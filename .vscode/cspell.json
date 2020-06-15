@@ -58,6 +58,7 @@
     "nlopes",
     "nolint",
     "nolintlint",
+    "postgres",
     "prealloc",
     "printf",
     "reviewdog",
