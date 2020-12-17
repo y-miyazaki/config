@@ -3,7 +3,7 @@
   // Version of the setting file.  Always 0.1
   "version": "0.1",
   // language - current active spelling language
-  "language": "en",
+  "language": "en,en-GB",
   // words - list of words to be always considered correct
   "words": [
     "arounds",
@@ -48,6 +48,7 @@
     "gosimple",
     "gotos",
     "govet",
+    "healthcheck",
     "hotfix",
     "ineffassign",
     "infof",
@@ -92,5 +93,20 @@
     "workdir",
     "xerrors",
     "ymiyazakixyz"
+  ],
+  "ignorePaths": [
+    "**/package-lock.json",
+    "**/node_modules/**",
+    "**/vscode-extension/**",
+    "**/.git/objects/**",
+    ".vscode",
+    "**/.devcontainer/**",
+    "**/.*ignore",
+    "**/*.log",
+    "**/*.out",
+    "**/*.json",
+  ],
+  "ignoreRegExpList": [
+    "[０-９Ａ-Ｚａ-ｚぁ-んァ-ヶ亜-熙纊-黑]+"
   ]
 }

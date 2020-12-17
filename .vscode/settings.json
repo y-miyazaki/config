@@ -1,19 +1,8 @@
 {
+  // ------------------------------------------------------------
+  // Base
+  // ------------------------------------------------------------
   "breadcrumbs.enabled": true,
-  "cSpell.language": "en,en-GB",
-  "cSpell.ignorePaths": [
-    "**/package-lock.json",
-    "**/node_modules/**",
-    "**/vscode-extension/**",
-    "**/.git/objects/**",
-    ".vscode",
-    "**/.devcontainer/**",
-    "**/.*ignore",
-    "**/*.log",
-    "**/*.out",
-    "**/*.json"
-  ],
-  "cSpell.ignoreRegExpList": ["[０-９Ａ-Ｚａ-ｚぁ-んァ-ヶ亜-熙纊-黑]+"],
   "editor.autoIndent": "full", // オートインデント
   "editor.detectIndentation": false, // インデントの自動判別
   "editor.formatOnPaste": false, // コード整形
@@ -75,6 +64,9 @@
     // "scrollbar.shadow": "#0077ff99",
     // "editorLink.activeForeground": "#5555ce"
   },
+  // ------------------------------------------------------------
+  // for Golang
+  // ------------------------------------------------------------
   "go.gopath": "/go",
   "go.toolsEnvVars": {
     "GO111MODULE": "on"
@@ -83,7 +75,9 @@
   "go.autocompleteUnimportedPackages": true,
   // go format tool
   "go.formatTool": "goimports",
-  "go.formatFlags": ["-w"],
+  "go.formatFlags": [
+    "-w"
+  ],
   // for golang lint
   "go.lintTool": "golangci-lint",
   "go.lintFlags": [
@@ -103,7 +97,9 @@
     "coveredGutterStyle": "blockblue",
     "uncoveredGutterStyle": "slashyellow"
   },
-  "go.testFlags": ["-v"],
+  "go.testFlags": [
+    "-v"
+  ],
   "go.toolsGopath": "/go",
   "go.alternateTools": {
     "go-langserver": "gopls"
@@ -133,9 +129,49 @@
       "source.organizeImports": true
     }
   },
+  // ------------------------------------------------------------
   // for Terraform
+  // ------------------------------------------------------------
   "terraform.languageServer": {
     "enabled": false,
     "args": []
-  }
+  },
+  // ------------------------------------------------------------
+  // for Python
+  // ------------------------------------------------------------
+  "python.pythonPath": "/usr/local/bin/python",
+  "python.linting.lintOnSave": true,
+  "python.linting.mypyEnabled": true,
+  "python.linting.pylintEnabled": false,
+  "python.linting.flake8Enabled": true,
+  "python.linting.enabled": true,
+  "python.linting.flake8Args": [
+    "--max-line-length",
+    "120",
+    "--max-complexity",
+    "20"
+  ],
+  "python.formatting.provider": "autopep8",
+  "python.formatting.autopep8Path": "/usr/local/bin/autopep8",
+  "python.formatting.autopep8Args": [
+    "--indent-size=4",
+    "--aggressive",
+    "--aggressive",
+  ],
+  "python.sortImports.path": "/usr/local/bin/isort",
+  "python.testing.unittestArgs": [
+    "-v",
+    "-s",
+    ".",
+    "-p",
+    "*test.py"
+  ],
+  "python.testing.pytestEnabled": false,
+  "python.testing.nosetestsEnabled": false,
+  "python.testing.unittestEnabled": true,
+  "python.linting.mypyPath": "/usr/local/bin/mypy",
+  "python.linting.mypyArgs": [
+    "--config-file",
+    "mypy.ini"
+  ],
 }

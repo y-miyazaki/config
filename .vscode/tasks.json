@@ -1,0 +1,23 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "azureFunc",
+      "detail": "azureFunc is func command.",
+      "type": "func",
+      "command": "start",
+      "problemMatcher": "$func-watch",
+      "isBackground": true,
+      "dependsOn": "pipInstall"
+    },
+    {
+      "label": "pipInstall",
+      "detail": "pipInstall is pip install command.",
+      "type": "shell",
+      "linux": {
+        "command": "pip install -r requirements.txt"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
