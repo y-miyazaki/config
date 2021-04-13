@@ -14,14 +14,14 @@
   "tf-attr": {
     "prefix": "attr",
     "body": [
-      "${1:name} = \"\\${var.${1:name}\\}\"",
+      "${1:name} = \"\\${var.${1:name}\\}\""
     ],
     "description": "attribute"
   },
   "tf-attrlook": {
     "prefix": "attrlook",
     "body": [
-      "${name} = \"${lookup(var.${key}, \"${name}\")}\"",
+      "${name} = \"${lookup(var.${key}, \"${name}\")}\""
     ],
     "description": "attribute lookup"
   },

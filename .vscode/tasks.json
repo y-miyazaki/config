@@ -18,6 +18,33 @@
         "command": "pip install -r requirements.txt"
       },
       "problemMatcher": []
-    }
+    },
+    {
+      "label": "preCommitInstall",
+      "detail": "preCommitInstall is for pre-commit install to git.",
+      "type": "shell",
+      "linux": {
+        "command": "pre-commit install"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "awstfPlan",
+      "detail": "terraform plan command.",
+      "type": "shell",
+      "linux": {
+        "command": "awstf plan"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "awstfApply",
+      "detail": "terraform apply command.",
+      "type": "shell",
+      "linux": {
+        "command": "awstf apply"
+      },
+      "problemMatcher": []
+    },
   ]
 }

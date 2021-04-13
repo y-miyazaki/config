@@ -75,9 +75,7 @@
   "go.autocompleteUnimportedPackages": true,
   // go format tool
   "go.formatTool": "goimports",
-  "go.formatFlags": [
-    "-w"
-  ],
+  "go.formatFlags": ["-w"],
   // for golang lint
   "go.lintTool": "golangci-lint",
   "go.lintFlags": [
@@ -97,9 +95,7 @@
     "coveredGutterStyle": "blockblue",
     "uncoveredGutterStyle": "slashyellow"
   },
-  "go.testFlags": [
-    "-v"
-  ],
+  "go.testFlags": ["-v"],
   "go.toolsGopath": "/go",
   "go.alternateTools": {
     "go-langserver": "gopls"
@@ -156,22 +152,13 @@
   "python.formatting.autopep8Args": [
     "--indent-size=4",
     "--aggressive",
-    "--aggressive",
+    "--aggressive"
   ],
   "python.sortImports.path": "/usr/local/bin/isort",
-  "python.testing.unittestArgs": [
-    "-v",
-    "-s",
-    ".",
-    "-p",
-    "*test.py"
-  ],
+  "python.testing.unittestArgs": ["-v", "-s", ".", "-p", "*test.py"],
   "python.testing.pytestEnabled": false,
   "python.testing.nosetestsEnabled": false,
   "python.testing.unittestEnabled": true,
   "python.linting.mypyPath": "/usr/local/bin/mypy",
-  "python.linting.mypyArgs": [
-    "--config-file",
-    "mypy.ini"
-  ],
+  "python.linting.mypyArgs": ["--config-file", "mypy.ini"]
 }
