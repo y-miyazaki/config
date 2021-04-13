@@ -48,6 +48,7 @@
     "gosimple",
     "gotos",
     "govet",
+    "hashicorp",
     "healthcheck",
     "hotfix",
     "ineffassign",
@@ -82,6 +83,7 @@
     "structs",
     "stylecheck",
     "testpackage",
+    "tflint",
     "trivy",
     "typecheck",
     "unconvert",
@@ -106,5 +108,7 @@
     "**/*.out",
     "**/*.json"
   ],
-  "ignoreRegExpList": ["[０-９Ａ-Ｚａ-ｚぁ-んァ-ヶ亜-熙纊-黑]+"]
+  "ignoreRegExpList": [
+    "[０-９Ａ-Ｚａ-ｚぁ-んァ-ヶ亜-熙纊-黑]+"
+  ]
 }
