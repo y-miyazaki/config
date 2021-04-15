@@ -65,6 +65,12 @@
     // "editorLink.activeForeground": "#5555ce"
   },
   // ------------------------------------------------------------
+  // file assotiations
+  // ------------------------------------------------------------
+  "files.associations": {
+    "tfvars": "Terraform"
+  },
+  // ------------------------------------------------------------
   // for Golang
   // ------------------------------------------------------------
   "go.gopath": "/go",
@@ -129,8 +135,15 @@
   // for Terraform
   // ------------------------------------------------------------
   "terraform.languageServer": {
-    "enabled": false,
-    "args": []
+    "enabled": true,
+    "external": true,
+    "args": ["serve"]
+  },
+  "terraform-ls.experimentalFeatures": {
+    "validateOnSave": true
+  },
+  "[terraform]": {
+    "editor.formatOnSave": true
   },
   // ------------------------------------------------------------
   // for Python
