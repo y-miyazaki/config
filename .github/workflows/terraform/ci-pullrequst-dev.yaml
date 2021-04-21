@@ -1,0 +1,92 @@
+# https://help.github.com/ja/actions/reference/workflow-syntax-for-github-actions
+name: ci-pullrequst-dev
+on:
+  pull_request:
+    - "feature/**"
+    - "develop"
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "code: check out code"
+        uses: actions/checkout@v2
+      - name: "parameters: set parameters"
+        id: parameters
+        run: |
+          PR_NUMBER=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
+          echo "::set-output name=pr_number::${PR_NUMBER}"
+      - name: Install Terraform
+        run: |
+          brew install terraform
+      - name: Terraform init
+        run: |
+          cd terraform
+          terraform init
+      # More complex example
+      - name: tflint
+        uses: reviewdog/action-tflint@master
+        with:
+          github_token: ${{ secrets.github_token }}
+          working_directory: "terraform" # Optional. Change working directory
+          reporter: github-pr-review # Optional. Change reporter
+          fail_on_error: "true" # Optional. Fail action if errors are found
+          filter_mode: "nofilter" # Optional. Check all files, not just the diff
+          flags: "--module" # Optional. Add custom tflint flags
+      # More complex example
+      - name: tflint
+        uses: reviewdog/action-tflint@master
+        with:
+          github_token: ${{ secrets.github_token }}
+          working_directory: "terraform" # Optional. Change working directory
+          reporter: github-pr-review # Optional. Change reporter
+          fail_on_error: "true" # Optional. Fail action if errors are found
+          filter_mode: "nofilter" # Optional. Check all files, not just the diff
+          flags: "--module" # Optional. Add custom tflint flags
+      - name: tfsec
+        uses: reviewdog/action-tfsec@master
+        with:
+          github_token: ${{ secrets.github_token }}
+          working_directory: "terraform" # Optional. Change working directory
+          reporter: github-pr-review # Change reporter
+          fail_on_error: "true" # Fail action if errors are found
+          filter_mode: "nofilter" # Check all files, not just the diff
+          flags: "" # Optional
+      - name: "terraform: plan"
+        id: plan
+        env:
+          ENV: ${{ secrets.ENV_DEV }}
+        run: |
+          echo "$ENV" >> $PWD/.env
+          chmod +x scripts/*
+          docker pull ymiyazakixyz/terraform-aws:0.14.7
+          docker run --rm -v $PWD:/workspace --env-file=$PWD/.env -w /workspace --name terraform-aws ymiyazakixyz/terraform-aws:latest scripts/terraform/integration_pr.sh terraform
+      - name: Terraform Comment
+        if: always()
+        uses: actions/github-script@v2
+        env:
+          PLAN: "${{ steps.plan.outputs.stderr }}\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = ` ### Report
+
+            #### Terraform Plan - \`${{ steps.plan-check.outputs.check }}\` - 📖
+
+              \`\`\`${process.env.PLAN}\`\`\` `;
+
+              github.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: output
+              })
+      - name: "slack: notification for failed integration."
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2.0.2
+        env:
+          SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL_ID }}
+          SLACK_COLOR: "danger"
+          SLACK_ICON: ""
+          SLACK_TITLE: failed integration on pull reququest
+          SLACK_USERNAME: github-notification
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}

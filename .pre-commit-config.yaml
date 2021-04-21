@@ -5,6 +5,7 @@ repos:
     rev: v3.2.0
     hooks:
       - id: trailing-whitespace
+        exclude: README.*.md
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-added-large-files
@@ -32,3 +33,9 @@ repos:
         language: golang
         exclude: ^.*_test.go$
         pass_filenames: false
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.1.0
+    hooks:
+    - id: detect-secrets
+        # args: ['--baseline', '.secrets.baseline']
+        # exclude: package.lock.json
