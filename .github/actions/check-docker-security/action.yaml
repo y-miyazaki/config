@@ -1,0 +1,43 @@
+name: 'check-docker-security'
+description: 'Install docker security commands.'
+inputs:
+  file:
+    description: 'Specify the path to the Dockerfile.'
+    required: true
+    default: 'Dockerfile'
+runs:
+  using: "composite"
+  steps:
+    - name: Install trivy
+      shell: bash
+      run: |
+        sudo apt-get install wget apt-transport-https gnupg lsb-release
+        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+        echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+        sudo apt-get update
+        sudo apt-get install --no-install-recommends trivy
+    - name: Install dockle
+      shell: bash
+      run: |
+        VERSION=$(curl --silent "https://api.github.com/repos/goodwithtech/dockle/releases/latest" |  grep '"tag_name":' |  sed -E 's/.*"v?([^"]+)".*/\1/' );
+        curl -L -o dockle.deb https://github.com/goodwithtech/dockle/releases/download/v${VERSION}/dockle_${VERSION}_Linux-64bit.deb;
+        sudo dpkg -i dockle.deb && rm dockle.deb
+    - name: Install pandoc
+      shell: bash
+      run: |
+        VERSION=$(curl --silent "https://api.github.com/repos/jgm/pandoc/releases/latest" |  grep '"tag_name":' |  sed -E 's/.*"v?([^"]+)".*/\1/' );
+        curl -L -o pandoc.deb https://github.com/jgm/pandoc/releases/download/${VERSION}/pandoc-${VERSION}-1-amd64.deb
+        sudo dpkg -i pandoc.deb
+    - name: Build Docker Image
+      shell: bash
+      run: |
+        docker build -f ${{ inputs.file }} -t tmp:${{github.sha}} .
+    - name: Check trivy
+      shell: bash
+      run: |
+        trivy -q --severity HIGH,CRITICAL --exit-code 1 tmp:${{github.sha}}
+    - name: Check dockle
+      shell: bash
+      run: |
+        dockle tmp:${{github.sha}} | tee -a dockle.out;
+        test $(cat dockle.out | grep -e FATAL -e WARN | wc -l) -eq 0

@@ -33,7 +33,7 @@
   "files.insertFinalNewline": true, // 有効にすると、ファイルの保存時に最新の行を末尾に挿入します。
   // "files.trimTrailingWhitespace": true, // (.editorconfig) ファイルの保存時に末尾の空白をトリミング
   "git.autofetch": true,
-  "terminal.integrated.shell.linux": "/bin/bash", // terminal default bash
+  "terminal.integrated.defaultProfile.linux": "/bin/bash", // terminal default bash
   "terminal.integrated.scrollback": 10000,
   "window.zoomLevel": 1,
   "workbench.startupEditor": "newUntitledFile",
@@ -65,62 +65,129 @@
     // "editorLink.activeForeground": "#5555ce"
   },
   // ------------------------------------------------------------
-  // file assotiations
+  // files assotiations
   // ------------------------------------------------------------
   "files.associations": {
     "tfvars": "Terraform"
   },
   // ------------------------------------------------------------
   // for Golang
+  // https://github.com/golang/vscode-go/blob/master/docs/settings.md
   // ------------------------------------------------------------
-  "go.gopath": "/go",
-  "go.toolsEnvVars": {
-    "GO111MODULE": "on"
+  "go.alternateTools": {
+    "go-langserver": "gopls"
   },
-  // for auto complete
-  "go.autocompleteUnimportedPackages": true,
-  // go format tool
-  "go.formatTool": "goimports",
+  "go.autocompleteUnimportedPackages": true, // for auto complete
+  // "go.buildFlags": "", // It will be ignored if you use a language server.
+  // "go.buildOnSave": "workspace", // It will be ignored if you use a language server.
+  // "go.buildTags": "", // It will be ignored if you use a language server.
+  "go.coverMode": "default",
+  "go.coverOnSave": true,
+  "go.coverOnSingleTest": true,
+  "go.coverOnSingleTestFile": true,
+  "go.coverOnTestPackage": true,
+  "go.coverShowCounts": false,
+  "go.coverageDecorator": {
+    "coveredBorderColor": "rgba(64,128,128,0.5)", // Color to use for the border of covered code.
+    "coveredGutterStyle": "blockblue", // Allowed Options: blockblue, blockred, blockgreen, blockyellow, slashred, slashgreen, slashblue, slashyellow, verticalred, verticalgreen, verticalblue, verticalyellow
+    "coveredHighlightColor": "rgba(64,128,128,0.2)", // Color in the rgba format to use to highlight covered code.
+    "type": "highlight", // Allowed Options: highlight, gutter
+    "uncoveredGutterStyle": "slashyellow", // Gutter style to indicate covered code. Allowed Options: blockblue, blockred, blockgreen, blockyellow, slashred, slashgreen, slashblue, slashyellow, verticalred, verticalgreen, verticalblue, verticalyellow
+    "uncoveredHighlightColor": "rgba(128,64,64,0.2)" // Color to use for the border of uncovered code.
+  },
+  "go.coverageOptions": "showBothCoveredAndUncoveredCode",
+  "go.delveConfig": {
+    "dlvLoadConfig": {
+      "followPointers": true,
+      "maxVariableRecurse": 1,
+      "maxStringLen": 64,
+      "maxArrayValues": 64,
+      "maxStructFields": -1
+    },
+    "apiVersion": 2,
+    "showGlobalVariables": false,
+    "debugAdapter": "legacy",
+    "substitutePath": []
+  },
+  "go.disableConcurrentTests": false,
+  // "go.docsTool": "godoc", // It will be ignored if you use a language server.
+  "go.editorContextMenuCommands": {
+    "toggleTestFile": true,
+    "addTags": true,
+    "removeTags": false,
+    "fillStruct": false,
+    "testAtCursor": true,
+    "testFile": false,
+    "testPackage": false,
+    "generateTestForFunction": true,
+    "generateTestForFile": false,
+    "generateTestForPackage": false,
+    "addImport": true,
+    "testCoverage": true,
+    "playground": true,
+    "debugTestAtCursor": true,
+    "benchmarkAtCursor": false
+  },
+  "go.enableCodeLens": {
+    "references": false,
+    "runtest": true
+  },
   "go.formatFlags": ["-w"],
-  // for golang lint
-  "go.lintTool": "golangci-lint",
+  // "go.formatTool": "goimports", // It will be ignored if you use a language server.
+  "go.generateTestsFlags": [],
+  // "go.gocodeAutoBuild": false, // It will be ignored if you use a language server.
+  // "go.gocodeFlags": ["-builtin", "-ignore-case", "-unimported-packages"], // It will be ignored if you use a language server.
+  // "go.gocodePackageLookupMode":"go", // It will be ignored if you use a language server.
+  "go.gopath": "/go",
+  "go.goroot": null,
+  // "go.gotoSymbol.ignoreFolders":[], // It will be ignored if you use a language server.
+  // "go.gotoSymbol.includeGoroot":false, // It will be ignored if you use a language server.
+  // "go.gotoSymbol.includeImports": false, // It will be ignored if you use a language server.
+  "go.inferGopath": true,
+  "go.installDependenciesWhenBuilding": false,
+  "go.languageServerExperimentalFeatures": {
+    "diagnostics": true
+  },
+  "go.languageServerFlags": [],
   "go.lintFlags": [
     "--config=${workspaceFolder}/golangci.yaml"
     // "--fast"
   ],
-  // for go coverage and test
+  "go.lintOnSave": "package",
+  "go.lintTool": "golangci-lint",
+  // "go.liveErrors": { // It will be ignored if you use a language server.
+  //   "enabled": true,
+  //   "delay": 500
+  // },
+  "go.logging.level": "error",
+  "go.playground": {
+    "openbrowser": true,
+    "share": true,
+    "run": true
+  },
+  "go.removeTags": {
+    "tags": "",
+    "options": "",
+    "promptForTags": false
+  },
+  // "go.testEnvFile": null,
+  // "go.testEnvVars": {},
+  // "go.testFlags": ["-v"], // It will be ignored if you use a language server.
   "go.testOnSave": true,
-  "go.coverOnSingleTest": true,
-  "go.coverOnSave": true,
-  "go.coverOnSingleTestFile": true,
-  "go.coverageDecorator": {
-    "type": "highlight",
-    "isWholeLine": false,
-    "coveredHighlightColor": "rgba(64,128,128,0.2)",
-    "uncoveredHighlightColor": "rgba(128,64,64,0.2)",
-    "coveredGutterStyle": "blockblue",
-    "uncoveredGutterStyle": "slashyellow"
+  "go.testTags": null,
+  "go.testTimeout": "30s",
+  "go.toolsEnvVars": {
+    "GO111MODULE": "on"
   },
-  "go.testFlags": ["-v"],
   "go.toolsGopath": "/go",
-  "go.alternateTools": {
-    "go-langserver": "gopls"
-  },
+  "go.toolsManagement.autoUpdate": true,
+  "go.toolsManagement.checkForUpdates": "proxy",
+  "go.trace.server": "off",
+  "go.useCodeSnippetsOnFunctionSuggest": false,
+  "go.useCodeSnippetsOnFunctionSuggestWithoutType": false,
   "go.useLanguageServer": true,
-  "go.languageServerExperimentalFeatures": {
-    "format": true,
-    "autoComplete": true,
-    "rename": true,
-    "goToDefinition": true,
-    "hover": true,
-    "signatureHelp": true,
-    "goToTypeDefinition": true,
-    "goToImplementation": true,
-    "documentSymbols": true,
-    "workspaceSymbols": true,
-    "findReferences": true,
-    "diagnostics": true
-  },
+  "go.vetFlags": [],
+  // "go.vetOnSave":"package", // It will be ignored if you use a language server.
   "gopls": {
     "usePlaceholders": true,
     "completeUnimported": true
@@ -133,6 +200,7 @@
   },
   // ------------------------------------------------------------
   // for Terraform
+  // https://github.com/hashicorp/vscode-terraform
   // ------------------------------------------------------------
   "terraform.languageServer": {
     "enabled": true,

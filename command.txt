@@ -1,0 +1,5 @@
+alias di="docker images"
+alias dprm="docker rm `docker ps -f \"status=exited\" -q`"
+alias dprmall='docker kill $(docker ps -aq) | docker rm $(docker ps -aq)'
+alias dirmall='docker rmi -f $(docker images -q)'
+alias ip="curl httpbin.org/ip"
