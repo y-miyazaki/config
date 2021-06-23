@@ -33,7 +33,8 @@
   "files.insertFinalNewline": true, // 有効にすると、ファイルの保存時に最新の行を末尾に挿入します。
   // "files.trimTrailingWhitespace": true, // (.editorconfig) ファイルの保存時に末尾の空白をトリミング
   "git.autofetch": true,
-  "terminal.integrated.defaultProfile.linux": "/bin/bash", // terminal default bash
+  "terminal.integrated.defaultProfile.linux": "/bin/bash",
+  "terminal.integrated.shell.linux": "/bin/bash",
   "terminal.integrated.scrollback": 10000,
   "window.zoomLevel": 1,
   "workbench.startupEditor": "newUntitledFile",
