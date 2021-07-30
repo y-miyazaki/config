@@ -22,7 +22,7 @@ repos:
           - "--args=-no-color"
       - id: terraform_tflint
       - id: terraform_tfsec
-  # for golang
+  # for go
   - repo: local
     hooks:
       - id: golangci-lint
