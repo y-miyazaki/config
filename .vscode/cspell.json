@@ -1,10 +1,6 @@
-// cSpell Settings
 {
-  // Version of the setting file.  Always 0.1
-  "version": "0.1",
-  // language - current active spelling language
+  "version": "0.2",
   "language": "en,en-GB",
-  // words - list of words to be always considered correct
   "words": [
     "arounds",
     "asciicheck",
@@ -17,13 +13,17 @@
     "csrf",
     "cyclomatic",
     "deadcode",
+    "debugf",
+    "debugln",
     "depguard",
     "dgrijalva",
     "dockle",
     "dupl",
     "errcheck",
     "errorf",
+    "errorln",
     "fatalf",
+    "fatalln",
     "fsnotify",
     "funcs",
     "funlen",
@@ -53,6 +53,7 @@
     "hotfix",
     "ineffassign",
     "infof",
+    "infoln",
     "interfacer",
     "jinzhu",
     "kubectl",
@@ -60,6 +61,7 @@
     "logrus",
     "logutils",
     "ludeeus",
+    "minio",
     "miyazaki",
     "multiline",
     "nakedret",
@@ -92,6 +94,9 @@
     "uuid",
     "varcheck",
     "warnf",
+    "warningf",
+    "warningln",
+    "warnln",
     "workdir",
     "xerrors",
     "ymiyazakixyz"
