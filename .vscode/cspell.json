@@ -19,6 +19,7 @@
         "crds",
         "csrf",
         "cyclomatic",
+        "dbname",
         "deadcode",
         "debugf",
         "debugln",
