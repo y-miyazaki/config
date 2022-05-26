@@ -58,8 +58,8 @@ jobs:
         run: |
           echo "$ENV" >> $PWD/.env
           chmod +x scripts/*
-          docker pull ghcr.io/y-miyazaki/terraform-aws:latest
-          docker run --rm -v $PWD:/workspace --env-file=$PWD/.env -w /workspace --name terraform-aws ghcr.io/y-miyazaki/terraform-aws:latest scripts/terraform/integration_pr.sh terraform
+          docker pull ghcr.io/y-miyazaki/terraform-aws-debian:latest
+          docker run --rm -v $PWD:/workspace --env-file=$PWD/.env -w /workspace --name terraform-aws ghcr.io/y-miyazaki/terraform-aws-debian:latest scripts/terraform/integration_pr.sh terraform
       - name: Terraform Comment
         if: always()
         uses: actions/github-script@v2

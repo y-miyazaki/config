@@ -15,8 +15,8 @@ jobs:
         run: |
           echo "$ENV" >> $PWD/.env
           chmod +x scripts/*
-          docker pull ghcr.io/y-miyazaki/terraform-aws:latest
-          docker run --rm -v $PWD:/workspace --env-file=$PWD/.env -w /workspace --name terraform-aws ghcr.io/y-miyazaki/terraform-aws:latest
+          docker pull ghcr.io/y-miyazaki/terraform-aws-debian:latest
+          docker run --rm -v $PWD:/workspace --env-file=$PWD/.env -w /workspace --name terraform-aws ghcr.io/y-miyazaki/terraform-aws-debian:latest
       - name: "slack: notification for failed deploy."
         if: failure()
         uses: rtCamp/action-slack-notify@v2.0.2
