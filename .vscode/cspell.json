@@ -41,6 +41,7 @@
       "fsnotify",
       "funcs",
       "funlen",
+      "gajira",
       "gmail",
       "gochecknoglobals",
       "gochecknoinits",
