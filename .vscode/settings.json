@@ -151,8 +151,10 @@
   "go.languageServerFlags": [],
   "go.lintFlags": [
     "-c",
-    "${workspaceFolder}/.golangci.yaml"
-    // "--fast"
+    "${workspaceFolder}/.golangci.yaml",
+    "--max-same-issues",
+    "0"
+// "--fast"
   ],
   "go.lintOnSave": "package",
   "go.lintTool": "golangci-lint",
