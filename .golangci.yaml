@@ -89,6 +89,10 @@ linters-settings:
     # default is false: such cases aren't reported by default.
     check-blank: false
 
+    # the regex is used to ignore names within pkg. (default "fmt:.*").
+    # see https://github.com/kisielk/errcheck#the-deprecated-method for details
+    ignore: fmt:.*,io/ioutil:^Read.*,io:.*Close,database/sql:.*Close,database/mysql:.*Close,github.com/pkg/sftp:.*Close,archive/zip:.*Close,github.com/golang-migrate/migrate/v4/database/mysql:.*Close
+
     # path to a file containing a list of functions to exclude from checking
     # see https://github.com/kisielk/errcheck#excluding-functions for details
     #     exclude: /path/to/file.txt
@@ -122,10 +126,23 @@ linters-settings:
       - octalLiteral
       - whyNoLint
       - wrapperFunc
+      - paramTypeCombine
+    settings:
+      hugeParam:
+        # Size in bytes that makes the warning trigger.
+        # Default: 80
+        sizeThreshold: 80
+      rangeValCopy:
+        # Size in bytes that makes the warning trigger.
+        # Default: 128
+        sizeThreshold: 128
+        # Whether to check test functions.
+        # Default: true
+        skipTestFuncs: true
   # https://github.com/alecthomas/gocyclo
   # Computes and checks the cyclomatic complexity of functions
   gocyclo:
-    min-complexity: 15
+    min-complexity: 20
   # https://github.com/tetafro/godot
   # Check if comments end in a period
   godot:
@@ -156,14 +173,15 @@ linters-settings:
   # https://github.com/tommy-muehle/go-mnd
   # An analyzer to detect magic numbers.
   gomnd:
-    settings:
-      mnd:
-        # don't include the "operation" and "assign"
-        checks: argument,case,condition,return
+    # don't include the "operation" and "assign"
+    checks: 
+      - argument
+      - case
+      - condition
+      - return
   # https://golang.org/cmd/vet/
   # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
   govet:
-    check-shadowing: true
     settings:
       printf:
         funcs:
@@ -171,6 +189,10 @@ linters-settings:
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+      # shadow:
+      #   # Whether to be strict about shadowing; can be noisy.
+      #   # Default: false
+      #   strict: false
   # https://github.com/walle/lll
   # Reports long lines
   lll:
@@ -211,6 +233,11 @@ linters-settings:
     simple: true
     range-loops: true # Report preallocation suggestions on range loops, true by default
     for-loops: false # Report preallocation suggestions on for loops, false by default
+  revive:
+    rules:
+      - name: exported
+        severity: warning
+        disabled: true
   # https://github.com/jingyugao/rowserrcheck
   # checks whether Err of rows is checked successfully
   rowserrcheck:
