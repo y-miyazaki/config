@@ -1,0 +1,15 @@
+version: 2
+mergeable:
+  - when: pull_request.*
+    validate:
+      - do: title
+        and:
+          - or:
+              - must_include:
+                  regex: 'TEST1-\d+:.+$'
+                  message: "Add your JIRA issue key"
+              - must_include:
+                  regex: 'TEST2-\d+:.+$'
+                  message: "Add your JIRA issue key"
+          - must_exclude:
+              regex: ^\[WIP\]

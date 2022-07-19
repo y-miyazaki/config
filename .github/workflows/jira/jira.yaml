@@ -4,6 +4,8 @@ on:
     - '*'
     - '!feature/*'
     - '!hotfix/*'
+    tags:
+    - 'v*'
 
 name: Transition Issue for progress
 jobs:
