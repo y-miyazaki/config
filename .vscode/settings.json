@@ -205,6 +205,26 @@
   // for Terraform
   // https://github.com/hashicorp/vscode-terraform
   // ------------------------------------------------------------
+  //   "terraform.experimentalFeatures.validateOnSave": true,
+  //   "terraform.experimentalFeatures.prefillRequiredFields": true,
+  //   "terraform.languageServer.enable": true,
+  //   "terraform.languageServer.pathToBinary": "",
+  //   "terraform.languageServer.args": ["serve"],
+  //   "terraform.languageServer.ignoreSingleFileWarning": false,
+  //   "[terraform]": {
+  //     "editor.defaultFormatter": "hashicorp.terraform",
+  //     "editor.formatOnSave": false,
+  //     "editor.codeActionsOnSave": {
+  //       "source.formatAll.terraform": true
+  //     }
+  //   },
+  //   "[terraform-vars]": {
+  //     "editor.defaultFormatter": "hashicorp.terraform",
+  //     "editor.formatOnSave": false,
+  //     "editor.codeActionsOnSave": {
+  //       "source.formatAll.terraform": true
+  //     }
+  //   },
   "terraform.languageServer": {
     "enabled": true,
     "external": true,
