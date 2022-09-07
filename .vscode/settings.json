@@ -35,7 +35,7 @@
   "git.autofetch": true,
   "terminal.integrated.defaultProfile.linux": "bash",
   "terminal.integrated.scrollback": 10000,
-  "window.zoomLevel": 1,
+  "window.zoomLevel": 0,
   "workbench.startupEditor": "newUntitledFile",
   "workbench.colorCustomizations": {
     // "statusBar.background": "#000000", // ステータスバー背景色
@@ -63,6 +63,20 @@
     // "tab.inactiveForeground": "#999999", // 非選択タブの文字色
     // "scrollbar.shadow": "#0077ff99",
     // "editorLink.activeForeground": "#5555ce"
+  },
+  // ------------------------------------------------------------
+  // cspell
+  // ------------------------------------------------------------
+  "cSpell.showAutocompleteSuggestions": true,
+  "cSpell.customDictionaries": {
+    "project-words": {
+      "name": "project-words",
+      "path": "${workspaceRoot}/.vscode/cspell-project.txt",
+      "description": "Words used in this project",
+      "addWords": true
+    },
+    "custom": true, // Enable the `custom` dictionary
+    "internal-terms": false // Disable the `internal-terms` dictionary
   },
   // ------------------------------------------------------------
   // files assotiations
@@ -159,7 +173,7 @@
     "0"
     // "--fast"
   ],
-  "go.lintOnSave": "package",
+  "go.lintOnSave": "workspace",
   "go.lintTool": "golangci-lint",
   // "go.liveErrors": { // It will be ignored if you use a language server.
   //   "enabled": true,
@@ -208,26 +222,6 @@
   // for Terraform
   // https://github.com/hashicorp/vscode-terraform
   // ------------------------------------------------------------
-  //   "terraform.experimentalFeatures.validateOnSave": true,
-  //   "terraform.experimentalFeatures.prefillRequiredFields": true,
-  //   "terraform.languageServer.enable": true,
-  //   "terraform.languageServer.pathToBinary": "",
-  //   "terraform.languageServer.args": ["serve"],
-  //   "terraform.languageServer.ignoreSingleFileWarning": false,
-  //   "[terraform]": {
-  //     "editor.defaultFormatter": "hashicorp.terraform",
-  //     "editor.formatOnSave": false,
-  //     "editor.codeActionsOnSave": {
-  //       "source.formatAll.terraform": true
-  //     }
-  //   },
-  //   "[terraform-vars]": {
-  //     "editor.defaultFormatter": "hashicorp.terraform",
-  //     "editor.formatOnSave": false,
-  //     "editor.codeActionsOnSave": {
-  //       "source.formatAll.terraform": true
-  //     }
-  //   },
   "terraform.languageServer": {
     "enabled": true,
     "external": true,
