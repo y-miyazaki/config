@@ -359,6 +359,13 @@ issues:
       text: "G204:" # G204: Subprocess launched with variable (gosec)
     - source: "// noinspection"
       linters: [gocritic]
+    - path: "_test\\.go"
+      linters:
+        - bodyclose
+        - dupl
+        - funlen
+        - goconst
+        - gosec
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
