@@ -151,10 +151,13 @@
   "go.languageServerFlags": [],
   "go.lintFlags": [
     "-c",
-    "${workspaceFolder}/.golangci.yaml",
+    "/workspaces/dw-nfc-server/.golangci.yaml",
+    "-v",
     "--max-same-issues",
+    "0",
+    "--max-issues-per-linter",
     "0"
-// "--fast"
+    // "--fast"
   ],
   "go.lintOnSave": "package",
   "go.lintTool": "golangci-lint",
