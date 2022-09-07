@@ -165,7 +165,7 @@
   "go.languageServerFlags": [],
   "go.lintFlags": [
     "-c",
-    "/workspaces/dw-nfc-server/.golangci.yaml",
+    "${workspaceFolder}/.golangci.yaml",
     "-v",
     "--max-same-issues",
     "0",
