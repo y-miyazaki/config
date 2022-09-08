@@ -28,7 +28,7 @@ repos:
       - id: golangci-lint
         name: golangci-lint
         description: Fast linters runner for Go.
-        entry: golangci-lint run --config=.golangci.yaml
+        entry: golangci-lint run --max-same-issues=0 --max-issues-per-linter=0 --config=.golangci.yaml --fix
         types: [go]
         language: golang
         exclude: ^.*_test.go$
@@ -36,10 +36,11 @@ repos:
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.1.0
     hooks:
-    - id: detect-secrets
-        # args: ['--baseline', '.secrets.baseline']
-        # exclude: package.lock.json
--   repo: https://github.com/zricethezav/gitleaks
+      - id:
+          detect-secrets
+          # args: ['--baseline', '.secrets.baseline']
+          # exclude: package.lock.json
+  - repo: https://github.com/zricethezav/gitleaks
     rev: v7.6.0
     hooks:
-    -   id: gitleaks
+      - id: gitleaks
