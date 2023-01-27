@@ -25,6 +25,8 @@
     "editor.renderLineHighlight": "all", // 選択中の行を強調する
     "editor.renderWhitespace": "all", // エディターで空白文字を表示する方法を制御します。'none'、'boundary' および 'all' が使用可能です。'boundary' オプションでは、単語間の単一スペースは表示されません。
     "editor.suggestFontSize": 16, // font size
+    "editor.guides.bracketPairs": true,
+    "editor.bracketPairColorization.enabled": true,
     // "editor.tabSize": 4, // (.editorconfig) tab size
     "explorer.confirmDragAndDrop": false,
     "files.autoGuessEncoding": true, // 文字コードを自動判別
