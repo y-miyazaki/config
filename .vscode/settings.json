@@ -145,7 +145,6 @@
         "benchmarkAtCursor": false
     },
     "go.enableCodeLens": {
-        "references": false,
         "runtest": true
     },
     "go.formatFlags": [
