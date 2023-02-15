@@ -163,7 +163,8 @@
         "warnln",
         "workdir",
         "xerrors",
-        "ymiyazakixyz"
+        "ymiyazakixyz",
+        "zapcore"
     ],
     "ignorePaths": [
         "**/package-lock.json",
