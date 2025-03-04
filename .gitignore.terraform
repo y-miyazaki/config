@@ -1,18 +1,36 @@
 # root
 .DS_Store
-.vscode
+.vscode/**
+!.vscode/cspell.json
 terraform.log
 crash.log
 
-# terraform files.
-.terraform
-.terraform.lock.hcl
+# Local .terraform directories
+**/.terraform/*
+**/.terraform.d/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
 
 # terraform customize file.
 main_init.tf
-main_provider.tf
 provider.json
-terraform.*.tfvars
+*.tfvars
 !terraform.example.tfvars
+!terraform.dev.tfvars
+!terraform.qa.tfvars
+!terraform.stg.tfvars
+!terraform.prd.tfvars
 *.tfbackend
 !terraform.example.tfbackend
+!terraform.dev.tfbackend
+!terraform.qa.tfbackend
+!terraform.stg.tfbackend
+!terraform.prd.tfbackend
+
+# env
+.devcontainer/**
+.gitconfig
+env/common/.aws
+env/common/.ssh

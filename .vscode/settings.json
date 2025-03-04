@@ -3,66 +3,65 @@
     // Base
     // ------------------------------------------------------------
     "breadcrumbs.enabled": true,
-    "editor.autoIndent": "full", // オートインデント
-    "editor.detectIndentation": false, // インデントの自動判別
-    "editor.formatOnPaste": false, // コード整形
-    "editor.formatOnType": false, // コード整形
-    "editor.formatOnSave": true, // format on save
-    "editor.fontSize": 16, // font size
-    "editor.folding": true, // コードの折りたたみを許可
+    "editor.autoIndent": "full", // Auto indent
+    "editor.detectIndentation": false, // Disable automatic indentation detection
+    "editor.formatOnPaste": false, // Disable format on paste
+    "editor.formatOnType": false, // Disable format on type
+    "editor.formatOnSave": true, // Enable format on save
+    "editor.fontSize": 16, // Font size
+    "editor.folding": true, // Enable code folding
     "editor.hover.sticky": false,
-    "editor.insertSpaces": true, // Tabキーで半角スペースを入力
-    "editor.letterSpacing": -1, // 文字の間隔を詰める
-    "editor.lineNumbers": "on", // 行番号の表示
-    "editor.links": true, // リンクをクリック可能に
-    "editor.matchBrackets": "always", // 対応する括弧の強調表示をオンに
-    "editor.minimap.enabled": true, // minimap
-    "editor.minimap.maxColumn": 40, // ミニマップの幅
-    "editor.minimap.renderCharacters": false, // ミニマップを簡略化
-    "editor.minimap.showSlider": "always", // ミニマップのハイライトを常に表示
-    "editor.minimap.side": "right", // ミニマップを右に表示
-    "editor.renderControlCharacters": true, // 制御文字の表示
-    "editor.renderLineHighlight": "all", // 選択中の行を強調する
-    "editor.renderWhitespace": "all", // エディターで空白文字を表示する方法を制御します。'none'、'boundary' および 'all' が使用可能です。'boundary' オプションでは、単語間の単一スペースは表示されません。
-    "editor.suggestFontSize": 16, // font size
+    "editor.insertSpaces": true, // Insert spaces when pressing Tab
+    "editor.letterSpacing": -1, // Adjust letter spacing
+    "editor.lineNumbers": "on", // Show line numbers
+    "editor.links": true, // Enable clickable links
+    "editor.matchBrackets": "always", // Always highlight matching brackets
+    "editor.minimap.enabled": true, // Enable minimap
+    "editor.minimap.maxColumn": 40, // Minimap width
+    "editor.minimap.renderCharacters": false, // Simplify minimap
+    "editor.minimap.showSlider": "always", // Always show minimap slider
+    "editor.minimap.side": "right", // Show minimap on the right
+    "editor.renderControlCharacters": true, // Show control characters
+    "editor.renderLineHighlight": "all", // Highlight the current line
+    "editor.renderWhitespace": "all", // Show whitespace characters
+    "editor.suggestFontSize": 16, // Suggestion font size
     "editor.guides.bracketPairs": true,
-    "editor.bracketPairColorization.enabled": true,
-    // "editor.tabSize": 4, // (.editorconfig) tab size
+    // "editor.bracketPairColorization.enabled": true, // Removed due to duplication
     "explorer.confirmDragAndDrop": false,
-    "files.autoGuessEncoding": true, // 文字コードを自動判別
-    "files.eol": "\n", // 改行コードをLF(Linux/OSX)にする
-    "files.encoding": "utf8", // 既定の文字コード
-    "files.insertFinalNewline": true, // 有効にすると、ファイルの保存時に最新の行を末尾に挿入します。
-    // "files.trimTrailingWhitespace": true, // (.editorconfig) ファイルの保存時に末尾の空白をトリミング
+    "files.autoGuessEncoding": true, // Automatically guess file encoding
+    "files.eol": "\n", // Use LF for line endings
+    "files.encoding": "utf8", // Default file encoding
+    "files.insertFinalNewline": true, // Insert final newline on save
+    // "files.trimTrailingWhitespace": true, // (.editorconfig) Trim trailing whitespace on save
     "git.autofetch": true,
     "terminal.integrated.defaultProfile.linux": "bash",
     "terminal.integrated.scrollback": 10000,
     "window.zoomLevel": 0,
     "workbench.startupEditor": "newUntitledFile",
     "workbench.colorCustomizations": {
-        // "statusBar.background": "#000000", // ステータスバー背景色
+        // "statusBar.background": "#000000", // Status bar background color
         // "statusBar.noFolderBackground": "#000000",
-        // "statusBar.foreground": "#ffffff", // ステータスバー前景色
+        // "statusBar.foreground": "#ffffff", // Status bar foreground color
         // "statusBar.noFolderForeground": "#ffffff",
-        // "statusBar.border": "#ffffff", // ステータスバーの境界線
-        // "sideBar.background": "#000000", // サイドバーの背景色
-        // "sideBar.foreground": "#ffffff", // サイドバーの前景色
-        // "sideBar.border": "#ffffff", // サイドバーの境界線
-        // "activityBar.background": "#000000", // アクティビティバーの背景色
-        // "activityBar.foreground": "#ffffff", // アクティビティバーの前景色
-        // "activityBar.border": "#ffffff", // アクティビティバーの境界線
-        // "editor.background": "#121817", // エディタ背景色
-        "editor.lineHighlightBackground": "#404040", // 選択している行の強調色
-        "editor.selectionBackground": "#0077ffbb", // 選択領域の強調色
-        "editorBracketMatch.background": "#ffff0077", // 対応する括弧の背景色
-        "editorError.border": "#ff000090" // エラー部分の下線
+        // "statusBar.border": "#ffffff", // Status bar border color
+        // "sideBar.background": "#000000", // Sidebar background color
+        // "sideBar.foreground": "#ffffff", // Sidebar foreground color
+        // "sideBar.border": "#ffffff", // Sidebar border color
+        // "activityBar.background": "#000000", // Activity bar background color
+        // "activityBar.foreground": "#ffffff", // Activity bar foreground color
+        // "activityBar.border": "#ffffff", // Activity bar border color
+        // "editor.background": "#121817", // Editor background color
+        "editor.lineHighlightBackground": "#404040", // Line highlight background color
+        "editor.selectionBackground": "#0077ffbb", // Selection background color
+        "editorBracketMatch.background": "#ffff0077", // Matching bracket background color
+        "editorError.border": "#ff000090" // Error underline color
         // "editorLineNumber.foreground": "#0077ffbb",
         // "editorLineNumber.activeForeground": "#ffffff",
-        // "editorSuggestWidget.selectedBackground": "#0044ff", // サジェスト欄,選択中項目の背景色
-        // "scrollbarSlider.background": "#0077ff99", // スクロールバーの色
-        // "scrollbarSlider.hoverBackground": "#00ccffcc", // 移動中のスクロールバーの色
-        // "tab.activeBorder": "#ffffff", // アクティブタブの下線
-        // "tab.inactiveForeground": "#999999", // 非選択タブの文字色
+        // "editorSuggestWidget.selectedBackground": "#0044ff", // Suggest widget selected item background color
+        // "scrollbarSlider.background": "#0077ff99", // Scrollbar color
+        // "scrollbarSlider.hoverBackground": "#00ccffcc", // Scrollbar hover color
+        // "tab.activeBorder": "#ffffff", // Active tab border color
+        // "tab.inactiveForeground": "#999999", // Inactive tab text color
         // "scrollbar.shadow": "#0077ff99",
         // "editorLink.activeForeground": "#5555ce"
     },
@@ -81,7 +80,24 @@
         "internal-terms": false // Disable the `internal-terms` dictionary
     },
     // ------------------------------------------------------------
-    // files assotiations
+    // dart
+    // ------------------------------------------------------------
+    // Automatically format Dart code on save
+    "dart.lineLength": 80,
+    "[dart]": {
+        "editor.formatOnSave": true,
+        "editor.formatOnType": true,
+        "editor.rulers": [
+            80
+        ],
+        "editor.selectionHighlight": false,
+        "editor.suggest.snippetsPreventQuickSuggestions": false,
+        "editor.suggestSelection": "first",
+        "editor.tabCompletion": "onlySnippets",
+        "editor.wordBasedSuggestions": "off"
+    },
+    // ------------------------------------------------------------
+    // files associations
     // ------------------------------------------------------------
     "files.associations": {
         "tfvars": "Terraform"
@@ -93,7 +109,7 @@
     "go.alternateTools": {
         "go-langserver": "gopls"
     },
-    "go.autocompleteUnimportedPackages": true, // for auto complete
+    "go.autocompleteUnimportedPackages": true, // Enable auto-complete for unimported packages
     // "go.buildFlags": "", // It will be ignored if you use a language server.
     // "go.buildOnSave": "workspace", // It will be ignored if you use a language server.
     // "go.buildTags": "", // It will be ignored if you use a language server.
@@ -104,12 +120,12 @@
     "go.coverOnTestPackage": true,
     "go.coverShowCounts": false,
     "go.coverageDecorator": {
-        "coveredBorderColor": "rgba(64,128,128,0.5)", // Color to use for the border of covered code.
+        "coveredBorderColor": "rgba(64,128,128,0.5)", // Color to use for the border of covered code
         "coveredGutterStyle": "blockblue", // Allowed Options: blockblue, blockred, blockgreen, blockyellow, slashred, slashgreen, slashblue, slashyellow, verticalred, verticalgreen, verticalblue, verticalyellow
-        "coveredHighlightColor": "rgba(64,128,128,0.2)", // Color in the rgba format to use to highlight covered code.
+        "coveredHighlightColor": "rgba(64,128,128,0.2)", // Color in the rgba format to use to highlight covered code
         "type": "highlight", // Allowed Options: highlight, gutter
-        "uncoveredGutterStyle": "slashyellow", // Gutter style to indicate covered code. Allowed Options: blockblue, blockred, blockgreen, blockyellow, slashred, slashgreen, slashblue, slashyellow, verticalred, verticalgreen, verticalblue, verticalyellow
-        "uncoveredHighlightColor": "rgba(128,64,64,0.2)" // Color to use for the border of uncovered code.
+        "uncoveredGutterStyle": "slashyellow", // Gutter style to indicate uncovered code. Allowed Options: blockblue, blockred, blockgreen, blockyellow, slashred, slashgreen, slashblue, slashyellow, verticalred, verticalgreen, verticalblue, verticalyellow
+        "uncoveredHighlightColor": "rgba(128,64,64,0.2)" // Color to use for the border of uncovered code
     },
     "go.coverageOptions": "showBothCoveredAndUncoveredCode",
     "go.delveConfig": {
@@ -218,7 +234,7 @@
     "[go]": {
         "editor.snippetSuggestions": "bottom",
         "editor.codeActionsOnSave": {
-            "source.organizeImports": true
+            "source.organizeImports": "explicit"
         }
     },
     // ------------------------------------------------------------
@@ -226,25 +242,36 @@
     // ------------------------------------------------------------
     "[markdown]": {
         "editor.codeActionsOnSave": {
-            "source.fixAll.markdownlint": true
+            "source.fixAll.markdownlint": "explicit"
         }
     },
     // ------------------------------------------------------------
     // for Terraform
     // https://github.com/hashicorp/vscode-terraform
     // ------------------------------------------------------------
-    "terraform.languageServer": {
-        "enabled": true,
-        "external": true,
-        "args": [
-            "serve"
-        ]
-    },
-    "terraform-ls.experimentalFeatures": {
-        "validateOnSave": true
-    },
+    "terraform.codelens.referenceCount": true,
+    "terraform.experimentalFeatures.prefillRequiredFields": true,
+    "terraform.experimentalFeatures.validateOnSave": true,
+    "terraform.languageServer.enabled": true,
+    "terraform.languageServer.external": true,
+    "terraform.languageServer.args": [
+        "serve"
+    ],
+    "terraform.languageServer.ignoreSingleFileWarning": true,
+    "terraform.validation.enableEnhancedValidation": true,
     "[terraform]": {
-        "editor.formatOnSave": true
+        "editor.defaultFormatter": "hashicorp.terraform",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.formatAll.terraform": "always"
+        }
+    },
+    "[terraform-vars]": {
+        "editor.defaultFormatter": "hashicorp.terraform",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.formatAll.terraform": "always"
+        }
     },
     // ------------------------------------------------------------
     // for Python
