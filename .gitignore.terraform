@@ -32,5 +32,4 @@ provider.json
 # env
 .devcontainer/**
 .gitconfig
-env/common/.aws
-env/common/.ssh
+env/common/tmp/**
