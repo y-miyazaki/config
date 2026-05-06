@@ -11,6 +11,11 @@
 !.vscode/settings-example.json
 tmp
 
+# nested repos
+config/
+docker-go/
+docker-terraform/
+
 # AI
 .amazonq
 .kiro
