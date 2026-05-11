@@ -1,67 +1,75 @@
+<!-- omit in toc -->
 # ツール比較マトリクス (Node.js)
 
 Node.js / フロントエンド開発に特化したツール選定の判断材料。
 
-<!-- omit toc -->
+<!-- omit in toc -->
 ## Table of Contents
 
 - [Linter: ESLint vs Biome vs deno lint](#linter-eslint-vs-biome-vs-deno-lint)
+  - [選定ガイドライン](#選定ガイドライン)
 - [フォーマッター: Prettier vs Biome vs dprint](#フォーマッター-prettier-vs-biome-vs-dprint)
+  - [選定ガイドライン](#選定ガイドライン-1)
 - [パッケージマネージャー: npm vs pnpm vs yarn](#パッケージマネージャー-npm-vs-pnpm-vs-yarn)
+  - [選定ガイドライン](#選定ガイドライン-2)
 
 ## Linter: ESLint vs Biome vs deno lint
 
-| 比較項目 | ESLint | Biome | deno lint |
-|---|---|---|---|
-| 実装言語 | JavaScript | Rust | Rust |
-| プラグインシステム | ✅ 豊富 (エコシステム最大) | ⚠️ 限定的 | ❌ |
-| TypeScript 対応 | ✅ (typescript-eslint) | ✅ 組み込み | ✅ 組み込み |
-| 実行速度 | 低速 | 非常に高速 | 非常に高速 |
-| 自動修正 | ✅ | ✅ | ✅ |
-| フォーマッター統合 | ❌ (Prettier 併用) | ✅ 組み込み | ✅ 組み込み |
-| 設定ファイル | `.eslintrc` / `eslint.config.js` | `biome.json` | `deno.json` |
-| コミュニティ規模 | 最大 | 成長中 | Deno エコシステム |
-| 移行コスト | - | 中程度 (ESLint ルール互換あり) | 高い (Deno 前提) |
+| 比較項目           | ESLint                                            | Biome                                             | deno lint                                         |
+| ------------------ | ------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------- |
+| 提供元             | ESLint                                            | Biome                                             | Deno                                              |
+| リポジトリ         | [eslint/eslint](https://github.com/eslint/eslint) | [biomejs/biome](https://github.com/biomejs/biome) | [denoland/deno](https://github.com/denoland/deno) |
+| ライセンス         | MIT                                               | MIT                                               | MIT                                               |
+| 実装言語           | JavaScript                                        | Rust                                              | Rust                                              |
+| プラグインシステム | ✅ 豊富 (エコシステム最大)                         | ⚠️ 限定的                                          | ❌                                                 |
+| TypeScript 対応    | ✅ (typescript-eslint)                             | ✅ 組み込み                                        | ✅ 組み込み                                        |
+| 実行速度           | 低速                                              | 非常に高速                                        | 非常に高速                                        |
+| フォーマッター統合 | ❌ (Prettier 併用)                                 | ✅ 組み込み                                        | ✅ 組み込み                                        |
 
 ### 選定ガイドライン
 
-- **ESLint**: プラグインエコシステムが必要、既存プロジェクトで利用中の場合
-- **Biome**: 高速な Lint + Format を一つのツールで完結させたい新規プロジェクト向け
-- **deno lint**: Deno ランタイムを採用している場合
+**→ 新規プロジェクトは Biome、既存プロジェクトは ESLint を採用する。**
+
+- Biome: Lint + Format を一つのツールで高速に完結させたい新規プロジェクトに最適
+- ESLint: プラグインエコシステム (React, Vue, a11y 等) が必要な場合 / 既存プロジェクトで移行コストが高い場合
+- deno lint: Deno ランタイムを採用している場合のみ
 
 ## フォーマッター: Prettier vs Biome vs dprint
 
-| 比較項目 | Prettier | Biome | dprint |
-|---|---|---|---|
-| 実装言語 | JavaScript | Rust | Rust |
-| 対応言語 | JS/TS/CSS/HTML/JSON/YAML/MD 等 | JS/TS/JSON/CSS | JS/TS/JSON/MD/TOML 等 |
-| 実行速度 | 低速 | 非常に高速 | 非常に高速 |
-| 設定の柔軟性 | 低い (Opinionated) | 中程度 | 高い (プラグイン) |
-| Lint 統合 | ❌ | ✅ | ❌ |
-| エディタ統合 | ✅ 全エディタ対応 | ✅ 主要エディタ対応 | ✅ 主要エディタ対応 |
-| コミュニティ規模 | 最大 | 成長中 | 中程度 |
+| 比較項目   | Prettier                                                  | Biome                                             | dprint                                            |
+| ---------- | --------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------- |
+| 提供元     | Prettier                                                  | Biome                                             | dprint                                            |
+| リポジトリ | [prettier/prettier](https://github.com/prettier/prettier) | [biomejs/biome](https://github.com/biomejs/biome) | [dprint/dprint](https://github.com/dprint/dprint) |
+| ライセンス | MIT                                                       | MIT                                               | MIT                                               |
+| 実装言語   | JavaScript                                                | Rust                                              | Rust                                              |
+| 対応言語   | JS/TS/CSS/HTML/JSON/YAML/MD 等                            | JS/TS/JSON/CSS                                    | JS/TS/JSON/MD/TOML 等                             |
+| 実行速度   | 低速                                                      | 非常に高速                                        | 非常に高速                                        |
+| Lint 統合  | ❌                                                         | ✅                                                 | ❌                                                 |
 
 ### 選定ガイドライン
 
-- **Prettier**: 対応言語が最も多い。Markdown/YAML/HTML 等も含めて統一フォーマットしたい場合
-- **Biome**: JS/TS プロジェクトで Lint + Format を高速に一括実行したい場合
-- **dprint**: Prettier 互換の出力で高速化したい場合。プラグインで拡張可能
+**→ Biome を Linter と併用する場合は Biome のフォーマッターを使用する。単体フォーマッターとしては Prettier を採用する。**
+
+- Biome: Lint と統合して一つのツールで完結させたい場合
+- Prettier: 対応言語が最も多い / Markdown・YAML・HTML 等も含めて統一フォーマットしたい場合
+- dprint: Prettier 互換の出力で高速化したい / プラグインで対応言語を拡張したい場合
 
 ## パッケージマネージャー: npm vs pnpm vs yarn
 
-| 比較項目 | npm | pnpm | yarn (v4+) |
-|---|---|---|---|
-| 提供元 | npm Inc (GitHub) | pnpm | Meta (Yarn Berry) |
-| ディスク効率 | 低い (node_modules 肥大化) | 高い (content-addressable store) | 中程度 (PnP) |
-| インストール速度 | 中程度 | 高速 | 高速 |
-| ロックファイル | `package-lock.json` | `pnpm-lock.yaml` | `yarn.lock` |
-| Monorepo 対応 | ✅ workspaces | ✅ workspaces (高機能) | ✅ workspaces |
-| 厳格な依存解決 | ❌ (hoisting) | ✅ (デフォルトで厳格) | ✅ (PnP) |
-| Node.js 同梱 | ✅ | ❌ | ❌ (corepack) |
-| 学習コスト | 低い | 低い | 中程度 (PnP) |
+| 比較項目         | npm                                   | pnpm                                      | yarn (v4+)                                        |
+| ---------------- | ------------------------------------- | ----------------------------------------- | ------------------------------------------------- |
+| 提供元           | npm Inc (GitHub)                      | pnpm                                      | Meta (Yarn Berry)                                 |
+| リポジトリ       | [npm/cli](https://github.com/npm/cli) | [pnpm/pnpm](https://github.com/pnpm/pnpm) | [yarnpkg/berry](https://github.com/yarnpkg/berry) |
+| ライセンス       | Artistic-2.0                          | MIT                                       | BSD-2-Clause                                      |
+| ディスク効率     | 低い (node_modules 肥大化)            | 高い (content-addressable store)          | 中程度 (PnP)                                      |
+| インストール速度 | 中程度                                | 高速                                      | 高速                                              |
+| Monorepo 対応    | ✅ workspaces                          | ✅ workspaces (高機能)                     | ✅ workspaces                                      |
+| 厳格な依存解決   | ❌ (hoisting)                          | ✅ (デフォルトで厳格)                      | ✅ (PnP)                                           |
+| Node.js 同梱     | ✅                                     | ❌                                         | ❌ (corepack)                                      |
 
 ### 選定ガイドライン
 
-- **npm**: 追加セットアップ不要で始めたい場合。小規模プロジェクト向け
-- **pnpm**: ディスク効率・速度・厳格な依存解決を重視。Monorepo に最適
-- **yarn (v4+)**: PnP による Zero-Install を活用したい場合
+**→ pnpm を採用する。** ディスク効率・速度・厳格な依存解決 (幽霊依存の防止) で優位。Monorepo にも最適。
+
+- 追加セットアップ不要で始めたい小規模プロジェクトでは npm でも可
+- PnP による Zero-Install を活用したい場合は yarn (v4+) を検討
