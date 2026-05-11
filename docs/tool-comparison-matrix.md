@@ -1,41 +1,42 @@
 <!-- omit in toc -->
-# ツール比較マトリクス
+# Tool Comparison Matrix
 
 ツール選定時の判断材料として、カテゴリ別に比較を行う。
 
 言語/技術スタック特化の比較は以下を参照:
 
-- [Go 特化](tool-comparison-matrix-go.md)
-- [Terraform 特化](tool-comparison-matrix-terraform.md)
-- [Node.js 特化](tool-comparison-matrix-nodejs.md)
-- [Shell Script 特化](tool-comparison-matrix-shell-script.md)
-- [AWS 特化](tool-comparison-matrix-aws.md)
+- [Go](tool-comparison-matrix-go.md)
+- [Terraform](tool-comparison-matrix-terraform.md)
+- [Node.js](tool-comparison-matrix-nodejs.md)
+- [Shell Script](tool-comparison-matrix-shell-script.md)
+- [AWS](tool-comparison-matrix-aws.md)
+- [AI Agent](tool-comparison-matrix-ai-agent.md)
 
 <!-- omit in toc -->
 ## Table of Contents
 
-- [依存関係更新: Renovate vs Dependabot](#依存関係更新-renovate-vs-dependabot)
-  - [選定ガイドライン](#選定ガイドライン)
-- [バージョン管理: aqua vs asdf](#バージョン管理-aqua-vs-asdf)
-  - [選定ガイドライン](#選定ガイドライン-1)
-- [セキュリティスキャン: Trivy vs Snyk vs Grype](#セキュリティスキャン-trivy-vs-snyk-vs-grype)
-  - [選定ガイドライン](#選定ガイドライン-2)
-- [シークレット検出: gitleaks vs detect-secrets vs truffleHog](#シークレット検出-gitleaks-vs-detect-secrets-vs-trufflehog)
-  - [選定ガイドライン](#選定ガイドライン-3)
+- [Dependency Updates: Renovate vs Dependabot](#dependency-updates-renovate-vs-dependabot)
+  - [Guidelines](#guidelines)
+- [Version Management: aqua vs asdf](#version-management-aqua-vs-asdf)
+  - [Guidelines](#guidelines-1)
+- [Security Scanning: Trivy vs Snyk vs Grype](#security-scanning-trivy-vs-snyk-vs-grype)
+  - [Guidelines](#guidelines-2)
+- [Secret Detection: gitleaks vs detect-secrets vs truffleHog](#secret-detection-gitleaks-vs-detect-secrets-vs-trufflehog)
+  - [Guidelines](#guidelines-3)
 - [GitHub Actions Lint: actionlint vs ghalint vs zizmor](#github-actions-lint-actionlint-vs-ghalint-vs-zizmor)
-  - [選定ガイドライン](#選定ガイドライン-4)
-- [GitHub Actions ピン留め: pinact vs pin-github-action vs Renovate](#github-actions-ピン留め-pinact-vs-pin-github-action-vs-renovate)
-  - [選定ガイドライン](#選定ガイドライン-5)
-- [PR レビュー自動化: reviewdog vs GitHub Code Scanning vs SonarQube](#pr-レビュー自動化-reviewdog-vs-github-code-scanning-vs-sonarqube)
-  - [選定ガイドライン](#選定ガイドライン-6)
-- [コードカバレッジ: Codecov vs Coveralls vs SonarQube](#コードカバレッジ-codecov-vs-coveralls-vs-sonarqube)
-  - [選定ガイドライン](#選定ガイドライン-7)
-- [Git Hooks フレームワーク: pre-commit](#git-hooks-フレームワーク-pre-commit)
-  - [選定ガイドライン](#選定ガイドライン-8)
+  - [Guidelines](#guidelines-4)
+- [GitHub Actions Pinning: pinact vs pin-github-action vs Renovate](#github-actions-pinning-pinact-vs-pin-github-action-vs-renovate)
+  - [Guidelines](#guidelines-5)
+- [PR Review Automation: reviewdog vs GitHub Code Scanning vs SonarQube](#pr-review-automation-reviewdog-vs-github-code-scanning-vs-sonarqube)
+  - [Guidelines](#guidelines-6)
+- [Code Coverage: Codecov vs Coveralls vs SonarQube](#code-coverage-codecov-vs-coveralls-vs-sonarqube)
+  - [Guidelines](#guidelines-7)
+- [Git Hooks Framework: pre-commit](#git-hooks-framework-pre-commit)
+  - [Guidelines](#guidelines-8)
 - [CI/CD: GitHub Actions vs GitLab CI vs CircleCI vs Jenkins](#cicd-github-actions-vs-gitlab-ci-vs-circleci-vs-jenkins)
-  - [選定ガイドライン](#選定ガイドライン-9)
+  - [Guidelines](#guidelines-9)
 
-## 依存関係更新: Renovate vs Dependabot
+## Dependency Updates: Renovate vs Dependabot
 
 | 比較項目              | Renovate                                                        | Dependabot                        |
 | --------------------- | --------------------------------------------------------------- | --------------------------------- |
@@ -54,7 +55,7 @@
 | セルフホスト          | ✅ 可能                                                          | ❌ GitHub 提供のみ                 |
 | 料金                  | 無料 (GitHub App) / セルフホスト無料                            | 無料 (GitHub 組み込み)            |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ Renovate を採用する。** 対応エコシステムの広さ、Shareable Config による組織横断の設定共有、グルーピング・自動マージの柔軟性で優位。
 
@@ -62,7 +63,7 @@
 - GitHub Actions の更新のみなど限定的な用途であれば Dependabot 単体でも可
 - 併用も有効: Dependabot (GitHub Actions) + Renovate (その他エコシステム)
 
-## バージョン管理: aqua vs asdf
+## Version Management: aqua vs asdf
 
 | 比較項目           | aqua                                              | asdf                                            |
 | ------------------ | ------------------------------------------------- | ----------------------------------------------- |
@@ -80,13 +81,13 @@
 | Windows 対応       | ✅                                                 | ❌ (WSL 経由のみ)                                |
 | セキュリティ       | 高い (checksum必須化可能)                         | 低い (プラグイン任意実行)                       |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ aqua を採用する。** Checksum 検証によるセキュリティ、Renovate 連携による自動更新、CI での高速セットアップで優位。
 
 - Node.js/Ruby/Python 等のランタイム管理が主目的で、チームが既に asdf に慣れている場合は asdf でも可
 
-## セキュリティスキャン: Trivy vs Snyk vs Grype
+## Security Scanning: Trivy vs Snyk vs Grype
 
 | 比較項目         | Trivy                                                       | Snyk                                    | Grype                                             |
 | ---------------- | ----------------------------------------------------------- | --------------------------------------- | ------------------------------------------------- |
@@ -102,14 +103,14 @@
 | オフライン実行   | ✅ (DB事前DL)                                                | ❌                                       | ✅ (DB事前DL)                                      |
 | 料金             | 無料                                                        | フリーミアム                            | 無料                                              |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ Trivy を採用する。** OSS・無料で IaC + コンテナ + SBOM + シークレット検出を一つでカバーでき、スキャン範囲が最も広い。
 
 - 脆弱性の修正 PR を自動生成したい / 商用サポートが必要な場合は Snyk を検討
 - コンテナイメージ特化で Syft と組み合わせた SBOM ベーススキャンが必要な場合は Grype を検討
 
-## シークレット検出: gitleaks vs detect-secrets vs truffleHog
+## Secret Detection: gitleaks vs detect-secrets vs truffleHog
 
 | 比較項目         | gitleaks                                                  | detect-secrets                                                | truffleHog                                                                  |
 | ---------------- | --------------------------------------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------- |
@@ -123,7 +124,7 @@
 | 実行速度         | 高速                                                      | 中程度                                                        | 高速                                                                        |
 | 誤検知率         | 低い                                                      | 中程度                                                        | 低い                                                                        |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ gitleaks + detect-secrets を併用する。** gitleaks で Git 履歴を含む包括スキャン、detect-secrets で pre-commit 時のステージング検出を行い、多層防御を実現する。
 
@@ -144,11 +145,11 @@
 | permissions 検証     | ⚠️ 限定的                                                | ✅                                                                     | ✅                                                         |
 | Action ピン留め      | ❌                                                       | ✅                                                                     | ✅                                                         |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ 3つ全て併用する。** 検出対象が異なるため、組み合わせることでカバレッジが最大化される。actionlint (構文・型) + ghalint (セキュリティプラクティス) + zizmor (セキュリティ設定)。
 
-## GitHub Actions ピン留め: pinact vs pin-github-action vs Renovate
+## GitHub Actions Pinning: pinact vs pin-github-action vs Renovate
 
 | 比較項目   | pinact                                                              | pin-github-action                                                     | Renovate (pinDigests)                                           |
 | ---------- | ------------------------------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------- |
@@ -159,11 +160,11 @@
 | 一括変換   | ✅                                                                   | ✅                                                                     | ❌ (PR ベース)                                                   |
 | 自動更新   | ❌ (Renovate と併用)                                                 | ❌                                                                     | ✅                                                               |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ pinact + Renovate を併用する。** pinact で既存ワークフローを一括ピン留めし、Renovate (pinDigests) で継続的に SHA を自動更新する。
 
-## PR レビュー自動化: reviewdog vs GitHub Code Scanning vs SonarQube
+## PR Review Automation: reviewdog vs GitHub Code Scanning vs SonarQube
 
 | 比較項目     | reviewdog                                                     | GitHub Code Scanning           | SonarQube                                                         |
 | ------------ | ------------------------------------------------------------- | ------------------------------ | ----------------------------------------------------------------- |
@@ -175,14 +176,14 @@
 | セルフホスト | 不要 (CI 内実行)                                              | 不要                           | 必要 (or Cloud版)                                                 |
 | 料金         | 無料                                                          | 無料 (Public) / 有料 (Private) | 有料 (Community版は無料)                                          |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ reviewdog を採用する。** 任意のリンターと組み合わせて PR インラインコメントを生成でき、無料・軽量・導入が容易。
 
 - コード品質メトリクス (技術的負債、重複率等) を組織全体で追跡したい場合は SonarQube を検討
 - SARIF 形式で Security タブに一元集約したい場合は GitHub Code Scanning を検討
 
-## コードカバレッジ: Codecov vs Coveralls vs SonarQube
+## Code Coverage: Codecov vs Coveralls vs SonarQube
 
 | 比較項目                  | Codecov                                                             | Coveralls                                                                   | SonarQube                                                         |
 | ------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------- |
@@ -195,26 +196,26 @@
 | OIDC 認証                 | ✅                                                                   | ❌                                                                           | ❌                                                                 |
 | 料金                      | 無料 (Public) / 有料 (Private)                                      | 無料 (Public) / 有料                                                        | 有料 (Community版は無料)                                          |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ Codecov を採用する。** OIDC 対応でトークンレス運用が可能、PR 差分カバレッジの可視化が優秀、コンポーネント別分割管理に対応。
 
 - カバレッジだけでなくコード品質全体を一元管理したい場合は SonarQube を検討
 
-## Git Hooks フレームワーク: pre-commit
+## Git Hooks Framework: pre-commit
 
-| 比較項目 | pre-commit |
-|---|---|
-| 提供元 | pre-commit |
-| リポジトリ | [pre-commit/pre-commit](https://github.com/pre-commit/pre-commit) |
-| ライセンス | MIT |
-| 実装言語 | Python |
-| 対応フック | 任意言語 (YAML で定義) |
-| マルチ言語対応 | ✅ (Go, Python, Node.js, Shell 等) |
-| キャッシュ | ✅ (フック環境を自動キャッシュ) |
-| CI 統合 | ✅ (`pre-commit run --all-files`) |
+| 比較項目       | pre-commit                                                        |
+| -------------- | ----------------------------------------------------------------- |
+| 提供元         | pre-commit                                                        |
+| リポジトリ     | [pre-commit/pre-commit](https://github.com/pre-commit/pre-commit) |
+| ライセンス     | MIT                                                               |
+| 実装言語       | Python                                                            |
+| 対応フック     | 任意言語 (YAML で定義)                                            |
+| マルチ言語対応 | ✅ (Go, Python, Node.js, Shell 等)                                 |
+| キャッシュ     | ✅ (フック環境を自動キャッシュ)                                    |
+| CI 統合        | ✅ (`pre-commit run --all-files`)                                  |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ pre-commit を採用する。** Git hooks のデファクトスタンダード。言語を問わず任意のリンター・フォーマッターを pre-commit/pre-push フックとして統一管理できる。代替ツール (husky + lint-staged 等) は Node.js 特化のため、多言語プロジェクトでは pre-commit が最適。
 
@@ -235,7 +236,7 @@
 | 料金 (Public)        | 無料                                      | 無料 (400分/月)                                           | 無料 (制限あり)        | 無料 (セルフホスト)                                       |
 | 料金 (Private)       | 2,000分/月〜                              | 400分/月〜                                                | 6,000分/月〜           | 無料 (セルフホスト)                                       |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ GitHub Actions を採用する。** GitHub をソースコード管理に使っている場合、最も統合がシームレスで学習コストが低い。Reusable Workflows による共通化、OIDC によるセキュアな認証、Marketplace の豊富な Actions が利用可能。
 

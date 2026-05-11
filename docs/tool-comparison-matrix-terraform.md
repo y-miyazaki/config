@@ -1,23 +1,23 @@
 <!-- omit in toc -->
-# ツール比較マトリクス (Terraform)
+# Tool Comparison Matrix (Terraform)
 
 Terraform / IaC に特化したツール選定の判断材料。
 
 <!-- omit in toc -->
 ## Table of Contents
 
-- [Lint / セキュリティ: tflint vs checkov vs tfsec](#lint--セキュリティ-tflint-vs-checkov-vs-tfsec)
-  - [選定ガイドライン](#選定ガイドライン)
+- [Lint / Security: tflint vs checkov vs tfsec](#lint--security-tflint-vs-checkov-vs-tfsec)
+  - [Guidelines](#Guidelines)
 - [IaC: Terraform vs OpenTofu vs Pulumi](#iac-terraform-vs-opentofu-vs-pulumi)
-  - [選定ガイドライン](#選定ガイドライン-1)
-- [Plan コメント: tfcmt vs tfnotify vs Atlantis](#plan-コメント-tfcmt-vs-tfnotify-vs-atlantis)
-  - [選定ガイドライン](#選定ガイドライン-2)
-- [ドキュメント生成: terraform-docs](#ドキュメント生成-terraform-docs)
-  - [選定ガイドライン](#選定ガイドライン-3)
-- [テスト: terraform test vs Terratest vs tftest](#テスト-terraform-test-vs-terratest-vs-tftest)
-  - [選定ガイドライン](#選定ガイドライン-4)
+  - [Guidelines](#Guidelines-1)
+- [Plan Comment: tfcmt vs tfnotify vs Atlantis](#plan-comment-tfcmt-vs-tfnotify-vs-atlantis)
+  - [Guidelines](#Guidelines-2)
+- [Documentation: terraform-docs](#documentation-terraform-docs)
+  - [Guidelines](#Guidelines-3)
+- [Testing: terraform test vs Terratest vs tftest](#testing-terraform-test-vs-terratest-vs-tftest)
+  - [Guidelines](#Guidelines-4)
 
-## Lint / セキュリティ: tflint vs checkov vs tfsec
+## Lint / Security: tflint vs checkov vs tfsec
 
 | 比較項目         | tflint                                                                  | checkov                                                         | tfsec (非推奨→Trivy統合)                                    |
 | ---------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------- |
@@ -30,7 +30,7 @@ Terraform / IaC に特化したツール選定の判断材料。
 | 自動修正         | ✅ `--fix`                                                               | ❌                                                               | ❌                                                           |
 | 現在の状態       | アクティブ                                                              | アクティブ                                                      | Trivy に統合済み                                            |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ tflint + Trivy を併用する。** tflint で構文・スタイル・非推奨リソースを検出し、Trivy でセキュリティスキャンをカバーする。tfsec は Trivy に統合済みのため新規採用は不要。
 
@@ -50,14 +50,14 @@ Terraform / IaC に特化したツール選定の判断材料。
 | 移行コスト            | -                                                             | 低い (ほぼ互換)                                           | 高い (書き直し)                                   |
 | CI ツール連携         | tfcmt, Atlantis 等豊富                                        | Terraform 互換ツール利用可                                | 独自 CI 統合                                      |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ Terraform を採用する。** エコシステムが最も成熟しており、Provider 数・周辺ツール (tfcmt, tflint 等) の充実度で優位。
 
 - OSS ライセンスが必須要件の場合は OpenTofu を採用 (Terraform からの移行は容易)
 - プログラミング言語で IaC を書きたい / ユニットテスト・型安全性を重視する場合は Pulumi を検討
 
-## Plan コメント: tfcmt vs tfnotify vs Atlantis
+## Plan Comment: tfcmt vs tfnotify vs Atlantis
 
 | 比較項目         | tfcmt                                                             | tfnotify                                                | Atlantis                                                        |
 | ---------------- | ----------------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------- |
@@ -71,13 +71,13 @@ Terraform / IaC に特化したツール選定の判断材料。
 | メンテナンス状況 | アクティブ                                                        | メンテナンスモード                                      | アクティブ                                                      |
 | 運用コスト       | なし (CI ジョブ内実行)                                            | なし                                                    | サーバー運用コスト                                              |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ tfcmt を採用する。** CI ワークフロー内で軽量に plan 結果を PR コメントでき、サーバー運用不要。tfnotify の後継的位置づけでアクティブにメンテナンスされている。
 
 - PR コメントから apply まで自動化したい / 複数環境の plan/apply をチームで統制したい場合は Atlantis を検討
 
-## ドキュメント生成: terraform-docs
+## Documentation: terraform-docs
 
 | 比較項目        | terraform-docs                                                                    |
 | --------------- | --------------------------------------------------------------------------------- |
@@ -89,11 +89,11 @@ Terraform / IaC に特化したツール選定の判断材料。
 | pre-commit 対応 | ✅                                                                                 |
 | README 自動更新 | ✅ (マーカーコメント間を自動置換)                                                  |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ terraform-docs を採用する。** Terraform モジュールの variables / outputs / providers を自動でドキュメント化する唯一のデファクトツール。pre-commit と組み合わせて README を常に最新に保てる。
 
-## テスト: terraform test vs Terratest vs tftest
+## Testing: terraform test vs Terratest vs tftest
 
 | 比較項目 | terraform test | Terratest | tftest (pytest) |
 |---|---|---|---|
@@ -109,7 +109,7 @@ Terraform / IaC に特化したツール選定の判断材料。
 | 柔軟性 | 中程度 | 非常に高い (任意の Go コード) | 中程度 |
 | マルチクラウド検証 | ✅ | ✅ (HTTP, SSH, K8s 等も可) | ✅ |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ terraform test を採用する。** Terraform 組み込みで追加依存なし、HCL で記述でき学習コストが低い。plan のみのテストやモックにも対応しており、モジュールの単体テストに最適。
 

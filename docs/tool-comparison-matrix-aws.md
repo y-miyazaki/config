@@ -1,21 +1,21 @@
 <!-- omit in toc -->
-# ツール比較マトリクス (AWS)
+# Tool Comparison Matrix (AWS)
 
 AWS に特化したツール選定の判断材料。
 
 <!-- omit in toc -->
 ## Table of Contents
 
-- [ECS デプロイ: ecspresso vs Copilot vs CDK](#ecs-デプロイ-ecspresso-vs-copilot-vs-cdk)
-  - [選定ガイドライン](#選定ガイドライン)
-- [サーバーレス: SAM vs Serverless Framework vs CloudFormation](#サーバーレス-sam-vs-serverless-framework-vs-cloudformation)
-  - [選定ガイドライン](#選定ガイドライン-1)
-- [シークレット暗号化: sops vs Vault vs AWS Secrets Manager](#シークレット暗号化-sops-vs-vault-vs-aws-secrets-manager)
-  - [選定ガイドライン](#選定ガイドライン-2)
-- [ECS スケジュールタスク: ecschedule](#ecs-スケジュールタスク-ecschedule)
-  - [選定ガイドライン](#選定ガイドライン-3)
+- [ECS Deploy: ecspresso vs Copilot vs CDK](#ecs-deploy-ecspresso-vs-copilot-vs-cdk)
+  - [Guidelines](#Guidelines)
+- [Serverless: SAM vs Serverless Framework vs CloudFormation](#serverless-sam-vs-serverless-framework-vs-cloudformation)
+  - [Guidelines](#Guidelines-1)
+- [Secret Encryption: sops vs Vault vs AWS Secrets Manager](#secret-encryption-sops-vs-vault-vs-aws-secrets-manager)
+  - [Guidelines](#Guidelines-2)
+- [ECS Scheduled Tasks: ecschedule](#ecs-scheduled-tasks-ecschedule)
+  - [Guidelines](#Guidelines-3)
 
-## ECS デプロイ: ecspresso vs Copilot vs CDK
+## ECS Deploy: ecspresso vs Copilot vs CDK
 
 | 比較項目            | ecspresso                                             | AWS Copilot                                           | AWS CDK                                       |
 | ------------------- | ----------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------- |
@@ -30,14 +30,14 @@ AWS に特化したツール選定の判断材料。
 | Terraform 連携      | ✅ (tfstate参照可能)                                   | ❌                                                     | ⚠️ (別管理)                                    |
 | CI/CD 統合          | シンプル (CLI実行のみ)                                | 組み込みパイプライン                                  | 組み込みパイプライン                          |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ ecspresso を採用する。** Terraform でインフラ管理しつつ ECS デプロイのみ軽量に行える。CI パイプラインに CLI を組み込むだけで完結し、学習コストが低い。
 
 - Terraform を使わず ECS の構築からデプロイまで一気通貫で管理したい場合は AWS Copilot を検討
 - 複雑なデプロイパターン (Blue/Green等) をプログラミング言語で制御したい場合は CDK を検討
 
-## サーバーレス: SAM vs Serverless Framework vs CloudFormation
+## Serverless: SAM vs Serverless Framework vs CloudFormation
 
 | 比較項目            | AWS SAM                                               | Serverless Framework                                              | CloudFormation (直接) |
 | ------------------- | ----------------------------------------------------- | ----------------------------------------------------------------- | --------------------- |
@@ -52,14 +52,14 @@ AWS に特化したツール選定の判断材料。
 | CloudFormation 互換 | ✅ (上位互換)                                          | ❌ (独自変換)                                                      | ✅ (そのもの)          |
 | 料金                | 無料                                                  | 無料 (v4 は有料プランあり)                                        | 無料                  |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ AWS SAM を採用する。** AWS 公式でローカル実行・ホットリロードに対応し、CloudFormation の上位互換として既存知識を活用できる。Lambda 中心のサーバーレス開発に最適。
 
 - マルチクラウド対応が必要 / プラグインエコシステムを活用したい場合は Serverless Framework を検討
 - SAM/Serverless を使わず Terraform で Lambda を管理する構成も有効 (インフラ全体を Terraform に統一したい場合)
 
-## シークレット暗号化: sops vs Vault vs AWS Secrets Manager
+## Secret Encryption: sops vs Vault vs AWS Secrets Manager
 
 | 比較項目       | sops                                            | HashiCorp Vault                                       | AWS Secrets Manager |
 | -------------- | ----------------------------------------------- | ----------------------------------------------------- | ------------------- |
@@ -73,13 +73,13 @@ AWS に特化したツール選定の判断材料。
 | アクセス制御   | KMS ポリシー                                    | 詳細なポリシー                                        | IAM ポリシー        |
 | Terraform 連携 | ✅ (sops provider)                               | ✅ (vault provider)                                    | ✅ (data source)     |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ sops + AWS Secrets Manager を併用する。** sops で IaC の変数ファイル (tfvars 等) を Git 管理しつつ暗号化、Secrets Manager でアプリケーション実行時のシークレット取得を行う。
 
 - 動的シークレット生成・詳細な監査ログが必要な大規模組織では Vault を検討
 
-## ECS スケジュールタスク: ecschedule
+## ECS Scheduled Tasks: ecschedule
 
 | 比較項目 | ecschedule |
 |---|---|
@@ -92,6 +92,6 @@ AWS に特化したツール選定の判断材料。
 | Terraform 連携 | ✅ (tfstate 参照) |
 | CI/CD 統合 | シンプル (CLI実行のみ) |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ ecschedule を採用する。** ecspresso と同じ思想で ECS スケジュールタスクを管理する軽量ツール。ecspresso と組み合わせることで ECS サービス + スケジュールタスクを統一的に管理できる。

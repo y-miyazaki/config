@@ -1,29 +1,29 @@
 <!-- omit in toc -->
-# ツール比較マトリクス (Go)
+# Tool Comparison Matrix (Go)
 
 Go 開発に特化したツール選定の判断材料。
 
 <!-- omit in toc -->
 ## Table of Contents
 
-- [フォーマッター: gofumpt vs gofmt vs goimports](#フォーマッター-gofumpt-vs-gofmt-vs-goimports)
-  - [選定ガイドライン](#選定ガイドライン)
+- [Formatter: gofumpt vs gofmt vs goimports](#formatter-gofumpt-vs-gofmt-vs-goimports)
+  - [Guidelines](#Guidelines)
 - [Linter: golangci-lint vs staticcheck vs go vet](#linter-golangci-lint-vs-staticcheck-vs-go-vet)
-  - [選定ガイドライン](#選定ガイドライン-1)
-- [コンテナビルド: ko vs Docker vs kaniko](#コンテナビルド-ko-vs-docker-vs-kaniko)
-  - [選定ガイドライン](#選定ガイドライン-2)
-- [リリース自動化: goreleaser vs GitHub Releases vs semantic-release](#リリース自動化-goreleaser-vs-github-releases-vs-semantic-release)
-  - [選定ガイドライン](#選定ガイドライン-3)
-- [API ドキュメント生成: swag vs go-swagger vs oapi-codegen](#api-ドキュメント生成-swag-vs-go-swagger-vs-oapi-codegen)
-  - [選定ガイドライン](#選定ガイドライン-4)
+  - [Guidelines](#Guidelines-1)
+- [Container Build: ko vs Docker vs kaniko](#container-build-ko-vs-docker-vs-kaniko)
+  - [Guidelines](#Guidelines-2)
+- [Release Automation: goreleaser vs GitHub Releases vs semantic-release](#release-automation-goreleaser-vs-github-releases-vs-semantic-release)
+  - [Guidelines](#Guidelines-3)
+- [API Documentation: swag vs go-swagger vs oapi-codegen](#api-documentation-swag-vs-go-swagger-vs-oapi-codegen)
+  - [Guidelines](#Guidelines-4)
 - [Protocol Buffers: buf](#protocol-buffers-buf)
-  - [選定ガイドライン](#選定ガイドライン-5)
-- [ライブリロード: air](#ライブリロード-air)
-  - [選定ガイドライン](#選定ガイドライン-6)
-- [脆弱性スキャン (Go): govulncheck](#脆弱性スキャン-go-govulncheck)
-  - [選定ガイドライン](#選定ガイドライン-7)
+  - [Guidelines](#Guidelines-5)
+- [Live Reload: air](#live-reload-air)
+  - [Guidelines](#Guidelines-6)
+- [Vulnerability Scanning (Go): govulncheck](#vulnerability-scanning-go-govulncheck)
+  - [Guidelines](#Guidelines-7)
 
-## フォーマッター: gofumpt vs gofmt vs goimports
+## Formatter: gofumpt vs gofmt vs goimports
 
 | 比較項目           | gofumpt                                           | gofmt                                     | goimports                                       |
 | ------------------ | ------------------------------------------------- | ----------------------------------------- | ----------------------------------------------- |
@@ -36,7 +36,7 @@ Go 開発に特化したツール選定の判断材料。
 | import 整理        | ❌                                                 | ❌                                         | ✅                                               |
 | golangci-lint 統合 | ✅                                                 | ✅                                         | ✅                                               |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ gofumpt を採用する。** gofmt の上位互換で、より厳格なルールによりチーム内のスタイルが統一される。golangci-lint 経由で実行可能。
 
@@ -57,11 +57,11 @@ Go 開発に特化したツール選定の判断材料。
 | staticcheck 含む | ✅                                                                   | -                                                         | ❌                                         |
 | go vet 含む      | ✅                                                                   | ❌                                                         | -                                         |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ golangci-lint を採用する。** staticcheck・go vet を含む 100+ のリンターを一括管理でき、差分チェック・キャッシュ・自動修正に対応。これ一つで十分。
 
-## コンテナビルド: ko vs Docker vs kaniko
+## Container Build: ko vs Docker vs kaniko
 
 | 比較項目        | ko                                            | Docker (BuildKit)                                 | kaniko                                                                        |
 | --------------- | --------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------- |
@@ -74,14 +74,14 @@ Go 開発に特化したツール選定の判断材料。
 | CI での特権不要 | ✅                                             | ❌ (Docker daemon 必要)                            | ✅                                                                             |
 | イメージサイズ  | 最小 (distroless ベース)                      | Dockerfile 依存                                   | Dockerfile 依存                                                               |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ Go アプリケーションには ko を採用する。** Dockerfile 不要で高速・最小イメージ・CI で特権不要。
 
 - Go 以外の言語を含む / 複雑なビルドステップが必要な場合は Docker を使用
 - Docker daemon なしで任意の Dockerfile をビルドしたい場合は kaniko を使用
 
-## リリース自動化: goreleaser vs GitHub Releases vs semantic-release
+## Release Automation: goreleaser vs GitHub Releases vs semantic-release
 
 | 比較項目         | goreleaser                                                        | GitHub Releases (手動) | semantic-release                                                                          |
 | ---------------- | ----------------------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
@@ -96,13 +96,13 @@ Go 開発に特化したツール選定の判断材料。
 | Docker イメージ  | ✅ ビルド+プッシュ                                                 | 別途設定               | 別途設定                                                                                  |
 | Homebrew 連携    | ✅                                                                 | ❌                      | ❌                                                                                         |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ Go プロジェクトには goreleaser を採用する。** クロスコンパイル + マルチプラットフォーム配布 + Docker イメージ + Homebrew を一括管理できる。
 
 - Go 以外の言語で Conventional Commits ベースの自動バージョニングが欲しい場合は semantic-release を検討
 
-## API ドキュメント生成: swag vs go-swagger vs oapi-codegen
+## API Documentation: swag vs go-swagger vs oapi-codegen
 
 | 比較項目         | swag                                          | go-swagger                                                        | oapi-codegen                                                              |
 | ---------------- | --------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------- |
@@ -115,7 +115,7 @@ Go 開発に特化したツール選定の判断材料。
 | 型安全性         | 中程度 (アノテーション依存)                   | 高い                                                              | 高い                                                                      |
 | スキーマ駆動開発 | ❌ (コードファースト)                          | ✅                                                                 | ✅ (スキーマファースト)                                                    |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ oapi-codegen を採用する (スキーマファースト)。** API 設計を先に行い、型安全なコードを自動生成する。spec が Single Source of Truth となりチーム開発に最適。
 
@@ -135,11 +135,11 @@ Go 開発に特化したツール選定の判断材料。
 | BSR (レジストリ) | ✅ (Buf Schema Registry) |
 | protoc 代替 | ✅ (`buf generate`) |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ buf を採用する。** protobuf 開発のオールインワンツール。Lint・Format・Breaking Change 検出・コード生成を統一管理でき、protoc を直接使うより開発体験が大幅に向上する。
 
-## ライブリロード: air
+## Live Reload: air
 
 | 比較項目 | air |
 |---|---|
@@ -152,11 +152,11 @@ Go 開発に特化したツール選定の判断材料。
 | ファイル除外 | ✅ (glob パターン) |
 | ログカラー | ✅ |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ air を採用する。** Go のローカル開発でファイル変更時に自動リビルド・再起動を行うデファクトツール。設定が `.air.toml` で宣言的に管理でき、チームで統一しやすい。
 
-## 脆弱性スキャン (Go): govulncheck
+## Vulnerability Scanning (Go): govulncheck
 
 | 比較項目 | govulncheck |
 |---|---|
@@ -169,6 +169,6 @@ Go 開発に特化したツール選定の判断材料。
 | JSON 出力 | ✅ |
 | CI 統合 | ✅ (`go install` で導入可能) |
 
-### 選定ガイドライン
+### Guidelines
 
 **→ govulncheck を採用する。** Go 公式の脆弱性スキャナー。到達可能性分析により誤検知が少なく、実際に影響のある脆弱性のみを報告する。Trivy と併用することで多層防御を実現。
