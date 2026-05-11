@@ -30,8 +30,10 @@
   - [選定ガイドライン](#選定ガイドライン-6)
 - [コードカバレッジ: Codecov vs Coveralls vs SonarQube](#コードカバレッジ-codecov-vs-coveralls-vs-sonarqube)
   - [選定ガイドライン](#選定ガイドライン-7)
-- [CI/CD: GitHub Actions vs GitLab CI vs CircleCI vs Jenkins](#cicd-github-actions-vs-gitlab-ci-vs-circleci-vs-jenkins)
+- [Git Hooks フレームワーク: pre-commit](#git-hooks-フレームワーク-pre-commit)
   - [選定ガイドライン](#選定ガイドライン-8)
+- [CI/CD: GitHub Actions vs GitLab CI vs CircleCI vs Jenkins](#cicd-github-actions-vs-gitlab-ci-vs-circleci-vs-jenkins)
+  - [選定ガイドライン](#選定ガイドライン-9)
 
 ## 依存関係更新: Renovate vs Dependabot
 
@@ -198,6 +200,23 @@
 **→ Codecov を採用する。** OIDC 対応でトークンレス運用が可能、PR 差分カバレッジの可視化が優秀、コンポーネント別分割管理に対応。
 
 - カバレッジだけでなくコード品質全体を一元管理したい場合は SonarQube を検討
+
+## Git Hooks フレームワーク: pre-commit
+
+| 比較項目 | pre-commit |
+|---|---|
+| 提供元 | pre-commit |
+| リポジトリ | [pre-commit/pre-commit](https://github.com/pre-commit/pre-commit) |
+| ライセンス | MIT |
+| 実装言語 | Python |
+| 対応フック | 任意言語 (YAML で定義) |
+| マルチ言語対応 | ✅ (Go, Python, Node.js, Shell 等) |
+| キャッシュ | ✅ (フック環境を自動キャッシュ) |
+| CI 統合 | ✅ (`pre-commit run --all-files`) |
+
+### 選定ガイドライン
+
+**→ pre-commit を採用する。** Git hooks のデファクトスタンダード。言語を問わず任意のリンター・フォーマッターを pre-commit/pre-push フックとして統一管理できる。代替ツール (husky + lint-staged 等) は Node.js 特化のため、多言語プロジェクトでは pre-commit が最適。
 
 ## CI/CD: GitHub Actions vs GitLab CI vs CircleCI vs Jenkins
 

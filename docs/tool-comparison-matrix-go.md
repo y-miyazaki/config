@@ -16,6 +16,12 @@ Go 開発に特化したツール選定の判断材料。
   - [選定ガイドライン](#選定ガイドライン-3)
 - [API ドキュメント生成: swag vs go-swagger vs oapi-codegen](#api-ドキュメント生成-swag-vs-go-swagger-vs-oapi-codegen)
   - [選定ガイドライン](#選定ガイドライン-4)
+- [Protocol Buffers: buf](#protocol-buffers-buf)
+  - [選定ガイドライン](#選定ガイドライン-5)
+- [ライブリロード: air](#ライブリロード-air)
+  - [選定ガイドライン](#選定ガイドライン-6)
+- [脆弱性スキャン (Go): govulncheck](#脆弱性スキャン-go-govulncheck)
+  - [選定ガイドライン](#選定ガイドライン-7)
 
 ## フォーマッター: gofumpt vs gofmt vs goimports
 
@@ -114,3 +120,55 @@ Go 開発に特化したツール選定の判断材料。
 **→ oapi-codegen を採用する (スキーマファースト)。** API 設計を先に行い、型安全なコードを自動生成する。spec が Single Source of Truth となりチーム開発に最適。
 
 - 既存コードからドキュメントを生成したい (コードファースト) 場合は swag を検討
+
+## Protocol Buffers: buf
+
+| 比較項目 | buf |
+|---|---|
+| 提供元 | Buf Technologies |
+| リポジトリ | [bufbuild/buf](https://github.com/bufbuild/buf) |
+| ライセンス | Apache 2.0 |
+| 用途 | protobuf の Lint / Format / Breaking Change 検出 / コード生成管理 |
+| Lint | ✅ (スタイル・命名規則) |
+| Format | ✅ |
+| Breaking Change 検出 | ✅ |
+| BSR (レジストリ) | ✅ (Buf Schema Registry) |
+| protoc 代替 | ✅ (`buf generate`) |
+
+### 選定ガイドライン
+
+**→ buf を採用する。** protobuf 開発のオールインワンツール。Lint・Format・Breaking Change 検出・コード生成を統一管理でき、protoc を直接使うより開発体験が大幅に向上する。
+
+## ライブリロード: air
+
+| 比較項目 | air |
+|---|---|
+| 提供元 | air-verse |
+| リポジトリ | [air-verse/air](https://github.com/air-verse/air) |
+| ライセンス | GPL-3.0 |
+| 用途 | Go アプリケーションのライブリロード (ファイル変更検知→自動リビルド) |
+| 設定ファイル | `.air.toml` |
+| カスタムビルドコマンド | ✅ |
+| ファイル除外 | ✅ (glob パターン) |
+| ログカラー | ✅ |
+
+### 選定ガイドライン
+
+**→ air を採用する。** Go のローカル開発でファイル変更時に自動リビルド・再起動を行うデファクトツール。設定が `.air.toml` で宣言的に管理でき、チームで統一しやすい。
+
+## 脆弱性スキャン (Go): govulncheck
+
+| 比較項目 | govulncheck |
+|---|---|
+| 提供元 | Go 公式 |
+| リポジトリ | [golang/vuln](https://github.com/golang/vuln) |
+| ライセンス | BSD-3-Clause |
+| 用途 | Go モジュールの既知脆弱性検出 |
+| 脆弱性 DB | Go Vulnerability Database (公式) |
+| 到達可能性分析 | ✅ (実際に呼ばれるコードパスのみ報告) |
+| JSON 出力 | ✅ |
+| CI 統合 | ✅ (`go install` で導入可能) |
+
+### 選定ガイドライン
+
+**→ govulncheck を採用する。** Go 公式の脆弱性スキャナー。到達可能性分析により誤検知が少なく、実際に影響のある脆弱性のみを報告する。Trivy と併用することで多層防御を実現。

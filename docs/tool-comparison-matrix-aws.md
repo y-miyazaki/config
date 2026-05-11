@@ -12,6 +12,8 @@ AWS に特化したツール選定の判断材料。
   - [選定ガイドライン](#選定ガイドライン-1)
 - [シークレット暗号化: sops vs Vault vs AWS Secrets Manager](#シークレット暗号化-sops-vs-vault-vs-aws-secrets-manager)
   - [選定ガイドライン](#選定ガイドライン-2)
+- [ECS スケジュールタスク: ecschedule](#ecs-スケジュールタスク-ecschedule)
+  - [選定ガイドライン](#選定ガイドライン-3)
 
 ## ECS デプロイ: ecspresso vs Copilot vs CDK
 
@@ -76,3 +78,20 @@ AWS に特化したツール選定の判断材料。
 **→ sops + AWS Secrets Manager を併用する。** sops で IaC の変数ファイル (tfvars 等) を Git 管理しつつ暗号化、Secrets Manager でアプリケーション実行時のシークレット取得を行う。
 
 - 動的シークレット生成・詳細な監査ログが必要な大規模組織では Vault を検討
+
+## ECS スケジュールタスク: ecschedule
+
+| 比較項目 | ecschedule |
+|---|---|
+| 提供元 | Songmu |
+| リポジトリ | [Songmu/ecschedule](https://github.com/Songmu/ecschedule) |
+| ライセンス | MIT |
+| 用途 | ECS Scheduled Tasks (EventBridge + ECS) のデプロイ管理 |
+| 設定形式 | YAML |
+| ecspresso 連携 | ✅ (タスク定義を共有可能) |
+| Terraform 連携 | ✅ (tfstate 参照) |
+| CI/CD 統合 | シンプル (CLI実行のみ) |
+
+### 選定ガイドライン
+
+**→ ecschedule を採用する。** ecspresso と同じ思想で ECS スケジュールタスクを管理する軽量ツール。ecspresso と組み合わせることで ECS サービス + スケジュールタスクを統一的に管理できる。
