@@ -185,22 +185,6 @@
 
 - **Codecov (このリポジトリ)**: OIDC 対応でトークンレス運用可能。PR 差分カバレッジの可視化が優秀
 
-## シェルスクリプト: shfmt + shellcheck vs beautysh
-
-| 比較項目           | shfmt            | shellcheck                 | beautysh         |
-| ------------------ | ---------------- | -------------------------- | ---------------- |
-| 用途               | フォーマッター   | 静的解析 (Lint)            | フォーマッター   |
-| 実装言語           | Go               | Haskell                    | Python           |
-| 自動修正           | ✅                | ⚠️ (一部提案のみ)           | ✅                |
-| バグ検出           | ❌                | ✅ (未定義変数、引用漏れ等) | ❌                |
-| POSIX 準拠チェック | ✅                | ✅                          | ❌                |
-| pre-commit 対応    | ✅                | ✅                          | ✅                |
-| 補完関係           | フォーマット担当 | Lint 担当                  | フォーマット担当 |
-
-### 選定ガイドライン
-
-- **shfmt + shellcheck 併用 (このリポジトリ)**: shfmt でフォーマット統一、shellcheck でバグ検出。役割が異なるため併用が最適
-
 ## シークレット暗号化: sops vs Vault vs AWS Secrets Manager
 
 | 比較項目       | sops                         | HashiCorp Vault     | AWS Secrets Manager |
