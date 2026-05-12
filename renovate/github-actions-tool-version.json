@@ -152,5 +152,14 @@
       "datasourceTemplate": "github-releases",
       "extractVersionTemplate": "^v(?<version>.*)$"
     }
+  ],
+  "packageRules": [
+    {
+      "description": "Update tool versions in GitHub Actions workflow inputs",
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": [".github/workflows/**"],
+      "commitMessagePrefix": "renovate(github-actions-tool-version):",
+      "addLabels": ["github-actions-tool-version"]
+    }
   ]
 }

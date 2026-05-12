@@ -3,7 +3,7 @@
   "extends": [
     "config:best-practices",
     "github>aquaproj/aqua-renovate-config#2.12.0",
-    "github>y-miyazaki/config//renovate/custom-managers",
+    "github>y-miyazaki/config//renovate/github-actions-tool-version",
     "mergeConfidence:age-confidence-badges"
   ],
   "timezone": "Asia/Tokyo",
