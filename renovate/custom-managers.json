@@ -115,7 +115,7 @@
       "matchStrings": ["govulncheck_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"],
       "depNameTemplate": "golang/vuln",
       "datasourceTemplate": "github-releases",
-      "extractVersionTemplate": "^gopls/(?<version>.*)$|^v(?<version>.*)$"
+      "extractVersionTemplate": "^v(?<version>.*)$"
     },
     {
       "description": "Update Go version in workflow inputs",
