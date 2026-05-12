@@ -7,80 +7,56 @@
   ],
   "timezone": "Asia/Tokyo",
   "dependencyDashboard": true,
-  "separateMajorMinor": true,
   "prConcurrentLimit": 10,
-  "minimumReleaseAge": "7 days",
   "labels": ["dependencies"],
   "packageRules": [
     {
-      "description": "[matchManagers: dockerfile] Update Dockerfile base images daily",
-      "matchManagers": ["dockerfile"],
-      "schedule": ["at any time"],
-      "commitMessagePrefix": "renovate(docker):",
-      "labels": ["dependencies", "docker"],
-      "enabled": false
-    },
-    {
-      "description": "[matchManagers: github-actions] Update GitHub Actions weekly on Monday at 4am",
-      "matchManagers": ["github-actions"],
-      "schedule": ["before 5am on monday"],
-      "commitMessagePrefix": "renovate(github-actions):",
-      "labels": ["dependencies", "github-actions"]
-    },
-    {
-      "description": "[matchManagers: gomod] Update Go module dependencies daily",
-      "matchManagers": ["gomod"],
-      "schedule": ["at any time"],
-      "commitMessagePrefix": "renovate(gomod):",
-      "labels": ["dependencies", "gomod"],
-      "postUpdateOptions": ["gomodTidy"],
-      "enabled": false
-    },
-    {
-      "description": "[matchManagers: npm] Update npm packages daily",
-      "matchManagers": ["npm"],
-      "schedule": ["at any time"],
-      "commitMessagePrefix": "renovate(npm):",
-      "labels": ["dependencies", "npm"],
-      "enabled": false
-    },
-    {
-      "description": "[matchManagers: npm, matchUpdateTypes: major] Skip npm major version updates to avoid breaking changes",
-      "matchManagers": ["npm"],
-      "matchUpdateTypes": ["major"],
-      "enabled": false
-    },
-    {
-      "description": "[matchManagers: regex, matchFileNames: aqua.yaml] Update aqua packages weekly on Monday at 4am",
+      "description": "Update aqua packages",
       "matchManagers": ["regex"],
       "matchFileNames": ["aqua.yaml"],
-      "schedule": ["before 5am on monday"],
       "commitMessagePrefix": "renovate(aqua):",
-      "labels": ["dependencies", "aqua"]
+      "addLabels": ["aqua"]
     },
     {
-      "description": "[matchManagers: terraform] Update Terraform providers and modules daily in configured infrastructure paths",
-      "matchManagers": ["terraform"],
-      "matchFileNames": [
-        "modules/aws/**",
-        "terraform/application/**",
-        "terraform/base/**",
-        "terraform/management/audit/**",
-        "terraform/management/root/**",
-        "terraform/monitor/**"
-      ],
-      "schedule": ["at any time"],
-      "commitMessagePrefix": "renovate(terraform):",
-      "labels": ["dependencies", "terraform"],
-      "enabled": false
-    },
-    {
-      "description": "[matchPackageNames: aquaproj/aqua-registry] Limit aqua-registry updates to weekly on Monday at 4am to reduce noise from frequent releases",
+      "description": "Limit aqua-registry updates to reduce noise from frequent releases",
       "matchPackageNames": ["aquaproj/aqua-registry"],
-      "schedule": ["before 5am on monday"]
+      "commitMessagePrefix": "renovate(aqua):",
+      "addLabels": ["aqua"]
     },
     {
-      "description": "[matchUpdateTypes: patch, pin, digest] Auto-merge low-risk updates after checks pass",
+      "description": "Update Dockerfile base images",
+      "matchManagers": ["dockerfile"],
+      "commitMessagePrefix": "renovate(docker):",
+      "addLabels": ["docker"]
+    },
+    {
+      "description": "Update GitHub Actions",
+      "matchManagers": ["github-actions"],
+      "commitMessagePrefix": "renovate(github-actions):",
+      "addLabels": ["github-actions"]
+    },
+    {
+      "description": "Update Go module dependencies",
+      "matchManagers": ["gomod"],
+      "commitMessagePrefix": "renovate(gomod):",
+      "addLabels": ["gomod"],
+      "postUpdateOptions": ["gomodTidy"]
+    },
+    {
+      "description": "Update npm packages",
+      "matchManagers": ["npm"],
+      "commitMessagePrefix": "renovate(npm):",
+      "addLabels": ["npm"]
+    },
+    {
+      "description": "Update Terraform providers and modules",
+      "matchManagers": ["terraform"],
+      "matchFileNames": ["modules/**", "terraform/**"],
+      "commitMessagePrefix": "renovate(terraform):",
+      "addLabels": ["terraform"]
+    },
+    {
+      "description": "Auto-merge low-risk updates (patch, pin, digest)",
       "matchUpdateTypes": ["patch", "pin", "digest"],
       "automerge": true,
       "automergeType": "pr",
@@ -88,16 +64,16 @@
       "addLabels": ["automerge"]
     },
     {
-      "description": "[matchManagers: dockerfile, github-actions, gomod, npm, regex; matchUpdateTypes: minor] Auto-merge non-terraform minor updates after checks pass",
-      "matchManagers": ["dockerfile", "github-actions", "gomod", "npm", "regex"],
+      "description": "Auto-merge minor updates except terraform",
       "matchUpdateTypes": ["minor"],
+      "excludeManagers": ["terraform"],
       "automerge": true,
       "automergeType": "pr",
       "platformAutomerge": true,
       "addLabels": ["automerge"]
     },
     {
-      "description": "[matchUpdateTypes: major] Require review for major updates",
+      "description": "Require review for major updates",
       "matchUpdateTypes": ["major"],
       "automerge": false,
       "addLabels": ["needs-review"]
