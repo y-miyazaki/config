@@ -17,7 +17,9 @@ AWS に特化したツール選定の判断材料。
 
 ## ECS Deploy: ecspresso vs Copilot vs CDK
 
-| 比較項目            | ecspresso                                             | AWS Copilot                                           | AWS CDK                                       |
+> ⚠️ **AWS Copilot CLI は 2026/6/12 に End of Support。** 新規採用は非推奨。移行先として ECS Express Mode または AWS CDK を推奨。
+
+| 比較項目            | ecspresso                                             | AWS Copilot ⚠️ EOS                                    | AWS CDK                                       |
 | ------------------- | ----------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------- |
 | 提供元              | kayac                                                 | AWS                                                   | AWS                                           |
 | リポジトリ          | [kayac/ecspresso](https://github.com/kayac/ecspresso) | [aws/copilot-cli](https://github.com/aws/copilot-cli) | [aws/aws-cdk](https://github.com/aws/aws-cdk) |
@@ -34,7 +36,7 @@ AWS に特化したツール選定の判断材料。
 
 **→ ecspresso を採用する。** Terraform でインフラ管理しつつ ECS デプロイのみ軽量に行える。CI パイプラインに CLI を組み込むだけで完結し、学習コストが低い。
 
-- Terraform を使わず ECS の構築からデプロイまで一気通貫で管理したい場合は AWS Copilot を検討
+- ~~Terraform を使わず ECS の構築からデプロイまで一気通貫で管理したい場合は AWS Copilot を検討~~ → EOS のため非推奨。CDK または ECS Express Mode を検討
 - 複雑なデプロイパターン (Blue/Green等) をプログラミング言語で制御したい場合は CDK を検討
 
 ## Serverless: SAM vs Serverless Framework vs CloudFormation
@@ -43,20 +45,20 @@ AWS に特化したツール選定の判断材料。
 | ------------------- | ----------------------------------------------------- | ----------------------------------------------------------------- | --------------------- |
 | 提供元              | AWS                                                   | Serverless Inc                                                    | AWS                   |
 | リポジトリ          | [aws/aws-sam-cli](https://github.com/aws/aws-sam-cli) | [serverless/serverless](https://github.com/serverless/serverless) | - (AWS 組み込み)      |
-| ライセンス          | Apache 2.0                                            | MIT                                                               | 商用 (AWS に含む)     |
+| ライセンス          | Apache 2.0                                            | 独自 (個人・小規模は無料、$2M+ 収益は有料)                       | 商用 (AWS に含む)     |
 | 設定形式            | YAML (CloudFormation拡張)                             | YAML (独自形式)                                                   | YAML/JSON             |
 | 抽象化レベル        | 中程度 (Lambda中心の簡略記法)                         | 高い (プラグインで拡張)                                           | なし (低レベル)       |
 | ローカル実行        | ✅ `sam local invoke/start-api`                        | ✅ `serverless invoke local`                                       | ❌                     |
 | ホットリロード      | ✅ `sam sync --watch`                                  | ⚠️ プラグイン依存                                                  | ❌                     |
-| マルチクラウド      | ❌ AWS のみ                                            | ✅ (AWS/Azure/GCP)                                                 | ❌ AWS のみ            |
+| マルチクラウド      | ❌ AWS のみ                                            | ❌ AWS のみ (v3 まで対応、v4 で廃止)                               | ❌ AWS のみ            |
 | CloudFormation 互換 | ✅ (上位互換)                                          | ❌ (独自変換)                                                      | ✅ (そのもの)          |
-| 料金                | 無料                                                  | 無料 (v4 は有料プランあり)                                        | 無料                  |
+| 料金                | 無料                                                  | 有料 (個人・小規模は無料枠あり)                                   | 無料                  |
 
 ### Guidelines
 
 **→ AWS SAM を採用する。** AWS 公式でローカル実行・ホットリロードに対応し、CloudFormation の上位互換として既存知識を活用できる。Lambda 中心のサーバーレス開発に最適。
 
-- マルチクラウド対応が必要 / プラグインエコシステムを活用したい場合は Serverless Framework を検討
+- プラグインエコシステムを活用したい場合は Serverless Framework を検討 (v4 以降は有料化・AWS 専用のため注意)
 - SAM/Serverless を使わず Terraform で Lambda を管理する構成も有効 (インフラ全体を Terraform に統一したい場合)
 
 ## Secret Encryption: sops vs Vault vs AWS Secrets Manager

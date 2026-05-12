@@ -22,11 +22,11 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 
 ## Coding Agent: Kiro vs Claude Code vs GitHub Copilot vs Cursor vs Gemini
 
-| 比較項目           | Kiro            | Claude Code           | GitHub Copilot         | Cursor                    | Gemini (Code Assist / CLI) |
+| 比較項目           | Kiro            | Claude Code           | GitHub Copilot         | Cursor                    | Gemini                     |
 | ------------------ | --------------- | --------------------- | ---------------------- | ------------------------- | -------------------------- |
 | 提供元             | AWS             | Anthropic             | GitHub (Microsoft)     | Anysphere                 | Google                     |
 | ライセンス         | 商用            | 商用                  | 商用                   | 商用                      | 商用                       |
-| 動作形態           | IDE / CLI       | CLI / IDE連携         | IDE拡張 / CLI          | AIネイティブIDE           | IDE拡張 / CLI              |
+| 動作形態           | IDE / CLI       | IDE / CLI             | IDE / CLI              | AIネイティブIDE           | IDE / CLI                  |
 | エージェントモード | ✅               | ✅                     | ✅                      | ✅                         | ✅                          |
 | マルチファイル編集 | ✅               | ✅                     | ✅                      | ✅                         | ✅                          |
 | ターミナル実行     | ✅               | ✅                     | ✅                      | ✅                         | ✅                          |
@@ -36,6 +36,10 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 | セルフホスト / VPC | ✅ (AWS環境連携) | ❌                     | ⚠️ (Enterprise構成次第) | ❌                         | ⚠️ (GCP Enterprise)         |
 | CLI 自動化適性     | ✅               | ✅ 非常に強い          | ⚠️ 中程度               | ⚠️ 中程度                  | ✅ (Gemini CLI)             |
 | 大規模導入適性     | ⚠️ 今後拡大      | ✅ (Team / Enterprise) | ✅ 非常に強い           | ✅ (Business / Enterprise) | ✅ (Google Cloud組織)       |
+| コンテキスト窓     | 200K tokens      | 200K tokens           | 128K〜200K tokens      | 128K〜200K tokens         | 1M+ tokens                 |
+| モデル選択         | ✅ (Auto / 手動)  | Claude 系のみ          | ✅ 複数 (GPT-5, Claude等) | ✅ 複数 (GPT-5, Claude等)  | Gemini 系のみ              |
+| データ学習利用     | ❌ 利用しない     | ❌ 利用しない          | ❌ (Business以上)        | ❌ (Business以上)          | ❌ 利用しない               |
+| コンプライアンス   | SOC2 / AWS準拠   | SOC2                  | SOC2 / FedRAMP          | SOC2                      | SOC2 / ISO / GCP準拠       |
 
 ### Pricing
 
@@ -43,10 +47,10 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 
 | プラン       | Kiro                         | Claude Code                       | GitHub Copilot               | Cursor                | Gemini                        |
 | ------------ | ---------------------------- | --------------------------------- | ---------------------------- | --------------------- | ----------------------------- |
-| 無料枠       | 50 クレジット (永続)         | ❌                                 | ✅ (50 premium requests/月)   | ✅ (2,000 completions) | ✅ (無料、高リミット)          |
+| 無料枠       | 50 クレジット/月             | ❌                                 | ✅ (50 premium requests/月)   | ✅ (2,000 completions) | ✅ (個人無料、日次クォータあり) |
 | 個人 (標準)  | Pro: $20/月                  | Pro: $20/月                       | Pro: $10/月                  | Pro: $20/月           | Google Dev Program: $24.99/月 |
 | 個人 (上位)  | Pro+: $40/月, Power: $200/月 | Max 5x: $100/月, Max 20x: $200/月 | Pro+: $39/月                 | Pro+: $60/月          | -                             |
-| チーム/組織  | 今後拡張                     | Team: $30/seat/月                 | Business: $19/user/月        | Business: $40/user/月 | Standard: $19/user/月         |
+| チーム/組織  | 今後拡張                     | Team: $25/seat/月, Premium: $125/seat/月 | Business: $19/user/月        | Business: $40/user/月 | Standard: 時間課金            |
 | Enterprise   | 今後拡張                     | Enterprise: カスタム              | Enterprise: $39/user/月      | Enterprise: カスタム  | Enterprise: カスタム          |
 | 従量追加課金 | ⚠️ あり得る                   | ⚠️ API利用時あり                   | ✅ usage-based ($0.01/credit) | ⚠️ usage 条件あり      | ⚠️ GCP課金連携                 |
 
@@ -62,7 +66,7 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 
 ### Configuration Files and Directories
 
-| 用途                | Kiro                           | Claude Code                      | GitHub Copilot                    | Cursor                            | Gemini CLI              |
+| 用途                | Kiro                           | Claude Code                      | GitHub Copilot                    | Cursor                            | Gemini                  |
 | ------------------- | ------------------------------ | -------------------------------- | --------------------------------- | --------------------------------- | ----------------------- |
 | Instructions (指示) | `.kiro/instructions/*.md`      | `CLAUDE.md` / `<dir>/CLAUDE.md`  | `.github/copilot-instructions.md` | `.cursorrules` / `.cursor/rules/` | `GEMINI.md`             |
 | Skills (スキル)     | `.kiro/skills/<name>/SKILL.md` | `.claude/skills/<name>/SKILL.md` | `.github/skills/<name>/SKILL.md`  | `.cursor/rules/*.md`              | ⚠️ 独自機能中心          |
@@ -82,7 +86,7 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 - IDE 内完結 / 高速開発体験 → **Cursor**
 - GCP 中心開発 / 無料枠で始めたい → **Gemini**
 - 複数ツール併用前提の探索環境 → **Kiro + Claude Code + Copilot** など併用
-- コスト最小で始めたい → Gemini (無料・高リミット) または GitHub Copilot (Free)
+- コスト最小で始めたい → Gemini (個人無料) または GitHub Copilot (Free)
 - 大量利用 → Kiro Power ($200/月) または Claude Code Max 20x ($200/月)
 
 ## Agent Security: Guardrails
