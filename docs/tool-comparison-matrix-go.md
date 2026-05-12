@@ -22,6 +22,8 @@ Go 開発に特化したツール選定の判断材料。
   - [Guidelines](#Guidelines-6)
 - [Vulnerability Scanning (Go): govulncheck](#vulnerability-scanning-go-govulncheck)
   - [Guidelines](#Guidelines-7)
+- [Mock Generation: gomock vs mockery vs moq](#mock-generation-gomock-vs-mockery-vs-moq)
+  - [Guidelines](#Guidelines-8)
 
 ## Formatter: gofumpt vs gofmt vs goimports
 
@@ -172,3 +174,30 @@ Go 開発に特化したツール選定の判断材料。
 ### Guidelines
 
 **→ govulncheck を採用する。** Go 公式の脆弱性スキャナー。到達可能性分析により誤検知が少なく、実際に影響のある脆弱性のみを報告する。Trivy と併用することで多層防御を実現。
+
+## Mock Generation: gomock vs mockery vs moq
+
+| 比較項目 | gomock (uber-go/mock) | mockery | moq |
+|---|---|---|---|
+| 提供元 | Uber (golang/mock から移行) | vektra | Mat Ryer |
+| リポジトリ | [uber-go/mock](https://github.com/uber-go/mock) | [vektra/mockery](https://github.com/vektra/mockery) | [matryer/moq](https://github.com/matryer/moq) |
+| ライセンス | Apache 2.0 | BSD-3-Clause | MIT |
+| 最新バージョン | v0.5.x (2025) | v3 (2026-03) | v0.5.3 (2025-02) |
+| アプローチ | コード生成 + DSL | コード生成 (testify/mock ベース) | コード生成 (関数フィールド) |
+| コード生成ツール | `mockgen` | `mockery` | `moq` |
+| go generate 対応 | ✅ | ✅ | ✅ |
+| Generics 対応 | ✅ | ✅ | ✅ |
+| 呼び出し順序検証 | ✅ (`InOrder`, `gomock.InOrder`) | ✅ (`.On().After()`) | ❌ |
+| 呼び出し回数検証 | ✅ (`Times`, `MinTimes`, `MaxTimes`) | ✅ (`.Times()`) | ❌ (手動で実装) |
+| 引数マッチャー | ✅ (豊富: `Any`, `Eq`, カスタム) | ✅ (testify の `mock.Anything` 等) | ❌ (関数内で自前検証) |
+| 外部依存 | なし | testify | なし |
+| 生成コードの複雑さ | 中程度 (Controller + Recorder) | 中程度 (testify/mock 埋め込み) | 低い (シンプルな struct) |
+| 学習コスト | 中程度 | 低い (testify 利用者なら容易) | 非常に低い |
+
+### Guidelines
+
+**→ mockery を採用する (testify 利用プロジェクト)。** testify/mock ベースのコード生成により、既に testify を使っているプロジェクトでは学習コストが最小。v3 で設定が `packages` ベースに統一され、`go generate` との統合も改善。
+
+- testify に依存したくない / よりシンプルな mock が欲しい場合は moq を検討。関数フィールドベースで IDE 補完が効きやすく、生成コードが読みやすい
+- 呼び出し順序・回数の厳密な検証が必要な場合は gomock を検討。DSL が最も表現力が高い
+- `golang/mock` はアーカイブ済み。gomock を使う場合は必ず `go.uber.org/mock` を使用すること
