@@ -5,6 +5,10 @@ on:
     branches:
       - "main"
       - "master"
+      - "hotfix/**"
+      - "release/**"
+      - "develop"
+      - "feature/**"
     paths:
       - "aqua.yaml"
       - "aqua/*.yaml"
