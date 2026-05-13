@@ -1,6 +1,6 @@
 # Reusable workflow for deploying multiple artifacts to GitHub Pages
 # This workflow downloads multiple artifacts, merges them, and creates a unified index page
-name: reusable-cd-github-pages
+name: cd-github-pages
 
 on:
   workflow_call:

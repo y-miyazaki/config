@@ -3,7 +3,7 @@
 # - Uses ghalint for security/settings validation
 # - Uses zizmor-action for static analysis
 # - Does NOT require aqua.yaml in the repository
-name: reusable-ci-github-actions-workflow
+name: ci-github-actions-workflow
 
 on:
   workflow_call:

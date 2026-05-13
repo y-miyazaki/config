@@ -3,7 +3,7 @@
 # - Checks .jsonnet formatting with jsonnetfmt (per service, via matrix)
 # - Verifies ECS service configuration with ecspresso verify (per service, via matrix)
 # - Optionally dry-runs ecschedule for scheduled task verification
-name: reusable-ci-aws-ecs
+name: ci-aws-ecs
 
 on:
   workflow_call:

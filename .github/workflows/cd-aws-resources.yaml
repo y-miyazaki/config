@@ -1,59 +1,44 @@
-# Reusable workflow: generate AWS batch schedules and upload as zip artifact
-# This workflow can be called by other workflows to generate schedule outputs with absc
-name: reusable-cd-aws-batch-schedules
+# Reusable workflow: generate AWS resources and upload as zip artifact
+# This workflow can be called by other workflows to generate AWS resources
+name: cd-aws-resources
 
 on:
   workflow_call:
     inputs:
-      absc_checksum:
-        default: "6f5c79d460a978a854f61701666c589cf7369a54987696361d2a85152d347c27" # pragma: allowlist secret
-        # To get checksum: curl -sL "https://github.com/y-miyazaki/absc/releases/download/v1.0.16/absc-linux-amd64.tar.gz" | sha256sum | awk '{print $1}'
-        description: "SHA256 checksum for absc release tarball"
+      arc_checksum:
+        default: "85ea298d9f37c7371ca77826e811985103686bf9b418e9262506442171496c76" # pragma: allowlist secret
+        # To get checksum: curl -sL "https://github.com/y-miyazaki/arc/releases/download/v1.0.12/arc-linux-amd64.tar.gz" | sha256sum | awk '{print $1}'
+        description: "SHA256 checksum for arc release tarball"
         required: false
         type: string
-      absc_version:
-        default: "v1.0.16"
-        description: "absc version to use (e.g. v1.0.16)"
+      arc_version:
+        default: "v1.0.12"
+        description: "arc version to use"
+        required: false
+        type: string
+      categories:
+        default: ""
+        description: "Comma-separated categories to limit collection (optional)"
         required: false
         type: string
       environment:
         description: "Target environment (dev, qa, stg, prd, etc.)"
         required: true
         type: string
-      days_ago:
-        default: 1
-        description: "Calendar day offset (0=today, 1=yesterday)"
-        required: false
-        type: number
-      max_concurrency:
-        default: 5
-        description: "Max concurrent resource collectors"
-        required: false
-        type: number
-      max_results:
-        default: 288
-        description: "Max executions/jobs per target"
-        required: false
-        type: number
       output_dir:
         default: "./output"
-        description: "Output base directory where schedules are written"
+        description: "Output directory where CSVs will be written"
         required: false
         type: string
       region:
         default: ""
-        description: "AWS region to query (optional, comma-separated accepted)"
-        required: false
-        type: string
-      timezone:
-        default: "UTC"
-        description: "IANA timezone"
+        description: "AWS region to query (optional)"
         required: false
         type: string
     outputs:
       artifact_name:
         description: "Name of the uploaded artifact"
-        value: ${{ jobs.generate-batch-schedules.outputs.artifact_name }}
+        value: ${{ jobs.generate-documentation.outputs.artifact_name }}
     secrets:
       AWS_IAM_ROLE_ARN:
         required: true
@@ -61,23 +46,20 @@ on:
         required: true
 
 env:
-  ABSC_CHECKSUM: ${{ inputs.absc_checksum }}
-  ABSC_VERSION: ${{ inputs.absc_version }}
+  ARC_CHECKSUM: ${{ inputs.arc_checksum }}
+  ARC_VERSION: ${{ inputs.arc_version }}
+  CATEGORIES: ${{ inputs.categories }}
   ENVIRONMENT: ${{ inputs.environment }}
-  DAYS_AGO: ${{ inputs.days_ago }}
-  MAX_CONCURRENCY: ${{ inputs.max_concurrency }}
-  MAX_RESULTS: ${{ inputs.max_results }}
   OUTPUT_DIR: ${{ inputs.output_dir }}
   REGION: ${{ inputs.region }}
-  TIMEZONE: ${{ inputs.timezone }}
 
 jobs:
-  generate-batch-schedules:
+  generate-documentation:
     if: ${{ github.actor != 'dependabot[bot]' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     concurrency:
-      group: aws-batch-schedules-${{ inputs.environment }}
+      group: aws-resources-${{ inputs.environment }}
       cancel-in-progress: false
     environment:
       name: ${{ inputs.environment }}
@@ -98,48 +80,57 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
 
-      - name: Download and install absc
+      - name: Download and install arc
         uses: ./.github/actions/install-github-release
         with:
-          asset_pattern: "absc-linux-amd64.tar.gz"
-          binary: absc
-          checksum: ${{ env.ABSC_CHECKSUM }}
-          repo: y-miyazaki/absc
+          asset_pattern: "arc-linux-amd64.tar.gz"
+          binary: arc
+          checksum: ${{ env.ARC_CHECKSUM }}
+          repo: y-miyazaki/arc
           strip_v_prefix: "true"
-          version: ${{ env.ABSC_VERSION }}
+          version: ${{ env.ARC_VERSION }}
 
       - name: Setup Parameters
         id: setup-parameters
         shell: bash
         run: | # pragma: allowlist secret
+          # shellcheck disable=SC2086,SC2129,SC2002
           set -euo pipefail
 
-          ARTIFACT_BASE="batch-schedules-${ENVIRONMENT}"
+          # Define common output and artifact naming variables here so downstream steps reuse them
+          ARTIFACT_BASE="resources-${ENVIRONMENT}"
           ARTIFACT_NAME="${ARTIFACT_BASE}.zip"
           OUTDIR="${OUTPUT_DIR}"
 
+          # Write environment variables to the GitHub environment file in one grouped redirect
           {
             echo "ARTIFACT_BASE=${ARTIFACT_BASE}"
             echo "ARTIFACT_NAME=${ARTIFACT_NAME}"
             echo "OUTDIR=${OUTDIR}"
           } >> "$GITHUB_ENV"
 
+          # Write outputs to the GitHub output file in one grouped redirect
           {
             echo "artifact_base=${ARTIFACT_BASE}"
             echo "artifact_name=${ARTIFACT_NAME}"
             echo "outdir=${OUTDIR}"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Exec absc to collect batch schedules
-        shell: bash
+      - name: Exec arc to collect AWS resources
         run: |
           set -euo pipefail
+          CATS="${CATEGORIES}"
+          REGION_ARG="${REGION}"
 
-          CMD=(absc -D "$OUTDIR" --days-ago "$DAYS_AGO" --max-concurrency "$MAX_CONCURRENCY" --max-results "$MAX_RESULTS" --timezone "$TIMEZONE")
-          if [[ -n "$REGION" ]]; then
-            CMD+=( -r "$REGION" )
+          CMD=(arc -H -D "$OUTDIR")
+          if [[ -n "$CATS" ]]; then
+            CMD+=( -c "$CATS" )
+          fi
+          if [[ -n "$REGION_ARG" ]]; then
+            CMD+=( -r "$REGION_ARG" )
           fi
 
+          # Print command safely, then execute using array expansion
           printf 'Running: %s\n' "${CMD[*]}"
           "${CMD[@]}"
 
@@ -148,7 +139,10 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Create artifact directory named after artifact base
           mkdir -p artifact-output/"${ARTIFACT_BASE}"
+
+          # Move output to artifact base directory (move directory contents safely)
           mv "$OUTDIR"/* "artifact-output/${ARTIFACT_BASE}/" || true
 
           echo "Artifact structure:"
@@ -181,13 +175,10 @@ jobs:
           outputs: |
             artifact_name: ${{ steps.setup-parameters.outputs.artifact_name }}
           params: |
-            absc_version: ${{ inputs.absc_version }}
+            arc_version: ${{ inputs.arc_version }}
+            categories: ${{ inputs.categories }}
             environment: ${{ inputs.environment }}
-            days_ago: ${{ inputs.days_ago }}
-            max_concurrency: ${{ inputs.max_concurrency }}
-            max_results: ${{ inputs.max_results }}
             output_dir: ${{ inputs.output_dir }}
             region: ${{ inputs.region }}
-            timezone: ${{ inputs.timezone }}
           status: "${{ job.status }}"
-          title: "AWS Batch Schedules (${{ env.ENVIRONMENT }})"
+          title: "AWS Resources (${{ env.ENVIRONMENT }})"

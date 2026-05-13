@@ -1,6 +1,6 @@
 # Reusable workflow for Terraform CI operations
 # This workflow can be called by other workflows to perform Terraform CI operations
-name: reusable-ci-terraform-aws
+name: ci-terraform-aws
 
 on:
   workflow_call:

@@ -1,6 +1,6 @@
 # Reusable workflow for controlling AWS services (unified interface)
 # This workflow orchestrates EC2, ECS, and RDS control workflows based on service type
-name: reusable-cd-aws-service-control
+name: cd-aws-service-control
 
 on:
   workflow_call:
@@ -192,7 +192,7 @@ on:
 jobs:
   control-ec2-instances:
     if: ${{ inputs.control_ec2 }}
-    uses: ./.github/workflows/reusable-cd-aws-service-control-ec2.yaml
+    uses: ./.github/workflows/cd-aws-service-control-ec2.yaml
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_ec2 }}
@@ -210,7 +210,7 @@ jobs:
 
   control-ecs-services:
     if: ${{ inputs.control_ecs_service }}
-    uses: ./.github/workflows/reusable-cd-aws-service-control-ecs-service.yaml
+    uses: ./.github/workflows/cd-aws-service-control-ecs-service.yaml
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_ecs }}
@@ -231,7 +231,7 @@ jobs:
 
   control-batch-job-queues:
     if: ${{ inputs.control_batch }}
-    uses: ./.github/workflows/reusable-cd-aws-service-control-batch.yaml
+    uses: ./.github/workflows/cd-aws-service-control-batch.yaml
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_batch }}
@@ -249,7 +249,7 @@ jobs:
 
   control-ecs-scheduled-tasks:
     if: ${{ inputs.control_ecs_scheduled_task }}
-    uses: ./.github/workflows/reusable-cd-aws-service-control-ecs-scheduled-task.yaml
+    uses: ./.github/workflows/cd-aws-service-control-ecs-scheduled-task.yaml
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_ecs_scheduled_task }}
@@ -267,7 +267,7 @@ jobs:
 
   control-rds-clusters:
     if: ${{ inputs.control_rds }}
-    uses: ./.github/workflows/reusable-cd-aws-service-control-rds-cluster.yaml
+    uses: ./.github/workflows/cd-aws-service-control-rds-cluster.yaml
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_rds }}
@@ -285,7 +285,7 @@ jobs:
 
   control-redshift-clusters:
     if: ${{ inputs.control_redshift }}
-    uses: ./.github/workflows/reusable-cd-aws-service-control-redshift.yaml
+    uses: ./.github/workflows/cd-aws-service-control-redshift.yaml
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_redshift }}

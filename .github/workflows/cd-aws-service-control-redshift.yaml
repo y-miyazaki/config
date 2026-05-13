@@ -1,6 +1,6 @@
 # Reusable workflow for controlling Redshift clusters (pause/resume)
 # This workflow can pause or resume Redshift clusters with automatic resource discovery
-name: reusable-cd-aws-service-control-redshift
+name: cd-aws-service-control-redshift
 
 on:
   workflow_call:

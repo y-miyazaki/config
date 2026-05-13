@@ -1,4 +1,4 @@
-name: reusable-cd-aws-ecs
+name: cd-aws-ecs
 
 on:
   workflow_call:

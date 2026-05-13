@@ -4,7 +4,7 @@
 # 3. Create the following secrets (repository or environment):
 #    - BOT_APP_ID: The GitHub App's App ID
 #    - BOT_APP_PRIVATE_KEY: The GitHub App's private key (PEM format)
-name: reusable-ci-aqua-update-checksum
+name: ci-aqua-update-checksum
 
 on:
   workflow_call:

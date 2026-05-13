@@ -1,6 +1,6 @@
 # Reusable workflow for Go CI operations
 # This workflow runs Go tests and golangci-lint. It is intended to be called from other workflows.
-name: reusable-ci-go
+name: ci-go
 
 on:
   workflow_call:

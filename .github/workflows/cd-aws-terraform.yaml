@@ -1,6 +1,6 @@
 # Reusable workflow for Terraform CD operations
 # This workflow can be called by other workflows to perform Terraform CD operations
-name: reusable-cd-aws-terraform
+name: cd-aws-terraform
 
 on:
   workflow_call:
