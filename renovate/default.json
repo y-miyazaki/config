@@ -9,7 +9,7 @@
     ":label(dependencies)",
     "mergeConfidence:age-confidence-badges",
     "github>aquaproj/aqua-renovate-config#2.12.0",
-    "github>y-miyazaki/config//renovate/github-actions-tool-version",
+    "github>y-miyazaki/config//renovate/github-actions-tool-version"
   ],
   "dependencyDashboard": true,
   "timezone": "Asia/Tokyo",
@@ -31,6 +31,7 @@
     {
       "description": "Rules: Update aqua-registry",
       "matchPackageNames": ["aquaproj/aqua-registry"],
+      "matchUpdateTypes": ["minor", "patch"],
       "commitMessagePrefix": "renovate(aqua):",
       "addLabels": ["aqua", "automerge"],
       "automerge": true,
@@ -55,8 +56,9 @@
       "description": "Rules: Update GitHub Actions official actions only patch automerge (optional)",
       "matchManagers": ["github-actions"],
       "matchPackagePrefixes": ["actions/"],
-      "matchUpdateTypes": ["patch", "automerge"],
+      "matchUpdateTypes": ["patch"],
       "commitMessagePrefix": "renovate(github-actions-official):",
+      "addLabels": ["automerge"],
       "automerge": true,
       "platformAutomerge": true
     },
@@ -73,6 +75,7 @@
       "description": "Rules: Update npm packages patch updates automerge",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["patch"],
+      "addLabels": ["automerge"],
       "automerge": true,
       "platformAutomerge": true
     },
@@ -97,9 +100,11 @@
       "platformAutomerge": true
     },
     {
-      "description": "Rules: Custom regex manager manual review",
-      "matchManagers": ["custom.regex"],
-      "automerge": false
+      "description": "Rules: Dockerfile digest/pin updates require manual review",
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "matchUpdateTypes": ["digest", "pin"],
+      "automerge": false,
+      "platformAutomerge": false
     }
   ]
 }

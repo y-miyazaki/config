@@ -5,7 +5,9 @@
       "description": "CustomManager: Update absc version in workflow inputs (disabled: requires checksum update)",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["absc_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"],
+      "matchStrings": [
+        "absc_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
       "depNameTemplate": "y-miyazaki/absc",
       "datasourceTemplate": "github-releases",
       "enabled": false
@@ -14,7 +16,9 @@
       "description": "CustomManager: Update arc version in workflow inputs (disabled: requires checksum update)",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["arc_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"],
+      "matchStrings": [
+        "arc_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
       "depNameTemplate": "y-miyazaki/arc",
       "datasourceTemplate": "github-releases",
       "enabled": false
@@ -23,7 +27,9 @@
       "description": "CustomManager: Update ecspresso version in workflow inputs",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["ecspresso_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"],
+      "matchStrings": [
+        "ecspresso_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
       "depNameTemplate": "kayac/ecspresso",
       "datasourceTemplate": "github-releases"
     },
@@ -31,7 +37,9 @@
       "description": "CustomManager: Update ecschedule version in workflow inputs",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["ecschedule_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"],
+      "matchStrings": [
+        "ecschedule_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
       "depNameTemplate": "Songmu/ecschedule",
       "datasourceTemplate": "github-releases"
     },
@@ -39,7 +47,9 @@
       "description": "CustomManager: Update go-jsonnet version in workflow inputs (disabled: requires checksum update)",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["jsonnet_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"],
+      "matchStrings": [
+        "jsonnet_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
       "depNameTemplate": "google/go-jsonnet",
       "datasourceTemplate": "github-releases",
       "enabled": false
@@ -48,16 +58,20 @@
       "description": "CustomManager: Update terraform version in workflow inputs",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["terraform_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"],
+      "matchStrings": [
+        "terraform_version:\\s*\\n\\s*default:\\s*[\"']?v?(?<currentValue>[\\d.]+)[\"']?"
+      ],
       "depNameTemplate": "hashicorp/terraform",
       "datasourceTemplate": "github-releases",
-      "extractVersionTemplate": "^v(?<version>.*)$"
+      "extractVersionTemplate": "^v?(?<version>.*)$"
     },
     {
       "description": "CustomManager: Update tfcmt version in workflow inputs (disabled: requires checksum update)",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["tfcmt_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"],
+      "matchStrings": [
+        "tfcmt_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
+      ],
       "depNameTemplate": "suzuki-shunsuke/tfcmt",
       "datasourceTemplate": "github-releases",
       "extractVersionTemplate": "^v(?<version>.*)$",
@@ -67,7 +81,9 @@
       "description": "CustomManager: Update tflint version in workflow inputs",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["tflint_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"],
+      "matchStrings": [
+        "tflint_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
       "depNameTemplate": "terraform-linters/tflint",
       "datasourceTemplate": "github-releases"
     },
@@ -75,7 +91,9 @@
       "description": "CustomManager: Update actionlint version in workflow inputs (disabled: requires checksum update)",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["actionlint_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"],
+      "matchStrings": [
+        "actionlint_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
+      ],
       "depNameTemplate": "rhysd/actionlint",
       "datasourceTemplate": "github-releases",
       "extractVersionTemplate": "^v(?<version>.*)$",
@@ -85,7 +103,9 @@
       "description": "CustomManager: Update ghalint version in workflow inputs (disabled: requires checksum update)",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["ghalint_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"],
+      "matchStrings": [
+        "ghalint_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
+      ],
       "depNameTemplate": "suzuki-shunsuke/ghalint",
       "datasourceTemplate": "github-releases",
       "extractVersionTemplate": "^v(?<version>.*)$",
@@ -95,7 +115,9 @@
       "description": "CustomManager: Update zizmor version in workflow inputs",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["zizmor_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"],
+      "matchStrings": [
+        "zizmor_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
+      ],
       "depNameTemplate": "woodruffw/zizmor",
       "datasourceTemplate": "github-releases",
       "extractVersionTemplate": "^v(?<version>.*)$"
@@ -104,7 +126,9 @@
       "description": "CustomManager: Update golangci-lint version in workflow inputs",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["golangci_lint_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"],
+      "matchStrings": [
+        "golangci_lint_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
       "depNameTemplate": "golangci/golangci-lint",
       "datasourceTemplate": "github-releases"
     },
@@ -112,16 +136,19 @@
       "description": "CustomManager: Update govulncheck version in workflow inputs",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["govulncheck_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"],
+      "matchStrings": [
+        "govulncheck_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
       "depNameTemplate": "golang/vuln",
-      "datasourceTemplate": "github-releases",
-      "extractVersionTemplate": "^v(?<version>.*)$"
+      "datasourceTemplate": "github-releases"
     },
     {
       "description": "CustomManager: Update Go version in workflow inputs",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["go_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"],
+      "matchStrings": [
+        "go_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
+      ],
       "depNameTemplate": "golang/go",
       "datasourceTemplate": "github-tags",
       "extractVersionTemplate": "^go(?<version>.*)$"
@@ -130,7 +157,9 @@
       "description": "CustomManager: Update goreleaser version in workflow inputs",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["goreleaser_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"],
+      "matchStrings": [
+        "goreleaser_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
       "depNameTemplate": "goreleaser/goreleaser",
       "datasourceTemplate": "github-releases"
     },
@@ -138,7 +167,9 @@
       "description": "CustomManager: Update shellcheck version in workflow inputs",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["shellcheck_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"],
+      "matchStrings": [
+        "shellcheck_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
+      ],
       "depNameTemplate": "koalaman/shellcheck",
       "datasourceTemplate": "github-releases",
       "extractVersionTemplate": "^v(?<version>.*)$"
@@ -147,7 +178,9 @@
       "description": "CustomManager: Update schemaspy version in workflow inputs",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["schemaspy_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"],
+      "matchStrings": [
+        "schemaspy_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
+      ],
       "depNameTemplate": "schemaspy/schemaspy",
       "datasourceTemplate": "github-releases",
       "extractVersionTemplate": "^v(?<version>.*)$"
@@ -164,6 +197,7 @@
     {
       "description": "Rules: Automerge custom regex manager dependencies",
       "matchManagers": ["custom.regex"],
+      "matchFileNames": [".github/workflows/**"],
       "matchUpdateTypes": ["patch"],
       "addLabels": ["automerge"],
       "automerge": true,
@@ -172,6 +206,7 @@
     {
       "description": "Rules: Require review for go version updates above patch",
       "matchManagers": ["custom.regex"],
+      "matchFileNames": [".github/workflows/**"],
       "matchUpdateTypes": ["minor", "major"],
       "automerge": false,
       "platformAutomerge": false,
