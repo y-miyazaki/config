@@ -39,7 +39,7 @@ on:
         required: false
         type: string
       tflint_version:
-        default: "v0.59.1"
+        default: "v0.62.0"
         description: "TFLint version to use"
         required: false
         type: string
