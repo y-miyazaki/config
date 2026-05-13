@@ -81,6 +81,13 @@
       "addLabels": ["needs-review"]
     },
     {
+      "description": "Require review for Dockerfile updates above patch",
+      "matchManagers": ["dockerfile"],
+      "matchUpdateTypes": ["minor", "major"],
+      "automerge": false,
+      "platformAutomerge": false
+    },
+    {
       "description": "Require review for go directive updates above patch",
       "matchManagers": ["gomod"],
       "matchDepNames": ["go"],
