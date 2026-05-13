@@ -24,7 +24,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
 
-    permissions: {}
+    permissions:
+      contents: read
 
     concurrency:
       group: aqua-update-checksum-${{ github.repository }}-${{ github.ref }}
