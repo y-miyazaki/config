@@ -44,6 +44,15 @@
       "postUpdateOptions": ["gomodTidy"]
     },
     {
+      "description": "Update go directive in go.mod",
+      "matchManagers": ["gomod"],
+      "matchDepNames": ["go"],
+      "matchDepTypes": ["golang"],
+      "commitMessagePrefix": "renovate(gomod):",
+      "addLabels": ["gomod"],
+      "rangeStrategy": "bump"
+    },
+    {
       "description": "Update npm packages",
       "matchManagers": ["npm"],
       "commitMessagePrefix": "renovate(npm):",
@@ -59,7 +68,7 @@
     {
       "description": "Auto-merge minor and low-risk updates except terraform",
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-      "excludeManagers": ["terraform"],
+      "excludeManagers": ["terraform", "custom.regex"],
       "automerge": true,
       "automergeType": "pr",
       "platformAutomerge": true,
@@ -70,6 +79,15 @@
       "matchUpdateTypes": ["major"],
       "automerge": false,
       "addLabels": ["needs-review"]
+    },
+    {
+      "description": "Require review for go directive updates above patch",
+      "matchManagers": ["gomod"],
+      "matchDepNames": ["go"],
+      "matchDepTypes": ["golang"],
+      "matchUpdateTypes": ["minor", "major"],
+      "automerge": false,
+      "platformAutomerge": false
     },
     {
       "description": "Require review for terraform updates (override automerge for all update types)",

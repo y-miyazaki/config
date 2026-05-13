@@ -160,6 +160,15 @@
       "matchFileNames": [".github/workflows/**"],
       "commitMessagePrefix": "renovate(github-actions-tool-version):",
       "addLabels": ["github-actions-tool-version"]
+    },
+    {
+      "description": "Require review for go version updates above patch",
+      "matchManagers": ["custom.regex"],
+      "matchDepNames": ["golang/go"],
+      "matchUpdateTypes": ["minor", "major"],
+      "automerge": false,
+      "platformAutomerge": false,
+      "addLabels": ["needs-review"]
     }
   ]
 }
