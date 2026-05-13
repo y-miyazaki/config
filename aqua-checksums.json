@@ -651,6 +651,36 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/getsops/sops/v3.13.0/sops-v3.13.0.amd64.exe",
+      "checksum": "B71E99F7701502C32D8D919EBCCB89BB895A27837218402B61C7318C774BD409",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/getsops/sops/v3.13.0/sops-v3.13.0.arm64.exe",
+      "checksum": "BC0D733108D69DB607BDC3EAA19742995EA73DA7C9F94EA96C73609802B08D43",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/getsops/sops/v3.13.0/sops-v3.13.0.darwin.amd64",
+      "checksum": "9020A2369BB348FC94CBADDC086C2E6B0B86C83BEEF0D5AC6E60D7DB6D8C257F",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/getsops/sops/v3.13.0/sops-v3.13.0.darwin.arm64",
+      "checksum": "F2EC6A0F5F22AAEF3723E5898D921751BC113834DD3D3B1AF9C59CA18794069C",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/getsops/sops/v3.13.0/sops-v3.13.0.linux.amd64",
+      "checksum": "F2E5ED5E57376789B0E12793ADC848E54C2338906E51392246DD03461B320157",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/getsops/sops/v3.13.0/sops-v3.13.0.linux.arm64",
+      "checksum": "CA39DC61BE763583C12690E4C55883449C6997274F5C24757F1FD86F7E47ACD8",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/github/copilot-cli/v0.0.402/copilot-darwin-arm64.tar.gz",
       "checksum": "5D352F1561AE3F4DCE125B250397BC759C9B1ADA749E82E05066AD90391F49FF",
       "algorithm": "sha256"
@@ -738,6 +768,36 @@
     {
       "id": "github_release/github.com/github/copilot-cli/v1.0.41/copilot-win32-x64.zip",
       "checksum": "8FF84EC2C8964DB514BFCB2B49AE9D6B451FF9CC8A2374AE155E10AC11D3BAB6",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/github/copilot-cli/v1.0.46/copilot-darwin-arm64.tar.gz",
+      "checksum": "FB67E9271E17B9946E031061A99A678118CBBEE2CC86DBC0A00F1985A073FBFB",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/github/copilot-cli/v1.0.46/copilot-darwin-x64.tar.gz",
+      "checksum": "38908ED0CA4179C5F21C55155B429A398B968AB3064D4B65C258F526054097E2",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/github/copilot-cli/v1.0.46/copilot-linux-arm64.tar.gz",
+      "checksum": "7E8826AE97CA20873A0DED153F53F47FB2D4A36F68D82C0B96778DD46D2633EB",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/github/copilot-cli/v1.0.46/copilot-linux-x64.tar.gz",
+      "checksum": "5BD3EDD01981B412C705014427BA1D1D545349590C0ECFDBA9C7070032FBC907",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/github/copilot-cli/v1.0.46/copilot-win32-arm64.zip",
+      "checksum": "1CAC4B575FEE795A755969CC60AFEF0C5727E049DA69E3808C3069B607BD3C84",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/github/copilot-cli/v1.0.46/copilot-win32-x64.zip",
+      "checksum": "58302218DD07FEF0DDAE43024FBEDC3FB48030201F7892D9E87EF0AE41CBB448",
       "algorithm": "sha256"
     },
     {
@@ -1506,6 +1566,31 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/mvdan/gofumpt/v0.10.0/gofumpt_v0.10.0_darwin_amd64",
+      "checksum": "30E5B914A824C3B6BD0480E4F493517012167D380DE74643879C50F4AA0C834E",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/mvdan/gofumpt/v0.10.0/gofumpt_v0.10.0_darwin_arm64",
+      "checksum": "BA4B348E729CBA915D5C7DC515774E2F2C7CC5C5AD011DE20D34BE10E5A2F906",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/mvdan/gofumpt/v0.10.0/gofumpt_v0.10.0_linux_amd64",
+      "checksum": "48EE398EC72AFDACA6ACCB70F5ED741349D5DCCCB52C5BB4C4469D698980B186",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/mvdan/gofumpt/v0.10.0/gofumpt_v0.10.0_linux_arm64",
+      "checksum": "5D239F93B1ED2DFE74D39B25112BB770A04F6581F986D4B4F5D380521E12CA61",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/mvdan/gofumpt/v0.10.0/gofumpt_v0.10.0_windows_amd64.exe",
+      "checksum": "20872B464435512B74678B1155B75BD75220DE5737AD8C075B9151C846543697",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/mvdan/gofumpt/v0.9.2/gofumpt_v0.9.2_darwin_amd64",
       "checksum": "4172B912EC514038605F334FEF9ED7B3F12CA3E40024CB0A622EAB3073A55E57",
       "algorithm": "sha256"
@@ -2236,6 +2321,36 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/terraform-docs/terraform-docs/v0.24.0/terraform-docs-v0.24.0-darwin-amd64.tar.gz",
+      "checksum": "3C3F7F18F908457FD1209CBE341418F7F6BAE78C08126CFBE8DE0D1B06AA8781",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/terraform-docs/terraform-docs/v0.24.0/terraform-docs-v0.24.0-darwin-arm64.tar.gz",
+      "checksum": "F6B114F4B032F3F9202AB6C23BFD28C3C8E68AEEB8A8F12FC118BF2073081D71",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/terraform-docs/terraform-docs/v0.24.0/terraform-docs-v0.24.0-linux-amd64.tar.gz",
+      "checksum": "9005DAF969DE0B50134493A2C00078B49F5F5B39D021CDA7C89BF4D4F3D776D3",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/terraform-docs/terraform-docs/v0.24.0/terraform-docs-v0.24.0-linux-arm64.tar.gz",
+      "checksum": "D12BD7B73C1FC9C64EFC79F8157DD713DABD559F1ECF3CFC0F42E32279A155FD",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/terraform-docs/terraform-docs/v0.24.0/terraform-docs-v0.24.0-windows-amd64.zip",
+      "checksum": "AFC02CBDF63726D3E5FB26A077CA1F24ACD4820D7E44C21B03A3E030F9266490",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/terraform-docs/terraform-docs/v0.24.0/terraform-docs-v0.24.0-windows-arm64.zip",
+      "checksum": "1168C12929531AC9132C97FFF794EF531EBB2A5B54C41870B9E19911950B6FD4",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/terraform-linters/tflint/v0.60.0/tflint_darwin_amd64.zip",
       "checksum": "256F70AD2C9963690BCCC31FFDA6BE0159F1C5F857B46773B70D01D56B711280",
       "algorithm": "sha256"
@@ -2461,6 +2576,11 @@
       "algorithm": "sha256"
     },
     {
+      "id": "http/awscli.amazonaws.com/AWSCLIV2-2.34.45.pkg",
+      "checksum": "8CF6A35DB3AB2341E7BBDEB59C0B8A3287CA1A2B9D0CF5400965E163377F2D3D",
+      "algorithm": "sha256"
+    },
+    {
       "id": "http/awscli.amazonaws.com/AWSCLIV2-2.34.9.pkg",
       "checksum": "732AD67A5D9C5401734DAAD39946840DD5DBE4729815CB8AE3D2B5A8C55BAFE7",
       "algorithm": "sha256"
@@ -2486,6 +2606,11 @@
       "algorithm": "sha256"
     },
     {
+      "id": "http/awscli.amazonaws.com/awscli-exe-linux-aarch64-2.34.45.zip",
+      "checksum": "BF29E06A06FB9BAC2A3803931E6618A9F7C9F4C6632EC3B587184850B8F03433",
+      "algorithm": "sha256"
+    },
+    {
       "id": "http/awscli.amazonaws.com/awscli-exe-linux-aarch64-2.34.9.zip",
       "checksum": "8FE570DAC640882FD8E386A0D73A7E32DDB6BEF303C7273F25A30698BABFFA28",
       "algorithm": "sha256"
@@ -2508,6 +2633,11 @@
     {
       "id": "http/awscli.amazonaws.com/awscli-exe-linux-x86_64-2.34.43.zip",
       "checksum": "822BD52EFA310541D26526280D6AD17B03A8386CA97E3EF9A2D988348D6C52AA",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/awscli.amazonaws.com/awscli-exe-linux-x86_64-2.34.45.zip",
+      "checksum": "2B382FD5C1E8D73F6AACA18E5850758FB9F70A20AF9C17DEB3078DF0DD4AF095",
       "algorithm": "sha256"
     },
     {
@@ -2703,6 +2833,11 @@
     {
       "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.505.0/registry.yaml",
       "checksum": "8C3D7A679A4396940F6725AB6F80E74AB590E47F90C065728B4C6EEFD77C9F70CF0A8842FF2221BDF6FB703397AF5222C42ADC3BBE0F58B4E64A30406F946E46",
+      "algorithm": "sha512"
+    },
+    {
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.511.1/registry.yaml",
+      "checksum": "52705257EC97BC4F2819D2D10DC4B1CFE5BCE06DAB3B5BEE5CE15BC6143A60C908672F2F287B64EA50FA000B658F2C86BF6CE5232E33C97591257FCF41AB1665",
       "algorithm": "sha512"
     }
   ]
