@@ -268,7 +268,7 @@ jobs:
 
       - name: Configure git auth
         if: matrix.task == 'lint' && github.event_name == 'pull_request'
-        uses: ./.github/actions/git-auth
+        uses: y-miyazaki/config/.github/actions/git-auth@a8e6939a2ab5dd05676ab72622305f63d15fcabc # v1.0.0
         with:
           operation: configure
           token: ${{ github.token }}
@@ -298,7 +298,7 @@ jobs:
 
       - name: Clear git auth
         if: always() && matrix.task == 'lint' && github.event_name == 'pull_request'
-        uses: ./.github/actions/git-auth
+        uses: y-miyazaki/config/.github/actions/git-auth@a8e6939a2ab5dd05676ab72622305f63d15fcabc # v1.0.0
         with:
           operation: clear
           token: ${{ github.token }}
@@ -328,7 +328,7 @@ jobs:
 
       - name: Summary
         if: always() && matrix.task == 'test'
-        uses: ./.github/actions/summary
+        uses: y-miyazaki/config/.github/actions/summary@a8e6939a2ab5dd05676ab72622305f63d15fcabc # v1.0.0
         with:
           artifacts: |
             coverage-${{ env.COMPONENT }}-${{ env.ENVIRONMENT }}
@@ -343,7 +343,7 @@ jobs:
 
       - name: Summary
         if: always() && matrix.task == 'security'
-        uses: ./.github/actions/summary
+        uses: y-miyazaki/config/.github/actions/summary@a8e6939a2ab5dd05676ab72622305f63d15fcabc # v1.0.0
         with:
           artifacts: |
             govulncheck-${{ env.COMPONENT }}-${{ env.ENVIRONMENT }}
@@ -359,7 +359,7 @@ jobs:
 
       - name: Summary
         if: always() && matrix.task == 'lint'
-        uses: ./.github/actions/summary
+        uses: y-miyazaki/config/.github/actions/summary@a8e6939a2ab5dd05676ab72622305f63d15fcabc # v1.0.0
         with:
           artifacts: |
             (none)
