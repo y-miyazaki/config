@@ -1,106 +1,105 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+
   "extends": [
     "config:best-practices",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":semanticCommitTypeAll(chore)",
+    ":label(dependencies)",
+    "mergeConfidence:age-confidence-badges",
     "github>aquaproj/aqua-renovate-config#2.12.0",
     "github>y-miyazaki/config//renovate/github-actions-tool-version",
-    "mergeConfidence:age-confidence-badges"
   ],
-  "timezone": "Asia/Tokyo",
   "dependencyDashboard": true,
-  "prConcurrentLimit": 10,
+  "timezone": "Asia/Tokyo",
+  "prConcurrentLimit": 5,
+  "branchConcurrentLimit": 5,
+  "rebaseWhen": "behind-base-branch",
+  "rangeStrategy": "replace",
   "labels": ["dependencies"],
   "packageRules": [
     {
-      "description": "Update aqua packages",
+      "description": "Rules: Update aqua packages",
       "matchManagers": ["regex"],
       "matchFileNames": ["aqua.yaml"],
       "commitMessagePrefix": "renovate(aqua):",
-      "addLabels": ["aqua"]
+      "addLabels": ["aqua"],
+      "automerge": false,
+      "platformAutomerge": false
     },
     {
-      "description": "Limit aqua-registry updates to reduce noise from frequent releases",
+      "description": "Rules: Update aqua-registry",
       "matchPackageNames": ["aquaproj/aqua-registry"],
       "commitMessagePrefix": "renovate(aqua):",
-      "addLabels": ["aqua"]
+      "addLabels": ["aqua", "automerge"],
+      "automerge": true,
+      "platformAutomerge": true
     },
     {
-      "description": "Update Dockerfile base images",
-      "matchManagers": ["dockerfile"],
-      "commitMessagePrefix": "renovate(docker):",
-      "addLabels": ["docker"]
+      "description": "Rules: Update Dockerfile base images",
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "addLabels": ["docker"],
+      "automerge": false,
+      "platformAutomerge": false
     },
     {
-      "description": "Update GitHub Actions",
+      "description": "Rules: Update GitHub Actions",
       "matchManagers": ["github-actions"],
       "commitMessagePrefix": "renovate(github-actions):",
-      "addLabels": ["github-actions"]
+      "addLabels": ["github-actions"],
+      "automerge": false,
+      "platformAutomerge": false
     },
     {
-      "description": "Update Go module dependencies",
+      "description": "Rules: Update GitHub Actions official actions only patch automerge (optional)",
+      "matchManagers": ["github-actions"],
+      "matchPackagePrefixes": ["actions/"],
+      "matchUpdateTypes": ["patch", "automerge"],
+      "commitMessagePrefix": "renovate(github-actions-official):",
+      "automerge": true,
+      "platformAutomerge": true
+    },
+    {
+      "description": "Rules: Update Go toolchain major/minor requires review",
       "matchManagers": ["gomod"],
-      "commitMessagePrefix": "renovate(gomod):",
-      "addLabels": ["gomod"],
-      "postUpdateOptions": ["gomodTidy"]
+      "matchPackageNames": ["go"],
+      "matchUpdateTypes": ["major", "minor"],
+      "commitMessagePrefix": "renovate(go):",
+      "automerge": false,
+      "platformAutomerge": false
     },
     {
-      "description": "Update go directive in go.mod",
-      "matchManagers": ["gomod"],
-      "matchDepNames": ["go"],
-      "matchDepTypes": ["golang"],
-      "commitMessagePrefix": "renovate(gomod):",
-      "addLabels": ["gomod"],
-      "rangeStrategy": "bump"
-    },
-    {
-      "description": "Update npm packages",
+      "description": "Rules: Update npm packages patch updates automerge",
       "matchManagers": ["npm"],
-      "commitMessagePrefix": "renovate(npm):",
-      "addLabels": ["npm"]
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "platformAutomerge": true
     },
     {
-      "description": "Update Terraform providers and modules",
-      "matchManagers": ["terraform"],
-      "matchFileNames": ["modules/**", "terraform/**"],
-      "commitMessagePrefix": "renovate(terraform):",
+      "description": "Rules: Update Terraform",
+      "matchManagers": ["terraform", "terraform-version"],
+      "automerge": false,
+      "platformAutomerge": false,
       "addLabels": ["terraform"]
     },
     {
-      "description": "Auto-merge minor and low-risk updates except terraform",
-      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-      "excludeManagers": ["terraform", "custom.regex"],
-      "automerge": true,
-      "automergeType": "pr",
-      "platformAutomerge": true,
-      "addLabels": ["automerge"]
-    },
-    {
-      "description": "Require review for major updates",
-      "matchUpdateTypes": ["major"],
-      "automerge": false,
-      "addLabels": ["needs-review"]
-    },
-    {
-      "description": "Require review for Dockerfile updates above patch",
-      "matchManagers": ["dockerfile"],
-      "matchUpdateTypes": ["minor", "major"],
-      "automerge": false,
-      "platformAutomerge": false
-    },
-    {
-      "description": "Require review for go directive updates above patch",
-      "matchManagers": ["gomod"],
-      "matchDepNames": ["go"],
-      "matchDepTypes": ["golang"],
-      "matchUpdateTypes": ["minor", "major"],
-      "automerge": false,
-      "platformAutomerge": false
-    },
-    {
-      "description": "Require review for terraform updates (override automerge for all update types)",
+      "description": "Rules: Update Terraform modules / providers grouping",
       "matchManagers": ["terraform"],
-      "automerge": false,
-      "platformAutomerge": false
+      "matchFileNames": ["**/*.tf", "**/*.tfvars"],
+      "groupName": "terraform dependencies"
+    },
+    {
+      "description": "Rules: Safe automerge only for lockfile/digest/pin updates",
+      "matchUpdateTypes": ["lockFileMaintenance", "digest", "pin"],
+      "addLabels": ["automerge"],
+      "automerge": true,
+      "platformAutomerge": true
+    },
+    {
+      "description": "Rules: Custom regex manager manual review",
+      "matchManagers": ["custom.regex"],
+      "automerge": false
     }
   ]
 }
