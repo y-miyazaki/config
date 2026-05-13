@@ -383,7 +383,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@a8e6939a2ab5dd05676ab72622305f63d15fcabc # v1.0.0
+        uses: y-miyazaki/config/.github/actions/summary@6b09c1551e5376a4e2a8bca0356c182ecdfb454e # v1.0.1
         with:
           title: "${{ inputs.index_title }}"
           status: "${{ job.status }}"
