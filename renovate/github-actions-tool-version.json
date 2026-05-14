@@ -140,7 +140,8 @@
         "govulncheck_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
       "depNameTemplate": "golang/vuln",
-      "datasourceTemplate": "github-releases"
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^govulncheck/v(?<version>.*)$"
     },
     {
       "description": "CustomManager: Update Go version in workflow inputs",

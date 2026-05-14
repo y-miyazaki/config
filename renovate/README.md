@@ -27,7 +27,7 @@ This section defines the intended update policy first, independent from implemen
 - Go modules (`gomod`): automerge library `patch` only (exclude Go toolchain package `go`).
 - Go toolchain (`go` package in `gomod`): do not automerge `major`/`minor`.
 - npm: automerge `patch` only.
-- Python packages (`poetry`, `pip_requirements`, `pipenv`): automerge library `patch` only (poetry, pip_requirements); pipenv has no automerge.
+- Python packages (`poetry`, `pip_requirements`, `pipenv`): automerge library `patch` only.
 - Terraform (`terraform`, `terraform-version`): do not automerge.
 - Shared safe update types (`lockFileMaintenance`, `digest`, `pin`): automerge allowed unless explicitly overridden by a stricter rule.
 
@@ -47,7 +47,7 @@ This section defines the intended update policy first, independent from implemen
 
 - Base labels: `dependencies`
 - Dependency dashboard: enabled
-- Concurrency limits: `prConcurrentLimit=5`, `branchConcurrentLimit=5`
+- Concurrency limits: `prConcurrentLimit=10`, `branchConcurrentLimit=10`
 - Rebase policy: `behind-base-branch`
 - Version range strategy: `replace`
 - Lock file maintenance: enabled with schedule `before 4am on monday`
@@ -86,24 +86,26 @@ This section defines the intended update policy first, independent from implemen
 - Label all updates with `go`
 - Go toolchain (`go`) major/minor updates require review (no automerge)
 - Non-toolchain patch updates are automerged
+- Post-update: `gomodTidy` and `gomodUpdateImportPaths` (auto-updates import paths on major version bumps)
 - Commit prefix: `renovate(go):`
 
 ### npm (`npm`)
 
 - Label all updates with `npm`
 - Automerge patch updates only
+- Post-update: `npmDedupe` (deduplicates `package-lock.json`)
 
 ### Python (`poetry`, `pip_requirements`, `pipenv`)
 
 - Label all updates with `python`
-- Poetry and pip_requirements: automerge patch updates only
-- Pipenv: no automerge (requires manual review for all versions)
+- Automerge patch updates only (all three managers)
 - Commit prefix: `renovate(python):`
 
 ### Terraform (`terraform`, `terraform-version`)
 
 - Label updates with `terraform`
 - No automerge
+- Post-update: `terraformLockFileMaintenance` (auto-updates `.terraform.lock.hcl`)
 - Group Terraform module/provider updates into one PR with group name `terraform dependencies`
 
 ### Safe Update Types (cross-cutting)
@@ -136,7 +138,7 @@ Enabled managers include:
 - `terraform-linters/tflint`
 - `woodruffw/zizmor`
 - `golangci/golangci-lint`
-- `golang/vuln`
+- `golang/vuln` (uses `extractVersionTemplate` to parse `govulncheck/vX.Y.Z` tags)
 - `golang/go`
 - `goreleaser/goreleaser`
 - `koalaman/shellcheck`

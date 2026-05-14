@@ -20,7 +20,7 @@
   "rangeStrategy": "replace",
   "packageRules": [
     {
-      "description": "Rules: Add aqua label for all aqua package updates",
+      "description": "Rules: Add aqua label for all aqua package updates (label-only, automerge is overridden by patch rule below)",
       "matchManagers": ["regex"],
       "matchFileNames": ["aqua.yaml"],
       "commitMessagePrefix": "renovate(aqua):",
@@ -39,7 +39,7 @@
       "platformAutomerge": true
     },
     {
-      "description": "Rules: Add aqua label for all aqua-registry updates",
+      "description": "Rules: Add aqua label for all aqua-registry updates (label-only, automerge is overridden by minor/patch rule below)",
       "matchPackageNames": ["aquaproj/aqua-registry"],
       "commitMessagePrefix": "renovate(aqua):",
       "addLabels": ["aqua"],
@@ -63,7 +63,7 @@
       "platformAutomerge": false
     },
     {
-      "description": "Rules: Update GitHub Actions",
+      "description": "Rules: Add github-actions label for all GitHub Actions updates (label-only, automerge is overridden by patch rule below)",
       "matchManagers": ["github-actions"],
       "commitMessagePrefix": "renovate(github-actions):",
       "addLabels": ["github-actions"],
@@ -81,7 +81,7 @@
       "platformAutomerge": true
     },
     {
-      "description": "Rules: Add go label for all Go module updates",
+      "description": "Rules: Add go label for all Go module updates (label-only, automerge is overridden by patch rule below)",
       "matchManagers": ["gomod"],
       "commitMessagePrefix": "renovate(go):",
       "addLabels": ["go"],
@@ -109,7 +109,7 @@
       "platformAutomerge": false
     },
     {
-      "description": "Rules: Add npm label for all npm package updates",
+      "description": "Rules: Add npm label for all npm package updates (label-only, automerge is overridden by patch rule below)",
       "matchManagers": ["npm"],
       "addLabels": ["npm"],
       "postUpdateOptions": ["npmDedupe"],
@@ -125,7 +125,7 @@
       "platformAutomerge": true
     },
     {
-      "description": "Rules: Add python label for all Python package updates",
+      "description": "Rules: Add python label for all Python package updates (label-only, automerge is overridden by patch rule below)",
       "matchManagers": ["poetry", "pip_requirements", "pipenv"],
       "commitMessagePrefix": "renovate(python):",
       "addLabels": ["python"],
@@ -134,7 +134,7 @@
     },
     {
       "description": "Rules: Automerge patch updates for Poetry and pip",
-      "matchManagers": ["poetry", "pip_requirements"],
+      "matchManagers": ["poetry", "pip_requirements", "pipenv"],
       "matchUpdateTypes": ["patch"],
       "commitMessagePrefix": "renovate(python):",
       "addLabels": ["automerge"],
@@ -163,7 +163,7 @@
       "platformAutomerge": true
     },
     {
-      "description": "Rules: Dockerfile digest/pin updates require manual review",
+      "description": "Rules: Dockerfile digest/pin updates require manual review (overrides the general digest/pin automerge rule above)",
       "matchManagers": ["dockerfile", "docker-compose"],
       "matchUpdateTypes": ["digest", "pin"],
       "automerge": false,
