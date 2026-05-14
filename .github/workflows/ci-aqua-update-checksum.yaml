@@ -10,7 +10,7 @@ on:
   workflow_call:
     inputs:
       aqua_version:
-        default: "v2.55.2"
+        default: "v2.58.1"
         description: "aqua version to use"
         required: false
         type: string
