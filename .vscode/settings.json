@@ -4,7 +4,6 @@
     // ------------------------------------------------------------
     "breadcrumbs.enabled": true,
     "editor.autoIndent": "full", // オートインデント
-    "editor.detectIndentation": false, // インデントの自動判別
     "editor.formatOnPaste": false, // コード整形
     "editor.formatOnType": false, // コード整形
     "editor.formatOnSave": true, // format on save
@@ -150,7 +149,7 @@
     // files assotiations
     // ------------------------------------------------------------
     "files.associations": {
-        "tfvars": "Terraform"
+        "*.tfvars": "terraform"
     },
     "files.exclude": {
         "**/.env.local": true,
@@ -210,7 +209,7 @@
         },
         "apiVersion": 2,
         "showGlobalVariables": false,
-        "debugAdapter": "legacy",
+        "debugAdapter": "dlv-dap",
         "substitutePath": []
     },
     "go.disableConcurrentTests": false,
@@ -369,26 +368,7 @@
     // ------------------------------------------------------------
     // for Python
     // ------------------------------------------------------------
-    "python.pythonPath": "/usr/local/bin/python",
-    "python.linting.lintOnSave": true,
-    "python.linting.mypyEnabled": true,
-    "python.linting.pylintEnabled": false,
-    "python.linting.flake8Enabled": true,
-    "python.linting.enabled": true,
-    "python.linting.flake8Args": [
-        "--max-line-length",
-        "120",
-        "--max-complexity",
-        "20"
-    ],
-    "python.formatting.provider": "autopep8",
-    "python.formatting.autopep8Path": "/usr/local/bin/autopep8",
-    "python.formatting.autopep8Args": [
-        "--indent-size=4",
-        "--aggressive",
-        "--aggressive"
-    ],
-    "python.sortImports.path": "/usr/local/bin/isort",
+    "python.defaultInterpreterPath": "/usr/local/bin/python",
     "python.testing.unittestArgs": [
         "-v",
         "-s",
@@ -397,12 +377,21 @@
         "*test.py"
     ],
     "python.testing.pytestEnabled": false,
-    "python.testing.nosetestsEnabled": false,
     "python.testing.unittestEnabled": true,
-    "python.linting.mypyPath": "/usr/local/bin/mypy",
-    "python.linting.mypyArgs": [
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports.ruff": "always"
+        }
+    },
+    "mypy-type-checker.path": ["/usr/local/bin/mypy"],
+    "mypy-type-checker.args": [
         "--config-file",
         "mypy.ini"
+    ],
+    "ruff.lint.args": [
+        "--max-line-length=120"
     ],
     // ------------------------------------------------------------
     // for Shell Script
@@ -422,7 +411,9 @@
         "**/*.fish": true
     },
     "shellcheck.customArgs": [
-        "-x -e SC1091"
+        "-x",
+        "-e",
+        "SC1091"
     ],
     "[shellscript]": {
         "editor.defaultFormatter": "foxundermoon.shell-format",
