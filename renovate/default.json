@@ -81,13 +81,6 @@
       "platformAutomerge": true
     },
     {
-      "description": "Rules: Disable self-repo GitHub Actions digest updates only in preset repository",
-      "matchRepositories": ["y-miyazaki/config"],
-      "matchManagers": ["github-actions"],
-      "matchPackageNames": ["y-miyazaki/config"],
-      "enabled": false
-    },
-    {
       "description": "Rules: Add go label for all Go module updates (label-only, automerge is overridden by patch rule below)",
       "matchManagers": ["gomod"],
       "commitMessagePrefix": "renovate(go):",
