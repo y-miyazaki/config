@@ -202,15 +202,6 @@
       "addLabels": ["automerge"],
       "automerge": true,
       "platformAutomerge": true
-    },
-    {
-      "description": "Rules: Require review for go version updates above patch",
-      "matchManagers": ["custom.regex"],
-      "matchFileNames": [".github/workflows/**"],
-      "matchUpdateTypes": ["minor", "major"],
-      "automerge": false,
-      "platformAutomerge": false,
-      "addLabels": ["needs-review"]
     }
   ]
 }

@@ -1,6 +1,5 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-
   "extends": [
     "config:best-practices",
     ":dependencyDashboard",
@@ -11,16 +10,20 @@
     "github>aquaproj/aqua-renovate-config#2.12.0",
     "github>y-miyazaki/config//renovate/github-actions-tool-version"
   ],
+  "branchConcurrentLimit": 5,
   "dependencyDashboard": true,
+  "labels": ["dependencies"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 4am on monday"]
+  },
   "timezone": "Asia/Tokyo",
   "prConcurrentLimit": 5,
-  "branchConcurrentLimit": 5,
   "rebaseWhen": "behind-base-branch",
   "rangeStrategy": "replace",
-  "labels": ["dependencies"],
   "packageRules": [
     {
-      "description": "Rules: Update aqua packages",
+      "description": "Rules: Add aqua label for all aqua package updates",
       "matchManagers": ["regex"],
       "matchFileNames": ["aqua.yaml"],
       "commitMessagePrefix": "renovate(aqua):",
@@ -29,11 +32,29 @@
       "platformAutomerge": false
     },
     {
-      "description": "Rules: Update aqua-registry",
+      "description": "Rules: Automerge patch updates for aqua packages",
+      "matchManagers": ["regex"],
+      "matchFileNames": ["aqua.yaml"],
+      "matchUpdateTypes": ["patch"],
+      "commitMessagePrefix": "renovate(aqua):",
+      "addLabels": ["automerge"],
+      "automerge": true,
+      "platformAutomerge": true
+    },
+    {
+      "description": "Rules: Add aqua label for all aqua-registry updates",
+      "matchPackageNames": ["aquaproj/aqua-registry"],
+      "commitMessagePrefix": "renovate(aqua):",
+      "addLabels": ["aqua"],
+      "automerge": false,
+      "platformAutomerge": false
+    },
+    {
+      "description": "Rules: Automerge minor/patch updates for aqua-registry",
       "matchPackageNames": ["aquaproj/aqua-registry"],
       "matchUpdateTypes": ["minor", "patch"],
       "commitMessagePrefix": "renovate(aqua):",
-      "addLabels": ["aqua", "automerge"],
+      "addLabels": ["automerge"],
       "automerge": true,
       "platformAutomerge": true
     },
@@ -63,6 +84,24 @@
       "platformAutomerge": true
     },
     {
+      "description": "Rules: Add go label for all Go module updates",
+      "matchManagers": ["gomod"],
+      "commitMessagePrefix": "renovate(go):",
+      "addLabels": ["go"],
+      "automerge": false,
+      "platformAutomerge": false
+    },
+    {
+      "description": "Rules: Automerge patch updates for Go modules (excluding Go toolchain)",
+      "matchManagers": ["gomod"],
+      "excludePackageNames": ["go"],
+      "matchUpdateTypes": ["patch"],
+      "commitMessagePrefix": "renovate(go):",
+      "addLabels": ["automerge"],
+      "automerge": true,
+      "platformAutomerge": true
+    },
+    {
       "description": "Rules: Update Go toolchain major/minor requires review",
       "matchManagers": ["gomod"],
       "matchPackageNames": ["go"],
@@ -72,7 +111,14 @@
       "platformAutomerge": false
     },
     {
-      "description": "Rules: Update npm packages patch updates automerge",
+      "description": "Rules: Add npm label for all npm package updates",
+      "matchManagers": ["npm"],
+      "addLabels": ["npm"],
+      "automerge": false,
+      "platformAutomerge": false
+    },
+    {
+      "description": "Rules: Automerge patch updates for npm packages",
       "matchManagers": ["npm"],
       "matchUpdateTypes": ["patch"],
       "addLabels": ["automerge"],
@@ -80,11 +126,28 @@
       "platformAutomerge": true
     },
     {
+      "description": "Rules: Add python label for all Python package updates",
+      "matchManagers": ["poetry", "pip_requirements", "pipenv"],
+      "commitMessagePrefix": "renovate(python):",
+      "addLabels": ["python"],
+      "automerge": false,
+      "platformAutomerge": false
+    },
+    {
+      "description": "Rules: Automerge patch updates for Poetry and pip",
+      "matchManagers": ["poetry", "pip_requirements"],
+      "matchUpdateTypes": ["patch"],
+      "commitMessagePrefix": "renovate(python):",
+      "addLabels": ["automerge"],
+      "automerge": true,
+      "platformAutomerge": true
+    },
+    {
       "description": "Rules: Update Terraform",
       "matchManagers": ["terraform", "terraform-version"],
+      "addLabels": ["terraform"],
       "automerge": false,
-      "platformAutomerge": false,
-      "addLabels": ["terraform"]
+      "platformAutomerge": false
     },
     {
       "description": "Rules: Update Terraform modules / providers grouping",
