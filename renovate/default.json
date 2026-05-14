@@ -85,7 +85,7 @@
       "matchManagers": ["gomod"],
       "commitMessagePrefix": "renovate(go):",
       "addLabels": ["go"],
-      "postUpdateOptions": ["gomodTidy"],
+      "postUpdateOptions": ["gomodTidy", "gomodUpdateImportPaths"],
       "automerge": false,
       "platformAutomerge": false
     },
@@ -112,6 +112,7 @@
       "description": "Rules: Add npm label for all npm package updates",
       "matchManagers": ["npm"],
       "addLabels": ["npm"],
+      "postUpdateOptions": ["npmDedupe"],
       "automerge": false,
       "platformAutomerge": false
     },
@@ -144,6 +145,7 @@
       "description": "Rules: Update Terraform",
       "matchManagers": ["terraform", "terraform-version"],
       "addLabels": ["terraform"],
+      "postUpdateOptions": ["terraformLockFileMaintenance"],
       "automerge": false,
       "platformAutomerge": false
     },
