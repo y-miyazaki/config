@@ -10,12 +10,12 @@
     "github>aquaproj/aqua-renovate-config#2.12.0",
     "github>y-miyazaki/config//renovate/github-actions-tool-version"
   ],
-  "branchConcurrentLimit": 5,
+  "branchConcurrentLimit": 10,
   "dependencyDashboard": true,
   "labels": ["dependencies"],
   "minimumReleaseAge": 7,
   "timezone": "Asia/Tokyo",
-  "prConcurrentLimit": 5,
+  "prConcurrentLimit": 10,
   "rebaseWhen": "behind-base-branch",
   "rangeStrategy": "replace",
   "packageRules": [
