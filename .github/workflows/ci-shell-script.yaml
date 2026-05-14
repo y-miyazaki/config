@@ -1,4 +1,4 @@
-name: ci-script
+name: ci-shell-script
 
 # Reusable workflow: lint and validate repository shell scripts
 # - Uses shellcheck and shfmt actions when available
