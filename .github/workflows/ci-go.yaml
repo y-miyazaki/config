@@ -268,7 +268,7 @@ jobs:
 
       - name: Configure git auth
         if: matrix.task == 'lint' && github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@760cde0cc108082323466cbbf1d089019d75b513 # v1.0.3
+        uses: y-miyazaki/config/.github/actions/git-auth@30e3dfdccc765f7b9a447d091a293efab584434d # v1.0.4
         with:
           operation: configure
           token: ${{ github.token }}
@@ -298,7 +298,7 @@ jobs:
 
       - name: Clear git auth
         if: always() && matrix.task == 'lint' && github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@760cde0cc108082323466cbbf1d089019d75b513 # v1.0.3
+        uses: y-miyazaki/config/.github/actions/git-auth@30e3dfdccc765f7b9a447d091a293efab584434d # v1.0.4
         with:
           operation: clear
           token: ${{ github.token }}
@@ -328,7 +328,7 @@ jobs:
 
       - name: Summary
         if: always() && matrix.task == 'test'
-        uses: y-miyazaki/config/.github/actions/summary@760cde0cc108082323466cbbf1d089019d75b513 # v1.0.3
+        uses: y-miyazaki/config/.github/actions/summary@30e3dfdccc765f7b9a447d091a293efab584434d # v1.0.4
         with:
           artifacts: |
             coverage-${{ env.COMPONENT }}-${{ env.ENVIRONMENT }}
@@ -343,7 +343,7 @@ jobs:
 
       - name: Summary
         if: always() && matrix.task == 'security'
-        uses: y-miyazaki/config/.github/actions/summary@760cde0cc108082323466cbbf1d089019d75b513 # v1.0.3
+        uses: y-miyazaki/config/.github/actions/summary@30e3dfdccc765f7b9a447d091a293efab584434d # v1.0.4
         with:
           artifacts: |
             govulncheck-${{ env.COMPONENT }}-${{ env.ENVIRONMENT }}
@@ -359,7 +359,7 @@ jobs:
 
       - name: Summary
         if: always() && matrix.task == 'lint'
-        uses: y-miyazaki/config/.github/actions/summary@760cde0cc108082323466cbbf1d089019d75b513 # v1.0.3
+        uses: y-miyazaki/config/.github/actions/summary@30e3dfdccc765f7b9a447d091a293efab584434d # v1.0.4
         with:
           artifacts: |
             (none)

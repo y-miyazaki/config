@@ -14,8 +14,6 @@ on:
       - "**/*.md"
       - "docs/**/*.md"
       - ".markdownlint.yaml"
-      - ".github/workflows/on-ci-push-markdown.yaml"
-      - ".github/workflows/ci-markdown.yaml"
   pull_request:
     branches:
       - "main"
@@ -28,8 +26,6 @@ on:
       - "**/*.md"
       - "docs/**/*.md"
       - ".markdownlint.yaml"
-      - ".github/workflows/on-ci-push-markdown.yaml"
-      - ".github/workflows/ci-markdown.yaml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

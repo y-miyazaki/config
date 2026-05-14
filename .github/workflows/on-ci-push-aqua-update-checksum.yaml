@@ -12,8 +12,6 @@ on:
       - "aqua.yaml"
       - "aqua/*.yaml"
       - "aqua-checksums.json"
-      - ".github/workflows/on-ci-push-aqua-update-checksum.yaml"
-      - ".github/workflows/ci-aqua-update-checksum.yaml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
