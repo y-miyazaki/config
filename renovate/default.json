@@ -13,10 +13,6 @@
   "branchConcurrentLimit": 5,
   "dependencyDashboard": true,
   "labels": ["dependencies"],
-  "lockFileMaintenance": {
-    "enabled": true,
-    "schedule": ["before 4am on monday"]
-  },
   "timezone": "Asia/Tokyo",
   "prConcurrentLimit": 5,
   "rebaseWhen": "behind-base-branch",
