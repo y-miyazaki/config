@@ -147,7 +147,8 @@
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
-        "go_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
+        "go_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?",
+        "go_version:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
       ],
       "depNameTemplate": "golang/go",
       "datasourceTemplate": "github-tags",
