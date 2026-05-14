@@ -13,6 +13,7 @@
   "branchConcurrentLimit": 5,
   "dependencyDashboard": true,
   "labels": ["dependencies"],
+  "minimumReleaseAge": 7,
   "timezone": "Asia/Tokyo",
   "prConcurrentLimit": 5,
   "rebaseWhen": "behind-base-branch",
