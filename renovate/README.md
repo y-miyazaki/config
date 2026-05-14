@@ -160,3 +160,36 @@ When updating rule behavior:
 1. Keep base labeling rules and automerge rules separate where possible.
 2. Document any exception rules that intentionally override broad safe-update policies.
 3. Re-validate JSON syntax after edits.
+
+## Troubleshooting
+
+### WARN: Package lookup failures for y-miyazaki/config
+
+Symptom:
+
+- Renovate logs warnings like `Could not determine new digest for update (github-tags package y-miyazaki/config)`.
+- Warning often appears after converting caller workflows (`on-*.yaml`) to remote reusable workflow references.
+
+Typical cause:
+
+- In this repository, using remote self-reference for reusable workflows, such as:
+  - `uses: y-miyazaki/config/.github/workflows/<workflow>.yaml@<sha>`
+- This can trigger digest/tag lookup behavior for `y-miyazaki/config` and cause lookup failures.
+
+Recommended approach for this repository:
+
+- Keep reusable workflow calls as local references:
+  - `uses: ./.github/workflows/<workflow>.yaml`
+- Keep action references as needed by policy (remote SHA pinning is acceptable).
+
+Why this works:
+
+- Local reusable workflow calls remove self-repo remote dependency resolution from Renovate.
+- Action update behavior remains available where remote action refs are intentionally managed.
+
+Quick checks:
+
+1. Confirm no remote self-referenced reusable workflow calls remain:
+   - `rg -n "uses:\\s*y-miyazaki/config/\\.github/workflows/" .github/workflows`
+2. Confirm workflow syntax remains valid (if installed):
+   - `actionlint`
