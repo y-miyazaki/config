@@ -85,6 +85,7 @@
       "matchManagers": ["gomod"],
       "commitMessagePrefix": "renovate(go):",
       "addLabels": ["go"],
+      "postUpdateOptions": ["gomodTidy"],
       "automerge": false,
       "platformAutomerge": false
     },
