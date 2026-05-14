@@ -263,7 +263,7 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
-    needs: [init, lint, security]
+    needs: [init]
     environment:
       name: ${{ inputs.environment }}
     permissions:

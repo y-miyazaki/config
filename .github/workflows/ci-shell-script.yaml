@@ -99,7 +99,7 @@ jobs:
           github_token: ${{ github.token }}
           level: error
           reviewdog_flags: "-fail-level=${{ env.FAIL_LEVEL }} -reporter=github-pr-review"
-          shfmt_flags: "-l -i 4 -ci -bn -sr"
+          shfmt_flags: "-l -s -i 4 -ci -bn -sr"
           workdir: "."
 
       - name: Exec shfmt + reviewdog (push/check)
