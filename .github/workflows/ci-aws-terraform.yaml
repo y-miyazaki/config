@@ -203,6 +203,11 @@ jobs:
         run: |
           terraform -chdir="${TERRAFORM_PATH}" validate
 
+      - name: Exec TFLint init
+        run: tflint --init --config "${TERRAFORM_PATH}/.tflint.hcl"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
       - name: Exec TFLint (Modules)
         run: tflint -f compact --chdir ./modules --call-module-type=all
         env:

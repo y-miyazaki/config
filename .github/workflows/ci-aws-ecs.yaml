@@ -264,6 +264,10 @@ jobs:
         run: |
           set -euo pipefail
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          if [[ -z "$ACCOUNT_ID" ]]; then
+            echo "Error: Failed to retrieve AWS Account ID"
+            exit 1
+          fi
           echo "Running ecspresso verify for ${SERVICE_PATH} (env: ${ENVIRONMENT})..."
           cd "${SERVICE_PATH}"
           ecspresso verify \
@@ -348,6 +352,10 @@ jobs:
         run: |
           set -euo pipefail
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          if [[ -z "$ACCOUNT_ID" ]]; then
+            echo "Error: Failed to retrieve AWS Account ID"
+            exit 1
+          fi
           echo "Verifying scheduled task ${{ matrix.name }} (env: ${ENVIRONMENT})..."
           cd "${BATCH_PATH}"
 
@@ -362,10 +370,14 @@ jobs:
             "${ECSCHEDULE_CONFIG}" > "$TMP_CONFIG"
 
           # Verify EventBridge rules (CI: show diff without applying)
-          # NOTE: ecschedule v0.17.2 diff -u has known behavior of reporting role field changes
-          # even when both local and remote contain the same role
           echo "Running ecschedule diff for ${{ matrix.name }}..."
-          ecschedule -conf "$TMP_CONFIG" diff -all -u 2>&1 || true
+          diff_exit=0
+          ecschedule -conf "$TMP_CONFIG" diff -all -u 2>&1 || diff_exit=$?
+          if [[ $diff_exit -ne 0 ]]; then
+            echo "Warning: ecschedule diff exited with code ${diff_exit}"
+            echo "This may indicate a configuration error. Please review the output above."
+            exit 1
+          fi
 
           # Verify task definition config against ECS
           echo "Running ecspresso verify for ${{ matrix.name }}..."

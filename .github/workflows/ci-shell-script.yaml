@@ -121,6 +121,7 @@ jobs:
           path: ${{ steps.file-list.outputs.files_list }}
           reporter: github-pr-review
           shellcheck_flags: "-x"
+          shellcheck_version: ${{ inputs.shellcheck_version }}
 
       - name: Exec ShellCheck + reviewdog (push/check)
         if: steps.file-list.outputs.no_files == 'false' && github.event_name != 'pull_request'
@@ -133,6 +134,7 @@ jobs:
           path: ${{ steps.file-list.outputs.files_list }}
           reporter: github-check
           shellcheck_flags: "-x"
+          shellcheck_version: ${{ inputs.shellcheck_version }}
 
       - name: Exec Bash syntax check (bash -n)
         if: steps.file-list.outputs.no_files == 'false'
