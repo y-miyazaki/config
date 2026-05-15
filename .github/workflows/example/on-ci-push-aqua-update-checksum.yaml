@@ -1,5 +1,10 @@
 # CI workflow: Aqua checksum update on push
-# Requires: BOT_APP_PRIVATE_KEY and BOT_APP_CLIENT_ID secrets.
+# Usage: This workflow requires a GitHub App for auto-committing checksum updates.
+# 1. Create a GitHub App with "Contents: Read & Write" repository permission.
+# 2. Install the App on the target repository (or organization).
+# 3. Create the following secrets (repository or environment):
+#    - BOT_APP_CLIENT_ID: The GitHub App's Client ID
+#    - BOT_APP_PRIVATE_KEY: The GitHub App's private key (PEM format)
 name: on-ci-push-aqua-update-checksum
 
 on:
