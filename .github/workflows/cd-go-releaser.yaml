@@ -79,7 +79,9 @@ jobs:
 
       - name: Check if tag exists
         id: check-tag
+        shell: bash
         run: |
+          set -euo pipefail
           if [ -z "$VERSION" ]; then
             VERSION="${GITHUB_REF#refs/tags/}"
             if [[ "$VERSION" == "refs/"* ]]; then
@@ -100,9 +102,11 @@ jobs:
 
       - name: Validate version format
         id: validate-version
+        shell: bash
         env:
           VERSION: ${{ steps.check-tag.outputs.version }}
         run: |
+          set -euo pipefail
           if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
             echo "❌ Error: Version must start with 'v' and follow semantic versioning (e.g. v1.0.0, v1.0.0-beta.1)"
             exit 1
@@ -117,9 +121,11 @@ jobs:
 
       - name: Create tag
         if: steps.check-tag.outputs.tag_exists == 'false' && env.CREATE_TAG == 'true'
+        shell: bash
         env:
           TAG_VERSION: ${{ steps.check-tag.outputs.version }}
         run: |
+          set -euo pipefail
           VERSION="${TAG_VERSION}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -129,12 +135,14 @@ jobs:
 
       - name: Fetch tags after creation
         if: steps.check-tag.outputs.tag_exists == 'false' && env.CREATE_TAG == 'true'
+        shell: bash
         run: |
+          set -euo pipefail
           git fetch --tags --force
           echo "✅ Tags refreshed"
 
       - name: Clear git auth
-        if: steps.check-tag.outputs.tag_exists == 'false' && env.CREATE_TAG == 'true'
+        if: always()
         uses: y-miyazaki/config/.github/actions/git-auth@ae434803ee16c58a449f5e1b925db1097687a556 # v1.0.8
         with:
           operation: clear
@@ -148,8 +156,10 @@ jobs:
 
       - name: Determine Go cache paths
         id: go-cache-paths
+        shell: bash
         working-directory: ${{ env.GO_PROJECT_PATH }}
         run: |
+          set -euo pipefail
           {
             echo "gomodcache=$(go env GOMODCACHE)"
             echo "gocache=$(go env GOCACHE)"
@@ -172,8 +182,10 @@ jobs:
             ${{ runner.os }}-gocache-
 
       - name: Download dependencies
+        shell: bash
         working-directory: ${{ env.GO_PROJECT_PATH }}
         run: |
+          set -euo pipefail
           go mod download
           echo "✅ Dependencies downloaded"
 
@@ -185,9 +197,11 @@ jobs:
 
       - name: Prepare GoReleaser arguments
         id: goreleaser-args
+        shell: bash
         env:
           TAG_EXISTS: ${{ steps.check-tag.outputs.tag_exists }}
         run: |
+          set -euo pipefail
           ARGS="release --clean --parallelism 2"
           # Skip git validation if we just created the tag
           if [ "${TAG_EXISTS}" == "false" ] && [ "${CREATE_TAG}" == "true" ]; then
