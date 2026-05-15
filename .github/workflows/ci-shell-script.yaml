@@ -1,9 +1,6 @@
+# Reusable workflow: Shell script lint and validation
+# Uses shellcheck, shfmt, bash syntax checks, and shebang verification.
 name: ci-shell-script
-
-# Reusable workflow: lint and validate repository shell scripts
-# - Uses shellcheck and shfmt actions when available
-# - Performs bash syntax checks and shebang verification
-# - Does NOT call scripts/validate.sh directly (reference only)
 
 on:
   workflow_call:

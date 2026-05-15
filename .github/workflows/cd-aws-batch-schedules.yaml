@@ -1,5 +1,5 @@
-# Reusable workflow: generate AWS batch schedules and upload as zip artifact
-# This workflow can be called by other workflows to generate schedule outputs with absc
+# Reusable workflow: Generate AWS Batch schedules and upload as zip artifact
+# Generates schedule outputs with absc and uploads them for downstream consumption.
 name: cd-aws-batch-schedules
 
 on:

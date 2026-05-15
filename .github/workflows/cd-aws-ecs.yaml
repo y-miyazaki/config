@@ -1,3 +1,5 @@
+# Reusable workflow: ECS CI/CD (verify and deploy ECS services)
+# Scans service directories, validates jsonnet formatting, and runs ecspresso verify/deploy.
 name: cd-aws-ecs
 
 on:

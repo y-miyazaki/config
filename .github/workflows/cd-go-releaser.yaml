@@ -1,6 +1,5 @@
-# Reusable workflow for Go application release using GoReleaser
-# This workflow builds cross-platform binaries and creates GitHub releases with GoReleaser.
-# It can be called from other workflows to perform CD operations for Go applications.
+# Reusable workflow: Go application release with GoReleaser
+# Builds cross-platform binaries and creates GitHub releases.
 name: cd-go-releaser
 
 on:

@@ -1,5 +1,5 @@
-# Reusable workflow for controlling AWS services (unified interface)
-# This workflow orchestrates EC2, ECS, and RDS control workflows based on service type
+# Reusable workflow: AWS service control (unified interface)
+# Orchestrates EC2, ECS, RDS, Batch, and Redshift control workflows based on service type.
 name: cd-aws-service-control
 
 on:

@@ -1,5 +1,5 @@
-# Reusable workflow for controlling EC2 instances (start/stop)
-# This workflow can start or stop EC2 instances with automatic resource discovery
+# Reusable workflow: EC2 instance control (start/stop)
+# Starts or stops EC2 instances with automatic resource discovery.
 name: cd-aws-service-control-ec2
 
 on:

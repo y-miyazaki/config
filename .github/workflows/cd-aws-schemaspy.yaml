@@ -1,5 +1,5 @@
-# Reusable workflow for SchemaSpy database documentation generation
-# This workflow can be called by other workflows to generate database schema documentation using SchemaSpy
+# Reusable workflow: SchemaSpy database documentation generation
+# Generates database schema documentation using SchemaSpy and uploads artifacts.
 name: cd-aws-schemaspy
 
 on:

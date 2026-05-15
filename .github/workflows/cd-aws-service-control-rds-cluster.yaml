@@ -1,5 +1,5 @@
-# Reusable workflow for controlling RDS clusters (start/stop)
-# This workflow can start or stop RDS clusters with automatic resource discovery
+# Reusable workflow: RDS cluster control (start/stop)
+# Starts or stops RDS clusters with automatic resource discovery.
 name: cd-aws-service-control-rds
 
 on:

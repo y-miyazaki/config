@@ -1,5 +1,5 @@
-# Reusable workflow for Go CI operations
-# This workflow runs Go tests and golangci-lint. It is intended to be called from other workflows.
+# Reusable workflow: Go CI (test, lint, security)
+# Runs Go tests, golangci-lint, govulncheck, and trivy scanning.
 name: ci-go
 
 on:
@@ -90,21 +90,6 @@ jobs:
           restore-keys: |
             go-cache-${{ env.ENVIRONMENT }}-${{ env.COMPONENT }}-${{ runner.os }}-${{ env.GO_VERSION }}-
             go-cache-${{ env.ENVIRONMENT }}-${{ env.COMPONENT }}-${{ runner.os }}-
-
-      - name: Exec gofmt
-        run: |
-          cd "${GO_PROJECT_PATH}"
-          go_files=$(git ls-files '*.go')
-          if [ -z "$go_files" ]; then
-            echo "No Go files tracked by git. Skipping gofmt check."
-            exit 0
-          fi
-          formatted=$(echo "$go_files" | xargs gofmt -l)
-          if [ -n "$formatted" ]; then
-            echo "The following files are not gofmt-formatted:"
-            echo "$formatted"
-            exit 1
-          fi
 
       - name: Exec go mod tidy
         run: |

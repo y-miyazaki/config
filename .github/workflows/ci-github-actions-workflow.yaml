@@ -1,8 +1,5 @@
-# Reusable workflow: lint and validate GitHub Actions workflows
-# - Uses actionlint for workflow syntax validation
-# - Uses ghalint for security/settings validation
-# - Uses zizmor-action for static analysis
-# - Does NOT require aqua.yaml in the repository
+# Reusable workflow: GitHub Actions workflow lint and validation
+# Uses actionlint, ghalint, and zizmor for syntax, security, and static analysis.
 name: ci-github-actions-workflow
 
 on:

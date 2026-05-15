@@ -1,5 +1,5 @@
-# Reusable workflow for controlling AWS Batch job queues (enable/disable)
-# This workflow can enable or disable AWS Batch job queues
+# Reusable workflow: AWS Batch job queue control (enable/disable)
+# Enables or disables AWS Batch job queues.
 name: cd-aws-service-control-batch
 
 on:

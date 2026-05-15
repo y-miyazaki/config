@@ -1,5 +1,5 @@
-# Reusable workflow for controlling ECS Services (start/stop)
-# This workflow can start or stop ECS services with automatic resource discovery
+# Reusable workflow: ECS service control (start/stop)
+# Starts or stops ECS services with automatic resource discovery.
 name: cd-aws-service-control-ecs-service
 
 on:

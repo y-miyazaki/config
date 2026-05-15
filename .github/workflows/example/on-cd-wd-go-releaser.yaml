@@ -1,6 +1,5 @@
-# Manual workflow for releasing Go application
-# This workflow allows manual release creation by specifying a version.
-# It uses the cd-go-releaser workflow to build and publish releases.
+# Manual workflow: Go application release with GoReleaser
+# Allows manual release creation by specifying a version.
 name: on-cd-wd-go-releaser
 
 on:

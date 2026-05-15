@@ -1,8 +1,5 @@
-# Reusable workflow for ECS CI
-# - Scans ecs_service_base_dir for service subdirectories containing ecspresso.jsonnet
-# - Checks .jsonnet formatting with jsonnetfmt (per service, via matrix)
-# - Verifies ECS service configuration with ecspresso verify (per service, via matrix)
-# - Optionally dry-runs ecschedule for scheduled task verification
+# Reusable workflow: ECS CI (jsonnet format check and ecspresso verify)
+# Scans service directories for ecspresso.jsonnet and validates per service via matrix.
 name: ci-aws-ecs
 
 on:

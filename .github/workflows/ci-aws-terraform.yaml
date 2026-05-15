@@ -1,5 +1,5 @@
-# Reusable workflow for Terraform CI operations
-# This workflow can be called by other workflows to perform Terraform CI operations
+# Reusable workflow: Terraform CI (lint, security, plan)
+# Runs terraform fmt, validate, tflint, trivy, and terraform plan.
 name: ci-terraform-aws
 
 on:

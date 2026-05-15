@@ -1,5 +1,5 @@
-# Reusable workflow: generate AWS resources and upload as zip artifact
-# This workflow can be called by other workflows to generate AWS resources
+# Reusable workflow: Generate AWS resources and upload as zip artifact
+# Generates AWS resource outputs and uploads them for downstream consumption.
 name: cd-aws-resources
 
 on:

@@ -1,5 +1,5 @@
-# Reusable workflow for controlling ECS Scheduled Tasks via EventBridge Scheduler (enable/disable)
-# This workflow can enable or disable EventBridge schedules that start/stop ECS tasks
+# Reusable workflow: ECS scheduled task control (enable/disable)
+# Enables or disables EventBridge schedules that manage ECS tasks.
 name: cd-aws-service-control-ecs-scheduled-task
 
 on:
