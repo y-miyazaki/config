@@ -78,6 +78,22 @@ This section defines the intended update policy first, independent from implemen
 - Default: no automerge
 - `digest` and `pin` updates: manual review required (explicitly no automerge)
 
+#### ECR pull-through cache と minimumReleaseAge
+
+`minimumReleaseAge`はDocker Hubレジストリでのみ`releaseTimestamp`を取得できます。ECR pull-through cache経由でDocker Hubイメージを参照している場合、デフォルトでは`minimumReleaseAge`が効きません。
+
+各リポジトリの`renovate.json`に`registryAliases`を設定することで対応できます：
+
+```json
+{
+  "registryAliases": {
+    "<account-id>.dkr.ecr.<region>.amazonaws.com/dockerhub": "docker.io"
+  }
+}
+```
+
+参考: [Renovate で ECR pull-through cache 経由のイメージにも minimumReleaseAge を適用できるか検証してみた](https://dev.classmethod.jp/articles/dafujii-renovate-minimum-release-age-on-ecr-pull-through-cache/)
+
 ### GitHub Actions (`github-actions` manager)
 
 - Label updates with `github-actions`
