@@ -91,7 +91,7 @@ jobs:
           check_jq
           echo "🔍 Discovering AWS Batch job queues..."
 
-          mapfile -t queues < <(aws batch describe-job-queues --query "jobQueues[].jobQueueName" --output text | tr '\t' '\n')
+          mapfile -t queues < <(aws batch describe-job-queues --output json | jq -r '.jobQueues[].jobQueueName')
 
           FILTERED_QUEUES=()
           INCLUDE_PATTERNS_ARRAY=$(echo "$INCLUDE_PATTERNS" | jq -r '.[]' 2>/dev/null || echo "")
@@ -231,14 +231,24 @@ jobs:
 
           echo "Job Queue: [$QUEUE_NAME]"
 
-          # Check if queue exists
-          QUEUE_CHECK=$(aws batch describe-job-queues --job-queues "$QUEUE_NAME" --query 'jobQueues[0].jobQueueName' --output text 2>/dev/null || echo "")
+          # Check current queue state before operation
+          QUEUE_INFO=$(aws batch describe-job-queues --job-queues "$QUEUE_NAME" --query 'jobQueues[0].[jobQueueName,state]' --output text 2>/dev/null || echo "")
+          QUEUE_CHECK=$(echo "$QUEUE_INFO" | awk '{print $1}')
+          CURRENT_STATE=$(echo "$QUEUE_INFO" | awk '{print $2}')
+
           if [[ -z "$QUEUE_CHECK" || "$QUEUE_CHECK" == "None" ]]; then
             echo "ℹ️ Job queue $QUEUE_NAME not found (skipping)"
             exit 0
           fi
 
+          echo "Current queue state: $CURRENT_STATE"
+
           if [[ "$ACTION" == "stop" ]]; then
+            if [[ "$CURRENT_STATE" == "DISABLED" ]]; then
+              echo "ℹ️ Batch job queue is already disabled (skipping)"
+              exit 0
+            fi
+
             echo "🛑 Disabling Batch job queue: $QUEUE_NAME"
             aws batch update-job-queue --job-queue "$QUEUE_NAME" --state DISABLED || {
               echo "❌ Failed to disable job queue $QUEUE_NAME"
@@ -247,6 +257,11 @@ jobs:
             echo "✅ Disabled Batch job queue: $QUEUE_NAME"
 
           elif [[ "$ACTION" == "start" ]]; then
+            if [[ "$CURRENT_STATE" == "ENABLED" ]]; then
+              echo "ℹ️ Batch job queue is already enabled (skipping)"
+              exit 0
+            fi
+
             echo "▶️  Enabling Batch job queue: $QUEUE_NAME"
             aws batch update-job-queue --job-queue "$QUEUE_NAME" --state ENABLED || {
               echo "❌ Failed to enable job queue $QUEUE_NAME"
@@ -263,6 +278,7 @@ jobs:
           EXPECTED_STATE: ${{ inputs.action == 'stop' && 'DISABLED' || 'ENABLED' }}
         shell: bash
         run: |
+          set -euo pipefail
           echo "⏳ Waiting for job queue to reach $EXPECTED_STATE state"
 
           for i in {1..20}; do

@@ -20,11 +20,11 @@ on:
         description: "Comma-separated glob(s) of script files to check. If empty, all **/*.sh are checked"
         required: false
         type: string
-      shellcheck_version:
-        default: "0.11.0"
-        description: "ShellCheck version to use"
-        required: false
-        type: string
+
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
 
 env:
   FAIL_LEVEL: ${{ inputs.fail_level }}
@@ -55,7 +55,9 @@ jobs:
 
       - name: Setup Expand file list
         id: file-list
+        shell: bash
         run: |
+          set -euo pipefail
           # shellcheck disable=SC2086,SC2046
           set -euo pipefail
           # If script_path is empty, check all shell scripts in the repo
@@ -121,7 +123,6 @@ jobs:
           path: ${{ steps.file-list.outputs.files_list }}
           reporter: github-pr-review
           shellcheck_flags: "-x"
-          shellcheck_version: ${{ inputs.shellcheck_version }}
 
       - name: Exec ShellCheck + reviewdog (push/check)
         if: steps.file-list.outputs.no_files == 'false' && github.event_name != 'pull_request'
@@ -134,11 +135,12 @@ jobs:
           path: ${{ steps.file-list.outputs.files_list }}
           reporter: github-check
           shellcheck_flags: "-x"
-          shellcheck_version: ${{ inputs.shellcheck_version }}
 
       - name: Exec Bash syntax check (bash -n)
         if: steps.file-list.outputs.no_files == 'false'
+        shell: bash
         run: |
+          set -euo pipefail
           # shellcheck disable=SC2086
           set -euo pipefail
           while IFS= read -r f; do
@@ -148,7 +150,9 @@ jobs:
 
       - name: Exec Shebang check (must be bash)
         if: steps.file-list.outputs.no_files == 'false'
+        shell: bash
         run: |
+          set -euo pipefail
           # shellcheck disable=SC2086
           set -euo pipefail
           while IFS= read -r f; do
@@ -161,7 +165,9 @@ jobs:
 
       - name: Exec Permissions check
         if: steps.file-list.outputs.no_files == 'false'
+        shell: bash
         run: |
+          set -euo pipefail
           # shellcheck disable=SC2086
           set -euo pipefail
           rc=0

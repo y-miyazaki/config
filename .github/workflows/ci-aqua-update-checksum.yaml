@@ -52,6 +52,7 @@ jobs:
           aqua_version: ${{ inputs.aqua_version }}
 
       - name: Fix aqua-checksums.json
+        shell: bash
         run: aqua upc -prune
 
       - name: Generate GitHub App Token

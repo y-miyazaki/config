@@ -245,9 +245,29 @@ jobs:
           INSTANCE_ID: ${{ matrix.instance }}
         shell: bash
         run: |
+          set -euo pipefail
+
+          # Check current instance state before operation
+          CURRENT_STATE=$(aws ec2 describe-instances \
+            --instance-ids "$INSTANCE_ID" \
+            --query 'Reservations[0].Instances[0].State.Name' \
+            --output text 2>/dev/null || echo "unknown")
+
+          echo "Current instance state: $CURRENT_STATE"
+
           if [[ "$ACTION" == "stop" ]]; then
+            if [[ "$CURRENT_STATE" == "stopped" ]]; then
+              echo "ℹ️ EC2 instance is already stopped (skipping)"
+              exit 0
+            elif [[ "$CURRENT_STATE" == "stopping" ]]; then
+              echo "ℹ️ EC2 instance is already stopping (skipping)"
+              exit 0
+            elif [[ "$CURRENT_STATE" != "running" ]]; then
+              echo "ℹ️ EC2 instance is not running (state: $CURRENT_STATE). Cannot stop (skipping)"
+              exit 0
+            fi
+
             echo "🛑 Stopping EC2 instance: $INSTANCE_ID"
-            # run command and capture stderr; ignore if instance already stopped
             ERR=$(aws ec2 stop-instances --instance-ids "$INSTANCE_ID" 2>&1) || RC=$?
             if [ "${RC:-0}" -ne 0 ]; then
               if echo "$ERR" | grep -qiE "already.*stopped|InvalidInstanceID\.NotFound"; then
@@ -261,6 +281,17 @@ jobs:
             fi
 
           elif [[ "$ACTION" == "start" ]]; then
+            if [[ "$CURRENT_STATE" == "running" ]]; then
+              echo "ℹ️ EC2 instance is already running (skipping)"
+              exit 0
+            elif [[ "$CURRENT_STATE" == "pending" ]]; then
+              echo "ℹ️ EC2 instance is already starting (skipping)"
+              exit 0
+            elif [[ "$CURRENT_STATE" != "stopped" ]]; then
+              echo "ℹ️ EC2 instance is not stopped (state: $CURRENT_STATE). Cannot start (skipping)"
+              exit 0
+            fi
+
             echo "▶️  Starting EC2 instance: $INSTANCE_ID"
             ERR=$(aws ec2 start-instances --instance-ids "$INSTANCE_ID" 2>&1) || RC=$?
             if [ "${RC:-0}" -ne 0 ]; then
@@ -282,6 +313,7 @@ jobs:
           INSTANCE_ID: ${{ matrix.instance }}
         shell: bash
         run: |
+          set -euo pipefail
           EXPECTED_STATUS="running"
           if [[ "$ACTION" == "stop" ]]; then
             EXPECTED_STATUS="stopped"

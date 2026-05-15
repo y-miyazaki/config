@@ -94,8 +94,8 @@ jobs:
 
           echo "🔍 Discovering Redshift clusters..."
 
-          # List all Redshift clusters
-          mapfile -t clusters < <(aws redshift describe-clusters --query 'Clusters[].ClusterIdentifier' --output text | tr '\t' '\n')
+          # List all Redshift clusters (JSON output enables automatic pagination)
+          mapfile -t clusters < <(aws redshift describe-clusters --output json | jq -r '.Clusters[].ClusterIdentifier')
 
           FILTERED_CLUSTERS=()
           INCLUDE_PATTERNS_ARRAY=$(echo "$INCLUDE_PATTERNS" | jq -r '.[]' 2>/dev/null || echo "")
@@ -239,6 +239,8 @@ jobs:
           CLUSTER: ${{ matrix.cluster }}
         shell: bash
         run: |
+          set -euo pipefail
+
           # Check current cluster status
           CURRENT_STATUS=$(aws redshift describe-clusters \
             --cluster-identifier "$CLUSTER" \
@@ -307,6 +309,7 @@ jobs:
           CLUSTER: ${{ matrix.cluster }}
         shell: bash
         run: |
+          set -euo pipefail
           EXPECTED_STATUS="available"
           if [[ "$ACTION" == "stop" ]]; then
             EXPECTED_STATUS="paused"

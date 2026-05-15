@@ -37,6 +37,11 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
 env:
   CODECOV_TOKEN: ${{ inputs.codecov_token }}
   COMPONENT: ${{ inputs.component }}
@@ -73,7 +78,9 @@ jobs:
       - name: Determine Go cache paths
         id: go-cache-paths
         working-directory: ${{ env.GO_PROJECT_PATH }}
+        shell: bash
         run: |
+          set -euo pipefail
           # Write outputs in a single grouped redirect to avoid multiple >> usage
           {
             echo "gomodcache=$(go env GOMODCACHE)"
@@ -92,7 +99,9 @@ jobs:
             go-cache-${{ env.ENVIRONMENT }}-${{ env.COMPONENT }}-${{ runner.os }}-
 
       - name: Exec go mod tidy
+        shell: bash
         run: |
+          set -euo pipefail
           cd "${GO_PROJECT_PATH}"
           go mod tidy
           if ! git diff --exit-code -- go.mod go.sum; then
@@ -126,7 +135,9 @@ jobs:
       - name: Determine Go cache paths
         id: go-cache-paths
         working-directory: ${{ env.GO_PROJECT_PATH }}
+        shell: bash
         run: |
+          set -euo pipefail
           {
             echo "gomodcache=$(go env GOMODCACHE)"
             echo "gocache=$(go env GOCACHE)"
@@ -146,11 +157,14 @@ jobs:
 
       - name: Download Go Modules
         if: steps.go-cache.outputs.cache-hit != 'true'
+        shell: bash
         run: go mod download
         working-directory: ${{ env.GO_PROJECT_PATH }}
 
       - name: Exec Go Tests (with race + coverage)
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p coverage
           go test ./... -race -count=1 -covermode=atomic -coverprofile=coverage/coverage.out
           go tool cover -func=coverage/coverage.out | tee coverage/coverage.txt
@@ -224,7 +238,9 @@ jobs:
       - name: Determine Go cache paths
         id: go-cache-paths
         working-directory: ${{ env.GO_PROJECT_PATH }}
+        shell: bash
         run: |
+          set -euo pipefail
           {
             echo "gomodcache=$(go env GOMODCACHE)"
             echo "gocache=$(go env GOCACHE)"
@@ -244,6 +260,7 @@ jobs:
 
       - name: Download Go Modules
         if: steps.go-cache.outputs.cache-hit != 'true'
+        shell: bash
         run: go mod download
         working-directory: ${{ env.GO_PROJECT_PATH }}
 
@@ -348,7 +365,9 @@ jobs:
       - name: Determine Go cache paths
         id: go-cache-paths
         working-directory: ${{ env.GO_PROJECT_PATH }}
+        shell: bash
         run: |
+          set -euo pipefail
           {
             echo "gomodcache=$(go env GOMODCACHE)"
             echo "gocache=$(go env GOCACHE)"
@@ -368,17 +387,20 @@ jobs:
 
       - name: Download Go Modules
         if: steps.go-cache.outputs.cache-hit != 'true'
+        shell: bash
         run: go mod download
         working-directory: ${{ env.GO_PROJECT_PATH }}
 
       - name: Setup govulncheck
         working-directory: ${{ env.GO_PROJECT_PATH }}
+        shell: bash
         run: go install "golang.org/x/vuln/cmd/govulncheck@${GOVULNCHECK_VERSION}"
 
       # Do not fail the job on vulnerabilities; save reports as artifacts instead
       - name: Exec govulncheck (no-fail, save artifacts)
         working-directory: ${{ env.GO_PROJECT_PATH }}
         continue-on-error: true
+        shell: bash
         run: |
           mkdir -p security
           # JSON report for machine processing

@@ -17,6 +17,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   aqua-update-checksum:
     uses: y-miyazaki/config/.github/workflows/ci-aqua-update-checksum.yaml@ae434803ee16c58a449f5e1b925db1097687a556 # v1.0.8

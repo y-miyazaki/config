@@ -49,6 +49,10 @@ on:
       AWS_REGION:
         required: true
 
+permissions:
+  contents: read
+  id-token: write
+
 env:
   COMPONENT: ${{ inputs.component }}
   DOCKER_CONTEXT: ${{ inputs.docker_context }}
@@ -89,7 +93,9 @@ jobs:
         id: meta
         env:
           ECR_LOGIN_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        shell: bash
         run: |
+          set -euo pipefail
           IMAGE_TAG_VAL="${IMAGE_TAG}"
           if [ -z "$IMAGE_TAG_VAL" ]; then IMAGE_TAG_VAL="${GITHUB_SHA::12}"; fi
           REGISTRY_INPUT="${ECR_REGISTRY}"

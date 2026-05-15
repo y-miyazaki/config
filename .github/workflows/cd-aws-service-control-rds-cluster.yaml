@@ -94,8 +94,8 @@ jobs:
 
           echo "🔍 Discovering RDS clusters..."
 
-          # List all RDS DB clusters
-          mapfile -t clusters < <(aws rds describe-db-clusters --query 'DBClusters[].DBClusterIdentifier' --output text | tr '\t' '\n')
+          # List all RDS DB clusters (JSON output enables automatic pagination)
+          mapfile -t clusters < <(aws rds describe-db-clusters --output json | jq -r '.DBClusters[].DBClusterIdentifier')
 
           FILTERED_CLUSTERS=()
           INCLUDE_PATTERNS_ARRAY=$(echo "$INCLUDE_PATTERNS" | jq -r '.[]' 2>/dev/null || echo "")
@@ -239,9 +239,29 @@ jobs:
           CLUSTER: ${{ matrix.cluster }}
         shell: bash
         run: |
+          set -euo pipefail
+
+          # Check current cluster status before operation
+          CURRENT_STATUS=$(aws rds describe-db-clusters \
+            --db-cluster-identifier "$CLUSTER" \
+            --query 'DBClusters[0].Status' \
+            --output text 2>/dev/null || echo "unknown")
+
+          echo "Current cluster status: $CURRENT_STATUS"
+
           if [[ "$ACTION" == "stop" ]]; then
+            if [[ "$CURRENT_STATUS" == "stopped" ]]; then
+              echo "ℹ️ RDS cluster is already stopped (skipping)"
+              exit 0
+            elif [[ "$CURRENT_STATUS" == "stopping" ]]; then
+              echo "ℹ️ RDS cluster is already stopping (skipping)"
+              exit 0
+            elif [[ "$CURRENT_STATUS" != "available" ]]; then
+              echo "ℹ️ RDS cluster is not available (status: $CURRENT_STATUS). Cannot stop (skipping)"
+              exit 0
+            fi
+
             echo "🛑 Stopping RDS cluster: $CLUSTER"
-            # run command and capture stderr; ignore if cluster already stopped
             ERR=$(aws rds stop-db-cluster --db-cluster-identifier "$CLUSTER" 2>&1) || RC=$?
             if [ "${RC:-0}" -ne 0 ]; then
               if echo "$ERR" | grep -qiE "is in stopped state|already.*stopped|InvalidDBClusterStateFault"; then
@@ -255,6 +275,17 @@ jobs:
             fi
 
           elif [[ "$ACTION" == "start" ]]; then
+            if [[ "$CURRENT_STATUS" == "available" ]]; then
+              echo "ℹ️ RDS cluster is already available (skipping)"
+              exit 0
+            elif [[ "$CURRENT_STATUS" == "starting" ]]; then
+              echo "ℹ️ RDS cluster is already starting (skipping)"
+              exit 0
+            elif [[ "$CURRENT_STATUS" != "stopped" ]]; then
+              echo "ℹ️ RDS cluster is not stopped (status: $CURRENT_STATUS). Cannot start (skipping)"
+              exit 0
+            fi
+
             echo "▶️  Starting RDS cluster: $CLUSTER"
             ERR=$(aws rds start-db-cluster --db-cluster-identifier "$CLUSTER" 2>&1) || RC=$?
             if [ "${RC:-0}" -ne 0 ]; then
@@ -276,6 +307,7 @@ jobs:
           CLUSTER: ${{ matrix.cluster }}
         shell: bash
         run: |
+          set -euo pipefail
           EXPECTED_STATUS="available"
           if [[ "$ACTION" == "stop" ]]; then
             EXPECTED_STATUS="stopped"

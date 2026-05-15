@@ -27,6 +27,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
+
 jobs:
   shell-script-ci:
     uses: ./.github/workflows/ci-shell-script.yaml

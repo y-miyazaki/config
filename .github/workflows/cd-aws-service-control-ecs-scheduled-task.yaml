@@ -91,8 +91,8 @@ jobs:
           check_jq
           echo "🔍 Discovering ECS scheduled tasks via EventBridge..."
 
-          # Find EventBridge rules with ECS RunTask target
-          mapfile -t rule_names < <(aws events list-rules --query "Rules[].Name" --output text | tr '\t' '\n')
+          # Find EventBridge rules with ECS RunTask target (JSON output enables automatic pagination)
+          mapfile -t rule_names < <(aws events list-rules --output json | jq -r '.Rules[].Name')
 
           FILTERED_TASKS=()
           INCLUDE_PATTERNS_ARRAY=$(echo "$INCLUDE_PATTERNS" | jq -r '.[]' 2>/dev/null || echo "")
@@ -174,12 +174,13 @@ jobs:
               fi
             fi
 
-            echo "  ✓ Discovered: $cluster_name/$task_family"
+            echo "  ✓ Discovered: $cluster_name/$task_family (rule: $rule_name)"
 
             cluster_escaped=$(printf '%s' "$cluster_name" | jq -Rs . | tr -d '\n')
             task_escaped=$(printf '%s' "$task_family" | jq -Rs . | tr -d '\n')
+            rule_escaped=$(printf '%s' "$rule_name" | jq -Rs . | tr -d '\n')
 
-            FILTERED_TASKS+=("{\"cluster\":$cluster_escaped,\"task_definition\":$task_escaped}")
+            FILTERED_TASKS+=("{\"cluster\":$cluster_escaped,\"task_definition\":$task_escaped,\"rule_name\":$rule_escaped}")
           done
 
           if [ ${#FILTERED_TASKS[@]} -eq 0 ]; then
@@ -254,7 +255,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     concurrency:
-      group: ecs-scheduled-task-control-${{ inputs.environment }}-${{ matrix.task.task_definition }}-${{ inputs.action }}
+      group: ecs-scheduled-task-control-${{ inputs.environment }}-${{ matrix.task.cluster }}-${{ matrix.task.task_definition }}-${{ inputs.action }}
       cancel-in-progress: false
     environment:
       name: ${{ inputs.environment }}
@@ -275,6 +276,7 @@ jobs:
       - name: Control EventBridge Schedules
         env:
           CLUSTER: ${{ matrix.task.cluster }}
+          RULE_NAME: ${{ matrix.task.rule_name }}
           TASK_DEFINITION: ${{ matrix.task.task_definition }}
         shell: bash
         run: |
@@ -282,39 +284,54 @@ jobs:
 
           echo "Task: [$CLUSTER/$TASK_DEFINITION]"
 
-          # Find all EventBridge rules targeting this cluster/task_definition
-          mapfile -t all_rules < <(aws events list-rules --query 'Rules[].Name' --output text | tr '\t' '\n')
-
           MATCHING_RULES=()
-          for rule_name in "${all_rules[@]}"; do
-            [[ -z "$rule_name" ]] && continue
 
-            # Get targets for this rule
-            targets_json=$(aws events list-targets-by-rule --rule "$rule_name" --query "Targets[?RoleArn!=null]" --output json)
-            targets_rc=$?
-            if [ $targets_rc -eq 0 ] && echo "$targets_json" | jq empty 2>/dev/null; then
-              targets="$targets_json"
-            else
-              targets="[]"
-            fi
+          if [[ -n "${RULE_NAME:-}" ]]; then
+            # rule_name is provided by discover: use it directly (no re-scan needed)
+            echo "Using discovered rule name: $RULE_NAME"
+            MATCHING_RULES+=("$RULE_NAME")
+          else
+            # Manual specification: scan EventBridge rules matching cluster + task_definition
+            echo "Scanning EventBridge rules for $CLUSTER/$TASK_DEFINITION..."
+            mapfile -t all_rules < <(aws events list-rules --output json | jq -r '.Rules[].Name')
 
-            # Check if this rule has ECS RunTask targets matching our cluster/task_definition
-            ecs_target=$(echo "$targets" | jq -r '.[] | select(.EcsParameters != null) | .EcsParameters' | jq -c . | head -1)
-            [[ -z "$ecs_target" || "$ecs_target" == "null" ]] && continue
+            for rule_name in "${all_rules[@]}"; do
+              [[ -z "$rule_name" ]] && continue
 
-            # Get task definition ARN
-            task_def_arn=$(echo "$ecs_target" | jq -r '.TaskDefinitionArn // empty')
-            [[ -z "$task_def_arn" ]] && continue
+              targets_json=$(aws events list-targets-by-rule --rule "$rule_name" --query "Targets[?RoleArn!=null]" --output json)
+              targets_rc=$?
+              if [ $targets_rc -eq 0 ] && echo "$targets_json" | jq empty 2>/dev/null; then
+                targets="$targets_json"
+              else
+                targets="[]"
+              fi
 
-            # Parse task family from ARN
-            task_family=${task_def_arn##*/}
-            task_family=${task_family%%:*}
+              ecs_target=$(echo "$targets" | jq -r '.[] | select(.EcsParameters != null) | .EcsParameters' | jq -c . | head -1)
+              [[ -z "$ecs_target" || "$ecs_target" == "null" ]] && continue
 
-            # Match cluster and task_definition
-            if [[ "$task_family" == "$TASK_DEFINITION" ]]; then
-              MATCHING_RULES+=("$rule_name")
-            fi
-          done
+              task_def_arn=$(echo "$ecs_target" | jq -r '.TaskDefinitionArn // empty')
+              [[ -z "$task_def_arn" ]] && continue
+
+              # Parse task family from ARN
+              task_family=${task_def_arn##*/}
+              task_family=${task_family%%:*}
+
+              # Parse cluster name from EcsParameters
+              cluster_arn=$(echo "$ecs_target" | jq -r '.Cluster // empty')
+              if [[ -z "$cluster_arn" || "$cluster_arn" == "null" ]]; then
+                cluster_name="default"
+              elif [[ "$cluster_arn" == arn:aws:ecs:* ]]; then
+                cluster_name=${cluster_arn##*/}
+              else
+                cluster_name="$cluster_arn"
+              fi
+
+              # Match both cluster and task_definition
+              if [[ "$task_family" == "$TASK_DEFINITION" && "$cluster_name" == "$CLUSTER" ]]; then
+                MATCHING_RULES+=("$rule_name")
+              fi
+            done
+          fi
 
           if [ ${#MATCHING_RULES[@]} -eq 0 ]; then
             echo "ℹ️ No EventBridge rules found for $CLUSTER/$TASK_DEFINITION (skipping)"

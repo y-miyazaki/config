@@ -25,6 +25,11 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: read
+  id-token: write
+  pages: write
+
 env:
   ARTIFACTS: ${{ inputs.artifacts }}
   INDEX_DESCRIPTION: ${{ inputs.index_description }}
@@ -52,7 +57,9 @@ jobs:
 
       - name: Parse artifacts configuration
         id: parse-inputs
+        shell: bash
         run: |
+          set -euo pipefail
           # shellcheck disable=SC2034,SC2129
           echo "Parsing artifacts configuration..."
           echo "${ARTIFACTS}" | jq -c '.[]' > /tmp/artifacts.jsonl
@@ -63,7 +70,9 @@ jobs:
           echo "Total artifacts: $(wc -l < /tmp/artifacts.jsonl)"
 
       - name: Validate artifacts configuration
+        shell: bash
         run: |
+          set -euo pipefail
           echo "Validating artifacts configuration..."
 
           # Check if artifacts is valid JSON array
@@ -99,7 +108,9 @@ jobs:
           path: all-artifacts
 
       - name: Extract zip archives if present
+        shell: bash
         run: |
+          set -euo pipefail
           # shellcheck disable=SC2034
           echo "Checking for zip archives in downloaded artifacts..."
 
@@ -130,7 +141,9 @@ jobs:
           ls -lR all-artifacts/
 
       - name: Merge artifacts
+        shell: bash
         run: |
+          set -euo pipefail
           # shellcheck disable=SC2129,SC2034
           echo "Merging multiple artifacts for GitHub Pages deployment"
 
@@ -231,130 +244,143 @@ jobs:
           ls -lR merged-pages/
 
       - name: Create index page
+        shell: bash
         run: |
-          # shellcheck disable=SC2129,SC2034
+          set -euo pipefail
           echo "Creating unified index page with links to all items"
 
-          cat > merged-pages/index.html <<EOF
+          # HTML-escape helper
+          html_escape() { printf '%s' "$1" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'"'"'/\&#39;/g'; }
+
+          SAFE_TITLE=$(html_escape "$INDEX_TITLE")
+          SAFE_DESC=$(html_escape "$INDEX_DESCRIPTION")
+          SAFE_WORKFLOW=$(html_escape "$WORKFLOW")
+
+          {
+            cat <<'HEADER'
           <!DOCTYPE html>
           <html lang="en">
           <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>${INDEX_TITLE}</title>
-            <style>
-              body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-                max-width: 900px;
-                margin: 50px auto;
-                padding: 20px;
-                background-color: #f6f8fa;
-                line-height: 1.6;
-              }
-              h1 {
-                color: #24292f;
-                border-bottom: 3px solid #0969da;
-                padding-bottom: 15px;
-                margin-bottom: 10px;
-              }
-              .description {
-                color: #57606a;
-                margin-bottom: 30px;
-              }
-              ul {
-                list-style-type: none;
-                padding: 0;
-              }
-              li {
-                margin: 12px 0;
-              }
-              a {
-                display: block;
-                padding: 16px 20px;
-                background-color: #ffffff;
-                color: #0969da;
-                text-decoration: none;
-                border-radius: 6px;
-                border: 1px solid #d0d7de;
-                transition: all 0.2s ease;
-                font-weight: 500;
-              }
-              a:hover {
-                background-color: #0969da;
-                color: #ffffff;
-                border-color: #0969da;
-                box-shadow: 0 3px 6px rgba(140,149,159,0.15);
-                transform: translateY(-1px);
-              }
-              .meta {
-                margin-top: 40px;
-                padding: 16px;
-                background-color: #ffffff;
-                border-radius: 6px;
-                border: 1px solid #d0d7de;
-                font-size: 0.875em;
-                color: #57606a;
-              }
-              .meta strong {
-                color: #24292f;
-              }
-              .meta a {
-                display: inline;
-                padding: 0;
-                background: none;
-                border: none;
-                color: #0969da;
-                font-weight: normal;
-              }
-              .meta a:hover {
-                background: none;
-                color: #0550ae;
-                text-decoration: underline;
-                transform: none;
-                box-shadow: none;
-              }
-            </style>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          HEADER
+            printf '<title>%s</title>\n' "${SAFE_TITLE}"
+            cat <<'STYLE'
+          <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f6f8fa;
+            line-height: 1.6;
+          }
+          h1 {
+            color: #24292f;
+            border-bottom: 3px solid #0969da;
+            padding-bottom: 15px;
+            margin-bottom: 10px;
+          }
+          .description {
+            color: #57606a;
+            margin-bottom: 30px;
+          }
+          ul {
+            list-style-type: none;
+            padding: 0;
+          }
+          li {
+            margin: 12px 0;
+          }
+          a {
+            display: block;
+            padding: 16px 20px;
+            background-color: #ffffff;
+            color: #0969da;
+            text-decoration: none;
+            border-radius: 6px;
+            border: 1px solid #d0d7de;
+            transition: all 0.2s ease;
+            font-weight: 500;
+          }
+          a:hover {
+            background-color: #0969da;
+            color: #ffffff;
+            border-color: #0969da;
+            box-shadow: 0 3px 6px rgba(140,149,159,0.15);
+            transform: translateY(-1px);
+          }
+          .meta {
+            margin-top: 40px;
+            padding: 16px;
+            background-color: #ffffff;
+            border-radius: 6px;
+            border: 1px solid #d0d7de;
+            font-size: 0.875em;
+            color: #57606a;
+          }
+          .meta strong {
+            color: #24292f;
+          }
+          .meta a {
+            display: inline;
+            padding: 0;
+            background: none;
+            border: none;
+            color: #0969da;
+            font-weight: normal;
+          }
+          .meta a:hover {
+            background: none;
+            color: #0550ae;
+            text-decoration: underline;
+            transform: none;
+            box-shadow: none;
+          }
+          </style>
           </head>
           <body>
-            <h1>📚 ${INDEX_TITLE}</h1>
-            <p class="description">${INDEX_DESCRIPTION}</p>
-            <ul>
-          EOF
+          STYLE
+            printf '<h1>&#x1F4DA; %s</h1>\n' "${SAFE_TITLE}"
+            printf '<p class="description">%s</p>\n' "${SAFE_DESC}"
+            echo '<ul>'
 
-          # Add links for each artifact using saved metadata
-          if [ -f /tmp/artifact-paths.txt ]; then
-            # Redirect the loop output into index.html in one shot to avoid multiple appends (SC2129)
-            while IFS='|' read -r _artifact_name display_name artifact_path; do
-              if [ -d "merged-pages/${artifact_path}" ]; then
-                # Use directory path without index.html (GitHub Pages auto-serves index.html)
-                printf '              <li><a href="./%s/">%s</a></li>\n' "${artifact_path}" "${display_name}"
-                # echo "Added link: ${display_name} -> ./${artifact_path}/"
-              else
-                echo "❌ Error: Directory not found for ${display_name}: merged-pages/${artifact_path}"
-                exit 1
-              fi
-            done < /tmp/artifact-paths.txt >> merged-pages/index.html
-          else
-            echo "❌ Error: /tmp/artifact-paths.txt not found"
-            echo "This indicates merge artifacts step did not complete successfully"
-            exit 1
-          fi
+            # Add links for each artifact using saved metadata
+            if [ -f /tmp/artifact-paths.txt ]; then
+              while IFS='|' read -r _artifact_name display_name artifact_path; do
+                if [ -d "merged-pages/${artifact_path}" ]; then
+                  safe_display=$(html_escape "$display_name")
+                  safe_path=$(html_escape "$artifact_path")
+                  printf '<li><a href="./%s/">%s</a></li>\n' "${safe_path}" "${safe_display}"
+                else
+                  echo "❌ Error: Directory not found for ${display_name}: merged-pages/${artifact_path}" >&2
+                  exit 1
+                fi
+              done < /tmp/artifact-paths.txt
+            else
+              echo "❌ Error: /tmp/artifact-paths.txt not found" >&2
+              exit 1
+            fi
 
-          cat >> merged-pages/index.html <<EOF
-            </ul>
-            <div class="meta">
-              <strong>Generated:</strong> $(date -u +"%Y-%m-%d %H:%M:%S UTC")<br>
-              <strong>Workflow:</strong> ${WORKFLOW}<br>
-              <strong>Run:</strong> <a href="${RUN_URL}" target="_blank">#${{ github.run_number }}</a>
-            </div>
-          </body>
-          </html>
-          EOF
+            echo '</ul>'
+            echo '<div class="meta">'
+            printf '<strong>Generated:</strong> %s<br>\n' "$(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+            printf '<strong>Workflow:</strong> %s<br>\n' "${SAFE_WORKFLOW}"
+            printf '<strong>Run:</strong> <a href="%s" target="_blank">#${{ github.run_number }}</a>\n' "${RUN_URL}"
+            echo '</div>'
+            echo '</body>'
+            echo '</html>'
+          } > merged-pages/index.html
+
+          # Strip leading spaces from heredoc output (YAML indentation)
+          sed -i 's/^          //' merged-pages/index.html
 
           echo "Index page created successfully"
 
       - name: Create buildinfo
+        shell: bash
         run: |
+          set -euo pipefail
           # shellcheck disable=SC2129,SC2034
           # Write build info once using a grouped redirect to avoid multiple appends
           {

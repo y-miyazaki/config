@@ -45,6 +45,10 @@ on:
       AWS_REGION:
         required: true
 
+permissions:
+  contents: read
+  id-token: write
+
 env:
   ARC_CHECKSUM: ${{ inputs.arc_checksum }}
   ARC_VERSION: ${{ inputs.arc_version }}
@@ -117,6 +121,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Exec arc to collect AWS resources
+        shell: bash
         run: |
           set -euo pipefail
           CATS="${CATEGORIES}"
@@ -136,6 +141,7 @@ jobs:
 
       - name: Prepare artifact structure
         id: prepare-artifact-structure
+        shell: bash
         run: |
           set -euo pipefail
 
@@ -149,6 +155,7 @@ jobs:
           ls -lR artifact-output/
 
       - name: Create zip archive
+        shell: bash
         run: |
           set -euo pipefail
 

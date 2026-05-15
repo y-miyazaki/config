@@ -121,44 +121,76 @@ jobs:
 
           for cluster_arn in "${clusters[@]}"; do
             [[ -z "$cluster_arn" ]] && continue
-            # Trim whitespace from cluster name
-            cluster_name=$(basename "$cluster_arn" | xargs)
+            cluster_name="${cluster_arn##*/}"
 
             # List services in this cluster
             mapfile -t services < <(aws ecs list-services --cluster "$cluster_arn" --query 'serviceArns[]' --output text | tr '\t' '\n')
 
+            # Batch describe-services (max 10 per call)
+            declare -A desired_counts=()
+            for ((i=0; i<${#services[@]}; i+=10)); do
+              batch=("${services[@]:i:10}")
+              # Filter empty entries
+              valid_batch=()
+              for s in "${batch[@]}"; do
+                [[ -n "$s" ]] && valid_batch+=("$s")
+              done
+              [[ ${#valid_batch[@]} -eq 0 ]] && continue
+
+              batch_json=$(aws ecs describe-services \
+                --cluster "$cluster_arn" \
+                --services "${valid_batch[@]}" \
+                --query 'services[].{arn:serviceArn,desired:desiredCount}' \
+                --output json 2>/dev/null || echo "[]")
+
+              while IFS=$'\t' read -r svc_arn svc_desired; do
+                [[ -z "$svc_arn" ]] && continue
+                desired_counts["$svc_arn"]="$svc_desired"
+              done < <(echo "$batch_json" | jq -r '.[] | [.arn, (.desired // 0 | tostring)] | @tsv')
+            done
+
+            # Batch describe-scalable-targets
+            declare -A autoscaling_data=()
+            resource_ids=()
             for service_arn in "${services[@]}"; do
               [[ -z "$service_arn" ]] && continue
-              # Trim whitespace from service name
-              service_name=$(basename "$service_arn" | xargs)
+              svc_name="${service_arn##*/}"
+              resource_ids+=("service/${cluster_name}/${svc_name}")
+            done
 
-              # Get desired count for this service
-              desired_count=$(aws ecs describe-services \
-                --cluster "$cluster_arn" \
-                --services "$service_arn" \
-                --query 'services[0].desiredCount' \
-                --output text 2>/dev/null || echo "$DEFAULT_DESIRED_COUNT")
+            for ((i=0; i<${#resource_ids[@]}; i+=10)); do
+              batch=("${resource_ids[@]:i:10}")
+              [[ ${#batch[@]} -eq 0 ]] && continue
 
-              if [[ -z "$desired_count" || "$desired_count" == "None" ]]; then
+              scaling_json=$(aws application-autoscaling describe-scalable-targets \
+                --service-namespace ecs \
+                --resource-ids "${batch[@]}" \
+                --scalable-dimension "ecs:service:DesiredCount" \
+                --query 'ScalableTargets[].{id:ResourceId,min:MinCapacity,max:MaxCapacity}' \
+                --output json 2>/dev/null || echo "[]")
+
+              while IFS=$'\t' read -r res_id res_min res_max; do
+                [[ -z "$res_id" ]] && continue
+                autoscaling_data["$res_id"]="${res_min}:${res_max}"
+              done < <(echo "$scaling_json" | jq -r '.[] | [.id, (.min // 0 | tostring), (.max // 0 | tostring)] | @tsv')
+            done
+
+            for service_arn in "${services[@]}"; do
+              [[ -z "$service_arn" ]] && continue
+              service_name="${service_arn##*/}"
+
+              # Get desired count from batch result
+              desired_count="${desired_counts[$service_arn]:-$DEFAULT_DESIRED_COUNT}"
+              if [[ -z "$desired_count" || "$desired_count" == "None" || "$desired_count" == "null" ]]; then
                 desired_count="$DEFAULT_DESIRED_COUNT"
               fi
 
-              # Check if AutoScaling is configured for this service
+              # Get AutoScaling info from batch result
               resource_id="service/${cluster_name}/${service_name}"
-              autoscaling_info=$(aws application-autoscaling describe-scalable-targets \
-                --service-namespace ecs \
-                --resource-ids "$resource_id" \
-                --scalable-dimension "ecs:service:DesiredCount" \
-                --query 'ScalableTargets[0].[MinCapacity,MaxCapacity]' \
-                --output text 2>/dev/null || echo "")
-
-              # Parse AutoScaling configuration
-              if [[ -n "$autoscaling_info" && "$autoscaling_info" != "None" ]]; then
+              if [[ -n "${autoscaling_data[$resource_id]:-}" ]]; then
                 has_autoscaling="1"
-                autoscaling_min=$(echo "$autoscaling_info" | awk '{print $1}')
-                autoscaling_max=$(echo "$autoscaling_info" | awk '{print $2}')
-                [[ -z "$autoscaling_min" || "$autoscaling_min" == "None" ]] && autoscaling_min="0"
-                [[ -z "$autoscaling_max" || "$autoscaling_max" == "None" ]] && autoscaling_max="0"
+                autoscaling_min="${autoscaling_data[$resource_id]%%:*}"
+                autoscaling_max="${autoscaling_data[$resource_id]##*:}"
               else
                 has_autoscaling="0"
                 autoscaling_min="0"
@@ -283,7 +315,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     concurrency:
-      group: ecs-control-${{ inputs.environment }}-${{ matrix.service.service }}-${{ inputs.action }}
+      group: ecs-control-${{ inputs.environment }}-${{ matrix.service.cluster }}-${{ matrix.service.service }}-${{ inputs.action }}
       cancel-in-progress: false
     environment:
       name: ${{ inputs.environment }}
@@ -445,6 +477,7 @@ jobs:
           SERVICE: ${{ matrix.service.service }}
         shell: bash
         run: |
+          set -euo pipefail
           echo "⏳ Waiting for ECS service to reach stable state"
 
           aws ecs wait services-stable \

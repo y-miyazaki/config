@@ -49,6 +49,10 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: write
+  id-token: write
+
 env:
   COMPONENT: ${{ inputs.component }}
   CREATE_TAG: ${{ inputs.create_tag }}

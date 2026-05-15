@@ -33,6 +33,10 @@ on:
       AWS_REGION:
         required: true
 
+permissions:
+  contents: read
+  id-token: write
+
 env:
   COMPONENT: ${{ inputs.component }}
   ENVIRONMENT: ${{ inputs.environment }}
@@ -71,20 +75,26 @@ jobs:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
       - name: Setup Terraform plugin cache
+        shell: bash
         run: |
+          set -euo pipefail
           # shellcheck disable=SC2016
           echo 'plugin_cache_dir="$HOME/.terraform.d/plugin-cache"' >~/.terraformrc
           mkdir --parents ~/.terraform.d/plugin-cache
 
       - name: Setup Terraform plugin cache key
         id: compute-plugin-cache-key
+        shell: bash
         run: |
+          set -euo pipefail
           # shellcheck disable=SC2016,SC2086
           echo "key=terraform-plugin-cache-${ENVIRONMENT}-${COMPONENT}-${{ runner.os }}-${{ hashFiles(format('{0}/.terraform.lock.hcl', env.TERRAFORM_PATH)) }}" >> "$GITHUB_OUTPUT"
 
       - name: Setup Terraform init cache key
         id: compute-init-cache-key
+        shell: bash
         run: |
+          set -euo pipefail
           # shellcheck disable=SC2016,SC2086
           echo "key=terraform-init-${ENVIRONMENT}-${COMPONENT}-${{ runner.os }}-${{ hashFiles(format('{0}/terraform.{1}.tfbackend', env.TERRAFORM_PATH, env.ENVIRONMENT), format('{0}/.terraform.lock.hcl', env.TERRAFORM_PATH), format('{0}/**/*.tf', env.TERRAFORM_PATH), 'modules/**/*.tf') }}" >> "$GITHUB_OUTPUT"
 
@@ -105,7 +115,9 @@ jobs:
 
       - name: Exec Terraform init
         id: init
+        shell: bash
         run: |
+          set -euo pipefail
           # shellcheck disable=SC2016
           if [ ! -d "${TERRAFORM_PATH}/.terraform" ]; then
             echo "Cache miss or incomplete modules - initializing Terraform for ${COMPONENT}"
@@ -141,7 +153,9 @@ jobs:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
       - name: Setup Terraform plugin cache
+        shell: bash
         run: |
+          set -euo pipefail
           # shellcheck disable=SC2016
           echo 'plugin_cache_dir="$HOME/.terraform.d/plugin-cache"' >~/.terraformrc
           mkdir --parents ~/.terraform.d/plugin-cache
@@ -165,7 +179,9 @@ jobs:
 
       - name: Exec Terraform init
         id: init
+        shell: bash
         run: |
+          set -euo pipefail
           if [ ! -d "${TERRAFORM_PATH}/.terraform" ]; then
             echo "Cache miss or incomplete modules - initializing Terraform for ${COMPONENT}"
             terraform -chdir="${TERRAFORM_PATH}" init -reconfigure -backend-config=terraform."${ENVIRONMENT}".tfbackend
@@ -178,12 +194,14 @@ jobs:
         id: plan
         shell: bash
         run: |
+          set -euo pipefail
           terraform -chdir="${TERRAFORM_PATH}" plan -lock=false -var-file=terraform."${ENVIRONMENT}".tfvars
 
       - name: Exec Terraform apply
         id: apply
         shell: bash
         run: |
+          set -euo pipefail
           terraform -chdir="${TERRAFORM_PATH}" apply --auto-approve -var-file=terraform."${ENVIRONMENT}".tfvars
 
       - name: Summary

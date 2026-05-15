@@ -31,6 +31,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   markdown-ci:
     uses: y-miyazaki/config/.github/workflows/ci-markdown.yaml@ae434803ee16c58a449f5e1b925db1097687a556 # v1.0.8

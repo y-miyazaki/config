@@ -153,6 +153,10 @@ on:
       AWS_REGION:
         required: false
 
+permissions:
+  contents: read
+  id-token: write
+
 env:
   AWS_SDK_CORE_VERSION: "1.12.529"
   BASTION_INSTANCE_ID: ${{ inputs.bastion_instance_id }}
@@ -339,7 +343,9 @@ jobs:
 
       - name: Setup Bastion Connection
         if: ${{ env.USE_BASTION == 'true' }}
+        shell: bash
         run: |
+          set -euo pipefail
           echo "Setting up EC2 Bastion connection via AWS Systems Manager Session Manager"
 
           # Install Session Manager plugin
@@ -380,7 +386,9 @@ jobs:
       - name: Setup SSM Port Forwarding
         if: ${{ env.USE_BASTION == 'true' }}
         id: start-port-forward
+        shell: bash
         run: |
+          set -euo pipefail
           echo "Starting AWS Systems Manager Session Manager port forwarding"
 
           # Determine local port based on database type
@@ -468,7 +476,9 @@ jobs:
           java-version: "17"
 
       - name: Setup SchemaSpy Dependencies
+        shell: bash
         run: |
+          set -euo pipefail
           echo "Installing Graphviz for ER diagram generation..."
           sudo apt-get update -qq
           sudo apt-get install -y graphviz fontconfig fonts-noto-cjk
@@ -497,6 +507,7 @@ jobs:
 
       - name: Setup SchemaSpy and JDBC Driver
         if: ${{ steps.cache-schemaspy.outputs.cache-hit != 'true' }}
+        shell: bash
         run: |
           set -euo pipefail
 
@@ -509,7 +520,9 @@ jobs:
           curl -fSL -o jdbc-aws-sdk-core.jar "https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-core/${AWS_SDK_CORE_VERSION}/aws-java-sdk-core-${AWS_SDK_CORE_VERSION}.jar"
 
       - name: Exec SchemaSpy
+        shell: bash
         run: |
+          set -euo pipefail
           # shellcheck disable=SC2086
           echo "Running SchemaSpy for database: ${DB_NAME}"
 
@@ -595,7 +608,9 @@ jobs:
 
       - name: Cleanup SSM Port Forwarding
         if: ${{ always() && env.USE_BASTION == 'true' }}
+        shell: bash
         run: |
+          set -euo pipefail
           # shellcheck disable=SC2034
           echo "Cleaning up SSM port forwarding session"
 
@@ -627,6 +642,7 @@ jobs:
 
       - name: Prepare artifact structure
         id: prepare-artifact-structure
+        shell: bash
         run: |
           set -euo pipefail
 
@@ -640,6 +656,7 @@ jobs:
           ls -lR artifact-output/
 
       - name: Create zip archive
+        shell: bash
         run: |
           set -euo pipefail
 

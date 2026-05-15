@@ -60,6 +60,10 @@ on:
       AWS_REGION:
         required: true
 
+permissions:
+  contents: read
+  id-token: write
+
 env:
   ABSC_CHECKSUM: ${{ inputs.absc_checksum }}
   ABSC_VERSION: ${{ inputs.absc_version }}
@@ -145,6 +149,7 @@ jobs:
 
       - name: Prepare artifact structure
         id: prepare-artifact-structure
+        shell: bash
         run: |
           set -euo pipefail
 
@@ -155,6 +160,7 @@ jobs:
           ls -lR artifact-output/
 
       - name: Create zip archive
+        shell: bash
         run: |
           set -euo pipefail
 

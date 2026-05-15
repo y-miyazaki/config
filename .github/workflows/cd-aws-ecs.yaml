@@ -55,6 +55,10 @@ on:
       AWS_REGION:
         required: true
 
+permissions:
+  contents: read
+  id-token: write
+
 env:
   ECSCHEDULE_CONFIG: ${{ inputs.ecschedule_config }}
   ECSPRESSO_CONFIG: ${{ inputs.ecspresso_config }}
@@ -246,6 +250,7 @@ jobs:
 
       - name: Skip Deploy (No Changes)
         if: steps.check_diff.outputs.deploy == 'false'
+        shell: bash
         run: |
           echo "No changes detected for ${{ matrix.name }}, skipping deploy"
 
