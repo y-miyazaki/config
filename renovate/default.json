@@ -8,16 +8,22 @@
     ":label(dependencies)",
     "mergeConfidence:age-confidence-badges",
     "github>aquaproj/aqua-renovate-config#2.12.0",
-    "github>y-miyazaki/config//renovate/github-actions-tool-version"
+    "github>y-miyazaki/config//renovate/github-actions-tool-version",
+    "security:minimumReleaseAgeNpm"
   ],
   "branchConcurrentLimit": 10,
   "dependencyDashboard": true,
+  "internalChecksFilter": "strict",
   "labels": ["dependencies"],
-  "minimumReleaseAge": 7,
-  "timezone": "Asia/Tokyo",
+  "minimumReleaseAge": "7 days",
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "addLabels": ["security"]
+  },
   "prConcurrentLimit": 10,
   "rebaseWhen": "behind-base-branch",
   "rangeStrategy": "replace",
+  "timezone": "Asia/Tokyo",
   "packageRules": [
     {
       "description": "Rules: Add aqua label for all aqua package updates (label-only, automerge is overridden by patch rule below)",

@@ -15,6 +15,8 @@ This section defines the intended update policy first, independent from implemen
 - Allow automerge only for low-risk updates.
 - Keep labeling rules and automerge rules separate for readability and easier policy changes.
 - Use explicit exception rules when broad safe-update policies are overridden.
+- Enforce minimum release age (7 days global, 3 days npm) to reduce supply chain risk.
+- Use OSV vulnerability alerts for proactive vulnerability detection (experimental).
 
 ### Automerge Policy by Dependency Category
 
@@ -50,6 +52,10 @@ This section defines the intended update policy first, independent from implemen
 - Concurrency limits: `prConcurrentLimit=10`, `branchConcurrentLimit=10`
 - Rebase policy: `behind-base-branch`
 - Version range strategy: `replace`
+- Minimum release age: `7 days` (global), `3 days` for npm via `security:minimumReleaseAgeNpm` preset
+- Internal checks filter: `strict` (branches/PRs are not created until minimumReleaseAge passes)
+- OSV vulnerability alerts: enabled (⚠️ experimental feature — may be changed or removed by Renovate)
+- Vulnerability alerts: `security` label added to vulnerability fix PRs
 - Lock file maintenance: enabled with schedule `before 4am on monday`
 
 ## Dependency Rules by Category
@@ -193,3 +199,13 @@ Quick checks:
    - `rg -n "uses:\\s*y-miyazaki/config/\\.github/workflows/" .github/workflows`
 2. Confirm workflow syntax remains valid (if installed):
    - `actionlint`
+
+## References
+
+- [Renovate Configuration Options](https://docs.renovatebot.com/configuration-options/)
+- [Minimum Release Age](https://docs.renovatebot.com/key-concepts/minimum-release-age/)
+- [Automerge](https://docs.renovatebot.com/key-concepts/automerge/)
+- [Supported Managers](https://docs.renovatebot.com/modules/manager/)
+- [Config Presets](https://docs.renovatebot.com/presets-config/)
+- [postUpdateOptions](https://docs.renovatebot.com/configuration-options/#postupdateoptions)
+- [OSV Vulnerability Alerts](https://docs.renovatebot.com/configuration-options/#osvvulnerabilityalerts)
