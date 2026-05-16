@@ -78,11 +78,11 @@ This section defines the intended update policy first, independent from implemen
 - Default: no automerge
 - `digest` and `pin` updates: manual review required (explicitly no automerge)
 
-#### ECR pull-through cache と minimumReleaseAge
+#### ECR Pull-Through Cache and `minimumReleaseAge`
 
-`minimumReleaseAge`はDocker Hubレジストリでのみ`releaseTimestamp`を取得できます。ECR pull-through cache経由でDocker Hubイメージを参照している場合、デフォルトでは`minimumReleaseAge`が効きません。
+The `minimumReleaseAge` feature can only retrieve the `releaseTimestamp` directly from the Docker Hub registry. If you reference Docker Hub images via an ECR pull-through cache, `minimumReleaseAge` will not function by default.
 
-各リポジトリの`renovate.json`に`registryAliases`を設定することで対応できます：
+To resolve this, you can configure `registryAliases` in each repository's `renovate.json` as follows:
 
 ```json
 {
@@ -91,8 +91,7 @@ This section defines the intended update policy first, independent from implemen
   }
 }
 ```
-
-参考: [Renovate で ECR pull-through cache 経由のイメージにも minimumReleaseAge を適用できるか検証してみた](https://dev.classmethod.jp/articles/dafujii-renovate-minimum-release-age-on-ecr-pull-through-cache/)
+Reference: Verifying if minimumReleaseAge applies to images via ECR pull-through cache in Renovate (DevelopersIO)   
 
 ### GitHub Actions (`github-actions` manager)
 
