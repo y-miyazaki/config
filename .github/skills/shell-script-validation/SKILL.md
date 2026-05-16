@@ -19,14 +19,24 @@ metadata:
 
 Structured results for bash -n, shellcheck, and project standards.
 
-See [references/common-output-format.md](references/common-output-format.md) for detailed format specification.
-
 ## Execution Scope
 
 - **Always use `scripts/validate.sh`** for comprehensive validation. Do not run individual commands.
 - Script runs checks in fixed order.
 - Individual commands are for debugging only (see [references/common-individual-commands.md](references/common-individual-commands.md)).
 - **Do not review code design decisions** (use shell-script-review for that)
+
+### USE FOR:
+
+- run shell script syntax and lint validation before merge
+- reproduce CI failures for shell scripts
+- validate a specific script path during iterative fixes
+
+### DO NOT USE FOR:
+
+- perform architecture/design review of shell scripts
+- modify business logic in scripts as a primary task
+- validate non-shell files
 
 ## Reference Files Guide
 
@@ -39,9 +49,10 @@ See [references/common-output-format.md](references/common-output-format.md) for
 ## Workflow
 
 1. Run `bash shell-script-validation/scripts/validate.sh`.
-2. If a failure appears, run with target path and/or `-v`.
-3. If formatting fixes are suggested, rerun with `-f`.
-4. Re-run until all checks pass.
+2. If a failure appears, rerun with target path first (for example `./scripts/deploy.sh`).
+3. If failure details are insufficient, rerun with `-v`.
+4. If formatting fixes are suggested, rerun with `-f` and review diffs.
+5. Retry at most 2 times after fixes; if checks still fail, return blocking findings and stop.
 
 ### Examples
 
@@ -51,9 +62,14 @@ bash shell-script-validation/scripts/validate.sh ./scripts/deploy.sh -v
 bash shell-script-validation/scripts/validate.sh -f
 ```
 
+## Error Handling and Troubleshooting
+
+- If `scripts/validate.sh` is missing or non-executable, return `status: failed` with script path.
+- If checks partially pass, report passed/failed/deferred per tool instead of collapsing to one status.
+
 ## Best Practices
 
 - Run validation before every commit
 - Use `-f` only after reviewing proposed changes.
-- Run bats tests separately when needed.
+- Run bats tests separately when changed scripts affect test helpers or executable runtime behavior.
 - Require all checks to pass before merge.

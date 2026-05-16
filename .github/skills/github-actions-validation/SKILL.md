@@ -18,8 +18,7 @@ metadata:
 ## Output Specification
 
 Structured validation results from three tools: actionlint → ghalint → zizmor.
-
-See [references/common-output-format.md](references/common-output-format.md) for detailed format specification.
+Return `## Checks Summary`, `## Checks (Failed/Deferred Only)`, and `## Issues` with tool-attributed evidence.
 
 ## Execution Scope
 
@@ -27,6 +26,18 @@ See [references/common-output-format.md](references/common-output-format.md) for
 - Script executes all tools in order.
 - Individual commands are for debugging only (see [references/common-individual-commands.md](references/common-individual-commands.md))
 - **Do not review workflow design decisions** (use github-actions-review for that)
+
+### USE FOR:
+
+- validate workflow changes before commit or merge
+- rerun CI-equivalent local checks for workflow failures
+- verify syntax and security findings from validation tools
+
+### DO NOT USE FOR:
+
+- judge workflow architecture or operational policy quality
+- edit workflow files automatically
+- validate non-workflow YAML files
 
 ## Reference Files Guide
 
@@ -43,8 +54,6 @@ See [references/common-output-format.md](references/common-output-format.md) for
 
 ## Workflow
 
-**Always use the validation script. Do not run individual commands.**
-
 ```bash
 # Run all validations (recommended before commit)
 bash github-actions-validation/scripts/validate.sh
@@ -56,6 +65,14 @@ bash github-actions-validation/scripts/validate.sh ./.github/workflows/
 ### Examples
 
 - Prompt: `Validate workflows and report only failed checks with ItemIDs.`
+- Command: `bash github-actions-validation/scripts/validate.sh ./.github/workflows/`
+- Output: failed/deferred checks mapped to `actionlint`, `ghalint`, or `zizmor`.
+
+## Error Handling and Troubleshooting
+
+- If `scripts/validate.sh` is missing or not executable, return `status: failed` with file path and permission state.
+- If one tool is unavailable, report it as deferred, continue remaining tools when script supports continuation, and record missing binary name.
+- If script exits non-zero, return per-tool results collected before exit and include exit status.
 
 ## Best Practices
 

@@ -17,8 +17,7 @@ metadata:
 ## Output Specification
 
 Return structured review output with `## Checks Summary`, `## Checks (Failed/Deferred Only)`, and `## Issues` using fixed ItemIDs.
-
-See [references/common-output-format.md](references/common-output-format.md) for detailed format specification.
+Always include target file list and deferred reason summary.
 
 ## Execution Scope
 
@@ -27,6 +26,18 @@ See [references/common-output-format.md](references/common-output-format.md) for
 - **Do not execute validation commands from this review skill**
 - Do not modify instructions files or approve/merge PRs
 - Required chapter order: Standards → Guidelines → Testing and Validation → Security Guidelines
+
+### USE FOR:
+
+- review existing `.instructions.md` files in PRs
+- audit instruction quality and rule consistency
+- propose review findings without modifying files
+
+### DO NOT USE FOR:
+
+- create new instruction files from scratch
+- run syntax/security validation tooling
+- review general markdown docs outside `.instructions.md`
 
 ## Reference Files Guide
 
@@ -39,11 +50,14 @@ See [references/common-output-format.md](references/common-output-format.md) for
 ## Workflow
 
 1. Read PR context and identify target instruction files.
-2. Confirm deterministic checks are available; if missing/failing, request rerun.
-3. Verify required chapter order, then review checklist priorities and collect failed/deferred ItemIDs.
-4. Output required report sections per [references/common-output-format.md](references/common-output-format.md).
+2. Confirm pre-existing deterministic check artifacts (`waza check` and relevant validation logs) are available; if missing, request rerun once.
+3. If target file does not exist, return `status: failed` for that file and continue remaining targets.
+4. If deterministic artifacts remain unavailable after one rerun request, defer check-dependent items with explicit reason.
+5. If PR context is unavailable, run file-only review and mark PR-context checks as deferred.
+6. Verify required chapter order, then review checklist priorities and collect failed/deferred ItemIDs.
+7. Output required report sections per [references/common-output-format.md](references/common-output-format.md).
 
 ## Best Practices
 
-- Prioritize consistency with existing instruction conventions.
-- Keep recommendations practical and executable.
+- Keep chapter order and section naming aligned with existing `.instructions.md` files in the same repository.
+- Include concrete remediation text with section name and expected change.

@@ -17,8 +17,7 @@ metadata:
 ## Output Specification
 
 Structured validation results from two tools: markdownlint → markdown-link-check.
-
-See [references/common-output-format.md](references/common-output-format.md) for detailed format specification.
+Return `## Checks Summary`, `## Checks (Failed/Deferred Only)`, and `## Issues`.
 
 ## Execution Scope
 
@@ -26,6 +25,18 @@ See [references/common-output-format.md](references/common-output-format.md) for
 - Script executes markdownlint and markdown-link-check in order.
 - **Do not modify Markdown files** (except with --fix flag)
 - External link checking depends on network connectivity
+
+### USE FOR:
+
+- validate markdown syntax and links before commit
+- investigate markdown CI failures
+- run scoped markdown checks for specific docs paths
+
+### DO NOT USE FOR:
+
+- review prose quality or content strategy
+- validate non-markdown files
+- replace YAML/JSON/Terraform validation workflows
 
 ## Reference Files Guide
 
@@ -37,8 +48,6 @@ See [references/common-output-format.md](references/common-output-format.md) for
 - [common-individual-commands.md](references/common-individual-commands.md) - Read when debugging tools directly
 
 ## Workflow
-
-**Always use the validation script. Do not run individual commands.**
 
 ```bash
 # Full validation of all Markdown files
@@ -54,8 +63,13 @@ bash markdown-validation/scripts/validate.sh ./docs/
 ### Examples
 
 - Prompt: `Validate Markdown files and report only failed checks.`
+- Command: `bash markdown-validation/scripts/validate.sh ./docs/`
+- Output: per-tool results with deferred status for network-only link failures.
 
 ## Best Practices
 
 - Run validation before every documentation commit
 - Resolve syntax violations and broken links before merge
+- If `scripts/validate.sh` is missing or not executable, return `status: failed` with script path.
+- If network failures affect external links, keep syntax results and mark network-dependent link checks as deferred.
+- If file pattern resolves to zero markdown files, return `status: passed` with `0 files checked`.

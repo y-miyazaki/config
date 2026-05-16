@@ -19,8 +19,6 @@ metadata:
 
 Structured validation results in fixed tool order.
 
-See [references/common-output-format.md](references/common-output-format.md) for detailed format specification.
-
 ## Execution Scope
 
 - **Always use `scripts/validate.sh`** for comprehensive validation. Do not run individual commands.
@@ -29,6 +27,18 @@ See [references/common-output-format.md](references/common-output-format.md) for
 - **Do not modify source files** except `--fix` formatting.
 - **Do not create or delete files**.
 - Test coverage threshold: 80%
+
+### USE FOR:
+
+- run deterministic Go validation before commit or merge
+- reproduce CI failures for Go format/lint/test/vulnerability checks
+- verify coverage threshold and blocking validation status
+
+### DO NOT USE FOR:
+
+- perform architecture or design reviews (use `go-review`)
+- generate new source code as a primary task
+- validate non-Go projects
 
 ## Reference Files Guide
 
@@ -42,16 +52,24 @@ See [references/common-output-format.md](references/common-output-format.md) for
 ## Workflow
 
 1. Run `bash go-validation/scripts/validate.sh`.
-2. Use target path for fast iteration.
-3. Use `--fix` for formatting and `--verbose` for diagnostics.
-4. Re-run until all checks pass.
+2. For fast iteration, run `bash go-validation/scripts/validate.sh <path>` where `<path>` is a Go package or directory.
+3. Use `--verbose` to collect tool-level diagnostics.
+4. Use `--fix` only for formatting issues, then review diffs.
+5. Retry at most 2 times after fixes; if checks still fail, return blocking failures and stop.
 
 ### Examples
 
 - Prompt: `Validate Go checks and report summary, tool results, and error details.`
+- Command: `bash go-validation/scripts/validate.sh ./test/go/ --verbose`
+- Output: `## Checks Summary` with per-tool pass/fail and coverage value.
+
+## Error Handling and Troubleshooting
+
+- If `scripts/validate.sh` is missing or non-executable, return `status: failed` with script path.
+- If coverage remains below 80% after retries, return blocking failure with measured coverage value.
+- If a single tool fails repeatedly, report that tool as failed and include last command output summary.
 
 ## Best Practices
 
 - Use `--fix` after reviewing diffs.
 - Run full validation before merge.
-- Require all checks to pass before merge.
