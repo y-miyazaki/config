@@ -1,9 +1,8 @@
 ---
 name: terraform-validation
 description: >-
-  Validates Terraform configurations for syntax, linting, and security using terraform fmt,
-  terraform validate, tflint, and trivy. Use when committing Terraform changes, running CI
-  validation, or checking infrastructure code for security vulnerabilities.
+  Validate Terraform syntax, linting, and security with terraform fmt/validate, tflint, and trivy.
+  Use when committing Terraform changes, running CI validation, or checking IaC security issues.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
@@ -12,64 +11,49 @@ metadata:
 
 ## Input
 
-- Terraform files (`.tf`) in current directory or specified path (required)
+- Terraform path or directory (required)
 - Validation script: `terraform-validation/scripts/validate.sh` (required)
-- Optional: directory path(s), `--fix` for auto-formatting, `--verbose` for detailed output
+- Optional flags: `--fix`, `--verbose`
 
 ## Output Specification
 
-Structured validation results from four tools in execution order: terraform fmt → terraform validate → tflint → trivy config.
+Structured results in fixed order: terraform fmt, terraform validate, tflint, trivy config.
 
 See [references/common-output-format.md](references/common-output-format.md) for detailed format specification.
 
 ## Execution Scope
 
 - **Always use `scripts/validate.sh`** for comprehensive validation. Do not run individual commands.
-- Script executes all tools in recommended order with proper configuration
-- Individual tool commands available for debugging only (see [references/common-individual-commands.md](references/common-individual-commands.md))
+- Script runs all checks in deterministic order.
+- Individual commands are for debugging only (see [references/common-individual-commands.md](references/common-individual-commands.md)).
 - **Do not review code design decisions** (use terraform-review for that)
 
 ## Reference Files Guide
 
-**Standard Components** (always read):
-
-- [common-checklist.md](references/common-checklist.md) - Validation checklist with ItemIDs
-- [common-output-format.md](references/common-output-format.md) - Report format specification
-- [common-troubleshooting.md](references/common-troubleshooting.md) - Read when validation fails with unexpected errors
-- [common-individual-commands.md](references/common-individual-commands.md) - Read when debugging a specific tool (terraform fmt/validate/tflint/trivy)
-
-**Category Details** (read when investigating specific failures):
-
-- [category-security.md](references/category-security.md) - Read when trivy reports security vulnerabilities
+- [common-checklist.md](references/common-checklist.md) (always read)
+- [common-output-format.md](references/common-output-format.md) (always read)
+- [common-troubleshooting.md](references/common-troubleshooting.md) - Read when checks fail unexpectedly.
+- [common-individual-commands.md](references/common-individual-commands.md) - Read when debugging one tool directly.
+- [category-security.md](references/category-security.md) - Read when trivy reports security findings.
 
 ## Workflow
 
-**Always use the validation script. Do not run individual commands.**
+1. Run `bash terraform-validation/scripts/validate.sh`.
+2. If needed, scope target directories for faster feedback.
+3. Use `--fix` for formatting corrections and `--verbose` for diagnostics.
+4. Re-run until all checks pass.
+
+### Examples
 
 ```bash
-# Full workspace validation (scans all Terraform directories)
 bash terraform-validation/scripts/validate.sh
-
-# Scope validation to specific directories (faster feedback)
-bash terraform-validation/scripts/validate.sh ./terraform/base/ ./terraform/application/
-
-# Automatically fix formatting issues
-bash terraform-validation/scripts/validate.sh --fix
-
-# With verbose output
-bash terraform-validation/scripts/validate.sh --verbose
+bash terraform-validation/scripts/validate.sh ./terraform/base/
+bash terraform-validation/scripts/validate.sh --fix --verbose
 ```
-
-### What the Script Does
-
-1. **`terraform fmt -check`** - Verify code formatting
-2. **`terraform validate`** - Validate syntax and internal consistency
-3. **`tflint`** - Static analysis and best practice enforcement
-4. **`trivy config`** - Security vulnerability scanning
 
 ## Best Practices
 
 - Run full validation before every commit
-- Use `--fix` to auto-correct formatting issues
-- Scope to specific directories for faster feedback during development
-- All checks must pass before considering changes complete
+- Use `--fix` after reviewing diffs.
+- Scope to target directories during development, then run full validation before merge.
+- Require all checks to pass before merge.

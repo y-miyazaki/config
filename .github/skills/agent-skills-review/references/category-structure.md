@@ -59,23 +59,24 @@ Examples:
 
 ---
 
-## Q-07: Progressive Disclosure (Word Count)
+## Q-07: Progressive Disclosure (Soft Guard)
 
-Check: Is SKILL.md word count < 5,000 words?
-Why: Word count limit ensures token efficiency, AI response speed, and human readability. Exceeding limit forces details to references/ for on-demand loading.
+Check: Is SKILL.md concise and compatible with token budget, using word count as a supplemental signal?
+Why: Hard gate is `waza check` token budget. Word count is a soft guard for readability and early warning, not a release blocker by itself.
 Examples:
-- ✅ wc -w SKILL.md = 996 < 5,000 → PASS
-- ❌ wc -w SKILL.md = 5,230 > 5,000 → FAIL (move verbose sections to references/)
+- ✅ `waza check` token budget passes and word count remains manageable
+- ⚠️ Word count is high, but fix priority is still token/behavior quality rather than raw length alone
 
 ---
 
 ## Q-08: Resource Separation
 
-Check: Does skill directory contain both scripts/ and references/ subdirectories? For review skills, does references/ include common-checklist.md and common-output-format.md?
-Why: Resource separation ensures scripts for deterministic checks and references for judgment-based content. Review skills require common-checklist.md and common-output-format.md as mandatory files.
+Check: Does skill directory contain `references/` and the mandatory common reference files? `scripts/` is optional but required when executable logic is provided.
+Why: Reference files define reusable evaluation contracts. Scripts should hold deterministic executable logic when present, but not every skill requires scripts.
 Examples:
-- ✅ Both scripts/ and references/ present. Review skill: includes common-checklist.md and common-output-format.md
-- ❌ Missing references/ → FAIL. Review skill missing checklist.md or output-format.md → FAIL
+- ✅ references/ exists and includes common-checklist.md + common-output-format.md
+- ✅ scripts/ exists when deterministic commands are provided
+- ❌ Missing references/ or missing common-checklist.md/common-output-format.md
 
 ---
 

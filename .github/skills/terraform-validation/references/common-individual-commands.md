@@ -31,4 +31,4 @@ tflint --recursive
 trivy config --severity HIGH,CRITICAL .
 ```
 
-See [Troubleshooting Guide](troubleshooting.md) for detailed error resolution.
+See [Troubleshooting Guide](common-troubleshooting.md) for detailed error resolution.

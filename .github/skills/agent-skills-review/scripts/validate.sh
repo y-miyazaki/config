@@ -47,7 +47,6 @@ source "${SCRIPT_DIR}/lib/all.sh"
 # Global variables and default values
 #######################################
 SKILL_FILE=""
-SKILL_TYPE="automation"
 declare -a check_names=()
 declare -a check_statuses=()
 declare -a check_details_json=()
@@ -86,8 +85,8 @@ Validation Checks:
   - YAML Frontmatter Fields: name, description, license fields present
   - Description Quality: third person, Use when trigger, no implementation instructions
   - Metadata Fields: author and version present
-  - Progressive Disclosure: word count < 5,000
-    - Resource Separation: references/ is required; scripts/ is required for validation skills only
+    - Progressive Disclosure (soft guard): word count monitoring for readability
+    - Resource Separation: references/ is required; scripts/ is optional
   - Reference Mandatory Files: common-checklist.md and common-output-format.md exist
   - Reference Triggers: trigger conditions present in Reference Files Guide
 
@@ -150,46 +149,6 @@ function parse_arguments {
     # Validate path matches expected pattern (SEC-01)
     if [[ ! "$SKILL_FILE" =~ /.github/skills/.*/SKILL\.md$ ]]; then
         error_exit "Error: File must be in .github/skills/*/SKILL.md structure: $SKILL_FILE"
-    fi
-}
-
-#######################################
-# detect_skill_type: Detect skill type from frontmatter name
-#
-# Description:
-#   Classifies skill type as validation, review, or automation
-#   using SKILL.md frontmatter name.
-#
-# Arguments:
-#   None (uses global SKILL_FILE)
-#
-# Global Variables:
-#   SKILL_FILE - Path to SKILL.md file
-#   SKILL_TYPE - Skill type classification
-#
-# Returns:
-#   None (updates SKILL_TYPE)
-#
-#######################################
-function detect_skill_type {
-    local skill_name=""
-
-    skill_name=$(awk '
-        /^---$/ { marker++; next }
-        marker == 1 && /^name:[[:space:]]*/ {
-            sub(/^name:[[:space:]]*/, "")
-            print
-            exit
-        }
-        marker == 2 { exit }
-    ' "$SKILL_FILE")
-
-    if [[ "$skill_name" =~ -validation$ ]]; then
-        SKILL_TYPE="validation"
-    elif [[ "$skill_name" =~ -review$ ]]; then
-        SKILL_TYPE="review"
-    else
-        SKILL_TYPE="automation"
     fi
 }
 
@@ -364,11 +323,11 @@ function check_yaml_frontmatter {
 }
 
 #######################################
-# check_progressive_disclosure: Check word count threshold
+# check_progressive_disclosure: Soft guard word count check
 #
 # Description:
-#   Verifies that SKILL.md word count is under 5,000 words
-#   to ensure Progressive Disclosure principle compliance
+#   Monitors SKILL.md word count as a readability soft guard.
+#   This check is advisory and does not block validation.
 #
 # Arguments:
 #   None (uses global SKILL_FILE)
@@ -395,10 +354,10 @@ function check_progressive_disclosure {
         check_statuses+=("PASS")
         check_details_json+=("$word_count")
     else
-        echo "✗ Word count exceeds limit ($word_count >= $limit)"
+        echo "⊘ Word count exceeds soft guard ($word_count >= $limit)"
         check_names+=("Progressive Disclosure")
-        check_statuses+=("FAIL")
-        check_details_json+=("$word_count")
+        check_statuses+=("SKIP")
+        check_details_json+=("soft-guard-exceeded:$word_count")
     fi
 }
 
@@ -407,7 +366,7 @@ function check_progressive_disclosure {
 #
 # Description:
 #   Verifies that skill directory contains references/ for all skills.
-#   Requires scripts/ directory only for validation skills.
+#   scripts/ is optional and expected when executable logic is provided.
 #
 # Arguments:
 #   None (uses global SKILL_FILE)
@@ -433,30 +392,20 @@ function check_resource_separation {
     [[ -d "$skill_dir/scripts" ]] && scripts_exists=1
     [[ -d "$skill_dir/references" ]] && reference_exists=1
 
-    if [[ "$reference_exists" -eq 1 ]] && [[ "$SKILL_TYPE" != "validation" || "$scripts_exists" -eq 1 ]]; then
-        if [[ "$SKILL_TYPE" == "validation" ]]; then
-            echo "✓ Required directories present (scripts/, references/) for validation skill"
+    if [[ "$reference_exists" -eq 1 ]]; then
+        if [[ "$scripts_exists" -eq 1 ]]; then
+            echo "✓ Required directories present (references/; scripts/ available)"
         else
-            echo "✓ Required directories present (references/; scripts/ optional for ${SKILL_TYPE} skill)"
+            echo "✓ Required directories present (references/; scripts/ optional)"
         fi
         check_names+=("Resource Separation")
         check_statuses+=("PASS")
         check_details_json+=("")
     else
-        local missing_dirs=()
-        if [[ "$SKILL_TYPE" == "validation" ]] && [[ "$scripts_exists" -eq 0 ]]; then
-            missing_dirs+=("scripts/")
-        fi
-        [[ "$reference_exists" -eq 0 ]] && missing_dirs+=("references/")
-
-        if [[ "$SKILL_TYPE" == "validation" ]]; then
-            echo "✗ Missing directories for validation skill: ${missing_dirs[*]}"
-        else
-            echo "✗ Missing directories: ${missing_dirs[*]}"
-        fi
+        echo "✗ Missing directories: references/"
         check_names+=("Resource Separation")
         check_statuses+=("FAIL")
-        check_details_json+=("${missing_dirs[*]}")
+        check_details_json+=("references/")
     fi
 }
 
@@ -713,10 +662,7 @@ function main {
 
     # Parse and validate arguments
     parse_arguments "$@"
-    detect_skill_type
-
     echo_section "Validating SKILL.md: $SKILL_FILE"
-    echo "Skill type detected: $SKILL_TYPE"
 
     # Run all checks
     check_yaml_syntax

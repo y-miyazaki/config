@@ -111,6 +111,11 @@ RUN apt-get update && \
     go install github.com/awslabs/diagram-as-code/cmd/awsdac-mcp-server@${AWSDAC_VERSION}
 
 #--------------------------------------------------------------
+# AI Tools
+#--------------------------------------------------------------
+RUN curl -fsSL https://raw.githubusercontent.com/microsoft/waza/main/install.sh | bash
+
+#--------------------------------------------------------------
 # Fixed go owner
 #--------------------------------------------------------------
 RUN chown -R vscode:vscode /go

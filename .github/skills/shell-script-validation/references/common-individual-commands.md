@@ -21,4 +21,4 @@ shellcheck script.sh
 shellcheck --severity=warning script.sh
 ```
 
-See [Troubleshooting Guide](troubleshooting.md) for detailed error resolution.
+See [Troubleshooting Guide](common-troubleshooting.md) for detailed error resolution.

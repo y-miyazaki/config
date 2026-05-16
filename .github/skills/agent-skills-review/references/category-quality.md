@@ -63,6 +63,18 @@ Examples:
 
 ---
 
+## Q-09: Token Hard Gate
+
+Check: Does the review include `waza check` evidence and confirm Token Budget is 500 tokens or less?
+Why: Token Budget is a Waza hard gate. SKILL.md that exceeds 500 tokens is not submission-ready regardless of other quality metrics.
+Examples:
+- ✅ `waza check` output attached with "Token Budget: 498 / 500"
+- ✅ Report marks token gate as PASS only after hard-gate evidence is present
+- ❌ No `waza check` evidence provided
+- ❌ Token over budget (for example 551 / 500) but report still marks PASS
+
+---
+
 ## BP-03: Token Efficiency
 
 Check: Does SKILL.md avoid content that Claude already knows, minimizing redundancy with frontmatter and reference files?
@@ -76,3 +88,16 @@ Examples:
 - ❌ Purpose section that restates the description
 - ❌ Constraints listing "Go toolchain installed", "Files must exist"
 - ❌ Failure Behavior listing standard exit codes and error messages
+
+---
+
+## BP-04: Anti-Overtrimming Guardrail
+
+Check: If token reduction is applied, are behavior-defining instructions preserved?
+Why: Over-aggressive trimming can make a skill unreadable to the agent, reducing activation quality and causing execution errors even when token limits pass.
+Examples:
+- ✅ Trigger blocks still explicit (`Use when...`, `USE FOR`, `DO NOT USE FOR`)
+- ✅ Output contract still structured and consistent (`Output Specification` + `common-output-format.md`)
+- ✅ Workflow still deterministic with numbered steps or explicit IF/THEN branches
+- ✅ At least one concrete example remains
+- ❌ Token-only edit removed trigger clarity or deleted examples

@@ -1,9 +1,8 @@
 ---
 name: agent-skills-review
 description: >-
-  Reviews SKILL.md files for structural requirements, quality standards, and design patterns.
-  Checks specification completeness, implementation feasibility, and consistency with established patterns.
-  Use when creating new skills, reviewing skill pull requests, or auditing skill quality.
+  Review SKILL.md quality for Waza readiness and project compliance in final release checks.
+  Use when creating skills, reviewing skill PRs, or fixing waza check findings.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
@@ -12,62 +11,61 @@ metadata:
 
 ## Input
 
-- SKILL.md file (required) - Target file to review (`.github/skills/*/SKILL.md`)
-- PR description and skill overview context (recommended)
+- Target: `.github/skills/*/SKILL.md`
+- Evidence: `scripts/validate_waza.sh` and `scripts/validate.sh` outputs
 
 ## Output Specification
 
-Output a structured Markdown review report for Agent Skills.
-
-- Use fixed ItemIDs from [references/common-checklist.md](references/common-checklist.md)
-- Follow the full output contract in [references/common-output-format.md](references/common-output-format.md)
-- If all pass, report that no failed or deferred checks were found
-
-See [references/common-output-format.md](references/common-output-format.md) for detailed format specification.
+- Return structured Markdown per [references/common-output-format.md](references/common-output-format.md).
 
 ## Execution Scope
 
-- Systematically apply review checklist from [references/common-checklist.md](references/common-checklist.md)
-- Focus on quality, specification completeness, and design pattern compliance requiring human/AI judgment
-- **Do not run yamllint or scripts/validate.sh from this review skill**
-- Do not modify SKILL.md files or approve/merge PRs
+- Review structure and quality.
+- Run `scripts/validate_waza.sh` and `scripts/validate.sh`.
+- Enforce `waza check` Token Budget <= 500.
+- Do not merge PRs or edit unrelated files.
 
-**Design Philosophy**: Deterministic checks (structure, metrics, file existence) are automated in `scripts/validate.sh`. This review focuses on judgment-based evaluation (semantic quality, design decisions).
+### USE FOR:
+
+- review new SKILL drafts
+- fix token-limit failures
+- fix compliance issues
+
+### DO NOT USE FOR:
+
+- implement product features
+- debug runtime issues
+
+### ROUTING:
+
+**UTILITY SKILL**
+
+INVOKES: `scripts/validate_waza.sh` and `scripts/validate.sh`.
+FOR SINGLE OPERATIONS: for one wording fix, edit `SKILL.md`.
 
 ## Reference Files Guide
 
-**Standard Components** (always read):
-
-- [common-checklist.md](references/common-checklist.md) - Complete review checklist (S-01 through BP-03)
-- [common-output-format.md](references/common-output-format.md) - This review skill's own report format specification
-
-**Category Details** (read when reviewing related aspects):
-
-- [category-patterns.md](references/category-patterns.md) - Read when checking design pattern compliance (P-01, P-02)
-- [category-quality.md](references/category-quality.md) - Read when checking quality standards (Q-01 through Q-06, BP-03)
-- [category-structure.md](references/category-structure.md) - Read when checking structural requirements (S-01, S-02, BP-01, BP-02)
+- [common-checklist.md](references/common-checklist.md) (always read)
+- [common-output-format.md](references/common-output-format.md) (always read)
+- [category-structure.md](references/category-structure.md) - Read for structure.
+- [category-quality.md](references/category-quality.md) - Read for quality.
+- [category-patterns.md](references/category-patterns.md) - Read for workflow.
 
 ## Workflow
 
-### Step 1: Understand Context
+1. Run `bash scripts/validate_waza.sh <skill-name>` and `bash scripts/validate.sh <SKILL.md>`.
+2. Check hard gate first: Token Budget <= 500.
+3. Apply checks in order: `S-*`, `Q-*`, `P-*`, `BP-*`.
+4. Report failed/deferred items with ItemIDs.
 
-Read PR description and target skill purpose.
+### Examples
 
-### Step 2: Automated Checks First
+- Prompt: `Review SKILL.md and report only failed/deferred items`.
 
-Confirm deterministic checks from `scripts/validate.sh` have been run. If execution is missing or failing, request rerun before semantic review.
+## Error Handling and Troubleshooting
 
-### Step 3: Systematic Review
-
-Apply quality checks (Q-01–Q-06) and pattern checks (P-01–P-02) using reference files. Confirm that `common-output-format.md` matches the target skill's actual output contract.
-
-### Step 4: Report Issues
-
-Output according to [references/common-output-format.md](references/common-output-format.md).
+- If script output is missing/failed, rerun both scripts and defer affected checks.
 
 ## Best Practices
 
-- **Constructive and specific**: Include concrete examples and reference to existing well-structured skills
-- **Context-aware**: Understand skill purpose and target audience, consider tradeoffs
-- **Clear priorities**: Distinguish between CRITICAL (structural) and ENHANCEMENT (quality improvements)
-- **Prevent scope creep**: Pay special attention to Q-02 Scope Boundaries items
+- Fix CRITICAL items first and prioritize Waza errors.

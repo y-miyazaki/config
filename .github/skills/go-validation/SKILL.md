@@ -1,9 +1,8 @@
 ---
 name: go-validation
 description: >-
-  Validates Go source code for formatting, linting, testing, and security using gofumpt, go vet,
-  golangci-lint, go test, and govulncheck. Use when committing Go code, running CI validation,
-  debugging test failures, or checking for security vulnerabilities in Go projects.
+  Validate Go formatting, linting, tests, and vulnerabilities for maintainable and secure code delivery.
+  Use when committing Go changes, running CI validation, or debugging failing checks in repositories.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
@@ -12,70 +11,47 @@ metadata:
 
 ## Input
 
-- Go source code files (`.go`) in current directory or specified path (required)
+- Go path or directory (required)
 - Validation script: `go-validation/scripts/validate.sh` (required)
-- Optional: directory path, `--fix` for auto-formatting, `--verbose` for detailed output
+- Optional flags: `--fix`, `--verbose`
 
 ## Output Specification
 
-Structured validation results from six tools in execution order: go mod tidy → gofumpt → go vet → golangci-lint → go test → govulncheck.
+Structured validation results in fixed tool order.
 
 See [references/common-output-format.md](references/common-output-format.md) for detailed format specification.
 
 ## Execution Scope
 
 - **Always use `scripts/validate.sh`** for comprehensive validation. Do not run individual commands.
-- Script executes all tools in recommended order with proper configuration
-- Individual tool commands available for debugging only (see [references/common-individual-commands.md](references/common-individual-commands.md))
-- **Do not review code design decisions** — use go-review for architecture, patterns, and logic review
-- **Do not modify source files** except formatting corrections applied by `--fix`
-- **Do not create or delete files** — validation only reports issues; never generate test files or scaffolding
+- Individual commands are for debugging only (see [references/common-individual-commands.md](references/common-individual-commands.md)).
+- **Do not review code design decisions** (use go-review).
+- **Do not modify source files** except `--fix` formatting.
+- **Do not create or delete files**.
 - Test coverage threshold: 80%
 
 ## Reference Files Guide
 
-**Standard Components** (always read):
-
-- [common-checklist.md](references/common-checklist.md) - Validation checklist with ItemIDs
-- [common-output-format.md](references/common-output-format.md) - Report format specification
-- [common-troubleshooting.md](references/common-troubleshooting.md) - Read when validation fails with unexpected errors
-- [common-individual-commands.md](references/common-individual-commands.md) - Read when debugging a specific tool (gofumpt/vet/lint/test/govulncheck)
-
-**Category Details** (read when investigating specific failures):
-
-- [category-security.md](references/category-security.md) - Read when govulncheck reports vulnerabilities
-- [category-testing.md](references/category-testing.md) - Read when tests fail or coverage is below threshold
+- [common-checklist.md](references/common-checklist.md) (always read)
+- [common-output-format.md](references/common-output-format.md) (always read)
+- [common-troubleshooting.md](references/common-troubleshooting.md) - Read when checks fail unexpectedly.
+- [common-individual-commands.md](references/common-individual-commands.md) - Read when debugging one tool directly.
+- [category-security.md](references/category-security.md) - Read when govulncheck reports vulnerabilities.
+- [category-testing.md](references/category-testing.md) - Read when tests fail or coverage drops.
 
 ## Workflow
 
-**Always use the validation script. Do not run individual commands.**
+1. Run `bash go-validation/scripts/validate.sh`.
+2. Use target path for fast iteration.
+3. Use `--fix` for formatting and `--verbose` for diagnostics.
+4. Re-run until all checks pass.
 
-```bash
-# Full validation (recommended before commit)
-bash go-validation/scripts/validate.sh
+### Examples
 
-# Directory-specific validation (faster feedback during development)
-bash go-validation/scripts/validate.sh ./path/to/code/
-
-# Auto-fix formatting issues
-bash go-validation/scripts/validate.sh --fix
-
-# With verbose output
-bash go-validation/scripts/validate.sh --verbose
-```
-
-### What the Script Does
-
-1. **`go mod tidy`** - Clean up and verify dependencies
-2. **`gofumpt`** - Format Go code
-3. **`go vet`** - Static analysis for suspicious constructs
-4. **`golangci-lint`** - Comprehensive linting (30+ linters)
-5. **`go test -v -race -cover`** - Run tests with race detection and coverage
-6. **`govulncheck`** - Security vulnerability scanning
+- Prompt: `Validate Go checks and report summary, tool results, and error details.`
 
 ## Best Practices
 
-- Run full validation before every commit
-- Use `--fix` to auto-correct formatting issues
-- Use directory-specific validation for faster feedback during development
-- All checks must pass before considering code complete
+- Use `--fix` after reviewing diffs.
+- Run full validation before merge.
+- Require all checks to pass before merge.

@@ -57,7 +57,7 @@ alias tapply='terraform apply -auto-approve -var-file="terraform.${ENV}.tfvars"'
 #######################################
 # for aqua
 #######################################
-export PATH="$(aqua root-dir)/bin:$PATH"
+export PATH="$(aqua root-dir)/bin:/home/vscode/bin:$PATH"
 
 # export PYENV_ROOT="/home/${USER}/.pyenv"
 # export PATH="$PYENV_ROOT/bin/:$PATH"

@@ -13,6 +13,37 @@ bash .github/skills/agent-skills-review/scripts/validate.sh SKILL.md
 # If any FAIL (status != PASS), stop and request fixes before proceeding to manual review
 ```
 
+### 2. Run Required Waza Checks
+```bash
+# Run readiness + eval + token checks in one step
+bash .github/skills/agent-skills-review/scripts/validate_waza.sh <skill-name>
+
+# The script runs these commands:
+# waza check <skill-name>
+# waza run <skill-name>/eval.yaml
+# waza tokens count <skill-name>/SKILL.md
+
+# If any command fails, stop and request fixes before manual review
+```
+
+### 3. Optional Deep-Dive Checks
+```bash
+# A/B baseline effect measurement (section 6)
+waza run <eval.yaml> --baseline --trials 5 --output results-baseline.json
+
+# Advisory quality scoring (optional)
+waza quality <skill-name>
+
+# Compare token delta against main (optional)
+waza tokens compare main --skills --threshold 10
+
+# Compare historical result files (optional)
+waza compare <results-a.json> <results-b.json>
+
+# Coverage planning (optional)
+waza coverage --format markdown
+```
+
 ---
 
 ## Manual Review Checklist
@@ -23,12 +54,16 @@ bash .github/skills/agent-skills-review/scripts/validate.sh SKILL.md
 - [ ] S-02 YAML Frontmatter Fields → validated by validate.sh
 - [ ] Description Quality → validated by validate.sh
 - [ ] Metadata Fields → validated by validate.sh
-- [ ] Q-07 Progressive Disclosure → validated by validate.sh
-- [ ] Q-08 Resource Separation → validated by validate.sh (references/ required for all skills; scripts/ required for validation skills)
+- [ ] Q-07 Progressive Disclosure (soft guard) → validated by validate.sh
+- [ ] Q-08 Resource Separation → validated by validate.sh (references/ required; scripts/ optional)
 - [ ] Reference Mandatory Files → validated by validate.sh
 - [ ] Reference Trigger Conditions → validated by validate.sh
 
 **Note:** All automated checks are executed by `validate.sh` script. If any check has status "FAIL", fix the issue and re-run before proceeding to manual review.
+
+**Note:** Required Waza checks are executed by `validate_waza.sh`. Treat any failure in `check`, `run`, or `tokens count` as a blocking issue.
+
+**Note:** For section 7 grader coverage in `eval.yaml`, keep `code`, `text`, and `behavior` enabled by default; use `prompt` (LLM-as-Judge) only in dedicated quality runs.
 
 ### Structure Checks (Reference: references/category-structure.md)
 
@@ -93,19 +128,24 @@ bash .github/skills/agent-skills-review/scripts/validate.sh SKILL.md
 - [ ] No forbidden expressions: "appropriately", "depending on", "case by case"
 - **PASS** if all 3 ✅
 
+#### Q-09: Token Hard Gate
+- [ ] `waza check <skill-dir>` evidence is provided
+- [ ] Reported Token Budget is 500 tokens or less
+- [ ] If token reduction was performed, behavior-defining instructions remain intact
+- **PASS** if all 3 ✅
+
 ### Pattern Checks (Reference: references/category-patterns.md)
 
 #### P-01: Design Pattern Compliance
-- [ ] Skill type identified: Review / Validation / Automation
-- [ ] **Review**: Checklist-driven workflow with category references and explicit validation-skill boundary
-- [ ] **Validation**: Script-driven workflow ("Always use validate.sh") with explicit review-skill boundary
-- [ ] **Automation**: Execution flow with tool priority and idempotent execution
-- [ ] references/ directory populated with category-specific files (Review) or troubleshooting files (Validation)
-- **PASS** if workflow matches skill type pattern
+- [ ] Workflow has explicit numbered steps and deterministic execution order
+- [ ] Branching logic is explicit when multiple paths exist (IF/THEN)
+- [ ] Execution Scope states what is in scope and out of scope
+- [ ] Reference Files Guide includes required common files and relevant category files
+- **PASS** if all 4 ✅
 
 #### P-02: Output Contract Compliance
 - [ ] Output Specification clearly states what the skill returns and how `common-output-format.md` refines it
-- [ ] `references/common-output-format.md` defines a structured output contract appropriate to the skill type (Review / Validation / Automation)
+- [ ] `references/common-output-format.md` defines a concrete structured output contract
 - [ ] Output structure is concrete and parseable (section names, fields, or schema are explicit)
 - [ ] Recommendations or example fields are concrete, not generic
 - **PASS** if all required items are satisfied
@@ -133,6 +173,13 @@ bash .github/skills/agent-skills-review/scripts/validate.sh SKILL.md
 - [ ] No Available Review Categories section duplicating Reference Files Guide
 - **PASS** if no redundant sections found
 
+#### BP-04: Anti-Overtrimming Guardrail
+- [ ] Trigger quality preserved (`description` trigger + `USE FOR` / `DO NOT USE FOR`)
+- [ ] Structured output contract preserved (`Output Specification` + `common-output-format.md`)
+- [ ] Workflow remains deterministic (numbered steps or explicit IF/THEN branch)
+- [ ] At least one concrete example remains in SKILL.md
+- **PASS** if all 4 ✅
+
 ---
 
 ## Summary Scoring
@@ -140,15 +187,15 @@ bash .github/skills/agent-skills-review/scripts/validate.sh SKILL.md
 | Category          | Checks                                                                   | Pass Threshold | Your Score |
 | ----------------- | ------------------------------------------------------------------------ | -------------- | ---------- |
 | **Automated**     | 9 (YAML, Structure, Fields, Desc, Meta, WordCount, Dirs, Refs, Triggers) | 9/9            | ___ / 9    |
-| **Quality**       | 6 (Q-01~Q-06)                                                            | 5+/6           | ___ / 6    |
+| **Quality**       | 7 (Q-01~Q-06, Q-09)                                                      | 6+/7           | ___ / 7    |
 | **Pattern**       | 2 (P-01, P-02)                                                           | 2/2            | ___ / 2    |
-| **Best Practice** | 3 (BP-01~BP-03)                                                          | 2+/3           | ___ / 3    |
-| **TOTAL**         | 20                                                                       | 18/20          | ___ / 20   |
+| **Best Practice** | 4 (BP-01~BP-04)                                                          | 3+/4           | ___ / 4    |
+| **TOTAL**         | 22                                                                       | 20/22          | ___ / 22   |
 
 ### Overall Status
-- **✅ PASS**: 18+ / 20 pass (2 ENHANCEMENT allowed)
-- **⚠️ REVIEW**: 15-17 / 20 pass (IMPORTANT issues)
-- **❌ REJECT**: < 15 / 20 pass (CRITICAL issues)
+- **✅ PASS**: 20+ / 22 pass (2 ENHANCEMENT allowed)
+- **⚠️ REVIEW**: 17-19 / 22 pass (IMPORTANT issues)
+- **❌ REJECT**: < 17 / 22 pass (CRITICAL issues)
 
 ---
 
@@ -156,13 +203,13 @@ bash .github/skills/agent-skills-review/scripts/validate.sh SKILL.md
 
 For detailed evaluation criteria, refer to:
 
-| Check ID               | Reference File                     |
-| ---------------------- | ---------------------------------- |
-| S-01, S-02, Q-07, Q-08 | references/category-structure.md   |
-| BP-01, BP-02           | references/category-structure.md   |
-| Q-01 ~ Q-06, BP-03     | references/category-quality.md     |
-| P-01, P-02             | references/category-patterns.md    |
-| Output examples        | references/common-output-format.md |
+| Check ID                        | Reference File                     |
+| ------------------------------- | ---------------------------------- |
+| S-01, S-02, Q-07, Q-08          | references/category-structure.md   |
+| BP-01, BP-02                    | references/category-structure.md   |
+| Q-01 ~ Q-06, Q-09, BP-03, BP-04 | references/category-quality.md     |
+| P-01, P-02                      | references/category-patterns.md    |
+| Output examples                 | references/common-output-format.md |
 
 ---
 

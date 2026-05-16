@@ -34,4 +34,4 @@
 # Good: cd /path || exit
 ```
 
-See [Script Standards](standards.md) for project template requirements.
+See [Script Standards](category-standards.md) for project template requirements.

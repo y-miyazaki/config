@@ -1,9 +1,8 @@
 ---
 name: diagram-as-code-validation
 description: >-
-  Validates AWS Diagram as Code (DAC) YAML files for syntax and structure using yamllint and
-  awsdac. Generates PNG architecture diagrams from YAML definitions. Use when editing DAC YAML
-  files, generating AWS architecture diagrams, or validating diagram structure before commit.
+  Validate AWS Diagram as Code (DAC) YAML with yamllint and awsdac, and generate PNG diagrams.
+  Use when editing DAC YAML, generating architecture diagrams, or validating structure before commit.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
@@ -12,23 +11,21 @@ metadata:
 
 ## Input
 
-- DAC YAML file(s) - AWS architecture diagram definitions (required)
-- Output PNG filename (required for generation)
-- yamllint configuration file (`.yamllint`) (optional)
-- Environment identifier for multi-environment diagrams (dev/stg/prd) (optional)
+- DAC YAML file(s) (required)
+- Optional: output PNG filename, `.yamllint`, environment identifier
 
 ## Output Specification
 
-Structured validation results and generated artifacts: yamllint → awsdac → file verification.
+Structured validation results: yamllint → awsdac → file verification.
 
 See [references/common-output-format.md](references/common-output-format.md) for detailed format specification.
 
 ## Execution Scope
 
 - **Always use `scripts/validate.sh`** for comprehensive validation. Do not run individual commands.
-- Script executes yamllint and awsdac in recommended order
+- Script executes yamllint and awsdac in order.
 - **Do not modify YAML files automatically**
-- Only generates PNG format diagrams
+- Generate PNG diagrams only.
 
 ## Reference Files Guide
 
@@ -36,8 +33,8 @@ See [references/common-output-format.md](references/common-output-format.md) for
 
 - [common-checklist.md](references/common-checklist.md) - Validation checklist with ItemIDs
 - [common-output-format.md](references/common-output-format.md) - Report format specification
-- [common-troubleshooting.md](references/common-troubleshooting.md) - Read when yamllint/awsdac/file verification fails unexpectedly
-- [common-individual-commands.md](references/common-individual-commands.md) - Read when debugging yamllint or awsdac directly
+- [common-troubleshooting.md](references/common-troubleshooting.md) - Read when validation fails unexpectedly
+- [common-individual-commands.md](references/common-individual-commands.md) - Read when debugging yamllint or awsdac
 
 ## Workflow
 
@@ -54,17 +51,12 @@ bash diagram-as-code-validation/scripts/validate.sh ./aws_architecture_diagram.y
 bash diagram-as-code-validation/scripts/validate.sh ./diagrams/
 ```
 
-### What the Script Does
+### Examples
 
-1. **yamllint** - YAML syntax validation
-2. **awsdac** - Diagram generation and structure verification
-3. **File verification** - Output confirmation and integrity check
-
-Detailed command options for troubleshooting are in [references/common-individual-commands.md](references/common-individual-commands.md).
+- Prompt: `Validate DAC YAML and generate PNG diagram. Report only failures.`
 
 ## Best Practices
 
 - Run validation before every DAC commit
 - Verify generated PNG visually after validation passes
-- All resource links must be valid (no dangling references)
-- Canvas hierarchy must be correct
+- Ensure resource links and canvas hierarchy are valid

@@ -1,25 +1,12 @@
-## 2. Error Handling (ERR)
+## Error Handling Review Guidance
 
-**ERR-01: Careful Use of continue-on-error**
+### Purpose
 
-Check: Is `continue-on-error` usage justified and limited?
-Why: Overusing `continue-on-error` causes hidden failures to be overlooked
-Fix: Limit usage, explicitly document justification in comments
+Use this reference when reviewing failure behavior in workflows.
 
-**ERR-02: Failure Post-Processing Preparation**
+### Focus Areas
 
-Check: Is post-processing (log collection, cleanup) prepared for failures?
-Why: Missing failure post-processing makes analysis difficult, leaves resources behind
-Fix: Collect logs/artifacts and perform cleanup with `if: failure()`
-
-**ERR-03: Failure Notification Integration**
-
-Check: Are notifications configured for critical job failures?
-Why: Missing failure notifications cause failures to be missed, delay response
-Fix: Implement Slack/Email notifications, aggregate by severity
-
-**ERR-04: Job Timeout Configuration**
-
-Check: Is appropriate `timeout-minutes` set for each job?
-Why: Missing timeout settings waste runners, stall CI
-Fix: Set appropriate `timeout-minutes`
+- `continue-on-error` usage and whether failure masking is justified
+- Required `if:` guards for cleanup or rollback steps
+- Retry behavior and timeout handling for flaky integrations
+- Failure notifications and escalation paths

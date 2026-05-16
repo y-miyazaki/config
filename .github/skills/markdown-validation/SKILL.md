@@ -1,9 +1,8 @@
 ---
 name: markdown-validation
 description: >-
-  Validates Markdown files for syntax correctness, formatting standards, and broken links using
-  markdownlint and markdown-link-check. Use when committing documentation changes, checking for
-  broken links, or validating Markdown formatting in pull requests.
+  Validate Markdown syntax, formatting, and links using markdownlint and markdown-link-check.
+  Use when committing docs changes, checking broken links, or validating Markdown in pull requests.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
@@ -13,11 +12,7 @@ metadata:
 ## Input
 
 - Markdown file(s) with `.md` extension (required)
-- markdownlint configuration (`.markdownlint.json` or `.markdownlint.yaml`) (optional)
-- markdown-link-check configuration (`.markdown-link-check.json`) (optional)
-- File pattern for selective validation (default: `**/*.md`) (optional)
-
-SKILL.md structural requirements are handled by `agent-skills-review`, not by this skill.
+- Optional: markdownlint config, markdown-link-check config, file pattern (`**/*.md`)
 
 ## Output Specification
 
@@ -28,7 +23,7 @@ See [references/common-output-format.md](references/common-output-format.md) for
 ## Execution Scope
 
 - **Always use `scripts/validate.sh`** for comprehensive validation. Do not run individual commands.
-- Script executes markdownlint and markdown-link-check in recommended order
+- Script executes markdownlint and markdown-link-check in order.
 - **Do not modify Markdown files** (except with --fix flag)
 - External link checking depends on network connectivity
 
@@ -39,7 +34,7 @@ See [references/common-output-format.md](references/common-output-format.md) for
 - [common-checklist.md](references/common-checklist.md) - Validation checklist with ItemIDs
 - [common-output-format.md](references/common-output-format.md) - Report format specification
 - [common-troubleshooting.md](references/common-troubleshooting.md) - Read when markdownlint or link checks fail unexpectedly
-- [common-individual-commands.md](references/common-individual-commands.md) - Read when debugging markdownlint or markdown-link-check directly
+- [common-individual-commands.md](references/common-individual-commands.md) - Read when debugging tools directly
 
 ## Workflow
 
@@ -56,16 +51,11 @@ bash markdown-validation/scripts/validate.sh ./README.md
 bash markdown-validation/scripts/validate.sh ./docs/
 ```
 
-### What the Script Does
+### Examples
 
-1. **markdownlint** - Markdown syntax and style validation
-2. **markdown-link-check** - Broken link detection
-
-Detailed command options for troubleshooting are in [references/common-individual-commands.md](references/common-individual-commands.md).
+- Prompt: `Validate Markdown files and report only failed checks.`
 
 ## Best Practices
 
 - Run validation before every documentation commit
-- All syntax violations and broken links must be resolved before merge
-- Heading hierarchy must be correct (H1→H2→H3 order)
-- Code blocks should have language specification
+- Resolve syntax violations and broken links before merge
