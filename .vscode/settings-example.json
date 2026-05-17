@@ -117,15 +117,16 @@
   "github.copilot.chat.virtualTools.threshold": 128,
   "github.copilot.enable": {
     "*": true,
+    "dotenv": false,
+    "env": false,
     "go": true,
     "javascript": true,
     "markdown": true,
     "plaintext": false,
     "python": true,
+    "scminput": false,
     "typescriptreact": true,
-    "yaml": false,
-    "env": false,
-    "dotenv": false
+    "yaml": false
   },
   // Security: Exclude sensitive files from search/indexing (affects Copilot context)
   "github.copilot.nextEditSuggestions.enabled": true,
@@ -304,6 +305,8 @@
       "-/workspace/.github",
       "-/workspace/.serena",
       "-/workspace/.vscode",
+      "-/workspace/coverage",
+      "-/workspace/db",
       "-/workspace/node_modules",
       "-/workspace/output",
       "-/workspace/tmp",

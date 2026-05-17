@@ -75,16 +75,6 @@ RUN npm install -g --ignore-scripts \
 RUN go install github.com/aquaproj/aqua/v2/cmd/aqua@${AQUA_VERSION}
 
 #--------------------------------------------------------------
-# Install for MCP Server
-#--------------------------------------------------------------
-# Install for vscode user
-USER ${USER}
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Switch back to root for remaining operations
-USER root
-
-#--------------------------------------------------------------
 # AWS environment
 #--------------------------------------------------------------
 # Install aws-mfa

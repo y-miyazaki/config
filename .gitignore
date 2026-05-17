@@ -3,7 +3,7 @@
 .DS_Store
 .devcontainer/devcontainer.json
 .serena
-.vscode/**
+.vscode
 !.vscode/cspell.json
 !.vscode/cspell-project.txt
 !.vscode/mcp-example.json
