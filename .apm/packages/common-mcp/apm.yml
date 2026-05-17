@@ -1,0 +1,29 @@
+name: common-mcp
+version: 1.0.0
+description: Common MCP servers (Context7, GitHub)
+author: y-miyazaki
+license: Apache-2.0
+includes: auto
+
+dependencies:
+  apm: []
+  mcp:
+    - name: context7
+      registry: false
+      transport: stdio
+      command: npx
+      args: ["-y", "@upstash/context7-mcp@latest"]
+    - name: github
+      registry: false
+      transport: http
+      url: https://api.githubcopilot.com/mcp/
+    - name: playwright
+      registry: false
+      transport: stdio
+      command: npx
+      args: ["-y", "@playwright/mcp@latest"]
+    - name: fetch
+      registry: false
+      transport: stdio
+      command: uvx
+      args: ["mcp-server-fetch"]

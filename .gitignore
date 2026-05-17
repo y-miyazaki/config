@@ -20,6 +20,16 @@ docker-terraform/
 .amazonq
 .kiro
 
+# APM
+apm_modules
+.agents
+.github/skills
+.github/instructions
+.github/agents
+.github/prompts
+.claude
+.cursor
+
 # env
 .env
 env/common/tmp/**

@@ -1,0 +1,37 @@
+name: aws-mcp
+version: 1.0.0
+description: MCP servers for AWS development (API and Knowledge)
+author: y-miyazaki
+license: Apache-2.0
+includes: auto
+
+dependencies:
+  apm: []
+  mcp:
+    - name: aws-mcp
+      registry: false
+      transport: stdio
+      command: uvx
+      args: ["mcp-proxy-for-aws@latest", "https://aws-mcp.us-east-1.api.aws/mcp"]
+    - name: awslabs-aws-api-mcp-server
+      registry: false
+      transport: stdio
+      command: uvx
+      args: ["awslabs.aws-api-mcp-server@latest"]
+      env:
+        AWS_REGION: "${AWS_REGION}"
+    - name: aws-knowledge-mcp-server
+      registry: false
+      transport: stdio
+      command: uvx
+      args: ["mcp-proxy", "--transport", "streamablehttp", "https://knowledge-mcp.global.api.aws"]
+    - name: aws-documentation-mcp-server
+      registry: false
+      transport: stdio
+      command: uvx
+      args: ["awslabs.aws-documentation-mcp-server@latest"]
+    - name: aws-pricing-mcp-server
+      registry: false
+      transport: stdio
+      command: uvx
+      args: ["awslabs.aws-pricing-mcp-server@latest"]
