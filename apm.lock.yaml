@@ -1,22 +1,30 @@
-lockfile_version: '1'
-generated_at: '2026-05-17T11:55:14.331036+00:00'
+lockfile_version: "1"
+generated_at: "2026-05-17T13:56:07.721510+00:00"
 apm_version: 0.13.0
 dependencies:
-- repo_url: _local/common-mcp
-  package_type: apm_package
-  source: local
-  local_path: ./.apm/packages/common-mcp
-- repo_url: _local/performance-mcp
-  package_type: apm_package
-  source: local
-  local_path: ./.apm/packages/performance-mcp
+  - repo_url: _local/common
+    package_type: apm_package
+    source: local
+    local_path: ./.apm/packages/mcp/common
+  - repo_url: _local/performance
+    package_type: apm_package
+    source: local
+    local_path: ./.apm/packages/mcp/performance
+  - repo_url: _local/performance-hooks
+    package_type: invalid
+    deployed_files:
+      - .github/hooks/performance-hooks-lean-ctx.json
+    deployed_file_hashes:
+      .github/hooks/performance-hooks-lean-ctx.json: sha256:2d28799a2648693e4ffe109d84f5c7c31ce266fab1c292b1f5dd4da043b5c8c5
+    source: local
+    local_path: ./.apm/packages/hooks/performance-hooks
 mcp_servers:
-- codebase-memory-mcp
-- context7
-- fetch
-- github
-- lean-ctx
-- playwright
+  - codebase-memory-mcp
+  - context7
+  - fetch
+  - github
+  - lean-ctx
+  - playwright
 mcp_configs:
   codebase-memory-mcp:
     name: codebase-memory-mcp
@@ -28,62 +36,62 @@ mcp_configs:
     name: context7
     transport: stdio
     args:
-    - -y
-    - '@upstash/context7-mcp@2.2.5'
+      - -y
+      - "@upstash/context7-mcp@2.2.5"
     registry: false
     command: npx
   fetch:
     name: fetch
     transport: stdio
     args:
-    - mcp-server-fetch==2025.4.7
+      - mcp-server-fetch==2025.4.7
     registry: false
     command: uvx
   github:
     name: github
     transport: stdio
     args:
-    - mcp-proxy
-    - --transport
-    - streamablehttp
-    - https://api.githubcopilot.com/mcp/
+      - mcp-proxy
+      - --transport
+      - streamablehttp
+      - https://api.githubcopilot.com/mcp/
     registry: false
     command: uvx
   lean-ctx:
     name: lean-ctx
     transport: stdio
     args:
-    - mcp
+      - mcp
     registry: false
     command: lean-ctx
   playwright:
     name: playwright
     transport: stdio
     args:
-    - -y
-    - '@playwright/mcp@0.0.75'
+      - -y
+      - "@playwright/mcp@0.0.75"
     registry: false
     command: npx
 local_deployed_files:
-- .agents/skills/agent-skills-review
-- .agents/skills/docs-creation
-- .agents/skills/github-actions-review
-- .agents/skills/github-actions-validation
-- .agents/skills/github-pr-body
-- .agents/skills/go-review
-- .agents/skills/go-validation
-- .agents/skills/instructions-review
-- .agents/skills/markdown-validation
-- .agents/skills/shell-script-review
-- .agents/skills/shell-script-validation
-- .agents/skills/terraform-review
-- .agents/skills/terraform-validation
-- .github/instructions/agent-skills.instructions.md
-- .github/instructions/github-actions-workflow.instructions.md
-- .github/instructions/go.instructions.md
-- .github/instructions/markdown.instructions.md
-- .github/instructions/shell-script.instructions.md
-- .github/instructions/terraform.instructions.md
+  - .agents/skills/agent-skills-review
+  - .agents/skills/docs-creation
+  - .agents/skills/github-actions-review
+  - .agents/skills/github-actions-validation
+  - .agents/skills/github-pr-body
+  - .agents/skills/go-review
+  - .agents/skills/go-validation
+  - .agents/skills/instructions-review
+  - .agents/skills/markdown-validation
+  - .agents/skills/shell-script-review
+  - .agents/skills/shell-script-validation
+  - .agents/skills/terraform-review
+  - .agents/skills/terraform-validation
+  - .github/instructions/agent-skills.instructions.md
+  - .github/instructions/github-actions-workflow.instructions.md
+  - .github/instructions/go.instructions.md
+  - .github/instructions/markdown.instructions.md
+  - .github/instructions/shell-script.instructions.md
+  - .github/instructions/terraform.instructions.md
 local_deployed_file_hashes:
   .github/instructions/agent-skills.instructions.md: sha256:01d0dd77dd5db88a7e4ba814e3823f055d3f1b48fb362d0e3d926c97e698f4ce
   .github/instructions/github-actions-workflow.instructions.md: sha256:23f16ff676d57c8aac8f6545244caa008242ffef672ea68b8715f7a7b15f2a4e

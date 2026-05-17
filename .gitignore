@@ -27,6 +27,7 @@ apm_modules
 .github/instructions
 .github/agents
 .github/prompts
+.github/hooks
 .claude
 .cursor
 

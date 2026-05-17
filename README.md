@@ -94,19 +94,19 @@ MCP server packages:
 
 ```bash
 # Common (GitHub, Context7, Playwright, Fetch)
-apm install y-miyazaki/config/.apm/packages/common-mcp
+apm install y-miyazaki/config/.apm/packages/mcp/common
 
 # AWS
-apm install y-miyazaki/config/.apm/packages/aws-mcp
+apm install y-miyazaki/config/.apm/packages/mcp/aws
 
 # Terraform (cloud-agnostic)
-apm install y-miyazaki/config/.apm/packages/terraform-mcp
+apm install y-miyazaki/config/.apm/packages/mcp/terraform
 
 # Terraform + AWS
-apm install y-miyazaki/config/.apm/packages/terraform-aws-mcp
+apm install y-miyazaki/config/.apm/packages/mcp/terraform-aws
 
 # Performance (lean-ctx, codebase-memory-mcp)
-apm install y-miyazaki/config/.apm/packages/performance-mcp
+apm install y-miyazaki/config/.apm/packages/mcp/performance
 ```
 
 ### Other targets

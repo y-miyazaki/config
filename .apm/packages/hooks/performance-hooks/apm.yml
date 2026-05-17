@@ -1,0 +1,11 @@
+name: performance-hooks
+version: 1.0.0
+description: Copilot hook package for performance-oriented lean-ctx integrations
+author: y-miyazaki
+license: Apache-2.0
+target: all
+includes: auto
+
+dependencies:
+  apm: []
+  mcp: []

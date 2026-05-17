@@ -8,6 +8,7 @@ includes: auto
 
 dependencies:
   apm:
-    - path: ./.apm/packages/common-mcp
-    - path: ./.apm/packages/performance-mcp
+    - path: ./.apm/packages/mcp/common
+    - path: ./.apm/packages/mcp/performance
+    - path: ./.apm/packages/hooks/performance-hooks
   mcp: []
