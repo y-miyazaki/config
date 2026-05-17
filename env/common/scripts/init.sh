@@ -20,6 +20,11 @@ if command -v aqua > /dev/null 2>&1; then
     aqua policy allow /workspace/aqua-policy.yaml 2> /dev/null || echo "[warn] aqua policy apply failed" >&2
 fi
 
+# Atom packages (optional)
+if command -v apm > /dev/null 2>&1; then
+    apm install || echo "[warn] apm install failed" >&2
+fi
+
 # Adjust ownership (only if paths exist)
 if [ -e /home/vscode/.aws ]; then sudo chown -R "$(id -u)":"$(id -g)" /home/vscode/.aws || true; fi
 if [ -e /home/vscode/.gitconfig ]; then sudo chown -R "$(id -u)":"$(id -g)" /home/vscode/.gitconfig || true; fi
