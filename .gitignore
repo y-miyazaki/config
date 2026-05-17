@@ -16,20 +16,18 @@ config/
 docker-go/
 docker-terraform/
 
-# AI
-.amazonq
-.kiro
-
-# APM
-apm_modules
+# AI agents
 .agents
-.github/skills
-.github/instructions
-.github/agents
-.github/prompts
-.github/hooks
+apm_modules
+.amazonq
 .claude
 .cursor
+.github/agents
+.github/instructions
+.github/hooks
+.github/prompts
+.github/skills
+.kiro
 
 # env
 .env
