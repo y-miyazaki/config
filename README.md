@@ -1,8 +1,44 @@
+<!-- omit in toc -->
 # y-miyazaki/config
 
-Shared agent skills and instructions for AI-assisted development.
+Shared configuration packages for AI agent tooling, GitHub Actions workflows, and Renovate policy reuse.
 
-## Contents
+This repository is a shared configuration repository. It is focused on practical usage and reuse of settings across projects.
+
+- Specifications for this repository are documented under [`docs/`](docs/), including repository structure in [`docs/specification.md`](docs/specification.md).
+- Usage and installation steps are documented in this `README.md`.
+- AI agent-related configuration files are shared as APM packages.
+- Shared automation is provided through GitHub Actions workflows.
+- Shared dependency update policy is provided through Renovate configuration.
+
+<!-- omit in toc -->
+## Table of Contents
+
+- [Documentation](#documentation)
+- [APM](#apm)
+  - [Contents](#contents)
+  - [Skills](#skills)
+  - [Instructions](#instructions)
+  - [Install](#install)
+  - [Individual packages](#individual-packages)
+  - [Other targets](#other-targets)
+  - [Use in other repositories](#use-in-other-repositories)
+- [GitHub Actions](#github-actions)
+  - [Reuse shared workflows](#reuse-shared-workflows)
+- [Renovate](#renovate)
+  - [Reuse shared policy](#reuse-shared-policy)
+- [License](#license)
+
+## Documentation
+
+- Usage: this `README.md`
+- Specification and structure: [`docs/specification.md`](docs/specification.md)
+
+## APM
+
+APM is used to share AI agent-related configuration files (skills, instructions, and MCP package sets).
+
+### Contents
 
 ### Skills
 
@@ -34,7 +70,7 @@ Shared agent skills and instructions for AI-assisted development.
 | shell-script            | `**/*.sh`                            |
 | terraform               | `**/*.tf`, `**/*.tfvars`, `**/*.hcl` |
 
-## Install with APM
+### Install
 
 Install the full package (skills + instructions + common/performance MCP servers):
 
@@ -86,7 +122,7 @@ apm install y-miyazaki/config --target cursor
 apm install y-miyazaki/config --target all
 ```
 
-## Usage in other repositories
+### Use in other repositories
 
 After adding dependencies to your project's `apm.yml`, teammates only need:
 
@@ -95,6 +131,38 @@ apm install
 ```
 
 This resolves all dependencies from `apm.lock.yaml` and deploys skills, instructions, and MCP servers to the appropriate target directories.
+
+## GitHub Actions
+
+GitHub Actions workflows are shared as reusable workflow definitions in this repository.
+
+### Reuse shared workflows
+
+Use this repository's reusable workflows from your repository workflows:
+
+```yaml
+jobs:
+	markdown:
+		uses: y-miyazaki/config/.github/workflows/ci-markdown.yaml@main
+```
+
+For production usage, pin a commit SHA instead of a branch.
+
+## Renovate
+
+Renovate configuration is shared as reusable policy presets.
+
+### Reuse shared policy
+
+Create or update your `.github/renovate.json`:
+
+```json
+{
+	"extends": ["github>y-miyazaki/config//renovate/default"]
+}
+```
+
+This enables the shared Renovate baseline and policy defaults maintained in this repository.
 
 ## License
 
