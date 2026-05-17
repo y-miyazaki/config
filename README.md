@@ -142,8 +142,8 @@ Use this repository's reusable workflows from your repository workflows:
 
 ```yaml
 jobs:
-	markdown:
-		uses: y-miyazaki/config/.github/workflows/ci-markdown.yaml@main
+  markdown:
+    uses: y-miyazaki/config/.github/workflows/ci-markdown.yaml@main
 ```
 
 For production usage, pin a commit SHA instead of a branch.

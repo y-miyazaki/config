@@ -7,18 +7,11 @@
 !.vscode/cspell.json
 !.vscode/cspell-project.txt
 !.vscode/mcp-example.json
-!.vscode/mcp-example-config.json
 !.vscode/settings-example.json
 tmp
 
-# nested repos
-config/
-docker-go/
-docker-terraform/
-
 # AI agents
 .agents
-apm_modules
 .amazonq
 .claude
 .cursor
@@ -28,6 +21,7 @@ apm_modules
 .github/prompts
 .github/skills
 .kiro
+apm_modules/
 
 # env
 .env
@@ -81,7 +75,3 @@ outputs
 __pycache__
 .Python
 .venv
-
-
-# APM dependencies
-apm_modules/
