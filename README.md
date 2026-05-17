@@ -36,24 +36,65 @@ Shared agent skills and instructions for AI-assisted development.
 
 ## Install with APM
 
-Install the full package:
+Install the full package (skills + instructions + common/performance MCP servers):
 
 ```bash
-apm install y-miyazaki/config
+apm install y-miyazaki/config --target copilot
 ```
 
-Install a specific skill:
+> **Note:** `--target` is not required if your project already has an `apm.yml` (auto-detected from the `target:` setting).
+
+### Individual packages
+
+Skills and instructions only:
 
 ```bash
 apm install y-miyazaki/config/.apm/skills/go-review
 apm install y-miyazaki/config/.apm/skills/terraform-review
-```
-
-Install a specific instruction:
-
-```bash
 apm install y-miyazaki/config/.apm/instructions/go.instructions.md
 ```
+
+MCP server packages:
+
+```bash
+# Common (GitHub, Context7, Playwright, Fetch)
+apm install y-miyazaki/config/.apm/packages/common-mcp
+
+# AWS
+apm install y-miyazaki/config/.apm/packages/aws-mcp
+
+# Terraform (cloud-agnostic)
+apm install y-miyazaki/config/.apm/packages/terraform-mcp
+
+# Terraform + AWS
+apm install y-miyazaki/config/.apm/packages/terraform-aws-mcp
+
+# Performance (lean-ctx, codebase-memory-mcp)
+apm install y-miyazaki/config/.apm/packages/performance-mcp
+```
+
+### Other targets
+
+```bash
+# Claude
+apm install y-miyazaki/config --target claude
+
+# Cursor
+apm install y-miyazaki/config --target cursor
+
+# All targets
+apm install y-miyazaki/config --target all
+```
+
+## Usage in other repositories
+
+After adding dependencies to your project's `apm.yml`, teammates only need:
+
+```bash
+apm install
+```
+
+This resolves all dependencies from `apm.lock.yaml` and deploys skills, instructions, and MCP servers to the appropriate target directories.
 
 ## License
 

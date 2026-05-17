@@ -1,0 +1,22 @@
+name: terraform-aws-mcp
+version: 1.0.0
+description: MCP servers for Terraform + AWS development
+author: y-miyazaki
+license: Apache-2.0
+includes: auto
+
+dependencies:
+  apm: []
+  mcp:
+    - name: hashicorp-terraform-mcp-server
+      registry: false
+      transport: stdio
+      command: npx
+      args: ["-y", "terraform-mcp-server@0.13.0"]
+    - name: awslabs-terraform-mcp-server
+      registry: false
+      transport: stdio
+      command: uvx
+      args: ["awslabs.terraform-mcp-server==0.3.4"]
+      env:
+        FASTMCP_LOG_LEVEL: "ERROR"

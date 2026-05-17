@@ -17,6 +17,7 @@ mkdir -p "$HOME/.local/share/aquaproj-aqua" 2> /dev/null || true
 # aqua lazy install
 if command -v aqua > /dev/null 2>&1; then
     aqua i -l || echo "[warn] aqua lazy install failed" >&2
+    aqua policy allow /workspace/aqua-policy.yaml 2> /dev/null || echo "[warn] aqua policy apply failed" >&2
 fi
 
 # Adjust ownership (only if paths exist)

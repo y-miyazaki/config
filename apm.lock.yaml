@@ -1,0 +1,98 @@
+lockfile_version: '1'
+generated_at: '2026-05-17T10:35:15.649814+00:00'
+apm_version: 0.13.0
+dependencies:
+- repo_url: _local/common-mcp
+  package_type: apm_package
+  source: local
+  local_path: ./.apm/packages/common-mcp
+- repo_url: _local/performance-mcp
+  package_type: apm_package
+  source: local
+  local_path: ./.apm/packages/performance-mcp
+mcp_servers:
+- context7
+- fetch
+- github
+- lean-ctx
+- playwright
+mcp_configs:
+  context7:
+    name: context7
+    transport: stdio
+    args:
+    - -y
+    - '@upstash/context7-mcp@2.2.5'
+    registry: false
+    command: npx
+  fetch:
+    name: fetch
+    transport: stdio
+    args:
+    - mcp-server-fetch==2025.4.7
+    registry: false
+    command: uvx
+  github:
+    name: github
+    transport: stdio
+    args:
+    - mcp-compressor==0.15.0
+    - -c
+    - medium
+    - https://api.githubcopilot.com/mcp/
+    - --server-name
+    - github
+    registry: false
+    command: uvx
+  lean-ctx:
+    name: lean-ctx
+    transport: stdio
+    args:
+    - mcp-compressor==0.15.0
+    - -c
+    - medium
+    - --
+    - lean-ctx
+    - mcp
+    registry: false
+    command: uvx
+  playwright:
+    name: playwright
+    transport: stdio
+    args:
+    - mcp-compressor==0.15.0
+    - -c
+    - medium
+    - --
+    - npx
+    - -y
+    - '@playwright/mcp@0.0.75'
+    registry: false
+    command: uvx
+local_deployed_files:
+- .agents/skills/agent-skills-review
+- .agents/skills/docs-creation
+- .agents/skills/github-actions-review
+- .agents/skills/github-actions-validation
+- .agents/skills/github-pr-body
+- .agents/skills/go-review
+- .agents/skills/go-validation
+- .agents/skills/instructions-review
+- .agents/skills/markdown-validation
+- .agents/skills/shell-script-review
+- .agents/skills/shell-script-validation
+- .agents/skills/terraform-review
+- .agents/skills/terraform-validation
+- .github/instructions/agent-skills.instructions.md
+- .github/instructions/github-actions-workflow.instructions.md
+- .github/instructions/go.instructions.md
+- .github/instructions/markdown.instructions.md
+- .github/instructions/shell-script.instructions.md
+- .github/instructions/terraform.instructions.md
+local_deployed_file_hashes:
+  .github/instructions/agent-skills.instructions.md: sha256:01d0dd77dd5db88a7e4ba814e3823f055d3f1b48fb362d0e3d926c97e698f4ce
+  .github/instructions/github-actions-workflow.instructions.md: sha256:23f16ff676d57c8aac8f6545244caa008242ffef672ea68b8715f7a7b15f2a4e
+  .github/instructions/go.instructions.md: sha256:56a8c0dbf917667b67a70e2da736bc911301a810da282703f523fd202a25cd74
+  .github/instructions/markdown.instructions.md: sha256:62e8b2f22a163c03133f10b7035eae6172222eae1c2a9fa09142d39c93cd9c35
+  .github/instructions/shell-script.instructions.md: sha256:afcc85a02bec09859a4f56c6166d66d759b08fec918f9907b34c61f0605a9438
+  .github/instructions/terraform.instructions.md: sha256:e80569ccca5f9927d080f1dd485d9f7a70b252cb81a2d30ad9004e0325afc5c3

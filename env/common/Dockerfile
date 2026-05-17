@@ -103,18 +103,6 @@ RUN pip3 install --break-system-packages aws-mfa==${AWS_MFA_VERSION} && \
     dpkg -i session-manager-plugin.deb && \
     rm session-manager-plugin.deb
 
-# Install awsdac
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    fonts-liberation && \
-    go install github.com/awslabs/diagram-as-code/cmd/awsdac@${AWSDAC_VERSION} && \
-    go install github.com/awslabs/diagram-as-code/cmd/awsdac-mcp-server@${AWSDAC_VERSION}
-
-#--------------------------------------------------------------
-# AI Tools
-#--------------------------------------------------------------
-RUN curl -fsSL https://raw.githubusercontent.com/microsoft/waza/main/install.sh | bash
-
 #--------------------------------------------------------------
 # Fixed go owner
 #--------------------------------------------------------------

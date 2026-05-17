@@ -3,12 +3,11 @@ version: 1.0.0
 description: Shared agent skills and instructions for Go, Terraform, Shell Script, GitHub Actions, and more
 author: y-miyazaki
 license: Apache-2.0
-target: all
+target: copilot
 includes: auto
 
 dependencies:
   apm:
     - path: ./.apm/packages/common-mcp
-    - path: ./.apm/packages/aws-mcp
-    - path: ./.apm/packages/terraform-mcp
+    - path: ./.apm/packages/performance-mcp
   mcp: []
