@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-05-17T10:35:15.649814+00:00'
+generated_at: '2026-05-17T11:55:14.331036+00:00'
 apm_version: 0.13.0
 dependencies:
 - repo_url: _local/common-mcp
@@ -11,12 +11,19 @@ dependencies:
   source: local
   local_path: ./.apm/packages/performance-mcp
 mcp_servers:
+- codebase-memory-mcp
 - context7
 - fetch
 - github
 - lean-ctx
 - playwright
 mcp_configs:
+  codebase-memory-mcp:
+    name: codebase-memory-mcp
+    transport: stdio
+    args: []
+    registry: false
+    command: codebase-memory-mcp
   context7:
     name: context7
     transport: stdio
@@ -36,39 +43,27 @@ mcp_configs:
     name: github
     transport: stdio
     args:
-    - mcp-compressor==0.15.0
-    - -c
-    - medium
+    - mcp-proxy
+    - --transport
+    - streamablehttp
     - https://api.githubcopilot.com/mcp/
-    - --server-name
-    - github
     registry: false
     command: uvx
   lean-ctx:
     name: lean-ctx
     transport: stdio
     args:
-    - mcp-compressor==0.15.0
-    - -c
-    - medium
-    - --
-    - lean-ctx
     - mcp
     registry: false
-    command: uvx
+    command: lean-ctx
   playwright:
     name: playwright
     transport: stdio
     args:
-    - mcp-compressor==0.15.0
-    - -c
-    - medium
-    - --
-    - npx
     - -y
     - '@playwright/mcp@0.0.75'
     registry: false
-    command: uvx
+    command: npx
 local_deployed_files:
 - .agents/skills/agent-skills-review
 - .agents/skills/docs-creation

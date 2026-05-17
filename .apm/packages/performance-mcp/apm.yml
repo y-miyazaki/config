@@ -1,6 +1,6 @@
 name: performance-mcp
 version: 1.0.0
-description: MCP servers for token optimization and context efficiency (lean-ctx, codebase-memory)
+description: MCP server for token optimization and context efficiency (lean-ctx)
 author: y-miyazaki
 license: Apache-2.0
 includes: auto
@@ -8,13 +8,13 @@ includes: auto
 dependencies:
   apm: []
   mcp:
+    - name: codebase-memory-mcp
+      registry: false
+      transport: stdio
+      command: codebase-memory-mcp
+      args: []
     - name: lean-ctx
       registry: false
       transport: stdio
-      command: uvx
-      args: ["mcp-compressor==0.15.0", "-c", "medium", "--", "lean-ctx", "mcp"]
-    # - name: codebase-memory-mcp
-    #   registry: false
-    #   transport: stdio
-    #   command: codebase-memory-mcp
-    #   args: []
+      command: lean-ctx
+      args: ["mcp"]

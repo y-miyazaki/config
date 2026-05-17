@@ -13,18 +13,24 @@ dependencies:
       transport: stdio
       command: npx
       args: ["-y", "@upstash/context7-mcp@2.2.5"]
-    - name: github
-      registry: false
-      transport: stdio
-      command: uvx
-      args: ["mcp-compressor==0.15.0", "-c", "medium", "https://api.githubcopilot.com/mcp/", "--server-name", "github"]
-    - name: playwright
-      registry: false
-      transport: stdio
-      command: uvx
-      args: ["mcp-compressor==0.15.0", "-c", "medium", "--", "npx", "-y", "@playwright/mcp@0.0.75"]
     - name: fetch
       registry: false
       transport: stdio
       command: uvx
       args: ["mcp-server-fetch==2025.4.7"]
+    - name: github
+      registry: false
+      transport: stdio
+      command: uvx
+      args:
+        [
+          "mcp-proxy",
+          "--transport",
+          "streamablehttp",
+          "https://api.githubcopilot.com/mcp/",
+        ]
+    - name: playwright
+      registry: false
+      transport: stdio
+      command: npx
+      args: ["-y", "@playwright/mcp@0.0.75"]

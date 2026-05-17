@@ -82,3 +82,7 @@ outputs
 __pycache__
 .Python
 .venv
+
+
+# APM dependencies
+apm_modules/
