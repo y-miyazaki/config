@@ -92,13 +92,13 @@ Avoid unrestricted inbound SSH/RDP unless explicitly required and documented.
 After applying fixes, rerun validation with the standard script:
 
 ```bash
-bash terraform-validation/scripts/validate.sh
+bash scripts/validate.sh
 ```
 
 For faster feedback on specific directories:
 
 ```bash
-bash terraform-validation/scripts/validate.sh ./terraform/base/ ./terraform/management/
+bash scripts/validate.sh ./terraform/base/ ./terraform/management/
 ```
 
 ## Escalation Rule

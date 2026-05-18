@@ -4,7 +4,7 @@
 
 - PRECOND-01: Target PR exists and is accessible via `gh pr view`
 - PRECOND-02: `gh` CLI is authenticated (`gh auth status` returns 0)
-- PRECOND-03: `.github/skills/github-pr-body/scripts/pr_body.sh` is executable
+- PRECOND-03: `scripts/pr_body.sh` is executable
 
 ## Execution Steps
 

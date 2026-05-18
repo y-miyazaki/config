@@ -57,7 +57,7 @@ description: "AI Assistant Instructions for Markdown Documentation"
 **Entry point (recommended)**:
 
 ```bash
-bash skills/markdown-validation/scripts/validate.sh
+bash <agent-root>/skills/markdown-validation/scripts/validate.sh
 ```
 
 **Individual execution (debugging)**:

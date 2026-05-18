@@ -4,7 +4,7 @@
 
 **Issue**: Code not formatted
 
-**Fix**: `bash terraform-validation/scripts/validate.sh --fix`
+**Fix**: `bash scripts/validate.sh --fix`
 
 ## terraform validate Failures
 

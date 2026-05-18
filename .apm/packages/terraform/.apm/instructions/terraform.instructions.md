@@ -214,7 +214,7 @@ description: "AI Assistant Instructions for Terraform"
 **Entry point (recommended)**:
 
 ```bash
-bash skills/terraform-validation/scripts/validate.sh
+bash <agent-root>/skills/terraform-validation/scripts/validate.sh
 ```
 
 **Individual execution (debugging)**:

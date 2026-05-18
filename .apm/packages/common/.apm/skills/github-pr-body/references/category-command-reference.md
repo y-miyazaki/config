@@ -29,23 +29,23 @@ Complete reference for scripts in the github-pr-body skill.
 
 ```bash
 # Fetch PR metadata, file classifications, and template sections
-.github/skills/github-pr-body/scripts/pr_fetch.sh <PR#> --repo owner/repo
+scripts/pr_fetch.sh <PR#> --repo owner/repo
 ```
 
 ### Options
 
 ```bash
 # Output in JSON format (default)
-.github/skills/github-pr-body/scripts/pr_fetch.sh <PR#> --repo owner/repo --format json
+scripts/pr_fetch.sh <PR#> --repo owner/repo --format json
 
 # Output in YAML format
-.github/skills/github-pr-body/scripts/pr_fetch.sh <PR#> --repo owner/repo --format yaml
+scripts/pr_fetch.sh <PR#> --repo owner/repo --format yaml
 
 # Auto-detect repo from git remote (no --repo needed)
-.github/skills/github-pr-body/scripts/pr_fetch.sh <PR#>
+scripts/pr_fetch.sh <PR#>
 
 # Help message
-.github/skills/github-pr-body/scripts/pr_fetch.sh --help
+scripts/pr_fetch.sh --help
 ```
 
 ### Parameters
@@ -99,7 +99,7 @@ Complete reference for scripts in the github-pr-body skill.
 
 **Example 1: Analyze PR and print summary**
 ```bash
-.github/skills/github-pr-body/scripts/pr_fetch.sh 311 --repo owner/repo \\
+scripts/pr_fetch.sh 311 --repo owner/repo \\
   | jq '.classified_files | map({type, count: (.files | length), additions: (.files | map(.additions) | add)})'
 
 # Output:
@@ -111,13 +111,13 @@ Complete reference for scripts in the github-pr-body skill.
 
 **Example 2: Extract Terraform changes**
 ```bash
-.github/skills/github-pr-body/scripts/pr_fetch.sh 311 --repo owner/repo \\
+scripts/pr_fetch.sh 311 --repo owner/repo \\
   | jq '.classified_files[] | select(.type == "Config") | .files[] | select(.path | contains("terraform"))'
 ```
 
 **Example 3: Save analysis for later processing**
 ```bash
-.github/skills/github-pr-body/scripts/pr_fetch.sh 311 --repo owner/repo > pr_analysis.json
+scripts/pr_fetch.sh 311 --repo owner/repo > pr_analysis.json
 # Use pr_analysis.json for downstream processing or manual refinement
 ```
 
@@ -136,23 +136,23 @@ Complete reference for scripts in the github-pr-body skill.
 
 ```bash
 # Update PR Body with deterministic baseline sections
-.github/skills/github-pr-body/scripts/pr_body.sh <PR#> --repo owner/repo
+scripts/pr_body.sh <PR#> --repo owner/repo
 ```
 
 ### Options
 
 ```bash
 # Preview changes before applying (dry-run mode)
-.github/skills/github-pr-body/scripts/pr_body.sh <PR#> --repo owner/repo --dry-run
+scripts/pr_body.sh <PR#> --repo owner/repo --dry-run
 
 # Verbose output for debugging
-.github/skills/github-pr-body/scripts/pr_body.sh <PR#> --repo owner/repo --verbose
+scripts/pr_body.sh <PR#> --repo owner/repo --verbose
 
 # Apply a fully AI-completed PR body file
-.github/skills/github-pr-body/scripts/pr_body.sh <PR#> --repo owner/repo --body-file /tmp/completed_pr_body.md
+scripts/pr_body.sh <PR#> --repo owner/repo --body-file /tmp/completed_pr_body.md
 
 # Auto-detect repo from git remote (no --repo needed)
-.github/skills/github-pr-body/scripts/pr_body.sh <PR#>
+scripts/pr_body.sh <PR#>
 ```
 
 ### Parameters for pr_body.sh
@@ -245,14 +245,14 @@ jq --version
 
 ```bash
 # See detailed execution steps
-.github/skills/github-pr-body/scripts/pr_body.sh 123 --repo owner/repo --verbose 2>&1 | tee debug.log
+scripts/pr_body.sh 123 --repo owner/repo --verbose 2>&1 | tee debug.log
 ```
 
 ### Dry-Run First
 
 ```bash
 # Preview exactly what will be changed
-.github/skills/github-pr-body/scripts/pr_body.sh 123 --repo owner/repo --dry-run
+scripts/pr_body.sh 123 --repo owner/repo --dry-run
 ```
 
 ### Check Current PR State
@@ -269,7 +269,7 @@ gh pr view 123 --repo owner/repo --json body --jq '.body' | wc -c
 
 ```bash
 # Apply AI-completed body through the supported skill entrypoint
-.github/skills/github-pr-body/scripts/pr_body.sh 123 --repo owner/repo --body-file /path/to/body.md
+scripts/pr_body.sh 123 --repo owner/repo --body-file /path/to/body.md
 ```
 
 ---

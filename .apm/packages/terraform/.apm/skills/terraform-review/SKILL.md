@@ -52,7 +52,7 @@ Each issue must include file path, risk summary, and remediation guidance.
 ## Workflow
 
 1. Read PR context and module scope.
-2. Confirm `terraform-validation` results (stdout/stderr logs from `terraform-validation/scripts/validate.sh`); if missing, request rerun by posting: `Please run terraform-validation and share output logs.`, then defer validator-dependent checks.
+2. Confirm `terraform-validation` results (stdout/stderr logs from `<agent-root>/skills/terraform-validation/scripts/validate.sh`); if missing, request rerun by posting: `Please run terraform-validation and share output logs.`, then defer validator-dependent checks.
 3. If PR context is unavailable, review file diffs only and defer PR-context-dependent checks.
 4. If changed files contain no `.tf` or `.tfvars`, return `status: skipped` with reason `no Terraform review target`.
 5. If validation output is partial, keep available findings and defer missing-tool checks with explicit tool name.

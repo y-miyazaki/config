@@ -132,8 +132,8 @@ Operational rules:
 **Entry point (recommended)**:
 
 ```bash
-bash skills/agent-skills-review/scripts/validate.sh SKILL.md
-bash skills/agent-skills-review/scripts/validate_waza.sh <skill-name>
+bash <agent-root>/skills/agent-skills-review/scripts/validate.sh SKILL.md
+bash <agent-root>/skills/agent-skills-review/scripts/validate_waza.sh <skill-name>
 ```
 
 **Individual execution (debugging)**:

@@ -108,7 +108,7 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
 **Entry point (recommended)**:
 
 ```bash
-bash skills/github-actions-validation/scripts/validate.sh
+bash <agent-root>/skills/github-actions-validation/scripts/validate.sh
 ```
 
 **Individual execution (debugging)**:

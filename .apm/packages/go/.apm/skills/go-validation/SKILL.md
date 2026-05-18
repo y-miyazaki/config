@@ -12,7 +12,7 @@ metadata:
 ## Input
 
 - Go path or directory (required)
-- Validation script: `go-validation/scripts/validate.sh` (required)
+- Validation script: `scripts/validate.sh` (required, run from the go-validation skill directory)
 - Optional flags: `--fix`, `--verbose`
 
 ## Output Specification
@@ -51,8 +51,8 @@ Structured validation results in fixed tool order.
 
 ## Workflow
 
-1. Run `bash go-validation/scripts/validate.sh`.
-2. For fast iteration, run `bash go-validation/scripts/validate.sh <path>` where `<path>` is a Go package or directory.
+1. Run `bash scripts/validate.sh`.
+2. For fast iteration, run `bash scripts/validate.sh <path>` where `<path>` is a Go package or directory.
 3. Use `--verbose` to collect tool-level diagnostics.
 4. Use `--fix` only for formatting issues, then review diffs.
 5. Retry at most 2 times after fixes; if checks still fail, return blocking failures and stop.
@@ -60,7 +60,7 @@ Structured validation results in fixed tool order.
 ### Examples
 
 - Prompt: `Validate Go checks and report summary, tool results, and error details.`
-- Command: `bash go-validation/scripts/validate.sh ./test/go/ --verbose`
+- Command: `bash scripts/validate.sh ./test/go/ --verbose`
 - Output: `## Checks Summary` with per-tool pass/fail and coverage value.
 
 ## Error Handling and Troubleshooting

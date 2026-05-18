@@ -285,7 +285,7 @@ Operational rules:
 **Entry point (recommended)**:
 
 ```bash
-bash skills/go-validation/scripts/validate.sh
+bash <agent-root>/skills/go-validation/scripts/validate.sh
 ```
 
 **Individual execution (debugging)**:

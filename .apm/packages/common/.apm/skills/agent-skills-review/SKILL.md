@@ -11,7 +11,7 @@ metadata:
 
 ## Input
 
-- Target: `.github/skills/*/SKILL.md`
+- Target: `<agent-root>/skills/*/SKILL.md` (`agent-root`: `.github`, `.agents`, `.claude`, `.cursor`, `cursor`, `.kiro`, `kiro`)
 - Evidence: `scripts/validate_waza.sh` and `scripts/validate.sh` outputs
 
 ## Output Specification
@@ -22,7 +22,7 @@ metadata:
 ## Execution Scope
 
 - Review required sections, section order, output-contract consistency, and ambiguity violations.
-- Run `scripts/validate_waza.sh` and `scripts/validate.sh`.
+- Run `scripts/validate_waza.sh` and `scripts/validate.sh` from the target skill directory.
 - Treat `waza check` Token Budget <= 500 as a warning threshold.
 - Do not merge PRs or edit unrelated files.
 - Do not review product runtime behavior or application business logic.
@@ -49,7 +49,7 @@ metadata:
 
 ## Workflow
 
-1. Run `bash scripts/validate_waza.sh <skill-name>` and `bash scripts/validate.sh <SKILL.md>`.
+1. Run `bash scripts/validate_waza.sh <skill-name>` and `bash scripts/validate.sh <SKILL.md>` from `./<agent-root>/skills/agent-skills-review/`.
 2. Check token warning threshold: Token Budget <= 500 (warning if exceeded).
 3. Apply checks in order: `S-*` (structure), `Q-*` (quality language), `P-*` (workflow/policy), `BP-*` (best-practice rules).
 4. Report failed/deferred items with ItemIDs.

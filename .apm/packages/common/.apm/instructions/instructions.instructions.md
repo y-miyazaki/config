@@ -157,7 +157,7 @@ description: "AI Assistant Instructions for Writing Instruction Files"
 **Entry point (recommended)**:
 
 ```bash
-bash skills/instructions-review/scripts/validate.sh
+bash <agent-root>/skills/instructions-review/scripts/validate.sh
 ```
 
 **Individual execution (debugging)**:

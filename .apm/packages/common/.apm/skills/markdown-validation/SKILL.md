@@ -51,19 +51,19 @@ Return `## Checks Summary`, `## Checks (Failed/Deferred Only)`, and `## Issues`.
 
 ```bash
 # Full validation of all Markdown files
-bash markdown-validation/scripts/validate.sh
+bash scripts/validate.sh
 
 # Validate specific file
-bash markdown-validation/scripts/validate.sh ./README.md
+bash scripts/validate.sh ./README.md
 
 # Validate specific directory
-bash markdown-validation/scripts/validate.sh ./docs/
+bash scripts/validate.sh ./docs/
 ```
 
 ### Examples
 
 - Prompt: `Validate Markdown files and report only failed checks.`
-- Command: `bash markdown-validation/scripts/validate.sh ./docs/`
+- Command: `bash scripts/validate.sh ./docs/`
 - Output: per-tool results with deferred status for network-only link failures.
 
 ## Best Practices

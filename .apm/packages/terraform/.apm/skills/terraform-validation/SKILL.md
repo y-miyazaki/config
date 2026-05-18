@@ -12,7 +12,7 @@ metadata:
 ## Input
 
 - Terraform path or directory (required)
-- Validation script: `terraform-validation/scripts/validate.sh` (required)
+- Validation script: `scripts/validate.sh` (required, run from the terraform-validation skill directory)
 - Optional flags: `--fix`, `--verbose`
 
 ## Output Specification
@@ -48,17 +48,17 @@ Structured results in fixed order: terraform fmt, terraform validate, tflint, tr
 
 ## Workflow
 
-1. Run `bash terraform-validation/scripts/validate.sh`.
-2. For scoped runs, pass a target directory: `bash terraform-validation/scripts/validate.sh ./terraform/<target>/`.
+1. Run `bash scripts/validate.sh`.
+2. For scoped runs, pass a target directory: `bash scripts/validate.sh ./terraform/<target>/`.
 3. Use `--fix` for formatting corrections and `--verbose` for diagnostics.
 4. Retry at most 2 times after fixes; if checks still fail, return blocking findings and stop.
 
 ### Examples
 
 ```bash
-bash terraform-validation/scripts/validate.sh
-bash terraform-validation/scripts/validate.sh ./terraform/base/
-bash terraform-validation/scripts/validate.sh --fix --verbose
+bash scripts/validate.sh
+bash scripts/validate.sh ./terraform/base/
+bash scripts/validate.sh --fix --verbose
 ```
 
 ## Error Handling and Troubleshooting

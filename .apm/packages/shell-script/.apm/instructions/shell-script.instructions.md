@@ -210,7 +210,7 @@ Required in-file order:
 **Entry point (recommended)**:
 
 ```bash
-bash skills/shell-script-validation/scripts/validate.sh
+bash <agent-root>/skills/shell-script-validation/scripts/validate.sh
 ```
 
 **Individual execution (debugging)**:

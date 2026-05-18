@@ -27,7 +27,7 @@
 
 This document contains detailed information about individual validation commands.
 
-**Always prefer the validation script:** `bash go-validation/scripts/validate.sh`
+**Always prefer the validation script:** `bash scripts/validate.sh`
 
 Use individual commands **only** when:
 - Debugging specific validation failures reported by the script

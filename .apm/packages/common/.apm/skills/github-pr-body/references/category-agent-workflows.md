@@ -10,7 +10,7 @@ This document demonstrates real-world usage scenarios for PR Body updates with t
 User: "PR #123 の変更を分析して owner/repo"
 
 Agent:
-1. Execute: .github/skills/github-pr-body/scripts/pr_fetch.sh 123 --repo owner/repo
+1. Execute: scripts/pr_fetch.sh 123 --repo owner/repo
 2. Parse output:
    - PR metadata (title, body, statistics)
    - File classifications (Config: 20 files, Docs: 63 files, Other: 17 files)
@@ -18,7 +18,7 @@ Agent:
 3. Analyze results and provide summary
 4. Optionally: Save to JSON for further processing
    ```bash
-   .github/skills/github-pr-body/scripts/pr_fetch.sh 123 --repo owner/repo > pr_analysis.json
+   scripts/pr_fetch.sh 123 --repo owner/repo > pr_analysis.json
    ```
 5. Confirm: "✅ PR analysis complete - core config changes and documentation updates detected"
 ```
@@ -38,13 +38,13 @@ User: "Analyze PR #311 and complete the PR body for owner/repo"
 
 Agent:
 1. Step 1 - Analyze with pr_fetch.sh:
-   .github/skills/github-pr-body/scripts/pr_fetch.sh 311 --repo owner/repo
+   scripts/pr_fetch.sh 311 --repo owner/repo
 
 2. Step 2 - Preview deterministic baseline with pr_body.sh:
-   .github/skills/github-pr-body/scripts/pr_body.sh 311 --repo owner/repo --dry-run
+   scripts/pr_body.sh 311 --repo owner/repo --dry-run
 
 3. Step 3 - Generate baseline or apply it:
-   .github/skills/github-pr-body/scripts/pr_body.sh 311 --repo owner/repo
+   scripts/pr_body.sh 311 --repo owner/repo
 
 4. Step 4 - Run AI completion:
    - Read each section comment in PULL_REQUEST_TEMPLATE.md
@@ -54,7 +54,7 @@ Agent:
    - Save the complete PR body to /tmp/completed_pr_body.md
 
 5. Step 5 - Apply the completed PR body:
-   .github/skills/github-pr-body/scripts/pr_body.sh 311 --repo owner/repo --body-file /tmp/completed_pr_body.md
+   scripts/pr_body.sh 311 --repo owner/repo --body-file /tmp/completed_pr_body.md
 
 6. Confirm: "✅ PR Body updated with deterministic baseline and AI-completed sections"
 ```
@@ -71,8 +71,8 @@ Agent:
 User: "Update the body for PR #123 in owner/repo"
 
 Agent:
-1. Execute: .github/skills/github-pr-body/scripts/pr_fetch.sh 123 --repo owner/repo
-2. Execute: .github/skills/github-pr-body/scripts/pr_body.sh 123 --repo owner/repo
+1. Execute: scripts/pr_fetch.sh 123 --repo owner/repo
+2. Execute: scripts/pr_body.sh 123 --repo owner/repo
 3. Complete sections using AI based on template comments
 4. Apply the complete result with `pr_body.sh --body-file`
 5. Confirm: "✅ PR Body updated - deterministic baseline generated and sections completed"
@@ -133,7 +133,7 @@ User: "Summarize this PR with domain focus and mention module impact + deploymen
 
 Agent:
 1. Run generic baseline update:
-   .github/skills/github-pr-body/scripts/pr_body.sh <PR_NUMBER> --repo owner/repo --dry-run
+   scripts/pr_body.sh <PR_NUMBER> --repo owner/repo --dry-run
 
 2. Run external domain skill/agent for analysis
    - Extract domain signals: module changes, environment impact, operational scope

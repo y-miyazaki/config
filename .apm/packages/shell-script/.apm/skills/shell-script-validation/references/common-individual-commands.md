@@ -2,7 +2,7 @@
 
 ### ⚠️ For Debugging Only
 
-Always prefer: `bash shell-script-validation/scripts/validate.sh`
+Always prefer: `bash scripts/validate.sh`
 
 ## Commands
 

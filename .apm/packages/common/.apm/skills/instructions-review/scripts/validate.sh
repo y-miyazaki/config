@@ -102,7 +102,7 @@ Validation Checks:
 Examples:
   ./validate.sh
   ./validate.sh ../SKILL.md
-  ./validate.sh /workspace/.github/skills/instructions-review/SKILL.md
+    ./validate.sh /workspace/.agents/skills/instructions-review/SKILL.md
 EOF
     exit 0
 }
@@ -145,8 +145,8 @@ function parse_arguments {
 
     SKILL_FILE="$(realpath "${SKILL_FILE}")"
 
-    if [[ ! "${SKILL_FILE}" =~ /.github/skills/.*/SKILL\.md$ ]]; then
-        error_exit "Error: File must match .github/skills/*/SKILL.md: ${SKILL_FILE}"
+    if [[ ! "${SKILL_FILE}" =~ /(\.github|\.agents|\.claude|\.cursor|cursor|\.kiro|kiro)/skills/.*/SKILL\.md$ ]]; then
+        error_exit "Error: File must match <agent-root>/skills/*/SKILL.md where agent-root is one of .github,.agents,.claude,.cursor,cursor,.kiro,kiro: ${SKILL_FILE}"
     fi
 }
 

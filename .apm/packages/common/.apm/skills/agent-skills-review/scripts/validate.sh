@@ -12,7 +12,7 @@
 #
 # Design Rules:
 # - Validates structural completeness and resource organization
-# - Input path must match .github/skills/*/SKILL.md pattern
+# - Input path must match <agent-root>/skills/*/SKILL.md pattern
 # - Normalizes paths with realpath to prevent path traversal
 # - Uses secure defaults (umask 027)
 # - Outputs structured JSON for automation
@@ -23,8 +23,8 @@
 # - yamllint (optional, for YAML syntax validation)
 #
 # Examples:
-#   ./validate.sh .github/skills/agent-skills-review/SKILL.md
-#   ./validate.sh /workspace/.github/skills/go-validation/SKILL.md
+#   ./validate.sh .agents/skills/agent-skills-review/SKILL.md
+#   ./validate.sh /workspace/.kiro/skills/go-validation/SKILL.md
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -78,7 +78,8 @@ Description: Deterministic validation for Agent Skills SKILL.md files
 
 Arguments:
   SKILL.md       Path to SKILL.md file to validate (required)
-                 Must match pattern: .github/skills/*/SKILL.md
+                                 Must match pattern: <agent-root>/skills/*/SKILL.md
+                                 agent-root: .github, .agents, .claude, .cursor, cursor, .kiro, kiro
 
 Validation Checks:
     - Structural Completeness: 6 required sections exist
@@ -95,8 +96,8 @@ Output Format:
   - JSON format for machine parsing
 
 Examples:
-  $(basename "$0") .github/skills/agent-skills-review/SKILL.md
-  $(basename "$0") /workspace/.github/skills/go-validation/SKILL.md
+    $(basename "$0") .agents/skills/agent-skills-review/SKILL.md
+    $(basename "$0") /workspace/.kiro/skills/go-validation/SKILL.md
 EOF
     exit 0
 }
@@ -147,8 +148,8 @@ function parse_arguments {
     SKILL_FILE="$(realpath "$input_path")"
 
     # Validate path matches expected pattern (SEC-01)
-    if [[ ! "$SKILL_FILE" =~ /.github/skills/.*/SKILL\.md$ ]]; then
-        error_exit "Error: File must be in .github/skills/*/SKILL.md structure: $SKILL_FILE"
+    if [[ ! "$SKILL_FILE" =~ /(\.github|\.agents|\.claude|\.cursor|cursor|\.kiro|kiro)/skills/.*/SKILL\.md$ ]]; then
+        error_exit "Error: File must match <agent-root>/skills/*/SKILL.md where agent-root is one of .github,.agents,.claude,.cursor,cursor,.kiro,kiro: $SKILL_FILE"
     fi
 }
 

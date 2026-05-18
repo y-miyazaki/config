@@ -6,7 +6,7 @@
 
 **Fix**:
 1. Reorder headings sequentially (H1 -> H2 -> H3)
-2. Run `bash markdown-validation/scripts/validate.sh ./path/to/file.md`
+2. Run `bash scripts/validate.sh ./path/to/file.md`
 
 **Issue**: Line length or list style violations
 
@@ -40,12 +40,12 @@
 
 **Fix**:
 1. Ensure tools are installed in the development environment
-2. Re-run through script: `bash markdown-validation/scripts/validate.sh`
+2. Re-run through script: `bash scripts/validate.sh`
 
 ### Revalidation
 
 After applying fixes, run:
 
 ```bash
-bash markdown-validation/scripts/validate.sh
+bash scripts/validate.sh
 ```

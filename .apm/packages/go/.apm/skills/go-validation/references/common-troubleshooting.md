@@ -521,34 +521,34 @@ No fix available for CVE-2024-5678
 ### Issue: Shell Script not found
 
 ```
-bash: go-validation/scripts/validate.sh: No such file or directory
+bash: scripts/validate.sh: No such file or directory
 ```
 
 **Solutions**:
 ```bash
-# Navigate to project root
-cd /workspace
+# Navigate to the go-validation skill directory
+cd <agent-root>/skills/go-validation
 
 # Verify script exists
-ls -la .github/skills/go-validation/scripts/validate.sh
+ls -la scripts/validate.sh
 
-# Run with full path
-bash .github/skills/go-validation/scripts/validate.sh
+# Run script
+bash scripts/validate.sh
 ```
 
 ### Issue: Permission denied
 
 ```
-permission denied: go-validation/scripts/validate.sh
+permission denied: scripts/validate.sh
 ```
 
 **Solutions**:
 ```bash
 # Make executable
-chmod +x .github/skills/go-validation/scripts/validate.sh
+chmod +x scripts/validate.sh
 
 # Or run with bash explicitly
-bash .github/skills/go-validation/scripts/validate.sh
+bash scripts/validate.sh
 ```
 
 ### Issue: Command not found in shell script

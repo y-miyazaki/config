@@ -12,7 +12,7 @@ metadata:
 ## Input
 
 - Shell script path or directory (required)
-- Validation script: `shell-script-validation/scripts/validate.sh` (required)
+- Validation script: `scripts/validate.sh` (required)
 - Optional flags: `-v`, `-f`
 
 ## Output Specification
@@ -48,7 +48,7 @@ Structured results for bash -n, shellcheck, and project standards.
 
 ## Workflow
 
-1. Run `bash shell-script-validation/scripts/validate.sh`.
+1. Run `bash scripts/validate.sh`.
 2. If a failure appears, rerun with target path first (for example `./scripts/deploy.sh`).
 3. If failure details are insufficient, rerun with `-v`.
 4. If formatting fixes are suggested, rerun with `-f` and review diffs.
@@ -57,9 +57,9 @@ Structured results for bash -n, shellcheck, and project standards.
 ### Examples
 
 ```bash
-bash shell-script-validation/scripts/validate.sh
-bash shell-script-validation/scripts/validate.sh ./scripts/deploy.sh -v
-bash shell-script-validation/scripts/validate.sh -f
+bash scripts/validate.sh
+bash scripts/validate.sh ./scripts/deploy.sh -v
+bash scripts/validate.sh -f
 ```
 
 ## Error Handling and Troubleshooting

@@ -96,7 +96,7 @@ When a PR uses `feature-branch` → `main`:
 
 **Step 1**: Get PR branch information:
 ```bash
-.github/skills/github-pr-body/scripts/pr_fetch.sh <PR_NUMBER> --repo owner/repo | jq '.metadata | {headRefName, baseRefName}'
+scripts/pr_fetch.sh <PR_NUMBER> --repo owner/repo | jq '.metadata | {headRefName, baseRefName}'
 ```
 
 **Step 2**: Construct file URLs:

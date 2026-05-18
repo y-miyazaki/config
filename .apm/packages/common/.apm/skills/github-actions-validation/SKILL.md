@@ -12,7 +12,7 @@ metadata:
 ## Input
 
 - Workflow YAML in `.github/workflows/` (required)
-- Validation script: `github-actions-validation/scripts/validate.sh` (required)
+- Validation script: `scripts/validate.sh` (required)
 - Optional: specific directory path
 
 ## Output Specification
@@ -56,16 +56,16 @@ Return `## Checks Summary`, `## Checks (Failed/Deferred Only)`, and `## Issues` 
 
 ```bash
 # Run all validations (recommended before commit)
-bash github-actions-validation/scripts/validate.sh
+bash scripts/validate.sh
 
 # Validate specific directory
-bash github-actions-validation/scripts/validate.sh ./.github/workflows/
+bash scripts/validate.sh ./.github/workflows/
 ```
 
 ### Examples
 
 - Prompt: `Validate workflows and report only failed checks with ItemIDs.`
-- Command: `bash github-actions-validation/scripts/validate.sh ./.github/workflows/`
+- Command: `bash scripts/validate.sh ./.github/workflows/`
 - Output: failed/deferred checks mapped to `actionlint`, `ghalint`, or `zizmor`.
 
 ## Error Handling and Troubleshooting

@@ -104,13 +104,13 @@ jobs:
 After applying fixes, rerun the standard validation script:
 
 ```bash
-bash github-actions-validation/scripts/validate.sh
+bash scripts/validate.sh
 ```
 
 For targeted checks:
 
 ```bash
-bash github-actions-validation/scripts/validate.sh ./.github/workflows/
+bash scripts/validate.sh ./.github/workflows/
 ```
 
 ## Escalation Rule

@@ -15,7 +15,7 @@
 #
 # Design Rules:
 # - Resolve skill input deterministically (skill name or SKILL.md path)
-# - Execute from .github/skills root to keep command behavior consistent
+# - Execute from <agent-root>/skills root to keep command behavior consistent
 # - Require waza from PATH (no hardcoded fallback path)
 # - Use shared helpers from scripts/lib/all.sh for logging and error handling
 #######################################
@@ -70,8 +70,9 @@ Usage: $(basename "$0") [options] <skill-name|SKILL.md>
 Description: Run deterministic waza readiness checks for a target skill.
 
 Arguments:
-  skill-name     Skill directory name under .github/skills (for example: terraform-review)
-  SKILL.md       Absolute or relative path to .github/skills/*/SKILL.md
+    skill-name     Skill directory name under <agent-root>/skills (for example: terraform-review)
+    SKILL.md       Absolute or relative path to <agent-root>/skills/*/SKILL.md
+                                 agent-root: .github, .agents, .claude, .cursor, cursor, .kiro, kiro
 
 Options:
   -h, --help     Display this help message
@@ -79,7 +80,7 @@ Options:
 
 Examples:
   $(basename "$0") agent-skills-review
-  $(basename "$0") .github/skills/terraform-review/SKILL.md
+    $(basename "$0") .agents/skills/terraform-review/SKILL.md
 EOF
     exit 0
 }
@@ -146,7 +147,7 @@ function parse_arguments {
 #   TARGET_SKILL_NAME - Resolved skill directory name
 #
 # Returns:
-#   Exits with error if input cannot be resolved to .github/skills/*
+#   Exits with error if input cannot be resolved to <agent-root>/skills/*
 #
 # Usage:
 #   resolve_target_skill
@@ -160,11 +161,11 @@ function resolve_target_skill {
         fi
 
         target_path="$(realpath "$TARGET_INPUT")"
-        if [[ ! "$target_path" =~ /.github/skills/([^/]+)/SKILL\.md$ ]]; then
-            error_exit "Path must match .github/skills/*/SKILL.md: $target_path"
+        if [[ ! "$target_path" =~ /(\.github|\.agents|\.claude|\.cursor|cursor|\.kiro|kiro)/skills/([^/]+)/SKILL\.md$ ]]; then
+            error_exit "Path must match <agent-root>/skills/*/SKILL.md where agent-root is one of .github,.agents,.claude,.cursor,cursor,.kiro,kiro: $target_path"
         fi
 
-        TARGET_SKILL_NAME="${BASH_REMATCH[1]}"
+        TARGET_SKILL_NAME="${BASH_REMATCH[2]}"
     else
         TARGET_SKILL_NAME="$TARGET_INPUT"
     fi
