@@ -35,21 +35,21 @@ description: "AI Assistant Instructions for Agent Skills Development"
 
 ### Naming Conventions
 
-| Component      | Rule       | Example                  |
-| -------------- | ---------- | ------------------------ |
-| Skill name     | kebab-case | go-review                |
-| Reference file | kebab-case | common-checklist.md      |
-| Script file    | snake_case | validate.sh              |
+| Component      | Rule       | Example             |
+| -------------- | ---------- | ------------------- |
+| Skill name     | kebab-case | go-review           |
+| Reference file | kebab-case | common-checklist.md |
+| Script file    | snake_case | validate.sh         |
 
 ### Reference Files Matrix（MUST）
 
-| File Name                       | Required | Purpose                                             | Load Trigger |
-| ------------------------------- | -------- | --------------------------------------------------- | ------------ |
-| `common-checklist.md`           | Yes      | Canonical checklist with fixed Item IDs             | Always       |
-| `common-output-format.md`       | Yes      | Canonical output contract                           | Always       |
-| `common-troubleshooting.md`     | No       | Failure diagnostics and rerun procedure             | On failure   |
-| `common-individual-commands.md` | No       | Debug-only command catalog                          | On debugging |
-| `category-*.md`                 | No       | Domain-specific review criteria                     | Per category |
+| File Name                       | Required | Purpose                                 | Load Trigger |
+| ------------------------------- | -------- | --------------------------------------- | ------------ |
+| `common-checklist.md`           | Yes      | Canonical checklist with fixed Item IDs | Always       |
+| `common-output-format.md`       | Yes      | Canonical output contract               | Always       |
+| `common-troubleshooting.md`     | No       | Failure diagnostics and rerun procedure | On failure   |
+| `common-individual-commands.md` | No       | Debug-only command catalog              | On debugging |
+| `category-*.md`                 | No       | Domain-specific review criteria         | Per category |
 
 ### Priority Principle（MUST）
 
@@ -74,12 +74,14 @@ description: "AI Assistant Instructions for Agent Skills Development"
 ## Guidelines
 
 ### Pattern Checks
+
 - P-01 (SHOULD): Design Pattern Compliance
   - Check: Does SKILL.md define a deterministic execution pattern with explicit flow, boundaries, and references?
 - P-02 (SHOULD): Output Contract Compliance
   - Check: Does the skill define a structured output contract across Output Specification and common-output-format.md without contradiction?
 
 ### Quality Checks
+
 - Q-01 (SHOULD): Output is Truly Structured
   - Check: Is the output format definition implementable and parseable (JSON schema / Markdown structure explicitly defined with example)?
 - Q-02 (SHOULD): Scope Boundaries
@@ -100,6 +102,7 @@ description: "AI Assistant Instructions for Agent Skills Development"
   - Check: If token reduction is applied, are behavior-defining instructions preserved?
 
 ### Structural Checks
+
 - S-01 (MUST): Structural Completeness
   - Check: Does SKILL.md have all 6 required sections at ## heading level?
 - S-02 (MUST): YAML Frontmatter Fields
@@ -119,7 +122,6 @@ description: "AI Assistant Instructions for Agent Skills Development"
 
 - 変更後は [agent-skills-review Skill](../skills/agent-skills-review/SKILL.md) の validate.sh 実行を優先
 - 個別コマンドはデバッグ時のみ使用
-
 
 ## Testing and Validation
 

@@ -13,15 +13,15 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
 
 ### Naming Conventions
 
-| Component     | Rule       | Example              |
-| ------------- | ---------- | -------------------- |
-| Workflow file | kebab-case | ci-build-deploy.yaml |
-| Job ID        | kebab-case | build-and-test       |
-| Step ID       | kebab-case | setup-node           |
-| Environment   | lowercase  | production, staging  |
-| Secret        | UPPER_SNAKE_CASE | DEPLOY_TOKEN   |
-| Variable      | UPPER_SNAKE_CASE | APP_VERSION    |
-| Artifact name | kebab-case | build-output-linux   |
+| Component     | Rule             | Example              |
+| ------------- | ---------------- | -------------------- |
+| Workflow file | kebab-case       | ci-build-deploy.yaml |
+| Job ID        | kebab-case       | build-and-test       |
+| Step ID       | kebab-case       | setup-node           |
+| Environment   | lowercase        | production, staging  |
+| Secret        | UPPER_SNAKE_CASE | DEPLOY_TOKEN         |
+| Variable      | UPPER_SNAKE_CASE | APP_VERSION          |
+| Artifact name | kebab-case       | build-output-linux   |
 
 ### Key Ordering（MUST）
 
@@ -30,6 +30,7 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
 ## Guidelines
 
 ### Best Practices (BP)
+
 - BP-01 (SHOULD): Reusable Workflow Design
   - Check: Are common processes extracted into reusable workflows or composite actions?
 - BP-02 (SHOULD): DRY Principle for Duplication Reduction
@@ -42,6 +43,7 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
   - Check: Is `env` defined with minimal scope?
 
 ### Error Handling (ERR)
+
 - ERR-01 (SHOULD): Careful Use of continue-on-error
   - Check: Is `continue-on-error` used only for non-critical steps with explicit justification?
 - ERR-02 (SHOULD): Failure and Always Guards for Cleanup/Notify
@@ -52,6 +54,7 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
   - Check: Is retry logic configured for transient external failures (network/service instability)?
 
 ### Global / Base (G)
+
 - G-01 (SHOULD): Clear Workflow Naming
   - Check: Is the workflow name clear and expressive of its purpose?
 - G-02 (SHOULD): Limit Triggers (on)
@@ -62,6 +65,7 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
   - Check: Do production jobs have `environment` configuration and approval?
 
 ### Performance (PERF)
+
 - PERF-01 (SHOULD): Cache Strategy and Invalidation
   - Check: Are cache keys deterministic and invalidated by dependency changes?
 - PERF-02 (SHOULD): Matrix/Parallel Execution Balance
@@ -72,6 +76,7 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
   - Check: Are broad triggers, full-repo checkout, and repeated setup steps minimized?
 
 ### Security (SEC)
+
 - SEC-01 (SHOULD): Explicit Top-Level Permissions
   - Check: Are top-level permissions explicitly set?
 - SEC-02 (SHOULD): Safe Secret References
@@ -88,6 +93,7 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
   - Check: Do public repositories have conditional branches like `github.event.repository.private`?
 
 ### Tool Integration (TOOL)
+
 - TOOL-01 (SHOULD): Reviewdog Integration for PR Feedback
   - Check: Is reviewdog integrated where lint results should be surfaced on pull requests?
 - TOOL-02 (SHOULD): Codecov Coverage Upload Strategy
@@ -101,7 +107,6 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
 
 - 変更後は [github-actions-validation Skill](../skills/github-actions-validation/SKILL.md) の validate.sh 実行を優先
 - 個別コマンドはデバッグ時のみ使用
-
 
 ## Testing and Validation
 
