@@ -13,181 +13,118 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
 
 ### Naming Conventions
 
-| Component     | Rule             | Example                |
-| ------------- | ---------------- | ---------------------- |
-| Workflow file | kebab-case       | ci-build-deploy.yaml   |
-| Job ID        | kebab-case       | build-and-test         |
-| Step ID       | kebab-case       | setup-node             |
-| Environment   | lowercase        | production, staging    |
-| Secret        | UPPER_SNAKE_CASE | DEPLOY_TOKEN           |
-| Variable      | UPPER_SNAKE_CASE | APP_VERSION            |
-| Artifact name | kebab-case       | build-output-linux     |
+| Component     | Rule       | Example              |
+| ------------- | ---------- | -------------------- |
+| Workflow file | kebab-case | ci-build-deploy.yaml |
+| Job ID        | kebab-case | build-and-test       |
+| Step ID       | kebab-case | setup-node           |
+| Environment   | lowercase  | production, staging  |
+| Secret        | UPPER_SNAKE_CASE | DEPLOY_TOKEN   |
+| Variable      | UPPER_SNAKE_CASE | APP_VERSION    |
+| Artifact name | kebab-case | build-output-linux   |
 
-### Workflow Standards
+### Key Ordering（MUST）
 
-キー記載順序:
-
-- `inputs`, `env`, `permissions`, `with` の中のキーはアルファベット順（A-Z）で記載すること
-- 例:
-  ```yaml
-  inputs:
-    component: # a
-    environment: # e
-    go_version: # g
-  env:
-    ENVIRONMENT: ${{ inputs.environment }}
-    GO_VERSION: ${{ inputs.go_version }}
-  permissions:
-    contents: write
-    id-token: write
-  with:
-    component: arc
-    go_path: "."
-    version: ${{ inputs.version }}
-  ```
+- **G-05 (MUST)**: `inputs`, `env`, `permissions`, `with` 内のキーはアルファベット順（A-Z） — 順序不統一だと差分レビューでノイズが増え変更検出が困難になる
 
 ## Guidelines
 
-### Tool Integration
+### Best Practices (BP)
+- BP-01 (SHOULD): Reusable Workflow Design
+  - Check: Are common processes extracted into reusable workflows or composite actions?
+- BP-02 (SHOULD): DRY Principle for Duplication Reduction
+  - Check: Is there code duplication?
+- BP-03 (SHOULD): Explicit Job Dependencies
+  - Check: Are job dependencies explicitly defined with `needs`?
+- BP-04 (SHOULD): Simplify Conditional Branches
+  - Check: Are `if` expressions concise and understandable?
+- BP-05 (SHOULD): Limit Environment Variable Scope
+  - Check: Is `env` defined with minimal scope?
 
-Reviewdog 統合:
+### Error Handling (ERR)
+- ERR-01 (SHOULD): Careful Use of continue-on-error
+  - Check: Is `continue-on-error` used only for non-critical steps with explicit justification?
+- ERR-02 (SHOULD): Failure and Always Guards for Cleanup/Notify
+  - Check: Are `if: failure()` and `if: always()` used appropriately for cleanup, artifact upload, and notifications?
+- ERR-03 (SHOULD): Timeout Configuration
+  - Check: Are `timeout-minutes` values set for jobs or long-running steps?
+- ERR-04 (SHOULD): Retry Strategy for Flaky Integrations
+  - Check: Is retry logic configured for transient external failures (network/service instability)?
 
-- PR 差分 lint 結果表示
-- `github_token`必須
-- `reporter: github-pr-review`推奨
+### Global / Base (G)
+- G-01 (SHOULD): Clear Workflow Naming
+  - Check: Is the workflow name clear and expressive of its purpose?
+- G-02 (SHOULD): Limit Triggers (on)
+  - Check: Are triggers appropriately narrowed down?
+- G-03 (SHOULD): Step Clarification and Order Guarantee
+  - Check: Does each step have a `name` and logical order?
+- G-04 (SHOULD): Explicit Environment and Approval Flow
+  - Check: Do production jobs have `environment` configuration and approval?
 
-Codecov:
+### Performance (PERF)
+- PERF-01 (SHOULD): Cache Strategy and Invalidation
+  - Check: Are cache keys deterministic and invalidated by dependency changes?
+- PERF-02 (SHOULD): Matrix/Parallel Execution Balance
+  - Check: Is matrix or parallel execution used where beneficial without excessive runner cost?
+- PERF-03 (SHOULD): Concurrency Control
+  - Check: Is `concurrency` configured to cancel redundant in-progress runs on same branch/context?
+- PERF-04 (SHOULD): Reduce Unnecessary Workload
+  - Check: Are broad triggers, full-repo checkout, and repeated setup steps minimized?
 
-- カバレッジアップロード
-- token 管理（Public repo: 不要、Private: 必須）
+### Security (SEC)
+- SEC-01 (SHOULD): Explicit Top-Level Permissions
+  - Check: Are top-level permissions explicitly set?
+- SEC-02 (SHOULD): Safe Secret References
+  - Check: Are secrets referenced only via `${{ secrets.NAME }}` and not directly output?
+- SEC-03 (SHOULD): Careful Use of pull_request_target
+  - Check: Are fork PR restrictions in place when using `pull_request_target`?
+- SEC-04 (SHOULD): Log Masking for Sensitive Information
+  - Check: Are sensitive values masked with `::add-mask::` or `core.setSecret()`?
+- SEC-05 (SHOULD): Pin Third-Party Actions
+  - Check: Are critical actions pinned to SHA?
+- SEC-06 (SHOULD): Sanitize Environment Variables
+  - Check: Are environment variable inputs validated and sanitized?
+- SEC-07 (SHOULD): Guardrails for Public Repositories
+  - Check: Do public repositories have conditional branches like `github.event.repository.private`?
 
-Artifact:
-
-- アップロード/ダウンロード適切
-- retention 設定（デフォルト 90 日、調整推奨）
-
-キャッシュ:
-
-- `actions/cache`で依存関係キャッシュ
-- key 設計: ロックファイルハッシュ使用
-- restore-keys fallback 設定
-
-### Security Best Practices
-
-セキュリティ必須:
-
-- `permissions`明示的設定
-- シークレット: `${{ secrets.NAME }}`
-- Public repo: fork PR 制限
-- サードパーティ Action は commit SHA pin を推奨（許容例外がある場合は理由をコメントで残す）
+### Tool Integration (TOOL)
+- TOOL-01 (SHOULD): Reviewdog Integration for PR Feedback
+  - Check: Is reviewdog integrated where lint results should be surfaced on pull requests?
+- TOOL-02 (SHOULD): Codecov Coverage Upload Strategy
+  - Check: Is Codecov usage configured appropriately for repository visibility and token requirements?
+- TOOL-03 (SHOULD): Artifact Retention Configuration
+  - Check: Are uploaded artifacts configured with explicit retention periods appropriate for use case?
+- TOOL-04 (SHOULD): Cache Key and Restore Strategy
+  - Check: Are cache keys based on lockfiles and restore-keys configured for safe fallback?
 
 ### Code Modification Guidelines
 
 - 変更後は [github-actions-validation Skill](../skills/github-actions-validation/SKILL.md) の validate.sh 実行を優先
-- YAML 構文・Action version・`permissions`・Secret 設定の個別確認はデバッグ時または失敗分析時に実施
+- 個別コマンドはデバッグ時のみ使用
 
-### Error Handling
-
-基本パターン:
-
-- `continue-on-error: true`慎重利用（重要ステップで使用禁止）
-- `if: failure()`で失敗時処理（cleanup、通知等）
-- `if: always()`で必須処理（artifact 保存、通知等）
-- `timeout-minutes`必須（job/step 両方）
-
-エラー通知:
-
-```yaml
-- name: Notify failure
-  if: failure()
-  uses: slackapi/slack-github-action@v2
-  with:
-    webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
-```
-
-リトライパターン:
-
-```yaml
-- name: Deploy with retry
-  uses: nick-invision/retry@v3
-  with:
-    command: make deploy
-    max_attempts: 3
-    timeout_minutes: 10
-```
-
-### Performance
-
-並列実行:
-
-- `matrix`戦略活用（複数バージョン/OS 並列テスト）
-- `concurrency`設定で重複実行キャンセル
-
-キャッシュ活用:
-
-- 依存関係キャッシュでビルド時間短縮
-- 不要 step 削減
-
-Concurrency 設定例:
-
-```yaml
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-```
-
-### Best Practices
-
-DRY 原則:
-
-- reusable workflow 活用（共通処理）
-- composite action 作成（複雑 step）
-- 重複排除
-
-Job 依存関係:
-
-- `needs`で依存関係明確化
-- 並列実行可能な job は依存関係設定しない
-
-条件分岐:
-
-- `if`条件適切
-- 環境変数スコープ適切（job/step/global）
-
-Reusable workflow 例:
-
-```yaml
-on:
-  workflow_call:
-    inputs:
-      environment:
-        required: true
-        type: string
-```
 
 ## Testing and Validation
 
 **エントリポイント（推奨）**:
 
 ```bash
-# 全検証を実行
-bash .github/skills/github-actions-validation/scripts/validate.sh
+bash skills/github-actions-validation/scripts/validate.sh
 ```
 
 **個別実行（デバッグ時）**:
 
 ```bash
-# 構文・ベストプラクティス検証
+# syntax and best-practice validation
 actionlint
 
-# セキュリティポリシー検証
+# policy validation
 ghalint run
 
-# セキュリティ脆弱性スキャン
+# security scanning
 zizmor .github/workflows/
 ```
 
-**詳細ガイド**: [github-actions-validation Skill](../skills/github-actions-validation/SKILL.md) を参照（検証手順・セキュリティベストプラクティス・トラブルシューティング）
+**詳細ガイド**: [github-actions-validation Skill](../skills/github-actions-validation/SKILL.md) を参照
 
 ## Security Guidelines
 

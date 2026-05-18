@@ -1,70 +1,110 @@
 # Terraform Review Checklist
 
-## Global & Base
+## CI & Lint (CI)
+- CI-01 (SHOULD): plan Diff Intentional (No Unintended Changes)
+- CI-02 (SHOULD): New Resources Clearly Justified
 
-- G-01: Secret hardcoding prohibition
-- G-02: Terraform versioning (required_version)
-- G-03: Provider versioning (version constraints)
-- G-04: for_each vs. count pattern choice
+## Compliance & Policy (COMP)
+- COMP-01 (SHOULD): Organization/Security Hub Governance Alignment
+- COMP-02 (SHOULD): trivy Results in Pipeline
+- COMP-03 (SHOULD): No Default VPC/Open SG/Public S3
+- COMP-04 (SHOULD): IAM Policy with jsonencode or aws_iam_policy_document
 
-## Module Design
+## Cost Optimization (COST)
+- COST-01 (SHOULD): Avoid High-Cost Metrics/Long Retention
+- COST-02 (SHOULD): Mass Resource Creation Cost Justification
+- COST-03 (SHOULD): Minimize Optional Defaults (monitoring/xray/retention)
 
-- MOD-01: Module responsibility separation
-- MOD-02: Input variable organization
-- MOD-03: Output design and sensitivity
-- MOD-04: Module composition and nesting
+## Data Sources & Imports (DATA)
+- DATA-01 (SHOULD): Reconsider data sources (Replace with Static Values)
+- DATA-02 (SHOULD): Document import Procedures
+- DATA-03 (SHOULD): Externalize IDs/ARNs as Variables
+- DATA-04 (SHOULD): Remove Unused data sources
 
-## Variables & Defaults
+## Dependency & Ordering (DEP)
+- DEP-01 (SHOULD): Minimal depends_on
+- DEP-02 (SHOULD): Avoid Circular References
+- DEP-03 (SHOULD): Make Implicit Dependencies Explicit When Needed
 
-- VAR-01: Variable type safety
-- VAR-02: Default value appropriateness
-- VAR-03: Validation rules for inputs
-- VAR-04: Sensitive variable marking
+## Events & Observability (E)
+- E-01 (SHOULD): EventBridge event_pattern Precision
+- E-02 (SHOULD): CloudWatch Log Group Retention
+- E-03 (SHOULD): Alarm/Metrics/Dashboard Consistency
+- E-04 (SHOULD): Step Functions Log Level Appropriateness
 
-## Security
+## Global / Base (G)
+- G-01 (SHOULD): Variables/Outputs/Module Usage
+- G-02 (SHOULD): Secret Hardcoding Prohibition
+- G-03 (SHOULD): External Module Versioning
+- G-04 (SHOULD): Provider Version Constraints
+- G-05 (SHOULD): for_each/count with Post-Apply Values
+- G-06 (SHOULD): Prefer for_each over count
+- G-07 (SHOULD): Module Argument Validity
+- G-08 (SHOULD): Module Output Usage
+- G-09 (SHOULD): tfsec → trivy Migration
 
-- SEC-01: IAM policy least privilege
-- SEC-02: Resource policy conditions
-- SEC-03: Encryption configuration
-- SEC-04: VPC and network isolation
-- SEC-05: Secrets management
+## Migration & Refactor (MIG)
+- MIG-01 (SHOULD): Use moved Block to Avoid Resource Recreation
+- MIG-02 (SHOULD): Replace Deprecated Features
+- MIG-03 (SHOULD): No Commented-Out Resources
 
-## State Management
+## Modules (M)
+- M-01 (SHOULD): Review All .tf Files in Module
+- M-02 (SHOULD): Provider Version Appropriateness
+- M-03 (SHOULD): Clear Responsibility for locals/variables/outputs
+- M-04 (SHOULD): Unified Tags and Naming Prefixes
 
-- STATE-01: Backend configuration
-- STATE-02: State locking
-- STATE-03: Remote state access control
-- STATE-04: Sensitive data in state
+## Naming & Documentation (N)
+- N-01 (SHOULD): English Comments
+- N-02 (SHOULD): Module Header (Purpose/Overview)
+- N-03 (SHOULD): Important Resource Explanation Comments
 
-## Tagging & Naming
+## outputs.tf (O)
+- O-01 (SHOULD): All Outputs Require description
+- O-02 (SHOULD): No Sensitive Information in Outputs
+- O-03 (SHOULD): Remove Unreferenced Outputs
 
-- TAG-01: Consistent tagging strategy
-- TAG-02: Environment tags
-- TAG-03: Naming conventions
-- TAG-04: Cost allocation tags
+## Patterns (P)
+- P-01 (SHOULD): Avoid Excessive dynamic Blocks
+- P-02 (SHOULD): Stable for_each Keys
+- P-03 (SHOULD): Avoid count = 0/1 Toggle Chains
 
-## Documentation
+## Performance & Limits (PERF)
+- PERF-01 (SHOULD): Avoid Excessive for_each/count Plan Time
+- PERF-02 (SHOULD): Reduce Provider Calls
+- PERF-03 (SHOULD): Monitor CloudWatch Event/Alarm Generation
 
-- DOC-01: Resource documentation
-- DOC-02: Variable descriptions
-- DOC-03: Output descriptions
-- DOC-04: Module README
+## Security (SEC)
+- SEC-01 (SHOULD): KMS Encryption (SNS/S3/Logs/StateMachines) [AWS-specific]
+- SEC-02 (SHOULD): IAM Least Privilege
+- SEC-03 (SHOULD): Resource Policy with Condition
+- SEC-04 (SHOULD): No Plaintext Secrets
+- SEC-05 (SHOULD): Appropriate Logging Configuration
 
-## Architecture
+## State & Backend (STATE)
+- STATE-01 (SHOULD): Remote Backend with Encryption (SSE) + DynamoDB Lock
+- STATE-02 (SHOULD): No Credentials in Backend Configuration
+- STATE-03 (SHOULD): No Workspace (Unless Documented)
+- STATE-04 (SHOULD): terraform state Manual Operations Documented
 
-- ARCH-01: Modularity principle
-- ARCH-02: Environment separation
-- ARCH-03: Dependency management
-- ARCH-04: Design pattern compliance
+## Tagging (TAG)
+- TAG-01 (SHOULD): Name Tag with merge(local.tags, {Name = "..."})
+- TAG-02 (SHOULD): Remove Redundant Manual Tags
 
-## Monitoring & Logging
+## tfvars (T)
+- T-01 (SHOULD): No Secrets in tfvars
+- T-02 (SHOULD): Environment-Specific File Separation
+- T-03 (SHOULD): No Cross-Environment Identifiers
+- T-04 (SHOULD): No Environment Prefix Mixing
 
-- MON-01: CloudWatch alarms
-- MON-02: Logging configuration
-- LOG-01: Log retention policies
+## variables.tf (V)
+- V-01 (SHOULD): Concrete Types (Avoid Excessive map(any)/any)
+- V-02 (SHOULD): Default Value Validity
+- V-03 (SHOULD): Description Comments + (Required)/(Optional)
+- V-04 (SHOULD): Validation Pattern Restrictions
+- V-05 (SHOULD): No Unused Variables
 
-## Performance
-
-- PERF-01: Resource sizing
-- PERF-02: Read capacity (RDS, DynamoDB)
-- PERF-03: Auto-scaling configuration
+## Versioning (VERS)
+- VERS-01 (MUST): required_version Aligns with Project Standards
+- VERS-02 (MUST): Provider Version Range (>= lower, < upper)
+- VERS-03 (SHOULD): External Module Pinning (Avoid SHA/pseudo version)

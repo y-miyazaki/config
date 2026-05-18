@@ -7,350 +7,147 @@ description: "AI Assistant Instructions for Agent Skills Development"
 
 ## Scope
 
-- 対象は `.github/skills/**/SKILL.md` のメタ仕様定義であり、通常のコード系 instructions とは目的が異なる
-- 本ファイルは SKILL 設計規約を定義するため、共通 4 章テンプレートの例外として扱う
-
-## Skill Structural Requirements (Mandatory)
-
-各SKILL.mdは実行決定性を保証するため、以下のセクションを定義すること:
-
-### Required Sections
-
-以下のセクションは記載された順序でSKILL.md内に配置すること（H2レベル `##`）:
-
-1. **Input**
-   - スキルが期待する情報/ファイル
-   - 形式要件
-   - 例: "カレントディレクトリのTerraformファイルを期待" または "PR説明とリンクされたissueが必要"
-
-2. **Output Specification**
-   - スキルが生成するもの
-   - 形式要件（可能な限り構造化フォーマット必須）
-   - 構造化フォーマットで出力を定義: markdownセクション、JSONスキーマ、テーブル
-   - 自由形式の記述的出力を避ける
-   - `references/common-output-format.md` を使う場合、ここでは「何を返すか」を要約し、詳細構造はそちらに委譲
-   - 例: "ChecksとIssuesセクションを持つmarkdownレビューレポートを出力" または "JSON形式で返却: {status, errors[], warnings[]}"
-
-3. **Execution Scope**
-   - スキルが行うこと
-   - スキルが行わないこと（Out of Scope）
-   - Out of Scope には外部ツール委譲を明記: yamllint/markdownlint等での構文チェック、word count計測、ディレクトリ存在確認等の deterministic check
-   - 例: "スコープ外: YAML/Markdown構文エラーはyamllint/markdownlint委譲。対象ディレクトリ外のファイル変更不可。依存関係バージョン変更不可。"
-
-4. **Reference Files Guide**
-   - Agent利用時に @-mention で参照可能な reference ファイルのリスト
-   - Standard Components (common-_) と Category Details (category-_) に分類
-   - 各ファイルに簡潔な説明を付記
-   - 例: "When using this skill with an agent, reference the following files as needed via @-mention:"
-
-5. **Workflow**
-   - スキル実行の具体的な手順・フロー
-
-- 手順は番号付きで定義し、分岐が必要な場合は IF/THEN を明示する
-- 実行順序と各ステップの明確な説明
-- 例: "1. **Make changes** - Edit files\n2. **Run validation**: `bash script/validate.sh`\n3. **Fix issues** - Address failures\n4. **Commit** - Only when validation passes"
-
-6. **Best Practices**
-   - そのスキル固有の実践上の注意点を短く列挙
-   - 実行順序、再実行性、関連スキルとの境界、よくある誤用の防止策を含めてもよい
-
-### Execution Determinism Rules
-
-- **Single canonical path**: 明示的に必要でない限り、単一の実装経路を提供
-- **Explicit branching**: 選択肢が存在する場合、すべてのオプションと選択基準を列挙
-- **No implicit inference**: すべての仮定を明示的に記述
-- **Bounded scope**: 行うことだけでなく、行わないことも定義
-- **Structured output**: markdownセクション、JSONスキーマ、テーブルを使用; 自由形式の記述を避ける
+- 対象は `skills/**/SKILL.md` および `references/*.md` の設計・修正に限定する
+- 本ファイルは SKILL 設計規約を定義する。共通 4 章テンプレートの例外として扱う
 
 ## Standards
 
-### Absolute Rules
+### Required Sections（MUST）
 
-- **Writing Style**: 命令形/不定詞形式（"You should"禁止）
-- **Specificity**: 具体的・測定可能な指示（"appropriately"等禁止）
-  - 手続き的指示には以下のいずれかを含む:
-    - 数値閾値（回数、時間、サイズ、ステータスコード）
-    - 明示的条件（Xの場合Yを返す）
-    - 具体的API/関数参照
-  - 設計原則と概念定義は例外
-- **Dual Token Budget (Warning + Soft)**
-  - **Warning Threshold**: `waza check` の Token Budget は **500 tokens 以下**を推奨（超過時は警告として扱い、対応可能な範囲で修正）
-  - **Soft Guard**: `validate.sh` の単語数チェックは補助指標として維持（可読性監視）
-  - **Anti-Overtrimming Guardrail**: Token削減時でも以下を削除しない
-    - trigger定義（description の "Use when..." および `USE FOR` / `DO NOT USE FOR`）
-    - structured output契約（`Output Specification` + `references/common-output-format.md`）
-    - 実行手順（`Workflow` の番号付き手順または明示分岐）
-    - 具体例（少なくとも1つの入出力または実行例）
-- **Resource Separation**: scripts/references/assets 明確分離
-  - scripts/: 実行可能コード（決定的・反復タスク）
-  - references/: 必要時ロードされるドキュメント
-  - assets/: 出力に使用するファイル（context外）
-  - SKILL.md内に短い説明用コードスニペット（<30行）は許可
-  - 実行可能または再利用可能なコードはscripts/に配置
+- **S-01 (MUST)**: 以下の 6 セクションを H2 で定義し、この順序で配置する — セクション欠落は実行決定性を破壊する:
+  1. Input
+  2. Output Specification
+  3. Execution Scope
+  4. Reference Files Guide
+  5. Workflow
+  6. Best Practices
 
-#### Reference Directory Structure
+### YAML Frontmatter（MUST）
 
-`references/` ディレクトリは以下のファイル構成標準に従う:
+- **S-02 (MUST)**: `name`, `description`, `license`, `metadata.author`, `metadata.version` を含む — 欠落するとプラグインシステムが skill を認識できない
 
-ファイル名と内容定義の正本は **Reference Files Matrix** とする。
-本セクションでは命名規則とヘッダーレベルのみ定義する。
+### Reference Header Levels（MUST）
 
-**命名規則**:
+- **S-03 (MUST)**: ヘッダーレベルを統一する — 不統一だと AI のセクション認識が破綻する:
+  - `common-checklist.md` / `common-output-format.md`: H1（`#`）
+  - `common-troubleshooting.md` / `common-individual-commands.md`: H2（`##`）
+  - `category-*.md`: H2（`##`）
 
-- すべてのファイル名は小文字ハイフン区切り（kebab-case）
-- `common-*`: Agent Skills全体で標準化される構成ファイル（すべては存在しない可能性）
-- `category-*`: スキル固有の詳細情報ファイル（存在可否はスキル実装に任せる）
+### Naming Conventions
 
-**ヘッダーレベル標準**:
+| Component      | Rule       | Example                  |
+| -------------- | ---------- | ------------------------ |
+| Skill name     | kebab-case | go-review                |
+| Reference file | kebab-case | common-checklist.md      |
+| Script file    | snake_case | validate.sh              |
 
-Common系ファイルのヘッダーレベルは統一:
+### Reference Files Matrix（MUST）
 
-- `common-checklist.md`: H1（`#`）で開始
-- `common-output-format.md`: H1（`#`）で開始
-- `common-troubleshooting.md`: H2（`##`）で開始（補足情報の位置づけ）
-- `common-individual-commands.md`: H2（`##`）で開始（デバッグ情報の位置づけ）
+| File Name                       | Required | Purpose                                             | Load Trigger |
+| ------------------------------- | -------- | --------------------------------------------------- | ------------ |
+| `common-checklist.md`           | Yes      | Canonical checklist with fixed Item IDs             | Always       |
+| `common-output-format.md`       | Yes      | Canonical output contract                           | Always       |
+| `common-troubleshooting.md`     | No       | Failure diagnostics and rerun procedure             | On failure   |
+| `common-individual-commands.md` | No       | Debug-only command catalog                          | On debugging |
+| `category-*.md`                 | No       | Domain-specific review criteria                     | Per category |
 
-Category系ファイル:
+### Priority Principle（MUST）
 
-- Title行は H2（`##`）で開始（セクション見出しとしての位置づけ）
-- 内容の詳細は H3（`###`）以下で階層化
+- **S-04 (MUST)**: Clarity > DRY を優先する — 重複削減で曖昧化する場合は明確性を優先する
 
-### Reference Files Matrix
+### Output Contract Source of Truth（MUST）
 
-Validation/Review などの類型で必須ファイルを分けない。
-下表の「役割」と「トリガー」を基準に採用する（ファイル名と内容定義の正本）。
+- **S-05 (MUST)**: `references/common-output-format.md` を出力契約の正本として扱う — `Output Specification` は要約に留め、重複定義を避ける
 
-| File Name                       | Required | 内容（何を書くか）                                                                                                                                                                                                                                                     | 読み込みトリガー |
-| ------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
-| `common-checklist.md`           | Yes      | 固定 ItemID 付きのチェック項目一覧（評価基準の正本）                                                                                                                                                                                                                   | 常時             |
-| `common-output-format.md`       | Yes      | 出力契約の正本（セクション名、項目、スキーマ、表形式など）                                                                                                                                                                                                             | 常時             |
-| `common-troubleshooting.md`     | No       | 失敗時の診断手順、再実行手順、既知パターン                                                                                                                                                                                                                             | エラー/失敗時    |
-| `common-individual-commands.md` | No       | 個別コマンド、デバッグ向け実行手順、切り分け方法                                                                                                                                                                                                                       | デバッグ時       |
-| `category-*.md`                 | No       | ドメイン別の詳細ルール。代表例: `category-security.md`, `category-testing.md`, `category-performance.md`, `category-error-handling.md`, `category-global.md`, `category-patterns.md`, `category-concurrency.md`, `category-logging.md`。その他も `category-*` で統一。 | 該当カテゴリ時   |
+### Writing Style（MUST）
 
-### Priority Principle
+- **Q-06 (MUST)**: 命令形/不定詞形式を使用する — "You should" は AI の実行確度を下げる:
+  - ❌ `You should do X` / `You need to check Y`
+  - ✅ `Do X` / `Check Y` / `To accomplish X, do Y`
 
-**Clarity > DRY**: 明確性が保たれる場合のみ冗長性を回避
+### Forbidden Expressions（MUST）
 
-### Module Count Policy (Quality First)
-
-- `waza check` の module-count は advisory であり、**目標値ではない**
-- module-count を 4〜6 に合わせること自体を目的化しない
-- 削減は以下を満たす場合のみ実施する:
-  - 重複または未参照の情報が存在する
-  - `common-checklist.md` / `common-output-format.md` の役割を弱めない
-  - `waza run eval.yaml` の品質タスク結果が悪化しない
-- 上記を満たさない削減は実施しない（品質維持を優先）
-
-### Output Contract Source of Truth
-
-- `references/common-output-format.md` を各スキルの出力契約の正本として扱う
-- `Output Specification` は出力内容の要約に留める
-- 同一情報を `Output Specification` と `references/common-output-format.md` に重複記載しない
+- **Q-04a (MUST)**: 以下の曖昧表現を禁止する — AI が具体的アクションに変換できない:
+  - EN: appropriately, as needed, if possible, preferably, etc., and so on
+  - JP: 適切に、必要に応じて、可能な限り、場合によっては、など、等
 
 ## Guidelines
 
+### Pattern Checks
+- P-01 (SHOULD): Design Pattern Compliance
+  - Check: Does SKILL.md define a deterministic execution pattern with explicit flow, boundaries, and references?
+- P-02 (SHOULD): Output Contract Compliance
+  - Check: Does the skill define a structured output contract across Output Specification and common-output-format.md without contradiction?
+
+### Quality Checks
+- Q-01 (SHOULD): Output is Truly Structured
+  - Check: Is the output format definition implementable and parseable (JSON schema / Markdown structure explicitly defined with example)?
+- Q-02 (SHOULD): Scope Boundaries
+  - Check: Is Execution Scope split into "What this skill does" (action list) + "Out of Scope" (explicit non-actions with tool delegation)?
+- Q-03 (SHOULD): Execution Determinism
+  - Check: Is execution path single/canonical OR are conditional branches explicitly defined (IF condition → path A, ELSE → path B)?
+- Q-04 (SHOULD): Input/Output Specificity
+  - Check: Are Input/Output formats explicitly defined with schema/structure + concrete examples (no vague "appropriately", "as needed", "etc." expressions)?
+- Q-05 (SHOULD): Constraints Clarity
+  - Check: Are project-specific, non-obvious constraints documented while self-evident constraints are omitted?
+- Q-06 (MUST): No Implicit Inference
+  - Check: Are all instructions imperative and explicit with concrete conditions (no vague "appropriately", "depending on context", "reasonable")?
+- Q-09 (SHOULD): Token Hard Gate
+  - Check: Does the review include `waza check` evidence and confirm Token Budget is 500 tokens or less?
+- BP-03 (SHOULD): Token Efficiency
+  - Check: Does SKILL.md avoid content that Claude already knows, minimizing redundancy with frontmatter and reference files?
+- BP-04 (SHOULD): Anti-Overtrimming Guardrail
+  - Check: If token reduction is applied, are behavior-defining instructions preserved?
+
+### Structural Checks
+- S-01 (MUST): Structural Completeness
+  - Check: Does SKILL.md have all 6 required sections at ## heading level?
+- S-02 (MUST): YAML Frontmatter Fields
+  - Check: Does SKILL.md YAML frontmatter have all required fields (name, description, license) and recommended metadata (author, version)?
+- BP-01 (SHOULD): Description Quality
+  - Check: Does the description field follow best practices for skill discovery (third person, "Use when..." trigger, no implementation instructions)?
+- BP-02 (SHOULD): Reference Trigger Conditions
+  - Check: Does Reference Files Guide specify when to load each reference file (not just what it contains)?
+- Q-07 (SHOULD): Progressive Disclosure (Soft Guard)
+  - Check: Is SKILL.md concise and compatible with token budget, using word count as a supplemental signal?
+- Q-08 (SHOULD): Resource Separation
+  - Check: Does skill directory contain `references/` and the mandatory common reference files? `scripts/` is optional but required when executable logic is provided.
+- S-03 (MUST): Reference Files Header Level Consistency
+  - Check: Do references/ files follow consistent header level standards?
+
 ### Code Modification Guidelines
 
-#### Writing Style
+- 変更後は [agent-skills-review Skill](../skills/agent-skills-review/SKILL.md) の validate.sh 実行を優先
+- 個別コマンドはデバッグ時のみ使用
 
-命令形/不定詞形式使用:
 
-```markdown
-❌ You should do X
-❌ You need to check Y
-✅ Do X
-✅ Check Y
-✅ To accomplish X, do Y
+## Testing and Validation
+
+運用ルール:
+
+- deterministic check（存在確認・定量計測・ファイル有無確認）は `scripts/` で自動化する
+- judgment-based check（意味評価・設計判定・文脈判断）は review skill で評価する
+- 総合評価は deterministic check + judgment-based check の両方で判断する
+
+**エントリポイント（推奨）**:
+
+```bash
+bash skills/agent-skills-review/scripts/validate.sh SKILL.md
+bash skills/agent-skills-review/scripts/validate_waza.sh <skill-name>
 ```
 
-#### Specificity Requirements
+**個別実行（デバッグ時）**:
 
-曖昧表現禁止、具体的指示:
-
-```markdown
-❌ Handle errors appropriately
-✅ Return errors with context using fmt.Errorf("operation failed: %w", err)
-
-❌ Optimize for performance
-✅ Cache query results for 5 minutes to reduce database load
-
-❌ Retry if the request fails
-✅ Retry up to 3 times if request returns 5xx status code
+```bash
+waza check <skill-name>
+waza run <skill-name>/eval.yaml
+waza tokens count <skill-name>/SKILL.md
 ```
 
-**禁止表現**:
+**詳細ガイド**: [agent-skills-review Skill](../skills/agent-skills-review/SKILL.md) を参照
 
-- appropriately, as needed, if possible, preferably, ideally
-- 適切に、必要に応じて、可能な限り、なるべく、できるだけ
-- in some cases, depending on the situation, case by case
-- 場合によっては、状況に応じて、ケースバイケース
-- etc., and so on, など、等
+## Security Guidelines
 
-#### Progressive Disclosure
-
-- SKILL.md Warning Threshold: `waza check` で 500 tokens 以下を推奨
-- SKILL.md Soft Guard: 単語数チェックは補助指標として利用
-- 詳細情報: `references/`に分離
-- 大ファイル(>10k単語): grep パターン記載
-- SKILL.md と references 間で情報重複禁止
-
-#### Resource Separation
-
-| Directory     | Purpose                              |
-| ------------- | ------------------------------------ |
-| `scripts/`    | 実行可能コード（決定的・反復タスク） |
-| `references/` | 必要時ロードされるドキュメント       |
-| `assets/`     | 出力に使用するファイル（context外）  |
-
-#### Quality Standards
-
-**Ambiguity Elimination (Critical)** - マージ前に必ず修正:
-
-- 不明確条件: "in some cases", "depending on the situation"
-- 場合によっては、状況に応じて、ケースバイケース
-
-**Ambiguity Elimination (Important)** - 強い正当化理由がない限り修正:
-
-- 曖昧表現: "appropriately", "as needed", "if possible"
-- 不完全列挙: "etc.", "and so on", "など"
-- 不完全フォーマット定義: "format like the following"
-
-**Redundancy Reduction**:
-
-- 複数箇所での同一情報繰り返し回避
-- 共通パターンは共有 references へ抽出
-- 冗長性排除が曖昧さ増加させる場合は冗長性維持（Clarity > DRY）
-
-**Best Practices Compliance**:
-
-- 命令形/不定詞形式全体使用
-- 具体的・測定可能指示（数値閾値、明示的条件、具体的API参照のいずれかを含む）
-- Progressive Disclosure（SKILL.md < 5,000単語、詳細はreferences/へ）
-- リソース分離（scripts/references/assets）
-- Clarity > DRY（明確性を損なわない範囲で重複削減）
-
-### Anti-Patterns
-
-**❌ 回避**:
-
-- 巨大 SKILL.md ファイル: 詳細は references へ
-- 曖昧指示: 常に具体的に
-- 情報重複: DRY 原則
-- 二人称言語: 命令形使用
-
-**✅ 推奨**:
-
-- 明確分離: 指示 vs. references vs. code
-- 具体的基準: 正確な閾値・条件
-- Progressive Disclosure: SKILL.md に本質情報、references に詳細
-- 客観的言語: 命令形/不定詞形式
-
-## Review Process
-
-Agent Skills 作成・修正時、以下を優先順位順に確認:
-
-### Critical (マージ前に必ず修正)
-
-1. **Structural Completeness**: 必須セクションすべて存在（Input, Output Specification, Execution Scope, Reference Files Guide, Workflow, Best Practices）
-2. **Ambiguity (Critical)**: 不明確条件を明示的条件に置換
-3. **Writing Style**: 命令形/不定詞形式使用（"you should"無）
-4. **Out-of-Scope Definition**: 明示的に「やらないこと」を定義
-
-### Important (強い正当化理由がない限り修正)
-
-6. **Ambiguity (Important)**: 曖昧表現を具体的指示に置換
-7. **Specificity**: 手続き的指示には数値閾値、明示的条件、具体的API参照のいずれかを含む
-8. **Progressive Disclosure**: SKILL.md の冗長内容を references へ移動し、`waza check` の token 超過を防止
-9. **Input/Output Format**: 入力形式と出力契約を明示的に定義
-10. **Single Canonical Path**: 複数の実装経路がある場合、選択基準を明示
-11. **Anti-Overtrimming**: Token削減後も trigger / output契約 / workflow / examples の4要素を維持
-12. **Token Warning Threshold**: `waza check` の Token Budget 500超過は警告として記録し、品質維持を優先しつつ対応可能なら削減
-
-### Recommended (可能な場合に修正)
-
-13. **Redundancy**: 不要重複削除（Clarity > DRY原則に従う）。特に `Output Specification` / `common-output-format.md` の重複を避ける
-14. **Consistency**: 確立パターン遵守
-15. **Resource Separation**: scripts/references/assets 適切分離
-
-## Token Efficiency Strategy
-
-SKILL.mdおよびそれを使用するスキルは、AI context最適化のため以下を必須とする:
-
-### Progressive Disclosure
-
-- **SKILL.md Warning Threshold**: `waza check` で 500 tokens 以下を推奨
-- **SKILL.md Soft Guard**: 単語数チェックは補助指標として利用
-- **詳細情報**: references/ に分離、必要時ロード
-- **Category-driven Reference Loading**: 検証カテゴリごとに reference ファイル分離し、必要な reference のみ段階的ロード
-- **情報重複排除**: SKILL.md と references 間での情報重複禁止
-- **Overtrimming防止**: trigger、output契約、workflow、examples を削除しない
-
-これにより context window を最適化し、AI invocation のレイテンシ・コストを削減。
-
-### Context Optimization Pattern
-
-例: Agent Skills Review スキルは以下を実装
-
-- 4つの deterministic check（sections 存在確認、word count計測等）を scripts で自動化
-- 8つの judgment-based check（意味評価、設計判定等）を manual review に特化
-- 結果: Automated checks の出力を reference として manual review に活用、context削減
-
-## Script Automation Principle
-
-スキルの検証項目は実装方式に基づいて分類し、deterministic check は scripts/ で自動化すべし。
-
-### Philosophy
-
-**Deterministic Check** (結果が客観的に決定される检証項目):
-
-- 存在確認: Required sections の grep、frontmatter フィールド抽出
-- 定量計測: word count (wc), ファイルサイズ、line count
-- ディレクトリ/ファイル有無確認: find コマンド
-- 実装方式: scripts/ 内で shell/Python等で deterministic に実行
-- 出力形式: JSON/CSV等の構造化フォーマット（AI/tool で解析可能）
-- 利点: 結果の客観性、AI context削減、実行速度向上
-
-**Judgment-based Check** (人間/AI の判断が必要な検証項目):
-
-- 意味評価: Output 構造の実装妥当性、曖昧表現・推論の検出
-- 設計判定: スコープ定義の充足度、pattern alignment
-- 文脈的判断: 全体的一貫性、ドメイン知識を要する評価
-- 実装方式: Manual review として AI による systematic な評価
-- 利点: AI の本来の強み（NLP、context 判断）を活用
-
-### Expected Pattern
-
-**スキル設計時の推奨パターン**:
-
-```
-Total checks = Deterministic checks + Judgment-based checks
-
-例: Agent Skills Review
-- 4 checks を scripts で自動化（S-01, S-02, Q-07, Q-08）
-- 8 checks を manual review（Q-01~Q-06, P-01~P-02）
-- スキルの Execution Flow により scripts → manual review の順序で実行
-```
-
-### Meta-Pattern
-
-スキル自体が推奨パターンを体現すべし:
-
-- SKILL.md に Philosophy を明記（deterministic check の自動化方針）
-- scripts/ で deterministic checks を実装し、judgment-based checks は AI に特化
-- 結果としてスキルが自身のベストプラクティスを示範的に実装する
-
-## Governance
-
-### Amendment Rule
-
-3つ以上のSkillsで曖昧さまたは不整合が観測された場合のみ、この指示を修正する。
-
-### Enforcement Actions
-
-- **構造違反**: 必須セクションすべて存在するまでマージをブロック
-- **Token > 500 (`waza check`)**: 警告として記録し、品質低下を避けつつ対応可能な範囲で削減
-- **過度削減**: trigger / output契約 / workflow / examples の欠落は承認不可
-- **Critical違反**: 修正されるまでマージをブロック
-- **Important違反**: 正当化または修正が必要
-- **Recommended違反**: レビューコメントに記録
+- SKILL.md および references にシークレット・認証情報の実値を記載しない
+- scripts/ 内のコードは入力検証を行い、任意パス操作を防止する
+- 外部ツール実行時は引数をサニタイズし、コマンドインジェクションを防止する

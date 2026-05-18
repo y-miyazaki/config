@@ -1,6 +1,6 @@
 ## Quality Checks
 
-## Q-01: Output is Truly Structured
+**Q-01 (SHOULD): Output is Truly Structured**
 
 Check: Is the output format definition implementable and parseable (JSON schema / Markdown structure explicitly defined with example)?
 Why: Unstructured output prevents tool automation, integration, and parsing. AI/humans cannot reliably extract results without explicit format definition.
@@ -10,7 +10,7 @@ Examples:
 
 ---
 
-## Q-02: Scope Boundaries
+**Q-02 (SHOULD): Scope Boundaries**
 
 Check: Is Execution Scope split into "What this skill does" (action list) + "Out of Scope" (explicit non-actions with tool delegation)?
 Why: Scope clarity prevents skill misuse, reduces ambiguity about responsibility boundaries, and clarifies tool/skill separation.
@@ -20,7 +20,7 @@ Examples:
 
 ---
 
-## Q-03: Execution Determinism
+**Q-03 (SHOULD): Execution Determinism**
 
 Check: Is execution path single/canonical OR are conditional branches explicitly defined (IF condition → path A, ELSE → path B)?
 Why: Deterministic execution prevents surprises, enables reproducibility, and allows automation. Ambiguous conditions cause inconsistent behavior across different uses.
@@ -30,7 +30,7 @@ Examples:
 
 ---
 
-## Q-04: Input/Output Specificity
+**Q-04 (SHOULD): Input/Output Specificity**
 
 Check: Are Input/Output formats explicitly defined with schema/structure + concrete examples (no vague "appropriately", "as needed", "etc." expressions)?
 Why: Vague format specifications make integration impossible, create ambiguity, and prevent tool automation. AI/humans cannot implement against vague specs.
@@ -41,7 +41,7 @@ Examples:
 
 ---
 
-## Q-05: Constraints Clarity
+**Q-05 (SHOULD): Constraints Clarity**
 
 Check: Are project-specific, non-obvious constraints documented while self-evident constraints are omitted?
 Why: Self-evident constraints (e.g., "tool must be installed") waste tokens and add noise. Project-specific constraints (e.g., "coverage threshold 80%", "AWS-only") are what the agent wouldn't know without being told.
@@ -53,7 +53,7 @@ Examples:
 
 ---
 
-## Q-06: No Implicit Inference
+**Q-06 (MUST): No Implicit Inference**
 
 Check: Are all instructions imperative and explicit with concrete conditions (no vague "appropriately", "depending on context", "reasonable")?
 Why: Implicit inference forces humans/AI to guess intent, causing inconsistency and errors. Explicit instructions are reproducible and testable.
@@ -63,7 +63,7 @@ Examples:
 
 ---
 
-## Q-09: Token Hard Gate
+**Q-09 (SHOULD): Token Hard Gate**
 
 Check: Does the review include `waza check` evidence and confirm Token Budget is 500 tokens or less?
 Why: Token Budget is a Waza hard gate. SKILL.md that exceeds 500 tokens is not submission-ready regardless of other quality metrics.
@@ -75,7 +75,7 @@ Examples:
 
 ---
 
-## BP-03: Token Efficiency
+**BP-03 (SHOULD): Token Efficiency**
 
 Check: Does SKILL.md avoid content that Claude already knows, minimizing redundancy with frontmatter and reference files?
 Why: Every token competes for context window attention. Redundant content dilutes the agent's focus on project-specific instructions. Claude's official best practice: "Would the agent get this wrong without this instruction? If no, cut it."
@@ -91,7 +91,7 @@ Examples:
 
 ---
 
-## BP-04: Anti-Overtrimming Guardrail
+**BP-04 (SHOULD): Anti-Overtrimming Guardrail**
 
 Check: If token reduction is applied, are behavior-defining instructions preserved?
 Why: Over-aggressive trimming can make a skill unreadable to the agent, reducing activation quality and causing execution errors even when token limits pass.

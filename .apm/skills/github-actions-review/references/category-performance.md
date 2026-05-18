@@ -1,12 +1,25 @@
-## Performance Review Guidance
+## 3. Performance (PERF)
 
-### Purpose
+**PERF-01 (SHOULD): Cache Strategy and Invalidation**
 
-Use this reference when reviewing workflow execution efficiency.
+Check: Are cache keys deterministic and invalidated by dependency changes?
+Why: Poor cache invalidation leads to stale dependencies or low cache hit rates.
+Fix: Build keys from lockfiles and use scoped restore-keys.
 
-### Focus Areas
+**PERF-02 (SHOULD): Matrix/Parallel Execution Balance**
 
-- Cache key strategy and invalidation correctness
-- Matrix/parallel jobs versus runner cost
-- Unnecessary full-repo checkout or repeated setup steps
-- Overly broad triggers that increase CI load
+Check: Is matrix or parallel execution used where beneficial without excessive runner cost?
+Why: Under-parallelization slows feedback, over-parallelization inflates CI cost.
+Fix: Tune matrix dimensions and parallelism based on critical path and cost.
+
+**PERF-03 (SHOULD): Concurrency Control**
+
+Check: Is `concurrency` configured to cancel redundant in-progress runs on same branch/context?
+Why: Missing concurrency controls wastes runners and delays important builds.
+Fix: Add concurrency group with `cancel-in-progress: true` where appropriate.
+
+**PERF-04 (SHOULD): Reduce Unnecessary Workload**
+
+Check: Are broad triggers, full-repo checkout, and repeated setup steps minimized?
+Why: Excessive workload increases runtime and resource consumption without quality gain.
+Fix: Narrow triggers with `paths/types`, optimize checkout depth, and deduplicate setup steps.

@@ -11,144 +11,296 @@ description: "AI Assistant Instructions for Go Development"
 
 ## Standards
 
-- GoDoc スタイルコメント: 全パッケージ、公開関数/メソッド/構造体
-- パッケージ名: 小文字、単一単語
-- ファイル名: snake_case
-- 変数/関数: camelCase、公開: PascalCase
-- エラーは明示的処理（`_`無視禁止）
-- エラーラッピング: `fmt.Errorf` + `%w`
+### Naming Conventions
+
+| Component  | Rule       | Example          |
+| ---------- | ---------- | ---------------- |
+| Interface  | er suffix  | UserRepository   |
+| ファイル名 | snake_case | event_handler.go |
+
+### Core Go Conventions（MUST）
+
+- **S-01 (MUST)**: GoDoc スタイルコメントを公開 API に付与する — package / public func / method / struct を対象とする
+- **S-02 (MUST)**: package 名は小文字の単語で命名する — 可読性と import 一貫性を維持する
+- **S-03 (MUST)**: エラー無視（`_` 代入）を禁止する — 例外は理由付きで明示する
+- **S-04 (MUST)**: エラーラップは `fmt.Errorf(... %w ...)` を優先する — 呼び出し元で原因追跡できる状態を維持する
+
+### File Declaration Order（MUST）
+
+- **G-05 (MUST)**: ファイル内の宣言順序を遵守する — 順序不統一だとコードナビゲーションが困難になる:
+  1. const
+  2. var
+  3. type（interface → struct）
+  4. func（constructor → public methods → private methods → helpers）
+- **G-06 (SHOULD)**: 各セクション内は原則アルファベット順。`main` は func の先頭に配置
+
+### Unexported Helper Placement（MUST）
+
+| 条件                                  | 配置先                           |
+| ------------------------------------- | -------------------------------- |
+| 単一 struct 固有の責務                | その struct の unexported method |
+| 複数の型/ファイルで共有される純粋関数 | package-level free function      |
 
 ## Guidelines
 
-### Code Organization
+### Architecture (ARCH)
+- ARCH-01 (SHOULD): Layer Separation
+  - Check: Are handler/usecase/repository separated and business/infrastructure layers separated?
+- ARCH-02 (SHOULD): Dependency Injection
+  - Check: Are constructor injection, wire/dig utilization, and interface dependencies present?
+- ARCH-03 (SHOULD): Domain-Driven Design
+  - Check: Are aggregate roots defined, Value Objects utilized, and Repositories abstracted?
+- ARCH-04 (SHOULD): SOLID Principles
+  - Check: Are SRP/OCP/LSP/ISP/DIP applied, interfaces segregated, and abstractions used?
+- ARCH-05 (SHOULD): Appropriate Package Structure
+  - Check: Are there no circular dependencies, standard layout compliance, and internal/ utilization?
+- ARCH-06 (SHOULD): Unified Configuration Management
+  - Check: Are viper/envconfig used, config structs consolidated, and environment variables prioritized?
+- ARCH-07 (SHOULD): Unified Log Management
+  - Check: Are zap/zerolog unified, structured logging used, and trace ID propagated?
+- ARCH-08 (SHOULD): Unified Error Management
+  - Check: Are error packages consolidated, error code systems defined, and standardized?
+- ARCH-09 (SHOULD): External Integration Abstraction
+  - Check: Are adapter patterns, interface definitions, and abstraction layers implemented?
+- ARCH-10 (SHOULD): Module Design
+  - Check: Are boundaries clear, loosely coupled, highly cohesive, and public APIs minimized?
 
-- パッケージ機能別分離
-- interface は使用側で定義（Dependency Inversion）
-- 循環参照回避
+### Code Standards (CODE)
+- CODE-01 (SHOULD): Appropriate Interface Design
+  - Check: Are interface method counts (5+) and consumer-side definitions appropriate?
+- CODE-02 (SHOULD): API/Package Boundary Design
+  - Check: Are there no excessive exports, unclear package name responsibilities, or unused internal/?
+- CODE-03 (SHOULD): Appropriate Struct Design
+  - Check: Are there no public fields, exposed mutexes, or excessive field counts (20+)?
+- CODE-04 (SHOULD): Safe Type Assertions
+  - Check: Do type assertions have ok checks (v, ok := i.(string) format)?
+- CODE-05 (SHOULD): Appropriate defer Usage
+  - Check: Are there no defer in loops and is resource release appropriate?
+- CODE-06 (SHOULD): Appropriate slice/map Operations
+  - Check: Are nil checks, out-of-bounds prevention, and map race condition measures present?
+- CODE-07 (SHOULD): Error String Format
+  - Check: Do error strings start with a lowercase letter and have no trailing punctuation?
+- CODE-08 (SHOULD): Import Grouping
+  - Check: Are imports organized into 3 groups: stdlib / external packages / internal packages, separated by blank lines?
+- CODE-09 (SHOULD): Avoid Naked Returns in Long Functions
+  - Check: Are naked returns (bare return statements with named return values) avoided in functions longer than ~10 lines?
 
-### Error Handling
+### Concurrency (CON)
+- CON-01 (SHOULD): Avoid goroutine Leaks
+  - Check: Do goroutines terminate properly and monitor context.Done()?
+- CON-02 (SHOULD): Clarify channel close Responsibility
+  - Check: Is channel close responsibility on the sender side?
+- CON-03 (SHOULD): Appropriate buffered/unbuffered channel Selection
+  - Check: Is buffered/unbuffered selection appropriate with justified size?
+- CON-04 (SHOULD): Appropriate sync primitives Usage
+  - Check: Are sync.Mutex/RWMutex/WaitGroup/atomic used appropriately?
+- CON-05 (SHOULD): for+goroutine Variable Capture Issue
+  - Check: Are loop variables not directly referenced in goroutines?
+- CON-06 (SHOULD): data race Detection and Prevention
+  - Check: Is go test -race executed and shared memory protected with sync?
 
-- error 無視禁止
-- context.Context でキャンセル・タイムアウト処理
-- 構造化ログ使用
+### Context Handling (CTX)
+- CTX-01 (SHOULD): Accept context in public APIs
+  - Check: Do public functions and methods accept context.Context as first argument?
+- CTX-02 (SHOULD): Avoid context.Background()/TODO() Overuse
+  - Check: Are there no excessive context.Background() uses or lingering context.TODO()?
+- CTX-03 (SHOULD): Propagate context to goroutines
+  - Check: Is context passed when launching goroutines?
+- CTX-04 (SHOULD): Appropriate cancel Invocation
+  - Check: Is cancel from WithCancel/WithTimeout called with defer?
 
-### Performance
+### Dependencies (DEP)
+- DEP-01 (SHOULD): Explicit Direct Dependencies
+  - Check: Are direct dependencies explicitly in go.mod, versions pinned, and regularly updated?
+- DEP-02 (SHOULD): Dependency Update Strategy
+  - Check: Are regular go get -u, Renovate/Dependabot adoption, and update policies established?
+- DEP-03 (SHOULD): vendor Management (Only When Necessary)
+  - Check: Is vendor only when necessary, .gitignore configured, and module proxy utilized?
+- DEP-04 (SHOULD): Prioritize Standard Library
+  - Check: Is standard library prioritized, minimal dependency principle followed, and dependency reasons clarified?
+- DEP-05 (SHOULD): AWS SDK Version Management
+  - Check: Are AWS SDK v2 migration, latest version usage, and deprecated API replacement done?
+- DEP-06 (SHOULD): Separate Development Dependencies
+  - Check: Are //go:build tools used, development dependencies clarified, and production excluded?
+- DEP-07 (SHOULD): License Compatibility
+  - Check: Are go-licenses utilized, license lists generated, and compatibility verified?
 
-- goroutine リーク防止
-- channel close 責任明確化
-- 高頻度操作でメモリプール検討
+### Documentation (DOC)
+- DOC-01 (SHOULD): Package Documentation Exists
+  - Check: Are package doc comments, package purpose, and usage documented?
+- DOC-02 (SHOULD): godoc for Public Functions
+  - Check: Are all public APIs documented with godoc, arguments, return values, and error conditions specified?
+- DOC-03 (SHOULD): Complex Logic Comments
+  - Check: Are Why-focused comments, algorithm explanations, and preconditions documented?
+- DOC-04 (SHOULD): Struct Field Comments
+  - Check: Are each field commented with constraints, default values, and required status?
+- DOC-05 (SHOULD): Constant and Variable Descriptions
+  - Check: Are constants/variables commented with units, constraints, and reasons?
+- DOC-06 (SHOULD): English Comment Consistency
+  - Check: Are comments unified in English, grammar-checked, and concise?
+- DOC-07 (SHOULD): README.md Maintenance
+  - Check: Are purpose, prerequisites, setup, usage examples, and contribution methods documented?
+- DOC-08 (SHOULD): API Specification (OpenAPI)
+  - Check: Are OpenAPI 3.0 descriptions, swag usage, and auto-generation verification present?
+- DOC-09 (SHOULD): Operations Documentation
+  - Check: Are deployment procedures, monitoring items, incident response procedures, and log analysis methods documented?
+- DOC-10 (SHOULD): CHANGELOG
+  - Check: Are Keep a Changelog format, semantic versioning, and breaking changes documented?
+
+### Error Handling (ERR)
+- ERR-01 (SHOULD): Appropriate Error Wrapping
+  - Check: Are errors wrapped with fmt.Errorf("%w", err) and context information included?
+- ERR-02 (SHOULD): Appropriate Custom Error Definition
+  - Check: Are sentinel errors defined and custom errors compatible with errors.Is/As?
+- ERR-03 (SHOULD): Avoid and Recover from Panics
+  - Check: Are panics only for fatal errors and defer+recover implemented?
+- ERR-04 (SHOULD): Appropriate Error Log Information
+  - Check: Are error log levels unified, stack traces recorded, and sensitive information masked?
+- ERR-05 (SHOULD): Error Propagation to Upper Layers
+  - Check: Are errors not swallowed and error context preserved?
+- ERR-06 (SHOULD): Error Handling Strategy
+  - Check: Are error classifications defined, retry logic, and Fail Fast implemented?
+- ERR-07 (SHOULD): External Dependency Error Handling
+  - Check: Are timeouts set, retries implemented, and errors classified?
+- ERR-08 (SHOULD): Validation Errors
+  - Check: Are input validations, field-level errors, and user-friendly messages present?
+- ERR-09 (SHOULD): Error Message Security
+  - Check: Are there no internal implementation exposure, external stack trace disclosure, or SQL statement exposure?
+
+### Function Design (FUNC)
+- FUNC-01 (SHOULD): Appropriate Function Splitting
+  - Check: Are there no multiple responsibilities or mixed business/infrastructure layers in single functions?
+- FUNC-02 (SHOULD): Appropriate Argument Design
+  - Check: Are there no excessive positional arguments or bool argument overuse, and are options handled appropriately?
+- FUNC-03 (SHOULD): Return Value Design
+  - Check: Are named returns minimized, error placed last, and multiple returns appropriate?
+- FUNC-04 (SHOULD): Recommend Pure Functions
+  - Check: Are there no global variable references, mixed side effects, or non-deterministic behavior?
+- FUNC-05 (SHOULD): Appropriate Receiver Design
+  - Check: Are there no mixed pointer/value receivers or large value receivers?
+- FUNC-06 (SHOULD): Method Set Design
+  - Check: Are there no unrelated methods mixed, God Object formation, or unclear responsibility scope?
+- FUNC-07 (SHOULD): Appropriate Initialization Functions
+  - Check: Do New functions implement error handling and validation?
+- FUNC-08 (SHOULD): Leverage Higher-Order Functions
+  - Check: Are callbacks and function pointers appropriately utilized?
+- FUNC-09 (SHOULD): Appropriate Generics Usage
+  - Check: Are there no interface{} overuse or unnecessary generics?
+- FUNC-10 (SHOULD): Comprehensive Function Documentation
+  - Check: Do all public functions have godoc with argument and return value descriptions?
+
+### Global / Base (G)
+- G-01 (SHOULD): No Hardcoded Secrets
+  - Check: Are API keys, passwords, and tokens not embedded in source code?
+- G-02 (SHOULD): Appropriate Function Signatures
+  - Check: Are argument count (4+), return types, and bool return overuse appropriate?
+- G-03 (SHOULD): Leverage Standard Library
+  - Check: Are external dependencies avoided for features implementable with standard library?
+- G-04 (SHOULD): Appropriate Log Levels
+  - Check: Are Debug/Info/Warn/Error levels appropriate and structured logging used?
+- G-05 (MUST): Declaration Order (File Level)
+  - Check: Is order const→var→type (interface→struct)→func (constructor→methods→helpers)?
+- G-06 (SHOULD): Declaration Order (Within Groups)
+  - Check: Is each group sorted A→Z alphabetically (recommended)?
+- G-07 (SHOULD): Restrict init() Complexity
+  - Check: Does init() avoid panics, external I/O, and non-trivial side effects? Is it minimal and deterministic?
+- G-08 (SHOULD): Zero Value Design
+  - Check: Are types designed so their zero value is a valid and useful state where possible?
+- G-09 (SHOULD): Defensive Copy at Boundaries
+  - Check: Are slices and maps copied when accepting from or returning to external callers?
+
+### Performance (PERF)
+- PERF-01 (SHOULD): Memory Optimization
+  - Check: Are slice capacity pre-allocated, map initial capacity specified, and sync.Pool utilized?
+- PERF-02 (SHOULD): CPU Optimization
+  - Check: Are there no O(n²) algorithms, unnecessary calculations, or duplicate processing in loops?
+- PERF-03 (SHOULD): I/O Optimization
+  - Check: Are bufio used, connection pools implemented, and buffer sizes appropriate?
+- PERF-04 (SHOULD): Appropriate Data Structure Selection
+  - Check: Are map/set utilized, appropriate indexes, and data structures optimized?
+- PERF-05 (SHOULD): GC Consideration
+  - Check: Are allocations reduced, value types utilized, and sync.Pool used?
+- PERF-06 (SHOULD): String Processing Optimization
+  - Check: Are strings.Builder used, bytes.Buffer utilized, and string concatenation minimized?
+- PERF-07 (SHOULD): Parallel Processing Optimization
+  - Check: Are worker pools implemented, GOMAXPROCS considered, and buffered channels used?
+- PERF-08 (SHOULD): Caching Strategy
+  - Check: Are caches implemented, TTL set, and LRU/LFU strategies present?
+- PERF-09 (SHOULD): Leverage pprof
+  - Check: Are regular pprof measurements and CPU/memory/goroutine profile analyses performed?
+- PERF-10 (SHOULD): Hot Path Optimization
+  - Check: Are critical paths identified, high-frequency processing optimized, and before/after measured?
+
+### Security (SEC)
+- SEC-01 (SHOULD): Input Validation
+  - Check: Are input validation, prepared statements, and sanitization implemented?
+- SEC-02 (SHOULD): Output Sanitization
+  - Check: Are HTML escaping, JSON injection prevention, and CRLF injection prevention present?
+- SEC-03 (SHOULD): Appropriate Encryption
+  - Check: Are TLS 1.2+, AES-256-GCM, and crypto/rand used?
+- SEC-04 (SHOULD): Authentication and Authorization Implementation
+  - Check: Are all endpoints authenticated, JWT signature verified, and RBAC implemented?
+- SEC-05 (SHOULD): Rate Limiting and DOS Prevention
+  - Check: Are rate limiters, timeout settings, and request size limits present?
+- SEC-06 (SHOULD): Log Security
+  - Check: Are sensitive information masking functions and password/token masking present?
+- SEC-07 (SHOULD): Secure Defaults
+  - Check: Are least privilege principle, production debug disabled, and explicit CORS settings present?
+- SEC-08 (SHOULD): OWASP Compliance
+  - Check: Are OWASP Top 10 addressed, Security Headers set, and CSP configured?
+
+### Testing (TEST)
+- TEST-01 (SHOULD): Table-Driven Tests
+  - Check: Are []struct format table-driven tests, subtests, and edge cases covered?
+- TEST-02 (SHOULD): testify Usage and Test Design
+  - Check: Are assert/require appropriately used, testable API designed, and time/rand injected?
+- TEST-03 (SHOULD): Appropriate Mock Usage
+  - Check: Are gomock/testify mock used, interfaces segregated, and dependency injection present?
+- TEST-04 (SHOULD): Separate Test Helpers
+  - Check: Are testing_test.go separated, common helper functions, and fixture management present?
+- TEST-05 (SHOULD): Benchmark Tests
+  - Check: Are Benchmark functions, benchstat comparisons, and CI integration present?
+- TEST-06 (SHOULD): Separate Integration Tests
+  - Check: Are build tags separated, // +build integration, and parallel execution configured?
+- TEST-07 (SHOULD): Test Data Management
+  - Check: Are testdata/ directory utilized, factory pattern, and Golden File Testing present?
+- TEST-08 (SHOULD): Efficient Test Parallel Execution
+  - Check: Are t.Parallel() used, -race -parallel specified, and parallel-safe implementation present?
+- TEST-09 (SHOULD): Use t.Helper() in Test Helpers
+  - Check: Do test helper functions call t.Helper() as their first statement?
 
 ### Code Modification Guidelines
 
 - 変更後は [go-validation Skill](../skills/go-validation/SKILL.md) の validate.sh 実行を優先
-- 個別コマンド（`gofumpt`/`go vet`/`go test`/`golangci-lint` 等）はデバッグ時または失敗分析時に実施
+- 個別コマンド（gofumpt/go vet/go test/golangci-lint）はデバッグ時のみ実施
 
-### Coding Standards
-
-#### Code Simplicity
-
-- 不要な一時変数作成禁止
-- 関数戻り値は直接使用（可読性損なわない範囲）
-- 例: `x := fn(); return x` → `return fn()`
-- 例: `tmp := fn(); doSomething(tmp)` → `doSomething(fn())`
-- 一時変数が必要な場合: 複数回参照、長い式の分割、エラーチェック
-
-#### Production and Test Separation
-
-- テスト専用コードは本番コードに追加禁止
-- テスト性はインターフェース設計で確保
-- テストヘルパー・モックは`*_test.go`に分離
-
-### Naming Conventions
-
-| コンポーネント | 規則            | 例                 |
-| -------------- | --------------- | ------------------ |
-| パッケージ名   | 小文字          | infrastructure     |
-| 関数(公開)     | PascalCase      | NewConfig, GetUser |
-| 関数(内部)     | camelCase       | validateInput      |
-| 定数           | PascalCase      | DefaultTimeout     |
-| Interface      | PascalCase + er | UserRepository     |
-| ファイル名     | snake_case      | event_handler.go   |
-
-### Go Standards
-
-- ファイルレベルの宣言順序（厳守）: const → var → type（interface → struct）→ func（constructor → public methods → private methods → helpers）— ファイル全体での順序維持・可読性向上
-- セクション内の宣言順（厳守）: 各セクション（const/var/type/func）は原則 A→Z のアルファベット順。最終的な整備は linter/formatter に準拠。funcのmainはfuncの先頭に配置。
-- unexported helper 配置ルール:
-  - 単一の struct だけで使う helper は、その struct の unexported method を優先
-  - receiver を今は参照しなくても、その helper がその struct 固有の責務なら method
-  - package local の free function は、複数の型やファイルで共有される純粋 helper に限定
-  - 単一 struct 専用 helper と package-wide helper を同じ粒度で混在させない
-
-例:
-
-- const: アルファベット順（関連グループは一括）
-- type: interfaces 先出し（アルファベット順）、次に structs（アルファベット順）
-- func: constructors（NewXxx）先出し → methods（アルファベット順） → helper/free functions（アルファベット順）
-
-Helper placement examples:
-
-- type-specific retry or filtering logic → unexported method on that type
-- type-specific normalization used only inside one struct → unexported method on that struct
-- action/status mapping reused by multiple types → shared helper in a support file
-
-### Lambda Function
-
-- パッケージコメント: 機能概要記載
-- 環境変数: 必須変数バリデーション実装
-- エラーハンドリング: context.Context でタイムアウト処理
-- ログ出力: 構造化ログ使用
-
-### Testing
-
-#### Default Style
-
-- デフォルトは table-driven test + `t.Run` を使用（純粋関数、バリデーション、分岐ロジック）
-- テスト名は `TestXxx_Scenario` 形式で統一（例: `TestClient_GetByID_NotFound`）
-- Arrange-Act-Assert を維持し、準備・実行・検証を明確に分離
-- アサーションは `testify/assert` と `testify/require` を用途で使い分ける（前提条件は `require`）
-
-#### Exceptions
-
-- 状態遷移・副作用・複数ステップが主責務の処理に限り、シナリオテスト形式を許可
-- 単一 struct 専用の複雑モックは `*_test.go` 内のヘルパーに閉じる
-- Integration テストは `*_integration_test.go` に分離し、`//go:build integration` を付与
-
-#### Minimum Test Rules
-
-- 公開関数/メソッドは正常系と異常系の両方を最低 1 ケース以上持つ
-- エラーは種類または sentinel 判定を検証し、文字列完全一致への依存を避ける
-- カバレッジ目標は 80%以上（`go test -cover` で確認）
 
 ## Testing and Validation
+
+運用ルール:
+
+- テストカバレッジ目標は 80%以上を推奨し、`go test -cover` の結果で確認する
+- Integration テストは `//go:build integration` を付けて通常テストと分離する
 
 **エントリポイント（推奨）**:
 
 ```bash
-# 全検証を実行
-bash .github/skills/go-validation/scripts/validate.sh
+bash skills/go-validation/scripts/validate.sh
 ```
 
 **個別実行（デバッグ時）**:
 
 ```bash
-# フォーマット確認
 gofumpt -l ./...
-
-# 静的解析
 go vet ./...
-
-# リント
 golangci-lint run ./...
-
-# テスト（カバレッジ付き）
-go test -cover ./...
+go test -race -cover ./...
 ```
 
-**詳細ガイド**: [go-validation Skill](../skills/go-validation/SKILL.md) を参照（検証手順・カバレッジ要件・トラブルシューティング）
+**詳細ガイド**: [go-validation Skill](../skills/go-validation/SKILL.md) を参照
 
 ## Security Guidelines
 
 - シークレット/資格情報をコード・ログ・テストデータに直接埋め込まない
-- 外部入力は検証し、権限境界（IAM/Role/Account）をまたぐ処理では明示的エラー処理を行う
+- 外部入力は検証し、権限境界をまたぐ処理では明示的エラー処理を行う
 - エラー出力は機密情報を含まない形式でラップし、必要最小限の情報のみ記録する

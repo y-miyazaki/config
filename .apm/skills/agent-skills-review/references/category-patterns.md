@@ -1,6 +1,6 @@
 ## Pattern Checks
 
-## P-01: Design Pattern Compliance
+**P-01 (SHOULD): Design Pattern Compliance**
 
 Check: Does SKILL.md define a deterministic execution pattern with explicit flow, boundaries, and references?
 Why: Pattern consistency improves reliability and reduces ambiguous execution across agents.
@@ -13,7 +13,7 @@ Examples:
 
 ---
 
-## P-02: Output Contract Compliance
+**P-02 (SHOULD): Output Contract Compliance**
 
 Check: Does the skill define a structured output contract across Output Specification and common-output-format.md without contradiction?
 Why: Structured output enables parsing, automation, and consistent evaluation.

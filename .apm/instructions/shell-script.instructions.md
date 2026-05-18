@@ -20,159 +20,208 @@ description: "AI Assistant Instructions for Shell Script"
 | Variable  | snake_case       | script_name, error_count |
 | Constant  | UPPER_SNAKE_CASE | DEFAULT_TIMEOUT          |
 
-### Shell Script Standards
+### Script Structure（MUST）
 
-テンプレート必須要素:
+ファイル内の構成順序:
 
-- `set -euo pipefail`
-- `SCRIPT_DIR`設定、共通ライブラリ source（プロジェクトに存在する場合）
-- 関数順序: `show_usage/parse_arguments`→ 他 a-z 順 →`main`最後
-- 依存関係検証
-- `error_exit`でエラー処理
-- エントリポイント: `if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then main "$@"; fi`
+1. shebang + ヘッダーコメント（DOC-01）
+2. `set -euo pipefail` + secure defaults（`umask 027`, `export LC_ALL=C.UTF-8`）
+3. `SCRIPT_DIR` 設定 + 共通ライブラリ source（G-01）
+4. グローバル変数定義
+5. 関数定義: `show_usage` / `parse_arguments` → 他 a-z 順 → `main` 最後
+6. エントリポイント: `if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then main "$@"; fi`
 
-## Guidelines
-
-### Documentation and Comments
-
-ファイルヘッダー:
-
-```bash
-#!/bin/bash
-#######################################
-# Description: Script purpose and functionality
-#
-# Usage: ./script_name.sh [options]
-#   options:
-#     -h, --help     Show help message
-#     -v, --verbose  Enable verbose output
-#
-# Output:
-# - Output description
-# - Side effects description
-#
-# Design Rules:
-# - Rule 1: Specific design constraint
-# - Rule 2: Architecture decision
-#######################################
-
-# Error handling: exit on error, unset variable, or failed pipeline
-set -euo pipefail
-
-# Secure defaults
-umask 027
-export LC_ALL=C.UTF-8
-
-# Get script directory for library loading
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export SCRIPT_DIR
-
-# Load shared library (project-dependent)
-# source "${SCRIPT_DIR}/../lib/common.sh"
-
-#######################################
-# Global variables and default values
-#######################################
-VERBOSE=false
-export VERBOSE
-VAR_NAME="default_value"
-```
-
-関数コメント必須形式:
+### Function Documentation（MUST）
 
 ```bash
 #######################################
 # function_name: 簡潔な説明（1行）
-#
-# Description:
-#   詳細説明（複数行可）
-#
 # Arguments:
 #   $1 - 引数1の説明
-#   $2 - 引数2の説明（optional記載）
-#
-# Global Variables:
-#   VAR_NAME - グローバル変数説明（使用時のみ）
-#
 # Returns:
-#   戻り値説明/Exit code説明
-#
-# Usage:
-#   function_name "arg1" "arg2"
-#
+#   Exit code 説明
 #######################################
 ```
 
-その他:
+## Guidelines
 
-- 複雑ロジック: インラインコメント
+### Code Standards (CODE)
+- CODE-01 (SHOULD): Proper Array Usage
+  - Check: Are paths with spaces and multiple values managed with arrays?
+- CODE-02 (SHOULD): Minimize Global Variables
+  - Check: Are local declarations used within functions?
+- CODE-03 (SHOULD): Proper Here Document Usage
+  - Check: Are here documents used for multi-line strings?
+- CODE-04 (SHOULD): Proper Process Substitution Usage
+  - Check: Is process substitution used where temporary files are unnecessary?
+- CODE-05 (SHOULD): Single Responsibility Functions with Explicit Arguments
+  - Check: Do functions have single responsibility and accept arguments explicitly?
 
-### Help Function
+### Dependencies (DEP)
+- DEP-01 (SHOULD): Leverage lib/all.sh
+  - Check: Is lib/all.sh sourced and common functions utilized?
+- DEP-02 (SHOULD): Use validate_dependencies
+  - Check: Is validate_dependencies function called?
+- DEP-03 (SHOULD): Document Required Commands
+  - Check: Are dependent commands documented in README?
+- DEP-04 (SHOULD): Command Existence Check
+  - Check: Are commands verified with command -v with clear error messages?
 
-`show_usage`関数必須内容:
+### Documentation (DOC)
+- DOC-01 (SHOULD): Standard Header Format
+  - Check: Does file header contain Description/Usage/Design Rules?
+- DOC-02 (SHOULD): show_usage Required
+  - Check: Is show_usage function implemented?
+- DOC-03 (SHOULD): Function Separators and Comments
+  - Check: Do functions have `#######` separator and purpose/arguments/return comments?
+- DOC-04 (SHOULD): Complex Logic Comments
+  - Check: Do complex algorithms have Why comments?
+- DOC-05 (SHOULD): Variable Documentation
+  - Check: Do global variables have purpose/unit/constraint comments?
+- DOC-06 (SHOULD): English Comment Consistency
+  - Check: Are all comments consistently in English?
+- DOC-07 (SHOULD): README.md Maintenance
+  - Check: Does README.md document purpose/prerequisites/setup/usage examples?
+- DOC-08 (SHOULD): Error Message Documentation
+  - Check: Are error codes and resolution methods documented?
+- DOC-09 (SHOULD): CHANGELOG History
+  - Check: Is CHANGELOG.md maintained with breaking changes documented?
 
-- Usage/Description/Options/Examples
-- `exit 0`で終了
+### Error Handling (ERR)
+- ERR-01 (SHOULD): Trap Configuration
+  - Check: Are trap handlers set for EXIT, ERR, INT, TERM?
+- ERR-02 (SHOULD): Exit Code Checking
+  - Check: Are command exit codes properly checked?
+- ERR-03 (SHOULD): Clear Error Messages
+  - Check: Do error messages include context information and line numbers?
+- ERR-04 (SHOULD): Resource Cleanup
+  - Check: Does cleanup function release temporary files, processes, and locks?
+- ERR-05 (SHOULD): Retry Strategy
+  - Check: Is there a retry strategy for transient errors?
+- ERR-06 (SHOULD): Partial Failure Tolerance
+  - Check: Is `set +e` explicitly used for acceptable errors?
+- ERR-07 (SHOULD): Error Logging
+  - Check: Are errors persistently logged to a log file?
 
-### Error Handling
+### Function Design (FUNC)
+- FUNC-01 (SHOULD): Functions Under 50 Lines Recommended
+  - Check: Are functions 50 lines or less?
+- FUNC-02 (SHOULD): Standardize parse_arguments
+  - Check: Is parse_arguments standardized with getopts and case statements?
+- FUNC-03 (SHOULD): Implement show_usage
+  - Check: Does show_usage function include Usage/Options/Examples and exit 0?
+- FUNC-04 (SHOULD): Return Value Design
+  - Check: Do functions properly set return values via return codes or echo output?
+- FUNC-05 (SHOULD): Leverage Common Library
+  - Check: Are common functions from lib/all.sh utilized?
+- FUNC-06 (SHOULD): validate_dependencies Function
+  - Check: Is required command existence check implemented in validate_dependencies function?
+- FUNC-07 (SHOULD): Implement main Function
+  - Check: Is main function implemented with minimized global scope processing?
 
-- `set -euo pipefail`必須
-- 共通ライブラリ`error_exit`利用
-- クリーンアップ: `trap`設定
-- エラーメッセージ明確化
+### Global / Base (G)
+- G-01 (SHOULD): Set SCRIPT_DIR and Source lib/all.sh
+  - Check: Is SCRIPT_DIR set and lib/all.sh sourced?
+- G-02 (SHOULD): No Hardcoded Secrets
+  - Check: Are API keys, passwords, and tokens not embedded in scripts?
+- G-03 (SHOULD): Follow Function Order
+  - Check: Is order show_usage→parse_arguments→functions a-z→main last?
+- G-04 (SHOULD): Remove Dead Code
+  - Check: Are there no commented code, unused functions, or unreachable code?
+- G-05 (SHOULD): Use error_exit for Error Handling
+  - Check: Is error_exit function used on errors?
+- G-06 (SHOULD): Script Idempotency
+  - Check: Does script run without errors on re-execution?
 
-### Performance
+### Logging (LOG)
+- LOG-01 (SHOULD): Leverage log_message/echo_section
+  - Check: Are log_message and echo_section functions utilized?
+- LOG-02 (SHOULD): Separate stdout/stderr
+  - Check: Are errors clearly separated to >&2 and info to stdout?
+- LOG-03 (SHOULD): Implement Log Levels
+  - Check: Are INFO, WARN, ERROR log levels implemented?
+- LOG-04 (SHOULD): Structured Logging
+  - Check: Is structured log format with timestamp, level, message used?
+- LOG-05 (SHOULD): Mask Sensitive Information
+  - Check: Are passwords and tokens masked before logging?
+- LOG-06 (SHOULD): Section Separators with echo_section
+  - Check: Are processing units separated with echo_section?
+- LOG-07 (SHOULD): Implement verbose
+  - Check: Is detailed log control available with -v/--verbose option?
 
-- `for f in $(ls)` を避け、glob（`for f in ./*.sh`）を使用してサブシェルと単語分割を防ぐ
-- ループ内でのサブシェル（`$(...)`）生成を最小化し、結果を変数にキャッシュする
-- ビルトイン（`[[ ]]`、`printf`、`read`）を外部コマンドより優先する
-- ファイル内容の読み込みには `$(cat file)` でなく `< file` リダイレクトを使用する
+### Performance (PERF)
+- PERF-01 (SHOULD): Minimize External Commands
+  - Check: Are external commands in loops minimized and Bash built-ins prioritized?
+- PERF-02 (SHOULD): Reduce Subshells
+  - Check: Are unnecessary `()` reduced and `{}` used instead?
+- PERF-03 (SHOULD): Optimize File I/O
+  - Check: Are files read in bulk and buffering utilized?
+- PERF-04 (SHOULD): Efficient Loops
+  - Check: Is `while IFS= read -r` used and inefficient loops avoided?
+- PERF-05 (SHOULD): Optimize String Processing
+  - Check: Is Bash parameter expansion utilized and sed/awk overuse avoided?
+- PERF-06 (SHOULD): Optimize Conditional Branching
+  - Check: Are early return and short-circuit evaluation used with shallow nesting?
+- PERF-07 (SHOULD): Leverage Parallel Execution
+  - Check: Are `&` and `xargs -P` utilized for parallelizable processing?
+- PERF-08 (SHOULD): Caching Strategy
+  - Check: Are identical processing results stored in variables and cached?
+- PERF-09 (SHOULD): Resource Limits (ulimit)
+  - Check: Are resource limits set with ulimit?
+- PERF-10 (SHOULD): Profiling
+  - Check: Are performance bottlenecks identified with set -x and time?
 
-### Anti-Patterns
+### Security (SEC)
+- SEC-01 (SHOULD): Input Validation
+  - Check: Is user input validated with regex patterns or whitelists?
+- SEC-02 (SHOULD): Command Injection Prevention
+  - Check: Are all variables quoted with `"$var"` and eval avoided?
+- SEC-03 (SHOULD): Path Traversal Prevention
+  - Check: Are paths normalized with realpath and restricted to allowed directories?
+- SEC-04 (SHOULD): Temporary File Cleanup
+  - Check: Are temporary files created with mktemp and cleaned up with trap?
+- SEC-05 (SHOULD): Permission Checks
+  - Check: Are required permissions (root, etc.) validated before execution?
+- SEC-06 (SHOULD): Sensitive Data Masking in Logs
+  - Check: Are passwords and tokens masked before logging?
+- SEC-07 (SHOULD): External Command Validation
+  - Check: Are external commands invoked via absolute paths or verified with command -v?
+- SEC-08 (SHOULD): Environment Variable Isolation
+  - Check: Are environment variables explicitly initialized with defaults?
+- SEC-09 (SHOULD): Secure Defaults (umask 027)
+  - Check: Is umask 027 set and least privilege principle applied?
 
-- **`for f in $(ls)`**: 単語分割とファイル名のグロブ展開に脆弱。glob（`for f in ./*.sh`）を使用すること
-- **非クォート変数**: `$VAR` → `"$VAR"` （スペース・改行・グロブ展開を防止）
-- **`[ ]` の使用**: 単語分割と演算子の挙動差が生じる。`[[ ]]` を使用すること
-- **`cd` 後の無チェック操作**: `cd /path || error_exit "..."` または `cd /path && rm -rf ./*` 形式でチェーンすること
-- **`ls` 出力のパース**: ls 出力をパースしない。`find` または glob を使用すること
+### Testing (TEST)
+- TEST-01 (SHOULD): Implement Unit Tests
+  - Check: Are unit tests implemented with Bats?
+- TEST-02 (SHOULD): Bats Test Functions in a-z Order
+  - Check: Are test functions placed in a-z order after setup/teardown?
+- TEST-03 (SHOULD): CI/CD Integration
+  - Check: Are tests integrated into CI/CD like GitHub Actions?
 
 ### Code Modification Guidelines
 
 - 変更後は [shell-script-validation Skill](../skills/shell-script-validation/SKILL.md) の validate.sh 実行を優先
 - 個別コマンドはデバッグ時のみ使用
 
-### Common Library Functions
-
-プロジェクトに共通ライブラリが存在する場合、以下のような関数を活用する:
-
-- `error_exit`: エラー終了
-- `log_message`: 構造化ログ
-- `echo_section`: セクション区切り
-- `validate_dependencies`: コマンド存在確認
 
 ## Testing and Validation
 
 **エントリポイント（推奨）**:
 
 ```bash
-# 全検証を実行
-bash .github/skills/shell-script-validation/scripts/validate.sh
+bash skills/shell-script-validation/scripts/validate.sh
 ```
 
 **個別実行（デバッグ時）**:
 
 ```bash
-# 構文チェック
 bash -n script.sh
-
-# 静的解析
 shellcheck script.sh
-
-# Bats テスト
 bats test/bats/
 ```
 
-**詳細ガイド**: [shell-script-validation Skill](../skills/shell-script-validation/SKILL.md) を参照（検証手順・Batsテスト標準・トラブルシューティング）
+**詳細ガイド**: [shell-script-validation Skill](../skills/shell-script-validation/SKILL.md) を参照
 
 ## Security Guidelines
 

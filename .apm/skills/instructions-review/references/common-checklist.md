@@ -1,58 +1,62 @@
 # Instructions Review Checklist
 
-## Global and Structure
+## General (G)
+- G-01 (MUST): Front Matter
+- G-02 (MUST): Language Policy
+- G-03 (MUST): Title
 
-- G-01: Front Matter
-- G-02: Language Policy
-- G-03: Title
-- STRUCT-01: Four Required Chapters Exist
-- STRUCT-02: Chapter Order Unified
-- STRUCT-03: Heading Levels Appropriate
+## Structure (STRUCT)
+- STRUCT-01 (MUST): Four Required Chapters Exist
+- STRUCT-02 (MUST): Chapter Order Unified
+- STRUCT-03 (MUST): Heading Levels Appropriate
+- STRUCT-04 (MUST): Standards Chapter Subsections
+- STRUCT-05 (MUST): Guidelines Chapter Subsections
+- STRUCT-06 (MUST): H3 Heading Format
 
-## Standards
+## Guidelines Chapter (GUIDE)
+- GUIDE-01 (SHOULD): Documentation and Comments
+- GUIDE-02 (SHOULD): Code Modification Guidelines
+- GUIDE-03 (SHOULD): Tool Usage
+- GUIDE-04 (SHOULD): Error Handling
+- GUIDE-05 (SHOULD): Performance Considerations
+- GUIDE-06 (SHOULD): Best Practices
+- GUIDE-07 (SHOULD): Common Patterns
+- GUIDE-08 (SHOULD): Anti-Patterns
+- GUIDE-09 (SHOULD): No ID-less Bullet Rules in Guidelines
 
-- STD-01: Naming Conventions
-- STD-02: Tool Standards
-- STD-03: Consistency
+## Content Quality (QUAL)
+- QUAL-01 (SHOULD): Conciseness
+- QUAL-02 (SHOULD): Practical Examples
+- QUAL-03 (SHOULD): No Redundancy
+- QUAL-04 (SHOULD): Token Efficiency
 
-## Guidelines
+## Consistency (CONS)
+- CONS-01 (SHOULD): Chapter Order
+- CONS-02 (SHOULD): Section Names
+- CONS-03 (SHOULD): Detail Level
+- CONS-04 (SHOULD): Format
 
-- GUIDE-01: Documentation and Comments
-- GUIDE-02: Code Modification Guidelines
-- GUIDE-03: Tool Usage
-- GUIDE-04: Error Handling
-- GUIDE-05: Performance Considerations
-- GUIDE-06: Best Practices
-- GUIDE-07: Common Patterns
-- GUIDE-08: Anti-Patterns
+## Completeness (COMP)
+- COMP-01 (SHOULD): All Required Sections
+- COMP-02 (SHOULD): No Missing Commands
+- COMP-03 (SHOULD): Tool Coverage
+- COMP-04 (SHOULD): Real Commands
 
-## Testing and Validation
+## Security Guidelines Chapter (SEC)
+- SEC-01 (MUST): Security Items
+- SEC-02 (MUST): Secrets Management
+- SEC-03 (MUST): Best Practices
+- SEC-04 (SHOULD): Examples
 
-- TEST-01: Validation Commands
-- TEST-02: Command Count
-- TEST-03: Code Block
-- TEST-04: Validation Items
-- TEST-05: Tool Coverage
-- TEST-06: Real Commands
+## Standards Chapter (STD)
+- STD-01 (MUST): Naming Conventions
+- STD-02 (SHOULD): Tool Standards
+- STD-03 (MUST): Consistency
 
-## Security
-
-- SEC-01: Security Items
-- SEC-02: Secrets Management
-- SEC-03: Best Practices
-- SEC-04: Examples
-
-## Quality, Consistency, and Completeness
-
-- QUAL-01: Conciseness
-- QUAL-02: Practical Examples
-- QUAL-03: No Redundancy
-- QUAL-04: Token Efficiency
-- CONS-01: Chapter Order
-- CONS-02: Section Names
-- CONS-03: Detail Level
-- CONS-04: Format
-- COMP-01: All Required Sections
-- COMP-02: No Missing Commands
-- COMP-03: Tool Coverage
-- COMP-04: Real Commands
+## Testing and Validation Chapter (TEST)
+- TEST-01 (MUST): Validation Commands
+- TEST-02 (MUST): Command Count
+- TEST-03 (MUST): Code Block
+- TEST-04 (SHOULD): Validation Items
+- TEST-05 (SHOULD): Tool Coverage
+- TEST-06 (SHOULD): Real Commands

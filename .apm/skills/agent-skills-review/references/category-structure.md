@@ -1,6 +1,6 @@
 ## Structural Checks
 
-## S-01: Structural Completeness
+**S-01 (MUST): Structural Completeness**
 
 Check: Does SKILL.md have all 6 required sections at ## heading level?
 Why: Complete structure ensures all required information exists for quality evaluation. Missing sections make skill incomplete and non-reviewable.
@@ -25,7 +25,7 @@ Examples:
 
 ---
 
-## S-02: YAML Frontmatter Fields
+**S-02 (MUST): YAML Frontmatter Fields**
 
 Check: Does SKILL.md YAML frontmatter have all required fields (name, description, license) and recommended metadata (author, version)?
 Why: Machine-readable frontmatter enables skill discovery, cataloging, and CI/CD integration. Missing fields cause parsing errors and skill registration failures. Metadata enables version tracking and ownership.
@@ -36,7 +36,7 @@ Examples:
 
 ---
 
-## BP-01: Description Quality
+**BP-01 (SHOULD): Description Quality**
 
 Check: Does the description field follow best practices for skill discovery (third person, "Use when..." trigger, no implementation instructions)?
 Why: The description is the primary signal for skill activation. Poor descriptions cause incorrect skill selection or missed activation. Claude's official best practice: "Always write in third person" and "include specific keywords that help agents identify relevant tasks."
@@ -48,7 +48,7 @@ Examples:
 
 ---
 
-## BP-02: Reference Trigger Conditions
+**BP-02 (SHOULD): Reference Trigger Conditions**
 
 Check: Does Reference Files Guide specify when to load each reference file (not just what it contains)?
 Why: Without trigger conditions, the agent may load all reference files upfront (wasting context) or miss relevant files. Explicit triggers enable on-demand loading per progressive disclosure.
@@ -59,7 +59,7 @@ Examples:
 
 ---
 
-## Q-07: Progressive Disclosure (Soft Guard)
+**Q-07 (SHOULD): Progressive Disclosure (Soft Guard)**
 
 Check: Is SKILL.md concise and compatible with token budget, using word count as a supplemental signal?
 Why: Hard gate is `waza check` token budget. Word count is a soft guard for readability and early warning, not a release blocker by itself.
@@ -69,7 +69,7 @@ Examples:
 
 ---
 
-## Q-08: Resource Separation
+**Q-08 (SHOULD): Resource Separation**
 
 Check: Does skill directory contain `references/` and the mandatory common reference files? `scripts/` is optional but required when executable logic is provided.
 Why: Reference files define reusable evaluation contracts. Scripts should hold deterministic executable logic when present, but not every skill requires scripts.
@@ -80,7 +80,7 @@ Examples:
 
 ---
 
-## S-03: Reference Files Header Level Consistency
+**S-03 (MUST): Reference Files Header Level Consistency**
 
 Check: Do references/ files follow consistent header level standards?
 Why: Consistent header levels ensure predictable structure, proper document hierarchy, and correct rendering when files are referenced from SKILL.md via @-mention.

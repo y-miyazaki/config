@@ -1,49 +1,41 @@
 # GitHub Actions Review Checklist
 
-## Global & Base
+## Best Practices (BP)
+- BP-01 (SHOULD): Reusable Workflow Design
+- BP-02 (SHOULD): DRY Principle for Duplication Reduction
+- BP-03 (SHOULD): Explicit Job Dependencies
+- BP-04 (SHOULD): Simplify Conditional Branches
+- BP-05 (SHOULD): Limit Environment Variable Scope
 
-- G-01: Clear workflow naming
-- G-02: Trigger scope is limited
-- G-03: Steps are named and ordered
-- G-04: Environment and approval flow are explicit
+## Error Handling (ERR)
+- ERR-01 (SHOULD): Careful Use of continue-on-error
+- ERR-02 (SHOULD): Failure and Always Guards for Cleanup/Notify
+- ERR-03 (SHOULD): Timeout Configuration
+- ERR-04 (SHOULD): Retry Strategy for Flaky Integrations
 
-## Error Handling
+## Global / Base (G)
+- G-01 (SHOULD): Clear Workflow Naming
+- G-02 (SHOULD): Limit Triggers (on)
+- G-03 (SHOULD): Step Clarification and Order Guarantee
+- G-04 (SHOULD): Explicit Environment and Approval Flow
 
-- ERR-01: `continue-on-error` usage is justified
-- ERR-02: Failure post-processing is prepared
-- ERR-03: Failure notifications are configured for critical jobs
-- ERR-04: `timeout-minutes` is set
+## Performance (PERF)
+- PERF-01 (SHOULD): Cache Strategy and Invalidation
+- PERF-02 (SHOULD): Matrix/Parallel Execution Balance
+- PERF-03 (SHOULD): Concurrency Control
+- PERF-04 (SHOULD): Reduce Unnecessary Workload
 
-## Tool Integration
+## Security (SEC)
+- SEC-01 (SHOULD): Explicit Top-Level Permissions
+- SEC-02 (SHOULD): Safe Secret References
+- SEC-03 (SHOULD): Careful Use of pull_request_target
+- SEC-04 (SHOULD): Log Masking for Sensitive Information
+- SEC-05 (SHOULD): Pin Third-Party Actions
+- SEC-06 (SHOULD): Sanitize Environment Variables
+- SEC-07 (SHOULD): Guardrails for Public Repositories
 
-- TOOL-01: PR diff lint integration is configured when needed
-- TOOL-02: Reviewdog reporter is configured when Reviewdog is used
-- TOOL-03: Coverage token handling uses secrets and minimal permissions
-- TOOL-04: Artifact naming excludes sensitive data
-- TOOL-05: Artifact retention policy is defined
-- TOOL-06: Cache key design includes stable hash and `restore-keys`
-
-## Security
-
-- SEC-01: Top-level permissions are explicit and minimal
-- SEC-02: Secret references use `${{ secrets.NAME }}` and are not logged
-- SEC-03: `pull_request_target` includes guardrails
-- SEC-04: Sensitive values are masked in logs
-- SEC-05: Third-party actions are pinned to SHA for critical paths
-- SEC-06: Environment variable inputs are sanitized
-- SEC-07: Public repository guardrails are implemented
-
-## Performance
-
-- PERF-01: Matrix parallelization is used for multi-environment testing
-- PERF-02: Dependency caching is configured
-- PERF-03: Redundant steps are removed
-- PERF-04: `concurrency` cancels stale runs
-
-## Best Practices
-
-- BP-01: Reusable workflows or composite actions are used where practical
-- BP-02: Duplication is reduced (DRY)
-- BP-03: Job dependencies are explicit with `needs`
-- BP-04: Conditional expressions are readable and maintainable
-- BP-05: Environment variable scope is minimal
+## Tool Integration (TOOL)
+- TOOL-01 (SHOULD): Reviewdog Integration for PR Feedback
+- TOOL-02 (SHOULD): Codecov Coverage Upload Strategy
+- TOOL-03 (SHOULD): Artifact Retention Configuration
+- TOOL-04 (SHOULD): Cache Key and Restore Strategy
