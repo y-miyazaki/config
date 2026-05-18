@@ -10,11 +10,11 @@ dependencies:
   apm:
     - git: github.com/y-miyazaki/config
       path: .apm/packages/mcp/common
-      ref: v1.1.1
+      ref: v1.1.2
     - git: github.com/y-miyazaki/config
       path: .apm/packages/mcp/performance
-      ref: v1.1.1
+      ref: v1.1.2
     - git: github.com/y-miyazaki/config
       path: .apm/packages/hooks/performance-hooks
-      ref: v1.1.1
+      ref: v1.1.2
   mcp: []
