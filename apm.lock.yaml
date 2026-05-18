@@ -1,23 +1,31 @@
 lockfile_version: '1'
-generated_at: '2026-05-17T14:09:08.475827+00:00'
+generated_at: '2026-05-18T02:35:45.958890+00:00'
 apm_version: 0.13.0
 dependencies:
-- repo_url: _local/common
-  package_type: apm_package
-  source: local
-  local_path: ./.apm/packages/mcp/common
-- repo_url: _local/performance
-  package_type: apm_package
-  source: local
-  local_path: ./.apm/packages/mcp/performance
 - repo_url: _local/performance-hooks
-  package_type: invalid
+  package_type: apm_package
   deployed_files:
   - .github/hooks/performance-hooks-lean-ctx.json
   deployed_file_hashes:
     .github/hooks/performance-hooks-lean-ctx.json: sha256:2d28799a2648693e4ffe109d84f5c7c31ce266fab1c292b1f5dd4da043b5c8c5
   source: local
   local_path: ./.apm/packages/hooks/performance-hooks
+- repo_url: y-miyazaki/config
+  host: github.com
+  resolved_commit: 7261974cb823477e35a97727a2abb503951917bd
+  resolved_ref: v1.1.0
+  virtual_path: .apm/packages/mcp/common
+  is_virtual: true
+  package_type: apm_package
+  content_hash: sha256:1a61b9ae7a4e138fc4619fea4888456d0086722ec289b20bd4715ff69b141a8a
+- repo_url: y-miyazaki/config
+  host: github.com
+  resolved_commit: 7261974cb823477e35a97727a2abb503951917bd
+  resolved_ref: v1.1.0
+  virtual_path: .apm/packages/mcp/performance
+  is_virtual: true
+  package_type: apm_package
+  content_hash: sha256:07dbcbfe54069874d275afee7c4979edda2c709eb4dc1f20748102b1a77ba848
 mcp_servers:
 - codebase-memory-mcp
 - context7

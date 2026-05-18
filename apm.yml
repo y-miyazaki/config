@@ -8,7 +8,13 @@ includes: auto
 
 dependencies:
   apm:
-    - path: ./.apm/packages/mcp/common
-    - path: ./.apm/packages/mcp/performance
-    - path: ./.apm/packages/hooks/performance-hooks
+    - git: github.com/y-miyazaki/config
+      path: .apm/packages/mcp/common
+      ref: v1.1.1
+    - git: github.com/y-miyazaki/config
+      path: .apm/packages/mcp/performance
+      ref: v1.1.1
+    - git: github.com/y-miyazaki/config
+      path: .apm/packages/hooks/performance-hooks
+      ref: v1.1.1
   mcp: []
