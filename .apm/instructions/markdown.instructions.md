@@ -7,8 +7,8 @@ description: "AI Assistant Instructions for Markdown Documentation"
 
 ## Scope
 
-- 対象は `README.md`、`CONTRIBUTING.md`、`docs/**/*.md` のドキュメント整備に限定する
-- Markdown 記法の一般論ではなく、リポジトリ内ドキュメント運用ルールを定義する
+- Scope is limited to documentation maintenance for `README.md`, `CONTRIBUTING.md`, and `docs/**/*.md`.
+- This file defines repository-specific documentation operations rather than general Markdown theory.
 
 ## Standards
 
@@ -24,54 +24,54 @@ description: "AI Assistant Instructions for Markdown Documentation"
 
 ### README.md Structure（MUST）
 
-- **DOC-01 (MUST)**: 以下の順序で構成 — 順序不統一だと初見ユーザーが必要情報を見つけられない:
+- **DOC-01 (MUST)**: Use the following order - inconsistent ordering makes it harder for first-time users to find required information:
   1. Project Title + Badge
   2. Description
-  3. Features（簡潔リスト）
+  3. Features (concise list)
   4. Installation/Setup
   5. Usage/Examples
-  6. Configuration（必要時）
-  7. License/Contributing（必要時）
+  6. Configuration (when needed)
+  7. License/Contributing (when needed)
 
 ### Documentation Rules（SHOULD）
 
-- **DOC-02 (SHOULD)**: 目次（TOC）は 3 セクション以上の場合に付与
-- **DOC-03 (SHOULD)**: 大きなドキュメントは論理的なセクションに分割
-- **DOC-04 (SHOULD)**: 画像は適切なフォーマット・サイズで配置。不要な高解像度を避ける
+- **DOC-02 (SHOULD)**: Add a TOC when the document has three or more sections.
+- **DOC-03 (SHOULD)**: Split large documents into logical sections.
+- **DOC-04 (SHOULD)**: Use appropriate image formats and sizes; avoid unnecessarily high resolution.
 
 ### Revision Process（SHOULD）
 
-1. 対象セクション特定
-2. 既存内容確認
-3. 他ファイルとの統一性確認
-4. 修正実施
-5. フォーマット確認
+1. Identify the target section.
+2. Review existing content.
+3. Check consistency with related files.
+4. Apply updates.
+5. Verify formatting.
 
 ### Code Modification Guidelines
 
-- 変更後は [markdown-validation Skill](../skills/markdown-validation/SKILL.md) の検証手順を優先
-- リンク切れ・表整形の個別確認はデバッグ時に実施
+- After changes, prioritize the validation workflow from [markdown-validation Skill](../skills/markdown-validation/SKILL.md).
+- Use individual checks for broken links and table formatting only during debugging.
 
 ## Testing and Validation
 
-**エントリポイント（推奨）**:
+**Entry point (recommended)**:
 
 ```bash
 bash skills/markdown-validation/scripts/validate.sh
 ```
 
-**個別実行（デバッグ時）**:
+**Individual execution (debugging)**:
 
 ```bash
 markdownlint docs/
 markdown-link-check README.md
 ```
 
-**詳細ガイド**: [markdown-validation Skill](../skills/markdown-validation/SKILL.md) を参照
+**Detailed guide**: See [markdown-validation Skill](../skills/markdown-validation/SKILL.md).
 
 ## Security Guidelines
 
-- ドキュメントに機密情報（トークン・鍵・内部URL・個人情報）を記載しない
-- コマンド例は破壊的操作を既定にしない（必要時は注意書きを付与）
-- 外部リンクは信頼できる一次情報を優先し、不明な短縮URLを避ける
-- コード例にダミーの認証情報を使用する場合、明示的にダミーであることを示す
+- Do not include sensitive information (tokens, keys, internal URLs, personal data) in documentation.
+- Do not make destructive operations the default in command examples; add warnings when required.
+- Prefer trustworthy primary sources for external links and avoid unclear shortened URLs.
+- If code samples include dummy credentials, explicitly label them as dummy values.

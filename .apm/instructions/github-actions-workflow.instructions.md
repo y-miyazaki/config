@@ -7,7 +7,7 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
 
 ## Scope
 
-- 対象は `.github/workflows/*.yml|yaml` の設計・修正・検証に限定する
+- Scope is limited to designing, updating, and validating `.github/workflows/*.yml|yaml` files.
 
 ## Standards
 
@@ -25,7 +25,7 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
 
 ### Key Ordering（MUST）
 
-- **G-05 (MUST)**: `inputs`, `env`, `permissions`, `with` 内のキーはアルファベット順（A-Z） — 順序不統一だと差分レビューでノイズが増え変更検出が困難になる
+- **G-05 (MUST)**: Keep keys in `inputs`, `env`, `permissions`, and `with` in alphabetical order (A-Z) - inconsistent ordering adds diff noise and makes change detection harder.
 
 ## Guidelines
 
@@ -105,18 +105,18 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
 
 ### Code Modification Guidelines
 
-- 変更後は [github-actions-validation Skill](../skills/github-actions-validation/SKILL.md) の validate.sh 実行を優先
-- 個別コマンドはデバッグ時のみ使用
+- After changes, prioritize running validate.sh from [github-actions-validation Skill](../skills/github-actions-validation/SKILL.md).
+- Use individual commands only for debugging.
 
 ## Testing and Validation
 
-**エントリポイント（推奨）**:
+**Entry point (recommended)**:
 
 ```bash
 bash skills/github-actions-validation/scripts/validate.sh
 ```
 
-**個別実行（デバッグ時）**:
+**Individual execution (debugging)**:
 
 ```bash
 # syntax and best-practice validation
@@ -129,10 +129,10 @@ ghalint run
 zizmor .github/workflows/
 ```
 
-**詳細ガイド**: [github-actions-validation Skill](../skills/github-actions-validation/SKILL.md) を参照
+**Detailed guide**: See [github-actions-validation Skill](../skills/github-actions-validation/SKILL.md).
 
 ## Security Guidelines
 
-- `permissions` は最小権限を維持し、不要な `write` 権限を付与しない
-- Secret は `${{ secrets.* }}` 経由のみで参照し、ログ出力しない
-- サードパーティ Action は commit SHA pin を優先し、例外時は理由をコメントに残す
+- Keep `permissions` at least privilege and avoid unnecessary `write` scopes.
+- Reference secrets only via `${{ secrets.* }}` and never print them to logs.
+- Prefer commit SHA pinning for third-party actions and document reasons for exceptions.

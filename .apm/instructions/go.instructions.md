@@ -7,39 +7,39 @@ description: "AI Assistant Instructions for Go Development"
 
 ## Scope
 
-- 対象は Go ソースコード（`*.go`）の実装・テスト・検証に限定する
+- Scope is limited to implementing, testing, and validating Go source code (`*.go`).
 
 ## Standards
 
 ### Naming Conventions
 
-| Component  | Rule       | Example          |
-| ---------- | ---------- | ---------------- |
-| Interface  | er suffix  | UserRepository   |
-| ファイル名 | snake_case | event_handler.go |
+| Component | Rule       | Example          |
+| --------- | ---------- | ---------------- |
+| Interface | er suffix  | UserRepository   |
+| File name | snake_case | event_handler.go |
 
 ### Core Go Conventions（MUST）
 
-- **S-01 (MUST)**: GoDoc スタイルコメントを公開 API に付与する — package / public func / method / struct を対象とする
-- **S-02 (MUST)**: package 名は小文字の単語で命名する — 可読性と import 一貫性を維持する
-- **S-03 (MUST)**: エラー無視（`_` 代入）を禁止する — 例外は理由付きで明示する
-- **S-04 (MUST)**: エラーラップは `fmt.Errorf(... %w ...)` を優先する — 呼び出し元で原因追跡できる状態を維持する
+- **S-01 (MUST)**: Add GoDoc-style comments to public APIs - package, public functions, methods, and structs are in scope.
+- **S-02 (MUST)**: Use lowercase single-word names for packages - this preserves readability and import consistency.
+- **S-03 (MUST)**: Prohibit ignored errors (`_` assignment) - allow exceptions only with explicit rationale.
+- **S-04 (MUST)**: Prefer error wrapping with `fmt.Errorf(... %w ...)` - keep causal tracing available to callers.
 
 ### File Declaration Order（MUST）
 
-- **G-05 (MUST)**: ファイル内の宣言順序を遵守する — 順序不統一だとコードナビゲーションが困難になる:
+- **G-05 (MUST)**: Enforce declaration order within each file - inconsistent order reduces code navigability:
   1. const
   2. var
   3. type（interface → struct）
   4. func（constructor → public methods → private methods → helpers）
-- **G-06 (SHOULD)**: 各セクション内は原則アルファベット順。`main` は func の先頭に配置
+- **G-06 (SHOULD)**: Keep declarations in alphabetical order inside each section where practical. Place `main` first in the function section.
 
 ### Unexported Helper Placement（MUST）
 
-| 条件                                  | 配置先                           |
+| Condition                             | Preferred placement              |
 | ------------------------------------- | -------------------------------- |
-| 単一 struct 固有の責務                | その struct の unexported method |
-| 複数の型/ファイルで共有される純粋関数 | package-level free function      |
+| Single-struct-specific responsibility | Unexported method on that struct |
+| Pure helper shared across types/files | Package-level free function      |
 
 ## Guidelines
 
@@ -283,23 +283,23 @@ description: "AI Assistant Instructions for Go Development"
 
 ### Code Modification Guidelines
 
-- 変更後は [go-validation Skill](../skills/go-validation/SKILL.md) の validate.sh 実行を優先
-- 個別コマンド（gofumpt/go vet/go test/golangci-lint）はデバッグ時のみ実施
+- After changes, prioritize running validate.sh from [go-validation Skill](../skills/go-validation/SKILL.md).
+- Use individual commands (gofumpt/go vet/go test/golangci-lint) only for debugging.
 
 ## Testing and Validation
 
-運用ルール:
+Operational rules:
 
-- テストカバレッジ目標は 80%以上を推奨し、`go test -cover` の結果で確認する
-- Integration テストは `//go:build integration` を付けて通常テストと分離する
+- Target at least 80% test coverage and verify with `go test -cover`.
+- Separate integration tests from regular tests by using `//go:build integration`.
 
-**エントリポイント（推奨）**:
+**Entry point (recommended)**:
 
 ```bash
 bash skills/go-validation/scripts/validate.sh
 ```
 
-**個別実行（デバッグ時）**:
+**Individual execution (debugging)**:
 
 ```bash
 gofumpt -l ./...
@@ -308,10 +308,10 @@ golangci-lint run ./...
 go test -race -cover ./...
 ```
 
-**詳細ガイド**: [go-validation Skill](../skills/go-validation/SKILL.md) を参照
+**Detailed guide**: See [go-validation Skill](../skills/go-validation/SKILL.md).
 
 ## Security Guidelines
 
-- シークレット/資格情報をコード・ログ・テストデータに直接埋め込まない
-- 外部入力は検証し、権限境界をまたぐ処理では明示的エラー処理を行う
-- エラー出力は機密情報を含まない形式でラップし、必要最小限の情報のみ記録する
+- Do not hardcode secrets or credentials in source code, logs, or test data.
+- Validate external inputs and use explicit error handling for privilege-boundary operations.
+- Wrap error outputs to avoid sensitive data leakage and log only the minimum required information.

@@ -7,7 +7,7 @@ description: "AI Assistant Instructions for Shell Script"
 
 ## Scope
 
-- 対象は Shell Script（`*.sh`）の実装・修正・検証に限定する
+- Scope is limited to implementing, updating, and validating Shell scripts (`*.sh`).
 
 ## Standards
 
@@ -22,24 +22,24 @@ description: "AI Assistant Instructions for Shell Script"
 
 ### Script Structure（MUST）
 
-ファイル内の構成順序:
+Required in-file order:
 
-1. shebang + ヘッダーコメント（DOC-01）
+1. shebang + header comments (DOC-01)
 2. `set -euo pipefail` + secure defaults（`umask 027`, `export LC_ALL=C.UTF-8`）
-3. `SCRIPT_DIR` 設定 + 共通ライブラリ source（G-01）
-4. グローバル変数定義
-5. 関数定義: `show_usage` / `parse_arguments` → 他 a-z 順 → `main` 最後
-6. エントリポイント: `if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then main "$@"; fi`
+3. `SCRIPT_DIR` setup + common library sourcing (G-01)
+4. global variable definitions
+5. function definitions: `show_usage` / `parse_arguments` -> other functions in a-z order -> `main` last
+6. entry point: `if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then main "$@"; fi`
 
 ### Function Documentation（MUST）
 
 ```bash
 #######################################
-# function_name: 簡潔な説明（1行）
+# function_name: concise description (one line)
 # Arguments:
-#   $1 - 引数1の説明
+#   $1 - description of argument 1
 # Returns:
-#   Exit code 説明
+#   exit code description
 #######################################
 ```
 
@@ -211,18 +211,18 @@ description: "AI Assistant Instructions for Shell Script"
 
 ### Code Modification Guidelines
 
-- 変更後は [shell-script-validation Skill](../skills/shell-script-validation/SKILL.md) の validate.sh 実行を優先
-- 個別コマンドはデバッグ時のみ使用
+- After changes, prioritize running validate.sh from [shell-script-validation Skill](../skills/shell-script-validation/SKILL.md).
+- Use individual commands only for debugging.
 
 ## Testing and Validation
 
-**エントリポイント（推奨）**:
+**Entry point (recommended)**:
 
 ```bash
 bash skills/shell-script-validation/scripts/validate.sh
 ```
 
-**個別実行（デバッグ時）**:
+**Individual execution (debugging)**:
 
 ```bash
 bash -n script.sh
@@ -230,10 +230,10 @@ shellcheck script.sh
 bats test/bats/
 ```
 
-**詳細ガイド**: [shell-script-validation Skill](../skills/shell-script-validation/SKILL.md) を参照
+**Detailed guide**: See [shell-script-validation Skill](../skills/shell-script-validation/SKILL.md).
 
 ## Security Guidelines
 
-- `set -euo pipefail` と安全なデフォルト（`umask` 等）を維持し、無効化しない
-- 秘密情報は環境変数または Secret 管理経由で扱い、標準出力・ログに出さない
-- 破壊的コマンド実行前には対象確認とガード条件を置き、誤実行を防止する
+- Keep `set -euo pipefail` and safe defaults (`umask`, etc.) enabled; do not disable them.
+- Handle sensitive information through environment variables or secret management, and never print it to stdout/logs.
+- Add target confirmation and guard conditions before destructive commands to prevent accidental execution.

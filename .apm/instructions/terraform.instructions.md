@@ -7,19 +7,19 @@ description: "AI Assistant Instructions for Terraform"
 
 ## Scope
 
-- 対象は Terraform 定義（`*.tf`、`*.tfvars`、`*.hcl`）の設計・修正・検証に限定する
+- Scope is limited to designing, updating, and validating Terraform definitions (`*.tf`, `*.tfvars`, `*.hcl`).
 
 ## Standards
 
 ### Naming Conventions
 
-- 全コンポーネント（resource, variable, output, local, module）: snake_case
-- ファイル名: snake_case（例: `main_vpc.tf`, `variables.tf`）
+- All components (resource, variable, output, local, module): snake_case
+- File names: snake_case (for example, `main_vpc.tf`, `variables.tf`)
 
 ### Versioning（MUST）
 
-- **VERS-01 (MUST)**: `required_version` をプロジェクト標準に準拠させる — バージョン不一致で state 破壊のリスクがある
-- **VERS-02 (MUST)**: provider version は範囲指定（`>= lower, < upper`） — 無制限だと breaking change で plan 時に予期しない差分が出る
+- **VERS-01 (MUST)**: Align `required_version` with project standards - version mismatch can risk state corruption.
+- **VERS-02 (MUST)**: Use provider version ranges (`>= lower, < upper`) - unconstrained versions can introduce unexpected plan diffs from breaking changes.
 
 ## Guidelines
 
@@ -224,18 +224,18 @@ description: "AI Assistant Instructions for Terraform"
 
 ### Code Modification Guidelines
 
-- 変更後は [terraform-validation Skill](../skills/terraform-validation/SKILL.md) の validate.sh 実行を優先
-- 個別コマンドはデバッグ時のみ使用
+- After changes, prioritize running validate.sh from [terraform-validation Skill](../skills/terraform-validation/SKILL.md).
+- Use individual commands only for debugging.
 
 ## Testing and Validation
 
-**エントリポイント（推奨）**:
+**Entry point (recommended)**:
 
 ```bash
 bash skills/terraform-validation/scripts/validate.sh
 ```
 
-**個別実行（デバッグ時）**:
+**Individual execution (debugging)**:
 
 ```bash
 terraform fmt -check -recursive
@@ -244,10 +244,10 @@ tflint --recursive
 trivy config .
 ```
 
-**詳細ガイド**: [terraform-validation Skill](../skills/terraform-validation/SKILL.md) を参照
+**Detailed guide**: See [terraform-validation Skill](../skills/terraform-validation/SKILL.md).
 
 ## Security Guidelines
 
-- シークレットは tfvars/コードへ直接記載せず、Secret Manager/SSM Parameter Store を使用する
-- IAM 権限は最小権限を維持し、ワイルドカード使用時は理由を明記する
-- 暗号化・監査ログ・公開範囲に関する設定はデフォルト安全側を維持する
+- Do not place secrets directly in tfvars/code; use Secret Manager or SSM Parameter Store.
+- Keep IAM permissions at least privilege and document the rationale for wildcard usage.
+- Keep defaults on the safe side for encryption, audit logging, and public exposure settings.

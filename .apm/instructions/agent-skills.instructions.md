@@ -7,14 +7,14 @@ description: "AI Assistant Instructions for Agent Skills Development"
 
 ## Scope
 
-- 対象は `skills/**/SKILL.md` および `references/*.md` の設計・修正に限定する
-- 本ファイルは SKILL 設計規約を定義する。共通 4 章テンプレートの例外として扱う
+- Scope is limited to designing and updating `skills/**/SKILL.md` and `references/*.md`.
+- This file defines SKILL authoring standards and is treated as an exception to the common four-chapter template.
 
 ## Standards
 
 ### Required Sections（MUST）
 
-- **S-01 (MUST)**: 以下の 6 セクションを H2 で定義し、この順序で配置する — セクション欠落は実行決定性を破壊する:
+- **S-01 (MUST)**: Define the following six sections as H2 headings in this exact order - missing sections break execution determinism:
   1. Input
   2. Output Specification
   3. Execution Scope
@@ -24,11 +24,11 @@ description: "AI Assistant Instructions for Agent Skills Development"
 
 ### YAML Frontmatter（MUST）
 
-- **S-02 (MUST)**: `name`, `description`, `license`, `metadata.author`, `metadata.version` を含む — 欠落するとプラグインシステムが skill を認識できない
+- **S-02 (MUST)**: Include `name`, `description`, `license`, `metadata.author`, and `metadata.version` - missing fields prevent the plugin system from recognizing the skill.
 
 ### Reference Header Levels（MUST）
 
-- **S-03 (MUST)**: ヘッダーレベルを統一する — 不統一だと AI のセクション認識が破綻する:
+- **S-03 (MUST)**: Keep header levels consistent - inconsistent levels break section recognition for AI agents:
   - `common-checklist.md` / `common-output-format.md`: H1（`#`）
   - `common-troubleshooting.md` / `common-individual-commands.md`: H2（`##`）
   - `category-*.md`: H2（`##`）
@@ -53,23 +53,23 @@ description: "AI Assistant Instructions for Agent Skills Development"
 
 ### Priority Principle（MUST）
 
-- **S-04 (MUST)**: Clarity > DRY を優先する — 重複削減で曖昧化する場合は明確性を優先する
+- **S-04 (MUST)**: Prioritize Clarity over DRY - when deduplication introduces ambiguity, keep the clearer wording.
 
 ### Output Contract Source of Truth（MUST）
 
-- **S-05 (MUST)**: `references/common-output-format.md` を出力契約の正本として扱う — `Output Specification` は要約に留め、重複定義を避ける
+- **S-05 (MUST)**: Treat `references/common-output-format.md` as the source of truth for output contracts - keep `Output Specification` as a summary and avoid duplicate definitions.
 
 ### Writing Style（MUST）
 
-- **Q-06 (MUST)**: 命令形/不定詞形式を使用する — "You should" は AI の実行確度を下げる:
+- **Q-06 (MUST)**: Use imperative/infinitive phrasing - "You should" lowers execution precision for AI agents:
   - ❌ `You should do X` / `You need to check Y`
   - ✅ `Do X` / `Check Y` / `To accomplish X, do Y`
 
 ### Forbidden Expressions（MUST）
 
-- **Q-04a (MUST)**: 以下の曖昧表現を禁止する — AI が具体的アクションに変換できない:
+- **Q-04a (MUST)**: Prohibit vague expressions that cannot be translated into concrete actions by AI:
   - EN: appropriately, as needed, if possible, preferably, etc., and so on
-  - JP: 適切に、必要に応じて、可能な限り、場合によっては、など、等
+  - JP equivalents: "appropriately", "as needed", "where possible", "depending on context", "etc."
 
 ## Guidelines
 
@@ -120,25 +120,25 @@ description: "AI Assistant Instructions for Agent Skills Development"
 
 ### Code Modification Guidelines
 
-- 変更後は [agent-skills-review Skill](../skills/agent-skills-review/SKILL.md) の validate.sh 実行を優先
-- 個別コマンドはデバッグ時のみ使用
+- After changes, prioritize running validate.sh from [agent-skills-review Skill](../skills/agent-skills-review/SKILL.md).
+- Use individual commands only for debugging.
 
 ## Testing and Validation
 
-運用ルール:
+Operational rules:
 
-- deterministic check（存在確認・定量計測・ファイル有無確認）は `scripts/` で自動化する
-- judgment-based check（意味評価・設計判定・文脈判断）は review skill で評価する
-- 総合評価は deterministic check + judgment-based check の両方で判断する
+- Automate deterministic checks (existence checks, quantitative checks, and file presence checks) in `scripts/`.
+- Evaluate judgment-based checks (semantic review, design assessment, and context-sensitive decisions) in the review skill.
+- Determine overall quality from both deterministic checks and judgment-based checks.
 
-**エントリポイント（推奨）**:
+**Entry point (recommended)**:
 
 ```bash
 bash skills/agent-skills-review/scripts/validate.sh SKILL.md
 bash skills/agent-skills-review/scripts/validate_waza.sh <skill-name>
 ```
 
-**個別実行（デバッグ時）**:
+**Individual execution (debugging)**:
 
 ```bash
 waza check <skill-name>
@@ -146,10 +146,10 @@ waza run <skill-name>/eval.yaml
 waza tokens count <skill-name>/SKILL.md
 ```
 
-**詳細ガイド**: [agent-skills-review Skill](../skills/agent-skills-review/SKILL.md) を参照
+**Detailed guide**: See [agent-skills-review Skill](../skills/agent-skills-review/SKILL.md).
 
 ## Security Guidelines
 
-- SKILL.md および references にシークレット・認証情報の実値を記載しない
-- scripts/ 内のコードは入力検証を行い、任意パス操作を防止する
-- 外部ツール実行時は引数をサニタイズし、コマンドインジェクションを防止する
+- Do not include raw secret values or credentials in SKILL.md or references.
+- Validate inputs in `scripts/` code and prevent arbitrary path operations.
+- Sanitize arguments when invoking external tools to prevent command injection.

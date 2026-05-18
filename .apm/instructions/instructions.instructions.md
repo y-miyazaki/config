@@ -7,7 +7,7 @@ description: "AI Assistant Instructions for Writing Instruction Files"
 
 ## Scope
 
-- 対象は `**/instructions/*.instructions.md` の作成・修正に限定する
+- Scope is limited to creating and updating `**/instructions/*.instructions.md` files.
 
 ## Standards
 
@@ -15,32 +15,31 @@ description: "AI Assistant Instructions for Writing Instruction Files"
 
 | Component | Rule                                     | Example                              |
 | --------- | ---------------------------------------- | ------------------------------------ |
-| File      | `<対象>.instructions.md`                 | `go.instructions.md`                 |
-| Title     | `# AI Assistant Instructions for <対象>` | `# AI Assistant Instructions for Go` |
+| File      | `<target>.instructions.md`               | `go.instructions.md`                 |
+| Title     | `# AI Assistant Instructions for <target>` | `# AI Assistant Instructions for Go` |
 
 ### Standards Content（MUST）
 
-- **STD-01 (MUST)**: Naming Conventions テーブルが存在する — テーブルなしだとコンポーネント命名が不統一になる
-- **STD-02 (SHOULD)**: ツール標準が文書化されている（該当する場合）
-- **STD-03 (MUST)**: 他の instruction ファイルと記述レベルが一致している — ファイル間で粒度が異なると横断比較が困難
+- **STD-01 (MUST)**: A Naming Conventions table exists - without it, component naming becomes inconsistent.
+- **STD-02 (SHOULD)**: Tool-specific standards are documented when applicable.
+- **STD-03 (MUST)**: The documentation level matches other instruction files - inconsistent granularity makes cross-file comparison difficult.
 
 ### Structure（MUST）
 
-- **G-01 (MUST)**: Front Matter に `applyTo` + `description` を含める — 欠落すると自動適用が機能しない
-- **G-02 (MUST)**: 本文は日本語、コード例/テーブルヘッダー/Front Matter/Rule ID は英語 — 混在ルールなしだと表記が不統一になる
-- **G-03 (MUST)**: H1 タイトルは `# AI Assistant Instructions for <対象>` 形式 — 検索性と一貫性のため
-- **STRUCT-01 (MUST)**: 5 章構成（Scope → Standards → Guidelines → Testing and Validation → Security Guidelines） — 章欠落は情報の抜け漏れを引き起こす
-- **STRUCT-02 (MUST)**: 章順序を厳守する — 順序不統一だとファイル間の比較が困難になる
-- **STRUCT-03 (MUST)**: H2 は章、H3 はサブセクション。H4 以降は最小限 — 階層が深いと AI の構造認識が劣化する
-- **STRUCT-04 (MUST)**: Standards 章は `### Naming Conventions` を先頭に置く — 全ファイルで統一された起点
-- **STRUCT-05 (MUST)**: Guidelines 章は「ドメイン固有ルール → Anti-Patterns → Code Modification Guidelines」の順 — 重要度順で配置
-- **STRUCT-06 (MUST)**: H3 見出しフォーマットは `### Name（LEVEL）`（ルール）または `### Name`（宣言/プロセス） — ID 範囲を見出しに含めない
-- **STRUCT-07 (MUST)**: `## Testing and Validation` / `## Security Guidelines` 章には運用手順・実務のみを記載し、レビュー観点（`TEST-*` / `SEC-*`）は Guidelines にのみ記載する — 重複定義は保守性と整合性を損なう
+- **G-01 (MUST)**: Include `applyTo` and `description` in Front Matter - missing fields prevent automatic application.
+- **G-02 (MUST)**: Use English consistently in body text, code examples, table headers, Front Matter, and Rule IDs - mixed language rules reduce consistency.
+- **G-03 (MUST)**: Use H1 title format `# AI Assistant Instructions for <target>` - this preserves discoverability and consistency.
+- **STRUCT-01 (MUST)**: Keep the five-chapter structure (Scope -> Standards -> Guidelines -> Testing and Validation -> Security Guidelines) - missing chapters create information gaps.
+- **STRUCT-02 (MUST)**: Keep chapter order strict - inconsistent ordering makes file-to-file comparison harder.
+- **STRUCT-03 (MUST)**: Use H2 for chapters and H3 for subsections; minimize H4 and deeper levels - deep hierarchies degrade AI structural recognition.
+- **STRUCT-04 (MUST)**: Start the Standards chapter with `### Naming Conventions` - this is the unified starting point across files.
+- **STRUCT-05 (MUST)**: Order Guidelines as domain rules -> Anti-Patterns -> Code Modification Guidelines - this keeps priority order clear.
+- **STRUCT-06 (MUST)**: Use H3 heading format `### Name (LEVEL)` for rule sections or `### Name` for declaration/process sections - do not include ID ranges in headings.
+- **STRUCT-07 (MUST)**: Keep only operational procedures in `## Testing and Validation` and `## Security Guidelines`; keep review criteria (`TEST-*`, `SEC-*`) only in Guidelines - duplicate definitions hurt maintainability and consistency.
 
 ## Guidelines
 
 ### General (G)
-
 - G-01 (MUST): Front Matter
   - Check: Front Matter contains applyTo and description fields
 - G-02 (MUST): Language Policy
@@ -49,7 +48,6 @@ description: "AI Assistant Instructions for Writing Instruction Files"
   - Check: Title clearly indicates purpose
 
 ### Structure (STRUCT)
-
 - STRUCT-01 (MUST): Four Required Chapters Exist
   - Check: Standards, Guidelines, Testing and Validation, and Security Guidelines chapters exist
 - STRUCT-02 (MUST): Chapter Order Unified
@@ -64,7 +62,6 @@ description: "AI Assistant Instructions for Writing Instruction Files"
   - Check: Do H3 headings use `### Name（LEVEL）` format for rule sections, and `### Name` for process/declaration sections?
 
 ### Guidelines Chapter (GUIDE)
-
 - GUIDE-01 (SHOULD): Documentation and Comments
   - Check: Comment and documentation conventions are documented
 - GUIDE-02 (SHOULD): Code Modification Guidelines
@@ -85,7 +82,6 @@ description: "AI Assistant Instructions for Writing Instruction Files"
   - Check: Are there no ID-less bullet rules in the Guidelines chapter?
 
 ### Content Quality (QUAL)
-
 - QUAL-01 (SHOULD): Conciseness
   - Check: Content is concise without redundant expressions
 - QUAL-02 (SHOULD): Practical Examples
@@ -96,7 +92,6 @@ description: "AI Assistant Instructions for Writing Instruction Files"
   - Check: Large code examples are avoided for high token efficiency
 
 ### Consistency (CONS)
-
 - CONS-01 (SHOULD): Chapter Order
   - Check: Chapter order is consistent across all instructions files
 - CONS-02 (SHOULD): Section Names
@@ -107,7 +102,6 @@ description: "AI Assistant Instructions for Writing Instruction Files"
   - Check: Table and list formats are consistent with other instructions files
 
 ### Completeness (COMP)
-
 - COMP-01 (SHOULD): All Required Sections
   - Check: All required sections exist
 - COMP-02 (SHOULD): No Missing Commands
@@ -118,7 +112,6 @@ description: "AI Assistant Instructions for Writing Instruction Files"
   - Check: Examples are concrete and comprehensive
 
 ### Security Guidelines Chapter (SEC)
-
 - SEC-01 (MUST): Security Items
   - Check: Security items are documented
 - SEC-02 (MUST): Secrets Management
@@ -129,7 +122,6 @@ description: "AI Assistant Instructions for Writing Instruction Files"
   - Check: YAML/code examples are included (where applicable)
 
 ### Standards Chapter (STD)
-
 - STD-01 (MUST): Naming Conventions
   - Check: Naming conventions are documented per component
 - STD-02 (SHOULD): Tool Standards
@@ -138,7 +130,6 @@ description: "AI Assistant Instructions for Writing Instruction Files"
   - Check: Documentation level matches other instructions files
 
 ### Testing and Validation Chapter (TEST)
-
 - TEST-01 (MUST): Validation Commands
   - Check: Executable validation commands are documented
 - TEST-02 (MUST): Command Count
@@ -154,31 +145,32 @@ description: "AI Assistant Instructions for Writing Instruction Files"
 
 ### Code Modification Guidelines
 
-- 変更後は [instructions-review Skill](../skills/instructions-review/SKILL.md) の validate.sh 実行を優先
-- instructions ファイルを修正した場合は、必ず instructions の品質再評価を実施する
-- 個別コマンドはデバッグ時のみ使用
+- After changes, prioritize running validate.sh from [instructions-review Skill](../skills/instructions-review/SKILL.md).
+- When instruction files are updated, always run an instruction quality re-evaluation.
+- Use individual commands only for debugging.
+
 
 ## Testing and Validation
 
-- 本章には実行手順（エントリポイント、個別実行、参照リンク）のみを記載し、レビュー観点（TEST-\*）は Guidelines に集約する
+- This chapter should contain only execution procedures (entry point, individual runs, reference links), while review criteria (TEST-*) are consolidated in Guidelines.
 
-**エントリポイント（推奨）**:
+**Entry point (recommended)**:
 
 ```bash
 bash skills/instructions-review/scripts/validate.sh
 ```
 
-**個別実行（デバッグ時）**:
+**Individual execution (debugging)**:
 
 ```bash
 markdownlint .apm/instructions/
 textlint .apm/instructions/
 ```
 
-**詳細ガイド**: [instructions-review Skill](../skills/instructions-review/SKILL.md) を参照
+**Detailed guide**: See [instructions-review Skill](../skills/instructions-review/SKILL.md).
 
 ## Security Guidelines
 
-- 本章には運用上のセキュリティ実務のみを記載し、レビュー観点（SEC-\*）は Guidelines に集約する
-- instruction ファイル内に実シークレット（トークン、鍵、認証情報）を記載しない
-- コマンド例では破壊的操作を既定にせず、必要な場合は明示的な注意書きを添える
+- This chapter should contain only operational security practices, while security review criteria (SEC-*) are consolidated in Guidelines.
+- Do not include real secrets (tokens, keys, credentials) in instruction files.
+- Do not make destructive operations the default in command examples; add explicit warnings when needed.

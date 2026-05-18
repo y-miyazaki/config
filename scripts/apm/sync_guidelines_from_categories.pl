@@ -20,29 +20,29 @@ my %map = (
 
 my %code_mod_guidelines = (
   'agent-skills-review' => [
-    '- 変更後は [agent-skills-review Skill](../skills/agent-skills-review/SKILL.md) の validate.sh 実行を優先',
-    '- 個別コマンドはデバッグ時のみ使用',
+    '- After changes, prioritize running validate.sh from [agent-skills-review Skill](../skills/agent-skills-review/SKILL.md).',
+    '- Use individual commands only for debugging.',
   ],
   'github-actions-review' => [
-    '- 変更後は [github-actions-validation Skill](../skills/github-actions-validation/SKILL.md) の validate.sh 実行を優先',
-    '- 個別コマンドはデバッグ時のみ使用',
+    '- After changes, prioritize running validate.sh from [github-actions-validation Skill](../skills/github-actions-validation/SKILL.md).',
+    '- Use individual commands only for debugging.',
   ],
   'go-review' => [
-    '- 変更後は [go-validation Skill](../skills/go-validation/SKILL.md) の validate.sh 実行を優先',
-    '- 個別コマンド（gofumpt/go vet/go test/golangci-lint）はデバッグ時のみ実施',
+    '- After changes, prioritize running validate.sh from [go-validation Skill](../skills/go-validation/SKILL.md).',
+    '- Use individual commands (gofumpt/go vet/go test/golangci-lint) only for debugging.',
   ],
   'instructions-review' => [
-    '- 変更後は [instructions-review Skill](../skills/instructions-review/SKILL.md) の validate.sh 実行を優先',
-    '- instructions ファイルを修正した場合は、必ず instructions の品質再評価を実施する',
-    '- 個別コマンドはデバッグ時のみ使用',
+    '- After changes, prioritize running validate.sh from [instructions-review Skill](../skills/instructions-review/SKILL.md).',
+    '- When instruction files are updated, always run an instruction quality re-evaluation.',
+    '- Use individual commands only for debugging.',
   ],
   'shell-script-review' => [
-    '- 変更後は [shell-script-validation Skill](../skills/shell-script-validation/SKILL.md) の validate.sh 実行を優先',
-    '- 個別コマンドはデバッグ時のみ使用',
+    '- After changes, prioritize running validate.sh from [shell-script-validation Skill](../skills/shell-script-validation/SKILL.md).',
+    '- Use individual commands only for debugging.',
   ],
   'terraform-review' => [
-    '- 変更後は [terraform-validation Skill](../skills/terraform-validation/SKILL.md) の validate.sh 実行を優先',
-    '- 個別コマンドはデバッグ時のみ使用',
+    '- After changes, prioritize running validate.sh from [terraform-validation Skill](../skills/terraform-validation/SKILL.md).',
+    '- Use individual commands only for debugging.',
   ],
 );
 
