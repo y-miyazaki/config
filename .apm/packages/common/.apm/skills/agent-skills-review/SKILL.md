@@ -11,7 +11,7 @@ metadata:
 
 ## Input
 
-- Target: `<agent-root>/skills/*/SKILL.md` (`agent-root`: `.github`, `.agents`, `.claude`, `.cursor`, `cursor`, `.kiro`, `kiro`)
+- Target: `<agent-root>/skills/*/SKILL.md`
 - Evidence: `scripts/validate_waza.sh` and `scripts/validate.sh` outputs
 
 ## Output Specification

@@ -11,7 +11,7 @@ metadata:
 
 ## Input
 
-- Target `.github/instructions/*.instructions.md` files (required)
+- Target `<agent-root>/instructions/*.instructions.md` files (required)
 - PR context (optional)
 
 ## Output Specification

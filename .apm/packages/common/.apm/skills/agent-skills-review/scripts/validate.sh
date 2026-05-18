@@ -581,6 +581,32 @@ function check_reference_triggers {
 }
 
 #######################################
+# check_path_conventions: Enforce path conventions and decoupling rules
+#######################################
+function check_path_conventions {
+    local issues=()
+
+    # Rule 3: If <agent-root> is used, path form must be explicit and portable
+    if grep -q '<agent-root>' "$SKILL_FILE"; then
+        if ! grep -qE '<agent-root>/(skills|instructions)/' "$SKILL_FILE"; then
+            issues+=("invalid <agent-root> path form")
+        fi
+    fi
+
+    if [[ ${#issues[@]} -eq 0 ]]; then
+        echo "✓ Path conventions valid"
+        check_names+=("Path Conventions")
+        check_statuses+=("PASS")
+        check_details_json+=("")
+    else
+        echo "✗ Path convention issues: ${issues[*]}"
+        check_names+=("Path Conventions")
+        check_statuses+=("FAIL")
+        check_details_json+=("${issues[*]}")
+    fi
+}
+
+#######################################
 # output_json: Generate JSON format output
 #
 # Description:
@@ -675,6 +701,7 @@ function main {
     check_resource_separation
     check_reference_mandatory_files
     check_reference_triggers
+    check_path_conventions
 
     echo ""
     echo_section "JSON Output"

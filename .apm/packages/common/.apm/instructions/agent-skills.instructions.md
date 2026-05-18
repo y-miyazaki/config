@@ -41,6 +41,15 @@ description: "AI Assistant Instructions for Agent Skills Development"
 | Reference file | kebab-case | common-checklist.md |
 | Script file    | snake_case | validate.sh         |
 
+### Agent Root Canonical List
+
+- **S-06 (MUST)**: Use `<agent-root>` placeholder for portable paths; do not hardcode `.github/skills`.
+- Canonical `agent-root` list (single source of truth): `.github`, `.agents`, `.claude`, `.cursor`, `cursor`, `.kiro`, `kiro`.
+- Keep markdown examples portable by using `<agent-root>` in paths.
+- Preferred markdown path forms:
+  - Cross-skill path: `<agent-root>/skills/<skill-name>/...`
+  - In-skill path: `scripts/...`
+
 ### Reference Files Matrix
 
 | File Name                       | Required | Purpose                                 | Load Trigger |
@@ -74,12 +83,14 @@ description: "AI Assistant Instructions for Agent Skills Development"
 ## Guidelines
 
 ### Pattern Checks (P)
+
 - P-01 (SHOULD): Design Pattern Compliance
   - Check: Does SKILL.md define a deterministic execution pattern with explicit flow, boundaries, and references?
 - P-02 (SHOULD): Output Contract Compliance
   - Check: Does the skill define a structured output contract across Output Specification and common-output-format.md without contradiction?
 
 ### Quality Checks (Q)
+
 - Q-01 (SHOULD): Output is Truly Structured
   - Check: Is the output format definition implementable and parseable (JSON schema / Markdown structure explicitly defined with example)?
 - Q-02 (SHOULD): Scope Boundaries
@@ -100,6 +111,7 @@ description: "AI Assistant Instructions for Agent Skills Development"
   - Check: If token reduction is applied, are behavior-defining instructions preserved?
 
 ### Structural Checks (S)
+
 - S-01 (MUST): Structural Completeness
   - Check: Does SKILL.md have all 6 required sections at ## heading level?
 - S-02 (MUST): YAML Frontmatter Fields
@@ -119,7 +131,6 @@ description: "AI Assistant Instructions for Agent Skills Development"
 
 - After changes, prioritize running validate.sh from [agent-skills-review Skill](../skills/agent-skills-review/SKILL.md).
 - Use individual commands only for debugging.
-
 
 ## Testing and Validation
 
