@@ -21,8 +21,9 @@ The following standards were aligned across instruction files:
 2. Keep `Check:` lines in `Guidelines` (do not split them into a separate chapter).
 3. Keep `### Code Modification Guidelines` in every instructions file.
 4. Remove numeric prefixes from Guidelines H3 headings (for example, `### 6. Best Practices` -> `### Best Practices`).
-5. Do not emit empty H3 sections in generated Guidelines.
-6. Avoid duplicate TEST/SEC review criteria outside `Guidelines` in `instructions.instructions.md`.
+5. Remove `(MUST)`, `(SHOULD)`, `(CAN)` (level markers) from Guidelines H3 headings, but keep category IDs (for example, `### Architecture (ARCH) (MUST)` -> `### Architecture (ARCH)`). Individual rule items retain `(LEVEL)` in their bullets (for example, `- **ARCH-01 (SHOULD)**: ...`).
+6. Do not emit empty H3 sections in generated Guidelines.
+7. Avoid duplicate TEST/SEC review criteria outside `Guidelines` in `instructions.instructions.md`.
 
 ## Source of Truth and Sync Direction
 
@@ -42,14 +43,15 @@ Path:
 
 Main behavior:
 
-1. Normalizes category rule titles to `**ID (LEVEL): Title**`.
-2. Regenerates checklist entries from category sections.
-3. Regenerates Guidelines with:
-   - H3 section headers (normalized, non-numeric)
-   - Rule bullets (`- ID (LEVEL): ...`)
+1. Removes numeric prefixes from category H2 headers (e.g., `## 10. Architecture (ARCH)` → `## Architecture (ARCH)`) - category IDs are preserved.
+2. Normalizes category rule titles to `**ID (LEVEL): Title**`.
+3. Regenerates checklist entries from category sections.
+4. Regenerates Guidelines with:
+   - H3 section headers without level markers but with category IDs (e.g., `### Architecture (ARCH)` not `### Architecture (ARCH) (MUST)`)
+   - Rule bullets with (LEVEL) preserved (`- **ID (LEVEL)**: ...`)
    - `Check:` child bullets
-4. Appends `### Code Modification Guidelines` using skill-specific defaults.
-5. Skips empty sections during generation.
+5. Appends `### Code Modification Guidelines` using skill-specific defaults.
+6. Skips empty sections during generation.
 
 ## How To Run
 

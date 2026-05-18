@@ -1,4 +1,4 @@
-## 7. Tagging (TAG)
+## Tagging (TAG)
 
 **TAG-01 (SHOULD): Name Tag with merge(local.tags, {Name = "..."})**
 

@@ -1,4 +1,4 @@
-## 6. Best Practices (BP)
+## Best Practices (BP)
 
 **BP-01 (SHOULD): Reusable Workflow Design**
 

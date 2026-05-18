@@ -1,4 +1,4 @@
-## 10. Architecture (ARCH)
+## Architecture (ARCH)
 
 **ARCH-01 (SHOULD): Layer Separation**
 

@@ -1,4 +1,4 @@
-## 13. State & Backend (STATE)
+## State & Backend (STATE)
 
 **STATE-01 (SHOULD): Remote Backend with Encryption (SSE) + DynamoDB Lock**
 

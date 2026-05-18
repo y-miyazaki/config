@@ -1,4 +1,4 @@
-## 6. Error Handling (ERR)
+## Error Handling (ERR)
 
 **ERR-01 (SHOULD): Appropriate Error Wrapping**
 

@@ -1,4 +1,4 @@
-## 5. tfvars (T)
+## tfvars (T)
 
 **T-01 (SHOULD): No Secrets in tfvars**
 

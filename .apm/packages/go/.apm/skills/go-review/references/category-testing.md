@@ -1,4 +1,4 @@
-## 9. Testing (TEST)
+## Testing (TEST)
 
 **TEST-01 (SHOULD): Table-Driven Tests**
 

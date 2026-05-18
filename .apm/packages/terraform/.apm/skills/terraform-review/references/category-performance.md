@@ -1,4 +1,4 @@
-## 16. Performance & Limits (PERF)
+## Performance & Limits (PERF)
 
 **PERF-01 (SHOULD): Avoid Excessive for_each/count Plan Time**
 

@@ -1,4 +1,4 @@
-## 5. Function Design (FUNC)
+## Function Design (FUNC)
 
 **FUNC-01 (SHOULD): Appropriate Function Splitting**
 

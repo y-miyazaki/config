@@ -1,4 +1,4 @@
-## 5. Tool Integration (TOOL)
+## Tool Integration (TOOL)
 
 **TOOL-01 (SHOULD): Reviewdog Integration for PR Feedback**
 

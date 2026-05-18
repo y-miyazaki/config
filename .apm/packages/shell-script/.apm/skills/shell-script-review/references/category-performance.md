@@ -1,4 +1,4 @@
-## 6. Performance (PERF)
+## Performance (PERF)
 
 **PERF-01 (SHOULD): Minimize External Commands**
 

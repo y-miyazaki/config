@@ -12,7 +12,7 @@ description: "AI Assistant Instructions for Agent Skills Development"
 
 ## Standards
 
-### Required Sections（MUST）
+### Required Sections
 
 - **S-01 (MUST)**: Define the following six sections as H2 headings in this exact order - missing sections break execution determinism:
   1. Input
@@ -22,11 +22,11 @@ description: "AI Assistant Instructions for Agent Skills Development"
   5. Workflow
   6. Best Practices
 
-### YAML Frontmatter（MUST）
+### YAML Frontmatter
 
 - **S-02 (MUST)**: Include `name`, `description`, `license`, `metadata.author`, and `metadata.version` - missing fields prevent the plugin system from recognizing the skill.
 
-### Reference Header Levels（MUST）
+### Reference Header Levels
 
 - **S-03 (MUST)**: Keep header levels consistent - inconsistent levels break section recognition for AI agents:
   - `common-checklist.md` / `common-output-format.md`: H1（`#`）
@@ -41,7 +41,7 @@ description: "AI Assistant Instructions for Agent Skills Development"
 | Reference file | kebab-case | common-checklist.md |
 | Script file    | snake_case | validate.sh         |
 
-### Reference Files Matrix（MUST）
+### Reference Files Matrix
 
 | File Name                       | Required | Purpose                                 | Load Trigger |
 | ------------------------------- | -------- | --------------------------------------- | ------------ |
@@ -51,21 +51,21 @@ description: "AI Assistant Instructions for Agent Skills Development"
 | `common-individual-commands.md` | No       | Debug-only command catalog              | On debugging |
 | `category-*.md`                 | No       | Domain-specific review criteria         | Per category |
 
-### Priority Principle（MUST）
+### Priority Principle
 
 - **S-04 (MUST)**: Prioritize Clarity over DRY - when deduplication introduces ambiguity, keep the clearer wording.
 
-### Output Contract Source of Truth（MUST）
+### Output Contract Source of Truth
 
 - **S-05 (MUST)**: Treat `references/common-output-format.md` as the source of truth for output contracts - keep `Output Specification` as a summary and avoid duplicate definitions.
 
-### Writing Style（MUST）
+### Writing Style
 
 - **Q-06 (MUST)**: Use imperative/infinitive phrasing - "You should" lowers execution precision for AI agents:
   - ❌ `You should do X` / `You need to check Y`
   - ✅ `Do X` / `Check Y` / `To accomplish X, do Y`
 
-### Forbidden Expressions（MUST）
+### Forbidden Expressions
 
 - **Q-04a (MUST)**: Prohibit vague expressions that cannot be translated into concrete actions by AI:
   - EN: appropriately, as needed, if possible, preferably, etc., and so on
@@ -73,15 +73,13 @@ description: "AI Assistant Instructions for Agent Skills Development"
 
 ## Guidelines
 
-### Pattern Checks
-
+### Pattern Checks (P)
 - P-01 (SHOULD): Design Pattern Compliance
   - Check: Does SKILL.md define a deterministic execution pattern with explicit flow, boundaries, and references?
 - P-02 (SHOULD): Output Contract Compliance
   - Check: Does the skill define a structured output contract across Output Specification and common-output-format.md without contradiction?
 
-### Quality Checks
-
+### Quality Checks (Q)
 - Q-01 (SHOULD): Output is Truly Structured
   - Check: Is the output format definition implementable and parseable (JSON schema / Markdown structure explicitly defined with example)?
 - Q-02 (SHOULD): Scope Boundaries
@@ -101,8 +99,7 @@ description: "AI Assistant Instructions for Agent Skills Development"
 - BP-04 (SHOULD): Anti-Overtrimming Guardrail
   - Check: If token reduction is applied, are behavior-defining instructions preserved?
 
-### Structural Checks
-
+### Structural Checks (S)
 - S-01 (MUST): Structural Completeness
   - Check: Does SKILL.md have all 6 required sections at ## heading level?
 - S-02 (MUST): YAML Frontmatter Fields
@@ -122,6 +119,7 @@ description: "AI Assistant Instructions for Agent Skills Development"
 
 - After changes, prioritize running validate.sh from [agent-skills-review Skill](../skills/agent-skills-review/SKILL.md).
 - Use individual commands only for debugging.
+
 
 ## Testing and Validation
 

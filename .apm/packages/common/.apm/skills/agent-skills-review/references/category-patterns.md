@@ -1,4 +1,4 @@
-## Pattern Checks
+## Pattern Checks (P)
 
 **P-01 (SHOULD): Design Pattern Compliance**
 

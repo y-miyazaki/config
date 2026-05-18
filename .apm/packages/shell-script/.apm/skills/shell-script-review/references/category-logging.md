@@ -1,4 +1,4 @@
-## 10. Logging (LOG)
+## Logging (LOG)
 
 **LOG-01 (SHOULD): Leverage log_message/echo_section**
 

@@ -1,4 +1,4 @@
-## 9. Dependencies (DEP)
+## Dependencies (DEP)
 
 **DEP-01 (SHOULD): Leverage lib/all.sh**
 

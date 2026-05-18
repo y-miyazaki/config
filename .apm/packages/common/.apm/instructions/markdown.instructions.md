@@ -22,7 +22,7 @@ description: "AI Assistant Instructions for Markdown Documentation"
 
 ## Guidelines
 
-### README.md Structure（MUST）
+### README.md Structure
 
 - **DOC-01 (MUST)**: Use the following order - inconsistent ordering makes it harder for first-time users to find required information:
   1. Project Title + Badge
@@ -33,13 +33,13 @@ description: "AI Assistant Instructions for Markdown Documentation"
   6. Configuration (when needed)
   7. License/Contributing (when needed)
 
-### Documentation Rules（SHOULD）
+### Documentation Rules
 
 - **DOC-02 (SHOULD)**: Add a TOC when the document has three or more sections.
 - **DOC-03 (SHOULD)**: Split large documents into logical sections.
 - **DOC-04 (SHOULD)**: Use appropriate image formats and sizes; avoid unnecessarily high resolution.
 
-### Revision Process（SHOULD）
+### Revision Process
 
 1. Identify the target section.
 2. Review existing content.

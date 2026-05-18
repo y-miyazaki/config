@@ -1,4 +1,4 @@
-## 2. Error Handling (ERR)
+## Error Handling (ERR)
 
 **ERR-01 (SHOULD): Careful Use of continue-on-error**
 

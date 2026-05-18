@@ -1,4 +1,4 @@
-## 15. Cost Optimization (COST)
+## Cost Optimization (COST)
 
 **COST-01 (SHOULD): Avoid High-Cost Metrics/Long Retention**
 

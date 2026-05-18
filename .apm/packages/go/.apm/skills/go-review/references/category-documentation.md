@@ -1,4 +1,4 @@
-## 11. Documentation (DOC)
+## Documentation (DOC)
 
 **DOC-01 (SHOULD): Package Documentation Exists**
 

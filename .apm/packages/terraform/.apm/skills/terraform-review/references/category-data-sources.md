@@ -1,4 +1,4 @@
-## 19. Data Sources & Imports (DATA)
+## Data Sources & Imports (DATA)
 
 **Note**: Data sources are recommended when:
 

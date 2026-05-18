@@ -1,4 +1,4 @@
-## 12. Patterns (P)
+## Patterns (P)
 
 **P-01 (SHOULD): Avoid Excessive dynamic Blocks**
 

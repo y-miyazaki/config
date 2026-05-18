@@ -1,4 +1,4 @@
-## 3. Performance (PERF)
+## Performance (PERF)
 
 **PERF-01 (SHOULD): Cache Strategy and Invalidation**
 

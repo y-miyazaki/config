@@ -1,4 +1,4 @@
-## 3. variables.tf (V)
+## variables.tf (V)
 
 **V-01 (SHOULD): Concrete Types (Avoid Excessive map(any)/any)**
 

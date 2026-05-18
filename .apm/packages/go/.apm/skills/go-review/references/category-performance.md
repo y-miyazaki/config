@@ -1,4 +1,4 @@
-## 8. Performance (PERF)
+## Performance (PERF)
 
 **PERF-01 (SHOULD): Memory Optimization**
 

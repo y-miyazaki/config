@@ -1,4 +1,4 @@
-## 3. Concurrency (CON)
+## Concurrency (CON)
 
 **CON-01 (SHOULD): Avoid goroutine Leaks**
 

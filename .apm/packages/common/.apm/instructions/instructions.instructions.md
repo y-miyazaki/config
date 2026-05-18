@@ -18,13 +18,13 @@ description: "AI Assistant Instructions for Writing Instruction Files"
 | File      | `<target>.instructions.md`               | `go.instructions.md`                 |
 | Title     | `# AI Assistant Instructions for <target>` | `# AI Assistant Instructions for Go` |
 
-### Standards Content（MUST）
+### Standards Content
 
 - **STD-01 (MUST)**: A Naming Conventions table exists - without it, component naming becomes inconsistent.
 - **STD-02 (SHOULD)**: Tool-specific standards are documented when applicable.
 - **STD-03 (MUST)**: The documentation level matches other instruction files - inconsistent granularity makes cross-file comparison difficult.
 
-### Structure（MUST）
+### Structure
 
 - **G-01 (MUST)**: Include `applyTo` and `description` in Front Matter - missing fields prevent automatic application.
 - **G-02 (MUST)**: Use English consistently in body text, code examples, table headers, Front Matter, and Rule IDs - mixed language rules reduce consistency.

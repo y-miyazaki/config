@@ -1,4 +1,4 @@
-## 1. Global / Base (G)
+## Global / Base (G)
 
 **G-01 (SHOULD): Variables/Outputs/Module Usage**
 

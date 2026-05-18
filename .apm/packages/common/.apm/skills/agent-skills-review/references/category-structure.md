@@ -1,4 +1,4 @@
-## Structural Checks
+## Structural Checks (S)
 
 **S-01 (MUST): Structural Completeness**
 

@@ -1,4 +1,4 @@
-## 2. Context Handling (CTX)
+## Context Handling (CTX)
 
 **CTX-01 (SHOULD): Accept context in public APIs**
 

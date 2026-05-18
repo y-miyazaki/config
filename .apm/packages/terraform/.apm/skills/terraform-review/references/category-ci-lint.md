@@ -1,4 +1,4 @@
-## 11. CI & Lint (CI)
+## CI & Lint (CI)
 
 **CI-01 (SHOULD): plan Diff Intentional (No Unintended Changes)**
 

@@ -1,4 +1,4 @@
-## 14. Compliance & Policy (COMP)
+## Compliance & Policy (COMP)
 
 **COMP-01 (SHOULD): Organization/Security Hub Governance Alignment**
 

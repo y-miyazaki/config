@@ -1,4 +1,4 @@
-## 18. Dependency & Ordering (DEP)
+## Dependency & Ordering (DEP)
 
 **DEP-01 (SHOULD): Minimal depends_on**
 

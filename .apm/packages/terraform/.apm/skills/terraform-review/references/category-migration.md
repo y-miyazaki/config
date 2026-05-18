@@ -1,4 +1,4 @@
-## 17. Migration & Refactor (MIG)
+## Migration & Refactor (MIG)
 
 **MIG-01 (SHOULD): Use moved Block to Avoid Resource Recreation**
 

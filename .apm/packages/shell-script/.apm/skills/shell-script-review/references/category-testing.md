@@ -1,4 +1,4 @@
-## 7. Testing (TEST)
+## Testing (TEST)
 
 **TEST-01 (SHOULD): Implement Unit Tests**
 

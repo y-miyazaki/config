@@ -1,4 +1,4 @@
-## 8. Events & Observability (E)
+## Events & Observability (E)
 
 **E-01 (SHOULD): EventBridge event_pattern Precision**
 

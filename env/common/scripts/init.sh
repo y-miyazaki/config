@@ -28,7 +28,7 @@ fi
 # Adjust ownership (only if paths exist)
 if [ -e /home/vscode/.aws ]; then sudo chown -R "$(id -u)":"$(id -g)" /home/vscode/.aws || true; fi
 if [ -e /home/vscode/.gitconfig ]; then sudo chown -R "$(id -u)":"$(id -g)" /home/vscode/.gitconfig || true; fi
-if [ -e /home/vscode/.local/share ]; then sudo chown -R "$(id -u)":"$(id -g)" /home/vscode/.local/share || true; fi
+if [ -e /home/vscode/.local ]; then sudo chown -R "$(id -u)":"$(id -g)" /home/vscode/.local || true; fi
 if [ -e /home/vscode/.ssh ]; then sudo chown -R "$(id -u)":"$(id -g)" /home/vscode/.ssh || true; fi
 chmod 600 /home/vscode/.ssh/id_* 2> /dev/null || true
 

@@ -1,4 +1,4 @@
-## 4. Code Standards (CODE)
+## Code Standards (CODE)
 
 **CODE-01 (SHOULD): Appropriate Interface Design**
 

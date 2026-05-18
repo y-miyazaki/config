@@ -1,4 +1,4 @@
-## 10. Naming & Documentation (N)
+## Naming & Documentation (N)
 
 **N-01 (SHOULD): English Comments**
 

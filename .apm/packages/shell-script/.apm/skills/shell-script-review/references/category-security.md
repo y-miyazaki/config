@@ -1,4 +1,4 @@
-## 5. Security (SEC)
+## Security (SEC)
 
 **SEC-01 (SHOULD): Input Validation**
 

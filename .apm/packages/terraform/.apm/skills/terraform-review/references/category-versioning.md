@@ -1,4 +1,4 @@
-## 9. Versioning (VERS)
+## Versioning (VERS)
 
 **VERS-01 (MUST): required_version Aligns with Project Standards**
 

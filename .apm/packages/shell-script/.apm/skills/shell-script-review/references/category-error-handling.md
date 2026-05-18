@@ -1,4 +1,4 @@
-## 4. Error Handling (ERR)
+## Error Handling (ERR)
 
 **ERR-01 (SHOULD): Trap Configuration**
 

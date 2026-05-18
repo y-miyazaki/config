@@ -10,12 +10,12 @@ use File::Glob ':glob';
 #    (## in checklist -> ### under Guidelines)
 
 my %map = (
-  'agent-skills-review'   => '.apm/instructions/agent-skills.instructions.md',
-  'github-actions-review' => '.apm/instructions/github-actions-workflow.instructions.md',
-  'go-review'             => '.apm/instructions/go.instructions.md',
-  'instructions-review'   => '.apm/instructions/instructions.instructions.md',
-  'shell-script-review'   => '.apm/instructions/shell-script.instructions.md',
-  'terraform-review'      => '.apm/instructions/terraform.instructions.md',
+  'agent-skills-review'   => '.apm/packages/common/.apm/instructions/agent-skills.instructions.md',
+  'github-actions-review' => '.apm/packages/common/.apm/instructions/github-actions-workflow.instructions.md',
+  'go-review'             => '.apm/packages/go/.apm/instructions/go.instructions.md',
+  'instructions-review'   => '.apm/packages/common/.apm/instructions/instructions.instructions.md',
+  'shell-script-review'   => '.apm/packages/shell-script/.apm/instructions/shell-script.instructions.md',
+  'terraform-review'      => '.apm/packages/terraform/.apm/instructions/terraform.instructions.md',
 );
 
 my %code_mod_guidelines = (
@@ -95,7 +95,16 @@ sub normalize_section_header {
 
 for my $skill (sort keys %map) {
   my $instr = $map{$skill};
-  my $ref_dir = ".apm/skills/$skill/references";
+  # Extract package path from instruction file path (e.g., .apm/packages/common/.apm -> .apm/packages/common)
+  # or determine ref_dir based on skill location
+  my $ref_dir;
+  if ($instr =~ m{^(.apm/packages/[^/]+)/\.apm/instructions/}) {
+    $ref_dir = "$1/.apm/skills/$skill/references";
+  } elsif ($instr =~ m{^\.apm/instructions/}) {
+    $ref_dir = ".apm/skills/$skill/references";
+  } else {
+    next;
+  }
   next unless -d $ref_dir;
   next unless -f $instr;
 

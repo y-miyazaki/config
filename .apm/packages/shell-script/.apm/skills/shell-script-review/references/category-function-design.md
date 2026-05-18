@@ -1,4 +1,4 @@
-## 3. Function Design (FUNC)
+## Function Design (FUNC)
 
 **FUNC-01 (SHOULD): Functions Under 50 Lines Recommended**
 

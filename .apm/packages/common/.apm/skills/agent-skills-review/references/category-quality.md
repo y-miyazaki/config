@@ -1,4 +1,4 @@
-## Quality Checks
+## Quality Checks (Q)
 
 **Q-01 (SHOULD): Output is Truly Structured**
 

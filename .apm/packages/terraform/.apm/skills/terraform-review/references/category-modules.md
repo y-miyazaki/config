@@ -1,4 +1,4 @@
-## 2. Modules (M)
+## Modules (M)
 
 **M-01 (SHOULD): Review All .tf Files in Module**
 

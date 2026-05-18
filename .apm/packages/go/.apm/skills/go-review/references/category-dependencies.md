@@ -1,4 +1,4 @@
-## 12. Dependencies (DEP)
+## Dependencies (DEP)
 
 **DEP-01 (SHOULD): Explicit Direct Dependencies**
 
