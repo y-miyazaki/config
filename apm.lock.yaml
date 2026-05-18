@@ -1,30 +1,30 @@
-lockfile_version: '1'
-generated_at: '2026-05-18T09:30:22.733108+00:00'
+lockfile_version: "1"
+generated_at: "2026-05-18T09:30:22.733108+00:00"
 apm_version: 0.13.0
 dependencies:
-- repo_url: y-miyazaki/config
-  host: github.com
-  resolved_commit: 71d89ff210d56ce2725599c104167815e5d0fc98
-  resolved_ref: v1.1.2
-  virtual_path: .apm/packages/mcp/common
-  is_virtual: true
-  package_type: apm_package
-  content_hash: sha256:1a61b9ae7a4e138fc4619fea4888456d0086722ec289b20bd4715ff69b141a8a
-- repo_url: y-miyazaki/config
-  host: github.com
-  resolved_commit: 71d89ff210d56ce2725599c104167815e5d0fc98
-  resolved_ref: v1.1.2
-  virtual_path: .apm/packages/mcp/performance
-  is_virtual: true
-  package_type: apm_package
-  content_hash: sha256:07dbcbfe54069874d275afee7c4979edda2c709eb4dc1f20748102b1a77ba848
+  - repo_url: y-miyazaki/config
+    host: github.com
+    resolved_commit: 71d89ff210d56ce2725599c104167815e5d0fc98
+    resolved_ref: v1.1.2
+    virtual_path: .apm/packages/mcp/common
+    is_virtual: true
+    package_type: apm_package
+    content_hash: sha256:1a61b9ae7a4e138fc4619fea4888456d0086722ec289b20bd4715ff69b141a8a
+  - repo_url: y-miyazaki/config
+    host: github.com
+    resolved_commit: 71d89ff210d56ce2725599c104167815e5d0fc98
+    resolved_ref: v1.1.2
+    virtual_path: .apm/packages/mcp/performance
+    is_virtual: true
+    package_type: apm_package
+    content_hash: sha256:07dbcbfe54069874d275afee7c4979edda2c709eb4dc1f20748102b1a77ba848
 mcp_servers:
-- codebase-memory-mcp
-- context7
-- fetch
-- github
-- lean-ctx
-- playwright
+  - codebase-memory-mcp
+  - context7
+  - fetch
+  - github
+  - lean-ctx
+  - playwright
 mcp_configs:
   codebase-memory-mcp:
     name: codebase-memory-mcp
@@ -36,63 +36,63 @@ mcp_configs:
     name: context7
     transport: stdio
     args:
-    - -y
-    - '@upstash/context7-mcp@2.2.5'
+      - -y
+      - "@upstash/context7-mcp@2.2.5"
     registry: false
     command: npx
   fetch:
     name: fetch
     transport: stdio
     args:
-    - mcp-server-fetch==2025.4.7
+      - mcp-server-fetch==2025.4.7
     registry: false
     command: uvx
   github:
     name: github
     transport: stdio
     args:
-    - mcp-proxy
-    - --transport
-    - streamablehttp
-    - https://api.githubcopilot.com/mcp/
+      - mcp-proxy
+      - --transport
+      - streamablehttp
+      - https://api.githubcopilot.com/mcp/
     registry: false
     command: uvx
   lean-ctx:
     name: lean-ctx
     transport: stdio
     args:
-    - mcp
+      - mcp
     registry: false
     command: lean-ctx
   playwright:
     name: playwright
     transport: stdio
     args:
-    - -y
-    - '@playwright/mcp@0.0.75'
+      - -y
+      - "@playwright/mcp@0.0.75"
     registry: false
     command: npx
 local_deployed_files:
-- .agents/skills/agent-skills-review
-- .agents/skills/docs-creation
-- .agents/skills/github-actions-review
-- .agents/skills/github-actions-validation
-- .agents/skills/github-pr-body
-- .agents/skills/go-review
-- .agents/skills/go-validation
-- .agents/skills/instructions-review
-- .agents/skills/markdown-validation
-- .agents/skills/shell-script-review
-- .agents/skills/shell-script-validation
-- .agents/skills/terraform-review
-- .agents/skills/terraform-validation
-- .github/instructions/agent-skills.instructions.md
-- .github/instructions/github-actions-workflow.instructions.md
-- .github/instructions/go.instructions.md
-- .github/instructions/instructions.instructions.md
-- .github/instructions/markdown.instructions.md
-- .github/instructions/shell-script.instructions.md
-- .github/instructions/terraform.instructions.md
+  - .agents/skills/agent-skills-review
+  - .agents/skills/docs-creation
+  - .agents/skills/github-actions-review
+  - .agents/skills/github-actions-validation
+  - .agents/skills/github-pr-body
+  - .agents/skills/go-review
+  - .agents/skills/go-validation
+  - .agents/skills/instructions-review
+  - .agents/skills/markdown-validation
+  - .agents/skills/shell-script-review
+  - .agents/skills/shell-script-validation
+  - .agents/skills/terraform-review
+  - .agents/skills/terraform-validation
+  - .github/instructions/agent-skills.instructions.md
+  - .github/instructions/github-actions-workflow.instructions.md
+  - .github/instructions/go.instructions.md
+  - .github/instructions/instructions.instructions.md
+  - .github/instructions/markdown.instructions.md
+  - .github/instructions/shell-script.instructions.md
+  - .github/instructions/terraform.instructions.md
 local_deployed_file_hashes:
   .github/instructions/agent-skills.instructions.md: sha256:0468fdf701c64b8f833a6acdca36bd573155b2a919fdb7258edbb07828958b5c
   .github/instructions/github-actions-workflow.instructions.md: sha256:37a3073d14d3d01ec1b65a9de7a98ababba6b2b91e72f5070ddc90a7af085e52
