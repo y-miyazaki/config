@@ -63,9 +63,9 @@ APM is used to share AI agent-related configuration files (skills, instructions,
 | Instruction             | Scope                                |
 | ----------------------- | ------------------------------------ |
 | agent-skills            | Agent skill files                    |
-| dac                     | Diagram-as-code files                |
 | github-actions-workflow | GitHub Actions workflows             |
 | go                      | `**/*.go`                            |
+| instructions            | Instruction files                    |
 | markdown                | Markdown files                       |
 | shell-script            | `**/*.sh`                            |
 | terraform               | `**/*.tf`, `**/*.tfvars`, `**/*.hcl` |
