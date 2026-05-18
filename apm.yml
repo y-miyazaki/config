@@ -1,4 +1,4 @@
-name: y-miyazaki-config
+name: config
 version: 1.0.0
 description: Shared agent skills and instructions for Go, Terraform, Shell Script, GitHub Actions, and more
 author: y-miyazaki

@@ -6,7 +6,6 @@
 .vscode
 !.vscode/cspell.json
 !.vscode/cspell-project.txt
-!.vscode/mcp-example.json
 !.vscode/settings-example.json
 tmp
 
