@@ -1,6 +1,6 @@
 name: performance-mcp
 version: 1.0.0
-description: MCP server for token optimization and context efficiency (lean-ctx)
+description: MCP server for token optimization, context efficiency, and lean-ctx hooks
 author: y-miyazaki
 license: Apache-2.0
 includes: auto

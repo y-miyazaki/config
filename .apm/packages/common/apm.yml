@@ -1,6 +1,6 @@
-name: performance-hooks
+name: config-common
 version: 1.0.0
-description: Copilot hook package for performance-oriented lean-ctx integrations
+description: Common AI assistant instructions and skills for shared workflows
 author: y-miyazaki
 license: Apache-2.0
 target: all

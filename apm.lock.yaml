@@ -1,19 +1,7 @@
 lockfile_version: '1'
-generated_at: '2026-05-18T07:19:57.223318+00:00'
+generated_at: '2026-05-18T09:30:22.733108+00:00'
 apm_version: 0.13.0
 dependencies:
-- repo_url: y-miyazaki/config
-  host: github.com
-  resolved_commit: 71d89ff210d56ce2725599c104167815e5d0fc98
-  resolved_ref: v1.1.2
-  virtual_path: .apm/packages/hooks/performance-hooks
-  is_virtual: true
-  package_type: apm_package
-  deployed_files:
-  - .github/hooks/performance-hooks-lean-ctx.json
-  deployed_file_hashes:
-    .github/hooks/performance-hooks-lean-ctx.json: sha256:2d28799a2648693e4ffe109d84f5c7c31ce266fab1c292b1f5dd4da043b5c8c5
-  content_hash: sha256:d24e1cd8b6015003933998d5a787387d3f267cda5fdd72c89d254e2e3a56bc07
 - repo_url: y-miyazaki/config
   host: github.com
   resolved_commit: 71d89ff210d56ce2725599c104167815e5d0fc98
