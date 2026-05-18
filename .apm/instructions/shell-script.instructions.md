@@ -9,15 +9,6 @@ description: "AI Assistant Instructions for Shell Script"
 
 - 対象は Shell Script（`*.sh`）の実装・修正・検証に限定する
 
-| Directory/File      | Purpose                     |
-| ------------------- | --------------------------- |
-| scripts/db/         | DB スキーマ・ドキュメント   |
-| scripts/go/         | Go ビルド・テスト・デプロイ |
-| scripts/lib/        | 共通ライブラリ              |
-| scripts/nodejs/     | Node.js テスト・検証        |
-| scripts/terraform/  | Terraform・AWS 自動化       |
-| scripts/validate.sh | 品質チェックツール          |
-
 ## Standards
 
 ### Naming Conventions
@@ -34,7 +25,7 @@ description: "AI Assistant Instructions for Shell Script"
 テンプレート必須要素:
 
 - `set -euo pipefail`
-- `SCRIPT_DIR`設定、`lib/all.sh` source
+- `SCRIPT_DIR`設定、共通ライブラリ source（プロジェクトに存在する場合）
 - 関数順序: `show_usage/parse_arguments`→ 他 a-z 順 →`main`最後
 - 依存関係検証
 - `error_exit`でエラー処理
@@ -76,10 +67,8 @@ export LC_ALL=C.UTF-8
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export SCRIPT_DIR
 
-# Load all-in-one library
-# shellcheck source=../lib/all.sh
-# shellcheck disable=SC1091
-source "${SCRIPT_DIR}/../lib/all.sh"
+# Load shared library (project-dependent)
+# source "${SCRIPT_DIR}/../lib/common.sh"
 
 #######################################
 # Global variables and default values
@@ -117,7 +106,6 @@ VAR_NAME="default_value"
 その他:
 
 - 複雑ロジック: インラインコメント
-- 全コメント英語
 
 ### Help Function
 
@@ -153,9 +141,9 @@ VAR_NAME="default_value"
 - 変更後は [shell-script-validation Skill](../skills/shell-script-validation/SKILL.md) の validate.sh 実行を優先
 - 個別コマンドはデバッグ時のみ使用
 
-### MCP Tool Usage
+### Common Library Functions
 
-共通ライブラリ関数（`lib/all.sh`）:
+プロジェクトに共通ライブラリが存在する場合、以下のような関数を活用する:
 
 - `error_exit`: エラー終了
 - `log_message`: 構造化ログ

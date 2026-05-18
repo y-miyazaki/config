@@ -16,6 +16,17 @@ description: "AI Assistant Instructions for Markdown Documentation"
 - この instructions は Markdown 記法の一般論ではなく、リポジトリ内ドキュメント運用ルールに限定する
 - 構文/リンク/フォーマットの一般チェックは [markdown-validation Skill](../skills/markdown-validation/SKILL.md) に委譲する
 
+### Naming Conventions
+
+| Component        | Rule                | Example                    |
+| ---------------- | ------------------- | -------------------------- |
+| File (docs/)     | kebab-case          | getting-started.md         |
+| File (root)      | UPPER_CASE          | README.md, CONTRIBUTING.md |
+| Heading          | Sentence case       | Getting started            |
+| Anchor/ID        | auto-generated      | #getting-started           |
+| Image file       | kebab-case          | architecture-overview.png  |
+| Directory        | kebab-case          | docs/user-guide/           |
+
 ## Guidelines
 
 ### Documentation Structure
@@ -54,12 +65,11 @@ README.md 構成:
 - 変更後は [markdown-validation Skill](../skills/markdown-validation/SKILL.md) の検証手順を優先
 - リンク切れ・表整形・コードブロック言語指定の個別確認はデバッグ時または失敗分析時に実施
 
-### MCP Tool Usage
+### Performance
 
-- `semantic_search`: プロジェクト全体ドキュメント検索
-- `grep_search`: キーワード完全一致検索
-- `read_file`: ファイル内容確認
-- `fetch_webpage`: 外部ドキュメント取得
+- 大きなドキュメントは論理的なセクションに分割し、ナビゲーションを容易にする
+- 画像は適切なフォーマット・サイズで配置し、不要な高解像度画像を避ける
+- 目次（TOC）はドキュメントが3セクション以上の場合に付与する
 
 ## Testing and Validation
 
@@ -87,3 +97,6 @@ markdown-link-check README.md
 - ドキュメントに機密情報（トークン・鍵・内部URL・個人情報）を記載しない
 - コマンド例は破壊的操作を既定にしない（必要時は注意書きを付与）
 - 外部リンクは信頼できる一次情報を優先し、不明な短縮URLを避ける
+- 外部画像のホットリンクを避け、リポジトリ内に配置するかCDNを使用する
+- HTML埋め込みは最小限にし、スクリプト実行可能なタグ（iframe, script等）を使用しない
+- コード例にダミーの認証情報を使用する場合、明示的にダミーであることを示す（例: `your-api-key-here`）

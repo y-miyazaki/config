@@ -1,5 +1,5 @@
 ---
-applyTo: "**/.github/workflows/*.yaml,**/.github/workflows/*.yml"
+applyTo: ".github/workflows/**/*.yaml,.github/workflows/**/*.yml"
 description: "AI Assistant Instructions for GitHub Actions Workflows"
 ---
 
@@ -10,6 +10,18 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
 - 対象は `.github/workflows/*.yml|yaml` の設計・修正・検証に限定する
 
 ## Standards
+
+### Naming Conventions
+
+| Component     | Rule             | Example                |
+| ------------- | ---------------- | ---------------------- |
+| Workflow file | kebab-case       | ci-build-deploy.yaml   |
+| Job ID        | kebab-case       | build-and-test         |
+| Step ID       | kebab-case       | setup-node             |
+| Environment   | lowercase        | production, staging    |
+| Secret        | UPPER_SNAKE_CASE | DEPLOY_TOKEN           |
+| Variable      | UPPER_SNAKE_CASE | APP_VERSION            |
+| Artifact name | kebab-case       | build-output-linux     |
 
 ### Workflow Standards
 

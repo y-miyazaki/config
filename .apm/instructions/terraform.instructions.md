@@ -34,7 +34,6 @@ description: "AI Assistant Instructions for Terraform"
 
 - ファイルヘッダー: 目的記載
 - 複雑リソース: コメント付与
-- 全コメント英語
 
 ### Code Modification Guidelines
 
@@ -104,13 +103,21 @@ description: "AI Assistant Instructions for Terraform"
 - 他環境識別子混在禁止（アカウント ID/VPC ID 等）
 - 環境名 prefix 誤混在禁止
 
-### MCP Tool Usage (terraform-mcp-server)
+### Performance
 
-AWS provider 優先:
+- `terraform plan` の実行時間短縮のため、state を適切な粒度で分割する
+- 大規模リソースセットでは `target` オプションで対象を限定する
+- provider プラグインキャッシュ（`plugin_cache_dir`）を活用する
+- data source の過剰な使用を避け、必要な情報は変数または remote state で受け渡す
 
-1. `SearchAwsProviderDocs`
-2. `SearchAwsccProviderDocs`（Cloud Control API）（fallback）
-3. AWS-IA モジュール: `SearchSpecificAwsIaModules`
+### Anti-Patterns
+
+- **`count` での条件分岐乱用**: リソースの有無トグル以外に `count` を使わない。コレクションには `for_each` を使用
+- **ハードコードされた ARN/ID**: 環境間で異なる値は変数化または data source で取得
+- **巨大な単一 state**: 責務境界で state を分割し、`terraform_remote_state` で参照
+- **`terraform.tfvars` への全環境混在**: 環境別ファイル（`dev.tfvars`, `prd.tfvars`）に分離
+- **`depends_on` の過剰使用**: implicit dependency で解決できる場合は使用しない
+- **output の未整理**: 使用されていない output は削除し、必要な output には description を付与
 
 ## Testing and Validation
 

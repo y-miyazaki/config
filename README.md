@@ -127,7 +127,7 @@ apm install y-miyazaki/config --target all
 After adding dependencies to your project's `apm.yml`, teammates only need:
 
 ```bash
-apm install
+apm install --frozen
 ```
 
 This resolves all dependencies from `apm.lock.yaml` and deploys skills, instructions, and MCP servers to the appropriate target directories.

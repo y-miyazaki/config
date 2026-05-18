@@ -1,5 +1,5 @@
 ---
-applyTo: "**/.github/skills/**/SKILL.md"
+applyTo: "**/skills/**/SKILL.md,**/skills/**/references/*.md"
 description: "AI Assistant Instructions for Agent Skills Development"
 ---
 
@@ -332,13 +332,13 @@ Total checks = Deterministic checks + Judgment-based checks
 - スキルの Execution Flow により scripts → manual review の順序で実行
 ```
 
-### Meta-Pattern: Skills が Philosophy を体現
+### Meta-Pattern
 
-スキル実装者は以下を提示すべし:
+スキル自体が推奨パターンを体現すべし:
 
-1. SKILL.md に "Philosophy" セクション追加: "このスキルは deterministic check を scripts で自動化し、judgment-based check に AI を特化させる philosophy を実装している"
-2. 実装で philosophy を体現: 4 deterministic checks は scripts/ で充実した実装、8 judgment-based checks は reference/ で段階的ロード
-3. 結果: スキル自体が推奨ベストプラクティスを示範的に実装（メタ的クレディビリティ向上）
+- SKILL.md に Philosophy を明記（deterministic check の自動化方針）
+- scripts/ で deterministic checks を実装し、judgment-based checks は AI に特化
+- 結果としてスキルが自身のベストプラクティスを示範的に実装する
 
 ## Governance
 
