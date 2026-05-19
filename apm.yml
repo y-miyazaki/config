@@ -11,6 +11,4 @@ dependencies:
     - github.com/y-miyazaki/config/.apm/packages/shell-script#v1.1.6
     - github.com/y-miyazaki/config/.apm/packages/terraform#v1.1.6
     - github.com/y-miyazaki/config/.apm/packages/terraform-aws#v1.1.6
-    - github.com/y-miyazaki/config/.apm/packages/mcp/common#v1.1.6
-    - github.com/y-miyazaki/config/.apm/packages/mcp/performance#v1.1.6
   mcp: []
