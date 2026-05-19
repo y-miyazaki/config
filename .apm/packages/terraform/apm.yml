@@ -7,6 +7,10 @@ target: all
 includes: auto
 
 dependencies:
-  apm:
-    - github.com/y-miyazaki/config/.apm/packages/mcp/terraform#v1.1.6
+  apm: []
   mcp:
+    - name: hashicorp-terraform-mcp-server
+      registry: false
+      transport: stdio
+      command: npx
+      args: ["-y", "terraform-mcp-server@0.13.0"]

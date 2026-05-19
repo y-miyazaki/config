@@ -7,7 +7,12 @@ target: all
 includes: auto
 
 dependencies:
-  apm:
-    - github.com/y-miyazaki/config/.apm/packages/terraform#v1.1.6
-    - github.com/y-miyazaki/config/.apm/packages/mcp/terraform-aws#v1.1.6
-  mcp: []
+  apm: []
+  mcp:
+    - name: awslabs-terraform-mcp-server
+      registry: false
+      transport: stdio
+      command: uvx
+      args: ["awslabs.terraform-mcp-server==1.0.18"]
+      env:
+        FASTMCP_LOG_LEVEL: "ERROR"
