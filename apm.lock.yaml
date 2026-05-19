@@ -1,71 +1,83 @@
-lockfile_version: "1"
-generated_at: "2026-05-19T09:00:44.442536+00:00"
+lockfile_version: '1'
+generated_at: '2026-05-19T09:23:34.943698+00:00'
 apm_version: 0.14.0
 dependencies:
-  - repo_url: _local/common
-    package_type: apm_package
-    deployed_files:
-      - .agents/skills/agent-skills-review
-      - .agents/skills/docs-creation
-      - .agents/skills/github-actions-review
-      - .agents/skills/github-actions-validation
-      - .agents/skills/github-pr-body
-      - .agents/skills/instructions-review
-      - .agents/skills/markdown-validation
-    source: local
-    local_path: ./.apm/packages/common
-  - repo_url: _local/github
-    package_type: apm_package
-    source: local
-    local_path: ./.apm/packages/mcp/github
-  - repo_url: _local/performance
-    package_type: apm_package
-    source: local
-    local_path: ./.apm/packages/mcp/performance
-  - repo_url: _local/playwright
-    package_type: apm_package
-    source: local
-    local_path: ./.apm/packages/mcp/playwright
-  - repo_url: _local/terraform-aws
-    package_type: apm_package
-    source: local
-    local_path: ./.apm/packages/terraform-aws
-  - repo_url: y-miyazaki/config
-    host: github.com
-    resolved_commit: 691aeebf0c09d7bba9ffa1e8751cb0a163430472
-    virtual_path: .apm/packages/mcp/common
-    is_virtual: true
-    package_type: apm_package
-    content_hash: sha256:1a61b9ae7a4e138fc4619fea4888456d0086722ec289b20bd4715ff69b141a8a
-  - repo_url: y-miyazaki/config
-    host: github.com
-    resolved_commit: 691aeebf0c09d7bba9ffa1e8751cb0a163430472
-    virtual_path: .apm/packages/mcp/terraform-aws
-    is_virtual: true
-    depth: 2
-    resolved_by: _local/terraform-aws
-    package_type: apm_package
-    content_hash: sha256:cd0e4f8392da805269abc450f8647472ed637fb363bb08cad290071ac686826c
-  - repo_url: y-miyazaki/config
-    host: github.com
-    resolved_commit: 691aeebf0c09d7bba9ffa1e8751cb0a163430472
-    virtual_path: .apm/packages/terraform
-    is_virtual: true
-    depth: 2
-    resolved_by: _local/terraform-aws
-    package_type: apm_package
-    deployed_files:
-      - .agents/skills/terraform-review
-      - .agents/skills/terraform-validation
-    content_hash: sha256:9ae6f57ae409668094f923c484a2ef59578640baf5c53dcbaf17fc167494cbaf
+- repo_url: y-miyazaki/config
+  host: github.com
+  resolved_commit: e0120d151ec1dc3d9ebc13c50ac2f9660cd85317
+  resolved_ref: v1.1.6
+  virtual_path: .apm/packages/common
+  is_virtual: true
+  package_type: apm_package
+  deployed_files:
+  - .agents/skills/agent-skills-review
+  - .agents/skills/docs-creation
+  - .agents/skills/github-actions-review
+  - .agents/skills/github-actions-validation
+  - .agents/skills/github-pr-body
+  - .agents/skills/instructions-review
+  - .agents/skills/markdown-validation
+  content_hash: sha256:bc6da2f23654917764f732bc66335e3dd6092feaf85ed32c23f77da03b6a434c
+- repo_url: y-miyazaki/config
+  host: github.com
+  resolved_commit: e0120d151ec1dc3d9ebc13c50ac2f9660cd85317
+  resolved_ref: v1.1.6
+  virtual_path: .apm/packages/go
+  is_virtual: true
+  package_type: apm_package
+  deployed_files:
+  - .agents/skills/go-review
+  - .agents/skills/go-validation
+  content_hash: sha256:c9701214ae6a679ac547de861809155cfa1400acb9aa85f68ac5bf6131d02d9d
+- repo_url: y-miyazaki/config
+  host: github.com
+  resolved_commit: e0120d151ec1dc3d9ebc13c50ac2f9660cd85317
+  resolved_ref: v1.1.6
+  virtual_path: .apm/packages/shell-script
+  is_virtual: true
+  package_type: apm_package
+  deployed_files:
+  - .agents/skills/shell-script-review
+  - .agents/skills/shell-script-validation
+  content_hash: sha256:47a5fe465110da98af5c3e849888c619435a08a34521a849b91a08518756570e
+- repo_url: y-miyazaki/config
+  host: github.com
+  resolved_commit: e0120d151ec1dc3d9ebc13c50ac2f9660cd85317
+  resolved_ref: v1.1.6
+  virtual_path: .apm/packages/terraform
+  is_virtual: true
+  package_type: apm_package
+  deployed_files:
+  - .agents/skills/terraform-review
+  - .agents/skills/terraform-validation
+  content_hash: sha256:947635be83c58658c1b5e86c4560643386442ddc5d7440e2fb7d0c317639b4aa
+- repo_url: y-miyazaki/config
+  host: github.com
+  resolved_commit: e0120d151ec1dc3d9ebc13c50ac2f9660cd85317
+  resolved_ref: v1.1.6
+  virtual_path: .apm/packages/terraform-aws
+  is_virtual: true
+  package_type: apm_package
+  content_hash: sha256:f2ab3e9287aa43d7d5ed6632cd5f84a2f30afb1439ad172ce246bad2707791e5
 mcp_servers:
-  - codebase-memory-mcp
-  - context7
-  - fetch
-  - github
-  - lean-ctx
-  - playwright
+- awslabs-terraform-mcp-server
+- codebase-memory-mcp
+- context7
+- fetch
+- github
+- hashicorp-terraform-mcp-server
+- lean-ctx
+- playwright
 mcp_configs:
+  awslabs-terraform-mcp-server:
+    name: awslabs-terraform-mcp-server
+    transport: stdio
+    env:
+      FASTMCP_LOG_LEVEL: ERROR
+    args:
+    - awslabs.terraform-mcp-server==1.0.18
+    registry: false
+    command: uvx
   codebase-memory-mcp:
     name: codebase-memory-mcp
     transport: stdio
@@ -76,39 +88,47 @@ mcp_configs:
     name: context7
     transport: stdio
     args:
-      - -y
-      - "@upstash/context7-mcp@2.2.5"
+    - -y
+    - '@upstash/context7-mcp@2.2.5'
     registry: false
     command: npx
   fetch:
     name: fetch
     transport: stdio
     args:
-      - mcp-server-fetch==2025.4.7
+    - mcp-server-fetch==2025.4.7
     registry: false
     command: uvx
   github:
     name: github
     transport: stdio
     args:
-      - -lc
-      - TOKEN="$GH_TOKEN"; if [ -z "$TOKEN" ]; then TOKEN="$GITHUB_TOKEN"; fi; uvx mcp-compressor==0.19.8
-        -- uvx mcp-proxy==0.12.0 --transport streamablehttp -H Authorization "Bearer
-        $TOKEN" https://api.githubcopilot.com/mcp/
+    - -lc
+    - TOKEN="$GH_TOKEN"; if [ -z "$TOKEN" ]; then TOKEN="$GITHUB_TOKEN"; fi; uvx mcp-compressor==0.19.8
+      -- uvx mcp-proxy==0.12.0 --transport streamablehttp -H Authorization "Bearer
+      $TOKEN" https://api.githubcopilot.com/mcp/
     registry: false
     command: bash
+  hashicorp-terraform-mcp-server:
+    name: hashicorp-terraform-mcp-server
+    transport: stdio
+    args:
+    - -y
+    - terraform-mcp-server@0.13.0
+    registry: false
+    command: npx
   lean-ctx:
     name: lean-ctx
     transport: stdio
     args:
-      - mcp
+    - mcp
     registry: false
     command: lean-ctx
   playwright:
     name: playwright
     transport: stdio
     args:
-      - -y
-      - "@playwright/mcp@0.0.75"
+    - -y
+    - '@playwright/mcp@0.0.75'
     registry: false
     command: npx
