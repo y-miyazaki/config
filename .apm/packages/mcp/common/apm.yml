@@ -1,6 +1,6 @@
 name: common-mcp
 version: 1.0.0
-description: Common MCP servers (Context7, GitHub, Playwright, Fetch)
+description: Common MCP servers (Context7, Fetch)
 author: y-miyazaki
 license: Apache-2.0
 includes: auto
@@ -18,19 +18,3 @@ dependencies:
       transport: stdio
       command: uvx
       args: ["mcp-server-fetch==2025.4.7"]
-    - name: github
-      registry: false
-      transport: stdio
-      command: uvx
-      args:
-        [
-          "mcp-proxy",
-          "--transport",
-          "streamablehttp",
-          "https://api.githubcopilot.com/mcp/",
-        ]
-    - name: playwright
-      registry: false
-      transport: stdio
-      command: npx
-      args: ["-y", "@playwright/mcp@0.0.75"]

@@ -7,5 +7,9 @@ target: all
 includes: auto
 
 dependencies:
-  apm: []
+  apm:
+    - github.com/y-miyazaki/config/.apm/packages/mcp/common#v1.1.6
+    - github.com/y-miyazaki/config/.apm/packages/mcp/github#v1.1.6
+    - github.com/y-miyazaki/config/.apm/packages/mcp/performance#v1.1.6
+    - github.com/y-miyazaki/config/.apm/packages/mcp/playwright#v1.1.6
   mcp: []

@@ -13,14 +13,23 @@ dependencies:
       transport: stdio
       command: uvx
       args:
-        ["mcp-proxy-for-aws==1.4.2", "https://aws-mcp.us-east-1.api.aws/mcp"]
+        [
+          "mcp-compressor==0.19.8",
+          "--",
+          "uvx",
+          "mcp-proxy-for-aws==1.4.2",
+          "https://aws-mcp.us-east-1.api.aws/mcp",
+        ]
     - name: aws-knowledge-mcp-server
       registry: false
       transport: stdio
       command: uvx
       args:
         [
-          "mcp-proxy",
+          "mcp-compressor==0.19.8",
+          "--",
+          "uvx",
+          "mcp-proxy==0.12.0",
           "--transport",
           "streamablehttp",
           "https://knowledge-mcp.global.api.aws",

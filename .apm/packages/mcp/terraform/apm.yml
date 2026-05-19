@@ -3,7 +3,6 @@ version: 1.0.0
 description: MCP servers for Terraform development (HashiCorp)
 author: y-miyazaki
 license: Apache-2.0
-includes: auto
 
 dependencies:
   apm: []

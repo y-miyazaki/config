@@ -1,0 +1,13 @@
+name: config-terraform-aws
+version: 1.0.0
+description: AI assistant instructions and skills for Terraform + AWS development
+author: y-miyazaki
+license: Apache-2.0
+target: all
+includes: auto
+
+dependencies:
+  apm:
+    - github.com/y-miyazaki/config/.apm/packages/terraform#v1.1.6
+    - github.com/y-miyazaki/config/.apm/packages/mcp/terraform-aws#v1.1.6
+  mcp: []

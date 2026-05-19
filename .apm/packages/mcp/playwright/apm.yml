@@ -1,0 +1,14 @@
+name: playwright-mcp
+version: 1.0.0
+description: Playwright MCP server package
+author: y-miyazaki
+license: Apache-2.0
+
+dependencies:
+  apm: []
+  mcp:
+    - name: playwright
+      registry: false
+      transport: stdio
+      command: npx
+      args: ["-y", "@playwright/mcp@0.0.75"]

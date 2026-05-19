@@ -7,5 +7,6 @@ target: all
 includes: auto
 
 dependencies:
-  apm: []
-  mcp: []
+  apm:
+    - github.com/y-miyazaki/config/.apm/packages/mcp/terraform#v1.1.6
+  mcp:
