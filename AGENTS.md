@@ -3,7 +3,9 @@
 
 Common operational policy for AI-assisted development agents.
 
-Project-specific rules are defined in `.github/instructions/*.instructions.md`.
+This file defines vendor-neutral repository-wide policies.
+
+Tool-specific instruction files MAY provide additional rules and integrations.
 
 ---
 
@@ -62,9 +64,9 @@ Project-specific rules are defined in `.github/instructions/*.instructions.md`.
 
 MUST:
 
-- Follow `AGENTS.md` as the primary cross-agent policy
-- Follow `.github/instructions/*.instructions.md` for path-specific rules
-- Prefer more specific `applyTo` rules over broader rules
+- Follow repository-wide agent policies
+- Follow tool-specific and path-specific instructions when applicable
+- Prefer more specific instructions over broader instructions
 
 If multiple rules conflict with equal specificity:
 
@@ -158,7 +160,7 @@ MUST:
 SHOULD:
 
 - Reduce unnecessary conversational redundancy
-- Re-read source instructions after context compression or summarization
+- Re-read applicable instructions after context compression or summarization
 
 ---
 
@@ -179,10 +181,7 @@ Adjust verification depth accordingly.
 
 ### Instruction Re-read Rule
 
-MUST re-read the following before major implementation work if context compression may have occurred:
-
-- `AGENTS.md`
-- relevant `.github/instructions/*.instructions.md`
+MUST re-read applicable instructions before major implementation work if context compression may have occurred.
 
 Examples:
 
@@ -191,7 +190,7 @@ Examples:
 - resumed work
 - multi-step implementation tasks
 
-MUST verify that instructions match the edited paths before implementation.
+MUST verify that instructions match the edited scope before implementation.
 
 ---
 
@@ -550,9 +549,13 @@ MUST NOT repeatedly retry destructive operations without analyzing failure cause
 
 SHOULD use:
 
-`./tmp/` (workspace-relative path)
+```text
+./tmp/
+```
 
 when available.
+
+Otherwise use the repository-standard temporary directory.
 
 ---
 
