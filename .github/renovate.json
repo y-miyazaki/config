@@ -1,3 +1,6 @@
 {
-  "extends": ["github>y-miyazaki/config//renovate/default"]
+  "extends": [
+    "github>y-miyazaki/config//renovate/default",
+    "github>y-miyazaki/config//renovate/github-actions-tool-version"
+  ]
 }

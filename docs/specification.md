@@ -15,7 +15,12 @@ Usage guidance is documented in [README.md](../README.md). This document is the 
   - [APM-Related Components](#apm-related-components)
   - [Validation and Utility Components](#validation-and-utility-components)
 - [APM](#apm)
+  - [Package Architecture](#package-architecture)
   - [Distribution Behavior](#distribution-behavior)
+  - [MCP Servers](#mcp-servers)
+  - [Hooks](#hooks)
+  - [Skills](#skills)
+  - [Instructions](#instructions)
   - [Scope](#scope)
 - [GitHub Actions](#github-actions)
   - [Reusable Workflow Behavior](#reusable-workflow-behavior)
@@ -58,9 +63,15 @@ The repository structure is function-oriented.
 
 ### APM-Related Components
 
-- `.apm/skills/`: shared skill definitions
-- `.apm/instructions/`: shared instruction definitions
 - `.apm/packages/`: grouped package bundles for target environments
+  - `common/`: shared workflows, documentation, and tools (MCP servers + hook + instructions + skills)
+  - `aws/`: AWS development (MCP servers only)
+  - `terraform/`: Terraform development (MCP server + hook + instruction + skills)
+  - `terraform-aws/`: Terraform + AWS integration (MCP server only)
+  - `go/`: Go development (hook + instruction + skills)
+  - `shell-script/`: Shell script development (hook + instruction + skills)
+- `apm.yml`: APM package metadata and dependency entry point
+- `apm.lock.yaml`: lock file for deterministic APM resolution
 - `apm_modules/`: locally materialized module content
 
 ### Validation and Utility Components
@@ -71,21 +82,121 @@ The repository structure is function-oriented.
 
 ## APM
 
-This repository shares AI agent settings as APM-distributed packages.
+This repository shares AI agent settings as APM-distributed packages. Each package is a self-contained bundle of MCP servers, hooks, instructions, and skills for a specific domain.
+
+### Package Architecture
+
+The repository uses a multi-package structure under `.apm/packages/`. Each package has its own `apm.yml` and optional `.apm/` subdirectory containing hooks, instructions, and skills.
+
+```
+.apm/packages/
+├── common/          # Shared workflows, documentation, and tools
+│   ├── apm.yml      # 6 MCP servers
+│   └── .apm/
+│       ├── hooks/         # lean-ctx (pre/postTool)
+│       ├── instructions/  # 4 instruction files
+│       └── skills/        # 7 skills
+├── aws/             # AWS development
+│   └── apm.yml      # 5 MCP servers
+├── terraform/       # Terraform development (cloud-agnostic)
+│   ├── apm.yml      # 1 MCP server
+│   └── .apm/
+│       ├── hooks/         # terraform-validate-tflint (postToolUse)
+│       ├── instructions/  # 1 instruction file
+│       └── skills/        # 2 skills
+├── terraform-aws/   # Terraform + AWS integration
+│   └── apm.yml      # 1 MCP server
+├── go/              # Go development
+│   ├── apm.yml      # 0 MCP servers
+│   └── .apm/
+│       ├── hooks/         # golangci-lint (postToolUse)
+│       ├── instructions/  # 1 instruction file
+│       └── skills/        # 2 skills
+└── shell-script/    # Shell script development
+    ├── apm.yml      # 0 MCP servers
+    └── .apm/
+        ├── hooks/         # shellcheck (postToolUse)
+        ├── instructions/  # 1 instruction file
+        └── skills/        # 2 skills
+```
 
 ### Distribution Behavior
 
 The repository must be consumable as an APM dependency.
 
-- consumers can install the shared package with `apm install`
+- consumers can install the full package or individual sub-packages with `apm install`
 - package resolution must be deterministic with `apm.lock.yaml`
 - configuration assets are deployed to the appropriate target by APM
+- each sub-package is independently installable via its path
+
+### MCP Servers
+
+MCP servers are declared in each package's `apm.yml` under `dependencies.mcp`.
+
+| Package       | Server                          | Transport | Command   |
+| ------------- | ------------------------------- | --------- | --------- |
+| common        | context7                        | stdio     | npx       |
+| common        | fetch                           | stdio     | uvx       |
+| common        | github                          | stdio     | bash      |
+| common        | codebase-memory-mcp             | stdio     | binary    |
+| common        | lean-ctx                        | stdio     | binary    |
+| common        | playwright                      | stdio     | npx       |
+| aws           | aws-mcp                         | stdio     | uvx       |
+| aws           | aws-knowledge-mcp-server        | stdio     | uvx       |
+| aws           | aws-documentation-mcp-server    | stdio     | uvx       |
+| aws           | aws-pricing-mcp-server          | stdio     | uvx       |
+| aws           | awslabs-aws-api-mcp-server      | stdio     | uvx       |
+| terraform     | hashicorp-terraform-mcp-server  | stdio     | npx       |
+| terraform-aws | awslabs-terraform-mcp-server    | stdio     | uvx       |
+
+### Hooks
+
+Hooks are defined as JSON files under each package's `.apm/hooks/` directory.
+
+| Package      | Hook                       | Trigger      | Description                                        |
+| ------------ | -------------------------- | ------------ | -------------------------------------------------- |
+| common       | lean-ctx                   | pre/postTool | Context observation and rewrite/redirect           |
+| go           | golangci-lint              | postToolUse  | Auto-fix Go files with golangci-lint               |
+| terraform    | terraform-validate-tflint  | postToolUse  | Run terraform validate and tflint on changed files |
+| shell-script | shellcheck                 | postToolUse  | Run shellcheck on changed shell scripts            |
+
+### Skills
+
+Skills are defined under each package's `.apm/skills/` directory. Each skill contains a `SKILL.md`, references, scripts, and eval definitions.
+
+| Package      | Skill                     |
+| ------------ | ------------------------- |
+| common       | agent-skills-review       |
+| common       | docs-creation             |
+| common       | github-actions-review     |
+| common       | github-actions-validation |
+| common       | github-pr-body            |
+| common       | instructions-review       |
+| common       | markdown-validation       |
+| go           | go-review                 |
+| go           | go-validation             |
+| terraform    | terraform-review          |
+| terraform    | terraform-validation      |
+| shell-script | shell-script-review       |
+| shell-script | shell-script-validation   |
+
+### Instructions
+
+Instructions are defined under each package's `.apm/instructions/` directory.
+
+| Package      | Instruction             | Scope                                |
+| ------------ | ----------------------- | ------------------------------------ |
+| common       | agent-skills            | Agent skill files                    |
+| common       | github-actions-workflow | GitHub Actions workflows             |
+| common       | instructions            | Instruction files                    |
+| common       | markdown                | Markdown files                       |
+| go           | go                      | `**/*.go`                            |
+| terraform    | terraform               | `**/*.tf`, `**/*.tfvars`, `**/*.hcl` |
+| shell-script | shell-script            | `**/*.sh`                            |
 
 ### Scope
 
-- `.apm/skills/`: shared skill definitions
-- `.apm/instructions/`: shared instruction definitions
-- `.apm/packages/`: grouped package bundles for target environments
+- `.apm/packages/`: all package bundles and their sub-components
 - `apm.yml` and `apm.lock.yaml`: package metadata and lock state
 
 ## GitHub Actions
@@ -126,7 +237,8 @@ The repository must provide centrally managed Renovate defaults.
 
 | Parameter                    | Default   | Notes                                              |
 | ---------------------------- | --------- | -------------------------------------------------- |
-| `target` in `apm.yml`        | `copilot` | Default deployment target for APM install          |
+| `target` in root `apm.yml`   | `copilot` | Default deployment target for APM install          |
+| `target` in sub-packages     | `all`     | Sub-packages target all supported environments     |
 | `includes` in `apm.yml`      | `auto`    | Automatic include behavior for package composition |
 | Renovate minimum release age | `7 days`  | Global baseline in shared Renovate policy          |
 

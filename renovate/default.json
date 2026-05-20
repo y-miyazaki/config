@@ -8,7 +8,6 @@
     ":label(dependencies)",
     "mergeConfidence:age-confidence-badges",
     "github>aquaproj/aqua-renovate-config#2.12.0",
-    "github>y-miyazaki/config//renovate/github-actions-tool-version",
     "security:minimumReleaseAgeNpm"
   ],
   "branchConcurrentLimit": 10,

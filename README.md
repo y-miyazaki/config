@@ -16,7 +16,9 @@ This repository is a shared configuration repository. It is focused on practical
 
 - [Documentation](#documentation)
 - [APM](#apm)
-  - [Contents](#contents)
+  - [Packages](#packages)
+  - [MCP Servers](#mcp-servers)
+  - [Hooks](#hooks)
   - [Skills](#skills)
   - [Instructions](#instructions)
   - [Install](#install)
@@ -36,43 +38,79 @@ This repository is a shared configuration repository. It is focused on practical
 
 ## APM
 
-APM is used to share AI agent-related configuration files (skills, instructions, and MCP package sets).
+APM is used to share AI agent-related configuration files as packages. Each package bundles MCP servers, hooks, instructions, and skills appropriate for its domain.
 
-### Contents
+### Packages
+
+| Package        | Description                                | MCP Servers | Hooks | Instructions | Skills |
+| -------------- | ------------------------------------------ | ----------- | ----- | ------------ | ------ |
+| common         | Shared workflows, documentation, and tools | 6           | 1     | 4            | 7      |
+| aws            | AWS development                            | 5           | 0     | 0            | 0      |
+| terraform      | Terraform development (cloud-agnostic)     | 1           | 1     | 1            | 2      |
+| terraform-aws  | Terraform + AWS integration                | 1           | 0     | 0            | 0      |
+| go             | Go development                             | 0           | 1     | 1            | 2      |
+| shell-script   | Shell script development                   | 0           | 1     | 1            | 2      |
+
+### MCP Servers
+
+| Package       | Server                          | Description                    |
+| ------------- | ------------------------------- | ------------------------------ |
+| common        | context7                        | Context management             |
+| common        | fetch                           | HTTP fetch                     |
+| common        | github                          | GitHub Copilot MCP             |
+| common        | codebase-memory-mcp             | Codebase memory                |
+| common        | lean-ctx                        | Lean context management        |
+| common        | playwright                      | Browser automation             |
+| aws           | aws-mcp                         | AWS MCP proxy                  |
+| aws           | aws-knowledge-mcp-server        | AWS knowledge base             |
+| aws           | aws-documentation-mcp-server    | AWS documentation              |
+| aws           | aws-pricing-mcp-server          | AWS pricing                    |
+| aws           | awslabs-aws-api-mcp-server      | AWS API operations             |
+| terraform     | hashicorp-terraform-mcp-server  | Terraform operations           |
+| terraform-aws | awslabs-terraform-mcp-server    | Terraform AWS provider support |
+
+### Hooks
+
+| Package      | Hook                       | Trigger      | Description                                    |
+| ------------ | -------------------------- | ------------ | ---------------------------------------------- |
+| common       | lean-ctx                   | pre/postTool | Context observation and rewrite/redirect       |
+| go           | golangci-lint              | postToolUse  | Auto-fix Go files with golangci-lint           |
+| terraform    | terraform-validate-tflint  | postToolUse  | Run terraform validate and tflint on changed files |
+| shell-script | shellcheck                 | postToolUse  | Run shellcheck on changed shell scripts        |
 
 ### Skills
 
-| Skill                     | Description                       |
-| ------------------------- | --------------------------------- |
-| agent-skills-review       | Review agent skill definitions    |
-| docs-creation             | Create documentation              |
-| github-actions-review     | Review GitHub Actions workflows   |
-| github-actions-validation | Validate GitHub Actions workflows |
-| github-pr-body            | Generate PR body                  |
-| go-review                 | Review Go code                    |
-| go-validation             | Validate Go code                  |
-| instructions-review       | Review instruction files          |
-| markdown-validation       | Validate Markdown files           |
-| shell-script-review       | Review shell scripts              |
-| shell-script-validation   | Validate shell scripts            |
-| terraform-review          | Review Terraform code             |
-| terraform-validation      | Validate Terraform code           |
+| Package      | Skill                     | Description                       |
+| ------------ | ------------------------- | --------------------------------- |
+| common       | agent-skills-review       | Review agent skill definitions    |
+| common       | docs-creation             | Create documentation              |
+| common       | github-actions-review     | Review GitHub Actions workflows   |
+| common       | github-actions-validation | Validate GitHub Actions workflows |
+| common       | github-pr-body            | Generate PR body                  |
+| common       | instructions-review       | Review instruction files          |
+| common       | markdown-validation       | Validate Markdown files           |
+| go           | go-review                 | Review Go code                    |
+| go           | go-validation             | Validate Go code                  |
+| terraform    | terraform-review          | Review Terraform code             |
+| terraform    | terraform-validation      | Validate Terraform code           |
+| shell-script | shell-script-review       | Review shell scripts              |
+| shell-script | shell-script-validation   | Validate shell scripts            |
 
 ### Instructions
 
-| Instruction             | Scope                                |
-| ----------------------- | ------------------------------------ |
-| agent-skills            | Agent skill files                    |
-| github-actions-workflow | GitHub Actions workflows             |
-| go                      | `**/*.go`                            |
-| instructions            | Instruction files                    |
-| markdown                | Markdown files                       |
-| shell-script            | `**/*.sh`                            |
-| terraform               | `**/*.tf`, `**/*.tfvars`, `**/*.hcl` |
+| Package      | Instruction             | Scope                                |
+| ------------ | ----------------------- | ------------------------------------ |
+| common       | agent-skills            | Agent skill files                    |
+| common       | github-actions-workflow | GitHub Actions workflows             |
+| common       | instructions            | Instruction files                    |
+| common       | markdown                | Markdown files                       |
+| go           | go                      | `**/*.go`                            |
+| terraform    | terraform               | `**/*.tf`, `**/*.tfvars`, `**/*.hcl` |
+| shell-script | shell-script            | `**/*.sh`                            |
 
 ### Install
 
-Install the full package (skills + instructions + common/performance MCP servers):
+Install the full package (all sub-packages):
 
 ```bash
 apm install y-miyazaki/config --target copilot
@@ -82,28 +120,24 @@ apm install y-miyazaki/config --target copilot
 
 ### Individual packages
 
-Skills and instructions only:
-
 ```bash
-apm install y-miyazaki/config/.apm/skills/go-review
-apm install y-miyazaki/config/.apm/skills/terraform-review
-apm install y-miyazaki/config/.apm/instructions/go.instructions.md
-```
-
-MCP server packages:
-
-```bash
-# Common (GitHub, Context7, Playwright, Fetch, lean-ctx, codebase-memory-mcp)
+# Common (MCP servers + hooks + instructions + skills)
 apm install y-miyazaki/config/.apm/packages/common
 
-# AWS (non-Terraform)
+# AWS (MCP servers only)
 apm install y-miyazaki/config/.apm/packages/aws
 
-# Terraform (cloud-agnostic)
+# Terraform (MCP server + hook + instruction + skills)
 apm install y-miyazaki/config/.apm/packages/terraform
 
-# Terraform + AWS
+# Terraform + AWS (MCP server only)
 apm install y-miyazaki/config/.apm/packages/terraform-aws
+
+# Go (hook + instruction + skills)
+apm install y-miyazaki/config/.apm/packages/go
+
+# Shell Script (hook + instruction + skills)
+apm install y-miyazaki/config/.apm/packages/shell-script
 ```
 
 ### Other targets
@@ -127,7 +161,7 @@ After adding dependencies to your project's `apm.yml`, teammates only need:
 apm install --frozen
 ```
 
-This resolves all dependencies from `apm.lock.yaml` and deploys skills, instructions, and MCP servers to the appropriate target directories.
+This resolves all dependencies from `apm.lock.yaml` and deploys skills, instructions, hooks, and MCP servers to the appropriate target directories.
 
 ## GitHub Actions
 

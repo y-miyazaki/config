@@ -37,7 +37,7 @@ fi
 
 # apm install (optional)
 if command -v apm > /dev/null 2>&1; then
-    apm install || echo "[warn] apm install failed" >&2
+    apm install --frozen || echo "[warn] apm install failed" >&2
 fi
 
 # pre-commit (optional)
