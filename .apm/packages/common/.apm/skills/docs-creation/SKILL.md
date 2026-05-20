@@ -2,6 +2,7 @@
 name: docs-creation
 description: >-
   Create or update docs files with deterministic matching and templates.
+  Use when creating or updating documentation skills.
   Use for specification, architecture, design, troubleshooting, and maintenance docs.
 license: Apache-2.0
 metadata:
@@ -11,12 +12,14 @@ metadata:
 
 ## Input
 
-- Topic/purpose (required)
-- Document type (required, must match one of the Document Types listed below)
-- Profile: `default`, `go`, or `terraform` (required)
+- Natural language request describing the topic/purpose (required)
+- Extracted document type (required, must match one of the Document Types listed below)
+- Extracted profile: `default`, `go`, or `terraform` (required)
 - Optional target file under `docs/` (if omitted, automatically matched using deterministic logic)
 
-### Input Schema (JSON)
+### Internal Structured Input Schema (JSON)
+
+Use this schema to validate the structured fields extracted from the natural language request. Do not require the user to author JSON directly.
 
 ```json
 {
@@ -45,7 +48,30 @@ metadata:
 }
 ```
 
-If input does not satisfy this schema, stop before write actions and return the schema plus a valid minimal JSON example in the report.
+If extracted structured input does not satisfy this schema, stop before write actions and return the schema plus a valid minimal JSON example in the report.
+
+## USE FOR:
+
+- Creating or updating docs under `docs/`
+- Applying templates to specification, architecture, design, troubleshooting, and maintenance docs
+- Generating `docs/index.md` entries for changed docs
+
+## DO NOT USE FOR:
+
+- Source code comments or docstrings
+- Non-markdown assets
+- Markdown linting or link checking
+
+## Routing
+
+- **UTILITY SKILL** for documentation creation and updates
+- Natural-language prompt in, structured fields out
+- Writes only markdown files under `docs/`
+
+## Examples
+
+- "Create an architecture doc for this repository"
+- "Update troubleshooting for Terraform validation issues"
 
 ## Document Types
 
@@ -75,7 +101,7 @@ If input does not satisfy this schema, stop before write actions and return the 
 
 Create or update markdown files under `docs/`, then return a report using [references/common-output-format.md](references/common-output-format.md).
 Report must include changed file paths and duplicate-check result.
-Generate or update `docs/index.md` listing all generated files with relative links and one-line content descriptions.
+Always regenerate `docs/index.md` with relative links and one-line descriptions.
 
 File rules: see [NC-02](references/common-checklist.md) and [DC-02](references/common-checklist.md).
 
@@ -83,7 +109,7 @@ File rules: see [NC-02](references/common-checklist.md) and [DC-02](references/c
 
 - Ensure core docs exist; create missing ones, update existing ones.
 - Resolve update/create deterministically and apply templates.
-- Add valid docs links and conditionally update README docs index.
+- Add valid docs links and update README docs index when markers exist.
 - Do not rename/delete files, add YAML frontmatter, or run markdown linting.
 
 ### USE FOR:
@@ -102,19 +128,19 @@ File rules: see [NC-02](references/common-checklist.md) and [DC-02](references/c
 
 - [common-checklist.md](references/common-checklist.md) (always read)
 - [common-output-format.md](references/common-output-format.md) (always read)
-- [templates](references/category-templates.md)
-- [go-templates](references/category-templates-go.md)
-- [tf-templates](references/category-templates-terraform.md)
+- [templates](references/category-templates.md) (Read when using the default documentation template set)
+- [go-templates](references/category-templates-go.md) (Read when the profile is `go`)
+- [tf-templates](references/category-templates-terraform.md) (Read when the profile is `terraform`)
 
 ## Workflow
 
 1. List markdown files in `docs/`.
-2. If no target file provided, resolve using exact filename match; if no match, fail and ask user to provide explicit target file path.
+2. If no target file provided, resolve using exact filename match; if no match, ask user for an explicit target file path.
 3. Select template by profile: if profile is `go`, use `references/category-templates-go.md`; if `terraform`, use `references/category-templates-terraform.md`; else use `references/category-templates.md`.
 4. Run case-insensitive duplicate check; duplicates must fail the run.
 5. Create/update with naming/structure rules from [common-checklist.md](references/common-checklist.md) and valid relative links.
 6. IF README has docs-index markers, update inside markers; ELSE skip.
-7. **Always** regenerate `docs/index.md` with a list of all files in `docs/` with relative links and one-line descriptions. Format:
+7. Regenerate `docs/index.md` with a list of all files in `docs/` with relative links and one-line descriptions. Format:
 
 ```markdown
 # Documentation Index
