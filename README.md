@@ -35,6 +35,7 @@ This repository is a shared configuration repository. It is focused on practical
 
 - Usage: this `README.md`
 - Specification and structure: [`docs/specification.md`](docs/specification.md)
+- Documentation index: [`docs/index.md`](docs/index.md)
 
 ## APM
 

@@ -2,33 +2,23 @@
 
 ## Pre-Creation Checklist
 
-### NC-00: Core Docs Baseline
+### NC-00: Input Schema Validation
 
-- [ ] Resolve baseline mode (`initial-only` default, `always` when explicitly provided)
-- [ ] Check whether `docs/architecture.md` and `docs/specification.md` exist
-- [ ] For `initial-only`, enforce core docs creation only when `docs/` has zero `.md` files
-- [ ] For `always`, enforce core docs creation in every run when missing
-- **PASS** if baseline mode rules are satisfied, **FAIL** if required core docs are missing after processing
+- [ ] Input payload is valid JSON and matches the schema defined in `SKILL.md` Input section
+- [ ] Required fields exist: `topic`, `document_type`, `profile`
+- [ ] `document_type` and `profile` use allowed enum values
+- [ ] If `target_file` is provided, it matches `^docs/[a-z0-9_]+\.md$`
+- **PASS** if schema validation succeeds, **FAIL** if validation fails
 
 ### NC-01: Target File Resolution and Duplicate Handling
 
 - [ ] List all files in `docs/` of the target project
 - [ ] If a target file is provided, confirm it exists or that its creation is explicitly intended and it is under `docs/`
-- [ ] If no target file is provided, determine whether an existing document should be updated before creating a new one
-- [ ] Apply deterministic match order when no target file is provided:
-	1. canonical filename exact match
-	2. normalized H1 exact match
-	3. weighted keyword score >= 2 where filename*3 + H1*2 + purpose*1
-	4. keyword extraction rule is applied consistently (lowercase, split by spaces/underscores/hyphens/slashes/dots, remove stopwords, remove tokens length <= 3)
-	5. tie-breaker: lexicographically smallest path
-- [ ] Verify weighted keyword scoring with an example:
-  - topic: `performance monitoring`
-  - `monitoring.md`: filename overlap=1, H1 overlap=0, purpose overlap=0 => score=3
-  - `performance.md`: filename overlap=1, H1 overlap=0, purpose overlap=0 => score=3
-  - same score => choose lexicographically smallest path
-- [ ] For a new file, confirm no file with the same name exists
+- [ ] If no target file is provided, attempt exact filename match on the canonical filename (e.g., `specification.md` for type `specification`)
+- [ ] If exact match not found and creation is intended, confirm no file with the same name exists
 - [ ] Check duplicates case-insensitively (`document.md` vs `DOCUMENT.md`)
 - [ ] If case-only duplicates are found, fail and stop create/update actions
+- [ ] If no match and ambiguous, ask user to provide explicit target file path
 - **PASS** if target resolution and file state are consistent, **FAIL** on duplicate collisions, invalid target path, or unresolved case-only duplicate conflicts
 
 ### NC-02: Filename Follows Naming Rules
@@ -42,17 +32,17 @@
 
 ### NC-03: Document Type Matched
 
-- [ ] Requested topic is matched to a core type, extension type, or project-defined custom type
-- [ ] Types marked `Required = Yes` in the Workflow table are present or created in this run
-- [ ] Filename pattern follows the selected type's convention from the Workflow table
-- [ ] If custom type is used, a matching template section exists in a selected category template reference file (or `general` fallback is used)
+- [ ] Requested topic is matched to a core type or extension type (see SKILL.md Document Types)
+- [ ] Filename pattern follows the selected type's convention
+- [ ] A matching template section exists in the selected category template reference file (or `general` fallback is used)
 - **PASS** if type mapping and template mapping are explicit, **FAIL** if type is ambiguous or unmatched
 
 ### DC-01: Template Applied
 
 - [ ] Template from selected category template reference file matching the document type is used as base
 - [ ] All `<placeholder>` values are replaced with actual content
-- [ ] Empty optional sections are removed (not left as placeholder headings)
+- [ ] Sections marked as optional in the template are removed if not applicable (not left as placeholder headings)
+- [ ] See the template definition for which sections are optional for each document type
 - **PASS** if template applied and placeholders replaced, **FAIL** if placeholders remain
 
 ### DC-02: Structure Rules Satisfied

@@ -12,23 +12,76 @@ metadata:
 ## Input
 
 - Topic/purpose (required)
-- Optional target file under `docs/` and baseline mode (`initial-only` or `always`)
-- Core docs set: `docs/specification.md`, `docs/architecture.md`, `docs/design.md`, `docs/troubleshooting.md`, `docs/maintenance.md`
+- Document type (required, must match one of the Document Types listed below)
+- Profile: `default`, `go`, or `terraform` (required)
+- Optional target file under `docs/` (if omitted, automatically matched using deterministic logic)
+
+### Input Schema (JSON)
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "topic": {
+      "type": "string",
+      "minLength": 3
+    },
+    "document_type": {
+      "type": "string",
+      "enum": ["specification", "architecture", "design", "design_decisions", "troubleshooting", "general", "module_catalog", "monitoring", "performance", "security_coverage", "maintenance_notes", "improvements"]
+    },
+    "profile": {
+      "type": "string",
+      "enum": ["default", "go", "terraform"]
+    },
+    "target_file": {
+      "type": "string",
+      "pattern": "^docs/[a-z0-9_]+\\.md$"
+    }
+  },
+  "required": ["topic", "document_type", "profile"]
+}
+```
+
+If input does not satisfy this schema, stop before write actions and return the schema plus a valid minimal JSON example in the report.
+
+## Document Types
+
+### Core Types
+
+| Type               | File                       | Description                                                                      |
+| ------------------ | -------------------------- | -------------------------------------------------------------------------------- |
+| `specification`    | `docs/specification.md`    | Behavioral specifications present in implementation but not elsewhere documented |
+| `architecture`     | `docs/architecture.md`     | System-wide structure, component relationships, and account layout               |
+| `design`           | `docs/design.md`           | Module-level internal design, variable design, and naming conventions            |
+| `design_decisions` | `docs/design_decisions.md` | Key decisions with rationale and rejected alternatives                           |
+| `troubleshooting`  | `docs/troubleshooting.md`  | Common issues, root causes, and resolutions                                      |
+| `general`          | (any)                      | Catch-all for documents that do not fit other types                              |
+
+### Extension Types
+
+| Type                | File                        | Description                                           |
+| ------------------- | --------------------------- | ----------------------------------------------------- |
+| `module_catalog`    | `docs/module_catalog.md`    | Index of modules with purpose, inputs, and outputs    |
+| `monitoring`        | `docs/monitoring.md`        | Alerts, dashboards, and runbooks                      |
+| `performance`       | `docs/performance.md`       | Benchmarks, bottlenecks, and tuning guidance          |
+| `security_coverage` | `docs/security_coverage.md` | Security service coverage matrix                      |
+| `maintenance_notes` | `docs/maintenance_notes.md` | Periodic tasks, known quirks, and maintenance history |
+| `improvements`      | `docs/improvements.md`      | Planned and completed improvements                    |
 
 ## Output Specification
 
 Create or update markdown files under `docs/`, then return a report using [references/common-output-format.md](references/common-output-format.md).
-Report must include changed file paths, mode (`initial-only` or `always`), and duplicate-check result.
+Report must include changed file paths and duplicate-check result.
+Generate or update `docs/index.md` listing all generated files with relative links and one-line content descriptions.
 
-File rules:
-
-- lowercase underscore `.md` filename
-- no YAML frontmatter
-- H1 title, purpose paragraph, H2 sections
+File rules: see [NC-02](references/common-checklist.md) and [DC-02](references/common-checklist.md).
 
 ## Execution Scope
 
-- Ensure baseline docs by mode.
+- Ensure core docs exist; create missing ones, update existing ones.
 - Resolve update/create deterministically and apply templates.
 - Add valid docs links and conditionally update README docs index.
 - Do not rename/delete files, add YAML frontmatter, or run markdown linting.
@@ -55,26 +108,26 @@ File rules:
 
 ## Workflow
 
-1. List markdown files in `docs/`; resolve baseline mode (`initial-only` by default).
-2. Apply baseline:
+1. List markdown files in `docs/`.
+2. If no target file provided, resolve using exact filename match; if no match, fail and ask user to provide explicit target file path.
+3. Select template by profile: if profile is `go`, use `references/category-templates-go.md`; if `terraform`, use `references/category-templates-terraform.md`; else use `references/category-templates.md`.
+4. Run case-insensitive duplicate check; duplicates must fail the run.
+5. Create/update with naming/structure rules from [common-checklist.md](references/common-checklist.md) and valid relative links.
+6. IF README has docs-index markers, update inside markers; ELSE skip.
+7. **Always** regenerate `docs/index.md` with a list of all files in `docs/` with relative links and one-line descriptions. Format:
 
-- IF mode is `initial-only` AND `docs/` has zero markdown files, create missing core docs.
-- IF mode is `always`, create missing core docs every run.
+```markdown
+# Documentation Index
 
-3. Choose template by profile (`Terraform > Go > default`, fallback `general`).
-4. Resolve target: explicit path; else canonical filename, normalized H1, weighted score (`f*3+h1*2+p*1`, min 2), then lexicographically smallest path.
+- [specification.md](specification.md) - Repository specification and structure
+- [architecture.md](architecture.md) - System architecture overview
+```
 
-- `f`: filename exact/close match score (0 or 1)
-- `h1`: H1 title exact/close match score (0 or 1)
-- `p`: purpose keyword match score (0 or 1)
-
-5. Run case-insensitive duplicate check; duplicates must fail the run.
-6. Create/update with naming/structure rules and valid relative links (`./`, `../`, or repo-relative path that exists).
-7. IF README has docs-index markers update inside markers; ELSE IF docs section has docs links append there; ELSE skip.
 8. Return report using [references/common-output-format.md](references/common-output-format.md).
 
 ## Error Handling and Troubleshooting
 
+- If input JSON schema validation fails, return `status: failed` and include the schema plus a valid minimal JSON example.
 - If `docs/` does not exist, create `docs/` first and continue.
 - If selected template file is missing, fall back to `general` template and record fallback in report.
 - If duplicate check fails, return `status: failed` and stop before write actions.

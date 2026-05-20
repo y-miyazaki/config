@@ -4,6 +4,7 @@
 This document defines the functional specification of this repository, including the intended structure and how shared configuration assets are organized.
 
 Usage guidance is documented in [README.md](../README.md). This document is the specification source of truth under docs.
+Structural details are documented in [architecture.md](./architecture.md), and operational issue handling is documented in [troubleshooting.md](./troubleshooting.md).
 
 <!-- omit in toc -->
 ## Table of Contents
@@ -133,32 +134,32 @@ The repository must be consumable as an APM dependency.
 
 MCP servers are declared in each package's `apm.yml` under `dependencies.mcp`.
 
-| Package       | Server                          | Transport | Command   |
-| ------------- | ------------------------------- | --------- | --------- |
-| common        | context7                        | stdio     | npx       |
-| common        | fetch                           | stdio     | uvx       |
-| common        | github                          | stdio     | bash      |
-| common        | codebase-memory-mcp             | stdio     | binary    |
-| common        | lean-ctx                        | stdio     | binary    |
-| common        | playwright                      | stdio     | npx       |
-| aws           | aws-mcp                         | stdio     | uvx       |
-| aws           | aws-knowledge-mcp-server        | stdio     | uvx       |
-| aws           | aws-documentation-mcp-server    | stdio     | uvx       |
-| aws           | aws-pricing-mcp-server          | stdio     | uvx       |
-| aws           | awslabs-aws-api-mcp-server      | stdio     | uvx       |
-| terraform     | hashicorp-terraform-mcp-server  | stdio     | npx       |
-| terraform-aws | awslabs-terraform-mcp-server    | stdio     | uvx       |
+| Package       | Server                         | Transport | Command |
+| ------------- | ------------------------------ | --------- | ------- |
+| common        | context7                       | stdio     | npx     |
+| common        | fetch                          | stdio     | uvx     |
+| common        | github                         | stdio     | bash    |
+| common        | codebase-memory-mcp            | stdio     | binary  |
+| common        | lean-ctx                       | stdio     | binary  |
+| common        | playwright                     | stdio     | npx     |
+| aws           | aws-mcp                        | stdio     | uvx     |
+| aws           | aws-knowledge-mcp-server       | stdio     | uvx     |
+| aws           | aws-documentation-mcp-server   | stdio     | uvx     |
+| aws           | aws-pricing-mcp-server         | stdio     | uvx     |
+| aws           | awslabs-aws-api-mcp-server     | stdio     | uvx     |
+| terraform     | hashicorp-terraform-mcp-server | stdio     | npx     |
+| terraform-aws | awslabs-terraform-mcp-server   | stdio     | uvx     |
 
 ### Hooks
 
 Hooks are defined as JSON files under each package's `.apm/hooks/` directory.
 
-| Package      | Hook                       | Trigger      | Description                                        |
-| ------------ | -------------------------- | ------------ | -------------------------------------------------- |
-| common       | lean-ctx                   | pre/postTool | Context observation and rewrite/redirect           |
-| go           | golangci-lint              | postToolUse  | Auto-fix Go files with golangci-lint               |
-| terraform    | terraform-validate-tflint  | postToolUse  | Run terraform validate and tflint on changed files |
-| shell-script | shellcheck                 | postToolUse  | Run shellcheck on changed shell scripts            |
+| Package      | Hook                      | Trigger      | Description                                        |
+| ------------ | ------------------------- | ------------ | -------------------------------------------------- |
+| common       | lean-ctx                  | pre/postTool | Context observation and rewrite/redirect           |
+| go           | golangci-lint             | postToolUse  | Auto-fix Go files with golangci-lint               |
+| terraform    | terraform-validate-tflint | postToolUse  | Run terraform validate and tflint on changed files |
+| shell-script | shellcheck                | postToolUse  | Run shellcheck on changed shell scripts            |
 
 ### Skills
 

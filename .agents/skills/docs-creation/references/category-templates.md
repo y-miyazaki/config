@@ -3,12 +3,12 @@
 Use the template matching the document type. Replace all `<placeholder>` values with actual content.
 Remove sections that do not apply rather than leaving them empty.
 
-Type model:
+## Optional vs. Required Sections
 
-- Core types: `specification`, `architecture`, `design_decisions`, `design`, `troubleshooting`, `general`
-- Extension types: `module_catalog`, `monitoring`, `performance`, `security_coverage`, `maintenance_notes`, `improvements`
-- Variant templates: see `category-templates-terraform.md` and `category-templates-go.md`
-- Project-defined custom types: add a dedicated template section or use `general` as fallback
+- **Required sections** (always include): Marked by title, typically core content sections
+- **Optional sections** (remove if not applicable): Marked with `(Optional)` — includes Configuration Defaults, Prevention, Alternative Implementations, etc.
+
+See SKILL.md Document Types for the full type list and descriptions.
 
 ---
 

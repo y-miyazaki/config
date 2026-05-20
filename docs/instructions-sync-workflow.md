@@ -6,7 +6,7 @@ This document explains how instruction files are synchronized with review skill 
 
 ## Scope
 
-Applies to instruction files under `.apm/instructions/*.instructions.md` and review references under `.apm/skills/*-review/references/`.
+Applies to instruction files under `.apm/**/instructions/*.instructions.md` and review references under `.apm/**/skills/*-review/references/`.
 
 ## What Was Standardized
 

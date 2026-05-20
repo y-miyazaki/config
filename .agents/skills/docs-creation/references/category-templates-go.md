@@ -4,6 +4,25 @@ Language-specific template variants. Use when the Go profile is detected.
 
 Use these variants when Go profile is detected and Terraform profile is not detected.
 
+## Coverage Matrix (Go Profile)
+
+Use the template source below for each `document_type`:
+
+| Document Type       | Template Source                                          |
+| ------------------- | -------------------------------------------------------- |
+| `specification`     | `specification_go` in this file                          |
+| `architecture`      | `references/category-templates.md` (`architecture`)      |
+| `design`            | `references/category-templates.md` (`design`)            |
+| `design_decisions`  | `references/category-templates.md` (`design_decisions`)  |
+| `troubleshooting`   | `references/category-templates.md` (`troubleshooting`)   |
+| `general`           | `references/category-templates.md` (`general`)           |
+| `module_catalog`    | `references/category-templates.md` (`module_catalog`)    |
+| `monitoring`        | `references/category-templates.md` (`monitoring`)        |
+| `performance`       | `references/category-templates.md` (`performance`)       |
+| `security_coverage` | `references/category-templates.md` (`security_coverage`) |
+| `maintenance_notes` | `references/category-templates.md` (`maintenance_notes`) |
+| `improvements`      | `references/category-templates.md` (`improvements`)      |
+
 ## specification_go
 
 ```markdown
@@ -43,7 +62,8 @@ This document defines behavior, package contracts, and runtime guarantees for Go
 ## Validation and Safety Checks
 
 - `go test ./...`
-- `go vet ./...`
+- `golangci-lint run`
+- `go vet ./...` (optional when `govet` is enabled in `golangci-lint`)
 - `<project specific checks>`
 
 ## Compatibility and Change Management
