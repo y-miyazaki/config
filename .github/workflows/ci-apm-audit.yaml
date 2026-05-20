@@ -58,14 +58,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          apm audit --ci
+          apm audit --ci --no-drift --no-cache
 
       - name: Policy checks(org)
         if: ${{ inputs.policy_org && inputs.policy_path == '' }}
         shell: bash
         run: |
           set -euo pipefail
-          apm audit --ci --no-cache --policy org
+          apm audit --ci --no-drift --no-cache --policy org
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
