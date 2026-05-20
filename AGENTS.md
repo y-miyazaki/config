@@ -7,9 +7,9 @@ Project-specific rules are defined in `.github/instructions/*.instructions.md`.
 
 ---
 
+<!-- omit in toc -->
 ## Table of Contents
 
-- [Table of Contents](#table-of-contents)
 - [Instruction Priority](#instruction-priority)
 - [Language and Formatting Standards](#language-and-formatting-standards)
 - [Core Operating Principles](#core-operating-principles)
