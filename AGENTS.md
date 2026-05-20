@@ -566,10 +566,9 @@ MUST NOT repeatedly retry destructive operations without understanding failure c
 
 SHOULD:
 
-- write temporary and generated artifacts under the repository root `tmp/` directory by default
-- place temporary artifacts in appropriate ignored locations
-- avoid accidental commits of generated artifacts
-- clean up temporary files in `tmp/` at task completion and before commit or PR creation
+- write temporary and generated artifacts to repository-appropriate ignored locations
+- keep transient outputs out of version control unless they are intentionally committed
+- clean up temporary files when they are no longer needed
 
 Examples may include:
 

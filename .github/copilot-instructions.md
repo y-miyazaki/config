@@ -10,9 +10,11 @@ Repository-wide instructions for GitHub Copilot.
 
 ## Copilot-specific Notes
 
+- Use this file for Copilot-specific guidance only.
 - Prefer workspace-relative paths
 - Respect existing project structure and editor configuration
 - Use minimal diffs unless broader refactor is explicitly required
+- Repository rules belong in `.github/instructions/*.instructions.md`
 
 ## References
 
