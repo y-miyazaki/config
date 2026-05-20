@@ -550,13 +550,9 @@ MUST NOT repeatedly retry destructive operations without analyzing failure cause
 
 SHOULD use:
 
-```text
-/workspace/tmp/
-```
+`./tmp/` (workspace-relative path)
 
 when available.
-
-Otherwise use the repository-standard temporary directory.
 
 ---
 
