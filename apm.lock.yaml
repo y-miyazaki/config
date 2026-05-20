@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-05-20T08:00:13.054819+00:00'
+generated_at: '2026-05-20T08:04:13.438850+00:00'
 apm_version: 0.14.0
 dependencies:
 - repo_url: _local/aws
@@ -16,6 +16,9 @@ dependencies:
   - .agents/skills/github-pr-body
   - .agents/skills/instructions-review
   - .agents/skills/markdown-validation
+  - .github/hooks/common-lean-ctx.json
+  deployed_file_hashes:
+    .github/hooks/common-lean-ctx.json: sha256:2d28799a2648693e4ffe109d84f5c7c31ce266fab1c292b1f5dd4da043b5c8c5
   source: local
   local_path: ./.apm/packages/common
 - repo_url: _local/go
@@ -23,6 +26,9 @@ dependencies:
   deployed_files:
   - .agents/skills/go-review
   - .agents/skills/go-validation
+  - .github/hooks/go-golangci-lint.json
+  deployed_file_hashes:
+    .github/hooks/go-golangci-lint.json: sha256:9d5702562458324cd434d36dbc0ba674075fdb73b91816ba8b44858bf5a320a7
   source: local
   local_path: ./.apm/packages/go
 - repo_url: _local/shell-script
@@ -30,6 +36,9 @@ dependencies:
   deployed_files:
   - .agents/skills/shell-script-review
   - .agents/skills/shell-script-validation
+  - .github/hooks/shell-script-shellcheck.json
+  deployed_file_hashes:
+    .github/hooks/shell-script-shellcheck.json: sha256:a546295e48614d79559a3a8c82db96d719d8815d50933c5ca5bbca1f3fedfe6a
   source: local
   local_path: ./.apm/packages/shell-script
 - repo_url: _local/terraform
@@ -37,6 +46,9 @@ dependencies:
   deployed_files:
   - .agents/skills/terraform-review
   - .agents/skills/terraform-validation
+  - .github/hooks/terraform-terraform-validate-tflint.json
+  deployed_file_hashes:
+    .github/hooks/terraform-terraform-validate-tflint.json: sha256:8f6086e1e176a46d6b27262c59d977c4b36a53ec946c2a1bdd0b862bcf64bf18
   source: local
   local_path: ./.apm/packages/terraform
 - repo_url: _local/terraform-aws
