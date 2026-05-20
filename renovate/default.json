@@ -63,6 +63,7 @@
     {
       "description": "Rules: Update Dockerfile base images",
       "matchManagers": ["dockerfile", "docker-compose"],
+      "commitMessagePrefix": "renovate(docker):",
       "addLabels": ["docker"],
       "automerge": false,
       "platformAutomerge": false
