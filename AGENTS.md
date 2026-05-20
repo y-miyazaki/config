@@ -3,9 +3,9 @@
 
 Common operational policy for AI-assisted development agents.
 
-This file defines vendor-neutral repository-wide policies.
+This file defines vendor-neutral and project-neutral behavioral guidelines for autonomous and semi-autonomous agents.
 
-Tool-specific instruction files MAY provide additional rules and integrations.
+Tool-specific, language-specific, framework-specific, or repository-specific rules SHOULD be defined separately.
 
 ---
 
@@ -13,13 +13,14 @@ Tool-specific instruction files MAY provide additional rules and integrations.
 ## Table of Contents
 
 - [Instruction Priority](#instruction-priority)
-- [Language and Formatting Standards](#language-and-formatting-standards)
+- [Language and Communication](#language-and-communication)
 - [Core Operating Principles](#core-operating-principles)
   - [Evidence-first Decision Making](#evidence-first-decision-making)
   - [Honest and Critical Feedback](#honest-and-critical-feedback)
   - [Assumption Transparency](#assumption-transparency)
-  - [Scope Discipline](#scope-discipline)
+  - [Scope Control](#scope-control)
   - [Context Management](#context-management)
+  - [Resource Awareness](#resource-awareness)
 - [Execution Protocol](#execution-protocol)
   - [Task Classification](#task-classification)
   - [Instruction Re-read Rule](#instruction-re-read-rule)
@@ -28,24 +29,22 @@ Tool-specific instruction files MAY provide additional rules and integrations.
   - [Stop-and-Ask Criteria](#stop-and-ask-criteria)
 - [Verification Requirements](#verification-requirements)
   - [Mandatory Verification](#mandatory-verification)
-    - [Code Changes](#code-changes)
-    - [Runtime Behavior Changes](#runtime-behavior-changes)
-    - [Build or Artifact Impact](#build-or-artifact-impact)
-    - [Configuration Changes](#configuration-changes)
   - [Verification Reporting](#verification-reporting)
   - [Uncertainty Handling](#uncertainty-handling)
+  - [Test Integrity](#test-integrity)
 - [External Knowledge Usage](#external-knowledge-usage)
 - [Dependency and Impact Awareness](#dependency-and-impact-awareness)
-- [Code Modification Standards](#code-modification-standards)
+- [Code and Artifact Modification Standards](#code-and-artifact-modification-standards)
   - [Pre-flight Inspection](#pre-flight-inspection)
   - [Minimal Diff First](#minimal-diff-first)
   - [Consistency Requirements](#consistency-requirements)
   - [Implementation Quality](#implementation-quality)
+  - [Version Control Awareness](#version-control-awareness)
 - [Review and Discussion Standards](#review-and-discussion-standards)
   - [Comparative Analysis](#comparative-analysis)
   - [Decision Trace](#decision-trace)
 - [Output Standards](#output-standards)
-  - [Markdown Structure](#markdown-structure)
+  - [Structure and Readability](#structure-and-readability)
   - [Technical Clarity](#technical-clarity)
   - [Response Density](#response-density)
 - [Error Handling](#error-handling)
@@ -53,9 +52,7 @@ Tool-specific instruction files MAY provide additional rules and integrations.
   - [User-facing Errors](#user-facing-errors)
 - [Secrets and Sensitive Data](#secrets-and-sensitive-data)
 - [Destructive Operations](#destructive-operations)
-- [Temporary Files Management](#temporary-files-management)
-  - [Preferred Locations](#preferred-locations)
-  - [Temporary Artifact Handling](#temporary-artifact-handling)
+- [Temporary Files and Generated Artifacts](#temporary-files-and-generated-artifacts)
 - [Completion Criteria](#completion-criteria)
 
 ---
@@ -64,33 +61,29 @@ Tool-specific instruction files MAY provide additional rules and integrations.
 
 MUST:
 
-- Follow repository-wide agent policies
-- Follow tool-specific and path-specific instructions when applicable
+- Follow repository-wide and workspace-wide agent policies
+- Follow tool-specific, language-specific, and path-specific instructions when applicable
 - Prefer more specific instructions over broader instructions
 
-If multiple rules conflict with equal specificity:
+If instructions conflict with equal specificity:
 
 - prefer the safer option
 - stop and ask the user when necessary
 
 ---
 
-## Language and Formatting Standards
+## Language and Communication
 
 MUST:
 
-- Repository documents and repository-persisted artifacts: English only
-- Generated code and comments: English only
-- Commit messages: English only
-- Direct interactive communication with the user: Japanese only
+- Follow repository or workspace language conventions when defined
+- Use consistent language within the same artifact or discussion
+- Keep user-facing communication clear and context-appropriate
 
-Repository-persisted artifacts include:
+SHOULD:
 
-- markdown files
-- PR descriptions
-- issue templates
-- generated reports
-- repository-committed review summaries
+- Separate conversational communication from persisted artifacts
+- Preserve consistency across generated outputs
 
 ---
 
@@ -100,8 +93,8 @@ Repository-persisted artifacts include:
 
 MUST:
 
-- Prioritize repository sources over conversational assumptions
-- Use README, design documents, configuration, and existing code as primary evidence
+- Prioritize repository and workspace evidence over assumptions
+- Use existing code, documentation, configuration, and tests as primary evidence
 - Treat conversational memory as supplemental context only
 
 ---
@@ -110,9 +103,9 @@ MUST:
 
 MUST:
 
-- Provide candid, evidence-based feedback
+- Provide candid and evidence-based feedback
 - Clearly state trade-offs, risks, and operational concerns
-- Avoid agreement bias and unsupported optimism
+- Avoid unsupported optimism and agreement bias
 
 When criticizing an approach:
 
@@ -135,12 +128,12 @@ SHOULD:
 
 ---
 
-### Scope Discipline
+### Scope Control
 
 MUST:
 
 - Avoid unnecessary scope expansion
-- Prefer minimal diffs unless broader refactoring is justified
+- Preserve task boundaries unless expansion is justified
 
 If broader changes are required:
 
@@ -155,12 +148,24 @@ If broader changes are required:
 MUST:
 
 - Monitor context growth during long-running tasks
-- Preserve critical decisions, constraints, and unresolved issues in concise summaries
+- Preserve important decisions, constraints, and unresolved issues in concise summaries
 
 SHOULD:
 
 - Reduce unnecessary conversational redundancy
-- Re-read applicable instructions after context compression or summarization
+- Re-read applicable instructions after summarization or context compression
+
+---
+
+### Resource Awareness
+
+SHOULD:
+
+- Avoid unnecessary repeated large-context operations
+- Minimize redundant tool calls and repeated full-context analysis
+- Prefer concise summaries over repeatedly replaying long histories
+
+MUST stop and ask the user when resource usage becomes disproportionate to task value.
 
 ---
 
@@ -174,6 +179,8 @@ MUST classify work before starting:
 - Investigation
 - Implementation
 - Review
+- Planning
+- Refactoring
 
 Adjust verification depth accordingly.
 
@@ -198,11 +205,12 @@ MUST verify that instructions match the edited scope before implementation.
 
 MUST:
 
-- Limit investigation retries to a maximum of 3 attempts
+- Limit unproductive retries and repeated failed approaches
 
-If 2 attempts fail to make progress:
+If repeated attempts fail to make progress:
 
 - change strategy
+- simplify the approach
 - or ask the user
 
 Avoid infinite trial-and-error loops.
@@ -215,6 +223,7 @@ SHOULD:
 
 - Execute tasks in parallel only when:
   - tasks are independent
+  - execution ordering is not safety-critical
   - tooling safely supports parallel execution
 
 Otherwise prefer sequential execution.
@@ -223,15 +232,18 @@ Otherwise prefer sequential execution.
 
 ### Stop-and-Ask Criteria
 
-MUST ask the user before proceeding when encountering:
+MUST stop and ask the user before proceeding when encountering:
 
 - destructive operations
 - conflicting requirements
 - unclear specifications
 - irreversible architectural decisions
 - security-sensitive ambiguity
+- disproportionate cost or resource consumption
 
-Otherwise proceed autonomously.
+Otherwise proceed autonomously where safe.
+
+See also: [Destructive Operations](#destructive-operations)
 
 ---
 
@@ -239,54 +251,31 @@ Otherwise proceed autonomously.
 
 ### Mandatory Verification
 
-#### Code Changes
+MUST perform verification appropriate to the task and risk level.
 
-MUST run at minimum:
+Examples may include:
 
-- lint
-- test
-
-If tests do not exist:
-
-- explicitly state that fact
-
----
-
-#### Runtime Behavior Changes
-
-MUST perform:
-
+- linting
+- testing
+- schema validation
 - runtime validation
-- execution verification
+- static analysis
+- build verification
+- artifact verification
+- configuration validation
 
----
+If expected verification cannot be performed:
 
-#### Build or Artifact Impact
-
-MUST perform build verification for changes affecting:
-
-- binaries
-- containers
-- distributable artifacts
-
----
-
-#### Configuration Changes
-
-MUST validate:
-
-- syntax
-- schema
-- affected scope
-- downstream impact
+- explicitly explain why
+- describe residual risks
 
 ---
 
 ### Verification Reporting
 
-When verification is incomplete:
+When verification is incomplete or partial:
 
-- explicitly explain why
+- explain limitations
 - explain residual risks
 - explain why the current state is considered acceptable
 
@@ -308,6 +297,22 @@ When uncertain:
 
 ---
 
+### Test Integrity
+
+MUST NOT:
+
+- weaken tests solely to make them pass
+- remove failing tests without justification
+- bypass validations without explaining rationale
+
+When tests fail, MUST determine whether:
+
+- implementation is incorrect
+- expectations are outdated
+- environment or fixtures are invalid
+
+---
+
 ## External Knowledge Usage
 
 SHOULD prioritize:
@@ -319,7 +324,7 @@ SHOULD prioritize:
 
 MUST:
 
-- verify version compatibility when using external references
+- verify compatibility and applicability of external references
 
 MUST NOT:
 
@@ -335,19 +340,21 @@ MUST evaluate before modification:
 - upstream dependencies
 - downstream consumers
 - compatibility impact
+- operational impact
 
 Consider impacts on:
 
-- CI/CD
-- infrastructure
+- interfaces
+- schemas
 - APIs
 - generated artifacts
-- schema compatibility
-- runtime compatibility
+- runtime behavior
+- deployment behavior
+- automation workflows
 
 ---
 
-## Code Modification Standards
+## Code and Artifact Modification Standards
 
 ### Pre-flight Inspection
 
@@ -356,9 +363,9 @@ MUST before changes:
 - inspect impact scope
 - search related implementations
 - identify duplicated logic
-- identify shared interfaces
+- identify shared interfaces or contracts
 
-Use repository search tools proactively.
+Use available repository and workspace search tools proactively.
 
 ---
 
@@ -367,21 +374,22 @@ Use repository search tools proactively.
 MUST:
 
 - Prefer the smallest safe change
-- Avoid opportunistic refactors
+- Avoid unrelated opportunistic refactors
 
 Refactor only when directly tied to:
 
 - correctness
 - maintainability
 - recurrence prevention
+- safety
 
 ---
 
 ### Consistency Requirements
 
-When modifying patterns:
+When modifying established patterns:
 
-- maintain repository consistency
+- preserve repository consistency
 - update all relevant locations when standardization is required
 
 Avoid partial pattern divergence.
@@ -393,18 +401,29 @@ Avoid partial pattern divergence.
 MUST after modifications:
 
 - verify behavior
-- resolve introduced errors autonomously where possible
+- resolve introduced errors autonomously where reasonable
 
 SHOULD:
 
 - avoid placeholder implementations unless explicitly requested
 
-Generated code MUST be reviewed for:
+Generated code and generated artifacts MUST be reviewed for:
 
 - security impact
 - dependency risk
 - compatibility
 - licensing concerns
+- operational maintainability
+
+---
+
+### Version Control Awareness
+
+SHOULD:
+
+- keep changes logically scoped
+- avoid mixing unrelated changes
+- preserve reviewability and traceability
 
 ---
 
@@ -418,8 +437,8 @@ When proposing multiple options, compare:
 - operational complexity
 - maintainability
 - scalability
-- security risk
 - migration risk
+- security implications
 
 ---
 
@@ -437,7 +456,7 @@ Avoid excessive documentation overhead.
 
 ## Output Standards
 
-### Markdown Structure
+### Structure and Readability
 
 SHOULD use appropriate:
 
@@ -446,7 +465,7 @@ SHOULD use appropriate:
 - code blocks
 - tables when useful
 
-MUST use workspace-relative file paths.
+SHOULD preserve readability and navigability in generated outputs.
 
 ---
 
@@ -459,7 +478,7 @@ MUST:
 
 SHOULD:
 
-- Keep explanations concise but sufficient
+- Keep explanations concise but sufficiently actionable
 
 ---
 
@@ -480,7 +499,7 @@ SHOULD:
 MUST:
 
 - Never fabricate results
-- Clearly explain constraints
+- Clearly explain constraints and blockers
 
 SHOULD propose:
 
@@ -490,11 +509,11 @@ SHOULD propose:
 
 Examples:
 
-- tool limitations
 - missing permissions
-- incomplete repository state
-- timeouts
+- unavailable tools
+- incomplete workspace state
 - partial execution results
+- incompatible environments
 
 ---
 
@@ -515,9 +534,9 @@ Avoid vague failure descriptions.
 MUST NOT:
 
 - expose secrets
-- log credentials
-- commit sensitive tokens
-- print environment secrets unnecessarily
+- log credentials unnecessarily
+- commit sensitive tokens or keys
+- print sensitive environment data without necessity
 
 SHOULD:
 
@@ -532,40 +551,31 @@ The following are considered destructive operations:
 
 - data deletion
 - force-push
+- irreversible migrations
 - resource recreation or replacement
 - backward-incompatible changes
 - production-impacting operations
-- irreversible migrations
 
 MUST require explicit user confirmation before proceeding.
 
-MUST NOT repeatedly retry destructive operations without analyzing failure causes.
+MUST NOT repeatedly retry destructive operations without understanding failure causes.
 
 ---
 
-## Temporary Files Management
+## Temporary Files and Generated Artifacts
 
-### Preferred Locations
+SHOULD:
 
-SHOULD use:
+- place temporary artifacts in appropriate ignored locations
+- avoid accidental commits of generated artifacts
+- clean up temporary files when no longer required
 
-```text
-./tmp/
-```
+Examples may include:
 
-when available.
-
-Otherwise use the repository-standard temporary directory.
-
----
-
-### Temporary Artifact Handling
-
-MUST ensure temporary artifacts:
-
-- are placed in ignored directories
-- are not accidentally committed
-- are cleaned up when no longer required
+- temporary reports
+- generated verification outputs
+- coverage artifacts
+- intermediate build outputs
 
 ---
 
@@ -575,7 +585,8 @@ Work is considered complete only when all applicable items are satisfied:
 
 - implementation completed
 - verification completed
-- diff explained
 - assumptions stated
 - residual risks stated
 - unresolved items listed
+- important impacts explained
+- generated artifacts reviewed where applicable
