@@ -7,9 +7,9 @@ Project-specific rules are defined in `.github/instructions/*.instructions.md`.
 
 ---
 
-<!-- omit in toc -->
 ## Table of Contents
 
+- [Table of Contents](#table-of-contents)
 - [Instruction Priority](#instruction-priority)
 - [Language and Formatting Standards](#language-and-formatting-standards)
 - [Core Operating Principles](#core-operating-principles)
@@ -17,6 +17,7 @@ Project-specific rules are defined in `.github/instructions/*.instructions.md`.
   - [Honest and Critical Feedback](#honest-and-critical-feedback)
   - [Assumption Transparency](#assumption-transparency)
   - [Scope Discipline](#scope-discipline)
+  - [Context Management](#context-management)
 - [Execution Protocol](#execution-protocol)
   - [Task Classification](#task-classification)
   - [Instruction Re-read Rule](#instruction-re-read-rule)
@@ -30,6 +31,8 @@ Project-specific rules are defined in `.github/instructions/*.instructions.md`.
     - [Build or Artifact Impact](#build-or-artifact-impact)
     - [Configuration Changes](#configuration-changes)
   - [Verification Reporting](#verification-reporting)
+  - [Uncertainty Handling](#uncertainty-handling)
+- [External Knowledge Usage](#external-knowledge-usage)
 - [Dependency and Impact Awareness](#dependency-and-impact-awareness)
 - [Code Modification Standards](#code-modification-standards)
   - [Pre-flight Inspection](#pre-flight-inspection)
@@ -46,10 +49,11 @@ Project-specific rules are defined in `.github/instructions/*.instructions.md`.
 - [Error Handling](#error-handling)
   - [Unexpected Situations](#unexpected-situations)
   - [User-facing Errors](#user-facing-errors)
+- [Secrets and Sensitive Data](#secrets-and-sensitive-data)
 - [Destructive Operations](#destructive-operations)
 - [Temporary Files Management](#temporary-files-management)
   - [Preferred Locations](#preferred-locations)
-  - [Temporary Artifact Examples](#temporary-artifact-examples)
+  - [Temporary Artifact Handling](#temporary-artifact-handling)
 - [Completion Criteria](#completion-criteria)
 
 ---
@@ -73,10 +77,18 @@ If multiple rules conflict with equal specificity:
 
 MUST:
 
-- Repository documents: English only
+- Repository documents and repository-persisted artifacts: English only
 - Generated code and comments: English only
 - Commit messages: English only
-- Chat / interactive communication with the user: Japanese only
+- Direct interactive communication with the user: Japanese only
+
+Repository-persisted artifacts include:
+
+- markdown files
+- PR descriptions
+- issue templates
+- generated reports
+- repository-committed review summaries
 
 ---
 
@@ -133,6 +145,20 @@ If broader changes are required:
 - explain why
 - explain impact scope
 - explain verification approach
+
+---
+
+### Context Management
+
+MUST:
+
+- Monitor context growth during long-running tasks
+- Preserve critical decisions, constraints, and unresolved issues in concise summaries
+
+SHOULD:
+
+- Reduce unnecessary conversational redundancy
+- Re-read source instructions after context compression or summarization
 
 ---
 
@@ -267,6 +293,42 @@ When verification is incomplete:
 
 ---
 
+### Uncertainty Handling
+
+MUST:
+
+- Clearly distinguish verified facts from assumptions
+- Explicitly state when behavior has not been validated
+- Avoid presenting unverified behavior as confirmed
+
+When uncertain:
+
+- explain uncertainty
+- explain verification limitations
+- propose safe verification steps
+
+---
+
+## External Knowledge Usage
+
+SHOULD prioritize:
+
+- official documentation
+- primary sources
+- vendor documentation
+- repository-native documentation
+
+MUST:
+
+- verify version compatibility when using external references
+
+MUST NOT:
+
+- include secrets or sensitive data in external queries
+- rely solely on unverified third-party examples for critical decisions
+
+---
+
 ## Dependency and Impact Awareness
 
 MUST evaluate before modification:
@@ -337,6 +399,13 @@ MUST after modifications:
 SHOULD:
 
 - avoid placeholder implementations unless explicitly requested
+
+Generated code MUST be reviewed for:
+
+- security impact
+- dependency risk
+- compatibility
+- licensing concerns
 
 ---
 
@@ -442,6 +511,22 @@ Avoid vague failure descriptions.
 
 ---
 
+## Secrets and Sensitive Data
+
+MUST NOT:
+
+- expose secrets
+- log credentials
+- commit sensitive tokens
+- print environment secrets unnecessarily
+
+SHOULD:
+
+- prefer redacted examples
+- minimize sensitive data exposure in logs and outputs
+
+---
+
 ## Destructive Operations
 
 The following are considered destructive operations:
@@ -454,6 +539,8 @@ The following are considered destructive operations:
 - irreversible migrations
 
 MUST require explicit user confirmation before proceeding.
+
+MUST NOT repeatedly retry destructive operations without analyzing failure causes.
 
 ---
 
@@ -473,16 +560,13 @@ Otherwise use the repository-standard temporary directory.
 
 ---
 
-### Temporary Artifact Examples
+### Temporary Artifact Handling
 
-Examples include:
+MUST ensure temporary artifacts:
 
-- coverage reports
-- test outputs
-- build artifacts
-- generated verification files
-
-MUST ensure temporary artifacts are ignored appropriately.
+- are placed in ignored directories
+- are not accidentally committed
+- are cleaned up when no longer required
 
 ---
 
