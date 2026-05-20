@@ -47,7 +47,7 @@ Structured PR output:
 
 - [common-checklist.md](references/common-checklist.md) (always read)
 - [common-output-format.md](references/common-output-format.md) (always read)
-- [troubleshooting](references/common-troubleshooting.md)
+- [common-troubleshooting.md](references/common-troubleshooting.md) - Read when fetching PR data or applying body updates fails unexpectedly.
 - [classification](references/category-change-classification.md) - Read when classifying the PR change type.
 - [guidelines](references/category-pr-body-guidelines.md) - Read when applying PR body writing guidelines.
 - [workflows](references/category-agent-workflows.md) - Read when selecting baseline or full-body mode.

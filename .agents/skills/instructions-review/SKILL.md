@@ -44,7 +44,7 @@ Always include target file list and deferred reason summary.
 
 - [common-checklist.md](references/common-checklist.md) (always read)
 - [common-output-format.md](references/common-output-format.md) (always read)
-- [troubleshooting](references/common-troubleshooting.md)
+- [common-troubleshooting.md](references/common-troubleshooting.md) - Read when checks fail unexpectedly.
 - [global](references/category-global.md), [testing](references/category-testing.md), [security](references/category-security.md) - Read when reviewing overall quality, testing instructions, or security guidelines.
 - [quality](references/category-quality.md), [guidelines](references/category-guidelines.md), [standards](references/category-standards.md) - Read when reviewing quality criteria, authoring guidelines, or compliance standards.
 
