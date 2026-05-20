@@ -1,8 +1,9 @@
-name: aws-mcp
+name: config-aws
 version: 1.0.0
-description: MCP servers for AWS development (API and Knowledge)
+description: AI assistant instructions and MCP servers for AWS development
 author: y-miyazaki
 license: Apache-2.0
+target: all
 includes: auto
 
 dependencies:

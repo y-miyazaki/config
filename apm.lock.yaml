@@ -1,13 +1,12 @@
 lockfile_version: '1'
-generated_at: '2026-05-20T01:19:51.659972+00:00'
+generated_at: '2026-05-20T04:11:42.523240+00:00'
 apm_version: 0.14.0
 dependencies:
-- repo_url: y-miyazaki/config
-  host: github.com
-  resolved_commit: e0120d151ec1dc3d9ebc13c50ac2f9660cd85317
-  resolved_ref: v1.1.6
-  virtual_path: .apm/packages/common
-  is_virtual: true
+- repo_url: _local/aws
+  package_type: apm_package
+  source: local
+  local_path: ./.apm/packages/aws
+- repo_url: _local/common
   package_type: apm_package
   deployed_files:
   - .agents/skills/agent-skills-review
@@ -17,49 +16,39 @@ dependencies:
   - .agents/skills/github-pr-body
   - .agents/skills/instructions-review
   - .agents/skills/markdown-validation
-  content_hash: sha256:bc6da2f23654917764f732bc66335e3dd6092feaf85ed32c23f77da03b6a434c
-- repo_url: y-miyazaki/config
-  host: github.com
-  resolved_commit: e0120d151ec1dc3d9ebc13c50ac2f9660cd85317
-  resolved_ref: v1.1.6
-  virtual_path: .apm/packages/go
-  is_virtual: true
+  source: local
+  local_path: ./.apm/packages/common
+- repo_url: _local/go
   package_type: apm_package
   deployed_files:
   - .agents/skills/go-review
   - .agents/skills/go-validation
-  content_hash: sha256:c9701214ae6a679ac547de861809155cfa1400acb9aa85f68ac5bf6131d02d9d
-- repo_url: y-miyazaki/config
-  host: github.com
-  resolved_commit: e0120d151ec1dc3d9ebc13c50ac2f9660cd85317
-  resolved_ref: v1.1.6
-  virtual_path: .apm/packages/shell-script
-  is_virtual: true
+  source: local
+  local_path: ./.apm/packages/go
+- repo_url: _local/shell-script
   package_type: apm_package
   deployed_files:
   - .agents/skills/shell-script-review
   - .agents/skills/shell-script-validation
-  content_hash: sha256:47a5fe465110da98af5c3e849888c619435a08a34521a849b91a08518756570e
-- repo_url: y-miyazaki/config
-  host: github.com
-  resolved_commit: e0120d151ec1dc3d9ebc13c50ac2f9660cd85317
-  resolved_ref: v1.1.6
-  virtual_path: .apm/packages/terraform
-  is_virtual: true
+  source: local
+  local_path: ./.apm/packages/shell-script
+- repo_url: _local/terraform
   package_type: apm_package
   deployed_files:
   - .agents/skills/terraform-review
   - .agents/skills/terraform-validation
-  content_hash: sha256:947635be83c58658c1b5e86c4560643386442ddc5d7440e2fb7d0c317639b4aa
-- repo_url: y-miyazaki/config
-  host: github.com
-  resolved_commit: e0120d151ec1dc3d9ebc13c50ac2f9660cd85317
-  resolved_ref: v1.1.6
-  virtual_path: .apm/packages/terraform-aws
-  is_virtual: true
+  source: local
+  local_path: ./.apm/packages/terraform
+- repo_url: _local/terraform-aws
   package_type: apm_package
-  content_hash: sha256:f2ab3e9287aa43d7d5ed6632cd5f84a2f30afb1439ad172ce246bad2707791e5
+  source: local
+  local_path: ./.apm/packages/terraform-aws
 mcp_servers:
+- aws-documentation-mcp-server
+- aws-knowledge-mcp-server
+- aws-mcp
+- aws-pricing-mcp-server
+- awslabs-aws-api-mcp-server
 - awslabs-terraform-mcp-server
 - codebase-memory-mcp
 - context7
@@ -69,6 +58,53 @@ mcp_servers:
 - lean-ctx
 - playwright
 mcp_configs:
+  aws-documentation-mcp-server:
+    name: aws-documentation-mcp-server
+    transport: stdio
+    args:
+    - awslabs.aws-documentation-mcp-server==1.1.24
+    registry: false
+    command: uvx
+  aws-knowledge-mcp-server:
+    name: aws-knowledge-mcp-server
+    transport: stdio
+    args:
+    - mcp-compressor==0.19.8
+    - --
+    - uvx
+    - mcp-proxy==0.12.0
+    - --transport
+    - streamablehttp
+    - https://knowledge-mcp.global.api.aws
+    registry: false
+    command: uvx
+  aws-mcp:
+    name: aws-mcp
+    transport: stdio
+    args:
+    - mcp-compressor==0.19.8
+    - --
+    - uvx
+    - mcp-proxy-for-aws==1.4.2
+    - https://aws-mcp.us-east-1.api.aws/mcp
+    registry: false
+    command: uvx
+  aws-pricing-mcp-server:
+    name: aws-pricing-mcp-server
+    transport: stdio
+    args:
+    - awslabs.aws-pricing-mcp-server==1.0.30
+    registry: false
+    command: uvx
+  awslabs-aws-api-mcp-server:
+    name: awslabs-aws-api-mcp-server
+    transport: stdio
+    env:
+      AWS_REGION: ${AWS_REGION}
+    args:
+    - awslabs.aws-api-mcp-server==1.3.36
+    registry: false
+    command: uvx
   awslabs-terraform-mcp-server:
     name: awslabs-terraform-mcp-server
     transport: stdio

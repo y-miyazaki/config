@@ -93,20 +93,17 @@ apm install y-miyazaki/config/.apm/instructions/go.instructions.md
 MCP server packages:
 
 ```bash
-# Common (GitHub, Context7, Playwright, Fetch)
-apm install y-miyazaki/config/.apm/packages/mcp/common
+# Common (GitHub, Context7, Playwright, Fetch, lean-ctx, codebase-memory-mcp)
+apm install y-miyazaki/config/.apm/packages/common
 
-# AWS
-apm install y-miyazaki/config/.apm/packages/mcp/aws
+# AWS (non-Terraform)
+apm install y-miyazaki/config/.apm/packages/aws
 
 # Terraform (cloud-agnostic)
-apm install y-miyazaki/config/.apm/packages/mcp/terraform
+apm install y-miyazaki/config/.apm/packages/terraform
 
 # Terraform + AWS
-apm install y-miyazaki/config/.apm/packages/mcp/terraform-aws
-
-# Performance (lean-ctx, codebase-memory-mcp)
-apm install y-miyazaki/config/.apm/packages/mcp/performance
+apm install y-miyazaki/config/.apm/packages/terraform-aws
 ```
 
 ### Other targets

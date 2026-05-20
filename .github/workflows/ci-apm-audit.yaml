@@ -1,0 +1,92 @@
+# Reusable workflow: APM install and audit
+# Installs the pinned APM CLI, runs apm install, and validates with apm audit.
+name: ci-apm-audit
+
+on:
+  workflow_call:
+    inputs:
+      apm_version:
+        default: "v0.14.0"
+        description: "APM CLI version to use"
+        required: false
+        type: string
+      policy_org:
+        default: false
+        description: "Run organization policy check (apm audit --policy org)"
+        required: false
+        type: boolean
+      policy_path:
+        default: ""
+        description: "Optional APM policy file or policy name"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  APM_VERSION: ${{ inputs.apm_version }}
+  POLICY_ORG: ${{ inputs.policy_org }}
+  POLICY_PATH: ${{ inputs.policy_path }}
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install APM CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://aka.ms/apm-unix | sh -s -- "@${APM_VERSION}"
+
+      - name: Install APM packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          apm install
+
+      - name: Baseline checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          apm audit --ci
+
+      - name: Policy checks(org)
+        if: ${{ inputs.policy_org && inputs.policy_path == '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          apm audit --ci --no-cache --policy org
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Policy checks(custom)
+        if: ${{ inputs.policy_path != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          apm audit --ci --no-cache --policy "${POLICY_PATH}"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@59f3fc2baeb78d374b3f0fdafeb1a07363af4b8c # v1.1.5
+        with:
+          artifacts: |
+            (none)
+          params: |
+            apm_version: ${{ env.APM_VERSION }}
+            policy_org: ${{ env.POLICY_ORG }}
+            policy_path: ${{ env.POLICY_PATH }}
+          status: "${{ job.status }}"
+          title: "APM Audit"
