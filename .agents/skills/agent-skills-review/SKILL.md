@@ -21,12 +21,10 @@ metadata:
 
 ## Execution Scope
 
-- Run validation scripts and parse results to assess SKILL.md quality against S-*, Q-*, P-*, and BP-* checks.
+- Run validation scripts and parse results to assess SKILL.md quality against S-_, Q-_, P-_, and BP-_ checks.
 - Check `waza check` token output; report as warning if SKILL.md exceeds 500 tokens.
 - Do not merge PRs or edit unrelated files.
 - Do not review product runtime behavior or application business logic.
-
-Detailed script failure handling and conditional branching are defined in Workflow.
 
 ### USE FOR:
 
@@ -39,20 +37,20 @@ Detailed script failure handling and conditional branching are defined in Workfl
 - implement product features
 - debug product runtime failures unrelated to SKILL quality checks
 - run benchmark content evaluations (`waza run eval.yaml`) as a substitute for compliance checks
-- modify the content of the target SKILL.md without explicit user instruction
+- modify or overwrite the target SKILL.md without explicit user approval (review output only; do not write or commit changes)
 
 ## Reference Files Guide
 
 - [common-checklist.md](references/common-checklist.md) (always read)
 - [common-output-format.md](references/common-output-format.md) (always read)
-- [category-structure.md](references/category-structure.md) - Read when checking required section structure (S-* checks).
-- [category-quality.md](references/category-quality.md) - Read when evaluating quality language (Q-* checks).
-- [category-patterns.md](references/category-patterns.md) - Read when reviewing workflow and policy patterns (P-* checks).
+- [category-structure.md](references/category-structure.md) - Read when checking required section structure (S-\* checks).
+- [category-quality.md](references/category-quality.md) - Read when evaluating quality language (Q-\* checks).
+- [category-patterns.md](references/category-patterns.md) - Read when reviewing workflow and policy patterns (P-\* checks).
 
 ## Workflow
 
-1. Run `bash scripts/validate_waza.sh <skill-name>` and `bash scripts/validate.sh <SKILL.md>` from `./<agent-root>/skills/agent-skills-review/`.
-2. Check token warning threshold: Token Budget <= 500 (warning if exceeded).
+1. Run `bash scripts/validate_waza.sh <skill-name>` and `bash scripts/validate.sh <SKILL.md>` (CWD: `<agent-root>/skills/agent-skills-review/`).
+2. Check token warning threshold: Token count > 500 (warning).
 3. Apply checks in order: `S-*` (structure), `Q-*` (quality language), `P-*` (workflow/policy), `BP-*` (best-practice rules).
 4. Report failed/deferred items with ItemIDs.
 5. If target `SKILL.md` does not exist, return `status: failed` and stop without running other checks.
@@ -66,16 +64,19 @@ Detailed script failure handling and conditional branching are defined in Workfl
 
 ```markdown
 ## Checks Summary
+
 - Total checks: <number>
 - Passed: <count>
 - Failed: <count>
 - Deferred: <count>
 
 ## Checks (Failed/Deferred Only)
+
 | ItemID | Status | Evidence | Fix |
-|---|---|---|---|
+| ------ | ------ | -------- | --- |
 
 ## Issues
+
 1. <ItemID>: <ItemName>
    - File: <path>#L<line>
    - Problem: <specific issue>
