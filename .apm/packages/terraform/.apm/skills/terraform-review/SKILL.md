@@ -15,6 +15,8 @@ metadata:
 
 ## Output Specification
 
+Return structured Markdown in accordance with [references/common-output-format.md](references/common-output-format.md).
+
 Return review output with `## Checks Summary`, `## Checks (Failed/Deferred Only)`, and `## Issues`.
 Each issue must include file path, risk summary, and remediation guidance.
 

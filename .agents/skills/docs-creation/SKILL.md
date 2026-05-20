@@ -2,7 +2,7 @@
 name: docs-creation
 description: >-
   Create or update docs files with deterministic matching and templates.
-  Use when creating or updating documentation skills.
+  Use when creating or updating documentation files.
   Use for specification, architecture, design, troubleshooting, and maintenance docs.
 license: Apache-2.0
 metadata:
@@ -13,7 +13,7 @@ metadata:
 ## Input
 
 - Natural language request describing the topic/purpose (required)
-- Extracted document type (required, must match one of the Document Types listed below)
+- Extracted document type (required, must match one of the Document Types in [references/category-document-types.md](references/category-document-types.md))
 - Extracted profile: `default`, `go`, or `terraform` (required)
 - Optional target file under `docs/` (if omitted, automatically matched using deterministic logic)
 
@@ -48,7 +48,7 @@ Use this schema to validate the structured fields extracted from the natural lan
 }
 ```
 
-If extracted structured input does not satisfy this schema, stop before write actions and return the schema plus a valid minimal JSON example in the report.
+If extracted structured input does not satisfy this schema, stop before write actions and return `status: failed` per Output Specification format, including the schema and a valid minimal JSON example in Issues.
 
 ## USE FOR:
 
@@ -73,31 +73,9 @@ If extracted structured input does not satisfy this schema, stop before write ac
 - "Create an architecture doc for this repository"
 - "Update troubleshooting for Terraform validation issues"
 
-## Document Types
-
-### Core Types
-
-| Type               | File                       | Description                                                                      |
-| ------------------ | -------------------------- | -------------------------------------------------------------------------------- |
-| `specification`    | `docs/specification.md`    | Behavioral specifications present in implementation but not elsewhere documented |
-| `architecture`     | `docs/architecture.md`     | System-wide structure, component relationships, and account layout               |
-| `design`           | `docs/design.md`           | Module-level internal design, variable design, and naming conventions            |
-| `design_decisions` | `docs/design_decisions.md` | Key decisions with rationale and rejected alternatives                           |
-| `troubleshooting`  | `docs/troubleshooting.md`  | Common issues, root causes, and resolutions                                      |
-| `general`          | (any)                      | Catch-all for documents that do not fit other types                              |
-
-### Extension Types
-
-| Type                | File                        | Description                                           |
-| ------------------- | --------------------------- | ----------------------------------------------------- |
-| `module_catalog`    | `docs/module_catalog.md`    | Index of modules with purpose, inputs, and outputs    |
-| `monitoring`        | `docs/monitoring.md`        | Alerts, dashboards, and runbooks                      |
-| `performance`       | `docs/performance.md`       | Benchmarks, bottlenecks, and tuning guidance          |
-| `security_coverage` | `docs/security_coverage.md` | Security service coverage matrix                      |
-| `maintenance_notes` | `docs/maintenance_notes.md` | Periodic tasks, known quirks, and maintenance history |
-| `improvements`      | `docs/improvements.md`      | Planned and completed improvements                    |
-
 ## Output Specification
+
+Return structured Markdown in accordance with [references/common-output-format.md](references/common-output-format.md).
 
 Create or update markdown files under `docs/`, then return a report using [references/common-output-format.md](references/common-output-format.md).
 Report must include changed file paths and duplicate-check result.
@@ -107,27 +85,14 @@ File rules: see [NC-02](references/common-checklist.md) and [DC-02](references/c
 
 ## Execution Scope
 
-- Ensure core docs exist; create missing ones, update existing ones.
-- Resolve update/create deterministically and apply templates.
-- Add valid docs links and update README docs index when markers exist.
+- Writes only to markdown files under `docs/`.
 - Do not rename/delete files, add YAML frontmatter, or run markdown linting.
-
-### USE FOR:
-
-- create new documentation files under `docs/`
-- update existing docs with template-aligned structure
-- maintain README docs index entries linked to `docs/`
-
-### DO NOT USE FOR:
-
-- edit inline code comments or source-code docstrings
-- rewrite non-markdown assets
-- run markdown lint or link checker as part of this skill
 
 ## Reference Files Guide
 
 - [common-checklist.md](references/common-checklist.md) (always read)
 - [common-output-format.md](references/common-output-format.md) (always read)
+- [document-types](references/category-document-types.md) (Read when resolving `document_type` to default target file)
 - [templates](references/category-templates.md) (Read when using the default documentation template set)
 - [go-templates](references/category-templates-go.md) (Read when the profile is `go`)
 - [tf-templates](references/category-templates-terraform.md) (Read when the profile is `terraform`)
@@ -135,8 +100,8 @@ File rules: see [NC-02](references/common-checklist.md) and [DC-02](references/c
 ## Workflow
 
 1. List markdown files in `docs/`.
-2. If no target file provided, resolve using exact filename match; if no match, ask user for an explicit target file path.
-3. Select template by profile: if profile is `go`, use `references/category-templates-go.md`; if `terraform`, use `references/category-templates-terraform.md`; else use `references/category-templates.md`.
+2. If no target file provided, resolve deterministic default path using [references/category-document-types.md](references/category-document-types.md); if no deterministic match exists, ask user for an explicit target file path.
+3. Select template: use `references/category-templates-<profile>.md` if it exists; fallback to `references/category-templates.md`.
 4. Run case-insensitive duplicate check; duplicates must fail the run.
 5. Create/update with naming/structure rules from [common-checklist.md](references/common-checklist.md) and valid relative links.
 6. IF README has docs-index markers, update inside markers; ELSE skip.

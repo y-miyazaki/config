@@ -16,8 +16,8 @@ metadata:
 
 ## Output Specification
 
-- Return structured Markdown with `## Checks Summary`, `## Checks (Failed/Deferred Only)`, and `## Issues`.
-- Use [references/common-output-format.md](references/common-output-format.md) as the field-level contract.
+- Return structured Markdown in accordance with [references/common-output-format.md](references/common-output-format.md).
+- Include `## Checks Summary`, `## Checks (Failed/Deferred Only)`, and `## Issues`.
 
 ## Execution Scope
 
