@@ -26,7 +26,6 @@ Structured validation results in fixed tool order.
 - **Do not review code design decisions** (use go-review).
 - **Do not modify source files** except `--fix` formatting.
 - **Do not create or delete files**.
-- Test coverage threshold: 80%
 
 ### USE FOR:
 

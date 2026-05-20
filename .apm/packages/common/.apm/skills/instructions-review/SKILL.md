@@ -25,7 +25,6 @@ Always include target file list and deferred reason summary.
 - Focus on quality, structure, consistency, and practical usability requiring human/AI judgment
 - **Do not execute validation commands from this review skill**
 - Do not modify instructions files or approve/merge PRs
-- Required chapter order: Standards → Guidelines → Testing and Validation → Security Guidelines
 
 ### USE FOR:
 
@@ -44,8 +43,8 @@ Always include target file list and deferred reason summary.
 - [common-checklist.md](references/common-checklist.md) (always read)
 - [common-output-format.md](references/common-output-format.md) (always read)
 - [troubleshooting](references/common-troubleshooting.md)
-- [global](references/category-global.md), [testing](references/category-testing.md), [security](references/category-security.md)
-- [quality](references/category-quality.md), [guidelines](references/category-guidelines.md), [standards](references/category-standards.md)
+- [global](references/category-global.md), [testing](references/category-testing.md), [security](references/category-security.md) - Read when reviewing overall quality, testing instructions, or security guidelines.
+- [quality](references/category-quality.md), [guidelines](references/category-guidelines.md), [standards](references/category-standards.md) - Read when reviewing quality criteria, authoring guidelines, or compliance standards.
 
 ## Workflow
 
@@ -54,7 +53,7 @@ Always include target file list and deferred reason summary.
 3. If target file does not exist, return `status: failed` for that file and continue remaining targets.
 4. If deterministic artifacts remain unavailable after one rerun request, defer check-dependent items with explicit reason.
 5. If PR context is unavailable, run file-only review and mark PR-context checks as deferred.
-6. Verify required chapter order, then review checklist priorities and collect failed/deferred ItemIDs.
+6. Verify required chapter order (Standards → Guidelines → Testing and Validation → Security Guidelines), then review checklist priorities and collect failed/deferred ItemIDs.
 7. Output required report sections per [references/common-output-format.md](references/common-output-format.md).
 
 ## Best Practices
