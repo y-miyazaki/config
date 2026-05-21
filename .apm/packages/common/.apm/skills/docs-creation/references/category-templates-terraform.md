@@ -8,19 +8,19 @@ Use these variants when Terraform profile is detected.
 
 Use the template source below for each `document_type`:
 
-| Document Type       | Template Source                                          |
+| `document_type`     | Template Source                                          |
 | ------------------- | -------------------------------------------------------- |
 | `specification`     | `specification_terraform` in this file                   |
 | `architecture`      | `references/category-templates.md` (`architecture`)      |
 | `design`            | `references/category-templates.md` (`design`)            |
-| `design_decisions`  | `references/category-templates.md` (`design_decisions`)  |
+| `design-decisions`  | `references/category-templates.md` (`design-decisions`)  |
 | `troubleshooting`   | `references/category-templates.md` (`troubleshooting`)   |
 | `general`           | `references/category-templates.md` (`general`)           |
-| `module_catalog`    | `references/category-templates.md` (`module_catalog`)    |
+| `module-catalog`    | `references/category-templates.md` (`module-catalog`)    |
 | `monitoring`        | `references/category-templates.md` (`monitoring`)        |
 | `performance`       | `references/category-templates.md` (`performance`)       |
-| `security_coverage` | `references/category-templates.md` (`security_coverage`) |
-| `maintenance_notes` | `references/category-templates.md` (`maintenance_notes`) |
+| `security-coverage` | `references/category-templates.md` (`security-coverage`) |
+| `maintenance-notes` | `references/category-templates.md` (`maintenance-notes`) |
 | `improvements`      | `references/category-templates.md` (`improvements`)      |
 
 ## specification_terraform

@@ -7,7 +7,7 @@
 - [ ] Input payload is valid JSON and matches the schema defined in `SKILL.md` Input section
 - [ ] Required fields exist: `topic`, `document_type`, `profile`
 - [ ] `document_type` and `profile` use allowed enum values
-- [ ] If `target_file` is provided, it matches `^docs/[a-z0-9_]+\.md$`
+- [ ] If `target_file` is provided, it matches `^docs/[a-z0-9-]+\.md$`
 - **PASS** if schema validation succeeds, **FAIL** if validation fails
 
 ### NC-01: Target File Resolution and Duplicate Handling
@@ -24,25 +24,25 @@
 ### NC-02: Filename Follows Naming Rules
 
 - [ ] All characters are lowercase ASCII
-- [ ] Word separators are underscores only (no hyphens, no camelCase)
+- [ ] Word separators are hyphens only (kebab-case; no underscores, no camelCase)
 - [ ] No version numbers in the filename
 - [ ] Extension is `.md`
 - [ ] Numeric prefix used only when documents have a defined reading order
 - **PASS** if all rules satisfied, **FAIL** if any rule violated
 
-### NC-03: Document Type Matched
+### NC-03: `document_type` Matched
 
-- [ ] Requested topic is matched to a core type or extension type (see SKILL.md Document Types)
+- [ ] Requested topic is matched to a core type or extension type (see `references/category-document-types.md`)
 - [ ] Filename pattern follows the selected type's convention
 - [ ] A matching template section exists in the selected category template reference file (or `general` fallback is used)
 - **PASS** if type mapping and template mapping are explicit, **FAIL** if type is ambiguous or unmatched
 
 ### DC-01: Template Applied
 
-- [ ] Template from selected category template reference file matching the document type is used as base
+- [ ] Template from selected category template reference file matching `document_type` is used as base
 - [ ] All `<placeholder>` values are replaced with actual content
 - [ ] Sections marked as optional in the template are removed if not applicable (not left as placeholder headings)
-- [ ] See the template definition for which sections are optional for each document type
+- [ ] See the template definition for which sections are optional for each `document_type`
 - **PASS** if template applied and placeholders replaced, **FAIL** if placeholders remain
 
 ### DC-02: Structure Rules Satisfied
@@ -67,7 +67,7 @@
 ### DC-05: Technical Documentation Structure Alignment
 
 - [ ] Apply this check using the selected template definition in `references/category-templates.md`
-- [ ] For types with technical standard structure (`architecture`, `design`, `module_catalog`, `security_coverage`, `monitoring`, `performance`), include `Overview`, `Prerequisites`, `Architecture/Design`, `Implementation Details`, `Testing/Validation`, `Troubleshooting` (or explicitly mark non-applicable sections)
-- [ ] For types with dedicated workflow style (`specification`, `troubleshooting`, `maintenance_notes`, `improvements`, `design_decisions`, `general`), follow the selected template sections without forcing the technical standard structure
+- [ ] For types with technical standard structure (`architecture`, `design`, `module-catalog`, `security-coverage`, `monitoring`, `performance`), include `Overview`, `Prerequisites`, `Architecture/Design`, `Implementation Details`, `Testing/Validation`, `Troubleshooting` (or explicitly mark non-applicable sections)
+- [ ] For types with dedicated workflow style (`specification`, `troubleshooting`, `maintenance-notes`, `improvements`, `design-decisions`, `general`), follow the selected template sections without forcing the technical standard structure
 - **PASS** if the document follows its selected template structure, **FAIL** if required sections for that template are missing without rationale
 - If the project has its own documentation standard, evaluate against project standard first and use this checklist as fallback

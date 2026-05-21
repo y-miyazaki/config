@@ -13,7 +13,7 @@ metadata:
 ## Input
 
 - Natural language request describing the topic/purpose (required)
-- Extracted document type (required, must match one of the Document Types in [references/category-document-types.md](references/category-document-types.md))
+- Extracted `document_type` (required in internal structured input; infer from the natural language request using [references/category-document-types.md](references/category-document-types.md) when not explicitly provided)
 - Extracted profile: `default`, `go`, or `terraform` (required)
 - Optional target file under `docs/` (if omitted, automatically matched using deterministic logic)
 
@@ -33,7 +33,7 @@ Use this schema to validate the structured fields extracted from the natural lan
     },
     "document_type": {
       "type": "string",
-      "enum": ["specification", "architecture", "design", "design_decisions", "troubleshooting", "general", "module_catalog", "monitoring", "performance", "security_coverage", "maintenance_notes", "improvements"]
+      "enum": ["specification", "architecture", "design", "design-decisions", "troubleshooting", "general", "module-catalog", "monitoring", "performance", "security-coverage", "maintenance-notes", "improvements"]
     },
     "profile": {
       "type": "string",
@@ -41,7 +41,7 @@ Use this schema to validate the structured fields extracted from the natural lan
     },
     "target_file": {
       "type": "string",
-      "pattern": "^docs/[a-z0-9_]+\\.md$"
+      "pattern": "^docs/[a-z0-9-]+\\.md$"
     }
   },
   "required": ["topic", "document_type", "profile"]
@@ -92,7 +92,7 @@ File rules: see [NC-02](references/common-checklist.md) and [DC-02](references/c
 
 - [common-checklist.md](references/common-checklist.md) (always read)
 - [common-output-format.md](references/common-output-format.md) (always read)
-- [document-types](references/category-document-types.md) (Read when resolving `document_type` to default target file)
+- [document-types](references/category-document-types.md) (always read)
 - [templates](references/category-templates.md) (Read when using the default documentation template set)
 - [go-templates](references/category-templates-go.md) (Read when the profile is `go`)
 - [tf-templates](references/category-templates-terraform.md) (Read when the profile is `terraform`)
@@ -100,12 +100,14 @@ File rules: see [NC-02](references/common-checklist.md) and [DC-02](references/c
 ## Workflow
 
 1. List markdown files in `docs/`.
-2. If no target file provided, resolve deterministic default path using [references/category-document-types.md](references/category-document-types.md); if no deterministic match exists, ask user for an explicit target file path.
-3. Select template: use `references/category-templates-<profile>.md` if it exists; fallback to `references/category-templates.md`.
-4. Run case-insensitive duplicate check; duplicates must fail the run.
-5. Create/update with naming/structure rules from [common-checklist.md](references/common-checklist.md) and valid relative links.
-6. IF README has docs-index markers, update inside markers; ELSE skip.
-7. Regenerate `docs/index.md` with a list of all files in `docs/` with relative links and one-line descriptions. Format:
+2. Resolve `document_type`: use explicit `document_type` if present; otherwise infer one candidate from [references/category-document-types.md](references/category-document-types.md).
+3. If `document_type` inference is ambiguous or no candidate matches, stop before write actions and ask the user to select one explicit `document_type`.
+4. If no target file provided, resolve deterministic default path using [references/category-document-types.md](references/category-document-types.md); if no deterministic match exists, ask user for an explicit target file path.
+5. Select template: use `references/category-templates-<profile>.md` if it exists; fallback to `references/category-templates.md`.
+6. Run case-insensitive duplicate check; duplicates must fail the run.
+7. Create/update with naming/structure rules from [common-checklist.md](references/common-checklist.md) and valid relative links.
+8. IF README has docs-index markers, update inside markers; ELSE skip.
+9. Regenerate `docs/index.md` with a list of all files in `docs/` with relative links and one-line descriptions. Format:
 
 ```markdown
 # Documentation Index
@@ -114,11 +116,12 @@ File rules: see [NC-02](references/common-checklist.md) and [DC-02](references/c
 - [architecture.md](architecture.md) - System architecture overview
 ```
 
-8. Return report using [references/common-output-format.md](references/common-output-format.md).
+10. Return report using [references/common-output-format.md](references/common-output-format.md).
 
 ## Error Handling and Troubleshooting
 
 - If input JSON schema validation fails, return `status: failed` and include the schema plus a valid minimal JSON example.
+- If `document_type` inference returns multiple candidates or no candidate, stop before write actions and request explicit `document_type`.
 - If `docs/` does not exist, create `docs/` first and continue.
 - If selected template file is missing, fall back to `general` template and record fallback in report.
 - If duplicate check fails, return `status: failed` and stop before write actions.

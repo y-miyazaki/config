@@ -16,7 +16,7 @@ Use the following report structure after creating or updating documentation file
 
 ## Created / Updated Files
 
-| Action  | File                 | Document Type |
+| Action  | File                 | `document_type` |
 | ------- | -------------------- | ------------- |
 | Created | `docs/<filename>.md` | <type>        |
 | Updated | `README.md`          | —             |
@@ -61,7 +61,7 @@ No files created or updated
 1. NC-01: Target File Resolution and Duplicate Handling
    - File: docs/
    - Problem: Case-insensitive duplicate paths found: `<pathA>`, `<pathB>`
-   - Recommendation: Keep one canonical lowercase underscore filename and remove or rename conflicting paths before rerunning.
+   - Recommendation: Keep one canonical lowercase kebab-case filename and remove or rename conflicting paths before rerunning.
 ```
 
 ## Status Symbols

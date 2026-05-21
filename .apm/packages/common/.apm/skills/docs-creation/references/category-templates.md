@@ -1,6 +1,6 @@
 # Document Templates
 
-Use the template matching the document type. Replace all `<placeholder>` values with actual content.
+Use the template matching `document_type`. Replace all `<placeholder>` values with actual content.
 Remove sections that do not apply rather than leaving them empty.
 
 ## Optional vs. Required Sections
@@ -8,7 +8,7 @@ Remove sections that do not apply rather than leaving them empty.
 - **Required sections** (always include): Marked by title, typically core content sections
 - **Optional sections** (remove if not applicable): Marked with `(Optional)` — includes Configuration Defaults, Prevention, Alternative Implementations, etc.
 
-See SKILL.md Document Types for the full type list and descriptions.
+See `references/category-document-types.md` for the full type list and descriptions.
 
 ---
 
@@ -58,12 +58,12 @@ design, account structure, <relevant layout>, and key design decisions.
 
 ## Key Design Decisions
 
-See [design_decisions.md](./design_decisions.md) for rationale behind major choices.
+See [design-decisions.md](./design-decisions.md) for rationale behind major choices.
 ```
 
 ---
 
-## design_decisions
+## design-decisions
 
 ```markdown
 # Design Decisions
@@ -126,7 +126,7 @@ things are built a certain way and avoid re-investigating known decisions.
 
 ---
 
-## module_catalog
+## module-catalog
 
 ```markdown
 # Module Catalog
@@ -154,7 +154,7 @@ Index of all Terraform modules in this repository with their purpose and usage.
 
 ---
 
-## security_coverage
+## security-coverage
 
 ```markdown
 # Security Coverage
@@ -166,7 +166,7 @@ Coverage matrix for AWS security services managed in this repository.
 | Service   | Implemented | Module           | Notes                                                                     |
 | --------- | :---------: | ---------------- | ------------------------------------------------------------------------- |
 | <Service> |      ✅      | `modules/<path>` | <notes>                                                                   |
-| <Service> |      ❌      | —                | Out of scope. <reason>. See [design_decisions.md](./design_decisions.md). |
+| <Service> |      ❌      | —                | Out of scope. <reason>. See [design-decisions.md](./design-decisions.md). |
 
 ## Legend
 
@@ -257,7 +257,7 @@ Benchmarks, known bottlenecks, and tuning guidance for <project>.
 
 ---
 
-## maintenance_notes
+## maintenance-notes
 
 ```markdown
 # Maintenance Notes
