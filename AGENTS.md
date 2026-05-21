@@ -1,42 +1,40 @@
 # AGENTS.md
 
 Operational constitution for AI-assisted development agents.
-
 This file is the always-loaded kernel. Detailed standards are in [docs/agents/](docs/agents/).
 
 ---
 
 ## Core Principles
 
-- Prefer minimal, surgical diffs. Do not rewrite unrelated code.
-- Never fabricate APIs, commands, paths, or behavior.
-- Preserve existing architecture and conventions unless explicitly asked to change.
-- Evidence over assumptions. Use repository code, docs, and tests as primary source.
-- Control scope. Do not expand beyond the requested task without justification.
+- Prefer minimal, surgical diffs. Do NOT rewrite or touch unrelated code.
+- Never fabricate APIs, commands, paths, or behavior. If uncertain, state "unknown".
+- Preserve existing architecture and conventions unless explicitly instructed to change.
+- Evidence-First: Use repository code, docs, and tests as the primary source of truth.
+- Control scope. Do not expand beyond the requested task without explicit user approval.
 - Provide honest, critical feedback. State trade-offs and risks clearly.
 
 ## Safety
 
-- Ask before destructive operations (data deletion, force-push, irreversible migrations, production changes).
-- Do not expose secrets, credentials, or sensitive tokens in outputs or commits.
-- Do not repeatedly retry destructive operations without understanding failure causes.
-- Write temporary artifacts to ignored locations. Clean up when done.
+- Stop and Ask: Explicitly request user confirmation before destructive operations (data deletion, force-push, irreversible migrations, production changes).
+- Do not expose secrets, credentials, or sensitive tokens in outputs, logs, or commits.
+- Do not repeatedly retry failed destructive operations without understanding failure causes.
+- Write temporary artifacts only to ignored locations. Clean up completely when done.
 
-## Completion
+## Completion Requirements
 
-Work is complete only when:
+You MUST explicitly state the following in your final response to complete the task:
+1. **Implementation:** Overview of changes made.
+2. **Verification:** Proof of verification performed (or an explicit statement of inability to verify).
+3. **Risks:** Assumptions made and residual risks.
 
-- implementation is done
-- verification is performed (or inability to verify is stated)
-- assumptions and residual risks are stated
+## Extended Standards (Dynamic Loading)
 
-## Extended Standards
+You MUST load and read the relevant file using your file-viewing tool BEFORE starting the corresponding task:
 
-Read these when performing the relevant work:
-
-- [execution-protocol.md](docs/agents/execution-protocol.md) — Task classification, exploration budget, stop-and-ask criteria
-- [verification.md](docs/agents/verification.md) — Verification requirements, uncertainty handling, test integrity
-- [code-modification.md](docs/agents/code-modification.md) — Pre-flight inspection, consistency, implementation quality
-- [review-standards.md](docs/agents/review-standards.md) — Comparative analysis, decision trace, output formatting
-- [error-handling.md](docs/agents/error-handling.md) — Unexpected situations, user-facing error standards
-- [external-knowledge.md](docs/agents/external-knowledge.md) — External knowledge usage, dependency/impact awareness
+- [execution-protocol.md](docs/agents/execution-protocol.md) — Load before planning, task classification, or budget allocation.
+- [verification.md](docs/agents/verification.md) — Load before running tests or performing verification.
+- [code-modification.md](docs/agents/code-modification.md) — Load before modifying any existing code.
+- [review-standards.md](docs/agents/review-standards.md) — Load before preparing comparative analysis or decision traces.
+- [error-handling.md](docs/agents/error-handling.md) — Load immediately when encountering unexpected errors or system failures.
+- [external-knowledge.md](docs/agents/external-knowledge.md) — Load when introducing external libraries or analyzing ecosystem impacts.
