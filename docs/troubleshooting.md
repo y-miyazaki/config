@@ -61,3 +61,24 @@ If needed, run with explicit working directory:
 ```sh
 tflint --chdir path/to/terraform --recursive
 ```
+
+## APM Audit CI
+
+### Symptom: `ci-apm-audit` workflow fails with audit errors
+
+**Cause**: lock file drift, missing or renamed package paths, or policy violations.
+
+**Resolution**:
+
+```sh
+apm install --update
+apm audit --ci --no-drift --no-cache
+```
+
+If policy checks fail, verify the policy configuration:
+
+```sh
+apm audit --ci --no-cache --policy org
+```
+
+Check that all package paths in `apm.yml` and sub-package `apm.yml` files are valid and that `apm.lock.yaml` is committed and up to date.

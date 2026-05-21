@@ -271,6 +271,7 @@ Use repository validation workflows and scripts for changed assets:
 ## Validation and Safety Checks
 
 - `apm install --frozen`: verify deterministic package resolution
+- `ci-apm-audit` workflow: install APM packages and run `apm audit --ci` with optional policy checks
 - Markdown lint CI workflow: validate documentation formatting
 - GitHub Actions workflow validation: check reusable workflow syntax
 - Renovate config validation: verify shared policy JSON schema compliance

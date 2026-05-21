@@ -40,6 +40,7 @@ The architecture separates:
 - `.apm/packages/common/`: shared instructions, skills, hooks, and MCP integrations
 - `.apm/packages/aws/`: AWS-focused MCP integrations
 - `.apm/packages/terraform/`: Terraform-focused integrations and validation hooks
+- `.apm/packages/terraform-aws/`: Terraform + AWS provider MCP integration
 - `.apm/packages/go/`: Go-focused hooks, instructions, and skills
 - `.apm/packages/shell-script/`: shell-focused hooks, instructions, and skills
 
@@ -62,6 +63,7 @@ Each package can be consumed independently through APM path-based dependencies.
 
 Validation is layered to reduce drift:
 
+- CI workflows for APM audit (`ci-apm-audit`), markdown lint, GitHub Actions validation, and shell script checks
 - package-level validation scripts under `scripts/`
 - language/tool specific validation via instructions and skills
 - CI-based checks for workflows and repository consistency
