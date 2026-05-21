@@ -3,8 +3,8 @@
 Individual templates have been split into per-`document_type` files.
 Load only the file matching the resolved `document_type`.
 
-| `document_type`     | Template File                                           |
-| ------------------- | ------------------------------------------------------- |
+| `document_type`     | Template File                                               |
+| ------------------- | ----------------------------------------------------------- |
 | `specification`     | `references/category-templates-common-specification.md`     |
 | `architecture`      | `references/category-templates-common-architecture.md`      |
 | `design`            | `references/category-templates-common-design.md`            |
