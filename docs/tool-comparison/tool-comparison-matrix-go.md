@@ -3,6 +3,13 @@
 
 Go 開発に特化したツール選定の判断材料。
 
+## History
+
+| 日付       | 内容                                                                 |
+| ---------- | -------------------------------------------------------------------- |
+| 2026-05-21 | History セクション追加                                               |
+| 2026-05-12 | 初版作成。Formatter / Linter / Container Build / Release / API Doc / Mock 等を比較 |
+
 <!-- omit in toc -->
 ## Table of Contents
 

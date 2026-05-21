@@ -3,6 +3,13 @@
 
 MCP Server の選定・比較の判断材料。
 
+## History
+
+| 日付       | 内容                                                                 |
+| ---------- | -------------------------------------------------------------------- |
+| 2026-05-21 | History セクション追加                                               |
+| 2026-05-17 | 初版作成。AWS / Terraform / Common / Performance / Code Intelligence / Knowledge MCP を比較 |
+
 <!-- omit in toc -->
 ## Table of Contents
 

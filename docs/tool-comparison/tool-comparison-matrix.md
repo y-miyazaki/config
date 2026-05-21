@@ -3,6 +3,13 @@
 
 ツール選定時の判断材料として、カテゴリ別に比較を行う。
 
+## History
+
+| 日付       | 内容                                                                 |
+| ---------- | -------------------------------------------------------------------- |
+| 2026-05-21 | AI Workflow 比較ドキュメントへのリンク追加。History セクション追加    |
+| 2026-05-12 | 初版作成。依存更新 / バージョン管理 / セキュリティ / CI/CD 等を比較 |
+
 言語/技術スタック特化の比較は以下を参照:
 
 - [Go](tool-comparison-matrix-go.md)
@@ -11,6 +18,7 @@
 - [Shell Script](tool-comparison-matrix-shell-script.md)
 - [AWS](tool-comparison-matrix-aws.md)
 - [AI Agent](tool-comparison-matrix-ai-agent.md)
+- [AI Workflow](tool-comparison-matrix-ai-workflow.md)
 
 <!-- omit in toc -->
 ## Table of Contents

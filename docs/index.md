@@ -11,6 +11,7 @@
 
 - [tool-comparison-matrix.md](tool-comparison/tool-comparison-matrix.md) - Overall tool comparison matrix
 - [tool-comparison-matrix-ai-agent.md](tool-comparison/tool-comparison-matrix-ai-agent.md) - AI agent tool comparison
+- [tool-comparison-matrix-ai-workflow.md](tool-comparison/tool-comparison-matrix-ai-workflow.md) - AI workflow tool comparison
 - [tool-comparison-matrix-aws.md](tool-comparison/tool-comparison-matrix-aws.md) - AWS tool comparison
 - [tool-comparison-matrix-go.md](tool-comparison/tool-comparison-matrix-go.md) - Go tool comparison
 - [tool-comparison-matrix-mcp-server.md](tool-comparison/tool-comparison-matrix-mcp-server.md) - MCP server tool comparison
@@ -23,3 +24,12 @@
 - [waza-quickstart.md](waza/waza-quickstart.md) - Waza quickstart guide
 - [waza-capabilities.md](waza/waza-capabilities.md) - Waza capabilities overview
 - [waza-eval-templates.md](waza/waza-eval-templates.md) - Waza eval templates
+
+## Agent Standards
+
+- [execution-protocol.md](agents/execution-protocol.md) - Task classification, exploration budget, stop-and-ask criteria
+- [verification.md](agents/verification.md) - Verification requirements, uncertainty handling, test integrity
+- [code-modification.md](agents/code-modification.md) - Pre-flight inspection, consistency, implementation quality
+- [review-standards.md](agents/review-standards.md) - Comparative analysis, decision trace, output formatting
+- [error-handling.md](agents/error-handling.md) - Unexpected situations, user-facing error standards
+- [external-knowledge.md](agents/external-knowledge.md) - External knowledge usage, dependency/impact awareness

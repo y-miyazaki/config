@@ -3,6 +3,13 @@
 
 Terraform / IaC に特化したツール選定の判断材料。
 
+## History
+
+| 日付       | 内容                                                                 |
+| ---------- | -------------------------------------------------------------------- |
+| 2026-05-21 | History セクション追加                                               |
+| 2026-05-11 | 初版作成。Lint / IaC 比較 / Plan Comment / Documentation / Testing を比較 |
+
 <!-- omit in toc -->
 ## Table of Contents
 
