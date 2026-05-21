@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-05-21T08:12:53.528514+00:00'
+generated_at: '2026-05-21T08:52:21.656670+00:00'
 apm_version: 0.14.0
 dependencies:
 - repo_url: _local/aws
@@ -18,7 +18,7 @@ dependencies:
   - .agents/skills/markdown-validation
   - .github/hooks/common-lean-ctx.json
   deployed_file_hashes:
-    .github/hooks/common-lean-ctx.json: sha256:2d28799a2648693e4ffe109d84f5c7c31ce266fab1c292b1f5dd4da043b5c8c5
+    .github/hooks/common-lean-ctx.json: sha256:30f187840c795acc257b22328f7bd3cd0ab78eb086a8c6e04f9792c18d4b2a7e
   source: local
   local_path: ./.apm/packages/common
 - repo_url: _local/go
