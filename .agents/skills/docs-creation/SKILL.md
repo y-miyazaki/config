@@ -93,9 +93,9 @@ File rules: see [NC-02](references/common-checklist.md) and [DC-02](references/c
 - [common-checklist.md](references/common-checklist.md) (always read)
 - [common-output-format.md](references/common-output-format.md) (always read)
 - [document-types](references/category-document-types.md) (always read)
-- [templates](references/category-templates.md) (Read when using the default documentation template set)
-- [go-templates](references/category-templates-go.md) (Read when the profile is `go`)
-- [tf-templates](references/category-templates-terraform.md) (Read when the profile is `terraform`)
+- common-template: `references/category-templates-common-<document_type>.md` (Read the file matching the resolved `document_type`; e.g., `references/category-templates-common-specification.md` for `specification`)
+- [go-templates](references/category-templates-go.md) (Read when the profile is `go`; overrides `specification` template)
+- [terraform-templates](references/category-templates-terraform.md) (Read when the profile is `terraform`; overrides `specification` template)
 
 ## Workflow
 
@@ -103,7 +103,7 @@ File rules: see [NC-02](references/common-checklist.md) and [DC-02](references/c
 2. Resolve `document_type`: use explicit `document_type` if present; otherwise infer one candidate from [references/category-document-types.md](references/category-document-types.md).
 3. If `document_type` inference is ambiguous or no candidate matches, stop before write actions and ask the user to select one explicit `document_type`.
 4. If no target file provided, resolve deterministic default path using [references/category-document-types.md](references/category-document-types.md); if no deterministic match exists, ask user for an explicit target file path.
-5. Select template: use `references/category-templates-<profile>.md` if it exists; fallback to `references/category-templates.md`.
+5. Select template: use `references/category-templates-go.md` for `go` profile, `references/category-templates-terraform.md` for `terraform` profile; for `default` profile, read `references/category-templates-common-<document_type>.md`.
 6. Run case-insensitive duplicate check; duplicates must fail the run.
 7. Create/update with naming/structure rules from [common-checklist.md](references/common-checklist.md) and valid relative links.
 8. IF README has docs-index markers, update inside markers; ELSE skip.
