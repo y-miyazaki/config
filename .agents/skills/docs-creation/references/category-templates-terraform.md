@@ -34,23 +34,18 @@ separately by terraform-docs.
 
 ## Scope
 
-| Item           | Detail                                  |
-| -------------- | --------------------------------------- |
-| Stacks         | <comma-separated list of stack paths>   |
-| Environments   | <e.g., dev, staging, production>        |
-| Cloud Provider | <e.g., AWS, GCP>                        |
-| Exclusions     | <what is explicitly out of scope>       |
+| Item           | Detail                                |
+| -------------- | ------------------------------------- |
+| Stacks         | <comma-separated list of stack paths> |
+| Environments   | <e.g., dev, staging, production>      |
+| Cloud Provider | <e.g., AWS, GCP>                      |
+| Exclusions     | <what is explicitly out of scope>     |
 
 Out-of-scope items:
 
 - Module input/output variable documentation (maintained by terraform-docs)
+- Resource specification tables (do not output; maintain with terraform-docs outputs)
 - <other exclusions>
-
-## Resource Specifications
-
-| Resource Type | Name Pattern | Required Tags | Notes   |
-| ------------- | ------------ | ------------- | ------- |
-| `<aws_*>`     | `<pattern>`  | `<tags>`      | <notes> |
 
 ## Validation and Safety Checks
 

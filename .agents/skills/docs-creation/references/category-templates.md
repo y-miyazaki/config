@@ -22,11 +22,11 @@ implementation but not described in any other document.
 
 ## Scope
 
-| Item         | Detail                                |
-| ------------ | ------------------------------------- |
-| Features     | <comma-separated list of features>    |
-| Environments | <e.g., dev, staging, production>      |
-| Exclusions   | <what is explicitly out of scope>     |
+| Item         | Detail                             |
+| ------------ | ---------------------------------- |
+| Features     | <comma-separated list of features> |
+| Environments | <e.g., dev, staging, production>   |
+| Exclusions   | <what is explicitly out of scope>  |
 
 ## <Major Feature or Pipeline Name>
 

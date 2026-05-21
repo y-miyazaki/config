@@ -44,13 +44,8 @@ separately by terraform-docs.
 Out-of-scope items:
 
 - Module input/output variable documentation (maintained by terraform-docs)
+- Resource specification tables (do not output; maintain with terraform-docs outputs)
 - <other exclusions>
-
-## Resource Specifications
-
-| Resource Type | Name Pattern | Required Tags | Notes   |
-| ------------- | ------------ | ------------- | ------- |
-| `<aws_*>`     | `<pattern>`  | `<tags>`      | <notes> |
 
 ## Validation and Safety Checks
 
