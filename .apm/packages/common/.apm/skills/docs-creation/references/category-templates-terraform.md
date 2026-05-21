@@ -28,28 +28,23 @@ Use the template source below for each `document_type`:
 ```markdown
 # Terraform Specification
 
-This document defines the repository behavior, module contracts, and environment-specific
-configuration for Terraform-managed resources.
+This document defines the repository behavior and environment-specific configuration
+for Terraform-managed resources. Module input/output documentation is maintained
+separately by terraform-docs.
 
 ## Scope
 
-<Describe covered stacks, environments, and exclusions.>
+| Item           | Detail                                |
+| -------------- | ------------------------------------- |
+| Stacks         | <comma-separated list of stack paths> |
+| Environments   | <e.g., dev, staging, production>      |
+| Cloud Provider | <e.g., AWS, GCP>                      |
+| Exclusions     | <what is explicitly out of scope>     |
 
-## Module Contracts
+Out-of-scope items:
 
-### `modules/<path>`
-
-**Inputs**:
-
-| Variable | Type     | Required | Default   | Description   |
-| -------- | -------- | -------- | --------- | ------------- |
-| `<var>`  | `<type>` | Yes/No   | `<value>` | <description> |
-
-**Outputs**:
-
-| Output     | Description   |
-| ---------- | ------------- |
-| `<output>` | <description> |
+- Module input/output variable documentation (maintained by terraform-docs)
+- <other exclusions>
 
 ## Resource Specifications
 

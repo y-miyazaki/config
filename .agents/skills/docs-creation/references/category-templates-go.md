@@ -32,7 +32,12 @@ This document defines behavior, package contracts, and runtime guarantees for Go
 
 ## Scope
 
-<Describe covered packages, binaries, and environments.>
+| Item         | Detail                                  |
+| ------------ | --------------------------------------- |
+| Packages     | <comma-separated list of package paths> |
+| Binaries     | <e.g., cmd/server, cmd/worker>          |
+| Environments | <e.g., dev, staging, production>        |
+| Exclusions   | <what is explicitly out of scope>       |
 
 ## Package Contracts
 

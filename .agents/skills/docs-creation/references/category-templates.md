@@ -12,13 +12,21 @@ See `references/category-document-types.md` for the full type list and descripti
 
 ---
 
-## specification / spec
+## specification
 
 ```markdown
 # <Project Name> Functional Specification
 
 This document records the behavioral specifications of <project> that are present in the
 implementation but not described in any other document.
+
+## Scope
+
+| Item         | Detail                                |
+| ------------ | ------------------------------------- |
+| Features     | <comma-separated list of features>    |
+| Environments | <e.g., dev, staging, production>      |
+| Exclusions   | <what is explicitly out of scope>     |
 
 ## <Major Feature or Pipeline Name>
 
@@ -33,6 +41,12 @@ implementation but not described in any other document.
 | Parameter  | Default   | Notes   |
 | ---------- | --------- | ------- |
 | `--<flag>` | `<value>` | <notes> |
+
+## Validation and Safety Checks
+
+- `<lint or format check>`
+- `<test command>`
+- `<project specific checks>`
 ```
 
 ---
@@ -43,7 +57,7 @@ implementation but not described in any other document.
 # Architecture Overview
 
 This document provides structural context for AI assistants. It describes the organization
-design, account structure, <relevant layout>, and key design decisions.
+design, account structure, <e.g., network topology, service layout>, and key design decisions.
 
 ## <System or Account Structure>
 
@@ -68,8 +82,7 @@ See [design-decisions.md](./design-decisions.md) for rationale behind major choi
 ```markdown
 # Design Decisions
 
-Key design decisions and patterns in this repository. Helps AI assistants understand why
-things are built a certain way and avoid re-investigating known decisions.
+Records key architectural decisions to clarify rationale and prevent re-investigation.
 
 ## <Decision Title>
 
@@ -113,11 +126,11 @@ things are built a certain way and avoid re-investigating known decisions.
 - <Policy 1>
 - <Policy 2>
 
-## Variable Design
+## Parameters
 
-| Variable | Type     | Description   |
-| -------- | -------- | ------------- |
-| `<name>` | `<type>` | <description> |
+| Parameter | Type     | Description   |
+| --------- | -------- | ------------- |
+| `<name>`  | `<type>` | <description> |
 
 ## Naming Conventions
 
@@ -131,7 +144,7 @@ things are built a certain way and avoid re-investigating known decisions.
 ```markdown
 # Module Catalog
 
-Index of all Terraform modules in this repository with their purpose and usage.
+Index of all modules in this repository with their purpose and usage.
 
 ## <Category Name>
 
@@ -159,7 +172,7 @@ Index of all Terraform modules in this repository with their purpose and usage.
 ```markdown
 # Security Coverage
 
-Coverage matrix for AWS security services managed in this repository.
+Coverage matrix for <cloud/infrastructure security services> managed in this repository.
 
 ## Coverage Matrix
 

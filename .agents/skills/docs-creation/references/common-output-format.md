@@ -17,9 +17,9 @@ Use the following report structure after creating or updating documentation file
 ## Created / Updated Files
 
 | Action  | File                 | `document_type` |
-| ------- | -------------------- | ------------- |
-| Created | `docs/<filename>.md` | <type>        |
-| Updated | `README.md`          | —             |
+| ------- | -------------------- | --------------- |
+| Created | `docs/<filename>.md` | <type>          |
+| Updated | `README.md`          | —               |
 
 ## Issues
 1. <ItemID>: <ItemName>
