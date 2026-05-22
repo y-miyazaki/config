@@ -61,7 +61,7 @@ packages:
   # AI agent tools
   - name: microsoft/apm@v0.14.0
     registry: local
-  - name: microsoft/waza@v0.31.0
+  - name: microsoft/waza@v0.33.0
     registry: local
   - name: yvgude/lean-ctx@v3.6.2
     registry: local

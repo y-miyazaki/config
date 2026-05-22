@@ -28,6 +28,7 @@
 - [ ] No version numbers in the filename
 - [ ] Extension is `.md`
 - [ ] Numeric prefix used only when documents have a defined reading order
+- **SKIP** for `other` type updating existing files (preserve original filename)
 - **PASS** if all rules satisfied, **FAIL** if any rule violated
 
 ### NC-03: `document_type` Matched

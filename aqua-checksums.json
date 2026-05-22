@@ -606,6 +606,36 @@
       "algorithm": "sha256"
     },
     {
+      "id": "github_release/github.com/microsoft/waza/v0.33.0/waza-darwin-amd64",
+      "checksum": "AF40CE5667C5C67584243324D7D8011752575F1E5747B1BEF1AAC269BAD2579C",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/microsoft/waza/v0.33.0/waza-darwin-arm64",
+      "checksum": "0467F019FD7F53FB6DEC09D810A957DB707BD69D72F3966861B23EF6155A11E5",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/microsoft/waza/v0.33.0/waza-linux-amd64",
+      "checksum": "C1A31A15D959D2CD536FEB41CF7B20F94B0434A8E86949D3DE3D21C1E3FB6FF3",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/microsoft/waza/v0.33.0/waza-linux-arm64",
+      "checksum": "552BA4F45E5F73E3E9C0C93429E2C59E21F1A4DE8B9895F98F54DEEA7F03DFA8",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/microsoft/waza/v0.33.0/waza-windows-amd64.exe",
+      "checksum": "F4B65386476A7BCFC224C4E9AE372B963320C495447E6D5D4E382023173B05B9",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/microsoft/waza/v0.33.0/waza-windows-arm64.exe",
+      "checksum": "EA3B8BD5064FAC05201ABADBA6680DE04506FE7C10A9F2B296558BA6BF296269",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/mvdan/gofumpt/v0.10.0/gofumpt_v0.10.0_darwin_amd64",
       "checksum": "30E5B914A824C3B6BD0480E4F493517012167D380DE74643879C50F4AA0C834E",
       "algorithm": "sha256"
