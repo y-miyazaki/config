@@ -43,6 +43,11 @@ on:
         description: "TFLint version to use"
         required: false
         type: string
+      trivy_version:
+        default: "v0.70.0"
+        description: "Trivy version to use"
+        required: false
+        type: string
     secrets:
       AWS_IAM_ROLE_ARN:
         required: true
@@ -66,6 +71,7 @@ env:
   TFCMT_CHECKSUM: ${{ inputs.tfcmt_checksum }}
   TFCMT_VERSION: ${{ inputs.tfcmt_version }}
   TFLINT_VERSION: ${{ inputs.tflint_version }}
+  TRIVY_VERSION: ${{ inputs.trivy_version }}
 
 jobs:
   init:
@@ -273,6 +279,7 @@ jobs:
           scanners: license,misconfig,secret,vuln
           severity: HIGH,CRITICAL
           trivy-config: trivy.yaml
+          version: ${{ env.TRIVY_VERSION }}
 
       # https://github.com/aquasecurity/trivy-action/?tab=readme-ov-file#inputs
       - name: Exec Trivy Generate SBOM (CycloneDX)
@@ -283,6 +290,7 @@ jobs:
           output: ${{ env.TERRAFORM_PATH }}/sbom-${{ env.COMPONENT }}-${{ env.ENVIRONMENT }}.json
           scan-ref: .
           scan-type: "fs"
+          version: ${{ env.TRIVY_VERSION }}
 
       - name: Upload SBOM Artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
