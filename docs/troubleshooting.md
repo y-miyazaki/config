@@ -9,7 +9,7 @@ This document lists common issues when working with this repository and the reco
 - [APM Installation Issues](#apm-installation-issues)
   - [Symptom: `apm install --update` fails](#symptom-apm-install---update-fails)
 - [Markdown and Instruction Validation](#markdown-and-instruction-validation)
-  - [Symptom: markdownlint failures in docs or instructions](#symptom-markdownlint-failures-in-docs-or-instructions)
+  - [Symptom: markdownlint-cli2 failures in docs or instructions](#symptom-markdownlint-cli2-failures-in-docs-or-instructions)
 - [Terraform Linting](#terraform-linting)
   - [Symptom: `tflint` fails after template updates](#symptom-tflint-fails-after-template-updates)
 
@@ -30,14 +30,14 @@ If the error persists, verify package paths in root `apm.yml` and each package `
 
 ## Markdown and Instruction Validation
 
-### Symptom: markdownlint failures in docs or instructions
+### Symptom: markdownlint-cli2 failures in docs or instructions
 
 **Cause**: heading hierarchy issues, trailing newline issues, or inconsistent table formatting.
 
 **Resolution**:
 
 ```sh
-markdownlint docs/ .github/instructions/*.instructions.md
+markdownlint-cli2 "docs/**/*.md" ".github/instructions/*.instructions.md"
 git diff --check
 ```
 

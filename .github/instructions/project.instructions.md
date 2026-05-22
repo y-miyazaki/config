@@ -44,7 +44,7 @@ description: "Repository-specific operational rules"
 ```bash
 apm install --update
 apm audit --ci
-markdownlint .github/instructions/*.instructions.md
+markdownlint-cli2 ".github/instructions/*.instructions.md"
 git diff --check
 ```
 
