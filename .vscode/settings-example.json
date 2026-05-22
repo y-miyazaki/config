@@ -277,10 +277,16 @@
   // "go.gotoSymbol.ignoreFolders":[], // It will be ignored if you use a language server.
   // "go.gotoSymbol.includeGoroot":false, // It will be ignored if you use a language server.
   // "go.gotoSymbol.includeImports": false, // It will be ignored if you use a language server.
+  "go.inlayHints.parameterNames": true,
+  "go.inlayHints.assignVariableTypes": false,
+  "go.inlayHints.compositeLiteralFields": false,
+  "go.inlayHints.constantValues": false,
+  "go.inlayHints.functionTypeParameters": false,
+  "go.inlayHints.rangeVariableTypes": false,
   "go.languageServerFlags": [],
   "go.lintFlags": [
     "-c",
-    "/workspace/.golangci.yaml",
+    ".golangci.yaml",
     "-v",
     "--max-same-issues",
     "0",
@@ -323,14 +329,6 @@
       "shadow": true,
       "nilness": true,
       "unusedwrite": true
-    },
-    "hints": {
-      "parameterNames": true,
-      "assignVariableTypes": false,
-      "compositeLiteralFields": false,
-      "constantValues": false,
-      "functionTypeParameters": false,
-      "rangeVariableTypes": false
     },
     "directoryFilters": [
       "-.agents",
@@ -379,14 +377,19 @@
   "markdownlint.lintWorkspaceGlobs": [
     "**/*.{md,mkd,mdwn,mdown,markdown,markdn,mdtxt,mdtext,workbook}",
     "!**/*.code-search",
-    "!**/bower_components",
-    "!**/node_modules",
     "!**/.git",
-    "!**/vendor",
-    "!modules/**/README.md",
     "!**/.terraform",
-    "!.github/instructions/*.md",
-    "!.github/prompt/*.md",
+    "!**/apm_modules",
+    "!**/bower_components",
+    "!**/credentials",
+    "!**/instructions",
+    "!**/modules/**/README.md",
+    "!**/node_modules",
+    "!**/output",
+    "!**/prompts",
+    "!**/secrets",
+    "!**/tmp",
+    "!**/vendor",
     "!CODEOWNERS"
   ],
   "[markdown]": {
