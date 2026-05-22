@@ -14,7 +14,7 @@ metadata:
 ## Input
 
 - Natural language request describing the topic/purpose (required)
-- `document_type`: one of `readme`, `specification`, `architecture`, `design`, `design-decisions`, `troubleshooting`, `general`, `module-catalog`, `monitoring`, `performance`, `security-coverage`, `maintenance-notes`, `improvements`, `other` (infer from request using [references/category-document-types.md](references/category-document-types.md); defaults to `other` when `target_file` points to an existing file)
+- `document_type`: one of `readme`, `specification`, `architecture`, `design`, `design-decisions`, `troubleshooting`, `tutorial`, `general`, `module-catalog`, `monitoring`, `performance`, `security-coverage`, `maintenance-notes`, `improvements`, `other` (infer from request using [references/category-document-types.md](references/category-document-types.md); defaults to `other` when `target_file` points to an existing file)
 - `profile`: `default`, `go`, or `terraform` (required)
 - `target_file`: path to target `.md` file (optional; required for `other` type)
 
@@ -34,7 +34,7 @@ Return structured report per [references/common-output-format.md](references/com
 
 - create or update docs under `docs/` or `README.md`
 - update existing manually-created documents (e.g. "Improve the existing CONTRIBUTING.md")
-- apply templates to specification, architecture, design, troubleshooting docs
+- apply templates to specification, architecture, design, troubleshooting, tutorial docs
 
 ### DO NOT USE FOR:
 
@@ -55,6 +55,7 @@ Return structured report per [references/common-output-format.md](references/com
   - [category-templates-common-design.md](references/category-templates-common-design.md)
   - [category-templates-common-design-decisions.md](references/category-templates-common-design-decisions.md)
   - [category-templates-common-troubleshooting.md](references/category-templates-common-troubleshooting.md)
+  - [category-templates-common-tutorial.md](references/category-templates-common-tutorial.md)
   - [category-templates-common-general.md](references/category-templates-common-general.md)
   - [category-templates-common-module-catalog.md](references/category-templates-common-module-catalog.md)
   - [category-templates-common-monitoring.md](references/category-templates-common-monitoring.md)
@@ -63,15 +64,15 @@ Return structured report per [references/common-output-format.md](references/com
   - [category-templates-common-maintenance-notes.md](references/category-templates-common-maintenance-notes.md)
   - [category-templates-common-improvements.md](references/category-templates-common-improvements.md)
   - [category-templates-common-other.md](references/category-templates-common-other.md)
-- [category-templates-go.md](references/category-templates-go.md) (Read when profile is `go`)
-- [category-templates-terraform.md](references/category-templates-terraform.md) (Read when profile is `terraform`)
+- [category-templates-go-specification.md](references/category-templates-go-specification.md) (Read when profile is `go` and `document_type` is `specification`)
+- [category-templates-terraform-specification.md](references/category-templates-terraform-specification.md) (Read when profile is `terraform` and `document_type` is `specification`)
 
 ## Workflow
 
 1. List markdown files in `docs/`.
 2. Resolve `document_type`: use explicit value if present; otherwise infer from [references/category-document-types.md](references/category-document-types.md). If `target_file` is an existing file and type is unspecified, default to `other`. If ambiguous, ask user.
 3. Resolve `target_file`: use [references/category-document-types.md](references/category-document-types.md) default path; `readme` → `README.md`; `other` requires explicit `target_file`. If unresolved, ask user.
-4. Select template per profile and `document_type`.
+4. Select template per profile and `document_type`. For `document_type=specification`, use profile-specific overrides from [category-templates-go-specification.md](references/category-templates-go-specification.md) or [category-templates-terraform-specification.md](references/category-templates-terraform-specification.md) when applicable.
 5. Run case-insensitive duplicate check (skip for `other` type). Fail on duplicates.
 6. Create/update per [common-checklist.md](references/common-checklist.md). For `other` type, preserve original structure and apply quality improvements.
 7. IF README has docs-index markers, update inside markers; ELSE skip.
