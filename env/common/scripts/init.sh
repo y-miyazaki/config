@@ -40,6 +40,11 @@ if command -v apm > /dev/null 2>&1; then
     apm install --frozen || echo "[warn] apm install failed" >&2
 fi
 
+# gh extension install (optional)
+if command -v gh > /dev/null 2>&1; then
+    gh extension install github/gh-aw || echo "[warn] gh extension install failed" >&2
+fi
+
 # pre-commit (optional)
 if command -v pre-commit > /dev/null 2>&1; then
     if [ -n "${repo_root}" ]; then
