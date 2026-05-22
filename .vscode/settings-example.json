@@ -27,12 +27,6 @@
   "editor.suggestFontSize": 16, // font size
   // "editor.tabSize": 4, // (.editorconfig) tab size
   "explorer.confirmDragAndDrop": false,
-  "files.autoGuessEncoding": true, // 文字コードを自動判別
-  "files.eol": "\n", // 改行コードをLF(Linux/OSX)にする
-  "files.encoding": "utf8", // 既定の文字コード
-  "files.insertFinalNewline": true, // 有効にすると、ファイルの保存時に最新の行を末尾に挿入します。
-  // "files.trimTrailingWhitespace": true, // (.editorconfig) ファイルの保存時に末尾の空白をトリミング
-  "git.autofetch": true,
   "terminal.integrated.defaultProfile.linux": "bash",
   "terminal.integrated.scrollback": 10000,
   "window.zoomLevel": 0,
@@ -65,7 +59,22 @@
     // "editorLink.activeForeground": "#5555ce"
   },
   // ------------------------------------------------------------
-  // GitHub Copilot
+  // for Diff Editor
+  // ------------------------------------------------------------
+  "diffEditor.ignoreTrimWhitespace": true,
+  "diffEditor.hideUnchangedRegions.enabled": true,
+  // ------------------------------------------------------------
+  // for Git
+  // ------------------------------------------------------------
+  "git.autofetch": true,
+  "git.confirmSync": false,
+  "git.replaceTagsWhenPull": true,
+  // ------------------------------------------------------------
+  // for GitHub Pull Requests
+  // ------------------------------------------------------------
+  "githubPullRequests.pullBranch": "never",
+  // ------------------------------------------------------------
+  // for GitHub Copilot
   // ------------------------------------------------------------
   "accessibility.signals.chatUserActionRequired": {
     "sound": "on",
@@ -85,7 +94,7 @@
   },
   "chat.checkpoints.showFileChanges": true,
   "chat.mcp.access": "all",
-  "chat.mcp.autostart": "onlyNew",
+  "chat.mcp.autostart": "newAndOutdated",
   "chat.mcp.discovery.enabled": {
     "claude-desktop": true,
     "windsurf": true,
@@ -101,6 +110,12 @@
     "git checkout": false
   },
   "chat.tools.todos.showWidget": true,
+  "chat.tools.terminal.autoReplyToPrompts": true,
+  "chat.tools.urls.autoApprove": {
+    "https://code.visualstudio.com": true,
+    "https://github.com/microsoft/vscode/wiki/*": true,
+    "https://*.github.io": true
+  },
   "chat.useAgentSkills": true,
   "chat.viewSessions.enabled": true,
   "editor.inlineSuggest.enabled": true,
@@ -114,6 +129,7 @@
   ],
   "github.copilot.chat.localeOverride": "ja",
   "github.copilot.chat.newWorkspace.useContext7": true,
+  "github.copilot.chat.scopeSelection": true,
   "github.copilot.chat.virtualTools.threshold": 128,
   "github.copilot.enable": {
     "*": true,
@@ -132,7 +148,7 @@
   "github.copilot.nextEditSuggestions.enabled": true,
   "github.copilot.nextEditSuggestions.fixes": true,
   // ------------------------------------------------------------
-  // cspell
+  // for cspell
   // ------------------------------------------------------------
   "cSpell.autoFormatConfigFile": true,
   "cSpell.caseSensitive": false,
@@ -148,36 +164,51 @@
   },
   "cSpell.showAutocompleteDirectiveSuggestions": true,
   // ------------------------------------------------------------
-  // files assotiations
+  // for files
   // ------------------------------------------------------------
+  "files.eol": "\n",
   "files.associations": {
     "tfvars": "Terraform"
   },
+  "files.autoGuessEncoding": true,
+  "files.encoding": "utf8",
   "files.exclude": {
-    "**/.env.local": true,
     "**/.env.*.local": true,
+    "**/.env.local": true,
+    "**/credentials/**": true,
+    "**/node_modules": true,
     "**/secrets/**": true,
     "**/*.key": true,
-    "**/*.pem": true,
     "**/*.p12": true,
+    "**/*.pem": true,
     "**/*.pfx": true
   },
+  "files.insertFinalNewline": true,
   "search.exclude": {
-    "**/.env*": true,
-    "**/secrets/**": true,
+    "**/.terraform": true,
+    "**/apm_modules": true,
+    "**/aqua-checksums.json": true,
     "**/credentials/**": true,
+    "**/node_modules": true,
+    "**/output": true,
+    "**/secrets/**": true,
+    "**/tmp": true,
+    "**/vendor": true,
     "**/*.key": true,
-    "**/*.pem": true,
     "**/*.p12": true,
-    "**/*.pfx": true,
-    "**/terraform.tfvars": true,
-    "**/.aws/credentials": true,
-    "**/.ssh/id_*": true
+    "**/*.pem": true,
+    "**/*.pfx": true
   },
   "files.watcherExclude": {
-    "**/.env*": true,
-    "**/secrets/**": true,
-    "**/credentials/**": true
+    "**/.git": true,
+    "**/.terraform": true,
+    "**/apm_modules": true,
+    "**/credentials": true,
+    "**/node_modules": true,
+    "**/output": true,
+    "**/secrets": true,
+    "**/tmp": true,
+    "**/vendor": true
   },
   // ------------------------------------------------------------
   // for Golang
@@ -338,6 +369,7 @@
   // ------------------------------------------------------------
   // for Markdown
   //  ------------------------------------------------------------
+  "markdown.extension.completion.enabled": true,
   "markdownlint.lintWorkspaceGlobs": [
     "**/*.{md,mkd,mdwn,mdown,markdown,markdn,mdtxt,mdtext,workbook}",
     "!**/*.code-search",
@@ -415,5 +447,9 @@
   "[bats]": {
     "editor.defaultFormatter": "foxundermoon.shell-format",
     "editor.formatOnSave": true
-  }
+  },
+  // ------------------------------------------------------------
+  // Telemetry
+  // ------------------------------------------------------------
+  "redhat.telemetry.enabled": false
 }
