@@ -10,7 +10,7 @@
   "editor.formatOnSave": true, // format on save
   "editor.fontSize": 16, // font size
   "editor.folding": true, // コードの折りたたみを許可
-  "editor.hover.sticky": false,
+  "editor.hover.sticky": true,
   "editor.insertSpaces": true, // Tabキーで半角スペースを入力
   "editor.letterSpacing": -1, // 文字の間隔を詰める
   "editor.lineNumbers": "on", // 行番号の表示
@@ -170,7 +170,7 @@
   "files.associations": {
     "tfvars": "Terraform"
   },
-  "files.autoGuessEncoding": true,
+  "files.autoGuessEncoding": false,
   "files.encoding": "utf8",
   "files.exclude": {
     "**/.env.*.local": true,
@@ -185,6 +185,7 @@
   },
   "files.insertFinalNewline": true,
   "search.exclude": {
+    "**/.serena": true,
     "**/.terraform": true,
     "**/apm_modules": true,
     "**/aqua-checksums.json": true,
@@ -201,6 +202,7 @@
   },
   "files.watcherExclude": {
     "**/.git": true,
+    "**/.serena": true,
     "**/.terraform": true,
     "**/apm_modules": true,
     "**/credentials": true,
@@ -286,7 +288,7 @@
     "0"
     // "--fast"
   ],
-  "go.lintOnSave": "workspace",
+  "go.lintOnSave": "workspace", // workspace, package, file, off
   "go.lintTool": "golangci-lint",
   "go.playground": {
     "openbrowser": true,
@@ -331,19 +333,23 @@
       "rangeVariableTypes": false
     },
     "directoryFilters": [
-      "-/workspace/.devcontainer",
-      "-/workspace/.git",
-      "-/workspace/.github",
-      "-/workspace/.serena",
-      "-/workspace/.vscode",
-      "-/workspace/coverage",
-      "-/workspace/db",
-      "-/workspace/node_modules",
-      "-/workspace/output",
-      "-/workspace/tmp",
-      "-/workspace/vendor",
-      "-/mnt/",
-      "-/proc/"
+      "-.agents",
+      "-.apm",
+      "-.copilot",
+      "-.devcontainer",
+      "-.git",
+      "-.github",
+      "-.kiro",
+      "-.serena",
+      "-.terraform",
+      "-.vscode",
+      "-apm_modules",
+      "-coverage",
+      "-node_modules",
+      "-output",
+      "-tmp",
+      "-vendor",
+      "-**/node_modules"
     ]
   },
   "[go]": {
@@ -383,6 +389,10 @@
     "!.github/prompt/*.md",
     "!CODEOWNERS"
   ],
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
   // ------------------------------------------------------------
   // for Terraform
   // https://github.com/hashicorp/vscode-terraform
@@ -422,7 +432,8 @@
     "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-      "source.organizeImports.ruff": "always"
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
     }
   },
   // ------------------------------------------------------------
