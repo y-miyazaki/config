@@ -43,41 +43,41 @@ APM is used to share AI agent-related configuration files as packages. Each pack
 
 ### Packages
 
-| Package        | Description                                | MCP Servers | Hooks | Instructions | Skills |
-| -------------- | ------------------------------------------ | ----------- | ----- | ------------ | ------ |
-| common         | Shared workflows, documentation, and tools | 6           | 1     | 4            | 7      |
-| aws            | AWS development                            | 5           | 0     | 0            | 0      |
-| terraform      | Terraform development (cloud-agnostic)     | 1           | 1     | 1            | 2      |
-| terraform-aws  | Terraform + AWS integration                | 1           | 0     | 0            | 0      |
-| go             | Go development                             | 0           | 1     | 1            | 2      |
-| shell-script   | Shell script development                   | 0           | 1     | 1            | 2      |
+| Package       | Description                                | MCP Servers | Hooks | Instructions | Skills |
+| ------------- | ------------------------------------------ | ----------- | ----- | ------------ | ------ |
+| common        | Shared workflows, documentation, and tools | 6           | 1     | 4            | 7      |
+| aws           | AWS development                            | 5           | 0     | 0            | 0      |
+| terraform     | Terraform development (cloud-agnostic)     | 1           | 1     | 1            | 2      |
+| terraform-aws | Terraform + AWS integration                | 1           | 0     | 0            | 0      |
+| go            | Go development                             | 0           | 1     | 1            | 2      |
+| shell-script  | Shell script development                   | 0           | 1     | 1            | 2      |
 
 ### MCP Servers
 
-| Package       | Server                          | Description                    |
-| ------------- | ------------------------------- | ------------------------------ |
-| common        | context7                        | Context management             |
-| common        | fetch                           | HTTP fetch                     |
-| common        | github                          | GitHub Copilot MCP             |
-| common        | codebase-memory-mcp             | Codebase memory                |
-| common        | lean-ctx                        | Lean context management        |
-| common        | playwright                      | Browser automation             |
-| aws           | aws-mcp                         | AWS MCP proxy                  |
-| aws           | aws-knowledge-mcp-server        | AWS knowledge base             |
-| aws           | aws-documentation-mcp-server    | AWS documentation              |
-| aws           | aws-pricing-mcp-server          | AWS pricing                    |
-| aws           | awslabs-aws-api-mcp-server      | AWS API operations             |
-| terraform     | hashicorp-terraform-mcp-server  | Terraform operations           |
-| terraform-aws | awslabs-terraform-mcp-server    | Terraform AWS provider support |
+| Package       | Server                         | Description                    |
+| ------------- | ------------------------------ | ------------------------------ |
+| common        | context7                       | Context management             |
+| common        | fetch                          | HTTP fetch                     |
+| common        | github                         | GitHub Copilot MCP             |
+| common        | codebase-memory-mcp            | Codebase memory                |
+| common        | lean-ctx                       | Lean context management        |
+| common        | playwright                     | Browser automation             |
+| aws           | aws-mcp                        | AWS MCP proxy                  |
+| aws           | aws-knowledge-mcp-server       | AWS knowledge base             |
+| aws           | aws-documentation-mcp-server   | AWS documentation              |
+| aws           | aws-pricing-mcp-server         | AWS pricing                    |
+| aws           | awslabs-aws-api-mcp-server     | AWS API operations             |
+| terraform     | hashicorp-terraform-mcp-server | Terraform operations           |
+| terraform-aws | awslabs-terraform-mcp-server   | Terraform AWS provider support |
 
 ### Hooks
 
-| Package      | Hook                       | Trigger      | Description                                    |
-| ------------ | -------------------------- | ------------ | ---------------------------------------------- |
-| common       | lean-ctx                   | pre/postTool | Context observation and rewrite/redirect       |
-| go           | golangci-lint              | postToolUse  | Auto-fix Go files with golangci-lint           |
-| terraform    | terraform-validate-tflint  | postToolUse  | Run terraform validate and tflint on changed files |
-| shell-script | shellcheck                 | postToolUse  | Run shellcheck on changed shell scripts        |
+| Package      | Hook                      | Trigger      | Description                                        |
+| ------------ | ------------------------- | ------------ | -------------------------------------------------- |
+| common       | lean-ctx                  | pre/postTool | Context observation and rewrite/redirect           |
+| go           | golangci-lint             | postToolUse  | Auto-fix Go files with golangci-lint               |
+| terraform    | terraform-validate-tflint | postToolUse  | Run terraform validate and tflint on changed files |
+| shell-script | shellcheck                | postToolUse  | Run shellcheck on changed shell scripts            |
 
 ### Skills
 
@@ -190,7 +190,7 @@ Create or update your `.github/renovate.json`:
 
 ```json
 {
-	"extends": ["github>y-miyazaki/config//renovate/default"]
+  "extends": ["github>y-miyazaki/config//renovate/default"]
 }
 ```
 

@@ -382,7 +382,8 @@
     "!**/apm_modules",
     "!**/bower_components",
     "!**/credentials",
-    "!**/modules",
+    "!**/instructions",
+    "!**/modules/**/README.md",
     "!**/node_modules",
     "!**/output",
     "!**/prompts",
@@ -392,7 +393,7 @@
     "!CODEOWNERS"
   ],
   "[markdown]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint",
     "editor.formatOnSave": true
   },
   // ------------------------------------------------------------
