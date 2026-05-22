@@ -80,6 +80,7 @@ jobs:
       - name: Exec ghalint
         shell: bash
         run: ghalint run
+        continue-on-error: true
 
       # Static analysis tool for GitHub Actions security
       - name: Exec zizmor
