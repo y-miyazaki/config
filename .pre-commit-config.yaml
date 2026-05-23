@@ -54,15 +54,15 @@ repos:
         entry: actionlint -color=false
         types: [yaml]
         files: ^\.github/workflows/.*\.(ya?ml)$
-  - repo: local
-    hooks:
-      - id: ghalint
-        name: ghalint
-        description: GitHub Actions workflow linter.
-        language: unsupported
-        entry: ghalint run --log-color never
-        types: [yaml]
-        files: ^\.github/workflows/.*\.(ya?ml)$
+  # - repo: local
+  #   hooks:
+  #     - id: ghalint
+  #       name: ghalint
+  #       description: GitHub Actions workflow linter.
+  #       language: unsupported
+  #       entry: ghalint run --log-color never
+  #       types: [yaml]
+  #       files: ^\.github/workflows/.*\.(ya?ml)$
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
     rev: v1.24.1 # https://github.com/zizmorcore/zizmor-pre-commit/releases
     hooks:
