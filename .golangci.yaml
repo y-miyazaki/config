@@ -54,7 +54,7 @@ run:
 
 # https://golangci-lint.run/usage/configuration/#linters-configuration
 linters:
-    # Default set of linters.
+  # Default set of linters.
   # The value can be:
   # - `standard`: https://golangci-lint.run/docs/linters/configuration/#enabled-by-default
   # - `all`: enables all linters by default.
@@ -545,7 +545,7 @@ linters:
       # Exclude strings matching the given regular expression.
       # Default: ""
       ignore-string-values:
-        - 'foo.+'
+        - "foo.+"
       # Detects constants with identical values.
       # Default: false
       find-duplicates: true
@@ -623,7 +623,7 @@ linters:
           #
           # The option is passed to the ruleguard 'debug-group' argument.
           # Default: ""
-          debug: 'emptyDecl'
+          debug: "emptyDecl"
           # Determines the behavior when an error occurs while parsing ruleguard files.
           # If flag is not set, log error and skip rule files that contain an error.
           # If flag is set, the value must be a comma-separated list of error conditions.
@@ -949,11 +949,11 @@ linters:
       #
       # Default: []
       escape-hatches:
-        - 'github.com/nicksnyder/go-i18n/v2/i18n.Message'
-        - 'example.com/your/project/i18n/markers.Raw'
-        - 'example.com/your/project/i18n/markers.OK'
-        - 'example.com/your/project/i18n/markers.TODO'
-        - 'command-line-arguments.Simple'
+        - "github.com/nicksnyder/go-i18n/v2/i18n.Message"
+        - "example.com/your/project/i18n/markers.Raw"
+        - "example.com/your/project/i18n/markers.OK"
+        - "example.com/your/project/i18n/markers.TODO"
+        - "command-line-arguments.Simple"
       # List of Unicode scripts to watch for any usage in string literals.
       # https://pkg.go.dev/unicode#pkg-variables
       #
@@ -1202,8 +1202,8 @@ linters:
       # Values always ignored: "1", "1.0", "0" and "0.0"
       # Default: []
       ignored-numbers:
-        - '0666'
-        - '0755'
+        - "0666"
+        - "0755"
       # List of file patterns to exclude from analysis.
       # Values always ignored: `.+_test.go`
       # Default: []
@@ -1547,7 +1547,8 @@ linters:
           disabled: false
           exclude: [""]
           arguments:
-            - allowed-packages: ["github.com/onsi/ginkgo/v2", "github.com/onsi/gomega"]
+            - allowed-packages:
+                ["github.com/onsi/ginkgo/v2", "github.com/onsi/gomega"]
         # https://github.com/mgechev/revive/blob/HEAD/RULES_DESCRIPTIONS.md#duplicated-imports
         - name: duplicated-imports
           severity: warning
@@ -1813,10 +1814,10 @@ linters:
           disabled: false
           exclude: [""]
           arguments:
-            - - 'core.WriteError[1].Message'
-              - '/^([^A-Z]|$)/'
+            - - "core.WriteError[1].Message"
+              - "/^([^A-Z]|$)/"
               - must not start with a capital letter
-            - - 'fmt.Errorf[0]'
+            - - "fmt.Errorf[0]"
               - '/(^|[^\.!?])$/'
               - must not end in punctuation
             - - panic
@@ -2903,14 +2904,19 @@ issues:
   # Show issues in any part of update files (requires new-from-rev or new-from-patch).
   # Default: false
   whole-files: true
-  # Fix found issues (if it's supported by the linter).
+  # Apply the fixes detected by the linters and formatters (if it's supported by the linter).
   # Default: false
   fix: true
 
 formatters: # https://golangci-lint.run/docs/formatters/configuration/
   enable:
+    # - gci
+    # - gofmt
     - gofumpt # A stricter formatter.
     - goimports # Manages import grouping and ordering.
+    # - golines
+    # - swaggo
+
   settings:
     gofumpt: # https://github.com/mvdan/gofumpt
       # Module path which contains the source code being formatted.

@@ -7,10 +7,14 @@
 
 | 日付       | 内容                                                                 |
 | ---------- | -------------------------------------------------------------------- |
+| 2026-05-23 | tool-comparison 共通評価基準ドキュメントへのリンク追加               |
+| 2026-05-23 | AI Governance 比較ドキュメントへのリンク追加                         |
 | 2026-05-21 | AI Workflow 比較ドキュメントへのリンク追加。History セクション追加    |
 | 2026-05-12 | 初版作成。依存更新 / バージョン管理 / セキュリティ / CI/CD 等を比較 |
 
 言語/技術スタック特化の比較は以下を参照:
+
+- [共通評価基準](tool-comparison-evaluation-criteria.md)
 
 - [Go](tool-comparison-matrix-go.md)
 - [Terraform](tool-comparison-matrix-terraform.md)
@@ -18,6 +22,7 @@
 - [Shell Script](tool-comparison-matrix-shell-script.md)
 - [AWS](tool-comparison-matrix-aws.md)
 - [AI Agent](tool-comparison-matrix-ai-agent.md)
+- [AI Governance](tool-comparison-matrix-ai-governance.md)
 - [AI Workflow](tool-comparison-matrix-ai-workflow.md)
 
 <!-- omit in toc -->

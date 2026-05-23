@@ -10,7 +10,9 @@
 ## Tool Comparison
 
 - [tool-comparison-matrix.md](tool-comparison/tool-comparison-matrix.md) - Overall tool comparison matrix
+- [tool-comparison-evaluation-criteria.md](tool-comparison/tool-comparison-evaluation-criteria.md) - Shared evaluation criteria for tool comparison
 - [tool-comparison-matrix-ai-agent.md](tool-comparison/tool-comparison-matrix-ai-agent.md) - AI agent tool comparison
+- [tool-comparison-matrix-ai-governance.md](tool-comparison/tool-comparison-matrix-ai-governance.md) - AI governance tool comparison
 - [tool-comparison-matrix-ai-workflow.md](tool-comparison/tool-comparison-matrix-ai-workflow.md) - AI workflow tool comparison
 - [tool-comparison-matrix-aws.md](tool-comparison/tool-comparison-matrix-aws.md) - AWS tool comparison
 - [tool-comparison-matrix-go.md](tool-comparison/tool-comparison-matrix-go.md) - Go tool comparison
