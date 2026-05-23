@@ -13,6 +13,7 @@ MCP Server の選定・比較の判断材料。
 <!-- omit in toc -->
 ## Table of Contents
 
+- [History](#history)
 - [AWS MCP Servers](#aws-mcp-servers)
   - [Guidelines](#guidelines)
 - [Terraform MCP Servers](#terraform-mcp-servers)

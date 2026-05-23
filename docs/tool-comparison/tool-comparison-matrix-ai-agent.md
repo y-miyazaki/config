@@ -13,6 +13,7 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 <!-- omit in toc -->
 ## Table of Contents
 
+- [History](#history)
 - [Coding Agent: Kiro vs Claude Code vs GitHub Copilot vs Cursor vs Gemini](#coding-agent-kiro-vs-claude-code-vs-github-copilot-vs-cursor-vs-gemini)
   - [Pricing](#pricing)
   - [Billing Model](#billing-model)

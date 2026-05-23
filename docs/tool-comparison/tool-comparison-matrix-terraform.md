@@ -13,16 +13,17 @@ Terraform / IaC に特化したツール選定の判断材料。
 <!-- omit in toc -->
 ## Table of Contents
 
+- [History](#history)
 - [Lint / Security: tflint vs checkov vs tfsec](#lint--security-tflint-vs-checkov-vs-tfsec)
-  - [Guidelines](#Guidelines)
+  - [Guidelines](#guidelines)
 - [IaC: Terraform vs OpenTofu vs Pulumi](#iac-terraform-vs-opentofu-vs-pulumi)
-  - [Guidelines](#Guidelines-1)
+  - [Guidelines](#guidelines-1)
 - [Plan Comment: tfcmt vs tfnotify vs Atlantis](#plan-comment-tfcmt-vs-tfnotify-vs-atlantis)
-  - [Guidelines](#Guidelines-2)
+  - [Guidelines](#guidelines-2)
 - [Documentation: terraform-docs](#documentation-terraform-docs)
-  - [Guidelines](#Guidelines-3)
+  - [Guidelines](#guidelines-3)
 - [Testing: terraform test vs Terratest vs tftest](#testing-terraform-test-vs-terratest-vs-tftest)
-  - [Guidelines](#Guidelines-4)
+  - [Guidelines](#guidelines-4)
 
 ## Lint / Security: tflint vs checkov vs tfsec
 

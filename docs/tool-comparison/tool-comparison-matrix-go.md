@@ -13,24 +13,25 @@ Go 開発に特化したツール選定の判断材料。
 <!-- omit in toc -->
 ## Table of Contents
 
+- [History](#history)
 - [Formatter: gofumpt vs gofmt vs goimports](#formatter-gofumpt-vs-gofmt-vs-goimports)
-  - [Guidelines](#Guidelines)
+  - [Guidelines](#guidelines)
 - [Linter: golangci-lint vs staticcheck vs go vet](#linter-golangci-lint-vs-staticcheck-vs-go-vet)
-  - [Guidelines](#Guidelines-1)
+  - [Guidelines](#guidelines-1)
 - [Container Build: ko vs Docker vs kaniko](#container-build-ko-vs-docker-vs-kaniko)
-  - [Guidelines](#Guidelines-2)
+  - [Guidelines](#guidelines-2)
 - [Release Automation: goreleaser vs GitHub Releases vs semantic-release](#release-automation-goreleaser-vs-github-releases-vs-semantic-release)
-  - [Guidelines](#Guidelines-3)
+  - [Guidelines](#guidelines-3)
 - [API Documentation: swag vs go-swagger vs oapi-codegen](#api-documentation-swag-vs-go-swagger-vs-oapi-codegen)
-  - [Guidelines](#Guidelines-4)
+  - [Guidelines](#guidelines-4)
 - [Protocol Buffers: buf](#protocol-buffers-buf)
-  - [Guidelines](#Guidelines-5)
+  - [Guidelines](#guidelines-5)
 - [Live Reload: air](#live-reload-air)
-  - [Guidelines](#Guidelines-6)
+  - [Guidelines](#guidelines-6)
 - [Vulnerability Scanning (Go): govulncheck](#vulnerability-scanning-go-govulncheck)
-  - [Guidelines](#Guidelines-7)
+  - [Guidelines](#guidelines-7)
 - [Mock Generation: gomock vs mockery vs moq](#mock-generation-gomock-vs-mockery-vs-moq)
-  - [Guidelines](#Guidelines-8)
+  - [Guidelines](#guidelines-8)
 
 ## Formatter: gofumpt vs gofmt vs goimports
 

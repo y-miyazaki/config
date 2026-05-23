@@ -13,8 +13,9 @@ Shell Script に特化したツール選定の判断材料。
 <!-- omit in toc -->
 ## Table of Contents
 
+- [History](#history)
 - [Format / Lint: shfmt + shellcheck vs beautysh](#format--lint-shfmt--shellcheck-vs-beautysh)
-  - [Guidelines](#Guidelines)
+  - [Guidelines](#guidelines)
 
 ## Format / Lint: shfmt + shellcheck vs beautysh
 

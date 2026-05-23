@@ -15,8 +15,7 @@ AI ワークフロー / LLM 基盤ツール選定の判断材料。
 ## Table of Contents
 
 - [History](#history)
-- [カテゴリ概要](#カテゴリ概要)
-- [ワークフロー自動化: n8n vs Make.com vs Zapier vs Dify vs Windmill](#ワークフロー自動化-n8n-vs-makecom-vs-zapier-vs-dify-vs-windmill)
+- [Workflow Automation: n8n vs Make.com vs Zapier vs Dify vs Windmill](#workflow-automation-n8n-vs-makecom-vs-zapier-vs-dify-vs-windmill)
   - [Pricing](#pricing)
   - [Guidelines](#guidelines)
 - [LLM Gateway: LiteLLM vs Portkey](#llm-gateway-litellm-vs-portkey)
@@ -30,16 +29,7 @@ AI ワークフロー / LLM 基盤ツール選定の判断材料。
 - [組み合わせパターン](#組み合わせパターン)
   - [Guidelines](#guidelines-4)
 
-## カテゴリ概要
-
-| カテゴリ           | ツール                                                  | 主な用途                               |
-| ------------------ | ------------------------------------------------------- | -------------------------------------- |
-| ワークフロー自動化 | n8n / Make.com / Zapier / Dify / Windmill               | ビジュアルワークフロー / AI アプリ構築 |
-| LLM Gateway        | LiteLLM / Portkey                                       | 統一 API / ルーティング / コスト管理   |
-| AI Agent Framework | Mastra / LangChain / LangGraph / CrewAI / Vercel AI SDK | エージェント開発フレームワーク         |
-| LLM Observability  | Langfuse / LangSmith / Arize Phoenix                    | トレーシング / 評価 / プロンプト管理   |
-
-## ワークフロー自動化: n8n vs Make.com vs Zapier vs Dify vs Windmill
+## Workflow Automation: n8n vs Make.com vs Zapier vs Dify vs Windmill
 
 | 比較項目             | n8n                                         | Make.com               | Zapier                 | Dify                                                  | Windmill                                                            |
 | -------------------- | ------------------------------------------- | ---------------------- | ---------------------- | ----------------------------------------------------- | ------------------------------------------------------------------- |

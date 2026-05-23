@@ -13,14 +13,15 @@ AWS に特化したツール選定の判断材料。
 <!-- omit in toc -->
 ## Table of Contents
 
+- [History](#history)
 - [ECS Deploy: ecspresso vs Copilot vs CDK](#ecs-deploy-ecspresso-vs-copilot-vs-cdk)
-  - [Guidelines](#Guidelines)
+  - [Guidelines](#guidelines)
 - [Serverless: SAM vs Serverless Framework vs CloudFormation](#serverless-sam-vs-serverless-framework-vs-cloudformation)
-  - [Guidelines](#Guidelines-1)
+  - [Guidelines](#guidelines-1)
 - [Secret Encryption: sops vs Vault vs AWS Secrets Manager](#secret-encryption-sops-vs-vault-vs-aws-secrets-manager)
-  - [Guidelines](#Guidelines-2)
+  - [Guidelines](#guidelines-2)
 - [ECS Scheduled Tasks: ecschedule](#ecs-scheduled-tasks-ecschedule)
-  - [Guidelines](#Guidelines-3)
+  - [Guidelines](#guidelines-3)
 
 ## ECS Deploy: ecspresso vs Copilot vs CDK
 

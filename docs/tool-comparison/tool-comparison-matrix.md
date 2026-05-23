@@ -15,7 +15,6 @@
 言語/技術スタック特化の比較は以下を参照:
 
 - [共通評価基準](tool-comparison-evaluation-criteria.md)
-
 - [Go](tool-comparison-matrix-go.md)
 - [Terraform](tool-comparison-matrix-terraform.md)
 - [Node.js](tool-comparison-matrix-nodejs.md)
@@ -28,6 +27,7 @@
 <!-- omit in toc -->
 ## Table of Contents
 
+- [History](#history)
 - [Dependency Updates: Renovate vs Dependabot](#dependency-updates-renovate-vs-dependabot)
   - [Guidelines](#guidelines)
 - [Version Management: aqua vs asdf](#version-management-aqua-vs-asdf)

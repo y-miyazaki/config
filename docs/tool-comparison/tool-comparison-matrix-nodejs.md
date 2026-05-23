@@ -13,12 +13,13 @@ Node.js / フロントエンド開発に特化したツール選定の判断材�
 <!-- omit in toc -->
 ## Table of Contents
 
+- [History](#history)
 - [Linter: ESLint vs Biome vs deno lint](#linter-eslint-vs-biome-vs-deno-lint)
-  - [Guidelines](#Guidelines)
+  - [Guidelines](#guidelines)
 - [Formatter: Prettier vs Biome vs dprint](#formatter-prettier-vs-biome-vs-dprint)
-  - [Guidelines](#Guidelines-1)
+  - [Guidelines](#guidelines-1)
 - [Package Manager: npm vs pnpm vs yarn](#package-manager-npm-vs-pnpm-vs-yarn)
-  - [Guidelines](#Guidelines-2)
+  - [Guidelines](#guidelines-2)
 
 ## Linter: ESLint vs Biome vs deno lint
 
