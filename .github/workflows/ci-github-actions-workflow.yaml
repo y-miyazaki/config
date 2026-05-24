@@ -28,7 +28,7 @@ on:
         required: false
         type: string
       zizmor_version:
-        default: "1.25.0"
+        default: "1.25.2"
         description: "zizmor version to use"
         required: false
         type: string
