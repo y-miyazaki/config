@@ -7,6 +7,7 @@
 
 | 日付       | 内容                                                                 |
 | ---------- | -------------------------------------------------------------------- |
+| 2026-05-24 | tool-comparison 共通評価ルールドキュメントへのリンク更新             |
 | 2026-05-23 | tool-comparison 共通評価基準ドキュメントへのリンク追加               |
 | 2026-05-23 | AI Governance 比較ドキュメントへのリンク追加                         |
 | 2026-05-21 | AI Workflow 比較ドキュメントへのリンク追加。History セクション追加    |
@@ -14,7 +15,7 @@
 
 言語/技術スタック特化の比較は以下を参照:
 
-- [共通評価基準](tool-comparison-evaluation-criteria.md)
+- [共通評価ルール](tool-comparison-evaluation-rules.md)
 - [Go](tool-comparison-matrix-go.md)
 - [Terraform](tool-comparison-matrix-terraform.md)
 - [Node.js](tool-comparison-matrix-nodejs.md)
