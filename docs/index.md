@@ -35,3 +35,7 @@
 - [review-standards.md](agents/review-standards.md) - Comparative analysis, decision trace, output formatting
 - [error-handling.md](agents/error-handling.md) - Unexpected situations, user-facing error standards
 - [external-knowledge.md](agents/external-knowledge.md) - External knowledge usage, dependency/impact awareness
+
+## Governance
+
+- [linter-review-boundary.md](governance/linter-review-boundary.md) - Boundary policy for instructions/skills: do not duplicate linter-detectable rules in review guidance
