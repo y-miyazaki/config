@@ -6,12 +6,12 @@ target: copilot
 includes: auto
 dependencies:
   apm:
-    # - github.com/y-miyazaki/config/.apm/packages/common#v1.1.14
-    # - github.com/y-miyazaki/config/.apm/packages/aws#v1.1.14
-    # - github.com/y-miyazaki/config/.apm/packages/go#v1.1.14
-    # - github.com/y-miyazaki/config/.apm/packages/shell-script#v1.1.14
-    # - github.com/y-miyazaki/config/.apm/packages/terraform#v1.1.14
-    # - github.com/y-miyazaki/config/.apm/packages/terraform-aws#v1.1.14
+    # - github.com/y-miyazaki/config/.apm/packages/common#v1.1.15
+    # - github.com/y-miyazaki/config/.apm/packages/aws#v1.1.15
+    # - github.com/y-miyazaki/config/.apm/packages/go#v1.1.15
+    # - github.com/y-miyazaki/config/.apm/packages/shell-script#v1.1.15
+    # - github.com/y-miyazaki/config/.apm/packages/terraform#v1.1.15
+    # - github.com/y-miyazaki/config/.apm/packages/terraform-aws#v1.1.15
     - ./.apm/packages/common
     - ./.apm/packages/aws
     - ./.apm/packages/go
