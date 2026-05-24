@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-05-24T05:20:41.151836+00:00'
+generated_at: '2026-05-24T14:00:07.813837+00:00'
 apm_version: 0.14.0
 dependencies:
 - repo_url: _local/aws
