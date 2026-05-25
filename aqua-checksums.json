@@ -551,31 +551,6 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/microsoft/apm/v0.14.0/apm-darwin-arm64.tar.gz",
-      "checksum": "3BB8B7CE7D4FC68646BFBE96C188E3C0CC278BFE066F68FB52E8929FD0DA3938",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/microsoft/apm/v0.14.0/apm-darwin-x86_64.tar.gz",
-      "checksum": "3F70F6C0985B344973F5BA6004F0BFC02212E547B95FDCE04DEB6D8A3EF7AE6D",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/microsoft/apm/v0.14.0/apm-linux-arm64.tar.gz",
-      "checksum": "3A8340B02851A94760A449D732E5F417B2BA4409689471302AF9C5801851AD72",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/microsoft/apm/v0.14.0/apm-linux-x86_64.tar.gz",
-      "checksum": "5CA7853E4B8858272DA721E1D68548A6C078F7920487298BEF901BD6E709A7D1",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/microsoft/apm/v0.14.0/apm-windows-x86_64.zip",
-      "checksum": "51E3D439863620EA51E00BAB09DCF22CEB2F8E83A1E70CB0EB50E5A02578F728",
-      "algorithm": "sha256"
-    },
-    {
       "id": "github_release/github.com/microsoft/apm/v0.14.2/apm-darwin-arm64.tar.gz",
       "checksum": "0C5346F71A78BAC599D6DBE65A3B36939135359E8533539C8FE7D330E463CFF5",
       "algorithm": "sha256"
@@ -971,26 +946,6 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.2/lean-ctx-aarch64-apple-darwin.tar.gz",
-      "checksum": "311127867391A4ABFE5996A150598EA63DB5B296D7AE3F309C15E94DB6144051",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.2/lean-ctx-aarch64-unknown-linux-gnu.tar.gz",
-      "checksum": "A00EE0BB2D4FC0BCF5A9C9ACD32E22A23E9EAADABA729777EF15159C69D78C13",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.2/lean-ctx-x86_64-apple-darwin.tar.gz",
-      "checksum": "7B2E103C13C2B62E09404FF468A53A590A0EB1F0390985E9DC388855865A63B6",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.2/lean-ctx-x86_64-unknown-linux-gnu.tar.gz",
-      "checksum": "8F50728216A54167D638834D94443EE0D4BB79461AF527700885DAF30041EE24",
-      "algorithm": "sha256"
-    },
-    {
       "id": "github_release/github.com/yvgude/lean-ctx/v3.6.3/lean-ctx-aarch64-apple-darwin.tar.gz",
       "checksum": "49EC3C8D5F56FCBD7ABB8E191890114FBED3EB71FE34CDAC903FEED308BD8A01",
       "algorithm": "sha256"
@@ -1008,31 +963,6 @@
     {
       "id": "github_release/github.com/yvgude/lean-ctx/v3.6.3/lean-ctx-x86_64-unknown-linux-gnu.tar.gz",
       "checksum": "38BDF91A71B5B49108AFDA9A7EEDDDB73B3FB999BBE7A4EF6770160106F19CC5",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/zizmorcore/zizmor/v1.25.0/zizmor-aarch64-apple-darwin.tar.gz",
-      "checksum": "D57861FD237055B2730E6A008289FFD8E8107E7D348CA31564D25863B7C66E64",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/zizmorcore/zizmor/v1.25.0/zizmor-aarch64-unknown-linux-gnu.tar.gz",
-      "checksum": "6214A8E291A07A3B33C652260EE5CAA6501E192CF20FF3A06DB7A350E93BAD93",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/zizmorcore/zizmor/v1.25.0/zizmor-x86_64-apple-darwin.tar.gz",
-      "checksum": "3C4B4FAEB40779CBB0063EB934809C03A570DD367892C2B41A1E87E27721DA01",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/zizmorcore/zizmor/v1.25.0/zizmor-x86_64-pc-windows-msvc.zip",
-      "checksum": "63620198D7C1292FDCC3500ABFC7B72F706C99807C5F76E96AC127F1D62254D3",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/zizmorcore/zizmor/v1.25.0/zizmor-x86_64-unknown-linux-gnu.tar.gz",
-      "checksum": "A16853F39C9E059AED04F3F7961ACB75468AF67B235AE36A9FAFF337D61E3D24",
       "algorithm": "sha256"
     },
     {
@@ -1098,16 +1028,6 @@
     {
       "id": "http/releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_windows_amd64.zip",
       "checksum": "B9DA8DF3D92402551C86B8956BE30FB87F600245321D2B31751AFCF37218018C",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.512.0/registry.yaml",
-      "checksum": "A0CBEAB68533DFB4E72A44811EF8ADE659D2A2669BBECCF4884DF1BE181F058A9C40AC147720720F40AE745ECFB27AE22BB5A05965BA389967D6783EFB747149",
-      "algorithm": "sha512"
-    },
-    {
-      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.512.1/registry.yaml",
-      "checksum": "75AF68C998F17E6DD6FA797A876759EB87B5925607880B0F631E62D41174B879",
       "algorithm": "sha256"
     },
     {
