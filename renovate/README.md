@@ -114,6 +114,7 @@ Reference: Verifying if minimumReleaseAge applies to images via ECR pull-through
 
 - Label all updates with `npm`
 - Automerge patch updates only
+- Commit prefix: `renovate(npm):`
 - Post-update: `npmDedupe` (deduplicates `package-lock.json`)
 
 ### Python (`poetry`, `pip_requirements`, `pipenv`)
