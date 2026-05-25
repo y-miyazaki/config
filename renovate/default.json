@@ -119,6 +119,7 @@
       "matchManagers": ["npm"],
       "addLabels": ["npm"],
       "postUpdateOptions": ["npmDedupe"],
+      "commitMessagePrefix": "renovate(npm):",
       "automerge": false,
       "platformAutomerge": false
     },
