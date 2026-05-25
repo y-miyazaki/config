@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-05-24T17:21:17.245390+00:00'
+generated_at: '2026-05-25T03:37:46.245524+00:00'
 apm_version: 0.14.2
 dependencies:
 - repo_url: _local/aws
@@ -16,19 +16,11 @@ dependencies:
   - .agents/skills/github-pr-body
   - .agents/skills/instructions-review
   - .agents/skills/markdown-validation
-  - .cursor/rules/agent-skills.mdc
-  - .cursor/rules/github-actions-workflow.mdc
-  - .cursor/rules/instructions.mdc
-  - .cursor/rules/markdown.mdc
   - .github/hooks/common-lean-ctx.json
   - .github/hooks/common-markdownlint-cli2.json
   deployed_file_hashes:
-    .cursor/rules/agent-skills.mdc: sha256:caf75e3ef4d739637289e5b65e26815915b0b5c96c77ac4e5c454b8904433664
-    .cursor/rules/github-actions-workflow.mdc: sha256:59a484a54e00d5978ae256012157dd73bde2bff57cbc33bd49086837ea18c9b0
-    .cursor/rules/instructions.mdc: sha256:2f836fa68224696a22146b463792e6ca5ad28e3dadba5e12b794f24710bb7807
-    .cursor/rules/markdown.mdc: sha256:130bf830a6d5aeed4d0de8ea3025e3cb6b591ae9cb10bdbd9be7cd6c1c1053bd
     .github/hooks/common-lean-ctx.json: sha256:30f187840c795acc257b22328f7bd3cd0ab78eb086a8c6e04f9792c18d4b2a7e
-    .github/hooks/common-markdownlint-cli2.json: sha256:2e551c9393569308537e0f1f36c8add1b7b1867ba96dbfff0426c0ea465c7956
+    .github/hooks/common-markdownlint-cli2.json: sha256:5a8f69cbf2e60aad7475b5855729f344ded69ba70010405f3c8e4e5f5061e3ec
   source: local
   local_path: ./.apm/packages/common
 - repo_url: _local/go
@@ -36,11 +28,9 @@ dependencies:
   deployed_files:
   - .agents/skills/go-review
   - .agents/skills/go-validation
-  - .cursor/rules/go.mdc
   - .github/hooks/go-golangci-lint.json
   deployed_file_hashes:
-    .cursor/rules/go.mdc: sha256:cf79a29676a0d5314b989c6b071e83f1c204c54b67f01cd3ee57b2cc4dd1e022
-    .github/hooks/go-golangci-lint.json: sha256:9d5702562458324cd434d36dbc0ba674075fdb73b91816ba8b44858bf5a320a7
+    .github/hooks/go-golangci-lint.json: sha256:5023d21f574b5478520b3308b50d9207c813e42f9a0e38cbcc906db9c0955462
   source: local
   local_path: ./.apm/packages/go
 - repo_url: _local/shell-script
@@ -48,11 +38,11 @@ dependencies:
   deployed_files:
   - .agents/skills/shell-script-review
   - .agents/skills/shell-script-validation
-  - .cursor/rules/shell-script.mdc
   - .github/hooks/shell-script-shellcheck.json
+  - .github/hooks/shell-script-shfmt.json
   deployed_file_hashes:
-    .cursor/rules/shell-script.mdc: sha256:67fdbd6661d9bf2b7a8aba83ca231e92506483c2dd77a24aa3871a2ebe5250a7
-    .github/hooks/shell-script-shellcheck.json: sha256:a546295e48614d79559a3a8c82db96d719d8815d50933c5ca5bbca1f3fedfe6a
+    .github/hooks/shell-script-shellcheck.json: sha256:4e9c4634d6b9e3bce629f4ff0af8cf78c31a92b690cf37b1ff9b85d3bf114a26
+    .github/hooks/shell-script-shfmt.json: sha256:50cd9a52cef467c379c986ef4809891ec4bfc5edeceb239948ed69eb1f4cbe47
   source: local
   local_path: ./.apm/packages/shell-script
 - repo_url: _local/terraform
@@ -60,11 +50,13 @@ dependencies:
   deployed_files:
   - .agents/skills/terraform-review
   - .agents/skills/terraform-validation
-  - .cursor/rules/terraform.mdc
-  - .github/hooks/terraform-terraform-validate-tflint.json
+  - .github/hooks/terraform-terraform-fmt.json
+  - .github/hooks/terraform-terraform-validate.json
+  - .github/hooks/terraform-tflint.json
   deployed_file_hashes:
-    .cursor/rules/terraform.mdc: sha256:f1091f59dc85253a64689aa211dcc872ba9da9872fe085d494a10ee06096c49f
-    .github/hooks/terraform-terraform-validate-tflint.json: sha256:8f6086e1e176a46d6b27262c59d977c4b36a53ec946c2a1bdd0b862bcf64bf18
+    .github/hooks/terraform-terraform-fmt.json: sha256:6096cf4c332a752f7908649b9814242863caef762a0dd3e21d8f86aa5739fad6
+    .github/hooks/terraform-terraform-validate.json: sha256:6c93283a881b1811bd1e7c3d1e7cf7f3c6fe754b6d8d370c953646c0ef3de9c7
+    .github/hooks/terraform-tflint.json: sha256:305883513f7a2ad69254a9588d04326c4af910dde06baa7362f2ad20f803f460
   source: local
   local_path: ./.apm/packages/terraform
 - repo_url: _local/terraform-aws
