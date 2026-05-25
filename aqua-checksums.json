@@ -946,23 +946,23 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.6/lean-ctx-aarch64-apple-darwin.tar.gz",
-      "checksum": "89C661F243CBBA7B804C46FE93A400479A4983888A351A9D91920151B24310AE",
+      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.7/lean-ctx-aarch64-apple-darwin.tar.gz",
+      "checksum": "60C3B12DE10CBEA6360D08ABAA8F1073570580677A7B014662F79BD00FEE68DC",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.6/lean-ctx-aarch64-unknown-linux-gnu.tar.gz",
-      "checksum": "A6DD5D9883DE078B7323EF7C8926524FA2551A2EFDF6D967EBAE48EDD4204C30",
+      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.7/lean-ctx-aarch64-unknown-linux-gnu.tar.gz",
+      "checksum": "ED7DC0CD59885BF2D3DCB39E319AD645087B1D687D3ED7D65CE219AA9548F205",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.6/lean-ctx-x86_64-apple-darwin.tar.gz",
-      "checksum": "D9FB68BC7036047220E18BCC5B60B7EB69FD82EBBA563D5B20608FCC3C78EBB7",
+      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.7/lean-ctx-x86_64-apple-darwin.tar.gz",
+      "checksum": "B81C6744491DCDFDD5DED6FAF0A273F625D6C6CE5F5AA0A438227A5FA07B0793",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.6/lean-ctx-x86_64-unknown-linux-gnu.tar.gz",
-      "checksum": "711F10867009C28F165D3C261CD87C019A825F4B1A1DC9F49275BD0B55D360AE",
+      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.7/lean-ctx-x86_64-unknown-linux-gnu.tar.gz",
+      "checksum": "4206BE6400140D0F53AF59E7B1DE193BDEC1C6F6104256FC2FE4CD7C356C6D16",
       "algorithm": "sha256"
     },
     {
