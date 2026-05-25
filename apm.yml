@@ -2,7 +2,8 @@ name: config
 version: 1.0.0
 description: agent skills and instructions and mcp
 license: Apache-2.0
-target: copilot
+targets:
+  - copilot
 includes: auto
 dependencies:
   apm:

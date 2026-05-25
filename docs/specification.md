@@ -111,7 +111,7 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 ├── common/          # Shared workflows, documentation, and tools
 │   ├── apm.yml      # 6 MCP servers
 │   └── .apm/
-│       ├── hooks/         # lean-ctx (pre/postTool)
+│       ├── hooks/         # lean-ctx (pre/postTool), markdownlint-cli2 (postToolUse)
 │       ├── instructions/  # 4 instruction files
 │       └── skills/        # 7 skills
 ├── aws/             # AWS development
@@ -119,7 +119,7 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 ├── terraform/       # Terraform development (cloud-agnostic)
 │   ├── apm.yml      # 1 MCP server
 │   └── .apm/
-│       ├── hooks/         # terraform-validate-tflint (postToolUse)
+│       ├── hooks/         # terraform-fmt, terraform-validate, tflint (postToolUse)
 │       ├── instructions/  # 1 instruction file
 │       └── skills/        # 2 skills
 ├── terraform-aws/   # Terraform + AWS integration
@@ -133,7 +133,7 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 └── shell-script/    # Shell script development
     ├── apm.yml      # 0 MCP servers
     └── .apm/
-        ├── hooks/         # shellcheck (postToolUse)
+        ├── hooks/         # shellcheck, shfmt (postToolUse)
         ├── instructions/  # 1 instruction file
         └── skills/        # 2 skills
 ```
@@ -171,12 +171,16 @@ MCP servers are declared in each package's `apm.yml` under `dependencies.mcp`.
 
 Hooks are defined as JSON files under each package's `.apm/hooks/` directory.
 
-| Package      | Hook                      | Trigger      | Description                                        |
-| ------------ | ------------------------- | ------------ | -------------------------------------------------- |
-| common       | lean-ctx                  | pre/postTool | Context observation and rewrite/redirect           |
-| go           | golangci-lint             | postToolUse  | Auto-fix Go files with golangci-lint               |
-| terraform    | terraform-validate-tflint | postToolUse  | Run terraform validate and tflint on changed files |
-| shell-script | shellcheck                | postToolUse  | Run shellcheck on changed shell scripts            |
+| Package      | Hook               | Trigger      | Description                                  |
+| ------------ | ------------------ | ------------ | -------------------------------------------- |
+| common       | lean-ctx           | pre/postTool | Context observation and rewrite/redirect     |
+| common       | markdownlint-cli2  | postToolUse  | Auto-fix Markdown files with markdownlint    |
+| go           | golangci-lint      | postToolUse  | Auto-fix Go files with golangci-lint         |
+| terraform    | terraform-fmt      | postToolUse  | Run terraform fmt on changed files           |
+| terraform    | terraform-validate | postToolUse  | Run terraform validate on changed files      |
+| terraform    | tflint             | postToolUse  | Run tflint on changed files                  |
+| shell-script | shellcheck         | postToolUse  | Run shellcheck on changed shell scripts      |
+| shell-script | shfmt              | postToolUse  | Auto-format shell scripts with shfmt         |
 
 ### Skills
 

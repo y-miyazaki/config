@@ -39,3 +39,7 @@
 ## Governance
 
 - [linter-review-boundary.md](governance/linter-review-boundary.md) - Boundary policy for instructions/skills: do not duplicate linter-detectable rules in review guidance
+
+## Go
+
+- [golangci-lint-maintenance-policy.md](go/golangci-lint-maintenance-policy.md) - golangci-lint maintenance policy and upgrade procedures

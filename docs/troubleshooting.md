@@ -10,8 +10,8 @@ This document lists common issues when working with this repository and the reco
   - [Symptom: `apm install --update` fails](#symptom-apm-install---update-fails)
 - [Markdown and Instruction Validation](#markdown-and-instruction-validation)
   - [Symptom: markdownlint-cli2 failures in docs or instructions](#symptom-markdownlint-cli2-failures-in-docs-or-instructions)
-- [Terraform Linting](#terraform-linting)
-  - [Symptom: `tflint` fails after template updates](#symptom-tflint-fails-after-template-updates)
+- [APM Audit CI](#apm-audit-ci)
+  - [Symptom: `ci-apm-audit` workflow fails with audit errors](#symptom-ci-apm-audit-workflow-fails-with-audit-errors)
 
 ## APM Installation Issues
 
@@ -42,25 +42,6 @@ git diff --check
 ```
 
 Apply minimal fixes and re-run the checks.
-
-## Terraform Linting
-
-### Symptom: `tflint` fails after template updates
-
-**Cause**: rulesets not initialized, or linting is executed only in current directory without recursive scan.
-
-**Resolution**:
-
-```sh
-tflint --init
-tflint --recursive
-```
-
-If needed, run with explicit working directory:
-
-```sh
-tflint --chdir path/to/terraform --recursive
-```
 
 ## APM Audit CI
 
