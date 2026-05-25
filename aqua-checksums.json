@@ -76,33 +76,33 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/air-verse/air/v1.65.1/air_1.65.1_darwin_amd64.tar.gz",
-      "checksum": "53663079579B8E358119B7798838022E9023867B4F0C8B2BF63D4BD2F949B14A",
+      "id": "github_release/github.com/air-verse/air/v1.65.2/air_1.65.2_darwin_amd64.tar.gz",
+      "checksum": "E5A69827B1B509DBE4A9D981EAA3B7549EDAEF67CE5DEEC1866A92F4F672C59F",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/air-verse/air/v1.65.1/air_1.65.1_darwin_arm64.tar.gz",
-      "checksum": "AF80D7858254FF18B91FBE85E992933C11AE7E931FCA847741AD8160AD6DFF4D",
+      "id": "github_release/github.com/air-verse/air/v1.65.2/air_1.65.2_darwin_arm64.tar.gz",
+      "checksum": "84890F5AEDD704FB4DB2591CBFAA9FDD429D3AA504F67DC0BB0E06DDF73637EE",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/air-verse/air/v1.65.1/air_1.65.1_linux_amd64.tar.gz",
-      "checksum": "B6305247EFD2F1B7606E7CBC3038DD60F556028D5396A0132D7890E0EEBF0DEC",
+      "id": "github_release/github.com/air-verse/air/v1.65.2/air_1.65.2_linux_amd64.tar.gz",
+      "checksum": "B85C99E5A1AE56627A15D5401DBE319CD0FE5402F9FCBD4120299441D229EA6F",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/air-verse/air/v1.65.1/air_1.65.1_linux_arm64.tar.gz",
-      "checksum": "6A4CD96847515CEBF3758C175C9AE70F7B6457888F65E29FA9F81C87E402E254",
+      "id": "github_release/github.com/air-verse/air/v1.65.2/air_1.65.2_linux_arm64.tar.gz",
+      "checksum": "2FE12A405530A380351FE62CF15C0C4F7328A649989483D7D46FCE9057BE2DAF",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/air-verse/air/v1.65.1/air_1.65.1_windows_amd64.tar.gz",
-      "checksum": "E045E0CDCAEF2B3A375CF985C7CDC60C12CCFBD10143B2A5D3275AC3AE0A6722",
+      "id": "github_release/github.com/air-verse/air/v1.65.2/air_1.65.2_windows_amd64.tar.gz",
+      "checksum": "91BD1C008D0F2F7F3FA5F8531FCD8955F8B31029BE6270F0ABEDBF6196E70BAC",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/air-verse/air/v1.65.1/air_1.65.1_windows_arm64.tar.gz",
-      "checksum": "DC5CAFF84B584F1315EBFA9A0D2BFE421E9CE2EE05B0E3F055A782F4660112AC",
+      "id": "github_release/github.com/air-verse/air/v1.65.2/air_1.65.2_windows_arm64.tar.gz",
+      "checksum": "A3C3954585A8AD9CA9D48991CEC34FFD30FA71FA6DAB9921B1CF98F36FF67BFE",
       "algorithm": "sha256"
     },
     {
@@ -946,23 +946,23 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.3/lean-ctx-aarch64-apple-darwin.tar.gz",
-      "checksum": "49EC3C8D5F56FCBD7ABB8E191890114FBED3EB71FE34CDAC903FEED308BD8A01",
+      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.6/lean-ctx-aarch64-apple-darwin.tar.gz",
+      "checksum": "89C661F243CBBA7B804C46FE93A400479A4983888A351A9D91920151B24310AE",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.3/lean-ctx-aarch64-unknown-linux-gnu.tar.gz",
-      "checksum": "125922392C14E3DE7495CEFD358E737DE7EC639730507C42A730F94AAB7AC331",
+      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.6/lean-ctx-aarch64-unknown-linux-gnu.tar.gz",
+      "checksum": "A6DD5D9883DE078B7323EF7C8926524FA2551A2EFDF6D967EBAE48EDD4204C30",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.3/lean-ctx-x86_64-apple-darwin.tar.gz",
-      "checksum": "7A3742DDA3D0A38003A59FCD962E5B1DC5B0A71BBDFC190B0509002184B29375",
+      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.6/lean-ctx-x86_64-apple-darwin.tar.gz",
+      "checksum": "D9FB68BC7036047220E18BCC5B60B7EB69FD82EBBA563D5B20608FCC3C78EBB7",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.3/lean-ctx-x86_64-unknown-linux-gnu.tar.gz",
-      "checksum": "38BDF91A71B5B49108AFDA9A7EEDDDB73B3FB999BBE7A4EF6770160106F19CC5",
+      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.6/lean-ctx-x86_64-unknown-linux-gnu.tar.gz",
+      "checksum": "711F10867009C28F165D3C261CD87C019A825F4B1A1DC9F49275BD0B55D360AE",
       "algorithm": "sha256"
     },
     {
