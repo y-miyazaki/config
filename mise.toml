@@ -13,7 +13,8 @@ not_found_auto_install = true # Try installing missing tools when a command is l
 provenance_api_failures_fatal = true # Fail installs if provenance verification APIs are unavailable or verification fails.
 slsa = true # Require SLSA provenance checks when a backend supports them.
 trusted_config_paths = [
-  "/",
+  "/workspace/",
+  "/tmp/renovate/repos/",
 ] # Paths to automatically trust mise.toml files in without prompting; use with caution.
 
 [settings.aqua]

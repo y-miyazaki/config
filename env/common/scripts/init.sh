@@ -49,9 +49,9 @@ if command -v mise > /dev/null 2>&1; then
     if [ -f /workspace/mise.toml ]; then
         mise trust --yes /workspace/mise.toml > /dev/null 2>&1 || echo "[warn] mise trust failed" >&2
     fi
-    mise run mise-install || echo "[warn] mise install task failed" >&2
-    mkdir -p "$HOME/.local/share/mise/shims"
-    mise reshim > /dev/null 2>&1 || echo "[warn] mise reshim failed" >&2
+    mise install || echo "[warn] mise install task failed" >&2
+    # mkdir -p "$HOME/.local/share/mise/shims"
+    # mise reshim > /dev/null 2>&1 || echo "[warn] mise reshim failed" >&2
 fi
 
 # pre-commit (optional)
