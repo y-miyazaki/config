@@ -7,6 +7,8 @@
 
 | 日付       | 内容                                                                 |
 | ---------- | -------------------------------------------------------------------- |
+| 2026-05-25 | Version Management セクションに mise 追加                            |
+| 2026-05-25 | SAST / Code Pattern Analysis セクション追加 (Semgrep vs CodeQL vs SonarQube) |
 | 2026-05-24 | tool-comparison 共通評価ルールドキュメントへのリンク更新             |
 | 2026-05-23 | tool-comparison 共通評価基準ドキュメントへのリンク追加               |
 | 2026-05-23 | AI Governance 比較ドキュメントへのリンク追加                         |
@@ -31,24 +33,26 @@
 - [History](#history)
 - [Dependency Updates: Renovate vs Dependabot](#dependency-updates-renovate-vs-dependabot)
   - [Guidelines](#guidelines)
-- [Version Management: aqua vs asdf](#version-management-aqua-vs-asdf)
+- [Version Management: aqua vs asdf vs mise](#version-management-aqua-vs-asdf-vs-mise)
   - [Guidelines](#guidelines-1)
 - [Security Scanning: Trivy vs Snyk vs Grype](#security-scanning-trivy-vs-snyk-vs-grype)
   - [Guidelines](#guidelines-2)
-- [Secret Detection: gitleaks vs detect-secrets vs truffleHog](#secret-detection-gitleaks-vs-detect-secrets-vs-trufflehog)
+- [SAST / Code Pattern Analysis: Semgrep vs CodeQL vs SonarQube](#sast--code-pattern-analysis-semgrep-vs-codeql-vs-sonarqube)
   - [Guidelines](#guidelines-3)
-- [GitHub Actions Lint: actionlint vs ghalint vs zizmor](#github-actions-lint-actionlint-vs-ghalint-vs-zizmor)
+- [Secret Detection: gitleaks vs detect-secrets vs truffleHog](#secret-detection-gitleaks-vs-detect-secrets-vs-trufflehog)
   - [Guidelines](#guidelines-4)
-- [GitHub Actions Pinning: pinact vs pin-github-action vs Renovate](#github-actions-pinning-pinact-vs-pin-github-action-vs-renovate)
+- [GitHub Actions Lint: actionlint vs ghalint vs zizmor](#github-actions-lint-actionlint-vs-ghalint-vs-zizmor)
   - [Guidelines](#guidelines-5)
-- [PR Review Automation: reviewdog vs GitHub Code Scanning vs SonarQube](#pr-review-automation-reviewdog-vs-github-code-scanning-vs-sonarqube)
+- [GitHub Actions Pinning: pinact vs pin-github-action vs Renovate](#github-actions-pinning-pinact-vs-pin-github-action-vs-renovate)
   - [Guidelines](#guidelines-6)
-- [Code Coverage: Codecov vs Coveralls vs SonarQube](#code-coverage-codecov-vs-coveralls-vs-sonarqube)
+- [PR Review Automation: reviewdog vs GitHub Code Scanning vs SonarQube](#pr-review-automation-reviewdog-vs-github-code-scanning-vs-sonarqube)
   - [Guidelines](#guidelines-7)
-- [Git Hooks Framework: pre-commit](#git-hooks-framework-pre-commit)
+- [Code Coverage: Codecov vs Coveralls vs SonarQube](#code-coverage-codecov-vs-coveralls-vs-sonarqube)
   - [Guidelines](#guidelines-8)
-- [CI/CD: GitHub Actions vs GitLab CI vs CircleCI vs Jenkins](#cicd-github-actions-vs-gitlab-ci-vs-circleci-vs-jenkins)
+- [Git Hooks Framework: pre-commit](#git-hooks-framework-pre-commit)
   - [Guidelines](#guidelines-9)
+- [CI/CD: GitHub Actions vs GitLab CI vs CircleCI vs Jenkins](#cicd-github-actions-vs-gitlab-ci-vs-circleci-vs-jenkins)
+  - [Guidelines](#guidelines-10)
 
 ## Dependency Updates: Renovate vs Dependabot
 
@@ -77,28 +81,33 @@
 - GitHub Actions の更新のみなど限定的な用途であれば Dependabot 単体でも可
 - 併用も有効: Dependabot (GitHub Actions) + Renovate (その他エコシステム)
 
-## Version Management: aqua vs asdf
+## Version Management: aqua vs asdf vs mise
 
-| 比較項目           | aqua                                              | asdf                                            |
-| ------------------ | ------------------------------------------------- | ----------------------------------------------- |
-| 提供元             | aquaproj                                          | asdf-vm                                         |
-| リポジトリ         | [aquaproj/aqua](https://github.com/aquaproj/aqua) | [asdf-vm/asdf](https://github.com/asdf-vm/asdf) |
-| ライセンス         | MIT                                               | MIT                                             |
-| 実装言語           | Go                                                | Shell Script (Bash)                             |
-| 設定ファイル       | `aqua.yaml`                                       | `.tool-versions`                                |
-| プラグインシステム | Registry (GitHub 集中管理)                        | Plugin (各リポジトリ分散)                       |
-| Checksum 検証      | ✅ 組み込みサポート                                | ❌ プラグイン依存                                |
-| Lazy Install       | ✅ コマンド実行時に自動インストール                | ❌ 事前に `asdf install` が必要                  |
-| 実行速度           | 高速 (Go バイナリ)                                | 低速 (shim + shell script)                      |
-| Renovate 対応      | ✅ datasource 指定で自動更新可能                   | ⚠️ 限定的                                        |
-| 対応ツール数       | 2,900+ (standard registry)                        | 700+ (community plugins)                        |
-| Windows 対応       | ✅                                                 | ❌ (WSL 経由のみ)                                |
-| セキュリティ       | 高い (checksum必須化可能)                         | 低い (プラグイン任意実行)                       |
+| 比較項目           | aqua                                              | asdf                                             | mise                                          |
+| ------------------ | ------------------------------------------------- | ------------------------------------------------ | --------------------------------------------- |
+| 提供元             | aquaproj                                          | asdf-vm                                          | jdx                                           |
+| リポジトリ         | [aquaproj/aqua](https://github.com/aquaproj/aqua) | [asdf-vm/asdf](https://github.com/asdf-vm/asdf) | [jdx/mise](https://github.com/jdx/mise)       |
+| ライセンス         | MIT                                               | MIT                                              | MIT                                           |
+| 実装言語           | Go                                                | Shell Script (Bash)                              | Rust                                          |
+| 設定ファイル       | `aqua.yaml`                                       | `.tool-versions`                                 | `mise.toml` / `.tool-versions`                |
+| プラグインシステム | Registry (GitHub 集中管理)                        | Plugin (各リポジトリ分散)                        | 複数バックエンド (aqua, asdf, cargo, npm 等)  |
+| Checksum 検証      | ✅ 組み込みサポート                                | ❌ プラグイン依存                                 | ✅ aqua バックエンド経由で対応                  |
+| Lazy Install       | ✅ コマンド実行時に自動インストール                | ❌ 事前に `asdf install` が必要                   | ✅ コマンド実行時に自動インストール             |
+| 実行速度           | 高速 (Go バイナリ)                                | 低速 (shim + shell script)                       | 高速 (Rust バイナリ、shim 不要)               |
+| Renovate 対応      | ✅ datasource 指定で自動更新可能                   | ⚠️ 限定的                                         | ✅ mise manager で自動更新可能 (lockfile対応)       |
+| 対応ツール数       | 2,900+ (standard registry)                        | 700+ (community plugins)                         | 900+ (registry) + asdf/aqua バックエンド経由  |
+| Windows 対応       | ✅                                                 | ❌ (WSL 経由のみ)                                 | ✅ (非 asdf バックエンドのみ)                   |
+| セキュリティ       | 高い (checksum必須化可能)                         | 低い (プラグイン任意実行)                        | 高い (aqua バックエンド経由で署名検証対応)    |
+| タスクランナー     | ❌                                                 | ❌                                                | ✅ 組み込みサポート                             |
+| 環境変数管理       | ❌                                                 | ❌                                                | ✅ 組み込みサポート                             |
+| asdf 互換性        | ❌                                                 | -                                                | ✅ `.tool-versions` 読み込み・asdf プラグイン対応 |
 
 ### Guidelines
 
-**→ aqua を採用する。** Checksum 検証によるセキュリティ、Renovate 連携による自動更新、CI での高速セットアップで優位。
+**→ aqua または mise を採用する。** どちらも高速・セキュアで Renovate による自動更新に対応しており、用途に応じて選択する。
 
+- **aqua を選ぶ場合**: `aqua-policy.yaml` によるインストール許可ツールのポリシー制御が可能。CI でのバージョン管理に特化したシンプルな設計で、組織全体のツール制限を強制できる
+- **mise を選ぶ場合**: aqua を backend として取り込めるため aqua registry の checksum/署名検証をそのまま利用可能。加えてタスクランナー・環境変数管理・lockfile (`mise.lock`) を統合し、単一ツールで開発環境全体をカバーできる。Rust 実装で shim 不要、Renovate の mise manager で lockfile 含む自動更新に対応
 - Node.js/Ruby/Python 等のランタイム管理が主目的で、チームが既に asdf に慣れている場合は asdf でも可
 
 ## Security Scanning: Trivy vs Snyk vs Grype
@@ -123,6 +132,41 @@
 
 - 脆弱性の修正 PR を自動生成したい / 商用サポートが必要な場合は Snyk を検討
 - コンテナイメージ特化で Syft と組み合わせた SBOM ベーススキャンが必要な場合は Grype を検討
+
+## SAST / Code Pattern Analysis: Semgrep vs CodeQL vs SonarQube
+
+| 比較項目             | Semgrep                                                   | CodeQL                                                    | SonarQube                                                         |
+| -------------------- | --------------------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------- |
+| 提供元               | Semgrep, Inc.                                             | GitHub (Microsoft)                                        | SonarSource                                                       |
+| リポジトリ           | [semgrep/semgrep](https://github.com/semgrep/semgrep)     | [github/codeql](https://github.com/github/codeql)        | [SonarSource/sonarqube](https://github.com/SonarSource/sonarqube) |
+| ドキュメント         | [semgrep.dev/docs](https://semgrep.dev/docs)              | [codeql.github.com](https://codeql.github.com)           | [docs.sonarsource.com](https://docs.sonarsource.com/sonarqube)    |
+| ライセンス           | LGPL-2.1 (OSS Engine) / 商用 (Platform)                   | MIT (クエリ) / 商用 (GitHub Advanced Security)            | LGPL-3.0 (CE) / 商用 (DE/EE)                                     |
+| 対応言語数           | 35+                                                       | 20+                                                       | 35+                                                               |
+| ルール記述           | YAML (パターンベース)                                     | QL (データフロー言語)                                     | Java (プラグイン)                                                 |
+| カスタムルール容易性 | ✅ 高い (YAML、数分で記述可能)                             | ⚠️ 中程度 (QL学習コストあり)                               | ⚠️ 低い (Java実装が必要)                                          |
+| クロスファイル解析   | ✅ (Pro Engine)                                            | ✅                                                         | ✅                                                                 |
+| テイント解析         | ✅ (クロスファンクション)                                  | ✅ (深いデータフロー)                                      | ✅                                                                 |
+| 解析深度             | パターンマッチ + テイント                                 | セマンティック (最も深い)                                  | データフロー + 品質メトリクス                                     |
+| スキャン速度         | ✅ 高速 (~10秒)                                            | ⚠️ 低速 (数分〜30分+)                                      | ⚠️ 中程度                                                         |
+| CI/CD 統合           | ✅ (GitHub/GitLab/任意CI)                                  | ✅ (GitHub Actions ネイティブ)                              | ✅ (任意CI)                                                        |
+| IDE 統合             | ✅ (VS Code, JetBrains)                                    | ⚠️ (VS Code のみ)                                          | ✅ (SonarLint: VS Code, JetBrains等)                               |
+| 品質ゲート           | ❌                                                         | ❌                                                         | ✅ (カバレッジ、重複、信頼性)                                      |
+| 自動修正 (Autofix)   | ✅ (AI-powered)                                            | ✅ (Copilot Autofix)                                       | ⚠️ 限定的                                                         |
+| AI トリアージ        | ✅ (Semgrep Assistant)                                     | ⚠️ (Copilot連携)                                           | ⚠️ (AI CodeFix)                                                    |
+| 誤検知率             | 低い                                                      | 低い                                                      | 中程度                                                            |
+| 料金 (無料枠)        | Free: 10リポジトリ/10人まで                               | 無料 (公開リポジトリ)                                     | Community Edition: 無料                                           |
+| 料金 (有料)          | Teams: $30/contributor/月                                 | Code Security: $30/committer/月 (GHAS)                    | Developer Edition: $150/年〜                                      |
+| 料金ページ           | [semgrep.dev/pricing](https://semgrep.dev/pricing)        | [github.com/pricing](https://github.com/pricing)         | [sonarsource.com/plans](https://www.sonarsource.com/plans-and-pricing/) |
+| オフライン実行       | ✅ (CLI)                                                   | ✅ (CLI)                                                   | ✅ (セルフホスト)                                                  |
+| SaaS / セルフホスト  | 両方                                                      | SaaS (GitHub) / CLI                                       | セルフホスト / SonarCloud (SaaS)                                  |
+
+### Guidelines
+
+**→ Semgrep を採用する。** カスタムルールの記述容易性 (YAML)、スキャン速度、CI統合の柔軟性のバランスが最も良い。OSS Engine (CLI) は無料で利用可能。
+
+- GitHub をメインで使い GHAS を契約済みの場合は CodeQL が追加コストなしで利用可能。解析深度は最も高いがスキャン時間が長い
+- コード品質ゲート (カバレッジ閾値、重複検出等) も統合したい場合は SonarQube を検討。SAST単体としては Semgrep/CodeQL に劣る
+- Semgrep + CodeQL の併用も有効。Semgrep で高速フィードバック (PR時)、CodeQL で深い解析 (定期スキャン) と使い分ける
 
 ## Secret Detection: gitleaks vs detect-secrets vs truffleHog
 

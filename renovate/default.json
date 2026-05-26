@@ -163,6 +163,23 @@
       "groupName": "terraform dependencies"
     },
     {
+      "description": "Rules: Add mise label for all mise package updates (label-only, automerge is overridden by patch rule below)",
+      "matchManagers": ["mise"],
+      "commitMessagePrefix": "renovate(mise):",
+      "addLabels": ["mise"],
+      "automerge": false,
+      "platformAutomerge": false
+    },
+    {
+      "description": "Rules: Automerge patch updates for mise packages",
+      "matchManagers": ["mise"],
+      "matchUpdateTypes": ["patch"],
+      "commitMessagePrefix": "renovate(mise):",
+      "addLabels": ["automerge"],
+      "automerge": true,
+      "platformAutomerge": true
+    },
+    {
       "description": "Rules: Safe automerge only for lockfile/digest/pin updates",
       "matchUpdateTypes": ["lockFileMaintenance", "digest", "pin"],
       "addLabels": ["automerge"],

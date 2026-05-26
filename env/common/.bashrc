@@ -46,6 +46,34 @@ __bash_prompt
 export PROMPT_DIRTRIM=4
 
 #######################################
+# for aqua
+#######################################
+if command -v aqua > /dev/null 2>&1; then
+    export PATH="$(aqua root-dir)/bin:/home/${USER}/bin:$PATH"
+fi
+
+#######################################
+# for mise
+#######################################
+if command -v mise > /dev/null 2>&1; then
+    # Ensure command stubs in shims are resolvable for on-demand execution.
+    case ":$PATH:" in
+        *":$HOME/.local/share/mise/shims:"*) ;;
+        *) export PATH="$HOME/.local/share/mise/shims:$PATH" ;;
+    esac
+    eval "$(mise activate bash)"
+
+    # VS Code may prepend its own tool paths after shell startup; move mise-managed
+    # paths back to the front without duplicating entries.
+    _mise_bin_paths="$(mise bin-paths)"
+    if [ -n "$_mise_bin_paths" ]; then
+        PATH="$(printf '%s\n%s\n' "$(printf '%s' "$_mise_bin_paths" | tr ':' '\n')" "$(printf '%s' "$PATH" | tr ':' '\n')" | awk 'NF && !seen[$0]++' | paste -sd: -)"
+        export PATH
+    fi
+    unset _mise_bin_paths
+fi
+
+#######################################
 # for terraform
 #######################################
 export TF_PLUGIN_CACHE_DIR="$HOME/.terraform.d/plugin-cache"
@@ -53,11 +81,6 @@ alias tinit='terraform init -reconfigure -backend-config="terraform.${ENV}.tfbac
 alias tinitupgrade='terraform init -upgrade -reconfigure -backend-config="terraform.${ENV}.tfbackend"'
 alias tplan='terraform plan -lock=false -var-file="terraform.${ENV}.tfvars"'
 alias tapply='terraform apply -auto-approve -var-file="terraform.${ENV}.tfvars"'
-
-#######################################
-# for aqua
-#######################################
-export PATH="$(aqua root-dir)/bin:/home/${USER}/bin:$PATH"
 
 # export PYENV_ROOT="/home/${USER}/.pyenv"
 # export PATH="$PYENV_ROOT/bin/:$PATH"

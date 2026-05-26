@@ -25,7 +25,7 @@ AI Agent / コーディングアシスタントに特化したツール選定の
   - [Guidelines](#guidelines-1)
 - [Agent Skills](#agent-skills)
   - [Guidelines](#guidelines-2)
-- [Agent Instructions](#agent-instructions)
+- [Agent Instructions (Steering)](#agent-instructions-steering)
   - [Guidelines](#guidelines-3)
 
 ## Coding Agent: Kiro vs Claude Code vs GitHub Copilot vs Cursor vs Gemini
@@ -33,6 +33,7 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 | 比較項目           | Kiro            | Claude Code           | GitHub Copilot         | Cursor                    | Gemini                     |
 | ------------------ | --------------- | --------------------- | ---------------------- | ------------------------- | -------------------------- |
 | 提供元             | AWS             | Anthropic             | GitHub (Microsoft)     | Anysphere                 | Google                     |
+| ドキュメント       | [kiro.dev/docs/cli](https://kiro.dev/docs/cli) | [docs.anthropic.com](https://docs.anthropic.com/en/docs/claude-code) | [docs.github.com](https://docs.github.com/en/copilot) | [docs.cursor.com](https://docs.cursor.com) | [ai.google.dev](https://ai.google.dev/gemini-api/docs) |
 | ライセンス         | 商用            | 商用                  | 商用                   | 商用                      | 商用                       |
 | 動作形態           | IDE / CLI       | IDE / CLI             | IDE / CLI              | AIネイティブIDE           | IDE / CLI                  |
 | エージェントモード | ✅               | ✅                     | ✅                      | ✅                         | ✅                          |
@@ -55,6 +56,7 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 
 | プラン       | Kiro                         | Claude Code                       | GitHub Copilot               | Cursor                | Gemini                        |
 | ------------ | ---------------------------- | --------------------------------- | ---------------------------- | --------------------- | ----------------------------- |
+| 料金ページ   | [kiro.dev/pricing](https://kiro.dev/pricing) | [anthropic.com/pricing](https://www.anthropic.com/pricing) | [github.com/features/copilot](https://github.com/features/copilot#pricing) | [cursor.com/pricing](https://www.cursor.com/pricing) | [ai.google.dev/pricing](https://ai.google.dev/pricing) |
 | 無料枠       | 50 クレジット/月             | ❌                                 | ✅ (50 premium requests/月)   | ✅ (2,000 completions) | ✅ (個人無料、日次クォータあり) |
 | 個人 (標準)  | Pro: $20/月                  | Pro: $20/月                       | Pro: $10/月                  | Pro: $20/月           | Google Dev Program: $24.99/月 |
 | 個人 (上位)  | Pro+: $40/月, Power: $200/月 | Max 5x: $100/月, Max 20x: $200/月 | Pro+: $39/月                 | Pro+: $60/月          | -                             |
@@ -76,13 +78,13 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 
 | 用途                | Kiro                           | Claude Code                      | GitHub Copilot                    | Cursor                            | Gemini                  |
 | ------------------- | ------------------------------ | -------------------------------- | --------------------------------- | --------------------------------- | ----------------------- |
-| Instructions (指示) | `.kiro/instructions/*.md`      | `CLAUDE.md` / `<dir>/CLAUDE.md`  | `.github/copilot-instructions.md` | `.cursorrules` / `.cursor/rules/` | `GEMINI.md`             |
+| Steering (指示)     | `.kiro/steering/*.md`          | `CLAUDE.md` / `<dir>/CLAUDE.md`  | `.github/copilot-instructions.md` | `.cursorrules` / `.cursor/rules/` | `GEMINI.md`             |
 | Skills (スキル)     | `.kiro/skills/<name>/SKILL.md` | `.claude/skills/<name>/SKILL.md` | `.github/skills/<name>/SKILL.md`  | `.cursor/rules/*.md`              | ⚠️ 独自機能中心          |
-| MCP 設定            | `.kiro/mcp.json`               | `.mcp.json`                      | `.vscode/mcp.json`                | `.cursor/mcp.json`                | `.gemini/settings.json` |
+| MCP 設定            | `.kiro/settings/mcp.json`      | `.mcp.json`                      | `.vscode/mcp.json`                | `.cursor/mcp.json`                | `.gemini/settings.json` |
 | Agent 定義          | `.kiro/agents/`                | `.claude/agents/`                | `.github/copilot-agents.yml`      | ⚠️ 独自UI管理                      | -                       |
 | プロンプト          | `.kiro/prompts/`               | `.claude/commands/` (レガシー)   | `.github/prompts/`                | -                                 | -                       |
-| プロジェクト設定    | `.kiro/settings.json`          | `.claude/settings.json`          | `.vscode/settings.json`           | `.cursor/settings.json`           | `.gemini/settings.json` |
-| ユーザー設定        | `~/.local/share/kiro-cli/`     | `~/.claude/`                     | VS Code User Settings             | `~/.cursor/`                      | `~/.gemini/`            |
+| プロジェクト設定    | `.kiro/agents/*.json`          | `.claude/settings.json`          | `.vscode/settings.json`           | `.cursor/settings.json`           | `.gemini/settings.json` |
+| ユーザー設定        | `~/.kiro/`                     | `~/.claude/`                     | VS Code User Settings             | `~/.cursor/`                      | `~/.gemini/`            |
 
 ### Guidelines
 
@@ -113,21 +115,24 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 
 | 設定項目                | Kiro                                    | Claude Code                   | GitHub Copilot          | Cursor                    | Gemini                    |
 | ----------------------- | --------------------------------------- | ----------------------------- | ----------------------- | ------------------------- | ------------------------- |
-| 権限設定ファイル        | `.kiro/settings.json`                   | `.claude/settings.json`       | `.vscode/settings.json` | `.cursor/settings.json`   | `.gemini/settings.json`   |
-| ユーザー権限設定        | `~/.local/share/kiro-cli/settings.json` | `~/.claude/settings.json`     | VS Code User Settings   | `~/.cursor/settings.json` | `~/.gemini/settings.json` |
-| ローカル設定 (Git除外)  | `.kiro/settings.local.json`             | `.claude/settings.local.json` | -                       | -                         | -                         |
-| ツール許可ルール        | `allow` / `deny` リスト                 | `allow` / `deny` リスト       | IDE設定                 | IDE設定                   | sandbox 設定              |
+| 権限設定ファイル        | `.kiro/agents/*.json`                   | `.claude/settings.json`       | `.vscode/settings.json` | `.cursor/settings.json`   | `.gemini/settings.json`   |
+| ユーザー権限設定        | `~/.kiro/agents/*.json`                 | `~/.claude/settings.json`     | VS Code User Settings   | `~/.cursor/settings.json` | `~/.gemini/settings.json` |
+| ローカル設定 (Git除外)  | -                                       | `.claude/settings.local.json` | -                       | -                         | -                         |
+| ツール許可ルール        | `allowedTools` / `toolsSettings`        | `allow` / `deny` リスト       | IDE設定                 | IDE設定                   | sandbox 設定              |
 | 管理者設定 (Enterprise) | -                                       | managed policy (JSON)         | Organization policy     | -                         | GCP Organization policy   |
 
 ### Configuration Examples
 
-**Kiro** (`.kiro/settings.json`):
+**Kiro** (`.kiro/agents/default.json`):
 
 ```json
 {
-  "tools": {
-    "allow": ["read", "write", "shell(npm test *)"],
-    "deny": ["shell(rm -rf *)", "shell(git push --force *)"]
+  "allowedTools": ["read", "write", "shell"],
+  "toolsSettings": {
+    "shell": {
+      "allowedCommands": ["npm test.*"],
+      "deniedCommands": ["rm -rf.*", "git push --force.*"]
+    }
   }
 }
 ```
@@ -169,7 +174,7 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 | -------------------- | ------------------------------ | -------------------------------- | -------------------------------- | ----------------------- | -------------- |
 | 定義形式             | Markdown (`SKILL.md`)          | Markdown (`SKILL.md`)            | Markdown (`SKILL.md`)            | Markdown                | ⚠️ 独自機能中心 |
 | 格納パス             | `.kiro/skills/<name>/SKILL.md` | `.claude/skills/<name>/SKILL.md` | `.github/skills/<name>/SKILL.md` | `.cursor/rules/*.md`    | -              |
-| グローバルスキル     | -                              | `~/.claude/skills/<name>/`       | -                                | `~/.cursor/rules/`      | -              |
+| グローバルスキル     | `~/.kiro/skills/<name>/`       | `~/.claude/skills/<name>/`       | -                                | `~/.cursor/rules/`      | -              |
 | プロジェクト単位     | ✅                              | ✅                                | ✅                                | ✅                       | ⚠️              |
 | 条件付き適用         | ✅ (ファイルパターン)           | ✅ (`paths` frontmatter)          | ✅                                | ⚠️                       | ⚠️              |
 | スラッシュコマンド化 | ✅ (`/skill-name`)              | ✅ (`/skill-name`)                | ✅ (`/skill-name`)                | ⚠️                       | ⚠️              |
@@ -187,14 +192,14 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 - Skill の品質 = Agent の出力品質。PR レビュー対象とする
 - Agent Skills オープンスタンダード対応ツール (Kiro / Claude Code / GitHub Copilot) 間では同一の `SKILL.md` を共有可能
 
-## Agent Instructions
+## Agent Instructions (Steering)
 
 | 比較項目       | Kiro                                    | Claude Code                     | GitHub Copilot                    | Cursor                            | Gemini                |
 | -------------- | --------------------------------------- | ------------------------------- | --------------------------------- | --------------------------------- | --------------------- |
-| 格納パス       | `.kiro/instructions/*.md`               | `CLAUDE.md` / `<dir>/CLAUDE.md` | `.github/copilot-instructions.md` | `.cursorrules` / `.cursor/rules/` | `GEMINI.md`           |
+| 格納パス       | `.kiro/steering/*.md`                   | `CLAUDE.md` / `<dir>/CLAUDE.md` | `.github/copilot-instructions.md` | `.cursorrules` / `.cursor/rules/` | `GEMINI.md`           |
 | 階層的指示     | ✅ (複数ファイル分割)                    | ✅ (ディレクトリ階層で継承)      | ⚠️ 単一ファイル中心                | ✅ (複数ファイル)                  | ⚠️ 単一ファイル中心    |
-| グローバル指示 | `~/.local/share/kiro-cli/instructions/` | `~/.claude/CLAUDE.md`           | VS Code User Settings             | `~/.cursor/rules/`                | `~/.gemini/GEMINI.md` |
-| 適用優先度     | Global → Project                        | Global → Root → Subdir          | Single / IDE設定                  | Global → Project                  | Global → Project      |
+| グローバル指示 | `~/.kiro/steering/`                     | `~/.claude/CLAUDE.md`           | VS Code User Settings             | `~/.cursor/rules/`                | `~/.gemini/GEMINI.md` |
+| 適用優先度     | Global → Project (Project優先)          | Global → Root → Subdir          | Single / IDE設定                  | Global → Project                  | Global → Project      |
 | 形式           | Markdown                                | Markdown                        | Markdown                          | Markdown                          | Markdown              |
 
 ### Guidelines

@@ -32,6 +32,8 @@ MCP Server の選定・比較の判断材料。
 | 比較項目           | AWS MCP (マネージド)                | AWS API MCP                      | AWS Knowledge MCP                 | AWS Documentation MCP                      | AWS Pricing MCP                      |
 | ------------------ | ----------------------------------- | -------------------------------- | --------------------------------- | ------------------------------------------ | ------------------------------------ |
 | 提供元             | AWS                                 | AWS Labs                         | AWS                               | AWS Labs                                   | AWS Labs                             |
+| リポジトリ         | -                                   | [GitHub](https://github.com/awslabs/mcp) | -                                 | [GitHub](https://github.com/awslabs/mcp) | [GitHub](https://github.com/awslabs/mcp) |
+| ドキュメント       | [AWS Docs](https://docs.aws.amazon.com/kiro/latest/userguide/mcp-managed.html) | [README](https://github.com/awslabs/mcp/tree/main/src/aws-api-mcp-server) | [AWS Docs](https://docs.aws.amazon.com/kiro/latest/userguide/mcp-managed.html) | [README](https://github.com/awslabs/mcp/tree/main/src/aws-documentation-mcp-server) | [README](https://github.com/awslabs/mcp/tree/main/src/aws-pricing-mcp-server) |
 | ライセンス         | 商用 (AWS)                          | Apache-2.0                       | 商用 (AWS)                        | Apache-2.0                                 | Apache-2.0                           |
 | ホスティング       | リモート (AWS管理)                  | ローカル                         | リモート                          | ローカル                                   | ローカル                             |
 | Transport          | stdio (proxy経由)                   | stdio                            | stdio (proxy経由)                 | stdio                                      | stdio                                |
@@ -55,6 +57,8 @@ MCP Server の選定・比較の判断材料。
 | 比較項目           | HashiCorp Terraform MCP                             | AWS Labs Terraform MCP                   |
 | ------------------ | --------------------------------------------------- | ---------------------------------------- |
 | 提供元             | HashiCorp                                           | AWS Labs                                 |
+| リポジトリ         | [GitHub](https://github.com/hashicorp/terraform-mcp-server) | [GitHub](https://github.com/awslabs/mcp) |
+| ドキュメント       | [README](https://github.com/hashicorp/terraform-mcp-server#readme) | [README](https://github.com/awslabs/mcp/tree/main/src/terraform-mcp-server) |
 | ライセンス         | MPL-2.0                                             | Apache-2.0                               |
 | インストール       | `npx terraform-mcp-server`                          | `uvx awslabs.terraform-mcp-server`       |
 | ランタイム         | Node.js (npx)                                       | Python (uvx)                             |
@@ -77,6 +81,8 @@ MCP Server の選定・比較の判断材料。
 | 比較項目           | GitHub MCP                   | Context7                    | Playwright MCP          | Fetch MCP              |
 | ------------------ | ---------------------------- | --------------------------- | ----------------------- | ---------------------- |
 | 提供元             | GitHub (Microsoft)           | Upstash                     | Microsoft               | MCP公式 (Anthropic)    |
+| リポジトリ         | [GitHub](https://github.com/github/github-mcp-server) | [GitHub](https://github.com/upstash/context7) | [GitHub](https://github.com/microsoft/playwright-mcp) | [GitHub](https://github.com/modelcontextprotocol/servers) |
+| ドキュメント       | [README](https://github.com/github/github-mcp-server#readme) | [context7.com](https://context7.com) | [README](https://github.com/microsoft/playwright-mcp#readme) | [README](https://github.com/modelcontextprotocol/servers/tree/main/src/fetch#readme) |
 | ライセンス         | MIT                          | MIT                         | Apache-2.0              | MIT                    |
 | Transport          | HTTP (リモート)              | stdio                       | stdio                   | stdio                  |
 | インストール       | URL直接                      | `npx @upstash/context7-mcp` | `npx @playwright/mcp`   | `uvx mcp-server-fetch` |
@@ -97,6 +103,8 @@ MCP Server の選定・比較の判断材料。
 | 比較項目           | lean-ctx                                                          |                          codebase-memory-mcp | jCodeMunch                             | mcp-compressor           |
 | ------------------ | ----------------------------------------------------------------- | -------------------------------------------: | -------------------------------------- | ------------------------ |
 | 提供元             | yvgude                                                            |                                     DeusData | jgravelle                              | Atlassian Labs           |
+| リポジトリ         | [GitHub](https://github.com/yvgude/lean-ctx)                      | [GitHub](https://github.com/deusdata/codebase-memory-mcp) | [GitHub](https://github.com/jgravelle/jcodemunch) | [GitHub](https://github.com/AltimateAI/mcp-compressor) |
+| ドキュメント       | [README](https://github.com/yvgude/lean-ctx#readme)               | [README](https://github.com/deusdata/codebase-memory-mcp#readme) | [jcodemunch.com](https://jcodemunch.com) | [README](https://github.com/AltimateAI/mcp-compressor#readme) |
 | ライセンス         | Apache-2.0                                                        |                                          MIT | 商用 (個人無料)                        | Apache-2.0               |
 | 言語               | Rust                                                              |                                            C | Python                                 | Python                   |
 | インストール       | `lean-ctx mcp` / aqua                                             |                              バイナリ / aqua | `uvx jcodemunch-mcp`                   | `uvx mcp-compressor`     |
@@ -124,6 +132,8 @@ MCP Server の選定・比較の判断材料。
 | 比較項目                      |  codebase-memory-mcp | jCodeMunch                  | Serena                        | lean-ctx           |
 | ----------------------------- | -------------------: | --------------------------- | ----------------------------- | ------------------ |
 | 提供元                        |             DeusData | jgravelle                   | Oraios                        | yvgude             |
+| リポジトリ                    | [GitHub](https://github.com/deusdata/codebase-memory-mcp) | [GitHub](https://github.com/jgravelle/jcodemunch) | [GitHub](https://github.com/oraios/serena) | [GitHub](https://github.com/yvgude/lean-ctx) |
+| ドキュメント                  | [README](https://github.com/deusdata/codebase-memory-mcp#readme) | [jcodemunch.com](https://jcodemunch.com) | [README](https://github.com/oraios/serena#readme) | [README](https://github.com/yvgude/lean-ctx#readme) |
 | ライセンス                    |                  MIT | 商用 (個人無料)             | Apache-2.0                    | Apache-2.0         |
 | 言語                          |                    C | Python                      | Python                        | Rust               |
 | インストール                  |   バイナリ / aqua    | `uvx jcodemunch-mcp`        | `uvx --from git+https://github.com/oraios/serena serena` | `lean-ctx mcp` / aqua |
@@ -159,6 +169,8 @@ MCP Server の選定・比較の判断材料。
 | 比較項目         | Context7                    | Brave Search MCP                  | Exa MCP                       | Fetch MCP              |
 | ---------------- | --------------------------- | --------------------------------- | ----------------------------- | ---------------------- |
 | 提供元           | Upstash                     | Brave                             | Exa                           | MCP公式                |
+| リポジトリ       | [GitHub](https://github.com/upstash/context7) | [GitHub](https://github.com/anthropics/brave-search-mcp) | -                             | [GitHub](https://github.com/modelcontextprotocol/servers) |
+| ドキュメント     | [context7.com](https://context7.com) | [README](https://github.com/anthropics/brave-search-mcp#readme) | [exa.ai](https://docs.exa.ai/reference/mcp) | [README](https://github.com/modelcontextprotocol/servers/tree/main/src/fetch#readme) |
 | ライセンス       | OSS                         | MIT                               | 商用                          | MIT                    |
 | Transport        | stdio                       | stdio                             | HTTP (リモート)               | stdio                  |
 | インストール     | `npx @upstash/context7-mcp` | `npx @anthropic/brave-search-mcp` | URL: `https://mcp.exa.ai/mcp` | `uvx mcp-server-fetch` |

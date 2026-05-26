@@ -27,22 +27,31 @@ if [ -e "$HOME/.local" ]; then sudo chown -R "$uid":"$gid" "$HOME/.local" || tru
 if [ -e "$HOME/.ssh" ]; then sudo chown -R "$uid":"$gid" "$HOME/.ssh" || true; fi
 chmod 600 "$HOME/.ssh"/id_* 2> /dev/null || true
 
-# aqua data directory
-mkdir -p "$HOME/.local/share/aquaproj-aqua" 2> /dev/null || true
-# aqua lazy install
-if command -v aqua > /dev/null 2>&1; then
-    aqua i -l || echo "[warn] aqua lazy install failed" >&2
-    aqua policy allow /workspace/aqua-policy.yaml 2> /dev/null || echo "[warn] aqua policy apply failed" >&2
-fi
-
 # apm install (optional)
 if command -v apm > /dev/null 2>&1; then
     apm install --frozen || echo "[warn] apm install failed" >&2
 fi
 
+# aqua lazy install
+if command -v aqua > /dev/null 2>&1; then
+    mkdir -p "$HOME/.local/share/aquaproj-aqua" 2> /dev/null || true
+    aqua i -l || echo "[warn] aqua lazy install failed" >&2
+    aqua policy allow /workspace/aqua-policy.yaml 2> /dev/null || echo "[warn] aqua policy apply failed" >&2
+fi
+
 # gh extension install (optional)
 if command -v gh > /dev/null 2>&1; then
     gh extension install github/gh-aw || echo "[warn] gh extension install failed" >&2
+fi
+
+# mise trust (optional)
+if command -v mise > /dev/null 2>&1; then
+    if [ -f /workspace/mise.toml ]; then
+        mise trust --yes /workspace/mise.toml > /dev/null 2>&1 || echo "[warn] mise trust failed" >&2
+    fi
+    mise run mise-install || echo "[warn] mise install task failed" >&2
+    mkdir -p "$HOME/.local/share/mise/shims"
+    mise reshim > /dev/null 2>&1 || echo "[warn] mise reshim failed" >&2
 fi
 
 # pre-commit (optional)
