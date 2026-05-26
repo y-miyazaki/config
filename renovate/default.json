@@ -12,6 +12,9 @@
   ],
   "branchConcurrentLimit": 10,
   "dependencyDashboard": true,
+  "env": {
+    "MISE_LOCKED": "0"
+  },
   "internalChecksFilter": "strict",
   "labels": ["dependencies"],
   "minimumReleaseAge": "7 days",
@@ -168,10 +171,7 @@
       "commitMessagePrefix": "renovate(mise):",
       "addLabels": ["mise"],
       "automerge": false,
-      "platformAutomerge": false,
-      "env": {
-        "MISE_LOCKED": "0"
-      }
+      "platformAutomerge": false
     },
     {
       "description": "Rules: Automerge patch updates for mise packages",
@@ -180,10 +180,7 @@
       "commitMessagePrefix": "renovate(mise):",
       "addLabels": ["automerge"],
       "automerge": true,
-      "platformAutomerge": true,
-      "env": {
-        "MISE_LOCKED": "0"
-      }
+      "platformAutomerge": true
     },
     {
       "description": "Rules: Safe automerge only for lockfile/digest/pin updates",
