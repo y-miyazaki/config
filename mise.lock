@@ -694,36 +694,36 @@ checksum = "sha256:b9da8df3d92402551c86b8956be30fb87f600245321d2b31751afcf372180
 url = "https://releases.hashicorp.com/terraform/1.15.3/terraform_1.15.3_windows_amd64.zip"
 
 [[tools."aqua:kayac/ecspresso"]]
-version = "2.8.3"
+version = "2.8.4"
 backend = "aqua:kayac/ecspresso"
 
 [tools."aqua:kayac/ecspresso"."platforms.linux-arm64"]
-checksum = "sha256:eaff105cdfff563fb1c4ee34b7754b1559214c8f185ffd533d78d814db068b0d"
-url = "https://github.com/kayac/ecspresso/releases/download/v2.8.3/ecspresso_2.8.3_linux_arm64.tar.gz"
+checksum = "sha256:ad3dc90b3db2451ad46813809fd812bd66e221220e656412367badae3d8149fb"
+url = "https://github.com/kayac/ecspresso/releases/download/v2.8.4/ecspresso_2.8.4_linux_arm64.tar.gz"
 
 [tools."aqua:kayac/ecspresso"."platforms.linux-arm64-musl"]
-checksum = "sha256:eaff105cdfff563fb1c4ee34b7754b1559214c8f185ffd533d78d814db068b0d"
-url = "https://github.com/kayac/ecspresso/releases/download/v2.8.3/ecspresso_2.8.3_linux_arm64.tar.gz"
+checksum = "sha256:ad3dc90b3db2451ad46813809fd812bd66e221220e656412367badae3d8149fb"
+url = "https://github.com/kayac/ecspresso/releases/download/v2.8.4/ecspresso_2.8.4_linux_arm64.tar.gz"
 
 [tools."aqua:kayac/ecspresso"."platforms.linux-x64"]
-checksum = "sha256:2bd4ec3364924fd974aaead5791a9fcad3f4d1b9a30bf01b0a4f042ebac79ab0"
-url = "https://github.com/kayac/ecspresso/releases/download/v2.8.3/ecspresso_2.8.3_linux_amd64.tar.gz"
+checksum = "sha256:652953ab0439f7837542f80fa03938b676574e8c85f477eb90df8e5b6d95ff68"
+url = "https://github.com/kayac/ecspresso/releases/download/v2.8.4/ecspresso_2.8.4_linux_amd64.tar.gz"
 
 [tools."aqua:kayac/ecspresso"."platforms.linux-x64-musl"]
-checksum = "sha256:2bd4ec3364924fd974aaead5791a9fcad3f4d1b9a30bf01b0a4f042ebac79ab0"
-url = "https://github.com/kayac/ecspresso/releases/download/v2.8.3/ecspresso_2.8.3_linux_amd64.tar.gz"
+checksum = "sha256:652953ab0439f7837542f80fa03938b676574e8c85f477eb90df8e5b6d95ff68"
+url = "https://github.com/kayac/ecspresso/releases/download/v2.8.4/ecspresso_2.8.4_linux_amd64.tar.gz"
 
 [tools."aqua:kayac/ecspresso"."platforms.macos-arm64"]
-checksum = "sha256:849fe537457ace45a9556a4b3cbd447051dc425a6e6aab65f06c081673ebe17d"
-url = "https://github.com/kayac/ecspresso/releases/download/v2.8.3/ecspresso_2.8.3_darwin_arm64.tar.gz"
+checksum = "sha256:22a126468511d5fb70709450aadbf8c85bda9df65eea1ffb265e2aae3d2a1da3"
+url = "https://github.com/kayac/ecspresso/releases/download/v2.8.4/ecspresso_2.8.4_darwin_arm64.tar.gz"
 
 [tools."aqua:kayac/ecspresso"."platforms.macos-x64"]
-checksum = "sha256:8cba50771d7f743958d325120e1ce5dca0e128b5cb143e9c63c7d2a4e2a5c40a"
-url = "https://github.com/kayac/ecspresso/releases/download/v2.8.3/ecspresso_2.8.3_darwin_amd64.tar.gz"
+checksum = "sha256:5d800a9ec71c65cab23820a4e5cd0b915e9d6d6918af8a085c7020b5df3bbae9"
+url = "https://github.com/kayac/ecspresso/releases/download/v2.8.4/ecspresso_2.8.4_darwin_amd64.tar.gz"
 
 [tools."aqua:kayac/ecspresso"."platforms.windows-x64"]
-checksum = "sha256:ae06b2c4fc7d4c904a12e304b5b89d444258ae3822276e6c01d97ed0cb6039d5"
-url = "https://github.com/kayac/ecspresso/releases/download/v2.8.3/ecspresso_2.8.3_windows_amd64.tar.gz"
+checksum = "sha256:080a6109d2caa9b66daf5ec4d839f92f8c065e4980e4f8965de8bd28a6bc3dd7"
+url = "https://github.com/kayac/ecspresso/releases/download/v2.8.4/ecspresso_2.8.4_windows_amd64.tar.gz"
 
 [[tools."aqua:ko-build/ko"]]
 version = "0.18.1"
