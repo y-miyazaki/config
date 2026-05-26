@@ -22,7 +22,7 @@ github_attestations = true # Verify GitHub attestations for aqua-backed packages
 [tools]
 # Runtime tools
 python = "3.14.5"
-node = "24"
+node = "24.16.0"
 pnpm = { version = "11.3.0", depends = ["node"] }
 aqua = "2.59.0"
 
@@ -98,7 +98,7 @@ aqua = "2.59.0"
 ], install_env = { NPM_CONFIG_IGNORE_SCRIPTS = "true" } } # AWS profile switcher
 
 # AI agent tools
-"aqua:kiro-cli" = "2.4.1"                       # Kiro CLI
+"aqua:kiro.dev/kiro-cli" = "2.4.1"              # Kiro CLI
 "github:microsoft/apm" = "0.14.2"               # agent package manager
 "github:microsoft/waza" = "0.33.0"              # agent skill evaluator
 "github:yvgude/lean-ctx" = "3.6.6"              # context optimizer
