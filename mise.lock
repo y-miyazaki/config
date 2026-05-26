@@ -724,28 +724,6 @@ url = "https://github.com/kayac/ecspresso/releases/download/v2.8.3/ecspresso_2.8
 checksum = "sha256:ae06b2c4fc7d4c904a12e304b5b89d444258ae3822276e6c01d97ed0cb6039d5"
 url = "https://github.com/kayac/ecspresso/releases/download/v2.8.3/ecspresso_2.8.3_windows_amd64.tar.gz"
 
-[[tools."aqua:kiro.dev/kiro-cli"]]
-version = "2.4.1"
-backend = "aqua:kiro.dev/kiro-cli"
-
-[tools."aqua:kiro.dev/kiro-cli"."platforms.linux-arm64"]
-url = "https://prod.download.cli.kiro.dev/stable/2.4.1/kirocli-aarch64-linux-musl.zip"
-
-[tools."aqua:kiro.dev/kiro-cli"."platforms.linux-arm64-musl"]
-url = "https://prod.download.cli.kiro.dev/stable/2.4.1/kirocli-aarch64-linux-musl.zip"
-
-[tools."aqua:kiro.dev/kiro-cli"."platforms.linux-x64"]
-url = "https://prod.download.cli.kiro.dev/stable/2.4.1/kirocli-x86_64-linux-musl.zip"
-
-[tools."aqua:kiro.dev/kiro-cli"."platforms.linux-x64-musl"]
-url = "https://prod.download.cli.kiro.dev/stable/2.4.1/kirocli-x86_64-linux-musl.zip"
-
-[tools."aqua:kiro.dev/kiro-cli"."platforms.macos-arm64"]
-url = "https://prod.download.cli.kiro.dev/stable/2.4.1/Kiro%20CLI.dmg"
-
-[tools."aqua:kiro.dev/kiro-cli"."platforms.macos-x64"]
-url = "https://prod.download.cli.kiro.dev/stable/2.4.1/Kiro%20CLI.dmg"
-
 [[tools."aqua:ko-build/ko"]]
 version = "0.18.1"
 backend = "aqua:ko-build/ko"

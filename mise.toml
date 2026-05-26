@@ -2,6 +2,7 @@
 # https://mise.jdx.dev/
 
 [settings]
+activate_aggressive = true    # Aggressively activate tools in the current config for all shells and commands; may cause unexpected tool activations but closest to former auto_activate.
 auto_install = true           # Auto-install tools when a mise-managed config is entered or evaluated; closest behavior to former lazy_install.
 exec_auto_install = true      # Auto-install tools when commands are run via `mise x` / `mise exec`.
 lockfile = true               # Generate and maintain mise.lock with resolved URLs and checksums.
@@ -98,7 +99,6 @@ aqua = "2.59.0"
 ], install_env = { NPM_CONFIG_IGNORE_SCRIPTS = "true" } } # AWS profile switcher
 
 # AI agent tools
-"aqua:kiro.dev/kiro-cli" = "2.4.1"              # Kiro CLI
 "github:microsoft/apm" = "0.14.2"               # agent package manager
 "github:microsoft/waza" = "0.33.0"              # agent skill evaluator
 "github:yvgude/lean-ctx" = "3.6.6"              # context optimizer

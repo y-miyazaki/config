@@ -56,21 +56,7 @@ fi
 # for mise
 #######################################
 if command -v mise > /dev/null 2>&1; then
-    # Ensure command stubs in shims are resolvable for on-demand execution.
-    case ":$PATH:" in
-        *":$HOME/.local/share/mise/shims:"*) ;;
-        *) export PATH="$HOME/.local/share/mise/shims:$PATH" ;;
-    esac
     eval "$(mise activate bash)"
-
-    # VS Code may prepend its own tool paths after shell startup; move mise-managed
-    # paths back to the front without duplicating entries.
-    _mise_bin_paths="$(mise bin-paths)"
-    if [ -n "$_mise_bin_paths" ]; then
-        PATH="$(printf '%s\n%s\n' "$(printf '%s' "$_mise_bin_paths" | tr ':' '\n')" "$(printf '%s' "$PATH" | tr ':' '\n')" | awk 'NF && !seen[$0]++' | paste -sd: -)"
-        export PATH
-    fi
-    unset _mise_bin_paths
 fi
 
 #######################################
