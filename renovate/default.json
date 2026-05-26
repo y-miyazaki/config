@@ -168,7 +168,10 @@
       "commitMessagePrefix": "renovate(mise):",
       "addLabels": ["mise"],
       "automerge": false,
-      "platformAutomerge": false
+      "platformAutomerge": false,
+      "env": {
+        "MISE_LOCKED": "0"
+      }
     },
     {
       "description": "Rules: Automerge patch updates for mise packages",
@@ -177,7 +180,10 @@
       "commitMessagePrefix": "renovate(mise):",
       "addLabels": ["automerge"],
       "automerge": true,
-      "platformAutomerge": true
+      "platformAutomerge": true,
+      "env": {
+        "MISE_LOCKED": "0"
+      }
     },
     {
       "description": "Rules: Safe automerge only for lockfile/digest/pin updates",
