@@ -6,7 +6,7 @@ activate_aggressive = true    # Aggressively activate tools in the current confi
 auto_install = true           # Auto-install tools when a mise-managed config is entered or evaluated; closest behavior to former lazy_install.
 exec_auto_install = true      # Auto-install tools when commands are run via `mise x` / `mise exec`.
 lockfile = true               # Generate and maintain mise.lock with resolved URLs and checksums.
-locked = true                 # Require lockfile entries during installs to reduce unexpected upstream changes.
+locked = false                # Require lockfile entries during installs to reduce unexpected upstream changes.
 not_found_auto_install = true # Try installing missing tools when a command is looked up from the current config.
 
 github_attestations = true           # Verify GitHub release attestations when a backend supports them.
