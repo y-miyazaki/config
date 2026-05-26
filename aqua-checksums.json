@@ -266,33 +266,33 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/github/copilot-cli/v1.0.48/copilot-darwin-arm64.tar.gz",
-      "checksum": "B89256FDFEB1EFA3BA3F9C8848EE844CD34EA485D53416BF304B6C69B18D4378",
+      "id": "github_release/github.com/github/copilot-cli/v1.0.49/copilot-darwin-arm64.tar.gz",
+      "checksum": "4F91C420A2DBD260626E854C7234B1491A7C7E17438B9F15138B292ABEF58F28",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/github/copilot-cli/v1.0.48/copilot-darwin-x64.tar.gz",
-      "checksum": "90E2E4CDC3053FD6C517FBEA266910F23259EE89A7D824F98BC8673DC589AC1E",
+      "id": "github_release/github.com/github/copilot-cli/v1.0.49/copilot-darwin-x64.tar.gz",
+      "checksum": "0661C7C61B0955DD3B74B928A848BE125B57CEDB7C0DD7DA265347CA69E34900",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/github/copilot-cli/v1.0.48/copilot-linux-arm64.tar.gz",
-      "checksum": "5A57BD11A2F1770A433F9E041BDE39C657838F7DA4F7B7C059DA5750A669AB7B",
+      "id": "github_release/github.com/github/copilot-cli/v1.0.49/copilot-linux-arm64.tar.gz",
+      "checksum": "3A83A98A888935283FC59FAD55CA8828F54EB1737E2C831690F54AD66449EEC4",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/github/copilot-cli/v1.0.48/copilot-linux-x64.tar.gz",
-      "checksum": "F2A1278C3C2FE22CBCBE51C0D2EE251F7621D2EA2211FE1C7B3668AB3B363FFD",
+      "id": "github_release/github.com/github/copilot-cli/v1.0.49/copilot-linux-x64.tar.gz",
+      "checksum": "E61FA2490BC584FE65C4D9F3B2337EF63439CBD9E0A4F6648EB63223E1B32AFD",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/github/copilot-cli/v1.0.48/copilot-win32-arm64.zip",
-      "checksum": "EC4F47B507C7536122CA3BF049D0D99C2BB7DB25DDE302599C81C0B939818BC9",
+      "id": "github_release/github.com/github/copilot-cli/v1.0.49/copilot-win32-arm64.zip",
+      "checksum": "D298179ACD16DC661872BC41A21CE169F8BB8F320DB121CDC9AF0A549E19CD3B",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/github/copilot-cli/v1.0.48/copilot-win32-x64.zip",
-      "checksum": "439EB022A9A6153DBBA92E9F3C497AE9DBC0B7122CB1B5AC4EF9A16796327CE9",
+      "id": "github_release/github.com/github/copilot-cli/v1.0.49/copilot-win32-x64.zip",
+      "checksum": "2E8FF202F28B8A69E22B3EDCBF363149AAD1C0C65A385C1AFEE79D5DE7906500",
       "algorithm": "sha256"
     },
     {
@@ -946,23 +946,23 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.7/lean-ctx-aarch64-apple-darwin.tar.gz",
-      "checksum": "60C3B12DE10CBEA6360D08ABAA8F1073570580677A7B014662F79BD00FEE68DC",
+      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.8/lean-ctx-aarch64-apple-darwin.tar.gz",
+      "checksum": "E4D3224960C80AA02D8CC830D124E32F64EAAAD496EF4D457FD75E1FAC9F849C",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.7/lean-ctx-aarch64-unknown-linux-gnu.tar.gz",
-      "checksum": "ED7DC0CD59885BF2D3DCB39E319AD645087B1D687D3ED7D65CE219AA9548F205",
+      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.8/lean-ctx-aarch64-unknown-linux-gnu.tar.gz",
+      "checksum": "3664B7675F455582B7909AC357E03E8BDA51123F47FAA0DC6FCDC347E7C71A80",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.7/lean-ctx-x86_64-apple-darwin.tar.gz",
-      "checksum": "B81C6744491DCDFDD5DED6FAF0A273F625D6C6CE5F5AA0A438227A5FA07B0793",
+      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.8/lean-ctx-x86_64-apple-darwin.tar.gz",
+      "checksum": "F4040C6DF94798FEF443D1782E290D8111E56754D9418FE3B076ABB1AF722ADD",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.7/lean-ctx-x86_64-unknown-linux-gnu.tar.gz",
-      "checksum": "4206BE6400140D0F53AF59E7B1DE193BDEC1C6F6104256FC2FE4CD7C356C6D16",
+      "id": "github_release/github.com/yvgude/lean-ctx/v3.6.8/lean-ctx-x86_64-unknown-linux-gnu.tar.gz",
+      "checksum": "09223CC59C280C2144B25F067788312CDBFEB34F6F2367589505FBC180259039",
       "algorithm": "sha256"
     },
     {
