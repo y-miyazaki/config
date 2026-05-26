@@ -7,6 +7,7 @@
 
 | 日付       | 内容                                                                 |
 | ---------- | -------------------------------------------------------------------- |
+| 2026-05-26 | Version Management セクション mise Lazy Install 記述修正             |
 | 2026-05-25 | Version Management セクションに mise 追加                            |
 | 2026-05-25 | SAST / Code Pattern Analysis セクション追加 (Semgrep vs CodeQL vs SonarQube) |
 | 2026-05-24 | tool-comparison 共通評価ルールドキュメントへのリンク更新             |
@@ -92,7 +93,7 @@
 | 設定ファイル       | `aqua.yaml`                                       | `.tool-versions`                                 | `mise.toml` / `.tool-versions`                |
 | プラグインシステム | Registry (GitHub 集中管理)                        | Plugin (各リポジトリ分散)                        | 複数バックエンド (aqua, asdf, cargo, npm 等)  |
 | Checksum 検証      | ✅ 組み込みサポート                                | ❌ プラグイン依存                                 | ✅ aqua バックエンド経由で対応                  |
-| Lazy Install       | ✅ コマンド実行時に自動インストール                | ❌ 事前に `asdf install` が必要                   | ✅ コマンド実行時に自動インストール             |
+| Lazy Install       | ✅ コマンド実行時に自動インストール                | ❌ 事前に `asdf install` が必要                   | ⚠️ `mise exec`/`mise run` 経由か、`mise activate` + shims 設定が必要。`not_found_auto_install` は既に別バージョンがインストール済みのツールのみ対応 |
 | 実行速度           | 高速 (Go バイナリ)                                | 低速 (shim + shell script)                       | 高速 (Rust バイナリ、shim 不要)               |
 | Renovate 対応      | ✅ datasource 指定で自動更新可能                   | ⚠️ 限定的                                         | ✅ mise manager で自動更新可能 (lockfile対応)       |
 | 対応ツール数       | 2,900+ (standard registry)                        | 700+ (community plugins)                         | 900+ (registry) + asdf/aqua バックエンド経由  |
@@ -107,7 +108,7 @@
 **→ aqua または mise を採用する。** どちらも高速・セキュアで Renovate による自動更新に対応しており、用途に応じて選択する。
 
 - **aqua を選ぶ場合**: `aqua-policy.yaml` によるインストール許可ツールのポリシー制御が可能。CI でのバージョン管理に特化したシンプルな設計で、組織全体のツール制限を強制できる
-- **mise を選ぶ場合**: aqua を backend として取り込めるため aqua registry の checksum/署名検証をそのまま利用可能。加えてタスクランナー・環境変数管理・lockfile (`mise.lock`) を統合し、単一ツールで開発環境全体をカバーできる。Rust 実装で shim 不要、Renovate の mise manager で lockfile 含む自動更新に対応
+- **mise を選ぶ場合**: aqua を backend として取り込めるため aqua registry の checksum/署名検証をそのまま利用可能。加えてタスクランナー・環境変数管理・lockfile (`mise.lock`) を統合し、単一ツールで開発環境全体をカバーできる。Rust 実装で高速、Renovate の mise manager で lockfile 含む自動更新に対応。ただし Lazy Install は aqua と異なり、初回は `mise install` が必要 (`not_found_auto_install` は既に別バージョンがインストール済みのツールのみ対応)。新規ツールの自動インストールには `mise exec`/`mise run` を使うか、事前に `mise install` を実行する必要がある
 - Node.js/Ruby/Python 等のランタイム管理が主目的で、チームが既に asdf に慣れている場合は asdf でも可
 
 ## Security Scanning: Trivy vs Snyk vs Grype

@@ -28,6 +28,7 @@ This section defines the intended update policy first, independent from implemen
 - GitHub official actions (`actions/*`): automerge `patch` only.
 - Go modules (`gomod`): automerge library `patch` only (exclude Go toolchain package `go`).
 - Go toolchain (`go` package in `gomod`): do not automerge `major`/`minor`.
+- mise (`mise.toml`): automerge `patch` only.
 - npm: automerge `patch` only.
 - Python packages (`poetry`, `pip_requirements`, `pipenv`): automerge library `patch` only.
 - Terraform (`terraform`, `terraform-version`): do not automerge.
@@ -39,6 +40,7 @@ This section defines the intended update policy first, independent from implemen
 - Docker: `docker`
 - GitHub Actions: `github-actions`
 - Go modules: `go`
+- mise: `mise`
 - npm: `npm`
 - Python: `python`
 - Terraform: `terraform`
@@ -109,6 +111,12 @@ Reference: Verifying if minimumReleaseAge applies to images via ECR pull-through
 - Non-toolchain patch updates are automerged
 - Post-update: `gomodTidy` and `gomodUpdateImportPaths` (auto-updates import paths on major version bumps)
 - Commit prefix: `renovate(go):`
+
+### mise (`mise.toml`)
+
+- Label all updates with `mise`
+- Automerge patch updates only
+- Commit prefix: `renovate(mise):`
 
 ### npm (`npm`)
 
