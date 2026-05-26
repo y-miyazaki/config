@@ -77,7 +77,7 @@ aqua = "2.59.0"
 "aqua:vektra/mockery" = "3.7.0"                                         # mock code generator for interfaces
 
 # Terraform related tools
-"aqua:getsops/sops" = "3.13.0"                  # encryption tool
+"aqua:getsops/sops" = "3.13.1"                  # encryption tool
 "aqua:hashicorp/terraform" = "1.15.3"           # infrastructure as code
 "aqua:terraform-docs/terraform-docs" = "0.24.0" # documentation generator
 "aqua:terraform-linters/tflint" = "0.62.1"      # linter
