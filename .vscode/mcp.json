@@ -3,12 +3,17 @@
     "context7": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp@2.2.5"]
+      "args": [
+        "-y",
+        "@upstash/context7-mcp@2.2.5"
+      ]
     },
     "fetch": {
       "type": "stdio",
       "command": "uvx",
-      "args": ["mcp-server-fetch==2025.4.7"]
+      "args": [
+        "mcp-server-fetch==2025.4.7"
+      ]
     },
     "github": {
       "type": "stdio",
@@ -26,12 +31,17 @@
     "lean-ctx": {
       "type": "stdio",
       "command": "lean-ctx",
-      "args": ["mcp"]
+      "args": [
+        "mcp"
+      ]
     },
     "playwright": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@playwright/mcp@0.0.75"]
+      "args": [
+        "-y",
+        "@playwright/mcp@0.0.75"
+      ]
     }
   },
   "inputs": []
