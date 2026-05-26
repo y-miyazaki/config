@@ -14,9 +14,9 @@ dependencies:
     # - github.com/y-miyazaki/config/.apm/packages/terraform#v1.1.16
     # - github.com/y-miyazaki/config/.apm/packages/terraform-aws#v1.1.16
     - ./.apm/packages/common
-    - ./.apm/packages/aws
+    # - ./.apm/packages/aws
     - ./.apm/packages/go
     - ./.apm/packages/shell-script
-    - ./.apm/packages/terraform
-    - ./.apm/packages/terraform-aws
+    # - ./.apm/packages/terraform
+    # - ./.apm/packages/terraform-aws
   mcp: []

@@ -1,10 +1,13 @@
 #!/bin/bash
 # Simple devcontainer initialization script
 # Responsibilities:
-#  - Ensure local data directories are writable for user-level tools like aqua
-#  - Perform lazy installation for aqua and apm (if available)
 #  - Adjust ownership for common config directories (e.g., .aws, .gitconfig, .local, .ssh)
+#  - Run apm install (if apm is available)
+#  - Perform lazy installation for aqua and apply aqua policy (if aqua is available)
+#  - Install gh extensions (if gh is available)
+#  - Apply mise trust and run mise install (if mise is available and mise.toml exists)
 #  - Install pre-commit hooks (if pre-commit is available)
+#  - Create Terraform plugin cache directory
 #  - Set up GitHub credential helper for repositories with GitHub remotes (if gh is available)
 set -euo pipefail
 
@@ -32,7 +35,7 @@ if command -v apm > /dev/null 2>&1; then
     apm install --frozen || echo "[warn] apm install failed" >&2
 fi
 
-# aqua lazy install
+# aqua lazy install (optional)
 if command -v aqua > /dev/null 2>&1; then
     mkdir -p "$HOME/.local/share/aquaproj-aqua" 2> /dev/null || true
     aqua i -l || echo "[warn] aqua lazy install failed" >&2
