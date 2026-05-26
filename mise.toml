@@ -2,17 +2,19 @@
 # https://mise.jdx.dev/
 
 [settings]
-activate_aggressive = true    # Aggressively activate tools in the current config for all shells and commands; may cause unexpected tool activations but closest to former auto_activate.
-auto_install = true           # Auto-install tools when a mise-managed config is entered or evaluated; closest behavior to former lazy_install.
-exec_auto_install = true      # Auto-install tools when commands are run via `mise x` / `mise exec`.
-lockfile = true               # Generate and maintain mise.lock with resolved URLs and checksums.
-locked = false                # Require lockfile entries during installs to reduce unexpected upstream changes.
+activate_aggressive = true # Aggressively activate tools in the current config for all shells and commands; may cause unexpected tool activations but closest to former auto_activate.
+auto_install = true # Auto-install tools when a mise-managed config is entered or evaluated; closest behavior to former lazy_install.
+exec_auto_install = true # Auto-install tools when commands are run via `mise x` / `mise exec`.
+github_attestations = true # Verify GitHub release attestations when a backend supports them.
+lockfile = true # Generate and maintain mise.lock with resolved URLs and checksums.
+locked = false # Require lockfile entries during installs to reduce unexpected upstream changes.
+minimum_release_age = "7d" # Avoid very recent releases to reduce supply-chain risk from rushed or bad publishes.
 not_found_auto_install = true # Try installing missing tools when a command is looked up from the current config.
-
-github_attestations = true           # Verify GitHub release attestations when a backend supports them.
-minimum_release_age = "7d"           # Avoid very recent releases to reduce supply-chain risk from rushed or bad publishes.
 provenance_api_failures_fatal = true # Fail installs if provenance verification APIs are unavailable or verification fails.
-slsa = true                          # Require SLSA provenance checks when a backend supports them.
+slsa = true # Require SLSA provenance checks when a backend supports them.
+trusted_config_paths = [
+  "/",
+] # Paths to automatically trust mise.toml files in without prompting; use with caution.
 
 [settings.aqua]
 cosign = true              # Verify cosign signatures for aqua-backed packages when available.

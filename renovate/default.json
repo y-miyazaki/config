@@ -12,9 +12,6 @@
   ],
   "branchConcurrentLimit": 10,
   "dependencyDashboard": true,
-  "env": {
-    "MISE_LOCKED": "0"
-  },
   "internalChecksFilter": "strict",
   "labels": ["dependencies"],
   "minimumReleaseAge": "7 days",
