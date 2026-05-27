@@ -628,10 +628,6 @@ checksum = "sha256:146695f49717dfd79d64d5d6f4b1d25e2b56d73e723bbf68a8dc13ce5cf69
 url = "https://github.com/goreleaser/goreleaser/releases/download/v2.15.4/goreleaser_Windows_x86_64.zip"
 provenance = "github-attestations"
 
-[[tools."aqua:grpc/grpc-go/protoc-gen-go-grpc"]]
-version = "1.81.1"
-backend = "aqua:grpc/grpc-go/protoc-gen-go-grpc"
-
 [[tools."aqua:hashicorp/terraform"]]
 version = "1.15.3"
 backend = "aqua:hashicorp/terraform"
@@ -1511,7 +1507,7 @@ version = "0.2.0"
 backend = "npm:awsp"
 
 [[tools."npm:cspell"]]
-version = "9.3.2"
+version = "10.0.0"
 backend = "npm:cspell"
 
 [[tools."npm:markdown-link-check"]]
