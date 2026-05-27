@@ -16,7 +16,7 @@
 - [tool-comparison-matrix-ai-workflow.md](tool-comparison/tool-comparison-matrix-ai-workflow.md) - AI workflow tool comparison
 - [tool-comparison-matrix-aws.md](tool-comparison/tool-comparison-matrix-aws.md) - AWS tool comparison
 - [tool-comparison-matrix-go.md](tool-comparison/tool-comparison-matrix-go.md) - Go tool comparison
-- [tool-comparison-matrix-mcp-server.md](tool-comparison/tool-comparison-matrix-mcp-server.md) - MCP server tool comparison
+- [tool-comparison-matrix-ai-mcp-server.md](tool-comparison/tool-comparison-matrix-ai-mcp-server.md) - MCP server tool comparison
 - [tool-comparison-matrix-nodejs.md](tool-comparison/tool-comparison-matrix-nodejs.md) - Node.js tool comparison
 - [tool-comparison-matrix-shell-script.md](tool-comparison/tool-comparison-matrix-shell-script.md) - Shell script tool comparison
 - [tool-comparison-matrix-terraform.md](tool-comparison/tool-comparison-matrix-terraform.md) - Terraform tool comparison
