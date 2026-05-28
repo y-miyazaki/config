@@ -24,10 +24,14 @@
 
 | 比較項目             | ALB                                                  | NLB                                                  | CLB (Classic)                                        |
 | -------------------- | ---------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
-| サービスカテゴリ     | L7 Load Balancer                                     | L4 Load Balancer                                     | L4/L7 Load Balancer (レガシー)                       |
 | ドキュメント         | [ALB](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/) | [NLB](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/) | [CLB](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/) |
-| 課金モデル           | 時間 + LCU (新規接続/アクティブ接続/帯域/ルール)     | 時間 + NLCU                                          | 時間 + データ転送量                                  |
+| 課金モデル           | 時間 + LCU ([料金](https://aws.amazon.com/elasticloadbalancing/pricing/)) | 時間 + NLCU ([料金](https://aws.amazon.com/elasticloadbalancing/pricing/)) | 時間 + データ転送量 ([料金](https://aws.amazon.com/elasticloadbalancing/pricing/)) |
 | 主用途               | HTTP/HTTPS ルーティング                              | TCP/UDP 高スループット、固定 IP                      | レガシー (新規利用非推奨)                            |
+| SLA                  | 99.99%                                               | 99.99%                                               | 99.99%                                               |
+| 学習コスト           | 低い                                                 | 低い                                                 | -                                                    |
+| スケーリング         | 自動 (トラフィックに応じて)                          | 自動 (トラフィックに応じて)                          | 自動                                                 |
+| コスト (常時高負荷)  | 中程度 (LCU 依存)                                    | 中程度 (NLCU 依存)                                   | 中程度                                               |
+| コスト (バースト)    | 中程度 (LCU 従量)                                    | 中程度 (NLCU 従量)                                   | 中程度                                               |
 | プロトコル           | HTTP, HTTPS, gRPC, WebSocket                         | TCP, UDP, TLS                                        | HTTP, HTTPS, TCP, SSL                                |
 | ルーティング         | パスベース、ホストベース、ヘッダー、クエリ文字列     | ポートベースのみ                                     | ポートベースのみ                                     |
 | 固定 IP              | ❌ (DNS 名のみ)                                       | ✅ (Elastic IP 割当可)                                | ❌                                                    |
@@ -37,7 +41,6 @@
 | TLS 終端             | ✅                                                    | ✅                                                    | ✅                                                    |
 | WAF 統合             | ✅                                                    | ❌                                                    | ❌                                                    |
 | 認証統合             | ✅ (Cognito / OIDC)                                   | ❌                                                    | ❌                                                    |
-| ヘルスチェック       | HTTP/HTTPS (詳細)                                    | TCP/HTTP/HTTPS                                       | TCP/HTTP                                             |
 | ターゲットタイプ     | Instance, IP, Lambda                                 | Instance, IP, ALB                                    | Instance                                             |
 | ECS 統合             | ✅ (動的ポートマッピング)                             | ✅                                                    | ⚠️                                                    |
 | Terraform 対応       | ✅                                                    | ✅                                                    | ✅                                                    |
@@ -54,18 +57,20 @@
 
 | 比較項目             | API Gateway REST                                     | API Gateway HTTP                                     | ALB                                                  |
 | -------------------- | ---------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
-| サービスカテゴリ     | Managed API Gateway                                  | Managed API Gateway (軽量)                           | L7 Load Balancer                                     |
 | ドキュメント         | [REST API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-rest-api.html) | [HTTP API](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html) | [ALB](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/) |
-| 課金モデル           | リクエスト課金 ($3.50/100万)                         | リクエスト課金 ($1.00/100万)                         | 時間 + LCU                                           |
+| 課金モデル           | $3.50/100万リクエスト ([料金](https://aws.amazon.com/api-gateway/pricing/)) | $1.00/100万リクエスト ([料金](https://aws.amazon.com/api-gateway/pricing/)) | 時間 + LCU ([料金](https://aws.amazon.com/elasticloadbalancing/pricing/)) |
 | 主用途               | フル機能 API 管理                                    | シンプルな HTTP プロキシ                             | コンテナ/EC2 へのルーティング                        |
+| SLA                  | 99.95%                                               | 99.95%                                               | 99.99%                                               |
+| 学習コスト           | 中程度 (VTL、ステージ管理)                           | 低い                                                 | 低い                                                 |
+| スケーリング         | 自動 (10,000 RPS リージョン上限)                     | 自動 (10,000 RPS リージョン上限)                     | 自動 (実質無制限)                                    |
+| コスト (常時高負荷)  | 高い (リクエスト課金)                                | 中程度 (リクエスト課金)                              | 安い (LCU 固定的)                                    |
+| コスト (バースト)    | 安い (従量課金)                                      | 安い (従量課金)                                      | 中程度 (時間課金あり)                                |
 | レイテンシ           | 中程度 (29ms+ オーバーヘッド)                        | 低い (10ms+ オーバーヘッド)                          | 低い                                                 |
-| リクエスト上限       | 10,000 RPS (リージョン)                              | 10,000 RPS (リージョン)                              | 実質無制限                                           |
 | 認証                 | IAM, Cognito, Lambda Authorizer, API Key             | IAM, Cognito (JWT), Lambda Authorizer                | Cognito, OIDC                                        |
 | リクエスト変換       | ✅ (VTL テンプレート)                                 | ❌                                                    | ❌                                                    |
 | レスポンスキャッシュ | ✅                                                    | ❌                                                    | ❌                                                    |
 | 使用量プラン/スロットリング | ✅                                              | ⚠️ (ルート単位スロットリング)                         | ❌                                                    |
 | WebSocket            | ✅                                                    | ❌                                                    | ✅                                                    |
-| カスタムドメイン     | ✅                                                    | ✅                                                    | ✅ (Route 53 + ACM)                                   |
 | WAF 統合             | ✅                                                    | ❌                                                    | ✅                                                    |
 | AWS サービス統合     | ✅ (直接プロキシ)                                     | ✅ (Lambda, HTTP, ALB, Step Functions)                | ❌ (バックエンドへのルーティングのみ)                 |
 | Private API          | ✅ (VPC Endpoint)                                     | ✅ (VPC Link)                                         | ✅ (Internal ALB)                                     |
@@ -85,17 +90,20 @@
 
 | 比較項目             | CloudFront                                           | Global Accelerator                                   |
 | -------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
-| サービスカテゴリ     | CDN                                                  | Network Accelerator                                  |
 | ドキュメント         | [CloudFront](https://docs.aws.amazon.com/cloudfront/) | [Global Accelerator](https://docs.aws.amazon.com/global-accelerator/) |
-| 課金モデル           | リクエスト + データ転送量                            | 固定時間 + データ転送量 (DT Premium)                 |
+| 課金モデル           | リクエスト + データ転送量 ([料金](https://aws.amazon.com/cloudfront/pricing/)) | 固定時間 + DT Premium ([料金](https://aws.amazon.com/global-accelerator/pricing/)) |
 | 主用途               | 静的/動的コンテンツ配信、キャッシュ                  | TCP/UDP の低レイテンシグローバルルーティング         |
+| SLA                  | 99.9%                                                | 99.99%                                               |
+| 学習コスト           | 中程度 (キャッシュ戦略)                              | 低い                                                 |
+| スケーリング         | 自動 (エッジロケーション分散)                        | 自動 (Anycast)                                       |
+| コスト (常時高負荷)  | 中程度 (データ転送量依存)                            | 高い (固定 + DT Premium)                             |
+| コスト (バースト)    | 安い (キャッシュヒットで削減)                        | 高い (固定時間課金)                                  |
 | プロトコル           | HTTP/HTTPS, WebSocket                                | TCP, UDP                                             |
 | キャッシュ           | ✅ (エッジキャッシュ)                                 | ❌ (パススルー)                                       |
 | 固定 IP              | ❌ (DNS 名)                                           | ✅ (Anycast IP)                                       |
 | オリジン             | S3, ALB, EC2, カスタムオリジン                       | ALB, NLB, EC2, Elastic IP                            |
 | エッジ関数           | ✅ (CloudFront Functions, Lambda@Edge)                | ❌                                                    |
 | WAF 統合             | ✅                                                    | ❌ (DDoS Shield のみ)                                 |
-| ヘルスチェック       | オリジンフェイルオーバー                             | ✅ (エンドポイントヘルスチェック)                     |
 | マルチリージョン FO  | ⚠️ (オリジングループ)                                 | ✅ (エンドポイントグループ)                           |
 | DDoS 防御            | ✅ Shield Standard (自動)                             | ✅ Shield Standard (自動)                             |
 | Terraform 対応       | ✅                                                    | ✅                                                    |

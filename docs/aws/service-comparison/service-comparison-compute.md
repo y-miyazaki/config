@@ -24,13 +24,14 @@
 
 | 比較項目             | ECS                                                                                                  | EKS                                                                                                  | App Runner                                                                                     |
 | -------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| サービスカテゴリ     | Container Orchestration                                                                              | Container Orchestration                                                                              | Container Hosting (PaaS)                                                                       |
 | ドキュメント         | [ECS](https://docs.aws.amazon.com/ecs/)                                                              | [EKS](https://docs.aws.amazon.com/eks/)                                                             | [App Runner](https://docs.aws.amazon.com/apprunner/)                                           |
-| 課金モデル           | コントロールプレーン無料 + Fargate/EC2 課金                                                          | クラスター $0.10/h + Fargate/EC2 課金                                                                | vCPU/メモリ従量 (アクティブ時のみ)                                                             |
-| マネージド度         | 高い                                                                                                 | 中程度 (Kubernetes 運用知識必要)                                                                     | 非常に高い                                                                                     |
+| 課金モデル           | コントロールプレーン無料 + Fargate/EC2 課金 ([料金](https://aws.amazon.com/ecs/pricing/))             | クラスター $0.10/h + Fargate/EC2 課金 ([料金](https://aws.amazon.com/eks/pricing/))                  | vCPU/メモリ従量 ([料金](https://aws.amazon.com/apprunner/pricing/))                            |
 | 主用途               | AWS ネイティブなコンテナワークロード                                                                 | Kubernetes エコシステム活用、マルチクラウド                                                           | シンプルな Web アプリ・API                                                                     |
+| SLA                  | 99.99%                                                                                               | 99.95%                                                                                               | 99.95%                                                                                         |
 | 学習コスト           | 低い                                                                                                 | 高い (Kubernetes 知識必須)                                                                           | 非常に低い                                                                                     |
 | スケーリング         | Service Auto Scaling                                                                                 | HPA / Karpenter / Cluster Autoscaler                                                                 | 自動 (リクエストベース)                                                                        |
+| コスト (常時高負荷)  | 安い                                                                                                 | 中程度 (クラスター費用加算)                                                                          | 高い                                                                                           |
+| コスト (バースト)    | 中程度                                                                                               | 中程度                                                                                               | 安い (アイドル時課金なし)                                                                      |
 | ネットワーク制御     | VPC、Security Group、Service Connect                                                                 | VPC、Security Group、Pod レベル制御                                                                  | VPC Connector (制限あり)                                                                       |
 | サービスメッシュ     | ⚠️ Service Connect (基本的)                                                                           | ✅ Istio / App Mesh / Linkerd                                                                        | ❌                                                                                              |
 | CI/CD 統合           | CodeDeploy、ecspresso、CDK                                                                           | ArgoCD、Flux、Helm                                                                                   | 自動デプロイ (ECR/GitHub 連携)                                                                 |
@@ -52,20 +53,20 @@
 
 | 比較項目             | EC2                                                  | ECS on Fargate                                       | ECS on EC2                                           | Lambda                                               |
 | -------------------- | ---------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
-| サービスカテゴリ     | IaaS                                                 | CaaS (Serverless)                                    | CaaS                                                 | FaaS (Serverless)                                    |
 | ドキュメント         | [EC2](https://docs.aws.amazon.com/ec2/)              | [Fargate](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html) | [ECS](https://docs.aws.amazon.com/ecs/)              | [Lambda](https://docs.aws.amazon.com/lambda/)        |
-| 課金モデル           | インスタンス時間課金 (RI/SP 割引あり)                | vCPU + メモリ秒課金                                  | EC2 インスタンス課金 (RI/SP 割引あり)                | リクエスト数 + 実行時間課金                          |
-| マネージド度         | 低い (OS 管理必要)                                   | 高い (インフラ管理不要)                              | 中程度 (EC2 管理必要)                                | 非常に高い                                           |
+| 課金モデル           | インスタンス時間 RI/SP 割引あり ([料金](https://aws.amazon.com/ec2/pricing/)) | vCPU + メモリ秒 ([料金](https://aws.amazon.com/fargate/pricing/)) | EC2 インスタンス RI/SP 割引あり ([料金](https://aws.amazon.com/ec2/pricing/)) | リクエスト + 実行時間 ([料金](https://aws.amazon.com/lambda/pricing/)) |
 | 主用途               | フルカスタマイズが必要なワークロード                 | 標準的なコンテナワークロード                         | GPU/大容量メモリ/特殊要件                            | イベント駆動・短時間処理                             |
+| SLA                  | 99.99%                                               | 99.99% (ECS SLA)                                     | 99.99%                                               | 99.95%                                               |
+| 学習コスト           | 中程度 (OS 管理含む)                                 | 低い                                                 | 中程度                                               | 低い                                                 |
+| スケーリング         | Auto Scaling Group (分単位)                          | Service Auto Scaling (分単位)                        | ASG + Service Auto Scaling (分単位)                  | 自動 (秒単位)                                        |
+| コスト (常時高負荷)  | 安い (RI/SP 適用時)                                  | 中程度                                               | 安い (RI/SP 適用時)                                  | 高い                                                 |
+| コスト (バースト)    | 高い (ピークに合わせたサイジング)                    | 中程度                                               | 高い                                                 | 安い (使った分だけ)                                  |
 | 最大実行時間         | 無制限                                               | 無制限                                               | 無制限                                               | 15 分                                                |
 | コールドスタート     | なし (常時稼働)                                      | あり (数十秒)                                        | なし (常時稼働)                                      | あり (数百ms〜数秒)                                  |
-| スケーリング速度     | 分単位                                               | 分単位                                               | 分単位                                               | 秒単位                                               |
 | 最大リソース         | インスタンスタイプ依存 (数百 vCPU)                   | 16 vCPU / 120 GB メモリ                              | インスタンスタイプ依存                               | 10 GB メモリ / 6 vCPU                                |
 | ステートフル         | ✅                                                    | ⚠️ (EBS マウント可、制限あり)                         | ✅                                                    | ❌                                                    |
 | SSH アクセス         | ✅                                                    | ❌ (ECS Exec で代替)                                  | ✅                                                    | ❌                                                    |
 | OS カスタマイズ      | ✅                                                    | ❌                                                    | ✅                                                    | ❌                                                    |
-| コスト効率 (常時稼働) | 高い (RI/SP 適用時)                                  | 中程度                                               | 高い (RI/SP 適用時)                                  | 低い (常時稼働には不向き)                            |
-| コスト効率 (バースト) | 低い                                                 | 高い                                                 | 低い                                                 | 非常に高い                                           |
 
 ### Guidelines
 
@@ -80,10 +81,15 @@
 
 | 比較項目             | Fargate                              | EC2                                  |
 | -------------------- | ------------------------------------ | ------------------------------------ |
-| サービスカテゴリ     | Serverless Compute                   | Managed Compute                      |
-| 課金モデル           | vCPU + メモリ秒課金                  | EC2 インスタンス時間課金             |
-| インフラ管理         | 不要                                 | AMI 更新、パッチ適用、容量管理必要   |
+| ドキュメント         | [Fargate](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html) | [ECS on EC2](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/getting-started-ecs-ec2.html) |
+| 課金モデル           | vCPU + メモリ秒 ([料金](https://aws.amazon.com/fargate/pricing/)) | EC2 インスタンス時間 ([料金](https://aws.amazon.com/ec2/pricing/)) |
+| 主用途               | 標準コンテナワークロード             | GPU/高密度/特殊要件ワークロード      |
+| SLA                  | 99.99% (ECS SLA)                     | 99.99%                               |
+| 学習コスト           | 低い                                 | 中程度 (AMI/容量管理)                |
 | スケーリング         | タスク単位で自動                     | インスタンス + タスクの2層管理       |
+| コスト (常時高負荷)  | 高い                                 | 安い (RI/SP + 高密度配置)            |
+| コスト (バースト)    | 安い (使った分だけ)                  | 高い (インスタンス常時課金)          |
+| インフラ管理         | 不要                                 | AMI 更新、パッチ適用、容量管理必要   |
 | 最大タスクサイズ     | 16 vCPU / 120 GB                     | インスタンスタイプ依存               |
 | EBS マウント         | ✅ (制限あり)                         | ✅                                    |
 | EFS マウント         | ✅                                    | ✅                                    |
@@ -91,8 +97,6 @@
 | Spot 利用            | ✅ Fargate Spot (最大 70% 割引)       | ✅ Spot Instance                      |
 | RI/SP 割引           | ✅ Savings Plans                      | ✅ RI + Savings Plans                 |
 | daemonset 相当       | ❌                                    | ✅ (daemon スケジューリング)          |
-| コスト (低負荷)      | 安い (使った分だけ)                  | 高い (インスタンス常時課金)          |
-| コスト (高負荷)      | 高い                                 | 安い (RI/SP + 高密度配置)            |
 
 ### Guidelines
 

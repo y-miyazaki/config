@@ -22,11 +22,14 @@
 
 | 比較項目             | AWS Batch                                            | ECS Scheduled Task                                   | Step Functions                                       | Lambda                                               |
 | -------------------- | ---------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
-| サービスカテゴリ     | Batch Computing                                      | Container Scheduling                                 | Workflow Orchestration                                | FaaS                                                 |
 | ドキュメント         | [Batch](https://docs.aws.amazon.com/batch/)          | [ECS](https://docs.aws.amazon.com/ecs/)              | [Step Functions](https://docs.aws.amazon.com/step-functions/) | [Lambda](https://docs.aws.amazon.com/lambda/)        |
-| 課金モデル           | 基盤リソース (Fargate/EC2) のみ                      | Fargate/EC2 課金                                     | 状態遷移課金 ($0.025/1000 遷移)                      | リクエスト + 実行時間                                |
-| マネージド度         | 高い (ジョブキュー・スケジューリング自動)            | 中程度 (EventBridge ルール設定必要)                  | 非常に高い                                           | 非常に高い                                           |
+| 課金モデル           | 基盤リソース (Fargate/EC2) のみ ([料金](https://aws.amazon.com/batch/pricing/)) | Fargate/EC2 課金 ([料金](https://aws.amazon.com/fargate/pricing/)) | 状態遷移 $0.025/1000 ([料金](https://aws.amazon.com/step-functions/pricing/)) | リクエスト + 実行時間 ([料金](https://aws.amazon.com/lambda/pricing/)) |
 | 主用途               | 大量並列バッチ、HPC                                  | 定期実行コンテナタスク                               | 複数ステップのワークフロー                           | 軽量イベント駆動処理                                 |
+| SLA                  | 99.99%                                               | 99.99% (ECS SLA)                                     | 99.99%                                               | 99.95%                                               |
+| 学習コスト           | 中程度                                               | 低い (ECS + EventBridge)                             | 中程度 (ASL 定義)                                    | 低い                                                 |
+| スケーリング         | 自動 (ジョブキュー + Compute Environment)            | タスク数手動指定                                     | Map State (最大 10,000 並列)                          | 自動 (同時実行数制御)                                |
+| コスト (常時高負荷)  | 安い (Spot 活用)                                     | 中程度                                               | 遷移数依存                                           | 高い                                                 |
+| コスト (バースト)    | 安い (使った分だけ + Spot)                           | 中程度                                               | 安い (従量課金)                                      | 安い (従量課金)                                      |
 | 最大実行時間         | 無制限                                               | 無制限                                               | 1 年 (Standard) / 5 分 (Express)                     | 15 分                                                |
 | 並列実行             | ✅ Array Job (数千並列)                               | ⚠️ (タスク数手動指定)                                 | ✅ Map State (最大 10,000)                             | ✅ (同時実行数制御)                                    |
 | ジョブ依存関係       | ✅ (ジョブ間依存定義)                                 | ❌                                                    | ✅ (ステート間遷移)                                    | ❌ (単体実行)                                         |
@@ -52,19 +55,20 @@
 
 | 比較項目             | Step Functions                                       | MWAA (Airflow)                                       | EventBridge Scheduler                                |
 | -------------------- | ---------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
-| サービスカテゴリ     | Workflow Orchestration                                | Workflow Orchestration                                | Job Scheduler                                        |
 | ドキュメント         | [Step Functions](https://docs.aws.amazon.com/step-functions/) | [MWAA](https://docs.aws.amazon.com/mwaa/)           | [Scheduler](https://docs.aws.amazon.com/scheduler/)  |
-| 課金モデル           | 状態遷移課金                                         | 環境時間課金 (最小 $0.49/h)                          | 呼び出し課金 ($1/100万)                              |
-| マネージド度         | 非常に高い                                           | 高い (Airflow 環境管理)                              | 非常に高い                                           |
+| 課金モデル           | 状態遷移課金 ([料金](https://aws.amazon.com/step-functions/pricing/)) | 環境時間 最小 $0.49/h ([料金](https://aws.amazon.com/managed-workflows-for-apache-airflow/pricing/)) | 呼び出し $1/100万 ([料金](https://aws.amazon.com/eventbridge/pricing/)) |
 | 主用途               | AWS サービス連携ワークフロー                         | データパイプライン、複雑な DAG                       | 単一ターゲットの定期呼び出し                         |
+| SLA                  | 99.99%                                               | 99.9%                                                | 99.99%                                               |
+| 学習コスト           | 中程度 (ASL 定義)                                    | 高い (Airflow 知識必要)                              | 低い                                                 |
+| スケーリング         | 自動 (状態遷移数に応じて)                            | Worker Auto Scaling                                  | 自動 (スケジュール数に応じて)                        |
+| コスト (常時高負荷)  | 遷移数依存 (Express で安い)                          | 高い (~$350/月〜)                                    | 安い                                                 |
+| コスト (バースト)    | 安い (従量課金)                                      | 高い (環境常時課金)                                  | 安い (従量課金)                                      |
 | ワークフロー定義     | ASL (JSON/YAML)                                      | Python DAG                                           | スケジュール式 (cron/rate)                           |
-| 学習コスト           | 中程度                                               | 高い (Airflow 知識必要)                              | 低い                                                 |
 | DAG 複雑度           | 中程度 (分岐・並列・Map)                             | 高い (任意の DAG 構造)                               | なし (単一ターゲット)                                |
 | AWS サービス統合     | ✅ 200+ サービス直接呼び出し                          | ⚠️ (Operator/Hook 経由)                               | ✅ 270+ ターゲット                                    |
 | 外部システム連携     | ⚠️ (Lambda/ECS 経由)                                  | ✅ (豊富な Provider)                                   | ⚠️ (API Destination 経由)                             |
 | UI/可視化            | ✅ コンソール実行グラフ                               | ✅ Airflow Web UI                                     | ❌ (スケジュール一覧のみ)                             |
 | バックフィル         | ❌                                                    | ✅                                                    | ❌                                                    |
-| 最小コスト           | $0 (使った分だけ)                                    | ~$350/月 (最小環境)                                  | $0 (使った分だけ)                                    |
 | Terraform 対応       | ✅                                                    | ✅                                                    | ✅                                                    |
 
 ### Guidelines

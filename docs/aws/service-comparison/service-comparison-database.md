@@ -1,7 +1,7 @@
 <!-- omit in toc -->
 # AWS Service Comparison Matrix (Database)
 
-データベースサービスの選定判断材料。RDS、DynamoDB、ElastiCache 等を比較する。
+データベースサービスの選定判断材料。RDS、DynamoDB、ElastiCache、DWH/分析基盤等を比較する。
 
 ## History
 
@@ -19,26 +19,29 @@
   - [Guidelines](#guidelines-1)
 - [Cache: ElastiCache Redis vs ElastiCache Memcached vs DAX](#cache-elasticache-redis-vs-elasticache-memcached-vs-dax)
   - [Guidelines](#guidelines-2)
+- [DWH / Analytics: Redshift vs Athena vs S3 + Glue](#dwh--analytics-redshift-vs-athena-vs-s3--glue)
+  - [Guidelines](#guidelines-3)
+  - [Guidelines](#guidelines-2)
 
 ## RDB: RDS vs Aurora vs Aurora Serverless v2
 
 | 比較項目             | RDS                                                  | Aurora                                               | Aurora Serverless v2                                 |
 | -------------------- | ---------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
-| サービスカテゴリ     | Managed RDB                                          | Cloud-Native RDB                                     | Serverless RDB                                       |
 | ドキュメント         | [RDS](https://docs.aws.amazon.com/rds/)              | [Aurora](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/) | [Aurora Serverless v2](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html) |
-| 課金モデル           | インスタンス時間 + ストレージ                        | インスタンス時間 + I/O + ストレージ                  | ACU 秒課金 + I/O + ストレージ                        |
-| マネージド度         | 高い                                                 | 高い                                                 | 非常に高い                                           |
+| 課金モデル           | インスタンス時間 + ストレージ ([料金](https://aws.amazon.com/rds/pricing/)) | インスタンス時間 + I/O + ストレージ ([料金](https://aws.amazon.com/rds/aurora/pricing/)) | ACU 秒 + I/O + ストレージ ([料金](https://aws.amazon.com/rds/aurora/pricing/)) |
 | 主用途               | 標準的な RDB ワークロード                            | 高性能・高可用性が必要な RDB                         | 可変負荷の RDB ワークロード                          |
+| SLA                  | 99.95% (Multi-AZ)                                    | 99.99%                                               | 99.99%                                               |
+| 学習コスト           | 低い                                                 | 低い (RDS 互換)                                      | 低い (Aurora 互換)                                   |
+| スケーリング         | 手動インスタンス変更                                 | リードレプリカ Auto Scaling                          | ACU 自動スケール (0.5〜128)                          |
+| コスト (常時高負荷)  | 安い (RI 適用)                                       | 中程度 (RI 適用)                                     | 高い                                                 |
+| コスト (バースト)    | 高い (ピークに合わせたサイジング)                    | 高い                                                 | 安い (使った分だけ)                                  |
 | 対応エンジン         | MySQL, PostgreSQL, MariaDB, Oracle, SQL Server        | MySQL 互換, PostgreSQL 互換                          | MySQL 互換, PostgreSQL 互換                          |
 | ストレージ上限       | 64 TB (gp3)                                          | 128 TB (自動拡張)                                    | 128 TB (自動拡張)                                    |
 | レプリカ             | 最大 15 (リードレプリカ)                             | 最大 15 (同一ストレージ共有)                         | 最大 15 (同一ストレージ共有)                         |
 | フェイルオーバー時間 | 60-120 秒                                            | 30 秒以下                                            | 30 秒以下                                            |
 | マルチ AZ            | ✅ (スタンバイレプリカ)                               | ✅ (3 AZ に 6 コピー自動)                             | ✅ (3 AZ に 6 コピー自動)                             |
-| 自動スケーリング     | ❌ (手動インスタンス変更)                             | ⚠️ (リードレプリカ Auto Scaling)                      | ✅ (ACU 自動スケール)                                 |
 | ゼロスケール         | ❌                                                    | ❌                                                    | ✅ (最小 0.5 ACU)                                     |
 | Global Database      | ❌                                                    | ✅                                                    | ✅                                                    |
-| コスト (常時高負荷)  | 安い (RI 適用)                                       | 中程度 (RI 適用)                                     | 高い                                                 |
-| コスト (可変負荷)    | 高い (ピークに合わせたサイジング)                    | 高い                                                 | 安い (使った分だけ)                                  |
 | Terraform 対応       | ✅                                                    | ✅                                                    | ✅                                                    |
 
 ### Guidelines
@@ -54,15 +57,17 @@
 
 | 比較項目             | DynamoDB                                             | DocumentDB                                           | ElastiCache (Redis)                                  |
 | -------------------- | ---------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
-| サービスカテゴリ     | Key-Value / Document DB                              | Document DB (MongoDB 互換)                           | In-Memory DB                                         |
 | ドキュメント         | [DynamoDB](https://docs.aws.amazon.com/dynamodb/)    | [DocumentDB](https://docs.aws.amazon.com/documentdb/) | [ElastiCache](https://docs.aws.amazon.com/elasticache/) |
-| 課金モデル           | RCU/WCU (プロビジョン) or リクエスト従量             | インスタンス時間 + I/O + ストレージ                  | ノード時間課金                                       |
-| マネージド度         | 非常に高い                                           | 高い                                                 | 高い                                                 |
+| 課金モデル           | RCU/WCU or リクエスト従量 ([料金](https://aws.amazon.com/dynamodb/pricing/)) | インスタンス時間 + I/O ([料金](https://aws.amazon.com/documentdb/pricing/)) | ノード時間 ([料金](https://aws.amazon.com/elasticache/pricing/)) |
 | 主用途               | 高スループット KV アクセス、シンプルなクエリ         | MongoDB 互換が必要なドキュメント DB                  | キャッシュ、セッション、リアルタイム処理             |
+| SLA                  | 99.999% (Global Tables) / 99.99% (Standard)          | 99.99%                                               | 99.99%                                               |
+| 学習コスト           | 中程度 (データモデリング独特)                        | 低い (MongoDB 経験者)                                | 低い (Redis 経験者)                                  |
+| スケーリング         | 自動 (オンデマンド) / 手動 (プロビジョン)            | インスタンス追加                                     | ノード追加 / シャーディング                          |
+| コスト (常時高負荷)  | 中程度 (プロビジョンモード)                          | 中程度                                               | 中程度                                               |
+| コスト (バースト)    | 安い (オンデマンドモード)                            | 高い (インスタンス常時課金)                          | 高い (ノード常時課金)                                |
 | データモデル         | Key-Value + ドキュメント                             | JSON ドキュメント                                    | Key-Value + データ構造                               |
 | クエリ柔軟性         | 低い (PK/SK + GSI/LSI)                               | 高い (MongoDB クエリ構文)                            | 低い (キーベース)                                    |
 | レイテンシ           | 1桁 ms                                               | 1桁 ms                                               | サブ ms                                              |
-| スケーリング         | 自動 (オンデマンド) / 手動 (プロビジョン)            | インスタンス追加                                     | ノード追加 / シャーディング                          |
 | ストレージ上限       | 実質無制限                                           | 128 TB                                               | ノードメモリ依存                                     |
 | トランザクション     | ✅ (25 アイテムまで)                                  | ✅                                                    | ✅ (Redis 7.0+)                                       |
 | TTL                  | ✅                                                    | ✅                                                    | ✅                                                    |
@@ -83,20 +88,22 @@
 
 | 比較項目             | ElastiCache Redis                                    | ElastiCache Memcached                                | DAX                                                  |
 | -------------------- | ---------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
-| サービスカテゴリ     | In-Memory Cache/DB                                   | In-Memory Cache                                      | DynamoDB Accelerator                                 |
 | ドキュメント         | [Redis](https://docs.aws.amazon.com/elasticache/latest/red-ug/) | [Memcached](https://docs.aws.amazon.com/elasticache/latest/mem-ug/) | [DAX](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.html) |
-| 課金モデル           | ノード時間課金                                       | ノード時間課金                                       | ノード時間課金                                       |
+| 課金モデル           | ノード時間 ([料金](https://aws.amazon.com/elasticache/pricing/)) | ノード時間 ([料金](https://aws.amazon.com/elasticache/pricing/)) | ノード時間 ([料金](https://aws.amazon.com/dynamodb/pricing/)) |
 | 主用途               | 汎用キャッシュ、セッション、Pub/Sub、ランキング      | シンプルなキャッシュ                                 | DynamoDB 読み取りキャッシュ                          |
+| SLA                  | 99.99%                                               | 99.99%                                               | 99.99%                                               |
+| 学習コスト           | 低い (Redis 経験者)                                  | 非常に低い                                           | 非常に低い (SDK 差し替えのみ)                        |
+| スケーリング         | シャーディング + レプリカ追加                        | ノード追加                                           | ノード追加 (最大 10)                                 |
+| コスト (常時高負荷)  | 中程度                                               | 安い                                                 | 中程度                                               |
+| コスト (バースト)    | 高い (ノード常時課金)                                | 高い (ノード常時課金)                                | 高い (ノード常時課金)                                |
 | データ構造           | String, Hash, List, Set, Sorted Set, Stream          | String のみ                                          | DynamoDB 互換                                        |
 | 永続化               | ✅ (RDB/AOF)                                          | ❌                                                    | ❌ (キャッシュのみ)                                   |
 | レプリケーション     | ✅ (最大 5 レプリカ/シャード)                          | ❌                                                    | ✅ (最大 10 レプリカ)                                  |
-| クラスターモード     | ✅ (シャーディング)                                   | ✅ (ノード追加)                                       | ✅ (ノード追加)                                       |
 | フェイルオーバー     | ✅ 自動                                               | ❌ (クライアント側で対応)                             | ✅ 自動                                               |
 | マルチ AZ            | ✅                                                    | ⚠️ (AZ 分散配置のみ)                                  | ✅                                                    |
 | Pub/Sub              | ✅                                                    | ❌                                                    | ❌                                                    |
 | Lua スクリプト       | ✅                                                    | ❌                                                    | ❌                                                    |
 | API 互換性           | Redis API                                            | Memcached API                                        | DynamoDB API (透過的)                                |
-| 導入コスト           | 中程度 (Redis クライアント設定)                      | 低い                                                 | 低い (SDK 差し替えのみ)                              |
 
 ### Guidelines
 
@@ -105,3 +112,37 @@
 - DynamoDB の読み取りレイテンシ改善が目的で、アプリケーション変更を最小化したい場合は DAX を検討
 - 単純な KV キャッシュのみで永続化・レプリケーション不要な場合は Memcached を検討 (コスト面で有利な場合がある)
 - Redis のメモリコストが問題になる場合は ElastiCache Serverless (Redis) を検討
+
+## DWH / Analytics: Redshift vs Athena vs S3 + Glue
+
+| 比較項目             | Redshift                                             | Athena                                               | S3 + Glue (データレイク)                             |
+| -------------------- | ---------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
+| ドキュメント         | [Redshift](https://docs.aws.amazon.com/redshift/)    | [Athena](https://docs.aws.amazon.com/athena/)        | [Glue](https://docs.aws.amazon.com/glue/)            |
+| 課金モデル           | ノード時間 or RPU 秒 (Serverless) ([料金](https://aws.amazon.com/redshift/pricing/)) | スキャンデータ量 $5/TB ([料金](https://aws.amazon.com/athena/pricing/)) | Glue ETL: DPU 時間 + S3 ストレージ ([料金](https://aws.amazon.com/glue/pricing/)) |
+| 主用途               | 大規模 DWH、複雑な分析クエリ、BI 連携               | アドホッククエリ、ログ分析、S3 データ探索            | ETL パイプライン、データカタログ、データレイク構築   |
+| SLA                  | 99.99%                                               | 99.99%                                               | 99.99% (S3) / 99.9% (Glue)                          |
+| 学習コスト           | 中程度 (PostgreSQL 互換 SQL)                         | 低い (標準 SQL / Presto)                             | 高い (Spark/Python + カタログ設計)                   |
+| スケーリング         | ノード追加 or Serverless 自動スケール                | 自動 (クエリ単位)                                    | DPU 自動スケール (Glue 4.0+)                         |
+| コスト (常時高負荷)  | 安い (RI 適用、大量データ常時クエリ)                 | 高い (スキャン量課金)                                | 中程度 (DPU 時間)                                    |
+| コスト (バースト)    | 高い (クラスター常時課金) ※Serverless なら中程度     | 安い (使った分だけ)                                  | 安い (ジョブ実行時のみ)                              |
+| クエリエンジン       | 独自 (PostgreSQL 互換、列指向)                       | Trino (Presto 後継)                                  | Apache Spark                                         |
+| データ格納先         | 独自マネージドストレージ + S3 (Spectrum)              | S3 (直接クエリ)                                      | S3                                                   |
+| データ形式           | 独自形式 (COPY でロード)                             | Parquet, ORC, CSV, JSON, Avro 等                     | 任意 (ETL で変換)                                    |
+| 同時実行性           | 高い (WLM / Concurrency Scaling)                     | 中程度 (アカウント上限あり)                          | ジョブ単位 (並列実行可)                              |
+| レイテンシ           | 秒〜分 (事前ロード済みデータ)                        | 秒〜分 (スキャン量依存)                              | 分〜時間 (バッチ ETL)                                |
+| リアルタイム取り込み | ✅ (Streaming Ingestion from Kinesis/MSK)             | ❌ (S3 に書き込み後クエリ)                            | ⚠️ (Glue Streaming ETL)                               |
+| BI ツール連携        | ✅ (QuickSight, Tableau, JDBC/ODBC)                   | ✅ (QuickSight, JDBC/ODBC)                            | ❌ (ETL 専用、クエリは Athena/Redshift 経由)          |
+| データカタログ       | ⚠️ (Glue Data Catalog 連携)                           | ✅ (Glue Data Catalog 必須)                           | ✅ (Glue Data Catalog 中心)                           |
+| ML 統合              | ✅ (Redshift ML → SageMaker)                          | ⚠️ (結果を S3 経由で SageMaker へ)                    | ✅ (Glue + SageMaker パイプライン)                    |
+| Terraform 対応       | ✅                                                    | ✅                                                    | ✅                                                    |
+
+### Guidelines
+
+**→ データ量・クエリ頻度・レイテンシ要件に応じて使い分ける。**
+
+- アドホッククエリ、ログ分析、低頻度の S3 データ探索 → Athena (初期コストゼロ、スキャン従量)
+- 大量データの定常的な分析、BI ダッシュボード、複雑な JOIN → Redshift (Provisioned or Serverless)
+- ETL パイプライン構築、データカタログ管理、データレイク基盤 → S3 + Glue
+- Redshift Serverless は小〜中規模で RI コミットなしに始められるため、Provisioned の前に検討する
+- Athena + Parquet (列指向) + パーティション設計でスキャン量を削減すれば、月数百 TB 規模でもコスト効率が高い
+- 典型的な構成: S3 (データレイク) + Glue (ETL/カタログ) + Athena (アドホック) + Redshift (定常 BI) の併用
