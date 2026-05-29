@@ -59,6 +59,10 @@ permissions:
   contents: read
   id-token: write
 
+concurrency:
+  group: ecs-deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
 env:
   ECSCHEDULE_CONFIG: ${{ inputs.ecschedule_config }}
   ECSPRESSO_CONFIG: ${{ inputs.ecspresso_config }}

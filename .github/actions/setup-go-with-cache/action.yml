@@ -1,0 +1,54 @@
+name: setup-go-with-cache
+description: "Setup Go with module and build cache. Returns cache paths and hit status."
+author: "GitHub Copilot"
+inputs:
+  go_project_path:
+    description: "Path to the Go project root (directory containing go.mod)"
+    required: true
+  go_version:
+    description: "Go version to install"
+    required: true
+  cache_prefix:
+    description: "Cache key prefix (e.g. environment-component)"
+    required: true
+outputs:
+  cache-hit:
+    description: "Whether the cache was hit"
+    value: ${{ steps.go-cache.outputs.cache-hit }}
+runs:
+  using: composite
+  steps:
+    - name: Setup Go
+      uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+      with:
+        cache: false
+        go-version: ${{ inputs.go_version }}
+
+    - name: Determine Go cache paths
+      id: go-cache-paths
+      working-directory: ${{ inputs.go_project_path }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        {
+          echo "gomodcache=$(go env GOMODCACHE)"
+          echo "gocache=$(go env GOCACHE)"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Cache Go build and module caches
+      id: go-cache
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      with:
+        key: go-cache-${{ inputs.cache_prefix }}-${{ runner.os }}-${{ inputs.go_version }}-${{ hashFiles(format('{0}/go.mod', inputs.go_project_path), format('{0}/go.sum', inputs.go_project_path)) }}
+        path: |
+          ${{ steps.go-cache-paths.outputs.gomodcache }}
+          ${{ steps.go-cache-paths.outputs.gocache }}
+        restore-keys: |
+          go-cache-${{ inputs.cache_prefix }}-${{ runner.os }}-${{ inputs.go_version }}-
+          go-cache-${{ inputs.cache_prefix }}-${{ runner.os }}-
+
+    - name: Download Go Modules
+      if: steps.go-cache.outputs.cache-hit != 'true'
+      shell: bash
+      working-directory: ${{ inputs.go_project_path }}
+      run: go mod download

@@ -53,6 +53,10 @@ permissions:
   contents: read
   id-token: write
 
+concurrency:
+  group: go-registry-${{ inputs.environment }}-${{ inputs.component }}
+  cancel-in-progress: false
+
 env:
   COMPONENT: ${{ inputs.component }}
   DOCKER_CONTEXT: ${{ inputs.docker_context }}

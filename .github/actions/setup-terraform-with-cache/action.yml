@@ -1,0 +1,51 @@
+name: setup-terraform-with-cache
+description: "Setup Terraform with plugin cache and init cache restore."
+author: "GitHub Copilot"
+inputs:
+  terraform_version:
+    description: "Terraform version to install"
+    required: true
+  plugin_cache_key:
+    description: "Cache key for Terraform plugin cache"
+    required: true
+  init_cache_key:
+    description: "Cache key for Terraform init cache"
+    required: true
+  terraform_path:
+    description: "Path to terraform configuration"
+    required: true
+outputs:
+  init-cache-hit:
+    description: "Whether the init cache was hit"
+    value: ${{ steps.restore-terraform-init.outputs.cache-hit }}
+runs:
+  using: composite
+  steps:
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+      with:
+        terraform_version: ${{ inputs.terraform_version }}
+
+    - name: Setup Terraform plugin cache
+      shell: bash
+      run: |
+        set -euo pipefail
+        # shellcheck disable=SC2016
+        echo 'plugin_cache_dir="$HOME/.terraform.d/plugin-cache"' >~/.terraformrc
+        mkdir --parents ~/.terraform.d/plugin-cache
+
+    - name: Restore Cache Terraform plugin cache
+      uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      with:
+        key: ${{ inputs.plugin_cache_key }}
+        path: |
+          ~/.terraform.d/plugin-cache
+
+    - name: Restore Cache Terraform init
+      id: restore-terraform-init
+      uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      with:
+        key: ${{ inputs.init_cache_key }}
+        path: |
+          ${{ inputs.terraform_path }}/.terraform
+          ${{ inputs.terraform_path }}/.terraform.lock.hcl

@@ -30,6 +30,10 @@ permissions:
   id-token: write
   pages: write
 
+concurrency:
+  group: github-pages-deploy
+  cancel-in-progress: false
+
 env:
   ARTIFACTS: ${{ inputs.artifacts }}
   INDEX_DESCRIPTION: ${{ inputs.index_description }}
