@@ -55,7 +55,7 @@ aqua = "2.59.0"
 
 # AWS related tools
 "aqua:aws/aws-cli" = "2.34.52"      # AWS CLI
-"aqua:aws/aws-sam-cli" = "1.160.1"  # SAM CLI tool
+"aqua:aws/aws-sam-cli" = "1.161.0"  # SAM CLI tool
 "aqua:kayac/ecspresso" = "2.8.4"    # ECS deployment tool
 "aqua:Songmu/ecschedule" = "0.18.2" # ECS scheduled tasks deployment tool
 
