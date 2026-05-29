@@ -30,6 +30,7 @@
 | SLA                  | 99.99%                                               | 99.99%                                               | 99.99%                                               |
 | 学習コスト           | 低い                                                 | 低い                                                 | -                                                    |
 | スケーリング         | 自動 (トラフィックに応じて)                          | 自動 (トラフィックに応じて)                          | 自動                                                 |
+| 主要サービス制限     | ターゲットグループ数 100、ルール数 100/リスナー ([Quotas](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html)) | ターゲットグループ数 100 ([Quotas](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-limits.html)) | リスナー数 100 ([Quotas](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-limits.html)) |
 | コスト (常時高負荷)  | 中程度 (LCU 依存)                                    | 中程度 (NLCU 依存)                                   | 中程度                                               |
 | コスト (バースト)    | 中程度 (LCU 従量)                                    | 中程度 (NLCU 従量)                                   | 中程度                                               |
 | プロトコル           | HTTP, HTTPS, gRPC, WebSocket                         | TCP, UDP, TLS                                        | HTTP, HTTPS, TCP, SSL                                |
@@ -63,6 +64,7 @@
 | SLA                  | 99.95%                                               | 99.95%                                               | 99.99%                                               |
 | 学習コスト           | 中程度 (VTL、ステージ管理)                           | 低い                                                 | 低い                                                 |
 | スケーリング         | 自動 (10,000 RPS リージョン上限)                     | 自動 (10,000 RPS リージョン上限)                     | 自動 (実質無制限)                                    |
+| 主要サービス制限     | タイムアウト 29秒、ペイロード 10MB、10,000 RPS ([Quotas](https://docs.aws.amazon.com/apigateway/latest/developerguide/limits.html)) | タイムアウト 30秒、ペイロード 10MB、10,000 RPS ([Quotas](https://docs.aws.amazon.com/apigateway/latest/developerguide/limits.html)) | ターゲット応答タイムアウト 4000秒、実質無制限 RPS ([Quotas](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-limits.html)) |
 | コスト (常時高負荷)  | 高い (リクエスト課金)                                | 中程度 (リクエスト課金)                              | 安い (LCU 固定的)                                    |
 | コスト (バースト)    | 安い (従量課金)                                      | 安い (従量課金)                                      | 中程度 (時間課金あり)                                |
 | レイテンシ           | 中程度 (29ms+ オーバーヘッド)                        | 低い (10ms+ オーバーヘッド)                          | 低い                                                 |
@@ -96,6 +98,7 @@
 | SLA                  | 99.9%                                                | 99.99%                                               |
 | 学習コスト           | 中程度 (キャッシュ戦略)                              | 低い                                                 |
 | スケーリング         | 自動 (エッジロケーション分散)                        | 自動 (Anycast)                                       |
+| 主要サービス制限     | リクエストボディ 46KB (Lambda@Edge)、レスポンス 1MB (Lambda@Edge)、ディストリビューション 200/アカウント ([Quotas](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)) | エンドポイントグループ 10/リスナー、リスナー 10/アクセラレーター ([Quotas](https://docs.aws.amazon.com/global-accelerator/latest/dg/limits-global-accelerator.html)) |
 | コスト (常時高負荷)  | 中程度 (データ転送量依存)                            | 高い (固定 + DT Premium)                             |
 | コスト (バースト)    | 安い (キャッシュヒットで削減)                        | 高い (固定時間課金)                                  |
 | プロトコル           | HTTP/HTTPS, WebSocket                                | TCP, UDP                                             |

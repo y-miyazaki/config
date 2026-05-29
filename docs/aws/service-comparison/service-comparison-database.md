@@ -33,6 +33,7 @@
 | SLA                  | 99.95% (Multi-AZ)                                    | 99.99%                                               | 99.99%                                               |
 | 学習コスト           | 低い                                                 | 低い (RDS 互換)                                      | 低い (Aurora 互換)                                   |
 | スケーリング         | 手動インスタンス変更                                 | リードレプリカ Auto Scaling                          | ACU 自動スケール (0.5〜128)                          |
+| 主要サービス制限     | ストレージ 64TB、インスタンス 40/リージョン ([Quotas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html)) | ストレージ 128TB、レプリカ 15、接続数はインスタンスクラス依存 ([Quotas](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_Limits.html)) | ストレージ 128TB、ACU 0.5-128、接続数は ACU 依存 ([Quotas](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.setting-capacity.html)) |
 | コスト (常時高負荷)  | 安い (RI 適用)                                       | 中程度 (RI 適用)                                     | 高い                                                 |
 | コスト (バースト)    | 高い (ピークに合わせたサイジング)                    | 高い                                                 | 安い (使った分だけ)                                  |
 | 対応エンジン         | MySQL, PostgreSQL, MariaDB, Oracle, SQL Server        | MySQL 互換, PostgreSQL 互換                          | MySQL 互換, PostgreSQL 互換                          |
@@ -63,6 +64,7 @@
 | SLA                  | 99.999% (Global Tables) / 99.99% (Standard)          | 99.99%                                               | 99.99%                                               |
 | 学習コスト           | 中程度 (データモデリング独特)                        | 低い (MongoDB 経験者)                                | 低い (Redis 経験者)                                  |
 | スケーリング         | 自動 (オンデマンド) / 手動 (プロビジョン)            | インスタンス追加                                     | ノード追加 / シャーディング                          |
+| 主要サービス制限     | アイテム 400KB、トランザクション 25アイテム/100アイテム、パーティション 3000 RCU/1000 WCU ([Quotas](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ServiceQuotas.html)) | ドキュメント 16MB、インスタンス数 16/クラスター ([Quotas](https://docs.aws.amazon.com/documentdb/latest/developerguide/limits.html)) | ノードメモリ依存、シャード数 500 ([Quotas](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/quota-limits.html)) |
 | コスト (常時高負荷)  | 中程度 (プロビジョンモード)                          | 中程度                                               | 中程度                                               |
 | コスト (バースト)    | 安い (オンデマンドモード)                            | 高い (インスタンス常時課金)                          | 高い (ノード常時課金)                                |
 | データモデル         | Key-Value + ドキュメント                             | JSON ドキュメント                                    | Key-Value + データ構造                               |
@@ -94,6 +96,7 @@
 | SLA                  | 99.99%                                               | 99.99%                                               | 99.99%                                               |
 | 学習コスト           | 低い (Redis 経験者)                                  | 非常に低い                                           | 非常に低い (SDK 差し替えのみ)                        |
 | スケーリング         | シャーディング + レプリカ追加                        | ノード追加                                           | ノード追加 (最大 10)                                 |
+| 主要サービス制限     | シャード 500、レプリカ 5/シャード、接続数ノードタイプ依存 ([Quotas](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/quota-limits.html)) | ノード 300/クラスター ([Quotas](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/quota-limits.html)) | ノード 10、アイテムキャッシュ 10分 TTL ([Quotas](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.concepts.cluster.html)) |
 | コスト (常時高負荷)  | 中程度                                               | 安い                                                 | 中程度                                               |
 | コスト (バースト)    | 高い (ノード常時課金)                                | 高い (ノード常時課金)                                | 高い (ノード常時課金)                                |
 | データ構造           | String, Hash, List, Set, Sorted Set, Stream          | String のみ                                          | DynamoDB 互換                                        |
@@ -123,6 +126,7 @@
 | SLA                  | 99.99%                                               | 99.99%                                               | 99.99% (S3) / 99.9% (Glue)                          |
 | 学習コスト           | 中程度 (PostgreSQL 互換 SQL)                         | 低い (標準 SQL / Presto)                             | 高い (Spark/Python + カタログ設計)                   |
 | スケーリング         | ノード追加 or Serverless 自動スケール                | 自動 (クエリ単位)                                    | DPU 自動スケール (Glue 4.0+)                         |
+| 主要サービス制限     | ノード 128/クラスター、同時クエリ 50 (WLM 依存) ([Quotas](https://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)) | クエリ結果 2GB、同時クエリ 25-150 (DML)、スキャンデータ無制限 ([Quotas](https://docs.aws.amazon.com/athena/latest/ug/service-limits.html)) | DPU 最大 100 (デフォルト)、ジョブ同時実行数制限あり ([Quotas](https://docs.aws.amazon.com/glue/latest/dg/aws-glue-limits.html)) |
 | コスト (常時高負荷)  | 安い (RI 適用、大量データ常時クエリ)                 | 高い (スキャン量課金)                                | 中程度 (DPU 時間)                                    |
 | コスト (バースト)    | 高い (クラスター常時課金) ※Serverless なら中程度     | 安い (使った分だけ)                                  | 安い (ジョブ実行時のみ)                              |
 | クエリエンジン       | 独自 (PostgreSQL 互換、列指向)                       | Trino (Presto 後継)                                  | Apache Spark                                         |

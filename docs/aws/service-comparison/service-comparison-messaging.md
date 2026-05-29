@@ -28,6 +28,7 @@
 | SLA                  | 99.99%                                               | 99.99%                                               | 99.95%                                               |
 | 学習コスト           | 低い                                                 | 中程度                                               | 高い (Kafka 運用知識必要)                            |
 | スケーリング         | 自動 (実質無制限、Standard)                          | シャード追加 (On-Demand で自動)                      | ブローカー追加                                       |
+| 主要サービス制限     | メッセージ 256KB、FIFO 3000 msg/s、可視性タイムアウト 12時間、保持 14日 ([Quotas](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-quotas.html)) | レコード 1MB、シャード書込 1MB/s・1000 rec/s、保持 365日 ([Quotas](https://docs.aws.amazon.com/streams/latest/dev/service-sizes-and-limits.html)) | メッセージ 1MB (設定変更可)、ブローカー数/パーティション数はクラスタータイプ依存 ([Quotas](https://docs.aws.amazon.com/msk/latest/developerguide/limits.html)) |
 | コスト (常時高負荷)  | 安い (リクエスト従量)                                | 中程度 (シャード時間)                                | 高い (ブローカー常時課金)                            |
 | コスト (バースト)    | 安い (従量課金)                                      | 中程度 (On-Demand)                                   | 高い (最小構成 ~$200/月)                             |
 | 配信モデル           | Pull (ポーリング)                                    | Pull (シャードイテレータ)                            | Pull (Consumer Group)                                |
@@ -61,6 +62,7 @@
 | SLA                  | 99.99%                                               | 99.99%                                               | 99.99%                                               |
 | 学習コスト           | 中程度 (イベントパターン)                            | 低い                                                 | 低い                                                 |
 | スケーリング         | 自動                                                 | 自動                                                 | 自動                                                 |
+| 主要サービス制限     | イベントサイズ 256KB、ルール 300/バス、ターゲット 5/ルール、スループット 10,000/s (リージョン) ([Quotas](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-quota.html)) | メッセージ 256KB、サブスクリプション 12,500,000/トピック ([Quotas](https://docs.aws.amazon.com/general/latest/gr/sns.html)) | メッセージ 256KB、FIFO 3000 msg/s ([Quotas](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-quotas.html)) |
 | コスト (常時高負荷)  | 中程度 (イベント従量)                                | 安い                                                 | 安い                                                 |
 | コスト (バースト)    | 安い (従量課金)                                      | 安い (従量課金)                                      | 安い (従量課金)                                      |
 | 配信モデル           | Push (ルールベース)                                  | Push (サブスクリプション)                            | Pull (ポーリング)                                    |
