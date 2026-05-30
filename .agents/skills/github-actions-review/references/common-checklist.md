@@ -33,6 +33,7 @@
 - SEC-05 (SHOULD): Pin Third-Party Actions
 - SEC-06 (SHOULD): Sanitize Environment Variables
 - SEC-07 (SHOULD): Guardrails for Public Repositories
+- SEC-08 (SHOULD): Avoid Template Expansion in run Blocks
 
 ## Tool Integration (TOOL)
 - TOOL-01 (SHOULD): Reviewdog Integration for PR Feedback

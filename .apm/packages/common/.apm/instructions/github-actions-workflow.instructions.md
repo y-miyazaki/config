@@ -86,6 +86,8 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
   - Check: Are environment variable inputs validated and sanitized?
 - SEC-07 (SHOULD): Guardrails for Public Repositories
   - Check: Do public repositories have conditional branches like `github.event.repository.private`?
+- SEC-08 (SHOULD): Avoid Template Expansion in run Blocks
+  - Check: Are non-secret inputs and step outputs passed via top-level `env` rather than inline `${{ }}` in `run:` blocks to prevent template injection?
 
 ### Tool Integration (TOOL)
 - TOOL-01 (SHOULD): Reviewdog Integration for PR Feedback

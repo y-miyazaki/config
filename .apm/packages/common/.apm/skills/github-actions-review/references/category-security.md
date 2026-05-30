@@ -41,3 +41,9 @@ Fix: Validate and sanitize inputs, prohibit direct shell passing of PR values
 Check: Do public repositories have conditional branches like `github.event.repository.private`?
 Why: Public repositories allow anyone to fork and submit PRs, potentially exposing secrets or triggering unintended workflows without proper access controls
 Fix: Add conditional branches with `github.event.repository.private`, restrict usage
+
+**SEC-08 (SHOULD): Avoid Template Expansion in run Blocks**
+
+Check: Are non-secret inputs and step outputs passed via top-level `env` rather than inline `${{ }}` in `run:` blocks to prevent template injection?
+Why: Inline `${{ }}` in `run:` blocks expands before shell execution, allowing attacker-controllable values (PR titles, branch names, step outputs) to inject arbitrary commands
+Fix: Pass values via step-level or job-level `env:` and reference them as shell variables (`${VAR}`) in `run:` blocks
