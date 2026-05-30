@@ -197,6 +197,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # shellcheck disable=SC2016
           echo 'plugin_cache_dir="$HOME/.terraform.d/plugin-cache"' >~/.terraformrc
           mkdir --parents ~/.terraform.d/plugin-cache
 
@@ -274,27 +275,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          config_path="${{ steps.tflint-config.outputs.path }}"
-          if [ -n "${config_path}" ]; then
-            tflint --init --config "${config_path}"
+          if [ -n "${TFLINT_RESOLVED_CONFIG}" ]; then
+            tflint --init --config "${TFLINT_RESOLVED_CONFIG}"
           else
             tflint --init
           fi
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          TFLINT_RESOLVED_CONFIG: ${{ steps.tflint-config.outputs.path }}
 
       - name: Exec TFLint
         shell: bash
         run: |
           set -euo pipefail
-          config_path="${{ steps.tflint-config.outputs.path }}"
           args=(-f compact --recursive --var-file="${TFVARS_FILE}")
-          if [ -n "${config_path}" ]; then
-            args+=(--config "${config_path}")
+          if [ -n "${TFLINT_RESOLVED_CONFIG}" ]; then
+            args+=(--config "${TFLINT_RESOLVED_CONFIG}")
           fi
           tflint "${args[@]}"
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          TFLINT_RESOLVED_CONFIG: ${{ steps.tflint-config.outputs.path }}
 
   security:
     if: ${{ github.actor != 'dependabot[bot]' }}
@@ -369,6 +370,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # shellcheck disable=SC2016
           echo 'plugin_cache_dir="$HOME/.terraform.d/plugin-cache"' >~/.terraformrc
           mkdir --parents ~/.terraform.d/plugin-cache
 

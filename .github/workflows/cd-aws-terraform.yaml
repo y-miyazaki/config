@@ -155,6 +155,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # shellcheck disable=SC2016
           echo 'plugin_cache_dir="$HOME/.terraform.d/plugin-cache"' >~/.terraformrc
           mkdir --parents ~/.terraform.d/plugin-cache
 
