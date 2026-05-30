@@ -81,6 +81,7 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 | Steering (指示)     | `.kiro/steering/*.md`          | `CLAUDE.md` / `<dir>/CLAUDE.md`  | `.github/copilot-instructions.md` | `.cursorrules` / `.cursor/rules/` | `GEMINI.md`             |
 | Skills (スキル)     | `.kiro/skills/<name>/SKILL.md` | `.claude/skills/<name>/SKILL.md` | `.github/skills/<name>/SKILL.md`  | `.cursor/rules/*.md`              | ⚠️ 独自機能中心          |
 | MCP 設定            | `.kiro/settings/mcp.json`      | `.mcp.json`                      | `.vscode/mcp.json`                | `.cursor/mcp.json`                | `.gemini/settings.json` |
+| Hooks 設定          | IDE: `.kiro/hooks/*.kiro.hook` / CLI: Agent設定内 `hooks` フィールド | `.claude/settings.json` 内 `hooks` | `.github/hooks/*.json`            | `.cursor/hooks.json`              | `.gemini/settings.json` 内 `hooks` |
 | Agent 定義          | `.kiro/agents/`                | `.claude/agents/`                | `.github/copilot-agents.yml`      | ⚠️ 独自UI管理                      | -                       |
 | プロンプト          | `.kiro/prompts/`               | `.claude/commands/` (レガシー)   | `.github/prompts/`                | -                                 | -                       |
 | プロジェクト設定    | `.kiro/agents/*.json`          | `.claude/settings.json`          | `.vscode/settings.json`           | `.cursor/settings.json`           | `.gemini/settings.json` |

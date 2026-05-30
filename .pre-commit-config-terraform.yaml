@@ -64,7 +64,7 @@ repos:
         types: [yaml]
         files: ^\.github/workflows/.*\.(ya?ml)$
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
-    rev: v1.24.1 # https://github.com/zizmorcore/zizmor-pre-commit/releases
+    rev: v1.25.2 # https://github.com/zizmorcore/zizmor-pre-commit/releases
     hooks:
       # Run the linter.
       - id: zizmor
