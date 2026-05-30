@@ -120,7 +120,7 @@ repos:
   #         - --args=--no-color
   #     - id: terraform_trivy
   #       args:
-  #         - --args=--config=/workspace/trivy.yaml
+  #         - --args=--config=__GIT_WORKING_DIR__/trivy.yaml
   #         - --args=--skip-dirs=**/.terraform
   # - repo: https://github.com/terraform-docs/terraform-docs
   #   rev: "v0.24.0"

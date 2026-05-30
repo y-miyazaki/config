@@ -56,7 +56,6 @@ Main behavior:
 ## How To Run
 
 ```bash
-cd /workspace
 scripts/apm/sync_guidelines_from_categories.pl
 ```
 
