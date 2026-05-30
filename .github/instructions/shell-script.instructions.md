@@ -46,6 +46,7 @@ Required in-file order:
 ## Guidelines
 
 ### Code Standards (CODE)
+
 - CODE-01 (SHOULD): Proper Array Usage
   - Check: Are paths with spaces and multiple values managed with arrays?
 - CODE-02 (SHOULD): Minimize Global Variables
@@ -58,6 +59,7 @@ Required in-file order:
   - Check: Do functions have single responsibility and accept arguments explicitly?
 
 ### Dependencies (DEP)
+
 - DEP-01 (SHOULD): Leverage lib/all.sh
   - Check: Is lib/all.sh sourced and common functions utilized?
 - DEP-02 (SHOULD): Use validate_dependencies
@@ -68,6 +70,7 @@ Required in-file order:
   - Check: Are commands verified with command -v with clear error messages?
 
 ### Documentation (DOC)
+
 - DOC-01 (SHOULD): Standard Header Format
   - Check: Does file header contain Description/Usage/Design Rules?
 - DOC-02 (SHOULD): show_usage Required
@@ -88,6 +91,7 @@ Required in-file order:
   - Check: Is CHANGELOG.md maintained with breaking changes documented?
 
 ### Error Handling (ERR)
+
 - ERR-01 (SHOULD): Trap Configuration
   - Check: Are trap handlers set for EXIT, ERR, INT, TERM?
 - ERR-02 (SHOULD): Exit Code Checking
@@ -104,6 +108,7 @@ Required in-file order:
   - Check: Are errors persistently logged to a log file?
 
 ### Function Design (FUNC)
+
 - FUNC-01 (SHOULD): Functions Under 50 Lines Recommended
   - Check: Are functions 50 lines or less?
 - FUNC-02 (SHOULD): Standardize parse_arguments
@@ -120,6 +125,7 @@ Required in-file order:
   - Check: Is main function implemented with minimized global scope processing?
 
 ### Global / Base (G)
+
 - G-01 (SHOULD): Set SCRIPT_DIR and Source lib/all.sh
   - Check: Is SCRIPT_DIR set and lib/all.sh sourced?
 - G-02 (SHOULD): No Hardcoded Secrets
@@ -134,6 +140,7 @@ Required in-file order:
   - Check: Does script run without errors on re-execution?
 
 ### Logging (LOG)
+
 - LOG-01 (SHOULD): Leverage log_message/echo_section
   - Check: Are log_message and echo_section functions utilized?
 - LOG-02 (SHOULD): Separate stdout/stderr
@@ -150,6 +157,7 @@ Required in-file order:
   - Check: Is detailed log control available with -v/--verbose option?
 
 ### Performance (PERF)
+
 - PERF-01 (SHOULD): Minimize External Commands
   - Check: Are external commands in loops minimized and Bash built-ins prioritized?
 - PERF-02 (SHOULD): Reduce Subshells
@@ -172,6 +180,7 @@ Required in-file order:
   - Check: Are performance bottlenecks identified with set -x and time?
 
 ### Security (SEC)
+
 - SEC-01 (SHOULD): Input Validation
   - Check: Is user input validated with regex patterns or whitelists?
 - SEC-02 (SHOULD): Command Injection Prevention
@@ -192,6 +201,7 @@ Required in-file order:
   - Check: Is umask 027 set and least privilege principle applied?
 
 ### Testing (TEST)
+
 - TEST-01 (SHOULD): Implement Unit Tests
   - Check: Are unit tests implemented with Bats?
 - TEST-02 (SHOULD): Bats Test Functions in a-z Order
@@ -201,9 +211,8 @@ Required in-file order:
 
 ### Code Modification Guidelines
 
-- After changes, prioritize running validate.sh from [shell-script-validation Skill](../../apm_modules/_local/shell-script/.apm/skills/shell-script-validation/SKILL.md).
+- After changes, prioritize running validate.sh from shell-script-validation skill.
 - Use individual commands only for debugging.
-
 
 ## Testing and Validation
 
@@ -221,7 +230,7 @@ shellcheck script.sh
 bats test/bats/
 ```
 
-**Detailed guide**: See [shell-script-validation Skill](../../apm_modules/_local/shell-script/.apm/skills/shell-script-validation/SKILL.md).
+**Detailed guide**: See shell-script-validation skill SKILL.md.
 
 ## Security Guidelines
 

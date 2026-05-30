@@ -128,7 +128,7 @@ description: "AI Assistant Instructions for Agent Skills Development"
 
 ### Code Modification Guidelines
 
-- After changes, prioritize running validate.sh from [agent-skills-review Skill](../../apm_modules/_local/common/.apm/skills/agent-skills-review/SKILL.md).
+- After changes, prioritize running validate.sh from agent-skills-review skill.
 - Use individual commands only for debugging.
 
 ## Testing and Validation
@@ -154,7 +154,7 @@ waza run <skill-name>/eval.yaml
 waza tokens count <skill-name>/SKILL.md
 ```
 
-**Detailed guide**: See [agent-skills-review Skill](../../apm_modules/_local/common/.apm/skills/agent-skills-review/SKILL.md).
+**Detailed guide**: See agent-skills-review skill SKILL.md.
 
 ## Security Guidelines
 
