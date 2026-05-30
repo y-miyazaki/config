@@ -64,7 +64,7 @@ jobs:
           permission-contents: write
 
       - name: Configure git auth
-        uses: y-miyazaki/config/.github/actions/git-auth@9f0f4f6f2d03d664dd370928ab4afcb16a9379da # v1.1.17
+        uses: y-miyazaki/config/.github/actions/git-auth@27d12e224bb20d2fdd2edfcafbe5160c348c331a # v1.1.18
         with:
           operation: configure
           token: ${{ steps.app-token.outputs.token }}
@@ -80,14 +80,14 @@ jobs:
 
       - name: Clear git auth
         if: always()
-        uses: y-miyazaki/config/.github/actions/git-auth@9f0f4f6f2d03d664dd370928ab4afcb16a9379da # v1.1.17
+        uses: y-miyazaki/config/.github/actions/git-auth@27d12e224bb20d2fdd2edfcafbe5160c348c331a # v1.1.18
         with:
           operation: clear
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@9f0f4f6f2d03d664dd370928ab4afcb16a9379da # v1.1.17
+        uses: y-miyazaki/config/.github/actions/summary@27d12e224bb20d2fdd2edfcafbe5160c348c331a # v1.1.18
         with:
           params: |
             aqua_version: ${{ inputs.aqua_version }}
