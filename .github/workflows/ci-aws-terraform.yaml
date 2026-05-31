@@ -295,7 +295,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          args=(-f compact --recursive --var-file="${TFVARS_FILE}")
+          if [ -f "${TFVARS_FILE}" ]; then
+            tfvars_path="$(realpath "${TFVARS_FILE}")"
+          elif [ -f "${TERRAFORM_PATH}/${TFVARS_FILE}" ]; then
+            tfvars_path="$(realpath "${TERRAFORM_PATH}/${TFVARS_FILE}")"
+          else
+            echo "TFVARS file not found: ${TFVARS_FILE}" >&2
+            exit 1
+          fi
+          args=(-f compact --recursive --var-file="${tfvars_path}")
           if [ -n "${TFLINT_RESOLVED_CONFIG}" ]; then
             args+=(--config "${TFLINT_RESOLVED_CONFIG}")
           fi
