@@ -234,11 +234,18 @@ jobs:
         run: |
           set -euo pipefail
           if [ -n "${TFLINT_CONFIG_PATH}" ]; then
-            echo "path=${TFLINT_CONFIG_PATH}" >> "$GITHUB_OUTPUT"
+            if [ -f "${TFLINT_CONFIG_PATH}" ]; then
+              echo "path=$(realpath "${TFLINT_CONFIG_PATH}")" >> "$GITHUB_OUTPUT"
+            elif [ -f "${GITHUB_WORKSPACE}/${TFLINT_CONFIG_PATH}" ]; then
+              echo "path=$(realpath "${GITHUB_WORKSPACE}/${TFLINT_CONFIG_PATH}")" >> "$GITHUB_OUTPUT"
+            else
+              echo "TFLINT_CONFIG_PATH not found: ${TFLINT_CONFIG_PATH}" >&2
+              exit 1
+            fi
           elif [ -f "${TERRAFORM_PATH}/.tflint.hcl" ]; then
-            echo "path=${TERRAFORM_PATH}/.tflint.hcl" >> "$GITHUB_OUTPUT"
+            echo "path=$(realpath "${TERRAFORM_PATH}/.tflint.hcl")" >> "$GITHUB_OUTPUT"
           elif [ -f ".tflint.hcl" ]; then
-            echo "path=.tflint.hcl" >> "$GITHUB_OUTPUT"
+            echo "path=$(realpath ".tflint.hcl")" >> "$GITHUB_OUTPUT"
           else
             echo "path=" >> "$GITHUB_OUTPUT"
           fi
