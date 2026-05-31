@@ -1,6 +1,6 @@
 lockfile_version: '1'
-generated_at: '2026-05-31T12:51:54.740520+00:00'
-apm_version: 0.14.0
+generated_at: '2026-05-31T17:33:40.391817+00:00'
+apm_version: 0.14.2
 dependencies:
 - repo_url: _local/common
   package_type: apm_package
@@ -17,6 +17,9 @@ dependencies:
   - .github/hooks/common-github-actions-zizmor.json
   - .github/hooks/common-lean-ctx.json
   - .github/hooks/common-markdownlint-cli2.json
+  - .github/instructions/agent-skills.instructions.md
+  - .github/instructions/github-actions-workflow.instructions.md
+  - .github/instructions/instructions.instructions.md
   - .github/instructions/markdown.instructions.md
   deployed_file_hashes:
     .github/hooks/common-github-actions-actionlint.json: sha256:bf9fb5170a781b1378a7fec249a9d31807ee5027e84f82077746b94230781134
@@ -24,7 +27,10 @@ dependencies:
     .github/hooks/common-github-actions-zizmor.json: sha256:4ad79520c68b1e585651f9d5ac0d9abe33c57b2df33626f66bff5c575ffdea2a
     .github/hooks/common-lean-ctx.json: sha256:30f187840c795acc257b22328f7bd3cd0ab78eb086a8c6e04f9792c18d4b2a7e
     .github/hooks/common-markdownlint-cli2.json: sha256:5a8f69cbf2e60aad7475b5855729f344ded69ba70010405f3c8e4e5f5061e3ec
-    .github/instructions/markdown.instructions.md: sha256:b6cf5bd99203c7e4ed9f4f63a587f04fb0888e5da9012e78956d433b74284cb3
+    .github/instructions/agent-skills.instructions.md: sha256:c4d6fbf162ea92229232615e967c5e5d004bd8f442354b7c85ee6ecd45cfb557
+    .github/instructions/github-actions-workflow.instructions.md: sha256:5585dd66938fcded0dcb7e860a87db7cad43a1817b08388a023ce7c912674621
+    .github/instructions/instructions.instructions.md: sha256:6e29597165f539e30974603b04416db334f92df8e2a3f05247f1bc7871dc9b21
+    .github/instructions/markdown.instructions.md: sha256:350ed7ecc1a368256e2ecc0a143a61db72e18f5e7261d655e04fcad822f9f782
   source: local
   local_path: ./.apm/packages/common
 - repo_url: _local/go
@@ -46,9 +52,11 @@ dependencies:
   - .agents/skills/shell-script-validation
   - .github/hooks/shell-script-shellcheck.json
   - .github/hooks/shell-script-shfmt.json
+  - .github/instructions/shell-script.instructions.md
   deployed_file_hashes:
     .github/hooks/shell-script-shellcheck.json: sha256:4e9c4634d6b9e3bce629f4ff0af8cf78c31a92b690cf37b1ff9b85d3bf114a26
     .github/hooks/shell-script-shfmt.json: sha256:50cd9a52cef467c379c986ef4809891ec4bfc5edeceb239948ed69eb1f4cbe47
+    .github/instructions/shell-script.instructions.md: sha256:7cffbe5657c7441b6f542cc8231777cf615217e543298952ed0bf360e4094815
   source: local
   local_path: ./.apm/packages/shell-script
 mcp_servers:

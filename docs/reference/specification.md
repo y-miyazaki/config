@@ -3,8 +3,8 @@
 
 This document defines the functional specification of this repository, including the intended structure and how shared configuration assets are organized.
 
-Usage guidance is documented in [README.md](../README.md). This document is the specification source of truth under docs.
-Structural details are documented in [architecture.md](./architecture.md), and operational issue handling is documented in [troubleshooting.md](./troubleshooting.md).
+Usage guidance is documented in [README.md](../../README.md). This document is the specification source of truth under docs.
+Structural details are documented in [architecture.md](../explanation/architecture.md), and operational issue handling is documented in [troubleshooting.md](../how-to/troubleshooting.md).
 
 <!-- omit in toc -->
 ## Table of Contents
@@ -283,6 +283,6 @@ Use repository validation workflows and scripts for changed assets:
 
 ## Troubleshooting
 
-- If APM install results differ across environments, verify [apm.lock.yaml](../apm.lock.yaml) is committed and up to date.
+- If APM install results differ across environments, verify [apm.lock.yaml](../../apm.lock.yaml) is committed and up to date.
 - If reusable workflows fail to resolve, verify repository visibility and workflow reference format.
-- If Renovate behavior differs from expectation, verify extends and rule precedence against [renovate/default.json](../renovate/default.json).
+- If Renovate behavior differs from expectation, verify extends and rule precedence against [renovate/default.json](../../renovate/default.json).
