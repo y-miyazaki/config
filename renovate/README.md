@@ -32,6 +32,7 @@ This section defines the intended update policy first, independent from implemen
 - npm: automerge `patch` only.
 - Python packages (`poetry`, `pip_requirements`, `pipenv`): automerge library `patch` only.
 - Terraform (`terraform`, `terraform-version`): do not automerge.
+- tflint plugins (`terraform-linters/tflint-ruleset-aws`): do not automerge.
 - Shared safe update types (`lockFileMaintenance`, `digest`, `pin`): automerge allowed unless explicitly overridden by a stricter rule.
 
 ### Labeling Policy by Dependency Category
@@ -44,6 +45,7 @@ This section defines the intended update policy first, independent from implemen
 - npm: `npm`
 - Python: `python`
 - Terraform: `terraform`
+- tflint plugins: `tflint`
 - Automerged updates: `automerge`
 - Baseline for dependency PRs: `dependencies`
 
@@ -137,6 +139,12 @@ Reference: Verifying if minimumReleaseAge applies to images via ECR pull-through
 - No automerge
 - Post-update: `terraformLockFileMaintenance` (auto-updates `.terraform.lock.hcl`)
 - Group Terraform module/provider updates into one PR with group name `terraform dependencies`
+
+### tflint Plugins (`terraform-linters/tflint-ruleset-aws`)
+
+- Label updates with `tflint`
+- No automerge
+- Commit prefix: `renovate(tflint):`
 
 ### Safe Update Types (cross-cutting)
 

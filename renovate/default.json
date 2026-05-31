@@ -166,6 +166,14 @@
       "groupName": "terraform dependencies"
     },
     {
+      "description": "Rules: Update tflint plugins",
+      "matchPackageNames": ["terraform-linters/tflint-ruleset-aws"],
+      "commitMessagePrefix": "renovate(tflint):",
+      "addLabels": ["tflint"],
+      "automerge": false,
+      "platformAutomerge": false
+    },
+    {
       "description": "Rules: Add mise label for all mise package updates (label-only, automerge is overridden by patch rule below)",
       "matchManagers": ["mise"],
       "commitMessagePrefix": "renovate(mise):",
