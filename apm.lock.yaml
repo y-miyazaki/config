@@ -1,6 +1,6 @@
 lockfile_version: '1'
-generated_at: '2026-05-31T17:46:41.135484+00:00'
-apm_version: 0.14.0
+generated_at: '2026-06-01T14:55:20.260372+00:00'
+apm_version: 0.14.2
 dependencies:
 - repo_url: _local/common
   package_type: apm_package
@@ -29,7 +29,7 @@ dependencies:
     .github/hooks/common-markdownlint-cli2.json: sha256:5a8f69cbf2e60aad7475b5855729f344ded69ba70010405f3c8e4e5f5061e3ec
     .github/instructions/agent-skills.instructions.md: sha256:c4d6fbf162ea92229232615e967c5e5d004bd8f442354b7c85ee6ecd45cfb557
     .github/instructions/github-actions-workflow.instructions.md: sha256:5585dd66938fcded0dcb7e860a87db7cad43a1817b08388a023ce7c912674621
-    .github/instructions/instructions.instructions.md: sha256:6e29597165f539e30974603b04416db334f92df8e2a3f05247f1bc7871dc9b21
+    .github/instructions/instructions.instructions.md: sha256:d700d5d3f3af6caaebd92f99e02c1d066c3dad9bc9d031c4e25c3c5d2bebd850
     .github/instructions/markdown.instructions.md: sha256:350ed7ecc1a368256e2ecc0a143a61db72e18f5e7261d655e04fcad822f9f782
   source: local
   local_path: ./.apm/packages/common
