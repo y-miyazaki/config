@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-06-01T14:55:20.260372+00:00'
+generated_at: '2026-06-02T05:25:00.506836+00:00'
 apm_version: 0.14.2
 dependencies:
 - repo_url: _local/common
@@ -16,6 +16,7 @@ dependencies:
   - .github/hooks/common-github-actions-ghalint.json
   - .github/hooks/common-github-actions-zizmor.json
   - .github/hooks/common-lean-ctx.json
+  - .github/hooks/common-markdown-link-check.json
   - .github/hooks/common-markdownlint-cli2.json
   - .github/instructions/agent-skills.instructions.md
   - .github/instructions/github-actions-workflow.instructions.md
@@ -26,11 +27,12 @@ dependencies:
     .github/hooks/common-github-actions-ghalint.json: sha256:cc6a2c06a24b436bad009e73b2d06f4a96747c29987a59f581b6d92d9068e63c
     .github/hooks/common-github-actions-zizmor.json: sha256:4ad79520c68b1e585651f9d5ac0d9abe33c57b2df33626f66bff5c575ffdea2a
     .github/hooks/common-lean-ctx.json: sha256:30f187840c795acc257b22328f7bd3cd0ab78eb086a8c6e04f9792c18d4b2a7e
+    .github/hooks/common-markdown-link-check.json: sha256:179e35c6e023e908837e49366e7078c0bd340b741d3d2b59b2bac1b8af8934d8
     .github/hooks/common-markdownlint-cli2.json: sha256:5a8f69cbf2e60aad7475b5855729f344ded69ba70010405f3c8e4e5f5061e3ec
     .github/instructions/agent-skills.instructions.md: sha256:c4d6fbf162ea92229232615e967c5e5d004bd8f442354b7c85ee6ecd45cfb557
     .github/instructions/github-actions-workflow.instructions.md: sha256:5585dd66938fcded0dcb7e860a87db7cad43a1817b08388a023ce7c912674621
     .github/instructions/instructions.instructions.md: sha256:d700d5d3f3af6caaebd92f99e02c1d066c3dad9bc9d031c4e25c3c5d2bebd850
-    .github/instructions/markdown.instructions.md: sha256:350ed7ecc1a368256e2ecc0a143a61db72e18f5e7261d655e04fcad822f9f782
+    .github/instructions/markdown.instructions.md: sha256:84d9e10189f1aff629779e96101f92bdda63c6a90d1a1ad4875a6e1281b22d6d
   source: local
   local_path: ./.apm/packages/common
 - repo_url: _local/go
