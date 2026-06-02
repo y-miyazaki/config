@@ -7,6 +7,7 @@
 
 | 日付       | 内容                                                                 |
 | ---------- | -------------------------------------------------------------------- |
+| 2026-06-02 | Code Formatter セクション追加 (Prettier vs Biome vs deno fmt vs clang-format vs rustfmt) |
 | 2026-05-26 | Version Management セクション mise Lazy Install 記述修正             |
 | 2026-05-25 | Version Management セクションに mise 追加                            |
 | 2026-05-25 | SAST / Code Pattern Analysis セクション追加 (Semgrep vs CodeQL vs SonarQube) |
@@ -54,6 +55,8 @@
   - [Guidelines](#guidelines-9)
 - [CI/CD: GitHub Actions vs GitLab CI vs CircleCI vs Jenkins](#cicd-github-actions-vs-gitlab-ci-vs-circleci-vs-jenkins)
   - [Guidelines](#guidelines-10)
+- [Code Formatter: Prettier vs Biome vs deno fmt vs clang-format vs rustfmt](#code-formatter-prettier-vs-biome-vs-deno-fmt-vs-clang-format-vs-rustfmt)
+  - [Guidelines](#guidelines-11)
 
 ## Dependency Updates: Renovate vs Dependabot
 
@@ -302,3 +305,42 @@
 - GitLab をソースコード管理に使っている場合は GitLab CI 一択
 - 高度な並列実行・リソースクラスの細かい制御が必要な場合は CircleCI を検討
 - 完全なカスタマイズ性・オンプレミス要件がある場合は Jenkins を検討 (運用コスト高)
+
+## Code Formatter: Prettier vs Biome vs deno fmt vs clang-format vs rustfmt
+
+コードフォーマッターの比較。言語固有フォーマッター (gofumpt, shfmt 等) は各言語別ドキュメントを参照。ここでは多言語対応フォーマッターおよび代表的な言語固有フォーマッターのアーキテクチャを比較する。
+
+| 比較項目             | Prettier                                                    | Biome                                               | deno fmt                                            | clang-format                                        | rustfmt                                               |
+| -------------------- | ----------------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------------- |
+| 提供元               | Prettier                                                    | Biome                                               | Deno Land                                           | LLVM Project                                        | Rust Project                                          |
+| リポジトリ           | [prettier/prettier](https://github.com/prettier/prettier)   | [biomejs/biome](https://github.com/biomejs/biome)   | [denoland/deno](https://github.com/denoland/deno)   | [llvm/llvm-project](https://github.com/llvm/llvm-project) | [rust-lang/rustfmt](https://github.com/rust-lang/rustfmt) |
+| ドキュメント         | [prettier.io](https://prettier.io/docs/en/)                 | [biomejs.dev](https://biomejs.dev)                  | [docs.deno.com](https://docs.deno.com/runtime/reference/cli/fmt/) | [clang.llvm.org](https://clang.llvm.org/docs/ClangFormat.html) | [rust-lang.github.io](https://rust-lang.github.io/rustfmt/) |
+| ライセンス           | MIT                                                         | MIT                                                 | MIT                                                 | Apache-2.0 with LLVM Exception                      | Apache-2.0 / MIT                                      |
+| 実装言語             | JavaScript                                                  | Rust                                                | Rust                                                | C++                                                 | Rust                                                  |
+| 対応言語             | JS/TS/JSX/TSX/CSS/HTML/JSON/YAML/Markdown/GraphQL等         | JS/TS/JSX/TSX/CSS/JSON/GraphQL                      | JS/TS/JSX/TSX/JSON/Markdown/YAML/CSS/HTML           | C/C++/Objective-C/Java/C#/Proto                     | Rust                                                  |
+| 設定ファイル         | `.prettierrc` (JSON/YAML/TOML/JS)                           | `biome.json` / `biome.jsonc`                        | `deno.json` (`fmt` セクション)                      | `.clang-format` (YAML)                              | `rustfmt.toml` / `.rustfmt.toml`                      |
+| 設定オプション数     | 少ない (Opinionated)                                        | 少ない (Opinionated)                                | 極少 (Opinionated)                                  | 多い (100+)                                         | 多い (60+、nightly のみのオプション含む)               |
+| Linter 統合          | ❌ (別途 ESLint)                                             | ✅ 組み込み (ESLint互換ルール)                       | ✅ 組み込み (`deno lint`)                            | ❌ (別途 clang-tidy)                                 | ❌ (別途 clippy)                                       |
+| 実行速度             | 低速 (Node.js)                                              | ✅ 高速 (Rust、Prettier比 25-35x)                    | ✅ 高速 (Rust)                                       | ✅ 高速 (C++)                                        | ✅ 高速 (Rust)                                         |
+| プラグインシステム   | ✅ (言語追加プラグイン)                                      | ❌ (組み込みのみ)                                    | ❌ (組み込みのみ)                                    | ❌                                                   | ❌                                                     |
+| エディタ統合         | ✅ (VS Code/JetBrains/Vim等、広範)                           | ✅ (VS Code/JetBrains/Vim等)                         | ✅ (VS Code/JetBrains)                               | ✅ (VS Code/JetBrains/Vim等)                         | ✅ (VS Code/JetBrains/Vim等)                           |
+| Ignore ファイル      | `.prettierignore`                                           | 設定内 `ignore` / CLI `--ignore`                    | 設定内 `exclude`                                    | ❌ (CLI で指定)                                      | `rustfmt.toml` 内 `ignore`                            |
+| CI 統合 (check mode) | ✅ (`--check`)                                               | ✅ (`check --formatter-enabled=true`)                | ✅ (`fmt --check`)                                   | ✅ (`--dry-run --Werror`)                            | ✅ (`--check`)                                         |
+| pre-commit 対応      | ✅ (mirrors-prettier)                                        | ✅ (biomejs/pre-commit)                              | ⚠️ (カスタム定義)                                    | ✅ (pre-commit/mirrors-clang-format)                 | ✅ (doublify/pre-commit-rust)                          |
+| Node.js 依存         | ✅ 必須                                                      | ❌ 不要 (単一バイナリ)                               | ❌ 不要 (Deno ランタイム)                            | ❌ 不要                                              | ❌ 不要 (rustup 経由)                                  |
+| Prettier 互換性      | -                                                           | ✅ 97%互換 (移行容易)                                | ⚠️ 類似だが非互換                                    | ❌                                                   | ❌                                                     |
+| Markdown フォーマット | ✅                                                           | ❌                                                   | ✅                                                   | ❌                                                   | ❌                                                     |
+| YAML フォーマット    | ✅                                                           | ❌                                                   | ✅                                                   | ❌                                                   | ❌                                                     |
+| 料金                 | 無料                                                        | 無料                                                | 無料                                                | 無料                                                | 無料                                                  |
+
+### Guidelines
+
+**→ 言語スタックに応じて使い分ける。** 単一の万能フォーマッターは存在しないため、プロジェクトの言語構成に合わせて選択する。
+
+- **Web フロントエンド (JS/TS/CSS/HTML)**: Biome を第一候補とする。Prettier比 25-35x の高速性、Linter統合による単一ツール化、Node.js不要で CI が軽量化。Prettier 97% 互換のため移行コストが低い
+- **Prettier を選ぶ場合**: プラグインによる追加言語対応が必要な場合 (PHP, Ruby, Svelte等)、または Biome 未対応のフォーマット (Markdown, YAML) が重要な場合。エコシステムの成熟度・プラグイン数では依然最大
+- **Deno プロジェクト**: deno fmt 一択。設定不要で Deno ランタイムに統合されており、追加の依存が不要
+- **C/C++ プロジェクト**: clang-format 一択。LLVM エコシステムのデファクトスタンダード。設定項目が多いためチームで `.clang-format` を共有し BasedOnStyle を固定する
+- **Rust プロジェクト**: rustfmt 一択。`cargo fmt` として標準ツールチェーンに含まれ、追加インストール不要
+- **Go プロジェクト**: gofumpt を使用 (Go 別ドキュメント参照)。本比較の対象外
+- **多言語リポジトリ**: Biome (JS/TS/CSS/JSON) + 言語固有ツール (gofumpt, rustfmt, shfmt 等) の組み合わせ。pre-commit で統一的に実行する
