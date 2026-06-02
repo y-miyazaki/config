@@ -7,6 +7,7 @@ MCP Server の選定・比較の判断材料。
 
 | 日付       | 内容                                                                 |
 | ---------- | -------------------------------------------------------------------- |
+| 2026-06-02 | Web Fetch & Markdown Compression MCP Servers カテゴリ追加 |
 | 2026-05-27 | Local Filesystem & Git / Database & Data Stores / SaaS & Collaboration カテゴリ追加。Performance と Code Intelligence の重複解消。提供元表記を統一 |
 | 2026-05-21 | History セクション追加                                               |
 | 2026-05-17 | 初版作成。AWS / Terraform / Common / Performance / Code Intelligence / Knowledge MCP を比較 |
@@ -33,6 +34,8 @@ MCP Server の選定・比較の判断材料。
   - [Guidelines](#guidelines-7)
 - [SaaS & Collaboration MCP Servers](#saas--collaboration-mcp-servers)
   - [Guidelines](#guidelines-8)
+- [Web Fetch & Markdown Compression MCP Servers](#web-fetch--markdown-compression-mcp-servers)
+  - [Guidelines](#guidelines-9)
 
 ## AWS MCP Servers
 
@@ -304,3 +307,44 @@ MCP Server の選定・比較の判断材料。
 - Linear MCP はLinearを利用しているチームでのみ有用。GitHub Issues で管理している場合は GitHub MCP で代替可能。
 - Slack MCP はチーム通知の自動化に有用だが、誤送信リスクがあるため書き込み操作には注意が必要。必要に応じて追加。
 - GitHub MCP と組み合わせることで「Sentryエラー解析 → GitHub Issue/PR作成」のワークフローが実現可能。
+
+## Web Fetch & Markdown Compression MCP Servers
+
+WebFetch / Fetch MCP の出力に対してMarkdown圧縮やレスポンスフィルタリングを行うプロキシ・サーバーの比較。トークン効率の高いWeb取得を実現するためのレイヤー選択肢を整理する。
+
+| 比較項目                | Context Mode                      | mcp-rtk                           | Cloudflare MCP Portal             | Markdownify MCP                   | mcp-read-website-fast             |
+| ----------------------- | --------------------------------- | --------------------------------- | --------------------------------- | --------------------------------- | --------------------------------- |
+| 提供元                  | mksglu (コミュニティ)             | ThomasTartrau (コミュニティ)      | Cloudflare                        | zcaceres (コミュニティ)           | just-every (コミュニティ)         |
+| リポジトリ              | [GitHub](https://github.com/mksglu/context-mode) | [GitHub](https://github.com/ThomasTartrau/mcp-rtk) | -                                 | [GitHub](https://github.com/zcaceres/markdownify-mcp) | [GitHub](https://github.com/just-every/mcp-read-website-fast) |
+| ドキュメント            | [README](https://github.com/mksglu/context-mode#readme) | [README](https://github.com/ThomasTartrau/mcp-rtk#readme) | [Cloudflare Docs](https://developers.cloudflare.com/changelog/post/2026-03-26-mcp-portal-context-optimization/) | [README](https://github.com/zcaceres/markdownify-mcp#readme) | [README](https://github.com/just-every/mcp-read-website-fast#readme) |
+| ライセンス              | ELv2 (source-available)           | MIT                               | 商用 (Cloudflare)                 | MIT                               | MIT                               |
+| 言語                    | TypeScript (Node.js)              | Rust                              | N/A (SaaS)                        | TypeScript (Bun/Node.js)          | TypeScript (Node.js)              |
+| インストール            | `npm install -g context-mode`     | `cargo install mcp-rtk`           | URL パラメータ追加                | `node dist/index.js`              | `npx @just-every/mcp-read-website-fast` |
+| アーキテクチャ          | MCP Server + Hook (サンドボックス) | プロキシ (他MCPをラップ)          | リモートポータル (URL)            | MCP Server (単体)                 | MCP Server (単体)                 |
+| 圧縮対象                | 全ツール出力 (Shell/Read/WebFetch) | MCP レスポンス JSON               | ツール定義 (スキーマ)             | HTML → Markdown 変換              | HTML → Markdown 変換              |
+| トークン削減率          | 98% (56KB→299B)                   | 60-90% (JSONフィルタ)             | 5x (minimize_tools) / 定数 (search_and_execute) | 50-80% (HTML→MD)                  | 50-80% (HTML→MD + Readability)    |
+| 圧縮方式               | サンドボックス実行 + 結果のみ返却 | 8段フィルターパイプライン (keep_fields/strip_nulls/condense_users等) | ツール定義をquery/execute 2ツールに集約 | markitdown による変換             | Mozilla Readability + Turndown    |
+| WebFetch出力圧縮        | ✅ (ctx_fetch_and_index)           | ✅ (レスポンス全般)                | ❌ (ツール定義のみ)                | ✅ (webpage-to-markdown)           | ✅ (read_website)                  |
+| セッション継続          | ✅ (SQLite FTS5 + PreCompact)      | ❌                                 | ❌                                 | ❌                                 | ❌                                 |
+| キャッシュ              | ✅ (TTL付きFTS5)                   | ❌                                 | ❌                                 | ❌                                 | ✅ (インメモリ)                    |
+| 対応プラットフォーム    | 15+ (Claude Code/Kiro/Cursor等)   | 全stdio MCP対応                   | Cloudflare Access経由のみ         | 全stdio MCP対応                   | 全stdio MCP対応                   |
+| Hook連携                | ✅ (PreToolUse/PostToolUse等)      | ❌ (プロキシのみ)                  | ❌                                 | ❌                                 | ❌                                 |
+| 他MCPラップ可能         | ⚠️ (ctx_executeで間接実行)         | ✅ (コマンドラップ)                | ✅ (ポータル経由)                  | ❌                                 | ❌                                 |
+| PDF/画像/音声対応       | ❌                                 | ❌                                 | ❌                                 | ✅ (PDF/画像OCR/音声文字起こし)    | ❌                                 |
+| プリセット/自動検出     | ✅ (プラットフォーム自動検出)      | ✅ (GitLab/Grafana等)             | N/A                               | ❌                                 | ❌                                 |
+| ツール数               | 11                                | 0 (プロキシ)                      | 2 (query + execute)               | 10                                | 1 (read_website)                  |
+| 依存関係               | Node.js >= 22.5 (or Bun) + Python/コンパイラ (サンドボックス言語実行時) | なし (単一バイナリ)               | なし (SaaS)                       | Node.js + Python (markitdown)     | Node.js                           |
+| 商用利用               | ⚠️ (ELv2: SaaS提供不可)           | ✅ 無料                            | ✅ (Cloudflare契約内)              | ✅ 無料                            | ✅ 無料                            |
+| GitHub Stars           | 16.2k                             | 1                                 | N/A                               | 2.4k                              | 150                               |
+
+### Guidelines
+
+**→ Context Mode + mcp-rtk を用途に応じて使い分ける。** Context Mode はWebFetch出力のサンドボックス化（`ctx_fetch_and_index`でURL取得→FTS5インデックス→検索）とセッション継続に最適。mcp-rtk は既存MCPサーバーのJSONレスポンスをフィルタリングするプロキシとして、特にGitLab/GitHub等のAPI応答が大きいサーバーに有効。
+
+- Context Mode は ELv2 ライセンスのため SaaS としての再配布は不可だが、開発ツールとしての利用は無制限。15プラットフォーム対応・Hook連携・セッション継続の機能性が圧倒的。
+- mcp-rtk は MIT ライセンス・Rust 単一バイナリでゼロ依存。コマンドを `mcp-rtk --` でラップするだけで導入可能。ただし新規プロジェクト（Star 1）のためプリセットの充実度に注意。
+- Cloudflare MCP Portal はエンタープライズ向け。`optimize_context=search_and_execute` でツール定義コストを定数化できるが、Cloudflare Access 環境が前提。
+- Markdownify MCP は PDF/画像/音声→Markdown 変換が必要な場合に追加。Web取得のみなら mcp-read-website-fast の方が軽量。
+- mcp-read-website-fast は Readability による不要要素除去 + Turndown による Markdown 変換で、Fetch MCP の代替として単体利用可能。ツール数が1で軽量。
+- mcp-compressor（既に Performance カテゴリで採用済み）はツール定義の圧縮であり、レスポンス圧縮とは補完関係にある。Context Mode / mcp-rtk と併用推奨。
+- lean-ctx（同カテゴリで採用済み）は `ctx_read` の10モード + Shell Hook + Archive FTS で Web 取得結果の圧縮読み込みも副次的にカバーする。lean-ctx 導入済み環境では本カテゴリのツール追加の必要性は低い。
