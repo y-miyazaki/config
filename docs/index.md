@@ -56,14 +56,14 @@ _Research and comparison reports._
 
 ### Service Comparison
 
-- [index.md](report/service-comparison/index.md) - Service comparison index
-- [service-comparison-evaluation-rules.md](report/service-comparison/service-comparison-evaluation-rules.md) - Shared evaluation rules
-- [service-comparison-storage.md](report/service-comparison/service-comparison-storage.md) - Storage service comparison
-- [service-comparison-database.md](report/service-comparison/service-comparison-database.md) - Database service comparison
-- [service-comparison-messaging.md](report/service-comparison/service-comparison-messaging.md) - Messaging service comparison
-- [service-comparison-batch.md](report/service-comparison/service-comparison-batch.md) - Batch service comparison
-- [service-comparison-gateway.md](report/service-comparison/service-comparison-gateway.md) - Gateway service comparison
-- [service-comparison-compute.md](report/service-comparison/service-comparison-compute.md) - Compute service comparison
+- [index.md](report/aws/service-comparison/index.md) - Service comparison index
+- [service-comparison-evaluation-rules.md](report/aws/service-comparison/service-comparison-evaluation-rules.md) - Shared evaluation rules
+- [service-comparison-storage.md](report/aws/service-comparison/service-comparison-storage.md) - Storage service comparison
+- [service-comparison-database.md](report/aws/service-comparison/service-comparison-database.md) - Database service comparison
+- [service-comparison-messaging.md](report/aws/service-comparison/service-comparison-messaging.md) - Messaging service comparison
+- [service-comparison-batch.md](report/aws/service-comparison/service-comparison-batch.md) - Batch service comparison
+- [service-comparison-gateway.md](report/aws/service-comparison/service-comparison-gateway.md) - Gateway service comparison
+- [service-comparison-compute.md](report/aws/service-comparison/service-comparison-compute.md) - Compute service comparison
 
 ### Waza
 

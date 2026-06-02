@@ -90,7 +90,7 @@
 
 | 比較項目             | ElastiCache Redis                                    | ElastiCache Memcached                                | DAX                                                  |
 | -------------------- | ---------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
-| ドキュメント         | [Redis](https://docs.aws.amazon.com/elasticache/latest/red-ug/) | [Memcached](https://docs.aws.amazon.com/elasticache/latest/mem-ug/) | [DAX](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.html) |
+| ドキュメント         | [Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/WhatIs.html) | [Memcached](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/WhatIs.Memcached.html) | [DAX](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.html) |
 | 課金モデル           | ノード時間 ([料金](https://aws.amazon.com/elasticache/pricing/)) | ノード時間 ([料金](https://aws.amazon.com/elasticache/pricing/)) | ノード時間 ([料金](https://aws.amazon.com/dynamodb/pricing/)) |
 | 主用途               | 汎用キャッシュ、セッション、Pub/Sub、ランキング      | シンプルなキャッシュ                                 | DynamoDB 読み取りキャッシュ                          |
 | SLA                  | 99.99%                                               | 99.99%                                               | 99.99%                                               |

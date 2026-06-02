@@ -56,7 +56,7 @@
 
 | 比較項目             | Step Functions                                       | MWAA (Airflow)                                       | EventBridge Scheduler                                |
 | -------------------- | ---------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
-| ドキュメント         | [Step Functions](https://docs.aws.amazon.com/step-functions/) | [MWAA](https://docs.aws.amazon.com/mwaa/)           | [Scheduler](https://docs.aws.amazon.com/scheduler/)  |
+| ドキュメント         | [Step Functions](https://docs.aws.amazon.com/step-functions/) | [MWAA](https://docs.aws.amazon.com/mwaa/)           | [Scheduler](https://docs.aws.amazon.com/scheduler/latest/UserGuide/what-is-scheduler.html)  |
 | 課金モデル           | 状態遷移課金 ([料金](https://aws.amazon.com/step-functions/pricing/)) | 環境時間 最小 $0.49/h ([料金](https://aws.amazon.com/managed-workflows-for-apache-airflow/pricing/)) | 呼び出し $1/100万 ([料金](https://aws.amazon.com/eventbridge/pricing/)) |
 | 主用途               | AWS サービス連携ワークフロー                         | データパイプライン、複雑な DAG                       | 単一ターゲットの定期呼び出し                         |
 | SLA                  | 99.99%                                               | 99.9%                                                | 99.99%                                               |
