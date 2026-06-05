@@ -69,4 +69,3 @@ apm_modules/** linguist-vendored=true
 test/** linguist-detectable=false
 tmp/** linguist-detectable=false
 output/** linguist-generated=true
-.apm/** linguist-vendored=true
