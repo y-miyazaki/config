@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-06-02T05:45:55.813400+00:00'
+generated_at: '2026-06-05T04:01:36.749560+00:00'
 apm_version: 0.14.0
 dependencies:
 - repo_url: _local/common
@@ -44,7 +44,7 @@ dependencies:
   - .github/instructions/go.instructions.md
   deployed_file_hashes:
     .github/hooks/go-golangci-lint.json: sha256:5023d21f574b5478520b3308b50d9207c813e42f9a0e38cbcc906db9c0955462
-    .github/instructions/go.instructions.md: sha256:d941102daef01ede943c3837318d1d6b23340a2008252468e4e123450f038de6
+    .github/instructions/go.instructions.md: sha256:e51bd95a7fb1cef5c32ab54a48cd354452d5c7da0acc7a622ea332ce01c137a2
   source: local
   local_path: ./.apm/packages/go
 - repo_url: _local/shell-script
