@@ -1,0 +1,123 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "customManagers": [
+    {
+      "description": "CustomManager: Update pre-commit/pre-commit-hooks rev",
+      "customType": "regex",
+      "fileMatch": ["^\\.pre-commit-config\\.yaml$"],
+      "matchStrings": [
+        "repo:\\s*https://github\\.com/pre-commit/pre-commit-hooks\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
+      "depNameTemplate": "pre-commit/pre-commit-hooks",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "CustomManager: Update Yelp/detect-secrets rev",
+      "customType": "regex",
+      "fileMatch": ["^\\.pre-commit-config\\.yaml$"],
+      "matchStrings": [
+        "repo:\\s*https://github\\.com/Yelp/detect-secrets\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
+      "depNameTemplate": "Yelp/detect-secrets",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "CustomManager: Update gitleaks/gitleaks rev",
+      "customType": "regex",
+      "fileMatch": ["^\\.pre-commit-config\\.yaml$"],
+      "matchStrings": [
+        "repo:\\s*https://github\\.com/gitleaks/gitleaks\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
+      "depNameTemplate": "gitleaks/gitleaks",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "CustomManager: Update zizmorcore/zizmor-pre-commit rev",
+      "customType": "regex",
+      "fileMatch": ["^\\.pre-commit-config\\.yaml$"],
+      "matchStrings": [
+        "repo:\\s*https://github\\.com/zizmorcore/zizmor-pre-commit\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
+      "depNameTemplate": "zizmorcore/zizmor-pre-commit",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "CustomManager: Update DavidAnson/markdownlint-cli2 rev",
+      "customType": "regex",
+      "fileMatch": ["^\\.pre-commit-config\\.yaml$"],
+      "matchStrings": [
+        "repo:\\s*https://github\\.com/DavidAnson/markdownlint-cli2\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
+      "depNameTemplate": "DavidAnson/markdownlint-cli2",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "CustomManager: Update tcort/markdown-link-check rev",
+      "customType": "regex",
+      "fileMatch": ["^\\.pre-commit-config\\.yaml$"],
+      "matchStrings": [
+        "repo:\\s*https://github\\.com/tcort/markdown-link-check\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
+      "depNameTemplate": "tcort/markdown-link-check",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "CustomManager: Update google/go-jsonnet rev",
+      "customType": "regex",
+      "fileMatch": ["^\\.pre-commit-config\\.yaml$"],
+      "matchStrings": [
+        "repo:\\s*https://github\\.com/google/go-jsonnet\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
+      "depNameTemplate": "google/go-jsonnet",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "CustomManager: Update sqlfluff/sqlfluff rev",
+      "customType": "regex",
+      "fileMatch": ["^\\.pre-commit-config\\.yaml$"],
+      "matchStrings": [
+        "repo:\\s*https://github\\.com/sqlfluff/sqlfluff\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
+      ],
+      "depNameTemplate": "sqlfluff/sqlfluff",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "CustomManager: Update antonbabenko/pre-commit-terraform rev",
+      "customType": "regex",
+      "fileMatch": ["^\\.pre-commit-config\\.yaml$"],
+      "matchStrings": [
+        "repo:\\s*https://github\\.com/antonbabenko/pre-commit-terraform\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
+      "depNameTemplate": "antonbabenko/pre-commit-terraform",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "CustomManager: Update terraform-docs/terraform-docs rev",
+      "customType": "regex",
+      "fileMatch": ["^\\.pre-commit-config\\.yaml$"],
+      "matchStrings": [
+        "repo:\\s*https://github\\.com/terraform-docs/terraform-docs\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
+      "depNameTemplate": "terraform-docs/terraform-docs",
+      "datasourceTemplate": "github-releases"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Rules: Update tool versions in .pre-commit-config.yaml",
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": [".pre-commit-config.yaml"],
+      "commitMessagePrefix": "renovate(pre-commit-config-tool-version):",
+      "addLabels": ["pre-commit-config-tool-version"]
+    },
+    {
+      "description": "Rules: Automerge patch updates for pre-commit hook versions",
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": [".pre-commit-config.yaml"],
+      "matchUpdateTypes": ["patch"],
+      "addLabels": ["automerge"],
+      "automerge": true,
+      "platformAutomerge": true
+    }
+  ]
+}

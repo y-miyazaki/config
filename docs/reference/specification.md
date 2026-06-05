@@ -247,12 +247,14 @@ The repository must provide centrally managed Renovate defaults.
 
 - shared policy baseline is defined in `renovate/default.json`
 - workflow tool-version updates are defined in `renovate/github-actions-tool-version.json`
+- pre-commit hook version updates are defined in `renovate/pre-commit-config-tool-version.json`
 - consumers can extend the baseline via `.github/renovate.json`
 
 ### Scope
 
 - `renovate/default.json`: baseline policy
 - `renovate/github-actions-tool-version.json`: workflow tool-version update rules
+- `renovate/pre-commit-config-tool-version.json`: pre-commit hook rev update rules
 - `renovate/README.md`: policy details and operational notes
 
 ## Configuration Defaults

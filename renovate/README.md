@@ -4,6 +4,7 @@ This directory contains Renovate configuration files for dependency update autom
 
 - `default.json`: main Renovate policy for this repository
 - `github-actions-tool-version.json`: custom regex managers for tool-version inputs in GitHub Actions workflows
+- `pre-commit-config-tool-version.json`: custom regex managers for hook rev versions in `.pre-commit-config.yaml`
 
 ## Policy (Source of Truth)
 
@@ -190,6 +191,34 @@ Disabled managers (checksum-coupled updates) include:
 - `suzuki-shunsuke/tfcmt`
 - `rhysd/actionlint`
 - `suzuki-shunsuke/ghalint`
+
+## Pre-commit Config Tool Version Rules (`pre-commit-config-tool-version.json`)
+
+### Scope
+
+- Uses `custom.regex` managers
+- Targets `.pre-commit-config.yaml`
+- Detects `rev:` values for each remote repository hook
+
+### Labels and Automerge
+
+- Label all matched updates with `pre-commit-config-tool-version`
+- Automerge patch updates
+- Add `automerge` label to automerged updates
+- Commit prefix: `renovate(pre-commit-config-tool-version):`
+
+### Managed Tools
+
+- `pre-commit/pre-commit-hooks`
+- `Yelp/detect-secrets`
+- `gitleaks/gitleaks`
+- `zizmorcore/zizmor-pre-commit`
+- `DavidAnson/markdownlint-cli2`
+- `tcort/markdown-link-check`
+- `google/go-jsonnet`
+- `sqlfluff/sqlfluff`
+- `antonbabenko/pre-commit-terraform`
+- `terraform-docs/terraform-docs`
 
 ## Maintenance Notes
 

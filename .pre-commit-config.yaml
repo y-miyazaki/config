@@ -91,7 +91,7 @@ repos:
         args: ["--fix"]
         files: \.md$
   - repo: https://github.com/tcort/markdown-link-check
-    rev: v3.14.2
+    rev: v3.14.2 # https://github.com/tcort/markdown-link-check/releases
     hooks:
       - id: markdown-link-check
         args: [--quiet]
@@ -144,7 +144,7 @@ repos:
   #         - --args=--format=table
   #         - --args=--skip-dirs=**/.terraform
   # - repo: https://github.com/terraform-docs/terraform-docs
-  #   rev: "v0.24.0"
+  #   rev: v0.24.0
   #   hooks:
   #     - id: terraform-docs-go
   #       args:
@@ -159,7 +159,7 @@ repos:
   #           "terraform",
   #         ]
   # - repo: https://github.com/terraform-docs/terraform-docs
-  #   rev: "v0.24.0"
+  #   rev: v0.24.0
   #   hooks:
   #     - id: terraform-docs-go
   #       args:
