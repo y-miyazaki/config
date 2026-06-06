@@ -3,7 +3,7 @@
     "postToolUse": [
       {
         "type": "command",
-        "bash": "command -v tflint >/dev/null 2>&1 || exit 0; root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; cd \"$root\" || exit 0; dirs=$( { git diff --name-only --diff-filter=ACMR -- '*.tf' '*.tfvars' '*.hcl' 2>/dev/null; git diff --cached --name-only --diff-filter=ACMR -- '*.tf' '*.tfvars' '*.hcl' 2>/dev/null; git ls-files --others --exclude-standard -- '*.tf' '*.tfvars' '*.hcl' 2>/dev/null; } | awk 'NF' | sed 's|/[^/]*$||' | sort -u ); if [ -z \"$dirs\" ]; then exit 0; fi; fails=0; echo \"$dirs\" | while IFS= read -r dir; do [ -d \"$dir\" ] || continue; tflint --init --chdir \"$dir\" >/dev/null 2>&1 || true; tflint --fix --chdir \"$dir\" || fails=$((fails + 1)); done; if [ \"$fails\" -gt 0 ]; then exit 2; fi",
+        "bash": "command -v tflint >/dev/null 2>&1 || exit 0; root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; cd \"$root\" || exit 0; dirs=$( { git diff --name-only --diff-filter=ACMR -- '*.tf' '*.tfvars' '*.hcl' 2>/dev/null; git diff --cached --name-only --diff-filter=ACMR -- '*.tf' '*.tfvars' '*.hcl' 2>/dev/null; git ls-files --others --exclude-standard -- '*.tf' '*.tfvars' '*.hcl' 2>/dev/null; } | awk 'NF' | sed 's|/[^/]*$||' | sort -u ); if [ -z \"$dirs\" ]; then exit 0; fi; fails=0; for dir in $dirs; do [ -d \"$dir\" ] || continue; tflint --init --chdir \"$dir\" >/dev/null 2>&1 || true; tflint --fix --chdir \"$dir\" || fails=$((fails + 1)); done; if [ \"$fails\" -gt 0 ]; then exit 2; fi",
         "timeoutSec": 120
       }
     ]
