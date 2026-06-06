@@ -3,7 +3,7 @@
     "postToolUse": [
       {
         "type": "command",
-        "bash": "command -v markdownlint-cli2 >/dev/null 2>&1 || exit 0; root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; cd \"$root\" || exit 0; tmp_list=$(mktemp /tmp/markdownlint-files-XXXXXX) || exit 0; trap 'rm -f \"$tmp_list\"' EXIT HUP INT TERM; { git diff --name-only --diff-filter=ACMR -- \"*.md\"; git diff --cached --name-only --diff-filter=ACMR -- \"*.md\"; git ls-files --others --exclude-standard -- \"*.md\"; } | awk \"NF\" | sort -u > \"$tmp_list\"; if [ ! -s \"$tmp_list\" ]; then exit 0; fi; if ! xargs markdownlint-cli2 --fix < \"$tmp_list\"; then exit 2; fi",
+        "bash": "command -v markdownlint-cli2 >/dev/null 2>&1 || exit 0; root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; cd \"$root\" || exit 0; files=$( { git diff --name-only --diff-filter=ACMR -- '*.md' 2>/dev/null; git diff --cached --name-only --diff-filter=ACMR -- '*.md' 2>/dev/null; git ls-files --others --exclude-standard -- '*.md' 2>/dev/null; } | awk 'NF' | sort -u ); if [ -n \"$files\" ]; then echo \"$files\" | xargs markdownlint-cli2 --fix || exit 2; fi",
         "timeoutSec": 120
       }
     ]

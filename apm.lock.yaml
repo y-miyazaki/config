@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-06-06T11:51:56.221566+00:00'
+generated_at: '2026-06-06T12:18:40.208532+00:00'
 apm_version: 0.16.0
 dependencies:
 - repo_url: _local/common
@@ -23,12 +23,12 @@ dependencies:
   - .github/instructions/instructions.instructions.md
   - .github/instructions/markdown.instructions.md
   deployed_file_hashes:
-    .github/hooks/common-github-actions-actionlint.json: sha256:078f51d2a279f45665131ea58f0bc1ffaccf95ffcfce98f90e545367841ad0fa
-    .github/hooks/common-github-actions-ghalint.json: sha256:75cfc3fcfb5e258a980fcfdb056d482ddd999c89164a87699ec282aaceb20fc1
-    .github/hooks/common-github-actions-zizmor.json: sha256:d8b740d58d8047bb6a9c08caf0f44cba304a9b16ab22716a84fb71b22a384d58
+    .github/hooks/common-github-actions-actionlint.json: sha256:f6efc13b1cd9e4c421e99ea31096d75eb798a2582e0f671d1313c5a874db8764
+    .github/hooks/common-github-actions-ghalint.json: sha256:9af22a863c4e2b6716d67290d711c9689d2fb8c0d5a9ce5981080b24747b8fd8
+    .github/hooks/common-github-actions-zizmor.json: sha256:a025bcdd8953ebe8ebca12b1459611394e7a8ed390105a1e53fb526a5a90a947
     .github/hooks/common-lean-ctx.json: sha256:e7850720c6989c31fedddf4b85595874a01cf7260f3d00264218ec1a94ddb244
-    .github/hooks/common-markdown-link-check.json: sha256:0a98e5db2405a7ca1ba7f1b4b6a511fe8e20d1ba73e8a30b659be9653aa64a83
-    .github/hooks/common-markdownlint-cli2.json: sha256:230752ff622e873b9235555f928b19329d6585f915922ab0f5b9aa7cbea8998f
+    .github/hooks/common-markdown-link-check.json: sha256:32ef4a1bcc5d47044a3f6415749007a8e57c35f7bba5c5c638dc07957dc3d418
+    .github/hooks/common-markdownlint-cli2.json: sha256:adaf3cd383f460a43e9b5f0a56f979e5d1188986546081578fde81a79832497d
     .github/instructions/agent-skills.instructions.md: sha256:c4d6fbf162ea92229232615e967c5e5d004bd8f442354b7c85ee6ecd45cfb557
     .github/instructions/github-actions-workflow.instructions.md: sha256:5585dd66938fcded0dcb7e860a87db7cad43a1817b08388a023ce7c912674621
     .github/instructions/instructions.instructions.md: sha256:d700d5d3f3af6caaebd92f99e02c1d066c3dad9bc9d031c4e25c3c5d2bebd850
@@ -43,7 +43,7 @@ dependencies:
   - .github/hooks/go-golangci-lint.json
   - .github/instructions/go.instructions.md
   deployed_file_hashes:
-    .github/hooks/go-golangci-lint.json: sha256:d4c9f216e8a2a2e759d8c91dddf3350eadff4fa1c996eb272ea2cd242fdd38df
+    .github/hooks/go-golangci-lint.json: sha256:1f65dfc843010a9f00233aee119930442c1950913a13a2920a806f306472abfa
     .github/instructions/go.instructions.md: sha256:e51bd95a7fb1cef5c32ab54a48cd354452d5c7da0acc7a622ea332ce01c137a2
   source: local
   local_path: ./.apm/packages/go
@@ -56,8 +56,8 @@ dependencies:
   - .github/hooks/shell-script-shfmt.json
   - .github/instructions/shell-script.instructions.md
   deployed_file_hashes:
-    .github/hooks/shell-script-shellcheck.json: sha256:ff115d34b40e1fc86d76dd7ce620e34ff344ec083038b922ebbd3c7ed3331fc5
-    .github/hooks/shell-script-shfmt.json: sha256:b7e686b4581c8b720783d9e40f03ac2a862f3869b02ef847803ed274a3d03b16
+    .github/hooks/shell-script-shellcheck.json: sha256:e251dd401c5a36c3e48977bd715eaa3c72ad1f6dc9a336ac4da30676ca6ec74c
+    .github/hooks/shell-script-shfmt.json: sha256:aefd8ae25a199894a8a95d1eef00d089e7e94c58d6086caa4aac666d2f2c30a9
     .github/instructions/shell-script.instructions.md: sha256:7cffbe5657c7441b6f542cc8231777cf615217e543298952ed0bf360e4094815
   source: local
   local_path: ./.apm/packages/shell-script

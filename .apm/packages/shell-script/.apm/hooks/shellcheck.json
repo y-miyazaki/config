@@ -3,7 +3,7 @@
     "postToolUse": [
       {
         "type": "command",
-        "bash": "command -v shellcheck >/dev/null 2>&1 || exit 0; root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; cd \"$root\" || exit 0; tmp_list=$(mktemp /tmp/shellcheck-files-XXXXXX) || exit 0; trap 'rm -f \"$tmp_list\"' EXIT HUP INT TERM; { git diff --name-only --diff-filter=ACMR -- \"*.sh\"; git diff --cached --name-only --diff-filter=ACMR -- \"*.sh\"; git ls-files --others --exclude-standard -- \"*.sh\"; } | awk \"NF\" | sort -u > \"$tmp_list\"; if [ ! -s \"$tmp_list\" ]; then exit 0; fi; if ! xargs shellcheck -x < \"$tmp_list\"; then exit 2; fi",
+        "bash": "command -v shellcheck >/dev/null 2>&1 || exit 0; root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; cd \"$root\" || exit 0; files=$( { git diff --name-only --diff-filter=ACMR -- '*.sh' 2>/dev/null; git diff --cached --name-only --diff-filter=ACMR -- '*.sh' 2>/dev/null; git ls-files --others --exclude-standard -- '*.sh' 2>/dev/null; } | awk 'NF' | sort -u ); if [ -n \"$files\" ]; then echo \"$files\" | xargs shellcheck -x || exit 2; fi",
         "timeoutSec": 120
       }
     ]
