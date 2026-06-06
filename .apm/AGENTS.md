@@ -12,6 +12,13 @@ Project-scoped operating rules for files under `.apm/`.
 - Manage agent assets through APM package sources under `.apm/packages/**`.
 - Reflect changes to consumers by running `apm install`; do not rely on manual copy operations.
 
+## Hook Policy
+
+- Keep hook definitions and their runtime constraints with the package source under `.apm/packages/**`.
+- Use POSIX sh-compatible command bodies in hook JSON so they work under `/bin/sh` as well as Bash-like launchers.
+- Keep hook output unmodified when the purpose is validation, and return `exit 2` for validation failures.
+- Use `.apm/AGENTS.md` for repository-wide policy, not for per-hook implementation details.
+
 ## Direct-Edit Restrictions
 
 - Do not directly operate deployed target directories such as `.agents/`, `.github/hooks/`, .`.github/instructions` deployment paths in consumer repositories.

@@ -3,7 +3,7 @@
     "postToolUse": [
       {
         "type": "command",
-        "bash": "bash -lc 'command -v golangci-lint >/dev/null 2>&1 || exit 0; root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; cd \"$root\" || exit 0; mapfile -t files < <({ git diff --name-only --diff-filter=ACMR -- \"*.go\"; git diff --cached --name-only --diff-filter=ACMR -- \"*.go\"; git ls-files --others --exclude-standard -- \"*.go\"; } | awk \"NF\" | sort -u); [[ ${#files[@]} -eq 0 ]] && exit 0; golangci-lint run --fix \"${files[@]}\"'",
+        "bash": "command -v golangci-lint >/dev/null 2>&1 || exit 0; root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; cd \"$root\" || exit 0; tmp_list=$(mktemp /tmp/golangci-lint-files-XXXXXX) || exit 0; tmp_dirs=$(mktemp /tmp/golangci-lint-dirs-XXXXXX) || exit 0; trap 'rm -f \"$tmp_list\" \"$tmp_dirs\"' EXIT HUP INT TERM; { git diff --name-only --diff-filter=ACMR -- \"*.go\"; git diff --cached --name-only --diff-filter=ACMR -- \"*.go\"; git ls-files --others --exclude-standard -- \"*.go\"; } | awk \"NF\" | sort -u > \"$tmp_list\"; if [ ! -s \"$tmp_list\" ]; then exit 0; fi; while IFS= read -r f; do dirname \"$f\"; done < \"$tmp_list\" | sort -u > \"$tmp_dirs\"; fails=0; while IFS= read -r dir; do [ -d \"$dir\" ] || continue; if ! golangci-lint run --fix --issues-exit-code 2 \"./$(echo \"$dir\" | sed 's|^\\./||')/...\"; then fails=$((fails + 1)); fi; done < \"$tmp_dirs\"; if [ \"$fails\" -gt 0 ]; then exit 2; fi",
         "timeoutSec": 120
       }
     ]
