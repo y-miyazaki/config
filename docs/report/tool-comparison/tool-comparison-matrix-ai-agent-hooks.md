@@ -61,14 +61,12 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 
 ### Guidelines
 
-**→ Claude Code が最もイベント種別が豊富。Antigravity は PreInvocation/PostInvocation で Model 呼び出し前後にステップ注入が可能。**
+**→ どのイベントが存在するかの比較。各イベントで何ができるかは Response Matrix を参照。**
 
-- Stop hook は全 5 ツールでサポートされ、lint/test による修正ループの起点になる
-- Antigravity の Stop は `{"decision":"continue","reason":"..."}` で agent に継続を強制する（他ツールの `"block"` に相当）
-- Antigravity は PreInvocation の `injectSteps` で ephemeralMessage / userMessage / toolCall を注入可能（PostToolUse では出力不可）
-- PreToolUse は破壊的コマンドのブロックに全ツールで活用可能
-- PostToolUse は Claude Code / GitHub Copilot で `additionalContext` 活用可能。Antigravity は `{}` のみ返却
-- Cursor は独自イベント名を使い、他 4 ツールと互換性が低い。対応関係: `beforeShellExecution` / `beforeMCPExecution` / `beforeReadFile` = PreToolUse、`afterFileEdit` = PostToolUse、`stop` = Stop
+- Claude Code が最もイベント種別が豊富（20種以上）。細かいライフサイクル制御が可能
+- Antigravity は PreInvocation / PostInvocation で Model 呼び出し前後へのステップ注入ポイントを持つ（他ツールにない独自イベント）
+- Stop / PreToolUse / PostToolUse は全 5 ツールで存在し、互換 hook スクリプトの共通基盤になる
+- Cursor は独自イベント名を使う。対応関係: `beforeShellExecution` / `beforeMCPExecution` / `beforeReadFile` = PreToolUse、`afterFileEdit` = PostToolUse、`stop` = Stop
 - ※1: Antigravity の PostToolUse は観測専用。stdout は `{}` のみ。agent へのフィードバックには PreInvocation を使用する
 
 ## Response Matrix (Stop / agentStop)
