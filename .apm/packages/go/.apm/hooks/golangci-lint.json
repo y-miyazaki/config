@@ -1,9 +1,9 @@
 {
   "hooks": {
-    "postToolUse": [
+    "agentStop": [
       {
         "type": "command",
-        "bash": "command -v golangci-lint >/dev/null 2>&1 || exit 0; root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; cd \"$root\" || exit 0; dirs=$( { git diff --name-only --diff-filter=ACMR -- '*.go' 2>/dev/null; git diff --cached --name-only --diff-filter=ACMR -- '*.go' 2>/dev/null; git ls-files --others --exclude-standard -- '*.go' 2>/dev/null; } | awk 'NF' | xargs -I{} dirname {} | sort -u ); if [ -z \"$dirs\" ]; then exit 0; fi; fails=0; for dir in $dirs; do [ -d \"$dir\" ] || continue; golangci-lint run --fix --issues-exit-code 2 \"./$(echo \"$dir\" | sed 's|^\\./||')/...\" || fails=$((fails + 1)); done; if [ \"$fails\" -gt 0 ]; then exit 2; fi",
+        "bash": "./scripts/golangci_lint.sh",
         "timeoutSec": 120
       }
     ]

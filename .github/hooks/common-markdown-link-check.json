@@ -1,9 +1,9 @@
 {
   "hooks": {
-    "postToolUse": [
+    "agentStop": [
       {
         "type": "command",
-        "bash": "command -v markdown-link-check >/dev/null 2>&1 || exit 0; root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; cd \"$root\" || exit 0; files=$( { git diff --name-only --diff-filter=ACMR -- '*.md' 2>/dev/null; git diff --cached --name-only --diff-filter=ACMR -- '*.md' 2>/dev/null; git ls-files --others --exclude-standard -- '*.md' 2>/dev/null; } | awk 'NF' | sort -u ); if [ -z \"$files\" ]; then exit 0; fi; fails=0; for file in $files; do markdown-link-check \"$file\" || fails=$((fails + 1)); done; if [ \"$fails\" -gt 0 ]; then exit 2; fi",
+        "bash": ".github/hooks/scripts/common/scripts/markdown_link_check.sh",
         "timeoutSec": 240
       }
     ]

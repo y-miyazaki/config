@@ -1,9 +1,9 @@
 {
   "hooks": {
-    "postToolUse": [
+    "agentStop": [
       {
         "type": "command",
-        "bash": "command -v ghalint >/dev/null 2>&1 || exit 0; root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0; cd \"$root\" || exit 0; files=$( { git diff --name-only --diff-filter=ACMR -- .github/workflows/*.yml .github/workflows/*.yaml 2>/dev/null; git diff --cached --name-only --diff-filter=ACMR -- .github/workflows/*.yml .github/workflows/*.yaml 2>/dev/null; git ls-files --others --exclude-standard -- .github/workflows/*.yml .github/workflows/*.yaml 2>/dev/null; } | awk 'NF' | sort -u ); if [ -n \"$files\" ]; then ghalint run || exit 2; fi",
+        "bash": "./scripts/ghalint.sh",
         "timeoutSec": 60
       }
     ]

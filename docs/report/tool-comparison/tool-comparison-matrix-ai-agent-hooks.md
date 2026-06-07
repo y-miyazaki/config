@@ -18,12 +18,19 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 - [Event Matrix](#event-matrix)
   - [Guidelines](#guidelines)
 - [Response Matrix (Stop / agentStop)](#response-matrix-stop--agentstop)
+  - [Stop stdout JSON Format](#stop-stdout-json-format)
   - [Guidelines](#guidelines-1)
 - [Response Matrix (PostToolUse)](#response-matrix-posttooluse)
+  - [PostToolUse stdout JSON Format](#posttooluse-stdout-json-format)
   - [Guidelines](#guidelines-2)
 - [Stop Block Decision: 実装パターン](#stop-block-decision-実装パターン)
-  - [Guidelines](#guidelines-3)
+  - [設計方針](#設計方針)
+  - [判定フロー](#判定フロー)
+  - [Agent 判定の優先順位](#agent-判定の優先順位)
+  - [Agent 別レスポンス仕様](#agent-別レスポンス仕様)
+  - [制約事項](#制約事項)
 - [必須評価軸 (MUST) 判定](#必須評価軸-must-判定)
+- [.apm パッケージでの Hook イベント選定](#apm-パッケージでの-hook-イベント選定)
 - [補足](#補足)
 
 ## Event Matrix
@@ -31,23 +38,22 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 | イベント             | Kiro              | Claude Code           | GitHub Copilot        | Cursor                | Antigravity           |
 | -------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- |
 | 提供元               | AWS                   | Anthropic             | GitHub (Microsoft)    | Anysphere             | Google DeepMind       |
-| ドキュメント         | [kiro.dev](https://kiro.dev/docs/cli/hooks/) | [docs.claude.com](https://docs.claude.com/en/docs/claude-code/hooks) | [docs.github.com](https://docs.github.com/en/copilot/reference/hooks-reference) | [cursor.com](https://docs.cursor.com/more/hooks) | [geminicli.com](https://geminicli.com/docs/hooks/reference/) |
-| Session Start        | ❌                     | ✅ SessionStart        | ✅ sessionStart        | ❌                     | ✅ SessionStart        |
-| User Prompt Submit   | ✅ userPromptSubmit    | ✅ UserPromptSubmit    | ✅ userPromptSubmitted | ❌                     | ✅ BeforeAgent         |
-| Pre Tool Use         | ✅ preToolUse          | ✅ PreToolUse          | ✅ preToolUse          | ✅ (beforeShellExecution等) | ✅ BeforeTool     |
-| Post Tool Use        | ✅ postToolUse         | ✅ PostToolUse         | ✅ postToolUse         | ✅ afterFileEdit        | ✅ AfterTool          |
-| Post Tool Failure    | ❌                     | ✅ PostToolUseFailure  | ✅ postToolUseFailure  | ❌                     | ❌                     |
-| Agent Stop           | ✅ stop                | ✅ Stop                | ✅ agentStop           | ✅ stop                 | ✅ AfterAgent          |
+| ドキュメント         | [kiro.dev](https://kiro.dev/docs/cli/hooks/) | [docs.claude.com](https://docs.claude.com/en/docs/claude-code/hooks) | [docs.github.com](https://docs.github.com/en/copilot/reference/hooks-reference) | [cursor.com](https://docs.cursor.com/more/hooks) | [antigravity.google](https://antigravity.google/docs/hooks) |
+| Session Start        | ❌                     | ✅ SessionStart        | ✅ sessionStart        | ❌                     | ❌                     |
+| User Prompt Submit   | ✅ userPromptSubmit    | ✅ UserPromptSubmit    | ✅ userPromptSubmitted | ❌                     | ❌                     |
+| Pre Tool Use         | ✅ preToolUse          | ✅ PreToolUse          | ✅ preToolUse          | ✅ (beforeShellExecution等) | ✅ PreToolUse     |
+| Post Tool Use        | ✅ postToolUse         | ✅ PostToolUse         | ✅ postToolUse         | ✅ afterFileEdit        | ✅ PostToolUse (出力は `{}` のみ) |
+| Post Tool Failure    | ❌                     | ✅ PostToolUseFailure  | ✅ postToolUseFailure  | ❌                     | ❌ (PostToolUse の `error` で判別) |
+| Agent Stop           | ✅ stop                | ✅ Stop                | ✅ agentStop           | ✅ stop                 | ✅ Stop                |
+| Pre Model Call       | ❌                     | ❌                     | ❌                     | ❌                     | ✅ PreInvocation       |
+| Post Model Call      | ❌                     | ❌                     | ❌                     | ❌                     | ✅ PostInvocation      |
 | Agent Spawn          | ✅ agentSpawn          | ✅ SubagentStart       | ✅ subagentStart       | ❌                     | ❌                     |
 | Subagent Stop        | ❌                     | ✅ SubagentStop        | ✅ subagentStop        | ❌                     | ❌                     |
-| Session End          | ❌                     | ✅ SessionEnd          | ✅ sessionEnd          | ❌                     | ✅ SessionEnd          |
+| Session End          | ❌                     | ✅ SessionEnd          | ✅ sessionEnd          | ❌                     | ❌                     |
 | Error Occurred       | ❌                     | ❌                     | ✅ errorOccurred       | ❌                     | ❌                     |
-| Notification         | ❌                     | ✅ Notification        | ✅ notification        | ❌                     | ✅ Notification        |
+| Notification         | ❌                     | ✅ Notification        | ✅ notification        | ❌                     | ❌                     |
 | Permission Request   | ❌                     | ✅ PermissionRequest   | ✅ permissionRequest   | ❌                     | ❌                     |
-| Compact (Pre/Post)   | ❌                     | ✅ PreCompact/PostCompact | ❌                  | ❌                     | ✅ PreCompress         |
-| Before Model         | ❌                     | ❌                     | ❌                     | ❌                     | ✅ BeforeModel         |
-| After Model          | ❌                     | ❌                     | ❌                     | ❌                     | ✅ AfterModel          |
-| Before Tool Selection | ❌                    | ❌                     | ❌                     | ❌                     | ✅ BeforeToolSelection |
+| Compact (Pre/Post)   | ❌                     | ✅ PreCompact/PostCompact | ❌                  | ❌                     | ❌                     |
 | File Changed         | ❌                     | ✅ FileChanged         | ❌                     | ❌                     | ❌                     |
 | Config Change        | ❌                     | ✅ ConfigChange        | ❌                     | ❌                     | ❌                     |
 | Task Created/Completed | ❌                   | ✅ TaskCreated/Completed | ❌                  | ❌                     | ❌                     |
@@ -55,118 +61,203 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 
 ### Guidelines
 
-**→ Claude Code が最もイベント種別が豊富。Antigravity は Model hooks (BeforeModel/AfterModel/BeforeToolSelection) を独自に持ち、LLM リクエスト自体を制御可能。**
+**→ Claude Code が最もイベント種別が豊富。Antigravity は PreInvocation/PostInvocation で Model 呼び出し前後にステップ注入が可能。**
 
 - Stop hook は全 5 ツールでサポートされ、lint/test による修正ループの起点になる
-- Antigravity の AfterAgent が他ツールの Stop に相当する。`decision: "deny"` + `reason` でリトライを強制する
-- Antigravity は BeforeModel/AfterModel でモデルリクエスト・レスポンスの直接改変が可能（他ツールにない独自機能）
-- PreToolUse / BeforeTool は破壊的コマンドのブロックに全ツールで活用可能
-- PostToolUse / AfterTool はフォーマッタ/リンター自動実行に全ツールで活用可能
+- Antigravity の Stop は `{"decision":"continue","reason":"..."}` で agent に継続を強制する（他ツールの `"block"` に相当）
+- Antigravity は PreInvocation の `injectSteps` で ephemeralMessage / userMessage / toolCall を注入可能（PostToolUse では出力不可）
+- PreToolUse は破壊的コマンドのブロックに全ツールで活用可能
+- PostToolUse は Claude Code / GitHub Copilot で `additionalContext` 活用可能。Antigravity は `{}` のみ返却
 - Cursor は独自イベント名を使い、他 4 ツールと互換性が低い
 
 ## Response Matrix (Stop / agentStop)
 
 | 項目                     | Kiro                  | Claude Code                    | GitHub Copilot               | Cursor          | Antigravity              |
 | ------------------------ | ------------------------- | ------------------------------ | ---------------------------- | --------------- | ------------------------ |
-| イベント名               | `stop`                    | `Stop`                         | `agentStop` / `Stop`         | `stop`          | `AfterAgent`             |
-| Block 方式 (推奨)        | exit 0 + JSON             | exit 2 (stderr) **または** exit 0 + JSON | exit 0 + JSON                | exit 2 のみ     | exit 0 + JSON **または** exit 2 |
-| Block JSON               | `{"decision":"block","reason":"..."}` | `{"decision":"block","reason":"..."}` | `{"decision":"block","reason":"..."}` | N/A             | `{"decision":"deny","reason":"..."}` |
-| exit 2 の効果            | ユーザーに警告表示のみ    | agent 停止を防止 + stderr が agent へ | ユーザーに警告表示のみ       | agent 停止を防止 | リトライ強制 + stderr が agent へ |
+| イベント名               | `stop`                    | `Stop`                         | `agentStop` / `Stop`         | `stop`          | `Stop`                   |
+| Block 方式 (推奨)        | exit 0 + JSON             | exit 2 (stderr) **または** exit 0 + JSON | exit 0 + JSON                | exit 2 のみ     | exit 0 + JSON            |
+| Block JSON               | `{"decision":"block","reason":"..."}` | `{"decision":"block","reason":"..."}` | `{"decision":"block","reason":"..."}` | N/A             | `{"decision":"continue","reason":"..."}` |
+| exit 2 の効果            | ユーザーに警告表示のみ    | agent 停止を防止 + stderr が agent へ | ユーザーに警告表示のみ       | agent 停止を防止 | 不明                     |
 | exit 0 (JSON無し) の効果 | agent 通常停止            | agent 通常停止                 | agent 通常停止               | agent 通常停止  | agent 通常停止           |
-| reason の扱い            | 新しいユーザーメッセージとして agent に送信 | agent のコンテキストに追加 | 新しいプロンプトとして agent に送信 | stderr が agent へ | agent へ新しいプロンプトとして送信（リトライ） |
+| reason の扱い            | 新しいユーザーメッセージとして agent に送信 | agent のコンテキストに追加 | 新しいプロンプトとして agent に送信 | stderr が agent へ | system message として会話に注入 |
+| **ユーザーへの表示**     | ❌ (表示なし)              | ❌ (表示なし)                   | ❌ (表示なし)                 | ✅ (stderr 表示) | ❌ (表示なし)             |
+| **agent コンテキスト注入** | ✅ reason がコンテキストに入る | ✅ reason がコンテキストに入る | ✅ reason がコンテキストに入る | ✅ stderr がコンテキストに入る | ✅ reason がコンテキストに入る |
+| **agent が修正アクションを実行** | ✅ 次ターンで reason に基づき行動 | ✅ 次ターンで reason に基づき行動 | ✅ 次ターンで reason に基づき行動 | ✅ 次ターンで修正行動 | ✅ 次ターンで reason に基づき行動 |
 | additionalContext        | ❌                         | ✅ `hookSpecificOutput.additionalContext` | ❌                           | ❌               | ❌                        |
-| clearContext             | ❌                         | ❌                              | ❌                            | ❌               | ✅ `hookSpecificOutput.clearContext` |
-| stdin (入力)             | JSON (`hook_event_name`, `session_id`, `cwd`, `assistant_response`) | JSON (`hook_event_name`, `session_id`, `cwd`, `transcript_path`, `stop_hook_active`, `last_assistant_message`) | JSON (`hook_event_name`, `session_id`, `cwd`, `transcriptPath`, `stopReason`) | なし | JSON (`hook_event_name`, `session_id`, `cwd`, `prompt`, `prompt_response`, `stop_hook_active`) |
+| clearContext             | ❌                         | ❌                              | ❌                            | ❌               | ❌                        |
+| stdin (入力)             | JSON (`hook_event_name`, `session_id`, `cwd`, `assistant_response`) | JSON (`hook_event_name`, `session_id`, `cwd`, `transcript_path`, `stop_hook_active`, `last_assistant_message`) | JSON (`hook_event_name`, `session_id`, `cwd`, `transcriptPath`, `stopReason`) | なし | JSON (`executionNum`, `terminationReason`, `error`, `fullyIdle`, `conversationId`, `workspacePaths`) |
 | 連続ブロック上限         | 不明                      | 8 回                           | ジョブタイムアウトに依存     | 不明            | 不明                     |
 | JSON 生成要件            | 有効な JSON 必須 (jq 推奨) | 有効な JSON 必須               | 有効な JSON 必須             | N/A             | 有効な JSON 必須          |
 
+### Stop stdout JSON Format
+
+**Kiro CLI** (`stop`):
+
+```json
+{"decision": "block", "reason": "修正すべき内容"}
+```
+
+**Claude Code** (`Stop`) — block decision:
+
+```json
+{"decision": "block", "reason": "修正すべき内容"}
+```
+
+**Claude Code** (`Stop`) — additionalContext (非エラーフィードバック):
+
+```json
+{
+  "hookSpecificOutput": {
+    "hookEventName": "Stop",
+    "additionalContext": "テスト実行してから完了してください"
+  }
+}
+```
+
+**GitHub Copilot** (`agentStop`):
+
+```json
+{"decision": "block", "reason": "修正すべき内容"}
+```
+
+**Antigravity** (`Stop`):
+
+```json
+{"decision": "continue", "reason": "修正すべき内容"}
+```
+
 ### Guidelines
 
-**→ 互換スクリプトを書くには stdin の `hook_event_name` で分岐し、Stop 系なら JSON、それ以外なら exit 2 を返す。**
+**→ Stop hook は全 5 ツールで agent に修正を強制できる唯一のイベント。lint/test ゲートの第一選択。**
 
-- Kiro / GitHub Copilot は exit 0 + JSON が唯一のブロック手段。exit 2 では agent は止まるが修正ループに入らない
+- 全ツールで reason が agent のコンテキストに入り、次ターンで agent が修正アクションを実行する
+- Kiro / GitHub Copilot は exit 0 + JSON が唯一のブロック手段。exit 2 では警告表示のみで修正ループに入らない
 - Claude Code は exit 2 でも stderr が agent に届くため修正ループに入る。JSON 方式も併用可能
-- Antigravity は exit 2 でリトライ強制（stderr が agent へ）。JSON `{"decision":"deny","reason":"..."}` でも同等。`"deny"` を使う点が他と異なる
+- Antigravity は `"continue"` を使う。stdin に `terminationReason` があることで検出する
 - Cursor は JSON block decision を解釈しない。exit 2 + stderr が唯一の手段
-- JSON は `jq -n --arg reason "$reason" '{"decision":"block","reason":$reason}'` で生成し、改行文字のエスケープを保証する
-- Antigravity のみ `"block"` ではなく `"deny"` を使う。互換スクリプトでは hook_event_name で分岐する
+- JSON は `jq -n --arg` で生成し、改行文字のエスケープを保証する
 
 ## Response Matrix (PostToolUse)
 
 | 項目                       | Kiro        | Claude Code                                 | GitHub Copilot                   | Cursor          | Antigravity              |
 | -------------------------- | --------------- | ------------------------------------------- | -------------------------------- | --------------- | ------------------------ |
-| イベント名                 | `postToolUse`   | `PostToolUse`                               | `postToolUse`                    | `afterFileEdit` | `AfterTool`              |
-| exit 0 + stdout の効果     | STDOUT captured (非表示) | JSON output 処理                       | STDOUT captured (非表示)         | 不明            | JSON output 処理          |
-| exit 2 の効果              | STDERR をユーザーに警告 | STDERR を Claude に表示 (ツール実行済み) | STDERR をユーザーに警告          | agent にフィードバック | ツール結果を隠蔽 + stderr を代替結果として agent へ |
-| exit code で block 可能か  | ❌               | ❌ (ツール実行済み)                          | ❌ (ツール実行済み)               | ❌               | ⚠️ 結果の隠蔽のみ (実行は済み) |
-| additionalContext          | ❌               | ✅ `hookSpecificOutput.additionalContext`    | ✅ `additionalContext`           | ❌               | ✅ `hookSpecificOutput.additionalContext` |
-| modifiedResult / updatedToolOutput | ❌       | ✅ `hookSpecificOutput.updatedToolOutput`    | ✅ `modifiedResult`              | ❌               | ⚠️ `decision:"deny"` + `reason` で結果置換 |
-| tailToolCallRequest        | ❌               | ❌                                           | ❌                                | ❌               | ✅ `hookSpecificOutput.tailToolCallRequest` |
+| イベント名                 | `postToolUse`   | `PostToolUse`                               | `postToolUse`                    | `afterFileEdit` | `PostToolUse`            |
+| exit 0 + stdout の効果     | STDOUT captured (非表示) | JSON output 処理                       | STDOUT captured (非表示)         | 不明            | 出力は `{}` のみ (処理なし) |
+| exit 2 の効果              | STDERR をユーザーに警告 | STDERR を Claude に表示 (ツール実行済み) | STDERR をユーザーに警告          | agent にフィードバック | 不明                     |
+| exit code で block 可能か  | ❌               | ❌ (ツール実行済み)                          | ❌ (ツール実行済み)               | ❌               | ❌ (ツール実行済み)       |
+| **ユーザーへの表示**       | ⚠️ exit 2 時のみ警告表示 | ❌ (表示なし)                           | ⚠️ exit 2 時のみ警告表示         | 不明            | ❌                        |
+| **agent コンテキスト注入** | ❌               | ✅ additionalContext で注入                  | ✅ additionalContext で注入       | ✅ agent に渡る   | ❌ (出力不可)             |
+| **agent が修正アクションを実行** | ❌ (フィードバック手段なし) | ✅ 次ツール呼出し時に認識して対応 | ✅ 次ツール呼出し時に認識して対応 | ✅ 次ターンで対応 | ❌ (PostToolUse 単体では不可。Stop で対応) |
+| additionalContext          | ❌               | ✅ `hookSpecificOutput.additionalContext`    | ✅ `additionalContext`           | ❌               | ❌ (出力は `{}` のみ)     |
+| modifiedResult / updatedToolOutput | ❌       | ✅ `hookSpecificOutput.updatedToolOutput`    | ✅ `modifiedResult`              | ❌               | ❌                        |
+| tailToolCallRequest        | ❌               | ❌                                           | ❌                                | ❌               | ❌                        |
 | matcher (ツール名フィルタ) | ❌ (全ツール)    | ✅ (`"Edit\|Write"` 等)                       | ❌ (全ツール)                     | ❌ (ファイル編集のみ) | ✅ (正規表現対応) |
 
-### Guidelines
+### PostToolUse stdout JSON Format
 
-**→ PostToolUse はツール実行済みのため block できない。Context 注入でフィードバックする。**
+**Claude Code** (`PostToolUse`) — additionalContext:
 
-- Claude Code / GitHub Copilot / Antigravity は `additionalContext` で lint 結果等を agent のコンテキストに注入可能
-- Antigravity は `tailToolCallRequest` で別ツールを即座にチェーン実行可能（他ツールにない独自機能）
-- Antigravity は matcher に正規表現が使え、特定ツールだけにフックを限定しやすい
-- Kiro / Cursor は PostToolUse での agent フィードバック手段が限定的。Stop hook で補完する
-- フォーマッタのように「修正して終わり」の処理は PostToolUse で十分。agent に修正を依頼する場合は Stop hook を使う
-
-## Stop Block Decision: 実装パターン
-
-全 agent 互換の `report_failure` 関数パターン:
-
-```bash
-HOOK_STDIN_DATA=""
-if [[ ! -t 0 ]]; then
-    HOOK_STDIN_DATA=$(cat)
-fi
-
-function report_failure {
-    local reason="$1"
-    local hook_event=""
-
-    if [[ -n "$HOOK_STDIN_DATA" ]]; then
-        hook_event=$(echo "$HOOK_STDIN_DATA" | jq -r '.hook_event_name // .hookEventName // empty' 2> /dev/null || true)
-    fi
-
-    case "$hook_event" in
-        Stop | stop | agentStop | SubagentStop)
-            # Kiro / GitHub Copilot / Claude Code (JSON mode)
-            jq -n --arg reason "$reason" '{"decision": "block", "reason": $reason}'
-            exit 0
-            ;;
-        AfterAgent)
-            # Antigravity: "deny" でリトライ強制
-            jq -n --arg reason "$reason" '{"decision": "deny", "reason": $reason}'
-            exit 0
-            ;;
-        *)
-            # Claude Code (exit 2 mode) / Cursor / Antigravity (exit 2) / fallback
-            echo "$reason" >&2
-            exit 2
-            ;;
-    esac
+```json
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PostToolUse",
+    "additionalContext": "lint結果: エラー3件"
+  }
 }
 ```
 
-| 条件                              | 出力                              | Exit Code |
-| --------------------------------- | --------------------------------- | --------- |
-| stdin に `Stop` / `stop` / `agentStop` | `{"decision":"block","reason":"..."}` stdout | 0         |
-| stdin に `AfterAgent`             | `{"decision":"deny","reason":"..."}` stdout | 0         |
-| stdin なし / その他イベント       | reason を stderr                  | 2         |
+**Claude Code** (`PostToolUse`) — updatedToolOutput (結果置換):
+
+```json
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PostToolUse",
+    "updatedToolOutput": {
+      "stdout": "[redacted]",
+      "stderr": "",
+      "interrupted": false,
+      "isImage": false
+    }
+  }
+}
+```
+
+**GitHub Copilot** (`postToolUse`):
+
+```json
+{
+  "modifiedResult": {
+    "resultType": "success",
+    "textResultForLlm": "置換後のツール結果"
+  },
+  "additionalContext": "agent に伝えたい追加情報"
+}
+```
+
+**Antigravity** (`PostToolUse`) — 出力は空オブジェクトのみ:
+
+```json
+{}
+```
+
+※ Antigravity の PostToolUse は観測専用。agent へのフィードバックには PreInvocation の `injectSteps` を使用する:
+
+```json
+{
+  "injectSteps": [
+    {"ephemeralMessage": "lint結果: エラー3件。修正してください。"}
+  ]
+}
+```
 
 ### Guidelines
 
-**→ `report_failure` を各 hook スクリプトに埋め込み、reason だけ渡せば全 agent で動作する。**
+**→ PostToolUse は agent にフィードバックを渡せるツールが限定的。修正を強制するなら Stop hook を使う。**
 
-- apm 配布ではライブラリの自動コピーが非対応のため、スクリプト本体に関数を埋め込む
-- `jq` は有効な JSON 生成に必須。hook スクリプトの依存コマンドとして明記する
-- stdin の読み取りはスクリプト冒頭で 1 回だけ行う（パイプは 2 回読めないため）
-- Claude Code は Stop で exit 2 でも動作するが、JSON 方式に統一すると全ツール互換になる
-- Antigravity は `"deny"` を使うため `AfterAgent` の分岐が必要。`"block"` は認識されない
+- Claude Code / GitHub Copilot のみ `additionalContext` で agent のコンテキストに注入し、agent が認識して対応可能
+- Kiro / Antigravity は PostToolUse で agent にフィードバックを渡す手段がない
+- Antigravity は PreInvocation の `injectSteps` で補完する設計
+- フォーマッタのように「hook 内で修正して終わり」の処理は PostToolUse で十分（agent の行動不要）
+- agent に修正を依頼する場合は Stop hook を使うのが全ツール互換
+
+## Stop Block Decision: 実装パターン
+
+### 設計方針
+
+`report_failure` 関数を各 hook スクリプトに埋め込み、reason を渡すだけで全 agent に適切なレスポンスを返す。
+
+### 判定フロー
+
+1. **stdin キャプチャ**: スクリプト冒頭で stdin を 1 回だけ読み取る（パイプは 2 回読めない）
+2. **Agent 判定**: stdin の JSON 構造と環境変数から Agent を特定する（Agent ファースト戦略）
+3. **hook_event 取得**: Agent ごとに異なるフィールド名・ケーシングで取得する
+4. **Response 構築**: Agent と hook_event の組み合わせに応じた JSON を stdout に出力する
+
+### Agent 判定の優先順位
+
+| 優先度 | 判定条件 | Agent |
+| ------ | -------- | ----- |
+| 1 | `terminationReason` / `toolCall` フィールドあり | Antigravity |
+| 2 | `GITHUB_COPILOT_API_TOKEN` 環境変数あり、または `transcriptPath` / `stopReason` / `toolResult` 等の Copilot 固有フィールドあり | GitHub Copilot |
+| 3 | `hook_event_name` が camelCase の既知値 (`stop`, `postToolUse` 等) | Kiro CLI |
+| 4 | `hook_event_name` が PascalCase (上記で Copilot 除外済み) | Claude Code |
+| 5 | stdin 無し / 判定不可 | Cursor / fallback |
+
+### Agent 別レスポンス仕様
+
+| Agent | Stop イベント時の stdout | PostToolUse 時の stdout | fallback |
+|-------|--------------------------|-------------------------|----------|
+| Kiro CLI | `{"decision":"block","reason":"..."}` + exit 0 | exit 2 + stderr (agent に届かない) | exit 2 |
+| Claude Code | `{"decision":"block","reason":"..."}` + exit 0 | `{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":"..."}}` + exit 0 | exit 2 |
+| GitHub Copilot | `{"decision":"block","reason":"..."}` + exit 0 | `{"additionalContext":"..."}` + exit 0 | exit 2 |
+| Antigravity | `{"decision":"continue","reason":"..."}` + exit 0 | N/A (出力 `{}` のみ) | exit 0 |
+| Cursor / unknown | exit 2 + stderr | exit 2 + stderr | exit 2 |
+
+### 制約事項
+
+- `jq` は有効な JSON 生成に必須。hook スクリプトの依存コマンドとして扱う
+- apm 配布ではライブラリの自動コピーが非対応のため、関数はスクリプト本体に埋め込む
+- 実装の正は `.apm/packages/*/. apm/hooks/scripts/*.sh` のソースコードを参照する
 
 ## 必須評価軸 (MUST) 判定
 
@@ -181,13 +272,31 @@ function report_failure {
 | **加重平均**    | **2.5**  | **3.0**     | **2.8**        | **2.2** | **2.8**    |
 
 - Claude Code: イベント種別最多、decision control 最も柔軟、`additionalContext` 活用可。全評価軸で最高
-- Antigravity: Model hooks で LLM リクエスト自体を制御可能。AfterAgent でリトライ強制。BeforeToolSelection でツール制限も可能。Claude Code に次ぐ柔軟性
+- Antigravity: PreInvocation で `injectSteps` により ephemeralMessage 注入可能。Stop で `"continue"` による修正ループ構築可能。PostToolUse は観測専用
 - GitHub Copilot: Claude Code に次ぐイベント数。JSON block decision 対応で Stop ループ構築可能
 - Kiro: Stop hook の JSON block 対応で修正ループ構築可能。イベント種別は少ないが実用上十分
 - Cursor: JSON block decision 非対応。独自イベント名で互換性が低い。条件付き採用
 
+## .apm パッケージでの Hook イベント選定
+
+| 観点 | PostToolUse | Stop |
+|------|-------------|------|
+| agent が修正アクションを実行するか | Claude Code / Copilot のみ | ✅ 全ツール |
+| Kiro で agent にフィードバックが届くか | ❌ | ✅ |
+| Antigravity で agent にフィードバックが届くか | ❌ | ✅ |
+| 全ツール互換でスクリプト 1 本で動くか | ❌ (ツール間で出力形式が異なる) | ✅ (decision + reason で統一可) |
+| 実行タイミング | ツール実行直後（即時） | ターン完了時（まとめて） |
+| 適したユースケース | 自動フォーマット（agent 行動不要） | lint/test エラーの修正ループ |
+
+**→ .apm パッケージでは Stop hook を採用する。**
+
+- lint/test のエラーを検知して agent に修正させるユースケースでは、Stop が唯一の全ツール互換手段
+- PostToolUse は Kiro / Antigravity で agent にフィードバックが届かないため、修正ループに使えない
+- `report_failure` 関数で stdin の `hook_event_name` / `terminationReason` を判別し、全 agent に適切な JSON を返す設計とする
+
 ## 補足
 
 - Cursor の hooks 仕様は公式ドキュメントの情報が限定的であり、変更される可能性がある
-- Antigravity (旧 Gemini CLI) は 2026-06-18 に Gemini CLI から移行完了予定。hooks 仕様は Gemini CLI 時代から安定しており、設定パス (`~/.gemini/`) も互換性あり
+- Antigravity の hooks 仕様は [antigravity.google/docs/hooks](https://antigravity.google/docs/hooks) の正式仕様に基づく。旧 Gemini CLI ([geminicli.com](https://geminicli.com/docs/hooks/reference/)) とはイベント名・JSON形式が異なるため注意
+- Antigravity の PostToolUse は観測専用（出力 `{}` のみ）。agent へのフィードバックには PreInvocation の `injectSteps` または Stop の `{"decision":"continue","reason":"..."}` を使用する
 - 各ツールの hooks 仕様 URL は変更される可能性があるため、定期的に確認する
