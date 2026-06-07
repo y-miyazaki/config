@@ -1,6 +1,6 @@
 lockfile_version: '1'
-generated_at: '2026-06-07T08:50:46.950558+00:00'
-apm_version: 0.16.0
+generated_at: '2026-06-07T09:00:14.390872+00:00'
+apm_version: 0.14.0
 dependencies:
 - repo_url: _local/common
   package_type: apm_package
