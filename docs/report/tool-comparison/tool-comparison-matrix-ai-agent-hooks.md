@@ -256,7 +256,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 
 - `jq` は有効な JSON 生成に必須。hook スクリプトの依存コマンドとして扱う
 - apm 配布ではライブラリの自動コピーが非対応のため、関数はスクリプト本体に埋め込む
-- 実装の正は `.apm/packages/*/.apm/hooks/scripts/*.sh` のソースコードを参照する
+- 実装例は `.apm/packages/*/.apm/hooks/scripts/*.sh` を参照。仕様の正は本ドキュメントと各 Agent の公式仕様とする
 - 無限ループ対策: Claude Code は 8 回で自動停止するが、Kiro / Copilot / Antigravity は上限が不明。スクリプト側で環境変数や一時ファイルを用いた最大試行回数（例: カウンター制限）のセーフガード実装を推奨する
 
 ## 必須評価軸 (MUST) 判定
