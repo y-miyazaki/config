@@ -79,7 +79,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 | Block 方式 (推奨)        | exit 0 + JSON             | exit 2 (stderr) **または** exit 0 + JSON | exit 0 + JSON                | exit 2 のみ     | exit 0 + JSON            |
 | Block JSON               | `{"decision":"block","reason":"..."}` | `{"decision":"block","reason":"..."}` | `{"decision":"block","reason":"..."}` | N/A             | `{"decision":"continue","reason":"..."}` |
 | exit 2 の効果            | ユーザーに警告表示のみ    | agent 停止を防止 + stderr が agent へ | ユーザーに警告表示のみ       | agent 停止を防止 | hook 自体の失敗として扱われる（agent フィードバックなし） |
-| exit 0 (JSON無し) の効果 | agent 通常停止            | agent 通常停止                 | agent 通常停止               | agent 通常停止  | agent 通常停止           |
+| exit 0 (JSON無し) の効果 | agent 通常停止            | agent 通常停止                 | agent 通常停止               | 何もしない (処理完了)  | agent 通常停止           |
 | reason の扱い            | 新しいユーザーメッセージとして agent に送信 | agent のコンテキストに追加 | 新しいプロンプトとして agent に送信 | stderr が agent へ | system message として会話に注入 |
 | **ユーザーへの表示**     | ❌ (表示なし)              | ❌ (表示なし)                   | ❌ (表示なし)                 | ✅ (stderr 表示) | ❌ (表示なし)             |
 | **agent コンテキスト注入** | ✅ reason がコンテキストに入る | ✅ reason がコンテキストに入る | ✅ reason がコンテキストに入る | ✅ stderr がコンテキストに入る | ✅ reason がコンテキストに入る |
@@ -259,7 +259,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 - `jq` は有効な JSON 生成に必須。hook スクリプトの依存コマンドとして扱う
 - apm 配布ではライブラリの自動コピーが非対応のため、関数はスクリプト本体に埋め込む
 - 実装の正は `.apm/packages/*/.apm/hooks/scripts/*.sh` のソースコードを参照する
-- 無限ループ対策: Claude Code は 8 回で自動停止するが、Kiro / Copilot / Antigravity は上限が不明。CI 環境ではジョブタイムアウトに依存するため、スクリプト側でリトライカウンターや一時ファイルによるガードを検討し、コスト高騰を防止する
+- 無限ループ対策: Claude Code は 8 回で自動停止するが、Kiro / Copilot / Antigravity は上限が不明。スクリプト側で環境変数や一時ファイルを用いた最大試行回数（例: カウンター制限）のセーフガード実装を推奨する
 
 ## 必須評価軸 (MUST) 判定
 
