@@ -41,8 +41,8 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 | ドキュメント         | [kiro.dev](https://kiro.dev/docs/cli/hooks/) | [docs.claude.com](https://docs.claude.com/en/docs/claude-code/hooks) | [docs.github.com](https://docs.github.com/en/copilot/reference/hooks-reference) | [cursor.com](https://docs.cursor.com/more/hooks) | [antigravity.google](https://antigravity.google/docs/hooks) |
 | Session Start        | ❌                     | ✅ SessionStart        | ✅ sessionStart        | ❌                     | ❌                     |
 | User Prompt Submit   | ✅ userPromptSubmit    | ✅ UserPromptSubmit    | ✅ userPromptSubmitted | ❌                     | ❌                     |
-| Pre Tool Use         | ✅ preToolUse          | ✅ PreToolUse          | ✅ preToolUse          | ✅ (beforeShellExecution等) | ✅ PreToolUse     |
-| Post Tool Use        | ✅ postToolUse         | ✅ PostToolUse         | ✅ postToolUse         | ✅ afterFileEdit        | ✅ PostToolUse (出力は `{}` のみ) |
+| Pre Tool Use         | ✅ preToolUse          | ✅ PreToolUse          | ✅ preToolUse          | ✅ beforeShellExecution | ✅ PreToolUse          |
+| Post Tool Use        | ✅ postToolUse         | ✅ PostToolUse         | ✅ postToolUse         | ✅ afterFileEdit        | ✅ PostToolUse ※1     |
 | Post Tool Failure    | ❌                     | ✅ PostToolUseFailure  | ✅ postToolUseFailure  | ❌                     | ❌ (PostToolUse の `error` で判別) |
 | Agent Stop           | ✅ stop                | ✅ Stop                | ✅ agentStop           | ✅ stop                 | ✅ Stop                |
 | Pre Model Call       | ❌                     | ❌                     | ❌                     | ❌                     | ✅ PreInvocation       |
@@ -68,7 +68,8 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 - Antigravity は PreInvocation の `injectSteps` で ephemeralMessage / userMessage / toolCall を注入可能（PostToolUse では出力不可）
 - PreToolUse は破壊的コマンドのブロックに全ツールで活用可能
 - PostToolUse は Claude Code / GitHub Copilot で `additionalContext` 活用可能。Antigravity は `{}` のみ返却
-- Cursor は独自イベント名を使い、他 4 ツールと互換性が低い
+- Cursor は独自イベント名を使い、他 4 ツールと互換性が低い。対応関係: `beforeShellExecution` / `beforeMCPExecution` / `beforeReadFile` = PreToolUse、`afterFileEdit` = PostToolUse、`stop` = Stop
+- ※1: Antigravity の PostToolUse は観測専用。stdout は `{}` のみ。agent へのフィードバックには PreInvocation を使用する
 
 ## Response Matrix (Stop / agentStop)
 
@@ -77,7 +78,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 | イベント名               | `stop`                    | `Stop`                         | `agentStop` / `Stop`         | `stop`          | `Stop`                   |
 | Block 方式 (推奨)        | exit 0 + JSON             | exit 2 (stderr) **または** exit 0 + JSON | exit 0 + JSON                | exit 2 のみ     | exit 0 + JSON            |
 | Block JSON               | `{"decision":"block","reason":"..."}` | `{"decision":"block","reason":"..."}` | `{"decision":"block","reason":"..."}` | N/A             | `{"decision":"continue","reason":"..."}` |
-| exit 2 の効果            | ユーザーに警告表示のみ    | agent 停止を防止 + stderr が agent へ | ユーザーに警告表示のみ       | agent 停止を防止 | 不明                     |
+| exit 2 の効果            | ユーザーに警告表示のみ    | agent 停止を防止 + stderr が agent へ | ユーザーに警告表示のみ       | agent 停止を防止 | hook 自体の失敗として扱われる（agent フィードバックなし） |
 | exit 0 (JSON無し) の効果 | agent 通常停止            | agent 通常停止                 | agent 通常停止               | agent 通常停止  | agent 通常停止           |
 | reason の扱い            | 新しいユーザーメッセージとして agent に送信 | agent のコンテキストに追加 | 新しいプロンプトとして agent に送信 | stderr が agent へ | system message として会話に注入 |
 | **ユーザーへの表示**     | ❌ (表示なし)              | ❌ (表示なし)                   | ❌ (表示なし)                 | ✅ (stderr 表示) | ❌ (表示なし)             |
@@ -257,7 +258,8 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 
 - `jq` は有効な JSON 生成に必須。hook スクリプトの依存コマンドとして扱う
 - apm 配布ではライブラリの自動コピーが非対応のため、関数はスクリプト本体に埋め込む
-- 実装の正は `.apm/packages/*/. apm/hooks/scripts/*.sh` のソースコードを参照する
+- 実装の正は `.apm/packages/*/.apm/hooks/scripts/*.sh` のソースコードを参照する
+- 無限ループ対策: Claude Code は 8 回で自動停止するが、Kiro / Copilot / Antigravity は上限が不明。CI 環境ではジョブタイムアウトに依存するため、スクリプト側でリトライカウンターや一時ファイルによるガードを検討し、コスト高騰を防止する
 
 ## 必須評価軸 (MUST) 判定
 
