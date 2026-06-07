@@ -10,7 +10,7 @@
 # Design Rules:
 #   - Exit 0 if tool not found or no changed files (silent skip)
 #   - Call report_failure on format failure (agent-aware error signal)
-#   - Supports Kiro CLI, Claude Code, GitHub Copilot, Cursor, Antigravity
+#   - Supports Kiro CLI, Claude Code, Copilot CLI, Cursor, Antigravity, VS Code
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -92,9 +92,20 @@ function report_failure {
         elif echo "$HOOK_STDIN_DATA" | jq -e ".toolCall" > /dev/null 2>&1; then
             agent="antigravity"
 
-        # 2. GitHub Copilot (env var or Copilot-unique fields)
+        # 2. VS Code (stop_hook_active field existence is VS Code-specific)
+        elif echo "$HOOK_STDIN_DATA" | jq -e 'has("stop_hook_active") or has("tool_use_id")' > /dev/null 2>&1; then
+            agent="vscode"
+            if echo "$HOOK_STDIN_DATA" | jq -e ".hook_event_name" > /dev/null 2>&1; then
+                hook_event=$(echo "$HOOK_STDIN_DATA" | jq -r '.hook_event_name' 2> /dev/null)
+            elif echo "$HOOK_STDIN_DATA" | jq -e 'has("stop_hook_active")' > /dev/null 2>&1; then
+                hook_event="Stop"
+            elif echo "$HOOK_STDIN_DATA" | jq -e 'has("tool_use_id")' > /dev/null 2>&1; then
+                hook_event="PostToolUse"
+            fi
+
+        # 3. Copilot CLI (env var or Copilot-unique fields)
         elif [[ -n "${GITHUB_COPILOT_API_TOKEN:-}" ]] \
-            || echo "$HOOK_STDIN_DATA" | jq -e '.transcriptPath // .transcript_path // .stopReason // .stop_reason // .toolResult // .tool_result' > /dev/null 2>&1; then
+            || echo "$HOOK_STDIN_DATA" | jq -e '.transcriptPath // .stopReason // .stop_reason // .toolResult // .tool_result' > /dev/null 2>&1; then
             agent="copilot"
             if echo "$HOOK_STDIN_DATA" | jq -e ".hook_event_name" > /dev/null 2>&1; then
                 hook_event=$(echo "$HOOK_STDIN_DATA" | jq -r '.hook_event_name' 2> /dev/null)
@@ -106,13 +117,13 @@ function report_failure {
                 hook_event="preToolUse"
             fi
 
-        # 3. Kiro CLI (camelCase hook_event_name with known values)
+        # 4. Kiro CLI (camelCase hook_event_name with known values)
         elif echo "$HOOK_STDIN_DATA" | jq -e '.hook_event_name' > /dev/null 2>&1 \
             && echo "$HOOK_STDIN_DATA" | jq -r '.hook_event_name' 2> /dev/null | grep -qE '^(stop|postToolUse|preToolUse|agentSpawn|userPromptSubmit)$'; then
             agent="kiro"
             hook_event=$(echo "$HOOK_STDIN_DATA" | jq -r '.hook_event_name' 2> /dev/null)
 
-        # 4. Claude Code (remaining PascalCase hook_event_name)
+        # 5. Claude Code (remaining PascalCase hook_event_name)
         elif echo "$HOOK_STDIN_DATA" | jq -e ".hook_event_name" > /dev/null 2>&1; then
             agent="claude_code"
             hook_event=$(echo "$HOOK_STDIN_DATA" | jq -r '.hook_event_name' 2> /dev/null)
@@ -141,6 +152,18 @@ function report_failure {
                 exit 0
             elif [[ "$hook_event" == "PostToolUse" ]]; then
                 jq -n --arg ctx "$reason" '{hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $ctx}}'
+                exit 0
+            else
+                echo "$reason" >&2
+                exit 2
+            fi
+            ;;
+        vscode)
+            if [[ "$hook_event" == "Stop" ]]; then
+                jq -n --arg reason "$reason" '{hookSpecificOutput: {hookEventName: "Stop", decision: "block", reason: $reason}}'
+                exit 0
+            elif [[ "$hook_event" == "PostToolUse" ]]; then
+                jq -n --arg reason "$reason" '{decision: "block", reason: $reason, hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $reason}}'
                 exit 0
             else
                 echo "$reason" >&2
