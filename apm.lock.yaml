@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-06-08T06:21:37.531667+00:00'
+generated_at: '2026-06-08T06:49:20.385663+00:00'
 apm_version: 0.16.0
 dependencies:
 - repo_url: _local/common
@@ -39,9 +39,9 @@ dependencies:
     .github/hooks/scripts/common/scripts/markdown_link_check.sh: sha256:e2777627f8c36732928101919cd3be7dda34ba08877e3a4fc81d086b402e7a38
     .github/hooks/scripts/common/scripts/markdownlint_cli2.sh: sha256:8d7288d49b50f53deefecf6273e74dca9db131a8d7055d89d21c2e5305b1121d
     .github/hooks/scripts/common/scripts/zizmor.sh: sha256:f0f541d98759f7d287745a52fcf6cfd29335cfe3b4c1a299ee3b7f88bca8994b
-    .github/instructions/agent-skills.instructions.md: sha256:c4d6fbf162ea92229232615e967c5e5d004bd8f442354b7c85ee6ecd45cfb557
-    .github/instructions/github-actions-workflow.instructions.md: sha256:5585dd66938fcded0dcb7e860a87db7cad43a1817b08388a023ce7c912674621
-    .github/instructions/instructions.instructions.md: sha256:b302e78aedc0d12d3f9ff503f8393c9fb9878fecdf9cb29850887bc687498175
+    .github/instructions/agent-skills.instructions.md: sha256:ea9c6af427e4f927940924e32e307da7cb8bf265afa4b2f939eaa233dc451182
+    .github/instructions/github-actions-workflow.instructions.md: sha256:42ca9bd31449a6536a955dfb476f077fc0595f09298005d41c6a670330279002
+    .github/instructions/instructions.instructions.md: sha256:343784c153e77cae5eb1d031de4f11d07655c6bd91ae39da1773d4e97becfe60
     .github/instructions/markdown.instructions.md: sha256:fa7f8346e8c81c05854cb22ee86f3ac9e97a46127148db942c74f922f576a773
   source: local
   local_path: ./.apm/packages/common
