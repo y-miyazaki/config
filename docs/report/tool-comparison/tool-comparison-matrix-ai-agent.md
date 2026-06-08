@@ -3,6 +3,7 @@
 
 AI Agent / コーディングアシスタントに特化したツール選定の判断材料。
 
+<!-- omit in toc -->
 ## History
 
 | 日付       | 内容                                                                 |
@@ -16,7 +17,6 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 <!-- omit in toc -->
 ## Table of Contents
 
-- [History](#history)
 - [Coding Agent: Kiro vs Claude Code vs GitHub Copilot vs Cursor vs Antigravity](#coding-agent-kiro-vs-claude-code-vs-github-copilot-vs-cursor-vs-antigravity)
   - [Pricing](#pricing)
   - [Billing Model](#billing-model)

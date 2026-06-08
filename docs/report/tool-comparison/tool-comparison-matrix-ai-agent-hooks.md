@@ -5,6 +5,7 @@ AI Agent Hooks のイベント体系・レスポンス形式・Stop 制御方式
 
 Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-comparison-matrix-ai-agent.md#agent-hooks) を参照。本ドキュメントはイベント単位の詳細仕様に特化する。
 
+<!-- omit in toc -->
 ## History
 
 | 日付       | 内容                                                             |
@@ -14,7 +15,6 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 <!-- omit in toc -->
 ## Table of Contents
 
-- [History](#history)
 - [Event Matrix](#event-matrix)
   - [Guidelines](#guidelines)
 - [Response Matrix (Stop / agentStop)](#response-matrix-stop--agentstop)

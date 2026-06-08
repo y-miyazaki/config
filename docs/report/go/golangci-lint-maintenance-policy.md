@@ -1,9 +1,11 @@
 <!-- omit in toc -->
 # Golangci-lint Maintenance Workflow
 
+This document defines a future-facing workflow for maintaining `.golangci.yaml`.
+It is a policy for how to update, review, and validate linter configuration, not a changelog of past edits.
+
 <!-- omit in toc -->
 ## Table Of Contents
-- [Purpose](#purpose)
 - [Scope](#scope)
 - [Principles](#principles)
 - [Workflow](#workflow)
@@ -13,10 +15,6 @@
 - [Decision Rules](#decision-rules)
 - [Verification Gate](#verification-gate)
 - [Operational Notes](#operational-notes)
-
-## Purpose
-This document defines a future-facing workflow for maintaining `.golangci.yaml`.
-It is a policy for how to update, review, and validate linter configuration, not a changelog of past edits.
 
 ## Scope
 - Target file: `.golangci.yaml`

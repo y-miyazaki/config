@@ -3,6 +3,7 @@
 
 Go 開発に特化したツール選定の判断材料。
 
+<!-- omit in toc -->
 ## History
 
 | 日付       | 内容                                                                 |
@@ -13,7 +14,6 @@ Go 開発に特化したツール選定の判断材料。
 <!-- omit in toc -->
 ## Table of Contents
 
-- [History](#history)
 - [Formatter: gofumpt vs gofmt vs goimports](#formatter-gofumpt-vs-gofmt-vs-goimports)
   - [Guidelines](#guidelines)
 - [Linter: golangci-lint vs staticcheck vs go vet](#linter-golangci-lint-vs-staticcheck-vs-go-vet)

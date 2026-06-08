@@ -3,6 +3,7 @@
 
 メッセージング・キューサービスの選定判断材料。
 
+<!-- omit in toc -->
 ## History
 
 | 日付       | 内容     |
@@ -12,7 +13,6 @@
 <!-- omit in toc -->
 ## Table of Contents
 
-- [History](#history)
 - [Queue: SQS vs Kinesis Data Streams vs MSK (Kafka)](#queue-sqs-vs-kinesis-data-streams-vs-msk-kafka)
   - [Guidelines](#guidelines)
 - [Event Bus: EventBridge vs SNS vs SQS](#event-bus-eventbridge-vs-sns-vs-sqs)

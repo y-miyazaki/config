@@ -3,6 +3,7 @@
 
 ストレージ・マウントサービスの選定判断材料。S3、EFS、EBS 等を比較する。
 
+<!-- omit in toc -->
 ## History
 
 | 日付       | 内容     |
@@ -12,7 +13,6 @@
 <!-- omit in toc -->
 ## Table of Contents
 
-- [History](#history)
 - [Block / File / Object: EBS vs EFS vs S3](#block--file--object-ebs-vs-efs-vs-s3)
   - [Guidelines](#guidelines)
 - [File Storage: EFS vs S3 Files vs FSx for Lustre vs FSx for NetApp ONTAP](#file-storage-efs-vs-s3-files-vs-fsx-for-lustre-vs-fsx-for-netapp-ontap)

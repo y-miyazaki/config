@@ -3,6 +3,7 @@
 
 バッチ処理・ジョブ実行サービスの選定判断材料。
 
+<!-- omit in toc -->
 ## History
 
 | 日付       | 内容     |
@@ -12,7 +13,6 @@
 <!-- omit in toc -->
 ## Table of Contents
 
-- [History](#history)
 - [Batch Processing: AWS Batch vs ECS Scheduled Task vs Step Functions vs Lambda](#batch-processing-aws-batch-vs-ecs-scheduled-task-vs-step-functions-vs-lambda)
   - [Guidelines](#guidelines)
 - [Workflow Orchestration: Step Functions vs MWAA (Airflow) vs EventBridge Scheduler](#workflow-orchestration-step-functions-vs-mwaa-airflow-vs-eventbridge-scheduler)

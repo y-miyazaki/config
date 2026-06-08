@@ -5,6 +5,7 @@ AI ワークフロー / LLM 基盤ツール選定の判断材料。
 
 対象ツールはカテゴリが異なるため、用途別に分類して比較する。
 
+<!-- omit in toc -->
 ## History
 
 | 日付       | 内容                                                                                           |
@@ -14,7 +15,6 @@ AI ワークフロー / LLM 基盤ツール選定の判断材料。
 <!-- omit in toc -->
 ## Table of Contents
 
-- [History](#history)
 - [Workflow Automation: n8n vs Make.com vs Zapier vs Dify vs Windmill](#workflow-automation-n8n-vs-makecom-vs-zapier-vs-dify-vs-windmill)
   - [Pricing](#pricing)
   - [Guidelines](#guidelines)

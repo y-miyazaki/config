@@ -3,6 +3,7 @@
 
 ホスティング・コンピュートサービスの選定判断材料。EC2、コンテナ関連サービスを比較する。
 
+<!-- omit in toc -->
 ## History
 
 | 日付       | 内容     |
@@ -12,7 +13,6 @@
 <!-- omit in toc -->
 ## Table of Contents
 
-- [History](#history)
 - [Container Orchestration: ECS vs EKS vs App Runner](#container-orchestration-ecs-vs-eks-vs-app-runner)
   - [Guidelines](#guidelines)
 - [Compute Host: EC2 vs ECS on Fargate vs ECS on EC2 vs Lambda](#compute-host-ec2-vs-ecs-on-fargate-vs-ecs-on-ec2-vs-lambda)

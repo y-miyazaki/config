@@ -3,6 +3,7 @@
 
 データベースサービスの選定判断材料。RDS、DynamoDB、ElastiCache、DWH/分析基盤等を比較する。
 
+<!-- omit in toc -->
 ## History
 
 | 日付       | 内容     |
@@ -12,7 +13,6 @@
 <!-- omit in toc -->
 ## Table of Contents
 
-- [History](#history)
 - [RDB: RDS vs Aurora vs Aurora Serverless v2](#rdb-rds-vs-aurora-vs-aurora-serverless-v2)
   - [Guidelines](#guidelines)
 - [NoSQL: DynamoDB vs DocumentDB vs ElastiCache](#nosql-dynamodb-vs-documentdb-vs-elasticache)
@@ -21,7 +21,6 @@
   - [Guidelines](#guidelines-2)
 - [DWH / Analytics: Redshift vs Athena vs S3 + Glue](#dwh--analytics-redshift-vs-athena-vs-s3--glue)
   - [Guidelines](#guidelines-3)
-  - [Guidelines](#guidelines-2)
 
 ## RDB: RDS vs Aurora vs Aurora Serverless v2
 

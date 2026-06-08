@@ -1,19 +1,17 @@
 <!-- omit in toc -->
 # Linter and Review Boundary Policy
 
+This document defines the boundary policy for instructions and skills maintenance.
+It prevents duplicated review guidance when lint configuration already covers machine-detectable issues.
+
 <!-- omit in toc -->
 ## Table Of Contents
-- [Purpose](#purpose)
 - [Scope](#scope)
 - [Core Rule](#core-rule)
 - [Decision Criteria](#decision-criteria)
 - [Workflow for Instructions and Skills Updates](#workflow-for-instructions-and-skills-updates)
 - [Examples](#examples)
 - [Verification](#verification)
-
-## Purpose
-This document defines the boundary policy for instructions and skills maintenance.
-It prevents duplicated review guidance when lint configuration already covers machine-detectable issues.
 
 ## Scope
 - Applies to:

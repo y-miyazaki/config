@@ -3,6 +3,7 @@
 
 ツール選定時の判断材料として、カテゴリ別に比較を行う。
 
+<!-- omit in toc -->
 ## History
 
 | 日付       | 内容                                                                 |
@@ -32,7 +33,6 @@
 <!-- omit in toc -->
 ## Table of Contents
 
-- [History](#history)
 - [Dependency Updates: Renovate vs Dependabot](#dependency-updates-renovate-vs-dependabot)
   - [Guidelines](#guidelines)
 - [Version Management: aqua vs asdf vs mise](#version-management-aqua-vs-asdf-vs-mise)

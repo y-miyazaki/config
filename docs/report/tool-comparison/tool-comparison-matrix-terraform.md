@@ -3,6 +3,7 @@
 
 Terraform / IaC に特化したツール選定の判断材料。
 
+<!-- omit in toc -->
 ## History
 
 | 日付       | 内容                                                                 |
@@ -13,7 +14,6 @@ Terraform / IaC に特化したツール選定の判断材料。
 <!-- omit in toc -->
 ## Table of Contents
 
-- [History](#history)
 - [Lint / Security: tflint vs checkov vs tfsec](#lint--security-tflint-vs-checkov-vs-tfsec)
   - [Guidelines](#guidelines)
 - [IaC: Terraform vs OpenTofu vs Pulumi](#iac-terraform-vs-opentofu-vs-pulumi)

@@ -3,6 +3,7 @@
 
 AWS に特化したツール選定の判断材料。
 
+<!-- omit in toc -->
 ## History
 
 | 日付       | 内容                                                                 |
@@ -13,7 +14,6 @@ AWS に特化したツール選定の判断材料。
 <!-- omit in toc -->
 ## Table of Contents
 
-- [History](#history)
 - [ECS Deploy: ecspresso vs Copilot vs CDK](#ecs-deploy-ecspresso-vs-copilot-vs-cdk)
   - [Guidelines](#guidelines)
 - [Serverless: SAM vs Serverless Framework vs CloudFormation](#serverless-sam-vs-serverless-framework-vs-cloudformation)

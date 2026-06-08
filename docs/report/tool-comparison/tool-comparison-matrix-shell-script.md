@@ -3,6 +3,7 @@
 
 Shell Script に特化したツール選定の判断材料。
 
+<!-- omit in toc -->
 ## History
 
 | 日付       | 内容                                                                 |
@@ -13,7 +14,6 @@ Shell Script に特化したツール選定の判断材料。
 <!-- omit in toc -->
 ## Table of Contents
 
-- [History](#history)
 - [Format / Lint: shfmt + shellcheck vs beautysh](#format--lint-shfmt--shellcheck-vs-beautysh)
   - [Guidelines](#guidelines)
 
