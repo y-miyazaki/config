@@ -1,6 +1,0 @@
-{"timestamp":"2026-06-07T07:58:33.583Z","hook_event_name":"Stop","session_id":"0298fff3-e378-42ad-b96d-ade4365415f1","transcript_path":"/home/vscode/.vscode-server/data/User/workspaceStorage/bce66adbdbf439b842f7234635f9c6ed/GitHub.copilot-chat/transcripts/0298fff3-e378-42ad-b96d-ade4365415f1.jsonl","stop_hook_active":false,"cwd":"/workspace"}
-copilot
-{
-  "decision": "block",
-  "reason": "markdownlint-cli2 found issues that --fix could not resolve:\nmarkdownlint-cli2 v0.22.1 (markdownlint v0.40.0)\nFinding: docs/reference/specification.md docs/report/tool-comparison/tool-comparison-matrix-ai-agent-hooks.md **/*.md !*.yaml !*.yml !**/.copilot/** !**/.github/CODEOWNERS !**/.terraform/** !**/apm_modules/** !**/bower_components/** !**/credentials/** !**/modules/** !**/node_modules/** !**/output/** !**/prompts/** !**/secrets/** !**/tmp/** !**/vendor/**\nLinting: 432 file(s)\nSummary: 1 error(s)\ndocs/reference/specification.md:3 error MD001/heading-increment Heading levels should only increment by one level at a time [Expected: h2; Actual: h3]"
-}

@@ -45,6 +45,7 @@ _Research and comparison reports._
 - [tool-comparison-matrix.md](report/tool-comparison/tool-comparison-matrix.md) - Overall tool comparison matrix
 - [tool-comparison-evaluation-rules.md](report/tool-comparison/tool-comparison-evaluation-rules.md) - Shared evaluation rules for tool comparison
 - [tool-comparison-matrix-ai-agent.md](report/tool-comparison/tool-comparison-matrix-ai-agent.md) - AI agent tool comparison
+- [tool-comparison-matrix-ai-agent-hooks.md](report/tool-comparison/tool-comparison-matrix-ai-agent-hooks.md) - AI agent hooks tool comparison
 - [tool-comparison-matrix-ai-governance.md](report/tool-comparison/tool-comparison-matrix-ai-governance.md) - AI governance tool comparison
 - [tool-comparison-matrix-ai-workflow.md](report/tool-comparison/tool-comparison-matrix-ai-workflow.md) - AI workflow tool comparison
 - [tool-comparison-matrix-ai-mcp-server.md](report/tool-comparison/tool-comparison-matrix-ai-mcp-server.md) - MCP server tool comparison

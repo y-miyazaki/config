@@ -5,7 +5,7 @@ Shared configuration packages for AI agent tooling, GitHub Actions workflows, an
 
 This repository is a shared configuration repository. It is focused on practical usage and reuse of settings across projects.
 
-- Specifications for this repository are documented under [`docs/`](docs/), including repository structure in [`docs/specification.md`](docs/specification.md).
+- Specifications for this repository are documented under [`docs/`](docs/), including repository structure in [`docs/reference/specification.md`](docs/reference/specification.md).
 - Usage and installation steps are documented in this `README.md`.
 - AI agent-related configuration files are shared as APM packages.
 - Shared automation is provided through GitHub Actions workflows.
@@ -34,7 +34,7 @@ This repository is a shared configuration repository. It is focused on practical
 ## Documentation
 
 - Usage: this `README.md`
-- Specification and structure: [`docs/specification.md`](docs/specification.md)
+- Specification and structure: [`docs/reference/specification.md`](docs/reference/specification.md)
 - Documentation index: [`docs/index.md`](docs/index.md)
 
 ## APM
@@ -45,9 +45,9 @@ APM is used to share AI agent-related configuration files as packages. Each pack
 
 | Package       | Description                                | MCP Servers | Hooks | Instructions | Skills |
 | ------------- | ------------------------------------------ | ----------- | ----- | ------------ | ------ |
-| common        | Shared workflows, documentation, and tools | 6           | 2     | 4            | 7      |
+| common        | Shared workflows, documentation, and tools | 6           | 6     | 4            | 7      |
 | aws           | AWS development                            | 5           | 0     | 0            | 0      |
-| terraform     | Terraform development (cloud-agnostic)     | 1           | 3     | 1            | 2      |
+| terraform     | Terraform development (cloud-agnostic)     | 1           | 2     | 1            | 2      |
 | terraform-aws | Terraform + AWS integration                | 1           | 0     | 0            | 0      |
 | go            | Go development                             | 0           | 1     | 1            | 2      |
 | shell-script  | Shell script development                   | 0           | 2     | 1            | 2      |
@@ -72,16 +72,19 @@ APM is used to share AI agent-related configuration files as packages. Each pack
 
 ### Hooks
 
-| Package      | Hook               | Trigger      | Description                                  |
-| ------------ | ------------------ | ------------ | -------------------------------------------- |
-| common       | lean-ctx           | pre/postTool | Context observation and rewrite/redirect     |
-| common       | markdownlint-cli2  | postToolUse  | Auto-fix Markdown files with markdownlint    |
-| go           | golangci-lint      | postToolUse  | Auto-fix Go files with golangci-lint         |
-| terraform    | terraform-fmt      | postToolUse  | Run terraform fmt on changed files           |
-| terraform    | terraform-validate | postToolUse  | Run terraform validate on changed files      |
-| terraform    | tflint             | postToolUse  | Run tflint on changed files                  |
-| shell-script | shellcheck         | postToolUse  | Run shellcheck on changed shell scripts      |
-| shell-script | shfmt              | postToolUse  | Auto-format shell scripts with shfmt         |
+| Package      | Hook                      | Trigger          | Description                                  |
+| ------------ | ------------------------- | ---------------- | -------------------------------------------- |
+| common       | lean-ctx                  | preToolUse/postToolUse | Context observation and rewrite/redirect     |
+| common       | markdownlint-cli2         | agentStop        | Auto-fix Markdown files with markdownlint    |
+| common       | markdown-link-check       | agentStop        | Check Markdown links                         |
+| common       | github-actions-actionlint | agentStop        | Lint GitHub Actions workflows with actionlint |
+| common       | github-actions-ghalint    | agentStop        | Lint GitHub Actions workflows with ghalint   |
+| common       | github-actions-zizmor     | agentStop        | Security scan GitHub Actions with zizmor     |
+| go           | golangci-lint             | agentStop        | Auto-fix Go files with golangci-lint         |
+| terraform    | terraform-fmt             | postToolUse      | Run terraform fmt on changed files           |
+| terraform    | tflint                    | agentStop        | Run tflint on changed files                  |
+| shell-script | shellcheck                | agentStop        | Run shellcheck on changed shell scripts      |
+| shell-script | shfmt                     | agentStop        | Auto-format shell scripts with shfmt         |
 
 ### Skills
 

@@ -6,7 +6,7 @@ This document explains how instruction files are synchronized with review skill 
 
 ## Scope
 
-Applies to instruction files under `.apm/**/instructions/*.instructions.md` and review references under `.apm/**/skills/*-review/references/`.
+Applies to instruction files under `.apm/packages/*/.apm/instructions/*.instructions.md` and review references under `.apm/packages/*/.apm/skills/*-review/references/`.
 
 ## What Was Standardized
 
@@ -67,15 +67,15 @@ Recommended checks:
 
 ```bash
 # 1) Ensure chapter order and 5 H2 chapters
-for f in .apm/instructions/*.instructions.md; do
+for f in .apm/packages/*/.apm/instructions/*.instructions.md; do
   awk 'BEGIN{s=0;st=0;g=0;t=0;sec=0} /^## Scope$/{s=NR} /^## Standards$/{st=NR} /^## Guidelines$/{g=NR} /^## Testing and Validation$/{t=NR} /^## Security Guidelines$/{sec=NR} END{print FILENAME, (s<st && st<g && g<t && t<sec)?"OK":"NG"}' "$f"
 done
 
 # 2) Ensure no numbered Guidelines H3
-grep -nE '^### [0-9]+\.' .apm/instructions/*.instructions.md || true
+grep -nE '^### [0-9]+\.' .apm/packages/*/.apm/instructions/*.instructions.md || true
 
 # 3) Ensure Code Modification Guidelines exists in each file
-for f in .apm/instructions/*.instructions.md; do
+for f in .apm/packages/*/.apm/instructions/*.instructions.md; do
   grep -q '^### Code Modification Guidelines' "$f" || echo "Missing: $f"
 done
 ```
