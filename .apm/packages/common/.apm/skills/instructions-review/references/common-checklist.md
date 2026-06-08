@@ -41,9 +41,9 @@
 - COMP-03 (SHOULD): Real Commands
 
 ## Security Guidelines Chapter (SEC)
-- SEC-01 (MUST): Security Items
+- SEC-01 (MUST): Tool-Undetectable Risks Documented
 - SEC-02 (MUST): Secrets Management
-- SEC-03 (MUST): Best Practices
+- SEC-03 (MUST): Scope Limited to Document Safety
 - SEC-04 (SHOULD): Examples
 
 ## Standards Chapter (STD)

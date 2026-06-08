@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-06-08T06:01:02.954695+00:00'
+generated_at: '2026-06-08T06:21:37.531667+00:00'
 apm_version: 0.16.0
 dependencies:
 - repo_url: _local/common
@@ -41,8 +41,8 @@ dependencies:
     .github/hooks/scripts/common/scripts/zizmor.sh: sha256:f0f541d98759f7d287745a52fcf6cfd29335cfe3b4c1a299ee3b7f88bca8994b
     .github/instructions/agent-skills.instructions.md: sha256:c4d6fbf162ea92229232615e967c5e5d004bd8f442354b7c85ee6ecd45cfb557
     .github/instructions/github-actions-workflow.instructions.md: sha256:5585dd66938fcded0dcb7e860a87db7cad43a1817b08388a023ce7c912674621
-    .github/instructions/instructions.instructions.md: sha256:d700d5d3f3af6caaebd92f99e02c1d066c3dad9bc9d031c4e25c3c5d2bebd850
-    .github/instructions/markdown.instructions.md: sha256:c7237ac75c14400b44044bea7353dc0c48cc6c18ccd9199b930e9a6426014326
+    .github/instructions/instructions.instructions.md: sha256:b302e78aedc0d12d3f9ff503f8393c9fb9878fecdf9cb29850887bc687498175
+    .github/instructions/markdown.instructions.md: sha256:fa7f8346e8c81c05854cb22ee86f3ac9e97a46127148db942c74f922f576a773
   source: local
   local_path: ./.apm/packages/common
 - repo_url: _local/go

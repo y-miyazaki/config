@@ -114,12 +114,12 @@ description: "AI Assistant Instructions for Writing Instruction Files"
 
 ### Security Guidelines Chapter (SEC)
 
-- SEC-01 (MUST): Security Items
-  - Check: Security items are documented
+- SEC-01 (MUST): Tool-Undetectable Risks Documented
+  - Check: Are security practices that automated tools (gitleaks, detect-secrets) cannot detect documented (e.g., destructive command defaults, untrusted link sources)?
 - SEC-02 (MUST): Secrets Management
-  - Check: Secrets management policy is documented
-- SEC-03 (MUST): Best Practices
-  - Check: Concrete security best practices are documented
+  - Check: Is a policy against embedding secrets in instruction files documented?
+- SEC-03 (MUST): Scope Limited to Document Safety
+  - Check: Are security items limited to documentation-specific risks rather than duplicating what CI/pre-commit tools enforce?
 - SEC-04 (SHOULD): Examples
   - Check: YAML/code examples are included (where applicable)
 
