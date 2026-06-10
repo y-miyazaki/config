@@ -113,7 +113,7 @@ repos:
       - id: golangci-lint
         name: golangci-lint
         description: Fast linters runner for Go.
-        entry: golangci-lint run --max-same-issues=0 --max-issues-per-linter=0 --config=.golangci.yaml --fix
+        entry: golangci-lint run --max-same-issues=0 --max-issues-per-linter=0 --fix
         exclude: ^(.*_test.go|tmp/.*\.go)$
         language: system
         pass_filenames: false

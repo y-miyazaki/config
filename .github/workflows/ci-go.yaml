@@ -282,7 +282,7 @@ jobs:
           filter_mode: file
           github_token: ${{ github.token }}
           go_version: ${{ env.GO_VERSION }}
-          golangci_lint_flags: "--config=.golangci.yaml --new-from-rev=origin/${{ env.PR_BASE_REF }}"
+          golangci_lint_flags: "--new-from-rev=origin/${{ env.PR_BASE_REF }}"
           golangci_lint_version: ${{ env.GOLANGCI_LINT_VERSION }}
           level: error
           reporter: github-pr-review
@@ -292,7 +292,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: golangci/golangci-lint-action@82606bf257cbaff209d206a39f5134f0cfbfd2ee # v9.2.1
         with:
-          args: --config=.golangci.yaml --max-same-issues=0 --max-issues-per-linter=0
+          args: --max-same-issues=0 --max-issues-per-linter=0
           version: ${{ env.GOLANGCI_LINT_VERSION }}
           working-directory: ${{ env.GO_PROJECT_PATH }}
 

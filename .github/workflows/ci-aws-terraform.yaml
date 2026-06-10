@@ -43,6 +43,11 @@ on:
         description: "tfcmt (tfcmt) version to use for PR plan comments"
         required: false
         type: string
+      modules_path:
+        default: ""
+        description: "Path to modules directory for TFLint (empty to skip modules lint)"
+        required: false
+        type: string
       tflint_config_path:
         default: ""
         description: "TFLint config file path (default: auto-detect .tflint.hcl in terraform_path or repository root)"
@@ -84,6 +89,7 @@ env:
   COMPONENT: ${{ inputs.component }}
   DEPLOY: ${{ inputs.deploy }}
   ENVIRONMENT: ${{ inputs.environment }}
+  MODULES_PATH: ${{ inputs.modules_path }}
   PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
   PR_NUMBER: ${{ github.event.number }}
   TERRAFORM_PATH: ${{ inputs.terraform_path }}
@@ -270,7 +276,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          terraform -chdir="${TERRAFORM_PATH}" fmt -check -recursive
+          terraform fmt -check -recursive
 
       - name: Exec Terraform validate
         shell: bash
@@ -292,6 +298,10 @@ jobs:
           TFLINT_RESOLVED_CONFIG: ${{ steps.tflint-config.outputs.path }}
 
       - name: Exec TFLint
+        # Design: Execute per-directory with module-local .tflint.hcl priority,
+        # falling back to repository root .tflint.hcl. This matches the hooks
+        # (apm hook) config resolution strategy. pre-commit cannot implement
+        # this due to tool constraints and uses root config only.
         shell: bash
         run: |
           set -euo pipefail
@@ -303,11 +313,31 @@ jobs:
             echo "TFVARS file not found: ${TFVARS_FILE}" >&2
             exit 1
           fi
-          args=(-f compact --recursive --var-file="${tfvars_path}")
+
+          # Lint component directory (with var-file)
+          args=(-f compact --chdir "${TERRAFORM_PATH}" --var-file="${tfvars_path}")
           if [ -n "${TFLINT_RESOLVED_CONFIG}" ]; then
             args+=(--config "${TFLINT_RESOLVED_CONFIG}")
           fi
           tflint "${args[@]}"
+
+          # Lint modules directories (without var-file, module-local config priority)
+          if [ -n "${MODULES_PATH}" ] && [ -d "${MODULES_PATH}" ]; then
+            root_config="${TFLINT_RESOLVED_CONFIG}"
+            if [ -z "${root_config}" ] && [ -f ".tflint.hcl" ]; then
+              root_config="$(realpath ".tflint.hcl")"
+            fi
+            while IFS= read -r dir; do
+              module_args=(-f compact --chdir "$dir")
+              if [ -f "${dir}/.tflint.hcl" ]; then
+                module_args+=(--config "$(realpath "${dir}/.tflint.hcl")")
+              elif [ -n "${root_config}" ]; then
+                module_args+=(--config "${root_config}")
+              fi
+              tflint --init "${module_args[@]}" > /dev/null 2>&1 || true
+              tflint "${module_args[@]}"
+            done < <(find "${MODULES_PATH}" -name "*.tf" -exec dirname {} \; | sort -u)
+          fi
         env:
           GITHUB_TOKEN: ${{ github.token }}
           TFLINT_RESOLVED_CONFIG: ${{ steps.tflint-config.outputs.path }}
