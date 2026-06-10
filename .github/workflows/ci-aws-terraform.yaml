@@ -18,6 +18,11 @@ on:
         description: "Target environment (dev, qa, stg, prd, audit, root)"
         required: true
         type: string
+      modules_path:
+        default: ""
+        description: "Path to modules directory for TFLint (empty to skip modules lint)"
+        required: false
+        type: string
       terraform_path:
         description: "Path to terraform configuration"
         required: true
@@ -41,11 +46,6 @@ on:
       tfcmt_version:
         default: "4.14.13"
         description: "tfcmt (tfcmt) version to use for PR plan comments"
-        required: false
-        type: string
-      modules_path:
-        default: ""
-        description: "Path to modules directory for TFLint (empty to skip modules lint)"
         required: false
         type: string
       tflint_config_path:
