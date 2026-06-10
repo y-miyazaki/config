@@ -47,6 +47,7 @@ This section defines the intended update policy first, independent from implemen
 - Python: `python`
 - Terraform: `terraform`
 - tflint plugins: `tflint`
+- Cross-file grouped tools: `ecspresso`, `ecschedule`, `golangci-lint`, `goreleaser`, `terraform`, `tflint`, `trivy`, `zizmor`
 - Automerged updates: `automerge`
 - Baseline for dependency PRs: `dependencies`
 
@@ -96,7 +97,7 @@ To resolve this, you can configure `registryAliases` in each repository's `renov
   }
 }
 ```
-Reference: Verifying if minimumReleaseAge applies to images via ECR pull-through cache in Renovate (DevelopersIO)   
+Reference: Verifying if minimumReleaseAge applies to images via ECR pull-through cache in Renovate (DevelopersIO)  
 
 ### GitHub Actions (`github-actions` manager)
 
@@ -146,6 +147,28 @@ Reference: Verifying if minimumReleaseAge applies to images via ECR pull-through
 - Label updates with `tflint`
 - No automerge
 - Commit prefix: `renovate(tflint):`
+
+### Cross-File Grouping Rules
+
+Tools that appear in both GitHub Actions workflow inputs (`github-actions-tool-version.json`) and mise (`mise.toml`) are grouped into a single PR per tool using `groupName`. This avoids version drift between CI and local development environments.
+
+| Group | GitHub Actions input package | mise package |
+|---|---|---|
+| ecspresso | `kayac/ecspresso` | `aqua:kayac/ecspresso` |
+| ecschedule | `Songmu/ecschedule` | `aqua:Songmu/ecschedule` |
+| golangci-lint | `golangci/golangci-lint` | `aqua:golangci/golangci-lint` |
+| goreleaser | `goreleaser/goreleaser` | `aqua:goreleaser/goreleaser` |
+| terraform | `hashicorp/terraform` | `aqua:hashicorp/terraform` |
+| tflint | `terraform-linters/tflint` | `aqua:terraform-linters/tflint` |
+| trivy | `aquasecurity/trivy` | `aqua:aquasecurity/trivy` |
+| zizmor | `woodruffw/zizmor` | `aqua:zizmorcore/zizmor` |
+
+Each group rule sets:
+
+- `groupName`: tool name (used as the branch/PR title group identifier)
+- `matchPackageNames`: array of package names across managers
+- `commitMessagePrefix`: `renovate(<tool>):`
+- `addLabels`: tool-specific label
 
 ### Safe Update Types (cross-cutting)
 
