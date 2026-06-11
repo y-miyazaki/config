@@ -23,7 +23,7 @@ on:
         required: true
         type: string
       go_version:
-        default: "1.26.2"
+        default: "1.26.4"
         description: "Go version to use for setup-go and linting"
         required: false
         type: string
