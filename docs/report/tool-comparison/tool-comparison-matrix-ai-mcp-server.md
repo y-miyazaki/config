@@ -108,7 +108,7 @@ MCP Server の選定・比較の判断材料。
 
 **→ GitHub MCP + Context7 + Fetch を採用する。** GitHub MCP はPR/Issue操作に必須（`mcp-compressor` でラップ）。Context7 はAPIキー不要で最新ライブラリドキュメントを取得。Fetch は特定URLの参照に有用。
 
-- Playwright MCP はE2Eテストやブラウザ操作が必要なプロジェクトでのみ追加。常時有効にするとツール数が多くトークンを消費する。
+- Playwright MCP はE2Eテストやブラウザ操作が必要なプロジェクトでのみ追加。常時有効にするとツール数が多くトークンを消費する。mcp-compressor は同時に 1 サーバーしかラップできないため、GitHub MCP に適用済みの場合は Playwright を同時に圧縮できない点に注意。
 
 ## Performance / Token Optimization MCP Servers
 
@@ -136,6 +136,7 @@ MCP Server の選定・比較の判断材料。
 
 **→ lean-ctx + mcp-compressor を採用する。** lean-ctx はシェル出力圧縮とキャッシュ読み込みで日常的なトークン消費を削減。mcp-compressor はツール数の多いサーバー（GitHub MCP 90+ツール、Playwright等）のプロキシとして適用。
 
+- **制約: mcp-compressor は同時に複数の MCP サーバーをラップできない。** プロキシとして公開するツール名が同一（`call_tool` 等）になるため、1 セッションにつき 1 サーバーのみラップ可能。複数サーバーのトークン削減が必要な場合は lean-ctx のシェル圧縮や各サーバー固有の軽量化オプションで補完する。
 - codebase-memory-mcp のトークン削減効果は構造クエリの副次的効果であり、主目的はコード理解。Code Intelligence カテゴリで採用。
 - jCodeMunch は機能面で優れるが商用利用が有料（$79〜）のため、OSSで統一する方針では不採用。
 

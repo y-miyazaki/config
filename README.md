@@ -45,7 +45,7 @@ APM is used to share AI agent-related configuration files as packages. Each pack
 
 | Package       | Description                                | MCP Servers | Hooks | Instructions | Skills |
 | ------------- | ------------------------------------------ | ----------- | ----- | ------------ | ------ |
-| common        | Shared workflows, documentation, and tools | 6           | 6     | 4            | 7      |
+| common        | Shared workflows, documentation, and tools | 5           | 6     | 4            | 7      |
 | aws           | AWS development                            | 5           | 0     | 0            | 0      |
 | terraform     | Terraform development (cloud-agnostic)     | 1           | 2     | 1            | 2      |
 | terraform-aws | Terraform + AWS integration                | 1           | 0     | 0            | 0      |
@@ -61,7 +61,6 @@ APM is used to share AI agent-related configuration files as packages. Each pack
 | common        | github                         | GitHub Copilot MCP             |
 | common        | codebase-memory-mcp            | Codebase memory                |
 | common        | lean-ctx                       | Lean context management        |
-| common        | playwright                     | Browser automation             |
 | aws           | aws-mcp                        | AWS MCP proxy                  |
 | aws           | aws-knowledge-mcp-server       | AWS knowledge base             |
 | aws           | aws-documentation-mcp-server   | AWS documentation              |

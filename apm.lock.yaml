@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-06-11T05:19:01.661268+00:00'
+generated_at: '2026-06-11T07:55:29.630368+00:00'
 apm_version: 0.16.1
 dependencies:
 - repo_url: _local/common
@@ -83,7 +83,6 @@ mcp_servers:
 - fetch
 - github
 - lean-ctx
-- playwright
 mcp_configs:
   codebase-memory-mcp:
     name: codebase-memory-mcp
@@ -123,11 +122,3 @@ mcp_configs:
     - mcp
     registry: false
     command: lean-ctx
-  playwright:
-    name: playwright
-    transport: stdio
-    args:
-    - -y
-    - '@playwright/mcp@0.0.75'
-    registry: false
-    command: npx
