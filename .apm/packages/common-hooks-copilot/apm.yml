@@ -1,0 +1,11 @@
+name: common-hooks-copilot
+version: 1.0.0
+description: Common hooks for GitHub Copilot (actionlint, ghalint, zizmor, markdownlint, markdown-link-check, lean-ctx)
+author: y-miyazaki
+license: Apache-2.0
+target: copilot
+includes: auto
+
+dependencies:
+  apm: []
+  mcp: []

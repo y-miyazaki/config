@@ -1,0 +1,11 @@
+name: common-hooks-cursor
+version: 1.0.0
+description: Common hooks for Cursor (actionlint, ghalint, zizmor, markdownlint, markdown-link-check, lean-ctx)
+author: y-miyazaki
+license: Apache-2.0
+target: cursor
+includes: auto
+
+dependencies:
+  apm: []
+  mcp: []

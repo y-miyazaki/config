@@ -1,0 +1,11 @@
+name: go-hooks-copilot
+version: 1.0.0
+description: Go hooks for GitHub Copilot (golangci-lint)
+author: y-miyazaki
+license: Apache-2.0
+target: copilot
+includes: auto
+
+dependencies:
+  apm: []
+  mcp: []

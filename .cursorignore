@@ -1,7 +1,7 @@
 # =============================================================================
-# .copilotignore
-# Base: .gitignore contents (already excluded from git, but explicit for Copilot)
-# Additional: files tracked by git but too large/noisy for Copilot context
+# .cursorignore
+# Base: .gitignore contents (already excluded from git, but explicit for Cursor)
+# Additional: files tracked by git but too large/noisy for Cursor context
 # =============================================================================
 
 # ─── From .gitignore (same exclusions) ───────────────────────────────────────

@@ -3,7 +3,7 @@ version: 1.0.0
 description: agent skills and instructions and mcp
 license: Apache-2.0
 targets:
-  - copilot
+  - cursor
 includes: auto
 dependencies:
   apm:
@@ -14,9 +14,18 @@ dependencies:
     # - github.com/y-miyazaki/config/.apm/packages/terraform#v1.1.37
     # - github.com/y-miyazaki/config/.apm/packages/terraform-aws#v1.1.37
     - ./.apm/packages/common
+    # - ./.apm/packages/common-hooks-copilot
+    - ./.apm/packages/common-hooks-cursor
     # - ./.apm/packages/aws
     - ./.apm/packages/go
+    # - ./.apm/packages/go-hooks-copilot
+    - ./.apm/packages/go-hooks-cursor
     - ./.apm/packages/shell-script
+    # - ./.apm/packages/shell-script-hooks-copilot
+    - ./.apm/packages/shell-script-hooks-cursor
     # - ./.apm/packages/terraform
     # - ./.apm/packages/terraform-aws
   mcp: []
+
+scripts:
+  postinstall: "jq '. + {\"version\": 1}' .cursor/hooks.json > .cursor/hooks.json.tmp && mv .cursor/hooks.json.tmp .cursor/hooks.json"

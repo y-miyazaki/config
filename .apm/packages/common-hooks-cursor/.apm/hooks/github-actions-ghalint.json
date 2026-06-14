@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "stop": [
+      {
+        "command": "./scripts/ghalint.sh",
+        "timeoutSec": 60
+      }
+    ]
+  },
+  "version": 1
+}
