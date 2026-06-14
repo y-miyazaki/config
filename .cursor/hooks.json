@@ -42,14 +42,14 @@
         "_apm_source": "shell-script-hooks-cursor"
       }
     ],
-    "PostToolUse": [
+    "postToolUse": [
       {
         "command": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook observe",
         "timeoutSec": 5,
         "_apm_source": "common-hooks-cursor"
       }
     ],
-    "PreToolUse": [
+    "preToolUse": [
       {
         "command": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook rewrite",
         "timeoutSec": 15,
@@ -61,5 +61,6 @@
         "_apm_source": "common-hooks-cursor"
       }
     ]
-  }
+  },
+  "version": 1
 }
