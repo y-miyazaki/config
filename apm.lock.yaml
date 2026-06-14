@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-06-14T15:39:53.727920+00:00'
+generated_at: '2026-06-14T16:36:23.653924+00:00'
 apm_version: 0.20.0
 dependencies:
 - repo_url: _local/common
@@ -160,10 +160,6 @@ dependencies:
   - .cursor/rules/github-actions-workflow.mdc
   - .cursor/rules/instructions.mdc
   - .cursor/rules/markdown.mdc
-  - .github/instructions/agent-skills.instructions.md
-  - .github/instructions/github-actions-workflow.instructions.md
-  - .github/instructions/instructions.instructions.md
-  - .github/instructions/markdown.instructions.md
   deployed_file_hashes:
     .agents/skills/agent-skills-review/SKILL.md: sha256:1ce2482546ac1d38861c972abd8fbf0b98db968cbb77b8ac85df07cd007e25f2
     .agents/skills/agent-skills-review/eval.yaml: sha256:c61a9eb0678ddd56fa65af66495e1117ecc74c3fe52c0a0cfb51b54c301ab5be
@@ -311,12 +307,8 @@ dependencies:
     .agents/skills/markdown-validation/scripts/validate.sh: sha256:477a3d2d30af874d0013a50a0b4ec9b97ef717138c80d946770ef7e44a0078d1
     .cursor/rules/agent-skills.mdc: sha256:113b26f2e95f55d079e20a1ad6b677e3369d5424f4c706216d0603e8e552b130
     .cursor/rules/github-actions-workflow.mdc: sha256:5c64bec5a97c4b6922fbecdcc0b62973768a863da044a6714a3b4705ad9385a8
-    .cursor/rules/instructions.mdc: sha256:ae1dd18bbe411fb580366454db19eff2211a074e034ed718194270d825e397de
+    .cursor/rules/instructions.mdc: sha256:3d52d4d4f8e0fa76e5de2169e3eaa7ffc13691f5b84e6256178834c327c512d5
     .cursor/rules/markdown.mdc: sha256:517791b7ec3b9a3a070660883ccaaddc6d7196e80ebd6d602d17a2a2fd58d8a4
-    .github/instructions/agent-skills.instructions.md: sha256:ea9c6af427e4f927940924e32e307da7cb8bf265afa4b2f939eaa233dc451182
-    .github/instructions/github-actions-workflow.instructions.md: sha256:1ee01b48b75a3c9d8f8a85e8aae3d8d5c7f1f1056c5063b1c408419fa855df85
-    .github/instructions/instructions.instructions.md: sha256:343784c153e77cae5eb1d031de4f11d07655c6bd91ae39da1773d4e97becfe60
-    .github/instructions/markdown.instructions.md: sha256:fa7f8346e8c81c05854cb22ee86f3ac9e97a46127148db942c74f922f576a773
   source: local
   local_path: ./.apm/packages/common
 - repo_url: _local/common-hooks-cursor
@@ -327,34 +319,12 @@ dependencies:
   - .cursor/hooks/common-hooks-cursor/scripts/markdown_link_check.sh
   - .cursor/hooks/common-hooks-cursor/scripts/markdownlint_cli2.sh
   - .cursor/hooks/common-hooks-cursor/scripts/zizmor.sh
-  - .github/hooks/common-hooks-cursor-github-actions-actionlint.json
-  - .github/hooks/common-hooks-cursor-github-actions-ghalint.json
-  - .github/hooks/common-hooks-cursor-github-actions-zizmor.json
-  - .github/hooks/common-hooks-cursor-lean-ctx.json
-  - .github/hooks/common-hooks-cursor-markdown-link-check.json
-  - .github/hooks/common-hooks-cursor-markdownlint-cli2.json
-  - .github/hooks/scripts/common-hooks-cursor/scripts/actionlint.sh
-  - .github/hooks/scripts/common-hooks-cursor/scripts/ghalint.sh
-  - .github/hooks/scripts/common-hooks-cursor/scripts/markdown_link_check.sh
-  - .github/hooks/scripts/common-hooks-cursor/scripts/markdownlint_cli2.sh
-  - .github/hooks/scripts/common-hooks-cursor/scripts/zizmor.sh
   deployed_file_hashes:
     .cursor/hooks/common-hooks-cursor/scripts/actionlint.sh: sha256:71832905e459cef0a8aee0e0416d655ff69d9fb1a78624a822a04b9a950f7c5a
     .cursor/hooks/common-hooks-cursor/scripts/ghalint.sh: sha256:8487d51ca5c1e497b5d84e4eea2abe10fbaea62db2e705c40e46d72f2b2a9932
     .cursor/hooks/common-hooks-cursor/scripts/markdown_link_check.sh: sha256:e2777627f8c36732928101919cd3be7dda34ba08877e3a4fc81d086b402e7a38
     .cursor/hooks/common-hooks-cursor/scripts/markdownlint_cli2.sh: sha256:8d7288d49b50f53deefecf6273e74dca9db131a8d7055d89d21c2e5305b1121d
     .cursor/hooks/common-hooks-cursor/scripts/zizmor.sh: sha256:f0f541d98759f7d287745a52fcf6cfd29335cfe3b4c1a299ee3b7f88bca8994b
-    .github/hooks/common-hooks-cursor-github-actions-actionlint.json: sha256:e20cf49c04f3f1e0f2dc618d12909f7f67d799a9f3a44f9aa28d08ec5362b2bd
-    .github/hooks/common-hooks-cursor-github-actions-ghalint.json: sha256:8eed136202f9ec2765e9a663bfe4b449ea6e5b91b2539b6f8ff087ba2e280762
-    .github/hooks/common-hooks-cursor-github-actions-zizmor.json: sha256:3b14e40258bb18ea28163fc1f8ba0cd0aebd99e7fb5b1729fb5580bbd20ac666
-    .github/hooks/common-hooks-cursor-lean-ctx.json: sha256:c2c4d5b29d0bc7a699026d73b403bc40991a3d97d61d72e143d3b0adc78b2965
-    .github/hooks/common-hooks-cursor-markdown-link-check.json: sha256:b496d3ae2e12113b50f76f38957719f3022271cac6e783043c0cc9c6dc9b3389
-    .github/hooks/common-hooks-cursor-markdownlint-cli2.json: sha256:abc9cb931106a4b8a79123e76f9731614607431b80290c29552eacdcdf75de6f
-    .github/hooks/scripts/common-hooks-cursor/scripts/actionlint.sh: sha256:71832905e459cef0a8aee0e0416d655ff69d9fb1a78624a822a04b9a950f7c5a
-    .github/hooks/scripts/common-hooks-cursor/scripts/ghalint.sh: sha256:8487d51ca5c1e497b5d84e4eea2abe10fbaea62db2e705c40e46d72f2b2a9932
-    .github/hooks/scripts/common-hooks-cursor/scripts/markdown_link_check.sh: sha256:e2777627f8c36732928101919cd3be7dda34ba08877e3a4fc81d086b402e7a38
-    .github/hooks/scripts/common-hooks-cursor/scripts/markdownlint_cli2.sh: sha256:8d7288d49b50f53deefecf6273e74dca9db131a8d7055d89d21c2e5305b1121d
-    .github/hooks/scripts/common-hooks-cursor/scripts/zizmor.sh: sha256:f0f541d98759f7d287745a52fcf6cfd29335cfe3b4c1a299ee3b7f88bca8994b
   source: local
   local_path: ./.apm/packages/common-hooks-cursor
 - repo_url: _local/go
@@ -408,7 +378,6 @@ dependencies:
   - .agents/skills/go-validation/scripts/lib/validation.sh
   - .agents/skills/go-validation/scripts/validate.sh
   - .cursor/rules/go.mdc
-  - .github/instructions/go.instructions.md
   deployed_file_hashes:
     .agents/skills/go-review/SKILL.md: sha256:5e8b40c0dfd896fa505c48c403c9b4aa99691b65d0658c15c79e2566912b45be
     .agents/skills/go-review/eval.yaml: sha256:d4582dd7ca3bfc4591ea42d1a3a81ddd14a39ea34caba66ae1e681d509c92e62
@@ -456,19 +425,14 @@ dependencies:
     .agents/skills/go-validation/scripts/lib/validation.sh: sha256:ee2be940117c00e6a681186e02e05188786bf98aa52bd74ff1586eb474a98648
     .agents/skills/go-validation/scripts/validate.sh: sha256:4828376fd096b1a549c7762a93242ec1020d3df014b661a437477f7467c3a9b6
     .cursor/rules/go.mdc: sha256:4199cdb28d19a041e510f7b5b9d24ccf8bf173126f40d1c4ed4e58b27042a9a3
-    .github/instructions/go.instructions.md: sha256:a5d2c45b51b403729febfb062c3ce2ae9746780043f1e65006378bccaeb146c9
   source: local
   local_path: ./.apm/packages/go
 - repo_url: _local/go-hooks-cursor
   package_type: apm_package
   deployed_files:
   - .cursor/hooks/go-hooks-cursor/scripts/golangci_lint.sh
-  - .github/hooks/go-hooks-cursor-golangci-lint.json
-  - .github/hooks/scripts/go-hooks-cursor/scripts/golangci_lint.sh
   deployed_file_hashes:
     .cursor/hooks/go-hooks-cursor/scripts/golangci_lint.sh: sha256:884226ecdabfc7ecc987fe4e6171240f4dbf4227d61a06b98f1868728ba2480c
-    .github/hooks/go-hooks-cursor-golangci-lint.json: sha256:6762a8c9504f97f0088751e580e888bd168af617289077ec4c4634c6530cd385
-    .github/hooks/scripts/go-hooks-cursor/scripts/golangci_lint.sh: sha256:884226ecdabfc7ecc987fe4e6171240f4dbf4227d61a06b98f1868728ba2480c
   source: local
   local_path: ./.apm/packages/go-hooks-cursor
 - repo_url: _local/shell-script
@@ -519,7 +483,6 @@ dependencies:
   - .agents/skills/shell-script-validation/scripts/lib/validation.sh
   - .agents/skills/shell-script-validation/scripts/validate.sh
   - .cursor/rules/shell-script.mdc
-  - .github/instructions/shell-script.instructions.md
   deployed_file_hashes:
     .agents/skills/shell-script-review/SKILL.md: sha256:b424cc004c925f235986139fd210838b0b6723cac9bf6f37aa889454d581307d
     .agents/skills/shell-script-review/eval.yaml: sha256:afa06f91c663f975c22747093a9cb2c22b00fb59985f4f2565427ad2be687d87
@@ -564,7 +527,6 @@ dependencies:
     .agents/skills/shell-script-validation/scripts/lib/validation.sh: sha256:ee2be940117c00e6a681186e02e05188786bf98aa52bd74ff1586eb474a98648
     .agents/skills/shell-script-validation/scripts/validate.sh: sha256:6f29681dfb85aecbb01d36a1742185b63c52ca901f416f116671cba291ebe5dd
     .cursor/rules/shell-script.mdc: sha256:ce761cd07d149eff1cd76bf856c78993c2e8cb98ba394b4e7a291da8d291e36b
-    .github/instructions/shell-script.instructions.md: sha256:55cd85eb429d2ca7af192054bd468151fbf84382a4fe1cf9f5b55fcaf6892d4a
   source: local
   local_path: ./.apm/packages/shell-script
 - repo_url: _local/shell-script-hooks-cursor
@@ -572,17 +534,9 @@ dependencies:
   deployed_files:
   - .cursor/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh
   - .cursor/hooks/shell-script-hooks-cursor/scripts/shfmt.sh
-  - .github/hooks/scripts/shell-script-hooks-cursor/scripts/shellcheck.sh
-  - .github/hooks/scripts/shell-script-hooks-cursor/scripts/shfmt.sh
-  - .github/hooks/shell-script-hooks-cursor-shellcheck.json
-  - .github/hooks/shell-script-hooks-cursor-shfmt.json
   deployed_file_hashes:
     .cursor/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh: sha256:f6010e973e22ef3493c2bfb572b16a2dd50fab3326ef04580e5aef3ab07ddbcf
     .cursor/hooks/shell-script-hooks-cursor/scripts/shfmt.sh: sha256:99a30020d4d29c4cedecf76d05d8becf85284758a7b4834695de02775856e819
-    .github/hooks/scripts/shell-script-hooks-cursor/scripts/shellcheck.sh: sha256:f6010e973e22ef3493c2bfb572b16a2dd50fab3326ef04580e5aef3ab07ddbcf
-    .github/hooks/scripts/shell-script-hooks-cursor/scripts/shfmt.sh: sha256:99a30020d4d29c4cedecf76d05d8becf85284758a7b4834695de02775856e819
-    .github/hooks/shell-script-hooks-cursor-shellcheck.json: sha256:eab5ee51003c999c75303bb3c26af9e933ee7963b0ca522051d0050de789d0af
-    .github/hooks/shell-script-hooks-cursor-shfmt.json: sha256:04c0d3ee64af5f2a8bc717554272e1c167146e2d62fac66b18a06a91d0bf1d48
   source: local
   local_path: ./.apm/packages/shell-script-hooks-cursor
 mcp_servers:

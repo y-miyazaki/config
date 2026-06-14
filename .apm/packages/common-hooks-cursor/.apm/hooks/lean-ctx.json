@@ -1,12 +1,12 @@
 {
   "hooks": {
-    "postToolUse": [
+    "PostToolUse": [
       {
         "command": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook observe",
         "timeoutSec": 5
       }
     ],
-    "preToolUse": [
+    "PreToolUse": [
       {
         "command": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook rewrite",
         "timeoutSec": 15
