@@ -25,6 +25,7 @@ This repository is a shared configuration repository. It is focused on practical
   - [Individual packages](#individual-packages)
   - [Other targets](#other-targets)
   - [Use in other repositories](#use-in-other-repositories)
+  - [Hooks Limitations](#hooks-limitations)
 - [GitHub Actions](#github-actions)
   - [Reuse shared workflows](#reuse-shared-workflows)
 - [Renovate](#renovate)
@@ -52,6 +53,23 @@ APM is used to share AI agent-related configuration files as packages. Each pack
 | go            | Go development                             | 0           | 1     | 1            | 2      |
 | shell-script  | Shell script development                   | 0           | 2     | 1            | 2      |
 
+Hooks are distributed as separate target-specific packages because each AI agent has a different hooks JSON format:
+
+| Hooks Package              | Target  | Description                            |
+| -------------------------- | ------- | -------------------------------------- |
+| common-hooks-claude        | Claude  | Common hooks for Claude Code           |
+| common-hooks-copilot       | Copilot | Common hooks for GitHub Copilot CLI    |
+| common-hooks-cursor        | Cursor  | Common hooks for Cursor                |
+| go-hooks-claude            | Claude  | Go hooks for Claude Code               |
+| go-hooks-copilot           | Copilot | Go hooks for GitHub Copilot CLI        |
+| go-hooks-cursor            | Cursor  | Go hooks for Cursor                    |
+| shell-script-hooks-claude  | Claude  | Shell script hooks for Claude Code     |
+| shell-script-hooks-copilot | Copilot | Shell script hooks for GitHub Copilot CLI |
+| shell-script-hooks-cursor  | Cursor  | Shell script hooks for Cursor          |
+| terraform-hooks-claude     | Claude  | Terraform hooks for Claude Code        |
+| terraform-hooks-copilot    | Copilot | Terraform hooks for GitHub Copilot CLI |
+| terraform-hooks-cursor     | Cursor  | Terraform hooks for Cursor             |
+
 ### MCP Servers
 
 | Package       | Server                         | Description                    |
@@ -71,19 +89,19 @@ APM is used to share AI agent-related configuration files as packages. Each pack
 
 ### Hooks
 
-| Package      | Hook                      | Trigger          | Description                                  |
-| ------------ | ------------------------- | ---------------- | -------------------------------------------- |
-| common       | lean-ctx                  | preToolUse/postToolUse | Context observation and rewrite/redirect     |
-| common       | markdownlint-cli2         | agentStop        | Auto-fix Markdown files with markdownlint    |
-| common       | markdown-link-check       | agentStop        | Check Markdown links                         |
-| common       | github-actions-actionlint | agentStop        | Lint GitHub Actions workflows with actionlint |
-| common       | github-actions-ghalint    | agentStop        | Lint GitHub Actions workflows with ghalint   |
-| common       | github-actions-zizmor     | agentStop        | Security scan GitHub Actions with zizmor     |
-| go           | golangci-lint             | agentStop        | Auto-fix Go files with golangci-lint         |
-| terraform    | terraform-fmt             | postToolUse      | Run terraform fmt on changed files           |
-| terraform    | tflint                    | agentStop        | Run tflint on changed files                  |
-| shell-script | shellcheck                | agentStop        | Run shellcheck on changed shell scripts      |
-| shell-script | shfmt                     | agentStop        | Auto-format shell scripts with shfmt         |
+| Package      | Hook                      | Trigger              | Description                                   |
+| ------------ | ------------------------- | -------------------- | --------------------------------------------- |
+| common       | lean-ctx                  | PreToolUse/PostToolUse | Context observation and rewrite/redirect      |
+| common       | markdownlint-cli2         | Stop                 | Auto-fix Markdown files with markdownlint     |
+| common       | markdown-link-check       | Stop                 | Check Markdown links                          |
+| common       | github-actions-actionlint | Stop                 | Lint GitHub Actions workflows with actionlint |
+| common       | github-actions-ghalint    | Stop                 | Lint GitHub Actions workflows with ghalint    |
+| common       | github-actions-zizmor     | Stop                 | Security scan GitHub Actions with zizmor      |
+| go           | golangci-lint             | Stop                 | Auto-fix Go files with golangci-lint          |
+| terraform    | terraform-fmt             | PostToolUse          | Run terraform fmt on changed files            |
+| terraform    | tflint                    | Stop                 | Run tflint on changed files                   |
+| shell-script | shellcheck                | Stop                 | Run shellcheck on changed shell scripts       |
+| shell-script | shfmt                     | Stop                 | Auto-format shell scripts with shfmt          |
 
 ### Skills
 
@@ -169,6 +187,20 @@ apm install --frozen
 ```
 
 This resolves all dependencies from `apm.lock.yaml` and deploys skills, instructions, hooks, and MCP servers to the appropriate target directories.
+
+### Hooks Limitations
+
+Hooks JSON format differs across AI agents and cannot be auto-converted between targets. Key constraints:
+
+| Constraint | Detail |
+| ---------- | ------ |
+| Format incompatibility | Each agent uses a different JSON structure (event names, command keys, timeout keys, nesting). A single hooks.json cannot serve multiple agents. |
+| Target-specific packages required | Hooks must be distributed as separate packages per target (`*-hooks-copilot`, `*-hooks-cursor`, `*-hooks-claude`). |
+| Cursor requires `version: 1` | Cursor errors if `version` is missing. APM does not inject `version` automatically — use a `postinstall` script (e.g. `jq '. + {"version": 1}'`). |
+| Claude Code uses 2-level nesting | Claude Code hooks use `{ matcher, hooks: [...] }` structure unlike other agents' flat arrays. |
+| Event name casing varies | Copilot CLI uses camelCase (`agentStop`), Claude Code/VS Code use PascalCase (`Stop`), Cursor uses lowercase (`stop`). |
+| `matcher` is Claude Code only | Tool name regex filtering (`matcher`) is available only in Claude Code. Other agents execute hooks for all tool invocations. |
+| Script portability | The hook scripts themselves are multi-agent aware (detect agent via stdin JSON and respond appropriately). Only the hook JSON definitions need per-target packaging. |
 
 ## GitHub Actions
 

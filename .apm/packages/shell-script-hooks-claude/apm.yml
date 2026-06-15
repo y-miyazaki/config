@@ -1,0 +1,11 @@
+name: shell-script-hooks-claude
+version: 1.0.0
+description: Shell script hooks for Claude Code (shellcheck, shfmt)
+author: y-miyazaki
+license: Apache-2.0
+target: claude
+includes: auto
+
+dependencies:
+  apm: []
+  mcp: []

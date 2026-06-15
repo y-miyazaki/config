@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/tflint.sh",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -8,30 +8,38 @@ includes: auto
 dependencies:
   apm:
     # - github.com/y-miyazaki/config/.apm/packages/common#v1.2.0
+    # - github.com/y-miyazaki/config/.apm/packages/common-hooks-claude#v1.2.0
     # - github.com/y-miyazaki/config/.apm/packages/common-hooks-copilot#v1.2.0
     # - github.com/y-miyazaki/config/.apm/packages/common-hooks-cursor#v1.2.0
     # - github.com/y-miyazaki/config/.apm/packages/aws#v1.2.0
     # - github.com/y-miyazaki/config/.apm/packages/go#v1.2.0
+    # - github.com/y-miyazaki/config/.apm/packages/go-hooks-claude#v1.2.0
     # - github.com/y-miyazaki/config/.apm/packages/go-hooks-copilot#v1.2.0
     # - github.com/y-miyazaki/config/.apm/packages/go-hooks-cursor#v1.2.0
     # - github.com/y-miyazaki/config/.apm/packages/shell-script#v1.2.0
+    # - github.com/y-miyazaki/config/.apm/packages/shell-script-hooks-claude#v1.2.0
     # - github.com/y-miyazaki/config/.apm/packages/shell-script-hooks-copilot#v1.2.0
     # - github.com/y-miyazaki/config/.apm/packages/shell-script-hooks-cursor#v1.2.0
     # - github.com/y-miyazaki/config/.apm/packages/terraform#v1.2.0
+    # - github.com/y-miyazaki/config/.apm/packages/terraform-hooks-claude#v1.2.0
     # - github.com/y-miyazaki/config/.apm/packages/terraform-hooks-copilot#v1.2.0
     # - github.com/y-miyazaki/config/.apm/packages/terraform-hooks-cursor#v1.2.0
     # - github.com/y-miyazaki/config/.apm/packages/terraform-aws#v1.2.0
     - ./.apm/packages/common
+    # - ./.apm/packages/common-hooks-claude
     # - ./.apm/packages/common-hooks-copilot
     - ./.apm/packages/common-hooks-cursor
     # - ./.apm/packages/aws
     - ./.apm/packages/go
+    # - ./.apm/packages/go-hooks-claude
     # - ./.apm/packages/go-hooks-copilot
     - ./.apm/packages/go-hooks-cursor
     - ./.apm/packages/shell-script
+    # - ./.apm/packages/shell-script-hooks-claude
     # - ./.apm/packages/shell-script-hooks-copilot
     - ./.apm/packages/shell-script-hooks-cursor
     # - ./.apm/packages/terraform
+    # - ./.apm/packages/terraform-hooks-claude
     # - ./.apm/packages/terraform-hooks-copilot
     # - ./.apm/packages/terraform-hooks-cursor
     # - ./.apm/packages/terraform-aws

@@ -43,8 +43,13 @@ The architecture separates:
 - `.apm/packages/terraform-aws/`: Terraform + AWS provider MCP integration
 - `.apm/packages/go/`: Go-focused hooks, instructions, and skills
 - `.apm/packages/shell-script/`: shell-focused hooks, instructions, and skills
+- `.apm/packages/*-hooks-claude/`: Claude Code target-specific hooks
+- `.apm/packages/*-hooks-copilot/`: GitHub Copilot CLI target-specific hooks
+- `.apm/packages/*-hooks-cursor/`: Cursor target-specific hooks
 
 Each package can be consumed independently through APM path-based dependencies.
+
+> **Note:** Hooks packages are split per target because each AI agent uses a different hooks JSON format (event names, command keys, nesting structure). The hook scripts themselves are multi-agent aware and shared across targets.
 
 ### Execution Layer
 

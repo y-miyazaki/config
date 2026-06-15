@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/actionlint.sh",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -83,11 +83,15 @@ The repository structure is function-oriented.
 
 - `.apm/packages/`: grouped package bundles for target environments
   - `common/`: shared workflows, documentation, and tools (MCP servers + hook + instructions + skills)
+  - `common-hooks-claude/`, `common-hooks-copilot/`, `common-hooks-cursor/`: target-specific common hooks
   - `aws/`: AWS development (MCP servers only)
   - `terraform/`: Terraform development (MCP server + hook + instruction + skills)
   - `terraform-aws/`: Terraform + AWS integration (MCP server only)
+  - `terraform-hooks-claude/`, `terraform-hooks-copilot/`, `terraform-hooks-cursor/`: target-specific Terraform hooks
   - `go/`: Go development (hook + instruction + skills)
+  - `go-hooks-claude/`, `go-hooks-copilot/`, `go-hooks-cursor/`: target-specific Go hooks
   - `shell-script/`: Shell script development (hook + instruction + skills)
+  - `shell-script-hooks-claude/`, `shell-script-hooks-copilot/`, `shell-script-hooks-cursor/`: target-specific shell script hooks
 - `apm.yml`: APM package metadata and dependency entry point
 - `apm.lock.yaml`: lock file for deterministic APM resolution
 - `apm_modules/`: locally materialized module content
@@ -111,31 +115,43 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 ├── common/          # Shared workflows, documentation, and tools
 │   ├── apm.yml      # 6 MCP servers
 │   └── .apm/
-│       ├── hooks/         # lean-ctx (preToolUse/postToolUse), markdownlint-cli2, markdown-link-check, github-actions-actionlint, github-actions-ghalint, github-actions-zizmor (agentStop)
+│       ├── hooks/         # lean-ctx (preToolUse/postToolUse), markdownlint-cli2, markdown-link-check, github-actions-actionlint, github-actions-ghalint, github-actions-zizmor (Stop)
 │       ├── instructions/  # 4 instruction files
 │       └── skills/        # 7 skills
+├── common-hooks-claude/   # Common hooks for Claude Code
+├── common-hooks-copilot/  # Common hooks for GitHub Copilot CLI
+├── common-hooks-cursor/   # Common hooks for Cursor
 ├── aws/             # AWS development
 │   └── apm.yml      # 5 MCP servers
 ├── terraform/       # Terraform development (cloud-agnostic)
 │   ├── apm.yml      # 1 MCP server
 │   └── .apm/
-│       ├── hooks/         # terraform-fmt (postToolUse), tflint (agentStop)
+│       ├── hooks/         # terraform-fmt (PostToolUse), tflint (Stop)
 │       ├── instructions/  # 1 instruction file
 │       └── skills/        # 2 skills
 ├── terraform-aws/   # Terraform + AWS integration
 │   └── apm.yml      # 1 MCP server
+├── terraform-hooks-claude/  # Terraform hooks for Claude Code
+├── terraform-hooks-copilot/ # Terraform hooks for GitHub Copilot CLI
+├── terraform-hooks-cursor/  # Terraform hooks for Cursor
 ├── go/              # Go development
 │   ├── apm.yml      # 0 MCP servers
 │   └── .apm/
-│       ├── hooks/         # golangci-lint (agentStop)
+│       ├── hooks/         # golangci-lint (Stop)
 │       ├── instructions/  # 1 instruction file
 │       └── skills/        # 2 skills
-└── shell-script/    # Shell script development
-    ├── apm.yml      # 0 MCP servers
-    └── .apm/
-        ├── hooks/         # shellcheck, shfmt (agentStop)
-        ├── instructions/  # 1 instruction file
-        └── skills/        # 2 skills
+├── go-hooks-claude/       # Go hooks for Claude Code
+├── go-hooks-copilot/      # Go hooks for GitHub Copilot CLI
+├── go-hooks-cursor/       # Go hooks for Cursor
+├── shell-script/    # Shell script development
+│   ├── apm.yml      # 0 MCP servers
+│   └── .apm/
+│       ├── hooks/         # shellcheck, shfmt (Stop)
+│       ├── instructions/  # 1 instruction file
+│       └── skills/        # 2 skills
+├── shell-script-hooks-claude/  # Shell script hooks for Claude Code
+├── shell-script-hooks-copilot/ # Shell script hooks for GitHub Copilot CLI
+└── shell-script-hooks-cursor/  # Shell script hooks for Cursor
 ```
 
 ### Distribution Behavior
@@ -171,19 +187,46 @@ MCP servers are declared in each package's `apm.yml` under `dependencies.mcp`.
 
 Hooks are defined as JSON files under each package's `.apm/hooks/` directory.
 
-| Package      | Hook                      | Trigger          | Description                                  |
-| ------------ | ------------------------- | ---------------- | -------------------------------------------- |
-| common       | lean-ctx                  | preToolUse/postToolUse | Context observation and rewrite/redirect     |
-| common       | markdownlint-cli2         | agentStop        | Auto-fix Markdown files with markdownlint    |
-| common       | markdown-link-check       | agentStop        | Check Markdown links                         |
-| common       | github-actions-actionlint | agentStop        | Lint GitHub Actions workflows with actionlint |
-| common       | github-actions-ghalint    | agentStop        | Lint GitHub Actions workflows with ghalint   |
-| common       | github-actions-zizmor     | agentStop        | Security scan GitHub Actions with zizmor     |
-| go           | golangci-lint             | agentStop        | Auto-fix Go files with golangci-lint         |
-| terraform    | terraform-fmt             | postToolUse      | Run terraform fmt on changed files           |
-| terraform    | tflint                    | agentStop        | Run tflint on changed files                  |
-| shell-script | shellcheck                | agentStop        | Run shellcheck on changed shell scripts      |
-| shell-script | shfmt                     | agentStop        | Auto-format shell scripts with shfmt         |
+| Package      | Hook                      | Trigger              | Description                                   |
+| ------------ | ------------------------- | -------------------- | --------------------------------------------- |
+| common       | lean-ctx                  | PreToolUse/PostToolUse | Context observation and rewrite/redirect      |
+| common       | markdownlint-cli2         | Stop                 | Auto-fix Markdown files with markdownlint     |
+| common       | markdown-link-check       | Stop                 | Check Markdown links                          |
+| common       | github-actions-actionlint | Stop                 | Lint GitHub Actions workflows with actionlint |
+| common       | github-actions-ghalint    | Stop                 | Lint GitHub Actions workflows with ghalint    |
+| common       | github-actions-zizmor     | Stop                 | Security scan GitHub Actions with zizmor      |
+| go           | golangci-lint             | Stop                 | Auto-fix Go files with golangci-lint          |
+| terraform    | terraform-fmt             | PostToolUse          | Run terraform fmt on changed files            |
+| terraform    | tflint                    | Stop                 | Run tflint on changed files                   |
+| shell-script | shellcheck                | Stop                 | Run shellcheck on changed shell scripts       |
+| shell-script | shfmt                     | Stop                 | Auto-format shell scripts with shfmt          |
+
+Hooks are distributed as separate target-specific packages because each AI agent has a different hooks JSON format:
+
+| Hooks Package              | Target  | Description                               |
+| -------------------------- | ------- | ----------------------------------------- |
+| common-hooks-claude        | Claude  | Common hooks for Claude Code              |
+| common-hooks-copilot       | Copilot | Common hooks for GitHub Copilot CLI       |
+| common-hooks-cursor        | Cursor  | Common hooks for Cursor                   |
+| go-hooks-claude            | Claude  | Go hooks for Claude Code                  |
+| go-hooks-copilot           | Copilot | Go hooks for GitHub Copilot CLI           |
+| go-hooks-cursor            | Cursor  | Go hooks for Cursor                       |
+| shell-script-hooks-claude  | Claude  | Shell script hooks for Claude Code        |
+| shell-script-hooks-copilot | Copilot | Shell script hooks for GitHub Copilot CLI |
+| shell-script-hooks-cursor  | Cursor  | Shell script hooks for Cursor             |
+| terraform-hooks-claude     | Claude  | Terraform hooks for Claude Code           |
+| terraform-hooks-copilot    | Copilot | Terraform hooks for GitHub Copilot CLI    |
+| terraform-hooks-cursor     | Cursor  | Terraform hooks for Cursor                |
+
+#### Hooks Limitations
+
+Hooks JSON format is incompatible across AI agents and cannot be auto-converted between targets:
+
+- Each agent uses a different JSON structure (event names, command keys, timeout keys, nesting depth)
+- Copilot CLI uses camelCase (`agentStop`), Claude Code/VS Code use PascalCase (`Stop`), Cursor uses lowercase (`stop`)
+- Claude Code uses 2-level nesting (`{ matcher, hooks: [...] }`) with tool name regex filtering (`matcher`)
+- Cursor requires top-level `version: 1` (APM does not inject this automatically; use a `postinstall` script)
+- The hook scripts themselves are multi-agent aware and portable; only the hook JSON definitions need per-target packaging
 
 ### Skills
 
