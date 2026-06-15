@@ -31,7 +31,7 @@ zizmor .github/workflows/
 
 ### Temporary Artifacts
 
-Write to `tmp/`. Do not commit `tmp/`, `output/`, `.copilot/`, `.kiro/`, `apm_modules/`.
+Write to `tmp/`.
 
 ### Documentation Editing
 
