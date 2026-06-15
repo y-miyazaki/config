@@ -1,0 +1,11 @@
+name: terraform-hooks-copilot
+version: 1.0.0
+description: Terraform hooks for GitHub Copilot (tflint, terraform fmt)
+author: y-miyazaki
+license: Apache-2.0
+target: copilot
+includes: auto
+
+dependencies:
+  apm: []
+  mcp: []

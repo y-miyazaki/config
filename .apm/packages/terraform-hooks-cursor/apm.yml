@@ -1,0 +1,11 @@
+name: terraform-hooks-cursor
+version: 1.0.0
+description: Terraform hooks for Cursor (tflint, terraform fmt)
+author: y-miyazaki
+license: Apache-2.0
+target: cursor
+includes: auto
+
+dependencies:
+  apm: []
+  mcp: []

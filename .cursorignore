@@ -2,6 +2,47 @@
 # AI context exclusion: files that should not be sent to Cursor's AI
 # Criteria: secrets, large/noisy generated files, tool-internal dirs
 
+# === AI tool configs (not useful as context) ===
+.copilot
+.kiro
+.serena
+apm_modules
+
+# === Go ===
+.serverless
+bin
+coverage
+dist
+vendor
+output
+cover.out
+coverage.html
+
+# === Large auto-generated config ===
+.gitleaks.toml
+.golangci.yaml
+
+# === Lock files (large, auto-generated) ===
+.terraform.lock.hcl
+apm.lock.yaml
+aqua-checksums.json
+go.sum
+mise.lock
+package-lock.json
+yarn.lock
+
+# === Node ===
+node_modules
+
+# === OS / Temp ===
+.DS_Store
+tmp
+
+# === Python ===
+__pycache__
+.Python
+.venv
+
 # === Secrets / Credentials ===
 .env
 .env.*
@@ -14,12 +55,6 @@
 **/*.pem
 **/*.pfx
 
-# === AI tool configs (not useful as context) ===
-.copilot
-.kiro
-.serena
-apm_modules/
-
 # === Terraform ===
 builds
 **/.terraform/*
@@ -28,38 +63,3 @@ builds
 *.tfstate.*
 *.tfvars
 *.tfbackend
-
-# === Go ===
-bin
-coverage
-dist
-vendor
-output
-.serverless
-cover.out
-coverage.html
-
-# === Node ===
-node_modules
-
-# === Python ===
-__pycache__
-.Python
-.venv
-
-# === OS / Temp ===
-.DS_Store
-tmp
-
-# === Lock files (large, auto-generated) ===
-mise.lock
-apm.lock.yaml
-package-lock.json
-yarn.lock
-go.sum
-.terraform.lock.hcl
-
-# === Large auto-generated config ===
-.golangci.yaml
-.gitleaks.toml
-aqua-checksums.json
