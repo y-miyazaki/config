@@ -1,26 +1,26 @@
-# =============================================================================
 # .cursorignore
-# Base: .gitignore contents (already excluded from git, but explicit for Cursor)
-# Additional: files tracked by git but too large/noisy for Cursor context
-# =============================================================================
+# AI context exclusion: files that should not be sent to Cursor's AI
+# Criteria: secrets, large/noisy generated files, tool-internal dirs
 
-# ─── From .gitignore (same exclusions) ───────────────────────────────────────
+# === Secrets / Credentials ===
+.env
+.env.*
+**/.env.*.local
+**/.env.local
+**/credentials/**
+**/secrets/**
+**/*.key
+**/*.p12
+**/*.pem
+**/*.pfx
 
-# root
-.DS_Store
-tmp
-
-# AI
+# === AI tool configs (not useful as context) ===
 .copilot
 .kiro
 .serena
 apm_modules/
 
-# env
-.env
-env/common/tmp/**
-
-# terraform
+# === Terraform ===
 builds
 **/.terraform/*
 **/.terraform.d/*
@@ -29,7 +29,7 @@ builds
 *.tfvars
 *.tfbackend
 
-# go
+# === Go ===
 bin
 coverage
 dist
@@ -39,17 +39,19 @@ output
 cover.out
 coverage.html
 
-# node
+# === Node ===
 node_modules
 
-# python
+# === Python ===
 __pycache__
 .Python
 .venv
 
-# ─── Additional: tracked by git but excluded from Copilot context ────────────
+# === OS / Temp ===
+.DS_Store
+tmp
 
-# Lock files (large, auto-generated, no reasoning value)
+# === Lock files (large, auto-generated) ===
 mise.lock
 apm.lock.yaml
 package-lock.json
@@ -57,6 +59,7 @@ yarn.lock
 go.sum
 .terraform.lock.hcl
 
-# Large auto-generated config (>90KB each)
+# === Large auto-generated config ===
 .golangci.yaml
 .gitleaks.toml
+aqua-checksums.json
