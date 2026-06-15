@@ -62,6 +62,7 @@ if command -v apm > /dev/null 2>&1; then
         (
             cd "$repo_root"
             apm install --frozen || echo "[warn] apm install failed" >&2
+            apm run postinstall || echo "[warn] apm run failed" >&2
         )
     fi
 fi

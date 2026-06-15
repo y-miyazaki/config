@@ -28,4 +28,4 @@ dependencies:
   mcp: []
 
 scripts:
-  postinstall: "jq '. + {\"version\": 1}' .cursor/hooks.json > .cursor/hooks.json.tmp && mv .cursor/hooks.json.tmp .cursor/hooks.json"
+  postinstall: 'jq ''. + {"version": 1}'' .cursor/hooks.json > .cursor/hooks.json.tmp && mv .cursor/hooks.json.tmp .cursor/hooks.json'
