@@ -37,6 +37,22 @@ Write to `tmp/`.
 
 When structure or package composition changes, keep `README.md` and `docs/` up to date.
 
+## Token Optimization
+
+### Context Exclusions
+
+The following are automatically excluded via `.claudeignore`:
+
+- Lock files: `mise.lock`, `go.sum`, `apm.lock.yaml`, `package-lock.json`
+- Dependencies: `node_modules/`, `vendor/`, `apm_modules/`
+- Build artifacts: `dist/`, `build/`, `bin/`
+- Reports: `docs/report/` (research documents, not specifications)
+- Temporary: `tmp/`, `.cache/`, `env/common/tmp/`
+
+### When to Read Reports
+
+Only read `docs/report/` files when explicitly asked or when comparison/research context is needed.
+
 ## Security Guidelines
 
 - No secrets in source code, logs, or test data.

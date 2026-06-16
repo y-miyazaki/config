@@ -1,8 +1,11 @@
 # === AI tool configs ===
+.claude/settings.local.json
+.claude/tmp/
 .copilot
 .kiro
 .serena
 apm_modules/
+
 
 # === Go ===
 .serverless

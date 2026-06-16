@@ -37,15 +37,16 @@ The architecture separates:
 
 ### Package Layer
 
-- `.apm/packages/common/`: shared instructions, skills, hooks, and MCP integrations
-- `.apm/packages/aws/`: AWS-focused MCP integrations
-- `.apm/packages/terraform/`: Terraform-focused integrations and validation hooks
-- `.apm/packages/terraform-aws/`: Terraform + AWS provider MCP integration
-- `.apm/packages/go/`: Go-focused hooks, instructions, and skills
-- `.apm/packages/shell-script/`: shell-focused hooks, instructions, and skills
-- `.apm/packages/*-hooks-claude/`: Claude Code target-specific hooks
-- `.apm/packages/*-hooks-copilot/`: GitHub Copilot CLI target-specific hooks
-- `.apm/packages/*-hooks-cursor/`: Cursor target-specific hooks
+- `.apm/packages/common/`: shared instructions, skills, and MCP integrations (5 MCP servers, 4 instructions, 7 skills)
+- `.apm/packages/common-hooks-*`: target-specific common hooks (6 hooks per target: Claude, Copilot, Cursor)
+- `.apm/packages/aws/`: AWS-focused MCP integrations (5 MCP servers)
+- `.apm/packages/terraform/`: Terraform-focused integrations (1 MCP server, 1 instruction, 2 skills)
+- `.apm/packages/terraform-hooks-*`: target-specific Terraform hooks (2 hooks per target: Claude, Copilot, Cursor)
+- `.apm/packages/terraform-aws/`: Terraform + AWS provider MCP integration (1 MCP server)
+- `.apm/packages/go/`: Go-focused instructions and skills (1 instruction, 2 skills)
+- `.apm/packages/go-hooks-*`: target-specific Go hooks (1 hook per target: Claude, Copilot, Cursor)
+- `.apm/packages/shell-script/`: shell-focused instructions and skills (1 instruction, 2 skills)
+- `.apm/packages/shell-script-hooks-*`: target-specific shell script hooks (2 hooks per target: Claude, Copilot, Cursor)
 
 Each package can be consumed independently through APM path-based dependencies.
 

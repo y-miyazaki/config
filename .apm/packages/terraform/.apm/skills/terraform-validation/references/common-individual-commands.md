@@ -1,6 +1,6 @@
 ## Terraform Validation - Individual Commands Reference
 
-## ⚠️ For Debugging Only
+## For Debugging Only
 
 Always prefer: `bash scripts/validate.sh`
 

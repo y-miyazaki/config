@@ -37,6 +37,7 @@ This repository is a shared configuration repository. It is focused on practical
 - Usage: this `README.md`
 - Specification and structure: [`docs/reference/specification.md`](docs/reference/specification.md)
 - Documentation index: [`docs/index.md`](docs/index.md)
+- Project instructions: [`CLAUDE.md`](CLAUDE.md) (for Claude Code users)
 
 ## APM
 
@@ -46,29 +47,29 @@ APM is used to share AI agent-related configuration files as packages. Each pack
 
 | Package       | Description                                | MCP Servers | Hooks | Instructions | Skills |
 | ------------- | ------------------------------------------ | ----------- | ----- | ------------ | ------ |
-| common        | Shared workflows, documentation, and tools | 5           | 6     | 4            | 7      |
+| common        | Shared workflows, documentation, and tools | 5           | 0     | 4            | 7      |
 | aws           | AWS development                            | 5           | 0     | 0            | 0      |
-| terraform     | Terraform development (cloud-agnostic)     | 1           | 2     | 1            | 2      |
+| terraform     | Terraform development (cloud-agnostic)     | 1           | 0     | 1            | 2      |
 | terraform-aws | Terraform + AWS integration                | 1           | 0     | 0            | 0      |
-| go            | Go development                             | 0           | 1     | 1            | 2      |
-| shell-script  | Shell script development                   | 0           | 2     | 1            | 2      |
+| go            | Go development                             | 0           | 0     | 1            | 2      |
+| shell-script  | Shell script development                   | 0           | 0     | 1            | 2      |
 
 Hooks are distributed as separate target-specific packages because each AI agent has a different hooks JSON format:
 
-| Hooks Package              | Target  | Description                            |
-| -------------------------- | ------- | -------------------------------------- |
-| common-hooks-claude        | Claude  | Common hooks for Claude Code           |
-| common-hooks-copilot       | Copilot | Common hooks for GitHub Copilot CLI    |
-| common-hooks-cursor        | Cursor  | Common hooks for Cursor                |
-| go-hooks-claude            | Claude  | Go hooks for Claude Code               |
-| go-hooks-copilot           | Copilot | Go hooks for GitHub Copilot CLI        |
-| go-hooks-cursor            | Cursor  | Go hooks for Cursor                    |
-| shell-script-hooks-claude  | Claude  | Shell script hooks for Claude Code     |
-| shell-script-hooks-copilot | Copilot | Shell script hooks for GitHub Copilot CLI |
-| shell-script-hooks-cursor  | Cursor  | Shell script hooks for Cursor          |
-| terraform-hooks-claude     | Claude  | Terraform hooks for Claude Code        |
-| terraform-hooks-copilot    | Copilot | Terraform hooks for GitHub Copilot CLI |
-| terraform-hooks-cursor     | Cursor  | Terraform hooks for Cursor             |
+| Hooks Package              | Target  | Hooks | Description                               |
+| -------------------------- | ------- | ----- | ----------------------------------------- |
+| common-hooks-claude        | Claude  | 6     | Common hooks for Claude Code              |
+| common-hooks-copilot       | Copilot | 6     | Common hooks for GitHub Copilot CLI       |
+| common-hooks-cursor        | Cursor  | 6     | Common hooks for Cursor                   |
+| go-hooks-claude            | Claude  | 1     | Go hooks for Claude Code                  |
+| go-hooks-copilot           | Copilot | 1     | Go hooks for GitHub Copilot CLI           |
+| go-hooks-cursor            | Cursor  | 1     | Go hooks for Cursor                       |
+| shell-script-hooks-claude  | Claude  | 2     | Shell script hooks for Claude Code        |
+| shell-script-hooks-copilot | Copilot | 2     | Shell script hooks for GitHub Copilot CLI |
+| shell-script-hooks-cursor  | Cursor  | 2     | Shell script hooks for Cursor             |
+| terraform-hooks-claude     | Claude  | 2     | Terraform hooks for Claude Code           |
+| terraform-hooks-copilot    | Copilot | 2     | Terraform hooks for GitHub Copilot CLI    |
+| terraform-hooks-cursor     | Cursor  | 2     | Terraform hooks for Cursor                |
 
 ### MCP Servers
 
@@ -89,19 +90,21 @@ Hooks are distributed as separate target-specific packages because each AI agent
 
 ### Hooks
 
-| Package      | Hook                      | Trigger              | Description                                   |
-| ------------ | ------------------------- | -------------------- | --------------------------------------------- |
-| common       | lean-ctx                  | PreToolUse/PostToolUse | Context observation and rewrite/redirect      |
-| common       | markdownlint-cli2         | Stop                 | Auto-fix Markdown files with markdownlint     |
-| common       | markdown-link-check       | Stop                 | Check Markdown links                          |
-| common       | github-actions-actionlint | Stop                 | Lint GitHub Actions workflows with actionlint |
-| common       | github-actions-ghalint    | Stop                 | Lint GitHub Actions workflows with ghalint    |
-| common       | github-actions-zizmor     | Stop                 | Security scan GitHub Actions with zizmor      |
-| go           | golangci-lint             | Stop                 | Auto-fix Go files with golangci-lint          |
-| terraform    | terraform-fmt             | PostToolUse          | Run terraform fmt on changed files            |
-| terraform    | tflint                    | Stop                 | Run tflint on changed files                   |
-| shell-script | shellcheck                | Stop                 | Run shellcheck on changed shell scripts       |
-| shell-script | shfmt                     | Stop                 | Auto-format shell scripts with shfmt          |
+| Hooks Package         | Hook                      | Trigger                | Description                                   |
+| --------------------- | ------------------------- | ---------------------- | --------------------------------------------- |
+| common-hooks-*        | lean-ctx                  | PreToolUse/PostToolUse | Context observation and rewrite/redirect      |
+| common-hooks-*        | markdownlint-cli2         | Stop                   | Auto-fix Markdown files with markdownlint     |
+| common-hooks-*        | markdown-link-check       | Stop                   | Check Markdown links                          |
+| common-hooks-*        | github-actions-actionlint | Stop                   | Lint GitHub Actions workflows with actionlint |
+| common-hooks-*        | github-actions-ghalint    | Stop                   | Lint GitHub Actions workflows with ghalint    |
+| common-hooks-*        | github-actions-zizmor     | Stop                   | Security scan GitHub Actions with zizmor      |
+| go-hooks-*            | golangci-lint             | Stop                   | Auto-fix Go files with golangci-lint          |
+| terraform-hooks-*     | terraform-fmt             | PostToolUse            | Run terraform fmt on changed files            |
+| terraform-hooks-*     | tflint                    | Stop                   | Run tflint on changed files                   |
+| shell-script-hooks-*  | shellcheck                | Stop                   | Run shellcheck on changed shell scripts       |
+| shell-script-hooks-*  | shfmt                     | Stop                   | Auto-format shell scripts with shfmt          |
+
+> **Note:** `*` represents target suffix (`claude`, `copilot`, or `cursor`). Each target has identical hook scripts with different JSON formats.
 
 ### Skills
 
