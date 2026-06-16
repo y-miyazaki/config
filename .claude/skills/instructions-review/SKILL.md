@@ -100,3 +100,4 @@ Key evaluation criteria (inline summary of common-checklist):
 | Target `.instructions.md` does not exist | Recoverable | Report `status: failed` for that file, continue remaining targets |
 | All target files missing | Fatal | Stop, report "no reviewable instruction files found" |
 | Validation artifacts missing after one rerun request | Recoverable | Defer artifact-dependent checks with explicit reason |
+

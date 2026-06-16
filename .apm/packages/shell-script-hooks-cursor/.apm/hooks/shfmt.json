@@ -1,6 +1,6 @@
 {
   "hooks": {
-    "stop": [
+    "afterFileEdit": [
       {
         "command": "./scripts/shfmt.sh",
         "timeoutSec": 120

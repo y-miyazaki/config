@@ -102,7 +102,7 @@ Hooks are distributed as separate target-specific packages because each AI agent
 | terraform-hooks-*     | terraform-fmt             | PostToolUse            | Run terraform fmt on changed files            |
 | terraform-hooks-*     | tflint                    | Stop                   | Run tflint on changed files                   |
 | shell-script-hooks-*  | shellcheck                | Stop                   | Run shellcheck on changed shell scripts       |
-| shell-script-hooks-*  | shfmt                     | Stop                   | Auto-format shell scripts with shfmt          |
+| shell-script-hooks-*  | shfmt                     | PostToolUse            | Auto-format shell scripts with shfmt          |
 
 > **Note:** `*` represents target suffix (`claude`, `copilot`, or `cursor`). Each target has identical hook scripts with different JSON formats.
 

@@ -1,6 +1,6 @@
 {
   "hooks": {
-    "agentStop": [
+    "postToolUse": [
       {
         "type": "command",
         "bash": "./scripts/shfmt.sh",

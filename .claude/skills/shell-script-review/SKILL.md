@@ -79,3 +79,4 @@ Minimal inline contract (used if reference file is unavailable):
 | `common-checklist.md` unavailable | Fatal | Stop, report missing dependency |
 | `common-output-format.md` unavailable | Recoverable | Use inline output contract |
 | PR contains only non-shell files | Recoverable | Report "no reviewable shell scripts" and stop |
+

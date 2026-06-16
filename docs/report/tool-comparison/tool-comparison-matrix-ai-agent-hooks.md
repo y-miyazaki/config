@@ -25,7 +25,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
   - [Kiro CLI](#kiro-cli)
   - [VS Code](#vs-code)
   - [Guidelines](#guidelines-1)
-- [res Matrix (Stop / agentStop)](#response-matrix-stop--agentstop)
+- [res Matrix (Stop / agentStop)](#res-matrix-stop--agentstop)
   - [Stop stdin / stdout Format](#stop-stdin--stdout-format)
     - [Antigravity](#antigravity)
     - [Claude Code](#claude-code-1)
@@ -33,7 +33,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
     - [Kiro CLI](#kiro-cli-1)
     - [VS Code](#vs-code-1)
   - [Guidelines](#guidelines-2)
-- [res Matrix (PostToolUse)](#response-matrix-posttooluse)
+- [res Matrix (PostToolUse)](#res-matrix-posttooluse)
   - [PostToolUse stdin / stdout Format](#posttooluse-stdin--stdout-format)
     - [Antigravity](#antigravity-1)
     - [Claude Code](#claude-code-2)
@@ -56,7 +56,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 | イベント             | Antigravity           | Claude Code           | Copilot CLI           | Cursor                | Kiro CLI              | VS Code               |
 | -------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- |
 | 提供元               | Google DeepMind       | Anthropic             | GitHub (Microsoft)    | Anysphere             | AWS                   | Microsoft (GitHub)    |
-| ドキュメント         | [antigravity.google](https://antigravity.google/docs/hooks) | [docs.claude.com](https://docs.claude.com/en/docs/claude-code/hooks) | [docs.github.com](https://docs.github.com/en/copilot/ref/hooks-reference) | [cursor.com](https://docs.cursor.com/more/hooks) | [kiro.dev](https://kiro.dev/docs/cli/hooks/) | [code.visualstudio.com](https://code.visualstudio.com/docs/agent-customization/hooks) |
+| ドキュメント         | [antigravity.google](https://antigravity.google/docs/hooks) | [docs.claude.com](https://docs.claude.com/en/docs/claude-code/hooks) | [docs.github.com](https://docs.github.com/en/copilot/reference/hooks-reference) | [cursor.com](https://docs.cursor.com/more/hooks) | [kiro.dev](https://kiro.dev/docs/cli/hooks/) | [code.visualstudio.com](https://code.visualstudio.com/docs/agent-customization/hooks) |
 | Session Start        | ❌                     | ✅ SessionStart        | ✅ sessionStart        | ❌                     | ❌                     | ✅ SessionStart        |
 | User Prompt Submit   | ❌                     | ✅ UserPromptSubmit    | ✅ userPromptSubmitted | ❌                     | ✅ userPromptSubmit    | ✅ UserPromptSubmit    |
 | Pre Tool Use         | ✅ PreToolUse          | ✅ PreToolUse          | ✅ preToolUse          | ✅ beforeShellExecution | ✅ preToolUse          | ✅ PreToolUse          |
@@ -623,6 +623,6 @@ stdout — additionalContext のみ:
 
 - VS Code の hooks 仕様は [code.visualstudio.com/docs/agent-customization/hooks](https://code.visualstudio.com/docs/agent-customization/hooks) に基づく。GitHub Copilot CLI とは別実装であり、同じ `.github/hooks/` ディレクトリを使用するが stdin/stdout の JSON 構造が異なる点に注意
 - Cursor の hooks 仕様は公式ドキュメントの情報が限定的であり、変更される可能性がある
-- Antigravity の hooks 仕様は [antigravity.google/docs/hooks](https://antigravity.google/docs/hooks) の正式仕様に基づく。旧 Gemini CLI ([geminicli.com](https://geminicli.com/docs/hooks/ref/)) とはイベント名・JSON形式が異なるため注意
+- Antigravity の hooks 仕様は [antigravity.google/docs/hooks](https://antigravity.google/docs/hooks) の正式仕様に基づく。旧 Gemini CLI ([geminicli.com](https://geminicli.com/docs/hooks/reference/)) とはイベント名・JSON形式が異なるため注意
 - Antigravity の PostToolUse は観測専用（出力 `{}` のみ）。agent へのフィードバックには PreInvocation の `injectSteps` または Stop の `{"decision":"continue","reason":"..."}` を使用する
 - 各ツールの hooks 仕様 URL は変更される可能性があるため、定期的に確認する

@@ -1,4 +1,105 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(actionlint *)",
+      "Bash(apm *)",
+      "Bash(ghalint *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git status)",
+      "Bash(go test *)",
+      "Bash(golangci-lint *)",
+      "Bash(markdown-link-check *)",
+      "Bash(markdownlint-cli2 *)",
+      "Bash(npm run *)",
+      "Bash(npm test *)",
+      "Bash(shellcheck *)",
+      "Bash(shfmt *)",
+      "Read(**/*.go)",
+      "Read(**/*.js)",
+      "Read(**/*.json)",
+      "Read(**/*.md)",
+      "Read(**/*.sh)",
+      "Read(**/*.ts)",
+      "Read(**/*.yaml)",
+      "Read(**/*.yml)",
+      "Read(./.apm/**)",
+      "Read(./.devcontainer/**)",
+      "Read(./.env.example)",
+      "Read(./.github/**)",
+      "Read(./.vscode/**)",
+      "Read(./cmd/**)",
+      "Read(./docs/**)",
+      "Read(./lib/**)",
+      "Read(./pkg/**)",
+      "Read(./scripts/**)",
+      "Read(./src/**)",
+      "Read(./test/**)",
+      "Read(./tests/**)",
+      "Read(Makefile)"
+    ],
+    "deny": [
+      "Bash(curl *)",
+      "Bash(rm -rf *)",
+      "Bash(sudo *)",
+      "Bash(wget *)",
+      "Read(**/credentials/**)",
+      "Read(**/*.key)",
+      "Read(**/*.p12)",
+      "Read(**/*.pem)",
+      "Read(**/*.pfx)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(~/.aws/credentials)",
+      "Read(~/.ssh/id_*)",
+      "Write(**/credentials/**)",
+      "Write(**/*.key)",
+      "Write(**/*.p12)",
+      "Write(**/*.pem)",
+      "Write(**/*.pfx)",
+      "Write(./.env)",
+      "Write(./.env.*)",
+      "Write(./secrets/**)",
+      "Write(~/.aws/credentials)",
+      "Write(~/.ssh/id_*)"
+    ],
+    "ask": [
+      "Bash(git clean -f *)",
+      "Bash(git push *)",
+      "Bash(git reset --hard *)",
+      "Bash(npm publish *)",
+      "Write(.claude/settings.json)",
+      "Write(.editorconfig)",
+      "Write(.eslintrc*)",
+      "Write(.github/workflows/**)",
+      "Write(.gitleaks.toml)",
+      "Write(.golangci.yaml)",
+      "Write(.prettierrc*)",
+      "Write(AGENTS.md)",
+      "Write(CLAUDE.md)",
+      "Write(docker-compose*.yml)",
+      "Write(Dockerfile)",
+      "Write(go.mod)",
+      "Write(jest.config.*)",
+      "Write(Makefile)",
+      "Write(mise.toml)",
+      "Write(package.json)",
+      "Write(renovate.json)",
+      "Write(terraform.*.tfvars)",
+      "Write(tsconfig.json)"
+    ]
+  },
+  "autoCompactEnabled": true,
+  "cleanupPeriodDays": 30,
+  "fileCheckpointingEnabled": true,
+  "respectGitignore": true,
+  "includeGitInstructions": true,
+  "attribution": {
+    "commit": "Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>",
+    "pr": "\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)"
+  },
   "hooks": {
     "Stop": [
       {
@@ -70,16 +171,6 @@
             "timeout": 120
           }
         ]
-      },
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/shell-script-hooks-claude/scripts/shfmt.sh",
-            "timeout": 120
-          }
-        ]
       }
     ],
     "PostToolUse": [
@@ -90,6 +181,16 @@
             "type": "command",
             "command": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook observe",
             "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/shell-script-hooks-claude/scripts/shfmt.sh",
+            "timeout": 120
           }
         ]
       }

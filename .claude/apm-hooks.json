@@ -76,17 +76,6 @@
         }
       ],
       "_apm_source": "shell-script-hooks-claude"
-    },
-    {
-      "matcher": "",
-      "hooks": [
-        {
-          "type": "command",
-          "command": ".claude/hooks/shell-script-hooks-claude/scripts/shfmt.sh",
-          "timeout": 120
-        }
-      ],
-      "_apm_source": "shell-script-hooks-claude"
     }
   ],
   "PostToolUse": [
@@ -100,6 +89,17 @@
         }
       ],
       "_apm_source": "common-hooks-claude"
+    },
+    {
+      "matcher": "Write",
+      "hooks": [
+        {
+          "type": "command",
+          "command": ".claude/hooks/shell-script-hooks-claude/scripts/shfmt.sh",
+          "timeout": 120
+        }
+      ],
+      "_apm_source": "shell-script-hooks-claude"
     }
   ],
   "PreToolUse": [

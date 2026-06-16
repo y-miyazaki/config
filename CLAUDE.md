@@ -41,8 +41,6 @@ When structure or package composition changes, keep `README.md` and `docs/` up t
 
 ### Context Exclusions
 
-The following are automatically excluded via `.claudeignore`:
-
 - Lock files: `mise.lock`, `go.sum`, `apm.lock.yaml`, `package-lock.json`
 - Dependencies: `node_modules/`, `vendor/`, `apm_modules/`
 - Build artifacts: `dist/`, `build/`, `bin/`

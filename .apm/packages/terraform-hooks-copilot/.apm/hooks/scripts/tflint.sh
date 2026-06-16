@@ -81,24 +81,51 @@ function report_failure {
 
     # Step 1: Detect agent (agent-first strategy)
     if [[ -n "$HOOK_STDIN_DATA" ]]; then
+        # 1. Antigravity (highest priority - unique fields)
         if echo "$HOOK_STDIN_DATA" | jq -e ".terminationReason" > /dev/null 2>&1; then
             agent="antigravity"
         elif echo "$HOOK_STDIN_DATA" | jq -e ".toolCall" > /dev/null 2>&1; then
             agent="antigravity"
-        elif echo "$HOOK_STDIN_DATA" | jq -e 'has("stop_hook_active") or has("tool_use_id")' > /dev/null 2>&1; then
-            agent="vscode"
-            hook_event=$(echo "$HOOK_STDIN_DATA" | jq -r '.hook_event_name // "Stop"' 2> /dev/null)
+
+        # 2. Check for hook_event_name first (most reliable discriminator)
+        elif echo "$HOOK_STDIN_DATA" | jq -e ".hook_event_name" > /dev/null 2>&1; then
+            hook_event=$(echo "$HOOK_STDIN_DATA" | jq -r '.hook_event_name' 2> /dev/null)
+
+            # Check event name pattern to determine agent type
+            if echo "$hook_event" | grep -qE '^(Stop|PostToolUse|PreToolUse)$'; then
+                # PascalCase = Claude Code
+                agent="claude_code"
+            elif echo "$hook_event" | grep -qE '^(stop|postToolUse|preToolUse|agentSpawn|userPromptSubmit)$'; then
+                # camelCase with Kiro values = Kiro
+                agent="kiro"
+            elif echo "$hook_event" | grep -qE '^(afterFileEdit|beforeShellExecution|beforeMCPExecution|beforeReadFile|stop)$'; then
+                # camelCase with Cursor values = Cursor
+                agent="cursor"
+            else
+                # Default to Claude Code for unknown PascalCase
+                agent="claude_code"
+            fi
+
+        # 3. Copilot CLI (env var or Copilot-unique fields, no hook_event_name)
         elif [[ -n "${GITHUB_COPILOT_API_TOKEN:-}" ]] \
             || echo "$HOOK_STDIN_DATA" | jq -e '.transcriptPath // .stopReason // .stop_reason // .toolResult // .tool_result' > /dev/null 2>&1; then
             agent="copilot"
-            hook_event=$(echo "$HOOK_STDIN_DATA" | jq -r '.hook_event_name // "agentStop"' 2> /dev/null)
-        elif echo "$HOOK_STDIN_DATA" | jq -e '.hook_event_name' > /dev/null 2>&1 \
-            && echo "$HOOK_STDIN_DATA" | jq -r '.hook_event_name' 2> /dev/null | grep -qE '^(stop|postToolUse|preToolUse|agentSpawn|userPromptSubmit)$'; then
-            agent="kiro"
-            hook_event=$(echo "$HOOK_STDIN_DATA" | jq -r '.hook_event_name' 2> /dev/null)
-        elif echo "$HOOK_STDIN_DATA" | jq -e ".hook_event_name" > /dev/null 2>&1; then
-            agent="claude_code"
-            hook_event=$(echo "$HOOK_STDIN_DATA" | jq -r '.hook_event_name' 2> /dev/null)
+            if echo "$HOOK_STDIN_DATA" | jq -e ".stopReason" > /dev/null 2>&1; then
+                hook_event="agentStop"
+            elif echo "$HOOK_STDIN_DATA" | jq -e ".toolResult" > /dev/null 2>&1; then
+                hook_event="postToolUse"
+            elif echo "$HOOK_STDIN_DATA" | jq -e ".toolName" > /dev/null 2>&1; then
+                hook_event="preToolUse"
+            fi
+
+        # 4. VS Code extension (fallback based on vscode-specific fields)
+        elif echo "$HOOK_STDIN_DATA" | jq -e 'has("stop_hook_active") or has("tool_use_id")' > /dev/null 2>&1; then
+            agent="vscode"
+            if echo "$HOOK_STDIN_DATA" | jq -e 'has("stop_hook_active")' > /dev/null 2>&1; then
+                hook_event="Stop"
+            elif echo "$HOOK_STDIN_DATA" | jq -e 'has("tool_use_id")' > /dev/null 2>&1; then
+                hook_event="PostToolUse"
+            fi
         fi
     fi
 
@@ -106,29 +133,15 @@ function report_failure {
         agent="copilot"
     fi
 
-    # Step 2: Build response per agent spec
+    # Step 2: Build response per agent spec (A-Z order)
     case "$agent" in
-        kiro)
-            if [[ "$hook_event" == "stop" ]]; then
-                jq -n --arg reason "$reason" '{decision: "block", reason: $reason}'
-                exit 0
-            else
-                echo "$reason" >&2
-                exit 2
-            fi
+        antigravity)
+            jq -n --arg reason "$reason" '{decision: "continue", reason: $reason}'
+            exit 0
             ;;
         claude_code)
             if [[ "$hook_event" == "Stop" ]]; then
                 jq -n --arg reason "$reason" '{decision: "block", reason: $reason}'
-                exit 0
-            else
-                echo "$reason" >&2
-                exit 2
-            fi
-            ;;
-        vscode)
-            if [[ "$hook_event" == "Stop" ]]; then
-                jq -n --arg reason "$reason" '{hookSpecificOutput: {hookEventName: "Stop", decision: "block", reason: $reason}}'
                 exit 0
             else
                 echo "$reason" >&2
@@ -147,9 +160,27 @@ function report_failure {
                     ;;
             esac
             ;;
-        antigravity)
-            jq -n --arg reason "$reason" '{decision: "continue", reason: $reason}'
-            exit 0
+        cursor)
+            echo "$reason" >&2
+            exit 2
+            ;;
+        kiro)
+            if [[ "$hook_event" == "stop" ]]; then
+                jq -n --arg reason "$reason" '{decision: "block", reason: $reason}'
+                exit 0
+            else
+                echo "$reason" >&2
+                exit 2
+            fi
+            ;;
+        vscode)
+            if [[ "$hook_event" == "Stop" ]]; then
+                jq -n --arg reason "$reason" '{hookSpecificOutput: {hookEventName: "Stop", decision: "block", reason: $reason}}'
+                exit 0
+            else
+                echo "$reason" >&2
+                exit 2
+            fi
             ;;
         *)
             echo "$reason" >&2
