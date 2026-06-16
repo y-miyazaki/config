@@ -83,6 +83,7 @@
       "Read(**/*.pfx)",
       "Read(./.env)",
       "Read(./.env.*)",
+      "Read(./env/common/tmp)",
       "Read(./secrets/**)",
       "Read(~/.aws/credentials)",
       "Read(~/.azure/**)",
@@ -100,14 +101,7 @@
       "Write(./.env)",
       "Write(./.env.*)",
       "Write(./secrets/**)",
-      "Write(~/.aws/credentials)",
-      "Write(~/.azure/**)",
-      "Write(~/.config/gcloud/**)",
-      "Write(~/.docker/config.json)",
-      "Write(~/.helm/**)",
-      "Write(~/.kube/config)",
-      "Write(~/.ssh/id_*)",
-      "Write(~/.terraform.d/credentials.tfrc.json)"
+      "Write(~/**)"
     ],
     "ask": [
       "Bash(git branch -D *)",
