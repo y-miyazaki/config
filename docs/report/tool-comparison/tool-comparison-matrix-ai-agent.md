@@ -8,6 +8,7 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 
 | 日付       | 内容                                                                 |
 | ---------- | -------------------------------------------------------------------- |
+| 2026-06-16 | ツール並び順を A-Z 順に統一                                          |
 | 2026-06-06 | markdown-link-check hooks 動作確認用にドキュメントを更新。             |
 | 2026-06-06 | Gemini CLI → Antigravity に移行。IDE/CLI設定パスの分離を明確化。copilot-instructions.md設計方針を反映 |
 | 2026-06-05 | GitHub Copilot 6月課金モデル変更 (AI Credits制) 反映、Cursor/Gemini情報修正、Agent Hooks セクション追加 |
@@ -17,7 +18,7 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 <!-- omit in toc -->
 ## Table of Contents
 
-- [Coding Agent: Kiro vs Claude Code vs GitHub Copilot vs Cursor vs Antigravity](#coding-agent-kiro-vs-claude-code-vs-github-copilot-vs-cursor-vs-antigravity)
+- [Coding Agent: Antigravity vs Claude Code vs Cursor vs GitHub Copilot vs Kiro](#coding-agent-antigravity-vs-claude-code-vs-cursor-vs-github-copilot-vs-kiro)
   - [Pricing](#pricing)
   - [Billing Model](#billing-model)
   - [Configuration Files and Directories](#configuration-files-and-directories)
@@ -34,74 +35,74 @@ AI Agent / コーディングアシスタントに特化したツール選定の
   - [Guidelines](#guidelines-4)
 - [今後の改善候補](#今後の改善候補)
 
-## Coding Agent: Kiro vs Claude Code vs GitHub Copilot vs Cursor vs Antigravity
+## Coding Agent: Antigravity vs Claude Code vs Cursor vs GitHub Copilot vs Kiro
 
-| 比較項目           | Kiro            | Claude Code           | GitHub Copilot         | Cursor                    | Antigravity                |
-| ------------------ | --------------- | --------------------- | ---------------------- | ------------------------- | -------------------------- |
-| 提供元             | AWS             | Anthropic             | GitHub (Microsoft)     | Anysphere                 | Google DeepMind            |
-| リポジトリ         | -               | -                     | -                      | -                         | -                          |
-| ドキュメント       | [kiro.dev/docs/cli](https://kiro.dev/docs/cli) | [docs.anthropic.com](https://docs.anthropic.com/en/docs/claude-code) | [docs.github.com](https://docs.github.com/en/copilot) | [docs.cursor.com](https://docs.cursor.com) | [antigravity.google](https://antigravity.google/docs) |
-| ライセンス         | 商用            | 商用                  | 商用                   | 商用                      | 商用                       |
-| 動作形態           | IDE / CLI       | IDE / CLI             | IDE / CLI              | AIネイティブIDE           | IDE / CLI                  |
-| エージェントモード | ✅               | ✅                     | ✅                      | ✅                         | ✅                          |
-| マルチファイル編集 | ✅               | ✅                     | ✅                      | ✅                         | ✅                          |
-| ターミナル実行     | ✅               | ✅                     | ✅                      | ✅                         | ✅                          |
-| MCP 対応           | ✅               | ✅                     | ✅                      | ✅                         | ✅                          |
-| AWS 統合           | ✅ (ネイティブ)  | ❌                     | ⚠️ 一部連携             | ❌                         | ❌                          |
-| GCP 統合           | ❌               | ❌                     | ⚠️ 一部連携             | ❌                         | ✅ (ネイティブ)             |
-| セルフホスト / VPC | ✅ (AWS環境連携) | ❌                     | ⚠️ (Enterprise構成次第) | ❌                         | ⚠️ (GCP Enterprise)         |
-| CLI 自動化適性     | ✅               | ✅ 非常に強い          | ⚠️ 中程度               | ⚠️ 中程度                  | ✅ (agy コマンド)            |
-| 大規模導入適性     | ⚠️ 今後拡大      | ✅ (Team / Enterprise) | ✅ 非常に強い           | ✅ (Business / Enterprise) | ✅ (Google Cloud組織)       |
-| コンテキスト窓     | 200K tokens      | 200K tokens           | 128K〜200K tokens      | 128K〜200K tokens         | 1M+ tokens                 |
-| モデル選択         | ✅ (Auto / 手動)  | Claude 系のみ          | ✅ 複数 (GPT-5, Claude等) | ✅ 複数 (GPT-5, Claude等)  | Gemini 系中心 (実験的に Gemma) |
-| データ学習利用     | ❌ 利用しない     | ❌ 利用しない          | ❌ (Business以上)        | ❌ (Business以上)          | ❌ 利用しない               |
-| コンプライアンス   | SOC2 / AWS準拠   | SOC2                  | SOC2 / FedRAMP          | SOC2                      | SOC2 / ISO / GCP準拠       |
+| 比較項目           | Antigravity                | Claude Code           | Cursor                    | GitHub Copilot         | Kiro            |
+| ------------------ | -------------------------- | --------------------- | ------------------------- | ---------------------- | --------------- |
+| 提供元             | Google DeepMind            | Anthropic             | Anysphere                 | GitHub (Microsoft)     | AWS             |
+| リポジトリ         | -                          | -                     | -                         | -                      | -               |
+| ドキュメント       | [antigravity.google](https://antigravity.google/docs) | [docs.anthropic.com](https://docs.anthropic.com/en/docs/claude-code) | [docs.cursor.com](https://docs.cursor.com) | [docs.github.com](https://docs.github.com/en/copilot) | [kiro.dev/docs/cli](https://kiro.dev/docs/cli) |
+| ライセンス         | 商用                       | 商用                  | 商用                      | 商用                   | 商用            |
+| 動作形態           | IDE / CLI                  | IDE / CLI             | AIネイティブIDE           | IDE / CLI              | IDE / CLI       |
+| エージェントモード | ✅                          | ✅                     | ✅                         | ✅                      | ✅               |
+| マルチファイル編集 | ✅                          | ✅                     | ✅                         | ✅                      | ✅               |
+| ターミナル実行     | ✅                          | ✅                     | ✅                         | ✅                      | ✅               |
+| MCP 対応           | ✅                          | ✅                     | ✅                         | ✅                      | ✅               |
+| AWS 統合           | ❌                          | ❌                     | ❌                         | ⚠️ 一部連携             | ✅ (ネイティブ)  |
+| GCP 統合           | ✅ (ネイティブ)             | ❌                     | ❌                         | ⚠️ 一部連携             | ❌               |
+| セルフホスト / VPC | ⚠️ (GCP Enterprise)         | ❌                     | ❌                         | ⚠️ (Enterprise構成次第) | ✅ (AWS環境連携) |
+| CLI 自動化適性     | ✅ (agy コマンド)            | ✅ 非常に強い          | ⚠️ 中程度                  | ⚠️ 中程度               | ✅               |
+| 大規模導入適性     | ✅ (Google Cloud組織)       | ✅ (Team / Enterprise) | ✅ (Business / Enterprise) | ✅ 非常に強い           | ⚠️ 今後拡大      |
+| コンテキスト窓     | 1M+ tokens                 | 200K tokens           | 128K〜200K tokens         | 128K〜200K tokens      | 200K tokens      |
+| モデル選択         | Gemini 系中心 (実験的に Gemma) | Claude 系のみ          | ✅ 複数 (GPT-5, Claude等)  | ✅ 複数 (GPT-5, Claude等) | ✅ (Auto / 手動)  |
+| データ学習利用     | ❌ 利用しない               | ❌ 利用しない          | ❌ (Business以上)          | ❌ (Business以上)        | ❌ 利用しない     |
+| コンプライアンス   | SOC2 / ISO / GCP準拠       | SOC2                  | SOC2                      | SOC2 / FedRAMP          | SOC2 / AWS準拠   |
 
 ### Pricing
 
 > ※ 2026-06-01 より GitHub Copilot は「リクエストベース」から「AI Credits (トークンベース)」課金に移行。1 AI credit = $0.01 USD。モデル選択とトークン消費量で実コストが大きく変動するため、月額はあくまで基本料金+含まれるクレジット枠の目安。
 > ※ Gemini CLI は 2026-06-18 にサービス停止。後継は Antigravity CLI (`agy`)。設定パスは `~/.gemini/` を引き続き使用し互換性あり。
 
-| プラン       | Kiro                         | Claude Code                       | GitHub Copilot                          | Cursor                | Antigravity                   |
-| ------------ | ---------------------------- | --------------------------------- | --------------------------------------- | --------------------- | ----------------------------- |
-| 料金ページ   | [kiro.dev/pricing](https://kiro.dev/pricing) | [anthropic.com/pricing](https://www.anthropic.com/pricing) | [github.com/features/copilot](https://github.com/features/copilot#pricing) | [cursor.com/pricing](https://www.cursor.com/pricing) | [antigravity.google/pricing](https://antigravity.google/pricing) |
-| 無料枠       | 50 クレジット/月             | ❌                                 | ✅ (Free: 限定 AI Credits / コード補完は無制限) | ✅ (Hobby: Agent限定利用+Tab限定) | ❌ (廃止予定)                  |
-| 個人 (標準)  | Pro: $20/月                  | Pro: $20/月                       | Pro: $10/月 (1,500 credits含む)         | Pro: $20/月           | Google AI Pro: $20/月          |
-| 個人 (上位)  | Pro+: $40/月, Power: $200/月 | Max 5x: $100/月, Max 20x: $200/月 | Pro+: $39/月 (7,000 credits), Max: $100/月 (20,000 credits) | Pro+: $60/月, Ultra: $200/月 | Ultra: $100/月 (5x), Ultra+: $200/月 (20x) |
-| チーム/組織  | 今後拡張                     | Team: $25/seat/月, Premium: $125/seat/月 | Business: $19/user/月 (1,900 credits/user, プール型) | Teams Standard: $40/seat/月, Premium: $120/seat/月 | Standard: 時間課金            |
-| Enterprise   | 今後拡張                     | Enterprise: カスタム              | Enterprise: $39/user/月 (3,900 credits/user, プール型) | Enterprise: カスタム  | Enterprise: カスタム          |
-| 従量追加課金 | ✅ 超過時 $0.04/credit で追加課金 (opt-in) | ⚠️ API利用時あり                   | ✅ 超過時 $0.01/credit で追加課金 (予算上限設定可) | ⚠️ usage 条件あり      | ⚠️ GCP課金連携                 |
+| プラン       | Antigravity                   | Claude Code                       | Cursor                | GitHub Copilot                          | Kiro                         |
+| ------------ | ----------------------------- | --------------------------------- | --------------------- | --------------------------------------- | ---------------------------- |
+| 料金ページ   | [antigravity.google/pricing](https://antigravity.google/pricing) | [anthropic.com/pricing](https://www.anthropic.com/pricing) | [cursor.com/pricing](https://www.cursor.com/pricing) | [github.com/features/copilot](https://github.com/features/copilot#pricing) | [kiro.dev/pricing](https://kiro.dev/pricing) |
+| 無料枠       | ❌ (廃止予定)                  | ❌                                 | ✅ (Hobby: Agent限定利用+Tab限定) | ✅ (Free: 限定 AI Credits / コード補完は無制限) | 50 クレジット/月             |
+| 個人 (標準)  | Google AI Pro: $20/月          | Pro: $20/月                       | Pro: $20/月           | Pro: $10/月 (1,500 credits含む)         | Pro: $20/月                  |
+| 個人 (上位)  | Ultra: $100/月 (5x), Ultra+: $200/月 (20x) | Max 5x: $100/月, Max 20x: $200/月 | Pro+: $60/月, Ultra: $200/月 | Pro+: $39/月 (7,000 credits), Max: $100/月 (20,000 credits) | Pro+: $40/月, Power: $200/月 |
+| チーム/組織  | Standard: 時間課金            | Team: $25/seat/月, Premium: $125/seat/月 | Teams Standard: $40/seat/月, Premium: $120/seat/月 | Business: $19/user/月 (1,900 credits/user, プール型) | 今後拡張                     |
+| Enterprise   | Enterprise: カスタム          | Enterprise: カスタム              | Enterprise: カスタム  | Enterprise: $39/user/月 (3,900 credits/user, プール型) | 今後拡張                     |
+| 従量追加課金 | ⚠️ GCP課金連携                 | ⚠️ API利用時あり                   | ⚠️ usage 条件あり      | ✅ 超過時 $0.01/credit で追加課金 (予算上限設定可) | ✅ 超過時 $0.04/credit で追加課金 (opt-in) |
 
 ### Billing Model
 
 > ※ GitHub Copilot は 2026-06-01 より全プラン AI Credits 制に移行。旧「premium requests」は廃止 (legacy)。
 
-| 項目               | Kiro                     | Claude Code                 | GitHub Copilot                                   | Cursor                         | Antigravity                   |
-| ------------------ | ------------------------ | --------------------------- | ------------------------------------------------ | ------------------------------ | ----------------------------- |
-| 基本課金           | サブスク + クレジット枠  | サブスク枠 (定額内トークン) | サブスク + AI Credits (トークン従量)              | サブスク + usage制限           | 無料枠 + サブスク             |
-| クレジット単価     | $0.04/credit (超過時)    | -                           | 1 AI credit = $0.01 USD                          | -                              | -                             |
-| 含まれるクレジット | Pro: 1,000/月, Pro+: 2,000/月, Power: 10,000/月 | -                           | Pro: 1,500/月, Pro+: 7,000/月, Max: 20,000/月    | -                              | -                             |
-| 組織プールモデル   | -                        | -                           | ✅ (user単位クレジットを組織全体でプール共有)      | -                              | -                             |
-| 超過時の挙動       | $0.04/credit 追加課金 (opt-in) | レート制限 / 上位プラン誘導 | 予算設定に基づき追加課金 or ブロック              | 制限 or 追加課金               | レート制限                    |
-| モデル選択         | ✅ (Auto / 手動)          | Claude 系中心               | ✅ 複数モデル (GPT-5, Claude, Gemini等)           | ✅ 複数モデル (GPT-5, Claude等) | Gemini 系中心 (2.5 Pro/Flash) |
-| モデルによる料金差 | クレジット消費量が異なる | プラン内定額                | モデル×トークン数で credit 消費が大きく異なる     | モデルにより消費が異なる       | プラン内定額                  |
-| Code Completions   | -                        | -                           | AI Credits 消費なし (Freeを含む全プランで無制限)  | -                              | -                             |
-| 年額割引           | 不明 / 今後次第          | ✅ ($17/月相当)              | ✅ (年額プランあり、旧request-baseは legacy扱い)  | ✅ ($192/年 = Pro)              | ✅ (年額プランあり)            |
+| 項目               | Antigravity                   | Claude Code                 | Cursor                         | GitHub Copilot                                   | Kiro                     |
+| ------------------ | ----------------------------- | --------------------------- | ------------------------------ | ------------------------------------------------ | ------------------------ |
+| 基本課金           | 無料枠 + サブスク             | サブスク枠 (定額内トークン) | サブスク + usage制限           | サブスク + AI Credits (トークン従量)              | サブスク + クレジット枠  |
+| クレジット単価     | -                             | -                           | -                              | 1 AI credit = $0.01 USD                          | $0.04/credit (超過時)    |
+| 含まれるクレジット | -                             | -                           | -                              | Pro: 1,500/月, Pro+: 7,000/月, Max: 20,000/月    | Pro: 1,000/月, Pro+: 2,000/月, Power: 10,000/月 |
+| 組織プールモデル   | -                             | -                           | -                              | ✅ (user単位クレジットを組織全体でプール共有)      | -                        |
+| 超過時の挙動       | レート制限                    | レート制限 / 上位プラン誘導 | 制限 or 追加課金               | 予算設定に基づき追加課金 or ブロック              | $0.04/credit 追加課金 (opt-in) |
+| モデル選択         | Gemini 系中心 (2.5 Pro/Flash) | Claude 系中心               | ✅ 複数モデル (GPT-5, Claude等) | ✅ 複数モデル (GPT-5, Claude, Gemini等)           | ✅ (Auto / 手動)          |
+| モデルによる料金差 | プラン内定額                  | プラン内定額                | モデルにより消費が異なる       | モデル×トークン数で credit 消費が大きく異なる     | クレジット消費量が異なる |
+| Code Completions   | -                             | -                           | -                              | AI Credits 消費なし (Freeを含む全プランで無制限)  | -                        |
+| 年額割引           | ✅ (年額プランあり)            | ✅ ($17/月相当)              | ✅ ($192/年 = Pro)              | ✅ (年額プランあり、旧request-baseは legacy扱い)  | 不明 / 今後次第          |
 
 ### Configuration Files and Directories
 
-| 用途                | Kiro                           | Claude Code                      | GitHub Copilot                    | Cursor                            | Antigravity                     |
-| ------------------- | ------------------------------ | -------------------------------- | --------------------------------- | --------------------------------- | ------------------------------- |
-| Steering (指示)     | `.kiro/steering/*.md`          | `CLAUDE.md` / `.claude/rules/*.md` | `.github/copilot-instructions.md` / `.github/instructions/*.instructions.md` | `.cursorrules` / `.cursor/rules/` | `GEMINI.md`                     |
-| AGENTS.md (共通)    | ✅ 読込                         | ✅ (`@AGENTS.md` import推奨)     | ✅ 読込                            | ✅ 読込                            | ✅ 読込                          |
-| Skills (スキル)     | `.kiro/skills/<name>/SKILL.md` | `.claude/skills/<name>/SKILL.md` | `.github/skills/<name>/SKILL.md`  | `.cursor/skills/<name>/SKILL.md`      | `.agents/skills/<name>/SKILL.md`  |
-| MCP 設定            | `.kiro/settings/mcp.json`      | `.mcp.json`                      | `.github/mcp.json` / `.mcp.json`  | `.cursor/mcp.json`                | `.agents/mcp_config.json`       |
-| MCP 設定 (IDE)      | -                              | -                                | `.vscode/mcp.json`                | -                                 | -                                       |
-| Hooks 設定          | IDE: `.kiro/hooks/*.kiro.hook` / CLI: Agent設定内 `hooks` フィールド | `.claude/settings.json` 内 `hooks` | `.github/hooks/*.json`            | `.cursor/hooks.json` (プロジェクト) / `~/.cursor/hooks.json` (ユーザー) | `.gemini/antigravity-cli/settings.json` 内 `hooks` |
-| Agent 定義          | `.kiro/agents/`                | `.claude/agents/`                | `.github/agents/*.md`             | ⚠️ 独自UI管理                      | -                               |
-| プロンプト          | `.kiro/prompts/`               | `.claude/commands/` (レガシー)   | `.github/prompts/`                | -                                 | Custom commands                 |
-| プロジェクト設定    | `.kiro/agents/*.json`          | `.claude/settings.json`          | `.github/copilot/settings.json`   | `.cursor/settings.json`           | `.gemini/antigravity-cli/settings.json` |
-| ユーザー設定        | `~/.kiro/`                     | `~/.claude/`                     | `~/.copilot/`                     | `~/.cursor/`                      | `~/.gemini/`                    |
+| 用途                | Antigravity                     | Claude Code                      | Cursor                            | GitHub Copilot                    | Kiro                           |
+| ------------------- | ------------------------------- | -------------------------------- | --------------------------------- | --------------------------------- | ------------------------------ |
+| Steering (指示)     | `GEMINI.md`                     | `CLAUDE.md` / `.claude/rules/*.md` | `.cursorrules` / `.cursor/rules/` | `.github/copilot-instructions.md` / `.github/instructions/*.instructions.md` | `.kiro/steering/*.md`          |
+| AGENTS.md (共通)    | ✅ 読込                          | ✅ (`@AGENTS.md` import推奨)     | ✅ 読込                            | ✅ 読込                            | ✅ 読込                         |
+| Skills (スキル)     | `.agents/skills/<name>/SKILL.md`  | `.claude/skills/<name>/SKILL.md` | `.cursor/skills/<name>/SKILL.md`      | `.github/skills/<name>/SKILL.md`  | `.kiro/skills/<name>/SKILL.md` |
+| MCP 設定            | `.agents/mcp_config.json`       | `.mcp.json`                      | `.cursor/mcp.json`                | `.github/mcp.json` / `.mcp.json`  | `.kiro/settings/mcp.json`      |
+| MCP 設定 (IDE)      | -                                       | -                                | -                                 | `.vscode/mcp.json`                | -                              |
+| Hooks 設定          | `.gemini/antigravity-cli/settings.json` 内 `hooks` | `.claude/settings.json` 内 `hooks` | `.cursor/hooks.json` (プロジェクト) / `~/.cursor/hooks.json` (ユーザー) | `.github/hooks/*.json`            | IDE: `.kiro/hooks/*.kiro.hook` / CLI: Agent設定内 `hooks` フィールド |
+| Agent 定義          | -                               | `.claude/agents/`                | ⚠️ 独自UI管理                      | `.github/agents/*.md`             | `.kiro/agents/`                |
+| プロンプト          | Custom commands                 | `.claude/commands/` (レガシー)   | -                                 | `.github/prompts/`                | `.kiro/prompts/`               |
+| プロジェクト設定    | `.gemini/antigravity-cli/settings.json` | `.claude/settings.json`          | `.cursor/settings.json`           | `.github/copilot/settings.json`   | `.kiro/agents/*.json`          |
+| ユーザー設定        | `~/.gemini/`                    | `~/.claude/`                     | `~/.cursor/`                      | `~/.copilot/`                     | `~/.kiro/`                     |
 
 ### Guidelines
 
@@ -119,25 +120,25 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 
 ## Agent Security: Guardrails
 
-| 比較項目             | Kiro                   | Claude Code      | GitHub Copilot  | Cursor           | Antigravity              |
-| -------------------- | ---------------------- | ---------------- | --------------- | ---------------- | ------------------------ |
-| 破壊的操作の制御     | ✅ 承認制               | ✅ permissions    | ✅ 確認あり      | ⚠️ 一部           | ✅ 確認あり               |
-| ファイルアクセス制御 | ✅                      | ✅ deny パターン  | ⚠️ IDE依存       | ⚠️ IDE依存        | ⚠️ 限定的                 |
-| シークレット保護     | ✅                      | ✅                | ✅               | ⚠️                | ✅                        |
-| ネットワーク制御     | ✅                      | ✅                | ⚠️               | ⚠️                | ⚠️                        |
-| コマンド実行制御     | ✅ (allowlist/denylist) | ✅ (permissions)  | ✅               | ⚠️                | ✅ (sandbox)              |
-| 監査ログ             | ⚠️ セッション中心       | ⚠️ セッション中心 | ✅ Enterprise    | ⚠️                | ⚠️ (Vertex AI経由時のみ)    |
-| データ統制           | AWS基盤準拠            | 契約プラン依存   | Enterprise 強い | Business以上推奨 | GCP基盤準拠              |
+| 比較項目             | Antigravity              | Claude Code      | Cursor           | GitHub Copilot  | Kiro                   |
+| -------------------- | ------------------------ | ---------------- | ---------------- | --------------- | ---------------------- |
+| 破壊的操作の制御     | ✅ 確認あり               | ✅ permissions    | ⚠️ 一部           | ✅ 確認あり      | ✅ 承認制               |
+| ファイルアクセス制御 | ⚠️ 限定的                 | ✅ deny パターン  | ⚠️ IDE依存        | ⚠️ IDE依存       | ✅                      |
+| シークレット保護     | ✅                        | ✅                | ⚠️                | ✅               | ✅                      |
+| ネットワーク制御     | ⚠️                        | ✅                | ⚠️                | ⚠️               | ✅                      |
+| コマンド実行制御     | ✅ (sandbox)              | ✅ (permissions)  | ⚠️                | ✅               | ✅ (allowlist/denylist) |
+| 監査ログ             | ⚠️ (Vertex AI経由時のみ)    | ⚠️ セッション中心 | ⚠️                | ✅ Enterprise    | ⚠️ セッション中心       |
+| データ統制           | GCP基盤準拠              | 契約プラン依存   | Business以上推奨 | Enterprise 強い | AWS基盤準拠            |
 
 ### Guardrails Configuration
 
-| 設定項目                | Kiro                                    | Claude Code                   | GitHub Copilot          | Cursor                    | Antigravity               |
-| ----------------------- | --------------------------------------- | ----------------------------- | ----------------------- | ------------------------- | ------------------------- |
-| 権限設定ファイル        | `.kiro/agents/*.json`                   | `.claude/settings.json`       | `.github/copilot/settings.json` | `.cursor/settings.json`   | `.gemini/antigravity-cli/settings.json` |
-| ユーザー権限設定        | `~/.kiro/agents/*.json`                 | `~/.claude/settings.json`     | `~/.copilot/settings.json`      | `~/.cursor/settings.json` | `~/.gemini/antigravity-cli/settings.json` |
-| ローカル設定 (Git除外)  | -                                       | `.claude/settings.local.json` | `.github/copilot/settings.local.json` | -                   | -                         |
-| ツール許可ルール        | `allowedTools` / `toolsSettings`        | `allow` / `deny` リスト       | `permissions-config.json`       | `permissions-config.json` | sandbox 設定              |
-| 管理者設定 (Enterprise) | -                                       | managed policy (JSON)         | Organization policy     | -                         | GCP Organization policy   |
+| 設定項目                | Antigravity               | Claude Code                   | Cursor                    | GitHub Copilot          | Kiro                                    |
+| ----------------------- | ------------------------- | ----------------------------- | ------------------------- | ----------------------- | --------------------------------------- |
+| 権限設定ファイル        | `.gemini/antigravity-cli/settings.json` | `.claude/settings.json`       | `.cursor/settings.json`   | `.github/copilot/settings.json` | `.kiro/agents/*.json`                   |
+| ユーザー権限設定        | `~/.gemini/antigravity-cli/settings.json` | `~/.claude/settings.json`     | `~/.cursor/settings.json` | `~/.copilot/settings.json`      | `~/.kiro/agents/*.json`                 |
+| ローカル設定 (Git除外)  | -                         | `.claude/settings.local.json` | -                   | `.github/copilot/settings.local.json` | -                                       |
+| ツール許可ルール        | sandbox 設定              | `allow` / `deny` リスト       | `permissions-config.json` | `permissions-config.json`       | `allowedTools` / `toolsSettings`        |
+| 管理者設定 (Enterprise) | GCP Organization policy   | managed policy (JSON)         | -                         | Organization policy     | -                                       |
 
 ### Configuration Examples
 
@@ -188,20 +189,20 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 
 ## Agent Skills
 
-| 比較項目             | Kiro                           | Claude Code                      | GitHub Copilot                   | Cursor                                    | Antigravity                                |
-| -------------------- | ------------------------------ | -------------------------------- | -------------------------------- | ----------------------------------------- | ------------------------------------------ |
-| ドキュメント         | [kiro.dev](https://kiro.dev/docs/cli/skills/) | [docs.anthropic.com](https://docs.anthropic.com/en/docs/claude-code/skills) | [docs.github.com](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) | [docs.cursor.com](https://docs.cursor.com/context/rules) / [Marketplace](https://cursor.com/marketplace) | [antigravity.google](https://antigravity.google/docs/skills) |
-| 定義形式             | Markdown (`SKILL.md`)          | Markdown (`SKILL.md`)            | Markdown (`SKILL.md`)            | MDC (YAML frontmatter + Markdown)         | Markdown (`SKILL.md`)                      |
-| 格納パス             | `.kiro/skills/<name>/SKILL.md` | `.claude/skills/<name>/SKILL.md` | `.github/skills/<name>/SKILL.md` | `.cursor/skills/<name>/SKILL.md`          | `.agents/skills/<name>/SKILL.md`           |
-| 代替パス (alias)     | `.agents/skills/<name>/`       | `.agents/skills/<name>/`         | `.agents/skills/<name>/`         | `.agents/skills/<name>/` (⚠️ Rules扱い)    | `.agents/skills/<name>/`                   |
-| グローバルスキル     | `~/.kiro/skills/<name>/`       | `~/.claude/skills/<name>/`       | -                                | `~/.cursor/skills/<name>/`                | `~/.gemini/skills/<name>/`                 |
-| プロジェクト単位     | ✅                              | ✅                                | ✅                                | ✅                                         | ✅                                          |
-| 条件付き適用         | ✅ (ファイルパターン)           | ✅ (`paths` frontmatter)          | ✅                                | ✅ (`globs` frontmatter)                   | ✅ (description ベースで自動活性化)         |
-| スラッシュコマンド化 | ✅ (`/skill-name`)              | ✅ (`/skill-name`)                | ✅ (`/skill-name`)                | ⚠️ (`.cursor/skills/` のみ対応)            | ✅ (`/skills` コマンド)                     |
-| サブエージェント実行 | ✅                              | ✅ (`context: fork`)              | -                                | ✅ (Background Agents)                     | ✅ (Subagents)                              |
-| 動的コンテキスト注入 | -                              | ✅ (`` !`command` `` 構文)        | -                                | -                                         | -                                          |
-| 再利用性             | 高い (symlink / submodule)     | 高い (plugin / symlink)          | 高い (symlink / submodule)       | 高い (Marketplace / symlink)              | 高い (git install / `.agents/` alias)      |
-| オープンスタンダード | ✅ (Agent Skills)               | ✅ (Agent Skills)                 | ✅ (Agent Skills)                 | ⚠️ (SKILL.md 読込可、独自 Rules 体系併存)  | ✅ (Agent Skills)                           |
+| 比較項目             | Antigravity                                | Claude Code                      | Cursor                                    | GitHub Copilot                   | Kiro                           |
+| -------------------- | ------------------------------------------ | -------------------------------- | ----------------------------------------- | -------------------------------- | ------------------------------ |
+| ドキュメント         | [antigravity.google](https://antigravity.google/docs/skills) | [docs.anthropic.com](https://docs.anthropic.com/en/docs/claude-code/skills) | [docs.cursor.com](https://docs.cursor.com/context/rules) / [Marketplace](https://cursor.com/marketplace) | [docs.github.com](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills) | [kiro.dev](https://kiro.dev/docs/cli/skills/) |
+| 定義形式             | Markdown (`SKILL.md`)                      | Markdown (`SKILL.md`)            | MDC (YAML frontmatter + Markdown)         | Markdown (`SKILL.md`)            | Markdown (`SKILL.md`)          |
+| 格納パス             | `.agents/skills/<name>/SKILL.md`           | `.claude/skills/<name>/SKILL.md` | `.cursor/skills/<name>/SKILL.md`          | `.github/skills/<name>/SKILL.md` | `.kiro/skills/<name>/SKILL.md` |
+| 代替パス (alias)     | `.agents/skills/<name>/`                   | `.agents/skills/<name>/`         | `.agents/skills/<name>/` (⚠️ Rules扱い)    | `.agents/skills/<name>/`         | `.agents/skills/<name>/`       |
+| グローバルスキル     | `~/.gemini/skills/<name>/`                 | `~/.claude/skills/<name>/`       | `~/.cursor/skills/<name>/`                | -                                | `~/.kiro/skills/<name>/`       |
+| プロジェクト単位     | ✅                                          | ✅                                | ✅                                         | ✅                                | ✅                              |
+| 条件付き適用         | ✅ (description ベースで自動活性化)         | ✅ (`paths` frontmatter)          | ✅ (`globs` frontmatter)                   | ✅                                | ✅ (ファイルパターン)           |
+| スラッシュコマンド化 | ✅ (`/skills` コマンド)                     | ✅ (`/skill-name`)                | ⚠️ (`.cursor/skills/` のみ対応)            | ✅ (`/skill-name`)                | ✅ (`/skill-name`)              |
+| サブエージェント実行 | ✅ (Subagents)                              | ✅ (`context: fork`)              | ✅ (Background Agents)                     | -                                | ✅                              |
+| 動的コンテキスト注入 | -                                          | ✅ (`` !`command` `` 構文)        | -                                         | -                                | -                              |
+| 再利用性             | 高い (git install / `.agents/` alias)      | 高い (plugin / symlink)          | 高い (Marketplace / symlink)              | 高い (symlink / submodule)       | 高い (symlink / submodule)     |
+| オープンスタンダード | ✅ (Agent Skills)                           | ✅ (Agent Skills)                 | ⚠️ (SKILL.md 読込可、独自 Rules 体系併存)  | ✅ (Agent Skills)                 | ✅ (Agent Skills)               |
 
 > ※ 「Agent Skills」は共通仕様団体による正式標準ではなく、de-facto standard (事実上の共通フォーマット)。ツール間でSKILL.md の大部分を共有可能だが、frontmatter・tool呼び出し・path指定等に差異がある。
 
@@ -216,18 +217,18 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 
 ## Agent Hooks
 
-| 比較項目             | Kiro                                             | Claude Code                        | GitHub Copilot             | Cursor                              | Antigravity                            |
-| -------------------- | ------------------------------------------------ | ---------------------------------- | -------------------------- | ----------------------------------- | -------------------------------------- |
-| ドキュメント         | [kiro.dev](https://kiro.dev/docs/cli/hooks/) | [docs.anthropic.com](https://docs.anthropic.com/en/docs/claude-code/hooks) | [docs.github.com](https://docs.github.com/en/copilot/concepts/agents/hooks) | [cursor.com](https://cursor.com/docs/hooks) / [Deep Dive](https://blog.gitbutler.com/cursor-hooks-deep-dive) | [antigravity.google](https://antigravity.google/docs/hooks) |
-| Hooks 対応           | ✅                                                | ✅                                  | ✅                          | ✅                                   | ✅                                      |
-| 設定ファイル (プロジェクト) | IDE: `.kiro/hooks/*.kiro.hook` / CLI: Agent設定  | `.claude/settings.json`            | `.github/hooks/*.json`     | `.cursor/hooks.json`                | `.gemini/antigravity-cli/settings.json`  |
-| 設定ファイル (ユーザー)    | `~/.kiro/` 配下                                   | `~/.claude/settings.json`          | `~/.copilot/settings.json`   | `~/.cursor/hooks.json`              | `~/.gemini/antigravity-cli/settings.json`  |
-| 設定ファイル (IDE)         | `.kiro/hooks/*.kiro.hook`                         | -                                  | VS Code User Settings        | -                                   | -                                      |
-| イベント種別         | Pre/Post Tool Use, Notification                  | PreToolUse, PostToolUse, Notification | Pre/Post Tool Use          | beforeSubmitPrompt, beforeShellExecution, beforeMCPExecution, beforeReadFile, afterFileEdit, stop | PreToolUse, PostToolUse, PreInvocation, PostInvocation, Stop の 5 種 |
-| ブロック/拒否        | ✅                                                | ✅                                  | ✅                          | ✅ (`permission: "deny"`)            | ✅ (exit code 2 で System Block)        |
-| コンテキスト注入     | ✅                                                | ✅                                  | ⚠️                          | ✅ (`agentMessage` / `userMessage`)  | ✅ (systemMessage)                      |
-| プロジェクト単位設定 | ✅                                                | ✅                                  | ✅                          | ✅ (`.cursor/hooks.json`)            | ✅ (`.gemini/antigravity-cli/settings.json`) |
-| セキュリティ指紋検証 | -                                                | -                                  | -                          | -                                   | ✅ (変更検知で再承認)                    |
+| 比較項目             | Antigravity                            | Claude Code                        | Cursor                              | GitHub Copilot             | Kiro                                             |
+| -------------------- | -------------------------------------- | ---------------------------------- | ----------------------------------- | -------------------------- | ------------------------------------------------ |
+| ドキュメント         | [antigravity.google](https://antigravity.google/docs/hooks) | [docs.anthropic.com](https://docs.anthropic.com/en/docs/claude-code/hooks) | [cursor.com](https://cursor.com/docs/hooks) / [Deep Dive](https://blog.gitbutler.com/cursor-hooks-deep-dive) | [docs.github.com](https://docs.github.com/en/copilot/concepts/agents/hooks) | [kiro.dev](https://kiro.dev/docs/cli/hooks/) |
+| Hooks 対応           | ✅                                      | ✅                                  | ✅                                   | ✅                          | ✅                                                |
+| 設定ファイル (プロジェクト) | `.gemini/antigravity-cli/settings.json`  | `.claude/settings.json`            | `.cursor/hooks.json`                | `.github/hooks/*.json`     | IDE: `.kiro/hooks/*.kiro.hook` / CLI: Agent設定  |
+| 設定ファイル (ユーザー)    | `~/.gemini/antigravity-cli/settings.json`  | `~/.claude/settings.json`          | `~/.cursor/hooks.json`              | `~/.copilot/settings.json`   | `~/.kiro/` 配下                                   |
+| 設定ファイル (IDE)         | -                                      | -                                  | -                                   | VS Code User Settings        | `.kiro/hooks/*.kiro.hook`                         |
+| イベント種別         | PreToolUse, PostToolUse, PreInvocation, PostInvocation, Stop の 5 種 | PreToolUse, PostToolUse, Notification | beforeSubmitPrompt, beforeShellExecution, beforeMCPExecution, beforeReadFile, afterFileEdit, stop | Pre/Post Tool Use          | Pre/Post Tool Use, Notification                  |
+| ブロック/拒否        | ✅ (exit code 2 で System Block)        | ✅                                  | ✅ (`permission: "deny"`)            | ✅                          | ✅                                                |
+| コンテキスト注入     | ✅ (systemMessage)                      | ✅                                  | ✅ (`agentMessage` / `userMessage`)  | ⚠️                          | ✅                                                |
+| プロジェクト単位設定 | ✅ (`.gemini/antigravity-cli/settings.json`) | ✅                                  | ✅ (`.cursor/hooks.json`)            | ✅                          | ✅                                                |
+| セキュリティ指紋検証 | ✅ (変更検知で再承認)                    | -                                  | -                                   | -                          | -                                                |
 
 ### Guidelines
 
@@ -241,16 +242,16 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 
 ## Agent Instructions (Steering)
 
-| 比較項目       | Kiro                                    | Claude Code                     | GitHub Copilot                    | Cursor                            | Antigravity                             |
+| 比較項目       | Antigravity                             | Claude Code                     | Cursor                            | GitHub Copilot                    | Kiro                                    |
 | -------------- | --------------------------------------- | ------------------------------- | --------------------------------- | --------------------------------- | --------------------------------------- |
-| ドキュメント   | [kiro.dev](https://kiro.dev/docs/cli/steering/) | [docs.anthropic.com](https://docs.anthropic.com/en/docs/claude-code/memory) | [docs.github.com](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions/add-repository-instructions) | [cursor.com](https://cursor.com/ja/docs/rules) | [antigravity.google](https://antigravity.google/docs/gemini-md) |
-| 格納パス (全体)  | `.kiro/steering/*.md`                   | `CLAUDE.md` / `.claude/CLAUDE.md` | `.github/copilot-instructions.md` | `.cursorrules` / `.cursor/rules/` | `GEMINI.md` / `AGENTS.md`              |
-| 格納パス (パス固有) | -                                    | `.claude/rules/*.md` (paths frontmatter) | `.github/instructions/*.instructions.md` (applyTo frontmatter) | `.cursor/rules/*.md` (globs frontmatter) | -                                       |
-| 階層的指示     | ✅ (複数ファイル分割)                    | ✅ (ディレクトリ階層で継承)      | ⚠️ 単一ファイル中心                | ✅ (複数ファイル)                  | ✅ (Global → Project → Subdir で継承)    |
-| グローバル指示 | `~/.kiro/steering/`                     | `~/.claude/CLAUDE.md`           | `~/.copilot/copilot-instructions.md`  | `~/.cursor/rules/`                | `~/.gemini/GEMINI.md`                   |
-| 適用優先度     | Global → Project (Project優先)          | Global → Root → Subdir          | Global → Repo-wide → Path-specific | Global → Project                  | Global → Project → Subdir (全連結)      |
-| 適用優先度 (IDE) | -                                      | -                               | VS Code User Settings → Repo   | -                                 | -                                       |
-| 形式           | Markdown                                | Markdown                        | Markdown                          | Markdown (MDC)                    | Markdown                                |
+| ドキュメント   | [antigravity.google](https://antigravity.google/docs/gemini-md) | [docs.anthropic.com](https://docs.anthropic.com/en/docs/claude-code/memory) | [cursor.com](https://cursor.com/ja/docs/rules) | [docs.github.com](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions/add-repository-instructions) | [kiro.dev](https://kiro.dev/docs/cli/steering/) |
+| 格納パス (全体)  | `GEMINI.md` / `AGENTS.md`              | `CLAUDE.md` / `.claude/CLAUDE.md` | `.cursorrules` / `.cursor/rules/` | `.github/copilot-instructions.md` | `.kiro/steering/*.md`                   |
+| 格納パス (パス固有) | -                                       | `.claude/rules/*.md` (paths frontmatter) | `.cursor/rules/*.md` (globs frontmatter) | `.github/instructions/*.instructions.md` (applyTo frontmatter) | -                                    |
+| 階層的指示     | ✅ (Global → Project → Subdir で継承)    | ✅ (ディレクトリ階層で継承)      | ✅ (複数ファイル)                  | ⚠️ 単一ファイル中心                | ✅ (複数ファイル分割)                    |
+| グローバル指示 | `~/.gemini/GEMINI.md`                   | `~/.claude/CLAUDE.md`           | `~/.cursor/rules/`                | `~/.copilot/copilot-instructions.md`  | `~/.kiro/steering/`                     |
+| 適用優先度     | Global → Project → Subdir (全連結)      | Global → Root → Subdir          | Global → Project                  | Global → Repo-wide → Path-specific | Global → Project (Project優先)          |
+| 適用優先度 (IDE) | -                                       | -                               | -                                 | VS Code User Settings → Repo   | -                                      |
+| 形式           | Markdown                                | Markdown                        | Markdown (MDC)                    | Markdown                          | Markdown                                |
 
 ### Guidelines
 
