@@ -1,4 +1,5 @@
 # === AI tool configs ===
+.claude/memory/
 .claude/settings.local.json
 .claude/tmp/
 .copilot

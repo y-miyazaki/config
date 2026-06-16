@@ -25,6 +25,7 @@
       "Read(**/*.yaml)",
       "Read(**/*.yml)",
       "Read(./.apm/**)",
+      "Read(./.claude/**)",
       "Read(./.devcontainer/**)",
       "Read(./.env.example)",
       "Read(./.github/**)",
