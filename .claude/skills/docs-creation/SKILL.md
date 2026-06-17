@@ -86,6 +86,7 @@ Return structured report per [references/common-output-format.md](references/com
      - Format fixes (code block languages, broken links) are applied automatically.
      - Content additions go at the end of existing sections.
      - Structural changes (reordering, splitting, removing sections) require user confirmation.
+   - When the document contains reference URLs (pricing pages, official docs, etc.), fetch or verify the URL content before updating. Do not update based on inference or memory — only based on confirmed source content. If the URL is unreachable, note it in the report and leave the value unchanged.
    - Remove sections that cannot be populated with concrete information rather than leaving generic filler.
 7. Run case-insensitive duplicate check (skip for `other` type). A duplicate exists when another file in `docs/` has the same basename regardless of subdirectory or case (e.g., `reference/design.md` duplicates `explanation/design.md`). Fail on duplicates.
 8. Regenerate `docs/index.md` if files under `docs/` changed (use index template from common-checklist).

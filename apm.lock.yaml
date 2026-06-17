@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-06-16T02:15:45.963472+00:00'
+generated_at: '2026-06-17T01:53:43.714026+00:00'
 apm_version: 0.20.0
 dependencies:
 - repo_url: _local/common
@@ -184,7 +184,7 @@ dependencies:
     .claude/skills/agent-skills-review/scripts/lib/validation.sh: sha256:ee2be940117c00e6a681186e02e05188786bf98aa52bd74ff1586eb474a98648
     .claude/skills/agent-skills-review/scripts/validate.sh: sha256:83b61c0db8a39d320c5ec09b7ca276b4abb8eee555ec26b2af2b2f20006e7476
     .claude/skills/agent-skills-review/scripts/validate_waza.sh: sha256:9b933b61a9879b124fe5d8ec6ce3686b5145e34823321a569b9cc4f5eb63122b
-    .claude/skills/docs-creation/SKILL.md: sha256:9acc9d23f627458c645d6bb9fdb6c0eb6103ff21353023bda2f8a710b475b495
+    .claude/skills/docs-creation/SKILL.md: sha256:9a31a4832ea1c48a59a0be0b8d61d0a099a455458fba2e7d1f32d61310391361
     .claude/skills/docs-creation/eval.yaml: sha256:c00569e05dc2f63874c847fb4cf84d5847d83715d243d562ba19d28fb6936d09
     .claude/skills/docs-creation/evals/tasks/docs-creation-basic.yaml: sha256:91716c58fe5e134f49da9ac14380a168e22c0cc938fa2d91e80a236cf8dee6ec
     .claude/skills/docs-creation/evals/tasks/docs-creation-boundary-guardrail.yaml: sha256:c0432e9c1e151bf69095f609c8278a843fdb7f4543d99dcacac2a97e8bde3f51

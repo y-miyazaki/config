@@ -14,21 +14,21 @@ Shell Script に特化したツール選定の判断材料。
 <!-- omit in toc -->
 ## Table of Contents
 
-- [Format / Lint: shfmt + shellcheck vs beautysh](#format--lint-shfmt--shellcheck-vs-beautysh)
+- [Format / Lint: beautysh vs shellcheck vs shfmt](#format--lint-beautysh-vs-shellcheck-vs-shfmt)
   - [Guidelines](#guidelines)
 
-## Format / Lint: shfmt + shellcheck vs beautysh
+## Format / Lint: beautysh vs shellcheck vs shfmt
 
-| 比較項目           | shfmt                                   | shellcheck                                                    | beautysh                                                          |
-| ------------------ | --------------------------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------- |
-| 提供元             | mvdan                                   | Vidar Holen                                                   | -                                                                 |
-| リポジトリ         | [mvdan/sh](https://github.com/mvdan/sh) | [koalaman/shellcheck](https://github.com/koalaman/shellcheck) | [lovesegfault/beautysh](https://github.com/lovesegfault/beautysh) |
-| ライセンス         | BSD-3-Clause                            | GPL-3.0                                                       | MIT                                                               |
-| 用途               | フォーマッター                          | 静的解析 (Lint)                                               | フォーマッター                                                    |
-| 実装言語           | Go                                      | Haskell                                                       | Python                                                            |
-| 自動修正           | ✅                                       | ⚠️ (一部提案のみ)                                              | ✅                                                                 |
-| バグ検出           | ❌                                       | ✅ (未定義変数、引用漏れ等)                                    | ❌                                                                 |
-| POSIX 準拠チェック | ✅                                       | ✅                                                             | ❌                                                                 |
+| 比較項目           | beautysh                                                          | shellcheck                                                    | shfmt                                   |
+| ------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------- | --------------------------------------- |
+| 提供元             | -                                                                 | Vidar Holen                                                   | mvdan                                   |
+| リポジトリ         | [lovesegfault/beautysh](https://github.com/lovesegfault/beautysh) | [koalaman/shellcheck](https://github.com/koalaman/shellcheck) | [mvdan/sh](https://github.com/mvdan/sh) |
+| ライセンス         | MIT                                                               | GPL-3.0                                                       | BSD-3-Clause                            |
+| 用途               | フォーマッター                                                    | 静的解析 (Lint)                                               | フォーマッター                          |
+| 実装言語           | Python                                                            | Haskell                                                       | Go                                      |
+| 自動修正           | ✅                                                                 | ⚠️ (一部提案のみ)                                              | ✅                                       |
+| バグ検出           | ❌                                                                 | ✅ (未定義変数、引用漏れ等)                                    | ❌                                       |
+| POSIX 準拠チェック | ❌                                                                 | ✅                                                             | ✅                                       |
 
 ### Guidelines
 

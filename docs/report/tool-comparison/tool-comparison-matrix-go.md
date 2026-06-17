@@ -16,13 +16,13 @@ Go 開発に特化したツール選定の判断材料。
 
 - [Formatter: gofumpt vs gofmt vs goimports](#formatter-gofumpt-vs-gofmt-vs-goimports)
   - [Guidelines](#guidelines)
-- [Linter: golangci-lint vs staticcheck vs go vet](#linter-golangci-lint-vs-staticcheck-vs-go-vet)
+- [Linter: go vet vs golangci-lint vs staticcheck](#linter-go-vet-vs-golangci-lint-vs-staticcheck)
   - [Guidelines](#guidelines-1)
-- [Container Build: ko vs Docker vs kaniko](#container-build-ko-vs-docker-vs-kaniko)
+- [Container Build: Docker vs kaniko vs ko](#container-build-docker-vs-kaniko-vs-ko)
   - [Guidelines](#guidelines-2)
-- [Release Automation: goreleaser vs GitHub Releases vs semantic-release](#release-automation-goreleaser-vs-github-releases-vs-semantic-release)
+- [Release Automation: GitHub Releases vs goreleaser vs semantic-release](#release-automation-github-releases-vs-goreleaser-vs-semantic-release)
   - [Guidelines](#guidelines-3)
-- [API Documentation: swag vs go-swagger vs oapi-codegen](#api-documentation-swag-vs-go-swagger-vs-oapi-codegen)
+- [API Documentation: go-swagger vs oapi-codegen vs swag](#api-documentation-go-swagger-vs-oapi-codegen-vs-swag)
   - [Guidelines](#guidelines-4)
 - [Protocol Buffers: buf](#protocol-buffers-buf)
   - [Guidelines](#guidelines-5)
@@ -52,37 +52,37 @@ Go 開発に特化したツール選定の判断材料。
 
 - goimports は import 整理に特化しており、gofumpt と併用可能
 
-## Linter: golangci-lint vs staticcheck vs go vet
+## Linter: go vet vs golangci-lint vs staticcheck
 
-| 比較項目         | golangci-lint                                                       | staticcheck                                               | go vet                                    |
-| ---------------- | ------------------------------------------------------------------- | --------------------------------------------------------- | ----------------------------------------- |
-| 提供元           | golangci                                                            | Dominik Honnef                                            | Go 公式                                   |
-| リポジトリ       | [golangci/golangci-lint](https://github.com/golangci/golangci-lint) | [dominikh/go-tools](https://github.com/dominikh/go-tools) | [golang/go](https://github.com/golang/go) |
-| ライセンス       | GPL-3.0                                                             | MIT                                                       | BSD-3-Clause                              |
-| 位置づけ         | メタリンター (複数リンター統合)                                     | 単体リンター                                              | Go 標準ツール                             |
-| 内蔵リンター数   | 100+                                                                | 1 (多数のチェック含む)                                    | 1                                         |
-| 設定ファイル     | `.golangci.yaml`                                                    | `staticcheck.conf`                                        | なし                                      |
-| 自動修正         | ✅ (一部リンター)                                                    | ❌                                                         | ❌                                         |
-| CI 向け最適化    | ✅ (差分チェック、キャッシュ)                                        | ⚠️ 限定的                                                  | ✅                                         |
-| staticcheck 含む | ✅                                                                   | -                                                         | ❌                                         |
-| go vet 含む      | ✅                                                                   | ❌                                                         | -                                         |
+| 比較項目         | go vet                                    | golangci-lint                                                       | staticcheck                                               |
+| ---------------- | ----------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------- |
+| 提供元           | Go 公式                                   | golangci                                                            | Dominik Honnef                                            |
+| リポジトリ       | [golang/go](https://github.com/golang/go) | [golangci/golangci-lint](https://github.com/golangci/golangci-lint) | [dominikh/go-tools](https://github.com/dominikh/go-tools) |
+| ライセンス       | BSD-3-Clause                              | GPL-3.0                                                             | MIT                                                       |
+| 位置づけ         | Go 標準ツール                             | メタリンター (複数リンター統合)                                     | 単体リンター                                              |
+| 内蔵リンター数   | 1                                         | 100+                                                                | 1 (多数のチェック含む)                                    |
+| 設定ファイル     | なし                                      | `.golangci.yaml`                                                    | `staticcheck.conf`                                        |
+| 自動修正         | ❌                                         | ✅ (一部リンター)                                                    | ❌                                                         |
+| CI 向け最適化    | ✅                                         | ✅ (差分チェック、キャッシュ)                                        | ⚠️ 限定的                                                  |
+| staticcheck 含む | ❌                                         | ✅                                                                   | -                                                         |
+| go vet 含む      | -                                         | ✅                                                                   | ❌                                                         |
 
 ### Guidelines
 
 **→ golangci-lint を採用する。** staticcheck・go vet を含む 100+ のリンターを一括管理でき、差分チェック・キャッシュ・自動修正に対応。これ一つで十分。
 
-## Container Build: ko vs Docker vs kaniko
+## Container Build: Docker vs kaniko vs ko
 
-| 比較項目        | ko                                            | Docker (BuildKit)                                 | kaniko                                                                        |
-| --------------- | --------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------- |
-| 提供元          | Google (OSS)                                  | Docker Inc                                        | Google                                                                        |
-| リポジトリ      | [ko-build/ko](https://github.com/ko-build/ko) | [moby/buildkit](https://github.com/moby/buildkit) | [GoogleContainerTools/kaniko](https://github.com/GoogleContainerTools/kaniko) |
-| ライセンス      | Apache 2.0                                    | Apache 2.0                                        | Apache 2.0                                                                    |
-| 対応言語        | Go 専用                                       | 任意                                              | 任意                                                                          |
-| Dockerfile 不要 | ✅                                             | ❌                                                 | ❌                                                                             |
-| ビルド速度      | 非常に高速                                    | 中程度                                            | 中程度                                                                        |
-| CI での特権不要 | ✅                                             | ❌ (Docker daemon 必要)                            | ✅                                                                             |
-| イメージサイズ  | 最小 (distroless ベース)                      | Dockerfile 依存                                   | Dockerfile 依存                                                               |
+| 比較項目        | Docker (BuildKit)                                 | kaniko                                                                        | ko                                            |
+| --------------- | ------------------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------- |
+| 提供元          | Docker Inc                                        | Google                                                                        | Google (OSS)                                  |
+| リポジトリ      | [moby/buildkit](https://github.com/moby/buildkit) | [GoogleContainerTools/kaniko](https://github.com/GoogleContainerTools/kaniko) | [ko-build/ko](https://github.com/ko-build/ko) |
+| ライセンス      | Apache 2.0                                        | Apache 2.0                                                                    | Apache 2.0                                    |
+| 対応言語        | 任意                                              | 任意                                                                          | Go 専用                                       |
+| Dockerfile 不要 | ❌                                                 | ❌                                                                             | ✅                                             |
+| ビルド速度      | 中程度                                            | 中程度                                                                        | 非常に高速                                    |
+| CI での特権不要 | ❌ (Docker daemon 必要)                            | ✅                                                                             | ✅                                             |
+| イメージサイズ  | Dockerfile 依存                                   | Dockerfile 依存                                                               | 最小 (distroless ベース)                      |
 
 ### Guidelines
 
@@ -91,20 +91,20 @@ Go 開発に特化したツール選定の判断材料。
 - Go 以外の言語を含む / 複雑なビルドステップが必要な場合は Docker を使用
 - Docker daemon なしで任意の Dockerfile をビルドしたい場合は kaniko を使用
 
-## Release Automation: goreleaser vs GitHub Releases vs semantic-release
+## Release Automation: GitHub Releases vs goreleaser vs semantic-release
 
-| 比較項目         | goreleaser                                                        | GitHub Releases (手動) | semantic-release                                                                          |
-| ---------------- | ----------------------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
-| 提供元           | goreleaser                                                        | GitHub                 | semantic-release                                                                          |
-| リポジトリ       | [goreleaser/goreleaser](https://github.com/goreleaser/goreleaser) | - (GitHub 組み込み)    | [semantic-release/semantic-release](https://github.com/semantic-release/semantic-release) |
-| ライセンス       | MIT                                                               | 商用 (GitHub に含む)   | MIT                                                                                       |
-| 対応言語         | Go 中心 (他言語も可)                                              | 任意                   | 任意                                                                                      |
-| クロスコンパイル | ✅ 自動                                                            | 手動                   | ❌                                                                                         |
-| Changelog 生成   | ✅ 自動                                                            | 手動                   | ✅ 自動                                                                                    |
-| バージョニング   | 手動 (Git tag)                                                    | 手動                   | ✅ 自動 (Conventional Commits)                                                             |
-| バイナリ配布     | ✅ (tar.gz, zip, deb, rpm)                                         | 手動アップロード       | ❌                                                                                         |
-| Docker イメージ  | ✅ ビルド+プッシュ                                                 | 別途設定               | 別途設定                                                                                  |
-| Homebrew 連携    | ✅                                                                 | ❌                      | ❌                                                                                         |
+| 比較項目         | GitHub Releases (手動) | goreleaser                                                        | semantic-release                                                                          |
+| ---------------- | ---------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| 提供元           | GitHub                 | goreleaser                                                        | semantic-release                                                                          |
+| リポジトリ       | - (GitHub 組み込み)    | [goreleaser/goreleaser](https://github.com/goreleaser/goreleaser) | [semantic-release/semantic-release](https://github.com/semantic-release/semantic-release) |
+| ライセンス       | 商用 (GitHub に含む)   | MIT                                                               | MIT                                                                                       |
+| 対応言語         | 任意                   | Go 中心 (他言語も可)                                              | 任意                                                                                      |
+| クロスコンパイル | 手動                   | ✅ 自動                                                            | ❌                                                                                         |
+| Changelog 生成   | 手動                   | ✅ 自動                                                            | ✅ 自動                                                                                    |
+| バージョニング   | 手動                   | 手動 (Git tag)                                                    | ✅ 自動 (Conventional Commits)                                                             |
+| バイナリ配布     | 手動アップロード       | ✅ (tar.gz, zip, deb, rpm)                                         | ❌                                                                                         |
+| Docker イメージ  | 別途設定               | ✅ ビルド+プッシュ                                                 | 別途設定                                                                                  |
+| Homebrew 連携    | ❌                      | ✅                                                                 | ❌                                                                                         |
 
 ### Guidelines
 
@@ -112,18 +112,18 @@ Go 開発に特化したツール選定の判断材料。
 
 - Go 以外の言語で Conventional Commits ベースの自動バージョニングが欲しい場合は semantic-release を検討
 
-## API Documentation: swag vs go-swagger vs oapi-codegen
+## API Documentation: go-swagger vs oapi-codegen vs swag
 
-| 比較項目         | swag                                          | go-swagger                                                        | oapi-codegen                                                              |
-| ---------------- | --------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| 提供元           | swaggo                                        | go-swagger                                                        | oapi-codegen                                                              |
-| リポジトリ       | [swaggo/swag](https://github.com/swaggo/swag) | [go-swagger/go-swagger](https://github.com/go-swagger/go-swagger) | [oapi-codegen/oapi-codegen](https://github.com/oapi-codegen/oapi-codegen) |
-| ライセンス       | MIT                                           | Apache 2.0                                                        | Apache 2.0                                                                |
-| アプローチ       | コード → OpenAPI (アノテーション)             | OpenAPI ↔ コード (双方向)                                         | OpenAPI → コード                                                          |
-| 入力             | Go コメント (アノテーション)                  | OpenAPI spec / Go コード                                          | OpenAPI spec (YAML/JSON)                                                  |
-| 出力             | OpenAPI JSON/YAML + Swagger UI                | Go サーバー/クライアントコード                                    | Go サーバー/クライアントコード                                            |
-| 型安全性         | 中程度 (アノテーション依存)                   | 高い                                                              | 高い                                                                      |
-| スキーマ駆動開発 | ❌ (コードファースト)                          | ✅                                                                 | ✅ (スキーマファースト)                                                    |
+| 比較項目         | go-swagger                                                        | oapi-codegen                                                              | swag                                          |
+| ---------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------- |
+| 提供元           | go-swagger                                                        | oapi-codegen                                                              | swaggo                                        |
+| リポジトリ       | [go-swagger/go-swagger](https://github.com/go-swagger/go-swagger) | [oapi-codegen/oapi-codegen](https://github.com/oapi-codegen/oapi-codegen) | [swaggo/swag](https://github.com/swaggo/swag) |
+| ライセンス       | Apache 2.0                                                        | Apache 2.0                                                                | MIT                                           |
+| アプローチ       | OpenAPI ↔ コード (双方向)                                         | OpenAPI → コード                                                          | コード → OpenAPI (アノテーション)             |
+| 入力             | OpenAPI spec / Go コード                                          | OpenAPI spec (YAML/JSON)                                                  | Go コメント (アノテーション)                  |
+| 出力             | Go サーバー/クライアントコード                                    | Go サーバー/クライアントコード                                            | OpenAPI JSON/YAML + Swagger UI                |
+| 型安全性         | 高い                                                              | 高い                                                                      | 中程度 (アノテーション依存)                   |
+| スキーマ駆動開発 | ✅                                                                 | ✅ (スキーマファースト)                                                    | ❌ (コードファースト)                          |
 
 ### Guidelines
 

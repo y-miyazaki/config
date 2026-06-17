@@ -14,29 +14,29 @@ Terraform / IaC に特化したツール選定の判断材料。
 <!-- omit in toc -->
 ## Table of Contents
 
-- [Lint / Security: tflint vs checkov vs tfsec](#lint--security-tflint-vs-checkov-vs-tfsec)
+- [Lint / Security: checkov vs tflint vs tfsec](#lint--security-checkov-vs-tflint-vs-tfsec)
   - [Guidelines](#guidelines)
-- [IaC: Terraform vs OpenTofu vs Pulumi](#iac-terraform-vs-opentofu-vs-pulumi)
+- [IaC: OpenTofu vs Pulumi vs Terraform](#iac-opentofu-vs-pulumi-vs-terraform)
   - [Guidelines](#guidelines-1)
-- [Plan Comment: tfcmt vs tfnotify vs Atlantis](#plan-comment-tfcmt-vs-tfnotify-vs-atlantis)
+- [Plan Comment: Atlantis vs tfcmt vs tfnotify](#plan-comment-atlantis-vs-tfcmt-vs-tfnotify)
   - [Guidelines](#guidelines-2)
 - [Documentation: terraform-docs](#documentation-terraform-docs)
   - [Guidelines](#guidelines-3)
 - [Testing: terraform test vs Terratest vs tftest](#testing-terraform-test-vs-terratest-vs-tftest)
   - [Guidelines](#guidelines-4)
 
-## Lint / Security: tflint vs checkov vs tfsec
+## Lint / Security: checkov vs tflint vs tfsec
 
-| 比較項目         | tflint                                                                  | checkov                                                         | tfsec (非推奨→Trivy統合)                                    |
-| ---------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------- |
-| 提供元           | terraform-linters                                                       | Bridgecrew (Palo Alto)                                          | Aqua Security                                               |
-| リポジトリ       | [terraform-linters/tflint](https://github.com/terraform-linters/tflint) | [bridgecrewio/checkov](https://github.com/bridgecrewio/checkov) | [aquasecurity/tfsec](https://github.com/aquasecurity/tfsec) |
-| ライセンス       | MPL-2.0                                                                 | Apache 2.0                                                      | MIT                                                         |
-| 主な用途         | Lint (構文・命名・非推奨検出)                                           | セキュリティ・コンプライアンス                                  | セキュリティスキャン                                        |
-| カスタムルール   | ✅ プラグイン                                                            | ✅ Python/YAML                                                   | ✅ Rego/YAML                                                 |
-| プロバイダー対応 | AWS/Azure/GCP プラグイン                                                | マルチクラウド                                                  | マルチクラウド                                              |
-| 自動修正         | ✅ `--fix`                                                               | ❌                                                               | ❌                                                           |
-| 現在の状態       | アクティブ                                                              | アクティブ                                                      | Trivy に統合済み                                            |
+| 比較項目         | checkov                                                         | tflint                                                                  | tfsec (非推奨→Trivy統合)                                    |
+| ---------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------- |
+| 提供元           | Bridgecrew (Palo Alto)                                          | terraform-linters                                                       | Aqua Security                                               |
+| リポジトリ       | [bridgecrewio/checkov](https://github.com/bridgecrewio/checkov) | [terraform-linters/tflint](https://github.com/terraform-linters/tflint) | [aquasecurity/tfsec](https://github.com/aquasecurity/tfsec) |
+| ライセンス       | Apache 2.0                                                      | MPL-2.0                                                                 | MIT                                                         |
+| 主な用途         | セキュリティ・コンプライアンス                                  | Lint (構文・命名・非推奨検出)                                           | セキュリティスキャン                                        |
+| カスタムルール   | ✅ Python/YAML                                                   | ✅ プラグイン                                                            | ✅ Rego/YAML                                                 |
+| プロバイダー対応 | マルチクラウド                                                  | AWS/Azure/GCP プラグイン                                                | マルチクラウド                                              |
+| 自動修正         | ❌                                                               | ✅ `--fix`                                                               | ❌                                                           |
+| 現在の状態       | アクティブ                                                      | アクティブ                                                              | Trivy に統合済み                                            |
 
 ### Guidelines
 
@@ -44,19 +44,19 @@ Terraform / IaC に特化したツール選定の判断材料。
 
 - コンプライアンスポリシーを Python/YAML で独自定義したい場合は checkov を検討
 
-## IaC: Terraform vs OpenTofu vs Pulumi
+## IaC: OpenTofu vs Pulumi vs Terraform
 
-| 比較項目              | Terraform                                                     | OpenTofu                                                  | Pulumi                                            |
-| --------------------- | ------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------- |
-| 提供元                | HashiCorp                                                     | Linux Foundation                                          | Pulumi Corp                                       |
-| リポジトリ            | [hashicorp/terraform](https://github.com/hashicorp/terraform) | [opentofu/opentofu](https://github.com/opentofu/opentofu) | [pulumi/pulumi](https://github.com/pulumi/pulumi) |
-| ライセンス            | BSL 1.1 (v1.6+)                                               | MPL 2.0                                                   | Apache 2.0                                        |
-| 設定言語              | HCL                                                           | HCL (互換)                                                | TypeScript/Python/Go等                            |
-| State 管理            | S3, Terraform Cloud 等                                        | S3, 互換バックエンド                                      | Pulumi Cloud, S3 等                               |
-| Provider エコシステム | 最大 (3,000+)                                                 | Terraform 互換                                            | 独自 + Terraform Bridge                           |
-| モジュール互換性      | -                                                             | ✅ Terraform モジュール利用可                              | ❌                                                 |
-| 移行コスト            | -                                                             | 低い (ほぼ互換)                                           | 高い (書き直し)                                   |
-| CI ツール連携         | tfcmt, Atlantis 等豊富                                        | Terraform 互換ツール利用可                                | 独自 CI 統合                                      |
+| 比較項目              | OpenTofu                                                  | Pulumi                                            | Terraform                                                     |
+| --------------------- | --------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------- |
+| 提供元                | Linux Foundation                                          | Pulumi Corp                                       | HashiCorp                                                     |
+| リポジトリ            | [opentofu/opentofu](https://github.com/opentofu/opentofu) | [pulumi/pulumi](https://github.com/pulumi/pulumi) | [hashicorp/terraform](https://github.com/hashicorp/terraform) |
+| ライセンス            | MPL 2.0                                                   | Apache 2.0                                        | BSL 1.1 (v1.6+)                                               |
+| 設定言語              | HCL (互換)                                                | TypeScript/Python/Go等                            | HCL                                                           |
+| State 管理            | S3, 互換バックエンド                                      | Pulumi Cloud, S3 等                               | S3, Terraform Cloud 等                                        |
+| Provider エコシステム | Terraform 互換                                            | 独自 + Terraform Bridge                           | 最大 (3,000+)                                                 |
+| モジュール互換性      | ✅ Terraform モジュール利用可                              | ❌                                                 | -                                                             |
+| 移行コスト            | 低い (ほぼ互換)                                           | 高い (書き直し)                                   | -                                                             |
+| CI ツール連携         | Terraform 互換ツール利用可                                | 独自 CI 統合                                      | tfcmt, Atlantis 等豊富                                        |
 
 ### Guidelines
 
@@ -65,19 +65,19 @@ Terraform / IaC に特化したツール選定の判断材料。
 - OSS ライセンスが必須要件の場合は OpenTofu を採用 (Terraform からの移行は容易)
 - プログラミング言語で IaC を書きたい / ユニットテスト・型安全性を重視する場合は Pulumi を検討
 
-## Plan Comment: tfcmt vs tfnotify vs Atlantis
+## Plan Comment: Atlantis vs tfcmt vs tfnotify
 
-| 比較項目         | tfcmt                                                             | tfnotify                                                | Atlantis                                                        |
-| ---------------- | ----------------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------- |
-| 提供元           | suzuki-shunsuke                                                   | mercari                                                 | runatlantis                                                     |
-| リポジトリ       | [suzuki-shunsuke/tfcmt](https://github.com/suzuki-shunsuke/tfcmt) | [mercari/tfnotify](https://github.com/mercari/tfnotify) | [runatlantis/atlantis](https://github.com/runatlantis/atlantis) |
-| ライセンス       | MIT                                                               | MIT                                                     | Apache 2.0                                                      |
-| 位置づけ         | plan 結果の PR コメント                                           | plan 結果の PR コメント                                 | plan + apply の自動化サーバー                                   |
-| 設定の簡易さ     | ✅ CLI 一つで完結                                                  | ✅ CLI 一つで完結                                        | ⚠️ サーバー運用が必要                                            |
-| コメント品質     | 高い (差分ハイライト、折りたたみ)                                 | 中程度                                                  | 高い                                                            |
-| apply 実行       | ❌ (plan コメントのみ)                                             | ❌                                                       | ✅ (PR コメントから apply)                                       |
-| メンテナンス状況 | アクティブ                                                        | メンテナンスモード                                      | アクティブ                                                      |
-| 運用コスト       | なし (CI ジョブ内実行)                                            | なし                                                    | サーバー運用コスト                                              |
+| 比較項目         | Atlantis                                                        | tfcmt                                                             | tfnotify                                                |
+| ---------------- | --------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------- |
+| 提供元           | runatlantis                                                     | suzuki-shunsuke                                                   | mercari                                                 |
+| リポジトリ       | [runatlantis/atlantis](https://github.com/runatlantis/atlantis) | [suzuki-shunsuke/tfcmt](https://github.com/suzuki-shunsuke/tfcmt) | [mercari/tfnotify](https://github.com/mercari/tfnotify) |
+| ライセンス       | Apache 2.0                                                      | MIT                                                               | MIT                                                     |
+| 位置づけ         | plan + apply の自動化サーバー                                   | plan 結果の PR コメント                                           | plan 結果の PR コメント                                 |
+| 設定の簡易さ     | ⚠️ サーバー運用が必要                                            | ✅ CLI 一つで完結                                                  | ✅ CLI 一つで完結                                        |
+| コメント品質     | 高い                                                            | 高い (差分ハイライト、折りたたみ)                                 | 中程度                                                  |
+| apply 実行       | ✅ (PR コメントから apply)                                       | ❌ (plan コメントのみ)                                             | ❌                                                       |
+| メンテナンス状況 | アクティブ                                                      | アクティブ                                                        | メンテナンスモード                                      |
+| 運用コスト       | サーバー運用コスト                                              | なし (CI ジョブ内実行)                                            | なし                                                    |
 
 ### Guidelines
 

@@ -8,6 +8,8 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 
 | 日付       | 内容                                                                 |
 | ---------- | -------------------------------------------------------------------- |
+| 2026-06-17 | 全般最新化: Copilot AI Credits をドル建て (Base+Flex) に修正、Claude Code Free tier 追加、Cursor pricing 簡略化反映、Anthropic Enterprise pricing 更新 |
+| 2026-06-17 | Pricing 個人プラン細分化 (3段階→4段階)。Kiro Pro Max ($100/月) 追加反映 |
 | 2026-06-16 | ツール並び順を A-Z 順に統一                                          |
 | 2026-06-06 | markdown-link-check hooks 動作確認用にドキュメントを更新。             |
 | 2026-06-06 | Gemini CLI → Antigravity に移行。IDE/CLI設定パスの分離を明確化。copilot-instructions.md設計方針を反映 |
@@ -20,6 +22,7 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 
 - [Coding Agent: Antigravity vs Claude Code vs Cursor vs GitHub Copilot vs Kiro](#coding-agent-antigravity-vs-claude-code-vs-cursor-vs-github-copilot-vs-kiro)
   - [Pricing](#pricing)
+    - [$10〜$20 プラン帯の選択指針](#1020-プラン帯の選択指針)
   - [Billing Model](#billing-model)
   - [Configuration Files and Directories](#configuration-files-and-directories)
   - [Guidelines](#guidelines)
@@ -53,23 +56,52 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 | 大規模導入適性     | ✅ (Google Cloud組織)       | ✅ (Team / Enterprise) | ✅ (Business / Enterprise) | ✅ 非常に強い           | ⚠️ 今後拡大      |
 | コンテキスト窓     | 1M+ tokens                 | 200K tokens           | 128K〜200K tokens         | 128K〜200K tokens      | 200K tokens      |
 | モデル選択         | Gemini 系中心 (実験的に Gemma) | Claude 系のみ          | ✅ 複数 (GPT-5, Claude等)  | ✅ 複数 (GPT-5, Claude等) | ✅ (Auto / 手動)  |
-| データ学習利用     | ❌ 利用しない               | ❌ 利用しない          | ❌ (Business以上)          | ❌ (Business以上)        | ❌ 利用しない     |
+| データ学習利用     | ❌ 利用しない               | ❌ 利用しない          | ❌ (Business以上)          | ❌ デフォルト除外 (全プラン) | ❌ 利用しない     |
 | コンプライアンス   | SOC2 / ISO / GCP準拠       | SOC2                  | SOC2                      | SOC2 / FedRAMP          | SOC2 / AWS準拠   |
 
 ### Pricing
 
-> ※ 2026-06-01 より GitHub Copilot は「リクエストベース」から「AI Credits (トークンベース)」課金に移行。1 AI credit = $0.01 USD。モデル選択とトークン消費量で実コストが大きく変動するため、月額はあくまで基本料金+含まれるクレジット枠の目安。
+> ※ 2026-06-01 より GitHub Copilot は「リクエストベース」から「AI Credits (ドル建て)」課金に移行。クレジットは Base (月額固定) + Flex (変動追加枠) で構成される。Flex allotments は時期により変動する可能性あり。新規 Pro/Pro+/Max プランのサインアップは一時停止中。
 > ※ Gemini CLI は 2026-06-18 にサービス停止。後継は Antigravity CLI (`agy`)。設定パスは `~/.gemini/` を引き続き使用し互換性あり。
 
 | プラン       | Antigravity                   | Claude Code                       | Cursor                | GitHub Copilot                          | Kiro                         |
 | ------------ | ----------------------------- | --------------------------------- | --------------------- | --------------------------------------- | ---------------------------- |
 | 料金ページ   | [antigravity.google/pricing](https://antigravity.google/pricing) | [anthropic.com/pricing](https://www.anthropic.com/pricing) | [cursor.com/pricing](https://www.cursor.com/pricing) | [github.com/features/copilot](https://github.com/features/copilot#pricing) | [kiro.dev/pricing](https://kiro.dev/pricing) |
-| 無料枠       | ❌ (廃止予定)                  | ❌                                 | ✅ (Hobby: Agent限定利用+Tab限定) | ✅ (Free: 限定 AI Credits / コード補完は無制限) | 50 クレジット/月             |
-| 個人 (標準)  | Google AI Pro: $20/月          | Pro: $20/月                       | Pro: $20/月           | Pro: $10/月 (1,500 credits含む)         | Pro: $20/月                  |
-| 個人 (上位)  | Ultra: $100/月 (5x), Ultra+: $200/月 (20x) | Max 5x: $100/月, Max 20x: $200/月 | Pro+: $60/月, Ultra: $200/月 | Pro+: $39/月 (7,000 credits), Max: $100/月 (20,000 credits) | Pro+: $40/月, Power: $200/月 |
-| チーム/組織  | Standard: 時間課金            | Team: $25/seat/月, Premium: $125/seat/月 | Teams Standard: $40/seat/月, Premium: $120/seat/月 | Business: $19/user/月 (1,900 credits/user, プール型) | 今後拡張                     |
-| Enterprise   | Enterprise: カスタム          | Enterprise: カスタム              | Enterprise: カスタム  | Enterprise: $39/user/月 (3,900 credits/user, プール型) | 今後拡張                     |
-| 従量追加課金 | ⚠️ GCP課金連携                 | ⚠️ API利用時あり                   | ⚠️ usage 条件あり      | ✅ 超過時 $0.01/credit で追加課金 (予算上限設定可) | ✅ 超過時 $0.04/credit で追加課金 (opt-in) |
+| 無料枠       | ❌ (廃止予定)                  | ✅ (Free: Claude Code含む、制限付き利用) | ✅ (Hobby: Agent限定利用+Tab限定) | ✅ (Free: 限定 AI Credits / inline suggestions 2,000回/月) | 50 クレジット/月             |
+| 個人 (標準)  | Google AI Pro: $20/月          | Pro: $20/月                       | Individual: $20/月    | Pro: $10/月 ($15相当 credits: Base $10+Flex $5)  | Pro: $20/月                  |
+| 個人 (中位)  | Ultra: $100/月 (5x)            | Max 5x: $100/月                   | -                     | Pro+: $39/月 ($70相当 credits: Base $39+Flex $31) | Pro+: $40/月                 |
+| 個人 (準上位) | -                              | -                                 | -                     | Max: $100/月 ($200相当 credits: Base $100+Flex $100) | Pro Max: $100/月             |
+| 個人 (上位)  | Ultra+: $200/月 (20x)          | Max 20x: $200/月                  | -                     | -                                       | Power: $200/月               |
+| チーム/組織  | Standard: 時間課金            | Team: $20/seat/月 (年額) / $25 (月額), Premium: $100 (年額) / $125 (月額) | Teams: $40/seat/月, Enterprise: カスタム | Business: $19/user/月 (プール型) | 今後拡張                     |
+| Enterprise   | Enterprise: カスタム          | Enterprise: $20/seat + 従量課金   | Enterprise: カスタム  | Enterprise: $39/user/月 (プール型) | 今後拡張                     |
+| 従量追加課金 | ❌ なし (枠超過時は利用停止) | ⚠️ API key モード時のみ (トークン従量) | ⚠️ on-demand 設定時のみ (使用量に応じ課金) | ✅ 超過時 $0.01/credit で追加課金 (予算上限設定可) | ✅ 超過時 $0.04/credit で追加課金 (opt-in) |
+| 枠超過時の制限 | 完全ロックアウト (数日〜1週間使用不可、翌リセットまで待機) | 一時利用停止 (5時間セッションリセットまで待機)。API key 設定時はトークン従量で継続可 | Slow pool フォールバック (低速応答、ピーク時は実質停止)。on-demand 有効時は従量課金で継続可 | 予算上限到達時はブロック (追加課金 opt-out 時) | 追加課金 opt-in しない場合は利用停止 |
+
+#### $10〜$20 プラン帯の選択指針
+
+> 個人の標準プラン ($10〜$20/月) は最も利用者が多い価格帯。同価格帯での優位性を整理する。
+
+| 観点               | Antigravity ($20)         | Claude Code ($20)              | Cursor ($20)                  | GitHub Copilot ($10)                | Kiro ($20)                    |
+| ------------ | ----------------------------- | --------------------------------- | --------------------- | --------------------------------------- | ---------------------------- |
+| 月額               | $20                       | $20                            | $20                           | $10 (最安)                          | $20                           |
+| credits相当価値    | プラン内定額              | プラン内定額                   | プラン内定額                  | $15相当 (Base $10+Flex $5)          | 1,000 credits                 |
+| 超過後も無料で継続 | ❌ 完全ロックアウト        | ❌ 利用停止 (5時間リセット待ち) | ⚠️ Slow pool (低速だが無料で継続) | ❌ ブロック (opt-out時)              | ❌ 利用停止                    |
+| 超過後の従量課金   | ❌ なし                    | ✅ API key 設定で従量継続可     | ✅ on-demand で従量継続可      | ✅ $0.01/credit で追加課金 (予算上限設定可) | ✅ $0.04/credit (opt-in)      |
+| 超過リスクの総合評価 | **高** (ロックアウト、回避手段なし) | **低** (API key で即座に従量移行可) | **低** (Slow pool で最低限継続 + on-demand 選択可) | **中** (追加課金 opt-in すれば継続可、しなければブロック) | **中** (opt-in すれば継続可、しなければ停止) |
+| inline suggestions | -                         | -                              | 限定                          | ✅ 無制限                            | -                             |
+| Cloud Agent        | -                         | -                              | ✅                             | ✅ (PR自動作成)                      | -                             |
+| Code Review        | -                         | -                              | Bugbot (従量)                 | ✅ (PR/diff review)                  | -                             |
+| CLI 自動化         | ✅ (agy)                   | ✅ (最も強い)                   | ⚠️                             | ✅ (Copilot CLI preview)             | ✅                             |
+| コンテキスト窓     | 1M+                       | 200K                           | 128K〜200K                    | 128K〜200K                          | 200K                          |
+| 年額割引           | あり                      | $17/月相当                     | $192/年                       | あり                                | 不明                          |
+
+**$20 プラン帯の推奨:**
+
+- **コスパ最優先** → GitHub Copilot Pro ($10/月)。半額で inline suggestions 無制限 + Cloud Agent + Code Review。超過後は追加課金 opt-in で $0.01/credit 継続可（opt-in しなければブロック）
+- **超過リスク最小 + CLI** → Claude Code Pro ($20/月)。定額内でのモデル品質が最も高い。枠を使い切っても API key 設定で即座に従量移行でき、作業中断なし
+- **超過リスク最小 + IDE** → Cursor Individual ($20/月)。Slow pool で低速ながら無料で継続利用可（唯一の「超過後も無料で使える」選択肢）。追加で on-demand 有効化すれば高速に戻る
+- **AWS 統合 + 従量予測性** → Kiro Pro ($20/月)。1,000 credits/月、超過時 $0.04/credit。opt-in しなければ停止のため予算超過リスクなし
+- **コンテキスト窓最大** → Antigravity ($20/月)。1M+ tokens で大規模コードベースに有利。**ただし超過時に完全ロックアウト（従量課金オプションなし）のため、利用量が読めない場合はリスク高**
 
 ### Billing Model
 
@@ -78,13 +110,13 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 | 項目               | Antigravity                   | Claude Code                 | Cursor                         | GitHub Copilot                                   | Kiro                     |
 | ------------------ | ----------------------------- | --------------------------- | ------------------------------ | ------------------------------------------------ | ------------------------ |
 | 基本課金           | 無料枠 + サブスク             | サブスク枠 (定額内トークン) | サブスク + usage制限           | サブスク + AI Credits (トークン従量)              | サブスク + クレジット枠  |
-| クレジット単価     | -                             | -                           | -                              | 1 AI credit = $0.01 USD                          | $0.04/credit (超過時)    |
-| 含まれるクレジット | -                             | -                           | -                              | Pro: 1,500/月, Pro+: 7,000/月, Max: 20,000/月    | Pro: 1,000/月, Pro+: 2,000/月, Power: 10,000/月 |
+| クレジット単価     | -                             | -                           | -                              | ドル建て (Base + Flex allotment)                 | $0.04/credit (超過時)    |
+| 含まれるクレジット | -                             | -                           | -                              | Pro: $15/月, Pro+: $70/月, Max: $200/月 (Base+Flex合計) | Pro: 1,000/月, Pro+: 2,000/月, Pro Max: 5,000/月, Power: 10,000/月 |
 | 組織プールモデル   | -                             | -                           | -                              | ✅ (user単位クレジットを組織全体でプール共有)      | -                        |
-| 超過時の挙動       | レート制限                    | レート制限 / 上位プラン誘導 | 制限 or 追加課金               | 予算設定に基づき追加課金 or ブロック              | $0.04/credit 追加課金 (opt-in) |
+| 超過時の挙動       | 完全ロックアウト (従量課金なし) | 利用停止 (API key モードで従量継続可) | Slow pool / on-demand 従量課金 | 予算設定に基づき追加課金 or ブロック              | $0.04/credit 追加課金 (opt-in、未設定時は利用停止) |
 | モデル選択         | Gemini 系中心 (2.5 Pro/Flash) | Claude 系中心               | ✅ 複数モデル (GPT-5, Claude等) | ✅ 複数モデル (GPT-5, Claude, Gemini等)           | ✅ (Auto / 手動)          |
 | モデルによる料金差 | プラン内定額                  | プラン内定額                | モデルにより消費が異なる       | モデル×トークン数で credit 消費が大きく異なる     | クレジット消費量が異なる |
-| Code Completions   | -                             | -                           | -                              | AI Credits 消費なし (Freeを含む全プランで無制限)  | -                        |
+| Code Completions   | -                             | -                           | -                              | Free: 2,000/月, Pro以上: 無制限 (AI Credits 消費なし) | -                        |
 | 年額割引           | ✅ (年額プランあり)            | ✅ ($17/月相当)              | ✅ ($192/年 = Pro)              | ✅ (年額プランあり、旧request-baseは legacy扱い)  | 不明 / 今後次第          |
 
 ### Configuration Files and Directories
@@ -108,13 +140,14 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 
 - AWS 中心開発 / IAM / 組織統制重視 → **Kiro**
 - CLI 中心 / 自動化 / 高品質対話 → **Claude Code**
-- GitHub / PRレビュー / 開発標準化 → **GitHub Copilot**
-- IDE 内完結 / 高速開発体験 → **Cursor**
+- GitHub / PRレビュー / 開発標準化 / Cloud Agent (PR自動作成) → **GitHub Copilot**
+- IDE 内完結 / 高速開発体験 / Cloud agents → **Cursor**
 - GCP 中心開発 / Vertex AI 連携 → **Antigravity**
 - 複数ツール併用前提の探索環境 → **Kiro + Claude Code + Copilot** など併用
 - コスト最小で始めたい → GitHub Copilot (Free) または Cursor (Hobby)
-- 大量利用 → Kiro Power ($200/月) または Claude Code Max 20x ($200/月) または Copilot Max ($100/月, 20,000 credits)
+- 大量利用 → Kiro Power ($200/月) または Claude Code Max 20x ($200/月) または Copilot Max ($200相当 credits/月)
 - コスト予測性重視 → Claude Code (定額内) または Kiro (クレジット制)。Copilot は AI Credits 制でモデル・用途次第で変動大
+- サードパーティ Agent 委任 (Claude/Codex) → GitHub Copilot Pro+ 以上
 
 ## Agent Security: Guardrails
 

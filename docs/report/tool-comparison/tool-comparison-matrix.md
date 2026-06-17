@@ -8,6 +8,7 @@
 
 | 日付       | 内容                                                                 |
 | ---------- | -------------------------------------------------------------------- |
+| 2026-06-17 | 全般最新化: Biome v2.5.0 HTML/SVG対応反映、Semgrep Multimodal情報追加 |
 | 2026-06-02 | Code Formatter セクション追加 (Prettier vs Biome vs deno fmt vs clang-format vs rustfmt) |
 | 2026-05-26 | Version Management セクション mise Lazy Install 記述修正             |
 | 2026-05-25 | Version Management セクションに mise 追加                            |
@@ -29,11 +30,14 @@
 - [AI Agent](tool-comparison-matrix-ai-agent.md)
 - [AI Governance](tool-comparison-matrix-ai-governance.md)
 - [AI Workflow](tool-comparison-matrix-ai-workflow.md)
+- [AI Agent Hooks](tool-comparison-matrix-ai-agent-hooks.md)
+- [AI Agent Guardrails](tool-comparison-matrix-ai-agent-guardrails.md)
+- [AI MCP Server](tool-comparison-matrix-ai-mcp-server.md)
 
 <!-- omit in toc -->
 ## Table of Contents
 
-- [Dependency Updates: Renovate vs Dependabot](#dependency-updates-renovate-vs-dependabot)
+- [Dependency Updates: Dependabot vs Renovate](#dependency-updates-dependabot-vs-renovate)
   - [Guidelines](#guidelines)
 - [Version Management: aqua vs asdf vs mise](#version-management-aqua-vs-asdf-vs-mise)
   - [Guidelines](#guidelines-1)
@@ -58,24 +62,24 @@
 - [Code Formatter: Prettier vs Biome vs deno fmt vs clang-format vs rustfmt](#code-formatter-prettier-vs-biome-vs-deno-fmt-vs-clang-format-vs-rustfmt)
   - [Guidelines](#guidelines-11)
 
-## Dependency Updates: Renovate vs Dependabot
+## Dependency Updates: Dependabot vs Renovate
 
-| 比較項目              | Renovate                                                        | Dependabot                        |
-| --------------------- | --------------------------------------------------------------- | --------------------------------- |
-| 提供元                | Mend (旧 WhiteSource)                                           | GitHub                            |
-| リポジトリ            | [renovatebot/renovate](https://github.com/renovatebot/renovate) | - (GitHub 組み込み)               |
-| ライセンス            | AGPL-3.0                                                        | MIT                               |
-| 対応プラットフォーム  | GitHub / GitLab / Bitbucket / Azure DevOps                      | GitHub のみ                       |
-| 設定ファイル          | `renovate.json` (JSON5対応、extends可)                          | `dependabot.yml`                  |
-| 設定の柔軟性          | 非常に高い (正規表現、プリセット共有)                           | 中程度 (YAML ベース)              |
-| Shareable Config      | ✅ extends で組織共通設定を共有可能                              | ❌ リポジトリ毎に設定が必要        |
-| グルーピング          | ✅ `group` ルールで柔軟にまとめられる                            | ⚠️ `groups` (2024年追加、制限あり) |
-| 自動マージ            | ✅ 組み込みサポート                                              | ⚠️ GitHub の auto-merge 機能に依存 |
-| カスタム マネージャー | ✅ regex manager で任意ファイル対応                              | ❌ 対応エコシステムのみ            |
-| 対応エコシステム数    | 90+                                                             | 20+                               |
-| スケジュール制御      | 詳細 (cron式、timezone対応)                                     | 基本 (daily/weekly/monthly)       |
-| セルフホスト          | ✅ 可能                                                          | ❌ GitHub 提供のみ                 |
-| 料金                  | 無料 (GitHub App) / セルフホスト無料                            | 無料 (GitHub 組み込み)            |
+| 比較項目              | Dependabot                        | Renovate                                                        |
+| --------------------- | --------------------------------- | --------------------------------------------------------------- |
+| 提供元                | GitHub                            | Mend (旧 WhiteSource)                                           |
+| リポジトリ            | - (GitHub 組み込み)               | [renovatebot/renovate](https://github.com/renovatebot/renovate) |
+| ライセンス            | MIT                               | AGPL-3.0                                                        |
+| 対応プラットフォーム  | GitHub のみ                       | GitHub / GitLab / Bitbucket / Azure DevOps                      |
+| 設定ファイル          | `dependabot.yml`                  | `renovate.json` (JSON5対応、extends可)                          |
+| 設定の柔軟性          | 中程度 (YAML ベース)              | 非常に高い (正規表現、プリセット共有)                           |
+| Shareable Config      | ❌ リポジトリ毎に設定が必要        | ✅ extends で組織共通設定を共有可能                              |
+| グルーピング          | ⚠️ `groups` (2024年追加、制限あり) | ✅ `group` ルールで柔軟にまとめられる                            |
+| 自動マージ            | ⚠️ GitHub の auto-merge 機能に依存 | ✅ 組み込みサポート                                              |
+| カスタム マネージャー | ❌ 対応エコシステムのみ            | ✅ regex manager で任意ファイル対応                              |
+| 対応エコシステム数    | 20+                               | 90+                                                             |
+| スケジュール制御      | 基本 (daily/weekly/monthly)       | 詳細 (cron式、timezone対応)                                     |
+| セルフホスト          | ❌ GitHub 提供のみ                 | ✅ 可能                                                          |
+| 料金                  | 無料 (GitHub 組み込み)            | 無料 (GitHub App) / セルフホスト無料                            |
 
 ### Guidelines
 
@@ -158,15 +162,15 @@
 | 自動修正 (Autofix)   | ✅ (AI-powered)                                            | ✅ (Copilot Autofix)                                       | ⚠️ 限定的                                                         |
 | AI トリアージ        | ✅ (Semgrep Assistant)                                     | ⚠️ (Copilot連携)                                           | ⚠️ (AI CodeFix)                                                    |
 | 誤検知率             | 低い                                                      | 低い                                                      | 中程度                                                            |
-| 料金 (無料枠)        | Free: 10リポジトリ/10人まで                               | 無料 (公開リポジトリ)                                     | Community Edition: 無料                                           |
-| 料金 (有料)          | Teams: $30/contributor/月                                 | Code Security: $30/committer/月 (GHAS)                    | Developer Edition: $150/年〜                                      |
+| 料金 (無料枠)        | Free: 10リポジトリ/10人まで (60 AI credits含む)            | 無料 (公開リポジトリ)                                     | Community Edition: 無料                                           |
+| 料金 (有料)          | Teams: $30/contributor/月 (20 AI credits/dev)              | Code Security: $30/committer/月 (GHAS)                    | Developer Edition: $150/年〜                                      |
 | 料金ページ           | [semgrep.dev/pricing](https://semgrep.dev/pricing)        | [github.com/pricing](https://github.com/pricing)         | [sonarsource.com/plans](https://www.sonarsource.com/plans-and-pricing/) |
 | オフライン実行       | ✅ (CLI)                                                   | ✅ (CLI)                                                   | ✅ (セルフホスト)                                                  |
 | SaaS / セルフホスト  | 両方                                                      | SaaS (GitHub) / CLI                                       | セルフホスト / SonarCloud (SaaS)                                  |
 
 ### Guidelines
 
-**→ Semgrep を採用する。** カスタムルールの記述容易性 (YAML)、スキャン速度、CI統合の柔軟性のバランスが最も良い。OSS Engine (CLI) は無料で利用可能。
+**→ Semgrep を採用する。** カスタムルールの記述容易性 (YAML)、スキャン速度、CI統合の柔軟性のバランスが最も良い。OSS Engine (CLI) は無料で利用可能。Semgrep Multimodal (AI + ルール解析の併用) が新たに追加され、従来のパターンマッチだけでは検出困難な問題もカバー可能。
 
 - GitHub をメインで使い GHAS を契約済みの場合は CodeQL が追加コストなしで利用可能。解析深度は最も高いがスキャン時間が長い
 - コード品質ゲート (カバレッジ閾値、重複検出等) も統合したい場合は SonarQube を検討。SAST単体としては Semgrep/CodeQL に劣る
@@ -317,7 +321,7 @@
 | ドキュメント         | [prettier.io](https://prettier.io/docs/en/)                 | [biomejs.dev](https://biomejs.dev)                  | [docs.deno.com](https://docs.deno.com/runtime/reference/cli/fmt/) | [clang.llvm.org](https://clang.llvm.org/docs/ClangFormat.html) | [rust-lang.github.io](https://rust-lang.github.io/rustfmt/) |
 | ライセンス           | MIT                                                         | MIT                                                 | MIT                                                 | Apache-2.0 with LLVM Exception                      | Apache-2.0 / MIT                                      |
 | 実装言語             | JavaScript                                                  | Rust                                                | Rust                                                | C++                                                 | Rust                                                  |
-| 対応言語             | JS/TS/JSX/TSX/CSS/HTML/JSON/YAML/Markdown/GraphQL等         | JS/TS/JSX/TSX/CSS/JSON/GraphQL                      | JS/TS/JSX/TSX/JSON/Markdown/YAML/CSS/HTML           | C/C++/Objective-C/Java/C#/Proto                     | Rust                                                  |
+| 対応言語             | JS/TS/JSX/TSX/CSS/HTML/JSON/YAML/Markdown/GraphQL等         | JS/TS/JSX/TSX/CSS/JSON/GraphQL/HTML/SVG (Vue/Svelte/Astroは実験的) | JS/TS/JSX/TSX/JSON/Markdown/YAML/CSS/HTML           | C/C++/Objective-C/Java/C#/Proto                     | Rust                                                  |
 | 設定ファイル         | `.prettierrc` (JSON/YAML/TOML/JS)                           | `biome.json` / `biome.jsonc`                        | `deno.json` (`fmt` セクション)                      | `.clang-format` (YAML)                              | `rustfmt.toml` / `.rustfmt.toml`                      |
 | 設定オプション数     | 少ない (Opinionated)                                        | 少ない (Opinionated)                                | 極少 (Opinionated)                                  | 多い (100+)                                         | 多い (60+、nightly のみのオプション含む)               |
 | Linter 統合          | ❌ (別途 ESLint)                                             | ✅ 組み込み (ESLint互換ルール)                       | ✅ 組み込み (`deno lint`)                            | ❌ (別途 clang-tidy)                                 | ❌ (別途 clippy)                                       |
@@ -337,7 +341,7 @@
 
 **→ 言語スタックに応じて使い分ける。** 単一の万能フォーマッターは存在しないため、プロジェクトの言語構成に合わせて選択する。
 
-- **Web フロントエンド (JS/TS/CSS/HTML)**: Biome を第一候補とする。Prettier比 25-35x の高速性、Linter統合による単一ツール化、Node.js不要で CI が軽量化。Prettier 97% 互換のため移行コストが低い
+- **Web フロントエンド (JS/TS/CSS/HTML)**: Biome を第一候補とする。Prettier比 25-35x の高速性、Linter統合による単一ツール化、Node.js不要で CI が軽量化。Prettier 97% 互換のため移行コストが低い。v2.5.0 で HTML/SVG のフォーマット+Lintが本番対応 (Vue/Svelte/Astro は実験的)
 - **Prettier を選ぶ場合**: プラグインによる追加言語対応が必要な場合 (PHP, Ruby, Svelte等)、または Biome 未対応のフォーマット (Markdown, YAML) が重要な場合。エコシステムの成熟度・プラグイン数では依然最大
 - **Deno プロジェクト**: deno fmt 一択。設定不要で Deno ランタイムに統合されており、追加の依存が不要
 - **C/C++ プロジェクト**: clang-format 一択。LLVM エコシステムのデファクトスタンダード。設定項目が多いためチームで `.clang-format` を共有し BasedOnStyle を固定する
