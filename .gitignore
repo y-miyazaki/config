@@ -39,14 +39,6 @@ tmp
 .venv
 __pycache__
 
-# === Root (project-specific) ===
-.devcontainer/devcontainer.json
-.vscode/**
-!.vscode/cspell.json
-!.vscode/cspell-project.txt
-!.vscode/mcp.json
-!.vscode/settings-example.json
-
 # === Secrets / Credentials ===
 .env
 env/common/tmp/**
@@ -74,3 +66,11 @@ env/common/tmp/**
 **/.terraform.d/*
 builds
 modules/**/.terraform.lock.hcl
+
+# === Root (project-specific) ===
+.devcontainer/devcontainer.json
+.vscode/**
+!.vscode/cspell.json
+!.vscode/cspell-project.txt
+!.vscode/mcp.json
+!.vscode/settings-example.json
