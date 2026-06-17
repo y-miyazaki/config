@@ -63,6 +63,7 @@ _Research and comparison reports._
 ### Tool Comparison
 
 - [tool-comparison-evaluation-rules.md](report/tool-comparison/tool-comparison-evaluation-rules.md) - Shared evaluation rules for tool comparison
+- [tool-comparison-matrix-ai-agent-guardrails.md](report/tool-comparison/tool-comparison-matrix-ai-agent-guardrails.md) - AI agent guardrails tool comparison
 - [tool-comparison-matrix-ai-agent-hooks.md](report/tool-comparison/tool-comparison-matrix-ai-agent-hooks.md) - AI agent hooks tool comparison
 - [tool-comparison-matrix-ai-agent.md](report/tool-comparison/tool-comparison-matrix-ai-agent.md) - AI agent tool comparison
 - [tool-comparison-matrix-ai-governance.md](report/tool-comparison/tool-comparison-matrix-ai-governance.md) - AI governance tool comparison
