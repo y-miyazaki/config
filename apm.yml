@@ -50,4 +50,8 @@ dependencies:
   mcp: []
 
 scripts:
-  postinstall: 'jq ''. + {"version": 1}'' .cursor/hooks.json > .cursor/hooks.json.tmp && mv .cursor/hooks.json.tmp .cursor/hooks.json'
+  postinstall: |
+    # Fix local .cursor/hooks.json (legacy, for non-global installs)
+    if [ -f .cursor/hooks.json ]; then
+      jq '. + {"version": 1}' .cursor/hooks.json > .cursor/hooks.json.tmp && mv .cursor/hooks.json.tmp .cursor/hooks.json
+    fi

@@ -7,7 +7,7 @@ auto_install = true # Auto-install tools when a mise-managed config is entered o
 exec_auto_install = true # Auto-install tools when commands are run via `mise x` / `mise exec`.
 github_attestations = true # Verify GitHub release attestations when a backend supports them.
 lockfile = true # Generate and maintain mise.lock with resolved URLs and checksums.
-# locked = true # Require lockfile entries during installs to reduce unexpected upstream changes.
+locked = true # Require lockfile entries during installs to reduce unexpected upstream changes.
 minimum_release_age = "7d" # Avoid very recent releases to reduce supply-chain risk from rushed or bad publishes.
 not_found_auto_install = true # Try installing missing tools when a command is looked up from the current config.
 provenance_api_failures_fatal = true # Fail installs if provenance verification APIs are unavailable or verification fails.
@@ -44,6 +44,7 @@ python = "3.14.5"
   "node",
 ], install_env = { NPM_CONFIG_IGNORE_SCRIPTS = "false" }, postinstall = "node $(find $MISE_TOOL_INSTALL_PATH -name 'install.cjs' -path '*/@anthropic-ai/claude-code/*' | head -1)" } # Claude Code CLI
 "github:DeusData/codebase-memory-mcp" = "v0.7.0" # codebase memory MCP server
+"pipx:headroom-ai" = { version = "0.26.0", depends = ["python"], extras = "proxy,mcp", install_env = { PYO3_USE_ABI3_FORWARD_COMPATIBILITY = "1" } } # Headroom CLI
 "github:yvgude/lean-ctx" = "v3.7.5"              # context optimizer
 "github:microsoft/waza" = "0.33.0"               # agent skill evaluator
 

@@ -8,6 +8,7 @@ MCP Server の選定・比較の判断材料。
 
 | 日付       | 内容                                                                 |
 | ---------- | -------------------------------------------------------------------- |
+| 2026-06-17 | Headroom を Performance / Token Optimization カテゴリに追加 |
 | 2026-06-17 | 全般最新化: Terraform MCP v1.0.0 GA反映、GitHub MCP v1.1.0機能追加、codebase-memory-mcp LSPエンジン追加、lean-ctx WebSocket対応、Context7 OAuth対応 |
 | 2026-06-02 | Web Fetch & Markdown Compression MCP Servers カテゴリ追加 |
 | 2026-05-27 | Local Filesystem & Git / Database & Data Stores / SaaS & Collaboration カテゴリ追加。Performance と Code Intelligence の重複解消。提供元表記を統一 |
@@ -120,29 +121,36 @@ MCP Server の選定・比較の判断材料。
 
 トークン消費削減に特化した比較。コード構造理解の詳細は [Code Intelligence MCP Servers](#code-intelligence-mcp-servers) を参照。
 
-| 比較項目             | lean-ctx                          | mcp-compressor                    | codebase-memory-mcp               | jCodeMunch                        |
-| -------------------- | --------------------------------- | --------------------------------- | --------------------------------- | --------------------------------- |
-| 提供元               | yvgude                            | Atlassian Labs                    | DeusData                          | jgravelle                         |
-| リポジトリ           | [GitHub](https://github.com/yvgude/lean-ctx) | [GitHub](https://github.com/atlassian-labs/mcp-compressor) | [GitHub](https://github.com/deusdata/codebase-memory-mcp) | [GitHub](https://github.com/jgravelle/jcodemunch-mcp) |
-| ドキュメント         | [README](https://github.com/yvgude/lean-ctx#readme) | [README](https://github.com/atlassian-labs/mcp-compressor#readme) | [README](https://github.com/deusdata/codebase-memory-mcp#readme) | [jCodeMunch](https://jcodemunch.com) |
-| ライセンス           | Apache-2.0                        | Apache-2.0                        | MIT                               | 商用 (個人無料)                   |
-| 言語                 | Rust                              | Python                            | C                                 | Python                            |
-| インストール         | `lean-ctx mcp` / aqua             | `uvx mcp-compressor`              | バイナリ / aqua                   | `uvx --from git+https://github.com/jgravelle/jcodemunch-mcp.git jcodemunch-mcp` |
-| 削減対象             | Shell出力 + ファイル読み込み      | ツール定義 (JSON Schema)          | grep/read → 構造クエリ代替        | ファイル読み込み → シンボル取得   |
-| トークン削減率       | 60-99%                            | 70-97%                            | 99.2% (構造クエリ vs grep)        | 95%+ (コード読み込み)             |
-| 削減方式             | 56パターンの正規表現圧縮 + キャッシュ (~13 tokens/file) | LLMによるJSON Schema要約          | ナレッジグラフ構造クエリ          | MUNCH圧縮フォーマット (45.5%バイト削減) |
-| セッションメモリ     | ✅ (CCP)                           | ❌                                 | ❌                                 | ✅ (session-aware routing)         |
-| 適用レイヤー         | Shell Hook + MCP Server           | プロキシ (他MCPをラップ)          | MCP Server (単体)                 | MCP Server (単体)                 |
-| ツール数             | 51+                               | 2-3 (プロキシ)                    | 14                                | 62 (full) / 16 (core)            |
-| mcp-compressor推奨   | ✅                                 | N/A                               | ❌ (14ツール)                      | ⚠️ (core profileで自己圧縮可能)   |
-| 依存関係             | なし (単一バイナリ)               | Python (uv)                       | なし (単一バイナリ)               | Python (uv)                       |
-| 商用利用             | ✅ 無料                            | ✅ 無料                            | ✅ 無料                            | 有料 ($79〜)                      |
+| 比較項目             | lean-ctx                          | Headroom                          | mcp-compressor                    | codebase-memory-mcp               | jCodeMunch                        |
+| -------------------- | --------------------------------- | --------------------------------- | --------------------------------- | --------------------------------- | --------------------------------- |
+| 提供元               | yvgude                            | chopratejas                       | Atlassian Labs                    | DeusData                          | jgravelle                         |
+| リポジトリ           | [GitHub](https://github.com/yvgude/lean-ctx) | [GitHub](https://github.com/chopratejas/headroom) | [GitHub](https://github.com/atlassian-labs/mcp-compressor) | [GitHub](https://github.com/deusdata/codebase-memory-mcp) | [GitHub](https://github.com/jgravelle/jcodemunch-mcp) |
+| ドキュメント         | [README](https://github.com/yvgude/lean-ctx#readme) | [Docs](https://headroom-docs.vercel.app/docs) | [README](https://github.com/atlassian-labs/mcp-compressor#readme) | [README](https://github.com/deusdata/codebase-memory-mcp#readme) | [jCodeMunch](https://jcodemunch.com) |
+| ライセンス           | Apache-2.0                        | Apache-2.0                        | Apache-2.0                        | MIT                               | 商用 (個人無料)                   |
+| 言語                 | Rust                              | Python                            | Python                            | C                                 | Python                            |
+| インストール         | `lean-ctx mcp` / aqua             | `pip install headroom-ai` / npm   | `uvx mcp-compressor`              | バイナリ / aqua                   | `uvx --from git+https://github.com/jgravelle/jcodemunch-mcp.git jcodemunch-mcp` |
+| 削減対象             | Shell出力 + ファイル読み込み      | ツール出力 + ログ + ファイル + RAGチャンク | ツール定義 (JSON Schema)          | grep/read → 構造クエリ代替        | ファイル読み込み → シンボル取得   |
+| トークン削減率       | 60-99%                            | 60-95%                            | 70-97%                            | 99.2% (構造クエリ vs grep)        | 95%+ (コード読み込み)             |
+| 削減方式             | 56パターンの正規表現圧縮 + キャッシュ (~13 tokens/file) | 6アルゴリズム (可逆圧縮 + Kompress-v2モデル) | LLMによるJSON Schema要約          | ナレッジグラフ構造クエリ          | MUNCH圧縮フォーマット (45.5%バイト削減) |
+| セッションメモリ     | ✅ (CCP)                           | ❌                                 | ❌                                 | ❌                                 | ✅ (session-aware routing)         |
+| 適用レイヤー         | Shell Hook + MCP Server           | Library + Proxy + MCP Server      | プロキシ (他MCPをラップ)          | MCP Server (単体)                 | MCP Server (単体)                 |
+| ツール数             | 51+                               | MCP: 少数 (圧縮API)              | 2-3 (プロキシ)                    | 14                                | 62 (full) / 16 (core)            |
+| mcp-compressor推奨   | ✅                                 | ❌ (自己圧縮機能あり)             | N/A                               | ❌ (14ツール)                      | ⚠️ (core profileで自己圧縮可能)   |
+| 依存関係             | なし (単一バイナリ)               | Python (pip/uv) または Node.js    | Python (uv)                       | なし (単一バイナリ)               | Python (uv)                       |
+| 商用利用             | ✅ 無料                            | ✅ 無料 (Enterprise別途)          | ✅ 無料                            | ✅ 無料                            | 有料 ($79〜)                      |
 
 ### Guidelines
 
-**→ lean-ctx + mcp-compressor を採用する。** lean-ctx はシェル出力圧縮とキャッシュ読み込みで日常的なトークン消費を削減。mcp-compressor はツール数の多いサーバー（GitHub MCP 90+ツール、Playwright等）のプロキシとして適用。
+**→ lean-ctx + mcp-compressor + Headroom を併用する。** 各ツールは適用レイヤーが異なるため競合せず重ね掛けが可能。
 
-- **制約: mcp-compressor は同時に複数の MCP サーバーをラップできない。** プロキシとして公開するツール名が同一（`call_tool` 等）になるため、1 セッションにつき 1 サーバーのみラップ可能。複数サーバーのトークン削減が必要な場合は lean-ctx のシェル圧縮や各サーバー固有の軽量化オプションで補完する。
+| レイヤー | ツール | 役割 |
+| -------- | ------ | ---- |
+| Shell Hook (出力圧縮 + キャッシュ) | lean-ctx | コマンド出力・ファイル読み込みの正規表現圧縮、セッションメモリ (CCP) |
+| Proxy (ツール定義圧縮) | mcp-compressor | ツール数の多い MCP サーバー (GitHub MCP 90+ ツール等) の JSON Schema 要約 |
+| Library / Proxy (コンテンツ圧縮) | Headroom | ツール出力・ログ・RAG チャンクの可逆圧縮 (6 アルゴリズム)。lean-ctx が対象としない非シェル経路のコンテキスト削減 |
+
+- **制約: mcp-compressor は同時に複数の MCP サーバーをラップできない。** プロキシとして公開するツール名が同一（`call_tool` 等）になるため、1 セッションにつき 1 サーバーのみラップ可能。複数サーバーのトークン削減が必要な場合は lean-ctx のシェル圧縮や Headroom の Library 形態で補完する。
+- Headroom は Python/Node.js 依存だが Library としてアプリケーションコードに埋め込める点が lean-ctx (単一バイナリ + Hook) と異なる。API プロキシ経由で LLM プロバイダへの送信前に圧縮する構成も可能。
 - codebase-memory-mcp のトークン削減効果は構造クエリの副次的効果であり、主目的はコード理解。Code Intelligence カテゴリで採用。
 - jCodeMunch は機能面で優れるが商用利用が有料（$79〜）のため、OSSで統一する方針では不採用。
 

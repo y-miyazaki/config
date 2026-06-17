@@ -1,12 +1,14 @@
 # === AI tool configs ===
+# Personal settings (never commit)
 .claude/memory/
 .claude/settings.local.json
 .claude/tmp/
+
+# AI tools with no project-specific configs (directories fully excluded)
 .copilot
 .kiro
 .serena
 apm_modules/
-
 
 # === Go ===
 .serverless
