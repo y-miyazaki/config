@@ -4,7 +4,10 @@
 
 # === AI tool configs (low value as context) ===
 .copilot/
-.cursor/
+.cursor/hooks/
+.cursor/permissions.json
+.cursor/hooks.json
+.cursor/cli.json
 .kiro/
 .serena/
 apm_modules/
@@ -40,6 +43,13 @@ target/
 *.pyc
 *.pyo
 __pycache__/
+
+# === Modern Frontend / Meta-Frameworks ===
+.astro/
+.next/
+.nuxt/
+.svelte-kit/
+.yarn/
 
 # === Test coverage ===
 coverage/

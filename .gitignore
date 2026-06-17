@@ -18,6 +18,13 @@ dist
 output
 vendor
 
+# === Modern Frontend / Meta-Frameworks ===
+.astro
+.next
+.nuxt
+.svelte-kit
+.yarn
+
 # === Node ===
 node_modules
 outputs
