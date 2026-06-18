@@ -49,6 +49,7 @@ if command -v mise > /dev/null 2>&1; then
             mise trust --yes "${repo_root}/mise.toml" > /dev/null 2>&1 || echo "[warn] mise trust failed" >&2
             mise install || echo "[warn] mise install task failed" >&2
             mise reshim --yes || echo "[warn] mise reshim failed" >&2
+            mise prune --yes || echo "[warn] mise prune failed" >&2
         )
     fi
 fi

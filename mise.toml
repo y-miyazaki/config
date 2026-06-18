@@ -44,6 +44,7 @@ python = "3.14.6"
   "node",
 ], install_env = { NPM_CONFIG_IGNORE_SCRIPTS = "false" }, postinstall = "node $(find $MISE_TOOL_INSTALL_PATH -name 'install.cjs' -path '*/@anthropic-ai/claude-code/*' | head -1)" } # Claude Code CLI
 "github:DeusData/codebase-memory-mcp" = "v0.7.0" # codebase memory MCP server
+"aqua:github/copilot-cli" = "1.0.61"             # GitHub Copilot CLI
 "pipx:headroom-ai" = { version = "0.26.0", extras = "proxy,mcp,bedrock", depends = ["python"] }
 "github:yvgude/lean-ctx" = "v3.7.5"              # context optimizer
 "github:microsoft/waza" = "0.33.0"               # agent skill evaluator
@@ -60,7 +61,6 @@ python = "3.14.6"
 
 # GitHub related tools
 "aqua:rhysd/actionlint" = "1.7.12"                                    # GitHub Actions linter
-"aqua:github/copilot-cli" = "1.0.61"                                  # GitHub Copilot CLI
 "aqua:suzuki-shunsuke/disable-checkout-persist-credentials" = "1.0.0" # disable persist-credentials in checkout action
 "aqua:cli/cli" = "2.94.0"                                             # GitHub CLI (gh)
 "aqua:suzuki-shunsuke/ghalint" = "1.5.6"                              # GitHub Actions linter
