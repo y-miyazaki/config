@@ -1547,10 +1547,6 @@ backend = "npm:awsp"
 version = "10.0.1"
 backend = "npm:cspell"
 
-[[tools."npm:headroom-ai"]]
-version = "0.22.4"
-backend = "npm:headroom-ai"
-
 [[tools."npm:markdown-link-check"]]
 version = "3.14.2"
 backend = "npm:markdown-link-check"
@@ -1568,7 +1564,7 @@ version = "0.26.0"
 backend = "pipx:headroom-ai"
 
 [tools."pipx:headroom-ai".options]
-extras = "proxy,mcp"
+extras = "proxy,mcp,bedrock"
 
 [[tools."pipx:pre-commit"]]
 version = "4.6.0"

@@ -44,7 +44,7 @@ python = "3.14.6"
   "node",
 ], install_env = { NPM_CONFIG_IGNORE_SCRIPTS = "false" }, postinstall = "node $(find $MISE_TOOL_INSTALL_PATH -name 'install.cjs' -path '*/@anthropic-ai/claude-code/*' | head -1)" } # Claude Code CLI
 "github:DeusData/codebase-memory-mcp" = "v0.7.0" # codebase memory MCP server
-"pipx:headroom-ai" = { version = "0.26.0", depends = ["python"], extras = "proxy,mcp", install_env = { PYO3_USE_ABI3_FORWARD_COMPATIBILITY = "1" } } # Headroom CLI
+"pipx:headroom-ai" = { version = "0.26.0", extras = "proxy,mcp,bedrock", depends = ["python"] }
 "github:yvgude/lean-ctx" = "v3.7.5"              # context optimizer
 "github:microsoft/waza" = "0.33.0"               # agent skill evaluator
 
