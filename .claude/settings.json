@@ -153,14 +153,19 @@
       "Write(tsconfig.json)"
     ]
   },
-  "autoCompactEnabled": true,
-  "cleanupPeriodDays": 30,
-  "fileCheckpointingEnabled": true,
-  "respectGitignore": true,
-  "includeGitInstructions": true,
   "attribution": {
     "commit": "Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>",
     "pr": "\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)"
+  },
+  "autoCompactEnabled": true,
+  "cleanupPeriodDays": 30,
+  "fileCheckpointingEnabled": true,
+  "includeGitInstructions": true,
+  "respectGitignore": true,
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh",
+    "padding": 2
   },
   "hooks": {
     "Stop": [

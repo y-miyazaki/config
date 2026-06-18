@@ -57,6 +57,13 @@ if command -v aqua > /dev/null 2>&1; then
 fi
 
 #######################################
+# for Claude
+#######################################
+if command -v claude > /dev/null 2>&1; then
+    export CLAUDE_CODE_NO_FLICKER=1
+fi
+
+#######################################
 # for headroom
 #######################################
 if command -v headroom > /dev/null 2>&1; then

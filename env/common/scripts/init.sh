@@ -40,6 +40,15 @@ if [ -e "$HOME/.ssh" ]; then sudo chown -R "$uid":"$gid" "$HOME/.ssh" || true; f
 chmod 600 "$HOME/.ssh"/id_* 2> /dev/null || true
 
 #######################################
+# Claude (optional)
+#######################################
+if command -v claude > /dev/null 2>&1; then
+    if [ -f "${repo_root}/.claude/scripts/statusline.sh" ]; then
+        cp -rp "${repo_root}/.claude/scripts/statusline.sh" ~/.claude/
+    fi
+fi
+
+#######################################
 # mise trust (optional)
 #######################################
 if command -v mise > /dev/null 2>&1; then
