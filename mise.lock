@@ -1261,36 +1261,36 @@ checksum = "sha256:5fbfb643b83c4ad489bde15a0e0d46e53dc9aa8dfa76d25da3c4bd2698a41
 url = "https://github.com/terraform-linters/tflint/releases/download/v0.63.1/tflint_windows_amd64.zip"
 
 [[tools."aqua:vektra/mockery"]]
-version = "3.7.0"
+version = "3.7.1"
 backend = "aqua:vektra/mockery"
 
 [tools."aqua:vektra/mockery"."platforms.linux-arm64"]
-checksum = "sha256:94dab8c6d8421630da51fe950b4f0f1180e5bef6022a3a5b3fe537acace94741"
-url = "https://github.com/vektra/mockery/releases/download/v3.7.0/mockery_3.7.0_Linux_arm64.tar.gz"
+checksum = "sha256:27bcb1d78a4e78488aaa9f90864f6281456f12a92548d5deb0e0af719478f418"
+url = "https://github.com/vektra/mockery/releases/download/v3.7.1/mockery_3.7.1_Linux_arm64.tar.gz"
 
 [tools."aqua:vektra/mockery"."platforms.linux-arm64-musl"]
-checksum = "sha256:94dab8c6d8421630da51fe950b4f0f1180e5bef6022a3a5b3fe537acace94741"
-url = "https://github.com/vektra/mockery/releases/download/v3.7.0/mockery_3.7.0_Linux_arm64.tar.gz"
+checksum = "sha256:27bcb1d78a4e78488aaa9f90864f6281456f12a92548d5deb0e0af719478f418"
+url = "https://github.com/vektra/mockery/releases/download/v3.7.1/mockery_3.7.1_Linux_arm64.tar.gz"
 
 [tools."aqua:vektra/mockery"."platforms.linux-x64"]
-checksum = "sha256:5e10597d9741d7b8cda699f044b24c9e8b51467dce413e79516d7cd9373c2896"
-url = "https://github.com/vektra/mockery/releases/download/v3.7.0/mockery_3.7.0_Linux_x86_64.tar.gz"
+checksum = "sha256:79e6a7374d444f7e47aab79a30993ec403d0a573212c2c707c4bffede5f1780f"
+url = "https://github.com/vektra/mockery/releases/download/v3.7.1/mockery_3.7.1_Linux_x86_64.tar.gz"
 
 [tools."aqua:vektra/mockery"."platforms.linux-x64-musl"]
-checksum = "sha256:5e10597d9741d7b8cda699f044b24c9e8b51467dce413e79516d7cd9373c2896"
-url = "https://github.com/vektra/mockery/releases/download/v3.7.0/mockery_3.7.0_Linux_x86_64.tar.gz"
+checksum = "sha256:79e6a7374d444f7e47aab79a30993ec403d0a573212c2c707c4bffede5f1780f"
+url = "https://github.com/vektra/mockery/releases/download/v3.7.1/mockery_3.7.1_Linux_x86_64.tar.gz"
 
 [tools."aqua:vektra/mockery"."platforms.macos-arm64"]
-checksum = "sha256:c0a8ea54d602c071775d1692321d385903ccc80bd2d1ae9f230539a195643d7d"
-url = "https://github.com/vektra/mockery/releases/download/v3.7.0/mockery_3.7.0_Darwin_arm64.tar.gz"
+checksum = "sha256:ec94a61c80e55bcfa868c59b51a662dcb47e451ef041f3f274630b58a2647fb1"
+url = "https://github.com/vektra/mockery/releases/download/v3.7.1/mockery_3.7.1_Darwin_arm64.tar.gz"
 
 [tools."aqua:vektra/mockery"."platforms.macos-x64"]
-checksum = "sha256:36e7357fd160689a9a8ae57726e099761159845e2749ba31091589853a5a894d"
-url = "https://github.com/vektra/mockery/releases/download/v3.7.0/mockery_3.7.0_Darwin_x86_64.tar.gz"
+checksum = "sha256:ccd4aed104cf886e4049b4ba5fafdf340a839c48b9d1b093927513051cc4df57"
+url = "https://github.com/vektra/mockery/releases/download/v3.7.1/mockery_3.7.1_Darwin_x86_64.tar.gz"
 
 [tools."aqua:vektra/mockery"."platforms.windows-x64"]
-checksum = "sha256:76d524ad1740cd02ed621d90015f538fdb53cf6cd4a1ad4d289db017fb69bd0e"
-url = "https://github.com/vektra/mockery/releases/download/v3.7.0/mockery_3.7.0_Windows_x86_64.tar.gz"
+checksum = "sha256:995bb7144ffdf4b71c8a351db88583da7ae3d090367119646ed3580d1b1d2a4b"
+url = "https://github.com/vektra/mockery/releases/download/v3.7.1/mockery_3.7.1_Windows_x86_64.tar.gz"
 
 [[tools."aqua:zizmorcore/zizmor"]]
 version = "1.25.2"
