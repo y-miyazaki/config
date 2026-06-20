@@ -1,6 +1,6 @@
 ---
-paths:
-  - ".github/workflows/**/*.yaml,.github/workflows/**/*.yml"
+description: AI Assistant Instructions for GitHub Actions Workflows
+globs: ".github/workflows/**/*.yaml,.github/workflows/**/*.yml"
 ---
 
 # AI Assistant Instructions for GitHub Actions Workflows

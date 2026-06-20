@@ -1,6 +1,6 @@
 ---
-paths:
-  - "README.md,CONTRIBUTING.md,docs/**/*.md"
+applyTo: "README.md,CONTRIBUTING.md,docs/**/*.md"
+description: "AI Assistant Instructions for Markdown Documentation"
 ---
 
 # AI Assistant Instructions for Markdown

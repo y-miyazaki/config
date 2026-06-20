@@ -1,6 +1,6 @@
 ---
-paths:
-  - "**/instructions/*.instructions.md,**/.cursor/rules/*.mdc,**/.kiro/steering/*.md,**/.claude/**/*.md"
+description: AI Assistant Instructions for Writing Instruction Files
+globs: "**/instructions/*.instructions.md,**/.cursor/rules/*.mdc,**/.kiro/steering/*.md,**/.claude/**/*.md"
 ---
 
 # AI Assistant Instructions for Instruction Files

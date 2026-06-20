@@ -1,6 +1,6 @@
 ---
-paths:
-  - "**/skills/**/SKILL.md,**/skills/**/references/*.md"
+applyTo: "**/skills/**/SKILL.md,**/skills/**/references/*.md"
+description: "AI Assistant Instructions for Agent Skills Development"
 ---
 
 # AI Assistant Instructions for Agent Skills

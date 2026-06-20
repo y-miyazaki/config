@@ -1,6 +1,6 @@
 ---
-paths:
-  - "**/skills/**/SKILL.md,**/skills/**/references/*.md"
+description: AI Assistant Instructions for Agent Skills Development
+globs: "**/skills/**/SKILL.md,**/skills/**/references/*.md"
 ---
 
 # AI Assistant Instructions for Agent Skills
