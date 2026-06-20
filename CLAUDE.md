@@ -4,10 +4,9 @@
 
 ## Repository Rules
 
-### Project Structure
+### Project Overview
 
-- Shared configuration distribution source — no application code.
-- Deliverables: APM packages, reusable GitHub Actions workflows, Renovate policy presets.
+Shared configuration distribution source — no application code. Deliverables: APM packages, reusable GitHub Actions workflows, Renovate policy presets.
 
 ### Generated Files — Do Not Edit
 
@@ -41,18 +40,14 @@ Write to `tmp/`.
 
 ### Documentation Editing
 
-Update documentation when structure or package composition changes:
-
-- Package added/removed → update `docs/` package listing
-- Workflow added/removed → update `README.md` workflow table
-- Renovate preset changed → update `README.md` usage examples
+When structure, modules, or features change, update related `README.md` and `docs/` accordingly.
 
 ## Token Optimization
 
 ### Context Exclusions
 
-- Lock files: `mise.lock`, `go.sum`, `apm.lock.yaml`, `package-lock.json`
-- Dependencies: `node_modules/`, `vendor/`, `apm_modules/`
+- Lock files: `*.lock`, `*.lock.*`, `go.sum`
+- Dependencies: `node_modules/`, `apm_modules/`
 - Build artifacts: `dist/`, `build/`, `bin/`
 - Reports: `docs/report/` (research documents, not specifications)
 - Temporary: `tmp/`, `.cache/`, `env/common/tmp/`
@@ -65,5 +60,3 @@ Only read `docs/report/` files when explicitly asked or when comparison/research
 
 - Secrets MUST NOT appear in source code, logs, or test data.
 - No destructive operations as defaults in command examples.
-- Reusable workflows MUST declare minimal `permissions` (least privilege).
-- Secrets received via `workflow_call` MUST NOT be logged or passed to untrusted actions.
