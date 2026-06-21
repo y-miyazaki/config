@@ -48,4 +48,4 @@ Renovate creates a "Dependency Dashboard" issue and begins opening PRs according
 
 ## Next Steps
 
-- Reference: Specification (`docs/reference/specification.md`) — For details on the shared Renovate policy rules.
+- [Specification](../reference/specification.md) — For details on the shared Renovate policy rules.

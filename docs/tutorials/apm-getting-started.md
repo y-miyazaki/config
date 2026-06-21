@@ -84,6 +84,6 @@ All commands should succeed without errors.
 
 ## Next Steps
 
-- How-To: Troubleshooting (`docs/how-to/troubleshooting.md`) — For resolving common install and sync issues.
-- Reference: Specification (`docs/reference/specification.md`) — To look up package structure and behavioral contracts.
-- Explanation: Architecture (`docs/explanation/architecture.md`) — To understand the system design and package boundaries.
+- [Troubleshooting](../how-to/troubleshooting.md) — For resolving common install and sync issues.
+- [Specification](../reference/specification.md) — To look up package structure and behavioral contracts.
+- [Architecture](../explanation/architecture.md) — To understand the system design and package boundaries.

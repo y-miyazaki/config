@@ -84,4 +84,4 @@ Completion criteria:
 ## Operational Notes
 - Re-run this workflow whenever golangci-lint version changes.
 - Treat this file as policy; project-specific enable/disable decisions belong in PR descriptions or issue discussions.
-- Reviewer/instructions boundary rule is defined in `docs/governance/linter-review-boundary.md`.
+- Reviewer/instructions boundary rule is defined in [linter-review-boundary.md](../governance/linter-review-boundary.md).

@@ -3,13 +3,15 @@
 
 Shared configuration packages for AI agent tooling, GitHub Actions workflows, and Renovate policy reuse.
 
-This repository is a shared configuration repository. It is focused on practical usage and reuse of settings across projects.
+**[Documentation](https://y-miyazaki.github.io/config/)** · **[APM Tutorial](https://y-miyazaki.github.io/config/tutorials/apm-getting-started/)** · **[GitHub Actions Tutorial](https://y-miyazaki.github.io/config/tutorials/github-actions-getting-started/)** · **[Renovate Tutorial](https://y-miyazaki.github.io/config/tutorials/renovate-getting-started/)**
 
-- Specifications for this repository are documented under [`docs/`](docs/), including repository structure in [`docs/reference/specification.md`](docs/reference/specification.md).
-- Usage and installation steps are documented in this `README.md`.
+---
+
+This repository is a shared configuration distribution source. No application code — only reusable packages, workflows, and presets.
+
 - AI agent-related configuration files are shared as APM packages.
-- Shared automation is provided through GitHub Actions workflows.
-- Shared dependency update policy is provided through Renovate configuration.
+- Shared automation is provided through GitHub Actions reusable workflows.
+- Shared dependency update policy is provided through Renovate configuration presets.
 
 <!-- omit in toc -->
 ## Table of Contents
@@ -34,10 +36,14 @@ This repository is a shared configuration repository. It is focused on practical
 
 ## Documentation
 
-- Usage: this `README.md`
-- Specification and structure: [`docs/reference/specification.md`](docs/reference/specification.md)
-- Documentation index: [`docs/index.md`](docs/index.md)
-- Project instructions: [`CLAUDE.md`](CLAUDE.md) (for Claude Code users)
+Full documentation is hosted at **<https://y-miyazaki.github.io/config/>**.
+
+| Category | Link |
+| -------- | ---- |
+| Tutorials | [APM](https://y-miyazaki.github.io/config/tutorials/apm-getting-started/) · [GitHub Actions](https://y-miyazaki.github.io/config/tutorials/github-actions-getting-started/) · [Renovate](https://y-miyazaki.github.io/config/tutorials/renovate-getting-started/) |
+| How-To | [Troubleshooting](https://y-miyazaki.github.io/config/how-to/troubleshooting/) |
+| Reference | [Specification](https://y-miyazaki.github.io/config/reference/specification/) |
+| Explanation | [Architecture](https://y-miyazaki.github.io/config/explanation/architecture/) |
 
 ## APM
 

@@ -54,5 +54,5 @@ The `CI Markdown` workflow appears in the pull request checks and passes.
 
 ## Next Steps
 
-- Reference: Specification (`docs/reference/specification.md`) — For the full list of available reusable workflows.
-- Explanation: Architecture (`docs/explanation/architecture.md`) — To understand workflow naming conventions and trigger patterns.
+- [Specification](../reference/specification.md) — For the full list of available reusable workflows.
+- [Architecture](../explanation/architecture.md) — To understand workflow naming conventions and trigger patterns.
