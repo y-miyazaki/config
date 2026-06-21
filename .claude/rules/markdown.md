@@ -1,6 +1,8 @@
 ---
 paths:
-  - "README.md,CONTRIBUTING.md,docs/**/*.md"
+  - "README.md"
+  - "CONTRIBUTING.md"
+  - "docs/**/*.md"
 ---
 
 # AI Assistant Instructions for Markdown

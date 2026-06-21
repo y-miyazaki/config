@@ -1,6 +1,7 @@
 ---
 paths:
-  - ".github/workflows/**/*.yaml,.github/workflows/**/*.yml"
+  - ".github/workflows/**/*.yaml"
+  - ".github/workflows/**/*.yml"
 ---
 
 # AI Assistant Instructions for GitHub Actions Workflows
