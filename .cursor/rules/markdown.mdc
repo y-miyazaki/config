@@ -1,6 +1,6 @@
 ---
-paths:
-  - "README.md,CONTRIBUTING.md,docs/**/*.md"
+description: AI Assistant Instructions for Markdown Documentation
+globs: "README.md,CONTRIBUTING.md,docs/**/*.md"
 ---
 
 # AI Assistant Instructions for Markdown
