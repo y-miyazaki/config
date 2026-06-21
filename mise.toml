@@ -112,6 +112,7 @@ python = "3.14.6"
 
 # Utility tools
 "aqua:google/go-jsonnet" = "0.22.0"  # Jsonnet command-line tool
+"pipx:mkdocs" = { version = "1.6.1", depends = ["python"], postinstall = "uv pip install --python $MISE_TOOL_INSTALL_PATH/mkdocs/bin/python mkdocs-material" } # MkDocs with Material theme
 "aqua:BurntSushi/ripgrep" = "15.1.0" # grep alternative (rg)
 "aqua:tamasfe/taplo" = "0.10.0"      # TOML formatter / LSP
 "aqua:jdx/usage" = "3.5.0"           # usage CLI tool for command help and completions

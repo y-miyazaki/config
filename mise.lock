@@ -1175,7 +1175,6 @@ version = "0.10.0"
 backend = "aqua:tamasfe/taplo"
 
 [tools."aqua:tamasfe/taplo"."platforms.linux-arm64"]
-checksum = "blake3:7f7a3ddaa5acf0bc243fc1134dc68a94a39b2bef91000f7866dd90e4bd670b5e"
 url = "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-linux-aarch64.gz"
 
 [tools."aqua:tamasfe/taplo"."platforms.linux-arm64-musl"]
@@ -1374,7 +1373,7 @@ url_api = "https://api.github.com/repos/DeusData/codebase-memory-mcp/releases/as
 provenance = "github-attestations"
 
 [[tools."github:microsoft/apm"]]
-version = "v0.20.0"
+version = "0.20.0"
 backend = "github:microsoft/apm"
 
 [tools."github:microsoft/apm"."platforms.linux-arm64"]
@@ -1535,7 +1534,7 @@ checksum = "sha256:edaca9bd58ec8e92037dac4e877d52f6b8f430b81c18b57e264b4e2fb111c
 url = "https://nodejs.org/dist/v24.16.0/node-v24.16.0-win-x64.zip"
 
 [[tools."npm:@anthropic-ai/claude-code"]]
-version = "2.1.179"
+version = "2.1.181"
 backend = "npm:@anthropic-ai/claude-code"
 
 [[tools."npm:awsp"]]
@@ -1564,6 +1563,10 @@ backend = "pipx:headroom-ai"
 
 [tools."pipx:headroom-ai".options]
 extras = "proxy,mcp,bedrock"
+
+[[tools."pipx:mkdocs"]]
+version = "1.6.1"
+backend = "pipx:mkdocs"
 
 [[tools."pipx:pre-commit"]]
 version = "4.6.0"

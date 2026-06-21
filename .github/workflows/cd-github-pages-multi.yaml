@@ -1,0 +1,344 @@
+# Reusable workflow: Merge multiple artifacts and deploy to GitHub Pages
+# Downloads multiple artifacts, merges them into a single site with an index page, and deploys.
+name: cd-github-pages-multi
+
+on:
+  workflow_call:
+    inputs:
+      artifacts:
+        description: |
+          JSON array of artifact objects to deploy. Each object should contain:
+          - name: Artifact name (required)
+          - display_name: Display name for index page (required)
+          - path: Subdirectory path in artifact (optional, defaults to artifact name)
+          Example: '[{"name":"schemaspy-aurora_dev-dev","display_name":"Aurora Dev (PostgreSQL)","path":"aurora_dev"}]'
+        required: true
+        type: string
+      index_description:
+        default: "Select an item to view documentation"
+        description: "Description for the index page"
+        required: false
+        type: string
+      index_title:
+        default: "Documentation"
+        description: "Title for the index page"
+        required: false
+        type: string
+    outputs:
+      page_url:
+        description: "Deployed GitHub Pages URL"
+        value: ${{ jobs.merge-and-deploy.outputs.page_url }}
+
+permissions:
+  contents: read
+  id-token: write
+  pages: write
+
+concurrency:
+  group: github-pages-deploy
+  cancel-in-progress: false
+
+env:
+  ARTIFACTS: ${{ inputs.artifacts }}
+  INDEX_DESCRIPTION: ${{ inputs.index_description }}
+  INDEX_TITLE: ${{ inputs.index_title }}
+  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  WORKFLOW: ${{ github.workflow }}
+
+jobs:
+  merge-and-deploy:
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+      pages: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Parse artifacts configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Parsing artifacts configuration..."
+          echo "${ARTIFACTS}" | jq -c '.[]' > /tmp/artifacts.jsonl
+          echo "Total artifacts: $(wc -l < /tmp/artifacts.jsonl)"
+
+      - name: Validate artifacts configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! echo "${ARTIFACTS}" | jq -e 'type == "array"' > /dev/null; then
+            echo "❌ Error: artifacts input must be a JSON array"
+            exit 1
+          fi
+          artifact_count=$(wc -l < /tmp/artifacts.jsonl)
+          if [ "${artifact_count}" -eq 0 ]; then
+            echo "❌ Error: artifacts array is empty"
+            exit 1
+          fi
+          while IFS= read -r artifact_json; do
+            name=$(echo "${artifact_json}" | jq -r '.name // empty')
+            display_name=$(echo "${artifact_json}" | jq -r '.display_name // empty')
+            if [ -z "${name}" ] || [ -z "${display_name}" ]; then
+              echo "❌ Error: Each artifact must have 'name' and 'display_name'"
+              echo "Invalid artifact: ${artifact_json}"
+              exit 1
+            fi
+          done < /tmp/artifacts.jsonl
+          echo "✅ Artifacts configuration is valid (${artifact_count} artifacts)"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          path: all-artifacts
+
+      - name: Extract zip archives if present
+        shell: bash
+        run: |
+          set -euo pipefail
+          find all-artifacts -name "*.zip" -type f -print0 | while IFS= read -r -d '' zip_file; do
+            zip_dir=$(dirname "${zip_file}")
+            if unzip -q "${zip_file}" -d "${zip_dir}"; then
+              rm "${zip_file}"
+              echo "✅ Extracted: $(basename "${zip_file}")"
+            else
+              echo "❌ Failed to extract: $(basename "${zip_file}")"
+              exit 1
+            fi
+          done
+
+      - name: Merge artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p merged-pages
+
+          while IFS= read -r artifact_json; do
+            artifact_name=$(echo "${artifact_json}" | jq -r '.name')
+            display_name=$(echo "${artifact_json}" | jq -r '.display_name')
+            artifact_path_specified=$(echo "${artifact_json}" | jq -r '.path // empty')
+
+            artifact_dir="all-artifacts/${artifact_name}"
+            if [ ! -d "${artifact_dir}" ]; then
+              echo "⚠️  Warning: Artifact directory not found: ${artifact_dir}"
+              continue
+            fi
+
+            # Determine path
+            if [ -n "${artifact_path_specified}" ]; then
+              artifact_path_in_archive="${artifact_path_specified}"
+            else
+              found_index_file=$(find "${artifact_dir}" -type f -name 'index.html' -print -quit 2>/dev/null || echo "")
+              if [ -n "${found_index_file}" ]; then
+                found_index_dir=$(dirname "${found_index_file}")
+                if [ "${found_index_dir}" = "${artifact_dir}" ]; then
+                  artifact_path_in_archive="${artifact_name}"
+                else
+                  # shellcheck disable=SC2295
+                  artifact_path_in_archive="${found_index_dir#${artifact_dir}/}"
+                fi
+              else
+                first_subdir=$(find "${artifact_dir}" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" -quit 2>/dev/null || echo "")
+                artifact_path_in_archive="${first_subdir:-${artifact_name}}"
+              fi
+            fi
+
+            # Copy to merged output
+            if [ -d "${artifact_dir}/${artifact_path_in_archive}" ]; then
+              source_dir="${artifact_dir}/${artifact_path_in_archive}"
+            else
+              source_dir="${artifact_dir}"
+            fi
+
+            target_dir="merged-pages/${artifact_path_in_archive}"
+            mkdir -p "${target_dir}"
+            cp -r "${source_dir}/." "${target_dir}/"
+            echo "${artifact_name}|${display_name}|${artifact_path_in_archive}" >> /tmp/artifact-paths.txt
+            echo "✅ ${display_name} → ${artifact_path_in_archive}"
+          done < /tmp/artifacts.jsonl
+
+      - name: Create index page
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          html_escape() { printf '%s' "$1" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g'; }
+
+          SAFE_TITLE=$(html_escape "$INDEX_TITLE")
+          SAFE_DESC=$(html_escape "$INDEX_DESCRIPTION")
+          SAFE_WORKFLOW=$(html_escape "$WORKFLOW")
+
+          # Count items for grid layout
+          item_count=$(wc -l < /tmp/artifact-paths.txt)
+          if [ "${item_count}" -le 4 ]; then
+            grid_cols="repeat(auto-fill, minmax(280px, 1fr))"
+          else
+            grid_cols="repeat(auto-fill, minmax(240px, 1fr))"
+          fi
+
+          {
+            cat <<EOF
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${SAFE_TITLE}</title>
+          <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+            background-color: #f6f8fa;
+            line-height: 1.6;
+            color: #24292f;
+          }
+          h1 {
+            font-size: 1.75em;
+            border-bottom: 3px solid #0969da;
+            padding-bottom: 12px;
+            margin-bottom: 8px;
+          }
+          .description {
+            color: #57606a;
+            margin-bottom: 32px;
+          }
+          .grid {
+            display: grid;
+            grid-template-columns: ${grid_cols};
+            gap: 16px;
+            list-style: none;
+          }
+          .grid a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px;
+            background: #ffffff;
+            color: #24292f;
+            text-decoration: none;
+            border-radius: 8px;
+            border: 1px solid #d0d7de;
+            transition: all 0.15s ease;
+            font-weight: 500;
+            font-size: 0.95em;
+          }
+          .grid a:hover {
+            border-color: #0969da;
+            box-shadow: 0 4px 12px rgba(9,105,218,0.12);
+            transform: translateY(-2px);
+          }
+          .grid a::before {
+            content: "📄";
+            font-size: 1.4em;
+            flex-shrink: 0;
+          }
+          .meta {
+            margin-top: 48px;
+            padding: 16px 20px;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #d0d7de;
+            font-size: 0.8em;
+            color: #57606a;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 24px;
+          }
+          .meta a { color: #0969da; text-decoration: none; }
+          .meta a:hover { text-decoration: underline; }
+          </style>
+          </head>
+          <body>
+          <h1>📚 ${SAFE_TITLE}</h1>
+          <p class="description">${SAFE_DESC}</p>
+          <div class="grid">
+          EOF
+
+            while IFS='|' read -r _artifact_name display_name artifact_path; do
+              if [ -d "merged-pages/${artifact_path}" ]; then
+                safe_display=$(html_escape "$display_name")
+                safe_path=$(html_escape "$artifact_path")
+                printf '<a href="./%s/">%s</a>\n' "${safe_path}" "${safe_display}"
+              fi
+            done < /tmp/artifact-paths.txt
+
+            cat <<EOF
+          </div>
+          <div class="meta">
+            <span><strong>Generated:</strong> $(date -u +'%Y-%m-%d %H:%M:%S UTC')</span>
+            <span><strong>Workflow:</strong> ${SAFE_WORKFLOW}</span>
+            <span><strong>Run:</strong> <a href="${RUN_URL}" target="_blank">#${{ github.run_number }}</a></span>
+          </div>
+          </body>
+          </html>
+          EOF
+          } > merged-pages/index.html
+
+          # Strip leading heredoc indentation
+          sed -i 's/^          //' merged-pages/index.html
+
+      - name: Create buildinfo
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "Generated at: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+            echo "Workflow: ${WORKFLOW}"
+            echo "Run: ${RUN_URL}"
+            echo "Items:"
+            if [ -f /tmp/artifact-paths.txt ]; then
+              while IFS='|' read -r _artifact_name display_name artifact_path; do
+                echo "  - ${display_name} (${artifact_path})"
+              done < /tmp/artifact-paths.txt
+            fi
+          } > merged-pages/.buildinfo
+
+      - name: Setup Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: merged-pages
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
+
+      - name: Summary
+        if: always()
+        env:
+          DEPLOY_STATUS: ${{ job.status }}
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "## 📄 GitHub Pages Deployment"
+            echo ""
+            if [ "${DEPLOY_STATUS}" = "success" ]; then
+              echo "✅ **Status:** Success"
+              echo ""
+              echo "🔗 **URL:** ${PAGE_URL}"
+            else
+              echo "❌ **Status:** ${DEPLOY_STATUS}"
+            fi
+            echo ""
+            echo "### Deployed Items"
+            echo ""
+            echo "| Item | Path |"
+            echo "|------|------|"
+            if [ -f /tmp/artifact-paths.txt ]; then
+              while IFS='|' read -r _artifact_name display_name artifact_path; do
+                echo "| ${display_name} | \`${artifact_path}\` |"
+              done < /tmp/artifact-paths.txt
+            fi
+          } >> "${GITHUB_STEP_SUMMARY}"

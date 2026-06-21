@@ -2,12 +2,13 @@
 
 Directory layout follows [Diataxis](https://diataxis.fr/).
 
-
 ## Tutorials
 
 _Learning-oriented walkthroughs._
 
-(No tutorials yet.)
+- [apm-getting-started.md](tutorials/apm-getting-started.md) - Getting Started with APM Packages
+- [github-actions-getting-started.md](tutorials/github-actions-getting-started.md) - Getting Started with Reusable GitHub Actions Workflows
+- [renovate-getting-started.md](tutorials/renovate-getting-started.md) - Getting Started with Renovate Shared Policy
 
 ## How-To
 
@@ -27,15 +28,6 @@ _Understanding-oriented discussion of concepts and decisions._
 
 - [architecture.md](explanation/architecture.md) - System architecture overview
 - [instructions-sync-workflow.md](explanation/instructions-sync-workflow.md) - Instructions sync workflow explanation
-
-## Agent Standards
-
-- [code-modification.md](agents/code-modification.md) - Pre-flight inspection, consistency, implementation quality
-- [error-handling.md](agents/error-handling.md) - Unexpected situations, user-facing error standards
-- [execution-protocol.md](agents/execution-protocol.md) - Task classification, exploration budget, stop-and-ask criteria
-- [external-knowledge.md](agents/external-knowledge.md) - External knowledge usage, dependency/impact awareness
-- [review-standards.md](agents/review-standards.md) - Comparative analysis, decision trace, output formatting
-- [verification.md](agents/verification.md) - Verification requirements, uncertainty handling, test integrity
 
 ## Report
 

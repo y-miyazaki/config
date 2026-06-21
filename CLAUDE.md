@@ -22,17 +22,16 @@ To modify agent instructions or skills, edit the source at `.apm/packages/<name>
 - File names: `ci-*` (CI), `cd-*` (CD), `on-*` (event-triggered callers).
 - Keys in `inputs`, `env`, `permissions`, `with` MUST be alphabetically ordered.
 
-### Build and Validation
+### Manual Validation
 
-Run in order (each step depends on the previous):
+Hooks handle validation automatically. Run manually when explicitly requested or troubleshooting CI failures:
 
-```bash
-apm install --update          # 1. Generate/sync files
-apm audit --ci                # 2. Package integrity check
-actionlint                    # 3. Workflow syntax lint
-ghalint run                   # 4. Workflow best-practice lint
-zizmor .github/workflows/     # 5. Workflow security scan
-```
+- Sync generated files: `apm install --update`
+- Verify package integrity: `apm audit --ci`
+- Workflow linting (independent, may run in parallel):
+  - `actionlint`
+  - `ghalint run`
+  - `zizmor .github/workflows/`
 
 ### Temporary Artifacts
 

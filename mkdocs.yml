@@ -1,0 +1,85 @@
+site_name: Shared Config Distribution
+site_description: APM packages, reusable GitHub Actions workflows, and Renovate policy presets.
+docs_dir: docs
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.indexes
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - toc:
+      permalink: true
+      separator: "-"
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Tutorials:
+      - APM Packages: tutorials/apm-getting-started.md
+      - GitHub Actions: tutorials/github-actions-getting-started.md
+      - Renovate: tutorials/renovate-getting-started.md
+  - How-To:
+      - Troubleshooting: how-to/troubleshooting.md
+  - Reference:
+      - Specification: reference/specification.md
+  - Explanation:
+      - Architecture: explanation/architecture.md
+      - Instructions Sync Workflow: explanation/instructions-sync-workflow.md
+  - Report:
+      - AWS Service Comparison:
+          - Index: report/aws/service-comparison/index.md
+          - Batch: report/aws/service-comparison/service-comparison-batch.md
+          - Compute: report/aws/service-comparison/service-comparison-compute.md
+          - Database: report/aws/service-comparison/service-comparison-database.md
+          - Evaluation Rules: report/aws/service-comparison/service-comparison-evaluation-rules.md
+          - Gateway: report/aws/service-comparison/service-comparison-gateway.md
+          - Messaging: report/aws/service-comparison/service-comparison-messaging.md
+          - Storage: report/aws/service-comparison/service-comparison-storage.md
+      - Go:
+          - golangci-lint Maintenance Policy: report/go/golangci-lint-maintenance-policy.md
+      - Governance:
+          - Linter Review Boundary: report/governance/linter-review-boundary.md
+      - Tool Comparison:
+          - Evaluation Rules: report/tool-comparison/tool-comparison-evaluation-rules.md
+          - AI Agent: report/tool-comparison/tool-comparison-matrix-ai-agent.md
+          - AI Agent Guardrails: report/tool-comparison/tool-comparison-matrix-ai-agent-guardrails.md
+          - AI Agent Hooks: report/tool-comparison/tool-comparison-matrix-ai-agent-hooks.md
+          - AI Governance: report/tool-comparison/tool-comparison-matrix-ai-governance.md
+          - AI MCP Server: report/tool-comparison/tool-comparison-matrix-ai-mcp-server.md
+          - AI Workflow: report/tool-comparison/tool-comparison-matrix-ai-workflow.md
+          - AWS: report/tool-comparison/tool-comparison-matrix-aws.md
+          - Go: report/tool-comparison/tool-comparison-matrix-go.md
+          - Node.js: report/tool-comparison/tool-comparison-matrix-nodejs.md
+          - Shell Script: report/tool-comparison/tool-comparison-matrix-shell-script.md
+          - Terraform: report/tool-comparison/tool-comparison-matrix-terraform.md
+          - Overall Matrix: report/tool-comparison/tool-comparison-matrix.md
+      - Waza:
+          - Capabilities: report/waza/waza-capabilities.md
+          - Eval Templates: report/waza/waza-eval-templates.md
+          - Quickstart: report/waza/waza-quickstart.md
