@@ -1535,7 +1535,7 @@ checksum = "sha256:edaca9bd58ec8e92037dac4e877d52f6b8f430b81c18b57e264b4e2fb111c
 url = "https://nodejs.org/dist/v24.16.0/node-v24.16.0-win-x64.zip"
 
 [[tools."npm:@anthropic-ai/claude-code"]]
-version = "2.1.177"
+version = "2.1.179"
 backend = "npm:@anthropic-ai/claude-code"
 
 [[tools."npm:awsp"]]
