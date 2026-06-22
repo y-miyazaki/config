@@ -37,8 +37,11 @@ description: "AI Assistant Instructions for Markdown Documentation"
   - Check: Can the information be added to an existing document before creating a new file or directory?
 - DOC-06 (SHOULD): Preserve Rationale
   - Check: When simplifying documentation, is important context or rationale preserved?
-- DOC-07 (MUST): Use Relative Path Links in docs/
-  - Check: Are cross-references within `docs/` written as relative Markdown links (e.g., `[Specification](../reference/specification.md)`) instead of inline code paths (e.g., `` `docs/reference/specification.md` ``)? MkDocs resolves relative links into navigable site links automatically.
+- DOC-07 (MUST): Use Relative Path Links with Document Title in docs/
+  - Check: Are cross-references within `docs/` written as relative Markdown links with the link text set to the target document's title (H1 heading), not the file name or file path? MkDocs resolves relative links into navigable site links — using file paths as link text results in `docs/...` labels in the rendered site.
+  - ✅ `[Architecture Decision Records](../reference/adr.md)` (link text = target H1 title)
+  - ❌ `[adr.md](../reference/adr.md)` (link text = file name)
+  - ❌ `[../reference/adr.md](../reference/adr.md)` (link text = file path)
 
 ### Terminology and Consistency (TERM)
 - TERM-01 (MUST): Use Official Product Names
@@ -55,8 +58,8 @@ description: "AI Assistant Instructions for Markdown Documentation"
   - Check: Are instructions written in active voice with a clear actor (e.g., "Run the script" not "The script should be run")?
 - TERM-07 (SHOULD): Specify Code Block Language
   - Check: Do fenced code blocks include a language identifier (e.g., ```bash,```json, ```yaml)?
-- TERM-08 (SHOULD): Use Descriptive Link Text
-  - Check: Does link text describe the destination rather than using raw URLs or generic labels such as "here"?
+- TERM-08 (MUST): Use Document Title as Link Text
+  - Check: Does link text use the target document's title (H1 heading or section heading) rather than file names, file paths, raw URLs, or generic labels such as "here"? File names and paths as link text render poorly in MkDocs and lack descriptive value.
 - TERM-09 (SHOULD): Verify Against Repository State
   - Check: Are commands, file paths, and documented behaviors consistent with the current repository contents?
 - TERM-10 (MUST): Do Not Invent Documentation
