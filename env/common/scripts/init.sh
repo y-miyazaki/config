@@ -109,6 +109,7 @@ if command -v pre-commit > /dev/null 2>&1; then
         (
             cd "$repo_root"
             pre-commit install
+            pre-commit install --hook-type commit-msg
         ) || echo "[warn] pre-commit install failed" >&2
     fi
 fi

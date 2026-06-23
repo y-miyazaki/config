@@ -64,9 +64,9 @@ Hooks are distributed as separate target-specific packages because each AI agent
 
 | Hooks Package              | Target  | Hooks | Description                               |
 | -------------------------- | ------- | ----- | ----------------------------------------- |
-| common-hooks-claude        | Claude  | 6     | Common hooks for Claude Code              |
-| common-hooks-copilot       | Copilot | 6     | Common hooks for GitHub Copilot CLI       |
-| common-hooks-cursor        | Cursor  | 6     | Common hooks for Cursor                   |
+| common-hooks-claude        | Claude  | 7     | Common hooks for Claude Code              |
+| common-hooks-copilot       | Copilot | 7     | Common hooks for GitHub Copilot CLI       |
+| common-hooks-cursor        | Cursor  | 7     | Common hooks for Cursor                   |
 | go-hooks-claude            | Claude  | 1     | Go hooks for Claude Code                  |
 | go-hooks-copilot           | Copilot | 1     | Go hooks for GitHub Copilot CLI           |
 | go-hooks-cursor            | Cursor  | 1     | Go hooks for Cursor                       |
@@ -104,6 +104,7 @@ Hooks are distributed as separate target-specific packages because each AI agent
 | common-hooks-*        | github-actions-actionlint | Stop                   | Lint GitHub Actions workflows with actionlint |
 | common-hooks-*        | github-actions-ghalint    | Stop                   | Lint GitHub Actions workflows with ghalint    |
 | common-hooks-*        | github-actions-zizmor     | Stop                   | Security scan GitHub Actions with zizmor      |
+| common-hooks-*        | gitleaks                  | Stop                   | Scan for secrets with gitleaks                |
 | go-hooks-*            | golangci-lint             | Stop                   | Auto-fix Go files with golangci-lint          |
 | terraform-hooks-*     | terraform-fmt             | PostToolUse            | Run terraform fmt on changed files            |
 | terraform-hooks-*     | tflint                    | Stop                   | Run tflint on changed files                   |

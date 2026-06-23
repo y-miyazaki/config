@@ -1,0 +1,12 @@
+{
+  "hooks": {
+    "agentStop": [
+      {
+        "type": "command",
+        "bash": "./scripts/gitleaks.sh",
+        "timeoutSec": 60
+      }
+    ]
+  },
+  "version": 1
+}
