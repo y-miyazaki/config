@@ -7,8 +7,7 @@
     ":semanticCommitTypeAll(chore)",
     ":label(dependencies)",
     "mergeConfidence:age-confidence-badges",
-    "github>aquaproj/aqua-renovate-config#2.12.0",
-    "security:minimumReleaseAgeNpm"
+    "github>aquaproj/aqua-renovate-config#2.12.0"
   ],
   "branchConcurrentLimit": 10,
   "dependencyDashboard": true,
@@ -410,16 +409,18 @@
       ]
     },
     {
-      "description": "Rules: Safe automerge only for lockfile/digest/pin updates",
+      "description": "Rules: Safe automerge only for lockfile/digest/pin/replacement updates",
       "matchUpdateTypes": [
-        "lockFileMaintenance",
         "digest",
-        "pin"
+        "lockFileMaintenance",
+        "pin",
+        "replacement"
       ],
       "addLabels": [
         "automerge"
       ],
       "automerge": true,
+      "minimumReleaseAge": null,
       "platformAutomerge": true
     },
     {
