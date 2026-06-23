@@ -66,7 +66,9 @@ nav:
       - Go:
           - golangci-lint Maintenance Policy: report/go/golangci-lint-maintenance-policy.md
       - Governance:
-          - Harness Engineering for Go and Terraform Projects: report/governance/harness-engineering.md
+          - Harness Engineering: report/governance/harness-engineering.md
+          - Harness Engineering - Go: report/governance/harness-engineering-go.md
+          - Harness Engineering - Terraform: report/governance/harness-engineering-terraform.md
           - Linter Review Boundary: report/governance/linter-review-boundary.md
       - Tool Comparison:
           - Evaluation Rules: report/tool-comparison/tool-comparison-evaluation-rules.md

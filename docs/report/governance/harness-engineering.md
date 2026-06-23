@@ -1,6 +1,11 @@
-# Harness Engineering for Go and Terraform Projects
+# Harness Engineering
 
 This document defines the enforcement architecture that ensures developers automatically comply with coding standards, security policies, and operational conventions — without requiring prior knowledge of the rules.
+
+For language-specific toolchain details, see:
+
+- [Harness Engineering: Go](harness-engineering-go.md)
+- [Harness Engineering: Terraform](harness-engineering-terraform.md)
 
 ## Overview
 
@@ -53,14 +58,6 @@ This is achieved through a 6-layer enforcement architecture where each layer cat
 
 Instructions (`.apm/instructions/*.instructions.md`) define coding rules that AI agents follow during code generation. APM (Agent Package Manager) distributes these instruction files and hooks to each project. These are soft controls — they guide but cannot enforce.
 
-| Package | Instruction | Scope |
-|---------|-------------|-------|
-| common | github-actions-workflow | `.github/workflows/**/*.yaml` |
-| common | markdown | `README.md`, `docs/**/*.md` |
-| go | go | `**/*.go` |
-| terraform | terraform | `**/*.tf`, `**/*.tfvars`, `**/*.hcl` |
-| shell-script | shell-script | `**/*.sh` |
-
 **Role**: Reduce violations at the point of generation. Complemented by review skills that provide structured assessment.
 
 ## Layer 2: Agent Hooks
@@ -70,18 +67,7 @@ Hooks execute automatically during AI agent operation. Two trigger points:
 - **PostToolUse** — runs after the agent writes/edits a file (auto-formatting)
 - **Stop** — runs when the agent completes a task (validation gate)
 
-| Language | PostToolUse (auto-fix) | Stop (validation) |
-|----------|------------------------|-------------------|
-| Go | — | golangci-lint |
-| Terraform | terraform fmt | tflint |
-| Shell | shfmt | shellcheck |
-| Markdown | markdownlint-cli2 | markdown-link-check |
-| GitHub Actions | — | actionlint, ghalint, zizmor |
-| Security | — | gitleaks |
-
 **Multi-agent support**: Each hook script detects the active agent (Claude Code, Copilot CLI, Cursor, Kiro CLI, VS Code, Antigravity) from stdin JSON and responds in the expected format. Hook JSON definitions are packaged per-target (`common-hooks-claude`, `common-hooks-copilot`, `common-hooks-cursor`).
-
-**Design principle**: golangci-lint covers Go formatting via its integrated formatters, so a separate `gofumpt` PostToolUse hook is unnecessary.
 
 ## Layer 3: pre-commit
 
@@ -90,14 +76,12 @@ pre-commit hooks run at commit time. Two hook types are installed:
 - **pre-commit** — runs on staged files before commit
 - **commit-msg** — validates commit message format
 
-### pre-commit hooks
+### Common pre-commit hooks
 
 | Category | Hooks |
 |----------|-------|
 | General | check-added-large-files, check-merge-conflict, end-of-file-fixer, trailing-whitespace |
 | Secrets | detect-secrets, detect-aws-credentials, detect-private-key, gitleaks |
-| Go | golangci-lint (with --fix) |
-| Terraform | terraform_fmt, terraform_tflint, terraform_trivy (all commented out; uncomment per project after `terraform init`) |
 | Shell | shellcheck, shfmt |
 | GitHub Actions | actionlint, zizmor |
 | Markdown | markdownlint-cli2 (--fix), markdown-link-check |
@@ -110,6 +94,7 @@ pre-commit hooks run at commit time. Two hook types are installed:
 | commitlint | Enforces Conventional Commits format (`type(scope): subject`) |
 
 **commitlint configuration** (`.commitlintrc.yaml`):
+
 - Extends `@commitlint/config-conventional`
 - Allowed types: `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`, `style`, `test`
 - Header max length: 100 characters
@@ -117,21 +102,15 @@ pre-commit hooks run at commit time. Two hook types are installed:
 
 ## Layer 4: CI (GitHub Actions)
 
-Reusable workflows enforce standards on push/PR regardless of local setup.
+Reusable workflows enforce standards on push/PR regardless of local setup. See language-specific documents for workflow details.
 
-| Workflow | Checks |
-|----------|--------|
-| `ci-go.yaml` | go mod tidy, go test -race, golangci-lint (reviewdog PR comments), govulncheck, trivy |
-| `ci-aws-terraform.yaml` | terraform fmt, validate, tflint, trivy, terraform plan + tfcmt |
-| `ci-github-actions-workflow.yaml` | actionlint, ghalint, zizmor |
-| `ci-markdown.yaml` | markdownlint-cli2, markdown-link-check |
-| `ci-shell-script.yaml` | shellcheck, shfmt |
-
-**Key behaviors**:
-- Go lint uses `reviewdog` for inline PR comments on pull requests
-- Terraform plan output is posted to PR via `tfcmt` for review
-- Security scanning (trivy, govulncheck) generates artifacts but does not block merge for informational findings
-- SBOM (CycloneDX) is generated and uploaded as artifact
+| Workflow | Language |
+|----------|----------|
+| `ci-go.yaml` | [Go](harness-engineering-go.md) |
+| `ci-aws-terraform.yaml` | [Terraform](harness-engineering-terraform.md) |
+| `ci-github-actions-workflow.yaml` | Common |
+| `ci-markdown.yaml` | Common |
+| `ci-shell-script.yaml` | Common |
 
 ## Layer 5: Renovate
 
@@ -154,45 +133,38 @@ Shared Renovate presets automate dependency governance.
 | `apm install --frozen` | Deploys instructions, hooks, skills, MCP servers |
 | `pre-commit install` | Activates pre-commit hooks |
 | `pre-commit install --hook-type commit-msg` | Activates commitlint |
-| `tflint --init` | Initializes tflint plugins |
 
 **Result**: A developer who opens the devcontainer has all enforcement layers active without any manual setup.
-
-## Coverage Matrix
-
-Layers 1–2 apply only when development is AI-assisted. For manual development, Layer 3 (pre-commit) is the first enforcement point.
-
-| Rule Category | Agent Instructions | Agent Hooks | pre-commit | CI |
-|---------------|:-:|:-:|:-:|:-:|
-| Code formatting (Go) | ✓ | ✓ (golangci-lint) | ✓ | ✓ |
-| Code formatting (Terraform) | ✓ | ✓ (terraform fmt) | ✓ | ✓ |
-| Code formatting (Shell) | ✓ | ✓ (shfmt) | ✓ | ✓ |
-| Linting (Go) | ✓ | ✓ | ✓ | ✓ |
-| Linting (Terraform) | ✓ | ✓ (tflint) | ✓ | ✓ |
-| Linting (GitHub Actions) | ✓ | ✓ | ✓ | ✓ |
-| Secrets detection | ✓ | ✓ (gitleaks) | ✓ | ✓ (trivy) |
-| Vulnerability scanning | — | — | — | ✓ (govulncheck, trivy) |
-| Commit message format | — | — | ✓ (commitlint) | — |
-| Dependency updates | — | — | — | ✓ (Renovate) |
-| Architecture/design | ✓ (review skills) | — | — | — |
 
 ## Design Decisions
 
 | Decision | Rationale |
 |----------|-----------|
-| No coverage threshold gate | Coverage percentage becomes the goal rather than test quality. Instructions guide toward 80% but CI does not enforce it. |
-| No `depguard` in shared config | Project package structures vary too much. Layer violation rules are project-specific. |
-| No `go-arch-lint` in shared config | Overkill for Lambda/CLI; only useful for large layered services. Projects add it individually. |
 | gitleaks in Agent hooks despite pre-commit coverage | Provides immediate feedback during AI-assisted development before commit time. |
 | commitlint via pre-commit only (no Agent hook) | Commit timing is identical; adding an Agent hook provides no additional coverage. |
-| All Terraform hooks commented out in pre-commit | Requires `terraform init` (project-specific provider/plugin initialization). Projects uncomment after local init is configured. |
-| Shared lint configs in repository (not APM) | APM distributes agent-related files only. `.golangci.yaml`, `.tflint.hcl`, `trivy.yaml` belong in the project repository. |
+| Shared lint configs in repository (not APM) | APM distributes agent-related files only. `.golangci.yaml`, `.tflint.hcl`, `trivy.yaml` belong in the project repository. Drift management for these files is addressed below. |
+
+## Known Gaps and Future Direction
+
+### Lint config drift across repositories
+
+APM distributes agent instructions and hooks but cannot distribute lint config files (`.golangci.yaml`, `.tflint.hcl`, `trivy.yaml`) because they are not agent-specific. These files currently live in each project repository with no automated sync mechanism.
+
+**Current mitigation**: Renovate presets group tool version updates (golangci-lint, tflint, trivy) so all projects receive version bumps together. However, rule configuration changes (e.g., enabling a new linter) require manual propagation.
+
+**Planned approach**: Adopt a repository-files-sync GitHub Action or template repository pattern to push config changes from this distribution source to consumer repositories via automated PRs. This preserves project autonomy (PRs can be reviewed) while preventing silent drift.
+
+### Tool version single source of truth
+
+All layers (Agent Hooks, pre-commit, CI) resolve tool binaries from the same source: `mise.toml` pins versions, `mise install` provisions them in the devcontainer, and all hooks execute within that environment. AI agents running inside the devcontainer use the same `PATH`-resolved binaries. CI workflows pin versions via `mise.toml` or explicit action inputs that Renovate keeps in sync. No separate tool registry exists for agent environments.
+
+### Escape hatch governance
+
+This document defines enforcement architecture, not operational policy. Bypass mechanisms (`--no-verify`, `nolint` directives, `[skip ci]`) are governed by the team's code review process: PRs that bypass enforcement layers require explicit reviewer approval, and CI logs record which checks were skipped. Detailed audit trail requirements are out of scope for this architecture document.
 
 ## Pending Items
 
 | Item | Status | Rationale for deferral |
 |------|--------|------------------------|
-| License compliance (`go-licenses`) | Pending | Not yet prioritized |
-| Dependency review action | Pending | Not yet prioritized |
+| Lint config sync (repository-files-sync) | Pending | Evaluating GitHub Action vs template repo pattern |
 | `apm audit --ci` in consumer CI | Deferred | MCP distribution causes persistent drift; tool not stable enough |
-| `go-arch-lint` | Per-project | Not suitable as shared harness; projects opt in individually |

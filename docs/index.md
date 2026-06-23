@@ -50,7 +50,7 @@ _Research and comparison reports._
 
 ### Governance
 
-- [Harness Engineering for Go and Terraform Projects](report/governance/harness-engineering.md)
+- [Harness Engineering](report/governance/harness-engineering.md)
 - [Linter and Review Boundary Policy](report/governance/linter-review-boundary.md)
 
 ### Tool Comparison
