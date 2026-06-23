@@ -1,5 +1,5 @@
 ---
-applyTo: "README.md,CONTRIBUTING.md,docs/**/*.md"
+applyTo: "README.md,CONTRIBUTING.md,docs/**/*.md,mkdocs.yml"
 description: "AI Assistant Instructions for Markdown Documentation"
 ---
 
@@ -87,6 +87,7 @@ description: "AI Assistant Instructions for Markdown Documentation"
 ### Code Modification Guidelines
 
 - After changes, prioritize the validation workflow from markdown-validation skill.
+- When adding, deleting, or renaming files under `docs/`, update the `nav` section in `mkdocs.yml` to keep navigation in sync.
 - Use individual checks for broken links and table formatting only during debugging.
 
 ## Testing and Validation

@@ -25,6 +25,7 @@ The agent reads each candidate document and the relevant diffs to determine:
 
 - Root `*.md`
 - `docs/**/*.md`
+- `mkdocs.yml` (nav section)
 
 ### Match Rules
 

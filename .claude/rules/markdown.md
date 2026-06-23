@@ -3,6 +3,7 @@ paths:
   - "README.md"
   - "CONTRIBUTING.md"
   - "docs/**/*.md"
+  - "mkdocs.yml"
 ---
 
 # AI Assistant Instructions for Markdown
@@ -89,6 +90,7 @@ paths:
 ### Code Modification Guidelines
 
 - After changes, prioritize the validation workflow from markdown-validation skill.
+- When adding, deleting, or renaming files under `docs/`, update the `nav` section in `mkdocs.yml` to keep navigation in sync.
 - Use individual checks for broken links and table formatting only during debugging.
 
 ## Testing and Validation

@@ -20,7 +20,7 @@ Return structured report per [references/common-output-format.md](references/com
 
 ## Execution Scope
 
-Target: root `*.md` and `docs/**/*.md`.
+Target: root `*.md`, `docs/**/*.md`, and `mkdocs.yml` (nav section).
 
 ### USE FOR:
 
@@ -47,7 +47,7 @@ Target: root `*.md` and `docs/**/*.md`.
 
 3. Read each `affected_docs` file and the relevant diffs. Identify stale references, missing entries, and dead references. If diff exceeds 500 changed lines, report exceeded-scope and stop.
 
-4. Apply minimal updates: add/update/remove entries in existing structure. Do not reorder, rewrite, or add sections.
+4. Apply minimal updates: add/update/remove entries in existing structure. Do not reorder, rewrite, or add sections. When `docs/` files are added, deleted, or renamed, update the `nav` section in `mkdocs.yml` to match.
 
 5. Scope guard: if changes affect >3 sections of one document, stop and report "Changes exceed diff-sync scope. Manual review of `<file>` recommended."
 
