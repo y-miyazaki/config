@@ -1,19 +1,6 @@
-<!-- omit in toc -->
 # Config Repository Architecture
 
 This document describes the repository architecture, major component boundaries, and how shared assets are organized for distribution and reuse.
-
-<!-- omit in toc -->
-## Table of Contents
-
-- [Overview](#overview)
-- [Component Layout](#component-layout)
-  - [Root Layer](#root-layer)
-  - [Package Layer](#package-layer)
-  - [Execution Layer](#execution-layer)
-- [Data and Control Flow](#data-and-control-flow)
-- [Validation Model](#validation-model)
-- [Operational Constraints](#operational-constraints)
 
 ## Overview
 

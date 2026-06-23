@@ -1,39 +1,9 @@
-<!-- omit in toc -->
 # Config Repository Functional Specification
 
 This document defines the functional specification of this repository, including the intended structure and how shared configuration assets are organized.
 
 Usage guidance is documented in README.md at the repository root. This document is the specification source of truth under docs.
-Structural details are documented in [architecture.md](../explanation/architecture.md), and operational issue handling is documented in [troubleshooting.md](../how-to/troubleshooting.md).
-
-<!-- omit in toc -->
-## Table of Contents
-
-- [Scope](#scope)
-- [Overview](#overview)
-- [Prerequisites](#prerequisites)
-- [Repository Structure](#repository-structure)
-  - [Root-Level Components](#root-level-components)
-  - [APM-Related Components](#apm-related-components)
-  - [Validation and Utility Components](#validation-and-utility-components)
-- [APM](#apm)
-  - [Package Architecture](#package-architecture)
-  - [Distribution Behavior](#distribution-behavior)
-  - [MCP Servers](#mcp-servers)
-  - [Hooks](#hooks)
-  - [Skills](#skills)
-  - [Instructions](#instructions)
-  - [Scope](#scope-1)
-- [GitHub Actions](#github-actions)
-  - [Reusable Workflow Behavior](#reusable-workflow-behavior)
-  - [Scope](#scope-2)
-- [Renovate](#renovate)
-  - [Shared Policy Behavior](#shared-policy-behavior)
-  - [Scope](#scope-3)
-- [Configuration Defaults](#configuration-defaults)
-- [Testing and Validation](#testing-and-validation)
-- [Validation and Safety Checks](#validation-and-safety-checks)
-- [Troubleshooting](#troubleshooting)
+Structural details are documented in [Config Repository Architecture](../explanation/architecture.md), and operational issue handling is documented in [Troubleshooting](../how-to/troubleshooting.md).
 
 ## Scope
 
@@ -110,7 +80,7 @@ This repository shares AI agent settings as APM-distributed packages. Each packa
 
 The repository uses a multi-package structure under `.apm/packages/`. Each package has its own `apm.yml` and optional `.apm/` subdirectory containing hooks, instructions, and skills.
 
-```
+```text
 .apm/packages/
 ├── common/          # Shared workflows, documentation, and tools
 │   ├── apm.yml      # 5 MCP servers

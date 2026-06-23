@@ -6,28 +6,28 @@ Directory layout follows [Diataxis](https://diataxis.fr/).
 
 _Learning-oriented walkthroughs._
 
-- [apm-getting-started.md](tutorials/apm-getting-started.md) - Getting Started with APM Packages
-- [github-actions-getting-started.md](tutorials/github-actions-getting-started.md) - Getting Started with Reusable GitHub Actions Workflows
-- [renovate-getting-started.md](tutorials/renovate-getting-started.md) - Getting Started with Renovate Shared Policy
+- [Getting Started with APM Packages](tutorials/apm-getting-started.md)
+- [Getting Started with Reusable GitHub Actions Workflows](tutorials/github-actions-getting-started.md)
+- [Getting Started with Renovate Shared Policy](tutorials/renovate-getting-started.md)
 
 ## How-To
 
 _Task-oriented guides for specific goals._
 
-- [troubleshooting.md](how-to/troubleshooting.md) - Common issues and recovery steps
+- [Troubleshooting](how-to/troubleshooting.md)
 
 ## Reference
 
 _Information-oriented technical descriptions._
 
-- [specification.md](reference/specification.md) - Repository specification and structure
+- [Config Repository Functional Specification](reference/specification.md)
 
 ## Explanation
 
 _Understanding-oriented discussion of concepts and decisions._
 
-- [architecture.md](explanation/architecture.md) - System architecture overview
-- [instructions-sync-workflow.md](explanation/instructions-sync-workflow.md) - Instructions sync workflow explanation
+- [Config Repository Architecture](explanation/architecture.md)
+- [Instructions Sync Workflow](explanation/instructions-sync-workflow.md)
 
 ## Report
 
@@ -35,42 +35,42 @@ _Research and comparison reports._
 
 ### AWS Service Comparison
 
-- [index.md](report/aws/service-comparison/index.md) - Service comparison index
-- [service-comparison-batch.md](report/aws/service-comparison/service-comparison-batch.md) - Batch service comparison
-- [service-comparison-compute.md](report/aws/service-comparison/service-comparison-compute.md) - Compute service comparison
-- [service-comparison-database.md](report/aws/service-comparison/service-comparison-database.md) - Database service comparison
-- [service-comparison-evaluation-rules.md](report/aws/service-comparison/service-comparison-evaluation-rules.md) - Shared evaluation rules
-- [service-comparison-gateway.md](report/aws/service-comparison/service-comparison-gateway.md) - Gateway service comparison
-- [service-comparison-messaging.md](report/aws/service-comparison/service-comparison-messaging.md) - Messaging service comparison
-- [service-comparison-storage.md](report/aws/service-comparison/service-comparison-storage.md) - Storage service comparison
+- [AWS Service Comparison](report/aws/service-comparison/index.md)
+- [AWS Service Comparison Matrix (Batch)](report/aws/service-comparison/service-comparison-batch.md)
+- [AWS Service Comparison Matrix (Compute)](report/aws/service-comparison/service-comparison-compute.md)
+- [AWS Service Comparison Matrix (Database)](report/aws/service-comparison/service-comparison-database.md)
+- [AWS Service Comparison Evaluation Rules](report/aws/service-comparison/service-comparison-evaluation-rules.md)
+- [AWS Service Comparison Matrix (Gateway)](report/aws/service-comparison/service-comparison-gateway.md)
+- [AWS Service Comparison Matrix (Messaging)](report/aws/service-comparison/service-comparison-messaging.md)
+- [AWS Service Comparison Matrix (Storage)](report/aws/service-comparison/service-comparison-storage.md)
 
 ### Go
 
-- [golangci-lint-maintenance-policy.md](report/go/golangci-lint-maintenance-policy.md) - golangci-lint maintenance policy
+- [Golangci-lint Maintenance Workflow](report/go/golangci-lint-maintenance-policy.md)
 
 ### Governance
 
-- [harness-engineering.md](report/governance/harness-engineering.md) - Harness engineering for Go and Terraform projects
-- [linter-review-boundary.md](report/governance/linter-review-boundary.md) - Boundary policy for linter-detectable rules
+- [Harness Engineering for Go and Terraform Projects](report/governance/harness-engineering.md)
+- [Linter and Review Boundary Policy](report/governance/linter-review-boundary.md)
 
 ### Tool Comparison
 
-- [tool-comparison-evaluation-rules.md](report/tool-comparison/tool-comparison-evaluation-rules.md) - Shared evaluation rules for tool comparison
-- [tool-comparison-matrix-ai-agent-guardrails.md](report/tool-comparison/tool-comparison-matrix-ai-agent-guardrails.md) - AI agent guardrails tool comparison
-- [tool-comparison-matrix-ai-agent-hooks.md](report/tool-comparison/tool-comparison-matrix-ai-agent-hooks.md) - AI agent hooks tool comparison
-- [tool-comparison-matrix-ai-agent.md](report/tool-comparison/tool-comparison-matrix-ai-agent.md) - AI agent tool comparison
-- [tool-comparison-matrix-ai-governance.md](report/tool-comparison/tool-comparison-matrix-ai-governance.md) - AI governance tool comparison
-- [tool-comparison-matrix-ai-mcp-server.md](report/tool-comparison/tool-comparison-matrix-ai-mcp-server.md) - MCP server tool comparison
-- [tool-comparison-matrix-ai-workflow.md](report/tool-comparison/tool-comparison-matrix-ai-workflow.md) - AI workflow tool comparison
-- [tool-comparison-matrix-aws.md](report/tool-comparison/tool-comparison-matrix-aws.md) - AWS tool comparison
-- [tool-comparison-matrix-go.md](report/tool-comparison/tool-comparison-matrix-go.md) - Go tool comparison
-- [tool-comparison-matrix-nodejs.md](report/tool-comparison/tool-comparison-matrix-nodejs.md) - Node.js tool comparison
-- [tool-comparison-matrix-shell-script.md](report/tool-comparison/tool-comparison-matrix-shell-script.md) - Shell script tool comparison
-- [tool-comparison-matrix-terraform.md](report/tool-comparison/tool-comparison-matrix-terraform.md) - Terraform tool comparison
-- [tool-comparison-matrix.md](report/tool-comparison/tool-comparison-matrix.md) - Overall tool comparison matrix
+- [Tool Comparison Evaluation Rules](report/tool-comparison/tool-comparison-evaluation-rules.md)
+- [Tool Comparison Matrix — Agent Security: Guardrails](report/tool-comparison/tool-comparison-matrix-ai-agent-guardrails.md)
+- [Tool Comparison Matrix (AI Agent Hooks)](report/tool-comparison/tool-comparison-matrix-ai-agent-hooks.md)
+- [Tool Comparison Matrix (AI Agent)](report/tool-comparison/tool-comparison-matrix-ai-agent.md)
+- [Tool Comparison Matrix (AI Governance)](report/tool-comparison/tool-comparison-matrix-ai-governance.md)
+- [Tool Comparison Matrix (MCP Server)](report/tool-comparison/tool-comparison-matrix-ai-mcp-server.md)
+- [Tool Comparison Matrix (AI Workflow)](report/tool-comparison/tool-comparison-matrix-ai-workflow.md)
+- [Tool Comparison Matrix (AWS)](report/tool-comparison/tool-comparison-matrix-aws.md)
+- [Tool Comparison Matrix (Go)](report/tool-comparison/tool-comparison-matrix-go.md)
+- [Tool Comparison Matrix (Node.js)](report/tool-comparison/tool-comparison-matrix-nodejs.md)
+- [Tool Comparison Matrix (Shell Script)](report/tool-comparison/tool-comparison-matrix-shell-script.md)
+- [Tool Comparison Matrix (Terraform)](report/tool-comparison/tool-comparison-matrix-terraform.md)
+- [Tool Comparison Matrix](report/tool-comparison/tool-comparison-matrix.md)
 
 ### Waza
 
-- [waza-capabilities.md](report/waza/waza-capabilities.md) - Waza capabilities overview
-- [waza-eval-templates.md](report/waza/waza-eval-templates.md) - Waza eval templates
-- [waza-quickstart.md](report/waza/waza-quickstart.md) - Waza quickstart guide
+- [Waza Capabilities In This Repository](report/waza/waza-capabilities.md)
+- [Waza Eval Templates](report/waza/waza-eval-templates.md)
+- [Waza Quickstart](report/waza/waza-quickstart.md)

@@ -1,17 +1,6 @@
-<!-- omit in toc -->
 # Troubleshooting
 
 This document lists common issues when working with this repository and the recommended recovery steps.
-
-<!-- omit in toc -->
-## Table of Contents
-
-- [APM Installation Issues](#apm-installation-issues)
-  - [Symptom: `apm install --update` fails](#symptom-apm-install---update-fails)
-- [Markdown and Instruction Validation](#markdown-and-instruction-validation)
-  - [Symptom: markdownlint-cli2 failures in docs or instructions](#symptom-markdownlint-cli2-failures-in-docs-or-instructions)
-- [APM Audit CI](#apm-audit-ci)
-  - [Symptom: `ci-apm-audit` workflow fails with audit errors](#symptom-ci-apm-audit-workflow-fails-with-audit-errors)
 
 ## APM Installation Issues
 
