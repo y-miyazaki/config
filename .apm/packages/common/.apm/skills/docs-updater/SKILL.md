@@ -1,7 +1,7 @@
 ---
 name: docs-updater
 description: >-
-  Sync documentation with code changes by detecting git diff impact on README.md and docs/.
+  Sync documentation with code changes by detecting git diff impact on markdown files.
   Use when a stop hook or user explicitly requests documentation sync after code changes.
 license: Apache-2.0
 metadata:
