@@ -12,8 +12,8 @@
 
 | File | Action | Detail |
 |------|--------|--------|
-| `README.md` | Updated | Added shell-script package to table |
-| `docs/reference/specification.md` | Skipped | Changes exceed diff-sync scope |
+| `path/to/doc.md` | Updated | Added new-feature entry to table |
+| `path/to/other.md` | Skipped | Changes exceed diff-sync scope |
 
 ## Skipped Items
 - <file>: <reason>
