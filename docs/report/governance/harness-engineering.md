@@ -142,17 +142,17 @@ Shared Renovate presets automate dependency governance.
 |----------|-----------|
 | gitleaks in Agent hooks despite pre-commit coverage | Provides immediate feedback during AI-assisted development before commit time. |
 | commitlint via pre-commit only (no Agent hook) | Commit timing is identical; adding an Agent hook provides no additional coverage. |
-| Shared lint configs in repository (not APM) | APM distributes agent-related files only. `.golangci.yaml`, `.tflint.hcl`, `trivy.yaml` belong in the project repository. Drift management for these files is addressed below. |
+| Shared lint configs in repository (not APM) | APM distributes agent-related files only. `.golangci.yaml`, `.tflint.hcl`, `trivy.yaml` are distributed via `install_go.sh` / `install_terraform.sh`. |
 
 ## Known Gaps and Future Direction
 
 ### Lint config drift across repositories
 
-APM distributes agent instructions and hooks but cannot distribute lint config files (`.golangci.yaml`, `.tflint.hcl`, `trivy.yaml`) because they are not agent-specific. These files currently live in each project repository with no automated sync mechanism.
+APM distributes agent instructions and hooks but cannot distribute lint config files (`.golangci.yaml`, `.tflint.hcl`, `trivy.yaml`) because they are not agent-specific. These files are distributed via install scripts (`install_go.sh`, `install_terraform.sh`) that consumer projects run to bootstrap shared configs.
 
-**Current mitigation**: Renovate presets group tool version updates (golangci-lint, tflint, trivy) so all projects receive version bumps together. However, rule configuration changes (e.g., enabling a new linter) require manual propagation.
+**Current mitigation**: Install scripts copy configs on first setup; Renovate presets group tool version updates so all projects receive version bumps together. However, rule configuration changes (e.g., enabling a new linter) require re-running the install script or manual propagation.
 
-**Planned approach**: Adopt a repository-files-sync GitHub Action or template repository pattern to push config changes from this distribution source to consumer repositories via automated PRs. This preserves project autonomy (PRs can be reviewed) while preventing silent drift.
+**Planned approach**: Adopt a repository-files-sync GitHub Action to push config changes from this distribution source to consumer repositories via automated PRs. This preserves project autonomy (PRs can be reviewed) while preventing silent drift.
 
 ### Tool version single source of truth
 
@@ -166,5 +166,5 @@ This document defines enforcement architecture, not operational policy. Bypass m
 
 | Item | Status | Rationale for deferral |
 |------|--------|------------------------|
-| Lint config sync (repository-files-sync) | Pending | Evaluating GitHub Action vs template repo pattern |
+| Lint config sync (repository-files-sync) | Pending | Install scripts handle bootstrap; automated ongoing sync not yet implemented |
 | `apm audit --ci` in consumer CI | Deferred | MCP distribution causes persistent drift; tool not stable enough |

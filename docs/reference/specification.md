@@ -235,6 +235,38 @@ Instructions are defined under each package's `.apm/instructions/` directory.
 - `.apm/packages/`: all package bundles and their sub-components
 - `apm.yml` and `apm.lock.yaml`: package metadata and lock state
 
+## Lint Configs
+
+This repository provides shared lint configuration files for consumer projects. These files are not distributed via APM (which handles agent-specific assets only) but via install scripts.
+
+### Install Scripts
+
+| Script | Target | Distributed Files |
+| ------ | ------ | ----------------- |
+| `install_go.sh` | Go projects | `.pre-commit-config.yaml`, `.golangci.yaml`, `.markdownlint-cli2.yaml`, `.gitleaks.toml`, `.commitlintrc.yaml`, `trivy.yaml` |
+| `install_terraform.sh` | Terraform projects | `.pre-commit-config.yaml`, `.tflint.hcl`, `.markdownlint-cli2.yaml`, `.gitleaks.toml`, `.commitlintrc.yaml`, `trivy.yaml` |
+
+### Pre-commit Config Variants
+
+| File | Description |
+| ---- | ----------- |
+| `.pre-commit-config.yaml` | Base config used by this repository (Terraform hooks commented out) |
+| `.pre-commit-config-go.yaml` | Go projects: golangci-lint active, commitlint active |
+| `.pre-commit-config-terraform.yaml` | Terraform projects: terraform_fmt, terraform_tflint, terraform_trivy active |
+
+### Behavior
+
+- Install scripts download files from this repository's `main` branch
+- Existing files are not overwritten unless `--force` is passed
+- Scripts require `curl` and an internet connection
+- After installation, projects run `pre-commit install` to activate hooks
+
+### Scope
+
+- `install_go.sh`, `install_terraform.sh`: install scripts at repository root
+- `.pre-commit-config-go.yaml`, `.pre-commit-config-terraform.yaml`: pre-commit config variants
+- `.golangci.yaml`, `.tflint.hcl`, `trivy.yaml`, `.markdownlint-cli2.yaml`, `.gitleaks.toml`, `.commitlintrc.yaml`: shared lint configs
+
 ## GitHub Actions
 
 This repository shares reusable GitHub Actions workflow definitions.

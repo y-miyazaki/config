@@ -18,13 +18,13 @@ Terraform-specific enforcement toolchain across the [harness engineering](harnes
 
 ### Layer 3: pre-commit
 
-| Hook | Status |
-|------|--------|
-| terraform_fmt | Commented out |
-| terraform_tflint | Commented out |
-| terraform_trivy | Commented out |
+| Hook | Behavior |
+|------|----------|
+| terraform_fmt | Format check on staged `.tf` files |
+| terraform_tflint | Lint with project `.tflint.hcl` config |
+| terraform_trivy | Security scan with project `trivy.yaml` config |
 
-All Terraform hooks are commented out because they require `terraform init` (project-specific provider/plugin initialization). CI (Layer 4) enforces regardless. See Known Gaps below for planned structural fix.
+Distributed via `.pre-commit-config-terraform.yaml` (installed by `install_terraform.sh`). All hooks are active — they require `terraform init` to have been run for full provider-aware checks.
 
 ### Layer 4: CI (`ci-aws-terraform.yaml`)
 
@@ -49,29 +49,31 @@ All Terraform hooks are commented out because they require `terraform init` (pro
 
 ## Coverage Matrix
 
-Layers 1–2 apply only when development is AI-assisted. For manual development, Layer 3 is currently inactive — CI (Layer 4) serves as the first enforcement point for Terraform.
+Layers 1–2 apply only when development is AI-assisted. For manual development, Layer 3 (pre-commit) is the first enforcement point.
 
 | Rule Category | Agent Instructions | Agent Hooks | pre-commit | CI |
 |---------------|:-:|:-:|:-:|:-:|
-| Code formatting | ✓ | ✓ (terraform fmt) | — (commented out) | ✓ |
-| Linting | ✓ | ✓ (tflint) | — (commented out) | ✓ |
-| Security scanning | — | — | — | ✓ (trivy) |
+| Code formatting | ✓ | ✓ (terraform fmt) | ✓ | ✓ |
+| Linting | ✓ | ✓ (tflint) | ✓ | ✓ |
+| Security scanning | — | — | ✓ (trivy) | ✓ (trivy) |
 | Dependency updates | — | — | — | ✓ (Renovate) |
 
 ## Design Decisions
 
 | Decision | Rationale |
 |----------|-----------|
-| All Terraform hooks commented out in pre-commit | Requires `terraform init` (project-specific provider/plugin initialization). CI (Layer 4) enforces regardless. Structural skip planned — see Known Gaps. |
+| Terraform pre-commit hooks require `terraform init` | Full provider-aware checks need initialized plugins. Projects run `terraform init` + `tflint --init` during setup. |
+| tflint in Agent Hooks without `terraform init` | Basic rules (naming, syntax, best practices) work without provider plugins. Provides immediate feedback during AI-assisted development. |
+| Separate `.pre-commit-config-terraform.yaml` | Distributed via `install_terraform.sh`. All hooks active — unlike the base config which comments them out. |
 
 ## Known Gaps
 
-### Terraform pre-commit hooks: structural skip
+### Provider-dependent checks without init
 
-The current design comments out Terraform hooks and relies on developers to uncomment them — a behavioral dependency that contradicts the structural enforcement principle. The planned improvement: keep hooks uncommented and add a guard condition in each hook entry that exits 0 (skip) when `.terraform/` or the provider lock file does not exist. This makes enforcement automatic after `terraform init` without requiring manual opt-in.
+If a developer has not run `terraform init`, pre-commit hooks will fail for provider-specific rules (e.g., `aws_instance` attribute validation). Basic syntax and naming rules still pass. The `init.sh` setup automation mitigates this by running `tflint --init` on devcontainer creation.
 
 ## Pending Items
 
 | Item | Status | Rationale for deferral |
 |------|--------|------------------------|
-| Terraform pre-commit structural skip | Pending | Requires hook wrapper script; current workaround is CI enforcement (Layer 4) |
+| Terraform pre-commit structural skip (guard on `.terraform/`) | Deferred | Separate config file resolves the distribution issue; guard script is a future DX improvement |

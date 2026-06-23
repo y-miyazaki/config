@@ -79,6 +79,24 @@ apm install y-miyazaki/config/.apm/packages/go
 apm install y-miyazaki/config/.apm/packages/shell-script
 ```
 
+## Lint Configs
+
+Shared lint configuration files (`.golangci.yaml`, `.tflint.hcl`, `trivy.yaml`, etc.) for consumer projects. Install with one command:
+
+```sh
+# Go projects
+bash <(curl -sL https://raw.githubusercontent.com/y-miyazaki/config/main/install_go.sh)
+
+# Terraform projects
+bash <(curl -sL https://raw.githubusercontent.com/y-miyazaki/config/main/install_terraform.sh)
+```
+
+Existing files are not overwritten. To force overwrite with the latest configs:
+
+```sh
+bash <(curl -sL https://raw.githubusercontent.com/y-miyazaki/config/main/install_go.sh) --force
+```
+
 ## GitHub Actions
 
 Reusable workflow definitions shared via `workflow_call`. Use from your repository:

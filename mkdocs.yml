@@ -45,6 +45,7 @@ nav:
   - Tutorials:
       - APM Packages: tutorials/apm-getting-started.md
       - GitHub Actions: tutorials/github-actions-getting-started.md
+      - Lint Configs: tutorials/lint-configs-getting-started.md
       - Renovate: tutorials/renovate-getting-started.md
   - How-To:
       - Troubleshooting: how-to/troubleshooting.md

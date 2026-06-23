@@ -8,6 +8,7 @@ _Learning-oriented walkthroughs._
 
 - [Getting Started with APM Packages](tutorials/apm-getting-started.md)
 - [Getting Started with Reusable GitHub Actions Workflows](tutorials/github-actions-getting-started.md)
+- [Getting Started with Lint Configs](tutorials/lint-configs-getting-started.md)
 - [Getting Started with Renovate Shared Policy](tutorials/renovate-getting-started.md)
 
 ## How-To
@@ -51,6 +52,8 @@ _Research and comparison reports._
 ### Governance
 
 - [Harness Engineering](report/governance/harness-engineering.md)
+- [Harness Engineering: Go](report/governance/harness-engineering-go.md)
+- [Harness Engineering: Terraform](report/governance/harness-engineering-terraform.md)
 - [Linter and Review Boundary Policy](report/governance/linter-review-boundary.md)
 
 ### Tool Comparison
