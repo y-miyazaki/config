@@ -61,6 +61,22 @@ paths:
   - Check: Are commands, file paths, and documented behaviors consistent with the current repository contents?
 - TERM-09 (MUST): Do Not Invent Documentation
   - Check: Is every documented feature, command, file path, or workflow supported by repository contents or provided context?
+- TERM-10 (SHOULD): Avoid Relative Directional References
+  - Check: Are directional words ("above", "below", "前述の", "後述の") avoided? Use explicit section links or immediate context instead.
+- TERM-11 (MUST): Define Prerequisites for Procedures
+  - Check: Before listing step-by-step instructions or commands, are required tools, permissions, and environmental states clearly stated?
+
+### Writing Style (STYLE)
+- STYLE-01 (SHOULD): One Idea per Sentence
+  - Check: Does each sentence convey a single idea? Split compound sentences joined by "and", "but", or "which" into separate sentences when they address distinct points.
+- STYLE-02 (SHOULD): Eliminate Filler Words and Weak Verbs
+  - Check: Are unnecessary adverbs (quite, very, easily, simply, basically) and roundabout phrases ("in order to" → "to", "make use of" → "use", "is able to" → "can") removed?
+- STYLE-03 (SHOULD): Avoid Subjective or Unquantifiable Claims
+  - Check: Are words like "simple", "easy", "fast", "lightweight", "powerful", "flexible" either removed or replaced with measurable statements?
+- STYLE-04 (SHOULD): Put Conditions Before Instructions
+  - Check: Are conditional clauses ("If X, do Y") placed before the action, not after ("Do Y if X")?
+- STYLE-05 (SHOULD): Use Second Person
+  - Check: Are instructions addressed to "you" rather than "we" or passive constructions? ("You configure..." not "We configure..." or "The configuration is done...")
 
 ### Revision Process
 
