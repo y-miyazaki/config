@@ -4,50 +4,54 @@ This document defines the enforcement architecture that ensures developers autom
 
 ## Overview
 
-Harness engineering is the practice of embedding rule enforcement into the development workflow infrastructure so that compliance is structural rather than behavioral. The goal: **a developer who has never read the coding standards still produces compliant code**.
+Harness engineering is the practice of embedding rule enforcement into the development workflow infrastructure so that compliance is structural rather than behavioral. The goal: **a developer — whether using an AI agent or writing code manually — still produces compliant code without reading the coding standards**.
 
-This is achieved through a 6-layer enforcement architecture where each layer catches violations that the previous layer missed or that the developer bypassed.
+This is achieved through a 6-layer enforcement architecture where each layer catches violations that the previous layer missed or that the developer bypassed. Layers 1–2 apply only to AI-assisted development; for manual development, Layer 3 (pre-commit) is the first enforcement point.
 
 ## Enforcement Architecture
 
 ```
-Developer writes code
-        │
-        ▼
-┌─────────────────────────────┐
-│  Layer 1: Agent Instructions │  ← Guides AI code generation
-│  (instructions.md / steering)│
-└──────────────┬──────────────┘
-               ▼
-┌─────────────────────────────┐
-│  Layer 2: Agent Hooks        │  ← Auto-format + validate on write/stop
-│  (PostToolUse / Stop)        │
-└──────────────┬──────────────┘
-               ▼
-┌─────────────────────────────┐
-│  Layer 3: pre-commit         │  ← Block non-compliant commits locally
-│  (commit-msg + pre-commit)   │
-└──────────────┬──────────────┘
-               ▼
-┌─────────────────────────────┐
-│  Layer 4: CI                 │  ← Block non-compliant merges remotely
-│  (GitHub Actions reusable)   │
-└──────────────┬──────────────┘
-               ▼
-┌─────────────────────────────┐
-│  Layer 5: Renovate           │  ← Automated dependency governance
-│  (Shared policy presets)     │
-└──────────────┬──────────────┘
-               ▼
-┌─────────────────────────────┐
-│  Layer 6: Setup Automation   │  ← Ensures layers 1-3 are installed
-│  (devcontainer init.sh)      │
-└─────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  Local Development Loop                                         │
+│                                                                 │
+│  Developer writes code                                          │
+│          │                                                      │
+│          ▼                                                      │
+│  Layer 1: Agent Instructions  ← Guides AI code generation       │
+│  (instructions.md / steering)   (AI-assisted only)              │
+│          ▼                                                      │
+│  Layer 2: Agent Hooks         ← Auto-format + validate          │
+│  (PostToolUse / Stop)           (AI-assisted only)              │
+│          ▼                                                      │
+│  Layer 3: pre-commit          ← Block non-compliant commits     │
+│  (commit-msg + pre-commit)      (all developers)                │
+│                                                                 │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ push
+                           ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  Remote Verification                                            │
+│                                                                 │
+│  Layer 4: CI                  ← Block non-compliant merges      │
+│  (GitHub Actions reusable)                                      │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Async / Infrastructure (independent lifecycle)                  │
+│                                                                 │
+│  Layer 5: Renovate            ← Automated dependency governance │
+│  (Shared policy presets)        Triggers CI on update PRs       │
+│                                                                 │
+│  Layer 6: Setup Automation    ← Ensures layers 1-3 are active   │
+│  (devcontainer init.sh)         Runs on environment creation    │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## Layer 1: Agent Instructions
 
-Instructions (`.apm/instructions/*.instructions.md`) define coding rules that AI agents follow during code generation. These are soft controls — they guide but cannot enforce.
+Instructions (`.apm/instructions/*.instructions.md`) define coding rules that AI agents follow during code generation. APM (Agent Package Manager) distributes these instruction files and hooks to each project. These are soft controls — they guide but cannot enforce.
 
 | Package | Instruction | Scope |
 |---------|-------------|-------|
@@ -93,7 +97,7 @@ pre-commit hooks run at commit time. Two hook types are installed:
 | General | check-added-large-files, check-merge-conflict, end-of-file-fixer, trailing-whitespace |
 | Secrets | detect-secrets, detect-aws-credentials, detect-private-key, gitleaks |
 | Go | golangci-lint (with --fix) |
-| Terraform | terraform_fmt, terraform_tflint, terraform_trivy (commented out; uncomment per project) |
+| Terraform | terraform_fmt, terraform_tflint, terraform_trivy (all commented out; uncomment per project after `terraform init`) |
 | Shell | shellcheck, shfmt |
 | GitHub Actions | actionlint, zizmor |
 | Markdown | markdownlint-cli2 (--fix), markdown-link-check |
@@ -156,6 +160,8 @@ Shared Renovate presets automate dependency governance.
 
 ## Coverage Matrix
 
+Layers 1–2 apply only when development is AI-assisted. For manual development, Layer 3 (pre-commit) is the first enforcement point.
+
 | Rule Category | Agent Instructions | Agent Hooks | pre-commit | CI |
 |---------------|:-:|:-:|:-:|:-:|
 | Code formatting (Go) | ✓ | ✓ (golangci-lint) | ✓ | ✓ |
@@ -179,7 +185,7 @@ Shared Renovate presets automate dependency governance.
 | No `go-arch-lint` in shared config | Overkill for Lambda/CLI; only useful for large layered services. Projects add it individually. |
 | gitleaks in Agent hooks despite pre-commit coverage | Provides immediate feedback during AI-assisted development before commit time. |
 | commitlint via pre-commit only (no Agent hook) | Commit timing is identical; adding an Agent hook provides no additional coverage. |
-| Terraform hooks commented out in pre-commit | Requires `terraform init` which is project-specific. Projects uncomment as needed. |
+| All Terraform hooks commented out in pre-commit | Requires `terraform init` (project-specific provider/plugin initialization). Projects uncomment after local init is configured. |
 | Shared lint configs in repository (not APM) | APM distributes agent-related files only. `.golangci.yaml`, `.tflint.hcl`, `trivy.yaml` belong in the project repository. |
 
 ## Pending Items
