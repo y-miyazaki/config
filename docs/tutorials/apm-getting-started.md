@@ -62,7 +62,7 @@ apm install --frozen
 Installing dependencies...
   ✓ github.com/y-miyazaki/config/.apm/packages/common
   ✓ github.com/y-miyazaki/config/.apm/packages/common-hooks-copilot
-Deployed: 5 MCP servers, 6 hooks, 4 instructions, 7 skills
+Deployed: 5 MCP servers, 6 hooks, 4 instructions, 8 skills
 ```
 
 This creates `apm_modules/` (gitignored) and deploys configuration to agent-specific directories (e.g., `.copilot/`, `.claude/`, `.cursor/`).

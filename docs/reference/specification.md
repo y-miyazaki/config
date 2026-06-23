@@ -116,7 +116,7 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 │   ├── apm.yml      # 5 MCP servers
 │   └── .apm/
 │       ├── instructions/  # 4 instruction files
-│       └── skills/        # 7 skills
+│       └── skills/        # 8 skills
 ├── common-hooks-claude/   # Common hooks for Claude Code (6 hooks)
 ├── common-hooks-copilot/  # Common hooks for GitHub Copilot CLI (6 hooks)
 ├── common-hooks-cursor/   # Common hooks for Cursor (6 hooks)
@@ -233,6 +233,7 @@ Skills are defined under each package's `.apm/skills/` directory. Each skill con
 | ------------ | ------------------------- |
 | common       | agent-skills-review       |
 | common       | docs-creation             |
+| common       | docs-updater              |
 | common       | github-actions-review     |
 | common       | github-actions-validation |
 | common       | github-pr-body            |

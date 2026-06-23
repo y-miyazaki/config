@@ -37,7 +37,7 @@ The architecture separates:
 
 ### Package Layer
 
-- `.apm/packages/common/`: shared instructions, skills, and MCP integrations (5 MCP servers, 4 instructions, 7 skills)
+- `.apm/packages/common/`: shared instructions, skills, and MCP integrations (5 MCP servers, 4 instructions, 8 skills)
 - `.apm/packages/common-hooks-*`: target-specific common hooks (6 hooks per target: Claude, Copilot, Cursor)
 - `.apm/packages/aws/`: AWS-focused MCP integrations (5 MCP servers)
 - `.apm/packages/terraform/`: Terraform-focused integrations (1 MCP server, 1 instruction, 2 skills)
