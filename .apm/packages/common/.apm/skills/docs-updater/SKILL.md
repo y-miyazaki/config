@@ -20,7 +20,7 @@ Return structured report per [references/common-output-format.md](references/com
 
 ## Execution Scope
 
-Target: root `*.md`, `docs/**/*.md`, and `mkdocs.yml` (nav section).
+Target: root `*.md`, `README.md`, `docs/**/*.md`, and `mkdocs.yml` (nav section).
 
 ### USE FOR:
 
