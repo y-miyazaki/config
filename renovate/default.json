@@ -371,6 +371,17 @@
       ]
     },
     {
+      "description": "Rules: Group mise updates across GitHub Actions workflow inputs, Dockerfile, and mise.toml",
+      "groupName": "mise",
+      "matchPackageNames": [
+        "jdx/mise"
+      ],
+      "commitMessagePrefix": "renovate(mise):",
+      "addLabels": [
+        "mise"
+      ]
+    },
+    {
       "description": "Rules: Group terraform updates across GitHub Actions workflow inputs and mise",
       "groupName": "terraform",
       "matchPackageNames": [

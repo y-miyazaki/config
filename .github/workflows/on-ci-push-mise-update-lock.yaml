@@ -26,6 +26,7 @@ jobs:
       contents: read
     with:
       environment: "default"
+      mise_version: "2026.6.13"
     secrets:
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
       BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}

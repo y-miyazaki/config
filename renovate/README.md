@@ -47,7 +47,7 @@ This section defines the intended update policy first, independent from implemen
 - Python: `python`
 - Terraform: `terraform`
 - tflint plugins: `tflint`
-- Cross-file grouped tools: `ecspresso`, `ecschedule`, `golangci-lint`, `goreleaser`, `terraform`, `tflint`, `trivy`, `zizmor`
+- Cross-file grouped tools: `ecspresso`, `ecschedule`, `golangci-lint`, `goreleaser`, `mise`, `terraform`, `tflint`, `trivy`, `zizmor`
 - Automerged updates: `automerge`
 - Baseline for dependency PRs: `dependencies`
 
@@ -159,6 +159,7 @@ Tools that appear in both GitHub Actions workflow inputs (`github-actions-tool-v
 | ecschedule | `Songmu/ecschedule` | `aqua:Songmu/ecschedule` |
 | golangci-lint | `golangci/golangci-lint` | `aqua:golangci/golangci-lint` |
 | goreleaser | `goreleaser/goreleaser` | `aqua:goreleaser/goreleaser` |
+| mise | `jdx/mise` (workflow input + Dockerfile ARG) | — |
 | terraform | `hashicorp/terraform` | `aqua:hashicorp/terraform` |
 | tflint | `terraform-linters/tflint` | `aqua:terraform-linters/tflint` |
 | trivy | `aquasecurity/trivy` | `aqua:aquasecurity/trivy` |
@@ -183,7 +184,8 @@ Each group rule sets:
 
 - Uses `custom.regex` managers
 - Targets workflow files under `.github/workflows/*.yml` and `.github/workflows/*.yaml`
-- Detects tool version inputs such as `terraform_version`, `go_version`, `golangci_lint_version`, etc.
+- Targets `env/common/Dockerfile` for mise version ARG
+- Detects tool version inputs such as `terraform_version`, `go_version`, `golangci_lint_version`, `mise_version`, etc.
 
 ### Labels and Automerge
 
@@ -195,6 +197,7 @@ Each group rule sets:
 
 Enabled managers include:
 
+- `jdx/mise` (workflow input + Dockerfile ARG)
 - `kayac/ecspresso`
 - `Songmu/ecschedule`
 - `hashicorp/terraform`
