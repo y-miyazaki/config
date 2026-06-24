@@ -1,4 +1,5 @@
 #!/bin/bash
+#######################################
 # Description: Detect code changes and identify candidate documentation files
 #
 # Usage: ./detect_changes.sh [--scope staged|all]
@@ -18,6 +19,7 @@
 # Dependencies:
 # - bash (POSIX bash, /bin/bash)
 # - git
+#######################################
 
 set -euo pipefail
 
@@ -174,11 +176,15 @@ function collect_changes {
     mapfile -t DELETED_FILES < <(git diff ${diff_ref} --name-only --diff-filter=D 2> /dev/null || true)
 
     local rename_lines
-    mapfile -t rename_lines < <(git diff ${diff_ref} --diff-filter=R --name-only 2> /dev/null || true)
-    local i
-    for ((i = 0; i < ${#rename_lines[@]}; i += 2)); do
-        if [[ -n "${rename_lines[i]:-}" && -n "${rename_lines[i + 1]:-}" ]]; then
-            RENAMED_FILES+=("${rename_lines[i]}->${rename_lines[i + 1]}")
+    mapfile -t rename_lines < <(git diff ${diff_ref} --diff-filter=R --name-status 2> /dev/null || true)
+    local line
+    for line in "${rename_lines[@]}"; do
+        [[ -z "${line}" ]] && continue
+        local old new
+        old="$(echo "${line}" | cut -f2)"
+        new="$(echo "${line}" | cut -f3)"
+        if [[ -n "${old}" && -n "${new}" ]]; then
+            RENAMED_FILES+=("${old}->${new}")
         fi
     done
 

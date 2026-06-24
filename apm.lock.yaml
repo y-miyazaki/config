@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-06-23T04:28:57.399331+00:00'
+generated_at: '2026-06-24T04:00:42.569280+00:00'
 apm_version: 0.20.0
 dependencies:
 - repo_url: _local/common
@@ -185,7 +185,7 @@ dependencies:
   - .claude/skills/markdown-validation/scripts/validate.sh
   deployed_file_hashes:
     .claude/rules/agent-skills.md: sha256:a9fc2d789720a66972692deb24c4f65ca04ae9cb76a6126096d2184dcd04c46e
-    .claude/rules/github-actions-workflow.md: sha256:729e573e4440b7968046cb83fbca45257e4aaebdb8b49dfc11d1f944ef439c74
+    .claude/rules/github-actions-workflow.md: sha256:f8a854fec992293a4a02a104828c3df53b7acc9898c52db82b840ab5ef0bb6f5
     .claude/rules/instructions.md: sha256:8e16a38941833e8aca7e3b94a2e867c15c8da58c061934ff21601268d5fed1be
     .claude/rules/markdown.md: sha256:5792df753a3dea37d8beb9e5a0cc2986262aec023246d413f779a7fc5cfaac9d
     .claude/skills/agent-skills-review/SKILL.md: sha256:1ce2482546ac1d38861c972abd8fbf0b98db968cbb77b8ac85df07cd007e25f2
@@ -242,7 +242,7 @@ dependencies:
     .claude/skills/docs-updater/references/common-checklist.md: sha256:a341a980775b8a924487aa4f7fef1abe6cd9507e427b9d06e2d193a8fef482b3
     .claude/skills/docs-updater/references/common-impact-map.md: sha256:1408381bb0f202864502e072ef1c5a36d5870d1ec7dbcdfec5acd4d46b7cf355
     .claude/skills/docs-updater/references/common-output-format.md: sha256:c5e4e048086dc3879246887ae4d19adc6e42269340eab7fe35e28211b6e89960
-    .claude/skills/docs-updater/scripts/detect_changes.sh: sha256:c58008e8e374becec478f9c4475345a42f6af4d03509217518450d30bcc4eb8a
+    .claude/skills/docs-updater/scripts/detect_changes.sh: sha256:23b35769736f764eb66254765f4fe3c27b8de1ce8f8629fe0b31613f3c776401
     .claude/skills/docs-updater/scripts/lib/all.sh: sha256:f6aa62b17de3935f921d04005ca439b3d3a637a86551ed2a7d442761d6d83786
     .claude/skills/docs-updater/scripts/lib/aws.sh: sha256:e949fb9cc8ebde36123160624d3dc6f4fc4e29d0cde67101c2310507e44b0386
     .claude/skills/docs-updater/scripts/lib/common.sh: sha256:b7a50822cd2821155c20d75cb0272d0a6fd797c3bb2161c71ebd7185cdbbb77c
@@ -255,13 +255,13 @@ dependencies:
     .claude/skills/github-actions-review/evals/tasks/github-actions-review-basic.yaml: sha256:4dd1a4958b6d761c285b2f05743b8dce992487767d40cadfb7262f242e3b1ba7
     .claude/skills/github-actions-review/evals/tasks/github-actions-review-boundary-guardrail.yaml: sha256:d17608b3452d87b5e5d75d9da050c76cd2035be53daa12aa47aa3c9069aac36a
     .claude/skills/github-actions-review/evals/tasks/github-actions-review-structured-output.yaml: sha256:fdfa1360972e2eab664408e43fdf9c4631c3ecf92b29eaa06b643fdba2d94372
-    .claude/skills/github-actions-review/references/category-best-practices.md: sha256:01b059c644aab09e5790966cf8d4491ba0ad0299969893429616d669722e6667
+    .claude/skills/github-actions-review/references/category-best-practices.md: sha256:5b6f74376253fed89f5490fde98610a0f451a0f3eba728975c06ace6684cdbc7
     .claude/skills/github-actions-review/references/category-error-handling.md: sha256:31fc3b2b626a2793a23815368bd2a3786a198d4daf134a0492c734b298142013
     .claude/skills/github-actions-review/references/category-global.md: sha256:821b80b5bd2b13099a3fbbc14b7b67f082e27521e118ca8a5caa14b1235b808a
     .claude/skills/github-actions-review/references/category-performance.md: sha256:df93c1e0febf60fd7754265f309b8ec95155934a4a749088c96efddd838e73d0
     .claude/skills/github-actions-review/references/category-security.md: sha256:07b833d0cc7473993b286e7823e5ed28c83a275081986ad861b73d101a64bc41
     .claude/skills/github-actions-review/references/category-tool-integration.md: sha256:97afac7d2942168dab8f1c7caa3c4f93364914d2e90bd0d68af09994243c45b7
-    .claude/skills/github-actions-review/references/common-checklist.md: sha256:353d839549d8e3b38cd9e9d3f3cf1f74238363ee01e43b63e9a6b1f425e484f8
+    .claude/skills/github-actions-review/references/common-checklist.md: sha256:78133a3884faea71d7cd97433079d7af5ee789aee7b84a111430dda9c974f6ae
     .claude/skills/github-actions-review/references/common-output-format.md: sha256:4d9883e2ad48cb7b7835767b1423c0566da1c79d0786cd46c6fdc2e788373512
     .claude/skills/github-actions-review/references/common-troubleshooting.md: sha256:2eb61d3296bd3adc85e4e250d74fec87f9037aa7ca762bd377b90cd9ff438272
     .claude/skills/github-actions-review/scripts/lib/all.sh: sha256:f6aa62b17de3935f921d04005ca439b3d3a637a86551ed2a7d442761d6d83786
