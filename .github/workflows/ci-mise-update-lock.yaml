@@ -1,0 +1,97 @@
+# Reusable workflow: mise lockfile update
+# Updates mise.lock and auto-commits via GitHub App.
+# Requires: BOT_APP_PRIVATE_KEY and BOT_APP_CLIENT_ID secrets.
+name: ci-mise-update-lock
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: string
+      mise_version:
+        default: "2025.5.6"
+        description: "mise version to use"
+        required: false
+        type: string
+    secrets:
+      BOT_APP_CLIENT_ID:
+        description: "GitHub App Client for auto commit"
+        required: true
+      BOT_APP_PRIVATE_KEY:
+        description: "GitHub App private key for auto commit"
+        required: true
+
+permissions: {}
+
+jobs:
+  update-lock:
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: ${{ inputs.environment }}
+
+    permissions:
+      contents: read
+
+    concurrency:
+      group: mise-update-lock-${{ github.repository }}-${{ github.ref }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Install mise
+        uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
+        with:
+          install: false
+          version: ${{ inputs.mise_version }}
+
+      - name: Update mise.lock
+        shell: bash
+        run: MISE_LOCKED=0 mise lock
+
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.BOT_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+          permission-contents: write
+
+      - name: Configure git auth
+        uses: y-miyazaki/config/.github/actions/git-auth@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        with:
+          operation: configure
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7.1.0
+        with:
+          branch: ${{ github.head_ref || github.ref_name }}
+          commit_message: "chore(ci): update mise lockfile"
+          commit_user_email: "41898282+github-actions[bot]@users.noreply.github.com"
+          commit_user_name: "repo-maintenance-bot[app]"
+          file_pattern: mise.lock
+
+      - name: Clear git auth
+        if: always()
+        uses: y-miyazaki/config/.github/actions/git-auth@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        with:
+          operation: clear
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        with:
+          params: |
+            environment: ${{ inputs.environment }}
+            mise_version: ${{ inputs.mise_version }}
+          status: "${{ job.status }}"
+          title: "Mise Update Lock"

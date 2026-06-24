@@ -44,6 +44,7 @@ chmod 600 "$HOME/.ssh"/id_* 2> /dev/null || true
 #######################################
 if command -v claude > /dev/null 2>&1; then
     if [ -f "${repo_root}/.claude/scripts/statusline.sh" ]; then
+        mkdir -p ~/.claude
         cp -rp "${repo_root}/.claude/scripts/statusline.sh" ~/.claude/
     fi
 fi
