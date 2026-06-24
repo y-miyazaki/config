@@ -1,6 +1,6 @@
 lockfile_version: '1'
-generated_at: '2026-06-24T04:50:30.385869+00:00'
-apm_version: 0.20.0
+generated_at: '2026-06-24T05:33:23.050566+00:00'
+apm_version: 0.21.0
 dependencies:
 - repo_url: _local/common
   package_type: apm_package
@@ -356,6 +356,7 @@ dependencies:
     .claude/skills/markdown-validation/scripts/validate.sh: sha256:477a3d2d30af874d0013a50a0b4ec9b97ef717138c80d946770ef7e44a0078d1
   source: local
   local_path: ./.apm/packages/common
+  declared_license: Apache-2.0
 - repo_url: _local/common-hooks-claude
   package_type: apm_package
   deployed_files:
@@ -374,6 +375,7 @@ dependencies:
     .claude/hooks/common-hooks-claude/scripts/zizmor.sh: sha256:4e2aa8d804c54a95b0290e81bfe899f434fd1754218248ac0e7058d795dff5e1
   source: local
   local_path: ./.apm/packages/common-hooks-claude
+  declared_license: Apache-2.0
 - repo_url: _local/go
   package_type: apm_package
   deployed_files:
@@ -478,6 +480,7 @@ dependencies:
     .claude/skills/go-validation/scripts/validate.sh: sha256:4828376fd096b1a549c7762a93242ec1020d3df014b661a437477f7467c3a9b6
   source: local
   local_path: ./.apm/packages/go
+  declared_license: Apache-2.0
 - repo_url: _local/go-hooks-claude
   package_type: apm_package
   deployed_files:
@@ -486,6 +489,7 @@ dependencies:
     .claude/hooks/go-hooks-claude/scripts/golangci_lint.sh: sha256:43f72f9e122dff16ef333b918b4755698203c6b27da928fa1e743db9653686b0
   source: local
   local_path: ./.apm/packages/go-hooks-claude
+  declared_license: Apache-2.0
 - repo_url: _local/shell-script
   package_type: apm_package
   deployed_files:
@@ -584,6 +588,7 @@ dependencies:
     .claude/skills/shell-script-validation/scripts/validate.sh: sha256:6f29681dfb85aecbb01d36a1742185b63c52ca901f416f116671cba291ebe5dd
   source: local
   local_path: ./.apm/packages/shell-script
+  declared_license: Apache-2.0
 - repo_url: _local/shell-script-hooks-claude
   package_type: apm_package
   deployed_files:
@@ -594,6 +599,7 @@ dependencies:
     .claude/hooks/shell-script-hooks-claude/scripts/shfmt.sh: sha256:3605c4c0c9153f351fca3ac626addbd9c79c27bc3de9085e62c135c0c7bbb0a1
   source: local
   local_path: ./.apm/packages/shell-script-hooks-claude
+  declared_license: Apache-2.0
 mcp_servers:
 - codebase-memory-mcp
 - context7
