@@ -11,7 +11,7 @@ on:
         required: true
         type: string
       mise_version:
-        default: "2025.5.6"
+        default: "2026.6.13"
         description: "mise version to use"
         required: false
         type: string
@@ -49,23 +49,27 @@ jobs:
       - name: Install mise
         uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
         with:
+          cache: false
           install: false
           version: ${{ inputs.mise_version }}
 
       - name: Update mise.lock
         shell: bash
-        run: MISE_LOCKED=0 mise lock
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          MISE_LOCKED: "0"
+        run: mise lock
 
       - name: Generate GitHub App Token
         id: app-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id: ${{ secrets.BOT_APP_CLIENT_ID }}
-          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           permission-contents: write
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
 
       - name: Configure git auth
-        uses: y-miyazaki/config/.github/actions/git-auth@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        uses: y-miyazaki/config/.github/actions/git-auth@f6d5c20514efa26ac0bf80ba83a025917845e9d6 # v1.4.0
         with:
           operation: configure
           token: ${{ steps.app-token.outputs.token }}
@@ -81,14 +85,14 @@ jobs:
 
       - name: Clear git auth
         if: always()
-        uses: y-miyazaki/config/.github/actions/git-auth@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        uses: y-miyazaki/config/.github/actions/git-auth@f6d5c20514efa26ac0bf80ba83a025917845e9d6 # v1.4.0
         with:
           operation: clear
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        uses: y-miyazaki/config/.github/actions/summary@f6d5c20514efa26ac0bf80ba83a025917845e9d6 # v1.4.0
         with:
           params: |
             environment: ${{ inputs.environment }}

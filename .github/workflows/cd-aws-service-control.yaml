@@ -9,14 +9,14 @@ on:
         description: "Action to perform (start or stop)"
         required: true
         type: string
-      auto_discover_ec2:
-        default: false
-        description: "Automatically discover EC2 instances"
-        required: false
-        type: boolean
       auto_discover_batch:
         default: false
         description: "Automatically discover AWS Batch job queues"
+        required: false
+        type: boolean
+      auto_discover_ec2:
+        default: false
+        description: "Automatically discover EC2 instances"
         required: false
         type: boolean
       auto_discover_ecs:
@@ -47,11 +47,6 @@ on:
       autoscaling_min_capacity:
         default: 1
         description: "Minimum capacity for autoscaling when starting ECS services (set to 0 to skip autoscaling adjustment)"
-        required: false
-        type: number
-      default_desired_count:
-        default: 1
-        description: "Default desired count for starting ECS services"
         required: false
         type: number
       batch_job_queues:
@@ -89,19 +84,24 @@ on:
         description: "Control Redshift clusters"
         required: false
         type: boolean
+      default_desired_count:
+        default: 1
+        description: "Default desired count for starting ECS services"
+        required: false
+        type: number
       ec2_instances:
         default: "[]"
         description: "JSON array of EC2 instance IDs to control ['i-xxxxx', 'i-yyyyy']"
         required: false
         type: string
-      ecs_services:
-        default: "[]"
-        description: "JSON array of ECS services to control [{cluster: 'name', service: 'name', desired_count: 1}]"
-        required: false
-        type: string
       ecs_scheduled_tasks:
         default: "[]"
         description: "JSON array of ECS scheduled tasks to control [{cluster: 'name', task_definition: 'family'}]"
+        required: false
+        type: string
+      ecs_services:
+        default: "[]"
+        description: "JSON array of ECS services to control [{cluster: 'name', service: 'name', desired_count: 1}]"
         required: false
         type: string
       environment:
@@ -218,8 +218,8 @@ jobs:
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_ecs }}
-      autoscaling_min_capacity: ${{ inputs.autoscaling_min_capacity }}
       autoscaling_max_capacity: ${{ inputs.autoscaling_max_capacity }}
+      autoscaling_min_capacity: ${{ inputs.autoscaling_min_capacity }}
       default_desired_count: ${{ inputs.default_desired_count }}
       environment: ${{ inputs.environment }}
       exclude_patterns: ${{ inputs.exclude_patterns_ecs }}
@@ -337,9 +337,9 @@ jobs:
           EC2_RESULT: ${{ needs.control-ec2-instances.result }}
           ECS_AUTO: ${{ inputs.auto_discover_ecs }}
           ECS_RESULT: ${{ needs.control-ecs-services.result }}
+          ECS_SCHEDULED_TASKS: ${{ inputs.ecs_scheduled_tasks }}
           ECS_SCHEDULED_TASK_AUTO: ${{ inputs.auto_discover_ecs_scheduled_task }}
           ECS_SCHEDULED_TASK_RESULT: ${{ needs.control-ecs-scheduled-tasks.result }}
-          ECS_SCHEDULED_TASKS: ${{ inputs.ecs_scheduled_tasks }}
           ECS_SERVICES: ${{ inputs.ecs_services }}
           ENVIRONMENT: ${{ inputs.environment }}
           RDS_AUTO: ${{ inputs.auto_discover_rds }}
@@ -361,7 +361,7 @@ jobs:
           echo "overall_status=$OVERALL_STATUS" >> "$GITHUB_OUTPUT"
 
       - name: Summary
-        uses: y-miyazaki/config/.github/actions/summary@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        uses: y-miyazaki/config/.github/actions/summary@f6d5c20514efa26ac0bf80ba83a025917845e9d6 # v1.4.0
         with:
           outputs: |
             action: ${{ inputs.action }}

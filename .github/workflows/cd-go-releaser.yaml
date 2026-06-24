@@ -57,10 +57,10 @@ env:
   COMPONENT: ${{ inputs.component }}
   CREATE_TAG: ${{ inputs.create_tag }}
   DRAFT: ${{ inputs.draft }}
-  GO_PROJECT_PATH: ${{ inputs.go_project_path }}
-  GO_VERSION: ${{ inputs.go_version }}
   GORELEASER_ARGS: ${{ inputs.goreleaser_args }}
   GORELEASER_VERSION: ${{ inputs.goreleaser_version }}
+  GO_PROJECT_PATH: ${{ inputs.go_project_path }}
+  GO_VERSION: ${{ inputs.go_version }}
   PRERELEASE: ${{ inputs.prerelease }}
   VERSION: ${{ inputs.version }}
 
@@ -118,7 +118,7 @@ jobs:
           echo "✅ Version format is valid: $VERSION"
 
       - name: Configure git auth
-        uses: y-miyazaki/config/.github/actions/git-auth@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        uses: y-miyazaki/config/.github/actions/git-auth@f6d5c20514efa26ac0bf80ba83a025917845e9d6 # v1.4.0
         with:
           operation: configure
           token: ${{ github.token }}
@@ -147,7 +147,7 @@ jobs:
 
       - name: Clear git auth
         if: always()
-        uses: y-miyazaki/config/.github/actions/git-auth@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        uses: y-miyazaki/config/.github/actions/git-auth@f6d5c20514efa26ac0bf80ba83a025917845e9d6 # v1.4.0
         with:
           operation: clear
           token: ${{ github.token }}
@@ -245,7 +245,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        uses: y-miyazaki/config/.github/actions/summary@f6d5c20514efa26ac0bf80ba83a025917845e9d6 # v1.4.0
         with:
           artifacts: |
             goreleaser-dist-${{ env.COMPONENT }}-${{ steps.check-tag.outputs.version }}

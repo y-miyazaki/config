@@ -59,8 +59,8 @@ concurrency:
 
 env:
   COMPONENT: ${{ inputs.component }}
-  DOCKER_CONTEXT: ${{ inputs.docker_context }}
   DOCKERFILE: ${{ inputs.dockerfile }}
+  DOCKER_CONTEXT: ${{ inputs.docker_context }}
   ECR_REGISTRY: ${{ inputs.ecr_registry }}
   ECR_REPOSITORY: ${{ inputs.ecr_repository }}
   ENVIRONMENT: ${{ inputs.environment }}
@@ -86,8 +86,8 @@ jobs:
       - name: Setup AWS Credentials
         uses: aws-actions/configure-aws-credentials@e7f100cf4c008499ea8adda475de1042d6975c7b # v6.2.0
         with:
-          role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
 
       - name: Setup Amazon ECR
         id: login-ecr
@@ -136,7 +136,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        uses: y-miyazaki/config/.github/actions/summary@f6d5c20514efa26ac0bf80ba83a025917845e9d6 # v1.4.0
         with:
           artifacts: |
             (none)

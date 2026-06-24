@@ -5,24 +5,14 @@ name: cd-aws-ecs
 on:
   workflow_call:
     inputs:
-      ecs_service_base_dir:
-        description: "Base directory containing ecspresso configs (e.g., ecspresso/backend/application)"
-        required: true
-        type: string
-      ecspresso_config:
-        default: "ecspresso.jsonnet"
-        description: "ecspresso config filename (e.g. ecspresso.jsonnet)"
-        required: false
-        type: string
-      ecspresso_version:
-        default: "v2.8.4"
-        description: "ecspresso version (e.g. v2.7.1)"
-        required: false
-        type: string
       ecs_scheduled_task_base_dir:
         default: ""
         description: "Base directory containing ecschedule config (e.g., ecschedule/backend). Leave empty to skip scheduled tasks"
         required: false
+        type: string
+      ecs_service_base_dir:
+        description: "Base directory containing ecspresso configs (e.g., ecspresso/backend/application)"
+        required: true
         type: string
       ecschedule_config:
         default: "ecschedule.jsonnet"
@@ -32,6 +22,16 @@ on:
       ecschedule_version:
         default: "v0.19.0"
         description: "ecschedule version (e.g. v0.17.2)"
+        required: false
+        type: string
+      ecspresso_config:
+        default: "ecspresso.jsonnet"
+        description: "ecspresso config filename (e.g. ecspresso.jsonnet)"
+        required: false
+        type: string
+      ecspresso_version:
+        default: "v2.8.4"
+        description: "ecspresso version (e.g. v2.7.1)"
         required: false
         type: string
       environment:
@@ -92,8 +92,8 @@ jobs:
         id: generate_matrix
         shell: bash
         env:
-          ECSPRESSO_BASE_DIR: ${{ inputs.ecs_service_base_dir }}
           ECSCHEDULE_BASE_DIR: ${{ inputs.ecs_scheduled_task_base_dir }}
+          ECSPRESSO_BASE_DIR: ${{ inputs.ecs_service_base_dir }}
           ENVIRONMENT: ${{ inputs.environment }}
         run: |
           set -euo pipefail
@@ -199,8 +199,8 @@ jobs:
         id: check_diff
         shell: bash
         env:
-          SERVICE_PATH: ${{ matrix.path }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
+          SERVICE_PATH: ${{ matrix.path }}
         run: |
           set -euo pipefail
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
@@ -237,8 +237,8 @@ jobs:
         if: steps.check_diff.outputs.deploy == 'true'
         shell: bash
         env:
-          SERVICE_PATH: ${{ matrix.path }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
+          SERVICE_PATH: ${{ matrix.path }}
         run: |
           set -euo pipefail
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
@@ -289,7 +289,7 @@ jobs:
 
       - name: Setup jsonnet
         timeout-minutes: 5
-        uses: y-miyazaki/config/.github/actions/install-github-release@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        uses: y-miyazaki/config/.github/actions/install-github-release@f6d5c20514efa26ac0bf80ba83a025917845e9d6 # v1.4.0
         with:
           asset_pattern: go-jsonnet_Linux_x86_64.tar.gz
           binary: jsonnet

@@ -63,8 +63,8 @@ permissions: {}
 
 env:
   ACTION: ${{ inputs.action }}
-  AUTOSCALING_MIN_CAPACITY: ${{ inputs.autoscaling_min_capacity }}
   AUTOSCALING_MAX_CAPACITY: ${{ inputs.autoscaling_max_capacity }}
+  AUTOSCALING_MIN_CAPACITY: ${{ inputs.autoscaling_min_capacity }}
   AUTO_DISCOVER: ${{ inputs.auto_discover }}
   DEFAULT_DESIRED_COUNT: ${{ inputs.default_desired_count }}
   EXCLUDE_PATTERNS: ${{ inputs.exclude_patterns }}
@@ -335,11 +335,11 @@ jobs:
 
       - name: Control ECS Service
         env:
+          AUTOSCALING_MAX: ${{ matrix.service.autoscaling_max }}
+          AUTOSCALING_MIN: ${{ matrix.service.autoscaling_min }}
           CLUSTER: ${{ matrix.service.cluster }}
           DESIRED_COUNT: ${{ matrix.service.desired_count }}
           HAS_AUTOSCALING: ${{ matrix.service.has_autoscaling }}
-          AUTOSCALING_MIN: ${{ matrix.service.autoscaling_min }}
-          AUTOSCALING_MAX: ${{ matrix.service.autoscaling_max }}
           SERVICE: ${{ matrix.service.service }}
         shell: bash
         run: |

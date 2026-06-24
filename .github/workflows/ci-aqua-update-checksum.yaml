@@ -60,11 +60,11 @@ jobs:
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id: ${{ secrets.BOT_APP_CLIENT_ID }}
-          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           permission-contents: write
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
 
       - name: Configure git auth
-        uses: y-miyazaki/config/.github/actions/git-auth@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        uses: y-miyazaki/config/.github/actions/git-auth@f6d5c20514efa26ac0bf80ba83a025917845e9d6 # v1.4.0
         with:
           operation: configure
           token: ${{ steps.app-token.outputs.token }}
@@ -72,22 +72,22 @@ jobs:
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9 # v7.1.0
         with:
-          commit_message: "chore(ci): update aqua checksums"
-          commit_user_name: "repo-maintenance-bot[app]"
-          commit_user_email: "41898282+github-actions[bot]@users.noreply.github.com"
           branch: ${{ github.head_ref || github.ref_name }}
+          commit_message: "chore(ci): update aqua checksums"
+          commit_user_email: "41898282+github-actions[bot]@users.noreply.github.com"
+          commit_user_name: "repo-maintenance-bot[app]"
           file_pattern: aqua-checksums.json
 
       - name: Clear git auth
         if: always()
-        uses: y-miyazaki/config/.github/actions/git-auth@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        uses: y-miyazaki/config/.github/actions/git-auth@f6d5c20514efa26ac0bf80ba83a025917845e9d6 # v1.4.0
         with:
           operation: clear
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        uses: y-miyazaki/config/.github/actions/summary@f6d5c20514efa26ac0bf80ba83a025917845e9d6 # v1.4.0
         with:
           params: |
             aqua_version: ${{ inputs.aqua_version }}

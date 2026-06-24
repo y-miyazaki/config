@@ -13,11 +13,6 @@ on:
         description: "Logical component name (e.g. base)"
         required: true
         type: string
-      golangci_lint_version:
-        default: "v2.12.2"
-        description: "golangci-lint version to use"
-        required: false
-        type: string
       go_project_path:
         description: "Path (relative) to the Go project root (directory containing go.mod)"
         required: true
@@ -25,6 +20,11 @@ on:
       go_version:
         default: "1.26.4"
         description: "Go version to use for setup-go and linting"
+        required: false
+        type: string
+      golangci_lint_version:
+        default: "v2.12.2"
+        description: "golangci-lint version to use"
         required: false
         type: string
       govulncheck_version:
@@ -46,9 +46,9 @@ permissions:
 env:
   COMPONENT: ${{ inputs.component }}
   GOLANGCI_LINT_VERSION: ${{ inputs.golangci_lint_version }}
+  GOVULNCHECK_VERSION: ${{ inputs.govulncheck_version }}
   GO_PROJECT_PATH: ${{ inputs.go_project_path }}
   GO_VERSION: ${{ inputs.go_version }}
-  GOVULNCHECK_VERSION: ${{ inputs.govulncheck_version }}
   TRIVY_VERSION: ${{ inputs.trivy_version }}
 
 jobs:
@@ -202,7 +202,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        uses: y-miyazaki/config/.github/actions/summary@f6d5c20514efa26ac0bf80ba83a025917845e9d6 # v1.4.0
         with:
           artifacts: |
             coverage-${{ env.COMPONENT }}
@@ -268,7 +268,7 @@ jobs:
 
       - name: Configure git auth
         if: github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        uses: y-miyazaki/config/.github/actions/git-auth@f6d5c20514efa26ac0bf80ba83a025917845e9d6 # v1.4.0
         with:
           operation: configure
           token: ${{ github.token }}
@@ -281,9 +281,9 @@ jobs:
           fail_level: error
           filter_mode: file
           github_token: ${{ github.token }}
+          go_version: ${{ env.GO_VERSION }}
           golangci_lint_flags: "--new-from-rev=origin/${{ env.PR_BASE_REF }}"
           golangci_lint_version: ${{ env.GOLANGCI_LINT_VERSION }}
-          go_version: ${{ env.GO_VERSION }}
           level: error
           reporter: github-pr-review
           workdir: ${{ env.GO_PROJECT_PATH }}
@@ -298,7 +298,7 @@ jobs:
 
       - name: Clear git auth
         if: always() && github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        uses: y-miyazaki/config/.github/actions/git-auth@f6d5c20514efa26ac0bf80ba83a025917845e9d6 # v1.4.0
         with:
           operation: clear
           token: ${{ github.token }}
@@ -328,7 +328,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        uses: y-miyazaki/config/.github/actions/summary@f6d5c20514efa26ac0bf80ba83a025917845e9d6 # v1.4.0
         with:
           artifacts: |
             (none)
@@ -447,7 +447,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        uses: y-miyazaki/config/.github/actions/summary@f6d5c20514efa26ac0bf80ba83a025917845e9d6 # v1.4.0
         with:
           artifacts: |
             govulncheck-${{ env.COMPONENT }}

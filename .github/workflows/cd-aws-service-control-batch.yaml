@@ -274,8 +274,8 @@ jobs:
         if: ${{ inputs.wait_for_stable }}
         timeout-minutes: 10
         env:
-          QUEUE_NAME: ${{ matrix.queue }}
           EXPECTED_STATE: ${{ inputs.action == 'stop' && 'DISABLED' || 'ENABLED' }}
+          QUEUE_NAME: ${{ matrix.queue }}
         shell: bash
         run: |
           set -euo pipefail

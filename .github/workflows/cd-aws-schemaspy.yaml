@@ -6,6 +6,13 @@ on:
   workflow_call:
     inputs:
       # Bastion Configuration
+      # Database Connection (Direct Parameters - No AWS Required)
+      # Environment Configuration
+      # JSON Key Mapping (for Secrets Manager and SSM JSON parameters)
+      # SchemaSpy Configuration
+      # Secrets Manager Configuration
+      # Systems Manager Parameter Store Configuration
+      # Use Flags (Boolean Controls)
       bastion_instance_id:
         default: ""
         description: "EC2 Bastion instance ID (auto-detected if not specified and use_bastion=true)"
@@ -21,8 +28,6 @@ on:
         description: "EC2 tag Name filter for Bastion auto-detection (default: '*bastion*')"
         required: false
         type: string
-
-      # Database Connection (Direct Parameters - No AWS Required)
       db_host:
         default: ""
         description: "[Direct] Database host (only if use_secrets_manager=false and use_ssm=false)" # pragma: allowlist secret
@@ -62,14 +67,10 @@ on:
         description: "[Direct] Database username (only if use_secrets_manager=false and use_ssm=false)" # pragma: allowlist secret
         required: false
         type: string
-
-      # Environment Configuration
       environment:
         description: "Target environment (dev, qa, stg, prd, etc.)"
         required: true
         type: string
-
-      # JSON Key Mapping (for Secrets Manager and SSM JSON parameters)
       json_key_database_name:
         default: "dbname"
         description: "JSON key for database name (default: 'database')"
@@ -95,15 +96,11 @@ on:
         description: "JSON key for username (default: 'username')"
         required: false
         type: string
-
-      # Systems Manager Parameter Store Configuration
       parameter_store_name:
         default: ""
         description: "[SSM Parameter Store] Parameter name containing JSON with all DB connection info (only if use_ssm=true)"
         required: false
         type: string
-
-      # SchemaSpy Configuration
       schema_name:
         default: ""
         description: "Database schema name to document (optional: if empty, -all flag is used to document all schemas)"
@@ -119,15 +116,11 @@ on:
         description: "SchemaSpy version to use"
         required: false
         type: string
-
-      # Secrets Manager Configuration
       secrets_manager_secret_id:
         default: ""
         description: "[Secrets Manager] Secret ID containing JSON with DB connection info (only if use_secrets_manager=true)" # pragma: allowlist secret
         required: false
         type: string
-
-      # Use Flags (Boolean Controls)
       use_bastion:
         default: false
         description: "Whether to use EC2 Bastion server for database connection"
@@ -180,9 +173,9 @@ env:
   JSON_KEY_PORT: ${{ inputs.json_key_port }}
   JSON_KEY_USERNAME: ${{ inputs.json_key_username }}
   PARAMETER_STORE_NAME: ${{ inputs.parameter_store_name }}
-  SCHEMA_NAME: ${{ inputs.schema_name }}
   SCHEMASPY_IMAGEFORMAT: ${{ inputs.schemaspy_imageformat }}
   SCHEMASPY_VERSION: ${{ inputs.schemaspy_version }}
+  SCHEMA_NAME: ${{ inputs.schema_name }}
   SECRETS_MANAGER_SECRET_ID: ${{ inputs.secrets_manager_secret_id }}
   USE_BASTION: ${{ inputs.use_bastion }}
   USE_SECRETS_MANAGER: ${{ inputs.use_secrets_manager }}
@@ -676,7 +669,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@861f3703bcba456b3d636c9fab98f8bc66e31729 # v1.3.1
+        uses: y-miyazaki/config/.github/actions/summary@f6d5c20514efa26ac0bf80ba83a025917845e9d6 # v1.4.0
         with:
           artifacts: |
             ${{ steps.setup-parameters.outputs.artifact_name }}
