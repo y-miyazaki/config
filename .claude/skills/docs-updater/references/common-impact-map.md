@@ -24,6 +24,7 @@ The agent reads each candidate document and the relevant diffs to determine:
 ### Search Scope
 
 - Root `*.md`
+- `README.md`
 - `docs/**/*.md`
 - `mkdocs.yml` (nav section)
 

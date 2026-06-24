@@ -313,6 +313,16 @@
       "platformAutomerge": true
     },
     {
+      "description": "Rules: Disable mise lockfile artifact updates for npm packages (Node.js unavailable in Renovate environment; lockfile is updated by on-ci-push-mise-update-lock workflow)",
+      "matchManagers": [
+        "mise"
+      ],
+      "matchPackagePatterns": [
+        "^npm:"
+      ],
+      "updateLockFiles": false
+    },
+    {
       "description": "Rules: Group ecspresso updates across GitHub Actions workflow inputs and mise",
       "groupName": "ecspresso",
       "matchPackageNames": [

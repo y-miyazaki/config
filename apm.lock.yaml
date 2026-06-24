@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-06-24T04:00:42.569280+00:00'
+generated_at: '2026-06-24T04:50:30.385869+00:00'
 apm_version: 0.20.0
 dependencies:
 - repo_url: _local/common
@@ -234,15 +234,15 @@ dependencies:
     .claude/skills/docs-creation/references/common-checklist.md: sha256:a61164605fc749069f198cdb2de9dbe67ae2b77b188a37057e2866b12a21a9ac
     .claude/skills/docs-creation/references/common-output-format.md: sha256:ad69a0ac6676a60d6178199e579310bfac1a09b973c84fd05178bbfe90ca2b33
     .claude/skills/docs-creation/references/common-troubleshooting.md: sha256:a45b0abdb0f22ab17312bf85bfb5fe64e487c96d7d4d7f8db12a8c31221acecc
-    .claude/skills/docs-updater/SKILL.md: sha256:4e132edcfbdf9bea374c70996398ec388fb98799aa9c7e1876dfbcaf0d2d7da5
+    .claude/skills/docs-updater/SKILL.md: sha256:c439a0e29272b2b86286d193a92724929cad2e0daed544bbd9121951816a297f
     .claude/skills/docs-updater/eval.yaml: sha256:9125f390fb14b9b316b0c3dbbedf5de88b52c3810f587182d024df8e91c2f11e
     .claude/skills/docs-updater/evals/tasks/docs-updater-basic.yaml: sha256:6baa551e7be679aeebb79b91fcbb121b26195aa6dc56d8fe9b32bbf9076aa5fb
     .claude/skills/docs-updater/evals/tasks/docs-updater-exceeded-scope.yaml: sha256:c7d1d621938e4ce77be44f36dd36dd112945d0236b972945a65075143593b4ca
     .claude/skills/docs-updater/evals/tasks/docs-updater-skip.yaml: sha256:f46f6ddb627a2f33df56caa396a65c1704a98a2112b1d486e05a57e6112376d8
     .claude/skills/docs-updater/references/common-checklist.md: sha256:a341a980775b8a924487aa4f7fef1abe6cd9507e427b9d06e2d193a8fef482b3
-    .claude/skills/docs-updater/references/common-impact-map.md: sha256:1408381bb0f202864502e072ef1c5a36d5870d1ec7dbcdfec5acd4d46b7cf355
+    .claude/skills/docs-updater/references/common-impact-map.md: sha256:8f8815efc65bdb48b327de7ba2ba57d84730e7534ce1efc4c980ef99d54538ad
     .claude/skills/docs-updater/references/common-output-format.md: sha256:c5e4e048086dc3879246887ae4d19adc6e42269340eab7fe35e28211b6e89960
-    .claude/skills/docs-updater/scripts/detect_changes.sh: sha256:23b35769736f764eb66254765f4fe3c27b8de1ce8f8629fe0b31613f3c776401
+    .claude/skills/docs-updater/scripts/detect_changes.sh: sha256:c84db750cf3fcb4398551268492a71ce0e12543ae8683770e9b6819975c1cb24
     .claude/skills/docs-updater/scripts/lib/all.sh: sha256:f6aa62b17de3935f921d04005ca439b3d3a637a86551ed2a7d442761d6d83786
     .claude/skills/docs-updater/scripts/lib/aws.sh: sha256:e949fb9cc8ebde36123160624d3dc6f4fc4e29d0cde67101c2310507e44b0386
     .claude/skills/docs-updater/scripts/lib/common.sh: sha256:b7a50822cd2821155c20d75cb0272d0a6fd797c3bb2161c71ebd7185cdbbb77c

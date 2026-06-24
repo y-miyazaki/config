@@ -120,6 +120,7 @@ Reference: Verifying if minimumReleaseAge applies to images via ECR pull-through
 
 - Label all updates with `mise`
 - Automerge patch updates only
+- Lockfile updates disabled for `npm:` packages (Node.js unavailable in Renovate environment; lockfile is updated by `on-ci-push-mise-update-lock` workflow)
 - Commit prefix: `renovate(mise):`
 
 ### npm (`npm`)

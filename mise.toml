@@ -12,10 +12,6 @@ minimum_release_age = "7d" # Avoid very recent releases to reduce supply-chain r
 not_found_auto_install = true # Try installing missing tools when a command is looked up from the current config.
 provenance_api_failures_fatal = true # Fail installs if provenance verification APIs are unavailable or verification fails.
 slsa = true # Require SLSA provenance checks when a backend supports them.
-trusted_config_paths = [
-  "/workspace/",          # for workspace containers which mount repos to /workspace
-  "/tmp/renovate/repos/", # for Renovate bot which clones repos to /tmp/renovate/repos/
-] # Paths to automatically trust mise.toml files in without prompting; use with caution.
 
 [settings.aqua]
 cosign = true   # Verify cosign signatures for aqua-backed packages when available.

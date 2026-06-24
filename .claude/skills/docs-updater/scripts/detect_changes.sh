@@ -250,6 +250,10 @@ function collect_affected_docs {
     while IFS= read -r doc_file; do
         AFFECTED_DOCS+=("${doc_file}")
     done < <(find docs -name '*.md' -type f 2> /dev/null || true)
+    # Nested README.md files (excluding root, docs/, and hidden directories)
+    while IFS= read -r doc_file; do
+        AFFECTED_DOCS+=("${doc_file}")
+    done < <(find . -mindepth 2 -path './docs' -prune -o -path '*/.*' -prune -o -name 'README.md' -type f -print 2> /dev/null | sed 's|^\./||' || true)
 }
 
 #######################################
