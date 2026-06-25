@@ -18,6 +18,7 @@ concurrency:
   group: loop-docs-triage
 
 env:
+  DEFAULT_BASE_BRANCH: main
   DEFAULT_ENGINE: claude
   DEFAULT_LEVEL: L2
   SKILL_NAME: loop-docs-triage
@@ -30,6 +31,7 @@ jobs:
     permissions:
       contents: read
     outputs:
+      base_branch: ${{ steps.config.outputs.base_branch }}
       current_sha: ${{ steps.state.outputs.current_sha }}
       engine: ${{ steps.config.outputs.engine }}
       last_sha: ${{ steps.state.outputs.last_sha }}
@@ -44,6 +46,7 @@ jobs:
         run: |
           set -euo pipefail
           {
+            echo "base_branch=${DEFAULT_BASE_BRANCH}"
             echo "engine=${DEFAULT_ENGINE}"
             echo "level=${DEFAULT_LEVEL}"
             echo "skill_name=${SKILL_NAME}"
@@ -106,6 +109,7 @@ jobs:
       contents: read
       copilot-requests: write
     with:
+      base_branch: ${{ needs.detect.outputs.base_branch }}
       branch: ${{ needs.agent.outputs.branch }}
       denylist: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
       engine: ${{ needs.detect.outputs.engine }}

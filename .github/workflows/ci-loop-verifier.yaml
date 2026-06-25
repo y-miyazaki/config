@@ -6,6 +6,11 @@ name: ci-loop-verifier
 on:
   workflow_call:
     inputs:
+      base_branch:
+        default: "main"
+        description: "Base branch to diff against (e.g. main, master)"
+        required: false
+        type: string
       branch:
         description: "Branch to verify"
         required: true
@@ -66,10 +71,12 @@ jobs:
       - name: Generate Diff
         id: diff
         shell: bash
+        env:
+          BASE_BRANCH: ${{ inputs.base_branch }}
         run: |
           set -euo pipefail
-          DIFF=$(git diff origin/main...HEAD -- . ':!.loop/')
-          DIFF_STAT=$(git diff --stat origin/main...HEAD -- . ':!.loop/')
+          DIFF=$(git diff "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/')
+          DIFF_STAT=$(git diff --stat "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/')
           {
             echo "diff<<EOF"
             echo "${DIFF}"
@@ -83,10 +90,15 @@ jobs:
         id: denylist
         shell: bash
         env:
+          BASE_BRANCH: ${{ inputs.base_branch }}
           DENYLIST: ${{ inputs.denylist }}
         run: |
           set -euo pipefail
-          CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
+          CHANGED_FILES=$(git diff --name-only "origin/${BASE_BRANCH}...HEAD")
+          if [[ -z "${CHANGED_FILES}" ]]; then
+            echo "has_violations=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           VIOLATIONS=""
           IFS=',' read -ra PATTERNS <<< "${DENYLIST}"
           for pattern in "${PATTERNS[@]}"; do
