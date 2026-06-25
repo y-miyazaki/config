@@ -6,6 +6,10 @@ inputs:
     default: "false"
     description: "Enable auto-merge on created PR (L3 only). Requires branch protection rules."
     required: false
+  agent_result:
+    default: "success"
+    description: "Result of the agent job (success/failure/cancelled/skipped)"
+    required: false
   branch:
     default: ""
     description: "Branch created by agent (empty if no changes)"
@@ -55,11 +59,14 @@ runs:
       id: outcome
       shell: bash
       env:
+        AGENT_RESULT: ${{ inputs.agent_result }}
         HAS_CHANGES: ${{ inputs.has_changes }}
         VERDICT: ${{ inputs.verdict }}
       run: |
         set -euo pipefail
-        if [[ "${HAS_CHANGES}" != "true" ]]; then
+        if [[ "${AGENT_RESULT}" != "success" && "${AGENT_RESULT}" != "skipped" ]]; then
+          echo "value=error" >> "$GITHUB_OUTPUT"
+        elif [[ "${HAS_CHANGES}" != "true" ]]; then
           echo "value=no-changes" >> "$GITHUB_OUTPUT"
         elif [[ "${VERDICT}" == "APPROVE" ]]; then
           echo "value=pr-created" >> "$GITHUB_OUTPUT"

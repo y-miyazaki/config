@@ -130,7 +130,8 @@ jobs:
       - name: Finalize
         uses: y-miyazaki/config/.github/actions/loop-finalize@d83036476eb26965baac7cbab152125f1b1985cc # v1.4.6
         with:
-          auto_merge: ${{ needs.detect.outputs.level == 'L3' && 'true' || 'false' }}
+          agent_result: ${{ needs.agent.result }}
+          auto_merge: ${{ needs.detect.outputs.level == 'L3' }}
           branch: ${{ needs.agent.outputs.branch }}
           current_sha: ${{ needs.detect.outputs.current_sha }}
           has_changes: ${{ needs.agent.outputs.has_changes }}
