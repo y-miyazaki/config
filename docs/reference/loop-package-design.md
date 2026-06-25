@@ -7,7 +7,6 @@
 
 | パッケージ | ステータス | レベル |
 |-----------|-----------|--------|
-| `common-loop` | ✅ 実装済み | - |
 | `docs-loop` | ✅ 実装済み | L2 (Assisted) |
 | `ci-sweeper-loop` | 未着手 | - |
 | `changelog-loop` | 未着手 | - |
@@ -62,8 +61,7 @@ GitHub Agentic Workflows（[公式ブログ](https://github.blog/ai-and-ml/autom
 
 ```text
 .apm/packages/
-  common-loop/           ← 基盤（全ループ共通）
-  docs-loop/             ← docs更新ループ
+  docs-loop/             ← docs更新ループ（自己完結）
   ci-sweeper-loop/       ← 将来: CI失敗修正ループ
   changelog-loop/        ← 将来: changelog起草ループ
 ```
@@ -72,51 +70,31 @@ GitHub Agentic Workflows（[公式ブログ](https://github.blog/ai-and-ml/autom
 
 | パッケージ種別 | 命名パターン | 例 |
 |---------------|-------------|-----|
-| ループ基盤 | `common-loop` | `common-loop` |
 | ドメイン固有ループ | `<domain>-loop` | `docs-loop`, `ci-sweeper-loop` |
-
-既存の `go-hooks-claude`（ドメイン + 機能 + ターゲット）と同じ位置に `-loop` を置く。
 
 ## 依存関係
 
-```text
-docs-loop
-  └── depends: common-loop
-
-ci-sweeper-loop
-  └── depends: common-loop
-
-changelog-loop
-  └── depends: common-loop
-```
-
-各 `*-loop` パッケージは `common-loop` のみに依存し、`common` パッケージには依存しない。
-既存の `common` パッケージ内スキル（`docs-updater` 等）とは独立した兄弟関係。
-
-## common-loop（基盤パッケージ）
-
-| コンポーネント | 内容 |
-|-------------|------|
-| `templates/STATE.json.example` | 状態ファイルテンプレート（JSON形式） |
-| `templates/LOOP.md.example` | ループ定義テンプレート（停止条件、budget、denylist） |
-
-State の読み書きは `loop-state-read` / `loop-state-write` composite action がインラインで実行する（外部スクリプト依存なし）。
+各 `*-loop` パッケージは自己完結（他パッケージへの依存なし）。
+APM パッケージは Skill のみ提供し、Workflow/Action は配布しない。
 
 ## docs-loop（docs更新ループ）
 
 | コンポーネント | 内容 |
 |-------------|------|
-| `.apm/skills/loop-docs-triage/SKILL.md` | range diffからdocs影響を判定し、L2ではドキュメント編集も実行するスキル |
+| `.apm/skills/loop-docs-triage/SKILL.md` | triage findings に基づきドキュメント編集を行うスキル |
+| `eval.yaml` + `evals/tasks/` | waza 評価スイート |
 
 ## 共通 Actions（`.github/actions/`）
 
 | Action | 内容 |
 |--------|------|
-| `loop-state-read` | checkout + state JSON read（outputs: last_sha, current_sha） |
-| `loop-state-write` | checkout + state JSON write + commit/push |
+| `loop-agent-run` | 全エンジン統一の agent 実行（install + run）。Claude は action 内蔵、CLI は npx |
+| `loop-finalize` | PR 作成 / branch 削除 / state 更新を一括実行 |
 | `loop-prompt-generate` | skill_name + context → prompt テキスト生成 |
-| `loop-worktree-setup` | L2用: 隔離 worktree + branch 作成 |
-| `loop-worktree-push` | L2用: worktree の変更を commit/push + cleanup |
+| `loop-state-read` | checkout + state JSON read（outputs: last_sha, current_sha） |
+| `loop-state-write` | state JSON write + commit/push（リトライ付き） |
+| `loop-worktree-setup` | CLI型 L2用: 隔離 worktree + branch 作成 |
+| `loop-worktree-push` | CLI型 L2用: worktree の変更を commit/push + cleanup |
 
 ## 共通 Reusable Workflow
 
@@ -130,22 +108,19 @@ State の読み書きは `loop-state-read` / `loop-state-write` composite action
 ```text
 cron → on-loop-docs-triage.yaml
   detect job:
-    → loop-state-read action              # checkout + 前回SHA取得
-    → detect_changes.sh --scope range     # docs影響検出（loop固有ロジック）
-    → loop-prompt-generate action         # prompt組み立て（L2指示含む）
+    → loop-state-read action              # 前回SHA取得
+    → detect_changes.sh (inline)          # docs影響検出（caller固有）
+    → loop-prompt-generate action         # prompt組み立て
   agent job:
-    → ci-loop-agent.yaml (reusable, L2)   # worktree隔離 + Agent実行
-      → loop-worktree-setup action        # branch作成 + worktree隔離
-      → loop-docs-triage スキル実行       # ドキュメント編集
-      → loop-worktree-push action         # 変更commit + push
+    → ci-loop-agent.yaml (reusable)       # Agent実行
+      → loop-agent-run action             # 全エンジン統一実行
+      (CLI型の場合: worktree-setup → agent → worktree-push)
   verify job:
     → ci-loop-verifier.yaml (reusable)    # Maker-Checker分離
       → denylist チェック                  # パス違反は即REJECT
-      → verifier agent 実行               # 別セッションで検証
+      → loop-agent-run action             # verifier agent 実行
   finalize job:
-    → APPROVE: gh pr create               # PR作成
-    → REJECT: branch削除                   # worktree破棄
-    → loop-state-write action             # state更新
+    → loop-finalize action                # PR作成 or branch削除 + state更新
 ```
 
 ### ワークフローアーキテクチャ図
@@ -158,7 +133,7 @@ flowchart TD
     %% Detect Job
     subgraph detect["detect job"]
         direction TB
-        D1[loop-state-read action] --> D2[detect_changes.sh --scope range]
+        D1[loop-state-read action] --> D2[detect_changes.sh<br/>caller inline]
         D2 --> D3{skip?}
         D3 -->|true| D_END([no-op])
         D3 -->|false| D4[loop-prompt-generate action]
@@ -191,9 +166,9 @@ flowchart TD
 
     subgraph finalize["finalize job"]
         direction TB
-        finalize_approve[gh pr create] --> F_STATE[loop-state-write<br/>outcome: pr-created]
-        finalize_reject[git push --delete branch] --> F_STATE2[loop-state-write<br/>outcome: rejected]
-        finalize_no[loop-state-write<br/>outcome: no-changes]
+        finalize_approve[loop-finalize<br/>PR作成] --> F_STATE[state: pr-created]
+        finalize_reject[loop-finalize<br/>branch削除] --> F_STATE2[state: rejected]
+        finalize_no[loop-finalize<br/>state: no-changes]
     end
 ```
 
@@ -221,11 +196,13 @@ graph LR
 
     %% Composite Actions
     subgraph actions["Composite Actions"]
-        CA1[loop-state-read]
-        CA2[loop-state-write]
+        CA1[loop-agent-run]
+        CA2[loop-finalize]
         CA3[loop-prompt-generate]
-        CA4[loop-worktree-setup<br/>CLI型のみ]
-        CA5[loop-worktree-push<br/>CLI型のみ]
+        CA4[loop-state-read]
+        CA5[loop-state-write]
+        CA6[loop-worktree-setup<br/>CLI型のみ]
+        CA7[loop-worktree-push<br/>CLI型のみ]
     end
 
     %% Skills
@@ -241,16 +218,19 @@ graph LR
     %% Relationships
     CW1 --> RW1
     CW1 --> RW2
-    CW1 --> CA1
     CW1 --> CA2
     CW1 --> CA3
+    CW1 --> CA4
     RW1 --> E1
     RW1 --> E2
-    E2 --> CA4
-    E2 --> CA5
+    RW1 --> CA1
+    RW2 --> CA1
+    E2 --> CA6
+    E2 --> CA7
     RW1 --> SK1
-    CA1 --> ST1
-    CA2 --> ST1
+    CA2 --> CA5
+    CA4 --> ST1
+    CA5 --> ST1
 ```
 
 ## STATE ファイル
@@ -265,7 +245,7 @@ graph LR
   .gitkeep
 ```
 
-- `common-loop` は state の読み書きツールを提供するのみで、自身は状態を持たない
+- State の読み書きは `loop-state-read` / `loop-state-write` action が担当
 - `.gitattributes` で `merge=ours` を設定し、マージ競合を防止
 - 初回は state ファイル不在でも `loop-state-read` がデフォルト値（HEAD~10）を返す
 
