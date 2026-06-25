@@ -103,7 +103,7 @@ cron → on-loop-docs-triage.yaml
       → denylist check                    # path violation = immediate REJECT
       → loop-agent-run action             # verifier agent execution
   finalize job:
-    → loop-finalize action                # create PR or delete branch + update state
+    → loop-finalize action                # create PR (+ auto-merge at L3) or delete branch + update state
 ```
 
 ### Workflow Architecture Diagram
@@ -150,9 +150,8 @@ flowchart TD
     subgraph finalize["finalize job"]
         direction TB
         finalize_approve[loop-finalize<br/>create PR] --> F_AUTO{L3?}
-        F_AUTO -->|yes| F_MERGE[auto-merge enabled]
-        F_AUTO -->|no| F_STATE[state: pr-created]
-        F_MERGE --> F_STATE
+        F_AUTO -->|yes| F_MERGE[enable auto-merge] --> F_STATE[state: pr-created]
+        F_AUTO -->|no| F_STATE
         finalize_reject[loop-finalize<br/>delete branch] --> F_STATE2[state: rejected]
         finalize_no[loop-finalize<br/>state: no-changes]
     end
