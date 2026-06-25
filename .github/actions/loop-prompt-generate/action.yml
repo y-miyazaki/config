@@ -4,15 +4,11 @@ description: "Generate a structured prompt for loop agent execution from skill n
 inputs:
   context:
     default: ""
-    description: "Additional context to include in the prompt (multiline text)"
+    description: "Additional context to include in the prompt (multiline text, e.g. state data, detection results)"
     required: false
   skill_name:
     description: "Name of the skill to invoke (e.g. loop-docs-triage)"
     required: true
-  state_file:
-    default: ""
-    description: "Path to state file (included in context if provided)"
-    required: false
 
 outputs:
   prompt:
@@ -28,17 +24,12 @@ runs:
       env:
         CONTEXT: ${{ inputs.context }}
         SKILL_NAME: ${{ inputs.skill_name }}
-        STATE_FILE: ${{ inputs.state_file }}
       run: |
         set -euo pipefail
         DELIM="PROMPT_DELIM_$(openssl rand -hex 8)"
         {
           echo "prompt<<${DELIM}"
           echo "Run the ${SKILL_NAME} skill."
-          echo ""
-          if [[ -n "${STATE_FILE}" ]]; then
-            echo "State file: ${STATE_FILE}"
-          fi
           if [[ -n "${CONTEXT}" ]]; then
             echo ""
             echo "## Context"

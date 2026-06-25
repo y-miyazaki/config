@@ -94,7 +94,6 @@ jobs:
             Allowed paths: docs/**/*.md, README.md, mkdocs.yml (nav section only).
             Do NOT modify any other files.
           skill_name: ${{ steps.config.outputs.skill_name }}
-          state_file: ${{ env.STATE_FILE }}
 
   agent:
     needs: detect
