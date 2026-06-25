@@ -184,7 +184,7 @@ jobs:
 
       - name: Run Verifier
         if: steps.denylist.outputs.has_violations != 'true'
-        uses: ./.github/actions/loop-agent-run
+        uses: y-miyazaki/config/.github/actions/loop-agent-run@d83036476eb26965baac7cbab152125f1b1985cc # v1.4.6
         with:
           agent_token: ${{ secrets.AGENT_TOKEN }}
           claude_args: "--output-format json"

@@ -51,13 +51,13 @@ jobs:
 
       - name: Read Loop State
         id: state
-        uses: ./.github/actions/loop-state-read
+        uses: y-miyazaki/config/.github/actions/loop-state-read@d83036476eb26965baac7cbab152125f1b1985cc # v1.4.6
         with:
           state_file: ${{ env.STATE_FILE }}
 
       - name: Detect Changes
         id: changes
-        uses: ./.github/actions/loop-detect-docs
+        uses: y-miyazaki/config/.github/actions/loop-detect-docs@d83036476eb26965baac7cbab152125f1b1985cc # v1.4.6
         with:
           current_sha: ${{ steps.state.outputs.current_sha }}
           last_sha: ${{ steps.state.outputs.last_sha }}
@@ -65,7 +65,7 @@ jobs:
       - name: Generate Prompt
         if: steps.changes.outputs.skip == 'false'
         id: prompt
-        uses: ./.github/actions/loop-prompt-generate
+        uses: y-miyazaki/config/.github/actions/loop-prompt-generate@d83036476eb26965baac7cbab152125f1b1985cc # v1.4.6
         with:
           context: |
             Last SHA: ${{ steps.state.outputs.last_sha }}
@@ -85,7 +85,7 @@ jobs:
   agent:
     needs: detect
     if: needs.detect.outputs.skip == 'false'
-    uses: ./.github/workflows/ci-loop-agent.yaml
+    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@d83036476eb26965baac7cbab152125f1b1985cc # v1.4.6
     permissions:
       contents: write
       copilot-requests: write
@@ -101,7 +101,7 @@ jobs:
   verify:
     needs: [detect, agent]
     if: needs.agent.outputs.has_changes == 'true'
-    uses: ./.github/workflows/ci-loop-verifier.yaml
+    uses: y-miyazaki/config/.github/workflows/ci-loop-verifier.yaml@d83036476eb26965baac7cbab152125f1b1985cc # v1.4.6
     permissions:
       contents: read
       copilot-requests: write
@@ -128,7 +128,7 @@ jobs:
           persist-credentials: false
 
       - name: Finalize
-        uses: ./.github/actions/loop-finalize
+        uses: y-miyazaki/config/.github/actions/loop-finalize@d83036476eb26965baac7cbab152125f1b1985cc # v1.4.6
         with:
           auto_merge: ${{ needs.detect.outputs.level == 'L3' && 'true' || 'false' }}
           branch: ${{ needs.agent.outputs.branch }}
