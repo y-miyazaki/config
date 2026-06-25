@@ -60,10 +60,21 @@ jobs:
 
       - name: Detect Changes
         id: changes
-        uses: y-miyazaki/config/.github/actions/loop-detect-docs@d83036476eb26965baac7cbab152125f1b1985cc # v1.4.6
-        with:
-          current_sha: ${{ steps.state.outputs.current_sha }}
-          last_sha: ${{ steps.state.outputs.last_sha }}
+        shell: bash
+        env:
+          LAST_SHA: ${{ steps.state.outputs.last_sha }}
+        run: |
+          set -euo pipefail
+          DETECT_SCRIPT=".claude/skills/docs-updater/scripts/detect_changes.sh"
+          RESULT=$(bash "${DETECT_SCRIPT}" --scope range --since "${LAST_SHA}")
+          SKIP=$(echo "${RESULT}" | jq -r '.skip // "true"')
+          DELIM="RESULT_$(openssl rand -hex 8)"
+          {
+            echo "skip=${SKIP}"
+            echo "result<<${DELIM}"
+            echo "${RESULT}"
+            echo "${DELIM}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Generate Prompt
         if: steps.changes.outputs.skip == 'false'

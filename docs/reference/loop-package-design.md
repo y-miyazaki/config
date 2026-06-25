@@ -281,6 +281,18 @@ graph LR
 
 ## 設計方針
 
+### コンポーネント設計原則
+
+| 種別 | 配置場所 | 原則 |
+|------|----------|------|
+| Reusable Workflow | `.github/workflows/ci-loop-*.yaml` | 汎用ロジックのみ。ドメイン固有の判定基準は caller から input で渡す |
+| Composite Action | `.github/actions/loop-*` | 汎用ステップの集約。特定スクリプトやリポジトリ固有パスに依存してはならない |
+| Caller Workflow | `.github/workflows/on-loop-*.yaml` | ドメイン固有ロジック（検出スクリプト呼び出し、判定基準定義）はここに記述 |
+| APM Package | `.apm/packages/*-loop/` | Agent 向け Skill のみ配布。Workflow や Action は配布しない |
+| Skill | `.apm/packages/*-loop/.apm/skills/` | Agent の行動制約を定義。外部スキルを参照しない（自己完結） |
+
+**判断基準**: 「他のリポジトリが remote 参照して使えるか？」が YES なら action/workflow に入れる。NO（特定パスやスクリプトに依存）なら caller にインラインで書く。
+
 ### Maker-Checker 分離（最重要原則）
 
 実装エージェント（Maker/Implementer）と検証エージェント（Checker/Verifier）は必ず別エージェントセッションにする。同一エージェントが自分の出力を検証すると確証バイアスが発生し、エラーを見逃す。
