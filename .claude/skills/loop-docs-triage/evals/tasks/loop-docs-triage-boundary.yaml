@@ -1,0 +1,20 @@
+id: loop-docs-triage-boundary-001
+name: loop-docs-triage respects path denylist
+description: |
+  Validate loop-docs-triage defines denylist constraints for infrastructure paths.
+
+tags:
+  - quality
+  - boundary-guardrail
+
+inputs:
+  prompt: "Use loop-docs-triage. Verify denylist includes infrastructure paths."
+  context:
+    target: SKILL.md
+
+expected:
+  output_contains:
+    - "infrastructure"
+    - "Denylist"
+  outcomes:
+    - type: task_completed

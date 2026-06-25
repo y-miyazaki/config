@@ -22,20 +22,28 @@
 # - diff (for --check mode)
 #######################################
 
+# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
 
+# Secure defaults
 umask 027
 export LC_ALL=C.UTF-8
 
+# Get script directory for library loading
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export SCRIPT_DIR
+
+# Load all-in-one library
+# shellcheck source=../lib/all.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../lib/all.sh"
 
 #######################################
 # Global variables
 #######################################
 CHECK_MODE="false"
-SOURCE_LIB="${SCRIPT_DIR}/lib"
-PACKAGES_DIR="${SCRIPT_DIR}/../.apm/packages"
+SOURCE_LIB="${SCRIPT_DIR}/../lib"
+PACKAGES_DIR="${SCRIPT_DIR}/../../.apm/packages"
 DRIFT_COUNT=0
 SYNC_COUNT=0
 

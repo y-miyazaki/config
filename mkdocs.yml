@@ -29,13 +29,20 @@ markdown_extensions:
   - md_in_html
   - mdx_truly_sane_lists
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - toc:
       permalink: true
       separator: "-"
       slugify: !!python/object/apply:pymdownx.slugs.slugify
         kwds:
           case: lower
+
+extra_javascript:
+  - https://unpkg.com/mermaid@11/dist/mermaid.min.js
 
 plugins:
   - search
@@ -51,6 +58,7 @@ nav:
       - Troubleshooting: how-to/troubleshooting.md
   - Reference:
       - Specification: reference/specification.md
+      - Loop Package Design: reference/loop-package-design.md
   - Explanation:
       - Architecture: explanation/architecture.md
       - Instructions Sync Workflow: explanation/instructions-sync-workflow.md
@@ -71,6 +79,7 @@ nav:
           - Harness Engineering - Go: report/governance/harness-engineering-go.md
           - Harness Engineering - Terraform: report/governance/harness-engineering-terraform.md
           - Linter Review Boundary: report/governance/linter-review-boundary.md
+          - Loop Engineering: report/governance/loop-engineering.md
       - Tool Comparison:
           - Evaluation Rules: report/tool-comparison/tool-comparison-evaluation-rules.md
           - AI Agent: report/tool-comparison/tool-comparison-matrix-ai-agent.md

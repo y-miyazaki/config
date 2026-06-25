@@ -47,6 +47,7 @@ dependencies:
     # - ./.apm/packages/terraform-hooks-copilot
     # - ./.apm/packages/terraform-hooks-cursor
     # - ./.apm/packages/terraform-aws
+    - ./.apm/packages/docs-loop
   mcp: []
 
 scripts:

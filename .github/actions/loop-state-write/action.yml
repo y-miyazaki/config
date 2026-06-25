@@ -1,0 +1,83 @@
+name: loop-state-write
+description: "Write loop state JSON and commit/push. Supports main branch (default) or memory branch (future)."
+
+inputs:
+  branch:
+    default: ""
+    description: "Target branch for state commit (empty = current/default branch)"
+    required: false
+  outcome:
+    description: "Run outcome (no-op|report-only|pr-created|rejected|escalated)"
+    required: true
+  sha:
+    description: "Commit SHA to record in state"
+    required: true
+  state_file:
+    description: "Path to state JSON file (e.g. .loop/state-docs-triage.json)"
+    required: true
+  token:
+    description: "GitHub token for push"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout Code
+      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      with:
+        fetch-depth: 1
+        persist-credentials: false
+
+    - name: Configure Git Auth
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      run: |
+        set -euo pipefail
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 -w0)"
+
+    - name: Switch Branch
+      if: inputs.branch != ''
+      shell: bash
+      env:
+        BRANCH: ${{ inputs.branch }}
+      run: |
+        set -euo pipefail
+        if ! [[ "${BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+          echo "::error::Invalid branch name: ${BRANCH}"
+          exit 1
+        fi
+        git checkout -B "${BRANCH}" 2>/dev/null || git checkout "${BRANCH}"
+
+    - name: Write State
+      shell: bash
+      env:
+        OUTCOME: ${{ inputs.outcome }}
+        SHA: ${{ inputs.sha }}
+        STATE_FILE: ${{ inputs.state_file }}
+      run: |
+        set -euo pipefail
+        mkdir -p "$(dirname "${STATE_FILE}")"
+        jq -n \
+          --arg sha "${SHA}" \
+          --arg last_run "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+          --arg outcome "${OUTCOME}" \
+          '{last_sha: $sha, last_run: $last_run, outcome: $outcome}' \
+          > "${STATE_FILE}"
+
+    - name: Commit and Push
+      shell: bash
+      env:
+        STATE_FILE: ${{ inputs.state_file }}
+      run: |
+        set -euo pipefail
+        # Detect both tracked changes and new untracked state file
+        if git diff --quiet "${STATE_FILE}" 2>/dev/null && [[ -z "$(git status --porcelain "${STATE_FILE}")" ]]; then
+          echo "No state changes to commit."
+          exit 0
+        fi
+        git add "${STATE_FILE}"
+        git commit -m "chore(loop): update state [skip ci]"
+        git push origin HEAD

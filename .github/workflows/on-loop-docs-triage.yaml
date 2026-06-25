@@ -1,0 +1,150 @@
+# Loop workflow: Documentation triage
+# Detects doc-impacting changes, delegates agent execution for edits,
+# verifies changes via separate agent session, then creates PR on approval.
+name: on-loop-docs-triage
+
+on:
+  schedule:
+    - cron: "0 9 * * 1-5"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  copilot-requests: write
+  pull-requests: write
+
+concurrency:
+  cancel-in-progress: true
+  group: loop-docs-triage
+
+env:
+  DEFAULT_ENGINE: claude
+  DEFAULT_LEVEL: L2
+  SKILL_NAME: loop-docs-triage
+  STATE_FILE: .loop/state-docs-triage.json
+
+jobs:
+  detect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      current_sha: ${{ steps.state.outputs.current_sha }}
+      engine: ${{ steps.config.outputs.engine }}
+      last_sha: ${{ steps.state.outputs.last_sha }}
+      level: ${{ steps.config.outputs.level }}
+      prompt: ${{ steps.prompt.outputs.prompt }}
+      skill_name: ${{ steps.config.outputs.skill_name }}
+      skip: ${{ steps.changes.outputs.skip }}
+    steps:
+      - name: Set Config Outputs
+        id: config
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "engine=${DEFAULT_ENGINE}"
+            echo "level=${DEFAULT_LEVEL}"
+            echo "skill_name=${SKILL_NAME}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Read Loop State
+        id: state
+        uses: ./.github/actions/loop-state-read
+        with:
+          state_file: ${{ env.STATE_FILE }}
+
+      - name: Detect Changes
+        id: changes
+        uses: ./.github/actions/loop-detect-docs
+        with:
+          current_sha: ${{ steps.state.outputs.current_sha }}
+          last_sha: ${{ steps.state.outputs.last_sha }}
+
+      - name: Generate Prompt
+        if: steps.changes.outputs.skip == 'false'
+        id: prompt
+        uses: ./.github/actions/loop-prompt-generate
+        with:
+          context: |
+            Last SHA: ${{ steps.state.outputs.last_sha }}
+            Current SHA: ${{ steps.state.outputs.current_sha }}
+
+            ## Change Detection Result
+            ${{ steps.changes.outputs.result }}
+
+            ## Instructions
+            You are operating at ${{ steps.config.outputs.level }} level.
+            Edit documentation files directly to address the triage findings.
+            Allowed paths: docs/**/*.md, README.md, mkdocs.yml (nav section only).
+            Do NOT modify any other files.
+          skill_name: ${{ steps.config.outputs.skill_name }}
+          state_file: ${{ env.STATE_FILE }}
+
+  agent:
+    needs: detect
+    if: needs.detect.outputs.skip == 'false'
+    uses: ./.github/workflows/ci-loop-agent.yaml
+    permissions:
+      contents: write
+      copilot-requests: write
+    with:
+      engine: ${{ needs.detect.outputs.engine }}
+      level: ${{ needs.detect.outputs.level }}
+      prompt_text: ${{ needs.detect.outputs.prompt }}
+      skill_name: ${{ needs.detect.outputs.skill_name }}
+    secrets:
+      AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+      GH_TOKEN_PUSH: ${{ secrets.GITHUB_TOKEN }}
+
+  verify:
+    needs: [detect, agent]
+    if: needs.agent.outputs.has_changes == 'true'
+    uses: ./.github/workflows/ci-loop-verifier.yaml
+    permissions:
+      contents: read
+      copilot-requests: write
+    with:
+      branch: ${{ needs.agent.outputs.branch }}
+      denylist: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
+      engine: ${{ needs.detect.outputs.engine }}
+      skill_name: ${{ needs.detect.outputs.skill_name }}
+    secrets:
+      AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+
+  finalize:
+    needs: [detect, agent, verify]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - name: Finalize
+        uses: ./.github/actions/loop-finalize
+        with:
+          auto_merge: ${{ needs.detect.outputs.level == 'L3' && 'true' || 'false' }}
+          branch: ${{ needs.agent.outputs.branch }}
+          current_sha: ${{ needs.detect.outputs.current_sha }}
+          has_changes: ${{ needs.agent.outputs.has_changes }}
+          pr_body: |
+            ## Summary
+
+            Automated documentation update by `loop-docs-triage` (${{ needs.detect.outputs.level }}).
+
+            - Commits scanned: `${{ needs.detect.outputs.last_sha }}..${{ needs.detect.outputs.current_sha }}`
+            - Verifier verdict: APPROVE
+
+            ---
+            *This PR was created by a loop automation. Review before merging.*
+          pr_title: "docs: automated documentation update (loop-docs-triage)"
+          state_file: ${{ env.STATE_FILE }}
+          token: ${{ github.token }}
+          verdict: ${{ needs.verify.outputs.verdict }}

@@ -1,0 +1,132 @@
+name: loop-finalize
+description: "Finalize a loop run: create PR on approval, delete branch on rejection, update state."
+
+inputs:
+  auto_merge:
+    default: "false"
+    description: "Enable auto-merge on created PR (L3 only). Requires branch protection rules."
+    required: false
+  branch:
+    default: ""
+    description: "Branch created by agent (empty if no changes)"
+    required: false
+  current_sha:
+    description: "Current HEAD SHA for state update"
+    required: true
+  has_changes:
+    default: "false"
+    description: "Whether agent produced changes"
+    required: false
+  labels:
+    default: "loop-automation"
+    description: "Comma-separated labels for the PR"
+    required: false
+  pr_body:
+    default: ""
+    description: "PR body text (markdown)"
+    required: false
+  pr_title:
+    default: "chore: automated update (loop)"
+    description: "PR title"
+    required: false
+  state_file:
+    description: "Path to state JSON file"
+    required: true
+  token:
+    description: "GitHub token for PR creation and state push"
+    required: true
+  verdict:
+    default: ""
+    description: "Verifier verdict (APPROVE or REJECT, empty if no verification)"
+    required: false
+
+outputs:
+  outcome:
+    description: "Final outcome written to state"
+    value: ${{ steps.outcome.outputs.value }}
+  pr_url:
+    description: "URL of created PR (empty if not created)"
+    value: ${{ steps.pr.outputs.url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Determine Outcome
+      id: outcome
+      shell: bash
+      env:
+        HAS_CHANGES: ${{ inputs.has_changes }}
+        VERDICT: ${{ inputs.verdict }}
+      run: |
+        set -euo pipefail
+        if [[ "${HAS_CHANGES}" != "true" ]]; then
+          echo "value=no-changes" >> "$GITHUB_OUTPUT"
+        elif [[ "${VERDICT}" == "APPROVE" ]]; then
+          echo "value=pr-created" >> "$GITHUB_OUTPUT"
+        elif [[ "${VERDICT}" == "REJECT" ]]; then
+          echo "value=rejected" >> "$GITHUB_OUTPUT"
+        else
+          echo "value=no-op" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Create PR
+      id: pr
+      if: inputs.verdict == 'APPROVE' && inputs.branch != ''
+      shell: bash
+      env:
+        BRANCH: ${{ inputs.branch }}
+        GH_TOKEN: ${{ inputs.token }}
+        LABELS: ${{ inputs.labels }}
+        PR_BODY: ${{ inputs.pr_body }}
+        PR_TITLE: ${{ inputs.pr_title }}
+      run: |
+        set -euo pipefail
+        ARGS=(
+          --repo "${GITHUB_REPOSITORY}"
+          --base main
+          --head "${BRANCH}"
+          --title "${PR_TITLE}"
+        )
+        if [[ -n "${PR_BODY}" ]]; then
+          ARGS+=(--body "${PR_BODY}")
+        fi
+        if [[ -n "${LABELS}" ]]; then
+          ARGS+=(--label "${LABELS}")
+        fi
+        URL=$(gh pr create "${ARGS[@]}")
+        echo "url=${URL}" >> "$GITHUB_OUTPUT"
+
+    - name: Enable Auto-Merge
+      if: inputs.verdict == 'APPROVE' && inputs.branch != '' && inputs.auto_merge == 'true'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        PR_URL: ${{ steps.pr.outputs.url }}
+      run: |
+        set -euo pipefail
+        if [[ -n "${PR_URL}" ]]; then
+          gh pr merge "${PR_URL}" --auto --squash
+        fi
+
+    - name: Delete Branch on Rejection
+      if: inputs.verdict == 'REJECT' && inputs.branch != ''
+      shell: bash
+      env:
+        BRANCH: ${{ inputs.branch }}
+        GH_TOKEN: ${{ inputs.token }}
+      run: |
+        set -euo pipefail
+        if ! [[ "${BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+          echo "::error::Invalid branch name: ${BRANCH}"
+          exit 1
+        fi
+        git push origin --delete "${BRANCH}" 2>/dev/null || true
+
+    - name: Write State
+      if: inputs.current_sha != ''
+      uses: ./.github/actions/loop-state-write
+      with:
+        outcome: ${{ steps.outcome.outputs.value }}
+        sha: ${{ inputs.current_sha }}
+        state_file: ${{ inputs.state_file }}
+        token: ${{ inputs.token }}

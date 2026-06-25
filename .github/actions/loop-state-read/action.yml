@@ -1,0 +1,44 @@
+name: loop-state-read
+description: "Checkout repository and read loop state JSON. Outputs last_sha and current_sha."
+
+inputs:
+  state_file:
+    description: "Path to state JSON file (e.g. .loop/state-docs-triage.json)"
+    required: true
+
+outputs:
+  current_sha:
+    description: "Current HEAD commit SHA"
+    value: ${{ steps.read.outputs.current_sha }}
+  last_sha:
+    description: "Last processed SHA from state file (or first commit if missing)"
+    value: ${{ steps.read.outputs.last_sha }}
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout Code
+      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      with:
+        fetch-depth: 0
+        persist-credentials: false
+
+    - name: Read State
+      id: read
+      shell: bash
+      env:
+        STATE_FILE: ${{ inputs.state_file }}
+      run: |
+        set -euo pipefail
+        LAST_SHA=""
+        if [[ -f "${STATE_FILE}" ]]; then
+          LAST_SHA=$(jq -r '.last_sha // empty' "${STATE_FILE}")
+        fi
+        if [[ -z "${LAST_SHA}" ]]; then
+          # Fallback: use root commit or HEAD~10, whichever is reachable
+          LAST_SHA=$(git rev-parse --verify HEAD~10 2>/dev/null || git rev-list --max-parents=0 HEAD | head -1)
+        fi
+        {
+          echo "last_sha=${LAST_SHA}"
+          echo "current_sha=$(git rev-parse HEAD)"
+        } >> "$GITHUB_OUTPUT"

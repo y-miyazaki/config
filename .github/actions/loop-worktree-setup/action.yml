@@ -1,0 +1,56 @@
+name: loop-worktree-setup
+description: "Create an isolated git worktree branch for loop agent modifications."
+
+inputs:
+  branch_prefix:
+    default: "loop"
+    description: "Branch name prefix (result: <prefix>/<skill>/<date>)"
+    required: false
+  skill_name:
+    description: "Skill name used in branch naming"
+    required: true
+  token:
+    description: "GitHub token for push"
+    required: true
+
+outputs:
+  branch:
+    description: "Created branch name"
+    value: ${{ steps.setup.outputs.branch }}
+  worktree_path:
+    description: "Absolute path to the worktree"
+    value: ${{ steps.setup.outputs.worktree_path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Worktree
+      id: setup
+      shell: bash
+      env:
+        BRANCH_PREFIX: ${{ inputs.branch_prefix }}
+        GH_TOKEN: ${{ inputs.token }}
+        SKILL_NAME: ${{ inputs.skill_name }}
+      run: |
+        set -euo pipefail
+        DATE=$(date -u +%Y%m%d-%H%M%S)
+        BRANCH="${BRANCH_PREFIX}/${SKILL_NAME}/${DATE}"
+
+        # Validate constructed branch name
+        if ! [[ "${BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+          echo "::error::Invalid branch name: ${BRANCH}"
+          exit 1
+        fi
+
+        WORKTREE_PATH="${RUNNER_TEMP}/worktree-${SKILL_NAME}"
+
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 -w0)"
+
+        git worktree add -b "${BRANCH}" "${WORKTREE_PATH}" HEAD
+
+        {
+          echo "branch=${BRANCH}"
+          echo "worktree_path=${WORKTREE_PATH}"
+        } >> "$GITHUB_OUTPUT"

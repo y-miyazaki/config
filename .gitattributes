@@ -69,3 +69,6 @@ apm_modules/** linguist-vendored=true
 test/** linguist-detectable=false
 tmp/** linguist-detectable=false
 output/** linguist-generated=true
+
+# Loop state files: main branch always wins on merge
+.loop/*.json merge=ours

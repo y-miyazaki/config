@@ -1,5 +1,5 @@
 ---
-applyTo: ".github/workflows/**/*.yaml,.github/workflows/**/*.yml"
+applyTo: ".github/workflows/**/*.yaml,.github/workflows/**/*.yml,.github/actions/**/action.yml"
 description: "AI Assistant Instructions for GitHub Actions Workflows"
 ---
 
@@ -7,7 +7,7 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
 
 ## Scope
 
-- Scope is limited to designing, updating, and validating `.github/workflows/*.yml|yaml` files.
+- Scope is limited to designing, updating, and validating `.github/workflows/*.yml|yaml` and `.github/actions/*/action.yml` files.
 
 ## Standards
 
@@ -83,7 +83,7 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
 - SEC-03 (SHOULD): Log Masking for Sensitive Information
   - Check: Are sensitive values masked with `::add-mask::` or `core.setSecret()`?
 - SEC-04 (SHOULD): Sanitize Environment Variables
-  - Check: Are environment variable inputs validated and sanitized?
+  - Check: Are untrusted environment variable inputs (PR titles/bodies, issue comments, branch names, user-controlled workflow_dispatch inputs) validated and sanitized? Internally generated values from prior controlled steps are trusted.
 - SEC-05 (SHOULD): Guardrails for Public Repositories
   - Check: Do public repositories have conditional branches like `github.event.repository.private`?
 

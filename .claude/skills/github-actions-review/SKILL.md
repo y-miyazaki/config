@@ -11,7 +11,7 @@ metadata:
 
 ## Input
 
-- Workflow YAML + PR context (required)
+- Workflow YAML and/or composite action YAML (`action.yml`) + PR context (required)
 
 ## Output Specification
 

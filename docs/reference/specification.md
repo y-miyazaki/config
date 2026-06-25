@@ -62,6 +62,8 @@ The repository structure is function-oriented.
   - `go-hooks-claude/`, `go-hooks-copilot/`, `go-hooks-cursor/`: target-specific Go hooks
   - `shell-script/`: Shell script development (hook + instruction + skills)
   - `shell-script-hooks-claude/`, `shell-script-hooks-copilot/`, `shell-script-hooks-cursor/`: target-specific shell script hooks
+  - `common-loop/`: Loop Engineering foundation (state management + change detection)
+  - `docs-loop/`: Documentation update loop (skill + depends: common-loop)
 - `apm.yml`: APM package metadata and dependency entry point
 - `apm.lock.yaml`: lock file for deterministic APM resolution
 - `apm_modules/`: locally materialized module content
@@ -117,7 +119,14 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 │       └── skills/        # 2 skills
 ├── shell-script-hooks-claude/  # Shell script hooks for Claude Code (2 hooks)
 ├── shell-script-hooks-copilot/ # Shell script hooks for GitHub Copilot CLI (2 hooks)
-└── shell-script-hooks-cursor/  # Shell script hooks for Cursor (2 hooks)
+├── shell-script-hooks-cursor/  # Shell script hooks for Cursor (2 hooks)
+├── common-loop/         # Loop Engineering foundation
+│   ├── apm.yml
+│   └── templates/       # STATE.json.example, LOOP.md.example
+└── docs-loop/           # Documentation update loop
+    ├── apm.yml          # depends: common-loop
+    └── .apm/
+        └── skills/      # 1 skill (loop-docs-triage)
 ```
 
 ### Distribution Behavior
@@ -215,6 +224,7 @@ Skills are defined under each package's `.apm/skills/` directory. Each skill con
 | terraform    | terraform-validation      |
 | shell-script | shell-script-review       |
 | shell-script | shell-script-validation   |
+| docs-loop    | loop-docs-triage          |
 
 ### Instructions
 
@@ -282,6 +292,27 @@ The repository must provide reusable workflows.
 ### Scope
 
 - `.github/workflows/`: reusable workflows and caller workflows
+- `.github/actions/`: composite actions for shared step logic
+
+### Loop Engineering Workflows
+
+| Workflow | Type | Purpose |
+|----------|------|---------|
+| `ci-loop-agent.yaml` | Reusable | Engine-agnostic agent invocation (Claude / Copilot / Codex). L1/L2 support |
+| `ci-loop-verifier.yaml` | Reusable | Maker-Checker verification with denylist enforcement |
+| `on-loop-docs-triage.yaml` | Caller | Cron-driven documentation triage (L2) |
+
+### Loop Engineering Actions
+
+| Action | Purpose |
+|--------|---------|
+| `loop-agent-run` | Unified agent execution (install + cache + run) for all engines |
+| `loop-finalize` | PR creation, branch cleanup, and state write |
+| `loop-prompt-generate` | Generate structured prompt from skill name and context |
+| `loop-state-read` | Checkout + read loop state JSON, output last_sha/current_sha |
+| `loop-state-write` | Write state JSON + commit/push |
+| `loop-worktree-setup` | Create isolated worktree + branch (CLI engines, L2) |
+| `loop-worktree-push` | Commit/push worktree changes + cleanup (CLI engines, L2) |
 
 ## Renovate
 

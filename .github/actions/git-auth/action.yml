@@ -1,5 +1,5 @@
 name: git-auth
-description: "Configure and clear ephemeral git authentication for actions using url.insteadOf."
+description: "Configure and clear ephemeral git authentication using http.extraheader (same pattern as actions/checkout)."
 author: "GitHub Copilot"
 inputs:
   operation:
@@ -12,22 +12,28 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Configure git auth (url.insteadOf)
-      if: ${{ inputs.operation == 'configure' }}
+    - name: Validate git repo
       shell: bash
-      env:
-        GITHUB_TOKEN: ${{ inputs.token }}
       run: |
         set -euo pipefail
-        echo "Configuring url.insteadOf for github.com"
-        git config --local url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+        if ! git rev-parse --git-dir > /dev/null 2>&1; then
+          echo "::error::Not inside a git repository. Run actions/checkout first."
+          exit 1
+        fi
 
-    - name: Clear git auth (url.insteadOf)
-      if: ${{ inputs.operation == 'clear' }}
+    - name: Configure git auth (http.extraheader)
+      if: inputs.operation == 'configure'
       shell: bash
       env:
-        GITHUB_TOKEN: ${{ inputs.token }}
+        GH_TOKEN: ${{ inputs.token }}
       run: |
         set -euo pipefail
-        echo "Clearing url.insteadOf for github.com"
-        git config --local --unset url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf || true
+        BASIC_CRED=$(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 -w0)
+        git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ${BASIC_CRED}"
+
+    - name: Clear git auth (http.extraheader)
+      if: inputs.operation == 'clear'
+      shell: bash
+      run: |
+        set -euo pipefail
+        git config --local --unset-all http.https://github.com/.extraheader 2>/dev/null || true

@@ -1,0 +1,19 @@
+id: loop-docs-triage-noaction-001
+name: loop-docs-triage handles empty findings
+description: |
+  Validate loop-docs-triage defines behavior for no actionable items.
+
+tags:
+  - quality
+  - edge-case
+
+inputs:
+  prompt: "Use loop-docs-triage. Verify skill handles empty findings."
+  context:
+    target: SKILL.md
+
+expected:
+  output_contains:
+    - "no actionable items"
+  outcomes:
+    - type: task_completed
