@@ -58,10 +58,10 @@ nav:
       - Troubleshooting: how-to/troubleshooting.md
   - Reference:
       - Specification: reference/specification.md
-      - Loop Engineering Design: reference/loop-engineering-design.md
   - Explanation:
       - Architecture: explanation/architecture.md
       - Instructions Sync Workflow: explanation/instructions-sync-workflow.md
+      - Loop Engineering Design: explanation/loop-engineering-design.md
   - Report:
       - AWS Service Comparison:
           - Index: report/aws/service-comparison/index.md
