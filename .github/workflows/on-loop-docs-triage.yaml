@@ -67,7 +67,7 @@ jobs:
           set -euo pipefail
           DETECT_SCRIPT=".claude/skills/docs-updater/scripts/detect_changes.sh"
           RESULT=$(bash "${DETECT_SCRIPT}" --scope range --since "${LAST_SHA}")
-          SKIP=$(echo "${RESULT}" | jq -r '.skip // "true"')
+          SKIP=$(echo "${RESULT}" | jq -r '.skip // "true"' 2>/dev/null || echo "true")
           DELIM="RESULT_$(openssl rand -hex 8)"
           {
             echo "skip=${SKIP}"

@@ -32,7 +32,7 @@ runs:
         set -euo pipefail
         LAST_SHA=""
         if [[ -f "${STATE_FILE}" ]]; then
-          LAST_SHA=$(jq -r '.last_sha // empty' "${STATE_FILE}")
+          LAST_SHA=$(jq -r '.last_sha // empty' "${STATE_FILE}" 2>/dev/null || true)
         fi
         if [[ -z "${LAST_SHA}" ]]; then
           # Fallback: use root commit or HEAD~10, whichever is reachable
