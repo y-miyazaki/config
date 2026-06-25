@@ -10,6 +10,10 @@ inputs:
     default: "success"
     description: "Result of the agent job (success/failure/cancelled/skipped)"
     required: false
+  base_branch:
+    default: "main"
+    description: "Base branch for PR target (e.g. main, master)"
+    required: false
   branch:
     default: ""
     description: "Branch created by agent (empty if no changes)"
@@ -81,6 +85,7 @@ runs:
       if: inputs.verdict == 'APPROVE' && inputs.branch != ''
       shell: bash
       env:
+        BASE_BRANCH: ${{ inputs.base_branch }}
         BRANCH: ${{ inputs.branch }}
         GH_TOKEN: ${{ inputs.token }}
         LABELS: ${{ inputs.labels }}
@@ -90,7 +95,7 @@ runs:
         set -euo pipefail
         ARGS=(
           --repo "${GITHUB_REPOSITORY}"
-          --base main
+          --base "${BASE_BRANCH}"
           --head "${BRANCH}"
           --title "${PR_TITLE}"
         )

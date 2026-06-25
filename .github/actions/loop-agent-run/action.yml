@@ -1,5 +1,5 @@
 name: loop-agent-run
-description: "Run an AI agent (claude/copilot/codex) with a prompt. Handles install, caching, and execution."
+description: "Run an AI agent (claude/copilot/codex) with a prompt. Handles install and execution."
 
 inputs:
   agent_token:
@@ -49,7 +49,7 @@ runs:
       if: inputs.engine != 'claude'
       uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
 
-    - name: Resolve CLI Package Info
+    - name: Resolve CLI Version
       if: inputs.engine != 'claude'
       id: pkg
       shell: bash
@@ -67,59 +67,24 @@ runs:
             ;;
         esac
         if [[ "${CLI_VERSION}" == "latest" ]]; then
-          RESOLVED=$(npm view "${PKG}" version 2>/dev/null || echo "latest")
+          RESOLVED=$(npm view "${PKG}" version)
         else
           RESOLVED="${CLI_VERSION}"
         fi
-        NPM_GLOBAL_PREFIX=$(npm config get prefix)
         {
           echo "package=${PKG}"
           echo "version=${RESOLVED}"
-          echo "prefix=${NPM_GLOBAL_PREFIX}"
         } >> "$GITHUB_OUTPUT"
 
-    - name: Cache CLI
-      if: inputs.engine != 'claude'
-      id: cache
-      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
-      with:
-        key: loop-cli-${{ inputs.engine }}-${{ steps.pkg.outputs.version }}
-        path: ${{ steps.pkg.outputs.prefix }}/lib/node_modules
-
     - name: Install CLI
-      if: inputs.engine != 'claude' && steps.cache.outputs.cache-hit != 'true'
+      if: inputs.engine != 'claude'
       shell: bash
       env:
         CLI_VERSION: ${{ steps.pkg.outputs.version }}
         PACKAGE: ${{ steps.pkg.outputs.package }}
       run: |
         set -euo pipefail
-        npm install -g "${PACKAGE}@${CLI_VERSION}"
-
-    - name: Link CLI Binary
-      if: inputs.engine != 'claude' && steps.cache.outputs.cache-hit == 'true'
-      shell: bash
-      env:
-        ENGINE: ${{ inputs.engine }}
-        PREFIX: ${{ steps.pkg.outputs.prefix }}
-      run: |
-        set -euo pipefail
-        case "${ENGINE}" in
-          copilot) npm link -g "${PREFIX}/lib/node_modules/@github/copilot" ;;
-          codex)   npm link -g "${PREFIX}/lib/node_modules/@openai/codex" ;;
-        esac
-
-    - name: Verify CLI
-      if: inputs.engine != 'claude'
-      shell: bash
-      env:
-        ENGINE: ${{ inputs.engine }}
-      run: |
-        set -euo pipefail
-        case "${ENGINE}" in
-          copilot) copilot --version ;;
-          codex)   codex --version ;;
-        esac
+        npm install "${PACKAGE}@${CLI_VERSION}" --no-save
 
     - name: Run CLI Agent
       if: inputs.engine != 'claude'
@@ -138,17 +103,17 @@ runs:
           copilot) export COPILOT_GITHUB_TOKEN="${AGENT_TOKEN}" ;;
           codex)   export OPENAI_API_KEY="${AGENT_TOKEN}" ;;
         esac
-        # Run
+        # Run via npx
         case "${ENGINE}" in
           copilot)
             ARGS=(-p "${PROMPT}" --no-ask-user)
             if [[ -n "${MAX_TURNS}" ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
             if [[ -n "${MODEL}" ]]; then ARGS+=(--model "${MODEL}"); fi
-            copilot "${ARGS[@]}"
+            npx copilot "${ARGS[@]}"
             ;;
           codex)
             ARGS=(--prompt "${PROMPT}" --auto-approve)
             if [[ -n "${MODEL}" ]]; then ARGS+=(--model "${MODEL}"); fi
-            codex "${ARGS[@]}"
+            npx codex "${ARGS[@]}"
             ;;
         esac

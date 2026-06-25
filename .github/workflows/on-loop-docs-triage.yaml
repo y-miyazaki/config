@@ -154,6 +154,7 @@ jobs:
         with:
           agent_result: ${{ needs.agent.result }}
           auto_merge: ${{ needs.detect.outputs.level == 'L3' }}
+          base_branch: ${{ needs.detect.outputs.base_branch }}
           branch: ${{ needs.agent.outputs.branch }}
           current_sha: ${{ needs.detect.outputs.current_sha }}
           has_changes: ${{ needs.agent.outputs.has_changes }}
