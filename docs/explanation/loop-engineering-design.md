@@ -1,112 +1,106 @@
 # Loop Engineering Design
 
-Loop Engineering の設計思想・アーキテクチャ・設計原則を記述する。
-具体的な仕様（Actions/Workflows 一覧、インターフェース）は [Specification](../reference/specification.md) を参照。
+This document describes the design philosophy, architecture, and design principles of Loop Engineering.
+For concrete specifications (Actions/Workflows list, interfaces), see [Specification](../reference/specification.md).
 
-## 実装状況
+## Implementation Status
 
-| パッケージ | ステータス | レベル |
-|-----------|-----------|--------|
-| `docs-loop` | ✅ 実装済み | L2 (Assisted) |
-| `ci-sweeper-loop` | 未着手 | - |
-| `changelog-loop` | 未着手 | - |
-| `issue-triage-loop` | 未着手 | - |
-| `test-coverage-loop` | 未着手 | - |
-| `stale-pr-loop` | 未着手 | - |
+| Package | Status | Level |
+| `docs-loop` | ✅ Implemented | L2 (Assisted) |
+| `ci-sweeper-loop` | Not started | - |
+| `changelog-loop` | Not started | - |
+| `issue-triage-loop` | Not started | - |
+| `test-coverage-loop` | Not started | - |
+| `stale-pr-loop` | Not started | - |
 
-## ループ候補ロードマップ
+## Loop Candidate Roadmap
 
-GitHub Agentic Workflows（[公式ブログ](https://github.blog/ai-and-ml/automate-repository-tasks-with-github-agentic-workflows/)、[Self-Healing CI 事例](https://pascoal.net/2026/03/12/self-healing-ci-using-gh-aw/)）の設計思想を参考に、以下のループを検討する。
+Referencing the design philosophy of GitHub Agentic Workflows ([official blog](https://github.blog/ai-and-ml/automate-repository-tasks-with-github-agentic-workflows/), [Self-Healing CI case study](https://pascoal.net/2026/03/12/self-healing-ci-using-gh-aw/)), the following loops are under consideration.
 
-### Tier 1（高優先度 — 既存基盤で実装可能）
+### Tier 1 (High Priority — Implementable with Existing Infrastructure)
 
-| ループ | 検出方法 | Agent 動作 | 想定レベル |
-|--------|----------|-----------|-----------|
-| **ci-sweeper** | GitHub API: 失敗した workflow runs を取得 | lint/build エラーの自動修正、PR 作成 | L2 → L3 |
-| **changelog** | git log: conventional commits を解析 | CHANGELOG.md 自動生成/更新 | L2 |
+| Loop | Detection Method | Agent Behavior | Expected Level |
+| **ci-sweeper** | GitHub API: retrieve failed workflow runs | Auto-fix lint/build errors, create PR | L2 → L3 |
+| **changelog** | git log: parse conventional commits | Auto-generate/update CHANGELOG.md | L2 |
 
-### Tier 2（中優先度 — 追加 detect action が必要）
+### Tier 2 (Medium Priority — Additional Detect Action Required)
 
-| ループ | 検出方法 | Agent 動作 | 想定レベル |
-|--------|----------|-----------|-----------|
-| **issue-triage** | GitHub API: ラベルなし issue を取得 | コードベース分析→ラベル付与+コメント | L1 → L2 |
-| **stale-pr** | GitHub API: 7日以上更新なし PR を取得 | レビューコメント or close 提案 | L1 |
-| **test-coverage** | CI artifacts: カバレッジレポート解析 | 不足テストの自動生成、PR 作成 | L2 |
+| Loop | Detection Method | Agent Behavior | Expected Level |
+| **issue-triage** | GitHub API: retrieve unlabeled issues | Codebase analysis → label assignment + comment | L1 → L2 |
+| **stale-pr** | GitHub API: retrieve PRs with no updates for 7+ days | Review comment or close suggestion | L1 |
+| **test-coverage** | CI artifacts: parse coverage reports | Auto-generate missing tests, create PR | L2 |
 
-### Tier 3（低優先度 — 安全策が複雑）
+### Tier 3 (Low Priority — Complex Safety Measures)
 
-| ループ | 検出方法 | Agent 動作 | 想定レベル |
-|--------|----------|-----------|-----------|
-| **dependency-update** | Renovate PR の CI 失敗を検出 | 依存更新による破壊の自動修正 | L2 |
-| **security-advisory** | GitHub Advisory DB: 新規 CVE | 脆弱性対応の PR 作成 | L1 (報告のみ) |
-| **api-docs** | OpenAPI spec 差分検出 | API ドキュメント同期 | L2 |
+| Loop | Detection Method | Agent Behavior | Expected Level |
+| **dependency-update** | Detect CI failures on Renovate PRs | Auto-fix breakage caused by dependency updates | L2 |
+| **security-advisory** | GitHub Advisory DB: new CVEs | Create PR for vulnerability remediation | L1 (report only) |
+| **api-docs** | OpenAPI spec diff detection | API documentation sync | L2 |
 
-### 選定基準
+### Selection Criteria
 
-新ループを追加する際の優先度判定：
+Priority assessment when adding new loops:
 
-1. **ROI**: 手動対応の頻度 × 1回あたりの時間 > ループ構築コスト
-2. **安全性**: allowlist で制限できるファイルスコープか
-3. **検証可能性**: verifier が判断できる明確な基準があるか
-4. **段階的昇格**: L1 で2週間以上安定稼働してから L2 に昇格
+1. **ROI**: Manual handling frequency × time per occurrence > loop construction cost
+2. **Safety**: Is the file scope restrictable via allowlist?
+3. **Verifiability**: Are there clear criteria that a verifier can evaluate?
+4. **Graduated Promotion**: Promote to L2 only after 2+ weeks of stable operation at L1
 
-### 参考資料
+### References
 
-- [GitHub Agentic Workflows 公式](https://docs.github.com/en/copilot/concepts/agents/about-github-agentic-workflows)
+- [GitHub Agentic Workflows Official](https://docs.github.com/en/copilot/concepts/agents/about-github-agentic-workflows)
 - [GitHub Blog: Automate repository tasks](https://github.blog/ai-and-ml/automate-repository-tasks-with-github-agentic-workflows/)
 - [Self-Healing CI with GitHub Agentic Workflows](https://pascoal.net/2026/03/12/self-healing-ci-using-gh-aw/)
 - [Transform Your SDLC with Agentic Workflows](https://colinsalmcorner.com/transform-sdlc-with-agentic-workflows/)
 
-## パッケージ構成
+## Package Structure
 
 ```text
 .apm/packages/
-  docs-loop/             ← docs更新ループ（自己完結）
-  ci-sweeper-loop/       ← 将来: CI失敗修正ループ
-  changelog-loop/        ← 将来: changelog起草ループ
+  docs-loop/             ← docs update loop (self-contained)
+  ci-sweeper-loop/       ← future: CI failure fix loop
+  changelog-loop/        ← future: changelog drafting loop
 ```
 
-## 命名規約
+## Naming Conventions
 
-| パッケージ種別 | 命名パターン | 例 |
-|---------------|-------------|-----|
-| ドメイン固有ループ | `<domain>-loop` | `docs-loop`, `ci-sweeper-loop` |
+| Package Type | Naming Pattern | Example |
+| Domain-specific loop | `<domain>-loop` | `docs-loop`, `ci-sweeper-loop` |
 
-## 依存関係
+## Dependencies
 
-各 `*-loop` パッケージは自己完結（他パッケージへの依存なし）。
-APM パッケージは Skill のみ提供し、Workflow/Action は配布しない。
+Each `*-loop` package is self-contained (no dependencies on other packages).
+APM packages provide Skills only and do not distribute Workflows/Actions.
 
-## docs-loop（docs更新ループ）
+## docs-loop (Docs Update Loop)
 
-| コンポーネント | 内容 |
-|-------------|------|
-| `.apm/skills/loop-docs-triage/SKILL.md` | triage findings に基づきドキュメント編集を行うスキル |
-| `eval.yaml` + `evals/tasks/` | waza 評価スイート |
+| Component | Description |
+| `.apm/skills/loop-docs-triage/SKILL.md` | Skill that performs document editing based on triage findings |
+| `eval.yaml` + `evals/tasks/` | waza evaluation suite |
 
-Actions、Reusable Workflows の一覧は [Specification](../reference/specification.md) を参照。
+For a list of Actions and Reusable Workflows, see [Specification](../reference/specification.md).
 
-## 実行フロー
+## Execution Flow
 
 ```text
 cron → on-loop-docs-triage.yaml
   detect job:
-    → loop-state-read action              # 前回SHA取得
-    → detect_changes.sh (inline)          # docs影響検出（caller固有）
-    → loop-prompt-generate action         # prompt組み立て
+    → loop-state-read action              # retrieve previous SHA
+    → detect_changes.sh (inline)          # detect docs impact (caller-specific)
+    → loop-prompt-generate action         # assemble prompt
   agent job:
-    → ci-loop-agent.yaml (reusable)       # Agent実行
-      → loop-agent-run action             # 全エンジン統一実行
-      (CLI型の場合: worktree-setup → agent → worktree-push)
+    → ci-loop-agent.yaml (reusable)       # Agent execution
+      → loop-agent-run action             # unified execution across all engines
+      (CLI type: worktree-setup → agent → worktree-push)
   verify job:
-    → ci-loop-verifier.yaml (reusable)    # Maker-Checker分離
-      → denylist チェック                  # パス違反は即REJECT
-      → loop-agent-run action             # verifier agent 実行
+    → ci-loop-verifier.yaml (reusable)    # Maker-Checker separation
+      → denylist check                    # path violation = immediate REJECT
+      → loop-agent-run action             # verifier agent execution
   finalize job:
-    → loop-finalize action                # PR作成 or branch削除 + state更新
+    → loop-finalize action                # create PR or delete branch + update state
 ```
 
-### ワークフローアーキテクチャ図
+### Workflow Architecture Diagram
 
 ```mermaid
 flowchart TD
@@ -126,7 +120,7 @@ flowchart TD
     D4 --> agent
     subgraph agent["agent job (ci-loop-agent L2)"]
         direction TB
-        A1[loop-worktree-setup action] --> A2[Agent 実行<br/>loop-docs-triage skill]
+        A1[loop-worktree-setup action] --> A2[Agent execution<br/>loop-docs-triage skill]
         A2 --> A3[loop-worktree-push action]
         A3 --> A4{has_changes?}
     end
@@ -136,9 +130,9 @@ flowchart TD
     A4 -->|false| finalize_no
     subgraph verify["verify job (ci-loop-verifier)"]
         direction TB
-        V1[Denylist チェック] --> V2{violation?}
+        V1[Denylist check] --> V2{violation?}
         V2 -->|yes| V_REJECT([REJECT])
-        V2 -->|no| V3[Verifier Agent 実行<br/>別セッション]
+        V2 -->|no| V3[Verifier Agent execution<br/>separate session]
         V3 --> V4{verdict}
     end
 
@@ -149,20 +143,20 @@ flowchart TD
 
     subgraph finalize["finalize job"]
         direction TB
-        finalize_approve[loop-finalize<br/>PR作成] --> F_STATE[state: pr-created]
-        finalize_reject[loop-finalize<br/>branch削除] --> F_STATE2[state: rejected]
+        finalize_approve[loop-finalize<br/>create PR] --> F_STATE[state: pr-created]
+        finalize_reject[loop-finalize<br/>delete branch] --> F_STATE2[state: rejected]
         finalize_no[loop-finalize<br/>state: no-changes]
     end
 ```
 
-### コンポーネント構成図
+### Component Structure Diagram
 
 ```mermaid
 graph LR
     %% Caller Workflows
     subgraph callers["Caller Workflows"]
         CW1[on-loop-docs-triage.yaml]
-        CW2[on-loop-ci-sweeper.yaml<br/>将来]
+        CW2[on-loop-ci-sweeper.yaml<br/>future]
     end
 
     %% Reusable Workflows
@@ -173,8 +167,8 @@ graph LR
 
     %% Engine Strategies
     subgraph engines["Engine Types"]
-        E1[Action管理型<br/>claude-code-action<br/>branch内蔵]
-        E2[CLI型<br/>copilot / codex<br/>worktree隔離]
+        E1[Action-managed<br/>claude-code-action<br/>branch built-in]
+        E2[CLI type<br/>copilot / codex<br/>worktree isolation]
     end
 
     %% Composite Actions
@@ -184,8 +178,8 @@ graph LR
         CA3[loop-prompt-generate]
         CA4[loop-state-read]
         CA5[loop-state-write]
-        CA6[loop-worktree-setup<br/>CLI型のみ]
-        CA7[loop-worktree-push<br/>CLI型のみ]
+        CA6[loop-worktree-setup<br/>CLI type only]
+        CA7[loop-worktree-push<br/>CLI type only]
     end
 
     %% Skills
@@ -216,138 +210,132 @@ graph LR
     CA5 --> ST1
 ```
 
-## STATE ファイル
+## STATE Files
 
-状態ファイルはループごとに個別に持つ（multi-loop協調原則）。JSON形式。
+State files are maintained individually per loop (multi-loop coordination principle). JSON format.
 
 ```text
 .loop/
-  state-docs-triage.json    ← docs-loop が所有
-  state-ci-sweeper.json     ← 将来: ci-sweeper-loop が所有
-  state-changelog.json      ← 将来: changelog-loop が所有
+  state-docs-triage.json    ← owned by docs-loop
+  state-ci-sweeper.json     ← future: owned by ci-sweeper-loop
+  state-changelog.json      ← future: owned by changelog-loop
   .gitkeep
 ```
 
-- State の読み書きは `loop-state-read` / `loop-state-write` action が担当
-- `.gitattributes` で `merge=ours` を設定し、マージ競合を防止
-- 初回は state ファイル不在でも `loop-state-read` がデフォルト値（HEAD~10）を返す
+- State read/write is handled by `loop-state-read` / `loop-state-write` actions
+- `.gitattributes` is configured with `merge=ours` to prevent merge conflicts
+- On first run, `loop-state-read` returns a default value (HEAD~10) even if the state file does not exist
 
-## L2 昇格要件
+## L2 Promotion Requirements
 
-| 要件 | 対応方針 | ステータス |
-|------|----------|-----------|
-| loop-budget スキル | npm/GitHub Release からキャッシュ付きダウンロード（リポジトリ非依存） | 将来対応 |
-| loop-verifier スキル | 同上 | 将来対応 |
-| Maker-Checker 分離 | ci-loop-verifier.yaml として実装 | ✅ 実装済み |
-| Worktree 隔離 | loop-worktree-setup/push action + ci-loop-agent L2 mode | ✅ 実装済み |
-| Denylist / Allowlist | SKILL.md 内で定義、verifier がチェック | ✅ 実装済み |
+| Requirement | Approach | Status |
+| loop-budget skill | Download from npm/GitHub Release with caching (repository-independent) | Future |
+| loop-verifier skill | Same as above | Future |
+| Maker-Checker separation | Implemented as ci-loop-verifier.yaml | ✅ Implemented |
+| Worktree isolation | loop-worktree-setup/push action + ci-loop-agent L2 mode | ✅ Implemented |
+| Denylist / Allowlist | Defined in SKILL.md, checked by verifier | ✅ Implemented |
 
-## 設計方針
+## Design Principles
 
-### コンポーネント設計原則
+### Component Design Principles
 
-| 種別 | 配置場所 | 原則 |
-|------|----------|------|
-| Reusable Workflow | `.github/workflows/ci-loop-*.yaml` | 汎用ロジックのみ。ドメイン固有の判定基準は caller から input で渡す |
-| Composite Action | `.github/actions/loop-*` | 汎用ステップの集約。特定スクリプトやリポジトリ固有パスに依存してはならない |
-| Caller Workflow | `.github/workflows/on-loop-*.yaml` | ドメイン固有ロジック（検出スクリプト呼び出し、判定基準定義）はここに記述 |
-| APM Package | `.apm/packages/*-loop/` | Agent 向け Skill のみ配布。Workflow や Action は配布しない |
-| Skill | `.apm/packages/*-loop/.apm/skills/` | Agent の行動制約を定義。外部スキルを参照しない（自己完結） |
+| Type | Location | Principle |
+| Reusable Workflow | `.github/workflows/ci-loop-*.yaml` | Generic logic only. Domain-specific criteria are passed from the caller via inputs |
+| Composite Action | `.github/actions/loop-*` | Aggregation of generic steps. Must not depend on specific scripts or repository-specific paths |
+| Caller Workflow | `.github/workflows/on-loop-*.yaml` | Domain-specific logic (detection script invocation, criteria definition) is written here |
+| APM Package | `.apm/packages/*-loop/` | Distributes Agent Skills only. Does not distribute Workflows or Actions |
+| Skill | `.apm/packages/*-loop/.apm/skills/` | Defines Agent behavioral constraints. Does not reference external skills (self-contained) |
 
-**判断基準**: 「他のリポジトリが remote 参照して使えるか？」が YES なら action/workflow に入れる。NO（特定パスやスクリプトに依存）なら caller にインラインで書く。
+**Decision criterion**: If the answer to "Can another repository use this via remote reference?" is YES, it belongs in an action/workflow. If NO (depends on specific paths or scripts), write it inline in the caller.
 
-### Maker-Checker 分離（最重要原則）
+### Maker-Checker Separation (Most Important Principle)
 
-実装エージェント（Maker/Implementer）と検証エージェント（Checker/Verifier）は必ず別エージェントセッションにする。同一エージェントが自分の出力を検証すると確証バイアスが発生し、エラーを見逃す。
+The implementation agent (Maker/Implementer) and the verification agent (Checker/Verifier) must always be separate agent sessions. If the same agent verifies its own output, confirmation bias occurs and errors are overlooked.
 
-Verifier の設計原則:
+Verifier design principles:
 
-- デフォルトの姿勢を「拒否」とする（承認ではなく拒否する理由を探す）
-- プロンプトに CI テスト出力と lint 結果を必須入力として含める
-- モデルは実装エージェントより強力なもの、または別系統のものを使う
-- `/goal` の stop condition 評価も fresh model で行う（実装者と同一モデルにしない）
+- Default stance is "reject" (look for reasons to reject, not to approve)
+- Prompt must include CI test output and lint results as mandatory inputs
+- Use a model that is more powerful than, or from a different family than, the implementation agent
+- `/goal` stop condition evaluation is also performed with a fresh model (not the same model as the implementer)
 
-### 停止条件を先に設計する
+### Design Stop Conditions First
 
-ループの作成より先に、ループの停止方法を設計する。停止条件なしに L3 を起動してはならない。
+Design how a loop stops before creating the loop itself. Never launch L3 without stop conditions.
 
-3段階の停止レベル:
+3-tier stop levels:
 
-| レベル | トリガー例 |
-|--------|-----------|
-| Slow Down（減速） | トークン予算が80%超 / false positive 30%超 |
-| Pause（一時停止） | 本番インシデント発生中 / スキーママイグレーション |
-| Kill（完全停止） | S2以上障害が2回連続 / 2週連続コスト対価値逆転 |
+| Level | Example Trigger |
+| Slow Down (decelerate) | Token budget exceeds 80% / false positive rate exceeds 30% |
+| Pause (temporary halt) | Production incident in progress / schema migration |
+| Kill (complete stop) | 2 consecutive S2+ incidents / cost-to-value inversion for 2 consecutive weeks |
 
-### 段階的自律（L1 → L2 → L3 の昇格ルール）
+### Graduated Autonomy (L1 → L2 → L3 Promotion Rules)
 
-新しいパターンは必ず L1 から開始する。既存ループが L3 でも、新機能は L1 から。
+New patterns always start at L1. Even if an existing loop is at L3, new features start at L1.
 
-| ティア | 内容 | 維持期間目安 |
-|--------|------|-------------|
-| L1（Report） | STATE.md 更新のみ。コード変更なし | 1-2週間 |
-| L2（Assisted） | worktree修正 + verifier承認時のみPR作成。auto-mergeはpath allowlist限定 | 安定後にL3検討 |
-| L3（Unattended） | denylist + 予算上限 + metrics + 人手ゲートが全て確立済みの場合のみ | 条件達成後のみ |
+| Tier | Description | Approximate Duration |
+| L1 (Report) | STATE.md update only. No code changes | 1-2 weeks |
+| L2 (Assisted) | Worktree modifications + PR creation only when verifier approves. Auto-merge limited to path allowlist | Consider L3 after stabilization |
+| L3 (Unattended) | Only when denylist + budget cap + metrics + human gate are all established | Only after conditions are met |
 
-L1 → L2 移行チェックリスト:
+L1 → L2 migration checklist:
 
-- state file スキーマが文書化されている
-- SKILL.md に build / test コマンドが記載されている
-- 実装者と検証者が別セッションになっている
-- denylist に auth・payments・secrets・インフラが明記されている
-- auto-merge 可能なパスを allowlist で制限している
-- 日次トークン上限と最大サブエージェント数が設定されている
+- State file schema is documented
+- SKILL.md includes build / test commands
+- Implementer and verifier are separate sessions
+- Denylist explicitly includes auth, payments, secrets, and infrastructure
+- Auto-merge eligible paths are restricted via allowlist
+- Daily token cap and maximum sub-agent count are configured
 
-### トークン予算管理
+### Token Budget Management
 
-トークンコストは会話の蓄積により二次関数的に増大する傾向がある。
+Token costs tend to increase quadratically as conversation accumulates.
 
-コスト圧縮パターン:
+Cost compression patterns:
 
-| パターン | トークン削減率（参考値） |
-|----------|------------------------|
-| スコープ限定（サブエージェント分離） | 約40% |
-| コーディネーター/スペシャリスト分離 | 約54% |
-| 文脈トリミング（10-15呼び出しごと） | 約23% |
-| Prompt caching（固定系プロンプト） | 固定部のみ最大90% |
+| Pattern | Token Reduction Rate (reference) |
+| Scope limitation (sub-agent separation) | ~40% |
+| Coordinator/specialist separation | ~54% |
+| Context trimming (every 10-15 calls) | ~23% |
+| Prompt caching (fixed prompts) | Up to 90% for fixed portions only |
 
-設計上の対策:
+Design countermeasures:
 
-- 安価なモデルで triage パスを実行し、アクション対象がある場合のみ強力なモデルを起動
-- アイテムが空のウォッチリストに対しては早期終了（コスト削減の最大機会）
-- phase 境界（triage → fix → verify）でコンテキストリセット
-- 日次上限を設定し、80%到達で一時停止
+- Execute triage path with an inexpensive model, invoke a powerful model only when actionable items exist
+- Early exit for watchlists with no items (greatest cost reduction opportunity)
+- Context reset at phase boundaries (triage → fix → verify)
+- Set daily cap, pause at 80% utilization
 
-### Worktree 隔離
+### Worktree Isolation
 
-L2 以上で自動修正を行う場合、ブランチ隔離が必須。エンジンの種類により実現方法が異なる。
+For L2 and above where auto-fixes are performed, branch isolation is mandatory. The implementation method differs by engine type.
 
-**エンジン戦略の分類:**
+**Engine strategy classification:**
 
-| 戦略 | エンジン | ブランチ管理 | 作業ディレクトリ |
-|------|----------|-------------|----------------|
-| Action管理型 | claude-code-action | action が内部で branch 作成・commit・push | GITHUB_WORKSPACE 固定 |
-| CLI型 | copilot, codex, claude-cli | worktree-setup/push action で外部管理 | worktree パスで隔離 |
+| Strategy | Engine | Branch Management | Working Directory |
+| Action-managed | claude-code-action | Action internally creates branch, commits, and pushes | Fixed to GITHUB_WORKSPACE |
+| CLI type | copilot, codex, claude-cli | Externally managed via worktree-setup/push actions | Isolated in worktree path |
 
-**統一 contract**: どちらの戦略でも `ci-loop-agent.yaml` は `{ branch, has_changes }` を output する。verifier 以降のフローは全エンジン共通。
+**Unified contract**: Regardless of strategy, `ci-loop-agent.yaml` outputs `{ branch, has_changes }`. The flow from verifier onward is common across all engines.
 
-**CLI型の原則:**
+**CLI type principles:**
 
-- 1アイテム = 1 worktree
-- verifier が REJECT した場合は branch 削除で全変更破棄
-- タスク完了後に worktree を削除
+- 1 item = 1 worktree
+- If verifier REJECTs, delete branch to discard all changes
+- Delete worktree after task completion
 
-**新エンジン追加時の手順:**
+**Procedure for adding a new engine:**
 
-1. Action管理型: L2 job を個別追加、output で branch_name を取得
-2. CLI型: `agent-cli-l2` job の case 文にエンジンを追加するだけ
+1. Action-managed: Add an L2 job individually, obtain branch_name from output
+2. CLI type: Simply add the engine to the case statement in the `agent-cli-l2` job
 
-### Denylist / 最小権限
+### Denylist / Least Privilege
 
-MCP コネクターとファイル変更は最小権限の原則に基づく。
+MCP connectors and file modifications follow the principle of least privilege.
 
 ```yaml
-# Path denylist（全ループ共有）
+# Path denylist (shared across all loops)
 path_denylist:
   - "**/.env"
   - "**/credentials*"
@@ -356,32 +344,32 @@ path_denylist:
   - "**/infrastructure/**"
 ```
 
-段階別の権限:
+Per-tier permissions:
 
-| ティア | 許可範囲 |
-|--------|---------|
-| L1 | Read-only。PRコメントへの書き込みのみ |
-| L2 | 承認済みpathへの limited write。branch作成許可 |
-| L3 | allowlist内パスへの write。auto-mergeはallowlist必須 |
+| Tier | Allowed Scope |
+|--------|---------| 
+| L1 | Read-only. Write only to PR comments |
+| L2 | Limited write to approved paths. Branch creation permitted |
+| L3 | Write to paths within allowlist. Auto-merge requires allowlist |
 
-### Multi-loop 協調
+### Multi-loop Coordination
 
-複数ループが同一リポジトリを操作する場合の5原則:
+5 principles when multiple loops operate on the same repository:
 
-1. **ブランチ排他所有**: 1ブランチにつき同時に操作できるループは1つのみ
-2. **状態ファイル分離**: 各ループは専用の状態ファイルを持つ（`state-triage.md` / `state-pr-watcher.md`）
-3. **役割分離**: Triage ループは L1 でレポートのみ。Action ループは独立実行
-4. **統一 denylist**: 全ループが同一の path denylist を共有
-5. **予算合算管理**: 全ループのトークン消費を合算して日次予算上限を管理
+1. **Exclusive branch ownership**: Only one loop may operate on a branch at a time
+2. **State file separation**: Each loop has its own dedicated state file (`state-triage.md` / `state-pr-watcher.md`)
+3. **Role separation**: Triage loops are L1 report-only. Action loops execute independently
+4. **Unified denylist**: All loops share the same path denylist
+5. **Aggregated budget management**: Token consumption across all loops is aggregated against a daily budget cap
 
-衝突検出は各 Action ループが実行前にピア状態ファイルの `acting_on` フィールドを確認して行う。
+Conflict detection is performed by each Action loop checking the `acting_on` field in peer state files before execution.
 
-### Failure Mode への対策
+### Failure Mode Countermeasures
 
-| 症状 | 原因 | 対処 |
+| Symptom | Cause | Countermeasure |
 |------|------|------|
-| 同一PRに5回以上自動修正 | Verifier が弱い（Infinite Fix Loop） | リトライ上限3回。強力なモデルでVerifier置換 |
-| CIが通らないのにVerifier承認 | テスト実行省略（Verifier Theater） | 「拒否理由を探す」フレーミング。テスト出力必須化 |
-| STATE.mdにクローズ済み増殖 | pruningなし（State Rot） | 実行ごとにクローズ済み削除。ループごとにファイル分離 |
-| 変更意図がチームに理解されない | auto-merge拡大（Comprehension Debt Spiral） | 週次ダイジェスト義務化。medium-riskは人手ゲートへ |
-| コンテキスト肥大で品質劣化 | 会話履歴無制限蓄積（Context Rot） | phase境界でリセット。10-15呼び出しごとにトリミング |
+| Same PR auto-fixed 5+ times | Weak verifier (Infinite Fix Loop) | Retry limit of 3. Replace verifier with a more powerful model |
+| CI fails but verifier approves | Test execution skipped (Verifier Theater) | "Look for reasons to reject" framing. Make test output mandatory |
+| Closed items accumulate in STATE.md | No pruning (State Rot) | Delete closed items on each execution. Separate files per loop |
+| Team cannot understand change intent | Auto-merge expansion (Comprehension Debt Spiral) | Mandatory weekly digest. Route medium-risk to human gate |
+| Quality degrades due to context bloat | Unlimited conversation history accumulation (Context Rot) | Reset at phase boundaries. Trim every 10-15 calls |

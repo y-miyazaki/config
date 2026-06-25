@@ -62,8 +62,7 @@ The repository structure is function-oriented.
   - `go-hooks-claude/`, `go-hooks-copilot/`, `go-hooks-cursor/`: target-specific Go hooks
   - `shell-script/`: Shell script development (hook + instruction + skills)
   - `shell-script-hooks-claude/`, `shell-script-hooks-copilot/`, `shell-script-hooks-cursor/`: target-specific shell script hooks
-  - `common-loop/`: Loop Engineering foundation (state management + change detection)
-  - `docs-loop/`: Documentation update loop (skill + depends: common-loop)
+  - `docs-loop/`: Documentation update loop (self-contained skill package)
 - `apm.yml`: APM package metadata and dependency entry point
 - `apm.lock.yaml`: lock file for deterministic APM resolution
 - `apm_modules/`: locally materialized module content
@@ -120,11 +119,8 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 ├── shell-script-hooks-claude/  # Shell script hooks for Claude Code (2 hooks)
 ├── shell-script-hooks-copilot/ # Shell script hooks for GitHub Copilot CLI (2 hooks)
 ├── shell-script-hooks-cursor/  # Shell script hooks for Cursor (2 hooks)
-├── common-loop/         # Loop Engineering foundation
-│   ├── apm.yml
-│   └── templates/       # STATE.json.example, LOOP.md.example
-└── docs-loop/           # Documentation update loop
-    ├── apm.yml          # depends: common-loop
+└── docs-loop/           # Documentation update loop (self-contained)
+    ├── apm.yml
     └── .apm/
         └── skills/      # 1 skill (loop-docs-triage)
 ```

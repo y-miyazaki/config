@@ -18,11 +18,13 @@ concurrency:
   group: loop-docs-triage
 
 env:
+  AGENT_MODEL: claude-sonnet-4-20250514
   DEFAULT_BASE_BRANCH: main
   DEFAULT_ENGINE: claude
   DEFAULT_LEVEL: L2
   SKILL_NAME: loop-docs-triage
   STATE_FILE: .loop/state-docs-triage.json
+  VERIFIER_MODEL: "claude-opus-4-20250514"
 
 jobs:
   detect:
@@ -31,6 +33,7 @@ jobs:
     permissions:
       contents: read
     outputs:
+      agent_model: ${{ steps.config.outputs.agent_model }}
       base_branch: ${{ steps.config.outputs.base_branch }}
       current_sha: ${{ steps.state.outputs.current_sha }}
       engine: ${{ steps.config.outputs.engine }}
@@ -39,6 +42,7 @@ jobs:
       prompt: ${{ steps.prompt.outputs.prompt }}
       skill_name: ${{ steps.config.outputs.skill_name }}
       skip: ${{ steps.changes.outputs.skip }}
+      verifier_model: ${{ steps.config.outputs.verifier_model }}
     steps:
       - name: Set Config Outputs
         id: config
@@ -46,10 +50,12 @@ jobs:
         run: |
           set -euo pipefail
           {
+            echo "agent_model=${AGENT_MODEL}"
             echo "base_branch=${DEFAULT_BASE_BRANCH}"
             echo "engine=${DEFAULT_ENGINE}"
             echo "level=${DEFAULT_LEVEL}"
             echo "skill_name=${SKILL_NAME}"
+            echo "verifier_model=${VERIFIER_MODEL}"
           } >> "$GITHUB_OUTPUT"
 
       - name: Read Loop State
@@ -105,6 +111,7 @@ jobs:
     with:
       engine: ${{ needs.detect.outputs.engine }}
       level: ${{ needs.detect.outputs.level }}
+      model: ${{ needs.detect.outputs.agent_model }}
       prompt_text: ${{ needs.detect.outputs.prompt }}
       skill_name: ${{ needs.detect.outputs.skill_name }}
     secrets:
@@ -123,6 +130,7 @@ jobs:
       branch: ${{ needs.agent.outputs.branch }}
       denylist: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
       engine: ${{ needs.detect.outputs.engine }}
+      model: ${{ needs.detect.outputs.verifier_model }}
       skill_name: ${{ needs.detect.outputs.skill_name }}
       verifier_criteria: |
         ## Criteria for APPROVE
