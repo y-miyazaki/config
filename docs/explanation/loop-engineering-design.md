@@ -149,7 +149,10 @@ flowchart TD
 
     subgraph finalize["finalize job"]
         direction TB
-        finalize_approve[loop-finalize<br/>create PR] --> F_STATE[state: pr-created]
+        finalize_approve[loop-finalize<br/>create PR] --> F_AUTO{L3?}
+        F_AUTO -->|yes| F_MERGE[auto-merge enabled]
+        F_AUTO -->|no| F_STATE[state: pr-created]
+        F_MERGE --> F_STATE
         finalize_reject[loop-finalize<br/>delete branch] --> F_STATE2[state: rejected]
         finalize_no[loop-finalize<br/>state: no-changes]
     end

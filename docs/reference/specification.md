@@ -303,7 +303,7 @@ The repository must provide reusable workflows.
 | Action | Purpose |
 |--------|---------|
 | `loop-agent-run` | Unified agent execution (install + cache + run) for all engines |
-| `loop-finalize` | PR creation, branch cleanup, and state write |
+| `loop-finalize` | PR creation (+ auto-merge at L3), branch cleanup, and state write |
 | `loop-prompt-generate` | Generate structured prompt from skill name and context |
 | `loop-state-read` | Checkout + read loop state JSON, output last_sha/current_sha |
 | `loop-state-write` | Write state JSON + commit/push |

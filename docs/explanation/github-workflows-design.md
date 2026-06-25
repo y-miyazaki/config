@@ -76,6 +76,8 @@ secrets:
 | PR creation / state push | `github.token` | Least privilege. Sufficient when CI re-trigger is not needed |
 | PR that should trigger CI | GitHub App Token / PAT | `GITHUB_TOKEN`-created PRs do not trigger other workflows |
 
+Note: At L3, `loop-finalize` enables auto-merge (`gh pr merge --auto --squash`) after PR creation. This requires branch protection rules with required status checks configured on the target branch.
+
 ## Input Design
 
 ### Defaults via env
