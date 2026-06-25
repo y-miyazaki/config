@@ -58,7 +58,7 @@ nav:
       - Troubleshooting: how-to/troubleshooting.md
   - Reference:
       - Specification: reference/specification.md
-      - Loop Package Design: reference/loop-package-design.md
+      - Loop Engineering Design: reference/loop-engineering-design.md
   - Explanation:
       - Architecture: explanation/architecture.md
       - Instructions Sync Workflow: explanation/instructions-sync-workflow.md

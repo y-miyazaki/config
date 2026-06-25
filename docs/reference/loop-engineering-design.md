@@ -1,4 +1,4 @@
-# Loop Package Design
+# Loop Engineering Design
 
 ループパッケージのアーキテクチャと設計方針を定義する。
 動作確認完了後に [Specification](specification.md) への統合を検討する。
