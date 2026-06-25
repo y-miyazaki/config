@@ -6,6 +6,7 @@ For concrete specifications (Actions/Workflows list, interfaces), see [Specifica
 ## Implementation Status
 
 | Package | Status | Level |
+|---|---|---|
 | `docs-loop` | ✅ Implemented | L2 (Assisted) |
 | `ci-sweeper-loop` | Not started | - |
 | `changelog-loop` | Not started | - |
@@ -20,12 +21,14 @@ Referencing the design philosophy of GitHub Agentic Workflows ([official blog](h
 ### Tier 1 (High Priority — Implementable with Existing Infrastructure)
 
 | Loop | Detection Method | Agent Behavior | Expected Level |
+|---|---|---|---|
 | **ci-sweeper** | GitHub API: retrieve failed workflow runs | Auto-fix lint/build errors, create PR | L2 → L3 |
 | **changelog** | git log: parse conventional commits | Auto-generate/update CHANGELOG.md | L2 |
 
 ### Tier 2 (Medium Priority — Additional Detect Action Required)
 
 | Loop | Detection Method | Agent Behavior | Expected Level |
+|---|---|---|---|
 | **issue-triage** | GitHub API: retrieve unlabeled issues | Codebase analysis → label assignment + comment | L1 → L2 |
 | **stale-pr** | GitHub API: retrieve PRs with no updates for 7+ days | Review comment or close suggestion | L1 |
 | **test-coverage** | CI artifacts: parse coverage reports | Auto-generate missing tests, create PR | L2 |
@@ -33,6 +36,7 @@ Referencing the design philosophy of GitHub Agentic Workflows ([official blog](h
 ### Tier 3 (Low Priority — Complex Safety Measures)
 
 | Loop | Detection Method | Agent Behavior | Expected Level |
+|---|---|---|---|
 | **dependency-update** | Detect CI failures on Renovate PRs | Auto-fix breakage caused by dependency updates | L2 |
 | **security-advisory** | GitHub Advisory DB: new CVEs | Create PR for vulnerability remediation | L1 (report only) |
 | **api-docs** | OpenAPI spec diff detection | API documentation sync | L2 |
@@ -65,6 +69,7 @@ Priority assessment when adding new loops:
 ## Naming Conventions
 
 | Package Type | Naming Pattern | Example |
+|---|---|---|
 | Domain-specific loop | `<domain>-loop` | `docs-loop`, `ci-sweeper-loop` |
 
 ## Dependencies
@@ -75,6 +80,7 @@ APM packages provide Skills only and do not distribute Workflows/Actions.
 ## docs-loop (Docs Update Loop)
 
 | Component | Description |
+|---|---|
 | `.apm/skills/loop-docs-triage/SKILL.md` | Skill that performs document editing based on triage findings |
 | `eval.yaml` + `evals/tasks/` | waza evaluation suite |
 
@@ -229,6 +235,7 @@ State files are maintained individually per loop (multi-loop coordination princi
 ## L2 Promotion Requirements
 
 | Requirement | Approach | Status |
+|---|---|---|
 | loop-budget skill | Download from npm/GitHub Release with caching (repository-independent) | Future |
 | loop-verifier skill | Same as above | Future |
 | Maker-Checker separation | Implemented as ci-loop-verifier.yaml | ✅ Implemented |
@@ -240,6 +247,7 @@ State files are maintained individually per loop (multi-loop coordination princi
 ### Component Design Principles
 
 | Type | Location | Principle |
+|---|---|---|
 | Reusable Workflow | `.github/workflows/ci-loop-*.yaml` | Generic logic only. Domain-specific criteria are passed from the caller via inputs |
 | Composite Action | `.github/actions/loop-*` | Aggregation of generic steps. Must not depend on specific scripts or repository-specific paths |
 | Caller Workflow | `.github/workflows/on-loop-*.yaml` | Domain-specific logic (detection script invocation, criteria definition) is written here |
@@ -266,6 +274,7 @@ Design how a loop stops before creating the loop itself. Never launch L3 without
 3-tier stop levels:
 
 | Level | Example Trigger |
+|---|---|
 | Slow Down (decelerate) | Token budget exceeds 80% / false positive rate exceeds 30% |
 | Pause (temporary halt) | Production incident in progress / schema migration |
 | Kill (complete stop) | 2 consecutive S2+ incidents / cost-to-value inversion for 2 consecutive weeks |
@@ -275,6 +284,7 @@ Design how a loop stops before creating the loop itself. Never launch L3 without
 New patterns always start at L1. Even if an existing loop is at L3, new features start at L1.
 
 | Tier | Description | Approximate Duration |
+|---|---|---|
 | L1 (Report) | STATE.md update only. No code changes | 1-2 weeks |
 | L2 (Assisted) | Worktree modifications + PR creation only when verifier approves. Auto-merge limited to path allowlist | Consider L3 after stabilization |
 | L3 (Unattended) | Only when denylist + budget cap + metrics + human gate are all established | Only after conditions are met |
@@ -295,6 +305,7 @@ Token costs tend to increase quadratically as conversation accumulates.
 Cost compression patterns:
 
 | Pattern | Token Reduction Rate (reference) |
+|---|---|
 | Scope limitation (sub-agent separation) | ~40% |
 | Coordinator/specialist separation | ~54% |
 | Context trimming (every 10-15 calls) | ~23% |
@@ -314,6 +325,7 @@ For L2 and above where auto-fixes are performed, branch isolation is mandatory. 
 **Engine strategy classification:**
 
 | Strategy | Engine | Branch Management | Working Directory |
+|---|---|---|---|
 | Action-managed | claude-code-action | Action internally creates branch, commits, and pushes | Fixed to GITHUB_WORKSPACE |
 | CLI type | copilot, codex, claude-cli | Externally managed via worktree-setup/push actions | Isolated in worktree path |
 
@@ -367,7 +379,7 @@ Conflict detection is performed by each Action loop checking the `acting_on` fie
 ### Failure Mode Countermeasures
 
 | Symptom | Cause | Countermeasure |
-|------|------|------|
+|---|---|---|
 | Same PR auto-fixed 5+ times | Weak verifier (Infinite Fix Loop) | Retry limit of 3. Replace verifier with a more powerful model |
 | CI fails but verifier approves | Test execution skipped (Verifier Theater) | "Look for reasons to reject" framing. Make test output mandatory |
 | Closed items accumulate in STATE.md | No pruning (State Rot) | Delete closed items on each execution. Separate files per loop |
