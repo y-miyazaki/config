@@ -70,3 +70,4 @@ runs:
         set -euo pipefail
         cd "${GITHUB_WORKSPACE}"
         git worktree remove "${WORKTREE_PATH}" --force 2>/dev/null || true
+        git worktree prune
