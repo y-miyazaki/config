@@ -114,6 +114,24 @@ jobs:
       denylist: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
       engine: ${{ needs.detect.outputs.engine }}
       skill_name: ${{ needs.detect.outputs.skill_name }}
+      verifier_criteria: |
+        ## Criteria for APPROVE
+
+        ALL of the following must be true:
+        1. Changes are limited to documentation files (docs/, README.md, mkdocs.yml nav)
+        2. No broken markdown links are introduced
+        3. Content is factually consistent with the codebase
+        4. No sensitive information is exposed
+        5. Changes address the documented triage items
+
+        ## Criteria for REJECT
+
+        ANY of the following triggers REJECT:
+        - Changes outside allowed documentation paths
+        - Factual inaccuracies or hallucinated content
+        - Broken internal links
+        - Sensitive data exposure
+        - Gratuitous changes not related to triage items
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
 

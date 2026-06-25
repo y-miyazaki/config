@@ -1,6 +1,7 @@
 # Reusable workflow: Loop verifier (Maker-Checker separation)
 # Runs a verification agent on a branch produced by the implementer agent.
 # The verifier uses a different model/session to avoid confirmation bias.
+# Generic: caller provides domain-specific criteria via verifier_criteria input.
 name: ci-loop-verifier
 
 on:
@@ -37,6 +38,11 @@ on:
       skill_name:
         description: "Skill that produced the changes (for context)"
         required: true
+        type: string
+      verifier_criteria:
+        default: ""
+        description: "Domain-specific APPROVE/REJECT criteria (markdown). If empty, uses generic criteria."
+        required: false
         type: string
     outputs:
       verdict:
@@ -75,12 +81,8 @@ jobs:
           BASE_BRANCH: ${{ inputs.base_branch }}
         run: |
           set -euo pipefail
-          DIFF=$(git diff "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/')
           DIFF_STAT=$(git diff --stat "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/')
           {
-            echo "diff<<EOF"
-            echo "${DIFF}"
-            echo "EOF"
             echo "stat<<EOF"
             echo "${DIFF_STAT}"
             echo "EOF"
@@ -142,39 +144,44 @@ jobs:
         env:
           DIFF_STAT: ${{ steps.diff.outputs.stat }}
           SKILL_NAME: ${{ inputs.skill_name }}
+          VERIFIER_CRITERIA: ${{ inputs.verifier_criteria }}
         run: |
           set -euo pipefail
-          PROMPT_PATH="${RUNNER_TEMP}/verifier-prompt.md"
-          cat > "${PROMPT_PATH}" << 'HEREDOC'
-          You are a code verification agent. Your DEFAULT posture is REJECT.
-          You must find reasons to REJECT, not reasons to APPROVE.
-
-          ## Task
-
-          Review the changes produced by the loop implementer agent and determine
-          whether they should be merged. Output exactly one word: APPROVE or REJECT.
-
-          ## Criteria for APPROVE
+          # Use caller-provided criteria or generic default
+          if [[ -z "${VERIFIER_CRITERIA}" ]]; then
+            CRITERIA="## Criteria for APPROVE
 
           ALL of the following must be true:
-          1. Changes are limited to documentation files (docs/, README.md, mkdocs.yml nav)
-          2. No broken markdown links are introduced
-          3. Content is factually consistent with the codebase
-          4. No sensitive information is exposed
-          5. Changes address the documented triage items
+          1. Changes are consistent with the codebase
+          2. No sensitive information is exposed
+          3. No files outside the expected scope are modified
+          4. Changes are coherent and non-destructive
 
           ## Criteria for REJECT
 
           ANY of the following triggers REJECT:
-          - Changes outside allowed paths
+          - Changes outside expected scope
           - Factual inaccuracies or hallucinated content
-          - Broken internal links
           - Sensitive data exposure
-          - Gratuitous changes not related to triage items
+          - Gratuitous or unrelated changes"
+          else
+            CRITERIA="${VERIFIER_CRITERIA}"
+          fi
 
-          ## Input
-          HEREDOC
+          DELIM="PROMPT_$(openssl rand -hex 8)"
           {
+            echo "prompt_content<<${DELIM}"
+            echo "You are a code verification agent. Your DEFAULT posture is REJECT."
+            echo "You must find reasons to REJECT, not reasons to APPROVE."
+            echo ""
+            echo "## Task"
+            echo ""
+            echo "Review the changes produced by the loop implementer agent and determine"
+            echo "whether they should be merged. Output exactly one word: APPROVE or REJECT."
+            echo ""
+            echo "${CRITERIA}"
+            echo ""
+            echo "## Input"
             echo ""
             echo "Skill: ${SKILL_NAME}"
             echo ""
@@ -188,12 +195,7 @@ jobs:
             echo ""
             echo "## Output"
             echo "Reply with exactly: APPROVE or REJECT followed by a one-line reason."
-          } >> "${PROMPT_PATH}"
-          echo "path=${PROMPT_PATH}" >> "$GITHUB_OUTPUT"
-          {
-            echo "prompt_content<<EOF"
-            cat "${PROMPT_PATH}"
-            echo "EOF"
+            echo "${DELIM}"
           } >> "$GITHUB_OUTPUT"
 
       - name: Run Verifier
