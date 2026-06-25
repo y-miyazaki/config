@@ -94,11 +94,13 @@ jobs:
           DENYLIST: ${{ inputs.denylist }}
         run: |
           set -euo pipefail
-          CHANGED_FILES=$(git diff --name-only "origin/${BASE_BRANCH}...HEAD")
+          CHANGED_FILES=$(git diff --name-only "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/')
           if [[ -z "${CHANGED_FILES}" ]]; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
             echo "has_violations=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
           VIOLATIONS=""
           IFS=',' read -ra PATTERNS <<< "${DENYLIST}"
           for pattern in "${PATTERNS[@]}"; do
@@ -134,7 +136,7 @@ jobs:
           echo "result=REJECT" >> "$GITHUB_OUTPUT"
 
       - name: Build Verifier Prompt
-        if: steps.denylist.outputs.has_violations != 'true'
+        if: steps.denylist.outputs.has_violations != 'true' && steps.denylist.outputs.has_changes == 'true'
         id: prompt
         shell: bash
         env:
@@ -195,7 +197,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Run Verifier
-        if: steps.denylist.outputs.has_violations != 'true'
+        if: steps.denylist.outputs.has_violations != 'true' && steps.denylist.outputs.has_changes == 'true'
         uses: y-miyazaki/config/.github/actions/loop-agent-run@d83036476eb26965baac7cbab152125f1b1985cc # v1.4.6
         with:
           agent_token: ${{ secrets.AGENT_TOKEN }}
@@ -211,10 +213,16 @@ jobs:
         shell: bash
         env:
           DENYLIST_REJECT: ${{ steps.reject_denylist.outputs.result || '' }}
+          HAS_CHANGES: ${{ steps.denylist.outputs.has_changes || 'true' }}
         run: |
           set -euo pipefail
           if [[ "${DENYLIST_REJECT}" == "REJECT" ]]; then
             echo "result=REJECT" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # No meaningful changes (only .loop/ files) → auto-approve
+          if [[ "${HAS_CHANGES}" != "true" ]]; then
+            echo "result=APPROVE" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           # Parse agent output for APPROVE/REJECT
