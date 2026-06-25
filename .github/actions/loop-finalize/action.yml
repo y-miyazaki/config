@@ -77,7 +77,7 @@ runs:
         elif [[ "${VERDICT}" == "REJECT" ]]; then
           echo "value=rejected" >> "$GITHUB_OUTPUT"
         else
-          echo "value=no-op" >> "$GITHUB_OUTPUT"
+          echo "value=error" >> "$GITHUB_OUTPUT"
         fi
 
     - name: Create PR
@@ -132,11 +132,11 @@ runs:
           echo "::error::Invalid branch name: ${BRANCH}"
           exit 1
         fi
-        git push origin --delete "${BRANCH}" 2>/dev/null || true
+        gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${BRANCH}" 2>/dev/null || true
 
     - name: Write State
       if: inputs.current_sha != ''
-      uses: ./.github/actions/loop-state-write
+      uses: y-miyazaki/config/.github/actions/loop-state-write@d83036476eb26965baac7cbab152125f1b1985cc # v1.4.6
       with:
         outcome: ${{ steps.outcome.outputs.value }}
         sha: ${{ inputs.current_sha }}
