@@ -103,7 +103,7 @@ jobs:
   # L2: Claude (Action-managed branch)
   # ============================================================
   agent-claude-l2:
-    if: inputs.engine == 'claude' && inputs.level != 'L1'
+    if: inputs.engine == 'claude' && (inputs.level == 'L2' || inputs.level == 'L3')
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
@@ -148,7 +148,7 @@ jobs:
   # L2: CLI engines (worktree isolation)
   # ============================================================
   agent-cli-l2:
-    if: inputs.engine != 'claude' && inputs.level != 'L1'
+    if: inputs.engine != 'claude' && (inputs.level == 'L2' || inputs.level == 'L3')
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
