@@ -115,7 +115,7 @@ jobs:
 
   finalize:
     needs: [detect, agent, verify]
-    if: always()
+    if: always() && (needs.detect.result == 'success')
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -141,7 +141,7 @@ jobs:
             Automated documentation update by `loop-docs-triage` (${{ needs.detect.outputs.level }}).
 
             - Commits scanned: `${{ needs.detect.outputs.last_sha }}..${{ needs.detect.outputs.current_sha }}`
-            - Verifier verdict: APPROVE
+            - Verifier verdict: ${{ needs.verify.outputs.verdict || 'SKIPPED' }}
 
             ---
             *This PR was created by a loop automation. Review before merging.*
