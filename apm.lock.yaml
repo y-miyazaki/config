@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-06-26T04:24:54.308889+00:00'
+generated_at: '2026-06-26T05:17:50.130078+00:00'
 apm_version: 0.21.0
 dependencies:
 - repo_url: _local/common
@@ -33,35 +33,6 @@ dependencies:
   - .claude/skills/agent-skills-review/scripts/lib/validation.sh
   - .claude/skills/agent-skills-review/scripts/validate.sh
   - .claude/skills/agent-skills-review/scripts/validate_waza.sh
-  - .claude/skills/docs-creation
-  - .claude/skills/docs-creation/SKILL.md
-  - .claude/skills/docs-creation/eval.yaml
-  - .claude/skills/docs-creation/evals/tasks/docs-creation-basic.yaml
-  - .claude/skills/docs-creation/evals/tasks/docs-creation-boundary-guardrail.yaml
-  - .claude/skills/docs-creation/evals/tasks/docs-creation-missing-input.yaml
-  - .claude/skills/docs-creation/evals/tasks/docs-creation-structured-output.yaml
-  - .claude/skills/docs-creation/evals/tasks/docs-creation-trigger-negative.yaml
-  - .claude/skills/docs-creation/references/category-diataxis-mapping.md
-  - .claude/skills/docs-creation/references/category-templates-common-architecture.md
-  - .claude/skills/docs-creation/references/category-templates-common-design-decisions.md
-  - .claude/skills/docs-creation/references/category-templates-common-design.md
-  - .claude/skills/docs-creation/references/category-templates-common-general.md
-  - .claude/skills/docs-creation/references/category-templates-common-improvements.md
-  - .claude/skills/docs-creation/references/category-templates-common-maintenance-notes.md
-  - .claude/skills/docs-creation/references/category-templates-common-module-catalog.md
-  - .claude/skills/docs-creation/references/category-templates-common-monitoring.md
-  - .claude/skills/docs-creation/references/category-templates-common-other.md
-  - .claude/skills/docs-creation/references/category-templates-common-performance.md
-  - .claude/skills/docs-creation/references/category-templates-common-readme.md
-  - .claude/skills/docs-creation/references/category-templates-common-security-coverage.md
-  - .claude/skills/docs-creation/references/category-templates-common-specification.md
-  - .claude/skills/docs-creation/references/category-templates-common-troubleshooting.md
-  - .claude/skills/docs-creation/references/category-templates-common-tutorial.md
-  - .claude/skills/docs-creation/references/category-templates-go-specification.md
-  - .claude/skills/docs-creation/references/category-templates-terraform-specification.md
-  - .claude/skills/docs-creation/references/common-checklist.md
-  - .claude/skills/docs-creation/references/common-output-format.md
-  - .claude/skills/docs-creation/references/common-troubleshooting.md
   - .claude/skills/docs-updater
   - .claude/skills/docs-updater/SKILL.md
   - .claude/skills/docs-updater/eval.yaml
@@ -229,35 +200,7 @@ dependencies:
     .claude/skills/agent-skills-review/scripts/lib/validation.sh: sha256:ee2be940117c00e6a681186e02e05188786bf98aa52bd74ff1586eb474a98648
     .claude/skills/agent-skills-review/scripts/validate.sh: sha256:081c2fb2856b5aed924e9011d63d233ff7e459a0838942497d5679c3f1ebe7fa
     .claude/skills/agent-skills-review/scripts/validate_waza.sh: sha256:9b933b61a9879b124fe5d8ec6ce3686b5145e34823321a569b9cc4f5eb63122b
-    .claude/skills/docs-creation/SKILL.md: sha256:1501c1514c90d865c97b05d1cc90d2282ece8e3c79e3c5bd991f3cf54bfb7010
-    .claude/skills/docs-creation/eval.yaml: sha256:9213bac4f0fcb1decec43bb917d03e71c89172f85e9a9863390cd2b1be1230e6
-    .claude/skills/docs-creation/evals/tasks/docs-creation-basic.yaml: sha256:21e8bad6cb1e8447f01d7ff46c55de7fa420a6fab4c4385e945452bd7444021f
-    .claude/skills/docs-creation/evals/tasks/docs-creation-boundary-guardrail.yaml: sha256:19bd9a28f553ba42d06ceaffed5307c8613c4ad12c04776ac5f4115d95b8b105
-    .claude/skills/docs-creation/evals/tasks/docs-creation-missing-input.yaml: sha256:5f2fb76fa7086fd65e8eedfe796059692dbb258e13a7d0e58d6efaadc111254c
-    .claude/skills/docs-creation/evals/tasks/docs-creation-structured-output.yaml: sha256:c454a4a5425bf8547b3d03a35ee742936edd4d478d77f6e152b9c21202aafcf1
-    .claude/skills/docs-creation/evals/tasks/docs-creation-trigger-negative.yaml: sha256:8ee7df15aed56d3785db9aef8bdc6588deb1677d0fcef6cae3c8e821a8b6477a
-    .claude/skills/docs-creation/references/category-diataxis-mapping.md: sha256:800fbd77bc1a0f6fb63138b05156f121b49845ed5976840c872a49461b28dd2a
-    .claude/skills/docs-creation/references/category-templates-common-architecture.md: sha256:5841b50007a5db390355654775d849fce7a9c7e95e9a63905221799e799de543
-    .claude/skills/docs-creation/references/category-templates-common-design-decisions.md: sha256:7adb9453e37ebf3456e76f38240bbe52f9d5590dcd301f97cb9b39c99c6b0cd1
-    .claude/skills/docs-creation/references/category-templates-common-design.md: sha256:3c3dc2d7c91194e364709386ebd7d59b3146f7bb29621befde3e351df27d6aa2
-    .claude/skills/docs-creation/references/category-templates-common-general.md: sha256:4404e98aca64455ea02b02b6a829874cf6c9c9a320a5b57aa93649201360c3a9
-    .claude/skills/docs-creation/references/category-templates-common-improvements.md: sha256:4f8fcb0dbb7941480b3e7508a54ed58fb15d9b030f459d932889075941566e38
-    .claude/skills/docs-creation/references/category-templates-common-maintenance-notes.md: sha256:c223073e1eed5a9ca32d0eaf8fd315ae71f44928917f2d830739fbcb9a60fada
-    .claude/skills/docs-creation/references/category-templates-common-module-catalog.md: sha256:14cea62605c3b7bbbf00482d4047a3c3fdf77f23501e52933c87e134572cb86d
-    .claude/skills/docs-creation/references/category-templates-common-monitoring.md: sha256:f905bc4fcb746a116df1bc9159ded17a4602e43c34b4b6e7b0f84b45aebe19e7
-    .claude/skills/docs-creation/references/category-templates-common-other.md: sha256:8d445151adcd51c0c659a2dd68b87726bac6b5ba7c931d79e5f186eb1c5790ad
-    .claude/skills/docs-creation/references/category-templates-common-performance.md: sha256:ba29879ed95ba16f421f7c1e3a62ca20d23c9bad953c4975c0ea19e7c34979e7
-    .claude/skills/docs-creation/references/category-templates-common-readme.md: sha256:83436e41a2aa4679f45ee65468d14b015fd4c8ba45c6701a5ac69b34667cfdb6
-    .claude/skills/docs-creation/references/category-templates-common-security-coverage.md: sha256:6f7feb98e1ba46fc07d09fcf79caf277a259b807b35305f7f1d11152f49c6b92
-    .claude/skills/docs-creation/references/category-templates-common-specification.md: sha256:680b05e6b9b888299e082d19108ae3fcbaf1aca779f6215d9b16c463c434375c
-    .claude/skills/docs-creation/references/category-templates-common-troubleshooting.md: sha256:4d09fa247f42890213625740a070e8cb731f5556c0b8920dca15b9a4c4170278
-    .claude/skills/docs-creation/references/category-templates-common-tutorial.md: sha256:ce3a9eefc7e44e78f00471d9ec4f39da8bccc1a1034172862e8a8467b5399915
-    .claude/skills/docs-creation/references/category-templates-go-specification.md: sha256:635e48d189f8ff081438be125bc9e779999d9fe86f2685ff5d593499470dd4c9
-    .claude/skills/docs-creation/references/category-templates-terraform-specification.md: sha256:1e09931b73e2aa7b7aca09ffa4a7daa4bdcb908174031c4d85f3f37cfb3431c7
-    .claude/skills/docs-creation/references/common-checklist.md: sha256:78a4297e7c3b2e68a0b93dbb514cbef7042ec26fe30283ec7487a74b113586ff
-    .claude/skills/docs-creation/references/common-output-format.md: sha256:ad69a0ac6676a60d6178199e579310bfac1a09b973c84fd05178bbfe90ca2b33
-    .claude/skills/docs-creation/references/common-troubleshooting.md: sha256:a45b0abdb0f22ab17312bf85bfb5fe64e487c96d7d4d7f8db12a8c31221acecc
-    .claude/skills/docs-updater/SKILL.md: sha256:4a6940472386df6f7013951f9d36955e9b8af9581b07038c9787d83efbfcae45
+    .claude/skills/docs-updater/SKILL.md: sha256:706bf8e95ab18064862ca9f6dea8ad3f586095afb38ccbbc4b2748c2bed325c4
     .claude/skills/docs-updater/eval.yaml: sha256:977e8bc7feea1f6473a72ea46295c24298e6a1fa316cc7e525cb238114935818
     .claude/skills/docs-updater/evals/tasks/docs-updater-basic.yaml: sha256:f9ab271e25ff712a952b512c8c8ca2bbcc4469de57c0e2c8a3c63d8b48173f2c
     .claude/skills/docs-updater/evals/tasks/docs-updater-deletion-deadlink.yaml: sha256:c7570f758c3afb10b509e21a6d3f553e7e7f6810563d3004b42c461bee74017c
@@ -265,10 +208,10 @@ dependencies:
     .claude/skills/docs-updater/evals/tasks/docs-updater-rename-detection.yaml: sha256:e5b49f3952b018231bb33af4c8ea768c1ac07960f726f284593e75e33a26d059
     .claude/skills/docs-updater/evals/tasks/docs-updater-skip.yaml: sha256:f46f6ddb627a2f33df56caa396a65c1704a98a2112b1d486e05a57e6112376d8
     .claude/skills/docs-updater/evals/tasks/docs-updater-trigger-negative.yaml: sha256:bbbfab776910db608c7ae55c58ae8665b092d3c94d7903cf99b7a571825871d4
-    .claude/skills/docs-updater/references/common-checklist.md: sha256:a341a980775b8a924487aa4f7fef1abe6cd9507e427b9d06e2d193a8fef482b3
-    .claude/skills/docs-updater/references/common-impact-map.md: sha256:8f8815efc65bdb48b327de7ba2ba57d84730e7534ce1efc4c980ef99d54538ad
-    .claude/skills/docs-updater/references/common-output-format.md: sha256:c5e4e048086dc3879246887ae4d19adc6e42269340eab7fe35e28211b6e89960
-    .claude/skills/docs-updater/scripts/detect_changes.sh: sha256:1dae625b084a41b00fdf1829bb091657cf3a58c190a58308c0987e405ddc5ed5
+    .claude/skills/docs-updater/references/common-checklist.md: sha256:2863fb151d2fcc41b88c91d347270fa15a335158738e7c6b775f6e7057049033
+    .claude/skills/docs-updater/references/common-impact-map.md: sha256:1eff3a2bde7e5771d784b40b8c3ffef57ae758a7de705a6be069b36f97276c84
+    .claude/skills/docs-updater/references/common-output-format.md: sha256:376040a3f209f4c6158d06c43aca931d39713cb6d6c4ca14d78b265132edff36
+    .claude/skills/docs-updater/scripts/detect_changes.sh: sha256:1d472bccef8319dee00484a9303c40ef1a8c712e6a9a555a099b4870fda6f8ba
     .claude/skills/docs-updater/scripts/lib/all.sh: sha256:f6aa62b17de3935f921d04005ca439b3d3a637a86551ed2a7d442761d6d83786
     .claude/skills/docs-updater/scripts/lib/aws.sh: sha256:e949fb9cc8ebde36123160624d3dc6f4fc4e29d0cde67101c2310507e44b0386
     .claude/skills/docs-updater/scripts/lib/common.sh: sha256:b7a50822cd2821155c20d75cb0272d0a6fd797c3bb2161c71ebd7185cdbbb77c

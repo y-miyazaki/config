@@ -231,8 +231,9 @@ function collect_changes {
 #######################################
 # collect_affected_docs: Collect candidate documentation files
 #
-# Returns all markdown files in scope when source changes exist.
-# Skips if only markdown or report files changed.
+# Returns all markdown files in scope when relevant changes exist.
+# Relevant means: non-markdown source changes, OR markdown renames/deletions
+# (which can break cross-references).
 #
 # Arguments:
 #   None
@@ -251,7 +252,7 @@ function collect_changes {
 #
 #######################################
 function collect_affected_docs {
-    local has_source_change="false"
+    local has_relevant_change="false"
     local all_files=("${CHANGED_FILES[@]}" "${DELETED_FILES[@]}")
 
     local rename
@@ -264,13 +265,30 @@ function collect_affected_docs {
     for file in "${all_files[@]}"; do
         [[ -z "${file}" ]] && continue
         case "${file}" in
-            *.md) continue ;;
+            *.md) ;; # markdown-only changes checked below
+            *)
+                has_relevant_change="true"
+                break
+                ;;
         esac
-        has_source_change="true"
-        break
     done
 
-    if [[ "${has_source_change}" == "false" ]]; then
+    # Markdown renames or deletions can break cross-references
+    if [[ "${has_relevant_change}" == "false" ]]; then
+        if [[ ${#DELETED_FILES[@]} -gt 0 || ${#RENAMED_FILES[@]} -gt 0 ]]; then
+            local item
+            for item in "${DELETED_FILES[@]}"; do
+                [[ "${item}" == *.md ]] && has_relevant_change="true" && break
+            done
+            if [[ "${has_relevant_change}" == "false" ]]; then
+                for item in "${RENAMED_FILES[@]}"; do
+                    [[ "${item}" == *.md* ]] && has_relevant_change="true" && break
+                done
+            fi
+        fi
+    fi
+
+    if [[ "${has_relevant_change}" == "false" ]]; then
         return
     fi
 
