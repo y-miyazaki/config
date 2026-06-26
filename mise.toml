@@ -98,7 +98,7 @@ python = "3.14.6"
 "pipx:pre-commit" = { version = "4.6.0", depends = [
   "python",
 ] } # pre-commit framework
-"aqua:aquasecurity/trivy" = "0.71.1" # vulnerability scanner
+"aqua:aquasecurity/trivy" = "0.71.2" # vulnerability scanner
 
 # Terraform related tools
 "aqua:getsops/sops" = "3.13.1"                  # encryption tool
