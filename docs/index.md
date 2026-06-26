@@ -22,13 +22,27 @@ _Task-oriented guides for specific goals._
 _Information-oriented technical descriptions._
 
 - [Config Repository Functional Specification](reference/specification.md)
+- [Loop Engineering Checklist](reference/loop-engineering-checklist.md)
 
 ## Explanation
 
 _Understanding-oriented discussion of concepts and decisions._
 
 - [Config Repository Architecture](explanation/architecture.md)
+- [GitHub Workflows Design](explanation/github-workflows-design.md)
 - [Instructions Sync Workflow](explanation/instructions-sync-workflow.md)
+- [Loop Engineering Design](explanation/loop-engineering-design.md)
+
+## Agents
+
+_Standards and protocols for AI agent operations._
+
+- [Code and Artifact Modification Standards](agents/code-modification.md)
+- [Error Handling](agents/error-handling.md)
+- [Execution Protocol](agents/execution-protocol.md)
+- [External Knowledge and Dependency Awareness](agents/external-knowledge.md)
+- [Review and Output Standards](agents/review-standards.md)
+- [Verification Requirements](agents/verification.md)
 
 ## Report
 
@@ -55,6 +69,7 @@ _Research and comparison reports._
 - [Harness Engineering: Go](report/governance/harness-engineering-go.md)
 - [Harness Engineering: Terraform](report/governance/harness-engineering-terraform.md)
 - [Linter and Review Boundary Policy](report/governance/linter-review-boundary.md)
+- [Loop Engineering](report/governance/loop-engineering.md)
 
 ### Tool Comparison
 
