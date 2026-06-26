@@ -78,15 +78,15 @@ repos:
         entry: actionlint -color=false
         types: [yaml]
         files: ^\.github/workflows/.*\.(ya?ml)$
-  # - repo: local
-  #   hooks:
-  #     - id: ghalint
-  #       name: ghalint
-  #       description: GitHub Actions workflow linter.
-  #       language: system
-  #       entry: ghalint run --log-color never
-  #       types: [yaml]
-  #       files: ^\.github/workflows/.*\.(ya?ml)$
+  - repo: local
+    hooks:
+      - id: ghalint
+        name: ghalint
+        description: GitHub Actions workflow linter.
+        language: system
+        entry: ghalint run --log-color never
+        types: [yaml]
+        files: ^\.github/workflows/.*\.(ya?ml)$
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
     rev: v1.25.2
     hooks:
@@ -95,16 +95,16 @@ repos:
   # --------------------------------------------------------------
   # For Go
   # --------------------------------------------------------------
-  - repo: local
-    hooks:
-      - id: golangci-lint
-        name: golangci-lint
-        description: Fast linters runner for Go.
-        entry: golangci-lint run --max-same-issues=0 --max-issues-per-linter=0 --fix
-        exclude: ^(.*_test.go|tmp/.*\.go)$
-        language: system
-        pass_filenames: false
-        types: [go]
+  # - repo: local
+  #   hooks:
+  #     - id: golangci-lint
+  #       name: golangci-lint
+  #       description: Fast linters runner for Go.
+  #       entry: golangci-lint run --max-same-issues=0 --max-issues-per-linter=0 --fix
+  #       exclude: ^(.*_test.go|tmp/.*\.go)$
+  #       language: system
+  #       pass_filenames: false
+  #       types: [go]
   # --------------------------------------------------------------
   # For Jsonnet
   # --------------------------------------------------------------

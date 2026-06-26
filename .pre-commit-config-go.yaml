@@ -1,5 +1,5 @@
-# Pre-commit hooks for Go projects
-# Install via: bash install_go.sh
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -19,24 +19,30 @@ repos:
       - id: detect-aws-credentials
         args: [--allow-missing-credentials]
       - id: detect-private-key
+        exclude: '(?:^|/)(?:.*/)?terraform\.[^.]+\.tfvars$'
       - id: end-of-file-fixer
         exclude: '(^.*(\.devcontainer/devcontainer(-lock)?\.json|settings\.json|settings-example\.json|.*\.md)$)'
       - id: pretty-format-json
         args: [--autofix, --no-sort-keys]
         exclude: '(^.*(\.devcontainer/devcontainer(-lock)?\.json|settings\.json|settings-example\.json)$)'
+      - id: requirements-txt-fixer
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.5.0
     hooks:
       - id: detect-secrets
-        exclude: '(.*_test.go|.gitleaks.toml|apm.lock.yaml|aqua-checksums.json)'
+        # args: ['--baseline', '.secrets.baseline']
+        # Exclude go test file and gitleaks config and any terraform.*.tfvars files in any directory
+        exclude: '(.*_test.go|.gitleaks.toml|apm.lock.yaml|aqua-checksums.json|(?:^|/)(?:.*/)?terraform\.(?!example\.)[^.]+\.tfvars$)'
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.1
     hooks:
       - id: gitleaks
         args: ["--config=.gitleaks.toml"]
-  # Shell
+  # --------------------------------------------------------------
+  # For Shell Script
+  # --------------------------------------------------------------
   - repo: local
     hooks:
       - id: shellcheck
@@ -51,7 +57,18 @@ repos:
         language: system
         entry: shfmt -w -i 4 -ci -bn -sr
         types: [shell]
-  # GitHub Actions
+  # --------------------------------------------------------------
+  # For Commit Message
+  # --------------------------------------------------------------
+  # - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+  #   rev: v9.25.0
+  #   hooks:
+  #     - id: commitlint
+  #       stages: [commit-msg]
+  #       additional_dependencies: ["@commitlint/config-conventional"]
+  # --------------------------------------------------------------
+  # For GitHub Actions
+  # --------------------------------------------------------------
   - repo: local
     hooks:
       - id: actionlint
@@ -61,11 +78,23 @@ repos:
         entry: actionlint -color=false
         types: [yaml]
         files: ^\.github/workflows/.*\.(ya?ml)$
+  - repo: local
+    hooks:
+      - id: ghalint
+        name: ghalint
+        description: GitHub Actions workflow linter.
+        language: system
+        entry: ghalint run --log-color never
+        types: [yaml]
+        files: ^\.github/workflows/.*\.(ya?ml)$
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
     rev: v1.25.2
     hooks:
+      # Run the linter.
       - id: zizmor
-  # Go
+  # --------------------------------------------------------------
+  # For Go
+  # --------------------------------------------------------------
   - repo: local
     hooks:
       - id: golangci-lint
@@ -76,7 +105,17 @@ repos:
         language: system
         pass_filenames: false
         types: [go]
-  # Markdown
+  # --------------------------------------------------------------
+  # For Jsonnet
+  # --------------------------------------------------------------
+  # - repo: https://github.com/google/go-jsonnet
+  #   rev: v0.22.0
+  #   hooks:
+  #     - id: jsonnet-format
+  #     - id: jsonnet-lint
+  # --------------------------------------------------------------
+  # For Markdown
+  # --------------------------------------------------------------
   - repo: https://github.com/DavidAnson/markdownlint-cli2
     rev: v0.22.1
     hooks:
@@ -88,10 +127,60 @@ repos:
     hooks:
       - id: markdown-link-check
         args: [--quiet]
-  # Commit message
-  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
-    rev: v9.25.0
-    hooks:
-      - id: commitlint
-        stages: [commit-msg]
-        additional_dependencies: ["@commitlint/config-conventional"]
+  # --------------------------------------------------------------
+  # For SQL
+  # --------------------------------------------------------------
+  # - repo: https://github.com/sqlfluff/sqlfluff
+  #   rev: 4.1.0
+  #   hooks:
+  #     - id: sqlfluff-lint
+  #       args: [--dialect, mysql]
+  #     - id: sqlfluff-fix
+  #       args: [--dialect, mysql]
+  # --------------------------------------------------------------
+  # For Terraform
+  # --------------------------------------------------------------
+  # - repo: https://github.com/antonbabenko/pre-commit-terraform
+  #   rev: v1.105.0
+  #   hooks:
+  #     - id: terraform_fmt
+  #     - id: terraform_tflint
+  #       args:
+  #         - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
+  #         - --args=--no-color
+  #         - --args=--fix
+  #     - id: terraform_trivy
+  #       args:
+  #         - --args=--config=__GIT_WORKING_DIR__/trivy.yaml
+  #         - --args=--format=table
+  #         - --args=--skip-dirs=**/.terraform
+  # - repo: https://github.com/terraform-docs/terraform-docs
+  #   rev: v0.24.0
+  #   hooks:
+  #     - id: terraform-docs-go
+  #       args:
+  #         [
+  #           "markdown",
+  #           "table",
+  #           "--output-file",
+  #           "README.md",
+  #           "--recursive",
+  #           "--recursive-path",
+  #           ".",
+  #           "terraform",
+  #         ]
+  # - repo: https://github.com/terraform-docs/terraform-docs
+  #   rev: v0.24.0
+  #   hooks:
+  #     - id: terraform-docs-go
+  #       args:
+  #         [
+  #           "markdown",
+  #           "table",
+  #           "--output-file",
+  #           "README.md",
+  #           "--recursive",
+  #           "--recursive-path",
+  #           ".",
+  #           "modules",
+  #         ]
