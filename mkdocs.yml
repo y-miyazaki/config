@@ -58,6 +58,7 @@ nav:
       - Troubleshooting: how-to/troubleshooting.md
   - Reference:
       - Specification: reference/specification.md
+      - Loop Engineering Checklist: reference/loop-engineering-checklist.md
   - Explanation:
       - Architecture: explanation/architecture.md
       - GitHub Workflows Design: explanation/github-workflows-design.md

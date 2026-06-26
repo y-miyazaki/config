@@ -388,6 +388,35 @@ Conflict detection is performed by each Action loop checking the `acting_on` fie
 | Team cannot understand change intent | Auto-merge expansion (Comprehension Debt Spiral) | Mandatory weekly digest. Route medium-risk to human gate |
 | Quality degrades due to context bloat | Unlimited conversation history accumulation (Context Rot) | Reset at phase boundaries. Trim every 10-15 calls |
 
+### Design Invariants
+
+Absolute rules that must never be violated regardless of loop type, level, or engine. Use these as the primary checklist during design review.
+
+1. **Agent never writes to the default branch directly** — All modifications happen on isolated branches
+2. **Verifier never modifies the repository** — Verify phase is strictly read-only
+3. **Detect never writes state** — State changes only in Finalize
+4. **Finalize never changes source code** — It persists outcomes (PR, state) but does not alter application/documentation files
+5. **State advances only through Finalize** — No other phase may commit to the state file
+6. **Each phase communicates only via outputs/inputs** — No implicit filesystem coupling between jobs
+7. **Checkout is the caller's responsibility** — Composite Actions must not perform checkout internally
+8. **Every decision is traceable** — Each phase must produce structured output sufficient to reconstruct why a decision was made (skip reason, reject reason, outcome)
+
+### Metrics
+
+Key indicators for evaluating loop health. Measurement infrastructure is not required at L2, but these definitions guide L3 promotion decisions.
+
+| Metric | Definition | Target (L2) |
+|---|---|---|
+| Approval Rate | APPROVE / (APPROVE + REJECT) per period | > 70% |
+| Skip Rate | skip=true / total executions | Context-dependent (high is fine for stable repos) |
+| Average Runtime | Wall-clock time from trigger to finalize | < 15 min |
+| Token Usage | Total tokens consumed per execution (agent + verifier) | Track, no hard cap at L2 |
+| PR Merge Rate | Merged PRs / Created PRs | > 80% |
+| Human Override Rate | PRs closed or edited by humans / Created PRs | < 30% |
+| Consecutive Failure Count | Sequential rejected or errored runs | Alert at 3+ |
+
+**L3 promotion gate**: A loop may be promoted to L3 only when Approval Rate > 80%, PR Merge Rate > 90%, and Human Override Rate < 10% over a 2-week window.
+
 ### Retry Policy
 
 Defines how a loop behaves when an execution fails or is rejected.
@@ -446,7 +475,19 @@ stateDiagram-v2
 | 2 | State records `consecutive_failures: 2`. Consider alerting via PR comment |
 | 3+ | Loop pauses (skip=true until manual reset). Escalate via notification |
 
-**Implementation**: `loop-finalize` increments `consecutive_rejects` in state on rejection. `detect_changes.sh` checks this counter and sets `skip=true` when threshold is exceeded.
+**Implementation**: `loop-finalize` increments `consecutive_failures` in state on rejection. `detect_changes.sh` checks this counter and sets `skip=true` when threshold is exceeded.
+
+**Reject reason recording**: On REJECT, Finalize writes the verifier's `reason` field to state. This enables future feedback loops where reject reasons are analyzed to improve prompts or detect systematic issues.
+
+```json
+{
+  "last_sha": "abc123",
+  "last_run": "2026-06-26T09:00:00Z",
+  "outcome": "rejected",
+  "consecutive_failures": 2,
+  "last_reject_reason": "Changes included hallucinated API endpoint not present in codebase"
+}
+```
 
 **Relationship to Stop Conditions**: Retry policy operates below the Stop Conditions tier. If consecutive failures trigger a Kill-level stop condition, the loop is permanently disabled until manual intervention.
 
