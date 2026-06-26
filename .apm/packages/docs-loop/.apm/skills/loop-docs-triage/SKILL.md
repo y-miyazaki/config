@@ -1,17 +1,45 @@
 ---
 name: loop-docs-triage
 description: >-
-  Apply documentation fixes based on triage findings provided in prompt context.
-  Use when loop automation detects documentation drift from recent commits.
+  Automated loop skill: apply documentation fixes based on triage findings
+  injected by scheduled GitHub Actions workflows. Use when loop automation
+  detects documentation drift from recent commits — not for manual/hook-triggered
+  sync (use docs-updater for that). Triggers via on-loop-docs-triage.yaml cron,
+  never invoked directly by users.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
-  version: "2.2.0"
+  version: "2.3.0"
 ---
 
 ## Input
 
-Provided via prompt context by the calling workflow: triage findings (JSON), commit range (last_sha..current_sha), operating level (L1/L2/L3).
+Provided via prompt context by the calling workflow (loop-prompt-generate action).
+
+Required fields in the injected JSON:
+
+```json
+{
+  "commit_range": "abc1234..def5678",
+  "level": "L2",
+  "findings": [
+    {
+      "file": "docs/reference/specification.md",
+      "reason": "references deleted workflow ci-build.yaml",
+      "source_commit": "def5678"
+    }
+  ]
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `commit_range` | string | SHA range that triggered detection |
+| `level` | enum | Operating level: `L1` (report only), `L2` (edit + PR), `L3` (edit + auto-merge) |
+| `findings` | array | Detected documentation drift items |
+| `findings[].file` | string | Path to affected documentation file |
+| `findings[].reason` | string | Why the file is stale |
+| `findings[].source_commit` | string | Commit that caused the drift |
 
 ## Output Specification
 
@@ -60,7 +88,8 @@ At L2+, documentation files are edited directly.
 
 ### Error Handling
 
-- No findings → report "no items", stop. >20 files → fix first 10, note truncation.
+- No findings → report "no items", stop.
+- >20 files → fix first 10, note truncation (token budget constraint: single agent session targets ≤120k tokens).
 - File outside allowlist or >3 sections affected → skip, classify as Watch.
 
 ### Examples
