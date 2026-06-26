@@ -1,5 +1,5 @@
 name: loop-state-read
-description: "Checkout repository and read loop state JSON. Outputs last_sha and current_sha."
+description: "Read loop state JSON from a checked-out repository. Outputs last_sha and current_sha. Requires actions/checkout with fetch-depth: 0 in the caller."
 
 inputs:
   state_file:
@@ -17,12 +17,6 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Checkout Code
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      with:
-        fetch-depth: 0
-        persist-credentials: false
-
     - name: Read State
       id: read
       shell: bash

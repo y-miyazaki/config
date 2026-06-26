@@ -1,5 +1,5 @@
 name: loop-state-write
-description: "Write loop state JSON and commit/push. Supports main branch (default) or memory branch (future)."
+description: "Write loop state JSON and commit/push. Requires actions/checkout in the caller."
 
 inputs:
   branch:
@@ -22,12 +22,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Checkout Code
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      with:
-        fetch-depth: 1
-        persist-credentials: false
-
     - name: Configure Git Auth
       shell: bash
       env:

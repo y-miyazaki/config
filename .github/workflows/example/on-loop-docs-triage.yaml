@@ -44,6 +44,12 @@ jobs:
       skip: ${{ steps.changes.outputs.skip }}
       verifier_model: ${{ steps.config.outputs.verifier_model }}
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
       - name: Set Config Outputs
         id: config
         shell: bash
@@ -137,25 +143,30 @@ jobs:
 
         ALL of the following must be true:
         1. Changes are limited to documentation files (docs/, README.md, mkdocs.yml nav)
-        2. No broken markdown links are introduced
-        3. Content is factually consistent with the codebase
-        4. No sensitive information is exposed
-        5. Changes address the documented triage items
+        2. Content is factually consistent with the codebase
+        3. No sensitive information is exposed
+        4. Changes address the documented triage items
+        5. No duplicate documentation is introduced
+        6. Existing documentation structure is preserved unless explicitly required by triage items
 
         ## Criteria for REJECT
 
         ANY of the following triggers REJECT:
         - Changes outside allowed documentation paths
         - Factual inaccuracies or hallucinated content
-        - Broken internal links
         - Sensitive data exposure
         - Gratuitous changes not related to triage items
+        - Duplicate content that restates existing documentation
+        - Unnecessary restructuring of document headings or sections
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
 
   finalize:
     needs: [detect, agent, verify]
-    if: always() && (needs.detect.result == 'success')
+    if: >-
+      always() &&
+      needs.detect.result == 'success' &&
+      needs.agent.result != 'cancelled'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:

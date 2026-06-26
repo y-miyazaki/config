@@ -387,3 +387,129 @@ Conflict detection is performed by each Action loop checking the `acting_on` fie
 | Closed items accumulate in STATE.md | No pruning (State Rot) | Delete closed items on each execution. Separate files per loop |
 | Team cannot understand change intent | Auto-merge expansion (Comprehension Debt Spiral) | Mandatory weekly digest. Route medium-risk to human gate |
 | Quality degrades due to context bloat | Unlimited conversation history accumulation (Context Rot) | Reset at phase boundaries. Trim every 10-15 calls |
+
+### Retry Policy
+
+Defines how a loop behaves when an execution fails or is rejected.
+
+**Retry scope**: Retry occurs across cron executions, not within a single Workflow run. A single run either succeeds or fails — it does not self-retry.
+
+**State Transition Diagram:**
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+
+    Idle --> Detecting : cron / workflow_dispatch
+
+    Detecting --> Skipped : no actionable changes
+    Detecting --> Detecting : detect script error\n(workflow fails, state unchanged)
+
+    Skipped --> Idle : next cron
+
+    Detecting --> Executing : changes found
+
+    Executing --> NoChanges : agent produces nothing
+    Executing --> Verifying : has_changes=true
+    Executing --> Idle : cancelled\n(state unchanged)
+
+    Verifying --> Approved : verdict=APPROVE
+    Verifying --> Rejected : verdict=REJECT
+
+    Approved --> PRCreated : finalize creates PR
+    Rejected --> BranchDeleted : finalize deletes branch
+
+    NoChanges --> Idle : state: no-op\nSHA advances
+    PRCreated --> Idle : state: pr-created\nSHA advances
+    BranchDeleted --> Idle : state: rejected\nSHA advances
+```
+
+**Key invariant**: SHA advances whenever Finalize runs successfully. Only detect-phase failures or cancellations leave SHA unchanged, causing the next cron to retry from the same point.
+
+**Policy by failure type:**
+
+| Failure Type | Behavior | State Record |
+|---|---|---|
+| Detect failure (script error) | Workflow fails. No state update. Next cron retries from same SHA | No change |
+| Agent produces no changes | Finalize records `no-op`. SHA advances. Next cron scans only new commits | `outcome: no-op` |
+| Verifier REJECT | Finalize deletes branch, records rejection. SHA advances. The rejected diff is not retried — only new commits are scanned | `outcome: rejected` |
+| Verifier APPROVE → PR CI fails | PR remains open (blocked by Required Status Checks). SHA advances. ci-sweeper-loop handles cleanup | `outcome: pr-created` |
+| Agent job cancelled (user/concurrency) | Finalize does not run. No state update. Next cron retries from same SHA | No change |
+
+**Design rationale**: SHA always advances on successful detect (even if later phases fail). This prevents infinite retry of the same failing diff. If the underlying issue persists, new commits touching the same area will trigger a fresh detection.
+
+**Consecutive failure handling:**
+
+| Consecutive Failures | Action |
+|---|---|
+| 1 | Normal — recorded in state |
+| 2 | State records `consecutive_failures: 2`. Consider alerting via PR comment |
+| 3+ | Loop pauses (skip=true until manual reset). Escalate via notification |
+
+**Implementation**: `loop-finalize` increments `consecutive_rejects` in state on rejection. `detect_changes.sh` checks this counter and sets `skip=true` when threshold is exceeded.
+
+**Relationship to Stop Conditions**: Retry policy operates below the Stop Conditions tier. If consecutive failures trigger a Kill-level stop condition, the loop is permanently disabled until manual intervention.
+
+### Phase Contract
+
+Defines the responsibilities, inputs, outputs, and boundaries for each phase of a loop execution. When creating a new loop, implement each phase according to this contract.
+
+#### Detect
+
+| Aspect | Definition |
+|---|---|
+| **Responsibility** | Determine whether actionable work exists. Output a structured description of what needs to be done |
+| **Input** | Previous state (last_sha), repository contents |
+| **Output** | `skip` (bool), `result` (structured JSON describing changes), config values |
+| **May modify** | Nothing. Read-only phase |
+| **Caller-specific** | Detection script, scope definition, filtering logic |
+| **Generic** | State read, config output, prompt generation |
+
+#### Agent (Execute)
+
+| Aspect | Definition |
+|---|---|
+| **Responsibility** | Produce code/content changes based on the prompt. Operate within the constraints defined by the Skill |
+| **Input** | Prompt text, skill name, engine, model, level |
+| **Output** | `branch` (string), `has_changes` (bool) |
+| **May modify** | Files within the Skill's allowed paths, on an isolated branch only |
+| **Must not modify** | Files on denylist. Files outside allowed paths. Default branch directly |
+| **Contract** | Regardless of engine strategy, always outputs `{ branch, has_changes }` |
+
+#### Verify
+
+| Aspect | Definition |
+|---|---|
+| **Responsibility** | Independently evaluate whether Agent output meets quality criteria. Default stance is reject |
+| **Input** | Agent branch, base branch, verifier criteria, denylist |
+| **Output** | `verdict` (APPROVE / REJECT), `reason` (string) |
+| **May modify** | Nothing. Read-only phase |
+| **Must be** | A separate agent session from the Agent phase (Maker-Checker separation) |
+| **Evaluates** | Semantic quality (factual accuracy, relevance, no hallucination). Does NOT evaluate lint/CI — that is CI's responsibility |
+
+#### Finalize
+
+| Aspect | Definition |
+|---|---|
+| **Responsibility** | Persist the outcome. Create PR on approval, delete branch on rejection, update state |
+| **Input** | All prior phase outputs (branch, has_changes, verdict, current_sha) |
+| **Output** | PR URL (on success), updated state file |
+| **May modify** | State file (commit + push to default branch). PR creation/deletion on agent branch |
+| **Must not** | Perform notifications, trigger downstream workflows, or modify code. Finalize is a persistence layer only |
+
+#### Skill
+
+| Aspect | Definition |
+|---|---|
+| **Responsibility** | Define behavioral constraints for the Agent: what it can do, what it must not do, and how it should approach the task |
+| **Composition** | Prompt template + allowed paths + behavioral rules + tool constraints |
+| **Guarantees** | Agent operating under a Skill will not modify files outside the allowed paths (enforced by Verifier + denylist). Agent will follow the approach defined in the Skill |
+| **Does not guarantee** | Correctness of output (that is the Verifier's job). CI passing (that is CI's job) |
+| **Self-contained** | A Skill must not reference external skills or repository-specific paths outside its domain |
+
+#### Phase Boundary Rules
+
+1. Each phase communicates only via GitHub Actions outputs/inputs — no shared filesystem state between jobs
+2. A phase must not assume the internal implementation of a prior phase (no implicit side effects)
+3. Checkout is the caller's responsibility. Actions operate on an already checked-out workspace
+4. Error in any phase halts the pipeline (except Finalize, which runs on `always()` to record state)
