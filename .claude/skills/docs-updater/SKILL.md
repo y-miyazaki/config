@@ -2,7 +2,9 @@
 name: docs-updater
 description: >-
   Sync documentation with code changes by detecting git diff impact on markdown files.
-  Use when a stop hook or user explicitly requests documentation sync after code changes.
+  Use when code changes may have made documentation stale — after commits, before PRs,
+  when files are renamed/deleted/added, or whenever the user mentions syncing docs with code.
+  Also triggers from stop hooks and commit-preparation hooks.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
@@ -45,11 +47,11 @@ Target: root `*.md`, `README.md`, `docs/**/*.md`, and `mkdocs.yml` (nav section)
 
 2. If `skip` is `true` AND all changed markdown files are already staged, report "No documentation update required." and exit.
 
-3. Read each `affected_docs` file and the relevant diffs. Identify stale references, missing entries, and dead references. If diff exceeds 500 changed lines, report exceeded-scope and stop.
+3. Read each `affected_docs` file and the relevant diffs. Identify stale references, missing entries, and dead references. If a single file's diff exceeds 500 changed lines, report exceeded-scope for that file and skip it.
 
-4. Apply minimal updates: add/update/remove entries in existing structure. Do not reorder, rewrite, or add sections. When `docs/` files are added, deleted, or renamed, update the `nav` section in `mkdocs.yml` to match.
+4. Apply minimal updates: add/update/remove entries in existing structure. Do not reorder, rewrite, or add sections. When `docs/` files are added, deleted, or renamed, update the `nav` section in `mkdocs.yml`: add new entries at the end of the relevant nav section, remove deleted entries, update renamed paths in-place.
 
-5. Scope guard: if changes affect >3 sections of one document, stop and report "Changes exceed diff-sync scope. Manual review of `<file>` recommended."
+5. Scope guard: if changes affect >3 H2 sections of one document, stop and report "Changes exceed diff-sync scope. Manual review of `<file>` recommended."
 
 6. Stage updated files with `git add`. Return report.
 
@@ -66,3 +68,9 @@ Target: root `*.md`, `README.md`, `docs/**/*.md`, and `mkdocs.yml` (nav section)
 
 - Trigger: `git mv .github/workflows/ci-build.yaml .github/workflows/ci-build-deploy.yaml`
 - Result: Updated `docs/reference/specification.md` table row, `mkdocs.yml` nav unchanged.
+
+- Trigger: New file `.github/workflows/cd-deploy.yaml` added.
+- Result: Added entry to workflows table in `docs/reference/specification.md`, added nav entry in `mkdocs.yml`.
+
+- Trigger: `rm .github/workflows/on-release.yaml`
+- Result: Removed dead link from `docs/reference/specification.md`, removed nav entry from `mkdocs.yml`.

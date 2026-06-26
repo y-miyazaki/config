@@ -2,7 +2,8 @@
 name: github-actions-review
 description: >-
   Review GitHub Actions workflows for correctness, security, and maintainability.
-  Use when assessing trigger design, permissions, secret usage, and action integrations requiring judgment.
+  Use when reviewing GitHub Actions workflow PRs, checking workflow security,
+  evaluating CI/CD pipeline design, or assessing permissions and secret handling.
 license: Apache-2.0
 metadata:
   author: y-miyazaki

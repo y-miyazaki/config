@@ -208,7 +208,7 @@ function collect_changes {
     mapfile -t DELETED_FILES < <(git diff "${diff_ref}" --name-only --diff-filter=D 2> /dev/null || true)
 
     local rename_lines
-    mapfile -t rename_lines < <(git diff "${diff_ref}" --diff-filter=R --name-status 2> /dev/null || true)
+    mapfile -t rename_lines < <(git diff "${diff_ref}" -M --diff-filter=R --name-status 2> /dev/null || true)
     local line
     for line in "${rename_lines[@]}"; do
         [[ -z "${line}" ]] && continue
@@ -279,14 +279,27 @@ function collect_affected_docs {
     while IFS= read -r doc_file; do
         AFFECTED_DOCS+=("${doc_file}")
     done < <(find . -maxdepth 1 -name '*.md' -type f 2> /dev/null | sed 's|^\./||')
-    # docs/ directory markdown files
+    # docs/ directory markdown files (excluding generated directories)
     while IFS= read -r doc_file; do
         AFFECTED_DOCS+=("${doc_file}")
     done < <(find docs -name '*.md' -type f 2> /dev/null || true)
-    # Nested README.md files (excluding root, docs/, and hidden directories)
+    # Nested README.md files (excluding root, docs/, generated, and hidden directories)
     while IFS= read -r doc_file; do
         AFFECTED_DOCS+=("${doc_file}")
-    done < <(find . -mindepth 2 -path './docs' -prune -o -path '*/.*' -prune -o -name 'README.md' -type f -print 2> /dev/null | sed 's|^\./||' || true)
+    done < <(find . -mindepth 2 \
+        -path './docs' -prune -o \
+        -path '*/.*' -prune -o \
+        -path './.agents' -prune -o \
+        -path './.cursor' -prune -o \
+        -path './.claude' -prune -o \
+        -path './.kiro' -prune -o \
+        -path './.vscode' -prune -o \
+        -path './apm_modules' -prune -o \
+        -name 'README.md' -type f -print 2> /dev/null | sed 's|^\./||' || true)
+    # mkdocs.yml (nav section is documentation)
+    if [[ -f "mkdocs.yml" ]]; then
+        AFFECTED_DOCS+=("mkdocs.yml")
+    fi
 }
 
 #######################################

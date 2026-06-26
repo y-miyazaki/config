@@ -2,14 +2,14 @@
 
 ## Pre-Creation Checklist
 
-### NC-00: Input Schema Validation
+### NC-00: Input Validation
 
-- [ ] Input payload is valid JSON and matches the schema defined in `SKILL.md` Input section
-- [ ] Required fields exist: `topic`, `document_type`, `profile`
-- [ ] `document_type` and `profile` use allowed enum values
+- [ ] User request contains enough information to determine the documentation purpose
+- [ ] `document_type` is resolved: either explicitly provided or inferred from request using `category-diataxis-mapping.md`
+- [ ] `profile` is resolved: explicitly provided or defaulted to `default`
 - [ ] If `target_file` is provided and `document_type` is NOT `other` or `general`, it matches `^docs/(tutorials|how-to|reference|explanation)/[a-z0-9-]+\.md$`
 - [ ] If `document_type` is `other` or `general`, `target_file` is a valid `.md` path (no further regex constraint)
-- **PASS** if schema validation succeeds, **FAIL** if validation fails
+- **PASS** if all parameters are resolved, **FAIL** if required information is missing and cannot be inferred
 
 ### NC-01: Target File Resolution and Duplicate Handling
 

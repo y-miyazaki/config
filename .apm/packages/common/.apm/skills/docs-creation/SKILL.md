@@ -2,8 +2,9 @@
 name: docs-creation
 description: >-
   Create or update documentation files using Diataxis structure and templates.
-  Use when writing README, specs, architecture, design, troubleshooting, or maintenance docs.
-  Use when improving existing manually-created documents.
+  Use when the user wants to create or improve any documentation file — README, specs,
+  architecture, design, troubleshooting, tutorial, or any markdown document under docs/.
+  Also use when improving existing manually-created documents or applying structure to unstructured docs.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
@@ -108,4 +109,4 @@ Return structured report per [references/common-output-format.md](references/com
 ### Examples
 
 - Prompt: `Create an explanation doc about caching strategy`
-- Result: `docs/explanation/caching-strategy.md` created with Diátaxis-compliant structure, `mkdocs.yml` nav updated.
+- Result: `docs/explanation/caching-strategy.md` created with Diátaxis-compliant structure, `docs/index.md` regenerated.
