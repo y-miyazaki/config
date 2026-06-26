@@ -62,8 +62,7 @@ Target: root `*.md`, `README.md`, `docs/**/*.md`, and `mkdocs.yml` (nav section)
 | Document missing | Skip, note in report |
 | Exceeds scope | Stop for that file, recommend manual review |
 
-## Best Practices
+### Examples
 
-- Prefer updating existing entries over adding duplicates.
-- Keep diffs minimal — change only what the code change necessitates.
-- When in doubt about scope, stop and report rather than making incorrect updates.
+- Trigger: `git mv .github/workflows/ci-build.yaml .github/workflows/ci-build-deploy.yaml`
+- Result: Updated `docs/reference/specification.md` table row, `mkdocs.yml` nav unchanged.

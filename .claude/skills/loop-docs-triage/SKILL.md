@@ -62,3 +62,8 @@ At L2+, documentation files are edited directly.
 
 - No findings → report "no items", stop. >20 files → fix first 10, note truncation.
 - File outside allowlist or >3 sections affected → skip, classify as Watch.
+
+### Examples
+
+- Trigger: schedule event detects stale API reference in `docs/reference/specification.md`
+- Result: triage report with Fix item (update table row) and Watch items (unrelated files skipped).
