@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-06-26T05:17:50.130078+00:00'
+generated_at: '2026-06-26T05:57:40.600055+00:00'
 apm_version: 0.21.0
 dependencies:
 - repo_url: _local/common
@@ -33,6 +33,17 @@ dependencies:
   - .claude/skills/agent-skills-review/scripts/lib/validation.sh
   - .claude/skills/agent-skills-review/scripts/validate.sh
   - .claude/skills/agent-skills-review/scripts/validate_waza.sh
+  - .claude/skills/docs-creator
+  - .claude/skills/docs-creator/SKILL.md
+  - .claude/skills/docs-creator/eval.yaml
+  - .claude/skills/docs-creator/evals/tasks/docs-creation-basic.yaml
+  - .claude/skills/docs-creator/evals/tasks/docs-creation-boundary-guardrail.yaml
+  - .claude/skills/docs-creator/evals/tasks/docs-creation-missing-input.yaml
+  - .claude/skills/docs-creator/evals/tasks/docs-creation-structured-output.yaml
+  - .claude/skills/docs-creator/evals/tasks/docs-creation-trigger-negative.yaml
+  - .claude/skills/docs-creator/references/category-diataxis-mapping.md
+  - .claude/skills/docs-creator/references/common-checklist.md
+  - .claude/skills/docs-creator/references/common-output-format.md
   - .claude/skills/docs-updater
   - .claude/skills/docs-updater/SKILL.md
   - .claude/skills/docs-updater/eval.yaml
@@ -200,6 +211,16 @@ dependencies:
     .claude/skills/agent-skills-review/scripts/lib/validation.sh: sha256:ee2be940117c00e6a681186e02e05188786bf98aa52bd74ff1586eb474a98648
     .claude/skills/agent-skills-review/scripts/validate.sh: sha256:081c2fb2856b5aed924e9011d63d233ff7e459a0838942497d5679c3f1ebe7fa
     .claude/skills/agent-skills-review/scripts/validate_waza.sh: sha256:9b933b61a9879b124fe5d8ec6ce3686b5145e34823321a569b9cc4f5eb63122b
+    .claude/skills/docs-creator/SKILL.md: sha256:7dda23abafd6f1fdf07670da386ac03d027f0b4fa440113fd5d90a4a54c8a000
+    .claude/skills/docs-creator/eval.yaml: sha256:9213bac4f0fcb1decec43bb917d03e71c89172f85e9a9863390cd2b1be1230e6
+    .claude/skills/docs-creator/evals/tasks/docs-creation-basic.yaml: sha256:21e8bad6cb1e8447f01d7ff46c55de7fa420a6fab4c4385e945452bd7444021f
+    .claude/skills/docs-creator/evals/tasks/docs-creation-boundary-guardrail.yaml: sha256:19bd9a28f553ba42d06ceaffed5307c8613c4ad12c04776ac5f4115d95b8b105
+    .claude/skills/docs-creator/evals/tasks/docs-creation-missing-input.yaml: sha256:5f2fb76fa7086fd65e8eedfe796059692dbb258e13a7d0e58d6efaadc111254c
+    .claude/skills/docs-creator/evals/tasks/docs-creation-structured-output.yaml: sha256:c454a4a5425bf8547b3d03a35ee742936edd4d478d77f6e152b9c21202aafcf1
+    .claude/skills/docs-creator/evals/tasks/docs-creation-trigger-negative.yaml: sha256:8ee7df15aed56d3785db9aef8bdc6588deb1677d0fcef6cae3c8e821a8b6477a
+    .claude/skills/docs-creator/references/category-diataxis-mapping.md: sha256:b53db008add7e975ed545c6254fde6a1fa78e87391cfeb2ae8e6c7656939efad
+    .claude/skills/docs-creator/references/common-checklist.md: sha256:7c4f0a0bd291a44dab1789b97774948ce9d8b7bd5d1f2b6f62355a790d3b44ac
+    .claude/skills/docs-creator/references/common-output-format.md: sha256:38aac4feff1bfce7e2d987977511ecfe37dd99dc969964117ab197e3ef3e29b6
     .claude/skills/docs-updater/SKILL.md: sha256:706bf8e95ab18064862ca9f6dea8ad3f586095afb38ccbbc4b2748c2bed325c4
     .claude/skills/docs-updater/eval.yaml: sha256:977e8bc7feea1f6473a72ea46295c24298e6a1fa316cc7e525cb238114935818
     .claude/skills/docs-updater/evals/tasks/docs-updater-basic.yaml: sha256:f9ab271e25ff712a952b512c8c8ca2bbcc4469de57c0e2c8a3c63d8b48173f2c
@@ -367,7 +388,7 @@ dependencies:
   - .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-noaction.yaml
   - .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-trigger-negative.yaml
   deployed_file_hashes:
-    .claude/skills/loop-docs-triage/SKILL.md: sha256:b3866f09766259614388e078a1bc377d1c558efddde428825a207439b09acdd9
+    .claude/skills/loop-docs-triage/SKILL.md: sha256:5d392cb8c3e35752a9534dd70127e74ca2873c64d171a6ce448871ee483d3d89
     .claude/skills/loop-docs-triage/eval.yaml: sha256:eb9d6fc72e354cbdce9c7955eb1976c87ccc2cdc0a22143e732cabf1a4d60896
     .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-basic.yaml: sha256:e128892489753374b3fad063c865080ad86a65c37ae753cdcfaf58e43e607ce6
     .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-boundary.yaml: sha256:49baf1f8e7e2ac173b87a29555e217e922e6e071dfdfedf0e18bde4c620b995f
