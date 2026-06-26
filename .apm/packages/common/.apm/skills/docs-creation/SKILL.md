@@ -104,3 +104,8 @@ Return structured report per [references/common-output-format.md](references/com
 | Reference file (`common-checklist.md`, `category-diataxis-mapping.md`) missing | Fatal | Stop, report missing dependency |
 | Context gathering yields 0 populatable sections | Blocking | Ask user for input |
 | README marker malformed | Recoverable | Skip marker update, note in report |
+
+### Examples
+
+- Prompt: `Create an explanation doc about caching strategy`
+- Result: `docs/explanation/caching-strategy.md` created with Diátaxis-compliant structure, `mkdocs.yml` nav updated.
