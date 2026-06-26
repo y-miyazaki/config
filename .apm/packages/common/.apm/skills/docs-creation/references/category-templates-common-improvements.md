@@ -4,6 +4,8 @@ Templates are guidance and review rubrics, not rigid prose generators.
 Adapt structure and depth to the repository and context.
 Remove sections that cannot be populated with concrete information.
 
+**Depth guidance:** Document all planned, in-progress, and completed improvements with concrete impact assessment. Include specific metrics or indicators of success. For projects with active tech debt, list every known item with its operational consequence.
+
 ```markdown
 # Improvements
 
@@ -15,9 +17,8 @@ Focus on:
 - technical debt with concrete consequences
 
 Avoid:
-- vague wishlist items without justification
-- low-context task lists
-- items that belong in an issue tracker
+- vague wishlist items without measurable justification
+- items that belong solely in an issue tracker with no architectural context
 
 ## Improvement Priorities
 

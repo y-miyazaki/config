@@ -21,10 +21,8 @@ Focus on:
 - minimal self-contained content (delegate details to docs/)
 
 Avoid:
-- duplicating docs/ content in README
-- embedding large generated tables or catalogs
-- exhaustive configuration references
-- manual TOC (GitHub renders section navigation automatically)
+- embedding large generated tables that should live in docs/
+- exhaustive configuration references (link to reference/ docs)
 
 ## Key Features (Optional)
 

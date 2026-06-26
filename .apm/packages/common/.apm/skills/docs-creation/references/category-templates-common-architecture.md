@@ -4,6 +4,8 @@ Templates are guidance and review rubrics, not rigid prose generators.
 Adapt structure and depth to the repository and context.
 Remove sections that cannot be populated with concrete information.
 
+**Depth guidance:** The document should be comprehensive enough that a new team member can understand the system's structure without reading source code. For repositories with 5+ major components, include concrete details: specific file paths, tool names, counts, and relationships. A useful architecture document is typically 100-250 lines for medium repositories. Err on the side of being too detailed rather than too terse — readers can skim, but they cannot infer missing information.
+
 ```markdown
 # Architecture Overview
 
@@ -17,7 +19,7 @@ Focus on:
 
 Avoid:
 - low-level implementation details (use design.md)
-- directory listings without explanation
+- directory listings without explanation (list directories only when annotated with purpose and relationships)
 - generic descriptions that apply to any system
 
 ## System Overview

@@ -82,6 +82,7 @@ Return structured report per [references/common-output-format.md](references/com
 5. Select template: `category-templates-common-{document_type}.md`. For `specification` with `go` or `terraform` profile, use `category-templates-{profile}-specification.md`. If the resolved template file is missing, fall back to `category-templates-common-general.md` and record the fallback in the report.
 6. Create or update the document:
    - For new documents: use template structure and populate sections using gathered context. Answer each section's guide comments before writing prose.
+   - **Depth principle**: the document must be comprehensive enough for a reader to understand the system without reading source code. Include concrete details — file paths, tool names, component counts, dependency relationships, data flow diagrams (Mermaid). Templates define minimum structure; expand sections proportionally to repository complexity (e.g., a 15-package monorepo warrants listing all packages with annotations).
    - For `other` type (existing document update):
      - Preserve original structure.
      - Format fixes (code block languages, broken links) are applied automatically.
@@ -90,7 +91,7 @@ Return structured report per [references/common-output-format.md](references/com
    - When the document contains reference URLs (pricing pages, official docs, etc.), fetch or verify the URL content before updating. Do not update based on inference or memory — only based on confirmed source content. If the URL is unreachable, note it in the report and leave the value unchanged.
    - Remove sections that cannot be populated with concrete information rather than leaving generic filler.
 7. Run case-insensitive duplicate check (skip for `other` type). A duplicate exists when another file in `docs/` has the same basename regardless of subdirectory or case (e.g., `reference/design.md` duplicates `explanation/design.md`). Fail on duplicates.
-8. Regenerate `docs/index.md` if files under `docs/` changed (use index template from common-checklist).
+8. **Always** regenerate `docs/index.md` when any file under `docs/` is created, updated, or renamed (use index template from common-checklist). This step is mandatory — do not skip even if the content change seems minor.
 9. IF README has docs-index markers (`<!-- docs-index-start -->` / `<!-- docs-index-end -->`), update content inside markers. IF markers are malformed or ambiguous, skip marker update and note in report. IF no markers exist, skip.
 10. Return report per [references/common-output-format.md](references/common-output-format.md).
 

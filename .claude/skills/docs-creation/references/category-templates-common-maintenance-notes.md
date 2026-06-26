@@ -4,6 +4,8 @@ Templates are guidance and review rubrics, not rigid prose generators.
 Adapt structure and depth to the repository and context.
 Remove sections that cannot be populated with concrete information.
 
+**Depth guidance:** Document every recurring task, operational quirk, and lifecycle concern with enough detail that someone unfamiliar with the project can execute maintenance tasks independently. Include specific commands, schedules, and known failure modes for each task.
+
 ```markdown
 # Maintenance Notes
 
@@ -15,9 +17,8 @@ Focus on:
 - operational quirks and tribal knowledge
 
 Avoid:
-- temporary issue tracking (use issue tracker)
-- undocumented operational assumptions
-- tasks that should be automated instead of documented
+- temporary issue tracking (use issue tracker for transient items)
+- tasks that should be automated rather than documented as manual procedures
 
 ## Recurring Tasks
 

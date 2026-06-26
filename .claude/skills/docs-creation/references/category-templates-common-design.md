@@ -4,6 +4,8 @@ Templates are guidance and review rubrics, not rigid prose generators.
 Adapt structure and depth to the repository and context.
 Remove sections that cannot be populated with concrete information.
 
+**Depth guidance:** Cover each component's design thoroughly enough that a developer can understand responsibilities, boundaries, and interaction patterns without reading source code. Include concrete type names, interface signatures, data structures, and sequence flows. For modules with 3+ interacting components, use tables or diagrams to show relationships.
+
 ```markdown
 # Design Document
 
@@ -16,8 +18,7 @@ Focus on:
 - design constraints and tradeoffs
 
 Avoid:
-- documenting every internal detail equally
-- duplicating source code structure without rationale
+- duplicating source code structure without explaining rationale and relationships
 - generic design principles not specific to this module
 
 ## Overview

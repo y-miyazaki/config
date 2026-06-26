@@ -4,6 +4,8 @@ Templates are guidance and review rubrics, not rigid prose generators.
 Adapt structure and depth to the repository and context.
 Remove sections that cannot be populated with concrete information.
 
+**Depth guidance:** Document every security control with its enforcement mechanism, owner, and verification method. For coverage matrices, enumerate all services/components and their security posture exhaustively — gaps should be immediately visible.
+
 ```markdown
 # Security Coverage
 
@@ -15,9 +17,8 @@ Focus on:
 - intentional exclusions with rationale
 
 Avoid:
-- vague "secured" statements without specifics
+- vague "secured" statements without specific mechanisms
 - undocumented trust assumptions
-- generic security checklists
 
 ## Coverage Matrix
 

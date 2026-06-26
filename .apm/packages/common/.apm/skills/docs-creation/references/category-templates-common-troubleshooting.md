@@ -4,6 +4,8 @@ Templates are guidance and review rubrics, not rigid prose generators.
 Adapt structure and depth to the repository and context.
 Remove sections that cannot be populated with concrete information.
 
+**Depth guidance:** Document every known failure mode with concrete error messages, investigation commands, and resolution steps. Include actual command output examples. For projects with multiple lint/validation tools, dedicate a section per tool with multiple error patterns each.
+
 ````markdown
 # Troubleshooting
 
@@ -15,9 +17,8 @@ Focus on:
 - verified recovery steps
 
 Avoid:
-- shallow "restart and retry" guidance without diagnosis
+- "restart and retry" guidance without specific diagnosis steps
 - undocumented assumptions about environment
-- generic advice not specific to this project
 
 ## <Symptom or Error Message>
 

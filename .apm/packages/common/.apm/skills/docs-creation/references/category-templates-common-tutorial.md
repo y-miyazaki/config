@@ -4,6 +4,8 @@ Templates are guidance and review rubrics, not rigid prose generators.
 Adapt structure and depth to the repository and context.
 Remove sections that cannot be populated with concrete information.
 
+**Depth guidance:** Each step must include the exact command, the expected output (verbatim), and a brief explanation of what happened. Tutorials should be long enough that following them blindly produces success — err on over-explaining rather than under-explaining. Include troubleshooting tips inline for steps that commonly fail.
+
 ```markdown
 # <Tutorial Title>
 
@@ -16,9 +18,8 @@ Focus on:
 - concrete instructions (exact commands and expected outputs)
 
 Avoid:
-- deep conceptual explanations (use explanation/ docs)
-- multiple choices or alternatives
-- exhaustive reference material or edge cases (use reference/ docs)
+- multiple alternative paths (pick one and commit to it)
+- exhaustive reference material (use reference/ docs for that)
 
 ## Prerequisites
 

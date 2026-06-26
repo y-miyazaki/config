@@ -4,6 +4,8 @@ Templates are guidance and review rubrics, not rigid prose generators.
 Adapt structure and depth to the repository and context.
 Remove sections that cannot be populated with concrete information.
 
+**Depth guidance:** Document every alert, dashboard, and runbook with concrete thresholds, owner contacts, and step-by-step response procedures. Include example queries and expected baseline values.
+
 ```markdown
 # Monitoring
 
@@ -15,9 +17,8 @@ Focus on:
 - incident investigation support
 
 Avoid:
-- dashboards without operational purpose
+- dashboards without clear operational purpose or audience
 - noisy non-actionable alerts
-- generic monitoring advice
 
 ## Monitoring Strategy
 

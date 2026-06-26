@@ -4,6 +4,8 @@ Templates are guidance and review rubrics, not rigid prose generators.
 Adapt structure and depth to the repository and context.
 Remove sections that cannot be populated with concrete information.
 
+**Depth guidance:** Include measured data (benchmark results, profiling numbers, latency percentiles) wherever available. Document specific tuning parameters with their current values, safe ranges, and the impact of changes. For each bottleneck, include the investigation method and resolution timeline.
+
 ```markdown
 # Performance
 
@@ -16,9 +18,8 @@ Focus on:
 - measured data over speculation
 
 Avoid:
-- micro-optimizations without operational relevance
-- benchmark numbers without context
-- generic performance advice
+- benchmark numbers without context on methodology and environment
+- generic performance advice not grounded in measured data
 
 ## Performance Goals
 

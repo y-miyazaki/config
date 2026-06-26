@@ -4,6 +4,8 @@ Templates are guidance and review rubrics, not rigid prose generators.
 Adapt structure and depth to the repository and context.
 Remove sections that cannot be populated with concrete information.
 
+**Depth guidance:** Each decision record should be self-contained and tell the full story — context, constraints, alternatives evaluated, and long-term implications. Include specific trade-off analysis with measurable criteria where possible. For repositories with 5+ major decisions, document all of them rather than picking a subset.
+
 ```markdown
 # Design Decisions
 
@@ -17,8 +19,7 @@ Focus on:
 
 Avoid:
 - obvious decisions requiring no rationale
-- implementation-only details without architectural impact
-- decisions already documented elsewhere
+- decisions already fully documented in another existing file
 
 ## <Decision Title>
 
