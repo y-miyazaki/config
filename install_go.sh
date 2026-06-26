@@ -25,14 +25,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Source repository raw URL base
 readonly REPO_RAW_BASE="https://raw.githubusercontent.com/y-miyazaki/config/main"
 
-# Mapping: destination filename -> source filename in repository
-declare -A FILES=(
-    [".pre-commit-config.yaml"]=".pre-commit-config-go.yaml"
-    [".golangci.yaml"]=".golangci.yaml"
-    [".markdownlint-cli2.yaml"]=".markdownlint-cli2.yaml"
-    [".gitleaks.toml"]=".gitleaks.toml"
-    [".commitlintrc.yaml"]=".commitlintrc.yaml"
-    ["trivy.yaml"]="trivy.yaml"
+# Mapping: destination filename:source filename in repository
+# Uses colon-separated pairs for bash 3.2 compatibility (no associative arrays).
+readonly FILE_PAIRS=(
+    ".pre-commit-config.yaml:.pre-commit-config-go.yaml"
+    ".golangci.yaml:.golangci.yaml"
+    ".markdownlint-cli2.yaml:.markdownlint-cli2.yaml"
+    ".gitleaks.toml:.gitleaks.toml"
+    ".commitlintrc.yaml:.commitlintrc.yaml"
+    "trivy.yaml:trivy.yaml"
 )
 
 #######################################
@@ -170,12 +171,13 @@ main() {
     echo "Installing Go project configurations to: ${TARGET_DIR}"
 
     local error_count=0
-    for dest in "${!FILES[@]}"; do
-        local src="${FILES[${dest}]}"
+    for pair in "${FILE_PAIRS[@]}"; do
+        local dest="${pair%%:*}"
+        local src="${pair#*:}"
         local dest_path="${TARGET_DIR}/${dest}"
 
         if ! install_file "${src}" "${dest_path}"; then
-            ((error_count++))
+            error_count=$((error_count + 1))
         fi
     done
 
