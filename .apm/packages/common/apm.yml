@@ -33,6 +33,11 @@ dependencies:
       transport: stdio
       command: codebase-memory-mcp
       args: []
+    - name: headroom
+      registry: false
+      transport: stdio
+      command: headroom
+      args: ["mcp", "serve"]
     - name: lean-ctx
       registry: false
       transport: stdio

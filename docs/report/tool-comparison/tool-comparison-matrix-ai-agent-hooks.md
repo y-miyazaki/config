@@ -10,6 +10,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 
 | 日付       | 内容                                                             |
 | ---------- | ---------------------------------------------------------------- |
+| 2026-06-27 | Codex (OpenAI) を全セクションに追加                              |
 | 2026-06-14 | hooks.json 設定方法セクション追加。ツール並び順を A-Z 順に統一   |
 | 2026-06-07 | 初版作成。Event Matrix / res Matrix / Stop Block仕様を整備 |
 
@@ -22,6 +23,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
   - [Copilot CLI](#copilot-cli)
   - [Cursor](#cursor)
   - [Claude Code](#claude-code)
+  - [Codex](#codex)
   - [Kiro CLI](#kiro-cli)
   - [VS Code](#vs-code)
   - [Guidelines](#guidelines-1)
@@ -29,6 +31,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
   - [Stop stdin / stdout Format](#stop-stdin--stdout-format)
     - [Antigravity](#antigravity)
     - [Claude Code](#claude-code-1)
+    - [Codex](#codex-1)
     - [Copilot CLI](#copilot-cli-1)
     - [Kiro CLI](#kiro-cli-1)
     - [VS Code](#vs-code-1)
@@ -37,6 +40,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
   - [PostToolUse stdin / stdout Format](#posttooluse-stdin--stdout-format)
     - [Antigravity](#antigravity-1)
     - [Claude Code](#claude-code-2)
+    - [Codex](#codex-2)
     - [Copilot CLI](#copilot-cli-2)
     - [Kiro CLI](#kiro-cli-2)
     - [VS Code](#vs-code-2)
@@ -53,26 +57,26 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 
 ## Event Matrix
 
-| イベント             | Antigravity           | Claude Code           | Copilot CLI           | Cursor                | Kiro CLI              | VS Code               |
-| -------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- |
-| 提供元               | Google DeepMind       | Anthropic             | GitHub (Microsoft)    | Anysphere             | AWS                   | Microsoft (GitHub)    |
-| ドキュメント         | [antigravity.google](https://antigravity.google/docs/hooks) | [docs.claude.com](https://docs.claude.com/en/docs/claude-code/hooks) | [docs.github.com](https://docs.github.com/en/copilot/reference/hooks-reference) | [cursor.com](https://docs.cursor.com/more/hooks) | [kiro.dev](https://kiro.dev/docs/cli/hooks/) | [code.visualstudio.com](https://code.visualstudio.com/docs/agent-customization/hooks) |
-| Session Start        | ❌                     | ✅ SessionStart        | ✅ sessionStart        | ❌                     | ❌                     | ✅ SessionStart        |
-| User Prompt Submit   | ❌                     | ✅ UserPromptSubmit    | ✅ userPromptSubmitted | ❌                     | ✅ userPromptSubmit    | ✅ UserPromptSubmit    |
-| Pre Tool Use         | ✅ PreToolUse          | ✅ PreToolUse          | ✅ preToolUse          | ✅ beforeShellExecution | ✅ preToolUse          | ✅ PreToolUse          |
-| Post Tool Use        | ✅ PostToolUse ※1     | ✅ PostToolUse         | ✅ postToolUse         | ✅ afterFileEdit        | ✅ postToolUse         | ✅ PostToolUse         |
-| Post Tool Failure    | ❌ (PostToolUse の `err` で判別) | ✅ PostToolUseFailure  | ✅ postToolUseFailure  | ❌                     | ❌                     | ❌                     |
-| Agent Spawn          | ❌                     | ✅ SubagentStart       | ✅ subagentStart       | ❌                     | ✅ agentSpawn          | ✅ SubagentStart       |
-| Subagent Stop        | ❌                     | ✅ SubagentStop        | ✅ subagentStop        | ❌                     | ❌                     | ✅ SubagentStop        |
-| Session End          | ❌                     | ✅ SessionEnd          | ✅ sessionEnd          | ❌                     | ❌                     | ❌                     |
-| err Occurred       | ❌                     | ❌                     | ✅ errorOccurred       | ❌                     | ❌                     | ❌                     |
-| Notification         | ❌                     | ✅ Notification        | ✅ notification        | ❌                     | ❌                     | ❌                     |
-| Permission req   | ❌                     | ✅ PermissionRequest   | ✅ permissionRequest   | ❌                     | ❌                     | ❌                     |
-| Compact (Pre/Post)   | ❌                     | ✅ PreCompact/PostCompact | ❌                  | ❌                     | ❌                     | ✅ PreCompact          |
-| File Changed         | ❌                     | ✅ FileChanged         | ❌                     | ❌                     | ❌                     | ❌                     |
-| Config Change        | ❌                     | ✅ ConfigChange        | ❌                     | ❌                     | ❌                     | ❌                     |
-| Task Created/Completed | ❌                   | ✅ TaskCreated/Completed | ❌                  | ❌                     | ❌                     | ❌                     |
-| Teammate Idle        | ❌                     | ✅ TeammateIdle        | ❌                     | ❌                     | ❌                     | ❌                     |
+| イベント             | Antigravity           | Claude Code           | Codex                 | Copilot CLI           | Cursor                | Kiro CLI              | VS Code               |
+| -------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- | --------------------- |
+| 提供元               | Google DeepMind       | Anthropic             | OpenAI                | GitHub (Microsoft)    | Anysphere             | AWS                   | Microsoft (GitHub)    |
+| ドキュメント         | [antigravity.google](https://antigravity.google/docs/hooks) | [docs.claude.com](https://docs.claude.com/en/docs/claude-code/hooks) | [developers.openai.com/codex/hooks](https://developers.openai.com/codex/hooks) | [docs.github.com](https://docs.github.com/en/copilot/reference/hooks-reference) | [cursor.com](https://docs.cursor.com/more/hooks) | [kiro.dev](https://kiro.dev/docs/cli/hooks/) | [code.visualstudio.com](https://code.visualstudio.com/docs/agent-customization/hooks) |
+| Session Start        | ❌                     | ✅ SessionStart        | ✅ SessionStart        | ✅ sessionStart        | ❌                     | ❌                     | ✅ SessionStart        |
+| User Prompt Submit   | ❌                     | ✅ UserPromptSubmit    | ✅ UserPromptSubmit    | ✅ userPromptSubmitted | ❌                     | ✅ userPromptSubmit    | ✅ UserPromptSubmit    |
+| Pre Tool Use         | ✅ PreToolUse          | ✅ PreToolUse          | ✅ PreToolUse          | ✅ preToolUse          | ✅ beforeShellExecution | ✅ preToolUse          | ✅ PreToolUse          |
+| Post Tool Use        | ✅ PostToolUse ※1     | ✅ PostToolUse         | ✅ PostToolUse         | ✅ postToolUse         | ✅ afterFileEdit        | ✅ postToolUse         | ✅ PostToolUse         |
+| Post Tool Failure    | ❌ (PostToolUse の `err` で判別) | ✅ PostToolUseFailure  | ❌ (PostToolUse runs for non-zero exit too) | ✅ postToolUseFailure  | ❌                     | ❌                     | ❌                     |
+| Agent Spawn          | ❌                     | ✅ SubagentStart       | ✅ SubagentStart       | ✅ subagentStart       | ❌                     | ✅ agentSpawn          | ✅ SubagentStart       |
+| Subagent Stop        | ❌                     | ✅ SubagentStop        | ✅ SubagentStop        | ✅ subagentStop        | ❌                     | ❌                     | ✅ SubagentStop        |
+| Session End          | ❌                     | ✅ SessionEnd          | ❌                     | ✅ sessionEnd          | ❌                     | ❌                     | ❌                     |
+| err Occurred       | ❌                     | ❌                     | ❌                     | ✅ errorOccurred       | ❌                     | ❌                     | ❌                     |
+| Notification         | ❌                     | ✅ Notification        | ❌                     | ✅ notification        | ❌                     | ❌                     | ❌                     |
+| Permission req   | ❌                     | ✅ PermissionRequest   | ✅ PermissionRequest   | ✅ permissionRequest   | ❌                     | ❌                     | ❌                     |
+| Compact (Pre/Post)   | ❌                     | ✅ PreCompact/PostCompact | ✅ PreCompact/PostCompact | ❌                  | ❌                     | ❌                     | ✅ PreCompact          |
+| File Changed         | ❌                     | ✅ FileChanged         | ❌                     | ❌                     | ❌                     | ❌                     | ❌                     |
+| Config Change        | ❌                     | ✅ ConfigChange        | ❌                     | ❌                     | ❌                     | ❌                     | ❌                     |
+| Task Created/Completed | ❌                   | ✅ TaskCreated/Completed | ❌                   | ❌                  | ❌                     | ❌                     | ❌                     |
+| Teammate Idle        | ❌                     | ✅ TeammateIdle        | ❌                     | ❌                     | ❌                     | ❌                     | ❌                     |
 
 ### Guidelines
 
@@ -200,6 +204,51 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 | `matcher` | ツール名正規表現フィルタ (空文字 = 全マッチ) |
 | ネスト構造 | イベント配列 → `{ matcher, hooks: [...] }` の 2 段ネスト |
 
+### Codex
+
+設定ファイル: `.codex/hooks.json` or inline in `.codex/config.toml`
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./scripts/actionlint.sh",
+            "timeout": 600
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "lean-ctx hook rewrite",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+| 項目 | 値 |
+| ---- | --- |
+| イベント名 | PascalCase (`SessionStart`, `PreToolUse`, `PostToolUse`, `Stop`) |
+| コマンドキー | `command` |
+| `type` フィールド | `"command"` (必須) |
+| `version` | 不要 |
+| タイムアウト | `timeout` (秒、デフォルト600) |
+| `matcher` | ✅ (正規表現、Claude Code と同形式) |
+| Trust review | 必須 (hash-based) |
+
 ### Kiro CLI
 
 設定ファイル: `.kiro/hooks/hooks.json` または `.kiro/hooks/<name>.json`
@@ -272,13 +321,13 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 
 **→ hooks.json のフォーマットはツール間で互換性がない。ターゲット別に定義を分離する。**
 
-| 差異ポイント | Copilot CLI | Cursor | Claude Code | Kiro CLI | VS Code |
-| ------------ | ----------- | ------ | ----------- | -------- | ------- |
-| コマンドキー | `bash` | `command` | `command` | `command` | `bash` |
-| Stop イベント名 | `agentStop` | `stop` | `Stop` | `stop` | `Stop` |
-| `version` 必須 | ✅ | ✅ | ❌ | ❌ | ✅ |
-| タイムアウトキー | `timeoutSec` | `timeoutSec` | `timeout` | `timeout` | `timeoutSec` |
-| matcher 対応 | ❌ | ❌ | ✅ | ❌ | ❌ |
+| 差異ポイント | Codex | Copilot CLI | Cursor | Claude Code | Kiro CLI | VS Code |
+| ------------ | ----- | ----------- | ------ | ----------- | -------- | ------- |
+| コマンドキー | `command` | `bash` | `command` | `command` | `command` | `bash` |
+| Stop イベント名 | `Stop` | `agentStop` | `stop` | `Stop` | `stop` | `Stop` |
+| `version` 必須 | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ |
+| タイムアウトキー | `timeout` | `timeoutSec` | `timeoutSec` | `timeout` | `timeout` | `timeoutSec` |
+| matcher 対応 | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
 
 - APM パッケージでの配布時、hooks JSON はターゲット別パッケージに分離する（例: `common-hooks-copilot`, `common-hooks-cursor`）
 - APM は `target` フィールドによるフィルタリングを行わないため、Copilot 用イベントが Cursor の hooks.json に混入する。各 IDE は unknown event を無視するため実害はないが、ノイズになる
@@ -286,19 +335,19 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 
 ## res Matrix (Stop / agentStop)
 
-| 項目                     | Antigravity              | Claude Code                    | Copilot CLI                  | Cursor          | Kiro CLI              | VS Code                      |
-| ------------------------ | ------------------------ | ------------------------------ | ---------------------------- | --------------- | --------------------- | ---------------------------- |
-| イベント名               | `Stop`                   | `Stop`                         | `agentStop` / `Stop`         | `stop`          | `stop`                    | `Stop`                       |
-| Block 方式 (推奨)        | exit 0 + JSON            | exit 2 (stderr) **または** exit 0 + JSON | exit 0 + JSON                | exit 2 のみ     | exit 0 + JSON             | exit 0 + JSON (hookSpecificOutput) |
-| Block JSON               | `{"decision":"continue",`<br>`"reason":"..."}` | `{"decision":"block",`<br>`"reason":"..."}` | `{"decision":"block",`<br>`"reason":"..."}` | N/A             | `{"decision":"block",`<br>`"reason":"..."}` | `{"hookSpecificOutput":`<br>`{"hookEventName":"Stop",`<br>`"decision":"block",`<br>`"reason":"..."}}` |
-| exit 2 の効果            | hook 自体の失敗として扱われる（agent フィードバックなし） | agent 停止を防止 + stderr が agent へ | ユーザーに警告表示のみ       | agent 停止を防止 | ユーザーに警告表示のみ    | agent に err ctx として注入 |
-| exit 0 (JSON無し) の効果 | agent 通常停止           | agent 通常停止                 | agent 通常停止               | 何もしない (処理完了)  | agent 通常停止            | agent 通常停止               |
-| reason の扱い            | system msg として会話に注入 | agent のコンテキストに追加 | 新しいプロンプトとして agent に送信 | stderr が agent へ | 新しいユーザーメッセージとして agent に送信 | agent のコンテキストに追加 |
-| **ユーザーへの表示**     | ❌ (表示なし)             | ❌ (表示なし)                   | ❌ (表示なし)                 | ✅ (stderr 表示) | ❌ (表示なし)              | ❌ (表示なし)                 |
-| **agent コンテキスト注入** | ✅ reason がコンテキストに入る | ✅ reason がコンテキストに入る | ✅ reason がコンテキストに入る | ✅ stderr がコンテキストに入る | ✅ reason がコンテキストに入る | ✅ reason がコンテキストに入る |
-| **agent が修正アクションを実行** | ✅ 次ターンで reason に基づき行動 | ✅ 次ターンで reason に基づき行動 | ✅ 次ターンで reason に基づき行動 | ✅ 次ターンで修正行動 | ✅ 次ターンで reason に基づき行動 | ✅ 次ターンで reason に基づき行動 |
-| 連続ブロック上限         | 不明                     | 8 回                           | ジョブタイムアウトに依存     | 不明            | 不明                      | 不明 (AI credits 消費で自然制限) |
-| JSON 生成要件            | 有効な JSON 必須          | 有効な JSON 必須               | 有効な JSON 必須             | N/A             | 有効な JSON 必須 (jq 推奨) | 有効な JSON 必須             |
+| 項目                     | Antigravity              | Claude Code                    | Codex                        | Copilot CLI                  | Cursor          | Kiro CLI              | VS Code                      |
+| ------------------------ | ------------------------ | ------------------------------ | ---------------------------- | ---------------------------- | --------------- | --------------------- | ---------------------------- |
+| イベント名               | `Stop`                   | `Stop`                         | `Stop`                       | `agentStop` / `Stop`         | `stop`          | `stop`                    | `Stop`                       |
+| Block 方式 (推奨)        | exit 0 + JSON            | exit 2 (stderr) **または** exit 0 + JSON | exit 0 + JSON **または** exit 2 + stderr | exit 0 + JSON                | exit 2 のみ     | exit 0 + JSON             | exit 0 + JSON (hookSpecificOutput) |
+| Block JSON               | `{"decision":"continue",`<br>`"reason":"..."}` | `{"decision":"block",`<br>`"reason":"..."}` | `{"decision":"block",`<br>`"reason":"..."}` | `{"decision":"block",`<br>`"reason":"..."}` | N/A             | `{"decision":"block",`<br>`"reason":"..."}` | `{"hookSpecificOutput":`<br>`{"hookEventName":"Stop",`<br>`"decision":"block",`<br>`"reason":"..."}}` |
+| exit 2 の効果            | hook 自体の失敗として扱われる（agent フィードバックなし） | agent 停止を防止 + stderr が agent へ | reason が agent に届き修正ループに入る | ユーザーに警告表示のみ       | agent 停止を防止 | ユーザーに警告表示のみ    | agent に err ctx として注入 |
+| exit 0 (JSON無し) の効果 | agent 通常停止           | agent 通常停止                 | agent 通常停止               | agent 通常停止               | 何もしない (処理完了)  | agent 通常停止            | agent 通常停止               |
+| reason の扱い            | system msg として会話に注入 | agent のコンテキストに追加 | 新しい continuation prompt として agent に送信 | 新しいプロンプトとして agent に送信 | stderr が agent へ | 新しいユーザーメッセージとして agent に送信 | agent のコンテキストに追加 |
+| **ユーザーへの表示**     | ❌ (表示なし)             | ❌ (表示なし)                   | ❌ (表示なし)                 | ❌ (表示なし)                 | ✅ (stderr 表示) | ❌ (表示なし)              | ❌ (表示なし)                 |
+| **agent コンテキスト注入** | ✅ reason がコンテキストに入る | ✅ reason がコンテキストに入る | ✅ reason がコンテキストに入る | ✅ reason がコンテキストに入る | ✅ stderr がコンテキストに入る | ✅ reason がコンテキストに入る | ✅ reason がコンテキストに入る |
+| **agent が修正アクションを実行** | ✅ 次ターンで reason に基づき行動 | ✅ 次ターンで reason に基づき行動 | ✅ 次ターンで reason に基づき行動 | ✅ 次ターンで reason に基づき行動 | ✅ 次ターンで修正行動 | ✅ 次ターンで reason に基づき行動 | ✅ 次ターンで reason に基づき行動 |
+| 連続ブロック上限         | 不明                     | 8 回                           | 不明 (スクリプト側でセーフガード推奨) | ジョブタイムアウトに依存     | 不明            | 不明                      | 不明 (AI credits 消費で自然制限) |
+| JSON 生成要件            | 有効な JSON 必須          | 有効な JSON 必須               | 有効な JSON 必須             | 有効な JSON 必須             | N/A             | 有効な JSON 必須 (jq 推奨) | 有効な JSON 必須             |
 
 ### Stop stdin / stdout Format
 
@@ -339,6 +388,20 @@ stdout — additionalContext (非エラーフィードバック):
     "additionalContext": "テスト実行してから完了してください"
   }
 }
+```
+
+#### Codex
+
+stdin:
+
+```json
+{"hook_event_name": "Stop", "session_id": "...", "cwd": "/workspace", "stop_hook_active": false, "last_assistant_message": "...", "turn_id": "...", "transcript_path": "...", "model": "...", "permission_mode": "..."}
+```
+
+stdout — block decision:
+
+```json
+{"decision": "block", "reason": "修正すべき内容"}
 ```
 
 #### Copilot CLI
@@ -402,16 +465,16 @@ stdout:
 
 ## res Matrix (PostToolUse)
 
-| 項目                       | Antigravity              | Claude Code                                 | Copilot CLI                      | Cursor          | Kiro CLI    | VS Code                     |
-| -------------------------- | ------------------------ | ------------------------------------------- | -------------------------------- | --------------- | ----------- | --------------------------- |
-| イベント名                 | `PostToolUse`            | `PostToolUse`                               | `postToolUse`                    | `afterFileEdit` | `postToolUse`   | `PostToolUse`               |
-| exit 0 + stdout の効果     | 出力は `{}` のみ (処理なし) | JSON output 処理                       | STDOUT captured (非表示)         | 不明            | STDOUT captured (非表示) | JSON output 処理            |
-| exit 2 の効果              | 不明                     | STDERR を Claude に表示 (ツール実行済み) | STDERR をユーザーに警告          | agent にフィードバック | STDERR をユーザーに警告 | agent に err ctx として注入 |
-| exit code で block 可能か  | ❌ (ツール実行済み)       | ❌ (ツール実行済み)                          | ❌ (ツール実行済み)               | ❌               | ❌               | ✅ `decision: "block"` で停止可 |
-| **ユーザーへの表示**       | ❌                        | ❌ (表示なし)                           | ⚠️ exit 2 時のみ警告表示         | 不明            | ⚠️ exit 2 時のみ警告表示 | ❌ (表示なし)               |
-| **agent コンテキスト注入** | ❌ (出力不可)             | ✅ additionalContext で注入                  | ✅ additionalContext で注入       | ✅ agent に渡る   | ❌               | ✅ `hookSpecificOutput.additionalContext` で注入 |
-| **agent が修正アクションを実行** | ❌ (PostToolUse 単体では不可。Stop で対応) | ✅ 次ツール呼出し時に認識して対応 | ✅ 次ツール呼出し時に認識して対応 | ✅ 次ターンで対応 | ❌ (フィードバック手段なし) | ✅ additionalContext / block で対応 |
-| matcher (ツール名フィルタ) | ✅ (正規表現対応) | ✅ (`"Edit\|Write"` 等)                       | ❌ (全ツール)                     | ❌ (ファイル編集のみ) | ❌ (全ツール)    | ❌ (全ツール)               |
+| 項目                       | Antigravity              | Claude Code                                 | Codex                            | Copilot CLI                      | Cursor          | Kiro CLI    | VS Code                     |
+| -------------------------- | ------------------------ | ------------------------------------------- | -------------------------------- | -------------------------------- | --------------- | ----------- | --------------------------- |
+| イベント名                 | `PostToolUse`            | `PostToolUse`                               | `PostToolUse`                    | `postToolUse`                    | `afterFileEdit` | `postToolUse`   | `PostToolUse`               |
+| exit 0 + stdout の効果     | 出力は `{}` のみ (処理なし) | JSON output 処理                       | JSON output 処理                 | STDOUT captured (非表示)         | 不明            | STDOUT captured (非表示) | JSON output 処理            |
+| exit 2 の効果              | 不明                     | STDERR を Claude に表示 (ツール実行済み) | feedback が agent に届く         | STDERR をユーザーに警告          | agent にフィードバック | STDERR をユーザーに警告 | agent に err ctx として注入 |
+| exit code で block 可能か  | ❌ (ツール実行済み)       | ❌ (ツール実行済み)                          | ✅ `decision: "block"` で tool result を置換 | ❌ (ツール実行済み)               | ❌               | ❌               | ✅ `decision: "block"` で停止可 |
+| **ユーザーへの表示**       | ❌                        | ❌ (表示なし)                           | ❌ (表示なし)                     | ⚠️ exit 2 時のみ警告表示         | 不明            | ⚠️ exit 2 時のみ警告表示 | ❌ (表示なし)               |
+| **agent コンテキスト注入** | ❌ (出力不可)             | ✅ additionalContext で注入                  | ✅ additionalContext / decision:block で注入 | ✅ additionalContext で注入       | ✅ agent に渡る   | ❌               | ✅ `hookSpecificOutput.additionalContext` で注入 |
+| **agent が修正アクションを実行** | ❌ (PostToolUse 単体では不可。Stop で対応) | ✅ 次ツール呼出し時に認識して対応 | ✅ 次ツール呼出し時に認識して対応 | ✅ 次ツール呼出し時に認識して対応 | ✅ 次ターンで対応 | ❌ (フィードバック手段なし) | ✅ additionalContext / block で対応 |
+| matcher (ツール名フィルタ) | ✅ (正規表現対応) | ✅ (`"Edit\|Write"` 等)                       | ✅ (正規表現対応)                 | ❌ (全ツール)                     | ❌ (ファイル編集のみ) | ❌ (全ツール)    | ❌ (全ツール)               |
 
 ### PostToolUse stdin / stdout Format
 
@@ -464,6 +527,27 @@ stdout — updatedToolOutput (結果置換):
       "interrupted": false,
       "isImage": false
     }
+  }
+}
+```
+
+#### Codex
+
+stdin:
+
+```json
+{"hook_event_name": "PostToolUse", "session_id": "...", "cwd": "/workspace", "tool_name": "Edit", "tool_input": {"file_path": "src/main.go"}, "tool_response": "File edited successfully"}
+```
+
+stdout — block + additionalContext:
+
+```json
+{
+  "decision": "block",
+  "reason": "...",
+  "hookSpecificOutput": {
+    "hookEventName": "PostToolUse",
+    "additionalContext": "lint エラーを修正してください"
   }
 }
 ```
@@ -562,8 +646,9 @@ stdout — additionalContext のみ:
 | 2 | `stop_hook_active` / `tool_use_id` フィールドが存在する (`has()` で判定。値が `false` でも検出) | VS Code |
 | 3 | `GITHUB_COPILOT_API_TOKEN` 環境変数あり、または `transcriptPath` / `stopReason` / `toolResult` 等の Copilot CLI 固有フィールドあり (`transcript_path` は VS Code と共通のため除外) | Copilot CLI |
 | 4 | `hook_event_name` が camelCase の既知値 (`stop`, `postToolUse` 等) | Kiro CLI |
-| 5 | `hook_event_name` が PascalCase (上記で Copilot 除外済み) | Claude Code |
-| 6 | stdin 無し / 判定不可 | Cursor / fallback |
+| 5 | `permission_mode` / `turn_id` フィールドあり (Codex 固有) | Codex |
+| 6 | `hook_event_name` が PascalCase (上記で Copilot/Codex 除外済み) | Claude Code |
+| 7 | stdin 無し / 判定不可 | Cursor / fallback |
 
 ### Agent 別レスポンス仕様
 
@@ -571,6 +656,7 @@ stdout — additionalContext のみ:
 | ----- | ------------------------ | ----------------------- | -------- |
 | Antigravity | `{"decision":"continue",`<br>`"reason":"..."}` + exit 0 | N/A (出力 `{}` のみ) | exit 0 |
 | Claude Code | `{"decision":"block",`<br>`"reason":"..."}` + exit 0 | `{"hookSpecificOutput":`<br>`{"hookEventName":"PostToolUse",`<br>`"additionalContext":"..."}}` + exit 0 | exit 2 |
+| Codex | `{"decision":"block",`<br>`"reason":"..."}` + exit 0 | `{"decision":"block",`<br>`"reason":"...",`<br>`"hookSpecificOutput":`<br>`{"hookEventName":"PostToolUse",`<br>`"additionalContext":"..."}}` + exit 0 | exit 2 |
 | Copilot CLI | `{"decision":"block",`<br>`"reason":"..."}` + exit 0 | `{"additionalContext":"..."}` + exit 0 | exit 2 |
 | Kiro CLI | `{"decision":"block",`<br>`"reason":"..."}` + exit 0 | exit 2 + stderr<br>(agent に届かない) | exit 2 |
 | VS Code | `{"hookSpecificOutput":`<br>`{"hookEventName":"Stop",`<br>`"decision":"block",`<br>`"reason":"..."}}` + exit 0 | `{"decision":"block",`<br>`"reason":"...",`<br>`"hookSpecificOutput":`<br>`{"hookEventName":"PostToolUse",`<br>`"additionalContext":"..."}}` + exit 0 | exit 2 |
@@ -585,18 +671,19 @@ stdout — additionalContext のみ:
 
 ## 必須評価軸 (MUST) 判定
 
-| 評価軸          | Antigravity | Claude Code | Copilot CLI | Cursor | Kiro CLI | VS Code |
-| --------------- | ----------- | ----------- | ----------- | ------ | -------- | ------- |
-| Problem Fit     | 3           | 3           | 3           | 2      | 3        | 3       |
-| Security        | 3           | 3           | 3           | 2      | 2        | 3       |
-| op Model | 3           | 3           | 3           | 2      | 3        | 3       |
-| Integration     | 3           | 3           | 3           | 2      | 2        | 3       |
-| Cost/TCO        | 3           | 3           | 3           | 3      | 3        | 3       |
-| Maintainability | 2           | 3           | 2           | 2      | 2        | 3       |
-| **加重平均**    | **2.8**     | **3.0**     | **2.8**     | **2.2** | **2.5** | **3.0** |
+| 評価軸          | Antigravity | Claude Code | Codex | Copilot CLI | Cursor | Kiro CLI | VS Code |
+| --------------- | ----------- | ----------- | ----- | ----------- | ------ | -------- | ------- |
+| Problem Fit     | 3           | 3           | 3     | 3           | 2      | 3        | 3       |
+| Security        | 3           | 3           | 3     | 3           | 2      | 2        | 3       |
+| op Model | 3           | 3           | 3     | 3           | 2      | 3        | 3       |
+| Integration     | 3           | 3           | 3     | 3           | 2      | 2        | 3       |
+| Cost/TCO        | 3           | 3           | 3     | 3           | 3      | 3        | 3       |
+| Maintainability | 2           | 3           | 3     | 2           | 2      | 2        | 3       |
+| **加重平均**    | **2.8**     | **3.0**     | **3.0** | **2.8**     | **2.2** | **2.5** | **3.0** |
 
 - Claude Code: イベント種別最多、decision control 最も柔軟、`additionalContext` 活用可。全評価軸で最高
 - VS Code: Claude Code 互換の `hookSpecificOutput` 形式を採用。PostToolUse でも block 可能な唯一のツール。`.github/hooks/` からの設定読み込みで Claude Code 設定と共存可
+- Codex: Claude Code と同形式 (PascalCase、matcher、decision JSON)。イベント 10 種で充実。hash-based trust review でセキュリティも高い
 - Antigravity: PreInvocation で `injectSteps` により ephemeralMessage 注入可能。Stop で `"continue"` による修正ループ構築可能。PostToolUse は観測専用
 - Copilot CLI: Claude Code に次ぐイベント数。JSON block decision 対応で Stop ループ構築可能
 - Kiro CLI: Stop hook の JSON block 対応で修正ループ構築可能。イベント種別は少ないが実用上十分
@@ -606,7 +693,7 @@ stdout — additionalContext のみ:
 
 | 観点 | PostToolUse | Stop |
 | ---- | ----------- | ---- |
-| agent が修正アクションを実行するか | Claude Code / Copilot CLI のみ | ✅ 全ツール |
+| agent が修正アクションを実行するか | Claude Code / Codex / Copilot CLI のみ | ✅ 全ツール |
 | Kiro CLI で agent にフィードバックが届くか | ❌ | ✅ |
 | Antigravity で agent にフィードバックが届くか | ❌ | ✅ |
 | 全ツール互換でスクリプト 1 本で動くか | ❌ (ツール間で出力形式が異なる) | ✅ (decision + reason で統一可) |

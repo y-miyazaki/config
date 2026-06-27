@@ -76,4 +76,4 @@ Rules:
 - Omit empty quadrant sections
 - List files alphabetically within each section
 - Description is the document's H1 title or first sentence of purpose paragraph
-- Non-Diataxis directories (e.g., `report/`) get their own H2 section after the four quadrants
+- Non-Diataxis directories (e.g., `agents/`, `report/`) get their own H2 section after the four quadrants
