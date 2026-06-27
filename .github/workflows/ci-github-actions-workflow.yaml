@@ -6,8 +6,8 @@ on:
   workflow_call:
     inputs:
       actionlint_checksum:
-        default: "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5" # pragma: allowlist secret
-        # To get checksum: curl -sL "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_linux_amd64.tar.gz" | sha256sum | awk '{print $1}'
+        default: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8" # pragma: allowlist secret
+        # To get checksum: curl -sL "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz" | sha256sum | awk '{print $1}'
         description: "SHA256 checksum for actionlint release tarball"
         required: false
         type: string
