@@ -1,7 +1,5 @@
 #!/bin/bash
 #######################################
-# install_go.sh
-#
 # Description:
 #   Downloads shared lint configs and pre-commit configuration for Go projects
 #   from the config distribution repository.
@@ -42,6 +40,9 @@ readonly FILE_PAIRS=(
 # Arguments:
 #   None
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   None
 #
@@ -56,6 +57,9 @@ trap cleanup EXIT ERR INT TERM
 # show_usage: Display usage information
 #
 # Arguments:
+#   None
+#
+# Global Variables:
 #   None
 #
 # Returns:
@@ -129,6 +133,10 @@ parse_arguments() {
 #   $1 - source filename in repository
 #   $2 - destination file path
 #
+# Global Variables:
+#   REPO_RAW_BASE - base URL for file downloads
+#   FORCE - whether to overwrite existing files
+#
 # Returns:
 #   0 on success, 1 on download failure
 #
@@ -155,6 +163,10 @@ install_file() {
 #
 # Arguments:
 #   $@ - command line arguments
+#
+# Global Variables:
+#   TARGET_DIR - target directory for installation
+#   FILE_PAIRS - array of destination:source file mappings
 #
 # Returns:
 #   0 on success, 1 on failure

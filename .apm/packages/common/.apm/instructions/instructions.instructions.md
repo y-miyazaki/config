@@ -39,14 +39,12 @@ description: "AI Assistant Instructions for Writing Instruction Files"
 ## Guidelines
 
 ### General (G)
-
 - G-01 (MUST): Front Matter
   - Check: Front Matter contains applyTo and description fields
 - G-02 (MUST): Title
   - Check: Title clearly indicates purpose
 
 ### Structure (STRUCT)
-
 - STRUCT-01 (MUST): Five Required Chapters Exist
   - Check: Scope, Standards, Guidelines, Testing and Validation, and Security Guidelines chapters exist
 - STRUCT-02 (MUST): Chapter Order Unified
@@ -57,22 +55,20 @@ description: "AI Assistant Instructions for Writing Instruction Files"
   - Check: Does the Standards chapter have Naming Conventions subsection first, followed by tool-specific standards?
 - STRUCT-05 (MUST): Guidelines Chapter Subsections
   - Check: Does the Guidelines chapter have domain rules first, followed by Anti-Patterns, then Code Modification Guidelines?
-- STRUCT-06 (MUST): H3 Heading Format in Guidelines
-  - Check: In the Guidelines chapter, do H3 headings use `### Name (LEVEL)` format for rule sections, and `### Name` for process/declaration sections?
+- STRUCT-06 (MUST): H3 Heading Format
+  - Check: Do H3 headings use `### Name（LEVEL）` format for rule sections, and `### Name` for process/declaration sections?
 
 ### Guidelines Chapter (GUIDE)
-
 - GUIDE-01 (SHOULD): Code Modification Guidelines
   - Check: Modification procedures and validation methods are clearly documented
 - GUIDE-02 (SHOULD): Tool Usage
-  - Check: MCP Tool usage examples are documented
+  - Check: Are tool invocation patterns (CLI, linter, formatter) documented where the instruction scope involves tool interaction?
 - GUIDE-03 (SHOULD): Anti-Patterns
   - Check: Common anti-patterns and pitfalls are documented
 - GUIDE-04 (SHOULD): No ID-less Bullet Rules in Guidelines
   - Check: Are there no ID-less bullet rules in the Guidelines chapter?
 
 ### Content Quality (QUAL)
-
 - QUAL-01 (SHOULD): Practical Examples
   - Check: Practical code examples are included
 - QUAL-02 (SHOULD): No Redundancy
@@ -81,21 +77,20 @@ description: "AI Assistant Instructions for Writing Instruction Files"
   - Check: Large code examples are avoided for high token efficiency
 
 ### Consistency (CONS)
-
 - CONS-01 (SHOULD): Section Names
   - Check: Section names are consistent with other instructions files
 - CONS-02 (SHOULD): Format
   - Check: Table and list formats are consistent with other instructions files
+- CONS-03 (SHOULD): Internal Consistency
+  - Check: Do Standards templates, Guidelines checks, and code examples within the same file agree with each other without contradiction?
 
 ### Completeness (COMP)
-
 - COMP-01 (SHOULD): No Missing Commands
   - Check: Executable validation commands are comprehensive
 - COMP-02 (SHOULD): Real Commands
   - Check: Examples are concrete and comprehensive
 
 ### Security Guidelines Chapter (SEC)
-
 - SEC-01 (MUST): Tool-Undetectable Risks Documented
   - Check: Are security practices that automated tools (gitleaks, detect-secrets) cannot detect documented (e.g., destructive command defaults, untrusted link sources)?
 - SEC-02 (MUST): Secrets Management
@@ -106,14 +101,14 @@ description: "AI Assistant Instructions for Writing Instruction Files"
   - Check: YAML/code examples are included (where applicable)
 
 ### Standards Chapter (STD)
-
 - STD-01 (MUST): Naming Conventions
   - Check: Naming conventions are documented per component
 - STD-02 (SHOULD): Tool Standards
   - Check: Tool conventions are documented
+- STD-03 (MUST): Consistency
+  - Check: Documentation level matches other instructions files
 
 ### Testing and Validation Chapter (TEST)
-
 - TEST-01 (MUST): Validation Commands
   - Check: Executable validation commands are documented
 - TEST-02 (MUST): Code Block Format
@@ -128,6 +123,7 @@ description: "AI Assistant Instructions for Writing Instruction Files"
 - After changes, prioritize running validate.sh from instructions-review skill.
 - When instruction files are updated, always run an instruction quality re-evaluation.
 - Use individual commands only for debugging.
+
 
 ## Testing and Validation
 
