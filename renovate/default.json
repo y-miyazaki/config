@@ -313,13 +313,15 @@
       "platformAutomerge": true
     },
     {
-      "description": "Rules: Disable mise lockfile artifact updates for npm packages (Node.js unavailable in Renovate environment; lockfile is updated by on-ci-push-mise-update-lock workflow)",
+      "description": "Rules: Disable automerge and lockfile updates for mise npm packages (minimumReleaseAge not enforced for mise npm packages; lockfile is updated by on-ci-push-mise-update-lock workflow)",
       "matchManagers": [
         "mise"
       ],
       "matchPackagePatterns": [
         "^npm:"
       ],
+      "automerge": false,
+      "platformAutomerge": false,
       "updateLockFiles": false
     },
     {
