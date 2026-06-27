@@ -33,17 +33,6 @@ _Understanding-oriented discussion of concepts and decisions._
 - [Instructions Sync Workflow](explanation/instructions-sync-workflow.md)
 - [Loop Engineering Design](explanation/loop-engineering-design.md)
 
-## Agents
-
-_Standards and protocols for AI agent operations._
-
-- [Code and Artifact Modification Standards](agents/code-modification.md)
-- [Error Handling](agents/error-handling.md)
-- [Execution Protocol](agents/execution-protocol.md)
-- [External Knowledge and Dependency Awareness](agents/external-knowledge.md)
-- [Review and Output Standards](agents/review-standards.md)
-- [Verification Requirements](agents/verification.md)
-
 ## Report
 
 _Research and comparison reports._
