@@ -38,13 +38,13 @@ on:
         required: false
         type: string
       tfcmt_checksum:
-        default: "475e3fb36765b10fec5c7a199f86116f6ef764340f96d6baa2becf609418b760" # pragma: allowlist secret
-        # To get checksum: curl -sL "https://github.com/suzuki-shunsuke/tfcmt/releases/download/v4.14.13/tfcmt_linux_amd64.tar.gz" | sha256sum | awk '{print $1}'
+        default: "40b37fa7ca201856759d2fe85ec571368b7dbfed6ff32a79fff0de3d355f84aa" # pragma: allowlist secret
+        # To get checksum: curl -sL "https://github.com/suzuki-shunsuke/tfcmt/releases/download/v4.14.15/tfcmt_linux_amd64.tar.gz" | sha256sum | awk '{print $1}'
         description: "SHA256 checksum for tfcmt release tarball"
         required: false
         type: string
       tfcmt_version:
-        default: "4.14.13"
+        default: "4.14.15"
         description: "tfcmt (tfcmt) version to use for PR plan comments"
         required: false
         type: string

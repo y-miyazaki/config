@@ -6,24 +6,24 @@ on:
   workflow_call:
     inputs:
       actionlint_checksum:
-        default: "233b280d05e100837f4af1433c7b40a5dcb306e3aa68fb4f17f8a7f45a7df7b4" # pragma: allowlist secret
-        # To get checksum: curl -sL "https://github.com/rhysd/actionlint/releases/download/v1.7.9/actionlint_linux_amd64.tar.gz" | sha256sum | awk '{print $1}'
+        default: "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5" # pragma: allowlist secret
+        # To get checksum: curl -sL "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_linux_amd64.tar.gz" | sha256sum | awk '{print $1}'
         description: "SHA256 checksum for actionlint release tarball"
         required: false
         type: string
       actionlint_version:
-        default: "1.7.9"
+        default: "1.7.12"
         description: "actionlint version to use"
         required: false
         type: string
       ghalint_checksum:
-        default: "977555b7142cc057aad4663679772510a9ed3f1687f26f2359d18bb6b67314fe" # pragma: allowlist secret
-        # To get checksum: curl -sL "https://github.com/suzuki-shunsuke/ghalint/releases/download/v1.5.4/ghalint_linux_amd64.tar.gz" | sha256sum | awk '{print $1}'
+        default: "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5" # pragma: allowlist secret
+        # To get checksum: curl -sL "https://github.com/suzuki-shunsuke/ghalint/releases/download/v1.5.6/ghalint_linux_amd64.tar.gz" | sha256sum | awk '{print $1}'
         description: "SHA256 checksum for ghalint release tarball"
         required: false
         type: string
       ghalint_version:
-        default: "1.5.4"
+        default: "1.5.6"
         description: "ghalint version to use"
         required: false
         type: string

@@ -39,14 +39,14 @@ on:
         required: true
         type: string
       jsonnet_checksum:
-        default: "ad3181fde77726b02d17eb4e72687020bf2cb35b9336cdeaaca4783c7ff104f7" # pragma: allowlist secret
-        # To get checksum: curl -sL "https://github.com/google/go-jsonnet/releases/download/v0.21.0/go-jsonnet_Linux_x86_64.tar.gz" | sha256sum | awk '{print $1}'
+        default: "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5" # pragma: allowlist secret
+        # To get checksum: curl -sL "https://github.com/google/go-jsonnet/releases/download/v0.22.0/go-jsonnet_Linux_x86_64.tar.gz" | sha256sum | awk '{print $1}'
         description: "SHA256 checksum for go-jsonnet release tarball (Linux_x86_64)"
         required: false
         type: string
       jsonnet_version:
-        default: "v0.21.0"
-        description: "go-jsonnet version (e.g. v0.21.0)"
+        default: "v0.22.0"
+        description: "go-jsonnet version (e.g. v0.22.0)"
         required: false
         type: string
     secrets:
