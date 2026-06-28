@@ -20,7 +20,6 @@ repos:
         args: [--allow-missing-credentials]
       - id: detect-private-key
         exclude: '(?:^|/)(?:.*/)?terraform\.(?!example\.)[^.]+\.tfvars$'
-        # exclude: '(?:^|/)(?:.*/)?terraform\.[^.]+\.tfvars$'
       - id: end-of-file-fixer
         exclude: '(^.*(\.devcontainer/devcontainer(-lock)?\.json|settings\.json|settings-example\.json|.*\.md)$)'
       - id: pretty-format-json
