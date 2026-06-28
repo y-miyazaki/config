@@ -317,12 +317,12 @@
       "matchManagers": [
         "mise"
       ],
-      "matchPackagePatterns": [
-        "^npm:"
+      "matchDepNames": [
+        "/^npm:/"
       ],
       "automerge": false,
       "platformAutomerge": false,
-      "updateLockFiles": false
+      "skipArtifactsUpdate": true
     },
     {
       "description": "Rules: Group ecspresso updates across GitHub Actions workflow inputs and mise",
