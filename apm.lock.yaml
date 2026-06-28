@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-06-27T15:35:02.072770+00:00'
+generated_at: '2026-06-28T02:50:30.004121+00:00'
 apm_version: 0.21.0
 dependencies:
 - repo_url: _local/common
@@ -643,7 +643,6 @@ mcp_servers:
 - context7
 - fetch
 - github
-- headroom
 - lean-ctx
 mcp_configs:
   codebase-memory-mcp:
@@ -677,14 +676,6 @@ mcp_configs:
       $TOKEN" https://api.githubcopilot.com/mcp/
     registry: false
     command: bash
-  headroom:
-    name: headroom
-    transport: stdio
-    args:
-    - mcp
-    - serve
-    registry: false
-    command: headroom
   lean-ctx:
     name: lean-ctx
     transport: stdio

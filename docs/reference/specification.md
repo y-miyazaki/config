@@ -207,7 +207,7 @@ Skills are defined under each package's `.apm/skills/` directory. Each skill con
 | Package      | Skill                     |
 | ------------ | ------------------------- |
 | common       | agent-skills-review       |
-| common       | docs-creation             |
+| common       | docs-creator              |
 | common       | docs-updater              |
 | common       | github-actions-review     |
 | common       | github-actions-validation |
