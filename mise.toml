@@ -8,7 +8,7 @@ exec_auto_install = true # Auto-install tools when commands are run via `mise x`
 github_attestations = true # Verify GitHub release attestations when a backend supports them.
 lockfile = true # Generate and maintain mise.lock with resolved URLs and checksums.
 locked = true # Require lockfile entries during installs to reduce unexpected upstream changes.
-minimum_release_age = "7d" # Avoid very recent releases to reduce supply-chain risk from rushed or bad publishes.
+# minimum_release_age = "7d" # Avoid very recent releases to reduce supply-chain risk from rushed or bad publishes.
 not_found_auto_install = true # Try installing missing tools when a command is looked up from the current config.
 provenance_api_failures_fatal = true # Fail installs if provenance verification APIs are unavailable or verification fails.
 slsa = true # Require SLSA provenance checks when a backend supports them.
@@ -36,9 +36,7 @@ python = "3.14.6"
 
 # AI agent tools
 "github:microsoft/apm" = "v0.21.0"               # agent package manager
-"npm:@anthropic-ai/claude-code" = { version = "2.1.191", depends = [
-  "node",
-], install_env = { NPM_CONFIG_IGNORE_SCRIPTS = "false" }, postinstall = "node $(find $MISE_TOOL_INSTALL_PATH -name 'install.cjs' -path '*/@anthropic-ai/claude-code/*' | head -1)" } # Claude Code CLI
+claude = "2.1.191"                               # Claude Code CLI
 "github:DeusData/codebase-memory-mcp" = "v0.8.1" # codebase memory MCP server
 "aqua:github/copilot-cli" = "1.0.63"             # GitHub Copilot CLI
 "pipx:headroom-ai" = { version = "0.27.0", extras = "proxy,mcp,bedrock", depends = ["python"] }
