@@ -487,7 +487,7 @@ jobs:
 
       - name: Cache SchemaSpy and JDBC Drivers
         id: cache-schemaspy
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
         with:
           # Cache key includes SchemaSpy and JDBC/SDK versions so changes to any artifact invalidate cache
           key: schemaspy-${{ env.SCHEMASPY_VERSION }}-mysql-${{ env.JDBC_VERSION_MYSQL }}-pg-${{ env.JDBC_VERSION_POSTGRESQL }}-rs-${{ env.JDBC_VERSION_REDSHIFT }}-aws-${{ env.AWS_SDK_CORE_VERSION }}-v1
