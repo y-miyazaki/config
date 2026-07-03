@@ -78,7 +78,7 @@ claude = "2.1.193"                               # Claude Code CLI
 "aqua:protocolbuffers/protobuf-go/protoc-gen-go" = "1.36.11"              # protobuf code generator
 "aqua:grpc/grpc-go/protoc-gen-go-grpc" = "1.6.1"                          # gRPC code generator
 "aqua:swaggo/swag" = "1.16.6"                                             # API documentation generator
-"aqua:go-swagger/go-swagger" = "0.34.1"                                   # API documentation generator (swagger)
+"aqua:go-swagger/go-swagger" = "0.35.0"                                   # API documentation generator (swagger)
 
 # Lint / Formatter tools
 "npm:cspell" = { version = "10.0.1", depends = [
