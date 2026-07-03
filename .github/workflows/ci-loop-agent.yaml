@@ -121,7 +121,7 @@ jobs:
 
       - name: Run Claude Code Action (L2)
         id: claude
-        uses: anthropics/claude-code-action@80b31826338489861333dc17217865dfe8085cdc # v1.0.155
+        uses: anthropics/claude-code-action@521136812280ae7ef256e06045655b9da02793f0 # v1.0.158
         with:
           anthropic_api_key: ${{ secrets.AGENT_TOKEN }}
           branch_prefix: "loop/${{ inputs.skill_name }}/"
