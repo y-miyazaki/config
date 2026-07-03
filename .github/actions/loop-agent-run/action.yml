@@ -38,7 +38,7 @@ runs:
     # --- Claude (Action-managed) ---
     - name: Run Claude
       if: inputs.engine == 'claude'
-      uses: anthropics/claude-code-action@521136812280ae7ef256e06045655b9da02793f0 # v1.0.158
+      uses: anthropics/claude-code-action@a92e7c70a4da9793dc164451d829089dc057a464 # v1.0.159
       with:
         anthropic_api_key: ${{ inputs.agent_token }}
         claude_args: "--max-turns ${{ inputs.max_turns }}${{ inputs.model != '' && format(' --model {0}', inputs.model) || '' }}${{ inputs.claude_args != '' && format(' {0}', inputs.claude_args) || '' }}"
