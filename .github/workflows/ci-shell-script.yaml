@@ -59,7 +59,6 @@ jobs:
         run: |
           set -euo pipefail
           # shellcheck disable=SC2086,SC2046
-          set -euo pipefail
           # If script_path is empty, check all shell scripts in the repo
           raw_input="${SCRIPT_PATH}"
           if [ -z "$raw_input" ]; then
@@ -67,14 +66,13 @@ jobs:
           fi
           IFS=',' read -ra patterns <<< "$raw_input"
           files=()
+          shopt -s globstar nullglob
           for p in "${patterns[@]}"; do
-            # globs are expanded by the shell; if no match, continue
-            shopt -s nullglob
             for f in $p; do
               files+=("$f")
             done
-            shopt -u nullglob
           done
+          shopt -u globstar nullglob
           if [ ${#files[@]} -eq 0 ]; then
             {
               echo "no_files=true"
