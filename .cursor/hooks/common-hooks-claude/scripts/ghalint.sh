@@ -1,15 +1,15 @@
 #!/bin/bash
 #######################################
-# Description: Hook for golangci-lint.
-#              Lints and fixes changed Go files and reports failures
-#              in the appropriate format for the active AI agent.
+# Description: Hook for ghalint.
+#              Runs ghalint on the repository when workflow files change
+#              and reports failures in the appropriate format for the active AI agent.
 #
 # Usage: Called by apm hook runner (not invoked directly).
 #        Receives hook event JSON via stdin.
 #
 # Design Rules:
 #   - Exit 0 if tool not found or no changed files (silent skip)
-#   - Call report_failure on lint failure (agent-aware error signal)
+#   - Call report_failure on policy violation (agent-aware error signal)
 #   - Supports Kiro CLI, Claude Code, Copilot CLI, Cursor, Antigravity, VS Code
 #######################################
 
@@ -32,29 +32,31 @@ if [[ ! -t 0 ]]; then
 fi
 
 #######################################
-# get_changed_dirs: Collect unique directories containing changed Go files
+# has_changed_workflows: Check if any workflow files have changed
 #
 # Description:
-#   Gathers modified/added/untracked Go files from git and extracts
-#   their parent directories. Each git command is guarded with || true to
+#   Returns success if any GitHub Actions workflow files are modified,
+#   staged, or untracked. Each git command is guarded with || true to
 #   prevent pipefail from terminating the script.
 #
 # Arguments:
 #   None
 #
 # Returns:
-#   Newline-separated unique directory list to stdout
+#   0 if changed files exist, 1 otherwise
 #
 # Usage:
-#   mapfile -t dirs < <(get_changed_dirs)
+#   if has_changed_workflows; then ...
 #
 #######################################
-function get_changed_dirs {
-    {
-        git diff --name-only --diff-filter=ACMR -- '*.go' 2> /dev/null || true
-        git diff --cached --name-only --diff-filter=ACMR -- '*.go' 2> /dev/null || true
-        git ls-files --others --exclude-standard -- '*.go' 2> /dev/null || true
-    } | awk 'NF' | xargs -I{} dirname {} | sort -u
+function has_changed_workflows {
+    local files
+    files=$({
+        git diff --name-only --diff-filter=ACMR -- .github/workflows/*.yml .github/workflows/*.yaml 2> /dev/null || true
+        git diff --cached --name-only --diff-filter=ACMR -- .github/workflows/*.yml .github/workflows/*.yaml 2> /dev/null || true
+        git ls-files --others --exclude-standard -- .github/workflows/*.yml .github/workflows/*.yaml 2> /dev/null || true
+    } | awk 'NF' | head -1)
+    [[ -n $files ]]
 }
 
 #######################################
@@ -77,7 +79,7 @@ function get_changed_dirs {
 #   Does not return. Exits with 0 (JSON block) or 2 (stderr).
 #
 # Usage:
-#   report_failure "golangci-lint found issues: ..."
+#   report_failure "ghalint found policy violations: ..."
 #
 #######################################
 function report_failure {
@@ -86,7 +88,7 @@ function report_failure {
     local hook_event=""
 
     # Step 1: Detect agent (agent-first strategy)
-    if [[ -n "$HOOK_STDIN_DATA" ]]; then
+    if [[ -n $HOOK_STDIN_DATA ]]; then
         # 1. Antigravity (highest priority - unique fields)
         if echo "$HOOK_STDIN_DATA" | jq -e ".terminationReason" > /dev/null 2>&1; then
             agent="antigravity"
@@ -113,7 +115,7 @@ function report_failure {
             fi
 
         # 3. Copilot CLI (env var or Copilot-unique fields, no hook_event_name)
-        elif [[ -n "${GITHUB_COPILOT_API_TOKEN:-}" ]] \
+        elif [[ -n ${GITHUB_COPILOT_API_TOKEN:-} ]] \
             || echo "$HOOK_STDIN_DATA" | jq -e '.transcriptPath // .stopReason // .stop_reason // .toolResult // .tool_result' > /dev/null 2>&1; then
             agent="copilot"
             if echo "$HOOK_STDIN_DATA" | jq -e ".stopReason" > /dev/null 2>&1; then
@@ -136,7 +138,7 @@ function report_failure {
     fi
 
     # Final fallback:    # Final fallback: env var check
-    if [[ -z "$agent" && -n "${GITHUB_COPILOT_API_TOKEN:-}" ]]; then
+    if [[ -z $agent && -n ${GITHUB_COPILOT_API_TOKEN:-} ]]; then
         agent="copilot"
     fi
 
@@ -147,10 +149,10 @@ function report_failure {
             exit 0
             ;;
         claude_code)
-            if [[ "$hook_event" == "Stop" ]]; then
+            if [[ $hook_event == "Stop" ]]; then
                 jq -n --arg reason "$reason" '{decision: "block", reason: $reason}'
                 exit 0
-            elif [[ "$hook_event" == "PostToolUse" ]]; then
+            elif [[ $hook_event == "PostToolUse" ]]; then
                 jq -n --arg ctx "$reason" '{hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $ctx}}'
                 exit 0
             else
@@ -179,7 +181,7 @@ function report_failure {
             exit 2
             ;;
         kiro)
-            if [[ "$hook_event" == "stop" ]]; then
+            if [[ $hook_event == "stop" ]]; then
                 jq -n --arg reason "$reason" '{decision: "block", reason: $reason}'
                 exit 0
             else
@@ -188,10 +190,10 @@ function report_failure {
             fi
             ;;
         vscode)
-            if [[ "$hook_event" == "Stop" ]]; then
+            if [[ $hook_event == "Stop" ]]; then
                 jq -n --arg reason "$reason" '{hookSpecificOutput: {hookEventName: "Stop", decision: "block", reason: $reason}}'
                 exit 0
-            elif [[ "$hook_event" == "PostToolUse" ]]; then
+            elif [[ $hook_event == "PostToolUse" ]]; then
                 jq -n --arg reason "$reason" '{decision: "block", reason: $reason, hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $reason}}'
                 exit 0
             else
@@ -210,8 +212,8 @@ function report_failure {
 # main: Entry point
 #
 # Description:
-#   Runs golangci-lint on each directory containing changed Go files.
-#   Collects failures and calls report_failure with a summary.
+#   Runs ghalint when workflow files have changed.
+#   Calls report_failure if policy violations are found.
 #
 # Arguments:
 #   None
@@ -225,36 +227,19 @@ function report_failure {
 #######################################
 function main {
     command -v jq > /dev/null 2>&1 || exit 0
-    command -v golangci-lint > /dev/null 2>&1 || exit 0
+    command -v ghalint > /dev/null 2>&1 || exit 0
 
     local root
     root=$(git rev-parse --show-toplevel 2> /dev/null) || exit 0
     cd "$root" || exit 0
 
-    local dirs=()
-    mapfile -t dirs < <(get_changed_dirs)
+    has_changed_workflows || exit 0
 
-    if ((${#dirs[@]} == 0)); then
-        exit 0
-    fi
-
-    local fails=0
-    local output=""
-    for dir in "${dirs[@]}"; do
-        [[ -n "$dir" && -d "$dir" ]] || continue
-        local result
-        result=$(golangci-lint run --fix "./${dir#./}/..." 2>&1) || {
-            fails=$((fails + 1))
-            output+="${result}"$'\n'
-        }
-    done
-
-    if [[ "$fails" -gt 0 ]]; then
-        report_failure "golangci-lint found issues in Go code:
-${output}"
-    fi
+    local result
+    result=$(ghalint run 2>&1) || report_failure "ghalint found policy violations:
+${result}"
 }
 
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
     main "$@"
 fi

@@ -1,7 +1,7 @@
 #!/bin/bash
 #######################################
-# Description: Hook for shfmt.
-#              Formats changed shell scripts and reports failures
+# Description: Hook for gitleaks.
+#              Scans changed files for secrets and reports failures
 #              in the appropriate format for the active AI agent.
 #
 # Usage: Called by apm hook runner (not invoked directly).
@@ -9,7 +9,7 @@
 #
 # Design Rules:
 #   - Exit 0 if tool not found or no changed files (silent skip)
-#   - Call report_failure on format failure (agent-aware error signal)
+#   - Call report_failure on scan failure (agent-aware error signal)
 #   - Supports Kiro CLI, Claude Code, Copilot CLI, Cursor, Antigravity, VS Code
 #######################################
 
@@ -32,88 +32,55 @@ if [[ ! -t 0 ]]; then
 fi
 
 #######################################
-# get_changed_files: Collect changed shell script files from git
-#
-# Description:
-#   Gathers modified/added/untracked shell scripts from git.
-#   Each git command is guarded with || true to prevent pipefail
-#   from terminating the script.
+# get_changed_files: Collect changed files from git
 #
 # Arguments:
 #   None
 #
 # Returns:
 #   Newline-separated unique file list to stdout
-#
-# Usage:
-#   mapfile -t files < <(get_changed_files)
-#
 #######################################
 function get_changed_files {
     {
-        git diff --name-only --diff-filter=ACMR -- '*.sh' 2> /dev/null || true
-        git diff --cached --name-only --diff-filter=ACMR -- '*.sh' 2> /dev/null || true
-        git ls-files --others --exclude-standard -- '*.sh' 2> /dev/null || true
-    } | awk 'NF' | sort -u
+        git diff --name-only --diff-filter=ACMR 2> /dev/null || true
+        git diff --cached --name-only --diff-filter=ACMR 2> /dev/null || true
+        git ls-files --others --exclude-standard 2> /dev/null || true
+    } | awk 'NF' \
+        | grep -v -E '^(\.agents/|\.cursor/|\.claude/|\.kiro/|\.vscode/|apm_modules/)' \
+        | sort -u
 }
 
 #######################################
 # report_failure: Emit error in the format the current agent expects, then exit.
 #
-# Description:
-#   Identifies the AI agent from HOOK_STDIN_DATA structure, then returns
-#   the agent-specific response format:
-#     - Kiro CLI: stop → {"decision":"block","reason":"..."}
-#     - Claude Code: Stop → {"decision":"block"}, PostToolUse → hookSpecificOutput
-#     - GitHub Copilot: agentStop → {"decision":"block"}, postToolUse → additionalContext
-#     - Antigravity: Stop → {"decision":"continue","reason":"..."}
-#     - Cursor: exit 2 + stderr (afterFileEdit, stop etc.)
-#     - unknown: exit 2 + stderr
-#
 # Arguments:
-#   $1 - reason: Human-readable description of what failed and how to fix it
+#   $1 - reason: Human-readable description of what failed
 #
 # Returns:
 #   Does not return. Exits with 0 (JSON block) or 2 (stderr).
-#
-# Usage:
-#   report_failure "shfmt found formatting issues: ..."
-#
 #######################################
 function report_failure {
     local reason="$1"
     local agent=""
     local hook_event=""
 
-    # Step 1: Detect agent (agent-first strategy)
-    if [[ -n "$HOOK_STDIN_DATA" ]]; then
-        # 1. Antigravity (highest priority - unique fields)
+    if [[ -n $HOOK_STDIN_DATA ]]; then
         if echo "$HOOK_STDIN_DATA" | jq -e ".terminationReason" > /dev/null 2>&1; then
             agent="antigravity"
         elif echo "$HOOK_STDIN_DATA" | jq -e ".toolCall" > /dev/null 2>&1; then
             agent="antigravity"
-
-        # 2. Check for hook_event_name first (most reliable discriminator)
         elif echo "$HOOK_STDIN_DATA" | jq -e ".hook_event_name" > /dev/null 2>&1; then
             hook_event=$(echo "$HOOK_STDIN_DATA" | jq -r '.hook_event_name' 2> /dev/null)
-
-            # Check event name pattern to determine agent type
             if echo "$hook_event" | grep -qE '^(Stop|PostToolUse|PreToolUse)$'; then
-                # PascalCase = Claude Code
                 agent="claude_code"
             elif echo "$hook_event" | grep -qE '^(stop|postToolUse|preToolUse|agentSpawn|userPromptSubmit)$'; then
-                # camelCase with Kiro values = Kiro
                 agent="kiro"
             elif echo "$hook_event" | grep -qE '^(afterFileEdit|beforeShellExecution|beforeMCPExecution|beforeReadFile|stop)$'; then
-                # camelCase with Cursor values = Cursor
                 agent="cursor"
             else
-                # Default to Claude Code for unknown PascalCase
                 agent="claude_code"
             fi
-
-        # 3. Copilot CLI (env var or Copilot-unique fields, no hook_event_name)
-        elif [[ -n "${GITHUB_COPILOT_API_TOKEN:-}" ]] \
+        elif [[ -n ${GITHUB_COPILOT_API_TOKEN:-} ]] \
             || echo "$HOOK_STDIN_DATA" | jq -e '.transcriptPath // .stopReason // .stop_reason // .toolResult // .tool_result' > /dev/null 2>&1; then
             agent="copilot"
             if echo "$HOOK_STDIN_DATA" | jq -e ".stopReason" > /dev/null 2>&1; then
@@ -123,8 +90,6 @@ function report_failure {
             elif echo "$HOOK_STDIN_DATA" | jq -e ".toolName" > /dev/null 2>&1; then
                 hook_event="preToolUse"
             fi
-
-        # 4. VS Code extension (fallback based on vscode-specific fields)
         elif echo "$HOOK_STDIN_DATA" | jq -e 'has("stop_hook_active") or has("tool_use_id")' > /dev/null 2>&1; then
             agent="vscode"
             if echo "$HOOK_STDIN_DATA" | jq -e 'has("stop_hook_active")' > /dev/null 2>&1; then
@@ -135,22 +100,20 @@ function report_failure {
         fi
     fi
 
-    # Final fallback:    # Final fallback: env var check
-    if [[ -z "$agent" && -n "${GITHUB_COPILOT_API_TOKEN:-}" ]]; then
+    if [[ -z $agent && -n ${GITHUB_COPILOT_API_TOKEN:-} ]]; then
         agent="copilot"
     fi
 
-    # Step 2: Build response per agent spec (A-Z order)
     case "$agent" in
         antigravity)
             jq -n --arg reason "$reason" '{decision: "continue", reason: $reason}'
             exit 0
             ;;
         claude_code)
-            if [[ "$hook_event" == "Stop" ]]; then
+            if [[ $hook_event == "Stop" ]]; then
                 jq -n --arg reason "$reason" '{decision: "block", reason: $reason}'
                 exit 0
-            elif [[ "$hook_event" == "PostToolUse" ]]; then
+            elif [[ $hook_event == "PostToolUse" ]]; then
                 jq -n --arg ctx "$reason" '{hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $ctx}}'
                 exit 0
             else
@@ -179,7 +142,7 @@ function report_failure {
             exit 2
             ;;
         kiro)
-            if [[ "$hook_event" == "stop" ]]; then
+            if [[ $hook_event == "stop" ]]; then
                 jq -n --arg reason "$reason" '{decision: "block", reason: $reason}'
                 exit 0
             else
@@ -188,10 +151,10 @@ function report_failure {
             fi
             ;;
         vscode)
-            if [[ "$hook_event" == "Stop" ]]; then
+            if [[ $hook_event == "Stop" ]]; then
                 jq -n --arg reason "$reason" '{hookSpecificOutput: {hookEventName: "Stop", decision: "block", reason: $reason}}'
                 exit 0
-            elif [[ "$hook_event" == "PostToolUse" ]]; then
+            elif [[ $hook_event == "PostToolUse" ]]; then
                 jq -n --arg reason "$reason" '{decision: "block", reason: $reason, hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $reason}}'
                 exit 0
             else
@@ -210,22 +173,18 @@ function report_failure {
 # main: Entry point
 #
 # Description:
-#   Runs shfmt on changed shell scripts.
-#   Calls report_failure if formatting issues are found.
+#   Runs gitleaks on changed files.
+#   Calls report_failure if secrets are found.
 #
 # Arguments:
 #   None
 #
 # Returns:
 #   0 on success or skip
-#
-# Usage:
-#   main
-#
 #######################################
 function main {
     command -v jq > /dev/null 2>&1 || exit 0
-    command -v shfmt > /dev/null 2>&1 || exit 0
+    command -v gitleaks > /dev/null 2>&1 || exit 0
 
     local root
     root=$(git rev-parse --show-toplevel 2> /dev/null) || exit 0
@@ -238,11 +197,31 @@ function main {
         exit 0
     fi
 
-    local result
-    result=$(shfmt -w -s -i 4 -ci -bn -sr "${files[@]}" 2>&1) || report_failure "shfmt found formatting issues in shell scripts:
+    local config_arg=""
+    if [[ -f ".gitleaks.toml" ]]; then
+        config_arg="--config=.gitleaks.toml"
+    fi
+
+    local scan_dir=""
+    scan_dir=$(mktemp -d) || exit 0
+    # shellcheck disable=SC2064
+    trap "rm -rf '${scan_dir}'" EXIT
+
+    local file=""
+    for file in "${files[@]}"; do
+        [[ -f $file ]] || continue
+        mkdir -p "${scan_dir}/$(dirname "$file")"
+        cp "$file" "${scan_dir}/${file}"
+    done
+
+    local result=""
+    # shellcheck disable=SC2086
+    if ! result=$(gitleaks detect --no-git $config_arg --source "$scan_dir" 2>&1); then
+        report_failure "gitleaks found potential secrets in changed files:
 ${result}"
+    fi
 }
 
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
     main "$@"
 fi

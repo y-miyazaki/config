@@ -1,7 +1,7 @@
 #!/bin/bash
 #######################################
-# Description: Hook for markdownlint-cli2.
-#              Lints and fixes changed Markdown files and reports failures
+# Description: Hook for actionlint.
+#              Lints changed GitHub Actions workflow files and reports failures
 #              in the appropriate format for the active AI agent.
 #
 # Usage: Called by apm hook runner (not invoked directly).
@@ -10,7 +10,7 @@
 # Design Rules:
 #   - Exit 0 if tool not found or no changed files (silent skip)
 #   - Call report_failure on lint failure (agent-aware error signal)
-#   - Supports Kiro CLI, Claude Code, GitHub Copilot, Cursor, Antigravity
+#   - Supports Kiro CLI, Claude Code, Copilot CLI, Cursor, Antigravity, VS Code
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -32,10 +32,10 @@ if [[ ! -t 0 ]]; then
 fi
 
 #######################################
-# get_changed_files: Collect changed Markdown files from git
+# get_changed_files: Collect changed GitHub Actions workflow files from git
 #
 # Description:
-#   Gathers modified/added/untracked Markdown files from git.
+#   Gathers modified/added/untracked workflow files from git.
 #   Each git command is guarded with || true to prevent pipefail
 #   from terminating the script.
 #
@@ -51,9 +51,9 @@ fi
 #######################################
 function get_changed_files {
     {
-        git diff --name-only --diff-filter=ACMR -- '*.md' 2> /dev/null || true
-        git diff --cached --name-only --diff-filter=ACMR -- '*.md' 2> /dev/null || true
-        git ls-files --others --exclude-standard -- '*.md' 2> /dev/null || true
+        git diff --name-only --diff-filter=ACMR -- .github/workflows/*.yml .github/workflows/*.yaml 2> /dev/null || true
+        git diff --cached --name-only --diff-filter=ACMR -- .github/workflows/*.yml .github/workflows/*.yaml 2> /dev/null || true
+        git ls-files --others --exclude-standard -- .github/workflows/*.yml .github/workflows/*.yaml 2> /dev/null || true
     } | awk 'NF' | sort -u
 }
 
@@ -77,7 +77,7 @@ function get_changed_files {
 #   Does not return. Exits with 0 (JSON block) or 2 (stderr).
 #
 # Usage:
-#   report_failure "markdownlint-cli2 found issues: ..."
+#   report_failure "actionlint found issues: ..."
 #
 #######################################
 function report_failure {
@@ -86,7 +86,7 @@ function report_failure {
     local hook_event=""
 
     # Step 1: Detect agent (agent-first strategy)
-    if [[ -n "$HOOK_STDIN_DATA" ]]; then
+    if [[ -n $HOOK_STDIN_DATA ]]; then
         # 1. Antigravity (highest priority - unique fields)
         if echo "$HOOK_STDIN_DATA" | jq -e ".terminationReason" > /dev/null 2>&1; then
             agent="antigravity"
@@ -113,7 +113,7 @@ function report_failure {
             fi
 
         # 3. Copilot CLI (env var or Copilot-unique fields, no hook_event_name)
-        elif [[ -n "${GITHUB_COPILOT_API_TOKEN:-}" ]] \
+        elif [[ -n ${GITHUB_COPILOT_API_TOKEN:-} ]] \
             || echo "$HOOK_STDIN_DATA" | jq -e '.transcriptPath // .stopReason // .stop_reason // .toolResult // .tool_result' > /dev/null 2>&1; then
             agent="copilot"
             if echo "$HOOK_STDIN_DATA" | jq -e ".stopReason" > /dev/null 2>&1; then
@@ -136,7 +136,7 @@ function report_failure {
     fi
 
     # Final fallback:    # Final fallback: env var check
-    if [[ -z "$agent" && -n "${GITHUB_COPILOT_API_TOKEN:-}" ]]; then
+    if [[ -z $agent && -n ${GITHUB_COPILOT_API_TOKEN:-} ]]; then
         agent="copilot"
     fi
 
@@ -147,10 +147,10 @@ function report_failure {
             exit 0
             ;;
         claude_code)
-            if [[ "$hook_event" == "Stop" ]]; then
+            if [[ $hook_event == "Stop" ]]; then
                 jq -n --arg reason "$reason" '{decision: "block", reason: $reason}'
                 exit 0
-            elif [[ "$hook_event" == "PostToolUse" ]]; then
+            elif [[ $hook_event == "PostToolUse" ]]; then
                 jq -n --arg ctx "$reason" '{hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $ctx}}'
                 exit 0
             else
@@ -179,7 +179,7 @@ function report_failure {
             exit 2
             ;;
         kiro)
-            if [[ "$hook_event" == "stop" ]]; then
+            if [[ $hook_event == "stop" ]]; then
                 jq -n --arg reason "$reason" '{decision: "block", reason: $reason}'
                 exit 0
             else
@@ -188,10 +188,10 @@ function report_failure {
             fi
             ;;
         vscode)
-            if [[ "$hook_event" == "Stop" ]]; then
+            if [[ $hook_event == "Stop" ]]; then
                 jq -n --arg reason "$reason" '{hookSpecificOutput: {hookEventName: "Stop", decision: "block", reason: $reason}}'
                 exit 0
-            elif [[ "$hook_event" == "PostToolUse" ]]; then
+            elif [[ $hook_event == "PostToolUse" ]]; then
                 jq -n --arg reason "$reason" '{decision: "block", reason: $reason, hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $reason}}'
                 exit 0
             else
@@ -210,8 +210,8 @@ function report_failure {
 # main: Entry point
 #
 # Description:
-#   Runs markdownlint-cli2 --fix on changed Markdown files.
-#   Calls report_failure if unfixable issues remain.
+#   Runs actionlint on changed workflow files.
+#   Calls report_failure if lint issues are found.
 #
 # Arguments:
 #   None
@@ -225,7 +225,7 @@ function report_failure {
 #######################################
 function main {
     command -v jq > /dev/null 2>&1 || exit 0
-    command -v markdownlint-cli2 > /dev/null 2>&1 || exit 0
+    command -v actionlint > /dev/null 2>&1 || exit 0
 
     local root
     root=$(git rev-parse --show-toplevel 2> /dev/null) || exit 0
@@ -239,10 +239,10 @@ function main {
     fi
 
     local result
-    result=$(markdownlint-cli2 --fix "${files[@]}" 2>&1) || report_failure "markdownlint-cli2 found issues that --fix could not resolve:
+    result=$(actionlint "${files[@]}" 2>&1) || report_failure "actionlint found issues in GitHub Actions workflows:
 ${result}"
 }
 
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
     main "$@"
 fi
