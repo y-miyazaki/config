@@ -146,7 +146,7 @@ install_file() {
     local dest="$2"
     local url="${REPO_RAW_BASE}/${src}"
 
-    if [[ -f "${dest}" ]] && [[ "${FORCE}" == "false" ]]; then
+    if [[ -f ${dest} ]] && [[ ${FORCE} == "false" ]]; then
         echo "  [skip] $(basename "${dest}") (already exists)" >&2
         return 0
     fi
@@ -193,7 +193,7 @@ main() {
         fi
     done
 
-    if [[ "${error_count}" -gt 0 ]]; then
+    if [[ ${error_count} -gt 0 ]]; then
         echo "" >&2
         echo "Completed with ${error_count} error(s)." >&2
         return 1
@@ -207,6 +207,6 @@ main() {
     echo "  4. Customize .tflint.hcl for your project if needed"
 }
 
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
     main "$@"
 fi
