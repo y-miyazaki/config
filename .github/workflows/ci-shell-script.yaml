@@ -20,6 +20,11 @@ on:
         description: "Comma-separated glob(s) of script files to check. If empty, all **/*.sh are checked"
         required: false
         type: string
+      shfmt_flags:
+        default: "-l -s -i 4 -ci -bn -sr"
+        description: "Flags passed to shfmt via reviewdog/action-shfmt."
+        required: false
+        type: string
 
 permissions:
   checks: write
@@ -30,6 +35,7 @@ env:
   FAIL_LEVEL: ${{ inputs.fail_level }}
   FAIL_ON_WARNINGS: ${{ inputs.fail_on_warnings }}
   SCRIPT_PATH: ${{ inputs.script_path }}
+  SHFMT_FLAGS: ${{ inputs.shfmt_flags }}
 
 jobs:
   lint:
@@ -96,7 +102,7 @@ jobs:
           github_token: ${{ github.token }}
           level: error
           reviewdog_flags: "-fail-level=${{ env.FAIL_LEVEL }} -reporter=github-pr-review"
-          shfmt_flags: "-l -s -i 4 -ci -bn -sr"
+          shfmt_flags: ${{ env.SHFMT_FLAGS }}
           workdir: "."
 
       - name: Exec shfmt + reviewdog (push/check)
@@ -107,7 +113,7 @@ jobs:
           github_token: ${{ github.token }}
           level: error
           reviewdog_flags: "-fail-level=${{ env.FAIL_LEVEL }} -reporter=github-check"
-          shfmt_flags: "-l -s -i 4 -ci -bn -sr"
+          shfmt_flags: ${{ env.SHFMT_FLAGS }}
           workdir: "."
 
       - name: Exec ShellCheck + reviewdog (PR comments)
