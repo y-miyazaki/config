@@ -136,7 +136,7 @@ runs:
 
     - name: Write State
       if: inputs.current_sha != ''
-      uses: y-miyazaki/config/.github/actions/loop-state-write@818e1f8aa9771e41af357bad06d1176e40ed59ee # v1.5.1
+      uses: y-miyazaki/config/.github/actions/loop-state-write@44a826cd1bfc1aa79c684e1d662e7875ae4979dd # v1.7.0
       with:
         outcome: ${{ steps.outcome.outputs.value }}
         sha: ${{ inputs.current_sha }}

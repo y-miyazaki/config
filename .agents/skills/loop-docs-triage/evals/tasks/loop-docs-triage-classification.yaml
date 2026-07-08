@@ -1,0 +1,21 @@
+id: loop-docs-triage-classification-001
+name: loop-docs-triage classifies findings correctly
+description: |
+  Validate that findings are classified into High-Priority or Watch categories.
+
+tags:
+  - quality
+  - classification
+  - edge-case
+
+inputs:
+  prompt: "Use loop-docs-triage. Assume findings include a missing README (critical) and a slightly outdated version number (low priority). Classify them into High-Priority and Watch."
+  context:
+    target: SKILL.md
+
+expected:
+  output_contains:
+    - "High-Priority"
+    - "Watch"
+  outcomes:
+    - type: task_completed
