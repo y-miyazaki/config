@@ -1,10 +1,8 @@
 lockfile_version: '1'
-generated_at: '2026-07-08T11:45:10.662700+00:00'
-apm_version: 0.23.1
+generated_at: '2026-07-08T11:48:23.328247+00:00'
+apm_version: 0.21.0
 dependencies:
 - repo_url: _local/common
-  name: config-common
-  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .agents/skills/agent-skills-review
@@ -708,8 +706,6 @@ dependencies:
   local_path: ./.apm/packages/common
   declared_license: Apache-2.0
 - repo_url: _local/common-hooks-claude
-  name: common-hooks-claude
-  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .claude/hooks/common-hooks-claude/scripts/actionlint.sh
@@ -741,8 +737,6 @@ dependencies:
   local_path: ./.apm/packages/common-hooks-claude
   declared_license: Apache-2.0
 - repo_url: _local/common-hooks-cursor
-  name: common-hooks-cursor
-  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .claude/hooks/common-hooks-cursor/scripts/actionlint.sh
@@ -774,8 +768,6 @@ dependencies:
   local_path: ./.apm/packages/common-hooks-cursor
   declared_license: Apache-2.0
 - repo_url: _local/docs-loop
-  name: config-docs-loop
-  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .agents/skills/loop-docs-triage
@@ -813,8 +805,6 @@ dependencies:
   local_path: ./.apm/packages/docs-loop
   declared_license: Apache-2.0
 - repo_url: _local/go
-  name: config-go
-  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .agents/skills/go-review
@@ -1034,8 +1024,6 @@ dependencies:
   local_path: ./.apm/packages/go
   declared_license: Apache-2.0
 - repo_url: _local/go-hooks-claude
-  name: go-hooks-claude
-  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .claude/hooks/go-hooks-claude/scripts/golangci_lint.sh
@@ -1047,8 +1035,6 @@ dependencies:
   local_path: ./.apm/packages/go-hooks-claude
   declared_license: Apache-2.0
 - repo_url: _local/go-hooks-cursor
-  name: go-hooks-cursor
-  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .claude/hooks/go-hooks-cursor/scripts/golangci_lint.sh
@@ -1060,8 +1046,6 @@ dependencies:
   local_path: ./.apm/packages/go-hooks-cursor
   declared_license: Apache-2.0
 - repo_url: _local/shell-script
-  name: config-shell-script
-  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .agents/skills/shell-script-review
@@ -1269,8 +1253,6 @@ dependencies:
   local_path: ./.apm/packages/shell-script
   declared_license: Apache-2.0
 - repo_url: _local/shell-script-hooks-claude
-  name: shell-script-hooks-claude
-  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .claude/hooks/shell-script-hooks-claude/scripts/shellcheck.sh
@@ -1286,8 +1268,6 @@ dependencies:
   local_path: ./.apm/packages/shell-script-hooks-claude
   declared_license: Apache-2.0
 - repo_url: _local/shell-script-hooks-cursor
-  name: shell-script-hooks-cursor
-  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .claude/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh
