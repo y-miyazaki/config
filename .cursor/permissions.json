@@ -20,11 +20,11 @@
   "autoRun": {
     "allow_instructions": [
       "Read-only commands such as listing files, viewing diffs, and checking status are fine.",
-      "Do not run linters. Hooks handle them automatically.",
       "Prioritize lean-ctx and fetch MCP. Avoid heavy terminal outputs."
     ],
     "block_instructions": [
       "Any command that installs packages (npm install, pip install, go get, etc.).",
+      "Do not run linters. Hooks handle them automatically.",
       "Destructive git operations: git push, git reset --hard, git clean -f, git rebase, git branch -D.",
       "Commands that delete files recursively (rm -rf).",
       "Commands that use sudo or curl/wget to download executables.",
