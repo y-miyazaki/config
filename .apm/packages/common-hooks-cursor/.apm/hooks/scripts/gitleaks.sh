@@ -45,7 +45,9 @@ function get_changed_files {
         git diff --name-only --diff-filter=ACMR 2> /dev/null || true
         git diff --cached --name-only --diff-filter=ACMR 2> /dev/null || true
         git ls-files --others --exclude-standard 2> /dev/null || true
-    } | awk 'NF' | sort -u
+    } | awk 'NF' \
+        | grep -v -E '^(\.agents/|\.cursor/|\.claude/|\.kiro/|\.vscode/|apm_modules/)' \
+        | sort -u
 }
 
 #######################################
@@ -200,10 +202,24 @@ function main {
         config_arg="--config=.gitleaks.toml"
     fi
 
-    local result
+    local scan_dir=""
+    scan_dir=$(mktemp -d) || exit 0
+    # shellcheck disable=SC2064
+    trap "rm -rf '${scan_dir}'" EXIT
+
+    local file=""
+    for file in "${files[@]}"; do
+        [[ -f "$file" ]] || continue
+        mkdir -p "${scan_dir}/$(dirname "$file")"
+        cp "$file" "${scan_dir}/${file}"
+    done
+
+    local result=""
     # shellcheck disable=SC2086
-    result=$(gitleaks detect --no-git $config_arg --source . 2>&1) || report_failure "gitleaks found potential secrets in changed files:
+    if ! result=$(gitleaks detect --no-git $config_arg --source "$scan_dir" 2>&1); then
+        report_failure "gitleaks found potential secrets in changed files:
 ${result}"
+    fi
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
