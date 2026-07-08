@@ -96,7 +96,7 @@ claude = "2.1.197"                               # Claude Code CLI
 "pipx:pre-commit" = { version = "4.6.0", depends = [
   "python",
 ] } # pre-commit framework
-"aqua:aquasecurity/trivy" = "0.71.2" # vulnerability scanner
+"aqua:aquasecurity/trivy" = "0.72.0" # vulnerability scanner
 
 # Terraform related tools
 "aqua:getsops/sops" = "3.13.2"                  # encryption tool
