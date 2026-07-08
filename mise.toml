@@ -41,7 +41,7 @@ claude = "2.1.197"                               # Claude Code CLI
 "aqua:github/copilot-cli" = "1.0.67"             # GitHub Copilot CLI
 "pipx:headroom-ai" = { version = "0.28.0", extras = "proxy,mcp,bedrock", depends = ["python"] }
 "github:yvgude/lean-ctx" = "v3.8.18"              # context optimizer
-"github:microsoft/waza" = "v0.37.0"               # agent skill evaluator
+"github:microsoft/waza" = "v0.38.0"               # agent skill evaluator
 
 # AWS related tools
 "aqua:aws/aws-cli" = "2.35.13"      # AWS CLI
