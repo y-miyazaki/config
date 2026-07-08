@@ -135,7 +135,7 @@ function report_failure {
         fi
     fi
 
-    # Final fallback: env var check
+    # Final fallback:    # Final fallback: env var check
     if [[ -z "$agent" && -n "${GITHUB_COPILOT_API_TOKEN:-}" ]]; then
         agent="copilot"
     fi
