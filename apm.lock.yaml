@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-08T11:39:28.573602+00:00'
+generated_at: '2026-07-08T11:45:10.662700+00:00'
 apm_version: 0.23.1
 dependencies:
 - repo_url: _local/common
@@ -1291,10 +1291,12 @@ dependencies:
   package_type: apm_package
   deployed_files:
   - .claude/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh
+  - .claude/hooks/shell-script-hooks-cursor/scripts/shfmt.sh
   - .cursor/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh
   - .cursor/hooks/shell-script-hooks-cursor/scripts/shfmt.sh
   deployed_file_hashes:
     .claude/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh: sha256:a70e8695a3353b45f9e3abc1615410314e46855cb0c3d8a2ac83a34d6767b02d
+    .claude/hooks/shell-script-hooks-cursor/scripts/shfmt.sh: sha256:98f7539e6d9a7ea596018fb07ef5fbfe59c908a2d46e5c138cbec9467885d2b8
     .cursor/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh: sha256:a70e8695a3353b45f9e3abc1615410314e46855cb0c3d8a2ac83a34d6767b02d
     .cursor/hooks/shell-script-hooks-cursor/scripts/shfmt.sh: sha256:98f7539e6d9a7ea596018fb07ef5fbfe59c908a2d46e5c138cbec9467885d2b8
   source: local
