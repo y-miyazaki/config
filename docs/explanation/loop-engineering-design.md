@@ -94,14 +94,10 @@ cron → on-loop-docs-triage.yaml
     → loop-state-read action              # retrieve previous SHA
     → detect_changes.sh (inline)          # detect docs impact (caller-specific)
     → loop-prompt-generate action         # assemble prompt
-  agent job:
-    → ci-loop-agent.yaml (reusable)       # Agent execution
-      → loop-agent-run action             # unified execution across all engines
-      (CLI type: worktree-setup → agent → worktree-push)
-  verify job:
-    → ci-loop-verifier.yaml (reusable)    # Maker-Checker separation
-      → denylist check                    # path violation = immediate REJECT
-      → loop-agent-run action             # verifier agent execution
+  execute job:
+    → ci-loop-agent.yaml (reusable)       # L1: loop-agent-once; L2/L3: worktree + loop-execute
+      → loop-worktree-setup action        # isolated branch (L2/L3)
+      → loop-execute action               # bounded Agent→Verify loop (denylist + retries)
   finalize job:
     → loop-finalize action                # create PR (+ auto-merge at L3) or delete branch + update state
 ```
@@ -122,30 +118,18 @@ flowchart TD
         D3 -->|false| D4[loop-prompt-generate action]
     end
 
-    %% Agent Job
-    D4 --> agent
-    subgraph agent["agent job (ci-loop-agent L2)"]
+    %% Execute Job (ci-loop-agent L2/L3)
+    D4 --> execute
+    subgraph execute["execute job (ci-loop-agent L2/L3)"]
         direction TB
-        A1[loop-worktree-setup action] --> A2[Agent execution<br/>loop-docs-triage skill]
-        A2 --> A3[loop-worktree-push action]
-        A3 --> A4{has_changes?}
-    end
-
-    %% Verify Job
-    A4 -->|true| verify
-    A4 -->|false| finalize_no
-    subgraph verify["verify job (ci-loop-verifier)"]
-        direction TB
-        V1[Denylist check] --> V2{violation?}
-        V2 -->|yes| V_REJECT([REJECT])
-        V2 -->|no| V3[Verifier Agent execution<br/>separate session]
-        V3 --> V4{verdict}
+        A1[loop-worktree-setup action] --> A2[loop-execute<br/>Agent→Verify loop]
+        A2 --> A3{verdict / has_changes?}
     end
 
     %% Finalize Job
-    V4 -->|APPROVE| finalize_approve
-    V4 -->|REJECT| finalize_reject
-    V_REJECT --> finalize_reject
+    A3 -->|APPROVE + changes| finalize_approve
+    A3 -->|REJECT| finalize_reject
+    A3 -->|no changes| finalize_no
 
     subgraph finalize["finalize job"]
         direction TB
@@ -169,25 +153,25 @@ graph LR
 
     %% Reusable Workflows
     subgraph reusable["Reusable Workflows"]
-        RW1[ci-loop-agent.yaml<br/>L1/L2]
-        RW2[ci-loop-verifier.yaml<br/>Maker-Checker]
+        RW1[ci-loop-agent.yaml<br/>L1 / L2 / L3]
     end
 
-    %% Engine Strategies
+    %% Engine Types
     subgraph engines["Engine Types"]
-        E1[Action-managed<br/>claude-code-action<br/>branch built-in]
-        E2[CLI type<br/>copilot / codex<br/>worktree isolation]
+        E1[claude / copilot / codex / cursor<br/>CLI via loop-install-cli]
     end
 
     %% Composite Actions
     subgraph actions["Composite Actions"]
-        CA1[loop-agent-run]
-        CA2[loop-finalize]
-        CA3[loop-prompt-generate]
-        CA4[loop-state-read]
-        CA5[loop-state-write]
-        CA6[loop-worktree-setup<br/>CLI type only]
-        CA7[loop-worktree-push<br/>CLI type only]
+        CA1[loop-agent-once<br/>L1]
+        CA2[loop-execute<br/>L2/L3 Agent→Verify]
+        CA3[loop-finalize]
+        CA4[loop-install-cli]
+        CA5[loop-prompt-generate]
+        CA6[loop-state-read]
+        CA7[loop-state-write]
+        CA8[loop-worktree-setup]
+        CA9[loop-worktree-push]
     end
 
     %% Skills
@@ -202,20 +186,20 @@ graph LR
 
     %% Relationships
     CW1 --> RW1
-    CW1 --> RW2
-    CW1 --> CA2
     CW1 --> CA3
-    CW1 --> CA4
+    CW1 --> CA5
+    CW1 --> CA6
     RW1 --> E1
-    RW1 --> E2
     RW1 --> CA1
-    RW2 --> CA1
-    E2 --> CA6
-    E2 --> CA7
+    RW1 --> CA2
+    RW1 --> CA8
+    CA1 --> CA4
+    CA2 --> CA4
+    CA2 --> CA9
     RW1 --> SK1
-    CA2 --> CA5
-    CA4 --> ST1
-    CA5 --> ST1
+    CA3 --> CA7
+    CA6 --> ST1
+    CA7 --> ST1
 ```
 
 ## STATE Files
@@ -240,7 +224,7 @@ State files are maintained individually per loop (multi-loop coordination princi
 |---|---|---|
 | loop-budget skill | Download from npm/GitHub Release with caching (repository-independent) | Future |
 | loop-verifier skill | Same as above | Future |
-| Maker-Checker separation | Implemented as ci-loop-verifier.yaml | ✅ Implemented |
+| Maker-Checker separation | Implemented inside `loop-execute` (via `ci-loop-agent.yaml` L2/L3) | ✅ Implemented |
 | Worktree isolation | loop-worktree-setup/push action + ci-loop-agent L2 mode | ✅ Implemented |
 | Denylist / Allowlist | Defined in SKILL.md, checked by verifier | ✅ Implemented |
 
@@ -331,7 +315,7 @@ For L2 and above where auto-fixes are performed, branch isolation is mandatory. 
 | Action-managed | claude-code-action | Action internally creates branch, commits, and pushes | Fixed to GITHUB_WORKSPACE |
 | CLI type | copilot, codex, claude-cli | Externally managed via worktree-setup/push actions | Isolated in worktree path |
 
-**Unified contract**: Regardless of strategy, `ci-loop-agent.yaml` outputs `{ branch, has_changes }`. The flow from verifier onward is common across all engines.
+**Unified contract**: Regardless of engine, `ci-loop-agent.yaml` outputs `{ branch, has_changes, verdict, reason, attempts }` at L2/L3. Maker-Checker verification runs inside `loop-execute` before finalize.
 
 **CLI type principles:**
 

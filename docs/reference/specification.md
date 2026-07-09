@@ -294,21 +294,22 @@ The repository must provide reusable workflows.
 
 | Workflow | Type | Purpose |
 |----------|------|---------|
-| `ci-loop-agent.yaml` | Reusable | Engine-agnostic agent invocation (Claude / Copilot / Codex). L1/L2 support |
-| `ci-loop-verifier.yaml` | Reusable | Maker-Checker verification with denylist enforcement |
+| `ci-loop-agent.yaml` | Reusable | Engine-agnostic agent invocation (Claude / Copilot / Codex / Cursor). L1 read-only; L2/L3 bounded Agent→Verify via `loop-execute` |
 | `on-loop-docs-triage.yaml` | Caller | Cron-driven documentation triage (L2) |
 
 ### Loop Engineering Actions
 
 | Action | Purpose |
 |--------|---------|
-| `loop-agent-run` | Unified agent execution (install + cache + run) for all engines |
+| `loop-agent-once` | Single agent session (install CLI + run) for L1 / non-loop one-shot use |
+| `loop-execute` | Bounded Agent→Verify loop in one job (denylist, retries, verdict outputs) |
 | `loop-finalize` | PR creation (+ auto-merge at L3), branch cleanup, and state write |
+| `loop-install-cli` | Install AI agent CLI once for subsequent loop actions |
 | `loop-prompt-generate` | Generate structured prompt from skill name and context |
 | `loop-state-read` | Checkout + read loop state JSON, output last_sha/current_sha |
 | `loop-state-write` | Write state JSON + commit/push |
-| `loop-worktree-setup` | Create isolated worktree + branch (CLI engines, L2) |
-| `loop-worktree-push` | Commit/push worktree changes + cleanup (CLI engines, L2) |
+| `loop-worktree-setup` | Create isolated worktree + branch (L2/L3) |
+| `loop-worktree-push` | Commit/push worktree changes + cleanup (L2/L3) |
 
 ## Renovate
 

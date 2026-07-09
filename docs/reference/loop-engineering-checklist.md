@@ -33,21 +33,22 @@ All must be true. Violation of any item is a blocking issue.
 #### Agent (Execute)
 
 - [ ] Outputs `branch` (string) and `has_changes` (bool)
+- [ ] At L2/L3, also outputs `verdict`, `reason`, and `attempts` from the bounded Agent→Verify loop
 - [ ] Operates on an isolated branch only (never default branch)
 - [ ] Respects Skill's allowed paths
 - [ ] Does not touch files on denylist
-- [ ] Uses reusable workflow `ci-loop-agent.yaml`
+- [ ] Uses reusable workflow `ci-loop-agent.yaml` (`loop-agent-once` at L1; `loop-worktree-setup` + `loop-execute` at L2/L3)
 
 #### Verify
 
 - [ ] Outputs `verdict` (APPROVE/REJECT) and `reason`
 - [ ] Read-only — does not modify repository
-- [ ] Runs as a separate agent session from Agent phase
+- [ ] Runs as a separate agent session from the implementer (Maker-Checker inside `loop-execute`)
 - [ ] Evaluates semantic quality only (factual accuracy, relevance, no hallucination)
 - [ ] Does not evaluate lint/CI concerns (that is CI's job)
 - [ ] Uses a model equal to or more powerful than the Agent model
 - [ ] Denylist is passed and enforced
-- [ ] Uses reusable workflow `ci-loop-verifier.yaml`
+- [ ] Verification runs inside `loop-execute` (via `ci-loop-agent.yaml`); there is no separate `ci-loop-verifier` workflow
 
 #### Finalize
 
