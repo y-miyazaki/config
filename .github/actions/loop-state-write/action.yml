@@ -2,6 +2,10 @@ name: loop-state-write
 description: "Write loop state JSON and commit/push. Requires actions/checkout in the caller."
 
 inputs:
+  base_branch:
+    default: "main"
+    description: "Base branch for state PR when direct push to a protected branch is blocked"
+    required: false
   branch:
     default: ""
     description: "Target branch for state commit (empty = current/default branch)"
@@ -64,6 +68,10 @@ runs:
     - name: Commit and Push
       shell: bash
       env:
+        BASE_BRANCH: ${{ inputs.base_branch }}
+        GH_TOKEN: ${{ inputs.token }}
+        OUTCOME: ${{ inputs.outcome }}
+        SHA: ${{ inputs.sha }}
         STATE_FILE: ${{ inputs.state_file }}
       run: |
         set -euo pipefail
@@ -74,7 +82,24 @@ runs:
         fi
         git add "${STATE_FILE}"
         git commit -m "chore(loop): update state [skip ci]"
-        git push origin HEAD || {
-          git pull --rebase origin HEAD
-          git push origin HEAD
-        }
+        if git push origin HEAD 2>/dev/null; then
+          echo "State pushed directly."
+          exit 0
+        fi
+        echo "Direct push blocked; opening state PR."
+        STATE_BRANCH="loop/state-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+        git checkout -B "${STATE_BRANCH}"
+        git push origin "${STATE_BRANCH}"
+        PR_URL=$(gh pr create \
+          --repo "${GITHUB_REPOSITORY}" \
+          --base "${BASE_BRANCH}" \
+          --head "${STATE_BRANCH}" \
+          --title "chore(loop): update state [skip ci]" \
+          --body "Automated loop state advance to ${SHA} (outcome: ${OUTCOME}).")
+        if gh pr merge "${PR_URL}" --auto --delete-branch --squash 2>/dev/null; then
+          echo "State PR queued for auto-merge: ${PR_URL}"
+        elif gh pr merge "${PR_URL}" --delete-branch --squash 2>/dev/null; then
+          echo "State PR merged: ${PR_URL}"
+        else
+          echo "::warning::State PR requires manual merge: ${PR_URL}"
+        fi
