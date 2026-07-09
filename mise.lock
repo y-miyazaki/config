@@ -253,32 +253,38 @@ url = "https://awscli.amazonaws.com/AWSCLIV2-2.35.14.pkg"
 url = "https://awscli.amazonaws.com/AWSCLIV2-2.35.14.pkg"
 
 [[tools."aqua:aws/aws-sam-cli"]]
-version = "1.162.1"
+version = "1.163.0"
 backend = "aqua:aws/aws-sam-cli"
 
 [tools."aqua:aws/aws-sam-cli"."platforms.linux-arm64"]
-checksum = "sha256:c37ad26f63a88b9fa9985e01a7a52c6d359be4298b3e02a823f8d242c7572911"
-url = "https://github.com/aws/aws-sam-cli/releases/download/v1.162.1/aws-sam-cli-linux-arm64.zip"
+checksum = "sha256:e58f69c2019fdb1b05f7aeab939a1a1d504a4f1184da94818942d10a43c50acf"
+url = "https://github.com/aws/aws-sam-cli/releases/download/v1.163.0/aws-sam-cli-linux-arm64.zip"
+url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/463845610"
 
 [tools."aqua:aws/aws-sam-cli"."platforms.linux-arm64-musl"]
-checksum = "sha256:c37ad26f63a88b9fa9985e01a7a52c6d359be4298b3e02a823f8d242c7572911"
-url = "https://github.com/aws/aws-sam-cli/releases/download/v1.162.1/aws-sam-cli-linux-arm64.zip"
+checksum = "sha256:e58f69c2019fdb1b05f7aeab939a1a1d504a4f1184da94818942d10a43c50acf"
+url = "https://github.com/aws/aws-sam-cli/releases/download/v1.163.0/aws-sam-cli-linux-arm64.zip"
+url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/463845610"
 
 [tools."aqua:aws/aws-sam-cli"."platforms.linux-x64"]
-checksum = "sha256:3c59630df5981ad0c251819eb637336fc452c6afc33acfc0dc086cf12a17e88b"
-url = "https://github.com/aws/aws-sam-cli/releases/download/v1.162.1/aws-sam-cli-linux-x86_64.zip"
+checksum = "sha256:3f12863f45da82bc2ad1fb837444cca57450bd07fef73449b917362ef2f5ab70"
+url = "https://github.com/aws/aws-sam-cli/releases/download/v1.163.0/aws-sam-cli-linux-x86_64.zip"
+url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/463845559"
 
 [tools."aqua:aws/aws-sam-cli"."platforms.linux-x64-musl"]
-checksum = "sha256:3c59630df5981ad0c251819eb637336fc452c6afc33acfc0dc086cf12a17e88b"
-url = "https://github.com/aws/aws-sam-cli/releases/download/v1.162.1/aws-sam-cli-linux-x86_64.zip"
+checksum = "sha256:3f12863f45da82bc2ad1fb837444cca57450bd07fef73449b917362ef2f5ab70"
+url = "https://github.com/aws/aws-sam-cli/releases/download/v1.163.0/aws-sam-cli-linux-x86_64.zip"
+url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/463845559"
 
 [tools."aqua:aws/aws-sam-cli"."platforms.macos-arm64"]
-checksum = "sha256:09ea8722d2fb44bd6417e06678c6a8b8e627f49118497b108f65be57e682b26d"
-url = "https://github.com/aws/aws-sam-cli/releases/download/v1.162.1/aws-sam-cli-macos-arm64.pkg"
+checksum = "sha256:45fc72463c7b7b82da3e60df25fb018a1241e8706e209316a092be3c9366ba45"
+url = "https://github.com/aws/aws-sam-cli/releases/download/v1.163.0/aws-sam-cli-macos-arm64.pkg"
+url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/463845494"
 
 [tools."aqua:aws/aws-sam-cli"."platforms.macos-x64"]
-checksum = "sha256:0cb829869f4240e3df0f2d52683457320d83db44c8505927f211924bcb20298f"
-url = "https://github.com/aws/aws-sam-cli/releases/download/v1.162.1/aws-sam-cli-macos-x86_64.pkg"
+checksum = "sha256:3a6295ad9aea5cd49806cc5860aa7d49661ffeab9e503a8e8523058eabab21a9"
+url = "https://github.com/aws/aws-sam-cli/releases/download/v1.163.0/aws-sam-cli-macos-x86_64.pkg"
+url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/463845662"
 
 [[tools."aqua:bufbuild/buf"]]
 version = "1.71.0"
