@@ -133,6 +133,7 @@ runs:
     - name: Run Bounded Loop
       id: loop
       shell: bash
+      working-directory: ${{ inputs.worktree_path }}
       env:
         AGENT_IMPLEMENTER_MAX_TURNS: ${{ inputs.agent_implementer_max_turns }}
         AGENT_IMPLEMENTER_MODEL: ${{ inputs.agent_implementer_model }}

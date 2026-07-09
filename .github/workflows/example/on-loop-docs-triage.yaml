@@ -187,6 +187,8 @@ jobs:
                       ## Instructions
                       You are operating at ${{ steps.config.outputs.level }} level.
                       Edit documentation files directly to address the triage findings.
+                      You MUST persist edits to disk in the worktree; a triage report alone is not sufficient at L2+.
+                      Do not claim files were modified unless git would show real changes.
                       Allowed paths: docs/**/*.md, README.md, mkdocs.yml (nav section only).
                       Do NOT modify any other files.
                   skill_name: ${{ steps.config.outputs.skill_name }}
@@ -211,6 +213,7 @@ jobs:
             engine: ${{ needs.detect.outputs.engine }}
             infer_files_pattern: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|yml|yaml)'
             level: ${{ needs.detect.outputs.level }}
+            no_changes_verdict: REJECT
             prompt_text: ${{ needs.detect.outputs.prompt }}
             prompt_verifier_output_contract: ${{ needs.detect.outputs.prompt_verifier_output_contract }}
             skill_name: ${{ needs.detect.outputs.skill_name }}

@@ -79,7 +79,11 @@ runs:
         if [[ "${AGENT_RESULT}" != "success" && "${AGENT_RESULT}" != "skipped" ]]; then
           echo "value=error" >> "$GITHUB_OUTPUT"
         elif [[ "${HAS_CHANGES}" != "true" ]]; then
-          echo "value=no-changes" >> "$GITHUB_OUTPUT"
+          if [[ "${VERDICT}" == "REJECT" ]]; then
+            echo "value=rejected" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=no-changes" >> "$GITHUB_OUTPUT"
+          fi
         elif [[ "${VERDICT}" == "APPROVE" ]]; then
           echo "value=pr-created" >> "$GITHUB_OUTPUT"
         elif [[ "${VERDICT}" == "REJECT" ]]; then
@@ -90,7 +94,7 @@ runs:
 
     - name: Create PR
       id: pr
-      if: inputs.verdict == 'APPROVE' && inputs.branch != ''
+      if: inputs.verdict == 'APPROVE' && inputs.has_changes == 'true' && inputs.branch != ''
       shell: bash
       env:
         BASE_BRANCH: ${{ inputs.base_branch }}
@@ -117,7 +121,7 @@ runs:
         echo "url=${URL}" >> "$GITHUB_OUTPUT"
 
     - name: Enable Auto-Merge
-      if: inputs.verdict == 'APPROVE' && inputs.branch != '' && inputs.auto_merge == 'true'
+      if: inputs.verdict == 'APPROVE' && inputs.has_changes == 'true' && inputs.branch != '' && inputs.auto_merge == 'true'
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.token }}
