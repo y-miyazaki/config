@@ -1,9 +1,9 @@
 name: loop-agent-run
-description: "Run an AI agent (claude/copilot/codex) with a prompt. Handles install and execution."
+description: "Run an AI agent (claude/copilot/codex/cursor) with a prompt. Handles install and execution."
 
 inputs:
   agent_token:
-    description: "Authentication token for the selected engine (ANTHROPIC_API_KEY for claude, COPILOT_GITHUB_TOKEN for copilot, OPENAI_API_KEY for codex)"
+    description: "Authentication token for the selected engine (ANTHROPIC_API_KEY for claude, COPILOT_GITHUB_TOKEN for copilot, CURSOR_API_KEY for cursor, OPENAI_API_KEY for codex)"
     required: true
   claude_args:
     default: ""
@@ -11,10 +11,10 @@ inputs:
     required: false
   cli_version:
     default: "latest"
-    description: "CLI package version (copilot/codex engine)"
+    description: "CLI package version (copilot/codex/claude worktree/cursor engine)"
     required: false
   engine:
-    description: "AI engine (claude or copilot or codex)"
+    description: "AI engine (claude or copilot or codex or cursor)"
     required: true
   max_turns:
     default: "5"
@@ -29,28 +29,28 @@ inputs:
     required: true
   working_directory:
     default: "."
-    description: "Working directory for agent execution (CLI engines only)"
+    description: "Working directory for agent execution (non-default value selects CLI/worktree mode)"
     required: false
 
 runs:
   using: composite
   steps:
-    # --- Claude (Action-managed) ---
+    # --- Claude L1 (claude-code-action on checked-out workspace) ---
     - name: Run Claude
-      if: inputs.engine == 'claude'
+      if: inputs.engine == 'claude' && inputs.working_directory == '.'
       uses: anthropics/claude-code-action@fad22eb3fa582b7357fc0ea48af6645851b884fd # v1.0.161
       with:
         anthropic_api_key: ${{ inputs.agent_token }}
         claude_args: "--max-turns ${{ inputs.max_turns }}${{ inputs.model != '' && format(' --model {0}', inputs.model) || '' }}${{ inputs.claude_args != '' && format(' {0}', inputs.claude_args) || '' }}"
         prompt: ${{ inputs.prompt_text }}
 
-    # --- CLI engines (copilot/codex) ---
+    # --- CLI engines (copilot/codex/claude worktree/cursor) ---
     - name: Setup Node.js
-      if: inputs.engine != 'claude'
+      if: inputs.engine == 'copilot' || inputs.engine == 'codex' || (inputs.engine == 'claude' && inputs.working_directory != '.')
       uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
 
     - name: Resolve CLI Version
-      if: inputs.engine != 'claude'
+      if: inputs.engine != 'claude' || inputs.working_directory != '.'
       id: pkg
       shell: bash
       env:
@@ -59,14 +59,18 @@ runs:
       run: |
         set -euo pipefail
         case "${ENGINE}" in
+          claude)  PKG="@anthropic-ai/claude-code" ;;
           copilot) PKG="@github/copilot" ;;
           codex)   PKG="@openai/codex" ;;
+          cursor)  PKG="cursor" ;;
           *)
             echo "::error::Unsupported engine: ${ENGINE}"
             exit 1
             ;;
         esac
-        if [[ "${CLI_VERSION}" == "latest" ]]; then
+        if [[ "${ENGINE}" == "cursor" ]]; then
+          RESOLVED="${CLI_VERSION}"
+        elif [[ "${CLI_VERSION}" == "latest" ]]; then
           RESOLVED=$(npm view "${PKG}" version)
         else
           RESOLVED="${CLI_VERSION}"
@@ -77,17 +81,29 @@ runs:
         } >> "$GITHUB_OUTPUT"
 
     - name: Install CLI
-      if: inputs.engine != 'claude'
+      if: inputs.engine != 'claude' || inputs.working_directory != '.'
       shell: bash
       env:
         CLI_VERSION: ${{ steps.pkg.outputs.version }}
+        ENGINE: ${{ inputs.engine }}
         PACKAGE: ${{ steps.pkg.outputs.package }}
       run: |
         set -euo pipefail
+        if [[ "${ENGINE}" == "cursor" ]]; then
+          curl https://cursor.com/install -fsS | bash
+          for bindir in "${HOME}/.local/bin" "${HOME}/.cursor/bin"; do
+            if [[ -x "${bindir}/agent" ]] || [[ -x "${bindir}/cursor-agent" ]]; then
+              echo "${bindir}" >> "${GITHUB_PATH}"
+              exit 0
+            fi
+          done
+          echo "::error::Cursor CLI not found after install"
+          exit 1
+        fi
         npm install "${PACKAGE}@${CLI_VERSION}" --no-save
 
     - name: Run CLI Agent
-      if: inputs.engine != 'claude'
+      if: inputs.engine != 'claude' || inputs.working_directory != '.'
       shell: bash
       env:
         AGENT_TOKEN: ${{ inputs.agent_token }}
@@ -95,25 +111,45 @@ runs:
         MAX_TURNS: ${{ inputs.max_turns }}
         MODEL: ${{ inputs.model }}
         PROMPT: ${{ inputs.prompt_text }}
+        WORKING_DIRECTORY: ${{ inputs.working_directory }}
       working-directory: ${{ inputs.working_directory }}
       run: |
         set -euo pipefail
-        # Set engine-specific auth env var
         case "${ENGINE}" in
-          copilot) export COPILOT_GITHUB_TOKEN="${AGENT_TOKEN}" ;;
-          codex)   export OPENAI_API_KEY="${AGENT_TOKEN}" ;;
-        esac
-        # Run via npx
-        case "${ENGINE}" in
+          claude)
+            export ANTHROPIC_API_KEY="${AGENT_TOKEN}"
+            ARGS=(-p "${PROMPT}" --bare)
+            if [[ -n "${MAX_TURNS}" ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
+            if [[ -n "${MODEL}" ]]; then ARGS+=(--model "${MODEL}"); fi
+            npx claude "${ARGS[@]}"
+            ;;
           copilot)
+            export COPILOT_GITHUB_TOKEN="${AGENT_TOKEN}"
             ARGS=(-p "${PROMPT}" --no-ask-user)
             if [[ -n "${MAX_TURNS}" ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
             if [[ -n "${MODEL}" ]]; then ARGS+=(--model "${MODEL}"); fi
             npx copilot "${ARGS[@]}"
             ;;
           codex)
+            export OPENAI_API_KEY="${AGENT_TOKEN}"
             ARGS=(--prompt "${PROMPT}" --auto-approve)
             if [[ -n "${MODEL}" ]]; then ARGS+=(--model "${MODEL}"); fi
             npx codex "${ARGS[@]}"
+            ;;
+          cursor)
+            export CURSOR_API_KEY="${AGENT_TOKEN}"
+            ARGS=(-p "${PROMPT}")
+            if [[ "${WORKING_DIRECTORY}" != "." ]]; then
+              ARGS+=(--force)
+            fi
+            if [[ -n "${MODEL}" ]]; then ARGS+=(--model "${MODEL}"); fi
+            if command -v agent >/dev/null 2>&1; then
+              agent "${ARGS[@]}"
+            elif command -v cursor-agent >/dev/null 2>&1; then
+              cursor-agent "${ARGS[@]}"
+            else
+              echo "::error::Cursor CLI (agent) not found in PATH"
+              exit 1
+            fi
             ;;
         esac

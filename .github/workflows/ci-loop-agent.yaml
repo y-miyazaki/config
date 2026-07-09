@@ -3,11 +3,10 @@
 # Supports L1 (read-only report) and L2 (branch creation with edits).
 #
 # Architecture:
-#   - L1: Agent runs read-only on the repo
-#   - L2 Claude: claude-code-action manages branch internally (branch_prefix)
-#   - L2 CLI: worktree isolation with loop-worktree-setup/push
+#   - L1: loop-agent-run (read-only, default workspace)
+#   - L2: loop-worktree-setup → loop-agent-run (worktree) → loop-worktree-push
 #
-# Contract: L2 outputs { branch, has_changes } regardless of engine.
+# Contract: L2 outputs { branch, has_changes } from worktree actions (engine-agnostic).
 name: ci-loop-agent
 
 on:
@@ -15,11 +14,11 @@ on:
     inputs:
       cli_version:
         default: "latest"
-        description: "CLI agent version (copilot/codex engine)"
+        description: "CLI agent version (copilot/codex/cursor engine)"
         required: false
         type: string
       engine:
-        description: "AI engine (claude | copilot | codex)"
+        description: "AI engine (claude | copilot | codex | cursor)"
         required: true
         type: string
       level:
@@ -55,13 +54,13 @@ on:
     outputs:
       branch:
         description: "Branch with changes (L2 only, empty if L1 or no changes)"
-        value: ${{ jobs.agent-claude-l2.outputs.branch || jobs.agent-cli-l2.outputs.branch || '' }}
+        value: ${{ jobs.agent-l2.outputs.branch || '' }}
       has_changes:
         description: "Whether agent produced file changes (L2 only)"
-        value: ${{ jobs.agent-claude-l2.outputs.has_changes || jobs.agent-cli-l2.outputs.has_changes || 'false' }}
+        value: ${{ jobs.agent-l2.outputs.has_changes || 'false' }}
     secrets:
       AGENT_TOKEN:
-        description: "Authentication token for the selected engine (ANTHROPIC_API_KEY for claude, COPILOT_GITHUB_TOKEN for copilot, OPENAI_API_KEY for codex)"
+        description: "Authentication token for the selected engine (ANTHROPIC_API_KEY for claude, COPILOT_GITHUB_TOKEN for copilot, CURSOR_API_KEY for cursor, OPENAI_API_KEY for codex)"
         required: true
       GH_TOKEN_PUSH:
         description: "GitHub token with push permission (required for L2)"
@@ -72,9 +71,7 @@ permissions:
   copilot-requests: write
 
 jobs:
-  # ============================================================
   # L1 (read-only, report mode)
-  # ============================================================
   agent-l1:
     if: inputs.level == 'L1'
     runs-on: ubuntu-24.04
@@ -99,56 +96,9 @@ jobs:
           model: ${{ inputs.model }}
           prompt_text: ${{ inputs.prompt_file != '' && format('/skill {0}', inputs.prompt_file) || inputs.prompt_text }}
 
-  # ============================================================
-  # L2: Claude (Action-managed branch)
-  # ============================================================
-  agent-claude-l2:
-    if: inputs.engine == 'claude' && (inputs.level == 'L2' || inputs.level == 'L3')
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    outputs:
-      branch: ${{ steps.result.outputs.branch }}
-      has_changes: ${{ steps.result.outputs.has_changes }}
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-          token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
-
-      - name: Run Claude Code Action (L2)
-        id: claude
-        uses: anthropics/claude-code-action@fad22eb3fa582b7357fc0ea48af6645851b884fd # v1.0.161
-        with:
-          anthropic_api_key: ${{ secrets.AGENT_TOKEN }}
-          branch_prefix: "loop/${{ inputs.skill_name }}/"
-          claude_args: "--max-turns ${{ inputs.max_turns }}${{ inputs.model != '' && format(' --model {0}', inputs.model) || '' }}"
-          github_token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
-          prompt: ${{ inputs.prompt_file != '' && format('/skill {0}', inputs.prompt_file) || inputs.prompt_text }}
-
-      - name: Extract Result
-        id: result
-        shell: bash
-        env:
-          BRANCH_NAME: ${{ steps.claude.outputs.branch_name }}
-        run: |
-          set -euo pipefail
-          if [[ -n "${BRANCH_NAME}" ]]; then
-            echo "branch=${BRANCH_NAME}" >> "$GITHUB_OUTPUT"
-            echo "has_changes=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "branch=" >> "$GITHUB_OUTPUT"
-            echo "has_changes=false" >> "$GITHUB_OUTPUT"
-          fi
-
-  # ============================================================
-  # L2: CLI engines (worktree isolation)
-  # ============================================================
-  agent-cli-l2:
-    if: inputs.engine != 'claude' && (inputs.level == 'L2' || inputs.level == 'L3')
+  # L2/L3 (edits with branch)
+  agent-l2:
+    if: inputs.level == 'L2' || inputs.level == 'L3'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:

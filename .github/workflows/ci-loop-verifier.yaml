@@ -22,7 +22,7 @@ on:
         required: false
         type: string
       engine:
-        description: "AI engine (claude or copilot or codex)"
+        description: "AI engine (claude or copilot or codex or cursor)"
         required: true
         type: string
       max_turns:
@@ -50,7 +50,7 @@ on:
         value: ${{ jobs.verify.outputs.verdict }}
     secrets:
       AGENT_TOKEN:
-        description: "Authentication token for the selected engine (ANTHROPIC_API_KEY for claude, COPILOT_GITHUB_TOKEN for copilot, OPENAI_API_KEY for codex)"
+        description: "Authentication token for the selected engine (ANTHROPIC_API_KEY for claude, COPILOT_GITHUB_TOKEN for copilot, CURSOR_API_KEY for cursor, OPENAI_API_KEY for codex)"
         required: true
 
 permissions:
