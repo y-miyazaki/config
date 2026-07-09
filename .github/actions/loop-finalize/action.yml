@@ -144,7 +144,7 @@ runs:
 
     - name: Write State
       if: inputs.current_sha != ''
-      uses: y-miyazaki/config/.github/actions/loop-state-write@a8c05ca01034ca94d61e6817a3df10f158aebc18 # v1.7.3
+      uses: y-miyazaki/config/.github/actions/loop-state-write@952f663047aea2c0b5ac4f143340fae91cd8c562 # v1.7.4
       with:
         base_branch: ${{ inputs.base_branch }}
         open_rejections: ${{ inputs.open_rejections }}

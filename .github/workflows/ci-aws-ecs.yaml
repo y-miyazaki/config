@@ -173,7 +173,7 @@ jobs:
 
             - name: Setup jsonnetfmt
               timeout-minutes: 5
-              uses: y-miyazaki/config/.github/actions/install-github-release@a8c05ca01034ca94d61e6817a3df10f158aebc18 # v1.7.3
+              uses: y-miyazaki/config/.github/actions/install-github-release@952f663047aea2c0b5ac4f143340fae91cd8c562 # v1.7.4
               with:
                   asset_pattern: go-jsonnet_Linux_x86_64.tar.gz
                   binary: jsonnetfmt
@@ -209,7 +209,7 @@ jobs:
 
             - name: Summary
               if: always()
-              uses: y-miyazaki/config/.github/actions/summary@a8c05ca01034ca94d61e6817a3df10f158aebc18 # v1.7.3
+              uses: y-miyazaki/config/.github/actions/summary@952f663047aea2c0b5ac4f143340fae91cd8c562 # v1.7.4
               with:
                   artifacts: |
                       (none)
@@ -280,7 +280,7 @@ jobs:
 
             - name: Summary
               if: always()
-              uses: y-miyazaki/config/.github/actions/summary@a8c05ca01034ca94d61e6817a3df10f158aebc18 # v1.7.3
+              uses: y-miyazaki/config/.github/actions/summary@952f663047aea2c0b5ac4f143340fae91cd8c562 # v1.7.4
               with:
                   artifacts: |
                       (none)
@@ -323,7 +323,7 @@ jobs:
 
             - name: Setup jsonnet
               timeout-minutes: 5
-              uses: y-miyazaki/config/.github/actions/install-github-release@a8c05ca01034ca94d61e6817a3df10f158aebc18 # v1.7.3
+              uses: y-miyazaki/config/.github/actions/install-github-release@952f663047aea2c0b5ac4f143340fae91cd8c562 # v1.7.4
               with:
                   asset_pattern: go-jsonnet_Linux_x86_64.tar.gz
                   binary: jsonnet
@@ -391,7 +391,7 @@ jobs:
 
             - name: Summary
               if: always()
-              uses: y-miyazaki/config/.github/actions/summary@a8c05ca01034ca94d61e6817a3df10f158aebc18 # v1.7.3
+              uses: y-miyazaki/config/.github/actions/summary@952f663047aea2c0b5ac4f143340fae91cd8c562 # v1.7.4
               with:
                   artifacts: |
                       (none)
