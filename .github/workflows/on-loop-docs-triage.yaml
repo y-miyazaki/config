@@ -180,7 +180,7 @@ jobs:
           persist-credentials: false
 
       - name: Finalize
-        uses: y-miyazaki/config/.github/actions/loop-finalize@71ddb636d0e6d8d0cf71f01c01aca3108b123618 # v1.7.3
+        uses: y-miyazaki/config/.github/actions/loop-finalize@2962d901c97b5ad50232414aa3b3a3b2a20c56b5 # v1.7.3
         with:
           agent_result: ${{ needs.agent.result }}
           auto_merge: ${{ needs.detect.outputs.level == 'L3' }}
