@@ -294,21 +294,22 @@ The repository must provide reusable workflows.
 
 | Workflow | Type | Purpose |
 |----------|------|---------|
-| `ci-loop-agent.yaml` | Reusable | Engine-agnostic agent invocation (Claude / Copilot / Codex). L1/L2 support |
-| `ci-loop-verifier.yaml` | Reusable | Maker-Checker verification with denylist enforcement |
-| `on-loop-docs-triage.yaml` | Caller | Cron-driven documentation triage (L2) |
+| `ci-loop-agent.yaml` | Reusable | Engine-agnostic agent invocation (Claude / Copilot / Codex / Cursor). L1: `loop-agent-once`; L2/L3: worktree + bounded Agent→Verify via `loop-execute` |
+| `on-loop-docs-triage.yaml` | Caller | Cron-driven documentation triage (detect → execute → finalize) |
 
 ### Loop Engineering Actions
 
 | Action | Purpose |
 |--------|---------|
-| `loop-agent-run` | Unified agent execution (install + cache + run) for all engines |
-| `loop-finalize` | PR creation (+ auto-merge at L3), branch cleanup, and state write |
+| `loop-agent-once` | Single read-only agent session (L1) |
+| `loop-execute` | Bounded Agent→Verify loop in one job (L2/L3); denylist/allowlist enforcement, structured rejections, push |
+| `loop-finalize` | PR creation (+ auto-merge at L3), branch cleanup, and state write (agent branch on approve, otherwise base branch) |
+| `loop-install-cli` | Install and cache the selected engine CLI |
 | `loop-prompt-generate` | Generate structured prompt from skill name and context |
-| `loop-state-read` | Checkout + read loop state JSON, output last_sha/current_sha |
-| `loop-state-write` | Write state JSON + commit/push |
-| `loop-worktree-setup` | Create isolated worktree + branch (CLI engines, L2) |
-| `loop-worktree-push` | Commit/push worktree changes + cleanup (CLI engines, L2) |
+| `loop-state-read` | Read loop state JSON; output last_sha/current_sha, consecutive_failures, open_rejections prompt |
+| `loop-state-write` | Write state JSON (including `open_rejections` on reject) + commit/push |
+| `loop-worktree-setup` | Create isolated worktree + branch (L2/L3) |
+| `loop-worktree-push` | Commit/push worktree changes + cleanup (used by `loop-execute`) |
 
 ## Renovate
 
