@@ -138,7 +138,8 @@ runs:
             ;;
           cursor)
             export CURSOR_API_KEY="${AGENT_TOKEN}"
-            ARGS=(-p "${PROMPT}")
+            # --trust: workspace trust in headless mode (-p); --force: allow writes in worktree mode
+            ARGS=(-p "${PROMPT}" --trust)
             if [[ "${WORKING_DIRECTORY}" != "." ]]; then
               ARGS+=(--force)
             fi
