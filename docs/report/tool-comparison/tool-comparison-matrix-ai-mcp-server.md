@@ -8,6 +8,7 @@ MCP Server の選定・比較の判断材料。
 
 | 日付       | 内容                                                                 |
 | ---------- | -------------------------------------------------------------------- |
+| 2026-07-09 | rtk (rtk-ai/rtk) と lean-ctx の Hook 層比較・併用非推奨理由を追記。mcp-rtk は成熟度不足のため現時点では未採用と明記 |
 | 2026-06-28 | Performance カテゴリに mcp-rtk 追加。導入形態（Proxy/Hook型 vs MCP Server型）による効果発動条件の違いを整理。Headroom の利用形態別評価を追記 |
 | 2026-06-17 | Headroom を Performance / Token Optimization カテゴリに追加 |
 | 2026-06-17 | 全般最新化: Terraform MCP v1.0.0 GA反映、GitHub MCP v1.1.0機能追加、codebase-memory-mcp LSPエンジン追加、lean-ctx WebSocket対応、Context7 OAuth対応 |
@@ -141,15 +142,38 @@ MCP Server の選定・比較の判断材料。
 | 依存関係             | なし (単一バイナリ)               | なし (単一バイナリ)               | Python (pip/uv) または Node.js    | Python (uv)                       | なし (単一バイナリ)               | Python (uv)                       |
 | 商用利用             | ✅ 無料                            | ✅ 無料                            | ✅ 無料 (Enterprise別途)          | ✅ 無料                            | ✅ 無料                            | 有料 ($79〜)                      |
 
+### Hook型 CLI Proxy: lean-ctx vs rtk (rtk-ai/rtk)
+
+> **用語整理:** **rtk** ([rtk-ai/rtk](https://github.com/rtk-ai/rtk)) は PreToolUse Hook で Bash コマンドを透過的に書き換え、シェル出力を圧縮する CLI プロキシ。**mcp-rtk** ([ThomasTartrau/mcp-rtk](https://github.com/ThomasTartrau/mcp-rtk)) は MCP レスポンス JSON を圧縮するプロキシで、製品・レイヤーともに別物。
+
+本リポジトリは `common-hooks-*` で lean-ctx の `hook rewrite` / `hook redirect` / `hook observe` を既に配布している。rtk の `rtk init -g --agent cursor` も同じ Hook 型・同じ Bash 出力圧縮の思想だが、**同一 PreToolUse 層への併用は非推奨**（後述 Guidelines 参照）。
+
+
+| 比較項目           | lean-ctx (採用)                   | rtk (rtk-ai/rtk)                  |
+| 提供元             | yvgude                            | rtk-ai                            |
+| リポジトリ         | [GitHub](https://github.com/yvgude/lean-ctx) | [GitHub](https://github.com/rtk-ai/rtk) |
+| 適用レイヤー       | Shell Hook + MCP Server           | Shell Hook のみ                   |
+| Cursor 統合        | `lean-ctx hook rewrite` 等 (APM)  | `rtk init -g --agent cursor`      |
+| 削減方針           | 情報保全優先 (passthrough rules)  | 積極的圧縮 (60-90%)               |
+| `git diff` 巨大出力 | 素通し (設計意図)                 | 高削減 (実測 99% 級)              |
+| 再読込キャッシュ   | ✅ (~13 tokens/再読み込み)         | ❌                                 |
+| Read/Grep 置換     | ✅ (`hook redirect` + MCP)         | ❌ (Bash のみ)                     |
+| lean-ctx との併用  | —                                 | **非推奨** (同一 Hook 層)          |
+| 本リポジトリ採用   | ✅                                 | ❌                                 |
+
+
+参考: [rtk vs lean-ctx 実測比較 (Elcamy Tech Blog)](https://blog.elcamy.com/articles/token-killer-bench)
+
 ### Guidelines
 
-**→ lean-ctx + mcp-compressor + mcp-rtk を併用する。** 各ツールは適用レイヤーと削減対象が異なるため競合せず重ね掛けが可能。
+**→ lean-ctx + mcp-compressor を採用する。** Shell Hook と MCP によるコンテキスト最適化に加え、ツール数の多い MCP サーバーの JSON Schema 要約を mcp-compressor で行う。
 
 | レイヤー | ツール | 役割 |
 | -------- | ------ | ---- |
-| Shell Hook (出力圧縮 + キャッシュ) | lean-ctx | コマンド出力・ファイル読み込みの正規表現圧縮、セッションメモリ (CCP) |
+| Shell Hook (出力圧縮 + キャッシュ) | lean-ctx | コマンド出力・ファイル読み込みの正規表現圧縮、セッションメモリ (CCP)。`common-hooks-*` で rewrite / redirect / observe を配布 |
 | Proxy (ツール定義圧縮) | mcp-compressor | ツール数の多い MCP サーバー (GitHub MCP 90+ ツール等) の JSON Schema 要約 |
-| Proxy (レスポンス JSON 圧縮) | mcp-rtk | MCP レスポンス JSON のフィールドフィルタ・null 除去・メタデータ削除。lean-ctx が対象としない MCP JSON レスポンスを透過的に圧縮 |
+| Proxy (レスポンス JSON 圧縮) | mcp-rtk | **現時点では未採用。** MCP レスポンス JSON のフィールドフィルタ。成熟度 (GitHub Stars 等) が不足のため保留 |
+
 
 **導入形態による効果発動条件の違い:**
 
@@ -161,10 +185,12 @@ MCP Server の選定・比較の判断材料。
 
 Proxy/Hook型はAgentの能力に依存せず確実に効果を発揮する。MCP Server型はAgentがツールを呼ぶ保証がないため、導入効果の確実性が低い。
 
-- **lean-ctx と mcp-rtk は対象レイヤーが異なるため補完関係にある。** lean-ctx は Shell 出力・ファイル読み込みを圧縮し、mcp-rtk は MCP レスポンス JSON そのものを圧縮する。例えば GitHub MCP が巨大な JSON を返した場合、lean-ctx ではそのフィールド削減はできないが mcp-rtk はプロキシとして透過的に不要フィールドを除去できる。導入優先度は lean-ctx の方が高い（対象範囲が広い）が、mcp-rtk の追加で補完効果が期待できる。
-- **制約: mcp-compressor は同時に複数の MCP サーバーをラップできない。** プロキシとして公開するツール名が同一（`call_tool` 等）になるため、1 セッションにつき 1 サーバーのみラップ可能。mcp-rtk は複数サーバーのラップが可能なため、mcp-compressor が対応できないサーバーのレスポンス圧縮を補完する。
-- **Headroom の利用形態による違い:** Headroom は Library / Proxy / MCP Server の3形態がある。Library（アプリケーション組み込み）や Proxy（LLM API の前段に配置）では透過的に効果を発揮するが、MCP Server 形態ではAgentが `compress_text` 等を明示的に呼び出す必要がある。Proxy をサポートしない環境では MCP 形態でしか利用できず、効果が限定的となる。アプリケーション組み込みや LLM Proxy 構成が可能な場合に追加を検討。
-- mcp-rtk は MIT ライセンス・Rust 単一バイナリでゼロ依存。`mcp-rtk --` でコマンドをラップするだけで導入可能。ただし新規プロジェクト（Star 1）のためプリセットの充実度に注意。
+- **rtk (rtk-ai/rtk) Hook と lean-ctx Hook の併用は非推奨。** 両者とも PreToolUse で Bash コマンドを透過的に書き換える同一レイヤーのツール。本リポジトリは `lean-ctx hook rewrite` / `hook redirect` / `hook observe` で既に同思想を実装済み。rtk を追加すると (1) Hook 実行順により `rtk lean-ctx git diff` のような二重ラップが起きうる、(2) lean-ctx の passthrough（情報保全）と rtk の積極圧縮がコマンドごとに競合し、**何が削られ何が残ったか監査できない**、(3) 失敗時の原本保存 (tee) の責任境界が曖昧になる。圧縮方針を一本化するため lean-ctx に集約する。
+- **rtk 単体採用は lean-ctx 未導入環境向け。** 手軽な導入 (`rtk init -g`) と広いシェルコマンドカバレッジが強み。MCP・キャッシュ・redirect が不要な個人環境では rtk から始めてもよい。本リポジトリは APM で lean-ctx (MCP + hooks) を配布するため rtk は不要。
+- **mcp-rtk は理論上 lean-ctx と補完関係だが、現時点では未採用。** lean-ctx は Shell 出力・ファイル読み込み、mcp-rtk は MCP レスポンス JSON を圧縮する別レイヤー。ただし GitHub Stars が極めて少なく（2026-06 時点で Star 1）、プリセットの充実度・運用実績が不足。GitHub MCP は mcp-compressor でラップ済みのため、当面は mcp-rtk の導入優先度は低い。成熟度が上がった段階で再評価する。
+- **制約: mcp-compressor は同時に複数の MCP サーバーをラップできない。** プロキシとして公開するツール名が同一（`call_tool` 等）になるため、1 セッションにつき 1 サーバーのみラップ可能。
+- **Headroom の利用形態による違い:** Headroom は Library / Proxy / MCP Server の3形態がある。Library（アプリケーション組み込み）や Proxy（LLM API の前段に配置）では透過的に効果を発揮するが、MCP Server 形態ではAgentが `compress_text` 等を明示的に呼び出す必要がある。Proxy をサポートしない環境では MCP 形態でしか利用できず、効果が限定的となる。アプリケーション組み込みや LLM Proxy 構成が可能な場合に追加を検討。headroom はシェル層に rtk または lean-ctx のどちらか一方を内部利用する設計であり、Hook 層での rtk + lean-ctx 併用とは別問題。
+
 - codebase-memory-mcp のトークン削減効果は構造クエリの副次的効果であり、主目的はコード理解。Code Intelligence カテゴリで採用。
 - jCodeMunch は機能面で優れるが商用利用が有料（$79〜）のため、OSSで統一する方針では不採用。
 
@@ -373,9 +399,9 @@ WebFetch / Fetch MCP の出力に対してMarkdown圧縮やレスポンスフィ
 
 **→ lean-ctx を採用する (Performance カテゴリと兼用)。** fetch ツール内蔵 + Shell 圧縮パイプライン + TTL キャッシュ (~13 tokens/再読み込み) + CCP セッションメモリにより、Web Fetch 結果の圧縮・蓄積・検索を単体でカバーする。単一バイナリ・Apache-2.0・ゼロ依存で導入コストが最小。
 
-- lean-ctx 導入済み環境では本カテゴリの他ツール追加の優先度は低い。ただし mcp-rtk は MCP レスポンス JSON のフィールド削減を透過的に行うため、lean-ctx とは対象レイヤーが異なり補完関係にある（詳細は Performance カテゴリ参照）。
+- lean-ctx 導入済み環境では本カテゴリの他ツール追加の優先度は低い。mcp-rtk は MCP レスポンス JSON 圧縮として理論上は補完関係にあるが、成熟度不足のため現時点では未採用（詳細は [Performance / Token Optimization MCP Servers](#performance--token-optimization-mcp-servers) 参照）。
 - Context Mode は lean-ctx と機能が重複するが、サンドボックス実行 (`ctx_fetch_and_index`) による 98% 圧縮が独自。ELv2 ライセンスのため SaaS 再配布不可だが開発ツールとしては無制限。15プラットフォーム対応。
-- mcp-rtk は MIT ライセンス・Rust 単一バイナリでゼロ依存。コマンドを `mcp-rtk --` でラップするだけで導入可能。ただし新規プロジェクト（Star 1）のためプリセットの充実度に注意。
+
 - Cloudflare MCP Portal はエンタープライズ向け。`optimize_context=search_and_execute` でツール定義コストを定数化できるが、Cloudflare Access 環境が前提。
 - Markdownify MCP は PDF/画像/音声→Markdown 変換が必要な場合に追加。Web取得のみなら mcp-read-website-fast の方が軽量。
 - mcp-read-website-fast は Readability による不要要素除去 + Turndown による Markdown 変換で、Fetch MCP の代替として単体利用可能。ツール数が1で軽量。

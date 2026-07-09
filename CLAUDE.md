@@ -56,6 +56,9 @@ When structure, modules, or features change, update related `README.md` and `doc
 - Reports: `docs/report/` (research documents, not specifications)
 - Temporary: `tmp/`, `.cache/`, `env/common/tmp/`
 
+### MCP Policies
+- lean-ctx, fetch should be used for all context fetching for optimization
+
 ### When to Read Reports
 
 Only read `docs/report/` files when explicitly asked or when comparison/research context is needed.
