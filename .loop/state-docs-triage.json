@@ -1,0 +1,7 @@
+{
+  "last_sha": "886c020c9eb9c5ae3934d5f74fc0621c1fd5cedf",
+  "last_run": "2026-07-09T17:15:07Z",
+  "outcome": "rejected",
+  "consecutive_failures": 1,
+  "last_reject_reason": "Execution flow mislabels denylist enforcement as a \"session\" when loop-execute performs it as an inline path check before the verifier agent session."
+}
