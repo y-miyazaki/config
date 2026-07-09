@@ -1,5 +1,5 @@
 name: loop-finalize
-description: "Finalize a loop run: create PR on approval, delete branch on rejection, update state."
+description: "Finalize a loop run: write state to agent branch, create PR on approval, delete branch on rejection, update state on main otherwise."
 
 inputs:
   auto_merge:
@@ -92,6 +92,23 @@ runs:
           echo "value=error" >> "$GITHUB_OUTPUT"
         fi
 
+    - name: Write State to Agent Branch
+      if: >-
+        inputs.current_sha != '' &&
+        inputs.verdict == 'APPROVE' &&
+        inputs.has_changes == 'true' &&
+        inputs.branch != ''
+      uses: ./.github/actions/loop-state-write
+      with:
+        base_branch: ${{ inputs.base_branch }}
+        branch: ${{ inputs.branch }}
+        open_rejections: ${{ inputs.open_rejections }}
+        outcome: ${{ steps.outcome.outputs.value }}
+        reject_reason: ${{ inputs.reject_reason }}
+        sha: ${{ inputs.current_sha }}
+        state_file: ${{ inputs.state_file }}
+        token: ${{ inputs.token }}
+
     - name: Create PR
       id: pr
       if: inputs.verdict == 'APPROVE' && inputs.has_changes == 'true' && inputs.branch != ''
@@ -147,8 +164,10 @@ runs:
         gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${BRANCH}" 2>/dev/null || true
 
     - name: Write State
-      if: inputs.current_sha != ''
-      uses: y-miyazaki/config/.github/actions/loop-state-write@4531917ea75dc79807a04ae7cdc6679294d81b4e # v1.7.7
+      if: >-
+        inputs.current_sha != '' &&
+        (inputs.verdict != 'APPROVE' || inputs.has_changes != 'true' || inputs.branch == '')
+      uses: ./.github/actions/loop-state-write
       with:
         base_branch: ${{ inputs.base_branch }}
         open_rejections: ${{ inputs.open_rejections }}

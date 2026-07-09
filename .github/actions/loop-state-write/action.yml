@@ -55,7 +55,13 @@ runs:
           echo "::error::Invalid branch name: ${BRANCH}"
           exit 1
         fi
-        git checkout -B "${BRANCH}"
+        git fetch origin "${BRANCH}"
+        if git show-ref --verify --quiet "refs/remotes/origin/${BRANCH}"; then
+          git checkout -B "${BRANCH}" "origin/${BRANCH}"
+        else
+          echo "::error::Branch not found on remote: ${BRANCH}"
+          exit 1
+        fi
 
     - name: Write State
       shell: bash
@@ -114,6 +120,7 @@ runs:
       shell: bash
       env:
         BASE_BRANCH: ${{ inputs.base_branch }}
+        BRANCH: ${{ inputs.branch }}
         GH_TOKEN: ${{ inputs.token }}
         OUTCOME: ${{ inputs.outcome }}
         SHA: ${{ inputs.sha }}
@@ -127,6 +134,11 @@ runs:
         fi
         git add "${STATE_FILE}"
         git commit -m "chore(loop): update state [skip ci]"
+        if [[ -n "${BRANCH}" ]]; then
+          git push origin HEAD:"${BRANCH}"
+          echo "State pushed to agent branch ${BRANCH}."
+          exit 0
+        fi
         if git push origin HEAD 2>/dev/null; then
           echo "State pushed directly."
           exit 0
