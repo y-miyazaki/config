@@ -45,7 +45,7 @@ claude = "2.1.198"                               # Claude Code CLI
 
 # AWS related tools
 "aqua:aws/aws-cli" = "2.35.14"      # AWS CLI
-"aqua:aws/aws-sam-cli" = "1.162.1"  # SAM CLI tool
+"aqua:aws/aws-sam-cli" = "1.163.0"  # SAM CLI tool
 "npm:awsp" = { version = "0.2.0", depends = [
   "node",
 ], install_env = { NPM_CONFIG_IGNORE_SCRIPTS = "true" } } # AWS profile switcher
