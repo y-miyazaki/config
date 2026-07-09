@@ -1,6 +1,7 @@
 # Loop workflow: Documentation triage
 # Detects doc-impacting changes, delegates agent execution for edits,
 # verifies changes via separate agent session, then creates PR on approval.
+# Requires repository secret: AGENT_TOKEN (engine API key; see DEFAULT_ENGINE).
 name: on-loop-docs-triage
 
 on:
