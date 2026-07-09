@@ -195,7 +195,6 @@ graph LR
     RW1 --> CA8
     CA1 --> CA4
     CA2 --> CA4
-    CA2 --> CA9
     RW1 --> SK1
     CA3 --> CA7
     CA6 --> ST1
@@ -225,7 +224,7 @@ State files are maintained individually per loop (multi-loop coordination princi
 | loop-budget skill | Download from npm/GitHub Release with caching (repository-independent) | Future |
 | loop-verifier skill | Same as above | Future |
 | Maker-Checker separation | Implemented inside `loop-execute` (via `ci-loop-agent.yaml` L2/L3) | ✅ Implemented |
-| Worktree isolation | loop-worktree-setup/push action + ci-loop-agent L2 mode | ✅ Implemented |
+| Worktree isolation | loop-worktree-setup + loop-execute (inline commit/push) + ci-loop-agent L2 mode | ✅ Implemented |
 | Denylist / Allowlist | Defined in SKILL.md, checked by verifier | ✅ Implemented |
 
 ## Design Principles
@@ -313,7 +312,7 @@ For L2 and above where auto-fixes are performed, branch isolation is mandatory. 
 | Strategy | Engine | Branch Management | Working Directory |
 |---|---|---|---|
 | Action-managed | claude-code-action | Action internally creates branch, commits, and pushes | Fixed to GITHUB_WORKSPACE |
-| CLI type | copilot, codex, claude-cli | Externally managed via worktree-setup/push actions | Isolated in worktree path |
+| CLI type | copilot, codex, claude-cli | Externally managed via loop-worktree-setup; commit/push inside loop-execute | Isolated in worktree path |
 
 **Unified contract**: Regardless of engine, `ci-loop-agent.yaml` outputs `{ branch, has_changes, verdict, reason, attempts }` at L2/L3. Maker-Checker verification runs inside `loop-execute` before finalize.
 

@@ -309,7 +309,7 @@ The repository must provide reusable workflows.
 | `loop-state-read` | Checkout + read loop state JSON, output last_sha/current_sha |
 | `loop-state-write` | Write state JSON + commit/push |
 | `loop-worktree-setup` | Create isolated worktree + branch (L2/L3) |
-| `loop-worktree-push` | Commit/push worktree changes + cleanup (L2/L3) |
+| `loop-worktree-push` | Commit/push worktree changes + cleanup (unused in current workflows; commit/push is handled inside `loop-execute`) |
 
 ## Renovate
 
