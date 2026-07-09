@@ -76,7 +76,7 @@ claude = "2.1.198"                               # Claude Code CLI
 "go:github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen" = "v2.7.1"  # OpenAPI code generator
 "aqua:protocolbuffers/protobuf/protoc" = "35.1"                            # protobuf compiler
 "aqua:protocolbuffers/protobuf-go/protoc-gen-go" = "1.36.11"              # protobuf code generator
-"aqua:grpc/grpc-go/protoc-gen-go-grpc" = "1.6.1"                          # gRPC code generator
+"aqua:grpc/grpc-go/protoc-gen-go-grpc" = "1.82.0"                          # gRPC code generator
 "aqua:swaggo/swag" = "1.16.6"                                             # API documentation generator
 "aqua:go-swagger/go-swagger" = "0.35.0"                                   # API documentation generator (swagger)
 
