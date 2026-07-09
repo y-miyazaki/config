@@ -226,7 +226,7 @@ State files are maintained individually per loop (multi-loop coordination princi
 | loop-budget skill | Download from npm/GitHub Release with caching (repository-independent) | Future |
 | loop-verifier skill | Same as above | Future |
 | Maker-Checker separation | Implemented in `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3) | ✅ Implemented |
-| Worktree isolation | loop-worktree-setup/push action + ci-loop-agent L2 mode | ✅ Implemented |
+| Worktree isolation | `loop-worktree-setup` / `loop-worktree-push` via `ci-loop-agent` L2/L3 | ✅ Implemented |
 | Denylist / Allowlist | Defined in SKILL.md, checked by verifier | ✅ Implemented |
 
 ## Design Principles
@@ -307,18 +307,18 @@ Design countermeasures:
 
 ### Worktree Isolation
 
-For L2 and above where auto-fixes are performed, branch isolation is mandatory. The implementation method differs by engine type.
+For L2 and above where auto-fixes are performed, branch isolation is mandatory. All supported engines (`claude`, `copilot`, `codex`, `cursor`) run as CLI engines under `ci-loop-agent.yaml`.
 
-**Engine strategy classification:**
+**Engine execution model:**
 
-| Strategy | Engine | Branch Management | Working Directory |
-|---|---|---|---|
-| Action-managed | claude-code-action | Action internally creates branch, commits, and pushes | Fixed to GITHUB_WORKSPACE |
-| CLI type | copilot, codex, claude-cli | Externally managed via worktree-setup/push actions | Isolated in worktree path |
+| Level | Path | Branch / working directory |
+|---|---|---|
+| L1 | `loop-agent-once` | Read-only on the checked-out workspace (no worktree branch) |
+| L2/L3 | `loop-worktree-setup` → `loop-execute` (uses `loop-worktree-push`) | Isolated worktree path and agent branch |
 
-**Unified contract**: Regardless of strategy, `ci-loop-agent.yaml` L2/L3 outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections }`. Verification runs inside `loop-execute` (separate verifier session); finalize consumes those outputs for all engines.
+**Unified contract**: `ci-loop-agent.yaml` L2/L3 outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections }`. Verification runs inside `loop-execute` (separate verifier session); finalize consumes those outputs for all engines.
 
-**CLI type principles:**
+**Worktree principles:**
 
 - 1 item = 1 worktree
 - If verifier REJECTs, delete branch to discard all changes
@@ -326,8 +326,8 @@ For L2 and above where auto-fixes are performed, branch isolation is mandatory. 
 
 **Procedure for adding a new engine:**
 
-1. Action-managed: Add an L2 job individually, obtain branch_name from output
-2. CLI type: Simply add the engine to the case statement in the `agent-cli-l2` job
+1. Add the engine to the `engine` input enum and install/run paths in `loop-install-cli` / `loop-agent-once` / `loop-execute`
+2. Keep L2/L3 on the shared `agent-l2` job (`loop-worktree-setup` + `loop-execute`); do not add a separate Action-managed branch path
 
 ### Denylist / Least Privilege
 
