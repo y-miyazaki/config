@@ -67,7 +67,7 @@ jobs:
 
       - name: Read Loop State
         id: state
-        uses: y-miyazaki/config/.github/actions/loop-state-read@b98f8a2f82c5bd363957943847633659cc45f9c0 # v1.7.3
+        uses: y-miyazaki/config/.github/actions/loop-state-read@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
         with:
           state_file: ${{ env.STATE_FILE }}
 
@@ -92,7 +92,7 @@ jobs:
       - name: Generate Prompt
         if: steps.changes.outputs.skip == 'false'
         id: prompt
-        uses: y-miyazaki/config/.github/actions/loop-prompt-generate@b98f8a2f82c5bd363957943847633659cc45f9c0 # v1.7.3
+        uses: y-miyazaki/config/.github/actions/loop-prompt-generate@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
         with:
           context: |
             Last SHA: ${{ steps.state.outputs.last_sha }}
@@ -111,7 +111,7 @@ jobs:
   agent:
     needs: detect
     if: needs.detect.outputs.skip == 'false'
-    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@2be7e7726d1b0c94bbe093e3ea79b075a3d8d8d4 # v1.7.2
+    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
     permissions:
       contents: write
       copilot-requests: write
@@ -128,7 +128,7 @@ jobs:
   verify:
     needs: [detect, agent]
     if: needs.agent.outputs.has_changes == 'true'
-    uses: y-miyazaki/config/.github/workflows/ci-loop-verifier.yaml@2be7e7726d1b0c94bbe093e3ea79b075a3d8d8d4 # v1.7.2
+    uses: y-miyazaki/config/.github/workflows/ci-loop-verifier.yaml@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
     permissions:
       contents: read
       copilot-requests: write
@@ -180,7 +180,7 @@ jobs:
           persist-credentials: false
 
       - name: Finalize
-        uses: y-miyazaki/config/.github/actions/loop-finalize@b98f8a2f82c5bd363957943847633659cc45f9c0 # v1.7.3
+        uses: y-miyazaki/config/.github/actions/loop-finalize@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
         with:
           agent_result: ${{ needs.agent.result }}
           auto_merge: ${{ needs.detect.outputs.level == 'L3' }}

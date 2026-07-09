@@ -2,44 +2,44 @@
 name: on-ci-push-apm-audit
 
 on:
-  push:
-    branches:
-      - "main"
-      - "master"
-      - "hotfix/**"
-      - "release/**"
-      - "develop"
-      - "feature/**"
-    paths:
-      - ".apm/**"
-      - ".agents/**"
-      - ".github/**"
-      - "apm.lock.yaml"
-      - "apm.yml"
-  pull_request:
-    branches:
-      - "main"
-      - "master"
-      - "hotfix/**"
-      - "release/**"
-      - "develop"
-      - "feature/**"
-    paths:
-      - ".apm/**"
-      - ".agents/**"
-      - ".github/**"
-      - "apm.lock.yaml"
-      - "apm.yml"
+    push:
+        branches:
+            - "main"
+            - "master"
+            - "hotfix/**"
+            - "release/**"
+            - "develop"
+            - "feature/**"
+        paths:
+            - ".apm/**"
+            - ".agents/**"
+            - ".github/**"
+            - "apm.lock.yaml"
+            - "apm.yml"
+    pull_request:
+        branches:
+            - "main"
+            - "master"
+            - "hotfix/**"
+            - "release/**"
+            - "develop"
+            - "feature/**"
+        paths:
+            - ".apm/**"
+            - ".agents/**"
+            - ".github/**"
+            - "apm.lock.yaml"
+            - "apm.yml"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
 permissions:
-  contents: read
+    contents: read
 
 jobs:
-  apm-audit:
-    uses: y-miyazaki/config/.github/workflows/ci-apm-audit.yaml@2be7e7726d1b0c94bbe093e3ea79b075a3d8d8d4 # v1.7.2
-    permissions:
-      contents: read
+    apm-audit:
+        uses: y-miyazaki/config/.github/workflows/ci-apm-audit.yaml@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
+        permissions:
+            contents: read

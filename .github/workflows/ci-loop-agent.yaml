@@ -87,7 +87,7 @@ jobs:
                   persist-credentials: false
 
             - name: Run Agent
-              uses: y-miyazaki/config/.github/actions/loop-agent-run@b98f8a2f82c5bd363957943847633659cc45f9c0 # v1.7.3
+              uses: y-miyazaki/config/.github/actions/loop-agent-run@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
               with:
                   agent_token: ${{ secrets.AGENT_TOKEN }}
                   cli_version: ${{ inputs.cli_version }}
@@ -116,13 +116,13 @@ jobs:
 
             - name: Setup Worktree
               id: worktree
-              uses: y-miyazaki/config/.github/actions/loop-worktree-setup@b98f8a2f82c5bd363957943847633659cc45f9c0 # v1.7.3
+              uses: y-miyazaki/config/.github/actions/loop-worktree-setup@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
               with:
                   skill_name: ${{ inputs.skill_name }}
                   token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
 
             - name: Run Agent
-              uses: y-miyazaki/config/.github/actions/loop-agent-run@b98f8a2f82c5bd363957943847633659cc45f9c0 # v1.7.3
+              uses: y-miyazaki/config/.github/actions/loop-agent-run@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
               with:
                   agent_token: ${{ secrets.AGENT_TOKEN }}
                   cli_version: ${{ inputs.cli_version }}
@@ -134,7 +134,7 @@ jobs:
 
             - name: Push Changes
               id: push
-              uses: y-miyazaki/config/.github/actions/loop-worktree-push@b98f8a2f82c5bd363957943847633659cc45f9c0 # v1.7.3
+              uses: y-miyazaki/config/.github/actions/loop-worktree-push@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
               with:
                   branch: ${{ steps.worktree.outputs.branch }}
                   token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
