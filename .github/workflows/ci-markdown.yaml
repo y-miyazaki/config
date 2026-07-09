@@ -3,63 +3,63 @@
 name: ci-markdown
 
 on:
-  workflow_call:
-    inputs:
-      markdownlint_flags:
-        default: "README*.md docs/**/*.md"
-        description: "Glob patterns to pass to markdownlint-cli2 (space-separated)"
-        required: false
-        type: string
+    workflow_call:
+        inputs:
+            markdownlint_flags:
+                default: "README*.md docs/**/*.md"
+                description: "Glob patterns to pass to markdownlint-cli2 (space-separated)"
+                required: false
+                type: string
 
 permissions:
-  contents: read
-  pull-requests: write
+    contents: read
+    pull-requests: write
 
 jobs:
-  lint:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          fetch-depth: 0
-          persist-credentials: false
+    lint:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 30
+        permissions:
+            contents: read
+            pull-requests: write
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              with:
+                  fetch-depth: 0
+                  persist-credentials: false
 
-      - name: Exec markdownlint-cli2
-        uses: DavidAnson/markdownlint-cli2-action@ded1f9488f68a970bc66ea5619e13e9b52e601cd # v23.2.0
-        with:
-          fix: false
-          globs: "${{ inputs.markdownlint_flags }}"
+            - name: Exec markdownlint-cli2
+              uses: DavidAnson/markdownlint-cli2-action@ded1f9488f68a970bc66ea5619e13e9b52e601cd # v23.2.0
+              with:
+                  fix: false
+                  globs: "${{ inputs.markdownlint_flags }}"
 
-      - name: Post PR failure comment
-        if: failure() && github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          script: |
-            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const body = `❌ markdownlint-cli2 failed.\n\n`+
-              `Run page: ${runUrl}\n\n`+
-              `Re-run guidance:\n- Fix markdown issues locally\n- Commit & push to trigger CI again.`;
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body
-            });
+            - name: Post PR failure comment
+              if: failure() && github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
+              uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+              with:
+                  script: |
+                      const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+                      const body = `❌ markdownlint-cli2 failed.\n\n`+
+                        `Run page: ${runUrl}\n\n`+
+                        `Re-run guidance:\n- Fix markdown issues locally\n- Commit & push to trigger CI again.`;
+                      github.rest.issues.createComment({
+                        issue_number: context.issue.number,
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        body
+                      });
 
-      - name: Summary
-        if: always()
-        uses: y-miyazaki/config/.github/actions/summary@2be7e7726d1b0c94bbe093e3ea79b075a3d8d8d4 # v1.7.2
-        with:
-          artifacts: |
-            (none)
-          outputs: |
-            (none)
-          params: |
-            markdownlint_flags: "${{ inputs.markdownlint_flags }}"
-          status: "${{ job.status }}"
-          title: "Markdownlint"
+            - name: Summary
+              if: always()
+              uses: y-miyazaki/config/.github/actions/summary@de385b1d4ffe69d5c0371d85194fb59b485e56ea # v1.7.3
+              with:
+                  artifacts: |
+                      (none)
+                  outputs: |
+                      (none)
+                  params: |
+                      markdownlint_flags: "${{ inputs.markdownlint_flags }}"
+                  status: "${{ job.status }}"
+                  title: "Markdownlint"

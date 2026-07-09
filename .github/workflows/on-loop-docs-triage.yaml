@@ -67,7 +67,7 @@ jobs:
 
       - name: Read Loop State
         id: state
-        uses: y-miyazaki/config/.github/actions/loop-state-read@2be7e7726d1b0c94bbe093e3ea79b075a3d8d8d4 # v1.7.2
+        uses: y-miyazaki/config/.github/actions/loop-state-read@de385b1d4ffe69d5c0371d85194fb59b485e56ea # v1.7.3
         with:
           state_file: ${{ env.STATE_FILE }}
 
@@ -92,7 +92,7 @@ jobs:
       - name: Generate Prompt
         if: steps.changes.outputs.skip == 'false'
         id: prompt
-        uses: y-miyazaki/config/.github/actions/loop-prompt-generate@2be7e7726d1b0c94bbe093e3ea79b075a3d8d8d4 # v1.7.2
+        uses: y-miyazaki/config/.github/actions/loop-prompt-generate@de385b1d4ffe69d5c0371d85194fb59b485e56ea # v1.7.3
         with:
           context: |
             Last SHA: ${{ steps.state.outputs.last_sha }}
@@ -180,7 +180,7 @@ jobs:
           persist-credentials: false
 
       - name: Finalize
-        uses: y-miyazaki/config/.github/actions/loop-finalize@2962d901c97b5ad50232414aa3b3a3b2a20c56b5 # v1.7.3
+        uses: y-miyazaki/config/.github/actions/loop-finalize@de385b1d4ffe69d5c0371d85194fb59b485e56ea # v1.7.3
         with:
           agent_result: ${{ needs.agent.result }}
           auto_merge: ${{ needs.detect.outputs.level == 'L3' }}
