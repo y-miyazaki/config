@@ -225,7 +225,7 @@ State files are maintained individually per loop (multi-loop coordination princi
 |---|---|---|
 | loop-budget skill | Download from npm/GitHub Release with caching (repository-independent) | Future |
 | loop-verifier skill | Same as above | Future |
-| Maker-Checker separation | Implemented as ci-loop-verifier.yaml | ✅ Implemented |
+| Maker-Checker separation | Implemented in `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3) | ✅ Implemented |
 | Worktree isolation | loop-worktree-setup/push action + ci-loop-agent L2 mode | ✅ Implemented |
 | Denylist / Allowlist | Defined in SKILL.md, checked by verifier | ✅ Implemented |
 
@@ -316,7 +316,7 @@ For L2 and above where auto-fixes are performed, branch isolation is mandatory. 
 | Action-managed | claude-code-action | Action internally creates branch, commits, and pushes | Fixed to GITHUB_WORKSPACE |
 | CLI type | copilot, codex, claude-cli | Externally managed via worktree-setup/push actions | Isolated in worktree path |
 
-**Unified contract**: Regardless of strategy, `ci-loop-agent.yaml` outputs `{ branch, has_changes }`. The flow from verifier onward is common across all engines.
+**Unified contract**: Regardless of strategy, `ci-loop-agent.yaml` L2/L3 outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections }`. Verification runs inside `loop-execute` (separate verifier session); finalize consumes those outputs for all engines.
 
 **CLI type principles:**
 
@@ -470,7 +470,14 @@ stateDiagram-v2
   "last_run": "2026-06-26T09:00:00Z",
   "outcome": "rejected",
   "consecutive_failures": 2,
-  "last_reject_reason": "Changes included hallucinated API endpoint not present in codebase"
+  "last_reject_reason": "Changes included hallucinated API endpoint not present in codebase",
+  "open_rejections": [
+    {
+      "files": ["docs/example.md"],
+      "issue": "Hallucinated API endpoint not present in codebase",
+      "fix": "Remove the invented endpoint or cite an existing one"
+    }
+  ]
 }
 ```
 
@@ -497,20 +504,21 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 |---|---|
 | **Responsibility** | Produce code/content changes based on the prompt. Operate within the constraints defined by the Skill |
 | **Input** | Prompt text, skill name, engine, model, level |
-| **Output** | `branch` (string), `has_changes` (bool) |
-| **May modify** | Files within the Skill's allowed paths, on an isolated branch only |
+| **Output (L1)** | Read-only session result (no branch / verdict contract) |
+| **Output (L2/L3)** | Via `loop-execute` inside `ci-loop-agent`: `branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections` |
+| **May modify** | Files within the Skill's allowed paths, on an isolated branch only (L2/L3) |
 | **Must not modify** | Files on denylist. Files outside allowed paths. Default branch directly |
-| **Contract** | Regardless of engine strategy, always outputs `{ branch, has_changes }` |
+| **Contract** | L2/L3 always outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections }` regardless of engine strategy |
 
 #### Verify
 
 | Aspect | Definition |
 |---|---|
 | **Responsibility** | Independently evaluate whether Agent output meets quality criteria. Default stance is reject |
-| **Input** | Agent branch, base branch, verifier criteria, denylist |
-| **Output** | `verdict` (APPROVE / REJECT), `reason` (string) |
+| **Input** | Agent branch, base branch, verifier criteria, denylist (and allowlist when set) |
+| **Output** | `verdict` (APPROVE / REJECT), `reason` (string); on REJECT, structured `files` / `issue` / `fix` when possible (surfaced as `open_rejections`) |
 | **May modify** | Nothing. Read-only phase |
-| **Must be** | A separate agent session from the Agent phase (Maker-Checker separation) |
+| **Must be** | A separate agent session from the implementer, run inside `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3) — not a separate workflow such as a removed `ci-loop-verifier.yaml` |
 | **Evaluates** | Semantic quality (factual accuracy, relevance, no hallucination). Does NOT evaluate lint/CI — that is CI's responsibility |
 
 #### Finalize
@@ -518,7 +526,7 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 | Aspect | Definition |
 |---|---|
 | **Responsibility** | Persist the outcome. Create PR on approval, delete branch on rejection, update state |
-| **Input** | All prior phase outputs (branch, has_changes, verdict, current_sha) |
+| **Input** | Prior phase outputs (`branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections`, `current_sha`) |
 | **Output** | PR URL (on success), updated state file |
 | **May modify** | State file (commit + push to default branch). PR creation/deletion on agent branch |
 | **Must not** | Perform notifications, trigger downstream workflows, or modify code. Finalize is a persistence layer only |
