@@ -121,7 +121,7 @@ jobs:
                   persist-credentials: false
 
             - name: Run Agent Once
-              uses: y-miyazaki/config/.github/actions/loop-agent-once@c7c5ba8e3b6cd45916af9a14c1df47c7123e0a5d # v1.7.3
+              uses: y-miyazaki/config/.github/actions/loop-agent-once@a8c05ca01034ca94d61e6817a3df10f158aebc18 # v1.7.3
               with:
                   agent_token: ${{ secrets.AGENT_TOKEN }}
                   cli_version: ${{ inputs.cli_version }}
@@ -152,14 +152,14 @@ jobs:
 
             - name: Setup Worktree
               id: worktree
-              uses: y-miyazaki/config/.github/actions/loop-worktree-setup@c7c5ba8e3b6cd45916af9a14c1df47c7123e0a5d # v1.7.3
+              uses: y-miyazaki/config/.github/actions/loop-worktree-setup@a8c05ca01034ca94d61e6817a3df10f158aebc18 # v1.7.3
               with:
                   skill_name: ${{ inputs.skill_name }}
                   token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
 
             - name: Execute Bounded Loop
               id: execute
-              uses: y-miyazaki/config/.github/actions/loop-execute@c7c5ba8e3b6cd45916af9a14c1df47c7123e0a5d # v1.7.3
+              uses: y-miyazaki/config/.github/actions/loop-execute@a8c05ca01034ca94d61e6817a3df10f158aebc18 # v1.7.3
               with:
                   agent_implementer_max_turns: ${{ inputs.agent_implementer_max_turns }}
                   agent_implementer_model: ${{ inputs.agent_implementer_model }}
