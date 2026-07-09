@@ -29,6 +29,10 @@ inputs:
     default: ""
     description: "Verifier model override"
     required: false
+  allowlist:
+    default: ""
+    description: "Comma-separated glob allowlist; when set, changes outside these paths trigger REJECT"
+    required: false
   base_branch:
     default: "main"
     description: "Base branch for verify diff"
@@ -51,15 +55,51 @@ inputs:
   engine:
     description: "AI engine (claude | copilot | codex | cursor)"
     required: true
+  infer_files_pattern:
+    default: ""
+    description: "Optional extended-regex to infer file paths from verifier text when JSON files is missing"
+    required: false
+  no_changes_verdict:
+    default: "APPROVE"
+    description: "Verdict when the implementer produces no file changes (APPROVE or REJECT)"
+    required: false
+  prompt_implementer_feedback:
+    default: ""
+    description: "Implementer retry prompt template. Placeholders: {{base_prompt}}, {{feedback}}"
+    required: false
   prompt_text:
     description: "Implementer prompt text"
     required: true
+  prompt_verifier_default_criteria:
+    default: ""
+    description: "Default verifier APPROVE/REJECT criteria when agent_verifier_criteria is empty"
+    required: false
+  prompt_verifier_initial:
+    default: ""
+    description: "Verifier INITIAL mode intro. Placeholder: {{attempt}}"
+    required: false
+  prompt_verifier_output_contract:
+    default: ""
+    description: "Verifier JSON output contract appended to the verifier prompt"
+    required: false
+  prompt_verifier_regression:
+    default: ""
+    description: "Verifier REGRESSION mode body. Placeholders: {{attempt}}, {{open_rejections}}, {{attempt_delta}}"
+    required: false
+  prompt_verifier_task:
+    default: ""
+    description: "Verifier task section inserted before criteria"
+    required: false
   skill_name:
     description: "Skill name for verifier context"
     required: true
   token:
     description: "GitHub token for push (must match worktree-setup)"
     required: true
+  verifier_context:
+    default: ""
+    description: "Additional markdown context appended to the verifier prompt (e.g. CI logs, lint output)"
+    required: false
   worktree_path:
     description: "Absolute path to the worktree"
     required: true
@@ -71,6 +111,9 @@ outputs:
   has_changes:
     description: "Whether any files were committed and pushed"
     value: ${{ steps.push.outputs.has_changes }}
+  open_rejections:
+    description: "JSON array of unresolved structured rejections"
+    value: ${{ steps.loop.outputs.open_rejections }}
   reason:
     description: "Final verifier reason"
     value: ${{ steps.loop.outputs.reason }}
@@ -98,13 +141,23 @@ runs:
         AGENT_VERIFIER_CRITERIA: ${{ inputs.agent_verifier_criteria }}
         AGENT_VERIFIER_MAX_TURNS: ${{ inputs.agent_verifier_max_turns }}
         AGENT_VERIFIER_MODEL: ${{ inputs.agent_verifier_model }}
+        ALLOWLIST: ${{ inputs.allowlist }}
         BASE_BRANCH: ${{ inputs.base_branch }}
         BRANCH: ${{ inputs.branch }}
         COMMIT_MESSAGE: ${{ inputs.commit_message }}
         DENYLIST: ${{ inputs.denylist }}
         ENGINE: ${{ inputs.engine }}
+        INFER_FILES_PATTERN: ${{ inputs.infer_files_pattern }}
+        NO_CHANGES_VERDICT: ${{ inputs.no_changes_verdict }}
+        PROMPT_IMPLEMENTER_FEEDBACK: ${{ inputs.prompt_implementer_feedback }}
         PROMPT_TEXT: ${{ inputs.prompt_text }}
+        PROMPT_VERIFIER_DEFAULT_CRITERIA: ${{ inputs.prompt_verifier_default_criteria }}
+        PROMPT_VERIFIER_INITIAL: ${{ inputs.prompt_verifier_initial }}
+        PROMPT_VERIFIER_OUTPUT_CONTRACT: ${{ inputs.prompt_verifier_output_contract }}
+        PROMPT_VERIFIER_REGRESSION: ${{ inputs.prompt_verifier_regression }}
+        PROMPT_VERIFIER_TASK: ${{ inputs.prompt_verifier_task }}
         SKILL_NAME: ${{ inputs.skill_name }}
+        VERIFIER_CONTEXT: ${{ inputs.verifier_context }}
         STATUS_DIR: ${{ runner.temp }}/loop-execute-status
         WORKTREE_PATH: ${{ inputs.worktree_path }}
       run: |
@@ -114,8 +167,139 @@ runs:
         VERDICT="REJECT"
         REASON="No attempts completed"
         HAS_CHANGES="false"
+        OPEN_REJECTIONS_JSON='[]'
         REJECT_FEEDBACK=""
+        NO_CHANGES_VERDICT=$(printf '%s' "${NO_CHANGES_VERDICT:-APPROVE}" | tr '[:lower:]' '[:upper:]')
+        if [[ "${NO_CHANGES_VERDICT}" != "REJECT" ]]; then
+          NO_CHANGES_VERDICT="APPROVE"
+        fi
 
+        load_default_prompts() {
+          if [[ -z "${PROMPT_IMPLEMENTER_FEEDBACK}" ]]; then
+            PROMPT_IMPLEMENTER_FEEDBACK=$'{{base_prompt}}\n\n## Verifier Feedback (must address)\n\nPrevious attempt(s) were REJECTED. Edit **only** the files listed under **Files** and apply each **Required fix**:\n\n{{feedback}}\n\nAfter editing, your changes must be written to disk. Do not make unrelated changes.'
+          fi
+          if [[ -z "${PROMPT_VERIFIER_INITIAL}" ]]; then
+            PROMPT_VERIFIER_INITIAL=$'You are in INITIAL verification mode (attempt {{attempt}}).\nScrutinize the branch diff for factual blockers and scope violations.'
+          fi
+          if [[ -z "${PROMPT_VERIFIER_REGRESSION}" ]]; then
+            PROMPT_VERIFIER_REGRESSION=$'You are in REGRESSION verification mode (attempt {{attempt}}).\nCheck whether prior open rejections were fixed. Do not hunt for new nits.\n\n### Rules\n\n- REJECT only if a prior open rejection is still unfixed or factually wrong\n- REJECT if this attempt introduced a new factual error in changed files\n- Do NOT REJECT for style, preference, or unrelated nits\n- Do NOT re-litigate an open rejection that this attempt correctly fixed\n\n### Prior Open Rejections\n\n{{open_rejections}}\n\n### This Attempt'"'"'s Delta\n```\n{{attempt_delta}}\n```'
+          fi
+          if [[ -z "${PROMPT_VERIFIER_TASK}" ]]; then
+            PROMPT_VERIFIER_TASK=$'Review the changes produced by the loop implementer agent and determine whether they should be merged.'
+          fi
+          if [[ -z "${PROMPT_VERIFIER_OUTPUT_CONTRACT}" ]]; then
+            PROMPT_VERIFIER_OUTPUT_CONTRACT=$'## Output (machine-readable — required)\n\nEnd your response with a single fenced JSON block (no prose after it):\n\n```json\n{\n  "verdict": "APPROVE",\n  "reason": "one-line summary"\n}\n```\n\nor on REJECT:\n\n```json\n{\n  "verdict": "REJECT",\n  "files": ["path/to/file"],\n  "issue": "what is factually wrong",\n  "fix": "specific change the implementer must make",\n  "reason": "one-line summary for logs"\n}\n```\n\nRules:\n- "verdict" must be "APPROVE" or "REJECT"\n- On REJECT, "files" (array), "issue", "fix", and "reason" are required\n- Use repo-relative paths in files'
+          fi
+          if [[ -z "${PROMPT_VERIFIER_DEFAULT_CRITERIA}" ]]; then
+            PROMPT_VERIFIER_DEFAULT_CRITERIA=$'## Criteria for APPROVE\n\nALL of the following must be true:\n1. Changes are consistent with the codebase\n2. No sensitive information is exposed\n3. No files outside the expected scope are modified\n4. Changes are coherent and non-destructive\n\n## Criteria for REJECT\n\nANY of the following triggers REJECT:\n- Changes outside expected scope\n- Factual inaccuracies or hallucinated content\n- Sensitive data exposure\n- Gratuitous or unrelated changes'
+          fi
+        }
+
+        render_template() {
+          local template="$1"
+          local key value result="${template}"
+          shift
+          while [[ $# -gt 0 ]]; do
+            key="$1"
+            value="$2"
+            result="${result//\{\{${key}\}\}/${value}}"
+            shift 2
+          done
+          printf '%s' "${result}"
+        }
+
+        load_default_prompts
+
+        parse_output_field() {
+          local output_file="$1"
+          local field="$2"
+          grep -E "^${field}:[[:space:]]+" "${output_file}" 2>/dev/null | tail -1 | sed -E "s/^${field}:[[:space:]]*//" || true
+        }
+
+        append_open_rejection() {
+          local attempt="$1"
+          local files="$2"
+          local issue="$3"
+          local fix="$4"
+          OPEN_REJECTIONS_JSON=$(jq -c \
+            --argjson attempt "${attempt}" \
+            --arg files "${files}" \
+            --arg issue "${issue}" \
+            --arg fix "${fix}" \
+            '. + [{"attempt": $attempt, "files": ($files | if length == 0 then [] else split(",") | map(gsub("^\\s+|\\s+$"; "")) | map(select(length > 0)) end), "issue": $issue, "fix": $fix}]' \
+            <<< "${OPEN_REJECTIONS_JSON}")
+        }
+
+        format_open_rejections_for_prompt() {
+          if [[ "$(jq 'length' <<< "${OPEN_REJECTIONS_JSON}")" -eq 0 ]]; then
+            return 0
+          fi
+          jq -r '.[] | "### Attempt \(.attempt)\n- **Files:** " + (if (.files | length) > 0 then (.files | join(", ")) else "not specified" end) + "\n- **Issue:** \(.issue)\n- **Required fix:** \(.fix)\n"' \
+            <<< "${OPEN_REJECTIONS_JSON}"
+        }
+
+        sync_reject_feedback() {
+          REJECT_FEEDBACK="$(format_open_rejections_for_prompt)"
+        }
+
+        record_structured_reject() {
+          local attempt_dir="$1"
+          local attempt="$2"
+          local files="$3"
+          local issue="$4"
+          local fix="$5"
+          local summary="$6"
+          printf '%s\n' "${files}" > "${attempt_dir}/reject-files"
+          printf '%s\n' "${issue}" > "${attempt_dir}/reject-issue"
+          printf '%s\n' "${fix}" > "${attempt_dir}/reject-fix"
+          append_open_rejection "${attempt}" "${files}" "${issue}" "${fix}"
+          sync_reject_feedback
+          printf '%s\n' "REJECT" > "${attempt_dir}/verdict"
+          printf '%s\n' "${summary}" > "${attempt_dir}/reason"
+        }
+
+        infer_files_from_text() {
+          local text="$1"
+          local fallback="$2"
+          local inferred=""
+          if [[ -n "${INFER_FILES_PATTERN}" ]]; then
+            inferred=$(printf '%s\n' "${text}" | grep -oE "${INFER_FILES_PATTERN}" | sort -u | paste -sd, - || true)
+          else
+            inferred=$(printf '%s\n' "${text}" | grep -oE '[[:alnum:]_.-]+/[^[:space:],)]+' | sort -u | paste -sd, - || true)
+          fi
+          if [[ -n "${inferred}" ]]; then
+            printf '%s' "${inferred}"
+          else
+            printf '%s' "${fallback}"
+          fi
+        }
+
+        collect_allowlist_violations() {
+          local changed_files="$1"
+          local violations="" pattern file matched
+          if [[ -z "${ALLOWLIST}" ]]; then
+            return 0
+          fi
+          IFS=',' read -ra PATTERNS <<< "${ALLOWLIST}"
+          while IFS= read -r file; do
+            [[ -z "${file}" ]] && continue
+            matched="false"
+            for pattern in "${PATTERNS[@]}"; do
+              pattern=$(echo "${pattern}" | xargs)
+              # shellcheck disable=SC2053
+              if [[ "${file}" == ${pattern} ]]; then
+                matched="true"
+                break
+              fi
+            done
+            if [[ "${matched}" != "true" ]]; then
+              violations="${violations}${file}\n"
+            fi
+          done <<< "${changed_files}"
+          if [[ -n "${violations}" ]]; then
+            printf '%b' "${violations}"
+          fi
+        }
         run_agent() {
           local allow_writes="${1:-true}"
           case "${ENGINE}" in
@@ -181,14 +365,102 @@ runs:
             printf '%s\n' "${PROMPT_TEXT}"
             return
           fi
-          printf '%s\n\n## Verifier Feedback (must address)\n\nThe previous attempt was REJECTED by the verifier for the following reason:\n\n%s\n\nFix only the issues described above. Do not make unrelated changes.\n' \
-            "${PROMPT_TEXT}" "${feedback}"
+          render_template "${PROMPT_IMPLEMENTER_FEEDBACK}" \
+            base_prompt "${PROMPT_TEXT}" \
+            feedback "${feedback}"
+          printf '\n'
+        }
+
+        extract_last_json_fence() {
+          local output_file="$1"
+          awk '
+            /^```json[[:space:]]*$/ { capture=1; block=""; next }
+            capture && /^```[[:space:]]*$/ { blocks[++n]=block; capture=0; next }
+            capture { block = block $0 "\n" }
+            END { if (n > 0) printf "%s", blocks[n] }
+          ' "${output_file}"
+        }
+
+        parse_verifier_output() {
+          local output_file="$1"
+          local json_blob line
+
+          parsed="false"
+          verdict="REJECT"
+          reason="Verifier output missing or unclear"
+          files=""
+          issue=""
+          fix=""
+
+          json_blob="$(extract_last_json_fence "${output_file}")"
+          if [[ -n "${json_blob}" ]] && jq -e '.verdict' >/dev/null 2>&1 <<< "${json_blob}"; then
+            verdict=$(jq -r '.verdict' <<< "${json_blob}")
+            reason=$(jq -r '.reason // empty' <<< "${json_blob}")
+            issue=$(jq -r '.issue // empty' <<< "${json_blob}")
+            fix=$(jq -r '.fix // empty' <<< "${json_blob}")
+            files=$(jq -r '
+              if (.files | type) == "array" then (.files | map(select(type == "string")) | join(","))
+              elif (.files | type) == "string" then .files
+              else empty end
+            ' <<< "${json_blob}")
+            parsed="true"
+            return 0
+          fi
+
+          while IFS= read -r line; do
+            if jq -e '.verdict' >/dev/null 2>&1 <<< "${line}"; then
+              json_blob="${line}"
+            fi
+          done < <(tail -30 "${output_file}")
+
+          if [[ -n "${json_blob}" ]]; then
+            verdict=$(jq -r '.verdict' <<< "${json_blob}")
+            reason=$(jq -r '.reason // empty' <<< "${json_blob}")
+            issue=$(jq -r '.issue // empty' <<< "${json_blob}")
+            fix=$(jq -r '.fix // empty' <<< "${json_blob}")
+            files=$(jq -r '
+              if (.files | type) == "array" then (.files | map(select(type == "string")) | join(","))
+              elif (.files | type) == "string" then .files
+              else empty end
+            ' <<< "${json_blob}")
+            parsed="true"
+            return 0
+          fi
+
+          local verdict_line
+          verdict_line=$(grep -E '^VERDICT:[[:space:]]*(APPROVE|REJECT)[[:space:]]*$' "${output_file}" | tail -1 || true)
+          if [[ -n "${verdict_line}" ]]; then
+            verdict=$(echo "${verdict_line}" | sed -E 's/^VERDICT:[[:space:]]*//')
+            reason="$(parse_output_field "${output_file}" "REASON")"
+            files="$(parse_output_field "${output_file}" "FILES")"
+            issue="$(parse_output_field "${output_file}" "ISSUE")"
+            fix="$(parse_output_field "${output_file}" "FIX")"
+            [[ -n "${reason}" ]] || reason="No reason provided"
+            parsed="true"
+            echo "::warning::Verifier used legacy line format; prefer JSON verdict block"
+            return 0
+          fi
+
+          local legacy_line
+          legacy_line=$(grep -E '^(APPROVE|REJECT)([[:space:]:]|$)' "${output_file}" | tail -1 || true)
+          if [[ -n "${legacy_line}" ]]; then
+            verdict=$(echo "${legacy_line}" | grep -oE '^(APPROVE|REJECT)' | head -1)
+            reason=$(echo "${legacy_line}" | sed -E 's/^(APPROVE|REJECT):?[[:space:]]*//')
+            parsed="true"
+            echo "::warning::Verifier used legacy verdict format; prefer JSON verdict block"
+          fi
+        }
+
+        write_verifier_output_contract() {
+          printf '%s\n' "${PROMPT_VERIFIER_OUTPUT_CONTRACT}"
         }
 
         run_verify() {
           local attempt_dir="$1"
-          local changed_files violations pattern file diff_stat criteria prompt_file output_file verdict reason verdict_line reason_line legacy_line parsed
-          local old_pwd="${PWD}"
+          local attempt_num="$2"
+          local attempt_committed="$3"
+          local changed_files violations pattern file diff_stat attempt_diff_stat criteria prompt_file output_file json_blob open_rejections_text
+          local verdict reason files issue fix summary parsed old_pwd="${PWD}"
 
           mkdir -p "${attempt_dir}"
           cd "${WORKTREE_PATH}"
@@ -208,47 +480,62 @@ runs:
             while IFS= read -r file; do
               # shellcheck disable=SC2053
               if [[ "${file}" == ${pattern} ]]; then
-                violations="${violations}${file} (matches ${pattern})\n"
+                violations="${violations}${file}\n"
               fi
             done <<< "${changed_files}"
           done
           if [[ -n "${violations}" ]]; then
-            printf '%s\n' "REJECT" > "${attempt_dir}/verdict"
-            printf 'Denylist violation:\n%b' "${violations}" > "${attempt_dir}/reason"
+            local denylist_files
+            denylist_files=$(printf '%b' "${violations}" | sed '/^$/d' | paste -sd, -)
+            record_structured_reject "${attempt_dir}" "${attempt_num}" "${denylist_files}" \
+              "Changed files match the denylist" \
+              "Remove or revert denylisted paths from the branch diff" \
+              "Denylist violation: ${denylist_files}"
+            cd "${old_pwd}"
+            return 0
+          fi
+
+          violations="$(collect_allowlist_violations "${changed_files}")"
+          if [[ -n "${violations}" ]]; then
+            local allowlist_files
+            allowlist_files=$(printf '%b' "${violations}" | sed '/^$/d' | paste -sd, -)
+            record_structured_reject "${attempt_dir}" "${attempt_num}" "${allowlist_files}" \
+              "Changed files are outside the allowlist" \
+              "Limit changes to allowlisted paths or update the allowlist in the caller workflow" \
+              "Allowlist violation: ${allowlist_files}"
             cd "${old_pwd}"
             return 0
           fi
 
           diff_stat=$(git diff --stat "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/' || true)
+          attempt_diff_stat=""
+          if [[ "${attempt_committed}" == "true" ]] && git rev-parse HEAD~1 >/dev/null 2>&1; then
+            attempt_diff_stat=$(git diff --stat HEAD~1...HEAD -- . ':!.loop/' || true)
+          elif [[ "${attempt_num}" -gt 1 ]]; then
+            attempt_diff_stat="(no new commit in this attempt)"
+          fi
+
           criteria="${AGENT_VERIFIER_CRITERIA}"
           if [[ -z "${criteria}" ]]; then
-            criteria="$(printf '%s\n' \
-              '## Criteria for APPROVE' \
-              '' \
-              'ALL of the following must be true:' \
-              '1. Changes are consistent with the codebase' \
-              '2. No sensitive information is exposed' \
-              '3. No files outside the expected scope are modified' \
-              '4. Changes are coherent and non-destructive' \
-              '' \
-              '## Criteria for REJECT' \
-              '' \
-              'ANY of the following triggers REJECT:' \
-              '- Changes outside expected scope' \
-              '- Factual inaccuracies or hallucinated content' \
-              '- Sensitive data exposure' \
-              '- Gratuitous or unrelated changes')"
+            criteria="${PROMPT_VERIFIER_DEFAULT_CRITERIA}"
           fi
 
           prompt_file="${attempt_dir}/verifier-prompt.txt"
           {
-            echo "You are a code verification agent. Your DEFAULT posture is REJECT."
-            echo "You must find reasons to REJECT, not reasons to APPROVE."
-            echo ""
+            if [[ "${attempt_num}" -gt 1 && "$(jq 'length' <<< "${OPEN_REJECTIONS_JSON}")" -gt 0 ]]; then
+              open_rejections_text="$(format_open_rejections_for_prompt)"
+              render_template "${PROMPT_VERIFIER_REGRESSION}" \
+                attempt "${attempt_num}" \
+                open_rejections "${open_rejections_text}" \
+                attempt_delta "${attempt_diff_stat}"
+              printf '\n\n'
+            else
+              render_template "${PROMPT_VERIFIER_INITIAL}" attempt "${attempt_num}"
+              printf '\n\n'
+            fi
             echo "## Task"
             echo ""
-            echo "Review the changes produced by the loop implementer agent and determine"
-            echo "whether they should be merged."
+            printf '%s\n' "${PROMPT_VERIFIER_TASK}"
             echo ""
             echo "${criteria}"
             echo ""
@@ -256,25 +543,21 @@ runs:
             echo ""
             echo "Skill: ${SKILL_NAME}"
             echo ""
-            echo "### Diff Stat"
+            echo "### Branch Diff Stat"
             echo '```'
             echo "${diff_stat}"
             echo '```'
             echo ""
+            if [[ -n "${VERIFIER_CONTEXT}" ]]; then
+              echo "### Additional Context"
+              echo ""
+              printf '%s\n' "${VERIFIER_CONTEXT}"
+              echo ""
+            fi
             echo "### Full Diff"
             echo "Review the checked-out branch for full context."
             echo ""
-            echo "## Output (machine-readable — required)"
-            echo ""
-            echo "End your response with exactly these two lines:"
-            echo ""
-            echo "VERDICT: APPROVE"
-            echo "REASON: <one-line reason>"
-            echo ""
-            echo "or"
-            echo ""
-            echo "VERDICT: REJECT"
-            echo "REASON: <one-line reason>"
+            write_verifier_output_contract
           } > "${prompt_file}"
 
           output_file="${attempt_dir}/verifier-output.txt"
@@ -287,28 +570,12 @@ runs:
             echo "::warning::Verifier agent exited non-zero"
           fi
 
-          verdict="REJECT"
-          reason="Verifier output missing or unclear"
-          parsed="false"
+          parse_verifier_output "${output_file}"
+          verdict=$(printf '%s' "${verdict}" | tr '[:lower:]' '[:upper:]')
           if [[ -f "${output_file}" ]]; then
-            verdict_line=$(grep -E '^VERDICT:[[:space:]]*(APPROVE|REJECT)[[:space:]]*$' "${output_file}" | tail -1 || true)
-            if [[ -n "${verdict_line}" ]]; then
-              verdict=$(echo "${verdict_line}" | sed -E 's/^VERDICT:[[:space:]]*//')
-              reason_line=$(grep -E '^REASON:[[:space:]]+' "${output_file}" | tail -1 || true)
-              if [[ -n "${reason_line}" ]]; then
-                reason=$(echo "${reason_line}" | sed -E 's/^REASON:[[:space:]]*//')
-              else
-                reason="No reason provided"
-              fi
-              parsed="true"
-            else
-              legacy_line=$(grep -E '^(APPROVE|REJECT)([[:space:]:]|$)' "${output_file}" | tail -1 || true)
-              if [[ -n "${legacy_line}" ]]; then
-                verdict=$(echo "${legacy_line}" | grep -oE '^(APPROVE|REJECT)' | head -1)
-                reason=$(echo "${legacy_line}" | sed -E 's/^(APPROVE|REJECT):?[[:space:]]*//')
-                parsed="true"
-                echo "::warning::Verifier used legacy verdict format; prefer VERDICT:/REASON: lines"
-              fi
+            json_blob="$(extract_last_json_fence "${output_file}")"
+            if [[ -n "${json_blob}" ]]; then
+              printf '%s\n' "${json_blob}" > "${attempt_dir}/verifier-verdict.json"
             fi
           fi
           if [[ "${parsed}" != "true" ]]; then
@@ -316,9 +583,15 @@ runs:
           fi
           if [[ "${verdict}" != "APPROVE" ]]; then
             verdict="REJECT"
+            [[ -n "${issue}" ]] || issue="${reason}"
+            [[ -n "${fix}" ]] || fix="${reason}"
+            files="$(infer_files_from_text "${issue} ${reason}" "${changed_files//$'\n'/,}")"
+            summary="${reason}"
+            record_structured_reject "${attempt_dir}" "${attempt_num}" "${files}" "${issue}" "${fix}" "${summary}"
+          else
+            printf '%s\n' "${verdict}" > "${attempt_dir}/verdict"
+            printf '%s\n' "${reason}" > "${attempt_dir}/reason"
           fi
-          printf '%s\n' "${verdict}" > "${attempt_dir}/verdict"
-          printf '%s\n' "${reason}" > "${attempt_dir}/reason"
           cd "${old_pwd}"
         }
 
@@ -327,9 +600,16 @@ runs:
           echo "::group::Loop attempt ${ATTEMPT}/${AGENT_LOOP_MAX_ATTEMPTS}"
           ATTEMPT_DIR="${STATUS_DIR}/attempt-${ATTEMPT}"
           mkdir -p "${ATTEMPT_DIR}"
+          ATTEMPT_COMMITTED="false"
+          sync_reject_feedback
 
           AGENT_PROMPT="$(build_agent_prompt "${REJECT_FEEDBACK}")"
           printf '%s\n' "${AGENT_PROMPT}" > "${ATTEMPT_DIR}/agent-prompt.txt"
+          if [[ -n "${REJECT_FEEDBACK}" ]]; then
+            echo "::group::Verifier feedback injected for attempt ${ATTEMPT}"
+            printf '%s\n' "${REJECT_FEEDBACK}"
+            echo "::endgroup::"
+          fi
 
           PROMPT="${AGENT_PROMPT}"
           MAX_TURNS="${AGENT_IMPLEMENTER_MAX_TURNS}"
@@ -344,28 +624,50 @@ runs:
 
           if commit_worktree_if_needed "${COMMIT_MESSAGE} (attempt ${ATTEMPT})"; then
             HAS_CHANGES="true"
+            ATTEMPT_COMMITTED="true"
+          elif [[ "${ATTEMPT}" -gt 1 && -n "${REJECT_FEEDBACK}" ]]; then
+            echo "::error::Attempt ${ATTEMPT} produced no file changes while open rejections remain"
+            record_structured_reject "${ATTEMPT_DIR}" "${ATTEMPT}" "" \
+              "Implementer produced no file changes on retry" \
+              "Edit the files listed in prior open rejections and commit the fixes" \
+              "No file changes produced on retry; open rejections were not addressed"
+            VERDICT="REJECT"
+            REASON="No file changes produced on retry; open rejections were not addressed"
+            echo "Verdict: ${VERDICT} — ${REASON}"
+            echo "::endgroup::"
+            continue
+          elif [[ "${ATTEMPT}" -gt 1 ]]; then
+            echo "::warning::Attempt ${ATTEMPT} produced no file changes; verifier will review the same diff as the previous attempt"
           fi
 
           if [[ "${HAS_CHANGES}" != "true" ]]; then
-            VERDICT="APPROVE"
+            VERDICT="${NO_CHANGES_VERDICT}"
             REASON="No file changes produced"
-            echo "No changes; treating as APPROVE (no-op)."
+            echo "No changes; treating as ${VERDICT}."
             echo "::endgroup::"
             break
           fi
 
           echo "Running verifier (fresh session)..."
-          run_verify "${ATTEMPT_DIR}"
+          run_verify "${ATTEMPT_DIR}" "${ATTEMPT}" "${ATTEMPT_COMMITTED}"
           VERDICT="$(cat "${ATTEMPT_DIR}/verdict")"
           REASON="$(cat "${ATTEMPT_DIR}/reason")"
           echo "Verdict: ${VERDICT} — ${REASON}"
+          if [[ "${VERDICT}" == "REJECT" && -f "${ATTEMPT_DIR}/reject-files" ]]; then
+            echo "Reject files: $(tr '\n' ',' < "${ATTEMPT_DIR}/reject-files" | sed 's/,$//')"
+            echo "Reject fix: $(tr '\n' ' ' < "${ATTEMPT_DIR}/reject-fix")"
+          fi
           echo "::endgroup::"
 
           if [[ "${VERDICT}" == "APPROVE" ]]; then
+            OPEN_REJECTIONS_JSON='[]'
             break
           fi
-          REJECT_FEEDBACK="${REASON}"
         done
+
+        if [[ "${VERDICT}" == "APPROVE" ]]; then
+          OPEN_REJECTIONS_JSON='[]'
+        fi
 
         {
           echo "verdict=${VERDICT}"
@@ -375,8 +677,17 @@ runs:
           echo "reason<<${DELIM}"
           echo "${REASON}"
           echo "${DELIM}"
+          DELIM="OPEN_REJECTIONS_$(openssl rand -hex 8)"
+          echo "open_rejections<<${DELIM}"
+          echo "${OPEN_REJECTIONS_JSON}"
+          echo "${DELIM}"
         } >> "${GITHUB_OUTPUT}"
         echo "Final: verdict=${VERDICT} attempts=${ATTEMPT} has_changes=${HAS_CHANGES}"
+        if [[ "${VERDICT}" == "REJECT" && "$(jq 'length' <<< "${OPEN_REJECTIONS_JSON}")" -gt 0 ]]; then
+          echo "::group::Open rejection history"
+          format_open_rejections_for_prompt
+          echo "::endgroup::"
+        fi
 
     - name: Push Branch
       id: push

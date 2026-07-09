@@ -13,9 +13,15 @@ outputs:
   current_sha:
     description: "Current HEAD commit SHA"
     value: ${{ steps.read.outputs.current_sha }}
+  last_reject_reason:
+    description: "Most recent verifier rejection reason from state file"
+    value: ${{ steps.read.outputs.last_reject_reason }}
   last_sha:
     description: "Last processed SHA from state file (or first commit if missing)"
     value: ${{ steps.read.outputs.last_sha }}
+  open_rejections_prompt:
+    description: "Formatted open rejections for implementer prompt injection"
+    value: ${{ steps.read.outputs.open_rejections_prompt }}
 
 runs:
   using: composite
@@ -27,11 +33,20 @@ runs:
         STATE_FILE: ${{ inputs.state_file }}
       run: |
         set -euo pipefail
-        LAST_SHA=""
         CONSECUTIVE_FAILURES="0"
+        LAST_REJECT_REASON=""
+        LAST_SHA=""
+        OPEN_REJECTIONS_JSON='[]'
+        OPEN_REJECTIONS_PROMPT=""
         if [[ -f "${STATE_FILE}" ]]; then
-          LAST_SHA=$(jq -r '.last_sha // empty' "${STATE_FILE}" 2>/dev/null || true)
           CONSECUTIVE_FAILURES=$(jq -r '.consecutive_failures // 0' "${STATE_FILE}" 2>/dev/null || echo "0")
+          LAST_REJECT_REASON=$(jq -r '.last_reject_reason // empty' "${STATE_FILE}" 2>/dev/null || true)
+          LAST_SHA=$(jq -r '.last_sha // empty' "${STATE_FILE}" 2>/dev/null || true)
+          OPEN_REJECTIONS_JSON=$(jq -c '.open_rejections // []' "${STATE_FILE}" 2>/dev/null || echo '[]')
+        fi
+        if [[ "$(jq 'length' <<< "${OPEN_REJECTIONS_JSON}")" -gt 0 ]]; then
+          OPEN_REJECTIONS_PROMPT=$(jq -r '.[] | "### Attempt \(.attempt // "-")\n- **Files:** " + (if (.files | length) > 0 then (.files | join(", ")) else "not specified" end) + "\n- **Issue:** \(.issue)\n- **Required fix:** \(.fix)\n"' \
+            <<< "${OPEN_REJECTIONS_JSON}")
         fi
         if [[ -z "${CONSECUTIVE_FAILURES}" ]]; then
           CONSECUTIVE_FAILURES="0"
@@ -42,6 +57,26 @@ runs:
         fi
         {
           echo "consecutive_failures=${CONSECUTIVE_FAILURES}"
-          echo "last_sha=${LAST_SHA}"
           echo "current_sha=$(git rev-parse HEAD)"
+          if [[ -n "${LAST_REJECT_REASON}" ]]; then
+            DELIM="LAST_REJECT_REASON_$(openssl rand -hex 8)"
+            echo "last_reject_reason<<${DELIM}"
+            echo "${LAST_REJECT_REASON}"
+            echo "${DELIM}"
+          else
+            echo "last_reject_reason="
+          fi
+          echo "last_sha=${LAST_SHA}"
+          DELIM="OPEN_REJECTIONS_$(openssl rand -hex 8)"
+          echo "open_rejections<<${DELIM}"
+          echo "${OPEN_REJECTIONS_JSON}"
+          echo "${DELIM}"
+          if [[ -n "${OPEN_REJECTIONS_PROMPT}" ]]; then
+            DELIM="OPEN_REJECTIONS_PROMPT_$(openssl rand -hex 8)"
+            echo "open_rejections_prompt<<${DELIM}"
+            echo "${OPEN_REJECTIONS_PROMPT}"
+            echo "${DELIM}"
+          else
+            echo "open_rejections_prompt="
+          fi
         } >> "$GITHUB_OUTPUT"

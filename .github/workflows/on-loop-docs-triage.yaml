@@ -42,6 +42,34 @@ env:
     - Gratuitous changes not related to triage items
     - Duplicate content that restates existing documentation
     - Unnecessary restructuring of document headings or sections
+  PROMPT_VERIFIER_OUTPUT_CONTRACT: |
+    ## Output (machine-readable — required)
+
+    End your response with a single fenced JSON block (no prose after it):
+
+    ```json
+    {
+      "verdict": "APPROVE",
+      "reason": "one-line summary"
+    }
+    ```
+
+    On REJECT:
+
+    ```json
+    {
+      "verdict": "REJECT",
+      "files": ["path/to/file"],
+      "issue": "what is factually wrong",
+      "fix": "specific correction required",
+      "reason": "one-line summary for logs"
+    }
+    ```
+
+    Rules:
+    - "verdict" must be "APPROVE" or "REJECT"
+    - On REJECT, "files" (array), "issue", "fix", and "reason" are required
+    - Use repo-relative paths in files
   AGENT_VERIFIER_MAX_TURNS: "3"
   AGENT_VERIFIER_MODEL: composer-2.5
   DEFAULT_BASE_BRANCH: main
@@ -71,6 +99,7 @@ jobs:
       level: ${{ steps.config.outputs.level }}
       paused: ${{ steps.changes.outputs.paused }}
       prompt: ${{ steps.prompt.outputs.prompt }}
+      prompt_verifier_output_contract: ${{ steps.config.outputs.prompt_verifier_output_contract }}
       skill_name: ${{ steps.config.outputs.skill_name }}
       skip: ${{ steps.changes.outputs.skip }}
     steps:
@@ -85,9 +114,11 @@ jobs:
         shell: bash
         env:
           AGENT_VERIFIER_CRITERIA: ${{ env.AGENT_VERIFIER_CRITERIA }}
+          PROMPT_VERIFIER_OUTPUT_CONTRACT: ${{ env.PROMPT_VERIFIER_OUTPUT_CONTRACT }}
         run: |
           set -euo pipefail
           CRITERIA_DELIM="CRITERIA_$(openssl rand -hex 8)"
+          CONTRACT_DELIM="CONTRACT_$(openssl rand -hex 8)"
           {
             echo "agent_implementer_max_turns=${AGENT_TRIAGE_MAX_TURNS}"
             echo "agent_implementer_model=${AGENT_TRIAGE_MODEL}"
@@ -100,6 +131,9 @@ jobs:
             echo "base_branch=${DEFAULT_BASE_BRANCH}"
             echo "engine=${DEFAULT_ENGINE}"
             echo "level=${DEFAULT_LEVEL}"
+            echo "prompt_verifier_output_contract<<${CONTRACT_DELIM}"
+            echo "${PROMPT_VERIFIER_OUTPUT_CONTRACT}"
+            echo "${CONTRACT_DELIM}"
             echo "skill_name=${SKILL_NAME}"
           } >> "$GITHUB_OUTPUT"
 
@@ -149,6 +183,7 @@ jobs:
             ## Change Detection Result
             ${{ steps.changes.outputs.result }}
 
+            ${{ steps.state.outputs.open_rejections_prompt != '' && format('## Open Rejections from Previous Run\n\nThe previous loop run left unresolved items ({0} consecutive failure(s)). Address these before other triage items:\n\n{1}\n', steps.state.outputs.consecutive_failures, steps.state.outputs.open_rejections_prompt) || '' }}
             ## Instructions
             You are operating at ${{ steps.config.outputs.level }} level.
             Edit documentation files directly to address the triage findings.
@@ -170,11 +205,14 @@ jobs:
       agent_verifier_criteria: ${{ needs.detect.outputs.agent_verifier_criteria }}
       agent_verifier_max_turns: ${{ needs.detect.outputs.agent_verifier_max_turns }}
       agent_verifier_model: ${{ needs.detect.outputs.agent_verifier_model }}
+      allowlist: "docs/**/*.md,README.md,mkdocs.yml"
       base_branch: ${{ needs.detect.outputs.base_branch }}
       denylist: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
       engine: ${{ needs.detect.outputs.engine }}
+      infer_files_pattern: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|yml|yaml)'
       level: ${{ needs.detect.outputs.level }}
       prompt_text: ${{ needs.detect.outputs.prompt }}
+      prompt_verifier_output_contract: ${{ needs.detect.outputs.prompt_verifier_output_contract }}
       skill_name: ${{ needs.detect.outputs.skill_name }}
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
@@ -220,6 +258,7 @@ jobs:
             ---
             *This PR was created by a loop automation. Review before merging.*
           pr_title: "docs: automated documentation update (loop-docs-triage)"
+          open_rejections: ${{ needs.execute.outputs.open_rejections }}
           reject_reason: ${{ needs.execute.outputs.reason }}
           state_file: ${{ env.STATE_FILE }}
           token: ${{ github.token }}

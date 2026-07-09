@@ -10,6 +10,10 @@ inputs:
     default: ""
     description: "Target branch for state commit (empty = current/default branch)"
     required: false
+  open_rejections:
+    default: "[]"
+    description: "JSON array of unresolved structured rejections (recorded when outcome is rejected)"
+    required: false
   outcome:
     description: "Run outcome (no-op|report-only|pr-created|rejected|escalated)"
     required: true
@@ -56,6 +60,7 @@ runs:
     - name: Write State
       shell: bash
       env:
+        OPEN_REJECTIONS: ${{ inputs.open_rejections }}
         OUTCOME: ${{ inputs.outcome }}
         REJECT_REASON: ${{ inputs.reject_reason }}
         SHA: ${{ inputs.sha }}
@@ -67,15 +72,21 @@ runs:
         if [[ -f "${STATE_FILE}" ]]; then
           PREV_CONSECUTIVE=$(jq -r '.consecutive_failures // 0' "${STATE_FILE}" 2>/dev/null || echo "0")
         fi
+        if ! jq -e . >/dev/null 2>&1 <<< "${OPEN_REJECTIONS}"; then
+          echo "::warning::open_rejections is not valid JSON; using []"
+          OPEN_REJECTIONS='[]'
+        fi
         case "${OUTCOME}" in
           rejected)
             CONSECUTIVE=$((PREV_CONSECUTIVE + 1))
             ;;
           error|escalated)
             CONSECUTIVE="${PREV_CONSECUTIVE}"
+            OPEN_REJECTIONS='[]'
             ;;
           *)
             CONSECUTIVE=0
+            OPEN_REJECTIONS='[]'
             ;;
         esac
         if [[ "${OUTCOME}" == "rejected" && -n "${REJECT_REASON}" ]]; then
@@ -85,7 +96,8 @@ runs:
             --arg outcome "${OUTCOME}" \
             --arg last_reject_reason "${REJECT_REASON}" \
             --argjson consecutive_failures "${CONSECUTIVE}" \
-            '{last_sha: $sha, last_run: $last_run, outcome: $outcome, consecutive_failures: $consecutive_failures, last_reject_reason: $last_reject_reason}' \
+            --argjson open_rejections "${OPEN_REJECTIONS}" \
+            '{last_sha: $sha, last_run: $last_run, outcome: $outcome, consecutive_failures: $consecutive_failures, last_reject_reason: $last_reject_reason, open_rejections: $open_rejections}' \
             > "${STATE_FILE}"
         else
           jq -n \
@@ -93,7 +105,8 @@ runs:
             --arg last_run "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
             --arg outcome "${OUTCOME}" \
             --argjson consecutive_failures "${CONSECUTIVE}" \
-            '{last_sha: $sha, last_run: $last_run, outcome: $outcome, consecutive_failures: $consecutive_failures}' \
+            --argjson open_rejections "${OPEN_REJECTIONS}" \
+            '{last_sha: $sha, last_run: $last_run, outcome: $outcome, consecutive_failures: $consecutive_failures, open_rejections: $open_rejections}' \
             > "${STATE_FILE}"
         fi
 

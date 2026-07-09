@@ -29,6 +29,10 @@ inputs:
     default: "loop-automation"
     description: "Comma-separated labels for the PR"
     required: false
+  open_rejections:
+    default: "[]"
+    description: "JSON array of unresolved structured rejections from the agent loop"
+    required: false
   pr_body:
     default: ""
     description: "PR body text (markdown)"
@@ -143,6 +147,7 @@ runs:
       uses: y-miyazaki/config/.github/actions/loop-state-write@a8c05ca01034ca94d61e6817a3df10f158aebc18 # v1.7.3
       with:
         base_branch: ${{ inputs.base_branch }}
+        open_rejections: ${{ inputs.open_rejections }}
         outcome: ${{ steps.outcome.outputs.value }}
         reject_reason: ${{ inputs.reject_reason }}
         sha: ${{ inputs.current_sha }}
