@@ -5,201 +5,201 @@
 name: on-loop-docs-triage
 
 on:
-  schedule:
-    - cron: "0 9 * * 1-5"
-  workflow_dispatch: {}
+    schedule:
+        - cron: "0 9 * * 1-5"
+    workflow_dispatch: {}
 
 permissions:
-  contents: write
-  copilot-requests: write
-  pull-requests: write
+    contents: write
+    copilot-requests: write
+    pull-requests: write
 
 concurrency:
-  cancel-in-progress: true
-  group: loop-docs-triage
+    cancel-in-progress: true
+    group: loop-docs-triage
 
 # cursor model: `agent --list-models`
 env:
-  AGENT_MODEL: grok-4.5-medium
-  DEFAULT_BASE_BRANCH: main
-  DEFAULT_ENGINE: cursor
-  DEFAULT_LEVEL: L2
-  SKILL_NAME: loop-docs-triage
-  STATE_FILE: .loop/state-docs-triage.json
-  VERIFIER_MODEL: composer-2.5
+    AGENT_MODEL: grok-4.5-medium
+    DEFAULT_BASE_BRANCH: main
+    DEFAULT_ENGINE: cursor
+    DEFAULT_LEVEL: L2
+    SKILL_NAME: loop-docs-triage
+    STATE_FILE: .loop/state-docs-triage.json
+    VERIFIER_MODEL: composer-2.5
 
 jobs:
-  detect:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    permissions:
-      contents: read
-    outputs:
-      agent_model: ${{ steps.config.outputs.agent_model }}
-      base_branch: ${{ steps.config.outputs.base_branch }}
-      current_sha: ${{ steps.state.outputs.current_sha }}
-      engine: ${{ steps.config.outputs.engine }}
-      last_sha: ${{ steps.state.outputs.last_sha }}
-      level: ${{ steps.config.outputs.level }}
-      prompt: ${{ steps.prompt.outputs.prompt }}
-      skill_name: ${{ steps.config.outputs.skill_name }}
-      skip: ${{ steps.changes.outputs.skip }}
-      verifier_model: ${{ steps.config.outputs.verifier_model }}
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+    detect:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 5
+        permissions:
+            contents: read
+        outputs:
+            agent_model: ${{ steps.config.outputs.agent_model }}
+            base_branch: ${{ steps.config.outputs.base_branch }}
+            current_sha: ${{ steps.state.outputs.current_sha }}
+            engine: ${{ steps.config.outputs.engine }}
+            last_sha: ${{ steps.state.outputs.last_sha }}
+            level: ${{ steps.config.outputs.level }}
+            prompt: ${{ steps.prompt.outputs.prompt }}
+            skill_name: ${{ steps.config.outputs.skill_name }}
+            skip: ${{ steps.changes.outputs.skip }}
+            verifier_model: ${{ steps.config.outputs.verifier_model }}
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              with:
+                  fetch-depth: 0
+                  persist-credentials: false
+
+            - name: Set Config Outputs
+              id: config
+              shell: bash
+              run: |
+                  set -euo pipefail
+                  {
+                    echo "agent_model=${AGENT_MODEL}"
+                    echo "base_branch=${DEFAULT_BASE_BRANCH}"
+                    echo "engine=${DEFAULT_ENGINE}"
+                    echo "level=${DEFAULT_LEVEL}"
+                    echo "skill_name=${SKILL_NAME}"
+                    echo "verifier_model=${VERIFIER_MODEL}"
+                  } >> "$GITHUB_OUTPUT"
+
+            - name: Read Loop State
+              id: state
+              uses: y-miyazaki/config/.github/actions/loop-state-read@a07d550c58bd517fd3966fcde86ec396e7c76fb1 # v1.7.3
+              with:
+                  state_file: ${{ env.STATE_FILE }}
+
+            - name: Detect Changes
+              id: changes
+              shell: bash
+              env:
+                  LAST_SHA: ${{ steps.state.outputs.last_sha }}
+              run: |
+                  set -euo pipefail
+                  DETECT_SCRIPT=".claude/skills/docs-updater/scripts/detect_changes.sh"
+                  RESULT=$(bash "${DETECT_SCRIPT}" --scope range --since "${LAST_SHA}")
+                  SKIP=$(echo "${RESULT}" | jq -r 'if (.skip | type) == "boolean" then (.skip | tostring) else "true" end' 2>/dev/null || echo "true")
+                  DELIM="RESULT_$(openssl rand -hex 8)"
+                  {
+                    echo "skip=${SKIP}"
+                    echo "result<<${DELIM}"
+                    echo "${RESULT}"
+                    echo "${DELIM}"
+                  } >> "$GITHUB_OUTPUT"
+
+            - name: Generate Prompt
+              if: steps.changes.outputs.skip == 'false'
+              id: prompt
+              uses: y-miyazaki/config/.github/actions/loop-prompt-generate@a07d550c58bd517fd3966fcde86ec396e7c76fb1 # v1.7.3
+              with:
+                  context: |
+                      Last SHA: ${{ steps.state.outputs.last_sha }}
+                      Current SHA: ${{ steps.state.outputs.current_sha }}
+
+                      ## Change Detection Result
+                      ${{ steps.changes.outputs.result }}
+
+                      ## Instructions
+                      You are operating at ${{ steps.config.outputs.level }} level.
+                      Edit documentation files directly to address the triage findings.
+                      Allowed paths: docs/**/*.md, README.md, mkdocs.yml (nav section only).
+                      Do NOT modify any other files.
+                  skill_name: ${{ steps.config.outputs.skill_name }}
+
+    agent:
+        needs: detect
+        if: needs.detect.outputs.skip == 'false'
+        uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@a07d550c58bd517fd3966fcde86ec396e7c76fb1 # v1.7.3
+        permissions:
+            contents: write
+            copilot-requests: write
         with:
-          fetch-depth: 0
-          persist-credentials: false
+            engine: ${{ needs.detect.outputs.engine }}
+            level: ${{ needs.detect.outputs.level }}
+            model: ${{ needs.detect.outputs.agent_model }}
+            prompt_text: ${{ needs.detect.outputs.prompt }}
+            skill_name: ${{ needs.detect.outputs.skill_name }}
+        secrets:
+            AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+            GH_TOKEN_PUSH: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set Config Outputs
-        id: config
-        shell: bash
-        run: |
-          set -euo pipefail
-          {
-            echo "agent_model=${AGENT_MODEL}"
-            echo "base_branch=${DEFAULT_BASE_BRANCH}"
-            echo "engine=${DEFAULT_ENGINE}"
-            echo "level=${DEFAULT_LEVEL}"
-            echo "skill_name=${SKILL_NAME}"
-            echo "verifier_model=${VERIFIER_MODEL}"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Read Loop State
-        id: state
-        uses: y-miyazaki/config/.github/actions/loop-state-read@94515ef13d2d742db4b7ac07b1799b8d7d7cc875 # v1.7.3
+    verify:
+        needs: [detect, agent]
+        if: needs.agent.outputs.has_changes == 'true'
+        uses: y-miyazaki/config/.github/workflows/ci-loop-verifier.yaml@a07d550c58bd517fd3966fcde86ec396e7c76fb1 # v1.7.3
+        permissions:
+            contents: read
+            copilot-requests: write
         with:
-          state_file: ${{ env.STATE_FILE }}
+            base_branch: ${{ needs.detect.outputs.base_branch }}
+            branch: ${{ needs.agent.outputs.branch }}
+            denylist: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
+            engine: ${{ needs.detect.outputs.engine }}
+            model: ${{ needs.detect.outputs.verifier_model }}
+            skill_name: ${{ needs.detect.outputs.skill_name }}
+            verifier_criteria: |
+                ## Criteria for APPROVE
 
-      - name: Detect Changes
-        id: changes
-        shell: bash
-        env:
-          LAST_SHA: ${{ steps.state.outputs.last_sha }}
-        run: |
-          set -euo pipefail
-          DETECT_SCRIPT=".claude/skills/docs-updater/scripts/detect_changes.sh"
-          RESULT=$(bash "${DETECT_SCRIPT}" --scope range --since "${LAST_SHA}")
-          SKIP=$(echo "${RESULT}" | jq -r 'if (.skip | type) == "boolean" then (.skip | tostring) else "true" end' 2>/dev/null || echo "true")
-          DELIM="RESULT_$(openssl rand -hex 8)"
-          {
-            echo "skip=${SKIP}"
-            echo "result<<${DELIM}"
-            echo "${RESULT}"
-            echo "${DELIM}"
-          } >> "$GITHUB_OUTPUT"
+                ALL of the following must be true:
+                1. Changes are limited to documentation files (docs/, README.md, mkdocs.yml nav)
+                2. Content is factually consistent with the codebase
+                3. No sensitive information is exposed
+                4. Changes address the documented triage items
+                5. No duplicate documentation is introduced
+                6. Existing documentation structure is preserved unless explicitly required by triage items
 
-      - name: Generate Prompt
-        if: steps.changes.outputs.skip == 'false'
-        id: prompt
-        uses: y-miyazaki/config/.github/actions/loop-prompt-generate@94515ef13d2d742db4b7ac07b1799b8d7d7cc875 # v1.7.3
-        with:
-          context: |
-            Last SHA: ${{ steps.state.outputs.last_sha }}
-            Current SHA: ${{ steps.state.outputs.current_sha }}
+                ## Criteria for REJECT
 
-            ## Change Detection Result
-            ${{ steps.changes.outputs.result }}
+                ANY of the following triggers REJECT:
+                - Changes outside allowed documentation paths
+                - Factual inaccuracies or hallucinated content
+                - Sensitive data exposure
+                - Gratuitous changes not related to triage items
+                - Duplicate content that restates existing documentation
+                - Unnecessary restructuring of document headings or sections
+        secrets:
+            AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
 
-            ## Instructions
-            You are operating at ${{ steps.config.outputs.level }} level.
-            Edit documentation files directly to address the triage findings.
-            Allowed paths: docs/**/*.md, README.md, mkdocs.yml (nav section only).
-            Do NOT modify any other files.
-          skill_name: ${{ steps.config.outputs.skill_name }}
+    finalize:
+        needs: [detect, agent, verify]
+        if: >-
+            always() &&
+            needs.detect.result == 'success' &&
+            needs.agent.result != 'cancelled'
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+        permissions:
+            contents: write
+            pull-requests: write
+        steps:
+            - name: Checkout
+              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              with:
+                  persist-credentials: false
 
-  agent:
-    needs: detect
-    if: needs.detect.outputs.skip == 'false'
-    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@94515ef13d2d742db4b7ac07b1799b8d7d7cc875 # v1.7.3
-    permissions:
-      contents: write
-      copilot-requests: write
-    with:
-      engine: ${{ needs.detect.outputs.engine }}
-      level: ${{ needs.detect.outputs.level }}
-      model: ${{ needs.detect.outputs.agent_model }}
-      prompt_text: ${{ needs.detect.outputs.prompt }}
-      skill_name: ${{ needs.detect.outputs.skill_name }}
-    secrets:
-      AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
-      GH_TOKEN_PUSH: ${{ secrets.GITHUB_TOKEN }}
+            - name: Finalize
+              uses: y-miyazaki/config/.github/actions/loop-finalize@a07d550c58bd517fd3966fcde86ec396e7c76fb1 # v1.7.3
+              with:
+                  agent_result: ${{ needs.agent.result }}
+                  auto_merge: ${{ needs.detect.outputs.level == 'L3' }}
+                  base_branch: ${{ needs.detect.outputs.base_branch }}
+                  branch: ${{ needs.agent.outputs.branch }}
+                  current_sha: ${{ needs.detect.outputs.current_sha }}
+                  has_changes: ${{ needs.agent.outputs.has_changes }}
+                  pr_body: |
+                      ## Summary
 
-  verify:
-    needs: [detect, agent]
-    if: needs.agent.outputs.has_changes == 'true'
-    uses: y-miyazaki/config/.github/workflows/ci-loop-verifier.yaml@94515ef13d2d742db4b7ac07b1799b8d7d7cc875 # v1.7.3
-    permissions:
-      contents: read
-      copilot-requests: write
-    with:
-      base_branch: ${{ needs.detect.outputs.base_branch }}
-      branch: ${{ needs.agent.outputs.branch }}
-      denylist: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
-      engine: ${{ needs.detect.outputs.engine }}
-      model: ${{ needs.detect.outputs.verifier_model }}
-      skill_name: ${{ needs.detect.outputs.skill_name }}
-      verifier_criteria: |
-        ## Criteria for APPROVE
+                      Automated documentation update by `loop-docs-triage` (${{ needs.detect.outputs.level }}).
 
-        ALL of the following must be true:
-        1. Changes are limited to documentation files (docs/, README.md, mkdocs.yml nav)
-        2. Content is factually consistent with the codebase
-        3. No sensitive information is exposed
-        4. Changes address the documented triage items
-        5. No duplicate documentation is introduced
-        6. Existing documentation structure is preserved unless explicitly required by triage items
+                      - Commits scanned: `${{ needs.detect.outputs.last_sha }}..${{ needs.detect.outputs.current_sha }}`
+                      - Verifier verdict: ${{ needs.verify.outputs.verdict || 'SKIPPED' }}
 
-        ## Criteria for REJECT
-
-        ANY of the following triggers REJECT:
-        - Changes outside allowed documentation paths
-        - Factual inaccuracies or hallucinated content
-        - Sensitive data exposure
-        - Gratuitous changes not related to triage items
-        - Duplicate content that restates existing documentation
-        - Unnecessary restructuring of document headings or sections
-    secrets:
-      AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
-
-  finalize:
-    needs: [detect, agent, verify]
-    if: >-
-      always() &&
-      needs.detect.result == 'success' &&
-      needs.agent.result != 'cancelled'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-
-      - name: Finalize
-        uses: y-miyazaki/config/.github/actions/loop-finalize@94515ef13d2d742db4b7ac07b1799b8d7d7cc875 # v1.7.3
-        with:
-          agent_result: ${{ needs.agent.result }}
-          auto_merge: ${{ needs.detect.outputs.level == 'L3' }}
-          base_branch: ${{ needs.detect.outputs.base_branch }}
-          branch: ${{ needs.agent.outputs.branch }}
-          current_sha: ${{ needs.detect.outputs.current_sha }}
-          has_changes: ${{ needs.agent.outputs.has_changes }}
-          pr_body: |
-            ## Summary
-
-            Automated documentation update by `loop-docs-triage` (${{ needs.detect.outputs.level }}).
-
-            - Commits scanned: `${{ needs.detect.outputs.last_sha }}..${{ needs.detect.outputs.current_sha }}`
-            - Verifier verdict: ${{ needs.verify.outputs.verdict || 'SKIPPED' }}
-
-            ---
-            *This PR was created by a loop automation. Review before merging.*
-          pr_title: "docs: automated documentation update (loop-docs-triage)"
-          state_file: ${{ env.STATE_FILE }}
-          token: ${{ github.token }}
-          verdict: ${{ needs.verify.outputs.verdict }}
+                      ---
+                      *This PR was created by a loop automation. Review before merging.*
+                  pr_title: "docs: automated documentation update (loop-docs-triage)"
+                  state_file: ${{ env.STATE_FILE }}
+                  token: ${{ github.token }}
+                  verdict: ${{ needs.verify.outputs.verdict }}

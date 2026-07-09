@@ -2,74 +2,74 @@
 name: on-ci-push-go
 
 on:
-  push:
-    branches:
-      - "main"
-      - "master"
-      - "hotfix/**"
-      - "release/**"
-      - "develop"
-      - "feature/**"
-    paths:
-      - "cmd/**"
-      - "internal/**"
-      - "go.mod"
-      - "go.sum"
-      - ".golangci.yaml"
-      - "trivy.yaml"
-  pull_request:
-    branches:
-      - "main"
-      - "master"
-      - "hotfix/**"
-      - "release/**"
-      - "develop"
-      - "feature/**"
-    paths:
-      - "cmd/**"
-      - "internal/**"
-      - "go.mod"
-      - "go.sum"
-      - ".golangci.yaml"
-      - "trivy.yaml"
+    push:
+        branches:
+            - "main"
+            - "master"
+            - "hotfix/**"
+            - "release/**"
+            - "develop"
+            - "feature/**"
+        paths:
+            - "cmd/**"
+            - "internal/**"
+            - "go.mod"
+            - "go.sum"
+            - ".golangci.yaml"
+            - "trivy.yaml"
+    pull_request:
+        branches:
+            - "main"
+            - "master"
+            - "hotfix/**"
+            - "release/**"
+            - "develop"
+            - "feature/**"
+        paths:
+            - "cmd/**"
+            - "internal/**"
+            - "go.mod"
+            - "go.sum"
+            - ".golangci.yaml"
+            - "trivy.yaml"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
 permissions:
-  contents: read
-  id-token: write
-  pull-requests: write
+    contents: read
+    id-token: write
+    pull-requests: write
 
 jobs:
-  detect-go-version:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    permissions:
-      contents: read
-    outputs:
-      go-version: ${{ steps.read-go-version.outputs.version }}
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+    detect-go-version:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 5
+        permissions:
+            contents: read
+        outputs:
+            go-version: ${{ steps.read-go-version.outputs.version }}
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              with:
+                  persist-credentials: false
+
+            - name: Read go version from go.mod
+              id: read-go-version
+              run: |
+                  GO_VERSION=$(grep -E '^go ' go.mod | awk '{print $2}')
+                  echo "version=$GO_VERSION" >> "$GITHUB_OUTPUT"
+
+    go-ci:
+        needs: detect-go-version
+        uses: y-miyazaki/config/.github/workflows/ci-go.yaml@a07d550c58bd517fd3966fcde86ec396e7c76fb1 # v1.7.3
         with:
-          persist-credentials: false
-
-      - name: Read go version from go.mod
-        id: read-go-version
-        run: |
-          GO_VERSION=$(grep -E '^go ' go.mod | awk '{print $2}')
-          echo "version=$GO_VERSION" >> "$GITHUB_OUTPUT"
-
-  go-ci:
-    needs: detect-go-version
-    uses: y-miyazaki/config/.github/workflows/ci-go.yaml@94515ef13d2d742db4b7ac07b1799b8d7d7cc875 # v1.7.3
-    with:
-      component: "base"
-      go_project_path: "."
-      go_version: ${{ needs.detect-go-version.outputs.go-version }}
-    permissions:
-      contents: read
-      id-token: write
-      pull-requests: write
+            component: "base"
+            go_project_path: "."
+            go_version: ${{ needs.detect-go-version.outputs.go-version }}
+        permissions:
+            contents: read
+            id-token: write
+            pull-requests: write
