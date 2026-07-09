@@ -5,237 +5,237 @@
 name: ci-loop-verifier
 
 on:
-    workflow_call:
-        inputs:
-            base_branch:
-                default: "main"
-                description: "Base branch to diff against (e.g. main, master)"
-                required: false
-                type: string
-            branch:
-                description: "Branch to verify"
-                required: true
-                type: string
-            denylist:
-                default: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
-                description: "Comma-separated glob patterns that must not be modified"
-                required: false
-                type: string
-            engine:
-                description: "AI engine (claude or copilot or codex or cursor)"
-                required: true
-                type: string
-            max_turns:
-                default: "3"
-                description: "Maximum agent conversation turns"
-                required: false
-                type: string
-            model:
-                default: ""
-                description: "Optional model override (recommend stronger model than implementer)"
-                required: false
-                type: string
-            skill_name:
-                description: "Skill that produced the changes (for context)"
-                required: true
-                type: string
-            verifier_criteria:
-                default: ""
-                description: "Domain-specific APPROVE/REJECT criteria (markdown). If empty, uses generic criteria."
-                required: false
-                type: string
-        outputs:
-            verdict:
-                description: "Verification result: APPROVE or REJECT"
-                value: ${{ jobs.verify.outputs.verdict }}
-        secrets:
-            AGENT_TOKEN:
-                description: "Authentication token for the selected engine (ANTHROPIC_API_KEY for claude, COPILOT_GITHUB_TOKEN for copilot, CURSOR_API_KEY for cursor, OPENAI_API_KEY for codex)"
-                required: true
+  workflow_call:
+    inputs:
+      base_branch:
+        default: "main"
+        description: "Base branch to diff against (e.g. main, master)"
+        required: false
+        type: string
+      branch:
+        description: "Branch to verify"
+        required: true
+        type: string
+      denylist:
+        default: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
+        description: "Comma-separated glob patterns that must not be modified"
+        required: false
+        type: string
+      engine:
+        description: "AI engine (claude or copilot or codex or cursor)"
+        required: true
+        type: string
+      max_turns:
+        default: "3"
+        description: "Maximum agent conversation turns"
+        required: false
+        type: string
+      model:
+        default: ""
+        description: "Optional model override (recommend stronger model than implementer)"
+        required: false
+        type: string
+      skill_name:
+        description: "Skill that produced the changes (for context)"
+        required: true
+        type: string
+      verifier_criteria:
+        default: ""
+        description: "Domain-specific APPROVE/REJECT criteria (markdown). If empty, uses generic criteria."
+        required: false
+        type: string
+    outputs:
+      verdict:
+        description: "Verification result: APPROVE or REJECT"
+        value: ${{ jobs.verify.outputs.verdict }}
+    secrets:
+      AGENT_TOKEN:
+        description: "Authentication token for the selected engine (ANTHROPIC_API_KEY for claude, COPILOT_GITHUB_TOKEN for copilot, CURSOR_API_KEY for cursor, OPENAI_API_KEY for codex)"
+        required: true
 
 permissions:
-    contents: read
-    copilot-requests: write
+  contents: read
+  copilot-requests: write
 
 jobs:
-    verify:
-        runs-on: ubuntu-24.04
-        timeout-minutes: 15
-        outputs:
-            verdict: ${{ steps.verdict.outputs.result }}
-        permissions:
-            contents: read
-            copilot-requests: write
-        steps:
-            - name: Checkout Branch
-              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-              with:
-                  fetch-depth: 0
-                  persist-credentials: false
-                  ref: ${{ inputs.branch }}
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      verdict: ${{ steps.verdict.outputs.result }}
+    permissions:
+      contents: read
+      copilot-requests: write
+    steps:
+      - name: Checkout Branch
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ inputs.branch }}
 
-            - name: Generate Diff
-              id: diff
-              shell: bash
-              env:
-                  BASE_BRANCH: ${{ inputs.base_branch }}
-              run: |
-                  set -euo pipefail
-                  DIFF_STAT=$(git diff --stat "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/')
-                  {
-                    echo "stat<<EOF"
-                    echo "${DIFF_STAT}"
-                    echo "EOF"
-                  } >> "$GITHUB_OUTPUT"
+      - name: Generate Diff
+        id: diff
+        shell: bash
+        env:
+          BASE_BRANCH: ${{ inputs.base_branch }}
+        run: |
+          set -euo pipefail
+          DIFF_STAT=$(git diff --stat "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/')
+          {
+            echo "stat<<EOF"
+            echo "${DIFF_STAT}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
-            - name: Check Denylist Violations
-              id: denylist
-              shell: bash
-              env:
-                  BASE_BRANCH: ${{ inputs.base_branch }}
-                  DENYLIST: ${{ inputs.denylist }}
-              run: |
-                  set -euo pipefail
-                  CHANGED_FILES=$(git diff --name-only "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/')
-                  if [[ -z "${CHANGED_FILES}" ]]; then
-                    echo "has_changes=false" >> "$GITHUB_OUTPUT"
-                    echo "has_violations=false" >> "$GITHUB_OUTPUT"
-                    exit 0
-                  fi
-                  echo "has_changes=true" >> "$GITHUB_OUTPUT"
-                  VIOLATIONS=""
-                  IFS=',' read -ra PATTERNS <<< "${DENYLIST}"
-                  for pattern in "${PATTERNS[@]}"; do
-                    pattern=$(echo "${pattern}" | xargs)
-                    while IFS= read -r file; do
-                      # shellcheck disable=SC2053
-                      if [[ "${file}" == ${pattern} ]]; then
-                        VIOLATIONS="${VIOLATIONS}${file} (matches ${pattern})\n"
-                      fi
-                    done <<< "${CHANGED_FILES}"
-                  done
-                  if [[ -n "${VIOLATIONS}" ]]; then
-                    echo "has_violations=true" >> "$GITHUB_OUTPUT"
-                    {
-                      echo "details<<EOF"
-                      printf '%b' "${VIOLATIONS}"
-                      echo "EOF"
-                    } >> "$GITHUB_OUTPUT"
-                  else
-                    echo "has_violations=false" >> "$GITHUB_OUTPUT"
-                  fi
+      - name: Check Denylist Violations
+        id: denylist
+        shell: bash
+        env:
+          BASE_BRANCH: ${{ inputs.base_branch }}
+          DENYLIST: ${{ inputs.denylist }}
+        run: |
+          set -euo pipefail
+          CHANGED_FILES=$(git diff --name-only "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/')
+          if [[ -z "${CHANGED_FILES}" ]]; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "has_violations=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          VIOLATIONS=""
+          IFS=',' read -ra PATTERNS <<< "${DENYLIST}"
+          for pattern in "${PATTERNS[@]}"; do
+            pattern=$(echo "${pattern}" | xargs)
+            while IFS= read -r file; do
+              # shellcheck disable=SC2053
+              if [[ "${file}" == ${pattern} ]]; then
+                VIOLATIONS="${VIOLATIONS}${file} (matches ${pattern})\n"
+              fi
+            done <<< "${CHANGED_FILES}"
+          done
+          if [[ -n "${VIOLATIONS}" ]]; then
+            echo "has_violations=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "details<<EOF"
+              printf '%b' "${VIOLATIONS}"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "has_violations=false" >> "$GITHUB_OUTPUT"
+          fi
 
-            - name: Force REJECT on Denylist Violation
-              if: steps.denylist.outputs.has_violations == 'true'
-              id: reject_denylist
-              shell: bash
-              env:
-                  DETAILS: ${{ steps.denylist.outputs.details }}
-              run: |
-                  set -euo pipefail
-                  echo "::error::Denylist violation detected"
-                  printf '%b' "${DETAILS}"
-                  echo "result=REJECT" >> "$GITHUB_OUTPUT"
+      - name: Force REJECT on Denylist Violation
+        if: steps.denylist.outputs.has_violations == 'true'
+        id: reject_denylist
+        shell: bash
+        env:
+          DETAILS: ${{ steps.denylist.outputs.details }}
+        run: |
+          set -euo pipefail
+          echo "::error::Denylist violation detected"
+          printf '%b' "${DETAILS}"
+          echo "result=REJECT" >> "$GITHUB_OUTPUT"
 
-            - name: Build Verifier Prompt
-              if: steps.denylist.outputs.has_violations != 'true' && steps.denylist.outputs.has_changes == 'true'
-              id: prompt
-              shell: bash
-              env:
-                  DIFF_STAT: ${{ steps.diff.outputs.stat }}
-                  SKILL_NAME: ${{ inputs.skill_name }}
-                  VERIFIER_CRITERIA: ${{ inputs.verifier_criteria }}
-              run: |
-                  set -euo pipefail
-                  # Use caller-provided criteria or generic default
-                  if [[ -z "${VERIFIER_CRITERIA}" ]]; then
-                    CRITERIA="## Criteria for APPROVE
+      - name: Build Verifier Prompt
+        if: steps.denylist.outputs.has_violations != 'true' && steps.denylist.outputs.has_changes == 'true'
+        id: prompt
+        shell: bash
+        env:
+          DIFF_STAT: ${{ steps.diff.outputs.stat }}
+          SKILL_NAME: ${{ inputs.skill_name }}
+          VERIFIER_CRITERIA: ${{ inputs.verifier_criteria }}
+        run: |
+          set -euo pipefail
+          # Use caller-provided criteria or generic default
+          if [[ -z "${VERIFIER_CRITERIA}" ]]; then
+            CRITERIA="## Criteria for APPROVE
 
-                  ALL of the following must be true:
-                  1. Changes are consistent with the codebase
-                  2. No sensitive information is exposed
-                  3. No files outside the expected scope are modified
-                  4. Changes are coherent and non-destructive
+          ALL of the following must be true:
+          1. Changes are consistent with the codebase
+          2. No sensitive information is exposed
+          3. No files outside the expected scope are modified
+          4. Changes are coherent and non-destructive
 
-                  ## Criteria for REJECT
+          ## Criteria for REJECT
 
-                  ANY of the following triggers REJECT:
-                  - Changes outside expected scope
-                  - Factual inaccuracies or hallucinated content
-                  - Sensitive data exposure
-                  - Gratuitous or unrelated changes"
-                  else
-                    CRITERIA="${VERIFIER_CRITERIA}"
-                  fi
+          ANY of the following triggers REJECT:
+          - Changes outside expected scope
+          - Factual inaccuracies or hallucinated content
+          - Sensitive data exposure
+          - Gratuitous or unrelated changes"
+          else
+            CRITERIA="${VERIFIER_CRITERIA}"
+          fi
 
-                  DELIM="PROMPT_$(openssl rand -hex 8)"
-                  {
-                    echo "prompt_content<<${DELIM}"
-                    echo "You are a code verification agent. Your DEFAULT posture is REJECT."
-                    echo "You must find reasons to REJECT, not reasons to APPROVE."
-                    echo ""
-                    echo "## Task"
-                    echo ""
-                    echo "Review the changes produced by the loop implementer agent and determine"
-                    echo "whether they should be merged. Output exactly one word: APPROVE or REJECT."
-                    echo ""
-                    echo "${CRITERIA}"
-                    echo ""
-                    echo "## Input"
-                    echo ""
-                    echo "Skill: ${SKILL_NAME}"
-                    echo ""
-                    echo "### Diff Stat"
-                    echo '```'
-                    echo "${DIFF_STAT}"
-                    echo '```'
-                    echo ""
-                    echo "### Full Diff"
-                    echo "Review the checked-out branch for full context."
-                    echo ""
-                    echo "## Output"
-                    echo "Reply with exactly: APPROVE or REJECT followed by a one-line reason."
-                    echo "${DELIM}"
-                  } >> "$GITHUB_OUTPUT"
+          DELIM="PROMPT_$(openssl rand -hex 8)"
+          {
+            echo "prompt_content<<${DELIM}"
+            echo "You are a code verification agent. Your DEFAULT posture is REJECT."
+            echo "You must find reasons to REJECT, not reasons to APPROVE."
+            echo ""
+            echo "## Task"
+            echo ""
+            echo "Review the changes produced by the loop implementer agent and determine"
+            echo "whether they should be merged. Output exactly one word: APPROVE or REJECT."
+            echo ""
+            echo "${CRITERIA}"
+            echo ""
+            echo "## Input"
+            echo ""
+            echo "Skill: ${SKILL_NAME}"
+            echo ""
+            echo "### Diff Stat"
+            echo '```'
+            echo "${DIFF_STAT}"
+            echo '```'
+            echo ""
+            echo "### Full Diff"
+            echo "Review the checked-out branch for full context."
+            echo ""
+            echo "## Output"
+            echo "Reply with exactly: APPROVE or REJECT followed by a one-line reason."
+            echo "${DELIM}"
+          } >> "$GITHUB_OUTPUT"
 
-            - name: Run Verifier
-              if: steps.denylist.outputs.has_violations != 'true' && steps.denylist.outputs.has_changes == 'true'
-              uses: y-miyazaki/config/.github/actions/loop-agent-run@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
-              with:
-                  agent_token: ${{ secrets.AGENT_TOKEN }}
-                  claude_args: "--output-format json"
-                  engine: ${{ inputs.engine }}
-                  max_turns: ${{ inputs.max_turns }}
-                  model: ${{ inputs.model }}
-                  prompt_text: ${{ steps.prompt.outputs.prompt_content }}
+      - name: Run Verifier
+        if: steps.denylist.outputs.has_violations != 'true' && steps.denylist.outputs.has_changes == 'true'
+        uses: y-miyazaki/config/.github/actions/loop-agent-run@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
+        with:
+          agent_token: ${{ secrets.AGENT_TOKEN }}
+          claude_args: "--output-format json"
+          engine: ${{ inputs.engine }}
+          max_turns: ${{ inputs.max_turns }}
+          model: ${{ inputs.model }}
+          prompt_text: ${{ steps.prompt.outputs.prompt_content }}
 
-            - name: Extract Verdict
-              id: verdict
-              if: always()
-              shell: bash
-              env:
-                  DENYLIST_REJECT: ${{ steps.reject_denylist.outputs.result || '' }}
-                  HAS_CHANGES: ${{ steps.denylist.outputs.has_changes || 'true' }}
-              run: |
-                  set -euo pipefail
-                  if [[ "${DENYLIST_REJECT}" == "REJECT" ]]; then
-                    echo "result=REJECT" >> "$GITHUB_OUTPUT"
-                    exit 0
-                  fi
-                  # No meaningful changes (only .loop/ files) → auto-approve
-                  if [[ "${HAS_CHANGES}" != "true" ]]; then
-                    echo "result=APPROVE" >> "$GITHUB_OUTPUT"
-                    exit 0
-                  fi
-                  # Parse agent output for APPROVE/REJECT
-                  OUTPUT_FILE="${RUNNER_TEMP}/verifier-output.txt"
-                  if [[ -f "${OUTPUT_FILE}" ]]; then
-                    VERDICT=$(grep -oE '^(APPROVE|REJECT)' "${OUTPUT_FILE}" | head -1)
-                  else
-                    VERDICT="REJECT"
-                  fi
-                  # Default to REJECT if unclear
-                  if [[ "${VERDICT}" != "APPROVE" ]]; then
-                    VERDICT="REJECT"
-                  fi
-                  echo "result=${VERDICT}" >> "$GITHUB_OUTPUT"
+      - name: Extract Verdict
+        id: verdict
+        if: always()
+        shell: bash
+        env:
+          DENYLIST_REJECT: ${{ steps.reject_denylist.outputs.result || '' }}
+          HAS_CHANGES: ${{ steps.denylist.outputs.has_changes || 'true' }}
+        run: |
+          set -euo pipefail
+          if [[ "${DENYLIST_REJECT}" == "REJECT" ]]; then
+            echo "result=REJECT" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # No meaningful changes (only .loop/ files) → auto-approve
+          if [[ "${HAS_CHANGES}" != "true" ]]; then
+            echo "result=APPROVE" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Parse agent output for APPROVE/REJECT
+          OUTPUT_FILE="${RUNNER_TEMP}/verifier-output.txt"
+          if [[ -f "${OUTPUT_FILE}" ]]; then
+            VERDICT=$(grep -oE '^(APPROVE|REJECT)' "${OUTPUT_FILE}" | head -1)
+          else
+            VERDICT="REJECT"
+          fi
+          # Default to REJECT if unclear
+          if [[ "${VERDICT}" != "APPROVE" ]]; then
+            VERDICT="REJECT"
+          fi
+          echo "result=${VERDICT}" >> "$GITHUB_OUTPUT"

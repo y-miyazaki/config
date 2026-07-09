@@ -10,132 +10,132 @@
 name: ci-loop-agent
 
 on:
-    workflow_call:
-        inputs:
-            cli_version:
-                default: "latest"
-                description: "CLI agent version (copilot/codex/cursor engine)"
-                required: false
-                type: string
-            engine:
-                description: "AI engine (claude | copilot | codex | cursor)"
-                required: true
-                type: string
-            level:
-                default: "L1"
-                description: "Loop level: L1 (read-only), L2 (edits with branch), or L3 (edits with auto-merge)"
-                required: false
-                type: string
-            max_turns:
-                default: "5"
-                description: "Maximum agent conversation turns"
-                required: false
-                type: string
-            model:
-                default: ""
-                description: "Optional model override"
-                required: false
-                type: string
-            prompt_file:
-                default: ""
-                description: "Path to prompt file (alternative to prompt_text)"
-                required: false
-                type: string
-            prompt_text:
-                default: ""
-                description: "Inline prompt text (used if prompt_file is empty)"
-                required: false
-                type: string
-            skill_name:
-                default: ""
-                description: "Skill name (used for L2 branch naming)"
-                required: false
-                type: string
-        outputs:
-            branch:
-                description: "Branch with changes (L2 only, empty if L1 or no changes)"
-                value: ${{ jobs.agent-l2.outputs.branch || '' }}
-            has_changes:
-                description: "Whether agent produced file changes (L2 only)"
-                value: ${{ jobs.agent-l2.outputs.has_changes || 'false' }}
-        secrets:
-            AGENT_TOKEN:
-                description: "Authentication token for the selected engine (ANTHROPIC_API_KEY for claude, COPILOT_GITHUB_TOKEN for copilot, CURSOR_API_KEY for cursor, OPENAI_API_KEY for codex)"
-                required: true
-            GH_TOKEN_PUSH:
-                description: "GitHub token with push permission (required for L2)"
-                required: false
+  workflow_call:
+    inputs:
+      cli_version:
+        default: "latest"
+        description: "CLI agent version (copilot/codex/cursor engine)"
+        required: false
+        type: string
+      engine:
+        description: "AI engine (claude | copilot | codex | cursor)"
+        required: true
+        type: string
+      level:
+        default: "L1"
+        description: "Loop level: L1 (read-only), L2 (edits with branch), or L3 (edits with auto-merge)"
+        required: false
+        type: string
+      max_turns:
+        default: "5"
+        description: "Maximum agent conversation turns"
+        required: false
+        type: string
+      model:
+        default: ""
+        description: "Optional model override"
+        required: false
+        type: string
+      prompt_file:
+        default: ""
+        description: "Path to prompt file (alternative to prompt_text)"
+        required: false
+        type: string
+      prompt_text:
+        default: ""
+        description: "Inline prompt text (used if prompt_file is empty)"
+        required: false
+        type: string
+      skill_name:
+        default: ""
+        description: "Skill name (used for L2 branch naming)"
+        required: false
+        type: string
+    outputs:
+      branch:
+        description: "Branch with changes (L2 only, empty if L1 or no changes)"
+        value: ${{ jobs.agent-l2.outputs.branch || '' }}
+      has_changes:
+        description: "Whether agent produced file changes (L2 only)"
+        value: ${{ jobs.agent-l2.outputs.has_changes || 'false' }}
+    secrets:
+      AGENT_TOKEN:
+        description: "Authentication token for the selected engine (ANTHROPIC_API_KEY for claude, COPILOT_GITHUB_TOKEN for copilot, CURSOR_API_KEY for cursor, OPENAI_API_KEY for codex)"
+        required: true
+      GH_TOKEN_PUSH:
+        description: "GitHub token with push permission (required for L2)"
+        required: false
 
 permissions:
-    contents: read
-    copilot-requests: write
+  contents: read
+  copilot-requests: write
 
 jobs:
-    # L1 (read-only, report mode)
-    agent-l1:
-        if: inputs.level == 'L1'
-        runs-on: ubuntu-24.04
-        timeout-minutes: 30
-        permissions:
-            contents: read
-            copilot-requests: write
-        steps:
-            - name: Checkout Code
-              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-              with:
-                  fetch-depth: 0
-                  persist-credentials: false
+  # L1 (read-only, report mode)
+  agent-l1:
+    if: inputs.level == 'L1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      copilot-requests: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
-            - name: Run Agent
-              uses: y-miyazaki/config/.github/actions/loop-agent-run@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
-              with:
-                  agent_token: ${{ secrets.AGENT_TOKEN }}
-                  cli_version: ${{ inputs.cli_version }}
-                  engine: ${{ inputs.engine }}
-                  max_turns: ${{ inputs.max_turns }}
-                  model: ${{ inputs.model }}
-                  prompt_text: ${{ inputs.prompt_file != '' && format('/skill {0}', inputs.prompt_file) || inputs.prompt_text }}
+      - name: Run Agent
+        uses: y-miyazaki/config/.github/actions/loop-agent-run@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
+        with:
+          agent_token: ${{ secrets.AGENT_TOKEN }}
+          cli_version: ${{ inputs.cli_version }}
+          engine: ${{ inputs.engine }}
+          max_turns: ${{ inputs.max_turns }}
+          model: ${{ inputs.model }}
+          prompt_text: ${{ inputs.prompt_file != '' && format('/skill {0}', inputs.prompt_file) || inputs.prompt_text }}
 
-    # L2/L3 (edits with branch)
-    agent-l2:
-        if: inputs.level == 'L2' || inputs.level == 'L3'
-        runs-on: ubuntu-24.04
-        timeout-minutes: 30
-        outputs:
-            branch: ${{ steps.worktree.outputs.branch }}
-            has_changes: ${{ steps.push.outputs.has_changes }}
-        permissions:
-            contents: write
-            copilot-requests: write
-        steps:
-            - name: Checkout Code
-              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-              with:
-                  fetch-depth: 0
-                  persist-credentials: false
+  # L2/L3 (edits with branch)
+  agent-l2:
+    if: inputs.level == 'L2' || inputs.level == 'L3'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      branch: ${{ steps.worktree.outputs.branch }}
+      has_changes: ${{ steps.push.outputs.has_changes }}
+    permissions:
+      contents: write
+      copilot-requests: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
-            - name: Setup Worktree
-              id: worktree
-              uses: y-miyazaki/config/.github/actions/loop-worktree-setup@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
-              with:
-                  skill_name: ${{ inputs.skill_name }}
-                  token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
+      - name: Setup Worktree
+        id: worktree
+        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
+        with:
+          skill_name: ${{ inputs.skill_name }}
+          token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
 
-            - name: Run Agent
-              uses: y-miyazaki/config/.github/actions/loop-agent-run@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
-              with:
-                  agent_token: ${{ secrets.AGENT_TOKEN }}
-                  cli_version: ${{ inputs.cli_version }}
-                  engine: ${{ inputs.engine }}
-                  max_turns: ${{ inputs.max_turns }}
-                  model: ${{ inputs.model }}
-                  prompt_text: ${{ inputs.prompt_file != '' && format('/skill {0}', inputs.prompt_file) || inputs.prompt_text }}
-                  working_directory: ${{ steps.worktree.outputs.worktree_path }}
+      - name: Run Agent
+        uses: y-miyazaki/config/.github/actions/loop-agent-run@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
+        with:
+          agent_token: ${{ secrets.AGENT_TOKEN }}
+          cli_version: ${{ inputs.cli_version }}
+          engine: ${{ inputs.engine }}
+          max_turns: ${{ inputs.max_turns }}
+          model: ${{ inputs.model }}
+          prompt_text: ${{ inputs.prompt_file != '' && format('/skill {0}', inputs.prompt_file) || inputs.prompt_text }}
+          working_directory: ${{ steps.worktree.outputs.worktree_path }}
 
-            - name: Push Changes
-              id: push
-              uses: y-miyazaki/config/.github/actions/loop-worktree-push@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
-              with:
-                  branch: ${{ steps.worktree.outputs.branch }}
-                  token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
-                  worktree_path: ${{ steps.worktree.outputs.worktree_path }}
+      - name: Push Changes
+        id: push
+        uses: y-miyazaki/config/.github/actions/loop-worktree-push@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
+        with:
+          branch: ${{ steps.worktree.outputs.branch }}
+          token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
+          worktree_path: ${{ steps.worktree.outputs.worktree_path }}

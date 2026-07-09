@@ -3,148 +3,148 @@
 name: cd-aws-go-registry
 
 on:
-    workflow_call:
-        inputs:
-            component:
-                description: "Logical component name (e.g. base)"
-                required: true
-                type: string
-            docker_context:
-                description: "Docker build context path"
-                required: false
-                type: string
-            dockerfile:
-                default: "Dockerfile"
-                description: "Dockerfile path"
-                required: false
-                type: string
-            ecr_registry:
-                description: "Target ECR registry URL (e.g. 123456789012.dkr.ecr.ap-northeast-1.amazonaws.com). If empty, uses login output."
-                required: false
-                type: string
-            ecr_repository:
-                description: "Target ECR repository name"
-                required: true
-                type: string
-            environment:
-                description: "Target environment (dev, qa, stg, prd, etc.)"
-                required: true
-                type: string
-            go_project_path:
-                description: "Path (relative) to the Go project root (directory containing go.mod). Used as default Docker context."
-                required: true
-                type: string
-            image_tag:
-                description: "Image tag to push"
-                required: false
-                type: string
-            platform:
-                default: "linux/arm64"
-                description: "Docker build platform(s) (e.g. linux/arm64 or linux/amd64,linux/arm64)"
-                required: false
-                type: string
-        secrets:
-            AWS_IAM_ROLE_ARN:
-                required: true
-            AWS_REGION:
-                required: true
+  workflow_call:
+    inputs:
+      component:
+        description: "Logical component name (e.g. base)"
+        required: true
+        type: string
+      docker_context:
+        description: "Docker build context path"
+        required: false
+        type: string
+      dockerfile:
+        default: "Dockerfile"
+        description: "Dockerfile path"
+        required: false
+        type: string
+      ecr_registry:
+        description: "Target ECR registry URL (e.g. 123456789012.dkr.ecr.ap-northeast-1.amazonaws.com). If empty, uses login output."
+        required: false
+        type: string
+      ecr_repository:
+        description: "Target ECR repository name"
+        required: true
+        type: string
+      environment:
+        description: "Target environment (dev, qa, stg, prd, etc.)"
+        required: true
+        type: string
+      go_project_path:
+        description: "Path (relative) to the Go project root (directory containing go.mod). Used as default Docker context."
+        required: true
+        type: string
+      image_tag:
+        description: "Image tag to push"
+        required: false
+        type: string
+      platform:
+        default: "linux/arm64"
+        description: "Docker build platform(s) (e.g. linux/arm64 or linux/amd64,linux/arm64)"
+        required: false
+        type: string
+    secrets:
+      AWS_IAM_ROLE_ARN:
+        required: true
+      AWS_REGION:
+        required: true
 
 permissions:
-    contents: read
-    id-token: write
+  contents: read
+  id-token: write
 
 concurrency:
-    group: go-registry-${{ inputs.environment }}-${{ inputs.component }}
-    cancel-in-progress: false
+  group: go-registry-${{ inputs.environment }}-${{ inputs.component }}
+  cancel-in-progress: false
 
 env:
-    COMPONENT: ${{ inputs.component }}
-    DOCKERFILE: ${{ inputs.dockerfile }}
-    DOCKER_CONTEXT: ${{ inputs.docker_context }}
-    ECR_REGISTRY: ${{ inputs.ecr_registry }}
-    ECR_REPOSITORY: ${{ inputs.ecr_repository }}
-    ENVIRONMENT: ${{ inputs.environment }}
-    GO_PROJECT_PATH: ${{ inputs.go_project_path }}
-    IMAGE_TAG: ${{ inputs.image_tag }}
-    PLATFORM: ${{ inputs.platform }}
+  COMPONENT: ${{ inputs.component }}
+  DOCKERFILE: ${{ inputs.dockerfile }}
+  DOCKER_CONTEXT: ${{ inputs.docker_context }}
+  ECR_REGISTRY: ${{ inputs.ecr_registry }}
+  ECR_REPOSITORY: ${{ inputs.ecr_repository }}
+  ENVIRONMENT: ${{ inputs.environment }}
+  GO_PROJECT_PATH: ${{ inputs.go_project_path }}
+  IMAGE_TAG: ${{ inputs.image_tag }}
+  PLATFORM: ${{ inputs.platform }}
 
 jobs:
-    deploy:
-        runs-on: ubuntu-24.04
-        timeout-minutes: 30
-        environment:
-            name: ${{ inputs.environment }}
-        permissions:
-            contents: read
-            id-token: write
-        steps:
-            - name: Checkout Code
-              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-              with:
-                  persist-credentials: false
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment:
+      name: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
-            - name: Setup AWS Credentials
-              uses: aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b # v6.2.1
-              with:
-                  aws-region: ${{ secrets.AWS_REGION }}
-                  role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
+      - name: Setup AWS Credentials
+        uses: aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b # v6.2.1
+        with:
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
 
-            - name: Setup Amazon ECR
-              id: login-ecr
-              uses: aws-actions/amazon-ecr-login@d539f0932e70871a027e9d5a9d8fc38589180a64 # v2.1.6
+      - name: Setup Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@d539f0932e70871a027e9d5a9d8fc38589180a64 # v2.1.6
 
-            - name: Setup image metadata
-              id: meta
-              env:
-                  ECR_LOGIN_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-              shell: bash
-              run: |
-                  set -euo pipefail
-                  IMAGE_TAG_VAL="${IMAGE_TAG}"
-                  if [ -z "$IMAGE_TAG_VAL" ]; then IMAGE_TAG_VAL="${GITHUB_SHA::12}"; fi
-                  REGISTRY_INPUT="${ECR_REGISTRY}"
-                  if [ -z "$REGISTRY_INPUT" ]; then REGISTRY_INPUT="${ECR_LOGIN_REGISTRY}"; fi
-                  REPOSITORY="${ECR_REPOSITORY}"
-                  DOCKER_CONTEXT_VAL="${DOCKER_CONTEXT}"
-                  if [ -z "$DOCKER_CONTEXT_VAL" ]; then DOCKER_CONTEXT_VAL="${GO_PROJECT_PATH}"; fi
-                  # Write meta outputs in one grouped redirect to avoid multiple >> usage
-                  {
-                    echo "image_tag=$IMAGE_TAG_VAL"
-                    echo "registry=$REGISTRY_INPUT"
-                    echo "repository=$REPOSITORY"
-                    echo "docker_context=$DOCKER_CONTEXT_VAL"
-                    echo "dockerfile_path=${DOCKERFILE}"
-                    echo "platforms=${PLATFORM}"
-                  } >> "$GITHUB_OUTPUT"
+      - name: Setup image metadata
+        id: meta
+        env:
+          ECR_LOGIN_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE_TAG_VAL="${IMAGE_TAG}"
+          if [ -z "$IMAGE_TAG_VAL" ]; then IMAGE_TAG_VAL="${GITHUB_SHA::12}"; fi
+          REGISTRY_INPUT="${ECR_REGISTRY}"
+          if [ -z "$REGISTRY_INPUT" ]; then REGISTRY_INPUT="${ECR_LOGIN_REGISTRY}"; fi
+          REPOSITORY="${ECR_REPOSITORY}"
+          DOCKER_CONTEXT_VAL="${DOCKER_CONTEXT}"
+          if [ -z "$DOCKER_CONTEXT_VAL" ]; then DOCKER_CONTEXT_VAL="${GO_PROJECT_PATH}"; fi
+          # Write meta outputs in one grouped redirect to avoid multiple >> usage
+          {
+            echo "image_tag=$IMAGE_TAG_VAL"
+            echo "registry=$REGISTRY_INPUT"
+            echo "repository=$REPOSITORY"
+            echo "docker_context=$DOCKER_CONTEXT_VAL"
+            echo "dockerfile_path=${DOCKERFILE}"
+            echo "platforms=${PLATFORM}"
+          } >> "$GITHUB_OUTPUT"
 
-            - name: Setup QEMU
-              uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
-              with:
-                  platforms: all
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
+        with:
+          platforms: all
 
-            - name: Setup Docker Buildx
-              uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
 
-            - name: Exec Build and Push Docker image
-              uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
-              with:
-                  context: ${{ steps.meta.outputs.docker_context }}
-                  file: ${{ steps.meta.outputs.dockerfile_path }}
-                  platforms: ${{ steps.meta.outputs.platforms }}
-                  push: true
-                  tags: ${{ steps.meta.outputs.registry }}/${{ steps.meta.outputs.repository }}:${{ steps.meta.outputs.image_tag }}
+      - name: Exec Build and Push Docker image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: ${{ steps.meta.outputs.docker_context }}
+          file: ${{ steps.meta.outputs.dockerfile_path }}
+          platforms: ${{ steps.meta.outputs.platforms }}
+          push: true
+          tags: ${{ steps.meta.outputs.registry }}/${{ steps.meta.outputs.repository }}:${{ steps.meta.outputs.image_tag }}
 
-            - name: Summary
-              if: always()
-              uses: y-miyazaki/config/.github/actions/summary@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
-              with:
-                  artifacts: |
-                      (none)
-                  outputs: |
-                      image: ${{ steps.meta.outputs.registry }}/${{ steps.meta.outputs.repository }}:${{ steps.meta.outputs.image_tag }}
-                  params: |
-                      component: ${{ env.COMPONENT }}
-                      ecr_repository: ${{ env.ECR_REPOSITORY }}
-                      image_tag: ${{ env.IMAGE_TAG }}
-                  status: "${{ job.status }}"
-                  title: "${{ format('Docker Image: {0}/{1}:{2}', steps.meta.outputs.registry, steps.meta.outputs.repository, steps.meta.outputs.image_tag) }}"
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@c4320dd8c8c4d10b6fde9c66a68a9854748052ca # v1.7.3
+        with:
+          artifacts: |
+            (none)
+          outputs: |
+            image: ${{ steps.meta.outputs.registry }}/${{ steps.meta.outputs.repository }}:${{ steps.meta.outputs.image_tag }}
+          params: |
+            component: ${{ env.COMPONENT }}
+            ecr_repository: ${{ env.ECR_REPOSITORY }}
+            image_tag: ${{ env.IMAGE_TAG }}
+          status: "${{ job.status }}"
+          title: "${{ format('Docker Image: {0}/{1}:{2}', steps.meta.outputs.registry, steps.meta.outputs.repository, steps.meta.outputs.image_tag) }}"
