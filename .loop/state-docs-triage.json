@@ -1,0 +1,8 @@
+{
+  "last_sha": "4531917ea75dc79807a04ae7cdc6679294d81b4e",
+  "last_run": "2026-07-09T18:32:30Z",
+  "outcome": "rejected",
+  "consecutive_failures": 1,
+  "last_reject_reason": "No file changes produced",
+  "open_rejections": []
+}
