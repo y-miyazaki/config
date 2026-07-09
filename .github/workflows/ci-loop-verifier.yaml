@@ -200,7 +200,7 @@ jobs:
 
             - name: Run Verifier
               if: steps.denylist.outputs.has_violations != 'true' && steps.denylist.outputs.has_changes == 'true'
-              uses: y-miyazaki/config/.github/actions/loop-agent-run@de385b1d4ffe69d5c0371d85194fb59b485e56ea # v1.7.3
+              uses: y-miyazaki/config/.github/actions/loop-agent-run@b98f8a2f82c5bd363957943847633659cc45f9c0 # v1.7.3
               with:
                   agent_token: ${{ secrets.AGENT_TOKEN }}
                   claude_args: "--output-format json"

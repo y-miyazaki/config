@@ -361,7 +361,7 @@ jobs:
                   echo "overall_status=$OVERALL_STATUS" >> "$GITHUB_OUTPUT"
 
             - name: Summary
-              uses: y-miyazaki/config/.github/actions/summary@de385b1d4ffe69d5c0371d85194fb59b485e56ea # v1.7.3
+              uses: y-miyazaki/config/.github/actions/summary@b98f8a2f82c5bd363957943847633659cc45f9c0 # v1.7.3
               with:
                   outputs: |
                       action: ${{ inputs.action }}
