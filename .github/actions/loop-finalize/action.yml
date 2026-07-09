@@ -37,6 +37,10 @@ inputs:
     default: "chore: automated update (loop)"
     description: "PR title"
     required: false
+  reject_reason:
+    default: ""
+    description: "Verifier rejection reason (recorded in state on REJECT)"
+    required: false
   state_file:
     description: "Path to state JSON file"
     required: true
@@ -140,6 +144,7 @@ runs:
       with:
         base_branch: ${{ inputs.base_branch }}
         outcome: ${{ steps.outcome.outputs.value }}
+        reject_reason: ${{ inputs.reject_reason }}
         sha: ${{ inputs.current_sha }}
         state_file: ${{ inputs.state_file }}
         token: ${{ inputs.token }}

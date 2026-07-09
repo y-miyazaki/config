@@ -2,6 +2,10 @@ name: loop-worktree-setup
 description: "Create an isolated git worktree branch for loop agent modifications."
 
 inputs:
+  branch:
+    default: ""
+    description: "Existing branch to check out (empty = create new branch)"
+    required: false
   branch_prefix:
     default: "loop"
     description: "Branch name prefix (result: <prefix>/<skill>/<date>)"
@@ -28,27 +32,37 @@ runs:
       id: setup
       shell: bash
       env:
+        BRANCH: ${{ inputs.branch }}
         BRANCH_PREFIX: ${{ inputs.branch_prefix }}
         GH_TOKEN: ${{ inputs.token }}
         SKILL_NAME: ${{ inputs.skill_name }}
       run: |
         set -euo pipefail
-        DATE=$(date -u +%Y%m%d-%H%M%S)
-        BRANCH="${BRANCH_PREFIX}/${SKILL_NAME}/${DATE}"
-
-        # Validate constructed branch name
-        if ! [[ "${BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
-          echo "::error::Invalid branch name: ${BRANCH}"
-          exit 1
-        fi
-
-        WORKTREE_PATH="${RUNNER_TEMP}/worktree-${SKILL_NAME}"
 
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 -w0)"
 
-        git worktree add -b "${BRANCH}" "${WORKTREE_PATH}" HEAD
+        WORKTREE_PATH="${RUNNER_TEMP}/worktree-${SKILL_NAME}"
+
+        if [[ -n "${BRANCH}" ]]; then
+          if ! [[ "${BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+            echo "::error::Invalid branch name: ${BRANCH}"
+            exit 1
+          fi
+          git fetch origin "${BRANCH}"
+          git worktree add "${WORKTREE_PATH}" "origin/${BRANCH}"
+        else
+          DATE=$(date -u +%Y%m%d-%H%M%S)
+          BRANCH="${BRANCH_PREFIX}/${SKILL_NAME}/${DATE}"
+
+          if ! [[ "${BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+            echo "::error::Invalid branch name: ${BRANCH}"
+            exit 1
+          fi
+
+          git worktree add -b "${BRANCH}" "${WORKTREE_PATH}" HEAD
+        fi
 
         {
           echo "branch=${BRANCH}"

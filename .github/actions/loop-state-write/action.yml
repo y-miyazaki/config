@@ -13,6 +13,10 @@ inputs:
   outcome:
     description: "Run outcome (no-op|report-only|pr-created|rejected|escalated)"
     required: true
+  reject_reason:
+    default: ""
+    description: "Verifier rejection reason (recorded when outcome is rejected)"
+    required: false
   sha:
     description: "Commit SHA to record in state"
     required: true
@@ -53,17 +57,45 @@ runs:
       shell: bash
       env:
         OUTCOME: ${{ inputs.outcome }}
+        REJECT_REASON: ${{ inputs.reject_reason }}
         SHA: ${{ inputs.sha }}
         STATE_FILE: ${{ inputs.state_file }}
       run: |
         set -euo pipefail
         mkdir -p "$(dirname "${STATE_FILE}")"
-        jq -n \
-          --arg sha "${SHA}" \
-          --arg last_run "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
-          --arg outcome "${OUTCOME}" \
-          '{last_sha: $sha, last_run: $last_run, outcome: $outcome}' \
-          > "${STATE_FILE}"
+        PREV_CONSECUTIVE=0
+        if [[ -f "${STATE_FILE}" ]]; then
+          PREV_CONSECUTIVE=$(jq -r '.consecutive_failures // 0' "${STATE_FILE}" 2>/dev/null || echo "0")
+        fi
+        case "${OUTCOME}" in
+          rejected)
+            CONSECUTIVE=$((PREV_CONSECUTIVE + 1))
+            ;;
+          error|escalated)
+            CONSECUTIVE="${PREV_CONSECUTIVE}"
+            ;;
+          *)
+            CONSECUTIVE=0
+            ;;
+        esac
+        if [[ "${OUTCOME}" == "rejected" && -n "${REJECT_REASON}" ]]; then
+          jq -n \
+            --arg sha "${SHA}" \
+            --arg last_run "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+            --arg outcome "${OUTCOME}" \
+            --arg last_reject_reason "${REJECT_REASON}" \
+            --argjson consecutive_failures "${CONSECUTIVE}" \
+            '{last_sha: $sha, last_run: $last_run, outcome: $outcome, consecutive_failures: $consecutive_failures, last_reject_reason: $last_reject_reason}' \
+            > "${STATE_FILE}"
+        else
+          jq -n \
+            --arg sha "${SHA}" \
+            --arg last_run "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+            --arg outcome "${OUTCOME}" \
+            --argjson consecutive_failures "${CONSECUTIVE}" \
+            '{last_sha: $sha, last_run: $last_run, outcome: $outcome, consecutive_failures: $consecutive_failures}' \
+            > "${STATE_FILE}"
+        fi
 
     - name: Commit and Push
       shell: bash

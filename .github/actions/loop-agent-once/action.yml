@@ -1,0 +1,105 @@
+name: loop-agent-once
+description: "Run a single AI agent session (claude/copilot/codex/cursor). For non-loop one-shot use."
+
+inputs:
+  agent_token:
+    description: "Authentication token for the selected engine (ANTHROPIC_API_KEY for claude, COPILOT_GITHUB_TOKEN for copilot, CURSOR_API_KEY for cursor, OPENAI_API_KEY for codex)"
+    required: true
+  cli_version:
+    default: "latest"
+    description: "CLI package version"
+    required: false
+  engine:
+    description: "AI engine (claude or copilot or codex or cursor)"
+    required: true
+  max_turns:
+    default: "5"
+    description: "Maximum agent conversation turns"
+    required: false
+  model:
+    default: ""
+    description: "Optional model override"
+    required: false
+  output_file:
+    default: ""
+    description: "Optional path to write agent stdout"
+    required: false
+  prompt_text:
+    description: "Prompt text to pass to the agent"
+    required: true
+  working_directory:
+    default: "."
+    description: "Working directory for agent execution"
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Install CLI
+      uses: y-miyazaki/config/.github/actions/loop-install-cli@a07d550c58bd517fd3966fcde86ec396e7c76fb1 # v1.7.3
+      with:
+        cli_version: ${{ inputs.cli_version }}
+        engine: ${{ inputs.engine }}
+
+    - name: Run CLI Agent
+      shell: bash
+      env:
+        AGENT_TOKEN: ${{ inputs.agent_token }}
+        ENGINE: ${{ inputs.engine }}
+        MAX_TURNS: ${{ inputs.max_turns }}
+        MODEL: ${{ inputs.model }}
+        OUTPUT_FILE: ${{ inputs.output_file }}
+        PROMPT: ${{ inputs.prompt_text }}
+        WORKING_DIRECTORY: ${{ inputs.working_directory }}
+      working-directory: ${{ inputs.working_directory }}
+      run: |
+        set -euo pipefail
+        run_agent() {
+          case "${ENGINE}" in
+            claude)
+              export ANTHROPIC_API_KEY="${AGENT_TOKEN}"
+              ARGS=(-p "${PROMPT}" --bare)
+              if [[ -n "${MAX_TURNS}" ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
+              if [[ -n "${MODEL}" ]]; then ARGS+=(--model "${MODEL}"); fi
+              npx claude "${ARGS[@]}"
+              ;;
+            copilot)
+              export COPILOT_GITHUB_TOKEN="${AGENT_TOKEN}"
+              ARGS=(-p "${PROMPT}" --no-ask-user)
+              if [[ -n "${MAX_TURNS}" ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
+              if [[ -n "${MODEL}" ]]; then ARGS+=(--model "${MODEL}"); fi
+              npx copilot "${ARGS[@]}"
+              ;;
+            codex)
+              export OPENAI_API_KEY="${AGENT_TOKEN}"
+              ARGS=(--prompt "${PROMPT}" --auto-approve)
+              if [[ -n "${MODEL}" ]]; then ARGS+=(--model "${MODEL}"); fi
+              npx codex "${ARGS[@]}"
+              ;;
+            cursor)
+              export CURSOR_API_KEY="${AGENT_TOKEN}"
+              ARGS=(-p "${PROMPT}" --trust)
+              if [[ "${WORKING_DIRECTORY}" != "." ]]; then
+                ARGS+=(--force)
+              fi
+              if [[ -n "${MODEL}" ]]; then ARGS+=(--model "${MODEL}"); fi
+              if command -v agent >/dev/null 2>&1; then
+                agent "${ARGS[@]}"
+              elif command -v cursor-agent >/dev/null 2>&1; then
+                cursor-agent "${ARGS[@]}"
+              else
+                echo "::error::Cursor CLI (agent) not found in PATH"
+                exit 1
+              fi
+              ;;
+            *)
+              echo "::error::Unsupported engine: ${ENGINE}"
+              exit 1
+              ;;
+          esac
+        }
+        if [[ -n "${OUTPUT_FILE}" ]]; then
+          run_agent 2>&1 | tee "${OUTPUT_FILE}"
+        else
+          run_agent
+        fi

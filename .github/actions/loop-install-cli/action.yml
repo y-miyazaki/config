@@ -1,0 +1,68 @@
+name: loop-install-cli
+description: "Install an AI agent CLI (claude/copilot/codex/cursor) once for subsequent loop actions."
+
+inputs:
+  cli_version:
+    default: "latest"
+    description: "CLI package version"
+    required: false
+  engine:
+    description: "AI engine (claude | copilot | codex | cursor)"
+    required: true
+
+outputs:
+  package:
+    description: "Resolved npm package name (empty for cursor)"
+    value: ${{ steps.install.outputs.package }}
+  version:
+    description: "Resolved CLI version"
+    value: ${{ steps.install.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      if: inputs.engine == 'copilot' || inputs.engine == 'codex' || inputs.engine == 'claude'
+      uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+
+    - name: Install CLI
+      id: install
+      shell: bash
+      env:
+        CLI_VERSION: ${{ inputs.cli_version }}
+        ENGINE: ${{ inputs.engine }}
+      run: |
+        set -euo pipefail
+        case "${ENGINE}" in
+          claude) PKG="@anthropic-ai/claude-code" ;;
+          copilot) PKG="@github/copilot" ;;
+          codex) PKG="@openai/codex" ;;
+          cursor) PKG="cursor" ;;
+          *)
+            echo "::error::Unsupported engine: ${ENGINE}"
+            exit 1
+            ;;
+        esac
+        if [[ "${ENGINE}" == "cursor" ]]; then
+          RESOLVED="${CLI_VERSION}"
+        elif [[ "${CLI_VERSION}" == "latest" ]]; then
+          RESOLVED=$(npm view "${PKG}" version)
+        else
+          RESOLVED="${CLI_VERSION}"
+        fi
+        {
+          echo "package=${PKG}"
+          echo "version=${RESOLVED}"
+        } >> "${GITHUB_OUTPUT}"
+        if [[ "${ENGINE}" == "cursor" ]]; then
+          curl https://cursor.com/install -fsS | bash
+          for bindir in "${HOME}/.local/bin" "${HOME}/.cursor/bin"; do
+            if [[ -x "${bindir}/agent" ]] || [[ -x "${bindir}/cursor-agent" ]]; then
+              echo "${bindir}" >> "${GITHUB_PATH}"
+              exit 0
+            fi
+          done
+          echo "::error::Cursor CLI not found after install"
+          exit 1
+        fi
+        npm install "${PKG}@${RESOLVED}" --no-save

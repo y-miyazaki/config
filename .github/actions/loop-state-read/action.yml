@@ -7,6 +7,9 @@ inputs:
     required: true
 
 outputs:
+  consecutive_failures:
+    description: "Consecutive rejected outcomes from state file"
+    value: ${{ steps.read.outputs.consecutive_failures }}
   current_sha:
     description: "Current HEAD commit SHA"
     value: ${{ steps.read.outputs.current_sha }}
@@ -25,14 +28,20 @@ runs:
       run: |
         set -euo pipefail
         LAST_SHA=""
+        CONSECUTIVE_FAILURES="0"
         if [[ -f "${STATE_FILE}" ]]; then
           LAST_SHA=$(jq -r '.last_sha // empty' "${STATE_FILE}" 2>/dev/null || true)
+          CONSECUTIVE_FAILURES=$(jq -r '.consecutive_failures // 0' "${STATE_FILE}" 2>/dev/null || echo "0")
+        fi
+        if [[ -z "${CONSECUTIVE_FAILURES}" ]]; then
+          CONSECUTIVE_FAILURES="0"
         fi
         if [[ -z "${LAST_SHA}" ]]; then
           # Fallback: use root commit or HEAD~10, whichever is reachable
           LAST_SHA=$(git rev-parse --verify HEAD~10 2>/dev/null || git rev-list --max-parents=0 HEAD | head -1)
         fi
         {
+          echo "consecutive_failures=${CONSECUTIVE_FAILURES}"
           echo "last_sha=${LAST_SHA}"
           echo "current_sha=$(git rev-parse HEAD)"
         } >> "$GITHUB_OUTPUT"
