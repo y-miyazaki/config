@@ -6,174 +6,174 @@
 name: ci-loop-agent
 
 on:
-  workflow_call:
-    inputs:
-      agent_implementer_max_turns:
-        default: "5"
-        description: "Maximum implementer agent turns per loop attempt"
-        required: false
-        type: string
-      agent_implementer_model:
-        default: ""
-        description: "Implementer model override"
-        required: false
-        type: string
-      agent_loop_max_attempts:
-        default: "3"
-        description: "Maximum Agent→Verify loop attempts (L2/L3)"
-        required: false
-        type: string
-      agent_verifier_criteria:
-        default: ""
-        description: "Domain-specific APPROVE/REJECT criteria (L2/L3)"
-        required: false
-        type: string
-      agent_verifier_max_turns:
-        default: "3"
-        description: "Maximum verifier agent turns (L2/L3)"
-        required: false
-        type: string
-      agent_verifier_model:
-        default: ""
-        description: "Verifier model override (L2/L3)"
-        required: false
-        type: string
-      base_branch:
-        default: "main"
-        description: "Base branch for verify diff (L2/L3)"
-        required: false
-        type: string
-      cli_version:
-        default: "latest"
-        description: "CLI agent version"
-        required: false
-        type: string
-      denylist:
-        default: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
-        description: "Comma-separated path denylist for verifier (L2/L3)"
-        required: false
-        type: string
-      engine:
-        description: "AI engine (claude | copilot | codex | cursor)"
-        required: true
-        type: string
-      level:
-        default: "L1"
-        description: "Loop level: L1 (read-only), L2 (edits with branch), or L3 (edits with auto-merge)"
-        required: false
-        type: string
-      prompt_file:
-        default: ""
-        description: "Path to prompt file (alternative to prompt_text)"
-        required: false
-        type: string
-      prompt_text:
-        default: ""
-        description: "Inline prompt text (used if prompt_file is empty)"
-        required: false
-        type: string
-      skill_name:
-        default: ""
-        description: "Skill name (used for L2 branch naming)"
-        required: false
-        type: string
-    outputs:
-      attempts:
-        description: "Number of Agent→Verify attempts (L2/L3)"
-        value: ${{ jobs.agent-l2.outputs.attempts || '0' }}
-      branch:
-        description: "Branch with changes (L2 only, empty if L1 or no changes)"
-        value: ${{ jobs.agent-l2.outputs.branch || '' }}
-      has_changes:
-        description: "Whether agent produced file changes (L2 only)"
-        value: ${{ jobs.agent-l2.outputs.has_changes || 'false' }}
-      reason:
-        description: "Final verifier reason (L2/L3)"
-        value: ${{ jobs.agent-l2.outputs.reason || '' }}
-      verdict:
-        description: "Final verifier verdict APPROVE/REJECT (L2/L3)"
-        value: ${{ jobs.agent-l2.outputs.verdict || '' }}
-    secrets:
-      AGENT_TOKEN:
-        description: "Authentication token for the selected engine"
-        required: true
-      GH_TOKEN_PUSH:
-        description: "GitHub token with push permission (required for L2)"
-        required: false
+    workflow_call:
+        inputs:
+            agent_implementer_max_turns:
+                default: "5"
+                description: "Maximum implementer agent turns per loop attempt"
+                required: false
+                type: string
+            agent_implementer_model:
+                default: ""
+                description: "Implementer model override"
+                required: false
+                type: string
+            agent_loop_max_attempts:
+                default: "3"
+                description: "Maximum Agent→Verify loop attempts (L2/L3)"
+                required: false
+                type: string
+            agent_verifier_criteria:
+                default: ""
+                description: "Domain-specific APPROVE/REJECT criteria (L2/L3)"
+                required: false
+                type: string
+            agent_verifier_max_turns:
+                default: "3"
+                description: "Maximum verifier agent turns (L2/L3)"
+                required: false
+                type: string
+            agent_verifier_model:
+                default: ""
+                description: "Verifier model override (L2/L3)"
+                required: false
+                type: string
+            base_branch:
+                default: "main"
+                description: "Base branch for verify diff (L2/L3)"
+                required: false
+                type: string
+            cli_version:
+                default: "latest"
+                description: "CLI agent version"
+                required: false
+                type: string
+            denylist:
+                default: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
+                description: "Comma-separated path denylist for verifier (L2/L3)"
+                required: false
+                type: string
+            engine:
+                description: "AI engine (claude | copilot | codex | cursor)"
+                required: true
+                type: string
+            level:
+                default: "L1"
+                description: "Loop level: L1 (read-only), L2 (edits with branch), or L3 (edits with auto-merge)"
+                required: false
+                type: string
+            prompt_file:
+                default: ""
+                description: "Path to prompt file (alternative to prompt_text)"
+                required: false
+                type: string
+            prompt_text:
+                default: ""
+                description: "Inline prompt text (used if prompt_file is empty)"
+                required: false
+                type: string
+            skill_name:
+                default: ""
+                description: "Skill name (used for L2 branch naming)"
+                required: false
+                type: string
+        outputs:
+            attempts:
+                description: "Number of Agent→Verify attempts (L2/L3)"
+                value: ${{ jobs.agent-l2.outputs.attempts || '0' }}
+            branch:
+                description: "Branch with changes (L2 only, empty if L1 or no changes)"
+                value: ${{ jobs.agent-l2.outputs.branch || '' }}
+            has_changes:
+                description: "Whether agent produced file changes (L2 only)"
+                value: ${{ jobs.agent-l2.outputs.has_changes || 'false' }}
+            reason:
+                description: "Final verifier reason (L2/L3)"
+                value: ${{ jobs.agent-l2.outputs.reason || '' }}
+            verdict:
+                description: "Final verifier verdict APPROVE/REJECT (L2/L3)"
+                value: ${{ jobs.agent-l2.outputs.verdict || '' }}
+        secrets:
+            AGENT_TOKEN:
+                description: "Authentication token for the selected engine"
+                required: true
+            GH_TOKEN_PUSH:
+                description: "GitHub token with push permission (required for L2)"
+                required: false
 
 permissions:
-  contents: read
-  copilot-requests: write
+    contents: read
+    copilot-requests: write
 
 jobs:
-  agent-l1:
-    if: inputs.level == 'L1'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
-    permissions:
-      contents: read
-      copilot-requests: write
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          fetch-depth: 0
-          persist-credentials: false
+    agent-l1:
+        if: inputs.level == 'L1'
+        runs-on: ubuntu-24.04
+        timeout-minutes: 30
+        permissions:
+            contents: read
+            copilot-requests: write
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              with:
+                  fetch-depth: 0
+                  persist-credentials: false
 
-      - name: Run Agent Once
-        uses: y-miyazaki/config/.github/actions/loop-agent-once@a07d550c58bd517fd3966fcde86ec396e7c76fb1 # v1.7.3
-        with:
-          agent_token: ${{ secrets.AGENT_TOKEN }}
-          cli_version: ${{ inputs.cli_version }}
-          engine: ${{ inputs.engine }}
-          max_turns: ${{ inputs.agent_implementer_max_turns }}
-          model: ${{ inputs.agent_implementer_model }}
-          prompt_text: ${{ inputs.prompt_file != '' && format('/skill {0}', inputs.prompt_file) || inputs.prompt_text }}
+            - name: Run Agent Once
+              uses: y-miyazaki/config/.github/actions/loop-agent-once@2f6b2763e61567e4a57e42d8bed8e16f1b5b39fe # v1.7.3
+              with:
+                  agent_token: ${{ secrets.AGENT_TOKEN }}
+                  cli_version: ${{ inputs.cli_version }}
+                  engine: ${{ inputs.engine }}
+                  max_turns: ${{ inputs.agent_implementer_max_turns }}
+                  model: ${{ inputs.agent_implementer_model }}
+                  prompt_text: ${{ inputs.prompt_file != '' && format('/skill {0}', inputs.prompt_file) || inputs.prompt_text }}
 
-  agent-l2:
-    if: inputs.level == 'L2' || inputs.level == 'L3'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 90
-    outputs:
-      attempts: ${{ steps.execute.outputs.attempts }}
-      branch: ${{ steps.worktree.outputs.branch }}
-      has_changes: ${{ steps.execute.outputs.has_changes }}
-      reason: ${{ steps.execute.outputs.reason }}
-      verdict: ${{ steps.execute.outputs.verdict }}
-    permissions:
-      contents: write
-      copilot-requests: write
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          fetch-depth: 0
-          persist-credentials: false
+    agent-l2:
+        if: inputs.level == 'L2' || inputs.level == 'L3'
+        runs-on: ubuntu-24.04
+        timeout-minutes: 90
+        outputs:
+            attempts: ${{ steps.execute.outputs.attempts }}
+            branch: ${{ steps.worktree.outputs.branch }}
+            has_changes: ${{ steps.execute.outputs.has_changes }}
+            reason: ${{ steps.execute.outputs.reason }}
+            verdict: ${{ steps.execute.outputs.verdict }}
+        permissions:
+            contents: write
+            copilot-requests: write
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              with:
+                  fetch-depth: 0
+                  persist-credentials: false
 
-      - name: Setup Worktree
-        id: worktree
-        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@a07d550c58bd517fd3966fcde86ec396e7c76fb1 # v1.7.3
-        with:
-          skill_name: ${{ inputs.skill_name }}
-          token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
+            - name: Setup Worktree
+              id: worktree
+              uses: y-miyazaki/config/.github/actions/loop-worktree-setup@2f6b2763e61567e4a57e42d8bed8e16f1b5b39fe # v1.7.3
+              with:
+                  skill_name: ${{ inputs.skill_name }}
+                  token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
 
-      - name: Execute Bounded Loop
-        id: execute
-        uses: y-miyazaki/config/.github/actions/loop-execute@a07d550c58bd517fd3966fcde86ec396e7c76fb1 # v1.7.3
-        with:
-          agent_implementer_max_turns: ${{ inputs.agent_implementer_max_turns }}
-          agent_implementer_model: ${{ inputs.agent_implementer_model }}
-          agent_loop_max_attempts: ${{ inputs.agent_loop_max_attempts }}
-          agent_token: ${{ secrets.AGENT_TOKEN }}
-          agent_verifier_criteria: ${{ inputs.agent_verifier_criteria }}
-          agent_verifier_max_turns: ${{ inputs.agent_verifier_max_turns }}
-          agent_verifier_model: ${{ inputs.agent_verifier_model }}
-          base_branch: ${{ inputs.base_branch }}
-          branch: ${{ steps.worktree.outputs.branch }}
-          cli_version: ${{ inputs.cli_version }}
-          denylist: ${{ inputs.denylist }}
-          engine: ${{ inputs.engine }}
-          prompt_text: ${{ inputs.prompt_file != '' && format('/skill {0}', inputs.prompt_file) || inputs.prompt_text }}
-          skill_name: ${{ inputs.skill_name }}
-          token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
-          worktree_path: ${{ steps.worktree.outputs.worktree_path }}
+            - name: Execute Bounded Loop
+              id: execute
+              uses: y-miyazaki/config/.github/actions/loop-execute@2f6b2763e61567e4a57e42d8bed8e16f1b5b39fe # v1.7.3
+              with:
+                  agent_implementer_max_turns: ${{ inputs.agent_implementer_max_turns }}
+                  agent_implementer_model: ${{ inputs.agent_implementer_model }}
+                  agent_loop_max_attempts: ${{ inputs.agent_loop_max_attempts }}
+                  agent_token: ${{ secrets.AGENT_TOKEN }}
+                  agent_verifier_criteria: ${{ inputs.agent_verifier_criteria }}
+                  agent_verifier_max_turns: ${{ inputs.agent_verifier_max_turns }}
+                  agent_verifier_model: ${{ inputs.agent_verifier_model }}
+                  base_branch: ${{ inputs.base_branch }}
+                  branch: ${{ steps.worktree.outputs.branch }}
+                  cli_version: ${{ inputs.cli_version }}
+                  denylist: ${{ inputs.denylist }}
+                  engine: ${{ inputs.engine }}
+                  prompt_text: ${{ inputs.prompt_file != '' && format('/skill {0}', inputs.prompt_file) || inputs.prompt_text }}
+                  skill_name: ${{ inputs.skill_name }}
+                  token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
+                  worktree_path: ${{ steps.worktree.outputs.worktree_path }}
