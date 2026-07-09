@@ -32,27 +32,26 @@ All must be true. Violation of any item is a blocking issue.
 
 #### Agent (Execute)
 
-- [ ] Outputs `branch` (string) and `has_changes` (bool)
+- [ ] L2/L3 outputs `branch`, `has_changes`, `verdict`, `reason`, `attempts`, and `open_rejections`
 - [ ] Operates on an isolated branch only (never default branch)
 - [ ] Respects Skill's allowed paths
 - [ ] Does not touch files on denylist
-- [ ] Uses reusable workflow `ci-loop-agent.yaml`
+- [ ] Uses reusable workflow `ci-loop-agent.yaml` (`loop-agent-once` at L1; `loop-execute` at L2/L3)
 
 #### Verify
 
-- [ ] Outputs `verdict` (APPROVE/REJECT) and `reason`
-- [ ] Read-only — does not modify repository
-- [ ] Runs as a separate agent session from Agent phase
+- [ ] Runs inside `loop-execute` as a separate agent session from the implementer (not a separate workflow job)
+- [ ] Outputs `verdict` (APPROVE/REJECT) and `reason`; REJECT includes structured `files` / `issue` / `fix` when possible
+- [ ] Read-only — verifier session does not modify the repository
 - [ ] Evaluates semantic quality only (factual accuracy, relevance, no hallucination)
 - [ ] Does not evaluate lint/CI concerns (that is CI's job)
 - [ ] Uses a model equal to or more powerful than the Agent model
-- [ ] Denylist is passed and enforced
-- [ ] Uses reusable workflow `ci-loop-verifier.yaml`
+- [ ] Denylist (and allowlist when set) is passed and enforced by `loop-execute`
 
 #### Finalize
 
-- [ ] Creates PR on APPROVE, deletes branch on REJECT
-- [ ] Updates state file with outcome, SHA, and reject reason (if applicable)
+- [ ] Creates PR on APPROVE with changes, deletes branch on REJECT
+- [ ] Updates state file with outcome, SHA, reject reason, and `open_rejections` (if applicable)
 - [ ] Does not perform notifications or trigger downstream workflows
 - [ ] Runs with `if: always()` condition (with appropriate guards)
 - [ ] Uses `loop-finalize` action
@@ -79,6 +78,8 @@ All must be true. Violation of any item is a blocking issue.
 - [ ] Only detect-phase failures or cancellations leave SHA unchanged
 - [ ] State records `consecutive_failures` count
 - [ ] State records `last_reject_reason` on REJECT
+- [ ] State records `open_rejections` on REJECT (cleared on non-reject outcomes)
+- [ ] Detect injects prior `open_rejections` into the implementer prompt when present
 - [ ] Loop pauses (skip=true) after 3+ consecutive failures
 
 ---

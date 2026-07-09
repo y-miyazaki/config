@@ -91,17 +91,14 @@ For a list of Actions and Reusable Workflows, see [Specification](../reference/s
 ```text
 cron → on-loop-docs-triage.yaml
   detect job:
-    → loop-state-read action              # retrieve previous SHA
+    → loop-state-read action              # retrieve previous SHA + open_rejections
     → detect_changes.sh (inline)          # detect docs impact (caller-specific)
-    → loop-prompt-generate action         # assemble prompt
-  agent job:
-    → ci-loop-agent.yaml (reusable)       # Agent execution
-      → loop-agent-run action             # unified execution across all engines
-      (CLI type: worktree-setup → agent → worktree-push)
-  verify job:
-    → ci-loop-verifier.yaml (reusable)    # Maker-Checker separation
-      → denylist check                    # path violation = immediate REJECT
-      → loop-agent-run action             # verifier agent execution
+    → loop-prompt-generate action         # assemble prompt (may inject prior open_rejections)
+  execute job:
+    → ci-loop-agent.yaml (reusable)       # L1: loop-agent-once; L2/L3: worktree + loop-execute
+      → loop-worktree-setup               # isolated branch (L2/L3)
+      → loop-execute                      # bounded Agent→Verify loop (separate verifier session)
+      → outputs: branch, has_changes, verdict, reason, attempts, open_rejections
   finalize job:
     → loop-finalize action                # create PR (+ auto-merge at L3) or delete branch + update state
 ```
@@ -122,37 +119,25 @@ flowchart TD
         D3 -->|false| D4[loop-prompt-generate action]
     end
 
-    %% Agent Job
-    D4 --> agent
-    subgraph agent["agent job (ci-loop-agent L2)"]
+    %% Execute Job (ci-loop-agent L2/L3)
+    D4 --> execute
+    subgraph execute["execute job (ci-loop-agent L2/L3)"]
         direction TB
-        A1[loop-worktree-setup action] --> A2[Agent execution<br/>loop-docs-triage skill]
-        A2 --> A3[loop-worktree-push action]
-        A3 --> A4{has_changes?}
-    end
-
-    %% Verify Job
-    A4 -->|true| verify
-    A4 -->|false| finalize_no
-    subgraph verify["verify job (ci-loop-verifier)"]
-        direction TB
-        V1[Denylist check] --> V2{violation?}
-        V2 -->|yes| V_REJECT([REJECT])
-        V2 -->|no| V3[Verifier Agent execution<br/>separate session]
-        V3 --> V4{verdict}
+        A1[loop-worktree-setup] --> A2[loop-execute<br/>Agent→Verify bounded loop]
+        A2 --> A3{verdict / has_changes}
     end
 
     %% Finalize Job
-    V4 -->|APPROVE| finalize_approve
-    V4 -->|REJECT| finalize_reject
-    V_REJECT --> finalize_reject
+    A3 -->|APPROVE + changes| finalize_approve
+    A3 -->|REJECT| finalize_reject
+    A3 -->|no changes + APPROVE| finalize_no
 
     subgraph finalize["finalize job"]
         direction TB
-        finalize_approve[loop-finalize<br/>create PR] --> F_AUTO{L3?}
+        finalize_approve[loop-finalize<br/>state on agent branch + create PR] --> F_AUTO{L3?}
         F_AUTO -->|yes| F_MERGE[enable auto-merge] --> F_STATE[state: pr-created]
         F_AUTO -->|no| F_STATE
-        finalize_reject[loop-finalize<br/>delete branch] --> F_STATE2[state: rejected]
+        finalize_reject[loop-finalize<br/>delete branch + state: rejected]
         finalize_no[loop-finalize<br/>state: no-changes]
     end
 ```
@@ -169,25 +154,25 @@ graph LR
 
     %% Reusable Workflows
     subgraph reusable["Reusable Workflows"]
-        RW1[ci-loop-agent.yaml<br/>L1/L2]
-        RW2[ci-loop-verifier.yaml<br/>Maker-Checker]
+        RW1[ci-loop-agent.yaml<br/>L1 / L2 / L3]
     end
 
     %% Engine Strategies
     subgraph engines["Engine Types"]
-        E1[Action-managed<br/>claude-code-action<br/>branch built-in]
-        E2[CLI type<br/>copilot / codex<br/>worktree isolation]
+        E1[CLI engines<br/>claude / copilot / codex / cursor]
     end
 
     %% Composite Actions
     subgraph actions["Composite Actions"]
-        CA1[loop-agent-run]
-        CA2[loop-finalize]
-        CA3[loop-prompt-generate]
-        CA4[loop-state-read]
-        CA5[loop-state-write]
-        CA6[loop-worktree-setup<br/>CLI type only]
-        CA7[loop-worktree-push<br/>CLI type only]
+        CA1[loop-agent-once<br/>L1]
+        CA2[loop-execute<br/>L2/L3 Agent→Verify]
+        CA3[loop-finalize]
+        CA4[loop-prompt-generate]
+        CA5[loop-state-read]
+        CA6[loop-state-write]
+        CA7[loop-worktree-setup]
+        CA8[loop-worktree-push]
+        CA9[loop-install-cli]
     end
 
     %% Skills
@@ -202,20 +187,20 @@ graph LR
 
     %% Relationships
     CW1 --> RW1
-    CW1 --> RW2
-    CW1 --> CA2
     CW1 --> CA3
     CW1 --> CA4
+    CW1 --> CA5
     RW1 --> E1
-    RW1 --> E2
     RW1 --> CA1
-    RW2 --> CA1
-    E2 --> CA6
-    E2 --> CA7
+    RW1 --> CA2
+    RW1 --> CA7
+    CA2 --> CA8
+    CA2 --> CA9
+    CA1 --> CA9
     RW1 --> SK1
-    CA2 --> CA5
-    CA4 --> ST1
+    CA3 --> CA6
     CA5 --> ST1
+    CA6 --> ST1
 ```
 
 ## STATE Files
