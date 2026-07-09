@@ -139,7 +139,7 @@ jobs:
 
             - name: Read Loop State
               id: state
-              uses: y-miyazaki/config/.github/actions/loop-state-read@4531917ea75dc79807a04ae7cdc6679294d81b4e # v1.7.7
+              uses: y-miyazaki/config/.github/actions/loop-state-read@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
               with:
                   state_file: ${{ env.STATE_FILE }}
 
@@ -174,7 +174,7 @@ jobs:
             - name: Generate Prompt
               if: steps.changes.outputs.skip == 'false'
               id: prompt
-              uses: y-miyazaki/config/.github/actions/loop-prompt-generate@4531917ea75dc79807a04ae7cdc6679294d81b4e # v1.7.7
+              uses: y-miyazaki/config/.github/actions/loop-prompt-generate@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
               with:
                   context: |
                       Last SHA: ${{ steps.state.outputs.last_sha }}
@@ -196,7 +196,7 @@ jobs:
     execute:
         needs: detect
         if: needs.detect.outputs.skip == 'false'
-        uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@4531917ea75dc79807a04ae7cdc6679294d81b4e # v1.7.7
+        uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
         permissions:
             contents: write
             copilot-requests: write
@@ -240,7 +240,7 @@ jobs:
                   persist-credentials: false
 
             - name: Finalize
-              uses: y-miyazaki/config/.github/actions/loop-finalize@4531917ea75dc79807a04ae7cdc6679294d81b4e # v1.7.7
+              uses: y-miyazaki/config/.github/actions/loop-finalize@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
               with:
                   agent_result: ${{ needs.execute.result }}
                   auto_merge: ${{ needs.detect.outputs.level == 'L3' }}
