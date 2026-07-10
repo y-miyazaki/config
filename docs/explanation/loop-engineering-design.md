@@ -98,9 +98,9 @@ cron → on-loop-<name>.yaml
     → ci-loop-agent.yaml (reusable)       # L1: loop-agent-once; L2/L3: worktree + loop-execute
       → loop-worktree-setup               # isolated branch (L2/L3)
       → loop-execute                      # bounded Agent→Verify loop + push/cleanup (L2/L3)
-      → outputs: branch, has_changes, verdict, reason, attempts, open_rejections
+      → outputs: branch, has_changes, verdict, reason, attempts, open_rejections, usage_json
   finalize job:
-    → loop-finalize action                # create PR (+ auto-merge at L3) or delete branch + update state
+    → loop-finalize action                # create PR (+ auto-merge at L3) or delete branch + update state + loop-run-log
 ```
 
 ### Workflow Architecture Diagram
@@ -173,6 +173,7 @@ graph LR
         CA7[loop-state-write]
         CA8[loop-worktree-setup]
         CA9[loop-install-cli]
+        CA10[loop-run-log]
     end
 
     %% Skills
@@ -183,6 +184,8 @@ graph LR
     %% State
     subgraph state["State"]
         ST1[.loop/state-docs-triage.json]
+        ST2[.loop/loop-run-log.md]
+        ST3[.loop/loop-budget.json]
     end
 
     %% Relationships
@@ -192,6 +195,8 @@ graph LR
     CA0 --> CA4
     CA0 --> CA5
     CA0 --> CA6
+    CA0 --> ST2
+    CA0 --> ST3
     RW1 --> E1
     RW1 --> CA1
     RW1 --> CA2
@@ -200,23 +205,29 @@ graph LR
     CA1 --> CA9
     RW1 --> SK1
     CA3 --> CA7
+    CA3 --> CA10
     CA6 --> ST1
     CA7 --> ST1
+    CA10 --> ST2
 ```
 
 ## STATE Files
 
-State files are maintained individually per loop (multi-loop coordination principle). JSON format.
+State and observability files under `.loop/` (multi-loop coordination principle). Per-loop state is JSON; the shared run log is JSONL in a markdown file.
 
 ```text
 .loop/
   state-docs-triage.json    ← owned by docs-loop
   state-ci-sweeper.json     ← future: owned by ci-sweeper-loop
   state-changelog.json      ← future: owned by changelog-loop
+  loop-budget.json          ← per-loop daily run/token caps (read by loop-detect)
+  loop-run-log.md           ← shared JSONL run history (append via loop-run-log; 30-day prune)
   .gitkeep
 ```
 
 - State read/write is handled by `loop-state-read` / `loop-state-write` actions
+- `loop-finalize` invokes `loop-run-log` to append outcome, attempts, verdict, and token usage
+- `loop-detect` aggregates today's entries from `loop-run-log.md` against `loop-budget.json` (or `budget_max_*` inputs) and may set `skip_reason=budget`
 - `.gitattributes` is configured with `merge=ours` to prevent merge conflicts
 - On first run, `loop-state-read` returns a default value (HEAD~10) even if the state file does not exist
 
@@ -224,8 +235,8 @@ State files are maintained individually per loop (multi-loop coordination princi
 
 | Requirement | Approach | Status |
 |---|---|---|
-| loop-budget skill | Download from npm/GitHub Release with caching (repository-independent) | Future |
-| loop-verifier skill | Same as above | Future |
+| Daily budget enforcement | `.loop/loop-budget.json` + `loop-detect` guards; usage from `loop-execute` → `loop-run-log` | ✅ Implemented |
+| loop-verifier skill | Download from npm/GitHub Release with caching (repository-independent) | Future |
 | Maker-Checker separation | Implemented in `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3) | ✅ Implemented |
 | Worktree isolation | `loop-worktree-setup` + push/cleanup inside `loop-execute` via `ci-loop-agent` L2/L3 | ✅ Implemented |
 | Denylist / Allowlist | Defined in SKILL.md, checked by verifier | ✅ Implemented |
@@ -324,6 +335,30 @@ L1 → L2 migration checklist:
 
 Token costs tend to increase quadratically as conversation accumulates.
 
+**Implemented controls** (detect + finalize path):
+
+| Mechanism | Location | Behavior |
+|---|---|---|
+| Per-loop policy | `.loop/loop-budget.json` (`max_runs_per_day`, `max_tokens_per_day`) | Overrides `budget_max_*` inputs on `loop-detect` when present |
+| Attempt cap | Caller `agent_loop_max_attempts` → `AGENT_LOOP_MAX_ATTEMPTS` | Bounds Agent→Verify retries in `loop-execute`; not read from `loop-budget.json` |
+| Daily aggregation | `loop-detect` reads `.loop/loop-run-log.md` | Skips execute when today's runs or tokens exceed the cap (`skip_reason=budget`) |
+| Measured usage | `loop-execute` output `usage_json` | Passed through finalize into `loop-run-log` for the next detect cycle |
+| Retention | `loop-run-log` | Prunes JSONL entries older than 30 days |
+
+Example policy entry (matches `.loop/loop-budget.json`). `loop-detect` consumes only `max_runs_per_day` and `max_tokens_per_day`; `max_attempts_per_run` in the file is unused — set attempt limits via `agent_loop_max_attempts` on the caller:
+
+```json
+{
+  "loops": {
+    "docs-triage": {
+      "max_attempts_per_run": 3,
+      "max_runs_per_day": 1,
+      "max_tokens_per_day": 500000
+    }
+  }
+}
+```
+
 Cost compression patterns:
 
 | Pattern | Token Reduction Rate (reference) |
@@ -336,9 +371,9 @@ Cost compression patterns:
 Design countermeasures:
 
 - Execute triage path with an inexpensive model, invoke a powerful model only when actionable items exist
-- Early exit for watchlists with no items (greatest cost reduction opportunity)
+- Early exit when detect finds no actionable items or budget is exhausted
 - Context reset at phase boundaries (triage → fix → verify)
-- Set daily cap, pause at 80% utilization
+- Enforce daily run/token caps in `loop-detect`; treat Slow Down stop conditions as operational policy on top of those caps
 
 ### Worktree Isolation
 
@@ -351,7 +386,7 @@ For L2 and above where auto-fixes are performed, branch isolation is mandatory. 
 | L1 | `loop-agent-once` | Read-only on the checked-out workspace (no worktree branch) |
 | L2/L3 | `loop-worktree-setup` → `loop-execute` (push and cleanup internal) | Isolated worktree path and agent branch |
 
-**Unified contract**: `ci-loop-agent.yaml` L2/L3 outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections }`. Verification runs inside `loop-execute` (separate verifier session); finalize consumes those outputs for all engines.
+**Unified contract**: `ci-loop-agent.yaml` L2/L3 outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections, usage_json }`. Verification runs inside `loop-execute` (separate verifier session); finalize consumes those outputs for all engines.
 
 **Worktree principles:**
 
@@ -430,7 +465,7 @@ Key indicators for evaluating loop health. Measurement infrastructure is not req
 | Approval Rate | APPROVE / (APPROVE + REJECT) per period | > 70% |
 | Skip Rate | skip=true / total executions | Context-dependent (high is fine for stable repos) |
 | Average Runtime | Wall-clock time from trigger to finalize | < 15 min |
-| Token Usage | Total tokens consumed per execution (agent + verifier) | Track, no hard cap at L2 |
+| Token Usage | Total tokens consumed per execution (agent + verifier), recorded in `loop-run-log` | Daily hard cap via `loop-detect` + `loop-budget.json` |
 | PR Merge Rate | Merged PRs / Created PRs | > 80% |
 | Human Override Rate | PRs closed or edited by humans / Created PRs | < 30% |
 | Consecutive Failure Count | Sequential rejected or errored runs | Alert at 3+ |
@@ -528,10 +563,10 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 |---|---|
 | **Responsibility** | Determine whether actionable work exists. Output a structured description of what needs to be done |
 | **Input** | Previous state (last_sha), repository contents |
-| **Output** | `skip` (bool), `result` (structured JSON describing changes), config values |
+| **Output** | `should_run` (bool), `skip_reason` (`none` / `no_changes` / `circuit_breaker` / `budget`), `result` (structured JSON), config values |
 | **May modify** | Nothing. Read-only phase |
 | **Caller-specific** | Detection script path, `prompt_instructions`, verifier criteria, allowlist, PR metadata |
-| **Generic** | `loop-detect` (state read, guards, detect invocation), `loop-prompt-generate` (constraints + caller context) |
+| **Generic** | `loop-detect` (state read, guards including budget, detect invocation), `loop-prompt-generate` (constraints + caller context) |
 
 #### Agent (Execute)
 
@@ -540,10 +575,10 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 | **Responsibility** | Produce code/content changes based on the prompt. Operate within the constraints defined by the Skill |
 | **Input** | Prompt text, skill name, engine, model, level |
 | **Output (L1)** | Read-only session result (no branch / verdict contract) |
-| **Output (L2/L3)** | Via `loop-execute` inside `ci-loop-agent`: `branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections` |
+| **Output (L2/L3)** | Via `loop-execute` inside `ci-loop-agent`: `branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections`, `usage_json` |
 | **May modify** | Files within the Skill's allowed paths, on an isolated branch only (L2/L3) |
 | **Must not modify** | Files on denylist. Files outside allowed paths. Default branch directly |
-| **Contract** | L2/L3 always outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections }` regardless of engine strategy |
+| **Contract** | L2/L3 always outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections, usage_json }` regardless of engine strategy |
 
 #### Verify
 
@@ -560,10 +595,10 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 
 | Aspect | Definition |
 |---|---|
-| **Responsibility** | Persist the outcome. Create PR on approval, delete branch on rejection, update state |
-| **Input** | Prior phase outputs (`branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections`, `current_sha`) |
-| **Output** | PR URL (on success), updated state file |
-| **May modify** | State file (commit + push to default branch). PR creation/deletion on agent branch |
+| **Responsibility** | Persist the outcome. Create PR on approval, delete branch on rejection, update state, append run log |
+| **Input** | Prior phase outputs (`branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections`, `usage_json`, `current_sha`) |
+| **Output** | PR URL (on success), updated state file, run-log entry |
+| **May modify** | State file and `.loop/loop-run-log.md` (commit + push to default branch). PR creation/deletion on agent branch |
 | **Must not** | Perform notifications, trigger downstream workflows, or modify code. Finalize is a persistence layer only |
 
 #### Skill
