@@ -24,16 +24,17 @@ All must be true. Violation of any item is a blocking issue.
 
 #### Detect
 
-- [ ] Outputs `should_run` (bool), `skip_reason`, and structured detect `result` via `loop-detect`
+- [ ] Outputs `should_run` (bool), `skip_reason` (`none` / `no_changes` / `circuit_breaker` / `budget`), and structured detect `result` via `loop-detect`
 - [ ] Read-only — does not modify repository or state
 - [ ] Detection script path is configured in the caller (`LOOP_DETECT_SCRIPT`); script logic is domain-specific
 - [ ] Domain-specific implementer instructions are in caller `env` (`LOOP_PROMPT_INSTRUCTIONS` → `prompt_instructions`)
 - [ ] Generic prompt constraints (level, allowlist, L2+ persistence) are injected by `loop-prompt-generate`, not hardcoded in `loop-detect`
+- [ ] Budget policy is configured (`.loop/loop-budget.json` and/or `budget_max_*` inputs); detect skips when daily run/token caps are exceeded
 - [ ] No domain vocabulary ("triage", "CHANGELOG", "lint fix") is embedded in `loop-*` actions
 
 #### Agent (Execute)
 
-- [ ] L2/L3 outputs `branch`, `has_changes`, `verdict`, `reason`, `attempts`, and `open_rejections`
+- [ ] L2/L3 outputs `branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections`, and `usage_json`
 - [ ] Operates on an isolated branch only (never default branch)
 - [ ] Respects Skill's allowed paths
 - [ ] Does not touch files on denylist
@@ -53,6 +54,7 @@ All must be true. Violation of any item is a blocking issue.
 
 - [ ] Creates PR on APPROVE with changes, deletes branch on REJECT
 - [ ] Updates state file with outcome, SHA, reject reason, and `open_rejections` (if applicable)
+- [ ] Appends a run-log entry via `loop-run-log` (outcome, attempts, verdict, usage)
 - [ ] Does not perform notifications or trigger downstream workflows
 - [ ] Runs with `if: always()` condition (with appropriate guards)
 - [ ] Uses `loop-finalize` action
@@ -111,6 +113,7 @@ All must be satisfied before promoting a loop from L1 (Report) to L2 (Assisted).
 
 - [ ] Approval Rate is tracked (target: > 70%)
 - [ ] Consecutive failure count is monitored (alert at 3+)
+- [ ] `.loop/loop-run-log.md` records per-run outcomes for budget aggregation and audit
 
 ---
 

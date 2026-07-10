@@ -303,11 +303,12 @@ The repository must provide reusable workflows.
 |--------|---------|
 | `loop-agent-once` | Single read-only agent session (L1) |
 | `loop-config-pack` | Pack caller agent config into standardized outputs for detect/execute handoff |
-| `loop-detect` | Detect phase: config pack, state read, guards, detect script invocation, prompt generation |
-| `loop-execute` | Bounded Agent→Verify loop in one job (L2/L3); denylist/allowlist enforcement, push, worktree cleanup |
-| `loop-finalize` | PR creation (+ auto-merge at L3), branch cleanup, and state write (agent branch on approve, otherwise base branch) |
+| `loop-detect` | Detect phase: config pack, state read, guards (circuit breaker + daily budget), detect script invocation, prompt generation |
+| `loop-execute` | Bounded Agent→Verify loop in one job (L2/L3); denylist/allowlist enforcement, push, worktree cleanup, `usage_json` |
+| `loop-finalize` | PR creation (+ auto-merge at L3), branch cleanup, state write, and run-log append via `loop-run-log` |
 | `loop-install-cli` | Install and cache the selected engine CLI |
 | `loop-prompt-generate` | Assemble implementer prompt: skill invocation, caller context/instructions, generic loop constraints |
+| `loop-run-log` | Append one JSONL entry to `.loop/loop-run-log.md`, prune entries older than 30 days, commit to base branch |
 | `loop-state-read` | Read loop state JSON; output last_sha/current_sha, consecutive_failures, open_rejections prompt |
 | `loop-state-write` | Write state JSON (including `open_rejections` on reject) + commit/push |
 | `loop-worktree-setup` | Create isolated worktree + branch (L2/L3) |
