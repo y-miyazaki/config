@@ -128,7 +128,7 @@ runs:
   using: composite
   steps:
     - name: Install CLI
-      uses: y-miyazaki/config/.github/actions/loop-install-cli@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
+      uses: y-miyazaki/config/.github/actions/loop-install-cli@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9
       with:
         cli_version: ${{ inputs.cli_version }}
         engine: ${{ inputs.engine }}
@@ -182,4 +182,3 @@ runs:
       env:
         WORKTREE_PATH: ${{ inputs.worktree_path }}
       run: bash "${{ github.action_path }}/lib/cleanup.sh"
-

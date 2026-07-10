@@ -4,98 +4,98 @@
 name: ci-mise-update-lock
 
 on:
-  workflow_call:
-    inputs:
-      environment:
-        description: "Target environment"
-        required: true
-        type: string
-      mise_version:
-        default: "2026.6.14"
-        description: "mise version to use"
-        required: false
-        type: string
-    secrets:
-      BOT_APP_CLIENT_ID:
-        description: "GitHub App Client for auto commit"
-        required: true
-      BOT_APP_PRIVATE_KEY:
-        description: "GitHub App private key for auto commit"
-        required: true
+    workflow_call:
+        inputs:
+            environment:
+                description: "Target environment"
+                required: true
+                type: string
+            mise_version:
+                default: "2026.6.14"
+                description: "mise version to use"
+                required: false
+                type: string
+        secrets:
+            BOT_APP_CLIENT_ID:
+                description: "GitHub App Client for auto commit"
+                required: true
+            BOT_APP_PRIVATE_KEY:
+                description: "GitHub App private key for auto commit"
+                required: true
 
 permissions: {}
 
 jobs:
-  update-lock:
-    if: ${{ github.actor != 'dependabot[bot]' }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    environment: ${{ inputs.environment }}
+    update-lock:
+        if: ${{ github.actor != 'dependabot[bot]' }}
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+        environment: ${{ inputs.environment }}
 
-    permissions:
-      contents: read
+        permissions:
+            contents: read
 
-    concurrency:
-      group: mise-update-lock-${{ github.repository }}-${{ github.ref }}
-      cancel-in-progress: true
+        concurrency:
+            group: mise-update-lock-${{ github.repository }}-${{ github.ref }}
+            cancel-in-progress: true
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-          ref: ${{ github.head_ref || github.ref_name }}
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              with:
+                  persist-credentials: false
+                  ref: ${{ github.head_ref || github.ref_name }}
 
-      - name: Install mise
-        uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
-        with:
-          cache: false
-          install: false
-          version: ${{ inputs.mise_version }}
+            - name: Install mise
+              uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
+              with:
+                  cache: false
+                  install: false
+                  version: ${{ inputs.mise_version }}
 
-      - name: Update mise.lock
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          MISE_LOCKED: "0"
-        run: mise lock
+            - name: Update mise.lock
+              shell: bash
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+                  MISE_LOCKED: "0"
+              run: mise lock
 
-      - name: Generate GitHub App Token
-        id: app-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          client-id: ${{ secrets.BOT_APP_CLIENT_ID }}
-          permission-contents: write
-          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+            - name: Generate GitHub App Token
+              id: app-token
+              uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+              with:
+                  client-id: ${{ secrets.BOT_APP_CLIENT_ID }}
+                  permission-contents: write
+                  private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
 
-      - name: Configure git auth
-        uses: y-miyazaki/config/.github/actions/git-auth@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
-        with:
-          operation: configure
-          token: ${{ steps.app-token.outputs.token }}
+            - name: Configure git auth
+              uses: y-miyazaki/config/.github/actions/git-auth@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9
+              with:
+                  operation: configure
+                  token: ${{ steps.app-token.outputs.token }}
 
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
-        with:
-          branch: ${{ github.head_ref || github.ref_name }}
-          commit_message: "chore(ci): update mise lockfile"
-          commit_user_email: "41898282+github-actions[bot]@users.noreply.github.com"
-          commit_user_name: "repo-maintenance-bot[app]"
-          file_pattern: mise.lock
+            - name: Commit changes
+              uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
+              with:
+                  branch: ${{ github.head_ref || github.ref_name }}
+                  commit_message: "chore(ci): update mise lockfile"
+                  commit_user_email: "41898282+github-actions[bot]@users.noreply.github.com"
+                  commit_user_name: "repo-maintenance-bot[app]"
+                  file_pattern: mise.lock
 
-      - name: Clear git auth
-        if: always()
-        uses: y-miyazaki/config/.github/actions/git-auth@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
-        with:
-          operation: clear
-          token: ${{ steps.app-token.outputs.token }}
+            - name: Clear git auth
+              if: always()
+              uses: y-miyazaki/config/.github/actions/git-auth@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9
+              with:
+                  operation: clear
+                  token: ${{ steps.app-token.outputs.token }}
 
-      - name: Summary
-        if: always()
-        uses: y-miyazaki/config/.github/actions/summary@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
-        with:
-          params: |
-            environment: ${{ inputs.environment }}
-            mise_version: ${{ inputs.mise_version }}
-          status: "${{ job.status }}"
-          title: "Mise Update Lock"
+            - name: Summary
+              if: always()
+              uses: y-miyazaki/config/.github/actions/summary@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9
+              with:
+                  params: |
+                      environment: ${{ inputs.environment }}
+                      mise_version: ${{ inputs.mise_version }}
+                  status: "${{ job.status }}"
+                  title: "Mise Update Lock"

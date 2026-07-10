@@ -5,19 +5,19 @@
 name: on-loop-docs-triage
 
 on:
-  workflow_dispatch: {}
+    workflow_dispatch: {}
 
 permissions:
-  contents: write
-  copilot-requests: write
-  pull-requests: write
+    contents: write
+    copilot-requests: write
+    pull-requests: write
 
 concurrency:
-  cancel-in-progress: true
-  group: loop-docs-triage
+    cancel-in-progress: true
+    group: loop-docs-triage
 
 jobs:
-  loop:
-    secrets:
-      AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
-    uses: y-miyazaki/config/.github/workflows/on-loop-docs-triage.yaml@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
+    loop:
+        secrets:
+            AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+        uses: y-miyazaki/config/.github/workflows/on-loop-docs-triage.yaml@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9

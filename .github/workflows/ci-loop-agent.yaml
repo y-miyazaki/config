@@ -187,7 +187,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Agent Once
-        uses: y-miyazaki/config/.github/actions/loop-agent-once@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
+        uses: y-miyazaki/config/.github/actions/loop-agent-once@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9
         with:
           agent_token: ${{ secrets.AGENT_TOKEN }}
           cli_version: ${{ inputs.cli_version }}
@@ -220,7 +220,7 @@ jobs:
 
       - name: Setup Worktree
         id: worktree
-        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
+        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9
         with:
           branch_prefix: ${{ inputs.branch_prefix }}
           skill_name: ${{ inputs.skill_name }}
@@ -228,7 +228,7 @@ jobs:
 
       - name: Execute Bounded Loop
         id: execute
-        uses: y-miyazaki/config/.github/actions/loop-execute@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
+        uses: y-miyazaki/config/.github/actions/loop-execute@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9
         with:
           agent_implementer_max_turns: ${{ inputs.agent_implementer_max_turns }}
           agent_implementer_model: ${{ inputs.agent_implementer_model }}
@@ -257,4 +257,3 @@ jobs:
           token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
           verifier_context: ${{ inputs.verifier_context }}
           worktree_path: ${{ steps.worktree.outputs.worktree_path }}
-

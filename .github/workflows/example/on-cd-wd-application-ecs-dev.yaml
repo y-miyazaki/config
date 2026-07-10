@@ -2,25 +2,25 @@
 name: on-cd-wd-application-ecs-dev
 
 on:
-  workflow_dispatch: # Manual deployment workflow
+    workflow_dispatch: # Manual deployment workflow
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
 permissions:
-  contents: read
-  id-token: write
+    contents: read
+    id-token: write
 
 jobs:
-  ecs-deploy:
-    permissions:
-      contents: read
-      id-token: write
-    uses: y-miyazaki/config/.github/workflows/cd-aws-ecs.yaml@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
-    with:
-      ecs_service_base_dir: "ecs/ecs-service/test-server"
-      environment: "dev"
-    secrets:
-      AWS_IAM_ROLE_ARN: ${{ secrets.AWS_IAM_ROLE_ARN }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
+    ecs-deploy:
+        permissions:
+            contents: read
+            id-token: write
+        uses: y-miyazaki/config/.github/workflows/cd-aws-ecs.yaml@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9
+        with:
+            ecs_service_base_dir: "ecs/ecs-service/test-server"
+            environment: "dev"
+        secrets:
+            AWS_IAM_ROLE_ARN: ${{ secrets.AWS_IAM_ROLE_ARN }}
+            AWS_REGION: ${{ secrets.AWS_REGION }}

@@ -2,46 +2,46 @@
 name: on-ci-push-github-actions-workflow
 
 on:
-  push:
-    branches:
-      - "main"
-      - "master"
-      - "hotfix/**"
-      - "release/**"
-      - "develop"
-      - "feature/**"
-    paths:
-      - ".github/workflows/**/*.yml"
-      - ".github/workflows/**/*.yaml"
-      - ".github/actions/**/*.yml"
-      - ".github/actions/**/*.yaml"
-      - "**/action.yml"
-      - "**/action.yaml"
-  pull_request:
-    branches:
-      - "main"
-      - "master"
-      - "hotfix/**"
-      - "release/**"
-      - "develop"
-      - "feature/**"
-    paths:
-      - ".github/workflows/**/*.yml"
-      - ".github/workflows/**/*.yaml"
-      - ".github/actions/**/*.yml"
-      - ".github/actions/**/*.yaml"
-      - "**/action.yml"
-      - "**/action.yaml"
+    push:
+        branches:
+            - "main"
+            - "master"
+            - "hotfix/**"
+            - "release/**"
+            - "develop"
+            - "feature/**"
+        paths:
+            - ".github/workflows/**/*.yml"
+            - ".github/workflows/**/*.yaml"
+            - ".github/actions/**/*.yml"
+            - ".github/actions/**/*.yaml"
+            - "**/action.yml"
+            - "**/action.yaml"
+    pull_request:
+        branches:
+            - "main"
+            - "master"
+            - "hotfix/**"
+            - "release/**"
+            - "develop"
+            - "feature/**"
+        paths:
+            - ".github/workflows/**/*.yml"
+            - ".github/workflows/**/*.yaml"
+            - ".github/actions/**/*.yml"
+            - ".github/actions/**/*.yaml"
+            - "**/action.yml"
+            - "**/action.yaml"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
 
 permissions:
-  contents: read
+    contents: read
 
 jobs:
-  github-actions-workflow-ci:
-    uses: y-miyazaki/config/.github/workflows/ci-github-actions-workflow.yaml@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
-    permissions:
-      contents: read
+    github-actions-workflow-ci:
+        uses: y-miyazaki/config/.github/workflows/ci-github-actions-workflow.yaml@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9
+        permissions:
+            contents: read

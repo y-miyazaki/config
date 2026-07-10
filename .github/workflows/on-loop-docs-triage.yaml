@@ -4,240 +4,240 @@
 name: on-loop-docs-triage
 
 on:
-  schedule:
-    - cron: "0 9 * * 1-5"
-  workflow_call:
-    secrets:
-      AGENT_TOKEN:
-        required: true
-  workflow_dispatch: {}
+    schedule:
+        - cron: "0 9 * * 1-5"
+    workflow_call:
+        secrets:
+            AGENT_TOKEN:
+                required: true
+    workflow_dispatch: {}
 
 permissions:
-  contents: write
-  copilot-requests: write
-  pull-requests: write
+    contents: write
+    copilot-requests: write
+    pull-requests: write
 
 # concurrency.group cannot use env (GitHub evaluates concurrency before env; allowed: github, inputs, vars).
 # Keep workflow name aligned with LOOP_NAME via on-loop-<LOOP_NAME> — group follows name on copy.
 concurrency:
-  cancel-in-progress: true
-  group: ${{ github.workflow }}
+    cancel-in-progress: true
+    group: ${{ github.workflow }}
 
 # cursor model: `agent --list-models`
 env:
-  AGENT_IMPLEMENTER_MAX_TURNS: "5"
-  AGENT_IMPLEMENTER_MODEL: grok-4.5-medium
-  AGENT_LOOP_MAX_ATTEMPTS: "3"
-  AGENT_VERIFIER_CRITERIA: |
-    ## Criteria for APPROVE
+    AGENT_IMPLEMENTER_MAX_TURNS: "5"
+    AGENT_IMPLEMENTER_MODEL: grok-4.5-medium
+    AGENT_LOOP_MAX_ATTEMPTS: "3"
+    AGENT_VERIFIER_CRITERIA: |
+        ## Criteria for APPROVE
 
-    ALL of the following must be true:
-    1. Changes are limited to documentation files (docs/, README.md, mkdocs.yml nav)
-    2. Content is factually consistent with the codebase
-    3. No sensitive information is exposed
-    4. Changes address the documented triage items
-    5. No duplicate documentation is introduced
-    6. Existing documentation structure is preserved unless explicitly required by triage items
+        ALL of the following must be true:
+        1. Changes are limited to documentation files (docs/, README.md, mkdocs.yml nav)
+        2. Content is factually consistent with the codebase
+        3. No sensitive information is exposed
+        4. Changes address the documented triage items
+        5. No duplicate documentation is introduced
+        6. Existing documentation structure is preserved unless explicitly required by triage items
 
-    ## Criteria for REJECT
+        ## Criteria for REJECT
 
-    ANY of the following triggers REJECT:
-    - Changes outside allowed documentation paths
-    - Factual inaccuracies or hallucinated content
-    - Sensitive data exposure
-    - Gratuitous changes not related to triage items
-    - Duplicate content that restates existing documentation
-    - Unnecessary restructuring of document headings or sections
-  AGENT_VERIFIER_MAX_TURNS: "3"
-  AGENT_VERIFIER_MODEL: composer-2.5
-  DEFAULT_BASE_BRANCH: main
-  DEFAULT_ENGINE: cursor
-  DEFAULT_LEVEL: L2
-  LOOP_ALLOWLIST: "docs/**/*.md,README.md,mkdocs.yml"
-  LOOP_BUDGET_MAX_RUNS_PER_DAY: "1"
-  LOOP_BUDGET_MAX_TOKENS_PER_DAY: "500000"
-  LOOP_DETECT_SCRIPT: .claude/skills/docs-updater/scripts/detect_changes.sh
-  LOOP_INFER_FILES_PATTERN: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|yml|yaml)'
-  LOOP_NAME: docs-triage
-  LOOP_NO_CHANGES_VERDICT: REJECT
-  LOOP_PR_BODY: |
-    ## Summary
+        ANY of the following triggers REJECT:
+        - Changes outside allowed documentation paths
+        - Factual inaccuracies or hallucinated content
+        - Sensitive data exposure
+        - Gratuitous changes not related to triage items
+        - Duplicate content that restates existing documentation
+        - Unnecessary restructuring of document headings or sections
+    AGENT_VERIFIER_MAX_TURNS: "3"
+    AGENT_VERIFIER_MODEL: composer-2.5
+    DEFAULT_BASE_BRANCH: main
+    DEFAULT_ENGINE: cursor
+    DEFAULT_LEVEL: L2
+    LOOP_ALLOWLIST: "docs/**/*.md,README.md,mkdocs.yml"
+    LOOP_BUDGET_MAX_RUNS_PER_DAY: "1"
+    LOOP_BUDGET_MAX_TOKENS_PER_DAY: "500000"
+    LOOP_DETECT_SCRIPT: .claude/skills/docs-updater/scripts/detect_changes.sh
+    LOOP_INFER_FILES_PATTERN: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|yml|yaml)'
+    LOOP_NAME: docs-triage
+    LOOP_NO_CHANGES_VERDICT: REJECT
+    LOOP_PR_BODY: |
+        ## Summary
 
-    Automated documentation update by `loop-docs-triage`.
+        Automated documentation update by `loop-docs-triage`.
 
-    ---
-    *This PR was created by a loop automation. Review before merging.*
-  LOOP_PR_TITLE: "docs: automated documentation update (loop-docs-triage)"
-  LOOP_PROMPT_INSTRUCTIONS: |
-    Edit files directly to address the documented triage findings.
-    Prioritize factual consistency with the codebase and preserve existing documentation structure unless triage items require restructuring.
-  SKILL_NAME: loop-docs-triage
+        ---
+        *This PR was created by a loop automation. Review before merging.*
+    LOOP_PR_TITLE: "docs: automated documentation update (loop-docs-triage)"
+    LOOP_PROMPT_INSTRUCTIONS: |
+        Edit files directly to address the documented triage findings.
+        Prioritize factual consistency with the codebase and preserve existing documentation structure unless triage items require restructuring.
+    SKILL_NAME: loop-docs-triage
 
 jobs:
-  detect:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    permissions:
-      contents: read
-    outputs:
-      agent_implementer_max_turns: ${{ steps.detect.outputs.agent_implementer_max_turns }}
-      agent_implementer_model: ${{ steps.detect.outputs.agent_implementer_model }}
-      agent_loop_max_attempts: ${{ steps.detect.outputs.agent_loop_max_attempts }}
-      agent_verifier_criteria: ${{ steps.detect.outputs.agent_verifier_criteria }}
-      agent_verifier_max_turns: ${{ steps.detect.outputs.agent_verifier_max_turns }}
-      agent_verifier_model: ${{ steps.detect.outputs.agent_verifier_model }}
-      allowlist: ${{ steps.detect.outputs.allowlist }}
-      base_branch: ${{ steps.detect.outputs.base_branch }}
-      consecutive_failures: ${{ steps.detect.outputs.consecutive_failures }}
-      current_sha: ${{ steps.detect.outputs.current_sha }}
-      engine: ${{ steps.detect.outputs.engine }}
-      infer_files_pattern: ${{ steps.detect.outputs.infer_files_pattern }}
-      last_sha: ${{ steps.detect.outputs.last_sha }}
-      level: ${{ steps.detect.outputs.level }}
-      loop_name: ${{ steps.detect.outputs.loop_name }}
-      no_changes_verdict: ${{ steps.detect.outputs.no_changes_verdict }}
-      pr_body: ${{ steps.detect.outputs.pr_body }}
-      pr_title: ${{ steps.detect.outputs.pr_title }}
-      prompt: ${{ steps.detect.outputs.prompt }}
-      run_started_at: ${{ steps.timing.outputs.started_at }}
-      should_run: ${{ steps.detect.outputs.should_run }}
-      skill_name: ${{ steps.detect.outputs.skill_name }}
-      skip_reason: ${{ steps.detect.outputs.skip_reason }}
-      state_file: ${{ steps.detect.outputs.state_file }}
-    steps:
-      - name: Record Run Start
-        id: timing
-        run: echo "started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+    detect:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 5
+        permissions:
+            contents: read
+        outputs:
+            agent_implementer_max_turns: ${{ steps.detect.outputs.agent_implementer_max_turns }}
+            agent_implementer_model: ${{ steps.detect.outputs.agent_implementer_model }}
+            agent_loop_max_attempts: ${{ steps.detect.outputs.agent_loop_max_attempts }}
+            agent_verifier_criteria: ${{ steps.detect.outputs.agent_verifier_criteria }}
+            agent_verifier_max_turns: ${{ steps.detect.outputs.agent_verifier_max_turns }}
+            agent_verifier_model: ${{ steps.detect.outputs.agent_verifier_model }}
+            allowlist: ${{ steps.detect.outputs.allowlist }}
+            base_branch: ${{ steps.detect.outputs.base_branch }}
+            consecutive_failures: ${{ steps.detect.outputs.consecutive_failures }}
+            current_sha: ${{ steps.detect.outputs.current_sha }}
+            engine: ${{ steps.detect.outputs.engine }}
+            infer_files_pattern: ${{ steps.detect.outputs.infer_files_pattern }}
+            last_sha: ${{ steps.detect.outputs.last_sha }}
+            level: ${{ steps.detect.outputs.level }}
+            loop_name: ${{ steps.detect.outputs.loop_name }}
+            no_changes_verdict: ${{ steps.detect.outputs.no_changes_verdict }}
+            pr_body: ${{ steps.detect.outputs.pr_body }}
+            pr_title: ${{ steps.detect.outputs.pr_title }}
+            prompt: ${{ steps.detect.outputs.prompt }}
+            run_started_at: ${{ steps.timing.outputs.started_at }}
+            should_run: ${{ steps.detect.outputs.should_run }}
+            skill_name: ${{ steps.detect.outputs.skill_name }}
+            skip_reason: ${{ steps.detect.outputs.skip_reason }}
+            state_file: ${{ steps.detect.outputs.state_file }}
+        steps:
+            - name: Record Run Start
+              id: timing
+              run: echo "started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
 
-      - name: Checkout Code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+            - name: Checkout Code
+              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              with:
+                  fetch-depth: 0
+                  persist-credentials: false
+
+            - name: Detect Loop Work
+              id: detect
+              uses: y-miyazaki/config/.github/actions/loop-detect@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9
+              with:
+                  agent_implementer_max_turns: ${{ env.AGENT_IMPLEMENTER_MAX_TURNS }}
+                  agent_implementer_model: ${{ env.AGENT_IMPLEMENTER_MODEL }}
+                  agent_loop_max_attempts: ${{ env.AGENT_LOOP_MAX_ATTEMPTS }}
+                  agent_verifier_criteria: ${{ env.AGENT_VERIFIER_CRITERIA }}
+                  agent_verifier_max_turns: ${{ env.AGENT_VERIFIER_MAX_TURNS }}
+                  agent_verifier_model: ${{ env.AGENT_VERIFIER_MODEL }}
+                  allowlist: ${{ env.LOOP_ALLOWLIST }}
+                  base_branch: ${{ env.DEFAULT_BASE_BRANCH }}
+                  budget_max_runs_per_day: ${{ env.LOOP_BUDGET_MAX_RUNS_PER_DAY }}
+                  budget_max_tokens_per_day: ${{ env.LOOP_BUDGET_MAX_TOKENS_PER_DAY }}
+                  detect_script: ${{ env.LOOP_DETECT_SCRIPT }}
+                  engine: ${{ env.DEFAULT_ENGINE }}
+                  infer_files_pattern: ${{ env.LOOP_INFER_FILES_PATTERN }}
+                  level: ${{ env.DEFAULT_LEVEL }}
+                  loop_name: ${{ env.LOOP_NAME }}
+                  no_changes_verdict: ${{ env.LOOP_NO_CHANGES_VERDICT }}
+                  pr_body: ${{ env.LOOP_PR_BODY }}
+                  pr_title: ${{ env.LOOP_PR_TITLE }}
+                  prompt_instructions: ${{ env.LOOP_PROMPT_INSTRUCTIONS }}
+                  skill_name: ${{ env.SKILL_NAME }}
+
+    execute:
+        needs: detect
+        if: needs.detect.outputs.should_run == 'true'
+        uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9
+        permissions:
+            contents: write
+            copilot-requests: write
         with:
-          fetch-depth: 0
-          persist-credentials: false
+            agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
+            agent_implementer_model: ${{ needs.detect.outputs.agent_implementer_model }}
+            agent_loop_max_attempts: ${{ needs.detect.outputs.agent_loop_max_attempts }}
+            agent_verifier_criteria: ${{ needs.detect.outputs.agent_verifier_criteria }}
+            agent_verifier_max_turns: ${{ needs.detect.outputs.agent_verifier_max_turns }}
+            agent_verifier_model: ${{ needs.detect.outputs.agent_verifier_model }}
+            allowlist: ${{ needs.detect.outputs.allowlist }}
+            base_branch: ${{ needs.detect.outputs.base_branch }}
+            engine: ${{ needs.detect.outputs.engine }}
+            infer_files_pattern: ${{ needs.detect.outputs.infer_files_pattern }}
+            level: ${{ needs.detect.outputs.level }}
+            no_changes_verdict: ${{ needs.detect.outputs.no_changes_verdict }}
+            prompt_text: ${{ needs.detect.outputs.prompt }}
+            skill_name: ${{ needs.detect.outputs.skill_name }}
+        secrets:
+            AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+            GH_TOKEN_PUSH: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Detect Loop Work
-        id: detect
-        uses: y-miyazaki/config/.github/actions/loop-detect@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
-        with:
-          agent_implementer_max_turns: ${{ env.AGENT_IMPLEMENTER_MAX_TURNS }}
-          agent_implementer_model: ${{ env.AGENT_IMPLEMENTER_MODEL }}
-          agent_loop_max_attempts: ${{ env.AGENT_LOOP_MAX_ATTEMPTS }}
-          agent_verifier_criteria: ${{ env.AGENT_VERIFIER_CRITERIA }}
-          agent_verifier_max_turns: ${{ env.AGENT_VERIFIER_MAX_TURNS }}
-          agent_verifier_model: ${{ env.AGENT_VERIFIER_MODEL }}
-          allowlist: ${{ env.LOOP_ALLOWLIST }}
-          base_branch: ${{ env.DEFAULT_BASE_BRANCH }}
-          budget_max_runs_per_day: ${{ env.LOOP_BUDGET_MAX_RUNS_PER_DAY }}
-          budget_max_tokens_per_day: ${{ env.LOOP_BUDGET_MAX_TOKENS_PER_DAY }}
-          detect_script: ${{ env.LOOP_DETECT_SCRIPT }}
-          engine: ${{ env.DEFAULT_ENGINE }}
-          infer_files_pattern: ${{ env.LOOP_INFER_FILES_PATTERN }}
-          level: ${{ env.DEFAULT_LEVEL }}
-          loop_name: ${{ env.LOOP_NAME }}
-          no_changes_verdict: ${{ env.LOOP_NO_CHANGES_VERDICT }}
-          pr_body: ${{ env.LOOP_PR_BODY }}
-          pr_title: ${{ env.LOOP_PR_TITLE }}
-          prompt_instructions: ${{ env.LOOP_PROMPT_INSTRUCTIONS }}
-          skill_name: ${{ env.SKILL_NAME }}
+    finalize:
+        needs: [detect, execute]
+        if: >-
+            always() &&
+            needs.detect.result == 'success' &&
+            needs.detect.outputs.skip_reason != 'circuit_breaker' &&
+            needs.detect.outputs.skip_reason != 'budget' &&
+            needs.execute.result != 'cancelled'
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+        permissions:
+            contents: write
+            pull-requests: write
+        steps:
+            - name: Checkout
+              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              with:
+                  persist-credentials: false
 
-  execute:
-    needs: detect
-    if: needs.detect.outputs.should_run == 'true'
-    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
-    permissions:
-      contents: write
-      copilot-requests: write
-    with:
-      agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
-      agent_implementer_model: ${{ needs.detect.outputs.agent_implementer_model }}
-      agent_loop_max_attempts: ${{ needs.detect.outputs.agent_loop_max_attempts }}
-      agent_verifier_criteria: ${{ needs.detect.outputs.agent_verifier_criteria }}
-      agent_verifier_max_turns: ${{ needs.detect.outputs.agent_verifier_max_turns }}
-      agent_verifier_model: ${{ needs.detect.outputs.agent_verifier_model }}
-      allowlist: ${{ needs.detect.outputs.allowlist }}
-      base_branch: ${{ needs.detect.outputs.base_branch }}
-      engine: ${{ needs.detect.outputs.engine }}
-      infer_files_pattern: ${{ needs.detect.outputs.infer_files_pattern }}
-      level: ${{ needs.detect.outputs.level }}
-      no_changes_verdict: ${{ needs.detect.outputs.no_changes_verdict }}
-      prompt_text: ${{ needs.detect.outputs.prompt }}
-      skill_name: ${{ needs.detect.outputs.skill_name }}
-    secrets:
-      AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
-      GH_TOKEN_PUSH: ${{ secrets.GITHUB_TOKEN }}
+            - name: Finalize
+              uses: y-miyazaki/config/.github/actions/loop-finalize@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9
+              with:
+                  agent_result: ${{ needs.execute.result }}
+                  attempts: ${{ needs.execute.outputs.attempts || '' }}
+                  auto_merge: ${{ needs.detect.outputs.level == 'L3' }}
+                  base_branch: ${{ needs.detect.outputs.base_branch }}
+                  branch: ${{ needs.execute.outputs.branch }}
+                  current_sha: ${{ needs.detect.outputs.current_sha }}
+                  has_changes: ${{ needs.execute.outputs.has_changes }}
+                  loop_name: ${{ needs.detect.outputs.loop_name }}
+                  pr_body: |
+                      ${{ needs.detect.outputs.pr_body }}
 
-  finalize:
-    needs: [detect, execute]
-    if: >-
-      always() &&
-      needs.detect.result == 'success' &&
-      needs.detect.outputs.skip_reason != 'circuit_breaker' &&
-      needs.detect.outputs.skip_reason != 'budget' &&
-      needs.execute.result != 'cancelled'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
+                      - Level: ${{ needs.detect.outputs.level }}
+                      - Commits scanned: `${{ needs.detect.outputs.last_sha }}..${{ needs.detect.outputs.current_sha }}`
+                      - Verifier verdict: ${{ needs.execute.outputs.verdict || 'SKIPPED' }}
+                      - Attempts: ${{ needs.execute.outputs.attempts || '0' }}
+                      - Skip reason: ${{ needs.detect.outputs.skip_reason }}
+                      ${{ needs.execute.outputs.reason != '' && format('- Last verifier note: {0}', needs.execute.outputs.reason) || '' }}
+                  pr_title: ${{ needs.detect.outputs.pr_title }}
+                  open_rejections: ${{ needs.execute.outputs.open_rejections }}
+                  reject_reason: ${{ needs.execute.outputs.reason }}
+                  run_started_at: ${{ needs.detect.outputs.run_started_at }}
+                  skip_reason: ${{ needs.detect.outputs.skip_reason }}
+                  state_file: ${{ needs.detect.outputs.state_file }}
+                  token: ${{ github.token }}
+                  usage_json: ${{ needs.execute.outputs.usage_json || '' }}
+                  verdict: ${{ needs.execute.outputs.verdict }}
 
-      - name: Finalize
-        uses: y-miyazaki/config/.github/actions/loop-finalize@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
-        with:
-          agent_result: ${{ needs.execute.result }}
-          attempts: ${{ needs.execute.outputs.attempts || '' }}
-          auto_merge: ${{ needs.detect.outputs.level == 'L3' }}
-          base_branch: ${{ needs.detect.outputs.base_branch }}
-          branch: ${{ needs.execute.outputs.branch }}
-          current_sha: ${{ needs.detect.outputs.current_sha }}
-          has_changes: ${{ needs.execute.outputs.has_changes }}
-          loop_name: ${{ needs.detect.outputs.loop_name }}
-          pr_body: |
-            ${{ needs.detect.outputs.pr_body }}
+    record-skip:
+        needs: detect
+        if: >-
+            needs.detect.result == 'success' &&
+            needs.detect.outputs.should_run == 'false' &&
+            (needs.detect.outputs.skip_reason == 'circuit_breaker' ||
+            needs.detect.outputs.skip_reason == 'budget')
+        runs-on: ubuntu-24.04
+        timeout-minutes: 5
+        permissions:
+            contents: write
+        steps:
+            - name: Checkout
+              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              with:
+                  persist-credentials: false
 
-            - Level: ${{ needs.detect.outputs.level }}
-            - Commits scanned: `${{ needs.detect.outputs.last_sha }}..${{ needs.detect.outputs.current_sha }}`
-            - Verifier verdict: ${{ needs.execute.outputs.verdict || 'SKIPPED' }}
-            - Attempts: ${{ needs.execute.outputs.attempts || '0' }}
-            - Skip reason: ${{ needs.detect.outputs.skip_reason }}
-            ${{ needs.execute.outputs.reason != '' && format('- Last verifier note: {0}', needs.execute.outputs.reason) || '' }}
-          pr_title: ${{ needs.detect.outputs.pr_title }}
-          open_rejections: ${{ needs.execute.outputs.open_rejections }}
-          reject_reason: ${{ needs.execute.outputs.reason }}
-          run_started_at: ${{ needs.detect.outputs.run_started_at }}
-          skip_reason: ${{ needs.detect.outputs.skip_reason }}
-          state_file: ${{ needs.detect.outputs.state_file }}
-          token: ${{ github.token }}
-          usage_json: ${{ needs.execute.outputs.usage_json || '' }}
-          verdict: ${{ needs.execute.outputs.verdict }}
-
-  record-skip:
-    needs: detect
-    if: >-
-      needs.detect.result == 'success' &&
-      needs.detect.outputs.should_run == 'false' &&
-      (needs.detect.outputs.skip_reason == 'circuit_breaker' ||
-      needs.detect.outputs.skip_reason == 'budget')
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-
-      - name: Append Skip Run Log
-        uses: y-miyazaki/config/.github/actions/loop-run-log@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
-        with:
-          base_branch: ${{ needs.detect.outputs.base_branch }}
-          loop_name: ${{ needs.detect.outputs.loop_name }}
-          outcome: skipped
-          run_started_at: ${{ needs.detect.outputs.run_started_at }}
-          skip_reason: ${{ needs.detect.outputs.skip_reason }}
-          token: ${{ github.token }}
+            - name: Append Skip Run Log
+              uses: y-miyazaki/config/.github/actions/loop-run-log@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9
+              with:
+                  base_branch: ${{ needs.detect.outputs.base_branch }}
+                  loop_name: ${{ needs.detect.outputs.loop_name }}
+                  outcome: skipped
+                  run_started_at: ${{ needs.detect.outputs.run_started_at }}
+                  skip_reason: ${{ needs.detect.outputs.skip_reason }}
+                  token: ${{ github.token }}
