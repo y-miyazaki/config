@@ -1,0 +1,129 @@
+#!/bin/bash
+#######################################
+# Description: Agent session helpers for loop-execute
+#
+# Usage: source "${SCRIPT_DIR}/lib/agent.sh"
+#
+# Output:
+# - None (library file, sourced by other scripts)
+#
+# Design Rules:
+# - run_agent maps ENGINE to the correct CLI and token env var
+# - Implementer sessions may write; verifier sessions are read-only
+#######################################
+
+#######################################
+# build_agent_prompt: Build implementer prompt with optional verifier feedback
+#
+# Arguments:
+#   $1 - Verifier feedback markdown (may be empty)
+#
+# Global Variables:
+#   PROMPT_TEXT - Base implementer prompt
+#   PROMPT_IMPLEMENTER_FEEDBACK - Retry prompt template
+#
+# Returns:
+#   Full implementer prompt to stdout
+#
+#######################################
+function build_agent_prompt {
+    local feedback="$1"
+    if [[ -z ${feedback} ]]; then
+        printf '%s\n' "${PROMPT_TEXT}"
+        return
+    fi
+    render_template "${PROMPT_IMPLEMENTER_FEEDBACK}" \
+        base_prompt "${PROMPT_TEXT}" \
+        feedback "${feedback}"
+    printf '\n'
+}
+
+#######################################
+# commit_worktree_if_needed: Commit worktree changes when dirty
+#
+# Arguments:
+#   $1 - Commit message
+#
+# Global Variables:
+#   WORKTREE_PATH - Absolute path to the isolated worktree
+#
+# Returns:
+#   0 when a commit was created, 1 when no changes existed
+#
+#######################################
+function commit_worktree_if_needed {
+    local msg="$1"
+    (
+        cd "${WORKTREE_PATH}" || exit
+        if git diff --quiet && git diff --cached --quiet && [[ -z "$(git status --porcelain)" ]]; then
+            return 1
+        fi
+        git add -A
+        git commit -m "${msg}"
+        return 0
+    )
+}
+
+#######################################
+# run_agent: Execute the configured AI engine CLI
+#
+# Arguments:
+#   $1 - allow_writes flag (true|false). Verifier uses false.
+#
+# Global Variables:
+#   AGENT_TOKEN - Authentication token for the selected engine
+#   ENGINE - Engine name (claude|copilot|codex|cursor)
+#   MAX_TURNS - Optional max turns override
+#   MODEL - Optional model override
+#   PROMPT - Prompt text
+#   WORKING_DIRECTORY - Working directory for write-capable engines
+#
+# Returns:
+#   Engine CLI exit code
+#
+#######################################
+function run_agent {
+    local allow_writes="${1:-true}"
+    case "${ENGINE}" in
+        claude)
+            export ANTHROPIC_API_KEY="${AGENT_TOKEN}"
+            local -a ARGS=(-p "${PROMPT}" --bare)
+            if [[ -n ${MAX_TURNS:-} ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
+            if [[ -n ${MODEL:-} ]]; then ARGS+=(--model "${MODEL}"); fi
+            npx claude "${ARGS[@]}"
+            ;;
+        copilot)
+            export COPILOT_GITHUB_TOKEN="${AGENT_TOKEN}"
+            local -a ARGS=(-p "${PROMPT}" --no-ask-user)
+            if [[ -n ${MAX_TURNS:-} ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
+            if [[ -n ${MODEL:-} ]]; then ARGS+=(--model "${MODEL}"); fi
+            npx copilot "${ARGS[@]}"
+            ;;
+        codex)
+            export OPENAI_API_KEY="${AGENT_TOKEN}"
+            local -a ARGS=(--prompt "${PROMPT}" --auto-approve)
+            if [[ -n ${MODEL:-} ]]; then ARGS+=(--model "${MODEL}"); fi
+            npx codex "${ARGS[@]}"
+            ;;
+        cursor)
+            export CURSOR_API_KEY="${AGENT_TOKEN}"
+            local -a ARGS=(-p "${PROMPT}" --trust)
+            if [[ ${allow_writes} == "true" && ${WORKING_DIRECTORY} != "." ]]; then
+                ARGS+=(--force)
+            fi
+            if [[ -n ${MODEL:-} ]]; then ARGS+=(--model "${MODEL}"); fi
+            if command -v agent > /dev/null 2>&1; then
+                agent "${ARGS[@]}"
+            elif command -v cursor-agent > /dev/null 2>&1; then
+                cursor-agent "${ARGS[@]}"
+            else
+                echo "::error::Cursor CLI (agent) not found in PATH"
+                exit 1
+            fi
+            ;;
+        *)
+            echo "::error::Unsupported engine: ${ENGINE}"
+            exit 1
+            ;;
+    esac
+}
