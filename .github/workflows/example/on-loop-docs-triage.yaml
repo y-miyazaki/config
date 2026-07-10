@@ -20,4 +20,4 @@ jobs:
     loop:
         secrets:
             AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
-        uses: y-miyazaki/config/.github/workflows/on-loop-docs-triage.yaml@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9
+        uses: y-miyazaki/config/.github/workflows/on-loop-docs-triage.yaml@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10

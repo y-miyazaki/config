@@ -117,7 +117,7 @@ jobs:
 
             - name: Detect Loop Work
               id: detect
-              uses: y-miyazaki/config/.github/actions/loop-detect@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9
+              uses: y-miyazaki/config/.github/actions/loop-detect@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
               with:
                   agent_implementer_max_turns: ${{ env.AGENT_IMPLEMENTER_MAX_TURNS }}
                   agent_implementer_model: ${{ env.AGENT_IMPLEMENTER_MODEL }}
@@ -143,7 +143,7 @@ jobs:
     execute:
         needs: detect
         if: needs.detect.outputs.should_run == 'true'
-        uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9
+        uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
         permissions:
             contents: write
             copilot-requests: write
@@ -186,7 +186,7 @@ jobs:
                   persist-credentials: false
 
             - name: Finalize
-              uses: y-miyazaki/config/.github/actions/loop-finalize@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9
+              uses: y-miyazaki/config/.github/actions/loop-finalize@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
               with:
                   agent_result: ${{ needs.execute.result }}
                   attempts: ${{ needs.execute.outputs.attempts || '' }}
@@ -233,7 +233,7 @@ jobs:
                   persist-credentials: false
 
             - name: Append Skip Run Log
-              uses: y-miyazaki/config/.github/actions/loop-run-log@5991a1c4412e3c22cb31b5634f7be657dc1e3df5 # v1.7.9
+              uses: y-miyazaki/config/.github/actions/loop-run-log@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
               with:
                   base_branch: ${{ needs.detect.outputs.base_branch }}
                   loop_name: ${{ needs.detect.outputs.loop_name }}
