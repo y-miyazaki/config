@@ -1,0 +1,101 @@
+name: loop-config-pack
+description: "Pack loop caller configuration into standardized job outputs for detect and execute jobs."
+
+inputs:
+  agent_implementer_max_turns:
+    description: "Maximum implementer agent turns per loop attempt"
+    required: true
+  agent_implementer_model:
+    description: "Implementer model override"
+    required: true
+  agent_loop_max_attempts:
+    description: "Maximum Agent→Verify loop attempts"
+    required: true
+  agent_verifier_criteria:
+    description: "Domain-specific APPROVE/REJECT criteria (markdown)"
+    required: true
+  agent_verifier_max_turns:
+    description: "Maximum verifier agent turns"
+    required: true
+  agent_verifier_model:
+    description: "Verifier model override"
+    required: true
+  base_branch:
+    description: "Base branch for verify diff"
+    required: true
+  engine:
+    description: "AI engine (claude | copilot | codex | cursor)"
+    required: true
+  level:
+    description: "Autonomy level (L1 | L2 | L3)"
+    required: true
+  skill_name:
+    description: "Skill name to invoke (e.g. loop-docs-triage)"
+    required: true
+
+outputs:
+  agent_implementer_max_turns:
+    description: "Packed implementer max turns"
+    value: ${{ steps.pack.outputs.agent_implementer_max_turns }}
+  agent_implementer_model:
+    description: "Packed implementer model"
+    value: ${{ steps.pack.outputs.agent_implementer_model }}
+  agent_loop_max_attempts:
+    description: "Packed loop max attempts"
+    value: ${{ steps.pack.outputs.agent_loop_max_attempts }}
+  agent_verifier_criteria:
+    description: "Packed verifier criteria"
+    value: ${{ steps.pack.outputs.agent_verifier_criteria }}
+  agent_verifier_max_turns:
+    description: "Packed verifier max turns"
+    value: ${{ steps.pack.outputs.agent_verifier_max_turns }}
+  agent_verifier_model:
+    description: "Packed verifier model"
+    value: ${{ steps.pack.outputs.agent_verifier_model }}
+  base_branch:
+    description: "Packed base branch"
+    value: ${{ steps.pack.outputs.base_branch }}
+  engine:
+    description: "Packed engine"
+    value: ${{ steps.pack.outputs.engine }}
+  level:
+    description: "Packed autonomy level"
+    value: ${{ steps.pack.outputs.level }}
+  skill_name:
+    description: "Packed skill name"
+    value: ${{ steps.pack.outputs.skill_name }}
+
+runs:
+  using: composite
+  steps:
+    - name: Pack Config
+      id: pack
+      shell: bash
+      env:
+        AGENT_IMPLEMENTER_MAX_TURNS: ${{ inputs.agent_implementer_max_turns }}
+        AGENT_IMPLEMENTER_MODEL: ${{ inputs.agent_implementer_model }}
+        AGENT_LOOP_MAX_ATTEMPTS: ${{ inputs.agent_loop_max_attempts }}
+        AGENT_VERIFIER_CRITERIA: ${{ inputs.agent_verifier_criteria }}
+        AGENT_VERIFIER_MAX_TURNS: ${{ inputs.agent_verifier_max_turns }}
+        AGENT_VERIFIER_MODEL: ${{ inputs.agent_verifier_model }}
+        BASE_BRANCH: ${{ inputs.base_branch }}
+        ENGINE: ${{ inputs.engine }}
+        LEVEL: ${{ inputs.level }}
+        SKILL_NAME: ${{ inputs.skill_name }}
+      run: |
+        set -euo pipefail
+        CRITERIA_DELIM="CRITERIA_$(openssl rand -hex 8)"
+        {
+          echo "agent_implementer_max_turns=${AGENT_IMPLEMENTER_MAX_TURNS}"
+          echo "agent_implementer_model=${AGENT_IMPLEMENTER_MODEL}"
+          echo "agent_loop_max_attempts=${AGENT_LOOP_MAX_ATTEMPTS}"
+          echo "agent_verifier_criteria<<${CRITERIA_DELIM}"
+          echo "${AGENT_VERIFIER_CRITERIA}"
+          echo "${CRITERIA_DELIM}"
+          echo "agent_verifier_max_turns=${AGENT_VERIFIER_MAX_TURNS}"
+          echo "agent_verifier_model=${AGENT_VERIFIER_MODEL}"
+          echo "base_branch=${BASE_BRANCH}"
+          echo "engine=${ENGINE}"
+          echo "level=${LEVEL}"
+          echo "skill_name=${SKILL_NAME}"
+        } >> "$GITHUB_OUTPUT"

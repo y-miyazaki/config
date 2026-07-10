@@ -6,6 +6,10 @@ name: on-loop-docs-triage
 on:
   schedule:
     - cron: "0 9 * * 1-5"
+  workflow_call:
+    secrets:
+      AGENT_TOKEN:
+        required: true
   workflow_dispatch: {}
 
 permissions:
@@ -13,15 +17,17 @@ permissions:
   copilot-requests: write
   pull-requests: write
 
+# concurrency.group cannot use env (GitHub evaluates concurrency before env; allowed: github, inputs, vars).
+# Keep workflow name aligned with LOOP_NAME via on-loop-<LOOP_NAME> — group follows name on copy.
 concurrency:
   cancel-in-progress: true
-  group: loop-docs-triage
+  group: ${{ github.workflow }}
 
 # cursor model: `agent --list-models`
 env:
+  AGENT_IMPLEMENTER_MAX_TURNS: "5"
+  AGENT_IMPLEMENTER_MODEL: grok-4.5-medium
   AGENT_LOOP_MAX_ATTEMPTS: "3"
-  AGENT_TRIAGE_MAX_TURNS: "5"
-  AGENT_TRIAGE_MODEL: grok-4.5-medium
   AGENT_VERIFIER_CRITERIA: |
     ## Criteria for APPROVE
 
@@ -42,41 +48,28 @@ env:
     - Gratuitous changes not related to triage items
     - Duplicate content that restates existing documentation
     - Unnecessary restructuring of document headings or sections
-  PROMPT_VERIFIER_OUTPUT_CONTRACT: |
-    ## Output (machine-readable — required)
-
-    End your response with a single fenced JSON block (no prose after it):
-
-    ```json
-    {
-      "verdict": "APPROVE",
-      "reason": "one-line summary"
-    }
-    ```
-
-    On REJECT:
-
-    ```json
-    {
-      "verdict": "REJECT",
-      "files": ["path/to/file"],
-      "issue": "what is factually wrong",
-      "fix": "specific correction required",
-      "reason": "one-line summary for logs"
-    }
-    ```
-
-    Rules:
-    - "verdict" must be "APPROVE" or "REJECT"
-    - On REJECT, "files" (array), "issue", "fix", and "reason" are required
-    - Use repo-relative paths in files
   AGENT_VERIFIER_MAX_TURNS: "3"
   AGENT_VERIFIER_MODEL: composer-2.5
   DEFAULT_BASE_BRANCH: main
   DEFAULT_ENGINE: cursor
   DEFAULT_LEVEL: L2
+  LOOP_ALLOWLIST: "docs/**/*.md,README.md,mkdocs.yml"
+  LOOP_DETECT_SCRIPT: .claude/skills/docs-updater/scripts/detect_changes.sh
+  LOOP_INFER_FILES_PATTERN: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|yml|yaml)'
+  LOOP_NAME: docs-triage
+  LOOP_NO_CHANGES_VERDICT: REJECT
+  LOOP_PR_BODY: |
+    ## Summary
+
+    Automated documentation update by `loop-docs-triage`.
+
+    ---
+    *This PR was created by a loop automation. Review before merging.*
+  LOOP_PR_TITLE: "docs: automated documentation update (loop-docs-triage)"
+  LOOP_PROMPT_INSTRUCTIONS: |
+    Edit files directly to address the documented triage findings.
+    Prioritize factual consistency with the codebase and preserve existing documentation structure unless triage items require restructuring.
   SKILL_NAME: loop-docs-triage
-  STATE_FILE: .loop/state-docs-triage.json
 
 jobs:
   detect:
@@ -85,23 +78,28 @@ jobs:
     permissions:
       contents: read
     outputs:
-      agent_implementer_max_turns: ${{ steps.config.outputs.agent_implementer_max_turns }}
-      agent_implementer_model: ${{ steps.config.outputs.agent_implementer_model }}
-      agent_loop_max_attempts: ${{ steps.config.outputs.agent_loop_max_attempts }}
-      agent_verifier_criteria: ${{ steps.config.outputs.agent_verifier_criteria }}
-      agent_verifier_max_turns: ${{ steps.config.outputs.agent_verifier_max_turns }}
-      agent_verifier_model: ${{ steps.config.outputs.agent_verifier_model }}
-      base_branch: ${{ steps.config.outputs.base_branch }}
-      consecutive_failures: ${{ steps.state.outputs.consecutive_failures }}
-      current_sha: ${{ steps.state.outputs.current_sha }}
-      engine: ${{ steps.config.outputs.engine }}
-      last_sha: ${{ steps.state.outputs.last_sha }}
-      level: ${{ steps.config.outputs.level }}
-      paused: ${{ steps.changes.outputs.paused }}
-      prompt: ${{ steps.prompt.outputs.prompt }}
-      prompt_verifier_output_contract: ${{ steps.config.outputs.prompt_verifier_output_contract }}
-      skill_name: ${{ steps.config.outputs.skill_name }}
-      skip: ${{ steps.changes.outputs.skip }}
+      agent_implementer_max_turns: ${{ steps.detect.outputs.agent_implementer_max_turns }}
+      agent_implementer_model: ${{ steps.detect.outputs.agent_implementer_model }}
+      agent_loop_max_attempts: ${{ steps.detect.outputs.agent_loop_max_attempts }}
+      agent_verifier_criteria: ${{ steps.detect.outputs.agent_verifier_criteria }}
+      agent_verifier_max_turns: ${{ steps.detect.outputs.agent_verifier_max_turns }}
+      agent_verifier_model: ${{ steps.detect.outputs.agent_verifier_model }}
+      allowlist: ${{ steps.detect.outputs.allowlist }}
+      base_branch: ${{ steps.detect.outputs.base_branch }}
+      consecutive_failures: ${{ steps.detect.outputs.consecutive_failures }}
+      current_sha: ${{ steps.detect.outputs.current_sha }}
+      engine: ${{ steps.detect.outputs.engine }}
+      infer_files_pattern: ${{ steps.detect.outputs.infer_files_pattern }}
+      last_sha: ${{ steps.detect.outputs.last_sha }}
+      level: ${{ steps.detect.outputs.level }}
+      no_changes_verdict: ${{ steps.detect.outputs.no_changes_verdict }}
+      pr_body: ${{ steps.detect.outputs.pr_body }}
+      pr_title: ${{ steps.detect.outputs.pr_title }}
+      prompt: ${{ steps.detect.outputs.prompt }}
+      should_run: ${{ steps.detect.outputs.should_run }}
+      skill_name: ${{ steps.detect.outputs.skill_name }}
+      skip_reason: ${{ steps.detect.outputs.skip_reason }}
+      state_file: ${{ steps.detect.outputs.state_file }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -109,93 +107,32 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Set Config Outputs
-        id: config
-        shell: bash
-        env:
-          AGENT_VERIFIER_CRITERIA: ${{ env.AGENT_VERIFIER_CRITERIA }}
-          PROMPT_VERIFIER_OUTPUT_CONTRACT: ${{ env.PROMPT_VERIFIER_OUTPUT_CONTRACT }}
-        run: |
-          set -euo pipefail
-          CRITERIA_DELIM="CRITERIA_$(openssl rand -hex 8)"
-          CONTRACT_DELIM="CONTRACT_$(openssl rand -hex 8)"
-          {
-            echo "agent_implementer_max_turns=${AGENT_TRIAGE_MAX_TURNS}"
-            echo "agent_implementer_model=${AGENT_TRIAGE_MODEL}"
-            echo "agent_loop_max_attempts=${AGENT_LOOP_MAX_ATTEMPTS}"
-            echo "agent_verifier_criteria<<${CRITERIA_DELIM}"
-            echo "${AGENT_VERIFIER_CRITERIA}"
-            echo "${CRITERIA_DELIM}"
-            echo "agent_verifier_max_turns=${AGENT_VERIFIER_MAX_TURNS}"
-            echo "agent_verifier_model=${AGENT_VERIFIER_MODEL}"
-            echo "base_branch=${DEFAULT_BASE_BRANCH}"
-            echo "engine=${DEFAULT_ENGINE}"
-            echo "level=${DEFAULT_LEVEL}"
-            echo "prompt_verifier_output_contract<<${CONTRACT_DELIM}"
-            echo "${PROMPT_VERIFIER_OUTPUT_CONTRACT}"
-            echo "${CONTRACT_DELIM}"
-            echo "skill_name=${SKILL_NAME}"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Read Loop State
-        id: state
-        uses: y-miyazaki/config/.github/actions/loop-state-read@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
+      - name: Detect Loop Work
+        id: detect
+        uses: ./.github/actions/loop-detect
         with:
-          state_file: ${{ env.STATE_FILE }}
-
-      - name: Detect Changes
-        id: changes
-        shell: bash
-        env:
-          CONSECUTIVE_FAILURES: ${{ steps.state.outputs.consecutive_failures }}
-          LAST_SHA: ${{ steps.state.outputs.last_sha }}
-        run: |
-          set -euo pipefail
-          if [[ "${CONSECUTIVE_FAILURES}" -ge 3 ]]; then
-            echo "::warning::Loop paused after ${CONSECUTIVE_FAILURES} consecutive rejections"
-            {
-              echo "paused=true"
-              echo "skip=true"
-            } >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          DETECT_SCRIPT=".claude/skills/docs-updater/scripts/detect_changes.sh"
-          RESULT=$(bash "${DETECT_SCRIPT}" --scope range --since "${LAST_SHA}")
-          SKIP=$(echo "${RESULT}" | jq -r 'if (.skip | type) == "boolean" then (.skip | tostring) else "true" end' 2>/dev/null || echo "true")
-          DELIM="RESULT_$(openssl rand -hex 8)"
-          {
-            echo "paused=false"
-            echo "skip=${SKIP}"
-            echo "result<<${DELIM}"
-            echo "${RESULT}"
-            echo "${DELIM}"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Generate Prompt
-        if: steps.changes.outputs.skip == 'false'
-        id: prompt
-        uses: y-miyazaki/config/.github/actions/loop-prompt-generate@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
-        with:
-          context: |
-            Last SHA: ${{ steps.state.outputs.last_sha }}
-            Current SHA: ${{ steps.state.outputs.current_sha }}
-
-            ## Change Detection Result
-            ${{ steps.changes.outputs.result }}
-
-            ${{ steps.state.outputs.open_rejections_prompt != '' && format('## Open Rejections from Previous Run\n\nThe previous loop run left unresolved items ({0} consecutive failure(s)). Address these before other triage items:\n\n{1}\n', steps.state.outputs.consecutive_failures, steps.state.outputs.open_rejections_prompt) || '' }}
-            ## Instructions
-            You are operating at ${{ steps.config.outputs.level }} level.
-            Edit documentation files directly to address the triage findings.
-            You MUST persist edits to disk in the worktree; a triage report alone is not sufficient at L2+.
-            Do not claim files were modified unless git would show real changes.
-            Allowed paths: docs/**/*.md, README.md, mkdocs.yml (nav section only).
-            Do NOT modify any other files.
-          skill_name: ${{ steps.config.outputs.skill_name }}
+          agent_implementer_max_turns: ${{ env.AGENT_IMPLEMENTER_MAX_TURNS }}
+          agent_implementer_model: ${{ env.AGENT_IMPLEMENTER_MODEL }}
+          agent_loop_max_attempts: ${{ env.AGENT_LOOP_MAX_ATTEMPTS }}
+          agent_verifier_criteria: ${{ env.AGENT_VERIFIER_CRITERIA }}
+          agent_verifier_max_turns: ${{ env.AGENT_VERIFIER_MAX_TURNS }}
+          agent_verifier_model: ${{ env.AGENT_VERIFIER_MODEL }}
+          allowlist: ${{ env.LOOP_ALLOWLIST }}
+          base_branch: ${{ env.DEFAULT_BASE_BRANCH }}
+          detect_script: ${{ env.LOOP_DETECT_SCRIPT }}
+          engine: ${{ env.DEFAULT_ENGINE }}
+          infer_files_pattern: ${{ env.LOOP_INFER_FILES_PATTERN }}
+          level: ${{ env.DEFAULT_LEVEL }}
+          loop_name: ${{ env.LOOP_NAME }}
+          no_changes_verdict: ${{ env.LOOP_NO_CHANGES_VERDICT }}
+          pr_body: ${{ env.LOOP_PR_BODY }}
+          pr_title: ${{ env.LOOP_PR_TITLE }}
+          prompt_instructions: ${{ env.LOOP_PROMPT_INSTRUCTIONS }}
+          skill_name: ${{ env.SKILL_NAME }}
 
   execute:
     needs: detect
-    if: needs.detect.outputs.skip == 'false'
+    if: needs.detect.outputs.should_run == 'true'
     uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@6aaff31f3fd826188a4f18443701b582215e9276 # v1.7.8
     permissions:
       contents: write
@@ -207,15 +144,13 @@ jobs:
       agent_verifier_criteria: ${{ needs.detect.outputs.agent_verifier_criteria }}
       agent_verifier_max_turns: ${{ needs.detect.outputs.agent_verifier_max_turns }}
       agent_verifier_model: ${{ needs.detect.outputs.agent_verifier_model }}
-      allowlist: "docs/**/*.md,README.md,mkdocs.yml"
+      allowlist: ${{ needs.detect.outputs.allowlist }}
       base_branch: ${{ needs.detect.outputs.base_branch }}
-      denylist: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
       engine: ${{ needs.detect.outputs.engine }}
-      infer_files_pattern: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|yml|yaml)'
+      infer_files_pattern: ${{ needs.detect.outputs.infer_files_pattern }}
       level: ${{ needs.detect.outputs.level }}
-      no_changes_verdict: REJECT
+      no_changes_verdict: ${{ needs.detect.outputs.no_changes_verdict }}
       prompt_text: ${{ needs.detect.outputs.prompt }}
-      prompt_verifier_output_contract: ${{ needs.detect.outputs.prompt_verifier_output_contract }}
       skill_name: ${{ needs.detect.outputs.skill_name }}
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
@@ -226,7 +161,8 @@ jobs:
     if: >-
       always() &&
       needs.detect.result == 'success' &&
-      needs.detect.outputs.paused != 'true' &&
+      needs.detect.outputs.skip_reason != 'circuit_breaker' &&
+      needs.detect.outputs.skip_reason != 'budget' &&
       needs.execute.result != 'cancelled'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -249,20 +185,17 @@ jobs:
           current_sha: ${{ needs.detect.outputs.current_sha }}
           has_changes: ${{ needs.execute.outputs.has_changes }}
           pr_body: |
-            ## Summary
+            ${{ needs.detect.outputs.pr_body }}
 
-            Automated documentation update by `loop-docs-triage` (${{ needs.detect.outputs.level }}).
-
+            - Level: ${{ needs.detect.outputs.level }}
             - Commits scanned: `${{ needs.detect.outputs.last_sha }}..${{ needs.detect.outputs.current_sha }}`
             - Verifier verdict: ${{ needs.execute.outputs.verdict || 'SKIPPED' }}
             - Attempts: ${{ needs.execute.outputs.attempts || '0' }}
+            - Skip reason: ${{ needs.detect.outputs.skip_reason }}
             ${{ needs.execute.outputs.reason != '' && format('- Last verifier note: {0}', needs.execute.outputs.reason) || '' }}
-
-            ---
-            *This PR was created by a loop automation. Review before merging.*
-          pr_title: "docs: automated documentation update (loop-docs-triage)"
+          pr_title: ${{ needs.detect.outputs.pr_title }}
           open_rejections: ${{ needs.execute.outputs.open_rejections }}
           reject_reason: ${{ needs.execute.outputs.reason }}
-          state_file: ${{ env.STATE_FILE }}
+          state_file: ${{ needs.detect.outputs.state_file }}
           token: ${{ github.token }}
           verdict: ${{ needs.execute.outputs.verdict }}

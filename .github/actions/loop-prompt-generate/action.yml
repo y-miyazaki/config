@@ -1,10 +1,22 @@
 name: loop-prompt-generate
-description: "Generate a structured prompt for loop agent execution from skill name and context."
+description: "Generate a structured implementer prompt from skill name, context, domain instructions, and generic loop constraints."
 
 inputs:
+  allowlist:
+    default: ""
+    description: "Comma-separated glob allowlist injected into generic path constraints"
+    required: false
   context:
     default: ""
-    description: "Additional context to include in the prompt (multiline text, e.g. state data, detection results)"
+    description: "Operational context (multiline text, e.g. state data, detection results, open rejections)"
+    required: false
+  instructions:
+    default: ""
+    description: "Domain-specific task instructions from the caller workflow (multiline markdown)"
+    required: false
+  level:
+    default: ""
+    description: "Autonomy level (L1 | L2 | L3) for generic level constraints"
     required: false
   skill_name:
     description: "Name of the skill to invoke (e.g. loop-docs-triage)"
@@ -22,7 +34,10 @@ runs:
       id: generate
       shell: bash
       env:
+        ALLOWLIST: ${{ inputs.allowlist }}
         CONTEXT: ${{ inputs.context }}
+        INSTRUCTIONS: ${{ inputs.instructions }}
+        LEVEL: ${{ inputs.level }}
         SKILL_NAME: ${{ inputs.skill_name }}
       run: |
         set -euo pipefail
@@ -34,6 +49,26 @@ runs:
             echo ""
             echo "## Context"
             echo "${CONTEXT}"
+          fi
+          if [[ -n "${INSTRUCTIONS}" ]]; then
+            echo ""
+            echo "## Instructions"
+            echo "${INSTRUCTIONS}"
+          fi
+          if [[ -n "${LEVEL}" || -n "${ALLOWLIST}" ]]; then
+            echo ""
+            echo "## Constraints"
+            if [[ -n "${LEVEL}" ]]; then
+              echo "You are operating at ${LEVEL} level."
+              if [[ "${LEVEL}" == "L2" || "${LEVEL}" == "L3" ]]; then
+                echo "You MUST persist edits to disk in the worktree; a report alone is not sufficient at L2+."
+              fi
+            fi
+            echo "Do not claim files were modified unless git would show real changes."
+            if [[ -n "${ALLOWLIST}" ]]; then
+              echo "Allowed paths: ${ALLOWLIST}."
+              echo "Do NOT modify any other files."
+            fi
           fi
           echo "${DELIM}"
         } >> "$GITHUB_OUTPUT"

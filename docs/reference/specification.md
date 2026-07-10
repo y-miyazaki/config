@@ -302,14 +302,15 @@ The repository must provide reusable workflows.
 | Action | Purpose |
 |--------|---------|
 | `loop-agent-once` | Single read-only agent session (L1) |
-| `loop-execute` | Bounded Agent→Verify loop in one job (L2/L3); denylist/allowlist enforcement, structured rejections, push |
+| `loop-config-pack` | Pack caller agent config into standardized outputs for detect/execute handoff |
+| `loop-detect` | Detect phase: config pack, state read, guards, detect script invocation, prompt generation |
+| `loop-execute` | Bounded Agent→Verify loop in one job (L2/L3); denylist/allowlist enforcement, push, worktree cleanup |
 | `loop-finalize` | PR creation (+ auto-merge at L3), branch cleanup, and state write (agent branch on approve, otherwise base branch) |
 | `loop-install-cli` | Install and cache the selected engine CLI |
-| `loop-prompt-generate` | Generate structured prompt from skill name and context |
+| `loop-prompt-generate` | Assemble implementer prompt: skill invocation, caller context/instructions, generic loop constraints |
 | `loop-state-read` | Read loop state JSON; output last_sha/current_sha, consecutive_failures, open_rejections prompt |
 | `loop-state-write` | Write state JSON (including `open_rejections` on reject) + commit/push |
 | `loop-worktree-setup` | Create isolated worktree + branch (L2/L3) |
-| `loop-worktree-push` | Commit/push worktree changes + cleanup (used by `loop-execute`) |
 
 ## Renovate
 
@@ -362,3 +363,4 @@ Use repository validation workflows and scripts for changed assets:
 - If APM install results differ across environments, verify `apm.lock.yaml` is committed and up to date.
 - If reusable workflows fail to resolve, verify repository visibility and workflow reference format.
 - If Renovate behavior differs from expectation, verify extends and rule precedence against `renovate/default.json`.
+

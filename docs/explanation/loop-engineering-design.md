@@ -89,15 +89,15 @@ For a list of Actions and Reusable Workflows, see [Specification](../reference/s
 ## Execution Flow
 
 ```text
-cron → on-loop-docs-triage.yaml
+cron → on-loop-<name>.yaml
   detect job:
-    → loop-state-read action              # retrieve previous SHA + open_rejections
-    → detect_changes.sh (inline)          # detect docs impact (caller-specific)
-    → loop-prompt-generate action         # assemble prompt (may inject prior open_rejections)
+    → loop-detect action                  # config pack, state read, guards, detect script, prompt assembly
+      → loop-config-pack / loop-state-read / loop-prompt-generate (internal)
+      → detect_changes.sh (caller-provided path)
   execute job:
     → ci-loop-agent.yaml (reusable)       # L1: loop-agent-once; L2/L3: worktree + loop-execute
       → loop-worktree-setup               # isolated branch (L2/L3)
-      → loop-execute                      # bounded Agent→Verify loop (separate verifier session)
+      → loop-execute                      # bounded Agent→Verify loop + push/cleanup (L2/L3)
       → outputs: branch, has_changes, verdict, reason, attempts, open_rejections
   finalize job:
     → loop-finalize action                # create PR (+ auto-merge at L3) or delete branch + update state
@@ -113,14 +113,13 @@ flowchart TD
     %% Detect Job
     subgraph detect["detect job"]
         direction TB
-        D1[loop-state-read action] --> D2[detect_changes.sh<br/>caller inline]
-        D2 --> D3{skip?}
-        D3 -->|true| D_END([no-op])
-        D3 -->|false| D4[loop-prompt-generate action]
+        D1[loop-detect action] --> D2{should_run?}
+        D2 -->|false| D_END([no-op])
+        D2 -->|true| D3[prompt output]
     end
 
     %% Execute Job (ci-loop-agent L2/L3)
-    D4 --> execute
+    D3 --> execute
     subgraph execute["execute job (ci-loop-agent L2/L3)"]
         direction TB
         A1[loop-worktree-setup] --> A2[loop-execute<br/>Agent→Verify bounded loop]
@@ -164,14 +163,15 @@ graph LR
 
     %% Composite Actions
     subgraph actions["Composite Actions"]
+        CA0[loop-detect<br/>detect phase]
         CA1[loop-agent-once<br/>L1]
         CA2[loop-execute<br/>L2/L3 Agent→Verify]
         CA3[loop-finalize]
-        CA4[loop-prompt-generate]
-        CA5[loop-state-read]
-        CA6[loop-state-write]
-        CA7[loop-worktree-setup]
-        CA8[loop-worktree-push]
+        CA4[loop-config-pack]
+        CA5[loop-prompt-generate]
+        CA6[loop-state-read]
+        CA7[loop-state-write]
+        CA8[loop-worktree-setup]
         CA9[loop-install-cli]
     end
 
@@ -187,20 +187,21 @@ graph LR
 
     %% Relationships
     CW1 --> RW1
+    CW1 --> CA0
     CW1 --> CA3
-    CW1 --> CA4
-    CW1 --> CA5
+    CA0 --> CA4
+    CA0 --> CA5
+    CA0 --> CA6
     RW1 --> E1
     RW1 --> CA1
     RW1 --> CA2
-    RW1 --> CA7
-    CA2 --> CA8
+    RW1 --> CA8
     CA2 --> CA9
     CA1 --> CA9
     RW1 --> SK1
-    CA3 --> CA6
-    CA5 --> ST1
+    CA3 --> CA7
     CA6 --> ST1
+    CA7 --> ST1
 ```
 
 ## STATE Files
@@ -226,7 +227,7 @@ State files are maintained individually per loop (multi-loop coordination princi
 | loop-budget skill | Download from npm/GitHub Release with caching (repository-independent) | Future |
 | loop-verifier skill | Same as above | Future |
 | Maker-Checker separation | Implemented in `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3) | ✅ Implemented |
-| Worktree isolation | `loop-worktree-setup` / `loop-worktree-push` via `ci-loop-agent` L2/L3 | ✅ Implemented |
+| Worktree isolation | `loop-worktree-setup` + push/cleanup inside `loop-execute` via `ci-loop-agent` L2/L3 | ✅ Implemented |
 | Denylist / Allowlist | Defined in SKILL.md, checked by verifier | ✅ Implemented |
 
 ## Design Principles
@@ -236,12 +237,46 @@ State files are maintained individually per loop (multi-loop coordination princi
 | Type | Location | Principle |
 |---|---|---|
 | Reusable Workflow | `.github/workflows/ci-loop-*.yaml` | Generic logic only. Domain-specific criteria are passed from the caller via inputs |
-| Composite Action | `.github/actions/loop-*` | Aggregation of generic steps. Must not depend on specific scripts or repository-specific paths |
-| Caller Workflow | `.github/workflows/on-loop-*.yaml` | Domain-specific logic (detection script invocation, criteria definition) is written here |
+| Composite Action | `.github/actions/loop-*` | Aggregation of generic steps. Must not depend on specific scripts, repository-specific paths, or domain vocabulary |
+| Caller Workflow | `.github/workflows/on-loop-*.yaml` | Domain-specific logic: detection script path, verifier criteria, allowlist, `prompt_instructions`, PR metadata |
 | APM Package | `.apm/packages/*-loop/` | Distributes Agent Skills only. Does not distribute Workflows or Actions |
 | Skill | `.apm/packages/*-loop/.apm/skills/` | Defines Agent behavioral constraints. Does not reference external skills (self-contained) |
 
 **Decision criterion**: If the answer to "Can another repository use this via remote reference?" is YES, it belongs in an action/workflow. If NO (depends on specific paths or scripts), write it inline in the caller.
+
+### Domain Isolation in Actions
+
+`loop-*` composite actions and reusable workflows must remain domain-agnostic. When adding loops such as `ci-sweeper`, `code-review`, or tech-debt remediation, domain logic must not leak into shared actions — otherwise every new loop requires editing the action layer.
+
+| Layer | Domain-specific (caller / skill) | Generic (action / reusable workflow) |
+|---|---|---|
+| Detection criteria | `detect_script` path, script output schema | `loop-detect` guard logic, state read, budget check |
+| Implementer prompt | `prompt_instructions`, `AGENT_VERIFIER_CRITERIA`, PR title/body | `loop-prompt-generate` constraints (level, allowlist, worktree persistence) |
+| Path scope | `LOOP_ALLOWLIST`, Skill allowed paths | denylist defaults in `loop-execute`, allowlist enforcement |
+| Verifier quality bar | Criteria markdown in caller `env` | Verifier prompt templates, JSON output contract in `loop-execute` |
+
+**Caller env pattern** for a new `on-loop-*.yaml`:
+
+```yaml
+env:
+  LOOP_NAME: ci-sweeper
+  LOOP_DETECT_SCRIPT: .github/scripts/detect-ci-failures.sh
+  LOOP_ALLOWLIST: "src/**,tests/**"
+  LOOP_PROMPT_INSTRUCTIONS: |
+    Fix the failing CI checks identified in the detection result.
+    Do not change unrelated files.
+  AGENT_VERIFIER_CRITERIA: |
+    ## Criteria for APPROVE
+    ...
+```
+
+**Anti-patterns** (do not embed in `loop-*` actions):
+
+- Task-specific verbs in prompt text ("triage findings", "update CHANGELOG", "fix lint errors")
+- Hardcoded file paths or glob patterns for a single loop
+- Domain-specific default commit messages or PR templates inside actions
+
+`loop-prompt-generate` is the boundary for prompt assembly: caller supplies `instructions` (domain task); the action injects generic `Constraints` (level, allowlist, L2+ worktree persistence).
 
 ### Maker-Checker Separation (Most Important Principle)
 
@@ -314,7 +349,7 @@ For L2 and above where auto-fixes are performed, branch isolation is mandatory. 
 | Level | Path | Branch / working directory |
 |---|---|---|
 | L1 | `loop-agent-once` | Read-only on the checked-out workspace (no worktree branch) |
-| L2/L3 | `loop-worktree-setup` → `loop-execute` (uses `loop-worktree-push`) | Isolated worktree path and agent branch |
+| L2/L3 | `loop-worktree-setup` → `loop-execute` (push and cleanup internal) | Isolated worktree path and agent branch |
 
 **Unified contract**: `ci-loop-agent.yaml` L2/L3 outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections }`. Verification runs inside `loop-execute` (separate verifier session); finalize consumes those outputs for all engines.
 
@@ -361,7 +396,7 @@ Per-tier permissions:
 4. **Unified denylist**: All loops share the same path denylist
 5. **Aggregated budget management**: Token consumption across all loops is aggregated against a daily budget cap
 
-Conflict detection is performed by each Action loop checking the `acting_on` field in peer state files before execution.
+Conflict detection via the `acting_on` field in peer state files is **Planned** (not yet implemented). Current mitigation: per-loop `concurrency` groups and separate state files.
 
 ### Failure Mode Countermeasures
 
@@ -495,8 +530,8 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 | **Input** | Previous state (last_sha), repository contents |
 | **Output** | `skip` (bool), `result` (structured JSON describing changes), config values |
 | **May modify** | Nothing. Read-only phase |
-| **Caller-specific** | Detection script, scope definition, filtering logic |
-| **Generic** | State read, config output, prompt generation |
+| **Caller-specific** | Detection script path, `prompt_instructions`, verifier criteria, allowlist, PR metadata |
+| **Generic** | `loop-detect` (state read, guards, detect invocation), `loop-prompt-generate` (constraints + caller context) |
 
 #### Agent (Execute)
 
@@ -547,3 +582,4 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 2. A phase must not assume the internal implementation of a prior phase (no implicit side effects)
 3. Checkout is the caller's responsibility. Actions operate on an already checked-out workspace
 4. Error in any phase halts the pipeline (except Finalize, which runs on `always()` to record state)
+

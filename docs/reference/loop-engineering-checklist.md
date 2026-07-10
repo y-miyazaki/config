@@ -24,11 +24,12 @@ All must be true. Violation of any item is a blocking issue.
 
 #### Detect
 
-- [ ] Outputs `skip` (bool) and structured `result`
+- [ ] Outputs `should_run` (bool), `skip_reason`, and structured detect `result` via `loop-detect`
 - [ ] Read-only — does not modify repository or state
-- [ ] Detection logic is inline in the caller (not in a reusable workflow or action)
-- [ ] Uses `loop-state-read` for previous SHA retrieval
-- [ ] Uses `loop-prompt-generate` for prompt assembly
+- [ ] Detection script path is configured in the caller (`LOOP_DETECT_SCRIPT`); script logic is domain-specific
+- [ ] Domain-specific implementer instructions are in caller `env` (`LOOP_PROMPT_INSTRUCTIONS` → `prompt_instructions`)
+- [ ] Generic prompt constraints (level, allowlist, L2+ persistence) are injected by `loop-prompt-generate`, not hardcoded in `loop-detect`
+- [ ] No domain vocabulary ("triage", "CHANGELOG", "lint fix") is embedded in `loop-*` actions
 
 #### Agent (Execute)
 
@@ -69,7 +70,8 @@ All must be true. Violation of any item is a blocking issue.
 - [ ] `timeout-minutes` set for all jobs
 - [ ] `permissions` follow least privilege per job
 - [ ] env keys are alphabetically ordered
-- [ ] State file path is unique to this loop (`.loop/state-<domain>.json`)
+- [ ] State file path is unique to this loop (`.loop/state-<domain>.json` or `LOOP_NAME` auto-resolution)
+- [ ] `LOOP_PROMPT_INSTRUCTIONS` defines domain task wording; `LOOP_ALLOWLIST` and `AGENT_VERIFIER_CRITERIA` are caller-owned
 - [ ] Denylist includes: `**/.env`, `**/credentials*`, `**/secrets*`, `**/migration/*.sql`, `**/infrastructure/**`
 
 ### Retry Policy
@@ -134,3 +136,4 @@ All must be satisfied over a 2-week window before promoting to L3 (Unattended).
 - [ ] Weekly digest is configured for team visibility
 - [ ] Medium-risk changes route to human gate
 - [ ] Escalation path is defined for consecutive failures
+

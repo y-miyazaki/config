@@ -124,8 +124,5 @@ env/
 # === Git ===
 .git/
 
-# === Reports (often large) ===
-docs/report/
-
 # === Development environment artifacts ===
 env/common/tmp/

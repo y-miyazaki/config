@@ -1,0 +1,295 @@
+name: loop-detect
+description: "Detect loop work: pack config, read state, check guards, run detect script, generate prompt."
+
+inputs:
+  agent_implementer_max_turns:
+    description: "Maximum implementer agent turns per loop attempt"
+    required: true
+  agent_implementer_model:
+    description: "Implementer model override"
+    required: true
+  agent_loop_max_attempts:
+    description: "Maximum Agent→Verify loop attempts"
+    required: true
+  agent_verifier_criteria:
+    description: "Domain-specific APPROVE/REJECT criteria (markdown)"
+    required: true
+  agent_verifier_max_turns:
+    description: "Maximum verifier agent turns"
+    required: true
+  agent_verifier_model:
+    description: "Verifier model override"
+    required: true
+  allowlist:
+    description: "Comma-separated glob allowlist passed to execute"
+    required: true
+  base_branch:
+    description: "Base branch for verify diff"
+    required: true
+  budget_file:
+    default: ".loop/loop-budget.json"
+    description: "Path to loop budget JSON policy file"
+    required: false
+  detect_script:
+    description: "Path to domain detect script (bash)"
+    required: true
+  engine:
+    description: "AI engine (claude | copilot | codex | cursor)"
+    required: true
+  infer_files_pattern:
+    default: ""
+    description: "Optional extended-regex to infer file paths from verifier text"
+    required: false
+  level:
+    description: "Autonomy level (L1 | L2 | L3)"
+    required: true
+  loop_name:
+    description: "Loop name for budget lookup (e.g. docs-triage)"
+    required: true
+  no_changes_verdict:
+    default: "APPROVE"
+    description: "Verdict when implementer produces no file changes (APPROVE or REJECT)"
+    required: false
+  pr_body:
+    default: ""
+    description: "PR body static section for finalize (domain-specific)"
+    required: false
+  pr_title:
+    default: ""
+    description: "PR title for finalize"
+    required: false
+  prompt_instructions:
+    default: ""
+    description: "Domain-specific implementer instructions passed to loop-prompt-generate"
+    required: false
+  run_log_file:
+    default: ".loop/loop-run-log.md"
+    description: "Path to JSONL run log for budget aggregation"
+    required: false
+  skill_name:
+    description: "Skill name to invoke (e.g. loop-docs-triage)"
+    required: true
+  state_file:
+    default: ""
+    description: "Path to loop state JSON file (default: .loop/state-<loop_name>.json)"
+    required: false
+
+outputs:
+  agent_implementer_max_turns:
+    description: "Implementer max turns"
+    value: ${{ steps.config.outputs.agent_implementer_max_turns }}
+  agent_implementer_model:
+    description: "Implementer model"
+    value: ${{ steps.config.outputs.agent_implementer_model }}
+  agent_loop_max_attempts:
+    description: "Loop max attempts"
+    value: ${{ steps.config.outputs.agent_loop_max_attempts }}
+  agent_verifier_criteria:
+    description: "Verifier criteria"
+    value: ${{ steps.config.outputs.agent_verifier_criteria }}
+  agent_verifier_max_turns:
+    description: "Verifier max turns"
+    value: ${{ steps.config.outputs.agent_verifier_max_turns }}
+  agent_verifier_model:
+    description: "Verifier model"
+    value: ${{ steps.config.outputs.agent_verifier_model }}
+  allowlist:
+    description: "Allowlist for execute job"
+    value: ${{ inputs.allowlist }}
+  base_branch:
+    description: "Base branch"
+    value: ${{ steps.config.outputs.base_branch }}
+  consecutive_failures:
+    description: "Consecutive failures from state"
+    value: ${{ steps.state.outputs.consecutive_failures }}
+  current_sha:
+    description: "Current HEAD SHA"
+    value: ${{ steps.state.outputs.current_sha }}
+  engine:
+    description: "AI engine"
+    value: ${{ steps.config.outputs.engine }}
+  infer_files_pattern:
+    description: "Infer files pattern for execute"
+    value: ${{ inputs.infer_files_pattern }}
+  last_sha:
+    description: "Last processed SHA from state"
+    value: ${{ steps.state.outputs.last_sha }}
+  level:
+    description: "Autonomy level"
+    value: ${{ steps.config.outputs.level }}
+  no_changes_verdict:
+    description: "Verdict when implementer produces no file changes"
+    value: ${{ inputs.no_changes_verdict }}
+  pr_body:
+    description: "PR body static section for finalize"
+    value: ${{ inputs.pr_body }}
+  pr_title:
+    description: "PR title for finalize"
+    value: ${{ inputs.pr_title }}
+  prompt:
+    description: "Generated implementer prompt (empty when should_run is false)"
+    value: ${{ steps.prompt.outputs.prompt }}
+  should_run:
+    description: "Whether the execute job should run"
+    value: ${{ steps.guard.outputs.should_run }}
+  skill_name:
+    description: "Skill name"
+    value: ${{ steps.config.outputs.skill_name }}
+  skip_reason:
+    description: "Why execution was skipped (none | no_changes | circuit_breaker | budget)"
+    value: ${{ steps.guard.outputs.skip_reason }}
+  state_file:
+    description: "Resolved loop state JSON path"
+    value: ${{ steps.paths.outputs.state_file }}
+
+runs:
+  using: composite
+  steps:
+    - name: Pack Config
+      id: config
+      uses: ./.github/actions/loop-config-pack
+      with:
+        agent_implementer_max_turns: ${{ inputs.agent_implementer_max_turns }}
+        agent_implementer_model: ${{ inputs.agent_implementer_model }}
+        agent_loop_max_attempts: ${{ inputs.agent_loop_max_attempts }}
+        agent_verifier_criteria: ${{ inputs.agent_verifier_criteria }}
+        agent_verifier_max_turns: ${{ inputs.agent_verifier_max_turns }}
+        agent_verifier_model: ${{ inputs.agent_verifier_model }}
+        base_branch: ${{ inputs.base_branch }}
+        engine: ${{ inputs.engine }}
+        level: ${{ inputs.level }}
+        skill_name: ${{ inputs.skill_name }}
+
+    - name: Resolve State File
+      id: paths
+      shell: bash
+      env:
+        LOOP_NAME: ${{ inputs.loop_name }}
+        STATE_FILE_INPUT: ${{ inputs.state_file }}
+      run: |
+        set -euo pipefail
+        if [[ -n "${STATE_FILE_INPUT}" ]]; then
+          echo "state_file=${STATE_FILE_INPUT}" >> "$GITHUB_OUTPUT"
+        else
+          echo "state_file=.loop/state-${LOOP_NAME}.json" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Read Loop State
+      id: state
+      uses: ./.github/actions/loop-state-read
+      with:
+        state_file: ${{ steps.paths.outputs.state_file }}
+
+    - name: Evaluate Guards and Detect Changes
+      id: guard
+      shell: bash
+      env:
+        BUDGET_FILE: ${{ inputs.budget_file }}
+        CONSECUTIVE_FAILURES: ${{ steps.state.outputs.consecutive_failures }}
+        DETECT_SCRIPT: ${{ inputs.detect_script }}
+        LAST_SHA: ${{ steps.state.outputs.last_sha }}
+        LOOP_NAME: ${{ inputs.loop_name }}
+        RUN_LOG_FILE: ${{ inputs.run_log_file }}
+      run: |
+        set -euo pipefail
+
+        should_run="true"
+        skip_reason="none"
+        detect_result=""
+
+        if [[ "${CONSECUTIVE_FAILURES}" -ge 3 ]]; then
+          echo "::warning::Loop paused after ${CONSECUTIVE_FAILURES} consecutive rejections"
+          should_run="false"
+          skip_reason="circuit_breaker"
+        elif [[ -f "${BUDGET_FILE}" ]]; then
+          max_runs=$(jq -r --arg loop "${LOOP_NAME}" '.loops[$loop].max_runs_per_day // empty' "${BUDGET_FILE}" 2>/dev/null || true)
+          max_tokens=$(jq -r --arg loop "${LOOP_NAME}" '.loops[$loop].max_tokens_per_day // empty' "${BUDGET_FILE}" 2>/dev/null || true)
+          today=$(date -u +%Y-%m-%d)
+          runs_today=0
+          tokens_today=0
+          if [[ -f "${RUN_LOG_FILE}" ]]; then
+            while IFS= read -r line; do
+              [[ -z "${line}" ]] && continue
+              [[ "${line}" != \{* ]] && continue
+              log_date=$(jq -r '.run_id // ""' <<< "${line}" 2>/dev/null | cut -c1-10)
+              log_pattern=$(jq -r '.pattern // ""' <<< "${line}" 2>/dev/null)
+              [[ "${log_date}" != "${today}" ]] && continue
+              [[ "${log_pattern}" != "${LOOP_NAME}" ]] && continue
+              runs_today=$((runs_today + 1))
+              entry_tokens=$(jq -r '(.usage.total_input_tokens // 0) + (.usage.total_output_tokens // 0) + (.tokens_estimate // 0)' <<< "${line}" 2>/dev/null || echo "0")
+              tokens_today=$((tokens_today + entry_tokens))
+            done < <(grep -E '^\{' "${RUN_LOG_FILE}" 2>/dev/null || true)
+          fi
+          if [[ -n "${max_runs}" && "${runs_today}" -ge "${max_runs}" ]]; then
+            echo "::warning::Daily run budget exceeded for ${LOOP_NAME} (${runs_today}/${max_runs})"
+            should_run="false"
+            skip_reason="budget"
+          elif [[ -n "${max_tokens}" && "${tokens_today}" -ge "${max_tokens}" ]]; then
+            echo "::warning::Daily token budget exceeded for ${LOOP_NAME} (${tokens_today}/${max_tokens})"
+            should_run="false"
+            skip_reason="budget"
+          fi
+        fi
+
+        if [[ "${should_run}" == "true" ]]; then
+          RESULT=$(bash "${DETECT_SCRIPT}" --scope range --since "${LAST_SHA}")
+          DETECT_SKIP=$(echo "${RESULT}" | jq -r 'if (.skip | type) == "boolean" then (.skip | tostring) else "true" end' 2>/dev/null || echo "true")
+          detect_result="${RESULT}"
+          if [[ "${DETECT_SKIP}" == "true" ]]; then
+            should_run="false"
+            skip_reason="no_changes"
+          fi
+        fi
+
+        {
+          echo "should_run=${should_run}"
+          echo "skip_reason=${skip_reason}"
+        } >> "$GITHUB_OUTPUT"
+
+        if [[ -n "${detect_result}" ]]; then
+          DELIM="DETECT_RESULT_$(openssl rand -hex 8)"
+          {
+            echo "detect_result<<${DELIM}"
+            echo "${detect_result}"
+            echo "${DELIM}"
+          } >> "$GITHUB_OUTPUT"
+        else
+          echo "detect_result=" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Generate Prompt Text
+      if: steps.guard.outputs.should_run == 'true'
+      id: prompt_text
+      uses: ./.github/actions/loop-prompt-generate
+      with:
+        allowlist: ${{ inputs.allowlist }}
+        context: |
+          Last SHA: ${{ steps.state.outputs.last_sha }}
+          Current SHA: ${{ steps.state.outputs.current_sha }}
+
+          ## Change Detection Result
+          ${{ steps.guard.outputs.detect_result }}
+
+          ${{ steps.state.outputs.open_rejections_prompt != '' && format('## Open Rejections from Previous Run\n\nThe previous loop run left unresolved items ({0} consecutive failure(s)). Address these before proceeding with new work:\n\n{1}\n', steps.state.outputs.consecutive_failures, steps.state.outputs.open_rejections_prompt) || '' }}
+        instructions: ${{ inputs.prompt_instructions }}
+        level: ${{ steps.config.outputs.level }}
+        skill_name: ${{ steps.config.outputs.skill_name }}
+
+    - name: Export Prompt Output
+      id: prompt
+      shell: bash
+      env:
+        GENERATED_PROMPT: ${{ steps.prompt_text.outputs.prompt }}
+        SHOULD_RUN: ${{ steps.guard.outputs.should_run }}
+      run: |
+        set -euo pipefail
+        if [[ "${SHOULD_RUN}" == "true" ]]; then
+          DELIM="PROMPT_$(openssl rand -hex 8)"
+          {
+            echo "prompt<<${DELIM}"
+            echo "${GENERATED_PROMPT}"
+            echo "${DELIM}"
+          } >> "$GITHUB_OUTPUT"
+        else
+          echo "prompt=" >> "$GITHUB_OUTPUT"
+        fi
