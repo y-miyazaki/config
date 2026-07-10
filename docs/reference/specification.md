@@ -303,8 +303,8 @@ The repository must provide reusable workflows.
 |--------|---------|
 | `loop-agent-once` | Single read-only agent session (L1) |
 | `loop-config-pack` | Pack caller agent config into standardized outputs for detect/execute handoff |
-| `loop-detect` | Detect phase: config pack, state read, guards (circuit breaker + daily budget), detect script invocation, prompt generation |
-| `loop-execute` | Bounded Agent→Verify loop in one job (L2/L3); denylist/allowlist enforcement, push, worktree cleanup, `usage_json` |
+| `loop-detect` | Detect phase: config pack, state read, guards (circuit breaker + daily budget via `max_runs_per_day` / `max_tokens_per_day` from `.loop/loop-budget.json` or `budget_max_*` inputs), detect script invocation, prompt generation. Attempt caps use caller `agent_loop_max_attempts`, not the budget file |
+| `loop-execute` | Bounded Agent→Verify loop in one job (L2/L3); denylist/allowlist enforcement, push, worktree cleanup, `usage_json`; attempt bound via `agent_loop_max_attempts` |
 | `loop-finalize` | PR creation (+ auto-merge at L3), branch cleanup, state write, and run-log append via `loop-run-log` |
 | `loop-install-cli` | Install and cache the selected engine CLI |
 | `loop-prompt-generate` | Assemble implementer prompt: skill invocation, caller context/instructions, generic loop constraints |

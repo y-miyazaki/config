@@ -29,7 +29,8 @@ All must be true. Violation of any item is a blocking issue.
 - [ ] Detection script path is configured in the caller (`LOOP_DETECT_SCRIPT`); script logic is domain-specific
 - [ ] Domain-specific implementer instructions are in caller `env` (`LOOP_PROMPT_INSTRUCTIONS` → `prompt_instructions`)
 - [ ] Generic prompt constraints (level, allowlist, L2+ persistence) are injected by `loop-prompt-generate`, not hardcoded in `loop-detect`
-- [ ] Budget policy is configured (`.loop/loop-budget.json` and/or `budget_max_*` inputs); detect skips when daily run/token caps are exceeded
+- [ ] Budget policy is configured (`.loop/loop-budget.json` and/or `budget_max_*` inputs); `loop-detect` reads only `max_runs_per_day` / `max_tokens_per_day` and skips when those daily caps are exceeded
+- [ ] Attempt caps are caller-configured (`agent_loop_max_attempts` / `AGENT_LOOP_MAX_ATTEMPTS`), not read from `loop-budget.json`
 - [ ] No domain vocabulary ("triage", "CHANGELOG", "lint fix") is embedded in `loop-*` actions
 
 #### Agent (Execute)
