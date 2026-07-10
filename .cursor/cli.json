@@ -59,7 +59,9 @@
       "Write(src/**)",
       "Write(test/**)",
       "Write(tests/**)",
-      "Mcp(*:*)"
+      "Mcp(*:*)",
+      "WebSearch(github.com)",
+      "WebSearch(*.cursor.com)"
     ],
     "deny": [
       "Shell(bundle install)",

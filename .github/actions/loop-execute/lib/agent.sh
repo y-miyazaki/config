@@ -107,19 +107,21 @@ function run_agent {
             ;;
         cursor)
             export CURSOR_API_KEY="${AGENT_TOKEN}"
-            local -a ARGS=(-p "${PROMPT}" --trust)
+            local -a ARGS=(-p "${PROMPT}" --print --output-format stream-json --trust)
+            local agent_bin
             if [[ ${allow_writes} == "true" && ${WORKING_DIRECTORY} != "." ]]; then
                 ARGS+=(--force)
             fi
             if [[ -n ${MODEL:-} ]]; then ARGS+=(--model "${MODEL}"); fi
             if command -v agent > /dev/null 2>&1; then
-                agent "${ARGS[@]}"
+                agent_bin="agent"
             elif command -v cursor-agent > /dev/null 2>&1; then
-                cursor-agent "${ARGS[@]}"
+                agent_bin="cursor-agent"
             else
                 echo "::error::Cursor CLI (agent) not found in PATH"
                 exit 1
             fi
+            run_cursor_agent_with_usage "${agent_bin}" "${ARGS[@]}"
             ;;
         *)
             echo "::error::Unsupported engine: ${ENGINE}"

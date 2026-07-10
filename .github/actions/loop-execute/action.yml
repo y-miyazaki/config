@@ -117,6 +117,9 @@ outputs:
   reason:
     description: "Final verifier reason"
     value: ${{ steps.loop.outputs.reason }}
+  usage_json:
+    description: "Measured token usage JSON (empty when CLI usage is unavailable)"
+    value: ${{ steps.loop.outputs.usage_json }}
   verdict:
     description: "Final verdict (APPROVE or REJECT)"
     value: ${{ steps.loop.outputs.verdict }}
@@ -179,3 +182,4 @@ runs:
       env:
         WORKTREE_PATH: ${{ inputs.worktree_path }}
       run: bash "${{ github.action_path }}/lib/cleanup.sh"
+

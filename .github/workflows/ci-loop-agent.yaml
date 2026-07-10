@@ -153,6 +153,9 @@ on:
       reason:
         description: "Final verifier reason (L2/L3)"
         value: ${{ jobs.agent-l2.outputs.reason || '' }}
+      usage_json:
+        description: "Measured token usage JSON (L2/L3)"
+        value: ${{ jobs.agent-l2.outputs.usage_json || '' }}
       verdict:
         description: "Final verifier verdict APPROVE/REJECT (L2/L3)"
         value: ${{ jobs.agent-l2.outputs.verdict || '' }}
@@ -203,6 +206,7 @@ jobs:
       has_changes: ${{ steps.execute.outputs.has_changes }}
       open_rejections: ${{ steps.execute.outputs.open_rejections }}
       reason: ${{ steps.execute.outputs.reason }}
+      usage_json: ${{ steps.execute.outputs.usage_json }}
       verdict: ${{ steps.execute.outputs.verdict }}
     permissions:
       contents: write
@@ -253,3 +257,4 @@ jobs:
           token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
           verifier_context: ${{ inputs.verifier_context }}
           worktree_path: ${{ steps.worktree.outputs.worktree_path }}
+

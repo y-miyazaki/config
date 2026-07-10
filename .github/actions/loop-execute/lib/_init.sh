@@ -28,5 +28,7 @@ source "${LIB_DIR}/rejections.sh"
 source "${LIB_DIR}/paths.sh"
 # shellcheck source=./agent.sh
 source "${LIB_DIR}/agent.sh"
+# shellcheck source=./usage.sh
+source "${LIB_DIR}/usage.sh"
 # shellcheck source=./verifier.sh
 source "${LIB_DIR}/verifier.sh"

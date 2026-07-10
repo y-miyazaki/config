@@ -8,6 +8,7 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 
 | 日付       | 内容                                                                 |
 | ---------- | -------------------------------------------------------------------- |
+| 2026-07-10 | Cursor プロジェクト設定パスを修正 (`.cursor/settings.json` → 用途別ファイル) |
 | 2026-06-27 | Codex (OpenAI) を全セクションに追加                                  |
 | 2026-06-17 | 全般最新化: Copilot AI Credits をドル建て (Base+Flex) に修正、Claude Code Free tier 追加、Cursor pricing 簡略化反映、Anthropic Enterprise pricing 更新 |
 | 2026-06-17 | Pricing 個人プラン細分化 (3段階→4段階)。Kiro Pro Max ($100/月) 追加反映 |
@@ -136,8 +137,8 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 | Hooks 設定          | `.gemini/antigravity-cli/settings.json` 内 `hooks` | `.claude/settings.json` 内 `hooks` | `.codex/hooks.json` / `.codex/config.toml` 内 `[hooks]` | `.cursor/hooks.json` (プロジェクト) / `~/.cursor/hooks.json` (ユーザー) | `.github/hooks/*.json`            | IDE: `.kiro/hooks/*.kiro.hook` / CLI: Agent設定内 `hooks` フィールド |
 | Agent 定義          | -                               | `.claude/agents/`                | -                                 | ⚠️ 独自UI管理                      | `.github/agents/*.md`             | `.kiro/agents/`                |
 | プロンプト          | Custom commands                 | `.claude/commands/` (レガシー)   | -                                 | -                                 | `.github/prompts/`                | `.kiro/prompts/`               |
-| プロジェクト設定    | `.gemini/antigravity-cli/settings.json` | `.claude/settings.json`          | `.codex/config.toml`              | `.cursor/settings.json`           | `.github/copilot/settings.json`   | `.kiro/agents/*.json`          |
-| ユーザー設定        | `~/.gemini/`                    | `~/.claude/`                     | `~/.codex/`                       | `~/.cursor/`                      | `~/.copilot/`                     | `~/.kiro/`                     |
+| プロジェクト設定    | `.gemini/antigravity-cli/settings.json` | `.claude/settings.json`          | `.codex/config.toml`              | IDE: `.cursor/permissions.json` / CLI: `.cursor/cli.json` / Editor: `.vscode/settings.json` | `.github/copilot/settings.json`   | `.kiro/agents/*.json`          |
+| ユーザー設定        | `~/.gemini/`                    | `~/.claude/`                     | `~/.codex/`                       | `~/.cursor/permissions.json` (IDE) / `~/.cursor/cli-config.json` (CLI) / Editor: `~/.config/Cursor/User/settings.json` | `~/.copilot/`                     | `~/.kiro/`                     |
 
 ### Guidelines
 
@@ -258,3 +259,5 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 | 中     | Instructions / Skills / Hooks / MCP / Agent 責務整理 | 何を守るか / どう実行するか / 強制する / 外部能力 / 誰が実行するか の対応表             |
 | 中     | 事実と評価の分離                              | Objective Comparison (事実) と Opinionated Assessment (筆者評価) を明示的に分ける         |
 | 低     | Guardrails → Agent Governance 再構成          | Permissions / Guardrails / Hooks / Audit を上位概念で統合                                |
+
+

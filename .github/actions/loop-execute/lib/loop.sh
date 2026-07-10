@@ -48,6 +48,7 @@ function initialize_loop_state {
     mkdir -p "${STATUS_DIR}"
     normalize_no_changes_verdict
     load_default_prompts
+    reset_usage_totals
 }
 
 #######################################
@@ -64,7 +65,8 @@ function initialize_loop_state {
 #
 #######################################
 function write_loop_outputs {
-    local delim
+    local delim usage_json
+    usage_json="$(build_usage_json)"
     {
         echo "verdict=${VERDICT}"
         echo "attempts=${ATTEMPT}"
@@ -77,6 +79,14 @@ function write_loop_outputs {
         echo "open_rejections<<${delim}"
         echo "${OPEN_REJECTIONS_JSON}"
         echo "${delim}"
+        if [[ -n ${usage_json} ]]; then
+            delim="USAGE_JSON_$(openssl rand -hex 8)"
+            echo "usage_json<<${delim}"
+            echo "${usage_json}"
+            echo "${delim}"
+        else
+            echo "usage_json="
+        fi
     } >> "${GITHUB_OUTPUT}"
     echo "Final: verdict=${VERDICT} attempts=${ATTEMPT} has_changes=${HAS_CHANGES}"
     if [[ ${VERDICT} == "REJECT" && "$(jq 'length' <<< "${OPEN_REJECTIONS_JSON}")" -gt 0 ]]; then

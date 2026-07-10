@@ -28,7 +28,15 @@ inputs:
     required: true
   budget_file:
     default: ".loop/loop-budget.json"
-    description: "Path to loop budget JSON policy file"
+    description: "Path to loop budget JSON policy file (per-loop keys override budget_max_* inputs)"
+    required: false
+  budget_max_runs_per_day:
+    default: ""
+    description: "Default daily run limit when budget file is absent or omits max_runs_per_day"
+    required: false
+  budget_max_tokens_per_day:
+    default: ""
+    description: "Default daily token limit when budget file is absent or omits max_tokens_per_day"
     required: false
   detect_script:
     description: "Path to domain detect script (bash)"
@@ -117,6 +125,9 @@ outputs:
   level:
     description: "Autonomy level"
     value: ${{ steps.config.outputs.level }}
+  loop_name:
+    description: "Loop name for budget lookup and run log pattern"
+    value: ${{ inputs.loop_name }}
   no_changes_verdict:
     description: "Verdict when implementer produces no file changes"
     value: ${{ inputs.no_changes_verdict }}
@@ -185,6 +196,8 @@ runs:
       shell: bash
       env:
         BUDGET_FILE: ${{ inputs.budget_file }}
+        BUDGET_MAX_RUNS_PER_DAY: ${{ inputs.budget_max_runs_per_day }}
+        BUDGET_MAX_TOKENS_PER_DAY: ${{ inputs.budget_max_tokens_per_day }}
         CONSECUTIVE_FAILURES: ${{ steps.state.outputs.consecutive_failures }}
         DETECT_SCRIPT: ${{ inputs.detect_script }}
         LAST_SHA: ${{ steps.state.outputs.last_sha }}
@@ -201,33 +214,51 @@ runs:
           echo "::warning::Loop paused after ${CONSECUTIVE_FAILURES} consecutive rejections"
           should_run="false"
           skip_reason="circuit_breaker"
-        elif [[ -f "${BUDGET_FILE}" ]]; then
-          max_runs=$(jq -r --arg loop "${LOOP_NAME}" '.loops[$loop].max_runs_per_day // empty' "${BUDGET_FILE}" 2>/dev/null || true)
-          max_tokens=$(jq -r --arg loop "${LOOP_NAME}" '.loops[$loop].max_tokens_per_day // empty' "${BUDGET_FILE}" 2>/dev/null || true)
-          today=$(date -u +%Y-%m-%d)
-          runs_today=0
-          tokens_today=0
-          if [[ -f "${RUN_LOG_FILE}" ]]; then
-            while IFS= read -r line; do
-              [[ -z "${line}" ]] && continue
-              [[ "${line}" != \{* ]] && continue
-              log_date=$(jq -r '.run_id // ""' <<< "${line}" 2>/dev/null | cut -c1-10)
-              log_pattern=$(jq -r '.pattern // ""' <<< "${line}" 2>/dev/null)
-              [[ "${log_date}" != "${today}" ]] && continue
-              [[ "${log_pattern}" != "${LOOP_NAME}" ]] && continue
-              runs_today=$((runs_today + 1))
-              entry_tokens=$(jq -r '(.usage.total_input_tokens // 0) + (.usage.total_output_tokens // 0) + (.tokens_estimate // 0)' <<< "${line}" 2>/dev/null || echo "0")
-              tokens_today=$((tokens_today + entry_tokens))
-            done < <(grep -E '^\{' "${RUN_LOG_FILE}" 2>/dev/null || true)
+        else
+          max_runs=""
+          max_tokens=""
+          if [[ -f "${BUDGET_FILE}" ]]; then
+            max_runs=$(jq -r --arg loop "${LOOP_NAME}" '.loops[$loop].max_runs_per_day // empty' "${BUDGET_FILE}" 2>/dev/null || true)
+            max_tokens=$(jq -r --arg loop "${LOOP_NAME}" '.loops[$loop].max_tokens_per_day // empty' "${BUDGET_FILE}" 2>/dev/null || true)
           fi
-          if [[ -n "${max_runs}" && "${runs_today}" -ge "${max_runs}" ]]; then
-            echo "::warning::Daily run budget exceeded for ${LOOP_NAME} (${runs_today}/${max_runs})"
-            should_run="false"
-            skip_reason="budget"
-          elif [[ -n "${max_tokens}" && "${tokens_today}" -ge "${max_tokens}" ]]; then
-            echo "::warning::Daily token budget exceeded for ${LOOP_NAME} (${tokens_today}/${max_tokens})"
-            should_run="false"
-            skip_reason="budget"
+          max_runs="${max_runs:-${BUDGET_MAX_RUNS_PER_DAY}}"
+          max_tokens="${max_tokens:-${BUDGET_MAX_TOKENS_PER_DAY}}"
+
+          if [[ -n "${max_runs}" || -n "${max_tokens}" ]]; then
+            today=$(date -u +%Y-%m-%d)
+            runs_today=0
+            tokens_today=0
+            if [[ -f "${RUN_LOG_FILE}" ]]; then
+              while IFS= read -r line; do
+                [[ -z "${line}" ]] && continue
+                [[ "${line}" != \{* ]] && continue
+                log_date=$(jq -r '.run_id // ""' <<< "${line}" 2>/dev/null | cut -c1-10)
+                log_pattern=$(jq -r '.pattern // ""' <<< "${line}" 2>/dev/null)
+                [[ "${log_date}" != "${today}" ]] && continue
+                [[ "${log_pattern}" != "${LOOP_NAME}" ]] && continue
+                runs_today=$((runs_today + 1))
+                entry_tokens=$(jq -r '
+                  if .usage then
+                    ((.usage.total_input_tokens // .usage.input_tokens // .usage.inputTokens // 0)
+                     + (.usage.total_output_tokens // .usage.output_tokens // .usage.outputTokens // 0))
+                  elif .tokens_estimate then
+                    .tokens_estimate
+                  else
+                    0
+                  end
+                ' <<< "${line}" 2>/dev/null || echo "0")
+                tokens_today=$((tokens_today + entry_tokens))
+              done < <(grep -E '^\{' "${RUN_LOG_FILE}" 2>/dev/null || true)
+            fi
+            if [[ -n "${max_runs}" && "${runs_today}" -ge "${max_runs}" ]]; then
+              echo "::warning::Daily run budget exceeded for ${LOOP_NAME} (${runs_today}/${max_runs})"
+              should_run="false"
+              skip_reason="budget"
+            elif [[ -n "${max_tokens}" && "${tokens_today}" -ge "${max_tokens}" ]]; then
+              echo "::warning::Daily token budget exceeded for ${LOOP_NAME} (${tokens_today}/${max_tokens})"
+              should_run="false"
+              skip_reason="budget"
+            fi
           fi
         fi
 
@@ -293,3 +324,4 @@ runs:
         else
           echo "prompt=" >> "$GITHUB_OUTPUT"
         fi
+

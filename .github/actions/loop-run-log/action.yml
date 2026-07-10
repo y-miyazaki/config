@@ -1,0 +1,115 @@
+name: loop-run-log
+description: "Append one JSONL entry to .loop/loop-run-log.md, prune entries older than 30 days, and commit to the base branch."
+
+inputs:
+  attempts:
+    default: ""
+    description: "Number of Agent→Verify attempts (empty when execute did not run)"
+    required: false
+  base_branch:
+    default: "main"
+    description: "Base branch for run log commit when direct push is blocked"
+    required: false
+  duration_s:
+    default: ""
+    description: "Run duration in seconds (computed from run_started_at when empty)"
+    required: false
+  has_changes:
+    default: ""
+    description: "Whether agent produced changes (true/false, empty when execute did not run)"
+    required: false
+  loop_name:
+    description: "Loop name / pattern (e.g. docs-triage)"
+    required: true
+  outcome:
+    description: "Run outcome (pr-created | no-changes | rejected | error | skipped)"
+    required: true
+  run_log_file:
+    default: ".loop/loop-run-log.md"
+    description: "Path to JSONL run log markdown file"
+    required: false
+  run_started_at:
+    default: ""
+    description: "Workflow run start timestamp (ISO 8601) for duration calculation"
+    required: false
+  skip_reason:
+    default: "none"
+    description: "Why execution was skipped (none | no_changes | circuit_breaker | budget)"
+    required: false
+  token:
+    description: "GitHub token for commit and push"
+    required: true
+  tokens_estimate:
+    default: "52000"
+    description: "Estimated token spend when measured usage is unavailable (Phase 0b fallback)"
+    required: false
+  usage_json:
+    default: ""
+    description: "Measured token usage JSON from loop-execute (empty when unavailable)"
+    required: false
+  verdict:
+    default: ""
+    description: "Verifier verdict (APPROVE or REJECT, empty when execute did not run)"
+    required: false
+  workflow_run:
+    default: ${{ github.run_id }}
+    description: "GitHub Actions workflow run ID"
+    required: false
+
+outputs:
+  entry_json:
+    description: "Appended JSON log entry"
+    value: ${{ steps.append.outputs.entry_json }}
+
+runs:
+  using: composite
+  steps:
+    - name: Append Run Log Entry
+      id: append
+      shell: bash
+      env:
+        ATTEMPTS: ${{ inputs.attempts }}
+        BASE_BRANCH: ${{ inputs.base_branch }}
+        DURATION_S_INPUT: ${{ inputs.duration_s }}
+        HAS_CHANGES: ${{ inputs.has_changes }}
+        LOOP_NAME: ${{ inputs.loop_name }}
+        OUTCOME: ${{ inputs.outcome }}
+        RUN_LOG_FILE: ${{ inputs.run_log_file }}
+        RUN_STARTED_AT: ${{ inputs.run_started_at }}
+        SKIP_REASON: ${{ inputs.skip_reason }}
+        TOKENS_ESTIMATE: ${{ inputs.tokens_estimate }}
+        TOKEN: ${{ inputs.token }}
+        USAGE_JSON: ${{ inputs.usage_json }}
+        VERDICT: ${{ inputs.verdict }}
+        WORKFLOW_RUN: ${{ inputs.workflow_run }}
+      run: |
+        set -euo pipefail
+        # shellcheck disable=SC1091
+        source "${GITHUB_ACTION_PATH}/lib/append.sh"
+
+        duration_s="${DURATION_S_INPUT}"
+        if [[ -z "${duration_s}" ]]; then
+          duration_s="$(loop_run_log_compute_duration "${RUN_STARTED_AT}")"
+        fi
+
+        entry_json="$(loop_run_log_build_entry \
+          "${ATTEMPTS}" \
+          "${duration_s}" \
+          "${HAS_CHANGES}" \
+          "${LOOP_NAME}" \
+          "${OUTCOME}" \
+          "${SKIP_REASON}" \
+          "${TOKENS_ESTIMATE}" \
+          "${VERDICT}" \
+          "${WORKFLOW_RUN}" \
+          "${USAGE_JSON}")"
+
+        loop_run_log_append_entry "${RUN_LOG_FILE}" "${entry_json}"
+        loop_run_log_commit_and_push "${BASE_BRANCH}" "${RUN_LOG_FILE}" "${TOKEN}"
+
+        DELIM="ENTRY_JSON_$(openssl rand -hex 8)"
+        {
+          echo "entry_json<<${DELIM}"
+          echo "${entry_json}"
+          echo "${DELIM}"
+        } >> "$GITHUB_OUTPUT"

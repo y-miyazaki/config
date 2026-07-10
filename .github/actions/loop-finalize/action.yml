@@ -2,6 +2,10 @@ name: loop-finalize
 description: "Finalize a loop run: write state to agent branch, create PR on approval, delete branch on rejection, update state on main otherwise."
 
 inputs:
+  attempts:
+    default: ""
+    description: "Number of Agent→Verify attempts (empty when execute did not run)"
+    required: false
   auto_merge:
     default: "false"
     description: "Enable auto-merge on created PR (L3 only). Requires branch protection rules."
@@ -29,6 +33,10 @@ inputs:
     default: "loop-automation"
     description: "Comma-separated labels for the PR"
     required: false
+  loop_name:
+    default: ""
+    description: "Loop name / pattern for run log (e.g. docs-triage)"
+    required: false
   open_rejections:
     default: "[]"
     description: "JSON array of unresolved structured rejections from the agent loop"
@@ -45,15 +53,39 @@ inputs:
     default: ""
     description: "Verifier rejection reason (recorded in state on REJECT)"
     required: false
+  run_log_file:
+    default: ".loop/loop-run-log.md"
+    description: "Path to JSONL run log markdown file"
+    required: false
+  run_started_at:
+    default: ""
+    description: "Workflow run start timestamp (ISO 8601) for run log duration"
+    required: false
+  skip_reason:
+    default: "none"
+    description: "Detect skip reason recorded in run log (none | no_changes | circuit_breaker | budget)"
+    required: false
   state_file:
     description: "Path to state JSON file"
     required: true
   token:
     description: "GitHub token for PR creation and state push"
     required: true
+  tokens_estimate:
+    default: "52000"
+    description: "Estimated token spend when measured usage is unavailable (Phase 0b fallback)"
+    required: false
+  usage_json:
+    default: ""
+    description: "Measured token usage JSON from loop-execute (empty when unavailable)"
+    required: false
   verdict:
     default: ""
     description: "Verifier verdict (APPROVE or REJECT, empty if no verification)"
+    required: false
+  workflow_run:
+    default: ${{ github.run_id }}
+    description: "GitHub Actions workflow run ID for run log"
     required: false
 
 outputs:
@@ -91,23 +123,6 @@ runs:
         else
           echo "value=error" >> "$GITHUB_OUTPUT"
         fi
-
-    - name: Write State to Agent Branch
-      if: >-
-        inputs.current_sha != '' &&
-        inputs.verdict == 'APPROVE' &&
-        inputs.has_changes == 'true' &&
-        inputs.branch != ''
-      uses: ./.github/actions/loop-state-write
-      with:
-        base_branch: ${{ inputs.base_branch }}
-        branch: ${{ inputs.branch }}
-        open_rejections: ${{ inputs.open_rejections }}
-        outcome: ${{ steps.outcome.outputs.value }}
-        reject_reason: ${{ inputs.reject_reason }}
-        sha: ${{ inputs.current_sha }}
-        state_file: ${{ inputs.state_file }}
-        token: ${{ inputs.token }}
 
     - name: Create PR
       id: pr
@@ -164,15 +179,33 @@ runs:
         gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${BRANCH}" 2>/dev/null || true
 
     - name: Write State
-      if: >-
-        inputs.current_sha != '' &&
-        (inputs.verdict != 'APPROVE' || inputs.has_changes != 'true' || inputs.branch == '')
+      if: inputs.current_sha != ''
       uses: ./.github/actions/loop-state-write
       with:
         base_branch: ${{ inputs.base_branch }}
+        branch: ${{ inputs.verdict == 'APPROVE' && inputs.has_changes == 'true' && inputs.branch != '' && inputs.branch || '' }}
         open_rejections: ${{ inputs.open_rejections }}
         outcome: ${{ steps.outcome.outputs.value }}
         reject_reason: ${{ inputs.reject_reason }}
         sha: ${{ inputs.current_sha }}
         state_file: ${{ inputs.state_file }}
         token: ${{ inputs.token }}
+
+    - name: Append Run Log
+      if: inputs.loop_name != ''
+      uses: ./.github/actions/loop-run-log
+      with:
+        attempts: ${{ inputs.attempts }}
+        base_branch: ${{ inputs.base_branch }}
+        has_changes: ${{ inputs.has_changes }}
+        loop_name: ${{ inputs.loop_name }}
+        outcome: ${{ steps.outcome.outputs.value }}
+        run_log_file: ${{ inputs.run_log_file }}
+        run_started_at: ${{ inputs.run_started_at }}
+        skip_reason: ${{ inputs.skip_reason }}
+        token: ${{ inputs.token }}
+        tokens_estimate: ${{ inputs.tokens_estimate }}
+        usage_json: ${{ inputs.usage_json }}
+        verdict: ${{ inputs.verdict }}
+        workflow_run: ${{ inputs.workflow_run }}
+

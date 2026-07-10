@@ -1,0 +1,9 @@
+{
+  "loops": {
+    "docs-triage": {
+      "max_attempts_per_run": 3,
+      "max_runs_per_day": 1,
+      "max_tokens_per_day": 500000
+    }
+  }
+}
