@@ -1,7 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:best-practices",
+    "config:recommended",
+    "docker:pinDigests",
+    "helpers:pinGitHubActionDigests",
+    ":configMigration",
+    ":pinDevDependencies",
+    "abandonments:recommended",
+    ":maintainLockFilesWeekly",
     ":dependencyDashboard",
     ":semanticCommits",
     ":semanticCommitTypeAll(chore)",
@@ -15,15 +21,11 @@
     "MISE_LOCKED": "0"
   },
   "internalChecksFilter": "strict",
-  "labels": [
-    "dependencies"
-  ],
+  "labels": ["dependencies"],
   "minimumReleaseAge": "7 days",
   "osvVulnerabilityAlerts": true,
   "vulnerabilityAlerts": {
-    "addLabels": [
-      "security"
-    ]
+    "addLabels": ["security"]
   },
   "prConcurrentLimit": 10,
   "rebaseWhen": "behind-base-branch",
@@ -32,294 +34,174 @@
   "packageRules": [
     {
       "description": "Rules: Add aqua label for all aqua package updates (label-only, automerge is overridden by patch rule below)",
-      "matchManagers": [
-        "regex"
-      ],
-      "matchFileNames": [
-        "aqua.yaml"
-      ],
+      "matchManagers": ["regex"],
+      "matchFileNames": ["aqua.yaml"],
       "commitMessagePrefix": "renovate(aqua):",
-      "addLabels": [
-        "aqua"
-      ],
+      "addLabels": ["aqua"],
       "automerge": false,
       "platformAutomerge": false
     },
     {
       "description": "Rules: Automerge patch updates for aqua packages",
-      "matchManagers": [
-        "regex"
-      ],
-      "matchFileNames": [
-        "aqua.yaml"
-      ],
-      "matchUpdateTypes": [
-        "patch"
-      ],
+      "matchManagers": ["regex"],
+      "matchFileNames": ["aqua.yaml"],
+      "matchUpdateTypes": ["patch"],
       "commitMessagePrefix": "renovate(aqua):",
-      "addLabels": [
-        "automerge"
-      ],
+      "addLabels": ["automerge"],
       "automerge": true,
       "platformAutomerge": true
     },
     {
       "description": "Rules: Add aqua label for all aqua-registry updates (label-only, automerge is overridden by minor/patch rule below)",
-      "matchPackageNames": [
-        "aquaproj/aqua-registry"
-      ],
+      "matchPackageNames": ["aquaproj/aqua-registry"],
       "commitMessagePrefix": "renovate(aqua):",
-      "addLabels": [
-        "aqua"
-      ],
+      "addLabels": ["aqua"],
       "automerge": false,
       "platformAutomerge": false
     },
     {
       "description": "Rules: Automerge minor/patch updates for aqua-registry",
-      "matchPackageNames": [
-        "aquaproj/aqua-registry"
-      ],
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
+      "matchPackageNames": ["aquaproj/aqua-registry"],
+      "matchUpdateTypes": ["minor", "patch"],
       "commitMessagePrefix": "renovate(aqua):",
-      "addLabels": [
-        "automerge"
-      ],
+      "addLabels": ["automerge"],
       "automerge": true,
       "platformAutomerge": true
     },
     {
       "description": "Rules: Update Dockerfile base images",
-      "matchManagers": [
-        "dockerfile",
-        "docker-compose"
-      ],
+      "matchManagers": ["dockerfile", "docker-compose"],
       "commitMessagePrefix": "renovate(docker):",
-      "addLabels": [
-        "docker"
-      ],
+      "addLabels": ["docker"],
       "automerge": false,
       "platformAutomerge": false
     },
     {
       "description": "Rules: Add github-actions label for all GitHub Actions updates (label-only, automerge is overridden by patch rule below)",
-      "matchManagers": [
-        "github-actions"
-      ],
+      "matchManagers": ["github-actions"],
       "commitMessagePrefix": "renovate(github-actions):",
-      "addLabels": [
-        "github-actions"
-      ],
+      "addLabels": ["github-actions"],
       "automerge": false,
       "platformAutomerge": false
     },
     {
       "description": "Rules: Update GitHub Actions official actions only patch automerge (optional)",
-      "matchManagers": [
-        "github-actions"
-      ],
-      "matchPackagePrefixes": [
-        "actions/"
-      ],
-      "matchUpdateTypes": [
-        "patch"
-      ],
+      "matchManagers": ["github-actions"],
+      "matchPackagePrefixes": ["actions/"],
+      "matchUpdateTypes": ["patch"],
       "commitMessagePrefix": "renovate(github-actions-official):",
-      "addLabels": [
-        "automerge"
-      ],
+      "addLabels": ["automerge"],
       "automerge": true,
       "platformAutomerge": true
     },
     {
       "description": "Rules: Add go label for all Go module updates (label-only, automerge is overridden by patch rule below)",
-      "matchManagers": [
-        "gomod"
-      ],
+      "matchManagers": ["gomod"],
       "commitMessagePrefix": "renovate(go):",
-      "addLabels": [
-        "go"
-      ],
-      "postUpdateOptions": [
-        "gomodTidy",
-        "gomodUpdateImportPaths"
-      ],
+      "addLabels": ["go"],
+      "postUpdateOptions": ["gomodTidy", "gomodUpdateImportPaths"],
       "automerge": false,
       "platformAutomerge": false
     },
     {
       "description": "Rules: Automerge patch updates for Go modules (excluding Go toolchain)",
-      "matchManagers": [
-        "gomod"
-      ],
-      "excludePackageNames": [
-        "go"
-      ],
-      "matchUpdateTypes": [
-        "patch"
-      ],
+      "matchManagers": ["gomod"],
+      "excludePackageNames": ["go"],
+      "matchUpdateTypes": ["patch"],
       "commitMessagePrefix": "renovate(go):",
-      "addLabels": [
-        "automerge"
-      ],
+      "addLabels": ["automerge"],
       "automerge": true,
       "platformAutomerge": true
     },
     {
       "description": "Rules: Update Go toolchain major/minor requires review",
-      "matchManagers": [
-        "gomod"
-      ],
-      "matchPackageNames": [
-        "go"
-      ],
-      "matchUpdateTypes": [
-        "major",
-        "minor"
-      ],
+      "matchManagers": ["gomod"],
+      "matchPackageNames": ["go"],
+      "matchUpdateTypes": ["major", "minor"],
       "commitMessagePrefix": "renovate(go):",
       "automerge": false,
       "platformAutomerge": false
     },
     {
       "description": "Rules: Add npm label for all npm package updates (label-only, automerge is overridden by patch rule below)",
-      "matchManagers": [
-        "npm"
-      ],
-      "addLabels": [
-        "npm"
-      ],
-      "postUpdateOptions": [
-        "npmDedupe"
-      ],
+      "matchManagers": ["npm"],
+      "addLabels": ["npm"],
+      "postUpdateOptions": ["npmDedupe"],
       "commitMessagePrefix": "renovate(npm):",
       "automerge": false,
       "platformAutomerge": false
     },
     {
       "description": "Rules: Automerge patch updates for npm packages",
-      "matchManagers": [
-        "npm"
-      ],
-      "matchUpdateTypes": [
-        "patch"
-      ],
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["patch"],
       "commitMessagePrefix": "renovate(npm):",
-      "addLabels": [
-        "automerge"
-      ],
+      "addLabels": ["automerge"],
       "automerge": true,
       "platformAutomerge": true
     },
     {
       "description": "Rules: Add python label for all Python package updates (label-only, automerge is overridden by patch rule below)",
-      "matchManagers": [
-        "poetry",
-        "pip_requirements",
-        "pipenv"
-      ],
+      "matchManagers": ["poetry", "pip_requirements", "pipenv"],
       "commitMessagePrefix": "renovate(python):",
-      "addLabels": [
-        "python"
-      ],
+      "addLabels": ["python"],
       "automerge": false,
       "platformAutomerge": false
     },
     {
       "description": "Rules: Automerge patch updates for Poetry and pip",
-      "matchManagers": [
-        "poetry",
-        "pip_requirements",
-        "pipenv"
-      ],
-      "matchUpdateTypes": [
-        "patch"
-      ],
+      "matchManagers": ["poetry", "pip_requirements", "pipenv"],
+      "matchUpdateTypes": ["patch"],
       "commitMessagePrefix": "renovate(python):",
-      "addLabels": [
-        "automerge"
-      ],
+      "addLabels": ["automerge"],
       "automerge": true,
       "platformAutomerge": true
     },
     {
       "description": "Rules: Update Terraform",
       "commitMessagePrefix": "renovate(terraform):",
-      "matchManagers": [
-        "terraform",
-        "terraform-version"
-      ],
-      "addLabels": [
-        "terraform"
-      ],
-      "postUpdateOptions": [
-        "terraformLockFileMaintenance"
-      ],
+      "matchManagers": ["terraform", "terraform-version"],
+      "addLabels": ["terraform"],
+      "postUpdateOptions": ["terraformLockFileMaintenance"],
       "automerge": false,
       "platformAutomerge": false
     },
     {
       "description": "Rules: Update Terraform modules / providers grouping",
       "commitMessagePrefix": "renovate(terraform):",
-      "matchManagers": [
-        "terraform"
-      ],
-      "matchFileNames": [
-        "**/*.tf",
-        "**/*.tfvars"
-      ],
+      "matchManagers": ["terraform"],
+      "matchFileNames": ["**/*.tf", "**/*.tfvars"],
       "groupName": "terraform dependencies"
     },
     {
       "description": "Rules: Update tflint plugins",
-      "matchPackageNames": [
-        "terraform-linters/tflint-ruleset-aws"
-      ],
+      "matchPackageNames": ["terraform-linters/tflint-ruleset-aws"],
       "commitMessagePrefix": "renovate(tflint):",
-      "addLabels": [
-        "tflint"
-      ],
+      "addLabels": ["tflint"],
       "automerge": false,
       "platformAutomerge": false
     },
     {
       "description": "Rules: Add mise label for all mise package updates (label-only, automerge is overridden by patch rule below)",
-      "matchManagers": [
-        "mise"
-      ],
+      "matchManagers": ["mise"],
       "commitMessagePrefix": "renovate(mise):",
-      "addLabels": [
-        "mise"
-      ],
+      "addLabels": ["mise"],
       "automerge": false,
       "platformAutomerge": false
     },
     {
       "description": "Rules: Automerge patch updates for mise packages",
-      "matchManagers": [
-        "mise"
-      ],
-      "matchUpdateTypes": [
-        "patch"
-      ],
+      "matchManagers": ["mise"],
+      "matchUpdateTypes": ["patch"],
       "commitMessagePrefix": "renovate(mise):",
-      "addLabels": [
-        "automerge"
-      ],
+      "addLabels": ["automerge"],
       "automerge": true,
       "platformAutomerge": true
     },
     {
       "description": "Rules: Disable automerge and lockfile updates for mise npm packages (minimumReleaseAge not enforced for mise npm packages; lockfile is updated by on-ci-push-mise-update-lock workflow)",
-      "matchManagers": [
-        "mise"
-      ],
-      "matchDepNames": [
-        "/^npm:/"
-      ],
+      "matchManagers": ["mise"],
+      "matchDepNames": ["/^npm:/"],
       "automerge": false,
       "platformAutomerge": false,
       "skipArtifactsUpdate": true
@@ -327,26 +209,16 @@
     {
       "description": "Rules: Group ecspresso updates across GitHub Actions workflow inputs and mise",
       "groupName": "ecspresso",
-      "matchPackageNames": [
-        "kayac/ecspresso",
-        "aqua:kayac/ecspresso"
-      ],
+      "matchPackageNames": ["kayac/ecspresso", "aqua:kayac/ecspresso"],
       "commitMessagePrefix": "renovate(ecspresso):",
-      "addLabels": [
-        "ecspresso"
-      ]
+      "addLabels": ["ecspresso"]
     },
     {
       "description": "Rules: Group ecschedule updates across GitHub Actions workflow inputs and mise",
       "groupName": "ecschedule",
-      "matchPackageNames": [
-        "Songmu/ecschedule",
-        "aqua:Songmu/ecschedule"
-      ],
+      "matchPackageNames": ["Songmu/ecschedule", "aqua:Songmu/ecschedule"],
       "commitMessagePrefix": "renovate(ecschedule):",
-      "addLabels": [
-        "ecschedule"
-      ]
+      "addLabels": ["ecschedule"]
     },
     {
       "description": "Rules: Group golangci-lint updates across GitHub Actions workflow inputs and mise",
@@ -356,9 +228,7 @@
         "aqua:golangci/golangci-lint"
       ],
       "commitMessagePrefix": "renovate(golangci-lint):",
-      "addLabels": [
-        "golangci-lint"
-      ]
+      "addLabels": ["golangci-lint"]
     },
     {
       "description": "Rules: Group goreleaser updates across GitHub Actions workflow inputs and mise",
@@ -368,32 +238,21 @@
         "aqua:goreleaser/goreleaser"
       ],
       "commitMessagePrefix": "renovate(goreleaser):",
-      "addLabels": [
-        "goreleaser"
-      ]
+      "addLabels": ["goreleaser"]
     },
     {
       "description": "Rules: Group mise updates across GitHub Actions workflow inputs, Dockerfile, and mise.toml",
       "groupName": "mise",
-      "matchPackageNames": [
-        "jdx/mise"
-      ],
+      "matchPackageNames": ["jdx/mise"],
       "commitMessagePrefix": "renovate(mise):",
-      "addLabels": [
-        "mise"
-      ]
+      "addLabels": ["mise"]
     },
     {
       "description": "Rules: Group terraform updates across GitHub Actions workflow inputs and mise",
       "groupName": "terraform",
-      "matchPackageNames": [
-        "hashicorp/terraform",
-        "aqua:hashicorp/terraform"
-      ],
+      "matchPackageNames": ["hashicorp/terraform", "aqua:hashicorp/terraform"],
       "commitMessagePrefix": "renovate(terraform):",
-      "addLabels": [
-        "terraform"
-      ]
+      "addLabels": ["terraform"]
     },
     {
       "description": "Rules: Group tflint updates across GitHub Actions workflow inputs and mise",
@@ -403,33 +262,21 @@
         "aqua:terraform-linters/tflint"
       ],
       "commitMessagePrefix": "renovate(tflint):",
-      "addLabels": [
-        "tflint"
-      ]
+      "addLabels": ["tflint"]
     },
     {
       "description": "Rules: Group trivy updates across GitHub Actions workflow inputs and mise",
       "groupName": "trivy",
-      "matchPackageNames": [
-        "aquasecurity/trivy",
-        "aqua:aquasecurity/trivy"
-      ],
+      "matchPackageNames": ["aquasecurity/trivy", "aqua:aquasecurity/trivy"],
       "commitMessagePrefix": "renovate(trivy):",
-      "addLabels": [
-        "trivy"
-      ]
+      "addLabels": ["trivy"]
     },
     {
       "description": "Rules: Group zizmor updates across GitHub Actions workflow inputs and mise",
       "groupName": "zizmor",
-      "matchPackageNames": [
-        "woodruffw/zizmor",
-        "aqua:zizmorcore/zizmor"
-      ],
+      "matchPackageNames": ["woodruffw/zizmor", "aqua:zizmorcore/zizmor"],
       "commitMessagePrefix": "renovate(zizmor):",
-      "addLabels": [
-        "zizmor"
-      ]
+      "addLabels": ["zizmor"]
     },
     {
       "description": "Rules: Safe automerge only for lockfile/digest/pin/replacement updates",
@@ -439,23 +286,15 @@
         "pin",
         "replacement"
       ],
-      "addLabels": [
-        "automerge"
-      ],
+      "addLabels": ["automerge"],
       "automerge": true,
       "minimumReleaseAge": null,
       "platformAutomerge": true
     },
     {
       "description": "Rules: Dockerfile digest/pin updates require manual review (overrides the general digest/pin automerge rule above)",
-      "matchManagers": [
-        "dockerfile",
-        "docker-compose"
-      ],
-      "matchUpdateTypes": [
-        "digest",
-        "pin"
-      ],
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "matchUpdateTypes": ["digest", "pin"],
       "automerge": false,
       "platformAutomerge": false
     }
