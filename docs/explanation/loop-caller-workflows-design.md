@@ -167,11 +167,14 @@ Each matrix cell = one `max_runs_per_day` consumption. Cap enumeration in `loop-
 
 ## Permissions (least privilege pattern)
 
-| Job      | Typical permissions                                                                 |
-| -------- | ----------------------------------------------------------------------------------- |
-| detect   | `contents: read`, `actions: read`, `checks: read`                                   |
-| execute  | `contents: write`, `pull-requests: write` (when `finalize_enabled=true`), engine-specific |
-| finalize | Runs inside `ci-loop-agent`; inherits caller `execute` job permissions              |
+| Job         | Typical permissions                                                                 |
+| ----------- | ----------------------------------------------------------------------------------- |
+| detect      | `contents: read`, `actions: read`, `checks: read`                                   |
+| execute     | `contents: write`, `pull-requests: write` (when `finalize_enabled=true`), engine-specific |
+| record-skip | `contents: write`, `pull-requests: write` (run-log PR fallback on protected branches) |
+| finalize    | Runs inside `ci-loop-agent`; inherits caller `execute` job permissions              |
+
+`ci-loop-agent` `agent-l2` also needs `pull-requests: write` — `loop-state-write` opens a state PR when `LOOP_STATE_PUSH_BRANCH` blocks direct push.
 
 ## env Conventions
 
