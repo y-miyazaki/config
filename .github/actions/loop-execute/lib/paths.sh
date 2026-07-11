@@ -102,13 +102,14 @@ function component_to_ere {
     local character
 
     while [[ ${index} -lt ${#component} ]]; do
-        character="${component:${index}:1}"
+        character="${component:index:1}"
         case "${character}" in
             '*') fragment+='[^/]*' ;;
             '?') fragment+='[^/]' ;;
             '.') fragment+='\.' ;;
             '+') fragment+='\+' ;;
-            '(' | ')' | '[' | ']' | '^' | '$' | '|' | '\\') fragment+="\\${character}" ;;
+            $'\\') fragment+="\\${character}" ;;
+            '(' | ')' | '[' | ']' | '^' | '$' | '|') fragment+="\\${character}" ;;
             *) fragment+="${character}" ;;
         esac
         index=$((index + 1))

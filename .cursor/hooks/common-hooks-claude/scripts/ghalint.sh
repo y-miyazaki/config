@@ -106,15 +106,18 @@ function report_failure {
             hook_event=$(echo "$HOOK_STDIN_DATA" | jq -r '.hook_event_name' 2> /dev/null)
 
             # Check event name pattern to determine agent type
-            if echo "$hook_event" | grep -qE '^(Stop|PostToolUse|PreToolUse)$'; then
+            if echo "$HOOK_STDIN_DATA" | jq -e '.cursor_version // .generation_id // .workspace_roots' > /dev/null 2>&1; then
+                # Cursor stop shares hook_event_name "stop" with Kiro; use Cursor-only stdin fields
+                agent="cursor"
+            elif echo "$hook_event" | grep -qE '^(afterFileEdit|beforeShellExecution|beforeMCPExecution|beforeReadFile)$'; then
+                # camelCase with Cursor-only event names
+                agent="cursor"
+            elif echo "$hook_event" | grep -qE '^(Stop|PostToolUse|PreToolUse)$'; then
                 # PascalCase = Claude Code
                 agent="claude_code"
             elif echo "$hook_event" | grep -qE '^(stop|postToolUse|preToolUse|agentSpawn|userPromptSubmit)$'; then
                 # camelCase with Kiro values = Kiro
                 agent="kiro"
-            elif echo "$hook_event" | grep -qE '^(afterFileEdit|beforeShellExecution|beforeMCPExecution|beforeReadFile|stop)$'; then
-                # camelCase with Cursor values = Cursor
-                agent="cursor"
             else
                 # Default to Claude Code for unknown PascalCase
                 agent="claude_code"
