@@ -201,6 +201,7 @@ jobs:
     permissions:
       contents: write
       copilot-requests: write # zizmor: ignore[excessive-permissions]
+      pull-requests: write
     strategy:
       matrix:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
