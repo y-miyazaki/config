@@ -5,139 +5,102 @@ For design rationale, see [Loop Engineering Design](../explanation/loop-engineer
 
 ## New Loop Creation Checklist
 
-Use when implementing a new `on-loop-*.yaml` workflow.
+Use when implementing a new `on-loop-*.yaml` workflow. Add `docs/explanation/workflows/<name>-workflow-design.md` for domain specifics.
 
 ### Design Invariants
 
-All must be true. Violation of any item is a blocking issue.
+All must be true. See [Loop Engineering Design — Design Invariants](../explanation/loop-engineering-design.md#design-invariants).
 
-- [ ] Agent never writes to the default branch directly
+- [ ] Agent never writes to integration branches during Execute (isolated worktree only). L3 integration `push` in Finalize only, with promotion gate
 - [ ] Verifier never modifies the repository (read-only phase)
-- [ ] Detect never writes state
-- [ ] Finalize never changes source code
+- [ ] Detect never writes state; **detect script invoked once per run** (no caller re-run)
+- [ ] Finalize never changes **source under repair**; `.loop/*` persistence allowed
 - [ ] State advances only through Finalize
-- [ ] Each phase communicates only via GitHub Actions outputs/inputs (no implicit filesystem coupling)
-- [ ] Checkout is performed by the caller workflow, not by composite actions
-- [ ] Every decision is traceable (skip reason, reject reason, outcome are recorded)
+- [ ] Phases communicate via GitHub Actions outputs/inputs only
+- [ ] Checkout is performed by the caller workflow
+- [ ] Every decision is traceable (`skip_reason`, reject reason, outcome)
 
 ### Phase Contract Compliance
 
 #### Detect
 
-- [ ] Outputs `should_run` (bool), `skip_reason` (`none` / `no_changes` / `circuit_breaker` / `budget`), and structured detect `result` via `loop-detect`
+- [ ] Outputs `should_run`, `skip_reason`, `target_matrix` via `loop-detect`
 - [ ] Read-only — does not modify repository or state
-- [ ] Detection script path is configured in the caller (`LOOP_DETECT_SCRIPT`); script logic is domain-specific
-- [ ] Domain-specific implementer instructions are in caller `env` (`LOOP_PROMPT_INSTRUCTIONS` → `prompt_instructions`)
-- [ ] Generic prompt constraints (level, allowlist, L2+ persistence) are injected by `loop-prompt-generate`, not hardcoded in `loop-detect`
-- [ ] Budget policy is configured (`.loop/loop-budget.json` and/or `budget_max_*` inputs); `loop-detect` reads only `max_runs_per_day` / `max_tokens_per_day` and skips when those daily caps are exceeded
-- [ ] Attempt caps are caller-configured (`agent_loop_max_attempts` / `AGENT_LOOP_MAX_ATTEMPTS`), not read from `loop-budget.json`
-- [ ] No domain vocabulary ("triage", "CHANGELOG", "lint fix") is embedded in `loop-*` actions
+- [ ] `LOOP_DETECT_SCRIPT` under loop skill package (`scripts/detect_*.sh`)
+- [ ] Budget / circuit breaker / `peer_active` (`acting_on`) guards via `loop-detect`
+- [ ] No domain vocabulary in `loop-*` actions
 
 #### Agent (Execute)
 
-- [ ] L2/L3 outputs `branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections`, and `usage_json`
-- [ ] Operates on an isolated branch only (never default branch)
-- [ ] Respects Skill's allowed paths
-- [ ] Does not touch files on denylist
-- [ ] Uses reusable workflow `ci-loop-agent.yaml` (`loop-agent-once` at L1; `loop-execute` at L2/L3)
+- [ ] L2/L3 outputs `branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections`, `usage_json`
+- [ ] Worktree from `target.from` (Phase 1+)
+- [ ] Respects Skill allowed paths and denylist
+- [ ] Uses `ci-loop-agent.yaml`
 
 #### Verify
 
-- [ ] Runs inside `loop-execute` as a separate agent session from the implementer (not a separate workflow job)
-- [ ] Outputs `verdict` (APPROVE/REJECT) and `reason`; REJECT includes structured `files` / `issue` / `fix` when possible
-- [ ] Read-only — verifier session does not modify the repository
-- [ ] Evaluates semantic quality only (factual accuracy, relevance, no hallucination)
-- [ ] Does not evaluate lint/CI concerns (that is CI's job)
-- [ ] Uses a model equal to or more powerful than the Agent model
-- [ ] Denylist (and allowlist when set) is passed and enforced by `loop-execute`
+- [ ] Separate agent session from implementer (inside `loop-execute`)
+- [ ] Read-only; outputs `verdict`, `reason`, `open_rejections`
+- [ ] Semantic quality + fit against `verifier_context` (always wired; may be empty)
+- [ ] `verifier_context` wired on every execute matrix cell
 
 #### Finalize
 
-- [ ] Creates PR on APPROVE with changes, deletes branch on REJECT
-- [ ] Updates state file with outcome, SHA, reject reason, and `open_rejections` (if applicable)
-- [ ] Appends a run-log entry via `loop-run-log` (outcome, attempts, verdict, usage)
-- [ ] Does not perform notifications or trigger downstream workflows
-- [ ] Runs with `if: always()` condition (with appropriate guards)
-- [ ] Uses `loop-finalize` action
+- [ ] Behavior matches [finalize strategy matrix](../explanation/loop-engineering-design.md#finalize-strategy-matrix) for `target.finalize` + `DEFAULT_LEVEL`
+- [ ] `open_pr`: create PR on APPROVE; `push` / `push_head`: push on APPROVE; delete agent branch on REJECT
+- [ ] L3 `auto_merge` only when `finalize=open_pr` — not for `push` / `push_head`
+- [ ] State, run-log, domain ledger via `domain_persistence_script` in finalize job (no caller `git push` for `.loop/*`)
+- [ ] `outcome: watch` for Skill Watch (no `consecutive_failures` increment)
+- [ ] `loop-finalize` + `if: always()` with appropriate guards
 
 #### Skill
 
-- [ ] SKILL.md defines allowed paths explicitly
-- [ ] Self-contained (no references to external skills)
-- [ ] Includes behavioral rules and constraints
-- [ ] Does not guarantee correctness (that is Verifier's job) or CI passing (that is CI's job)
+- [ ] SKILL.md: allowed paths, self-contained, behavioral rules
+
+### Multi-Branch Targets (Phase 1+)
+
+See [Multi-Branch Loops Design](../explanation/multi-branch-loops-design.md) and [Loop Caller Workflows](../explanation/loop-caller-workflows-design.md).
+
+- [ ] `LOOP_INTEGRATION_BRANCHES` and/or `LOOP_PULL_REQUESTS` in caller `env`
+- [ ] `target_matrix` with `mode`, `from`, `to`, stable `key` per cell
+- [ ] Matrix execute/finalize; capped by `LOOP_MAX_TARGETS_PER_SCHEDULE`
+- [ ] `LOOP_PR_EXCLUDE`; bots excluded unless `LOOP_PR_INCLUDE_BOTS`
+- [ ] `DEFAULT_LEVEL=L2` unless L3 gate passed
+- [ ] Per-target `concurrency.group` when using matrix fan-out
 
 ### Workflow Structure
 
-- [ ] `concurrency` group prevents parallel executions of the same loop
-- [ ] `timeout-minutes` set for all jobs
-- [ ] `permissions` follow least privilege per job
-- [ ] env keys are alphabetically ordered
-- [ ] State file path is unique to this loop (`.loop/state-<domain>.json` or `LOOP_NAME` auto-resolution)
-- [ ] `LOOP_PROMPT_INSTRUCTIONS` defines domain task wording; `LOOP_ALLOWLIST` and `AGENT_VERIFIER_CRITERIA` are caller-owned
-- [ ] Denylist includes: `**/.env`, `**/credentials*`, `**/secrets*`, `**/migration/*.sql`, `**/infrastructure/**`
+- [ ] Follows [Loop Caller Workflows Design](../explanation/loop-caller-workflows-design.md)
+- [ ] `timeout-minutes` on all jobs; least-privilege permissions per job
+- [ ] env keys alphabetically ordered
+- [ ] Unique state file (`.loop/state-<loop>.json`)
+- [ ] Denylist includes standard paths
 
 ### Retry Policy
 
-- [ ] SHA advances on every successful Finalize (no same-diff retry)
-- [ ] Only detect-phase failures or cancellations leave SHA unchanged
-- [ ] State records `consecutive_failures` count
-- [ ] State records `last_reject_reason` on REJECT
-- [ ] State records `open_rejections` on REJECT (cleared on non-reject outcomes)
-- [ ] Detect injects prior `open_rejections` into the implementer prompt when present
-- [ ] Loop pauses (skip=true) after 3+ consecutive failures
+- [ ] SHA / target cursor advances on successful Finalize per loop semantics
+- [ ] `consecutive_failures` + `attempt_fingerprint` on `target.key`
+- [ ] Pause at 3+ consecutive failures (`circuit_breaker`)
 
 ---
 
 ## L1 → L2 Promotion Checklist
 
-All must be satisfied before promoting a loop from L1 (Report) to L2 (Assisted).
+(Unchanged — see prior sections.)
 
-### Prerequisites
-
-- [ ] Loop has operated at L1 for 2+ weeks without incident
-- [ ] State file schema is documented
+- [ ] Loop operated at L1 for 2+ weeks
+- [ ] State schema documented in workflow design doc
 - [ ] SKILL.md includes build/test commands
-
-### Safety
-
-- [ ] Implementer and verifier are separate agent sessions
-- [ ] Denylist explicitly includes auth, payments, secrets, and infrastructure paths
-- [ ] Auto-merge eligible paths are restricted via allowlist (L2 does not auto-merge by default)
-
-### Budget
-
-- [ ] Daily token cap is configured
-- [ ] Maximum sub-agent count is configured
-
-### Observability
-
-- [ ] Approval Rate is tracked (target: > 70%)
-- [ ] Consecutive failure count is monitored (alert at 3+)
-- [ ] `.loop/loop-run-log.md` records per-run outcomes for budget aggregation and audit
+- [ ] Implementer and verifier separate sessions
+- [ ] Denylist includes auth, payments, secrets, infrastructure
+- [ ] Daily token cap configured
+- [ ] `.loop/loop-run-log.md` in use
 
 ---
 
 ## L2 → L3 Promotion Checklist
 
-All must be satisfied over a 2-week window before promoting to L3 (Unattended).
-
-### Metrics Gate
-
-- [ ] Approval Rate > 80%
-- [ ] PR Merge Rate > 90%
-- [ ] Human Override Rate < 10%
-
-### Safety Gate
-
-- [ ] Denylist + budget cap + metrics + human gate are all established
-- [ ] Stop conditions are defined (Slow Down / Pause / Kill triggers)
-- [ ] Branch protection with Required Status Checks is enforced
-- [ ] Auto-merge restricted to path allowlist only
-
-### Operational Readiness
-
-- [ ] Weekly digest is configured for team visibility
-- [ ] Medium-risk changes route to human gate
-- [ ] Escalation path is defined for consecutive failures
-
+- [ ] Approval Rate > 80%, PR Merge Rate > 90%, Human Override Rate < 10% (2 weeks)
+- [ ] [cobusgreyling Pre-Flight Safety](https://github.com/cobusgreyling/loop-engineering/blob/main/docs/safety.md#pre-flight-safety-check) complete
+- [ ] `LOOP_FINALIZE_INTEGRATION=push` only after gate; never default `DEFAULT_LEVEL=L3` for new adopters
+- [ ] Stop conditions and escalation path defined

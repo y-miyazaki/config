@@ -62,7 +62,7 @@ The repository structure is function-oriented.
   - `go-hooks-claude/`, `go-hooks-copilot/`, `go-hooks-cursor/`: target-specific Go hooks
   - `shell-script/`: Shell script development (hook + instruction + skills)
   - `shell-script-hooks-claude/`, `shell-script-hooks-copilot/`, `shell-script-hooks-cursor/`: target-specific shell script hooks
-  - `docs-loop/`: Documentation update loop (self-contained skill package)
+  - `loop-docs-triage/`: Documentation update loop (self-contained skill package)
 - `apm.yml`: APM package metadata and dependency entry point
 - `apm.lock.yaml`: lock file for deterministic APM resolution
 - `apm_modules/`: locally materialized module content
@@ -119,10 +119,17 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 ├── shell-script-hooks-claude/  # Shell script hooks for Claude Code (2 hooks)
 ├── shell-script-hooks-copilot/ # Shell script hooks for GitHub Copilot CLI (2 hooks)
 ├── shell-script-hooks-cursor/  # Shell script hooks for Cursor (2 hooks)
-└── docs-loop/           # Documentation update loop (self-contained)
+├── loop-docs-triage/    # Documentation update loop (self-contained)
+│   ├── apm.yml
+│   └── .apm/skills/loop-docs-triage/
+│       ├── SKILL.md
+│       └── scripts/detect_changes.sh
+└── loop-ci-sweeper/     # CI failure sweeper loop (self-contained)
     ├── apm.yml
-    └── .apm/
-        └── skills/      # 1 skill (loop-docs-triage)
+    └── .apm/skills/loop-ci-sweeper/
+        ├── SKILL.md
+        ├── scripts/detect_ci_failures.sh
+        └── scripts/update_run_ledger.sh
 ```
 
 ### Distribution Behavior
@@ -220,7 +227,8 @@ Skills are defined under each package's `.apm/skills/` directory. Each skill con
 | terraform    | terraform-validation      |
 | shell-script | shell-script-review       |
 | shell-script | shell-script-validation   |
-| docs-loop    | loop-docs-triage          |
+| loop-docs-triage | loop-docs-triage          |
+| loop-ci-sweeper  | loop-ci-sweeper           |
 
 ### Instructions
 
@@ -295,7 +303,18 @@ The repository must provide reusable workflows.
 | Workflow | Type | Purpose |
 |----------|------|---------|
 | `ci-loop-agent.yaml` | Reusable | Engine-agnostic agent invocation (Claude / Copilot / Codex / Cursor). L1: `loop-agent-once`; L2/L3: worktree + bounded Agent→Verify via `loop-execute` |
+| `on-loop-ci-sweeper.yaml` | Caller | Schedule-driven CI failure repair (detect → execute → finalize) |
 | `on-loop-docs-triage.yaml` | Caller | Cron-driven documentation triage (detect → execute → finalize) |
+
+### Loop Skill Package Pattern
+
+Each `loop-*` APM package is self-contained. Domain detection and agent behavior live in the same package — not in shared actions or unrelated skills (`docs-updater` is hook/manual only; `loop-docs-triage` owns its detect script).
+
+| Artifact | Location | Role |
+|----------|----------|------|
+| Skill | `.apm/skills/loop-<domain>/SKILL.md` | Implementer behavior, classification, allowed paths |
+| Detect script | `.apm/skills/loop-<domain>/scripts/detect_*.sh` | Per-target scan in branch context set by `loop-detect` |
+| Persistence script (optional) | `.apm/skills/loop-<domain>/scripts/*_ledger.sh` | Domain ledger via `loop-finalize` `domain_persistence_script` |
 
 ### Loop Engineering Actions
 
@@ -303,15 +322,71 @@ The repository must provide reusable workflows.
 |--------|---------|
 | `loop-agent-once` | Single read-only agent session (L1) |
 | `loop-config-pack` | Pack caller agent config into standardized outputs for detect/execute handoff |
-| `loop-detect` | Detect phase: config pack, state read, guards (circuit breaker + daily budget via `max_runs_per_day` / `max_tokens_per_day` from `.loop/loop-budget.json` or `budget_max_*` inputs), detect script invocation, prompt generation. Attempt caps use caller `agent_loop_max_attempts`, not the budget file |
-| `loop-execute` | Bounded Agent→Verify loop in one job (L2/L3); denylist/allowlist enforcement, push, worktree cleanup, `usage_json`; attempt bound via `agent_loop_max_attempts` |
-| `loop-finalize` | PR creation (+ auto-merge at L3), branch cleanup, state write, and run-log append via `loop-run-log` |
+| `loop-detect` | Read `LOOP_*`, enumerate branches/PRs, checkout per context, invoke `detect_script` per context, assemble `target_matrix`, `verifier_context`, prompts; guards (`budget`, `acting_on`, `peer_active`, circuit breaker). **No caller re-run of detect script** |
+| `loop-execute` | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`; worktree from `from.ref` @ `from.branch` |
+| `loop-finalize` | Finalize per `target.finalize`, branch cleanup, per-target state, run-log, optional `domain_persistence_script`; `.loop/*` to `LOOP_STATE_PUSH_BRANCH` |
 | `loop-install-cli` | Install and cache the selected engine CLI |
 | `loop-prompt-generate` | Assemble implementer prompt: skill invocation, caller context/instructions, generic loop constraints |
-| `loop-run-log` | Append one JSONL entry to `.loop/loop-run-log.md`, prune entries older than 30 days, commit to base branch |
-| `loop-state-read` | Read loop state JSON; output last_sha/current_sha, consecutive_failures, open_rejections prompt |
-| `loop-state-write` | Write state JSON (including `open_rejections` on reject) + commit/push |
-| `loop-worktree-setup` | Create isolated worktree + branch (L2/L3) |
+| `loop-run-log` | Append one JSONL entry to `.loop/loop-run-log.md`, prune entries older than 30 days |
+| `loop-state-read` | Read `targets` map; per-target cursors; peer `acting_on` inputs |
+| `loop-state-write` | Write per-target entry in `targets` map; commit to `LOOP_STATE_PUSH_BRANCH` |
+| `loop-worktree-setup` | Isolated worktree at `base_ref` on `base_branch` + agent branch (L2/L3) |
+
+### Detect script output (per context)
+
+Invoked by `loop-detect` per scan context (not by the caller). Scans the branch/ref that `loop-detect` checked out.
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `skip` | yes | `true` when this context has no actionable work |
+| `result` | when actionable | Domain JSON (facts). Semantic `findings[]` are produced by the Skill |
+| `verifier_context` | no | Markdown for verifier (may be empty) |
+
+`loop-detect` assembles each **candidate** (`target_json`, `result`, `prompt`, `verifier_context`), applies priority/`acting_on`/cap, and outputs `target_matrix` (JSON array).
+
+### `target_json` contract
+
+Execute/finalize input. Schema: [Multi-Branch Loops Design](../explanation/multi-branch-loops-design.md#target-model-from--to).
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `mode` | yes | `integration` \| `pull_request` |
+| `key` | yes | State key |
+| `from.branch`, `from.ref` | yes | Worktree checkout |
+| `to.branch` | yes | Finalize destination |
+| `base.branch` | pull_request | Verifier diff baseline |
+| `finalize` | yes | `open_pr` \| `push` \| `push_head` |
+| `workflow_run_id` | optional | CI loops |
+
+### `loop-detect` outputs (caller detect job)
+
+| Output | When |
+|--------|------|
+| `should_run` | `target_matrix` non-empty after guards |
+| `skip_reason` | `none` \| `no_changes` \| `circuit_breaker` \| `budget` \| `target_budget` \| `config_error` \| `peer_active` |
+| `target_matrix` | JSON array of candidates for matrix fan-out |
+
+### `loop-finalize` inputs (additions)
+
+| Input | Required | Description |
+|-------|----------|-------------|
+| `target_json` | yes | Matrix cell target |
+| `domain_persistence_script` | no | Optional bash script (ledger). Standard env: `TARGET_JSON`, `OUTCOME`, `VERDICT`, `LOOP_NAME`, `STATE_FILE`, `EXECUTE_BRANCH` |
+| `state_push_branch` | no | Default: repository default branch |
+
+### State `targets` map
+
+Flat top-level `last_sha` is **removed**. Migration: on first read, copy legacy `last_sha` into `targets["integration:<default_branch>"]`; subsequent writes use `targets` only.
+
+### Outcome enum
+
+| Outcome | Meaning | `consecutive_failures` |
+|---------|---------|------------------------|
+| `pr-created` | Fix PR or `push_head` succeeded | Reset to 0 |
+| `rejected` | Actionable; verifier REJECT or no-change REJECT | Increment |
+| `no-op` | No actionable detect result | Reset to 0 |
+| `watch` | Present; Skill Watch (no code edit) | No increment |
+| `error` | Execute failed | Unchanged |
 
 ## Renovate
 
@@ -364,4 +439,7 @@ Use repository validation workflows and scripts for changed assets:
 - If APM install results differ across environments, verify `apm.lock.yaml` is committed and up to date.
 - If reusable workflows fail to resolve, verify repository visibility and workflow reference format.
 - If Renovate behavior differs from expectation, verify extends and rule precedence against `renovate/default.json`.
+
+
+
 

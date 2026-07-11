@@ -1,0 +1,18 @@
+id: loop-ci-sweeper-noaction-001
+name: loop-ci-sweeper no actionable failures
+description: Validate loop-ci-sweeper exits cleanly when failures array is empty.
+tags:
+- trigger
+- negative
+inputs:
+  prompt: >-
+    Use loop-ci-sweeper. Context JSON has skip=true and failures=[]. Report no
+    actionable work.
+  context:
+    skip: true
+    failures: []
+expected:
+  output_contains:
+  - no actionable
+  outcomes:
+  - type: task_completed

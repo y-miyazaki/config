@@ -19,7 +19,7 @@ metadata:
 
 Return structured Markdown in accordance with [references/common-output-format.md](references/common-output-format.md).
 
-Structured results for bash -n, shellcheck, and project standards.
+Structured results for bash -n and shellcheck (syntax and lint only).
 
 ## Execution Scope
 

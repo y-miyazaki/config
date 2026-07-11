@@ -48,7 +48,8 @@ dependencies:
     # - ./.apm/packages/terraform-hooks-copilot
     # - ./.apm/packages/terraform-hooks-cursor
     # - ./.apm/packages/terraform-aws
-    - ./.apm/packages/docs-loop
+    - ./.apm/packages/loop-ci-sweeper
+    - ./.apm/packages/loop-docs-triage
   mcp: []
 
 scripts:
@@ -57,3 +58,4 @@ scripts:
     if [ -f .cursor/hooks.json ]; then
       jq '. + {"version": 1}' .cursor/hooks.json > .cursor/hooks.json.tmp && mv .cursor/hooks.json.tmp .cursor/hooks.json
     fi
+

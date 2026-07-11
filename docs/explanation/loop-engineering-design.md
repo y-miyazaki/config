@@ -7,12 +7,14 @@ For concrete specifications (Actions/Workflows list, interfaces), see [Specifica
 
 | Package | Status | Level |
 |---|---|---|
-| `docs-loop` | ✅ Implemented | L2 (Assisted) |
-| `ci-sweeper-loop` | Not started | - |
-| `changelog-loop` | Not started | - |
+| `loop-docs-triage` | Phase 0 done; multi-branch in progress | L2 (Assisted) |
+| `loop-ci-sweeper` | Phase 0 done; multi-branch in progress | L2 (Assisted) |
+| `loop-changelog` | Not started | - |
 | `issue-triage-loop` | Not started | - |
 | `test-coverage-loop` | Not started | - |
 | `stale-pr-loop` | Not started | - |
+
+Platform actions (`loop-detect` `target_matrix`, `acting_on`, `domain_persistence_script`) are in progress — see [Multi-Branch Loops Design](multi-branch-loops-design.md).
 
 ## Loop Candidate Roadmap
 
@@ -22,7 +24,7 @@ Referencing the design philosophy of GitHub Agentic Workflows ([official blog](h
 
 | Loop | Detection Method | Agent Behavior | Expected Level |
 |---|---|---|---|
-| **ci-sweeper** | GitHub API: retrieve failed workflow runs | Auto-fix lint/build errors, create PR | L2 → L3 |
+| **ci-sweeper** | GitHub API: failed runs (integration + optional PR) | Auto-fix; PR or push per mode | L2 default; L3 opt-in — see [CI Sweeper Workflow](workflows/ci-sweeper-workflow-design.md) |
 | **changelog** | git log: parse conventional commits | Auto-generate/update CHANGELOG.md | L2 |
 
 ### Tier 2 (Medium Priority — Additional Detect Action Required)
@@ -59,48 +61,64 @@ Priority assessment when adding new loops:
 
 ## Package Structure
 
+Each `loop-*` package ships **Skill + detect script** (+ optional ledger script). Shared actions stay domain-agnostic.
+
 ```text
 .apm/packages/
-  docs-loop/             ← docs update loop (self-contained)
-  ci-sweeper-loop/       ← future: CI failure fix loop
-  changelog-loop/        ← future: changelog drafting loop
+  loop-docs-triage/
+    .apm/skills/loop-docs-triage/
+      SKILL.md
+      scripts/detect_changes.sh
+  loop-ci-sweeper/
+    .apm/skills/loop-ci-sweeper/
+      SKILL.md
+      scripts/detect_ci_failures.sh
+      scripts/update_run_ledger.sh
+  loop-changelog/        ← future
 ```
+
+Hook/manual skills (e.g. `docs-updater` in `common`) are **not** loop packages — see [Docs Loop Workflow Design](workflows/docs-loop-workflow-design.md#separation-from-docs-updater).
 
 ## Naming Conventions
 
 | Package Type | Naming Pattern | Example |
 |---|---|---|
-| Domain-specific loop | `<domain>-loop` | `docs-loop`, `ci-sweeper-loop` |
+| Domain-specific loop | `loop-<skill-name>` (matches skill directory) | `loop-docs-triage`, `loop-ci-sweeper` |
 
 ## Dependencies
 
-Each `*-loop` package is self-contained (no dependencies on other packages).
+Each `loop-*` package is self-contained (no dependencies on other packages).
 APM packages provide Skills only and do not distribute Workflows/Actions.
 
-## docs-loop (Docs Update Loop)
+## loop-docs-triage (Docs Update Loop)
 
 | Component | Description |
 |---|---|
-| `.apm/skills/loop-docs-triage/SKILL.md` | Skill that performs document editing based on triage findings |
+| `.apm/skills/loop-docs-triage/SKILL.md` | Triage + document editing from detect facts |
+| `.apm/skills/loop-docs-triage/scripts/detect_changes.sh` | Per-branch doc drift facts (`changed_files`, `affected_docs`) |
 | `eval.yaml` + `evals/tasks/` | waza evaluation suite |
 
-For a list of Actions and Reusable Workflows, see [Specification](../reference/specification.md).
+## loop-ci-sweeper (CI Sweeper)
+
+| Component | Description |
+|---|---|
+| `.apm/skills/loop-ci-sweeper/SKILL.md` | Fix / Watch / Escalate classification + minimal CI repair |
+| `.apm/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh` | Failed run detection (stable filters only) |
+| `.apm/skills/loop-ci-sweeper/scripts/update_run_ledger.sh` | `domain_persistence_script` target for finalize |
+
+For workflow env and behavior, see [CI Sweeper Workflow Design](workflows/ci-sweeper-workflow-design.md).
 
 ## Execution Flow
 
 ```text
 cron → on-loop-<name>.yaml
   detect job:
-    → loop-detect action                  # config pack, state read, guards, detect script, prompt assembly
-      → loop-config-pack / loop-state-read / loop-prompt-generate (internal)
-      → detect_changes.sh (caller-provided path)
-  execute job:
-    → ci-loop-agent.yaml (reusable)       # L1: loop-agent-once; L2/L3: worktree + loop-execute
-      → loop-worktree-setup               # isolated branch (L2/L3)
-      → loop-execute                      # bounded Agent→Verify loop + push/cleanup (L2/L3)
-      → outputs: branch, has_changes, verdict, reason, attempts, open_rejections, usage_json
-  finalize job:
-    → loop-finalize action                # create PR (+ auto-merge at L3) or delete branch + update state + loop-run-log
+    → loop-detect action                  # LOOP_* enumeration, checkout per context, detect_script per context
+      → target_matrix output              # candidates for matrix fan-out
+  execute job (matrix per target):
+    → ci-loop-agent.yaml                  # worktree from target.from; verifier_context always wired
+  finalize job (matrix per target):
+    → loop-finalize                       # target.finalize + state + run-log + domain_persistence_script
 ```
 
 ### Workflow Architecture Diagram
@@ -133,9 +151,13 @@ flowchart TD
 
     subgraph finalize["finalize job"]
         direction TB
-        finalize_approve[loop-finalize<br/>state on agent branch + create PR] --> F_AUTO{L3?}
-        F_AUTO -->|yes| F_MERGE[enable auto-merge] --> F_STATE[state: pr-created]
+        finalize_approve[loop-finalize<br/>per target.finalize] --> F_STRAT{finalize strategy}
+        F_STRAT -->|open_pr| F_PR[create PR]
+        F_STRAT -->|push / push_head| F_PUSH[push to to.branch]
+        F_PR --> F_AUTO{L3 + open_pr?}
+        F_AUTO -->|yes| F_MERGE[enable auto-merge] --> F_STATE[state + run-log]
         F_AUTO -->|no| F_STATE
+        F_PUSH --> F_STATE
         finalize_reject[loop-finalize<br/>delete branch + state: rejected]
         finalize_no[loop-finalize<br/>state: no-changes]
     end
@@ -148,7 +170,7 @@ graph LR
     %% Caller Workflows
     subgraph callers["Caller Workflows"]
         CW1[on-loop-docs-triage.yaml]
-        CW2[on-loop-ci-sweeper.yaml<br/>future]
+        CW2[on-loop-ci-sweeper.yaml]
     end
 
     %% Reusable Workflows
@@ -179,24 +201,29 @@ graph LR
     %% Skills
     subgraph skills["Skills"]
         SK1[loop-docs-triage]
+        SK2[loop-ci-sweeper]
     end
 
     %% State
     subgraph state["State"]
         ST1[.loop/state-docs-triage.json]
-        ST2[.loop/loop-run-log.md]
-        ST3[.loop/loop-budget.json]
+        ST2[.loop/state-ci-sweeper.json]
+        ST3[.loop/loop-run-log.md]
+        ST4[.loop/loop-budget.json]
     end
 
     %% Relationships
     CW1 --> RW1
+    CW2 --> RW1
     CW1 --> CA0
+    CW2 --> CA0
     CW1 --> CA3
+    CW2 --> CA3
     CA0 --> CA4
     CA0 --> CA5
     CA0 --> CA6
-    CA0 --> ST2
     CA0 --> ST3
+    CA0 --> ST4
     RW1 --> E1
     RW1 --> CA1
     RW1 --> CA2
@@ -204,11 +231,14 @@ graph LR
     CA2 --> CA9
     CA1 --> CA9
     RW1 --> SK1
+    RW1 --> SK2
     CA3 --> CA7
     CA3 --> CA10
     CA6 --> ST1
+    CA6 --> ST2
     CA7 --> ST1
-    CA10 --> ST2
+    CA7 --> ST2
+    CA10 --> ST3
 ```
 
 ## STATE Files
@@ -217,8 +247,8 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 
 ```text
 .loop/
-  state-docs-triage.json    ← owned by docs-loop
-  state-ci-sweeper.json     ← future: owned by ci-sweeper-loop
+  state-docs-triage.json    ← owned by loop-docs-triage
+  state-ci-sweeper.json     ← owned by loop-ci-sweeper
   state-changelog.json      ← future: owned by changelog-loop
   loop-budget.json          ← per-loop daily run/token caps (read by loop-detect)
   loop-run-log.md           ← shared JSONL run history (append via loop-run-log; 30-day prune)
@@ -250,8 +280,8 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 | Reusable Workflow | `.github/workflows/ci-loop-*.yaml` | Generic logic only. Domain-specific criteria are passed from the caller via inputs |
 | Composite Action | `.github/actions/loop-*` | Aggregation of generic steps. Must not depend on specific scripts, repository-specific paths, or domain vocabulary |
 | Caller Workflow | `.github/workflows/on-loop-*.yaml` | Domain-specific logic: detection script path, verifier criteria, allowlist, `prompt_instructions`, PR metadata |
-| APM Package | `.apm/packages/*-loop/` | Distributes Agent Skills only. Does not distribute Workflows or Actions |
-| Skill | `.apm/packages/*-loop/.apm/skills/` | Defines Agent behavioral constraints. Does not reference external skills (self-contained) |
+| APM Package | `.apm/packages/loop-*/` | Distributes Agent Skills only. Does not distribute Workflows or Actions |
+| Skill | `.apm/packages/loop-*/.apm/skills/` | Defines Agent behavioral constraints. Does not reference external skills (self-contained) |
 
 **Decision criterion**: If the answer to "Can another repository use this via remote reference?" is YES, it belongs in an action/workflow. If NO (depends on specific paths or scripts), write it inline in the caller.
 
@@ -261,10 +291,12 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 
 | Layer | Domain-specific (caller / skill) | Generic (action / reusable workflow) |
 |---|---|---|
-| Detection criteria | `detect_script` path, script output schema | `loop-detect` guard logic, state read, budget check |
+| Detection criteria | `detect_script` path, script output (`result` facts) | `loop-detect` enumeration, checkout, guards, `target_matrix` |
 | Implementer prompt | `prompt_instructions`, `AGENT_VERIFIER_CRITERIA`, PR title/body | `loop-prompt-generate` constraints (level, allowlist, worktree persistence) |
+| Verifier context | Detect fact summary or CI log excerpt per target | Always wire `verifier_context` to `loop-execute` (may be empty) |
 | Path scope | `LOOP_ALLOWLIST`, Skill allowed paths | denylist defaults in `loop-execute`, allowlist enforcement |
 | Verifier quality bar | Criteria markdown in caller `env` | Verifier prompt templates, JSON output contract in `loop-execute` |
+| Domain persistence | `domain_persistence_script` path (optional) | `loop-finalize` invokes script with standard env; no domain logic in action |
 
 **Caller env pattern** for a new `on-loop-*.yaml`:
 
@@ -371,7 +403,7 @@ Cost compression patterns:
 Design countermeasures:
 
 - Execute triage path with an inexpensive model, invoke a powerful model only when actionable items exist
-- Early exit when detect finds no actionable items or budget is exhausted
+- Early exit when detect finds no actionable items or budget is exhausted (cobusgreyling ci-sweeper: ~5k tokens green no-op reference)
 - Context reset at phase boundaries (triage → fix → verify)
 - Enforce daily run/token caps in `loop-detect`; treat Slow Down stop conditions as operational policy on top of those caps
 
@@ -431,7 +463,9 @@ Per-tier permissions:
 4. **Unified denylist**: All loops share the same path denylist
 5. **Aggregated budget management**: Token consumption across all loops is aggregated against a daily budget cap
 
-Conflict detection via the `acting_on` field in peer state files is **Planned** (not yet implemented). Current mitigation: per-loop `concurrency` groups and separate state files.
+**Evolution:** Loops act on integration branches and PR heads via `target_matrix` and `LOOP_*` in caller `env`. See [Multi-Branch Loops Design](multi-branch-loops-design.md) and [Loop Caller Workflows Design](loop-caller-workflows-design.md).
+
+Conflict detection uses the `acting_on` field in peer state files: detect skips when `skip_reason=peer_active` (TTL 90 min). Execute sets `acting_on`; finalize clears it. Per-target `concurrency.group` complements peer checks.
 
 ### Failure Mode Countermeasures
 
@@ -447,12 +481,12 @@ Conflict detection via the `acting_on` field in peer state files is **Planned** 
 
 Absolute rules that must never be violated regardless of loop type, level, or engine. Use these as the primary checklist during design review.
 
-1. **Agent never writes to the default branch directly** — All modifications happen on isolated branches
+1. **Agent never writes to integration branches directly during Execute** — Implementer edits run in an isolated worktree. At **L2**, integration-branch changes reach `to.branch` only via a fix PR. At **L3** with `LOOP_FINALIZE_INTEGRATION=push`, **Finalize** may push verifier-approved commits to `to.branch` (explicit opt-in; see [Finalize strategy matrix](#finalize-strategy-matrix))
 2. **Verifier never modifies the repository** — Verify phase is strictly read-only
 3. **Detect never writes state** — State changes only in Finalize
-4. **Finalize never changes source code** — It persists outcomes (PR, state) but does not alter application/documentation files
+4. **Finalize never changes source under repair** — It persists outcomes (PR, push, state, `.loop/*` metadata). Application/documentation files being fixed are not edited in Finalize
 5. **State advances only through Finalize** — No other phase may commit to the state file
-6. **Each phase communicates only via outputs/inputs** — No implicit filesystem coupling between jobs
+6. **Each phase communicates only via outputs/inputs** — No implicit filesystem coupling between jobs; **no second detect script invocation in the caller**
 7. **Checkout is the caller's responsibility** — Composite Actions must not perform checkout internally
 8. **Every decision is traceable** — Each phase must produce structured output sufficient to reconstruct why a decision was made (skip reason, reject reason, outcome)
 
@@ -515,9 +549,11 @@ stateDiagram-v2
 | Failure Type | Behavior | State Record |
 |---|---|---|
 | Detect failure (script error) | Workflow fails. No state update. Next cron retries from same SHA | No change |
-| Agent produces no changes | Finalize records `no-op`. SHA advances. Next cron scans only new commits | `outcome: no-op` |
+| Agent produces no changes (actionable) | Finalize records `rejected` when `LOOP_NO_CHANGES_VERDICT=REJECT` | `outcome: rejected` |
+| Skill Watch (no code edit) | Finalize records `watch`; ledger/state cursor advances; no `consecutive_failures` increment | `outcome: watch` |
+| Agent produces no changes (non-actionable) | Finalize records `no-op`. Cursor advances | `outcome: no-op` |
 | Verifier REJECT | Finalize deletes branch, records rejection. SHA advances. The rejected diff is not retried — only new commits are scanned | `outcome: rejected` |
-| Verifier APPROVE → PR CI fails | PR remains open (blocked by Required Status Checks). SHA advances. ci-sweeper-loop handles cleanup | `outcome: pr-created` |
+| Verifier APPROVE → PR CI fails | PR remains open (blocked by Required Status Checks). SHA advances. loop-ci-sweeper handles cleanup | `outcome: pr-created` |
 | Agent job cancelled (user/concurrency) | Finalize does not run. No state update. Next cron retries from same SHA | No change |
 
 **Design rationale**: SHA always advances on successful detect (even if later phases fail). This prevents infinite retry of the same failing diff. If the underlying issue persists, new commits touching the same area will trigger a fresh detection.
@@ -530,24 +566,29 @@ stateDiagram-v2
 | 2 | State records `consecutive_failures: 2`. Consider alerting via PR comment |
 | 3+ | Loop pauses (skip=true until manual reset). Escalate via notification |
 
-**Implementation**: `loop-finalize` increments `consecutive_failures` in state on rejection. `detect_changes.sh` checks this counter and sets `skip=true` when threshold is exceeded.
+**Implementation**: `loop-finalize` increments `consecutive_failures` per `target.key` on `outcome: rejected`. `loop-detect` reads per-target counter and sets `skip_reason=circuit_breaker` when threshold is exceeded.
 
 **Reject reason recording**: On REJECT, Finalize writes the verifier's `reason` field to state. This enables future feedback loops where reject reasons are analyzed to improve prompts or detect systematic issues.
 
 ```json
 {
-  "last_sha": "abc123",
-  "last_run": "2026-06-26T09:00:00Z",
-  "outcome": "rejected",
-  "consecutive_failures": 2,
-  "last_reject_reason": "Changes included hallucinated API endpoint not present in codebase",
-  "open_rejections": [
-    {
-      "files": ["docs/example.md"],
-      "issue": "Hallucinated API endpoint not present in codebase",
-      "fix": "Remove the invented endpoint or cite an existing one"
+  "targets": {
+    "integration:main": {
+      "last_sha": "abc123",
+      "last_run": "2026-06-26T09:00:00Z",
+      "outcome": "rejected",
+      "consecutive_failures": 2,
+      "last_reject_reason": "Changes included hallucinated API endpoint not present in codebase",
+      "open_rejections": [
+        {
+          "files": ["docs/example.md"],
+          "issue": "Hallucinated API endpoint not present in codebase",
+          "fix": "Remove the invented endpoint or cite an existing one"
+        }
+      ]
     }
-  ]
+  },
+  "acting_on": null
 }
 ```
 
@@ -563,7 +604,7 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 |---|---|
 | **Responsibility** | Determine whether actionable work exists. Output a structured description of what needs to be done |
 | **Input** | Previous state (last_sha), repository contents |
-| **Output** | `should_run` (bool), `skip_reason` (`none` / `no_changes` / `circuit_breaker` / `budget`), `result` (structured JSON), config values |
+| **Output** | `should_run`, `skip_reason`, `target_matrix` (candidates with `target_json`, `prompt`, `verifier_context`, `result`), config passthrough |
 | **May modify** | Nothing. Read-only phase |
 | **Caller-specific** | Detection script path, `prompt_instructions`, verifier criteria, allowlist, PR metadata |
 | **Generic** | `loop-detect` (state read, guards including budget, detect invocation), `loop-prompt-generate` (constraints + caller context) |
@@ -573,7 +614,7 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 | Aspect | Definition |
 |---|---|
 | **Responsibility** | Produce code/content changes based on the prompt. Operate within the constraints defined by the Skill |
-| **Input** | Prompt text, skill name, engine, model, level |
+| **Input** | Prompt text, skill name, engine, model, level, `target_json` (Phase 1+) |
 | **Output (L1)** | Read-only session result (no branch / verdict contract) |
 | **Output (L2/L3)** | Via `loop-execute` inside `ci-loop-agent`: `branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections`, `usage_json` |
 | **May modify** | Files within the Skill's allowed paths, on an isolated branch only (L2/L3) |
@@ -585,21 +626,35 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 | Aspect | Definition |
 |---|---|
 | **Responsibility** | Independently evaluate whether Agent output meets quality criteria. Default stance is reject |
-| **Input** | Agent branch, base branch, verifier criteria, denylist (and allowlist when set) |
+| **Input** | Agent branch, base branch (from `target_json`), verifier criteria, denylist, allowlist, `verifier_context` (always wired; may be empty) |
 | **Output** | `verdict` (APPROVE / REJECT), `reason` (string); on REJECT, structured `files` / `issue` / `fix` when possible (surfaced as `open_rejections`) |
 | **May modify** | Nothing. Read-only phase |
 | **Must be** | A separate agent session from the implementer, run inside `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3) — not a separate workflow such as a removed `ci-loop-verifier.yaml` |
-| **Evaluates** | Semantic quality (factual accuracy, relevance, no hallucination). Does NOT evaluate lint/CI — that is CI's responsibility |
+| **Evaluates** | Semantic quality (factual accuracy, relevance, no hallucination). Does **not** re-run CI or linters. **May** evaluate whether the diff plausibly addresses caller-provided `verifier_context` (e.g. CI log excerpt) — required for [CI Sweeper](workflows/ci-sweeper-workflow-design.md) |
 
 #### Finalize
 
 | Aspect | Definition |
 |---|---|
-| **Responsibility** | Persist the outcome. Create PR on approval, delete branch on rejection, update state, append run log |
-| **Input** | Prior phase outputs (`branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections`, `usage_json`, `current_sha`) |
-| **Output** | PR URL (on success), updated state file, run-log entry |
-| **May modify** | State file and `.loop/loop-run-log.md` (commit + push to default branch). PR creation/deletion on agent branch |
-| **Must not** | Perform notifications, trigger downstream workflows, or modify code. Finalize is a persistence layer only |
+| **Responsibility** | Persist the outcome per `target.finalize`: open fix PR, push to branch, delete agent branch on rejection, update state, append run log, domain ledger (when applicable) |
+| **Input** | `target_json`, execute outputs (`branch`, `has_changes`, `verdict`, …), `current_sha` |
+| **Output** | PR URL and/or push result, updated state, run-log entry |
+| **May modify** | `.loop/*` persistence on `LOOP_STATE_PUSH_BRANCH`; PR/branch operations per strategy — not source files under repair |
+| **Must not** | Perform notifications, trigger downstream workflows, or apply implementer edits to application/doc source |
+
+##### Finalize strategy matrix
+
+`DEFAULT_LEVEL` is one switch. **Finalize behavior** is `target.finalize` + level:
+
+| `target.finalize` | L2 | L3 |
+|---|---|---|
+| `open_pr` | Create fix PR to `to.branch` | Create PR + optional `auto_merge` (allowlist + branch protection) |
+| `push` | N/A (use `open_pr` at L2) | Push verifier-approved commits to `to.branch` (integration only; explicit opt-in) |
+| `push_head` | Push to PR head `to.branch` | Same |
+
+**Do not** map `L3` → auto-merge alone. `push` and `push_head` never enable auto-merge.
+
+See [Loop Caller Workflows — Finalize](loop-caller-workflows-design.md#finalize-job).
 
 #### Skill
 
@@ -617,4 +672,14 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 2. A phase must not assume the internal implementation of a prior phase (no implicit side effects)
 3. Checkout is the caller's responsibility. Actions operate on an already checked-out workspace
 4. Error in any phase halts the pipeline (except Finalize, which runs on `always()` to record state)
+
+
+
+
+
+
+
+
+
+
 

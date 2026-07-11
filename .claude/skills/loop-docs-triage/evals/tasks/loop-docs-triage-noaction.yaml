@@ -7,13 +7,14 @@ tags:
 - quality
 - edge-case
 inputs:
-  prompt: Use loop-docs-triage. Verify skill handles empty findings. Classify findings
-    as High-Priority or Watch.
+  prompt: Use loop-docs-triage. Context has skip=true and findings=[]. Emit four-section
+    report with Summary outcome indicating no documentation impact.
   context:
-    target: SKILL.md
+    skip: true
+    findings: []
 expected:
   output_contains:
-  - no actionable items
+  - No documentation impact detected
   - High-Priority
   outcomes:
   - type: task_completed

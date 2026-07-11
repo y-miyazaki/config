@@ -1,30 +1,42 @@
 name: loop-finalize
-description: "Finalize a loop run: write state to agent branch, create PR on approval, delete branch on rejection, update state on main otherwise."
+description: "Finalize a loop run per target_json: strategy, state, run-log, optional domain persistence."
 
 inputs:
+  agent_result:
+    default: "success"
+    description: "Result of the agent job (success/failure/cancelled/skipped)"
+    required: false
   attempts:
     default: ""
     description: "Number of Agent→Verify attempts (empty when execute did not run)"
     required: false
   auto_merge:
     default: "false"
-    description: "Enable auto-merge on created PR (L3 only). Requires branch protection rules."
-    required: false
-  agent_result:
-    default: "success"
-    description: "Result of the agent job (success/failure/cancelled/skipped)"
+    description: "Enable auto-merge on created PR (L3 + open_pr only)"
     required: false
   base_branch:
     default: "main"
-    description: "Base branch for PR target (e.g. main, master)"
+    description: "Fallback base branch when target_json is absent"
     required: false
   branch:
     default: ""
-    description: "Branch created by agent (empty if no changes)"
+    description: "Agent branch with changes (empty if none)"
     required: false
   current_sha:
-    description: "Current HEAD SHA for state update"
+    description: "SHA to record in per-target state"
     required: true
+  domain_persistence_script:
+    default: ""
+    description: "Optional bash script for domain ledger persistence"
+    required: false
+  additional_commit_paths:
+    default: ""
+    description: "Comma-separated paths to commit with state after domain persistence"
+    required: false
+  execute_branch:
+    default: ""
+    description: "Agent branch name for domain_persistence_script env"
+    required: false
   has_changes:
     default: "false"
     description: "Whether agent produced changes"
@@ -40,6 +52,10 @@ inputs:
   open_rejections:
     default: "[]"
     description: "JSON array of unresolved structured rejections from the agent loop"
+    required: false
+  outcome_override:
+    default: ""
+    description: "Optional explicit outcome (e.g. watch from Skill classification)"
     required: false
   pr_body:
     default: ""
@@ -63,17 +79,25 @@ inputs:
     required: false
   skip_reason:
     default: "none"
-    description: "Detect skip reason recorded in run log (none | no_changes | circuit_breaker | budget)"
+    description: "Detect skip reason recorded in run log"
     required: false
   state_file:
     description: "Path to state JSON file"
     required: true
+  state_push_branch:
+    default: ""
+    description: "Branch for .loop/* commits (empty = base_branch)"
+    required: false
+  target_json:
+    default: ""
+    description: "Target descriptor JSON from loop-detect matrix cell"
+    required: false
   token:
     description: "GitHub token for PR creation and state push"
     required: true
   tokens_estimate:
     default: "52000"
-    description: "Estimated token spend when measured usage is unavailable (Phase 0b fallback)"
+    description: "Estimated token spend when measured usage is unavailable"
     required: false
   usage_json:
     default: ""
@@ -99,15 +123,40 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Parse Target
+      id: target
+      shell: bash
+      env:
+        BASE_BRANCH: ${{ inputs.base_branch }}
+        TARGET_JSON: ${{ inputs.target_json }}
+      run: |
+        set -euo pipefail
+        if [[ -n "${TARGET_JSON}" ]] && jq -e . >/dev/null 2>&1 <<< "${TARGET_JSON}"; then
+          echo "target_key=$(jq -r '.key' <<< "${TARGET_JSON}")" >> "$GITHUB_OUTPUT"
+          echo "finalize_strategy=$(jq -r '.finalize // "open_pr"' <<< "${TARGET_JSON}")" >> "$GITHUB_OUTPUT"
+          echo "pr_base_branch=$(jq -r 'if .mode == "pull_request" then .base.branch else .to.branch end' <<< "${TARGET_JSON}")" >> "$GITHUB_OUTPUT"
+          echo "to_branch=$(jq -r '.to.branch' <<< "${TARGET_JSON}")" >> "$GITHUB_OUTPUT"
+        else
+          echo "target_key=integration:${BASE_BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "finalize_strategy=open_pr" >> "$GITHUB_OUTPUT"
+          echo "pr_base_branch=${BASE_BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "to_branch=${BASE_BRANCH}" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Determine Outcome
       id: outcome
       shell: bash
       env:
         AGENT_RESULT: ${{ inputs.agent_result }}
         HAS_CHANGES: ${{ inputs.has_changes }}
+        OUTCOME_OVERRIDE: ${{ inputs.outcome_override }}
         VERDICT: ${{ inputs.verdict }}
       run: |
         set -euo pipefail
+        if [[ -n "${OUTCOME_OVERRIDE}" ]]; then
+          echo "value=${OUTCOME_OVERRIDE}" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
         if [[ "${AGENT_RESULT}" != "success" && "${AGENT_RESULT}" != "skipped" ]]; then
           echo "value=error" >> "$GITHUB_OUTPUT"
         elif [[ "${HAS_CHANGES}" != "true" ]]; then
@@ -124,22 +173,46 @@ runs:
           echo "value=error" >> "$GITHUB_OUTPUT"
         fi
 
-    - name: Create PR
-      id: pr
-      if: inputs.verdict == 'APPROVE' && inputs.has_changes == 'true' && inputs.branch != ''
+    - name: Push to Target Branch
+      id: push_target
+      if: >-
+        inputs.verdict == 'APPROVE' &&
+        inputs.has_changes == 'true' &&
+        inputs.branch != '' &&
+        steps.target.outputs.finalize_strategy != 'open_pr'
       shell: bash
       env:
-        BASE_BRANCH: ${{ inputs.base_branch }}
+        AGENT_BRANCH: ${{ inputs.branch }}
+        GH_TOKEN: ${{ inputs.token }}
+        TO_BRANCH: ${{ steps.target.outputs.to_branch }}
+      run: |
+        set -euo pipefail
+        git fetch origin "${AGENT_BRANCH}" "${TO_BRANCH}" --prune
+        git checkout -B "${TO_BRANCH}" "origin/${TO_BRANCH}"
+        git merge --no-ff "origin/${AGENT_BRANCH}" -m "chore(loop): automated fix [skip ci]"
+        git push origin HEAD:"${TO_BRANCH}"
+        echo "pushed=true" >> "$GITHUB_OUTPUT"
+
+    - name: Create PR
+      id: pr
+      if: >-
+        inputs.verdict == 'APPROVE' &&
+        inputs.has_changes == 'true' &&
+        inputs.branch != '' &&
+        steps.target.outputs.finalize_strategy == 'open_pr'
+      shell: bash
+      env:
         BRANCH: ${{ inputs.branch }}
         GH_TOKEN: ${{ inputs.token }}
         LABELS: ${{ inputs.labels }}
+        PR_BASE_BRANCH: ${{ steps.target.outputs.pr_base_branch }}
         PR_BODY: ${{ inputs.pr_body }}
         PR_TITLE: ${{ inputs.pr_title }}
       run: |
         set -euo pipefail
         ARGS=(
           --repo "${GITHUB_REPOSITORY}"
-          --base "${BASE_BRANCH}"
+          --base "${PR_BASE_BRANCH}"
           --head "${BRANCH}"
           --title "${PR_TITLE}"
         )
@@ -153,7 +226,12 @@ runs:
         echo "url=${URL}" >> "$GITHUB_OUTPUT"
 
     - name: Enable Auto-Merge
-      if: inputs.verdict == 'APPROVE' && inputs.has_changes == 'true' && inputs.branch != '' && inputs.auto_merge == 'true'
+      if: >-
+        inputs.verdict == 'APPROVE' &&
+        inputs.has_changes == 'true' &&
+        inputs.branch != '' &&
+        steps.target.outputs.finalize_strategy == 'open_pr' &&
+        inputs.auto_merge == 'true'
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.token }}
@@ -178,17 +256,36 @@ runs:
         fi
         gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${BRANCH}" 2>/dev/null || true
 
+    - name: Run Domain Persistence
+      if: inputs.domain_persistence_script != ''
+      shell: bash
+      env:
+        DOMAIN_PERSISTENCE_SCRIPT: ${{ inputs.domain_persistence_script }}
+        EXECUTE_BRANCH: ${{ inputs.execute_branch != '' && inputs.execute_branch || inputs.branch }}
+        LOOP_NAME: ${{ inputs.loop_name }}
+        OUTCOME: ${{ steps.outcome.outputs.value }}
+        STATE_FILE: ${{ inputs.state_file }}
+        TARGET_JSON: ${{ inputs.target_json }}
+        VERDICT: ${{ inputs.verdict }}
+      run: |
+        set -euo pipefail
+        bash "${DOMAIN_PERSISTENCE_SCRIPT}"
+
     - name: Write State
       if: inputs.current_sha != ''
       uses: ./.github/actions/loop-state-write
       with:
+        acting_on_action: clear
         base_branch: ${{ inputs.base_branch }}
-        branch: ${{ inputs.verdict == 'APPROVE' && inputs.has_changes == 'true' && inputs.branch != '' && inputs.branch || '' }}
+        loop_name: ${{ inputs.loop_name }}
         open_rejections: ${{ inputs.open_rejections }}
         outcome: ${{ steps.outcome.outputs.value }}
         reject_reason: ${{ inputs.reject_reason }}
         sha: ${{ inputs.current_sha }}
         state_file: ${{ inputs.state_file }}
+        state_push_branch: ${{ inputs.state_push_branch }}
+        additional_commit_paths: ${{ inputs.additional_commit_paths }}
+        target_key: ${{ steps.target.outputs.target_key }}
         token: ${{ inputs.token }}
 
     - name: Append Run Log
@@ -196,7 +293,7 @@ runs:
       uses: ./.github/actions/loop-run-log
       with:
         attempts: ${{ inputs.attempts }}
-        base_branch: ${{ inputs.base_branch }}
+        base_branch: ${{ inputs.state_push_branch != '' && inputs.state_push_branch || inputs.base_branch }}
         has_changes: ${{ inputs.has_changes }}
         loop_name: ${{ inputs.loop_name }}
         outcome: ${{ steps.outcome.outputs.value }}
@@ -208,4 +305,3 @@ runs:
         usage_json: ${{ inputs.usage_json }}
         verdict: ${{ inputs.verdict }}
         workflow_run: ${{ inputs.workflow_run }}
-

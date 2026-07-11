@@ -1,5 +1,5 @@
 name: loop-detect
-description: "Detect loop work: pack config, read state, check guards, run detect script, generate prompt."
+description: "Detect loop work: enumerate branches/PRs, run detect script per context, build target_matrix."
 
 inputs:
   agent_implementer_max_turns:
@@ -24,7 +24,7 @@ inputs:
     description: "Comma-separated glob allowlist passed to execute"
     required: true
   base_branch:
-    description: "Base branch for verify diff"
+    description: "Default branch for state migration and fallback integration scan"
     required: true
   budget_file:
     default: ".loop/loop-budget.json"
@@ -51,9 +51,49 @@ inputs:
   level:
     description: "Autonomy level (L1 | L2 | L3)"
     required: true
+  loop_branch_match:
+    default: "glob"
+    description: "Branch pattern mode: list | glob | regex"
+    required: false
+  loop_finalize_integration:
+    default: "open_pr"
+    description: "Finalize strategy for integration targets: open_pr | push"
+    required: false
+  loop_finalize_pull_request:
+    default: "push_head"
+    description: "Finalize strategy for pull_request targets"
+    required: false
+  loop_integration_branches:
+    default: ""
+    description: "Comma-separated integration branch patterns (empty = base_branch only)"
+    required: false
+  loop_max_targets_per_schedule:
+    default: "3"
+    description: "Maximum targets per detect run (fan-out cap)"
+    required: false
   loop_name:
     description: "Loop name for budget lookup (e.g. docs-triage)"
     required: true
+  loop_pr_exclude:
+    default: "fork,draft,label:no-loop"
+    description: "PR exclusion tokens (fork,draft,label:<name>,wip_title)"
+    required: false
+  loop_pr_include_bots:
+    default: ""
+    description: "Bot logins to include when scanning PRs (empty = exclude all bots)"
+    required: false
+  loop_priority:
+    default: "integration,pull_request"
+    description: "Target mode priority order (comma-separated)"
+    required: false
+  loop_pull_requests:
+    default: "false"
+    description: "Whether to enumerate open pull request heads"
+    required: false
+  loop_state_push_branch:
+    default: ""
+    description: "Branch for .loop/* persistence (empty = repository default branch)"
+    required: false
   no_changes_verdict:
     default: "APPROVE"
     description: "Verdict when implementer produces no file changes (APPROVE or REJECT)"
@@ -80,6 +120,10 @@ inputs:
   state_file:
     default: ""
     description: "Path to loop state JSON file (default: .loop/state-<loop_name>.json)"
+    required: false
+  token:
+    description: "GitHub token for PR enumeration (defaults to github.token in caller)"
+    default: ""
     required: false
 
 outputs:
@@ -108,11 +152,11 @@ outputs:
     description: "Base branch"
     value: ${{ steps.config.outputs.base_branch }}
   consecutive_failures:
-    description: "Consecutive failures from state"
-    value: ${{ steps.state.outputs.consecutive_failures }}
+    description: "Consecutive failures for first matrix cell (legacy compat)"
+    value: ${{ steps.detect.outputs.consecutive_failures }}
   current_sha:
-    description: "Current HEAD SHA"
-    value: ${{ steps.state.outputs.current_sha }}
+    description: "Current SHA for first matrix cell (legacy compat)"
+    value: ${{ steps.detect.outputs.current_sha }}
   engine:
     description: "AI engine"
     value: ${{ steps.config.outputs.engine }}
@@ -120,8 +164,8 @@ outputs:
     description: "Infer files pattern for execute"
     value: ${{ inputs.infer_files_pattern }}
   last_sha:
-    description: "Last processed SHA from state"
-    value: ${{ steps.state.outputs.last_sha }}
+    description: "Last processed SHA for first matrix cell (legacy compat)"
+    value: ${{ steps.detect.outputs.last_sha }}
   level:
     description: "Autonomy level"
     value: ${{ steps.config.outputs.level }}
@@ -138,20 +182,23 @@ outputs:
     description: "PR title for finalize"
     value: ${{ inputs.pr_title }}
   prompt:
-    description: "Generated implementer prompt (empty when should_run is false)"
-    value: ${{ steps.prompt.outputs.prompt }}
+    description: "Generated implementer prompt for first matrix cell (legacy compat)"
+    value: ${{ steps.detect.outputs.prompt }}
   should_run:
     description: "Whether the execute job should run"
-    value: ${{ steps.guard.outputs.should_run }}
+    value: ${{ steps.detect.outputs.should_run }}
   skill_name:
     description: "Skill name"
     value: ${{ steps.config.outputs.skill_name }}
   skip_reason:
-    description: "Why execution was skipped (none | no_changes | circuit_breaker | budget)"
-    value: ${{ steps.guard.outputs.skip_reason }}
+    description: "Why execution was skipped (none | no_changes | circuit_breaker | budget | target_budget | config_error | peer_active)"
+    value: ${{ steps.detect.outputs.skip_reason }}
   state_file:
     description: "Resolved loop state JSON path"
     value: ${{ steps.paths.outputs.state_file }}
+  target_matrix:
+    description: "JSON array of candidates for matrix fan-out"
+    value: ${{ steps.detect.outputs.target_matrix }}
 
 runs:
   using: composite
@@ -185,143 +232,31 @@ runs:
           echo "state_file=.loop/state-${LOOP_NAME}.json" >> "$GITHUB_OUTPUT"
         fi
 
-    - name: Read Loop State
-      id: state
-      uses: ./.github/actions/loop-state-read
-      with:
-        state_file: ${{ steps.paths.outputs.state_file }}
-
-    - name: Evaluate Guards and Detect Changes
-      id: guard
+    - name: Detect Targets
+      id: detect
       shell: bash
       env:
+        ALLOWLIST: ${{ inputs.allowlist }}
+        BASE_BRANCH: ${{ inputs.base_branch }}
         BUDGET_FILE: ${{ inputs.budget_file }}
         BUDGET_MAX_RUNS_PER_DAY: ${{ inputs.budget_max_runs_per_day }}
         BUDGET_MAX_TOKENS_PER_DAY: ${{ inputs.budget_max_tokens_per_day }}
-        CONSECUTIVE_FAILURES: ${{ steps.state.outputs.consecutive_failures }}
         DETECT_SCRIPT: ${{ inputs.detect_script }}
-        LAST_SHA: ${{ steps.state.outputs.last_sha }}
+        GH_TOKEN: ${{ inputs.token != '' && inputs.token || github.token }}
+        LEVEL: ${{ inputs.level }}
+        LOOP_BRANCH_MATCH: ${{ inputs.loop_branch_match }}
+        LOOP_FINALIZE_INTEGRATION: ${{ inputs.loop_finalize_integration }}
+        LOOP_FINALIZE_PULL_REQUEST: ${{ inputs.loop_finalize_pull_request }}
+        LOOP_INTEGRATION_BRANCHES: ${{ inputs.loop_integration_branches }}
+        LOOP_MAX_TARGETS_PER_SCHEDULE: ${{ inputs.loop_max_targets_per_schedule }}
         LOOP_NAME: ${{ inputs.loop_name }}
+        LOOP_PR_EXCLUDE: ${{ inputs.loop_pr_exclude }}
+        LOOP_PR_INCLUDE_BOTS: ${{ inputs.loop_pr_include_bots }}
+        LOOP_PRIORITY: ${{ inputs.loop_priority }}
+        LOOP_PULL_REQUESTS: ${{ inputs.loop_pull_requests }}
+        LOOP_STATE_PUSH_BRANCH: ${{ inputs.loop_state_push_branch }}
+        PROMPT_INSTRUCTIONS: ${{ inputs.prompt_instructions }}
         RUN_LOG_FILE: ${{ inputs.run_log_file }}
-      run: |
-        set -euo pipefail
-
-        should_run="true"
-        skip_reason="none"
-        detect_result=""
-
-        if [[ "${CONSECUTIVE_FAILURES}" -ge 3 ]]; then
-          echo "::warning::Loop paused after ${CONSECUTIVE_FAILURES} consecutive rejections"
-          should_run="false"
-          skip_reason="circuit_breaker"
-        else
-          max_runs=""
-          max_tokens=""
-          if [[ -f "${BUDGET_FILE}" ]]; then
-            max_runs=$(jq -r --arg loop "${LOOP_NAME}" '.loops[$loop].max_runs_per_day // empty' "${BUDGET_FILE}" 2>/dev/null || true)
-            max_tokens=$(jq -r --arg loop "${LOOP_NAME}" '.loops[$loop].max_tokens_per_day // empty' "${BUDGET_FILE}" 2>/dev/null || true)
-          fi
-          max_runs="${max_runs:-${BUDGET_MAX_RUNS_PER_DAY}}"
-          max_tokens="${max_tokens:-${BUDGET_MAX_TOKENS_PER_DAY}}"
-
-          if [[ -n "${max_runs}" || -n "${max_tokens}" ]]; then
-            today=$(date -u +%Y-%m-%d)
-            runs_today=0
-            tokens_today=0
-            if [[ -f "${RUN_LOG_FILE}" ]]; then
-              while IFS= read -r line; do
-                [[ -z "${line}" ]] && continue
-                [[ "${line}" != \{* ]] && continue
-                log_date=$(jq -r '.run_id // ""' <<< "${line}" 2>/dev/null | cut -c1-10)
-                log_pattern=$(jq -r '.pattern // ""' <<< "${line}" 2>/dev/null)
-                [[ "${log_date}" != "${today}" ]] && continue
-                [[ "${log_pattern}" != "${LOOP_NAME}" ]] && continue
-                runs_today=$((runs_today + 1))
-                entry_tokens=$(jq -r '
-                  if .usage then
-                    ((.usage.total_input_tokens // .usage.input_tokens // .usage.inputTokens // 0)
-                     + (.usage.total_output_tokens // .usage.output_tokens // .usage.outputTokens // 0))
-                  elif .tokens_estimate then
-                    .tokens_estimate
-                  else
-                    0
-                  end
-                ' <<< "${line}" 2>/dev/null || echo "0")
-                tokens_today=$((tokens_today + entry_tokens))
-              done < <(grep -E '^\{' "${RUN_LOG_FILE}" 2>/dev/null || true)
-            fi
-            if [[ -n "${max_runs}" && "${runs_today}" -ge "${max_runs}" ]]; then
-              echo "::warning::Daily run budget exceeded for ${LOOP_NAME} (${runs_today}/${max_runs})"
-              should_run="false"
-              skip_reason="budget"
-            elif [[ -n "${max_tokens}" && "${tokens_today}" -ge "${max_tokens}" ]]; then
-              echo "::warning::Daily token budget exceeded for ${LOOP_NAME} (${tokens_today}/${max_tokens})"
-              should_run="false"
-              skip_reason="budget"
-            fi
-          fi
-        fi
-
-        if [[ "${should_run}" == "true" ]]; then
-          RESULT=$(bash "${DETECT_SCRIPT}" --scope range --since "${LAST_SHA}")
-          DETECT_SKIP=$(echo "${RESULT}" | jq -r 'if (.skip | type) == "boolean" then (.skip | tostring) else "true" end' 2>/dev/null || echo "true")
-          detect_result="${RESULT}"
-          if [[ "${DETECT_SKIP}" == "true" ]]; then
-            should_run="false"
-            skip_reason="no_changes"
-          fi
-        fi
-
-        {
-          echo "should_run=${should_run}"
-          echo "skip_reason=${skip_reason}"
-        } >> "$GITHUB_OUTPUT"
-
-        if [[ -n "${detect_result}" ]]; then
-          DELIM="DETECT_RESULT_$(openssl rand -hex 8)"
-          {
-            echo "detect_result<<${DELIM}"
-            echo "${detect_result}"
-            echo "${DELIM}"
-          } >> "$GITHUB_OUTPUT"
-        else
-          echo "detect_result=" >> "$GITHUB_OUTPUT"
-        fi
-
-    - name: Generate Prompt Text
-      if: steps.guard.outputs.should_run == 'true'
-      id: prompt_text
-      uses: ./.github/actions/loop-prompt-generate
-      with:
-        allowlist: ${{ inputs.allowlist }}
-        context: |
-          Last SHA: ${{ steps.state.outputs.last_sha }}
-          Current SHA: ${{ steps.state.outputs.current_sha }}
-
-          ## Change Detection Result
-          ${{ steps.guard.outputs.detect_result }}
-
-          ${{ steps.state.outputs.open_rejections_prompt != '' && format('## Open Rejections from Previous Run\n\nThe previous loop run left unresolved items ({0} consecutive failure(s)). Address these before proceeding with new work:\n\n{1}\n', steps.state.outputs.consecutive_failures, steps.state.outputs.open_rejections_prompt) || '' }}
-        instructions: ${{ inputs.prompt_instructions }}
-        level: ${{ steps.config.outputs.level }}
-        skill_name: ${{ steps.config.outputs.skill_name }}
-
-    - name: Export Prompt Output
-      id: prompt
-      shell: bash
-      env:
-        GENERATED_PROMPT: ${{ steps.prompt_text.outputs.prompt }}
-        SHOULD_RUN: ${{ steps.guard.outputs.should_run }}
-      run: |
-        set -euo pipefail
-        if [[ "${SHOULD_RUN}" == "true" ]]; then
-          DELIM="PROMPT_$(openssl rand -hex 8)"
-          {
-            echo "prompt<<${DELIM}"
-            echo "${GENERATED_PROMPT}"
-            echo "${DELIM}"
-          } >> "$GITHUB_OUTPUT"
-        else
-          echo "prompt=" >> "$GITHUB_OUTPUT"
-        fi
-
+        SKILL_NAME: ${{ inputs.skill_name }}
+        STATE_FILE: ${{ steps.paths.outputs.state_file }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/detect.sh"

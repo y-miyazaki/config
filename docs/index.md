@@ -31,7 +31,13 @@ _Understanding-oriented discussion of concepts and decisions._
 - [Config Repository Architecture](explanation/architecture.md)
 - [GitHub Workflows Design](explanation/github-workflows-design.md)
 - [Instructions Sync Workflow](explanation/instructions-sync-workflow.md)
+- [Instructions Sync Workflow](explanation/instructions-sync-workflow.md)
 - [Loop Engineering Design](explanation/loop-engineering-design.md)
+- [Multi-Branch Loops Design](explanation/multi-branch-loops-design.md)
+- [Loop Caller Workflows Design](explanation/loop-caller-workflows-design.md)
+- [CI Healing Loops Design](explanation/ci-healing-loops-design.md) (index — split docs)
+- [CI Sweeper Workflow Design](explanation/workflows/ci-sweeper-workflow-design.md)
+- [Docs Loop Workflow Design](explanation/workflows/docs-loop-workflow-design.md)
 
 ## Report
 

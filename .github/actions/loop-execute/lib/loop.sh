@@ -33,6 +33,7 @@ REASON="No attempts completed"
 HAS_CHANGES="false"
 OPEN_REJECTIONS_JSON='[]'
 REJECT_FEEDBACK=""
+OUTCOME_OVERRIDE=""
 
 #######################################
 # initialize_loop_state: Prepare status directory and prompt defaults
@@ -52,6 +53,25 @@ function initialize_loop_state {
 }
 
 #######################################
+# parse_outcome_override_from_agent_output: Detect Skill watch outcome from implementer text
+#
+# Arguments:
+#   $1 - Implementer agent output text
+#
+# Returns:
+#   0 when outcome_override should be watch, 1 otherwise
+#
+function parse_outcome_override_from_agent_output {
+    local agent_out="$1"
+    if grep -qiE '^\*\*Outcome:\*\*[[:space:]]*(watch|deferred|no actionable|escalat)' <<< "${agent_out}"; then
+        return 0
+    fi
+    if grep -qiE '^[[:space:]]*Outcome:[[:space:]]*(watch|deferred|no actionable|escalat)' <<< "${agent_out}"; then
+        return 0
+    fi
+    return 1
+}
+
 # write_loop_outputs: Write step outputs to GITHUB_OUTPUT
 #
 # Arguments:
@@ -87,6 +107,7 @@ function write_loop_outputs {
         else
             echo "usage_json="
         fi
+        echo "outcome_override=${OUTCOME_OVERRIDE}"
     } >> "${GITHUB_OUTPUT}"
     echo "Final: verdict=${VERDICT} attempts=${ATTEMPT} has_changes=${HAS_CHANGES}"
     if [[ ${VERDICT} == "REJECT" && "$(jq 'length' <<< "${OPEN_REJECTIONS_JSON}")" -gt 0 ]]; then
@@ -155,9 +176,15 @@ function run_bounded_loop {
         fi
 
         if [[ ${HAS_CHANGES} != "true" ]]; then
-            VERDICT="${NO_CHANGES_VERDICT}"
-            REASON="No file changes produced"
-            echo "No changes; treating as ${VERDICT}."
+            if [[ -f ${attempt_dir}/agent-output.txt ]] \
+                && parse_outcome_override_from_agent_output "$(cat "${attempt_dir}/agent-output.txt")"; then
+                OUTCOME_OVERRIDE="watch"
+                REASON="Skill classified as watch with no file changes"
+            else
+                VERDICT="${NO_CHANGES_VERDICT}"
+                REASON="No file changes produced"
+            fi
+            echo "No changes; verdict=${VERDICT} outcome_override=${OUTCOME_OVERRIDE:-none}."
             echo "::endgroup::"
             break
         fi

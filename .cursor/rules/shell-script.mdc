@@ -220,9 +220,12 @@ Write `None` for sections that do not apply. Do not omit sections.
 
 - After changes, prioritize running validate.sh from shell-script-validation skill.
 - Use individual commands only for debugging.
+- Comment and header conventions (DOC-*) are authoring guidelines — not enforced by validate.sh. Use shell-script-review for judgment on documentation quality.
 
 
 ## Testing and Validation
+
+`shell-script-validation` runs automated checks only: `bash -n`, shellcheck, shebang, and permissions. It does **not** enforce DOC-* comment format or header separator style.
 
 **Entry point (recommended)**:
 
@@ -238,10 +241,12 @@ shellcheck script.sh
 bats test/bats/
 ```
 
-**Detailed guide**: See shell-script-validation skill SKILL.md.
+**Detailed guide**: See shell-script-validation skill SKILL.md. For comment/header conventions, see shell-script-review skill and the Skill Scripts section above.
 
 ## Security Guidelines
 
 - Keep `set -euo pipefail` and safe defaults (`umask`, etc.) enabled; do not disable them.
 - Handle sensitive information through environment variables or secret management, and never print it to stdout/logs.
 - Add target confirmation and guard conditions before destructive commands to prevent accidental execution.
+
+

@@ -120,6 +120,9 @@ outputs:
   usage_json:
     description: "Measured token usage JSON (empty when CLI usage is unavailable)"
     value: ${{ steps.loop.outputs.usage_json }}
+  outcome_override:
+    description: "Optional finalize outcome when Skill defers without edits (e.g. watch)"
+    value: ${{ steps.loop.outputs.outcome_override }}
   verdict:
     description: "Final verdict (APPROVE or REJECT)"
     value: ${{ steps.loop.outputs.verdict }}

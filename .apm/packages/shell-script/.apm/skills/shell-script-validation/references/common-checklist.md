@@ -23,6 +23,7 @@ Run tools in this order (fail-fast: stop on first failure):
 - SC-05: Command substitution uses `$()` instead of backticks
 
 ### Project standards check
+
 - STD-01: `SCRIPT_DIR` is defined using `$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)`
 - STD-02: Common library (`scripts/lib/`) is sourced where required
 - STD-03: `set -euo pipefail` (or equivalent) is present at script top

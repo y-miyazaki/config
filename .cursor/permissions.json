@@ -3,6 +3,10 @@
   "terminalAllowlist": [
     "actionlint",
     "apm",
+    "cat",
+    "cd",
+    "diff",
+    "echo",
     "ghalint",
     "git add",
     "git diff",
@@ -10,12 +14,17 @@
     "git status",
     "go test",
     "golangci-lint",
+    "head",
+    "jq",
     "markdown-link-check",
     "markdownlint-cli2",
     "npm run",
     "npm test",
+    "rg",
     "shellcheck",
-    "shfmt"
+    "shfmt",
+    "tail",
+    "zizmor"
   ],
   "autoRun": {
     "allow_instructions": [

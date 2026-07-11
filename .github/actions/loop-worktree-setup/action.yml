@@ -1,10 +1,18 @@
 name: loop-worktree-setup
-description: "Create an isolated git worktree branch for loop agent modifications."
+description: "Create an isolated git worktree at base_ref on base_branch for loop agent modifications."
 
 inputs:
+  base_branch:
+    default: ""
+    description: "Base branch to fetch (from target.from.branch). Empty = current branch."
+    required: false
+  base_ref:
+    default: ""
+    description: "Ref to check out in worktree (from target.from.ref). Empty = origin/base_branch."
+    required: false
   branch:
     default: ""
-    description: "Existing branch to check out (empty = create new branch)"
+    description: "Existing agent branch to check out (empty = create new branch)"
     required: false
   branch_prefix:
     default: "loop"
@@ -32,6 +40,8 @@ runs:
       id: setup
       shell: bash
       env:
+        BASE_BRANCH: ${{ inputs.base_branch }}
+        BASE_REF: ${{ inputs.base_ref }}
         BRANCH: ${{ inputs.branch }}
         BRANCH_PREFIX: ${{ inputs.branch_prefix }}
         GH_TOKEN: ${{ inputs.token }}
@@ -44,6 +54,17 @@ runs:
         git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 -w0)"
 
         WORKTREE_PATH="${RUNNER_TEMP}/worktree-${SKILL_NAME}"
+        CHECKOUT_REF=""
+        FETCH_BRANCH="${BASE_BRANCH}"
+
+        if [[ -n "${BASE_BRANCH}" ]]; then
+          if ! [[ "${BASE_BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+            echo "::error::Invalid base branch: ${BASE_BRANCH}"
+            exit 1
+          fi
+          git fetch origin "${BASE_BRANCH}" --prune
+          CHECKOUT_REF="${BASE_REF:-origin/${BASE_BRANCH}}"
+        fi
 
         if [[ -n "${BRANCH}" ]]; then
           if ! [[ "${BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
@@ -51,6 +72,7 @@ runs:
             exit 1
           fi
           git fetch origin "${BRANCH}"
+          rm -rf "${WORKTREE_PATH}"
           git worktree add "${WORKTREE_PATH}" "origin/${BRANCH}"
         else
           DATE=$(date -u +%Y%m%d-%H%M%S)
@@ -61,7 +83,12 @@ runs:
             exit 1
           fi
 
-          git worktree add -b "${BRANCH}" "${WORKTREE_PATH}" HEAD
+          rm -rf "${WORKTREE_PATH}"
+          if [[ -n "${CHECKOUT_REF}" ]]; then
+            git worktree add -b "${BRANCH}" "${WORKTREE_PATH}" "${CHECKOUT_REF}"
+          else
+            git worktree add -b "${BRANCH}" "${WORKTREE_PATH}" HEAD
+          fi
         fi
 
         {

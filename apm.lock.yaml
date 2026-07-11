@@ -1,8 +1,10 @@
 lockfile_version: '1'
-generated_at: '2026-07-08T11:48:23.328247+00:00'
-apm_version: 0.21.0
+generated_at: '2026-07-11T06:04:22.200053+00:00'
+apm_version: 0.23.1
 dependencies:
 - repo_url: _local/common
+  name: config-common
+  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .agents/skills/agent-skills-review
@@ -706,6 +708,8 @@ dependencies:
   local_path: ./.apm/packages/common
   declared_license: Apache-2.0
 - repo_url: _local/common-hooks-claude
+  name: common-hooks-claude
+  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .claude/hooks/common-hooks-claude/scripts/actionlint.sh
@@ -737,6 +741,8 @@ dependencies:
   local_path: ./.apm/packages/common-hooks-claude
   declared_license: Apache-2.0
 - repo_url: _local/common-hooks-cursor
+  name: common-hooks-cursor
+  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .claude/hooks/common-hooks-cursor/scripts/actionlint.sh
@@ -767,44 +773,9 @@ dependencies:
   source: local
   local_path: ./.apm/packages/common-hooks-cursor
   declared_license: Apache-2.0
-- repo_url: _local/docs-loop
-  package_type: apm_package
-  deployed_files:
-  - .agents/skills/loop-docs-triage
-  - .agents/skills/loop-docs-triage/SKILL.md
-  - .agents/skills/loop-docs-triage/eval.yaml
-  - .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-basic.yaml
-  - .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-boundary.yaml
-  - .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-classification.yaml
-  - .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-noaction.yaml
-  - .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-trigger-negative.yaml
-  - .claude/skills/loop-docs-triage
-  - .claude/skills/loop-docs-triage/SKILL.md
-  - .claude/skills/loop-docs-triage/eval.yaml
-  - .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-basic.yaml
-  - .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-boundary.yaml
-  - .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-classification.yaml
-  - .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-noaction.yaml
-  - .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-trigger-negative.yaml
-  deployed_file_hashes:
-    .agents/skills/loop-docs-triage/SKILL.md: sha256:5d392cb8c3e35752a9534dd70127e74ca2873c64d171a6ce448871ee483d3d89
-    .agents/skills/loop-docs-triage/eval.yaml: sha256:eb9d6fc72e354cbdce9c7955eb1976c87ccc2cdc0a22143e732cabf1a4d60896
-    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-basic.yaml: sha256:e128892489753374b3fad063c865080ad86a65c37ae753cdcfaf58e43e607ce6
-    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-boundary.yaml: sha256:49baf1f8e7e2ac173b87a29555e217e922e6e071dfdfedf0e18bde4c620b995f
-    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-classification.yaml: sha256:c46ae4a6c93911b4c5b1172cc7a3a0ca4f1981c0c98dc3d8318f9df59f71cb43
-    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-noaction.yaml: sha256:aca45d6e27e0066cc915e4e9646b7f99c957c9e22c77218ec7e55b4fad473424
-    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-trigger-negative.yaml: sha256:efda15888edb4f851ba6998a94156d08b7102b4c480e9dbcca122c0d892d4fa0
-    .claude/skills/loop-docs-triage/SKILL.md: sha256:5d392cb8c3e35752a9534dd70127e74ca2873c64d171a6ce448871ee483d3d89
-    .claude/skills/loop-docs-triage/eval.yaml: sha256:eb9d6fc72e354cbdce9c7955eb1976c87ccc2cdc0a22143e732cabf1a4d60896
-    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-basic.yaml: sha256:e128892489753374b3fad063c865080ad86a65c37ae753cdcfaf58e43e607ce6
-    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-boundary.yaml: sha256:49baf1f8e7e2ac173b87a29555e217e922e6e071dfdfedf0e18bde4c620b995f
-    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-classification.yaml: sha256:c46ae4a6c93911b4c5b1172cc7a3a0ca4f1981c0c98dc3d8318f9df59f71cb43
-    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-noaction.yaml: sha256:aca45d6e27e0066cc915e4e9646b7f99c957c9e22c77218ec7e55b4fad473424
-    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-trigger-negative.yaml: sha256:efda15888edb4f851ba6998a94156d08b7102b4c480e9dbcca122c0d892d4fa0
-  source: local
-  local_path: ./.apm/packages/docs-loop
-  declared_license: Apache-2.0
 - repo_url: _local/go
+  name: config-go
+  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .agents/skills/go-review
@@ -1024,6 +995,8 @@ dependencies:
   local_path: ./.apm/packages/go
   declared_license: Apache-2.0
 - repo_url: _local/go-hooks-claude
+  name: go-hooks-claude
+  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .claude/hooks/go-hooks-claude/scripts/golangci_lint.sh
@@ -1035,6 +1008,8 @@ dependencies:
   local_path: ./.apm/packages/go-hooks-claude
   declared_license: Apache-2.0
 - repo_url: _local/go-hooks-cursor
+  name: go-hooks-cursor
+  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .claude/hooks/go-hooks-cursor/scripts/golangci_lint.sh
@@ -1045,7 +1020,187 @@ dependencies:
   source: local
   local_path: ./.apm/packages/go-hooks-cursor
   declared_license: Apache-2.0
+- repo_url: _local/loop-ci-sweeper
+  name: config-loop-ci-sweeper
+  version: 1.0.0
+  package_type: apm_package
+  deployed_files:
+  - .agents/skills/loop-ci-sweeper
+  - .agents/skills/loop-ci-sweeper/SKILL.md
+  - .agents/skills/loop-ci-sweeper/eval.yaml
+  - .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-basic.yaml
+  - .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml
+  - .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-noaction.yaml
+  - .agents/skills/loop-ci-sweeper/references/category-input-schema.md
+  - .agents/skills/loop-ci-sweeper/references/category-run-ledger.md
+  - .agents/skills/loop-ci-sweeper/references/category-scope.md
+  - .agents/skills/loop-ci-sweeper/references/category-validation-commands.md
+  - .agents/skills/loop-ci-sweeper/references/common-checklist.md
+  - .agents/skills/loop-ci-sweeper/references/common-output-format.md
+  - .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh
+  - .agents/skills/loop-ci-sweeper/scripts/lib/all.sh
+  - .agents/skills/loop-ci-sweeper/scripts/lib/aws.sh
+  - .agents/skills/loop-ci-sweeper/scripts/lib/common.sh
+  - .agents/skills/loop-ci-sweeper/scripts/lib/csv.sh
+  - .agents/skills/loop-ci-sweeper/scripts/lib/json.sh
+  - .agents/skills/loop-ci-sweeper/scripts/lib/terraform.sh
+  - .agents/skills/loop-ci-sweeper/scripts/lib/validation.sh
+  - .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh
+  - .claude/skills/loop-ci-sweeper
+  - .claude/skills/loop-ci-sweeper/SKILL.md
+  - .claude/skills/loop-ci-sweeper/eval.yaml
+  - .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-basic.yaml
+  - .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml
+  - .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-noaction.yaml
+  - .claude/skills/loop-ci-sweeper/references/category-input-schema.md
+  - .claude/skills/loop-ci-sweeper/references/category-run-ledger.md
+  - .claude/skills/loop-ci-sweeper/references/category-scope.md
+  - .claude/skills/loop-ci-sweeper/references/category-validation-commands.md
+  - .claude/skills/loop-ci-sweeper/references/common-checklist.md
+  - .claude/skills/loop-ci-sweeper/references/common-output-format.md
+  - .claude/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh
+  - .claude/skills/loop-ci-sweeper/scripts/lib/all.sh
+  - .claude/skills/loop-ci-sweeper/scripts/lib/aws.sh
+  - .claude/skills/loop-ci-sweeper/scripts/lib/common.sh
+  - .claude/skills/loop-ci-sweeper/scripts/lib/csv.sh
+  - .claude/skills/loop-ci-sweeper/scripts/lib/json.sh
+  - .claude/skills/loop-ci-sweeper/scripts/lib/terraform.sh
+  - .claude/skills/loop-ci-sweeper/scripts/lib/validation.sh
+  - .claude/skills/loop-ci-sweeper/scripts/update_run_ledger.sh
+  deployed_file_hashes:
+    .agents/skills/loop-ci-sweeper/SKILL.md: sha256:d826f2ccaf00d744ca94bf7206bdda425f339f6173be6c418e2a4603a0ba9973
+    .agents/skills/loop-ci-sweeper/eval.yaml: sha256:0312de1071a0fa234bd6d1ce690899d2ebe61a4ec4991ced2c5bf39c1196a15f
+    .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-basic.yaml: sha256:b93b23a065f367dbe93c3899c665a356aadeb8c8f40a329118889a911ec346f3
+    .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml: sha256:cb935f554e6ecc40c5a842df5ee4af03acd5bea46c9458fe827b08893f7865b4
+    .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-noaction.yaml: sha256:561a90e9babbcce450d1e4d2e550aef511ec9171389c988b137c4ef83c98a9a8
+    .agents/skills/loop-ci-sweeper/references/category-input-schema.md: sha256:017d39c907ae38dc3631746ac6a53d5cc008a446946b9e58f0ed27fe51c9168d
+    .agents/skills/loop-ci-sweeper/references/category-run-ledger.md: sha256:ad40ea7a459e3a5869c38b7eac3b914146c3f3843fb13840a4fe151ff507d304
+    .agents/skills/loop-ci-sweeper/references/category-scope.md: sha256:e629a55899f59aa6cc007fe68ffc706e7971f4223827030bdf8f817a25f4de26
+    .agents/skills/loop-ci-sweeper/references/category-validation-commands.md: sha256:0c4b786edfbb5c40257ebaa2fe7e0a8927e83dee335e16fd75d75a0e04eef98a
+    .agents/skills/loop-ci-sweeper/references/common-checklist.md: sha256:68f1e9423c46c11c6317ba69fd38004e4eee6d90a9cb79463b8260e38e0e900e
+    .agents/skills/loop-ci-sweeper/references/common-output-format.md: sha256:fca5a2d50861f0761ad5bcfce98b98ed5aae911e9c2ba8c668550b225b074e22
+    .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh: sha256:26da96404dafb994a20661b8e64f36a94dc7ed78125fb9166065c59d83574d4c
+    .agents/skills/loop-ci-sweeper/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .agents/skills/loop-ci-sweeper/scripts/lib/aws.sh: sha256:d8dc593a4bbeda77df8aeee3f2f2eab1271e5193a686b83d199bd7e39406b045
+    .agents/skills/loop-ci-sweeper/scripts/lib/common.sh: sha256:e23f1c9c5666c4631f6a6b29bc389515dc948b50b8da9017b4ac30bc5178675d
+    .agents/skills/loop-ci-sweeper/scripts/lib/csv.sh: sha256:47ce9627152a3ac89361e8f5f9711e4a7175558b805ec74f069f954e36f00941
+    .agents/skills/loop-ci-sweeper/scripts/lib/json.sh: sha256:ccaab13ab60fb80af63437bef073edf6754f02981fc40a179b7b9db09e5246d8
+    .agents/skills/loop-ci-sweeper/scripts/lib/terraform.sh: sha256:dcfd137be98a966ca6b0741e5ed499950fb95f9246c02840fd6f36a0820cf95f
+    .agents/skills/loop-ci-sweeper/scripts/lib/validation.sh: sha256:0e277bba677aa2613e33d49b0939ff682a6cdecc99acb6beac0319ead4ab8641
+    .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh: sha256:00bf702777f1247edabef9663447a736fc41605825cc6499531dc01c77baf63c
+    .claude/skills/loop-ci-sweeper/SKILL.md: sha256:d826f2ccaf00d744ca94bf7206bdda425f339f6173be6c418e2a4603a0ba9973
+    .claude/skills/loop-ci-sweeper/eval.yaml: sha256:0312de1071a0fa234bd6d1ce690899d2ebe61a4ec4991ced2c5bf39c1196a15f
+    .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-basic.yaml: sha256:b93b23a065f367dbe93c3899c665a356aadeb8c8f40a329118889a911ec346f3
+    .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml: sha256:cb935f554e6ecc40c5a842df5ee4af03acd5bea46c9458fe827b08893f7865b4
+    .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-noaction.yaml: sha256:561a90e9babbcce450d1e4d2e550aef511ec9171389c988b137c4ef83c98a9a8
+    .claude/skills/loop-ci-sweeper/references/category-input-schema.md: sha256:017d39c907ae38dc3631746ac6a53d5cc008a446946b9e58f0ed27fe51c9168d
+    .claude/skills/loop-ci-sweeper/references/category-run-ledger.md: sha256:ad40ea7a459e3a5869c38b7eac3b914146c3f3843fb13840a4fe151ff507d304
+    .claude/skills/loop-ci-sweeper/references/category-scope.md: sha256:e629a55899f59aa6cc007fe68ffc706e7971f4223827030bdf8f817a25f4de26
+    .claude/skills/loop-ci-sweeper/references/category-validation-commands.md: sha256:0c4b786edfbb5c40257ebaa2fe7e0a8927e83dee335e16fd75d75a0e04eef98a
+    .claude/skills/loop-ci-sweeper/references/common-checklist.md: sha256:68f1e9423c46c11c6317ba69fd38004e4eee6d90a9cb79463b8260e38e0e900e
+    .claude/skills/loop-ci-sweeper/references/common-output-format.md: sha256:fca5a2d50861f0761ad5bcfce98b98ed5aae911e9c2ba8c668550b225b074e22
+    .claude/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh: sha256:26da96404dafb994a20661b8e64f36a94dc7ed78125fb9166065c59d83574d4c
+    .claude/skills/loop-ci-sweeper/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .claude/skills/loop-ci-sweeper/scripts/lib/aws.sh: sha256:d8dc593a4bbeda77df8aeee3f2f2eab1271e5193a686b83d199bd7e39406b045
+    .claude/skills/loop-ci-sweeper/scripts/lib/common.sh: sha256:e23f1c9c5666c4631f6a6b29bc389515dc948b50b8da9017b4ac30bc5178675d
+    .claude/skills/loop-ci-sweeper/scripts/lib/csv.sh: sha256:47ce9627152a3ac89361e8f5f9711e4a7175558b805ec74f069f954e36f00941
+    .claude/skills/loop-ci-sweeper/scripts/lib/json.sh: sha256:ccaab13ab60fb80af63437bef073edf6754f02981fc40a179b7b9db09e5246d8
+    .claude/skills/loop-ci-sweeper/scripts/lib/terraform.sh: sha256:dcfd137be98a966ca6b0741e5ed499950fb95f9246c02840fd6f36a0820cf95f
+    .claude/skills/loop-ci-sweeper/scripts/lib/validation.sh: sha256:0e277bba677aa2613e33d49b0939ff682a6cdecc99acb6beac0319ead4ab8641
+    .claude/skills/loop-ci-sweeper/scripts/update_run_ledger.sh: sha256:00bf702777f1247edabef9663447a736fc41605825cc6499531dc01c77baf63c
+  source: local
+  local_path: ./.apm/packages/loop-ci-sweeper
+  declared_license: Apache-2.0
+- repo_url: _local/loop-docs-triage
+  name: config-loop-docs-triage
+  version: 1.0.0
+  package_type: apm_package
+  deployed_files:
+  - .agents/skills/loop-docs-triage
+  - .agents/skills/loop-docs-triage/SKILL.md
+  - .agents/skills/loop-docs-triage/eval.yaml
+  - .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-basic.yaml
+  - .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-boundary.yaml
+  - .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-classification.yaml
+  - .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-noaction.yaml
+  - .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-trigger-negative.yaml
+  - .agents/skills/loop-docs-triage/references/category-input-schema.md
+  - .agents/skills/loop-docs-triage/references/category-scope.md
+  - .agents/skills/loop-docs-triage/references/common-checklist.md
+  - .agents/skills/loop-docs-triage/references/common-output-format.md
+  - .agents/skills/loop-docs-triage/scripts/detect_changes.sh
+  - .agents/skills/loop-docs-triage/scripts/lib/all.sh
+  - .agents/skills/loop-docs-triage/scripts/lib/aws.sh
+  - .agents/skills/loop-docs-triage/scripts/lib/common.sh
+  - .agents/skills/loop-docs-triage/scripts/lib/csv.sh
+  - .agents/skills/loop-docs-triage/scripts/lib/json.sh
+  - .agents/skills/loop-docs-triage/scripts/lib/terraform.sh
+  - .agents/skills/loop-docs-triage/scripts/lib/validation.sh
+  - .claude/skills/loop-docs-triage
+  - .claude/skills/loop-docs-triage/SKILL.md
+  - .claude/skills/loop-docs-triage/eval.yaml
+  - .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-basic.yaml
+  - .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-boundary.yaml
+  - .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-classification.yaml
+  - .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-noaction.yaml
+  - .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-trigger-negative.yaml
+  - .claude/skills/loop-docs-triage/references/category-input-schema.md
+  - .claude/skills/loop-docs-triage/references/category-scope.md
+  - .claude/skills/loop-docs-triage/references/common-checklist.md
+  - .claude/skills/loop-docs-triage/references/common-output-format.md
+  - .claude/skills/loop-docs-triage/scripts/detect_changes.sh
+  - .claude/skills/loop-docs-triage/scripts/lib/all.sh
+  - .claude/skills/loop-docs-triage/scripts/lib/aws.sh
+  - .claude/skills/loop-docs-triage/scripts/lib/common.sh
+  - .claude/skills/loop-docs-triage/scripts/lib/csv.sh
+  - .claude/skills/loop-docs-triage/scripts/lib/json.sh
+  - .claude/skills/loop-docs-triage/scripts/lib/terraform.sh
+  - .claude/skills/loop-docs-triage/scripts/lib/validation.sh
+  deployed_file_hashes:
+    .agents/skills/loop-docs-triage/SKILL.md: sha256:f479c040373e951c03bda2b49af84be0af25c5901f3588da5179cc7f30afa9b1
+    .agents/skills/loop-docs-triage/eval.yaml: sha256:eb9d6fc72e354cbdce9c7955eb1976c87ccc2cdc0a22143e732cabf1a4d60896
+    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-basic.yaml: sha256:e128892489753374b3fad063c865080ad86a65c37ae753cdcfaf58e43e607ce6
+    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-boundary.yaml: sha256:49baf1f8e7e2ac173b87a29555e217e922e6e071dfdfedf0e18bde4c620b995f
+    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-classification.yaml: sha256:c46ae4a6c93911b4c5b1172cc7a3a0ca4f1981c0c98dc3d8318f9df59f71cb43
+    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-noaction.yaml: sha256:a4b4d7af198ac01a59b30c0b3a1b5a812cf02e98b425065973aafc27e117fd07
+    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-trigger-negative.yaml: sha256:efda15888edb4f851ba6998a94156d08b7102b4c480e9dbcca122c0d892d4fa0
+    .agents/skills/loop-docs-triage/references/category-input-schema.md: sha256:0f23947050622220a3b8f9eeece1eacbc41ba01bff655004956f5096efc48307
+    .agents/skills/loop-docs-triage/references/category-scope.md: sha256:2704dba7418d36ec638d0d5925fafc76ba0189a472c01993e4dad6d622daaed1
+    .agents/skills/loop-docs-triage/references/common-checklist.md: sha256:319ec9736fbf3fc5d72b3b4ae7f540abb3f56ebd45723ca7572969383bc525c3
+    .agents/skills/loop-docs-triage/references/common-output-format.md: sha256:a317fa6699e84307d8f243b0f49e469fe243845f53ad9ca99e3513fd1da7850e
+    .agents/skills/loop-docs-triage/scripts/detect_changes.sh: sha256:b739a5665905ec4b92ed15fd230dc7bbd2137a3d22379c15f2dbcfef8e9aa9dc
+    .agents/skills/loop-docs-triage/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .agents/skills/loop-docs-triage/scripts/lib/aws.sh: sha256:d8dc593a4bbeda77df8aeee3f2f2eab1271e5193a686b83d199bd7e39406b045
+    .agents/skills/loop-docs-triage/scripts/lib/common.sh: sha256:e23f1c9c5666c4631f6a6b29bc389515dc948b50b8da9017b4ac30bc5178675d
+    .agents/skills/loop-docs-triage/scripts/lib/csv.sh: sha256:47ce9627152a3ac89361e8f5f9711e4a7175558b805ec74f069f954e36f00941
+    .agents/skills/loop-docs-triage/scripts/lib/json.sh: sha256:ccaab13ab60fb80af63437bef073edf6754f02981fc40a179b7b9db09e5246d8
+    .agents/skills/loop-docs-triage/scripts/lib/terraform.sh: sha256:dcfd137be98a966ca6b0741e5ed499950fb95f9246c02840fd6f36a0820cf95f
+    .agents/skills/loop-docs-triage/scripts/lib/validation.sh: sha256:0e277bba677aa2613e33d49b0939ff682a6cdecc99acb6beac0319ead4ab8641
+    .claude/skills/loop-docs-triage/SKILL.md: sha256:f479c040373e951c03bda2b49af84be0af25c5901f3588da5179cc7f30afa9b1
+    .claude/skills/loop-docs-triage/eval.yaml: sha256:eb9d6fc72e354cbdce9c7955eb1976c87ccc2cdc0a22143e732cabf1a4d60896
+    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-basic.yaml: sha256:e128892489753374b3fad063c865080ad86a65c37ae753cdcfaf58e43e607ce6
+    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-boundary.yaml: sha256:49baf1f8e7e2ac173b87a29555e217e922e6e071dfdfedf0e18bde4c620b995f
+    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-classification.yaml: sha256:c46ae4a6c93911b4c5b1172cc7a3a0ca4f1981c0c98dc3d8318f9df59f71cb43
+    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-noaction.yaml: sha256:a4b4d7af198ac01a59b30c0b3a1b5a812cf02e98b425065973aafc27e117fd07
+    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-trigger-negative.yaml: sha256:efda15888edb4f851ba6998a94156d08b7102b4c480e9dbcca122c0d892d4fa0
+    .claude/skills/loop-docs-triage/references/category-input-schema.md: sha256:0f23947050622220a3b8f9eeece1eacbc41ba01bff655004956f5096efc48307
+    .claude/skills/loop-docs-triage/references/category-scope.md: sha256:2704dba7418d36ec638d0d5925fafc76ba0189a472c01993e4dad6d622daaed1
+    .claude/skills/loop-docs-triage/references/common-checklist.md: sha256:319ec9736fbf3fc5d72b3b4ae7f540abb3f56ebd45723ca7572969383bc525c3
+    .claude/skills/loop-docs-triage/references/common-output-format.md: sha256:a317fa6699e84307d8f243b0f49e469fe243845f53ad9ca99e3513fd1da7850e
+    .claude/skills/loop-docs-triage/scripts/detect_changes.sh: sha256:b739a5665905ec4b92ed15fd230dc7bbd2137a3d22379c15f2dbcfef8e9aa9dc
+    .claude/skills/loop-docs-triage/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .claude/skills/loop-docs-triage/scripts/lib/aws.sh: sha256:d8dc593a4bbeda77df8aeee3f2f2eab1271e5193a686b83d199bd7e39406b045
+    .claude/skills/loop-docs-triage/scripts/lib/common.sh: sha256:e23f1c9c5666c4631f6a6b29bc389515dc948b50b8da9017b4ac30bc5178675d
+    .claude/skills/loop-docs-triage/scripts/lib/csv.sh: sha256:47ce9627152a3ac89361e8f5f9711e4a7175558b805ec74f069f954e36f00941
+    .claude/skills/loop-docs-triage/scripts/lib/json.sh: sha256:ccaab13ab60fb80af63437bef073edf6754f02981fc40a179b7b9db09e5246d8
+    .claude/skills/loop-docs-triage/scripts/lib/terraform.sh: sha256:dcfd137be98a966ca6b0741e5ed499950fb95f9246c02840fd6f36a0820cf95f
+    .claude/skills/loop-docs-triage/scripts/lib/validation.sh: sha256:0e277bba677aa2613e33d49b0939ff682a6cdecc99acb6beac0319ead4ab8641
+  source: local
+  local_path: ./.apm/packages/loop-docs-triage
+  declared_license: Apache-2.0
 - repo_url: _local/shell-script
+  name: config-shell-script
+  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .agents/skills/shell-script-review
@@ -1179,7 +1334,7 @@ dependencies:
     .agents/skills/shell-script-review/scripts/lib/terraform.sh: sha256:dcfd137be98a966ca6b0741e5ed499950fb95f9246c02840fd6f36a0820cf95f
     .agents/skills/shell-script-review/scripts/lib/validation.sh: sha256:0e277bba677aa2613e33d49b0939ff682a6cdecc99acb6beac0319ead4ab8641
     .agents/skills/shell-script-review/scripts/validate.sh: sha256:1c0960d1215b5e5010d2623a82b55cb1ed8f52979e051c74950c02c8dea1e5ff
-    .agents/skills/shell-script-validation/SKILL.md: sha256:f9c967043928163eb00db1fa8286f827c957e4c2a36aa5e5ac207659039865cc
+    .agents/skills/shell-script-validation/SKILL.md: sha256:e5f36551d2aeecd248a3245ba92aa5bc98310e42ac7e4d0a419cbf56b7ec1bce
     .agents/skills/shell-script-validation/eval.yaml: sha256:afeeb962911b2d520a622dbf4bb8b4a26c81b0167b5bbdb8c0c636c21cbe24bb
     .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-basic.yaml: sha256:5403e15d12a1d4c15520ab5463149185b2213d47b85ce942e5327bbdbc9b1b12
     .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-boundary-guardrail.yaml: sha256:1238638e16effa3f2f1c58c5e12768624d65b5821b4c8b7b20d40878eeca8104
@@ -1187,7 +1342,7 @@ dependencies:
     .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-structured-output.yaml: sha256:2aa440cf1a0876e9cefd903d31387305acb5c1ce5ccb8a4fdfcc7c48744b44d8
     .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-trigger-negative.yaml: sha256:d8fa4af37e422419997bbe136e26dcb6a6f5a5aef6be69efd2704dfbb52b7cb4
     .agents/skills/shell-script-validation/references/category-standards.md: sha256:2cf45d3e4a85d263a534f1cc923dee5411a373191626cdaa3b8a122bd7c099e3
-    .agents/skills/shell-script-validation/references/common-checklist.md: sha256:dc74adaf7c6f5eb2818d8d41f51e806f8e0115d19b436684080180a0237be9bf
+    .agents/skills/shell-script-validation/references/common-checklist.md: sha256:59bedc277c9ad66b86c9030a050e1c0604016fe45f7efe03453472a17c8f0d69
     .agents/skills/shell-script-validation/references/common-individual-commands.md: sha256:3486e8fc18eabdeae563079f550d9de410cb0cb6d3697009aab05affe002b942
     .agents/skills/shell-script-validation/references/common-output-format.md: sha256:d710a887406f2a19ea18d9ecf08f22b4e4f73b0c680fee4014a14661155c0487
     .agents/skills/shell-script-validation/references/common-troubleshooting.md: sha256:aff016d33f539d84e12af63f65d5cb5519131e871f0da21616cc03116695c504
@@ -1199,7 +1354,7 @@ dependencies:
     .agents/skills/shell-script-validation/scripts/lib/terraform.sh: sha256:dcfd137be98a966ca6b0741e5ed499950fb95f9246c02840fd6f36a0820cf95f
     .agents/skills/shell-script-validation/scripts/lib/validation.sh: sha256:0e277bba677aa2613e33d49b0939ff682a6cdecc99acb6beac0319ead4ab8641
     .agents/skills/shell-script-validation/scripts/validate.sh: sha256:561d91717c529ce2531a4ff2593301d55b87d93fbd9645541d78d0d0933add41
-    .claude/rules/shell-script.md: sha256:bda93bedda2a80c2768ec4b226b2082b646ae3208e0b58ee15fe825e74139bf0
+    .claude/rules/shell-script.md: sha256:52674123c9825c7531d6a9c1eb77e23cbae020e096ed324ada030e862218a142
     .claude/skills/shell-script-review/SKILL.md: sha256:de20d643b23e312fbb6a2e19188c2cfc30b70f1121e842d60551599893c068db
     .claude/skills/shell-script-review/eval.yaml: sha256:f763afd922b139bd59672a143454b777717fef2f7953a6fbf4e9b12476be70f3
     .claude/skills/shell-script-review/evals/tasks/shell-script-review-basic.yaml: sha256:fa2696cd038fd0590c9e2efab53b6611241484a41cb939dc7d02dcd0487e6e81
@@ -1228,7 +1383,7 @@ dependencies:
     .claude/skills/shell-script-review/scripts/lib/terraform.sh: sha256:dcfd137be98a966ca6b0741e5ed499950fb95f9246c02840fd6f36a0820cf95f
     .claude/skills/shell-script-review/scripts/lib/validation.sh: sha256:0e277bba677aa2613e33d49b0939ff682a6cdecc99acb6beac0319ead4ab8641
     .claude/skills/shell-script-review/scripts/validate.sh: sha256:1c0960d1215b5e5010d2623a82b55cb1ed8f52979e051c74950c02c8dea1e5ff
-    .claude/skills/shell-script-validation/SKILL.md: sha256:f9c967043928163eb00db1fa8286f827c957e4c2a36aa5e5ac207659039865cc
+    .claude/skills/shell-script-validation/SKILL.md: sha256:e5f36551d2aeecd248a3245ba92aa5bc98310e42ac7e4d0a419cbf56b7ec1bce
     .claude/skills/shell-script-validation/eval.yaml: sha256:afeeb962911b2d520a622dbf4bb8b4a26c81b0167b5bbdb8c0c636c21cbe24bb
     .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-basic.yaml: sha256:5403e15d12a1d4c15520ab5463149185b2213d47b85ce942e5327bbdbc9b1b12
     .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-boundary-guardrail.yaml: sha256:1238638e16effa3f2f1c58c5e12768624d65b5821b4c8b7b20d40878eeca8104
@@ -1236,7 +1391,7 @@ dependencies:
     .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-structured-output.yaml: sha256:2aa440cf1a0876e9cefd903d31387305acb5c1ce5ccb8a4fdfcc7c48744b44d8
     .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-trigger-negative.yaml: sha256:d8fa4af37e422419997bbe136e26dcb6a6f5a5aef6be69efd2704dfbb52b7cb4
     .claude/skills/shell-script-validation/references/category-standards.md: sha256:2cf45d3e4a85d263a534f1cc923dee5411a373191626cdaa3b8a122bd7c099e3
-    .claude/skills/shell-script-validation/references/common-checklist.md: sha256:dc74adaf7c6f5eb2818d8d41f51e806f8e0115d19b436684080180a0237be9bf
+    .claude/skills/shell-script-validation/references/common-checklist.md: sha256:59bedc277c9ad66b86c9030a050e1c0604016fe45f7efe03453472a17c8f0d69
     .claude/skills/shell-script-validation/references/common-individual-commands.md: sha256:3486e8fc18eabdeae563079f550d9de410cb0cb6d3697009aab05affe002b942
     .claude/skills/shell-script-validation/references/common-output-format.md: sha256:d710a887406f2a19ea18d9ecf08f22b4e4f73b0c680fee4014a14661155c0487
     .claude/skills/shell-script-validation/references/common-troubleshooting.md: sha256:aff016d33f539d84e12af63f65d5cb5519131e871f0da21616cc03116695c504
@@ -1248,11 +1403,13 @@ dependencies:
     .claude/skills/shell-script-validation/scripts/lib/terraform.sh: sha256:dcfd137be98a966ca6b0741e5ed499950fb95f9246c02840fd6f36a0820cf95f
     .claude/skills/shell-script-validation/scripts/lib/validation.sh: sha256:0e277bba677aa2613e33d49b0939ff682a6cdecc99acb6beac0319ead4ab8641
     .claude/skills/shell-script-validation/scripts/validate.sh: sha256:561d91717c529ce2531a4ff2593301d55b87d93fbd9645541d78d0d0933add41
-    .cursor/rules/shell-script.mdc: sha256:2e153a9e835ad4ef8193e11c3adcf831a97cc1441a6f0e47b3dcdc30df5f4fc6
+    .cursor/rules/shell-script.mdc: sha256:e580aa44376446ea5bbe991ebadc5421394042590fd07774afe998a72be1b3b5
   source: local
   local_path: ./.apm/packages/shell-script
   declared_license: Apache-2.0
 - repo_url: _local/shell-script-hooks-claude
+  name: shell-script-hooks-claude
+  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .claude/hooks/shell-script-hooks-claude/scripts/shellcheck.sh
@@ -1268,6 +1425,8 @@ dependencies:
   local_path: ./.apm/packages/shell-script-hooks-claude
   declared_license: Apache-2.0
 - repo_url: _local/shell-script-hooks-cursor
+  name: shell-script-hooks-cursor
+  version: 1.0.0
   package_type: apm_package
   deployed_files:
   - .claude/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh

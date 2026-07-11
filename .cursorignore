@@ -67,7 +67,6 @@ htmlcov/
 *.tfbackend
 
 # === Temporary / Cache ===
-tmp/
 temp/
 .cache/
 .pytest_cache/

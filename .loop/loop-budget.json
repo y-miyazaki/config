@@ -1,5 +1,10 @@
 {
   "loops": {
+    "ci-sweeper": {
+      "max_attempts_per_run": 3,
+      "max_runs_per_day": 5,
+      "max_tokens_per_day": 1000000
+    },
     "docs-triage": {
       "max_attempts_per_run": 3,
       "max_runs_per_day": 1,

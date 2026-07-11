@@ -1,0 +1,11 @@
+name: config-loop-ci-sweeper
+version: 1.0.0
+description: CI failure sweeper loop - detects failed workflow runs and proposes minimal fixes
+author: y-miyazaki
+license: Apache-2.0
+target: all
+includes: auto
+
+dependencies:
+  apm: []
+  mcp: []

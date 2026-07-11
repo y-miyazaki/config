@@ -1,7 +1,7 @@
 # Reusable workflow: Loop agent execution
 # L1: single read-only agent session (loop-agent-once)
 # L2/L3: worktree + bounded Agent→Verify loop (loop-execute)
-#
+# Optional finalize job pairs execute outputs per matrix cell (caller sets finalize_enabled).
 # Contract (L2/L3): outputs { branch, has_changes, verdict, reason, attempts }
 name: ci-loop-agent
 
@@ -38,6 +38,16 @@ on:
         description: "Verifier model override (L2/L3)"
         required: false
         type: string
+      auto_merge:
+        default: "false"
+        description: "Enable auto-merge on created PR (finalize job; L3 + open_pr only)"
+        required: false
+        type: string
+      additional_commit_paths:
+        default: ""
+        description: "Comma-separated paths to commit with state after domain persistence"
+        required: false
+        type: string
       allowlist:
         default: ""
         description: "Comma-separated glob allowlist for verifier (L2/L3)"
@@ -63,15 +73,30 @@ on:
         description: "Commit message prefix for loop attempts (L2/L3)"
         required: false
         type: string
+      current_sha:
+        default: ""
+        description: "SHA to record in per-target state (finalize job)"
+        required: false
+        type: string
       denylist:
         default: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
         description: "Comma-separated path denylist for verifier (L2/L3)"
+        required: false
+        type: string
+      domain_persistence_script:
+        default: ""
+        description: "Optional bash script for domain ledger persistence (finalize job)"
         required: false
         type: string
       engine:
         description: "AI engine (claude | copilot | codex | cursor)"
         required: true
         type: string
+      finalize_enabled:
+        default: false
+        description: "Run loop-finalize after agent-l2 in this workflow instance"
+        required: false
+        type: boolean
       infer_files_pattern:
         default: ""
         description: "Optional extended-regex to infer file paths from verifier text (L2/L3)"
@@ -82,9 +107,34 @@ on:
         description: "Loop level: L1 (read-only), L2 (edits with branch), or L3 (edits with auto-merge)"
         required: false
         type: string
+      labels:
+        default: "loop-automation"
+        description: "Comma-separated labels for created PR (finalize job)"
+        required: false
+        type: string
+      loop_name:
+        default: ""
+        description: "Loop name for acting_on state (L2/L3)"
+        required: false
+        type: string
       no_changes_verdict:
         default: "APPROVE"
         description: "Verdict when implementer produces no file changes (APPROVE or REJECT, L2/L3)"
+        required: false
+        type: string
+      outcome_override:
+        default: ""
+        description: "Optional explicit finalize outcome (e.g. watch)"
+        required: false
+        type: string
+      pr_body:
+        default: ""
+        description: "PR body text for finalize job"
+        required: false
+        type: string
+      pr_title:
+        default: ""
+        description: "PR title for finalize job"
         required: false
         type: string
       prompt_file:
@@ -127,9 +177,34 @@ on:
         description: "Verifier task section before criteria (L2/L3)"
         required: false
         type: string
+      run_started_at:
+        default: ""
+        description: "Workflow run start timestamp for run log (finalize job)"
+        required: false
+        type: string
       skill_name:
         default: ""
         description: "Skill name (used for L2 branch naming)"
+        required: false
+        type: string
+      state_file:
+        default: ""
+        description: "Loop state file path for acting_on (L2/L3)"
+        required: false
+        type: string
+      state_push_branch:
+        default: ""
+        description: "Branch for acting_on state commits (L2/L3)"
+        required: false
+        type: string
+      skip_reason:
+        default: "none"
+        description: "Detect skip reason recorded in run log (finalize job)"
+        required: false
+        type: string
+      target_json:
+        default: ""
+        description: "Target descriptor from loop-detect matrix cell (L2/L3)"
         required: false
         type: string
       verifier_context:
@@ -150,6 +225,9 @@ on:
       open_rejections:
         description: "JSON array of unresolved structured rejections (L2/L3)"
         value: ${{ jobs.agent-l2.outputs.open_rejections || '[]' }}
+      outcome_override:
+        description: "Optional finalize outcome from Skill deferral (e.g. watch)"
+        value: ${{ jobs.agent-l2.outputs.outcome_override || '' }}
       reason:
         description: "Final verifier reason (L2/L3)"
         value: ${{ jobs.agent-l2.outputs.reason || '' }}
@@ -169,7 +247,7 @@ on:
 
 permissions:
   contents: read
-  copilot-requests: write
+  copilot-requests: write # zizmor: ignore[excessive-permissions]
 
 jobs:
   agent-l1:
@@ -178,7 +256,7 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
-      copilot-requests: write
+      copilot-requests: write # zizmor: ignore[excessive-permissions]
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -187,7 +265,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Agent Once
-        uses: y-miyazaki/config/.github/actions/loop-agent-once@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
+        uses: ./.github/actions/loop-agent-once
         with:
           agent_token: ${{ secrets.AGENT_TOKEN }}
           cli_version: ${{ inputs.cli_version }}
@@ -205,12 +283,13 @@ jobs:
       branch: ${{ steps.worktree.outputs.branch }}
       has_changes: ${{ steps.execute.outputs.has_changes }}
       open_rejections: ${{ steps.execute.outputs.open_rejections }}
+      outcome_override: ${{ steps.execute.outputs.outcome_override }}
       reason: ${{ steps.execute.outputs.reason }}
       usage_json: ${{ steps.execute.outputs.usage_json }}
       verdict: ${{ steps.execute.outputs.verdict }}
     permissions:
       contents: write
-      copilot-requests: write
+      copilot-requests: write # zizmor: ignore[excessive-permissions]
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -218,17 +297,73 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Parse Target
+        id: target
+        shell: bash
+        env:
+          BASE_BRANCH: ${{ inputs.base_branch }}
+          TARGET_JSON: ${{ inputs.target_json }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${TARGET_JSON}" ]] && jq -e . >/dev/null 2>&1 <<< "${TARGET_JSON}"; then
+            {
+              echo "worktree_branch=$(jq -r '.from.branch' <<< "${TARGET_JSON}")"
+              echo "worktree_ref=$(jq -r '.from.ref' <<< "${TARGET_JSON}")"
+              echo "verify_base_branch=$(jq -r 'if .mode == "pull_request" then .base.branch else .to.branch end' <<< "${TARGET_JSON}")"
+              echo "target_key=$(jq -r '.key' <<< "${TARGET_JSON}")"
+            } >> "$GITHUB_OUTPUT"
+          else
+            {
+              echo "worktree_branch=${BASE_BRANCH}"
+              echo "worktree_ref="
+              echo "verify_base_branch=${BASE_BRANCH}"
+              echo "target_key=integration:${BASE_BRANCH}"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Resolve State File
+        id: state_path
+        shell: bash
+        env:
+          LOOP_NAME: ${{ inputs.loop_name }}
+          STATE_FILE_INPUT: ${{ inputs.state_file }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${STATE_FILE_INPUT}" ]]; then
+            echo "state_file=${STATE_FILE_INPUT}" >> "$GITHUB_OUTPUT"
+          elif [[ -n "${LOOP_NAME}" ]]; then
+            echo "state_file=.loop/state-${LOOP_NAME}.json" >> "$GITHUB_OUTPUT"
+          else
+            echo "state_file=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set Acting On
+        if: steps.state_path.outputs.state_file != ''
+        uses: ./.github/actions/loop-state-write
+        with:
+          acting_on_action: set
+          acting_on_loop_name: ${{ inputs.loop_name }}
+          acting_on_target_key: ${{ steps.target.outputs.target_key }}
+          base_branch: ${{ inputs.base_branch }}
+          state_file: ${{ steps.state_path.outputs.state_file }}
+          state_push_branch: ${{ inputs.state_push_branch }}
+          target_key: ${{ steps.target.outputs.target_key }}
+          token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
+          write_target_state: "false"
+
       - name: Setup Worktree
         id: worktree
-        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
+        uses: ./.github/actions/loop-worktree-setup
         with:
+          base_branch: ${{ steps.target.outputs.worktree_branch }}
+          base_ref: ${{ steps.target.outputs.worktree_ref }}
           branch_prefix: ${{ inputs.branch_prefix }}
           skill_name: ${{ inputs.skill_name }}
           token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
 
       - name: Execute Bounded Loop
         id: execute
-        uses: y-miyazaki/config/.github/actions/loop-execute@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
+        uses: ./.github/actions/loop-execute
         with:
           agent_implementer_max_turns: ${{ inputs.agent_implementer_max_turns }}
           agent_implementer_model: ${{ inputs.agent_implementer_model }}
@@ -238,7 +373,7 @@ jobs:
           agent_verifier_max_turns: ${{ inputs.agent_verifier_max_turns }}
           agent_verifier_model: ${{ inputs.agent_verifier_model }}
           allowlist: ${{ inputs.allowlist }}
-          base_branch: ${{ inputs.base_branch }}
+          base_branch: ${{ steps.target.outputs.verify_base_branch }}
           branch: ${{ steps.worktree.outputs.branch }}
           cli_version: ${{ inputs.cli_version }}
           commit_message: ${{ inputs.commit_message }}
@@ -257,3 +392,78 @@ jobs:
           token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
           verifier_context: ${{ inputs.verifier_context }}
           worktree_path: ${{ steps.worktree.outputs.worktree_path }}
+
+  finalize:
+    if: >-
+      always() &&
+      inputs.finalize_enabled &&
+      (inputs.level == 'L2' || inputs.level == 'L3') &&
+      needs.agent-l2.result != 'cancelled'
+    needs: agent-l2
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Resolve State File
+        id: state_path
+        shell: bash
+        env:
+          LOOP_NAME: ${{ inputs.loop_name }}
+          STATE_FILE_INPUT: ${{ inputs.state_file }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${STATE_FILE_INPUT}" ]]; then
+            echo "state_file=${STATE_FILE_INPUT}" >> "$GITHUB_OUTPUT"
+          elif [[ -n "${LOOP_NAME}" ]]; then
+            echo "state_file=.loop/state-${LOOP_NAME}.json" >> "$GITHUB_OUTPUT"
+          else
+            echo "state_file=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Finalize
+        uses: ./.github/actions/loop-finalize
+        with:
+          agent_result: ${{ needs.agent-l2.result }}
+          attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
+          auto_merge: ${{ inputs.auto_merge }}
+          base_branch: ${{ inputs.base_branch }}
+          branch: ${{ needs.agent-l2.outputs.branch }}
+          current_sha: ${{ inputs.current_sha }}
+          domain_persistence_script: ${{ inputs.domain_persistence_script }}
+          execute_branch: ${{ needs.agent-l2.outputs.branch }}
+          has_changes: ${{ needs.agent-l2.outputs.has_changes }}
+          labels: ${{ inputs.labels }}
+          loop_name: ${{ inputs.loop_name }}
+          open_rejections: ${{ needs.agent-l2.outputs.open_rejections }}
+          outcome_override: ${{ inputs.outcome_override != '' && inputs.outcome_override || needs.agent-l2.outputs.outcome_override }}
+          additional_commit_paths: ${{ inputs.additional_commit_paths }}
+          pr_body: ${{ inputs.pr_body }}
+          pr_title: ${{ inputs.pr_title }}
+          reject_reason: ${{ needs.agent-l2.outputs.reason }}
+          run_started_at: ${{ inputs.run_started_at }}
+          skip_reason: ${{ inputs.skip_reason }}
+          state_file: ${{ steps.state_path.outputs.state_file }}
+          state_push_branch: ${{ inputs.state_push_branch }}
+          target_json: ${{ inputs.target_json }}
+          token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
+          usage_json: ${{ needs.agent-l2.outputs.usage_json || '' }}
+          verdict: ${{ needs.agent-l2.outputs.verdict }}
+
+
+
+
+
+
+
+
+
+
+
+
