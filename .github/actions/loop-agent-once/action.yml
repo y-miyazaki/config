@@ -36,7 +36,7 @@ runs:
   using: composite
   steps:
     - name: Install CLI
-      uses: y-miyazaki/config/.github/actions/loop-install-cli@dac927215f6eda487c6009ca943ae385153e0688 # v1.8.1
+      uses: y-miyazaki/config/.github/actions/loop-install-cli@80eb16b130ad4ae398d0dd5ef2085cc94ff3cabd # v1.8.2
       with:
         cli_version: ${{ inputs.cli_version }}
         engine: ${{ inputs.engine }}
