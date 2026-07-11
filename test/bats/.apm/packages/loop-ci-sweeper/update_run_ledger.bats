@@ -74,7 +74,7 @@ teardown() {
         --head-sha abc1234 \
         --outcome no-action
     [ "$status" -eq 0 ]
-    [[ "$output" == *"No workflow run id"* ]]
+    [[ $output == *"No workflow run id"* ]]
 }
 
 @test "update_run_ledger exits 0 on corrupt ledger file" {
@@ -85,7 +85,7 @@ teardown() {
         --head-sha abc \
         --outcome rejected
     [ "$status" -eq 0 ]
-    [[ "$output" == *"Failed to update ledger"* ]]
+    [[ $output == *"Failed to update ledger"* ]]
 }
 
 @test "update_run_ledger preserves unrelated run entries" {
@@ -101,6 +101,3 @@ teardown() {
     run jq -e '.runs["222"].outcome == "no-action"' "${LEDGER_FILE}"
     [ "$status" -eq 0 ]
 }
-
-
-

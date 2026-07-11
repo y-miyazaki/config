@@ -137,8 +137,8 @@ EOF
 @test "sanitize_log_excerpt redacts github tokens" {
     run sanitize_log_excerpt "token=ghp_abcdefghijklmnopqrstuvwxyz1234567890"
     [ "$status" -eq 0 ]
-    [[ "$output" == *"[REDACTED]"* ]]
-    [[ "$output" != *"ghp_"* ]]
+    [[ $output == *"[REDACTED]"* ]]
+    [[ $output != *"ghp_"* ]]
 }
 
 @test "collect_failures_for_run includes secret-missing failures in failures array" {
@@ -175,20 +175,12 @@ EOF
 @test "sanitize_log_excerpt redacts bearer tokens" {
     run sanitize_log_excerpt "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.test.sig"
     [ "$status" -eq 0 ]
-    [[ "$output" == *"[REDACTED]"* ]]
-    [[ "$output" != *"eyJhbGci"* ]]
+    [[ $output == *"[REDACTED]"* ]]
+    [[ $output != *"eyJhbGci"* ]]
 }
 
 @test "detect_ci_failures rejects ledger path traversal outside dot loop" {
     run env CI_SWEEPER_LEDGER_FILE=".loop/../outside.json" bash "${DETECT_DIR}/detect_ci_failures.sh" --scope all
     [ "$status" -eq 0 ]
-    [[ "$output" == *'"status": "error"'* ]]
+    [[ $output == *'"status": "error"'* ]]
 }
-
-
-
-
-
-
-
-
