@@ -1,7 +1,12 @@
 {
-  "last_sha": "1ea80c3201009adaf2f907a34c61ded76aaa70a9",
-  "last_run": "2026-07-10T06:04:51Z",
-  "outcome": "pr-created",
-  "consecutive_failures": 0,
-  "open_rejections": []
+  "targets": {
+    "integration:main": {
+      "last_sha": "3508727d7aa01e0d85eedba6f1e889e6fa9dd7ba",
+      "last_run": "2026-07-11T08:47:30Z",
+      "outcome": "pr-created",
+      "consecutive_failures": 0,
+      "open_rejections": [],
+      "last_reject_reason": "Three minimal docs-only fixes are factually correct, in scope, and address detected drift (exclusion checklist, package list, duplicate nav link)."
+    }
+  }
 }
