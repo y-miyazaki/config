@@ -153,7 +153,7 @@ Dogfood: **`DEFAULT_LEVEL=L2`** until [L3 promotion gate](../loop-engineering-de
 Before uncommenting `workflow_run` in `on-loop-ci-sweeper.yaml`:
 
 - [ ] zizmor / security review complete
-- [ ] `CI_SWEEPER_EXCLUDED_WORKFLOWS` includes `on-loop-ci-sweeper`, `ci-loop-agent`
+- [ ] `CI_SWEEPER_EXCLUDED_WORKFLOWS` includes `on-loop-ci-sweeper`, `on-loop-docs-triage`, `ci-loop-agent`
 - [ ] Concurrency prevents overlapping runs on same `target.key`
 - [ ] Event path sets `CI_SWEEPER_*` env on detect job
 - [ ] Failed workflow is not the sweeper’s own finalize push (`[skip ci]` on ledger commits)

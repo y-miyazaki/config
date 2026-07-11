@@ -63,6 +63,7 @@ The repository structure is function-oriented.
   - `shell-script/`: Shell script development (hook + instruction + skills)
   - `shell-script-hooks-claude/`, `shell-script-hooks-copilot/`, `shell-script-hooks-cursor/`: target-specific shell script hooks
   - `loop-docs-triage/`: Documentation update loop (self-contained skill package)
+  - `loop-ci-sweeper/`: CI failure sweeper loop (self-contained skill package)
 - `apm.yml`: APM package metadata and dependency entry point
 - `apm.lock.yaml`: lock file for deterministic APM resolution
 - `apm_modules/`: locally materialized module content
