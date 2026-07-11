@@ -17,7 +17,7 @@ on:
                 type: boolean
             script_path:
                 default: ""
-                description: "Comma-separated glob(s) of script files to check. If empty, all **/*.sh are checked"
+                description: "Comma-separated glob(s) of script files to check. If empty, all **/*.sh and **/*.bats are checked"
                 required: false
                 type: string
             shfmt_flags:
@@ -68,7 +68,7 @@ jobs:
                   # If script_path is empty, check all shell scripts in the repo
                   raw_input="${SCRIPT_PATH}"
                   if [ -z "$raw_input" ]; then
-                    raw_input='**/*.sh'
+                    raw_input='**/*.sh,**/*.bats'
                   fi
                   IFS=',' read -ra patterns <<< "$raw_input"
                   files=()
@@ -148,11 +148,15 @@ jobs:
                   # shellcheck disable=SC2086
                   set -euo pipefail
                   while IFS= read -r f; do
+                    if [[ "$f" == *.bats ]]; then
+                      echo "Skipping bash syntax check for Bats file: $f"
+                      continue
+                    fi
                     echo "Checking syntax: $f"
                     bash -n "$f"
                   done < /tmp/scripts_to_check.txt
 
-            - name: Exec Shebang check (must be bash)
+            - name: Exec Shebang check (shell or bats)
               if: steps.file-list.outputs.no_files == 'false'
               shell: bash
               run: |
@@ -161,7 +165,7 @@ jobs:
                   set -euo pipefail
                   while IFS= read -r f; do
                     first_line=$(head -n1 "$f" || true)
-                    if [[ "$first_line" != "#!"*"bash"* ]]; then
+                    if [[ ! "$first_line" =~ ^#!/.*sh ]] && [[ ! "$first_line" =~ ^#!/.*bats ]]; then
                       echo "Invalid shebang in $f: $first_line" >&2
                       exit 2
                     fi
@@ -176,6 +180,9 @@ jobs:
                   set -euo pipefail
                   rc=0
                   while IFS= read -r f; do
+                    if [[ "$f" == *.bats ]]; then
+                      continue
+                    fi
                     if [[ ! -x "$f" ]]; then
                       # Emit GitHub workflow warning annotation for visibility
                       echo "::warning file=$f::Script is not executable"

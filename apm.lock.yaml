@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-11T06:04:22.200053+00:00'
+generated_at: '2026-07-11T06:21:45.780506+00:00'
 apm_version: 0.23.1
 dependencies:
 - repo_url: _local/common
@@ -1353,7 +1353,7 @@ dependencies:
     .agents/skills/shell-script-validation/scripts/lib/json.sh: sha256:ccaab13ab60fb80af63437bef073edf6754f02981fc40a179b7b9db09e5246d8
     .agents/skills/shell-script-validation/scripts/lib/terraform.sh: sha256:dcfd137be98a966ca6b0741e5ed499950fb95f9246c02840fd6f36a0820cf95f
     .agents/skills/shell-script-validation/scripts/lib/validation.sh: sha256:0e277bba677aa2613e33d49b0939ff682a6cdecc99acb6beac0319ead4ab8641
-    .agents/skills/shell-script-validation/scripts/validate.sh: sha256:561d91717c529ce2531a4ff2593301d55b87d93fbd9645541d78d0d0933add41
+    .agents/skills/shell-script-validation/scripts/validate.sh: sha256:34c8bfb814f4000085ab8069550ed494b57bb2d9eb04df75dbbc1c62a3659565
     .claude/rules/shell-script.md: sha256:52674123c9825c7531d6a9c1eb77e23cbae020e096ed324ada030e862218a142
     .claude/skills/shell-script-review/SKILL.md: sha256:de20d643b23e312fbb6a2e19188c2cfc30b70f1121e842d60551599893c068db
     .claude/skills/shell-script-review/eval.yaml: sha256:f763afd922b139bd59672a143454b777717fef2f7953a6fbf4e9b12476be70f3
@@ -1402,7 +1402,7 @@ dependencies:
     .claude/skills/shell-script-validation/scripts/lib/json.sh: sha256:ccaab13ab60fb80af63437bef073edf6754f02981fc40a179b7b9db09e5246d8
     .claude/skills/shell-script-validation/scripts/lib/terraform.sh: sha256:dcfd137be98a966ca6b0741e5ed499950fb95f9246c02840fd6f36a0820cf95f
     .claude/skills/shell-script-validation/scripts/lib/validation.sh: sha256:0e277bba677aa2613e33d49b0939ff682a6cdecc99acb6beac0319ead4ab8641
-    .claude/skills/shell-script-validation/scripts/validate.sh: sha256:561d91717c529ce2531a4ff2593301d55b87d93fbd9645541d78d0d0933add41
+    .claude/skills/shell-script-validation/scripts/validate.sh: sha256:34c8bfb814f4000085ab8069550ed494b57bb2d9eb04df75dbbc1c62a3659565
     .cursor/rules/shell-script.mdc: sha256:e580aa44376446ea5bbe991ebadc5421394042590fd07774afe998a72be1b3b5
   source: local
   local_path: ./.apm/packages/shell-script
@@ -1417,10 +1417,10 @@ dependencies:
   - .cursor/hooks/shell-script-hooks-claude/scripts/shellcheck.sh
   - .cursor/hooks/shell-script-hooks-claude/scripts/shfmt.sh
   deployed_file_hashes:
-    .claude/hooks/shell-script-hooks-claude/scripts/shellcheck.sh: sha256:d98d94d4ea99773d2efc7502f811d03329257ba198d58ef7151f985c6b5f00ed
-    .claude/hooks/shell-script-hooks-claude/scripts/shfmt.sh: sha256:98f7539e6d9a7ea596018fb07ef5fbfe59c908a2d46e5c138cbec9467885d2b8
-    .cursor/hooks/shell-script-hooks-claude/scripts/shellcheck.sh: sha256:d98d94d4ea99773d2efc7502f811d03329257ba198d58ef7151f985c6b5f00ed
-    .cursor/hooks/shell-script-hooks-claude/scripts/shfmt.sh: sha256:98f7539e6d9a7ea596018fb07ef5fbfe59c908a2d46e5c138cbec9467885d2b8
+    .claude/hooks/shell-script-hooks-claude/scripts/shellcheck.sh: sha256:09646532116f95abf4b28d4209e6e68d023760a54da282862db921d094cdacda
+    .claude/hooks/shell-script-hooks-claude/scripts/shfmt.sh: sha256:7d5c9e5bfc725c049f1c6f5c48df4be35482d89099fcb10f8b2a651de8a1c020
+    .cursor/hooks/shell-script-hooks-claude/scripts/shellcheck.sh: sha256:09646532116f95abf4b28d4209e6e68d023760a54da282862db921d094cdacda
+    .cursor/hooks/shell-script-hooks-claude/scripts/shfmt.sh: sha256:7d5c9e5bfc725c049f1c6f5c48df4be35482d89099fcb10f8b2a651de8a1c020
   source: local
   local_path: ./.apm/packages/shell-script-hooks-claude
   declared_license: Apache-2.0
@@ -1434,10 +1434,10 @@ dependencies:
   - .cursor/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh
   - .cursor/hooks/shell-script-hooks-cursor/scripts/shfmt.sh
   deployed_file_hashes:
-    .claude/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh: sha256:a70e8695a3353b45f9e3abc1615410314e46855cb0c3d8a2ac83a34d6767b02d
-    .claude/hooks/shell-script-hooks-cursor/scripts/shfmt.sh: sha256:98f7539e6d9a7ea596018fb07ef5fbfe59c908a2d46e5c138cbec9467885d2b8
-    .cursor/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh: sha256:a70e8695a3353b45f9e3abc1615410314e46855cb0c3d8a2ac83a34d6767b02d
-    .cursor/hooks/shell-script-hooks-cursor/scripts/shfmt.sh: sha256:98f7539e6d9a7ea596018fb07ef5fbfe59c908a2d46e5c138cbec9467885d2b8
+    .claude/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh: sha256:cffdb041b2cebedd7f89bf50c79a154f8d1f4ff61084f992e1796da90628c790
+    .claude/hooks/shell-script-hooks-cursor/scripts/shfmt.sh: sha256:7d5c9e5bfc725c049f1c6f5c48df4be35482d89099fcb10f8b2a651de8a1c020
+    .cursor/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh: sha256:cffdb041b2cebedd7f89bf50c79a154f8d1f4ff61084f992e1796da90628c790
+    .cursor/hooks/shell-script-hooks-cursor/scripts/shfmt.sh: sha256:7d5c9e5bfc725c049f1c6f5c48df4be35482d89099fcb10f8b2a651de8a1c020
   source: local
   local_path: ./.apm/packages/shell-script-hooks-cursor
   declared_license: Apache-2.0

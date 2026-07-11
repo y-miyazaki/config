@@ -784,6 +784,11 @@ function validate_permissions {
 
     custom_log "DEBUG" "Validating permissions for: $script_name"
 
+    if [[ $script == *.bats ]]; then
+        custom_log "DEBUG" "Skipping executable check for Bats file: $script_name"
+        return 0
+    fi
+
     if [[ -x $script ]]; then
         custom_log "DEBUG" "✅ Script is executable: $script_name"
         return 0
@@ -930,7 +935,7 @@ function validate_shebang {
     local first_line
     first_line=$(head -1 "$script" 2> /dev/null)
 
-    if [[ $first_line =~ ^#!/.*sh ]]; then
+    if [[ $first_line =~ ^#!/.*sh ]] || [[ $first_line =~ ^#!/.*bats ]]; then
         custom_log "DEBUG" "✅ Valid shebang: $script_name ($first_line)"
         return 0
     elif [[ $first_line =~ ^#! ]]; then
@@ -994,6 +999,11 @@ function validate_syntax {
     script_name="$(basename "$script")"
 
     custom_log "DEBUG" "Validating syntax for: $script_name"
+
+    if [[ $script == *.bats ]]; then
+        custom_log "DEBUG" "Skipping bash syntax validation for Bats file: $script_name"
+        return 0
+    fi
 
     if bash -n "$script" 2> /dev/null; then
         custom_log "DEBUG" "✅ Syntax validation passed: $script_name"

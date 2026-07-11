@@ -50,13 +50,13 @@ repos:
         description: Shell script static analysis tool.
         language: system
         entry: shellcheck
-        types: [shell]
+        files: \.(sh|bats)$
       - id: shfmt
         name: shfmt
         description: Shell script formatter.
         language: system
         entry: shfmt -w -s -i 4 -ci -bn -sr
-        types: [shell]
+        files: \.(sh|bats)$
   # --------------------------------------------------------------
   # For Commit Message
   # --------------------------------------------------------------

@@ -51,9 +51,9 @@ fi
 #######################################
 function get_changed_files {
     {
-        git diff --name-only --diff-filter=ACMR -- '*.sh' 2> /dev/null || true
-        git diff --cached --name-only --diff-filter=ACMR -- '*.sh' 2> /dev/null || true
-        git ls-files --others --exclude-standard -- '*.sh' 2> /dev/null || true
+        git diff --name-only --diff-filter=ACMR -- '*.sh' '*.bats' 2> /dev/null || true
+        git diff --cached --name-only --diff-filter=ACMR -- '*.sh' '*.bats' 2> /dev/null || true
+        git ls-files --others --exclude-standard -- '*.sh' '*.bats' 2> /dev/null || true
     } | awk 'NF' | sort -u
 }
 
