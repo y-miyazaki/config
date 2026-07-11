@@ -59,6 +59,8 @@ function extract_last_json_fence {
 #######################################
 function parse_verifier_output {
     local output_file="$1"
+    local parse_file="${output_file}"
+    local normalized_file=""
     local json_blob line
 
     parsed="false"
@@ -68,7 +70,14 @@ function parse_verifier_output {
     issue=""
     fix=""
 
-    json_blob="$(extract_last_json_fence "${output_file}")"
+    if declare -F is_cursor_stream_json_file > /dev/null 2>&1 \
+        && is_cursor_stream_json_file "${output_file}"; then
+        normalized_file="$(mktemp)"
+        extract_cursor_stream_text "${output_file}" > "${normalized_file}"
+        parse_file="${normalized_file}"
+    fi
+
+    json_blob="$(extract_last_json_fence "${parse_file}")"
     if [[ -n ${json_blob} ]] && jq -e '.verdict' > /dev/null 2>&1 <<< "${json_blob}"; then
         verdict=$(jq -r '.verdict' <<< "${json_blob}")
         reason=$(jq -r '.reason // empty' <<< "${json_blob}")
@@ -80,6 +89,9 @@ function parse_verifier_output {
             else empty end
         ' <<< "${json_blob}")
         parsed="true"
+        if [[ -n ${normalized_file} ]]; then
+            rm -f "${normalized_file}"
+        fi
         return 0
     fi
 
@@ -87,7 +99,7 @@ function parse_verifier_output {
         if jq -e '.verdict' > /dev/null 2>&1 <<< "${line}"; then
             json_blob="${line}"
         fi
-    done < <(tail -30 "${output_file}")
+    done < <(tail -30 "${parse_file}")
 
     if [[ -n ${json_blob} ]]; then
         verdict=$(jq -r '.verdict' <<< "${json_blob}")
@@ -100,30 +112,40 @@ function parse_verifier_output {
             else empty end
         ' <<< "${json_blob}")
         parsed="true"
+        if [[ -n ${normalized_file} ]]; then
+            rm -f "${normalized_file}"
+        fi
         return 0
     fi
 
     local verdict_line
-    verdict_line=$(grep -E '^VERDICT:[[:space:]]*(APPROVE|REJECT)[[:space:]]*$' "${output_file}" | tail -1 || true)
+    verdict_line=$(grep -E '^VERDICT:[[:space:]]*(APPROVE|REJECT)[[:space:]]*$' "${parse_file}" | tail -1 || true)
     if [[ -n ${verdict_line} ]]; then
         verdict=$(echo "${verdict_line}" | sed -E 's/^VERDICT:[[:space:]]*//')
-        reason="$(parse_output_field "${output_file}" "REASON")"
-        files="$(parse_output_field "${output_file}" "FILES")"
-        issue="$(parse_output_field "${output_file}" "ISSUE")"
-        fix="$(parse_output_field "${output_file}" "FIX")"
+        reason="$(parse_output_field "${parse_file}" "REASON")"
+        files="$(parse_output_field "${parse_file}" "FILES")"
+        issue="$(parse_output_field "${parse_file}" "ISSUE")"
+        fix="$(parse_output_field "${parse_file}" "FIX")"
         [[ -n ${reason} ]] || reason="No reason provided"
         parsed="true"
         echo "::warning::Verifier used legacy line format; prefer JSON verdict block"
+        if [[ -n ${normalized_file} ]]; then
+            rm -f "${normalized_file}"
+        fi
         return 0
     fi
 
     local legacy_line
-    legacy_line=$(grep -E '^(APPROVE|REJECT)([[:space:]:]|$)' "${output_file}" | tail -1 || true)
+    legacy_line=$(grep -E '^(APPROVE|REJECT)([[:space:]:]|$)' "${parse_file}" | tail -1 || true)
     if [[ -n ${legacy_line} ]]; then
         verdict=$(echo "${legacy_line}" | grep -oE '^(APPROVE|REJECT)' | head -1)
         reason=$(echo "${legacy_line}" | sed -E 's/^(APPROVE|REJECT):?[[:space:]]*//')
         parsed="true"
         echo "::warning::Verifier used legacy verdict format; prefer JSON verdict block"
+    fi
+
+    if [[ -n ${normalized_file} ]]; then
+        rm -f "${normalized_file}"
     fi
 }
 

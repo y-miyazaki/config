@@ -4,6 +4,7 @@
 
 setup() {
     source ".github/actions/loop-execute/lib/common.sh"
+    source ".github/actions/loop-execute/lib/usage.sh"
     source ".github/actions/loop-execute/lib/verifier.sh"
 }
 
@@ -89,4 +90,14 @@ EOF
     [ "${parsed}" = "false" ]
     [ "${verdict}" = "REJECT" ]
     rm -f "${tmpf}"
+}
+
+@test "parse_verifier_output parses cursor stream-json verifier capture" {
+    parse_verifier_output "test/fixtures/loop-execute/cursor-stream-json-verifier.ndjson"
+    [ "${parsed}" = "true" ]
+    [ "${verdict}" = "REJECT" ]
+    [ "${files}" = "docs/explanation/architecture.md" ]
+    [ "${issue}" = "factual mismatch in module list" ]
+    [ "${fix}" = "align architecture.md with current packages" ]
+    [ "${reason}" = "docs inconsistent with repo" ]
 }

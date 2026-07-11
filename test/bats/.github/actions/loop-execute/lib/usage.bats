@@ -66,6 +66,31 @@ setup() {
     [ "$(jq -r '.total_input_tokens' <<< "${result}")" = "1842" ]
 }
 
+@test "is_cursor_stream_json_file detects stream-json captures" {
+    is_cursor_stream_json_file test/fixtures/loop-execute/cursor-stream-json-usage.ndjson
+    tmpf="$(mktemp)"
+    echo "plain text output" > "${tmpf}"
+    ! is_cursor_stream_json_file "${tmpf}"
+    rm -f "${tmpf}"
+}
+
+@test "extract_cursor_stream_text returns assistant markdown with json fence" {
+    local fixture="test/fixtures/loop-execute/cursor-stream-json-verifier.ndjson"
+    result="$(extract_cursor_stream_text "${fixture}")"
+    [[ ${result} == *'```json'* ]]
+    [[ ${result} == *'"verdict": "REJECT"'* ]]
+}
+
+@test "render_cursor_stream_log_summary omits raw ndjson and includes tool summary" {
+    local fixture="test/fixtures/loop-execute/cursor-stream-json-verifier.ndjson"
+    accumulate_cursor_stream_usage "${fixture}"
+    result="$(render_cursor_stream_log_summary "${fixture}")"
+    [[ ${result} == *"Agent summary:"* ]]
+    [[ ${result} == *"read docs/explanation/architecture.md"* ]]
+    [[ ${result} == *'"verdict": "REJECT"'* ]]
+    [[ ${result} != *'"type":"tool_call"'* ]]
+}
+
 @test "run_cursor_agent_with_usage captures usage from live cursor stream-json" {
     if [[ -z ${CURSOR_API_KEY:-} ]]; then
         skip "CURSOR_API_KEY not set; export it to run live Cursor usage verification"

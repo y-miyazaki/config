@@ -160,11 +160,181 @@ function reset_usage_totals {
 }
 
 #######################################
+# is_cursor_stream_json_file: Detect Cursor CLI stream-json capture files
+#
+# Arguments:
+#   $1 - Path to candidate capture file
+#
+# Returns:
+#   0 when the file looks like NDJSON stream-json, 1 otherwise
+#
+#######################################
+function is_cursor_stream_json_file {
+    local stream_file="${1:?stream_file required}"
+    local first_line event_type
+
+    [[ -f ${stream_file} ]] || return 1
+    first_line="$(grep -m1 '^{' "${stream_file}" 2> /dev/null || true)"
+    [[ -n ${first_line} ]] || return 1
+    event_type="$(jq -r '.type // empty' <<< "${first_line}" 2> /dev/null || true)"
+    [[ ${event_type} =~ ^(system|assistant|tool_call|result|user)$ ]]
+}
+
+#######################################
+# extract_cursor_stream_text: Reconstruct assistant text from stream-json
+#
+# Description:
+#   Concatenates assistant message text and falls back to the terminal result
+#   field so downstream parsers can read fenced JSON verdict blocks.
+#
+# Arguments:
+#   $1 - Path to stream-json capture file
+#
+# Returns:
+#   Extracted assistant text to stdout
+#
+#######################################
+function extract_cursor_stream_text {
+    local stream_file="${1:?stream_file required}"
+    local line event_type chunk assistant_text="" result_text=""
+
+    [[ -f ${stream_file} ]] || return 0
+
+    while IFS= read -r line || [[ -n ${line} ]]; do
+        [[ -z ${line} || ${line} != \{* ]] && continue
+        event_type="$(jq -r '.type // empty' <<< "${line}" 2> /dev/null || true)"
+        case "${event_type}" in
+            assistant)
+                chunk="$(jq -r '
+                  [.message.content[]? | select((.type // "text") == "text") | .text] | join("")
+                ' <<< "${line}" 2> /dev/null || true)"
+                if [[ -n ${chunk} ]]; then
+                    assistant_text="${assistant_text}${chunk}"$'\n'
+                fi
+                ;;
+            result)
+                chunk="$(jq -r '.result // empty' <<< "${line}" 2> /dev/null || true)"
+                if [[ -n ${chunk} ]]; then
+                    result_text="${chunk}"
+                fi
+                ;;
+        esac
+    done < "${stream_file}"
+
+    if [[ -n ${assistant_text} ]]; then
+        printf '%s' "${assistant_text}"
+    elif [[ -n ${result_text} ]]; then
+        printf '%s' "${result_text}"
+    fi
+}
+
+#######################################
+# cursor_stream_tool_summary_line: Format one tool_call started event for logs
+#
+# Arguments:
+#   $1 - Single NDJSON line
+#
+# Returns:
+#   One-line tool summary to stdout, or nothing when not a started tool call
+#
+#######################################
+function cursor_stream_tool_summary_line {
+    local line="${1:?line required}"
+    local subtype path command
+
+    [[ ${line} == \{* ]] || return 1
+    subtype="$(jq -r '.subtype // empty' <<< "${line}" 2> /dev/null || true)"
+    [[ ${subtype} == "started" ]] || return 1
+
+    if jq -e '.tool_call.readToolCall' > /dev/null 2>&1 <<< "${line}"; then
+        path="$(jq -r '.tool_call.readToolCall.args.path // "unknown"' <<< "${line}")"
+        printf '  read %s\n' "${path}"
+        return 0
+    fi
+    if jq -e '.tool_call.writeToolCall' > /dev/null 2>&1 <<< "${line}"; then
+        path="$(jq -r '.tool_call.writeToolCall.args.path // "unknown"' <<< "${line}")"
+        printf '  write %s\n' "${path}"
+        return 0
+    fi
+    if jq -e '.tool_call.grepToolCall' > /dev/null 2>&1 <<< "${line}"; then
+        command="$(jq -r '.tool_call.grepToolCall.args.pattern // "pattern"' <<< "${line}")"
+        printf '  grep %s\n' "${command}"
+        return 0
+    fi
+    if jq -e '.tool_call.shellToolCall' > /dev/null 2>&1 <<< "${line}"; then
+        command="$(jq -r '.tool_call.shellToolCall.args.command // "command"' <<< "${line}")"
+        printf '  shell %s\n' "${command:0:120}"
+        return 0
+    fi
+    if jq -e '.tool_call.runTerminalCommand' > /dev/null 2>&1 <<< "${line}"; then
+        command="$(jq -r '.tool_call.runTerminalCommand.args.command // "command"' <<< "${line}")"
+        printf '  shell %s\n' "${command:0:120}"
+        return 0
+    fi
+    return 1
+}
+
+#######################################
+# render_cursor_stream_log_summary: Print concise CI log for a stream-json capture
+#
+# Description:
+#   Emits model, tool call summaries, token usage, and the extracted assistant
+#   text so tee'd artifacts remain parseable by the verifier.
+#
+# Arguments:
+#   $1 - Path to stream-json capture file
+#
+# Returns:
+#   Human-readable summary to stdout
+#
+#######################################
+function render_cursor_stream_log_summary {
+    local stream_file="${1:?stream_file required}"
+    local line event_type model="" duration_ms="0"
+    local tool_count=0 assistant_text="" tool_summary=""
+
+    [[ -f ${stream_file} ]] || return 0
+
+    while IFS= read -r line || [[ -n ${line} ]]; do
+        [[ -z ${line} || ${line} != \{* ]] && continue
+        event_type="$(jq -r '.type // empty' <<< "${line}" 2> /dev/null || true)"
+        case "${event_type}" in
+            system)
+                if [[ -z ${model} ]]; then
+                    model="$(jq -r '.model // empty' <<< "${line}" 2> /dev/null || true)"
+                fi
+                ;;
+            tool_call)
+                if summary_line="$(cursor_stream_tool_summary_line "${line}")"; then
+                    tool_summary="${tool_summary}${summary_line}"
+                    tool_count=$((tool_count + 1))
+                fi
+                ;;
+            result)
+                duration_ms="$(jq -r '.duration_ms // 0' <<< "${line}" 2> /dev/null || true)"
+                ;;
+        esac
+    done < "${stream_file}"
+
+    assistant_text="$(extract_cursor_stream_text "${stream_file}")"
+
+    echo "Agent summary: model=${model:-unknown} tools=${tool_count} duration_ms=${duration_ms}"
+    echo "Agent usage: input=${USAGE_INPUT_TOTAL} output=${USAGE_OUTPUT_TOTAL}"
+    if [[ -n ${tool_summary} ]]; then
+        printf '%s' "${tool_summary}"
+    fi
+    if [[ -n ${assistant_text} ]]; then
+        echo ""
+        printf '%s\n' "${assistant_text}"
+    fi
+}
+
+#######################################
 # run_cursor_agent_with_usage: Run Cursor CLI and capture stream-json usage
 #
 # Description:
-#   Invokes the Cursor agent in headless stream-json mode, tees output for
-#   attempt logs, and feeds the capture file into accumulate_cursor_stream_usage.
+#   Invokes the Cursor agent in headless stream-json mode, captures raw NDJSON
+#   for usage accounting, and prints a concise summary for CI logs.
 #
 # Arguments:
 #   $1 - Agent binary name (agent or cursor-agent)
@@ -183,8 +353,9 @@ function run_cursor_agent_with_usage {
     local stream_file rc=0
 
     stream_file="$(mktemp)"
-    "${agent_bin}" "$@" 2>&1 | tee "${stream_file}" || rc=$?
+    "${agent_bin}" "$@" > "${stream_file}" 2>&1 || rc=$?
     accumulate_cursor_stream_usage "${stream_file}"
+    render_cursor_stream_log_summary "${stream_file}"
     rm -f "${stream_file}"
     return "${rc}"
 }
