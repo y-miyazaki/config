@@ -1,17 +1,20 @@
 <!-- omit in toc -->
+
 # Tool Comparison Matrix (AWS)
 
 AWS に特化したツール選定の判断材料。
 
 <!-- omit in toc -->
+
 ## History
 
-| 日付       | 内容                                                                 |
-| ---------- | -------------------------------------------------------------------- |
-| 2026-05-21 | History セクション追加                                               |
+| 日付       | 内容                                                                          |
+| ---------- | ----------------------------------------------------------------------------- |
+| 2026-05-21 | History セクション追加                                                        |
 | 2026-05-12 | 初版作成。ECS デプロイ / Serverless / Secret 管理を比較。Copilot EOS 警告追加 |
 
 <!-- omit in toc -->
+
 ## Table of Contents
 
 - [ECS Deploy: AWS CDK vs AWS Copilot vs ecspresso](#ecs-deploy-aws-cdk-vs-aws-copilot-vs-ecspresso)
@@ -32,20 +35,20 @@ AWS に特化したツール選定の判断材料。
 | 提供元              | AWS                                           | AWS                                                   | kayac                                                 |
 | リポジトリ          | [aws/aws-cdk](https://github.com/aws/aws-cdk) | [aws/copilot-cli](https://github.com/aws/copilot-cli) | [kayac/ecspresso](https://github.com/kayac/ecspresso) |
 | ライセンス          | Apache 2.0                                    | Apache 2.0                                            | MIT                                                   |
-| 設定形式            | TypeScript/Python等                           | YAML (独自形式)                                       | JSON/Jsonnet (ECS API準拠)                            |
-| 学習コスト          | 高い                                          | 中程度                                                | 低い (ECS API知識があれば)                            |
-| 柔軟性              | 非常に高い                                    | 中程度 (抽象化)                                       | 高い (ECS API直接操作)                                |
-| スケジュールタスク  | ✅                                             | ✅                                                     | ⚠️ ecschedule で対応                                   |
-| Blue/Green デプロイ | ✅                                             | ❌                                                     | ✅ (CodeDeploy連携)                                    |
-| Terraform 連携      | ⚠️ (別管理)                                    | ❌                                                     | ✅ (tfstate参照可能)                                   |
-| CI/CD 統合          | 組み込みパイプライン                          | 組み込みパイプライン                                  | シンプル (CLI実行のみ)                                |
+| 設定形式            | TypeScript/Python 等                          | YAML (独自形式)                                       | JSON/Jsonnet (ECS API 準拠)                           |
+| 学習コスト          | 高い                                          | 中程度                                                | 低い (ECS API 知識があれば)                           |
+| 柔軟性              | 非常に高い                                    | 中程度 (抽象化)                                       | 高い (ECS API 直接操作)                               |
+| スケジュールタスク  | ✅                                            | ✅                                                    | ⚠️ ecschedule で対応                                  |
+| Blue/Green デプロイ | ✅                                            | ❌                                                    | ✅ (CodeDeploy 連携)                                  |
+| Terraform 連携      | ⚠️ (別管理)                                   | ❌                                                    | ✅ (tfstate 参照可能)                                 |
+| CI/CD 統合          | 組み込みパイプライン                          | 組み込みパイプライン                                  | シンプル (CLI 実行のみ)                               |
 
 ### Guidelines
 
 **→ ecspresso を採用する。** Terraform でインフラ管理しつつ ECS デプロイのみ軽量に行える。CI パイプラインに CLI を組み込むだけで完結し、学習コストが低い。
 
 - ~~Terraform を使わず ECS の構築からデプロイまで一気通貫で管理したい場合は AWS Copilot を検討~~ → EOS のため非推奨。CDK または ECS Express Mode を検討
-- 複雑なデプロイパターン (Blue/Green等) をプログラミング言語で制御したい場合は CDK を検討
+- 複雑なデプロイパターン (Blue/Green 等) をプログラミング言語で制御したい場合は CDK を検討
 
 ## Serverless: AWS SAM vs CloudFormation vs Serverless Framework
 
@@ -53,13 +56,13 @@ AWS に特化したツール選定の判断材料。
 | ------------------- | ----------------------------------------------------- | --------------------- | ----------------------------------------------------------------- |
 | 提供元              | AWS                                                   | AWS                   | Serverless Inc                                                    |
 | リポジトリ          | [aws/aws-sam-cli](https://github.com/aws/aws-sam-cli) | - (AWS 組み込み)      | [serverless/serverless](https://github.com/serverless/serverless) |
-| ライセンス          | Apache 2.0                                            | 商用 (AWS に含む)     | 独自 (個人・小規模は無料、$2M+ 収益は有料)                       |
-| 設定形式            | YAML (CloudFormation拡張)                             | YAML/JSON             | YAML (独自形式)                                                   |
-| 抽象化レベル        | 中程度 (Lambda中心の簡略記法)                         | なし (低レベル)       | 高い (プラグインで拡張)                                           |
-| ローカル実行        | ✅ `sam local invoke/start-api`                        | ❌                     | ✅ `serverless invoke local`                                       |
-| ホットリロード      | ✅ `sam sync --watch`                                  | ❌                     | ⚠️ プラグイン依存                                                  |
-| マルチクラウド      | ❌ AWS のみ                                            | ❌ AWS のみ            | ❌ AWS のみ (v3 まで対応、v4 で廃止)                               |
-| CloudFormation 互換 | ✅ (上位互換)                                          | ✅ (そのもの)          | ❌ (独自変換)                                                      |
+| ライセンス          | Apache 2.0                                            | 商用 (AWS に含む)     | 独自 (個人・小規模は無料、\$2M+ 収益は有料)                       |
+| 設定形式            | YAML (CloudFormation 拡張)                            | YAML/JSON             | YAML (独自形式)                                                   |
+| 抽象化レベル        | 中程度 (Lambda 中心の簡略記法)                        | なし (低レベル)       | 高い (プラグインで拡張)                                           |
+| ローカル実行        | ✅ `sam local invoke/start-api`                       | ❌                    | ✅ `serverless invoke local`                                      |
+| ホットリロード      | ✅ `sam sync --watch`                                 | ❌                    | ⚠️ プラグイン依存                                                 |
+| マルチクラウド      | ❌ AWS のみ                                           | ❌ AWS のみ           | ❌ AWS のみ (v3 まで対応、v4 で廃止)                              |
+| CloudFormation 互換 | ✅ (上位互換)                                         | ✅ (そのもの)         | ❌ (独自変換)                                                     |
 | 料金                | 無料                                                  | 無料                  | 有料 (個人・小規模は無料枠あり)                                   |
 
 ### Guidelines
@@ -77,11 +80,11 @@ AWS に特化したツール選定の判断材料。
 | リポジトリ     | - (AWS 組み込み)    | [hashicorp/vault](https://github.com/hashicorp/vault) | [getsops/sops](https://github.com/getsops/sops) |
 | ライセンス     | 商用 (AWS に含む)   | BSL 1.1                                               | MPL-2.0                                         |
 | 暗号化方式     | AWS KMS             | 独自エンジン                                          | KMS / PGP / age                                 |
-| Git 管理       | ❌ (API経由)         | ❌ (API経由)                                           | ✅ (暗号化ファイルをコミット)                    |
-| 運用コスト     | 低い (マネージド)   | 高い (サーバー運用)                                   | なし (CLIのみ)                                  |
-| ローテーション | ✅ 自動              | ✅ 自動                                                | 手動                                            |
+| Git 管理       | ❌ (API 経由)       | ❌ (API 経由)                                         | ✅ (暗号化ファイルをコミット)                   |
+| 運用コスト     | 低い (マネージド)   | 高い (サーバー運用)                                   | なし (CLI のみ)                                 |
+| ローテーション | ✅ 自動             | ✅ 自動                                               | 手動                                            |
 | アクセス制御   | IAM ポリシー        | 詳細なポリシー                                        | KMS ポリシー                                    |
-| Terraform 連携 | ✅ (data source)     | ✅ (vault provider)                                    | ✅ (sops provider)                               |
+| Terraform 連携 | ✅ (data source)    | ✅ (vault provider)                                   | ✅ (sops provider)                              |
 
 ### Guidelines
 
@@ -91,16 +94,16 @@ AWS に特化したツール選定の判断材料。
 
 ## ECS Scheduled Tasks: ecschedule
 
-| 比較項目 | ecschedule |
-|---|---|
-| 提供元 | Songmu |
-| リポジトリ | [Songmu/ecschedule](https://github.com/Songmu/ecschedule) |
-| ライセンス | MIT |
-| 用途 | ECS Scheduled Tasks (EventBridge + ECS) のデプロイ管理 |
-| 設定形式 | YAML |
-| ecspresso 連携 | ✅ (タスク定義を共有可能) |
-| Terraform 連携 | ✅ (tfstate 参照) |
-| CI/CD 統合 | シンプル (CLI実行のみ) |
+| 比較項目       | ecschedule                                                |
+| -------------- | --------------------------------------------------------- |
+| 提供元         | Songmu                                                    |
+| リポジトリ     | [Songmu/ecschedule](https://github.com/Songmu/ecschedule) |
+| ライセンス     | MIT                                                       |
+| 用途           | ECS Scheduled Tasks (EventBridge + ECS) のデプロイ管理    |
+| 設定形式       | YAML                                                      |
+| ecspresso 連携 | ✅ (タスク定義を共有可能)                                 |
+| Terraform 連携 | ✅ (tfstate 参照)                                         |
+| CI/CD 統合     | シンプル (CLI 実行のみ)                                   |
 
 ### Guidelines
 

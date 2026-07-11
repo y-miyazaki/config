@@ -14,10 +14,7 @@ dependencies:
       transport: stdio
       command: uvx
       args:
-        [
-          "mcp-proxy-for-aws==1.4.2",
-          "https://aws-mcp.us-east-1.api.aws/mcp",
-        ]
+        ["mcp-proxy-for-aws==1.4.2", "https://aws-mcp.us-east-1.api.aws/mcp"]
     - name: aws-knowledge-mcp-server
       registry: false
       transport: stdio

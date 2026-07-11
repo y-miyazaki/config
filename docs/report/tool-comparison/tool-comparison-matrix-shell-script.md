@@ -1,17 +1,20 @@
 <!-- omit in toc -->
+
 # Tool Comparison Matrix (Shell Script)
 
 Shell Script に特化したツール選定の判断材料。
 
 <!-- omit in toc -->
+
 ## History
 
-| 日付       | 内容                                                                 |
-| ---------- | -------------------------------------------------------------------- |
-| 2026-05-21 | History セクション追加                                               |
-| 2026-05-11 | 初版作成。shfmt / shellcheck / beautysh を比較                       |
+| 日付       | 内容                                           |
+| ---------- | ---------------------------------------------- |
+| 2026-05-21 | History セクション追加                         |
+| 2026-05-11 | 初版作成。shfmt / shellcheck / beautysh を比較 |
 
 <!-- omit in toc -->
+
 ## Table of Contents
 
 - [Format / Lint: beautysh vs shellcheck vs shfmt](#format--lint-beautysh-vs-shellcheck-vs-shfmt)
@@ -26,9 +29,9 @@ Shell Script に特化したツール選定の判断材料。
 | ライセンス         | MIT                                                               | GPL-3.0                                                       | BSD-3-Clause                            |
 | 用途               | フォーマッター                                                    | 静的解析 (Lint)                                               | フォーマッター                          |
 | 実装言語           | Python                                                            | Haskell                                                       | Go                                      |
-| 自動修正           | ✅                                                                 | ⚠️ (一部提案のみ)                                              | ✅                                       |
-| バグ検出           | ❌                                                                 | ✅ (未定義変数、引用漏れ等)                                    | ❌                                       |
-| POSIX 準拠チェック | ❌                                                                 | ✅                                                             | ✅                                       |
+| 自動修正           | ✅                                                                | ⚠️ (一部提案のみ)                                             | ✅                                      |
+| バグ検出           | ❌                                                                | ✅ (未定義変数、引用漏れ等)                                   | ❌                                      |
+| POSIX 準拠チェック | ❌                                                                | ✅                                                            | ✅                                      |
 
 ### Guidelines
 

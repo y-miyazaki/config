@@ -46,25 +46,25 @@ apm install --frozen
 
 Full documentation is hosted at **<https://y-miyazaki.github.io/config/>**.
 
-| Category | Link |
-| -------- | ---- |
-| Tutorials | [APM](https://y-miyazaki.github.io/config/tutorials/apm-getting-started/) · [GitHub Actions](https://y-miyazaki.github.io/config/tutorials/github-actions-getting-started/) · [Renovate](https://y-miyazaki.github.io/config/tutorials/renovate-getting-started/) |
-| How-To | [Troubleshooting](https://y-miyazaki.github.io/config/how-to/troubleshooting/) |
-| Reference | [Specification](https://y-miyazaki.github.io/config/reference/specification/) |
-| Explanation | [Architecture](https://y-miyazaki.github.io/config/explanation/architecture/) |
+| Category    | Link                                                                                                                                                                                                                                                              |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tutorials   | [APM](https://y-miyazaki.github.io/config/tutorials/apm-getting-started/) · [GitHub Actions](https://y-miyazaki.github.io/config/tutorials/github-actions-getting-started/) · [Renovate](https://y-miyazaki.github.io/config/tutorials/renovate-getting-started/) |
+| How-To      | [Troubleshooting](https://y-miyazaki.github.io/config/how-to/troubleshooting/)                                                                                                                                                                                    |
+| Reference   | [Specification](https://y-miyazaki.github.io/config/reference/specification/)                                                                                                                                                                                     |
+| Explanation | [Architecture](https://y-miyazaki.github.io/config/explanation/architecture/)                                                                                                                                                                                     |
 
 ## APM
 
 APM distributes AI agent-related configuration files as packages. Each package bundles MCP servers, hooks, instructions, and skills appropriate for its domain.
 
-| Package | Description |
-| ------- | ----------- |
-| common | Shared workflows, documentation, and tools |
-| aws | AWS development |
-| terraform | Terraform development (cloud-agnostic) |
-| terraform-aws | Terraform + AWS integration |
-| go | Go development |
-| shell-script | Shell script development |
+| Package       | Description                                |
+| ------------- | ------------------------------------------ |
+| common        | Shared workflows, documentation, and tools |
+| aws           | AWS development                            |
+| terraform     | Terraform development (cloud-agnostic)     |
+| terraform-aws | Terraform + AWS integration                |
+| go            | Go development                             |
+| shell-script  | Shell script development                   |
 
 For detailed package contents (MCP servers, hooks, skills, instructions), see the [Specification](https://y-miyazaki.github.io/config/reference/specification/).
 

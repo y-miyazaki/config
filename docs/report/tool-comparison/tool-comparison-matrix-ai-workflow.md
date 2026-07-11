@@ -1,4 +1,5 @@
 <!-- omit in toc -->
+
 # Tool Comparison Matrix (AI Workflow)
 
 AI ワークフロー / LLM 基盤ツール選定の判断材料。
@@ -6,14 +7,16 @@ AI ワークフロー / LLM 基盤ツール選定の判断材料。
 対象ツールはカテゴリが異なるため、用途別に分類して比較する。
 
 <!-- omit in toc -->
+
 ## History
 
-| 日付       | 内容                                                                                           |
-| ---------- | ---------------------------------------------------------------------------------------------- |
-| 2026-06-17 | 全般最新化: LangSmith Fleet/Engine プラットフォーム化反映、Langfuse pricing更新 ($29〜$2,499)、n8n AI Workflow Builder追加、Mastra managed DB追加 |
-| 2026-05-21 | 初版作成。ワークフロー自動化 / LLM Gateway / Agent Framework / Observability の4カテゴリで比較 |
+| 日付       | 内容                                                                                                                                                 |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-17 | 全般最新化: LangSmith Fleet/Engine プラットフォーム化反映、Langfuse pricing 更新 ($29〜$2,499)、n8n AI Workflow Builder 追加、Mastra managed DB 追加 |
+| 2026-05-21 | 初版作成。ワークフロー自動化 / LLM Gateway / Agent Framework / Observability の 4 カテゴリで比較                                                     |
 
 <!-- omit in toc -->
+
 ## Table of Contents
 
 - [Workflow Automation: Dify vs Make.com vs n8n vs Windmill vs Zapier](#workflow-automation-dify-vs-makecom-vs-n8n-vs-windmill-vs-zapier)
@@ -38,26 +41,26 @@ AI ワークフロー / LLM 基盤ツール選定の判断材料。
 | リポジトリ           | [langgenius/dify](https://github.com/langgenius/dify) | - (商用 SaaS)          | [n8n-io/n8n](https://github.com/n8n-io/n8n) | [windmill-labs/windmill](https://github.com/windmill-labs/windmill) | - (商用 SaaS)          |
 | ライセンス           | Source Available (Apache-2.0 ベース + 追加条項)       | 商用                   | Sustainable Use License (fair-code)         | AGPLv3                                                              | 商用                   |
 | 実装言語             | Python + TypeScript                                   | - (SaaS)               | TypeScript                                  | Rust + TypeScript                                                   | - (SaaS)               |
-| セルフホスト         | ✅ (Docker / K8s)                                      | ❌                      | ✅ (Docker / K8s)                            | ✅ (Docker / K8s)                                                    | ❌                      |
-| クラウドホスト       | ✅ (Dify Cloud)                                        | ✅ (SaaS のみ)          | ✅ (n8n Cloud)                               | ✅ (Windmill Cloud)                                                  | ✅ (SaaS のみ)          |
-| ビジュアルエディタ   | ✅                                                     | ✅                      | ✅                                           | ✅                                                                   | ✅                      |
-| AI エージェント      | ✅ (Agent + ReAct / Function Calling)                  | ✅ (AI Agents)          | ✅ (AI Agent ノード)                         | ⚠️ (スクリプトで実装)                                                | ✅ (Agents / Chatbots)  |
-| RAG / ナレッジベース | ✅ (組み込み RAG パイプライン)                         | ⚠️ (外部連携)           | ⚠️ (外部連携)                                | ⚠️ (外部連携)                                                        | ⚠️ (外部連携)           |
+| セルフホスト         | ✅ (Docker / K8s)                                     | ❌                     | ✅ (Docker / K8s)                           | ✅ (Docker / K8s)                                                   | ❌                     |
+| クラウドホスト       | ✅ (Dify Cloud)                                       | ✅ (SaaS のみ)         | ✅ (n8n Cloud)                              | ✅ (Windmill Cloud)                                                 | ✅ (SaaS のみ)         |
+| ビジュアルエディタ   | ✅                                                    | ✅                     | ✅                                          | ✅                                                                  | ✅                     |
+| AI エージェント      | ✅ (Agent + ReAct / Function Calling)                 | ✅ (AI Agents)         | ✅ (AI Agent ノード)                        | ⚠️ (スクリプトで実装)                                               | ✅ (Agents / Chatbots) |
+| RAG / ナレッジベース | ✅ (組み込み RAG パイプライン)                        | ⚠️ (外部連携)          | ⚠️ (外部連携)                               | ⚠️ (外部連携)                                                       | ⚠️ (外部連携)          |
 | インテグレーション数 | 少数 (AI 特化)                                        | 3,000+                 | 500+                                        | 少数 (スクリプト中心)                                               | 9,000+                 |
-| コード実行           | ✅ (コードブロック)                                    | ⚠️ (限定的)             | ✅ (JavaScript / Python)                     | ✅ (TypeScript / Python / Go / SQL / Bash)                           | ⚠️ (Code by Zapier)     |
-| MCP 対応             | ⚠️ (プラグイン)                                        | ❌                      | ⚠️ (コミュニティ)                            | ❌                                                                   | ✅ (Zapier MCP)         |
+| コード実行           | ✅ (コードブロック)                                   | ⚠️ (限定的)            | ✅ (JavaScript / Python)                    | ✅ (TypeScript / Python / Go / SQL / Bash)                          | ⚠️ (Code by Zapier)    |
+| MCP 対応             | ⚠️ (プラグイン)                                       | ❌                     | ⚠️ (コミュニティ)                           | ❌                                                                  | ✅ (Zapier MCP)        |
 | 対象ユーザー         | AI アプリ開発者                                       | ビジネスユーザー       | 開発者 / テクニカルチーム                   | 開発者 / インフラチーム                                             | ビジネスユーザー       |
 | 主な用途             | AI アプリ構築 (チャットボット / Agent)                | ビジネスプロセス自動化 | 汎用ワークフロー + AI パイプライン          | 内部ツール / データパイプライン / スクリプト実行                    | ビジネスプロセス自動化 |
 
 ### Pricing
 
-| プラン         | Dify                        | Make.com           | n8n                                   | Windmill                          | Zapier               |
-| -------------- | --------------------------- | ------------------ | ------------------------------------- | --------------------------------- | -------------------- |
-| 無料枠         | ✅ (Sandbox: 200 メッセージ) | ✅ (1,000 ops/月)   | ✅ (セルフホスト Community)            | ✅ (Cloud: 1,000 実行/月)          | ✅ (100 tasks/月)     |
-| Starter / Core | Professional: $59/月        | $9/月 (10,000 ops) | Cloud: €20/月 (2,500 実行)            | Team: $10/dev/月                  | Professional: $20/月 |
-| Pro / Team     | Team: $159/月               | $16/月             | Cloud: €50/月 (10,000 実行)           | Pro: $170/月 (1 dev)              | Team: $69/月         |
-| Enterprise     | カスタム                    | カスタム           | カスタム                              | カスタム                          | カスタム             |
-| セルフホスト   | 無料 (機能制限なし)         | N/A                | 無料 (Community) / €333/月 (Business) | 無料 (AGPLv3) / 有料 (Enterprise) | N/A                  |
+| プラン         | Dify                         | Make.com            | n8n                                   | Windmill                          | Zapier                |
+| -------------- | ---------------------------- | ------------------- | ------------------------------------- | --------------------------------- | --------------------- |
+| 無料枠         | ✅ (Sandbox: 200 メッセージ) | ✅ (1,000 ops/月)   | ✅ (セルフホスト Community)           | ✅ (Cloud: 1,000 実行/月)         | ✅ (100 tasks/月)     |
+| Starter / Core | Professional: \$59/月        | \$9/月 (10,000 ops) | Cloud: €20/月 (2,500 実行)            | Team: \$10/dev/月                 | Professional: \$20/月 |
+| Pro / Team     | Team: \$159/月               | \$16/月             | Cloud: €50/月 (10,000 実行)           | Pro: \$170/月 (1 dev)             | Team: \$69/月         |
+| Enterprise     | カスタム                     | カスタム            | カスタム                              | カスタム                          | カスタム              |
+| セルフホスト   | 無料 (機能制限なし)          | N/A                 | 無料 (Community) / €333/月 (Business) | 無料 (AGPLv3) / 有料 (Enterprise) | N/A                   |
 
 ### Guidelines
 
@@ -73,25 +76,25 @@ AI ワークフロー / LLM 基盤ツール選定の判断材料。
 
 ## LLM Gateway: LiteLLM vs Portkey
 
-| 比較項目           | LiteLLM                                               | Portkey                                                      |
-| ------------------ | ----------------------------------------------------- | ------------------------------------------------------------ |
-| 提供元             | BerriAI                                               | Portkey AI                                                   |
-| リポジトリ         | [BerriAI/litellm](https://github.com/BerriAI/litellm) | [portkey-ai/gateway](https://github.com/portkey-ai/gateway)  |
-| ライセンス         | MIT (OSS) / Enterprise (商用)                         | MIT (Gateway OSS) / Managed (商用)                           |
-| 実装言語           | Python                                                | TypeScript (Gateway) / Platform (SaaS)                       |
-| セルフホスト       | ✅ (Docker / K8s)                                      | ✅ (Gateway OSS のみ)                                         |
-| マネージドサービス | ❌ (セルフホストのみ)                                  | ✅ (Portkey Cloud)                                            |
-| 統一 API           | ✅ (OpenAI 互換)                                       | ✅ (OpenAI 互換)                                              |
-| 対応プロバイダー   | 100+                                                  | 200+                                                         |
-| ロードバランシング | ✅                                                     | ✅                                                            |
-| フォールバック     | ✅                                                     | ✅ (条件付きルーティング)                                     |
-| コストトラッキング | ✅                                                     | ✅                                                            |
-| 予算管理           | ✅ (チーム / プロジェクト / ユーザー)                  | ✅ (Virtual Keys)                                             |
-| ガードレール       | ✅ (Enterprise)                                        | ✅ (組み込み)                                                 |
-| キャッシュ         | ✅                                                     | ✅ (Semantic Cache)                                           |
-| Observability 統合 | ⚠️ (外部連携: Langfuse 等)                             | ✅ (組み込みトレーシング + ログ)                              |
-| プロンプト管理     | ❌                                                     | ✅ (Prompt Templates)                                         |
-| Pricing            | OSS: 無料 / Enterprise: カスタム                      | OSS Gateway: 無料 / Managed: $49/月〜 / Enterprise: カスタム |
+| 比較項目           | LiteLLM                                               | Portkey                                                       |
+| ------------------ | ----------------------------------------------------- | ------------------------------------------------------------- |
+| 提供元             | BerriAI                                               | Portkey AI                                                    |
+| リポジトリ         | [BerriAI/litellm](https://github.com/BerriAI/litellm) | [portkey-ai/gateway](https://github.com/portkey-ai/gateway)   |
+| ライセンス         | MIT (OSS) / Enterprise (商用)                         | MIT (Gateway OSS) / Managed (商用)                            |
+| 実装言語           | Python                                                | TypeScript (Gateway) / Platform (SaaS)                        |
+| セルフホスト       | ✅ (Docker / K8s)                                     | ✅ (Gateway OSS のみ)                                         |
+| マネージドサービス | ❌ (セルフホストのみ)                                 | ✅ (Portkey Cloud)                                            |
+| 統一 API           | ✅ (OpenAI 互換)                                      | ✅ (OpenAI 互換)                                              |
+| 対応プロバイダー   | 100+                                                  | 200+                                                          |
+| ロードバランシング | ✅                                                    | ✅                                                            |
+| フォールバック     | ✅                                                    | ✅ (条件付きルーティング)                                     |
+| コストトラッキング | ✅                                                    | ✅                                                            |
+| 予算管理           | ✅ (チーム / プロジェクト / ユーザー)                 | ✅ (Virtual Keys)                                             |
+| ガードレール       | ✅ (Enterprise)                                       | ✅ (組み込み)                                                 |
+| キャッシュ         | ✅                                                    | ✅ (Semantic Cache)                                           |
+| Observability 統合 | ⚠️ (外部連携: Langfuse 等)                            | ✅ (組み込みトレーシング + ログ)                              |
+| プロンプト管理     | ❌                                                    | ✅ (Prompt Templates)                                         |
+| Pricing            | OSS: 無料 / Enterprise: カスタム                      | OSS Gateway: 無料 / Managed: \$49/月〜 / Enterprise: カスタム |
 
 ### Guidelines
 
@@ -111,26 +114,26 @@ AI ワークフロー / LLM 基盤ツール選定の判断材料。
 | リポジトリ         | [crewAIInc/crewAI](https://github.com/crewAIInc/crewAI) | [langchain-ai/langchain](https://github.com/langchain-ai/langchain) / [langgraph](https://github.com/langchain-ai/langgraph) | [mastra-ai/mastra](https://github.com/mastra-ai/mastra) | [vercel/ai](https://github.com/vercel/ai) |
 | ライセンス         | MIT (Framework) / 商用 (AMP)                            | MIT                                                                                                                          | Apache-2.0                                              | Apache-2.0                                |
 | 言語               | Python                                                  | Python / JavaScript                                                                                                          | TypeScript                                              | TypeScript                                |
-| Agent 定義         | ✅ (ロール + ゴール + バックストーリー)                  | ✅ (LangGraph: グラフベース状態管理)                                                                                          | ✅ (プロンプト + ツール + メモリ)                        | ✅ (generateText + tools)                  |
-| マルチエージェント | ✅ (役割分担型が得意)                                    | ✅ (LangGraph: 明示的グラフ制御)                                                                                              | ✅                                                       | ⚠️ (自前実装)                              |
-| ワークフロー       | ✅ (タスクベース)                                        | ✅ (LangGraph: ノード + エッジ)                                                                                               | ✅ (step / then / after)                                 | ⚠️ (自前実装)                              |
-| RAG                | ⚠️ (外部連携)                                            | ✅ (豊富なインテグレーション)                                                                                                 | ✅ (組み込み)                                            | ❌                                         |
-| Evals              | ⚠️ (AMP で提供)                                          | ✅ (LangSmith 連携)                                                                                                           | ✅ (組み込み)                                            | ❌                                         |
-| メモリ             | ✅ (短期 + 長期)                                         | ✅ (チェックポイント / 永続化)                                                                                                | ✅ (セッション + 長期)                                   | ❌                                         |
-| MCP 対応           | ✅                                                       | ✅                                                                                                                            | ✅                                                       | ✅                                         |
-| モデルルーター     | ✅ (LiteLLM 統合)                                        | ✅ (多数プロバイダー)                                                                                                         | ✅ (AI SDK 統合)                                         | ✅ (コア機能)                              |
-| Human-in-the-loop  | ✅                                                       | ✅ (LangGraph: interrupt)                                                                                                     | ✅ (suspend / resume)                                    | ⚠️                                         |
-| ストリーミング     | ✅                                                       | ✅                                                                                                                            | ✅                                                       | ✅ (コア機能)                              |
-| 構造化出力         | ✅                                                       | ✅                                                                                                                            | ✅                                                       | ✅ (コア機能)                              |
+| Agent 定義         | ✅ (ロール + ゴール + バックストーリー)                 | ✅ (LangGraph: グラフベース状態管理)                                                                                         | ✅ (プロンプト + ツール + メモリ)                       | ✅ (generateText + tools)                 |
+| マルチエージェント | ✅ (役割分担型が得意)                                   | ✅ (LangGraph: 明示的グラフ制御)                                                                                             | ✅                                                      | ⚠️ (自前実装)                             |
+| ワークフロー       | ✅ (タスクベース)                                       | ✅ (LangGraph: ノード + エッジ)                                                                                              | ✅ (step / then / after)                                | ⚠️ (自前実装)                             |
+| RAG                | ⚠️ (外部連携)                                           | ✅ (豊富なインテグレーション)                                                                                                | ✅ (組み込み)                                           | ❌                                        |
+| Evals              | ⚠️ (AMP で提供)                                         | ✅ (LangSmith 連携)                                                                                                          | ✅ (組み込み)                                           | ❌                                        |
+| メモリ             | ✅ (短期 + 長期)                                        | ✅ (チェックポイント / 永続化)                                                                                               | ✅ (セッション + 長期)                                  | ❌                                        |
+| MCP 対応           | ✅                                                      | ✅                                                                                                                           | ✅                                                      | ✅                                        |
+| モデルルーター     | ✅ (LiteLLM 統合)                                       | ✅ (多数プロバイダー)                                                                                                        | ✅ (AI SDK 統合)                                        | ✅ (コア機能)                             |
+| Human-in-the-loop  | ✅                                                      | ✅ (LangGraph: interrupt)                                                                                                    | ✅ (suspend / resume)                                   | ⚠️                                        |
+| ストリーミング     | ✅                                                      | ✅                                                                                                                           | ✅                                                      | ✅ (コア機能)                             |
+| 構造化出力         | ✅                                                      | ✅                                                                                                                           | ✅                                                      | ✅ (コア機能)                             |
 | エコシステム成熟度 | 高い (25K+ stars)                                       | 非常に高い (100K+ stars)                                                                                                     | 成長中 (22K+ stars)                                     | 高い (Vercel エコシステム)                |
 | 学習コスト         | 低い (直感的 API)                                       | 高い (抽象化が多い)                                                                                                          | 中程度                                                  | 低い (シンプル API)                       |
 
 ### Pricing
 
-| プラン    | CrewAI                               | LangChain / LangGraph                               | Mastra                     | Vercel AI SDK        |
-| --------- | ------------------------------------ | --------------------------------------------------- | -------------------------- | -------------------- |
-| Framework | 無料 (MIT)                           | 無料 (MIT)                                          | 無料 (Apache-2.0)          | 無料 (Apache-2.0)    |
-| Platform  | AMP: $99/月〜 / Enterprise: カスタム | LangSmith: 無料〜$39/seat/月 / Deployment: 従量課金 | 年額固定 (Mastra Platform) | Vercel: $0〜$20/月〜 |
+| プラン    | CrewAI                                | LangChain / LangGraph                                | Mastra                     | Vercel AI SDK        |
+| --------- | ------------------------------------- | ---------------------------------------------------- | -------------------------- | -------------------- |
+| Framework | 無料 (MIT)                            | 無料 (MIT)                                           | 無料 (Apache-2.0)          | 無料 (Apache-2.0)    |
+| Platform  | AMP: \$99/月〜 / Enterprise: カスタム | LangSmith: 無料〜\$39/seat/月 / Deployment: 従量課金 | 年額固定 (Mastra Platform) | Vercel: $0〜$20/月〜 |
 
 ### Guidelines
 
@@ -147,32 +150,32 @@ AI ワークフロー / LLM 基盤ツール選定の判断材料。
 
 ## LLM Observability: Arize Phoenix vs Langfuse vs LangSmith
 
-| 比較項目           | Arize Phoenix                                           | Langfuse                                                  | LangSmith                      |
-| ------------------ | ------------------------------------------------------- | --------------------------------------------------------- | ------------------------------ |
-| 提供元             | Arize AI                                                | Langfuse GmbH (ClickHouse 傘下)                           | LangChain, Inc.                |
-| リポジトリ         | [Arize-ai/phoenix](https://github.com/Arize-ai/phoenix) | [langfuse/langfuse](https://github.com/langfuse/langfuse) | - (商用 SaaS)                  |
-| ライセンス         | Elastic License 2.0                                     | MIT (コア)                                                | 商用                           |
-| セルフホスト       | ✅ (機能制限なし)                                        | ✅ (機能制限なし)                                          | ❌                              |
-| クラウドホスト     | ✅ (Arize Cloud / AX)                                    | ✅ (Langfuse Cloud)                                        | ✅ (SaaS のみ)                  |
-| トレーシング       | ✅ (ネスト対応)                                          | ✅ (ネスト対応)                                            | ✅ (ネスト対応)                 |
-| OpenTelemetry      | ✅ (OTel ネイティブ)                                     | ✅ (OTLP エンドポイント)                                   | ⚠️ (独自形式中心)               |
-| コスト分析         | ✅                                                       | ✅                                                         | ✅                              |
-| 評価 (Evals)       | ✅ (自動 + LLM-as-judge)                                 | ✅ (自動 + 手動 + LLM-as-judge)                            | ✅ (自動 + 手動 + Online Evals) |
-| プロンプト管理     | ❌                                                       | ✅ (バージョニング)                                        | ✅ (Hub + バージョニング)       |
-| データセット管理   | ✅                                                       | ✅                                                         | ✅                              |
-| フレームワーク統合 | 広い (OpenAI / LangChain / LlamaIndex 等)               | 広い (OpenAI / LangChain / Mastra / n8n 等)               | LangChain / LangGraph に最適化 |
-| Agent デプロイ     | ❌                                                       | ❌                                                         | ✅ (LangSmith Deployment)       |
-| SDK                | Python                                                  | Python / TypeScript                                       | Python / TypeScript            |
-| 実験管理           | ✅ (実験 + ベンチマーク)                                 | ⚠️ (基本的)                                                | ✅ (A/B テスト + Playground)    |
+| 比較項目           | Arize Phoenix                                           | Langfuse                                                  | LangSmith                       |
+| ------------------ | ------------------------------------------------------- | --------------------------------------------------------- | ------------------------------- |
+| 提供元             | Arize AI                                                | Langfuse GmbH (ClickHouse 傘下)                           | LangChain, Inc.                 |
+| リポジトリ         | [Arize-ai/phoenix](https://github.com/Arize-ai/phoenix) | [langfuse/langfuse](https://github.com/langfuse/langfuse) | - (商用 SaaS)                   |
+| ライセンス         | Elastic License 2.0                                     | MIT (コア)                                                | 商用                            |
+| セルフホスト       | ✅ (機能制限なし)                                       | ✅ (機能制限なし)                                         | ❌                              |
+| クラウドホスト     | ✅ (Arize Cloud / AX)                                   | ✅ (Langfuse Cloud)                                       | ✅ (SaaS のみ)                  |
+| トレーシング       | ✅ (ネスト対応)                                         | ✅ (ネスト対応)                                           | ✅ (ネスト対応)                 |
+| OpenTelemetry      | ✅ (OTel ネイティブ)                                    | ✅ (OTLP エンドポイント)                                  | ⚠️ (独自形式中心)               |
+| コスト分析         | ✅                                                      | ✅                                                        | ✅                              |
+| 評価 (Evals)       | ✅ (自動 + LLM-as-judge)                                | ✅ (自動 + 手動 + LLM-as-judge)                           | ✅ (自動 + 手動 + Online Evals) |
+| プロンプト管理     | ❌                                                      | ✅ (バージョニング)                                       | ✅ (Hub + バージョニング)       |
+| データセット管理   | ✅                                                      | ✅                                                        | ✅                              |
+| フレームワーク統合 | 広い (OpenAI / LangChain / LlamaIndex 等)               | 広い (OpenAI / LangChain / Mastra / n8n 等)               | LangChain / LangGraph に最適化  |
+| Agent デプロイ     | ❌                                                      | ❌                                                        | ✅ (LangSmith Deployment)       |
+| SDK                | Python                                                  | Python / TypeScript                                       | Python / TypeScript             |
+| 実験管理           | ✅ (実験 + ベンチマーク)                                | ⚠️ (基本的)                                               | ✅ (A/B テスト + Playground)    |
 
 ### Pricing
 
-| プラン       | Arize Phoenix               | Langfuse                    | LangSmith                |
-| ------------ | --------------------------- | --------------------------- | ------------------------ |
-| 無料枠       | セルフホスト: 無料 (無制限) | Hobby: 50K units/月, 2 users | Developer: 5K traces/月, 1 seat |
-| 有料         | AX (Enterprise): カスタム   | Core: $29/月 / Pro: $199/月  | Plus: $39/seat/月 (Fleet/Engine従量課金あり) |
-| Enterprise   | カスタム                    | $2,499/月 (SCIM/監査ログ/SLA) | カスタム                 |
-| セルフホスト | 無料 (機能制限なし)         | 無料 (機能制限なし)         | N/A                      |
+| プラン       | Arize Phoenix               | Langfuse                       | LangSmith                                      |
+| ------------ | --------------------------- | ------------------------------ | ---------------------------------------------- |
+| 無料枠       | セルフホスト: 無料 (無制限) | Hobby: 50K units/月, 2 users   | Developer: 5K traces/月, 1 seat                |
+| 有料         | AX (Enterprise): カスタム   | Core: $29/月 / Pro: $199/月    | Plus: \$39/seat/月 (Fleet/Engine 従量課金あり) |
+| Enterprise   | カスタム                    | \$2,499/月 (SCIM/監査ログ/SLA) | カスタム                                       |
+| セルフホスト | 無料 (機能制限なし)         | 無料 (機能制限なし)            | N/A                                            |
 
 ### Guidelines
 

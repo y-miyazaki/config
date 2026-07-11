@@ -2,35 +2,35 @@
 name: on-cd-mkdocs
 
 on:
-    push:
-        branches:
-            - "main"
-        paths:
-            - "docs/**"
-            - "mkdocs.yml"
-    workflow_dispatch:
+  push:
+    branches:
+      - "main"
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+  workflow_dispatch:
 
 permissions:
-    contents: read
-    id-token: write
-    pages: write
+  contents: read
+  id-token: write
+  pages: write
 
 jobs:
-    build:
-        permissions:
-            contents: read
-        uses: y-miyazaki/config/.github/workflows/cd-mkdocs.yaml@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
-        with:
-            artifact_name: mkdocs-site
-            config_file: mkdocs.yml
-            pip_packages: mkdocs-material mdx-truly-sane-lists
+  build:
+    permissions:
+      contents: read
+    uses: y-miyazaki/config/.github/workflows/cd-mkdocs.yaml@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
+    with:
+      artifact_name: mkdocs-site
+      config_file: mkdocs.yml
+      pip_packages: mkdocs-material mdx-truly-sane-lists
 
-    deploy:
-        needs: build
-        permissions:
-            contents: read
-            id-token: write
-            pages: write
-        uses: y-miyazaki/config/.github/workflows/cd-github-pages.yaml@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
-        with:
-            artifact_name: mkdocs-site
+  deploy:
+    needs: build
+    permissions:
+      contents: read
+      id-token: write
+      pages: write
+    uses: y-miyazaki/config/.github/workflows/cd-github-pages.yaml@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
+    with:
+      artifact_name: mkdocs-site

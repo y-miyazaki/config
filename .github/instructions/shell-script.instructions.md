@@ -70,7 +70,8 @@ Required in-file order:
 ```
 
 Write `None` for sections that do not apply. Do not omit sections.
-```
+
+````
 
 ## Guidelines
 
@@ -226,7 +227,7 @@ Write `None` for sections that do not apply. Do not omit sections.
 
 ```bash
 bash <agent-root>/skills/shell-script-validation/scripts/validate.sh
-```
+````
 
 **Individual execution (debugging)**:
 

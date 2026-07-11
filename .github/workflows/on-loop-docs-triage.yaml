@@ -224,8 +224,3 @@ jobs:
           run_started_at: ${{ needs.detect.outputs.run_started_at }}
           skip_reason: ${{ needs.detect.outputs.skip_reason }}
           token: ${{ github.token }}
-
-
-
-
-

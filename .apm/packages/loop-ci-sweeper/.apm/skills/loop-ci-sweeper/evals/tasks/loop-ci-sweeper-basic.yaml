@@ -4,15 +4,15 @@ description: >-
   Validate loop-ci-sweeper defines triage report with Actionable Fixes and Watch
   classification.
 tags:
-- quality
-- output-contract
+  - quality
+  - output-contract
 inputs:
   prompt: Use loop-ci-sweeper. Show triage report structure with Actionable Fixes and Watch sections.
   context:
     target: SKILL.md
 expected:
   output_contains:
-  - triage
-  - Actionable Fixes
+    - triage
+    - Actionable Fixes
   outcomes:
-  - type: task_completed
+    - type: task_completed

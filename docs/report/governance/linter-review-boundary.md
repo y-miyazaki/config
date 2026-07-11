@@ -1,11 +1,14 @@
 <!-- omit in toc -->
+
 # Linter and Review Boundary Policy
 
 This document defines the boundary policy for instructions and skills maintenance.
 It prevents duplicated review guidance when lint configuration already covers machine-detectable issues.
 
 <!-- omit in toc -->
+
 ## Table Of Contents
+
 - [Scope](#scope)
 - [Core Rule](#core-rule)
 - [Decision Criteria](#decision-criteria)
@@ -14,6 +17,7 @@ It prevents duplicated review guidance when lint configuration already covers ma
 - [Verification](#verification)
 
 ## Scope
+
 - Applies to:
   - instructions
   - skills
@@ -21,27 +25,34 @@ It prevents duplicated review guidance when lint configuration already covers ma
 - Does not define generic review/output standards.
 
 ## Core Rule
+
 Do not add review guidance that only repeats what enabled linters already detect and enforce.
 
 Keep review guidance for concerns that require human judgment, such as:
+
 - architecture and design intent
 - trade-off evaluation and risk
 - ownership boundaries and responsibilities
 - domain correctness and operational impact
 
 ## Decision Criteria
+
 When adding or editing a review item, classify it before documenting it.
 
 1. Linter-covered (machine-detectable)
+
 - If fully detectable by configured linters with acceptable signal quality, do not add it as a review rule.
 
 2. Judgment-required (human evaluation)
+
 - If context, intent, or trade-off assessment is needed, keep it as a review rule.
 
 3. Mixed
+
 - If a linter detects only part of the issue, keep only the judgment-required portion in review guidance.
 
 ## Workflow for Instructions and Skills Updates
+
 1. Identify candidate guidance to add or modify.
 2. Check whether current lint configuration already covers it.
 3. If covered by linter, remove the direct mechanical rule from review guidance.
@@ -49,6 +60,7 @@ When adding or editing a review item, classify it before documenting it.
 5. Verify wording does not prescribe purely mechanical replacements.
 
 ## Examples
+
 - Prefer: "Are synchronization boundaries and ownership rules explicit?"
 - Avoid: "Replace X with Y" when configured linters already provide that mechanical suggestion.
 
@@ -56,6 +68,7 @@ When adding or editing a review item, classify it before documenting it.
 - Avoid: checklist items that only mirror linter-detected token-level patterns.
 
 ## Verification
+
 For policy updates:
 
 ```bash

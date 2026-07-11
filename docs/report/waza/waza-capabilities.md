@@ -9,6 +9,7 @@ Waza is an evaluation framework for AI agent skills.
 It helps validate whether a skill is invoked as intended and whether its outputs satisfy objective quality checks.
 
 Primary value:
+
 - Turn skill quality checks into repeatable YAML-based evaluations.
 - Separate deterministic checks from subjective checks.
 - Run evaluation loops quickly with `mock` and then validate with a real executor.
@@ -23,6 +24,7 @@ Primary value:
   - Optional fixtures under `evals/fixtures/`
 
 Recommended version hygiene:
+
 - Check versions before running evaluations:
 
 ```bash
@@ -34,19 +36,23 @@ waza --version
 Waza evaluates a skill using three layers:
 
 1. Inputs:
+
 - `eval.yaml`: suite-level config, metrics, graders, task globs.
 - task files: scenario-level inputs/expectations.
 - fixtures: optional test inputs.
 
 2. Executor:
+
 - `mock`: fast feedback loop for grader and task design.
 - `copilot-sdk`: real model execution.
 
 3. Outputs:
+
 - Grader results per task.
 - Aggregated scores and pass/fail summary.
 
 Design guidance from the article and docs:
+
 - Keep objective graders (text/file/diff/behavior) as the core.
 - Use subjective prompt-based grading only where objective checks are insufficient.
 
@@ -75,6 +81,7 @@ waza tokens suggest <path>
 ```
 
 For this repository workflow, use these checks as default:
+
 - Required: `waza check <skill-path>`, `waza run eval.yaml`, `waza tokens count <SKILL.md>`
 - Optional: `waza quality <skill-path>` for advisory content feedback
 - Optional: `waza grade eval.yaml --results <results.json>` only when grading saved run artifacts
@@ -88,6 +95,7 @@ For this repository workflow, use these checks as default:
 - It does not infer missing task files when your glob pattern matches nothing.
 
 Example failure pattern seen in this repo:
+
 - `no test files matched patterns: [evals/tasks/*.yaml]`
 - Fix: create at least one valid task YAML under `evals/tasks/`.
 
@@ -114,6 +122,7 @@ waza run eval.yaml
 - The glob must match at least one task file.
 
 Recommended working loop:
+
 1. Run `waza check` for packaging/readiness issues.
 2. Fix hard errors first (schema, missing files, token limit).
 3. Run `waza run eval.yaml` and inspect task-level results.
@@ -141,14 +150,17 @@ waza run eval.yaml
 Common issues and fixes:
 
 1. Evaluation suite found but run fails immediately.
+
 - Cause: task glob in `eval.yaml` matches zero files.
 - Action: add task files under the configured path.
 
 2. `waza check` passes spec but remains low readiness.
+
 - Cause: advisory/content quality findings in `SKILL.md`.
 - Action: improve description triggers, routing clarity, examples, and token budget fit.
 
 3. Schema errors in `eval.yaml`.
+
 - Cause: missing required sections (for example metrics in current toolchain expectations).
 - Action: align with official eval spec examples and rerun.
 

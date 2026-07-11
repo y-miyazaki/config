@@ -166,17 +166,17 @@ Hooks are defined as JSON files under each hooks package's `.apm/hooks/` directo
 
 | Hooks Package         | Hook                      | Trigger                | Description                                   |
 | --------------------- | ------------------------- | ---------------------- | --------------------------------------------- |
-| common-hooks-*        | lean-ctx                  | PreToolUse/PostToolUse | Context observation and rewrite/redirect      |
-| common-hooks-*        | markdownlint-cli2         | Stop                   | Auto-fix Markdown files with markdownlint     |
-| common-hooks-*        | markdown-link-check       | Stop                   | Check Markdown links                          |
-| common-hooks-*        | github-actions-actionlint | Stop                   | Lint GitHub Actions workflows with actionlint |
-| common-hooks-*        | github-actions-ghalint    | Stop                   | Lint GitHub Actions workflows with ghalint    |
-| common-hooks-*        | github-actions-zizmor     | Stop                   | Security scan GitHub Actions with zizmor      |
-| go-hooks-*            | golangci-lint             | Stop                   | Auto-fix Go files with golangci-lint          |
-| terraform-hooks-*     | terraform-fmt             | PostToolUse            | Run terraform fmt on changed files            |
-| terraform-hooks-*     | tflint                    | Stop                   | Run tflint on changed files                   |
-| shell-script-hooks-*  | shellcheck                | Stop                   | Run shellcheck on changed shell scripts       |
-| shell-script-hooks-*  | shfmt                     | Stop                   | Auto-format shell scripts with shfmt          |
+| common-hooks-\*       | lean-ctx                  | PreToolUse/PostToolUse | Context observation and rewrite/redirect      |
+| common-hooks-\*       | markdownlint-cli2         | Stop                   | Auto-fix Markdown files with markdownlint     |
+| common-hooks-\*       | markdown-link-check       | Stop                   | Check Markdown links                          |
+| common-hooks-\*       | github-actions-actionlint | Stop                   | Lint GitHub Actions workflows with actionlint |
+| common-hooks-\*       | github-actions-ghalint    | Stop                   | Lint GitHub Actions workflows with ghalint    |
+| common-hooks-\*       | github-actions-zizmor     | Stop                   | Security scan GitHub Actions with zizmor      |
+| go-hooks-\*           | golangci-lint             | Stop                   | Auto-fix Go files with golangci-lint          |
+| terraform-hooks-\*    | terraform-fmt             | PostToolUse            | Run terraform fmt on changed files            |
+| terraform-hooks-\*    | tflint                    | Stop                   | Run tflint on changed files                   |
+| shell-script-hooks-\* | shellcheck                | Stop                   | Run shellcheck on changed shell scripts       |
+| shell-script-hooks-\* | shfmt                     | Stop                   | Auto-format shell scripts with shfmt          |
 
 > **Note:** `*` represents target suffix (`claude`, `copilot`, or `cursor`). Each target has identical hook scripts with different JSON formats.
 
@@ -211,22 +211,22 @@ Hooks JSON format is incompatible across AI agents and cannot be auto-converted 
 
 Skills are defined under each package's `.apm/skills/` directory. Each skill contains a `SKILL.md`, references, scripts, and eval definitions.
 
-| Package      | Skill                     |
-| ------------ | ------------------------- |
-| common       | agent-skills-review       |
-| common       | docs-creator              |
-| common       | docs-updater              |
-| common       | github-actions-review     |
-| common       | github-actions-validation |
-| common       | github-pr-body            |
-| common       | instructions-review       |
-| common       | markdown-validation       |
-| go           | go-review                 |
-| go           | go-validation             |
-| terraform    | terraform-review          |
-| terraform    | terraform-validation      |
-| shell-script | shell-script-review       |
-| shell-script | shell-script-validation   |
+| Package          | Skill                     |
+| ---------------- | ------------------------- |
+| common           | agent-skills-review       |
+| common           | docs-creator              |
+| common           | docs-updater              |
+| common           | github-actions-review     |
+| common           | github-actions-validation |
+| common           | github-pr-body            |
+| common           | instructions-review       |
+| common           | markdown-validation       |
+| go               | go-review                 |
+| go               | go-validation             |
+| terraform        | terraform-review          |
+| terraform        | terraform-validation      |
+| shell-script     | shell-script-review       |
+| shell-script     | shell-script-validation   |
 | loop-docs-triage | loop-docs-triage          |
 | loop-ci-sweeper  | loop-ci-sweeper           |
 
@@ -255,17 +255,17 @@ This repository provides shared lint configuration files for consumer projects. 
 
 ### Install Scripts
 
-| Script | Target | Distributed Files |
-| ------ | ------ | ----------------- |
-| `install_go.sh` | Go projects | `.pre-commit-config.yaml`, `.golangci.yaml`, `.markdownlint-cli2.yaml`, `.gitleaks.toml`, `.commitlintrc.yaml`, `trivy.yaml` |
-| `install_terraform.sh` | Terraform projects | `.pre-commit-config.yaml`, `.tflint.hcl`, `.markdownlint-cli2.yaml`, `.gitleaks.toml`, `.commitlintrc.yaml`, `trivy.yaml` |
+| Script                 | Target             | Distributed Files                                                                                                            |
+| ---------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `install_go.sh`        | Go projects        | `.pre-commit-config.yaml`, `.golangci.yaml`, `.markdownlint-cli2.yaml`, `.gitleaks.toml`, `.commitlintrc.yaml`, `trivy.yaml` |
+| `install_terraform.sh` | Terraform projects | `.pre-commit-config.yaml`, `.tflint.hcl`, `.markdownlint-cli2.yaml`, `.gitleaks.toml`, `.commitlintrc.yaml`, `trivy.yaml`    |
 
 ### Pre-commit Config Variants
 
-| File | Description |
-| ---- | ----------- |
-| `.pre-commit-config.yaml` | Base config used by this repository (Terraform hooks commented out) |
-| `.pre-commit-config-go.yaml` | Go projects: golangci-lint active, commitlint active |
+| File                                | Description                                                                 |
+| ----------------------------------- | --------------------------------------------------------------------------- |
+| `.pre-commit-config.yaml`           | Base config used by this repository (Terraform hooks commented out)         |
+| `.pre-commit-config-go.yaml`        | Go projects: golangci-lint active, commitlint active                        |
 | `.pre-commit-config-terraform.yaml` | Terraform projects: terraform_fmt, terraform_tflint, terraform_trivy active |
 
 ### Behavior
@@ -300,47 +300,47 @@ The repository must provide reusable workflows.
 
 ### Loop Engineering Workflows
 
-| Workflow | Type | Purpose |
-|----------|------|---------|
-| `ci-loop-agent.yaml` | Reusable | Engine-agnostic agent invocation (Claude / Copilot / Codex / Cursor). L1: `loop-agent-once`; L2/L3: worktree + bounded Agent→Verify via `loop-execute` |
-| `on-loop-ci-sweeper.yaml` | Caller | Schedule-driven CI failure repair (detect → execute → finalize) |
-| `on-loop-docs-triage.yaml` | Caller | Cron-driven documentation triage (detect → execute → finalize) |
+| Workflow                   | Type     | Purpose                                                                                                                                                |
+| -------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ci-loop-agent.yaml`       | Reusable | Engine-agnostic agent invocation (Claude / Copilot / Codex / Cursor). L1: `loop-agent-once`; L2/L3: worktree + bounded Agent→Verify via `loop-execute` |
+| `on-loop-ci-sweeper.yaml`  | Caller   | Schedule-driven CI failure repair (detect → execute → finalize)                                                                                        |
+| `on-loop-docs-triage.yaml` | Caller   | Cron-driven documentation triage (detect → execute → finalize)                                                                                         |
 
 ### Loop Skill Package Pattern
 
 Each `loop-*` APM package is self-contained. Domain detection and agent behavior live in the same package — not in shared actions or unrelated skills (`docs-updater` is hook/manual only; `loop-docs-triage` owns its detect script).
 
-| Artifact | Location | Role |
-|----------|----------|------|
-| Skill | `.apm/skills/loop-<domain>/SKILL.md` | Implementer behavior, classification, allowed paths |
-| Detect script | `.apm/skills/loop-<domain>/scripts/detect_*.sh` | Per-target scan in branch context set by `loop-detect` |
+| Artifact                      | Location                                        | Role                                                          |
+| ----------------------------- | ----------------------------------------------- | ------------------------------------------------------------- |
+| Skill                         | `.apm/skills/loop-<domain>/SKILL.md`            | Implementer behavior, classification, allowed paths           |
+| Detect script                 | `.apm/skills/loop-<domain>/scripts/detect_*.sh` | Per-target scan in branch context set by `loop-detect`        |
 | Persistence script (optional) | `.apm/skills/loop-<domain>/scripts/*_ledger.sh` | Domain ledger via `loop-finalize` `domain_persistence_script` |
 
 ### Loop Engineering Actions
 
-| Action | Purpose |
-|--------|---------|
-| `loop-agent-once` | Single read-only agent session (L1) |
-| `loop-config-pack` | Pack caller agent config into standardized outputs for detect/execute handoff |
-| `loop-detect` | Read `LOOP_*`, enumerate branches/PRs, checkout per context, invoke `detect_script` per context, assemble `target_matrix`, `verifier_context`, prompts; guards (`budget`, `acting_on`, `peer_active`, circuit breaker). **No caller re-run of detect script** |
-| `loop-execute` | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`; worktree from `from.ref` @ `from.branch` |
-| `loop-finalize` | Finalize per `target.finalize`, branch cleanup, per-target state, run-log, optional `domain_persistence_script`; `.loop/*` to `LOOP_STATE_PUSH_BRANCH` |
-| `loop-install-cli` | Install and cache the selected engine CLI |
-| `loop-prompt-generate` | Assemble implementer prompt: skill invocation, caller context/instructions, generic loop constraints |
-| `loop-run-log` | Append one JSONL entry to `.loop/loop-run-log.md`, prune entries older than 30 days |
-| `loop-state-read` | Read `targets` map; per-target cursors; peer `acting_on` inputs |
-| `loop-state-write` | Write per-target entry in `targets` map; commit to `LOOP_STATE_PUSH_BRANCH` |
-| `loop-worktree-setup` | Isolated worktree at `base_ref` on `base_branch` + agent branch (L2/L3) |
+| Action                 | Purpose                                                                                                                                                                                                                                                       |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `loop-agent-once`      | Single read-only agent session (L1)                                                                                                                                                                                                                           |
+| `loop-config-pack`     | Pack caller agent config into standardized outputs for detect/execute handoff                                                                                                                                                                                 |
+| `loop-detect`          | Read `LOOP_*`, enumerate branches/PRs, checkout per context, invoke `detect_script` per context, assemble `target_matrix`, `verifier_context`, prompts; guards (`budget`, `acting_on`, `peer_active`, circuit breaker). **No caller re-run of detect script** |
+| `loop-execute`         | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`; worktree from `from.ref` @ `from.branch`                                                                                                                                 |
+| `loop-finalize`        | Finalize per `target.finalize`, branch cleanup, per-target state, run-log, optional `domain_persistence_script`; `.loop/*` to `LOOP_STATE_PUSH_BRANCH`                                                                                                        |
+| `loop-install-cli`     | Install and cache the selected engine CLI                                                                                                                                                                                                                     |
+| `loop-prompt-generate` | Assemble implementer prompt: skill invocation, caller context/instructions, generic loop constraints                                                                                                                                                          |
+| `loop-run-log`         | Append one JSONL entry to `.loop/loop-run-log.md`, prune entries older than 30 days                                                                                                                                                                           |
+| `loop-state-read`      | Read `targets` map; per-target cursors; peer `acting_on` inputs                                                                                                                                                                                               |
+| `loop-state-write`     | Write per-target entry in `targets` map; commit to `LOOP_STATE_PUSH_BRANCH`                                                                                                                                                                                   |
+| `loop-worktree-setup`  | Isolated worktree at `base_ref` on `base_branch` + agent branch (L2/L3)                                                                                                                                                                                       |
 
 ### Detect script output (per context)
 
 Invoked by `loop-detect` per scan context (not by the caller). Scans the branch/ref that `loop-detect` checked out.
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `skip` | yes | `true` when this context has no actionable work |
-| `result` | when actionable | Domain JSON (facts). Semantic `findings[]` are produced by the Skill |
-| `verifier_context` | no | Markdown for verifier (may be empty) |
+| Field              | Required        | Description                                                          |
+| ------------------ | --------------- | -------------------------------------------------------------------- |
+| `skip`             | yes             | `true` when this context has no actionable work                      |
+| `result`           | when actionable | Domain JSON (facts). Semantic `findings[]` are produced by the Skill |
+| `verifier_context` | no              | Markdown for verifier (may be empty)                                 |
 
 `loop-detect` assembles each **candidate** (`target_json`, `result`, `prompt`, `verifier_context`), applies priority/`acting_on`/cap, and outputs `target_matrix` (JSON array).
 
@@ -348,31 +348,31 @@ Invoked by `loop-detect` per scan context (not by the caller). Scans the branch/
 
 Execute/finalize input. Schema: [Multi-Branch Loops Design](../explanation/multi-branch-loops-design.md#target-model-from--to).
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `mode` | yes | `integration` \| `pull_request` |
-| `key` | yes | State key |
-| `from.branch`, `from.ref` | yes | Worktree checkout |
-| `to.branch` | yes | Finalize destination |
-| `base.branch` | pull_request | Verifier diff baseline |
-| `finalize` | yes | `open_pr` \| `push` \| `push_head` |
-| `workflow_run_id` | optional | CI loops |
+| Field                     | Required     | Description                        |
+| ------------------------- | ------------ | ---------------------------------- |
+| `mode`                    | yes          | `integration` \| `pull_request`    |
+| `key`                     | yes          | State key                          |
+| `from.branch`, `from.ref` | yes          | Worktree checkout                  |
+| `to.branch`               | yes          | Finalize destination               |
+| `base.branch`             | pull_request | Verifier diff baseline             |
+| `finalize`                | yes          | `open_pr` \| `push` \| `push_head` |
+| `workflow_run_id`         | optional     | CI loops                           |
 
 ### `loop-detect` outputs (caller detect job)
 
-| Output | When |
-|--------|------|
-| `should_run` | `target_matrix` non-empty after guards |
-| `skip_reason` | `none` \| `no_changes` \| `circuit_breaker` \| `budget` \| `target_budget` \| `config_error` \| `peer_active` |
-| `target_matrix` | JSON array of candidates for matrix fan-out |
+| Output          | When                                                                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------------------- |
+| `should_run`    | `target_matrix` non-empty after guards                                                                        |
+| `skip_reason`   | `none` \| `no_changes` \| `circuit_breaker` \| `budget` \| `target_budget` \| `config_error` \| `peer_active` |
+| `target_matrix` | JSON array of candidates for matrix fan-out                                                                   |
 
 ### `loop-finalize` inputs (additions)
 
-| Input | Required | Description |
-|-------|----------|-------------|
-| `target_json` | yes | Matrix cell target |
-| `domain_persistence_script` | no | Optional bash script (ledger). Standard env: `TARGET_JSON`, `OUTCOME`, `VERDICT`, `LOOP_NAME`, `STATE_FILE`, `EXECUTE_BRANCH` |
-| `state_push_branch` | no | Default: repository default branch |
+| Input                       | Required | Description                                                                                                                   |
+| --------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `target_json`               | yes      | Matrix cell target                                                                                                            |
+| `domain_persistence_script` | no       | Optional bash script (ledger). Standard env: `TARGET_JSON`, `OUTCOME`, `VERDICT`, `LOOP_NAME`, `STATE_FILE`, `EXECUTE_BRANCH` |
+| `state_push_branch`         | no       | Default: repository default branch                                                                                            |
 
 ### State `targets` map
 
@@ -380,13 +380,13 @@ Flat top-level `last_sha` is **removed**. Migration: on first read, copy legacy 
 
 ### Outcome enum
 
-| Outcome | Meaning | `consecutive_failures` |
-|---------|---------|------------------------|
-| `pr-created` | Fix PR or `push_head` succeeded | Reset to 0 |
-| `rejected` | Actionable; verifier REJECT or no-change REJECT | Increment |
-| `no-op` | No actionable detect result | Reset to 0 |
-| `watch` | Present; Skill Watch (no code edit) | No increment |
-| `error` | Execute failed | Unchanged |
+| Outcome      | Meaning                                         | `consecutive_failures` |
+| ------------ | ----------------------------------------------- | ---------------------- |
+| `pr-created` | Fix PR or `push_head` succeeded                 | Reset to 0             |
+| `rejected`   | Actionable; verifier REJECT or no-change REJECT | Increment              |
+| `no-op`      | No actionable detect result                     | Reset to 0             |
+| `watch`      | Present; Skill Watch (no code edit)             | No increment           |
+| `error`      | Execute failed                                  | Unchanged              |
 
 ## Renovate
 
@@ -439,7 +439,3 @@ Use repository validation workflows and scripts for changed assets:
 - If APM install results differ across environments, verify `apm.lock.yaml` is committed and up to date.
 - If reusable workflows fail to resolve, verify repository visibility and workflow reference format.
 - If Renovate behavior differs from expectation, verify extends and rule precedence against `renovate/default.json`.
-
-
-
-

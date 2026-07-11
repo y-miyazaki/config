@@ -2,11 +2,11 @@
 
 Workflow and domain design for the `ci-sweeper` loop.
 
-| Layer | Document |
-|---|---|
-| Platform | [Multi-Branch Loops Design](../multi-branch-loops-design.md) |
+| Layer        | Document                                                           |
+| ------------ | ------------------------------------------------------------------ |
+| Platform     | [Multi-Branch Loops Design](../multi-branch-loops-design.md)       |
 | Caller shell | [Loop Caller Workflows Design](../loop-caller-workflows-design.md) |
-| Invariants | [Loop Engineering Design](../loop-engineering-design.md) |
+| Invariants   | [Loop Engineering Design](../loop-engineering-design.md)           |
 
 **Artifacts:** `on-loop-ci-sweeper.yaml` · skill `loop-ci-sweeper` · `scripts/detect_ci_failures.sh` · `scripts/update_run_ledger.sh`
 
@@ -14,10 +14,10 @@ Workflow and domain design for the `ci-sweeper` loop.
 
 Automated minimal repair when CI fails on integration branches and/or open PR heads. One engine; no separate `pr-ci-healer` package.
 
-| Mode | User expectation |
-|---|---|
-| `integration` | Fix PR **to** `main` / `develop` / `release/*` |
-| `pull_request` | Push fix **to PR head** |
+| Mode           | User expectation                               |
+| -------------- | ---------------------------------------------- |
+| `integration`  | Fix PR **to** `main` / `develop` / `release/*` |
+| `pull_request` | Push fix **to PR head**                        |
 
 ## Recommended `env` (consumer)
 
@@ -44,13 +44,13 @@ env:
 
 ### CI-specific `env`
 
-| Variable | Role |
-|---|---|
-| `CI_SWEEPER_EXCLUDED_WORKFLOWS` | Prevent sweeper self-trigger / recursion |
-| `CI_SWEEPER_INCLUDED_WORKFLOWS` | Allowlist (empty = all non-excluded) |
-| `CI_SWEEPER_LEDGER_FILE` | Run-level dedupe JSON |
-| `CI_SWEEPER_REJECT_RETRY_POLICY` | `block` \| `retry` \| `limited` (dogfood: **`block`**) |
-| `CI_SWEEPER_*` event vars | Injected when `workflow_run` enabled (trigger remains disabled until ops checklist) |
+| Variable                         | Role                                                                                |
+| -------------------------------- | ----------------------------------------------------------------------------------- |
+| `CI_SWEEPER_EXCLUDED_WORKFLOWS`  | Prevent sweeper self-trigger / recursion                                            |
+| `CI_SWEEPER_INCLUDED_WORKFLOWS`  | Allowlist (empty = all non-excluded)                                                |
+| `CI_SWEEPER_LEDGER_FILE`         | Run-level dedupe JSON                                                               |
+| `CI_SWEEPER_REJECT_RETRY_POLICY` | `block` \| `retry` \| `limited` (dogfood: **`block`**)                              |
+| `CI_SWEEPER_*` event vars        | Injected when `workflow_run` enabled (trigger remains disabled until ops checklist) |
 
 Event vars (when `workflow_run` active): `CI_SWEEPER_HEAD_BRANCH`, `CI_SWEEPER_HEAD_SHA`, `CI_SWEEPER_WORKFLOW_RUN_ID`, `CI_SWEEPER_WORKFLOW_NAME`, `CI_SWEEPER_RUN_URL`.
 
@@ -60,13 +60,13 @@ Event vars (when `workflow_run` active): `CI_SWEEPER_HEAD_BRANCH`, `CI_SWEEPER_H
 
 Detect applies **only** stable gates — not semantic failure classification:
 
-| Filter | Layer |
-|---|---|
-| Ledger dedupe (`workflow_run_id`) | detect script |
-| Workflow include/exclude lists | detect script |
+| Filter                                 | Layer                  |
+| -------------------------------------- | ---------------------- |
+| Ledger dedupe (`workflow_run_id`)      | detect script          |
+| Workflow include/exclude lists         | detect script          |
 | PR exclusion (fork, draft, bot, label) | `loop-detect` + script |
-| `acting_on` / `peer_active` | `loop-detect` |
-| Budget / circuit breaker | `loop-detect` |
+| `acting_on` / `peer_active`            | `loop-detect`          |
+| Budget / circuit breaker               | `loop-detect`          |
 
 `failure_type` from grep heuristics is an optional **hint** for the Skill — not a detect gate. **Skill** classifies Fix / Watch / Escalate.
 
@@ -85,10 +85,10 @@ Per watch branch, `loop-detect` sets context; script uses `gh run list --branch 
 
 ### Detect truth source
 
-| Mode | Primary cursor | Secondary |
-|---|---|---|
-| integration | `workflow_run_id` + ledger | `last_sha` in state (advance on finalize) |
-| pull_request | `workflow_run_id` + ledger | `head_ref` per PR in state |
+| Mode         | Primary cursor             | Secondary                                 |
+| ------------ | -------------------------- | ----------------------------------------- |
+| integration  | `workflow_run_id` + ledger | `last_sha` in state (advance on finalize) |
+| pull_request | `workflow_run_id` + ledger | `head_ref` per PR in state                |
 
 **Rule:** Do not rely on `last_sha` alone to skip a still-failing workflow run. Ledger outcome `pr-created` or `watch` blocks re-processing same run ID under `block` policy.
 
@@ -100,13 +100,13 @@ When the Skill classifies **Watch** (infra/flake/env) with no code edit → `out
 
 ## PR Exclusion Rules
 
-| Rule | Default | Token |
-|---|---|---|
-| Fork PR | Exclude | `fork` |
-| Draft | Exclude | `draft` |
-| Label opt-out | Exclude | `label:<name>` |
-| Bots | **Exclude** | use `LOOP_PR_INCLUDE_BOTS` to opt in |
-| WIP title | Optional | `wip_title` |
+| Rule          | Default     | Token                                |
+| ------------- | ----------- | ------------------------------------ |
+| Fork PR       | Exclude     | `fork`                               |
+| Draft         | Exclude     | `draft`                              |
+| Label opt-out | Exclude     | `label:<name>`                       |
+| Bots          | **Exclude** | use `LOOP_PR_INCLUDE_BOTS` to opt in |
+| WIP title     | Optional    | `wip_title`                          |
 
 ## Execute
 
@@ -125,16 +125,16 @@ CI sweeper criteria require the fix to address the **logged failure** (semantic 
 
 ## Finalize
 
-| Mode | L2 | L3 |
-|---|---|---|
-| integration | `open_pr` → fix PR to `to.branch` | `push` → Finalize pushes to `to.branch` |
-| pull_request | `push_head` | `push_head` |
+| Mode         | L2                                | L3                                      |
+| ------------ | --------------------------------- | --------------------------------------- |
+| integration  | `open_pr` → fix PR to `to.branch` | `push` → Finalize pushes to `to.branch` |
+| pull_request | `push_head`                       | `push_head`                             |
 
-| Persistence | Mechanism |
-|---|---|
-| State | `state-ci-sweeper.json` (`targets` map) on `LOOP_STATE_PUSH_BRANCH` |
-| Run ledger | `domain_persistence_script` → `update_run_ledger.sh` |
-| Run log | `loop-run-log` in `loop-finalize` chain |
+| Persistence | Mechanism                                                           |
+| ----------- | ------------------------------------------------------------------- |
+| State       | `state-ci-sweeper.json` (`targets` map) on `LOOP_STATE_PUSH_BRANCH` |
+| Run ledger  | `domain_persistence_script` → `update_run_ledger.sh`                |
+| Run log     | `loop-run-log` in `loop-finalize` chain                             |
 
 Dogfood: **`DEFAULT_LEVEL=L2`** until [L3 promotion gate](../loop-engineering-design.md).
 

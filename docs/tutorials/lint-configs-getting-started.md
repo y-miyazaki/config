@@ -61,15 +61,15 @@ All checks should pass (or show only pre-existing issues in your code).
 
 ## Installed Files
 
-| File | Purpose |
-| ---- | ------- |
-| `.pre-commit-config.yaml` | Pre-commit hook definitions |
-| `.golangci.yaml` (Go) | golangci-lint configuration |
-| `.tflint.hcl` (Terraform) | tflint configuration |
-| `trivy.yaml` | Trivy security scanner configuration |
-| `.markdownlint-cli2.yaml` | Markdown linting rules |
-| `.gitleaks.toml` | Secret detection rules |
-| `.commitlintrc.yaml` | Commit message format rules |
+| File                      | Purpose                              |
+| ------------------------- | ------------------------------------ |
+| `.pre-commit-config.yaml` | Pre-commit hook definitions          |
+| `.golangci.yaml` (Go)     | golangci-lint configuration          |
+| `.tflint.hcl` (Terraform) | tflint configuration                 |
+| `trivy.yaml`              | Trivy security scanner configuration |
+| `.markdownlint-cli2.yaml` | Markdown linting rules               |
+| `.gitleaks.toml`          | Secret detection rules               |
+| `.commitlintrc.yaml`      | Commit message format rules          |
 
 ## Next Steps
 

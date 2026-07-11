@@ -2,11 +2,11 @@
 
 Workflow and domain design for the `loop-docs-triage` (`docs-triage`) loop.
 
-| Layer | Document |
-|---|---|
-| Platform | [Multi-Branch Loops Design](../multi-branch-loops-design.md) |
+| Layer        | Document                                                           |
+| ------------ | ------------------------------------------------------------------ |
+| Platform     | [Multi-Branch Loops Design](../multi-branch-loops-design.md)       |
 | Caller shell | [Loop Caller Workflows Design](../loop-caller-workflows-design.md) |
-| Invariants | [Loop Engineering Design](../loop-engineering-design.md) |
+| Invariants   | [Loop Engineering Design](../loop-engineering-design.md)           |
 
 **Artifacts:** `on-loop-docs-triage.yaml` · skill `loop-docs-triage` · `scripts/detect_changes.sh`
 
@@ -18,10 +18,10 @@ Detect documentation drift from code changes and open fix PRs to integration bra
 
 ## Separation from `docs-updater`
 
-| Package | Role | Trigger |
-|---|---|---|
-| `docs-updater` (common) | Hook/manual git-diff → doc sync | Pre-commit, user-invoked |
-| `loop-docs-triage` | Cron loop: detect facts + Skill triage/fix | `on-loop-docs-triage.yaml` |
+| Package                 | Role                                       | Trigger                    |
+| ----------------------- | ------------------------------------------ | -------------------------- |
+| `docs-updater` (common) | Hook/manual git-diff → doc sync            | Pre-commit, user-invoked   |
+| `loop-docs-triage`      | Cron loop: detect facts + Skill triage/fix | `on-loop-docs-triage.yaml` |
 
 Loop detect logic lives in **`loop-docs-triage/scripts/detect_changes.sh`** — not `docs-updater/scripts/detect_changes.sh`.
 
@@ -49,12 +49,12 @@ Per watch branch, `loop-detect` checks out the branch and invokes `detect_change
 
 Detect script outputs **facts** (not semantic findings):
 
-| Field | Role |
-|---|---|
-| `changed_files`, `deleted_files`, `renamed_files` | Git diff summary |
-| `affected_docs` | Candidate doc paths for agent review |
-| `commit_range` | Passed through prompt context |
-| `skip` | `true` when no doc-impacting change |
+| Field                                             | Role                                 |
+| ------------------------------------------------- | ------------------------------------ |
+| `changed_files`, `deleted_files`, `renamed_files` | Git diff summary                     |
+| `affected_docs`                                   | Candidate doc paths for agent review |
+| `commit_range`                                    | Passed through prompt context        |
+| `skip`                                            | `true` when no doc-impacting change  |
 
 **Skill** (`loop-docs-triage`) builds `findings[]` with semantic `reason` from these facts.
 
@@ -75,11 +75,11 @@ No infra/env classification — not applicable.
 
 ### State fields (per target key)
 
-| Field | Role |
-|---|---|
-| `last_sha` | Scan cursor; advances on successful finalize |
-| `outcome` | `pr-created`, `rejected`, `no-op`, … |
-| `consecutive_failures` | Circuit breaker |
+| Field                  | Role                                         |
+| ---------------------- | -------------------------------------------- |
+| `last_sha`             | Scan cursor; advances on successful finalize |
+| `outcome`              | `pr-created`, `rejected`, `no-op`, …         |
+| `consecutive_failures` | Circuit breaker                              |
 
 No `workflow_run_id` / ci ledger.
 

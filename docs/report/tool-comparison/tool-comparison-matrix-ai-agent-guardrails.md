@@ -1,18 +1,21 @@
 <!-- omit in toc -->
+
 # Tool Comparison Matrix — Agent Security: Guardrails
 
 [tool-comparison-matrix-ai-agent.md](tool-comparison-matrix-ai-agent.md) からの分離ドキュメント。
 エージェントの権限設定・ツール許可ルール・Configuration Examples を詳述する。
 
 <!-- omit in toc -->
+
 ## History
 
-| 日付       | 内容                                                                 |
-| ---------- | -------------------------------------------------------------------- |
-| 2026-06-27 | Codex (OpenAI) を追加                                                |
-| 2026-06-16 | 本体から分離して新規作成。Cursor IDE/CLI 権限設定を追加              |
+| 日付       | 内容                                                    |
+| ---------- | ------------------------------------------------------- |
+| 2026-06-27 | Codex (OpenAI) を追加                                   |
+| 2026-06-16 | 本体から分離して新規作成。Cursor IDE/CLI 権限設定を追加 |
 
 <!-- omit in toc -->
+
 ## Table of Contents
 
 - [Guardrails Configuration](#guardrails-configuration)
@@ -21,14 +24,14 @@
 
 ## Guardrails Configuration
 
-| 設定項目                | Antigravity               | Claude Code                   | Codex                     | Cursor                    | GitHub Copilot          | Kiro                                    |
-| ----------------------- | ------------------------- | ----------------------------- | ------------------------- | ------------------------- | ----------------------- | --------------------------------------- |
-| ドキュメント            | [antigravity.google](https://antigravity.google/docs/security) | [docs.anthropic.com](https://docs.anthropic.com/en/docs/claude-code/security) | [developers.openai.com/codex](https://developers.openai.com/codex/config-advanced) | [IDE](https://cursor.com/docs/reference/permissions) / [CLI](https://cursor.com/docs/cli/reference/configuration) | [docs.github.com](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference) | [kiro.dev](https://kiro.dev/docs/cli/custom-agents/configuration-reference/#toolssettings-field) |
-| 権限設定ファイル        | `.gemini/antigravity-cli/settings.json` | `.claude/settings.json`       | `.codex/config.toml` (approval_mode) | IDE: `.cursor/permissions.json` / CLI: `.cursor/cli.json`   | `.github/copilot/settings.json` | `.kiro/agents/*.json`                   |
-| ユーザー権限設定        | `~/.gemini/antigravity-cli/settings.json` | `~/.claude/settings.json`     | `~/.codex/config.toml`    | `~/.cursor/cli-config.json` (CLI) / IDE は動的承認 | `~/.copilot/permissions-config.json`      | `~/.kiro/agents/*.json`                 |
-| ローカル設定 (Git除外)  | -                         | `.claude/settings.local.json` | -                         | -                   | `.github/copilot/settings.local.json` | -                                       |
-| ツール許可ルール        | sandbox 設定              | `allow` / `deny` リスト       | sandbox modes (read-only / workspace-write / danger-full-access) + approval mode (suggest / auto-edit / full-auto) | `mcpAllowlist` / `terminalAllowlist` / `autoRun`   | `permissions-config.json` (自動記録)       | `allowedTools` / `toolsSettings`        |
-| 管理者設定 (Enterprise) | GCP Organization policy   | managed policy (JSON)         | `requirements.toml` (管理者ポリシー) | -                         | Organization policy     | -                                       |
+| 設定項目                | Antigravity                                                    | Claude Code                                                                   | Codex                                                                                                              | Cursor                                                                                                            | GitHub Copilot                                                                                                 | Kiro                                                                                             |
+| ----------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| ドキュメント            | [antigravity.google](https://antigravity.google/docs/security) | [docs.anthropic.com](https://docs.anthropic.com/en/docs/claude-code/security) | [developers.openai.com/codex](https://developers.openai.com/codex/config-advanced)                                 | [IDE](https://cursor.com/docs/reference/permissions) / [CLI](https://cursor.com/docs/cli/reference/configuration) | [docs.github.com](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-config-dir-reference) | [kiro.dev](https://kiro.dev/docs/cli/custom-agents/configuration-reference/#toolssettings-field) |
+| 権限設定ファイル        | `.gemini/antigravity-cli/settings.json`                        | `.claude/settings.json`                                                       | `.codex/config.toml` (approval_mode)                                                                               | IDE: `.cursor/permissions.json` / CLI: `.cursor/cli.json`                                                         | `.github/copilot/settings.json`                                                                                | `.kiro/agents/*.json`                                                                            |
+| ユーザー権限設定        | `~/.gemini/antigravity-cli/settings.json`                      | `~/.claude/settings.json`                                                     | `~/.codex/config.toml`                                                                                             | `~/.cursor/cli-config.json` (CLI) / IDE は動的承認                                                                | `~/.copilot/permissions-config.json`                                                                           | `~/.kiro/agents/*.json`                                                                          |
+| ローカル設定 (Git 除外) | -                                                              | `.claude/settings.local.json`                                                 | -                                                                                                                  | -                                                                                                                 | `.github/copilot/settings.local.json`                                                                          | -                                                                                                |
+| ツール許可ルール        | sandbox 設定                                                   | `allow` / `deny` リスト                                                       | sandbox modes (read-only / workspace-write / danger-full-access) + approval mode (suggest / auto-edit / full-auto) | `mcpAllowlist` / `terminalAllowlist` / `autoRun`                                                                  | `permissions-config.json` (自動記録)                                                                           | `allowedTools` / `toolsSettings`                                                                 |
+| 管理者設定 (Enterprise) | GCP Organization policy                                        | managed policy (JSON)                                                         | `requirements.toml` (管理者ポリシー)                                                                               | -                                                                                                                 | Organization policy                                                                                            | -                                                                                                |
 
 ## Configuration Examples
 
@@ -75,10 +78,7 @@ hooks = true
   "mcpAllowlist": ["github:*"],
   "terminalAllowlist": ["git", "npm test", "go test"],
   "autoRun": {
-    "block_instructions": [
-      "Destructive git operations: push --force, reset --hard, clean -f.",
-      "Any command that installs packages or modifies .env files."
-    ]
+    "block_instructions": ["Destructive git operations: push --force, reset --hard, clean -f.", "Any command that installs packages or modifies .env files."]
   }
 }
 ```

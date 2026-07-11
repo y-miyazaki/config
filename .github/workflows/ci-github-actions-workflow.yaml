@@ -3,102 +3,102 @@
 name: ci-github-actions-workflow
 
 on:
-    workflow_call:
-        inputs:
-            actionlint_checksum:
-                default: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8" # pragma: allowlist secret
-                # To get checksum: curl -sL "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz" | sha256sum | awk '{print $1}'
-                description: "SHA256 checksum for actionlint release tarball"
-                required: false
-                type: string
-            actionlint_version:
-                default: "1.7.12"
-                description: "actionlint version to use"
-                required: false
-                type: string
-            ghalint_checksum:
-                default: "98ee0e3330de7286f470d1e89c03ff7ce70d7a5998ba0f15969c400447be579c" # pragma: allowlist secret
-                # To get checksum: curl -sL "https://github.com/suzuki-shunsuke/ghalint/releases/download/v1.5.6/ghalint_1.5.6_linux_amd64.tar.gz" | sha256sum | awk '{print $1}'
-                description: "SHA256 checksum for ghalint release tarball"
-                required: false
-                type: string
-            ghalint_version:
-                default: "1.5.6"
-                description: "ghalint version to use"
-                required: false
-                type: string
-            zizmor_version:
-                default: "1.26.1"
-                description: "zizmor version to use"
-                required: false
-                type: string
+  workflow_call:
+    inputs:
+      actionlint_checksum:
+        default: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8" # pragma: allowlist secret
+        # To get checksum: curl -sL "https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz" | sha256sum | awk '{print $1}'
+        description: "SHA256 checksum for actionlint release tarball"
+        required: false
+        type: string
+      actionlint_version:
+        default: "1.7.12"
+        description: "actionlint version to use"
+        required: false
+        type: string
+      ghalint_checksum:
+        default: "98ee0e3330de7286f470d1e89c03ff7ce70d7a5998ba0f15969c400447be579c" # pragma: allowlist secret
+        # To get checksum: curl -sL "https://github.com/suzuki-shunsuke/ghalint/releases/download/v1.5.6/ghalint_1.5.6_linux_amd64.tar.gz" | sha256sum | awk '{print $1}'
+        description: "SHA256 checksum for ghalint release tarball"
+        required: false
+        type: string
+      ghalint_version:
+        default: "1.5.6"
+        description: "ghalint version to use"
+        required: false
+        type: string
+      zizmor_version:
+        default: "1.26.1"
+        description: "zizmor version to use"
+        required: false
+        type: string
 
 permissions:
-    contents: read
+  contents: read
 
 env:
-    ACTIONLINT_CHECKSUM: ${{ inputs.actionlint_checksum }}
-    ACTIONLINT_VERSION: ${{ inputs.actionlint_version }}
-    GHALINT_CHECKSUM: ${{ inputs.ghalint_checksum }}
-    GHALINT_VERSION: ${{ inputs.ghalint_version }}
-    ZIZMOR_VERSION: ${{ inputs.zizmor_version }}
+  ACTIONLINT_CHECKSUM: ${{ inputs.actionlint_checksum }}
+  ACTIONLINT_VERSION: ${{ inputs.actionlint_version }}
+  GHALINT_CHECKSUM: ${{ inputs.ghalint_checksum }}
+  GHALINT_VERSION: ${{ inputs.ghalint_version }}
+  ZIZMOR_VERSION: ${{ inputs.zizmor_version }}
 
 jobs:
-    lint:
-        runs-on: ubuntu-24.04
-        timeout-minutes: 10
-        permissions:
-            contents: read
-        steps:
-            - name: Checkout Code
-              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-              with:
-                  persist-credentials: false
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
 
-            # GitHub Actions workflow linter
-            - name: Setup actionlint
-              uses: y-miyazaki/config/.github/actions/install-github-release@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
-              with:
-                  binary: actionlint
-                  checksum: ${{ env.ACTIONLINT_CHECKSUM }}
-                  repo: rhysd/actionlint
-                  version: ${{ env.ACTIONLINT_VERSION }}
+      # GitHub Actions workflow linter
+      - name: Setup actionlint
+        uses: y-miyazaki/config/.github/actions/install-github-release@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
+        with:
+          binary: actionlint
+          checksum: ${{ env.ACTIONLINT_CHECKSUM }}
+          repo: rhysd/actionlint
+          version: ${{ env.ACTIONLINT_VERSION }}
 
-            # Security and settings validation (persist-credentials, timeout-minutes, etc.)
-            - name: Setup ghalint
-              uses: y-miyazaki/config/.github/actions/install-github-release@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
-              with:
-                  binary: ghalint
-                  checksum: ${{ env.GHALINT_CHECKSUM }}
-                  repo: suzuki-shunsuke/ghalint
-                  version: ${{ env.GHALINT_VERSION }}
+      # Security and settings validation (persist-credentials, timeout-minutes, etc.)
+      - name: Setup ghalint
+        uses: y-miyazaki/config/.github/actions/install-github-release@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
+        with:
+          binary: ghalint
+          checksum: ${{ env.GHALINT_CHECKSUM }}
+          repo: suzuki-shunsuke/ghalint
+          version: ${{ env.GHALINT_VERSION }}
 
-            - name: Exec actionlint
-              shell: bash
-              run: actionlint -color -oneline
+      - name: Exec actionlint
+        shell: bash
+        run: actionlint -color -oneline
 
-            - name: Exec ghalint
-              shell: bash
-              run: ghalint run
-              continue-on-error: true
+      - name: Exec ghalint
+        shell: bash
+        run: ghalint run
+        continue-on-error: true
 
-            # Static analysis tool for GitHub Actions security
-            - name: Exec zizmor
-              uses: zizmorcore/zizmor-action@192e21d79ab29983730a13d1382995c2307fbcaa # v0.5.7
-              with:
-                  advanced-security: false
-                  min-severity: medium
-                  version: ${{ env.ZIZMOR_VERSION }}
+      # Static analysis tool for GitHub Actions security
+      - name: Exec zizmor
+        uses: zizmorcore/zizmor-action@192e21d79ab29983730a13d1382995c2307fbcaa # v0.5.7
+        with:
+          advanced-security: false
+          min-severity: medium
+          version: ${{ env.ZIZMOR_VERSION }}
 
-            - name: Summary
-              if: always()
-              uses: y-miyazaki/config/.github/actions/summary@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
-              with:
-                  artifacts: |
-                      (none)
-                  params: |
-                      actionlint_version: ${{ env.ACTIONLINT_VERSION }}
-                      ghalint_version: ${{ env.GHALINT_VERSION }}
-                      zizmor_version: ${{ env.ZIZMOR_VERSION }}
-                  status: "${{ job.status }}"
-                  title: "GitHub Actions Workflow Lint"
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
+        with:
+          artifacts: |
+            (none)
+          params: |
+            actionlint_version: ${{ env.ACTIONLINT_VERSION }}
+            ghalint_version: ${{ env.GHALINT_VERSION }}
+            zizmor_version: ${{ env.ZIZMOR_VERSION }}
+          status: "${{ job.status }}"
+          title: "GitHub Actions Workflow Lint"

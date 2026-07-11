@@ -1,20 +1,22 @@
 id: loop-docs-triage-contract-001
 name: loop-docs-triage output contract sections
-description: 'Validate loop-docs-triage defines High-Priority triage report with Watch
+description:
+  "Validate loop-docs-triage defines High-Priority triage report with Watch
   classification.
 
-  '
+  "
 tags:
-- quality
-- output-contract
+  - quality
+  - output-contract
 inputs:
-  prompt: Use loop-docs-triage. Show triage report structure with High-Priority and
+  prompt:
+    Use loop-docs-triage. Show triage report structure with High-Priority and
     Watch sections.
   context:
     target: SKILL.md
 expected:
   output_contains:
-  - triage
-  - High-Priority
+    - triage
+    - High-Priority
   outcomes:
-  - type: task_completed
+    - type: task_completed

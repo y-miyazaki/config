@@ -77,6 +77,7 @@ Write `None` for sections that do not apply. Do not omit sections.
 ## Guidelines
 
 ### Code Standards (CODE)
+
 - CODE-01 (SHOULD): Proper Array Usage
   - Check: Are paths with spaces and multiple values managed with arrays?
 - CODE-02 (SHOULD): Minimize Global Variables
@@ -89,12 +90,14 @@ Write `None` for sections that do not apply. Do not omit sections.
   - Check: Do functions have single responsibility and accept arguments explicitly?
 
 ### Dependencies (DEP)
+
 - DEP-01 (SHOULD): Document Required Commands
   - Check: Are dependent commands documented in README?
 - DEP-02 (SHOULD): Command Existence Check
   - Check: Are commands verified with command -v with clear error messages?
 
 ### Documentation (DOC)
+
 - DOC-01 (MUST): Standard Header Format
   - Check: Does file header contain Description/Usage/Design Rules?
 - DOC-02 (SHOULD): show_usage Required
@@ -115,6 +118,7 @@ Write `None` for sections that do not apply. Do not omit sections.
   - Check: Is CHANGELOG.md maintained with breaking changes documented?
 
 ### Error Handling (ERR)
+
 - ERR-01 (SHOULD): Trap Configuration
   - Check: Are trap handlers set for EXIT, ERR, INT, TERM?
 - ERR-02 (SHOULD): Exit Code Checking
@@ -131,6 +135,7 @@ Write `None` for sections that do not apply. Do not omit sections.
   - Check: Are errors persistently logged to a log file?
 
 ### Function Design (FUNC)
+
 - FUNC-01 (SHOULD): Functions Under 50 Lines Recommended
   - Check: Are functions 50 lines or less?
 - FUNC-02 (SHOULD): Standardize parse_arguments
@@ -143,6 +148,7 @@ Write `None` for sections that do not apply. Do not omit sections.
   - Check: Is main function implemented with minimized global scope processing?
 
 ### Global / Base (G)
+
 - G-01 (MUST): Set SCRIPT_DIR
   - Check: Is SCRIPT_DIR set for reliable relative path resolution?
 - G-02 (SHOULD): No Hardcoded Secrets
@@ -155,6 +161,7 @@ Write `None` for sections that do not apply. Do not omit sections.
   - Check: Does script run without errors on re-execution?
 
 ### Logging (LOG)
+
 - LOG-01 (SHOULD): Separate stdout/stderr
   - Check: Are errors clearly separated to >&2 and info to stdout?
 - LOG-02 (SHOULD): Implement Log Levels
@@ -167,6 +174,7 @@ Write `None` for sections that do not apply. Do not omit sections.
   - Check: Is detailed log control available with -v/--verbose option?
 
 ### Performance (PERF)
+
 - PERF-01 (SHOULD): Minimize External Commands
   - Check: Are external commands in loops minimized and Bash built-ins prioritized?
 - PERF-02 (SHOULD): Reduce Subshells
@@ -189,6 +197,7 @@ Write `None` for sections that do not apply. Do not omit sections.
   - Check: Are performance bottlenecks identified with set -x and time?
 
 ### Security (SEC)
+
 - SEC-01 (SHOULD): Input Validation
   - Check: Is user input validated with regex patterns or whitelists?
 - SEC-02 (SHOULD): Command Injection Prevention
@@ -209,6 +218,7 @@ Write `None` for sections that do not apply. Do not omit sections.
   - Check: Is umask 027 set and least privilege principle applied?
 
 ### Testing (TEST)
+
 - TEST-01 (SHOULD): Implement Unit Tests
   - Check: Are unit tests implemented with Bats?
 - TEST-02 (SHOULD): Bats Test Functions in a-z Order
@@ -220,12 +230,11 @@ Write `None` for sections that do not apply. Do not omit sections.
 
 - After changes, prioritize running validate.sh from shell-script-validation skill.
 - Use individual commands only for debugging.
-- Comment and header conventions (DOC-*) are authoring guidelines — not enforced by validate.sh. Use shell-script-review for judgment on documentation quality.
-
+- Comment and header conventions (DOC-\*) are authoring guidelines — not enforced by validate.sh. Use shell-script-review for judgment on documentation quality.
 
 ## Testing and Validation
 
-`shell-script-validation` runs automated checks only: `bash -n`, shellcheck, shebang, and permissions. It does **not** enforce DOC-* comment format or header separator style.
+`shell-script-validation` runs automated checks only: `bash -n`, shellcheck, shebang, and permissions. It does **not** enforce DOC-\* comment format or header separator style.
 
 **Entry point (recommended)**:
 
@@ -248,5 +257,3 @@ bats test/bats/
 - Keep `set -euo pipefail` and safe defaults (`umask`, etc.) enabled; do not disable them.
 - Handle sensitive information through environment variables or secret management, and never print it to stdout/logs.
 - Add target confirmation and guard conditions before destructive commands to prevent accidental execution.
-
-

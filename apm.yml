@@ -58,4 +58,3 @@ scripts:
     if [ -f .cursor/hooks.json ]; then
       jq '. + {"version": 1}' .cursor/hooks.json > .cursor/hooks.json.tmp && mv .cursor/hooks.json.tmp .cursor/hooks.json
     fi
-

@@ -25,24 +25,23 @@ Provided via prompt context by the calling workflow (loop-prompt-generate action
 }
 ```
 
-| Field | Type | Description |
-|---|---|---|
-| `since` | string | Last processed SHA from loop state |
-| `scope` | string | Detect scope (`range` from loop-detect) |
-| `level` | enum | Operating level: `L1` (report only), `L2` (edit + PR), `L3` (edit + auto-merge) |
-| `skip` | boolean | When true, no actionable work (detect script found no failures) |
-| `failures` | array | Actionable CI failures to assess (may be empty) |
-| `ignored` | array | Skipped runs (ledger, filters, non-actionable types) for SKILL Ignored section |
-| `failures[].workflow_name` | string | Failed workflow display name |
-| `failures[].workflow_run_id` | string | GitHub Actions run ID |
-| `failures[].head_sha` | string | Commit SHA that failed |
-| `failures[].head_branch` | string | Branch name |
-| `failures[].job_name` | string | Failed job name |
-| `failures[].failure_type` | enum | `regression`, `flake`, `infra`, or `env` (optional hint from detect script; Skill reclassifies) |
-| `failures[].log_excerpt` | string | Truncated failed log lines |
-| `failures[].run_url` | string | Link to the workflow run |
-| `failures[].source_commit` | string | Commit SHA for the failure (same as `head_sha` from detect script) |
-| `failures[].reason` | string | Human-readable failure summary |
+| Field                        | Type    | Description                                                                                     |
+| ---------------------------- | ------- | ----------------------------------------------------------------------------------------------- |
+| `since`                      | string  | Last processed SHA from loop state                                                              |
+| `scope`                      | string  | Detect scope (`range` from loop-detect)                                                         |
+| `level`                      | enum    | Operating level: `L1` (report only), `L2` (edit + PR), `L3` (edit + auto-merge)                 |
+| `skip`                       | boolean | When true, no actionable work (detect script found no failures)                                 |
+| `failures`                   | array   | Actionable CI failures to assess (may be empty)                                                 |
+| `ignored`                    | array   | Skipped runs (ledger, filters, non-actionable types) for SKILL Ignored section                  |
+| `failures[].workflow_name`   | string  | Failed workflow display name                                                                    |
+| `failures[].workflow_run_id` | string  | GitHub Actions run ID                                                                           |
+| `failures[].head_sha`        | string  | Commit SHA that failed                                                                          |
+| `failures[].head_branch`     | string  | Branch name                                                                                     |
+| `failures[].job_name`        | string  | Failed job name                                                                                 |
+| `failures[].failure_type`    | enum    | `regression`, `flake`, `infra`, or `env` (optional hint from detect script; Skill reclassifies) |
+| `failures[].log_excerpt`     | string  | Truncated failed log lines                                                                      |
+| `failures[].run_url`         | string  | Link to the workflow run                                                                        |
+| `failures[].source_commit`   | string  | Commit SHA for the failure (same as `head_sha` from detect script)                              |
+| `failures[].reason`          | string  | Human-readable failure summary                                                                  |
 
 `failures` may be an empty array. `level` defaults to `L2` when omitted by the workflow.
-

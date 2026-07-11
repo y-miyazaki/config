@@ -6,6 +6,7 @@ Use this page when you want a fast setup without reading all details.
 ## Overview
 
 Goal:
+
 - Run readiness checks for a skill.
 - Run an evaluation suite from `eval.yaml`.
 
@@ -53,15 +54,18 @@ waza run eval.yaml
 1. No task files matched.
 
 Symptom:
+
 - `no test files matched patterns: [evals/tasks/*.yaml]`
 
 Fix:
+
 - Add at least one task file under `evals/tasks/`.
 - Confirm the glob in `eval.yaml` matches the file path.
 
 2. Eval schema error.
 
 Fix:
+
 - Ensure required sections exist in `eval.yaml`.
 - Compare with examples in [waza-eval-templates.md](./waza-eval-templates.md).
 

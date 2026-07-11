@@ -1,17 +1,20 @@
 <!-- omit in toc -->
+
 # Tool Comparison Matrix (Go)
 
 Go 開発に特化したツール選定の判断材料。
 
 <!-- omit in toc -->
+
 ## History
 
-| 日付       | 内容                                                                 |
-| ---------- | -------------------------------------------------------------------- |
-| 2026-05-21 | History セクション追加                                               |
+| 日付       | 内容                                                                               |
+| ---------- | ---------------------------------------------------------------------------------- |
+| 2026-05-21 | History セクション追加                                                             |
 | 2026-05-12 | 初版作成。Formatter / Linter / Container Build / Release / API Doc / Mock 等を比較 |
 
 <!-- omit in toc -->
+
 ## Table of Contents
 
 - [Formatter: gofumpt vs gofmt vs goimports](#formatter-gofumpt-vs-gofmt-vs-goimports)
@@ -41,10 +44,10 @@ Go 開発に特化したツール選定の判断材料。
 | リポジトリ         | [mvdan/gofumpt](https://github.com/mvdan/gofumpt) | [golang/go](https://github.com/golang/go) | [golang/tools](https://github.com/golang/tools) |
 | ライセンス         | BSD-3-Clause                                      | BSD-3-Clause                              | BSD-3-Clause                                    |
 | 位置づけ           | gofmt の厳格版                                    | 標準フォーマッター                        | gofmt + import 整理                             |
-| gofmt 互換         | ✅ (上位互換)                                      | -                                         | ✅                                               |
+| gofmt 互換         | ✅ (上位互換)                                     | -                                         | ✅                                              |
 | 追加ルール         | 空行削除、グルーピング強制等                      | なし                                      | import のみ                                     |
-| import 整理        | ❌                                                 | ❌                                         | ✅                                               |
-| golangci-lint 統合 | ✅                                                 | ✅                                         | ✅                                               |
+| import 整理        | ❌                                                | ❌                                        | ✅                                              |
+| golangci-lint 統合 | ✅                                                | ✅                                        | ✅                                              |
 
 ### Guidelines
 
@@ -62,10 +65,10 @@ Go 開発に特化したツール選定の判断材料。
 | 位置づけ         | Go 標準ツール                             | メタリンター (複数リンター統合)                                     | 単体リンター                                              |
 | 内蔵リンター数   | 1                                         | 100+                                                                | 1 (多数のチェック含む)                                    |
 | 設定ファイル     | なし                                      | `.golangci.yaml`                                                    | `staticcheck.conf`                                        |
-| 自動修正         | ❌                                         | ✅ (一部リンター)                                                    | ❌                                                         |
-| CI 向け最適化    | ✅                                         | ✅ (差分チェック、キャッシュ)                                        | ⚠️ 限定的                                                  |
-| staticcheck 含む | ❌                                         | ✅                                                                   | -                                                         |
-| go vet 含む      | -                                         | ✅                                                                   | ❌                                                         |
+| 自動修正         | ❌                                        | ✅ (一部リンター)                                                   | ❌                                                        |
+| CI 向け最適化    | ✅                                        | ✅ (差分チェック、キャッシュ)                                       | ⚠️ 限定的                                                 |
+| staticcheck 含む | ❌                                        | ✅                                                                  | -                                                         |
+| go vet 含む      | -                                         | ✅                                                                  | ❌                                                        |
 
 ### Guidelines
 
@@ -79,9 +82,9 @@ Go 開発に特化したツール選定の判断材料。
 | リポジトリ      | [moby/buildkit](https://github.com/moby/buildkit) | [GoogleContainerTools/kaniko](https://github.com/GoogleContainerTools/kaniko) | [ko-build/ko](https://github.com/ko-build/ko) |
 | ライセンス      | Apache 2.0                                        | Apache 2.0                                                                    | Apache 2.0                                    |
 | 対応言語        | 任意                                              | 任意                                                                          | Go 専用                                       |
-| Dockerfile 不要 | ❌                                                 | ❌                                                                             | ✅                                             |
+| Dockerfile 不要 | ❌                                                | ❌                                                                            | ✅                                            |
 | ビルド速度      | 中程度                                            | 中程度                                                                        | 非常に高速                                    |
-| CI での特権不要 | ❌ (Docker daemon 必要)                            | ✅                                                                             | ✅                                             |
+| CI での特権不要 | ❌ (Docker daemon 必要)                           | ✅                                                                            | ✅                                            |
 | イメージサイズ  | Dockerfile 依存                                   | Dockerfile 依存                                                               | 最小 (distroless ベース)                      |
 
 ### Guidelines
@@ -99,12 +102,12 @@ Go 開発に特化したツール選定の判断材料。
 | リポジトリ       | - (GitHub 組み込み)    | [goreleaser/goreleaser](https://github.com/goreleaser/goreleaser) | [semantic-release/semantic-release](https://github.com/semantic-release/semantic-release) |
 | ライセンス       | 商用 (GitHub に含む)   | MIT                                                               | MIT                                                                                       |
 | 対応言語         | 任意                   | Go 中心 (他言語も可)                                              | 任意                                                                                      |
-| クロスコンパイル | 手動                   | ✅ 自動                                                            | ❌                                                                                         |
-| Changelog 生成   | 手動                   | ✅ 自動                                                            | ✅ 自動                                                                                    |
-| バージョニング   | 手動                   | 手動 (Git tag)                                                    | ✅ 自動 (Conventional Commits)                                                             |
-| バイナリ配布     | 手動アップロード       | ✅ (tar.gz, zip, deb, rpm)                                         | ❌                                                                                         |
-| Docker イメージ  | 別途設定               | ✅ ビルド+プッシュ                                                 | 別途設定                                                                                  |
-| Homebrew 連携    | ❌                      | ✅                                                                 | ❌                                                                                         |
+| クロスコンパイル | 手動                   | ✅ 自動                                                           | ❌                                                                                        |
+| Changelog 生成   | 手動                   | ✅ 自動                                                           | ✅ 自動                                                                                   |
+| バージョニング   | 手動                   | 手動 (Git tag)                                                    | ✅ 自動 (Conventional Commits)                                                            |
+| バイナリ配布     | 手動アップロード       | ✅ (tar.gz, zip, deb, rpm)                                        | ❌                                                                                        |
+| Docker イメージ  | 別途設定               | ✅ ビルド+プッシュ                                                | 別途設定                                                                                  |
+| Homebrew 連携    | ❌                     | ✅                                                                | ❌                                                                                        |
 
 ### Guidelines
 
@@ -123,7 +126,7 @@ Go 開発に特化したツール選定の判断材料。
 | 入力             | OpenAPI spec / Go コード                                          | OpenAPI spec (YAML/JSON)                                                  | Go コメント (アノテーション)                  |
 | 出力             | Go サーバー/クライアントコード                                    | Go サーバー/クライアントコード                                            | OpenAPI JSON/YAML + Swagger UI                |
 | 型安全性         | 高い                                                              | 高い                                                                      | 中程度 (アノテーション依存)                   |
-| スキーマ駆動開発 | ✅                                                                 | ✅ (スキーマファースト)                                                    | ❌ (コードファースト)                          |
+| スキーマ駆動開発 | ✅                                                                | ✅ (スキーマファースト)                                                   | ❌ (コードファースト)                         |
 
 ### Guidelines
 
@@ -133,17 +136,17 @@ Go 開発に特化したツール選定の判断材料。
 
 ## Protocol Buffers: buf
 
-| 比較項目 | buf |
-|---|---|
-| 提供元 | Buf Technologies |
-| リポジトリ | [bufbuild/buf](https://github.com/bufbuild/buf) |
-| ライセンス | Apache 2.0 |
-| 用途 | protobuf の Lint / Format / Breaking Change 検出 / コード生成管理 |
-| Lint | ✅ (スタイル・命名規則) |
-| Format | ✅ |
-| Breaking Change 検出 | ✅ |
-| BSR (レジストリ) | ✅ (Buf Schema Registry) |
-| protoc 代替 | ✅ (`buf generate`) |
+| 比較項目             | buf                                                               |
+| -------------------- | ----------------------------------------------------------------- |
+| 提供元               | Buf Technologies                                                  |
+| リポジトリ           | [bufbuild/buf](https://github.com/bufbuild/buf)                   |
+| ライセンス           | Apache 2.0                                                        |
+| 用途                 | protobuf の Lint / Format / Breaking Change 検出 / コード生成管理 |
+| Lint                 | ✅ (スタイル・命名規則)                                           |
+| Format               | ✅                                                                |
+| Breaking Change 検出 | ✅                                                                |
+| BSR (レジストリ)     | ✅ (Buf Schema Registry)                                          |
+| protoc 代替          | ✅ (`buf generate`)                                               |
 
 ### Guidelines
 
@@ -151,16 +154,16 @@ Go 開発に特化したツール選定の判断材料。
 
 ## Live Reload: air
 
-| 比較項目 | air |
-|---|---|
-| 提供元 | air-verse |
-| リポジトリ | [air-verse/air](https://github.com/air-verse/air) |
-| ライセンス | GPL-3.0 |
-| 用途 | Go アプリケーションのライブリロード (ファイル変更検知→自動リビルド) |
-| 設定ファイル | `.air.toml` |
-| カスタムビルドコマンド | ✅ |
-| ファイル除外 | ✅ (glob パターン) |
-| ログカラー | ✅ |
+| 比較項目               | air                                                                   |
+| ---------------------- | --------------------------------------------------------------------- |
+| 提供元                 | air-verse                                                             |
+| リポジトリ             | [air-verse/air](https://github.com/air-verse/air)                     |
+| ライセンス             | GPL-3.0                                                               |
+| 用途                   | Go アプリケーションのライブリロード (ファイル変更検知 → 自動リビルド) |
+| 設定ファイル           | `.air.toml`                                                           |
+| カスタムビルドコマンド | ✅                                                                    |
+| ファイル除外           | ✅ (glob パターン)                                                    |
+| ログカラー             | ✅                                                                    |
 
 ### Guidelines
 
@@ -168,16 +171,16 @@ Go 開発に特化したツール選定の判断材料。
 
 ## Vulnerability Scanning (Go): govulncheck
 
-| 比較項目 | govulncheck |
-|---|---|
-| 提供元 | Go 公式 |
-| リポジトリ | [golang/vuln](https://github.com/golang/vuln) |
-| ライセンス | BSD-3-Clause |
-| 用途 | Go モジュールの既知脆弱性検出 |
-| 脆弱性 DB | Go Vulnerability Database (公式) |
-| 到達可能性分析 | ✅ (実際に呼ばれるコードパスのみ報告) |
-| JSON 出力 | ✅ |
-| CI 統合 | ✅ (`go install` で導入可能) |
+| 比較項目       | govulncheck                                   |
+| -------------- | --------------------------------------------- |
+| 提供元         | Go 公式                                       |
+| リポジトリ     | [golang/vuln](https://github.com/golang/vuln) |
+| ライセンス     | BSD-3-Clause                                  |
+| 用途           | Go モジュールの既知脆弱性検出                 |
+| 脆弱性 DB      | Go Vulnerability Database (公式)              |
+| 到達可能性分析 | ✅ (実際に呼ばれるコードパスのみ報告)         |
+| JSON 出力      | ✅                                            |
+| CI 統合        | ✅ (`go install` で導入可能)                  |
 
 ### Guidelines
 
@@ -185,22 +188,22 @@ Go 開発に特化したツール選定の判断材料。
 
 ## Mock Generation: gomock vs mockery vs moq
 
-| 比較項目 | gomock (uber-go/mock) | mockery | moq |
-|---|---|---|---|
-| 提供元 | Uber (golang/mock から移行) | vektra | Mat Ryer |
-| リポジトリ | [uber-go/mock](https://github.com/uber-go/mock) | [vektra/mockery](https://github.com/vektra/mockery) | [matryer/moq](https://github.com/matryer/moq) |
-| ライセンス | Apache 2.0 | BSD-3-Clause | MIT |
-| 最新バージョン | v0.5.x (2025) | v3 (2026-03) | v0.5.3 (2025-02) |
-| アプローチ | コード生成 + DSL | コード生成 (testify/mock ベース) | コード生成 (関数フィールド) |
-| コード生成ツール | `mockgen` | `mockery` | `moq` |
-| go generate 対応 | ✅ | ✅ | ✅ |
-| Generics 対応 | ✅ | ✅ | ✅ |
-| 呼び出し順序検証 | ✅ (`InOrder`, `gomock.InOrder`) | ✅ (`.On().After()`) | ❌ |
-| 呼び出し回数検証 | ✅ (`Times`, `MinTimes`, `MaxTimes`) | ✅ (`.Times()`) | ❌ (手動で実装) |
-| 引数マッチャー | ✅ (豊富: `Any`, `Eq`, カスタム) | ✅ (testify の `mock.Anything` 等) | ❌ (関数内で自前検証) |
-| 外部依存 | なし | testify | なし |
-| 生成コードの複雑さ | 中程度 (Controller + Recorder) | 中程度 (testify/mock 埋め込み) | 低い (シンプルな struct) |
-| 学習コスト | 中程度 | 低い (testify 利用者なら容易) | 非常に低い |
+| 比較項目           | gomock (uber-go/mock)                           | mockery                                             | moq                                           |
+| ------------------ | ----------------------------------------------- | --------------------------------------------------- | --------------------------------------------- |
+| 提供元             | Uber (golang/mock から移行)                     | vektra                                              | Mat Ryer                                      |
+| リポジトリ         | [uber-go/mock](https://github.com/uber-go/mock) | [vektra/mockery](https://github.com/vektra/mockery) | [matryer/moq](https://github.com/matryer/moq) |
+| ライセンス         | Apache 2.0                                      | BSD-3-Clause                                        | MIT                                           |
+| 最新バージョン     | v0.5.x (2025)                                   | v3 (2026-03)                                        | v0.5.3 (2025-02)                              |
+| アプローチ         | コード生成 + DSL                                | コード生成 (testify/mock ベース)                    | コード生成 (関数フィールド)                   |
+| コード生成ツール   | `mockgen`                                       | `mockery`                                           | `moq`                                         |
+| go generate 対応   | ✅                                              | ✅                                                  | ✅                                            |
+| Generics 対応      | ✅                                              | ✅                                                  | ✅                                            |
+| 呼び出し順序検証   | ✅ (`InOrder`, `gomock.InOrder`)                | ✅ (`.On().After()`)                                | ❌                                            |
+| 呼び出し回数検証   | ✅ (`Times`, `MinTimes`, `MaxTimes`)            | ✅ (`.Times()`)                                     | ❌ (手動で実装)                               |
+| 引数マッチャー     | ✅ (豊富: `Any`, `Eq`, カスタム)                | ✅ (testify の `mock.Anything` 等)                  | ❌ (関数内で自前検証)                         |
+| 外部依存           | なし                                            | testify                                             | なし                                          |
+| 生成コードの複雑さ | 中程度 (Controller + Recorder)                  | 中程度 (testify/mock 埋め込み)                      | 低い (シンプルな struct)                      |
+| 学習コスト         | 中程度                                          | 低い (testify 利用者なら容易)                       | 非常に低い                                    |
 
 ### Guidelines
 

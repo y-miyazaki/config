@@ -97,7 +97,8 @@ To resolve this, you can configure `registryAliases` in each repository's `renov
   }
 }
 ```
-Reference: Verifying if minimumReleaseAge applies to images via ECR pull-through cache in Renovate (DevelopersIO)  
+
+Reference: Verifying if minimumReleaseAge applies to images via ECR pull-through cache in Renovate (DevelopersIO)
 
 ### GitHub Actions (`github-actions` manager)
 
@@ -153,17 +154,17 @@ Reference: Verifying if minimumReleaseAge applies to images via ECR pull-through
 
 Tools that appear in both GitHub Actions workflow inputs (`github-actions-tool-version.json`) and mise (`mise.toml`) are grouped into a single PR per tool using `groupName`. This avoids version drift between CI and local development environments.
 
-| Group | GitHub Actions input package | mise package |
-|---|---|---|
-| ecspresso | `kayac/ecspresso` | `aqua:kayac/ecspresso` |
-| ecschedule | `Songmu/ecschedule` | `aqua:Songmu/ecschedule` |
-| golangci-lint | `golangci/golangci-lint` | `aqua:golangci/golangci-lint` |
-| goreleaser | `goreleaser/goreleaser` | `aqua:goreleaser/goreleaser` |
-| mise | `jdx/mise` (workflow input + Dockerfile ARG) | — |
-| terraform | `hashicorp/terraform` | `aqua:hashicorp/terraform` |
-| tflint | `terraform-linters/tflint` | `aqua:terraform-linters/tflint` |
-| trivy | `aquasecurity/trivy` | `aqua:aquasecurity/trivy` |
-| zizmor | `woodruffw/zizmor` | `aqua:zizmorcore/zizmor` |
+| Group         | GitHub Actions input package                 | mise package                    |
+| ------------- | -------------------------------------------- | ------------------------------- |
+| ecspresso     | `kayac/ecspresso`                            | `aqua:kayac/ecspresso`          |
+| ecschedule    | `Songmu/ecschedule`                          | `aqua:Songmu/ecschedule`        |
+| golangci-lint | `golangci/golangci-lint`                     | `aqua:golangci/golangci-lint`   |
+| goreleaser    | `goreleaser/goreleaser`                      | `aqua:goreleaser/goreleaser`    |
+| mise          | `jdx/mise` (workflow input + Dockerfile ARG) | —                               |
+| terraform     | `hashicorp/terraform`                        | `aqua:hashicorp/terraform`      |
+| tflint        | `terraform-linters/tflint`                   | `aqua:terraform-linters/tflint` |
+| trivy         | `aquasecurity/trivy`                         | `aqua:aquasecurity/trivy`       |
+| zizmor        | `woodruffw/zizmor`                           | `aqua:zizmorcore/zizmor`        |
 
 Each group rule sets:
 

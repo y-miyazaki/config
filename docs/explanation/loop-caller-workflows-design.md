@@ -7,11 +7,11 @@ Shared GitHub Actions layout for `on-loop-*.yaml` caller workflows.
 
 ## Files
 
-| Type | Path | Role |
-|---|---|---|
-| Caller | `.github/workflows/on-loop-<name>.yaml` | Domain `env`, detect script path, verifier criteria |
-| Reusable | `.github/workflows/ci-loop-agent.yaml` | L1/L2/L3 execute (`loop-execute`) |
-| Actions | `y-miyazaki/config` `loop-detect`, `loop-finalize`, … | Generic phases |
+| Type     | Path                                                  | Role                                                |
+| -------- | ----------------------------------------------------- | --------------------------------------------------- |
+| Caller   | `.github/workflows/on-loop-<name>.yaml`               | Domain `env`, detect script path, verifier criteria |
+| Reusable | `.github/workflows/ci-loop-agent.yaml`                | L1/L2/L3 execute (`loop-execute`)                   |
+| Actions  | `y-miyazaki/config` `loop-detect`, `loop-finalize`, … | Generic phases                                      |
 
 ## Job Graph
 
@@ -32,12 +32,12 @@ record-skip (optional)
 
 ### Required outputs
 
-| Output | Source |
-|---|---|
-| `should_run` | `loop-detect` — true when `target_matrix` is non-empty |
-| `skip_reason` | `loop-detect` |
-| `target_matrix` | JSON array of candidates (see [Specification](../reference/specification.md)) |
-| Config passthrough | `level`, models, allowlist, `state_file`, … |
+| Output             | Source                                                                        |
+| ------------------ | ----------------------------------------------------------------------------- |
+| `should_run`       | `loop-detect` — true when `target_matrix` is non-empty                        |
+| `skip_reason`      | `loop-detect`                                                                 |
+| `target_matrix`    | JSON array of candidates (see [Specification](../reference/specification.md)) |
+| Config passthrough | `level`, models, allowlist, `state_file`, …                                   |
 
 Each matrix cell carries: `target_json`, `prompt`, `verifier_context`, `result`.
 
@@ -92,11 +92,11 @@ When `finalize_enabled=true`, `ci-loop-agent` runs `loop-finalize` after `agent-
 
 All `.loop/*` writes in **finalize step** via `loop-finalize` — not separate caller `git push` steps.
 
-| Input | Example |
-|---|---|
-| `target_json` | Matrix cell |
+| Input                       | Example                                                          |
+| --------------------------- | ---------------------------------------------------------------- |
+| `target_json`               | Matrix cell                                                      |
 | `domain_persistence_script` | loop-ci-sweeper: `update_run_ledger.sh`; loop-docs-triage: empty |
-| `state_push_branch` | `LOOP_STATE_PUSH_BRANCH` or default branch |
+| `state_push_branch`         | `LOOP_STATE_PUSH_BRANCH` or default branch                       |
 
 Push branch: `LOOP_STATE_PUSH_BRANCH`, **not** `target.to.branch`.
 
@@ -118,11 +118,11 @@ on:
   workflow_dispatch:
 ```
 
-| Trigger | Typical use |
-|---|---|
-| `schedule` | Integration branch polling |
-| `workflow_run` | Low-latency CI failure (ops checklist required) |
-| `workflow_dispatch` | Manual debug |
+| Trigger             | Typical use                                     |
+| ------------------- | ----------------------------------------------- |
+| `schedule`          | Integration branch polling                      |
+| `workflow_run`      | Low-latency CI failure (ops checklist required) |
+| `workflow_dispatch` | Manual debug                                    |
 
 ## Concurrency
 
@@ -167,11 +167,11 @@ Each matrix cell = one `max_runs_per_day` consumption. Cap enumeration in `loop-
 
 ## Permissions (least privilege pattern)
 
-| Job | Typical permissions |
-|---|---|
-| detect | `contents: read`, `actions: read`, `checks: read` |
-| execute | `contents: write`, engine-specific |
-| finalize | `contents: write`, `pull-requests: write` |
+| Job      | Typical permissions                               |
+| -------- | ------------------------------------------------- |
+| detect   | `contents: read`, `actions: read`, `checks: read` |
+| execute  | `contents: write`, engine-specific                |
+| finalize | `contents: write`, `pull-requests: write`         |
 
 ## env Conventions
 
@@ -189,13 +189,13 @@ Each matrix cell = one `max_runs_per_day` consumption. Cap enumeration in `loop-
 
 ## Phase 0 Debt (remove in implementation)
 
-| Debt | Caller | Resolution |
-|---|---|---|
-| Double detect script | `on-loop-ci-sweeper` | `loop-detect` outputs `verifier_context` |
-| Caller ledger `git push` | `on-loop-ci-sweeper` | `domain_persistence_script` in `loop-finalize` |
-| `auto_merge: level == L3` without finalize check | all L2+ callers | `finalize == 'open_pr'` guard |
-| Single `DEFAULT_BASE_BRANCH` only | all | `LOOP_INTEGRATION_BRANCHES` |
-| `docs-updater` detect path | `on-loop-docs-triage` | `loop-docs-triage/scripts/detect_changes.sh` |
+| Debt                                             | Caller                | Resolution                                     |
+| ------------------------------------------------ | --------------------- | ---------------------------------------------- |
+| Double detect script                             | `on-loop-ci-sweeper`  | `loop-detect` outputs `verifier_context`       |
+| Caller ledger `git push`                         | `on-loop-ci-sweeper`  | `domain_persistence_script` in `loop-finalize` |
+| `auto_merge: level == L3` without finalize check | all L2+ callers       | `finalize == 'open_pr'` guard                  |
+| Single `DEFAULT_BASE_BRANCH` only                | all                   | `LOOP_INTEGRATION_BRANCHES`                    |
+| `docs-updater` detect path                       | `on-loop-docs-triage` | `loop-docs-triage/scripts/detect_changes.sh`   |
 
 ## References
 
@@ -204,8 +204,3 @@ Each matrix cell = one `max_runs_per_day` consumption. Cap enumeration in `loop-
 - [Specification](../reference/specification.md)
 - [CI Sweeper Workflow](workflows/ci-sweeper-workflow-design.md)
 - [Docs Loop Workflow](workflows/docs-loop-workflow-design.md)
-
-
-
-
-

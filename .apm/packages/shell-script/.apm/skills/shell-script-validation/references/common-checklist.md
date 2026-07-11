@@ -11,11 +11,13 @@ Run tools in this order (fail-fast: stop on first failure):
 ## Checks by Tool
 
 ### bash -n
+
 - SYN-01: Script parses without syntax errors
 - SYN-02: Shebang line is present (`#!/usr/bin/env bash` or `#!/bin/bash`)
 - SYN-03: All here-docs and subshells are properly closed
 
 ### shellcheck
+
 - SC-01: No SC warnings at severity ERROR or WARNING
 - SC-02: Variables are properly quoted to prevent word-splitting
 - SC-03: No use of deprecated or unsafe constructs

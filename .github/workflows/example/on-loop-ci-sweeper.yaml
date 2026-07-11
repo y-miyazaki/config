@@ -1,5 +1,3 @@
-# LEGACY (Phase 0): Pin-based consumer template for remote `y-miyazaki/config` references.
-# For multi-branch matrix callers, copy `.github/workflows/on-loop-ci-sweeper.yaml` instead.
 # Loop workflow: CI sweeper
 # Polls for failed CI on main (schedule), runs bounded Agent→Verify loop, then finalizes.
 # Requires repository secret: AGENT_TOKEN (engine API key; see DEFAULT_ENGINE).
@@ -78,11 +76,17 @@ env:
   DEFAULT_BASE_BRANCH: main
   DEFAULT_ENGINE: cursor
   DEFAULT_LEVEL: L2
+  DOMAIN_PERSISTENCE_SCRIPT: .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh
   LOOP_ALLOWLIST: ".github/**,.apm/packages/**,scripts/**,apm.yml,mise.toml,renovate/**,docs/**/*.md,README.md,mkdocs.yml"
   LOOP_BUDGET_MAX_RUNS_PER_DAY: "5"
   LOOP_BUDGET_MAX_TOKENS_PER_DAY: "1000000"
+  LOOP_DENYLIST: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
   LOOP_DETECT_SCRIPT: .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh
+  LOOP_FINALIZE_INTEGRATION: open_pr
+  LOOP_FINALIZE_PULL_REQUEST: push_head
   LOOP_INFER_FILES_PATTERN: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|ya?ml|sh|go|toml|json)'
+  LOOP_INTEGRATION_BRANCHES: main
+  LOOP_MAX_TARGETS_PER_SCHEDULE: "3"
   LOOP_NAME: ci-sweeper
   LOOP_NO_CHANGES_VERDICT: REJECT
   LOOP_PR_BODY: |
@@ -92,12 +96,16 @@ env:
 
     ---
     *This PR was created by a loop automation. Review before merging.*
+  LOOP_PR_EXCLUDE: fork,draft,label:no-loop
+  LOOP_PR_INCLUDE_BOTS: ""
   LOOP_PR_TITLE: "fix(ci): automated CI repair (loop-ci-sweeper)"
   LOOP_PROMPT_INSTRUCTIONS: |
     Fix the failing CI checks identified in the detection result.
     Classify flakes and infra/env failures as Watch — do not edit code for those.
     Apply the smallest change that resolves the logged failure.
     Run stack-appropriate validation skills before finishing.
+  LOOP_PULL_REQUESTS: "true"
+  LOOP_STATE_PUSH_BRANCH: main
   SKILL_NAME: loop-ci-sweeper
 
 jobs:
@@ -117,25 +125,20 @@ jobs:
       agent_verifier_model: ${{ steps.detect.outputs.agent_verifier_model }}
       allowlist: ${{ steps.detect.outputs.allowlist }}
       base_branch: ${{ steps.detect.outputs.base_branch }}
-      consecutive_failures: ${{ steps.detect.outputs.consecutive_failures }}
-      current_sha: ${{ steps.detect.outputs.current_sha }}
       engine: ${{ steps.detect.outputs.engine }}
       infer_files_pattern: ${{ steps.detect.outputs.infer_files_pattern }}
-      last_sha: ${{ steps.detect.outputs.last_sha }}
       level: ${{ steps.detect.outputs.level }}
       loop_name: ${{ steps.detect.outputs.loop_name }}
       no_changes_verdict: ${{ steps.detect.outputs.no_changes_verdict }}
       pr_body: ${{ steps.detect.outputs.pr_body }}
       pr_title: ${{ steps.detect.outputs.pr_title }}
-      prompt: ${{ steps.detect.outputs.prompt }}
       run_started_at: ${{ steps.timing.outputs.started_at }}
       should_run: ${{ steps.detect.outputs.should_run }}
       skill_name: ${{ steps.detect.outputs.skill_name }}
       skip_reason: ${{ steps.detect.outputs.skip_reason }}
       state_file: ${{ steps.detect.outputs.state_file }}
-      target_head_sha: ${{ steps.failure_ctx.outputs.head_sha }}
-      target_workflow_name: ${{ steps.failure_ctx.outputs.workflow_name }}
-      target_workflow_run_id: ${{ steps.failure_ctx.outputs.workflow_run_id }}
+      state_push_branch: ${{ env.LOOP_STATE_PUSH_BRANCH }}
+      target_matrix: ${{ steps.detect.outputs.target_matrix }}
     steps:
       - name: Record Run Start
         id: timing
@@ -150,8 +153,14 @@ jobs:
       - name: Detect Loop Work
         id: detect
         env:
+          CI_SWEEPER_EXCLUDED_WORKFLOWS: ${{ env.CI_SWEEPER_EXCLUDED_WORKFLOWS }}
+          CI_SWEEPER_INCLUDED_WORKFLOWS: ${{ env.CI_SWEEPER_INCLUDED_WORKFLOWS }}
+          CI_SWEEPER_LEDGER_FILE: ${{ env.CI_SWEEPER_LEDGER_FILE }}
+          CI_SWEEPER_REJECT_MAX_RETRIES: ${{ env.CI_SWEEPER_REJECT_MAX_RETRIES }}
+          CI_SWEEPER_REJECT_RETRY_POLICY: ${{ env.CI_SWEEPER_REJECT_RETRY_POLICY }}
+          DEFAULT_BASE_BRANCH: ${{ env.DEFAULT_BASE_BRANCH }}
           GH_TOKEN: ${{ github.token }}
-        uses: y-miyazaki/config/.github/actions/loop-detect@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
+        uses: ./.github/actions/loop-detect
         with:
           agent_implementer_max_turns: ${{ env.AGENT_IMPLEMENTER_MAX_TURNS }}
           agent_implementer_model: ${{ env.AGENT_IMPLEMENTER_MODEL }}
@@ -167,40 +176,35 @@ jobs:
           engine: ${{ env.DEFAULT_ENGINE }}
           infer_files_pattern: ${{ env.LOOP_INFER_FILES_PATTERN }}
           level: ${{ env.DEFAULT_LEVEL }}
+          loop_finalize_integration: ${{ env.LOOP_FINALIZE_INTEGRATION }}
+          loop_finalize_pull_request: ${{ env.LOOP_FINALIZE_PULL_REQUEST }}
+          loop_integration_branches: ${{ env.LOOP_INTEGRATION_BRANCHES }}
+          loop_max_targets_per_schedule: ${{ env.LOOP_MAX_TARGETS_PER_SCHEDULE }}
           loop_name: ${{ env.LOOP_NAME }}
+          loop_pr_exclude: ${{ env.LOOP_PR_EXCLUDE }}
+          loop_pr_include_bots: ${{ env.LOOP_PR_INCLUDE_BOTS }}
+          loop_pull_requests: ${{ env.LOOP_PULL_REQUESTS }}
+          loop_state_push_branch: ${{ env.LOOP_STATE_PUSH_BRANCH }}
           no_changes_verdict: ${{ env.LOOP_NO_CHANGES_VERDICT }}
           pr_body: ${{ env.LOOP_PR_BODY }}
           pr_title: ${{ env.LOOP_PR_TITLE }}
           prompt_instructions: ${{ env.LOOP_PROMPT_INSTRUCTIONS }}
           skill_name: ${{ env.SKILL_NAME }}
-
-      - name: Export Target Failure Context
-        id: failure_ctx
-        if: steps.detect.outputs.should_run == 'true'
-        env:
-          CI_SWEEPER_EXCLUDED_WORKFLOWS: ${{ env.CI_SWEEPER_EXCLUDED_WORKFLOWS }}
-          CI_SWEEPER_INCLUDED_WORKFLOWS: ${{ env.CI_SWEEPER_INCLUDED_WORKFLOWS }}
-          CI_SWEEPER_LEDGER_FILE: ${{ env.CI_SWEEPER_LEDGER_FILE }}
-          CI_SWEEPER_REJECT_MAX_RETRIES: ${{ env.CI_SWEEPER_REJECT_MAX_RETRIES }}
-          CI_SWEEPER_REJECT_RETRY_POLICY: ${{ env.CI_SWEEPER_REJECT_RETRY_POLICY }}
-          GH_TOKEN: ${{ github.token }}
-          LAST_SHA: ${{ steps.detect.outputs.last_sha }}
-          LOOP_DETECT_SCRIPT: ${{ env.LOOP_DETECT_SCRIPT }}
-        run: |
-          result="$(bash "${LOOP_DETECT_SCRIPT}" --scope range --since "${LAST_SHA}")"
-          {
-            echo "head_sha=$(jq -r '.failures[0].head_sha // empty' <<< "${result}")"
-            echo "workflow_name=$(jq -r '.failures[0].workflow_name // empty' <<< "${result}")"
-            echo "workflow_run_id=$(jq -r '.failures[0].workflow_run_id // empty' <<< "${result}")"
-          } >> "${GITHUB_OUTPUT}"
+          token: ${{ github.token }}
 
   execute:
-    needs: detect
+    concurrency:
+      cancel-in-progress: true
+      group: on-loop-ci-sweeper-${{ matrix.target.target_json.key }}
     if: needs.detect.outputs.should_run == 'true'
-    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
+    needs: detect
     permissions:
       contents: write
       copilot-requests: write # zizmor: ignore[excessive-permissions]
+    strategy:
+      matrix:
+        target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
+    uses: ./.github/workflows/ci-loop-agent.yaml
     with:
       agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
       agent_implementer_model: ${{ needs.detect.outputs.agent_implementer_model }}
@@ -208,111 +212,49 @@ jobs:
       agent_verifier_criteria: ${{ needs.detect.outputs.agent_verifier_criteria }}
       agent_verifier_max_turns: ${{ needs.detect.outputs.agent_verifier_max_turns }}
       agent_verifier_model: ${{ needs.detect.outputs.agent_verifier_model }}
+      additional_commit_paths: .loop/ci-sweeper-run-ledger.json
       allowlist: ${{ needs.detect.outputs.allowlist }}
-      base_branch: ${{ needs.detect.outputs.base_branch }}
+      auto_merge: ${{ (needs.detect.outputs.level == 'L3' && matrix.target.target_json.finalize == 'open_pr') && 'true' || 'false' }}
+      base_branch: ${{ matrix.target.target_json.mode == 'pull_request' && matrix.target.target_json.base.branch || matrix.target.target_json.to.branch }}
+      current_sha: ${{ matrix.target.target_json.from.ref }}
+      denylist: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
+      domain_persistence_script: .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh
       engine: ${{ needs.detect.outputs.engine }}
+      finalize_enabled: true
       infer_files_pattern: ${{ needs.detect.outputs.infer_files_pattern }}
       level: ${{ needs.detect.outputs.level }}
+      loop_name: ${{ needs.detect.outputs.loop_name }}
       no_changes_verdict: ${{ needs.detect.outputs.no_changes_verdict }}
-      prompt_text: ${{ needs.detect.outputs.prompt }}
+      pr_body: |
+        ${{ needs.detect.outputs.pr_body }}
+
+        - Level: ${{ needs.detect.outputs.level }}
+        - Target: `${{ matrix.target.target_json.key }}`
+        - Skip reason: ${{ needs.detect.outputs.skip_reason }}
+      pr_title: ${{ needs.detect.outputs.pr_title }}
+      prompt_text: ${{ matrix.target.prompt }}
+      run_started_at: ${{ needs.detect.outputs.run_started_at }}
       skill_name: ${{ needs.detect.outputs.skill_name }}
+      skip_reason: ${{ needs.detect.outputs.skip_reason }}
+      state_file: ${{ needs.detect.outputs.state_file }}
+      state_push_branch: ${{ needs.detect.outputs.state_push_branch }}
+      target_json: ${{ toJson(matrix.target.target_json) }}
+      verifier_context: ${{ matrix.target.verifier_context }}
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       GH_TOKEN_PUSH: ${{ secrets.GITHUB_TOKEN }}
 
-  finalize:
-    needs: [detect, execute]
-    if: >-
-      always() &&
-      needs.detect.result == 'success' &&
-      needs.detect.outputs.skip_reason != 'circuit_breaker' &&
-      needs.detect.outputs.skip_reason != 'budget' &&
-      needs.execute.result != 'cancelled'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-
-      - name: Finalize
-        uses: y-miyazaki/config/.github/actions/loop-finalize@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
-        with:
-          agent_result: ${{ needs.execute.result }}
-          attempts: ${{ needs.execute.outputs.attempts || '' }}
-          auto_merge: ${{ needs.detect.outputs.level == 'L3' }}
-          base_branch: ${{ needs.detect.outputs.base_branch }}
-          branch: ${{ needs.execute.outputs.branch }}
-          current_sha: ${{ needs.detect.outputs.current_sha }}
-          has_changes: ${{ needs.execute.outputs.has_changes }}
-          loop_name: ${{ needs.detect.outputs.loop_name }}
-          pr_body: |
-            ${{ needs.detect.outputs.pr_body }}
-
-            - Level: ${{ needs.detect.outputs.level }}
-            - Commits scanned: `${{ needs.detect.outputs.last_sha }}..${{ needs.detect.outputs.current_sha }}`
-            - Verifier verdict: ${{ needs.execute.outputs.verdict || 'SKIPPED' }}
-            - Attempts: ${{ needs.execute.outputs.attempts || '0' }}
-            - Skip reason: ${{ needs.detect.outputs.skip_reason }}
-            ${{ needs.execute.outputs.reason != '' && format('- Last verifier note: {0}', needs.execute.outputs.reason) || '' }}
-          pr_title: ${{ needs.detect.outputs.pr_title }}
-          open_rejections: ${{ needs.execute.outputs.open_rejections }}
-          reject_reason: ${{ needs.execute.outputs.reason }}
-          run_started_at: ${{ needs.detect.outputs.run_started_at }}
-          skip_reason: ${{ needs.detect.outputs.skip_reason }}
-          state_file: ${{ needs.detect.outputs.state_file }}
-          token: ${{ github.token }}
-          usage_json: ${{ needs.execute.outputs.usage_json || '' }}
-          verdict: ${{ needs.execute.outputs.verdict }}
-
-      - name: Update CI Sweeper Run Ledger
-        if: >-
-          needs.detect.outputs.target_workflow_run_id != '' &&
-          (needs.execute.outputs.verdict == 'APPROVE' || needs.execute.outputs.verdict == 'REJECT')
-        env:
-          BASE_BRANCH: ${{ needs.detect.outputs.base_branch }}
-          CI_SWEEPER_LEDGER_FILE: ${{ env.CI_SWEEPER_LEDGER_FILE }}
-          EXECUTE_VERDICT: ${{ needs.execute.outputs.verdict }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_TOKEN: ${{ github.token }}
-          TARGET_HEAD_SHA: ${{ needs.detect.outputs.target_head_sha }}
-          TARGET_WORKFLOW_NAME: ${{ needs.detect.outputs.target_workflow_name }}
-          TARGET_WORKFLOW_RUN_ID: ${{ needs.detect.outputs.target_workflow_run_id }}
-        run: |
-          outcome="rejected"
-          if [[ "${EXECUTE_VERDICT}" == "APPROVE" ]]; then
-            outcome="pr-created"
-          fi
-          bash .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh \
-            --head-sha "${TARGET_HEAD_SHA}" \
-            --outcome "${outcome}" \
-            --run-id "${TARGET_WORKFLOW_RUN_ID}" \
-            --workflow "${TARGET_WORKFLOW_NAME}"
-          git pull --rebase origin "${BASE_BRANCH}"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "${CI_SWEEPER_LEDGER_FILE}"
-          if ! git diff --cached --quiet; then
-            git commit -m "chore(loop): update ci-sweeper run ledger [skip ci]"
-            git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
-              "HEAD:${BASE_BRANCH}"
-          fi
-
   record-skip:
-    needs: detect
     if: >-
       needs.detect.result == 'success' &&
       needs.detect.outputs.should_run == 'false' &&
       (needs.detect.outputs.skip_reason == 'circuit_breaker' ||
       needs.detect.outputs.skip_reason == 'budget')
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    needs: detect
     permissions:
       contents: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -320,7 +262,7 @@ jobs:
           persist-credentials: false
 
       - name: Append Skip Run Log
-        uses: y-miyazaki/config/.github/actions/loop-run-log@1ea80c3201009adaf2f907a34c61ded76aaa70a9 # v1.7.10
+        uses: ./.github/actions/loop-run-log
         with:
           base_branch: ${{ needs.detect.outputs.base_branch }}
           loop_name: ${{ needs.detect.outputs.loop_name }}
@@ -328,4 +270,3 @@ jobs:
           run_started_at: ${{ needs.detect.outputs.run_started_at }}
           skip_reason: ${{ needs.detect.outputs.skip_reason }}
           token: ${{ github.token }}
-

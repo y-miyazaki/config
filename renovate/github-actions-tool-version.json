@@ -4,9 +4,7 @@
     {
       "description": "CustomManager: Update absc version in workflow inputs (disabled: requires checksum update)",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "absc_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
@@ -17,9 +15,7 @@
     {
       "description": "CustomManager: Update actionlint version in workflow inputs (disabled: requires checksum update)",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "actionlint_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
       ],
@@ -31,9 +27,7 @@
     {
       "description": "CustomManager: Update arc version in workflow inputs (disabled: requires checksum update)",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "arc_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
@@ -44,9 +38,7 @@
     {
       "description": "CustomManager: Update ecschedule version in workflow inputs",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "ecschedule_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
@@ -56,9 +48,7 @@
     {
       "description": "CustomManager: Update ecspresso version in workflow inputs",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "ecspresso_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
@@ -68,9 +58,7 @@
     {
       "description": "CustomManager: Update ghalint version in workflow inputs (disabled: requires checksum update)",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "ghalint_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
       ],
@@ -82,9 +70,7 @@
     {
       "description": "CustomManager: Update Go version in workflow inputs",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "go_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
       ],
@@ -95,9 +81,7 @@
     {
       "description": "CustomManager: Update go-jsonnet version in workflow inputs (disabled: requires checksum update)",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "jsonnet_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
@@ -108,9 +92,7 @@
     {
       "description": "CustomManager: Update golangci-lint version in workflow inputs",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "golangci_lint_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
@@ -120,9 +102,7 @@
     {
       "description": "CustomManager: Update goreleaser version in workflow inputs",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "goreleaser_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
@@ -132,9 +112,7 @@
     {
       "description": "CustomManager: Update govulncheck version in workflow inputs",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "govulncheck_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
@@ -145,21 +123,15 @@
     {
       "description": "CustomManager: Update mise version in Dockerfile ARG",
       "customType": "regex",
-      "fileMatch": [
-        "env/common/Dockerfile$"
-      ],
-      "matchStrings": [
-        "ARG MISE_VERSION=(?<currentValue>v[\\d.]+)"
-      ],
+      "fileMatch": ["env/common/Dockerfile$"],
+      "matchStrings": ["ARG MISE_VERSION=(?<currentValue>v[\\d.]+)"],
       "depNameTemplate": "jdx/mise",
       "datasourceTemplate": "github-releases"
     },
     {
       "description": "CustomManager: Update mise version in workflow inputs",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "mise_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
       ],
@@ -170,9 +142,7 @@
     {
       "description": "CustomManager: Update schemaspy version in workflow inputs",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "schemaspy_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
       ],
@@ -183,9 +153,7 @@
     {
       "description": "CustomManager: Update shellcheck version in workflow inputs",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "shellcheck_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
       ],
@@ -196,9 +164,7 @@
     {
       "description": "CustomManager: Update terraform version in workflow inputs",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "terraform_version:\\s*\\n\\s*default:\\s*[\"']?v?(?<currentValue>[\\d.]+)[\"']?"
       ],
@@ -209,9 +175,7 @@
     {
       "description": "CustomManager: Update tfcmt version in workflow inputs (disabled: requires checksum update)",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "tfcmt_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
       ],
@@ -223,9 +187,7 @@
     {
       "description": "CustomManager: Update tflint version in workflow inputs",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "tflint_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
@@ -235,9 +197,7 @@
     {
       "description": "CustomManager: Update trivy version in workflow inputs",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "trivy_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
       ],
@@ -247,9 +207,7 @@
     {
       "description": "CustomManager: Update zizmor version in workflow inputs",
       "customType": "regex",
-      "fileMatch": [
-        "\\.github/workflows/.*\\.ya?ml$"
-      ],
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
       "matchStrings": [
         "zizmor_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
       ],
@@ -261,48 +219,26 @@
   "packageRules": [
     {
       "description": "Rules: Update tool versions in GitHub Actions workflow inputs",
-      "matchManagers": [
-        "custom.regex"
-      ],
-      "matchFileNames": [
-        ".github/workflows/**"
-      ],
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": [".github/workflows/**"],
       "commitMessagePrefix": "renovate(github-actions-tool-version):",
-      "addLabels": [
-        "github-actions-tool-version"
-      ]
+      "addLabels": ["github-actions-tool-version"]
     },
     {
       "description": "Rules: Automerge custom regex manager dependencies (workflow inputs)",
-      "matchManagers": [
-        "custom.regex"
-      ],
-      "matchFileNames": [
-        ".github/workflows/**"
-      ],
-      "matchUpdateTypes": [
-        "patch"
-      ],
-      "addLabels": [
-        "automerge"
-      ],
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": [".github/workflows/**"],
+      "matchUpdateTypes": ["patch"],
+      "addLabels": ["automerge"],
       "automerge": true,
       "platformAutomerge": true
     },
     {
       "description": "Rules: Automerge custom regex manager dependencies (Dockerfile)",
-      "matchManagers": [
-        "custom.regex"
-      ],
-      "matchFileNames": [
-        "env/common/Dockerfile"
-      ],
-      "matchUpdateTypes": [
-        "patch"
-      ],
-      "addLabels": [
-        "automerge"
-      ],
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": ["env/common/Dockerfile"],
+      "matchUpdateTypes": ["patch"],
+      "addLabels": ["automerge"],
       "automerge": true,
       "platformAutomerge": true
     }

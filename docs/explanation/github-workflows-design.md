@@ -6,12 +6,12 @@ Design principles for Reusable Workflows and Composite Actions distributed from 
 
 This repository serves as a **distribution source**. Consumer repositories reference components remotely:
 
-| Component | Reference Method |
-|---|---|
-| Reusable Workflow | `uses: y-miyazaki/config/.github/workflows/<name>@<sha>` |
-| Composite Action | `uses: y-miyazaki/config/.github/actions/<name>@<sha>` |
+| Component           | Reference Method                                           |
+| ------------------- | ---------------------------------------------------------- |
+| Reusable Workflow   | `uses: y-miyazaki/config/.github/workflows/<name>@<sha>`   |
+| Composite Action    | `uses: y-miyazaki/config/.github/actions/<name>@<sha>`     |
 | APM Package (Skill) | `apm install` deploys to consumer's `.claude/skills/` etc. |
-| Caller Workflow | Consumer creates their own, using `example/` as template |
+| Caller Workflow     | Consumer creates their own, using `example/` as template   |
 
 ## Design Principles
 
@@ -19,11 +19,11 @@ This repository serves as a **distribution source**. Consumer repositories refer
 
 > If another repository can use it via remote reference without modification → put it in an action/workflow. If it depends on specific paths or scripts → inline it in the caller.
 
-| Location | Rule |
-|----------|------|
-| Reusable Workflow | No domain-specific logic. Criteria passed via inputs from caller |
-| Composite Action | No dependency on specific scripts or repository-specific paths |
-| Caller Workflow (`example/`) | Domain-specific logic (detection scripts, criteria) lives here |
+| Location                     | Rule                                                             |
+| ---------------------------- | ---------------------------------------------------------------- |
+| Reusable Workflow            | No domain-specific logic. Criteria passed via inputs from caller |
+| Composite Action             | No dependency on specific scripts or repository-specific paths   |
+| Caller Workflow (`example/`) | Domain-specific logic (detection scripts, criteria) lives here   |
 
 ### Prohibited External Dependencies
 
@@ -63,18 +63,18 @@ secrets:
   AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
 ```
 
-| Engine | Internal Mapping |
-|--------|-----------------|
-| claude | `ANTHROPIC_API_KEY` |
+| Engine  | Internal Mapping       |
+| ------- | ---------------------- |
+| claude  | `ANTHROPIC_API_KEY`    |
 | copilot | `COPILOT_GITHUB_TOKEN` |
-| codex | `OPENAI_API_KEY` |
+| codex   | `OPENAI_API_KEY`       |
 
 ### GitHub Token Usage
 
-| Purpose | Token | Rationale |
-|---------|-------|-----------|
-| PR creation / state push | `github.token` | Least privilege. Sufficient when CI re-trigger is not needed |
-| PR that should trigger CI | GitHub App Token / PAT | `GITHUB_TOKEN`-created PRs do not trigger other workflows |
+| Purpose                   | Token                  | Rationale                                                    |
+| ------------------------- | ---------------------- | ------------------------------------------------------------ |
+| PR creation / state push  | `github.token`         | Least privilege. Sufficient when CI re-trigger is not needed |
+| PR that should trigger CI | GitHub App Token / PAT | `GITHUB_TOKEN`-created PRs do not trigger other workflows    |
 
 Note: At L3, `loop-finalize` enables auto-merge (`gh pr merge --auto --squash`) after PR creation. This requires branch protection rules with required status checks configured on the target branch.
 

@@ -78,19 +78,19 @@ pre-commit hooks run at commit time. Two hook types are installed:
 
 ### Common pre-commit hooks
 
-| Category | Hooks |
-|----------|-------|
-| General | check-added-large-files, check-merge-conflict, end-of-file-fixer, trailing-whitespace |
-| Secrets | detect-secrets, detect-aws-credentials, detect-private-key, gitleaks |
-| Shell | shellcheck, shfmt |
-| GitHub Actions | actionlint, zizmor |
-| Markdown | markdownlint-cli2 (--fix), markdown-link-check |
-| JSON/YAML/TOML | check-json, check-yaml, check-toml, pretty-format-json |
+| Category       | Hooks                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------- |
+| General        | check-added-large-files, check-merge-conflict, end-of-file-fixer, trailing-whitespace |
+| Secrets        | detect-secrets, detect-aws-credentials, detect-private-key, gitleaks                  |
+| Shell          | shellcheck, shfmt                                                                     |
+| GitHub Actions | actionlint, zizmor                                                                    |
+| Markdown       | markdownlint-cli2 (--fix), markdown-link-check                                        |
+| JSON/YAML/TOML | check-json, check-yaml, check-toml, pretty-format-json                                |
 
 ### commit-msg hooks
 
-| Hook | Purpose |
-|------|---------|
+| Hook       | Purpose                                                       |
+| ---------- | ------------------------------------------------------------- |
 | commitlint | Enforces Conventional Commits format (`type(scope): subject`) |
 
 **commitlint configuration** (`.commitlintrc.yaml`):
@@ -104,45 +104,45 @@ pre-commit hooks run at commit time. Two hook types are installed:
 
 Reusable workflows enforce standards on push/PR regardless of local setup. See language-specific documents for workflow details.
 
-| Workflow | Language |
-|----------|----------|
-| `ci-go.yaml` | [Go](harness-engineering-go.md) |
-| `ci-aws-terraform.yaml` | [Terraform](harness-engineering-terraform.md) |
-| `ci-github-actions-workflow.yaml` | Common |
-| `ci-markdown.yaml` | Common |
-| `ci-shell-script.yaml` | Common |
+| Workflow                          | Language                                      |
+| --------------------------------- | --------------------------------------------- |
+| `ci-go.yaml`                      | [Go](harness-engineering-go.md)               |
+| `ci-aws-terraform.yaml`           | [Terraform](harness-engineering-terraform.md) |
+| `ci-github-actions-workflow.yaml` | Common                                        |
+| `ci-markdown.yaml`                | Common                                        |
+| `ci-shell-script.yaml`            | Common                                        |
 
 ## Layer 5: Renovate
 
 Shared Renovate presets automate dependency governance.
 
-| Policy | Effect |
-|--------|--------|
-| Patch automerge | Go modules, npm, aqua, mise patches merge automatically |
-| Minimum release age | 7 days before adoption (supply-chain risk reduction) |
+| Policy                | Effect                                                                              |
+| --------------------- | ----------------------------------------------------------------------------------- |
+| Patch automerge       | Go modules, npm, aqua, mise patches merge automatically                             |
+| Minimum release age   | 7 days before adoption (supply-chain risk reduction)                                |
 | Tool version grouping | golangci-lint, terraform, tflint, trivy updates are grouped across mise + CI inputs |
-| Vulnerability alerts | OSV alerts with `security` label |
+| Vulnerability alerts  | OSV alerts with `security` label                                                    |
 
 ## Layer 6: Setup Automation
 
 `env/common/scripts/init.sh` runs in devcontainer `postCreateCommand` and ensures all enforcement layers are active:
 
-| Step | Effect |
-|------|--------|
-| `mise trust + install` | Installs pinned tool versions (Go, Terraform, linters, etc.) |
-| `apm install --frozen` | Deploys instructions, hooks, skills, MCP servers |
-| `pre-commit install` | Activates pre-commit hooks |
-| `pre-commit install --hook-type commit-msg` | Activates commitlint |
+| Step                                        | Effect                                                       |
+| ------------------------------------------- | ------------------------------------------------------------ |
+| `mise trust + install`                      | Installs pinned tool versions (Go, Terraform, linters, etc.) |
+| `apm install --frozen`                      | Deploys instructions, hooks, skills, MCP servers             |
+| `pre-commit install`                        | Activates pre-commit hooks                                   |
+| `pre-commit install --hook-type commit-msg` | Activates commitlint                                         |
 
 **Result**: A developer who opens the devcontainer has all enforcement layers active without any manual setup.
 
 ## Design Decisions
 
-| Decision | Rationale |
-|----------|-----------|
-| gitleaks in Agent hooks despite pre-commit coverage | Provides immediate feedback during AI-assisted development before commit time. |
-| commitlint via pre-commit only (no Agent hook) | Commit timing is identical; adding an Agent hook provides no additional coverage. |
-| Shared lint configs in repository (not APM) | APM distributes agent-related files only. `.golangci.yaml`, `.tflint.hcl`, `trivy.yaml` are distributed via `install_go.sh` / `install_terraform.sh`. |
+| Decision                                            | Rationale                                                                                                                                             |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| gitleaks in Agent hooks despite pre-commit coverage | Provides immediate feedback during AI-assisted development before commit time.                                                                        |
+| commitlint via pre-commit only (no Agent hook)      | Commit timing is identical; adding an Agent hook provides no additional coverage.                                                                     |
+| Shared lint configs in repository (not APM)         | APM distributes agent-related files only. `.golangci.yaml`, `.tflint.hcl`, `trivy.yaml` are distributed via `install_go.sh` / `install_terraform.sh`. |
 
 ## Known Gaps and Future Direction
 
@@ -164,7 +164,7 @@ This document defines enforcement architecture, not operational policy. Bypass m
 
 ## Pending Items
 
-| Item | Status | Rationale for deferral |
-|------|--------|------------------------|
-| Lint config sync (repository-files-sync) | Pending | Install scripts handle bootstrap; automated ongoing sync not yet implemented |
-| `apm audit --ci` in consumer CI | Deferred | MCP distribution causes persistent drift; tool not stable enough |
+| Item                                     | Status   | Rationale for deferral                                                       |
+| ---------------------------------------- | -------- | ---------------------------------------------------------------------------- |
+| Lint config sync (repository-files-sync) | Pending  | Install scripts handle bootstrap; automated ongoing sync not yet implemented |
+| `apm audit --ci` in consumer CI          | Deferred | MCP distribution causes persistent drift; tool not stable enough             |

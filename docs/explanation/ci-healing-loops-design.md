@@ -2,12 +2,12 @@
 
 > **This document was split.** Use the links below to avoid duplication.
 
-| Topic | Document |
-|---|---|
-| Platform (targets, `LOOP_*`, state) | [Multi-Branch Loops Design](multi-branch-loops-design.md) |
-| Shared `on-loop-*.yaml` layout | [Loop Caller Workflows Design](loop-caller-workflows-design.md) |
+| Topic                                     | Document                                                              |
+| ----------------------------------------- | --------------------------------------------------------------------- |
+| Platform (targets, `LOOP_*`, state)       | [Multi-Branch Loops Design](multi-branch-loops-design.md)             |
+| Shared `on-loop-*.yaml` layout            | [Loop Caller Workflows Design](loop-caller-workflows-design.md)       |
 | **ci-sweeper** workflow + detect + CI env | [CI Sweeper Workflow Design](workflows/ci-sweeper-workflow-design.md) |
-| Loop invariants + L3 gates | [Loop Engineering Design](loop-engineering-design.md) |
+| Loop invariants + L3 gates                | [Loop Engineering Design](loop-engineering-design.md)                 |
 
 ## Summary
 
