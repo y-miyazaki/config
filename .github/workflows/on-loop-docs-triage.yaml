@@ -54,6 +54,8 @@ env:
   DEFAULT_BASE_BRANCH: main
   DEFAULT_ENGINE: cursor
   DEFAULT_LEVEL: L2
+  DOCS_TRIAGE_DOC_GLOBS: "docs/**/*.md,README.md"
+  DOCS_TRIAGE_EXTRA_FILES: mkdocs.yml
   LOOP_ALLOWLIST: "docs/**/*.md,README.md,mkdocs.yml"
   LOOP_BUDGET_MAX_RUNS_PER_DAY: "1"
   LOOP_BUDGET_MAX_TOKENS_PER_DAY: "500000"
@@ -121,6 +123,9 @@ jobs:
 
       - name: Detect Loop Work
         id: detect
+        env:
+          DOCS_TRIAGE_DOC_GLOBS: ${{ env.DOCS_TRIAGE_DOC_GLOBS }}
+          DOCS_TRIAGE_EXTRA_FILES: ${{ env.DOCS_TRIAGE_EXTRA_FILES }}
         uses: ./.github/actions/loop-detect
         with:
           agent_implementer_max_turns: ${{ env.AGENT_IMPLEMENTER_MAX_TURNS }}

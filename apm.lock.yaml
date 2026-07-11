@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-11T08:33:16.358984+00:00'
+generated_at: '2026-07-11T09:21:27.760352+00:00'
 apm_version: 0.23.1
 dependencies:
 - repo_url: _local/common
@@ -1157,18 +1157,18 @@ dependencies:
   - .claude/skills/loop-docs-triage/scripts/lib/terraform.sh
   - .claude/skills/loop-docs-triage/scripts/lib/validation.sh
   deployed_file_hashes:
-    .agents/skills/loop-docs-triage/SKILL.md: sha256:f479c040373e951c03bda2b49af84be0af25c5901f3588da5179cc7f30afa9b1
+    .agents/skills/loop-docs-triage/SKILL.md: sha256:6e5ef80b33c4c3907dcfd15d2b8d5b15de95f9e94109decfaa199b4cb60a8ef4
     .agents/skills/loop-docs-triage/eval.yaml: sha256:78d3aa6e48ad45d71623dfb16f2eb05f86aaa3a6b79147c676fb90ff1bd28a56
     .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-basic.yaml: sha256:9a3fce47af6a059de37eccac7802a138236423104bf07bd7e652cdcaa63cb8bb
     .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-boundary.yaml: sha256:0bd2c5c4d71bcf556bcedcc6907255a8eaddca89a87149a6179f1f9e38829aca
     .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-classification.yaml: sha256:c46ae4a6c93911b4c5b1172cc7a3a0ca4f1981c0c98dc3d8318f9df59f71cb43
     .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-noaction.yaml: sha256:f4a3ab8f8d389168a3959dad4a6f12362d631b3544964356e9dd9618e1e8f37f
     .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-trigger-negative.yaml: sha256:b73042ece4a7a7d484d541a0f5080fab7dd857ff0c612addc17bd0385b804062
-    .agents/skills/loop-docs-triage/references/category-input-schema.md: sha256:a53ce08ec571abf036b0b191572768feeaae6a398b50507de0f5d50c94cae7a5
-    .agents/skills/loop-docs-triage/references/category-scope.md: sha256:b55c337bfcb8b01d2b2c8ceeef2ad18303af54d079a45d899a72ffbec0ec2c54
-    .agents/skills/loop-docs-triage/references/common-checklist.md: sha256:82fac637f6432bc6f1abe76ed0aa981e146787eb3b3b9edd27fba3522f523a97
-    .agents/skills/loop-docs-triage/references/common-output-format.md: sha256:a317fa6699e84307d8f243b0f49e469fe243845f53ad9ca99e3513fd1da7850e
-    .agents/skills/loop-docs-triage/scripts/detect_changes.sh: sha256:b739a5665905ec4b92ed15fd230dc7bbd2137a3d22379c15f2dbcfef8e9aa9dc
+    .agents/skills/loop-docs-triage/references/category-input-schema.md: sha256:df54fa4229c77b2633e0fe85dd4299da91ad7211db0c7e3fabeb19af89a7efaf
+    .agents/skills/loop-docs-triage/references/category-scope.md: sha256:b9a408861108ff9026a5c5888d5197b4c3e05aa4deb54652fc7ffe42013e8da8
+    .agents/skills/loop-docs-triage/references/common-checklist.md: sha256:6593968b0046fa64270ef1f8fc2236f0f6a40783d363e1c0d97a9ff06ae9c08c
+    .agents/skills/loop-docs-triage/references/common-output-format.md: sha256:c5c07aa7760970b7f2b0fdb2d4201c67dc2b849490e5b02ba34df3cd0b1486f3
+    .agents/skills/loop-docs-triage/scripts/detect_changes.sh: sha256:60d681ebee517bcf92bae92419a4e2c7fa7906b58618ba030b6656c9483c9c52
     .agents/skills/loop-docs-triage/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
     .agents/skills/loop-docs-triage/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/loop-docs-triage/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
@@ -1176,18 +1176,18 @@ dependencies:
     .agents/skills/loop-docs-triage/scripts/lib/json.sh: sha256:56e5b946ba293ff011845ed09ffa3441dc8d223063e5598fb9e23efde81889bd
     .agents/skills/loop-docs-triage/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/loop-docs-triage/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .claude/skills/loop-docs-triage/SKILL.md: sha256:f479c040373e951c03bda2b49af84be0af25c5901f3588da5179cc7f30afa9b1
+    .claude/skills/loop-docs-triage/SKILL.md: sha256:6e5ef80b33c4c3907dcfd15d2b8d5b15de95f9e94109decfaa199b4cb60a8ef4
     .claude/skills/loop-docs-triage/eval.yaml: sha256:78d3aa6e48ad45d71623dfb16f2eb05f86aaa3a6b79147c676fb90ff1bd28a56
     .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-basic.yaml: sha256:9a3fce47af6a059de37eccac7802a138236423104bf07bd7e652cdcaa63cb8bb
     .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-boundary.yaml: sha256:0bd2c5c4d71bcf556bcedcc6907255a8eaddca89a87149a6179f1f9e38829aca
     .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-classification.yaml: sha256:c46ae4a6c93911b4c5b1172cc7a3a0ca4f1981c0c98dc3d8318f9df59f71cb43
     .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-noaction.yaml: sha256:f4a3ab8f8d389168a3959dad4a6f12362d631b3544964356e9dd9618e1e8f37f
     .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-trigger-negative.yaml: sha256:b73042ece4a7a7d484d541a0f5080fab7dd857ff0c612addc17bd0385b804062
-    .claude/skills/loop-docs-triage/references/category-input-schema.md: sha256:a53ce08ec571abf036b0b191572768feeaae6a398b50507de0f5d50c94cae7a5
-    .claude/skills/loop-docs-triage/references/category-scope.md: sha256:b55c337bfcb8b01d2b2c8ceeef2ad18303af54d079a45d899a72ffbec0ec2c54
-    .claude/skills/loop-docs-triage/references/common-checklist.md: sha256:82fac637f6432bc6f1abe76ed0aa981e146787eb3b3b9edd27fba3522f523a97
-    .claude/skills/loop-docs-triage/references/common-output-format.md: sha256:a317fa6699e84307d8f243b0f49e469fe243845f53ad9ca99e3513fd1da7850e
-    .claude/skills/loop-docs-triage/scripts/detect_changes.sh: sha256:b739a5665905ec4b92ed15fd230dc7bbd2137a3d22379c15f2dbcfef8e9aa9dc
+    .claude/skills/loop-docs-triage/references/category-input-schema.md: sha256:df54fa4229c77b2633e0fe85dd4299da91ad7211db0c7e3fabeb19af89a7efaf
+    .claude/skills/loop-docs-triage/references/category-scope.md: sha256:b9a408861108ff9026a5c5888d5197b4c3e05aa4deb54652fc7ffe42013e8da8
+    .claude/skills/loop-docs-triage/references/common-checklist.md: sha256:6593968b0046fa64270ef1f8fc2236f0f6a40783d363e1c0d97a9ff06ae9c08c
+    .claude/skills/loop-docs-triage/references/common-output-format.md: sha256:c5c07aa7760970b7f2b0fdb2d4201c67dc2b849490e5b02ba34df3cd0b1486f3
+    .claude/skills/loop-docs-triage/scripts/detect_changes.sh: sha256:60d681ebee517bcf92bae92419a4e2c7fa7906b58618ba030b6656c9483c9c52
     .claude/skills/loop-docs-triage/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
     .claude/skills/loop-docs-triage/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/loop-docs-triage/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667

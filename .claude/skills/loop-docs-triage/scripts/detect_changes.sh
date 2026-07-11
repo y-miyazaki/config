@@ -4,6 +4,8 @@
 #
 # Usage: ./detect_changes.sh [--scope staged|all|range] [--since <ref>]
 #   --scope    Change detection scope (default: range for loop-detect)
+#              staged: git diff --cached only
+#              all: git diff HEAD + untracked files
 #              range: git diff <ref>..HEAD (requires --since)
 #   --since    Git ref for range scope (commit SHA from loop state)
 #
@@ -13,6 +15,9 @@
 # Design Rules:
 # - Collect changed files with diff-filter for accurate rename/delete detection
 # - Output facts only; Skill builds semantic findings[]
+# - Candidate doc paths: caller env DOCS_TRIAGE_DOC_GLOBS (comma-separated globs);
+#   optional DOCS_TRIAGE_EXTRA_FILES (comma-separated non-markdown doc config paths)
+# - When DOCS_TRIAGE_DOC_GLOBS is unset, discover all *.md excluding generated/hidden paths
 # - Output structured JSON via shared lib/json.sh
 # - Exit 0 always (errors reported in JSON status field)
 # - Source shared helpers from scripts/lib/all.sh (synced via scripts/ai/sync_skill_lib.sh)
@@ -20,6 +25,10 @@
 # Dependencies:
 # - bash (POSIX bash, /bin/bash)
 # - git
+#
+# Optional environment:
+#   DOCS_TRIAGE_DOC_GLOBS      Comma-separated glob patterns for candidate doc discovery
+#   DOCS_TRIAGE_EXTRA_FILES    Comma-separated non-markdown documentation config paths
 #######################################
 
 set -euo pipefail
@@ -58,6 +67,9 @@ declare -a AFFECTED_DOCS=()
 # Returns:
 #   Exits with code 0
 #
+# Usage:
+#   show_usage
+#
 #######################################
 function show_usage {
     cat << 'EOF'
@@ -92,6 +104,9 @@ EOF
 #
 # Returns:
 #   None
+#
+# Usage:
+#   parse_arguments "$@"
 #
 #######################################
 function parse_arguments {
@@ -150,7 +165,147 @@ function parse_arguments {
 }
 
 #######################################
+# append_docs_from_extra_files: Add configured non-markdown documentation files
+#
+# Append paths from DOCS_TRIAGE_EXTRA_FILES when each file exists.
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   AFFECTED_DOCS - Output array of candidate document paths
+#   DOCS_TRIAGE_EXTRA_FILES - Comma-separated repository-relative paths (caller env)
+#
+# Returns:
+#   None
+#
+# Usage:
+#   append_docs_from_extra_files
+#
+#######################################
+function append_docs_from_extra_files {
+    local -a extras=()
+    local extra
+
+    [[ -z ${DOCS_TRIAGE_EXTRA_FILES:-} ]] && return 0
+
+    IFS=',' read -ra extras <<< "${DOCS_TRIAGE_EXTRA_FILES}"
+    for extra in "${extras[@]}"; do
+        append_unique_doc "$(trim_whitespace "${extra}")"
+    done
+}
+
+#######################################
+# append_docs_from_find: Discover markdown files with standard prune paths
+#
+# Find repository markdown files excluding generated and hidden directories.
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   AFFECTED_DOCS - Output array of candidate document paths
+#
+# Returns:
+#   None
+#
+# Usage:
+#   append_docs_from_find
+#
+#######################################
+function append_docs_from_find {
+    local doc_file
+
+    while IFS= read -r doc_file; do
+        append_unique_doc "${doc_file}"
+    done < <(find . \
+        \( -path './.git' -o \
+        -path '*/.*' -o \
+        -path './.agents' -o \
+        -path './.cursor' -o \
+        -path './.claude' -o \
+        -path './.kiro' -o \
+        -path './.vscode' -o \
+        -path './apm_modules' -o \
+        -path './node_modules' -o \
+        -path './dist' -o \
+        -path './build' -o \
+        -path './bin' \) -prune -o \
+        -name '*.md' -type f -print 2> /dev/null | sed 's|^\./||')
+}
+
+#######################################
+# append_docs_from_globs: Expand comma-separated globs into AFFECTED_DOCS
+#
+# Resolve caller-configured glob patterns into existing documentation paths.
+#
+# Arguments:
+#   $1 - Comma-separated glob patterns (repository-relative)
+#
+# Global Variables:
+#   AFFECTED_DOCS - Output array of candidate document paths
+#
+# Returns:
+#   None
+#
+# Usage:
+#   append_docs_from_globs "${DOCS_TRIAGE_DOC_GLOBS}"
+#
+#######################################
+function append_docs_from_globs {
+    local globs_csv="$1"
+    local -a globs=()
+    local glob pattern match
+
+    IFS=',' read -ra globs <<< "${globs_csv}"
+    shopt -s globstar nullglob
+    for glob in "${globs[@]}"; do
+        pattern="$(trim_whitespace "${glob}")"
+        [[ -z ${pattern} ]] && continue
+        for match in ${pattern}; do
+            match="${match#./}"
+            append_unique_doc "${match}"
+        done
+    done
+    shopt -u globstar nullglob
+}
+
+#######################################
+# append_unique_doc: Add a documentation path once to AFFECTED_DOCS
+#
+# Append a repository-relative path when the file exists and is not duplicated.
+#
+# Arguments:
+#   $1 - Repository-relative file path
+#
+# Global Variables:
+#   AFFECTED_DOCS - Output array of candidate document paths
+#
+# Returns:
+#   None
+#
+# Usage:
+#   append_unique_doc "docs/guide/overview.md"
+#
+#######################################
+function append_unique_doc {
+    local path="$1"
+    local existing
+
+    [[ -z ${path} ]] && return 0
+    [[ ! -f ${path} ]] && return 0
+
+    for existing in "${AFFECTED_DOCS[@]}"; do
+        [[ ${existing} == "${path}" ]] && return 0
+    done
+    AFFECTED_DOCS+=("${path}")
+}
+
+#######################################
 # collect_affected_docs: Collect candidate documentation files
+#
+# When non-markdown changes or markdown deletes/renames exist, populate
+# AFFECTED_DOCS from DOCS_TRIAGE_DOC_GLOBS or a generic markdown scan.
 #
 # Arguments:
 #   None
@@ -160,9 +315,13 @@ function parse_arguments {
 #   DELETED_FILES - Deleted files
 #   RENAMED_FILES - Renamed files
 #   AFFECTED_DOCS - Output array of candidate document paths
+#   DOCS_TRIAGE_DOC_GLOBS - Comma-separated glob patterns (caller env)
 #
 # Returns:
 #   None
+#
+# Usage:
+#   collect_affected_docs
 #
 #######################################
 function collect_affected_docs {
@@ -179,7 +338,7 @@ function collect_affected_docs {
     for file in "${all_files[@]}"; do
         [[ -z ${file} ]] && continue
         case "${file}" in
-            *.md) ;;
+            *.md) ;; # markdown-only changes checked below
             *)
                 has_relevant_change="true"
                 break
@@ -187,6 +346,7 @@ function collect_affected_docs {
         esac
     done
 
+    # Markdown renames or deletions can break cross-references
     if [[ ${has_relevant_change} == "false" ]]; then
         if [[ ${#DELETED_FILES[@]} -gt 0 || ${#RENAMED_FILES[@]} -gt 0 ]]; then
             local item
@@ -205,28 +365,12 @@ function collect_affected_docs {
         return
     fi
 
-    local doc_file
-    while IFS= read -r doc_file; do
-        AFFECTED_DOCS+=("${doc_file}")
-    done < <(find . -maxdepth 1 -name '*.md' -type f 2> /dev/null | sed 's|^\./||')
-    while IFS= read -r doc_file; do
-        AFFECTED_DOCS+=("${doc_file}")
-    done < <(find docs -name '*.md' -type f 2> /dev/null || true)
-    while IFS= read -r doc_file; do
-        AFFECTED_DOCS+=("${doc_file}")
-    done < <(find . -mindepth 2 \
-        -path './docs' -prune -o \
-        -path '*/.*' -prune -o \
-        -path './.agents' -prune -o \
-        -path './.cursor' -prune -o \
-        -path './.claude' -prune -o \
-        -path './.kiro' -prune -o \
-        -path './.vscode' -prune -o \
-        -path './apm_modules' -prune -o \
-        -name 'README.md' -type f -print 2> /dev/null | sed 's|^\./||' || true)
-    if [[ -f "mkdocs.yml" ]]; then
-        AFFECTED_DOCS+=("mkdocs.yml")
+    if [[ -n ${DOCS_TRIAGE_DOC_GLOBS:-} ]]; then
+        append_docs_from_globs "${DOCS_TRIAGE_DOC_GLOBS}"
+    else
+        append_docs_from_find
     fi
+    append_docs_from_extra_files
 }
 
 #######################################
@@ -245,6 +389,9 @@ function collect_affected_docs {
 #
 # Returns:
 #   None
+#
+# Usage:
+#   collect_changes
 #
 #######################################
 function collect_changes {
@@ -297,6 +444,7 @@ function collect_changes {
         fi
     done
 
+    # Include untracked files only for 'all' scope (not range)
     if [[ ${SCOPE} == "all" ]]; then
         local untracked
         mapfile -t untracked < <(git ls-files --others --exclude-standard 2> /dev/null || true)
@@ -311,10 +459,19 @@ function collect_changes {
 #   None
 #
 # Global Variables:
-#   SCOPE, SINCE_REF, COMMIT_RANGE, CHANGED_FILES, DELETED_FILES, RENAMED_FILES, AFFECTED_DOCS
+#   SCOPE - Detection scope
+#   SINCE_REF - Range start ref
+#   COMMIT_RANGE - Active diff range label
+#   CHANGED_FILES - Array of changed file paths
+#   DELETED_FILES - Array of deleted file paths
+#   RENAMED_FILES - Array of old->new rename pairs
+#   AFFECTED_DOCS - Array of candidate document paths
 #
 # Returns:
 #   None
+#
+# Usage:
+#   output_json
 #
 #######################################
 function output_json {
@@ -343,6 +500,29 @@ function output_json {
 }
 
 #######################################
+# trim_whitespace: Remove leading and trailing whitespace from a string
+#
+# Arguments:
+#   $1 - Input string
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Trimmed string on stdout
+#
+# Usage:
+#   value="$(trim_whitespace "${input}")"
+#
+#######################################
+function trim_whitespace {
+    local value="$1"
+    value="${value#"${value%%[![:space:]]*}"}"
+    value="${value%"${value##*[![:space:]]}"}"
+    printf '%s' "${value}"
+}
+
+#######################################
 # main: Entry point
 #
 # Arguments:
@@ -353,6 +533,9 @@ function output_json {
 #
 # Returns:
 #   0 always
+#
+# Usage:
+#   main "$@"
 #
 #######################################
 function main {

@@ -1,8 +1,12 @@
 ## Path Scope
 
-### Allowlist
+Allowlist and denylist are configured by the caller workflow (`LOOP_ALLOWLIST`, `LOOP_DENYLIST` / verifier denylist). The implementer prompt `## Constraints` section repeats the active allowlist. Defaults below match this repository's dogfood caller.
 
-`docs/**/*.md` (any depth under `docs/`, including `docs/index.md`), `README.md`, `mkdocs.yml` (nav only)
+This skill edits documentation only. Callers must align `LOOP_ALLOWLIST` with documentation paths; do not widen it to source or infrastructure paths.
+
+### Allowlist (dogfood example)
+
+`docs/**/*.md`, `README.md`, `mkdocs.yml` (nav only)
 
 ### Denylist
 

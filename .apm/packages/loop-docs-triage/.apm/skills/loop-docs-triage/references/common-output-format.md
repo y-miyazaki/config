@@ -33,5 +33,5 @@ Use this structure for every run, including no-action exits.
 
 - Always emit all four `##` sections; use `None` or `0` when a section has no items.
 - At `L1`, list fixes in High-Priority Items but do not edit files.
-- At `L2`/`L3`, edit documentation files only for High-Priority items within the allowlist.
+- At `L2`/`L3`, edit only High-Priority items within the prompt `## Constraints` allowlist (see `category-scope.md`).
 - Verifier expects changes to address triage findings with factual consistency and preserved structure.

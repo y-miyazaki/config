@@ -23,23 +23,13 @@ To modify agent instructions or skills:
 2. Run `apm install --update` to regenerate the target directories
 3. Verify with `apm audit --ci`
 
-### Skill Scripts and `scripts/lib/`
-
-When adding or updating a skill that includes `scripts/`:
-
-1. Follow an existing skill script in this repository as the template (e.g. `common/.apm/skills/docs-updater/scripts/detect_changes.sh`).
-2. Match that reference script's comment and structure conventions (do not invent a one-off layout).
-3. Source shared helpers from `scripts/lib/all.sh` via `source "${SCRIPT_DIR}/lib/all.sh"`.
-
-Shared library sync (required when the skill has `scripts/lib/`):
+### Shared `scripts/lib/`
 
 - Source of truth: `scripts/lib/`
 - Targets: `.apm/packages/*/.apm/skills/*/scripts/lib/` (copies only)
 - Do not edit skill `scripts/lib/` directly or create skill-specific minimal loaders (e.g. `json.sh` only).
 - Workflow: edit `scripts/lib/` → `bash scripts/ai/sync_skill_lib.sh` → `apm install --update`
 - Drift check: `bash scripts/ai/sync_skill_lib.sh --check`
-
-See also: `.apm/packages/shell-script/.apm/instructions/shell-script.instructions.md` (Skill Scripts section).
 
 ### Workflow Conventions
 

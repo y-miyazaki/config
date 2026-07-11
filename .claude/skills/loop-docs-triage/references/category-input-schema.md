@@ -9,7 +9,7 @@ Provided via prompt context by the calling workflow (loop-prompt-generate action
   "skip": false,
   "findings": [
     {
-      "file": "docs/reference/specification.md",
+      "file": "docs/guide/overview.md",
       "reason": "references deleted workflow ci-build.yaml",
       "source_commit": "def5678"
     }
@@ -28,3 +28,5 @@ Provided via prompt context by the calling workflow (loop-prompt-generate action
 | `findings[].source_commit` | string  | Commit that caused the drift                                                    |
 
 `findings` may be an empty array. `level` defaults to `L2` when omitted by the workflow.
+
+Path allowlist and denylist are not JSON fields. They are injected in the implementer prompt `## Constraints` section from the caller (`LOOP_ALLOWLIST`, `LOOP_DENYLIST`). See [category-scope.md](category-scope.md).

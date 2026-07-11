@@ -8,7 +8,7 @@
 
 ## Scope Guards
 
-- Edit only paths in the allowlist; never touch denylist paths (see `category-scope.md`)
+- Edit only paths in the prompt `## Constraints` allowlist; never touch denylist paths (see `category-scope.md`)
 - > 3 sections affected in one doc → defer that file as Watch, recommend manual review
 - > 20 findings → fix first 10 High-Priority items, note truncation in Summary
 
@@ -25,6 +25,6 @@
 
 ## Examples
 
-- Stale workflow reference in `docs/reference/specification.md` → High-Priority fix (update table row)
+- Stale workflow reference in a docs table row → High-Priority fix (update the reference)
 - Slightly outdated version number → Watch item (low priority)
 - Test-only change with no doc impact → Noise / Ignore
