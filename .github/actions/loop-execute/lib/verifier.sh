@@ -25,6 +25,9 @@ fix=""
 # Arguments:
 #   $1 - Output file path
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   JSON blob to stdout, or empty string
 #

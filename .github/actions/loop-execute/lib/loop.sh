@@ -41,6 +41,9 @@ OUTCOME_OVERRIDE=""
 # Arguments:
 #   None
 #
+# Global Variables:
+#   STATUS_DIR - Caller env directory for attempt artifacts (read)
+#
 # Returns:
 #   None
 #
@@ -58,9 +61,13 @@ function initialize_loop_state {
 # Arguments:
 #   $1 - Implementer agent output text
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   0 when outcome_override should be watch, 1 otherwise
 #
+#######################################
 function parse_outcome_override_from_agent_output {
     local agent_out="$1"
     if grep -qiE '^\*\*Outcome:\*\*[[:space:]]*(watch|deferred|no actionable|escalat)' <<< "${agent_out}"; then
@@ -72,13 +79,20 @@ function parse_outcome_override_from_agent_output {
     return 1
 }
 
+#######################################
 # write_loop_outputs: Write step outputs to GITHUB_OUTPUT
 #
 # Arguments:
 #   None
 #
 # Global Variables:
-#   VERDICT, ATTEMPT, HAS_CHANGES, REASON, OPEN_REJECTIONS_JSON
+#   ATTEMPT - Final attempt count (read)
+#   GITHUB_OUTPUT - GitHub Actions output file path (read)
+#   HAS_CHANGES - Whether commits were produced (read)
+#   OPEN_REJECTIONS_JSON - Open rejection array JSON (read)
+#   OUTCOME_OVERRIDE - Skill watch override when set (read)
+#   REASON - Final verdict reason (read)
+#   VERDICT - Final loop verdict (read)
 #
 # Returns:
 #   None
@@ -123,6 +137,15 @@ function write_loop_outputs {
 # Arguments:
 #   None
 #
+# Global Variables:
+#   ATTEMPT - Current attempt counter (read/write)
+#   HAS_CHANGES - Whether commits were produced (read/write)
+#   OPEN_REJECTIONS_JSON - Open rejection array JSON (read/write)
+#   OUTCOME_OVERRIDE - Skill watch override when set (write)
+#   REASON - Verdict reason for current attempt (read/write)
+#   REJECT_FEEDBACK - Verifier feedback for retry prompt (read)
+#   VERDICT - Loop verdict for current attempt (read/write)
+#
 # Returns:
 #   None
 #
@@ -161,16 +184,28 @@ function run_bounded_loop {
             HAS_CHANGES="true"
             attempt_committed="true"
         elif [[ ${ATTEMPT} -gt 1 && -n ${REJECT_FEEDBACK} ]]; then
-            echo "::error::Attempt ${ATTEMPT} produced no file changes while open rejections remain"
-            record_structured_reject "${attempt_dir}" "${ATTEMPT}" "" \
-                "Implementer produced no file changes on retry" \
-                "Edit the files listed in prior open rejections and commit the fixes" \
-                "No file changes produced on retry; open rejections were not addressed"
-            VERDICT="REJECT"
-            REASON="No file changes produced on retry; open rejections were not addressed"
-            echo "Verdict: ${VERDICT} — ${REASON}"
-            echo "::endgroup::"
-            continue
+            local branch_changed_files branch_violations
+            branch_changed_files="$(
+                cd "${WORKTREE_PATH}" || exit 1
+                git diff --name-only "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/' || true
+            )"
+            branch_violations="$(collect_denylist_violations "${branch_changed_files}")"
+            if [[ -z ${branch_violations} ]]; then
+                branch_violations="$(collect_allowlist_violations "${branch_changed_files}")"
+            fi
+            if [[ -n ${branch_violations} ]]; then
+                echo "::error::Attempt ${ATTEMPT} produced no file changes while open rejections remain"
+                record_structured_reject "${attempt_dir}" "${ATTEMPT}" "" \
+                    "Implementer produced no file changes on retry" \
+                    "Edit the files listed in prior open rejections and commit the fixes" \
+                    "No file changes produced on retry; open rejections were not addressed"
+                VERDICT="REJECT"
+                REASON="No file changes produced on retry; open rejections were not addressed"
+                echo "Verdict: ${VERDICT} — ${REASON}"
+                echo "::endgroup::"
+                continue
+            fi
+            echo "::warning::Attempt ${ATTEMPT} produced no new commit; branch diff passes path guards — running verifier"
         elif [[ ${ATTEMPT} -gt 1 ]]; then
             echo "::warning::Attempt ${ATTEMPT} produced no file changes; verifier will review the same diff as the previous attempt"
         fi
@@ -216,6 +251,15 @@ function run_bounded_loop {
 #
 # Arguments:
 #   None
+#
+# Global Variables:
+#   AGENT_LOOP_MAX_ATTEMPTS - Maximum implementer attempts (read)
+#   AGENT_TOKEN - Authentication token for the selected engine (read)
+#   ENGINE - Agent engine name (read)
+#   GITHUB_OUTPUT - GitHub Actions output file path (read)
+#   PROMPT_TEXT - Base implementer prompt (read)
+#   STATUS_DIR - Status directory for attempt artifacts (read)
+#   WORKTREE_PATH - Isolated git worktree path (read)
 #
 # Returns:
 #   0 on success

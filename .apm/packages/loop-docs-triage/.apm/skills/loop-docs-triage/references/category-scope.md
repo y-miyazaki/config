@@ -2,7 +2,7 @@
 
 ### Allowlist
 
-`docs/**/*.md`, `README.md`, `mkdocs.yml` (nav only)
+`docs/**/*.md` (any depth under `docs/`, including `docs/index.md`), `README.md`, `mkdocs.yml` (nav only)
 
 ### Denylist
 

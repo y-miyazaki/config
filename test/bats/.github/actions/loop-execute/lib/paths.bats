@@ -20,12 +20,40 @@ setup() {
     [[ ${output} != *"docs/a.md"* ]]
 }
 
+@test "collect_allowlist_violations matches docs root markdown via ** glob" {
+    ALLOWLIST="docs/**/*.md,README.md,mkdocs.yml"
+    output=$(collect_allowlist_violations $'docs/index.md\nsrc/b.go')
+    [[ ${output} != *"docs/index.md"* ]]
+    [[ ${output} == *"src/b.go"* ]]
+}
+
+@test "collect_allowlist_violations matches nested docs markdown via ** glob" {
+    ALLOWLIST="docs/**/*.md"
+    output=$(collect_allowlist_violations $'docs/explanation/architecture.md\nREADME.md')
+    [[ ${output} != *"docs/explanation/architecture.md"* ]]
+    [[ ${output} == *"README.md"* ]]
+}
+
+@test "path_matches_glob supports trailing ** directory patterns" {
+    run path_matches_glob ".github/workflows/ci.yaml" ".github/**"
+    [ "$status" -eq 0 ]
+    run path_matches_glob "README.md" ".github/**"
+    [ "$status" -eq 1 ]
+}
+
 @test "collect_denylist_violations flags denylisted paths" {
     DENYLIST="**/.env,**/secrets*"
     output=$(collect_denylist_violations $'docs/a.md\nnested/.env\nconfig/secrets.json')
     [[ ${output} == *"nested/.env"* ]]
     [[ ${output} == *"config/secrets.json"* ]]
     [[ ${output} != *"docs/a.md"* ]]
+}
+
+@test "collect_denylist_violations matches ** at start of pattern" {
+    DENYLIST="**/.env"
+    output=$(collect_denylist_violations $'nested/.env\n.env')
+    [[ ${output} == *"nested/.env"* ]]
+    [[ ${output} == *".env"* ]]
 }
 
 @test "collect_denylist_violations returns nothing when denylist unset" {

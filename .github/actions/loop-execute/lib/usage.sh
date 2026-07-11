@@ -165,6 +165,9 @@ function reset_usage_totals {
 # Arguments:
 #   $1 - Path to candidate capture file
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   0 when the file looks like NDJSON stream-json, 1 otherwise
 #
@@ -189,6 +192,9 @@ function is_cursor_stream_json_file {
 #
 # Arguments:
 #   $1 - Path to stream-json capture file
+#
+# Global Variables:
+#   None
 #
 # Returns:
 #   Extracted assistant text to stdout
@@ -233,6 +239,9 @@ function extract_cursor_stream_text {
 #
 # Arguments:
 #   $1 - Single NDJSON line
+#
+# Global Variables:
+#   None
 #
 # Returns:
 #   One-line tool summary to stdout, or nothing when not a started tool call
@@ -283,6 +292,9 @@ function cursor_stream_tool_summary_line {
 #
 # Arguments:
 #   $1 - Path to stream-json capture file
+#
+# Global Variables:
+#   None
 #
 # Returns:
 #   Human-readable summary to stdout

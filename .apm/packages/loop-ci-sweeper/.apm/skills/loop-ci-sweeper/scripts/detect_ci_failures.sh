@@ -74,6 +74,9 @@ declare -a IGNORED_JSON=()
 # Arguments:
 #   None
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   Exits with code 0
 #
@@ -161,6 +164,9 @@ function parse_arguments {
 #   $1 - Comma-separated string
 #   $2 - Name of target array variable
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   None
 #
@@ -213,6 +219,9 @@ function load_workflow_filters {
 # Arguments:
 #   $1 - Error message
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   Exits with code 0
 #
@@ -239,6 +248,9 @@ function output_error {
 # Arguments:
 #   $1 - Ledger file path
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   Exits via output_error when invalid
 #
@@ -261,6 +273,9 @@ function validate_ledger_file {
 # Arguments:
 #   None
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   Branch name on stdout
 #
@@ -280,6 +295,9 @@ function scan_branch_name {
 #
 # Arguments:
 #   $1 - Workflow display name
+#
+# Global Variables:
+#   None
 #
 # Returns:
 #   0 if excluded, 1 otherwise
@@ -305,6 +323,9 @@ function is_excluded_workflow {
 #
 # Arguments:
 #   $1 - Workflow display name
+#
+# Global Variables:
+#   None
 #
 # Returns:
 #   0 if included, 1 otherwise
@@ -334,6 +355,9 @@ function is_included_workflow {
 # Arguments:
 #   None
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   0 if available, 1 otherwise
 #
@@ -350,6 +374,9 @@ function gh_available {
 #
 # Arguments:
 #   $1 - Commit SHA
+#
+# Global Variables:
+#   None
 #
 # Returns:
 #   0 if relevant, 1 otherwise
@@ -378,6 +405,9 @@ function commit_is_relevant {
 # Arguments:
 #   $1 - Workflow run ID
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   Outcome string on stdout, empty when not ledgered
 #
@@ -398,6 +428,9 @@ function ledger_outcome_for_run {
 #
 # Arguments:
 #   $1 - Workflow run ID
+#
+# Global Variables:
+#   None
 #
 # Returns:
 #   Reject count on stdout
@@ -420,6 +453,9 @@ function ledger_reject_count_for_run {
 #
 # Arguments:
 #   $1 - Policy value
+#
+# Global Variables:
+#   None
 #
 # Returns:
 #   Normalized policy on stdout
@@ -455,6 +491,9 @@ function normalize_reject_retry_policy {
 #
 # Arguments:
 #   $1 - Workflow run ID
+#
+# Global Variables:
+#   None
 #
 # Returns:
 #   0 if the run should be skipped, 1 otherwise
@@ -501,6 +540,9 @@ function should_skip_processed_run {
 # Arguments:
 #   $1 - Log excerpt
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   Failure type on stdout (infra, env, flake, regression)
 #
@@ -541,6 +583,9 @@ function sanitize_log_excerpt {
 # Arguments:
 #   $1 - Workflow run ID
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   JSON lines for failed jobs on stdout
 #
@@ -561,6 +606,9 @@ function fetch_failed_jobs {
 # Arguments:
 #   $1 - Workflow run ID
 #   $2 - Job name
+#
+# Global Variables:
+#   None
 #
 # Returns:
 #   Log excerpt on stdout
@@ -587,6 +635,9 @@ function fetch_log_excerpt {
 #
 # Arguments:
 #   $1-$8 - workflow_name, run_id, head_sha, head_branch, run_url, job_name, failure_type, log_excerpt
+#
+# Global Variables:
+#   None
 #
 # Returns:
 #   JSON object on stdout
@@ -628,6 +679,9 @@ EOF
 # Arguments:
 #   $1-$8 - workflow_name, run_id, head_sha, head_branch, run_url, job_name, failure_type, log_excerpt
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   None
 #
@@ -653,6 +707,9 @@ function append_failure {
 #
 # Arguments:
 #   $1-$6 - workflow_name, run_id, head_branch, job_name, failure_type, reason
+#
+# Global Variables:
+#   None
 #
 # Returns:
 #   JSON object on stdout
@@ -682,6 +739,9 @@ EOF
 # Arguments:
 #   $1-$6 - workflow_name, run_id, head_branch, job_name, failure_type, reason
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   None
 #
@@ -702,6 +762,9 @@ function append_ignored {
 #
 # Arguments:
 #   $1-$5 - workflow_name, run_id, head_sha, head_branch, run_url
+#
+# Global Variables:
+#   None
 #
 # Returns:
 #   None
@@ -760,6 +823,9 @@ function collect_failures_for_run {
 # Arguments:
 #   None
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   0 when event context is present, 1 otherwise
 #
@@ -785,6 +851,9 @@ function collect_from_workflow_run_event {
 # collect_recent_failures: Collect recent failed runs from the current scan branch
 #
 # Arguments:
+#   None
+#
+# Global Variables:
 #   None
 #
 # Returns:
@@ -868,6 +937,9 @@ function ignored_array_json {
 # Arguments:
 #   None
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   None
 #
@@ -901,6 +973,9 @@ function output_json {
 #
 # Arguments:
 #   $@ - Command line arguments
+#
+# Global Variables:
+#   None
 #
 # Returns:
 #   0 always

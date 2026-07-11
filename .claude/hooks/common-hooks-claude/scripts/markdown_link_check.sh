@@ -42,6 +42,9 @@ fi
 # Arguments:
 #   None
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   Newline-separated unique file list to stdout
 #
@@ -73,6 +76,9 @@ function get_changed_files {
 #
 # Arguments:
 #   $1 - reason: Human-readable description of what failed and how to fix it
+#
+# Global Variables:
+#   None
 #
 # Returns:
 #   Does not return. Exits with 0 (JSON block) or 2 (stderr).
@@ -215,6 +221,9 @@ function report_failure {
 #   Collects failures and calls report_failure with a summary.
 #
 # Arguments:
+#   None
+#
+# Global Variables:
 #   None
 #
 # Returns:

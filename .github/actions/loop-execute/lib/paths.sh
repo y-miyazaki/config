@@ -9,7 +9,7 @@
 #
 # Design Rules:
 # - Allowlist and denylist checks run before the LLM verifier
-# - Glob patterns follow bash pathname expansion rules
+# - Glob patterns follow gitwildmatch-style path rules (** crosses /)
 #######################################
 
 #######################################
@@ -36,9 +36,7 @@ function collect_allowlist_violations {
         [[ -z ${file} ]] && continue
         matched="false"
         for pattern in "${PATTERNS[@]}"; do
-            pattern=$(echo "${pattern}" | xargs)
-            # shellcheck disable=SC2053
-            if [[ ${file} == ${pattern} ]]; then
+            if path_matches_glob "${file}" "${pattern}"; then
                 matched="true"
                 break
             fi
@@ -73,11 +71,9 @@ function collect_denylist_violations {
     fi
     IFS=',' read -ra PATTERNS <<< "${DENYLIST}"
     for pattern in "${PATTERNS[@]}"; do
-        pattern=$(echo "${pattern}" | xargs)
         while IFS= read -r file; do
             [[ -z ${file} ]] && continue
-            # shellcheck disable=SC2053
-            if [[ ${file} == ${pattern} ]]; then
+            if path_matches_glob "${file}" "${pattern}"; then
                 violations="${violations}${file}\n"
             fi
         done <<< "${changed_files}"
@@ -85,6 +81,98 @@ function collect_denylist_violations {
     if [[ -n ${violations} ]]; then
         printf '%b' "${violations}"
     fi
+}
+
+#######################################
+# component_to_ere: Convert one path segment glob to ERE
+#
+# Arguments:
+#   $1 - Single path segment (no slashes)
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   ERE fragment to stdout
+#
+#######################################
+function component_to_ere {
+    local component="$1"
+    local fragment="" index=0
+    local character
+
+    while [[ ${index} -lt ${#component} ]]; do
+        character="${component:${index}:1}"
+        case "${character}" in
+            '*') fragment+='[^/]*' ;;
+            '?') fragment+='[^/]' ;;
+            '.') fragment+='\.' ;;
+            '+') fragment+='\+' ;;
+            '(' | ')' | '[' | ']' | '^' | '$' | '|' | '\\') fragment+="\\${character}" ;;
+            *) fragment+="${character}" ;;
+        esac
+        index=$((index + 1))
+    done
+    printf '%s' "${fragment}"
+}
+
+#######################################
+# glob_to_ere: Convert a repo-relative glob to an anchored ERE
+#
+# Description:
+#   Maps gitwildmatch-style path globs to bash ERE. A standalone ** path
+#   component matches zero or more directory segments so docs/**/*.md also
+#   matches docs/index.md (bash [[ == ]] cannot express this).
+#
+# Arguments:
+#   $1 - Glob pattern (may include / and **)
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Anchored ERE to stdout
+#
+#######################################
+function glob_to_ere {
+    local glob="$1"
+    local -a parts=()
+    local remaining="${glob}"
+    local part ere="^"
+    local index part_count
+
+    while [[ ${remaining} == */* ]]; do
+        part="${remaining%%/*}"
+        remaining="${remaining#*/}"
+        parts+=("${part}")
+    done
+    parts+=("${remaining}")
+
+    part_count=${#parts[@]}
+    for ((index = 0; index < part_count; index++)); do
+        part="${parts[${index}]}"
+        [[ -z ${part} ]] && continue
+
+        if [[ ${part} == '**' ]]; then
+            if [[ ${index} -eq 0 ]]; then
+                ere+='.*'
+            elif [[ ${index} -eq $((part_count - 1)) ]]; then
+                ere+='(/.*)?'
+            else
+                ere+='(/[^/]+)*'
+            fi
+            continue
+        fi
+
+        if [[ ${index} -gt 0 || ${ere} == ^.* ]]; then
+            ere+='/'
+        fi
+
+        ere+="$(component_to_ere "${part}")"
+    done
+
+    ere+='$'
+    printf '%s' "${ere}"
 }
 
 #######################################
@@ -115,4 +203,35 @@ function infer_files_from_text {
     else
         printf '%s' "${fallback}"
     fi
+}
+
+#######################################
+# path_matches_glob: Test whether a file path matches a glob pattern
+#
+# Arguments:
+#   $1 - Repo-relative file path
+#   $2 - Glob pattern
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   0 when matched, 1 otherwise
+#
+#######################################
+function path_matches_glob {
+    local file="$1"
+    local pattern="$2"
+    local trimmed ere
+
+    trimmed="$(echo "${pattern}" | xargs)"
+    [[ -z ${trimmed} ]] && return 1
+
+    if [[ ${trimmed} != *[\*\?\[]* ]]; then
+        [[ ${file} == "${trimmed}" ]]
+        return
+    fi
+
+    ere="$(glob_to_ere "${trimmed}")"
+    [[ ${file} =~ ${ere} ]]
 }

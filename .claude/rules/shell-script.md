@@ -22,7 +22,7 @@ paths:
 
 ### Script Structure
 
-Required in-file order:
+Required in-file order for **executable entry scripts** (invoked directly or via `bash lib/*.sh`):
 
 1. shebang + header comments (DOC-01)
 2. `set -euo pipefail` + secure defaults（`umask 027`, `export LC_ALL=C.UTF-8`）
@@ -30,6 +30,17 @@ Required in-file order:
 4. global variable definitions
 5. function definitions: `show_usage` / `parse_arguments` -> other functions in a-z order (G-03) -> `main` last
 6. entry point: `if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then main "$@"; fi`
+
+### Sourced library files
+
+Applies to `source`d modules (for example `.github/actions/*/lib/*.sh`, `scripts/lib/*.sh`):
+
+- Omit items 2, 3, 5 (`show_usage` / `parse_arguments` / `main`), and 6 from the executable list above
+- Match the enclosing directory's existing `lib/` style; for GitHub Actions loop libraries use `.github/actions/loop-execute/lib/rejections.sh` as the reference
+- Keep the `#######################################` file header and per-function separator blocks
+- List functions in a-z order (G-03)
+- Every function doc block must include **Arguments**, **Global Variables**, and **Returns** (`None` when a section does not apply)
+- When refactoring logic, **do not remove** header or function comment blocks to save tokens
 
 ### Header Comment Format
 
@@ -72,7 +83,7 @@ Required in-file order:
 #######################################
 ```
 
-Write `None` for sections that do not apply. Do not omit sections.
+Write `None` for sections that do not apply. **Do not omit sections** — especially `Global Variables`; when a function reads or writes no caller globals, write `Global Variables:` followed by `None`.
 
 ## Guidelines
 
@@ -103,7 +114,8 @@ Write `None` for sections that do not apply. Do not omit sections.
 - DOC-02 (SHOULD): show_usage Required
   - Check: Is show_usage function implemented?
 - DOC-03 (SHOULD): Function Separators and Comments
-  - Check: Do functions have `#######` separator and Description/Arguments/Global Variables/Returns sections?
+  - Check: Do functions have `#######################################` separator and Description/Arguments/Global Variables/Returns sections?
+  - Check: Is `Global Variables` present on every function (with `None` when no caller globals are read or written)?
 - DOC-04 (SHOULD): Complex Logic Comments
   - Check: Do complex algorithms have Why comments?
 - DOC-05 (SHOULD): Variable Documentation
@@ -226,11 +238,19 @@ Write `None` for sections that do not apply. Do not omit sections.
 - TEST-03 (SHOULD): CI/CD Integration
   - Check: Are tests integrated into CI/CD like GitHub Actions?
 
+### Anti-Patterns
+
+- Applying executable-script requirements (`set -euo pipefail`, `main`, entry guard) to sourced library files
+- Removing DOC comment blocks to shorten a diff — use shell-script-review conventions instead
+- Omitting the `Global Variables` section when a function uses only locals — write `None` instead
+- Introducing a new comment style in one `lib/*.sh` file while siblings use the loop/action library format
+
 ### Code Modification Guidelines
 
 - After changes, prioritize running validate.sh from shell-script-validation skill.
 - Use individual commands only for debugging.
 - Comment and header conventions (DOC-\*) are authoring guidelines — not enforced by validate.sh. Use shell-script-review for judgment on documentation quality.
+- When editing a sourced `lib/*.sh` file, preserve comment structure and match sibling files in the same directory; never strip `#######################################` blocks or function doc sections during logic fixes.
 
 ## Testing and Validation
 

@@ -67,6 +67,9 @@ declare -a WARNING_SCRIPTS_LIST=()
 # Arguments:
 #   None
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   None (outputs to stdout)
 #

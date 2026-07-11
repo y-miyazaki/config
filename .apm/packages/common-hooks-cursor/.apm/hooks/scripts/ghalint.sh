@@ -42,6 +42,9 @@ fi
 # Arguments:
 #   None
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   0 if changed files exist, 1 otherwise
 #
@@ -74,6 +77,9 @@ function has_changed_workflows {
 #
 # Arguments:
 #   $1 - reason: Human-readable description of what failed and how to fix it
+#
+# Global Variables:
+#   None
 #
 # Returns:
 #   Does not return. Exits with 0 (JSON block) or 2 (stderr).
@@ -216,6 +222,9 @@ function report_failure {
 #   Calls report_failure if policy violations are found.
 #
 # Arguments:
+#   None
+#
+# Global Variables:
 #   None
 #
 # Returns:

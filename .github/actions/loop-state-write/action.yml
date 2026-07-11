@@ -243,9 +243,12 @@ runs:
           exit 0
         fi
         echo "Direct push blocked; opening state PR."
-        STATE_BRANCH="loop/state-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+        STATE_BRANCH="loop/state-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-$(openssl rand -hex 4)"
         git checkout -B "${STATE_BRANCH}"
-        git push origin "${STATE_BRANCH}"
+        if ! git push origin "${STATE_BRANCH}"; then
+          echo "::error::Failed to push state branch ${STATE_BRANCH}"
+          exit 1
+        fi
         PR_URL=$(gh pr create \
           --repo "${GITHUB_REPOSITORY}" \
           --base "${TARGET_BRANCH}" \

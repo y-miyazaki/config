@@ -28,6 +28,9 @@ export LC_ALL=C.UTF-8
 # Arguments:
 #   None
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   0 on success or when no push is needed
 #

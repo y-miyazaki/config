@@ -84,6 +84,9 @@ function normalize_no_changes_verdict {
 #   $1 - Output file path
 #   $2 - Field name (e.g. REASON, FILES)
 #
+# Global Variables:
+#   None
+#
 # Returns:
 #   Field value to stdout, or empty string
 #
@@ -100,6 +103,9 @@ function parse_output_field {
 # Arguments:
 #   $1 - Template string
 #   $2.. - Alternating key/value pairs
+#
+# Global Variables:
+#   None
 #
 # Returns:
 #   Rendered template to stdout
