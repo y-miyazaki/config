@@ -1,5 +1,7 @@
 # Loop workflow: Changelog maintenance
 # Detects unreleased conventional commits, runs bounded Agent→Verify loop, then finalizes.
+# Design doc: docs/explanation/workflows/loop-changelog-workflow-design.md
+# Shared env reference: docs/explanation/workflows/loop-caller-env-reference.md
 # Requires repository secret: AGENT_TOKEN (engine API key; see DEFAULT_ENGINE).
 name: on-loop-changelog
 
@@ -23,11 +25,15 @@ concurrency:
   cancel-in-progress: true
   group: ${{ github.workflow }}
 
+# Caller configuration — keys alphabetically ordered; passed to loop-detect (see design doc).
 env:
+  # Max implementer agent turns per loop attempt.
   AGENT_IMPLEMENTER_MAX_TURNS: "5"
-  # cursor model: `agent --list-models`
+  # Implementer model; list models: `agent --list-models` (cursor).
   AGENT_IMPLEMENTER_MODEL: grok-4.5-medium
+  # Max Agent→Verify retry cycles before recording failure.
   AGENT_LOOP_MAX_ATTEMPTS: "3"
+  # Verifier APPROVE/REJECT rubric (domain-specific).
   AGENT_VERIFIER_CRITERIA: |
     ## Criteria for APPROVE
 
@@ -49,24 +55,41 @@ env:
     - Removed or rewritten released sections
     - Version bump or tag-like edits
     - Duplicate or hallucinated entries
+  # Max verifier agent turns per verification.
   AGENT_VERIFIER_MAX_TURNS: "3"
-  # cursor model: `agent --list-models`
+  # Verifier model; list models: `agent --list-models` (cursor).
   AGENT_VERIFIER_MODEL: composer-2.5
+  # Target changelog path (also forwarded to detect_changelog_commits.sh).
   CHANGELOG_FILE: &changelog_file CHANGELOG.md
+  # "false" excludes merge commits from scan (--no-merges).
   CHANGELOG_MERGE_COMMITS: "false"
+  # Default branch for state migration fallback.
   DEFAULT_BASE_BRANCH: main
+  # AI engine: claude | copilot | codex | cursor (maps AGENT_TOKEN).
   DEFAULT_ENGINE: cursor
+  # Autonomy level: L1 | L2 | L3 (L2 = review PR).
   DEFAULT_LEVEL: L2
+  # Globs the implementer may modify.
   LOOP_ALLOWLIST: *changelog_file
+  # Daily run cap for this LOOP_NAME.
   LOOP_BUDGET_MAX_RUNS_PER_DAY: "1"
+  # Daily aggregated token cap.
   LOOP_BUDGET_MAX_TOKENS_PER_DAY: "500000"
+  # Domain detect script (invoked by loop-detect per scan context).
   LOOP_DETECT_SCRIPT: .agents/skills/loop-changelog/scripts/detect_changelog_commits.sh
+  # Finalize integration targets: open_pr | push (L3).
   LOOP_FINALIZE_INTEGRATION: open_pr
+  # Extended regex to infer file paths from verifier output.
   LOOP_INFER_FILES_PATTERN: 'CHANGELOG\.md'
+  # Comma-separated integration branch patterns to watch.
   LOOP_INTEGRATION_BRANCHES: main
+  # Max targets per cron tick (fan-out cap).
   LOOP_MAX_TARGETS_PER_SCHEDULE: "3"
+  # Loop id — state file .loop/state-<LOOP_NAME>.json; align with workflow filename.
   LOOP_NAME: changelog
+  # APPROVE | REJECT when implementer produces no file diff.
   LOOP_NO_CHANGES_VERDICT: REJECT
+  # Static PR body prefix for finalize.
   LOOP_PR_BODY: |
     ## Summary
 
@@ -74,14 +97,19 @@ env:
 
     ---
     *This PR was created by a loop automation. Review before merging.*
+  # PR title when finalize strategy is open_pr.
   LOOP_PR_TITLE: "chore(changelog): update CHANGELOG.md (loop-changelog)"
+  # Domain instructions appended to implementer prompt.
   LOOP_PROMPT_INSTRUCTIONS: |
     Update the target changelog file under `## [Unreleased]` using Keep a Changelog section names.
     Map each provided commit to a single bullet. When `repository_url` is present, append a markdown commit link using the full `sha`.
     When `compare_url` is present, add `[Full diff](compare_url)` once under `## [Unreleased]` if not already there.
     Do not bump versions or edit released sections.
+  # "true" scans open PR heads; changelog uses integration branches only.
   LOOP_PULL_REQUESTS: "false"
+  # Branch for .loop/* persistence commits (state, budget, run-log).
   LOOP_STATE_PUSH_BRANCH: main
+  # Skill package invoked by loop-prompt-generate.
   SKILL_NAME: loop-changelog
 
 jobs:

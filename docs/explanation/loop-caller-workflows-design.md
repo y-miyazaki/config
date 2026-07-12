@@ -179,8 +179,9 @@ Each matrix cell = one `max_runs_per_day` consumption. Cap enumeration in `loop-
 ## env Conventions
 
 - Keys **alphabetically ordered** (repository workflow convention).
-- `LOOP_*` from [Multi-Branch canonical table](multi-branch-loops-design.md#caller-configuration-canonical).
-- Domain vars (`CI_SWEEPER_*`, `LOOP_DETECT_SCRIPT`) in workflow design doc.
+- Shared caller keys: [Loop Caller `env` Reference](workflows/loop-caller-env-reference.md).
+- `LOOP_*` branch/finalize caps: [Multi-Branch canonical table](multi-branch-loops-design.md#caller-configuration-canonical).
+- Domain vars (`CI_SWEEPER_*`, `CHANGELOG_*`, `DOCS_TRIAGE_*`, `LOOP_DETECT_SCRIPT`) in each [workflow design doc](multi-branch-loops-design.md#workflow-design-documents).
 
 ## Adding a New Loop Caller
 

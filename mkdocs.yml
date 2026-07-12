@@ -68,6 +68,7 @@ nav:
       - Loop Caller Workflows Design: explanation/loop-caller-workflows-design.md
       - CI Healing Loops Design: explanation/ci-healing-loops-design.md
       - Loop Workflows:
+          - Caller env Reference: explanation/workflows/loop-caller-env-reference.md
           - Changelog: explanation/workflows/loop-changelog-workflow-design.md
           - CI Sweeper: explanation/workflows/loop-ci-sweeper-workflow-design.md
           - Docs Triage: explanation/workflows/loop-docs-triage-workflow-design.md

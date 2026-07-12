@@ -9,6 +9,8 @@ Workflow and domain design for the `loop-changelog` (`changelog`) loop.
 
 **Artifacts:** `on-loop-changelog.yaml` · skill `loop-changelog` · `scripts/detect_changelog_commits.sh`
 
+Shared caller keys (`AGENT_*`, `DEFAULT_*`, `LOOP_*`, `SKILL_NAME`): [Loop Caller `env` Reference](loop-caller-env-reference.md).
+
 ## Purpose
 
 Maintain [Keep a Changelog](https://keepachangelog.com/) `CHANGELOG.md` on integration branches: **released version sections are the immutable baseline**; the loop appends only to `## [Unreleased]` from changelog-worthy commits since the last processed SHA, then opens a review PR.
@@ -36,24 +38,41 @@ Skill execution boundaries: `loop-changelog` SKILL.md (`USE FOR` / `DO NOT USE F
 | `integration` | on | Detect on watch branch → fix PR to same branch |
 | `pull_request`| off | not supported for this loop |
 
-## Recommended `env`
+## Environment variables
 
-```yaml
-env:
-  CHANGELOG_FILE: CHANGELOG.md
-  CHANGELOG_MERGE_COMMITS: "false"
-  DEFAULT_LEVEL: L2
-  LOOP_ALLOWLIST: CHANGELOG.md
-  LOOP_DETECT_SCRIPT: .agents/skills/loop-changelog/scripts/detect_changelog_commits.sh
-  LOOP_FINALIZE_INTEGRATION: open_pr
-  LOOP_INTEGRATION_BRANCHES: main
-  LOOP_NAME: changelog
-  LOOP_PULL_REQUESTS: "false"
-  LOOP_STATE_PUSH_BRANCH: main
-  SKILL_NAME: loop-changelog
-```
+All keys in workflow `env:` (alphabetically ordered). Multiline values (`AGENT_VERIFIER_CRITERIA`, `LOOP_PR_BODY`, `LOOP_PROMPT_INSTRUCTIONS`) are defined inline in `on-loop-changelog.yaml`.
 
-Full `LOOP_*` definitions: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
+Shared semantics for keys used across loops: [Loop Caller `env` Reference](loop-caller-env-reference.md). Platform branch/finalize caps: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
+
+| Variable                         | Description                                                                                                     | Dogfood value                                                       |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `AGENT_IMPLEMENTER_MAX_TURNS`    | Max implementer agent turns per loop attempt (one Agent→Verify cycle).                                          | `"5"`                                                               |
+| `AGENT_IMPLEMENTER_MODEL`        | Implementer model ID. Cursor: `agent --list-models`.                                                            | `grok-4.5-medium`                                                   |
+| `AGENT_LOOP_MAX_ATTEMPTS`        | Max Agent→Verify retry cycles before finalize records failure.                                                  | `"3"`                                                               |
+| `AGENT_VERIFIER_CRITERIA`        | Verifier APPROVE/REJECT rubric (markdown). Checks Keep a Changelog shape, commit mapping, and no version bumps. | Inline in workflow YAML                                             |
+| `AGENT_VERIFIER_MAX_TURNS`       | Max verifier agent turns per verification.                                                                      | `"3"`                                                               |
+| `AGENT_VERIFIER_MODEL`           | Verifier model ID. Cursor: `agent --list-models`.                                                               | `composer-2.5`                                                      |
+| `CHANGELOG_FILE`                 | Target changelog path. Forwarded to `detect_changelog_commits.sh`. YAML anchor reused by `LOOP_ALLOWLIST`.      | `CHANGELOG.md`                                                      |
+| `CHANGELOG_MERGE_COMMITS`        | `"true"` includes merge commits; `"false"` passes `--no-merges` to detect script.                               | `"false"`                                                           |
+| `DEFAULT_BASE_BRANCH`            | Default branch for state migration when legacy flat `last_sha` is copied into `targets`.                        | `main`                                                              |
+| `DEFAULT_ENGINE`                 | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                           | `cursor`                                                            |
+| `DEFAULT_LEVEL`                  | Autonomy level (`L1`, `L2`, `L3`). L2 opens review PR; L3 may auto-merge when `finalize=open_pr`.               | `L2`                                                                |
+| `LOOP_ALLOWLIST`                 | Comma-separated globs the implementer may modify. Enforced in `loop-execute`.                                   | `CHANGELOG.md`                                                      |
+| `LOOP_BUDGET_MAX_RUNS_PER_DAY`   | Daily run cap keyed by `LOOP_NAME`. Exceeded → `skip_reason=budget`.                                            | `"1"`                                                               |
+| `LOOP_BUDGET_MAX_TOKENS_PER_DAY` | Daily aggregated token cap across loops.                                                                        | `"500000"`                                                          |
+| `LOOP_DETECT_SCRIPT`             | Domain detect script path. Invoked once per scan context by `loop-detect`.                                      | `.agents/skills/loop-changelog/scripts/detect_changelog_commits.sh` |
+| `LOOP_FINALIZE_INTEGRATION`      | Finalize strategy for integration targets: `open_pr` or `push` (L3).                                            | `open_pr`                                                           |
+| `LOOP_INFER_FILES_PATTERN`       | Extended regex to infer file paths from verifier text for allowlist checks.                                     | `CHANGELOG\.md`                                                     |
+| `LOOP_INTEGRATION_BRANCHES`      | Comma-separated branch patterns to watch for changelog drift.                                                   | `main`                                                              |
+| `LOOP_MAX_TARGETS_PER_SCHEDULE`  | Max targets per cron tick after priority/`acting_on` filters.                                                   | `"3"`                                                               |
+| `LOOP_NAME`                      | Loop identifier; state file `.loop/state-changelog.json`. Align workflow name `on-loop-<LOOP_NAME>.yaml`.       | `changelog`                                                         |
+| `LOOP_NO_CHANGES_VERDICT`        | `APPROVE` or `REJECT` when implementer produces no file diff.                                                   | `REJECT`                                                            |
+| `LOOP_PR_BODY`                   | Static markdown prefix for finalize PR body (attribution, review notice).                                       | Inline in workflow YAML                                             |
+| `LOOP_PR_TITLE`                  | PR title when finalize strategy is `open_pr`.                                                                   | `chore(changelog): update CHANGELOG.md (loop-changelog)`            |
+| `LOOP_PROMPT_INSTRUCTIONS`       | Domain instructions appended to implementer prompt by `loop-prompt-generate`.                                   | Inline in workflow YAML                                             |
+| `LOOP_PULL_REQUESTS`             | `"true"` enumerates open PR heads; changelog uses integration branches only.                                    | `"false"`                                                           |
+| `LOOP_STATE_PUSH_BRANCH`         | Branch for `.loop/*` persistence commits (state, budget, run-log).                                              | `main`                                                              |
+| `SKILL_NAME`                     | Skill package to invoke. Must match `.agents/skills/loop-changelog/`.                                           | `loop-changelog`                                                    |
 
 ## Detect
 

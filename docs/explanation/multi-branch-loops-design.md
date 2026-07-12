@@ -224,6 +224,8 @@ Caller/workflow steps: [Loop Caller Workflows Design](loop-caller-workflows-desi
 
 Add new loops as `docs/explanation/workflows/<name>-workflow-design.md` without growing this file.
 
+Shared caller `env` keys: [Loop Caller `env` Reference](workflows/loop-caller-env-reference.md).
+
 ## Decision Summary
 
 | Question                    | Decision                                                       |

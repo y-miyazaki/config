@@ -1,5 +1,7 @@
 # Loop workflow: Documentation triage
 # Detects doc-impacting changes, runs bounded Agent→Verify loop, then finalizes.
+# Design doc: docs/explanation/workflows/loop-docs-triage-workflow-design.md
+# Shared env reference: docs/explanation/workflows/loop-caller-env-reference.md
 # Requires repository secret: AGENT_TOKEN (engine API key; see DEFAULT_ENGINE).
 name: on-loop-docs-triage
 
@@ -23,11 +25,15 @@ concurrency:
   cancel-in-progress: true
   group: ${{ github.workflow }}
 
+# Caller configuration — keys alphabetically ordered; passed to loop-detect (see design doc).
 env:
+  # Max implementer agent turns per loop attempt.
   AGENT_IMPLEMENTER_MAX_TURNS: "5"
-  # cursor model: `agent --list-models`
+  # Implementer model; list models: `agent --list-models` (cursor).
   AGENT_IMPLEMENTER_MODEL: grok-4.5-medium
+  # Max Agent→Verify retry cycles before recording failure.
   AGENT_LOOP_MAX_ATTEMPTS: "3"
+  # Verifier APPROVE/REJECT rubric (domain-specific).
   AGENT_VERIFIER_CRITERIA: |
     ## Criteria for APPROVE
 
@@ -48,22 +54,41 @@ env:
     - Gratuitous changes not related to triage items
     - Duplicate content that restates existing documentation
     - Unnecessary restructuring of document headings or sections
+  # Max verifier agent turns per verification.
   AGENT_VERIFIER_MAX_TURNS: "3"
-  # cursor model: `agent --list-models`
+  # Verifier model; list models: `agent --list-models` (cursor).
   AGENT_VERIFIER_MODEL: composer-2.5
+  # Default branch for state migration fallback.
   DEFAULT_BASE_BRANCH: main
+  # AI engine: claude | copilot | codex | cursor (maps AGENT_TOKEN).
   DEFAULT_ENGINE: cursor
+  # Autonomy level: L1 | L2 | L3 (L2 = review PR).
   DEFAULT_LEVEL: L2
+  # Doc file globs for detect_changes.sh git-diff analysis.
+  DOCS_TRIAGE_DOC_GLOBS: "docs/**/*.md,README.md"
+  # Additional non-glob paths included in doc impact scan.
+  DOCS_TRIAGE_EXTRA_FILES: mkdocs.yml
+  # Globs the implementer may modify.
   LOOP_ALLOWLIST: "docs/**/*.md,README.md,mkdocs.yml"
+  # Daily run cap for this LOOP_NAME.
   LOOP_BUDGET_MAX_RUNS_PER_DAY: "1"
+  # Daily aggregated token cap.
   LOOP_BUDGET_MAX_TOKENS_PER_DAY: "500000"
+  # Domain detect script (invoked by loop-detect per scan context).
   LOOP_DETECT_SCRIPT: .agents/skills/loop-docs-triage/scripts/detect_changes.sh
+  # Finalize integration targets: open_pr | push (L3).
   LOOP_FINALIZE_INTEGRATION: open_pr
+  # Extended regex to infer file paths from verifier output.
   LOOP_INFER_FILES_PATTERN: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|yml|yaml)'
+  # Comma-separated integration branch patterns to watch.
   LOOP_INTEGRATION_BRANCHES: main
+  # Max targets per cron tick (fan-out cap).
   LOOP_MAX_TARGETS_PER_SCHEDULE: "3"
+  # Loop id — state file .loop/state-<LOOP_NAME>.json; align with workflow filename.
   LOOP_NAME: docs-triage
+  # APPROVE | REJECT when implementer produces no file diff.
   LOOP_NO_CHANGES_VERDICT: REJECT
+  # Static PR body prefix for finalize.
   LOOP_PR_BODY: |
     ## Summary
 
@@ -71,12 +96,17 @@ env:
 
     ---
     *This PR was created by a loop automation. Review before merging.*
+  # PR title when finalize strategy is open_pr.
   LOOP_PR_TITLE: "fix(docs): automated documentation update (loop-docs-triage)"
+  # Domain instructions appended to implementer prompt.
   LOOP_PROMPT_INSTRUCTIONS: |
     Edit files directly to address the documented triage findings.
     Prioritize factual consistency with the codebase and preserve existing documentation structure unless triage items require restructuring.
+  # "true" scans open PR heads; docs-triage uses integration branches only.
   LOOP_PULL_REQUESTS: "false"
+  # Branch for .loop/* persistence commits (state, budget, run-log).
   LOOP_STATE_PUSH_BRANCH: main
+  # Skill package invoked by loop-prompt-generate.
   SKILL_NAME: loop-docs-triage
 
 jobs:
@@ -121,6 +151,9 @@ jobs:
 
       - name: Detect Loop Work
         id: detect
+        env:
+          DOCS_TRIAGE_DOC_GLOBS: ${{ env.DOCS_TRIAGE_DOC_GLOBS }}
+          DOCS_TRIAGE_EXTRA_FILES: ${{ env.DOCS_TRIAGE_EXTRA_FILES }}
         uses: ./.github/actions/loop-detect
         with:
           agent_implementer_max_turns: ${{ env.AGENT_IMPLEMENTER_MAX_TURNS }}

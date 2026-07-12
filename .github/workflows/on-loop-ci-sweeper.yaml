@@ -1,5 +1,7 @@
 # Loop workflow: CI sweeper
 # Polls for failed CI on main (schedule), runs bounded Agent→Verify loop, then finalizes.
+# Design doc: docs/explanation/workflows/loop-ci-sweeper-workflow-design.md
+# Shared env reference: docs/explanation/workflows/loop-caller-env-reference.md
 # Requires repository secret: AGENT_TOKEN (engine API key; see DEFAULT_ENGINE).
 name: on-loop-ci-sweeper
 
@@ -40,11 +42,15 @@ concurrency:
   cancel-in-progress: true
   group: ${{ github.workflow }}
 
+# Caller configuration — keys alphabetically ordered; passed to loop-detect (see design doc).
 env:
+  # Max implementer agent turns per loop attempt.
   AGENT_IMPLEMENTER_MAX_TURNS: "8"
-  # cursor model: `agent --list-models`
+  # Implementer model; list models: `agent --list-models` (cursor).
   AGENT_IMPLEMENTER_MODEL: grok-4.5-medium
+  # Max Agent→Verify retry cycles before recording failure.
   AGENT_LOOP_MAX_ATTEMPTS: "3"
+  # Verifier APPROVE/REJECT rubric (domain-specific).
   AGENT_VERIFIER_CRITERIA: |
     ## Criteria for APPROVE
 
@@ -65,30 +71,53 @@ env:
     - Missing validation when the failure type is lint/syntax/test
     - Fixes for infra/env failures that should have been deferred
     - Hallucinated paths, commands, or APIs not present in the repository
+  # Max verifier agent turns per verification.
   AGENT_VERIFIER_MAX_TURNS: "3"
-  # cursor model: `agent --list-models`
+  # Verifier model; list models: `agent --list-models` (cursor).
   AGENT_VERIFIER_MODEL: composer-2.5
+  # Workflow names to ignore (prevents loop self-trigger / recursion).
   CI_SWEEPER_EXCLUDED_WORKFLOWS: "on-loop-changelog,on-loop-ci-sweeper,on-loop-docs-triage,ci-loop-agent"
+  # Workflow allowlist; empty = all non-excluded workflows.
   CI_SWEEPER_INCLUDED_WORKFLOWS: ""
+  # JSON ledger for workflow_run_id dedupe.
   CI_SWEEPER_LEDGER_FILE: .loop/ci-sweeper-run-ledger.json
+  # Max retries per run ID when CI_SWEEPER_REJECT_RETRY_POLICY=limited.
   CI_SWEEPER_REJECT_MAX_RETRIES: "3"
+  # block | retry | limited — ledger policy for prior rejected runs.
   CI_SWEEPER_REJECT_RETRY_POLICY: block
+  # Default branch for state migration fallback.
   DEFAULT_BASE_BRANCH: main
+  # AI engine: claude | copilot | codex | cursor (maps AGENT_TOKEN).
   DEFAULT_ENGINE: cursor
+  # Autonomy level: L1 | L2 | L3 (L2 = review PR).
   DEFAULT_LEVEL: L2
+  # Ledger script for loop-finalize domain_persistence_script.
   DOMAIN_PERSISTENCE_SCRIPT: .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh
+  # Globs the implementer may modify.
   LOOP_ALLOWLIST: ".github/**,.apm/packages/**,scripts/**,apm.yml,mise.toml,renovate/**,docs/**/*.md,README.md,mkdocs.yml"
+  # Daily run cap for this LOOP_NAME.
   LOOP_BUDGET_MAX_RUNS_PER_DAY: "5"
+  # Daily aggregated token cap.
   LOOP_BUDGET_MAX_TOKENS_PER_DAY: "1000000"
+  # Globs the implementer must never modify.
   LOOP_DENYLIST: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
+  # Domain detect script (invoked by loop-detect per scan context).
   LOOP_DETECT_SCRIPT: .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh
+  # Finalize integration targets: open_pr | push (L3).
   LOOP_FINALIZE_INTEGRATION: open_pr
+  # Finalize pull_request targets (push_head).
   LOOP_FINALIZE_PULL_REQUEST: push_head
+  # Extended regex to infer file paths from verifier output.
   LOOP_INFER_FILES_PATTERN: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|ya?ml|sh|go|toml|json)'
+  # Comma-separated integration branch patterns to watch.
   LOOP_INTEGRATION_BRANCHES: main
+  # Max targets per cron tick (fan-out cap).
   LOOP_MAX_TARGETS_PER_SCHEDULE: "3"
+  # Loop id — state file .loop/state-<LOOP_NAME>.json; align with workflow filename.
   LOOP_NAME: ci-sweeper
+  # APPROVE | REJECT when implementer produces no file diff.
   LOOP_NO_CHANGES_VERDICT: REJECT
+  # Static PR body prefix for finalize.
   LOOP_PR_BODY: |
     ## Summary
 
@@ -96,16 +125,23 @@ env:
 
     ---
     *This PR was created by a loop automation. Review before merging.*
+  # PR exclusion tokens: fork, draft, label:<name>, wip_title.
   LOOP_PR_EXCLUDE: fork,draft,label:no-loop
+  # Bot logins to include when scanning PRs; empty = exclude all bots.
   LOOP_PR_INCLUDE_BOTS: ""
+  # PR title when finalize strategy is open_pr.
   LOOP_PR_TITLE: "fix(ci): automated CI repair (loop-ci-sweeper)"
+  # Domain instructions appended to implementer prompt.
   LOOP_PROMPT_INSTRUCTIONS: |
     Fix the failing CI checks identified in the detection result.
     Classify flakes and infra/env failures as Watch — do not edit code for those.
     Apply the smallest change that resolves the logged failure.
     Run stack-appropriate validation skills before finishing.
+  # "true" scans open PR heads for CI failures.
   LOOP_PULL_REQUESTS: "true"
+  # Branch for .loop/* persistence commits (state, budget, run-log).
   LOOP_STATE_PUSH_BRANCH: main
+  # Skill package invoked by loop-prompt-generate.
   SKILL_NAME: loop-ci-sweeper
 
 jobs:

@@ -10,6 +10,8 @@ Workflow and domain design for the `loop-docs-triage` (`docs-triage`) loop.
 
 **Artifacts:** `on-loop-docs-triage.yaml` · skill `loop-docs-triage` · `scripts/detect_changes.sh`
 
+Shared caller keys (`AGENT_*`, `DEFAULT_*`, `LOOP_*`, `SKILL_NAME`): [Loop Caller `env` Reference](loop-caller-env-reference.md).
+
 ## Purpose
 
 Detect documentation drift from code changes on integration branches and open fix PRs after Skill triage.
@@ -43,22 +45,41 @@ Skill execution boundaries: `loop-docs-triage` SKILL.md (`USE FOR` / `DO NOT USE
 | `integration` | on | Detect on watch branch → fix PR to same branch |
 | `pull_request`| off | not supported for this loop |
 
-## Recommended `env`
+## Environment variables
 
-```yaml
-env:
-  DEFAULT_LEVEL: L2
-  LOOP_ALLOWLIST: docs/**/*.md,README.md,mkdocs.yml
-  LOOP_DETECT_SCRIPT: .agents/skills/loop-docs-triage/scripts/detect_changes.sh
-  LOOP_INTEGRATION_BRANCHES: main
-  LOOP_NAME: docs-triage
-  LOOP_PULL_REQUESTS: "false"
-  SKILL_NAME: loop-docs-triage
-```
+All keys in workflow `env:` (alphabetically ordered). Multiline values (`AGENT_VERIFIER_CRITERIA`, `LOOP_PR_BODY`, `LOOP_PROMPT_INSTRUCTIONS`) are defined inline in `on-loop-docs-triage.yaml`.
 
-Multi-branch example: `LOOP_INTEGRATION_BRANCHES: main,develop,release/*` with `LOOP_BRANCH_MATCH: glob`.
+Shared semantics for keys used across loops: [Loop Caller `env` Reference](loop-caller-env-reference.md). Platform branch/finalize caps: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
 
-Full `LOOP_*` definitions: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
+| Variable                         | Description                                                                                           | Dogfood value                                                  |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `AGENT_IMPLEMENTER_MAX_TURNS`    | Max implementer agent turns per loop attempt (one Agent→Verify cycle).                                | `"5"`                                                          |
+| `AGENT_IMPLEMENTER_MODEL`        | Implementer model ID. Cursor: `agent --list-models`.                                                  | `grok-4.5-medium`                                              |
+| `AGENT_LOOP_MAX_ATTEMPTS`        | Max Agent→Verify retry cycles before finalize records failure.                                        | `"3"`                                                          |
+| `AGENT_VERIFIER_CRITERIA`        | Verifier APPROVE/REJECT rubric. Doc-only edits; factual consistency; no sensitive data.               | Inline in workflow YAML                                        |
+| `AGENT_VERIFIER_MAX_TURNS`       | Max verifier agent turns per verification.                                                            | `"3"`                                                          |
+| `AGENT_VERIFIER_MODEL`           | Verifier model ID. Cursor: `agent --list-models`.                                                     | `composer-2.5`                                                 |
+| `DEFAULT_BASE_BRANCH`            | Default branch for state migration fallback.                                                          | `main`                                                         |
+| `DEFAULT_ENGINE`                 | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                 | `cursor`                                                       |
+| `DEFAULT_LEVEL`                  | Autonomy level (`L1`, `L2`, `L3`). L2 opens review PR.                                                | `L2`                                                           |
+| `DOCS_TRIAGE_DOC_GLOBS`          | Comma-separated globs for documentation files in git-diff analysis. Forwarded to `detect_changes.sh`. | `docs/**/*.md,README.md`                                       |
+| `DOCS_TRIAGE_EXTRA_FILES`        | Additional non-glob paths (site config) included in doc impact scan.                                  | `mkdocs.yml`                                                   |
+| `LOOP_ALLOWLIST`                 | Comma-separated globs the implementer may modify. Must align with triage scope.                       | `docs/**/*.md,README.md,mkdocs.yml`                            |
+| `LOOP_BUDGET_MAX_RUNS_PER_DAY`   | Daily run cap keyed by `LOOP_NAME`.                                                                   | `"1"`                                                          |
+| `LOOP_BUDGET_MAX_TOKENS_PER_DAY` | Daily aggregated token cap across loops.                                                              | `"500000"`                                                     |
+| `LOOP_DETECT_SCRIPT`             | Domain detect script path. Not `docs-updater` script (hook/manual only).                              | `.agents/skills/loop-docs-triage/scripts/detect_changes.sh`    |
+| `LOOP_FINALIZE_INTEGRATION`      | Finalize strategy for integration targets: `open_pr` or `push` (L3).                                  | `open_pr`                                                      |
+| `LOOP_INFER_FILES_PATTERN`       | Extended regex to infer file paths from verifier text.                                                | See workflow YAML                                              |
+| `LOOP_INTEGRATION_BRANCHES`      | Comma-separated integration branch patterns to watch for doc drift.                                   | `main`                                                         |
+| `LOOP_MAX_TARGETS_PER_SCHEDULE`  | Max targets per cron tick after priority/`acting_on` filters.                                         | `"3"`                                                          |
+| `LOOP_NAME`                      | Loop identifier; state file `.loop/state-docs-triage.json`.                                           | `docs-triage`                                                  |
+| `LOOP_NO_CHANGES_VERDICT`        | `APPROVE` or `REJECT` when implementer produces no file diff.                                         | `REJECT`                                                       |
+| `LOOP_PR_BODY`                   | Static markdown prefix for finalize PR body.                                                          | Inline in workflow YAML                                        |
+| `LOOP_PR_TITLE`                  | PR title when finalize strategy is `open_pr`.                                                         | `fix(docs): automated documentation update (loop-docs-triage)` |
+| `LOOP_PROMPT_INSTRUCTIONS`       | Domain instructions: address triage findings; preserve doc structure.                                 | Inline in workflow YAML                                        |
+| `LOOP_PULL_REQUESTS`             | `"true"` enumerates open PR heads; docs-triage uses integration branches only.                        | `"false"`                                                      |
+| `LOOP_STATE_PUSH_BRANCH`         | Branch for `.loop/*` persistence commits.                                                             | `main`                                                         |
+| `SKILL_NAME`                     | Skill package to invoke.                                                                              | `loop-docs-triage`                                             |
 
 ## Detect
 

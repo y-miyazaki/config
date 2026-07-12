@@ -10,6 +10,8 @@ Workflow and domain design for the `loop-ci-sweeper` (`ci-sweeper`) loop.
 
 **Artifacts:** `on-loop-ci-sweeper.yaml` · skill `loop-ci-sweeper` · `scripts/detect_ci_failures.sh` · `scripts/update_run_ledger.sh`
 
+Shared caller keys (`AGENT_*`, `DEFAULT_*`, `LOOP_*`, `SKILL_NAME`): [Loop Caller `env` Reference](loop-caller-env-reference.md).
+
 ## Purpose
 
 Automated minimal repair when CI fails on integration branches and/or open PR heads. One engine; no separate `loop-pr-ci-healer` package.
@@ -40,40 +42,59 @@ Skill execution boundaries: `loop-ci-sweeper` SKILL.md (`USE FOR` / `DO NOT USE 
 | `integration`  | Fix PR **to** `main` / `develop` / `release/*` |
 | `pull_request` | Push fix **to PR head**                        |
 
-## Recommended `env` (consumer)
+## Environment variables
 
-Link to [canonical `LOOP_*`](../multi-branch-loops-design.md#caller-configuration-canonical). Example:
+All keys in workflow `env:` (alphabetically ordered). Multiline values (`AGENT_VERIFIER_CRITERIA`, `LOOP_PR_BODY`, `LOOP_PROMPT_INSTRUCTIONS`) are defined inline in `on-loop-ci-sweeper.yaml`.
 
-```yaml
-env:
-  CI_SWEEPER_EXCLUDED_WORKFLOWS: on-loop-changelog,on-loop-ci-sweeper,on-loop-docs-triage,ci-loop-agent
-  CI_SWEEPER_LEDGER_FILE: .loop/ci-sweeper-run-ledger.json
-  CI_SWEEPER_REJECT_RETRY_POLICY: block
-  DEFAULT_LEVEL: L2
-  DOMAIN_PERSISTENCE_SCRIPT: .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh
-  LOOP_DETECT_SCRIPT: .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh
-  LOOP_FINALIZE_INTEGRATION: open_pr
-  LOOP_FINALIZE_PULL_REQUEST: push_head
-  LOOP_INTEGRATION_BRANCHES: main,develop,release/*
-  LOOP_NAME: ci-sweeper
-  LOOP_PULL_REQUESTS: "true"
-  LOOP_PR_EXCLUDE: fork,draft,label:no-loop
-  LOOP_PR_INCLUDE_BOTS: ""
-  LOOP_NO_CHANGES_VERDICT: REJECT
-  SKILL_NAME: loop-ci-sweeper
-```
+Shared semantics for keys used across loops: [Loop Caller `env` Reference](loop-caller-env-reference.md). Platform branch/finalize caps: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
 
-### CI-specific `env`
+| Variable                         | Description                                                                                                           | Dogfood value                                                                                            |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `AGENT_IMPLEMENTER_MAX_TURNS`    | Max implementer agent turns per loop attempt (one Agent→Verify cycle).                                                | `"8"`                                                                                                    |
+| `AGENT_IMPLEMENTER_MODEL`        | Implementer model ID. Cursor: `agent --list-models`.                                                                  | `grok-4.5-medium`                                                                                        |
+| `AGENT_LOOP_MAX_ATTEMPTS`        | Max Agent→Verify retry cycles before finalize records failure.                                                        | `"3"`                                                                                                    |
+| `AGENT_VERIFIER_CRITERIA`        | Verifier APPROVE/REJECT rubric. Requires fix addresses logged CI failure; minimal diff; allowlist/denylist respected. | Inline in workflow YAML                                                                                  |
+| `AGENT_VERIFIER_MAX_TURNS`       | Max verifier agent turns per verification.                                                                            | `"3"`                                                                                                    |
+| `AGENT_VERIFIER_MODEL`           | Verifier model ID. Cursor: `agent --list-models`.                                                                     | `composer-2.5`                                                                                           |
+| `CI_SWEEPER_EXCLUDED_WORKFLOWS`  | Comma-separated workflow **names** to ignore (prevents loop self-trigger / recursion).                                | `on-loop-changelog,on-loop-ci-sweeper,on-loop-docs-triage,ci-loop-agent`                                 |
+| `CI_SWEEPER_INCLUDED_WORKFLOWS`  | Workflow name allowlist. Empty = all non-excluded workflows.                                                          | `""`                                                                                                     |
+| `CI_SWEEPER_LEDGER_FILE`         | JSON ledger path for `workflow_run_id` dedupe. Updated by `update_run_ledger.sh` in finalize.                         | `.loop/ci-sweeper-run-ledger.json`                                                                       |
+| `CI_SWEEPER_REJECT_MAX_RETRIES`  | Max re-attempts per run ID when `CI_SWEEPER_REJECT_RETRY_POLICY=limited`.                                             | `"3"`                                                                                                    |
+| `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`, `retry`, or `limited` — ledger policy for prior `rejected` entries for the same run.                         | `block`                                                                                                  |
+| `DEFAULT_BASE_BRANCH`            | Default branch for state migration fallback.                                                                          | `main`                                                                                                   |
+| `DEFAULT_ENGINE`                 | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                                 | `cursor`                                                                                                 |
+| `DEFAULT_LEVEL`                  | Autonomy level (`L1`, `L2`, `L3`). L2 opens review PR.                                                                | `L2`                                                                                                     |
+| `DOMAIN_PERSISTENCE_SCRIPT`      | Bash script for `loop-finalize` `domain_persistence_script` (run ledger updates).                                     | `.agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh`                                            |
+| `LOOP_ALLOWLIST`                 | Comma-separated globs the implementer may modify.                                                                     | `.github/**,.apm/packages/**,scripts/**,apm.yml,mise.toml,renovate/**,docs/**/*.md,README.md,mkdocs.yml` |
+| `LOOP_BUDGET_MAX_RUNS_PER_DAY`   | Daily run cap keyed by `LOOP_NAME`.                                                                                   | `"5"`                                                                                                    |
+| `LOOP_BUDGET_MAX_TOKENS_PER_DAY` | Daily aggregated token cap across loops.                                                                              | `"1000000"`                                                                                              |
+| `LOOP_DENYLIST`                  | Comma-separated globs the implementer must never modify (credentials, infra, migrations).                             | `**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**`                            |
+| `LOOP_DETECT_SCRIPT`             | Domain detect script path. Uses `gh run list` per watch branch / PR head.                                             | `.agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh`                                           |
+| `LOOP_FINALIZE_INTEGRATION`      | Finalize for integration targets: `open_pr` (fix PR to watch branch) or `push` (L3).                                  | `open_pr`                                                                                                |
+| `LOOP_FINALIZE_PULL_REQUEST`     | Finalize for pull_request targets. Currently `push_head` only.                                                        | `push_head`                                                                                              |
+| `LOOP_INFER_FILES_PATTERN`       | Extended regex to infer file paths from verifier text.                                                                | See workflow YAML                                                                                        |
+| `LOOP_INTEGRATION_BRANCHES`      | Comma-separated integration branch patterns to poll for failed CI.                                                    | `main`                                                                                                   |
+| `LOOP_MAX_TARGETS_PER_SCHEDULE`  | Max targets per cron tick after priority/`acting_on` filters.                                                         | `"3"`                                                                                                    |
+| `LOOP_NAME`                      | Loop identifier; state file `.loop/state-ci-sweeper.json`.                                                            | `ci-sweeper`                                                                                             |
+| `LOOP_NO_CHANGES_VERDICT`        | `APPROVE` or `REJECT` when implementer produces no file diff on actionable CI failure.                                | `REJECT`                                                                                                 |
+| `LOOP_PR_BODY`                   | Static markdown prefix for finalize PR body.                                                                          | Inline in workflow YAML                                                                                  |
+| `LOOP_PR_EXCLUDE`                | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`.                                                    | `fork,draft,label:no-loop`                                                                               |
+| `LOOP_PR_INCLUDE_BOTS`           | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots.                                    | `""`                                                                                                     |
+| `LOOP_PR_TITLE`                  | PR title when finalize strategy is `open_pr`.                                                                         | `fix(ci): automated CI repair (loop-ci-sweeper)`                                                         |
+| `LOOP_PROMPT_INSTRUCTIONS`       | Domain instructions: classify Watch vs Fix; minimal diff; run validation skills.                                      | Inline in workflow YAML                                                                                  |
+| `LOOP_PULL_REQUESTS`             | `"true"` enumerates open PR heads for failed CI repair (`push_head`).                                                 | `"true"`                                                                                                 |
+| `LOOP_STATE_PUSH_BRANCH`         | Branch for `.loop/*` persistence commits.                                                                             | `main`                                                                                                   |
+| `SKILL_NAME`                     | Skill package to invoke.                                                                                              | `loop-ci-sweeper`                                                                                        |
 
-| Variable                         | Role                                                                                |
-| -------------------------------- | ----------------------------------------------------------------------------------- |
-| `CI_SWEEPER_EXCLUDED_WORKFLOWS`  | Prevent sweeper self-trigger / recursion                                            |
-| `CI_SWEEPER_INCLUDED_WORKFLOWS`  | Allowlist (empty = all non-excluded)                                                |
-| `CI_SWEEPER_LEDGER_FILE`         | Run-level dedupe JSON                                                               |
-| `CI_SWEEPER_REJECT_RETRY_POLICY` | `block` \| `retry` \| `limited` (dogfood: **`block`**)                              |
-| `CI_SWEEPER_*` event vars        | Injected when `workflow_run` enabled (trigger remains disabled until ops checklist) |
+**Event vars** (inject on detect job when `workflow_run` trigger is enabled — currently commented out in workflow YAML):
 
-Event vars (when `workflow_run` active): `CI_SWEEPER_HEAD_BRANCH`, `CI_SWEEPER_HEAD_SHA`, `CI_SWEEPER_WORKFLOW_RUN_ID`, `CI_SWEEPER_WORKFLOW_NAME`, `CI_SWEEPER_RUN_URL`.
+| Variable                     | Description                                                       |
+| ---------------------------- | ----------------------------------------------------------------- |
+| `CI_SWEEPER_HEAD_BRANCH`     | Failed workflow run head branch from `github.event.workflow_run`. |
+| `CI_SWEEPER_HEAD_SHA`        | Failed workflow run head SHA.                                     |
+| `CI_SWEEPER_WORKFLOW_RUN_ID` | Failed workflow run ID for ledger dedupe.                         |
+| `CI_SWEEPER_WORKFLOW_NAME`   | Failed workflow display name.                                     |
+| `CI_SWEEPER_RUN_URL`         | HTML URL of the failed workflow run (verifier context).           |
 
 ## Detect
 
