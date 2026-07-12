@@ -167,12 +167,12 @@ Each matrix cell = one `max_runs_per_day` consumption. Cap enumeration in `loop-
 
 ## Permissions (least privilege pattern)
 
-| Job         | Typical permissions                                                                 |
-| ----------- | ----------------------------------------------------------------------------------- |
-| detect      | `contents: read`, `actions: read`, `checks: read`                                   |
+| Job         | Typical permissions                                                                       |
+| ----------- | ----------------------------------------------------------------------------------------- |
+| detect      | `contents: read`, `actions: read`, `checks: read`                                         |
 | execute     | `contents: write`, `pull-requests: write` (when `finalize_enabled=true`), engine-specific |
-| record-skip | `contents: write`, `pull-requests: write` (run-log PR fallback on protected branches) |
-| finalize    | Runs inside `ci-loop-agent`; inherits caller `execute` job permissions              |
+| record-skip | `contents: write`, `pull-requests: write` (run-log PR fallback on protected branches)     |
+| finalize    | Runs inside `ci-loop-agent`; inherits caller `execute` job permissions                    |
 
 `ci-loop-agent` `agent-l2` also needs `pull-requests: write` — `loop-state-write` opens a state PR when `LOOP_STATE_PUSH_BRANCH` blocks direct push.
 
@@ -184,8 +184,8 @@ Each matrix cell = one `max_runs_per_day` consumption. Cap enumeration in `loop-
 
 ## Adding a New Loop Caller
 
-1. Copy `on-loop-docs-triage.yaml` or `on-loop-ci-sweeper.yaml` skeleton.
-2. Add `docs/explanation/workflows/<name>-workflow-design.md`.
+1. Copy `on-loop-changelog.yaml`, `on-loop-docs-triage.yaml`, or `on-loop-ci-sweeper.yaml` skeleton.
+2. Add `docs/explanation/workflows/loop-<name>-workflow-design.md`.
 3. Link from [Multi-Branch workflow index](multi-branch-loops-design.md#workflow-design-documents).
 4. Register in `mkdocs.yml` under **Explanation → Loop Workflows**.
 5. Package: `.apm/packages/loop-<name>/` with `SKILL.md` + `scripts/detect_*.sh` (+ optional ledger script).
@@ -205,5 +205,6 @@ Each matrix cell = one `max_runs_per_day` consumption. Cap enumeration in `loop-
 - [Multi-Branch Loops Design](multi-branch-loops-design.md)
 - [Loop Engineering Design](loop-engineering-design.md)
 - [Specification](../reference/specification.md)
-- [CI Sweeper Workflow](workflows/ci-sweeper-workflow-design.md)
-- [Docs Loop Workflow](workflows/docs-loop-workflow-design.md)
+- [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md)
+- [Changelog Workflow](workflows/loop-changelog-workflow-design.md)
+- [Docs Triage Workflow](workflows/loop-docs-triage-workflow-design.md)

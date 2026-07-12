@@ -68,8 +68,9 @@ nav:
       - Loop Caller Workflows Design: explanation/loop-caller-workflows-design.md
       - CI Healing Loops Design: explanation/ci-healing-loops-design.md
       - Loop Workflows:
-          - CI Sweeper: explanation/workflows/ci-sweeper-workflow-design.md
-          - Docs Loop: explanation/workflows/docs-loop-workflow-design.md
+          - Changelog: explanation/workflows/loop-changelog-workflow-design.md
+          - CI Sweeper: explanation/workflows/loop-ci-sweeper-workflow-design.md
+          - Docs Triage: explanation/workflows/loop-docs-triage-workflow-design.md
   - Report:
       - AWS Service Comparison:
           - Index: report/aws/service-comparison/index.md

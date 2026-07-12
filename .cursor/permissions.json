@@ -5,8 +5,10 @@
     "apm",
     "cat",
     "cd",
+    "command",
     "diff",
     "echo",
+    "find",
     "ghalint",
     "git add",
     "git diff",
@@ -16,6 +18,7 @@
     "golangci-lint",
     "head",
     "jq",
+    "ls",
     "markdown-link-check",
     "markdownlint-cli2",
     "npm run",
@@ -24,6 +27,7 @@
     "shellcheck",
     "shfmt",
     "tail",
+    "which",
     "zizmor"
   ],
   "autoRun": {

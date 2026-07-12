@@ -165,19 +165,19 @@ MCP servers are declared in each package's `apm.yml` under `dependencies.mcp`.
 
 Hooks are defined as JSON files under each hooks package's `.apm/hooks/` directory.
 
-| Hooks Package         | Hook                      | Trigger                | Description                                   |
-| --------------------- | ------------------------- | ---------------------- | --------------------------------------------- |
-| common-hooks-\*       | lean-ctx                  | PreToolUse/PostToolUse | Context observation and rewrite/redirect      |
-| common-hooks-\*       | markdownlint-cli2         | Stop                   | Auto-fix Markdown files with markdownlint     |
-| common-hooks-\*       | markdown-link-check       | Stop                   | Check Markdown links                          |
-| common-hooks-\*       | github-actions-actionlint | Stop                   | Lint GitHub Actions workflows with actionlint |
-| common-hooks-\*       | github-actions-ghalint    | Stop                   | Lint GitHub Actions workflows with ghalint    |
-| common-hooks-\*       | github-actions-zizmor     | Stop                   | Security scan GitHub Actions with zizmor      |
-| go-hooks-\*           | golangci-lint             | Stop                   | Auto-fix Go files with golangci-lint          |
-| terraform-hooks-\*    | terraform-fmt             | PostToolUse            | Run terraform fmt on changed files            |
-| terraform-hooks-\*    | tflint                    | Stop                   | Run tflint on changed files                   |
-| shell-script-hooks-\* | shellcheck                | Stop                   | Run shellcheck on changed shell scripts       |
-| shell-script-hooks-\* | shfmt                     | Stop                   | Auto-format shell scripts with shfmt          |
+| Hooks Package         | Hook                      | Trigger                | Description                                                       |
+| --------------------- | ------------------------- | ---------------------- | ----------------------------------------------------------------- |
+| common-hooks-\*       | lean-ctx                  | PreToolUse/PostToolUse | Context observation and rewrite/redirect                          |
+| common-hooks-\*       | markdownlint-cli2         | Stop                   | Auto-fix Markdown files with markdownlint                         |
+| common-hooks-\*       | markdown-link-check       | Stop                   | Check Markdown links                                              |
+| common-hooks-\*       | github-actions-actionlint | Stop                   | Lint GitHub Actions workflows with actionlint                     |
+| common-hooks-\*       | github-actions-ghalint    | Stop                   | Lint GitHub Actions workflows with ghalint                        |
+| common-hooks-\*       | github-actions-zizmor     | Stop                   | Security scan `.github` with zizmor when workflows/actions change |
+| go-hooks-\*           | golangci-lint             | Stop                   | Auto-fix Go files with golangci-lint                              |
+| terraform-hooks-\*    | terraform-fmt             | PostToolUse            | Run terraform fmt on changed files                                |
+| terraform-hooks-\*    | tflint                    | Stop                   | Run tflint on changed files                                       |
+| shell-script-hooks-\* | shellcheck                | Stop                   | Run shellcheck on changed shell scripts                           |
+| shell-script-hooks-\* | shfmt                     | Stop                   | Auto-format shell scripts with shfmt                              |
 
 > **Note:** `*` represents target suffix (`claude`, `copilot`, or `cursor`). Each target has identical hook scripts with different JSON formats.
 
@@ -304,6 +304,7 @@ The repository must provide reusable workflows.
 | Workflow                   | Type     | Purpose                                                                                                                                                |
 | -------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `ci-loop-agent.yaml`       | Reusable | Engine-agnostic agent invocation (Claude / Copilot / Codex / Cursor). L1: `loop-agent-once`; L2/L3: worktree + bounded Agent→Verify via `loop-execute` |
+| `on-loop-changelog.yaml`   | Caller   | Cron-driven CHANGELOG.md maintenance (detect → execute → finalize)                                                                                     |
 | `on-loop-ci-sweeper.yaml`  | Caller   | Schedule-driven CI failure repair (detect → execute → finalize)                                                                                        |
 | `on-loop-docs-triage.yaml` | Caller   | Cron-driven documentation triage (detect → execute → finalize)                                                                                         |
 

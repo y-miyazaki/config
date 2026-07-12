@@ -9,10 +9,10 @@ For concrete specifications (Actions/Workflows list, interfaces), see [Specifica
 | -------------------- | -------------------------------------- | ------------- |
 | `loop-docs-triage`   | Phase 0 done; multi-branch in progress | L2 (Assisted) |
 | `loop-ci-sweeper`    | Phase 0 done; multi-branch in progress | L2 (Assisted) |
-| `loop-changelog`     | Not started                            | -             |
-| `issue-triage-loop`  | Not started                            | -             |
-| `test-coverage-loop` | Not started                            | -             |
-| `stale-pr-loop`      | Not started                            | -             |
+| `loop-changelog`     | Phase 0 done; workflow design complete | L2 (Assisted) |
+| `loop-issue-triage`  | Not started                            | -             |
+| `loop-test-coverage` | Not started                            | -             |
+| `loop-stale-pr`      | Not started                            | -             |
 
 Platform actions (`loop-detect` `target_matrix`, `acting_on`, `domain_persistence_script`) are in progress — see [Multi-Branch Loops Design](multi-branch-loops-design.md).
 
@@ -22,10 +22,10 @@ Referencing the design philosophy of GitHub Agentic Workflows ([official blog](h
 
 ### Tier 1 (High Priority — Implementable with Existing Infrastructure)
 
-| Loop           | Detection Method                                    | Agent Behavior                    | Expected Level                                                                             |
-| -------------- | --------------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------ |
-| **ci-sweeper** | GitHub API: failed runs (integration + optional PR) | Auto-fix; PR or push per mode     | L2 default; L3 opt-in — see [CI Sweeper Workflow](workflows/ci-sweeper-workflow-design.md) |
-| **changelog**  | git log: parse conventional commits                 | Auto-generate/update CHANGELOG.md | L2                                                                                         |
+| Loop                | Detection Method                                    | Agent Behavior                    | Expected Level                                                                                  |
+| ------------------- | --------------------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **loop-ci-sweeper** | GitHub API: failed runs (integration + optional PR) | Auto-fix; PR or push per mode     | L2 default; L3 opt-in — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md) |
+| **loop-changelog**  | git log: parse conventional commits                 | Auto-generate/update CHANGELOG.md | L2                                                                                              |
 
 ### Tier 2 (Medium Priority — Additional Detect Action Required)
 
@@ -74,10 +74,13 @@ Each `loop-*` package ships **Skill + detect script** (+ optional ledger script)
       SKILL.md
       scripts/detect_ci_failures.sh
       scripts/update_run_ledger.sh
-  loop-changelog/        ← future
+  loop-changelog/
+    .apm/skills/loop-changelog/
+      SKILL.md
+      scripts/detect_changelog_commits.sh
 ```
 
-Hook/manual skills (e.g. `docs-updater` in `common`) are **not** loop packages — see [Docs Loop Workflow Design](workflows/docs-loop-workflow-design.md#separation-from-docs-updater).
+Hook/manual skills (e.g. `docs-updater` in `common`) are **not** loop packages — see [Docs Triage Workflow Design](workflows/loop-docs-triage-workflow-design.md#separation-from-docs-updater).
 
 ## Naming Conventions
 
@@ -106,7 +109,17 @@ APM packages provide Skills only and do not distribute Workflows/Actions.
 | `.apm/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh` | Failed run detection (stable filters only)                |
 | `.apm/skills/loop-ci-sweeper/scripts/update_run_ledger.sh`  | `domain_persistence_script` target for finalize           |
 
-For workflow env and behavior, see [CI Sweeper Workflow Design](workflows/ci-sweeper-workflow-design.md).
+For workflow env and behavior, see [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md).
+
+## loop-changelog (Changelog Maintenance)
+
+| Component                                                        | Description                                             |
+| ---------------------------------------------------------------- | ------------------------------------------------------- |
+| `.apm/skills/loop-changelog/SKILL.md`                            | Keep a Changelog editing from conventional commit facts |
+| `.apm/skills/loop-changelog/scripts/detect_changelog_commits.sh` | Per-branch conventional commit facts (`commits[]`)      |
+| `eval.yaml` + `evals/tasks/`                                     | waza evaluation suite                                   |
+
+For workflow env and behavior, see [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md).
 
 ## Execution Flow
 
@@ -169,8 +182,9 @@ flowchart TD
 graph LR
     %% Caller Workflows
     subgraph callers["Caller Workflows"]
-        CW1[on-loop-docs-triage.yaml]
-        CW2[on-loop-ci-sweeper.yaml]
+        CW1[on-loop-changelog.yaml]
+        CW2[on-loop-docs-triage.yaml]
+        CW3[on-loop-ci-sweeper.yaml]
     end
 
     %% Reusable Workflows
@@ -200,30 +214,35 @@ graph LR
 
     %% Skills
     subgraph skills["Skills"]
-        SK1[loop-docs-triage]
-        SK2[loop-ci-sweeper]
+        SK1[loop-changelog]
+        SK2[loop-docs-triage]
+        SK3[loop-ci-sweeper]
     end
 
     %% State
     subgraph state["State"]
-        ST1[.loop/state-docs-triage.json]
-        ST2[.loop/state-ci-sweeper.json]
-        ST3[.loop/loop-run-log.md]
-        ST4[.loop/loop-budget.json]
+        ST1[.loop/state-changelog.json]
+        ST2[.loop/state-docs-triage.json]
+        ST3[.loop/state-ci-sweeper.json]
+        ST4[.loop/loop-run-log.md]
+        ST5[.loop/loop-budget.json]
     end
 
     %% Relationships
     CW1 --> RW1
     CW2 --> RW1
+    CW3 --> RW1
     CW1 --> CA0
     CW2 --> CA0
+    CW3 --> CA0
     CW1 --> CA3
     CW2 --> CA3
+    CW3 --> CA3
     CA0 --> CA4
     CA0 --> CA5
     CA0 --> CA6
-    CA0 --> ST3
     CA0 --> ST4
+    CA0 --> ST5
     RW1 --> E1
     RW1 --> CA1
     RW1 --> CA2
@@ -232,13 +251,16 @@ graph LR
     CA1 --> CA9
     RW1 --> SK1
     RW1 --> SK2
+    RW1 --> SK3
     CA3 --> CA7
     CA3 --> CA10
     CA6 --> ST1
     CA6 --> ST2
+    CA6 --> ST3
     CA7 --> ST1
     CA7 --> ST2
-    CA10 --> ST3
+    CA7 --> ST3
+    CA10 --> ST4
 ```
 
 ## STATE Files
@@ -249,7 +271,7 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 .loop/
   state-docs-triage.json    ← owned by loop-docs-triage
   state-ci-sweeper.json     ← owned by loop-ci-sweeper
-  state-changelog.json      ← future: owned by changelog-loop
+  state-changelog.json      ← owned by loop-changelog
   loop-budget.json          ← per-loop daily run/token caps (read by loop-detect)
   loop-run-log.md           ← shared JSONL run history (append via loop-run-log; 30-day prune)
   .gitkeep
@@ -623,14 +645,14 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 
 #### Verify
 
-| Aspect             | Definition                                                                                                                                                                                                                                                                               |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Responsibility** | Independently evaluate whether Agent output meets quality criteria. Default stance is reject                                                                                                                                                                                             |
-| **Input**          | Agent branch, base branch (from `target_json`), verifier criteria, denylist, allowlist, `verifier_context` (always wired; may be empty)                                                                                                                                                  |
-| **Output**         | `verdict` (APPROVE / REJECT), `reason` (string); on REJECT, structured `files` / `issue` / `fix` when possible (surfaced as `open_rejections`)                                                                                                                                           |
-| **May modify**     | Nothing. Read-only phase                                                                                                                                                                                                                                                                 |
-| **Must be**        | A separate agent session from the implementer, run inside `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3) — not a separate workflow such as a removed `ci-loop-verifier.yaml`                                                                                             |
-| **Evaluates**      | Semantic quality (factual accuracy, relevance, no hallucination). Does **not** re-run CI or linters. **May** evaluate whether the diff plausibly addresses caller-provided `verifier_context` (e.g. CI log excerpt) — required for [CI Sweeper](workflows/ci-sweeper-workflow-design.md) |
+| Aspect             | Definition                                                                                                                                                                                                                                                                                    |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Responsibility** | Independently evaluate whether Agent output meets quality criteria. Default stance is reject                                                                                                                                                                                                  |
+| **Input**          | Agent branch, base branch (from `target_json`), verifier criteria, denylist, allowlist, `verifier_context` (always wired; may be empty)                                                                                                                                                       |
+| **Output**         | `verdict` (APPROVE / REJECT), `reason` (string); on REJECT, structured `files` / `issue` / `fix` when possible (surfaced as `open_rejections`)                                                                                                                                                |
+| **May modify**     | Nothing. Read-only phase                                                                                                                                                                                                                                                                      |
+| **Must be**        | A separate agent session from the implementer, run inside `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3) — not a separate workflow such as a removed `ci-loop-verifier.yaml`                                                                                                  |
+| **Evaluates**      | Semantic quality (factual accuracy, relevance, no hallucination). Does **not** re-run CI or linters. **May** evaluate whether the diff plausibly addresses caller-provided `verifier_context` (e.g. CI log excerpt) — required for [CI Sweeper](workflows/loop-ci-sweeper-workflow-design.md) |
 
 #### Finalize
 

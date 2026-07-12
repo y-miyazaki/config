@@ -34,19 +34,19 @@ Two **independent**, caller-configurable capabilities:
 
 Defined here only. Other docs link to this section.
 
-| Variable                        | Description                                                                                                  | Default / empty            |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------- |
-| `LOOP_INTEGRATION_BRANCHES`     | Comma-separated branch patterns. Empty = mode off.                                                           | `""`                       |
-| `LOOP_PULL_REQUESTS`            | `true` / `false`.                                                                                            | `false`                    |
-| `LOOP_BRANCH_MATCH`             | `list` \| `glob` \| `regex`.                                                                                 | `glob`                     |
-| `LOOP_PRIORITY`                 | Cron mode order. Overridden by [trigger-aware priority](#trigger-aware-priority).                            | `integration,pull_request` |
-| `LOOP_FINALIZE_INTEGRATION`     | `open_pr` or `push` (L3).                                                                                    | `open_pr`                  |
-| `LOOP_FINALIZE_PULL_REQUEST`    | `push_head`.                                                                                                 | `push_head`                |
-| `DEFAULT_LEVEL`                 | `L1` \| `L2` \| `L3`. [Single level switch](#single-level-switch).                                           | `L2`                       |
-| `LOOP_PR_EXCLUDE`               | PR exclusion tokens — see [CI Sweeper Workflow](workflows/ci-sweeper-workflow-design.md#pr-exclusion-rules). | `fork,draft,label:no-loop` |
-| `LOOP_PR_INCLUDE_BOTS`          | Bot logins to include. Empty = all bots excluded.                                                            | `""`                       |
-| `LOOP_MAX_TARGETS_PER_SCHEDULE` | Max targets per cron tick (fan-out cap).                                                                     | `3`                        |
-| `LOOP_STATE_PUSH_BRANCH`        | Branch for `.loop/*` persistence commits.                                                                    | repository default branch  |
+| Variable                        | Description                                                                                                       | Default / empty            |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `LOOP_INTEGRATION_BRANCHES`     | Comma-separated branch patterns. Empty = mode off.                                                                | `""`                       |
+| `LOOP_PULL_REQUESTS`            | `true` / `false`.                                                                                                 | `false`                    |
+| `LOOP_BRANCH_MATCH`             | `list` \| `glob` \| `regex`.                                                                                      | `glob`                     |
+| `LOOP_PRIORITY`                 | Cron mode order. Overridden by [trigger-aware priority](#trigger-aware-priority).                                 | `integration,pull_request` |
+| `LOOP_FINALIZE_INTEGRATION`     | `open_pr` or `push` (L3).                                                                                         | `open_pr`                  |
+| `LOOP_FINALIZE_PULL_REQUEST`    | `push_head`.                                                                                                      | `push_head`                |
+| `DEFAULT_LEVEL`                 | `L1` \| `L2` \| `L3`. [Single level switch](#single-level-switch).                                                | `L2`                       |
+| `LOOP_PR_EXCLUDE`               | PR exclusion tokens — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md#pr-exclusion-rules). | `fork,draft,label:no-loop` |
+| `LOOP_PR_INCLUDE_BOTS`          | Bot logins to include. Empty = all bots excluded.                                                                 | `""`                       |
+| `LOOP_MAX_TARGETS_PER_SCHEDULE` | Max targets per cron tick (fan-out cap).                                                                          | `3`                        |
+| `LOOP_STATE_PUSH_BRANCH`        | Branch for `.loop/*` persistence commits.                                                                         | repository default branch  |
 
 `.loop/*` metadata is **always centralized** on `LOOP_STATE_PUSH_BRANCH` (typically `main`), aligned with [cobusgreyling loop-engineering](https://github.com/cobusgreyling/loop-engineering). Fix PRs may target other branches; state does not follow `target.to.branch`.
 
@@ -71,7 +71,7 @@ Defined here only. Other docs link to this section.
 | `schedule`     | `LOOP_PRIORITY` — integration before pull_request                              |
 | `workflow_run` | pull_request when `head_branch` is open PR; else integration for failed branch |
 
-`workflow_run` triggers remain disabled until per-loop ops checklist passes — see [CI Sweeper Workflow](workflows/ci-sweeper-workflow-design.md#workflow_run-operational-checklist).
+`workflow_run` triggers remain disabled until per-loop ops checklist passes — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md#workflow_run-operational-checklist).
 
 ## `loop-detect` orchestration
 
@@ -178,7 +178,7 @@ On first Phase 1+ read, if legacy flat `last_sha` exists and `targets` is absent
 | `attempt_fingerprint`  | workflow run / commit range + failure class |
 | `consecutive_failures` | ≥3 → `circuit_breaker` (`skip_reason`)      |
 
-`outcome: watch` does **not** increment `consecutive_failures`. CI run-ledger is **secondary** dedupe — see [CI Sweeper Workflow](workflows/ci-sweeper-workflow-design.md#detect-truth-source).
+`outcome: watch` does **not** increment `consecutive_failures`. CI run-ledger is **secondary** dedupe — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md#detect-truth-source).
 
 ## Cross-Loop Coordination (`acting_on`)
 
@@ -216,26 +216,27 @@ Caller/workflow steps: [Loop Caller Workflows Design](loop-caller-workflows-desi
 
 ## Workflow Design Documents
 
-| Loop                 | Document                                                              | Caller workflow            |
-| -------------------- | --------------------------------------------------------------------- | -------------------------- |
-| **loop-ci-sweeper**  | [CI Sweeper Workflow Design](workflows/ci-sweeper-workflow-design.md) | `on-loop-ci-sweeper.yaml`  |
-| **loop-docs-triage** | [Docs Loop Workflow Design](workflows/docs-loop-workflow-design.md)   | `on-loop-docs-triage.yaml` |
+| Loop                 | Document                                                                     | Caller workflow            |
+| -------------------- | ---------------------------------------------------------------------------- | -------------------------- |
+| **loop-changelog**   | [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md)     | `on-loop-changelog.yaml`   |
+| **loop-ci-sweeper**  | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md)   | `on-loop-ci-sweeper.yaml`  |
+| **loop-docs-triage** | [Docs Triage Workflow Design](workflows/loop-docs-triage-workflow-design.md) | `on-loop-docs-triage.yaml` |
 
 Add new loops as `docs/explanation/workflows/<name>-workflow-design.md` without growing this file.
 
 ## Decision Summary
 
-| Question               | Decision                                                       |
-| ---------------------- | -------------------------------------------------------------- |
-| Config                 | Caller `env` (table above)                                     |
-| Target shape           | `mode` + from/to/base                                          |
-| Branch scan            | `loop-detect` enumerates + checkout; detect script per context |
-| Fan-out                | `target_matrix` → execute/finalize matrix                      |
-| State persistence      | `LOOP_STATE_PUSH_BRANCH` (default branch), not per target      |
-| `pr-ci-healer` package | **No**                                                         |
-| Levels                 | Single `DEFAULT_LEVEL`; L2 default                             |
-| Bot PRs                | Excluded; `LOOP_PR_INCLUDE_BOTS` opt-in                        |
-| Detect filters         | Stable mechanical only; Skill classifies Watch                 |
+| Question                    | Decision                                                       |
+| --------------------------- | -------------------------------------------------------------- |
+| Config                      | Caller `env` (table above)                                     |
+| Target shape                | `mode` + from/to/base                                          |
+| Branch scan                 | `loop-detect` enumerates + checkout; detect script per context |
+| Fan-out                     | `target_matrix` → execute/finalize matrix                      |
+| State persistence           | `LOOP_STATE_PUSH_BRANCH` (default branch), not per target      |
+| `loop-pr-ci-healer` package | **No**                                                         |
+| Levels                      | Single `DEFAULT_LEVEL`; L2 default                             |
+| Bot PRs                     | Excluded; `LOOP_PR_INCLUDE_BOTS` opt-in                        |
+| Detect filters              | Stable mechanical only; Skill classifies Watch                 |
 
 ## References
 

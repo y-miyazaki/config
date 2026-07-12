@@ -170,8 +170,13 @@ function report_failure {
             esac
             ;;
         cursor)
-            echo "$reason" >&2
-            exit 2
+            if [[ $hook_event == "stop" ]]; then
+                jq -n --arg reason "$reason" '{followup_message: $reason}'
+                exit 0
+            else
+                echo "$reason" >&2
+                exit 2
+            fi
             ;;
         kiro)
             if [[ $hook_event == "stop" ]]; then

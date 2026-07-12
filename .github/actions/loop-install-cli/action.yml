@@ -31,7 +31,7 @@ runs:
       env:
         CLI_VERSION: ${{ inputs.cli_version }}
         ENGINE: ${{ inputs.engine }}
-      run: |
+      run: | # zizmor: ignore[adhoc-packages] version pinned via RESOLVED
         set -euo pipefail
         case "${ENGINE}" in
           claude) PKG="@anthropic-ai/claude-code" ;;

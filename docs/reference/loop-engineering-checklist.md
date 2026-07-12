@@ -5,7 +5,7 @@ For design rationale, see [Loop Engineering Design](../explanation/loop-engineer
 
 ## New Loop Creation Checklist
 
-Use when implementing a new `on-loop-*.yaml` workflow. Add `docs/explanation/workflows/<name>-workflow-design.md` for domain specifics.
+Use when implementing a new `on-loop-*.yaml` workflow. Add `docs/explanation/workflows/loop-<name>-workflow-design.md` for domain specifics.
 
 ### Design Invariants
 

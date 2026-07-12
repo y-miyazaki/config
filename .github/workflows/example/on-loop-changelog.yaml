@@ -1,0 +1,236 @@
+# Loop workflow: Changelog maintenance
+# Detects unreleased conventional commits, runs bounded Agent→Verify loop, then finalizes.
+# Requires repository secret: AGENT_TOKEN (engine API key; see DEFAULT_ENGINE).
+name: on-loop-changelog
+
+on:
+  schedule:
+    - cron: "0 10 * * 5"
+  workflow_call:
+    secrets:
+      AGENT_TOKEN:
+        required: true
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  copilot-requests: write # zizmor: ignore[excessive-permissions]
+  pull-requests: write
+
+# concurrency.group cannot use env (GitHub evaluates concurrency before env; allowed: github, inputs, vars).
+# Keep workflow name aligned with LOOP_NAME via on-loop-<LOOP_NAME> — group follows name on copy.
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}
+
+env:
+  AGENT_IMPLEMENTER_MAX_TURNS: "5"
+  # cursor model: `agent --list-models`
+  AGENT_IMPLEMENTER_MODEL: grok-4.5-medium
+  AGENT_LOOP_MAX_ATTEMPTS: "3"
+  AGENT_VERIFIER_CRITERIA: |
+    ## Criteria for APPROVE
+
+    ALL of the following must be true:
+    1. Changes are limited to the target changelog file only
+    2. New entries appear under `## [Unreleased]` and match the provided commits
+    3. When `repository_url` is provided, each new bullet includes a commit link (`[short-sha](repository_url/commit/sha)`)
+    4. When `compare_url` is provided, `## [Unreleased]` includes at most one `[Full diff](compare_url)` line
+    5. Released version sections are preserved
+    6. No version numbers or release dates are added or modified
+    7. No duplicate entries for the same commit subject
+
+    ## Criteria for REJECT
+
+    ANY of the following triggers REJECT:
+    - Changes outside CHANGELOG.md
+    - Missing or incorrect mapping for provided commits
+    - Missing commit links when `repository_url` was provided in detect JSON
+    - Removed or rewritten released sections
+    - Version bump or tag-like edits
+    - Duplicate or hallucinated entries
+  AGENT_VERIFIER_MAX_TURNS: "3"
+  # cursor model: `agent --list-models`
+  AGENT_VERIFIER_MODEL: composer-2.5
+  CHANGELOG_FILE: &changelog_file CHANGELOG.md
+  CHANGELOG_MERGE_COMMITS: "false"
+  DEFAULT_BASE_BRANCH: main
+  DEFAULT_ENGINE: cursor
+  DEFAULT_LEVEL: L2
+  LOOP_ALLOWLIST: *changelog_file
+  LOOP_BUDGET_MAX_RUNS_PER_DAY: "1"
+  LOOP_BUDGET_MAX_TOKENS_PER_DAY: "500000"
+  LOOP_DETECT_SCRIPT: .agents/skills/loop-changelog/scripts/detect_changelog_commits.sh
+  LOOP_FINALIZE_INTEGRATION: open_pr
+  LOOP_INFER_FILES_PATTERN: 'CHANGELOG\.md'
+  LOOP_INTEGRATION_BRANCHES: main
+  LOOP_MAX_TARGETS_PER_SCHEDULE: "3"
+  LOOP_NAME: changelog
+  LOOP_NO_CHANGES_VERDICT: REJECT
+  LOOP_PR_BODY: |
+    ## Summary
+
+    Automated CHANGELOG.md update by `loop-changelog`.
+
+    ---
+    *This PR was created by a loop automation. Review before merging.*
+  LOOP_PR_TITLE: "chore(changelog): update CHANGELOG.md (loop-changelog)"
+  LOOP_PROMPT_INSTRUCTIONS: |
+    Update the target changelog file under `## [Unreleased]` using Keep a Changelog section names.
+    Map each provided commit to a single bullet. When `repository_url` is present, append a markdown commit link using the full `sha`.
+    When `compare_url` is present, add `[Full diff](compare_url)` once under `## [Unreleased]` if not already there.
+    Do not bump versions or edit released sections.
+  LOOP_PULL_REQUESTS: "false"
+  LOOP_STATE_PUSH_BRANCH: main
+  SKILL_NAME: loop-changelog
+
+jobs:
+  detect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      agent_implementer_max_turns: ${{ steps.detect.outputs.agent_implementer_max_turns }}
+      agent_implementer_model: ${{ steps.detect.outputs.agent_implementer_model }}
+      agent_loop_max_attempts: ${{ steps.detect.outputs.agent_loop_max_attempts }}
+      agent_verifier_criteria: ${{ steps.detect.outputs.agent_verifier_criteria }}
+      agent_verifier_max_turns: ${{ steps.detect.outputs.agent_verifier_max_turns }}
+      agent_verifier_model: ${{ steps.detect.outputs.agent_verifier_model }}
+      allowlist: ${{ steps.detect.outputs.allowlist }}
+      base_branch: ${{ steps.detect.outputs.base_branch }}
+      engine: ${{ steps.detect.outputs.engine }}
+      infer_files_pattern: ${{ steps.detect.outputs.infer_files_pattern }}
+      level: ${{ steps.detect.outputs.level }}
+      loop_name: ${{ steps.detect.outputs.loop_name }}
+      no_changes_verdict: ${{ steps.detect.outputs.no_changes_verdict }}
+      pr_body: ${{ steps.detect.outputs.pr_body }}
+      pr_title: ${{ steps.detect.outputs.pr_title }}
+      run_started_at: ${{ steps.timing.outputs.started_at }}
+      should_run: ${{ steps.detect.outputs.should_run }}
+      skill_name: ${{ steps.detect.outputs.skill_name }}
+      skip_reason: ${{ steps.detect.outputs.skip_reason }}
+      state_file: ${{ steps.detect.outputs.state_file }}
+      state_push_branch: ${{ env.LOOP_STATE_PUSH_BRANCH }}
+      target_matrix: ${{ steps.detect.outputs.target_matrix }}
+    steps:
+      - name: Record Run Start
+        id: timing
+        run: echo "started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Detect Loop Work
+        id: detect
+        env:
+          CHANGELOG_FILE: ${{ env.CHANGELOG_FILE }}
+          CHANGELOG_MERGE_COMMITS: ${{ env.CHANGELOG_MERGE_COMMITS }}
+        uses: ./.github/actions/loop-detect
+        with:
+          agent_implementer_max_turns: ${{ env.AGENT_IMPLEMENTER_MAX_TURNS }}
+          agent_implementer_model: ${{ env.AGENT_IMPLEMENTER_MODEL }}
+          agent_loop_max_attempts: ${{ env.AGENT_LOOP_MAX_ATTEMPTS }}
+          agent_verifier_criteria: ${{ env.AGENT_VERIFIER_CRITERIA }}
+          agent_verifier_max_turns: ${{ env.AGENT_VERIFIER_MAX_TURNS }}
+          agent_verifier_model: ${{ env.AGENT_VERIFIER_MODEL }}
+          allowlist: ${{ env.LOOP_ALLOWLIST }}
+          base_branch: ${{ env.DEFAULT_BASE_BRANCH }}
+          budget_max_runs_per_day: ${{ env.LOOP_BUDGET_MAX_RUNS_PER_DAY }}
+          budget_max_tokens_per_day: ${{ env.LOOP_BUDGET_MAX_TOKENS_PER_DAY }}
+          detect_script: ${{ env.LOOP_DETECT_SCRIPT }}
+          engine: ${{ env.DEFAULT_ENGINE }}
+          infer_files_pattern: ${{ env.LOOP_INFER_FILES_PATTERN }}
+          level: ${{ env.DEFAULT_LEVEL }}
+          loop_finalize_integration: ${{ env.LOOP_FINALIZE_INTEGRATION }}
+          loop_integration_branches: ${{ env.LOOP_INTEGRATION_BRANCHES }}
+          loop_max_targets_per_schedule: ${{ env.LOOP_MAX_TARGETS_PER_SCHEDULE }}
+          loop_name: ${{ env.LOOP_NAME }}
+          loop_pull_requests: ${{ env.LOOP_PULL_REQUESTS }}
+          loop_state_push_branch: ${{ env.LOOP_STATE_PUSH_BRANCH }}
+          no_changes_verdict: ${{ env.LOOP_NO_CHANGES_VERDICT }}
+          pr_body: ${{ env.LOOP_PR_BODY }}
+          pr_title: ${{ env.LOOP_PR_TITLE }}
+          prompt_instructions: ${{ env.LOOP_PROMPT_INSTRUCTIONS }}
+          skill_name: ${{ env.SKILL_NAME }}
+
+  execute:
+    concurrency:
+      cancel-in-progress: true
+      group: on-loop-changelog-${{ matrix.target.target_json.key }}
+    if: needs.detect.outputs.should_run == 'true'
+    needs: detect
+    permissions:
+      contents: write
+      copilot-requests: write # zizmor: ignore[excessive-permissions]
+      pull-requests: write
+    strategy:
+      matrix:
+        target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
+    uses: ./.github/workflows/ci-loop-agent.yaml
+    with:
+      agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
+      agent_implementer_model: ${{ needs.detect.outputs.agent_implementer_model }}
+      agent_loop_max_attempts: ${{ needs.detect.outputs.agent_loop_max_attempts }}
+      agent_verifier_criteria: ${{ needs.detect.outputs.agent_verifier_criteria }}
+      agent_verifier_max_turns: ${{ needs.detect.outputs.agent_verifier_max_turns }}
+      agent_verifier_model: ${{ needs.detect.outputs.agent_verifier_model }}
+      allowlist: ${{ needs.detect.outputs.allowlist }}
+      auto_merge: ${{ (needs.detect.outputs.level == 'L3' && matrix.target.target_json.finalize == 'open_pr') && 'true' || 'false' }}
+      base_branch: ${{ matrix.target.target_json.mode == 'pull_request' && matrix.target.target_json.base.branch || matrix.target.target_json.to.branch }}
+      current_sha: ${{ matrix.target.target_json.from.ref }}
+      engine: ${{ needs.detect.outputs.engine }}
+      finalize_enabled: true
+      infer_files_pattern: ${{ needs.detect.outputs.infer_files_pattern }}
+      level: ${{ needs.detect.outputs.level }}
+      loop_name: ${{ needs.detect.outputs.loop_name }}
+      no_changes_verdict: ${{ needs.detect.outputs.no_changes_verdict }}
+      pr_body: |
+        ${{ needs.detect.outputs.pr_body }}
+
+        - Level: ${{ needs.detect.outputs.level }}
+        - Target: `${{ matrix.target.target_json.key }}`
+        - Skip reason: ${{ needs.detect.outputs.skip_reason }}
+      pr_title: ${{ needs.detect.outputs.pr_title }}
+      prompt_text: ${{ matrix.target.prompt }}
+      run_started_at: ${{ needs.detect.outputs.run_started_at }}
+      skill_name: ${{ needs.detect.outputs.skill_name }}
+      skip_reason: ${{ needs.detect.outputs.skip_reason }}
+      state_file: ${{ needs.detect.outputs.state_file }}
+      state_push_branch: ${{ needs.detect.outputs.state_push_branch }}
+      target_json: ${{ toJson(matrix.target.target_json) }}
+      verifier_context: ${{ matrix.target.verifier_context }}
+    secrets:
+      AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+      GH_TOKEN_PUSH: ${{ secrets.GITHUB_TOKEN }}
+
+  record-skip:
+    if: >-
+      needs.detect.result == 'success' &&
+      needs.detect.outputs.should_run == 'false' &&
+      (needs.detect.outputs.skip_reason == 'circuit_breaker' ||
+      needs.detect.outputs.skip_reason == 'budget')
+    needs: detect
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Append Skip Run Log
+        uses: ./.github/actions/loop-run-log
+        with:
+          base_branch: ${{ needs.detect.outputs.base_branch }}
+          loop_name: ${{ needs.detect.outputs.loop_name }}
+          outcome: skipped
+          run_started_at: ${{ needs.detect.outputs.run_started_at }}
+          skip_reason: ${{ needs.detect.outputs.skip_reason }}
+          token: ${{ github.token }}

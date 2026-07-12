@@ -1,6 +1,6 @@
 # CI Sweeper Workflow Design
 
-Workflow and domain design for the `ci-sweeper` loop.
+Workflow and domain design for the `loop-ci-sweeper` (`ci-sweeper`) loop.
 
 | Layer        | Document                                                           |
 | ------------ | ------------------------------------------------------------------ |
@@ -12,7 +12,28 @@ Workflow and domain design for the `ci-sweeper` loop.
 
 ## Purpose
 
-Automated minimal repair when CI fails on integration branches and/or open PR heads. One engine; no separate `pr-ci-healer` package.
+Automated minimal repair when CI fails on integration branches and/or open PR heads. One engine; no separate `loop-pr-ci-healer` package.
+
+### Supported use cases
+
+- Integration branch CI failure → open a fix PR **to** the watch branch (`main`, `develop`, `release/*`, …)
+- Open PR head CI failure → push a minimal fix **to the PR branch** (`push_head`)
+- Classify failures as Fix / Watch / Escalate; apply small lint, workflow, shell, or doc edits when actionable
+- Dedupe by `workflow_run_id` ledger; skip infra/flake/env failures as `outcome: watch`
+- Cron polling (default); optional `workflow_run` after [ops checklist](#workflow_run-operational-checklist)
+
+### Out of scope
+
+- Infra outages, secrets, runner capacity, or persistent flakes (Watch — no code edit)
+- Large refactors (>5 files), auth/payment/credential paths
+- Merging PRs or pushing directly to the default branch (L2 integration uses `open_pr` only)
+- Re-running CI in the verifier (semantic fit against log excerpt only)
+- Manual interactive debugging as a substitute for the loop
+- Separate `loop-pr-ci-healer` package
+
+Skill execution boundaries: `loop-ci-sweeper` SKILL.md (`USE FOR` / `DO NOT USE FOR`).
+
+### Modes
 
 | Mode           | User expectation                               |
 | -------------- | ---------------------------------------------- |
@@ -25,7 +46,7 @@ Link to [canonical `LOOP_*`](../multi-branch-loops-design.md#caller-configuratio
 
 ```yaml
 env:
-  CI_SWEEPER_EXCLUDED_WORKFLOWS: on-loop-ci-sweeper,on-loop-docs-triage,ci-loop-agent
+  CI_SWEEPER_EXCLUDED_WORKFLOWS: on-loop-changelog,on-loop-ci-sweeper,on-loop-docs-triage,ci-loop-agent
   CI_SWEEPER_LEDGER_FILE: .loop/ci-sweeper-run-ledger.json
   CI_SWEEPER_REJECT_RETRY_POLICY: block
   DEFAULT_LEVEL: L2
@@ -153,7 +174,7 @@ Dogfood: **`DEFAULT_LEVEL=L2`** until [L3 promotion gate](../loop-engineering-de
 Before uncommenting `workflow_run` in `on-loop-ci-sweeper.yaml`:
 
 - [ ] zizmor / security review complete
-- [ ] `CI_SWEEPER_EXCLUDED_WORKFLOWS` includes `on-loop-ci-sweeper`, `on-loop-docs-triage`, `ci-loop-agent`
+- [ ] `CI_SWEEPER_EXCLUDED_WORKFLOWS` includes `on-loop-changelog`, `on-loop-ci-sweeper`, `on-loop-docs-triage`, `ci-loop-agent`
 - [ ] Concurrency prevents overlapping runs on same `target.key`
 - [ ] Event path sets `CI_SWEEPER_*` env on detect job
 - [ ] Failed workflow is not the sweeper’s own finalize push (`[skip ci]` on ledger commits)
@@ -163,6 +184,10 @@ Before uncommenting `workflow_run` in `on-loop-ci-sweeper.yaml`:
 ## dependency-update (roadmap)
 
 `LOOP_PULL_REQUESTS=true` + `LOOP_PR_INCLUDE_BOTS=renovate[bot]`. Same workflow; no new package.
+
+## Cross-Loop Note
+
+CI failure on `integration:main` takes priority over `loop-docs-triage` and `loop-changelog` via [acting_on](../multi-branch-loops-design.md#cross-loop-coordination-acting_on). Include loop caller workflows in `CI_SWEEPER_EXCLUDED_WORKFLOWS` to prevent self-trigger recursion.
 
 ## References
 

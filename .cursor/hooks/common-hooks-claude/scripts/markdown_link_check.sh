@@ -71,7 +71,7 @@ function get_changed_files {
 #     - VS Code: Stop → hookSpecificOutput.decision, PostToolUse → hookSpecificOutput
 #     - Copilot CLI: agentStop → {"decision":"block"}, postToolUse → additionalContext
 #     - Antigravity: Stop → {"decision":"continue","reason":"..."}
-#     - Cursor: exit 2 + stderr (afterFileEdit, stop etc.)
+#     - Cursor: stop → followup_message, other events → exit 2 + stderr
 #     - unknown: exit 2 + stderr
 #
 # Arguments:
@@ -185,8 +185,13 @@ function report_failure {
             esac
             ;;
         cursor)
-            echo "$reason" >&2
-            exit 2
+            if [[ $hook_event == "stop" ]]; then
+                jq -n --arg reason "$reason" '{followup_message: $reason}'
+                exit 0
+            else
+                echo "$reason" >&2
+                exit 2
+            fi
             ;;
         kiro)
             if [[ $hook_event == "stop" ]]; then

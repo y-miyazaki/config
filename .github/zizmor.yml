@@ -6,6 +6,7 @@ rules:
   excessive-permissions:
     ignore:
       - ci-loop-agent.yaml
+      - on-loop-changelog.yaml
       - on-loop-ci-sweeper.yaml
       - on-loop-docs-triage.yaml
 

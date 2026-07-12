@@ -8,6 +8,7 @@ description: "AI Assistant Instructions for Shell Script"
 ## Scope
 
 - Scope is limited to implementing, updating, and validating Shell scripts (`*.sh`).
+- Bats suites (`*.bats`) follow `bats.instructions.md` in this package.
 
 ## Standards
 
@@ -232,9 +233,9 @@ Write `None` for sections that do not apply. **Do not omit sections** — especi
 ### Testing (TEST)
 
 - TEST-01 (SHOULD): Implement Unit Tests
-  - Check: Are unit tests implemented with Bats?
+  - Check: Are unit tests implemented with Bats per `bats.instructions.md`?
 - TEST-02 (SHOULD): Bats Test Functions in a-z Order
-  - Check: Are test functions placed in a-z order after setup/teardown?
+  - Check: Are `@test` functions placed in a-z order after setup/teardown (see `bats.instructions.md`)?
 - TEST-03 (SHOULD): CI/CD Integration
   - Check: Are tests integrated into CI/CD like GitHub Actions?
 
@@ -267,10 +268,10 @@ bash <agent-root>/skills/shell-script-validation/scripts/validate.sh
 ```bash
 bash -n script.sh
 shellcheck script.sh
-bats test/bats/
+bats -r test/bats
 ```
 
-**Detailed guide**: See shell-script-validation skill SKILL.md. For comment/header conventions, see shell-script-review skill and the Skill Scripts section above.
+**Detailed guide**: See shell-script-validation skill SKILL.md. For Bats suite layout and helpers, see `bats.instructions.md`. For comment/header conventions, see shell-script-review skill.
 
 ## Security Guidelines
 

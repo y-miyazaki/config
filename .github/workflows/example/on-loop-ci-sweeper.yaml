@@ -68,7 +68,7 @@ env:
   AGENT_VERIFIER_MAX_TURNS: "3"
   # cursor model: `agent --list-models`
   AGENT_VERIFIER_MODEL: composer-2.5
-  CI_SWEEPER_EXCLUDED_WORKFLOWS: "on-loop-ci-sweeper,on-loop-docs-triage,ci-loop-agent"
+  CI_SWEEPER_EXCLUDED_WORKFLOWS: "on-loop-changelog,on-loop-ci-sweeper,on-loop-docs-triage,ci-loop-agent"
   CI_SWEEPER_INCLUDED_WORKFLOWS: ""
   CI_SWEEPER_LEDGER_FILE: .loop/ci-sweeper-run-ledger.json
   CI_SWEEPER_REJECT_MAX_RETRIES: "3"

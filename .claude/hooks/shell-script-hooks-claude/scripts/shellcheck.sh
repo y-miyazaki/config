@@ -53,10 +53,12 @@ fi
 #
 #######################################
 function get_changed_files {
+    local -a shell_ext_globs=('*.sh' '*.bats' '*.bash')
+
     {
-        git diff --name-only --diff-filter=ACMR -- '*.sh' '*.bats' 2> /dev/null || true
-        git diff --cached --name-only --diff-filter=ACMR -- '*.sh' '*.bats' 2> /dev/null || true
-        git ls-files --others --exclude-standard -- '*.sh' '*.bats' 2> /dev/null || true
+        git diff --name-only --diff-filter=ACMR -- "${shell_ext_globs[@]}" 2> /dev/null || true
+        git diff --cached --name-only --diff-filter=ACMR -- "${shell_ext_globs[@]}" 2> /dev/null || true
+        git ls-files --others --exclude-standard -- "${shell_ext_globs[@]}" 2> /dev/null || true
     } | awk 'NF' | sort -u
 }
 
@@ -70,7 +72,7 @@ function get_changed_files {
 #     - Claude Code: Stop → {"decision":"block"}, PostToolUse → hookSpecificOutput
 #     - GitHub Copilot: agentStop → {"decision":"block"}, postToolUse → additionalContext
 #     - Antigravity: Stop → {"decision":"continue","reason":"..."}
-#     - Cursor: exit 2 + stderr (afterFileEdit, stop etc.)
+#     - Cursor: stop → followup_message, other events → exit 2 + stderr
 #     - unknown: exit 2 + stderr
 #
 # Arguments:
@@ -184,8 +186,13 @@ function report_failure {
             esac
             ;;
         cursor)
-            echo "$reason" >&2
-            exit 2
+            if [[ $hook_event == "stop" ]]; then
+                jq -n --arg reason "$reason" '{followup_message: $reason}'
+                exit 0
+            else
+                echo "$reason" >&2
+                exit 2
+            fi
             ;;
         kiro)
             if [[ $hook_event == "stop" ]]; then

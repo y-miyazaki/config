@@ -121,6 +121,33 @@ function build_verifier_context_from_result {
         return 0
     fi
 
+    if jq -e '.commits' <<< "${detect_result}" > /dev/null 2>&1; then
+        jq -r '
+            if (.commits | length) == 0 then ""
+            else
+                (.repository_url // "") as $repo_url
+                | "## Changelog Commits\n"
+                + "- file: " + (.changelog_file // "CHANGELOG.md") + "\n"
+                + "- count: " + ((.commits | length) | tostring) + "\n"
+                + (if ((.compare_url // "") | length) > 0 then "- compare: " + .compare_url + "\n" else "" end)
+                + (.commits[] |
+                    "- **\(.type)\(if ((.scope // "") | length) > 0 then "(\(.scope))" else "" end)**: "
+                    + .subject
+                    + (
+                        if ($repo_url | length) > 0 then
+                            " ([\(.sha[0:7])](\($repo_url)/commit/\(.sha)))"
+                        else
+                            " (`\(.sha[0:8])`)"
+                        end
+                    )
+                    + (if .breaking then " [breaking]" else "" end)
+                    + "\n"
+                )
+            end
+        ' <<< "${detect_result}"
+        return 0
+    fi
+
     if jq -e '.affected_docs' <<< "${detect_result}" > /dev/null 2>&1; then
         jq -r '
             "## Change Detection\n"

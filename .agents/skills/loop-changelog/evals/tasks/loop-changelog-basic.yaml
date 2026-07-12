@@ -1,0 +1,17 @@
+name: loop-changelog-basic
+description: Process conventional commits and report changelog updates
+input:
+  changelog_file: CHANGELOG.md
+  commit_range: abc1234..def5678
+  level: L2
+  skip: false
+  commits:
+    - sha: def5678
+      type: feat
+      scope: changelog
+      breaking: false
+      subject: add loop-changelog workflow
+expect:
+  output_contains:
+    - Commits Processed
+    - Summary

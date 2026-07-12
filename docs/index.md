@@ -35,8 +35,9 @@ _Understanding-oriented discussion of concepts and decisions._
 - [Multi-Branch Loops Design](explanation/multi-branch-loops-design.md)
 - [Loop Caller Workflows Design](explanation/loop-caller-workflows-design.md)
 - [CI Healing Loops Design](explanation/ci-healing-loops-design.md) (index — split docs)
-- [CI Sweeper Workflow Design](explanation/workflows/ci-sweeper-workflow-design.md)
-- [Docs Loop Workflow Design](explanation/workflows/docs-loop-workflow-design.md)
+- [CI Sweeper Workflow Design](explanation/workflows/loop-ci-sweeper-workflow-design.md)
+- [Changelog Workflow Design](explanation/workflows/loop-changelog-workflow-design.md)
+- [Docs Triage Workflow Design](explanation/workflows/loop-docs-triage-workflow-design.md)
 
 ## Report
 

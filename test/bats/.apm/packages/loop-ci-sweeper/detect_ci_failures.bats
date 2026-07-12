@@ -1,20 +1,27 @@
 #!/usr/bin/env bats
+# shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
-# Tests for .apm/packages/loop-ci-sweeper loop-ci-sweeper detect_ci_failures.sh
+# Tests for .apm/packages/loop-ci-sweeper/.apm/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh
 
-DETECT_DIR=".apm/packages/loop-ci-sweeper/.apm/skills/loop-ci-sweeper/scripts"
+_bats_support="$(dirname "${BATS_TEST_FILENAME}")"
+while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
+    _bats_support="$(dirname "${_bats_support}")"
+done
+# shellcheck disable=SC1091
+source "${_bats_support}/support/common.bash"
+
+DETECT_SCRIPT="$(apm_skill_script_path loop-ci-sweeper detect_ci_failures.sh)"
 
 setup() {
     LEDGER_FILE="$(mktemp)"
     export CI_SWEEPER_LEDGER_FILE="${LEDGER_FILE}"
     export CI_SWEEPER_REJECT_RETRY_POLICY="limited"
     export CI_SWEEPER_REJECT_MAX_RETRIES="3"
-    # shellcheck disable=SC1091
-    source "${DETECT_DIR}/detect_ci_failures.sh"
+    bats_source_apm_skill loop-ci-sweeper detect_ci_failures.sh
 }
 
 teardown() {
-    rm -f "${LEDGER_FILE}"
+    rm -f "${LEDGER_FILE:-}"
 }
 
 @test "split_csv_to_array trims whitespace from workflow filter entries" {
@@ -86,8 +93,6 @@ teardown() {
 }
 
 @test "collect_failures_for_run includes infra failures in failures array" {
-    # shellcheck disable=SC1091
-    source "${DETECT_DIR}/detect_ci_failures.sh"
     load_workflow_filters
     MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
     mkdir -p "${MOCK_BIN}"
@@ -135,15 +140,13 @@ EOF
 }
 
 @test "sanitize_log_excerpt redacts github tokens" {
-    run sanitize_log_excerpt "token=ghp_abcdefghijklmnopqrstuvwxyz1234567890"
+    run sanitize_log_excerpt "token=ghp_abcdefghijklmnopqrstuvwxyz1234567890" # pragma: allowlist secret
     [ "$status" -eq 0 ]
     [[ $output == *"[REDACTED]"* ]]
     [[ $output != *"ghp_"* ]]
 }
 
 @test "collect_failures_for_run includes secret-missing failures in failures array" {
-    # shellcheck disable=SC1091
-    source "${DETECT_DIR}/detect_ci_failures.sh"
     load_workflow_filters
     MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
     mkdir -p "${MOCK_BIN}"
@@ -180,7 +183,7 @@ EOF
 }
 
 @test "detect_ci_failures rejects ledger path traversal outside dot loop" {
-    run env CI_SWEEPER_LEDGER_FILE=".loop/../outside.json" bash "${DETECT_DIR}/detect_ci_failures.sh" --scope all
+    run env CI_SWEEPER_LEDGER_FILE=".loop/../outside.json" bash "${DETECT_SCRIPT}" --scope all
     [ "$status" -eq 0 ]
     [[ $output == *'"status": "error"'* ]]
 }

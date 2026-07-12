@@ -1,4 +1,4 @@
-# Docs Loop Workflow Design
+# Docs Triage Workflow Design
 
 Workflow and domain design for the `loop-docs-triage` (`docs-triage`) loop.
 
@@ -12,24 +12,43 @@ Workflow and domain design for the `loop-docs-triage` (`docs-triage`) loop.
 
 ## Purpose
 
-Detect documentation drift from code changes and open fix PRs to integration branches.
+Detect documentation drift from code changes on integration branches and open fix PRs after Skill triage.
 
-**Pull request mode:** disabled by default (`LOOP_PULL_REQUESTS` unset or `false`). Docs-loop creates PRs; it does not heal arbitrary PR heads.
+### Supported use cases
 
-## Separation from `docs-updater`
+- Cron scan of integration branches for git-diff facts (`changed_files`, `affected_docs`, …)
+- Semantic triage and fix of High-Priority stale references or missing doc content
+- Open an L2 review PR to the watch integration branch
+- Coordinate with peer loops via [acting_on](../multi-branch-loops-design.md#cross-loop-coordination-acting_on) when multiple loops target the same branch
+
+### Out of scope
+
+- PR head healing (`LOOP_PULL_REQUESTS` default off)
+- Hook-triggered or user-invoked doc sync — use **`docs-updater`** (common package) instead
+- Creating documentation from scratch; non-documentation file edits
+- Loop state and detect script management
 
 | Package                 | Role                                       | Trigger                    |
 | ----------------------- | ------------------------------------------ | -------------------------- |
 | `docs-updater` (common) | Hook/manual git-diff → doc sync            | Pre-commit, user-invoked   |
 | `loop-docs-triage`      | Cron loop: detect facts + Skill triage/fix | `on-loop-docs-triage.yaml` |
 
-Loop detect logic lives in **`loop-docs-triage/scripts/detect_changes.sh`** — not `docs-updater/scripts/detect_changes.sh`.
+Detect script path: **`loop-docs-triage/scripts/detect_changes.sh`** (not `docs-updater/scripts/detect_changes.sh`).
+
+Skill execution boundaries: `loop-docs-triage` SKILL.md (`USE FOR` / `DO NOT USE FOR`).
+
+### Modes
+
+| Mode | Default | Behavior |
+| `integration` | on | Detect on watch branch → fix PR to same branch |
+| `pull_request`| off | not supported for this loop |
 
 ## Recommended `env`
 
 ```yaml
 env:
   DEFAULT_LEVEL: L2
+  LOOP_ALLOWLIST: docs/**/*.md,README.md,mkdocs.yml
   LOOP_DETECT_SCRIPT: .agents/skills/loop-docs-triage/scripts/detect_changes.sh
   LOOP_INTEGRATION_BRANCHES: main
   LOOP_NAME: docs-triage
