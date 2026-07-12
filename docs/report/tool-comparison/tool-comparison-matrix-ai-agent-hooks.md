@@ -66,8 +66,9 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 | ドキュメント           | [antigravity.google](https://antigravity.google/docs/hooks) | [docs.claude.com](https://docs.claude.com/en/docs/claude-code/hooks) | [developers.openai.com/codex/hooks](https://developers.openai.com/codex/hooks) | [docs.github.com](https://docs.github.com/en/copilot/reference/hooks-reference) | [cursor.com](https://docs.cursor.com/more/hooks) | [kiro.dev](https://kiro.dev/docs/cli/hooks/) | [code.visualstudio.com](https://code.visualstudio.com/docs/agent-customization/hooks) |
 | Session Start          | ❌                                                          | ✅ SessionStart                                                      | ✅ SessionStart                                                                | ✅ sessionStart                                                                 | ❌                                               | ❌                                           | ✅ SessionStart                                                                       |
 | User Prompt Submit     | ❌                                                          | ✅ UserPromptSubmit                                                  | ✅ UserPromptSubmit                                                            | ✅ userPromptSubmitted                                                          | ❌                                               | ✅ userPromptSubmit                          | ✅ UserPromptSubmit                                                                   |
-| Pre Tool Use           | ✅ PreToolUse                                               | ✅ PreToolUse                                                        | ✅ PreToolUse                                                                  | ✅ preToolUse                                                                   | ✅ beforeShellExecution                          | ✅ preToolUse                                | ✅ PreToolUse                                                                         |
-| Post Tool Use          | ✅ PostToolUse ※1                                           | ✅ PostToolUse                                                       | ✅ PostToolUse                                                                 | ✅ postToolUse                                                                  | ✅ afterFileEdit                                 | ✅ postToolUse                               | ✅ PostToolUse                                                                        |
+| Pre Tool Use           | ✅ PreToolUse                                               | ✅ PreToolUse                                                        | ✅ PreToolUse                                                                  | ✅ preToolUse                                                                   | ✅ preToolUse / beforeShellExecution ※2          | ✅ preToolUse                                | ✅ PreToolUse                                                                         |
+| Post Tool Use          | ✅ PostToolUse ※1                                           | ✅ PostToolUse                                                       | ✅ PostToolUse                                                                 | ✅ postToolUse                                                                  | ✅ postToolUse / afterFileEdit ※2                | ✅ postToolUse                               | ✅ PostToolUse                                                                        |
+| Stop (Turn End)        | ✅ Stop                                                     | ✅ Stop                                                              | ✅ Stop                                                                        | ✅ agentStop                                                                    | ✅ stop ※2                                       | ✅ stop                                      | ✅ Stop                                                                               |
 | Post Tool Failure      | ❌ (PostToolUse の `err` で判別)                            | ✅ PostToolUseFailure                                                | ❌ (PostToolUse runs for non-zero exit too)                                    | ✅ postToolUseFailure                                                           | ❌                                               | ❌                                           | ❌                                                                                    |
 | Agent Spawn            | ❌                                                          | ✅ SubagentStart                                                     | ✅ SubagentStart                                                               | ✅ subagentStart                                                                | ❌                                               | ✅ agentSpawn                                | ✅ SubagentStart                                                                      |
 | Subagent Stop          | ❌                                                          | ✅ SubagentStop                                                      | ✅ SubagentStop                                                                | ✅ subagentStop                                                                 | ❌                                               | ❌                                           | ✅ SubagentStop                                                                       |
@@ -87,10 +88,11 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 
 - Claude Code が最もイベント種別が豊富（20 種以上）。細かいライフサイクル制御が可能
 - Antigravity は PreInvocation / PostInvocation で Model 呼び出し前後へのステップ注入ポイントを持つ（他ツールにない独自イベント）
-- Stop / PreToolUse / PostToolUse は全 6 ツールで存在し、互換 hook スクリプトの共通基盤になる
+- Stop / PreToolUse / PostToolUse に相当するライフサイクルは全 6 ツールに存在するが、**hooks.json のイベントキー名はツールごとに異なり、大文字小文字も区別される**（例: Claude `Stop` ≠ Cursor `stop`）。hook **スクリプト**は共有可能だが、hook **定義 JSON** はターゲット別パッケージに分離する（後述）
 - VS Code は Claude Code と同じ PascalCase イベント名・`hookSpecificOutput` 形式を採用するが、GitHub Copilot CLI とは別実装。`.github/hooks/*.json` を共有するが stdin/stdout の JSON 構造が異なる
-- Cursor は独自イベント名を使う。対応関係: `beforeShellExecution` / `beforeMCPExecution` / `beforeReadFile` = PreToolUse、`afterFileEdit` = PostToolUse、`stop` = Stop
+- Cursor は camelCase の汎用イベント（`stop`, `preToolUse`, `postToolUse`）に加え、ツール種別ごとの細分化イベント（`beforeShellExecution` / `beforeMCPExecution` / `beforeReadFile` / `afterFileEdit` 等）を持つ。**`Stop` や `PreToolUse` など PascalCase キーは Cursor では一致せず、hook は発火しない**
 - ※1: Antigravity の PostToolUse は観測専用。stdout は `{}` のみ。agent へのフィードバックには PreInvocation を使用する
+- ※2: Cursor の hooks.json はイベント名のケースが厳密一致。`stop` / `preToolUse` / `postToolUse` が正。`Stop` / `PreToolUse` / `PostToolUse` は無視される（unknown event ではなく、単にマッチしない）
 
 ## hooks.json 設定方法
 
@@ -154,15 +156,16 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 }
 ```
 
-| 項目                 | 値                                                                                              |
-| -------------------- | ----------------------------------------------------------------------------------------------- |
-| イベント名           | camelCase (`stop`, `preToolUse`, `postToolUse`, `afterFileEdit`, `beforeShellExecution`)        |
-| コマンドキー         | `command` (`bash` はエラー)                                                                     |
-| `type` フィールド    | 不要                                                                                            |
-| `version`            | `1` (トップレベル、必須。省略するとエラー)                                                      |
-| タイムアウト         | `timeoutSec` (秒)                                                                               |
-| `stop` の stdout     | `{"followup_message":"..."}`（非空で次ユーザーメッセージを自動送信。`loop_limit` デフォルト 5） |
-| その他 hook の block | exit 2 + stderr（`beforeShellExecution` / `afterFileEdit` 等）                                  |
+| 項目                 | 値                                                                                                    |
+| -------------------- | ----------------------------------------------------------------------------------------------------- |
+| イベント名           | camelCase (`stop`, `preToolUse`, `postToolUse`, `afterFileEdit`, `beforeShellExecution`)              |
+| ケース厳密一致       | **必須**。`Stop` / `PreToolUse` / `PostToolUse` は発火しない（PascalCase は Claude/Codex/VS Code 用） |
+| コマンドキー         | `command` (`bash` はエラー)                                                                           |
+| `type` フィールド    | 不要                                                                                                  |
+| `version`            | `1` (トップレベル、必須。省略するとエラー)                                                            |
+| タイムアウト         | `timeoutSec` (秒)                                                                                     |
+| `stop` の stdout     | `{"followup_message":"..."}`（非空で次ユーザーメッセージを自動送信。`loop_limit` デフォルト 5）       |
+| その他 hook の block | exit 2 + stderr（`beforeShellExecution` / `afterFileEdit` 等）                                        |
 
 ### Claude Code
 
@@ -324,19 +327,35 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 
 ### Guidelines
 
-**→ hooks.json のフォーマットはツール間で互換性がない。ターゲット別に定義を分離する。**
+**→ hooks.json のフォーマットはツール間で互換性がない。ターゲット別パッケージに定義を分離する（単一パッケージで `Stop` を共通キーとして配布する設計は不可）。**
 
-| 差異ポイント     | Codex     | Copilot CLI  | Cursor       | Claude Code | Kiro CLI  | VS Code      |
-| ---------------- | --------- | ------------ | ------------ | ----------- | --------- | ------------ |
-| コマンドキー     | `command` | `bash`       | `command`    | `command`   | `command` | `bash`       |
-| Stop イベント名  | `Stop`    | `agentStop`  | `stop`       | `Stop`      | `stop`    | `Stop`       |
-| `version` 必須   | ❌        | ✅           | ✅           | ❌          | ❌        | ✅           |
-| タイムアウトキー | `timeout` | `timeoutSec` | `timeoutSec` | `timeout`   | `timeout` | `timeoutSec` |
-| matcher 対応     | ✅        | ❌           | ❌           | ✅          | ❌        | ❌           |
+| 差異ポイント     | Codex         | Copilot CLI   | Cursor        | Claude Code   | Kiro CLI      | VS Code       |
+| ---------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
+| コマンドキー     | `command`     | `bash`        | `command`     | `command`     | `command`     | `bash`        |
+| Stop イベント名  | `Stop`        | `agentStop`   | `stop`        | `Stop`        | `stop`        | `Stop`        |
+| Pre イベント名   | `PreToolUse`  | `preToolUse`  | `preToolUse`  | `PreToolUse`  | `preToolUse`  | `PreToolUse`  |
+| Post イベント名  | `PostToolUse` | `postToolUse` | `postToolUse` | `PostToolUse` | `postToolUse` | `PostToolUse` |
+| ケース厳密一致   | ✅ PascalCase | ✅ camelCase  | ✅ camelCase  | ✅ PascalCase | ✅ camelCase  | ✅ PascalCase |
+| `version` 必須   | ❌            | ✅            | ✅            | ❌            | ❌            | ✅            |
+| タイムアウトキー | `timeout`     | `timeoutSec`  | `timeoutSec`  | `timeout`     | `timeout`     | `timeoutSec`  |
+| matcher 対応     | ✅            | ❌            | ❌            | ✅            | ❌            | ❌            |
 
-- APM パッケージでの配布時、hooks JSON はターゲット別パッケージに分離する（例: `common-hooks-copilot`, `common-hooks-cursor`）
-- APM は `target` フィールドによるフィルタリングを行わないため、Copilot 用イベントが Cursor の hooks.json に混入する。各 IDE は unknown event を無視するため実害はないが、ノイズになる
-- Cursor は `version: 1` がないとエラーになる。APM の hooks.json 生成は `version` を付与しないため、ポストインストールスクリプトで注入する必要がある
+### APM パッケージでの hooks 配布設計
+
+[APM Hooks and Commands](https://microsoft.github.io/apm/producer/author-primitives/hooks-and-commands/) では、ソース hook JSON を Claude 形式（`PreToolUse`, `Stop`）または Copilot 形式（`preToolUse`, `agentStop`）で記述し、インストール時に各ターゲットの integrator がイベント名をリネームしてマージする。ただし **Cursor の hooks.json はイベントキーがケース厳密一致**であり、PascalCase の `Stop` / `PreToolUse` / `PostToolUse` をそのまま書くと発火しない（2026-07 実測）。
+
+このため本リポジトリでは **hooks はターゲット別サブパッケージに最初から分離する**設計とする:
+
+| パッケージ例           | `apm.yml` の `target` | hooks JSON のイベントキー例                      |
+| ---------------------- | --------------------- | ------------------------------------------------ |
+| `common-hooks-claude`  | `claude`              | `Stop`, `PreToolUse`, `PostToolUse` (PascalCase) |
+| `common-hooks-cursor`  | `cursor`              | `stop`, `preToolUse`, `postToolUse` (camelCase)  |
+| `common-hooks-copilot` | `copilot`             | `agentStop`, `preToolUse`, `postToolUse`         |
+
+- **やってはいけない**: 1 つの hooks パッケージに `Stop` キーだけで全ターゲット向けに配布し、マージ時のリネームに任せる（Cursor ではヒットしない）
+- **正しい**: `*-hooks-claude` / `*-hooks-cursor` / `*-hooks-copilot` のようにターゲット別パッケージを分け、各パッケージの `.apm/hooks/*.json` にそのターゲットのネイティブイベント名を直接記述する。hook **スクリプト**（`scripts/*.sh`）は共通化可能
+- コンシューマの `dependencies.apm` で `targets:` を指定し、インストール先 harness を限定する（APM 公式推奨）
+- Cursor は `version: 1` がないとエラーになる。生成物に `version` が欠ける場合はポストインストールで注入する
 
 ## res Matrix (Stop / agentStop)
 
@@ -812,16 +831,18 @@ stdout — additionalContext のみ:
 | 実行タイミング                                | ツール実行直後（即時）                 | ターン完了時（まとめて）        |
 | 適したユースケース                            | 自動フォーマット（agent 行動不要）     | lint/test エラーの修正ループ    |
 
-**→ .apm パッケージでは Stop hook を採用する。**
+**→ .apm パッケージでは Stop 相当イベントの hook を採用する（定義 JSON はターゲット別）。**
 
-- lint/test のエラーを検知して agent に修正させるユースケースでは、Stop が唯一の全ツール互換手段
+- lint/test のエラーを検知して agent に修正させるユースケースでは、Stop 相当イベントが唯一の全ツール互換手段
 - PostToolUse は Kiro CLI / Antigravity で agent にフィードバックが届かないため、修正ループに使えない
+- hook スクリプトは 1 本で全 agent 対応可能だが、`.apm/hooks/*.json` のイベントキーはターゲット別パッケージでネイティブ名を使う（Cursor では `stop` / `preToolUse` / `postToolUse`。`Stop` / `PreToolUse` / `PostToolUse` は不可）
 - `report_failure` 関数で stdin の `hook_event_name` / `terminationReason` / `cursor_version` 等を判別し、全 agent に適切な JSON または exit code を返す設計とする（Cursor `stop` → `followup_message`、その他 Cursor → exit 2 + stderr）
 
 ## 補足
 
 - VS Code の hooks 仕様は [code.visualstudio.com/docs/agent-customization/hooks](https://code.visualstudio.com/docs/agent-customization/hooks) に基づく。GitHub Copilot CLI とは別実装であり、同じ `.github/hooks/` ディレクトリを使用するが stdin/stdout の JSON 構造が異なる点に注意
-- Cursor の hooks 仕様は [cursor.com/docs/hooks](https://cursor.com/docs/hooks) に基づく。`stop` の修正ループは `followup_message` が正規 API（exit 2 + stderr は Hooks ログ用でゲートには非推奨）
+- Cursor の hooks 仕様は [cursor.com/docs/hooks](https://cursor.com/docs/hooks) に基づく。イベントキーは camelCase 厳密一致（`stop`, `preToolUse`, `postToolUse`）。`stop` の修正ループは `followup_message` が正規 API（exit 2 + stderr は Hooks ログ用でゲートには非推奨）
+- APM hooks 配布の設計指針は [microsoft.github.io/apm — Hooks and Commands](https://microsoft.github.io/apm/producer/author-primitives/hooks-and-commands/) を参照。本リポジトリはターゲット別 hooks パッケージ分離を採用
 - Antigravity の hooks 仕様は [antigravity.google/docs/hooks](https://antigravity.google/docs/hooks) の正式仕様に基づく。旧 Gemini CLI ([geminicli.com](https://geminicli.com/docs/hooks/reference/)) とはイベント名・JSON 形式が異なるため注意
 - Antigravity の PostToolUse は観測専用（出力 `{}` のみ）。agent へのフィードバックには PreInvocation の `injectSteps` または Stop の `{"decision":"continue","reason":"..."}` を使用する
 - 各ツールの hooks 仕様 URL は変更される可能性があるため、定期的に確認する
