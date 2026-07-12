@@ -71,6 +71,7 @@ setup() {
     git -C "${GIT_TEST_REPO}" commit -q -m "docs: expand index"
     git_test_repo_run "env DOCS_TRIAGE_DOC_GLOBS='docs/**/*.md' bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
     [ "$status" -eq 0 ]
+    assert_detect_changes_ok_json "${output}" "range" "${base}"
     [[ $output == *'"skip": true'* ]]
     [[ $output == *'"affected_docs": []'* ]]
 }
@@ -102,6 +103,21 @@ setup() {
     git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range"
     [ "$status" -eq 0 ]
-    [[ $output == *'"status": "error"'* ]]
-    [[ $output == *'requires --since'* ]]
+    assert_detect_changes_error_json "${output}" "requires --since"
+}
+
+@test "detect_changes script validates ok response format on workspace repo" {
+    local workspace since_ref json
+
+    workspace="$(bats_workspace_root)"
+    if ! since_ref="$(bats_resolve_since_ref "${workspace}")"; then
+        skip "not enough git history for relative since ref"
+    fi
+
+    run bash -c "cd '${workspace}' && env DOCS_TRIAGE_DOC_GLOBS='docs/**/*.md,README.md' bash '${DETECT_SCRIPT}' --scope range --since '${since_ref}'"
+    [ "$status" -eq 0 ]
+    json="${output}"
+    assert_detect_changes_ok_json "${json}" "range" "${since_ref}"
+    run jq -e --arg since_ref "${since_ref}" '.commit_range == ($since_ref + "..HEAD")' <<< "${json}"
+    [ "$status" -eq 0 ]
 }

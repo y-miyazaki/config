@@ -38,6 +38,20 @@ teardown() {
     [ "$(jq -r '.verdict' <<< "${result}")" = "APPROVE" ]
 }
 
+@test "loop_run_log_append_entry writes JSONL entry with expected format" {
+    local log_file="${TEST_DIR}/loop-run-log.md"
+    local entry
+
+    entry="$(loop_run_log_build_entry "" 3 "" "docs-triage" "skipped" "budget" 52000 "" "42" "")"
+    assert_loop_run_log_entry_json "${entry}"
+    loop_run_log_append_entry "${log_file}" "${entry}"
+
+    run tail -n 1 "${log_file}"
+    [ "$status" -eq 0 ]
+    assert_loop_run_log_entry_json "${output}"
+    [ "$(jq -r '.workflow_run' <<< "${output}")" = "42" ]
+}
+
 @test "loop_run_log_compute_duration returns zero for empty start" {
     result="$(loop_run_log_compute_duration "")"
     [ "${result}" = "0" ]

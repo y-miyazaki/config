@@ -77,7 +77,8 @@ setup() {
     is_cursor_stream_json_file test/fixtures/loop-execute/cursor-stream-json-usage.ndjson
     tmpf="$(mktemp)"
     echo "plain text output" > "${tmpf}"
-    run ! is_cursor_stream_json_file "${tmpf}"
+    run is_cursor_stream_json_file "${tmpf}"
+    [ "$status" -ne 0 ]
     rm -f "${tmpf}"
 }
 

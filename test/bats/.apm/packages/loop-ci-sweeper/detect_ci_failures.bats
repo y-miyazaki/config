@@ -185,5 +185,47 @@ EOF
 @test "detect_ci_failures rejects ledger path traversal outside dot loop" {
     run env CI_SWEEPER_LEDGER_FILE=".loop/../outside.json" bash "${DETECT_SCRIPT}" --scope all
     [ "$status" -eq 0 ]
-    [[ $output == *'"status": "error"'* ]]
+    assert_detect_ci_failures_error_json "${output}" "stay under .loop/"
+}
+
+@test "detect_ci_failures script validates ok response format with mocked gh" {
+    local workspace since_ref json mock_bin ledger_file
+
+    workspace="$(bats_workspace_root)"
+    if ! since_ref="$(bats_resolve_since_ref "${workspace}")"; then
+        skip "not enough git history for relative since ref"
+    fi
+
+    mock_bin="${BATS_TEST_TMPDIR}/bin"
+    ledger_file=".loop/bats-detect-ci-failures-${BATS_TEST_NUMBER}.json"
+    mkdir -p "${mock_bin}" "${workspace}/.loop"
+    cat > "${mock_bin}/gh" << 'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "run" && "$2" == "list" ]]; then
+    printf '[]'
+    exit 0
+fi
+exit 1
+EOF
+    chmod +x "${mock_bin}/gh"
+
+    run bash -c "cd '${workspace}' && PATH='${mock_bin}:'\$PATH CI_SWEEPER_LEDGER_FILE='${ledger_file}' GITHUB_TOKEN='test-token' bash '${DETECT_SCRIPT}' --scope range --since '${since_ref}'"
+    [ "$status" -eq 0 ]
+    json="${output}"
+    assert_detect_ci_failures_ok_json "${json}" "range" "${since_ref}"
+    run jq -e '.skip == true and (.failures | length) == 0' <<< "${json}"
+    [ "$status" -eq 0 ]
+    rm -f "${workspace}/${ledger_file}"
+}
+
+@test "detect_ci_failures script validates error response format without token" {
+    local workspace ledger_file
+
+    workspace="$(bats_workspace_root)"
+    ledger_file=".loop/bats-detect-ci-failures-no-token-${BATS_TEST_NUMBER}.json"
+    mkdir -p "${workspace}/.loop"
+
+    run bash -c "cd '${workspace}' && env -u GH_TOKEN -u GITHUB_TOKEN CI_SWEEPER_LEDGER_FILE='${ledger_file}' bash '${DETECT_SCRIPT}' --scope all"
+    [ "$status" -eq 0 ]
+    assert_detect_ci_failures_error_json "${output}" "GH_TOKEN or GITHUB_TOKEN is required"
 }

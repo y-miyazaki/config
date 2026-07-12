@@ -570,13 +570,13 @@ function parse_commit_subject {
     [[ -z ${out_rest} || ${out_rest} == "${subject}" ]] && return 1
     [[ ${#out_rest} -lt 3 ]] && return 1
 
-    local breaking="false"
+    local breaking_flag="false"
     if [[ ${header} == *'!'* ]]; then
-        breaking="true"
+        breaking_flag="true"
         header="${header//'!'/}"
     fi
     # shellcheck disable=SC2034
-    out_breaking="${breaking}"
+    out_breaking="${breaking_flag}"
 
     if [[ ${header} == *"("*")" ]]; then
         out_type="${header%%(*}"

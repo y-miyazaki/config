@@ -1,6 +1,6 @@
 lockfile_version: '1'
-generated_at: '2026-07-12T12:24:52.363764+00:00'
-apm_version: 0.23.1
+generated_at: '2026-07-12T13:38:39.802863+00:00'
+apm_version: 0.24.0
 dependencies:
 - repo_url: _local/common
   name: config-common
@@ -1065,7 +1065,7 @@ dependencies:
     .agents/skills/loop-changelog/references/category-scope.md: sha256:befd337c4d5585c9888b16b3a24d18770bcfc7ddfa73c0ff224d44893c7fe3b5
     .agents/skills/loop-changelog/references/common-checklist.md: sha256:d418181c502f99da9ce93fbdf564dd37f7423b2550d63240ed570b60c38a6c1f
     .agents/skills/loop-changelog/references/common-output-format.md: sha256:cfa1278e2a4e2c5beaa96654a783381189a230b318c6ef0b37a58c6183c27cd0
-    .agents/skills/loop-changelog/scripts/detect_changelog_commits.sh: sha256:fe7e4ebd8c9502f6410ce17d273fbfcedce68be42b442c32b0c6087990254fdd
+    .agents/skills/loop-changelog/scripts/detect_changelog_commits.sh: sha256:2d5953034ba866cdc5c362d207a7c433889adba512513cb973d5bb23295503e5
     .agents/skills/loop-changelog/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
     .agents/skills/loop-changelog/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/loop-changelog/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
@@ -1080,7 +1080,7 @@ dependencies:
     .claude/skills/loop-changelog/references/category-scope.md: sha256:befd337c4d5585c9888b16b3a24d18770bcfc7ddfa73c0ff224d44893c7fe3b5
     .claude/skills/loop-changelog/references/common-checklist.md: sha256:d418181c502f99da9ce93fbdf564dd37f7423b2550d63240ed570b60c38a6c1f
     .claude/skills/loop-changelog/references/common-output-format.md: sha256:cfa1278e2a4e2c5beaa96654a783381189a230b318c6ef0b37a58c6183c27cd0
-    .claude/skills/loop-changelog/scripts/detect_changelog_commits.sh: sha256:fe7e4ebd8c9502f6410ce17d273fbfcedce68be42b442c32b0c6087990254fdd
+    .claude/skills/loop-changelog/scripts/detect_changelog_commits.sh: sha256:2d5953034ba866cdc5c362d207a7c433889adba512513cb973d5bb23295503e5
     .claude/skills/loop-changelog/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
     .claude/skills/loop-changelog/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/loop-changelog/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
