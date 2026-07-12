@@ -1,8 +1,8 @@
 # Loop workflow: Documentation triage
 # Detects doc-impacting changes, runs bounded Agent→Verify loop, then finalizes.
 # Design doc: docs/explanation/workflows/loop-docs-triage-workflow-design.md
-# Shared env reference: docs/explanation/workflows/loop-caller-env-reference.md
-# Requires repository secret: AGENT_TOKEN (engine API key; see DEFAULT_ENGINE).
+# Caller inputs: docs/explanation/workflows/loop-caller-inputs-reference.md
+# Requires repository secret: AGENT_TOKEN (engine API key; see engine input).
 name: on-loop-docs-triage
 
 on:
@@ -19,243 +19,65 @@ permissions:
   copilot-requests: write # zizmor: ignore[excessive-permissions]
   pull-requests: write
 
-# concurrency.group cannot use env (GitHub evaluates concurrency before env; allowed: github, inputs, vars).
-# Keep workflow name aligned with LOOP_NAME via on-loop-<LOOP_NAME> — group follows name on copy.
 concurrency:
   cancel-in-progress: true
   group: ${{ github.workflow }}
 
-# Caller configuration — keys alphabetically ordered; passed to loop-detect (see design doc).
-env:
-  # Max implementer agent turns per loop attempt.
-  AGENT_IMPLEMENTER_MAX_TURNS: "5"
-  # Implementer model; list models: `agent --list-models` (cursor).
-  AGENT_IMPLEMENTER_MODEL: grok-4.5-medium
-  # Max Agent→Verify retry cycles before recording failure.
-  AGENT_LOOP_MAX_ATTEMPTS: "3"
-  # Verifier APPROVE/REJECT rubric (domain-specific).
-  AGENT_VERIFIER_CRITERIA: |
-    ## Criteria for APPROVE
-
-    ALL of the following must be true:
-    1. Changes are limited to documentation files (docs/, README.md, mkdocs.yml nav)
-    2. Content is factually consistent with the codebase
-    3. No sensitive information is exposed
-    4. Changes address the documented triage items
-    5. No duplicate documentation is introduced
-    6. Existing documentation structure is preserved unless explicitly required by triage items
-
-    ## Criteria for REJECT
-
-    ANY of the following triggers REJECT:
-    - Changes outside allowed documentation paths
-    - Factual inaccuracies or hallucinated content
-    - Sensitive data exposure
-    - Gratuitous changes not related to triage items
-    - Duplicate content that restates existing documentation
-    - Unnecessary restructuring of document headings or sections
-  # Max verifier agent turns per verification.
-  AGENT_VERIFIER_MAX_TURNS: "3"
-  # Verifier model; list models: `agent --list-models` (cursor).
-  AGENT_VERIFIER_MODEL: composer-2.5
-  # Default branch for state migration fallback.
-  DEFAULT_BASE_BRANCH: main
-  # AI engine: claude | copilot | codex | cursor (maps AGENT_TOKEN).
-  DEFAULT_ENGINE: cursor
-  # Autonomy level: L1 | L2 | L3 (L2 = review PR).
-  DEFAULT_LEVEL: L2
-  # Doc file globs for detect_changes.sh git-diff analysis.
-  DOCS_TRIAGE_DOC_GLOBS: "docs/**/*.md,README.md"
-  # Additional non-glob paths included in doc impact scan.
-  DOCS_TRIAGE_EXTRA_FILES: mkdocs.yml
-  # Globs the implementer may modify.
-  LOOP_ALLOWLIST: "docs/**/*.md,README.md,mkdocs.yml"
-  # Daily run cap for this LOOP_NAME.
-  LOOP_BUDGET_MAX_RUNS_PER_DAY: "1"
-  # Daily aggregated token cap.
-  LOOP_BUDGET_MAX_TOKENS_PER_DAY: "500000"
-  # Domain detect script (invoked by loop-detect per scan context).
-  LOOP_DETECT_SCRIPT: .agents/skills/loop-docs-triage/scripts/detect_changes.sh
-  # Finalize integration targets: open_pr | push (L3).
-  LOOP_FINALIZE_INTEGRATION: open_pr
-  # Extended regex to infer file paths from verifier output.
-  LOOP_INFER_FILES_PATTERN: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|yml|yaml)'
-  # Comma-separated integration branch patterns to watch.
-  LOOP_INTEGRATION_BRANCHES: main
-  # Max targets per cron tick (fan-out cap).
-  LOOP_MAX_TARGETS_PER_SCHEDULE: "3"
-  # Loop id — state file .loop/state-<LOOP_NAME>.json; align with workflow filename.
-  LOOP_NAME: docs-triage
-  # APPROVE | REJECT when implementer produces no file diff.
-  LOOP_NO_CHANGES_VERDICT: REJECT
-  # Static PR body prefix for finalize.
-  LOOP_PR_BODY: |
-    ## Summary
-
-    Automated documentation update by `loop-docs-triage`.
-
-    ---
-    *This PR was created by a loop automation. Review before merging.*
-  # PR title when finalize strategy is open_pr.
-  LOOP_PR_TITLE: "fix(docs): automated documentation update (loop-docs-triage)"
-  # Domain instructions appended to implementer prompt.
-  LOOP_PROMPT_INSTRUCTIONS: |
-    Edit files directly to address the documented triage findings.
-    Prioritize factual consistency with the codebase and preserve existing documentation structure unless triage items require restructuring.
-  # "true" scans open PR heads; docs-triage uses integration branches only.
-  LOOP_PULL_REQUESTS: "false"
-  # Branch for .loop/* persistence commits (state, budget, run-log).
-  LOOP_STATE_PUSH_BRANCH: main
-  # Skill package invoked by loop-prompt-generate.
-  SKILL_NAME: loop-docs-triage
-
 jobs:
-  detect:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    outputs:
-      agent_implementer_max_turns: ${{ steps.detect.outputs.agent_implementer_max_turns }}
-      agent_implementer_model: ${{ steps.detect.outputs.agent_implementer_model }}
-      agent_loop_max_attempts: ${{ steps.detect.outputs.agent_loop_max_attempts }}
-      agent_verifier_criteria: ${{ steps.detect.outputs.agent_verifier_criteria }}
-      agent_verifier_max_turns: ${{ steps.detect.outputs.agent_verifier_max_turns }}
-      agent_verifier_model: ${{ steps.detect.outputs.agent_verifier_model }}
-      allowlist: ${{ steps.detect.outputs.allowlist }}
-      base_branch: ${{ steps.detect.outputs.base_branch }}
-      engine: ${{ steps.detect.outputs.engine }}
-      infer_files_pattern: ${{ steps.detect.outputs.infer_files_pattern }}
-      level: ${{ steps.detect.outputs.level }}
-      loop_name: ${{ steps.detect.outputs.loop_name }}
-      no_changes_verdict: ${{ steps.detect.outputs.no_changes_verdict }}
-      pr_body: ${{ steps.detect.outputs.pr_body }}
-      pr_title: ${{ steps.detect.outputs.pr_title }}
-      run_started_at: ${{ steps.timing.outputs.started_at }}
-      should_run: ${{ steps.detect.outputs.should_run }}
-      skill_name: ${{ steps.detect.outputs.skill_name }}
-      skip_reason: ${{ steps.detect.outputs.skip_reason }}
-      state_file: ${{ steps.detect.outputs.state_file }}
-      state_push_branch: ${{ env.LOOP_STATE_PUSH_BRANCH }}
-      target_matrix: ${{ steps.detect.outputs.target_matrix }}
-    steps:
-      - name: Record Run Start
-        id: timing
-        run: echo "started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
-
-      - name: Checkout Code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Detect Loop Work
-        id: detect
-        env:
-          DOCS_TRIAGE_DOC_GLOBS: ${{ env.DOCS_TRIAGE_DOC_GLOBS }}
-          DOCS_TRIAGE_EXTRA_FILES: ${{ env.DOCS_TRIAGE_EXTRA_FILES }}
-        uses: ./.github/actions/loop-detect
-        with:
-          agent_implementer_max_turns: ${{ env.AGENT_IMPLEMENTER_MAX_TURNS }}
-          agent_implementer_model: ${{ env.AGENT_IMPLEMENTER_MODEL }}
-          agent_loop_max_attempts: ${{ env.AGENT_LOOP_MAX_ATTEMPTS }}
-          agent_verifier_criteria: ${{ env.AGENT_VERIFIER_CRITERIA }}
-          agent_verifier_max_turns: ${{ env.AGENT_VERIFIER_MAX_TURNS }}
-          agent_verifier_model: ${{ env.AGENT_VERIFIER_MODEL }}
-          allowlist: ${{ env.LOOP_ALLOWLIST }}
-          base_branch: ${{ env.DEFAULT_BASE_BRANCH }}
-          budget_max_runs_per_day: ${{ env.LOOP_BUDGET_MAX_RUNS_PER_DAY }}
-          budget_max_tokens_per_day: ${{ env.LOOP_BUDGET_MAX_TOKENS_PER_DAY }}
-          detect_script: ${{ env.LOOP_DETECT_SCRIPT }}
-          engine: ${{ env.DEFAULT_ENGINE }}
-          infer_files_pattern: ${{ env.LOOP_INFER_FILES_PATTERN }}
-          level: ${{ env.DEFAULT_LEVEL }}
-          loop_finalize_integration: ${{ env.LOOP_FINALIZE_INTEGRATION }}
-          loop_integration_branches: ${{ env.LOOP_INTEGRATION_BRANCHES }}
-          loop_max_targets_per_schedule: ${{ env.LOOP_MAX_TARGETS_PER_SCHEDULE }}
-          loop_name: ${{ env.LOOP_NAME }}
-          loop_pull_requests: ${{ env.LOOP_PULL_REQUESTS }}
-          loop_state_push_branch: ${{ env.LOOP_STATE_PUSH_BRANCH }}
-          no_changes_verdict: ${{ env.LOOP_NO_CHANGES_VERDICT }}
-          pr_body: ${{ env.LOOP_PR_BODY }}
-          pr_title: ${{ env.LOOP_PR_TITLE }}
-          prompt_instructions: ${{ env.LOOP_PROMPT_INSTRUCTIONS }}
-          skill_name: ${{ env.SKILL_NAME }}
-
-  execute:
-    concurrency:
-      cancel-in-progress: true
-      group: on-loop-docs-triage-${{ matrix.target.target_json.key }}
-    if: needs.detect.outputs.should_run == 'true'
-    needs: detect
-    permissions:
-      contents: write
-      copilot-requests: write # zizmor: ignore[excessive-permissions]
-      pull-requests: write
-    strategy:
-      matrix:
-        target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
-    uses: ./.github/workflows/ci-loop-agent.yaml
+  loop:
+    uses: ./.github/workflows/ci-loop-caller.yaml
     with:
-      agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
-      agent_implementer_model: ${{ needs.detect.outputs.agent_implementer_model }}
-      agent_loop_max_attempts: ${{ needs.detect.outputs.agent_loop_max_attempts }}
-      agent_verifier_criteria: ${{ needs.detect.outputs.agent_verifier_criteria }}
-      agent_verifier_max_turns: ${{ needs.detect.outputs.agent_verifier_max_turns }}
-      agent_verifier_model: ${{ needs.detect.outputs.agent_verifier_model }}
-      allowlist: ${{ needs.detect.outputs.allowlist }}
-      auto_merge: ${{ (needs.detect.outputs.level == 'L3' && matrix.target.target_json.finalize == 'open_pr') && 'true' || 'false' }}
-      base_branch: ${{ matrix.target.target_json.mode == 'pull_request' && matrix.target.target_json.base.branch || matrix.target.target_json.to.branch }}
-      current_sha: ${{ matrix.target.target_json.from.ref }}
-      engine: ${{ needs.detect.outputs.engine }}
-      finalize_enabled: true
-      infer_files_pattern: ${{ needs.detect.outputs.infer_files_pattern }}
-      level: ${{ needs.detect.outputs.level }}
-      loop_name: ${{ needs.detect.outputs.loop_name }}
-      no_changes_verdict: ${{ needs.detect.outputs.no_changes_verdict }}
-      pr_body: |
-        ${{ needs.detect.outputs.pr_body }}
+      agent_implementer_max_turns: 5
+      agent_implementer_model: grok-4.5-medium
+      agent_loop_max_attempts: 3
+      agent_verifier_criteria: |
+        ## Criteria for APPROVE
 
-        - Level: ${{ needs.detect.outputs.level }}
-        - Target: `${{ matrix.target.target_json.key }}`
-        - Skip reason: ${{ needs.detect.outputs.skip_reason }}
-      pr_title: ${{ needs.detect.outputs.pr_title }}
-      prompt_text: ${{ matrix.target.prompt }}
-      run_started_at: ${{ needs.detect.outputs.run_started_at }}
-      skill_name: ${{ needs.detect.outputs.skill_name }}
-      skip_reason: ${{ needs.detect.outputs.skip_reason }}
-      state_file: ${{ needs.detect.outputs.state_file }}
-      state_push_branch: ${{ needs.detect.outputs.state_push_branch }}
-      target_json: ${{ toJson(matrix.target.target_json) }}
-      verifier_context: ${{ matrix.target.verifier_context }}
+        ALL of the following must be true:
+        1. Changes are limited to documentation files (docs/, README.md, mkdocs.yml nav)
+        2. Content is factually consistent with the codebase
+        3. No sensitive information is exposed
+        4. Changes address the documented triage items
+        5. No duplicate documentation is introduced
+        6. Existing documentation structure is preserved unless explicitly required by triage items
+
+        ## Criteria for REJECT
+
+        ANY of the following triggers REJECT:
+        - Changes outside allowed documentation paths
+        - Factual inaccuracies or hallucinated content
+        - Sensitive data exposure
+        - Gratuitous changes not related to triage items
+        - Duplicate content that restates existing documentation
+        - Unnecessary restructuring of document headings or sections
+      agent_verifier_max_turns: 3
+      agent_verifier_model: composer-2.5
+      allowlist: "docs/**/*.md,README.md,mkdocs.yml"
+      branch_match: main
+      branch_state: main
+      budget_max_runs_per_day: 1
+      budget_max_tokens_per_day: 500000
+      detect_domain_env_json: >-
+        {"DOCS_TRIAGE_DOC_GLOBS":"docs/**/*.md,README.md","DOCS_TRIAGE_EXTRA_FILES":"mkdocs.yml"}
+      detect_script: .agents/skills/loop-docs-triage/scripts/detect_changes.sh
+      engine: cursor
+      finalize_integration: open_pr
+      infer_files_pattern: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|yml|yaml)'
+      loop_name: docs-triage
+      max_targets_per_schedule: 3
+      no_changes_verdict: REJECT
+      pr_body: |
+        ## Summary
+
+        Automated documentation update by `loop-docs-triage`.
+
+        ---
+        *This PR was created by a loop automation. Review before merging.*
+      pr_title: "fix(docs): automated documentation update (loop-docs-triage)"
+      prompt_instructions: |
+        Edit files directly to address the documented triage findings.
+        Prioritize factual consistency with the codebase and preserve existing documentation structure unless triage items require restructuring.
+      pull_requests: false
+      skill_name: loop-docs-triage
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
-      GH_TOKEN_PUSH: ${{ secrets.GITHUB_TOKEN }}
-
-  record-skip:
-    if: >-
-      needs.detect.result == 'success' &&
-      needs.detect.outputs.should_run == 'false' &&
-      (needs.detect.outputs.skip_reason == 'circuit_breaker' ||
-      needs.detect.outputs.skip_reason == 'budget')
-    needs: detect
-    permissions:
-      contents: write
-      pull-requests: write
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    steps:
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-
-      - name: Append Skip Run Log
-        uses: ./.github/actions/loop-run-log
-        with:
-          base_branch: ${{ needs.detect.outputs.base_branch }}
-          loop_name: ${{ needs.detect.outputs.loop_name }}
-          outcome: skipped
-          run_started_at: ${{ needs.detect.outputs.run_started_at }}
-          skip_reason: ${{ needs.detect.outputs.skip_reason }}
-          token: ${{ github.token }}

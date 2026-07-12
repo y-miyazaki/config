@@ -1,0 +1,381 @@
+# Reusable workflow: Loop caller orchestration
+# Shared detect → execute (matrix) → record-skip job graph for on-loop-*.yaml callers.
+# Design doc: docs/explanation/loop-caller-reusable-design.md
+# Inputs reference: docs/explanation/workflows/loop-caller-inputs-reference.md
+name: ci-loop-caller
+
+on:
+  workflow_call:
+    inputs:
+      additional_commit_paths:
+        default: ""
+        description: "Extra paths included in finalize commit (e.g. ledger file)"
+        required: false
+        type: string
+      agent_implementer_max_turns:
+        description: "Maximum implementer agent turns per loop attempt"
+        required: true
+        type: string
+      agent_implementer_model:
+        description: "Implementer model ID"
+        required: true
+        type: string
+      agent_loop_max_attempts:
+        description: "Maximum Agent→Verify retry cycles"
+        required: true
+        type: string
+      agent_verifier_criteria:
+        description: "Domain-specific APPROVE/REJECT rubric"
+        required: true
+        type: string
+      agent_verifier_max_turns:
+        description: "Maximum verifier agent turns per verification"
+        required: true
+        type: string
+      agent_verifier_model:
+        description: "Verifier model ID"
+        required: true
+        type: string
+      allowlist:
+        description: "Comma-separated globs the implementer may modify"
+        required: true
+        type: string
+      branch_match:
+        default: ""
+        description: "Comma-separated integration branch patterns to watch (empty = branch_state only)"
+        required: false
+        type: string
+      branch_match_mode:
+        default: glob
+        description: "How to interpret branch_match: list, glob, or regex"
+        required: false
+        type: string
+      branch_state:
+        description: "Branch for .loop/* persistence, state migration, and watch fallback when branch_match is empty"
+        required: true
+        type: string
+      budget_file:
+        default: .loop/loop-budget.json
+        description: "Path to loop budget JSON"
+        required: false
+        type: string
+      budget_max_runs_per_day:
+        description: "Daily run cap keyed by loop_name"
+        required: false
+        type: number
+      budget_max_tokens_per_day:
+        description: "Daily aggregated token cap"
+        required: false
+        type: number
+      denylist:
+        default: ""
+        description: "Comma-separated globs the implementer must not touch"
+        required: false
+        type: string
+      detect_domain_env_json:
+        default: "{}"
+        description: "JSON object of domain detect script environment variables"
+        required: false
+        type: string
+      detect_needs_ci_api:
+        default: false
+        description: "Documents CI API requirement; detect always grants actions:read and checks:read"
+        required: false
+        type: boolean
+      detect_script:
+        description: "Path to domain detect_*.sh script"
+        required: true
+        type: string
+      domain_persistence_script:
+        default: ""
+        description: "Bash script for loop-finalize domain persistence"
+        required: false
+        type: string
+      engine:
+        description: "AI engine: claude | copilot | codex | cursor"
+        required: true
+        type: string
+      finalize_integration:
+        default: open_pr
+        description: "Finalize for integration targets: open_pr | push"
+        required: false
+        type: string
+      finalize_pull_request:
+        default: push_head
+        description: "Finalize for PR head targets"
+        required: false
+        type: string
+      infer_files_pattern:
+        default: ""
+        description: "Extended regex to infer file paths from verifier text"
+        required: false
+        type: string
+      level:
+        default: L2
+        description: "Autonomy: L1 | L2 | L3"
+        required: false
+        type: string
+      loop_name:
+        description: "Loop identifier for state, budget, and concurrency"
+        required: true
+        type: string
+      max_targets_per_schedule:
+        default: 3
+        description: "Max targets per cron tick after filters"
+        required: false
+        type: number
+      no_changes_verdict:
+        default: REJECT
+        description: "APPROVE | REJECT when implementer produces no file diff"
+        required: false
+        type: string
+      pr_body:
+        default: ""
+        description: "Static markdown prefix for finalize PR body"
+        required: false
+        type: string
+      pr_exclude:
+        default: fork,draft,label:no-loop
+        description: "PR exclusion tokens"
+        required: false
+        type: string
+      pr_include_bots:
+        default: ""
+        description: "Comma-separated bot logins to include when scanning PRs"
+        required: false
+        type: string
+      pr_title:
+        default: ""
+        description: "PR title when finalize strategy is open_pr"
+        required: false
+        type: string
+      priority:
+        default: integration,pull_request
+        description: "Target mode priority order (comma-separated)"
+        required: false
+        type: string
+      prompt_instructions:
+        default: ""
+        description: "Domain-specific implementer instructions"
+        required: false
+        type: string
+      pull_requests:
+        default: false
+        description: "Enumerate open PR heads for detect"
+        required: false
+        type: boolean
+      run_log_file:
+        default: .loop/loop-run-log.md
+        description: "JSONL run log path for budget aggregation"
+        required: false
+        type: string
+      skill_name:
+        description: "Skill package name"
+        required: true
+        type: string
+      state_file:
+        default: ""
+        description: "Override state JSON path (default .loop/state-<loop_name>.json)"
+        required: false
+        type: string
+      token:
+        default: ""
+        description: "GitHub token for PR enumeration and detect scripts"
+        required: false
+        type: string
+    secrets:
+      AGENT_TOKEN:
+        required: true
+      GH_TOKEN_PUSH:
+        required: false
+
+jobs:
+  detect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      checks: read
+      contents: read
+    outputs:
+      additional_commit_paths: ${{ inputs.additional_commit_paths }}
+      agent_implementer_max_turns: ${{ steps.detect.outputs.agent_implementer_max_turns }}
+      agent_implementer_model: ${{ steps.detect.outputs.agent_implementer_model }}
+      agent_loop_max_attempts: ${{ steps.detect.outputs.agent_loop_max_attempts }}
+      agent_verifier_criteria: ${{ steps.detect.outputs.agent_verifier_criteria }}
+      agent_verifier_max_turns: ${{ steps.detect.outputs.agent_verifier_max_turns }}
+      agent_verifier_model: ${{ steps.detect.outputs.agent_verifier_model }}
+      allowlist: ${{ steps.detect.outputs.allowlist }}
+      branch_state: ${{ inputs.branch_state }}
+      denylist: ${{ inputs.denylist }}
+      domain_persistence_script: ${{ inputs.domain_persistence_script }}
+      engine: ${{ steps.detect.outputs.engine }}
+      infer_files_pattern: ${{ steps.detect.outputs.infer_files_pattern }}
+      level: ${{ steps.detect.outputs.level }}
+      loop_name: ${{ steps.detect.outputs.loop_name }}
+      no_changes_verdict: ${{ steps.detect.outputs.no_changes_verdict }}
+      pr_body: ${{ steps.detect.outputs.pr_body }}
+      pr_title: ${{ steps.detect.outputs.pr_title }}
+      run_started_at: ${{ steps.timing.outputs.started_at }}
+      should_run: ${{ steps.detect.outputs.should_run }}
+      skill_name: ${{ steps.detect.outputs.skill_name }}
+      skip_reason: ${{ steps.detect.outputs.skip_reason }}
+      state_file: ${{ steps.detect.outputs.state_file }}
+      state_push_branch: ${{ inputs.branch_state }}
+      target_matrix: ${{ steps.detect.outputs.target_matrix }}
+    steps:
+      - name: Record Run Start
+        id: timing
+        run: echo "started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Export Detect Domain Env
+        shell: bash
+        env:
+          DETECT_DOMAIN_ENV_JSON: ${{ inputs.detect_domain_env_json }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${DETECT_DOMAIN_ENV_JSON}" && "${DETECT_DOMAIN_ENV_JSON}" != "{}" ]]; then
+            if ! echo "${DETECT_DOMAIN_ENV_JSON}" | jq -e 'type == "object"' >/dev/null; then
+              echo "detect_domain_env_json must be a JSON object" >&2
+              exit 1
+            fi
+            if ! echo "${DETECT_DOMAIN_ENV_JSON}" | jq -e \
+              '[to_entries[] | select(.value != "" and ((.value | tostring) | test("[\r\n]")))] | length == 0' \
+              >/dev/null; then
+              bad_key="$(echo "${DETECT_DOMAIN_ENV_JSON}" | jq -r \
+                'to_entries[] | select(.value != "" and ((.value | tostring) | test("[\r\n]"))) | .key' \
+                | head -1)"
+              echo "detect_domain_env_json values must not contain newlines (key: ${bad_key})" >&2
+              exit 1
+            fi
+            while IFS= read -r -d '' entry; do
+              printf '%s\n' "${entry}" >> "${GITHUB_ENV}"
+            done < <(echo "${DETECT_DOMAIN_ENV_JSON}" | jq -jr \
+              'to_entries[] | select(.value != "") | "\(.key)=\(.value)\u0000"')
+          fi
+
+      - name: Detect Loop Work
+        id: detect
+        uses: ./.github/actions/loop-detect
+        with:
+          agent_implementer_max_turns: ${{ format('{0}', inputs.agent_implementer_max_turns) }}
+          agent_implementer_model: ${{ inputs.agent_implementer_model }}
+          agent_loop_max_attempts: ${{ format('{0}', inputs.agent_loop_max_attempts) }}
+          agent_verifier_criteria: ${{ inputs.agent_verifier_criteria }}
+          agent_verifier_max_turns: ${{ format('{0}', inputs.agent_verifier_max_turns) }}
+          agent_verifier_model: ${{ inputs.agent_verifier_model }}
+          allowlist: ${{ inputs.allowlist }}
+          base_branch: ${{ inputs.branch_state }}
+          budget_file: ${{ inputs.budget_file }}
+          budget_max_runs_per_day: ${{ inputs.budget_max_runs_per_day != null && format('{0}', inputs.budget_max_runs_per_day) || '' }}
+          budget_max_tokens_per_day: ${{ inputs.budget_max_tokens_per_day != null && format('{0}', inputs.budget_max_tokens_per_day) || '' }}
+          detect_script: ${{ inputs.detect_script }}
+          engine: ${{ inputs.engine }}
+          infer_files_pattern: ${{ inputs.infer_files_pattern }}
+          level: ${{ inputs.level }}
+          loop_branch_match: ${{ inputs.branch_match_mode }}
+          loop_finalize_integration: ${{ inputs.finalize_integration }}
+          loop_finalize_pull_request: ${{ inputs.finalize_pull_request }}
+          loop_integration_branches: ${{ inputs.branch_match }}
+          loop_max_targets_per_schedule: ${{ format('{0}', inputs.max_targets_per_schedule) }}
+          loop_name: ${{ inputs.loop_name }}
+          loop_pr_exclude: ${{ inputs.pr_exclude }}
+          loop_pr_include_bots: ${{ inputs.pr_include_bots }}
+          loop_priority: ${{ inputs.priority }}
+          loop_pull_requests: ${{ inputs.pull_requests && 'true' || 'false' }}
+          loop_state_push_branch: ${{ inputs.branch_state }}
+          no_changes_verdict: ${{ inputs.no_changes_verdict }}
+          pr_body: ${{ inputs.pr_body }}
+          pr_title: ${{ inputs.pr_title }}
+          prompt_instructions: ${{ inputs.prompt_instructions }}
+          run_log_file: ${{ inputs.run_log_file }}
+          skill_name: ${{ inputs.skill_name }}
+          state_file: ${{ inputs.state_file }}
+          token: ${{ inputs.token != '' && inputs.token || github.token }}
+
+  execute:
+    concurrency:
+      cancel-in-progress: true
+      group: on-loop-${{ inputs.loop_name }}-${{ matrix.target.target_json.key }}
+    if: needs.detect.outputs.should_run == 'true'
+    needs: detect
+    permissions:
+      contents: write
+      copilot-requests: write # zizmor: ignore[excessive-permissions]
+      pull-requests: write
+    strategy:
+      matrix:
+        target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
+    uses: ./.github/workflows/ci-loop-agent.yaml
+    with:
+      additional_commit_paths: ${{ needs.detect.outputs.additional_commit_paths }}
+      agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
+      agent_implementer_model: ${{ needs.detect.outputs.agent_implementer_model }}
+      agent_loop_max_attempts: ${{ needs.detect.outputs.agent_loop_max_attempts }}
+      agent_verifier_criteria: ${{ needs.detect.outputs.agent_verifier_criteria }}
+      agent_verifier_max_turns: ${{ needs.detect.outputs.agent_verifier_max_turns }}
+      agent_verifier_model: ${{ needs.detect.outputs.agent_verifier_model }}
+      allowlist: ${{ needs.detect.outputs.allowlist }}
+      auto_merge: ${{ (needs.detect.outputs.level == 'L3' && matrix.target.target_json.finalize == 'open_pr') && 'true' || 'false' }}
+      base_branch: ${{ matrix.target.target_json.mode == 'pull_request' && matrix.target.target_json.base.branch || matrix.target.target_json.to.branch }}
+      current_sha: ${{ matrix.target.target_json.from.ref }}
+      denylist: ${{ needs.detect.outputs.denylist }}
+      domain_persistence_script: ${{ needs.detect.outputs.domain_persistence_script }}
+      engine: ${{ needs.detect.outputs.engine }}
+      finalize_enabled: true
+      infer_files_pattern: ${{ needs.detect.outputs.infer_files_pattern }}
+      level: ${{ needs.detect.outputs.level }}
+      loop_name: ${{ needs.detect.outputs.loop_name }}
+      no_changes_verdict: ${{ needs.detect.outputs.no_changes_verdict }}
+      pr_body: |
+        ${{ needs.detect.outputs.pr_body }}
+
+        - Level: ${{ needs.detect.outputs.level }}
+        - Target: `${{ matrix.target.target_json.key }}`
+        - Skip reason: ${{ needs.detect.outputs.skip_reason }}
+      pr_title: ${{ needs.detect.outputs.pr_title }}
+      prompt_text: ${{ matrix.target.prompt }}
+      run_started_at: ${{ needs.detect.outputs.run_started_at }}
+      skill_name: ${{ needs.detect.outputs.skill_name }}
+      skip_reason: ${{ needs.detect.outputs.skip_reason }}
+      state_file: ${{ needs.detect.outputs.state_file }}
+      state_push_branch: ${{ needs.detect.outputs.state_push_branch }}
+      target_json: ${{ toJson(matrix.target.target_json) }}
+      verifier_context: ${{ matrix.target.verifier_context }}
+    secrets:
+      AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+      GH_TOKEN_PUSH: ${{ secrets.GH_TOKEN_PUSH }}
+
+  record-skip:
+    if: >-
+      needs.detect.result == 'success' &&
+      needs.detect.outputs.should_run == 'false' &&
+      (needs.detect.outputs.skip_reason == 'circuit_breaker' ||
+      needs.detect.outputs.skip_reason == 'budget')
+    needs: detect
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Append Skip Run Log
+        uses: ./.github/actions/loop-run-log
+        with:
+          base_branch: ${{ needs.detect.outputs.branch_state }}
+          loop_name: ${{ needs.detect.outputs.loop_name }}
+          outcome: skipped
+          run_started_at: ${{ needs.detect.outputs.run_started_at }}
+          skip_reason: ${{ needs.detect.outputs.skip_reason }}
+          token: ${{ secrets.GH_TOKEN_PUSH || github.token }}

@@ -1,5 +1,7 @@
 # Loop Caller `env` Reference
 
+> **Deprecation:** Caller workflow-level `env:` is a legacy pattern used while job graphs were duplicated per loop. New work should follow [Loop Caller Reusable Workflow Design](../loop-caller-reusable-design.md) (`ci-loop-caller.yaml` + caller `with:`) and [Loop Caller Inputs Reference](loop-caller-inputs-reference.md).
+
 Shared environment variables for `.github/workflows/on-loop-*.yaml` caller workflows.
 
 **Scope:** every key in caller workflow-level `env:` blocks. Domain-prefixed keys (`CHANGELOG_*`, `CI_SWEEPER_*`, `DOCS_TRIAGE_*`) are listed in workflow `env:` for alphabetical grouping and forwarded to detect scripts on the detect job step.

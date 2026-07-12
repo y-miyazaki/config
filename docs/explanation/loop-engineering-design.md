@@ -320,20 +320,26 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 | Verifier quality bar | Criteria markdown in caller `env`                               | Verifier prompt templates, JSON output contract in `loop-execute`           |
 | Domain persistence   | `domain_persistence_script` path (optional)                     | `loop-finalize` invokes script with standard env; no domain logic in action |
 
-**Caller env pattern** for a new `on-loop-*.yaml`:
+**Caller input pattern** for a new `on-loop-*.yaml` (after [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md)):
 
 ```yaml
-env:
-  LOOP_NAME: ci-sweeper
-  LOOP_DETECT_SCRIPT: .github/scripts/detect-ci-failures.sh
-  LOOP_ALLOWLIST: "src/**,tests/**"
-  LOOP_PROMPT_INSTRUCTIONS: |
-    Fix the failing CI checks identified in the detection result.
-    Do not change unrelated files.
-  AGENT_VERIFIER_CRITERIA: |
-    ## Criteria for APPROVE
-    ...
+jobs:
+  loop:
+    uses: ./.github/workflows/ci-loop-caller.yaml
+    with:
+      loop_name: ci-sweeper
+      detect_script: .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh
+      allowlist: "src/**,tests/**"
+      prompt_instructions: |
+        Fix the failing CI checks identified in the detection result.
+        Do not change unrelated files.
+      agent_verifier_criteria: |
+        ## Criteria for APPROVE
+        ...
+    secrets: inherit
 ```
+
+Copy `on-loop-changelog.yaml` as a thin caller template (`with:` on `ci-loop-caller.yaml`).
 
 **Anti-patterns** (do not embed in `loop-*` actions):
 
@@ -676,7 +682,7 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 
 **Do not** map `L3` → auto-merge alone. `push` and `push_head` never enable auto-merge.
 
-See [Loop Caller Workflows — Finalize](loop-caller-workflows-design.md#finalize-job).
+See [Loop Caller Workflows — Finalize (inside ci-loop-agent)](loop-caller-workflows-design.md#finalize-inside-ci-loop-agent).
 
 #### Skill
 

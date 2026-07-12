@@ -66,9 +66,11 @@ nav:
       - Loop Engineering Design: explanation/loop-engineering-design.md
       - Multi-Branch Loops Design: explanation/multi-branch-loops-design.md
       - Loop Caller Workflows Design: explanation/loop-caller-workflows-design.md
+      - Loop Caller Reusable Workflow Design: explanation/loop-caller-reusable-design.md
       - CI Healing Loops Design: explanation/ci-healing-loops-design.md
       - Loop Workflows:
           - Caller env Reference: explanation/workflows/loop-caller-env-reference.md
+          - Caller Inputs Reference: explanation/workflows/loop-caller-inputs-reference.md
           - Changelog: explanation/workflows/loop-changelog-workflow-design.md
           - CI Sweeper: explanation/workflows/loop-ci-sweeper-workflow-design.md
           - Docs Triage: explanation/workflows/loop-docs-triage-workflow-design.md

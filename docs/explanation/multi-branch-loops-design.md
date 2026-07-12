@@ -34,21 +34,23 @@ Two **independent**, caller-configurable capabilities:
 
 Defined here only. Other docs link to this section.
 
-| Variable                        | Description                                                                                                       | Default / empty            |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `LOOP_INTEGRATION_BRANCHES`     | Comma-separated branch patterns. Empty = mode off.                                                                | `""`                       |
-| `LOOP_PULL_REQUESTS`            | `true` / `false`.                                                                                                 | `false`                    |
-| `LOOP_BRANCH_MATCH`             | `list` \| `glob` \| `regex`.                                                                                      | `glob`                     |
-| `LOOP_PRIORITY`                 | Cron mode order. Overridden by [trigger-aware priority](#trigger-aware-priority).                                 | `integration,pull_request` |
-| `LOOP_FINALIZE_INTEGRATION`     | `open_pr` or `push` (L3).                                                                                         | `open_pr`                  |
-| `LOOP_FINALIZE_PULL_REQUEST`    | `push_head`.                                                                                                      | `push_head`                |
-| `DEFAULT_LEVEL`                 | `L1` \| `L2` \| `L3`. [Single level switch](#single-level-switch).                                                | `L2`                       |
-| `LOOP_PR_EXCLUDE`               | PR exclusion tokens — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md#pr-exclusion-rules). | `fork,draft,label:no-loop` |
-| `LOOP_PR_INCLUDE_BOTS`          | Bot logins to include. Empty = all bots excluded.                                                                 | `""`                       |
-| `LOOP_MAX_TARGETS_PER_SCHEDULE` | Max targets per cron tick (fan-out cap).                                                                          | `3`                        |
-| `LOOP_STATE_PUSH_BRANCH`        | Branch for `.loop/*` persistence commits.                                                                         | repository default branch  |
+`ci-loop-caller` workflow inputs map to these `loop-detect` environment variables — see [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md#branch-configuration).
 
-`.loop/*` metadata is **always centralized** on `LOOP_STATE_PUSH_BRANCH` (typically `main`), aligned with [cobusgreyling loop-engineering](https://github.com/cobusgreyling/loop-engineering). Fix PRs may target other branches; state does not follow `target.to.branch`.
+| Variable                        | `ci-loop-caller` input     | Description                                                                                                       | Default / empty            |
+| ------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `LOOP_INTEGRATION_BRANCHES`     | `branch_match`             | Comma-separated branch patterns. Empty = watch `branch_state` only.                                               | `""`                       |
+| `LOOP_PULL_REQUESTS`            | `pull_requests`            | `true` / `false`.                                                                                                 | `false`                    |
+| `LOOP_BRANCH_MATCH`             | `branch_match_mode`        | `list` \| `glob` \| `regex`.                                                                                      | `glob`                     |
+| `LOOP_PRIORITY`                 | `priority`                 | Cron mode order. Overridden by [trigger-aware priority](#trigger-aware-priority).                                 | `integration,pull_request` |
+| `LOOP_FINALIZE_INTEGRATION`     | `finalize_integration`     | `open_pr` or `push` (L3).                                                                                         | `open_pr`                  |
+| `LOOP_FINALIZE_PULL_REQUEST`    | `finalize_pull_request`    | `push_head`.                                                                                                      | `push_head`                |
+| `DEFAULT_LEVEL`                 | `level`                    | `L1` \| `L2` \| `L3`. [Single level switch](#single-level-switch).                                                | `L2`                       |
+| `LOOP_PR_EXCLUDE`               | `pr_exclude`               | PR exclusion tokens — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md#pr-exclusion-rules). | `fork,draft,label:no-loop` |
+| `LOOP_PR_INCLUDE_BOTS`          | `pr_include_bots`          | Bot logins to include. Empty = all bots excluded.                                                                 | `""`                       |
+| `LOOP_MAX_TARGETS_PER_SCHEDULE` | `max_targets_per_schedule` | Max targets per cron tick (fan-out cap).                                                                          | `3`                        |
+| `LOOP_STATE_PUSH_BRANCH`        | `branch_state`             | Branch for `.loop/*` persistence commits and state migration fallback.                                            | repository default branch  |
+
+`.loop/*` metadata is **always centralized** on `branch_state` (typically `main`), aligned with [cobusgreyling loop-engineering](https://github.com/cobusgreyling/loop-engineering). Fix PRs may target other branches; state does not follow `target.to.branch`.
 
 ### Env validation
 
@@ -124,6 +126,16 @@ Detect scripts scan **only the current context** (branch/ref `loop-detect` check
 | `key`                  | State key: `integration:<branch>` or `pull_request:<pr_number>` |
 | `from` / `to` / `base` | Detect, finalize, verifier diff baseline                        |
 | `finalize`             | `open_pr` \| `push` \| `push_head`                              |
+
+## Branch roles and fix direction
+
+Three branch roles on callers — detailed tables in [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md#branch-configuration):
+
+| Role             | `ci-loop-caller` input                                   | Behavior                                                                                      |
+| ---------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| **Watch**        | `branch_match`, `branch_match_mode`, `pull_requests`     | Detect scans matching integration branches and/or open PR heads                               |
+| **State**        | `branch_state`, `state_file`                             | `.loop/*` persistence commits land on `branch_state`; optional path override via `state_file` |
+| **Fix delivery** | `finalize_integration`, `finalize_pull_request`, `level` | Agent changes land on the **watched** branch (`to.branch`), not `branch_state`                |
 
 ## Platform Contract: candidates and `target_json`
 
@@ -202,15 +214,16 @@ Per-target `concurrency.group` in caller YAML complements `acting_on` — see [L
 
 ## Implementation Phases
 
-| Phase | Platform deliverable                                                               | Status                     |
-| ----- | ---------------------------------------------------------------------------------- | -------------------------- |
-| **0** | Single-branch dogfood                                                              | ✅ Done                    |
-| **1** | `target_matrix`; `targets` map; no double detect; `acting_on`                      | In progress                |
-| **2** | `target_json` on execute/finalize; `domain_persistence_script`; `push`/`push_head` | Planned                    |
-| **3** | Matrix fan-out + per-target concurrency                                            | Planned (with Phase 1)     |
-| **4** | `workflow_run` per loop ops checklist                                              | Planned (trigger disabled) |
-| **5** | L3 integration `push` (opt-in)                                                     | Planned                    |
-| **6** | Optional `repository` on target                                                    | Future                     |
+| Phase | Platform deliverable                                                               | Status                                             |
+| ----- | ---------------------------------------------------------------------------------- | -------------------------------------------------- |
+| **0** | Single-branch dogfood                                                              | ✅ Done                                            |
+| **1** | `target_matrix`; `targets` map; no double detect; `acting_on`                      | ✅ Done                                            |
+| **2** | `target_json` on execute/finalize; `domain_persistence_script`; `push`/`push_head` | ✅ Done                                            |
+| **3** | Matrix fan-out + per-target concurrency                                            | ✅ Done                                            |
+| **4** | `workflow_run` per loop ops checklist                                              | ⏸ Planned (trigger disabled in dogfood)            |
+| **5** | L3 integration `push` (opt-in)                                                     | Planned                                            |
+| **6** | Optional `repository` on target                                                    | Future                                             |
+| **7** | `ci-loop-caller.yaml` — thin callers + `with:`                                     | Planned ([design](loop-caller-reusable-design.md)) |
 
 Caller/workflow steps: [Loop Caller Workflows Design](loop-caller-workflows-design.md).
 
@@ -224,21 +237,21 @@ Caller/workflow steps: [Loop Caller Workflows Design](loop-caller-workflows-desi
 
 Add new loops as `docs/explanation/workflows/<name>-workflow-design.md` without growing this file.
 
-Shared caller `env` keys: [Loop Caller `env` Reference](workflows/loop-caller-env-reference.md).
+Shared caller configuration: [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md) (planned `with:` on `ci-loop-caller`). Legacy: [Loop Caller `env` Reference](workflows/loop-caller-env-reference.md).
 
 ## Decision Summary
 
-| Question                    | Decision                                                       |
-| --------------------------- | -------------------------------------------------------------- |
-| Config                      | Caller `env` (table above)                                     |
-| Target shape                | `mode` + from/to/base                                          |
-| Branch scan                 | `loop-detect` enumerates + checkout; detect script per context |
-| Fan-out                     | `target_matrix` → execute/finalize matrix                      |
-| State persistence           | `LOOP_STATE_PUSH_BRANCH` (default branch), not per target      |
-| `loop-pr-ci-healer` package | **No**                                                         |
-| Levels                      | Single `DEFAULT_LEVEL`; L2 default                             |
-| Bot PRs                     | Excluded; `LOOP_PR_INCLUDE_BOTS` opt-in                        |
-| Detect filters              | Stable mechanical only; Skill classifies Watch                 |
+| Question                    | Decision                                                                                           |
+| --------------------------- | -------------------------------------------------------------------------------------------------- |
+| Config                      | Caller `with:` on `ci-loop-caller` ([inputs reference](workflows/loop-caller-inputs-reference.md)) |
+| Target shape                | `mode` + from/to/base                                                                              |
+| Branch scan                 | `loop-detect` enumerates + checkout; detect script per context                                     |
+| Fan-out                     | `target_matrix` → execute/finalize matrix                                                          |
+| State persistence           | `branch_state` on caller (`LOOP_STATE_PUSH_BRANCH` internally), not per target                     |
+| `loop-pr-ci-healer` package | **No**                                                                                             |
+| Levels                      | Single `DEFAULT_LEVEL`; L2 default                                                                 |
+| Bot PRs                     | Excluded; `LOOP_PR_INCLUDE_BOTS` opt-in                                                            |
+| Detect filters              | Stable mechanical only; Skill classifies Watch                                                     |
 
 ## References
 

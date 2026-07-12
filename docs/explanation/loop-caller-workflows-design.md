@@ -5,13 +5,16 @@ Shared GitHub Actions layout for `on-loop-*.yaml` caller workflows.
 **Scope:** job graph, `target_matrix` handoff, triggers, concurrency, matrix fan-out, persistence job structure.  
 **Out of scope:** domain detect logic — see [workflow designs](multi-branch-loops-design.md#workflow-design-documents). Platform target model — [Multi-Branch Loops Design](multi-branch-loops-design.md).
 
+> **Refactor complete:** Job graph lives in `ci-loop-caller.yaml`; each `on-loop-*.yaml` is a thin caller (`with:` only, no `env:`). See [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md).
+
 ## Files
 
-| Type     | Path                                                  | Role                                                |
-| -------- | ----------------------------------------------------- | --------------------------------------------------- |
-| Caller   | `.github/workflows/on-loop-<name>.yaml`               | Domain `env`, detect script path, verifier criteria |
-| Reusable | `.github/workflows/ci-loop-agent.yaml`                | L1/L2/L3 execute (`loop-execute`)                   |
-| Actions  | `y-miyazaki/config` `loop-detect`, `loop-finalize`, … | Generic phases                                      |
+| Type     | Path                                                  | Role                                           |
+| -------- | ----------------------------------------------------- | ---------------------------------------------- |
+| Caller   | `.github/workflows/on-loop-<name>.yaml`               | Triggers, concurrency; loop config via `with:` |
+| Reusable | `.github/workflows/ci-loop-caller.yaml`               | Shared detect → execute → record-skip          |
+| Reusable | `.github/workflows/ci-loop-agent.yaml`                | L1/L2/L3 execute (`loop-execute`)              |
+| Actions  | `y-miyazaki/config` `loop-detect`, `loop-finalize`, … | Generic phases                                 |
 
 ## Job Graph
 
@@ -25,7 +28,8 @@ execute (matrix: target_matrix)
   → inputs: target_json, prompt, verifier_context, finalize config, …
 
 record-skip (optional)
-  → loop-run-log when skip_reason=budget|circuit_breaker
+  → loop-run-log when should_run=false and skip_reason=budget|circuit_breaker
+  → not used for target_budget (execute still runs; deferral is informational)
 ```
 
 ## Detect Job
@@ -185,21 +189,29 @@ Each matrix cell = one `max_runs_per_day` consumption. Cap enumeration in `loop-
 
 ## Adding a New Loop Caller
 
+After [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md) is implemented, copy a thin `on-loop-*.yaml` (triggers + `with:` only).
+
+Until then:
+
 1. Copy `on-loop-changelog.yaml`, `on-loop-docs-triage.yaml`, or `on-loop-ci-sweeper.yaml` skeleton.
 2. Add `docs/explanation/workflows/loop-<name>-workflow-design.md`.
 3. Link from [Multi-Branch workflow index](multi-branch-loops-design.md#workflow-design-documents).
 4. Register in `mkdocs.yml` under **Explanation → Loop Workflows**.
 5. Package: `.apm/packages/loop-<name>/` with `SKILL.md` + `scripts/detect_*.sh` (+ optional ledger script).
 
-## Phase 0 Debt (remove in implementation)
+## Phase 0 Debt (resolved)
 
-| Debt                                             | Caller                | Resolution                                     |
-| ------------------------------------------------ | --------------------- | ---------------------------------------------- |
-| Double detect script                             | `on-loop-ci-sweeper`  | `loop-detect` outputs `verifier_context`       |
-| Caller ledger `git push`                         | `on-loop-ci-sweeper`  | `domain_persistence_script` in `loop-finalize` |
-| `auto_merge: level == L3` without finalize check | all L2+ callers       | `finalize == 'open_pr'` guard                  |
-| Single `DEFAULT_BASE_BRANCH` only                | all                   | `LOOP_INTEGRATION_BRANCHES`                    |
-| `docs-updater` detect path                       | `on-loop-docs-triage` | `loop-docs-triage/scripts/detect_changes.sh`   |
+Historical debt from early caller implementations. **All items below are resolved** in current `on-loop-*.yaml`; retained for audit trail only.
+
+| Debt                                             | Was                                          | Resolution (current)                                               |
+| ------------------------------------------------ | -------------------------------------------- | ------------------------------------------------------------------ |
+| Double detect script                             | `on-loop-ci-sweeper` re-ran detect in `run:` | `loop-detect` outputs `verifier_context` per matrix cell           |
+| Caller ledger `git push`                         | ci-sweeper pushed ledger from caller         | `domain_persistence_script` in `loop-finalize` via `ci-loop-agent` |
+| `auto_merge: level == L3` without finalize check | all L2+ callers                              | `finalize == 'open_pr'` guard on `auto_merge`                      |
+| Single `DEFAULT_BASE_BRANCH` only                | all                                          | `LOOP_INTEGRATION_BRANCHES`                                        |
+| `docs-updater` detect path                       | `on-loop-docs-triage`                        | `loop-docs-triage/scripts/detect_changes.sh`                       |
+
+Next structural improvement: [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md) (`ci-loop-caller.yaml`).
 
 ## References
 

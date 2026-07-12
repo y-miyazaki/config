@@ -82,7 +82,9 @@ Note: At L3, `loop-finalize` enables auto-merge (`gh pr merge --auto --squash`) 
 
 ### Defaults via env
 
-Caller workflow configuration values are defined in `env:`. Not placed in `workflow_dispatch` inputs (avoids the limitation where cron-triggered runs have no inputs context).
+Most caller workflows define configuration in `env:` when jobs are inlined in the caller. Not placed in `workflow_dispatch` inputs (cron-triggered runs have no inputs context).
+
+**Exception — loop callers:** `on-loop-*.yaml` will pass configuration via `with:` on `ci-loop-caller.yaml` (no caller `env:`), matching `on-ci-push-*.yaml`. See [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md). Until that refactor lands, loop callers still use `env:` — see [Loop Caller `env` Reference](workflows/loop-caller-env-reference.md).
 
 ```yaml
 env:
@@ -93,9 +95,11 @@ env:
   VERIFIER_MODEL: ""
 ```
 
-### Passing env to Reusable Workflow with
+### Passing configuration to reusable workflows
 
-GitHub Actions does not allow `env` context in reusable workflow `with:`. Pass values via detect job outputs:
+Thin callers pass fixed literals in `with:` (same pattern as `on-cd-mkdocs.yaml` and `on-loop-*.yaml` on `ci-loop-caller.yaml`).
+
+Legacy loop pattern (pre-`ci-loop-caller`): map caller `env` → action `with:` inside inlined detect jobs. Detect job outputs passthrough to execute:
 
 ```yaml
 outputs:
