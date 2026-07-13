@@ -3,6 +3,7 @@
 # Design doc: docs/explanation/workflows/loop-changelog-workflow-design.md
 # Caller inputs: docs/explanation/workflows/loop-caller-inputs-reference.md
 # Requires repository secret: AGENT_TOKEN (engine API key; see engine input).
+# Requires environment secrets on `default`: MAINTENANCE_BOT_APP_CLIENT_ID, MAINTENANCE_BOT_APP_PRIVATE_KEY.
 name: on-loop-changelog
 
 on:
@@ -65,6 +66,7 @@ jobs:
         {"CHANGELOG_FILE":"CHANGELOG.md","CHANGELOG_MERGE_COMMITS":"false"}
       detect_script: .agents/skills/loop-changelog/scripts/detect_changelog_commits.sh
       engine: cursor
+      environment: default
       finalize_integration: open_pr
       infer_files_pattern: 'CHANGELOG\.md'
       loop_name: changelog

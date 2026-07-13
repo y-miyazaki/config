@@ -3,6 +3,7 @@
 # Design doc: docs/explanation/workflows/loop-ci-sweeper-workflow-design.md
 # Caller inputs: docs/explanation/workflows/loop-caller-inputs-reference.md
 # Requires repository secret: AGENT_TOKEN (engine API key; see engine input).
+# Requires environment secrets on `default`: MAINTENANCE_BOT_APP_CLIENT_ID, MAINTENANCE_BOT_APP_PRIVATE_KEY.
 name: on-loop-ci-sweeper
 
 on:
@@ -78,6 +79,7 @@ jobs:
       detect_script: .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh
       domain_persistence_script: .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh
       engine: cursor
+      environment: default
       finalize_integration: open_pr
       finalize_pull_request: push_head
       infer_files_pattern: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|ya?ml|sh|go|toml|json)'

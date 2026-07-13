@@ -3,6 +3,7 @@
 # Design doc: docs/explanation/workflows/loop-docs-triage-workflow-design.md
 # Caller inputs: docs/explanation/workflows/loop-caller-inputs-reference.md
 # Requires repository secret: AGENT_TOKEN (engine API key; see engine input).
+# Requires environment secrets on `default`: MAINTENANCE_BOT_APP_CLIENT_ID, MAINTENANCE_BOT_APP_PRIVATE_KEY.
 name: on-loop-docs-triage
 
 on:
@@ -61,6 +62,7 @@ jobs:
         {"DOCS_TRIAGE_DOC_GLOBS":"docs/**/*.md,README.md","DOCS_TRIAGE_EXTRA_FILES":"mkdocs.yml"}
       detect_script: .agents/skills/loop-docs-triage/scripts/detect_changes.sh
       engine: cursor
+      environment: default
       finalize_integration: open_pr
       infer_files_pattern: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|yml|yaml)'
       loop_name: docs-triage

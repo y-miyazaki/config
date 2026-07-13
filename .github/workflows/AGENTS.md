@@ -64,6 +64,38 @@ run: bash "${GITHUB_ACTION_PATH}/../loop-state-write/lib/run.sh"
 
 Rationale: a single action SHA stays self-contained at release time without hidden transitive dependencies.
 
+### `GITHUB_ACTION_PATH` vs caller workspace
+
+`${GITHUB_ACTION_PATH}` (same as `${{ github.action_path }}`) is **not** the consumer repository's `GITHUB_WORKSPACE/.github/actions/`.
+
+When a workflow pins a remote action:
+
+```yaml
+uses: y-miyazaki/config/.github/actions/loop-agent-once@<full-sha>
+```
+
+GitHub downloads the **config repository snapshot at that SHA** into the runner's `_actions/` cache. `GITHUB_ACTION_PATH` points to the downloaded action directory inside that snapshot, for example:
+
+```text
+.../_actions/y-miyazaki/config/<sha>/.github/actions/loop-agent-once   ← GITHUB_ACTION_PATH
+.../_actions/y-miyazaki/config/<sha>/.github/actions/loop-install-cli   ← ../loop-install-cli
+```
+
+So this pattern inside a composite `run:` step resolves against the **pinned config repo tree**, not the caller's checkout:
+
+```yaml
+run: bash "${GITHUB_ACTION_PATH}/../loop-install-cli/lib/install.sh"
+```
+
+| Variable / path                                           | Resolves to                                                                   |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `GITHUB_WORKSPACE`                                        | Consumer repo checkout (caller workflow's repository)                         |
+| `GITHUB_ACTION_PATH`                                      | Downloaded action directory for the **currently executing** composite action  |
+| `uses: ./.github/actions/...` in a **workflow** step      | Relative to `GITHUB_WORKSPACE` (caller repo only)                             |
+| `uses: ./.github/actions/...` inside a **composite** step | Relative to caller workspace — **broken for distributed actions**; do not use |
+
+The sibling `lib/` pattern works because one SHA pin carries the whole `.github/actions/*` tree for that commit. It does **not** work in `uses:` (contexts are not expanded there); use `run:` + `GITHUB_ACTION_PATH` instead.
+
 **Workflows are different:** job steps call leaf composite actions via `uses:` — never invoke `lib/run.sh` directly from a workflow.
 
 ```yaml

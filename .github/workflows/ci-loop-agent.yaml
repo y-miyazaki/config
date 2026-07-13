@@ -92,6 +92,11 @@ on:
         description: "AI engine (claude | copilot | codex | cursor)"
         required: true
         type: string
+      environment:
+        default: default
+        description: "GitHub environment for maintenance bot secrets"
+        required: false
+        type: string
       finalize_enabled:
         default: false
         description: "Run loop-finalize after agent-l2 in this workflow instance"
@@ -246,8 +251,20 @@ on:
       AGENT_TOKEN:
         description: "Authentication token for the selected engine"
         required: true
+      BOT_APP_CLIENT_ID:
+        description: "GitHub App client ID for ruleset-bypass .loop/* pushes"
+        required: false
+      BOT_APP_PRIVATE_KEY:
+        description: "GitHub App private key for ruleset-bypass .loop/* pushes"
+        required: false
       GH_TOKEN_PUSH:
         description: "GitHub token with push permission (required for L2)"
+        required: false
+      MAINTENANCE_BOT_APP_CLIENT_ID:
+        description: "GitHub App client ID from environment secrets"
+        required: false
+      MAINTENANCE_BOT_APP_PRIVATE_KEY:
+        description: "GitHub App private key from environment secrets"
         required: false
 
 permissions:
@@ -281,6 +298,7 @@ jobs:
 
   agent-l2:
     if: inputs.level == 'L2' || inputs.level == 'L3'
+    environment: ${{ inputs.environment }}
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     outputs:
@@ -302,6 +320,34 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Generate Maintenance Bot Token
+        continue-on-error: true
+        id: app_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.BOT_APP_CLIENT_ID || secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
+          permission-contents: write
+          permission-pull-requests: write
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY || secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
+
+      - name: Resolve Push Token
+        id: push_token
+        shell: bash
+        env:
+          APP_TOKEN: ${{ steps.app_token.outputs.token }}
+          GH_TOKEN_PUSH: ${{ secrets.GH_TOKEN_PUSH }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${APP_TOKEN}" ]]; then
+            token="${APP_TOKEN}"
+          elif [[ -n "${GH_TOKEN_PUSH}" ]]; then
+            token="${GH_TOKEN_PUSH}"
+          else
+            token="${GITHUB_TOKEN}"
+          fi
+          echo "::add-mask::${token}"
+          echo "token=${token}" >> "${GITHUB_OUTPUT}"
 
       - name: Parse Target
         id: target
@@ -354,7 +400,7 @@ jobs:
           state_file: ${{ steps.state_path.outputs.state_file }}
           state_push_branch: ${{ inputs.state_push_branch }}
           target_key: ${{ steps.target.outputs.target_key }}
-          token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
+          token: ${{ steps.push_token.outputs.token }}
           write_target_state: "false"
 
       - name: Setup Worktree
@@ -365,7 +411,7 @@ jobs:
           base_ref: ${{ steps.target.outputs.worktree_ref }}
           branch_prefix: ${{ inputs.branch_prefix }}
           skill_name: ${{ inputs.skill_name }}
-          token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
+          token: ${{ steps.push_token.outputs.token }}
 
       - name: Execute Bounded Loop
         id: execute
@@ -395,7 +441,7 @@ jobs:
           prompt_verifier_regression: ${{ inputs.prompt_verifier_regression }}
           prompt_verifier_task: ${{ inputs.prompt_verifier_task }}
           skill_name: ${{ inputs.skill_name }}
-          token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
+          token: ${{ steps.push_token.outputs.token }}
           verifier_context: ${{ inputs.verifier_context }}
           worktree_path: ${{ steps.worktree.outputs.worktree_path }}
 
@@ -406,6 +452,7 @@ jobs:
       (inputs.level == 'L2' || inputs.level == 'L3') &&
       needs.agent-l2.result != 'cancelled'
     needs: agent-l2
+    environment: ${{ inputs.environment }}
     permissions:
       contents: write
       pull-requests: write
@@ -416,6 +463,34 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+
+      - name: Generate Maintenance Bot Token
+        continue-on-error: true
+        id: app_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.BOT_APP_CLIENT_ID || secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
+          permission-contents: write
+          permission-pull-requests: write
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY || secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
+
+      - name: Resolve Push Token
+        id: push_token
+        shell: bash
+        env:
+          APP_TOKEN: ${{ steps.app_token.outputs.token }}
+          GH_TOKEN_PUSH: ${{ secrets.GH_TOKEN_PUSH }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${APP_TOKEN}" ]]; then
+            token="${APP_TOKEN}"
+          elif [[ -n "${GH_TOKEN_PUSH}" ]]; then
+            token="${GH_TOKEN_PUSH}"
+          else
+            token="${GITHUB_TOKEN}"
+          fi
+          echo "::add-mask::${token}"
+          echo "token=${token}" >> "${GITHUB_OUTPUT}"
 
       - name: Resolve State File
         id: state_path
@@ -459,6 +534,6 @@ jobs:
           state_file: ${{ steps.state_path.outputs.state_file }}
           state_push_branch: ${{ inputs.state_push_branch }}
           target_json: ${{ inputs.target_json }}
-          token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
+          token: ${{ steps.push_token.outputs.token }}
           usage_json: ${{ needs.agent-l2.outputs.usage_json || '' }}
           verdict: ${{ needs.agent-l2.outputs.verdict }}

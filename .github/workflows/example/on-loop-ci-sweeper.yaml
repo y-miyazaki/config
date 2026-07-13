@@ -78,6 +78,7 @@ jobs:
       detect_script: .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh
       domain_persistence_script: .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh
       engine: cursor
+      environment: default
       finalize_integration: open_pr
       finalize_pull_request: push_head
       infer_files_pattern: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|ya?ml|sh|go|toml|json)'

@@ -62,6 +62,7 @@ jobs:
         {"CHANGELOG_FILE":"CHANGELOG.md","CHANGELOG_MERGE_COMMITS":"false"}
       detect_script: .agents/skills/loop-changelog/scripts/detect_changelog_commits.sh
       engine: cursor
+      environment: default
       finalize_integration: open_pr
       infer_files_pattern: 'CHANGELOG\.md'
       loop_name: changelog

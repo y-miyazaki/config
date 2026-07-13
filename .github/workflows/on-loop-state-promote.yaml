@@ -1,5 +1,6 @@
 # Platform workflow: promote pending loop state when a fix PR closes.
 # Design: docs/explanation/multi-branch-loops-design.md#state-delivery-philosophy
+# Requires environment secrets on `default`: MAINTENANCE_BOT_APP_CLIENT_ID, MAINTENANCE_BOT_APP_PRIVATE_KEY.
 name: on-loop-state-promote
 
 on:
@@ -11,6 +12,7 @@ permissions:
 
 jobs:
   promote:
+    environment: default
     if: contains(github.event.pull_request.labels.*.name, 'loop-automation')
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -21,10 +23,19 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Generate Maintenance Bot Token
+        id: app_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
+          permission-contents: write
+          permission-pull-requests: write
+          private-key: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
+
       - name: Promote Pending State
         uses: ./.github/actions/loop-state-promote
         with:
           merged: ${{ github.event.pull_request.merged && 'true' || 'false' }}
           pr_number: ${{ github.event.pull_request.number }}
           state_push_branch: ""
-          token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
+          token: ${{ steps.app_token.outputs.token }}

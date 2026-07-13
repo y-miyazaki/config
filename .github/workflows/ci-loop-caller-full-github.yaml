@@ -90,6 +90,11 @@ on:
         description: "AI engine: claude | copilot | codex | cursor"
         required: true
         type: string
+      environment:
+        default: default
+        description: "GitHub environment for maintenance bot secrets"
+        required: false
+        type: string
       finalize_integration:
         default: open_pr
         description: "Finalize for integration targets: open_pr | push"
@@ -181,7 +186,15 @@ on:
     secrets:
       AGENT_TOKEN:
         required: true
+      BOT_APP_CLIENT_ID:
+        required: false
+      BOT_APP_PRIVATE_KEY:
+        required: false
       GH_TOKEN_PUSH:
+        required: false
+      MAINTENANCE_BOT_APP_CLIENT_ID:
+        required: false
+      MAINTENANCE_BOT_APP_PRIVATE_KEY:
         required: false
 
 jobs:
@@ -323,6 +336,7 @@ jobs:
       denylist: ${{ needs.detect.outputs.denylist }}
       domain_persistence_script: ${{ needs.detect.outputs.domain_persistence_script }}
       engine: ${{ needs.detect.outputs.engine }}
+      environment: ${{ inputs.environment }}
       finalize_enabled: true
       infer_files_pattern: ${{ needs.detect.outputs.infer_files_pattern }}
       level: ${{ needs.detect.outputs.level }}
@@ -354,6 +368,7 @@ jobs:
       (needs.detect.outputs.skip_reason == 'circuit_breaker' ||
       needs.detect.outputs.skip_reason == 'budget')
     needs: detect
+    environment: ${{ inputs.environment }}
     permissions:
       contents: write
       pull-requests: write
@@ -365,6 +380,34 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Generate Maintenance Bot Token
+        continue-on-error: true
+        id: app_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.BOT_APP_CLIENT_ID || secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
+          permission-contents: write
+          permission-pull-requests: write
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY || secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
+
+      - name: Resolve Push Token
+        id: push_token
+        shell: bash
+        env:
+          APP_TOKEN: ${{ steps.app_token.outputs.token }}
+          GH_TOKEN_PUSH: ${{ secrets.GH_TOKEN_PUSH }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${APP_TOKEN}" ]]; then
+            token="${APP_TOKEN}"
+          elif [[ -n "${GH_TOKEN_PUSH}" ]]; then
+            token="${GH_TOKEN_PUSH}"
+          else
+            token="${GITHUB_TOKEN}"
+          fi
+          echo "::add-mask::${token}"
+          echo "token=${token}" >> "${GITHUB_OUTPUT}"
+
       - name: Append Skip Run Log
         uses: y-miyazaki/config/.github/actions/loop-run-log@6f1947b75d02265f87cd97888193497add65ac7f # v1.8.17
         with:
@@ -373,4 +416,4 @@ jobs:
           outcome: skipped
           run_started_at: ${{ needs.detect.outputs.run_started_at }}
           skip_reason: ${{ needs.detect.outputs.skip_reason }}
-          token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
+          token: ${{ steps.push_token.outputs.token }}
