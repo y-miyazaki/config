@@ -265,7 +265,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Agent Once
-        uses: y-miyazaki/config/.github/actions/loop-agent-once@8171ef0fb582e1d650e87c3851c7d4136901740f # v1.8.16
+        uses: y-miyazaki/config/.github/actions/loop-agent-once@79d74d1dadea776a3a99178c3e082e7fe5d7db65 # v1.8.16
         with:
           agent_token: ${{ secrets.AGENT_TOKEN }}
           cli_version: ${{ inputs.cli_version }}
@@ -340,7 +340,7 @@ jobs:
 
       - name: Set Acting On
         if: steps.state_path.outputs.state_file != ''
-        uses: y-miyazaki/config/.github/actions/loop-state-write@8171ef0fb582e1d650e87c3851c7d4136901740f # v1.8.16
+        uses: y-miyazaki/config/.github/actions/loop-state-write@79d74d1dadea776a3a99178c3e082e7fe5d7db65 # v1.8.16
         with:
           acting_on_action: set
           acting_on_loop_name: ${{ inputs.loop_name }}
@@ -354,7 +354,7 @@ jobs:
 
       - name: Setup Worktree
         id: worktree
-        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@8171ef0fb582e1d650e87c3851c7d4136901740f # v1.8.16
+        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@79d74d1dadea776a3a99178c3e082e7fe5d7db65 # v1.8.16
         with:
           base_branch: ${{ steps.target.outputs.worktree_branch }}
           base_ref: ${{ steps.target.outputs.worktree_ref }}
@@ -364,7 +364,7 @@ jobs:
 
       - name: Execute Bounded Loop
         id: execute
-        uses: y-miyazaki/config/.github/actions/loop-execute@8171ef0fb582e1d650e87c3851c7d4136901740f # v1.8.16
+        uses: y-miyazaki/config/.github/actions/loop-execute@79d74d1dadea776a3a99178c3e082e7fe5d7db65 # v1.8.16
         with:
           agent_implementer_max_turns: ${{ inputs.agent_implementer_max_turns }}
           agent_implementer_model: ${{ inputs.agent_implementer_model }}
@@ -429,7 +429,7 @@ jobs:
           fi
 
       - name: Finalize
-        uses: y-miyazaki/config/.github/actions/loop-finalize@8171ef0fb582e1d650e87c3851c7d4136901740f # v1.8.16
+        uses: y-miyazaki/config/.github/actions/loop-finalize@79d74d1dadea776a3a99178c3e082e7fe5d7db65 # v1.8.16
         with:
           agent_result: ${{ needs.agent-l2.result }}
           attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
