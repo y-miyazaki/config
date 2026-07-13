@@ -1,0 +1,18 @@
+{
+  "targets": {
+    "integration:main": {
+      "pending": {
+        "sha": "a8c75754f830ffd4aa201a1cf1340ede8296cf8a",
+        "pr": 368,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/368",
+        "loop_name": "changelog",
+        "created_at": "2026-07-13T11:02:01Z"
+      },
+      "last_run": "2026-07-13T11:02:01Z",
+      "outcome": "pr-created",
+      "consecutive_failures": 0,
+      "open_rejections": [],
+      "last_reject_reason": "All 10 commits are correctly mapped with commit links into new 1.8.17 and 1.8.16 release sections; only CHANGELOG.md changed."
+    }
+  }
+}
