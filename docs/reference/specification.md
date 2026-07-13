@@ -300,6 +300,10 @@ The repository must provide reusable workflows.
 - `.github/workflows/`: reusable workflows and caller workflows
 - `.github/actions/`: composite actions for shared step logic
 
+### Composite action composition
+
+Loop composites must not nest other repository composite actions via `uses: <owner>/<repo>/.github/actions/...`. Parents invoke shared bash under sibling `lib/` paths instead (for example `${GITHUB_ACTION_PATH}/../loop-install-cli/lib/install.sh`). Leaf actions (`loop-install-cli`, `loop-state-write`, `loop-run-log`, `loop-config-pack`) remain available for direct workflow use. This keeps a single action SHA self-contained at release time without transitive pin drift.
+
 ### Loop Engineering Workflows
 
 | Workflow                   | Type     | Purpose                                                                                                                                                |
@@ -324,7 +328,7 @@ Each `loop-*` APM package is self-contained. Domain detection and agent behavior
 | Action                 | Purpose                                                                                                                                                                                                                                                       |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `loop-agent-once`      | Single read-only agent session (L1)                                                                                                                                                                                                                           |
-| `loop-config-pack`     | Pack caller agent config into standardized outputs for detect/execute handoff                                                                                                                                                                                 |
+| `loop-config-pack`     | Pack caller agent config into standardized outputs for detect/execute handoff (standalone; `loop-detect` inlines the same pack step)                                                                                                                          |
 | `loop-detect`          | Read `LOOP_*`, enumerate branches/PRs, checkout per context, invoke `detect_script` per context, assemble `target_matrix`, `verifier_context`, prompts; guards (`budget`, `acting_on`, `peer_active`, circuit breaker). **No caller re-run of detect script** |
 | `loop-execute`         | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`; worktree from `from.ref` @ `from.branch`                                                                                                                                 |
 | `loop-finalize`        | Finalize per `target.finalize`, branch cleanup, per-target state, run-log, optional `domain_persistence_script`; `.loop/*` to `LOOP_STATE_PUSH_BRANCH`                                                                                                        |

@@ -273,35 +273,39 @@ runs:
 
     - name: Write State
       if: inputs.current_sha != ''
-      uses: y-miyazaki/config/.github/actions/loop-state-write@v1.8.14 # v1.8.14
-      with:
-        acting_on_action: clear
-        base_branch: ${{ inputs.base_branch }}
-        loop_name: ${{ inputs.loop_name }}
-        open_rejections: ${{ inputs.open_rejections }}
-        outcome: ${{ steps.outcome.outputs.value }}
-        reject_reason: ${{ inputs.reject_reason }}
-        sha: ${{ inputs.current_sha }}
-        state_file: ${{ inputs.state_file }}
-        state_push_branch: ${{ inputs.state_push_branch }}
-        additional_commit_paths: ${{ inputs.additional_commit_paths }}
-        target_key: ${{ steps.target.outputs.target_key }}
-        token: ${{ inputs.token }}
+      shell: bash
+      env:
+        ACTING_ON_ACTION: clear
+        ACTING_ON_LOOP_NAME: ${{ inputs.loop_name }}
+        ACTING_ON_TARGET_KEY: ${{ steps.target.outputs.target_key }}
+        ADDITIONAL_COMMIT_PATHS: ${{ inputs.additional_commit_paths }}
+        BASE_BRANCH: ${{ inputs.base_branch }}
+        GH_TOKEN: ${{ inputs.token }}
+        OPEN_REJECTIONS: ${{ inputs.open_rejections }}
+        OUTCOME: ${{ steps.outcome.outputs.value }}
+        REJECT_REASON: ${{ inputs.reject_reason }}
+        SHA: ${{ inputs.current_sha }}
+        STATE_FILE: ${{ inputs.state_file }}
+        STATE_PUSH_BRANCH: ${{ inputs.state_push_branch }}
+        TARGET_KEY: ${{ steps.target.outputs.target_key }}
+        WRITE_TARGET_STATE: "true"
+      run: bash "${GITHUB_ACTION_PATH}/../loop-state-write/lib/run.sh"
 
     - name: Append Run Log
       if: inputs.loop_name != ''
-      uses: y-miyazaki/config/.github/actions/loop-run-log@v1.8.14 # v1.8.14
-      with:
-        attempts: ${{ inputs.attempts }}
-        base_branch: ${{ inputs.state_push_branch != '' && inputs.state_push_branch || inputs.base_branch }}
-        has_changes: ${{ inputs.has_changes }}
-        loop_name: ${{ inputs.loop_name }}
-        outcome: ${{ steps.outcome.outputs.value }}
-        run_log_file: ${{ inputs.run_log_file }}
-        run_started_at: ${{ inputs.run_started_at }}
-        skip_reason: ${{ inputs.skip_reason }}
-        token: ${{ inputs.token }}
-        tokens_estimate: ${{ inputs.tokens_estimate }}
-        usage_json: ${{ inputs.usage_json }}
-        verdict: ${{ inputs.verdict }}
-        workflow_run: ${{ inputs.workflow_run }}
+      shell: bash
+      env:
+        ATTEMPTS: ${{ inputs.attempts }}
+        BASE_BRANCH: ${{ inputs.state_push_branch != '' && inputs.state_push_branch || inputs.base_branch }}
+        HAS_CHANGES: ${{ inputs.has_changes }}
+        LOOP_NAME: ${{ inputs.loop_name }}
+        OUTCOME: ${{ steps.outcome.outputs.value }}
+        RUN_LOG_FILE: ${{ inputs.run_log_file }}
+        RUN_STARTED_AT: ${{ inputs.run_started_at }}
+        SKIP_REASON: ${{ inputs.skip_reason }}
+        TOKEN: ${{ inputs.token }}
+        TOKENS_ESTIMATE: ${{ inputs.tokens_estimate }}
+        USAGE_JSON: ${{ inputs.usage_json }}
+        VERDICT: ${{ inputs.verdict }}
+        WORKFLOW_RUN: ${{ inputs.workflow_run }}
+      run: bash "${GITHUB_ACTION_PATH}/../loop-run-log/lib/run.sh"

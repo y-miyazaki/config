@@ -205,18 +205,35 @@ runs:
   steps:
     - name: Pack Config
       id: config
-      uses: y-miyazaki/config/.github/actions/loop-config-pack@v1.8.14 # v1.8.14
-      with:
-        agent_implementer_max_turns: ${{ inputs.agent_implementer_max_turns }}
-        agent_implementer_model: ${{ inputs.agent_implementer_model }}
-        agent_loop_max_attempts: ${{ inputs.agent_loop_max_attempts }}
-        agent_verifier_criteria: ${{ inputs.agent_verifier_criteria }}
-        agent_verifier_max_turns: ${{ inputs.agent_verifier_max_turns }}
-        agent_verifier_model: ${{ inputs.agent_verifier_model }}
-        base_branch: ${{ inputs.base_branch }}
-        engine: ${{ inputs.engine }}
-        level: ${{ inputs.level }}
-        skill_name: ${{ inputs.skill_name }}
+      shell: bash
+      env:
+        AGENT_IMPLEMENTER_MAX_TURNS: ${{ inputs.agent_implementer_max_turns }}
+        AGENT_IMPLEMENTER_MODEL: ${{ inputs.agent_implementer_model }}
+        AGENT_LOOP_MAX_ATTEMPTS: ${{ inputs.agent_loop_max_attempts }}
+        AGENT_VERIFIER_CRITERIA: ${{ inputs.agent_verifier_criteria }}
+        AGENT_VERIFIER_MAX_TURNS: ${{ inputs.agent_verifier_max_turns }}
+        AGENT_VERIFIER_MODEL: ${{ inputs.agent_verifier_model }}
+        BASE_BRANCH: ${{ inputs.base_branch }}
+        ENGINE: ${{ inputs.engine }}
+        LEVEL: ${{ inputs.level }}
+        SKILL_NAME: ${{ inputs.skill_name }}
+      run: |
+        set -euo pipefail
+        CRITERIA_DELIM="CRITERIA_$(openssl rand -hex 8)"
+        {
+          echo "agent_implementer_max_turns=${AGENT_IMPLEMENTER_MAX_TURNS}"
+          echo "agent_implementer_model=${AGENT_IMPLEMENTER_MODEL}"
+          echo "agent_loop_max_attempts=${AGENT_LOOP_MAX_ATTEMPTS}"
+          echo "agent_verifier_criteria<<${CRITERIA_DELIM}"
+          echo "${AGENT_VERIFIER_CRITERIA}"
+          echo "${CRITERIA_DELIM}"
+          echo "agent_verifier_max_turns=${AGENT_VERIFIER_MAX_TURNS}"
+          echo "agent_verifier_model=${AGENT_VERIFIER_MODEL}"
+          echo "base_branch=${BASE_BRANCH}"
+          echo "engine=${ENGINE}"
+          echo "level=${LEVEL}"
+          echo "skill_name=${SKILL_NAME}"
+        } >> "$GITHUB_OUTPUT"
 
     - name: Resolve State File
       id: paths
