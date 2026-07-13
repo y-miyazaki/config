@@ -26,7 +26,7 @@ If the error persists, verify package paths in root `apm.yml` and each package `
 **Resolution**:
 
 ```sh
-markdownlint-cli2 "docs/**/*.md" ".github/instructions/*.instructions.md"
+markdownlint-cli2 "docs/**/*.md" ".apm/packages/*/.apm/instructions/*.instructions.md"
 git diff --check
 ```
 
