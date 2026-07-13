@@ -1,0 +1,12 @@
+{
+  "runs": {
+    "29253466857": {
+      "workflow_name": "on-ci-push-mise-update-lock",
+      "head_sha": "075baf92cb6e3b6899e4c222feae5a9cad408d9e",
+      "outcome": "rejected",
+      "reject_count": 1,
+      "loop_run_id": "29257400839",
+      "updated_at": "2026-07-13T14:19:32Z"
+    }
+  }
+}
