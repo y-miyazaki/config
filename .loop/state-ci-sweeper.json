@@ -1,0 +1,12 @@
+{
+  "targets": {
+    "integration:main": {
+      "last_sha": "732e63a2937d807787b5316c684650b7667080db",
+      "last_run": "2026-07-13T10:15:37Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
+      "open_rejections": [],
+      "last_reject_reason": "No file changes produced"
+    }
+  }
+}
