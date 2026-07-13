@@ -1,0 +1,30 @@
+# Platform workflow: promote pending loop state when a fix PR closes.
+# Design: docs/explanation/multi-branch-loops-design.md#state-delivery-philosophy
+name: on-loop-state-promote
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    if: contains(github.event.pull_request.labels.*.name, 'loop-automation')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Promote Pending State
+        uses: y-miyazaki/config/.github/actions/loop-state-promote@79d74d1dadea776a3a99178c3e082e7fe5d7db65 # v1.8.16
+        with:
+          merged: ${{ github.event.pull_request.merged && 'true' || 'false' }}
+          pr_number: ${{ github.event.pull_request.number }}
+          state_push_branch: ""
+          token: ${{ secrets.GH_TOKEN_PUSH || github.token }}

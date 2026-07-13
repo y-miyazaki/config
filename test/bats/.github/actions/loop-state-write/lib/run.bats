@@ -33,6 +33,12 @@ state_write_run() {
     run bash -c "cd '${STATE_WRITE_WORK}' && $(printf '%q ' "${@}") bash '${RUN_SCRIPT}'"
 }
 
+state_write_seed() {
+    git -C "${STATE_WRITE_WORK}" add .loop/state.json
+    git -C "${STATE_WRITE_WORK}" commit -q -m "test: seed state"
+    git -C "${STATE_WRITE_WORK}" push -q origin main
+}
+
 setup() {
     state_write_git_setup
 }
@@ -65,7 +71,7 @@ setup() {
         GITHUB_RUN_ID='1' \
         GITHUB_RUN_ATTEMPT='1'
     [ "$status" -eq 1 ]
-    [[ $output == *"Invalid state push branch"* ]]
+    [[ $output == *"Invalid state read branch"* ]]
 }
 
 @test "run.sh writes target state and resets consecutive_failures on pr-created" {
@@ -97,6 +103,7 @@ setup() {
 @test "run.sh increments consecutive_failures on rejected outcome" {
     printf '%s\n' '{"targets":{"integration:main":{"consecutive_failures":2}}}' \
         > "${STATE_WRITE_WORK}/.loop/state.json"
+    state_write_seed
 
     state_write_run \
         GH_TOKEN='test-token' \
@@ -170,4 +177,91 @@ setup() {
         GITHUB_RUN_ATTEMPT='1'
     [ "$status" -eq 0 ]
     [[ $output == *"No state changes to commit."* ]]
+}
+
+@test "run.sh metadata mode updates outcome without advancing last_sha" {
+    printf '%s\n' '{"targets":{"integration:main":{"last_sha":"oldsha000000","consecutive_failures":0}}}' \
+        > "${STATE_WRITE_WORK}/.loop/state.json"
+    state_write_seed
+
+    state_write_run \
+        GH_TOKEN='test-token' \
+        STATE_FILE='.loop/state.json' \
+        BASE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='metadata' \
+        OUTCOME='rejected' \
+        SHA='ignored000000' \
+        OPEN_REJECTIONS='[]' \
+        ACTING_ON_ACTION='' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='7' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    run jq -e \
+        '.targets["integration:main"].last_sha == "oldsha000000"
+         and .targets["integration:main"].outcome == "rejected"
+         and .targets["integration:main"].consecutive_failures == 1' \
+        "${STATE_WRITE_WORK}/.loop/state.json"
+    [ "$status" -eq 0 ]
+}
+
+@test "run.sh pending mode records pending without advancing last_sha" {
+    printf '%s\n' '{"targets":{"integration:main":{"last_sha":"oldsha000000"}}}' \
+        > "${STATE_WRITE_WORK}/.loop/state.json"
+    state_write_seed
+
+    state_write_run \
+        GH_TOKEN='test-token' \
+        STATE_FILE='.loop/state.json' \
+        BASE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='pending' \
+        OUTCOME='pr-created' \
+        SHA='abcdefghi' \
+        PENDING_PR_NUMBER='42' \
+        PENDING_PR_URL='https://github.com/owner/repo/pull/42' \
+        LOOP_NAME='changelog' \
+        OPEN_REJECTIONS='[]' \
+        ACTING_ON_ACTION='' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='8' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    run jq -e \
+        '.targets["integration:main"].last_sha == "oldsha000000"
+         and .targets["integration:main"].pending.pr == 42
+         and .targets["integration:main"].pending.sha == "abcdefghi"' \
+        "${STATE_WRITE_WORK}/.loop/state.json"
+    [ "$status" -eq 0 ]
+}
+
+@test "run.sh promote mode advances last_sha from pending" {
+    printf '%s\n' '{"targets":{"integration:main":{"last_sha":"oldsha000000","pending":{"sha":"newsha111111","pr":99}}}}' \
+        > "${STATE_WRITE_WORK}/.loop/state.json"
+    state_write_seed
+
+    state_write_run \
+        GH_TOKEN='test-token' \
+        STATE_FILE='.loop/state.json' \
+        BASE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='promote' \
+        OUTCOME='merged' \
+        PENDING_PR_NUMBER='99' \
+        OPEN_REJECTIONS='[]' \
+        ACTING_ON_ACTION='' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='9' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    run jq -e \
+        '.targets["integration:main"].last_sha == "newsha111111"
+         and (.targets["integration:main"] | has("pending") | not)
+         and .targets["integration:main"].outcome == "merged"' \
+        "${STATE_WRITE_WORK}/.loop/state.json"
+    [ "$status" -eq 0 ]
 }

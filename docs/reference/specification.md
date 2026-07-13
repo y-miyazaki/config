@@ -302,16 +302,19 @@ The repository must provide reusable workflows.
 
 ### Composite action composition
 
-Loop composites must not nest other repository composite actions via `uses: <owner>/<repo>/.github/actions/...`. Parents invoke shared bash under sibling `lib/` paths instead (for example `${GITHUB_ACTION_PATH}/../loop-install-cli/lib/install.sh`). Leaf actions (`loop-install-cli`, `loop-state-write`, `loop-run-log`, `loop-config-pack`) remain available for direct workflow use. This keeps a single action SHA self-contained at release time without transitive pin drift.
+Loop **composite actions** must not nest other repository composite actions via `uses: <owner>/<repo>/.github/actions/...`. Parent composites invoke shared bash under sibling `lib/` paths instead (for example `${GITHUB_ACTION_PATH}/../loop-install-cli/lib/install.sh`). This keeps a single action SHA self-contained at release time without transitive pin drift.
+
+**Workflows** (including `on-loop-state-promote.yaml`) must call leaf actions via `uses:` — never `${GITHUB_WORKSPACE}/.github/actions/.../lib/run.sh`. Consumer repositories pin `y-miyazaki/config/.github/actions/<name>@<ref>`; this repository dogfoods with `./.github/actions/<name>`.
 
 ### Loop Engineering Workflows
 
-| Workflow                   | Type     | Purpose                                                                                                                                                |
-| -------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ci-loop-agent.yaml`       | Reusable | Engine-agnostic agent invocation (Claude / Copilot / Codex / Cursor). L1: `loop-agent-once`; L2/L3: worktree + bounded Agent→Verify via `loop-execute` |
-| `on-loop-changelog.yaml`   | Caller   | Cron-driven CHANGELOG.md maintenance (detect → execute → finalize)                                                                                     |
-| `on-loop-ci-sweeper.yaml`  | Caller   | Schedule-driven CI failure repair (detect → execute → finalize)                                                                                        |
-| `on-loop-docs-triage.yaml` | Caller   | Cron-driven documentation triage (detect → execute → finalize)                                                                                         |
+| Workflow                     | Type     | Purpose                                                                                                                                                |
+| ---------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ci-loop-agent.yaml`         | Reusable | Engine-agnostic agent invocation (Claude / Copilot / Codex / Cursor). L1: `loop-agent-once`; L2/L3: worktree + bounded Agent→Verify via `loop-execute` |
+| `on-loop-changelog.yaml`     | Caller   | Cron-driven CHANGELOG.md maintenance (detect → execute → finalize)                                                                                     |
+| `on-loop-ci-sweeper.yaml`    | Caller   | Schedule-driven CI failure repair (detect → execute → finalize)                                                                                        |
+| `on-loop-docs-triage.yaml`   | Caller   | Cron-driven documentation triage (detect → execute → finalize)                                                                                         |
+| `on-loop-state-promote.yaml` | Platform | Merge-gated `pending` → `last_sha` promotion when a `loop-automation` fix PR closes                                                                    |
 
 ### Loop Skill Package Pattern
 
@@ -335,6 +338,7 @@ Each `loop-*` APM package is self-contained. Domain detection and agent behavior
 | `loop-install-cli`     | Install and cache the selected engine CLI                                                                                                                                                                                                                     |
 | `loop-prompt-generate` | Assemble implementer prompt: skill invocation, caller context/instructions, generic loop constraints                                                                                                                                                          |
 | `loop-run-log`         | Append one JSONL entry to `.loop/loop-run-log.md`, prune entries older than 30 days                                                                                                                                                                           |
+| `loop-state-promote`   | Promote or clear `pending` loop state after a fix PR closes (`pull_request` `closed` handler)                                                                                                                                                                 |
 | `loop-state-read`      | Read `targets` map; per-target cursors; peer `acting_on` inputs                                                                                                                                                                                               |
 | `loop-state-write`     | Write per-target entry in `targets` map; commit to `LOOP_STATE_PUSH_BRANCH`                                                                                                                                                                                   |
 | `loop-worktree-setup`  | Isolated worktree at `base_ref` on `base_branch` + agent branch (L2/L3)                                                                                                                                                                                       |

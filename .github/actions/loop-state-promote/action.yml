@@ -1,0 +1,30 @@
+name: loop-state-promote
+description: "Promote or clear pending loop state after a fix PR closes."
+
+inputs:
+  merged:
+    default: "false"
+    description: "Whether the pull request was merged"
+    required: true
+  pr_number:
+    description: "Closed pull request number"
+    required: true
+  state_push_branch:
+    default: ""
+    description: "Branch hosting .loop/* state files (empty = repository default branch)"
+    required: false
+  token:
+    description: "GitHub token with contents write"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Promote Pending State
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        MERGED: ${{ inputs.merged }}
+        PR_NUMBER: ${{ inputs.pr_number }}
+        STATE_PUSH_BRANCH: ${{ inputs.state_push_branch }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/run.sh"

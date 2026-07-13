@@ -81,6 +81,10 @@ inputs:
     default: "none"
     description: "Detect skip reason recorded in run log"
     required: false
+  state_bundle_with_fix_pr:
+    default: "false"
+    description: "Deprecated: commit state on fix branch before open_pr"
+    required: false
   state_file:
     description: "Path to state JSON file"
     required: true
@@ -173,6 +177,81 @@ runs:
           echo "value=error" >> "$GITHUB_OUTPUT"
         fi
 
+    - name: Resolve State Write Mode
+      id: state_mode
+      shell: bash
+      env:
+        BUNDLE_STATE: ${{ inputs.state_bundle_with_fix_pr }}
+        FINALIZE_STRATEGY: ${{ steps.target.outputs.finalize_strategy }}
+        HAS_CHANGES: ${{ inputs.has_changes }}
+        OUTCOME: ${{ steps.outcome.outputs.value }}
+        VERDICT: ${{ inputs.verdict }}
+      run: |
+        set -euo pipefail
+        if [[ "${BUNDLE_STATE}" == "true" && "${VERDICT}" == "APPROVE" && "${HAS_CHANGES}" == "true" && "${FINALIZE_STRATEGY}" == "open_pr" ]]; then
+          echo "mode=advance" >> "$GITHUB_OUTPUT"
+          echo "bundle=true" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        echo "bundle=false" >> "$GITHUB_OUTPUT"
+        if [[ "${VERDICT}" == "APPROVE" && "${HAS_CHANGES}" == "true" ]]; then
+          case "${FINALIZE_STRATEGY}" in
+            open_pr)
+              echo "mode=pending" >> "$GITHUB_OUTPUT"
+              ;;
+            push|push_head)
+              echo "mode=advance" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "mode=metadata" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+        else
+          echo "mode=metadata" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Run Domain Persistence
+      if: inputs.domain_persistence_script != ''
+      shell: bash
+      env:
+        DOMAIN_PERSISTENCE_SCRIPT: ${{ inputs.domain_persistence_script }}
+        EXECUTE_BRANCH: ${{ inputs.execute_branch != '' && inputs.execute_branch || inputs.branch }}
+        LOOP_NAME: ${{ inputs.loop_name }}
+        OUTCOME: ${{ steps.outcome.outputs.value }}
+        STATE_FILE: ${{ inputs.state_file }}
+        TARGET_JSON: ${{ inputs.target_json }}
+        VERDICT: ${{ inputs.verdict }}
+      run: |
+        set -euo pipefail
+        bash "${DOMAIN_PERSISTENCE_SCRIPT}"
+
+    - name: Write Bundled State
+      if: >-
+        inputs.current_sha != '' &&
+        steps.state_mode.outputs.bundle == 'true' &&
+        inputs.branch != ''
+      shell: bash
+      env:
+        ACTING_ON_ACTION: clear
+        ACTING_ON_LOOP_NAME: ${{ inputs.loop_name }}
+        ACTING_ON_TARGET_KEY: ${{ steps.target.outputs.target_key }}
+        ADDITIONAL_COMMIT_PATHS: ${{ inputs.additional_commit_paths }}
+        BASE_BRANCH: ${{ inputs.base_branch }}
+        COMMIT_TARGET_BRANCH: ${{ inputs.branch }}
+        GH_TOKEN: ${{ inputs.token }}
+        LOOP_NAME: ${{ inputs.loop_name }}
+        OPEN_REJECTIONS: ${{ inputs.open_rejections }}
+        OUTCOME: ${{ steps.outcome.outputs.value }}
+        REJECT_REASON: ${{ inputs.reject_reason }}
+        SHA: ${{ inputs.current_sha }}
+        SKIP_STATE_PR: "true"
+        STATE_FILE: ${{ inputs.state_file }}
+        STATE_PUSH_BRANCH: ${{ inputs.state_push_branch }}
+        STATE_WRITE_MODE: advance
+        TARGET_KEY: ${{ steps.target.outputs.target_key }}
+        WRITE_TARGET_STATE: "true"
+      run: bash "${GITHUB_ACTION_PATH}/../loop-state-write/lib/run.sh"
+
     - name: Push to Target Branch
       id: push_target
       if: >-
@@ -223,7 +302,9 @@ runs:
           ARGS+=(--label "${LABELS}")
         fi
         URL=$(gh pr create "${ARGS[@]}")
+        NUMBER=$(gh pr view "${URL}" --json number --jq '.number')
         echo "url=${URL}" >> "$GITHUB_OUTPUT"
+        echo "number=${NUMBER}" >> "$GITHUB_OUTPUT"
 
     - name: Enable Auto-Merge
       if: >-
@@ -242,6 +323,32 @@ runs:
           gh pr merge "${PR_URL}" --auto --squash
         fi
 
+    - name: Write State
+      if: >-
+        inputs.current_sha != '' &&
+        steps.state_mode.outputs.bundle != 'true'
+      shell: bash
+      env:
+        ACTING_ON_ACTION: clear
+        ACTING_ON_LOOP_NAME: ${{ inputs.loop_name }}
+        ACTING_ON_TARGET_KEY: ${{ steps.target.outputs.target_key }}
+        ADDITIONAL_COMMIT_PATHS: ${{ inputs.additional_commit_paths }}
+        BASE_BRANCH: ${{ inputs.base_branch }}
+        GH_TOKEN: ${{ inputs.token }}
+        LOOP_NAME: ${{ inputs.loop_name }}
+        OPEN_REJECTIONS: ${{ inputs.open_rejections }}
+        OUTCOME: ${{ steps.outcome.outputs.value }}
+        PENDING_PR_NUMBER: ${{ steps.pr.outputs.number || '' }}
+        PENDING_PR_URL: ${{ steps.pr.outputs.url || '' }}
+        REJECT_REASON: ${{ inputs.reject_reason }}
+        SHA: ${{ inputs.current_sha }}
+        STATE_FILE: ${{ inputs.state_file }}
+        STATE_PUSH_BRANCH: ${{ inputs.state_push_branch }}
+        STATE_WRITE_MODE: ${{ steps.state_mode.outputs.mode }}
+        TARGET_KEY: ${{ steps.target.outputs.target_key }}
+        WRITE_TARGET_STATE: "true"
+      run: bash "${GITHUB_ACTION_PATH}/../loop-state-write/lib/run.sh"
+
     - name: Delete Branch on Rejection
       if: inputs.verdict == 'REJECT' && inputs.branch != ''
       shell: bash
@@ -255,41 +362,6 @@ runs:
           exit 1
         fi
         gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${BRANCH}" 2>/dev/null || true
-
-    - name: Run Domain Persistence
-      if: inputs.domain_persistence_script != ''
-      shell: bash
-      env:
-        DOMAIN_PERSISTENCE_SCRIPT: ${{ inputs.domain_persistence_script }}
-        EXECUTE_BRANCH: ${{ inputs.execute_branch != '' && inputs.execute_branch || inputs.branch }}
-        LOOP_NAME: ${{ inputs.loop_name }}
-        OUTCOME: ${{ steps.outcome.outputs.value }}
-        STATE_FILE: ${{ inputs.state_file }}
-        TARGET_JSON: ${{ inputs.target_json }}
-        VERDICT: ${{ inputs.verdict }}
-      run: |
-        set -euo pipefail
-        bash "${DOMAIN_PERSISTENCE_SCRIPT}"
-
-    - name: Write State
-      if: inputs.current_sha != ''
-      shell: bash
-      env:
-        ACTING_ON_ACTION: clear
-        ACTING_ON_LOOP_NAME: ${{ inputs.loop_name }}
-        ACTING_ON_TARGET_KEY: ${{ steps.target.outputs.target_key }}
-        ADDITIONAL_COMMIT_PATHS: ${{ inputs.additional_commit_paths }}
-        BASE_BRANCH: ${{ inputs.base_branch }}
-        GH_TOKEN: ${{ inputs.token }}
-        OPEN_REJECTIONS: ${{ inputs.open_rejections }}
-        OUTCOME: ${{ steps.outcome.outputs.value }}
-        REJECT_REASON: ${{ inputs.reject_reason }}
-        SHA: ${{ inputs.current_sha }}
-        STATE_FILE: ${{ inputs.state_file }}
-        STATE_PUSH_BRANCH: ${{ inputs.state_push_branch }}
-        TARGET_KEY: ${{ steps.target.outputs.target_key }}
-        WRITE_TARGET_STATE: "true"
-      run: bash "${GITHUB_ACTION_PATH}/../loop-state-write/lib/run.sh"
 
     - name: Append Run Log
       if: inputs.loop_name != ''

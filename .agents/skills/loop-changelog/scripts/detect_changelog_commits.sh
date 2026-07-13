@@ -63,6 +63,7 @@ CHANGELOG_EXISTS="false"
 CONVENTIONAL_TYPES="feat fix docs style refactor perf test build ci chore revert"
 
 declare -a COMMITS_JSON=()
+declare -a RELEASES_JSON=()
 
 #######################################
 # show_usage: Display script usage information
@@ -480,6 +481,7 @@ function output_error {
     json_field_string "compare_url" "${COMPARE_URL}" ","
     json_field_bool "skip" "true" ","
     json_field_array "commits" "[]" ","
+    json_field_array "releases" "[]" ","
     json_field_string "message" "${message}" ""
     json_object_end
     exit 0
@@ -509,12 +511,14 @@ function output_error {
 function output_json {
     local skip="false"
     local commits_array
+    local releases_array
 
-    if [[ ${#COMMITS_JSON[@]} -eq 0 ]]; then
+    if [[ ${#COMMITS_JSON[@]} -eq 0 && ${#RELEASES_JSON[@]} -eq 0 ]]; then
         skip="true"
     fi
 
     commits_array="$(commits_array_json)"
+    releases_array="$(releases_array_json)"
     resolve_repository_context
     resolve_compare_url
 
@@ -529,7 +533,8 @@ function output_json {
     json_field_string "repository_url" "${REPOSITORY_URL}" ","
     json_field_string "compare_url" "${COMPARE_URL}" ","
     json_field_bool "skip" "${skip}" ","
-    json_field_array "commits" "${commits_array}" ""
+    json_field_array "commits" "${commits_array}" ","
+    json_field_array "releases" "${releases_array}" ""
     json_object_end
 }
 
@@ -601,6 +606,253 @@ function parse_commit_subject {
 }
 
 #######################################
+# version_documented_in_changelog: Return 0 when ## [version] exists
+#
+# Arguments:
+#   $1 - Semantic version without leading v (e.g. 1.8.16)
+#
+# Returns:
+#   0 when documented, 1 otherwise
+#
+#######################################
+function version_documented_in_changelog {
+    local version="$1"
+
+    [[ -f ${CHANGELOG_FILE} ]] || return 1
+    grep -qE "^## \\[${version//./\\.}\\]" "${CHANGELOG_FILE}"
+}
+
+#######################################
+# extract_release_version_from_subject: Parse semver from pin/finalize subjects
+#
+# Arguments:
+#   $1 - Commit subject text after prefix
+#
+# Returns:
+#   0 with version on stdout when matched, 1 otherwise
+#
+#######################################
+function extract_release_version_from_subject {
+    local subject="$1"
+
+    if [[ ! ${subject} =~ [Pp]in|[Ff]inalize|[Aa]lign ]]; then
+        return 1
+    fi
+    if [[ ${subject} =~ v?([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+        printf '%s' "${BASH_REMATCH[1]}"
+        return 0
+    fi
+    return 1
+}
+
+#######################################
+# release_object_json: Build one release object as JSON
+#
+# Arguments:
+#   $1 - Version without leading v
+#   $2 - Tag name (e.g. v1.8.16)
+#   $3 - Tag or anchor commit SHA
+#   $4 - Release date (YYYY-MM-DD)
+#   $5 - JSON array string of commit SHAs
+#
+# Returns:
+#   JSON object on stdout
+#
+#######################################
+function release_object_json {
+    local version="$1"
+    local tag="$2"
+    local tag_sha="$3"
+    local release_date="$4"
+    local commit_shas="$5"
+
+    cat << EOF
+{
+  "version": "$(json_escape "${version}")",
+  "tag": "$(json_escape "${tag}")",
+  "tag_sha": "$(json_escape "${tag_sha}")",
+  "date": "$(json_escape "${release_date}")",
+  "commit_shas": ${commit_shas}
+}
+EOF
+}
+
+#######################################
+# releases_array_json: Join release objects into a JSON array string
+#
+# Returns:
+#   JSON array string on stdout
+#
+#######################################
+function releases_array_json {
+    local joined="" release
+    if [[ ${#RELEASES_JSON[@]} -eq 0 ]]; then
+        printf '%s' "[]"
+        return
+    fi
+    for release in "${RELEASES_JSON[@]}"; do
+        if [[ -n ${joined} ]]; then
+            joined+=","
+        fi
+        joined+="${release}"
+    done
+    printf '[%s]' "${joined}"
+}
+
+#######################################
+# commit_in_tag_release_range: Return 0 when a commit belongs to a tag release range
+#
+# Arguments:
+#   $1 - Commit SHA
+#   $2 - Tag anchor commit SHA
+#
+# Global Variables:
+#   SCOPE - Detection scope
+#   SINCE_REF - Range start ref for range scope
+#
+# Returns:
+#   0 when the commit is in the release range, 1 otherwise
+#
+function commit_in_tag_release_range {
+    local sha="$1"
+    local tag_sha="$2"
+
+    git merge-base --is-ancestor "${sha}" "${tag_sha}" 2> /dev/null || return 1
+    if [[ ${SCOPE} == "range" && -n ${SINCE_REF} ]]; then
+        git merge-base --is-ancestor "${SINCE_REF}" "${sha}" 2> /dev/null || return 1
+        [[ "$(git rev-parse "${SINCE_REF}")" == "${sha}" ]] && return 1
+    fi
+    return 0
+}
+
+# release_commit_shas_json: Build commit_shas JSON array for one release version
+#
+# Arguments:
+#   $1 - Version without leading v
+#   $2 - Tag anchor commit SHA
+#   $3 - Optional comma-separated quoted pin-commit SHA list
+#
+# Global Variables:
+#   COMMITS_JSON - Collected commits
+#
+# Returns:
+#   JSON array string on stdout
+#
+function release_commit_shas_json {
+    local version="$1"
+    local tag_sha="$2"
+    local pin_commit_list="${3:-}"
+    local -A seen=()
+    local -a sha_list=()
+    local commit_json sha entry
+
+    if [[ -n ${pin_commit_list} ]]; then
+        while IFS= read -r entry; do
+            [[ -z ${entry} ]] && continue
+            sha="${entry//\"/}"
+            [[ -n ${seen["${sha}"]+x} ]] && continue
+            seen["${sha}"]=1
+            sha_list+=("\"${sha}\"")
+        done < <(printf '%s' "${pin_commit_list}" | tr ',' '\n')
+    fi
+
+    for commit_json in "${COMMITS_JSON[@]}"; do
+        sha="$(jq -r '.sha' <<< "${commit_json}")"
+        [[ -n ${seen["${sha}"]+x} ]] && continue
+        if commit_in_tag_release_range "${sha}" "${tag_sha}"; then
+            seen["${sha}"]=1
+            sha_list+=("\"${sha}\"")
+        fi
+    done
+
+    if [[ ${#sha_list[@]} -eq 0 ]]; then
+        printf '[%s]' "\"${tag_sha}\""
+        return 0
+    fi
+
+    local joined=""
+    for sha in "${sha_list[@]}"; do
+        if [[ -n ${joined} ]]; then
+            joined+=","
+        fi
+        joined+="${sha}"
+    done
+    printf '[%s]' "${joined}"
+}
+#
+# Global Variables:
+#   CHANGELOG_FILE - Target changelog path
+#   COMMITS_JSON - Collected commits (used for pin grouping)
+#   RELEASES_JSON - Output release objects
+#   SINCE_REF - Range start ref
+#
+#######################################
+function collect_releases {
+    local -A version_tags=()
+    local -A version_dates=()
+    local -A version_tag_shas=()
+    local -A version_commit_lists=()
+    local tag tag_sha release_date version commit_json sha subject commit_shas
+
+    detect_changelog_exists
+
+    while IFS= read -r tag; do
+        [[ -z ${tag} ]] && continue
+        [[ ${tag} =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || continue
+        version="${tag#v}"
+        version_documented_in_changelog "${version}" && continue
+        tag_sha="$(git rev-parse "${tag}^{commit}" 2> /dev/null || true)"
+        [[ -z ${tag_sha} ]] && continue
+        if [[ ${SCOPE} == "range" ]]; then
+            if ! git merge-base --is-ancestor "${SINCE_REF}" "${tag_sha}" 2> /dev/null; then
+                continue
+            fi
+            if git merge-base --is-ancestor "${tag_sha}" "${SINCE_REF}" 2> /dev/null \
+                && [[ "$(git rev-parse "${SINCE_REF}")" == "${tag_sha}" ]]; then
+                continue
+            fi
+        fi
+        release_date="$(git log -1 --format=%aI "${tag_sha}" 2> /dev/null | cut -dT -f1)"
+        version_tags["${version}"]="${tag}"
+        version_tag_shas["${version}"]="${tag_sha}"
+        version_dates["${version}"]="${release_date}"
+    done < <(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-creatordate 2> /dev/null || true)
+
+    for commit_json in "${COMMITS_JSON[@]}"; do
+        sha="$(jq -r '.sha' <<< "${commit_json}")"
+        subject="$(jq -r '.subject' <<< "${commit_json}")"
+        version="$(extract_release_version_from_subject "${subject}" || true)"
+        [[ -z ${version} ]] && continue
+        version_documented_in_changelog "${version}" && continue
+        if [[ -z ${version_commit_lists["${version}"]+x} ]]; then
+            version_commit_lists["${version}"]="\"${sha}\""
+        else
+            version_commit_lists["${version}"]+=",\"${sha}\""
+        fi
+        if [[ -z ${version_dates["${version}"]+x} ]]; then
+            version_dates["${version}"]="$(git log -1 --format=%aI "${sha}" 2> /dev/null | cut -dT -f1)"
+        fi
+        if [[ -z ${version_tags["${version}"]+x} ]]; then
+            version_tags["${version}"]="v${version}"
+            version_tag_shas["${version}"]="${sha}"
+        fi
+    done
+
+    for version in "${!version_tags[@]}"; do
+        commit_shas="$(release_commit_shas_json \
+            "${version}" \
+            "${version_tag_shas["${version}"]}" \
+            "${version_commit_lists["${version}"]:-}")"
+        RELEASES_JSON+=("$(release_object_json \
+            "${version}" \
+            "${version_tags["${version}"]}" \
+            "${version_tag_shas["${version}"]}" \
+            "${version_dates["${version}"]}" \
+            "${commit_shas}")")
+    done
+}
+
+#######################################
 # main: Entry point
 #
 # Arguments:
@@ -619,6 +871,7 @@ function parse_commit_subject {
 function main {
     parse_arguments "$@"
     collect_commits
+    collect_releases
     output_json
 }
 

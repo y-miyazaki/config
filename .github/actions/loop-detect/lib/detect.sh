@@ -69,6 +69,13 @@ function append_integration_candidate {
         return 0
     fi
 
+    if target_pending_blocks_detect "${target_state}"; then
+        pending_pr=$(jq -r '.pending.pr // empty' <<< "${target_state}")
+        echo "::warning::Pending PR #${pending_pr} blocks detect for ${target_key}"
+        PENDING_PR_BLOCKED=$((PENDING_PR_BLOCKED + 1))
+        return 0
+    fi
+
     last_sha="$(target_last_sha "${target_state}" "${branch}")"
     current_sha="$(git rev-parse HEAD)"
     export CI_SWEEPER_HEAD_BRANCH="${branch}"
@@ -141,6 +148,13 @@ function append_pull_request_candidate {
     if target_circuit_breaker_open "${consecutive}"; then
         echo "::warning::Circuit breaker open for ${target_key}"
         CIRCUIT_BREAKER_BLOCKED=$((CIRCUIT_BREAKER_BLOCKED + 1))
+        return 0
+    fi
+
+    if target_pending_blocks_detect "${target_state}"; then
+        pending_pr=$(jq -r '.pending.pr // empty' <<< "${target_state}")
+        echo "::warning::Pending PR #${pending_pr} blocks detect for ${target_key}"
+        PENDING_PR_BLOCKED=$((PENDING_PR_BLOCKED + 1))
         return 0
     fi
 
@@ -632,6 +646,8 @@ function main {
     if [[ ${#CANDIDATES_JSON[@]} -eq 0 ]]; then
         if [[ ${CIRCUIT_BREAKER_BLOCKED} -gt 0 ]]; then
             write_detect_outputs "false" "circuit_breaker" "[]"
+        elif [[ ${PENDING_PR_BLOCKED} -gt 0 ]]; then
+            write_detect_outputs "false" "pending_pr" "[]"
         else
             write_detect_outputs "false" "no_changes" "[]"
         fi

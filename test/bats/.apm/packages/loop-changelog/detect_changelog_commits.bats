@@ -158,6 +158,55 @@ setup() {
     assert_detect_changelog_error_json "${output}" "must be all or range"
 }
 
+@test "detect_changelog_commits detects undocumented release from pin subject" {
+    git_test_repo_setup
+    printf '# Changelog\n\n## [Unreleased]\n\n## [1.8.5] - 2026-07-11\n' > "${GIT_TEST_REPO}/CHANGELOG.md"
+    touch "${GIT_TEST_REPO}/file.txt"
+    git -C "${GIT_TEST_REPO}" add CHANGELOG.md file.txt
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    local base
+    base="$(git -C "${GIT_TEST_REPO}" rev-parse HEAD)"
+    git_test_repo_commit "chore: pin all to v1.8.16"
+    git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
+    [ "$status" -eq 0 ]
+    [[ $output == *'"releases"'* ]]
+    [[ $output == *'"version": "1.8.16"'* ]]
+}
+
+@test "detect_changelog_commits skips documented release version" {
+    git_test_repo_setup
+    printf '# Changelog\n\n## [Unreleased]\n\n## [1.8.16] - 2026-07-12\n' > "${GIT_TEST_REPO}/CHANGELOG.md"
+    touch "${GIT_TEST_REPO}/file.txt"
+    git -C "${GIT_TEST_REPO}" add CHANGELOG.md file.txt
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    local base
+    base="$(git -C "${GIT_TEST_REPO}" rev-parse HEAD)"
+    git_test_repo_commit "chore: pin all to v1.8.16"
+    git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
+    [ "$status" -eq 0 ]
+    [[ $output != *'"version": "1.8.16"'* ]]
+}
+
+@test "detect_changelog_commits includes range commits in tag release commit_shas" {
+    git_test_repo_setup
+    printf '# Changelog\n\n## [Unreleased]\n\n## [1.8.5] - 2026-07-11\n' > "${GIT_TEST_REPO}/CHANGELOG.md"
+    touch "${GIT_TEST_REPO}/file.txt"
+    git -C "${GIT_TEST_REPO}" add CHANGELOG.md file.txt
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    local base feat_sha
+    base="$(git -C "${GIT_TEST_REPO}" rev-parse HEAD)"
+    git_test_repo_commit "feat(api): add endpoint"
+    feat_sha="$(git -C "${GIT_TEST_REPO}" rev-parse HEAD)"
+    git -C "${GIT_TEST_REPO}" tag -a v1.8.16 -m "release 1.8.16"
+    git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
+    [ "$status" -eq 0 ]
+    run jq -e \
+        --arg feat_sha "${feat_sha}" \
+        '.releases[] | select(.version == "1.8.16") | .commit_shas | index($feat_sha) != null' \
+        <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
 @test "detect_changelog_commits script validates ok response format on workspace repo" {
     local workspace since_ref json
 

@@ -192,6 +192,11 @@ on:
         description: "Loop state file path for acting_on (L2/L3)"
         required: false
         type: string
+      state_bundle_with_fix_pr:
+        default: false
+        description: "Commit loop state on the fix branch before open_pr (single reviewable PR)"
+        required: false
+        type: boolean
       state_push_branch:
         default: ""
         description: "Branch for acting_on state commits (L2/L3)"
@@ -339,7 +344,7 @@ jobs:
           fi
 
       - name: Set Acting On
-        if: steps.state_path.outputs.state_file != ''
+        if: steps.state_path.outputs.state_file != '' && inputs.state_bundle_with_fix_pr != true
         uses: y-miyazaki/config/.github/actions/loop-state-write@79d74d1dadea776a3a99178c3e082e7fe5d7db65 # v1.8.16
         with:
           acting_on_action: set
@@ -450,6 +455,7 @@ jobs:
           reject_reason: ${{ needs.agent-l2.outputs.reason }}
           run_started_at: ${{ inputs.run_started_at }}
           skip_reason: ${{ inputs.skip_reason }}
+          state_bundle_with_fix_pr: ${{ inputs.state_bundle_with_fix_pr && 'true' || 'false' }}
           state_file: ${{ steps.state_path.outputs.state_file }}
           state_push_branch: ${{ inputs.state_push_branch }}
           target_json: ${{ inputs.target_json }}

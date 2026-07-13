@@ -168,6 +168,11 @@ on:
         description: "Skill package name"
         required: true
         type: string
+      state_bundle_with_fix_pr:
+        default: false
+        description: "Commit loop state on the fix branch before open_pr (single reviewable PR)"
+        required: false
+        type: boolean
       state_file:
         default: ""
         description: "Override state JSON path (default .loop/state-<loop_name>.json)"
@@ -305,7 +310,7 @@ jobs:
     strategy:
       matrix:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
-    uses: ./.github/workflows/ci-loop-agent.yaml
+    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@79d74d1dadea776a3a99178c3e082e7fe5d7db65 # v1.8.16
     with:
       additional_commit_paths: ${{ needs.detect.outputs.additional_commit_paths }}
       agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
@@ -337,6 +342,7 @@ jobs:
       run_started_at: ${{ needs.detect.outputs.run_started_at }}
       skill_name: ${{ needs.detect.outputs.skill_name }}
       skip_reason: ${{ needs.detect.outputs.skip_reason }}
+      state_bundle_with_fix_pr: ${{ inputs.state_bundle_with_fix_pr }}
       state_file: ${{ needs.detect.outputs.state_file }}
       state_push_branch: ${{ needs.detect.outputs.state_push_branch }}
       target_json: ${{ toJson(matrix.target.target_json) }}

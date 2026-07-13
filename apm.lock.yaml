@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-13T07:57:29.252560+00:00'
+generated_at: '2026-07-13T10:24:19.891583+00:00'
 apm_version: 0.24.0
 dependencies:
 - repo_url: _local/common
@@ -1058,14 +1058,14 @@ dependencies:
   - .claude/skills/loop-changelog/scripts/lib/terraform.sh
   - .claude/skills/loop-changelog/scripts/lib/validation.sh
   deployed_file_hashes:
-    .agents/skills/loop-changelog/SKILL.md: sha256:581c8b2dfc9e319cdfc587a616ca3c54e19bb6346736fea0053913c149645078
+    .agents/skills/loop-changelog/SKILL.md: sha256:cc616c7edd4f6f74174046c0e16fc63d581b1d39e0472aa395f817bf1c4bcab6
     .agents/skills/loop-changelog/eval.yaml: sha256:f817bf8a7ffce6fa628768bd73695973734814e15003bc99ba91496117cd5aa7
     .agents/skills/loop-changelog/evals/tasks/loop-changelog-basic.yaml: sha256:9e67d395bd69a207a432d5346e5518929522fbe928839762b1686f8bba7ccef2
-    .agents/skills/loop-changelog/references/category-input-schema.md: sha256:cab88674c6937210f679be0e97a88319e7ca9c8250af8b17d86ed00199acb9f2
+    .agents/skills/loop-changelog/references/category-input-schema.md: sha256:c1838bb247ab6666476f3b7df505435cedce64cd98217bf35f7ada85ecfed181
     .agents/skills/loop-changelog/references/category-scope.md: sha256:befd337c4d5585c9888b16b3a24d18770bcfc7ddfa73c0ff224d44893c7fe3b5
-    .agents/skills/loop-changelog/references/common-checklist.md: sha256:d418181c502f99da9ce93fbdf564dd37f7423b2550d63240ed570b60c38a6c1f
+    .agents/skills/loop-changelog/references/common-checklist.md: sha256:f5d48805ccdff30690fe985aacc03feedd801b4e292fd23926a9adbf96800ad6
     .agents/skills/loop-changelog/references/common-output-format.md: sha256:cfa1278e2a4e2c5beaa96654a783381189a230b318c6ef0b37a58c6183c27cd0
-    .agents/skills/loop-changelog/scripts/detect_changelog_commits.sh: sha256:2d5953034ba866cdc5c362d207a7c433889adba512513cb973d5bb23295503e5
+    .agents/skills/loop-changelog/scripts/detect_changelog_commits.sh: sha256:94454e18387531196eb1427e04967ce13827c63aa7fdae0d0cded89730a259a8
     .agents/skills/loop-changelog/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
     .agents/skills/loop-changelog/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/loop-changelog/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
@@ -1073,14 +1073,14 @@ dependencies:
     .agents/skills/loop-changelog/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
     .agents/skills/loop-changelog/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/loop-changelog/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .claude/skills/loop-changelog/SKILL.md: sha256:581c8b2dfc9e319cdfc587a616ca3c54e19bb6346736fea0053913c149645078
+    .claude/skills/loop-changelog/SKILL.md: sha256:cc616c7edd4f6f74174046c0e16fc63d581b1d39e0472aa395f817bf1c4bcab6
     .claude/skills/loop-changelog/eval.yaml: sha256:f817bf8a7ffce6fa628768bd73695973734814e15003bc99ba91496117cd5aa7
     .claude/skills/loop-changelog/evals/tasks/loop-changelog-basic.yaml: sha256:9e67d395bd69a207a432d5346e5518929522fbe928839762b1686f8bba7ccef2
-    .claude/skills/loop-changelog/references/category-input-schema.md: sha256:cab88674c6937210f679be0e97a88319e7ca9c8250af8b17d86ed00199acb9f2
+    .claude/skills/loop-changelog/references/category-input-schema.md: sha256:c1838bb247ab6666476f3b7df505435cedce64cd98217bf35f7ada85ecfed181
     .claude/skills/loop-changelog/references/category-scope.md: sha256:befd337c4d5585c9888b16b3a24d18770bcfc7ddfa73c0ff224d44893c7fe3b5
-    .claude/skills/loop-changelog/references/common-checklist.md: sha256:d418181c502f99da9ce93fbdf564dd37f7423b2550d63240ed570b60c38a6c1f
+    .claude/skills/loop-changelog/references/common-checklist.md: sha256:f5d48805ccdff30690fe985aacc03feedd801b4e292fd23926a9adbf96800ad6
     .claude/skills/loop-changelog/references/common-output-format.md: sha256:cfa1278e2a4e2c5beaa96654a783381189a230b318c6ef0b37a58c6183c27cd0
-    .claude/skills/loop-changelog/scripts/detect_changelog_commits.sh: sha256:2d5953034ba866cdc5c362d207a7c433889adba512513cb973d5bb23295503e5
+    .claude/skills/loop-changelog/scripts/detect_changelog_commits.sh: sha256:94454e18387531196eb1427e04967ce13827c63aa7fdae0d0cded89730a259a8
     .claude/skills/loop-changelog/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
     .claude/skills/loop-changelog/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/loop-changelog/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667

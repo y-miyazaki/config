@@ -65,17 +65,17 @@ on-loop-changelog.yaml          on-loop-ci-sweeper.yaml
 
 These constraints come from [Loop Caller Workflows Design](loop-caller-workflows-design.md) and [Multi-Branch Loops Design](multi-branch-loops-design.md). The refactor must preserve them.
 
-| Invariant                           | Rationale                                                                                                                                                                  |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Separate `on-loop-*` per loop**   | Independent cron, workflow name, concurrency, `CI_SWEEPER_EXCLUDED_WORKFLOWS` references                                                                                   |
-| **Finalize inside `ci-loop-agent`** | Reusable-workflow matrix collapses outputs across cells; finalize must pair with execute in the same workflow instance                                                     |
-| **Single detect per run**           | Domain `detect_script` invoked only by `loop-detect`; no second `run:` detect in caller                                                                                    |
-| **`target_matrix` handoff**         | `detect` outputs JSON array; `execute` matrix uses `fromJson(needs.detect.outputs.target_matrix)`                                                                          |
-| **`acting_on` / peer filter**       | Unchanged; handled inside `loop-detect` / `loop-state-write`                                                                                                               |
-| **Budget / circuit breaker**        | `record-skip` when `should_run == false` and `skip_reason` is `budget` or `circuit_breaker`                                                                                |
-| **`target_budget` deferral**        | When fan-out cap defers targets, `should_run` stays `true` and execute runs; `skip_reason=target_budget` is informational only — not recorded by `record-skip` (by design) |
-| **State push branch**               | `.loop/*` persistence uses `branch_state` input, not `target.to.branch`                                                                                                    |
-| **Alphabetical keys**               | `inputs`, `with`, `env` (inside reusable jobs), `permissions` keys sorted A→Z                                                                                              |
+| Invariant                           | Rationale                                                                                                                                                                                 |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Separate `on-loop-*` per loop**   | Independent cron, workflow name, concurrency, `CI_SWEEPER_EXCLUDED_WORKFLOWS` references                                                                                                  |
+| **Finalize inside `ci-loop-agent`** | Reusable-workflow matrix collapses outputs across cells; finalize must pair with execute in the same workflow instance                                                                    |
+| **Single detect per run**           | Domain `detect_script` invoked only by `loop-detect`; no second `run:` detect in caller                                                                                                   |
+| **`target_matrix` handoff**         | `detect` outputs JSON array; `execute` matrix uses `fromJson(needs.detect.outputs.target_matrix)`                                                                                         |
+| **`acting_on` / peer filter**       | Unchanged; handled inside `loop-detect` / `loop-state-write`                                                                                                                              |
+| **Budget / circuit breaker**        | `record-skip` when `should_run == false` and `skip_reason` is `budget` or `circuit_breaker`                                                                                               |
+| **`target_budget` deferral**        | When fan-out cap defers targets, `should_run` stays `true` and execute runs; `skip_reason=target_budget` is informational only — not recorded by `record-skip` (by design)                |
+| **State push branch**               | `.loop/*` run-log/budget persistence uses `branch_state`. Changelog uses merge-gated `pending` on `branch_state` and `on-loop-state-promote` (default `state_bundle_with_fix_pr: false`). |
+| **Alphabetical keys**               | `inputs`, `with`, `env` (inside reusable jobs), `permissions` keys sorted A→Z                                                                                                             |
 
 ## Thin Caller Pattern
 
@@ -336,6 +336,7 @@ New domain env keys go into `detect_domain_env_json` without editing reusable jo
 - [x] `ghalint run`
 - [x] `zizmor .github/workflows/`
 - [x] `scripts/ci/validate_loop_caller_permissions.sh`
+- [ ] Bump remote pins in `ci-loop-caller.yaml` / `ci-loop-agent.yaml` to release SHA containing merge-gated `pending`, `pending_pr` detect blocking, and `loop-state-promote`
 - [ ] `workflow_dispatch` smoke per loop (optional in implementation PR).
 
 ## Risk Register

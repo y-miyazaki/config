@@ -172,7 +172,7 @@ runs:
         VERIFIER_CONTEXT: ${{ inputs.verifier_context }}
         STATUS_DIR: ${{ runner.temp }}/loop-execute-status
         WORKTREE_PATH: ${{ inputs.worktree_path }}
-      run: bash "${{ github.action_path }}/lib/loop.sh"
+      run: bash "${GITHUB_ACTION_PATH}/lib/loop.sh"
 
     - name: Push Branch
       id: push
@@ -182,11 +182,11 @@ runs:
         GH_TOKEN: ${{ inputs.token }}
         LOOP_HAS_CHANGES: ${{ steps.loop.outputs.has_changes }}
         WORKTREE_PATH: ${{ inputs.worktree_path }}
-      run: bash "${{ github.action_path }}/lib/push.sh"
+      run: bash "${GITHUB_ACTION_PATH}/lib/push.sh"
 
     - name: Cleanup Worktree
       if: always()
       shell: bash
       env:
         WORKTREE_PATH: ${{ inputs.worktree_path }}
-      run: bash "${{ github.action_path }}/lib/cleanup.sh"
+      run: bash "${GITHUB_ACTION_PATH}/lib/cleanup.sh"

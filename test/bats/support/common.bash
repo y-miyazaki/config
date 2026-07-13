@@ -151,8 +151,16 @@ function assert_detect_changelog_ok_json {
             and (.scope | type == "string")
             and (.breaking | type == "boolean")
             and (.subject | type == "string" and length > 0);
+        def release_object:
+            type == "object"
+            and (keys | sort) == ["commit_shas", "date", "tag", "tag_sha", "version"]
+            and (.version | type == "string" and length > 0)
+            and (.tag | type == "string" and length > 0)
+            and (.tag_sha | type == "string" and length > 0)
+            and (.date | type == "string" and length > 0)
+            and (.commit_shas | type == "array");
         type == "object"
-        and (keys | sort) == ["changelog_exists", "changelog_file", "commit_range", "commits", "compare_url", "repository", "repository_url", "scope", "since", "skip", "status"]
+        and (keys | sort) == ["changelog_exists", "changelog_file", "commit_range", "commits", "compare_url", "releases", "repository", "repository_url", "scope", "since", "skip", "status"]
         and .status == "ok"
         and .scope == $expected_scope
         and (.since | type == "string")
@@ -166,7 +174,9 @@ function assert_detect_changelog_ok_json {
         and (.skip | type == "boolean")
         and (.commits | type == "array")
         and (.commits | all(commit_object))
-        and (if .skip then (.commits | length) == 0 else (.commits | length) > 0 end)
+        and (.releases | type == "array")
+        and (.releases | all(release_object))
+        and (if .skip then (.commits | length) == 0 and (.releases | length) == 0 else (.commits | length) > 0 or (.releases | length) > 0 end)
     ' <<< "${json}"
 }
 
@@ -177,7 +187,7 @@ function assert_detect_changelog_error_json {
 
     jq -e --arg expected_message "${expected_message}" '
         type == "object"
-        and (keys | sort) == ["changelog_exists", "changelog_file", "commit_range", "commits", "compare_url", "message", "repository", "repository_url", "scope", "since", "skip", "status"]
+        and (keys | sort) == ["changelog_exists", "changelog_file", "commit_range", "commits", "compare_url", "message", "releases", "repository", "repository_url", "scope", "since", "skip", "status"]
         and .status == "error"
         and (.scope | type == "string")
         and (.since | type == "string")
@@ -189,6 +199,7 @@ function assert_detect_changelog_error_json {
         and (.compare_url | type == "string")
         and .skip == true
         and (.commits | type == "array" and length == 0)
+        and (.releases | type == "array" and length == 0)
         and (.message | type == "string" and length > 0)
         and ($expected_message == "" or (.message | contains($expected_message)))
     ' <<< "${json}"

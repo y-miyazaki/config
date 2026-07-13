@@ -141,6 +141,25 @@ function target_last_sha {
 }
 
 #######################################
+# target_pending_blocks_detect: Return 0 when pending cursor blocks detect
+#
+# Arguments:
+#   $1 - Target state JSON
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   0 when blocked by pending fix PR (open, merged-awaiting-promote, or closed-awaiting-clear), 1 otherwise
+#
+#######################################
+function target_pending_blocks_detect {
+    local target_state="$1"
+
+    jq -e '(.pending.pr | type) == "number"' <<< "${target_state}" > /dev/null 2>&1
+}
+
+#######################################
 # target_open_rejections_prompt: Format open rejections for prompt injection
 #
 # Arguments:

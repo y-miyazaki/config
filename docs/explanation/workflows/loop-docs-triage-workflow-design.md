@@ -136,6 +136,15 @@ Always `open_pr` to `to.branch` at L2. L3 `push` rarely appropriate for loop-doc
 
 No `domain_persistence_script`.
 
+## State delivery
+
+See [State delivery philosophy](../multi-branch-loops-design.md#state-delivery-philosophy) for platform rules.
+
+| Dogfood (`main` only) | `branch_match: main`, `branch_state: main` → `to.branch == branch_state`. Enabling `state_bundle_with_fix_pr: true` is reasonable (same trade-off as changelog). |
+| Multi-branch watch | e.g. `branch_match: develop,release/*` with `branch_state: main` → keep default `false`; state must stay on `main`, not on the fix branch PR. |
+
+Default today: `state_bundle_with_fix_pr: false` (centralized push to `branch_state`). Long-term: direct push on fix merge, not a state PR.
+
 Persistence: `state-docs-triage.json` on `branch_state` via [finalize inside ci-loop-agent](../loop-caller-workflows-design.md#finalize-inside-ci-loop-agent).
 
 ## Implementation Checklist

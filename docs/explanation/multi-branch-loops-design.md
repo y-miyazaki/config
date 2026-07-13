@@ -61,6 +61,7 @@ Defined here only. Other docs link to this section.
 | Fan-out cap                | `target_budget` |
 | Daily cap                  | `budget`        |
 | Peer loop active on target | `peer_active`   |
+| Open pending fix PR        | `pending_pr`    |
 
 ## Single level switch
 
@@ -176,6 +177,59 @@ Recorded in [Specification](../reference/specification.md).
 
 Field sets differ by loop — see each workflow design doc.
 
+### Per-target state delivery (`state_bundle_with_fix_pr`)
+
+Caller input on `ci-loop-caller` (see [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md)). Controls whether **per-target cursor fields** (`last_sha`, `outcome`, …) are committed on the **fix branch** before `open_pr`, or pushed to `branch_state` separately.
+
+| Mode                      | `state_bundle_with_fix_pr` | Reviewer sees                                         | When to use                                                                                                                                                             |
+| ------------------------- | -------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Bundled**               | `true`                     | One PR: domain fix + `.loop/state-<loop>.json`        | Watch branch equals fix branch **and** equals `branch_state` (typical dogfood: all `main`). Cursor advances only when the fix PR merges.                                |
+| **Centralized** (default) | `false`                    | Fix PR + optional separate state PR to `branch_state` | Multi-branch watch (`develop`, `release/*`, …) while `branch_state` stays `main`; PR-head fixes (`push_head`); or when fix PR must not carry shared `.loop/*` metadata. |
+
+**Always on `branch_state` (not bundled):** run log, budget — operational metadata, not reviewer-facing.
+
+**On `REJECT`:** finalize still writes target state to `branch_state` (failure accounting without a fix PR).
+
+#### Loop defaults (dogfood)
+
+| Loop               | Default           | Rationale                                                                                                                                                                   |
+| ------------------ | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `loop-changelog`   | `false` (default) | `main`-only; merge-gated `pending` via `on-loop-state-promote`                                                                                                              |
+| `loop-docs-triage` | `false`           | Platform default; **same-branch dogfood (`main` only) may enable `true`** — see [Docs Triage Workflow Design](workflows/loop-docs-triage-workflow-design.md#state-delivery) |
+| `loop-ci-sweeper`  | `false`           | Integration + PR-head targets; fix often lands off `branch_state`                                                                                                           |
+
+Bundling is **per-loop opt-in**, not a global LE requirement. The historical default (centralized on `branch_state`) exists for [multi-branch watch + shared state file](#branch-roles-and-fix-direction), not because users prefer two PRs.
+
+### State delivery philosophy
+
+**State is not a reviewer-facing deliverable.** `.loop/state-*.json` holds machine cursors (`last_sha`), outcomes, and circuit-breaker counters — analogous to a CI cache key or migration ledger, not to `CHANGELOG.md` or doc fixes. Asking humans to approve state in a PR is a category error.
+
+| Delivery                                                                                         | Verdict                                                                                                                       |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Direct push to `branch_state`** (bot token + branch-protection bypass for `.loop/*`)           | **Target.** State updates are infrastructure writes, not review gates.                                                        |
+| **Merge-gated state push** (`pull_request` `closed` + `merged` → promote `pending` → `last_sha`) | **Chosen L2 model.** Fix PR is domain-only; state advances on the merge **event**, not because a human approved a state diff. |
+| **State-only PR** (including auto-merge queue)                                                   | **Anti-pattern.** A fallback when push is blocked; must not be the designed happy path.                                       |
+| **`state_bundle_with_fix_pr`**                                                                   | **Deprecated interim.** Mixed machine state into a human PR; retire after merge-gated push.                                   |
+| **L3 `push` / `push_head`**                                                                      | **Cleanest when automation owns the branch.** Fix + state land atomically; no PR for either.                                  |
+
+**What matters more than PR vs push is _when_ `last_sha` advances:**
+
+- Pushing state at finalize **before** the fix PR merges → cursor races ahead; rejected fixes are skipped on re-detect. **Wrong** for L2 `open_pr`.
+- Advancing `last_sha` **when the fix is accepted** (PR merged, or L3 push) → **correct**.
+
+So “state should be pushed, not PR’d” is right for **delivery mechanism**. It is insufficient without **timing**: centralized direct push belongs at **fix acceptance**, not unconditionally at finalize success.
+
+**`git push --force`:** not part of normal loop operation. “強制” here means **bypass the PR gate** (ruleset allowing `github-actions[bot]` to push `.loop/*` to `branch_state`), not rewriting history on every run. Reserve force-push for explicit recovery only.
+
+**Platform direction (chosen):**
+
+1. **L2:** Fix PR carries **domain files only**. On `pull_request` `closed` + `merged`, a platform handler **direct-pushes** state to `branch_state` (promote `pending` → `last_sha`). Humans never review or merge state.
+2. **L2 + `to.branch != branch_state`:** Same merge hook; state always lands on `branch_state`, not on the fix branch.
+3. **L3:** `finalize: push` / `push_head` — single atomic push; no PR, no pending.
+4. **`state_bundle_with_fix_pr`:** **Deprecated interim** (changelog dogfood today). Remove once merge-gated push ships. Do not adopt for new loops.
+
+**Pending cursor:** On `pr-created`, finalize writes `targets[key].pending = { sha, pr, … }` to `branch_state` via direct push **without** advancing `last_sha`. `on-loop-state-promote` (`pull_request` `closed`) promotes `pending.sha` → `last_sha` on merge or clears `pending` when closed without merge. Re-open detect therefore still sees the same commits if the fix PR is closed without merge.
+
 ### Migration
 
 On first Phase 1+ read, if legacy flat `last_sha` exists and `targets` is absent:
@@ -224,6 +278,7 @@ Per-target `concurrency.group` in caller YAML complements `acting_on` — see [L
 | **5** | L3 integration `push` (opt-in)                                                     | Planned                                            |
 | **6** | Optional `repository` on target                                                    | Future                                             |
 | **7** | `ci-loop-caller.yaml` — thin callers + `with:`                                     | Planned ([design](loop-caller-reusable-design.md)) |
+| **8** | Merge-gated state push (`on-loop-state-promote`)                                   | ✅ Done                                            |
 
 Caller/workflow steps: [Loop Caller Workflows Design](loop-caller-workflows-design.md).
 
@@ -241,17 +296,17 @@ Shared caller configuration: [Loop Caller Inputs Reference](workflows/loop-calle
 
 ## Decision Summary
 
-| Question                    | Decision                                                                                           |
-| --------------------------- | -------------------------------------------------------------------------------------------------- |
-| Config                      | Caller `with:` on `ci-loop-caller` ([inputs reference](workflows/loop-caller-inputs-reference.md)) |
-| Target shape                | `mode` + from/to/base                                                                              |
-| Branch scan                 | `loop-detect` enumerates + checkout; detect script per context                                     |
-| Fan-out                     | `target_matrix` → execute/finalize matrix                                                          |
-| State persistence           | `branch_state` on caller (`LOOP_STATE_PUSH_BRANCH` internally), not per target                     |
-| `loop-pr-ci-healer` package | **No**                                                                                             |
-| Levels                      | Single `DEFAULT_LEVEL`; L2 default                                                                 |
-| Bot PRs                     | Excluded; `LOOP_PR_INCLUDE_BOTS` opt-in                                                            |
-| Detect filters              | Stable mechanical only; Skill classifies Watch                                                     |
+| Question                    | Decision                                                                                                                                                                 |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Config                      | Caller `with:` on `ci-loop-caller` ([inputs reference](workflows/loop-caller-inputs-reference.md))                                                                       |
+| Target shape                | `mode` + from/to/base                                                                                                                                                    |
+| Branch scan                 | `loop-detect` enumerates + checkout; detect script per context                                                                                                           |
+| Fan-out                     | `target_matrix` → execute/finalize matrix                                                                                                                                |
+| State persistence           | Direct push to `branch_state` (no state PR); per-loop [delivery modes](#per-target-state-delivery-state_bundle_with_fix_pr) and [philosophy](#state-delivery-philosophy) |
+| `loop-pr-ci-healer` package | **No**                                                                                                                                                                   |
+| Levels                      | Single `DEFAULT_LEVEL`; L2 default                                                                                                                                       |
+| Bot PRs                     | Excluded; `LOOP_PR_INCLUDE_BOTS` opt-in                                                                                                                                  |
+| Detect filters              | Stable mechanical only; Skill classifies Watch                                                                                                                           |
 
 ## References
 

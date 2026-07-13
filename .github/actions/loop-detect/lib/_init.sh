@@ -54,3 +54,5 @@ declare -a INTEGRATION_BRANCHES=()
 declare -a OPEN_PRS_JSON=()
 # shellcheck disable=SC2034
 CIRCUIT_BREAKER_BLOCKED=0
+# shellcheck disable=SC2034
+PENDING_PR_BLOCKED=0
