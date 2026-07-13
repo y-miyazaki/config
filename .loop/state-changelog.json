@@ -1,8 +1,18 @@
 {
-  "targets": {},
-  "acting_on": {
-    "target_key": "integration:main",
-    "loop_name": "changelog",
-    "started_at": "2026-07-13T14:46:24Z"
+  "targets": {
+    "integration:main": {
+      "pending": {
+        "sha": "c88ec170e8073ec9aea283a811cec84f0ec3f183",
+        "pr": 372,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/372",
+        "loop_name": "changelog",
+        "created_at": "2026-07-13T14:48:05Z"
+      },
+      "last_run": "2026-07-13T14:48:05Z",
+      "outcome": "pr-created",
+      "consecutive_failures": 0,
+      "open_rejections": [],
+      "last_reject_reason": "No meaningful changes outside .loop/"
+    }
   }
 }
