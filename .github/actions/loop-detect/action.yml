@@ -205,7 +205,7 @@ runs:
   steps:
     - name: Pack Config
       id: config
-      uses: y-miyazaki/config/.github/actions/loop-config-pack@v1.8.14 # v1.8.14
+      uses: y-miyazaki/config/.github/actions/loop-config-pack@f4d9a47e5dd291ae096004eeb77efc84cd3f7a17 # v1.8.14
       with:
         agent_implementer_max_turns: ${{ inputs.agent_implementer_max_turns }}
         agent_implementer_model: ${{ inputs.agent_implementer_model }}
