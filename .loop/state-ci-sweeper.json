@@ -1,0 +1,8 @@
+{
+  "targets": {},
+  "acting_on": {
+    "target_key": "pull_request:355",
+    "loop_name": "ci-sweeper",
+    "started_at": "2026-07-13T14:19:14Z"
+  }
+}
