@@ -1,8 +1,11 @@
 {
-  "targets": {},
-  "acting_on": {
-    "target_key": "integration:main",
-    "loop_name": "changelog",
-    "started_at": "2026-07-13T14:16:05Z"
+  "targets": {
+    "integration:main": {
+      "last_run": "2026-07-13T14:16:25Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
+      "open_rejections": [],
+      "last_reject_reason": "No file changes produced"
+    }
   }
 }
