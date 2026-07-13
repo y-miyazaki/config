@@ -57,7 +57,7 @@ jobs:
 
       # GitHub Actions workflow linter
       - name: Setup actionlint
-        uses: y-miyazaki/config/.github/actions/install-github-release@e9584c0415c85cfb351b49cc13d5b88dc729768d # v1.8.14
+        uses: y-miyazaki/config/.github/actions/install-github-release@703a60d6b2bf3f627ec52fbbd51de097a36abd8c # v1.8.14
         with:
           binary: actionlint
           checksum: ${{ env.ACTIONLINT_CHECKSUM }}
@@ -66,7 +66,7 @@ jobs:
 
       # Security and settings validation (persist-credentials, timeout-minutes, etc.)
       - name: Setup ghalint
-        uses: y-miyazaki/config/.github/actions/install-github-release@e9584c0415c85cfb351b49cc13d5b88dc729768d # v1.8.14
+        uses: y-miyazaki/config/.github/actions/install-github-release@703a60d6b2bf3f627ec52fbbd51de097a36abd8c # v1.8.14
         with:
           binary: ghalint
           checksum: ${{ env.GHALINT_CHECKSUM }}
@@ -83,7 +83,7 @@ jobs:
         continue-on-error: true
 
       - name: Validate Loop Caller Permissions
-        uses: y-miyazaki/config/.github/actions/validate-loop-caller-permissions@e9584c0415c85cfb351b49cc13d5b88dc729768d # v1.8.14
+        uses: y-miyazaki/config/.github/actions/validate-loop-caller-permissions@703a60d6b2bf3f627ec52fbbd51de097a36abd8c # v1.8.14
         with:
           verbose: "true"
 
@@ -97,7 +97,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@e9584c0415c85cfb351b49cc13d5b88dc729768d # v1.8.14
+        uses: y-miyazaki/config/.github/actions/summary@703a60d6b2bf3f627ec52fbbd51de097a36abd8c # v1.8.14
         with:
           artifacts: |
             (none)
