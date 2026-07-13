@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Raise changelog daily run budget for verification (loop) ([c88ec17](https://github.com/y-miyazaki/config/commit/c88ec170e8073ec9aea283a811cec84f0ec3f183))
+- Append run log [skip ci] (loop) ([c71f337](https://github.com/y-miyazaki/config/commit/c71f3371e1494329468f35aecb5b1ffa442cbf5a))
+- Append run log [skip ci] (loop) ([2b5f4d2](https://github.com/y-miyazaki/config/commit/2b5f4d2815ee8302972d74d4c3d8680d9e61fd42))
+- Append run log [skip ci] (loop) ([86e1474](https://github.com/y-miyazaki/config/commit/86e1474190376631e03a924d23b009eb4d26d12b))
+- Update state [skip ci] (loop) ([4a7e61c](https://github.com/y-miyazaki/config/commit/4a7e61cc67e3f9d2ee610f12981421fa01797a56))
+- Update state [skip ci] (loop) ([9bd18ea](https://github.com/y-miyazaki/config/commit/9bd18ea0a586e644171111e716c24cef39b5aa1a))
+- Append run log [skip ci] (loop) ([cdee5e1](https://github.com/y-miyazaki/config/commit/cdee5e15b689520b10d49f9bb1785ec5d3bd0f1d))
+- Update state [skip ci] (loop) ([3603856](https://github.com/y-miyazaki/config/commit/3603856051ac0080c3ee80125d514baf887ac020))
+- Update state [skip ci] (loop) ([6cf2905](https://github.com/y-miyazaki/config/commit/6cf29050513796511faf40cc1b664ec6f083bc09))
+
 #### Dependencies
 
 - Update dependency pnpm to v11.10.0 (#313) ([4238e81](https://github.com/y-miyazaki/config/commit/4238e8154e6b6e50afd34c2b0ccdfbb28245d146))
