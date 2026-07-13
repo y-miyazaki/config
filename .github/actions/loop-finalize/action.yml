@@ -273,7 +273,7 @@ runs:
 
     - name: Write State
       if: inputs.current_sha != ''
-      uses: y-miyazaki/config/.github/actions/loop-state-write@ac1e7be20e48cdff0216362ecfca66e8459bceb6 # v1.8.12
+      uses: y-miyazaki/config/.github/actions/loop-state-write@138fed890fd0a20e0ac1cfceb8d2c1752d177cce # v1.8.13
       with:
         acting_on_action: clear
         base_branch: ${{ inputs.base_branch }}
@@ -290,7 +290,7 @@ runs:
 
     - name: Append Run Log
       if: inputs.loop_name != ''
-      uses: y-miyazaki/config/.github/actions/loop-run-log@ac1e7be20e48cdff0216362ecfca66e8459bceb6 # v1.8.12
+      uses: y-miyazaki/config/.github/actions/loop-run-log@138fed890fd0a20e0ac1cfceb8d2c1752d177cce # v1.8.13
       with:
         attempts: ${{ inputs.attempts }}
         base_branch: ${{ inputs.state_push_branch != '' && inputs.state_push_branch || inputs.base_branch }}

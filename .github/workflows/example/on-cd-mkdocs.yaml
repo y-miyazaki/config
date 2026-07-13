@@ -19,7 +19,7 @@ jobs:
   build:
     permissions:
       contents: read
-    uses: y-miyazaki/config/.github/workflows/cd-mkdocs.yaml@ac1e7be20e48cdff0216362ecfca66e8459bceb6 # v1.8.12
+    uses: y-miyazaki/config/.github/workflows/cd-mkdocs.yaml@138fed890fd0a20e0ac1cfceb8d2c1752d177cce # v1.8.13
     with:
       artifact_name: mkdocs-site
       config_file: mkdocs.yml
@@ -31,6 +31,6 @@ jobs:
       contents: read
       id-token: write
       pages: write
-    uses: y-miyazaki/config/.github/workflows/cd-github-pages.yaml@ac1e7be20e48cdff0216362ecfca66e8459bceb6 # v1.8.12
+    uses: y-miyazaki/config/.github/workflows/cd-github-pages.yaml@138fed890fd0a20e0ac1cfceb8d2c1752d177cce # v1.8.13
     with:
       artifact_name: mkdocs-site
