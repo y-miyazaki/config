@@ -1,0 +1,18 @@
+{
+  "targets": {
+    "integration:main": {
+      "pending": {
+        "sha": "a8c75754f830ffd4aa201a1cf1340ede8296cf8a",
+        "pr": 370,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/370",
+        "loop_name": "changelog",
+        "created_at": "2026-07-13T11:19:59Z"
+      },
+      "last_run": "2026-07-13T11:19:59Z",
+      "outcome": "pr-created",
+      "consecutive_failures": 0,
+      "open_rejections": [],
+      "last_reject_reason": "CHANGELOG.md-only diff correctly documents all 10 commits in 1.8.17/1.8.16 release sections with commit links and footer compare URLs."
+    }
+  }
+}
