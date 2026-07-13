@@ -15,11 +15,11 @@ globs: "**/*.bats"
 
 ### Naming Conventions
 
-| Component        | Rule                                              | Example                                    |
-| Suite file       | snake_case; mirror source path under `test/bats/` | `scripts/lib/common.bats`                  |
-| Support helper   | snake_case `.bash` under `test/bats/support/`     | `common.bash`, `mock_cli.bash`             |
-| `@test` name     | Descriptive sentence (lowercase)                  | `parse_args accepts --verbose flag`        |
-| Package constant | UPPER_SNAKE_CASE                                  | `TARGET_SCRIPT`, `FIXTURE_DIR`             |
+| Component | Rule | Example |
+| Suite file | snake_case; mirror source path under `test/bats/` | `scripts/lib/common.bats` |
+| Support helper | snake_case `.bash` under `test/bats/support/` | `common.bash`, `mock_cli.bash` |
+| `@test` name | Descriptive sentence (lowercase) | `parse_args accepts --verbose flag` |
+| Package constant | UPPER_SNAKE_CASE | `TARGET_SCRIPT`, `FIXTURE_DIR` |
 
 ### Suite File Structure
 
@@ -46,9 +46,9 @@ source "${_bats_support}/support/common.bash"
 
 ### Support Library
 
-| File                            | Role                                                                 |
-| `test/bats/support/common.bash` | Optional shared helpers (source paths, fixtures, temp dirs)          |
-| `test/bats/support/*.bash`      | Domain mocks; load from `setup()` or per-test as needed              |
+| File | Role |
+| `test/bats/support/common.bash` | Optional shared helpers (source paths, fixtures, temp dirs) |
+| `test/bats/support/*.bash` | Domain mocks; load from `setup()` or per-test as needed |
 
 Prefer [bats-support](https://github.com/bats-core/bats-support) and [bats-assert](https://github.com/bats-core/bats-assert) when the project adopts them.
 

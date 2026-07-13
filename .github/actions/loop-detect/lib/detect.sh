@@ -331,7 +331,11 @@ function enrich_target_json_with_ci_context {
 function detect_result_skip {
     local result="$1"
     local skip_val
-    skip_val=$(echo "${result}" | jq -r 'if (.skip | type) == "boolean" then (.skip | tostring) else "true" end' 2> /dev/null || echo "true")
+    if ! jq -e . <<< "${result}" > /dev/null 2>&1; then
+        echo "::error::Detect script returned invalid JSON"
+        return 0
+    fi
+    skip_val=$(jq -r 'if (.skip | type) == "boolean" then (.skip | tostring) else "true" end' <<< "${result}")
     [[ ${skip_val} == "true" ]]
 }
 

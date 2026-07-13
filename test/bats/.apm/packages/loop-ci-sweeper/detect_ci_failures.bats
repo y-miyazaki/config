@@ -182,6 +182,35 @@ EOF
     [[ $output != *"eyJhbGci"* ]]
 }
 
+@test "collect_failures_for_run emits valid JSON when log excerpt contains control characters" {
+    load_workflow_filters
+    MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${MOCK_BIN}"
+    cat > "${MOCK_BIN}/gh" << 'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "run" && "$2" == "view" ]]; then
+    if [[ "$*" == *"--json jobs"* ]]; then
+        printf '%s\n' '{"name":"lint","conclusion":"failure","url":"https://example.com/run/3"}'
+        exit 0
+    fi
+    if [[ "$*" == *"--log-failed"* ]]; then
+        printf '%s\n' $'error\r\nwith\x01control'
+        exit 0
+    fi
+fi
+exit 1
+EOF
+    chmod +x "${MOCK_BIN}/gh"
+    PATH="${MOCK_BIN}:${PATH}"
+
+    FAILURES_JSON=()
+    IGNORED_JSON=()
+    collect_failures_for_run "ci-markdown" "54321" "abc123" "main" "https://example.com/run/3"
+    [ "${#FAILURES_JSON[@]}" -eq 1 ]
+    run jq -e . <<< "${FAILURES_JSON[0]}"
+    [ "$status" -eq 0 ]
+}
+
 @test "detect_ci_failures rejects ledger path traversal outside dot loop" {
     run env CI_SWEEPER_LEDGER_FILE=".loop/../outside.json" bash "${DETECT_SCRIPT}" --scope all
     [ "$status" -eq 0 ]
