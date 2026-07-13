@@ -1,0 +1,12 @@
+{
+  "targets": {
+    "integration:main": {
+      "last_sha": "732e63a2937d807787b5316c684650b7667080db",
+      "last_run": "2026-07-13T08:06:04Z",
+      "outcome": "pr-created",
+      "consecutive_failures": 0,
+      "open_rejections": [],
+      "last_reject_reason": "CHANGELOG.md-only diff adds all 10 commits under [Unreleased] with correct subjects, commit links, preserved releases, and no duplicates."
+    }
+  }
+}
