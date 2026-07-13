@@ -1,12 +1,8 @@
-<!-- omit in toc -->
-
 # Tool Comparison Matrix (AI Agent Hooks)
 
 AI Agent Hooks のイベント体系・レスポンス形式・Stop 制御方式を横断比較する。
 
 Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-comparison-matrix-ai-agent.md#agent-hooks) を参照。本ドキュメントはイベント単位の詳細仕様に特化する。
-
-<!-- omit in toc -->
 
 ## History
 
@@ -15,48 +11,6 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 | 2026-06-27 | Codex (OpenAI) を全セクションに追加                            |
 | 2026-06-14 | hooks.json 設定方法セクション追加。ツール並び順を A-Z 順に統一 |
 | 2026-06-07 | 初版作成。Event Matrix / res Matrix / Stop Block 仕様を整備    |
-
-<!-- omit in toc -->
-
-## Table of Contents
-
-- [Event Matrix](#event-matrix)
-  - [Guidelines](#guidelines)
-- [hooks.json 設定方法](#hooksjson-設定方法)
-  - [Copilot CLI](#copilot-cli)
-  - [Cursor](#cursor)
-  - [Claude Code](#claude-code)
-  - [Codex](#codex)
-  - [Kiro CLI](#kiro-cli)
-  - [VS Code](#vs-code)
-  - [Guidelines](#guidelines-1)
-- [res Matrix (Stop / agentStop)](#res-matrix-stop--agentstop)
-  - [Stop stdin / stdout Format](#stop-stdin--stdout-format)
-    - [Antigravity](#antigravity)
-    - [Claude Code](#claude-code-1)
-    - [Codex](#codex-1)
-    - [Copilot CLI](#copilot-cli-1)
-    - [Kiro CLI](#kiro-cli-1)
-    - [VS Code](#vs-code-1)
-  - [Guidelines](#guidelines-2)
-- [res Matrix (PostToolUse)](#res-matrix-posttooluse)
-  - [PostToolUse stdin / stdout Format](#posttooluse-stdin--stdout-format)
-    - [Antigravity](#antigravity-1)
-    - [Claude Code](#claude-code-2)
-    - [Codex](#codex-2)
-    - [Copilot CLI](#copilot-cli-2)
-    - [Kiro CLI](#kiro-cli-2)
-    - [VS Code](#vs-code-2)
-  - [Guidelines](#guidelines-3)
-- [Stop Block Decision: 実装パターン](#stop-block-decision-実装パターン)
-  - [設計方針](#設計方針)
-  - [判定フロー](#判定フロー)
-  - [Agent 判定の優先順位](#agent-判定の優先順位)
-  - [Agent 別レスポンス仕様](#agent-別レスポンス仕様)
-  - [制約事項](#制約事項)
-- [必須評価軸 (MUST) 判定](#必須評価軸-must-判定)
-- [.apm パッケージでの Hook イベント選定](#apm-パッケージでの-hook-イベント選定)
-- [補足](#補足)
 
 ## Event Matrix
 

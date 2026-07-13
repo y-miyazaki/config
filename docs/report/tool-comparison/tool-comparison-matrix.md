@@ -1,10 +1,6 @@
-<!-- omit in toc -->
-
 # Tool Comparison Matrix
 
 ツール選定時の判断材料として、カテゴリ別に比較を行う。
-
-<!-- omit in toc -->
 
 ## History
 
@@ -35,35 +31,6 @@
 - [AI Agent Hooks](tool-comparison-matrix-ai-agent-hooks.md)
 - [AI Agent Guardrails](tool-comparison-matrix-ai-agent-guardrails.md)
 - [AI MCP Server](tool-comparison-matrix-ai-mcp-server.md)
-
-<!-- omit in toc -->
-
-## Table of Contents
-
-- [Dependency Updates: Dependabot vs Renovate](#dependency-updates-dependabot-vs-renovate)
-  - [Guidelines](#guidelines)
-- [Version Management: aqua vs asdf vs mise](#version-management-aqua-vs-asdf-vs-mise)
-  - [Guidelines](#guidelines-1)
-- [Security Scanning: Trivy vs Snyk vs Grype](#security-scanning-trivy-vs-snyk-vs-grype)
-  - [Guidelines](#guidelines-2)
-- [SAST / Code Pattern Analysis: Semgrep vs CodeQL vs SonarQube](#sast--code-pattern-analysis-semgrep-vs-codeql-vs-sonarqube)
-  - [Guidelines](#guidelines-3)
-- [Secret Detection: gitleaks vs detect-secrets vs truffleHog](#secret-detection-gitleaks-vs-detect-secrets-vs-trufflehog)
-  - [Guidelines](#guidelines-4)
-- [GitHub Actions Lint: actionlint vs ghalint vs zizmor](#github-actions-lint-actionlint-vs-ghalint-vs-zizmor)
-  - [Guidelines](#guidelines-5)
-- [GitHub Actions Pinning: pinact vs pin-github-action vs Renovate](#github-actions-pinning-pinact-vs-pin-github-action-vs-renovate)
-  - [Guidelines](#guidelines-6)
-- [PR Review Automation: reviewdog vs GitHub Code Scanning vs SonarQube](#pr-review-automation-reviewdog-vs-github-code-scanning-vs-sonarqube)
-  - [Guidelines](#guidelines-7)
-- [Code Coverage: Codecov vs Coveralls vs SonarQube](#code-coverage-codecov-vs-coveralls-vs-sonarqube)
-  - [Guidelines](#guidelines-8)
-- [Git Hooks Framework: pre-commit](#git-hooks-framework-pre-commit)
-  - [Guidelines](#guidelines-9)
-- [CI/CD: GitHub Actions vs GitLab CI vs CircleCI vs Jenkins](#cicd-github-actions-vs-gitlab-ci-vs-circleci-vs-jenkins)
-  - [Guidelines](#guidelines-10)
-- [Code Formatter: Prettier vs Biome vs deno fmt vs clang-format vs rustfmt](#code-formatter-prettier-vs-biome-vs-deno-fmt-vs-clang-format-vs-rustfmt)
-  - [Guidelines](#guidelines-11)
 
 ## Dependency Updates: Dependabot vs Renovate
 

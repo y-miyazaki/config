@@ -4,7 +4,7 @@
 
 This document explains how instruction files stay aligned with review-skill `category-*.md` references, which files the sync script manages, and how to validate changes before release.
 
-For distributable-package authoring rules (repository-neutral content, edit targets, test pairing), see [`.apm/AGENTS.md`](../../.apm/AGENTS.md).
+For distributable-package authoring rules (repository-neutral content, edit targets, test pairing), see [AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md).
 
 ## Scope
 

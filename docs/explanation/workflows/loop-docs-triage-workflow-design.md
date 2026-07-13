@@ -35,6 +35,8 @@ Detect documentation drift from code changes on integration branches and open fi
 | `docs-updater` (common) | Hook/manual git-diff → doc sync            | Pre-commit, user-invoked   |
 | `loop-docs-triage`      | Cron loop: detect facts + Skill triage/fix | `on-loop-docs-triage.yaml` |
 
+### Separation from docs-updater
+
 Detect script path: **`loop-docs-triage/scripts/detect_changes.sh`** (not `docs-updater/scripts/detect_changes.sh`).
 
 Skill execution boundaries: `loop-docs-triage` SKILL.md (`USE FOR` / `DO NOT USE FOR`).

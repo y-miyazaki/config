@@ -1,10 +1,6 @@
-<!-- omit in toc -->
-
 # Tool Comparison Matrix (Shell Script)
 
 Shell Script に特化したツール選定の判断材料。
-
-<!-- omit in toc -->
 
 ## History
 
@@ -12,13 +8,6 @@ Shell Script に特化したツール選定の判断材料。
 | ---------- | ---------------------------------------------- |
 | 2026-05-21 | History セクション追加                         |
 | 2026-05-11 | 初版作成。shfmt / shellcheck / beautysh を比較 |
-
-<!-- omit in toc -->
-
-## Table of Contents
-
-- [Format / Lint: beautysh vs shellcheck vs shfmt](#format--lint-beautysh-vs-shellcheck-vs-shfmt)
-  - [Guidelines](#guidelines)
 
 ## Format / Lint: beautysh vs shellcheck vs shfmt
 

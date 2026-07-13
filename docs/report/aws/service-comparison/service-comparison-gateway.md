@@ -1,27 +1,12 @@
-<!-- omit in toc -->
-
 # AWS Service Comparison Matrix (Gateway)
 
 ロードバランサー・API Gateway 等のトラフィック制御サービスの選定判断材料。
-
-<!-- omit in toc -->
 
 ## History
 
 | 日付       | 内容     |
 | ---------- | -------- |
 | 2026-05-28 | 初版作成 |
-
-<!-- omit in toc -->
-
-## Table of Contents
-
-- [Load Balancer: ALB vs NLB vs CLB](#load-balancer-alb-vs-nlb-vs-clb)
-  - [Guidelines](#guidelines)
-- [API Gateway: API Gateway REST vs API Gateway HTTP vs ALB](#api-gateway-api-gateway-rest-vs-api-gateway-http-vs-alb)
-  - [Guidelines](#guidelines-1)
-- [CDN / Edge: CloudFront vs Global Accelerator](#cdn--edge-cloudfront-vs-global-accelerator)
-  - [Guidelines](#guidelines-2)
 
 ## Load Balancer: ALB vs NLB vs CLB
 

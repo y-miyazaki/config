@@ -1,25 +1,12 @@
-<!-- omit in toc -->
-
 # AWS Service Comparison Matrix (Batch)
 
 バッチ処理・ジョブ実行サービスの選定判断材料。
-
-<!-- omit in toc -->
 
 ## History
 
 | 日付       | 内容     |
 | ---------- | -------- |
 | 2026-05-28 | 初版作成 |
-
-<!-- omit in toc -->
-
-## Table of Contents
-
-- [Batch Processing: AWS Batch vs ECS Scheduled Task vs Step Functions vs Lambda](#batch-processing-aws-batch-vs-ecs-scheduled-task-vs-step-functions-vs-lambda)
-  - [Guidelines](#guidelines)
-- [Workflow Orchestration: Step Functions vs MWAA (Airflow) vs EventBridge Scheduler](#workflow-orchestration-step-functions-vs-mwaa-airflow-vs-eventbridge-scheduler)
-  - [Guidelines](#guidelines-1)
 
 ## Batch Processing: AWS Batch vs ECS Scheduled Task vs Step Functions vs Lambda
 

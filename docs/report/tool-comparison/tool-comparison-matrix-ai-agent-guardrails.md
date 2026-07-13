@@ -1,11 +1,7 @@
-<!-- omit in toc -->
-
 # Tool Comparison Matrix — Agent Security: Guardrails
 
 [tool-comparison-matrix-ai-agent.md](tool-comparison-matrix-ai-agent.md) からの分離ドキュメント。
 エージェントの権限設定・ツール許可ルール・Configuration Examples を詳述する。
-
-<!-- omit in toc -->
 
 ## History
 
@@ -13,14 +9,6 @@
 | ---------- | ------------------------------------------------------- |
 | 2026-06-27 | Codex (OpenAI) を追加                                   |
 | 2026-06-16 | 本体から分離して新規作成。Cursor IDE/CLI 権限設定を追加 |
-
-<!-- omit in toc -->
-
-## Table of Contents
-
-- [Guardrails Configuration](#guardrails-configuration)
-- [Configuration Examples](#configuration-examples)
-- [Guidelines](#guidelines)
 
 ## Guardrails Configuration
 

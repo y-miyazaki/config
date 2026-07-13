@@ -1,12 +1,8 @@
-<!-- omit in toc -->
-
 # Tool Comparison Matrix (AI Workflow)
 
 AI ワークフロー / LLM 基盤ツール選定の判断材料。
 
 対象ツールはカテゴリが異なるため、用途別に分類して比較する。
-
-<!-- omit in toc -->
 
 ## History
 
@@ -14,24 +10,6 @@ AI ワークフロー / LLM 基盤ツール選定の判断材料。
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-06-17 | 全般最新化: LangSmith Fleet/Engine プラットフォーム化反映、Langfuse pricing 更新 ($29〜$2,499)、n8n AI Workflow Builder 追加、Mastra managed DB 追加 |
 | 2026-05-21 | 初版作成。ワークフロー自動化 / LLM Gateway / Agent Framework / Observability の 4 カテゴリで比較                                                     |
-
-<!-- omit in toc -->
-
-## Table of Contents
-
-- [Workflow Automation: Dify vs Make.com vs n8n vs Windmill vs Zapier](#workflow-automation-dify-vs-makecom-vs-n8n-vs-windmill-vs-zapier)
-  - [Pricing](#pricing)
-  - [Guidelines](#guidelines)
-- [LLM Gateway: LiteLLM vs Portkey](#llm-gateway-litellm-vs-portkey)
-  - [Guidelines](#guidelines-1)
-- [AI Agent Framework: CrewAI vs LangChain / LangGraph vs Mastra vs Vercel AI SDK](#ai-agent-framework-crewai-vs-langchain--langgraph-vs-mastra-vs-vercel-ai-sdk)
-  - [Pricing](#pricing-1)
-  - [Guidelines](#guidelines-2)
-- [LLM Observability: Arize Phoenix vs Langfuse vs LangSmith](#llm-observability-arize-phoenix-vs-langfuse-vs-langsmith)
-  - [Pricing](#pricing-2)
-  - [Guidelines](#guidelines-3)
-- [組み合わせパターン](#組み合わせパターン)
-  - [Guidelines](#guidelines-4)
 
 ## Workflow Automation: Dify vs Make.com vs n8n vs Windmill vs Zapier
 

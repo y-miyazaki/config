@@ -1,32 +1,14 @@
-<!-- omit in toc -->
-
 # AWS Service Comparison Evaluation Rules
 
 AWS サービス比較ドキュメント群で共通利用する評価・記載ルール。
 
 [tool-comparison-evaluation-rules](../../tool-comparison/tool-comparison-evaluation-rules.md) をベースに、AWS サービス選定に特化した評価軸を追加定義する。
 
-<!-- omit in toc -->
-
 ## History
 
 | 日付       | 内容     |
 | ---------- | -------- |
 | 2026-05-28 | 初版作成 |
-
-<!-- omit in toc -->
-
-## Table of Contents
-
-- [評価の原則](#評価の原則)
-- [記載ルール](#記載ルール)
-  - [共通行の順序 (MUST)](#共通行の順序-must)
-  - [表記ルール](#表記ルール)
-- [必須評価軸 (MUST)](#必須評価軸-must)
-- [加点評価軸 (SHOULD)](#加点評価軸-should)
-- [判定フロー](#判定フロー)
-- [スコアリング方式](#スコアリング方式)
-- [記載テンプレート](#記載テンプレート)
 
 ## 評価の原則
 

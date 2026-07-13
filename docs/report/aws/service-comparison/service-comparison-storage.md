@@ -1,27 +1,12 @@
-<!-- omit in toc -->
-
 # AWS Service Comparison Matrix (Storage)
 
 ストレージ・マウントサービスの選定判断材料。S3、EFS、EBS 等を比較する。
-
-<!-- omit in toc -->
 
 ## History
 
 | 日付       | 内容     |
 | ---------- | -------- |
 | 2026-05-28 | 初版作成 |
-
-<!-- omit in toc -->
-
-## Table of Contents
-
-- [Block / File / Object: EBS vs EFS vs S3](#block--file--object-ebs-vs-efs-vs-s3)
-  - [Guidelines](#guidelines)
-- [File Storage: EFS vs S3 Files vs FSx for Lustre vs FSx for NetApp ONTAP](#file-storage-efs-vs-s3-files-vs-fsx-for-lustre-vs-fsx-for-netapp-ontap)
-  - [Guidelines](#guidelines-1)
-- [Object Storage Tier: S3 Standard vs S3 IA vs S3 Glacier](#object-storage-tier-s3-standard-vs-s3-ia-vs-s3-glacier)
-  - [Guidelines](#guidelines-2)
 
 ## Block / File / Object: EBS vs EFS vs S3
 

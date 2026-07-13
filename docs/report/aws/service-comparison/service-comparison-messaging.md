@@ -1,25 +1,12 @@
-<!-- omit in toc -->
-
 # AWS Service Comparison Matrix (Messaging)
 
 メッセージング・キューサービスの選定判断材料。
-
-<!-- omit in toc -->
 
 ## History
 
 | 日付       | 内容     |
 | ---------- | -------- |
 | 2026-05-28 | 初版作成 |
-
-<!-- omit in toc -->
-
-## Table of Contents
-
-- [Queue: SQS vs Kinesis Data Streams vs MSK (Kafka)](#queue-sqs-vs-kinesis-data-streams-vs-msk-kafka)
-  - [Guidelines](#guidelines)
-- [Event Bus: EventBridge vs SNS vs SQS](#event-bus-eventbridge-vs-sns-vs-sqs)
-  - [Guidelines](#guidelines-1)
 
 ## Queue: SQS vs Kinesis Data Streams vs MSK (Kafka)
 

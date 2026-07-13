@@ -1,10 +1,6 @@
-<!-- omit in toc -->
-
 # Tool Comparison Matrix (AWS)
 
 AWS に特化したツール選定の判断材料。
-
-<!-- omit in toc -->
 
 ## History
 
@@ -12,19 +8,6 @@ AWS に特化したツール選定の判断材料。
 | ---------- | ----------------------------------------------------------------------------- |
 | 2026-05-21 | History セクション追加                                                        |
 | 2026-05-12 | 初版作成。ECS デプロイ / Serverless / Secret 管理を比較。Copilot EOS 警告追加 |
-
-<!-- omit in toc -->
-
-## Table of Contents
-
-- [ECS Deploy: AWS CDK vs AWS Copilot vs ecspresso](#ecs-deploy-aws-cdk-vs-aws-copilot-vs-ecspresso)
-  - [Guidelines](#guidelines)
-- [Serverless: AWS SAM vs CloudFormation vs Serverless Framework](#serverless-aws-sam-vs-cloudformation-vs-serverless-framework)
-  - [Guidelines](#guidelines-1)
-- [Secret Encryption: AWS Secrets Manager vs HashiCorp Vault vs sops](#secret-encryption-aws-secrets-manager-vs-hashicorp-vault-vs-sops)
-  - [Guidelines](#guidelines-2)
-- [ECS Scheduled Tasks: ecschedule](#ecs-scheduled-tasks-ecschedule)
-  - [Guidelines](#guidelines-3)
 
 ## ECS Deploy: AWS CDK vs AWS Copilot vs ecspresso
 

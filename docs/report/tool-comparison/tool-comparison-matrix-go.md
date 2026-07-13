@@ -1,10 +1,6 @@
-<!-- omit in toc -->
-
 # Tool Comparison Matrix (Go)
 
 Go 開発に特化したツール選定の判断材料。
-
-<!-- omit in toc -->
 
 ## History
 
@@ -12,29 +8,6 @@ Go 開発に特化したツール選定の判断材料。
 | ---------- | ---------------------------------------------------------------------------------- |
 | 2026-05-21 | History セクション追加                                                             |
 | 2026-05-12 | 初版作成。Formatter / Linter / Container Build / Release / API Doc / Mock 等を比較 |
-
-<!-- omit in toc -->
-
-## Table of Contents
-
-- [Formatter: gofumpt vs gofmt vs goimports](#formatter-gofumpt-vs-gofmt-vs-goimports)
-  - [Guidelines](#guidelines)
-- [Linter: go vet vs golangci-lint vs staticcheck](#linter-go-vet-vs-golangci-lint-vs-staticcheck)
-  - [Guidelines](#guidelines-1)
-- [Container Build: Docker vs kaniko vs ko](#container-build-docker-vs-kaniko-vs-ko)
-  - [Guidelines](#guidelines-2)
-- [Release Automation: GitHub Releases vs goreleaser vs semantic-release](#release-automation-github-releases-vs-goreleaser-vs-semantic-release)
-  - [Guidelines](#guidelines-3)
-- [API Documentation: go-swagger vs oapi-codegen vs swag](#api-documentation-go-swagger-vs-oapi-codegen-vs-swag)
-  - [Guidelines](#guidelines-4)
-- [Protocol Buffers: buf](#protocol-buffers-buf)
-  - [Guidelines](#guidelines-5)
-- [Live Reload: air](#live-reload-air)
-  - [Guidelines](#guidelines-6)
-- [Vulnerability Scanning (Go): govulncheck](#vulnerability-scanning-go-govulncheck)
-  - [Guidelines](#guidelines-7)
-- [Mock Generation: gomock vs mockery vs moq](#mock-generation-gomock-vs-mockery-vs-moq)
-  - [Guidelines](#guidelines-8)
 
 ## Formatter: gofumpt vs gofmt vs goimports
 

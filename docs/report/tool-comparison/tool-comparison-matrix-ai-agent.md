@@ -1,10 +1,6 @@
-<!-- omit in toc -->
-
 # Tool Comparison Matrix (AI Agent)
 
 AI Agent / コーディングアシスタントに特化したツール選定の判断材料。
-
-<!-- omit in toc -->
 
 ## History
 
@@ -20,26 +16,6 @@ AI Agent / コーディングアシスタントに特化したツール選定の
 | 2026-06-05 | GitHub Copilot 6 月課金モデル変更 (AI Credits 制) 反映、Cursor/Gemini 情報修正、Agent Hooks セクション追加                                             |
 | 2026-05-21 | History セクション追加                                                                                                                                 |
 | 2026-05-12 | 初版作成。Kiro / Claude Code / GitHub Copilot / Cursor / Gemini を比較                                                                                 |
-
-<!-- omit in toc -->
-
-## Table of Contents
-
-- [Coding Agent: Antigravity vs Claude Code vs Codex vs Cursor vs GitHub Copilot vs Kiro](#coding-agent-antigravity-vs-claude-code-vs-codex-vs-cursor-vs-github-copilot-vs-kiro)
-  - [Pricing](#pricing)
-    - [$10〜$20 プラン帯の選択指針](#1020-プラン帯の選択指針)
-  - [Billing Model](#billing-model)
-  - [Configuration Files and Directories](#configuration-files-and-directories)
-  - [Guidelines](#guidelines)
-- [Agent Security: Guardrails](#agent-security-guardrails)
-  - [Guardrails Configuration](#guardrails-configuration)
-- [Agent Skills](#agent-skills)
-  - [Guidelines](#guidelines-1)
-- [Agent Hooks](#agent-hooks)
-  - [Guidelines](#guidelines-2)
-- [Agent Instructions (Steering)](#agent-instructions-steering)
-  - [Guidelines](#guidelines-3)
-- [今後の改善候補](#今後の改善候補)
 
 ## Coding Agent: Antigravity vs Claude Code vs Codex vs Cursor vs GitHub Copilot vs Kiro
 

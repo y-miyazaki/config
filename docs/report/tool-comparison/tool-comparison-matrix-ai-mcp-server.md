@@ -1,10 +1,6 @@
-<!-- omit in toc -->
-
 # Tool Comparison Matrix (MCP Server)
 
 MCP Server の選定・比較の判断材料。
-
-<!-- omit in toc -->
 
 ## History
 
@@ -18,33 +14,6 @@ MCP Server の選定・比較の判断材料。
 | 2026-05-27 | Local Filesystem & Git / Database & Data Stores / SaaS & Collaboration カテゴリ追加。Performance と Code Intelligence の重複解消。提供元表記を統一       |
 | 2026-05-21 | History セクション追加                                                                                                                                   |
 | 2026-05-17 | 初版作成。AWS / Terraform / Common / Performance / Code Intelligence / Knowledge MCP を比較                                                              |
-
-<!-- omit in toc -->
-
-## Table of Contents
-
-- [AWS MCP Servers](#aws-mcp-servers)
-  - [Guidelines](#guidelines)
-- [Terraform MCP Servers](#terraform-mcp-servers)
-  - [Guidelines](#guidelines-1)
-- [Common / General Purpose MCP Servers](#common--general-purpose-mcp-servers)
-  - [Guidelines](#guidelines-2)
-- [Performance / Token Optimization MCP Servers](#performance--token-optimization-mcp-servers)
-  - [Guidelines](#guidelines-3)
-- [Code Intelligence MCP Servers](#code-intelligence-mcp-servers)
-  - [Guidelines](#guidelines-4)
-- [Knowledge / Search MCP Servers](#knowledge--search-mcp-servers)
-  - [Guidelines](#guidelines-5)
-- [Local Filesystem \& Git MCP Servers](#local-filesystem--git-mcp-servers)
-  - [Guidelines](#guidelines-6)
-- [Database MCP Servers](#database-mcp-servers)
-  - [PostgreSQL MCP Servers](#postgresql-mcp-servers)
-  - [SQLite MCP Servers](#sqlite-mcp-servers)
-  - [Guidelines](#guidelines-7)
-- [SaaS \& Collaboration MCP Servers](#saas--collaboration-mcp-servers)
-  - [Guidelines](#guidelines-8)
-- [Web Fetch \& Markdown Compression MCP Servers](#web-fetch--markdown-compression-mcp-servers)
-  - [Guidelines](#guidelines-9)
 
 ## AWS MCP Servers
 

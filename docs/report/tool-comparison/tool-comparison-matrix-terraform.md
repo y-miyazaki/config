@@ -1,10 +1,6 @@
-<!-- omit in toc -->
-
 # Tool Comparison Matrix (Terraform)
 
 Terraform / IaC に特化したツール選定の判断材料。
-
-<!-- omit in toc -->
 
 ## History
 
@@ -12,21 +8,6 @@ Terraform / IaC に特化したツール選定の判断材料。
 | ---------- | ------------------------------------------------------------------------- |
 | 2026-05-21 | History セクション追加                                                    |
 | 2026-05-11 | 初版作成。Lint / IaC 比較 / Plan Comment / Documentation / Testing を比較 |
-
-<!-- omit in toc -->
-
-## Table of Contents
-
-- [Lint / Security: checkov vs tflint vs tfsec](#lint--security-checkov-vs-tflint-vs-tfsec)
-  - [Guidelines](#guidelines)
-- [IaC: OpenTofu vs Pulumi vs Terraform](#iac-opentofu-vs-pulumi-vs-terraform)
-  - [Guidelines](#guidelines-1)
-- [Plan Comment: Atlantis vs tfcmt vs tfnotify](#plan-comment-atlantis-vs-tfcmt-vs-tfnotify)
-  - [Guidelines](#guidelines-2)
-- [Documentation: terraform-docs](#documentation-terraform-docs)
-  - [Guidelines](#guidelines-3)
-- [Testing: terraform test vs Terratest vs tftest](#testing-terraform-test-vs-terratest-vs-tftest)
-  - [Guidelines](#guidelines-4)
 
 ## Lint / Security: checkov vs tflint vs tfsec
 

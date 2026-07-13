@@ -128,11 +128,11 @@ Event vars (detect job only when `workflow_run` trigger enabled):
 
 Each workflow design doc lists **every** `env` key for that caller (including multiline values referenced as inline in YAML):
 
-| Loop        | All `env` keys documented                                                                                        |
-| ----------- | ---------------------------------------------------------------------------------------------------------------- |
-| changelog   | [Changelog Workflow Design — Environment variables](loop-changelog-workflow-design.md#environment-variables)     |
-| ci-sweeper  | [CI Sweeper Workflow Design — Environment variables](loop-ci-sweeper-workflow-design.md#environment-variables)   |
-| docs-triage | [Docs Triage Workflow Design — Environment variables](loop-docs-triage-workflow-design.md#environment-variables) |
+| Loop        | All `env` keys documented                                                                        |
+| ----------- | ------------------------------------------------------------------------------------------------ |
+| changelog   | [Changelog Workflow Design — Caller inputs](loop-changelog-workflow-design.md#caller-inputs)     |
+| ci-sweeper  | [CI Sweeper Workflow Design — Caller inputs](loop-ci-sweeper-workflow-design.md#caller-inputs)   |
+| docs-triage | [Docs Triage Workflow Design — Caller inputs](loop-docs-triage-workflow-design.md#caller-inputs) |
 
 ## Per-loop design docs
 
