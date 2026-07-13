@@ -669,7 +669,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@b3380368e9a5ecabf60601d1feedf81031c387c1 # v1.8.14
+        uses: y-miyazaki/config/.github/actions/summary@e9584c0415c85cfb351b49cc13d5b88dc729768d # v1.8.14
         with:
           artifacts: |
             ${{ steps.setup-parameters.outputs.artifact_name }}
