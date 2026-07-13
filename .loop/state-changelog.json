@@ -1,0 +1,8 @@
+{
+  "targets": {},
+  "acting_on": {
+    "target_key": "integration:main",
+    "loop_name": "changelog",
+    "started_at": "2026-07-13T14:46:24Z"
+  }
+}
