@@ -101,12 +101,9 @@ function append_integration_candidate {
         }')"
     target_json="$(enrich_target_json_with_ci_context "${target_json}" "${detect_result}")"
 
-    candidate="$(jq -nc \
-        --argjson target_json "${target_json}" \
-        --arg prompt "${prompt_text}" \
-        --arg verifier_context "${verifier_context}" \
-        --argjson result "${detect_result}" \
-        '{target_json: $target_json, prompt: $prompt, verifier_context: $verifier_context, result: $result}')"
+    candidate="$(build_loop_candidate_json \
+        "${target_key}" "${target_json}" "${prompt_text}" "${verifier_context}" "${detect_result}")" \
+        || return 0
 
     CANDIDATES_JSON+=("${candidate}")
 }
@@ -182,12 +179,9 @@ function append_pull_request_candidate {
         }')"
     target_json="$(enrich_target_json_with_ci_context "${target_json}" "${detect_result}")"
 
-    candidate="$(jq -nc \
-        --argjson target_json "${target_json}" \
-        --arg prompt "${prompt_text}" \
-        --arg verifier_context "${verifier_context}" \
-        --argjson result "${detect_result}" \
-        '{target_json: $target_json, prompt: $prompt, verifier_context: $verifier_context, result: $result}')"
+    candidate="$(build_loop_candidate_json \
+        "${target_key}" "${target_json}" "${prompt_text}" "${verifier_context}" "${detect_result}")" \
+        || return 0
 
     CANDIDATES_JSON+=("${candidate}")
 }
@@ -251,6 +245,69 @@ function apply_target_cap {
 }
 
 #######################################
+# build_loop_candidate_json: Assemble one matrix cell with argjson validation
+#
+# Arguments:
+#   $1 - Target key (for logs)
+#   $2 - target_json object string
+#   $3 - Prompt text
+#   $4 - Verifier context markdown
+#   $5 - Detect script JSON result
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Candidate JSON on stdout; non-zero when assembly fails
+#
+#######################################
+function build_loop_candidate_json {
+    local target_key="$1"
+    local target_json="$2"
+    local prompt_text="$3"
+    local verifier_context="$4"
+    local detect_result="$5"
+    local candidate jq_stderr
+
+    log_detect_notice "candidate" "${target_key}" \
+        "target_json_bytes=${#target_json} detect_bytes=${#detect_result}"
+
+    if [[ -z ${target_json} ]]; then
+        log_detect_error "build_loop_candidate_json(${target_key}): target_json is empty after enrich"
+        return 1
+    fi
+    if ! jq -e . <<< "${target_json}" > /dev/null 2>&1; then
+        log_detect_json_invalid "build_loop_candidate_json(${target_key})" "target_json" "${target_json}"
+        return 1
+    fi
+    if ! jq -e . <<< "${detect_result}" > /dev/null 2>&1; then
+        log_detect_json_invalid "build_loop_candidate_json(${target_key})" "detect_result" "${detect_result}"
+        return 1
+    fi
+
+    jq_stderr="$(mktemp)"
+    candidate="$(jq -nc \
+        --argjson target_json "${target_json}" \
+        --arg prompt "${prompt_text}" \
+        --arg verifier_context "${verifier_context}" \
+        --argjson result "${detect_result}" \
+        '{target_json: $target_json, prompt: $prompt, verifier_context: $verifier_context, result: $result}' \
+        2> "${jq_stderr}")" || {
+        log_detect_error "build_loop_candidate_json(${target_key}): jq --argjson assembly failed (target_json_bytes=${#target_json}, detect_bytes=${#detect_result}, prompt_bytes=${#prompt_text}, verifier_bytes=${#verifier_context}): $(tr -d '\n\r' < "${jq_stderr}")"
+        rm -f "${jq_stderr}"
+        return 1
+    }
+    rm -f "${jq_stderr}"
+
+    if [[ -z ${candidate} ]] || ! jq -e . <<< "${candidate}" > /dev/null 2>&1; then
+        log_detect_json_invalid "build_loop_candidate_json(${target_key})" "candidate_output" "${candidate}"
+        return 1
+    fi
+
+    printf '%s' "${candidate}"
+}
+
+#######################################
 # checkout_context: Fetch and checkout branch at optional ref
 #
 # Arguments:
@@ -282,40 +339,6 @@ function checkout_context {
 }
 
 #######################################
-# enrich_target_json_with_ci_context: Add CI failure fields to target_json
-#
-# Arguments:
-#   $1 - Base target_json object string
-#   $2 - Detect script JSON result
-#
-# Global Variables:
-#   None
-#
-# Returns:
-#   Enriched target_json on stdout
-#
-#######################################
-function enrich_target_json_with_ci_context {
-    local target_json="$1"
-    local detect_result="$2"
-
-    if ! jq -e '.failures[0]' <<< "${detect_result}" > /dev/null 2>&1; then
-        printf '%s' "${target_json}"
-        return 0
-    fi
-
-    jq -c \
-        --argjson base "${target_json}" \
-        --arg workflow_run_id "$(jq -r '.failures[0].workflow_run_id // empty' <<< "${detect_result}")" \
-        --arg workflow_name "$(jq -r '.failures[0].workflow_name // empty' <<< "${detect_result}")" \
-        --arg head_sha "$(jq -r '.failures[0].head_sha // empty' <<< "${detect_result}")" \
-        '$base
-        | if $workflow_run_id != "" then .workflow_run_id = $workflow_run_id else . end
-        | if $workflow_name != "" then .workflow_name = $workflow_name else . end
-        | if $head_sha != "" then .head_sha = $head_sha else . end'
-}
-
-#######################################
 # detect_result_skip: Return 0 when detect script JSON indicates skip
 #
 # Arguments:
@@ -332,11 +355,144 @@ function detect_result_skip {
     local result="$1"
     local skip_val
     if ! jq -e . <<< "${result}" > /dev/null 2>&1; then
-        echo "::error::Detect script returned invalid JSON"
+        log_detect_json_invalid "detect_result_skip" "detect_script_output" "${result}"
         return 0
     fi
     skip_val=$(jq -r 'if (.skip | type) == "boolean" then (.skip | tostring) else "true" end' <<< "${result}")
     [[ ${skip_val} == "true" ]]
+}
+
+#######################################
+# enrich_target_json_with_ci_context: Add CI failure fields to target_json
+#
+# Arguments:
+#   $1 - Base target_json object string
+#   $2 - Detect script JSON result
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Enriched target_json on stdout
+#
+#######################################
+function enrich_target_json_with_ci_context {
+    local target_json="$1"
+    local detect_result="$2"
+    local enriched jq_stderr
+
+    if ! jq -e '.failures[0]' <<< "${detect_result}" > /dev/null 2>&1; then
+        printf '%s' "${target_json}"
+        return 0
+    fi
+
+    if ! jq -e . <<< "${target_json}" > /dev/null 2>&1; then
+        log_detect_json_invalid "enrich_target_json_with_ci_context" "target_json" "${target_json}"
+        return 1
+    fi
+    if ! jq -e . <<< "${detect_result}" > /dev/null 2>&1; then
+        log_detect_json_invalid "enrich_target_json_with_ci_context" "detect_result" "${detect_result}"
+        printf '%s' "${target_json}"
+        return 0
+    fi
+
+    log_detect_notice "enrich" "ci-context" \
+        "base_bytes=${#target_json} detect_bytes=${#detect_result}"
+
+    jq_stderr="$(mktemp)"
+    enriched="$(jq -nc \
+        --argjson base "${target_json}" \
+        --argjson detect "${detect_result}" \
+        '($detect.failures[0] // {}) as $f
+         | $base
+         | if ($f.workflow_run_id // "") != "" then .workflow_run_id = ($f.workflow_run_id | tostring) else . end
+         | if ($f.workflow_name // "") != "" then .workflow_name = $f.workflow_name else . end
+         | if ($f.head_sha // "") != "" then .head_sha = $f.head_sha else . end' \
+        2> "${jq_stderr}")" || {
+        log_detect_error "enrich_target_json_with_ci_context: jq enrich failed (base_bytes=${#target_json}, detect_bytes=${#detect_result}): $(tr -d '\n\r' < "${jq_stderr}")"
+        rm -f "${jq_stderr}"
+        printf '%s' "${target_json}"
+        return 0
+    }
+    rm -f "${jq_stderr}"
+
+    if [[ -z ${enriched} ]] || ! jq -e . <<< "${enriched}" > /dev/null 2>&1; then
+        log_detect_json_invalid "enrich_target_json_with_ci_context" "enriched_output" "${enriched}"
+        log_detect_error "enrich_target_json_with_ci_context: using base target_json after enrich failure"
+        printf '%s' "${target_json}"
+        return 0
+    fi
+
+    log_detect_notice "enrich" "ok" \
+        "workflow_run_id=$(jq -r '.workflow_run_id // "-"' <<< "${enriched}")"
+    printf '%s' "${enriched}"
+}
+
+#######################################
+# log_detect_error: Emit a GitHub Actions error annotation
+#
+# Arguments:
+#   $1 - Message
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   None
+#
+#######################################
+function log_detect_error {
+    echo "::error::loop-detect: $*" >&2
+}
+
+#######################################
+# log_detect_json_invalid: Log JSON validation failure with jq diagnostics
+#
+# Arguments:
+#   $1 - Context (function or stage name)
+#   $2 - Label for the invalid payload (e.g. detect_result)
+#   $3 - Raw JSON string that failed validation
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   None
+#
+#######################################
+function log_detect_json_invalid {
+    local context="$1"
+    local label="$2"
+    local json="$3"
+    local jq_err preview
+
+    jq_err="$(jq -e . <<< "${json}" 2>&1 > /dev/null || true)"
+    jq_err="$(tr -d '\n\r' <<< "${jq_err}")"
+    preview="$(printf '%.120s' "${json}" | tr -d '\n\r\t')"
+    log_detect_error \
+        "${context}: ${label} is not valid JSON (bytes=${#json}, jq_error=${jq_err:-unknown}, preview=${preview})"
+}
+
+#######################################
+# log_detect_notice: Emit a GitHub Actions notice for detect diagnostics
+#
+# Arguments:
+#   $1 - Stage name
+#   $2 - Target key or scope
+#   $3 - Detail text
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   None
+#
+#######################################
+function log_detect_notice {
+    local stage="$1"
+    local scope="$2"
+    local detail="$3"
+    echo "::notice title=loop-detect/${stage}::${scope}: ${detail}" >&2
 }
 
 #######################################

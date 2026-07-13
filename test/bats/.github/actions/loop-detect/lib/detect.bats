@@ -77,3 +77,50 @@ setup() {
     [ "$status" -eq 0 ]
     [ "$output" = "[]" ]
 }
+
+@test "enrich_target_json_with_ci_context adds first failure metadata" {
+    local base detect_result enriched
+
+    base='{"mode":"integration","key":"integration:main","from":{"branch":"main","ref":"abc"},"to":{"branch":"main"},"finalize":"open_pr"}'
+    detect_result='{"status":"ok","skip":false,"failures":[{"workflow_run_id":"123","workflow_name":"ci-test","head_sha":"def","log_excerpt":"line1\r\nline2"}]}'
+
+    enriched="$(enrich_target_json_with_ci_context "${base}" "${detect_result}" 2> /dev/null)"
+    run jq -e '.workflow_run_id == "123" and .workflow_name == "ci-test" and .head_sha == "def"' <<< "${enriched}"
+    [ "$status" -eq 0 ]
+}
+
+@test "build_loop_candidate_json rejects empty target_json with error annotation" {
+    local detect_result
+
+    detect_result='{"status":"ok","skip":false,"failures":[]}'
+
+    run build_loop_candidate_json "integration:main" "" "prompt" "context" "${detect_result}"
+    [ "$status" -eq 1 ]
+    [[ $output == *"::error::loop-detect:"* ]]
+    [[ $output == *"target_json is empty"* ]]
+}
+
+@test "build_loop_candidate_json rejects invalid detect_result with diagnostic error" {
+    local target_json detect_result
+
+    target_json='{"mode":"integration","key":"integration:main"}'
+    detect_result='not-json'
+
+    run build_loop_candidate_json "integration:main" "${target_json}" "prompt" "context" "${detect_result}"
+    [ "$status" -eq 1 ]
+    [[ $output == *"::error::loop-detect:"* ]]
+    [[ $output == *"detect_result is not valid JSON"* ]]
+    [[ $output == *"jq_error="* ]]
+    [[ $output == *"preview="* ]]
+}
+
+@test "build_loop_candidate_json assembles valid candidate JSON" {
+    local target_json detect_result candidate
+
+    target_json='{"mode":"integration","key":"integration:main","workflow_run_id":"123"}'
+    detect_result='{"status":"ok","skip":false,"failures":[{"workflow_run_id":"123"}]}'
+
+    candidate="$(build_loop_candidate_json "integration:main" "${target_json}" "do work" "verify" "${detect_result}" 2> /dev/null)"
+    run jq -e '.target_json.key == "integration:main" and .prompt == "do work" and .result.skip == false' <<< "${candidate}"
+    [ "$status" -eq 0 ]
+}
