@@ -22,7 +22,7 @@ jobs:
           persist-credentials: false
 
       - name: Promote Pending State
-        uses: y-miyazaki/config/.github/actions/loop-state-promote@85cdd8420d16e571381c9add44e005d230a7d5a4 # v1.8.17
+        uses: y-miyazaki/config/.github/actions/loop-state-promote@e40edea21da3b398b82d63883f295cc931ebe36a # v1.8.17
         with:
           merged: ${{ github.event.pull_request.merged && 'true' || 'false' }}
           pr_number: ${{ github.event.pull_request.number }}
