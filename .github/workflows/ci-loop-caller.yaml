@@ -77,11 +77,11 @@ on:
         description: "JSON object of domain detect script environment variables"
         required: false
         type: string
-      detect_needs_ci_api:
-        default: false
-        description: "Documents CI API requirement; detect always grants actions:read and checks:read"
+      detect_permissions_profile:
+        default: default
+        description: "Detect job permissions profile; see validate-loop-caller-permissions action registry"
         required: false
-        type: boolean
+        type: string
       detect_script:
         description: "Path to domain detect_*.sh script"
         required: true
@@ -190,12 +190,32 @@ on:
         required: false
 
 jobs:
-  detect:
+  validate-profile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    permissions:
+      contents: read
+    steps:
+      - name: Validate Detect Permissions Profile
+        env:
+          PROFILE: ${{ inputs.detect_permissions_profile }}
+        run: |
+          set -euo pipefail
+          case "${PROFILE}" in
+            default | full-github) ;;
+            *)
+              echo "Unknown or unimplemented detect_permissions_profile: ${PROFILE}" >&2
+              echo "See .github/actions/validate-loop-caller-permissions/detect-permissions-profiles.yaml" >&2
+              exit 1
+              ;;
+          esac
+
+  detect-default:
+    if: inputs.detect_permissions_profile == 'default'
+    needs: validate-profile
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
-      actions: read
-      checks: read
       contents: read
     outputs:
       additional_commit_paths: ${{ inputs.additional_commit_paths }}
@@ -299,53 +319,203 @@ jobs:
           state_file: ${{ inputs.state_file }}
           token: ${{ inputs.token != '' && inputs.token || github.token }}
 
+  detect-full-github:
+    if: inputs.detect_permissions_profile == 'full-github'
+    needs: validate-profile
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    outputs:
+      additional_commit_paths: ${{ inputs.additional_commit_paths }}
+      agent_implementer_max_turns: ${{ steps.detect.outputs.agent_implementer_max_turns }}
+      agent_implementer_model: ${{ steps.detect.outputs.agent_implementer_model }}
+      agent_loop_max_attempts: ${{ steps.detect.outputs.agent_loop_max_attempts }}
+      agent_verifier_criteria: ${{ steps.detect.outputs.agent_verifier_criteria }}
+      agent_verifier_max_turns: ${{ steps.detect.outputs.agent_verifier_max_turns }}
+      agent_verifier_model: ${{ steps.detect.outputs.agent_verifier_model }}
+      allowlist: ${{ steps.detect.outputs.allowlist }}
+      branch_state: ${{ inputs.branch_state }}
+      denylist: ${{ inputs.denylist }}
+      domain_persistence_script: ${{ inputs.domain_persistence_script }}
+      engine: ${{ steps.detect.outputs.engine }}
+      infer_files_pattern: ${{ steps.detect.outputs.infer_files_pattern }}
+      level: ${{ steps.detect.outputs.level }}
+      loop_name: ${{ steps.detect.outputs.loop_name }}
+      no_changes_verdict: ${{ steps.detect.outputs.no_changes_verdict }}
+      pr_body: ${{ steps.detect.outputs.pr_body }}
+      pr_title: ${{ steps.detect.outputs.pr_title }}
+      run_started_at: ${{ steps.timing.outputs.started_at }}
+      should_run: ${{ steps.detect.outputs.should_run }}
+      skill_name: ${{ steps.detect.outputs.skill_name }}
+      skip_reason: ${{ steps.detect.outputs.skip_reason }}
+      state_file: ${{ steps.detect.outputs.state_file }}
+      state_push_branch: ${{ inputs.branch_state }}
+      target_matrix: ${{ steps.detect.outputs.target_matrix }}
+    steps:
+      - name: Record Run Start
+        id: timing
+        run: echo "started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Export Detect Domain Env
+        shell: bash
+        env:
+          DETECT_DOMAIN_ENV_JSON: ${{ inputs.detect_domain_env_json }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${DETECT_DOMAIN_ENV_JSON}" && "${DETECT_DOMAIN_ENV_JSON}" != "{}" ]]; then
+            if ! echo "${DETECT_DOMAIN_ENV_JSON}" | jq -e 'type == "object"' >/dev/null; then
+              echo "detect_domain_env_json must be a JSON object" >&2
+              exit 1
+            fi
+            if ! echo "${DETECT_DOMAIN_ENV_JSON}" | jq -e \
+              '[to_entries[] | select(.value != "" and ((.value | tostring) | test("[\r\n]")))] | length == 0' \
+              >/dev/null; then
+              bad_key="$(echo "${DETECT_DOMAIN_ENV_JSON}" | jq -r \
+                'to_entries[] | select(.value != "" and ((.value | tostring) | test("[\r\n]"))) | .key' \
+                | head -1)"
+              echo "detect_domain_env_json values must not contain newlines (key: ${bad_key})" >&2
+              exit 1
+            fi
+            while IFS= read -r -d '' entry; do
+              printf '%s\n' "${entry}" >> "${GITHUB_ENV}"
+            done < <(echo "${DETECT_DOMAIN_ENV_JSON}" | jq -jr \
+              'to_entries[] | select(.value != "") | "\(.key)=\(.value)\u0000"')
+          fi
+
+      - name: Detect Loop Work
+        id: detect
+        uses: y-miyazaki/config/.github/actions/loop-detect@5a5408053a1d6bf357808590ae74f5ccb8eb31f4 # v1.8.9
+        with:
+          agent_implementer_max_turns: ${{ format('{0}', inputs.agent_implementer_max_turns) }}
+          agent_implementer_model: ${{ inputs.agent_implementer_model }}
+          agent_loop_max_attempts: ${{ format('{0}', inputs.agent_loop_max_attempts) }}
+          agent_verifier_criteria: ${{ inputs.agent_verifier_criteria }}
+          agent_verifier_max_turns: ${{ format('{0}', inputs.agent_verifier_max_turns) }}
+          agent_verifier_model: ${{ inputs.agent_verifier_model }}
+          allowlist: ${{ inputs.allowlist }}
+          base_branch: ${{ inputs.branch_state }}
+          budget_file: ${{ inputs.budget_file }}
+          budget_max_runs_per_day: ${{ inputs.budget_max_runs_per_day != null && format('{0}', inputs.budget_max_runs_per_day) || '' }}
+          budget_max_tokens_per_day: ${{ inputs.budget_max_tokens_per_day != null && format('{0}', inputs.budget_max_tokens_per_day) || '' }}
+          detect_script: ${{ inputs.detect_script }}
+          engine: ${{ inputs.engine }}
+          infer_files_pattern: ${{ inputs.infer_files_pattern }}
+          level: ${{ inputs.level }}
+          loop_branch_match: ${{ inputs.branch_match_mode }}
+          loop_finalize_integration: ${{ inputs.finalize_integration }}
+          loop_finalize_pull_request: ${{ inputs.finalize_pull_request }}
+          loop_integration_branches: ${{ inputs.branch_match }}
+          loop_max_targets_per_schedule: ${{ format('{0}', inputs.max_targets_per_schedule) }}
+          loop_name: ${{ inputs.loop_name }}
+          loop_pr_exclude: ${{ inputs.pr_exclude }}
+          loop_pr_include_bots: ${{ inputs.pr_include_bots }}
+          loop_priority: ${{ inputs.priority }}
+          loop_pull_requests: ${{ inputs.pull_requests && 'true' || 'false' }}
+          loop_state_push_branch: ${{ inputs.branch_state }}
+          no_changes_verdict: ${{ inputs.no_changes_verdict }}
+          pr_body: ${{ inputs.pr_body }}
+          pr_title: ${{ inputs.pr_title }}
+          prompt_instructions: ${{ inputs.prompt_instructions }}
+          run_log_file: ${{ inputs.run_log_file }}
+          skill_name: ${{ inputs.skill_name }}
+          state_file: ${{ inputs.state_file }}
+          token: ${{ inputs.token != '' && inputs.token || github.token }}
+
+  detect-gateway:
+    if: always() && (needs.detect-default.result == 'success' || needs.detect-full-github.result == 'success')
+    needs:
+      - detect-default
+      - detect-full-github
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    outputs:
+      additional_commit_paths: ${{ inputs.additional_commit_paths }}
+      agent_implementer_max_turns: ${{ needs.detect-default.outputs.agent_implementer_max_turns || needs.detect-full-github.outputs.agent_implementer_max_turns }}
+      agent_implementer_model: ${{ needs.detect-default.outputs.agent_implementer_model || needs.detect-full-github.outputs.agent_implementer_model }}
+      agent_loop_max_attempts: ${{ needs.detect-default.outputs.agent_loop_max_attempts || needs.detect-full-github.outputs.agent_loop_max_attempts }}
+      agent_verifier_criteria: ${{ needs.detect-default.outputs.agent_verifier_criteria || needs.detect-full-github.outputs.agent_verifier_criteria }}
+      agent_verifier_max_turns: ${{ needs.detect-default.outputs.agent_verifier_max_turns || needs.detect-full-github.outputs.agent_verifier_max_turns }}
+      agent_verifier_model: ${{ needs.detect-default.outputs.agent_verifier_model || needs.detect-full-github.outputs.agent_verifier_model }}
+      allowlist: ${{ needs.detect-default.outputs.allowlist || needs.detect-full-github.outputs.allowlist }}
+      branch_state: ${{ inputs.branch_state }}
+      denylist: ${{ inputs.denylist }}
+      domain_persistence_script: ${{ inputs.domain_persistence_script }}
+      engine: ${{ needs.detect-default.outputs.engine || needs.detect-full-github.outputs.engine }}
+      infer_files_pattern: ${{ needs.detect-default.outputs.infer_files_pattern || needs.detect-full-github.outputs.infer_files_pattern }}
+      level: ${{ needs.detect-default.outputs.level || needs.detect-full-github.outputs.level }}
+      loop_name: ${{ needs.detect-default.outputs.loop_name || needs.detect-full-github.outputs.loop_name }}
+      no_changes_verdict: ${{ needs.detect-default.outputs.no_changes_verdict || needs.detect-full-github.outputs.no_changes_verdict }}
+      pr_body: ${{ needs.detect-default.outputs.pr_body || needs.detect-full-github.outputs.pr_body }}
+      pr_title: ${{ needs.detect-default.outputs.pr_title || needs.detect-full-github.outputs.pr_title }}
+      run_started_at: ${{ needs.detect-default.outputs.run_started_at || needs.detect-full-github.outputs.run_started_at }}
+      should_run: ${{ needs.detect-default.outputs.should_run || needs.detect-full-github.outputs.should_run }}
+      skill_name: ${{ needs.detect-default.outputs.skill_name || needs.detect-full-github.outputs.skill_name }}
+      skip_reason: ${{ needs.detect-default.outputs.skip_reason || needs.detect-full-github.outputs.skip_reason }}
+      state_file: ${{ needs.detect-default.outputs.state_file || needs.detect-full-github.outputs.state_file }}
+      state_push_branch: ${{ inputs.branch_state }}
+      target_matrix: ${{ needs.detect-default.outputs.target_matrix || needs.detect-full-github.outputs.target_matrix }}
+    steps:
+      - name: Detect Complete
+        run: echo "detect complete"
+
   execute:
     concurrency:
       cancel-in-progress: true
       group: on-loop-${{ inputs.loop_name }}-${{ matrix.target.target_json.key }}
-    if: needs.detect.outputs.should_run == 'true'
-    needs: detect
+    if: needs.detect-gateway.outputs.should_run == 'true'
+    needs: detect-gateway
     permissions:
       contents: write
       copilot-requests: write # zizmor: ignore[excessive-permissions]
       pull-requests: write
     strategy:
       matrix:
-        target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
+        target: ${{ fromJson(needs.detect-gateway.outputs.target_matrix) }}
     uses: ./.github/workflows/ci-loop-agent.yaml
     with:
-      additional_commit_paths: ${{ needs.detect.outputs.additional_commit_paths }}
-      agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
-      agent_implementer_model: ${{ needs.detect.outputs.agent_implementer_model }}
-      agent_loop_max_attempts: ${{ needs.detect.outputs.agent_loop_max_attempts }}
-      agent_verifier_criteria: ${{ needs.detect.outputs.agent_verifier_criteria }}
-      agent_verifier_max_turns: ${{ needs.detect.outputs.agent_verifier_max_turns }}
-      agent_verifier_model: ${{ needs.detect.outputs.agent_verifier_model }}
-      allowlist: ${{ needs.detect.outputs.allowlist }}
-      auto_merge: ${{ (needs.detect.outputs.level == 'L3' && matrix.target.target_json.finalize == 'open_pr') && 'true' || 'false' }}
+      additional_commit_paths: ${{ needs.detect-gateway.outputs.additional_commit_paths }}
+      agent_implementer_max_turns: ${{ needs.detect-gateway.outputs.agent_implementer_max_turns }}
+      agent_implementer_model: ${{ needs.detect-gateway.outputs.agent_implementer_model }}
+      agent_loop_max_attempts: ${{ needs.detect-gateway.outputs.agent_loop_max_attempts }}
+      agent_verifier_criteria: ${{ needs.detect-gateway.outputs.agent_verifier_criteria }}
+      agent_verifier_max_turns: ${{ needs.detect-gateway.outputs.agent_verifier_max_turns }}
+      agent_verifier_model: ${{ needs.detect-gateway.outputs.agent_verifier_model }}
+      allowlist: ${{ needs.detect-gateway.outputs.allowlist }}
+      auto_merge: ${{ (needs.detect-gateway.outputs.level == 'L3' && matrix.target.target_json.finalize == 'open_pr') && 'true' || 'false' }}
       base_branch: ${{ matrix.target.target_json.mode == 'pull_request' && matrix.target.target_json.base.branch || matrix.target.target_json.to.branch }}
       current_sha: ${{ matrix.target.target_json.from.ref }}
-      denylist: ${{ needs.detect.outputs.denylist }}
-      domain_persistence_script: ${{ needs.detect.outputs.domain_persistence_script }}
-      engine: ${{ needs.detect.outputs.engine }}
+      denylist: ${{ needs.detect-gateway.outputs.denylist }}
+      domain_persistence_script: ${{ needs.detect-gateway.outputs.domain_persistence_script }}
+      engine: ${{ needs.detect-gateway.outputs.engine }}
       finalize_enabled: true
-      infer_files_pattern: ${{ needs.detect.outputs.infer_files_pattern }}
-      level: ${{ needs.detect.outputs.level }}
-      loop_name: ${{ needs.detect.outputs.loop_name }}
-      no_changes_verdict: ${{ needs.detect.outputs.no_changes_verdict }}
+      infer_files_pattern: ${{ needs.detect-gateway.outputs.infer_files_pattern }}
+      level: ${{ needs.detect-gateway.outputs.level }}
+      loop_name: ${{ needs.detect-gateway.outputs.loop_name }}
+      no_changes_verdict: ${{ needs.detect-gateway.outputs.no_changes_verdict }}
       pr_body: |
-        ${{ needs.detect.outputs.pr_body }}
+        ${{ needs.detect-gateway.outputs.pr_body }}
 
-        - Level: ${{ needs.detect.outputs.level }}
+        - Level: ${{ needs.detect-gateway.outputs.level }}
         - Target: `${{ matrix.target.target_json.key }}`
-        - Skip reason: ${{ needs.detect.outputs.skip_reason }}
-      pr_title: ${{ needs.detect.outputs.pr_title }}
+        - Skip reason: ${{ needs.detect-gateway.outputs.skip_reason }}
+      pr_title: ${{ needs.detect-gateway.outputs.pr_title }}
       prompt_text: ${{ matrix.target.prompt }}
-      run_started_at: ${{ needs.detect.outputs.run_started_at }}
-      skill_name: ${{ needs.detect.outputs.skill_name }}
-      skip_reason: ${{ needs.detect.outputs.skip_reason }}
-      state_file: ${{ needs.detect.outputs.state_file }}
-      state_push_branch: ${{ needs.detect.outputs.state_push_branch }}
+      run_started_at: ${{ needs.detect-gateway.outputs.run_started_at }}
+      skill_name: ${{ needs.detect-gateway.outputs.skill_name }}
+      skip_reason: ${{ needs.detect-gateway.outputs.skip_reason }}
+      state_file: ${{ needs.detect-gateway.outputs.state_file }}
+      state_push_branch: ${{ needs.detect-gateway.outputs.state_push_branch }}
       target_json: ${{ toJson(matrix.target.target_json) }}
       verifier_context: ${{ matrix.target.verifier_context }}
     secrets:
@@ -354,11 +524,11 @@ jobs:
 
   record-skip:
     if: >-
-      needs.detect.result == 'success' &&
-      needs.detect.outputs.should_run == 'false' &&
-      (needs.detect.outputs.skip_reason == 'circuit_breaker' ||
-      needs.detect.outputs.skip_reason == 'budget')
-    needs: detect
+      needs.detect-gateway.result == 'success' &&
+      needs.detect-gateway.outputs.should_run == 'false' &&
+      (needs.detect-gateway.outputs.skip_reason == 'circuit_breaker' ||
+      needs.detect-gateway.outputs.skip_reason == 'budget')
+    needs: detect-gateway
     permissions:
       contents: write
       pull-requests: write
@@ -373,9 +543,9 @@ jobs:
       - name: Append Skip Run Log
         uses: y-miyazaki/config/.github/actions/loop-run-log@5a5408053a1d6bf357808590ae74f5ccb8eb31f4 # v1.8.9
         with:
-          base_branch: ${{ needs.detect.outputs.branch_state }}
-          loop_name: ${{ needs.detect.outputs.loop_name }}
+          base_branch: ${{ needs.detect-gateway.outputs.branch_state }}
+          loop_name: ${{ needs.detect-gateway.outputs.loop_name }}
           outcome: skipped
-          run_started_at: ${{ needs.detect.outputs.run_started_at }}
-          skip_reason: ${{ needs.detect.outputs.skip_reason }}
+          run_started_at: ${{ needs.detect-gateway.outputs.run_started_at }}
+          skip_reason: ${{ needs.detect-gateway.outputs.skip_reason }}
           token: ${{ secrets.GH_TOKEN_PUSH || github.token }}

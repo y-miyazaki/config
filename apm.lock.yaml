@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-12T18:55:02.303671+00:00'
+generated_at: '2026-07-13T04:56:16.736937+00:00'
 apm_version: 0.24.0
 dependencies:
 - repo_url: _local/common
@@ -375,7 +375,7 @@ dependencies:
     .agents/skills/agent-skills-review/references/category-patterns.md: sha256:12dceb902ad97ec22da513ba0b6ecd4341464c34fbddc7988f540a542b2b1bef
     .agents/skills/agent-skills-review/references/category-quality.md: sha256:7281e129309e7bce2996fe66ceffd6ccc1ef6b2af59d3caa5b726ca50f7188bb
     .agents/skills/agent-skills-review/references/category-structure.md: sha256:92025008e08b8e68d488e2b91ee3b2aba76cd6e7ab1424a26e8a4519590d93bb
-    .agents/skills/agent-skills-review/references/common-checklist.md: sha256:f4d88a69a3336037bc3b9ac6158a0bcde986df4e2bb657ac0c9a40d4ae4ce903
+    .agents/skills/agent-skills-review/references/common-checklist.md: sha256:816c77b68ea068a0909cd5a64975177e0be3357ee5ca09f812940e1fd435644e
     .agents/skills/agent-skills-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .agents/skills/agent-skills-review/references/common-troubleshooting.md: sha256:5dbb882894876af04f588e84dcf7e48147384d0bf7f2daa26750665c8a1ea90c
     .agents/skills/agent-skills-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
@@ -429,7 +429,7 @@ dependencies:
     .agents/skills/github-actions-review/references/category-performance.md: sha256:df93c1e0febf60fd7754265f309b8ec95155934a4a749088c96efddd838e73d0
     .agents/skills/github-actions-review/references/category-security.md: sha256:11f6e000eb2a248932e540d1ce682b178b31d51102355a2335466335ec1b9af7
     .agents/skills/github-actions-review/references/category-tool-integration.md: sha256:74d267baca919e90ede5ee647b0fb9957a807786f224928b69ebb59d56a6bc4f
-    .agents/skills/github-actions-review/references/common-checklist.md: sha256:8878deffa623c0e468561b5e6fbf5d1ea20b7b49f98dd60225c5db9732d2eb77
+    .agents/skills/github-actions-review/references/common-checklist.md: sha256:78133a3884faea71d7cd97433079d7af5ee789aee7b84a111430dda9c974f6ae
     .agents/skills/github-actions-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .agents/skills/github-actions-review/references/common-troubleshooting.md: sha256:2eb61d3296bd3adc85e4e250d74fec87f9037aa7ca762bd377b90cd9ff438272
     .agents/skills/github-actions-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
@@ -500,7 +500,7 @@ dependencies:
     .agents/skills/instructions-review/references/category-security.md: sha256:a0112bd6603b9a00e2082092496bcecbac0662b34d30bbde129c266b05bc5bf3
     .agents/skills/instructions-review/references/category-standards.md: sha256:121080ce10b86568a0bdb365dfdc551ff3c26ffe6a5644e90a670b4c0610ed1b
     .agents/skills/instructions-review/references/category-testing.md: sha256:bbc105c28a3288680b7d7393042159ee677f8919725b71ccc44ce1afa2ecad0c
-    .agents/skills/instructions-review/references/common-checklist.md: sha256:da2e05536cd4105dff392d63c2a3b7c41ce5a127d1abf77c3fa5ded942556880
+    .agents/skills/instructions-review/references/common-checklist.md: sha256:6a9b4ec1423b0a8a60e8a1493375fd89192210886c3838b67454e267b60f5706
     .agents/skills/instructions-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .agents/skills/instructions-review/references/common-troubleshooting.md: sha256:a3a1f701372770f158ba0bb3796f7e5e0b6997e7ab64c6258863c4103a617a43
     .agents/skills/instructions-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
@@ -530,9 +530,9 @@ dependencies:
     .agents/skills/markdown-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/markdown-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .agents/skills/markdown-validation/scripts/validate.sh: sha256:31dab7c058e759c83a6c182386b47f4add61e8df97132d26db974a0c4057d37e
-    .claude/rules/agent-skills.md: sha256:3027aa5b6365882109e6e791e5a6c38f882e66b4dc39d513819d6497644cf862
-    .claude/rules/github-actions-workflow.md: sha256:b1caa9941816278adc7d6dc0a5f3deb784252ab3fa58128539caed04f84b05d9
-    .claude/rules/instructions.md: sha256:2b0f187540fc953e51157b1871f8d6627e46edca1389545107408327ed1ebf66
+    .claude/rules/agent-skills.md: sha256:5527422bc712c18e9de6a93e7030fb8c8c96b436c947fb7d028a26e72bed4499
+    .claude/rules/github-actions-workflow.md: sha256:cf295db5b338cdc18987a02dc0d2de49f4d1ab5e67ae955d43e9c7eb8a506117
+    .claude/rules/instructions.md: sha256:24f5d273493a7d7b9ae840e505f24fb406cf1620c7669cc31b6eb626936c8347
     .claude/rules/markdown.md: sha256:b72107ef9ac2360df4d01bc21e505f7242328ec9bf6f5cc8697c76281ce0188b
     .claude/skills/agent-skills-review/SKILL.md: sha256:9c8a3bcf29d08a5f2542d2c33d6158eef05ee5e248262814b3a02ec25451e4f7
     .claude/skills/agent-skills-review/eval.yaml: sha256:dd6b3b2266e89d218bbaf9e258038ade3caae076c4d588fcc872c44687276235
@@ -545,7 +545,7 @@ dependencies:
     .claude/skills/agent-skills-review/references/category-patterns.md: sha256:12dceb902ad97ec22da513ba0b6ecd4341464c34fbddc7988f540a542b2b1bef
     .claude/skills/agent-skills-review/references/category-quality.md: sha256:7281e129309e7bce2996fe66ceffd6ccc1ef6b2af59d3caa5b726ca50f7188bb
     .claude/skills/agent-skills-review/references/category-structure.md: sha256:92025008e08b8e68d488e2b91ee3b2aba76cd6e7ab1424a26e8a4519590d93bb
-    .claude/skills/agent-skills-review/references/common-checklist.md: sha256:f4d88a69a3336037bc3b9ac6158a0bcde986df4e2bb657ac0c9a40d4ae4ce903
+    .claude/skills/agent-skills-review/references/common-checklist.md: sha256:816c77b68ea068a0909cd5a64975177e0be3357ee5ca09f812940e1fd435644e
     .claude/skills/agent-skills-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .claude/skills/agent-skills-review/references/common-troubleshooting.md: sha256:5dbb882894876af04f588e84dcf7e48147384d0bf7f2daa26750665c8a1ea90c
     .claude/skills/agent-skills-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
@@ -599,7 +599,7 @@ dependencies:
     .claude/skills/github-actions-review/references/category-performance.md: sha256:df93c1e0febf60fd7754265f309b8ec95155934a4a749088c96efddd838e73d0
     .claude/skills/github-actions-review/references/category-security.md: sha256:11f6e000eb2a248932e540d1ce682b178b31d51102355a2335466335ec1b9af7
     .claude/skills/github-actions-review/references/category-tool-integration.md: sha256:74d267baca919e90ede5ee647b0fb9957a807786f224928b69ebb59d56a6bc4f
-    .claude/skills/github-actions-review/references/common-checklist.md: sha256:8878deffa623c0e468561b5e6fbf5d1ea20b7b49f98dd60225c5db9732d2eb77
+    .claude/skills/github-actions-review/references/common-checklist.md: sha256:78133a3884faea71d7cd97433079d7af5ee789aee7b84a111430dda9c974f6ae
     .claude/skills/github-actions-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .claude/skills/github-actions-review/references/common-troubleshooting.md: sha256:2eb61d3296bd3adc85e4e250d74fec87f9037aa7ca762bd377b90cd9ff438272
     .claude/skills/github-actions-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
@@ -670,7 +670,7 @@ dependencies:
     .claude/skills/instructions-review/references/category-security.md: sha256:a0112bd6603b9a00e2082092496bcecbac0662b34d30bbde129c266b05bc5bf3
     .claude/skills/instructions-review/references/category-standards.md: sha256:121080ce10b86568a0bdb365dfdc551ff3c26ffe6a5644e90a670b4c0610ed1b
     .claude/skills/instructions-review/references/category-testing.md: sha256:bbc105c28a3288680b7d7393042159ee677f8919725b71ccc44ce1afa2ecad0c
-    .claude/skills/instructions-review/references/common-checklist.md: sha256:da2e05536cd4105dff392d63c2a3b7c41ce5a127d1abf77c3fa5ded942556880
+    .claude/skills/instructions-review/references/common-checklist.md: sha256:6a9b4ec1423b0a8a60e8a1493375fd89192210886c3838b67454e267b60f5706
     .claude/skills/instructions-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .claude/skills/instructions-review/references/common-troubleshooting.md: sha256:a3a1f701372770f158ba0bb3796f7e5e0b6997e7ab64c6258863c4103a617a43
     .claude/skills/instructions-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
@@ -700,9 +700,9 @@ dependencies:
     .claude/skills/markdown-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/markdown-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .claude/skills/markdown-validation/scripts/validate.sh: sha256:31dab7c058e759c83a6c182386b47f4add61e8df97132d26db974a0c4057d37e
-    .cursor/rules/agent-skills.mdc: sha256:9b022ebe5570f2a97a6c5c228f3b93f0a25a627ac6ae4fff8f7d30fdc1add021
-    .cursor/rules/github-actions-workflow.mdc: sha256:c69be69da1606b18ee7e968ca47da12cc711003864088ac581601821fa87c933
-    .cursor/rules/instructions.mdc: sha256:1642d9531874b3432cc85d6061c25c34cb4b771d1cf393be1d4ea2972fa330c1
+    .cursor/rules/agent-skills.mdc: sha256:5d93107098811387a70e6ed1a42aafd00910f17b5d538982e1261bfa3ef89509
+    .cursor/rules/github-actions-workflow.mdc: sha256:874dae7a451190d3d400db2a543b353b0eb10520bc7b32ee5964df094141a306
+    .cursor/rules/instructions.mdc: sha256:7d3a3c78a90255349c1e58bc75dab3c4d3effe163292854f86fa762fa7190796
     .cursor/rules/markdown.mdc: sha256:3139301c903f78704d8b6bea0efbd62ccda2e9cfd5c13d6632e8be56e26e14b3
   source: local
   local_path: ./.apm/packages/common
@@ -905,8 +905,8 @@ dependencies:
     .agents/skills/go-review/references/category-global.md: sha256:0f8d5d8fb3fa930bffb6d5c0488299d462b92468d252cac712efaa6a9b8c97df
     .agents/skills/go-review/references/category-performance.md: sha256:cbee5961c549732c58e9df80ae6bcd5f86411a004e449c634d91928e0f41d869
     .agents/skills/go-review/references/category-security.md: sha256:2c4e6c6ac7a72a6a210d2129e3f8311c82b222287c420ec876359e3643303326
-    .agents/skills/go-review/references/category-testing.md: sha256:91a4728b451e1e915c0ad987310f461537284927c3fcf5af0ac64c987823783e
-    .agents/skills/go-review/references/common-checklist.md: sha256:7fadd9f5077a0f10bda3ac0eda04114a22b035c2065fadbace00093e1019547b
+    .agents/skills/go-review/references/category-testing.md: sha256:f711330fadfb67f7f6c55237131c8787268ffc5a3fc85562566547456a078dcc
+    .agents/skills/go-review/references/common-checklist.md: sha256:b7765c20c3ece28c225c16f01c5dc9f73a5cec3dc2d8865a145f8904b5a20c2e
     .agents/skills/go-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .agents/skills/go-review/references/common-troubleshooting.md: sha256:503ec07ab77ab8567fe8b6eb2959fd9ef37e726993da5e5663efc883c1489242
     .agents/skills/go-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
@@ -938,7 +938,7 @@ dependencies:
     .agents/skills/go-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/go-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .agents/skills/go-validation/scripts/validate.sh: sha256:3f3f4ed70670d8246f5b8a6999213179969167aa05643d45b981226191b3559a
-    .claude/rules/go.md: sha256:c6f6a60a45cb8473e723a0d841b4cef7c97225a1659e0a25e33964f4c90e38d0
+    .claude/rules/go.md: sha256:e204e1d48645e31f58e9fdc01c53e5839eb607ffb65710cdcc74f7d49071e7de
     .claude/skills/go-review/SKILL.md: sha256:5d65e249a66d54b7409f77fd280f06317b3db78a0970bc97393dbfef0f11e59a
     .claude/skills/go-review/eval.yaml: sha256:c8e9abf238dd1a8628bc5610e25e62c36e547722cdf97f91c71781fb23cd2e4f
     .claude/skills/go-review/evals/tasks/go-review-basic.yaml: sha256:05308719ab7f564bcbd9f8dc66903e6da21dc703fa3094bc9ee71a555c59cf71
@@ -957,8 +957,8 @@ dependencies:
     .claude/skills/go-review/references/category-global.md: sha256:0f8d5d8fb3fa930bffb6d5c0488299d462b92468d252cac712efaa6a9b8c97df
     .claude/skills/go-review/references/category-performance.md: sha256:cbee5961c549732c58e9df80ae6bcd5f86411a004e449c634d91928e0f41d869
     .claude/skills/go-review/references/category-security.md: sha256:2c4e6c6ac7a72a6a210d2129e3f8311c82b222287c420ec876359e3643303326
-    .claude/skills/go-review/references/category-testing.md: sha256:91a4728b451e1e915c0ad987310f461537284927c3fcf5af0ac64c987823783e
-    .claude/skills/go-review/references/common-checklist.md: sha256:7fadd9f5077a0f10bda3ac0eda04114a22b035c2065fadbace00093e1019547b
+    .claude/skills/go-review/references/category-testing.md: sha256:f711330fadfb67f7f6c55237131c8787268ffc5a3fc85562566547456a078dcc
+    .claude/skills/go-review/references/common-checklist.md: sha256:b7765c20c3ece28c225c16f01c5dc9f73a5cec3dc2d8865a145f8904b5a20c2e
     .claude/skills/go-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .claude/skills/go-review/references/common-troubleshooting.md: sha256:503ec07ab77ab8567fe8b6eb2959fd9ef37e726993da5e5663efc883c1489242
     .claude/skills/go-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
@@ -990,7 +990,7 @@ dependencies:
     .claude/skills/go-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/go-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .claude/skills/go-validation/scripts/validate.sh: sha256:3f3f4ed70670d8246f5b8a6999213179969167aa05643d45b981226191b3559a
-    .cursor/rules/go.mdc: sha256:fd9fd956405b32fbfd30f63347b0cb1dfd72f08a9f81cdb610eee5c05cf12161
+    .cursor/rules/go.mdc: sha256:4f683c64a0d7722afb45b2a5aab237448eb17f252d8bf8485ef08ee96bc0fe97
   source: local
   local_path: ./.apm/packages/go
   declared_license: Apache-2.0
@@ -1282,6 +1282,7 @@ dependencies:
   - .agents/skills/shell-script-review/evals/tasks/shell-script-review-specific-check.yaml
   - .agents/skills/shell-script-review/evals/tasks/shell-script-review-structured-output.yaml
   - .agents/skills/shell-script-review/evals/tasks/shell-script-review-trigger-negative.yaml
+  - .agents/skills/shell-script-review/references/category-anti-patterns.md
   - .agents/skills/shell-script-review/references/category-code-standards.md
   - .agents/skills/shell-script-review/references/category-dependencies.md
   - .agents/skills/shell-script-review/references/category-documentation.md
@@ -1334,6 +1335,7 @@ dependencies:
   - .claude/skills/shell-script-review/evals/tasks/shell-script-review-specific-check.yaml
   - .claude/skills/shell-script-review/evals/tasks/shell-script-review-structured-output.yaml
   - .claude/skills/shell-script-review/evals/tasks/shell-script-review-trigger-negative.yaml
+  - .claude/skills/shell-script-review/references/category-anti-patterns.md
   - .claude/skills/shell-script-review/references/category-code-standards.md
   - .claude/skills/shell-script-review/references/category-dependencies.md
   - .claude/skills/shell-script-review/references/category-documentation.md
@@ -1386,17 +1388,18 @@ dependencies:
     .agents/skills/shell-script-review/evals/tasks/shell-script-review-specific-check.yaml: sha256:6254824ca48ab273b43fee24bbb7e98f6cb1d57292121892d09f20077c2a3640
     .agents/skills/shell-script-review/evals/tasks/shell-script-review-structured-output.yaml: sha256:bab2d054e4ae76c8625ff2a79d17ae9e44b21ddfc19868cce95a856ea8700fc8
     .agents/skills/shell-script-review/evals/tasks/shell-script-review-trigger-negative.yaml: sha256:fc840f3eef639edd0fed55a77cc64b490e4fe84e9db7f9458c099b8fd7d02c90
+    .agents/skills/shell-script-review/references/category-anti-patterns.md: sha256:dfc25b4c25073346519ace657fc6e7aa4c4df9fb717d4cd9f670a42d07a34ea7
     .agents/skills/shell-script-review/references/category-code-standards.md: sha256:9d35630b91eeac2f9749d7185a1edf8969aff5cadcc5e2f732aad243988023f2
     .agents/skills/shell-script-review/references/category-dependencies.md: sha256:56b4ffb6a4c1206d98c1ab96389aab1cfed8e653246fa6d9c4794630ae2abe2e
-    .agents/skills/shell-script-review/references/category-documentation.md: sha256:309d2e69967df2dec41b658574035174af91eb0fb620145f7813922e7a649892
+    .agents/skills/shell-script-review/references/category-documentation.md: sha256:1f9a47df813a49e7e12fe3dc2134a14c9bd2e7559b96b7bf0e212075381dca15
     .agents/skills/shell-script-review/references/category-error-handling.md: sha256:0f833238541ea3bbe77d3833a561449b8de681d3503db830131ef51f91b7c043
     .agents/skills/shell-script-review/references/category-function-design.md: sha256:fa7189704d81aa6450bfb1ec98c744a01b05bdfe40c8c5a0e39bb8ca400d2a77
     .agents/skills/shell-script-review/references/category-global.md: sha256:7073b952449ee34266f6b0e9fe1bd3ca7a96d7fbce64f77a36751f90991a6ebb
     .agents/skills/shell-script-review/references/category-logging.md: sha256:a130d527d875ebed099b087cf836e3cf5970b44da7cd5ca308878a40128baa4c
     .agents/skills/shell-script-review/references/category-performance.md: sha256:762ed81ee5b8dd9910f651676c74d68a2430901f68380a178ba2176b0b34abbe
     .agents/skills/shell-script-review/references/category-security.md: sha256:e5ca34532fbf5d11fcc1c791e83d71e670485c39e16f943ac1ddfb48fc885a16
-    .agents/skills/shell-script-review/references/category-testing.md: sha256:acc096fa8eaa90ace92c1a3c64e63c29f5cdae71eff066c40f8616f888370c2f
-    .agents/skills/shell-script-review/references/common-checklist.md: sha256:cd670f9c5e7e30b0ffcf5913b42232edad770041289066631ce6bda175f61a92
+    .agents/skills/shell-script-review/references/category-testing.md: sha256:790cd417f76142ec117f96e993b7115081b3d1852310b99ea8724188172ffc0e
+    .agents/skills/shell-script-review/references/common-checklist.md: sha256:e6428b768ed10898a4cacd233eb76daa70e3ef8c8015843a1de211820df03ea9
     .agents/skills/shell-script-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .agents/skills/shell-script-review/references/common-troubleshooting.md: sha256:fa4bc89706e6c30ea58d4b882ee85f001b0ae832618f98648ab465274a17305f
     .agents/skills/shell-script-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
@@ -1427,8 +1430,8 @@ dependencies:
     .agents/skills/shell-script-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/shell-script-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .agents/skills/shell-script-validation/scripts/validate.sh: sha256:ea2599b29b653f3009a6c6ac19e7a69b928799c95e8188a85a3284124a90ac65
-    .claude/rules/bats.md: sha256:2530ca68edcb3edcd3370f8f80edb6641ecdbd7c355c05309b58b2ac972c4908
-    .claude/rules/shell-script.md: sha256:db465ebc616f1a745f6c09971b8b73e06ad717fb749c88af8292502c0280e6c1
+    .claude/rules/bats.md: sha256:7c2c50c7f1d6c6bd05ee8d8dcaee4e7f8c7b3f47acd27af51cb7f2ce4e76d023
+    .claude/rules/shell-script.md: sha256:0ecbced87c54cb3f447ec6146dcb2b34b824bfb5755b09e0b6e3ef2ba17c72c2
     .claude/skills/shell-script-review/SKILL.md: sha256:6c7fd9a40d909c8f927d21f7865d48b095a168d0d010f9cfabd9327575da076f
     .claude/skills/shell-script-review/eval.yaml: sha256:787b28497c258dc8bb5850176f43f9956d26b979c19319a149e00dff0de1084a
     .claude/skills/shell-script-review/evals/tasks/shell-script-review-basic.yaml: sha256:49daaacf14929630cc344423578640e23f321d87d94c809052f82adce59890e0
@@ -1436,17 +1439,18 @@ dependencies:
     .claude/skills/shell-script-review/evals/tasks/shell-script-review-specific-check.yaml: sha256:6254824ca48ab273b43fee24bbb7e98f6cb1d57292121892d09f20077c2a3640
     .claude/skills/shell-script-review/evals/tasks/shell-script-review-structured-output.yaml: sha256:bab2d054e4ae76c8625ff2a79d17ae9e44b21ddfc19868cce95a856ea8700fc8
     .claude/skills/shell-script-review/evals/tasks/shell-script-review-trigger-negative.yaml: sha256:fc840f3eef639edd0fed55a77cc64b490e4fe84e9db7f9458c099b8fd7d02c90
+    .claude/skills/shell-script-review/references/category-anti-patterns.md: sha256:dfc25b4c25073346519ace657fc6e7aa4c4df9fb717d4cd9f670a42d07a34ea7
     .claude/skills/shell-script-review/references/category-code-standards.md: sha256:9d35630b91eeac2f9749d7185a1edf8969aff5cadcc5e2f732aad243988023f2
     .claude/skills/shell-script-review/references/category-dependencies.md: sha256:56b4ffb6a4c1206d98c1ab96389aab1cfed8e653246fa6d9c4794630ae2abe2e
-    .claude/skills/shell-script-review/references/category-documentation.md: sha256:309d2e69967df2dec41b658574035174af91eb0fb620145f7813922e7a649892
+    .claude/skills/shell-script-review/references/category-documentation.md: sha256:1f9a47df813a49e7e12fe3dc2134a14c9bd2e7559b96b7bf0e212075381dca15
     .claude/skills/shell-script-review/references/category-error-handling.md: sha256:0f833238541ea3bbe77d3833a561449b8de681d3503db830131ef51f91b7c043
     .claude/skills/shell-script-review/references/category-function-design.md: sha256:fa7189704d81aa6450bfb1ec98c744a01b05bdfe40c8c5a0e39bb8ca400d2a77
     .claude/skills/shell-script-review/references/category-global.md: sha256:7073b952449ee34266f6b0e9fe1bd3ca7a96d7fbce64f77a36751f90991a6ebb
     .claude/skills/shell-script-review/references/category-logging.md: sha256:a130d527d875ebed099b087cf836e3cf5970b44da7cd5ca308878a40128baa4c
     .claude/skills/shell-script-review/references/category-performance.md: sha256:762ed81ee5b8dd9910f651676c74d68a2430901f68380a178ba2176b0b34abbe
     .claude/skills/shell-script-review/references/category-security.md: sha256:e5ca34532fbf5d11fcc1c791e83d71e670485c39e16f943ac1ddfb48fc885a16
-    .claude/skills/shell-script-review/references/category-testing.md: sha256:acc096fa8eaa90ace92c1a3c64e63c29f5cdae71eff066c40f8616f888370c2f
-    .claude/skills/shell-script-review/references/common-checklist.md: sha256:cd670f9c5e7e30b0ffcf5913b42232edad770041289066631ce6bda175f61a92
+    .claude/skills/shell-script-review/references/category-testing.md: sha256:790cd417f76142ec117f96e993b7115081b3d1852310b99ea8724188172ffc0e
+    .claude/skills/shell-script-review/references/common-checklist.md: sha256:e6428b768ed10898a4cacd233eb76daa70e3ef8c8015843a1de211820df03ea9
     .claude/skills/shell-script-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .claude/skills/shell-script-review/references/common-troubleshooting.md: sha256:fa4bc89706e6c30ea58d4b882ee85f001b0ae832618f98648ab465274a17305f
     .claude/skills/shell-script-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
@@ -1477,8 +1481,8 @@ dependencies:
     .claude/skills/shell-script-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/shell-script-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .claude/skills/shell-script-validation/scripts/validate.sh: sha256:ea2599b29b653f3009a6c6ac19e7a69b928799c95e8188a85a3284124a90ac65
-    .cursor/rules/bats.mdc: sha256:88611a4061f8476ea4909a3d37a2fa21696583d9c9e98328150c75729cec6300
-    .cursor/rules/shell-script.mdc: sha256:44a5ca5ea51198d1f80887e2a83ce51de6c1afe27b32d2c44ff2c66a9997a1a3
+    .cursor/rules/bats.mdc: sha256:d4e76ea20dc86efbcb2fce1a75ee7d1b1245d65ac6bd822757ece106ebe6f8f8
+    .cursor/rules/shell-script.mdc: sha256:a2df38a1d3f29bd7a288d2f1a58d0e269094a27d0ba360bd95a48d7e42204983
   source: local
   local_path: ./.apm/packages/shell-script
   declared_license: Apache-2.0
@@ -1561,9 +1565,3 @@ mcp_configs:
     - mcp
     registry: false
     command: lean-ctx
-mcp_config_provenance:
-  codebase-memory-mcp: config-common
-  context7: config-common
-  fetch: config-common
-  github: config-common
-  lean-ctx: config-common

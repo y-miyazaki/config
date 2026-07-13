@@ -19,9 +19,10 @@ These contain agent instructions, skills, and editor settings assembled from `.a
 
 To modify agent instructions or skills:
 
-1. Edit the source at `.apm/packages/<name>/` (e.g. `.apm/packages/loop-docs-triage/.apm/skills/loop-docs-triage/SKILL.md`)
-2. Run `apm install --update` to regenerate the target directories
-3. Verify with `apm audit --ci`
+1. Read `.apm/AGENTS.md` for distributable-package authoring rules.
+2. Edit the source at `.apm/packages/<name>/` (e.g. `.apm/packages/loop-docs-triage/.apm/skills/loop-docs-triage/SKILL.md`)
+3. Run `apm install --update` to regenerate the target directories
+4. Verify with `apm audit --ci`
 
 ### Shared `scripts/lib/`
 

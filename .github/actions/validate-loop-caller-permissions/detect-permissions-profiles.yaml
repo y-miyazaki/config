@@ -1,0 +1,46 @@
+# Detect permissions profiles for ci-loop-caller reusable workflow.
+# Single source of truth for detect job permissions and caller workflow additions.
+# Registry: docs/explanation/loop-caller-reusable-design.md#detect-permissions-profile
+execute_baseline:
+  contents: write
+  copilot-requests: write
+  pull-requests: write
+
+profiles:
+  default:
+    description: Git-based detect only (changelog, docs-triage)
+    implemented: true
+    job: detect-default
+    job_permissions:
+      contents: read
+    caller_adds: {}
+
+  pr-scan:
+    description: PR head enumeration (not yet implemented in ci-loop-caller)
+    implemented: false
+    job: detect-pr-scan
+    job_permissions:
+      contents: read
+      pull-requests: read
+    caller_adds: {}
+
+  ci-monitor:
+    description: Failed CI scan via Actions API (not yet implemented in ci-loop-caller)
+    implemented: false
+    job: detect-ci-monitor
+    job_permissions:
+      actions: read
+      contents: read
+    caller_adds:
+      actions: read
+
+  full-github:
+    description: CI failure scan plus PR enumeration (ci-sweeper)
+    implemented: true
+    job: detect-full-github
+    job_permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    caller_adds:
+      actions: read

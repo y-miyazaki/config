@@ -28,6 +28,7 @@ my %code_mod_guidelines = (
     '- Use individual commands only for debugging.',
   ],
   'go-review' => [
+    '- When adding or changing behavior, add or update *_test.go files in the same change.',
     '- After changes, prioritize running validate.sh from go-validation skill.',
     '- Use individual commands (gofumpt/go vet/go test/golangci-lint) only for debugging.',
   ],
@@ -37,6 +38,7 @@ my %code_mod_guidelines = (
     '- Use individual commands only for debugging.',
   ],
   'shell-script-review' => [
+    '- When adding or changing shell scripts or sourced libraries, add or update matching Bats suites per bats.instructions.md in the same change.',
     '- After changes, prioritize running validate.sh from shell-script-validation skill.',
     '- Use individual commands only for debugging.',
   ],

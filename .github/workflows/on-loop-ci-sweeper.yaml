@@ -28,6 +28,7 @@ on:
   workflow_dispatch: {}
 
 permissions:
+  actions: read
   contents: write
   copilot-requests: write # zizmor: ignore[excessive-permissions]
   pull-requests: write
@@ -74,7 +75,7 @@ jobs:
       denylist: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
       detect_domain_env_json: >-
         {"CI_SWEEPER_EXCLUDED_WORKFLOWS":"on-loop-changelog,on-loop-ci-sweeper,on-loop-docs-triage,ci-loop-agent,ci-loop-caller","CI_SWEEPER_INCLUDED_WORKFLOWS":"","CI_SWEEPER_LEDGER_FILE":".loop/ci-sweeper-run-ledger.json","CI_SWEEPER_REJECT_MAX_RETRIES":"3","CI_SWEEPER_REJECT_RETRY_POLICY":"block"}
-      detect_needs_ci_api: true
+      detect_permissions_profile: full-github
       detect_script: .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh
       domain_persistence_script: .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh
       engine: cursor

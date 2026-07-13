@@ -210,9 +210,18 @@ Passed through `ci-loop-caller` to `ci-loop-agent.yaml` when non-empty.
 
 ## Detect permissions
 
-| Input                 | Type    | Description                                                                       | Default                         |
-| --------------------- | ------- | --------------------------------------------------------------------------------- | ------------------------------- |
-| `detect_needs_ci_api` | boolean | Documents CI API requirement (detect always grants `actions:read`, `checks:read`) | `false` (`true` for ci-sweeper) |
+Profile registry: `.github/actions/validate-loop-caller-permissions/detect-permissions-profiles.yaml`. Caller workflow `permissions` must include the execute baseline plus any profile `caller_adds`.
+
+| Input                        | Type   | Description                                                             | Default                                  |
+| ---------------------------- | ------ | ----------------------------------------------------------------------- | ---------------------------------------- |
+| `detect_permissions_profile` | string | Routes detect through the matching `detect-*` job; see profile registry | `default` (`full-github` for ci-sweeper) |
+
+### Profile summary
+
+| Profile       | Detect job           | Caller additions beyond execute baseline |
+| ------------- | -------------------- | ---------------------------------------- |
+| `default`     | `detect-default`     | (none)                                   |
+| `full-github` | `detect-full-github` | `actions: read`                          |
 
 ## Domain detect environment (`detect_domain_env_json`)
 

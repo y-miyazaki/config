@@ -65,7 +65,7 @@ description: "AI Assistant Instructions for Writing Instruction Files"
 - GUIDE-01 (SHOULD): Code Modification Guidelines
   - Check: Modification procedures and validation methods are clearly documented
 - GUIDE-02 (SHOULD): Tool Usage
-  - Check: Are tool invocation patterns (CLI, linter, formatter) documented where the instruction scope involves tool interaction?
+  - Check: MCP Tool usage examples are documented
 - GUIDE-03 (SHOULD): Anti-Patterns
   - Check: Common anti-patterns and pitfalls are documented
 - GUIDE-04 (SHOULD): No ID-less Bullet Rules in Guidelines

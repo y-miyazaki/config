@@ -32,7 +32,7 @@ The architecture separates:
 - `.apm/packages/terraform-aws/`: Terraform + AWS provider MCP integration (1 MCP server)
 - `.apm/packages/go/`: Go-focused instructions and skills (1 instruction, 2 skills)
 - `.apm/packages/go-hooks-*`: target-specific Go hooks (1 hook per target: Claude, Copilot, Cursor)
-- `.apm/packages/shell-script/`: shell-focused instructions and skills (1 instruction, 2 skills)
+- `.apm/packages/shell-script/`: shell-focused instructions and skills (2 instructions, 2 skills)
 - `.apm/packages/shell-script-hooks-*`: target-specific shell script hooks (2 hooks per target: Claude, Copilot, Cursor)
 
 Each package can be consumed independently through APM path-based dependencies.

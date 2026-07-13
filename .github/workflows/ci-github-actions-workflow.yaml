@@ -82,6 +82,11 @@ jobs:
         run: ghalint run
         continue-on-error: true
 
+      - name: Validate Loop Caller Permissions
+        uses: y-miyazaki/config/.github/actions/validate-loop-caller-permissions@5a5408053a1d6bf357808590ae74f5ccb8eb31f4 # v1.8.9
+        with:
+          verbose: "true"
+
       # Static analysis tool for GitHub Actions security
       - name: Exec zizmor
         uses: zizmorcore/zizmor-action@192e21d79ab29983730a13d1382995c2307fbcaa # v0.5.7

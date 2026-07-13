@@ -251,11 +251,20 @@ Full mapping table: [Loop Caller Inputs Reference — `loop-detect` mapping](wor
 
 #### Detect permissions profile
 
-`detect` job permissions are **declared on the detect job** inside `ci-loop-caller` (not inherited from caller workflow-level `permissions`). Implementation grants `actions: read` and `checks: read` on every detect run (simpler than conditional expressions; actionlint rejects dynamic permission values).
+Detect job permissions are **profile-based** and declared per job inside `ci-loop-caller`. GitHub Actions cannot use dynamic `permissions` expressions, so each profile maps to a dedicated `detect-*` job selected by `inputs.detect_permissions_profile`. The profile registry (`.github/actions/validate-loop-caller-permissions/detect-permissions-profiles.yaml`) is the single source of truth for job permissions and caller workflow additions.
 
-| Input                 | Default | Effect                                                      |
-| --------------------- | ------- | ----------------------------------------------------------- |
-| `detect_needs_ci_api` | `false` | Caller documents CI API requirement; ci-sweeper sets `true` |
+| Profile       | Detect job           | Job permissions                                          | Callers                |
+| ------------- | -------------------- | -------------------------------------------------------- | ---------------------- |
+| `default`     | `detect-default`     | `contents: read`                                         | changelog, docs-triage |
+| `full-github` | `detect-full-github` | `actions: read`, `contents: read`, `pull-requests: read` | ci-sweeper             |
+
+Caller workflow `permissions` = **execute baseline** (`contents: write`, `pull-requests: write`, `copilot-requests: write`) + **profile `caller_adds`**. Reusable workflows cannot escalate beyond the caller grant.
+
+| Input                        | Default   | Effect                                            |
+| ---------------------------- | --------- | ------------------------------------------------- |
+| `detect_permissions_profile` | `default` | Routes detect through the matching `detect-*` job |
+
+CI validation: `validate-loop-caller-permissions` composite action (run in `ci-github-actions-workflow`; local wrapper: `scripts/ci/validate_loop_caller_permissions.sh`).
 
 ### Secrets
 
@@ -312,7 +321,7 @@ New domain env keys go into `detect_domain_env_json` without editing reusable jo
 
 - [x] Refactor `on-loop-changelog.yaml` to single `loop` job + `with:`.
 - [x] Refactor `on-loop-docs-triage.yaml`.
-- [x] Refactor `on-loop-ci-sweeper.yaml` (include `detect_needs_ci_api`, execute-only inputs).
+- [x] Refactor `on-loop-ci-sweeper.yaml` (include `detect_permissions_profile`, execute-only inputs).
 - [x] Update `.github/workflows/example/on-loop-*.yaml` mirrors.
 - [x] Remove workflow-level `env:` from all loop callers.
 
@@ -330,6 +339,7 @@ New domain env keys go into `detect_domain_env_json` without editing reusable jo
 - [x] `actionlint .github/workflows/ci-loop-caller.yaml .github/workflows/on-loop-*.yaml`
 - [x] `ghalint run`
 - [x] `zizmor .github/workflows/`
+- [x] `scripts/ci/validate_loop_caller_permissions.sh`
 - [ ] `workflow_dispatch` smoke per loop (optional in implementation PR).
 
 ## Risk Register

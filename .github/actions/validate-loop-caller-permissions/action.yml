@@ -1,0 +1,23 @@
+name: validate-loop-caller-permissions
+description: "Validate on-loop-* caller workflow permissions against ci-loop-caller detect profile registry."
+
+inputs:
+  verbose:
+    default: "false"
+    description: "Print per-caller OK lines"
+    required: false
+  workflows_dir:
+    default: ".github/workflows"
+    description: "Directory to scan for on-loop-*.yaml callers (relative to repository root)"
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Validate Loop Caller Permissions
+      shell: bash
+      env:
+        REGISTRY_FILE: ${{ github.action_path }}/detect-permissions-profiles.yaml
+        VERBOSE: ${{ inputs.verbose }}
+        WORKFLOWS_DIR: ${{ github.workspace }}/${{ inputs.workflows_dir }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/validate.sh"

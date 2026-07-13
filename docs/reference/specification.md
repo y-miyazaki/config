@@ -115,7 +115,7 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 ├── shell-script/    # Shell script development
 │   ├── apm.yml      # 0 MCP servers
 │   └── .apm/
-│       ├── instructions/  # 1 instruction file
+│       ├── instructions/  # 2 instruction files
 │       └── skills/        # 2 skills
 ├── shell-script-hooks-claude/  # Shell script hooks for Claude Code (2 hooks)
 ├── shell-script-hooks-copilot/ # Shell script hooks for GitHub Copilot CLI (2 hooks)
@@ -244,6 +244,7 @@ Instructions are defined under each package's `.apm/instructions/` directory.
 | go           | go                      | `**/*.go`                            |
 | terraform    | terraform               | `**/*.tf`, `**/*.tfvars`, `**/*.hcl` |
 | shell-script | shell-script            | `**/*.sh`                            |
+| shell-script | bats                    | `**/*.bats`                          |
 
 ### Scope
 
