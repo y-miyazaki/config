@@ -176,7 +176,7 @@ function run_bounded_loop {
         export PROMPT MAX_TURNS MODEL WORKING_DIRECTORY
 
         echo "Running implementer agent (fresh session)..."
-        if ! run_agent "true" 2>&1 | tee "${attempt_dir}/agent-output.txt"; then
+        if ! run_agent_capture "${attempt_dir}/agent-output.txt" "true"; then
             echo "::warning::Implementer agent exited non-zero on attempt ${ATTEMPT}"
         fi
 

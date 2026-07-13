@@ -9,6 +9,7 @@
 #
 # Design Rules:
 # - run_agent maps ENGINE to the correct CLI and token env var
+# - run_agent_capture avoids pipe subshells so USAGE_* globals persist
 # - Implementer sessions may write; verifier sessions are read-only
 #######################################
 
@@ -62,6 +63,35 @@ function commit_worktree_if_needed {
         git commit -m "${msg}"
         return 0
     )
+}
+
+#######################################
+# run_agent_capture: Run agent and capture output without a pipe subshell
+#
+# Description:
+#   Writes stdout/stderr to output_file, mirrors the same content to stdout for
+#   CI logs, and returns the agent exit code. Avoids `cmd | tee` so USAGE_*
+#   globals updated inside run_agent remain visible to the caller.
+#
+# Arguments:
+#   $1 - Output file path
+#   $2 - allow_writes flag (true|false), forwarded to run_agent
+#
+# Global Variables:
+#   USAGE_* - Preserved from run_agent / run_cursor_agent_with_usage
+#
+# Returns:
+#   Engine CLI exit code
+#
+#######################################
+function run_agent_capture {
+    local output_file="${1:?output_file required}"
+    local allow_writes="${2:-true}"
+    local rc=0
+
+    run_agent "${allow_writes}" > "${output_file}" 2>&1 || rc=$?
+    cat "${output_file}"
+    return "${rc}"
 }
 
 #######################################

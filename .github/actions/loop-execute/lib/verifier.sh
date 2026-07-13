@@ -289,7 +289,7 @@ function run_verify {
     MODEL="${AGENT_VERIFIER_MODEL}"
     WORKING_DIRECTORY="${WORKTREE_PATH}"
     export PROMPT MAX_TURNS MODEL WORKING_DIRECTORY
-    if ! run_agent "false" 2>&1 | tee "${output_file}"; then
+    if ! run_agent_capture "${output_file}" "false"; then
         echo "::warning::Verifier agent exited non-zero"
     fi
 
