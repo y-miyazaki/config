@@ -1,7 +1,12 @@
 {
-  "last_sha": "1ea80c3201009adaf2f907a34c61ded76aaa70a9",
-  "last_run": "2026-07-10T06:04:51Z",
-  "outcome": "pr-created",
-  "consecutive_failures": 0,
-  "open_rejections": []
+  "targets": {
+    "integration:main": {
+      "last_sha": "732e63a2937d807787b5316c684650b7667080db",
+      "last_run": "2026-07-13T10:15:47Z",
+      "outcome": "pr-created",
+      "consecutive_failures": 0,
+      "open_rejections": [],
+      "last_reject_reason": "Single docs-only fix correctly updates stale markdownlint instructions path after .github/instructions migration to .apm/packages/*/.apm/instructions/"
+    }
+  }
 }
