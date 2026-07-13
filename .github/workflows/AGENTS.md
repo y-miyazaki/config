@@ -139,6 +139,36 @@ uses: y-miyazaki/config/.github/actions/loop-state-promote@<full-sha> # vX.Y.Z
 - File names: `ci-*` (CI), `cd-*` (CD), `on-*` (event-triggered callers).
 - Reusable workflows use `workflow_call`; callers pass configuration via `with:` (avoid caller-level `env:` blocks for loop callers).
 
+### Secrets and credentials (GitHub Actions constraints)
+
+Official docs: [Reuse workflows — inputs and secrets](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows#using-inputs-and-secrets-in-a-reusable-workflow).
+
+| Mechanism          | Reusable workflow (`workflow_call`)                                                                                                         | Composite action                                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Non-secret config  | `with:` → `inputs.*`                                                                                                                        | `with:` → `inputs.*`                                                      |
+| Credentials        | **`secrets:` only** → `secrets.*` (declare under `on.workflow_call.secrets`)                                                                | `with:` (actions have no `secrets:` pass-through; treat as string inputs) |
+| `secrets: inherit` | **Do not use** — forces callee secret _names_ to match the caller repo/org names; blocks remapping (e.g. `MAINTENANCE_BOT_*` → `BOT_APP_*`) | N/A                                                                       |
+
+**Reusable workflows — required pattern:**
+
+1. Declare credentials under `on.workflow_call.secrets` with **stable callee names** (e.g. `BOT_APP_CLIENT_ID`, `BOT_APP_PRIVATE_KEY`, `AGENT_TOKEN`, `GH_TOKEN_PUSH`).
+2. Callers pass **explicit** `secrets:` maps so local names can differ:
+
+   ```yaml
+   secrets:
+     AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+     BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
+     BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
+   ```
+
+3. Optional `with: environment:` — jobs inside the reusable that need environment-scoped secrets set `environment: ${{ inputs.environment }}`. Callers **cannot** set `environment:` on a job that `uses:` a reusable (platform restriction). Environment secrets are resolved **inside** the reusable job, not by the caller.
+4. Do **not** pass tokens/app keys as `with:` string inputs on reusable workflows — that bypasses the `secrets` channel and is not the supported contract.
+5. Do **not** use `secrets: inherit`.
+
+**Composite actions:** pass tokens via `with:` (e.g. `token: ${{ secrets.BOT_APP_PRIVATE_KEY }}` from a job that already resolved secrets).
+
+**Environment-secret caveat (docs):** if a reusable job sets `environment:`, environment secrets with the same names take precedence over secrets passed from the caller. Callers that rely on remapped repository secrets should leave `environment` empty unless the environment defines the expected names.
+
 ## Anti-Patterns
 
 | Anti-pattern                                                                            | Why                                                  |
@@ -148,6 +178,8 @@ uses: y-miyazaki/config/.github/actions/loop-state-promote@<full-sha> # vX.Y.Z
 | Nested `uses:` between config composite actions                                         | Transitive pin drift; use `lib/run.sh` sibling paths |
 | `bash "${GITHUB_WORKSPACE}/.github/actions/.../lib/run.sh"` in workflows                | Consumers lack that path; bypasses pin boundary      |
 | Hardcoded consumer paths (`scripts/`, `.agents/`, skill paths) inside reusables/actions | Breaks portability rule                              |
+| `secrets: inherit` on reusable callers                                                  | Locks callee secret names; prevents remapping        |
+| Passing credentials via `with:` on reusable workflows                                   | Unsupported channel; use `secrets:`                  |
 
 ## Verification
 

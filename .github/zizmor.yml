@@ -27,10 +27,3 @@ rules:
   cache-poisoning:
     ignore:
       - cd-go-releaser.yaml
-
-  # Ignore unpinned-tools for trivy-action
-  # Trivy version is pinned via workflow input (trivy_version) with a default value
-  unpinned-tools:
-    ignore:
-      - ci-aws-terraform.yaml
-      - ci-go.yaml

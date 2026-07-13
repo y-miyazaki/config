@@ -3,7 +3,7 @@
 # Design doc: docs/explanation/workflows/loop-docs-triage-workflow-design.md
 # Caller inputs: docs/explanation/workflows/loop-caller-inputs-reference.md
 # Requires repository secret: AGENT_TOKEN (engine API key; see engine input).
-# Requires environment secrets on `default`: MAINTENANCE_BOT_APP_CLIENT_ID, MAINTENANCE_BOT_APP_PRIVATE_KEY.
+# Pass credentials via secrets: (callee BOT_APP_* / AGENT_TOKEN; remap MAINTENANCE_BOT_*). Optional with.environment for env-scoped secrets inside the reusable.
 name: on-loop-docs-triage
 
 on:
@@ -12,7 +12,14 @@ on:
   workflow_call:
     secrets:
       AGENT_TOKEN:
+        description: "Engine API key (mapped per engine input)"
         required: true
+      MAINTENANCE_BOT_APP_CLIENT_ID:
+        description: "GitHub App client ID; remapped to BOT_APP_CLIENT_ID on ci-loop-caller"
+        required: false
+      MAINTENANCE_BOT_APP_PRIVATE_KEY:
+        description: "GitHub App private key; remapped to BOT_APP_PRIVATE_KEY on ci-loop-caller"
+        required: false
   workflow_dispatch: {}
 
 permissions:
@@ -83,3 +90,5 @@ jobs:
       skill_name: loop-docs-triage
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+      BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
+      BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}

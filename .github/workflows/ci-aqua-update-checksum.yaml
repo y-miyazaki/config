@@ -16,11 +16,11 @@ on:
         required: true
         type: string
     secrets:
-      BOT_APP_PRIVATE_KEY:
-        description: "GitHub App private key for auto commit"
-        required: true
       BOT_APP_CLIENT_ID:
         description: "GitHub App Client for auto commit"
+        required: true
+      BOT_APP_PRIVATE_KEY:
+        description: "GitHub App private key for auto commit"
         required: true
 
 permissions: {}

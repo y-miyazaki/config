@@ -336,7 +336,7 @@ jobs:
       agent_verifier_criteria: |
         ## Criteria for APPROVE
         ...
-    secrets: inherit
+    explicit secrets: map
 ```
 
 Copy `on-loop-changelog.yaml` as a thin caller template (`with:` on `ci-loop-caller.yaml`).

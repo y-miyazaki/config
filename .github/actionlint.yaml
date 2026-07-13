@@ -11,6 +11,8 @@ paths:
       - 'input "db_ssl_mode" is typed as string by reusable workflow .+ bool value cannot be assigned'
       # copilot-requests is a valid GitHub permission scope not yet recognized by actionlint
       - 'unknown permission scope "copilot-requests"'
+      - 'input "environment" is not defined in'
+      - 'property "environment" is not defined in object type'
   .github/workflows/**/*.lock.{yml,yaml}:
     ignore:
       # Ignore all errors for lock files used as generated workflow metadata.

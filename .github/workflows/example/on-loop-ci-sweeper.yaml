@@ -24,7 +24,14 @@ on:
   workflow_call:
     secrets:
       AGENT_TOKEN:
+        description: "Engine API key (mapped per engine input)"
         required: true
+      MAINTENANCE_BOT_APP_CLIENT_ID:
+        description: "GitHub App client ID; remapped to BOT_APP_CLIENT_ID on ci-loop-caller"
+        required: false
+      MAINTENANCE_BOT_APP_PRIVATE_KEY:
+        description: "GitHub App private key; remapped to BOT_APP_PRIVATE_KEY on ci-loop-caller"
+        required: false
   workflow_dispatch: {}
 
 permissions:
@@ -104,3 +111,5 @@ jobs:
       skill_name: loop-ci-sweeper
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+      BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
+      BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}

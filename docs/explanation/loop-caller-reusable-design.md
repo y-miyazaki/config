@@ -39,7 +39,7 @@ on-loop-changelog.yaml          on-loop-ci-sweeper.yaml
     loop:                             loop:
       uses: ci-loop-caller.yaml         uses: ci-loop-caller.yaml
       with: { loop-specific }           with: { loop-specific }
-      secrets: inherit                  secrets: inherit
+      explicit secrets: map                  explicit secrets: map
                     \                   /
                      v                 v
               ci-loop-caller.yaml  (NEW, workflow_call)
@@ -132,11 +132,9 @@ jobs:
         Update the target changelog file under `## [Unreleased]` ...
       pull_requests: false
       skill_name: loop-changelog
-    secrets:
-      AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
 ```
 
-**No workflow-level `env:` block.**
+**No workflow-level `env:` block.** Callers pass `agent_token` (and optional bot credentials) via `with:`.
 
 Cron and `workflow_dispatch` runs have no `github.event.inputs` — fixed literals in `with:` are correct (same as `on-cd-mkdocs.yaml` `pip_packages`).
 
@@ -262,17 +260,16 @@ Caller workflow `permissions` = **execute baseline** (`contents: write`, `pull-r
 
 CI validation: `validate-loop-caller-permissions` composite action (run in `ci-github-actions-workflow`; local wrapper: `scripts/ci/validate_loop_caller_permissions.sh`).
 
-### Secrets
+### Credentials (via `with:`)
 
-```yaml
-secrets:
-  AGENT_TOKEN:
-    required: true
-  GH_TOKEN_PUSH:
-    required: false
-```
+| Input                 | Required | Role                                                                          |
+| --------------------- | -------- | ----------------------------------------------------------------------------- |
+| `agent_token`         | yes      | Engine API key. Mapped internally per `engine` input.                         |
+| `gh_token_push`       | no       | Git push / PR creation for finalize. Defaults to `github.token` when omitted. |
+| `bot_app_client_id`   | no       | GitHub App client ID for ruleset-bypass `.loop/*` pushes.                     |
+| `bot_app_private_key` | no       | GitHub App private key for maintenance bot token.                             |
 
-Caller passes `secrets: inherit` or explicit mapping. `GH_TOKEN_PUSH` defaults to `github.token` inside reusable when omitted.
+Caller maps repository secrets via explicit `secrets:` (e.g. `BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}`). `GH_TOKEN_PUSH` defaults to `github.token` inside the reusable when omitted.
 
 ### Nesting
 

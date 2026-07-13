@@ -1,6 +1,6 @@
 # Platform workflow: promote pending loop state when a fix PR closes.
 # Design: docs/explanation/multi-branch-loops-design.md#state-delivery-philosophy
-# Requires environment secrets on `default`: MAINTENANCE_BOT_APP_CLIENT_ID, MAINTENANCE_BOT_APP_PRIVATE_KEY.
+# Requires MAINTENANCE_BOT_APP_CLIENT_ID and MAINTENANCE_BOT_APP_PRIVATE_KEY (environment: default).
 name: on-loop-state-promote
 
 on:

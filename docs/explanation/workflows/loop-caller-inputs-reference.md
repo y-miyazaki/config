@@ -23,12 +23,32 @@ on-loop-*.yaml (with:)
       record-skip → loop-run-log
 ```
 
-## Secrets
+## Credentials (via `secrets:`)
 
-| Secret          | Required | Role                                                                          |
-| --------------- | -------- | ----------------------------------------------------------------------------- |
-| `AGENT_TOKEN`   | yes      | Engine API key. Mapped internally per `engine` input.                         |
-| `GH_TOKEN_PUSH` | no       | Git push / PR creation for finalize. Defaults to `github.token` when omitted. |
+Per [GitHub reusable workflow docs](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows#using-inputs-and-secrets-in-a-reusable-workflow), credentials use the **`secrets:`** keyword — not `with:`. Do **not** use `secrets: inherit` (locks callee secret names to the caller's names).
+
+| Secret (callee)       | Required | Role                                                                          |
+| --------------------- | -------- | ----------------------------------------------------------------------------- |
+| `AGENT_TOKEN`         | yes      | Engine API key. Mapped internally per `engine` input.                         |
+| `GH_TOKEN_PUSH`       | no       | Git push / PR creation for finalize. Defaults to `github.token` when omitted. |
+| `BOT_APP_CLIENT_ID`   | no       | GitHub App client ID for ruleset-bypass `.loop/*` pushes.                     |
+| `BOT_APP_PRIVATE_KEY` | no       | GitHub App private key for maintenance bot token.                             |
+
+Callers remap local names explicitly. Optional `with: environment:` lets reusable jobs bind an environment for environment-scoped secrets named like the callee expects (`BOT_APP_*`). Callers cannot set `environment:` on a job that `uses:` a reusable.
+
+Example caller mapping:
+
+```yaml
+jobs:
+  loop:
+    uses: org/repo/.github/workflows/ci-loop-caller.yaml@<sha>
+    secrets:
+      AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+      BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
+      BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
+    with:
+      environment: default
+```
 
 ## Branch configuration
 
