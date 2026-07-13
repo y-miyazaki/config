@@ -319,6 +319,54 @@ function is_excluded_workflow {
 }
 
 #######################################
+# is_definition_error_conclusion: Whether the run failed before jobs started
+#
+# Arguments:
+#   $1 - Workflow run conclusion
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   0 when conclusion is a workflow-definition class failure
+#
+# Usage:
+#   if is_definition_error_conclusion "${conclusion}"; then ...
+#
+#######################################
+function is_definition_error_conclusion {
+    local conclusion="$1"
+    [[ ${conclusion} == "startup_failure" ]]
+}
+
+#######################################
+# should_exclude_workflow_run: Apply exclusion unless definition-error conclusion
+#
+# Arguments:
+#   $1 - Workflow display name
+#   $2 - Workflow run conclusion
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   0 when the run should be excluded, 1 otherwise
+#
+# Usage:
+#   if should_exclude_workflow_run "${name}" "${conclusion}"; then ...
+#
+#######################################
+function should_exclude_workflow_run {
+    local workflow_name="$1"
+    local run_conclusion="$2"
+
+    if is_definition_error_conclusion "${run_conclusion}"; then
+        return 1
+    fi
+    is_excluded_workflow "${workflow_name}"
+}
+
+#######################################
 # is_included_workflow: Check whether a workflow name passes the allowlist
 #
 # Arguments:
@@ -631,6 +679,34 @@ function fetch_log_excerpt {
 }
 
 #######################################
+# fetch_definition_error_excerpt: Build context for startup_failure runs
+#
+# Arguments:
+#   $1 - Workflow run ID
+#   $2 - Workflow run conclusion
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Log excerpt on stdout
+#
+# Usage:
+#   fetch_definition_error_excerpt "${run_id}" "${conclusion}"
+#
+#######################################
+function fetch_definition_error_excerpt {
+    local run_id="$1"
+    local conclusion="$2"
+    local detail
+    detail="$(gh run view "${run_id}" --json event,workflowName,displayTitle,conclusion \
+        --jq '"workflow=" + .workflowName + " conclusion=" + .conclusion + " event=" + .event + " title=" + .displayTitle' \
+        2> /dev/null || true)"
+    printf 'Workflow run failed before jobs started (%s). %s Inspect caller/callee workflow permissions and reusable workflow references.' \
+        "${conclusion}" "${detail}"
+}
+
+#######################################
 # failure_object_json: Build one failure object as JSON
 #
 # Arguments:
@@ -762,6 +838,7 @@ function append_ignored {
 #
 # Arguments:
 #   $1-$5 - workflow_name, run_id, head_sha, head_branch, run_url
+#   $6    - Workflow run conclusion (optional; fetched when empty)
 #
 # Global Variables:
 #   None
@@ -779,9 +856,15 @@ function collect_failures_for_run {
     local head_sha="$3"
     local head_branch="$4"
     local run_url="$5"
+    local run_conclusion="${6:-}"
     local ledger_outcome
 
-    if is_excluded_workflow "${workflow_name}" || ! is_included_workflow "${workflow_name}"; then
+    if [[ -z ${run_conclusion} ]]; then
+        run_conclusion="$(gh run view "${run_id}" --json conclusion --jq -r '.conclusion // empty' 2> /dev/null || true)"
+    fi
+
+    if should_exclude_workflow_run "${workflow_name}" "${run_conclusion}" \
+        || ! is_included_workflow "${workflow_name}"; then
         append_ignored "${workflow_name}" "${run_id}" "${head_branch}" "-" "-" \
             "excluded workflow filter"
         return 0
@@ -801,6 +884,14 @@ function collect_failures_for_run {
     fi
 
     local job_line job_name log_excerpt failure_type
+    if is_definition_error_conclusion "${run_conclusion}" \
+        && ! fetch_failed_jobs "${run_id}" | grep -q .; then
+        log_excerpt="$(fetch_definition_error_excerpt "${run_id}" "${run_conclusion}")"
+        append_failure "${workflow_name}" "${run_id}" "${head_sha}" "${head_branch}" "${run_url}" \
+            "workflow" "regression" "${log_excerpt}"
+        return 0
+    fi
+
     if ! fetch_failed_jobs "${run_id}" | grep -q .; then
         append_failure "${workflow_name}" "${run_id}" "${head_sha}" "${head_branch}" "${run_url}" \
             "unknown" "regression" "Failed workflow run with no failed job metadata."
@@ -864,10 +955,15 @@ function collect_from_workflow_run_event {
 #
 #######################################
 function collect_recent_failures {
-    local runs_json run_line run_id workflow_name head_sha head_branch run_url scan_branch
+    local runs_json run_line run_id workflow_name head_sha head_branch run_url run_conclusion scan_branch
+    local failure_runs startup_runs
     scan_branch="$(scan_branch_name)"
-    runs_json="$(gh run list --branch "${scan_branch}" --status failure --limit "${SCAN_BRANCH_RUN_LIMIT}" --json \
+    failure_runs="$(gh run list --branch "${scan_branch}" --status failure --limit "${SCAN_BRANCH_RUN_LIMIT}" --json \
         databaseId,headSha,headBranch,url,workflowName,conclusion 2> /dev/null || echo '[]')"
+    startup_runs="$(gh run list --branch "${scan_branch}" --limit "${SCAN_BRANCH_RUN_LIMIT}" --json \
+        databaseId,headSha,headBranch,url,workflowName,conclusion 2> /dev/null \
+        | jq '[.[] | select(.conclusion == "startup_failure")]' 2> /dev/null || echo '[]')"
+    runs_json="$(jq -s 'add | unique_by(.databaseId)' <<< "$(printf '%s\n%s' "${failure_runs}" "${startup_runs}")")"
 
     while IFS= read -r run_line; do
         [[ -z ${run_line} ]] && continue
@@ -876,7 +972,9 @@ function collect_recent_failures {
         head_sha="$(jq -r '.headSha' <<< "${run_line}")"
         head_branch="$(jq -r '.headBranch' <<< "${run_line}")"
         run_url="$(jq -r '.url' <<< "${run_line}")"
-        collect_failures_for_run "${workflow_name}" "${run_id}" "${head_sha}" "${head_branch}" "${run_url}"
+        run_conclusion="$(jq -r '.conclusion' <<< "${run_line}")"
+        collect_failures_for_run "${workflow_name}" "${run_id}" "${head_sha}" "${head_branch}" \
+            "${run_url}" "${run_conclusion}"
     done < <(jq -c '.[]' <<< "${runs_json}")
 }
 

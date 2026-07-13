@@ -210,18 +210,14 @@ Passed through `ci-loop-caller` to `ci-loop-agent.yaml` when non-empty.
 
 ## Detect permissions
 
-Profile registry: `.github/actions/validate-loop-caller-permissions/detect-permissions-profiles.yaml`. Caller workflow `permissions` must include the execute baseline plus any profile `caller_adds`.
-
-| Input                        | Type   | Description                                                             | Default                                  |
-| ---------------------------- | ------ | ----------------------------------------------------------------------- | ---------------------------------------- |
-| `detect_permissions_profile` | string | Routes detect through the matching `detect-*` job; see profile registry | `default` (`full-github` for ci-sweeper) |
+Profile registry: `.github/actions/validate-loop-caller-permissions/detect-permissions-profiles.yaml`. Caller workflow `permissions` must include the execute baseline plus any profile `caller_adds`. Select the profile by which reusable workflow the thin caller `uses:` (`ci-loop-caller.yaml` for default; `ci-loop-caller-full-github.yaml` for full-github).
 
 ### Profile summary
 
-| Profile       | Detect job           | Caller additions beyond execute baseline |
-| ------------- | -------------------- | ---------------------------------------- |
-| `default`     | `detect-default`     | (none)                                   |
-| `full-github` | `detect-full-github` | `actions: read`                          |
+| Profile       | Reusable workflow                 | Detect job | Caller additions beyond execute baseline |
+| ------------- | --------------------------------- | ---------- | ---------------------------------------- |
+| `default`     | `ci-loop-caller.yaml`             | `detect`   | (none)                                   |
+| `full-github` | `ci-loop-caller-full-github.yaml` | `detect`   | `actions: read`                          |
 
 ## Domain detect environment (`detect_domain_env_json`)
 
@@ -241,13 +237,13 @@ detect_domain_env_json: >-
 
 ### CI sweeper (`loop-ci-sweeper`)
 
-| JSON key                         | Description                                     | Dogfood value                                                                           |
-| -------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `CI_SWEEPER_EXCLUDED_WORKFLOWS`  | Workflow names to ignore (prevents recursion)   | `on-loop-changelog,on-loop-ci-sweeper,on-loop-docs-triage,ci-loop-agent,ci-loop-caller` |
-| `CI_SWEEPER_INCLUDED_WORKFLOWS`  | Workflow allowlist. Empty = all non-excluded    | `""`                                                                                    |
-| `CI_SWEEPER_LEDGER_FILE`         | JSON ledger for `workflow_run_id` dedupe        | `.loop/ci-sweeper-run-ledger.json`                                                      |
-| `CI_SWEEPER_REJECT_MAX_RETRIES`  | Max retries per run ID when policy is `limited` | `"3"`                                                                                   |
-| `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`, `retry`, or `limited`                  | `block`                                                                                 |
+| JSON key                         | Description                                     | Dogfood value                                                                                                      |
+| -------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `CI_SWEEPER_EXCLUDED_WORKFLOWS`  | Workflow names to ignore (prevents recursion)   | `on-loop-changelog,on-loop-ci-sweeper,on-loop-docs-triage,ci-loop-agent,ci-loop-caller,ci-loop-caller-full-github` |
+| `CI_SWEEPER_INCLUDED_WORKFLOWS`  | Workflow allowlist. Empty = all non-excluded    | `""`                                                                                                               |
+| `CI_SWEEPER_LEDGER_FILE`         | JSON ledger for `workflow_run_id` dedupe        | `.loop/ci-sweeper-run-ledger.json`                                                                                 |
+| `CI_SWEEPER_REJECT_MAX_RETRIES`  | Max retries per run ID when policy is `limited` | `"3"`                                                                                                              |
+| `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`, `retry`, or `limited`                  | `block`                                                                                                            |
 
 `GH_TOKEN` is **not** passed via `detect_domain_env_json` — use the `token` input on `ci-loop-caller` (maps to `loop-detect`). Reusable defaults to `github.token` when empty.
 

@@ -160,6 +160,10 @@ baseline = registry.get("execute_baseline", {})
 profiles = registry.get("profiles", {})
 
 PROFILE_RE = re.compile(r"^\s*detect_permissions_profile:\s*([^\s#]+)\s*$", re.MULTILINE)
+CALLER_USES_RE = re.compile(
+    r"uses:\s*\./\.github/workflows/(ci-loop-caller(?:-full-github)?\.yaml)",
+    re.MULTILINE,
+)
 PERMS_BLOCK_RE = re.compile(
     r"^permissions:\s*\n((?:[ \t]+[^\n]+\n)+)", re.MULTILINE
 )
@@ -176,6 +180,12 @@ def scope_satisfied(granted: dict[str, str], scope: str, required: str) -> bool:
         return actual in {"read", "write"}
     return actual == required
 
+def profile_for_caller_workflow(caller_workflow: str) -> str | None:
+    for name, profile_def in profiles.items():
+        if profile_def.get("caller_workflow") == caller_workflow:
+            return name
+    return None
+
 errors: list[str] = []
 checked = 0
 
@@ -185,11 +195,13 @@ if not workflows_dir.is_dir():
 
 for workflow_path in sorted(workflows_dir.rglob("on-loop-*.yaml")):
     text = workflow_path.read_text(encoding="utf-8")
-    if "ci-loop-caller.yaml" not in text:
+    uses_match = CALLER_USES_RE.search(text)
+    if not uses_match:
         continue
 
     checked += 1
     rel = workflow_path.relative_to(workflows_dir.parent.parent)
+    caller_workflow = uses_match.group(1)
 
     perms_match = PERMS_BLOCK_RE.search(text)
     if not perms_match:
@@ -199,16 +211,27 @@ for workflow_path in sorted(workflows_dir.rglob("on-loop-*.yaml")):
     granted = parse_permissions(perms_match.group(1))
 
     profile_match = PROFILE_RE.search(text)
-    profile = profile_match.group(1) if profile_match else "default"
+    profile = profile_match.group(1) if profile_match else profile_for_caller_workflow(caller_workflow)
+
+    if profile is None:
+        errors.append(f"{rel}: unknown reusable workflow '{caller_workflow}'")
+        continue
 
     if profile not in profiles:
         errors.append(f"{rel}: unknown detect_permissions_profile '{profile}'")
         continue
 
     profile_def = profiles[profile]
+    expected_workflow = profile_def.get("caller_workflow")
+    if expected_workflow and expected_workflow != caller_workflow:
+        errors.append(
+            f"{rel}: profile '{profile}' expects {expected_workflow}, caller uses {caller_workflow}"
+        )
+        continue
+
     if not profile_def.get("implemented", False):
         errors.append(
-            f"{rel}: profile '{profile}' is not implemented in ci-loop-caller"
+            f"{rel}: profile '{profile}' is not implemented in {expected_workflow or 'ci-loop-caller'}"
         )
         continue
 
@@ -229,7 +252,7 @@ for workflow_path in sorted(workflows_dir.rglob("on-loop-*.yaml")):
         print(f"OK {rel} profile={profile}")
 
 if checked == 0:
-    print("No on-loop-* callers referencing ci-loop-caller.yaml found")
+    print("No on-loop-* callers referencing ci-loop-caller reusable workflows found")
 
 if errors:
     print("Loop caller permissions validation failed:", file=sys.stderr)

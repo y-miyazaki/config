@@ -92,6 +92,47 @@ teardown() {
     [ "$status" -eq 1 ]
 }
 
+@test "collect_failures_for_run ignores excluded workflow for regular failure conclusion" {
+    export CI_SWEEPER_EXCLUDED_WORKFLOWS="on-loop-changelog"
+    load_workflow_filters
+    FAILURES_JSON=()
+    IGNORED_JSON=()
+    collect_failures_for_run "on-loop-changelog" "12345" "abc123" "main" "https://example.com/run/1" "failure"
+    [ "${#FAILURES_JSON[@]}" -eq 0 ]
+    [ "${#IGNORED_JSON[@]}" -eq 1 ]
+    [[ ${IGNORED_JSON[0]} == *"excluded workflow filter"* ]]
+}
+
+@test "collect_failures_for_run includes excluded workflow for startup_failure conclusion" {
+    export CI_SWEEPER_EXCLUDED_WORKFLOWS="on-loop-changelog"
+    load_workflow_filters
+    MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${MOCK_BIN}"
+    cat > "${MOCK_BIN}/gh" << 'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "run" && "$2" == "view" ]]; then
+    if [[ "$*" == *"--json jobs"* ]]; then
+        exit 0
+    fi
+    if [[ "$*" == *"--json event,workflowName,displayTitle,conclusion"* ]]; then
+        printf '%s\n' '{"event":"workflow_dispatch","workflowName":"on-loop-changelog","displayTitle":"on-loop-changelog","conclusion":"startup_failure"}'
+        exit 0
+    fi
+fi
+exit 1
+EOF
+    chmod +x "${MOCK_BIN}/gh"
+    PATH="${MOCK_BIN}:${PATH}"
+
+    FAILURES_JSON=()
+    IGNORED_JSON=()
+    collect_failures_for_run "on-loop-changelog" "12345" "abc123" "main" "https://example.com/run/1" "startup_failure"
+    [ "${#FAILURES_JSON[@]}" -eq 1 ]
+    [ "${#IGNORED_JSON[@]}" -eq 0 ]
+    [[ ${FAILURES_JSON[0]} == *'"job_name": "workflow"'* ]]
+    [[ ${FAILURES_JSON[0]} == *"startup_failure"* ]]
+}
+
 @test "collect_failures_for_run includes infra failures in failures array" {
     load_workflow_filters
     MOCK_BIN="${BATS_TEST_TMPDIR}/bin"

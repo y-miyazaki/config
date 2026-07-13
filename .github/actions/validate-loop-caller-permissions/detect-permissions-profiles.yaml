@@ -8,14 +8,16 @@ execute_baseline:
 
 profiles:
   default:
+    caller_workflow: ci-loop-caller.yaml
     description: Git-based detect only (changelog, docs-triage)
     implemented: true
-    job: detect-default
+    job: detect
     job_permissions:
       contents: read
     caller_adds: {}
 
   pr-scan:
+    caller_workflow: ci-loop-caller.yaml
     description: PR head enumeration (not yet implemented in ci-loop-caller)
     implemented: false
     job: detect-pr-scan
@@ -25,6 +27,7 @@ profiles:
     caller_adds: {}
 
   ci-monitor:
+    caller_workflow: ci-loop-caller.yaml
     description: Failed CI scan via Actions API (not yet implemented in ci-loop-caller)
     implemented: false
     job: detect-ci-monitor
@@ -35,9 +38,10 @@ profiles:
       actions: read
 
   full-github:
+    caller_workflow: ci-loop-caller-full-github.yaml
     description: CI failure scan plus PR enumeration (ci-sweeper)
     implemented: true
-    job: detect-full-github
+    job: detect
     job_permissions:
       actions: read
       contents: read

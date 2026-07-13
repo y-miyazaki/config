@@ -28,7 +28,8 @@ teardown() {
 write_loop_caller_fixture() {
     local name="$1"
     local permissions_block="$2"
-    local profile_line="${3:-}"
+    local uses_line="$3"
+    local profile_line="${4:-}"
 
     cat > "${WORKFLOWS_TMPDIR}/${name}.yaml" << EOF
 name: ${name}
@@ -41,7 +42,7 @@ ${permissions_block}
 
 jobs:
   loop:
-    uses: ./.github/workflows/ci-loop-caller.yaml
+    uses: ./.github/workflows/${uses_line}
     with:
 ${profile_line}
       loop_name: test-loop
@@ -49,7 +50,7 @@ EOF
 }
 
 @test "fails when execute baseline permission is missing" {
-    write_loop_caller_fixture "on-loop-missing-baseline" "  contents: write" ""
+    write_loop_caller_fixture "on-loop-missing-baseline" "  contents: write" "ci-loop-caller.yaml" ""
 
     run bash "${VALIDATE_SCRIPT}"
     [ "$status" -eq 1 ]
@@ -61,7 +62,7 @@ EOF
         "  contents: write
   copilot-requests: write
   pull-requests: write" \
-        "      detect_permissions_profile: full-github"
+        "ci-loop-caller-full-github.yaml" ""
 
     run bash "${VALIDATE_SCRIPT}"
     [ "$status" -eq 1 ]
@@ -73,11 +74,12 @@ EOF
         "  contents: write
   copilot-requests: write
   pull-requests: write" \
+        "ci-loop-caller.yaml" \
         "      detect_permissions_profile: pr-scan"
 
     run bash "${VALIDATE_SCRIPT}"
     [ "$status" -eq 1 ]
-    [[ $output == *"not implemented in ci-loop-caller"* ]]
+    [[ $output == *"not implemented in ci-loop-caller.yaml"* ]]
 }
 
 @test "passes for default profile caller" {
@@ -85,6 +87,7 @@ EOF
         "  contents: write
   copilot-requests: write
   pull-requests: write" \
+        "ci-loop-caller.yaml" \
         ""
 
     run bash "${VALIDATE_SCRIPT}"
@@ -98,7 +101,8 @@ EOF
   contents: write
   copilot-requests: write
   pull-requests: write" \
-        "      detect_permissions_profile: full-github"
+        "ci-loop-caller-full-github.yaml" \
+        ""
 
     run bash "${VALIDATE_SCRIPT}"
     [ "$status" -eq 0 ]
@@ -108,7 +112,7 @@ EOF
 @test "passes when no loop callers are present" {
     run bash "${VALIDATE_SCRIPT}"
     [ "$status" -eq 0 ]
-    [[ $output == *"No on-loop-* callers referencing ci-loop-caller.yaml found"* ]]
+    [[ $output == *"No on-loop-* callers referencing ci-loop-caller reusable workflows found"* ]]
 }
 
 @test "requires REGISTRY_FILE environment variable" {

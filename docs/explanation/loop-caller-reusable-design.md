@@ -251,18 +251,14 @@ Full mapping table: [Loop Caller Inputs Reference — `loop-detect` mapping](wor
 
 #### Detect permissions profile
 
-Detect job permissions are **profile-based** and declared per job inside `ci-loop-caller`. GitHub Actions cannot use dynamic `permissions` expressions, so each profile maps to a dedicated `detect-*` job selected by `inputs.detect_permissions_profile`. The profile registry (`.github/actions/validate-loop-caller-permissions/detect-permissions-profiles.yaml`) is the single source of truth for job permissions and caller workflow additions.
+Detect job permissions are **profile-based** and declared per reusable workflow file. GitHub Actions validates every job in a called reusable workflow at parse time (even when `if:` skips them), so profiles that need `actions: read` live in `ci-loop-caller-full-github.yaml` instead of sharing `ci-loop-caller.yaml` with the default profile. The profile registry (`.github/actions/validate-loop-caller-permissions/detect-permissions-profiles.yaml`) is the single source of truth for job permissions, caller workflow file, and caller workflow additions.
 
-| Profile       | Detect job           | Job permissions                                          | Callers                |
-| ------------- | -------------------- | -------------------------------------------------------- | ---------------------- |
-| `default`     | `detect-default`     | `contents: read`                                         | changelog, docs-triage |
-| `full-github` | `detect-full-github` | `actions: read`, `contents: read`, `pull-requests: read` | ci-sweeper             |
+| Profile       | Reusable workflow                 | Detect job | Job permissions                                          | Callers                |
+| ------------- | --------------------------------- | ---------- | -------------------------------------------------------- | ---------------------- |
+| `default`     | `ci-loop-caller.yaml`             | `detect`   | `contents: read`                                         | changelog, docs-triage |
+| `full-github` | `ci-loop-caller-full-github.yaml` | `detect`   | `actions: read`, `contents: read`, `pull-requests: read` | ci-sweeper             |
 
-Caller workflow `permissions` = **execute baseline** (`contents: write`, `pull-requests: write`, `copilot-requests: write`) + **profile `caller_adds`**. Reusable workflows cannot escalate beyond the caller grant.
-
-| Input                        | Default   | Effect                                            |
-| ---------------------------- | --------- | ------------------------------------------------- |
-| `detect_permissions_profile` | `default` | Routes detect through the matching `detect-*` job |
+Caller workflow `permissions` = **execute baseline** (`contents: write`, `pull-requests: write`, `copilot-requests: write`) + **profile `caller_adds`**. Reusable workflows cannot escalate beyond the caller grant. Thin callers select the profile by which reusable workflow they `uses:` (ci-sweeper → `ci-loop-caller-full-github.yaml`; changelog and docs-triage → `ci-loop-caller.yaml`).
 
 CI validation: `validate-loop-caller-permissions` composite action (run in `ci-github-actions-workflow`; local wrapper: `scripts/ci/validate_loop_caller_permissions.sh`).
 

@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-13T05:30:17.238665+00:00'
+generated_at: '2026-07-13T07:57:29.252560+00:00'
 apm_version: 0.24.0
 dependencies:
 - repo_url: _local/common
@@ -1150,7 +1150,7 @@ dependencies:
     .agents/skills/loop-ci-sweeper/references/category-validation-commands.md: sha256:a1feaac097275ab88a1fad4aa904ae40c82f2f29ff74e28eae87721717235ea9
     .agents/skills/loop-ci-sweeper/references/common-checklist.md: sha256:68f1e9423c46c11c6317ba69fd38004e4eee6d90a9cb79463b8260e38e0e900e
     .agents/skills/loop-ci-sweeper/references/common-output-format.md: sha256:fca5a2d50861f0761ad5bcfce98b98ed5aae911e9c2ba8c668550b225b074e22
-    .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh: sha256:f3985faadc39a9787870db567b2f561e62d4f333b99bdcf5e0449007ce5dc567
+    .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh: sha256:eb7a1cb7bc84ad29c52fc50b00e438a84c85dbb269964e7ab91551ebc0c33067
     .agents/skills/loop-ci-sweeper/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
     .agents/skills/loop-ci-sweeper/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/loop-ci-sweeper/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
@@ -1170,7 +1170,7 @@ dependencies:
     .claude/skills/loop-ci-sweeper/references/category-validation-commands.md: sha256:a1feaac097275ab88a1fad4aa904ae40c82f2f29ff74e28eae87721717235ea9
     .claude/skills/loop-ci-sweeper/references/common-checklist.md: sha256:68f1e9423c46c11c6317ba69fd38004e4eee6d90a9cb79463b8260e38e0e900e
     .claude/skills/loop-ci-sweeper/references/common-output-format.md: sha256:fca5a2d50861f0761ad5bcfce98b98ed5aae911e9c2ba8c668550b225b074e22
-    .claude/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh: sha256:f3985faadc39a9787870db567b2f561e62d4f333b99bdcf5e0449007ce5dc567
+    .claude/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh: sha256:eb7a1cb7bc84ad29c52fc50b00e438a84c85dbb269964e7ab91551ebc0c33067
     .claude/skills/loop-ci-sweeper/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
     .claude/skills/loop-ci-sweeper/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/loop-ci-sweeper/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667

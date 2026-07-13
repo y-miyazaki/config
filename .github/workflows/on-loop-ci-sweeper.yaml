@@ -39,7 +39,7 @@ concurrency:
 
 jobs:
   loop:
-    uses: ./.github/workflows/ci-loop-caller.yaml
+    uses: ./.github/workflows/ci-loop-caller-full-github.yaml
     with:
       additional_commit_paths: .loop/ci-sweeper-run-ledger.json
       agent_implementer_max_turns: 8
@@ -74,8 +74,7 @@ jobs:
       budget_max_tokens_per_day: 1000000
       denylist: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
       detect_domain_env_json: >-
-        {"CI_SWEEPER_EXCLUDED_WORKFLOWS":"on-loop-changelog,on-loop-ci-sweeper,on-loop-docs-triage,ci-loop-agent,ci-loop-caller","CI_SWEEPER_INCLUDED_WORKFLOWS":"","CI_SWEEPER_LEDGER_FILE":".loop/ci-sweeper-run-ledger.json","CI_SWEEPER_REJECT_MAX_RETRIES":"3","CI_SWEEPER_REJECT_RETRY_POLICY":"block"}
-      detect_permissions_profile: full-github
+        {"CI_SWEEPER_EXCLUDED_WORKFLOWS":"on-loop-changelog,on-loop-ci-sweeper,on-loop-docs-triage,ci-loop-agent,ci-loop-caller,ci-loop-caller-full-github","CI_SWEEPER_INCLUDED_WORKFLOWS":"","CI_SWEEPER_LEDGER_FILE":".loop/ci-sweeper-run-ledger.json","CI_SWEEPER_REJECT_MAX_RETRIES":"3","CI_SWEEPER_REJECT_RETRY_POLICY":"block"}
       detect_script: .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh
       domain_persistence_script: .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh
       engine: cursor
