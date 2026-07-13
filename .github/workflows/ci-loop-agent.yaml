@@ -287,7 +287,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Agent Once
-        uses: y-miyazaki/config/.github/actions/loop-agent-once@bcdeced6e62a31dbb5cc56043f874ab2873a9be7 # v1.8.18
+        uses: y-miyazaki/config/.github/actions/loop-agent-once@873701ac06836bd2a8813e55edc44f29526ac41f # v1.8.18
         with:
           agent_token: ${{ secrets.AGENT_TOKEN }}
           cli_version: ${{ inputs.cli_version }}
@@ -391,7 +391,7 @@ jobs:
 
       - name: Set Acting On
         if: steps.state_path.outputs.state_file != '' && inputs.state_bundle_with_fix_pr != true
-        uses: y-miyazaki/config/.github/actions/loop-state-write@bcdeced6e62a31dbb5cc56043f874ab2873a9be7 # v1.8.18
+        uses: y-miyazaki/config/.github/actions/loop-state-write@873701ac06836bd2a8813e55edc44f29526ac41f # v1.8.18
         with:
           acting_on_action: set
           acting_on_loop_name: ${{ inputs.loop_name }}
@@ -405,7 +405,7 @@ jobs:
 
       - name: Setup Worktree
         id: worktree
-        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@bcdeced6e62a31dbb5cc56043f874ab2873a9be7 # v1.8.18
+        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@873701ac06836bd2a8813e55edc44f29526ac41f # v1.8.18
         with:
           base_branch: ${{ steps.target.outputs.worktree_branch }}
           base_ref: ${{ steps.target.outputs.worktree_ref }}
@@ -415,7 +415,7 @@ jobs:
 
       - name: Execute Bounded Loop
         id: execute
-        uses: y-miyazaki/config/.github/actions/loop-execute@bcdeced6e62a31dbb5cc56043f874ab2873a9be7 # v1.8.18
+        uses: y-miyazaki/config/.github/actions/loop-execute@873701ac06836bd2a8813e55edc44f29526ac41f # v1.8.18
         with:
           agent_implementer_max_turns: ${{ inputs.agent_implementer_max_turns }}
           agent_implementer_model: ${{ inputs.agent_implementer_model }}
@@ -509,7 +509,7 @@ jobs:
           fi
 
       - name: Finalize
-        uses: y-miyazaki/config/.github/actions/loop-finalize@bcdeced6e62a31dbb5cc56043f874ab2873a9be7 # v1.8.18
+        uses: y-miyazaki/config/.github/actions/loop-finalize@873701ac06836bd2a8813e55edc44f29526ac41f # v1.8.18
         with:
           agent_result: ${{ needs.agent-l2.result }}
           attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
