@@ -26,7 +26,7 @@ dependencies:
       args:
         [
           "-lc",
-          'TOKEN="$GH_TOKEN"; if [ -z "$TOKEN" ]; then TOKEN="$GITHUB_TOKEN"; fi; uvx mcp-compressor==0.19.8 -- uvx mcp-proxy==0.12.0 --transport streamablehttp -H Authorization "Bearer $TOKEN" https://api.githubcopilot.com/mcp/',
+          'TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"; exec uvx mcp-compressor==0.31.5 -- https://api.githubcopilot.com/mcp/ -H "Authorization=Bearer ${TOKEN}" --auth explicit-headers',
         ]
     - name: codebase-memory-mcp
       registry: false
@@ -36,5 +36,5 @@ dependencies:
     - name: lean-ctx
       registry: false
       transport: stdio
-      command: lean-ctx
-      args: ["mcp"]
+      command: npx
+      args: ["-y", "lean-ctx-bin"]

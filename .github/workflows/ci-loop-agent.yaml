@@ -217,6 +217,11 @@ on:
         description: "Target descriptor from loop-detect matrix cell (L2/L3)"
         required: false
         type: string
+      uv_version:
+        default: "0.11.27"
+        description: "uv version for MCP servers (uvx); keep aligned with mise.toml aqua:astral-sh/uv"
+        required: false
+        type: string
       verifier_context:
         default: ""
         description: "Additional verifier context such as CI logs or lint output (L2/L3)"
@@ -280,6 +285,13 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Setup uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+          prune-cache: true
+          version: ${{ inputs.uv_version }}
+
       - name: Run Agent Once
         uses: y-miyazaki/config/.github/actions/loop-agent-once@98020d80e7a86fa253748b23b19443ff57f97e1b # v1.8.21
         with:
@@ -314,6 +326,13 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+          prune-cache: true
+          version: ${{ inputs.uv_version }}
 
       - name: Generate Maintenance Bot Token
         continue-on-error: true

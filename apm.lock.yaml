@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-13T10:24:19.891583+00:00'
+generated_at: '2026-07-14T05:16:41.948985+00:00'
 apm_version: 0.24.0
 dependencies:
 - repo_url: _local/common
@@ -1145,12 +1145,12 @@ dependencies:
     .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml: sha256:210f615c53b7828e5e442a7064391f462c40b522ea693461eee1e361bd07f9fc
     .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-noaction.yaml: sha256:86df7cbd5a7f712123fc014ad92c141fe46f581f2271ba8bd570135e2f8ebad5
     .agents/skills/loop-ci-sweeper/references/category-input-schema.md: sha256:6e6fca889e2454353d70d0563b3f788afd68237a678eae2e15f2555b69819572
-    .agents/skills/loop-ci-sweeper/references/category-run-ledger.md: sha256:e207f5ef5c82f8984262a8d0422942af0d3b7eb440c011c4333d21c94dc67faa
+    .agents/skills/loop-ci-sweeper/references/category-run-ledger.md: sha256:f9876a1ad807cb4c943a0d4acd1ddf568ad32359cb3363f1fa33bd4b6b72673f
     .agents/skills/loop-ci-sweeper/references/category-scope.md: sha256:e629a55899f59aa6cc007fe68ffc706e7971f4223827030bdf8f817a25f4de26
     .agents/skills/loop-ci-sweeper/references/category-validation-commands.md: sha256:a1feaac097275ab88a1fad4aa904ae40c82f2f29ff74e28eae87721717235ea9
     .agents/skills/loop-ci-sweeper/references/common-checklist.md: sha256:68f1e9423c46c11c6317ba69fd38004e4eee6d90a9cb79463b8260e38e0e900e
     .agents/skills/loop-ci-sweeper/references/common-output-format.md: sha256:fca5a2d50861f0761ad5bcfce98b98ed5aae911e9c2ba8c668550b225b074e22
-    .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh: sha256:eb7a1cb7bc84ad29c52fc50b00e438a84c85dbb269964e7ab91551ebc0c33067
+    .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh: sha256:ca11cff1c0346044dcacca48af47d1553768d32d83039e5067f6e8a141cef925
     .agents/skills/loop-ci-sweeper/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
     .agents/skills/loop-ci-sweeper/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/loop-ci-sweeper/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
@@ -1158,19 +1158,19 @@ dependencies:
     .agents/skills/loop-ci-sweeper/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
     .agents/skills/loop-ci-sweeper/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/loop-ci-sweeper/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh: sha256:00bf702777f1247edabef9663447a736fc41605825cc6499531dc01c77baf63c
+    .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh: sha256:b10c446bb6546b9846bfcaecfb7ed7c9147870b56e7908c5197be02ccdcf342a
     .claude/skills/loop-ci-sweeper/SKILL.md: sha256:d826f2ccaf00d744ca94bf7206bdda425f339f6173be6c418e2a4603a0ba9973
     .claude/skills/loop-ci-sweeper/eval.yaml: sha256:b61c0737b994c5e4eda80c9e3714feb4472096f42cd08fb5eb57bf34e56b2b86
     .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-basic.yaml: sha256:f04f86769fc092c8ff6a56286cd5b56a87b863fab0f6b9eff53fc98998ef0a81
     .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml: sha256:210f615c53b7828e5e442a7064391f462c40b522ea693461eee1e361bd07f9fc
     .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-noaction.yaml: sha256:86df7cbd5a7f712123fc014ad92c141fe46f581f2271ba8bd570135e2f8ebad5
     .claude/skills/loop-ci-sweeper/references/category-input-schema.md: sha256:6e6fca889e2454353d70d0563b3f788afd68237a678eae2e15f2555b69819572
-    .claude/skills/loop-ci-sweeper/references/category-run-ledger.md: sha256:e207f5ef5c82f8984262a8d0422942af0d3b7eb440c011c4333d21c94dc67faa
+    .claude/skills/loop-ci-sweeper/references/category-run-ledger.md: sha256:f9876a1ad807cb4c943a0d4acd1ddf568ad32359cb3363f1fa33bd4b6b72673f
     .claude/skills/loop-ci-sweeper/references/category-scope.md: sha256:e629a55899f59aa6cc007fe68ffc706e7971f4223827030bdf8f817a25f4de26
     .claude/skills/loop-ci-sweeper/references/category-validation-commands.md: sha256:a1feaac097275ab88a1fad4aa904ae40c82f2f29ff74e28eae87721717235ea9
     .claude/skills/loop-ci-sweeper/references/common-checklist.md: sha256:68f1e9423c46c11c6317ba69fd38004e4eee6d90a9cb79463b8260e38e0e900e
     .claude/skills/loop-ci-sweeper/references/common-output-format.md: sha256:fca5a2d50861f0761ad5bcfce98b98ed5aae911e9c2ba8c668550b225b074e22
-    .claude/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh: sha256:eb7a1cb7bc84ad29c52fc50b00e438a84c85dbb269964e7ab91551ebc0c33067
+    .claude/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh: sha256:ca11cff1c0346044dcacca48af47d1553768d32d83039e5067f6e8a141cef925
     .claude/skills/loop-ci-sweeper/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
     .claude/skills/loop-ci-sweeper/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/loop-ci-sweeper/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
@@ -1178,7 +1178,7 @@ dependencies:
     .claude/skills/loop-ci-sweeper/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
     .claude/skills/loop-ci-sweeper/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/loop-ci-sweeper/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .claude/skills/loop-ci-sweeper/scripts/update_run_ledger.sh: sha256:00bf702777f1247edabef9663447a736fc41605825cc6499531dc01c77baf63c
+    .claude/skills/loop-ci-sweeper/scripts/update_run_ledger.sh: sha256:b10c446bb6546b9846bfcaecfb7ed7c9147870b56e7908c5197be02ccdcf342a
   source: local
   local_path: ./.apm/packages/loop-ci-sweeper
   declared_license: Apache-2.0
@@ -1553,15 +1553,15 @@ mcp_configs:
     transport: stdio
     args:
     - -lc
-    - TOKEN="$GH_TOKEN"; if [ -z "$TOKEN" ]; then TOKEN="$GITHUB_TOKEN"; fi; uvx mcp-compressor==0.19.8
-      -- uvx mcp-proxy==0.12.0 --transport streamablehttp -H Authorization "Bearer
-      $TOKEN" https://api.githubcopilot.com/mcp/
+    - TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"; exec uvx mcp-compressor==0.31.5 -- https://api.githubcopilot.com/mcp/
+      -H "Authorization=Bearer ${TOKEN}" --auth explicit-headers
     registry: false
     command: bash
   lean-ctx:
     name: lean-ctx
     transport: stdio
     args:
-    - mcp
+    - -y
+    - lean-ctx-bin
     registry: false
-    command: lean-ctx
+    command: npx
