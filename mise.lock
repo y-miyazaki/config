@@ -1724,7 +1724,7 @@ url = "https://github.com/yvgude/lean-ctx/releases/download/v3.9.1/lean-ctx-x86_
 url_api = "https://api.github.com/repos/yvgude/lean-ctx/releases/assets/467492472"
 
 [[tools."go:github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen"]]
-version = "2.7.1"
+version = "2.7.2"
 backend = "go:github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen"
 
 [[tools."go:golang.org/x/tools/gopls"]]
