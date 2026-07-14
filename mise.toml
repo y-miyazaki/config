@@ -36,7 +36,7 @@ python = "3.14.6"
 
 # AI agent tools
 "github:microsoft/apm" = "v0.24.0"               # agent package manager
-claude = "2.1.201"                               # Claude Code CLI
+claude = "2.1.202"                               # Claude Code CLI
 "github:DeusData/codebase-memory-mcp" = "v0.8.1" # codebase memory MCP server
 "aqua:github/copilot-cli" = "1.0.68"             # GitHub Copilot CLI
 "pipx:headroom-ai" = { version = "0.30.0", extras = "proxy,mcp,bedrock", depends = ["python"] }
