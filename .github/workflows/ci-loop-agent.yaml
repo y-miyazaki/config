@@ -218,7 +218,7 @@ on:
         required: false
         type: string
       uv_version:
-        default: "0.11.27"
+        default: "0.11.28"
         description: "uv version for MCP servers (uvx); keep aligned with mise.toml aqua:astral-sh/uv"
         required: false
         type: string
