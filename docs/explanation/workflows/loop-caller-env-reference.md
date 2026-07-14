@@ -100,7 +100,7 @@ Optional keys not set in current dogfood callers but supported by `loop-detect`:
 
 | Variable                         | Description                                                                   | Dogfood value                                                            |
 | -------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `CI_SWEEPER_EXCLUDED_WORKFLOWS`  | Workflow names to ignore (prevents self-trigger / recursion).                 | `on-loop-changelog,on-loop-ci-sweeper,on-loop-docs-triage,ci-loop-agent` |
+| `CI_SWEEPER_EXCLUDED_WORKFLOWS`  | Workflow names to ignore (prevents self-trigger / recursion).                 | `on-loop-changelog,on-loop-ci-sweeper,on-loop-docs-triage,ci-loop-agent,ci-loop-caller,ci-loop-caller-full-github` |
 | `CI_SWEEPER_INCLUDED_WORKFLOWS`  | Workflow name allowlist. Empty = all non-excluded.                            | `""`                                                                     |
 | `CI_SWEEPER_LEDGER_FILE`         | JSON ledger for `workflow_run_id` dedupe.                                     | `.loop/state-ci-sweeper-run-ledger.json`                                 |
 | `CI_SWEEPER_REJECT_MAX_RETRIES`  | Max retries per run ID when policy is `limited`.                              | `"3"`                                                                    |

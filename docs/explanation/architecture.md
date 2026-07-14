@@ -34,6 +34,9 @@ The architecture separates:
 - `.apm/packages/go-hooks-*`: target-specific Go hooks (1 hook per target: Claude, Copilot, Cursor)
 - `.apm/packages/shell-script/`: shell-focused instructions and skills (2 instructions, 2 skills)
 - `.apm/packages/shell-script-hooks-*`: target-specific shell script hooks (2 hooks per target: Claude, Copilot, Cursor)
+- `.apm/packages/loop-docs-triage/`: documentation triage loop (self-contained skill package)
+- `.apm/packages/loop-ci-sweeper/`: CI failure sweeper loop (self-contained skill package)
+- `.apm/packages/loop-changelog/`: changelog maintenance loop (self-contained skill package)
 
 Each package can be consumed independently through APM path-based dependencies.
 
