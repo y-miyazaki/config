@@ -30,7 +30,7 @@ on:
         required: false
         type: string
       ecspresso_version:
-        default: "v2.8.4"
+        default: "v2.8.5"
         description: "ecspresso version (e.g. v2.7.1)"
         required: false
         type: string
@@ -190,7 +190,7 @@ jobs:
 
       - name: Install ecspresso
         timeout-minutes: 5
-        uses: kayac/ecspresso@3d47a637a1f8f2dd5c91bb616ac4b7a0e55b18ca # v2.8.4
+        uses: kayac/ecspresso@03c3416ba35a35e6e545b54a208b54738ffdb468 # v2.8.5
         with:
           version: ${{ inputs.ecspresso_version }}
 
@@ -299,7 +299,7 @@ jobs:
 
       - name: Install ecspresso
         timeout-minutes: 5
-        uses: kayac/ecspresso@3d47a637a1f8f2dd5c91bb616ac4b7a0e55b18ca # v2.8.4
+        uses: kayac/ecspresso@03c3416ba35a35e6e545b54a208b54738ffdb468 # v2.8.5
         with:
           version: ${{ inputs.ecspresso_version }}
 
