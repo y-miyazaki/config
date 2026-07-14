@@ -64,6 +64,7 @@ The repository structure is function-oriented.
   - `shell-script-hooks-claude/`, `shell-script-hooks-copilot/`, `shell-script-hooks-cursor/`: target-specific shell script hooks
   - `loop-docs-triage/`: Documentation update loop (self-contained skill package)
   - `loop-ci-sweeper/`: CI failure sweeper loop (self-contained skill package)
+  - `loop-changelog/`: Changelog maintenance loop (self-contained skill package)
 - `apm.yml`: APM package metadata and dependency entry point
 - `apm.lock.yaml`: lock file for deterministic APM resolution
 - `apm_modules/`: locally materialized module content
@@ -125,12 +126,17 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 │   └── .apm/skills/loop-docs-triage/
 │       ├── SKILL.md
 │       └── scripts/detect_changes.sh
-└── loop-ci-sweeper/     # CI failure sweeper loop (self-contained)
+├── loop-ci-sweeper/     # CI failure sweeper loop (self-contained)
+│   ├── apm.yml
+│   └── .apm/skills/loop-ci-sweeper/
+│       ├── SKILL.md
+│       ├── scripts/detect_ci_failures.sh
+│       └── scripts/update_run_ledger.sh
+└── loop-changelog/      # Changelog maintenance loop (self-contained)
     ├── apm.yml
-    └── .apm/skills/loop-ci-sweeper/
+    └── .apm/skills/loop-changelog/
         ├── SKILL.md
-        ├── scripts/detect_ci_failures.sh
-        └── scripts/update_run_ledger.sh
+        └── scripts/detect_changelog_commits.sh
 ```
 
 ### Distribution Behavior
@@ -286,6 +292,7 @@ Skills are defined under each package's `.apm/skills/` directory. Each skill con
 | shell-script     | shell-script-validation   |
 | loop-docs-triage | loop-docs-triage          |
 | loop-ci-sweeper  | loop-ci-sweeper           |
+| loop-changelog   | loop-changelog            |
 
 ### Instructions
 
