@@ -97,7 +97,7 @@ This repository dogfoods the recommended tier for CI and local validation. Consu
 - Missing tools produce `SKIP` entries in structured output — visible to the agent, not silent success.
 - Skills complement hooks; neither replaces CI or pre-commit in consumer repositories.
 
-Package authoring rules: [.apm/AGENTS.md](../../.apm/AGENTS.md). Behavioral contracts: [Config Repository Functional Specification](../reference/specification.md#configuration-philosophy).
+Package authoring rules: [AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md). Behavioral contracts: [Config Repository Functional Specification](../reference/specification.md#configuration-philosophy).
 
 ## Validation Model
 
