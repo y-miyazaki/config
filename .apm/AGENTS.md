@@ -10,6 +10,41 @@ Behavioral rules for editing APM package sources under `.apm/packages/`. Self-co
 - These packages are **distribution artifacts**: `apm install` materializes them into consumer repositories (`.cursor/`, `.claude/`, `.agents/`, and similar).
 - Consumer-specific conventions belong in the consumer repository, not in package sources.
 
+## Configuration Philosophy
+
+APM packages distribute **configuration**, not a complete toolchain. Tool execution rules differ by layer — do not apply MCP rules to hooks or skills.
+
+| Layer  | Purpose                           | Tool resolution                               | When tool absent                              |
+| ------ | --------------------------------- | --------------------------------------------- | --------------------------------------------- |
+| MCP    | Agent capabilities at runtime     | `npx` / `uvx` with pinned versions (required) | Server fails to start; fix runtime or network |
+| Hooks  | Optional in-session lint/format   | `PATH` lookup for native binaries             | Exit 0 — do not block agent sessions          |
+| Skills | On-demand validation when invoked | `PATH` lookup via `scripts/validate.sh`       | Report `SKIP` in structured output            |
+
+**Minimal consumer prerequisites**: APM CLI, Node.js (`npx`) and/or Python with [uv](https://docs.astral.sh/uv/) (`uvx`), plus network for MCP runtime fetch. Per-linter global installs are not required.
+
+**Recommended dev setup**: Install linters on `PATH` (for example via [mise](https://mise.jdx.dev/)) so hooks and skills run fully. This is an optimization, not an APM package requirement.
+
+See [Config Repository Architecture](../docs/explanation/architecture.md#configuration-philosophy) and [Config Repository Functional Specification](../docs/reference/specification.md#configuration-philosophy).
+
+### MCP — Runtime Resolution
+
+- Declare `command: npx` or `command: uvx` with pinned versions in `args`. Use `-y` with `npx` for non-interactive fetch.
+- Do not document per-MCP global installs as required consumer steps.
+- **Exceptions**: MCP servers with no npm/PyPI distribution (for example `codebase-memory-mcp`) use a bare binary command and are **optional** — document that consumers must install the binary separately or omit the server.
+
+### Hooks — Optional Enforcement
+
+- Hooks are **not** a quality gate. They provide best-effort lint/format when tools happen to be on `PATH`.
+- Use `command -v tool || exit 0` before running native binaries (`actionlint`, `golangci-lint`, `shellcheck`, and similar). Most hook tools are **not** available via `npx`/`uvx`.
+- Do not block agent sessions when linters are absent.
+- Prefer emitting a skip notice to stderr when skipping (for example `actionlint not installed — hook skipped`) so users know enforcement did not run.
+
+### Skills — Explicit Validation
+
+- Skills run only when an agent invokes them. Route checks through `scripts/validate.sh`; do not assume tools are installed.
+- When a tool is missing, record `SKIP` (with reason) in structured output — not silent success.
+- Use `npx`/`uvx` inside skill scripts only when the tool is published to npm or PyPI. Most domain linters remain native binaries on `PATH`.
+
 ## Distributable Content
 
 ### Repository-Neutral Rules

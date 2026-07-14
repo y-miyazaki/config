@@ -7,6 +7,13 @@ Install shared AI agent configuration packages (MCP servers, hooks, instructions
 - [APM CLI](https://github.com/microsoft/apm) installed
 - A target repository with `git init` completed
 - One of the supported AI agents: Claude Code, GitHub Copilot CLI, or Cursor
+- Node.js (`npx`) and/or Python with [uv](https://docs.astral.sh/uv/) (`uvx`) for MCP runtime resolution
+
+**Minimal setup** — `apm install` plus runtime runners above. MCP servers fetch on demand; per-linter global installs are not required.
+
+**Recommended dev setup** — install linters on `PATH` (for example via [mise](https://mise.jdx.dev/)) so hooks and skills run checks instead of skipping. Hooks are optional enforcement, not a quality guarantee.
+
+See [Config Repository Architecture](../explanation/architecture.md#configuration-philosophy) for layer-by-layer rules (MCP / hooks / skills).
 
 ## Goal
 

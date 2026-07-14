@@ -142,26 +142,80 @@ The repository must be consumable as an APM dependency.
 - configuration assets are deployed to the appropriate target by APM
 - each sub-package is independently installable via its path
 
+### Configuration Philosophy
+
+APM packages distribute **configuration**. Tool execution rules differ by layer — do not treat hooks or skills as MCP-style runtime fetch.
+
+#### Layer Summary
+
+| Layer  | Purpose                           | Tool resolution                    | When tool absent      | Quality guarantee          |
+| ------ | --------------------------------- | ---------------------------------- | --------------------- | -------------------------- |
+| MCP    | Agent capabilities at runtime     | `npx` / `uvx`, pinned in `apm.yml` | Server fails to start | N/A (capability, not lint) |
+| Hooks  | Optional in-session lint/format   | Native binary on `PATH`            | Exit 0                | No — best-effort only      |
+| Skills | On-demand validation when invoked | Native binary via `validate.sh`    | `SKIP` in output      | No — agent-triggered only  |
+
+#### Consumer Setup Tiers
+
+**Minimal** (MCP and configuration):
+
+- APM CLI, Node.js (`npx`) and/or Python with [uv](https://docs.astral.sh/uv/) (`uvx`), network for runtime fetch
+- No per-linter global install before `apm install`
+
+**Recommended dev** (full hook/skill enforcement):
+
+- Linters on `PATH` (for example via [mise](https://mise.jdx.dev/))
+- Same packages behave differently: hooks run checks instead of skipping
+
+#### MCP — Runtime Resolution
+
+Prefer ephemeral runners with pinned versions:
+
+```yaml
+- name: context7
+  command: npx
+  args: ["-y", "@upstash/context7-mcp@2.2.5"]
+```
+
+Optional binary MCP servers (no npm/PyPI package) use a bare command and require separate consumer install — for example `codebase-memory-mcp`. Consumers may omit these servers.
+
+#### Hooks — Optional Enforcement
+
+Hooks invoke native binaries when present on `PATH`. Most hook tools are not available via `npx`/`uvx`.
+
+```bash
+command -v actionlint > /dev/null 2>&1 || exit 0
+```
+
+Hooks exit 0 when tools are missing so agent sessions continue. This is intentional — hooks are not a substitute for CI or pre-commit.
+
+#### Skills — Explicit Validation
+
+Skills run through `scripts/validate.sh` when an agent invokes them. Missing tools produce `SKIP` in structured output rather than silent pass.
+
+Authoring rules: [.apm/AGENTS.md](../../.apm/AGENTS.md). Design context: [Config Repository Architecture](../explanation/architecture.md#configuration-philosophy).
+
 ### MCP Servers
 
 MCP servers are declared in each package's `apm.yml` under `dependencies.mcp`.
 
-| Package       | Server                         | Transport | Command |
-| ------------- | ------------------------------ | --------- | ------- |
-| common        | context7                       | stdio     | npx     |
-| common        | fetch                          | stdio     | uvx     |
-| common        | github                         | stdio     | bash    |
-| common        | codebase-memory-mcp            | stdio     | binary  |
-| common        | lean-ctx                       | stdio     | binary  |
-| aws           | aws-mcp                        | stdio     | uvx     |
-| aws           | aws-knowledge-mcp-server       | stdio     | uvx     |
-| aws           | aws-documentation-mcp-server   | stdio     | uvx     |
-| aws           | aws-pricing-mcp-server         | stdio     | uvx     |
-| aws           | awslabs-aws-api-mcp-server     | stdio     | uvx     |
-| terraform     | hashicorp-terraform-mcp-server | stdio     | npx     |
-| terraform-aws | awslabs-terraform-mcp-server   | stdio     | uvx     |
+| Package       | Server                         | Transport | Command                             |
+| ------------- | ------------------------------ | --------- | ----------------------------------- |
+| common        | context7                       | stdio     | npx                                 |
+| common        | fetch                          | stdio     | uvx                                 |
+| common        | github                         | stdio     | bash                                |
+| common        | codebase-memory-mcp            | stdio     | binary (optional; consumer install) |
+| common        | lean-ctx                       | stdio     | npx                                 |
+| aws           | aws-mcp                        | stdio     | uvx                                 |
+| aws           | aws-knowledge-mcp-server       | stdio     | uvx                                 |
+| aws           | aws-documentation-mcp-server   | stdio     | uvx                                 |
+| aws           | aws-pricing-mcp-server         | stdio     | uvx                                 |
+| aws           | awslabs-aws-api-mcp-server     | stdio     | uvx                                 |
+| terraform     | hashicorp-terraform-mcp-server | stdio     | npx                                 |
+| terraform-aws | awslabs-terraform-mcp-server   | stdio     | uvx                                 |
 
 ### Hooks
+
+Hooks provide **optional, best-effort** lint and format when native binaries are on `PATH`. They are not a quality gate — missing tools cause exit 0, not failure. For full enforcement, install linters separately (see [Configuration Philosophy](#configuration-philosophy) consumer setup tiers).
 
 Hooks are defined as JSON files under each hooks package's `.apm/hooks/` directory.
 
@@ -209,6 +263,8 @@ Hooks JSON format is incompatible across AI agents and cannot be auto-converted 
 - The hook scripts themselves are multi-agent aware and portable; only the hook JSON definitions need per-target packaging
 
 ### Skills
+
+Skills provide **on-demand validation** when an agent invokes them through `scripts/validate.sh`. Missing native binaries produce `SKIP` in structured output — not silent pass. Skills are agent-triggered; they do not replace CI, pre-commit, or hooks. See [Configuration Philosophy](#configuration-philosophy).
 
 Skills are defined under each package's `.apm/skills/` directory. Each skill contains a `SKILL.md`, references, scripts, and eval definitions.
 
