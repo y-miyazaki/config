@@ -56,7 +56,7 @@ jobs:
   release:
     name: Release base
     needs: detect-go-version
-    uses: y-miyazaki/config/.github/workflows/cd-go-releaser.yaml@e64f1af97634cbf7a6f51a58997d1e115da8b8af # v1.8.22
+    uses: y-miyazaki/config/.github/workflows/cd-go-releaser.yaml@6f6613ec09af4ba3744bb14ae809b3458ff325e0 # v1.8.22
     with:
       component: base
       create_tag: ${{ inputs.create_tag }}
