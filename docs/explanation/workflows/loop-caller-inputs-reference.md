@@ -259,13 +259,11 @@ detect_domain_env_json: >-
 
 ### CI sweeper (`loop-ci-sweeper`)
 
-| JSON key                         | Description                                     | Dogfood value                                                                                                      |
-| -------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `CI_SWEEPER_EXCLUDED_WORKFLOWS`  | Workflow names to ignore (prevents recursion)   | `on-loop-changelog,on-loop-ci-sweeper,on-loop-docs-triage,ci-loop-agent,ci-loop-caller,ci-loop-caller-full-github` |
-| `CI_SWEEPER_INCLUDED_WORKFLOWS`  | Workflow allowlist. Empty = all non-excluded    | `""`                                                                                                               |
-| `CI_SWEEPER_LEDGER_FILE`         | JSON ledger for `workflow_run_id` dedupe        | `.loop/state-ci-sweeper-run-ledger.json`                                                                           |
-| `CI_SWEEPER_REJECT_MAX_RETRIES`  | Max retries per run ID when policy is `limited` | `"3"`                                                                                                              |
-| `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`, `retry`, or `limited`                  | `block`                                                                                                            |
+| JSON key                         | Description                                     | Dogfood value                            |
+| -------------------------------- | ----------------------------------------------- | ---------------------------------------- |
+| `CI_SWEEPER_LEDGER_FILE`         | JSON ledger for `workflow_run_id` dedupe        | `.loop/state-ci-sweeper-run-ledger.json` |
+| `CI_SWEEPER_REJECT_MAX_RETRIES`  | Max retries per run ID when policy is `limited` | `"3"`                                    |
+| `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`, `retry`, or `limited`                  | `block`                                  |
 
 `GH_TOKEN` is **not** passed via `detect_domain_env_json` — use the `token` input on `ci-loop-caller` (maps to `loop-detect`). Reusable defaults to `github.token` when empty.
 

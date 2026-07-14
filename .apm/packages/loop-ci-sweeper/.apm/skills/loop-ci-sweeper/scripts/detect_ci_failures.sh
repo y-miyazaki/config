@@ -15,6 +15,7 @@
 # - Return structured JSON via shared lib/json.sh
 # - Exit 0 always (errors reported in JSON status field)
 # - Skip runs per CI_SWEEPER_REJECT_RETRY_POLICY and ledger state
+# - workflow_run event path: match run head branch to loop-detect scan branch
 # - Source shared helpers from scripts/lib/all.sh (synced via scripts/ai/sync_skill_lib.sh)
 #
 # Dependencies:
@@ -24,10 +25,8 @@
 # - jq (gh --json parsing only)
 #
 # Optional environment:
-#   CI_SWEEPER_EXCLUDED_WORKFLOWS     Comma-separated workflow names to ignore
 #   CI_SWEEPER_HEAD_BRANCH            workflow_run event context (optional)
 #   CI_SWEEPER_HEAD_SHA               workflow_run event context (optional)
-#   CI_SWEEPER_INCLUDED_WORKFLOWS     Comma-separated allowlist (empty = all non-excluded)
 #   CI_SWEEPER_LEDGER_FILE            Path to run ledger JSON (default: .loop/state-ci-sweeper-run-ledger.json)
 #   CI_SWEEPER_REJECT_MAX_RETRIES     Max REJECT retries when policy is limited (default: 3)
 #   CI_SWEEPER_REJECT_RETRY_POLICY    block | retry | limited (aliases a/b/c)
@@ -63,8 +62,6 @@ SCAN_BRANCH_RUN_LIMIT="${SCAN_BRANCH_RUN_LIMIT:-100}"
 REJECT_RETRY_POLICY="${CI_SWEEPER_REJECT_RETRY_POLICY:-block}"
 REJECT_MAX_RETRIES="${CI_SWEEPER_REJECT_MAX_RETRIES:-3}"
 
-declare -a EXCLUDED_WORKFLOWS=()
-declare -a INCLUDED_WORKFLOWS=()
 declare -a FAILURES_JSON=()
 declare -a IGNORED_JSON=()
 
@@ -158,62 +155,6 @@ function parse_arguments {
 }
 
 #######################################
-# split_csv_to_array: Split comma-separated values into a named array
-#
-# Arguments:
-#   $1 - Comma-separated string
-#   $2 - Name of target array variable
-#
-# Global Variables:
-#   None
-#
-# Returns:
-#   None
-#
-# Usage:
-#   split_csv_to_array "${csv}" EXCLUDED_WORKFLOWS
-#
-#######################################
-function split_csv_to_array {
-    local csv="$1"
-    local -n _target="$2"
-    _target=()
-    [[ -z ${csv} ]] && return
-    local item
-    local -a raw=()
-    IFS=',' read -r -a raw <<< "${csv}"
-    for item in "${raw[@]}"; do
-        item="${item#"${item%%[![:space:]]*}"}"
-        item="${item%"${item##*[![:space:]]}"}"
-        _target+=("${item}")
-    done
-}
-
-#######################################
-# load_workflow_filters: Load included and excluded workflow filters from environment
-#
-# Arguments:
-#   None
-#
-# Global Variables:
-#   EXCLUDED_WORKFLOWS - Populated excluded workflow names
-#   INCLUDED_WORKFLOWS - Populated included workflow names
-#
-# Returns:
-#   None
-#
-# Usage:
-#   load_workflow_filters
-#
-#######################################
-function load_workflow_filters {
-    local excluded_csv="${CI_SWEEPER_EXCLUDED_WORKFLOWS:-}"
-    local included_csv="${CI_SWEEPER_INCLUDED_WORKFLOWS:-}"
-    split_csv_to_array "${excluded_csv}" EXCLUDED_WORKFLOWS
-    split_csv_to_array "${included_csv}" INCLUDED_WORKFLOWS
-}
-
-#######################################
 # output_error: Print structured JSON error and exit
 #
 # Arguments:
@@ -291,34 +232,6 @@ function scan_branch_name {
 }
 
 #######################################
-# is_excluded_workflow: Check whether a workflow name is excluded
-#
-# Arguments:
-#   $1 - Workflow display name
-#
-# Global Variables:
-#   None
-#
-# Returns:
-#   0 if excluded, 1 otherwise
-#
-# Usage:
-#   if is_excluded_workflow "${name}"; then ...
-#
-#######################################
-function is_excluded_workflow {
-    local name="$1"
-    local excluded
-    for excluded in "${EXCLUDED_WORKFLOWS[@]}"; do
-        [[ -z ${excluded} ]] && continue
-        if [[ ${name} == "${excluded}" ]]; then
-            return 0
-        fi
-    done
-    return 1
-}
-
-#######################################
 # is_definition_error_conclusion: Whether the run failed before jobs started
 #
 # Arguments:
@@ -337,64 +250,6 @@ function is_excluded_workflow {
 function is_definition_error_conclusion {
     local conclusion="$1"
     [[ ${conclusion} == "startup_failure" ]]
-}
-
-#######################################
-# should_exclude_workflow_run: Apply exclusion unless definition-error conclusion
-#
-# Arguments:
-#   $1 - Workflow display name
-#   $2 - Workflow run conclusion
-#
-# Global Variables:
-#   None
-#
-# Returns:
-#   0 when the run should be excluded, 1 otherwise
-#
-# Usage:
-#   if should_exclude_workflow_run "${name}" "${conclusion}"; then ...
-#
-#######################################
-function should_exclude_workflow_run {
-    local workflow_name="$1"
-    local run_conclusion="$2"
-
-    if is_definition_error_conclusion "${run_conclusion}"; then
-        return 1
-    fi
-    is_excluded_workflow "${workflow_name}"
-}
-
-#######################################
-# is_included_workflow: Check whether a workflow name passes the allowlist
-#
-# Arguments:
-#   $1 - Workflow display name
-#
-# Global Variables:
-#   None
-#
-# Returns:
-#   0 if included, 1 otherwise
-#
-# Usage:
-#   if is_included_workflow "${name}"; then ...
-#
-#######################################
-function is_included_workflow {
-    local name="$1"
-    local included
-    if [[ ${#INCLUDED_WORKFLOWS[@]} -eq 0 ]]; then
-        return 0
-    fi
-    for included in "${INCLUDED_WORKFLOWS[@]}"; do
-        [[ -z ${included} ]] && continue
-        if [[ ${name} == "${included}" ]]; then
-            return 0
-        fi
-    done
-    return 1
 }
 
 #######################################
@@ -532,6 +387,27 @@ function normalize_reject_retry_policy {
             printf 'block'
             ;;
     esac
+}
+
+#######################################
+# run_head_branch_for_run: Resolve head branch for a workflow run ID
+#
+# Arguments:
+#   $1 - Workflow run ID
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Head branch name on stdout, empty when unavailable
+#
+# Usage:
+#   branch="$(run_head_branch_for_run "${run_id}")"
+#
+#######################################
+function run_head_branch_for_run {
+    local run_id="$1"
+    gh run view "${run_id}" --json headBranch --jq -r '.headBranch // empty' 2> /dev/null || true
 }
 
 #######################################
@@ -863,13 +739,6 @@ function collect_failures_for_run {
         run_conclusion="$(gh run view "${run_id}" --json conclusion --jq -r '.conclusion // empty' 2> /dev/null || true)"
     fi
 
-    if should_exclude_workflow_run "${workflow_name}" "${run_conclusion}" \
-        || ! is_included_workflow "${workflow_name}"; then
-        append_ignored "${workflow_name}" "${run_id}" "${head_branch}" "-" "-" \
-            "excluded workflow filter"
-        return 0
-    fi
-
     if should_skip_processed_run "${run_id}"; then
         ledger_outcome="$(ledger_outcome_for_run "${run_id}")"
         append_ignored "${workflow_name}" "${run_id}" "${head_branch}" "-" "-" \
@@ -930,12 +799,22 @@ function collect_from_workflow_run_event {
     local head_sha="${CI_SWEEPER_HEAD_SHA:-}"
     local head_branch="${CI_SWEEPER_HEAD_BRANCH:-}"
     local run_url="${CI_SWEEPER_RUN_URL:-}"
+    local scan_branch actual_head_branch
 
     if [[ -z ${run_id} ]]; then
         return 1
     fi
 
-    collect_failures_for_run "${workflow_name}" "${run_id}" "${head_sha}" "${head_branch}" "${run_url}"
+    scan_branch="$(scan_branch_name)"
+    actual_head_branch="$(run_head_branch_for_run "${run_id}")"
+    if [[ -n ${actual_head_branch} && ${actual_head_branch} != "${scan_branch}" ]]; then
+        append_ignored "${workflow_name}" "${run_id}" "${actual_head_branch}" "-" "-" \
+            "branch mismatch (scan=${scan_branch})"
+        return 0
+    fi
+
+    collect_failures_for_run "${workflow_name}" "${run_id}" "${head_sha}" \
+        "${actual_head_branch:-${head_branch}}" "${run_url}"
 }
 
 #######################################
@@ -1085,7 +964,6 @@ function output_json {
 function main {
     parse_arguments "$@"
     validate_ledger_file "${LEDGER_FILE}"
-    load_workflow_filters
 
     if ! gh_available; then
         output_error "gh CLI and jq are required but not installed"

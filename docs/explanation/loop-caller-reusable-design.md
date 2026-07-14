@@ -67,7 +67,7 @@ These constraints come from [Loop Caller Workflows Design](loop-caller-workflows
 
 | Invariant                           | Rationale                                                                                                                                                                                 |
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Separate `on-loop-*` per loop**   | Independent cron, workflow name, concurrency, `CI_SWEEPER_EXCLUDED_WORKFLOWS` references                                                                                                  |
+| **Separate `on-loop-*` per loop**   | Independent cron, workflow name, concurrency; CI sweeper `workflow_run.workflows` lists repair targets only                                                                               |
 | **Finalize inside `ci-loop-agent`** | Reusable-workflow matrix collapses outputs across cells; finalize must pair with execute in the same workflow instance                                                                    |
 | **Single detect per run**           | Domain `detect_script` invoked only by `loop-detect`; no second `run:` detect in caller                                                                                                   |
 | **`target_matrix` handoff**         | `detect` outputs JSON array; `execute` matrix uses `fromJson(needs.detect.outputs.target_matrix)`                                                                                         |
@@ -284,7 +284,7 @@ Two levels of reusable workflows — well within GitHub Actions nesting limits.
 1. Add `.apm/packages/loop-<name>/` (skill + `scripts/detect_*.sh`).
 2. Add `docs/explanation/workflows/loop-<name>-workflow-design.md`.
 3. Copy thin caller from `on-loop-changelog.yaml`; set `on:`, `with:`, workflow `name:`.
-4. Register caller in `CI_SWEEPER_EXCLUDED_WORKFLOWS` when applicable.
+4. For CI sweeper callers: list only repair-target workflows under `workflow_run.workflows` (omit `on-loop-*` / `ci-loop-*`).
 5. Add mkdocs nav entry under **Loop Workflows**.
 6. **Do not** copy `detect` / `execute` / `record-skip` jobs — only `with:` values change.
 
