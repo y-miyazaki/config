@@ -224,11 +224,11 @@ Domain-specific detect script variables use `detect_domain_env_json` keys (not `
 
 Passed through `ci-loop-caller` to `ci-loop-agent.yaml` when non-empty.
 
-| Input                       | Description                                                | Default (dogfood)                               |
-| --------------------------- | ---------------------------------------------------------- | ----------------------------------------------- |
-| `additional_commit_paths`   | Extra paths included in finalize commit (e.g. ledger file) | `.loop/ci-sweeper-run-ledger.json` (ci-sweeper) |
-| `domain_persistence_script` | Bash script for `loop-finalize` domain persistence         | ci-sweeper ledger script                        |
-| `state_bundle_with_fix_pr`  | Commit loop state on fix branch before `open_pr`           | `false` (changelog uses merge-gated `pending`)  |
+| Input                       | Description                                                | Default (dogfood)                                     |
+| --------------------------- | ---------------------------------------------------------- | ----------------------------------------------------- |
+| `additional_commit_paths`   | Extra paths included in finalize commit (e.g. ledger file) | `.loop/state-ci-sweeper-run-ledger.json` (ci-sweeper) |
+| `domain_persistence_script` | Bash script for `loop-finalize` domain persistence         | ci-sweeper ledger script                              |
+| `state_bundle_with_fix_pr`  | Commit loop state on fix branch before `open_pr`           | `false` (changelog uses merge-gated `pending`)        |
 
 ## Detect permissions
 
@@ -263,7 +263,7 @@ detect_domain_env_json: >-
 | -------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `CI_SWEEPER_EXCLUDED_WORKFLOWS`  | Workflow names to ignore (prevents recursion)   | `on-loop-changelog,on-loop-ci-sweeper,on-loop-docs-triage,ci-loop-agent,ci-loop-caller,ci-loop-caller-full-github` |
 | `CI_SWEEPER_INCLUDED_WORKFLOWS`  | Workflow allowlist. Empty = all non-excluded    | `""`                                                                                                               |
-| `CI_SWEEPER_LEDGER_FILE`         | JSON ledger for `workflow_run_id` dedupe        | `.loop/ci-sweeper-run-ledger.json`                                                                                 |
+| `CI_SWEEPER_LEDGER_FILE`         | JSON ledger for `workflow_run_id` dedupe        | `.loop/state-ci-sweeper-run-ledger.json`                                                                           |
 | `CI_SWEEPER_REJECT_MAX_RETRIES`  | Max retries per run ID when policy is `limited` | `"3"`                                                                                                              |
 | `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`, `retry`, or `limited`                  | `block`                                                                                                            |
 

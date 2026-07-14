@@ -28,7 +28,7 @@
 #   CI_SWEEPER_HEAD_BRANCH            workflow_run event context (optional)
 #   CI_SWEEPER_HEAD_SHA               workflow_run event context (optional)
 #   CI_SWEEPER_INCLUDED_WORKFLOWS     Comma-separated allowlist (empty = all non-excluded)
-#   CI_SWEEPER_LEDGER_FILE            Path to run ledger JSON (default: .loop/ci-sweeper-run-ledger.json)
+#   CI_SWEEPER_LEDGER_FILE            Path to run ledger JSON (default: .loop/state-ci-sweeper-run-ledger.json)
 #   CI_SWEEPER_REJECT_MAX_RETRIES     Max REJECT retries when policy is limited (default: 3)
 #   CI_SWEEPER_REJECT_RETRY_POLICY    block | retry | limited (aliases a/b/c)
 #   CI_SWEEPER_RUN_URL                workflow_run event context (optional)
@@ -58,7 +58,7 @@ source "${SCRIPT_DIR}/lib/all.sh"
 SCOPE="range"
 SINCE_REF=""
 DEFAULT_BRANCH="${DEFAULT_BASE_BRANCH:-${DEFAULT_BRANCH:-main}}"
-LEDGER_FILE="${CI_SWEEPER_LEDGER_FILE:-.loop/ci-sweeper-run-ledger.json}"
+LEDGER_FILE="${CI_SWEEPER_LEDGER_FILE:-.loop/state-ci-sweeper-run-ledger.json}"
 SCAN_BRANCH_RUN_LIMIT="${SCAN_BRANCH_RUN_LIMIT:-100}"
 REJECT_RETRY_POLICY="${CI_SWEEPER_REJECT_RETRY_POLICY:-block}"
 REJECT_MAX_RETRIES="${CI_SWEEPER_REJECT_MAX_RETRIES:-3}"
