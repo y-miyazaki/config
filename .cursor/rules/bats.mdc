@@ -18,12 +18,12 @@ globs:
 
 ### Naming Conventions
 
-| Component | Rule | Example |
-| --- | --- | --- |
-| Suite file | snake_case; mirror source path under `test/bats/` | `scripts/lib/common.bats` |
-| Support helper | snake_case `.bash` under `test/bats/support/` | `common.bash`, `mock_cli.bash` |
-| `@test` name | Descriptive sentence (lowercase) | `parse_args accepts --verbose flag` |
-| Package constant | UPPER_SNAKE_CASE | `TARGET_SCRIPT`, `FIXTURE_DIR` |
+| Component        | Rule                                              | Example                             |
+| ---------------- | ------------------------------------------------- | ----------------------------------- |
+| Suite file       | snake_case; mirror source path under `test/bats/` | `scripts/lib/common.bats`           |
+| Support helper   | snake_case `.bash` under `test/bats/support/`     | `common.bash`, `mock_cli.bash`      |
+| `@test` name     | Descriptive sentence (lowercase)                  | `parse_args accepts --verbose flag` |
+| Package constant | UPPER_SNAKE_CASE                                  | `TARGET_SCRIPT`, `FIXTURE_DIR`      |
 
 ### Suite File Structure
 

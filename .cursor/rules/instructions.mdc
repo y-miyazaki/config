@@ -13,21 +13,21 @@ globs:
 
 - Scope covers creating and updating instruction/rule files: package sources (`**/instructions/*.instructions.md`) and distributed targets (`.cursor/rules/*.mdc`, `.kiro/steering/*.md`, `.claude/rules/*.md`).
 - G-03 (MUST): Keep `applyTo` globs precise to those rule paths — do not use broad trees such as `.claude/**/*.md` that also match skills and unrelated markdown.
-- G-04 (MUST): In agent-facing cross-links, use stem-based wording (`companion X rules (stem \`x\`)`) — never bare `*.instructions.md` filenames that disappear after `apm install`.
+- G-04 (MUST): In agent-facing cross-links, use stem-based wording (`companion X rules (stem \`x\`)`) — never bareuctions.md` filenames that disappear after `apm install`.
 - G-05 (MUST): When a companion instruction must guide production-file edits (for example tests paired with source), include those production globs in `applyTo` so the rules inject at edit time.
 
 ## Standards
 
 ### Naming Conventions
 
-| Component | Rule | Example |
-| --- | --- | --- |
-| Package source file | `<stem>.instructions.md` | `go.instructions.md`, `bats.instructions.md` |
-| Cursor (after `apm install`) | `.cursor/rules/<stem>.mdc` | `go.mdc`, `bats.mdc` |
-| Claude (after `apm install`) | `.claude/rules/<stem>.md` | `go.md`, `bats.md` |
-| Kiro (after `apm install`) | `.kiro/steering/<stem>.md` | `go.md` |
-| Title | `# AI Assistant Instructions for <target>` | `# AI Assistant Instructions for Go` |
-| Agent-facing cross-link | Companion wording with stem — not source filename | `companion Bats rules (stem \`bats\`)` |
+| Component                    | Rule                                              | Example                                      |
+| ---------------------------- | ------------------------------------------------- | -------------------------------------------- |
+| Package source file          | `<stem>.instructions.md`                          | `go.instructions.md`, `bats.instructions.md` |
+| Cursor (after `apm install`) | `.cursor/rules/<stem>.mdc`                        | `go.mdc`, `bats.mdc`                         |
+| Claude (after `apm install`) | `.claude/rules/<stem>.md`                         | `go.md`, `bats.md`                           |
+| Kiro (after `apm install`)   | `.kiro/steering/<stem>.md`                        | `go.md`                                      |
+| Title                        | `# AI Assistant Instructions for <target>`        | `# AI Assistant Instructions for Go`         |
+| Agent-facing cross-link      | Companion wording with stem — not source filename | `companion Bats rules (stem \`bats\`)`       |
 
 ### Standards Content
 
@@ -55,6 +55,7 @@ globs:
 ## Guidelines
 
 ### General (G)
+
 - G-01 (MUST): Front Matter
   - Check: Front Matter contains applyTo and description fields
 - G-02 (MUST): Title
@@ -62,11 +63,12 @@ globs:
 - G-03 (MUST): applyTo Target Precision
   - Check: Do `applyTo` globs match only intended instruction/rule paths after distribution (for example `.claude/rules/*.md`, not `.claude/**/*.md`)?
 - G-04 (MUST): Portable Cross-References
-  - Check: Do agent-facing cross-links use stem-based wording (`companion X rules (stem \`x\`)`) instead of bare `*.instructions.md` filenames?
+  - Check: Do agent-facing cross-links use stem-based wording (`companion X rules (stem \`x\`)`) instead of bareuctions.md` filenames?
 - G-05 (MUST): Companion applyTo Coverage
   - Check: When a companion instruction must guide production-file edits (for example tests paired with source), does `applyTo` include those production globs?
 
 ### Structure (STRUCT)
+
 - STRUCT-01 (MUST): Five Required Chapters Exist
   - Check: Scope, Standards, Guidelines, Testing and Validation, and Security Guidelines chapters exist
 - STRUCT-02 (MUST): Chapter Order Unified
@@ -83,6 +85,7 @@ globs:
   - Check: When Guidelines are large, are critical MUST obligations (for example test pairing) reinforced with a short Scope bullet?
 
 ### Guidelines Chapter (GUIDE)
+
 - GUIDE-01 (SHOULD): Code Modification Guidelines
   - Check: Modification procedures and validation methods are clearly documented
 - GUIDE-02 (SHOULD): Tool Usage
@@ -93,6 +96,7 @@ globs:
   - Check: Are there no ID-less bullet rules in the Guidelines chapter?
 
 ### Content Quality (QUAL)
+
 - QUAL-01 (SHOULD): Practical Examples
   - Check: Practical code examples are included
 - QUAL-02 (SHOULD): No Redundancy
@@ -101,6 +105,7 @@ globs:
   - Check: Large code examples are avoided for high token efficiency
 
 ### Consistency (CONS)
+
 - CONS-01 (SHOULD): Section Names
   - Check: Section names are consistent with other instructions files
 - CONS-02 (SHOULD): Format
@@ -109,12 +114,14 @@ globs:
   - Check: Do Standards templates, Guidelines checks, and code examples within the same file agree with each other without contradiction?
 
 ### Completeness (COMP)
+
 - COMP-01 (SHOULD): No Missing Commands
   - Check: Executable validation commands are comprehensive
 - COMP-02 (SHOULD): Real Commands
   - Check: Examples are concrete and comprehensive
 
 ### Security Guidelines Chapter (SEC)
+
 - SEC-01 (MUST): Tool-Undetectable Risks Documented
   - Check: Are security practices that automated tools (gitleaks, detect-secrets) cannot detect documented (e.g., destructive command defaults, untrusted link sources)?
 - SEC-02 (MUST): Secrets Management
@@ -125,6 +132,7 @@ globs:
   - Check: YAML/code examples are included (where applicable)
 
 ### Standards Chapter (STD)
+
 - STD-01 (MUST): Naming Conventions
   - Check: Naming conventions are documented per component
 - STD-02 (SHOULD): Tool Standards
@@ -135,6 +143,7 @@ globs:
   - Check: When instructions are APM-distributed, does Naming Conventions document source stem → Cursor `.mdc` / Claude `.md` / Kiro steering mapping?
 
 ### Testing and Validation Chapter (TEST)
+
 - TEST-01 (MUST): Validation Commands
   - Check: Executable validation commands are documented
 - TEST-02 (MUST): Code Block Format
@@ -150,7 +159,6 @@ globs:
 - When instruction files are updated, always run an instruction quality re-evaluation.
 - Keep applyTo precise to distributed rule paths; use stem-based companion cross-links (G-03, G-04, G-05).
 - Use individual commands only for debugging.
-
 
 ## Testing and Validation
 

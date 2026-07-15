@@ -12,7 +12,7 @@ paths:
 
 - Scope covers creating and updating instruction/rule files: package sources (`**/instructions/*.instructions.md`) and distributed targets (`.cursor/rules/*.mdc`, `.kiro/steering/*.md`, `.claude/rules/*.md`).
 - G-03 (MUST): Keep `applyTo` globs precise to those rule paths — do not use broad trees such as `.claude/**/*.md` that also match skills and unrelated markdown.
-- G-04 (MUST): In agent-facing cross-links, use stem-based wording (`companion X rules (stem \`x\`)`) — never barections.md` filenames that disappear after `apm install`.
+- G-04 (MUST): In agent-facing cross-links, use stem-based wording (`companion X rules (stem \`x\`)`) — never bareuctions.md` filenames that disappear after `apm install`.
 - G-05 (MUST): When a companion instruction must guide production-file edits (for example tests paired with source), include those production globs in `applyTo` so the rules inject at edit time.
 
 ## Standards
@@ -62,7 +62,7 @@ paths:
 - G-03 (MUST): applyTo Target Precision
   - Check: Do `applyTo` globs match only intended instruction/rule paths after distribution (for example `.claude/rules/*.md`, not `.claude/**/*.md`)?
 - G-04 (MUST): Portable Cross-References
-  - Check: Do agent-facing cross-links use stem-based wording (`companion X rules (stem \`x\`)`) instead of barections.md` filenames?
+  - Check: Do agent-facing cross-links use stem-based wording (`companion X rules (stem \`x\`)`) instead of bareuctions.md` filenames?
 - G-05 (MUST): Companion applyTo Coverage
   - Check: When a companion instruction must guide production-file edits (for example tests paired with source), does `applyTo` include those production globs?
 

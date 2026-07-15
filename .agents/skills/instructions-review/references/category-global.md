@@ -24,7 +24,7 @@ Fix: Scope `applyTo` to package sources plus distributed rule paths (Cursor `.md
 
 **G-04 (MUST): Portable Cross-References**
 
-Check: Do agent-facing cross-links use stem-based wording (`companion X rules (stem \`x\`)`) instead of barections.md`flnms
+Check: Do agent-facing cross-links use stem-based wording (`companion X rules (stem \`x\`)`) instead of bareuctions.md`flnms
 Why: APM renames instruction files per target (`bats.instructions.md` → `bats.mdc` / `bats.md`); bare source names do not exist at agent runtime
 Fix: Prefer stem-based companion references; document the distribution mapping in Naming Conventions when relevant
 
