@@ -1,6 +1,16 @@
-# CI Healing Loops Design
+# Loop Engineering
 
-> **This document was split.** Use the links below to avoid duplication.
+Understanding-oriented design docs for autonomous CI and documentation loops in this repository.
+
+## Reading order
+
+1. [Loop Engineering Design](loop-engineering-design.md) — invariants, L1/L2/L3, phase contract
+2. [Multi-Branch Loops Design](multi-branch-loops-design.md) — platform targets, `LOOP_*`, state
+3. [Loop Caller Workflows Design](loop-caller-workflows-design.md) — shared `on-loop-*.yaml` shell
+4. [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md) — `ci-loop-caller.yaml` refactor
+5. Per-loop workflow designs — see [Multi-Branch Loops Design — Workflow Design Documents](multi-branch-loops-design.md#workflow-design-documents)
+
+## Topic index
 
 | Topic                                          | Document                                                                   |
 | ---------------------------------------------- | -------------------------------------------------------------------------- |
@@ -9,7 +19,13 @@
 | **loop-ci-sweeper** workflow + detect + CI env | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md) |
 | Loop invariants + L3 gates                     | [Loop Engineering Design](loop-engineering-design.md)                      |
 
-## Summary
+## Reference (outside this section)
+
+- [Specification](../../reference/specification.md) — action I/O, detect script contract
+- [loop-notify-pr Specification](../../reference/loop-notify-pr-specification.md)
+- [Loop Engineering Checklist](../../reference/loop-engineering-checklist.md)
+
+## CI healing summary
 
 - One **ci-sweeper** engine handles integration branches and PR heads (`LOOP_INTEGRATION_BRANCHES`, `LOOP_PULL_REQUESTS`).
 - No separate `loop-pr-ci-healer` package.

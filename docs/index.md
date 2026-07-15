@@ -32,14 +32,14 @@ _Understanding-oriented discussion of concepts and decisions._
 - [Config Repository Architecture](explanation/architecture.md)
 - [GitHub Workflows Design](explanation/github-workflows-design.md)
 - [Instructions Sync Workflow](explanation/instructions-sync-workflow.md)
-- [Loop Engineering Design](explanation/loop-engineering-design.md)
-- [Multi-Branch Loops Design](explanation/multi-branch-loops-design.md)
-- [Loop Caller Workflows Design](explanation/loop-caller-workflows-design.md)
-- [Loop Caller Reusable Workflow Design](explanation/loop-caller-reusable-design.md)
-- [CI Healing Loops Design](explanation/ci-healing-loops-design.md) (index — split docs)
-- [CI Sweeper Workflow Design](explanation/workflows/loop-ci-sweeper-workflow-design.md)
-- [Changelog Workflow Design](explanation/workflows/loop-changelog-workflow-design.md)
-- [Docs Triage Workflow Design](explanation/workflows/loop-docs-triage-workflow-design.md)
+- [Loop Engineering](explanation/loop-engineering/index.md)
+- [Loop Engineering Design](explanation/loop-engineering/loop-engineering-design.md)
+- [Multi-Branch Loops Design](explanation/loop-engineering/multi-branch-loops-design.md)
+- [Loop Caller Workflows Design](explanation/loop-engineering/loop-caller-workflows-design.md)
+- [Loop Caller Reusable Workflow Design](explanation/loop-engineering/loop-caller-reusable-design.md)
+- [CI Sweeper Workflow Design](explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md)
+- [Changelog Workflow Design](explanation/loop-engineering/workflows/loop-changelog-workflow-design.md)
+- [Docs Triage Workflow Design](explanation/loop-engineering/workflows/loop-docs-triage-workflow-design.md)
 
 ## Report
 

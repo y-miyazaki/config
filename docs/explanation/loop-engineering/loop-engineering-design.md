@@ -1,7 +1,7 @@
 # Loop Engineering Design
 
 This document describes the design philosophy, architecture, and design principles of Loop Engineering.
-For concrete specifications (Actions/Workflows list, interfaces), see [Specification](../reference/specification.md).
+For concrete specifications (Actions/Workflows list, interfaces), see [Specification](../../reference/specification.md).
 
 ## Implementation Status
 

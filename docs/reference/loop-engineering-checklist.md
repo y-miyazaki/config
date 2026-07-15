@@ -1,15 +1,15 @@
 # Loop Engineering Checklist
 
 Operational checklist for creating and promoting loops.
-For design rationale, see [Loop Engineering Design](../explanation/loop-engineering-design.md).
+For design rationale, see [Loop Engineering Design](../explanation/loop-engineering/loop-engineering-design.md).
 
 ## New Loop Creation Checklist
 
-Use when implementing a new `on-loop-*.yaml` workflow. Add `docs/explanation/workflows/loop-<name>-workflow-design.md` for domain specifics.
+Use when implementing a new `on-loop-*.yaml` workflow. Add `docs/explanation/loop-engineering/workflows/loop-<name>-workflow-design.md` for domain specifics.
 
 ### Design Invariants
 
-All must be true. See [Loop Engineering Design — Design Invariants](../explanation/loop-engineering-design.md#design-invariants).
+All must be true. See [Loop Engineering Design — Design Invariants](../explanation/loop-engineering/loop-engineering-design.md#design-invariants).
 
 - [ ] Agent never writes to integration branches during Execute (isolated worktree only). L3 integration `push` in Finalize only, with promotion gate
 - [ ] Verifier never modifies the repository (read-only phase)
@@ -46,7 +46,7 @@ All must be true. See [Loop Engineering Design — Design Invariants](../explana
 
 #### Finalize
 
-- [ ] Behavior matches [finalize strategy matrix](../explanation/loop-engineering-design.md#finalize-strategy-matrix) for `target.finalize` + `DEFAULT_LEVEL`
+- [ ] Behavior matches [finalize strategy matrix](../explanation/loop-engineering/loop-engineering-design.md#finalize-strategy-matrix) for `target.finalize` + `DEFAULT_LEVEL`
 - [ ] `open_pr`: create PR on APPROVE; `push` / `push_head`: push on APPROVE; delete agent branch on REJECT
 - [ ] L3 `auto_merge` only when `finalize=open_pr` — not for `push` / `push_head`
 - [ ] State, run-log, domain ledger via `domain_persistence_script` in finalize job (no caller `git push` for `.loop/*`)
@@ -61,7 +61,7 @@ All must be true. See [Loop Engineering Design — Design Invariants](../explana
 
 ### Multi-Branch Targets (Phase 1+)
 
-See [Multi-Branch Loops Design](../explanation/multi-branch-loops-design.md) and [Loop Caller Workflows](../explanation/loop-caller-workflows-design.md).
+See [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loops-design.md) and [Loop Caller Workflows](../explanation/loop-engineering/loop-caller-workflows-design.md).
 
 - [ ] `LOOP_INTEGRATION_BRANCHES` and/or `LOOP_PULL_REQUESTS` in caller `env`
 - [ ] `target_matrix` with `mode`, `from`, `to`, stable `key` per cell
@@ -72,7 +72,7 @@ See [Multi-Branch Loops Design](../explanation/multi-branch-loops-design.md) and
 
 ### Workflow Structure
 
-- [ ] Follows [Loop Caller Workflows Design](../explanation/loop-caller-workflows-design.md)
+- [ ] Follows [Loop Caller Workflows Design](../explanation/loop-engineering/loop-caller-workflows-design.md)
 - [ ] `timeout-minutes` on all jobs; least-privilege permissions per job
 - [ ] env keys alphabetically ordered
 - [ ] Unique state file (`.loop/state-<loop>.json`)

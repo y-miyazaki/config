@@ -1,5 +1,5 @@
 # Platform workflow: promote pending loop state when a fix PR closes.
-# Design: docs/explanation/multi-branch-loops-design.md#state-delivery-philosophy
+# Design: docs/explanation/loop-engineering/multi-branch-loops-design.md#state-delivery-philosophy
 # Requires MAINTENANCE_BOT_APP_CLIENT_ID and MAINTENANCE_BOT_APP_PRIVATE_KEY (environment: default).
 name: on-loop-state-promote
 

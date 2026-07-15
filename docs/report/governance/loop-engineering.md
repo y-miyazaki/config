@@ -65,7 +65,7 @@ Schedule/Automation
 
 ## 設計方針
 
-設計の詳細は [Loop Engineering Design](../../explanation/loop-engineering-design.md) を参照。
+設計の詳細は [Loop Engineering Design](../../explanation/loop-engineering/loop-engineering-design.md) を参照。
 
 ## 注意点とリスク
 
@@ -93,7 +93,7 @@ Schedule/Automation
 
 ## ループパッケージ設計
 
-パッケージ構成・命名規約・依存関係・実行フローの詳細は [Loop Engineering Design](../../explanation/loop-engineering-design.md) を参照。
+パッケージ構成・命名規約・依存関係・実行フローの詳細は [Loop Engineering Design](../../explanation/loop-engineering/loop-engineering-design.md) を参照。
 
 ## 本リポジトリへの適用可能性
 

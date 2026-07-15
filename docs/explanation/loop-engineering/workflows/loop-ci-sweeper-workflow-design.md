@@ -139,7 +139,7 @@ Per watch branch, `loop-detect` sets context; script uses `gh run list --branch 
 
 When the Skill classifies **Fix** but the implementer produces no changes → REJECT → `outcome: rejected`.
 
-When the Skill classifies **Watch** (infra/flake/env) with no code edit → `outcome: watch` (not REJECT). See [Outcome enum](../../reference/specification.md#outcome-enum).
+When the Skill classifies **Watch** (infra/flake/env) with no code edit → `outcome: watch` (not REJECT). See [Outcome enum](../../../reference/specification.md#outcome-enum).
 
 ## PR Exclusion and Opt-In Rules
 
@@ -165,7 +165,7 @@ If the label does not exist in the repository, detect never matches PR-head targ
 
 Dogfood wiring: `on-loop-ci-sweeper.yaml` sets `pr_require: label:ci-sweeper-ok` with `pull_requests: true`. Empty `pr_require` remains fail-closed (no PR-head targets).
 
-After finalize, `loop-notify-pr` posts a marker comment on the PR. See [loop-notify-pr Specification](../../reference/loop-notify-pr-specification.md).
+After finalize, `loop-notify-pr` posts a marker comment on the PR. See [loop-notify-pr Specification](../../../reference/loop-notify-pr-specification.md).
 
 ## Execute
 
@@ -235,4 +235,4 @@ CI failure on `integration:main` takes priority over `loop-docs-triage` and `loo
 - [cobusgreyling ci-sweeper pattern](https://github.com/cobusgreyling/loop-engineering/blob/main/patterns/ci-sweeper.md)
 - [Multi-Branch Loops Design](../multi-branch-loops-design.md)
 - [Loop Caller Workflows Design](../loop-caller-workflows-design.md)
-- [Specification](../../reference/specification.md)
+- [Specification](../../../reference/specification.md)

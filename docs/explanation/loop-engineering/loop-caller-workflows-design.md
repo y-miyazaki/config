@@ -36,12 +36,12 @@ record-skip (optional)
 
 ### Required outputs
 
-| Output             | Source                                                                        |
-| ------------------ | ----------------------------------------------------------------------------- |
-| `should_run`       | `loop-detect` — true when `target_matrix` is non-empty                        |
-| `skip_reason`      | `loop-detect`                                                                 |
-| `target_matrix`    | JSON array of candidates (see [Specification](../reference/specification.md)) |
-| Config passthrough | `level`, models, allowlist, `state_file`, …                                   |
+| Output             | Source                                                                           |
+| ------------------ | -------------------------------------------------------------------------------- |
+| `should_run`       | `loop-detect` — true when `target_matrix` is non-empty                           |
+| `skip_reason`      | `loop-detect`                                                                    |
+| `target_matrix`    | JSON array of candidates (see [Specification](../../reference/specification.md)) |
+| Config passthrough | `level`, models, allowlist, `state_file`, …                                      |
 
 Each matrix cell carries: `target_json`, `prompt`, `verifier_context`, `result`.
 
@@ -92,7 +92,7 @@ auto_merge: ${{ needs.detect.outputs.level == 'L3' && matrix.target.target_json.
 
 When `finalize_enabled=true`, `ci-loop-agent` runs `loop-finalize` after `agent-l2` in the **same workflow instance**, preserving execute output pairing per matrix cell.
 
-When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as a **sibling step** immediately after `loop-finalize` (not nested inside the composite — see [composite action composition](../reference/specification.md#composite-action-composition)). See [loop-notify-pr Specification](../reference/loop-notify-pr-specification.md).
+When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as a **sibling step** immediately after `loop-finalize` (not nested inside the composite — see [composite action composition](../../reference/specification.md#composite-action-composition)). See [loop-notify-pr Specification](../../reference/loop-notify-pr-specification.md).
 
 ### Persistence layer
 
@@ -137,11 +137,11 @@ on:
   workflow_dispatch: {}
 ```
 
-| Trigger             | Typical use                                                       |
-| ------------------- | ----------------------------------------------------------------- |
-| `schedule`          | Integration branch polling (changelog, docs-triage)               |
-| `workflow_run`      | Low-latency CI failure (ci-sweeper; ops checklist)                |
-| `workflow_dispatch` | Manual debug / `gh run list` scan without an event run ID         |
+| Trigger             | Typical use                                               |
+| ------------------- | --------------------------------------------------------- |
+| `schedule`          | Integration branch polling (changelog, docs-triage)       |
+| `workflow_run`      | Low-latency CI failure (ci-sweeper; ops checklist)        |
+| `workflow_dispatch` | Manual debug / `gh run list` scan without an event run ID |
 
 ## Concurrency
 
@@ -209,9 +209,9 @@ After [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md) is 
 Until then:
 
 1. Copy `on-loop-changelog.yaml`, `on-loop-docs-triage.yaml`, or `on-loop-ci-sweeper.yaml` skeleton.
-2. Add `docs/explanation/workflows/loop-<name>-workflow-design.md`.
+2. Add `docs/explanation/loop-engineering/workflows/loop-<name>-workflow-design.md`.
 3. Link from [Multi-Branch workflow index](multi-branch-loops-design.md#workflow-design-documents).
-4. Register in `mkdocs.yml` under **Explanation → Loop Workflows**.
+4. Register in `mkdocs.yml` under **Explanation → Loop Engineering → Loop Workflows**.
 5. Package: `.apm/packages/loop-<name>/` with `SKILL.md` + `scripts/detect_*.sh` (+ optional ledger script).
 
 ## Phase 0 Debt (resolved)
@@ -232,7 +232,7 @@ Next structural improvement: [Loop Caller Reusable Workflow Design](loop-caller-
 
 - [Multi-Branch Loops Design](multi-branch-loops-design.md)
 - [Loop Engineering Design](loop-engineering-design.md)
-- [Specification](../reference/specification.md)
+- [Specification](../../reference/specification.md)
 - [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md)
 - [Changelog Workflow](workflows/loop-changelog-workflow-design.md)
 - [Docs Triage Workflow](workflows/loop-docs-triage-workflow-design.md)

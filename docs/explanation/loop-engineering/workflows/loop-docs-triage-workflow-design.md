@@ -164,4 +164,4 @@ If `loop-ci-sweeper` and `loop-docs-triage` both target `integration:main`, [act
 
 - [Multi-Branch Loops Design](../multi-branch-loops-design.md)
 - [Loop Caller Workflows Design](../loop-caller-workflows-design.md)
-- [Specification](../../reference/specification.md)
+- [Specification](../../../reference/specification.md)

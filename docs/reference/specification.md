@@ -421,7 +421,7 @@ Invoked by `loop-detect` per scan context (not by the caller). Scans the branch/
 
 ### `target_json` contract
 
-Execute/finalize input. Schema: [Multi-Branch Loops Design](../explanation/multi-branch-loops-design.md#target-model-from--to).
+Execute/finalize input. Schema: [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loops-design.md#target-model-from--to).
 
 | Field                     | Required     | Description                        |
 | ------------------------- | ------------ | ---------------------------------- |

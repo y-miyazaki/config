@@ -1,7 +1,7 @@
 # Reusable workflow: Loop caller orchestration
 # Shared detect → execute (matrix) → record-skip job graph for on-loop-*.yaml callers.
-# Design doc: docs/explanation/loop-caller-reusable-design.md
-# Inputs reference: docs/explanation/workflows/loop-caller-inputs-reference.md
+# Design doc: docs/explanation/loop-engineering/loop-caller-reusable-design.md
+# Inputs reference: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
 name: ci-loop-caller
 
 on:

@@ -1,6 +1,6 @@
 # Detect permissions profiles for ci-loop-caller reusable workflow.
 # Single source of truth for detect job permissions and caller workflow additions.
-# Registry: docs/explanation/loop-caller-reusable-design.md#detect-permissions-profile
+# Registry: docs/explanation/loop-engineering/loop-caller-reusable-design.md#detect-permissions-profile
 execute_baseline:
   contents: write
   copilot-requests: write

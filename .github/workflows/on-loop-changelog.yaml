@@ -1,7 +1,7 @@
 # Loop workflow: Changelog maintenance
 # Detects unreleased conventional commits, runs bounded Agent→Verify loop, then finalizes.
-# Design doc: docs/explanation/workflows/loop-changelog-workflow-design.md
-# Caller inputs: docs/explanation/workflows/loop-caller-inputs-reference.md
+# Design doc: docs/explanation/loop-engineering/workflows/loop-changelog-workflow-design.md
+# Caller inputs: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
 # Requires repository secret: AGENT_TOKEN (engine API key; see engine input).
 # Pass credentials via secrets: (callee BOT_APP_* / AGENT_TOKEN; remap MAINTENANCE_BOT_*). Optional with.environment for env-scoped secrets inside the reusable.
 name: on-loop-changelog

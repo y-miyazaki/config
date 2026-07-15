@@ -1,7 +1,7 @@
 # Reusable workflow: Loop caller orchestration (full-github detect profile)
 # Detect requires actions: read and pull-requests: read — use only from callers that grant them.
-# Design doc: docs/explanation/loop-caller-reusable-design.md
-# Inputs reference: docs/explanation/workflows/loop-caller-inputs-reference.md
+# Design doc: docs/explanation/loop-engineering/loop-caller-reusable-design.md
+# Inputs reference: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
 name: ci-loop-caller-full-github
 
 on:

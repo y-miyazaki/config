@@ -283,7 +283,7 @@ Two levels of reusable workflows — well within GitHub Actions nesting limits.
 ## Extensibility: Adding a New Loop
 
 1. Add `.apm/packages/loop-<name>/` (skill + `scripts/detect_*.sh`).
-2. Add `docs/explanation/workflows/loop-<name>-workflow-design.md`.
+2. Add `docs/explanation/loop-engineering/workflows/loop-<name>-workflow-design.md`.
 3. Copy thin caller from `on-loop-changelog.yaml`; set `on:`, `with:`, workflow `name:`.
 4. For CI sweeper callers: list only repair-target workflows under `workflow_run.workflows` (omit `on-loop-*` / `ci-loop-*`).
 5. Add mkdocs nav entry under **Loop Workflows**.
@@ -325,7 +325,7 @@ New domain env keys go into `detect_domain_env_json` without editing reusable jo
 - [x] Update [Loop Caller Workflows Design](loop-caller-workflows-design.md) (planned refactor note, Phase 0 status).
 - [x] Mark [Loop Caller `env` Reference](workflows/loop-caller-env-reference.md) as deprecated; link to inputs reference.
 - [x] Update per-loop workflow design docs (`Environment variables` → `Caller inputs`).
-- [x] Update [GitHub Workflows Design](github-workflows-design.md) loop exception note.
+- [x] Update [GitHub Workflows Design](../github-workflows-design.md) loop exception note.
 - [x] Register nav in `mkdocs.yml`.
 
 ### 4. Validation
@@ -351,6 +351,6 @@ New domain env keys go into `detect_domain_env_json` without editing reusable jo
 
 - [Loop Caller Workflows Design](loop-caller-workflows-design.md) — current job graph and invariants
 - [Loop Caller `env` Reference](workflows/loop-caller-env-reference.md) — legacy env keys (to be superseded)
-- [GitHub Workflows Design](github-workflows-design.md) — `on-*` / `ci-*` naming and caller conventions
+- [GitHub Workflows Design](../github-workflows-design.md) — `on-*` / `ci-*` naming and caller conventions
 - [Multi-Branch Loops Design](multi-branch-loops-design.md) — platform `LOOP_*` semantics
 - [Loop Engineering Design](loop-engineering-design.md) — L1/L2/L3 and finalize behavior

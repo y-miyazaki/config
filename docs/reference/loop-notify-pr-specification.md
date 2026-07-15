@@ -3,11 +3,11 @@
 Platform specification for PR notifications after loop finalize on `pull_request` targets (`push_head`).
 Status: **implemented (P1)** — `loop-notify-pr`, `notify_context_json`, and `LOOP_PR_REQUIRE` in `.github/actions/`; release pin bump pending.
 
-| Layer                  | Document                                                                                  |
-| ---------------------- | ----------------------------------------------------------------------------------------- |
-| Invariants             | [Loop Engineering Design](../explanation/loop-engineering-design.md)                      |
-| Targets / `pr_exclude` | [Multi-Branch Loops Design](../explanation/multi-branch-loops-design.md)                  |
-| CI sweeper dogfood     | [CI Sweeper Workflow Design](../explanation/workflows/loop-ci-sweeper-workflow-design.md) |
+| Layer                  | Document                                                                                                   |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Invariants             | [Loop Engineering Design](../explanation/loop-engineering/loop-engineering-design.md)                      |
+| Targets / `pr_exclude` | [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loops-design.md)                  |
+| CI sweeper dogfood     | [CI Sweeper Workflow Design](../explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md) |
 
 ## Problem
 
@@ -277,7 +277,7 @@ Do not embed full `git diff` or raw CI logs in the comment.
 
 ## Finalize Invariant Change
 
-Replace in [Loop Engineering Design](../explanation/loop-engineering-design.md):
+Replace in [Loop Engineering Design](../explanation/loop-engineering/loop-engineering-design.md):
 
 ```diff
 - Must not: Perform notifications
