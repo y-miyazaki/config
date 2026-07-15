@@ -1,17 +1,19 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-07-14T10:00:37Z",
-      "outcome": "merged",
+      "last_run": "2026-07-15T06:57:53Z",
+      "outcome": "pr-created",
       "consecutive_failures": 0,
       "open_rejections": [],
       "last_reject_reason": "No meaningful changes outside .loop/",
-      "last_sha": "6d04020a928aa85ec6961c6a8bcf60e978eb05df"
+      "last_sha": "6d04020a928aa85ec6961c6a8bcf60e978eb05df",
+      "pending": {
+        "sha": "c07d006edcf1860ce5ba85cbeb999bd319d40692",
+        "pr": 393,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/393",
+        "loop_name": "docs-triage",
+        "created_at": "2026-07-15T06:57:53Z"
+      }
     }
-  },
-  "acting_on": {
-    "target_key": "integration:main",
-    "loop_name": "docs-triage",
-    "started_at": "2026-07-15T06:55:08Z"
   }
 }
