@@ -114,23 +114,34 @@ Remove Phase 0 debt: `on-loop-ci-sweeper.yaml` `Update CI Sweeper Run Ledger` ca
 
 ## Triggers
 
-Document **both** in every caller; enable by uncommenting one block:
+Document applicable triggers in every caller. Prefer one primary poll/event path plus `workflow_dispatch`.
+
+Dogfood `on-loop-ci-sweeper.yaml` uses `workflow_run` (repair-target `workflows:` list) + `workflow_dispatch` — no `schedule`. Changelog and docs-triage callers keep `schedule` + `workflow_dispatch`.
 
 ```yaml
+# Example: event-driven CI sweeper (dogfood)
+on:
+  workflow_dispatch: {}
+  workflow_run: # zizmor: ignore[dangerous-triggers] after ops checklist
+    types: [completed]
+    workflows:
+      - on-ci-push-markdown
+      # ... repair targets only (not on-loop-* / ci-loop-*)
+```
+
+```yaml
+# Example: schedule polling (changelog / docs-triage)
 on:
   schedule:
     - cron: "*/15 * * * 1-5"
-  # workflow_run:
-  #   types: [completed]
-  #   ...
-  workflow_dispatch:
+  workflow_dispatch: {}
 ```
 
-| Trigger             | Typical use                                     |
-| ------------------- | ----------------------------------------------- |
-| `schedule`          | Integration branch polling                      |
-| `workflow_run`      | Low-latency CI failure (ops checklist required) |
-| `workflow_dispatch` | Manual debug                                    |
+| Trigger             | Typical use                                                       |
+| ------------------- | ----------------------------------------------------------------- |
+| `schedule`          | Integration branch polling (changelog, docs-triage)               |
+| `workflow_run`      | Low-latency CI failure (ci-sweeper; ops checklist)                |
+| `workflow_dispatch` | Manual debug / `gh run list` scan without an event run ID         |
 
 ## Concurrency
 

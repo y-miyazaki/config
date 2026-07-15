@@ -75,7 +75,7 @@ Defined here only. Other docs link to this section.
 | `schedule`     | `LOOP_PRIORITY` — integration before pull_request                              |
 | `workflow_run` | pull_request when `head_branch` is open PR; else integration for failed branch |
 
-`workflow_run` triggers remain disabled until per-loop ops checklist passes — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md#workflow_run-operational-checklist).
+`workflow_run` is enabled for dogfood `loop-ci-sweeper` after the [ops checklist](workflows/loop-ci-sweeper-workflow-design.md#workflow_run-operational-checklist). Other loops stay schedule / `workflow_dispatch` until their checklist passes.
 
 ## `loop-detect` orchestration
 
@@ -275,7 +275,7 @@ Per-target `concurrency.group` in caller YAML complements `acting_on` — see [L
 | **1** | `target_matrix`; `targets` map; no double detect; `acting_on`                      | ✅ Done                                            |
 | **2** | `target_json` on execute/finalize; `domain_persistence_script`; `push`/`push_head` | ✅ Done                                            |
 | **3** | Matrix fan-out + per-target concurrency                                            | ✅ Done                                            |
-| **4** | `workflow_run` per loop ops checklist                                              | ⏸ Planned (trigger disabled in dogfood)            |
+| **4** | `workflow_run` per loop ops checklist                                              | ✅ Done (ci-sweeper dogfood; other loops TBD)       |
 | **5** | L3 integration `push` (opt-in)                                                     | Planned                                            |
 | **6** | Optional `repository` on target                                                    | Future                                             |
 | **7** | `ci-loop-caller.yaml` — thin callers + `with:`                                     | Planned ([design](loop-caller-reusable-design.md)) |

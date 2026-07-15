@@ -33,7 +33,7 @@ That `env:` pattern was a **workaround for copied jobs**, not a platform require
 
 ```text
 on-loop-changelog.yaml          on-loop-ci-sweeper.yaml
-  on: schedule                     on: schedule (+ optional workflow_run)
+  on: schedule                     on: workflow_run (+ workflow_dispatch)
   concurrency / permissions         concurrency / permissions
   jobs:                             jobs:
     loop:                             loop:
