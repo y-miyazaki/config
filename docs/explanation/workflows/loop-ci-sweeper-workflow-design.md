@@ -22,7 +22,7 @@ Automated minimal repair when CI fails on integration branches and/or open PR he
 - Open PR head CI failure → push a minimal fix **to the PR branch** (`push_head`)
 - Classify failures as Fix / Watch / Escalate; apply small lint, workflow, shell, or doc edits when actionable
 - Dedupe by `workflow_run_id` ledger; skip infra/flake/env failures as `outcome: watch`
-- Cron polling (default); optional `workflow_run` after [ops checklist](#workflow_run-operational-checklist)
+- `workflow_run` on repair-target CI workflows (dogfood default); `workflow_dispatch` for manual / `gh run list` scan; see [ops checklist](#workflow_run-operational-checklist)
 
 ### Out of scope
 
@@ -73,8 +73,6 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `finalize_integration`                                      | Finalize for integration targets: `open_pr` (fix PR to watch branch) or `push` (L3).                                                                  | `open_pr`                                                                                                |
 | `finalize_pull_request`                                     | Finalize for pull_request targets. Currently `push_head` only.                                                                                        | `push_head`                                                                                              |
 | `infer_files_pattern`                                       | Extended regex to infer file paths from verifier text.                                                                                                | See caller workflow                                                                                      |
-| `branch_match`                                              | Comma-separated integration branch patterns to poll for failed CI.                                                                                    | `main`                                                                                                   |
-| `branch_state`                                              | Branch for `.loop/*` persistence, state migration, and watch fallback.                                                                                | `main`                                                                                                   |
 | `level`                                                     | Autonomy level (`L1`, `L2`, `L3`). L2 opens review PR.                                                                                                | `L2`                                                                                                     |
 | `loop_name`                                                 | Loop identifier; state file `.loop/state-ci-sweeper.json`.                                                                                            | `ci-sweeper`                                                                                             |
 | `max_targets_per_schedule`                                  | Max targets per cron tick after priority/`acting_on` filters.                                                                                         | `3`                                                                                                      |
@@ -88,7 +86,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `pull_requests`                                             | Enumerate open PR heads for failed CI repair (`push_head`).                                                                                           | `true`                                                                                                   |
 | `skill_name`                                                | Skill package to invoke.                                                                                                                              | `loop-ci-sweeper`                                                                                        |
 
-**Event keys** (embed in `detect_domain_env_json` when `workflow_run` trigger is enabled — currently commented out in caller workflow):
+**Event keys** (embedded in `detect_domain_env_json` when `workflow_run` fires; dogfood caller enables this trigger):
 
 | JSON key                     | Description                                                       |
 | ---------------------------- | ----------------------------------------------------------------- |
@@ -211,15 +209,16 @@ Dogfood: **`DEFAULT_LEVEL=L2`** until [L3 promotion gate](../loop-engineering-de
 
 ## workflow_run Operational Checklist
 
-Before uncommenting `workflow_run` in `on-loop-ci-sweeper.yaml`:
+Dogfood `on-loop-ci-sweeper.yaml` enables `workflow_run`. Keep these gates when changing the trigger or `workflows:` list:
 
-- [ ] zizmor / security review complete
-- [ ] `workflow_run.workflows` lists only CI workflows to repair (not `on-loop-*` / `ci-loop-*` callers)
-- [ ] Concurrency prevents overlapping runs on same `target.key`
-- [ ] Event path sets `CI_SWEEPER_*` env on detect job
-- [ ] Failed workflow is not the sweeper’s own finalize push (`[skip ci]` on ledger commits)
-- [ ] Fork / draft / bot exclusions active
-- [ ] 1 failure event → 1 target (no unbounded matrix from one event)
+- [x] zizmor / security review complete (`zizmor: ignore[dangerous-triggers]` documented on the trigger)
+- [x] `workflow_run.workflows` lists only CI workflows to repair (not `on-loop-*` / `ci-loop-*` callers)
+- [x] Concurrency prevents overlapping runs on same workflow
+- [x] Event path sets `CI_SWEEPER_*` keys in `detect_domain_env_json`
+- [x] Failed workflow is not the sweeper’s own finalize push (`[skip ci]` on ledger commits)
+- [x] Fork / draft / bot exclusions active (`pr_exclude` / `pr_require`)
+- [x] Job `if:` limits event runs to `failure` / `startup_failure`
+- [ ] 1 failure event → 1 target (no unbounded matrix from one event) — verify when expanding `workflows:`
 
 ## dependency-update (roadmap)
 
