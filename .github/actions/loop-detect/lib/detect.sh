@@ -20,7 +20,7 @@
 #   DETECT_SCRIPT, STATE_FILE, LOOP_NAME, BASE_BRANCH, SKILL_NAME, LEVEL, ALLOWLIST
 #   LOOP_INTEGRATION_BRANCHES, LOOP_PULL_REQUESTS, LOOP_BRANCH_MATCH, LOOP_PRIORITY
 #   LOOP_FINALIZE_INTEGRATION, LOOP_FINALIZE_PULL_REQUEST, LOOP_MAX_TARGETS_PER_SCHEDULE
-#   LOOP_PR_EXCLUDE, LOOP_PR_INCLUDE_BOTS, PROMPT_INSTRUCTIONS, BUDGET_FILE, RUN_LOG_FILE
+#   LOOP_PR_EXCLUDE, LOOP_PR_INCLUDE_BOTS, LOOP_PR_REQUIRE, PROMPT_INSTRUCTIONS, BUDGET_FILE, RUN_LOG_FILE
 #   GH_TOKEN / GITHUB_TOKEN
 #######################################
 
@@ -623,7 +623,7 @@ function main {
     fi
 
     resolve_integration_branches "${LOOP_INTEGRATION_BRANCHES}" "${BASE_BRANCH}"
-    list_open_prs "${LOOP_PR_EXCLUDE}" "${LOOP_PR_INCLUDE_BOTS}" "${gh_token}" || {
+    list_open_prs "${LOOP_PR_EXCLUDE}" "${LOOP_PR_INCLUDE_BOTS}" "${gh_token}" "${LOOP_PR_REQUIRE}" || {
         write_detect_outputs "false" "config_error" "[]"
         write_legacy_outputs "[]"
         return 0

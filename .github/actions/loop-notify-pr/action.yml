@@ -1,0 +1,83 @@
+name: loop-notify-pr
+description: "Post or update a marker PR comment after loop finalize on pull_request targets."
+
+inputs:
+  attempts:
+    default: ""
+    description: "Number of Agent→Verify attempts"
+    required: false
+  commit_sha:
+    default: ""
+    description: "Commit SHA after successful push_head (empty when not pushed)"
+    required: false
+  loop_name:
+    description: "Loop name for marker scoping"
+    required: true
+  loop_run_id:
+    default: ${{ github.run_id }}
+    description: "GitHub Actions workflow run ID"
+    required: false
+  max_attempts:
+    default: ""
+    description: "Maximum Agent→Verify attempts"
+    required: false
+  notify_context_json:
+    default: "{}"
+    description: "Machine context from loop-execute"
+    required: false
+  outcome:
+    description: "Finalize outcome enum"
+    required: true
+  pr_number:
+    description: "Target pull request number"
+    required: true
+  reject_reason:
+    default: ""
+    description: "Verifier rejection reason"
+    required: false
+  repository:
+    default: ${{ github.repository }}
+    description: "Repository owner/name"
+    required: false
+  target_json:
+    default: "{}"
+    description: "Target descriptor JSON from loop-detect"
+    required: false
+  token:
+    description: "GitHub token with pull-requests: write"
+    required: true
+  verdict:
+    default: ""
+    description: "Verifier verdict (APPROVE or REJECT)"
+    required: false
+
+outputs:
+  comment_id:
+    description: "GraphQL node id of the posted or updated comment"
+    value: ${{ steps.notify.outputs.comment_id }}
+  comment_url:
+    description: "URL of the posted or updated comment"
+    value: ${{ steps.notify.outputs.comment_url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Notify Pull Request
+      id: notify
+      shell: bash
+      env:
+        ATTEMPTS: ${{ inputs.attempts }}
+        COMMIT_SHA: ${{ inputs.commit_sha }}
+        GITHUB_SERVER_URL: ${{ github.server_url }}
+        LOOP_NAME: ${{ inputs.loop_name }}
+        LOOP_RUN_ID: ${{ inputs.loop_run_id }}
+        MAX_ATTEMPTS: ${{ inputs.max_attempts }}
+        NOTIFY_CONTEXT_JSON: ${{ inputs.notify_context_json }}
+        OUTCOME: ${{ inputs.outcome }}
+        PR_NUMBER: ${{ inputs.pr_number }}
+        REJECT_REASON: ${{ inputs.reject_reason }}
+        REPOSITORY: ${{ inputs.repository }}
+        TARGET_JSON: ${{ inputs.target_json }}
+        TOKEN: ${{ inputs.token }}
+        VERDICT: ${{ inputs.verdict }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/notify.sh"

@@ -144,6 +144,11 @@ on:
         description: "Comma-separated bot logins to include when scanning PRs"
         required: false
         type: string
+      pr_require:
+        default: ""
+        description: "PR require tokens (all must match). Empty when pull_requests=true → no PR-head targets"
+        required: false
+        type: string
       pr_title:
         default: ""
         description: "PR title when finalize strategy is open_pr"
@@ -298,6 +303,7 @@ jobs:
           loop_name: ${{ inputs.loop_name }}
           loop_pr_exclude: ${{ inputs.pr_exclude }}
           loop_pr_include_bots: ${{ inputs.pr_include_bots }}
+          loop_pr_require: ${{ inputs.pr_require }}
           loop_priority: ${{ inputs.priority }}
           loop_pull_requests: ${{ inputs.pull_requests && 'true' || 'false' }}
           loop_state_push_branch: ${{ inputs.branch_state }}
@@ -337,6 +343,7 @@ jobs:
       base_branch: ${{ matrix.target.target_json.mode == 'pull_request' && matrix.target.target_json.base.branch || matrix.target.target_json.to.branch }}
       current_sha: ${{ matrix.target.target_json.from.ref }}
       denylist: ${{ needs.detect.outputs.denylist }}
+      detect_result_json: ${{ toJson(matrix.target.result) }}
       domain_persistence_script: ${{ needs.detect.outputs.domain_persistence_script }}
       engine: ${{ needs.detect.outputs.engine }}
       environment: ${{ inputs.environment }}
@@ -386,7 +393,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Generate Maintenance Bot Token
+      - name: Generate App Bot Token
         continue-on-error: true
         id: app_token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0

@@ -32,7 +32,7 @@ All must be true. See [Loop Engineering Design — Design Invariants](../explana
 
 #### Agent (Execute)
 
-- [ ] L2/L3 outputs `branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections`, `usage_json`
+- [ ] L2/L3 outputs `branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections`, `usage_json`, `notify_context_json`
 - [ ] Worktree from `target.from` (Phase 1+)
 - [ ] Respects Skill allowed paths and denylist
 - [ ] Uses `ci-loop-agent.yaml`
@@ -52,6 +52,8 @@ All must be true. See [Loop Engineering Design — Design Invariants](../explana
 - [ ] State, run-log, domain ledger via `domain_persistence_script` in finalize job (no caller `git push` for `.loop/*`)
 - [ ] `outcome: watch` for Skill Watch (no `consecutive_failures` increment)
 - [ ] `loop-finalize` + `if: always()` with appropriate guards
+- [ ] `loop-notify-pr` when `target_json.to.pr_number` is set ([spec](../reference/loop-notify-pr-specification.md))
+- [ ] `pr_require` opt-in label for PR-head repair (repo admin creates label; humans apply)
 
 #### Skill
 
@@ -64,7 +66,7 @@ See [Multi-Branch Loops Design](../explanation/multi-branch-loops-design.md) and
 - [ ] `LOOP_INTEGRATION_BRANCHES` and/or `LOOP_PULL_REQUESTS` in caller `env`
 - [ ] `target_matrix` with `mode`, `from`, `to`, stable `key` per cell
 - [ ] Matrix execute/finalize; capped by `LOOP_MAX_TARGETS_PER_SCHEDULE`
-- [ ] `LOOP_PR_EXCLUDE`; bots excluded unless `LOOP_PR_INCLUDE_BOTS`
+- [ ] `LOOP_PR_EXCLUDE`; `LOOP_PR_REQUIRE` when `LOOP_PULL_REQUESTS=true` (fail-closed when empty); bots excluded unless `LOOP_PR_INCLUDE_BOTS`
 - [ ] `DEFAULT_LEVEL=L2` unless L3 gate passed
 - [ ] Per-target `concurrency.group` when using matrix fan-out
 

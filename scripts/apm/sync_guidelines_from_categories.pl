@@ -35,10 +35,11 @@ my %code_mod_guidelines = (
   'instructions-review' => [
     '- After changes, prioritize running validate.sh from instructions-review skill.',
     '- When instruction files are updated, always run an instruction quality re-evaluation.',
+    '- Keep applyTo precise to distributed rule paths; use stem-based companion cross-links (G-03, G-04, G-05).',
     '- Use individual commands only for debugging.',
   ],
   'shell-script-review' => [
-    '- When adding or changing shell scripts or sourced libraries, add or update matching Bats suites per bats.instructions.md in the same change.',
+    '- When adding or changing shell scripts or sourced libraries, add or update matching Bats suites under test/bats/ (mirror the script path) in the same change; follow companion Bats rules (stem `bats`) for suite layout.',
     '- After changes, prioritize running validate.sh from shell-script-validation skill.',
     '- Use individual commands only for debugging.',
   ],

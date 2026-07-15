@@ -36,19 +36,20 @@ Defined here only. Other docs link to this section.
 
 `ci-loop-caller` workflow inputs map to these `loop-detect` environment variables — see [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md#branch-configuration).
 
-| Variable                        | `ci-loop-caller` input     | Description                                                                                                       | Default / empty            |
-| ------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `LOOP_INTEGRATION_BRANCHES`     | `branch_match`             | Comma-separated branch patterns. Empty = watch `branch_state` only.                                               | `""`                       |
-| `LOOP_PULL_REQUESTS`            | `pull_requests`            | `true` / `false`.                                                                                                 | `false`                    |
-| `LOOP_BRANCH_MATCH`             | `branch_match_mode`        | `list` \| `glob` \| `regex`.                                                                                      | `glob`                     |
-| `LOOP_PRIORITY`                 | `priority`                 | Cron mode order. Overridden by [trigger-aware priority](#trigger-aware-priority).                                 | `integration,pull_request` |
-| `LOOP_FINALIZE_INTEGRATION`     | `finalize_integration`     | `open_pr` or `push` (L3).                                                                                         | `open_pr`                  |
-| `LOOP_FINALIZE_PULL_REQUEST`    | `finalize_pull_request`    | `push_head`.                                                                                                      | `push_head`                |
-| `DEFAULT_LEVEL`                 | `level`                    | `L1` \| `L2` \| `L3`. [Single level switch](#single-level-switch).                                                | `L2`                       |
-| `LOOP_PR_EXCLUDE`               | `pr_exclude`               | PR exclusion tokens — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md#pr-exclusion-rules). | `fork,draft,label:no-loop` |
-| `LOOP_PR_INCLUDE_BOTS`          | `pr_include_bots`          | Bot logins to include. Empty = all bots excluded.                                                                 | `""`                       |
-| `LOOP_MAX_TARGETS_PER_SCHEDULE` | `max_targets_per_schedule` | Max targets per cron tick (fan-out cap).                                                                          | `3`                        |
-| `LOOP_STATE_PUSH_BRANCH`        | `branch_state`             | Branch for `.loop/*` persistence commits and state migration fallback.                                            | repository default branch  |
+| Variable                        | `ci-loop-caller` input     | Description                                                                                                                                                                               | Default / empty            |
+| ------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `LOOP_INTEGRATION_BRANCHES`     | `branch_match`             | Comma-separated branch patterns. Empty = watch `branch_state` only.                                                                                                                       | `""`                       |
+| `LOOP_PULL_REQUESTS`            | `pull_requests`            | `true` / `false`.                                                                                                                                                                         | `false`                    |
+| `LOOP_BRANCH_MATCH`             | `branch_match_mode`        | `list` \| `glob` \| `regex`.                                                                                                                                                              | `glob`                     |
+| `LOOP_PRIORITY`                 | `priority`                 | Cron mode order. Overridden by [trigger-aware priority](#trigger-aware-priority).                                                                                                         | `integration,pull_request` |
+| `LOOP_FINALIZE_INTEGRATION`     | `finalize_integration`     | `open_pr` or `push` (L3).                                                                                                                                                                 | `open_pr`                  |
+| `LOOP_FINALIZE_PULL_REQUEST`    | `finalize_pull_request`    | `push_head`.                                                                                                                                                                              | `push_head`                |
+| `DEFAULT_LEVEL`                 | `level`                    | `L1` \| `L2` \| `L3`. [Single level switch](#single-level-switch).                                                                                                                        | `L2`                       |
+| `LOOP_PR_EXCLUDE`               | `pr_exclude`               | PR exclusion tokens — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md#pr-exclusion-and-opt-in-rules).                                                              | `fork,draft,label:no-loop` |
+| `LOOP_PR_REQUIRE`               | `pr_require`               | PR require tokens (all must match). Empty when `pull_requests=true` → no PR-head targets (fail-closed). See [loop-notify-pr Specification](../reference/loop-notify-pr-specification.md). | `""`                       |
+| `LOOP_PR_INCLUDE_BOTS`          | `pr_include_bots`          | Bot logins to include. Empty = all bots excluded.                                                                                                                                         | `""`                       |
+| `LOOP_MAX_TARGETS_PER_SCHEDULE` | `max_targets_per_schedule` | Max targets per cron tick (fan-out cap).                                                                                                                                                  | `3`                        |
+| `LOOP_STATE_PUSH_BRANCH`        | `branch_state`             | Branch for `.loop/*` persistence commits and state migration fallback.                                                                                                                    | repository default branch  |
 
 `.loop/*` metadata is **always centralized** on `branch_state` (typically `main`), aligned with [cobusgreyling loop-engineering](https://github.com/cobusgreyling/loop-engineering). Fix PRs may target other branches; state does not follow `target.to.branch`.
 
@@ -204,13 +205,13 @@ Bundling is **per-loop opt-in**, not a global LE requirement. The historical def
 
 **State is not a reviewer-facing deliverable.** `.loop/state-*.json` holds machine cursors (`last_sha`), outcomes, and circuit-breaker counters — analogous to a CI cache key or migration ledger, not to `CHANGELOG.md` or doc fixes. Asking humans to approve state in a PR is a category error.
 
-| Delivery                                                                                         | Verdict                                                                                                                       |
-| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| **Direct push to `branch_state`** (bot token + branch-protection bypass for `.loop/*`)           | **Target.** State updates are infrastructure writes, not review gates.                                                        |
-| **Merge-gated state push** (`pull_request` `closed` + `merged` → promote `pending` → `last_sha`) | **Chosen L2 model.** Fix PR is domain-only; state advances on the merge **event**, not because a human approved a state diff. |
-| **State-only PR** (including auto-merge queue)                                                   | **Anti-pattern.** A fallback when push is blocked; must not be the designed happy path.                                       |
-| **`state_bundle_with_fix_pr`**                                                                   | **Deprecated interim.** Mixed machine state into a human PR; retire after merge-gated push.                                   |
-| **L3 `push` / `push_head`**                                                                      | **Cleanest when automation owns the branch.** Fix + state land atomically; no PR for either.                                  |
+| Delivery                                                                                         | Verdict                                                                                                                                                       |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Direct push to `branch_state`** (bot token + branch-protection bypass for `.loop/*`)           | **Target.** State updates are infrastructure writes, not review gates.                                                                                        |
+| **Merge-gated state push** (`pull_request` `closed` + `merged` → promote `pending` → `last_sha`) | **Chosen L2 model.** Fix PR is domain-only; state advances on the merge **event**, not because a human approved a state diff.                                 |
+| **State-only PR** (including auto-merge queue)                                                   | **Anti-pattern.** A fallback when push is blocked; must not be the designed happy path.                                                                       |
+| **`state_bundle_with_fix_pr`**                                                                   | **Deprecated interim.** Mixed machine state into a human PR; retire after merge-gated push.                                                                   |
+| **L3 `push` / `push_head`**                                                                      | **Cleanest when automation owns the branch.** Fix + state land atomically; no **new fix PR** (`push_head` updates an existing PR when `to.pr_number` is set). |
 
 **What matters more than PR vs push is _when_ `last_sha` advances:**
 
@@ -225,7 +226,7 @@ So “state should be pushed, not PR’d” is right for **delivery mechanism**.
 
 1. **L2:** Fix PR carries **domain files only**. On `pull_request` `closed` + `merged`, a platform handler **direct-pushes** state to `branch_state` (promote `pending` → `last_sha`). Humans never review or merge state.
 2. **L2 + `to.branch != branch_state`:** Same merge hook; state always lands on `branch_state`, not on the fix branch.
-3. **L3:** `finalize: push` / `push_head` — single atomic push; no PR, no pending.
+3. **L3:** `finalize: push` / `push_head` — single atomic push to the watched branch; no **new fix PR**, no `pending` state cursor.
 4. **`state_bundle_with_fix_pr`:** **Deprecated interim** (changelog dogfood today). Remove once merge-gated push ships. Do not adopt for new loops.
 
 **Pending cursor:** On `pr-created`, finalize writes `targets[key].pending = { sha, pr, … }` to `branch_state` via direct push **without** advancing `last_sha`. `on-loop-state-promote` (`pull_request` `closed`) promotes `pending.sha` → `last_sha` on merge or clears `pending` when closed without merge. Re-open detect therefore still sees the same commits if the fix PR is closed without merge.

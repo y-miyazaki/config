@@ -82,6 +82,10 @@ inputs:
     default: ""
     description: "Bot logins to include when scanning PRs (empty = exclude all bots)"
     required: false
+  loop_pr_require:
+    default: ""
+    description: "PR require tokens (all must match). Empty when pull_requests=true → no PR-head targets"
+    required: false
   loop_priority:
     default: "integration,pull_request"
     description: "Target mode priority order (comma-separated)"
@@ -269,6 +273,7 @@ runs:
         LOOP_NAME: ${{ inputs.loop_name }}
         LOOP_PR_EXCLUDE: ${{ inputs.loop_pr_exclude }}
         LOOP_PR_INCLUDE_BOTS: ${{ inputs.loop_pr_include_bots }}
+        LOOP_PR_REQUIRE: ${{ inputs.loop_pr_require }}
         LOOP_PRIORITY: ${{ inputs.loop_priority }}
         LOOP_PULL_REQUESTS: ${{ inputs.loop_pull_requests }}
         LOOP_STATE_PUSH_BRANCH: ${{ inputs.loop_state_push_branch }}

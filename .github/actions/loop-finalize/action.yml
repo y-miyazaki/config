@@ -117,6 +117,9 @@ inputs:
     required: false
 
 outputs:
+  commit_sha:
+    description: "Commit SHA on target branch after push_head (empty when not pushed)"
+    value: ${{ steps.push_target.outputs.commit_sha }}
   outcome:
     description: "Final outcome written to state"
     value: ${{ steps.outcome.outputs.value }}
@@ -270,6 +273,7 @@ runs:
         git checkout -B "${TO_BRANCH}" "origin/${TO_BRANCH}"
         git merge --no-ff "origin/${AGENT_BRANCH}" -m "chore(loop): automated fix [skip ci]"
         git push origin HEAD:"${TO_BRANCH}"
+        echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
         echo "pushed=true" >> "$GITHUB_OUTPUT"
 
     - name: Create PR

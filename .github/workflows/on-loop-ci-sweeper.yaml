@@ -108,6 +108,7 @@ jobs:
         *This PR was created by a loop automation. Review before merging.*
       pr_exclude: fork,draft,label:no-loop
       pr_include_bots: ""
+      pr_require: label:ci-sweeper-ok
       pr_title: "fix(ci): automated CI repair (loop-ci-sweeper)"
       prompt_instructions: |
         Fix the failing CI checks identified in the detection result.

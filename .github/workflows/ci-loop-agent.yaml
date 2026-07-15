@@ -83,6 +83,11 @@ on:
         description: "Comma-separated path denylist for verifier (L2/L3)"
         required: false
         type: string
+      detect_result_json:
+        default: "{}"
+        description: "Detect script JSON result for notify_context_json (L2/L3)"
+        required: false
+        type: string
       domain_persistence_script:
         default: ""
         description: "Optional bash script for domain ledger persistence (finalize job)"
@@ -311,6 +316,7 @@ jobs:
       attempts: ${{ steps.execute.outputs.attempts }}
       branch: ${{ steps.worktree.outputs.branch }}
       has_changes: ${{ steps.execute.outputs.has_changes }}
+      notify_context_json: ${{ steps.execute.outputs.notify_context_json }}
       open_rejections: ${{ steps.execute.outputs.open_rejections }}
       outcome_override: ${{ steps.execute.outputs.outcome_override }}
       reason: ${{ steps.execute.outputs.reason }}
@@ -334,7 +340,7 @@ jobs:
           prune-cache: true
           version: ${{ inputs.uv_version }}
 
-      - name: Generate Maintenance Bot Token
+      - name: Generate App Bot Token
         continue-on-error: true
         id: app_token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
@@ -442,6 +448,7 @@ jobs:
           branch: ${{ steps.worktree.outputs.branch }}
           cli_version: ${{ inputs.cli_version }}
           commit_message: ${{ inputs.commit_message }}
+          detect_result_json: ${{ inputs.detect_result_json }}
           denylist: ${{ inputs.denylist }}
           engine: ${{ inputs.engine }}
           infer_files_pattern: ${{ inputs.infer_files_pattern }}
@@ -477,7 +484,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Generate Maintenance Bot Token
+      - name: Generate App Bot Token
         continue-on-error: true
         id: app_token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
@@ -521,9 +528,24 @@ jobs:
             echo "state_file=" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Parse Notify Target
+        id: notify_target
+        shell: bash
+        env:
+          TARGET_JSON: ${{ inputs.target_json }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${TARGET_JSON}" ]] && jq -e . >/dev/null 2>&1 <<< "${TARGET_JSON}"; then
+            echo "pr_number=$(jq -r '.to.pr_number // empty' <<< "${TARGET_JSON}")" >> "$GITHUB_OUTPUT"
+          else
+            echo "pr_number=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Finalize
+        id: finalize
         uses: y-miyazaki/config/.github/actions/loop-finalize@4885292fd83f1a0db7d8bbdee476486ee566d4b6 # v1.8.22
         with:
+          additional_commit_paths: ${{ inputs.additional_commit_paths }}
           agent_result: ${{ needs.agent-l2.result }}
           attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
           auto_merge: ${{ inputs.auto_merge }}
@@ -537,7 +559,6 @@ jobs:
           loop_name: ${{ inputs.loop_name }}
           open_rejections: ${{ needs.agent-l2.outputs.open_rejections }}
           outcome_override: ${{ inputs.outcome_override != '' && inputs.outcome_override || needs.agent-l2.outputs.outcome_override }}
-          additional_commit_paths: ${{ inputs.additional_commit_paths }}
           pr_body: ${{ inputs.pr_body }}
           pr_title: ${{ inputs.pr_title }}
           reject_reason: ${{ needs.agent-l2.outputs.reason }}
@@ -549,4 +570,25 @@ jobs:
           target_json: ${{ inputs.target_json }}
           token: ${{ steps.push_token.outputs.token }}
           usage_json: ${{ needs.agent-l2.outputs.usage_json || '' }}
+          verdict: ${{ needs.agent-l2.outputs.verdict }}
+
+      - name: Notify Pull Request
+        continue-on-error: true
+        if: >-
+          always() &&
+          steps.notify_target.outputs.pr_number != ''
+        uses: y-miyazaki/config/.github/actions/loop-notify-pr@4885292fd83f1a0db7d8bbdee476486ee566d4b6 # v1.8.22
+        with:
+          attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
+          commit_sha: ${{ steps.finalize.outputs.commit_sha || '' }}
+          loop_name: ${{ inputs.loop_name }}
+          loop_run_id: ${{ github.run_id }}
+          max_attempts: ${{ inputs.agent_loop_max_attempts }}
+          notify_context_json: ${{ needs.agent-l2.outputs.notify_context_json || '{}' }}
+          outcome: ${{ steps.finalize.outputs.outcome || 'error' }}
+          pr_number: ${{ steps.notify_target.outputs.pr_number }}
+          reject_reason: ${{ needs.agent-l2.outputs.reason }}
+          repository: ${{ github.repository }}
+          target_json: ${{ inputs.target_json }}
+          token: ${{ steps.push_token.outputs.token }}
           verdict: ${{ needs.agent-l2.outputs.verdict }}

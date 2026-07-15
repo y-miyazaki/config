@@ -200,6 +200,7 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 | `no_changes_verdict`        | string  | no       | `REJECT`                   | detect → execute                                        |
 | `pr_body`                   | string  | no       | `""`                       | detect → execute finalize                               |
 | `pr_exclude`                | string  | no       | `fork,draft,label:no-loop` | `loop-detect`                                           |
+| `pr_require`                | string  | no       | `label:ci-sweeper-ok`      | `loop-detect`                                           |
 | `pr_include_bots`           | string  | no       | `""`                       | `loop-detect`                                           |
 | `pr_title`                  | string  | no       | `""`                       | detect → execute                                        |
 | `prompt_instructions`       | string  | no       | `""`                       | `loop-detect`                                           |

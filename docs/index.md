@@ -22,6 +22,7 @@ _Task-oriented guides for specific goals._
 _Information-oriented technical descriptions._
 
 - [Config Repository Functional Specification](reference/specification.md)
+- [loop-notify-pr Specification](reference/loop-notify-pr-specification.md) (draft)
 - [Loop Engineering Checklist](reference/loop-engineering-checklist.md)
 
 ## Explanation

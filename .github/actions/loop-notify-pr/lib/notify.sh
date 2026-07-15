@@ -1,0 +1,403 @@
+#!/bin/bash
+#######################################
+# Description:
+#   Post or update a loop-notify-pr marker comment on a pull request.
+#   Environment variables mirror loop-notify-pr composite action inputs.
+#
+# Usage:
+#   LOOP_NAME=ci-sweeper OUTCOME=pr-created PR_NUMBER=42 TOKEN=... bash lib/notify.sh
+#
+# Design Rules:
+#   - One marker comment per PR per loop name (idempotent upsert)
+#   - Notification failures must not fail the caller job (warnings only)
+#   - No full diff or raw logs in comment body
+#
+# Output:
+#   Writes comment_id and comment_url to GITHUB_OUTPUT
+#
+# Dependencies:
+#   - bash, gh, jq
+#######################################
+
+set -euo pipefail
+umask 027
+export LC_ALL=C.UTF-8
+
+#######################################
+# Global variables
+#######################################
+ATTEMPTS="${ATTEMPTS:-}"
+COMMIT_SHA="${COMMIT_SHA:-}"
+GITHUB_OUTPUT="${GITHUB_OUTPUT:-}"
+GITHUB_SERVER_URL="${GITHUB_SERVER_URL:-https://github.com}"
+LOOP_NAME="${LOOP_NAME:-}"
+LOOP_RUN_ID="${LOOP_RUN_ID:-}"
+MAX_ATTEMPTS="${MAX_ATTEMPTS:-}"
+NOTIFY_CONTEXT_JSON="${NOTIFY_CONTEXT_JSON:-"{}"}"
+OUTCOME="${OUTCOME:-}"
+PR_NUMBER="${PR_NUMBER:-}"
+REJECT_REASON="${REJECT_REASON:-}"
+REPOSITORY="${REPOSITORY:-}"
+TARGET_JSON="${TARGET_JSON:-"{}"}"
+TOKEN="${TOKEN:-}"
+VERDICT="${VERDICT:-}"
+
+#######################################
+# build_comment_body: Render marker comment markdown
+#
+# Arguments:
+#   $1 - Actor login
+#
+# Global Variables:
+#   ATTEMPTS - Attempt count for display
+#   COMMIT_SHA - Pushed commit SHA when present
+#   GITHUB_SERVER_URL - GitHub server URL prefix
+#   LOOP_NAME - Loop name for marker scoping
+#   LOOP_RUN_ID - Current workflow run id
+#   MAX_ATTEMPTS - Maximum attempts for display
+#   NOTIFY_CONTEXT_JSON - Machine context from loop-execute
+#   OUTCOME - Finalize outcome enum
+#   REJECT_REASON - Verifier rejection reason
+#   TARGET_JSON - Target descriptor JSON
+#   VERDICT - Verifier verdict when present
+#
+# Returns:
+#   Comment body to stdout
+#
+#######################################
+function build_comment_body {
+    local actor="$1"
+    local marker branch to_branch workflow_name workflow_run_id workflow_url
+    local loop_run_url commit_url short_sha verdict_display fix_context agent_summary
+    local changed_files diff_stat fix_summary reject_display timestamp
+
+    marker="<!-- loop-notify-pr:v1:${LOOP_NAME} -->"
+    timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+    if [[ -n ${TARGET_JSON} ]] && jq -e . <<< "${TARGET_JSON}" > /dev/null 2>&1; then
+        branch=$(jq -r '.to.branch // "-"' <<< "${TARGET_JSON}")
+        to_branch="${branch}"
+        workflow_name=$(jq -r '.workflow_name // "workflow"' <<< "${TARGET_JSON}")
+        workflow_run_id=$(jq -r '.workflow_run_id // empty' <<< "${TARGET_JSON}")
+    else
+        to_branch="-"
+        workflow_name="workflow"
+        workflow_run_id=""
+    fi
+
+    if [[ -n ${workflow_run_id} ]]; then
+        workflow_url="${GITHUB_SERVER_URL}/${REPOSITORY}/actions/runs/${workflow_run_id}"
+    else
+        workflow_url="-"
+    fi
+
+    loop_run_url="${GITHUB_SERVER_URL}/${REPOSITORY}/actions/runs/${LOOP_RUN_ID}"
+
+    if [[ -n ${COMMIT_SHA} ]]; then
+        short_sha="${COMMIT_SHA:0:7}"
+        commit_url="${GITHUB_SERVER_URL}/${REPOSITORY}/commit/${COMMIT_SHA}"
+    else
+        short_sha="-"
+        commit_url="#"
+    fi
+
+    if [[ -n ${VERDICT} ]]; then
+        verdict_display="${VERDICT}"
+    else
+        verdict_display="—"
+    fi
+
+    if [[ -n ${NOTIFY_CONTEXT_JSON} ]] && jq -e . <<< "${NOTIFY_CONTEXT_JSON}" > /dev/null 2>&1; then
+        fix_summary=$(jq -r '.fix_summary // ""' <<< "${NOTIFY_CONTEXT_JSON}")
+        diff_stat=$(jq -r '.diff_stat // ""' <<< "${NOTIFY_CONTEXT_JSON}")
+        agent_summary=$(jq -r '.agent_summary // ""' <<< "${NOTIFY_CONTEXT_JSON}")
+        changed_files=$(jq -r '.changed_files[]? // empty' <<< "${NOTIFY_CONTEXT_JSON}" | paste -sd, - || true)
+    else
+        fix_summary=""
+        diff_stat=""
+        agent_summary=""
+        changed_files=""
+    fi
+
+    fix_summary="$(truncate_text "$(redact_sensitive_text "${fix_summary}")" 2000)"
+    agent_summary="$(truncate_text "$(redact_sensitive_text "${agent_summary}")" 2000)"
+    reject_display="$(truncate_text "$(redact_sensitive_text "${REJECT_REASON}")" 2000)"
+
+    if [[ -n ${changed_files} || -n ${diff_stat} ]]; then
+        fix_context="**${fix_summary}**"
+        if [[ -n ${changed_files} ]]; then
+            fix_context="${fix_context}"$'\n\n'"Changed files: \`${changed_files}\`"
+        fi
+        if [[ -n ${diff_stat} ]]; then
+            fix_context="${fix_context}"$'\n\n'"\`${diff_stat}\`"
+        fi
+    elif [[ ${OUTCOME} == "watch" ]]; then
+        fix_context="No file changes; classified as **watch**."
+    elif [[ -n ${reject_display} ]]; then
+        fix_context="${reject_display}"
+    else
+        fix_context="No mechanical fix context available."
+    fi
+
+    cat << EOF
+${marker}
+## Loop notification: ${LOOP_NAME}
+
+| Field | Value |
+| ----- | ----- |
+| Outcome | \`${OUTCOME}\` |
+| Verdict | ${verdict_display} |
+| Actor | \`${actor}\` |
+| Commit | [\`${short_sha}\`](${commit_url}) |
+| Branch | \`${to_branch}\` |
+| Failed run | [${workflow_name} #${workflow_run_id:-—}](${workflow_url}) |
+| Loop run | [actions run](${loop_run_url}) |
+| Attempt | ${ATTEMPTS:-—}/${MAX_ATTEMPTS:-—} |
+| Timestamp | ${timestamp} |
+
+### Fix context
+
+${fix_context}
+EOF
+
+    if [[ -n ${agent_summary} ]]; then
+        cat << EOF
+
+### Agent summary (appendix)
+
+${agent_summary}
+EOF
+    fi
+}
+
+#######################################
+# find_existing_comment: Find comment id by loop marker
+#
+# Arguments:
+#   $1 - Marker substring
+#
+# Global Variables:
+#   PR_NUMBER - Target pull request number
+#   REPOSITORY - Repository owner/name
+#
+# Returns:
+#   Comment GraphQL node id to stdout, or empty
+#
+#######################################
+function find_existing_comment {
+    local marker="$1"
+    gh pr view "${PR_NUMBER}" \
+        --repo "${REPOSITORY}" \
+        --json comments \
+        --jq ".comments[] | select(.body | contains(\"${marker}\")) | .id" \
+        2> /dev/null | head -1 || true
+}
+
+#######################################
+# redact_sensitive_text: Redact common secret patterns
+#
+# Arguments:
+#   $1 - Input text
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Redacted text to stdout
+#
+#######################################
+function redact_sensitive_text {
+    local text="$1"
+    # Keep patterns aligned with loop-ci-sweeper sanitize_log_excerpt.
+    text=$(sed -E 's/gh[pousr]_[A-Za-z0-9_]{20,}/[REDACTED]/g' <<< "${text}")
+    text=$(sed -E 's/AKIA[0-9A-Z]{16}/[REDACTED]/g' <<< "${text}")
+    text=$(sed -E 's/(password|secret|token|api[_-]?key)[[:space:]]*[:=][[:space:]]*[^[:space:]\"]+/\1=[REDACTED]/gi' <<< "${text}")
+    text=$(sed -E 's/x-access-token:[A-Za-z0-9._-]+/x-access-token:[REDACTED]/g' <<< "${text}")
+    text=$(sed -E 's/Bearer[[:space:]]+[A-Za-z0-9._-]+/Bearer [REDACTED]/g' <<< "${text}")
+    text=$(sed -E 's/Authorization:[[:space:]]*[^[:space:]\"]+/Authorization: [REDACTED]/gi' <<< "${text}")
+    text=$(sed -E 's/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/[REDACTED-JWT]/g' <<< "${text}")
+    text=$(sed -E 's/-----BEGIN [A-Z ]+-----[^-]*-----END [A-Z ]+-----/[REDACTED-PEM]/g' <<< "${text}")
+    printf '%s' "${text}"
+}
+
+#######################################
+# truncate_text: Truncate text to max length
+#
+# Arguments:
+#   $1 - Input text
+#   $2 - Maximum length
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Truncated text to stdout
+#
+#######################################
+function truncate_text {
+    local text="$1"
+    local max="$2"
+    if [[ ${#text} -le ${max} ]]; then
+        printf '%s' "${text}"
+    else
+        printf '%s' "${text:0:max}"
+    fi
+}
+
+#######################################
+# upsert_comment: Create or update PR comment
+#
+# Arguments:
+#   $1 - Comment body file path
+#   $2 - Marker substring
+#
+# Global Variables:
+#   GITHUB_OUTPUT - GitHub Actions output file path
+#   PR_NUMBER - Target pull request number
+#   REPOSITORY - Repository owner/name
+#
+# Returns:
+#   0 on success, 1 on failure
+#
+#######################################
+function upsert_comment {
+    local body_file="$1"
+    local marker="$2"
+    local comment_id comment_url payload update_err
+
+    comment_id="$(find_existing_comment "${marker}")"
+
+    if [[ -n ${comment_id} ]]; then
+        update_err="$(mktemp)"
+        # Pass multiline body via JSON stdin (avoid -f body= form encoding issues).
+        # shellcheck disable=SC2016
+        payload="$(jq -nc \
+            --arg commentId "${comment_id}" \
+            --rawfile body "${body_file}" \
+            --arg query 'mutation UpdateComment($commentId: ID!, $body: String!) {
+              updateIssueComment(input: {id: $commentId, body: $body}) {
+                issueComment { id url }
+              }
+            }' \
+            '{query: $query, variables: {commentId: $commentId, body: $body}}')"
+        if comment_url="$(printf '%s' "${payload}" | gh api graphql --input - \
+            --jq '.data.updateIssueComment.issueComment.url' 2> "${update_err}")" \
+            && [[ -n ${comment_url} ]]; then
+            rm -f "${update_err}"
+            echo "comment_id=${comment_id}" >> "${GITHUB_OUTPUT}"
+            echo "comment_url=${comment_url}" >> "${GITHUB_OUTPUT}"
+            return 0
+        fi
+        echo "::warning::Failed to update existing loop-notify-pr comment; creating a new comment"
+        rm -f "${update_err}"
+    fi
+
+    if ! gh pr comment "${PR_NUMBER}" \
+        --repo "${REPOSITORY}" \
+        --body-file "${body_file}" > /dev/null; then
+        return 1
+    fi
+
+    comment_id="$(find_existing_comment "${marker}")"
+    comment_url="$(gh pr view "${PR_NUMBER}" \
+        --repo "${REPOSITORY}" \
+        --json comments \
+        --jq ".comments[] | select(.body | contains(\"${marker}\")) | .url" \
+        2> /dev/null | head -1 || true)"
+    echo "comment_id=${comment_id}" >> "${GITHUB_OUTPUT}"
+    echo "comment_url=${comment_url}" >> "${GITHUB_OUTPUT}"
+    return 0
+}
+
+#######################################
+# validate_required_inputs: Validate required loop-notify-pr environment
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   GITHUB_OUTPUT - GitHub Actions output file path
+#   LOOP_NAME - Loop name for marker scoping
+#   OUTCOME - Finalize outcome enum
+#   PR_NUMBER - Target pull request number
+#   REPOSITORY - Repository owner/name
+#   TOKEN - GitHub token with pull-requests: write
+#
+# Returns:
+#   Exits 1 when required input is missing
+#
+#######################################
+function validate_required_inputs {
+    : "${GITHUB_OUTPUT:?}"
+    : "${LOOP_NAME:?}"
+    : "${OUTCOME:?}"
+    : "${PR_NUMBER:?}"
+    : "${REPOSITORY:?}"
+    : "${TOKEN:?}"
+}
+
+#######################################
+# main: Post or update loop-notify-pr marker comment
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   ATTEMPTS - Attempt count for display
+#   COMMIT_SHA - Pushed commit SHA when present
+#   GITHUB_OUTPUT - GitHub Actions output file path
+#   GITHUB_SERVER_URL - GitHub server URL prefix
+#   LOOP_NAME - Loop name for marker scoping
+#   LOOP_RUN_ID - Current workflow run id
+#   MAX_ATTEMPTS - Maximum attempts for display
+#   NOTIFY_CONTEXT_JSON - Machine context from loop-execute
+#   OUTCOME - Finalize outcome enum
+#   PR_NUMBER - Target pull request number
+#   REJECT_REASON - Verifier rejection reason
+#   REPOSITORY - Repository owner/name
+#   TARGET_JSON - Target descriptor JSON
+#   TOKEN - GitHub token (exported as GH_TOKEN for gh CLI)
+#   VERDICT - Verifier verdict when present
+#
+# Returns:
+#   0 on success or when prerequisites are missing
+#
+#######################################
+function main {
+    local actor body_file marker
+
+    if ! command -v gh > /dev/null 2>&1; then
+        echo "::warning::gh CLI is required for loop-notify-pr"
+        return 0
+    fi
+    if ! command -v jq > /dev/null 2>&1; then
+        echo "::warning::jq is required for loop-notify-pr"
+        return 0
+    fi
+
+    validate_required_inputs
+
+    export GH_TOKEN="${TOKEN}"
+    actor="$(gh api user --jq '.login' 2> /dev/null || echo "github-actions")"
+    marker="<!-- loop-notify-pr:v1:${LOOP_NAME} -->"
+    body_file="$(mktemp)"
+    trap 'rm -f "${body_file}"' EXIT
+
+    build_comment_body "${actor}" > "${body_file}"
+
+    if [[ $(wc -c < "${body_file}") -gt 65536 ]]; then
+        echo "::warning::loop-notify-pr comment exceeds GitHub limit; truncating appendix"
+        sed -i '/^### Agent summary/,$d' "${body_file}" || true
+    fi
+
+    if ! upsert_comment "${body_file}" "${marker}"; then
+        echo "::warning::loop-notify-pr failed to post comment on PR #${PR_NUMBER}"
+        return 0
+    fi
+
+    echo "::notice title=loop-notify-pr::Posted notification on PR #${PR_NUMBER}"
+}
+
+if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
+    main "$@"
+fi

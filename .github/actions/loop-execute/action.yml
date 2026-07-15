@@ -48,6 +48,10 @@ inputs:
     default: "chore: loop-automated update"
     description: "Commit message prefix for loop attempts"
     required: false
+  detect_result_json:
+    default: "{}"
+    description: "Detect script JSON result for notify_context_json fix_summary"
+    required: false
   denylist:
     default: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
     description: "Comma-separated path denylist"
@@ -111,18 +115,21 @@ outputs:
   has_changes:
     description: "Whether any files were committed and pushed"
     value: ${{ steps.push.outputs.has_changes }}
+  notify_context_json:
+    description: "Machine context for loop-notify-pr"
+    value: ${{ steps.notify_context.outputs.notify_context_json }}
   open_rejections:
     description: "JSON array of unresolved structured rejections"
     value: ${{ steps.loop.outputs.open_rejections }}
+  outcome_override:
+    description: "Optional finalize outcome when Skill defers without edits (e.g. watch)"
+    value: ${{ steps.loop.outputs.outcome_override }}
   reason:
     description: "Final verifier reason"
     value: ${{ steps.loop.outputs.reason }}
   usage_json:
     description: "Measured token usage JSON (empty when CLI usage is unavailable)"
     value: ${{ steps.loop.outputs.usage_json }}
-  outcome_override:
-    description: "Optional finalize outcome when Skill defers without edits (e.g. watch)"
-    value: ${{ steps.loop.outputs.outcome_override }}
   verdict:
     description: "Final verdict (APPROVE or REJECT)"
     value: ${{ steps.loop.outputs.verdict }}
@@ -183,6 +190,17 @@ runs:
         LOOP_HAS_CHANGES: ${{ steps.loop.outputs.has_changes }}
         WORKTREE_PATH: ${{ inputs.worktree_path }}
       run: bash "${GITHUB_ACTION_PATH}/lib/push.sh"
+
+    - name: Build Notify Context
+      id: notify_context
+      shell: bash
+      env:
+        BASE_BRANCH: ${{ inputs.base_branch }}
+        DETECT_RESULT_JSON: ${{ inputs.detect_result_json }}
+        HAS_CHANGES: ${{ steps.push.outputs.has_changes }}
+        STATUS_DIR: ${{ runner.temp }}/loop-execute-status
+        WORKTREE_PATH: ${{ inputs.worktree_path }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/notify_context.sh"
 
     - name: Cleanup Worktree
       if: always()

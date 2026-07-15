@@ -446,7 +446,7 @@ For L2 and above where auto-fixes are performed, branch isolation is mandatory. 
 | L1    | `loop-agent-once`                                                  | Read-only on the checked-out workspace (no worktree branch) |
 | L2/L3 | `loop-worktree-setup` → `loop-execute` (push and cleanup internal) | Isolated worktree path and agent branch                     |
 
-**Unified contract**: `ci-loop-agent.yaml` L2/L3 outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections, usage_json }`. Verification runs inside `loop-execute` (separate verifier session); finalize consumes those outputs for all engines.
+**Unified contract**: `ci-loop-agent.yaml` L2/L3 outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections, usage_json, notify_context_json }`. Verification runs inside `loop-execute` (separate verifier session); finalize and `loop-notify-pr` consume those outputs for all engines.
 
 **Worktree principles:**
 
@@ -639,15 +639,15 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 
 #### Agent (Execute)
 
-| Aspect              | Definition                                                                                                                           |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| **Responsibility**  | Produce code/content changes based on the prompt. Operate within the constraints defined by the Skill                                |
-| **Input**           | Prompt text, skill name, engine, model, level, `target_json` (Phase 1+)                                                              |
-| **Output (L1)**     | Read-only session result (no branch / verdict contract)                                                                              |
-| **Output (L2/L3)**  | Via `loop-execute` inside `ci-loop-agent`: `branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections`, `usage_json` |
-| **May modify**      | Files within the Skill's allowed paths, on an isolated branch only (L2/L3)                                                           |
-| **Must not modify** | Files on denylist. Files outside allowed paths. Default branch directly                                                              |
-| **Contract**        | L2/L3 always outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections, usage_json }` regardless of engine strategy |
+| Aspect              | Definition                                                                                                                                                  |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Responsibility**  | Produce code/content changes based on the prompt. Operate within the constraints defined by the Skill                                                       |
+| **Input**           | Prompt text, skill name, engine, model, level, `target_json` (Phase 1+)                                                                                     |
+| **Output (L1)**     | Read-only session result (no branch / verdict contract)                                                                                                     |
+| **Output (L2/L3)**  | Via `loop-execute` inside `ci-loop-agent`: `branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections`, `usage_json`, `notify_context_json` |
+| **May modify**      | Files within the Skill's allowed paths, on an isolated branch only (L2/L3)                                                                                  |
+| **Must not modify** | Files on denylist. Files outside allowed paths. Default branch directly                                                                                     |
+| **Contract**        | L2/L3 always outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections, usage_json, notify_context_json }` regardless of engine strategy   |
 
 #### Verify
 
@@ -668,7 +668,9 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 | **Input**          | `target_json`, execute outputs (`branch`, `has_changes`, `verdict`, …), `current_sha`                                                                                   |
 | **Output**         | PR URL and/or push result, updated state, run-log entry                                                                                                                 |
 | **May modify**     | `.loop/*` persistence on `LOOP_STATE_PUSH_BRANCH`; PR/branch operations per strategy — not source files under repair                                                    |
-| **Must not**       | Perform notifications, trigger downstream workflows, or apply implementer edits to application/doc source                                                               |
+| **Must not**       | Perform ad-hoc notifications outside `loop-notify-pr`; trigger downstream workflows; apply implementer edits to application/doc source                                  |
+
+When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as a **sibling step** immediately after `loop-finalize` (not nested inside the finalize action).
 
 ##### Finalize strategy matrix
 

@@ -7,8 +7,9 @@ description: "AI Assistant Instructions for Shell Script"
 
 ## Scope
 
-- Scope is limited to implementing, updating, and validating Shell scripts (`*.sh`).
-- Bats suites (`*.bats`) follow `bats.instructions.md` in this package.
+- Scope covers implementing and validating Shell scripts (`*.sh`), including pairing Bats suites (`*.bats`) in the same change.
+- TEST-00 (MUST): When adding or materially changing a shell script or sourced library, add or update the matching Bats suite under `test/bats/` (mirror the script path) in the same change — do not defer tests.
+- Suite layout and helpers: companion Bats rules (stem `bats`). After `apm install`, that stem is `.cursor/rules/bats.mdc` (Cursor) or `.claude/rules/bats.md` (Claude) — not `bats.instructions.md`.
 
 ## Standards
 
@@ -240,7 +241,7 @@ Write `None` for sections that do not apply. **Do not omit sections** — especi
 - TEST-00 (MUST): Add Tests With Script Changes
   - Check: When adding or materially changing a shell script or sourced library, is a matching Bats suite added or updated in the same change?
 - TEST-01 (MUST): Implement Unit Tests
-  - Check: Are unit tests implemented with Bats per bats.instructions.md?
+  - Check: Are unit tests implemented with Bats per companion Bats rules (stem `bats`)?
 - TEST-02 (SHOULD): Bats Test Functions in a-z Order
   - Check: Are test functions placed in a-z order after setup/teardown?
 - TEST-03 (SHOULD): CI/CD Integration
@@ -248,7 +249,7 @@ Write `None` for sections that do not apply. **Do not omit sections** — especi
 
 ### Code Modification Guidelines
 
-- When adding or changing shell scripts or sourced libraries, add or update matching Bats suites per bats.instructions.md in the same change.
+- When adding or changing shell scripts or sourced libraries, add or update matching Bats suites under test/bats/ (mirror the script path) in the same change; follow companion Bats rules (stem `bats`) for suite layout.
 - After changes, prioritize running validate.sh from shell-script-validation skill.
 - Use individual commands only for debugging.
 
@@ -270,7 +271,7 @@ shellcheck script.sh
 bats -r test/bats
 ```
 
-**Detailed guide**: See shell-script-validation skill SKILL.md. For Bats suite layout and helpers, see `bats.instructions.md`. For comment/header conventions, see shell-script-review skill.
+**Detailed guide**: See shell-script-validation skill SKILL.md. For Bats suite layout and helpers, see companion Bats rules (stem `bats`). For comment/header conventions, see shell-script-review skill.
 
 ## Security Guidelines
 

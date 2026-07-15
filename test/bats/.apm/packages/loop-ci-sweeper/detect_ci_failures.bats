@@ -24,11 +24,15 @@ teardown() {
     rm -f "${LEDGER_FILE:-}"
 }
 
-@test "split_csv_to_array trims whitespace from workflow filter entries" {
-    declare -a trimmed=()
-    split_csv_to_array " on-loop-ci-sweeper , ci-markdown " trimmed
-    [ "${trimmed[0]}" = "on-loop-ci-sweeper" ]
-    [ "${trimmed[1]}" = "ci-markdown" ]
+@test "append_ignored records ledger skip reason" {
+    REJECT_RETRY_POLICY="block"
+    printf '%s' '{"runs":{"12345":{"outcome":"no-action","reject_count":0}}}' > "${LEDGER_FILE}"
+    FAILURES_JSON=()
+    IGNORED_JSON=()
+    collect_failures_for_run "ci-markdown" "12345" "abc123" "main" "https://example.com/run/1" "failure"
+    [ "${#FAILURES_JSON[@]}" -eq 0 ]
+    [ "${#IGNORED_JSON[@]}" -eq 1 ]
+    [[ ${IGNORED_JSON[0]} == *"ledger: no-action"* ]]
 }
 
 @test "classify_failure_type treats normal runner label as regression" {
@@ -92,20 +96,7 @@ teardown() {
     [ "$status" -eq 1 ]
 }
 
-@test "collect_failures_for_run ignores excluded workflow for regular failure conclusion" {
-    export CI_SWEEPER_EXCLUDED_WORKFLOWS="on-loop-changelog"
-    load_workflow_filters
-    FAILURES_JSON=()
-    IGNORED_JSON=()
-    collect_failures_for_run "on-loop-changelog" "12345" "abc123" "main" "https://example.com/run/1" "failure"
-    [ "${#FAILURES_JSON[@]}" -eq 0 ]
-    [ "${#IGNORED_JSON[@]}" -eq 1 ]
-    [[ ${IGNORED_JSON[0]} == *"excluded workflow filter"* ]]
-}
-
-@test "collect_failures_for_run includes excluded workflow for startup_failure conclusion" {
-    export CI_SWEEPER_EXCLUDED_WORKFLOWS="on-loop-changelog"
-    load_workflow_filters
+@test "collect_failures_for_run includes startup_failure as workflow-level failure" {
     MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
     mkdir -p "${MOCK_BIN}"
     cat > "${MOCK_BIN}/gh" << 'EOF'
@@ -134,7 +125,6 @@ EOF
 }
 
 @test "collect_failures_for_run includes infra failures in failures array" {
-    load_workflow_filters
     MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
     mkdir -p "${MOCK_BIN}"
     cat > "${MOCK_BIN}/gh" << 'EOF'
@@ -188,7 +178,6 @@ EOF
 }
 
 @test "collect_failures_for_run includes secret-missing failures in failures array" {
-    load_workflow_filters
     MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
     mkdir -p "${MOCK_BIN}"
     cat > "${MOCK_BIN}/gh" << 'EOF'
@@ -224,7 +213,6 @@ EOF
 }
 
 @test "collect_failures_for_run emits valid JSON when log excerpt contains control characters" {
-    load_workflow_filters
     MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
     mkdir -p "${MOCK_BIN}"
     cat > "${MOCK_BIN}/gh" << 'EOF'

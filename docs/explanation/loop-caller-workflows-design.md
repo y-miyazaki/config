@@ -92,6 +92,8 @@ auto_merge: ${{ needs.detect.outputs.level == 'L3' && matrix.target.target_json.
 
 When `finalize_enabled=true`, `ci-loop-agent` runs `loop-finalize` after `agent-l2` in the **same workflow instance**, preserving execute output pairing per matrix cell.
 
+When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as a **sibling step** immediately after `loop-finalize` (not nested inside the composite — see [composite action composition](../reference/specification.md#composite-action-composition)). See [loop-notify-pr Specification](../reference/loop-notify-pr-specification.md).
+
 ### Persistence layer
 
 All `.loop/*` writes in **finalize step** via `loop-finalize` — not separate caller `git push` steps.

@@ -81,6 +81,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `no_changes_verdict`                                        | `APPROVE` or `REJECT` when implementer produces no file diff on actionable CI failure.                                                                | `REJECT`                                                                                                 |
 | `pr_body`                                                   | Static markdown prefix for finalize PR body.                                                                                                          | Inline in caller workflow                                                                                |
 | `pr_exclude`                                                | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`.                                                                                    | `fork,draft,label:no-loop`                                                                               |
+| `pr_require`                                                | PR require tokens (all must match). `label:ci-sweeper-ok` for PR-head opt-in.                                                                         | `label:ci-sweeper-ok`                                                                                    |
 | `pr_include_bots`                                           | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots.                                                                    | `""`                                                                                                     |
 | `pr_title`                                                  | PR title when finalize strategy is `open_pr`.                                                                                                         | `fix(ci): automated CI repair (loop-ci-sweeper)`                                                         |
 | `prompt_instructions`                                       | Domain instructions: classify Watch vs Fix; minimal diff; run validation skills.                                                                      | Inline in caller workflow                                                                                |
@@ -125,7 +126,7 @@ Per watch branch, `loop-detect` sets context; script uses `gh run list --branch 
 
 - Failed runs where `head_branch` matches open PR
 - Emit `pr_number`, `base.branch` in `target_json`
-- Apply [PR exclusion rules](#pr-exclusion-rules)
+- Apply [PR exclusion and opt-in rules](#pr-exclusion-and-opt-in-rules)
 
 ### Detect truth source
 
@@ -142,7 +143,9 @@ When the Skill classifies **Fix** but the implementer produces no changes → RE
 
 When the Skill classifies **Watch** (infra/flake/env) with no code edit → `outcome: watch` (not REJECT). See [Outcome enum](../../reference/specification.md#outcome-enum).
 
-## PR Exclusion Rules
+## PR Exclusion and Opt-In Rules
+
+### Exclusion (`pr_exclude`)
 
 | Rule          | Default     | Token                           |
 | ------------- | ----------- | ------------------------------- |
@@ -151,6 +154,20 @@ When the Skill classifies **Watch** (infra/flake/env) with no code edit → `out
 | Label opt-out | Exclude     | `label:<name>`                  |
 | Bots          | **Exclude** | use `pr_include_bots` to opt in |
 | WIP title     | Optional    | `wip_title`                     |
+
+### Opt-in (`pr_require`)
+
+PR-head repair (`push_head`) requires explicit consent. Dogfood:
+
+| Rule         | Token                 | Setup                                                             |
+| ------------ | --------------------- | ----------------------------------------------------------------- |
+| Opt-in label | `label:ci-sweeper-ok` | Repo admin creates label once; author or maintainer applies to PR |
+
+If the label does not exist in the repository, detect never matches PR-head targets (silent no-op, not workflow error). The bot does not create or apply labels.
+
+Dogfood wiring: `on-loop-ci-sweeper.yaml` sets `pr_require: label:ci-sweeper-ok` with `pull_requests: true`. Empty `pr_require` remains fail-closed (no PR-head targets).
+
+After finalize, `loop-notify-pr` posts a marker comment on the PR. See [loop-notify-pr Specification](../../reference/loop-notify-pr-specification.md).
 
 ## Execute
 

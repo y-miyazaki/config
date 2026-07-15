@@ -125,7 +125,7 @@ pull_request mode (ci-sweeper)
 | `pull_requests`         | boolean | Also watch open PR heads                                              | `false`                               | `loop_pull_requests`                    |
 | `state_file`            | string  | Override state JSON path                                              | `""` (`.loop/state-<loop_name>.json`) | `state_file`                            |
 
-Related but not branch-scoped: `max_targets_per_schedule` (fan-out cap after watch), `pr_exclude` / `pr_include_bots` (PR watch filters).
+Related but not branch-scoped: `max_targets_per_schedule` (fan-out cap after watch), `pr_exclude` / `pr_require` / `pr_include_bots` (PR watch filters).
 
 ## Agent and engine
 
@@ -145,30 +145,31 @@ Related but not branch-scoped: `max_targets_per_schedule` (fan-out cap after wat
 
 Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
 
-| Input                       | Type    | Description                                                                                                                 | Default (dogfood)                              |
-| --------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| `allowlist`                 | string  | Comma-separated globs the implementer may modify                                                                            | Per loop                                       |
-| `branch_match`              | string  | Comma-separated branch patterns to watch                                                                                    | `main`                                         |
-| `branch_match_mode`         | string  | How to interpret `branch_match`: `list`, `glob`, or `regex`                                                                 | `glob`                                         |
-| `branch_state`              | string  | Branch for `.loop/*` persistence, state migration, and watch fallback                                                       | `main`                                         |
-| `budget_max_runs_per_day`   | number  | Daily run cap keyed by `loop_name` (each matrix cell counts)                                                                | `1`–`5`                                        |
-| `budget_max_tokens_per_day` | number  | Daily aggregated token cap                                                                                                  | `500000`–`1000000`                             |
-| `denylist`                  | string  | Comma-separated globs the implementer must not touch                                                                        | ci-sweeper only                                |
-| `detect_script`             | string  | Path to domain `detect_*.sh` under loop skill package                                                                       | Per loop                                       |
-| `finalize_integration`      | string  | Finalize for integration targets: `open_pr` \| `push`                                                                       | `open_pr`                                      |
-| `finalize_pull_request`     | string  | Finalize for PR head targets. Currently `push_head` only                                                                    | `push_head` (ci-sweeper)                       |
-| `infer_files_pattern`       | string  | Extended regex to infer file paths from verifier text                                                                       | Per loop                                       |
-| `loop_name`                 | string  | Loop identifier: `.loop/state-<loop_name>.json`, budget key, run-log tag. Align caller filename: `on-loop-<loop_name>.yaml` | Per loop                                       |
-| `max_targets_per_schedule`  | number  | Max targets per cron tick after priority/`acting_on` filters                                                                | `3`                                            |
-| `no_changes_verdict`        | string  | `APPROVE` \| `REJECT` when implementer produces no file diff                                                                | `REJECT`                                       |
-| `pr_body`                   | string  | Static markdown prefix for finalize PR body                                                                                 | Per loop                                       |
-| `pr_exclude`                | string  | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`                                                           | ci-sweeper                                     |
-| `pr_include_bots`           | string  | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots                                           | `""`                                           |
-| `pr_title`                  | string  | PR title when finalize strategy is `open_pr`                                                                                | Per loop                                       |
-| `prompt_instructions`       | string  | Domain-specific implementer instructions for `loop-prompt-generate`                                                         | Per loop                                       |
-| `pull_requests`             | boolean | Enumerate open PR heads for detect                                                                                          | `false` except ci-sweeper                      |
-| `state_bundle_with_fix_pr`  | boolean | Commit loop state on the fix branch before `open_pr` (single reviewable PR)                                                 | `false` (changelog uses merge-gated `pending`) |
-| `state_file`                | string  | Override state JSON path                                                                                                    | `.loop/state-<loop_name>.json`                 |
+| Input                       | Type    | Description                                                                                                                                                                    | Default (dogfood)                              |
+| --------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| `allowlist`                 | string  | Comma-separated globs the implementer may modify                                                                                                                               | Per loop                                       |
+| `branch_match`              | string  | Comma-separated branch patterns to watch                                                                                                                                       | `main`                                         |
+| `branch_match_mode`         | string  | How to interpret `branch_match`: `list`, `glob`, or `regex`                                                                                                                    | `glob`                                         |
+| `branch_state`              | string  | Branch for `.loop/*` persistence, state migration, and watch fallback                                                                                                          | `main`                                         |
+| `budget_max_runs_per_day`   | number  | Daily run cap keyed by `loop_name` (each matrix cell counts)                                                                                                                   | `1`–`5`                                        |
+| `budget_max_tokens_per_day` | number  | Daily aggregated token cap                                                                                                                                                     | `500000`–`1000000`                             |
+| `denylist`                  | string  | Comma-separated globs the implementer must not touch                                                                                                                           | ci-sweeper only                                |
+| `detect_script`             | string  | Path to domain `detect_*.sh` under loop skill package                                                                                                                          | Per loop                                       |
+| `finalize_integration`      | string  | Finalize for integration targets: `open_pr` \| `push`                                                                                                                          | `open_pr`                                      |
+| `finalize_pull_request`     | string  | Finalize for PR head targets. Currently `push_head` only                                                                                                                       | `push_head` (ci-sweeper)                       |
+| `infer_files_pattern`       | string  | Extended regex to infer file paths from verifier text                                                                                                                          | Per loop                                       |
+| `loop_name`                 | string  | Loop identifier: `.loop/state-<loop_name>.json`, budget key, run-log tag. Align caller filename: `on-loop-<loop_name>.yaml`                                                    | Per loop                                       |
+| `max_targets_per_schedule`  | number  | Max targets per cron tick after priority/`acting_on` filters                                                                                                                   | `3`                                            |
+| `no_changes_verdict`        | string  | `APPROVE` \| `REJECT` when implementer produces no file diff                                                                                                                   | `REJECT`                                       |
+| `pr_body`                   | string  | Static markdown prefix for finalize PR body                                                                                                                                    | Per loop                                       |
+| `pr_exclude`                | string  | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`                                                                                                              | ci-sweeper                                     |
+| `pr_require`                | string  | PR require tokens (all must match). Empty when `pull_requests=true` → no PR-head targets. See [loop-notify-pr Specification](../../reference/loop-notify-pr-specification.md). | `label:ci-sweeper-ok` (ci-sweeper)             |
+| `pr_include_bots`           | string  | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots                                                                                              | `""`                                           |
+| `pr_title`                  | string  | PR title when finalize strategy is `open_pr`                                                                                                                                   | Per loop                                       |
+| `prompt_instructions`       | string  | Domain-specific implementer instructions for `loop-prompt-generate`                                                                                                            | Per loop                                       |
+| `pull_requests`             | boolean | Enumerate open PR heads for detect                                                                                                                                             | `false` except ci-sweeper                      |
+| `state_bundle_with_fix_pr`  | boolean | Commit loop state on the fix branch before `open_pr` (single reviewable PR)                                                                                                    | `false` (changelog uses merge-gated `pending`) |
+| `state_file`                | string  | Override state JSON path                                                                                                                                                       | `.loop/state-<loop_name>.json`                 |
 
 ### Optional platform inputs (supported by `loop-detect`)
 
@@ -209,6 +210,7 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `no_changes_verdict`          | `no_changes_verdict`                    |
 | `pr_body`                     | `pr_body`                               |
 | `pr_exclude`                  | `loop_pr_exclude`                       |
+| `pr_require`                  | `loop_pr_require`                       |
 | `pr_include_bots`             | `loop_pr_include_bots`                  |
 | `priority`                    | `loop_priority`                         |
 | `prompt_instructions`         | `prompt_instructions`                   |

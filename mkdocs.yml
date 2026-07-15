@@ -58,6 +58,7 @@ nav:
       - Troubleshooting: how-to/troubleshooting.md
   - Reference:
       - Specification: reference/specification.md
+      - loop-notify-pr Specification: reference/loop-notify-pr-specification.md
       - Loop Engineering Checklist: reference/loop-engineering-checklist.md
   - Explanation:
       - Architecture: explanation/architecture.md
