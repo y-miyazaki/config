@@ -34,13 +34,14 @@
 #   GITHUB_REPOSITORY         Used with GITHUB_SERVER_URL in Actions (auto)
 #######################################
 
+# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
 
+# Secure defaults
 umask 027
 export LC_ALL=C.UTF-8
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export SCRIPT_DIR
 
 # shellcheck source=lib/all.sh
 # shellcheck disable=SC1091

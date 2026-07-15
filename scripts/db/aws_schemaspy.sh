@@ -42,9 +42,7 @@ set -euo pipefail
 umask 027
 export LC_ALL=C.UTF-8
 
-# Get script directory for library loading
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export SCRIPT_DIR
 
 # Load all-in-one library
 # shellcheck source=../lib/all.sh
@@ -55,7 +53,7 @@ source "${SCRIPT_DIR}/../lib/all.sh"
 REPO_ROOT="$(git rev-parse --show-toplevel 2> /dev/null || echo "${SCRIPT_DIR}/../..")"
 
 #######################################
-# Global variables and default values
+# Global variables
 #######################################
 VERBOSE=false
 export VERBOSE

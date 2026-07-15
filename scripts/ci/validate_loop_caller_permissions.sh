@@ -14,10 +14,16 @@
 #   Validation summary from the composite action library
 #######################################
 
+# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
+
+# Secure defaults
 umask 027
 export LC_ALL=C.UTF-8
 
+#######################################
+# Global variables
+#######################################
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 ACTION_ROOT="${REPO_ROOT}/.github/actions/validate-loop-caller-permissions"

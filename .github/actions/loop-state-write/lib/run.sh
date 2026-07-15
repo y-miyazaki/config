@@ -18,10 +18,16 @@
 #   - bash, git, jq, gh, openssl
 #######################################
 
+# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
+
+# Secure defaults
 umask 027
 export LC_ALL=C.UTF-8
 
+#######################################
+# Global variables
+#######################################
 REJECT_REASON="${REJECT_REASON:-}"
 OPEN_REJECTIONS="${OPEN_REJECTIONS:-[]}"
 WRITE_TARGET_STATE="${WRITE_TARGET_STATE:-true}"

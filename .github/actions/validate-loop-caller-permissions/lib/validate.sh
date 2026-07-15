@@ -18,10 +18,16 @@
 #   - python3 with PyYAML
 #######################################
 
+# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
+
+# Secure defaults
 umask 027
 export LC_ALL=C.UTF-8
 
+#######################################
+# Global variables
+#######################################
 VERBOSE="${VERBOSE:-false}"
 
 #######################################

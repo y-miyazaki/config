@@ -38,13 +38,14 @@ set -euo pipefail
 umask 027
 export LC_ALL=C.UTF-8
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 #######################################
-# Global variables and default values
+# Global variables
 #######################################
 VERBOSE=false
 AUTO_FIX=false
 QUIET=false
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # Global variable for script search paths
 SEARCH_PATHS=()

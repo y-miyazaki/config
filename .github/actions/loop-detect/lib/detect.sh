@@ -24,7 +24,10 @@
 #   GH_TOKEN / GITHUB_TOKEN
 #######################################
 
+# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
+
+# Secure defaults
 umask 027
 export LC_ALL=C.UTF-8
 
@@ -33,6 +36,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/_init.sh"
 
+#######################################
+# Global variables
+#######################################
 # Environment supplied by loop-detect composite action (validated in main).
 BASE_BRANCH="${BASE_BRANCH-}"
 DETECT_SCRIPT="${DETECT_SCRIPT-}"

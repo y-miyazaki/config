@@ -19,7 +19,10 @@
 #   - append.sh in the same directory
 #######################################
 
+# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
+
+# Secure defaults
 umask 027
 export LC_ALL=C.UTF-8
 
@@ -28,6 +31,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/append.sh"
 
+#######################################
+# Global variables
+#######################################
 ATTEMPTS="${ATTEMPTS:-}"
 BASE_BRANCH="${BASE_BRANCH:-}"
 DURATION_S_INPUT="${DURATION_S_INPUT:-}"

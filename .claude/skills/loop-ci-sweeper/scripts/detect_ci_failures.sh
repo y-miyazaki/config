@@ -39,13 +39,14 @@
 #   SCAN_BRANCH_RUN_LIMIT             Max failed runs to scan per branch (default: 100)
 #######################################
 
+# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
 
+# Secure defaults
 umask 027
 export LC_ALL=C.UTF-8
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export SCRIPT_DIR
 
 # shellcheck source=lib/all.sh
 # shellcheck disable=SC1091

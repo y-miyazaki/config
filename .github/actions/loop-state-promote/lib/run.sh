@@ -18,10 +18,16 @@
 #   - bash, git, jq, gh
 #######################################
 
+# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
+
+# Secure defaults
 umask 027
 export LC_ALL=C.UTF-8
 
+#######################################
+# Global variables
+#######################################
 MERGED="${MERGED:-false}"
 PR_NUMBER="${PR_NUMBER:?}"
 STATE_PUSH_BRANCH="${STATE_PUSH_BRANCH:-}"

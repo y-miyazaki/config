@@ -18,7 +18,10 @@
 #   - Uses http.extraheader auth (same pattern as actions/checkout)
 #######################################
 
+# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
+
+# Secure defaults
 umask 027
 export LC_ALL=C.UTF-8
 

@@ -13,7 +13,10 @@
 # - Budget checks prefer measured usage over tokens_estimate when present
 #######################################
 
+# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
+
+# Secure defaults
 umask 027
 export LC_ALL=C.UTF-8
 

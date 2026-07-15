@@ -28,10 +28,26 @@ Required in-file order for **executable entry scripts** (invoked directly or via
 
 1. shebang + header comments (DOC-01)
 2. `set -euo pipefail` + secure defaults（`umask 027`, `export LC_ALL=C.UTF-8`）
-3. `SCRIPT_DIR` setup (G-01)
+3. `SCRIPT_DIR` setup (G-01) — only when the script sources libraries or resolves relative paths (see below)
 4. global variable definitions
 5. function definitions: `show_usage` / `parse_arguments` -> other functions in a-z order (G-03) -> `main` last
 6. entry point: `if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then main "$@"; fi`
+
+### SCRIPT_DIR (G-01)
+
+Set `SCRIPT_DIR` **only when** the script sources libraries or builds paths relative to the script file (for example `source "${SCRIPT_DIR}/lib/all.sh"`). Omit it when the script uses only environment variables or absolute paths.
+
+Canonical assignment (no `export`, no `# shellcheck disable=SC2034` when `${SCRIPT_DIR}` is referenced):
+
+```bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+```
+
+Placement:
+
+- After secure defaults (step 2)
+- Before the `# Global variables` block (step 4) or before an immediate `source "${SCRIPT_DIR}/..."` line
+- Do not add `export SCRIPT_DIR` unless a child process must read `$SCRIPT_DIR` from the environment
 
 ### Sourced library files
 
@@ -169,7 +185,7 @@ Write `None` for sections that do not apply. **Do not omit sections** — especi
 ### Global / Base (G)
 
 - G-01 (MUST): Set SCRIPT_DIR
-  - Check: Is SCRIPT_DIR set for reliable relative path resolution?
+  - Check: When the script sources libraries or resolves relative paths, is `SCRIPT_DIR` set with the canonical assignment (no `export`, no `SC2034` when referenced)?
 - G-02 (SHOULD): No Hardcoded Secrets
   - Check: Are API keys, passwords, and tokens not embedded in scripts?
 - G-03 (MUST): Follow Function Order
