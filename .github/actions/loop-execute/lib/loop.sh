@@ -224,6 +224,9 @@ function run_bounded_loop {
             break
         fi
 
+        echo "::endgroup::"
+
+        echo "::group::Verifier attempt ${ATTEMPT}/${AGENT_LOOP_MAX_ATTEMPTS}"
         echo "Running verifier (fresh session)..."
         run_verify "${attempt_dir}" "${ATTEMPT}" "${attempt_committed}"
         VERDICT="$(cat "${attempt_dir}/verdict")"
