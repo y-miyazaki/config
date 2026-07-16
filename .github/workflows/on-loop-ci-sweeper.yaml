@@ -71,6 +71,8 @@ jobs:
         - Missing validation when the failure type is lint/syntax/test
         - Fixes for infra/env failures that should have been deferred
         - Hallucinated paths, commands, or APIs not present in the repository
+        - Diffs whose primary purpose is raising test coverage thresholds (coverage gate failures) — classify Watch, no edit
+        - Diffs whose primary purpose is dependency version bumps or lockfile churn from Renovate/Dependabot-class failures — classify Watch unless a named dependency-repair domain skill is in caller instructions
       agent_verifier_max_turns: 3
       agent_verifier_model: composer-2.5
       allowlist: ".github/**,.apm/packages/**,scripts/**,apm.yml,mise.toml,renovate/**,docs/**/*.md,README.md,mkdocs.yml"
@@ -114,7 +116,18 @@ jobs:
         Fix the failing CI checks identified in the detection result.
         Classify flakes and infra/env failures as Watch — do not edit code for those.
         Apply the smallest change that resolves the logged failure.
-        Run stack-appropriate validation skills before finishing.
+
+        ## Stack routing (validation / repair skills)
+
+        | Failed workflow (hint)              | Domain skill to invoke                          |
+        | ----------------------------------- | ----------------------------------------------- |
+        | on-ci-push-github-actions-workflow  | github-actions-validation                       |
+        | on-ci-push-shell-script             | shell-script-validation                         |
+        | on-ci-push-markdown, on-cd-mkdocs    | markdown-validation                             |
+        | on-ci-push-mise-update-lock         | (minimal lockfile edit; run affected CI checks) |
+
+        Read each skill's SKILL.md under `.agents/skills/` or `.claude/skills/` before invoking.
+        Coverage-threshold and dependency-breakage failures: classify Watch — do not edit until caller verifier allows.
       pull_requests: true
       skill_name: loop-ci-sweeper
     secrets:

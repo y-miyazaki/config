@@ -48,5 +48,5 @@ At `L2`/`L3`, edit actionable `regression` failures within [category-scope.md](r
 2. Classify every item in `failures[]` per [common-checklist.md](references/common-checklist.md). Use detect `failure_type` as a hint only — reclassify when `log_excerpt` contradicts it. List `ignored[]` entries under `## Ignored`.
 3. For `regression` at `L2`/`L3`, fix the first regression only when more than three failures are present; defer the rest as Watch. Edit only within [category-scope.md](references/category-scope.md) allowlist.
 4. When infra/env/flake or >5 files are required, classify as Watch with no edits. Set Summary **Outcome** to `watch` (or `deferred`) so finalize records `outcome: watch`.
-5. Run [category-validation-commands.md](references/category-validation-commands.md) after edits; record outcome in Summary. If validation tooling is missing, defer as Watch unless fixing a single reported line from `log_excerpt`.
+5. Run validation per [category-validation-commands.md](references/category-validation-commands.md) and caller `## Instructions` stack routing; record outcome in Summary. If validation tooling is missing, defer as Watch unless fixing a single reported line from `log_excerpt`.
 6. Output per [common-output-format.md](references/common-output-format.md).

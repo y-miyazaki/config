@@ -116,11 +116,12 @@ No infra/env classification — not applicable.
 
 ### State fields (per target key)
 
-| Field                  | Role                                         |
-| ---------------------- | -------------------------------------------- |
-| `last_sha`             | Scan cursor; advances on successful finalize |
-| `outcome`              | `pr-created`, `rejected`, `no-op`, …         |
-| `consecutive_failures` | Circuit breaker                              |
+| Field                  | Role                                                               |
+| ---------------------- | ------------------------------------------------------------------ |
+| `last_sha`             | Scan cursor; advances when fix PR merges (`on-loop-state-promote`) |
+| `pending`              | Written at finalize on `open_pr`; promoted to `last_sha` on merge  |
+| `outcome`              | `pr-created`, `rejected`, `no-op`, …                               |
+| `consecutive_failures` | Circuit breaker                                                    |
 
 No `workflow_run_id` / ci ledger.
 
@@ -136,14 +137,13 @@ Always `open_pr` to `to.branch` at L2. L3 `push` rarely appropriate for loop-doc
 
 No `domain_persistence_script`.
 
+**Merge-gated cursor:** Same platform rule as all L2 `open_pr` loops — `pending` at finalize, `last_sha` on fix PR merge via `on-loop-state-promote.yaml`. See [State delivery philosophy](../multi-branch-loops-design.md#state-delivery-philosophy).
+
 ## State delivery
 
 See [State delivery philosophy](../multi-branch-loops-design.md#state-delivery-philosophy) for platform rules.
 
-| Dogfood (`main` only) | `branch_match: main`, `branch_state: main` → `to.branch == branch_state`. Enabling `state_bundle_with_fix_pr: true` is reasonable (same trade-off as changelog). |
-| Multi-branch watch | e.g. `branch_match: develop,release/*` with `branch_state: main` → keep default `false`; state must stay on `main`, not on the fix branch PR. |
-
-Default today: `state_bundle_with_fix_pr: false` (centralized push to `branch_state`). Long-term: direct push on fix merge, not a state PR.
+**Target (dogfood):** merge-gated `pending` + `on-loop-state-promote` — same as changelog. Do **not** enable `state_bundle_with_fix_pr`.
 
 Persistence: `state-docs-triage.json` on `branch_state` via [finalize inside ci-loop-agent](../loop-caller-workflows-design.md#finalize-inside-ci-loop-agent).
 

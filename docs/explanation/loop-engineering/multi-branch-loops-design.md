@@ -193,11 +193,11 @@ Caller input on `ci-loop-caller` (see [Loop Caller Inputs Reference](workflows/l
 
 #### Loop defaults (dogfood)
 
-| Loop               | Default           | Rationale                                                                                                                                                                   |
-| ------------------ | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `loop-changelog`   | `false` (default) | `main`-only; merge-gated `pending` via `on-loop-state-promote`                                                                                                              |
-| `loop-docs-triage` | `false`           | Platform default; **same-branch dogfood (`main` only) may enable `true`** — see [Docs Triage Workflow Design](workflows/loop-docs-triage-workflow-design.md#state-delivery) |
-| `loop-ci-sweeper`  | `false`           | Integration + PR-head targets; fix often lands off `branch_state`                                                                                                           |
+| Loop               | Default           | Rationale                                                                                                                    |
+| ------------------ | ----------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `loop-changelog`   | `false` (default) | Merge-gated `pending` via `on-loop-state-promote`                                                                            |
+| `loop-docs-triage` | `false`           | Merge-gated `pending` (same as changelog; do not bundle state in fix PR)                                                     |
+| `loop-ci-sweeper`  | `false`           | Integration `open_pr`: merge-gated `pending`. PR-head `push_head`: cursor via ledger + finalize semantics (no domain fix PR) |
 
 Bundling is **per-loop opt-in**, not a global LE requirement. The historical default (centralized on `branch_state`) exists for [multi-branch watch + shared state file](#branch-roles-and-fix-direction), not because users prefer two PRs.
 

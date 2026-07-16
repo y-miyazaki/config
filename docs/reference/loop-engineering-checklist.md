@@ -15,10 +15,19 @@ All must be true. See [Loop Engineering Design — Design Invariants](../explana
 - [ ] Verifier never modifies the repository (read-only phase)
 - [ ] Detect never writes state; **detect script invoked once per run** (no caller re-run)
 - [ ] Finalize never changes **source under repair**; `.loop/*` persistence allowed
-- [ ] State advances only through Finalize
+- [ ] State advances only through Finalize (and merge-gated promote for L2 `open_pr` — see Finalize below)
 - [ ] Phases communicate via GitHub Actions outputs/inputs only
 - [ ] Checkout is performed by the caller workflow
 - [ ] Every decision is traceable (`skip_reason`, reject reason, outcome)
+
+### Detect vs Execute (semantic boundary)
+
+See [CONTEXT — Semantic Findings](../explanation/loop-engineering/CONTEXT.md#language).
+
+- [ ] Detect script emits mechanical **facts** only (`failures[]`, `changed_files`, `commits[]`, …) inside the common envelope (`skip`, `result`, `verifier_context`)
+- [ ] Detect does **not** emit semantic `findings[]`, triage prose, or repair decisions
+- [ ] Entry skill builds semantic output (`findings[]`, Fix/Watch/Escalate) in Execute from detect facts
+- [ ] `verifier_context` carries fact summary or log excerpt for verify — not skill triage report
 
 ### Phase Contract Compliance
 
@@ -47,17 +56,27 @@ All must be true. See [Loop Engineering Design — Design Invariants](../explana
 #### Finalize
 
 - [ ] Behavior matches [finalize strategy matrix](../explanation/loop-engineering/loop-engineering-design.md#finalize-strategy-matrix) for `target.finalize` + `DEFAULT_LEVEL`
+- [ ] **L2 `open_pr`:** merge-gated cursor — `loop-finalize` writes `pending`; `last_sha` advances only when fix PR merges via `on-loop-state-promote.yaml` (label `loop-automation`). Fix PR is domain-only — see [State delivery philosophy](../explanation/loop-engineering/multi-branch-loops-design.md#state-delivery-philosophy)
 - [ ] `open_pr`: create PR on APPROVE; `push` / `push_head`: push on APPROVE; delete agent branch on REJECT
 - [ ] L3 `auto_merge` only when `finalize=open_pr` — not for `push` / `push_head`
 - [ ] State, run-log, domain ledger via `domain_persistence_script` in finalize job (no caller `git push` for `.loop/*`)
 - [ ] `outcome: watch` for Skill Watch (no `consecutive_failures` increment)
 - [ ] `loop-finalize` + `if: always()` with appropriate guards
-- [ ] `loop-notify-pr` when `target_json.to.pr_number` is set ([spec](../reference/loop-notify-pr-specification.md))
+- [ ] `loop-notify-pr` when `target_json.to.pr_number` is set ([spec](loop-notify-pr-specification.md))
 - [ ] `pr_require` opt-in label for PR-head repair (repo admin creates label; humans apply)
+- [ ] GitHub-entity loops (issue/stale): caller grants `issues: write` / `pull-requests: write`; skill performs API actions in **Execute**; Finalize advances state cursor (no file PR at L1)
 
 #### Skill
 
-- [ ] SKILL.md: allowed paths, self-contained, behavioral rules
+- [ ] SKILL.md: allowed paths, behavioral rules, generic orchestration
+- [ ] **No named consumer domain skills** in distributable skill `references/` (caller `prompt_instructions` owns stack routing A')
+- [ ] CI failure loops: caller `agent_verifier_criteria` appendix for failure-kind defer (B) where needed
+
+#### Caller (`on-loop-*.yaml`)
+
+- [ ] `prompt_instructions` includes repo-specific overlay (stack routing table for `loop-ci-sweeper`-type loops)
+- [ ] `agent_verifier_criteria` matches observation trigger (CI log fit, doc factual accuracy, changelog version rules, …)
+- [ ] Fix PRs labeled `loop-automation` for `on-loop-state-promote` matching
 
 ### Multi-Branch Targets (Phase 1+)
 
@@ -80,7 +99,7 @@ See [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loo
 
 ### Retry Policy
 
-- [ ] SHA / target cursor advances on successful Finalize per loop semantics
+- [ ] **State cursor (general):** L2 `open_pr` → merge-gated `pending`; API-only / no file diff → cursor on verifier APPROVE in same finalize run; L3 push → cursor in same finalize run
 - [ ] `consecutive_failures` + `attempt_fingerprint` on `target.key`
 - [ ] Pause at 3+ consecutive failures (`circuit_breaker`)
 
@@ -88,11 +107,9 @@ See [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loo
 
 ## L1 → L2 Promotion Checklist
 
-(Unchanged — see prior sections.)
-
 - [ ] Loop operated at L1 for 2+ weeks
 - [ ] State schema documented in workflow design doc
-- [ ] SKILL.md includes build/test commands
+- [ ] SKILL.md includes build/test commands (or GitHub-entity deliverable rules for non-file loops)
 - [ ] Implementer and verifier separate sessions
 - [ ] Denylist includes auth, payments, secrets, infrastructure
 - [ ] Daily token cap configured

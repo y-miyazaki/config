@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-15T10:01:00.725026+00:00'
+generated_at: '2026-07-16T04:53:07.165349+00:00'
 apm_version: 0.24.0
 dependencies:
 - repo_url: _local/common
@@ -1139,7 +1139,7 @@ dependencies:
   - .claude/skills/loop-ci-sweeper/scripts/lib/validation.sh
   - .claude/skills/loop-ci-sweeper/scripts/update_run_ledger.sh
   deployed_file_hashes:
-    .agents/skills/loop-ci-sweeper/SKILL.md: sha256:d826f2ccaf00d744ca94bf7206bdda425f339f6173be6c418e2a4603a0ba9973
+    .agents/skills/loop-ci-sweeper/SKILL.md: sha256:ff277c0c55a6b5047cfd5f2693da73cb4c039140847042118523c4329a5f8467
     .agents/skills/loop-ci-sweeper/eval.yaml: sha256:b61c0737b994c5e4eda80c9e3714feb4472096f42cd08fb5eb57bf34e56b2b86
     .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-basic.yaml: sha256:f04f86769fc092c8ff6a56286cd5b56a87b863fab0f6b9eff53fc98998ef0a81
     .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml: sha256:210f615c53b7828e5e442a7064391f462c40b522ea693461eee1e361bd07f9fc
@@ -1147,7 +1147,7 @@ dependencies:
     .agents/skills/loop-ci-sweeper/references/category-input-schema.md: sha256:6e6fca889e2454353d70d0563b3f788afd68237a678eae2e15f2555b69819572
     .agents/skills/loop-ci-sweeper/references/category-run-ledger.md: sha256:f9876a1ad807cb4c943a0d4acd1ddf568ad32359cb3363f1fa33bd4b6b72673f
     .agents/skills/loop-ci-sweeper/references/category-scope.md: sha256:e629a55899f59aa6cc007fe68ffc706e7971f4223827030bdf8f817a25f4de26
-    .agents/skills/loop-ci-sweeper/references/category-validation-commands.md: sha256:a1feaac097275ab88a1fad4aa904ae40c82f2f29ff74e28eae87721717235ea9
+    .agents/skills/loop-ci-sweeper/references/category-validation-commands.md: sha256:6f0ecb53005eb37b3f4860ffdd0d1bb4938f61476cad97f32bae1d5f2c124e26
     .agents/skills/loop-ci-sweeper/references/common-checklist.md: sha256:68f1e9423c46c11c6317ba69fd38004e4eee6d90a9cb79463b8260e38e0e900e
     .agents/skills/loop-ci-sweeper/references/common-output-format.md: sha256:fca5a2d50861f0761ad5bcfce98b98ed5aae911e9c2ba8c668550b225b074e22
     .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh: sha256:d97b5d13b4462f725981211c6d0af1a73414485fa05d1d07f96e30d857c57bac
@@ -1159,7 +1159,7 @@ dependencies:
     .agents/skills/loop-ci-sweeper/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/loop-ci-sweeper/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh: sha256:eed53e50b01f595a8767bf0d2bb58fc4e678b53b821882f07abeb25e073e3fce
-    .claude/skills/loop-ci-sweeper/SKILL.md: sha256:d826f2ccaf00d744ca94bf7206bdda425f339f6173be6c418e2a4603a0ba9973
+    .claude/skills/loop-ci-sweeper/SKILL.md: sha256:ff277c0c55a6b5047cfd5f2693da73cb4c039140847042118523c4329a5f8467
     .claude/skills/loop-ci-sweeper/eval.yaml: sha256:b61c0737b994c5e4eda80c9e3714feb4472096f42cd08fb5eb57bf34e56b2b86
     .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-basic.yaml: sha256:f04f86769fc092c8ff6a56286cd5b56a87b863fab0f6b9eff53fc98998ef0a81
     .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml: sha256:210f615c53b7828e5e442a7064391f462c40b522ea693461eee1e361bd07f9fc
@@ -1167,7 +1167,7 @@ dependencies:
     .claude/skills/loop-ci-sweeper/references/category-input-schema.md: sha256:6e6fca889e2454353d70d0563b3f788afd68237a678eae2e15f2555b69819572
     .claude/skills/loop-ci-sweeper/references/category-run-ledger.md: sha256:f9876a1ad807cb4c943a0d4acd1ddf568ad32359cb3363f1fa33bd4b6b72673f
     .claude/skills/loop-ci-sweeper/references/category-scope.md: sha256:e629a55899f59aa6cc007fe68ffc706e7971f4223827030bdf8f817a25f4de26
-    .claude/skills/loop-ci-sweeper/references/category-validation-commands.md: sha256:a1feaac097275ab88a1fad4aa904ae40c82f2f29ff74e28eae87721717235ea9
+    .claude/skills/loop-ci-sweeper/references/category-validation-commands.md: sha256:6f0ecb53005eb37b3f4860ffdd0d1bb4938f61476cad97f32bae1d5f2c124e26
     .claude/skills/loop-ci-sweeper/references/common-checklist.md: sha256:68f1e9423c46c11c6317ba69fd38004e4eee6d90a9cb79463b8260e38e0e900e
     .claude/skills/loop-ci-sweeper/references/common-output-format.md: sha256:fca5a2d50861f0761ad5bcfce98b98ed5aae911e9c2ba8c668550b225b074e22
     .claude/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh: sha256:d97b5d13b4462f725981211c6d0af1a73414485fa05d1d07f96e30d857c57bac
@@ -1394,7 +1394,7 @@ dependencies:
     .agents/skills/shell-script-review/references/category-documentation.md: sha256:1f9a47df813a49e7e12fe3dc2134a14c9bd2e7559b96b7bf0e212075381dca15
     .agents/skills/shell-script-review/references/category-error-handling.md: sha256:0f833238541ea3bbe77d3833a561449b8de681d3503db830131ef51f91b7c043
     .agents/skills/shell-script-review/references/category-function-design.md: sha256:fa7189704d81aa6450bfb1ec98c744a01b05bdfe40c8c5a0e39bb8ca400d2a77
-    .agents/skills/shell-script-review/references/category-global.md: sha256:ab71d483617c44102a768642b7b64c6759d7eb9db923b86934dde7ab97b2cc6a
+    .agents/skills/shell-script-review/references/category-global.md: sha256:53fb9ede4dc1198abb004c2aaea07dd678ecf0022c335a2c078f2be30b2d2308
     .agents/skills/shell-script-review/references/category-logging.md: sha256:a130d527d875ebed099b087cf836e3cf5970b44da7cd5ca308878a40128baa4c
     .agents/skills/shell-script-review/references/category-performance.md: sha256:762ed81ee5b8dd9910f651676c74d68a2430901f68380a178ba2176b0b34abbe
     .agents/skills/shell-script-review/references/category-security.md: sha256:e5ca34532fbf5d11fcc1c791e83d71e670485c39e16f943ac1ddfb48fc885a16
@@ -1418,7 +1418,7 @@ dependencies:
     .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-structured-output.yaml: sha256:e97179c5f3391b47515b033632809862677d721a642084d2639999c6c12eedf6
     .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-trigger-negative.yaml: sha256:cb7f413048123c3c4dab9f3d8651b89a29ebce907f8d108c092ece58c8080c19
     .agents/skills/shell-script-validation/references/category-standards.md: sha256:acd702114fc4cfbc7789808c5d52a3459bdf12cab8e231dc45648bb5625b18b5
-    .agents/skills/shell-script-validation/references/common-checklist.md: sha256:f5c55efa8845f040f4011dc4176e716eb3119734fef93c170c944376fbfe70a1
+    .agents/skills/shell-script-validation/references/common-checklist.md: sha256:b6f118917d004052a4ad34a787bdc1d064784f8af27af3518592af3fa7ce1fa7
     .agents/skills/shell-script-validation/references/common-individual-commands.md: sha256:4630375e0015c89f53e85ab1aab5cdbbd69e0d68dc626ea02a794822ca73ad40
     .agents/skills/shell-script-validation/references/common-output-format.md: sha256:511c268f7abfa4bd6081402b03132da89a2a64be224fb63f91c98b3e9e77fe06
     .agents/skills/shell-script-validation/references/common-troubleshooting.md: sha256:4b815b33130af54c157d9856e59bc0d54239d2529643555eb2c27f82731dc69a
@@ -1431,7 +1431,7 @@ dependencies:
     .agents/skills/shell-script-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .agents/skills/shell-script-validation/scripts/validate.sh: sha256:144cbecbd76a2f1e8ce266570627193afa952ecc756bf0b03b0fb45f8713fc04
     .claude/rules/bats.md: sha256:f8a413c4c9dca7090898343d21d265ca0b983569dd54c50d996861db3ccdd528
-    .claude/rules/shell-script.md: sha256:5b19732ed283352ccd50f6311671c3717829d9a2a1d633971cc9d5cc897219f9
+    .claude/rules/shell-script.md: sha256:cf9fbdf2a42a1fc9355a00dd5b8b83510be7c914dd9c8e17ae73c0da69853601
     .claude/skills/shell-script-review/SKILL.md: sha256:dfd8a2f213e1b32f39b608351026e29c8a39b29fff61d78932413d6e445e0d39
     .claude/skills/shell-script-review/eval.yaml: sha256:787b28497c258dc8bb5850176f43f9956d26b979c19319a149e00dff0de1084a
     .claude/skills/shell-script-review/evals/tasks/shell-script-review-basic.yaml: sha256:49daaacf14929630cc344423578640e23f321d87d94c809052f82adce59890e0
@@ -1445,7 +1445,7 @@ dependencies:
     .claude/skills/shell-script-review/references/category-documentation.md: sha256:1f9a47df813a49e7e12fe3dc2134a14c9bd2e7559b96b7bf0e212075381dca15
     .claude/skills/shell-script-review/references/category-error-handling.md: sha256:0f833238541ea3bbe77d3833a561449b8de681d3503db830131ef51f91b7c043
     .claude/skills/shell-script-review/references/category-function-design.md: sha256:fa7189704d81aa6450bfb1ec98c744a01b05bdfe40c8c5a0e39bb8ca400d2a77
-    .claude/skills/shell-script-review/references/category-global.md: sha256:ab71d483617c44102a768642b7b64c6759d7eb9db923b86934dde7ab97b2cc6a
+    .claude/skills/shell-script-review/references/category-global.md: sha256:53fb9ede4dc1198abb004c2aaea07dd678ecf0022c335a2c078f2be30b2d2308
     .claude/skills/shell-script-review/references/category-logging.md: sha256:a130d527d875ebed099b087cf836e3cf5970b44da7cd5ca308878a40128baa4c
     .claude/skills/shell-script-review/references/category-performance.md: sha256:762ed81ee5b8dd9910f651676c74d68a2430901f68380a178ba2176b0b34abbe
     .claude/skills/shell-script-review/references/category-security.md: sha256:e5ca34532fbf5d11fcc1c791e83d71e670485c39e16f943ac1ddfb48fc885a16
@@ -1469,7 +1469,7 @@ dependencies:
     .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-structured-output.yaml: sha256:e97179c5f3391b47515b033632809862677d721a642084d2639999c6c12eedf6
     .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-trigger-negative.yaml: sha256:cb7f413048123c3c4dab9f3d8651b89a29ebce907f8d108c092ece58c8080c19
     .claude/skills/shell-script-validation/references/category-standards.md: sha256:acd702114fc4cfbc7789808c5d52a3459bdf12cab8e231dc45648bb5625b18b5
-    .claude/skills/shell-script-validation/references/common-checklist.md: sha256:f5c55efa8845f040f4011dc4176e716eb3119734fef93c170c944376fbfe70a1
+    .claude/skills/shell-script-validation/references/common-checklist.md: sha256:b6f118917d004052a4ad34a787bdc1d064784f8af27af3518592af3fa7ce1fa7
     .claude/skills/shell-script-validation/references/common-individual-commands.md: sha256:4630375e0015c89f53e85ab1aab5cdbbd69e0d68dc626ea02a794822ca73ad40
     .claude/skills/shell-script-validation/references/common-output-format.md: sha256:511c268f7abfa4bd6081402b03132da89a2a64be224fb63f91c98b3e9e77fe06
     .claude/skills/shell-script-validation/references/common-troubleshooting.md: sha256:4b815b33130af54c157d9856e59bc0d54239d2529643555eb2c27f82731dc69a
@@ -1482,7 +1482,7 @@ dependencies:
     .claude/skills/shell-script-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .claude/skills/shell-script-validation/scripts/validate.sh: sha256:144cbecbd76a2f1e8ce266570627193afa952ecc756bf0b03b0fb45f8713fc04
     .cursor/rules/bats.mdc: sha256:d99945bb46feb5c31b2ccd4f1f712c5395ba09909b7749b4217d040123506f56
-    .cursor/rules/shell-script.mdc: sha256:0b60b28dbc92744f64f9b0d345e49bdeaf09989eec7fcc20866216c3b80cc615
+    .cursor/rules/shell-script.mdc: sha256:bf46fc990380b1d24365ddfe37a285007695a28f83173e4c632570851c385af9
   source: local
   local_path: ./.apm/packages/shell-script
   declared_license: Apache-2.0

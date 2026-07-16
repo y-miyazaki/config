@@ -67,6 +67,7 @@ nav:
       - Loop Engineering:
           - explanation/loop-engineering/index.md
           - Loop Engineering Design: explanation/loop-engineering/loop-engineering-design.md
+          - Ubiquitous Language: explanation/loop-engineering/CONTEXT.md
           - Multi-Branch Loops Design: explanation/loop-engineering/multi-branch-loops-design.md
           - Loop Caller Workflows Design: explanation/loop-engineering/loop-caller-workflows-design.md
           - Loop Caller Reusable Workflow Design: explanation/loop-engineering/loop-caller-reusable-design.md

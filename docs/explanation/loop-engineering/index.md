@@ -8,16 +8,20 @@ Understanding-oriented design docs for autonomous CI and documentation loops in 
 2. [Multi-Branch Loops Design](multi-branch-loops-design.md) — platform targets, `LOOP_*`, state
 3. [Loop Caller Workflows Design](loop-caller-workflows-design.md) — shared `on-loop-*.yaml` shell
 4. [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md) — `ci-loop-caller.yaml` refactor
-5. Per-loop workflow designs — see [Multi-Branch Loops Design — Workflow Design Documents](multi-branch-loops-design.md#workflow-design-documents)
+5. [Loop Engineering Checklist](../../reference/loop-engineering-checklist.md) — new loop author checklist
+6. Per-loop workflow designs — see [Multi-Branch Loops Design — Workflow Design Documents](multi-branch-loops-design.md#workflow-design-documents)
 
 ## Topic index
 
-| Topic                                          | Document                                                                   |
-| ---------------------------------------------- | -------------------------------------------------------------------------- |
-| Platform (targets, `LOOP_*`, state)            | [Multi-Branch Loops Design](multi-branch-loops-design.md)                  |
-| Shared `on-loop-*.yaml` layout                 | [Loop Caller Workflows Design](loop-caller-workflows-design.md)            |
-| **loop-ci-sweeper** workflow + detect + CI env | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md) |
-| Loop invariants + L3 gates                     | [Loop Engineering Design](loop-engineering-design.md)                      |
+| Topic                                              | Document                                                                     |
+| -------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Platform (targets, `LOOP_*`, state)                | [Multi-Branch Loops Design](multi-branch-loops-design.md)                    |
+| Shared `on-loop-*.yaml` layout                     | [Loop Caller Workflows Design](loop-caller-workflows-design.md)              |
+| **loop-docs-triage** workflow + doc drift detect   | [Docs Triage Workflow Design](workflows/loop-docs-triage-workflow-design.md) |
+| **loop-ci-sweeper** workflow + detect + CI env     | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md)   |
+| **loop-changelog** workflow + conventional commits | [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md)     |
+| Loop invariants + L3 gates                         | [Loop Engineering Design](loop-engineering-design.md)                        |
+| Ubiquitous language (detect, A'/B, findings)       | [Ubiquitous Language](CONTEXT.md)                                            |
 
 ## Reference (outside this section)
 

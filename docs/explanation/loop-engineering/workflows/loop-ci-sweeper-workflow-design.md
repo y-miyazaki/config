@@ -26,14 +26,32 @@ Automated minimal repair when CI fails on integration branches and/or open PR he
 
 ### Out of scope
 
-- Infra outages, secrets, runner capacity, or persistent flakes (Watch — no code edit)
+Entry skill design intent for failure kinds deferred via [Failure kind defer (B)](../loop-engineering-design.md#failure-kind-defer-b) — coverage threshold, dependency breakage.
+
+- Infra outages, secrets, runner capacity, or persistent flakes (Watch — no code edit when Skill recognizes them)
 - Large refactors (>5 files), auth/payment/credential paths
 - Merging PRs or pushing directly to the default branch (L2 integration uses `open_pr` only)
 - Re-running CI in the verifier (semantic fit against log excerpt only)
 - Manual interactive debugging as a substitute for the loop
 - Separate `loop-pr-ci-healer` package
+- **Coverage-threshold and test-gap repair** — defer (B) until a domain skill exists
+- **Dependency-breakage repair** — defer (B); bot PR heads excluded in dogfood (`pr_include_bots: ""`)
 
 Skill execution boundaries: `loop-ci-sweeper` SKILL.md (`USE FOR` / `DO NOT USE FOR`).
+
+### Execute — responsibility split (A' / B)
+
+Distributable `loop-ci-sweeper` skill stays repository-neutral. **Do not** hardcode consumer skill names in skill `references/`. Named dispatch belongs in caller `prompt_instructions` (dogfood: `on-loop-ci-sweeper.yaml`).
+
+| Layer         | Input                       | Role                                                                                            |
+| ------------- | --------------------------- | ----------------------------------------------------------------------------------------------- |
+| Detect        | `detect_ci_failures.sh`     | `failures[]`, `failure_type` hint; optional future `stack_hint`                                 |
+| Entry skill   | `loop-ci-sweeper`           | Generic orchestration: classify, follow `## Instructions` for skill dispatch, fix one, validate |
+| Caller        | `prompt_instructions`       | **Stack routing (A')** — workflow/stack → named domain skills for this repo                     |
+| Caller        | `agent_verifier_criteria`   | Failure kind defer (B): appendix REJECT rules                                                   |
+| Domain skills | Consumer `.agents/skills/*` | Invoked per caller routing table                                                                |
+
+See [CI failure repair — layered responsibilities](../loop-engineering-design.md#ci-failure-repair--one-package-layered-responsibilities).
 
 ### Modes
 
@@ -111,7 +129,7 @@ Detect applies **only** stable gates — not semantic failure classification:
 | `acting_on` / `peer_active`             | `loop-detect`          |
 | Budget / circuit breaker                | `loop-detect`          |
 
-`failure_type` from grep heuristics is an optional **hint** for the Skill — not a detect gate. **Skill** classifies Fix / Watch / Escalate.
+`failure_type` from grep heuristics is an optional **hint** for the Skill — not a detect gate. Default is `regression` when the log is not infra/env/flake. See [Execute — responsibility split](#execute--responsibility-split-a--b).
 
 ### Integration mode
 
@@ -220,9 +238,9 @@ Dogfood `on-loop-ci-sweeper.yaml` enables `workflow_run`. Keep these gates when 
 - [x] Job `if:` limits event runs to `failure` / `startup_failure`
 - [ ] 1 failure event → 1 target (no unbounded matrix from one event) — verify when expanding `workflows:`
 
-## dependency-update (roadmap)
+## Dependency update (caller filter + domain skill)
 
-`pull_requests: true` + `pr_include_bots: renovate[bot]`. Same workflow; no new package.
+Tier 3 **dependency-update** behavior is a domain skill plus caller PR filters (`pr_include_bots`, `pr_require`) under **`loop-ci-sweeper`** — not a separate loop package. Defer via [Failure kind defer (B)](../loop-engineering-design.md#failure-kind-defer-b) until the skill exists.
 
 ## Cross-Loop Note
 
