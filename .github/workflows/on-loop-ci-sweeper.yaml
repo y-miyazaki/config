@@ -84,7 +84,7 @@ jobs:
       # detect_domain_env_json: LEDGER/REJECT_*; workflow_run event keys (HEAD_*/WORKFLOW_*) when present
       detect_domain_env_json: |
         ${{ format(
-          '{"CI_SWEEPER_LEDGER_FILE":".loop/state-ci-sweeper-run-ledger.json","CI_SWEEPER_REJECT_MAX_RETRIES":"3","CI_SWEEPER_REJECT_RETRY_POLICY":"block","CI_SWEEPER_HEAD_SHA":"{0}","CI_SWEEPER_WORKFLOW_RUN_ID":"{1}","CI_SWEEPER_HEAD_BRANCH":"{2}","CI_SWEEPER_WORKFLOW_NAME":"{3}","CI_SWEEPER_RUN_URL":"{4}"}',
+          '{{"CI_SWEEPER_LEDGER_FILE":".loop/state-ci-sweeper-run-ledger.json","CI_SWEEPER_REJECT_MAX_RETRIES":"3","CI_SWEEPER_REJECT_RETRY_POLICY":"block","CI_SWEEPER_HEAD_SHA":"{0}","CI_SWEEPER_WORKFLOW_RUN_ID":"{1}","CI_SWEEPER_HEAD_BRANCH":"{2}","CI_SWEEPER_WORKFLOW_NAME":"{3}","CI_SWEEPER_RUN_URL":"{4}"}}',
           github.event.workflow_run.head_sha || github.sha,
           github.event.workflow_run.id || '',
           github.event.workflow_run.head_branch || 'main',
@@ -134,3 +134,4 @@ jobs:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
       BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
+
