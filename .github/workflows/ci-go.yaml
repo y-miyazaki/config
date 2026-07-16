@@ -200,6 +200,7 @@ jobs:
                   token: ${{ env.CODECOV_TOKEN }}
                   use_oidc: true
 
+<<<<<<< HEAD
             - name: Summary
               if: always()
               uses: y-miyazaki/config/.github/actions/summary@86080c96bb7a03745719a81205b693bff6906e4c # v1.8.27
@@ -213,6 +214,21 @@ jobs:
                       task: test
                   status: "${{ job.status }}"
                   title: "${{ format('Go CI: {0} ({1})', env.COMPONENT, 'test') }}"
+=======
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@98340997214ae47f9b8a88da96d5e0b330c30d57 # v1.8.27
+        with:
+          artifacts: |
+            coverage-${{ env.COMPONENT }}
+          outputs: |
+            (none)
+          params: |
+            component: ${{ env.COMPONENT }}
+            task: test
+          status: "${{ job.status }}"
+          title: "${{ format('Go CI: {0} ({1})', env.COMPONENT, 'test') }}"
+>>>>>>> 77ffacd2 (chore: pin all to release v1.8.27 (9834099))
 
     lint:
         needs: precheck
@@ -266,12 +282,21 @@ jobs:
               working-directory: ${{ env.GO_PROJECT_PATH }}
               run: go mod download
 
+<<<<<<< HEAD
             - name: Configure git auth
               if: github.event_name == 'pull_request'
               uses: y-miyazaki/config/.github/actions/git-auth@86080c96bb7a03745719a81205b693bff6906e4c # v1.8.27
               with:
                   operation: configure
                   token: ${{ github.token }}
+=======
+      - name: Configure git auth
+        if: github.event_name == 'pull_request'
+        uses: y-miyazaki/config/.github/actions/git-auth@98340997214ae47f9b8a88da96d5e0b330c30d57 # v1.8.27
+        with:
+          operation: configure
+          token: ${{ github.token }}
+>>>>>>> 77ffacd2 (chore: pin all to release v1.8.27 (9834099))
 
             - name: Exec GolangCI-Lint via reviewdog (PR inline comments)
               if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
@@ -296,12 +321,21 @@ jobs:
                   version: ${{ env.GOLANGCI_LINT_VERSION }}
                   working-directory: ${{ env.GO_PROJECT_PATH }}
 
+<<<<<<< HEAD
             - name: Clear git auth
               if: always() && github.event_name == 'pull_request'
               uses: y-miyazaki/config/.github/actions/git-auth@86080c96bb7a03745719a81205b693bff6906e4c # v1.8.27
               with:
                   operation: clear
                   token: ${{ github.token }}
+=======
+      - name: Clear git auth
+        if: always() && github.event_name == 'pull_request'
+        uses: y-miyazaki/config/.github/actions/git-auth@98340997214ae47f9b8a88da96d5e0b330c30d57 # v1.8.27
+        with:
+          operation: clear
+          token: ${{ github.token }}
+>>>>>>> 77ffacd2 (chore: pin all to release v1.8.27 (9834099))
 
             - name: Post PR failure comment
               if: failure() && github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
@@ -326,6 +360,7 @@ jobs:
                         body
                       });
 
+<<<<<<< HEAD
             - name: Summary
               if: always()
               uses: y-miyazaki/config/.github/actions/summary@86080c96bb7a03745719a81205b693bff6906e4c # v1.8.27
@@ -339,6 +374,21 @@ jobs:
                       task: lint
                   status: "${{ job.status }}"
                   title: "${{ format('Go CI: {0} ({1})', env.COMPONENT, 'lint') }}"
+=======
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@98340997214ae47f9b8a88da96d5e0b330c30d57 # v1.8.27
+        with:
+          artifacts: |
+            (none)
+          outputs: |
+            (none)
+          params: |
+            component: ${{ env.COMPONENT }}
+            task: lint
+          status: "${{ job.status }}"
+          title: "${{ format('Go CI: {0} ({1})', env.COMPONENT, 'lint') }}"
+>>>>>>> 77ffacd2 (chore: pin all to release v1.8.27 (9834099))
 
     security:
         needs: precheck
@@ -445,6 +495,7 @@ jobs:
                   path: ${{ env.GO_PROJECT_PATH }}/sbom-${{ env.COMPONENT }}.json
                   retention-days: 30
 
+<<<<<<< HEAD
             - name: Summary
               if: always()
               uses: y-miyazaki/config/.github/actions/summary@86080c96bb7a03745719a81205b693bff6906e4c # v1.8.27
@@ -459,3 +510,19 @@ jobs:
                       task: security
                   status: "${{ job.status }}"
                   title: "${{ format('Go CI: {0} ({1})', env.COMPONENT, 'security') }}"
+=======
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@98340997214ae47f9b8a88da96d5e0b330c30d57 # v1.8.27
+        with:
+          artifacts: |
+            govulncheck-${{ env.COMPONENT }}
+            sbom-${{ env.COMPONENT }}
+          outputs: |
+            (none)
+          params: |
+            component: ${{ env.COMPONENT }}
+            task: security
+          status: "${{ job.status }}"
+          title: "${{ format('Go CI: {0} ({1})', env.COMPONENT, 'security') }}"
+>>>>>>> 77ffacd2 (chore: pin all to release v1.8.27 (9834099))

@@ -19,6 +19,7 @@ permissions:
     contents: read
 
 jobs:
+<<<<<<< HEAD
     aqua-update-checksum:
         uses: y-miyazaki/config/.github/workflows/ci-aqua-update-checksum.yaml@86080c96bb7a03745719a81205b693bff6906e4c # v1.8.27
         permissions:
@@ -28,3 +29,14 @@ jobs:
             BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
         with:
             environment: "default"
+=======
+  aqua-update-checksum:
+    uses: y-miyazaki/config/.github/workflows/ci-aqua-update-checksum.yaml@98340997214ae47f9b8a88da96d5e0b330c30d57 # v1.8.27
+    permissions:
+      contents: read
+    secrets:
+      BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
+      BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
+    with:
+      environment: "default"
+>>>>>>> 77ffacd2 (chore: pin all to release v1.8.27 (9834099))

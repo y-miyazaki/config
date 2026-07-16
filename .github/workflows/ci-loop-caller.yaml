@@ -374,6 +374,7 @@ jobs:
             BOT_APP_PRIVATE_KEY: ${{ secrets.BOT_APP_PRIVATE_KEY }}
             GH_TOKEN_PUSH: ${{ secrets.GH_TOKEN_PUSH }}
 
+<<<<<<< HEAD
     record-skip:
         if: >-
             needs.detect.result == 'success' &&
@@ -402,6 +403,86 @@ jobs:
                   permission-contents: write
                   permission-pull-requests: write
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+=======
+      - name: Detect Loop Work
+        id: detect
+        uses: y-miyazaki/config/.github/actions/loop-detect@98340997214ae47f9b8a88da96d5e0b330c30d57 # v1.8.27
+        with:
+          agent_implementer_max_turns: ${{ format('{0}', inputs.agent_implementer_max_turns) }}
+          agent_implementer_model: ${{ inputs.agent_implementer_model }}
+          agent_loop_max_attempts: ${{ format('{0}', inputs.agent_loop_max_attempts) }}
+          agent_verifier_criteria: ${{ inputs.agent_verifier_criteria }}
+          agent_verifier_max_turns: ${{ format('{0}', inputs.agent_verifier_max_turns) }}
+          agent_verifier_model: ${{ inputs.agent_verifier_model }}
+          allowlist: ${{ inputs.allowlist }}
+          base_branch: ${{ inputs.branch_state }}
+          budget_file: ${{ inputs.budget_file }}
+          budget_max_runs_per_day: ${{ inputs.budget_max_runs_per_day != null && format('{0}', inputs.budget_max_runs_per_day) || '' }}
+          budget_max_tokens_per_day: ${{ inputs.budget_max_tokens_per_day != null && format('{0}', inputs.budget_max_tokens_per_day) || '' }}
+          detect_script: ${{ inputs.detect_script }}
+          engine: ${{ inputs.engine }}
+          infer_files_pattern: ${{ inputs.infer_files_pattern }}
+          level: ${{ inputs.level }}
+          loop_branch_match: ${{ inputs.branch_match_mode }}
+          loop_finalize_integration: ${{ inputs.finalize_integration }}
+          loop_finalize_pull_request: ${{ inputs.finalize_pull_request }}
+          loop_integration_branches: ${{ inputs.branch_match }}
+          loop_max_targets_per_schedule: ${{ format('{0}', inputs.max_targets_per_schedule) }}
+          loop_name: ${{ inputs.loop_name }}
+          loop_pr_exclude: ${{ inputs.pr_exclude }}
+          loop_pr_include_bots: ${{ inputs.pr_include_bots }}
+          loop_pr_require: ${{ inputs.pr_require }}
+          loop_priority: ${{ inputs.priority }}
+          loop_pull_requests: ${{ inputs.pull_requests && 'true' || 'false' }}
+          loop_state_push_branch: ${{ inputs.branch_state }}
+          no_changes_verdict: ${{ inputs.no_changes_verdict }}
+          pr_body: ${{ inputs.pr_body }}
+          pr_title: ${{ inputs.pr_title }}
+          prompt_instructions: ${{ inputs.prompt_instructions }}
+          run_log_file: ${{ inputs.run_log_file }}
+          skill_name: ${{ inputs.skill_name }}
+          state_file: ${{ inputs.state_file }}
+          token: ${{ inputs.token != '' && inputs.token || github.token }}
+
+  execute:
+    concurrency:
+      cancel-in-progress: true
+      group: on-loop-${{ inputs.loop_name }}-${{ matrix.target.target_json.key }}
+    if: needs.detect.outputs.should_run == 'true'
+    needs: detect
+    permissions:
+      contents: write
+      copilot-requests: write # zizmor: ignore[excessive-permissions]
+      pull-requests: write
+    strategy:
+      matrix:
+        target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
+    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@98340997214ae47f9b8a88da96d5e0b330c30d57 # v1.8.27
+    with:
+      additional_commit_paths: ${{ needs.detect.outputs.additional_commit_paths }}
+      agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
+      agent_implementer_model: ${{ needs.detect.outputs.agent_implementer_model }}
+      agent_loop_max_attempts: ${{ needs.detect.outputs.agent_loop_max_attempts }}
+      agent_verifier_criteria: ${{ needs.detect.outputs.agent_verifier_criteria }}
+      agent_verifier_max_turns: ${{ needs.detect.outputs.agent_verifier_max_turns }}
+      agent_verifier_model: ${{ needs.detect.outputs.agent_verifier_model }}
+      allowlist: ${{ needs.detect.outputs.allowlist }}
+      auto_merge: ${{ (needs.detect.outputs.level == 'L3' && matrix.target.target_json.finalize == 'open_pr') && 'true' || 'false' }}
+      base_branch: ${{ matrix.target.target_json.mode == 'pull_request' && matrix.target.target_json.base.branch || matrix.target.target_json.to.branch }}
+      current_sha: ${{ matrix.target.target_json.from.ref }}
+      denylist: ${{ needs.detect.outputs.denylist }}
+      detect_result_json: ${{ toJson(matrix.target.result) }}
+      domain_persistence_script: ${{ needs.detect.outputs.domain_persistence_script }}
+      engine: ${{ needs.detect.outputs.engine }}
+      environment: ${{ inputs.environment }}
+      finalize_enabled: true
+      infer_files_pattern: ${{ needs.detect.outputs.infer_files_pattern }}
+      level: ${{ needs.detect.outputs.level }}
+      loop_name: ${{ needs.detect.outputs.loop_name }}
+      no_changes_verdict: ${{ needs.detect.outputs.no_changes_verdict }}
+      pr_body: |
+        ${{ needs.detect.outputs.pr_body }}
+>>>>>>> 77ffacd2 (chore: pin all to release v1.8.27 (9834099))
 
             - name: Resolve Push Token
               id: push_token
@@ -421,6 +502,7 @@ jobs:
                   echo "::add-mask::${token}"
                   echo "token=${token}" >> "${GITHUB_OUTPUT}"
 
+<<<<<<< HEAD
             - name: Append Skip Run Log
               uses: y-miyazaki/config/.github/actions/loop-run-log@86080c96bb7a03745719a81205b693bff6906e4c # v1.8.27
               with:
@@ -430,3 +512,61 @@ jobs:
                   run_started_at: ${{ needs.detect.outputs.run_started_at }}
                   skip_reason: ${{ needs.detect.outputs.skip_reason }}
                   token: ${{ steps.push_token.outputs.token }}
+=======
+  record-skip:
+    if: >-
+      needs.detect.result == 'success' &&
+      needs.detect.outputs.should_run == 'false' &&
+      (needs.detect.outputs.skip_reason == 'circuit_breaker' ||
+      needs.detect.outputs.skip_reason == 'budget')
+    needs: detect
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Generate App Bot Token
+        continue-on-error: true
+        id: app_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.BOT_APP_CLIENT_ID }}
+          permission-contents: write
+          permission-pull-requests: write
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+
+      - name: Resolve Push Token
+        id: push_token
+        shell: bash
+        env:
+          APP_TOKEN: ${{ steps.app_token.outputs.token }}
+          GH_TOKEN_PUSH: ${{ secrets.GH_TOKEN_PUSH }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${APP_TOKEN}" ]]; then
+            token="${APP_TOKEN}"
+          elif [[ -n "${GH_TOKEN_PUSH}" ]]; then
+            token="${GH_TOKEN_PUSH}"
+          else
+            token="${GITHUB_TOKEN}"
+          fi
+          echo "::add-mask::${token}"
+          echo "token=${token}" >> "${GITHUB_OUTPUT}"
+
+      - name: Append Skip Run Log
+        uses: y-miyazaki/config/.github/actions/loop-run-log@98340997214ae47f9b8a88da96d5e0b330c30d57 # v1.8.27
+        with:
+          base_branch: ${{ needs.detect.outputs.branch_state }}
+          loop_name: ${{ needs.detect.outputs.loop_name }}
+          outcome: skipped
+          run_started_at: ${{ needs.detect.outputs.run_started_at }}
+          skip_reason: ${{ needs.detect.outputs.skip_reason }}
+          token: ${{ steps.push_token.outputs.token }}
+>>>>>>> 77ffacd2 (chore: pin all to release v1.8.27 (9834099))

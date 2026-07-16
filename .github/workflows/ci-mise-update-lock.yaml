@@ -68,11 +68,19 @@ jobs:
                   permission-contents: write
                   private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
 
+<<<<<<< HEAD
             - name: Configure git auth
               uses: y-miyazaki/config/.github/actions/git-auth@86080c96bb7a03745719a81205b693bff6906e4c # v1.8.27
               with:
                   operation: configure
                   token: ${{ steps.app-token.outputs.token }}
+=======
+      - name: Configure git auth
+        uses: y-miyazaki/config/.github/actions/git-auth@98340997214ae47f9b8a88da96d5e0b330c30d57 # v1.8.27
+        with:
+          operation: configure
+          token: ${{ steps.app-token.outputs.token }}
+>>>>>>> 77ffacd2 (chore: pin all to release v1.8.27 (9834099))
 
             - name: Commit changes
               uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
@@ -83,6 +91,7 @@ jobs:
                   commit_user_name: "repo-maintenance-bot[app]"
                   file_pattern: mise.lock
 
+<<<<<<< HEAD
             - name: Clear git auth
               if: always()
               uses: y-miyazaki/config/.github/actions/git-auth@86080c96bb7a03745719a81205b693bff6906e4c # v1.8.27
@@ -99,3 +108,21 @@ jobs:
                       mise_version: ${{ inputs.mise_version }}
                   status: "${{ job.status }}"
                   title: "Mise Update Lock"
+=======
+      - name: Clear git auth
+        if: always()
+        uses: y-miyazaki/config/.github/actions/git-auth@98340997214ae47f9b8a88da96d5e0b330c30d57 # v1.8.27
+        with:
+          operation: clear
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@98340997214ae47f9b8a88da96d5e0b330c30d57 # v1.8.27
+        with:
+          params: |
+            environment: ${{ inputs.environment }}
+            mise_version: ${{ inputs.mise_version }}
+          status: "${{ job.status }}"
+          title: "Mise Update Lock"
+>>>>>>> 77ffacd2 (chore: pin all to release v1.8.27 (9834099))

@@ -35,6 +35,7 @@ permissions:
     pull-requests: write
 
 jobs:
+<<<<<<< HEAD
     shell-script-ci:
         uses: y-miyazaki/config/.github/workflows/ci-shell-script.yaml@86080c96bb7a03745719a81205b693bff6906e4c # v1.8.27
         with:
@@ -43,3 +44,13 @@ jobs:
             checks: write
             contents: read
             pull-requests: write
+=======
+  shell-script-ci:
+    uses: y-miyazaki/config/.github/workflows/ci-shell-script.yaml@98340997214ae47f9b8a88da96d5e0b330c30d57 # v1.8.27
+    with:
+      script_path: "**/*.sh,**/*.bats"
+    permissions:
+      checks: write
+      contents: read
+      pull-requests: write
+>>>>>>> 77ffacd2 (chore: pin all to release v1.8.27 (9834099))

@@ -52,12 +52,21 @@ jobs:
                   fetch-depth: 0
                   persist-credentials: false
 
+<<<<<<< HEAD
             - name: Configure git auth
               if: github.event_name == 'pull_request'
               uses: y-miyazaki/config/.github/actions/git-auth@86080c96bb7a03745719a81205b693bff6906e4c # v1.8.27
               with:
                   operation: configure
                   token: ${{ github.token }}
+=======
+      - name: Configure git auth
+        if: github.event_name == 'pull_request'
+        uses: y-miyazaki/config/.github/actions/git-auth@98340997214ae47f9b8a88da96d5e0b330c30d57 # v1.8.27
+        with:
+          operation: configure
+          token: ${{ github.token }}
+>>>>>>> 77ffacd2 (chore: pin all to release v1.8.27 (9834099))
 
             - name: Setup Expand file list
               id: file-list
@@ -199,6 +208,7 @@ jobs:
                     fi
                   fi
 
+<<<<<<< HEAD
             - name: Clear git auth
               if: always() && github.event_name == 'pull_request'
               uses: y-miyazaki/config/.github/actions/git-auth@86080c96bb7a03745719a81205b693bff6906e4c # v1.8.27
@@ -219,3 +229,25 @@ jobs:
                       fail_level: ${{ env.FAIL_LEVEL }}
                   status: "${{ job.status }}"
                   title: "Shell Script Lint"
+=======
+      - name: Clear git auth
+        if: always() && github.event_name == 'pull_request'
+        uses: y-miyazaki/config/.github/actions/git-auth@98340997214ae47f9b8a88da96d5e0b330c30d57 # v1.8.27
+        with:
+          operation: clear
+          token: ${{ github.token }}
+
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@98340997214ae47f9b8a88da96d5e0b330c30d57 # v1.8.27
+        with:
+          artifacts: |
+            (none)
+          outputs: |
+            files_list: ${{ steps.file-list.outputs.files_list }}
+          params: |
+            script_path: ${{ env.SCRIPT_PATH }}
+            fail_level: ${{ env.FAIL_LEVEL }}
+          status: "${{ job.status }}"
+          title: "Shell Script Lint"
+>>>>>>> 77ffacd2 (chore: pin all to release v1.8.27 (9834099))
