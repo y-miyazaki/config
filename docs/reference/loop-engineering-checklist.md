@@ -62,8 +62,8 @@ See [CONTEXT — Semantic Findings](../explanation/loop-engineering/CONTEXT.md#l
 - [ ] State, run-log, domain ledger via `domain_persistence_script` in finalize job (no caller `git push` for `.loop/*`)
 - [ ] `outcome: watch` for Skill Watch (no `consecutive_failures` increment)
 - [ ] `loop-finalize` + `if: always()` with appropriate guards
-- [ ] `loop-notify-pr` when `target_json.to.pr_number` is set ([spec](loop-notify-pr-specification.md))
-- [ ] `pr_require` opt-in label for PR-head repair (repo admin creates label; humans apply)
+- [ ] `loop-notify-pr` when `target_json.to.pr_number` is set ([spec](loop-notify-pr-specification.md)); includes bot fix PR link for `pull_request` + `open_pr`
+- [ ] `pr_exclude` for PR-head watch; no `pr_require` label opt-in
 - [ ] GitHub-entity loops (issue/stale): caller grants `issues: write` / `pull-requests: write`; skill performs API actions in **Execute**; Finalize advances state cursor (no file PR at L1)
 
 #### Skill
@@ -82,11 +82,11 @@ See [CONTEXT — Semantic Findings](../explanation/loop-engineering/CONTEXT.md#l
 
 See [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loops-design.md) and [Loop Caller Workflows](../explanation/loop-engineering/loop-caller-workflows-design.md).
 
-- [ ] `LOOP_INTEGRATION_BRANCHES` and/or `LOOP_PULL_REQUESTS` in caller `env`
+- [ ] `LOOP_INTEGRATION_BRANCHES` and/or `LOOP_PULL_REQUESTS` (`pr_enabled`) in caller `with:`
 - [ ] `target_matrix` with `mode`, `from`, `to`, stable `key` per cell
 - [ ] Matrix execute/finalize; capped by `LOOP_MAX_TARGETS_PER_SCHEDULE`
-- [ ] `LOOP_PR_EXCLUDE`; `LOOP_PR_REQUIRE` when `LOOP_PULL_REQUESTS=true` (fail-closed when empty); bots excluded unless `LOOP_PR_INCLUDE_BOTS`
-- [ ] `DEFAULT_LEVEL=L2` unless L3 gate passed
+- [ ] `LOOP_PR_EXCLUDE`; bots excluded unless `LOOP_PR_INCLUDE_BOTS`
+- [ ] `DEFAULT_LEVEL=L2` unless L3 gate passed; L3 = auto-merge on bot fix PR when `finalize=open_pr`
 - [ ] Per-target `concurrency.group` when using matrix fan-out
 
 ### Workflow Structure
@@ -121,5 +121,6 @@ See [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loo
 
 - [ ] Approval Rate > 80%, PR Merge Rate > 90%, Human Override Rate < 10% (2 weeks)
 - [ ] [cobusgreyling Pre-Flight Safety](https://github.com/cobusgreyling/loop-engineering/blob/main/docs/safety.md#pre-flight-safety-check) complete
-- [ ] `LOOP_FINALIZE_INTEGRATION=push` only after gate; never default `DEFAULT_LEVEL=L3` for new adopters
+- [ ] L3 enables GitHub auto-merge on bot fix PRs (`finalize=open_pr`); never default `DEFAULT_LEVEL=L3` for new adopters
 - [ ] Stop conditions and escalation path defined
+

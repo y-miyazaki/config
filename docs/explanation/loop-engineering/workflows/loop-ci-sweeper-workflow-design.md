@@ -18,11 +18,13 @@ Automated minimal repair when CI fails on integration branches and/or open PR he
 
 ### Supported use cases
 
-- Integration branch CI failure → open a fix PR **to** the watch branch (`main`, `develop`, `release/*`, …)
-- Open PR head CI failure → push a minimal fix **to the PR branch** (`push_head`)
+- **Integration branch CI failure** (`main`, `develop`, `release/*`, …) → open a bot fix PR **to** the watch branch; L3 enables GitHub **auto-merge** on that fix PR
+- **Open PR head CI failure** → open a bot fix PR **to the PR head branch** (not `main`); post a marker comment on the **human PR** with fix summary and link to the bot fix PR; L3 auto-merges the bot fix PR into the head branch
 - Classify failures as Fix / Watch / Escalate; apply small lint, workflow, shell, or doc edits when actionable
 - Dedupe by `workflow_run_id` ledger; skip infra/flake/env failures as `outcome: watch`
 - `workflow_run` on repair-target CI workflows (dogfood default); `workflow_dispatch` for manual / `gh run list` scan; see [ops checklist](#workflow_run-operational-checklist)
+
+Dogfood uses **`open_pr` for all repair paths**. Direct branch push (`push` / `push_head`) is a platform exception path — not the ci-sweeper default. See [Finalize strategy](#finalize-strategy).
 
 ### Out of scope
 
@@ -30,12 +32,13 @@ Entry skill design intent for failure kinds deferred via [Failure kind defer (B)
 
 - Infra outages, secrets, runner capacity, or persistent flakes (Watch — no code edit when Skill recognizes them)
 - Large refactors (>5 files), auth/payment/credential paths
-- Merging PRs or pushing directly to the default branch (L2 integration uses `open_pr` only)
+- Auto-merging the **human's** open PR (only the **bot fix PR** is auto-merged at L3)
 - Re-running CI in the verifier (semantic fit against log excerpt only)
 - Manual interactive debugging as a substitute for the loop
 - Separate `loop-pr-ci-healer` package
 - **Coverage-threshold and test-gap repair** — defer (B) until a domain skill exists
 - **Dependency-breakage repair** — defer (B); bot PR heads excluded in dogfood (`pr_include_bots: ""`)
+- Per-PR opt-in labels (`pr_require`) — removed; use `pr_exclude` only
 
 Skill execution boundaries: `loop-ci-sweeper` SKILL.md (`USE FOR` / `DO NOT USE FOR`).
 
@@ -53,18 +56,62 @@ Distributable `loop-ci-sweeper` skill stays repository-neutral. **Do not** hardc
 
 See [CI failure repair — layered responsibilities](../loop-engineering-design.md#ci-failure-repair--one-package-layered-responsibilities).
 
-### Modes
+### Failure contexts
 
-| Mode           | User expectation                               |
-| -------------- | ---------------------------------------------- |
-| `integration`  | Fix PR **to** `main` / `develop` / `release/*` |
-| `pull_request` | Push fix **to PR head**                        |
+Two independent watch paths. Both use **`open_pr`** finalize; **`level`** selects human review (L2) vs GitHub auto-merge on the bot fix PR (L3).
+
+| Context        | Trigger example                         | Bot fix PR target (`to.branch`) |
+| -------------- | --------------------------------------- | ------------------------------- |
+| `integration`  | CI fails on `main` after direct push    | `main`                          |
+| `pull_request` | CI fails on PR head `hotfix/0001 → main` | `hotfix/0001` (PR head)         |
+
+### End-to-end flows
+
+#### Integration (`main` CI failure)
+
+```text
+L2:
+  1. main CI fails
+  2. Bot opens loop/* → main fix PR
+  3. Human reviews and merges fix PR
+
+L3:
+  1. main CI fails
+  2. Bot opens loop/* → main fix PR
+  3. GitHub auto-merge on fix PR (allowlist + branch protection)
+```
+
+#### Pull request (`main ← hotfix/0001`, head CI failure)
+
+```text
+L2:
+  1. Human PR #1 (hotfix/0001 → main) — CI fails on hotfix/0001
+  2. Bot opens loop/* → hotfix/0001 fix PR (#2)
+  3. Bot comments on human PR #1: fix summary, link to #2, merge or close guidance
+  4. Human merges #2 into hotfix/0001 → CI on #1 goes green → human merges #1
+
+L3:
+  1–3. Same as L2, except bot fix PR (#2) is auto-merged into hotfix/0001
+  4. Human merges #1 when CI is green
+```
+
+The human PR is **never** auto-merged by the loop. L3 auto-merge applies only to the **bot fix PR**.
 
 ## Caller inputs
 
 Keys are passed in `on-loop-ci-sweeper.yaml` via `with:` on `ci-loop-caller-full-github.yaml` (alphabetically ordered). Multiline values (`agent_verifier_criteria`, `pr_body`, `prompt_instructions`) are defined inline in the caller workflow.
 
 Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md). Legacy env name mapping: [Loop Caller `env` Reference](loop-caller-env-reference.md). Platform branch/finalize caps: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
+
+**Dogfood minimum (autonomy + PR watch):**
+
+```yaml
+level: L2
+pr_enabled: true   # target name; wire name today: pull_requests
+pr_exclude: fork,draft,label:no-loop
+```
+
+Do **not** set caller `finalize_integration` or `finalize_pull_request` for ci-sweeper — platform defaults to `open_pr` for both modes. See [Level × finalize matrix](loop-caller-inputs-reference.md#level--finalize-matrix).
 
 | Input / JSON key                                            | Description                                                                                                                                           | Dogfood value                                                                                            |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
@@ -88,21 +135,19 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `detect_script`                                             | Domain detect script path. Uses `gh run list` per watch branch / PR head.                                                                             | `.agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh`                                           |
 | `domain_persistence_script`                                 | Bash script for `loop-finalize` domain persistence (run ledger updates).                                                                              | `.agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh`                                            |
 | `engine`                                                    | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                                                                 | `cursor`                                                                                                 |
-| `finalize_integration`                                      | Finalize for integration targets: `open_pr` (fix PR to watch branch) or `push` (L3).                                                                  | `open_pr`                                                                                                |
-| `finalize_pull_request`                                     | Finalize for pull_request targets. Currently `push_head` only.                                                                                        | `push_head`                                                                                              |
-| `infer_files_pattern`                                       | Extended regex to infer file paths from verifier text.                                                                                                | See caller workflow                                                                                      |
-| `level`                                                     | Autonomy level (`L1`, `L2`, `L3`). L2 opens review PR.                                                                                                | `L2`                                                                                                     |
+| `level`                                                     | Autonomy: `L2` (human merges bot fix PR) or `L3` (GitHub auto-merge on bot fix PR).                                                                   | `L2`                                                                                                     |
 | `loop_name`                                                 | Loop identifier; state file `.loop/state-ci-sweeper.json`.                                                                                            | `ci-sweeper`                                                                                             |
 | `max_targets_per_schedule`                                  | Max targets per cron tick after priority/`acting_on` filters.                                                                                         | `3`                                                                                                      |
 | `no_changes_verdict`                                        | `APPROVE` or `REJECT` when implementer produces no file diff on actionable CI failure.                                                                | `REJECT`                                                                                                 |
 | `pr_body`                                                   | Static markdown prefix for finalize PR body.                                                                                                          | Inline in caller workflow                                                                                |
+| `pr_enabled`                                                | Watch open PR heads for failed CI. **Wire name today:** `pull_requests`.                                                                              | `true`                                                                                                   |
 | `pr_exclude`                                                | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`.                                                                                    | `fork,draft,label:no-loop`                                                                               |
-| `pr_require`                                                | PR require tokens (all must match). `label:ci-sweeper-ok` for PR-head opt-in.                                                                         | `label:ci-sweeper-ok`                                                                                    |
 | `pr_include_bots`                                           | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots.                                                                    | `""`                                                                                                     |
 | `pr_title`                                                  | PR title when finalize strategy is `open_pr`.                                                                                                         | `fix(ci): automated CI repair (loop-ci-sweeper)`                                                         |
 | `prompt_instructions`                                       | Domain instructions: classify Watch vs Fix; minimal diff; run validation skills.                                                                      | Inline in caller workflow                                                                                |
-| `pull_requests`                                             | Enumerate open PR heads for failed CI repair (`push_head`).                                                                                           | `true`                                                                                                   |
 | `skill_name`                                                | Skill package to invoke.                                                                                                                              | `loop-ci-sweeper`                                                                                        |
+
+**Removed from dogfood (do not set):** `pr_require`, `finalize_integration`, `finalize_pull_request`.
 
 **Event keys** (embedded in `detect_domain_env_json` when `workflow_run` fires; dogfood caller enables this trigger):
 
@@ -140,9 +185,11 @@ Per watch branch, `loop-detect` sets context; script uses `gh run list --branch 
 
 ### Pull request mode
 
-- Failed runs where `head_branch` matches open PR
-- Emit `pr_number`, `base.branch` in `target_json`
-- Apply [PR exclusion and opt-in rules](#pr-exclusion-and-opt-in-rules)
+Requires `pr_enabled: true` (wire: `pull_requests`).
+
+- Failed runs where `head_branch` matches an eligible open PR
+- Emit `pr_number`, `base.branch` in `target_json.to`
+- Apply [PR exclusion rules](#pr-exclusion-pr_exclude)
 
 ### Detect truth source
 
@@ -159,9 +206,7 @@ When the Skill classifies **Fix** but the implementer produces no changes → RE
 
 When the Skill classifies **Watch** (infra/flake/env) with no code edit → `outcome: watch` (not REJECT). See [Outcome enum](../../../reference/specification.md#outcome-enum).
 
-## PR Exclusion and Opt-In Rules
-
-### Exclusion (`pr_exclude`)
+## PR exclusion (`pr_exclude`)
 
 | Rule          | Default     | Token                           |
 | ------------- | ----------- | ------------------------------- |
@@ -171,19 +216,9 @@ When the Skill classifies **Watch** (infra/flake/env) with no code edit → `out
 | Bots          | **Exclude** | use `pr_include_bots` to opt in |
 | WIP title     | Optional    | `wip_title`                     |
 
-### Opt-in (`pr_require`)
+No label opt-in (`pr_require`) — eligible open PRs passing `pr_exclude` are watched when `pr_enabled: true`.
 
-PR-head repair (`push_head`) requires explicit consent. Dogfood:
-
-| Rule         | Token                 | Setup                                                             |
-| ------------ | --------------------- | ----------------------------------------------------------------- |
-| Opt-in label | `label:ci-sweeper-ok` | Repo admin creates label once; author or maintainer applies to PR |
-
-If the label does not exist in the repository, detect never matches PR-head targets (silent no-op, not workflow error). The bot does not create or apply labels.
-
-Dogfood wiring: `on-loop-ci-sweeper.yaml` sets `pr_require: label:ci-sweeper-ok` with `pull_requests: true`. Empty `pr_require` remains fail-closed (no PR-head targets).
-
-After finalize, `loop-notify-pr` posts a marker comment on the PR. See [loop-notify-pr Specification](../../../reference/loop-notify-pr-specification.md).
+After finalize on `pull_request` targets, `loop-notify-pr` posts or updates a marker comment on the **human PR** (`target_json.to.pr_number`), including the bot fix PR URL when finalize creates one. See [loop-notify-pr Specification](../../../reference/loop-notify-pr-specification.md).
 
 ## Execute
 
@@ -200,12 +235,16 @@ with:
 
 CI sweeper criteria require the fix to address the **logged failure** (semantic fit against `verifier_context`). This does not violate the generic rule “verifier does not re-run CI” — see [Loop Engineering — Verify](../loop-engineering-design.md#verify).
 
-## Finalize
+## Finalize strategy
 
-| Mode         | L2                                | L3                                      |
-| ------------ | --------------------------------- | --------------------------------------- |
-| integration  | `open_pr` → fix PR to `to.branch` | `push` → Finalize pushes to `to.branch` |
-| pull_request | `push_head`                       | `push_head`                             |
+Platform rule for dogfood loops (changelog, docs-triage, ci-sweeper): **`target.finalize` is always `open_pr`**. **`level`** controls review vs auto-merge on the **bot fix PR**.
+
+| Mode           | L2                                              | L3                                                        |
+| -------------- | ----------------------------------------------- | --------------------------------------------------------- |
+| `integration`  | Bot fix PR → `to.branch`; human merge           | Bot fix PR → `to.branch`; **GitHub auto-merge**           |
+| `pull_request` | Bot fix PR → PR head; comment on human PR       | Bot fix PR → PR head; **auto-merge**; comment on human PR |
+
+Reference: [Finalize strategy matrix](../loop-engineering-design.md#finalize-strategy-matrix).
 
 | Persistence | Mechanism                                                 |
 | ----------- | --------------------------------------------------------- |
@@ -213,17 +252,19 @@ CI sweeper criteria require the fix to address the **logged failure** (semantic 
 | Run ledger  | `domain_persistence_script` → `update_run_ledger.sh`      |
 | Run log     | `loop-run-log` in `loop-finalize` chain                   |
 
-Dogfood: **`DEFAULT_LEVEL=L2`** until [L3 promotion gate](../loop-engineering-design.md).
+Dogfood: **`level=L2`** until [L3 promotion gate](../loop-engineering-design.md).
 
 ## Implementation Checklist
 
 - [ ] Single detect path via `loop-detect` (no caller re-run)
-- [ ] `branch_match` / `pull_requests`
+- [ ] `branch_match` / `pr_enabled` (`pull_requests` wire)
 - [ ] State `targets` map; flat `last_sha` removed
 - [ ] `target_matrix` + matrix execute/finalize
 - [ ] `verifier_context` always on execute
 - [ ] Ledger via `domain_persistence_script` in `loop-finalize`
 - [ ] `outcome: watch` for Skill Watch classification
+- [ ] `loop-notify-pr` on human PR for `pull_request` mode
+- [ ] `open_pr` finalize for PR head targets (implementation migration from `push_head`-only)
 
 ## workflow_run Operational Checklist
 
@@ -234,13 +275,13 @@ Dogfood `on-loop-ci-sweeper.yaml` enables `workflow_run`. Keep these gates when 
 - [x] Concurrency prevents overlapping runs on same workflow
 - [x] Event path sets `CI_SWEEPER_*` keys in `detect_domain_env_json`
 - [x] Failed workflow is not the sweeper’s own finalize push (`[skip ci]` on ledger commits)
-- [x] Fork / draft / bot exclusions active (`pr_exclude` / `pr_require`)
+- [x] Fork / draft / bot exclusions active (`pr_exclude`)
 - [x] Job `if:` limits event runs to `failure` / `startup_failure`
 - [ ] 1 failure event → 1 target (no unbounded matrix from one event) — verify when expanding `workflows:`
 
 ## Dependency update (caller filter + domain skill)
 
-Tier 3 **dependency-update** behavior is a domain skill plus caller PR filters (`pr_include_bots`, `pr_require`) under **`loop-ci-sweeper`** — not a separate loop package. Defer via [Failure kind defer (B)](../loop-engineering-design.md#failure-kind-defer-b) until the skill exists.
+Tier 3 **dependency-update** behavior is a domain skill plus caller PR filters (`pr_include_bots`, `pr_exclude`) under **`loop-ci-sweeper`** — not a separate loop package. Defer via [Failure kind defer (B)](../loop-engineering-design.md#failure-kind-defer-b) until the skill exists.
 
 ## Cross-Loop Note
 

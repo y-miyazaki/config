@@ -22,12 +22,12 @@ Maintain [Keep a Changelog](https://keepachangelog.com/) `CHANGELOG.md` on integ
 - Ingest [Conventional Commits](https://www.conventionalcommits.org/) and other explicit prefixed subjects (for example `renovate(scope):`, `chore(deps):`)
 - Promote detect `releases[]` into `## [x.y.z] - date` sections (from git tags and pin/finalize subjects)
 - Add commit links when `repository_url` is resolved (GitHub Actions `GITHUB_*` or git remote; optional `CHANGELOG_REPOSITORY_URL` override)
-- Open an L2 review PR to the watch integration branch (`finalize_integration: open_pr`); state cursor advances on merge via `on-loop-state-promote`
+- Open an L2 review PR to the watch integration branch; L3 enables GitHub auto-merge on that fix PR. Platform default finalize is `open_pr` — caller need not set `finalize_integration`
 
 ### Out of scope
 
 - Creating git tags (tags are inputs to detect; the loop documents them in `CHANGELOG.md` only)
-- PR head mode (`pull_requests` default off) — changelog updates target integration branches only
+- PR head mode (`pr_enabled` default off) — changelog updates target integration branches only
 - Commits without a clear `prefix: description` or `prefix(scope): description` shape
 - Implementer edits to loop state (finalize bundles state after verification)
 
@@ -69,16 +69,15 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `detect_domain_env_json` → `CHANGELOG_MERGE_COMMITS` | `true` includes merge commits; `false` passes `--no-merges` to detect script.                             | `false`                                                             |
 | `detect_script`                                      | Domain detect script path. Invoked once per scan context by `loop-detect`.                                | `.agents/skills/loop-changelog/scripts/detect_changelog_commits.sh` |
 | `engine`                                             | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                     | `cursor`                                                            |
-| `finalize_integration`                               | Finalize strategy for integration targets: `open_pr` or `push` (L3).                                      | `open_pr`                                                           |
 | `infer_files_pattern`                                | Extended regex to infer file paths from verifier text for allowlist checks.                               | `CHANGELOG\.md`                                                     |
-| `level`                                              | Autonomy level (`L1`, `L2`, `L3`). L2 opens review PR; L3 may auto-merge when `finalize=open_pr`.         | `L2`                                                                |
+| `level`                                              | Autonomy: `L2` human merge on bot fix PR; `L3` GitHub auto-merge on bot fix PR.                           | `L2`                                                                |
 | `loop_name`                                          | Loop identifier; state file `.loop/state-changelog.json`. Align workflow name `on-loop-<loop_name>.yaml`. | `changelog`                                                         |
 | `max_targets_per_schedule`                           | Max targets per cron tick after priority/`acting_on` filters.                                             | `3`                                                                 |
 | `no_changes_verdict`                                 | `APPROVE` or `REJECT` when implementer produces no file diff.                                             | `REJECT`                                                            |
 | `pr_body`                                            | Static markdown prefix for finalize PR body (notes bundled state).                                        | Inline in caller workflow                                           |
 | `pr_title`                                           | PR title when finalize strategy is `open_pr`.                                                             | `chore(changelog): update CHANGELOG.md (loop-changelog)`            |
 | `prompt_instructions`                                | Domain instructions appended to implementer prompt by `loop-prompt-generate`.                             | Inline in caller workflow                                           |
-| `pull_requests`                                      | Enumerate open PR heads. Changelog uses integration branches only.                                        | `false`                                                             |
+| `pull_requests`                                      | Wire name for `pr_enabled`. Changelog uses integration branches only.                                     | `false`                                                             |
 | `skill_name`                                         | Skill package to invoke. Must match `.agents/skills/loop-changelog/`.                                     | `loop-changelog`                                                    |
 
 Platform handler: `on-loop-state-promote.yaml` (`pull_request` `closed`) promotes `pending` → `last_sha` on merge.
@@ -170,3 +169,4 @@ Changelog runs are doc-metadata only (`CHANGELOG.md`). Coordinate with `loop-doc
 - [Multi-Branch Loops Design](../multi-branch-loops-design.md)
 - [Loop Caller Workflows Design](../loop-caller-workflows-design.md)
 - [Specification](../../../reference/specification.md)
+

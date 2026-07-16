@@ -42,7 +42,7 @@ Cron and `workflow_dispatch` runs have no `inputs` context — tunables live in 
 | `AGENT_VERIFIER_MAX_TURNS`    | Max verifier agent turns per verification.                                                                                                    | `3`                                |
 | `AGENT_VERIFIER_MODEL`        | Verifier model ID. Cursor: run `agent --list-models`.                                                                                         | `composer-2.5`                     |
 | `DEFAULT_ENGINE`              | AI engine: `claude` \| `copilot` \| `codex` \| `cursor`. Selects CLI and `AGENT_TOKEN` mapping.                                               | `cursor`                           |
-| `DEFAULT_LEVEL`               | Autonomy: `L1` (read-only once) \| `L2` (review PR) \| `L3` (auto-merge when `finalize=open_pr`). Single switch per loop — not split by mode. | `L2`                               |
+| `DEFAULT_LEVEL`               | Autonomy: `L1` \| `L2` (human merge bot fix PR) \| `L3` (GitHub auto-merge on bot fix PR when `finalize=open_pr`). Single switch per loop. | `L2`                               |
 | `SKILL_NAME`                  | Skill package to invoke (e.g. `loop-changelog`). Must match `.agents/skills/<name>/`.                                                         | Per loop                           |
 
 ## Repository and branch defaults
@@ -62,8 +62,8 @@ Canonical branch/finalize/PR keys: [Multi-Branch canonical table](../multi-branc
 | `LOOP_BUDGET_MAX_TOKENS_PER_DAY` | Daily aggregated token cap across loops.                                                                                                                                               | `500000`–`1000000`                 |
 | `LOOP_DENYLIST`                  | Comma-separated globs the implementer must not touch (ci-sweeper).                                                                                                                     | ci-sweeper only                    |
 | `LOOP_DETECT_SCRIPT`             | Path to domain `detect_*.sh` (under loop skill package). Invoked once per scan context by `loop-detect` — never re-run in caller `run:` steps.                                         | Per loop                           |
-| `LOOP_FINALIZE_INTEGRATION`      | Finalize for integration targets: `open_pr` \| `push` (L3 direct push).                                                                                                                | `open_pr`                          |
-| `LOOP_FINALIZE_PULL_REQUEST`     | Finalize for PR head targets. Currently `push_head` only.                                                                                                                              | `push_head` (ci-sweeper)           |
+| `LOOP_FINALIZE_INTEGRATION`      | Optional override. Default `open_pr`. Exception: `push` (not dogfood).                                                                                                                 | Omit (internal default)            |
+| `LOOP_FINALIZE_PULL_REQUEST`     | Optional override. Default `open_pr`. Exception: `push_head` (not dogfood).                                                                                                            | Omit (internal default)            |
 | `LOOP_INFER_FILES_PATTERN`       | Extended regex to infer file paths from verifier text for allowlist checks.                                                                                                            | Per loop                           |
 | `LOOP_INTEGRATION_BRANCHES`      | Comma-separated branch patterns to watch (`glob` unless `LOOP_BRANCH_MATCH` set). Empty with `LOOP_PULL_REQUESTS=false` → no work.                                                     | `main`                             |
 | `LOOP_MAX_TARGETS_PER_SCHEDULE`  | Max targets per cron tick after priority/`acting_on` filters. Excess deferred → `target_budget`.                                                                                       | `3`                                |
@@ -71,11 +71,10 @@ Canonical branch/finalize/PR keys: [Multi-Branch canonical table](../multi-branc
 | `LOOP_NO_CHANGES_VERDICT`        | `APPROVE` \| `REJECT` when implementer produces no file diff. CI loops use `REJECT` for actionable failures.                                                                           | `REJECT` (all dogfood callers)     |
 | `LOOP_PR_BODY`                   | Static markdown prefix for finalize PR body (loop attribution, review notice).                                                                                                         | Per loop                           |
 | `LOOP_PR_EXCLUDE`                | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`.                                                                                                                     | ci-sweeper                         |
-| `LOOP_PR_REQUIRE`                | PR require tokens (all must match). Empty when `LOOP_PULL_REQUESTS=true` → no PR-head targets. See [loop-notify-pr Specification](../../../reference/loop-notify-pr-specification.md). | `label:ci-sweeper-ok` (ci-sweeper) |
 | `LOOP_PR_INCLUDE_BOTS`           | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots.                                                                                                     | `""`                               |
 | `LOOP_PR_TITLE`                  | PR title template when finalize strategy is `open_pr`.                                                                                                                                 | Per loop                           |
 | `LOOP_PROMPT_INSTRUCTIONS`       | Domain-specific implementer instructions appended by `loop-prompt-generate`.                                                                                                           | Per loop                           |
-| `LOOP_PULL_REQUESTS`             | `"true"` \| `"false"` — enumerate open PR heads for detect.                                                                                                                            | `"false"` except ci-sweeper        |
+| `LOOP_PULL_REQUESTS`             | `"true"` \| `"false"` — watch open PR heads (`pr_enabled` target name).                                                                                                                            | `"false"` except ci-sweeper        |
 | `LOOP_STATE_PUSH_BRANCH`         | Branch for `.loop/*` persistence commits (state, budget, run-log). Fix PRs may target other branches; metadata stays here.                                                             | `main`                             |
 
 Optional keys not set in current dogfood callers but supported by `loop-detect`:
@@ -105,7 +104,6 @@ Optional keys not set in current dogfood callers but supported by `loop-detect`:
 | `CI_SWEEPER_REJECT_MAX_RETRIES`  | Max retries per run ID when policy is `limited`.                                                 | `"3"`                                                         |
 | `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`, `retry`, or `limited` for prior `rejected` ledger entries.                              | `block`                                                       |
 | `DOMAIN_PERSISTENCE_SCRIPT`      | Bash script for `loop-finalize` `domain_persistence_script` (ledger updates).                    | `.agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh` |
-| `LOOP_PR_REQUIRE`                | PR require tokens for PR-head opt-in. Empty → no PR-head targets when `LOOP_PULL_REQUESTS=true`. | `label:ci-sweeper-ok`                                         |
 
 Event vars (detect job only when `workflow_run` trigger enabled):
 
@@ -148,3 +146,4 @@ Each workflow design doc lists **every** `env` key for that caller (including mu
 - [Loop Caller Workflows Design](../loop-caller-workflows-design.md)
 - [Loop Engineering Design](../loop-engineering-design.md)
 - [Specification](../../../reference/specification.md)
+

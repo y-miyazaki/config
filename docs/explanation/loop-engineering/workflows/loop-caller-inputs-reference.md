@@ -54,11 +54,11 @@ jobs:
 
 Branch-related caller inputs fall into **three roles**. Mixing them up is the most common configuration mistake.
 
-| Role             | Question it answers                                       | `ci-loop-caller` inputs                                  | Dogfood (typical)                            |
-| ---------------- | --------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------- |
-| **Watch**        | Which branches / PR heads does detect scan?               | `branch_match`, `branch_match_mode`, `pull_requests`     | `main`, `glob`, `false` (ci-sweeper: `true`) |
-| **State**        | Where do `.loop/*` commits (state, budget, run-log) land? | `branch_state`, `state_file`                             | `main`, (default path)                       |
-| **Fix delivery** | After the agent edits, where does the change go?          | `finalize_integration`, `finalize_pull_request`, `level` | `open_pr`, `push_head`, `L2`                 |
+| Role             | Question it answers                                       | `ci-loop-caller` inputs                          | Dogfood (typical)                            |
+| ---------------- | --------------------------------------------------------- | ------------------------------------------------ | -------------------------------------------- |
+| **Watch**        | Which branches / PR heads does detect scan?               | `branch_match`, `branch_match_mode`, `pr_enabled` | `main`, `glob`, `false` (ci-sweeper: `true`) |
+| **State**        | Where do `.loop/*` commits (state, budget, run-log) land? | `branch_state`, `state_file`                     | `main`, (default path)                       |
+| **Autonomy**     | Human review vs GitHub auto-merge on the **bot fix PR**   | `level`                                          | `L2`                                         |
 
 Platform semantics (target model, verifier baseline): [Multi-Branch Loops Design](../multi-branch-loops-design.md#branch-roles-and-fix-direction).
 
@@ -74,7 +74,9 @@ Platform semantics (target model, verifier baseline): [Multi-Branch Loops Design
 
 When `branch_match` is **empty**, detect scans **`branch_state` only** (single-branch fallback).
 
-`pull_requests: true` adds a second watch path: open PR **head** branches (see [Fix direction](#fix-direction-integration-vs-pull_request) below). Does not change where state is stored.
+`pr_enabled: true` adds a second watch path: open PR **head** branches (see [Fix direction](#fix-direction-integration-vs-pull_request) below). Does not change where state is stored.
+
+**Wire name today:** `pull_requests` on `ci-loop-caller.yaml` (rename to `pr_enabled` planned).
 
 ### State: `branch_state` + `state_file`
 
@@ -85,47 +87,67 @@ When `branch_match` is **empty**, detect scans **`branch_state` only** (single-b
 
 Dogfood sets `branch_match: main` and `branch_state: main`. That matches the usual model: **watch `main` (and optionally other integration branches / PR heads); keep loop metadata on `main`.**
 
+### Level × finalize matrix
+
+Dogfood loops (changelog, docs-triage, ci-sweeper) use **`open_pr` for all modes**. Callers set **`level` only** — not `finalize_integration` / `finalize_pull_request`.
+
+| Mode           | `target.finalize` (platform default) | L2                                     | L3                                      |
+| -------------- | ------------------------------------ | -------------------------------------- | --------------------------------------- |
+| `integration`  | `open_pr`                            | Bot fix PR → `to.branch`; human merge  | Bot fix PR → `to.branch`; **auto-merge** |
+| `pull_request` | `open_pr`                            | Bot fix PR → PR head; notify human PR  | Bot fix PR → PR head; **auto-merge**; notify human PR |
+
+L3 **auto-merge** is [GitHub PR auto-merge](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/automatically-merging-a-pull-request) on the **bot fix PR** — not direct push to the branch. The human's open PR is not auto-merged.
+
+Platform exception paths (`push`, `push_head`) exist for advanced callers; dogfood does not use them. See [Finalize strategy matrix](../loop-engineering-design.md#finalize-strategy-matrix).
+
+Optional overrides (not used in dogfood): `finalize_integration`, `finalize_pull_request` on `ci-loop-caller.yaml` → `loop-detect` env. Default when omitted: integration and pull_request both resolve to `open_pr`.
+
 ### Fix direction: integration vs `pull_request`
 
-Detect builds one `target_json` per watch context. **Execute** checks out `from.branch` / `from.ref`. **Finalize** delivers the agent's commit to the **same branch that was watched**, not to `branch_state`.
+Detect builds one `target_json` per watch context. **Execute** checks out `from.branch` / `from.ref`. **Finalize** opens a bot fix PR targeting `to.branch` (watched integration branch or PR head), not `branch_state`.
 
 ```text
-integration mode (e.g. changelog, docs-triage, ci-sweeper on main)
+integration mode (changelog, docs-triage, ci-sweeper on main)
   watch:  branch_match → checkout main (or develop, release/*, …)
-  worktree / edits: from.branch == to.branch == watched integration branch
-  L2 finalize (open_pr): open fix PR → to.branch (the watched branch)
-  L3 finalize (push):      push directly → to.branch (the watched branch)
-  state:                 branch_state (main) — separate from fix target
+  worktree: from.branch == watched integration branch
+  finalize: open_pr → bot fix PR to to.branch
+  L2: human merges fix PR
+  L3: auto-merge on fix PR
+  state: branch_state (main) — separate from fix target
 
-pull_request mode (ci-sweeper)
-  watch:  open PR head branch
-  worktree / edits: from.branch == to.branch == PR head (feature branch)
-  finalize (push_head): push fix → PR head branch (updates the existing PR)
-  verifier diff baseline: base.branch (PR base, e.g. main) — not the push target
-  state:                 branch_state (main) — separate from fix target
+pull_request mode (ci-sweeper, pr_enabled: true)
+  watch:  open PR head branch (e.g. hotfix/0001)
+  worktree: from.branch == PR head
+  finalize: open_pr → bot fix PR to to.branch (PR head, not main)
+  loop-notify-pr: comment on human PR with fix PR link + summary
+  L2: human merges bot fix PR into head branch; then merges human PR
+  L3: auto-merge bot fix PR into head branch
+  verifier diff baseline: base.branch (PR base, e.g. main)
+  state: branch_state (main) — separate from fix target
 ```
 
-| Mode           | Watched branch            | Fix lands on        | L2 behavior                       | L3 behavior                  |
-| -------------- | ------------------------- | ------------------- | --------------------------------- | ---------------------------- |
-| `integration`  | `integration:main` (etc.) | Same watched branch | `open_pr` → PR **to** `to.branch` | `push` → **to** `to.branch`  |
-| `pull_request` | PR head (`feature/…`)     | Same PR head        | `push_head` → **to** PR head      | `push_head` → **to** PR head |
+| Mode           | Watched branch            | Bot fix PR targets | Human PR notify |
+| -------------- | ------------------------- | ------------------ | --------------- |
+| `integration`  | `integration:main` (etc.) | `to.branch`        | No              |
+| `pull_request` | PR head (`feature/…`)     | PR head branch     | Yes             |
 
 **Summary:** monitored branches and PR heads are **watch targets**; `branch_state` is **metadata only**; fixes and pushes always target the **branch that was watched** (`to.branch`), not `main`, unless `main` itself is the watch target.
 
 ### Branch-related inputs (complete)
 
-| Input                   | Type    | Role                                                                  | Default                               | Maps to `loop-detect`                   |
-| ----------------------- | ------- | --------------------------------------------------------------------- | ------------------------------------- | --------------------------------------- |
-| `branch_match`          | string  | Comma-separated patterns / names to watch                             | `""` (→ `branch_state`)               | `loop_integration_branches`             |
-| `branch_match_mode`     | string  | How to interpret `branch_match` patterns                              | `glob`                                | `loop_branch_match`                     |
-| `branch_state`          | string  | `.loop/*` persistence, state migration, empty `branch_match` fallback | (required)                            | `base_branch`, `loop_state_push_branch` |
-| `finalize_integration`  | string  | Fix delivery for integration targets                                  | `open_pr`                             | `loop_finalize_integration`             |
-| `finalize_pull_request` | string  | Fix delivery for PR head targets                                      | `push_head`                           | `loop_finalize_pull_request`            |
-| `priority`              | string  | Order when both integration and PR candidates exist                   | `integration,pull_request`            | `loop_priority`                         |
-| `pull_requests`         | boolean | Also watch open PR heads                                              | `false`                               | `loop_pull_requests`                    |
-| `state_file`            | string  | Override state JSON path                                              | `""` (`.loop/state-<loop_name>.json`) | `state_file`                            |
+| Input               | Type    | Role                                                                  | Default                               | Maps to `loop-detect`                   |
+| ------------------- | ------- | --------------------------------------------------------------------- | ------------------------------------- | --------------------------------------- |
+| `branch_match`      | string  | Comma-separated patterns / names to watch                             | `""` (→ `branch_state`)               | `loop_integration_branches`             |
+| `branch_match_mode` | string  | How to interpret `branch_match` patterns                              | `glob`                                | `loop_branch_match`                     |
+| `branch_state`      | string  | `.loop/*` persistence, state migration, empty `branch_match` fallback | (required)                            | `base_branch`, `loop_state_push_branch` |
+| `level`             | string  | `L2` human merge on bot fix PR; `L3` GitHub auto-merge on bot fix PR  | `L2`                                  | `level`                                 |
+| `priority`          | string  | Order when both integration and PR candidates exist                   | `integration,pull_request`            | `loop_priority`                         |
+| `pr_enabled`        | boolean | Watch open PR heads (`pull_requests` wire name today)                 | `false`                               | `loop_pull_requests`                    |
+| `state_file`        | string  | Override state JSON path                                              | `""` (`.loop/state-<loop_name>.json`) | `state_file`                            |
 
-Related but not branch-scoped: `max_targets_per_schedule` (fan-out cap after watch), `pr_exclude` / `pr_require` / `pr_include_bots` (PR watch filters).
+Related but not branch-scoped: `max_targets_per_schedule` (fan-out cap after watch), `pr_exclude` / `pr_include_bots` (PR watch filters).
+
+Optional platform overrides (dogfood omit): `finalize_integration`, `finalize_pull_request` — default `open_pr` for both modes. See [Level × finalize matrix](#level--finalize-matrix).
 
 ## Agent and engine
 
@@ -155,19 +177,18 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `budget_max_tokens_per_day` | number  | Daily aggregated token cap                                                                                                                                                        | `500000`–`1000000`                             |
 | `denylist`                  | string  | Comma-separated globs the implementer must not touch                                                                                                                              | ci-sweeper only                                |
 | `detect_script`             | string  | Path to domain `detect_*.sh` under loop skill package                                                                                                                             | Per loop                                       |
-| `finalize_integration`      | string  | Finalize for integration targets: `open_pr` \| `push`                                                                                                                             | `open_pr`                                      |
-| `finalize_pull_request`     | string  | Finalize for PR head targets. Currently `push_head` only                                                                                                                          | `push_head` (ci-sweeper)                       |
+| `finalize_integration`      | string  | **Optional override.** Default `open_pr`. Exception: `push` (direct write; not dogfood).                          | Omit (platform default)                        |
+| `finalize_pull_request`     | string  | **Optional override.** Default `open_pr`. Exception: `push_head` (not dogfood).                                   | Omit (platform default)                        |
 | `infer_files_pattern`       | string  | Extended regex to infer file paths from verifier text                                                                                                                             | Per loop                                       |
 | `loop_name`                 | string  | Loop identifier: `.loop/state-<loop_name>.json`, budget key, run-log tag. Align caller filename: `on-loop-<loop_name>.yaml`                                                       | Per loop                                       |
 | `max_targets_per_schedule`  | number  | Max targets per cron tick after priority/`acting_on` filters                                                                                                                      | `3`                                            |
 | `no_changes_verdict`        | string  | `APPROVE` \| `REJECT` when implementer produces no file diff                                                                                                                      | `REJECT`                                       |
 | `pr_body`                   | string  | Static markdown prefix for finalize PR body                                                                                                                                       | Per loop                                       |
 | `pr_exclude`                | string  | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`                                                                                                                 | ci-sweeper                                     |
-| `pr_require`                | string  | PR require tokens (all must match). Empty when `pull_requests=true` → no PR-head targets. See [loop-notify-pr Specification](../../../reference/loop-notify-pr-specification.md). | `label:ci-sweeper-ok` (ci-sweeper)             |
 | `pr_include_bots`           | string  | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots                                                                                                 | `""`                                           |
 | `pr_title`                  | string  | PR title when finalize strategy is `open_pr`                                                                                                                                      | Per loop                                       |
 | `prompt_instructions`       | string  | Domain-specific implementer instructions for `loop-prompt-generate`                                                                                                               | Per loop                                       |
-| `pull_requests`             | boolean | Enumerate open PR heads for detect                                                                                                                                                | `false` except ci-sweeper                      |
+| `pr_enabled`                | boolean | Watch open PR heads for detect. **Wire name today:** `pull_requests`                                                                                                            | `false` except ci-sweeper                      |
 | `state_bundle_with_fix_pr`  | boolean | Commit loop state on the fix branch before `open_pr` (single reviewable PR)                                                                                                       | `false` (changelog uses merge-gated `pending`) |
 | `state_file`                | string  | Override state JSON path                                                                                                                                                          | `.loop/state-<loop_name>.json`                 |
 
@@ -210,11 +231,10 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `no_changes_verdict`          | `no_changes_verdict`                    |
 | `pr_body`                     | `pr_body`                               |
 | `pr_exclude`                  | `loop_pr_exclude`                       |
-| `pr_require`                  | `loop_pr_require`                       |
 | `pr_include_bots`             | `loop_pr_include_bots`                  |
 | `priority`                    | `loop_priority`                         |
 | `prompt_instructions`         | `prompt_instructions`                   |
-| `pull_requests`               | `loop_pull_requests`                    |
+| `pr_enabled` / `pull_requests` | `loop_pull_requests`                    |
 | `run_log_file`                | `run_log_file`                          |
 | `skill_name`                  | `skill_name`                            |
 | `state_file`                  | `state_file`                            |
@@ -309,7 +329,7 @@ detect_domain_env_json: ${{ format('{{"CI_SWEEPER_HEAD_SHA":"{0}","CI_SWEEPER_WO
 | `LOOP_MAX_TARGETS_PER_SCHEDULE`                               | `max_targets_per_schedule`                               |
 | `LOOP_NAME`                                                   | `loop_name`                                              |
 | `LOOP_NO_CHANGES_VERDICT`                                     | `no_changes_verdict`                                     |
-| `LOOP_PR_*`, `LOOP_PROMPT_INSTRUCTIONS`, `LOOP_PULL_REQUESTS` | `pr_*`, `prompt_instructions`, `pull_requests`           |
+| `LOOP_PR_*`, `LOOP_PROMPT_INSTRUCTIONS`, `LOOP_PULL_REQUESTS` | `pr_*`, `prompt_instructions`, `pr_enabled` / `pull_requests` |
 | `CHANGELOG_*`, `CI_SWEEPER_*`, `DOCS_TRIAGE_*`                | `detect_domain_env_json` keys                            |
 | `DOMAIN_PERSISTENCE_SCRIPT`                                   | `domain_persistence_script`                              |
 
@@ -327,3 +347,4 @@ detect_domain_env_json: ${{ format('{{"CI_SWEEPER_HEAD_SHA":"{0}","CI_SWEEPER_WO
 - [Loop Caller `env` Reference](loop-caller-env-reference.md) (legacy)
 - [Loop Caller Workflows Design](../loop-caller-workflows-design.md)
 - [Specification](../../../reference/specification.md)
+

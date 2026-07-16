@@ -192,19 +192,18 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 | `budget_max_tokens_per_day` | number  | no       | omitted                    | `loop-detect`                                           |
 | `denylist`                  | string  | no       | `""`                       | `ci-loop-agent` execute only                            |
 | `detect_script`             | string  | yes      | —                          | `loop-detect`                                           |
-| `finalize_integration`      | string  | no       | `open_pr`                  | `loop-detect`                                           |
-| `finalize_pull_request`     | string  | no       | `push_head`                | `loop-detect`                                           |
+| `finalize_integration`      | string  | no       | `open_pr`                  | `loop-detect` (optional; dogfood omit)                  |
+| `finalize_pull_request`     | string  | no       | `open_pr`                  | `loop-detect` (optional; dogfood omit)                  |
 | `infer_files_pattern`       | string  | no       | `""`                       | detect → execute                                        |
 | `loop_name`                 | string  | yes      | —                          | detect, execute, record-skip, concurrency group         |
 | `max_targets_per_schedule`  | number  | no       | `3`                        | `loop-detect`                                           |
 | `no_changes_verdict`        | string  | no       | `REJECT`                   | detect → execute                                        |
 | `pr_body`                   | string  | no       | `""`                       | detect → execute finalize                               |
 | `pr_exclude`                | string  | no       | `fork,draft,label:no-loop` | `loop-detect`                                           |
-| `pr_require`                | string  | no       | `label:ci-sweeper-ok`      | `loop-detect`                                           |
 | `pr_include_bots`           | string  | no       | `""`                       | `loop-detect`                                           |
 | `pr_title`                  | string  | no       | `""`                       | detect → execute                                        |
 | `prompt_instructions`       | string  | no       | `""`                       | `loop-detect`                                           |
-| `pull_requests`             | boolean | no       | `false`                    | `loop-detect`                                           |
+| `pull_requests`             | boolean | no       | `false`                    | `loop-detect` (`pr_enabled` target name)                |
 | `state_file`                | string  | no       | `""`                       | `loop-detect`                                           |
 | `token`                     | string  | no       | `""`                       | `loop-detect` (`github.token` when empty)               |
 
@@ -354,3 +353,4 @@ New domain env keys go into `detect_domain_env_json` without editing reusable jo
 - [GitHub Workflows Design](../github-workflows-design.md) — `on-*` / `ci-*` naming and caller conventions
 - [Multi-Branch Loops Design](multi-branch-loops-design.md) — platform `LOOP_*` semantics
 - [Loop Engineering Design](loop-engineering-design.md) — L1/L2/L3 and finalize behavior
+
