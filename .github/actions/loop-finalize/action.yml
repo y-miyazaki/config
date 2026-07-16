@@ -269,6 +269,8 @@ runs:
         TO_BRANCH: ${{ steps.target.outputs.to_branch }}
       run: |
         set -euo pipefail
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
         git fetch origin "${AGENT_BRANCH}" "${TO_BRANCH}" --prune
         git checkout -B "${TO_BRANCH}" "origin/${TO_BRANCH}"
         git merge --no-ff "origin/${AGENT_BRANCH}" -m "chore(loop): automated fix [skip ci]"
@@ -385,3 +387,4 @@ runs:
         VERDICT: ${{ inputs.verdict }}
         WORKFLOW_RUN: ${{ inputs.workflow_run }}
       run: bash "${GITHUB_ACTION_PATH}/../loop-run-log/lib/run.sh"
+
