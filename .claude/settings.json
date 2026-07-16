@@ -270,7 +270,6 @@
         ]
       }
     ],
-
     "PostToolUse": [
       {
         "matcher": "",
@@ -281,6 +280,10 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "command": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook observe",
+        "timeoutSec": 5
       },
       {
         "matcher": "Write",
@@ -313,6 +316,54 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "command": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook rewrite",
+        "timeoutSec": 15
+      },
+      {
+        "command": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook redirect",
+        "timeoutSec": 5
+      }
+    ],
+    "stop": [
+      {
+        "command": ".claude/hooks/common-hooks-cursor/scripts/actionlint.sh",
+        "timeoutSec": 60
+      },
+      {
+        "command": ".claude/hooks/common-hooks-cursor/scripts/ghalint.sh",
+        "timeoutSec": 60
+      },
+      {
+        "command": ".claude/hooks/common-hooks-cursor/scripts/zizmor.sh",
+        "timeoutSec": 60
+      },
+      {
+        "command": ".claude/hooks/common-hooks-cursor/scripts/gitleaks.sh",
+        "timeoutSec": 60
+      },
+      {
+        "command": ".claude/hooks/common-hooks-cursor/scripts/markdown_link_check.sh",
+        "timeoutSec": 240
+      },
+      {
+        "command": ".claude/hooks/common-hooks-cursor/scripts/markdownlint_cli2.sh",
+        "timeoutSec": 120
+      },
+      {
+        "command": ".claude/hooks/go-hooks-cursor/scripts/golangci_lint.sh",
+        "timeoutSec": 120
+      },
+      {
+        "command": ".claude/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh",
+        "timeoutSec": 120
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": ".claude/hooks/shell-script-hooks-cursor/scripts/shfmt.sh",
+        "timeoutSec": 120
       }
     ]
   }

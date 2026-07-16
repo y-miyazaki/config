@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-16T04:53:07.165349+00:00'
+generated_at: '2026-07-16T10:37:45.081905+00:00'
 apm_version: 0.24.0
 dependencies:
 - repo_url: _local/common
@@ -1565,3 +1565,9 @@ mcp_configs:
     - lean-ctx-bin
     registry: false
     command: npx
+mcp_config_provenance:
+  codebase-memory-mcp: config-common
+  context7: config-common
+  fetch: config-common
+  github: config-common
+  lean-ctx: config-common
