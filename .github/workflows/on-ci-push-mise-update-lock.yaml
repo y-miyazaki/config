@@ -6,25 +6,25 @@
 name: on-ci-push-mise-update-lock
 
 on:
-  push:
-    paths:
-      - "mise.toml"
+    push:
+        paths:
+            - "mise.toml"
 
 concurrency:
-  cancel-in-progress: true
-  group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.ref }}
 
 permissions:
-  contents: read
+    contents: read
 
 jobs:
-  mise-update-lock:
-    uses: y-miyazaki/config/.github/workflows/ci-mise-update-lock.yaml@e148d9267e5d22d3995706db221dce2d1f3b7fc4 # v1.8.27
-    permissions:
-      contents: read
-    secrets:
-      BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
-      BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
-    with:
-      environment: "default"
-      mise_version: "2026.6.13"
+    mise-update-lock:
+        uses: y-miyazaki/config/.github/workflows/ci-mise-update-lock.yaml@86080c96bb7a03745719a81205b693bff6906e4c # v1.8.27
+        permissions:
+            contents: read
+        secrets:
+            BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
+            BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
+        with:
+            environment: "default"
+            mise_version: "2026.6.13"

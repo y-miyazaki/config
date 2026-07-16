@@ -6,25 +6,25 @@
 name: on-ci-push-aqua-update-checksum
 
 on:
-  push:
-    paths:
-      - "aqua.yaml"
-      - "aqua/*.yaml"
+    push:
+        paths:
+            - "aqua.yaml"
+            - "aqua/*.yaml"
 
 concurrency:
-  cancel-in-progress: true
-  group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.ref }}
 
 permissions:
-  contents: read
+    contents: read
 
 jobs:
-  aqua-update-checksum:
-    uses: y-miyazaki/config/.github/workflows/ci-aqua-update-checksum.yaml@e148d9267e5d22d3995706db221dce2d1f3b7fc4 # v1.8.27
-    permissions:
-      contents: read
-    secrets:
-      BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
-      BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
-    with:
-      environment: "default"
+    aqua-update-checksum:
+        uses: y-miyazaki/config/.github/workflows/ci-aqua-update-checksum.yaml@86080c96bb7a03745719a81205b693bff6906e4c # v1.8.27
+        permissions:
+            contents: read
+        secrets:
+            BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
+            BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
+        with:
+            environment: "default"
