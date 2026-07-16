@@ -76,7 +76,7 @@ jobs:
                   token: ${{ steps.app-token.outputs.token }}
 =======
       - name: Configure git auth
-        uses: y-miyazaki/config/.github/actions/git-auth@ce70870e6b5943030c3193a59972616f0d9b644c # v1.8.26
+        uses: y-miyazaki/config/.github/actions/git-auth@179c4a3d75aff08f72f6083131dfbb98803243e6 # v1.8.26
         with:
           operation: configure
           token: ${{ steps.app-token.outputs.token }}
@@ -111,14 +111,14 @@ jobs:
 =======
       - name: Clear git auth
         if: always()
-        uses: y-miyazaki/config/.github/actions/git-auth@ce70870e6b5943030c3193a59972616f0d9b644c # v1.8.26
+        uses: y-miyazaki/config/.github/actions/git-auth@179c4a3d75aff08f72f6083131dfbb98803243e6 # v1.8.26
         with:
           operation: clear
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@ce70870e6b5943030c3193a59972616f0d9b644c # v1.8.26
+        uses: y-miyazaki/config/.github/actions/summary@179c4a3d75aff08f72f6083131dfbb98803243e6 # v1.8.26
         with:
           params: |
             environment: ${{ inputs.environment }}
