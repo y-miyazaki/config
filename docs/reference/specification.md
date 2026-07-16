@@ -211,11 +211,10 @@ MCP servers are declared in each package's `apm.yml` under `dependencies.mcp`.
 | common        | github                         | stdio     | bash                                |
 | common        | codebase-memory-mcp            | stdio     | binary (optional; consumer install) |
 | common        | lean-ctx                       | stdio     | npx                                 |
-| aws           | aws-mcp                        | stdio     | uvx                                 |
+| aws           | aws-mcp                        | stdio     | bash                                |
 | aws           | aws-knowledge-mcp-server       | stdio     | uvx                                 |
 | aws           | aws-documentation-mcp-server   | stdio     | uvx                                 |
 | aws           | aws-pricing-mcp-server         | stdio     | uvx                                 |
-| aws           | awslabs-aws-api-mcp-server     | stdio     | uvx                                 |
 | terraform     | hashicorp-terraform-mcp-server | stdio     | npx                                 |
 | terraform-aws | awslabs-terraform-mcp-server   | stdio     | uvx                                 |
 

@@ -6,6 +6,7 @@ MCP Server の選定・比較の判断材料。
 
 | 日付       | 内容                                                                                                                                                     |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-16 | AWS API 操作は `aws-mcp` に統一。`awslabs-aws-api-mcp-server` を `config-aws` から削除し、AWS 公式の移行推奨に合わせて採用方針を明文化                   |
 | 2026-07-09 | rtk (rtk-ai/rtk) と lean-ctx の Hook 層比較・併用非推奨理由を追記。mcp-rtk は成熟度不足のため現時点では未採用と明記                                      |
 | 2026-06-28 | Performance カテゴリに mcp-rtk 追加。導入形態（Proxy/Hook 型 vs MCP Server 型）による効果発動条件の違いを整理。Headroom の利用形態別評価を追記           |
 | 2026-06-17 | Headroom を Performance / Token Optimization カテゴリに追加                                                                                              |
@@ -25,19 +26,22 @@ MCP Server の選定・比較の判断材料。
 | ライセンス          | 商用 (AWS)                              | Apache-2.0                                                                | 商用 (AWS)                              | Apache-2.0                                                                          | Apache-2.0                                                                    |
 | ホスティング        | リモート (AWS 管理)                     | ローカル                                                                  | リモート                                | ローカル                                                                            | ローカル                                                                      |
 | Transport           | stdio (proxy 経由)                      | stdio                                                                     | stdio (proxy 経由)                      | stdio                                                                               | stdio                                                                         |
-| インストール        | `uvx mcp-proxy-for-aws`                 | `uvx awslabs.aws-api-mcp-server`                                          | `uvx mcp-proxy`                         | `uvx awslabs.aws-documentation-mcp-server`                                          | `uvx awslabs.aws-pricing-mcp-server`                                          |
-| 認証                | IAM (自動)                              | AWS CLI credentials                                                       | 不要                                    | 不要                                                                                | 不要                                                                          |
+| インストール        | `bash -lc` + `uvx mcp-proxy-for-aws`    | `uvx awslabs.aws-api-mcp-server`                                          | `uvx mcp-proxy`                         | `uvx awslabs.aws-documentation-mcp-server`                                          | `uvx awslabs.aws-pricing-mcp-server`                                          |
+| 認証                | IAM (SigV4 / OAuth)                     | AWS CLI credentials                                                       | 不要                                    | 不要                                                                                | 不要                                                                          |
 | ツール数            | 多数                                    | 少数                                                                      | 少数                                    | 少数                                                                                | 少数                                                                          |
 | mcp-compressor 推奨 | ✅                                      | ❌                                                                        | ❌                                      | ❌                                                                                  | ❌                                                                            |
 | 主な用途            | 全 AWS サービス API 操作 + ドキュメント | AWS CLI 経由のリソース操作                                                | 最新 AWS コンテンツ・コードサンプル     | 最新 AWS ドキュメント参照                                                           | デプロイ前コスト見積もり                                                      |
 | CloudTrail 監査     | ✅                                      | ❌                                                                        | ❌                                      | ❌                                                                                  | ❌                                                                            |
 | オフライン利用      | ❌                                      | ✅ (credentials 必要)                                                     | ❌                                      | ✅ (キャッシュ後)                                                                   | ✅ (キャッシュ後)                                                             |
+| 本リポジトリ採用    | ✅ (`aws-mcp`)                          | ❌ (廃止)                                                                 | ✅                                      | 任意                                                                                | 任意                                                                          |
 
 ### Guidelines
 
-**→ AWS MCP (マネージド) + AWS Knowledge MCP を採用する。** AWS MCP は GA 済みで全サービスをカバーし CloudTrail 監査付き。Knowledge MCP は最新ドキュメント・コードサンプルの参照に有用。`mcp-compressor` で AWS MCP をラップしてトークン消費を抑える。
+**→ AWS API 操作は `aws-mcp` のみを採用する。** AWS 公式が `awslabs-aws-api-mcp-server` から統合 AWS MCP Server への移行を推奨しており、本リポジトリの `config-aws` パッケージ（`.apm/packages/aws/apm.yml`）でも AWS API MCP を削除済み。`aws-mcp` は GA 済みで全サービスをカバーし CloudTrail 監査付き。`github` MCP と同様に `bash -lc` ラッパーで `AWS_REGION` のフォールバックとシェルプロファイル経由の認証情報読み込みに対応する。
 
-- AWS API MCP は AWS MCP と機能が重複するため不要。AWS MCP が使えない環境（オフライン等）でのみ検討。
+**→ 補助 MCP として AWS Knowledge MCP を採用する。** Knowledge MCP は最新ドキュメント・コードサンプルの参照に有用。`mcp-compressor` で AWS MCP をラップしてトークン消費を抑える。
+
+- **AWS API MCP (`awslabs-aws-api-mcp-server`) は非採用。** AWS MCP と機能が重複し、公式も superseded と明記。オフライン専用環境など AWS MCP が使えない場合のみ個別検討する。
 - Documentation MCP / Pricing MCP は必要に応じて追加。Pricing MCP はコスト見積もりが頻繁な場合に有用。
 
 ## Terraform MCP Servers
