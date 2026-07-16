@@ -60,8 +60,8 @@ inputs:
     description: "Finalize strategy for integration targets: open_pr | push"
     required: false
   loop_finalize_pull_request:
-    default: "push_head"
-    description: "Finalize strategy for pull_request targets"
+    default: "open_pr"
+    description: "Finalize strategy for pull_request targets: open_pr | push_head"
     required: false
   loop_integration_branches:
     default: ""
@@ -82,17 +82,13 @@ inputs:
     default: ""
     description: "Bot logins to include when scanning PRs (empty = exclude all bots)"
     required: false
-  loop_pr_require:
-    default: ""
-    description: "PR require tokens (all must match). Empty when pull_requests=true → no PR-head targets"
+  loop_pr_enabled:
+    default: "false"
+    description: "Whether to enumerate open pull request heads (pr_enabled)"
     required: false
   loop_priority:
     default: "integration,pull_request"
     description: "Target mode priority order (comma-separated)"
-    required: false
-  loop_pull_requests:
-    default: "false"
-    description: "Whether to enumerate open pull request heads"
     required: false
   loop_state_push_branch:
     default: ""
@@ -273,9 +269,8 @@ runs:
         LOOP_NAME: ${{ inputs.loop_name }}
         LOOP_PR_EXCLUDE: ${{ inputs.loop_pr_exclude }}
         LOOP_PR_INCLUDE_BOTS: ${{ inputs.loop_pr_include_bots }}
-        LOOP_PR_REQUIRE: ${{ inputs.loop_pr_require }}
+        LOOP_PR_ENABLED: ${{ inputs.loop_pr_enabled }}
         LOOP_PRIORITY: ${{ inputs.loop_priority }}
-        LOOP_PULL_REQUESTS: ${{ inputs.loop_pull_requests }}
         LOOP_STATE_PUSH_BRANCH: ${{ inputs.loop_state_push_branch }}
         PROMPT_INSTRUCTIONS: ${{ inputs.prompt_instructions }}
         RUN_LOG_FILE: ${{ inputs.run_log_file }}

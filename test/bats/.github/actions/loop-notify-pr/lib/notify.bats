@@ -25,6 +25,10 @@ setup() {
     COMMIT_SHA="abcdefghijk"
     VERDICT="APPROVE"
     REJECT_REASON=""
+    LEVEL="L2"
+    AUTO_MERGE="false"
+    FIX_PR_NUMBER="406"
+    FIX_PR_URL="https://github.com/owner/repo/pull/406"
     TARGET_JSON='{"to":{"branch":"feature/x","pr_number":42},"workflow_name":"ci-test","workflow_run_id":"123"}'
     NOTIFY_CONTEXT_JSON='{"changed_files":["docs/a.md"],"diff_stat":" 1 file changed, 2 insertions(+)","fix_summary":"Address CI failure in lint (ci-test)","agent_summary":"","baseline_ref":"abc"}'
 }
@@ -55,11 +59,28 @@ teardown() {
     [[ $output == *"<!-- loop-notify-pr:v1:ci-sweeper -->"* ]]
     [[ $output == *"## Loop notification: ci-sweeper"* ]]
     [[ $output == *"| Outcome | \`pr-created\` |"* ]]
+    [[ $output == *"| Bot fix PR | [#406]"* ]]
     [[ $output == *"| Actor | \`loop-bot\` |"* ]]
     [[ $output == *"| Branch | \`feature/x\` |"* ]]
     [[ $output == *"abcdefghijk"* ]]
     [[ $output == *"https://github.com/owner/repo/commit/abcdefghijk"* ]]
     [[ $output == *"actions/runs/99"* ]]
+}
+
+@test "build_comment_body includes L2 next step when bot fix PR created" {
+    run build_comment_body "loop-bot"
+    [ "$status" -eq 0 ]
+    [[ $output == *"Next step (L2)"* ]]
+    [[ $output == *"Merge or close the bot fix PR"* ]]
+}
+
+@test "build_comment_body includes L3 auto-merge note when enabled" {
+    LEVEL="L3"
+    AUTO_MERGE="true"
+    run build_comment_body "loop-bot"
+    [ "$status" -eq 0 ]
+    [[ $output == *"Next step (L3)"* ]]
+    [[ $output == *"auto-merge"* ]]
 }
 
 @test "build_comment_body redacts secrets in reject reason" {

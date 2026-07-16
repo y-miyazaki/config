@@ -6,9 +6,25 @@ inputs:
     default: ""
     description: "Number of Agent→Verify attempts"
     required: false
+  auto_merge:
+    default: "false"
+    description: "Whether L3 auto-merge was enabled on the bot fix PR"
+    required: false
   commit_sha:
     default: ""
-    description: "Commit SHA after successful push_head (empty when not pushed)"
+    description: "Commit SHA after successful push_head (empty for open_pr)"
+    required: false
+  fix_pr_number:
+    default: ""
+    description: "Bot fix PR number from loop-finalize (open_pr)"
+    required: false
+  fix_pr_url:
+    default: ""
+    description: "Bot fix PR URL from loop-finalize (open_pr)"
+    required: false
+  level:
+    default: L2
+    description: "Autonomy level (L2 | L3) for next-step guidance"
     required: false
   loop_name:
     description: "Loop name for marker scoping"
@@ -67,8 +83,12 @@ runs:
       shell: bash
       env:
         ATTEMPTS: ${{ inputs.attempts }}
+        AUTO_MERGE: ${{ inputs.auto_merge }}
         COMMIT_SHA: ${{ inputs.commit_sha }}
+        FIX_PR_NUMBER: ${{ inputs.fix_pr_number }}
+        FIX_PR_URL: ${{ inputs.fix_pr_url }}
         GITHUB_SERVER_URL: ${{ github.server_url }}
+        LEVEL: ${{ inputs.level }}
         LOOP_NAME: ${{ inputs.loop_name }}
         LOOP_RUN_ID: ${{ inputs.loop_run_id }}
         MAX_ATTEMPTS: ${{ inputs.max_attempts }}

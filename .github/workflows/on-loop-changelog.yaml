@@ -97,7 +97,7 @@ jobs:
         - Move bullets for that release's `commit_shas` from `## [Unreleased]` into the matching subsections
         - Add or update footer compare links `[version]: repository_url/compare/previous_tag...tag_sha` when `repository_url` is present
         Preserve existing released sections; do not invent versions outside detect `releases[]`.
-      pull_requests: false
+      pr_enabled: false
       skill_name: loop-changelog
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}

@@ -95,8 +95,6 @@ jobs:
       domain_persistence_script: .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh
       engine: cursor
       environment: default
-      finalize_integration: open_pr
-      finalize_pull_request: push_head
       infer_files_pattern: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|ya?ml|sh|go|toml|json)'
       loop_name: ci-sweeper
       max_targets_per_schedule: 3
@@ -108,9 +106,9 @@ jobs:
 
         ---
         *This PR was created by a loop automation. Review before merging.*
+      pr_enabled: true
       pr_exclude: fork,draft,label:no-loop
       pr_include_bots: ""
-      pr_require: label:ci-sweeper-ok
       pr_title: "fix(ci): automated CI repair (loop-ci-sweeper)"
       prompt_instructions: |
         Fix the failing CI checks identified in the detection result.
@@ -128,11 +126,8 @@ jobs:
 
         Read each skill's SKILL.md under `.agents/skills/` or `.claude/skills/` before invoking.
         Coverage-threshold and dependency-breakage failures: classify Watch — do not edit until caller verifier allows.
-      pull_requests: true
       skill_name: loop-ci-sweeper
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
       BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
-
-

@@ -13,7 +13,7 @@ source "${_bats_support}/support/common.bash"
 setup() {
     bats_source_rel ".github/actions/loop-detect/lib/branches.sh"
     bats_source_rel ".github/actions/loop-detect/lib/prs.sh"
-    LOOP_PULL_REQUESTS="false"
+    LOOP_PR_ENABLED="false"
     OPEN_PRS_JSON=()
 }
 
@@ -23,16 +23,9 @@ pr_json_with_labels() {
         '{number:1,title:"fix",isDraft:false,author:{login:"alice"},labels:$labels,headRepository:{isFork:false}}'
 }
 
-@test "list_open_prs returns empty when pull_requests is false" {
-    LOOP_PULL_REQUESTS="false"
-    run list_open_prs "fork,draft" "" "token" "label:ci-sweeper-ok"
-    [ "$status" -eq 0 ]
-    [ "${#OPEN_PRS_JSON[@]}" -eq 0 ]
-}
-
-@test "list_open_prs returns empty when pr_require is not configured" {
-    LOOP_PULL_REQUESTS="true"
-    run list_open_prs "fork,draft" "" "token" ""
+@test "list_open_prs returns empty when pr_enabled is false" {
+    LOOP_PR_ENABLED="false"
+    run list_open_prs "fork,draft" "" "token"
     [ "$status" -eq 0 ]
     [ "${#OPEN_PRS_JSON[@]}" -eq 0 ]
 }
@@ -69,62 +62,5 @@ pr_json_with_labels() {
     local pr
     pr="$(pr_json_with_labels '[{"name":"no-loop"}]')"
     run pr_excluded "${pr}" "label:no-loop" ""
-    [ "$status" -eq 0 ]
-}
-
-@test "pr_meets_requirements fails on empty require csv" {
-    local pr
-    pr="$(pr_json_with_labels '[{"name":"ci-sweeper-ok"}]')"
-    run pr_meets_requirements "${pr}" ""
-    [ "$status" -eq 1 ]
-}
-
-@test "pr_meets_requirements fails on unknown token" {
-    local pr
-    pr="$(pr_json_with_labels '[{"name":"ci-sweeper-ok"}]')"
-    run pr_meets_requirements "${pr}" "author:collaborator"
-    [ "$status" -eq 1 ]
-}
-
-@test "pr_meets_requirements fails when required label is missing" {
-    local pr
-    pr="$(pr_json_with_labels '[{"name":"other"}]')"
-    run pr_meets_requirements "${pr}" "label:ci-sweeper-ok"
-    [ "$status" -eq 1 ]
-}
-
-@test "pr_meets_requirements passes when required label is present" {
-    local pr
-    pr="$(pr_json_with_labels '[{"name":"ci-sweeper-ok"}]')"
-    run pr_meets_requirements "${pr}" "label:ci-sweeper-ok"
-    [ "$status" -eq 0 ]
-}
-
-@test "pr_meets_requirements requires all labels when multiple tokens" {
-    local pr
-    pr="$(pr_json_with_labels '[{"name":"ci-sweeper-ok"}]')"
-    run pr_meets_requirements "${pr}" "label:ci-sweeper-ok,label:ready"
-    [ "$status" -eq 1 ]
-
-    pr="$(pr_json_with_labels '[{"name":"ci-sweeper-ok"},{"name":"ready"}]')"
-    run pr_meets_requirements "${pr}" "label:ci-sweeper-ok,label:ready"
-    [ "$status" -eq 0 ]
-}
-
-@test "pr_require_configured fails closed when pull_requests true and require empty" {
-    LOOP_PULL_REQUESTS="true"
-    run pr_require_configured ""
-    [ "$status" -eq 1 ]
-}
-
-@test "pr_require_configured passes when pull_requests false even if require empty" {
-    LOOP_PULL_REQUESTS="false"
-    run pr_require_configured ""
-    [ "$status" -eq 0 ]
-}
-
-@test "pr_require_configured passes when require has label token" {
-    LOOP_PULL_REQUESTS="true"
-    run pr_require_configured "label:ci-sweeper-ok"
     [ "$status" -eq 0 ]
 }

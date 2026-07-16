@@ -30,9 +30,13 @@ export LC_ALL=C.UTF-8
 # Global variables
 #######################################
 ATTEMPTS="${ATTEMPTS:-}"
+AUTO_MERGE="${AUTO_MERGE:-false}"
 COMMIT_SHA="${COMMIT_SHA:-}"
+FIX_PR_NUMBER="${FIX_PR_NUMBER:-}"
+FIX_PR_URL="${FIX_PR_URL:-}"
 GITHUB_OUTPUT="${GITHUB_OUTPUT:-}"
 GITHUB_SERVER_URL="${GITHUB_SERVER_URL:-https://github.com}"
+LEVEL="${LEVEL:-L2}"
 LOOP_NAME="${LOOP_NAME:-}"
 LOOP_RUN_ID="${LOOP_RUN_ID:-}"
 MAX_ATTEMPTS="${MAX_ATTEMPTS:-}"
@@ -72,7 +76,7 @@ function build_comment_body {
     local actor="$1"
     local marker branch to_branch workflow_name workflow_run_id workflow_url
     local loop_run_url commit_url short_sha verdict_display fix_context agent_summary
-    local changed_files diff_stat fix_summary reject_display timestamp
+    local changed_files diff_stat fix_summary reject_display timestamp bot_fix_pr next_step
 
     marker="<!-- loop-notify-pr:v1:${LOOP_NAME} -->"
     timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
@@ -142,6 +146,21 @@ function build_comment_body {
         fix_context="No mechanical fix context available."
     fi
 
+    if [[ -n ${FIX_PR_NUMBER} && -n ${FIX_PR_URL} ]]; then
+        bot_fix_pr="[#${FIX_PR_NUMBER}](${FIX_PR_URL})"
+    else
+        bot_fix_pr="—"
+    fi
+
+    next_step=""
+    if [[ ${OUTCOME} == "pr-created" && -n ${FIX_PR_URL} ]]; then
+        if [[ ${LEVEL} == "L3" && ${AUTO_MERGE} == "true" ]]; then
+            next_step="**Next step (L3):** Bot fix PR will auto-merge when checks pass. Wait for CI on this PR after merge."
+        else
+            next_step="**Next step (L2):** Merge or close the bot fix PR above, then re-run CI on this PR."
+        fi
+    fi
+
     cat << EOF
 ${marker}
 ## Loop notification: ${LOOP_NAME}
@@ -149,6 +168,7 @@ ${marker}
 | Field | Value |
 | ----- | ----- |
 | Outcome | \`${OUTCOME}\` |
+| Bot fix PR | ${bot_fix_pr} |
 | Verdict | ${verdict_display} |
 | Actor | \`${actor}\` |
 | Commit | [\`${short_sha}\`](${commit_url}) |
@@ -162,6 +182,13 @@ ${marker}
 
 ${fix_context}
 EOF
+
+    if [[ -n ${next_step} ]]; then
+        cat << EOF
+
+${next_step}
+EOF
+    fi
 
     if [[ -n ${agent_summary} ]]; then
         cat << EOF

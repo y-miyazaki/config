@@ -126,6 +126,9 @@ outputs:
   pr_url:
     description: "URL of created PR (empty if not created)"
     value: ${{ steps.pr.outputs.url }}
+  pr_number:
+    description: "Number of created PR (empty if not created)"
+    value: ${{ steps.pr.outputs.number }}
 
 runs:
   using: composite
@@ -141,7 +144,7 @@ runs:
         if [[ -n "${TARGET_JSON}" ]] && jq -e . >/dev/null 2>&1 <<< "${TARGET_JSON}"; then
           echo "target_key=$(jq -r '.key' <<< "${TARGET_JSON}")" >> "$GITHUB_OUTPUT"
           echo "finalize_strategy=$(jq -r '.finalize // "open_pr"' <<< "${TARGET_JSON}")" >> "$GITHUB_OUTPUT"
-          echo "pr_base_branch=$(jq -r 'if .mode == "pull_request" then .base.branch else .to.branch end' <<< "${TARGET_JSON}")" >> "$GITHUB_OUTPUT"
+          echo "pr_base_branch=$(jq -r '.to.branch' <<< "${TARGET_JSON}")" >> "$GITHUB_OUTPUT"
           echo "to_branch=$(jq -r '.to.branch' <<< "${TARGET_JSON}")" >> "$GITHUB_OUTPUT"
         else
           echo "target_key=integration:${BASE_BRANCH}" >> "$GITHUB_OUTPUT"
@@ -387,4 +390,3 @@ runs:
         VERDICT: ${{ inputs.verdict }}
         WORKFLOW_RUN: ${{ inputs.workflow_run }}
       run: bash "${GITHUB_ACTION_PATH}/../loop-run-log/lib/run.sh"
-

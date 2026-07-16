@@ -8,7 +8,7 @@
 # - None (library file; populates OPEN_PRS_JSON)
 #
 # Design Rules:
-# - Applies LOOP_PR_EXCLUDE tokens and LOOP_PR_REQUIRE opt-in
+# - Applies LOOP_PR_EXCLUDE tokens
 # - Applies LOOP_PR_INCLUDE_BOTS opt-in
 #######################################
 
@@ -19,11 +19,10 @@
 #   $1 - LOOP_PR_EXCLUDE csv
 #   $2 - LOOP_PR_INCLUDE_BOTS csv
 #   $3 - GitHub token
-#   $4 - LOOP_PR_REQUIRE csv
 #
 # Global Variables:
 #   OPEN_PRS_JSON - Output array
-#   LOOP_PULL_REQUESTS - Enable flag (read)
+#   LOOP_PR_ENABLED - Enable flag (read)
 #
 # Returns:
 #   0 on success, 1 when gh is required but unavailable
@@ -33,20 +32,15 @@ function list_open_prs {
     local exclude_csv="$1"
     local include_bots_csv="$2"
     local gh_token="$3"
-    local require_csv="$4"
     local prs_json pr_line
 
     OPEN_PRS_JSON=()
-    if [[ ${LOOP_PULL_REQUESTS} != "true" ]]; then
-        return 0
-    fi
-
-    if ! pr_require_configured "${require_csv}"; then
+    if [[ ${LOOP_PR_ENABLED} != "true" ]]; then
         return 0
     fi
 
     if ! command -v gh > /dev/null 2>&1; then
-        echo "::error::gh CLI is required for LOOP_PULL_REQUESTS=true"
+        echo "::error::gh CLI is required for LOOP_PR_ENABLED=true"
         return 1
     fi
 
@@ -57,9 +51,6 @@ function list_open_prs {
     while IFS= read -r pr_line; do
         [[ -z ${pr_line} ]] && continue
         if pr_excluded "${pr_line}" "${exclude_csv}" "${include_bots_csv}"; then
-            continue
-        fi
-        if ! pr_meets_requirements "${pr_line}" "${require_csv}"; then
             continue
         fi
         OPEN_PRS_JSON+=("${pr_line}")
@@ -133,76 +124,4 @@ function pr_excluded {
     fi
 
     return 1
-}
-
-#######################################
-# pr_meets_requirements: Return 0 when all require tokens match
-#
-# Arguments:
-#   $1 - PR JSON object
-#   $2 - Require token csv
-#
-# Global Variables:
-#   None
-#
-# Returns:
-#   0 when all requirements met, 1 otherwise
-#
-#######################################
-function pr_meets_requirements {
-    local pr_json="$1"
-    local require_csv="$2"
-    local -a require_tokens=()
-    local token label_name labels_json
-
-    split_csv "${require_csv}" require_tokens
-    if [[ ${#require_tokens[@]} -eq 0 ]]; then
-        return 1
-    fi
-
-    labels_json=$(jq -c '.labels // []' <<< "${pr_json}")
-    for token in "${require_tokens[@]}"; do
-        [[ -z ${token} ]] && continue
-        case "${token}" in
-            label:*)
-                label_name="${token#label:}"
-                if ! jq -e --arg name "${label_name}" '.[] | select(.name == $name)' <<< "${labels_json}" > /dev/null; then
-                    return 1
-                fi
-                ;;
-            *)
-                return 1
-                ;;
-        esac
-    done
-
-    return 0
-}
-
-#######################################
-# pr_require_configured: Return 0 when PR-head mode may enumerate PRs
-#
-# Arguments:
-#   $1 - Require token csv
-#
-# Global Variables:
-#   LOOP_PULL_REQUESTS - Enable flag (read)
-#
-# Returns:
-#   0 when configured, 1 when fail-closed (empty require with pull_requests)
-#
-#######################################
-function pr_require_configured {
-    local require_csv="$1"
-    local -a require_tokens=()
-
-    if [[ ${LOOP_PULL_REQUESTS} != "true" ]]; then
-        return 0
-    fi
-
-    split_csv "${require_csv}" require_tokens
-    if [[ ${#require_tokens[@]} -eq 0 ]]; then
-        return 1
-    fi
-    return 0
 }

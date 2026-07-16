@@ -580,7 +580,11 @@ jobs:
         uses: y-miyazaki/config/.github/actions/loop-notify-pr@918db24bc160b02462748456a742eba08c78cbf0 # v1.8.27
         with:
           attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
+          auto_merge: ${{ inputs.auto_merge }}
           commit_sha: ${{ steps.finalize.outputs.commit_sha || '' }}
+          fix_pr_number: ${{ steps.finalize.outputs.pr_number || '' }}
+          fix_pr_url: ${{ steps.finalize.outputs.pr_url || '' }}
+          level: ${{ inputs.level }}
           loop_name: ${{ inputs.loop_name }}
           loop_run_id: ${{ github.run_id }}
           max_attempts: ${{ inputs.agent_loop_max_attempts }}

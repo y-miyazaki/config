@@ -88,7 +88,7 @@ jobs:
         Map each provided commit to a single bullet. When `repository_url` is present, append a markdown commit link using the full `sha`.
         When `compare_url` is present, add `[Full diff](compare_url)` once under `## [Unreleased]` if not already there.
         Do not bump versions or edit released sections.
-      pull_requests: false
+      pr_enabled: false
       skill_name: loop-changelog
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}

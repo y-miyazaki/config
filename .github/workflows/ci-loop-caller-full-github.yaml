@@ -101,8 +101,8 @@ on:
         required: false
         type: string
       finalize_pull_request:
-        default: push_head
-        description: "Finalize for PR head targets"
+        default: open_pr
+        description: "Finalize for PR head targets: open_pr | push_head"
         required: false
         type: string
       infer_files_pattern:
@@ -134,6 +134,11 @@ on:
         description: "Static markdown prefix for finalize PR body"
         required: false
         type: string
+      pr_enabled:
+        default: false
+        description: "Watch open PR heads for detect (pr_enabled)"
+        required: false
+        type: boolean
       pr_exclude:
         default: fork,draft,label:no-loop
         description: "PR exclusion tokens"
@@ -142,11 +147,6 @@ on:
       pr_include_bots:
         default: ""
         description: "Comma-separated bot logins to include when scanning PRs"
-        required: false
-        type: string
-      pr_require:
-        default: ""
-        description: "PR require tokens (all must match). Empty when pull_requests=true → no PR-head targets"
         required: false
         type: string
       pr_title:
@@ -164,11 +164,6 @@ on:
         description: "Domain-specific implementer instructions"
         required: false
         type: string
-      pull_requests:
-        default: false
-        description: "Enumerate open PR heads for detect"
-        required: false
-        type: boolean
       run_log_file:
         default: .loop/loop-run-log.md
         description: "JSONL run log path for budget aggregation"
@@ -300,9 +295,8 @@ jobs:
           loop_name: ${{ inputs.loop_name }}
           loop_pr_exclude: ${{ inputs.pr_exclude }}
           loop_pr_include_bots: ${{ inputs.pr_include_bots }}
-          loop_pr_require: ${{ inputs.pr_require }}
+          loop_pr_enabled: ${{ inputs.pr_enabled && 'true' || 'false' }}
           loop_priority: ${{ inputs.priority }}
-          loop_pull_requests: ${{ inputs.pull_requests && 'true' || 'false' }}
           loop_state_push_branch: ${{ inputs.branch_state }}
           no_changes_verdict: ${{ inputs.no_changes_verdict }}
           pr_body: ${{ inputs.pr_body }}

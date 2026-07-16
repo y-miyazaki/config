@@ -85,7 +85,7 @@ jobs:
       prompt_instructions: |
         Edit files directly to address the documented triage findings.
         Prioritize factual consistency with the codebase and preserve existing documentation structure unless triage items require restructuring.
-      pull_requests: false
+      pr_enabled: false
       skill_name: loop-docs-triage
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
