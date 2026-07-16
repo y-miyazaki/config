@@ -64,7 +64,7 @@ jobs:
           private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
 
       - name: Configure git auth
-        uses: y-miyazaki/config/.github/actions/git-auth@0ae1c021964530c4bf7e0f1e9f3ba78e422d32a9 # v1.8.26
+        uses: y-miyazaki/config/.github/actions/git-auth@0e2ba0648c9cfe94ed5b5462b990fc7a0cc79eff # v1.8.27
         with:
           operation: configure
           token: ${{ steps.app-token.outputs.token }}
@@ -80,14 +80,14 @@ jobs:
 
       - name: Clear git auth
         if: always()
-        uses: y-miyazaki/config/.github/actions/git-auth@0ae1c021964530c4bf7e0f1e9f3ba78e422d32a9 # v1.8.26
+        uses: y-miyazaki/config/.github/actions/git-auth@0e2ba0648c9cfe94ed5b5462b990fc7a0cc79eff # v1.8.27
         with:
           operation: clear
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@0ae1c021964530c4bf7e0f1e9f3ba78e422d32a9 # v1.8.26
+        uses: y-miyazaki/config/.github/actions/summary@0e2ba0648c9cfe94ed5b5462b990fc7a0cc79eff # v1.8.27
         with:
           params: |
             aqua_version: ${{ inputs.aqua_version }}
