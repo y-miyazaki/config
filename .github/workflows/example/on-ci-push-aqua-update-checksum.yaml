@@ -31,7 +31,7 @@ jobs:
             environment: "default"
 =======
   aqua-update-checksum:
-    uses: y-miyazaki/config/.github/workflows/ci-aqua-update-checksum.yaml@33508f1dc107530fb90b4401e0a033e6efa3079f # v1.8.27
+    uses: y-miyazaki/config/.github/workflows/ci-aqua-update-checksum.yaml@918db24bc160b02462748456a742eba08c78cbf0 # v1.8.27
     permissions:
       contents: read
     secrets:
