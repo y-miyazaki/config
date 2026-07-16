@@ -204,19 +204,19 @@ Authoring rules: [AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm
 
 MCP servers are declared in each package's `apm.yml` under `dependencies.mcp`.
 
-| Package       | Server                         | Transport | Command                             |
-| ------------- | ------------------------------ | --------- | ----------------------------------- |
-| common        | context7                       | stdio     | npx                                 |
-| common        | fetch                          | stdio     | uvx                                 |
-| common        | github                         | stdio     | bash                                |
-| common        | codebase-memory-mcp            | stdio     | binary (optional; consumer install) |
-| common        | lean-ctx                       | stdio     | npx                                 |
-| aws           | aws-mcp                        | stdio     | bash                                |
-| aws           | aws-knowledge-mcp-server       | stdio     | uvx                                 |
-| aws           | aws-documentation-mcp-server   | stdio     | uvx                                 |
-| aws           | aws-pricing-mcp-server         | stdio     | uvx                                 |
-| terraform     | hashicorp-terraform-mcp-server | stdio     | npx                                 |
-| terraform-aws | awslabs-terraform-mcp-server   | stdio     | uvx                                 |
+| Package       | Server                         | Transport       | Command                             |
+| ------------- | ------------------------------ | --------------- | ----------------------------------- |
+| common        | context7                       | stdio           | npx                                 |
+| common        | fetch                          | stdio           | uvx                                 |
+| common        | github                         | stdio           | bash                                |
+| common        | codebase-memory-mcp            | stdio           | binary (optional; consumer install) |
+| common        | lean-ctx                       | stdio           | npx                                 |
+| aws           | aws-mcp                        | streamable-http | url (OAuth)                         |
+| aws           | aws-knowledge-mcp-server       | stdio           | uvx                                 |
+| aws           | aws-documentation-mcp-server   | stdio           | uvx                                 |
+| aws           | aws-pricing-mcp-server         | stdio           | uvx                                 |
+| terraform     | hashicorp-terraform-mcp-server | stdio           | npx                                 |
+| terraform-aws | awslabs-terraform-mcp-server   | stdio           | uvx                                 |
 
 ### Hooks
 

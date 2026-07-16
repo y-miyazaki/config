@@ -11,13 +11,8 @@ dependencies:
   mcp:
     - name: aws-mcp
       registry: false
-      transport: stdio
-      command: bash
-      args:
-        [
-          "-lc",
-          'export AWS_REGION="${AWS_REGION:-ap-northeast-1}"; exec uvx mcp-proxy-for-aws==1.6.2 https://aws-mcp.us-east-1.api.aws/mcp --metadata "AWS_REGION=${AWS_REGION}"',
-        ]
+      transport: streamable-http
+      url: https://aws-mcp.us-east-1.api.aws/mcp?oauth=initialize
     - name: aws-knowledge-mcp-server
       registry: false
       transport: stdio

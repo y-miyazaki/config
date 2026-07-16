@@ -4,17 +4,17 @@ MCP Server の選定・比較の判断材料。
 
 ## History
 
-| 日付       | 内容                                                                                                                                                     |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-07-16 | AWS API 操作は `aws-mcp` に統一。`awslabs-aws-api-mcp-server` を `config-aws` から削除し、AWS 公式の移行推奨に合わせて採用方針を明文化                   |
-| 2026-07-09 | rtk (rtk-ai/rtk) と lean-ctx の Hook 層比較・併用非推奨理由を追記。mcp-rtk は成熟度不足のため現時点では未採用と明記                                      |
-| 2026-06-28 | Performance カテゴリに mcp-rtk 追加。導入形態（Proxy/Hook 型 vs MCP Server 型）による効果発動条件の違いを整理。Headroom の利用形態別評価を追記           |
-| 2026-06-17 | Headroom を Performance / Token Optimization カテゴリに追加                                                                                              |
-| 2026-06-17 | 全般最新化: Terraform MCP v1.0.0 GA 反映、GitHub MCP v1.1.0 機能追加、codebase-memory-mcp LSP エンジン追加、lean-ctx WebSocket 対応、Context7 OAuth 対応 |
-| 2026-06-02 | Web Fetch & Markdown Compression MCP Servers カテゴリ追加                                                                                                |
-| 2026-05-27 | Local Filesystem & Git / Database & Data Stores / SaaS & Collaboration カテゴリ追加。Performance と Code Intelligence の重複解消。提供元表記を統一       |
-| 2026-05-21 | History セクション追加                                                                                                                                   |
-| 2026-05-17 | 初版作成。AWS / Terraform / Common / Performance / Code Intelligence / Knowledge MCP を比較                                                              |
+| 日付       | 内容                                                                                                                                                                        |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-07-16 | AWS API 操作は `aws-mcp` に統一。`awslabs-aws-api-mcp-server` を削除。認証は OAuth（`streamable-http` + `?oauth=initialize`）をデフォルト採用し `NoCredentialsError` を回避 |
+| 2026-07-09 | rtk (rtk-ai/rtk) と lean-ctx の Hook 層比較・併用非推奨理由を追記。mcp-rtk は成熟度不足のため現時点では未採用と明記                                                         |
+| 2026-06-28 | Performance カテゴリに mcp-rtk 追加。導入形態（Proxy/Hook 型 vs MCP Server 型）による効果発動条件の違いを整理。Headroom の利用形態別評価を追記                              |
+| 2026-06-17 | Headroom を Performance / Token Optimization カテゴリに追加                                                                                                                 |
+| 2026-06-17 | 全般最新化: Terraform MCP v1.0.0 GA 反映、GitHub MCP v1.1.0 機能追加、codebase-memory-mcp LSP エンジン追加、lean-ctx WebSocket 対応、Context7 OAuth 対応                    |
+| 2026-06-02 | Web Fetch & Markdown Compression MCP Servers カテゴリ追加                                                                                                                   |
+| 2026-05-27 | Local Filesystem & Git / Database & Data Stores / SaaS & Collaboration カテゴリ追加。Performance と Code Intelligence の重複解消。提供元表記を統一                          |
+| 2026-05-21 | History セクション追加                                                                                                                                                      |
+| 2026-05-17 | 初版作成。AWS / Terraform / Common / Performance / Code Intelligence / Knowledge MCP を比較                                                                                 |
 
 ## AWS MCP Servers
 
@@ -25,9 +25,9 @@ MCP Server の選定・比較の判断材料。
 | ドキュメント        | [Kiro Docs](https://kiro.dev/docs/mcp/) | [README](https://github.com/awslabs/mcp/tree/main/src/aws-api-mcp-server) | [Kiro Docs](https://kiro.dev/docs/mcp/) | [README](https://github.com/awslabs/mcp/tree/main/src/aws-documentation-mcp-server) | [README](https://github.com/awslabs/mcp/tree/main/src/aws-pricing-mcp-server) |
 | ライセンス          | 商用 (AWS)                              | Apache-2.0                                                                | 商用 (AWS)                              | Apache-2.0                                                                          | Apache-2.0                                                                    |
 | ホスティング        | リモート (AWS 管理)                     | ローカル                                                                  | リモート                                | ローカル                                                                            | ローカル                                                                      |
-| Transport           | stdio (proxy 経由)                      | stdio                                                                     | stdio (proxy 経由)                      | stdio                                                                               | stdio                                                                         |
-| インストール        | `bash -lc` + `uvx mcp-proxy-for-aws`    | `uvx awslabs.aws-api-mcp-server`                                          | `uvx mcp-proxy`                         | `uvx awslabs.aws-documentation-mcp-server`                                          | `uvx awslabs.aws-pricing-mcp-server`                                          |
-| 認証                | IAM (SigV4 / OAuth)                     | AWS CLI credentials                                                       | 不要                                    | 不要                                                                                | 不要                                                                          |
+| Transport           | streamable-http (OAuth)                 | stdio                                                                     | stdio (proxy 経由)                      | stdio                                                                               | stdio                                                                         |
+| インストール        | OAuth URL（リモート）                   | `uvx awslabs.aws-api-mcp-server`                                          | `uvx mcp-proxy`                         | `uvx awslabs.aws-documentation-mcp-server`                                          | `uvx awslabs.aws-pricing-mcp-server`                                          |
+| 認証                | OAuth（ブラウザサインイン）             | AWS CLI credentials                                                       | 不要                                    | 不要                                                                                | 不要                                                                          |
 | ツール数            | 多数                                    | 少数                                                                      | 少数                                    | 少数                                                                                | 少数                                                                          |
 | mcp-compressor 推奨 | ✅                                      | ❌                                                                        | ❌                                      | ❌                                                                                  | ❌                                                                            |
 | 主な用途            | 全 AWS サービス API 操作 + ドキュメント | AWS CLI 経由のリソース操作                                                | 最新 AWS コンテンツ・コードサンプル     | 最新 AWS ドキュメント参照                                                           | デプロイ前コスト見積もり                                                      |
@@ -37,7 +37,7 @@ MCP Server の選定・比較の判断材料。
 
 ### Guidelines
 
-**→ AWS API 操作は `aws-mcp` のみを採用する。** AWS 公式が `awslabs-aws-api-mcp-server` から統合 AWS MCP Server への移行を推奨しており、本リポジトリの `config-aws` パッケージ（`.apm/packages/aws/apm.yml`）でも AWS API MCP を削除済み。`aws-mcp` は GA 済みで全サービスをカバーし CloudTrail 監査付き。`github` MCP と同様に `bash -lc` ラッパーで `AWS_REGION` のフォールバックとシェルプロファイル経由の認証情報読み込みに対応する。
+**→ AWS API 操作は `aws-mcp` のみを採用する。** AWS 公式が `awslabs-aws-api-mcp-server` から統合 AWS MCP Server への移行を推奨しており、本リポジトリの `config-aws` パッケージ（`.apm/packages/aws/apm.yml`）でも AWS API MCP を削除済み。`aws-mcp` は GA 済みで全サービスをカバーし CloudTrail 監査付き。**認証は OAuth をデフォルトとする**（`streamable-http` + `?oauth=initialize`）。Cursor からローカル AWS 認証情報（SSO セッション等）が参照できない `NoCredentialsError` を回避できる。SigV4（`mcp-proxy-for-aws` + `bash -lc`）はマルチアカウント切替や read-only モードが必要な場合のみ検討する。
 
 **→ 補助 MCP として AWS Knowledge MCP を採用する。** Knowledge MCP は最新ドキュメント・コードサンプルの参照に有用。`mcp-compressor` で AWS MCP をラップしてトークン消費を抑える。
 
