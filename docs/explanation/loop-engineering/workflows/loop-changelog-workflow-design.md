@@ -22,7 +22,7 @@ Maintain [Keep a Changelog](https://keepachangelog.com/) `CHANGELOG.md` on integ
 - Ingest [Conventional Commits](https://www.conventionalcommits.org/) and other explicit prefixed subjects (for example `renovate(scope):`, `chore(deps):`)
 - Promote detect `releases[]` into `## [x.y.z] - date` sections (from git tags and pin/finalize subjects)
 - Add commit links when `repository_url` is resolved (GitHub Actions `GITHUB_*` or git remote; optional `CHANGELOG_REPOSITORY_URL` override)
-- Open an L2 review PR to the watch integration branch; L3 enables GitHub auto-merge on that fix PR. Platform default finalize is `open_pr` — caller need not set `finalize_integration`
+- Open an L2 review PR to the watch integration branch; L3 enables GitHub auto-merge on that fix PR. Wire/default finalize is `open_pr` (dogfood sets `finalize_integration: open_pr`)
 
 ### Out of scope
 

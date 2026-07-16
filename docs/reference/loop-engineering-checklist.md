@@ -63,7 +63,7 @@ See [CONTEXT — Semantic Findings](../explanation/loop-engineering/CONTEXT.md#l
 - [ ] `outcome: watch` for Skill Watch (no `consecutive_failures` increment)
 - [ ] `loop-finalize` + `if: always()` with appropriate guards
 - [ ] `loop-notify-pr` when `target_json.to.pr_number` is set ([spec](loop-notify-pr-specification.md)); includes bot fix PR link for `pull_request` + `open_pr`
-- [ ] `pr_exclude` for PR-head watch; no `pr_require` label opt-in
+- [ ] `pr_exclude` for PR-head watch; dogfood may also set `pr_require` (ci-sweeper: `label:ci-sweeper-ok`)
 - [ ] GitHub-entity loops (issue/stale): caller grants `issues: write` / `pull-requests: write`; skill performs API actions in **Execute**; Finalize advances state cursor (no file PR at L1)
 
 #### Skill

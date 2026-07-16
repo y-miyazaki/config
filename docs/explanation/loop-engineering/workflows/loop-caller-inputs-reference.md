@@ -89,18 +89,16 @@ Dogfood sets `branch_match: main` and `branch_state: main`. That matches the usu
 
 ### Level × finalize matrix
 
-Dogfood loops (changelog, docs-triage, ci-sweeper) use **`open_pr` for all modes**. Callers set **`level` only** — not `finalize_integration` / `finalize_pull_request`.
+Wire defaults in `ci-loop-caller.yaml`: integration **`open_pr`**, pull_request **`push_head`**. Target design for dogfood PR heads is `open_pr` + `loop-notify-pr` (migration pending on ci-sweeper).
 
-| Mode           | `target.finalize` (platform default) | L2                                     | L3                                      |
-| -------------- | ------------------------------------ | -------------------------------------- | --------------------------------------- |
-| `integration`  | `open_pr`                            | Bot fix PR → `to.branch`; human merge  | Bot fix PR → `to.branch`; **auto-merge** |
-| `pull_request` | `open_pr`                            | Bot fix PR → PR head; notify human PR  | Bot fix PR → PR head; **auto-merge**; notify human PR |
+| Mode           | `target.finalize` (wire default) | L2                                     | L3                                      |
+| -------------- | -------------------------------- | -------------------------------------- | --------------------------------------- |
+| `integration`  | `open_pr`                        | Bot fix PR → `to.branch`; human merge  | Bot fix PR → `to.branch`; **auto-merge** |
+| `pull_request` | `push_head`                      | Push to PR head; notify human PR       | Same push path (no bot fix PR auto-merge) |
 
-L3 **auto-merge** is [GitHub PR auto-merge](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/automatically-merging-a-pull-request) on the **bot fix PR** — not direct push to the branch. The human's open PR is not auto-merged.
+L3 **auto-merge** applies only when `finalize=open_pr` (GitHub PR auto-merge on the **bot fix PR**). The human's open PR is never auto-merged.
 
-Platform exception paths (`push`, `push_head`) exist for advanced callers; dogfood does not use them. See [Finalize strategy matrix](../loop-engineering-design.md#finalize-strategy-matrix).
-
-Optional overrides (not used in dogfood): `finalize_integration`, `finalize_pull_request` on `ci-loop-caller.yaml` → `loop-detect` env. Default when omitted: integration and pull_request both resolve to `open_pr`.
+Dogfood today: changelog/docs-triage set `finalize_integration: open_pr`; ci-sweeper sets `finalize_pull_request: push_head` until the open_pr migration completes. See [Finalize strategy matrix](../loop-engineering-design.md#finalize-strategy-matrix).
 
 ### Fix direction: integration vs `pull_request`
 
@@ -118,10 +116,9 @@ integration mode (changelog, docs-triage, ci-sweeper on main)
 pull_request mode (ci-sweeper, pr_enabled: true)
   watch:  open PR head branch (e.g. hotfix/0001)
   worktree: from.branch == PR head
-  finalize: open_pr → bot fix PR to to.branch (PR head, not main)
-  loop-notify-pr: comment on human PR with fix PR link + summary
-  L2: human merges bot fix PR into head branch; then merges human PR
-  L3: auto-merge bot fix PR into head branch
+  finalize (current dogfood): push_head → push to to.branch (PR head)
+  finalize (target): open_pr → bot fix PR to PR head + loop-notify-pr on human PR
+  loop-notify-pr: comment on human PR when to.pr_number is set
   verifier diff baseline: base.branch (PR base, e.g. main)
   state: branch_state (main) — separate from fix target
 ```
@@ -147,7 +144,7 @@ pull_request mode (ci-sweeper, pr_enabled: true)
 
 Related but not branch-scoped: `max_targets_per_schedule` (fan-out cap after watch), `pr_exclude` / `pr_include_bots` (PR watch filters).
 
-Optional platform overrides (dogfood omit): `finalize_integration`, `finalize_pull_request` — default `open_pr` for both modes. See [Level × finalize matrix](#level--finalize-matrix).
+Optional platform overrides: `finalize_integration` (default `open_pr`), `finalize_pull_request` (default `push_head`). See [Level × finalize matrix](#level--finalize-matrix).
 
 ## Agent and engine
 
@@ -177,14 +174,15 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `budget_max_tokens_per_day` | number  | Daily aggregated token cap                                                                                                                                                        | `500000`–`1000000`                             |
 | `denylist`                  | string  | Comma-separated globs the implementer must not touch                                                                                                                              | ci-sweeper only                                |
 | `detect_script`             | string  | Path to domain `detect_*.sh` under loop skill package                                                                                                                             | Per loop                                       |
-| `finalize_integration`      | string  | **Optional override.** Default `open_pr`. Exception: `push` (direct write; not dogfood).                          | Omit (platform default)                        |
-| `finalize_pull_request`     | string  | **Optional override.** Default `open_pr`. Exception: `push_head` (not dogfood).                                   | Omit (platform default)                        |
+| `finalize_integration`      | string  | Finalize for integration targets. Default `open_pr`. Exception: `push` (direct write).                            | `open_pr` (changelog/docs-triage set explicitly) |
+| `finalize_pull_request`     | string  | Finalize for PR-head targets. Default `push_head`. Target migration: `open_pr` + notify.                          | `push_head` (ci-sweeper dogfood)               |
 | `infer_files_pattern`       | string  | Extended regex to infer file paths from verifier text                                                                                                                             | Per loop                                       |
 | `loop_name`                 | string  | Loop identifier: `.loop/state-<loop_name>.json`, budget key, run-log tag. Align caller filename: `on-loop-<loop_name>.yaml`                                                       | Per loop                                       |
 | `max_targets_per_schedule`  | number  | Max targets per cron tick after priority/`acting_on` filters                                                                                                                      | `3`                                            |
 | `no_changes_verdict`        | string  | `APPROVE` \| `REJECT` when implementer produces no file diff                                                                                                                      | `REJECT`                                       |
 | `pr_body`                   | string  | Static markdown prefix for finalize PR body                                                                                                                                       | Per loop                                       |
 | `pr_exclude`                | string  | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`                                                                                                                 | ci-sweeper                                     |
+| `pr_require`                | string  | PR require tokens (all must match). Empty with `pull_requests=true` → fail-closed (no PR-head targets)                                                                            | `label:ci-sweeper-ok` (ci-sweeper dogfood)     |
 | `pr_include_bots`           | string  | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots                                                                                                 | `""`                                           |
 | `pr_title`                  | string  | PR title when finalize strategy is `open_pr`                                                                                                                                      | Per loop                                       |
 | `prompt_instructions`       | string  | Domain-specific implementer instructions for `loop-prompt-generate`                                                                                                               | Per loop                                       |

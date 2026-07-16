@@ -24,7 +24,7 @@ When CI fails on a **human open PR**, the loop opens a separate **bot fix PR** t
 ## Non-Goals (v1)
 
 - Notifications for `integration` + `open_pr` (fix PR body is sufficient; no human PR in scope).
-- Per-PR opt-in labels (`pr_require` / `ci-sweeper-ok`) — removed; use `pr_exclude` only.
+- Replacing dogfood `pr_require` / `pr_exclude` filters without an explicit caller change.
 - Auto-merge of the **human PR** (only the **bot fix PR** is auto-merged at L3).
 - Inline review comments per changed line (reviewdog-style).
 - External channels (Slack, email, PagerDuty).
@@ -51,10 +51,11 @@ Comma-separated deny tokens processed by `loop-detect`:
 
 ```text
 pr_exclude: fork,draft,label:no-loop
+pr_require: label:ci-sweeper-ok
 pr_enabled: true
 ```
 
-Bots excluded unless `pr_include_bots` lists them. No `pr_require` gate.
+Bots excluded unless `pr_include_bots` lists them. Dogfood ci-sweeper still gates on `pr_require`.
 
 ## When `loop-notify-pr` Runs
 
@@ -152,16 +153,16 @@ Inputs/outputs unchanged from P1 except:
 | ------ | ---------------------------------------------------------------------------------------------------- |
 | **P0** | Spec + design docs (this document)                                                                   |
 | **P1** | `loop-notify-pr`, `notify_context_json`, `pr_exclude` filters                                        |
-| **P2** | Dogfood ci-sweeper: `open_pr` to PR head + notify with fix PR link; remove `pr_require`              |
+| **P2** | Dogfood ci-sweeper: migrate PR-head finalize `push_head` → `open_pr` + notify with fix PR link; revisit `pr_require` |
 | **P3** | Optional `agent_summary` appendix in `loop-ci-sweeper` skill reference                               |
 
 ## Resolved decisions
 
 | Topic              | Decision                                              |
 | ------------------ | ----------------------------------------------------- |
-| Opt-in             | `pr_exclude` deny list only; no label opt-in           |
+| Opt-in             | `pr_exclude` deny list + dogfood `pr_require` label gate |
 | Human PR automerge | Never — L3 auto-merge applies to **bot fix PR** only  |
-| Delivery           | `open_pr` to PR head branch; not direct `push_head`   |
+| Delivery           | Target: `open_pr` to PR head; current dogfood: `push_head` until P2 |
 | Marker scope       | `<!-- loop-notify-pr:v1:{loop_name} -->`              |
 
 ## References

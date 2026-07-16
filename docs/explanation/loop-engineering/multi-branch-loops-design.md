@@ -42,10 +42,11 @@ Defined here only. Other docs link to this section.
 | `LOOP_PULL_REQUESTS`            | `pr_enabled` / `pull_requests` | `true` / `false`. Watch open PR heads.                                                                                       | `false`                    |
 | `LOOP_BRANCH_MATCH`             | `branch_match_mode`        | `list` \| `glob` \| `regex`.                                                                                                                                                                 | `glob`                     |
 | `LOOP_PRIORITY`                 | `priority`                 | Cron mode order. Overridden by [trigger-aware priority](#trigger-aware-priority).                                                                                                            | `integration,pull_request` |
-| `LOOP_FINALIZE_INTEGRATION`     | `finalize_integration`     | Optional override. Default **`open_pr`**. Exception: `push` (not dogfood).                                                                                                                   | `open_pr` (internal)       |
-| `LOOP_FINALIZE_PULL_REQUEST`    | `finalize_pull_request`    | Optional override. Default **`open_pr`**. Exception: `push_head` (not dogfood).                                                                                                              | `open_pr` (internal)       |
+| `LOOP_FINALIZE_INTEGRATION`     | `finalize_integration`     | Finalize for integration targets. Wire default **`open_pr`**. Exception: `push` (L3 direct write).                                                                                           | `open_pr`                  |
+| `LOOP_FINALIZE_PULL_REQUEST`    | `finalize_pull_request`    | Finalize for PR-head targets. Wire default **`push_head`**. Migration to default `open_pr` pending (see ci-sweeper checklist).                                                               | `push_head`                |
 | `DEFAULT_LEVEL`                 | `level`                    | `L1` \| `L2` \| `L3`. L3 + `open_pr` → GitHub auto-merge on bot fix PR. [Single level switch](#single-level-switch).                                                                       | `L2`                       |
 | `LOOP_PR_EXCLUDE`               | `pr_exclude`               | PR exclusion tokens — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md#pr-exclusion-pr_exclude).                                                                        | `fork,draft,label:no-loop` |
+| `LOOP_PR_REQUIRE`               | `pr_require`               | PR require tokens (all must match). Empty when `pull_requests=true` → no PR-head targets (fail-closed).                                                                                      | `""` (ci-sweeper dogfood sets `label:ci-sweeper-ok`) |
 | `LOOP_PR_INCLUDE_BOTS`          | `pr_include_bots`          | Bot logins to include. Empty = all bots excluded.                                                                                                                                            | `""`                       |
 | `LOOP_MAX_TARGETS_PER_SCHEDULE` | `max_targets_per_schedule` | Max targets per cron tick (fan-out cap).                                                                                                                                                     | `3`                        |
 | `LOOP_STATE_PUSH_BRANCH`        | `branch_state`             | Branch for `.loop/*` persistence commits and state migration fallback.                                                                                                                       | repository default branch  |
@@ -117,18 +118,7 @@ Detect scripts scan **only the current context** (branch/ref `loop-detect` check
   "from": { "branch": "feature/auth", "ref": "def456" },
   "to": { "branch": "feature/auth", "pr_number": 42 },
   "base": { "branch": "main" },
-  "finalize": "open_pr"
-}
-```
-
-```json
-{
-  "mode": "pull_request",
-  "key": "pull_request:42",
-  "from": { "branch": "feature/auth", "ref": "def456" },
-  "to": { "branch": "feature/auth", "pr_number": 42 },
-  "base": { "branch": "main" },
-  "finalize": "open_pr"
+  "finalize": "push_head"
 }
 ```
 
@@ -137,7 +127,7 @@ Detect scripts scan **only the current context** (branch/ref `loop-detect` check
 | `mode`                 | `integration` \| `pull_request`                                 |
 | `key`                  | State key: `integration:<branch>` or `pull_request:<pr_number>` |
 | `from` / `to` / `base` | Detect, finalize, verifier diff baseline                        |
-| `finalize`             | Default `open_pr` (dogfood). Exceptions: `push`, `push_head`    |
+| `finalize`             | Wire defaults: integration `open_pr`, pull_request `push_head`  |
 
 ## Branch roles and fix direction
 
@@ -288,7 +278,7 @@ Per-target `concurrency.group` in caller YAML complements `acting_on` — see [L
 | **4** | `workflow_run` per loop ops checklist                                              | ✅ Done (ci-sweeper dogfood; other loops TBD)      |
 | **5** | L3 integration `push` (opt-in)                                                     | Planned                                            |
 | **6** | Optional `repository` on target                                                    | Future                                             |
-| **7** | `ci-loop-caller.yaml` — thin callers + `with:`                                     | Planned ([design](loop-caller-reusable-design.md)) |
+| **7** | `ci-loop-caller.yaml` — thin callers + `with:`                                     | ✅ Done ([design](loop-caller-reusable-design.md)) |
 | **8** | Merge-gated state push (`on-loop-state-promote`)                                   | ✅ Done                                            |
 
 Caller/workflow steps: [Loop Caller Workflows Design](loop-caller-workflows-design.md).
@@ -303,7 +293,7 @@ Caller/workflow steps: [Loop Caller Workflows Design](loop-caller-workflows-desi
 
 Add new loops as `docs/explanation/loop-engineering/workflows/<name>-workflow-design.md` without growing this file.
 
-Shared caller configuration: [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md) (planned `with:` on `ci-loop-caller`). Legacy: [Loop Caller `env` Reference](workflows/loop-caller-env-reference.md).
+Shared caller configuration: [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md) (`with:` on `ci-loop-caller`). Legacy: [Loop Caller `env` Reference](workflows/loop-caller-env-reference.md).
 
 ## Decision Summary
 

@@ -429,7 +429,7 @@ Execute/finalize input. Schema: [Multi-Branch Loops Design](../explanation/loop-
 | `key`                     | yes          | State key                          |
 | `from.branch`, `from.ref` | yes          | Worktree checkout                  |
 | `to.branch`               | yes          | Finalize destination               |
-| `to.pr_number`            | pull_request | PR to notify after `push_head`     |
+| `to.pr_number`            | pull_request | Human PR for `loop-notify-pr` after finalize |
 | `base.branch`             | pull_request | Verifier diff baseline             |
 | `finalize`                | yes          | `open_pr` \| `push` \| `push_head` |
 | `workflow_run_id`         | optional     | CI loops                           |
@@ -452,7 +452,7 @@ Execute/finalize input. Schema: [Multi-Branch Loops Design](../explanation/loop-
 
 | Variable          | Caller input | Description                                                 |
 | ----------------- | ------------ | ----------------------------------------------------------- |
-| `LOOP_PR_REQUIRE` | `pr_require` | Comma-separated require tokens (e.g. `label:ci-sweeper-ok`) |
+| `LOOP_PR_REQUIRE` | `pr_require` | Optional require tokens (all must match); ci-sweeper dogfood uses `label:ci-sweeper-ok` |
 
 ### `loop-finalize` inputs (additions)
 

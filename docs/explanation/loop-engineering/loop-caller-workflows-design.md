@@ -155,13 +155,15 @@ concurrency:
   group: on-loop-ci-sweeper-${{ matrix.target.target_json.key }}
 ```
 
-When `target_matrix` is empty (detect-only skip), workflow-level group is sufficient:
+When `target_matrix` is empty (detect-only skip), workflow-level group is sufficient. Dogfood ci-sweeper scopes by workflow run so overlapping `workflow_run` events do not cancel each other:
 
 ```yaml
 concurrency:
   cancel-in-progress: true
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.id || github.run_id }}
 ```
+
+Other thin callers may use `group: ${{ github.workflow }}` alone.
 
 Cross-loop: [acting_on](multi-branch-loops-design.md#cross-loop-coordination-acting_on).
 
@@ -204,9 +206,7 @@ Each matrix cell = one `max_runs_per_day` consumption. Cap enumeration in `loop-
 
 ## Adding a New Loop Caller
 
-After [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md) is implemented, copy a thin `on-loop-*.yaml` (triggers + `with:` only).
-
-Until then:
+Copy a thin `on-loop-*.yaml` (triggers + `with:` only) that calls `ci-loop-caller.yaml` — see [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md).
 
 1. Copy `on-loop-changelog.yaml`, `on-loop-docs-triage.yaml`, or `on-loop-ci-sweeper.yaml` skeleton.
 2. Add `docs/explanation/loop-engineering/workflows/loop-<name>-workflow-design.md`.
@@ -225,8 +225,7 @@ Historical debt from early caller implementations. **All items below are resolve
 | `auto_merge: level == L3` without finalize check | all L2+ callers                              | `finalize == 'open_pr'` guard on `auto_merge`                      |
 | Single `DEFAULT_BASE_BRANCH` only                | all                                          | `LOOP_INTEGRATION_BRANCHES`                                        |
 | `docs-updater` detect path                       | `on-loop-docs-triage`                        | `loop-docs-triage/scripts/detect_changes.sh`                       |
-
-Next structural improvement: [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md) (`ci-loop-caller.yaml`).
+| Duplicated job graph per `on-loop-*`             | inlined detect/execute per caller            | `ci-loop-caller.yaml` thin callers + `with:`                       |
 
 ## References
 

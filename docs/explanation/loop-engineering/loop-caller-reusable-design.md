@@ -192,8 +192,8 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 | `budget_max_tokens_per_day` | number  | no       | omitted                    | `loop-detect`                                           |
 | `denylist`                  | string  | no       | `""`                       | `ci-loop-agent` execute only                            |
 | `detect_script`             | string  | yes      | —                          | `loop-detect`                                           |
-| `finalize_integration`      | string  | no       | `open_pr`                  | `loop-detect` (optional; dogfood omit)                  |
-| `finalize_pull_request`     | string  | no       | `open_pr`                  | `loop-detect` (optional; dogfood omit)                  |
+| `finalize_integration`      | string  | no       | `open_pr`                  | `loop-detect` (dogfood may set explicitly)              |
+| `finalize_pull_request`     | string  | no       | `push_head`                | `loop-detect` (ci-sweeper sets `push_head`; `open_pr` migration pending) |
 | `infer_files_pattern`       | string  | no       | `""`                       | detect → execute                                        |
 | `loop_name`                 | string  | yes      | —                          | detect, execute, record-skip, concurrency group         |
 | `max_targets_per_schedule`  | number  | no       | `3`                        | `loop-detect`                                           |

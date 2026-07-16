@@ -24,7 +24,7 @@ Automated minimal repair when CI fails on integration branches and/or open PR he
 - Dedupe by `workflow_run_id` ledger; skip infra/flake/env failures as `outcome: watch`
 - `workflow_run` on repair-target CI workflows (dogfood default); `workflow_dispatch` for manual / `gh run list` scan; see [ops checklist](#workflow_run-operational-checklist)
 
-Dogfood uses **`open_pr` for all repair paths**. Direct branch push (`push` / `push_head`) is a platform exception path — not the ci-sweeper default. See [Finalize strategy](#finalize-strategy).
+Dogfood uses **`open_pr` for integration** and currently **`push_head` for PR-head** repair (migration to `open_pr` + `loop-notify-pr` pending — see [Implementation Checklist](#implementation-checklist)). See [Finalize strategy](#finalize-strategy).
 
 ### Out of scope
 
@@ -38,7 +38,7 @@ Entry skill design intent for failure kinds deferred via [Failure kind defer (B)
 - Separate `loop-pr-ci-healer` package
 - **Coverage-threshold and test-gap repair** — defer (B) until a domain skill exists
 - **Dependency-breakage repair** — defer (B); bot PR heads excluded in dogfood (`pr_include_bots: ""`)
-- Per-PR opt-in labels (`pr_require`) — removed; use `pr_exclude` only
+- Broadening beyond dogfood `pr_require` / `pr_exclude` filters without an explicit caller change
 
 Skill execution boundaries: `loop-ci-sweeper` SKILL.md (`USE FOR` / `DO NOT USE FOR`).
 
@@ -58,7 +58,7 @@ See [CI failure repair — layered responsibilities](../loop-engineering-design.
 
 ### Failure contexts
 
-Two independent watch paths. Both use **`open_pr`** finalize; **`level`** selects human review (L2) vs GitHub auto-merge on the bot fix PR (L3).
+Two independent watch paths. Integration uses **`open_pr`**; PR-head dogfood still uses **`push_head`** until migration. **`level`** selects human review (L2) vs auto-merge when `finalize=open_pr` (L3).
 
 | Context        | Trigger example                         | Bot fix PR target (`to.branch`) |
 | -------------- | --------------------------------------- | ------------------------------- |
@@ -109,9 +109,12 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 level: L2
 pr_enabled: true   # target name; wire name today: pull_requests
 pr_exclude: fork,draft,label:no-loop
+pr_require: label:ci-sweeper-ok
+finalize_integration: open_pr
+finalize_pull_request: push_head   # migrate to open_pr when ready
 ```
 
-Do **not** set caller `finalize_integration` or `finalize_pull_request` for ci-sweeper — platform defaults to `open_pr` for both modes. See [Level × finalize matrix](loop-caller-inputs-reference.md#level--finalize-matrix).
+Wire defaults and dogfood values: [Level × finalize matrix](loop-caller-inputs-reference.md#level--finalize-matrix).
 
 | Input / JSON key                                            | Description                                                                                                                                           | Dogfood value                                                                                            |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
@@ -147,7 +150,7 @@ Do **not** set caller `finalize_integration` or `finalize_pull_request` for ci-s
 | `prompt_instructions`                                       | Domain instructions: classify Watch vs Fix; minimal diff; run validation skills.                                                                      | Inline in caller workflow                                                                                |
 | `skill_name`                                                | Skill package to invoke.                                                                                                                              | `loop-ci-sweeper`                                                                                        |
 
-**Removed from dogfood (do not set):** `pr_require`, `finalize_integration`, `finalize_pull_request`.
+**Dogfood still sets:** `pr_require: label:ci-sweeper-ok`, `finalize_integration: open_pr`, `finalize_pull_request: push_head` (PR-head `open_pr` migration pending).
 
 **Event keys** (embedded in `detect_domain_env_json` when `workflow_run` fires; dogfood caller enables this trigger):
 
@@ -216,7 +219,7 @@ When the Skill classifies **Watch** (infra/flake/env) with no code edit → `out
 | Bots          | **Exclude** | use `pr_include_bots` to opt in |
 | WIP title     | Optional    | `wip_title`                     |
 
-No label opt-in (`pr_require`) — eligible open PRs passing `pr_exclude` are watched when `pr_enabled: true`.
+Dogfood requires `pr_require: label:ci-sweeper-ok` in addition to `pr_exclude` when `pr_enabled: true`.
 
 After finalize on `pull_request` targets, `loop-notify-pr` posts or updates a marker comment on the **human PR** (`target_json.to.pr_number`), including the bot fix PR URL when finalize creates one. See [loop-notify-pr Specification](../../../reference/loop-notify-pr-specification.md).
 
@@ -237,12 +240,12 @@ CI sweeper criteria require the fix to address the **logged failure** (semantic 
 
 ## Finalize strategy
 
-Platform rule for dogfood loops (changelog, docs-triage, ci-sweeper): **`target.finalize` is always `open_pr`**. **`level`** controls review vs auto-merge on the **bot fix PR**.
+Platform rule (target): dogfood loops prefer **`open_pr`**. **Current ci-sweeper dogfood** still uses **`push_head`** for `pull_request` mode until the checklist migration lands. **`level`** controls review vs auto-merge only when `finalize=open_pr`.
 
-| Mode           | L2                                              | L3                                                        |
+| Mode           | L2 (current dogfood)                            | L3                                                        |
 | -------------- | ----------------------------------------------- | --------------------------------------------------------- |
 | `integration`  | Bot fix PR → `to.branch`; human merge           | Bot fix PR → `to.branch`; **GitHub auto-merge**           |
-| `pull_request` | Bot fix PR → PR head; comment on human PR       | Bot fix PR → PR head; **auto-merge**; comment on human PR |
+| `pull_request` | `push_head` to PR head; comment on human PR     | Same push path until `open_pr` migration                  |
 
 Reference: [Finalize strategy matrix](../loop-engineering-design.md#finalize-strategy-matrix).
 
