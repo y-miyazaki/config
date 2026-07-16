@@ -31,7 +31,7 @@ jobs:
             mise_version: "2026.6.13"
 =======
   mise-update-lock:
-    uses: y-miyazaki/config/.github/workflows/ci-mise-update-lock.yaml@e0433542c1084203d5684f97f593346186e391fa # v1.8.27
+    uses: y-miyazaki/config/.github/workflows/ci-mise-update-lock.yaml@33508f1dc107530fb90b4401e0a033e6efa3079f # v1.8.27
     permissions:
       contents: read
     secrets:
