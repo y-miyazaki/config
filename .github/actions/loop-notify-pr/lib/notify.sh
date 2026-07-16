@@ -384,7 +384,8 @@ function main {
     actor="$(gh api user --jq '.login' 2> /dev/null || echo "github-actions")"
     marker="<!-- loop-notify-pr:v1:${LOOP_NAME} -->"
     body_file="$(mktemp)"
-    trap 'rm -f "${body_file}"' EXIT
+    # shellcheck disable=SC2064
+    trap "rm -f '${body_file}'" EXIT
 
     build_comment_body "${actor}" > "${body_file}"
 
