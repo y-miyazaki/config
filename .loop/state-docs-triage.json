@@ -8,5 +8,10 @@
       "last_reject_reason": "No meaningful changes outside .loop/",
       "last_sha": "c07d006edcf1860ce5ba85cbeb999bd319d40692"
     }
+  },
+  "acting_on": {
+    "target_key": "integration:main",
+    "loop_name": "docs-triage",
+    "started_at": "2026-07-16T09:47:28Z"
   }
 }
