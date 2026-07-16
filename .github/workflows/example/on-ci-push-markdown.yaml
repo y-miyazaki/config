@@ -46,7 +46,7 @@ jobs:
             markdownlint_flags: "README*.md docs/**/*.md"
 =======
   markdown-ci:
-    uses: y-miyazaki/config/.github/workflows/ci-markdown.yaml@ecb346a51d85909520d482f8a67642af6f26d158 # v1.8.27
+    uses: y-miyazaki/config/.github/workflows/ci-markdown.yaml@13975e897b6ccbada17ded542e7568f63daa6fa1 # v1.8.26
     permissions:
       contents: read
       pull-requests: write
