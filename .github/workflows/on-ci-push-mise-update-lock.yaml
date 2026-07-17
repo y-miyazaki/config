@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   mise-update-lock:
-    uses: y-miyazaki/config/.github/workflows/ci-mise-update-lock.yaml@de4f5337e3a5e1ca8f940b2e8af0e8c06d3c2d92 # v1.8.36
+    uses: y-miyazaki/config/.github/workflows/ci-mise-update-lock.yaml@e9f7e78c864e2bcdc0ed724ea718573f9ff4df55 # v1.8.36
     permissions:
       contents: read
     secrets:
