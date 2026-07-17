@@ -26,3 +26,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-07-17T06:02:15Z","pattern":"ci-sweeper","duration_s":78,"outcome":"pr-created","skip_reason":"none","tokens_estimate":52000,"workflow_run":"29558840978","attempts":1,"has_changes":true,"verdict":"APPROVE","usage":{"total_input_tokens":34362,"total_output_tokens":2060,"model":"Cursor Grok 4.5 High Fast"}}
 {"run_id":"2026-07-17T06:06:26Z","pattern":"ci-sweeper","duration_s":11,"outcome":"skipped","skip_reason":"budget","tokens_estimate":52000,"workflow_run":"29559096677"}
 {"run_id":"2026-07-17T07:13:49Z","pattern":"ci-sweeper","duration_s":10,"outcome":"skipped","skip_reason":"budget","tokens_estimate":52000,"workflow_run":"29562419737"}
+{"run_id":"2026-07-17T07:22:15Z","pattern":"ci-sweeper","duration_s":14,"outcome":"skipped","skip_reason":"budget","tokens_estimate":52000,"workflow_run":"29562850308"}
