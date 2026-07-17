@@ -43,5 +43,10 @@
         "created_at": "2026-07-17T05:53:50Z"
       }
     }
+  },
+  "acting_on": {
+    "target_key": "integration:main",
+    "loop_name": "ci-sweeper",
+    "started_at": "2026-07-17T06:01:15Z"
   }
 }
