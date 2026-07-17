@@ -36,5 +36,10 @@
       "open_rejections": [],
       "last_reject_reason": "No meaningful changes outside .loop/"
     }
+  },
+  "acting_on": {
+    "target_key": "integration:main",
+    "loop_name": "ci-sweeper",
+    "started_at": "2026-07-17T09:19:43Z"
   }
 }
