@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-17T08:41:30.525203+00:00'
+generated_at: '2026-07-17T09:46:29.490809+00:00'
 apm_version: 0.24.0
 dependencies:
 - repo_url: _local/common
@@ -1153,7 +1153,7 @@ dependencies:
     .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml: sha256:210f615c53b7828e5e442a7064391f462c40b522ea693461eee1e361bd07f9fc
     .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-noaction.yaml: sha256:86df7cbd5a7f712123fc014ad92c141fe46f581f2271ba8bd570135e2f8ebad5
     .agents/skills/loop-ci-sweeper/references/category-input-schema.md: sha256:6e6fca889e2454353d70d0563b3f788afd68237a678eae2e15f2555b69819572
-    .agents/skills/loop-ci-sweeper/references/category-run-ledger.md: sha256:f9876a1ad807cb4c943a0d4acd1ddf568ad32359cb3363f1fa33bd4b6b72673f
+    .agents/skills/loop-ci-sweeper/references/category-run-ledger.md: sha256:f1b1441bfe87c9d643cba63484fc3533d6ff09dd2b73c5ae40ec7f43d243d5c0
     .agents/skills/loop-ci-sweeper/references/category-scope.md: sha256:e629a55899f59aa6cc007fe68ffc706e7971f4223827030bdf8f817a25f4de26
     .agents/skills/loop-ci-sweeper/references/category-validation-commands.md: sha256:6f0ecb53005eb37b3f4860ffdd0d1bb4938f61476cad97f32bae1d5f2c124e26
     .agents/skills/loop-ci-sweeper/references/common-checklist.md: sha256:68f1e9423c46c11c6317ba69fd38004e4eee6d90a9cb79463b8260e38e0e900e
@@ -1166,14 +1166,14 @@ dependencies:
     .agents/skills/loop-ci-sweeper/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
     .agents/skills/loop-ci-sweeper/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/loop-ci-sweeper/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh: sha256:eed53e50b01f595a8767bf0d2bb58fc4e678b53b821882f07abeb25e073e3fce
+    .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh: sha256:e410ae7a424a52e8308b2044dfaba1811ff72859e9bdf69fba79056808652200
     .claude/skills/loop-ci-sweeper/SKILL.md: sha256:ff277c0c55a6b5047cfd5f2693da73cb4c039140847042118523c4329a5f8467
     .claude/skills/loop-ci-sweeper/eval.yaml: sha256:b61c0737b994c5e4eda80c9e3714feb4472096f42cd08fb5eb57bf34e56b2b86
     .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-basic.yaml: sha256:f04f86769fc092c8ff6a56286cd5b56a87b863fab0f6b9eff53fc98998ef0a81
     .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml: sha256:210f615c53b7828e5e442a7064391f462c40b522ea693461eee1e361bd07f9fc
     .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-noaction.yaml: sha256:86df7cbd5a7f712123fc014ad92c141fe46f581f2271ba8bd570135e2f8ebad5
     .claude/skills/loop-ci-sweeper/references/category-input-schema.md: sha256:6e6fca889e2454353d70d0563b3f788afd68237a678eae2e15f2555b69819572
-    .claude/skills/loop-ci-sweeper/references/category-run-ledger.md: sha256:f9876a1ad807cb4c943a0d4acd1ddf568ad32359cb3363f1fa33bd4b6b72673f
+    .claude/skills/loop-ci-sweeper/references/category-run-ledger.md: sha256:f1b1441bfe87c9d643cba63484fc3533d6ff09dd2b73c5ae40ec7f43d243d5c0
     .claude/skills/loop-ci-sweeper/references/category-scope.md: sha256:e629a55899f59aa6cc007fe68ffc706e7971f4223827030bdf8f817a25f4de26
     .claude/skills/loop-ci-sweeper/references/category-validation-commands.md: sha256:6f0ecb53005eb37b3f4860ffdd0d1bb4938f61476cad97f32bae1d5f2c124e26
     .claude/skills/loop-ci-sweeper/references/common-checklist.md: sha256:68f1e9423c46c11c6317ba69fd38004e4eee6d90a9cb79463b8260e38e0e900e
@@ -1186,7 +1186,7 @@ dependencies:
     .claude/skills/loop-ci-sweeper/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
     .claude/skills/loop-ci-sweeper/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/loop-ci-sweeper/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .claude/skills/loop-ci-sweeper/scripts/update_run_ledger.sh: sha256:eed53e50b01f595a8767bf0d2bb58fc4e678b53b821882f07abeb25e073e3fce
+    .claude/skills/loop-ci-sweeper/scripts/update_run_ledger.sh: sha256:e410ae7a424a52e8308b2044dfaba1811ff72859e9bdf69fba79056808652200
   source: local
   local_path: ./.apm/packages/loop-ci-sweeper
   declared_license: Apache-2.0

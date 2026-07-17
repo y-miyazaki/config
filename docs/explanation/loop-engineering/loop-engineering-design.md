@@ -657,6 +657,8 @@ stateDiagram-v2
 
 **Implementation**: `loop-finalize` increments `consecutive_failures` per `target.key` on `outcome: rejected`. `loop-detect` reads per-target counter and sets `skip_reason=circuit_breaker` when threshold is exceeded.
 
+**State / ledger retention (30 days):** On each `loop-state-write`, prune terminal `pull_request:*` keys older than 30 days (`rejected` / `pr-closed`, no `pending`). Watch keys (`integration:*`, …) are never deleted; aged reject metadata is cleared and `consecutive_failures` reset (cooldown). Keep `last_sha` / `pending`. CI sweeper run ledger (`update_run_ledger.sh`) drops `runs` entries with `updated_at` older than 30 days. Same window as `loop-run-log`. See [Loop State Targets Retention Design](../../superpowers/specs/2026-07-17-loop-state-targets-retention-design.md).
+
 **Reject reason recording**: On REJECT, Finalize writes the verifier's `reason` field to state. This enables future feedback loops where reject reasons are analyzed to improve prompts or detect systematic issues.
 
 ```json

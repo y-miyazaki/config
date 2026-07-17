@@ -25,6 +25,11 @@ set -euo pipefail
 umask 027
 export LC_ALL=C.UTF-8
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=prune_targets.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/prune_targets.sh"
+
 #######################################
 # Global variables
 #######################################
@@ -707,6 +712,7 @@ function main {
     validate_required_inputs
 
     load_state_tmp
+    prune_targets_by_retention "${STATE_TMP}"
     now="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
     if [[ ${WRITE_TARGET_STATE} == "true" ]]; then

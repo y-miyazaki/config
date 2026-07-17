@@ -123,12 +123,14 @@ teardown() {
     [ "$status" -eq 0 ]
 }
 
-@test "update_run_ledger prunes entries older than seven days" {
-    local recent
+@test "update_run_ledger prunes entries older than thirty days" {
+    local recent eight_days_ago
     recent="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-    jq -nc --arg recent "${recent}" \
+    eight_days_ago="$(date -u -d '8 days ago' +"%Y-%m-%dT%H:%M:%SZ" 2> /dev/null || date -u -v-8d +"%Y-%m-%dT%H:%M:%SZ")"
+    jq -nc --arg recent "${recent}" --arg mid "${eight_days_ago}" \
         '{runs:{
             "old":{outcome:"watch",reject_count:0,updated_at:"2020-01-01T00:00:00Z",workflow_name:"ci-old"},
+            "mid":{outcome:"rejected",reject_count:1,updated_at:$mid,workflow_name:"ci-mid"},
             "keep":{outcome:"watch",reject_count:0,updated_at:$recent,workflow_name:"ci-keep"}
         }}' > "${LEDGER_FILE}"
     run bash "${LEDGER_SCRIPT}" \
@@ -137,6 +139,12 @@ teardown() {
         --head-sha abc1234 \
         --outcome watch
     [ "$status" -eq 0 ]
-    run jq -e 'has("runs") and (.runs|has("old")|not) and .runs.keep.workflow_name == "ci-keep" and .runs["333"].outcome == "watch"' "${LEDGER_FILE}"
+    # 8-day-old kept under 30-day TTL (would have been dropped under old 7-day rule)
+    run jq -e '
+      (.runs|has("old")|not)
+      and .runs.mid.workflow_name == "ci-mid"
+      and .runs.keep.workflow_name == "ci-keep"
+      and .runs["333"].outcome == "watch"
+    ' "${LEDGER_FILE}"
     [ "$status" -eq 0 ]
 }

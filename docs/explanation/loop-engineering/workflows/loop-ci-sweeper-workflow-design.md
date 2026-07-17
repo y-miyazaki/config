@@ -186,7 +186,7 @@ Detect applies **only** stable gates — not semantic failure classification:
 Per watch branch, `loop-detect` sets context; script uses `gh run list --branch <watch_branch> --status failure`.
 
 - Range filter via `targets["integration:<branch>"].last_sha`
-- **Dedupe:** `state-ci-sweeper-run-ledger.json` keyed by `workflow_run_id`
+- **Dedupe:** `state-ci-sweeper-run-ledger.json` keyed by `workflow_run_id` (entries pruned after **30 days** on ledger update)
 
 ### Pull request mode
 

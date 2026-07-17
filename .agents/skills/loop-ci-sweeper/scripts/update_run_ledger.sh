@@ -11,7 +11,7 @@
 # Design Rules:
 # - Exit 0 always; log errors to stderr
 # - Merge into existing ledger without dropping unrelated run entries
-# - Prune entries older than 7 days
+# - Prune entries older than 30 days (aligned with loop-run-log / state retention)
 # - Source shared helpers from scripts/lib/all.sh (synced via scripts/ai/sync_skill_lib.sh)
 #
 # Dependencies:
@@ -195,7 +195,7 @@ function validate_ledger_file {
 function update_ledger {
     local now cutoff updated
     now="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-    cutoff="$(date -u -d '7 days ago' +"%Y-%m-%dT%H:%M:%SZ" 2> /dev/null || date -u -v-7d +"%Y-%m-%dT%H:%M:%SZ")"
+    cutoff="$(date -u -d '30 days ago' +"%Y-%m-%dT%H:%M:%SZ" 2> /dev/null || date -u -v-30d +"%Y-%m-%dT%H:%M:%SZ")"
 
     if ! updated="$(jq --arg run_id "${RUN_ID}" --arg workflow "${WORKFLOW_NAME}" --arg head_sha "${HEAD_SHA}" --arg outcome "${OUTCOME}" --arg loop_run_id "${LOOP_RUN_ID}" --arg updated_at "${now}" --arg cutoff "${cutoff}" '''
         .runs[$run_id] = {
