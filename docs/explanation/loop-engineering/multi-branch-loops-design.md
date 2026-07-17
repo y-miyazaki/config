@@ -242,7 +242,7 @@ So “state should be pushed, not PR’d” is right for **delivery mechanism**.
 1. **L2:** Fix PR carries **domain files only**. On `pull_request_target` `closed` + `merged`, a platform handler **direct-pushes** state to `branch_state` (promote `pending` → `last_sha`). Humans never review or merge state.
 2. **L2 + `to.branch != branch_state`:** Same merge hook; state always lands on `branch_state`, not on the fix branch.
 3. **L3:** `finalize: push` / `push_head` — single atomic push to the watched branch; no **new fix PR**, no `pending` state cursor.
-4. **`state_bundle_with_fix_pr`:** **Deprecated interim** (changelog dogfood today). Remove once merge-gated push ships. Do not adopt for new loops.
+4. **`state_bundle_with_fix_pr`:** **Deprecated interim.** Dogfood loops use merge-gated `pending` (`false`). Do not adopt for new loops.
 
 **Pending cursor:** On `pr-created`, finalize writes `targets[key].pending = { sha, pr, … }` to `branch_state` via direct push **without** advancing `last_sha`. `on-loop-state-promote` (`pull_request_target` `closed`) promotes `pending.sha` → `last_sha` on merge or clears `pending` when closed without merge. Promote updates **only** `branch_state` / the repository default branch (or an explicit `state_push_branch` override) — never open fix-PR heads — so `[skip ci]` state commits cannot pollute a PR HEAD and suppress Actions. Detect blocks on `pending.pr` only while that PR is `OPEN`; `CLOSED` / `MERGED` pending is treated as stale (warn and continue) until promote clears it. Re-open detect therefore still sees the same commits if the fix PR is closed without merge (after stale pending is ignored or cleared).
 

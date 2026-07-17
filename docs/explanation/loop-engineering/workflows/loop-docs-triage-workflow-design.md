@@ -64,7 +64,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `allowlist`                                          | Comma-separated globs the implementer may modify. Must align with triage scope.                                                                                                        | `docs/**/*.md,README.md,mkdocs.yml`                            |
 | `branch_match`                                       | Comma-separated integration branch patterns to watch for doc drift.                                                                                                                    | `main`                                                         |
 | `branch_state`                                       | Branch for `.loop/*` persistence, state migration, and watch fallback.                                                                                                                 | `main`                                                         |
-| `budget_max_runs_per_day`                            | Daily run cap keyed by `loop_name`.                                                                                                                                                    | `1`                                                            |
+| `budget_max_runs_per_day`                            | Daily run cap keyed by `loop_name`. Caller input; `.loop/loop-budget.json` overrides when present.                                                                                      | `1` (caller); effective `5` via `.loop/loop-budget.json`       |
 | `budget_max_tokens_per_day`                          | Daily aggregated token cap across loops.                                                                                                                                               | `500000`                                                       |
 | `detect_domain_env_json` → `DOCS_TRIAGE_DOC_GLOBS`   | Comma-separated globs for documentation files in git-diff analysis.                                                                                                                    | `docs/**/*.md,README.md`                                       |
 | `detect_domain_env_json` → `DOCS_TRIAGE_EXTRA_FILES` | Additional non-glob paths (site config) included in doc impact scan.                                                                                                                   | `mkdocs.yml`                                                   |
@@ -157,7 +157,7 @@ Persistence: `state-docs-triage.json` on `branch_state` via [finalize inside ci-
 - [ ] State migration: flat `last_sha` removed
 - [ ] `target_matrix` through detect → matrix execute/finalize
 - [ ] `verifier_context` on execute path
-- [ ] Bump `ci-loop-agent.yaml` pins for `loop-finalize` and `loop-execute` to a release SHA with hybrid PR body — or temporary `uses: ./.github/actions/...` for validation
+- [x] Hybrid PR body pins: `ci-loop-agent.yaml` uses `loop-finalize` / `loop-execute` @ v1.8.36 (`render_pr_body.sh`)
 
 ## Cross-Loop Note
 
