@@ -79,15 +79,16 @@ jobs:
       budget_max_runs_per_day: 5
       budget_max_tokens_per_day: 1000000
       denylist: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
-      # detect_domain_env_json: LEDGER/REJECT_*; workflow_run event keys (HEAD_*/WORKFLOW_*) when present
+      # detect_domain_env_json: LEDGER/REJECT_*; workflow_run event keys (EVENT_/HEAD_*/WORKFLOW_*) when present
+      # Keys must stay alphabetically ordered.
       detect_domain_env_json: |
         ${{ format(
-          '{"CI_SWEEPER_LEDGER_FILE":".loop/state-ci-sweeper-run-ledger.json","CI_SWEEPER_REJECT_MAX_RETRIES":"3","CI_SWEEPER_REJECT_RETRY_POLICY":"block","CI_SWEEPER_HEAD_SHA":"{0}","CI_SWEEPER_WORKFLOW_RUN_ID":"{1}","CI_SWEEPER_HEAD_BRANCH":"{2}","CI_SWEEPER_WORKFLOW_NAME":"{3}","CI_SWEEPER_RUN_URL":"{4}"}',
-          github.event.workflow_run.head_sha || github.sha,
-          github.event.workflow_run.id || '',
+          '{"CI_SWEEPER_EVENT_HEAD_BRANCH":"{0}","CI_SWEEPER_HEAD_BRANCH":"{0}","CI_SWEEPER_HEAD_SHA":"{1}","CI_SWEEPER_LEDGER_FILE":".loop/state-ci-sweeper-run-ledger.json","CI_SWEEPER_REJECT_MAX_RETRIES":"3","CI_SWEEPER_REJECT_RETRY_POLICY":"block","CI_SWEEPER_RUN_URL":"{2}","CI_SWEEPER_WORKFLOW_NAME":"{3}","CI_SWEEPER_WORKFLOW_RUN_ID":"{4}"}',
           github.event.workflow_run.head_branch || 'main',
+          github.event.workflow_run.head_sha || github.sha,
+          github.event.workflow_run.html_url || '',
           github.event.workflow_run.name || '',
-          github.event.workflow_run.html_url || ''
+          github.event.workflow_run.id || ''
         ) }}
       detect_script: .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh
       domain_persistence_script: .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh

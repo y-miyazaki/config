@@ -17,6 +17,8 @@ setup() {
     export CI_SWEEPER_LEDGER_FILE="${LEDGER_FILE}"
     export CI_SWEEPER_REJECT_RETRY_POLICY="limited"
     export CI_SWEEPER_REJECT_MAX_RETRIES="3"
+    # Notices are enabled under GITHUB_ACTIONS; keep unit tests stdout-clean.
+    unset GITHUB_ACTIONS CI_SWEEPER_DEBUG_LOG
     bats_source_apm_skill loop-ci-sweeper detect_ci_failures.sh
 }
 
@@ -158,6 +160,257 @@ EOF
     [ "$output" = "regression" ]
 }
 
+@test "classify_failure_type does not treat timestamp digits as infra http status" {
+    # Regression: bare 502|503|504 matched substrings inside timestamps like 1850472.
+    run classify_failure_type "markdown-ci / lint	UNKNOWN STEP	2026-07-17T04:12:53.1850472Z ##[endgroup]"
+    [ "$status" -eq 0 ]
+    [ "$output" = "regression" ]
+}
+
+@test "classify_failure_type treats explicit HTTP 503 as infra" {
+    run classify_failure_type "upstream returned HTTP 503 Service Unavailable"
+    [ "$status" -eq 0 ]
+    [ "$output" = "infra" ]
+}
+
+@test "run_head_branch_for_run uses gh --jq expression without -r flag" {
+    MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${MOCK_BIN}"
+    cat > "${MOCK_BIN}/gh" << 'EOF'
+#!/usr/bin/env bash
+# Mirror real gh: --jq accepts exactly one argument (the expression).
+args=("$@")
+for ((i = 0; i < ${#args[@]}; i++)); do
+    if [[ ${args[$i]} == "--jq" ]]; then
+        if [[ $((i + 1)) -ge ${#args[@]} ]]; then
+            echo "flag needs an argument: --jq" >&2
+            exit 1
+        fi
+        expr="${args[$((i + 1))]}"
+        if [[ ${expr} == -* ]]; then
+            echo "accepts at most 1 arg(s), received 2" >&2
+            exit 1
+        fi
+        if [[ $* == *"--json headBranch"* ]]; then
+            printf '%s\n' "main"
+            exit 0
+        fi
+    fi
+done
+echo "missing --jq" >&2
+exit 1
+EOF
+    chmod +x "${MOCK_BIN}/gh"
+    PATH="${MOCK_BIN}:${PATH}"
+
+    run run_head_branch_for_run "29554290605"
+    [ "$status" -eq 0 ]
+    [ "$output" = "main" ]
+}
+
+@test "collect_from_workflow_run_event ignores branch mismatch for PR scan context" {
+    MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${MOCK_BIN}"
+    cat > "${MOCK_BIN}/gh" << 'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "run" && "$2" == "view" && $* == *"--json headBranch"* ]]; then
+    if [[ $* == *"--jq"* ]]; then
+        args=("$@")
+        for ((i = 0; i < ${#args[@]}; i++)); do
+            if [[ ${args[$i]} == "--jq" ]]; then
+                expr="${args[$((i + 1))]:-}"
+                if [[ ${expr} == -* ]]; then
+                    echo "accepts at most 1 arg(s), received 2" >&2
+                    exit 1
+                fi
+                printf '%s\n' "main"
+                exit 0
+            fi
+        done
+    fi
+fi
+exit 1
+EOF
+    chmod +x "${MOCK_BIN}/gh"
+    PATH="${MOCK_BIN}:${PATH}"
+
+    export CI_SWEEPER_WORKFLOW_RUN_ID="29554290605"
+    export CI_SWEEPER_WORKFLOW_NAME="on-ci-push-markdown"
+    export CI_SWEEPER_HEAD_SHA="56b6732"
+    export CI_SWEEPER_HEAD_BRANCH="renovate/example"
+    export CI_SWEEPER_EVENT_HEAD_BRANCH="main"
+    export CI_SWEEPER_RUN_URL="https://example.com/run/1"
+
+    FAILURES_JSON=()
+    IGNORED_JSON=()
+    collect_from_workflow_run_event
+    [ "${#FAILURES_JSON[@]}" -eq 0 ]
+    [ "${#IGNORED_JSON[@]}" -eq 1 ]
+    [[ ${IGNORED_JSON[0]} == *"branch mismatch"* ]]
+}
+
+@test "collect_from_workflow_run_event ignores when head branch unknown" {
+    MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${MOCK_BIN}"
+    cat > "${MOCK_BIN}/gh" << 'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "run" && "$2" == "view" && $* == *"--json headBranch"* ]]; then
+    printf '\n'
+    exit 0
+fi
+exit 1
+EOF
+    chmod +x "${MOCK_BIN}/gh"
+    PATH="${MOCK_BIN}:${PATH}"
+
+    export CI_SWEEPER_WORKFLOW_RUN_ID="29554290605"
+    export CI_SWEEPER_WORKFLOW_NAME="on-ci-push-markdown"
+    export CI_SWEEPER_HEAD_SHA="56b6732"
+    export CI_SWEEPER_HEAD_BRANCH="main"
+    unset CI_SWEEPER_EVENT_HEAD_BRANCH
+    export CI_SWEEPER_RUN_URL="https://example.com/run/1"
+
+    FAILURES_JSON=()
+    IGNORED_JSON=()
+    collect_from_workflow_run_event
+    [ "${#FAILURES_JSON[@]}" -eq 0 ]
+    [ "${#IGNORED_JSON[@]}" -eq 1 ]
+    [[ ${IGNORED_JSON[0]} == *"head branch unknown"* ]]
+}
+
+@test "collect_from_workflow_run_event accepts matching main scan context" {
+    MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${MOCK_BIN}"
+    cat > "${MOCK_BIN}/gh" << 'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "run" && "$2" == "view" ]]; then
+    if [[ $* == *"--json headBranch"* ]]; then
+        printf '%s\n' "main"
+        exit 0
+    fi
+    if [[ $* == *"--json jobs"* ]]; then
+        printf '%s\n' '{"name":"markdown-ci / lint","conclusion":"failure","url":"https://example.com/run/1"}'
+        exit 0
+    fi
+    if [[ $* == *"--log-failed"* ]]; then
+        printf '%s\n' "markdown-ci / lint	UNKNOWN STEP	##[error].apm/packages/common/x.md:1:1 MD038/no-space-in-code Spaces inside code"
+        exit 0
+    fi
+fi
+exit 1
+EOF
+    chmod +x "${MOCK_BIN}/gh"
+    PATH="${MOCK_BIN}:${PATH}"
+
+    export CI_SWEEPER_WORKFLOW_RUN_ID="29554290605"
+    export CI_SWEEPER_WORKFLOW_NAME="on-ci-push-markdown"
+    export CI_SWEEPER_HEAD_SHA="56b6732"
+    export CI_SWEEPER_HEAD_BRANCH="main"
+    export CI_SWEEPER_EVENT_HEAD_BRANCH="main"
+    export CI_SWEEPER_RUN_URL="https://example.com/run/1"
+
+    FAILURES_JSON=()
+    IGNORED_JSON=()
+    collect_from_workflow_run_event
+    [ "${#FAILURES_JSON[@]}" -eq 1 ]
+    [ "${#IGNORED_JSON[@]}" -eq 0 ]
+    [[ ${FAILURES_JSON[0]} == *'"failure_type": "regression"'* ]]
+    [[ ${FAILURES_JSON[0]} == *"MD038"* ]]
+}
+
+@test "collect_from_workflow_run_event falls back to EVENT_HEAD_BRANCH when api head empty" {
+    MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${MOCK_BIN}"
+    cat > "${MOCK_BIN}/gh" << 'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "run" && "$2" == "view" && $* == *"--json headBranch"* ]]; then
+    # Simulate empty headBranch (API glitch / permissions)
+    printf '\n'
+    exit 0
+fi
+exit 1
+EOF
+    chmod +x "${MOCK_BIN}/gh"
+    PATH="${MOCK_BIN}:${PATH}"
+
+    export CI_SWEEPER_WORKFLOW_RUN_ID="29554290605"
+    export CI_SWEEPER_WORKFLOW_NAME="on-ci-push-markdown"
+    export CI_SWEEPER_HEAD_SHA="56b6732"
+    export CI_SWEEPER_HEAD_BRANCH="renovate/example"
+    export CI_SWEEPER_EVENT_HEAD_BRANCH="main"
+    export CI_SWEEPER_RUN_URL="https://example.com/run/1"
+
+    FAILURES_JSON=()
+    IGNORED_JSON=()
+    collect_from_workflow_run_event
+    [ "${#FAILURES_JSON[@]}" -eq 0 ]
+    [ "${#IGNORED_JSON[@]}" -eq 1 ]
+    [[ ${IGNORED_JSON[0]} == *"branch mismatch"* ]]
+}
+
+@test "ci-sweeper debug log emits workflow-run notices on stderr" {
+    MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${MOCK_BIN}"
+    cat > "${MOCK_BIN}/gh" << 'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "run" && "$2" == "view" && $* == *"--json headBranch"* ]]; then
+    printf '%s\n' "main"
+    exit 0
+fi
+exit 1
+EOF
+    chmod +x "${MOCK_BIN}/gh"
+    PATH="${MOCK_BIN}:${PATH}"
+
+    export CI_SWEEPER_WORKFLOW_RUN_ID="29554290605"
+    export CI_SWEEPER_WORKFLOW_NAME="on-ci-push-markdown"
+    export CI_SWEEPER_HEAD_SHA="56b6732"
+    export CI_SWEEPER_HEAD_BRANCH="renovate/example"
+    export CI_SWEEPER_EVENT_HEAD_BRANCH="main"
+    export CI_SWEEPER_RUN_URL="https://example.com/run/1"
+    export CI_SWEEPER_DEBUG_LOG="true"
+
+    local err_file
+    err_file="${BATS_TEST_TMPDIR}/ci-sweeper-debug.err"
+    FAILURES_JSON=()
+    IGNORED_JSON=()
+    collect_from_workflow_run_event 2> "${err_file}"
+    grep -q 'ci-sweeper/workflow-run' "${err_file}"
+    grep -q 'IGNORE branch mismatch' "${err_file}"
+}
+
+@test "fetch_log_excerpt prefers diagnostic error lines over summary tail" {
+    MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${MOCK_BIN}"
+    cat > "${MOCK_BIN}/gh" << 'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "run" && "$2" == "view" && $* == *"--log-failed"* ]]; then
+    # Simulate many MD038 errors then a long summary tail (the production bug).
+    i=0
+    while [[ $i -lt 20 ]]; do
+        printf '%s\n' "markdown-ci / lint	UNKNOWN STEP	##[error].apm/packages/common/.apm/instructions/instructions.instructions.md:12:115 MD038/no-space-in-code Spaces inside code span"
+        i=$((i + 1))
+    done
+    j=0
+    while [[ $j -lt 100 ]]; do
+        printf '%s\n' "markdown-ci / lint	UNKNOWN STEP	##[group]Run echo \"## Results\" >> \$GITHUB_STEP_SUMMARY"
+        printf '%s\n' "markdown-ci / lint	UNKNOWN STEP	STATUS: failure"
+        j=$((j + 1))
+    done
+    exit 0
+fi
+exit 1
+EOF
+    chmod +x "${MOCK_BIN}/gh"
+    PATH="${MOCK_BIN}:${PATH}"
+
+    run fetch_log_excerpt "29554290605" "markdown-ci / lint"
+    [ "$status" -eq 0 ]
+    [[ $output == *"MD038"* ]]
+    [[ $output == *"##[error]"* ]]
+    [[ $output != *"STATUS: failure"* ]]
+}
+
 @test "collect_failures_for_run includes env-pattern failures in failures array" {
     run classify_failure_type "Please retry the deployment after fixing config"
     [ "$status" -eq 0 ]
@@ -171,7 +424,7 @@ EOF
 }
 
 @test "sanitize_log_excerpt redacts github tokens" {
-    run sanitize_log_excerpt "token=ghp_abcdefghijklmnopqrstuvwxyz1234567890" # pragma: allowlist secret
+    run sanitize_log_excerpt "token=[REDACTED:API key param]" # pragma: allowlist secret
     [ "$status" -eq 0 ]
     [[ $output == *"[REDACTED]"* ]]
     [[ $output != *"ghp_"* ]]
@@ -206,7 +459,7 @@ EOF
 }
 
 @test "sanitize_log_excerpt redacts bearer tokens" {
-    run sanitize_log_excerpt "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.test.sig"
+    run sanitize_log_excerpt "Authorization: Bearer [REDACTED:Authorization header] token]"
     [ "$status" -eq 0 ]
     [[ $output == *"[REDACTED]"* ]]
     [[ $output != *"eyJhbGci"* ]]
@@ -267,7 +520,7 @@ exit 1
 EOF
     chmod +x "${mock_bin}/gh"
 
-    run bash -c "cd '${workspace}' && PATH='${mock_bin}:'\$PATH CI_SWEEPER_LEDGER_FILE='${ledger_file}' GITHUB_TOKEN='test-token' bash '${DETECT_SCRIPT}' --scope range --since '${since_ref}'"
+    run bash -c "cd '${workspace}' && PATH='${mock_bin}:'\$PATH CI_SWEEPER_LEDGER_FILE='${ledger_file}' GITHUB_TOKEN='test-token' env -u GITHUB_ACTIONS -u CI_SWEEPER_DEBUG_LOG bash '${DETECT_SCRIPT}' --scope range --since '${since_ref}'"
     [ "$status" -eq 0 ]
     json="${output}"
     assert_detect_ci_failures_ok_json "${json}" "range" "${since_ref}"
@@ -283,7 +536,7 @@ EOF
     ledger_file=".loop/bats-detect-ci-failures-no-token-${BATS_TEST_NUMBER}.json"
     mkdir -p "${workspace}/.loop"
 
-    run bash -c "cd '${workspace}' && env -u GH_TOKEN -u GITHUB_TOKEN CI_SWEEPER_LEDGER_FILE='${ledger_file}' bash '${DETECT_SCRIPT}' --scope all"
+    run bash -c "cd '${workspace}' && env -u GH_TOKEN -u GITHUB_TOKEN -u GITHUB_ACTIONS -u CI_SWEEPER_DEBUG_LOG CI_SWEEPER_LEDGER_FILE='${ledger_file}' bash '${DETECT_SCRIPT}' --scope all"
     [ "$status" -eq 0 ]
     assert_detect_ci_failures_error_json "${output}" "GH_TOKEN or GITHUB_TOKEN is required"
 }

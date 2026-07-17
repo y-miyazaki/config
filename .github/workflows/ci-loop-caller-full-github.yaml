@@ -316,6 +316,7 @@ jobs:
       copilot-requests: write # zizmor: ignore[excessive-permissions]
       pull-requests: write
     strategy:
+      fail-fast: false
       matrix:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
     uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@0098282039f73bf3aba3a67a02568c0dec11c2a5 # v1.8.30

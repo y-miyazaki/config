@@ -89,6 +89,8 @@ function append_integration_candidate {
     detect_result="$(bash "${DETECT_SCRIPT}" --scope range --since "${last_sha}")"
 
     if detect_result_skip "${detect_result}"; then
+        log_detect_notice "skip" "${target_key}" \
+            "detect skip=true failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") ignored=$(jq -r '.ignored|length // 0' <<< "${detect_result}") ignored_reasons=$(jq -r '[.ignored[]?.reason // empty] | join("; ")' <<< "${detect_result}")"
         return 0
     fi
 
@@ -118,6 +120,8 @@ function append_integration_candidate {
         "${target_key}" "${target_json}" "${prompt_text}" "${verifier_context}" "${detect_result}")" \
         || return 0
 
+    log_detect_notice "accept" "${target_key}" \
+        "failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") failure_types=$(jq -r '[.failures[]?.failure_type // empty] | unique | join(",")' <<< "${detect_result}")"
     CANDIDATES_JSON+=("${candidate}")
 }
 
@@ -171,6 +175,8 @@ function append_pull_request_candidate {
     detect_result="$(bash "${DETECT_SCRIPT}" --scope range --since "${last_sha}")"
 
     if detect_result_skip "${detect_result}"; then
+        log_detect_notice "skip" "${target_key}" \
+            "detect skip=true failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") ignored=$(jq -r '.ignored|length // 0' <<< "${detect_result}") ignored_reasons=$(jq -r '[.ignored[]?.reason // empty] | join("; ")' <<< "${detect_result}")"
         return 0
     fi
 
@@ -203,6 +209,8 @@ function append_pull_request_candidate {
         "${target_key}" "${target_json}" "${prompt_text}" "${verifier_context}" "${detect_result}")" \
         || return 0
 
+    log_detect_notice "accept" "${target_key}" \
+        "failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") failure_types=$(jq -r '[.failures[]?.failure_type // empty] | unique | join(",")' <<< "${detect_result}") head=${head_branch}"
     CANDIDATES_JSON+=("${candidate}")
 }
 
@@ -681,6 +689,9 @@ function main {
 
     target_matrix_json="$(printf '%s\n' "${CANDIDATES_JSON[@]}" | jq -sc '.')"
     should_run="true"
+
+    log_detect_notice "matrix" "${LOOP_NAME}" \
+        "should_run=true count=${#CANDIDATES_JSON[@]} keys=$(jq -r '[.[].target_json.key] | join(",")' <<< "${target_matrix_json}") skip_reason=${skip_reason} pr_enabled=${LOOP_PR_ENABLED} max_targets=${LOOP_MAX_TARGETS_PER_SCHEDULE}"
 
     write_detect_outputs "${should_run}" "${skip_reason}" "${target_matrix_json}"
     write_legacy_outputs "${target_matrix_json}"

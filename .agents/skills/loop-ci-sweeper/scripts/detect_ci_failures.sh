@@ -25,7 +25,9 @@
 # - jq (gh --json parsing only)
 #
 # Optional environment:
-#   CI_SWEEPER_HEAD_BRANCH            workflow_run event context (optional)
+#   CI_SWEEPER_DEBUG_LOG             when true, emit ::notice/::warning diagnostics (also on in GITHUB_ACTIONS)
+#   CI_SWEEPER_EVENT_HEAD_BRANCH      workflow_run head branch (stable; not rewritten per scan)
+#   CI_SWEEPER_HEAD_BRANCH            per-scan branch context (optional; rewritten by loop-detect)
 #   CI_SWEEPER_HEAD_SHA               workflow_run event context (optional)
 #   CI_SWEEPER_LEDGER_FILE            Path to run ledger JSON (default: .loop/state-ci-sweeper-run-ledger.json)
 #   CI_SWEEPER_REJECT_MAX_RETRIES     Max REJECT retries when policy is limited (default: 3)
@@ -408,7 +410,16 @@ function normalize_reject_retry_policy {
 #######################################
 function run_head_branch_for_run {
     local run_id="$1"
-    gh run view "${run_id}" --json headBranch --jq -r '.headBranch // empty' 2> /dev/null || true
+    local branch
+    # gh --jq accepts exactly one argument (the expression). Do not pass -r.
+    branch="$(gh run view "${run_id}" --json headBranch --jq '.headBranch // empty' 2> /dev/null || true)"
+    if [[ -z ${branch} ]]; then
+        log_ci_sweeper_warning "head-branch" "run:${run_id}" \
+            "gh run view --json headBranch returned empty; falling back to CI_SWEEPER_EVENT_HEAD_BRANCH if set"
+    else
+        log_ci_sweeper_notice "head-branch" "run:${run_id}" "resolved=${branch}"
+    fi
+    printf '%s' "${branch}"
 }
 
 #######################################
@@ -460,6 +471,54 @@ function should_skip_processed_run {
 }
 
 #######################################
+# log_ci_sweeper_notice: Emit a GitHub Actions notice for ci-sweeper detect diagnostics
+#
+# Arguments:
+#   $1 - Stage name
+#   $2 - Scope / subject
+#   $3 - Detail text
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   None (writes to stderr so stdout JSON/excerpts stay clean)
+#
+#######################################
+function log_ci_sweeper_notice {
+    local stage="$1"
+    local scope="$2"
+    local detail="$3"
+    if [[ ${GITHUB_ACTIONS:-} == "true" || ${CI_SWEEPER_DEBUG_LOG:-} == "true" ]]; then
+        echo "::notice title=ci-sweeper/${stage}::${scope}: ${detail}" >&2
+    fi
+}
+
+#######################################
+# log_ci_sweeper_warning: Emit a GitHub Actions warning for ci-sweeper detect diagnostics
+#
+# Arguments:
+#   $1 - Stage name
+#   $2 - Scope / subject
+#   $3 - Detail text
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   None
+#
+#######################################
+function log_ci_sweeper_warning {
+    local stage="$1"
+    local scope="$2"
+    local detail="$3"
+    if [[ ${GITHUB_ACTIONS:-} == "true" || ${CI_SWEEPER_DEBUG_LOG:-} == "true" ]]; then
+        echo "::warning title=ci-sweeper/${stage}::${scope}: ${detail}" >&2
+    fi
+}
+
+#######################################
 # classify_failure_type: Classify failure from log excerpt heuristics
 #
 # Arguments:
@@ -477,7 +536,8 @@ function should_skip_processed_run {
 #######################################
 function classify_failure_type {
     local log_excerpt="$1"
-    if grep -qiE 'timeout|timed out|oom|out of memory|503|502|504|service unavailable|registry|rate limit|waiting for a runner|no runners (available|online|found)|runner (has lost|not found|offline|unavailable)|could not acquire a runner|job was not acquired' <<< "${log_excerpt}"; then
+    # Do not match bare 502/503/504 — those appear inside timestamps (e.g. 1850472).
+    if grep -qiE 'timeout|timed out|\boom\b|out of memory|\bHTTP[/ ]*50[234]\b|\b50[234] (Bad Gateway|Service Unavailable|Gateway Timeout)\b|service unavailable|registry|rate limit|waiting for a runner|no runners (available|online|found)|runner (has lost|not found|offline|unavailable)|could not acquire a runner|job was not acquired' <<< "${log_excerpt}"; then
         echo "infra"
     elif grep -qiE '(missing|invalid|not found|cannot find).*(secret|credential|api[_-]?key)|(secret|credential|api[_-]?key).*(missing|invalid|not found)|(AWS_|GITHUB_TOKEN|GH_TOKEN).*(missing|invalid|not set)|permission denied.*/(secrets|credentials)' <<< "${log_excerpt}"; then
         echo "env"
@@ -545,13 +605,35 @@ function fetch_failed_jobs {
 function fetch_log_excerpt {
     local run_id="$1"
     local job_name="$2"
-    local excerpt
-    excerpt="$(gh run view "${run_id}" --log-failed 2> /dev/null | grep -F "${job_name}" | tail -n 80 || true)"
-    if [[ -z ${excerpt} ]]; then
-        excerpt="$(gh run view "${run_id}" --log-failed 2> /dev/null | tail -n 80 || true)"
+    local raw excerpt diagnostics mode raw_bytes excerpt_bytes
+    raw="$(gh run view "${run_id}" --log-failed 2> /dev/null || true)"
+    raw_bytes="${#raw}"
+    if [[ -n ${job_name} ]]; then
+        excerpt="$(grep -F "${job_name}" <<< "${raw}" || true)"
+    fi
+    if [[ -z ${excerpt:-} ]]; then
+        excerpt="${raw}"
+        if [[ -n ${job_name} ]]; then
+            log_ci_sweeper_notice "log-excerpt" "run:${run_id}" \
+                "job_filter_miss job=${job_name} raw_bytes=${raw_bytes}; using full failed log"
+        fi
+    fi
+    # Prefer actionable diagnostics over trailing summary/cleanup noise.
+    diagnostics="$(grep -iE '##\[error\]|##\[warning\]|\bMD[0-9]{3}\b|\berror:|\bfailed:|\bSC[0-9]{4}\b' <<< "${excerpt}" || true)"
+    if [[ -n ${diagnostics} ]]; then
+        excerpt="${diagnostics}"
+        mode="diagnostics"
+    else
+        excerpt="$(tail -n 80 <<< "${excerpt}" || true)"
+        mode="tail80"
+        log_ci_sweeper_warning "log-excerpt" "run:${run_id}" \
+            "no diagnostic lines for job=${job_name}; using ${mode} (may omit lint rule IDs)"
     fi
     excerpt="${excerpt:0:4000}"
     excerpt="$(sanitize_log_excerpt "${excerpt}")"
+    excerpt_bytes="${#excerpt}"
+    log_ci_sweeper_notice "log-excerpt" "run:${run_id}" \
+        "job=${job_name} mode=${mode} raw_bytes=${raw_bytes} excerpt_bytes=${excerpt_bytes}"
     printf '%s' "${excerpt}"
 }
 
@@ -706,6 +788,8 @@ function append_ignored {
     local failure_type="$5"
     local reason="$6"
 
+    log_ci_sweeper_notice "ignored" "run:${run_id}" \
+        "workflow=${workflow_name} branch=${head_branch} job=${job_name} type=${failure_type} reason=${reason}"
     IGNORED_JSON+=("$(ignored_object_json "${workflow_name}" "${run_id}" "${head_branch}" \
         "${job_name}" "${failure_type}" "${reason}")")
 }
@@ -737,7 +821,7 @@ function collect_failures_for_run {
     local ledger_outcome
 
     if [[ -z ${run_conclusion} ]]; then
-        run_conclusion="$(gh run view "${run_id}" --json conclusion --jq -r '.conclusion // empty' 2> /dev/null || true)"
+        run_conclusion="$(gh run view "${run_id}" --json conclusion --jq '.conclusion // empty' 2> /dev/null || true)"
     fi
 
     if should_skip_processed_run "${run_id}"; then
@@ -773,6 +857,9 @@ function collect_failures_for_run {
         job_name="$(jq -r '.name' <<< "${job_line}")"
         log_excerpt="$(fetch_log_excerpt "${run_id}" "${job_name}")"
         failure_type="$(classify_failure_type "${log_excerpt}")"
+        preview="$(sanitize_log_excerpt "$(printf '%.120s' "${log_excerpt}" | tr -d '\n\r')")"
+        log_ci_sweeper_notice "classify" "run:${run_id}" \
+            "job=${job_name} failure_type=${failure_type} excerpt_bytes=${#log_excerpt} preview=${preview}"
         append_failure "${workflow_name}" "${run_id}" "${head_sha}" "${head_branch}" "${run_url}" \
             "${job_name}" "${failure_type}" "${log_excerpt}"
     done < <(fetch_failed_jobs "${run_id}")
@@ -800,22 +887,39 @@ function collect_from_workflow_run_event {
     local head_sha="${CI_SWEEPER_HEAD_SHA:-}"
     local head_branch="${CI_SWEEPER_HEAD_BRANCH:-}"
     local run_url="${CI_SWEEPER_RUN_URL:-}"
-    local scan_branch actual_head_branch
+    local scan_branch actual_head_branch resolved_head_branch event_head_branch
 
     if [[ -z ${run_id} ]]; then
         return 1
     fi
 
     scan_branch="$(scan_branch_name)"
+    event_head_branch="${CI_SWEEPER_EVENT_HEAD_BRANCH:-}"
     actual_head_branch="$(run_head_branch_for_run "${run_id}")"
-    if [[ -n ${actual_head_branch} && ${actual_head_branch} != "${scan_branch}" ]]; then
-        append_ignored "${workflow_name}" "${run_id}" "${actual_head_branch}" "-" "-" \
+    # EVENT_HEAD_BRANCH is set by the caller from workflow_run and must not be
+    # overwritten per scan context (loop-detect rewrites CI_SWEEPER_HEAD_BRANCH).
+    resolved_head_branch="${actual_head_branch:-${event_head_branch}}"
+    log_ci_sweeper_notice "workflow-run" "run:${run_id}" \
+        "workflow=${workflow_name} scan=${scan_branch} api_head=${actual_head_branch:-empty} event_head=${event_head_branch:-empty} resolved=${resolved_head_branch:-empty} head_sha=${head_sha}"
+    if [[ -z ${resolved_head_branch} ]]; then
+        log_ci_sweeper_warning "workflow-run" "run:${run_id}" \
+            "IGNORE head branch unknown (api and CI_SWEEPER_EVENT_HEAD_BRANCH empty); refusing to attach failure"
+        append_ignored "${workflow_name}" "${run_id}" "${scan_branch}" "-" "-" \
+            "head branch unknown"
+        return 0
+    fi
+    if [[ ${resolved_head_branch} != "${scan_branch}" ]]; then
+        log_ci_sweeper_notice "workflow-run" "run:${run_id}" \
+            "IGNORE branch mismatch (scan=${scan_branch} != resolved=${resolved_head_branch}); not attaching this failure to scan context"
+        append_ignored "${workflow_name}" "${run_id}" "${resolved_head_branch}" "-" "-" \
             "branch mismatch (scan=${scan_branch})"
         return 0
     fi
 
+    log_ci_sweeper_notice "workflow-run" "run:${run_id}" \
+        "ACCEPT attaching failure to scan=${scan_branch}"
     collect_failures_for_run "${workflow_name}" "${run_id}" "${head_sha}" \
-        "${actual_head_branch:-${head_branch}}" "${run_url}"
+        "${resolved_head_branch}" "${run_url}"
 }
 
 #######################################
@@ -977,10 +1081,14 @@ function main {
     export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
 
     if collect_from_workflow_run_event; then
-        :
+        log_ci_sweeper_notice "main" "path" "workflow_run event path (CI_SWEEPER_WORKFLOW_RUN_ID set)"
     else
+        log_ci_sweeper_notice "main" "path" "recent failures scan path (no workflow_run id)"
         collect_recent_failures
     fi
+
+    log_ci_sweeper_notice "main" "result" \
+        "failures=${#FAILURES_JSON[@]} ignored=${#IGNORED_JSON[@]} skip=$([ ${#FAILURES_JSON[@]} -eq 0 ] && echo true || echo false)"
 
     output_json
 }
