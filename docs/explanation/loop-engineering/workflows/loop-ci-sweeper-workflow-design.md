@@ -60,9 +60,9 @@ See [CI failure repair — layered responsibilities](../loop-engineering-design.
 
 Two independent watch paths. Both use **`open_pr`** finalize; **`level`** selects human review (L2) vs GitHub auto-merge on the bot fix PR (L3).
 
-| Context        | Trigger example                         | Bot fix PR target (`to.branch`) |
-| -------------- | --------------------------------------- | ------------------------------- |
-| `integration`  | CI fails on `main` after direct push    | `main`                          |
+| Context        | Trigger example                          | Bot fix PR target (`to.branch`) |
+| -------------- | ---------------------------------------- | ------------------------------- |
+| `integration`  | CI fails on `main` after direct push     | `main`                          |
 | `pull_request` | CI fails on PR head `hotfix/0001 → main` | `hotfix/0001` (PR head)         |
 
 ### End-to-end flows
@@ -107,7 +107,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 
 ```yaml
 level: L2
-pr_enabled: true   # target name; wire name today: pull_requests
+pr_enabled: true # target name; wire name today: pull_requests
 pr_exclude: fork,draft,label:no-loop
 ```
 
@@ -239,10 +239,10 @@ CI sweeper criteria require the fix to address the **logged failure** (semantic 
 
 Platform rule for dogfood loops (changelog, docs-triage, ci-sweeper): **`target.finalize` is always `open_pr`**. **`level`** controls review vs auto-merge on the **bot fix PR**.
 
-| Mode           | L2                                              | L3                                                        |
-| -------------- | ----------------------------------------------- | --------------------------------------------------------- |
-| `integration`  | Bot fix PR → `to.branch`; human merge           | Bot fix PR → `to.branch`; **GitHub auto-merge**           |
-| `pull_request` | Bot fix PR → PR head; comment on human PR       | Bot fix PR → PR head; **auto-merge**; comment on human PR |
+| Mode           | L2                                        | L3                                                        |
+| -------------- | ----------------------------------------- | --------------------------------------------------------- |
+| `integration`  | Bot fix PR → `to.branch`; human merge     | Bot fix PR → `to.branch`; **GitHub auto-merge**           |
+| `pull_request` | Bot fix PR → PR head; comment on human PR | Bot fix PR → PR head; **auto-merge**; comment on human PR |
 
 Reference: [Finalize strategy matrix](../loop-engineering-design.md#finalize-strategy-matrix).
 

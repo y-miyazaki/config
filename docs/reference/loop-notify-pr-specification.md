@@ -31,10 +31,10 @@ When CI fails on a **human open PR**, the loop opens a separate **bot fix PR** t
 
 ## Repository Prerequisites
 
-| Prerequisite                           | Owner           | Failure mode                         |
-| -------------------------------------- | --------------- | ------------------------------------ |
+| Prerequisite                            | Owner           | Failure mode                         |
+| --------------------------------------- | --------------- | ------------------------------------ |
 | `pr_enabled: true` on ci-sweeper caller | Loop maintainer | PR-head targets not enumerated       |
-| `pull-requests: write` on finalize job | Caller workflow | `loop-notify-pr` cannot post comment |
+| `pull-requests: write` on finalize job  | Caller workflow | `loop-notify-pr` cannot post comment |
 
 ## PR watch filters (`pr_exclude`)
 
@@ -61,7 +61,7 @@ Bots excluded unless `pr_include_bots` lists them. No `pr_require` gate.
 | Condition                                                                  | Notify             |
 | -------------------------------------------------------------------------- | ------------------ |
 | `target_json.mode == pull_request`                                         | Yes                |
-| `target_json.to.pr_number` present (human PR)                                | Yes                |
+| `target_json.to.pr_number` present (human PR)                              | Yes                |
 | `target_json.mode == integration`                                          | No                 |
 | Finalize attempted (success, `rejected`, `watch`, `error` with PR context) | Yes — all outcomes |
 | Detect `should_run == false`                                               | No                 |
@@ -86,7 +86,7 @@ Invocation: **sibling step** in `ci-loop-agent.yaml` immediately after `loop-fin
 | Failing job     | detect `failures[].job_name` when present                                             |
 | Loop run URL    | `${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}` |
 | Attempt         | `attempts` / `agent_loop_max_attempts`                                                |
-| Level           | L2 vs L3 (merge guidance vs auto-merge note)                                           |
+| Level           | L2 vs L3 (merge guidance vs auto-merge note)                                          |
 
 ### Layer 2 — Mechanical fix context (required when `has_changes == true`)
 
@@ -113,13 +113,13 @@ Marker: `<!-- loop-notify-pr:v1:{loop_name} -->`
 
 ## Loop notification: {loop_name}
 
-| Field        | Value                                  |
-| ------------ | -------------------------------------- |
-| Outcome      | `{outcome}`                            |
-| Bot fix PR   | [#{fix_pr}]({fix_pr_url}) or —         |
-| Branch       | `{to.branch}`                          |
-| Failed run   | [{workflow_name} #{run_id}]({run_url}) |
-| Loop run     | [actions run]({loop_run_url})          |
+| Field      | Value                                  |
+| ---------- | -------------------------------------- |
+| Outcome    | `{outcome}`                            |
+| Bot fix PR | [#{fix_pr}]({fix_pr_url}) or —         |
+| Branch     | `{to.branch}`                          |
+| Failed run | [{workflow_name} #{run_id}]({run_url}) |
+| Loop run   | [actions run]({loop_run_url})          |
 
 ### Fix context
 
@@ -148,21 +148,21 @@ Inputs/outputs unchanged from P1 except:
 
 ## Implementation Phases
 
-| Phase  | Deliverable                                                                                          |
-| ------ | ---------------------------------------------------------------------------------------------------- |
-| **P0** | Spec + design docs (this document)                                                                   |
-| **P1** | `loop-notify-pr`, `notify_context_json`, `pr_exclude` filters                                        |
-| **P2** | Dogfood ci-sweeper: `open_pr` to PR head + notify with fix PR link; remove `pr_require`              |
-| **P3** | Optional `agent_summary` appendix in `loop-ci-sweeper` skill reference                               |
+| Phase  | Deliverable                                                                             |
+| ------ | --------------------------------------------------------------------------------------- |
+| **P0** | Spec + design docs (this document)                                                      |
+| **P1** | `loop-notify-pr`, `notify_context_json`, `pr_exclude` filters                           |
+| **P2** | Dogfood ci-sweeper: `open_pr` to PR head + notify with fix PR link; remove `pr_require` |
+| **P3** | Optional `agent_summary` appendix in `loop-ci-sweeper` skill reference                  |
 
 ## Resolved decisions
 
-| Topic              | Decision                                              |
-| ------------------ | ----------------------------------------------------- |
-| Opt-in             | `pr_exclude` deny list only; no label opt-in           |
-| Human PR automerge | Never — L3 auto-merge applies to **bot fix PR** only  |
-| Delivery           | `open_pr` to PR head branch; not direct `push_head`   |
-| Marker scope       | `<!-- loop-notify-pr:v1:{loop_name} -->`              |
+| Topic              | Decision                                             |
+| ------------------ | ---------------------------------------------------- |
+| Opt-in             | `pr_exclude` deny list only; no label opt-in         |
+| Human PR automerge | Never — L3 auto-merge applies to **bot fix PR** only |
+| Delivery           | `open_pr` to PR head branch; not direct `push_head`  |
+| Marker scope       | `<!-- loop-notify-pr:v1:{loop_name} -->`             |
 
 ## References
 

@@ -60,7 +60,7 @@ Prefer:
 
 - Generic path patterns and naming rules.
 - "Match sibling files in the same directory" for comment style, separators, and layout.
-- Cross-links between package instruction files (for example stem `shell-script` ↔ stem `bats`) instead of duplicating rules. In **agent-facing** text, prefer stem-based wording (`companion Bats rules (stem \`bats\`)`) because APM renames files per target (Cursor:/rules/bats.mdc`, Claude:`cad/ue/ats.md`; package source stays`btsintrcton.m`)
+- Cross-links between package instruction files (for example stem `shell-script` ↔ stem `bats`) instead of duplicating rules. In **agent-facing** text, prefer stem-based wording such as companion Bats rules (stem `bats`) because APM renames files per target (Cursor: `.cursor/rules/bats.mdc`, Claude: `.claude/rules/bats.md`; package source stays `bats.instructions.md`).
 - External, stable references when citing industry practice (for example [Google eng-practices](https://google.github.io/eng-practices/review/developer/small-cls.html#test_code), [bats-core docs](https://bats-core.readthedocs.io/en/stable/writing-tests.html)).
 
 ### Pair Production Code With Tests

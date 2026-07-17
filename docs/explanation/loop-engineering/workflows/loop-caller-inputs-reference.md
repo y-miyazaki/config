@@ -54,11 +54,11 @@ jobs:
 
 Branch-related caller inputs fall into **three roles**. Mixing them up is the most common configuration mistake.
 
-| Role             | Question it answers                                       | `ci-loop-caller` inputs                          | Dogfood (typical)                            |
-| ---------------- | --------------------------------------------------------- | ------------------------------------------------ | -------------------------------------------- |
-| **Watch**        | Which branches / PR heads does detect scan?               | `branch_match`, `branch_match_mode`, `pr_enabled` | `main`, `glob`, `false` (ci-sweeper: `true`) |
-| **State**        | Where do `.loop/*` commits (state, budget, run-log) land? | `branch_state`, `state_file`                     | `main`, (default path)                       |
-| **Autonomy**     | Human review vs GitHub auto-merge on the **bot fix PR**   | `level`                                          | `L2`                                         |
+| Role         | Question it answers                                       | `ci-loop-caller` inputs                           | Dogfood (typical)                            |
+| ------------ | --------------------------------------------------------- | ------------------------------------------------- | -------------------------------------------- |
+| **Watch**    | Which branches / PR heads does detect scan?               | `branch_match`, `branch_match_mode`, `pr_enabled` | `main`, `glob`, `false` (ci-sweeper: `true`) |
+| **State**    | Where do `.loop/*` commits (state, budget, run-log) land? | `branch_state`, `state_file`                      | `main`, (default path)                       |
+| **Autonomy** | Human review vs GitHub auto-merge on the **bot fix PR**   | `level`                                           | `L2`                                         |
 
 Platform semantics (target model, verifier baseline): [Multi-Branch Loops Design](../multi-branch-loops-design.md#branch-roles-and-fix-direction).
 
@@ -91,10 +91,10 @@ Dogfood sets `branch_match: main` and `branch_state: main`. That matches the usu
 
 Dogfood loops (changelog, docs-triage, ci-sweeper) use **`open_pr` for all modes**. Callers set **`level` only** — not `finalize_integration` / `finalize_pull_request`.
 
-| Mode           | `target.finalize` (platform default) | L2                                     | L3                                      |
-| -------------- | ------------------------------------ | -------------------------------------- | --------------------------------------- |
-| `integration`  | `open_pr`                            | Bot fix PR → `to.branch`; human merge  | Bot fix PR → `to.branch`; **auto-merge** |
-| `pull_request` | `open_pr`                            | Bot fix PR → PR head; notify human PR  | Bot fix PR → PR head; **auto-merge**; notify human PR |
+| Mode           | `target.finalize` (platform default) | L2                                    | L3                                                    |
+| -------------- | ------------------------------------ | ------------------------------------- | ----------------------------------------------------- |
+| `integration`  | `open_pr`                            | Bot fix PR → `to.branch`; human merge | Bot fix PR → `to.branch`; **auto-merge**              |
+| `pull_request` | `open_pr`                            | Bot fix PR → PR head; notify human PR | Bot fix PR → PR head; **auto-merge**; notify human PR |
 
 L3 **auto-merge** is [GitHub PR auto-merge](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/automatically-merging-a-pull-request) on the **bot fix PR** — not direct push to the branch. The human's open PR is not auto-merged.
 
@@ -167,30 +167,30 @@ Optional platform overrides (dogfood omit): `finalize_integration`, `finalize_pu
 
 Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
 
-| Input                       | Type    | Description                                                                                                                                                                       | Default (dogfood)                              |
-| --------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| `allowlist`                 | string  | Comma-separated globs the implementer may modify                                                                                                                                  | Per loop                                       |
-| `branch_match`              | string  | Comma-separated branch patterns to watch                                                                                                                                          | `main`                                         |
-| `branch_match_mode`         | string  | How to interpret `branch_match`: `list`, `glob`, or `regex`                                                                                                                       | `glob`                                         |
-| `branch_state`              | string  | Branch for `.loop/*` persistence, state migration, and watch fallback                                                                                                             | `main`                                         |
-| `budget_max_runs_per_day`   | number  | Daily run cap keyed by `loop_name` (each matrix cell counts)                                                                                                                      | `1`–`5`                                        |
-| `budget_max_tokens_per_day` | number  | Daily aggregated token cap                                                                                                                                                        | `500000`–`1000000`                             |
-| `denylist`                  | string  | Comma-separated globs the implementer must not touch                                                                                                                              | ci-sweeper only                                |
-| `detect_script`             | string  | Path to domain `detect_*.sh` under loop skill package                                                                                                                             | Per loop                                       |
-| `finalize_integration`      | string  | **Optional override.** Default `open_pr`. Exception: `push` (direct write; not dogfood).                          | Omit (platform default)                        |
-| `finalize_pull_request`     | string  | **Optional override.** Default `open_pr`. Exception: `push_head` (not dogfood).                                   | Omit (platform default)                        |
-| `infer_files_pattern`       | string  | Extended regex to infer file paths from verifier text                                                                                                                             | Per loop                                       |
-| `loop_name`                 | string  | Loop identifier: `.loop/state-<loop_name>.json`, budget key, run-log tag. Align caller filename: `on-loop-<loop_name>.yaml`                                                       | Per loop                                       |
-| `max_targets_per_schedule`  | number  | Max targets per cron tick after priority/`acting_on` filters                                                                                                                      | `3`                                            |
-| `no_changes_verdict`        | string  | `APPROVE` \| `REJECT` when implementer produces no file diff                                                                                                                      | `REJECT`                                       |
-| `pr_body`                   | string  | Static markdown prefix for finalize PR body                                                                                                                                       | Per loop                                       |
-| `pr_exclude`                | string  | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`                                                                                                                 | ci-sweeper                                     |
-| `pr_include_bots`           | string  | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots                                                                                                 | `""`                                           |
-| `pr_title`                  | string  | PR title when finalize strategy is `open_pr`                                                                                                                                      | Per loop                                       |
-| `prompt_instructions`       | string  | Domain-specific implementer instructions for `loop-prompt-generate`                                                                                                               | Per loop                                       |
-| `pr_enabled`                | boolean | Watch open PR heads for detect. **Wire name today:** `pull_requests`                                                                                                            | `false` except ci-sweeper                      |
-| `state_bundle_with_fix_pr`  | boolean | Commit loop state on the fix branch before `open_pr` (single reviewable PR)                                                                                                       | `false` (changelog uses merge-gated `pending`) |
-| `state_file`                | string  | Override state JSON path                                                                                                                                                          | `.loop/state-<loop_name>.json`                 |
+| Input                       | Type    | Description                                                                                                                 | Default (dogfood)                              |
+| --------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `allowlist`                 | string  | Comma-separated globs the implementer may modify                                                                            | Per loop                                       |
+| `branch_match`              | string  | Comma-separated branch patterns to watch                                                                                    | `main`                                         |
+| `branch_match_mode`         | string  | How to interpret `branch_match`: `list`, `glob`, or `regex`                                                                 | `glob`                                         |
+| `branch_state`              | string  | Branch for `.loop/*` persistence, state migration, and watch fallback                                                       | `main`                                         |
+| `budget_max_runs_per_day`   | number  | Daily run cap keyed by `loop_name` (each matrix cell counts)                                                                | `1`–`5`                                        |
+| `budget_max_tokens_per_day` | number  | Daily aggregated token cap                                                                                                  | `500000`–`1000000`                             |
+| `denylist`                  | string  | Comma-separated globs the implementer must not touch                                                                        | ci-sweeper only                                |
+| `detect_script`             | string  | Path to domain `detect_*.sh` under loop skill package                                                                       | Per loop                                       |
+| `finalize_integration`      | string  | **Optional override.** Default `open_pr`. Exception: `push` (direct write; not dogfood).                                    | Omit (platform default)                        |
+| `finalize_pull_request`     | string  | **Optional override.** Default `open_pr`. Exception: `push_head` (not dogfood).                                             | Omit (platform default)                        |
+| `infer_files_pattern`       | string  | Extended regex to infer file paths from verifier text                                                                       | Per loop                                       |
+| `loop_name`                 | string  | Loop identifier: `.loop/state-<loop_name>.json`, budget key, run-log tag. Align caller filename: `on-loop-<loop_name>.yaml` | Per loop                                       |
+| `max_targets_per_schedule`  | number  | Max targets per cron tick after priority/`acting_on` filters                                                                | `3`                                            |
+| `no_changes_verdict`        | string  | `APPROVE` \| `REJECT` when implementer produces no file diff                                                                | `REJECT`                                       |
+| `pr_body`                   | string  | Static markdown prefix for finalize PR body                                                                                 | Per loop                                       |
+| `pr_exclude`                | string  | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`                                                           | ci-sweeper                                     |
+| `pr_include_bots`           | string  | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots                                           | `""`                                           |
+| `pr_title`                  | string  | PR title when finalize strategy is `open_pr`                                                                                | Per loop                                       |
+| `prompt_instructions`       | string  | Domain-specific implementer instructions for `loop-prompt-generate`                                                         | Per loop                                       |
+| `pr_enabled`                | boolean | Watch open PR heads for detect. **Wire name today:** `pull_requests`                                                        | `false` except ci-sweeper                      |
+| `state_bundle_with_fix_pr`  | boolean | Commit loop state on the fix branch before `open_pr` (single reviewable PR)                                                 | `false` (changelog uses merge-gated `pending`) |
+| `state_file`                | string  | Override state JSON path                                                                                                    | `.loop/state-<loop_name>.json`                 |
 
 ### Optional platform inputs (supported by `loop-detect`)
 
@@ -205,40 +205,40 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 
 `ci-loop-caller` inputs map to `loop-detect` action `with:` as follows. Names without a `loop_` prefix on the caller side expand when passed to the action.
 
-| `ci-loop-caller` input        | `loop-detect` input                     |
-| ----------------------------- | --------------------------------------- |
-| `agent_implementer_max_turns` | `agent_implementer_max_turns`           |
-| `agent_implementer_model`     | `agent_implementer_model`               |
-| `agent_loop_max_attempts`     | `agent_loop_max_attempts`               |
-| `agent_verifier_criteria`     | `agent_verifier_criteria`               |
-| `agent_verifier_max_turns`    | `agent_verifier_max_turns`              |
-| `agent_verifier_model`        | `agent_verifier_model`                  |
-| `allowlist`                   | `allowlist`                             |
-| `branch_match`                | `loop_integration_branches`             |
-| `branch_match_mode`           | `loop_branch_match`                     |
-| `branch_state`                | `base_branch`, `loop_state_push_branch` |
-| `budget_file`                 | `budget_file`                           |
-| `budget_max_runs_per_day`     | `budget_max_runs_per_day`               |
-| `budget_max_tokens_per_day`   | `budget_max_tokens_per_day`             |
-| `detect_script`               | `detect_script`                         |
-| `engine`                      | `engine`                                |
-| `finalize_integration`        | `loop_finalize_integration`             |
-| `finalize_pull_request`       | `loop_finalize_pull_request`            |
-| `infer_files_pattern`         | `infer_files_pattern`                   |
-| `level`                       | `level`                                 |
-| `loop_name`                   | `loop_name`                             |
-| `max_targets_per_schedule`    | `loop_max_targets_per_schedule`         |
-| `no_changes_verdict`          | `no_changes_verdict`                    |
-| `pr_body`                     | `pr_body`                               |
-| `pr_exclude`                  | `loop_pr_exclude`                       |
-| `pr_include_bots`             | `loop_pr_include_bots`                  |
-| `priority`                    | `loop_priority`                         |
-| `prompt_instructions`         | `prompt_instructions`                   |
+| `ci-loop-caller` input         | `loop-detect` input                     |
+| ------------------------------ | --------------------------------------- |
+| `agent_implementer_max_turns`  | `agent_implementer_max_turns`           |
+| `agent_implementer_model`      | `agent_implementer_model`               |
+| `agent_loop_max_attempts`      | `agent_loop_max_attempts`               |
+| `agent_verifier_criteria`      | `agent_verifier_criteria`               |
+| `agent_verifier_max_turns`     | `agent_verifier_max_turns`              |
+| `agent_verifier_model`         | `agent_verifier_model`                  |
+| `allowlist`                    | `allowlist`                             |
+| `branch_match`                 | `loop_integration_branches`             |
+| `branch_match_mode`            | `loop_branch_match`                     |
+| `branch_state`                 | `base_branch`, `loop_state_push_branch` |
+| `budget_file`                  | `budget_file`                           |
+| `budget_max_runs_per_day`      | `budget_max_runs_per_day`               |
+| `budget_max_tokens_per_day`    | `budget_max_tokens_per_day`             |
+| `detect_script`                | `detect_script`                         |
+| `engine`                       | `engine`                                |
+| `finalize_integration`         | `loop_finalize_integration`             |
+| `finalize_pull_request`        | `loop_finalize_pull_request`            |
+| `infer_files_pattern`          | `infer_files_pattern`                   |
+| `level`                        | `level`                                 |
+| `loop_name`                    | `loop_name`                             |
+| `max_targets_per_schedule`     | `loop_max_targets_per_schedule`         |
+| `no_changes_verdict`           | `no_changes_verdict`                    |
+| `pr_body`                      | `pr_body`                               |
+| `pr_exclude`                   | `loop_pr_exclude`                       |
+| `pr_include_bots`              | `loop_pr_include_bots`                  |
+| `priority`                     | `loop_priority`                         |
+| `prompt_instructions`          | `prompt_instructions`                   |
 | `pr_enabled` / `pull_requests` | `loop_pull_requests`                    |
-| `run_log_file`                | `run_log_file`                          |
-| `skill_name`                  | `skill_name`                            |
-| `state_file`                  | `state_file`                            |
-| `token`                       | `token`                                 |
+| `run_log_file`                 | `run_log_file`                          |
+| `skill_name`                   | `skill_name`                            |
+| `state_file`                   | `state_file`                            |
+| `token`                        | `token`                                 |
 
 Domain-specific detect script variables use `detect_domain_env_json` keys (not `loop-detect` inputs).
 
@@ -312,26 +312,26 @@ detect_domain_env_json: ${{ format('{{"CI_SWEEPER_HEAD_SHA":"{0}","CI_SWEEPER_WO
 
 ## Legacy `env` name mapping
 
-| Legacy caller `env`                                           | `ci-loop-caller` input                                   |
-| ------------------------------------------------------------- | -------------------------------------------------------- |
-| `AGENT_*`, `DEFAULT_ENGINE`, `DEFAULT_LEVEL`, `SKILL_NAME`    | Same name (lowercase `engine`, `level` for engine/level) |
-| `DEFAULT_BASE_BRANCH`, `LOOP_STATE_PUSH_BRANCH`               | `branch_state`                                           |
-| `LOOP_ALLOWLIST`                                              | `allowlist`                                              |
-| `LOOP_BUDGET_MAX_RUNS_PER_DAY`                                | `budget_max_runs_per_day`                                |
-| `LOOP_BUDGET_MAX_TOKENS_PER_DAY`                              | `budget_max_tokens_per_day`                              |
-| `LOOP_DENYLIST`                                               | `denylist`                                               |
-| `LOOP_DETECT_SCRIPT`                                          | `detect_script`                                          |
-| `LOOP_FINALIZE_INTEGRATION`                                   | `finalize_integration`                                   |
-| `LOOP_FINALIZE_PULL_REQUEST`                                  | `finalize_pull_request`                                  |
-| `LOOP_INFER_FILES_PATTERN`                                    | `infer_files_pattern`                                    |
-| `LOOP_INTEGRATION_BRANCHES`                                   | `branch_match`                                           |
-| `LOOP_BRANCH_MATCH`                                           | `branch_match_mode`                                      |
-| `LOOP_MAX_TARGETS_PER_SCHEDULE`                               | `max_targets_per_schedule`                               |
-| `LOOP_NAME`                                                   | `loop_name`                                              |
-| `LOOP_NO_CHANGES_VERDICT`                                     | `no_changes_verdict`                                     |
+| Legacy caller `env`                                           | `ci-loop-caller` input                                        |
+| ------------------------------------------------------------- | ------------------------------------------------------------- |
+| `AGENT_*`, `DEFAULT_ENGINE`, `DEFAULT_LEVEL`, `SKILL_NAME`    | Same name (lowercase `engine`, `level` for engine/level)      |
+| `DEFAULT_BASE_BRANCH`, `LOOP_STATE_PUSH_BRANCH`               | `branch_state`                                                |
+| `LOOP_ALLOWLIST`                                              | `allowlist`                                                   |
+| `LOOP_BUDGET_MAX_RUNS_PER_DAY`                                | `budget_max_runs_per_day`                                     |
+| `LOOP_BUDGET_MAX_TOKENS_PER_DAY`                              | `budget_max_tokens_per_day`                                   |
+| `LOOP_DENYLIST`                                               | `denylist`                                                    |
+| `LOOP_DETECT_SCRIPT`                                          | `detect_script`                                               |
+| `LOOP_FINALIZE_INTEGRATION`                                   | `finalize_integration`                                        |
+| `LOOP_FINALIZE_PULL_REQUEST`                                  | `finalize_pull_request`                                       |
+| `LOOP_INFER_FILES_PATTERN`                                    | `infer_files_pattern`                                         |
+| `LOOP_INTEGRATION_BRANCHES`                                   | `branch_match`                                                |
+| `LOOP_BRANCH_MATCH`                                           | `branch_match_mode`                                           |
+| `LOOP_MAX_TARGETS_PER_SCHEDULE`                               | `max_targets_per_schedule`                                    |
+| `LOOP_NAME`                                                   | `loop_name`                                                   |
+| `LOOP_NO_CHANGES_VERDICT`                                     | `no_changes_verdict`                                          |
 | `LOOP_PR_*`, `LOOP_PROMPT_INSTRUCTIONS`, `LOOP_PULL_REQUESTS` | `pr_*`, `prompt_instructions`, `pr_enabled` / `pull_requests` |
-| `CHANGELOG_*`, `CI_SWEEPER_*`, `DOCS_TRIAGE_*`                | `detect_domain_env_json` keys                            |
-| `DOMAIN_PERSISTENCE_SCRIPT`                                   | `domain_persistence_script`                              |
+| `CHANGELOG_*`, `CI_SWEEPER_*`, `DOCS_TRIAGE_*`                | `detect_domain_env_json` keys                                 |
+| `DOMAIN_PERSISTENCE_SCRIPT`                                   | `domain_persistence_script`                                   |
 
 ## Per-loop design docs
 
@@ -347,4 +347,3 @@ detect_domain_env_json: ${{ format('{{"CI_SWEEPER_HEAD_SHA":"{0}","CI_SWEEPER_WO
 - [Loop Caller `env` Reference](loop-caller-env-reference.md) (legacy)
 - [Loop Caller Workflows Design](../loop-caller-workflows-design.md)
 - [Specification](../../../reference/specification.md)
-

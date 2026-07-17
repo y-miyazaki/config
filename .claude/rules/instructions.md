@@ -12,7 +12,7 @@ paths:
 
 - Scope covers creating and updating instruction/rule files: package sources (`**/instructions/*.instructions.md`) and distributed targets (`.cursor/rules/*.mdc`, `.kiro/steering/*.md`, `.claude/rules/*.md`).
 - G-03 (MUST): Keep `applyTo` globs precise to those rule paths — do not use broad trees such as `.claude/**/*.md` that also match skills and unrelated markdown.
-- G-04 (MUST): In agent-facing cross-links, use stem-based wording (`companion X rules (stem \`x\`)`) — never bare `*.instructions.md` filenames that disappear after `apm install`.
+- G-04 (MUST): In agent-facing cross-links, use stem-based wording such as companion X rules (stem `x`) — never bare `*.instructions.md` filenames that disappear after `apm install`.
 - G-05 (MUST): When a companion instruction must guide production-file edits (for example tests paired with source), include those production globs in `applyTo` so the rules inject at edit time.
 
 ## Standards
@@ -26,7 +26,7 @@ paths:
 | Claude (after `apm install`) | `.claude/rules/<stem>.md`                         | `go.md`, `bats.md`                           |
 | Kiro (after `apm install`)   | `.kiro/steering/<stem>.md`                        | `go.md`                                      |
 | Title                        | `# AI Assistant Instructions for <target>`        | `# AI Assistant Instructions for Go`         |
-| Agent-facing cross-link      | Companion wording with stem — not source filename | `companion Bats rules (stem \`bats\`)`       |
+| Agent-facing cross-link      | Companion wording with stem — not source filename | companion Bats rules (stem `bats`)           |
 
 ### Standards Content
 
@@ -54,6 +54,7 @@ paths:
 ## Guidelines
 
 ### General (G)
+
 - G-01 (MUST): Front Matter
   - Check: Front Matter contains applyTo and description fields
 - G-02 (MUST): Title
@@ -61,11 +62,12 @@ paths:
 - G-03 (MUST): applyTo Target Precision
   - Check: Do `applyTo` globs match only intended instruction/rule paths after distribution (for example `.claude/rules/*.md`, not `.claude/**/*.md`)?
 - G-04 (MUST): Portable Cross-References
-  - Check: Do agent-facing cross-links use stem-based wording (`companion X rules (stem \`x\`)`) instead of bare `*.instructions.md` filenames?
+  - Check: Do agent-facing cross-links use stem-based wording such as companion X rules (stem `x`) instead of bare `*.instructions.md` filenames?
 - G-05 (MUST): Companion applyTo Coverage
   - Check: When a companion instruction must guide production-file edits (for example tests paired with source), does `applyTo` include those production globs?
 
 ### Structure (STRUCT)
+
 - STRUCT-01 (MUST): Five Required Chapters Exist
   - Check: Scope, Standards, Guidelines, Testing and Validation, and Security Guidelines chapters exist
 - STRUCT-02 (MUST): Chapter Order Unified
@@ -84,6 +86,7 @@ paths:
   - Check: When Guidelines are large, are critical MUST obligations (for example test pairing) reinforced with a short Scope bullet?
 
 ### Guidelines Chapter (GUIDE)
+
 - GUIDE-01 (SHOULD): Code Modification Guidelines
   - Check: Modification procedures are clearly documented; do not embed always-run lint/validate recipes or "hooks handle it, skip lint" explanations
 - GUIDE-02 (SHOULD): Tool Usage
@@ -94,6 +97,7 @@ paths:
   - Check: Are there no ID-less bullet rules in the Guidelines chapter?
 
 ### Content Quality (QUAL)
+
 - QUAL-01 (SHOULD): Practical Examples
   - Check: Practical code examples are included
 - QUAL-02 (SHOULD): No Redundancy
@@ -102,6 +106,7 @@ paths:
   - Check: Large code examples are avoided for high token efficiency
 
 ### Consistency (CONS)
+
 - CONS-01 (SHOULD): Section Names
   - Check: Section names are consistent with other instructions files
 - CONS-02 (SHOULD): Format
@@ -110,12 +115,14 @@ paths:
   - Check: Do Standards templates, Guidelines checks, and code examples within the same file agree with each other without contradiction?
 
 ### Completeness (COMP)
+
 - COMP-01 (SHOULD): Validation Ownership Clear
   - Check: Does Testing and Validation avoid always-run lint recipes, and use at most a short on-demand skill pointer?
 - COMP-02 (SHOULD): Real Pointers
   - Check: When a skill is referenced, is the skill name concrete rather than vague "run validation"?
 
 ### Security Guidelines Chapter (SEC)
+
 - SEC-01 (MUST): Tool-Undetectable Risks Documented
   - Check: Are security practices that automated tools (gitleaks, detect-secrets) cannot detect documented (e.g., destructive command defaults, untrusted link sources)?
 - SEC-02 (MUST): Secrets Management
@@ -126,6 +133,7 @@ paths:
   - Check: YAML/code examples are included (where applicable)
 
 ### Standards Chapter (STD)
+
 - STD-01 (MUST): Naming Conventions
   - Check: Naming conventions are documented per component
 - STD-02 (SHOULD): Tool Standards
@@ -136,6 +144,7 @@ paths:
   - Check: When instructions are APM-distributed, does Naming Conventions document source stem → Cursor `.mdc` / Claude `.md` / Kiro steering mapping?
 
 ### Testing and Validation Chapter (TEST)
+
 - TEST-01 (MUST): No Always-Run Lint Mandates
   - Check: Does the chapter omit "after every change, run validate.sh / linter X" and omit "hooks/pre-commit handle X so do not run Y"?
 - TEST-02 (SHOULD): On-Demand Skill Pointer
@@ -148,7 +157,6 @@ paths:
 - Keep applyTo precise to distributed rule paths; use stem-based companion cross-links (G-03, G-04, G-05).
 - Do not embed always-run lint/validate recipes or "hooks handle it" skip explanations in always-on instructions.
 - When instruction files are updated, re-evaluate instruction quality against this file's STRUCT/TEST rules.
-
 
 ## Testing and Validation
 

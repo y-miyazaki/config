@@ -36,19 +36,19 @@ Defined here only. Other docs link to this section.
 
 `ci-loop-caller` workflow inputs map to these `loop-detect` environment variables — see [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md#branch-configuration).
 
-| Variable                        | `ci-loop-caller` input     | Description                                                                                                                                                                                  | Default / empty            |
-| ------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `LOOP_INTEGRATION_BRANCHES`     | `branch_match`             | Comma-separated branch patterns. Empty = watch `branch_state` only.                                                                                                                          | `""`                       |
-| `LOOP_PULL_REQUESTS`            | `pr_enabled` / `pull_requests` | `true` / `false`. Watch open PR heads.                                                                                       | `false`                    |
-| `LOOP_BRANCH_MATCH`             | `branch_match_mode`        | `list` \| `glob` \| `regex`.                                                                                                                                                                 | `glob`                     |
-| `LOOP_PRIORITY`                 | `priority`                 | Cron mode order. Overridden by [trigger-aware priority](#trigger-aware-priority).                                                                                                            | `integration,pull_request` |
-| `LOOP_FINALIZE_INTEGRATION`     | `finalize_integration`     | Optional override. Default **`open_pr`**. Exception: `push` (not dogfood).                                                                                                                   | `open_pr` (internal)       |
-| `LOOP_FINALIZE_PULL_REQUEST`    | `finalize_pull_request`    | Optional override. Default **`open_pr`**. Exception: `push_head` (not dogfood).                                                                                                              | `open_pr` (internal)       |
-| `DEFAULT_LEVEL`                 | `level`                    | `L1` \| `L2` \| `L3`. L3 + `open_pr` → GitHub auto-merge on bot fix PR. [Single level switch](#single-level-switch).                                                                       | `L2`                       |
-| `LOOP_PR_EXCLUDE`               | `pr_exclude`               | PR exclusion tokens — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md#pr-exclusion-pr_exclude).                                                                        | `fork,draft,label:no-loop` |
-| `LOOP_PR_INCLUDE_BOTS`          | `pr_include_bots`          | Bot logins to include. Empty = all bots excluded.                                                                                                                                            | `""`                       |
-| `LOOP_MAX_TARGETS_PER_SCHEDULE` | `max_targets_per_schedule` | Max targets per cron tick (fan-out cap).                                                                                                                                                     | `3`                        |
-| `LOOP_STATE_PUSH_BRANCH`        | `branch_state`             | Branch for `.loop/*` persistence commits and state migration fallback.                                                                                                                       | repository default branch  |
+| Variable                        | `ci-loop-caller` input         | Description                                                                                                            | Default / empty            |
+| ------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `LOOP_INTEGRATION_BRANCHES`     | `branch_match`                 | Comma-separated branch patterns. Empty = watch `branch_state` only.                                                    | `""`                       |
+| `LOOP_PULL_REQUESTS`            | `pr_enabled` / `pull_requests` | `true` / `false`. Watch open PR heads.                                                                                 | `false`                    |
+| `LOOP_BRANCH_MATCH`             | `branch_match_mode`            | `list` \| `glob` \| `regex`.                                                                                           | `glob`                     |
+| `LOOP_PRIORITY`                 | `priority`                     | Cron mode order. Overridden by [trigger-aware priority](#trigger-aware-priority).                                      | `integration,pull_request` |
+| `LOOP_FINALIZE_INTEGRATION`     | `finalize_integration`         | Optional override. Default **`open_pr`**. Exception: `push` (not dogfood).                                             | `open_pr` (internal)       |
+| `LOOP_FINALIZE_PULL_REQUEST`    | `finalize_pull_request`        | Optional override. Default **`open_pr`**. Exception: `push_head` (not dogfood).                                        | `open_pr` (internal)       |
+| `DEFAULT_LEVEL`                 | `level`                        | `L1` \| `L2` \| `L3`. L3 + `open_pr` → GitHub auto-merge on bot fix PR. [Single level switch](#single-level-switch).   | `L2`                       |
+| `LOOP_PR_EXCLUDE`               | `pr_exclude`                   | PR exclusion tokens — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md#pr-exclusion-pr_exclude). | `fork,draft,label:no-loop` |
+| `LOOP_PR_INCLUDE_BOTS`          | `pr_include_bots`              | Bot logins to include. Empty = all bots excluded.                                                                      | `""`                       |
+| `LOOP_MAX_TARGETS_PER_SCHEDULE` | `max_targets_per_schedule`     | Max targets per cron tick (fan-out cap).                                                                               | `3`                        |
+| `LOOP_STATE_PUSH_BRANCH`        | `branch_state`                 | Branch for `.loop/*` persistence commits and state migration fallback.                                                 | repository default branch  |
 
 `.loop/*` metadata is **always centralized** on `branch_state` (typically `main`), aligned with [cobusgreyling loop-engineering](https://github.com/cobusgreyling/loop-engineering). Fix PRs may target other branches; state does not follow `target.to.branch`.
 
@@ -143,11 +143,11 @@ Detect scripts scan **only the current context** (branch/ref `loop-detect` check
 
 Three branch roles on callers — detailed tables in [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md#branch-configuration):
 
-| Role             | `ci-loop-caller` input                                   | Behavior                                                                                      |
-| ---------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| **Watch**        | `branch_match`, `branch_match_mode`, `pr_enabled`        | Detect scans matching integration branches and/or open PR heads                               |
-| **State**        | `branch_state`, `state_file`                             | `.loop/*` persistence commits land on `branch_state`; optional path override via `state_file` |
-| **Autonomy**     | `level`                                                  | L2: human merge on bot fix PR; L3: GitHub auto-merge on bot fix PR when `finalize=open_pr`    |
+| Role         | `ci-loop-caller` input                            | Behavior                                                                                      |
+| ------------ | ------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| **Watch**    | `branch_match`, `branch_match_mode`, `pr_enabled` | Detect scans matching integration branches and/or open PR heads                               |
+| **State**    | `branch_state`, `state_file`                      | `.loop/*` persistence commits land on `branch_state`; optional path override via `state_file` |
+| **Autonomy** | `level`                                           | L2: human merge on bot fix PR; L3: GitHub auto-merge on bot fix PR when `finalize=open_pr`    |
 
 ## Platform Contract: candidates and `target_json`
 
@@ -192,10 +192,10 @@ Field sets differ by loop — see each workflow design doc.
 
 Caller input on `ci-loop-caller` (see [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md)). Controls whether **per-target cursor fields** (`last_sha`, `outcome`, …) are committed on the **fix branch** before `open_pr`, or pushed to `branch_state` separately.
 
-| Mode                      | `state_bundle_with_fix_pr` | Reviewer sees                                         | When to use                                                                                                                                                             |
-| ------------------------- | -------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Bundled**               | `true`                     | One PR: domain fix + `.loop/state-<loop>.json`        | Watch branch equals fix branch **and** equals `branch_state` (typical dogfood: all `main`). Cursor advances only when the fix PR merges.                                |
-| **Centralized** (default) | `false`                    | Fix PR + optional separate state PR to `branch_state` | Multi-branch watch while `branch_state` stays `main`; PR-head fixes use bot fix PR + `loop-notify-pr` on human PR. |
+| Mode                      | `state_bundle_with_fix_pr` | Reviewer sees                                         | When to use                                                                                                                              |
+| ------------------------- | -------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Bundled**               | `true`                     | One PR: domain fix + `.loop/state-<loop>.json`        | Watch branch equals fix branch **and** equals `branch_state` (typical dogfood: all `main`). Cursor advances only when the fix PR merges. |
+| **Centralized** (default) | `false`                    | Fix PR + optional separate state PR to `branch_state` | Multi-branch watch while `branch_state` stays `main`; PR-head fixes use bot fix PR + `loop-notify-pr` on human PR.                       |
 
 **Always on `branch_state` (not bundled):** run log, budget — operational metadata, not reviewer-facing.
 
@@ -203,10 +203,10 @@ Caller input on `ci-loop-caller` (see [Loop Caller Inputs Reference](workflows/l
 
 #### Loop defaults (dogfood)
 
-| Loop               | Default           | Rationale                                                                                                                    |
-| ------------------ | ----------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `loop-changelog`   | `false` (default) | Merge-gated `pending` via `on-loop-state-promote`                                                                            |
-| `loop-docs-triage` | `false`           | Merge-gated `pending` (same as changelog; do not bundle state in fix PR)                                                     |
+| Loop               | Default           | Rationale                                                                            |
+| ------------------ | ----------------- | ------------------------------------------------------------------------------------ |
+| `loop-changelog`   | `false` (default) | Merge-gated `pending` via `on-loop-state-promote`                                    |
+| `loop-docs-triage` | `false`           | Merge-gated `pending` (same as changelog; do not bundle state in fix PR)             |
 | `loop-ci-sweeper`  | `false`           | Merge-gated `pending` for integration and PR-head bot fix PRs; run ledger for dedupe |
 
 Bundling is **per-loop opt-in**, not a global LE requirement. The historical default (centralized on `branch_state`) exists for [multi-branch watch + shared state file](#branch-roles-and-fix-direction), not because users prefer two PRs.
@@ -215,13 +215,13 @@ Bundling is **per-loop opt-in**, not a global LE requirement. The historical def
 
 **State is not a reviewer-facing deliverable.** `.loop/state-*.json` holds machine cursors (`last_sha`), outcomes, and circuit-breaker counters — analogous to a CI cache key or migration ledger, not to `CHANGELOG.md` or doc fixes. Asking humans to approve state in a PR is a category error.
 
-| Delivery                                                                                         | Verdict                                                                                                                                                       |
-| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Direct push to `branch_state`** (bot token + branch-protection bypass for `.loop/*`)           | **Target.** State updates are infrastructure writes, not review gates.                                                                                        |
-| **Merge-gated state push** (`pull_request` `closed` + `merged` → promote `pending` → `last_sha`) | **Chosen L2 model.** Fix PR is domain-only; state advances on the merge **event**, not because a human approved a state diff.                                 |
-| **State-only PR** (including auto-merge queue)                                                   | **Anti-pattern.** A fallback when push is blocked; must not be the designed happy path.                                                                       |
-| **`state_bundle_with_fix_pr`**                                                                   | **Deprecated interim.** Mixed machine state into a human PR; retire after merge-gated push.                                                                   |
-| **L3 `push` / `push_head`**                                                                      | **Platform exception.** Dogfood uses `open_pr` + GitHub auto-merge instead of direct push. |
+| Delivery                                                                                         | Verdict                                                                                                                       |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Direct push to `branch_state`** (bot token + branch-protection bypass for `.loop/*`)           | **Target.** State updates are infrastructure writes, not review gates.                                                        |
+| **Merge-gated state push** (`pull_request` `closed` + `merged` → promote `pending` → `last_sha`) | **Chosen L2 model.** Fix PR is domain-only; state advances on the merge **event**, not because a human approved a state diff. |
+| **State-only PR** (including auto-merge queue)                                                   | **Anti-pattern.** A fallback when push is blocked; must not be the designed happy path.                                       |
+| **`state_bundle_with_fix_pr`**                                                                   | **Deprecated interim.** Mixed machine state into a human PR; retire after merge-gated push.                                   |
+| **L3 `push` / `push_head`**                                                                      | **Platform exception.** Dogfood uses `open_pr` + GitHub auto-merge instead of direct push.                                    |
 
 **What matters more than PR vs push is _when_ `last_sha` advances:**
 
@@ -324,4 +324,3 @@ Shared caller configuration: [Loop Caller Inputs Reference](workflows/loop-calle
 - [Loop Engineering Design](loop-engineering-design.md)
 - [Loop Caller Workflows Design](loop-caller-workflows-design.md)
 - [cobusgreyling loop-engineering](https://github.com/cobusgreyling/loop-engineering)
-

@@ -33,17 +33,17 @@ Cron and `workflow_dispatch` runs have no `inputs` context — tunables live in 
 
 ## Agent and engine
 
-| Variable                      | Description                                                                                                                                   | Default (dogfood)                  |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| `AGENT_IMPLEMENTER_MAX_TURNS` | Max implementer agent turns **per loop attempt** (one Agent→Verify cycle).                                                                    | `5`–`8` (loop-specific)            |
-| `AGENT_IMPLEMENTER_MODEL`     | Implementer model ID (engine-specific). Cursor: run `agent --list-models`. Empty = engine default.                                            | `grok-4.5-medium`                  |
-| `AGENT_LOOP_MAX_ATTEMPTS`     | Max Agent→Verify retry cycles before finalize records failure.                                                                                | `3`                                |
-| `AGENT_VERIFIER_CRITERIA`     | Caller-owned markdown rubric (`## Criteria for APPROVE` / `REJECT`). Passed verbatim to verifier.                                             | Domain-specific (in workflow YAML) |
-| `AGENT_VERIFIER_MAX_TURNS`    | Max verifier agent turns per verification.                                                                                                    | `3`                                |
-| `AGENT_VERIFIER_MODEL`        | Verifier model ID. Cursor: run `agent --list-models`.                                                                                         | `composer-2.5`                     |
-| `DEFAULT_ENGINE`              | AI engine: `claude` \| `copilot` \| `codex` \| `cursor`. Selects CLI and `AGENT_TOKEN` mapping.                                               | `cursor`                           |
+| Variable                      | Description                                                                                                                                | Default (dogfood)                  |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- |
+| `AGENT_IMPLEMENTER_MAX_TURNS` | Max implementer agent turns **per loop attempt** (one Agent→Verify cycle).                                                                 | `5`–`8` (loop-specific)            |
+| `AGENT_IMPLEMENTER_MODEL`     | Implementer model ID (engine-specific). Cursor: run `agent --list-models`. Empty = engine default.                                         | `grok-4.5-medium`                  |
+| `AGENT_LOOP_MAX_ATTEMPTS`     | Max Agent→Verify retry cycles before finalize records failure.                                                                             | `3`                                |
+| `AGENT_VERIFIER_CRITERIA`     | Caller-owned markdown rubric (`## Criteria for APPROVE` / `REJECT`). Passed verbatim to verifier.                                          | Domain-specific (in workflow YAML) |
+| `AGENT_VERIFIER_MAX_TURNS`    | Max verifier agent turns per verification.                                                                                                 | `3`                                |
+| `AGENT_VERIFIER_MODEL`        | Verifier model ID. Cursor: run `agent --list-models`.                                                                                      | `composer-2.5`                     |
+| `DEFAULT_ENGINE`              | AI engine: `claude` \| `copilot` \| `codex` \| `cursor`. Selects CLI and `AGENT_TOKEN` mapping.                                            | `cursor`                           |
 | `DEFAULT_LEVEL`               | Autonomy: `L1` \| `L2` (human merge bot fix PR) \| `L3` (GitHub auto-merge on bot fix PR when `finalize=open_pr`). Single switch per loop. | `L2`                               |
-| `SKILL_NAME`                  | Skill package to invoke (e.g. `loop-changelog`). Must match `.agents/skills/<name>/`.                                                         | Per loop                           |
+| `SKILL_NAME`                  | Skill package to invoke (e.g. `loop-changelog`). Must match `.agents/skills/<name>/`.                                                      | Per loop                           |
 
 ## Repository and branch defaults
 
@@ -55,27 +55,27 @@ Cron and `workflow_dispatch` runs have no `inputs` context — tunables live in 
 
 Canonical branch/finalize/PR keys: [Multi-Branch canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
 
-| Variable                         | Description                                                                                                                                                                            | Default (dogfood)                  |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| `LOOP_ALLOWLIST`                 | Comma-separated globs the implementer may modify. Enforced in `loop-execute`.                                                                                                          | Per loop                           |
-| `LOOP_BUDGET_MAX_RUNS_PER_DAY`   | Daily run cap keyed by `LOOP_NAME` (each matrix cell counts). Exceeded → `skip_reason=budget`.                                                                                         | `1`–`5`                            |
-| `LOOP_BUDGET_MAX_TOKENS_PER_DAY` | Daily aggregated token cap across loops.                                                                                                                                               | `500000`–`1000000`                 |
-| `LOOP_DENYLIST`                  | Comma-separated globs the implementer must not touch (ci-sweeper).                                                                                                                     | ci-sweeper only                    |
-| `LOOP_DETECT_SCRIPT`             | Path to domain `detect_*.sh` (under loop skill package). Invoked once per scan context by `loop-detect` — never re-run in caller `run:` steps.                                         | Per loop                           |
-| `LOOP_FINALIZE_INTEGRATION`      | Optional override. Default `open_pr`. Exception: `push` (not dogfood).                                                                                                                 | Omit (internal default)            |
-| `LOOP_FINALIZE_PULL_REQUEST`     | Optional override. Default `open_pr`. Exception: `push_head` (not dogfood).                                                                                                            | Omit (internal default)            |
-| `LOOP_INFER_FILES_PATTERN`       | Extended regex to infer file paths from verifier text for allowlist checks.                                                                                                            | Per loop                           |
-| `LOOP_INTEGRATION_BRANCHES`      | Comma-separated branch patterns to watch (`glob` unless `LOOP_BRANCH_MATCH` set). Empty with `LOOP_PULL_REQUESTS=false` → no work.                                                     | `main`                             |
-| `LOOP_MAX_TARGETS_PER_SCHEDULE`  | Max targets per cron tick after priority/`acting_on` filters. Excess deferred → `target_budget`.                                                                                       | `3`                                |
-| `LOOP_NAME`                      | Loop identifier: state file `.loop/state-<LOOP_NAME>.json`, budget key, run-log tag. Align workflow filename: `on-loop-<LOOP_NAME>.yaml`.                                              | Per loop                           |
-| `LOOP_NO_CHANGES_VERDICT`        | `APPROVE` \| `REJECT` when implementer produces no file diff. CI loops use `REJECT` for actionable failures.                                                                           | `REJECT` (all dogfood callers)     |
-| `LOOP_PR_BODY`                   | Static markdown prefix for finalize PR body (loop attribution, review notice).                                                                                                         | Per loop                           |
-| `LOOP_PR_EXCLUDE`                | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`.                                                                                                                     | ci-sweeper                         |
-| `LOOP_PR_INCLUDE_BOTS`           | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots.                                                                                                     | `""`                               |
-| `LOOP_PR_TITLE`                  | PR title template when finalize strategy is `open_pr`.                                                                                                                                 | Per loop                           |
-| `LOOP_PROMPT_INSTRUCTIONS`       | Domain-specific implementer instructions appended by `loop-prompt-generate`.                                                                                                           | Per loop                           |
-| `LOOP_PULL_REQUESTS`             | `"true"` \| `"false"` — watch open PR heads (`pr_enabled` target name).                                                                                                                            | `"false"` except ci-sweeper        |
-| `LOOP_STATE_PUSH_BRANCH`         | Branch for `.loop/*` persistence commits (state, budget, run-log). Fix PRs may target other branches; metadata stays here.                                                             | `main`                             |
+| Variable                         | Description                                                                                                                                    | Default (dogfood)              |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `LOOP_ALLOWLIST`                 | Comma-separated globs the implementer may modify. Enforced in `loop-execute`.                                                                  | Per loop                       |
+| `LOOP_BUDGET_MAX_RUNS_PER_DAY`   | Daily run cap keyed by `LOOP_NAME` (each matrix cell counts). Exceeded → `skip_reason=budget`.                                                 | `1`–`5`                        |
+| `LOOP_BUDGET_MAX_TOKENS_PER_DAY` | Daily aggregated token cap across loops.                                                                                                       | `500000`–`1000000`             |
+| `LOOP_DENYLIST`                  | Comma-separated globs the implementer must not touch (ci-sweeper).                                                                             | ci-sweeper only                |
+| `LOOP_DETECT_SCRIPT`             | Path to domain `detect_*.sh` (under loop skill package). Invoked once per scan context by `loop-detect` — never re-run in caller `run:` steps. | Per loop                       |
+| `LOOP_FINALIZE_INTEGRATION`      | Optional override. Default `open_pr`. Exception: `push` (not dogfood).                                                                         | Omit (internal default)        |
+| `LOOP_FINALIZE_PULL_REQUEST`     | Optional override. Default `open_pr`. Exception: `push_head` (not dogfood).                                                                    | Omit (internal default)        |
+| `LOOP_INFER_FILES_PATTERN`       | Extended regex to infer file paths from verifier text for allowlist checks.                                                                    | Per loop                       |
+| `LOOP_INTEGRATION_BRANCHES`      | Comma-separated branch patterns to watch (`glob` unless `LOOP_BRANCH_MATCH` set). Empty with `LOOP_PULL_REQUESTS=false` → no work.             | `main`                         |
+| `LOOP_MAX_TARGETS_PER_SCHEDULE`  | Max targets per cron tick after priority/`acting_on` filters. Excess deferred → `target_budget`.                                               | `3`                            |
+| `LOOP_NAME`                      | Loop identifier: state file `.loop/state-<LOOP_NAME>.json`, budget key, run-log tag. Align workflow filename: `on-loop-<LOOP_NAME>.yaml`.      | Per loop                       |
+| `LOOP_NO_CHANGES_VERDICT`        | `APPROVE` \| `REJECT` when implementer produces no file diff. CI loops use `REJECT` for actionable failures.                                   | `REJECT` (all dogfood callers) |
+| `LOOP_PR_BODY`                   | Static markdown prefix for finalize PR body (loop attribution, review notice).                                                                 | Per loop                       |
+| `LOOP_PR_EXCLUDE`                | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`.                                                                             | ci-sweeper                     |
+| `LOOP_PR_INCLUDE_BOTS`           | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots.                                                             | `""`                           |
+| `LOOP_PR_TITLE`                  | PR title template when finalize strategy is `open_pr`.                                                                                         | Per loop                       |
+| `LOOP_PROMPT_INSTRUCTIONS`       | Domain-specific implementer instructions appended by `loop-prompt-generate`.                                                                   | Per loop                       |
+| `LOOP_PULL_REQUESTS`             | `"true"` \| `"false"` — watch open PR heads (`pr_enabled` target name).                                                                        | `"false"` except ci-sweeper    |
+| `LOOP_STATE_PUSH_BRANCH`         | Branch for `.loop/*` persistence commits (state, budget, run-log). Fix PRs may target other branches; metadata stays here.                     | `main`                         |
 
 Optional keys not set in current dogfood callers but supported by `loop-detect`:
 
@@ -98,12 +98,12 @@ Optional keys not set in current dogfood callers but supported by `loop-detect`:
 
 ### CI sweeper (`loop-ci-sweeper`)
 
-| Variable                         | Description                                                                                      | Dogfood value                                                 |
-| -------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| `CI_SWEEPER_LEDGER_FILE`         | JSON ledger for `workflow_run_id` dedupe.                                                        | `.loop/state-ci-sweeper-run-ledger.json`                      |
-| `CI_SWEEPER_REJECT_MAX_RETRIES`  | Max retries per run ID when policy is `limited`.                                                 | `"3"`                                                         |
-| `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`, `retry`, or `limited` for prior `rejected` ledger entries.                              | `block`                                                       |
-| `DOMAIN_PERSISTENCE_SCRIPT`      | Bash script for `loop-finalize` `domain_persistence_script` (ledger updates).                    | `.agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh` |
+| Variable                         | Description                                                                   | Dogfood value                                                 |
+| -------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `CI_SWEEPER_LEDGER_FILE`         | JSON ledger for `workflow_run_id` dedupe.                                     | `.loop/state-ci-sweeper-run-ledger.json`                      |
+| `CI_SWEEPER_REJECT_MAX_RETRIES`  | Max retries per run ID when policy is `limited`.                              | `"3"`                                                         |
+| `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`, `retry`, or `limited` for prior `rejected` ledger entries.           | `block`                                                       |
+| `DOMAIN_PERSISTENCE_SCRIPT`      | Bash script for `loop-finalize` `domain_persistence_script` (ledger updates). | `.agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh` |
 
 Event vars (detect job only when `workflow_run` trigger enabled):
 
@@ -146,4 +146,3 @@ Each workflow design doc lists **every** `env` key for that caller (including mu
 - [Loop Caller Workflows Design](../loop-caller-workflows-design.md)
 - [Loop Engineering Design](../loop-engineering-design.md)
 - [Specification](../../../reference/specification.md)
-
