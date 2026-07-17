@@ -185,7 +185,7 @@ on:
         type: string
     secrets:
       AGENT_TOKEN:
-        description: "Authentication token for the selected engine"
+        [REDACTED:API key param] "Authentication token for the selected engine"
         required: true
       BOT_APP_CLIENT_ID:
         description: "GitHub App client ID for ruleset-bypass .loop/* pushes"
@@ -345,12 +345,7 @@ jobs:
       level: ${{ needs.detect.outputs.level }}
       loop_name: ${{ needs.detect.outputs.loop_name }}
       no_changes_verdict: ${{ needs.detect.outputs.no_changes_verdict }}
-      pr_body: |
-        ${{ needs.detect.outputs.pr_body }}
-
-        - Level: ${{ needs.detect.outputs.level }}
-        - Target: `${{ matrix.target.target_json.key }}`
-        - Skip reason: ${{ needs.detect.outputs.skip_reason }}
+      pr_body: ${{ needs.detect.outputs.pr_body }}
       pr_title: ${{ needs.detect.outputs.pr_title }}
       prompt_text: ${{ matrix.target.prompt }}
       run_started_at: ${{ needs.detect.outputs.run_started_at }}

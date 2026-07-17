@@ -25,6 +25,10 @@ inputs:
   current_sha:
     description: "SHA to record in per-target state"
     required: true
+  detect_result_json:
+    default: "{}"
+    description: "Detect script JSON (failures[]) for PR Failure context"
+    required: false
   domain_persistence_script:
     default: ""
     description: "Optional bash script for domain ledger persistence"
@@ -45,9 +49,17 @@ inputs:
     default: "loop-automation"
     description: "Comma-separated labels for the PR"
     required: false
+  level:
+    default: ""
+    description: "Loop level for PR footer (e.g. L2)"
+    required: false
   loop_name:
     default: ""
     description: "Loop name / pattern for run log (e.g. docs-triage)"
+    required: false
+  notify_context_json:
+    default: "{}"
+    description: "notify_context_json from loop-execute (changed_files, agent_report_summary)"
     required: false
   open_rejections:
     default: "[]"
@@ -59,7 +71,7 @@ inputs:
     required: false
   pr_body:
     default: ""
-    description: "PR body text (markdown)"
+    description: "Static markdown prefix (finalize composes final body)"
     required: false
   pr_title:
     default: "chore: automated update (loop)"
@@ -97,7 +109,7 @@ inputs:
     description: "Target descriptor JSON from loop-detect matrix cell"
     required: false
   token:
-    description: "GitHub token for PR creation and state push"
+    [REDACTED:API key param] "GitHub token for PR creation and state push"
     required: true
   tokens_estimate:
     default: "52000"
@@ -291,21 +303,46 @@ runs:
       shell: bash
       env:
         BRANCH: ${{ inputs.branch }}
+        DETECT_RESULT_JSON: ${{ inputs.detect_result_json }}
         GH_TOKEN: ${{ inputs.token }}
         LABELS: ${{ inputs.labels }}
+        LEVEL: ${{ inputs.level }}
+        NOTIFY_CONTEXT_JSON: ${{ inputs.notify_context_json }}
         PR_BASE_BRANCH: ${{ steps.target.outputs.pr_base_branch }}
         PR_BODY: ${{ inputs.pr_body }}
         PR_TITLE: ${{ inputs.pr_title }}
+        SKIP_REASON: ${{ inputs.skip_reason }}
+        TARGET_JSON: ${{ inputs.target_json }}
       run: |
         set -euo pipefail
+        NOTIFY_JSON="${NOTIFY_CONTEXT_JSON:-{}}"
+        if ! jq -e . >/dev/null 2>&1 <<< "${NOTIFY_JSON}"; then
+          NOTIFY_JSON='{}'
+        fi
+        if ! jq -e . >/dev/null 2>&1 <<< "${DETECT_RESULT_JSON:-{}}"; then
+          DETECT_RESULT_JSON='{}'
+        fi
+        CHANGED_FILES_JSON="$(jq -c '.changed_files // []' <<< "${NOTIFY_JSON}")"
+        AGENT_REPORT_SUMMARY="$(jq -r '.agent_report_summary // empty' <<< "${NOTIFY_JSON}")"
+        TARGET_KEY="$(jq -r '.key // empty' <<< "${TARGET_JSON:-{}}" 2>/dev/null || true)"
+
+        export PR_BODY_PREFIX="${PR_BODY}"
+        export DETECT_RESULT_JSON
+        export CHANGED_FILES_JSON
+        export AGENT_REPORT_SUMMARY
+        export LEVEL
+        export TARGET_KEY
+        export SKIP_REASON
+
+        COMPOSED="$(bash "${GITHUB_ACTION_PATH}/lib/render_pr_body.sh")"
         ARGS=(
           --repo "${GITHUB_REPOSITORY}"
           --base "${PR_BASE_BRANCH}"
           --head "${BRANCH}"
           --title "${PR_TITLE}"
         )
-        if [[ -n "${PR_BODY}" ]]; then
-          ARGS+=(--body "${PR_BODY}")
+        if [[ -n "${COMPOSED}" ]]; then
+          ARGS+=(--body "${COMPOSED}")
         fi
         if [[ -n "${LABELS}" ]]; then
           ARGS+=(--label "${LABELS}")

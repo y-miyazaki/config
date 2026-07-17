@@ -11,6 +11,7 @@
 #   - fix_summary is platform-owned from detect_result_json failures
 #   - changed_files and diff_stat come from merge-base git diff (excludes .loop/)
 #   - agent_summary is optional; parsed from <!-- loop-agent-summary:v1 --> only
+#   - agent_report_summary is optional; parsed from ## Summary until next H2
 #
 # Output:
 #   Writes notify_context_json multiline output to GITHUB_OUTPUT
@@ -61,6 +62,29 @@ function build_fix_summary {
     job_name=$(jq -r '.failures[0].job_name // "CI"' <<< "${detect_json}")
     workflow_name=$(jq -r '.failures[0].workflow_name // .workflow_name // "workflow"' <<< "${detect_json}")
     printf 'Address CI failure in %s (%s)' "${job_name}" "${workflow_name}"
+}
+
+#######################################
+# extract_agent_report_summary: Extract ## Summary section from agent output
+#
+# Arguments:
+#   $1 - Agent output file path
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Summary section body to stdout (may be empty)
+#
+#######################################
+function extract_agent_report_summary {
+    local output_file="$1"
+    [[ -f ${output_file} ]] || return 0
+    awk '
+      /^## Summary[[:space:]]*$/ {grab=1; next}
+      /^## / {if (grab) exit}
+      grab {print}
+    ' "${output_file}" | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}'
 }
 
 #######################################
@@ -209,6 +233,7 @@ function main {
     local detect_json="${DETECT_RESULT_JSON}"
     local has_changes="${HAS_CHANGES}"
     local baseline_ref changed_files_json diff_stat fix_summary agent_summary=""
+    local agent_report_summary=""
     local -a files=()
     local file count=0 extra=0 last_output notify_json
 
@@ -255,6 +280,8 @@ function main {
         if [[ -n ${last_output} ]]; then
             agent_summary="$(parse_agent_summary "${last_output}")"
             agent_summary="$(truncate_text "$(redact_sensitive_text "${agent_summary}")" 2000)"
+            agent_report_summary="$(extract_agent_report_summary "${last_output}")"
+            agent_report_summary="$(truncate_text "$(redact_sensitive_text "${agent_report_summary}")" 4000)"
         fi
     fi
 
@@ -263,12 +290,14 @@ function main {
         --arg diff_stat "${diff_stat}" \
         --arg fix_summary "${fix_summary}" \
         --arg agent_summary "${agent_summary}" \
+        --arg agent_report_summary "${agent_report_summary}" \
         --arg baseline_ref "${baseline_ref}" \
         '{
             changed_files: $changed_files,
             diff_stat: $diff_stat,
             fix_summary: $fix_summary,
             agent_summary: $agent_summary,
+            agent_report_summary: $agent_report_summary,
             baseline_ref: $baseline_ref
         }')"
 

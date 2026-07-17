@@ -74,7 +74,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `loop_name`                                          | Loop identifier; state file `.loop/state-changelog.json`. Align workflow name `on-loop-<loop_name>.yaml`. | `changelog`                                                         |
 | `max_targets_per_schedule`                           | Max targets per cron tick after priority/`acting_on` filters.                                             | `3`                                                                 |
 | `no_changes_verdict`                                 | `APPROVE` or `REJECT` when implementer produces no file diff.                                             | `REJECT`                                                            |
-| `pr_body`                                            | Static markdown prefix for finalize PR body (notes bundled state).                                        | Inline in caller workflow                                           |
+| `pr_body`                                            | Static markdown prefix only; `loop-finalize` hybrid-composes the final PR body. See [Loop PR Body Hybrid Design](../../../superpowers/specs/2026-07-17-loop-pr-body-hybrid-design.md). | Inline in caller workflow                                           |
 | `pr_title`                                           | PR title when finalize strategy is `open_pr`.                                                             | `chore(changelog): update CHANGELOG.md (loop-changelog)`            |
 | `prompt_instructions`                                | Domain instructions appended to implementer prompt by `loop-prompt-generate`.                             | Inline in caller workflow                                           |
 | `pull_requests`                                      | Wire name for `pr_enabled`. Changelog uses integration branches only.                                     | `false`                                                             |
@@ -137,6 +137,8 @@ Detect script outputs **facts** (not formatted changelog prose):
 
 ## Finalize
 
+PR body is hybrid-composed by `loop-finalize` (see [Loop PR Body Hybrid Design](../../../superpowers/specs/2026-07-17-loop-pr-body-hybrid-design.md)). Caller `pr_body` remains a static prefix only.
+
 Always `open_pr` to `to.branch` at L2.
 
 1. Optional domain persistence (none for changelog)
@@ -159,6 +161,7 @@ No `domain_persistence_script`.
 - [x] `target_matrix` through detect → matrix execute/finalize
 - [x] `verifier_context` on execute path (`build_verifier_context_from_result` `.commits` branch)
 - [ ] Bump remote pins (`loop-detect`, `ci-loop-agent`, `loop-finalize`, `loop-state-write`) to release SHA containing merge-gated `pending` / `loop-state-promote`
+- [ ] Bump `ci-loop-agent.yaml` pins for `loop-finalize` and `loop-execute` to a release SHA with hybrid PR body — or temporary `uses: ./.github/actions/...` for validation
 
 ## Cross-Loop Note
 

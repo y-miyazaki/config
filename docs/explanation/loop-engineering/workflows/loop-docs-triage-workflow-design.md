@@ -76,7 +76,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `loop_name`                                          | Loop identifier; state file `.loop/state-docs-triage.json`.                             | `docs-triage`                                                  |
 | `max_targets_per_schedule`                           | Max targets per cron tick after priority/`acting_on` filters.                           | `3`                                                            |
 | `no_changes_verdict`                                 | `APPROVE` or `REJECT` when implementer produces no file diff.                           | `REJECT`                                                       |
-| `pr_body`                                            | Static markdown prefix for finalize PR body.                                            | Inline in caller workflow                                      |
+| `pr_body`                                            | Static markdown prefix only; `loop-finalize` hybrid-composes the final PR body. See [Loop PR Body Hybrid Design](../../../superpowers/specs/2026-07-17-loop-pr-body-hybrid-design.md). | Inline in caller workflow                                      |
 | `pr_title`                                           | PR title when finalize strategy is `open_pr`.                                           | `fix(docs): automated documentation update (loop-docs-triage)` |
 | `prompt_instructions`                                | Domain instructions: address triage findings; preserve doc structure.                   | Inline in caller workflow                                      |
 | `pull_requests`                                      | Enumerate open PR heads. Docs-triage uses integration branches only.                    | `false`                                                        |
@@ -133,6 +133,8 @@ No `workflow_run_id` / ci ledger.
 
 ## Finalize
 
+PR body is hybrid-composed by `loop-finalize` (see [Loop PR Body Hybrid Design](../../../superpowers/specs/2026-07-17-loop-pr-body-hybrid-design.md)). Caller `pr_body` remains a static prefix only.
+
 Always `open_pr` to `to.branch` at L2. L3 `push` rarely appropriate for loop-docs-triage; if enabled, requires explicit promotion review.
 
 No `domain_persistence_script`.
@@ -155,6 +157,7 @@ Persistence: `state-docs-triage.json` on `branch_state` via [finalize inside ci-
 - [ ] State migration: flat `last_sha` removed
 - [ ] `target_matrix` through detect → matrix execute/finalize
 - [ ] `verifier_context` on execute path
+- [ ] Bump `ci-loop-agent.yaml` pins for `loop-finalize` and `loop-execute` to a release SHA with hybrid PR body — or temporary `uses: ./.github/actions/...` for validation
 
 ## Cross-Loop Note
 

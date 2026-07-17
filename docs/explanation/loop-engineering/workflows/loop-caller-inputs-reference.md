@@ -183,7 +183,7 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `loop_name`                 | string  | Loop identifier: `.loop/state-<loop_name>.json`, budget key, run-log tag. Align caller filename: `on-loop-<loop_name>.yaml` | Per loop                                       |
 | `max_targets_per_schedule`  | number  | Max targets per cron tick after priority/`acting_on` filters                                                                | `3`                                            |
 | `no_changes_verdict`        | string  | `APPROVE` \| `REJECT` when implementer produces no file diff                                                                | `REJECT`                                       |
-| `pr_body`                   | string  | Static markdown prefix for finalize PR body                                                                                 | Per loop                                       |
+| `pr_body`                   | string  | Static markdown prefix. `loop-finalize` composes the final PR body: prefix, Failure context (from `detect_result.failures[]` when present), Changes, optional agent `## Summary`, Level/Target/Skip footer. See [Loop PR Body Hybrid Design](../../../superpowers/specs/2026-07-17-loop-pr-body-hybrid-design.md). | Per loop                                       |
 | `pr_exclude`                | string  | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`                                                           | ci-sweeper                                     |
 | `pr_include_bots`           | string  | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots                                           | `""`                                           |
 | `pr_title`                  | string  | PR title when finalize strategy is `open_pr`                                                                                | Per loop                                       |
@@ -191,6 +191,8 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `pr_enabled`                | boolean | Watch open PR heads for detect. **Wire name today:** `pull_requests`                                                        | `false` except ci-sweeper                      |
 | `state_bundle_with_fix_pr`  | boolean | Commit loop state on the fix branch before `open_pr` (single reviewable PR)                                                 | `false` (changelog uses merge-gated `pending`) |
 | `state_file`                | string  | Override state JSON path                                                                                                    | `.loop/state-<loop_name>.json`                 |
+
+**Dogfood pin follow-up:** Live loops need `ci-loop-agent.yaml` action pin bumps (or temporary `uses: ./.github/actions/loop-finalize` and `loop-execute`) to a SHA that includes hybrid PR body composition (`render_pr_body.sh`).
 
 ### Optional platform inputs (supported by `loop-detect`)
 

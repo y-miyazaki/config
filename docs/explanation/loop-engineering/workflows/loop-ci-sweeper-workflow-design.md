@@ -139,7 +139,7 @@ Do **not** set caller `finalize_integration` or `finalize_pull_request` for ci-s
 | `loop_name`                                                 | Loop identifier; state file `.loop/state-ci-sweeper.json`.                                                                                            | `ci-sweeper`                                                                                             |
 | `max_targets_per_schedule`                                  | Max targets per cron tick after priority/`acting_on` filters.                                                                                         | `3`                                                                                                      |
 | `no_changes_verdict`                                        | `APPROVE` or `REJECT` when implementer produces no file diff on actionable CI failure.                                                                | `REJECT`                                                                                                 |
-| `pr_body`                                                   | Static markdown prefix for finalize PR body.                                                                                                          | Inline in caller workflow                                                                                |
+| `pr_body`                                                   | Static markdown prefix only; `loop-finalize` hybrid-composes the final PR body. See [Loop PR Body Hybrid Design](../../../superpowers/specs/2026-07-17-loop-pr-body-hybrid-design.md). | Inline in caller workflow                                                                                |
 | `pr_enabled`                                                | Watch open PR heads for failed CI. **Wire name today:** `pull_requests`.                                                                              | `true`                                                                                                   |
 | `pr_exclude`                                                | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`.                                                                                    | `fork,draft,label:no-loop`                                                                               |
 | `pr_include_bots`                                           | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots.                                                                    | `""`                                                                                                     |
@@ -242,6 +242,8 @@ CI sweeper criteria require the fix to address the **logged failure** (semantic 
 
 ## Finalize strategy
 
+PR body is hybrid-composed by `loop-finalize` (see [Loop PR Body Hybrid Design](../../../superpowers/specs/2026-07-17-loop-pr-body-hybrid-design.md)). Caller `pr_body` remains a static prefix only.
+
 Platform rule for dogfood loops (changelog, docs-triage, ci-sweeper): **`target.finalize` is always `open_pr`**. **`level`** controls review vs auto-merge on the **bot fix PR**.
 
 | Mode           | L2                                        | L3                                                        |
@@ -270,6 +272,7 @@ Dogfood: **`level=L2`** until [L3 promotion gate](../loop-engineering-design.md)
 - [ ] `outcome: watch` for Skill Watch classification
 - [ ] `loop-notify-pr` on human PR for `pull_request` mode
 - [ ] `open_pr` finalize for PR head targets (implementation migration from `push_head`-only)
+- [ ] Bump `ci-loop-agent.yaml` pins for `loop-finalize` and `loop-execute` to a release SHA with hybrid PR body — or temporary `uses: ./.github/actions/...` for validation
 
 ## workflow_run Operational Checklist
 

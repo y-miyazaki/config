@@ -552,11 +552,14 @@ jobs:
           base_branch: ${{ inputs.base_branch }}
           branch: ${{ needs.agent-l2.outputs.branch }}
           current_sha: ${{ inputs.current_sha }}
+          detect_result_json: ${{ inputs.detect_result_json }}
           domain_persistence_script: ${{ inputs.domain_persistence_script }}
           execute_branch: ${{ needs.agent-l2.outputs.branch }}
           has_changes: ${{ needs.agent-l2.outputs.has_changes }}
           labels: ${{ inputs.labels }}
+          level: ${{ inputs.level }}
           loop_name: ${{ inputs.loop_name }}
+          notify_context_json: ${{ needs.agent-l2.outputs.notify_context_json || '{}' }}
           open_rejections: ${{ needs.agent-l2.outputs.open_rejections }}
           outcome_override: ${{ inputs.outcome_override != '' && inputs.outcome_override || needs.agent-l2.outputs.outcome_override }}
           pr_body: ${{ inputs.pr_body }}
