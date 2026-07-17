@@ -315,26 +315,16 @@ runs:
         TARGET_JSON: ${{ inputs.target_json }}
       run: |
         set -euo pipefail
-        NOTIFY_JSON="${NOTIFY_CONTEXT_JSON:-{}}"
-        if ! jq -e . >/dev/null 2>&1 <<< "${NOTIFY_JSON}"; then
-          NOTIFY_JSON='{}'
-        fi
-        if ! jq -e . >/dev/null 2>&1 <<< "${DETECT_RESULT_JSON:-{}}"; then
-          DETECT_RESULT_JSON='{}'
-        fi
-        CHANGED_FILES_JSON="$(jq -c '.changed_files // []' <<< "${NOTIFY_JSON}")"
-        AGENT_REPORT_SUMMARY="$(jq -r '.agent_report_summary // empty' <<< "${NOTIFY_JSON}")"
-        TARGET_KEY="$(jq -r '.key // empty' <<< "${TARGET_JSON:-{}}" 2>/dev/null || true)"
-
-        export PR_BODY_PREFIX="${PR_BODY}"
-        export DETECT_RESULT_JSON
-        export CHANGED_FILES_JSON
-        export AGENT_REPORT_SUMMARY
-        export LEVEL
-        export TARGET_KEY
-        export SKIP_REASON
-
-        COMPOSED="$(bash "${GITHUB_ACTION_PATH}/lib/render_pr_body.sh")"
+        # create_pr_body.sh owns JSON defaulting (must use quoted "{}" — not ${VAR:-{}}).
+        COMPOSED="$(
+          PR_BODY="${PR_BODY}" \
+          DETECT_RESULT_JSON="${DETECT_RESULT_JSON}" \
+          NOTIFY_CONTEXT_JSON="${NOTIFY_CONTEXT_JSON}" \
+          LEVEL="${LEVEL}" \
+          SKIP_REASON="${SKIP_REASON}" \
+          TARGET_JSON="${TARGET_JSON}" \
+          bash "${GITHUB_ACTION_PATH}/lib/create_pr_body.sh"
+        )"
         ARGS=(
           --repo "${GITHUB_REPOSITORY}"
           --base "${PR_BASE_BRANCH}"

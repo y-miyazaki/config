@@ -9,7 +9,8 @@
 #
 # Design Rules:
 #   - fix_summary is platform-owned from detect_result_json failures
-#   - changed_files and diff_stat come from merge-base git diff (excludes .loop/)
+#   - changed_files and diff_stat come from origin/BASE...HEAD (excludes .loop/)
+#     with HEAD^ fallback when origin/BASE is unavailable
 #   - agent_summary is optional; parsed from <!-- loop-agent-summary:v1 --> only
 #   - agent_report_summary is optional; parsed from ## Summary until next H2
 #
@@ -245,7 +246,18 @@ function main {
 
     cd "${WORKTREE_PATH}" || exit 1
     git fetch origin "${BASE_BRANCH}" --prune > /dev/null 2>&1 || true
-    baseline_ref="$(git merge-base "origin/${BASE_BRANCH}" HEAD 2> /dev/null || git rev-parse HEAD)"
+
+    # Align with loop.sh / verifier.sh: triple-dot vs origin/BASE.
+    # Never fall back to HEAD alone when has_changes — that yields an empty diff
+    # (seen on shallow clones when merge-base fails).
+    if git rev-parse --verify "origin/${BASE_BRANCH}" > /dev/null 2>&1; then
+        baseline_ref="$(git merge-base "origin/${BASE_BRANCH}" HEAD 2> /dev/null || git rev-parse "origin/${BASE_BRANCH}")"
+    else
+        baseline_ref="$(git rev-parse "HEAD^" 2> /dev/null || git rev-parse HEAD)"
+    fi
+    if [[ ${has_changes} == "true" && ${baseline_ref} == "$(git rev-parse HEAD)" ]]; then
+        baseline_ref="$(git rev-parse "HEAD^" 2> /dev/null || git rev-parse HEAD)"
+    fi
 
     fix_summary="$(build_fix_summary "${detect_json}")"
     fix_summary="$(truncate_text "$(redact_sensitive_text "${fix_summary}")" 2000)"
@@ -262,7 +274,13 @@ function main {
             else
                 extra=$((extra + 1))
             fi
-        done < <(git diff --name-only "${baseline_ref}" HEAD -- . ':!.loop/' 2> /dev/null || true)
+        done < <(
+            if git rev-parse --verify "origin/${BASE_BRANCH}" > /dev/null 2>&1; then
+                git diff --name-only "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/' 2> /dev/null || true
+            else
+                git diff --name-only "${baseline_ref}" HEAD -- . ':!.loop/' 2> /dev/null || true
+            fi
+        )
 
         if [[ ${#files[@]} -gt 0 ]]; then
             changed_files_json="$(printf '%s\n' "${files[@]}" | jq -R . | jq -s .)"
@@ -271,7 +289,11 @@ function main {
             fi
         fi
 
-        diff_stat="$(git diff --stat "${baseline_ref}" HEAD -- . ':!.loop/' 2> /dev/null | tail -1 || true)"
+        if git rev-parse --verify "origin/${BASE_BRANCH}" > /dev/null 2>&1; then
+            diff_stat="$(git diff --stat "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/' 2> /dev/null | tail -1 || true)"
+        else
+            diff_stat="$(git diff --stat "${baseline_ref}" HEAD -- . ':!.loop/' 2> /dev/null | tail -1 || true)"
+        fi
         diff_stat="$(truncate_text "$(redact_sensitive_text "${diff_stat}")" 500)"
     fi
 

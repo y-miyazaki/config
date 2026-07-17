@@ -8,6 +8,7 @@
 # - build_fix_summary formats job and workflow from failures
 # - extract_agent_report_summary takes ## Summary until next H2
 # - main includes changed files when has_changes is true
+# - main includes changed files when origin base ref is missing
 # - main parses agent_report_summary from status dir
 # - main parses agent_summary from status dir
 # - main writes notify_context_json without changes
@@ -118,6 +119,31 @@ EOF
     ' <<< "${json}"
     [ "$status" -eq 0 ]
     rm -f "${detect_file}"
+}
+
+@test "main includes changed files when origin base ref is missing" {
+    local json
+    notify_context_git_setup
+    printf 'change\n' >> "${GIT_TEST_REPO}/file.txt"
+    git -C "${GIT_TEST_REPO}" add -A
+    git -C "${GIT_TEST_REPO}" commit -q -m "fix: change"
+    # BASE_BRANCH not on origin → fetch miss. Old code fell back to HEAD and
+    # produced changed_files=[]; fix must use HEAD^ / local diff.
+
+    GITHUB_OUTPUT="$(mktemp)"
+    run env \
+        HAS_CHANGES=true \
+        WORKTREE_PATH="${GIT_TEST_REPO}" \
+        BASE_BRANCH=does-not-exist \
+        DETECT_RESULT_JSON='{"failures":[{"job_name":"lint","workflow_name":"ci"}]}' \
+        GITHUB_OUTPUT="${GITHUB_OUTPUT}" \
+        STATUS_DIR= \
+        bash "${NOTIFY_CONTEXT_SCRIPT}"
+    [ "$status" -eq 0 ]
+
+    json="$(awk '/^notify_context_json<</{found=1;next} found{if($0 ~ /^NOTIFY_CONTEXT_/) exit; print}' "${GITHUB_OUTPUT}")"
+    run jq -e '(.changed_files | index("file.txt") != null) and (.diff_stat | length) > 0' <<< "${json}"
+    [ "$status" -eq 0 ]
 }
 
 @test "main parses agent_report_summary from status dir" {
