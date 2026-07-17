@@ -70,10 +70,10 @@ Defined here only. Other docs link to this section.
 
 ## Trigger-aware priority
 
-| Trigger        | Order / scope                                                                                              |
-| -------------- | ---------------------------------------------------------------------------------------------------------- |
-| `schedule`     | `LOOP_PRIORITY` — integration before pull_request; scan all resolved watch targets                         |
-| `workflow_run` | **Enumerate only** the failed `head_branch`: matching open PR if any, else matching integration branch     |
+| Trigger        | Order / scope                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------ |
+| `schedule`     | `LOOP_PRIORITY` — integration before pull_request; scan all resolved watch targets                     |
+| `workflow_run` | **Enumerate only** the failed `head_branch`: matching open PR if any, else matching integration branch |
 
 `workflow_run` scoping is enforced in `loop-detect` via `LOOP_SCOPED_HEAD_BRANCH` (explicit) or, for ci-sweeper dogfood, `CI_SWEEPER_WORKFLOW_RUN_ID` + `CI_SWEEPER_EVENT_HEAD_BRANCH` (stable event head — not the per-scan rewritten `CI_SWEEPER_HEAD_BRANCH`). Domain detect scripts still apply branch-mismatch guards as defense in depth.
 

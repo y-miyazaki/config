@@ -21,6 +21,8 @@ When CI fails on a **human open PR**, the loop opens a separate **bot fix PR** t
 4. Keep notification content platform-owned (Layers 1–2). Skill output is optional appendix only.
 5. Implement via shared `loop-notify-pr` action as a sibling step after `loop-finalize` in `ci-loop-agent` (not per-caller shell logic).
 
+`loop-notify-pr` uses `notify_context_json` for human PR comments only. PR description composition is owned by `loop-finalize` (`render_pr_body.sh`).
+
 ## Non-Goals (v1)
 
 - Notifications for `integration` + `open_pr` (fix PR body is sufficient; no human PR in scope).

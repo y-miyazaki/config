@@ -52,6 +52,25 @@ teardown() {
     [ "$output" = "Address CI failure in lint (on-ci-push)" ]
 }
 
+@test "extract_agent_report_summary takes ## Summary until next H2" {
+    local f
+    f="${BATS_TEST_TMPDIR}/agent-output.txt"
+    cat > "$f" << 'EOF'
+noise
+## Summary
+- **Root cause:** MD001
+- **Outcome:** fixed
+
+## Ignored
+- none
+EOF
+    run extract_agent_report_summary "$f"
+    [ "$status" -eq 0 ]
+    [[ $output == *"Root cause"* ]]
+    [[ $output != *"## Ignored"* ]]
+    [[ $output != *"## Summary"* ]]
+}
+
 @test "main includes changed files when has_changes is true" {
     local json detect_file
     notify_context_git_setup
@@ -85,6 +104,32 @@ teardown() {
     ' <<< "${json}"
     [ "$status" -eq 0 ]
     rm -f "${detect_file}"
+}
+
+@test "main parses agent_report_summary from status dir" {
+    local status_dir json
+    notify_context_git_setup
+    status_dir="${BATS_TEST_TMPDIR}/status"
+    mkdir -p "${status_dir}/attempt-1"
+    cat > "${status_dir}/attempt-1/agent-output.txt" << 'EOF'
+noise before
+## Summary
+- **Root cause:** MD001
+- **Outcome:** fixed
+
+## Ignored
+- none
+EOF
+
+    GITHUB_OUTPUT="$(mktemp)"
+    run bash -c "HAS_CHANGES='false' WORKTREE_PATH='${GIT_TEST_REPO}' BASE_BRANCH='main' DETECT_RESULT_JSON='{}' GITHUB_OUTPUT='${GITHUB_OUTPUT}' STATUS_DIR='${status_dir}' bash '${NOTIFY_CONTEXT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+
+    json="$(awk '/^notify_context_json<</{found=1;next} found{if($0 ~ /^NOTIFY_CONTEXT_/) exit; print}' "${GITHUB_OUTPUT}")"
+    run jq -er '.agent_report_summary' <<< "${json}"
+    [ "$status" -eq 0 ]
+    [[ $output == *"Root cause"* ]]
+    [[ $output != *"## Ignored"* ]]
 }
 
 @test "main parses agent_summary from status dir" {
@@ -124,6 +169,7 @@ EOF
       and .diff_stat == ""
       and .fix_summary == "Address CI failure in CI (workflow)"
       and .agent_summary == ""
+      and .agent_report_summary == ""
       and (.baseline_ref | length) > 0
     ' <<< "${json}"
     [ "$status" -eq 0 ]
