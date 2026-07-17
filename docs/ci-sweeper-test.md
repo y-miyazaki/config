@@ -4,7 +4,8 @@ Intentional markdownlint failures for ci-sweeper dogfood testing. Remove after v
 
 Trigger re-run: 2026-07-16T07:36Z
 
-### Skipped heading level (MD001)
+### Heading level check (was MD001)
 
-This heading skips H2 and should fail markdownlint-cli2.
+Was an intentional H3-under-H1 skip for ci-sweeper dogfood; restored to H2 so lint passes.
 [Reversed link syntax](https://example.com "MD011")
+

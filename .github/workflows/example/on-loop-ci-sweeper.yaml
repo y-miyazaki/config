@@ -49,7 +49,7 @@ jobs:
     with:
       additional_commit_paths: .loop/state-ci-sweeper-run-ledger.json
       agent_implementer_max_turns: 8
-      agent_implementer_model: grok-4.5-medium
+      agent_implementer_model: cursor-grok-4.5-low
       agent_loop_max_attempts: 3
       agent_verifier_criteria: |
         ## Criteria for APPROVE

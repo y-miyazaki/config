@@ -35,7 +35,7 @@ jobs:
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
       agent_implementer_max_turns: 5
-      agent_implementer_model: grok-4.5-medium
+      agent_implementer_model: cursor-grok-4.5-low
       agent_loop_max_attempts: 3
       agent_verifier_criteria: |
         ## Criteria for APPROVE

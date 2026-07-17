@@ -37,14 +37,14 @@ setup() {
     local tmpf
     tmpf="$(mktemp)"
     printf '%s\n' \
-        '{"type":"system","subtype":"init","model":"grok-4.5-medium"}' \
+        '{"type":"system","subtype":"init","model":"cursor-grok-4.5-low"}' \
         '{"type":"result","usage":{"total_input_tokens":500,"total_output_tokens":100}}' \
         > "${tmpf}"
     accumulate_cursor_stream_usage "${tmpf}"
     rm -f "${tmpf}"
     [ "${USAGE_INPUT_TOTAL}" -eq 500 ]
     [ "${USAGE_OUTPUT_TOTAL}" -eq 100 ]
-    [ "${USAGE_MODEL}" = "grok-4.5-medium" ]
+    [ "${USAGE_MODEL}" = "cursor-grok-4.5-low" ]
 }
 
 @test "build_usage_json returns empty when no usage captured" {
