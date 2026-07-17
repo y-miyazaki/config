@@ -16,10 +16,10 @@ setup() {
 
 @test "redact_sensitive_text redacts github tokens" {
     # Dummy token shape only — not a real credential (ghp_ + 36 alnum).
-    run redact_sensitive_text 'token ghp_abcdefghijklmnopqrstuvwxyz0123456789'
+    run redact_sensitive_text 'token ghp_abcdefghijklmnopqrstuvwxyz0123456789' # pragma: allowlist secret
     [ "$status" -eq 0 ]
     [[ $output == *"[REDACTED]"* ]]
-    [[ $output != *"ghp_abcdefghijklmnopqrstuvwxyz0123456789"* ]]
+    [[ $output != *"ghp_abcdefghijklmnopqrstuvwxyz0123456789"* ]] # pragma: allowlist secret
 }
 
 @test "render_agent_summary_section omitted when empty" {
@@ -106,11 +106,11 @@ setup() {
 }
 
 @test "render_failure_context redacts secret-like reason" {
-    local json='{"failures":[{"workflow_name":"wf","run_url":"https://example/r","job_name":"job","failure_type":"regression","reason":"token ghp_abcdefghijklmnopqrstuvwxyz0123456789"}]}'
+    local json='{"failures":[{"workflow_name":"wf","run_url":"https://example/r","job_name":"job","failure_type":"regression","reason":"token ghp_abcdefghijklmnopqrstuvwxyz0123456789"}]}' # pragma: allowlist secret
     run render_failure_context "${json}"
     [ "$status" -eq 0 ]
     [[ $output == *"[REDACTED]"* ]]
-    [[ $output != *"ghp_abcdefghijklmnopqrstuvwxyz0123456789"* ]]
+    [[ $output != *"ghp_abcdefghijklmnopqrstuvwxyz0123456789"* ]] # pragma: allowlist secret
 }
 
 @test "render_pr_body empty prefix shows mechanical sections" {

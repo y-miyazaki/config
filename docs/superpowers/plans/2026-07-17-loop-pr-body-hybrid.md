@@ -160,10 +160,10 @@ setup() {
 }
 
 @test "redact_sensitive_text redacts github tokens" {
-    run redact_sensitive_text 'token ghp_abcdefghijklmnopqrstuvwxyz0123456789'
+    run redact_sensitive_text 'token ghp_abcdefghijklmnopqrstuvwxyz0123456789' # pragma: allowlist secret
     [ "$status" -eq 0 ]
     [[ "$output" == *"[REDACTED]"* ]]
-    [[ "$output" != *"ghp_abcdefghijklmnopqrstuvwxyz0123456789"* ]]
+    [[ "$output" != *"ghp_abcdefghijklmnopqrstuvwxyz0123456789"* ]] # pragma: allowlist secret
 }
 
 @test "render_pr_body orders prefix failure changes summary footer" {
