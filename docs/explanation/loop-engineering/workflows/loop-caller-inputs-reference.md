@@ -154,7 +154,7 @@ Optional platform overrides (dogfood omit): `finalize_integration`, `finalize_pu
 | Input                         | Type   | Description                                                                | Default (dogfood)       |
 | ----------------------------- | ------ | -------------------------------------------------------------------------- | ----------------------- |
 | `agent_implementer_max_turns` | number | Max implementer agent turns per loop attempt                               | `5`–`8` (loop-specific) |
-| `agent_implementer_model`     | string | Implementer model ID. Empty = engine default                               | `cursor-grok-4.5-low`       |
+| `agent_implementer_model`     | string | Implementer model ID. Empty = engine default                               | `cursor-grok-4.5-low`   |
 | `agent_loop_max_attempts`     | number | Max Agent→Verify retry cycles before finalize records failure              | `3`                     |
 | `agent_verifier_criteria`     | string | Caller-owned markdown rubric (`## Criteria for APPROVE` / `REJECT`)        | Domain-specific         |
 | `agent_verifier_max_turns`    | number | Max verifier agent turns per verification                                  | `3`                     |
