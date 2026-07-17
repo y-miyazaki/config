@@ -39,8 +39,8 @@ setup() {
     run render_changes_section '["docs/a.md","scripts/b.sh"]'
     [ "$status" -eq 0 ]
     [[ $output == *"## Changes"* ]]
-    [[ $output == *"`docs/a.md`"* ]]
-    [[ $output == *"`scripts/b.sh`"* ]]
+    [[ $output == *"$(docs/a.md)"* ]]
+    [[ $output == *"$(scripts/b.sh)"* ]]
 }
 
 @test "render_changes_section omitted when empty" {
@@ -57,8 +57,8 @@ setup() {
     run render_changes_section "${files_json}"
     [ "$status" -eq 0 ]
     [[ $output == *"## Changes"* ]]
-    [[ $output == *"`file-1.txt`"* ]]
-    [[ $output == *"`file-20.txt`"* ]]
+    [[ $output == *"$(file-1.txt)"* ]]
+    [[ $output == *"$(file-20.txt)"* ]]
     [[ $output == *"(+5 more)"* ]]
     [[ $output != *"(+1 more)"* ]]
 }

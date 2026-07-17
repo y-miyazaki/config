@@ -24,15 +24,15 @@
 
 ## Decisions
 
-| Topic | Choice |
-| --- | --- |
-| Content model | Hybrid: mechanical sections required when data exists; Agent `## Summary` block appended when parseable |
-| Scope | All loops; domain sections appear only when detect schema provides data (e.g. `failures[]`) |
-| Agent text | Whole `## Summary` … next H2 (not key/value parse) |
+| Topic           | Choice                                                                                                  |
+| --------------- | ------------------------------------------------------------------------------------------------------- |
+| Content model   | Hybrid: mechanical sections required when data exists; Agent `## Summary` block appended when parseable |
+| Scope           | All loops; domain sections appear only when detect schema provides data (e.g. `failures[]`)             |
+| Agent text      | Whole `## Summary` … next H2 (not key/value parse)                                                      |
 | Failure listing | Enumerate all `failures[]` (cap 5 + “and N more”); never hide multiples behind “Other failures: N” only |
-| PR title | Unchanged (static caller input) |
-| Implementation | `loop-finalize/lib/render_pr_body.sh` pure function; Create PR step calls it |
-| Testing | bats on the lib; no new top-level `scripts/` entry |
+| PR title        | Unchanged (static caller input)                                                                         |
+| Implementation  | `loop-finalize/lib/render_pr_body.sh` pure function; Create PR step calls it                            |
+| Testing         | bats on the lib; no new top-level `scripts/` entry                                                      |
 
 ## Architecture
 
@@ -50,21 +50,21 @@ loop-finalize Create PR step
 
 ### Placement
 
-| Path | Role |
-| --- | --- |
-| `.github/actions/loop-finalize/lib/render_pr_body.sh` | Compose body; no `gh` / no git push |
-| `.github/actions/loop-finalize/action.yml` | Wire env; call lib before `gh pr create` |
-| `test/bats/.github/actions/loop-finalize/lib/render_pr_body.bats` | Unit tests |
+| Path                                                              | Role                                     |
+| ----------------------------------------------------------------- | ---------------------------------------- |
+| `.github/actions/loop-finalize/lib/render_pr_body.sh`             | Compose body; no `gh` / no git push      |
+| `.github/actions/loop-finalize/action.yml`                        | Wire env; call lib before `gh pr create` |
+| `test/bats/.github/actions/loop-finalize/lib/render_pr_body.bats` | Unit tests                               |
 
 ### Wiring inputs (new or reused)
 
-| Source | Into finalize / render |
-| --- | --- |
-| `inputs.pr_body` (caller prefix + existing Level/Target footer from caller YAML, or footer fields passed separately) | `PR_BODY_PREFIX` and/or footer env |
-| `detect_result_json` (already on `ci-loop-agent` / execute; **add passthrough to finalize**) | `DETECT_RESULT_JSON` |
-| Domain changed files (merge-base diff excluding `.loop/`, same idea as `notify_context.sh`) | `CHANGED_FILES` (newline list or JSON array) |
-| Last `agent-output.txt` path from execute status dir | `AGENT_OUTPUT_PATH` |
-| `level`, target key, `skip_reason` | Footer (keep current semantics) |
+| Source                                                                                                               | Into finalize / render                       |
+| -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `inputs.pr_body` (caller prefix + existing Level/Target footer from caller YAML, or footer fields passed separately) | `PR_BODY_PREFIX` and/or footer env           |
+| `detect_result_json` (already on `ci-loop-agent` / execute; **add passthrough to finalize**)                         | `DETECT_RESULT_JSON`                         |
+| Domain changed files (merge-base diff excluding `.loop/`, same idea as `notify_context.sh`)                          | `CHANGED_FILES` (newline list or JSON array) |
+| Last `agent-output.txt` path from execute status dir                                                                 | `AGENT_OUTPUT_PATH`                          |
+| `level`, target key, `skip_reason`                                                                                   | Footer (keep current semantics)              |
 
 Footer may stay assembled in `ci-loop-caller*.yaml` today; prefer moving Level/Target/Skip into `render_pr_body` once inputs are available so composition is single-sourced. Either is acceptable if PR body order matches the format below.
 
@@ -93,7 +93,7 @@ Composition order (top → bottom):
 
 ### Agent Summary rules
 
-- Extract from first `## Summary` heading through the line before the next `## ` heading (or EOF).
+- Extract from first `## Summary` heading through the line before the next `##eading (or EOF).
 - If absent → omit (do not fail).
 - Apply redact + truncate (`SUMMARY_MAX_CHARS`, default 4000).
 - Redact patterns aligned with `loop-execute/lib/notify_context.sh` / ci-sweeper sanitize.
@@ -102,12 +102,15 @@ Composition order (top → bottom):
 
 ```markdown
 ## Summary
+
 Automated minimal CI fix by `loop-ci-sweeper`.
 
 ---
-*This PR was created by a loop automation. Review before merging.*
+
+_This PR was created by a loop automation. Review before merging._
 
 ## Failure context
+
 - Workflow: `on-ci-push-markdown`
 - Run: https://github.com/y-miyazaki/config/actions/runs/29558828923
 - Job: `markdown-ci / lint`
@@ -115,9 +118,11 @@ Automated minimal CI fix by `loop-ci-sweeper`.
 - Reason: CI failure in job markdown-ci / lint (regression)
 
 ## Changes
+
 - `docs/ci-sweeper-test.md`
 
 ## Summary
+
 - **Root cause:** docs/ci-sweeper-test.md:7 MD001 — heading jumped from h1 to h3
 - **Fix applied:** Changed `###` to `##` for the MD001 heading
 - **Outcome:** markdownlint clean
@@ -140,17 +145,17 @@ Note: two `## Summary` headings can appear (caller prefix title vs agent report)
 
 `render_pr_body.bats` must cover:
 
-| Case | Expectation |
-| --- | --- |
-| No failures | No Failure context |
-| One failure | One failure block |
-| Three failures | All three listed |
-| Seven failures | Five listed + `… and 2 more` |
-| Agent Summary present | Block appended |
-| Agent Summary absent | Omitted |
-| Secret-like strings in reason/Summary | Redacted |
-| Empty changed files | No Changes section |
-| Empty prefix | Starts at first mechanical section |
+| Case                                  | Expectation                        |
+| ------------------------------------- | ---------------------------------- |
+| No failures                           | No Failure context                 |
+| One failure                           | One failure block                  |
+| Three failures                        | All three listed                   |
+| Seven failures                        | Five listed + `… and 2 more`       |
+| Agent Summary present                 | Block appended                     |
+| Agent Summary absent                  | Omitted                            |
+| Secret-like strings in reason/Summary | Redacted                           |
+| Empty changed files                   | No Changes section                 |
+| Empty prefix                          | Starts at first mechanical section |
 
 ## Documentation updates (implementation phase)
 
@@ -160,12 +165,12 @@ Note: two `## Summary` headings can appear (caller prefix title vs agent report)
 
 ## Risks
 
-| Risk | Mitigation |
-| --- | --- |
-| Duplicate `## Summary` headings confuse some renderers | Accepted; document; caller rename is out of scope |
-| Agent Summary long/noisy | Truncate + redact |
-| Detect lists failures agent deferred as Watch | Intentional: show detect scope; Changes/Summary show edits |
-| Passthrough wiring misses agent-output path | Fail soft (omit Summary); add bats + one wiring check in action |
+| Risk                                                   | Mitigation                                                      |
+| ------------------------------------------------------ | --------------------------------------------------------------- |
+| Duplicate `## Summary` headings confuse some renderers | Accepted; document; caller rename is out of scope               |
+| Agent Summary long/noisy                               | Truncate + redact                                               |
+| Detect lists failures agent deferred as Watch          | Intentional: show detect scope; Changes/Summary show edits      |
+| Passthrough wiring misses agent-output path            | Fail soft (omit Summary); add bats + one wiring check in action |
 
 ## Related observations (out of scope)
 

@@ -23,44 +23,46 @@
 
 ## File map
 
-| File | Responsibility |
-| --- | --- |
-| `.github/actions/loop-finalize/lib/render_pr_body.sh` | Pure compose: prefix + Failure context + Changes + agent Summary + footer → stdout |
-| `.github/actions/loop-finalize/action.yml` | New inputs; Create PR step invokes renderer |
-| `.github/actions/loop-execute/lib/notify_context.sh` | Add `agent_report_summary` from `## Summary` … next H2 |
-| `.github/workflows/ci-loop-agent.yaml` | Pass `detect_result_json` + `notify_context_json` into finalize |
-| `.github/workflows/ci-loop-caller.yaml` | Stop appending Level/Target/Skip into `pr_body`; pass discrete footer fields if needed via agent inputs |
-| `.github/workflows/ci-loop-caller-full-github.yaml` | Same as caller |
-| `test/bats/.github/actions/loop-finalize/lib/render_pr_body.bats` | Unit tests for renderer |
-| `test/bats/.github/actions/loop-execute/lib/notify_context.bats` | Extend or add tests for `agent_report_summary` |
-| Loop design / inputs docs under `docs/explanation/loop-engineering/workflows/` | Document hybrid body |
+| File                                                                           | Responsibility                                                                                          |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `.github/actions/loop-finalize/lib/render_pr_body.sh`                          | Pure compose: prefix + Failure context + Changes + agent Summary + footer → stdout                      |
+| `.github/actions/loop-finalize/action.yml`                                     | New inputs; Create PR step invokes renderer                                                             |
+| `.github/actions/loop-execute/lib/notify_context.sh`                           | Add `agent_report_summary` from `## Summary` … next H2                                                  |
+| `.github/workflows/ci-loop-agent.yaml`                                         | Pass `detect_result_json` + `notify_context_json` into finalize                                         |
+| `.github/workflows/ci-loop-caller.yaml`                                        | Stop appending Level/Target/Skip into `pr_body`; pass discrete footer fields if needed via agent inputs |
+| `.github/workflows/ci-loop-caller-full-github.yaml`                            | Same as caller                                                                                          |
+| `test/bats/.github/actions/loop-finalize/lib/render_pr_body.bats`              | Unit tests for renderer                                                                                 |
+| `test/bats/.github/actions/loop-execute/lib/notify_context.bats`               | Extend or add tests for `agent_report_summary`                                                          |
+| Loop design / inputs docs under `docs/explanation/loop-engineering/workflows/` | Document hybrid body                                                                                    |
 
 ---
 
 ### Task 1: `render_pr_body` pure library + bats (TDD)
 
 **Files:**
+
 - Create: `.github/actions/loop-finalize/lib/render_pr_body.sh`
 - Create: `test/bats/.github/actions/loop-finalize/lib/render_pr_body.bats`
 - Test: same bats file
 
 **Interfaces:**
+
 - Consumes: env vars listed below
 - Produces: functions callable from bats / Create PR step; `main` prints full markdown to stdout when script is executed
 
 **Env contract (renderer):**
 
-| Env | Meaning |
-| --- | --- |
-| `PR_BODY_PREFIX` | Caller static prefix (may be empty) |
-| `DETECT_RESULT_JSON` | Detect JSON; use `.failures` array |
-| `CHANGED_FILES_JSON` | JSON string array of paths (from notify `changed_files`) |
+| Env                    | Meaning                                                      |
+| ---------------------- | ------------------------------------------------------------ |
+| `PR_BODY_PREFIX`       | Caller static prefix (may be empty)                          |
+| `DETECT_RESULT_JSON`   | Detect JSON; use `.failures` array                           |
+| `CHANGED_FILES_JSON`   | JSON string array of paths (from notify `changed_files`)     |
 | `AGENT_REPORT_SUMMARY` | Pre-extracted agent Summary body text (no heading), or empty |
-| `LEVEL` | Footer level (e.g. `L2`) |
-| `TARGET_KEY` | Footer target key (e.g. `integration:main`) |
-| `SKIP_REASON` | Footer skip reason |
-| `SUMMARY_MAX_CHARS` | Default `4000` |
-| `FAILURES_MAX` | Default `5` |
+| `LEVEL`                | Footer level (e.g. `L2`)                                     |
+| `TARGET_KEY`           | Footer target key (e.g. `integration:main`)                  |
+| `SKIP_REASON`          | Footer skip reason                                           |
+| `SUMMARY_MAX_CHARS`    | Default `4000`                                               |
+| `FAILURES_MAX`         | Default `5`                                                  |
 
 **Required functions (exact names):**
 
@@ -353,10 +355,12 @@ EOF
 ### Task 2: Extract agent `## Summary` into `notify_context_json`
 
 **Files:**
+
 - Modify: `.github/actions/loop-execute/lib/notify_context.sh`
 - Create or modify: `test/bats/.github/actions/loop-execute/lib/notify_context.bats`
 
 **Interfaces:**
+
 - Consumes: existing `STATUS_DIR` / `agent-output.txt`
 - Produces: `notify_context_json.agent_report_summary` (string; may be empty). Keep existing `agent_summary` (HTML comment) unchanged for notify-pr compatibility.
 
@@ -444,12 +448,14 @@ EOF
 ### Task 3: Wire finalize Create PR + caller footer move
 
 **Files:**
+
 - Modify: `.github/actions/loop-finalize/action.yml` (inputs + Create PR step)
 - Modify: `.github/workflows/ci-loop-agent.yaml` (finalize `with:`)
 - Modify: `.github/workflows/ci-loop-caller.yaml` (pr_body footer removal; pass level already via detect outputs into agent — add finalize-facing fields on agent if missing)
 - Modify: `.github/workflows/ci-loop-caller-full-github.yaml` (same)
 
 **Interfaces:**
+
 - Consumes: Task 1 `render_pr_body.sh`; Task 2 `notify_context_json.agent_report_summary` + `changed_files`
 - Produces: `gh pr create --body` uses composed markdown
 
@@ -458,18 +464,18 @@ EOF
 In `loop-finalize/action.yml` inputs (keep alphabetical order):
 
 ```yaml
-  detect_result_json:
-    default: "{}"
-    description: "Detect script JSON (failures[]) for PR Failure context"
-    required: false
-  level:
-    default: ""
-    description: "Loop level for PR footer (e.g. L2)"
-    required: false
-  notify_context_json:
-    default: "{}"
-    description: "notify_context_json from loop-execute (changed_files, agent_report_summary)"
-    required: false
+detect_result_json:
+  default: "{}"
+  description: "Detect script JSON (failures[]) for PR Failure context"
+  required: false
+level:
+  default: ""
+  description: "Loop level for PR footer (e.g. L2)"
+  required: false
+notify_context_json:
+  default: "{}"
+  description: "notify_context_json from loop-execute (changed_files, agent_report_summary)"
+  required: false
 ```
 
 (`skip_reason` and `target_json` already exist — derive `TARGET_KEY` from `target_json.key`.)
@@ -591,6 +597,7 @@ EOF
 ### Task 4: Documentation + dogfood pin note
 
 **Files:**
+
 - Modify: `docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md`
 - Modify: `docs/explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md`
 - Modify: `docs/explanation/loop-engineering/workflows/loop-changelog-workflow-design.md`
@@ -636,18 +643,18 @@ EOF
 
 ## Spec coverage checklist
 
-| Spec requirement | Task |
-| --- | --- |
-| Hybrid body (mechanical + optional Summary) | 1, 3 |
-| All loops / failures optional | 1 (omit when empty), 3 |
-| Whole `## Summary` block | 2 extraction, 1 render |
-| List all failures, cap 5 | 1 |
-| Static `pr_title` | Global constraint / no task changes title |
-| `loop-finalize/lib` + bats | 1 |
-| Wire detect + files + agent text into finalize | 2, 3 |
-| Footer order after Summary | 1, 3 (caller footer removal) |
-| Docs | 4 |
-| No top-level scripts/ | Global constraint |
+| Spec requirement                               | Task                                      |
+| ---------------------------------------------- | ----------------------------------------- |
+| Hybrid body (mechanical + optional Summary)    | 1, 3                                      |
+| All loops / failures optional                  | 1 (omit when empty), 3                    |
+| Whole `## Summary` block                       | 2 extraction, 1 render                    |
+| List all failures, cap 5                       | 1                                         |
+| Static `pr_title`                              | Global constraint / no task changes title |
+| `loop-finalize/lib` + bats                     | 1                                         |
+| Wire detect + files + agent text into finalize | 2, 3                                      |
+| Footer order after Summary                     | 1, 3 (caller footer removal)              |
+| Docs                                           | 4                                         |
+| No top-level scripts/                          | Global constraint                         |
 
 ## Self-review notes
 

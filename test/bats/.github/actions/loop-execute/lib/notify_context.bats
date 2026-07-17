@@ -55,7 +55,7 @@ teardown() {
 @test "extract_agent_report_summary takes ## Summary until next H2" {
     local f
     f="${BATS_TEST_TMPDIR}/agent-output.txt"
-    cat >"$f" <<'EOF'
+    cat > "$f" << 'EOF'
 noise
 ## Summary
 - **Root cause:** MD001
@@ -66,9 +66,9 @@ noise
 EOF
     run extract_agent_report_summary "$f"
     [ "$status" -eq 0 ]
-    [[ "$output" == *"Root cause"* ]]
-    [[ "$output" != *"## Ignored"* ]]
-    [[ "$output" != *"## Summary"* ]]
+    [[ $output == *"Root cause"* ]]
+    [[ $output != *"## Ignored"* ]]
+    [[ $output != *"## Summary"* ]]
 }
 
 @test "main includes changed files when has_changes is true" {
