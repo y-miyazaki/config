@@ -22,5 +22,10 @@
       "open_rejections": [],
       "last_reject_reason": "No file changes produced"
     }
+  },
+  "acting_on": {
+    "target_key": "pull_request:409",
+    "loop_name": "ci-sweeper",
+    "started_at": "2026-07-17T04:13:25Z"
   }
 }
