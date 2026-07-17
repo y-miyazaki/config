@@ -178,11 +178,6 @@ on:
         description: "Override state JSON path (default .loop/state-<loop_name>.json)"
         required: false
         type: string
-      token:
-        default: ""
-        description: "GitHub token for PR enumeration and detect scripts"
-        required: false
-        type: string
     secrets:
       AGENT_TOKEN:
         description: "Authentication token for the selected engine"
@@ -192,6 +187,9 @@ on:
         required: false
       BOT_APP_PRIVATE_KEY:
         description: "GitHub App private key for ruleset-bypass .loop/* pushes"
+        required: false
+      GH_TOKEN_OVERRIDE:
+        description: "GitHub token override for PR enumeration and detect scripts (defaults to github.token when empty)"
         required: false
       GH_TOKEN_PUSH:
         description: "GitHub token with push permission (defaults to github.token when empty)"
@@ -305,7 +303,7 @@ jobs:
           run_log_file: ${{ inputs.run_log_file }}
           skill_name: ${{ inputs.skill_name }}
           state_file: ${{ inputs.state_file }}
-          token: ${{ inputs.token != '' && inputs.token || github.token }}
+          token: ${{ secrets.GH_TOKEN_OVERRIDE != '' && secrets.GH_TOKEN_OVERRIDE || github.token }}
 
   execute:
     concurrency:

@@ -22,6 +22,11 @@ on:
         description: "SHA256 checksum for ghalint release tarball"
         required: false
         type: string
+      ghalint_soft_fail:
+        default: false
+        description: "When true, ghalint failures are reported but do not fail the job"
+        required: false
+        type: boolean
       ghalint_version:
         default: "1.5.6"
         description: "ghalint version to use"
@@ -78,9 +83,15 @@ jobs:
         run: actionlint -color -oneline
 
       - name: Exec ghalint
+        id: ghalint
         shell: bash
         run: ghalint run
-        continue-on-error: true
+        continue-on-error: ${{ inputs.ghalint_soft_fail }}
+
+      - name: Report ghalint soft-fail
+        if: inputs.ghalint_soft_fail && steps.ghalint.outcome == 'failure'
+        shell: bash
+        run: echo "::warning::ghalint reported policy violations (ghalint_soft_fail=true; job continues)"
 
       - name: Validate Loop Caller Permissions
         uses: y-miyazaki/config/.github/actions/validate-loop-caller-permissions@0098282039f73bf3aba3a67a02568c0dec11c2a5 # v1.8.30
@@ -103,6 +114,7 @@ jobs:
             (none)
           params: |
             actionlint_version: ${{ env.ACTIONLINT_VERSION }}
+            ghalint_soft_fail: ${{ inputs.ghalint_soft_fail }}
             ghalint_version: ${{ env.GHALINT_VERSION }}
             zizmor_version: ${{ env.ZIZMOR_VERSION }}
           status: "${{ job.status }}"

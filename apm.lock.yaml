@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-16T10:37:45.081905+00:00'
+generated_at: '2026-07-17T03:06:03.644656+00:00'
 apm_version: 0.24.0
 dependencies:
 - repo_url: _local/common
@@ -181,6 +181,8 @@ dependencies:
   - .agents/skills/markdown-validation/scripts/lib/terraform.sh
   - .agents/skills/markdown-validation/scripts/lib/validation.sh
   - .agents/skills/markdown-validation/scripts/validate.sh
+  - .claude/agents/code-review.md
+  - .claude/agents/test-engineer.md
   - .claude/rules/agent-skills.md
   - .claude/rules/github-actions-workflow.md
   - .claude/rules/instructions.md
@@ -359,6 +361,8 @@ dependencies:
   - .claude/skills/markdown-validation/scripts/lib/terraform.sh
   - .claude/skills/markdown-validation/scripts/lib/validation.sh
   - .claude/skills/markdown-validation/scripts/validate.sh
+  - .cursor/agents/code-review.md
+  - .cursor/agents/test-engineer.md
   - .cursor/rules/agent-skills.mdc
   - .cursor/rules/github-actions-workflow.mdc
   - .cursor/rules/instructions.mdc
@@ -530,6 +534,8 @@ dependencies:
     .agents/skills/markdown-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/markdown-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .agents/skills/markdown-validation/scripts/validate.sh: sha256:e7d8b5242395d6c75df754357724868b688ee3293912037a62d7fdde8a784802
+    .claude/agents/code-review.md: sha256:74667b052cb6a75079791cee8f6e465a248e28fd82178505aaaec8db95c40ccf
+    .claude/agents/test-engineer.md: sha256:c4acde91d6307d88515387344a129a2d0679134e587596c3517d73faffcd5aa6
     .claude/rules/agent-skills.md: sha256:3027aa5b6365882109e6e791e5a6c38f882e66b4dc39d513819d6497644cf862
     .claude/rules/github-actions-workflow.md: sha256:b1caa9941816278adc7d6dc0a5f3deb784252ab3fa58128539caed04f84b05d9
     .claude/rules/instructions.md: sha256:6678403d5a438c9efccaf598ee1973e40d430b608364698ddcad708476fd7acf
@@ -700,6 +706,8 @@ dependencies:
     .claude/skills/markdown-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/markdown-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .claude/skills/markdown-validation/scripts/validate.sh: sha256:e7d8b5242395d6c75df754357724868b688ee3293912037a62d7fdde8a784802
+    .cursor/agents/code-review.md: sha256:74667b052cb6a75079791cee8f6e465a248e28fd82178505aaaec8db95c40ccf
+    .cursor/agents/test-engineer.md: sha256:c4acde91d6307d88515387344a129a2d0679134e587596c3517d73faffcd5aa6
     .cursor/rules/agent-skills.mdc: sha256:9b022ebe5570f2a97a6c5c228f3b93f0a25a627ac6ae4fff8f7d30fdc1add021
     .cursor/rules/github-actions-workflow.mdc: sha256:c69be69da1606b18ee7e968ca47da12cc711003864088ac581601821fa87c933
     .cursor/rules/instructions.mdc: sha256:3bcee2f0753504fff009f351b24e47376e980c6c7cdd58118ff87879afd033da
@@ -1565,9 +1573,3 @@ mcp_configs:
     - lean-ctx-bin
     registry: false
     command: npx
-mcp_config_provenance:
-  codebase-memory-mcp: config-common
-  context7: config-common
-  fetch: config-common
-  github: config-common
-  lean-ctx: config-common

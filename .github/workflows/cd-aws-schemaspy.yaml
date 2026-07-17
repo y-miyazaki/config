@@ -28,24 +28,9 @@ on:
         description: "EC2 tag Name filter for Bastion auto-detection (default: '*bastion*')"
         required: false
         type: string
-      db_host:
-        default: ""
-        description: "[Direct] Database host (only if use_secrets_manager=false and use_ssm=false)" # pragma: allowlist secret
-        required: false
-        type: string
       db_name:
         default: ""
         description: "[Direct] Database name (only if use_secrets_manager=false and use_ssm=false)" # pragma: allowlist secret
-        required: false
-        type: string
-      db_password:
-        default: ""
-        description: "[Direct] Database password (only if use_secrets_manager=false and use_ssm=false)" # pragma: allowlist secret
-        required: false
-        type: string
-      db_port:
-        default: ""
-        description: "[Direct] Database port (only if use_secrets_manager=false and use_ssm=false)" # pragma: allowlist secret
         required: false
         type: string
       db_ssl_mode:
@@ -61,11 +46,6 @@ on:
       db_type:
         description: "Database type (pgsql, pgsql11, redshift, mysql, etc.)"
         required: true
-        type: string
-      db_username:
-        default: ""
-        description: "[Direct] Database username (only if use_secrets_manager=false and use_ssm=false)" # pragma: allowlist secret
-        required: false
         type: string
       environment:
         description: "Target environment (dev, qa, stg, prd, etc.)"
@@ -145,6 +125,18 @@ on:
         required: false
       AWS_REGION:
         required: false
+      DB_HOST:
+        description: "[Direct] Database host (only if use_secrets_manager=false and use_ssm=false)" # pragma: allowlist secret
+        required: false
+      DB_PASSWORD:
+        description: "[Direct] Database password (only if use_secrets_manager=false and use_ssm=false)" # pragma: allowlist secret
+        required: false
+      DB_PORT:
+        description: "[Direct] Database port (only if use_secrets_manager=false and use_ssm=false)" # pragma: allowlist secret
+        required: false
+      DB_USERNAME:
+        description: "[Direct] Database username (only if use_secrets_manager=false and use_ssm=false)" # pragma: allowlist secret
+        required: false
 
 permissions:
   contents: read
@@ -155,14 +147,14 @@ env:
   BASTION_INSTANCE_ID: ${{ inputs.bastion_instance_id }}
   BASTION_LOCAL_PORT: ${{ inputs.bastion_local_port }}
   BASTION_TAG_NAME: ${{ inputs.bastion_tag_name }}
-  DB_HOST_INPUT: ${{ inputs.db_host }}
+  DB_HOST_INPUT: ${{ secrets.DB_HOST }}
   DB_NAME_INPUT: ${{ inputs.db_name }}
-  DB_PASSWORD_INPUT: ${{ inputs.db_password }}
-  DB_PORT_INPUT: ${{ inputs.db_port }}
+  DB_PASSWORD_INPUT: ${{ secrets.DB_PASSWORD }}
+  DB_PORT_INPUT: ${{ secrets.DB_PORT }}
   DB_SSL_MODE: ${{ inputs.db_ssl_mode }}
   DB_THREADS: ${{ inputs.db_threads }}
   DB_TYPE: ${{ inputs.db_type }}
-  DB_USERNAME_INPUT: ${{ inputs.db_username }}
+  DB_USERNAME_INPUT: ${{ secrets.DB_USERNAME }}
   ENVIRONMENT: ${{ inputs.environment }}
   JDBC_VERSION_MYSQL: "9.1.0"
   JDBC_VERSION_POSTGRESQL: "42.7.5"
@@ -290,7 +282,7 @@ jobs:
           else
             # Validate required parameters for direct connection
             if [ -z "${DB_HOST_INPUT}" ] || [ -z "${DB_PORT_INPUT}" ] || [ -z "${DB_NAME_INPUT}" ] || [ -z "${DB_USERNAME_INPUT}" ] || [ -z "${DB_PASSWORD_INPUT}" ]; then
-              echo "Error: When use_ssm=false and use_secrets_manager=false, all db_* inputs must be provided" # pragma: allowlist secret
+              echo "Error: When use_ssm=false and use_secrets_manager=false, DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD secrets and db_name input must be provided" # pragma: allowlist secret
               exit 1
             fi
             DB_HOST="${DB_HOST_INPUT}"
@@ -642,8 +634,12 @@ jobs:
           # Create artifact directory named after artifact base
           mkdir -p artifact-output/"${ARTIFACT_BASE}"
 
-          # Move output to artifact base directory (move directory contents safely)
-          mv "$OUTDIR"/* "artifact-output/${ARTIFACT_BASE}/" || true
+          # Move output to artifact base directory (fail if SchemaSpy produced no files)
+          if [[ -z "$(ls -A "$OUTDIR" 2>/dev/null)" ]]; then
+            echo "Error: SchemaSpy output directory is empty: ${OUTDIR}"
+            exit 1
+          fi
+          mv "$OUTDIR"/* "artifact-output/${ARTIFACT_BASE}/"
 
           echo "Artifact structure:"
           ls -lR artifact-output/
