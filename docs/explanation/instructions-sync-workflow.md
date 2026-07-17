@@ -43,6 +43,13 @@ The sync direction is:
 
 `## Guidelines` is the review-criteria hub. `## Testing and Validation` and `## Security Guidelines` remain manually maintained operational chapters.
 
+`## Testing and Validation` should stay short:
+
+- Optional one-line on-demand skill pointer (for example `On-demand validation: see go-validation skill SKILL.md.`)
+- Optional notes for checks automation does **not** cover (tests, coverage, suite pairing, judgment review)
+- Do **not** embed always-run `validate.sh` / linter recipes
+- Do **not** add "Agent hooks/pre-commit handle X, so do not run Y" explanations
+
 ### Skill-to-Instruction Map
 
 The sync script updates only these pairs:
@@ -85,24 +92,29 @@ Main behavior:
 
 ### Code Modification Guidelines Defaults
 
-Operational bullets under `### Code Modification Guidelines` live in `scripts/apm/sync_guidelines_from_categories.pl` (`%code_mod_guidelines`). Update that hash when adding cross-cutting authoring rules (for example, “add tests in the same change”).
+Operational bullets under `### Code Modification Guidelines` live in `scripts/apm/sync_guidelines_from_categories.pl` (`%code_mod_guidelines`). Update that hash when adding cross-cutting authoring rules (for example, “add tests in the same change”). Do **not** put always-run lint/`validate.sh` mandates there — those belong in Agent hooks and on-demand validation skills.
 
-Current test-pairing defaults:
+Current defaults (domain-only):
 
-| Skill                 | Extra guideline bullet                                                                                                     |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `shell-script-review` | Add or update matching Bats suites under `test/bats/` when shell scripts change; follow companion Bats rules (stem `bats`) |
-| `go-review`           | Add or update `*_test.go` files when behavior changes                                                                      |
+| Skill                   | Extra guideline bullet                                                                                                     |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `agent-skills-review`   | Deterministic checks in skill `scripts/`; judgment in the review skill workflow                                            |
+| `github-actions-review` | Keep `inputs` / `env` / `permissions` / `with` keys alphabetically ordered (G-05)                                          |
+| `shell-script-review`   | Add or update matching Bats suites under `test/bats/` when shell scripts change; follow companion Bats rules (stem `bats`) |
+| `go-review`             | Add or update `*_test.go` files when behavior changes                                                                      |
+| `instructions-review`   | Precise `applyTo`, stem-based cross-links; no always-run lint recipes or hook-skip explanations                            |
+| `terraform-review`      | Keep resource/module/data argument keys alphabetically ordered (ORD-01)                                                    |
 
 Corresponding review criteria belong in `category-testing.md` as `TEST-00 (MUST)` (or equivalent) so Guidelines and checklist stay aligned.
 
 ## Changing Review Criteria
 
 1. Edit the relevant `category-*.md` under `.apm/packages/<package>/.apm/skills/<skill>-review/references/`.
-2. Run `scripts/apm/sync_guidelines_from_categories.pl`.
-3. If the rule is operational (validation entry points, coverage targets), update `## Testing and Validation` in the instruction file manually.
-4. If the rule is Bats-specific and not shell authoring, update `bats.instructions.md` manually.
-5. Run the re-evaluation commands below.
+2. If Code Modification Guidelines need changes, update `%code_mod_guidelines` in `scripts/apm/sync_guidelines_from_categories.pl`.
+3. Run `scripts/apm/sync_guidelines_from_categories.pl` (skills → instructions Guidelines).
+4. If the rule is operational and not covered by automation (coverage targets, suite verification notes, on-demand skill pointer), update `## Testing and Validation` in the instruction file manually.
+5. If the rule is Bats-specific and not shell authoring, update `bats.instructions.md` manually.
+6. Run the re-evaluation commands below.
 
 **Important:** The sync script replaces the full `## Guidelines` … `## Testing and Validation` region. Subsections such as `### Anti-Patterns` are removed unless they come from a `category-*.md` file. Use `category-anti-patterns.md` (or another category file) for anti-pattern rules.
 
@@ -141,10 +153,11 @@ apm audit --ci
 ## Decisions Captured
 
 1. Keep `Check` content in `## Guidelines`.
-2. Keep operational content in `## Testing and Validation` and `## Security Guidelines`.
+2. Keep operational content in `## Testing and Validation` and `## Security Guidelines`, but keep Testing concise (skill pointer + non-automated notes only).
 3. In `instructions.instructions.md`, avoid duplicating TEST/SEC review criteria outside `## Guidelines`.
 4. Pair production changes with tests in the same change (`TEST-00 (MUST)` in `go-review` and `shell-script-review`; Bats details in companion Bats rules, stem `bats`).
 5. Keep distributable instruction content repository-neutral; consumer-specific helpers belong in the consuming repository's docs or test support, not in APM package instructions.
+6. Always-run lint belongs in Agent hooks/pre-commit; on-demand recipes belong in validation skills — not in always-on instructions or `%code_mod_guidelines`.
 
 ## Troubleshooting
 

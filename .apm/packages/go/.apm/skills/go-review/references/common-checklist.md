@@ -1,7 +1,6 @@
 # Go Review Checklist
 
 ## Architecture (ARCH)
-
 - ARCH-01 (SHOULD): Layer Separation
 - ARCH-02 (SHOULD): Dependency Injection
 - ARCH-03 (SHOULD): Domain Logic Isolation
@@ -14,7 +13,6 @@
 - ARCH-10 (SHOULD): Module Design
 
 ## Code Standards (CODE)
-
 - CODE-01 (MUST): Appropriate Interface Design
 - CODE-02 (SHOULD): API/Package Boundary Design
 - CODE-03 (SHOULD): Appropriate Struct Design
@@ -26,7 +24,6 @@
 - CODE-09 (SHOULD): Avoid Naked Returns in Long Functions
 
 ## Concurrency (CON)
-
 - CON-01 (SHOULD): Avoid goroutine Leaks
 - CON-02 (SHOULD): Clarify channel close Responsibility
 - CON-03 (SHOULD): Appropriate buffered/unbuffered channel Selection
@@ -35,14 +32,12 @@
 - CON-06 (SHOULD): data race Detection and Prevention
 
 ## Context Handling (CTX)
-
 - CTX-01 (MUST): Accept context in public APIs
 - CTX-02 (SHOULD): Avoid context lifecycle ambiguity
 - CTX-03 (SHOULD): Propagate context to goroutines
 - CTX-04 (SHOULD): Appropriate cancel Invocation
 
 ## Dependencies (DEP)
-
 - DEP-01 (SHOULD): Explicit Direct Dependencies
 - DEP-02 (SHOULD): Dependency Update Strategy
 - DEP-03 (SHOULD): vendor Management (Only When Necessary)
@@ -52,7 +47,6 @@
 - DEP-07 (SHOULD): License Compatibility
 
 ## Documentation (DOC)
-
 - DOC-01 (SHOULD): Package Documentation Exists
 - DOC-02 (MUST): godoc for Public Functions
 - DOC-03 (SHOULD): Complex Logic Comments
@@ -65,7 +59,6 @@
 - DOC-10 (SHOULD): CHANGELOG
 
 ## Error Handling (ERR)
-
 - ERR-01 (MUST): Appropriate Error Wrapping
 - ERR-02 (SHOULD): Appropriate Custom Error Definition
 - ERR-03 (SHOULD): Avoid and Recover from Panics
@@ -77,7 +70,6 @@
 - ERR-09 (SHOULD): Error Message Security
 
 ## Function Design (FUNC)
-
 - FUNC-01 (SHOULD): Appropriate Function Splitting
 - FUNC-02 (SHOULD): Appropriate Argument Design
 - FUNC-03 (SHOULD): Return Value Design
@@ -90,7 +82,6 @@
 - FUNC-10 (SHOULD): Comprehensive Function Documentation
 
 ## Global / Base (G)
-
 - G-01 (SHOULD): No Hardcoded Secrets
 - G-02 (SHOULD): Appropriate Function Signatures
 - G-03 (SHOULD): Leverage Standard Library
@@ -100,7 +91,6 @@
 - G-07 (SHOULD): Defensive Copy at Boundaries
 
 ## Performance (PERF)
-
 - PERF-01 (SHOULD): Memory Optimization
 - PERF-02 (SHOULD): CPU Optimization
 - PERF-03 (SHOULD): I/O Optimization
@@ -113,7 +103,6 @@
 - PERF-10 (SHOULD): Hot Path Optimization
 
 ## Security (SEC)
-
 - SEC-01 (SHOULD): Input Validation
 - SEC-02 (SHOULD): Output Sanitization
 - SEC-03 (SHOULD): Appropriate Encryption
@@ -124,7 +113,6 @@
 - SEC-08 (SHOULD): OWASP Compliance
 
 ## Testing (TEST)
-
 - TEST-00 (MUST): Add Tests With Behavior Changes
 - TEST-01 (SHOULD): Table-Driven Tests
 - TEST-02 (SHOULD): testify Usage and Test Design

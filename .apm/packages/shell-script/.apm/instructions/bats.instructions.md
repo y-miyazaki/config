@@ -104,30 +104,13 @@ Prefer [bats-support](https://github.com/bats-core/bats-support) and [bats-asser
 
 - Add or update suites under `test/bats/` mirroring the changed script path in the same change as the script.
 - Reuse `test/bats/support/` helpers; extend shared support instead of copying preamble logic.
-- After changes, run `bats -r test/bats` and the repository's shell validation entry point (for example `shell-script-validation` `validate.sh` when available).
 - Shell script DOC/header rules remain in the companion Shell Script rules (stem `shell-script`); do not duplicate them here.
 
 ## Testing and Validation
 
-**Entry point (recommended)**:
+On-demand suite verification: see shell-script-validation skill SKILL.md, or run `bats` against the changed suite.
 
-```bash
-bats -r test/bats
-bash <agent-root>/skills/shell-script-validation/scripts/validate.sh
-```
-
-**Individual execution (debugging)**:
-
-```bash
-bats test/bats/path/to/script.bats
-bats test/bats/path/to/script.bats -f "partial test name"
-```
-
-**References**:
-
-- [bats-core writing tests](https://bats-core.readthedocs.io/en/stable/writing-tests.html)
-- [bats-core tutorial](https://bats-core.readthedocs.io/en/stable/tutorial.html)
-- Suite conventions: this file. Shell script authoring: companion Shell Script rules (stem `shell-script`). Validation workflow: `shell-script-validation` skill SKILL.md.
+References: [bats-core writing tests](https://bats-core.readthedocs.io/en/stable/writing-tests.html), [bats-core tutorial](https://bats-core.readthedocs.io/en/stable/tutorial.html). Shell authoring: companion Shell Script rules (stem `shell-script`).
 
 ## Security Guidelines
 

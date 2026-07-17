@@ -82,7 +82,6 @@ description: "AI Assistant Instructions for Agent Skills Development"
 ## Guidelines
 
 ### Pattern Checks (P)
-
 - P-01 (SHOULD): Design Pattern Compliance
   - Check: Does SKILL.md define a deterministic execution pattern with explicit flow, boundaries, and references?
 - P-02 (SHOULD): Output Contract Compliance
@@ -91,7 +90,6 @@ description: "AI Assistant Instructions for Agent Skills Development"
   - Check: For skills that generate or modify content (docs, code, configs), does the Workflow include an explicit step to read relevant source material before writing?
 
 ### Quality Checks (Q)
-
 - Q-01 (SHOULD): Output is Truly Structured
   - Check: Is the output format definition implementable and parseable (JSON schema / Markdown structure explicitly defined with example)?
 - Q-02 (SHOULD): Scope Boundaries
@@ -118,7 +116,6 @@ description: "AI Assistant Instructions for Agent Skills Development"
   - Check: Are definitions across sections (Input, Output Specification, Workflow, Reference Files Guide) free of mutual contradiction?
 
 ### Structural Checks (S)
-
 - S-01 (MUST): Structural Completeness
   - Check: Does SKILL.md have all 5 required sections at ## heading level?
 - S-02 (MUST): YAML Frontmatter Fields
@@ -136,33 +133,12 @@ description: "AI Assistant Instructions for Agent Skills Development"
 
 ### Code Modification Guidelines
 
-- After changes, prioritize running validate.sh from agent-skills-review skill.
-- Use individual commands only for debugging.
+- Automate deterministic checks (existence, quantitative, file presence) in skill `scripts/`; keep judgment-based checks in the review skill workflow.
+
 
 ## Testing and Validation
 
-Operational rules:
-
-- Automate deterministic checks (existence checks, quantitative checks, and file presence checks) in `scripts/`.
-- Evaluate judgment-based checks (semantic review, design assessment, and context-sensitive decisions) in the review skill.
-- Determine overall quality from both deterministic checks and judgment-based checks.
-
-**Entry point (recommended)**:
-
-```bash
-bash <agent-root>/skills/agent-skills-review/scripts/validate.sh SKILL.md
-bash <agent-root>/skills/agent-skills-review/scripts/validate_waza.sh <skill-name>
-```
-
-**Individual execution (debugging)**:
-
-```bash
-waza check <skill-name>
-waza run <skill-name>/eval.yaml
-waza tokens count <skill-name>/SKILL.md
-```
-
-**Detailed guide**: See agent-skills-review skill SKILL.md.
+On-demand validation: see agent-skills-review skill SKILL.md.
 
 ## Security Guidelines
 
