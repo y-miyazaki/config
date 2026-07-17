@@ -109,7 +109,7 @@ inputs:
     description: "Target descriptor JSON from loop-detect matrix cell"
     required: false
   token:
-    [REDACTED:API key param] "GitHub token for PR creation and state push"
+    description: "GitHub token for PR creation and state push"
     required: true
   tokens_estimate:
     default: "52000"

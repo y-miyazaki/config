@@ -185,7 +185,7 @@ on:
         type: string
     secrets:
       AGENT_TOKEN:
-        [REDACTED:API key param] "Authentication token for the selected engine"
+        description: "Authentication token for the selected engine"
         required: true
       BOT_APP_CLIENT_ID:
         description: "GitHub App client ID for ruleset-bypass .loop/* pushes"
