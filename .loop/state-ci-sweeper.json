@@ -24,8 +24,8 @@
     }
   },
   "acting_on": {
-    "target_key": "integration:main",
+    "target_key": "pull_request:265",
     "loop_name": "ci-sweeper",
-    "started_at": "2026-07-17T04:13:27Z"
+    "started_at": "2026-07-17T04:13:31Z"
   }
 }
