@@ -466,14 +466,24 @@ Token costs tend to increase quadratically as conversation accumulates.
 | Measured usage    | `loop-execute` output `usage_json`                                  | Passed through finalize into `loop-run-log` for the next detect cycle           |
 | Retention         | `loop-run-log`                                                      | Prunes JSONL entries older than 30 days                                         |
 
-Example policy entry (matches `.loop/loop-budget.json`). `loop-detect` consumes only `max_runs_per_day` and `max_tokens_per_day`; `max_attempts_per_run` in the file is unused — set attempt limits via `agent_loop_max_attempts` on the caller:
+Example policy entry (matches dogfood `.loop/loop-budget.json`). `loop-detect` consumes only `max_runs_per_day` and `max_tokens_per_day`; `max_attempts_per_run` in the file is unused — set attempt limits via `agent_loop_max_attempts` on the caller:
 
 ```json
 {
   "loops": {
+    "changelog": {
+      "max_attempts_per_run": 3,
+      "max_runs_per_day": 5,
+      "max_tokens_per_day": 500000
+    },
+    "ci-sweeper": {
+      "max_attempts_per_run": 3,
+      "max_runs_per_day": 50,
+      "max_tokens_per_day": 1000000
+    },
     "docs-triage": {
       "max_attempts_per_run": 3,
-      "max_runs_per_day": 1,
+      "max_runs_per_day": 5,
       "max_tokens_per_day": 500000
     }
   }

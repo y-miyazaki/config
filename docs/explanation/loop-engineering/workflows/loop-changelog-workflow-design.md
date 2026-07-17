@@ -63,7 +63,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `allowlist`                                          | Comma-separated globs the implementer may modify. Enforced in `loop-execute`.                                                                                                          | `CHANGELOG.md`                                                      |
 | `branch_match`                                       | Comma-separated branch patterns to watch for changelog drift.                                                                                                                          | `main`                                                              |
 | `branch_state`                                       | Branch for run-log/budget persistence and state **read** baseline.                                                                                                                     | `main`                                                              |
-| `budget_max_runs_per_day`                            | Daily run cap keyed by `loop_name`. Exceeded → `skip_reason=budget`.                                                                                                                   | `1`                                                                 |
+| `budget_max_runs_per_day`                            | Daily run cap keyed by `loop_name`. Caller input; `.loop/loop-budget.json` overrides when present. Exceeded → `skip_reason=budget`.                                                     | `1` (caller); effective `5` via `.loop/loop-budget.json`            |
 | `budget_max_tokens_per_day`                          | Daily aggregated token cap across loops.                                                                                                                                               | `500000`                                                            |
 | `detect_domain_env_json` → `CHANGELOG_FILE`          | Target changelog path. Forwarded to `detect_changelog_commits.sh`.                                                                                                                     | `CHANGELOG.md`                                                      |
 | `detect_domain_env_json` → `CHANGELOG_MERGE_COMMITS` | `true` includes merge commits; `false` passes `--no-merges` to detect script.                                                                                                          | `false`                                                             |
@@ -160,8 +160,8 @@ No `domain_persistence_script`.
 - [x] Per-branch `targets["integration:<branch>"]`
 - [x] `target_matrix` through detect → matrix execute/finalize
 - [x] `verifier_context` on execute path (`build_verifier_context_from_result` `.commits` branch)
-- [ ] Bump remote pins (`loop-detect`, `ci-loop-agent`, `loop-finalize`, `loop-state-write`) to release SHA containing merge-gated `pending` / `loop-state-promote`
-- [ ] Bump `ci-loop-agent.yaml` pins for `loop-finalize` and `loop-execute` to a release SHA with hybrid PR body — or temporary `uses: ./.github/actions/...` for validation
+- [x] Merge-gated `pending` / `loop-state-promote` pins: dogfood callers use release actions @ v1.8.36
+- [x] Hybrid PR body pins: `ci-loop-agent.yaml` uses `loop-finalize` / `loop-execute` @ v1.8.36 (`render_pr_body.sh`)
 
 ## Cross-Loop Note
 
