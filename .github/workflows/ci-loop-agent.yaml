@@ -298,7 +298,7 @@ jobs:
           version: ${{ inputs.uv_version }}
 
       - name: Run Agent Once
-        uses: y-miyazaki/config/.github/actions/loop-agent-once@ece3e4795f21f2d75a20398e29569db5d10ae139 # v1.8.31
+        uses: y-miyazaki/config/.github/actions/loop-agent-once@cf5428b7f8ec2b9bf4b052bc8517ee45cb9c8e35 # v1.8.31
         with:
           agent_token: ${{ secrets.AGENT_TOKEN }}
           cli_version: ${{ inputs.cli_version }}
@@ -410,7 +410,7 @@ jobs:
 
       - name: Set Acting On
         if: steps.state_path.outputs.state_file != '' && inputs.state_bundle_with_fix_pr != true
-        uses: y-miyazaki/config/.github/actions/loop-state-write@ece3e4795f21f2d75a20398e29569db5d10ae139 # v1.8.31
+        uses: y-miyazaki/config/.github/actions/loop-state-write@cf5428b7f8ec2b9bf4b052bc8517ee45cb9c8e35 # v1.8.31
         with:
           acting_on_action: set
           acting_on_loop_name: ${{ inputs.loop_name }}
@@ -424,7 +424,7 @@ jobs:
 
       - name: Setup Worktree
         id: worktree
-        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@ece3e4795f21f2d75a20398e29569db5d10ae139 # v1.8.31
+        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@cf5428b7f8ec2b9bf4b052bc8517ee45cb9c8e35 # v1.8.31
         with:
           base_branch: ${{ steps.target.outputs.worktree_branch }}
           base_ref: ${{ steps.target.outputs.worktree_ref }}
@@ -434,7 +434,7 @@ jobs:
 
       - name: Execute Bounded Loop
         id: execute
-        uses: y-miyazaki/config/.github/actions/loop-execute@ece3e4795f21f2d75a20398e29569db5d10ae139 # v1.8.31
+        uses: y-miyazaki/config/.github/actions/loop-execute@cf5428b7f8ec2b9bf4b052bc8517ee45cb9c8e35 # v1.8.31
         with:
           agent_implementer_max_turns: ${{ inputs.agent_implementer_max_turns }}
           agent_implementer_model: ${{ inputs.agent_implementer_model }}
@@ -543,7 +543,7 @@ jobs:
 
       - name: Finalize
         id: finalize
-        uses: y-miyazaki/config/.github/actions/loop-finalize@ece3e4795f21f2d75a20398e29569db5d10ae139 # v1.8.31
+        uses: y-miyazaki/config/.github/actions/loop-finalize@cf5428b7f8ec2b9bf4b052bc8517ee45cb9c8e35 # v1.8.31
         with:
           additional_commit_paths: ${{ inputs.additional_commit_paths }}
           agent_result: ${{ needs.agent-l2.result }}
@@ -577,7 +577,7 @@ jobs:
         if: >-
           always() &&
           steps.notify_target.outputs.pr_number != ''
-        uses: y-miyazaki/config/.github/actions/loop-notify-pr@ece3e4795f21f2d75a20398e29569db5d10ae139 # v1.8.31
+        uses: y-miyazaki/config/.github/actions/loop-notify-pr@cf5428b7f8ec2b9bf4b052bc8517ee45cb9c8e35 # v1.8.31
         with:
           attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
           auto_merge: ${{ inputs.auto_merge }}
