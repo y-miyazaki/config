@@ -8,12 +8,19 @@
       "last_reject_reason": "No file changes produced"
     },
     "integration:main": {
-      "last_run": "2026-07-16T11:55:09Z",
-      "outcome": "pr-closed",
+      "last_run": "2026-07-17T05:30:05Z",
+      "outcome": "pr-created",
       "consecutive_failures": 0,
       "open_rejections": [],
       "last_reject_reason": "No meaningful changes outside .loop/",
-      "last_sha": "348e9e955416dc5acdd8d177197b06351af9f8f2"
+      "last_sha": "348e9e955416dc5acdd8d177197b06351af9f8f2",
+      "pending": {
+        "sha": "bd64af5ffbe73498aa7442cc6315045c238f1e99",
+        "pr": 415,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/415",
+        "loop_name": "ci-sweeper",
+        "created_at": "2026-07-17T05:30:05Z"
+      }
     },
     "pull_request:401": {
       "last_run": "2026-07-16T07:45:36Z",
@@ -29,10 +36,5 @@
       "open_rejections": [],
       "last_reject_reason": "No file changes produced"
     }
-  },
-  "acting_on": {
-    "target_key": "pull_request:265",
-    "loop_name": "ci-sweeper",
-    "started_at": "2026-07-17T05:29:12Z"
   }
 }
