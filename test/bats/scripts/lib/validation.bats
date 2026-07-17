@@ -3,6 +3,19 @@
 
 # Tests for scripts/lib/validation.sh
 
+# Use cases:
+# - validate_directory_exists fails for missing dir
+# - validate_directory_exists succeeds for existing dir
+# - validate_file_exists fails for missing file
+# - validate_file_exists succeeds for existing readable file
+# - validate_file_permissions detects correct and incorrect perms
+# - validate_files_in_directory validates files with provided function
+# - validate_json_file validates correct and incorrect JSON
+# - validate_script_executable recognizes executable and non-executable
+# - validate_script_syntax fails for invalid script
+# - validate_script_syntax succeeds for syntactically valid script
+# - validate_yaml_file validates correct and invalid YAML when python available
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

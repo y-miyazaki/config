@@ -3,6 +3,16 @@
 
 # Tests for .github/actions/validate-loop-caller-permissions/lib/validate.sh
 
+# Use cases:
+# - fails when execute baseline permission is missing
+# - fails when full-github profile lacks actions read
+# - fails when profile is not implemented
+# - passes for default profile caller
+# - passes for full-github profile caller
+# - passes when no loop callers are present
+# - requires REGISTRY_FILE environment variable
+# - wrapper script validates dogfood callers
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

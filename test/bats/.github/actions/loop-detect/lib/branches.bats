@@ -3,6 +3,15 @@
 
 # Tests for .github/actions/loop-detect/lib/branches.sh
 
+# Use cases:
+# - split_csv trims whitespace and drops empty items
+# - split_csv yields empty array for empty string
+# - branch_matches_pattern list mode requires exact match
+# - branch_matches_pattern glob mode matches release/*
+# - branch_matches_pattern regex mode matches extended regex
+# - resolve_integration_branches falls back to base when patterns empty
+# - resolve_integration_branches list mode uses patterns as-is
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

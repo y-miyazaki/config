@@ -3,6 +3,18 @@
 
 # Tests for scripts/lib/terraform.sh
 
+# Use cases:
+# - terraform_apply uses plan file when provided (dry-run)
+# - terraform_apply without plan uses var file (dry-run)
+# - terraform_destroy uses var file (dry-run)
+# - terraform_format check mode returns 0 in dry-run
+# - terraform_format non-check runs in dry-run mode
+# - terraform_get_workspace falls back to default when terraform not available
+# - terraform_init succeeds when backend config file exists (dry-run)
+# - terraform_plan succeeds when var file exists (dry-run)
+# - terraform_select_workspace creates workspace when select fails (dry-run)
+# - terraform_select_workspace errors when no name provided
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

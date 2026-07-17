@@ -3,6 +3,14 @@
 
 # Tests for .github/actions/loop-execute/lib/verifier.sh
 
+# Use cases:
+# - extract_last_json_fence returns the last json block
+# - parse_verifier_output parses fenced JSON APPROVE
+# - parse_verifier_output parses fenced JSON REJECT with files array
+# - parse_verifier_output falls back to legacy VERDICT lines
+# - parse_verifier_output defaults to REJECT when unparsable
+# - parse_verifier_output parses cursor stream-json verifier capture
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

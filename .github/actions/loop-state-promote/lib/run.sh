@@ -2,7 +2,8 @@
 #######################################
 # Description:
 #   Promote or clear pending loop state entries after a fix PR closes.
-#   Scans all .loop/state-*.json files on branch_state for matching pending.pr.
+#   Updates .loop/state-*.json only on the state push branch (explicit
+#   STATE_PUSH_BRANCH, or the repository default branch when unset).
 #
 # Usage:
 #   GH_TOKEN=... PR_NUMBER=... MERGED=true|false bash lib/run.sh
@@ -10,6 +11,7 @@
 # Design Rules:
 #   - Merged PRs promote pending.sha to last_sha
 #   - Closed-without-merge PRs clear pending only
+#   - Never push state commits onto fix-PR heads (avoids [skip ci] pollution)
 #
 # Output:
 #   Commits updated state files to branch_state when matches exist
@@ -195,74 +197,30 @@ function validate_state_push_branch {
 }
 
 #######################################
-# branch_has_pending_pr: Return 0 when a branch hosts state with matching pending.pr
+# discover_state_push_branches: Resolve the single branch that hosts loop state
 #
 # Arguments:
-#   $1 - Branch name
-#   $2 - Pull request number
-#
-# Global Variables:
-#   None
-#
-# Returns:
-#   0 when a matching pending entry exists on the branch, 1 otherwise
-#
-#######################################
-function branch_has_pending_pr {
-    local branch="$1"
-    local pr="$2"
-    local state_file
-
-    for state_file in $(list_state_files "${branch}"); do
-        if git show "origin/${branch}:${state_file}" 2> /dev/null \
-            | jq -e --argjson pr "${pr}" '.targets // {} | to_entries[] | select(.value.pending.pr == $pr)' \
-                > /dev/null 2>&1; then
-            return 0
-        fi
-    done
-    return 1
-}
-
-#######################################
-# discover_state_push_branches: Find branches hosting pending state for a PR
-#
-# Arguments:
-#   $1 - Pull request number
+#   $1 - Pull request number (unused; kept for call-site compatibility)
 #
 # Global Variables:
 #   STATE_PUSH_BRANCH - Optional explicit branch override
+#   GITHUB_REPOSITORY - Repository slug for default-branch lookup
 #
 # Returns:
-#   Newline-separated branch names on stdout
+#   One branch name on stdout (explicit override or repository default)
 #
 #######################################
 function discover_state_push_branches {
-    local pr="$1"
-    local -a branches=()
-    local branch
+    local _pr="${1:-}"
 
     if [[ -n ${STATE_PUSH_BRANCH} ]]; then
         printf '%s\n' "${STATE_PUSH_BRANCH}"
         return 0
     fi
 
-    git fetch origin --prune
-    while IFS= read -r branch; do
-        [[ -z ${branch} ]] && continue
-        branch="${branch#origin/}"
-        [[ ${branch} == HEAD ]] && continue
-        if branch_has_pending_pr "${branch}" "${pr}"; then
-            branches+=("${branch}")
-        fi
-    done < <(git branch -r --format='%(refname:short)')
-
-    if [[ ${#branches[@]} -eq 0 ]]; then
-        STATE_PUSH_BRANCH="$(gh repo view "${GITHUB_REPOSITORY}" --json defaultBranchRef --jq '.defaultBranchRef.name')"
-        printf '%s\n' "${STATE_PUSH_BRANCH}"
-        return 0
-    fi
-
-    printf '%s\n' "${branches[@]}"
+    : "${GITHUB_REPOSITORY:?}"
+    STATE_PUSH_BRANCH="$(gh repo view "${GITHUB_REPOSITORY}" --json defaultBranchRef --jq '.defaultBranchRef.name')"
+    printf '%s\n' "${STATE_PUSH_BRANCH}"
 }
 
 #######################################

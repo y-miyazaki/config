@@ -3,6 +3,13 @@
 
 # Tests for scripts/lib/common.sh
 
+# Use cases:
+# - execute_command executes the command and logs when VERBOSE=true
+# - execute_command in dry-run mode only logs planned command
+# - is_dry_run returns non-zero when DRY_RUN is false/unset
+# - is_dry_run returns success when DRY_RUN=true
+# - log prints ERROR messages regardless of VERBOSE
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

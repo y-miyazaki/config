@@ -3,6 +3,16 @@
 
 # Tests for .apm/packages/loop-ci-sweeper/.apm/skills/loop-ci-sweeper/scripts/update_run_ledger.sh
 
+# Use cases:
+# - update_run_ledger resolves head_sha from TARGET_JSON head_sha field
+# - update_run_ledger resolves fields from TARGET_JSON env
+# - update_run_ledger writes a new ledger entry
+# - update_run_ledger increments reject_count on rejected outcome
+# - update_run_ledger exits 0 when run-id is omitted
+# - update_run_ledger exits 0 on corrupt ledger file
+# - update_run_ledger preserves unrelated run entries
+# - update_run_ledger prunes entries older than seven days
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

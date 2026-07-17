@@ -3,6 +3,21 @@
 
 # Tests for .github/actions/loop-detect/lib/detect.sh
 
+# Use cases:
+# - detect_result_skip matches live changelog detect script output
+# - build_verifier_context_from_result formats live docs detect script output
+# - write_detect_outputs writes expected action output format
+# - enrich_target_json_with_ci_context adds first failure metadata
+# - build_loop_candidate_json rejects empty target_json with error annotation
+# - build_loop_candidate_json rejects invalid detect_result with diagnostic error
+# - build_loop_candidate_json assembles valid candidate JSON
+# - resolve_detect_script_path converts relative path to absolute
+# - resolve_detect_script_path keeps pinned script after cwd changes to stale tree
+# - resolve_detect_script_path fails when script is missing
+# - resolve_scoped_head_branch prefers LOOP_SCOPED_HEAD_BRANCH
+# - resolve_scoped_head_branch uses EVENT_HEAD_BRANCH when workflow_run id is set
+# - … and 10 more scenarios covered by @test names
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

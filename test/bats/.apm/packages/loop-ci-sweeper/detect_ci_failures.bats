@@ -3,6 +3,21 @@
 
 # Tests for .apm/packages/loop-ci-sweeper/.apm/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh
 
+# Use cases:
+# - append_ignored records ledger skip reason
+# - classify_failure_type treats normal runner label as regression
+# - classify_failure_type treats waiting for runner as infra
+# - classify_failure_type treats shellcheck failure as regression
+# - normalize_reject_retry_policy accepts aliases a b c
+# - should_skip_processed_run block policy skips any ledgered run
+# - should_skip_processed_run retry policy skips only pr-created
+# - should_skip_processed_run limited policy allows retry for no-action outcome
+# - should_skip_processed_run limited policy skips rejected at max retries
+# - collect_failures_for_run includes startup_failure as workflow-level failure
+# - collect_failures_for_run includes infra failures in failures array
+# - classify_failure_type treats http status in test output as regression
+# - … and 18 more scenarios covered by @test names
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

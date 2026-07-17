@@ -3,6 +3,17 @@
 
 # Tests for scripts/lib/aws.sh (aws_paginate_items and aws_retry_exec)
 
+# Use cases:
+# - aws_paginate_items returns nothing for empty array
+# - aws_paginate_items returns items for single page
+# - aws_paginate_items paginates with NextToken
+# - aws_paginate_items handles CloudFront NextMarker pagination
+# - aws_paginate_items handles DynamoDB LastEvaluatedTableName pagination
+# - aws_paginate_items handles DynamoDB list-global-tables pagination
+# - aws_paginate_items values can be unquoted with jq -r for primitive arrays (DynamoDB TableNames)
+# - aws_paginate_items handles S3 list-objects-v2 ContinuationToken pagination
+# - aws_retry_exec retries on failure and succeeds
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

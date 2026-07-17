@@ -3,6 +3,11 @@
 
 # Tests for scripts/lib/json.sh
 
+# Use cases:
+# - json_escape escapes carriage returns and other control characters
+# - json_escape preserves printable characters and standard escapes
+# - json_field_string emits valid JSON for multiline values
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

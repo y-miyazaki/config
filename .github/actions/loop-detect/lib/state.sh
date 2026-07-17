@@ -141,22 +141,49 @@ function target_last_sha {
 }
 
 #######################################
-# target_pending_blocks_detect: Return 0 when pending cursor blocks detect
+# target_pending_blocks_detect: Return 0 when an open pending fix PR blocks detect
 #
 # Arguments:
 #   $1 - Target state JSON
 #
 # Global Variables:
-#   None
+#   GH_TOKEN / GITHUB_TOKEN - Used for live PR state lookup when pending.pr is set
 #
 # Returns:
-#   0 when blocked by pending fix PR (open, merged-awaiting-promote, or closed-awaiting-clear), 1 otherwise
+#   0 when pending.pr refers to an OPEN PR (or PR state cannot be resolved),
+#   1 when pending is absent or the PR is CLOSED/MERGED (stale cursor)
 #
 #######################################
 function target_pending_blocks_detect {
     local target_state="$1"
+    local pending_pr pr_state gh_token
 
-    jq -e '(.pending.pr | type) == "number"' <<< "${target_state}" > /dev/null 2>&1
+    if ! jq -e '(.pending.pr | type) == "number"' <<< "${target_state}" > /dev/null 2>&1; then
+        return 1
+    fi
+
+    pending_pr="$(jq -r '.pending.pr' <<< "${target_state}")"
+    gh_token="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+    if [[ -z ${gh_token} ]] || ! command -v gh > /dev/null 2>&1; then
+        echo "::warning::Pending PR #${pending_pr} present but gh/token unavailable; blocking detect"
+        return 0
+    fi
+
+    export GH_TOKEN="${gh_token}"
+    pr_state="$(gh pr view "${pending_pr}" --json state --jq '.state' 2> /dev/null || true)"
+    case "${pr_state}" in
+        OPEN)
+            return 0
+            ;;
+        CLOSED | MERGED)
+            echo "::warning::Pending PR #${pending_pr} is ${pr_state}; treating pending as stale (promote should clear it)"
+            return 1
+            ;;
+        *)
+            echo "::warning::Pending PR #${pending_pr} state unresolved (${pr_state:-empty}); blocking detect"
+            return 0
+            ;;
+    esac
 }
 
 #######################################

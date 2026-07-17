@@ -3,6 +3,21 @@
 
 # Tests for .github/actions/loop-finalize/lib/render_pr_body.sh
 
+# Use cases:
+# - redact_sensitive_text redacts github tokens
+# - render_agent_summary_section omitted when empty
+# - render_agent_summary_section wraps heading
+# - render_changes_section lists files
+# - render_changes_section omitted when empty
+# - render_changes_section preserves notify overflow note
+# - render_failure_context caps at five with overflow
+# - render_failure_context empty when no failures
+# - render_failure_context lists one failure
+# - render_failure_context lists three failures fully
+# - render_failure_context redacts secret-like reason
+# - render_pr_body empty prefix shows mechanical sections
+# - render_pr_body orders prefix failure changes summary footer
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

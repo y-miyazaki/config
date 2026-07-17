@@ -3,6 +3,12 @@
 
 # Tests for .github/actions/loop-install-cli/lib/install.sh
 
+# Use cases:
+# - install.sh rejects unsupported engine
+# - install.sh resolves pinned npm package version
+# - install.sh resolves latest npm package version via npm view
+# - install.sh installs cursor CLI and appends bindir to GITHUB_PATH
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

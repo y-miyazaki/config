@@ -3,6 +3,14 @@
 
 # Tests for .github/actions/loop-detect/lib/matrix.sh
 
+# Use cases:
+# - build_verifier_context_from_result formats changelog commits
+# - build_verifier_context_from_result returns empty for empty commits array
+# - build_verifier_context_from_result prefers explicit verifier_context
+# - build_verifier_context_from_result still formats affected_docs
+# - candidate_priority_rank follows LOOP_PRIORITY order
+# - sort_candidates_by_priority puts integration before pull_request by default
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

@@ -3,6 +3,14 @@
 
 # Tests for .github/actions/loop-detect/lib/guards.sh
 
+# Use cases:
+# - target_circuit_breaker_open trips at three consecutive failures
+# - acting_on_is_active blocks matching peer within TTL
+# - acting_on_is_active ignores expired peer lock
+# - read_budget_limits prefers budget file over defaults
+# - budget_exceeded trips when daily run count reaches max
+# - budget_exceeded allows runs under the daily cap
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

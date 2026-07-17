@@ -3,6 +3,14 @@
 
 # Tests for .github/actions/loop-execute/lib/common.sh
 
+# Use cases:
+# - render_template replaces placeholders
+# - normalize_no_changes_verdict defaults to APPROVE
+# - normalize_no_changes_verdict coerces reject variants to REJECT
+# - normalize_no_changes_verdict coerces unknown values to APPROVE
+# - parse_output_field extracts legacy line fields
+# - load_default_prompts fills empty prompt env vars
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

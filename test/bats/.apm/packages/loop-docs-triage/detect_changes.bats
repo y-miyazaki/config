@@ -3,6 +3,15 @@
 
 # Tests for .apm/packages/loop-docs-triage/.apm/skills/loop-docs-triage/scripts/detect_changes.sh
 
+# Use cases:
+# - trim_whitespace removes leading and trailing spaces
+# - append_unique_doc adds existing paths once
+# - detect_changes range scope lists affected docs for non-markdown changes
+# - detect_changes range scope skips when only markdown files change
+# - detect_changes range scope includes affected docs when markdown is deleted
+# - detect_changes rejects range scope without since ref
+# - detect_changes script validates ok response format on workspace repo
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

@@ -223,7 +223,7 @@ Bundling is **per-loop opt-in**, not a global LE requirement. The historical def
 | Delivery                                                                                         | Verdict                                                                                                                       |
 | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
 | **Direct push to `branch_state`** (bot token + branch-protection bypass for `.loop/*`)           | **Target.** State updates are infrastructure writes, not review gates.                                                        |
-| **Merge-gated state push** (`pull_request` `closed` + `merged` → promote `pending` → `last_sha`) | **Chosen L2 model.** Fix PR is domain-only; state advances on the merge **event**, not because a human approved a state diff. |
+| **Merge-gated state push** (`pull_request_target` `closed` + `merged` → promote `pending` → `last_sha`) | **Chosen L2 model.** Fix PR is domain-only; state advances on the merge **event**, not because a human approved a state diff. |
 | **State-only PR** (including auto-merge queue)                                                   | **Anti-pattern.** A fallback when push is blocked; must not be the designed happy path.                                       |
 | **`state_bundle_with_fix_pr`**                                                                   | **Deprecated interim.** Mixed machine state into a human PR; retire after merge-gated push.                                   |
 | **L3 `push` / `push_head`**                                                                      | **Platform exception.** Dogfood uses `open_pr` + GitHub auto-merge instead of direct push.                                    |
@@ -239,12 +239,12 @@ So “state should be pushed, not PR’d” is right for **delivery mechanism**.
 
 **Platform direction (chosen):**
 
-1. **L2:** Fix PR carries **domain files only**. On `pull_request` `closed` + `merged`, a platform handler **direct-pushes** state to `branch_state` (promote `pending` → `last_sha`). Humans never review or merge state.
+1. **L2:** Fix PR carries **domain files only**. On `pull_request_target` `closed` + `merged`, a platform handler **direct-pushes** state to `branch_state` (promote `pending` → `last_sha`). Humans never review or merge state.
 2. **L2 + `to.branch != branch_state`:** Same merge hook; state always lands on `branch_state`, not on the fix branch.
 3. **L3:** `finalize: push` / `push_head` — single atomic push to the watched branch; no **new fix PR**, no `pending` state cursor.
 4. **`state_bundle_with_fix_pr`:** **Deprecated interim** (changelog dogfood today). Remove once merge-gated push ships. Do not adopt for new loops.
 
-**Pending cursor:** On `pr-created`, finalize writes `targets[key].pending = { sha, pr, … }` to `branch_state` via direct push **without** advancing `last_sha`. `on-loop-state-promote` (`pull_request` `closed`) promotes `pending.sha` → `last_sha` on merge or clears `pending` when closed without merge. Re-open detect therefore still sees the same commits if the fix PR is closed without merge.
+**Pending cursor:** On `pr-created`, finalize writes `targets[key].pending = { sha, pr, … }` to `branch_state` via direct push **without** advancing `last_sha`. `on-loop-state-promote` (`pull_request_target` `closed`) promotes `pending.sha` → `last_sha` on merge or clears `pending` when closed without merge. Promote updates **only** `branch_state` / the repository default branch (or an explicit `state_push_branch` override) — never open fix-PR heads — so `[skip ci]` state commits cannot pollute a PR HEAD and suppress Actions. Detect blocks on `pending.pr` only while that PR is `OPEN`; `CLOSED` / `MERGED` pending is treated as stale (warn and continue) until promote clears it. Re-open detect therefore still sees the same commits if the fix PR is closed without merge (after stale pending is ignored or cleared).
 
 ### Migration
 
@@ -329,3 +329,4 @@ Shared caller configuration: [Loop Caller Inputs Reference](workflows/loop-calle
 - [Loop Engineering Design](loop-engineering-design.md)
 - [Loop Caller Workflows Design](loop-caller-workflows-design.md)
 - [cobusgreyling loop-engineering](https://github.com/cobusgreyling/loop-engineering)
+

@@ -3,6 +3,11 @@
 
 # Tests for .github/actions/loop-execute/lib/rejections.sh
 
+# Use cases:
+# - append_open_rejection adds structured entry
+# - format_open_rejections_for_prompt renders markdown
+# - record_structured_reject writes attempt artifacts
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

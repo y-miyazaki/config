@@ -3,6 +3,19 @@
 
 # Tests for .github/actions/loop-notify-pr/lib/notify.sh
 
+# Use cases:
+# - build_comment_body includes agent appendix when present
+# - build_comment_body includes fix context from notify json
+# - build_comment_body includes marker and outcome
+# - build_comment_body includes L2 next step when bot fix PR created
+# - build_comment_body includes L3 auto-merge note when enabled
+# - build_comment_body redacts secrets in reject reason
+# - build_comment_body uses watch message when outcome is watch
+# - redact_sensitive_text redacts bearer tokens
+# - truncate_text truncates to max
+# - validate_required_inputs fails when LOOP_NAME is empty
+# - validate_required_inputs passes when required fields are set
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

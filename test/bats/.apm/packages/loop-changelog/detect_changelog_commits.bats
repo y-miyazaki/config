@@ -3,6 +3,21 @@
 
 # Tests for .apm/packages/loop-changelog/.apm/skills/loop-changelog/scripts/detect_changelog_commits.sh
 
+# Use cases:
+# - parse_commit_subject accepts conventional feat commit
+# - parse_commit_subject accepts renovate prefix
+# - parse_commit_subject accepts chore deps scope
+# - parse_commit_subject rejects plain message
+# - parse_commit_subject marks breaking header
+# - is_loop_maintenance_commit skips chore changelog scope
+# - is_loop_maintenance_commit skips subject with loop-changelog marker
+# - is_loop_maintenance_commit allows regular feat commits
+# - detect_changelog_commits range scope returns feat commit
+# - detect_changelog_commits skips loop maintenance commit in range
+# - detect_changelog_commits reports changelog_exists false when missing
+# - detect_changelog_commits reports changelog_exists true when present
+# - … and 7 more scenarios covered by @test names
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

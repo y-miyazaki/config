@@ -3,6 +3,13 @@
 
 # Tests for scripts/terraform/validate.sh
 
+# Use cases:
+# - parse_arguments sets VERBOSE on -v
+# - parse_arguments sets GENERATE_DOCS on -d
+# - parse_arguments sets AUTO_FIX on -f
+# - parse_arguments collects positional args as TARGET_DIRS
+# - parse_arguments fails on unknown option
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

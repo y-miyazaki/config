@@ -3,6 +3,18 @@
 
 # Tests for .github/actions/loop-execute/lib/usage.sh
 
+# Use cases:
+# - reset_usage_totals clears module globals
+# - accumulate_cursor_usage_from_line sums result usage
+# - accumulate_cursor_stream_usage reads model from system init
+# - build_usage_json returns empty when no usage captured
+# - build_usage_json serializes measured totals
+# - accumulate_cursor_stream_usage parses fixture stream-json with camelCase usage
+# - is_cursor_stream_json_file detects stream-json captures
+# - extract_cursor_stream_text returns assistant markdown with json fence
+# - render_cursor_stream_log_summary omits raw ndjson and includes tool summary
+# - run_cursor_agent_with_usage captures usage from live cursor stream-json
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

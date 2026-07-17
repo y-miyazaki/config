@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-17T05:20:43.424867+00:00'
+generated_at: '2026-07-17T08:41:30.525203+00:00'
 apm_version: 0.24.0
 dependencies:
 - repo_url: _local/common
@@ -1438,7 +1438,7 @@ dependencies:
     .agents/skills/shell-script-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/shell-script-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .agents/skills/shell-script-validation/scripts/validate.sh: sha256:144cbecbd76a2f1e8ce266570627193afa952ecc756bf0b03b0fb45f8713fc04
-    .claude/rules/bats.md: sha256:6f764a7eb905cbeb6303dfa9b6fd5a885df7c707267342a9d4c0a843be28e768
+    .claude/rules/bats.md: sha256:0abe424dd9f1e8aac7eccc5d5769d6891dd7be51f5249d063096b9df10dcc451
     .claude/rules/shell-script.md: sha256:a38cb90bd2e866062fa3fc9874b3f0330dd78cf4071726df9d6082a9c8547db4
     .claude/skills/shell-script-review/SKILL.md: sha256:dfd8a2f213e1b32f39b608351026e29c8a39b29fff61d78932413d6e445e0d39
     .claude/skills/shell-script-review/eval.yaml: sha256:787b28497c258dc8bb5850176f43f9956d26b979c19319a149e00dff0de1084a
@@ -1489,7 +1489,7 @@ dependencies:
     .claude/skills/shell-script-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/shell-script-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .claude/skills/shell-script-validation/scripts/validate.sh: sha256:144cbecbd76a2f1e8ce266570627193afa952ecc756bf0b03b0fb45f8713fc04
-    .cursor/rules/bats.mdc: sha256:0dfaba1f9e74306e8d1382fc8bae243a5ffecb1f41b72b72ac12ad61d79ce200
+    .cursor/rules/bats.mdc: sha256:9771ea0e306d78b09d25cc54d987ef816bc1bbe14e684621b9b2d3597ffb3733
     .cursor/rules/shell-script.mdc: sha256:4451457d8a7afaf09ca8389118d9e61bd5e83d3dd3c334042276ee90b3384d34
   source: local
   local_path: ./.apm/packages/shell-script

@@ -3,6 +3,11 @@
 
 # Tests for .github/actions/loop-run-log/lib/run.sh
 
+# Use cases:
+# - run.sh rejects missing loop_name
+# - run.sh appends entry, commits, and writes entry_json output
+# - run.sh computes duration when duration input is empty
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

@@ -3,6 +3,19 @@
 
 # Tests for .github/actions/loop-execute/lib/paths.sh
 
+# Use cases:
+# - collect_allowlist_violations returns nothing when allowlist unset
+# - collect_allowlist_violations flags paths outside allowlist
+# - collect_allowlist_violations matches docs root markdown via ** glob
+# - collect_allowlist_violations matches nested docs markdown via ** glob
+# - path_matches_glob supports trailing ** directory patterns
+# - collect_denylist_violations flags denylisted paths
+# - collect_denylist_violations matches ** at start of pattern
+# - collect_denylist_violations returns nothing when denylist unset
+# - infer_files_from_text uses fallback when no paths found
+# - infer_files_from_text extracts repo-relative paths
+# - infer_files_from_text honors INFER_FILES_PATTERN
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

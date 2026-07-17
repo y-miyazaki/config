@@ -106,7 +106,7 @@ All `.loop/*` writes in **finalize step** via `loop-finalize` — not separate c
 
 Push branch: `LOOP_STATE_PUSH_BRANCH`, **not** `target.to.branch`.
 
-**Merge-gated state (L2 `open_pr`):** `loop-finalize` writes `pending` to `branch_state` after creating the domain-only PR. `on-loop-state-promote.yaml` (`pull_request` `closed`) promotes `pending` → `last_sha` on merge. L3 `push` / `push_head` advances `last_sha` in the same finalize run.
+**Merge-gated state (L2 `open_pr`):** `loop-finalize` writes `pending` to `branch_state` after creating the domain-only PR. `on-loop-state-promote.yaml` (`pull_request_target` `closed`) promotes `pending` → `last_sha` on merge. L3 `push` / `push_head` advances `last_sha` in the same finalize run.
 
 **Invariant:** Finalize does not edit application/doc **source under repair**.
 
@@ -236,3 +236,4 @@ Next structural improvement: [Loop Caller Reusable Workflow Design](loop-caller-
 - [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md)
 - [Changelog Workflow](workflows/loop-changelog-workflow-design.md)
 - [Docs Triage Workflow](workflows/loop-docs-triage-workflow-design.md)
+

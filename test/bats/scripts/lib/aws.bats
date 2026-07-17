@@ -3,6 +3,22 @@
 
 # Tests for scripts/lib/aws.sh
 
+# Use cases:
+# - extract_jq_value returns default for empty json
+# - extract_jq_value extracts value from json
+# - extract_jq_array returns joined quoted list for array
+# - extract_jq_array returns default when key missing
+# - aws_safe_exec returns stdout on success
+# - aws_safe_exec returns non-zero on failure
+# - is_service_available_in_region returns 0 for iam
+# - is_service_available_in_region handles lambda with aws success
+# - get_waf_association returns WebACL ARN
+# - format_aws_timestamp converts seconds
+# - format_aws_timestamp handles milliseconds
+# - parse_arn returns json with components
+# - get_resource_name_from_arn extracts resource name
+# - get_waf_name extracts name from ARN path
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

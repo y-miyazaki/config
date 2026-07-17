@@ -3,6 +3,9 @@
 
 # Tests for .github/actions/loop-execute/lib/agent.sh
 
+# Use cases:
+# - run_agent_capture preserves USAGE_* unlike pipe to tee
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

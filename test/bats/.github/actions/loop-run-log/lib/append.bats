@@ -3,6 +3,16 @@
 
 # Tests for .github/actions/loop-run-log/lib/append.sh
 
+# Use cases:
+# - loop_run_log_build_entry includes tokens_estimate by default
+# - loop_run_log_build_entry merges measured usage_json
+# - loop_run_log_append_entry writes JSONL entry with expected format
+# - loop_run_log_compute_duration returns zero for empty start
+# - loop_run_log_compute_duration returns elapsed seconds
+# - loop_run_log_prune_cutoff_date returns YYYY-MM-DD
+# - loop_run_log_append_entry prunes entries older than 30 days
+# - budget token selection prefers measured usage over tokens_estimate
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

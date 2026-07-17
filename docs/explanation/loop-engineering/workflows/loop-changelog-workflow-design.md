@@ -80,7 +80,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `pull_requests`                                      | Wire name for `pr_enabled`. Changelog uses integration branches only.                                                                                                                  | `false`                                                             |
 | `skill_name`                                         | Skill package to invoke. Must match `.agents/skills/loop-changelog/`.                                                                                                                  | `loop-changelog`                                                    |
 
-Platform handler: `on-loop-state-promote.yaml` (`pull_request` `closed`) promotes `pending` → `last_sha` on merge.
+Platform handler: `on-loop-state-promote.yaml` (`pull_request_target` `closed`) promotes `pending` → `last_sha` on merge.
 
 ## Detect
 
@@ -172,3 +172,4 @@ Changelog runs are doc-metadata only (`CHANGELOG.md`). Coordinate with `loop-doc
 - [Multi-Branch Loops Design](../multi-branch-loops-design.md)
 - [Loop Caller Workflows Design](../loop-caller-workflows-design.md)
 - [Specification](../../../reference/specification.md)
+

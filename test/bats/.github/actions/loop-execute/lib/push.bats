@@ -3,6 +3,11 @@
 
 # Tests for .github/actions/loop-execute/lib/push.sh
 
+# Use cases:
+# - main rejects invalid branch names
+# - main writes has_changes=false when loop produced no commits
+# - main accepts valid branch name characters
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

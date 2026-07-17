@@ -3,6 +3,12 @@
 
 # Tests for .github/actions/loop-execute/lib/loop.sh helpers
 
+# Use cases:
+# - parse_outcome_override_from_agent_output detects bold Outcome watch
+# - parse_outcome_override_from_agent_output detects plain Outcome deferred
+# - parse_outcome_override_from_agent_output detects no actionable failures
+# - parse_outcome_override_from_agent_output ignores fix outcomes
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

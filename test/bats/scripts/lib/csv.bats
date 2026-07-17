@@ -3,6 +3,13 @@
 
 # Tests for scripts/lib/csv.sh
 
+# Use cases:
+# - normalize_csv_value returns empty string for empty/null
+# - normalize_csv_value escapes quotes and newlines when PRESERVE_NEWLINES=false
+# - normalize_csv_value preserves newlines when PRESERVE_NEWLINES=true
+# - make_csv_safe wraps with quotes when comma present
+# - csv_sort sorts rows by region/subcategory/etc
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

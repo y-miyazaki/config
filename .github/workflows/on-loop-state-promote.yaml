@@ -1,10 +1,18 @@
 # Platform workflow: promote pending loop state when a fix PR closes.
 # Design: docs/explanation/loop-engineering/multi-branch-loops-design.md#state-delivery-philosophy
 # Requires MAINTENANCE_BOT_APP_CLIENT_ID and MAINTENANCE_BOT_APP_PRIVATE_KEY (environment: default).
+#
+# Trigger: pull_request_target (not pull_request) so a [skip ci] annotation on the closed
+# PR HEAD cannot suppress this merge-gate handler (GitHub skips pull_request for skip-ci HEADs).
+# Security model (required for zizmor ignore):
+# - Checkout only the PR base ref (never the untrusted head).
+# - Run only trusted composite action / scripts from that base checkout.
+# - Use event payload fields only (number, merged, labels); no head checkout or head script exec.
+# - Job gated on loop-automation label.
 name: on-loop-state-promote
 
 on:
-  pull_request:
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
     types: [closed]
 
 permissions:
@@ -22,6 +30,8 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+          # Explicit base ref: do not check out untrusted PR head under pull_request_target.
+          ref: ${{ github.event.pull_request.base.ref }}
 
       - name: Generate App Bot Token
         id: app_token

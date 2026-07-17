@@ -3,6 +3,14 @@
 
 # Tests for scripts/terraform/module_updater.sh
 
+# Use cases:
+# - artifact_dir_for creates sanitized directory path
+# - artifact_dir_for strips leading slash and replaces separators
+# - extract_modules_from_file extracts source and version pairs
+# - extract_modules_from_file ignores local modules without version
+# - find_terraform_modules finds files with module declarations
+# - find_terraform_project_root finds directory with versions.tf
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"

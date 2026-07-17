@@ -3,6 +3,20 @@
 
 # Tests for .github/actions/loop-execute/lib/notify_context.sh
 
+# Use cases:
+# - build_fix_summary falls back for invalid json
+# - build_fix_summary formats job and workflow from failures
+# - extract_agent_report_summary takes ## Summary until next H2
+# - main includes changed files when has_changes is true
+# - main parses agent_report_summary from status dir
+# - main parses agent_summary from status dir
+# - main writes notify_context_json without changes
+# - parse_agent_summary extracts block after marker
+# - parse_agent_summary returns empty when file missing
+# - redact_sensitive_text redacts github tokens
+# - truncate_text preserves short input
+# - truncate_text truncates long input
+
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
     _bats_support="$(dirname "${_bats_support}")"
