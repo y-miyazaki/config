@@ -73,10 +73,11 @@ function initialize_loop_state {
 #######################################
 function parse_outcome_override_from_agent_output {
     local agent_out="$1"
-    if grep -qiE '^\*\*Outcome:\*\*[[:space:]]*(watch|deferred|no actionable|escalat)' <<< "${agent_out}"; then
+    # Skill reports use either bold or plain Outcome lines, often as a list item.
+    if grep -qiE '^[[:space:]]*(-[[:space:]]+)?\*\*Outcome:\*\*[[:space:]]*(watch|deferred|no actionable|escalat)' <<< "${agent_out}"; then
         return 0
     fi
-    if grep -qiE '^[[:space:]]*Outcome:[[:space:]]*(watch|deferred|no actionable|escalat)' <<< "${agent_out}"; then
+    if grep -qiE '^[[:space:]]*(-[[:space:]]+)?Outcome:[[:space:]]*(watch|deferred|no actionable|escalat)' <<< "${agent_out}"; then
         return 0
     fi
     return 1

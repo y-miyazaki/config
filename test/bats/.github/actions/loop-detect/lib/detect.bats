@@ -124,3 +124,192 @@ setup() {
     run jq -e '.target_json.key == "integration:main" and .prompt == "do work" and .result.skip == false' <<< "${candidate}"
     [ "$status" -eq 0 ]
 }
+
+# --- UC: pin detect script to branch_state checkout (not target worktree) ---
+
+@test "resolve_detect_script_path converts relative path to absolute" {
+    local tmp pinned
+
+    tmp="$(mktemp -d)"
+    mkdir -p "${tmp}/scripts"
+    printf '%s\n' '#!/bin/bash' 'echo pinned' > "${tmp}/scripts/detect.sh"
+
+    (
+        cd "${tmp}"
+        DETECT_SCRIPT="scripts/detect.sh"
+        resolve_detect_script_path
+        printf '%s' "${DETECT_SCRIPT}"
+    ) > "${tmp}/out"
+    pinned="$(cat "${tmp}/out")"
+
+    [[ ${pinned} == /* ]]
+    [[ ${pinned} == */scripts/detect.sh ]]
+    [ -f "${pinned}" ]
+    rm -rf "${tmp}"
+}
+
+@test "resolve_detect_script_path keeps pinned script after cwd changes to stale tree" {
+    # Reproduces dogfood failure: PR head checkout has an older detect script;
+    # loop-detect must keep invoking the absolute path from the initial checkout.
+    local tmp pinned output
+
+    tmp="$(mktemp -d)"
+    mkdir -p "${tmp}/scripts" "${tmp}/stale/scripts"
+    printf '%s\n' '#!/bin/bash' 'echo pinned' > "${tmp}/scripts/detect.sh"
+    printf '%s\n' '#!/bin/bash' 'echo stale' > "${tmp}/stale/scripts/detect.sh"
+
+    (
+        cd "${tmp}"
+        DETECT_SCRIPT="scripts/detect.sh"
+        resolve_detect_script_path
+        cd "${tmp}/stale"
+        bash "${DETECT_SCRIPT}"
+    ) > "${tmp}/out"
+    output="$(cat "${tmp}/out")"
+
+    [ "${output}" = "pinned" ]
+    rm -rf "${tmp}"
+}
+
+@test "resolve_detect_script_path fails when script is missing" {
+    local tmp old_pwd
+
+    tmp="$(mktemp -d)"
+    old_pwd="$(pwd)"
+    cd "${tmp}"
+    DETECT_SCRIPT="missing/detect.sh"
+    run resolve_detect_script_path
+    cd "${old_pwd}"
+    rm -rf "${tmp}"
+
+    [ "$status" -ne 0 ]
+    [[ $output == *"DETECT_SCRIPT"* ]] || [[ $output == *"::error::"* ]]
+}
+
+# --- UC: workflow_run scopes watch list to failed head only ---
+
+@test "resolve_scoped_head_branch prefers LOOP_SCOPED_HEAD_BRANCH" {
+    LOOP_SCOPED_HEAD_BRANCH="feature/explicit"
+    CI_SWEEPER_WORKFLOW_RUN_ID="29557410488"
+    CI_SWEEPER_EVENT_HEAD_BRANCH="main"
+
+    run resolve_scoped_head_branch
+    [ "$status" -eq 0 ]
+    [ "$output" = "feature/explicit" ]
+}
+
+@test "resolve_scoped_head_branch uses EVENT_HEAD_BRANCH when workflow_run id is set" {
+    # UC: main markdown failure must not scan open Renovate PRs.
+    unset LOOP_SCOPED_HEAD_BRANCH
+    CI_SWEEPER_WORKFLOW_RUN_ID="29557410488"
+    CI_SWEEPER_EVENT_HEAD_BRANCH="main"
+
+    run resolve_scoped_head_branch
+    [ "$status" -eq 0 ]
+    [ "$output" = "main" ]
+}
+
+@test "resolve_scoped_head_branch is empty for schedule-like runs" {
+    unset LOOP_SCOPED_HEAD_BRANCH
+    unset CI_SWEEPER_WORKFLOW_RUN_ID
+    unset CI_SWEEPER_EVENT_HEAD_BRANCH
+
+    run resolve_scoped_head_branch
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "apply_scoped_head_filter keeps matching integration branch only" {
+    INTEGRATION_BRANCHES=("main" "develop")
+    OPEN_PRS_JSON=(
+        '{"number":265,"headRefName":"renovate/go"}'
+        '{"number":409,"headRefName":"renovate/pipx"}'
+    )
+
+    apply_scoped_head_filter "main"
+
+    [ "${#INTEGRATION_BRANCHES[@]}" -eq 1 ]
+    [ "${INTEGRATION_BRANCHES[0]}" = "main" ]
+    [ "${#OPEN_PRS_JSON[@]}" -eq 0 ]
+}
+
+@test "apply_scoped_head_filter keeps matching PR head only" {
+    INTEGRATION_BRANCHES=("main")
+    OPEN_PRS_JSON=(
+        '{"number":265,"headRefName":"renovate/mcr.microsoft.com-devcontainers-go-1.26"}'
+        '{"number":409,"headRefName":"renovate/pipx-headroom-ai-0.x"}'
+    )
+
+    apply_scoped_head_filter "renovate/mcr.microsoft.com-devcontainers-go-1.26"
+
+    [ "${#INTEGRATION_BRANCHES[@]}" -eq 0 ]
+    [ "${#OPEN_PRS_JSON[@]}" -eq 1 ]
+    run jq -e '.number == 265' <<< "${OPEN_PRS_JSON[0]}"
+    [ "$status" -eq 0 ]
+}
+
+@test "apply_scoped_head_filter is a no-op when scoped head is empty" {
+    INTEGRATION_BRANCHES=("main" "develop")
+    OPEN_PRS_JSON=('{"number":1,"headRefName":"feature/a"}')
+
+    apply_scoped_head_filter ""
+
+    [ "${#INTEGRATION_BRANCHES[@]}" -eq 2 ]
+    [ "${#OPEN_PRS_JSON[@]}" -eq 1 ]
+}
+
+@test "resolve_detect_script_path preserves already-absolute paths" {
+    local tmp abs
+
+    tmp="$(mktemp -d)"
+    printf '%s\n' '#!/bin/bash' 'echo ok' > "${tmp}/detect.sh"
+    abs="${tmp}/detect.sh"
+    DETECT_SCRIPT="${abs}"
+
+    resolve_detect_script_path
+
+    [ "${DETECT_SCRIPT}" = "$(realpath "${abs}")" ]
+    rm -rf "${tmp}"
+}
+
+@test "apply_scoped_head_filter clears all targets when none match" {
+    INTEGRATION_BRANCHES=("main")
+    OPEN_PRS_JSON=('{"number":265,"headRefName":"renovate/go"}')
+
+    apply_scoped_head_filter "feature/does-not-exist"
+
+    [ "${#INTEGRATION_BRANCHES[@]}" -eq 0 ]
+    [ "${#OPEN_PRS_JSON[@]}" -eq 0 ]
+}
+
+@test "require_scoped_head_for_workflow_run fails closed when run id set without head" {
+    CI_SWEEPER_WORKFLOW_RUN_ID="29557410488"
+
+    run require_scoped_head_for_workflow_run ""
+    [ "$status" -ne 0 ]
+    [[ $output == *"::error::"* ]]
+}
+
+@test "require_scoped_head_for_workflow_run allows schedule when run id unset" {
+    unset CI_SWEEPER_WORKFLOW_RUN_ID
+
+    run require_scoped_head_for_workflow_run ""
+    [ "$status" -eq 0 ]
+}
+
+@test "require_scoped_head_for_workflow_run accepts non-empty scoped head" {
+    CI_SWEEPER_WORKFLOW_RUN_ID="29557410488"
+
+    run require_scoped_head_for_workflow_run "main"
+    [ "$status" -eq 0 ]
+}
+
+@test "resolve_scoped_head_branch empty when workflow_run id set without EVENT_HEAD" {
+    unset LOOP_SCOPED_HEAD_BRANCH
+    unset CI_SWEEPER_EVENT_HEAD_BRANCH
+    CI_SWEEPER_WORKFLOW_RUN_ID="29557410488"
+
+    run resolve_scoped_head_branch
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}

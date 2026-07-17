@@ -42,6 +42,7 @@ Defined here only. Other docs link to this section.
 | `LOOP_PULL_REQUESTS`            | `pr_enabled` / `pull_requests` | `true` / `false`. Watch open PR heads.                                                                                 | `false`                    |
 | `LOOP_BRANCH_MATCH`             | `branch_match_mode`            | `list` \| `glob` \| `regex`.                                                                                           | `glob`                     |
 | `LOOP_PRIORITY`                 | `priority`                     | Cron mode order. Overridden by [trigger-aware priority](#trigger-aware-priority).                                      | `integration,pull_request` |
+| `LOOP_SCOPED_HEAD_BRANCH`       | (env / future input)           | When set, detect enumerates only this integration branch or PR head. `workflow_run` dogfood derives from event head.   | `""` (scan all)            |
 | `LOOP_FINALIZE_INTEGRATION`     | `finalize_integration`         | Optional override. Default **`open_pr`**. Exception: `push` (not dogfood).                                             | `open_pr` (internal)       |
 | `LOOP_FINALIZE_PULL_REQUEST`    | `finalize_pull_request`        | Optional override. Default **`open_pr`**. Exception: `push_head` (not dogfood).                                        | `open_pr` (internal)       |
 | `DEFAULT_LEVEL`                 | `level`                        | `L1` \| `L2` \| `L3`. L3 + `open_pr` → GitHub auto-merge on bot fix PR. [Single level switch](#single-level-switch).   | `L2`                       |
@@ -69,10 +70,12 @@ Defined here only. Other docs link to this section.
 
 ## Trigger-aware priority
 
-| Trigger        | Order                                                                          |
-| -------------- | ------------------------------------------------------------------------------ |
-| `schedule`     | `LOOP_PRIORITY` — integration before pull_request                              |
-| `workflow_run` | pull_request when `head_branch` is open PR; else integration for failed branch |
+| Trigger        | Order / scope                                                                                              |
+| -------------- | ---------------------------------------------------------------------------------------------------------- |
+| `schedule`     | `LOOP_PRIORITY` — integration before pull_request; scan all resolved watch targets                         |
+| `workflow_run` | **Enumerate only** the failed `head_branch`: matching open PR if any, else matching integration branch     |
+
+`workflow_run` scoping is enforced in `loop-detect` via `LOOP_SCOPED_HEAD_BRANCH` (explicit) or, for ci-sweeper dogfood, `CI_SWEEPER_WORKFLOW_RUN_ID` + `CI_SWEEPER_EVENT_HEAD_BRANCH` (stable event head — not the per-scan rewritten `CI_SWEEPER_HEAD_BRANCH`). Domain detect scripts still apply branch-mismatch guards as defense in depth.
 
 `workflow_run` is enabled for dogfood `loop-ci-sweeper` after the [ops checklist](workflows/loop-ci-sweeper-workflow-design.md#workflow_run-operational-checklist). Other loops stay schedule / `workflow_dispatch` until their checklist passes.
 
@@ -83,20 +86,22 @@ Defined here only. Other docs link to this section.
 ```text
 loop-detect
   1. Read LOOP_* + state (targets map)
-  2. Resolve integration branch list (glob/regex)
-  3. Optionally enumerate open PRs (LOOP_PULL_REQUESTS)
-  4. For each scan context:
-       a. fetch/checkout target ref
-       b. invoke detect_script (once per context)
+  2. Pin DETECT_SCRIPT to an absolute path (branch_state / job checkout) BEFORE any target checkout
+  3. Resolve integration branch list (glob/regex)
+  4. Optionally enumerate open PRs (LOOP_PULL_REQUESTS)
+  5. Apply trigger scope (LOOP_SCOPED_HEAD_BRANCH / workflow_run event head) → drop non-matching targets
+  6. For each remaining scan context:
+       a. fetch/checkout target ref (for last_sha / current_sha only)
+       b. invoke pinned detect_script (never the copy from the target worktree)
        c. if not skip: build candidate (target_json, result, prompt, verifier_context)
-  5. Apply acting_on / peer_active on each candidate.key
-  6. Apply LOOP_PRIORITY + LOOP_MAX_TARGETS_PER_SCHEDULE
-  7. Output target_matrix (JSON array)
+  7. Apply acting_on / peer_active on each candidate.key
+  8. Apply LOOP_PRIORITY + LOOP_MAX_TARGETS_PER_SCHEDULE
+  9. Output target_matrix (JSON array)
 ```
 
 Execute and finalize jobs use **matrix fan-out** over `target_matrix` — one cell per target, parallel with per-target `concurrency.group`.
 
-Detect scripts scan **only the current context** (branch/ref `loop-detect` checked out). They do not iterate branches themselves.
+Detect scripts scan **only the current context** (branch/ref `loop-detect` checked out for git state). The **script binary** always comes from the pinned absolute path on the job's initial checkout so stale PR heads cannot run older detect logic.
 
 ## Target Model (from / to)
 

@@ -11,7 +11,8 @@ done
 source "${_bats_support}/support/common.bash"
 
 setup() {
-    bats_source_rel ".github/actions/loop-detect/lib/matrix.sh"
+    # matrix.sh helpers depend on split_csv from branches.sh via _init.
+    bats_source_rel ".github/actions/loop-detect/lib/_init.sh"
 }
 
 @test "build_verifier_context_from_result formats changelog commits" {
@@ -72,4 +73,36 @@ setup() {
     [ "$status" -eq 0 ]
     [[ $output == *"## Change Detection"* ]]
     [[ $output == *"affected_docs: docs/a.md"* ]]
+}
+
+@test "candidate_priority_rank follows LOOP_PRIORITY order" {
+    LOOP_PRIORITY="pull_request,integration"
+
+    run candidate_priority_rank "pull_request"
+    [ "$status" -eq 0 ]
+    [ "$output" = "1" ]
+
+    run candidate_priority_rank "integration"
+    [ "$status" -eq 0 ]
+    [ "$output" = "2" ]
+
+    run candidate_priority_rank "unknown"
+    [ "$status" -eq 0 ]
+    [ "$output" = "99" ]
+}
+
+@test "sort_candidates_by_priority puts integration before pull_request by default" {
+    LOOP_PRIORITY="integration,pull_request"
+    CANDIDATES_JSON=(
+        '{"target_json":{"mode":"pull_request","key":"pull_request:265"},"prompt":"pr"}'
+        '{"target_json":{"mode":"integration","key":"integration:main"},"prompt":"int"}'
+    )
+
+    sort_candidates_by_priority
+
+    [ "${#CANDIDATES_JSON[@]}" -eq 2 ]
+    run jq -r '.target_json.key' <<< "${CANDIDATES_JSON[0]}"
+    [ "$output" = "integration:main" ]
+    run jq -r '.target_json.key' <<< "${CANDIDATES_JSON[1]}"
+    [ "$output" = "pull_request:265" ]
 }

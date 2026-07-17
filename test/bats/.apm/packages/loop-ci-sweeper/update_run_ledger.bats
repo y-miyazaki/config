@@ -96,7 +96,11 @@ teardown() {
 }
 
 @test "update_run_ledger preserves unrelated run entries" {
-    printf '%s' '{"runs":{"111":{"outcome":"pr-created","reject_count":0,"updated_at":"2026-07-10T00:00:00Z","workflow_name":"ci-shell"}}}' > "${LEDGER_FILE}"
+    local recent
+    recent="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    jq -nc --arg updated_at "${recent}" \
+        '{runs:{"111":{outcome:"pr-created",reject_count:0,updated_at:$updated_at,workflow_name:"ci-shell"}}}' \
+        > "${LEDGER_FILE}"
     run bash "${LEDGER_SCRIPT}" \
         --run-id 222 \
         --workflow ci-markdown \
@@ -106,5 +110,23 @@ teardown() {
     run jq -e '.runs["111"].workflow_name == "ci-shell"' "${LEDGER_FILE}"
     [ "$status" -eq 0 ]
     run jq -e '.runs["222"].outcome == "no-action"' "${LEDGER_FILE}"
+    [ "$status" -eq 0 ]
+}
+
+@test "update_run_ledger prunes entries older than seven days" {
+    local recent
+    recent="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    jq -nc --arg recent "${recent}" \
+        '{runs:{
+            "old":{outcome:"watch",reject_count:0,updated_at:"2020-01-01T00:00:00Z",workflow_name:"ci-old"},
+            "keep":{outcome:"watch",reject_count:0,updated_at:$recent,workflow_name:"ci-keep"}
+        }}' > "${LEDGER_FILE}"
+    run bash "${LEDGER_SCRIPT}" \
+        --run-id 333 \
+        --workflow ci-markdown \
+        --head-sha abc1234 \
+        --outcome watch
+    [ "$status" -eq 0 ]
+    run jq -e 'has("runs") and (.runs|has("old")|not) and .runs.keep.workflow_name == "ci-keep" and .runs["333"].outcome == "watch"' "${LEDGER_FILE}"
     [ "$status" -eq 0 ]
 }

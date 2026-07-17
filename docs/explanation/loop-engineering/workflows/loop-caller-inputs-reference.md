@@ -292,16 +292,17 @@ detect_domain_env_json: >-
 Event keys (embed in `detect_domain_env_json` when `workflow_run` trigger is enabled on the caller):
 
 ```yaml
-detect_domain_env_json: ${{ format('{{"CI_SWEEPER_HEAD_SHA":"{0}","CI_SWEEPER_WORKFLOW_RUN_ID":"{1}","CI_SWEEPER_HEAD_BRANCH":"{2}"}}', github.event.workflow_run.head_sha || github.sha, github.event.workflow_run.id || '', github.event.workflow_run.head_branch || 'main') }}
+detect_domain_env_json: ${{ format('{{"CI_SWEEPER_EVENT_HEAD_BRANCH":"{0}","CI_SWEEPER_HEAD_BRANCH":"{0}","CI_SWEEPER_HEAD_SHA":"{1}","CI_SWEEPER_WORKFLOW_RUN_ID":"{2}"}}', github.event.workflow_run.head_branch || 'main', github.event.workflow_run.head_sha || github.sha, github.event.workflow_run.id || '') }}
 ```
 
-| JSON key                     | Description                     |
-| ---------------------------- | ------------------------------- |
-| `CI_SWEEPER_HEAD_BRANCH`     | Failed run head branch          |
-| `CI_SWEEPER_HEAD_SHA`        | Failed run head SHA             |
-| `CI_SWEEPER_WORKFLOW_RUN_ID` | Failed run ID for ledger dedupe |
-| `CI_SWEEPER_WORKFLOW_NAME`   | Failed workflow display name    |
-| `CI_SWEEPER_RUN_URL`         | HTML URL of failed run          |
+| JSON key                       | Description                                                                                                      |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `CI_SWEEPER_EVENT_HEAD_BRANCH` | Stable failed-run head (not rewritten per scan). With `WORKFLOW_RUN_ID`, scopes `loop-detect` to that head only. |
+| `CI_SWEEPER_HEAD_BRANCH`       | Initial head; `loop-detect` rewrites per scan context                                                            |
+| `CI_SWEEPER_HEAD_SHA`          | Failed run head SHA                                                                                              |
+| `CI_SWEEPER_WORKFLOW_RUN_ID`   | Failed run ID for ledger dedupe + trigger-aware target scoping                                                   |
+| `CI_SWEEPER_WORKFLOW_NAME`     | Failed workflow display name                                                                                     |
+| `CI_SWEEPER_RUN_URL`           | HTML URL of failed run                                                                                           |
 
 ### Docs triage (`loop-docs-triage`)
 

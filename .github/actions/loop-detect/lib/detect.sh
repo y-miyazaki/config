@@ -9,6 +9,8 @@
 #
 # Design Rules:
 # - Enumerates integration branches and optional PR heads
+# - Pins DETECT_SCRIPT to an absolute path before any target checkout
+# - Scopes watch lists when LOOP_SCOPED_HEAD_BRANCH or workflow_run event head is set
 # - Invokes detect_script once per scan context (caller never re-runs)
 # - Assembles target_matrix with prompt and verifier_context per cell
 #
@@ -21,6 +23,8 @@
 #   LOOP_INTEGRATION_BRANCHES, LOOP_PR_ENABLED, LOOP_BRANCH_MATCH, LOOP_PRIORITY
 #   LOOP_FINALIZE_INTEGRATION, LOOP_FINALIZE_PULL_REQUEST, LOOP_MAX_TARGETS_PER_SCHEDULE
 #   LOOP_PR_EXCLUDE, LOOP_PR_INCLUDE_BOTS, LOOP_PR_ENABLED, PROMPT_INSTRUCTIONS, BUDGET_FILE, RUN_LOG_FILE
+#   LOOP_SCOPED_HEAD_BRANCH - when set, only scan this integration branch / PR head
+#   CI_SWEEPER_WORKFLOW_RUN_ID + CI_SWEEPER_EVENT_HEAD_BRANCH - workflow_run scope fallback
 #   GH_TOKEN / GITHUB_TOKEN
 #######################################
 
@@ -43,6 +47,175 @@ source "${SCRIPT_DIR}/_init.sh"
 BASE_BRANCH="${BASE_BRANCH-}"
 DETECT_SCRIPT="${DETECT_SCRIPT-}"
 STATE_FILE="${STATE_FILE-}"
+
+#######################################
+# resolve_detect_script_path: Pin DETECT_SCRIPT to an absolute path
+#
+# Must run before any target checkout. Relative detect scripts otherwise resolve
+# against the watched branch worktree (stale PR heads can ship older detect logic).
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   DETECT_SCRIPT - Updated in place to an absolute path
+#
+# Returns:
+#   0 on success; non-zero when the script cannot be resolved
+#
+#######################################
+function resolve_detect_script_path {
+    local resolved
+
+    if [[ -z ${DETECT_SCRIPT} ]]; then
+        log_detect_error "DETECT_SCRIPT is empty"
+        return 1
+    fi
+
+    if [[ ${DETECT_SCRIPT} == /* ]]; then
+        resolved="${DETECT_SCRIPT}"
+    else
+        resolved="$(pwd)/${DETECT_SCRIPT}"
+    fi
+
+    if [[ ! -f ${resolved} ]]; then
+        log_detect_error "DETECT_SCRIPT not found: ${resolved}"
+        return 1
+    fi
+
+    # Prefer realpath when available so checkout symlinks do not re-bind the script.
+    if command -v realpath > /dev/null 2>&1; then
+        resolved="$(realpath "${resolved}")"
+    else
+        resolved="$(cd "$(dirname "${resolved}")" && pwd)/$(basename "${resolved}")"
+    fi
+
+    if [[ ! -f ${resolved} ]]; then
+        log_detect_error "DETECT_SCRIPT not found after resolve: ${resolved}"
+        return 1
+    fi
+
+    DETECT_SCRIPT="${resolved}"
+    log_detect_notice "detect-script" "pinned" "path=${DETECT_SCRIPT}"
+}
+
+#######################################
+# resolve_scoped_head_branch: Head branch that scopes watch enumeration
+#
+# workflow_run dogfood sets CI_SWEEPER_WORKFLOW_RUN_ID + CI_SWEEPER_EVENT_HEAD_BRANCH.
+# Callers may also set LOOP_SCOPED_HEAD_BRANCH explicitly (wins).
+# Empty result = scan all resolved integration branches / open PRs (schedule).
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   LOOP_SCOPED_HEAD_BRANCH, CI_SWEEPER_WORKFLOW_RUN_ID, CI_SWEEPER_EVENT_HEAD_BRANCH
+#
+# Returns:
+#   Scoped branch name on stdout (may be empty)
+#
+#######################################
+function resolve_scoped_head_branch {
+    local scoped="${LOOP_SCOPED_HEAD_BRANCH:-}"
+
+    if [[ -n ${scoped} ]]; then
+        printf '%s' "${scoped}"
+        return 0
+    fi
+
+    if [[ -n ${CI_SWEEPER_WORKFLOW_RUN_ID:-} ]]; then
+        # Prefer EVENT_HEAD_BRANCH (stable); never CI_SWEEPER_HEAD_BRANCH (rewritten per scan).
+        printf '%s' "${CI_SWEEPER_EVENT_HEAD_BRANCH:-}"
+        return 0
+    fi
+
+    printf ''
+}
+
+#######################################
+# require_scoped_head_for_workflow_run: Fail closed when workflow_run lacks a head
+#
+# A workflow_run id without a scoped head would otherwise fall through to a full
+# watch-list scan (integration + all open PRs). Refuse that fan-out.
+#
+# Arguments:
+#   $1 - Scoped head branch from resolve_scoped_head_branch
+#
+# Global Variables:
+#   CI_SWEEPER_WORKFLOW_RUN_ID - when set, scoped head is required
+#
+# Returns:
+#   0 when safe to continue; 1 when detect should abort with config_error
+#
+#######################################
+function require_scoped_head_for_workflow_run {
+    local scoped_head="$1"
+
+    if [[ -z ${CI_SWEEPER_WORKFLOW_RUN_ID:-} ]]; then
+        return 0
+    fi
+    if [[ -n ${scoped_head} ]]; then
+        return 0
+    fi
+
+    log_detect_error \
+        "workflow_run scope incomplete: CI_SWEEPER_WORKFLOW_RUN_ID is set but scoped head is empty (set CI_SWEEPER_EVENT_HEAD_BRANCH or LOOP_SCOPED_HEAD_BRANCH)"
+    return 1
+}
+
+#######################################
+# apply_scoped_head_filter: Keep only watch targets matching the failed head
+#
+# Use cases:
+# - workflow_run on main → only integration:main (do not fan out to open PRs)
+# - workflow_run on PR head → only that pull_request target
+# - empty scoped head → no-op (schedule / workflow_dispatch full scan)
+#
+# Arguments:
+#   $1 - Scoped head branch (empty = no-op)
+#
+# Global Variables:
+#   INTEGRATION_BRANCHES, OPEN_PRS_JSON - Filtered in place
+#
+# Returns:
+#   None
+#
+#######################################
+function apply_scoped_head_filter {
+    local scoped_head="$1"
+    local -a kept_branches=()
+    local -a kept_prs=()
+    local branch pr_json head_ref
+
+    if [[ -z ${scoped_head} ]]; then
+        return 0
+    fi
+
+    for branch in "${INTEGRATION_BRANCHES[@]+"${INTEGRATION_BRANCHES[@]}"}"; do
+        if [[ ${branch} == "${scoped_head}" ]]; then
+            kept_branches+=("${branch}")
+        fi
+    done
+    INTEGRATION_BRANCHES=()
+    if [[ ${#kept_branches[@]} -gt 0 ]]; then
+        INTEGRATION_BRANCHES=("${kept_branches[@]}")
+    fi
+
+    for pr_json in "${OPEN_PRS_JSON[@]+"${OPEN_PRS_JSON[@]}"}"; do
+        head_ref="$(jq -r '.headRefName // empty' <<< "${pr_json}")"
+        if [[ ${head_ref} == "${scoped_head}" ]]; then
+            kept_prs+=("${pr_json}")
+        fi
+    done
+    OPEN_PRS_JSON=()
+    if [[ ${#kept_prs[@]} -gt 0 ]]; then
+        OPEN_PRS_JSON=("${kept_prs[@]}")
+    fi
+
+    log_detect_notice "scoped-head" "${scoped_head}" \
+        "integration=${#INTEGRATION_BRANCHES[@]} pull_request=${#OPEN_PRS_JSON[@]}"
+}
 
 #######################################
 # append_integration_candidate: Scan one integration branch
@@ -619,6 +792,14 @@ function main {
     local target_matrix_json="[]"
     local now_epoch branch pr_json gh_token="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
     local pre_peer_count pre_cap_count
+    local scoped_head
+
+    # Pin detect script before any target checkout (stale PR trees must not supply it).
+    if ! resolve_detect_script_path; then
+        write_detect_outputs "false" "config_error" "[]"
+        write_legacy_outputs "[]"
+        return 0
+    fi
 
     mkdir -p "$(dirname "${STATE_FILE}")"
     migrate_state_targets "${STATE_FILE}" "${BASE_BRANCH}"
@@ -642,6 +823,14 @@ function main {
         write_legacy_outputs "[]"
         return 0
     }
+
+    scoped_head="$(resolve_scoped_head_branch)"
+    if ! require_scoped_head_for_workflow_run "${scoped_head}"; then
+        write_detect_outputs "false" "config_error" "[]"
+        write_legacy_outputs "[]"
+        return 0
+    fi
+    apply_scoped_head_filter "${scoped_head}"
 
     if [[ ${#INTEGRATION_BRANCHES[@]} -eq 0 && ${#OPEN_PRS_JSON[@]} -eq 0 ]]; then
         write_detect_outputs "false" "no_changes" "[]"

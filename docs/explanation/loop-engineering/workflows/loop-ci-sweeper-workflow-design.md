@@ -151,13 +151,16 @@ Do **not** set caller `finalize_integration` or `finalize_pull_request` for ci-s
 
 **Event keys** (embedded in `detect_domain_env_json` when `workflow_run` fires; dogfood caller enables this trigger):
 
-| JSON key                     | Description                                                       |
-| ---------------------------- | ----------------------------------------------------------------- |
-| `CI_SWEEPER_HEAD_BRANCH`     | Failed workflow run head branch from `github.event.workflow_run`. |
-| `CI_SWEEPER_HEAD_SHA`        | Failed workflow run head SHA.                                     |
-| `CI_SWEEPER_WORKFLOW_RUN_ID` | Failed workflow run ID for ledger dedupe.                         |
-| `CI_SWEEPER_WORKFLOW_NAME`   | Failed workflow display name.                                     |
-| `CI_SWEEPER_RUN_URL`         | HTML URL of the failed workflow run (verifier context).           |
+| JSON key                         | Description                                                                                         |
+| -------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `CI_SWEEPER_EVENT_HEAD_BRANCH`   | Stable failed-run head branch (not rewritten per scan). Drives `loop-detect` watch-list scoping.    |
+| `CI_SWEEPER_HEAD_BRANCH`         | Per-scan branch context rewritten by `loop-detect` for each target.                                 |
+| `CI_SWEEPER_HEAD_SHA`            | Failed workflow run head SHA.                                                                       |
+| `CI_SWEEPER_WORKFLOW_RUN_ID`     | Failed workflow run ID for ledger dedupe **and** trigger-aware target scoping.                      |
+| `CI_SWEEPER_WORKFLOW_NAME`       | Failed workflow display name.                                                                       |
+| `CI_SWEEPER_RUN_URL`             | HTML URL of the failed workflow run (verifier context).                                             |
+
+When `CI_SWEEPER_WORKFLOW_RUN_ID` is set, `loop-detect` enumerates **only** the failed head (matching integration branch or open PR). See [Trigger-aware priority](../multi-branch-loops-design.md#trigger-aware-priority). Detect script binaries are always pinned from the job checkout (branch_state), never from a stale PR worktree.
 
 ## Detect
 
@@ -169,6 +172,8 @@ Detect applies **only** stable gates — not semantic failure classification:
 | --------------------------------------- | ---------------------- |
 | Ledger dedupe (`workflow_run_id`)       | detect script          |
 | `workflow_run` caller `workflows:` list | caller trigger         |
+| `workflow_run` → single failed head     | `loop-detect` scope    |
+| Pin `DETECT_SCRIPT` absolute path       | `loop-detect`          |
 | Event run branch vs scan branch         | detect script          |
 | PR exclusion (fork, draft, bot, label)  | `loop-detect` + script |
 | `acting_on` / `peer_active`             | `loop-detect`          |
@@ -277,7 +282,7 @@ Dogfood `on-loop-ci-sweeper.yaml` enables `workflow_run`. Keep these gates when 
 - [x] Failed workflow is not the sweeper’s own finalize push (`[skip ci]` on ledger commits)
 - [x] Fork / draft / bot exclusions active (`pr_exclude`)
 - [x] Job `if:` limits event runs to `failure` / `startup_failure`
-- [ ] 1 failure event → 1 target (no unbounded matrix from one event) — verify when expanding `workflows:`
+- [x] 1 failure event → 1 target (no unbounded matrix from one event) — `loop-detect` scopes watch list to failed head when `CI_SWEEPER_WORKFLOW_RUN_ID` is set; verify when expanding `workflows:`
 
 ## Dependency update (caller filter + domain skill)
 
