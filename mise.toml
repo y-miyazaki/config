@@ -38,7 +38,7 @@ python = "3.14.6"
 "github:microsoft/apm" = "v0.24.0"               # agent package manager
 claude = "2.1.205"                               # Claude Code CLI
 "github:DeusData/codebase-memory-mcp" = "v0.9.0" # codebase memory MCP server
-"aqua:github/copilot-cli" = "1.0.69"             # GitHub Copilot CLI
+"aqua:github/copilot-cli" = "1.0.70"             # GitHub Copilot CLI
 "pipx:headroom-ai" = { version = "0.30.0", extras = "proxy,mcp,bedrock", depends = ["python"] }
 "github:yvgude/lean-ctx" = "v3.9.3"              # context optimizer
 "github:microsoft/waza" = "v0.38.0"               # agent skill evaluator
