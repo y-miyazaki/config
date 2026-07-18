@@ -134,7 +134,7 @@ on:
         type: string
       loop_name:
         default: ""
-        description: "Loop name for acting_on state (L2/L3)"
+        description: "Loop name for state and budget (L2/L3)"
         required: false
         type: string
       no_changes_verdict:
@@ -209,7 +209,7 @@ on:
         type: string
       state_file:
         default: ""
-        description: "Loop state file path for acting_on (L2/L3)"
+        description: "Loop state file path (L2/L3)"
         required: false
         type: string
       state_bundle_with_fix_pr:
@@ -219,7 +219,7 @@ on:
         type: boolean
       state_push_branch:
         default: ""
-        description: "Branch for acting_on state commits (L2/L3)"
+        description: "Branch for .loop/* state commits (L2/L3)"
         required: false
         type: string
       skip_reason:
@@ -425,20 +425,6 @@ jobs:
           else
             echo "state_file=" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Set Acting On
-        if: steps.state_path.outputs.state_file != '' && inputs.state_bundle_with_fix_pr != true
-        uses: y-miyazaki/config/.github/actions/loop-state-write@14ad6edf009a0a68817066c32fd7f95e79616ccf # v1.8.41
-        with:
-          acting_on_action: set
-          acting_on_loop_name: ${{ inputs.loop_name }}
-          acting_on_target_key: ${{ steps.target.outputs.target_key }}
-          base_branch: ${{ inputs.base_branch }}
-          state_file: ${{ steps.state_path.outputs.state_file }}
-          state_push_branch: ${{ inputs.state_push_branch }}
-          target_key: ${{ steps.target.outputs.target_key }}
-          token: ${{ steps.push_token.outputs.token }}
-          write_target_state: "false"
 
       - name: Setup Worktree
         id: worktree

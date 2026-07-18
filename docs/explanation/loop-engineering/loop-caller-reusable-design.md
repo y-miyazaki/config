@@ -26,7 +26,7 @@ That `env:` pattern was a **workaround for copied jobs**, not a platform require
 | Single job graph    | One `ci-loop-caller.yaml` owns `detect`, `execute`, `record-skip`                     |
 | Thin callers        | Each `on-loop-<name>.yaml`: `on:`, `concurrency`, `permissions`, one job with `with:` |
 | No caller `env:`    | Configuration via `ci-loop-caller` `inputs` and caller `with:` literals               |
-| Preserve invariants | Matrix fan-out, finalize inside `ci-loop-agent`, budget, `acting_on`, concurrency     |
+| Preserve invariants | Matrix fan-out, finalize inside `ci-loop-agent`, budget, shared workflow concurrency  |
 | Extensibility       | New loops add caller `with:` + optional inputs; reusable jobs stay stable             |
 
 ## Target Architecture
@@ -71,7 +71,7 @@ These constraints come from [Loop Caller Workflows Design](loop-caller-workflows
 | **Finalize inside `ci-loop-agent`** | Reusable-workflow matrix collapses outputs across cells; finalize must pair with execute in the same workflow instance                                                                                                       |
 | **Single detect per run**           | Domain `detect_script` invoked only by `loop-detect`; no second `run:` detect in caller                                                                                                                                      |
 | **`target_matrix` handoff**         | `detect` outputs slim JSON array + `handoff_artifact_name`; large `result` / `verifier_context` in loop-handoff artifact; `execute` matrix uses `fromJson(needs.detect.outputs.target_matrix)` and resolves by `handoff_key` |
-| **`acting_on` / peer filter**       | Unchanged; handled inside `loop-detect` / `loop-state-write`                                                                                                                                                                 |
+| **Shared workflow concurrency**     | `on-loop-*.yaml` use `loop-state-<branch_state>` with `cancel-in-progress: false` and `queue: max` so detect runs on fresh state before execute                                                                              |
 | **Budget / circuit breaker**        | `record-skip` when `should_run == false` and `skip_reason` is `budget` or `circuit_breaker`                                                                                                                                  |
 | **`target_budget` deferral**        | When fan-out cap defers targets, `should_run` stays `true` and execute runs; `skip_reason=target_budget` is informational only — not recorded by `record-skip` (by design)                                                   |
 | **State push branch**               | `.loop/*` run-log/budget persistence uses `branch_state`. Changelog uses merge-gated `pending` on `branch_state` and `on-loop-state-promote` (default `state_bundle_with_fix_pr: false`).                                    |
@@ -90,8 +90,9 @@ on:
   workflow_dispatch: {}
 
 concurrency:
-  cancel-in-progress: true
-  group: ${{ github.workflow }}
+  cancel-in-progress: false
+  group: loop-state-main
+  queue: max
 
 permissions:
   actions: write
@@ -155,13 +156,7 @@ Enable `workflow_run` on the caller only; reusable workflow stays trigger-agnost
 | `execute`     | `detect` | `needs.detect.outputs.should_run == 'true'`                          | `ci-loop-agent.yaml` (matrix) |
 | `record-skip` | `detect` | success + `should_run == false` + skip reason budget/circuit_breaker | `loop-run-log`                |
 
-`execute` concurrency:
-
-```yaml
-concurrency:
-  cancel-in-progress: true
-  group: on-loop-${{ inputs.loop_name }}-${{ matrix.target.target_json.key }}
-```
+Caller workflows set workflow-level concurrency (`loop-state-main`); `ci-loop-caller` does not add job-level concurrency on `execute`.
 
 ### Input Groups
 

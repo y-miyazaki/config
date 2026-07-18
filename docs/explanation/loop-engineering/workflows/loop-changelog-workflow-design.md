@@ -37,7 +37,7 @@ Skill execution boundaries: `loop-changelog` SKILL.md (`USE FOR` / `DO NOT USE F
 
 | Invariant | Rationale |
 | One review PR (domain only) | Reviewers judge `CHANGELOG.md` only; loop state advances on merge via `on-loop-state-promote` |
-| No orphan state PRs | `acting_on` persistence during execute does not open state PRs; merge-gated `pending` lands on `branch_state` |
+| No orphan state PRs | Workflow concurrency (`loop-state-main`) serializes with peer loops; merge-gated `pending` lands on `branch_state` |
 | Release sections from facts | Skill may add `## [version] - date` only for versions in detect `releases[]` — never invented versions |
 
 ### Modes
@@ -63,7 +63,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `allowlist`                                          | Comma-separated globs the implementer may modify. Enforced in `loop-execute`.                                                                                                          | `CHANGELOG.md`                                                      |
 | `branch_match`                                       | Comma-separated branch patterns to watch for changelog drift.                                                                                                                          | `main`                                                              |
 | `branch_state`                                       | Branch for run-log/budget persistence and state **read** baseline.                                                                                                                     | `main`                                                              |
-| `budget_max_runs_per_day`                            | Daily run cap keyed by `loop_name`. Caller input; `.loop/loop-budget.json` overrides when present. Exceeded → `skip_reason=budget`.                                                     | `1` (caller); effective `5` via `.loop/loop-budget.json`            |
+| `budget_max_runs_per_day`                            | Daily run cap keyed by `loop_name`. Caller input; `.loop/loop-budget.json` overrides when present. Exceeded → `skip_reason=budget`.                                                    | `1` (caller); effective `5` via `.loop/loop-budget.json`            |
 | `budget_max_tokens_per_day`                          | Daily aggregated token cap across loops.                                                                                                                                               | `500000`                                                            |
 | `detect_domain_env_json` → `CHANGELOG_FILE`          | Target changelog path. Forwarded to `detect_changelog_commits.sh`.                                                                                                                     | `CHANGELOG.md`                                                      |
 | `detect_domain_env_json` → `CHANGELOG_MERGE_COMMITS` | `true` includes merge commits; `false` passes `--no-merges` to detect script.                                                                                                          | `false`                                                             |
@@ -72,7 +72,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `infer_files_pattern`                                | Extended regex to infer file paths from verifier text for allowlist checks.                                                                                                            | `CHANGELOG\.md`                                                     |
 | `level`                                              | Autonomy: `L2` human merge on bot fix PR; `L3` GitHub auto-merge on bot fix PR.                                                                                                        | `L2`                                                                |
 | `loop_name`                                          | Loop identifier; state file `.loop/state-changelog.json`. Align workflow name `on-loop-<loop_name>.yaml`.                                                                              | `changelog`                                                         |
-| `max_targets_per_schedule`                           | Max targets per cron tick after priority/`acting_on` filters.                                                                                                                          | `3`                                                                 |
+| `max_targets_per_schedule`                           | Max targets per cron tick after priority filters.                                                                                                                                      | `3`                                                                 |
 | `no_changes_verdict`                                 | `APPROVE` or `REJECT` when implementer produces no file diff.                                                                                                                          | `REJECT`                                                            |
 | `pr_body`                                            | Static markdown prefix only; `loop-finalize` hybrid-composes the final PR body. See [Loop PR Body Hybrid Design](../../../superpowers/specs/2026-07-17-loop-pr-body-hybrid-design.md). | Inline in caller workflow                                           |
 | `pr_title`                                           | PR title when finalize strategy is `open_pr`.                                                                                                                                          | `chore(changelog): update CHANGELOG.md (loop-changelog)`            |
@@ -172,4 +172,3 @@ Changelog runs are doc-metadata only (`CHANGELOG.md`). Coordinate with `loop-doc
 - [Multi-Branch Loops Design](../multi-branch-loops-design.md)
 - [Loop Caller Workflows Design](../loop-caller-workflows-design.md)
 - [Specification](../../../reference/specification.md)
-

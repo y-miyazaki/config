@@ -35,7 +35,6 @@ source "${LIB_DIR}/handoff.sh"
 #######################################
 # Global variables
 #######################################
-ACTING_ON_TTL_SECONDS="${ACTING_ON_TTL_SECONDS:-5400}"
 LOOP_BRANCH_MATCH="${LOOP_BRANCH_MATCH:-glob}"
 LOOP_FINALIZE_INTEGRATION="${LOOP_FINALIZE_INTEGRATION:-open_pr}"
 LOOP_FINALIZE_PULL_REQUEST="${LOOP_FINALIZE_PULL_REQUEST:-open_pr}"
@@ -46,13 +45,10 @@ LOOP_PR_INCLUDE_BOTS="${LOOP_PR_INCLUDE_BOTS:-}"
 LOOP_PR_ENABLED="${LOOP_PR_ENABLED:-false}"
 LOOP_SCOPED_HEAD_BRANCH="${LOOP_SCOPED_HEAD_BRANCH:-}"
 LOOP_STATE_PUSH_BRANCH="${LOOP_STATE_PUSH_BRANCH:-}"
-STATE_SCAN_GLOB="${STATE_SCAN_GLOB:-.loop/state-*.json}"
 
 # Populated by detect.sh and sourced libraries.
 # shellcheck disable=SC2034
 declare -a CANDIDATES_JSON=()
-# shellcheck disable=SC2034
-declare -a FILTERED_CANDIDATES_JSON=()
 # shellcheck disable=SC2034
 declare -a INTEGRATION_BRANCHES=()
 # shellcheck disable=SC2034

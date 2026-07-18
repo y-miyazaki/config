@@ -57,43 +57,6 @@ PUSH_BRANCH=""
 STATE_TMP=""
 
 #######################################
-# apply_acting_on: Apply acting_on coordination to state JSON
-#
-# Arguments:
-#   $1 - State temp file path
-#   $2 - ISO timestamp for set action
-#
-# Global Variables:
-#   ACTING_ON_ACTION - set | clear | empty
-#   ACTING_ON_TARGET_KEY - Target key for set
-#   ACTING_ON_LOOP_NAME - Loop name for set
-#
-# Returns:
-#   None
-#
-#######################################
-function apply_acting_on {
-    local state_tmp="$1"
-    local now="$2"
-
-    case "${ACTING_ON_ACTION}" in
-        set)
-            jq \
-                --arg target_key "${ACTING_ON_TARGET_KEY}" \
-                --arg loop_name "${ACTING_ON_LOOP_NAME}" \
-                --arg started_at "${now}" \
-                '.acting_on = {target_key: $target_key, loop_name: $loop_name, started_at: $started_at}' \
-                "${state_tmp}" > "${state_tmp}.next"
-            mv "${state_tmp}.next" "${state_tmp}"
-            ;;
-        clear)
-            jq 'del(.acting_on)' "${state_tmp}" > "${state_tmp}.next"
-            mv "${state_tmp}.next" "${state_tmp}"
-            ;;
-    esac
-}
-
-#######################################
 # commit_and_push_state: Commit state paths and push or open fallback PR
 #
 # Arguments:
@@ -699,10 +662,6 @@ function main {
 
     : "${STATE_FILE:?}"
 
-    if [[ ${WRITE_TARGET_STATE} != "true" && ${ACTING_ON_ACTION} == "set" ]]; then
-        SKIP_STATE_PR="true"
-    fi
-
     configure_git_auth
 
     READ_BRANCH="${STATE_PUSH_BRANCH:-${BASE_BRANCH}}"
@@ -720,7 +679,6 @@ function main {
         write_target_state "${now}" "${consecutive}"
     fi
 
-    apply_acting_on "${STATE_TMP}" "${now}"
     commit_and_push_state
 }
 

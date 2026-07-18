@@ -36,8 +36,9 @@ permissions:
   pull-requests: write
 
 concurrency:
-  cancel-in-progress: true
-  group: ${{ github.workflow }}
+  cancel-in-progress: false
+  group: loop-state-main
+  queue: max
 
 jobs:
   loop:

@@ -137,7 +137,7 @@ Do **not** set caller `finalize_integration` or `finalize_pull_request` for ci-s
 | `engine`                                                    | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                                                                                                  | `cursor`                                                                                                 |
 | `level`                                                     | Autonomy: `L2` (human merges bot fix PR) or `L3` (GitHub auto-merge on bot fix PR).                                                                                                    | `L2`                                                                                                     |
 | `loop_name`                                                 | Loop identifier; state file `.loop/state-ci-sweeper.json`.                                                                                                                             | `ci-sweeper`                                                                                             |
-| `max_targets_per_schedule`                                  | Max targets per cron tick after priority/`acting_on` filters.                                                                                                                          | `3`                                                                                                      |
+| `max_targets_per_schedule`                                  | Max targets per cron tick after priority filters.                                                                                                                                      | `3`                                                                                                      |
 | `no_changes_verdict`                                        | `APPROVE` or `REJECT` when implementer produces no file diff on actionable CI failure.                                                                                                 | `REJECT`                                                                                                 |
 | `pr_body`                                                   | Static markdown prefix only; `loop-finalize` hybrid-composes the final PR body. See [Loop PR Body Hybrid Design](../../../superpowers/specs/2026-07-17-loop-pr-body-hybrid-design.md). | Inline in caller workflow                                                                                |
 | `pr_enabled`                                                | Watch open PR heads for failed CI. **Wire name today:** `pull_requests`.                                                                                                               | `true`                                                                                                   |
@@ -168,16 +168,16 @@ When `CI_SWEEPER_WORKFLOW_RUN_ID` is set, `loop-detect` enumerates **only** the 
 
 Detect applies **only** stable gates — not semantic failure classification:
 
-| Filter                                  | Layer                  |
-| --------------------------------------- | ---------------------- |
-| Ledger dedupe (`workflow_run_id`)       | detect script          |
-| `workflow_run` caller `workflows:` list | caller trigger         |
-| `workflow_run` → single failed head     | `loop-detect` scope    |
-| Pin `DETECT_SCRIPT` absolute path       | `loop-detect`          |
-| Event run branch vs scan branch         | detect script          |
-| PR exclusion (fork, draft, bot, label)  | `loop-detect` + script |
-| `acting_on` / `peer_active`             | `loop-detect`          |
-| Budget / circuit breaker                | `loop-detect`          |
+| Filter                                   | Layer                  |
+| ---------------------------------------- | ---------------------- |
+| Ledger dedupe (`workflow_run_id`)        | detect script          |
+| `workflow_run` caller `workflows:` list  | caller trigger         |
+| `workflow_run` → single failed head      | `loop-detect` scope    |
+| Pin `DETECT_SCRIPT` absolute path        | `loop-detect`          |
+| Event run branch vs scan branch          | detect script          |
+| PR exclusion (fork, draft, bot, label)   | `loop-detect` + script |
+| Workflow concurrency (`loop-state-main`) | `on-loop-*.yaml`       |
+| Budget / circuit breaker                 | `loop-detect`          |
 
 `failure_type` from grep heuristics is an optional **hint** for the Skill — not a detect gate. Default is `regression` when the log is not infra/env/flake. See [Execute — responsibility split](#execute--responsibility-split-a--b).
 
@@ -293,7 +293,7 @@ Tier 3 **dependency-update** behavior is a domain skill plus caller PR filters (
 
 ## Cross-Loop Note
 
-CI failure on `integration:main` takes priority over `loop-docs-triage` and `loop-changelog` via [acting_on](../multi-branch-loops-design.md#cross-loop-coordination-acting_on). Limit recursion with `workflow_run.workflows` (caller allowlist), run ledger (`workflow_run_id`), and daily budget — not workflow-name exclude lists in detect.
+CI failure on `integration:main` is serialized with `loop-docs-triage` and `loop-changelog` via [workflow concurrency](../multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency). Limit recursion with `workflow_run.workflows` (caller allowlist), run ledger (`workflow_run_id`), and daily budget — not workflow-name exclude lists in detect.
 
 `workflow_dispatch` (no event run ID) uses `gh run list` on the watch branch (`SCAN_BRANCH_RUN_LIMIT`, default 100), then ledger and `since` range filters. Skill classifies infra/env/flake failures as Watch.
 

@@ -55,14 +55,13 @@ Defined here only. Other docs link to this section.
 
 ### Env validation
 
-| Condition                  | `skip_reason`   |
-| -------------------------- | --------------- |
-| Invalid config / regex     | `config_error`  |
-| Both modes disabled        | `no_changes`    |
-| Fan-out cap                | `target_budget` |
-| Daily cap                  | `budget`        |
-| Peer loop active on target | `peer_active`   |
-| Open pending fix PR        | `pending_pr`    |
+| Condition              | `skip_reason`   |
+| ---------------------- | --------------- |
+| Invalid config / regex | `config_error`  |
+| Both modes disabled    | `no_changes`    |
+| Fan-out cap            | `target_budget` |
+| Daily cap              | `budget`        |
+| Open pending fix PR    | `pending_pr`    |
 
 ## Single level switch
 
@@ -94,10 +93,9 @@ loop-detect
        a. fetch/checkout target ref (for last_sha / current_sha only)
        b. invoke pinned detect_script (never the copy from the target worktree)
        c. if not skip: build candidate (target_json, result, prompt, verifier_context)
-  7. Apply acting_on / peer_active on each candidate.key
-  8. Apply LOOP_PRIORITY + LOOP_MAX_TARGETS_PER_SCHEDULE
-  9. Write loop-handoff artifact (full result + verifier_context per key)
- 10. Output slim target_matrix (JSON array; handoff_key per cell, no inlined result)
+  7. Apply LOOP_PRIORITY + LOOP_MAX_TARGETS_PER_SCHEDULE
+  8. Write loop-handoff artifact (full result + verifier_context per key)
+  9. Output slim target_matrix (JSON array; handoff_key per cell, no inlined result)
 ```
 
 Execute and finalize jobs use **matrix fan-out** over `target_matrix` — one cell per target, parallel with per-target `concurrency.group`.
@@ -187,8 +185,7 @@ Recorded in [Specification](../../reference/specification.md).
       "consecutive_failures": 0,
       "attempt_fingerprint": "sha256:…"
     }
-  },
-  "acting_on": null
+  }
 }
 ```
 
@@ -263,34 +260,27 @@ On first Phase 1+ read, if legacy flat `last_sha` exists and `targets` is absent
 
 `outcome: watch` does **not** increment `consecutive_failures`. CI run-ledger is **secondary** dedupe — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md#detect-truth-source).
 
-## Cross-Loop Coordination (`acting_on`)
+## Cross-Loop Coordination (workflow concurrency)
 
-```json
-{
-  "acting_on": {
-    "target_key": "integration:main",
-    "loop_name": "ci-sweeper",
-    "started_at": "2026-07-10T18:00:00Z"
-  }
-}
-```
+Loop callers (`on-loop-*.yaml`) and `on-loop-state-promote.yaml` share a workflow-level concurrency group keyed by state branch (e.g. `loop-state-main` when `branch_state: main`). Runs queue with `cancel-in-progress: false` and `queue: max` so detect always sees fresh repository state before execute.
 
-| Phase        | Behavior                                                                                                                                          |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Detect**   | Read all `.loop/state-*.json` peers. If `acting_on.target_key` matches candidate and `started_at` within TTL (90 min) → `skip_reason=peer_active` |
-| **Execute**  | Set `acting_on` on this loop's state file (via `loop-state-write` sub-step or execute preamble)                                                   |
-| **Finalize** | Clear `acting_on` (always, success or failure)                                                                                                    |
+| Workflow                | `concurrency.group` | Notes                                              |
+| ----------------------- | ------------------- | -------------------------------------------------- |
+| `on-loop-changelog`     | `loop-state-main`   | Serializes with other loops on same `branch_state` |
+| `on-loop-docs-triage`   | `loop-state-main`   | Same                                               |
+| `on-loop-ci-sweeper`    | `loop-state-main`   | Same (replaces per-`workflow_run` group)           |
+| `on-loop-state-promote` | `loop-state-main`   | Avoids state PR races during loop runs             |
 
-Per-target `concurrency.group` in caller YAML complements `acting_on` — see [Loop Caller Workflows](loop-caller-workflows-design.md#concurrency).
+See [Loop Caller Workflows — Concurrency](loop-caller-workflows-design.md#concurrency).
 
 ## Implementation Phases
 
 | Phase | Platform deliverable                                                               | Status                                             |
 | ----- | ---------------------------------------------------------------------------------- | -------------------------------------------------- |
 | **0** | Single-branch dogfood                                                              | ✅ Done                                            |
-| **1** | `target_matrix`; `targets` map; no double detect; `acting_on`                      | ✅ Done                                            |
+| **1** | `target_matrix`; `targets` map; no double detect; workflow concurrency             | ✅ Done                                            |
 | **2** | `target_json` on execute/finalize; `domain_persistence_script`; `push`/`push_head` | ✅ Done                                            |
-| **3** | Matrix fan-out + per-target concurrency                                            | ✅ Done                                            |
+| **3** | Matrix fan-out; shared workflow concurrency (`loop-state-<branch>`)                | ✅ Done                                            |
 | **4** | `workflow_run` per loop ops checklist                                              | ✅ Done (ci-sweeper dogfood; other loops TBD)      |
 | **5** | L3 integration `push` (opt-in)                                                     | Planned                                            |
 | **6** | Optional `repository` on target                                                    | Future                                             |

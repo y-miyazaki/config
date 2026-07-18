@@ -68,8 +68,9 @@ function main {
     source "${loop_detect_lib}/handoff.sh"
 
     work_dir="$(mktemp -d)"
+    # Capture path at trap-set time; local work_dir is out of scope on EXIT.
     # shellcheck disable=SC2064
-    trap 'rm -rf "${work_dir}"' EXIT
+    trap "rm -rf '${work_dir}'" EXIT
 
     detect_json_path="$(mktemp "${work_dir}/tmp.XXXXXX")"
     notify_json_path="$(mktemp "${work_dir}/tmp.XXXXXX")"

@@ -67,7 +67,7 @@ Bots excluded unless `pr_include_bots` lists them. No `pr_require` gate.
 | `target_json.mode == integration`                                          | No                 |
 | Finalize attempted (success, `rejected`, `watch`, `error` with PR context) | Yes — all outcomes |
 | Detect `should_run == false`                                               | No                 |
-| Execute skipped (budget, peer_active, etc.)                                | No                 |
+| Execute skipped (budget, etc.)                                             | No                 |
 
 Invocation: **sibling step** in `ci-loop-agent.yaml` immediately after `loop-finalize`. Run with `if: always()` when `pr_number` is set and the finalize job executed.
 

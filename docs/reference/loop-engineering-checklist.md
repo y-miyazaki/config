@@ -36,7 +36,7 @@ See [CONTEXT — Semantic Findings](../explanation/loop-engineering/CONTEXT.md#l
 - [ ] Outputs `should_run`, `skip_reason`, `target_matrix` via `loop-detect`
 - [ ] Read-only — does not modify repository or state
 - [ ] `LOOP_DETECT_SCRIPT` under loop skill package (`scripts/detect_*.sh`)
-- [ ] Budget / circuit breaker / `peer_active` (`acting_on`) guards via `loop-detect`
+- [ ] Budget / circuit breaker guards via `loop-detect`; cross-loop serialization via workflow concurrency
 - [ ] No domain vocabulary in `loop-*` actions
 
 #### Agent (Execute)

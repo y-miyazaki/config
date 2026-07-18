@@ -15,9 +15,6 @@ inputs:
     required: false
 
 outputs:
-  acting_on_json:
-    description: "JSON object for acting_on coordination state"
-    value: ${{ steps.read.outputs.acting_on_json }}
   consecutive_failures:
     description: "Consecutive rejected outcomes for target (or legacy root)"
     value: ${{ steps.read.outputs.consecutive_failures }}
@@ -62,7 +59,6 @@ runs:
         LAST_SHA=""
         OPEN_REJECTIONS_JSON='[]'
         OPEN_REJECTIONS_PROMPT=""
-        ACTING_ON_JSON='null'
         TARGETS_JSON='{}'
 
         if [[ -f "${STATE_FILE}" ]]; then
@@ -95,7 +91,6 @@ runs:
           fi
 
           TARGETS_JSON=$(jq -c '.targets // {}' "${STATE_FILE}" 2>/dev/null || echo '{}')
-          ACTING_ON_JSON=$(jq -c '.acting_on // null' "${STATE_FILE}" 2>/dev/null || echo 'null')
           CONSECUTIVE_FAILURES=$(jq -r --arg key "${RESOLVED_KEY}" '.targets[$key].consecutive_failures // 0' "${STATE_FILE}" 2>/dev/null || echo "0")
           LAST_REJECT_REASON=$(jq -r --arg key "${RESOLVED_KEY}" '.targets[$key].last_reject_reason // empty' "${STATE_FILE}" 2>/dev/null || true)
           LAST_SHA=$(jq -r --arg key "${RESOLVED_KEY}" '.targets[$key].last_sha // empty' "${STATE_FILE}" 2>/dev/null || true)
@@ -115,10 +110,6 @@ runs:
         fi
 
         {
-          DELIM="ACTING_ON_$(openssl rand -hex 8)"
-          echo "acting_on_json<<${DELIM}"
-          echo "${ACTING_ON_JSON}"
-          echo "${DELIM}"
           echo "consecutive_failures=${CONSECUTIVE_FAILURES}"
           echo "current_sha=$(git rev-parse HEAD)"
           if [[ -n "${LAST_REJECT_REASON}" ]]; then

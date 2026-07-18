@@ -2,18 +2,6 @@ name: loop-state-write
 description: "Write per-target loop state JSON and commit/push to LOOP_STATE_PUSH_BRANCH."
 
 inputs:
-  acting_on_action:
-    default: ""
-    description: "acting_on coordination: set | clear (empty = no change)"
-    required: false
-  acting_on_loop_name:
-    default: ""
-    description: "Loop name recorded in acting_on when action=set"
-    required: false
-  acting_on_target_key:
-    default: ""
-    description: "Target key recorded in acting_on when action=set"
-    required: false
   additional_commit_paths:
     default: ""
     description: "Comma-separated extra paths to commit with state (e.g. domain ledger)"
@@ -28,7 +16,7 @@ inputs:
     required: false
   loop_name:
     default: ""
-    description: "Loop name for acting_on metadata and pending records"
+    description: "Loop name for pending records"
     required: false
   open_rejections:
     default: "[]"
@@ -82,7 +70,7 @@ inputs:
     required: true
   write_target_state:
     default: "true"
-    description: "When false, only apply acting_on_action without updating target fields"
+    description: "When false, skip target field updates (metadata-only writes)"
     required: false
 
 runs:
@@ -91,9 +79,6 @@ runs:
     - name: Write State
       shell: bash
       env:
-        ACTING_ON_ACTION: ${{ inputs.acting_on_action }}
-        ACTING_ON_LOOP_NAME: ${{ inputs.acting_on_loop_name != '' && inputs.acting_on_loop_name || inputs.loop_name }}
-        ACTING_ON_TARGET_KEY: ${{ inputs.acting_on_target_key }}
         ADDITIONAL_COMMIT_PATHS: ${{ inputs.additional_commit_paths }}
         BASE_BRANCH: ${{ inputs.base_branch }}
         COMMIT_TARGET_BRANCH: ${{ inputs.commit_target_branch }}

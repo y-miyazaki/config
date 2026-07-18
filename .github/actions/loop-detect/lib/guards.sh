@@ -1,6 +1,6 @@
 #!/bin/bash
 #######################################
-# Description: Guard helpers for loop-detect (budget, circuit breaker, peer_active)
+# Description: Guard helpers for loop-detect (budget, circuit breaker)
 #
 # Usage: source "${LIB_DIR}/guards.sh"
 #
@@ -10,41 +10,6 @@
 # Design Rules:
 # - Budget reads loop-budget.json and loop-run-log.md for daily aggregation
 #######################################
-
-#######################################
-# acting_on_is_active: Return 0 when peer acting_on blocks target_key
-#
-# Arguments:
-#   $1 - Target key (e.g. integration:main)
-#   $2 - Current epoch seconds
-#
-# Global Variables:
-#   ACTING_ON_TTL_SECONDS - Peer lock TTL
-#   STATE_SCAN_GLOB - Glob for peer state files
-#
-# Returns:
-#   0 when blocked, 1 otherwise
-#
-#######################################
-function acting_on_is_active {
-    local target_key="$1"
-    local now_epoch="$2"
-    local peer_file started_at peer_key started_epoch age
-
-    for peer_file in ${STATE_SCAN_GLOB}; do
-        [[ -f ${peer_file} ]] || continue
-        started_at=$(jq -r '.acting_on.started_at // empty' "${peer_file}" 2> /dev/null || true)
-        peer_key=$(jq -r '.acting_on.target_key // empty' "${peer_file}" 2> /dev/null || true)
-        [[ -z ${started_at} || -z ${peer_key} ]] && continue
-        [[ ${peer_key} != "${target_key}" ]] && continue
-        started_epoch=$(date -u -d "${started_at}" +%s 2> /dev/null || echo "0")
-        age=$((now_epoch - started_epoch))
-        if [[ ${age} -ge 0 && ${age} -lt ${ACTING_ON_TTL_SECONDS} ]]; then
-            return 0
-        fi
-    done
-    return 1
-}
 
 #######################################
 # budget_exceeded: Return 0 when daily budget is exceeded

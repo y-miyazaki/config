@@ -7,7 +7,6 @@
 # - validate_branch_match rejects invalid LOOP_BRANCH_MATCH
 # - resolve_detect_script_path fails on empty or missing DETECT_SCRIPT
 # - require_scoped_head_for_workflow_run fails when workflow_run lacks scoped head
-# - apply_peer_active_filter drops candidates blocked by peer acting_on
 # - apply_target_cap truncates candidates to fan-out cap
 # - target_circuit_breaker_open blocks append_integration_candidate before detect
 
@@ -81,27 +80,6 @@ teardown() {
     CI_SWEEPER_WORKFLOW_RUN_ID="12345"
     run require_scoped_head_for_workflow_run "feature/auth"
     [ "$status" -eq 0 ]
-}
-
-@test "apply_peer_active_filter drops candidates blocked by peer acting_on" {
-    local peer_file now_epoch
-
-    peer_file="${DETECT_TMP}/state-docs-triage.json"
-    now_epoch="$(date -u +%s)"
-    jq -nc --arg started "$(date -u -d "@${now_epoch}" +%Y-%m-%dT%H:%M:%SZ)" \
-        '{acting_on:{target_key:"integration:main",loop_name:"docs-triage",started_at:$started}}' \
-        > "${peer_file}"
-
-    CANDIDATES_JSON=(
-        "$(make_detect_candidate "integration:main")"
-        "$(make_detect_candidate "pull_request:42")"
-    )
-
-    apply_peer_active_filter "${now_epoch}"
-
-    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
-    run jq -r '.target_json.key' <<< "${CANDIDATES_JSON[0]}"
-    [ "$output" = "pull_request:42" ]
 }
 
 @test "apply_target_cap truncates candidates to fan-out cap" {

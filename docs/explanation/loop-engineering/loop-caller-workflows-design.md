@@ -58,7 +58,7 @@ Remove Phase 0 debt: `on-loop-ci-sweeper.yaml` `Export Target Failure Context`.
 
 1. Read [caller `env`](multi-branch-loops-design.md#caller-configuration-canonical).
 2. Enumerate integration branches / PRs; checkout per context; run `detect_script` per context.
-3. Apply [trigger-aware priority](multi-branch-loops-design.md#trigger-aware-priority) and `acting_on`.
+3. Apply [trigger-aware priority](multi-branch-loops-design.md#trigger-aware-priority).
 4. Cap at `LOOP_MAX_TARGETS_PER_SCHEDULE`; excess → `target_budget` on next cron.
 
 ## Execute Job (matrix)
@@ -150,25 +150,22 @@ on:
 
 ## Concurrency
 
-`concurrency.group` **cannot use `env`**. Embed pattern in YAML.
+`concurrency.group` **cannot use `env`**. Embed the group name in caller workflow YAML.
 
-### Per-target (matrix)
+### Shared state branch (callers)
 
-```yaml
-concurrency:
-  cancel-in-progress: true
-  group: on-loop-ci-sweeper-${{ matrix.target.target_json.key }}
-```
-
-When `target_matrix` is empty (detect-only skip), workflow-level group is sufficient:
+All `on-loop-*.yaml` callers and `on-loop-state-promote.yaml` use the same group for a given `branch_state` (currently `loop-state-main`):
 
 ```yaml
 concurrency:
-  cancel-in-progress: true
-  group: ${{ github.workflow }}
+  cancel-in-progress: false
+  group: loop-state-main
+  queue: max
 ```
 
-Cross-loop: [acting_on](multi-branch-loops-design.md#cross-loop-coordination-acting_on).
+Queued runs wait for the active run to finish (detect → execute → finalize) before starting detect, so handoff JSON is never stale relative to peer loop activity. `queue: max` allows up to 100 pending runs in FIFO order (default `queue: single` would cancel an existing pending run when a third enters the group).
+
+`ci-loop-caller` does **not** set job-level concurrency on `execute`; matrix cells within one run may still fan out in parallel.
 
 ## Matrix Fan-Out
 

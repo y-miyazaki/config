@@ -21,7 +21,7 @@ Detect documentation drift from code changes on integration branches and open fi
 - Cron scan of integration branches for git-diff facts (`changed_files`, `affected_docs`, …)
 - Semantic triage and fix of High-Priority stale references or missing doc content
 - Open an L2 review PR to the watch integration branch
-- Coordinate with peer loops via [acting_on](../multi-branch-loops-design.md#cross-loop-coordination-acting_on) when multiple loops target the same branch
+- Coordinate with peer loops via [workflow concurrency](../multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency) when multiple loops target the same branch
 
 ### Out of scope
 
@@ -64,7 +64,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `allowlist`                                          | Comma-separated globs the implementer may modify. Must align with triage scope.                                                                                                        | `docs/**/*.md,README.md,mkdocs.yml`                            |
 | `branch_match`                                       | Comma-separated integration branch patterns to watch for doc drift.                                                                                                                    | `main`                                                         |
 | `branch_state`                                       | Branch for `.loop/*` persistence, state migration, and watch fallback.                                                                                                                 | `main`                                                         |
-| `budget_max_runs_per_day`                            | Daily run cap keyed by `loop_name`. Caller input; `.loop/loop-budget.json` overrides when present.                                                                                      | `1` (caller); effective `5` via `.loop/loop-budget.json`       |
+| `budget_max_runs_per_day`                            | Daily run cap keyed by `loop_name`. Caller input; `.loop/loop-budget.json` overrides when present.                                                                                     | `1` (caller); effective `5` via `.loop/loop-budget.json`       |
 | `budget_max_tokens_per_day`                          | Daily aggregated token cap across loops.                                                                                                                                               | `500000`                                                       |
 | `detect_domain_env_json` → `DOCS_TRIAGE_DOC_GLOBS`   | Comma-separated globs for documentation files in git-diff analysis.                                                                                                                    | `docs/**/*.md,README.md`                                       |
 | `detect_domain_env_json` → `DOCS_TRIAGE_EXTRA_FILES` | Additional non-glob paths (site config) included in doc impact scan.                                                                                                                   | `mkdocs.yml`                                                   |
@@ -74,7 +74,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `infer_files_pattern`                                | Extended regex to infer file paths from verifier text.                                                                                                                                 | See caller workflow                                            |
 | `level`                                              | Autonomy level (`L1`, `L2`, `L3`). L2 opens review PR.                                                                                                                                 | `L2`                                                           |
 | `loop_name`                                          | Loop identifier; state file `.loop/state-docs-triage.json`.                                                                                                                            | `docs-triage`                                                  |
-| `max_targets_per_schedule`                           | Max targets per cron tick after priority/`acting_on` filters.                                                                                                                          | `3`                                                            |
+| `max_targets_per_schedule`                           | Max targets per cron tick after priority filters.                                                                                                                                      | `3`                                                            |
 | `no_changes_verdict`                                 | `APPROVE` or `REJECT` when implementer produces no file diff.                                                                                                                          | `REJECT`                                                       |
 | `pr_body`                                            | Static markdown prefix only; `loop-finalize` hybrid-composes the final PR body. See [Loop PR Body Hybrid Design](../../../superpowers/specs/2026-07-17-loop-pr-body-hybrid-design.md). | Inline in caller workflow                                      |
 | `pr_title`                                           | PR title when finalize strategy is `open_pr`.                                                                                                                                          | `fix(docs): automated documentation update (loop-docs-triage)` |
@@ -110,7 +110,7 @@ Detect script outputs **facts** (not semantic findings):
 ### Stable filters (detect only)
 
 - Circuit breaker on `targets[key].consecutive_failures`
-- Budget / `acting_on` (platform)
+- Budget (platform)
 
 No infra/env classification — not applicable.
 
@@ -161,7 +161,7 @@ Persistence: `state-docs-triage.json` on `branch_state` via [finalize inside ci-
 
 ## Cross-Loop Note
 
-If `loop-ci-sweeper` and `loop-docs-triage` both target `integration:main`, [acting_on](../multi-branch-loops-design.md#cross-loop-coordination-acting_on) and separate concurrency groups apply. CI failure on `main` is loop-ci-sweeper priority; doc-only drift is loop-docs-triage.
+If `loop-ci-sweeper` and `loop-docs-triage` both target `integration:main`, [workflow concurrency](../multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency_on) and separate concurrency groups apply. CI failure on `main` is loop-ci-sweeper priority; doc-only drift is loop-docs-triage.
 
 ## References
 

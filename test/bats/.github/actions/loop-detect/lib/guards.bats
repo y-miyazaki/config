@@ -5,8 +5,6 @@
 
 # Use cases:
 # - target_circuit_breaker_open trips at three consecutive failures
-# - acting_on_is_active blocks matching peer within TTL
-# - acting_on_is_active ignores expired peer lock
 # - read_budget_limits prefers budget file over defaults
 # - budget_exceeded trips when daily run count reaches max
 # - budget_exceeded allows runs under the daily cap
@@ -38,42 +36,6 @@ teardown() {
 
     run target_circuit_breaker_open 5
     [ "$status" -eq 0 ]
-}
-
-@test "acting_on_is_active blocks matching peer within TTL" {
-    local peer_file now_epoch
-
-    peer_file="${GUARDS_TMP}/state-docs-triage.json"
-    now_epoch="$(date -u +%s)"
-    jq -nc --arg started "$(date -u -d "@${now_epoch}" +%Y-%m-%dT%H:%M:%SZ)" \
-        '{acting_on:{target_key:"integration:main",loop_name:"docs-triage",started_at:$started}}' \
-        > "${peer_file}"
-
-    STATE_SCAN_GLOB="${GUARDS_TMP}/state-*.json"
-    ACTING_ON_TTL_SECONDS=5400
-
-    run acting_on_is_active "integration:main" "${now_epoch}"
-    [ "$status" -eq 0 ]
-
-    run acting_on_is_active "pull_request:265" "${now_epoch}"
-    [ "$status" -ne 0 ]
-}
-
-@test "acting_on_is_active ignores expired peer lock" {
-    local peer_file now_epoch old_epoch
-
-    peer_file="${GUARDS_TMP}/state-docs-triage.json"
-    now_epoch="$(date -u +%s)"
-    old_epoch=$((now_epoch - 10000))
-    jq -nc --arg started "$(date -u -d "@${old_epoch}" +%Y-%m-%dT%H:%M:%SZ)" \
-        '{acting_on:{target_key:"integration:main",loop_name:"docs-triage",started_at:$started}}' \
-        > "${peer_file}"
-
-    STATE_SCAN_GLOB="${GUARDS_TMP}/state-*.json"
-    ACTING_ON_TTL_SECONDS=5400
-
-    run acting_on_is_active "integration:main" "${now_epoch}"
-    [ "$status" -ne 0 ]
 }
 
 @test "read_budget_limits prefers budget file over defaults" {

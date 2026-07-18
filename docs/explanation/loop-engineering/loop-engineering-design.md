@@ -13,7 +13,7 @@ For concrete specifications (Actions/Workflows list, interfaces), see [Specifica
 | `loop-issue-triage` | Not started                            | -             |
 | `loop-stale-pr`     | Not started                            | -             |
 
-Platform actions (`loop-detect` `target_matrix`, `acting_on`, `domain_persistence_script`) are in progress — see [Multi-Branch Loops Design](multi-branch-loops-design.md).
+Platform actions (`loop-detect` `target_matrix`, `domain_persistence_script`) are in progress — see [Multi-Branch Loops Design](multi-branch-loops-design.md).
 
 ## Loop Candidate Roadmap
 
@@ -564,7 +564,7 @@ Per-tier permissions:
 
 **Evolution:** Loops act on integration branches and PR heads via `target_matrix` and `LOOP_*` in caller `env`. See [Multi-Branch Loops Design](multi-branch-loops-design.md) and [Loop Caller Workflows Design](loop-caller-workflows-design.md).
 
-Conflict detection uses the `acting_on` field in peer state files: detect skips when `skip_reason=peer_active` (TTL 90 min). Execute sets `acting_on`; finalize clears it. Per-target `concurrency.group` complements peer checks.
+Cross-loop serialization uses shared workflow concurrency (`loop-state-<branch_state>`) on `on-loop-*.yaml` callers so detect runs on fresh state before execute. See [Multi-Branch Loops Design](multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency).
 
 ### Failure Mode Countermeasures
 
@@ -688,8 +688,7 @@ stateDiagram-v2
         }
       ]
     }
-  },
-  "acting_on": null
+  }
 }
 ```
 

@@ -311,9 +311,6 @@ jobs:
           token: ${{ secrets.GH_TOKEN_OVERRIDE != '' && secrets.GH_TOKEN_OVERRIDE || github.token }}
 
   execute:
-    concurrency:
-      cancel-in-progress: true
-      group: on-loop-${{ inputs.loop_name }}-${{ matrix.target.target_json.key }}
     if: needs.detect.outputs.should_run == 'true'
     needs: detect
     permissions:

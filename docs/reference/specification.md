@@ -390,21 +390,21 @@ Each `loop-*` APM package is self-contained. Domain detection and agent behavior
 
 ### Loop Engineering Actions
 
-| Action                 | Purpose                                                                                                                                                                                                                                                                                   |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `loop-agent-once`      | Single read-only agent session (L1)                                                                                                                                                                                                                                                       |
-| `loop-config-pack`     | Pack caller agent config into standardized outputs for detect/execute handoff (standalone; `loop-detect` inlines the same pack step)                                                                                                                                                      |
-| `loop-detect`          | Read `LOOP_*`, enumerate branches/PRs, checkout per context, invoke `detect_script` per context, assemble candidates, write **loop-handoff** artifact, output slim `target_matrix`; guards (`budget`, `acting_on`, `peer_active`, circuit breaker). **No caller re-run of detect script** |
-| `loop-execute`         | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`; worktree from `from.ref` @ `from.branch`                                                                                                                                                             |
-| `loop-finalize`        | Finalize per `target.finalize`, branch cleanup, per-target state, run-log, optional `domain_persistence_script`; `.loop/*` to `LOOP_STATE_PUSH_BRANCH`                                                                                                                                    |
-| `loop-notify-pr`       | Post or update marker PR comment after finalize on `pull_request` targets (sibling step in `ci-loop-agent`, not nested in `loop-finalize`). Platform-owned Layers 1–2; optional skill appendix. See [loop-notify-pr Specification](loop-notify-pr-specification.md)                       |
-| `loop-install-cli`     | Install and cache the selected engine CLI                                                                                                                                                                                                                                                 |
-| `loop-prompt-generate` | Assemble implementer prompt: skill invocation, caller context/instructions, generic loop constraints                                                                                                                                                                                      |
-| `loop-run-log`         | Append one JSONL entry to `.loop/loop-run-log.md`, prune entries older than 30 days                                                                                                                                                                                                       |
-| `loop-state-promote`   | Promote or clear `pending` loop state after a fix PR closes (`pull_request` `closed` handler)                                                                                                                                                                                             |
-| `loop-state-read`      | Read `targets` map; per-target cursors; peer `acting_on` inputs                                                                                                                                                                                                                           |
-| `loop-state-write`     | Write per-target entry in `targets` map; commit to `LOOP_STATE_PUSH_BRANCH`                                                                                                                                                                                                               |
-| `loop-worktree-setup`  | Isolated worktree at `base_ref` on `base_branch` + agent branch (L2/L3)                                                                                                                                                                                                                   |
+| Action                 | Purpose                                                                                                                                                                                                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `loop-agent-once`      | Single read-only agent session (L1)                                                                                                                                                                                                                                 |
+| `loop-config-pack`     | Pack caller agent config into standardized outputs for detect/execute handoff (standalone; `loop-detect` inlines the same pack step)                                                                                                                                |
+| `loop-detect`          | Read `LOOP_*`, enumerate branches/PRs, checkout per context, invoke `detect_script` per context, assemble candidates, write **loop-handoff** artifact, output slim `target_matrix`; guards (`budget`, circuit breaker). **No caller re-run of detect script**       |
+| `loop-execute`         | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`; worktree from `from.ref` @ `from.branch`                                                                                                                                       |
+| `loop-finalize`        | Finalize per `target.finalize`, branch cleanup, per-target state, run-log, optional `domain_persistence_script`; `.loop/*` to `LOOP_STATE_PUSH_BRANCH`                                                                                                              |
+| `loop-notify-pr`       | Post or update marker PR comment after finalize on `pull_request` targets (sibling step in `ci-loop-agent`, not nested in `loop-finalize`). Platform-owned Layers 1–2; optional skill appendix. See [loop-notify-pr Specification](loop-notify-pr-specification.md) |
+| `loop-install-cli`     | Install and cache the selected engine CLI                                                                                                                                                                                                                           |
+| `loop-prompt-generate` | Assemble implementer prompt: skill invocation, caller context/instructions, generic loop constraints                                                                                                                                                                |
+| `loop-run-log`         | Append one JSONL entry to `.loop/loop-run-log.md`, prune entries older than 30 days                                                                                                                                                                                 |
+| `loop-state-promote`   | Promote or clear `pending` loop state after a fix PR closes (`pull_request` `closed` handler)                                                                                                                                                                       |
+| `loop-state-read`      | Read `targets` map; per-target cursors                                                                                                                                                                                                                              |
+| `loop-state-write`     | Write per-target entry in `targets` map; commit to `LOOP_STATE_PUSH_BRANCH`                                                                                                                                                                                         |
+| `loop-worktree-setup`  | Isolated worktree at `base_ref` on `base_branch` + agent branch (L2/L3)                                                                                                                                                                                             |
 
 ### Detect script output (per context)
 
@@ -416,7 +416,7 @@ Invoked by `loop-detect` per scan context (not by the caller). Scans the branch/
 | `result`           | when actionable | Domain JSON (facts). Semantic `findings[]` are produced by the Skill |
 | `verifier_context` | no              | Markdown for verifier (may be empty)                                 |
 
-`loop-detect` assembles each **candidate** (`target_json`, `result`, `prompt`, `verifier_context`), applies priority/`acting_on`/cap, uploads a **loop-handoff** artifact bundle, and outputs a slim `target_matrix` (JSON array) for matrix fan-out.
+`loop-detect` assembles each **candidate** (`target_json`, `result`, `prompt`, `verifier_context`), applies priority/cap, uploads a **loop-handoff** artifact bundle, and outputs a slim `target_matrix` (JSON array) for matrix fan-out.
 
 ### Job handoff (`loop-handoff` artifact)
 
@@ -462,14 +462,14 @@ Execute/finalize input. Schema: [Multi-Branch Loops Design](../explanation/loop-
 
 ### `loop-detect` outputs (caller detect job)
 
-| Output                  | When                                                                                                                          |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `should_run`            | `target_matrix` non-empty after guards                                                                                        |
-| `skip_reason`           | `none` \| `no_changes` \| `circuit_breaker` \| `budget` \| `target_budget` \| `config_error` \| `peer_active` \| `pending_pr` |
-| `handoff_artifact_name` | `loop-handoff-<run_id>` when `should_run=true`; empty otherwise                                                               |
-| `target_matrix`         | Slim JSON array of candidates for matrix fan-out (see [Job handoff](#job-handoff-loop-handoff-artifact))                      |
+| Output                  | When                                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `should_run`            | `target_matrix` non-empty after guards                                                                       |
+| `skip_reason`           | `none` \| `no_changes` \| `circuit_breaker` \| `budget` \| `target_budget` \| `config_error` \| `pending_pr` |
+| `handoff_artifact_name` | `loop-handoff-<run_id>` when `should_run=true`; empty otherwise                                              |
+| `target_matrix`         | Slim JSON array of candidates for matrix fan-out (see [Job handoff](#job-handoff-loop-handoff-artifact))     |
 
-**`skip_reason` priority** (when `should_run=false`): `circuit_breaker` > `pending_pr` > `no_changes`. Other values apply at earlier gates (`config_error`, `budget`, `peer_active`).
+**`skip_reason` priority** (when `should_run=false`): `circuit_breaker` > `pending_pr` > `no_changes`. Other values apply at earlier gates (`config_error`, `budget`).
 
 **`target_budget` semantics:** Set when fan-out cap (`LOOP_MAX_TARGETS_PER_SCHEDULE`) trims candidates but **`should_run` remains `true`**. Informational deferral only — not a skip. `record-skip` records `budget` and `circuit_breaker` only (not `target_budget`).
 

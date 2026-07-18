@@ -388,36 +388,6 @@ function append_pull_request_candidate {
 }
 
 #######################################
-# apply_peer_active_filter: Drop candidates blocked by peer acting_on
-#
-# Arguments:
-#   $1 - Current epoch seconds
-#
-# Global Variables:
-#   CANDIDATES_JSON - Filtered in place
-#   FILTERED_CANDIDATES_JSON - Scratch array
-#
-# Returns:
-#   None
-#
-#######################################
-function apply_peer_active_filter {
-    local now_epoch="$1"
-    local candidate target_key
-
-    FILTERED_CANDIDATES_JSON=()
-    for candidate in "${CANDIDATES_JSON[@]}"; do
-        target_key=$(jq -r '.target_json.key' <<< "${candidate}")
-        if acting_on_is_active "${target_key}" "${now_epoch}"; then
-            echo "::warning::Peer loop active on ${target_key}"
-            continue
-        fi
-        FILTERED_CANDIDATES_JSON+=("${candidate}")
-    done
-    CANDIDATES_JSON=("${FILTERED_CANDIDATES_JSON[@]}")
-}
-
-#######################################
 # apply_target_cap: Cap candidates at LOOP_MAX_TARGETS_PER_SCHEDULE
 #
 # Arguments:
@@ -804,8 +774,8 @@ function main {
     local should_run="false"
     local skip_reason="none"
     local target_matrix_json="[]"
-    local now_epoch branch pr_json gh_token="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
-    local pre_peer_count pre_cap_count
+    local branch pr_json gh_token="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+    local pre_cap_count
     local scoped_head
 
     # Pin detect script before any target checkout (stale PR trees must not supply it).
@@ -873,16 +843,6 @@ function main {
     fi
 
     sort_candidates_by_priority
-
-    now_epoch=$(date -u +%s)
-    pre_peer_count=${#CANDIDATES_JSON[@]}
-    apply_peer_active_filter "${now_epoch}"
-
-    if [[ ${#CANDIDATES_JSON[@]} -eq 0 && ${pre_peer_count} -gt 0 ]]; then
-        write_detect_outputs "false" "peer_active" "[]"
-        write_legacy_outputs "[]"
-        return 0
-    fi
 
     pre_cap_count=${#CANDIDATES_JSON[@]}
     apply_target_cap "${LOOP_MAX_TARGETS_PER_SCHEDULE}"

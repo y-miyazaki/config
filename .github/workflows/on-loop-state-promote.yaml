@@ -18,6 +18,11 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  cancel-in-progress: false
+  group: loop-state-main
+  queue: max
+
 jobs:
   promote:
     environment: default
