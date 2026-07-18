@@ -237,6 +237,7 @@ function render_footer {
     [[ -n ${level} ]] && printf '%s\n' "- Level: ${level}"
     [[ -n ${target_key} ]] && printf '%s\n' "- Target: \`${target_key}\`"
     [[ -n ${skip_reason} ]] && printf '%s\n' "- Skip reason: ${skip_reason}"
+    return 0
 }
 
 #######################################

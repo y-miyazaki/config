@@ -10,9 +10,13 @@
 #   LEVEL=... SKIP_REASON=... TARGET_JSON=... \
 #   bash lib/create_pr_body.sh
 #
+#   Large payloads: pass file paths as CLI arguments (avoids ARG_MAX / MAX_ARG_STRLEN):
+#   bash lib/create_pr_body.sh --detect-json-file /path/a --notify-json-file /path/b
+#
 # Design Rules:
 #   - Default empty JSON with quoted "{}" — never ${VAR:-{}} (bash closes early)
 #   - Invalid JSON falls back to {}
+#   - Detect JSON is slimmed to failures[] before render (commits[] may be 100s of KB)
 #   - Delegates composition to render_pr_body.sh
 #
 # Output:
@@ -38,6 +42,53 @@ NOTIFY_CONTEXT_JSON="${NOTIFY_CONTEXT_JSON:-}"
 PR_BODY="${PR_BODY:-}"
 SKIP_REASON="${SKIP_REASON:-}"
 TARGET_JSON="${TARGET_JSON:-}"
+
+_JSON_FILE_DETECT=""
+_JSON_FILE_NOTIFY=""
+_JSON_FILE_TARGET=""
+
+#######################################
+# parse_create_pr_body_args: Parse optional JSON file path arguments
+#
+# Arguments:
+#   $@ - CLI arguments
+#
+# Global Variables:
+#   _JSON_FILE_DETECT - Path to detect JSON payload (set)
+#   _JSON_FILE_NOTIFY - Path to notify JSON payload (set)
+#   _JSON_FILE_TARGET - Path to target JSON payload (set)
+#
+# Returns:
+#   Exits 2 on unknown arguments
+#
+#######################################
+function parse_create_pr_body_args {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --detect-json-file)
+                _JSON_FILE_DETECT="${2:?--detect-json-file requires a path}"
+                shift 2
+                ;;
+            --notify-json-file)
+                _JSON_FILE_NOTIFY="${2:?--notify-json-file requires a path}"
+                shift 2
+                ;;
+            --target-json-file)
+                _JSON_FILE_TARGET="${2:?--target-json-file requires a path}"
+                shift 2
+                ;;
+            -h | --help)
+                printf '%s\n' \
+                    "Usage: create_pr_body.sh [--detect-json-file PATH] [--notify-json-file PATH] [--target-json-file PATH]"
+                exit 0
+                ;;
+            *)
+                printf 'create_pr_body.sh: unknown argument: %s\n' "$1" >&2
+                exit 2
+                ;;
+        esac
+    done
+}
 
 #######################################
 # normalize_json_object: Return valid JSON object or {}
@@ -67,6 +118,48 @@ function normalize_json_object {
 }
 
 #######################################
+# read_json_payload: Load JSON from file or inline string
+#
+# Arguments:
+#   $1 - Optional file path
+#   $2 - Inline JSON fallback
+#
+# Returns:
+#   Raw JSON text on stdout (may be empty)
+#
+#######################################
+function read_json_payload {
+    local file_path="${1:-}"
+    local inline="${2:-}"
+
+    if [[ -n ${file_path} && -f ${file_path} ]]; then
+        cat "${file_path}"
+        return 0
+    fi
+    printf '%s' "${inline}"
+}
+
+#######################################
+# slim_detect_json_for_pr_body: Keep only failures[] for PR rendering
+#
+# Arguments:
+#   $1 - Detect result JSON object string
+#
+# Returns:
+#   Small JSON with failures array on stdout
+#
+#######################################
+function slim_detect_json_for_pr_body {
+    local detect_json="${1:-}"
+
+    if [[ -z ${detect_json} ]] || ! jq -e . > /dev/null 2>&1 <<< "${detect_json}"; then
+        printf '%s' '{}'
+        return 0
+    fi
+    jq -c '{failures: (.failures // [])}' <<< "${detect_json}"
+}
+
+#######################################
 # create_pr_body: Normalize inputs and render PR body
 #
 # Description:
@@ -93,9 +186,9 @@ function create_pr_body {
     local script_dir
 
     # Quoted "{}" defaults — ${VAR:-{}} appends a literal "}" and corrupts JSON.
-    notify_json="$(normalize_json_object "${NOTIFY_CONTEXT_JSON:-"{}"}")"
-    detect_json="$(normalize_json_object "${DETECT_RESULT_JSON:-"{}"}")"
-    target_json="$(normalize_json_object "${TARGET_JSON:-"{}"}")"
+    notify_json="$(normalize_json_object "$(read_json_payload "${_JSON_FILE_NOTIFY}" "${NOTIFY_CONTEXT_JSON:-"{}"}")")"
+    detect_json="$(slim_detect_json_for_pr_body "$(normalize_json_object "$(read_json_payload "${_JSON_FILE_DETECT}" "${DETECT_RESULT_JSON:-"{}"}")")")"
+    target_json="$(normalize_json_object "$(read_json_payload "${_JSON_FILE_TARGET}" "${TARGET_JSON:-"{}"}")")"
 
     CHANGED_FILES_JSON="$(jq -c '.changed_files // []' <<< "${notify_json}")"
     AGENT_REPORT_SUMMARY="$(jq -r '.agent_report_summary // empty' <<< "${notify_json}")"
@@ -117,6 +210,9 @@ function create_pr_body {
 # main: Entry point
 #######################################
 function main {
+    if [[ $# -gt 0 ]]; then
+        parse_create_pr_body_args "$@"
+    fi
     create_pr_body
 }
 

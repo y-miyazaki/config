@@ -95,7 +95,8 @@ function normalize_no_changes_verdict {
 # Global Variables:
 #   DETECT_RESULT_JSON - Detect script JSON from matrix cell (read)
 #   PROMPT_TEXT - Implementer prompt (read/write)
-#   STATUS_DIR - Runner-local status directory for detect-result.json (read)
+#   STATUS_DIR - Runner-local status directory for materialized detect JSON (read)
+#   DETECT_JSON_FILE - Path to materialized detect JSON when prompt uses marker (write)
 #   VERIFIER_CONTEXT - Verifier markdown context (read/write)
 #
 # Returns:
@@ -103,7 +104,7 @@ function normalize_no_changes_verdict {
 #
 #######################################
 function materialize_matrix_handoff_context {
-    local detect_json detect_file loop_detect_lib
+    local detect_json loop_detect_lib
     local inline="${DETECT_RESULT_JSON:-"{}"}"
     local artifact_required=false
 
@@ -142,9 +143,9 @@ function materialize_matrix_handoff_context {
 
     if [[ ${PROMPT_TEXT} == *'__LOOP_DETECT_RESULT_JSON__'* ]]; then
         : "${STATUS_DIR:?}"
-        detect_file="${STATUS_DIR}/detect-result.json"
-        printf '%s' "${detect_json}" > "${detect_file}"
-        PROMPT_TEXT="${PROMPT_TEXT//__LOOP_DETECT_RESULT_JSON__/Structured detect JSON path: ${detect_file}}"
+        DETECT_JSON_FILE="$(mktemp "${STATUS_DIR}/tmp.XXXXXX")"
+        printf '%s' "${detect_json}" > "${DETECT_JSON_FILE}"
+        PROMPT_TEXT="${PROMPT_TEXT//__LOOP_DETECT_RESULT_JSON__/Structured detect JSON path: ${DETECT_JSON_FILE}}"
     fi
 
     if [[ -z ${VERIFIER_CONTEXT:-} ]]; then

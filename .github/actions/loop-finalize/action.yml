@@ -323,39 +323,7 @@ runs:
         PR_TITLE: ${{ inputs.pr_title }}
         SKIP_REASON: ${{ inputs.skip_reason }}
         TARGET_JSON: ${{ inputs.target_json }}
-      run: |
-        set -euo pipefail
-        LOOP_DETECT_LIB="$(cd "${GITHUB_ACTION_PATH}/../loop-detect/lib" && pwd)"
-        # shellcheck source=../loop-detect/lib/handoff.sh
-        # shellcheck disable=SC1091
-        source "${LOOP_DETECT_LIB}/handoff.sh"
-        DETECT_RESULT_JSON="$(loop_handoff_resolve_detect_result_json)"
-        # create_pr_body.sh owns JSON defaulting (must use quoted "{}" — not ${VAR:-{}}).
-        COMPOSED="$(
-          PR_BODY="${PR_BODY}" \
-          DETECT_RESULT_JSON="${DETECT_RESULT_JSON}" \
-          NOTIFY_CONTEXT_JSON="${NOTIFY_CONTEXT_JSON}" \
-          LEVEL="${LEVEL}" \
-          SKIP_REASON="${SKIP_REASON}" \
-          TARGET_JSON="${TARGET_JSON}" \
-          bash "${GITHUB_ACTION_PATH}/lib/create_pr_body.sh"
-        )"
-        ARGS=(
-          --repo "${GITHUB_REPOSITORY}"
-          --base "${PR_BASE_BRANCH}"
-          --head "${BRANCH}"
-          --title "${PR_TITLE}"
-        )
-        if [[ -n "${COMPOSED}" ]]; then
-          ARGS+=(--body "${COMPOSED}")
-        fi
-        if [[ -n "${LABELS}" ]]; then
-          ARGS+=(--label "${LABELS}")
-        fi
-        URL=$(gh pr create "${ARGS[@]}")
-        NUMBER=$(gh pr view "${URL}" --json number --jq '.number')
-        echo "url=${URL}" >> "$GITHUB_OUTPUT"
-        echo "number=${NUMBER}" >> "$GITHUB_OUTPUT"
+      run: bash "${GITHUB_ACTION_PATH}/lib/create_pr.sh"
 
     - name: Enable Auto-Merge
       if: >-

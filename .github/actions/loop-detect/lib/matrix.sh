@@ -56,7 +56,7 @@ function build_prompt_text {
         echo ""
         echo "## Change Detection Result"
         echo "${LOOP_DETECT_RESULT_MARKER}"
-        echo "At execute time this is replaced with a detect-result.json path (not inlined JSON)."
+        echo "At execute time this is replaced with a runner-local JSON file path (not inlined JSON)."
         if [[ -n ${open_rejections_prompt} ]]; then
             echo ""
             echo "## Open Rejections from Previous Run"

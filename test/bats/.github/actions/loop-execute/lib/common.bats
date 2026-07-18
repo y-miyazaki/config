@@ -71,7 +71,7 @@ EOF
 }
 
 @test "materialize_matrix_handoff_context resolves detect JSON from loop-handoff artifact" {
-    local candidate detect_file
+    local candidate
 
     candidate='{"target_json":{"key":"integration:main"},"prompt":"p","verifier_context":"stored","result":{"commits":[{"sha":"abc1234567890","type":"feat","scope":"","breaking":false,"subject":"from artifact"}]}}' # pragma: allowlist secret
     loop_handoff_write_bundle "${BATS_TEST_TMPDIR}/loop-handoff" "${candidate}"
@@ -86,15 +86,14 @@ EOF
 
     materialize_matrix_handoff_context
 
-    detect_file="${STATUS_DIR}/detect-result.json"
-    [ -f "${detect_file}" ]
-    run jq -e '.commits[0].subject == "from artifact"' "${detect_file}"
+    [ -f "${DETECT_JSON_FILE}" ]
+    run jq -e '.commits[0].subject == "from artifact"' "${DETECT_JSON_FILE}"
     [ "$status" -eq 0 ]
     [ "${VERIFIER_CONTEXT}" = "stored" ]
 }
 
 @test "materialize_matrix_handoff_context writes detect file and keeps prompt compact" {
-    local detect_json detect_file
+    local detect_json
 
     detect_json='{"commits":[{"sha":"abc1234567890","type":"feat","scope":"","breaking":false,"subject":"add thing"}]}' # pragma: allowlist secret
     PROMPT_TEXT=$'Run skill\n\n## Change Detection Result\n__LOOP_DETECT_RESULT_JSON__\n'
@@ -105,11 +104,10 @@ EOF
 
     materialize_matrix_handoff_context
 
-    detect_file="${STATUS_DIR}/detect-result.json"
-    [ -f "${detect_file}" ]
-    run jq -e '.commits[0].subject == "add thing"' "${detect_file}"
+    [ -f "${DETECT_JSON_FILE}" ]
+    run jq -e '.commits[0].subject == "add thing"' "${DETECT_JSON_FILE}"
     [ "$status" -eq 0 ]
-    [[ ${PROMPT_TEXT} == *"Structured detect JSON path: ${detect_file}"* ]]
+    [[ ${PROMPT_TEXT} == *"Structured detect JSON path: ${DETECT_JSON_FILE}"* ]]
     [[ ${PROMPT_TEXT} != *'"commits"'* ]]
     [[ ${PROMPT_TEXT} != *"__LOOP_DETECT_RESULT_JSON__"* ]]
     [[ ${VERIFIER_CONTEXT} == *"## Changelog Commits"* ]]
