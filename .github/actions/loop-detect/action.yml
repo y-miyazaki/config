@@ -196,6 +196,9 @@ outputs:
   state_file:
     description: "Resolved loop state JSON path"
     value: ${{ steps.paths.outputs.state_file }}
+  handoff_artifact_name:
+    description: "Uploaded artifact name for loop-handoff bundle (empty when should_run=false)"
+    value: ${{ steps.handoff.outputs.artifact_name }}
   target_matrix:
     description: "JSON array of candidates for matrix fan-out"
     value: ${{ steps.detect.outputs.target_matrix }}
@@ -277,3 +280,17 @@ runs:
         SKILL_NAME: ${{ inputs.skill_name }}
         STATE_FILE: ${{ steps.paths.outputs.state_file }}
       run: bash "${GITHUB_ACTION_PATH}/lib/detect.sh"
+
+    - name: Record Handoff Artifact Name
+      id: handoff
+      if: steps.detect.outputs.should_run == 'true'
+      shell: bash
+      run: echo "artifact_name=loop-handoff-${GITHUB_RUN_ID}" >> "${GITHUB_OUTPUT}"
+
+    - name: Upload Loop Handoff Artifact
+      if: steps.detect.outputs.should_run == 'true'
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: loop-handoff-${{ github.run_id }}
+        path: ${{ runner.temp }}/loop-handoff
+        retention-days: 1

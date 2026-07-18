@@ -9,7 +9,9 @@
 # - normalize_no_changes_verdict coerces reject variants to REJECT
 # - normalize_no_changes_verdict coerces unknown values to APPROVE
 # - parse_output_field extracts legacy line fields
-# - load_default_prompts fills empty prompt env vars
+# - materialize_matrix_handoff_context resolves detect JSON from loop-handoff artifact
+# - materialize_matrix_handoff_context writes detect file and keeps prompt compact
+# - materialize_matrix_handoff_context rebuilds verifier_context from detect result when artifact omits it
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -19,6 +21,7 @@ done
 source "${_bats_support}/support/common.bash"
 
 setup() {
+    bats_source_rel ".github/actions/loop-detect/lib/handoff.sh"
     bats_source_rel ".github/actions/loop-execute/lib/common.sh"
 }
 
@@ -64,4 +67,69 @@ EOF
     load_default_prompts
     [[ ${PROMPT_VERIFIER_TASK} == *"loop implementer"* ]]
     [[ ${PROMPT_VERIFIER_OUTPUT_CONTRACT} == *'"verdict"'* ]]
+}
+
+@test "materialize_matrix_handoff_context resolves detect JSON from loop-handoff artifact" {
+    local candidate detect_file
+
+    candidate='{"target_json":{"key":"integration:main"},"prompt":"p","verifier_context":"stored","result":{"commits":[{"sha":"abc1234567890","type":"feat","scope":"","breaking":false,"subject":"from artifact"}]}}' # pragma: allowlist secret
+    loop_handoff_write_bundle "${BATS_TEST_TMPDIR}/loop-handoff" "${candidate}"
+
+    PROMPT_TEXT=$'Run skill\n\n## Change Detection Result\n__LOOP_DETECT_RESULT_JSON__\n'
+    DETECT_RESULT_JSON="{}"
+    LOOP_HANDOFF_DIR="${BATS_TEST_TMPDIR}/loop-handoff"
+    HANDOFF_KEY="integration:main"
+    VERIFIER_CONTEXT=""
+    STATUS_DIR="${BATS_TEST_TMPDIR}/loop-status-artifact"
+    mkdir -p "${STATUS_DIR}"
+
+    materialize_matrix_handoff_context
+
+    detect_file="${STATUS_DIR}/detect-result.json"
+    [ -f "${detect_file}" ]
+    run jq -e '.commits[0].subject == "from artifact"' "${detect_file}"
+    [ "$status" -eq 0 ]
+    [ "${VERIFIER_CONTEXT}" = "stored" ]
+}
+
+@test "materialize_matrix_handoff_context writes detect file and keeps prompt compact" {
+    local detect_json detect_file
+
+    detect_json='{"commits":[{"sha":"abc1234567890","type":"feat","scope":"","breaking":false,"subject":"add thing"}]}' # pragma: allowlist secret
+    PROMPT_TEXT=$'Run skill\n\n## Change Detection Result\n__LOOP_DETECT_RESULT_JSON__\n'
+    DETECT_RESULT_JSON="${detect_json}"
+    VERIFIER_CONTEXT=""
+    STATUS_DIR="${BATS_TEST_TMPDIR}/loop-status"
+    mkdir -p "${STATUS_DIR}"
+
+    materialize_matrix_handoff_context
+
+    detect_file="${STATUS_DIR}/detect-result.json"
+    [ -f "${detect_file}" ]
+    run jq -e '.commits[0].subject == "add thing"' "${detect_file}"
+    [ "$status" -eq 0 ]
+    [[ ${PROMPT_TEXT} == *"Structured detect JSON path: ${detect_file}"* ]]
+    [[ ${PROMPT_TEXT} != *'"commits"'* ]]
+    [[ ${PROMPT_TEXT} != *"__LOOP_DETECT_RESULT_JSON__"* ]]
+    [[ ${VERIFIER_CONTEXT} == *"## Changelog Commits"* ]]
+}
+
+@test "materialize_matrix_handoff_context rebuilds verifier_context from detect result when artifact omits it" {
+    local candidate detect_file
+
+    candidate='{"target_json":{"key":"integration:main"},"prompt":"p","verifier_context":"","result":{"commits":[{"sha":"abc1234567890","type":"feat","scope":"","breaking":false,"subject":"from artifact"}]}}' # pragma: allowlist secret
+    loop_handoff_write_bundle "${BATS_TEST_TMPDIR}/loop-handoff" "${candidate}"
+
+    PROMPT_TEXT="Run skill"
+    DETECT_RESULT_JSON="{}"
+    LOOP_HANDOFF_DIR="${BATS_TEST_TMPDIR}/loop-handoff"
+    HANDOFF_KEY="integration:main"
+    VERIFIER_CONTEXT=""
+    STATUS_DIR="${BATS_TEST_TMPDIR}/loop-status-rebuild"
+    mkdir -p "${STATUS_DIR}"
+
+    materialize_matrix_handoff_context
+
+    [[ ${VERIFIER_CONTEXT} == *"## Changelog Commits"* ]]
+    [[ ${VERIFIER_CONTEXT} == *"from artifact"* ]]
 }

@@ -21,11 +21,13 @@ Shared GitHub Actions layout for `on-loop-*.yaml` caller workflows.
 ```text
 detect (single job)
   → loop-detect
-  → outputs: target_matrix, should_run, skip_reason
+  → outputs: target_matrix (slim), handoff_artifact_name, should_run, skip_reason
+  → uploads loop-handoff artifact (full result + verifier_context per target)
 
 execute (matrix: target_matrix)
   → ci-loop-agent.yaml per cell (optional finalize job when finalize_enabled=true)
-  → inputs: target_json, prompt, verifier_context, finalize config, …
+  → downloads loop-handoff artifact; resolves payloads by handoff_key
+  → inputs: target_json, prompt, handoff_key, finalize config, …
 
 record-skip (optional)
   → loop-run-log when should_run=false and skip_reason=budget|circuit_breaker
@@ -36,14 +38,15 @@ record-skip (optional)
 
 ### Required outputs
 
-| Output             | Source                                                                           |
-| ------------------ | -------------------------------------------------------------------------------- |
-| `should_run`       | `loop-detect` — true when `target_matrix` is non-empty                           |
-| `skip_reason`      | `loop-detect`                                                                    |
-| `target_matrix`    | JSON array of candidates (see [Specification](../../reference/specification.md)) |
-| Config passthrough | `level`, models, allowlist, `state_file`, …                                      |
+| Output                  | Source                                                                                                                  |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `should_run`            | `loop-detect` — true when `target_matrix` is non-empty                                                                  |
+| `skip_reason`           | `loop-detect`                                                                                                           |
+| `handoff_artifact_name` | `loop-detect` — artifact name for execute download (empty when `should_run=false`)                                      |
+| `target_matrix`         | Slim JSON array of candidates (see [Specification](../../reference/specification.md#job-handoff-loop-handoff-artifact)) |
+| Config passthrough      | `level`, models, allowlist, `state_file`, …                                                                             |
 
-Each matrix cell carries: `target_json`, `prompt`, `verifier_context`, `result`.
+Each slim matrix cell carries: `target_json`, `prompt`, `handoff_key`. Full `result` and `verifier_context` live in the **loop-handoff** artifact (`payloads/<sanitized-key>.json`).
 
 ### Anti-pattern: double detect
 
@@ -73,14 +76,16 @@ execute:
   with:
     base_branch: ${{ matrix.target.target_json.mode == 'pull_request' && matrix.target.target_json.base.branch || matrix.target.target_json.to.branch }}
     current_sha: ${{ matrix.target.target_json.from.ref }}
+    detect_result_json: "{}"
     finalize_enabled: true
+    handoff_artifact_name: ${{ needs.detect.outputs.handoff_artifact_name }}
+    handoff_key: ${{ matrix.target.handoff_key }}
     prompt_text: ${{ matrix.target.prompt }}
     target_json: ${{ toJson(matrix.target.target_json) }}
-    verifier_context: ${{ matrix.target.verifier_context }}
     # … passthrough from detect + finalize config
 ```
 
-`target_json` and `verifier_context` are required platform inputs (verifier_context may be empty string).
+`target_json` is required. `verifier_context` and `result` are resolved at runtime from the loop-handoff artifact (or inline `detect_result_json` when non-empty).
 
 **`DEFAULT_LEVEL` vs finalize:**
 
@@ -186,12 +191,12 @@ Each matrix cell = one `max_runs_per_day` consumption. Cap enumeration in `loop-
 
 ## Permissions (least privilege pattern)
 
-| Job         | Typical permissions                                                                       |
-| ----------- | ----------------------------------------------------------------------------------------- |
-| detect      | `contents: read`, `actions: read`, `checks: read`                                         |
-| execute     | `contents: write`, `pull-requests: write` (when `finalize_enabled=true`), engine-specific |
-| record-skip | `contents: write`, `pull-requests: write` (run-log PR fallback on protected branches)     |
-| finalize    | Runs inside `ci-loop-agent`; inherits caller `execute` job permissions                    |
+| Job         | Typical permissions                                                                                                            |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| detect      | `contents: read`, `actions: write` (upload artifact); profile may add `actions: read`, `pull-requests: read`                   |
+| execute     | `actions: read` (download artifact), `contents: write`, `pull-requests: write` (when `finalize_enabled=true`), engine-specific |
+| record-skip | `contents: write`, `pull-requests: write` (run-log PR fallback on protected branches)                                          |
+| finalize    | Runs inside `ci-loop-agent`; inherits caller `execute` job permissions                                                         |
 
 `ci-loop-agent` `agent-l2` also needs `pull-requests: write` — `loop-state-write` opens a state PR when `LOOP_STATE_PUSH_BRANCH` blocks direct push.
 
@@ -236,4 +241,3 @@ Next structural improvement: [Loop Caller Reusable Workflow Design](loop-caller-
 - [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md)
 - [Changelog Workflow](workflows/loop-changelog-workflow-design.md)
 - [Docs Triage Workflow](workflows/loop-docs-triage-workflow-design.md)
-

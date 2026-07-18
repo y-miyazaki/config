@@ -200,7 +200,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
-      actions: read
+      actions: write
       contents: read
       pull-requests: read
     outputs:
@@ -216,6 +216,7 @@ jobs:
       denylist: ${{ inputs.denylist }}
       domain_persistence_script: ${{ inputs.domain_persistence_script }}
       engine: ${{ steps.detect.outputs.engine }}
+      handoff_artifact_name: ${{ steps.detect.outputs.handoff_artifact_name }}
       infer_files_pattern: ${{ steps.detect.outputs.infer_files_pattern }}
       level: ${{ steps.detect.outputs.level }}
       loop_name: ${{ steps.detect.outputs.loop_name }}
@@ -312,6 +313,7 @@ jobs:
     if: needs.detect.outputs.should_run == 'true'
     needs: detect
     permissions:
+      actions: read
       contents: write
       copilot-requests: write # zizmor: ignore[excessive-permissions]
       pull-requests: write
@@ -333,11 +335,13 @@ jobs:
       base_branch: ${{ matrix.target.target_json.mode == 'pull_request' && matrix.target.target_json.base.branch || matrix.target.target_json.to.branch }}
       current_sha: ${{ matrix.target.target_json.from.ref }}
       denylist: ${{ needs.detect.outputs.denylist }}
-      detect_result_json: ${{ toJson(matrix.target.result) }}
+      detect_result_json: "{}"
       domain_persistence_script: ${{ needs.detect.outputs.domain_persistence_script }}
       engine: ${{ needs.detect.outputs.engine }}
       environment: ${{ inputs.environment }}
       finalize_enabled: true
+      handoff_artifact_name: ${{ needs.detect.outputs.handoff_artifact_name }}
+      handoff_key: ${{ matrix.target.handoff_key }}
       infer_files_pattern: ${{ needs.detect.outputs.infer_files_pattern }}
       level: ${{ needs.detect.outputs.level }}
       loop_name: ${{ needs.detect.outputs.loop_name }}

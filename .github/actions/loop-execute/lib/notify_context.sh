@@ -231,12 +231,19 @@ function write_notify_context_output {
 #
 #######################################
 function main {
-    local detect_json="${DETECT_RESULT_JSON}"
+    local detect_json
+    local loop_detect_lib
     local has_changes="${HAS_CHANGES}"
     local baseline_ref changed_files_json diff_stat fix_summary agent_summary=""
     local agent_report_summary=""
     local -a files=()
     local file count=0 extra=0 last_output notify_json
+
+    loop_detect_lib="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../loop-detect/lib" && pwd)"
+    # shellcheck source=../../loop-detect/lib/handoff.sh
+    # shellcheck disable=SC1091
+    source "${loop_detect_lib}/handoff.sh"
+    detect_json="$(loop_handoff_resolve_detect_result_json)"
 
     validate_required_inputs
 

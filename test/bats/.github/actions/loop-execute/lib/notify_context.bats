@@ -12,6 +12,7 @@
 # - main parses agent_report_summary from status dir
 # - main parses agent_summary from status dir
 # - main writes notify_context_json without changes
+# - main resolves fix_summary from loop-handoff artifact when inline detect JSON is empty
 # - parse_agent_summary extracts block after marker
 # - parse_agent_summary returns empty when file missing
 # - redact_sensitive_text redacts github tokens
@@ -193,6 +194,33 @@ EOF
     run jq -er '.agent_summary' <<< "${json}"
     [ "$status" -eq 0 ]
     [[ $output == *"Fixed the lint job"* ]]
+}
+
+@test "main resolves fix_summary from loop-handoff artifact when inline detect JSON is empty" {
+    local candidate handoff_dir json
+
+    notify_context_git_setup
+    handoff_dir="${BATS_TEST_TMPDIR}/loop-handoff-notify"
+    candidate='{"target_json":{"key":"integration:main"},"prompt":"p","verifier_context":"","result":{"failures":[{"job_name":"lint","workflow_name":"on-ci-push"}]}}'
+    bats_source_rel ".github/actions/loop-detect/lib/handoff.sh"
+    loop_handoff_write_bundle "${handoff_dir}" "${candidate}"
+
+    GITHUB_OUTPUT="$(mktemp)"
+    run env \
+        HAS_CHANGES=false \
+        WORKTREE_PATH="${GIT_TEST_REPO}" \
+        BASE_BRANCH=main \
+        DETECT_RESULT_JSON="{}" \
+        LOOP_HANDOFF_DIR="${handoff_dir}" \
+        HANDOFF_KEY="integration:main" \
+        GITHUB_OUTPUT="${GITHUB_OUTPUT}" \
+        STATUS_DIR= \
+        bash "${NOTIFY_CONTEXT_SCRIPT}"
+    [ "$status" -eq 0 ]
+
+    json="$(awk '/^notify_context_json<</{found=1;next} found{if($0 ~ /^NOTIFY_CONTEXT_/) exit; print}' "${GITHUB_OUTPUT}")"
+    run jq -e '.fix_summary == "Address CI failure in lint (on-ci-push)"' <<< "${json}"
+    [ "$status" -eq 0 ]
 }
 
 @test "main writes notify_context_json without changes" {

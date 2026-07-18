@@ -9,6 +9,7 @@
 # - build_verifier_context_from_result prefers explicit verifier_context
 # - build_verifier_context_from_result still formats affected_docs
 # - candidate_priority_rank follows LOOP_PRIORITY order
+# - shrink_matrix_candidate_for_output strips result and sets handoff_key
 # - sort_candidates_by_priority puts integration before pull_request by default
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -113,4 +114,24 @@ setup() {
     [ "$output" = "integration:main" ]
     run jq -r '.target_json.key' <<< "${CANDIDATES_JSON[1]}"
     [ "$output" = "pull_request:265" ]
+}
+
+@test "build_prompt_text uses detect marker instead of embedding JSON" {
+    local detect_result prompt
+
+    detect_result='{"status":"ok","commits":[{"sha":"abc","type":"feat","scope":"","breaking":false,"subject":"big"}]}'
+    prompt="$(build_prompt_text "loop-changelog" "L2" "CHANGELOG.md" "do work" "since" "head" "${detect_result}" "" "0")"
+
+    [[ ${prompt} == *"__LOOP_DETECT_RESULT_JSON__"* ]]
+    [[ ${prompt} != *'"commits"'* ]]
+    [[ ${prompt} == *"## Instructions"* ]]
+}
+
+@test "shrink_matrix_candidate_for_output strips result and sets handoff_key" {
+    local candidate shrunk
+
+    candidate='{"target_json":{"key":"integration:main"},"prompt":"p","verifier_context":"big","result":{"skip":false}}'
+    shrunk="$(shrink_matrix_candidate_for_output "${candidate}")"
+    run jq -e '.handoff_key == "integration:main" and .verifier_context == "" and (.result? | not)' <<< "${shrunk}"
+    [ "$status" -eq 0 ]
 }

@@ -5,7 +5,7 @@
 
 # Use cases:
 # - fails when execute baseline permission is missing
-# - fails when full-github profile lacks actions read
+# - fails when full-github profile lacks actions write (artifact handoff)
 # - fails when profile is not implemented
 # - passes for default profile caller
 # - passes for full-github profile caller
@@ -67,7 +67,7 @@ EOF
     [[ $output == *"missing execute baseline"* ]]
 }
 
-@test "fails when full-github profile lacks actions read" {
+@test "fails when full-github profile lacks actions write" {
     write_loop_caller_fixture "on-loop-ci-sweeper" \
         "  contents: write
   copilot-requests: write
@@ -76,7 +76,7 @@ EOF
 
     run bash "${VALIDATE_SCRIPT}"
     [ "$status" -eq 1 ]
-    [[ $output == *"addition actions: read"* ]]
+    [[ $output == *"addition actions: write"* ]]
 }
 
 @test "fails when profile is not implemented" {
@@ -94,7 +94,8 @@ EOF
 
 @test "passes for default profile caller" {
     write_loop_caller_fixture "on-loop-changelog" \
-        "  contents: write
+        "  actions: write
+  contents: write
   copilot-requests: write
   pull-requests: write" \
         "ci-loop-caller.yaml" \
@@ -107,7 +108,7 @@ EOF
 
 @test "passes for full-github profile caller" {
     write_loop_caller_fixture "on-loop-ci-sweeper" \
-        "  actions: read
+        "  actions: write
   contents: write
   copilot-requests: write
   pull-requests: write" \

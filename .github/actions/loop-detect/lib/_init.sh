@@ -29,6 +29,8 @@ source "${LIB_DIR}/state.sh"
 source "${LIB_DIR}/prs.sh"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/matrix.sh"
+# shellcheck disable=SC1091
+source "${LIB_DIR}/handoff.sh"
 
 #######################################
 # Global variables

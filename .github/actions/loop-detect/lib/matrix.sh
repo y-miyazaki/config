@@ -8,8 +8,12 @@
 # - None (library file; writes to GITHUB_OUTPUT via helpers)
 #
 # Design Rules:
-# - verifier_context may be empty; always included in matrix cells
+# - Large payloads (result, verifier_context) live in loop-handoff artifact files
+# - target_matrix carries handoff_key; execute resolves payloads by key
+# - Implementer prompts use LOOP_DETECT_RESULT_MARKER; detect JSON is file-backed at execute
 #######################################
+
+LOOP_DETECT_RESULT_MARKER='__LOOP_DETECT_RESULT_JSON__'
 
 #######################################
 # build_prompt_text: Assemble implementer prompt for one candidate
@@ -51,7 +55,8 @@ function build_prompt_text {
         echo "Current SHA: ${current_sha}"
         echo ""
         echo "## Change Detection Result"
-        echo "${detect_result}"
+        echo "${LOOP_DETECT_RESULT_MARKER}"
+        echo "At execute time this is replaced with a detect-result.json path (not inlined JSON)."
         if [[ -n ${open_rejections_prompt} ]]; then
             echo ""
             echo "## Open Rejections from Previous Run"
@@ -81,6 +86,34 @@ function build_prompt_text {
             fi
         fi
     }
+}
+
+#######################################
+# shrink_matrix_candidate_for_output: Trim matrix payload for job output limits
+#
+# Arguments:
+#   $1 - Candidate JSON object string
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Compacted candidate JSON on stdout
+#
+#######################################
+function shrink_matrix_candidate_for_output {
+    local candidate="$1"
+
+    if ! jq -e . <<< "${candidate}" > /dev/null 2>&1; then
+        printf '%s' "${candidate}"
+        return 0
+    fi
+
+    jq -c '
+        .handoff_key = (.target_json.key // "") |
+        .verifier_context = "" |
+        del(.result)
+    ' <<< "${candidate}"
 }
 
 #######################################

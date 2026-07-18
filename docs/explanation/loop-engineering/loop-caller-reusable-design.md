@@ -65,17 +65,17 @@ on-loop-changelog.yaml          on-loop-ci-sweeper.yaml
 
 These constraints come from [Loop Caller Workflows Design](loop-caller-workflows-design.md) and [Multi-Branch Loops Design](multi-branch-loops-design.md). The refactor must preserve them.
 
-| Invariant                           | Rationale                                                                                                                                                                                 |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Separate `on-loop-*` per loop**   | Independent cron, workflow name, concurrency; CI sweeper `workflow_run.workflows` lists repair targets only                                                                               |
-| **Finalize inside `ci-loop-agent`** | Reusable-workflow matrix collapses outputs across cells; finalize must pair with execute in the same workflow instance                                                                    |
-| **Single detect per run**           | Domain `detect_script` invoked only by `loop-detect`; no second `run:` detect in caller                                                                                                   |
-| **`target_matrix` handoff**         | `detect` outputs JSON array; `execute` matrix uses `fromJson(needs.detect.outputs.target_matrix)`                                                                                         |
-| **`acting_on` / peer filter**       | Unchanged; handled inside `loop-detect` / `loop-state-write`                                                                                                                              |
-| **Budget / circuit breaker**        | `record-skip` when `should_run == false` and `skip_reason` is `budget` or `circuit_breaker`                                                                                               |
-| **`target_budget` deferral**        | When fan-out cap defers targets, `should_run` stays `true` and execute runs; `skip_reason=target_budget` is informational only — not recorded by `record-skip` (by design)                |
-| **State push branch**               | `.loop/*` run-log/budget persistence uses `branch_state`. Changelog uses merge-gated `pending` on `branch_state` and `on-loop-state-promote` (default `state_bundle_with_fix_pr: false`). |
-| **Alphabetical keys**               | `inputs`, `with`, `env` (inside reusable jobs), `permissions` keys sorted A→Z                                                                                                             |
+| Invariant                           | Rationale                                                                                                                                                                                                                    |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Separate `on-loop-*` per loop**   | Independent cron, workflow name, concurrency; CI sweeper `workflow_run.workflows` lists repair targets only                                                                                                                  |
+| **Finalize inside `ci-loop-agent`** | Reusable-workflow matrix collapses outputs across cells; finalize must pair with execute in the same workflow instance                                                                                                       |
+| **Single detect per run**           | Domain `detect_script` invoked only by `loop-detect`; no second `run:` detect in caller                                                                                                                                      |
+| **`target_matrix` handoff**         | `detect` outputs slim JSON array + `handoff_artifact_name`; large `result` / `verifier_context` in loop-handoff artifact; `execute` matrix uses `fromJson(needs.detect.outputs.target_matrix)` and resolves by `handoff_key` |
+| **`acting_on` / peer filter**       | Unchanged; handled inside `loop-detect` / `loop-state-write`                                                                                                                                                                 |
+| **Budget / circuit breaker**        | `record-skip` when `should_run == false` and `skip_reason` is `budget` or `circuit_breaker`                                                                                                                                  |
+| **`target_budget` deferral**        | When fan-out cap defers targets, `should_run` stays `true` and execute runs; `skip_reason=target_budget` is informational only — not recorded by `record-skip` (by design)                                                   |
+| **State push branch**               | `.loop/*` run-log/budget persistence uses `branch_state`. Changelog uses merge-gated `pending` on `branch_state` and `on-loop-state-promote` (default `state_bundle_with_fix_pr: false`).                                    |
+| **Alphabetical keys**               | `inputs`, `with`, `env` (inside reusable jobs), `permissions` keys sorted A→Z                                                                                                                                                |
 
 ## Thin Caller Pattern
 
@@ -94,6 +94,7 @@ concurrency:
   group: ${{ github.workflow }}
 
 permissions:
+  actions: write
   contents: write
   copilot-requests: write # zizmor: ignore[excessive-permissions]
   pull-requests: write
@@ -251,12 +252,12 @@ Full mapping table: [Loop Caller Inputs Reference — `loop-detect` mapping](wor
 
 Detect job permissions are **profile-based** and declared per reusable workflow file. GitHub Actions validates every job in a called reusable workflow at parse time (even when `if:` skips them), so profiles that need `actions: read` live in `ci-loop-caller-full-github.yaml` instead of sharing `ci-loop-caller.yaml` with the default profile. The profile registry (`.github/actions/validate-loop-caller-permissions/detect-permissions-profiles.yaml`) is the single source of truth for job permissions, caller workflow file, and caller workflow additions.
 
-| Profile       | Reusable workflow                 | Detect job | Job permissions                                          | Callers                |
-| ------------- | --------------------------------- | ---------- | -------------------------------------------------------- | ---------------------- |
-| `default`     | `ci-loop-caller.yaml`             | `detect`   | `contents: read`                                         | changelog, docs-triage |
-| `full-github` | `ci-loop-caller-full-github.yaml` | `detect`   | `actions: read`, `contents: read`, `pull-requests: read` | ci-sweeper             |
+| Profile       | Reusable workflow                 | Detect job | Job permissions                                           | Callers                |
+| ------------- | --------------------------------- | ---------- | --------------------------------------------------------- | ---------------------- |
+| `default`     | `ci-loop-caller.yaml`             | `detect`   | `actions: write`, `contents: read`                        | changelog, docs-triage |
+| `full-github` | `ci-loop-caller-full-github.yaml` | `detect`   | `actions: write`, `contents: read`, `pull-requests: read` | ci-sweeper             |
 
-Caller workflow `permissions` = **execute baseline** (`contents: write`, `pull-requests: write`, `copilot-requests: write`) + **profile `caller_adds`**. Reusable workflows cannot escalate beyond the caller grant. Thin callers select the profile by which reusable workflow they `uses:` (ci-sweeper → `ci-loop-caller-full-github.yaml`; changelog and docs-triage → `ci-loop-caller.yaml`).
+Caller workflow `permissions` = **execute baseline** (`actions: read`, `contents: write`, `pull-requests: write`, `copilot-requests: write`) + **profile `caller_adds`** (`actions: write` for both profiles). Reusable workflows cannot escalate beyond the caller grant. Thin callers select the profile by which reusable workflow they `uses:` (ci-sweeper → `ci-loop-caller-full-github.yaml`; changelog and docs-triage → `ci-loop-caller.yaml`).
 
 CI validation: `validate-loop-caller-permissions` composite action (run in `ci-github-actions-workflow`; local wrapper: `scripts/ci/validate_loop_caller_permissions.sh`).
 

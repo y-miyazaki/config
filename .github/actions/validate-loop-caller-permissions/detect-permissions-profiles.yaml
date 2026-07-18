@@ -2,6 +2,7 @@
 # Single source of truth for detect job permissions and caller workflow additions.
 # Registry: docs/explanation/loop-engineering/loop-caller-reusable-design.md#detect-permissions-profile
 execute_baseline:
+  actions: read
   contents: write
   copilot-requests: write
   pull-requests: write
@@ -13,8 +14,10 @@ profiles:
     implemented: true
     job: detect
     job_permissions:
+      actions: write
       contents: read
-    caller_adds: {}
+    caller_adds:
+      actions: write
 
   pr-scan:
     caller_workflow: ci-loop-caller.yaml
@@ -43,8 +46,8 @@ profiles:
     implemented: true
     job: detect
     job_permissions:
-      actions: read
+      actions: write
       contents: read
       pull-requests: read
     caller_adds:
-      actions: read
+      actions: write

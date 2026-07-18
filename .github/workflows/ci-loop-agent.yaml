@@ -107,6 +107,16 @@ on:
         description: "Run loop-finalize after agent-l2 in this workflow instance"
         required: false
         type: boolean
+      handoff_artifact_name:
+        default: ""
+        description: "loop-handoff artifact name from loop-detect"
+        required: false
+        type: string
+      handoff_key:
+        default: ""
+        description: "Target handoff key for artifact payload resolution"
+        required: false
+        type: string
       infer_files_pattern:
         default: ""
         description: "Optional extended-regex to infer file paths from verifier text (L2/L3)"
@@ -323,6 +333,7 @@ jobs:
       usage_json: ${{ steps.execute.outputs.usage_json }}
       verdict: ${{ steps.execute.outputs.verdict }}
     permissions:
+      actions: read
       contents: write
       copilot-requests: write # zizmor: ignore[excessive-permissions]
       pull-requests: write
@@ -332,6 +343,13 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Download Loop Handoff
+        if: inputs.handoff_artifact_name != ''
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ inputs.handoff_artifact_name }}
+          path: ${{ runner.temp }}/loop-handoff
 
       - name: Setup uv
         uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
@@ -451,6 +469,8 @@ jobs:
           detect_result_json: ${{ inputs.detect_result_json }}
           denylist: ${{ inputs.denylist }}
           engine: ${{ inputs.engine }}
+          handoff_dir: ${{ runner.temp }}/loop-handoff
+          handoff_key: ${{ inputs.handoff_key != '' && inputs.handoff_key || steps.target.outputs.target_key }}
           infer_files_pattern: ${{ inputs.infer_files_pattern }}
           no_changes_verdict: ${{ inputs.no_changes_verdict }}
           prompt_implementer_feedback: ${{ inputs.prompt_implementer_feedback }}
@@ -474,6 +494,7 @@ jobs:
     needs: agent-l2
     environment: ${{ inputs.environment }}
     permissions:
+      actions: read
       contents: write
       pull-requests: write
     runs-on: ubuntu-24.04
@@ -483,6 +504,13 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+
+      - name: Download Loop Handoff
+        if: inputs.handoff_artifact_name != ''
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ inputs.handoff_artifact_name }}
+          path: ${{ runner.temp }}/loop-handoff
 
       - name: Generate App Bot Token
         continue-on-error: true
@@ -555,6 +583,8 @@ jobs:
           detect_result_json: ${{ inputs.detect_result_json }}
           domain_persistence_script: ${{ inputs.domain_persistence_script }}
           execute_branch: ${{ needs.agent-l2.outputs.branch }}
+          handoff_dir: ${{ runner.temp }}/loop-handoff
+          handoff_key: ${{ inputs.handoff_key }}
           has_changes: ${{ needs.agent-l2.outputs.has_changes }}
           labels: ${{ inputs.labels }}
           level: ${{ inputs.level }}

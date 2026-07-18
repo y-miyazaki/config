@@ -96,7 +96,8 @@ loop-detect
        c. if not skip: build candidate (target_json, result, prompt, verifier_context)
   7. Apply acting_on / peer_active on each candidate.key
   8. Apply LOOP_PRIORITY + LOOP_MAX_TARGETS_PER_SCHEDULE
-  9. Output target_matrix (JSON array)
+  9. Write loop-handoff artifact (full result + verifier_context per key)
+ 10. Output slim target_matrix (JSON array; handoff_key per cell, no inlined result)
 ```
 
 Execute and finalize jobs use **matrix fan-out** over `target_matrix` — one cell per target, parallel with per-target `concurrency.group`.
@@ -220,13 +221,13 @@ Bundling is **per-loop opt-in**, not a global LE requirement. The historical def
 
 **State is not a reviewer-facing deliverable.** `.loop/state-*.json` holds machine cursors (`last_sha`), outcomes, and circuit-breaker counters — analogous to a CI cache key or migration ledger, not to `CHANGELOG.md` or doc fixes. Asking humans to approve state in a PR is a category error.
 
-| Delivery                                                                                         | Verdict                                                                                                                       |
-| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| **Direct push to `branch_state`** (bot token + branch-protection bypass for `.loop/*`)           | **Target.** State updates are infrastructure writes, not review gates.                                                        |
+| Delivery                                                                                                | Verdict                                                                                                                       |
+| ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Direct push to `branch_state`** (bot token + branch-protection bypass for `.loop/*`)                  | **Target.** State updates are infrastructure writes, not review gates.                                                        |
 | **Merge-gated state push** (`pull_request_target` `closed` + `merged` → promote `pending` → `last_sha`) | **Chosen L2 model.** Fix PR is domain-only; state advances on the merge **event**, not because a human approved a state diff. |
-| **State-only PR** (including auto-merge queue)                                                   | **Anti-pattern.** A fallback when push is blocked; must not be the designed happy path.                                       |
-| **`state_bundle_with_fix_pr`**                                                                   | **Deprecated interim.** Mixed machine state into a human PR; retire after merge-gated push.                                   |
-| **L3 `push` / `push_head`**                                                                      | **Platform exception.** Dogfood uses `open_pr` + GitHub auto-merge instead of direct push.                                    |
+| **State-only PR** (including auto-merge queue)                                                          | **Anti-pattern.** A fallback when push is blocked; must not be the designed happy path.                                       |
+| **`state_bundle_with_fix_pr`**                                                                          | **Deprecated interim.** Mixed machine state into a human PR; retire after merge-gated push.                                   |
+| **L3 `push` / `push_head`**                                                                             | **Platform exception.** Dogfood uses `open_pr` + GitHub auto-merge instead of direct push.                                    |
 
 **What matters more than PR vs push is _when_ `last_sha` advances:**
 
@@ -329,4 +330,3 @@ Shared caller configuration: [Loop Caller Inputs Reference](workflows/loop-calle
 - [Loop Engineering Design](loop-engineering-design.md)
 - [Loop Caller Workflows Design](loop-caller-workflows-design.md)
 - [cobusgreyling loop-engineering](https://github.com/cobusgreyling/loop-engineering)
-

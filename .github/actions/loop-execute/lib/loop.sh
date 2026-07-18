@@ -54,6 +54,7 @@ OUTCOME_OVERRIDE=""
 function initialize_loop_state {
     mkdir -p "${STATUS_DIR}"
     normalize_no_changes_verdict
+    materialize_matrix_handoff_context
     load_default_prompts
     reset_usage_totals
 }

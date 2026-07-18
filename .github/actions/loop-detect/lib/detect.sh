@@ -890,14 +890,25 @@ function main {
         skip_reason="target_budget"
     fi
 
-    target_matrix_json="$(printf '%s\n' "${CANDIDATES_JSON[@]}" | jq -sc '.')"
+    local handoff_dir="${RUNNER_TEMP:-/tmp}/loop-handoff"
+    local full_matrix_json candidate slim_candidate
+    local -a slim_candidates=()
+
+    full_matrix_json="$(printf '%s\n' "${CANDIDATES_JSON[@]}" | jq -sc '.')"
+    loop_handoff_write_bundle "${handoff_dir}" "${CANDIDATES_JSON[@]}"
+
+    for candidate in "${CANDIDATES_JSON[@]}"; do
+        slim_candidate="$(shrink_matrix_candidate_for_output "${candidate}")"
+        slim_candidates+=("${slim_candidate}")
+    done
+    target_matrix_json="$(printf '%s\n' "${slim_candidates[@]}" | jq -sc '.')"
     should_run="true"
 
     log_detect_notice "matrix" "${LOOP_NAME}" \
-        "should_run=true count=${#CANDIDATES_JSON[@]} keys=$(jq -r '[.[].target_json.key] | join(",")' <<< "${target_matrix_json}") skip_reason=${skip_reason} pr_enabled=${LOOP_PR_ENABLED} max_targets=${LOOP_MAX_TARGETS_PER_SCHEDULE}"
+        "should_run=true count=${#CANDIDATES_JSON[@]} keys=$(jq -r '[.[].target_json.key] | join(",")' <<< "${target_matrix_json}") skip_reason=${skip_reason} pr_enabled=${LOOP_PR_ENABLED} max_targets=${LOOP_MAX_TARGETS_PER_SCHEDULE} handoff_dir=${handoff_dir}"
 
     write_detect_outputs "${should_run}" "${skip_reason}" "${target_matrix_json}"
-    write_legacy_outputs "${target_matrix_json}"
+    write_legacy_outputs "${full_matrix_json}"
 }
 
 if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then

@@ -59,6 +59,14 @@ inputs:
   engine:
     description: "AI engine (claude | copilot | codex | cursor)"
     required: true
+  handoff_dir:
+    default: ""
+    description: "Downloaded loop-handoff artifact directory (empty when inline detect_result_json is used)"
+    required: false
+  handoff_key:
+    default: ""
+    description: "Target handoff key for artifact payload lookup"
+    required: false
   infer_files_pattern:
     default: ""
     description: "Optional extended-regex to infer file paths from verifier text when JSON files is missing"
@@ -165,8 +173,11 @@ runs:
         BRANCH: ${{ inputs.branch }}
         COMMIT_MESSAGE: ${{ inputs.commit_message }}
         DENYLIST: ${{ inputs.denylist }}
+        DETECT_RESULT_JSON: ${{ inputs.detect_result_json }}
         ENGINE: ${{ inputs.engine }}
+        HANDOFF_KEY: ${{ inputs.handoff_key }}
         INFER_FILES_PATTERN: ${{ inputs.infer_files_pattern }}
+        LOOP_HANDOFF_DIR: ${{ inputs.handoff_dir }}
         NO_CHANGES_VERDICT: ${{ inputs.no_changes_verdict }}
         PROMPT_IMPLEMENTER_FEEDBACK: ${{ inputs.prompt_implementer_feedback }}
         PROMPT_TEXT: ${{ inputs.prompt_text }}
@@ -197,7 +208,9 @@ runs:
       env:
         BASE_BRANCH: ${{ inputs.base_branch }}
         DETECT_RESULT_JSON: ${{ inputs.detect_result_json }}
+        HANDOFF_KEY: ${{ inputs.handoff_key }}
         HAS_CHANGES: ${{ steps.push.outputs.has_changes }}
+        LOOP_HANDOFF_DIR: ${{ inputs.handoff_dir }}
         STATUS_DIR: ${{ runner.temp }}/loop-execute-status
         WORKTREE_PATH: ${{ inputs.worktree_path }}
       run: bash "${GITHUB_ACTION_PATH}/lib/notify_context.sh"

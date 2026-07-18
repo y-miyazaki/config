@@ -45,6 +45,14 @@ inputs:
     default: "false"
     description: "Whether agent produced changes"
     required: false
+  handoff_dir:
+    default: ""
+    description: "Downloaded loop-handoff artifact directory"
+    required: false
+  handoff_key:
+    default: ""
+    description: "Target handoff key for artifact payload lookup"
+    required: false
   labels:
     default: "loop-automation"
     description: "Comma-separated labels for the PR"
@@ -305,8 +313,10 @@ runs:
         BRANCH: ${{ inputs.branch }}
         DETECT_RESULT_JSON: ${{ inputs.detect_result_json }}
         GH_TOKEN: ${{ inputs.token }}
+        HANDOFF_KEY: ${{ inputs.handoff_key }}
         LABELS: ${{ inputs.labels }}
         LEVEL: ${{ inputs.level }}
+        LOOP_HANDOFF_DIR: ${{ inputs.handoff_dir }}
         NOTIFY_CONTEXT_JSON: ${{ inputs.notify_context_json }}
         PR_BASE_BRANCH: ${{ steps.target.outputs.pr_base_branch }}
         PR_BODY: ${{ inputs.pr_body }}
@@ -315,6 +325,11 @@ runs:
         TARGET_JSON: ${{ inputs.target_json }}
       run: |
         set -euo pipefail
+        LOOP_DETECT_LIB="$(cd "${GITHUB_ACTION_PATH}/../loop-detect/lib" && pwd)"
+        # shellcheck source=../loop-detect/lib/handoff.sh
+        # shellcheck disable=SC1091
+        source "${LOOP_DETECT_LIB}/handoff.sh"
+        DETECT_RESULT_JSON="$(loop_handoff_resolve_detect_result_json)"
         # create_pr_body.sh owns JSON defaulting (must use quoted "{}" — not ${VAR:-{}}).
         COMPOSED="$(
           PR_BODY="${PR_BODY}" \

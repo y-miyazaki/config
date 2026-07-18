@@ -390,21 +390,21 @@ Each `loop-*` APM package is self-contained. Domain detection and agent behavior
 
 ### Loop Engineering Actions
 
-| Action                 | Purpose                                                                                                                                                                                                                                                             |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `loop-agent-once`      | Single read-only agent session (L1)                                                                                                                                                                                                                                 |
-| `loop-config-pack`     | Pack caller agent config into standardized outputs for detect/execute handoff (standalone; `loop-detect` inlines the same pack step)                                                                                                                                |
-| `loop-detect`          | Read `LOOP_*`, enumerate branches/PRs, checkout per context, invoke `detect_script` per context, assemble `target_matrix`, `verifier_context`, prompts; guards (`budget`, `acting_on`, `peer_active`, circuit breaker). **No caller re-run of detect script**       |
-| `loop-execute`         | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`; worktree from `from.ref` @ `from.branch`                                                                                                                                       |
-| `loop-finalize`        | Finalize per `target.finalize`, branch cleanup, per-target state, run-log, optional `domain_persistence_script`; `.loop/*` to `LOOP_STATE_PUSH_BRANCH`                                                                                                              |
-| `loop-notify-pr`       | Post or update marker PR comment after finalize on `pull_request` targets (sibling step in `ci-loop-agent`, not nested in `loop-finalize`). Platform-owned Layers 1–2; optional skill appendix. See [loop-notify-pr Specification](loop-notify-pr-specification.md) |
-| `loop-install-cli`     | Install and cache the selected engine CLI                                                                                                                                                                                                                           |
-| `loop-prompt-generate` | Assemble implementer prompt: skill invocation, caller context/instructions, generic loop constraints                                                                                                                                                                |
-| `loop-run-log`         | Append one JSONL entry to `.loop/loop-run-log.md`, prune entries older than 30 days                                                                                                                                                                                 |
-| `loop-state-promote`   | Promote or clear `pending` loop state after a fix PR closes (`pull_request` `closed` handler)                                                                                                                                                                       |
-| `loop-state-read`      | Read `targets` map; per-target cursors; peer `acting_on` inputs                                                                                                                                                                                                     |
-| `loop-state-write`     | Write per-target entry in `targets` map; commit to `LOOP_STATE_PUSH_BRANCH`                                                                                                                                                                                         |
-| `loop-worktree-setup`  | Isolated worktree at `base_ref` on `base_branch` + agent branch (L2/L3)                                                                                                                                                                                             |
+| Action                 | Purpose                                                                                                                                                                                                                                                                                   |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `loop-agent-once`      | Single read-only agent session (L1)                                                                                                                                                                                                                                                       |
+| `loop-config-pack`     | Pack caller agent config into standardized outputs for detect/execute handoff (standalone; `loop-detect` inlines the same pack step)                                                                                                                                                      |
+| `loop-detect`          | Read `LOOP_*`, enumerate branches/PRs, checkout per context, invoke `detect_script` per context, assemble candidates, write **loop-handoff** artifact, output slim `target_matrix`; guards (`budget`, `acting_on`, `peer_active`, circuit breaker). **No caller re-run of detect script** |
+| `loop-execute`         | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`; worktree from `from.ref` @ `from.branch`                                                                                                                                                             |
+| `loop-finalize`        | Finalize per `target.finalize`, branch cleanup, per-target state, run-log, optional `domain_persistence_script`; `.loop/*` to `LOOP_STATE_PUSH_BRANCH`                                                                                                                                    |
+| `loop-notify-pr`       | Post or update marker PR comment after finalize on `pull_request` targets (sibling step in `ci-loop-agent`, not nested in `loop-finalize`). Platform-owned Layers 1–2; optional skill appendix. See [loop-notify-pr Specification](loop-notify-pr-specification.md)                       |
+| `loop-install-cli`     | Install and cache the selected engine CLI                                                                                                                                                                                                                                                 |
+| `loop-prompt-generate` | Assemble implementer prompt: skill invocation, caller context/instructions, generic loop constraints                                                                                                                                                                                      |
+| `loop-run-log`         | Append one JSONL entry to `.loop/loop-run-log.md`, prune entries older than 30 days                                                                                                                                                                                                       |
+| `loop-state-promote`   | Promote or clear `pending` loop state after a fix PR closes (`pull_request` `closed` handler)                                                                                                                                                                                             |
+| `loop-state-read`      | Read `targets` map; per-target cursors; peer `acting_on` inputs                                                                                                                                                                                                                           |
+| `loop-state-write`     | Write per-target entry in `targets` map; commit to `LOOP_STATE_PUSH_BRANCH`                                                                                                                                                                                                               |
+| `loop-worktree-setup`  | Isolated worktree at `base_ref` on `base_branch` + agent branch (L2/L3)                                                                                                                                                                                                                   |
 
 ### Detect script output (per context)
 
@@ -416,7 +416,30 @@ Invoked by `loop-detect` per scan context (not by the caller). Scans the branch/
 | `result`           | when actionable | Domain JSON (facts). Semantic `findings[]` are produced by the Skill |
 | `verifier_context` | no              | Markdown for verifier (may be empty)                                 |
 
-`loop-detect` assembles each **candidate** (`target_json`, `result`, `prompt`, `verifier_context`), applies priority/`acting_on`/cap, and outputs `target_matrix` (JSON array).
+`loop-detect` assembles each **candidate** (`target_json`, `result`, `prompt`, `verifier_context`), applies priority/`acting_on`/cap, uploads a **loop-handoff** artifact bundle, and outputs a slim `target_matrix` (JSON array) for matrix fan-out.
+
+### Job handoff (`loop-handoff` artifact)
+
+GitHub Actions job outputs are capped at 1MB. Large per-target payloads (`result`, `verifier_context`) are **not** inlined in `target_matrix`.
+
+| Stage   | Mechanism                                                                                                                                        |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| detect  | `loop-detect` writes `loop-handoff-<run_id>` artifact (`manifest.json` + `payloads/<sanitized-key>.json`); uploads via `actions/upload-artifact` |
+| execute | `ci-loop-agent` downloads the artifact; `loop-execute` / `loop-finalize` resolve payloads by `handoff_key` (`target_json.key`)                   |
+
+Slim **matrix candidate** (job output):
+
+| Field              | In `target_matrix` | Notes                                                                   |
+| ------------------ | ------------------ | ----------------------------------------------------------------------- |
+| `target_json`      | yes                | Execute/finalize target contract                                        |
+| `prompt`           | yes                | Compact prompt (`__LOOP_DETECT_RESULT_JSON__` marker when result large) |
+| `handoff_key`      | yes                | Same as `target_json.key`; lookup into artifact bundle                  |
+| `verifier_context` | empty string       | Loaded from artifact at execute time                                    |
+| `result`           | omitted            | Loaded from artifact at execute time                                    |
+
+Full candidate payloads remain in the artifact until execute/finalize read them. Inline `detect_result_json` on execute is supported for backward compatibility; callers pass `"{}"` and rely on the artifact.
+
+Library: `.github/actions/loop-detect/lib/handoff.sh` (`LOOP_HANDOFF_VERSION=1`).
 
 ### `target_json` contract
 
@@ -435,11 +458,12 @@ Execute/finalize input. Schema: [Multi-Branch Loops Design](../explanation/loop-
 
 ### `loop-detect` outputs (caller detect job)
 
-| Output          | When                                                                                                          |
-| --------------- | ------------------------------------------------------------------------------------------------------------- |
-| `should_run`    | `target_matrix` non-empty after guards                                                                        |
-| `skip_reason`   | `none` \| `no_changes` \| `circuit_breaker` \| `budget` \| `target_budget` \| `config_error` \| `peer_active` |
-| `target_matrix` | JSON array of candidates for matrix fan-out                                                                   |
+| Output                  | When                                                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `should_run`            | `target_matrix` non-empty after guards                                                                        |
+| `skip_reason`           | `none` \| `no_changes` \| `circuit_breaker` \| `budget` \| `target_budget` \| `config_error` \| `peer_active` |
+| `handoff_artifact_name` | `loop-handoff-<run_id>` when `should_run=true`; empty otherwise                                               |
+| `target_matrix`         | Slim JSON array of candidates for matrix fan-out (see [Job handoff](#job-handoff-loop-handoff-artifact))      |
 
 ### `loop-execute` outputs (L2/L3 additions)
 

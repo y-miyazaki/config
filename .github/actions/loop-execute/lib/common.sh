@@ -12,6 +12,8 @@
 # - Template placeholders use {{key}} syntax
 #######################################
 
+_LOOP_EXECUTE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 #######################################
 # load_default_prompts: Apply built-in prompt defaults
 #
@@ -74,6 +76,65 @@ function normalize_no_changes_verdict {
     NO_CHANGES_VERDICT=$(printf '%s' "${NO_CHANGES_VERDICT:-APPROVE}" | tr '[:lower:]' '[:upper:]')
     if [[ ${NO_CHANGES_VERDICT} != "REJECT" ]]; then
         NO_CHANGES_VERDICT="APPROVE"
+    fi
+}
+
+#######################################
+# materialize_matrix_handoff_context: Resolve compact detect handoff at execute time
+#
+# Description:
+# Design Rules:
+#   loop-detect omits large detect JSON from target_matrix; resolve from inline JSON
+#   or loop-handoff artifact via LOOP_HANDOFF_DIR + HANDOFF_KEY. Write detect JSON
+#   to a runner-local file and point the implementer prompt at that path instead
+#   of inlining JSON into PROMPT_TEXT. Rebuild verifier_context from the same JSON.
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   DETECT_RESULT_JSON - Detect script JSON from matrix cell (read)
+#   PROMPT_TEXT - Implementer prompt (read/write)
+#   STATUS_DIR - Runner-local status directory for detect-result.json (read)
+#   VERIFIER_CONTEXT - Verifier markdown context (read/write)
+#
+# Returns:
+#   None
+#
+#######################################
+function materialize_matrix_handoff_context {
+    local detect_json detect_file loop_detect_lib
+
+    loop_detect_lib="$(cd "${_LOOP_EXECUTE_LIB_DIR}/../../loop-detect/lib" && pwd)"
+    # shellcheck source=../../loop-detect/lib/handoff.sh
+    # shellcheck disable=SC1091
+    source "${loop_detect_lib}/handoff.sh"
+    detect_json="$(loop_handoff_resolve_detect_result_json)"
+
+    if [[ -z ${detect_json} || ${detect_json} == "{}" ]]; then
+        return 0
+    fi
+    if ! jq -e . <<< "${detect_json}" > /dev/null 2>&1; then
+        return 0
+    fi
+
+    if [[ ${PROMPT_TEXT} == *'__LOOP_DETECT_RESULT_JSON__'* ]]; then
+        : "${STATUS_DIR:?}"
+        detect_file="${STATUS_DIR}/detect-result.json"
+        printf '%s' "${detect_json}" > "${detect_file}"
+        PROMPT_TEXT="${PROMPT_TEXT//__LOOP_DETECT_RESULT_JSON__/Structured detect JSON path: ${detect_file}}"
+    fi
+
+    if [[ -z ${VERIFIER_CONTEXT:-} ]]; then
+        if [[ -n ${LOOP_HANDOFF_DIR:-} && -n ${HANDOFF_KEY:-} ]]; then
+            VERIFIER_CONTEXT="$(loop_handoff_read_verifier_context "${LOOP_HANDOFF_DIR}" "${HANDOFF_KEY}" || true)"
+        fi
+        if [[ -z ${VERIFIER_CONTEXT:-} ]]; then
+            # shellcheck source=../../loop-detect/lib/matrix.sh
+            # shellcheck disable=SC1091
+            source "${loop_detect_lib}/matrix.sh"
+            VERIFIER_CONTEXT="$(build_verifier_context_from_result "${detect_json}")"
+        fi
     fi
 }
 
