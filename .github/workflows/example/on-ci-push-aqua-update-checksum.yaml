@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   aqua-update-checksum:
-    uses: y-miyazaki/config/.github/workflows/ci-aqua-update-checksum.yaml@14ad6edf009a0a68817066c32fd7f95e79616ccf # v1.8.41
+    uses: y-miyazaki/config/.github/workflows/ci-aqua-update-checksum.yaml@b3c5b322661ff3a9bab566925174cf9f67aa6319 # v1.8.42
     permissions:
       contents: read
     secrets:
