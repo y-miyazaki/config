@@ -9,9 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [Full diff](https://github.com/y-miyazaki/config/compare/3508727d7aa01e0d85eedba6f1e889e6fa9dd7ba...a8506d6d80b7a549a0e3c275448a33c7523cf343)
 
-### Changed
-- Update GitHub Actions to use loop-install-cli and other actions version 1.8.5 ([3508727](https://github.com/y-miyazaki/config/commit/3508727d7aa01e0d85eedba6f1e889e6fa9dd7ba))
-
 ## [1.8.42] - 2026-07-18
 
 ### Changed
@@ -214,7 +211,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.8.30] - 2026-07-16
 
+### Changed
+- Update dependencies to version 1.8.29 across various workflows and configuration files, including changes to AWS MCP command execution method and documentation updates for OAuth integration. This ensures consistency and reflects the latest improvements in the project. ([0098282](https://github.com/y-miyazaki/config/commit/0098282039f73bf3aba3a67a02568c0dec11c2a5))
+
 ## [1.8.29] - 2026-07-16
+
+### Changed
+- Update AWS MCP configuration to use bash for command execution and remove deprecated awslabs-aws-api-mcp-server. Adjust documentation to reflect these changes and clarify the adoption of AWS MCP as the primary API operation tool. ([45afa9c](https://github.com/y-miyazaki/config/commit/45afa9c0f1dd5b8227bfd9efc86345fd45b0e65c))
 
 ## [1.8.28] - 2026-07-16
 
