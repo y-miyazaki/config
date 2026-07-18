@@ -12,6 +12,7 @@
 # - materialize_matrix_handoff_context resolves detect JSON from loop-handoff artifact
 # - materialize_matrix_handoff_context writes detect file and keeps prompt compact
 # - materialize_matrix_handoff_context rebuilds verifier_context from detect result when artifact omits it
+# - materialize_matrix_handoff_context fails when required artifact payload is missing
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -132,4 +133,19 @@ EOF
 
     [[ ${VERIFIER_CONTEXT} == *"## Changelog Commits"* ]]
     [[ ${VERIFIER_CONTEXT} == *"from artifact"* ]]
+}
+
+@test "materialize_matrix_handoff_context fails when required artifact payload is missing" {
+    PROMPT_TEXT="Run skill"
+    DETECT_RESULT_JSON="{}"
+    LOOP_HANDOFF_DIR="${BATS_TEST_TMPDIR}/missing-handoff"
+    HANDOFF_KEY="integration:main"
+    mkdir -p "${LOOP_HANDOFF_DIR}/payloads"
+    VERIFIER_CONTEXT=""
+    STATUS_DIR="${BATS_TEST_TMPDIR}/loop-status-fail"
+    mkdir -p "${STATUS_DIR}"
+
+    run materialize_matrix_handoff_context
+    [ "$status" -eq 1 ]
+    [[ $output == *"handoff payload missing"* ]]
 }

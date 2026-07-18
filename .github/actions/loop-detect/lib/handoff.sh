@@ -206,7 +206,10 @@ function loop_handoff_write_bundle {
         [[ -z ${candidate} ]] && continue
         target_key="$(jq -r '.target_json.key // empty' <<< "${candidate}")"
         [[ -z ${target_key} ]] && continue
-        loop_handoff_write_candidate_payload "${handoff_dir}" "${candidate}"
+        if ! loop_handoff_write_candidate_payload "${handoff_dir}" "${candidate}"; then
+            echo "::error::loop-handoff: failed to write payload for ${target_key}" >&2
+            return 1
+        fi
         keys+=("${target_key}")
     done
 

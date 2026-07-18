@@ -7,7 +7,13 @@
 # - loop_handoff_write_bundle writes manifest and per-target payload files
 # - loop_handoff_read_detect_result and loop_handoff_read_verifier_context load payloads
 # - loop_handoff_resolve_detect_result_json prefers inline JSON over artifact files
+# - loop_handoff_resolve_detect_result_json falls back to artifact when DETECT_RESULT_JSON is unset
 # - loop_handoff_resolve_detect_result_json returns empty object when no source
+# - loop_handoff_write_candidate_payload rejects invalid candidate JSON
+# - loop_handoff_write_bundle returns error when payload write fails
+# - loop_handoff_read_payload returns error when payload file is missing
+# - loop_handoff_read_payload returns error when payload is invalid JSON
+# - loop_handoff_resolve_detect_result_json returns empty object when handoff_key mismatches
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -73,12 +79,52 @@ setup() {
     [ "$output" = "${inline}" ]
 }
 
+@test "loop_handoff_resolve_detect_result_json falls back to artifact when DETECT_RESULT_JSON is unset" {
+    local candidate
+
+    candidate='{"target_json":{"key":"integration:main"},"prompt":"p","verifier_context":"","result":{"from":"artifact"}}'
+    loop_handoff_write_bundle "${HANDOFF_DIR}" "${candidate}"
+
+    unset DETECT_RESULT_JSON
+    export LOOP_HANDOFF_DIR="${HANDOFF_DIR}"
+    export HANDOFF_KEY="integration:main"
+
+    run loop_handoff_resolve_detect_result_json
+    [ "$status" -eq 0 ]
+    run jq -e '.from == "artifact"' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
 @test "loop_handoff_resolve_detect_result_json returns empty object when no source" {
     unset DETECT_RESULT_JSON LOOP_HANDOFF_DIR HANDOFF_KEY
 
     run loop_handoff_resolve_detect_result_json
     [ "$status" -eq 0 ]
     [ "$output" = "{}" ]
+}
+
+@test "loop_handoff_write_candidate_payload rejects invalid candidate JSON" {
+    run loop_handoff_write_candidate_payload "${HANDOFF_DIR}" 'not-json'
+    [ "$status" -eq 1 ]
+}
+
+@test "loop_handoff_write_bundle returns error when payload write fails" {
+    local handoff_dir repo_root
+
+    handoff_dir="${BATS_TEST_TMPDIR}/loop-handoff-fail"
+    repo_root="$(bats_workspace_root)"
+    export HANDOFF_FAIL_CANDIDATE='{"target_json":{"key":"integration:main"},"prompt":"p","verifier_context":"","result":{}}'
+
+    run bash -c '
+        set -euo pipefail
+        # shellcheck disable=SC1091
+        source "'"${repo_root}"'/.github/actions/loop-detect/lib/handoff.sh"
+        loop_handoff_write_candidate_payload() { return 1; }
+        loop_handoff_write_bundle "'"${handoff_dir}"'" "${HANDOFF_FAIL_CANDIDATE}"
+    '
+    [ "$status" -eq 1 ]
+    [[ $output == *"failed to write payload"* ]]
+    [ ! -f "${handoff_dir}/manifest.json" ]
 }
 
 @test "loop_handoff_write_bundle writes manifest and per-key payloads" {
@@ -97,4 +143,31 @@ setup() {
     run jq -e '.result.skip == false and .verifier_context == "vc1"' \
         "${HANDOFF_DIR}/payloads/integration_main.json"
     [ "$status" -eq 0 ]
+}
+
+@test "loop_handoff_read_payload returns error when payload file is missing" {
+    run loop_handoff_read_payload "${HANDOFF_DIR}" "integration:main"
+    [ "$status" -eq 1 ]
+}
+
+@test "loop_handoff_read_payload returns error when payload is invalid JSON" {
+    mkdir -p "${HANDOFF_DIR}/payloads"
+    printf 'not-json' > "${HANDOFF_DIR}/payloads/integration_main.json"
+    run loop_handoff_read_payload "${HANDOFF_DIR}" "integration:main"
+    [ "$status" -eq 1 ]
+}
+
+@test "loop_handoff_resolve_detect_result_json returns empty object when handoff_key mismatches" {
+    local candidate
+
+    candidate='{"target_json":{"key":"integration:main"},"prompt":"p","verifier_context":"","result":{"from":"artifact"}}'
+    loop_handoff_write_bundle "${HANDOFF_DIR}" "${candidate}"
+
+    export DETECT_RESULT_JSON="{}"
+    export LOOP_HANDOFF_DIR="${HANDOFF_DIR}"
+    export HANDOFF_KEY="integration:other"
+
+    run loop_handoff_resolve_detect_result_json
+    [ "$status" -eq 0 ]
+    [ "$output" = "{}" ]
 }

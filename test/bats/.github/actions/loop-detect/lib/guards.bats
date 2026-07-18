@@ -10,6 +10,7 @@
 # - read_budget_limits prefers budget file over defaults
 # - budget_exceeded trips when daily run count reaches max
 # - budget_exceeded allows runs under the daily cap
+# - budget_exceeded trips when daily token count reaches max
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -111,4 +112,19 @@ teardown() {
 
     run budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "5" "1000000"
     [ "$status" -ne 0 ]
+}
+
+@test "budget_exceeded trips when daily token count reaches max" {
+    local budget_file run_log today
+
+    budget_file="${GUARDS_TMP}/loop-budget.json"
+    run_log="${GUARDS_TMP}/loop-run-log.md"
+    today="$(date -u +%Y-%m-%d)"
+    jq -nc '{loops:{"ci-sweeper":{max_runs_per_day:100,max_tokens_per_day:100}}}' > "${budget_file}"
+    printf '%s\n' "{\"run_id\":\"${today}T00:00:00Z\",\"pattern\":\"ci-sweeper\",\"tokens_estimate\":100}" \
+        > "${run_log}"
+
+    run budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "5" "1000000"
+    [ "$status" -eq 0 ]
+    [[ $output == *"Daily token budget exceeded"* ]]
 }

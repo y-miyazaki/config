@@ -104,12 +104,34 @@ function normalize_no_changes_verdict {
 #######################################
 function materialize_matrix_handoff_context {
     local detect_json detect_file loop_detect_lib
+    local inline="${DETECT_RESULT_JSON:-"{}"}"
+    local artifact_required=false
 
     loop_detect_lib="$(cd "${_LOOP_EXECUTE_LIB_DIR}/../../loop-detect/lib" && pwd)"
     # shellcheck source=../../loop-detect/lib/handoff.sh
     # shellcheck disable=SC1091
     source "${loop_detect_lib}/handoff.sh"
+
+    if [[ -n ${LOOP_HANDOFF_DIR:-} && -n ${HANDOFF_KEY:-} ]]; then
+        if [[ -z ${inline} || ${inline} == "{}" ]]; then
+            artifact_required=true
+        elif ! jq -e . <<< "${inline}" > /dev/null 2>&1; then
+            artifact_required=true
+        fi
+    fi
+
     detect_json="$(loop_handoff_resolve_detect_result_json)"
+
+    if [[ ${artifact_required} == true ]]; then
+        if [[ -z ${detect_json} || ${detect_json} == "{}" ]]; then
+            echo "::error::loop-execute: handoff payload missing or invalid for key ${HANDOFF_KEY}" >&2
+            return 1
+        fi
+        if ! jq -e . <<< "${detect_json}" > /dev/null 2>&1; then
+            echo "::error::loop-execute: handoff payload missing or invalid for key ${HANDOFF_KEY}" >&2
+            return 1
+        fi
+    fi
 
     if [[ -z ${detect_json} || ${detect_json} == "{}" ]]; then
         return 0

@@ -439,6 +439,10 @@ Slim **matrix candidate** (job output):
 
 Full candidate payloads remain in the artifact until execute/finalize read them. Inline `detect_result_json` on execute is supported for backward compatibility; callers pass `"{}"` and rely on the artifact.
 
+**Execute failure contract:** When `HANDOFF_KEY` and `LOOP_HANDOFF_DIR` are set (artifact path) and inline `DETECT_RESULT_JSON` is empty or `{}`, execute **must** resolve a valid payload from the artifact. Missing or invalid payloads are **fail-fast** (`::error::` + non-zero exit). Non-empty inline `detect_result_json` remains supported for backward compatibility.
+
+**Legacy outputs:** `loop-detect` also writes backward-compatible single-target outputs (`prompt`, `last_sha`, etc.) from the **full** candidate matrix (including inlined `result`). Legacy consumers may hit the 1MB job-output cap when payloads are large; prefer artifact + slim `target_matrix`.
+
 Library: `.github/actions/loop-detect/lib/handoff.sh` (`LOOP_HANDOFF_VERSION=1`).
 
 ### `target_json` contract
@@ -458,24 +462,22 @@ Execute/finalize input. Schema: [Multi-Branch Loops Design](../explanation/loop-
 
 ### `loop-detect` outputs (caller detect job)
 
-| Output                  | When                                                                                                          |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `should_run`            | `target_matrix` non-empty after guards                                                                        |
-| `skip_reason`           | `none` \| `no_changes` \| `circuit_breaker` \| `budget` \| `target_budget` \| `config_error` \| `peer_active` |
-| `handoff_artifact_name` | `loop-handoff-<run_id>` when `should_run=true`; empty otherwise                                               |
-| `target_matrix`         | Slim JSON array of candidates for matrix fan-out (see [Job handoff](#job-handoff-loop-handoff-artifact))      |
+| Output                  | When                                                                                                                          |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `should_run`            | `target_matrix` non-empty after guards                                                                                        |
+| `skip_reason`           | `none` \| `no_changes` \| `circuit_breaker` \| `budget` \| `target_budget` \| `config_error` \| `peer_active` \| `pending_pr` |
+| `handoff_artifact_name` | `loop-handoff-<run_id>` when `should_run=true`; empty otherwise                                                               |
+| `target_matrix`         | Slim JSON array of candidates for matrix fan-out (see [Job handoff](#job-handoff-loop-handoff-artifact))                      |
+
+**`skip_reason` priority** (when `should_run=false`): `circuit_breaker` > `pending_pr` > `no_changes`. Other values apply at earlier gates (`config_error`, `budget`, `peer_active`).
+
+**`target_budget` semantics:** Set when fan-out cap (`LOOP_MAX_TARGETS_PER_SCHEDULE`) trims candidates but **`should_run` remains `true`**. Informational deferral only — not a skip. `record-skip` records `budget` and `circuit_breaker` only (not `target_budget`).
 
 ### `loop-execute` outputs (L2/L3 additions)
 
 | Output                | Required | Description                                                                                                   |
 | --------------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
 | `notify_context_json` | yes      | Machine fix context for `loop-notify-pr`. See [loop-notify-pr Specification](loop-notify-pr-specification.md) |
-
-### `loop-detect` env additions
-
-| Variable          | Caller input | Description                                                 |
-| ----------------- | ------------ | ----------------------------------------------------------- |
-| `LOOP_PR_REQUIRE` | `pr_require` | Comma-separated require tokens (e.g. `label:ci-sweeper-ok`) |
 
 ### `loop-finalize` inputs (additions)
 

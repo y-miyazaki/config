@@ -10,6 +10,8 @@
 # - pr_excluded excludes draft when draft token is set
 # - pr_excluded excludes fork when fork token is set
 # - pr_excluded excludes label match
+# - pr_excluded excludes wip_title when token is set
+# - list_open_prs fails when gh missing and pr_enabled is true
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -71,4 +73,32 @@ pr_json_with_labels() {
     pr="$(pr_json_with_labels '[{"name":"no-loop"}]')"
     run pr_excluded "${pr}" "label:no-loop" ""
     [ "$status" -eq 0 ]
+}
+
+@test "pr_excluded excludes wip_title when token is set" {
+    local pr
+    pr='{"number":1,"title":"WIP: auth refactor","isDraft":false,"author":{"login":"alice"},"labels":[],"headRepository":{"isFork":false}}'
+    run pr_excluded "${pr}" "wip_title" ""
+    [ "$status" -eq 0 ]
+}
+
+@test "list_open_prs fails when gh missing and pr_enabled is true" {
+    local repo_root empty_bin
+
+    repo_root="$(bats_workspace_root)"
+    empty_bin="${BATS_TEST_TMPDIR}/empty-bin"
+    mkdir -p "${empty_bin}"
+    run bash -c '
+        set -euo pipefail
+        # shellcheck disable=SC1091
+        source "'"${repo_root}"'/.github/actions/loop-detect/lib/branches.sh"
+        # shellcheck disable=SC1091
+        source "'"${repo_root}"'/.github/actions/loop-detect/lib/prs.sh"
+        LOOP_PR_ENABLED="true"
+        PATH="'"${empty_bin}"'"
+        command -v gh > /dev/null 2>&1 && exit 99
+        list_open_prs "fork" "" "token"
+    '
+    [ "$status" -eq 1 ]
+    [[ $output == *"gh CLI is required"* ]]
 }
