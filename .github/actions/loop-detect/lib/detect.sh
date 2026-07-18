@@ -446,7 +446,7 @@ function apply_target_cap {
 }
 
 #######################################
-# build_loop_candidate_json: Assemble one matrix cell with argjson validation
+# build_loop_candidate_json: Assemble one matrix cell from detect payloads
 #
 # Arguments:
 #   $1 - Target key (for logs)
@@ -468,7 +468,7 @@ function build_loop_candidate_json {
     local prompt_text="$3"
     local verifier_context="$4"
     local detect_result="$5"
-    local candidate jq_stderr
+    local candidate jq_stderr target_file result_file prompt_file verifier_file
 
     log_detect_notice "candidate" "${target_key}" \
         "target_json_bytes=${#target_json} detect_bytes=${#detect_result}"
@@ -486,19 +486,28 @@ function build_loop_candidate_json {
         return 1
     fi
 
+    target_file="$(mktemp)"
+    result_file="$(mktemp)"
+    prompt_file="$(mktemp)"
+    verifier_file="$(mktemp)"
     jq_stderr="$(mktemp)"
-    candidate="$(jq -nc \
-        --argjson target_json "${target_json}" \
-        --arg prompt "${prompt_text}" \
-        --arg verifier_context "${verifier_context}" \
-        --argjson result "${detect_result}" \
-        '{target_json: $target_json, prompt: $prompt, verifier_context: $verifier_context, result: $result}' \
+    printf '%s' "${target_json}" > "${target_file}"
+    printf '%s' "${detect_result}" > "${result_file}"
+    printf '%s' "${prompt_text}" > "${prompt_file}"
+    printf '%s' "${verifier_context}" > "${verifier_file}"
+
+    candidate="$(jq -n \
+        --slurpfile target_json "${target_file}" \
+        --rawfile prompt "${prompt_file}" \
+        --rawfile verifier_context "${verifier_file}" \
+        --slurpfile result "${result_file}" \
+        '{target_json: $target_json[0], prompt: $prompt, verifier_context: $verifier_context, result: $result[0]}' \
         2> "${jq_stderr}")" || {
-        log_detect_error "build_loop_candidate_json(${target_key}): jq --argjson assembly failed (target_json_bytes=${#target_json}, detect_bytes=${#detect_result}, prompt_bytes=${#prompt_text}, verifier_bytes=${#verifier_context}): $(tr -d '\n\r' < "${jq_stderr}")"
-        rm -f "${jq_stderr}"
+        log_detect_error "build_loop_candidate_json(${target_key}): jq assembly failed (target_json_bytes=${#target_json}, detect_bytes=${#detect_result}, prompt_bytes=${#prompt_text}, verifier_bytes=${#verifier_context}): $(tr -d '\n\r' < "${jq_stderr}")"
+        rm -f "${target_file}" "${result_file}" "${prompt_file}" "${verifier_file}" "${jq_stderr}"
         return 1
     }
-    rm -f "${jq_stderr}"
+    rm -f "${target_file}" "${result_file}" "${prompt_file}" "${verifier_file}" "${jq_stderr}"
 
     if [[ -z ${candidate} ]] || ! jq -e . <<< "${candidate}" > /dev/null 2>&1; then
         log_detect_json_invalid "build_loop_candidate_json(${target_key})" "candidate_output" "${candidate}"
@@ -580,7 +589,7 @@ function detect_result_skip {
 function enrich_target_json_with_ci_context {
     local target_json="$1"
     local detect_result="$2"
-    local enriched jq_stderr
+    local enriched jq_stderr base_file detect_file
 
     if ! jq -e '.failures[0]' <<< "${detect_result}" > /dev/null 2>&1; then
         printf '%s' "${target_json}"
@@ -600,22 +609,27 @@ function enrich_target_json_with_ci_context {
     log_detect_notice "enrich" "ci-context" \
         "base_bytes=${#target_json} detect_bytes=${#detect_result}"
 
+    base_file="$(mktemp)"
+    detect_file="$(mktemp)"
     jq_stderr="$(mktemp)"
-    enriched="$(jq -nc \
-        --argjson base "${target_json}" \
-        --argjson detect "${detect_result}" \
-        '($detect.failures[0] // {}) as $f
-         | $base
+    printf '%s' "${target_json}" > "${base_file}"
+    printf '%s' "${detect_result}" > "${detect_file}"
+
+    enriched="$(jq -n \
+        --slurpfile base "${base_file}" \
+        --slurpfile detect "${detect_file}" \
+        '($detect[0].failures[0] // {}) as $f
+         | $base[0]
          | if ($f.workflow_run_id // "") != "" then .workflow_run_id = ($f.workflow_run_id | tostring) else . end
          | if ($f.workflow_name // "") != "" then .workflow_name = $f.workflow_name else . end
          | if ($f.head_sha // "") != "" then .head_sha = $f.head_sha else . end' \
         2> "${jq_stderr}")" || {
         log_detect_error "enrich_target_json_with_ci_context: jq enrich failed (base_bytes=${#target_json}, detect_bytes=${#detect_result}): $(tr -d '\n\r' < "${jq_stderr}")"
-        rm -f "${jq_stderr}"
+        rm -f "${base_file}" "${detect_file}" "${jq_stderr}"
         printf '%s' "${target_json}"
         return 0
     }
-    rm -f "${jq_stderr}"
+    rm -f "${base_file}" "${detect_file}" "${jq_stderr}"
 
     if [[ -z ${enriched} ]] || ! jq -e . <<< "${enriched}" > /dev/null 2>&1; then
         log_detect_json_invalid "enrich_target_json_with_ci_context" "enriched_output" "${enriched}"

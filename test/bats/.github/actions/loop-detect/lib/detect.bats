@@ -140,6 +140,25 @@ setup() {
     [ "$status" -eq 0 ]
 }
 
+@test "build_loop_candidate_json assembles large changelog detect payloads" {
+    local target_json detect_result prompt verifier candidate i sha
+
+    target_json='{"mode":"integration","key":"integration:main","from":{"branch":"main","ref":"abc"},"to":{"branch":"main"},"finalize":"open_pr"}'
+    detect_result='{"status":"ok","skip":false,"commits":['
+    for ((i = 0; i < 400; i++)); do
+        sha="$(printf 'a%.039d' "${i}")"
+        [[ ${i} -gt 0 ]] && detect_result+=','
+        detect_result+="$(jq -nc --arg sha "${sha}" --arg subject "feat: item ${i}" '{sha:$sha,type:"feat",scope:"",breaking:false,subject:$subject}')"
+    done
+    detect_result+='],"releases":[]}'
+    prompt="$(build_prompt_text "loop-changelog" "" "CHANGELOG.md" "instructions" "since" "head" "${detect_result}" "" "0")"
+    verifier="$(build_verifier_context_from_result "${detect_result}")"
+
+    candidate="$(build_loop_candidate_json "integration:main" "${target_json}" "${prompt}" "${verifier}" "${detect_result}" 2> /dev/null)"
+    run jq -e '(.result.commits | length) == 400 and .target_json.key == "integration:main"' <<< "${candidate}"
+    [ "$status" -eq 0 ]
+}
+
 # --- UC: pin detect script to branch_state checkout (not target worktree) ---
 
 @test "resolve_detect_script_path converts relative path to absolute" {
