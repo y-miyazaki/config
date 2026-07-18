@@ -8,5 +8,10 @@
       "last_reject_reason": "No meaningful changes outside .loop/",
       "last_sha": "3508727d7aa01e0d85eedba6f1e889e6fa9dd7ba"
     }
+  },
+  "acting_on": {
+    "target_key": "integration:main",
+    "loop_name": "changelog",
+    "started_at": "2026-07-18T07:40:17Z"
   }
 }
