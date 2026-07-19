@@ -205,9 +205,19 @@
       "datasourceTemplate": "github-releases"
     },
     {
-      "description": "CustomManager: Update uv version in workflow inputs",
+      "description": "CustomManager: Update node version in loop composite action inputs",
       "customType": "regex",
-      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
+      "fileMatch": ["\\.github/actions/.*action\\.ya?ml$"],
+      "matchStrings": [
+        "node_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
+      ],
+      "depNameTemplate": "node",
+      "datasourceTemplate": "node-version"
+    },
+    {
+      "description": "CustomManager: Update uv version in loop composite action inputs",
+      "customType": "regex",
+      "fileMatch": ["\\.github/actions/.*action\\.ya?ml$"],
       "matchStrings": [
         "uv_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
       ],
@@ -231,14 +241,14 @@
     {
       "description": "Rules: Update tool versions in GitHub Actions workflow inputs",
       "matchManagers": ["custom.regex"],
-      "matchFileNames": [".github/workflows/**"],
+      "matchFileNames": [".github/workflows/**", ".github/actions/**"],
       "commitMessagePrefix": "renovate(github-actions-tool-version):",
       "addLabels": ["github-actions-tool-version"]
     },
     {
       "description": "Rules: Automerge custom regex manager dependencies (workflow inputs)",
       "matchManagers": ["custom.regex"],
-      "matchFileNames": [".github/workflows/**"],
+      "matchFileNames": [".github/workflows/**", ".github/actions/**"],
       "matchUpdateTypes": ["patch"],
       "addLabels": ["automerge"],
       "automerge": true,

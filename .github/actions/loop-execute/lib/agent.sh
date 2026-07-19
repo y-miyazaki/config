@@ -114,10 +114,15 @@ function run_agent_capture {
 #######################################
 function run_agent {
     local allow_writes="${1:-true}"
+    local working_root="${WORKING_DIRECTORY:-.}"
+
+    prepare_agent_mcps "${ENGINE}" "${working_root}"
+
     case "${ENGINE}" in
         claude)
             export ANTHROPIC_API_KEY="${AGENT_TOKEN}"
             local -a ARGS=(-p "${PROMPT}" --bare)
+            append_agent_mcp_args ARGS "${ENGINE}"
             if [[ -n ${MAX_TURNS:-} ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
             if [[ -n ${MODEL:-} ]]; then ARGS+=(--model "${MODEL}"); fi
             npx claude "${ARGS[@]}"
@@ -125,6 +130,7 @@ function run_agent {
         copilot)
             export COPILOT_GITHUB_TOKEN="${AGENT_TOKEN}"
             local -a ARGS=(-p "${PROMPT}" --no-ask-user)
+            append_agent_mcp_args ARGS "${ENGINE}"
             if [[ -n ${MAX_TURNS:-} ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
             if [[ -n ${MODEL:-} ]]; then ARGS+=(--model "${MODEL}"); fi
             npx copilot "${ARGS[@]}"
@@ -132,12 +138,14 @@ function run_agent {
         codex)
             export OPENAI_API_KEY="${AGENT_TOKEN}"
             local -a ARGS=(--prompt "${PROMPT}" --auto-approve)
+            append_agent_mcp_args ARGS "${ENGINE}"
             if [[ -n ${MODEL:-} ]]; then ARGS+=(--model "${MODEL}"); fi
             npx codex "${ARGS[@]}"
             ;;
         cursor)
             export CURSOR_API_KEY="${AGENT_TOKEN}"
             local -a ARGS=(-p "${PROMPT}" --print --output-format stream-json --trust)
+            append_agent_mcp_args ARGS "${ENGINE}"
             local agent_bin
             if [[ ${allow_writes} == "true" && ${WORKING_DIRECTORY} != "." ]]; then
                 ARGS+=(--force)

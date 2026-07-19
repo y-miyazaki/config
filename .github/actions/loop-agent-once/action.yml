@@ -20,6 +20,10 @@ inputs:
     default: ""
     description: "Optional model override"
     required: false
+  node_version:
+    default: "24.18.0"
+    description: "Node.js version for MCP servers (npx); keep aligned with mise.toml node"
+    required: false
   output_file:
     default: ""
     description: "Optional path to write agent stdout"
@@ -27,6 +31,10 @@ inputs:
   prompt_text:
     description: "Prompt text to pass to the agent"
     required: true
+  uv_version:
+    default: "0.11.28"
+    description: "uv version for MCP servers (uvx); keep aligned with mise.toml aqua:astral-sh/uv"
+    required: false
   working_directory:
     default: "."
     description: "Working directory for agent execution"
@@ -36,8 +44,16 @@ runs:
   using: composite
   steps:
     - name: Setup Node.js
-      if: inputs.engine == 'copilot' || inputs.engine == 'codex' || inputs.engine == 'claude'
       uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+      with:
+        node-version: ${{ inputs.node_version }}
+
+    - name: Setup uv
+      uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+      with:
+        enable-cache: true
+        prune-cache: true
+        version: ${{ inputs.uv_version }}
 
     - name: Install CLI
       shell: bash
@@ -59,11 +75,15 @@ runs:
       working-directory: ${{ inputs.working_directory }}
       run: |
         set -euo pipefail
+        # shellcheck disable=SC1091
+        source "${GITHUB_ACTION_PATH}/../loop-execute/lib/mcp.sh"
         run_agent() {
+          prepare_agent_mcps "${ENGINE}" "${WORKING_DIRECTORY:-.}"
           case "${ENGINE}" in
             claude)
               export ANTHROPIC_API_KEY="${AGENT_TOKEN}"
               ARGS=(-p "${PROMPT}" --bare)
+              append_agent_mcp_args ARGS "${ENGINE}"
               if [[ -n "${MAX_TURNS}" ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
               if [[ -n "${MODEL}" ]]; then ARGS+=(--model "${MODEL}"); fi
               npx claude "${ARGS[@]}"
@@ -71,6 +91,7 @@ runs:
             copilot)
               export COPILOT_GITHUB_TOKEN="${AGENT_TOKEN}"
               ARGS=(-p "${PROMPT}" --no-ask-user)
+              append_agent_mcp_args ARGS "${ENGINE}"
               if [[ -n "${MAX_TURNS}" ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
               if [[ -n "${MODEL}" ]]; then ARGS+=(--model "${MODEL}"); fi
               npx copilot "${ARGS[@]}"
@@ -78,12 +99,14 @@ runs:
             codex)
               export OPENAI_API_KEY="${AGENT_TOKEN}"
               ARGS=(--prompt "${PROMPT}" --auto-approve)
+              append_agent_mcp_args ARGS "${ENGINE}"
               if [[ -n "${MODEL}" ]]; then ARGS+=(--model "${MODEL}"); fi
               npx codex "${ARGS[@]}"
               ;;
             cursor)
               export CURSOR_API_KEY="${AGENT_TOKEN}"
               ARGS=(-p "${PROMPT}" --trust)
+              append_agent_mcp_args ARGS "${ENGINE}"
               if [[ "${WORKING_DIRECTORY}" != "." ]]; then
                 ARGS+=(--force)
               fi

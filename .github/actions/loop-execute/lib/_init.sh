@@ -26,6 +26,8 @@ source "${LIB_DIR}/common.sh"
 source "${LIB_DIR}/rejections.sh"
 # shellcheck source=./paths.sh
 source "${LIB_DIR}/paths.sh"
+# shellcheck source=./mcp.sh
+source "${LIB_DIR}/mcp.sh"
 # shellcheck source=./agent.sh
 source "${LIB_DIR}/agent.sh"
 # shellcheck source=./usage.sh
