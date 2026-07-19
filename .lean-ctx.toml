@@ -1,25 +1,23 @@
 # Project-level lean-ctx compression tuning
-compression_level = "max"
-compression_aggressiveness = 0.75
-structure_first = true
 auto_mode_learning = true
+bypass_hints = "aggressive"
+cache_policy = "aggressive"
+compression_aggressiveness = 0.8
+compression_level = "max"
 crush_verbatim_json = true
+enable_wakeup_ctx = false
+minimal_overhead = true
+output_density = "terse"
+structure_first = true
 symbol_map_auto = true
 
 # Net savings: power profile advertises 81 tools (~27K tok/turn fixed overhead);
 # standard keeps the 16 most-used tools (~20K) while ctx_call still reaches the rest.
 tool_profile = "standard"
-bypass_hints = "aggressive"
-minimal_overhead = true
-enable_wakeup_ctx = false
 
-# Repo MCP (.cursor/mcp.json via APM) is canonical — do not also register user-level lean-ctx.
+# Repo MCP (.cursor/mcp.json via APM) is canonical — do not register user-level lean-ctx.
+# Keep ~/.cursor/mcp.json mcpServers empty; never run `lean-ctx wrap cursor` (re-adds user MCP).
 # Hooks (~/.cursor/hooks.json) enforce ctx_* routing; skip rule/skill injection into AGENTS.md etc.
-[setup]
-auto_update_mcp = false
-auto_inject_rules = false
-auto_inject_skills = false
-
 [archive]
 ephemeral = true
 ephemeral_min_tokens = 800
@@ -33,3 +31,14 @@ dedup_threshold = 3
 [loop_detection]
 normal_threshold = 1
 reduced_threshold = 2
+
+# Observatory "role:coder tokens N% WARNING" — project .lean-ctx.toml cannot set [context];
+# per machine: lean-ctx config set context.budget_tokens 25000
+
+[memory.knowledge]
+max_facts = 300
+
+[setup]
+auto_inject_rules = false
+auto_inject_skills = false
+auto_update_mcp = false

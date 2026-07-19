@@ -111,6 +111,15 @@ if command -v apm > /dev/null 2>&1; then
 fi
 
 #######################################
+# lean-ctx MCP scope (workspace via APM is canonical)
+#######################################
+if command -v lean-ctx > /dev/null 2>&1; then
+    mkdir -p "${HOME}/.config/lean-ctx"
+    lean-ctx config set setup.auto_update_mcp false > /dev/null 2>&1 \
+        || echo "[warn] lean-ctx config set (auto_update_mcp) failed" >&2
+fi
+
+#######################################
 # aqua lazy install (optional)
 #######################################
 if command -v aqua > /dev/null 2>&1; then

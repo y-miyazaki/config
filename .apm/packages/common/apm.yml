@@ -37,4 +37,4 @@ dependencies:
       registry: false
       transport: stdio
       command: npx
-      args: ["-y", "lean-ctx-bin@3.9.7"]
+      args: ["-y", "lean-ctx-bin@3.9.12"]

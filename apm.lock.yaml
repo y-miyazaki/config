@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-19T04:52:21.756415+00:00'
+generated_at: '2026-07-19T09:31:10.587185+00:00'
 apm_version: 0.24.1
 dependencies:
 - repo_url: _local/common
@@ -1546,14 +1546,14 @@ mcp_configs:
     transport: stdio
     args:
     - -y
-    - '@upstash/context7-mcp@2.2.5'
+    - '@upstash/context7-mcp@3.2.3'
     registry: false
     command: npx
   fetch:
     name: fetch
     transport: stdio
     args:
-    - mcp-server-fetch==2025.4.7
+    - mcp-server-fetch==2026.7.10
     registry: false
     command: uvx
   github:
@@ -1570,7 +1570,7 @@ mcp_configs:
     transport: stdio
     args:
     - -y
-    - lean-ctx-bin@3.9.7
+    - lean-ctx-bin@3.9.12
     registry: false
     command: npx
 mcp_config_provenance:
