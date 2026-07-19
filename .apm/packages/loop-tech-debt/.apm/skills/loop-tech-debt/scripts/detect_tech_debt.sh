@@ -25,6 +25,9 @@
 # - bash (POSIX bash, /bin/bash)
 # - git
 #
+# Optional dependencies:
+# - jq (package.json dependency sensor)
+#
 # Optional environment:
 #   TECH_DEBT_EOL_MODULES - Comma-separated module paths/names for eol_hint signals
 #######################################
@@ -50,6 +53,8 @@ SINCE_REF=""
 
 MARKER_PER_FILE_CAP=10
 MARKER_GLOBAL_CAP=50
+DEP_PER_FILE_CAP=20
+DEP_GLOBAL_CAP=50
 
 declare -a SIGNALS_JSON=()
 declare -a HOTSPOTS_JSON=()
@@ -57,6 +62,9 @@ declare -a WARNINGS=()
 declare -A MARKER_FILE_COUNTS=()
 MARKER_GLOBAL_COUNT=0
 MARKER_TRUNCATED=false
+declare -A DEP_FILE_COUNTS=()
+DEP_GLOBAL_COUNT=0
+DEP_TRUNCATED=false
 
 #######################################
 # show_usage: Display script usage information
@@ -149,7 +157,53 @@ function parse_arguments {
 }
 
 #######################################
-# append_signal: Append one signal object when marker caps allow
+# append_dependency_signal: Append one dependency signal when dep caps allow
+#
+# Arguments:
+#   $1-$6 - kind, path, line, snippet, source, hint (hint optional)
+#
+# Global Variables:
+#   SIGNALS_JSON - Output array of signal objects
+#   DEP_FILE_COUNTS - Per-file dependency signal counts
+#   DEP_GLOBAL_COUNT - Total dependency signals collected
+#   DEP_TRUNCATED - Set true when a dep cap is reached
+#   DEP_PER_FILE_CAP - Maximum dependency signals per manifest file
+#   DEP_GLOBAL_CAP - Maximum dependency signals across the repository
+#
+# Returns:
+#   0 when appended; 1 when skipped due to caps
+#
+# Usage:
+#   append_dependency_signal "eol_hint" "go.mod" "5" "require x v1" "go_mod" "dependency_version"
+#
+#######################################
+function append_dependency_signal {
+    local kind="$1"
+    local path="$2"
+    local line="$3"
+    local snippet="$4"
+    local source="$5"
+    local hint="${6:-}"
+    local file_count
+
+    if [[ ${DEP_GLOBAL_COUNT} -ge ${DEP_GLOBAL_CAP} ]]; then
+        DEP_TRUNCATED=true
+        return 1
+    fi
+
+    file_count="${DEP_FILE_COUNTS[${path}]:-0}"
+    if [[ ${file_count} -ge ${DEP_PER_FILE_CAP} ]]; then
+        DEP_TRUNCATED=true
+        return 1
+    fi
+
+    DEP_FILE_COUNTS[${path}]=$((file_count + 1))
+    DEP_GLOBAL_COUNT=$((DEP_GLOBAL_COUNT + 1))
+    SIGNALS_JSON+=("$(signal_object_json "${kind}" "${path}" "${line}" "${snippet}" "${source}" "${hint}")")
+}
+
+#######################################
+# append_signal: Append one marker signal object when marker caps allow
 #
 # Arguments:
 #   $1-$6 - kind, path, line, snippet, source, hint (hint optional)
@@ -203,6 +257,9 @@ function append_signal {
 # Global Variables:
 #   SIGNALS_JSON - Output array of signal objects
 #   WARNINGS - Warning messages
+#   DEP_FILE_COUNTS - Per-file dependency signal counts (reset per run)
+#   DEP_GLOBAL_COUNT - Total dependency signals collected (reset per run)
+#   DEP_TRUNCATED - Truncation flag (reset per run)
 #
 # Returns:
 #   None
@@ -213,6 +270,10 @@ function append_signal {
 #######################################
 function collect_dependency_signals {
     local file
+
+    DEP_FILE_COUNTS=()
+    DEP_GLOBAL_COUNT=0
+    DEP_TRUNCATED=false
 
     if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
         return 0
@@ -232,6 +293,10 @@ function collect_dependency_signals {
                 ;;
         esac
     done < <(git ls-files 2> /dev/null | grep -E '(^|/)go\.mod$|(^|/)package\.json$' || true)
+
+    if [[ ${DEP_TRUNCATED} == "true" ]]; then
+        WARNINGS+=("dependency signals truncated")
+    fi
 }
 
 #######################################
@@ -412,7 +477,7 @@ function dependency_signals_from_go_mod {
         fi
 
         snippet="require ${module} ${version}"
-        append_signal "eol_hint" "${path}" "$((line_num + 1))" "${snippet}" "go_mod" "dependency_version" || true
+        append_dependency_signal "eol_hint" "${path}" "$((line_num + 1))" "${snippet}" "go_mod" "dependency_version" || true
     done
 }
 
@@ -468,7 +533,7 @@ function dependency_signals_from_package_json {
         snippet="\"${name}\": \"${version}\""
 
         if dependency_is_version_range "${version}"; then
-            append_signal "version_range" "${path}" "${line_num}" "${snippet}" "package_json" "dependency_version" || true
+            append_dependency_signal "version_range" "${path}" "${line_num}" "${snippet}" "package_json" "dependency_version" || true
             continue
         fi
 
@@ -483,7 +548,7 @@ function dependency_signals_from_package_json {
         ' "${lock_path}" 2> /dev/null || true)"
         if [[ -n ${resolved} && ${version} != "${resolved}" ]]; then
             snippet="\"${name}\": \"${version}\" (lock: ${resolved})"
-            append_signal "pin_drift" "${path}" "${line_num}" "${snippet}" "package_json" "dependency_version" || true
+            append_dependency_signal "pin_drift" "${path}" "${line_num}" "${snippet}" "package_json" "dependency_version" || true
         fi
     done < <(jq -r '
         (.dependencies // {}), (.devDependencies // {}) | to_entries[] | [.key, .value] | @tsv

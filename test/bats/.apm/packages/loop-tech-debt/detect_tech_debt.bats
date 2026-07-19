@@ -90,3 +90,31 @@ EOF
     [ "$status" -eq 0 ]
     assert_detect_tech_debt_error_json "${output}" "scope"
 }
+
+@test "detect_tech_debt keeps dependency signals when marker cap is reached" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/src"
+    local file_idx todo_idx
+    for file_idx in $(seq 1 6); do
+        {
+            printf 'package main\n'
+            for todo_idx in $(seq 1 10); do
+                printf '// TODO: marker %s-%s\n' "${file_idx}" "${todo_idx}"
+            done
+            printf 'func main() {}\n'
+        } > "${GIT_TEST_REPO}/src/file${file_idx}.go"
+    done
+    cat > "${GIT_TEST_REPO}/go.mod" << 'EOF'
+module example.com/app
+
+go 1.22
+
+require github.com/old/lib v1.2.3
+EOF
+    git -C "${GIT_TEST_REPO}" add .
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_run "env TECH_DEBT_EOL_MODULES='github.com/old/lib' bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    [[ $output == *'"marker signals truncated"'* ]]
+    [[ $output == *'"eol_hint"'* ]]
+}
