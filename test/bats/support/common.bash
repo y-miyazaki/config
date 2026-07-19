@@ -307,6 +307,61 @@ function assert_detect_ci_failures_error_json {
     ' <<< "${json}"
 }
 
+# assert_detect_tech_debt_ok_json: Validate detect_tech_debt.sh success JSON
+function assert_detect_tech_debt_ok_json {
+    local json="$1"
+    local expected_scope="${2:-all}"
+    local expected_since="${3:-}"
+
+    jq -e --arg expected_scope "${expected_scope}" --arg expected_since "${expected_since}" '
+        def signal_object:
+            type == "object"
+            and (.kind | type == "string" and length > 0)
+            and (.path | type == "string" and length > 0)
+            and (.line | type == "number")
+            and (.snippet | type == "string")
+            and (.source | type == "string" and length > 0)
+            and (if has("hint") then .hint | type == "string" else true end);
+        def hotspot_object:
+            type == "object"
+            and (.path | type == "string" and length > 0)
+            and (.metric | type == "string" and length > 0)
+            and (.value | type == "number")
+            and (.window | type == "string" and length > 0);
+        type == "object"
+        and (.status == "ok")
+        and .scope == $expected_scope
+        and (.since | type == "string")
+        and ($expected_since == "" or .since == $expected_since)
+        and (.skip | type == "boolean")
+        and (.signals | type == "array")
+        and (.hotspots | type == "array")
+        and (.warnings | type == "array" and all(type == "string"))
+        and (.signals | all(signal_object))
+        and (.hotspots | all(hotspot_object))
+        and (if .skip then (.signals | length) == 0 and (.hotspots | length) == 0 else (.signals | length) > 0 or (.hotspots | length) > 0 end)
+    ' <<< "${json}"
+}
+
+# assert_detect_tech_debt_error_json: Validate detect_tech_debt.sh error JSON
+function assert_detect_tech_debt_error_json {
+    local json="$1"
+    local expected_message="${2:-}"
+
+    jq -e --arg expected_message "${expected_message}" '
+        type == "object"
+        and .status == "error"
+        and (.scope | type == "string")
+        and (.since | type == "string")
+        and .skip == true
+        and (.signals | type == "array" and length == 0)
+        and (.hotspots | type == "array" and length == 0)
+        and (.warnings | type == "array")
+        and (.message | type == "string" and length > 0)
+        and ($expected_message == "" or (.message | contains($expected_message)))
+    ' <<< "${json}"
+}
+
 # assert_loop_run_log_entry_json: Validate loop_run_log_build_entry JSON
 function assert_loop_run_log_entry_json {
     local json="$1"
@@ -333,4 +388,5 @@ export -f bats_resolve_since_ref
 export -f assert_detect_changelog_ok_json assert_detect_changelog_error_json
 export -f assert_detect_changes_ok_json assert_detect_changes_error_json
 export -f assert_detect_ci_failures_ok_json assert_detect_ci_failures_error_json
+export -f assert_detect_tech_debt_ok_json assert_detect_tech_debt_error_json
 export -f assert_loop_run_log_entry_json
