@@ -1,0 +1,21 @@
+id: loop-tech-debt-contract-001
+name: loop-tech-debt output contract sections
+description: >-
+  Validate loop-tech-debt defines Critical, High-Priority, Watch, Noise / Ignore,
+  and Summary session-summary sections with Category labels.
+tags:
+  - quality
+  - output-contract
+inputs:
+  prompt: >-
+    Use loop-tech-debt. Show the session-summary structure with Critical,
+    High-Priority, Watch, Noise / Ignore, and Summary, including Category fields.
+  context:
+    target: SKILL.md
+expected:
+  output_contains:
+    - High-Priority
+    - Category
+    - Summary
+  outcomes:
+    - type: task_completed
