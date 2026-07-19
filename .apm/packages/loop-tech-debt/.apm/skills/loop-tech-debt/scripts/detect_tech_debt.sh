@@ -26,7 +26,7 @@
 # - git
 #
 # Optional environment:
-#   (none for scaffold; sensors add env in later tasks)
+#   TECH_DEBT_EOL_MODULES - Comma-separated module paths/names for eol_hint signals
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -195,6 +195,46 @@ function append_signal {
 }
 
 #######################################
+# collect_dependency_signals: Scan manifests for dependency version facts
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   SIGNALS_JSON - Output array of signal objects
+#   WARNINGS - Warning messages
+#
+# Returns:
+#   None
+#
+# Usage:
+#   collect_dependency_signals
+#
+#######################################
+function collect_dependency_signals {
+    local file
+
+    if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+        return 0
+    fi
+
+    while IFS= read -r file; do
+        [[ -z ${file} ]] && continue
+        if path_is_pruned "${file}"; then
+            continue
+        fi
+        case "${file}" in
+            go.mod | */go.mod)
+                dependency_signals_from_go_mod "${file}"
+                ;;
+            package.json | */package.json)
+                dependency_signals_from_package_json "${file}"
+                ;;
+        esac
+    done < <(git ls-files 2> /dev/null | grep -E '(^|/)go\.mod$|(^|/)package\.json$' || true)
+}
+
+#######################################
 # collect_marker_signals: Scan tracked files for TODO/FIXME/HACK/XXX markers
 #
 # Arguments:
@@ -251,6 +291,203 @@ function collect_marker_signals {
     if [[ ${MARKER_TRUNCATED} == "true" ]]; then
         WARNINGS+=("marker signals truncated")
     fi
+}
+
+#######################################
+# dependency_eol_module_listed: Return whether a module is in TECH_DEBT_EOL_MODULES
+#
+# Arguments:
+#   $1 - Module path or package name
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   0 when listed; 1 otherwise
+#
+# Usage:
+#   dependency_eol_module_listed "github.com/old/lib"
+#
+#######################################
+function dependency_eol_module_listed {
+    local module="$1"
+    local entry trimmed
+
+    [[ -n ${TECH_DEBT_EOL_MODULES:-} ]] || return 1
+
+    IFS=',' read -ra eol_entries <<< "${TECH_DEBT_EOL_MODULES}"
+    for entry in "${eol_entries[@]}"; do
+        trimmed="${entry#"${entry%%[![:space:]]*}"}"
+        trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
+        [[ -z ${trimmed} ]] && continue
+        if [[ ${module} == "${trimmed}" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+#######################################
+# dependency_is_version_range: Return whether a version string is a loose range
+#
+# Arguments:
+#   $1 - Version string from a manifest
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   0 when the version uses a range prefix; 1 otherwise
+#
+# Usage:
+#   dependency_is_version_range "^1.0.0"
+#
+#######################################
+function dependency_is_version_range {
+    local version="$1"
+
+    case "${version}" in
+        ^* | ~* | \** | x* | X*)
+            return 0
+            ;;
+    esac
+    return 1
+}
+
+#######################################
+# dependency_signals_from_go_mod: Emit eol_hint signals from a go.mod file
+#
+# Arguments:
+#   $1 - Repository-relative path to go.mod
+#
+# Global Variables:
+#   SIGNALS_JSON - Output array of signal objects
+#
+# Returns:
+#   None
+#
+# Usage:
+#   dependency_signals_from_go_mod "go.mod"
+#
+#######################################
+function dependency_signals_from_go_mod {
+    local path="$1"
+    local line line_content module version snippet line_num in_require=false
+    local -a go_mod_lines=()
+
+    [[ -f ${path} ]] || return 0
+    [[ -n ${TECH_DEBT_EOL_MODULES:-} ]] || return 0
+
+    mapfile -t go_mod_lines < "${path}"
+    for line_num in "${!go_mod_lines[@]}"; do
+        line_content="${go_mod_lines[${line_num}]}"
+        line="${line_content%%#*}"
+        line="${line#"${line%%[![:space:]]*}"}"
+        line="${line%"${line##*[![:space:]]}"}"
+        [[ -z ${line} ]] && continue
+
+        if [[ ${line} == "require (" ]]; then
+            in_require=true
+            continue
+        fi
+        if [[ ${in_require} == "true" && ${line} == ")" ]]; then
+            in_require=false
+            continue
+        fi
+
+        module=""
+        version=""
+        if [[ ${line} =~ ^require[[:space:]]+([^[:space:]]+)[[:space:]]+([^[:space:]]+) ]]; then
+            module="${BASH_REMATCH[1]}"
+            version="${BASH_REMATCH[2]}"
+        elif [[ ${in_require} == "true" && ${line} =~ ^([^[:space:]]+)[[:space:]]+([^[:space:]]+) ]]; then
+            module="${BASH_REMATCH[1]}"
+            version="${BASH_REMATCH[2]}"
+        else
+            continue
+        fi
+
+        if ! dependency_eol_module_listed "${module}"; then
+            continue
+        fi
+
+        snippet="require ${module} ${version}"
+        append_signal "eol_hint" "${path}" "$((line_num + 1))" "${snippet}" "go_mod" "dependency_version" || true
+    done
+}
+
+#######################################
+# dependency_signals_from_package_json: Emit npm dependency version signals
+#
+# Arguments:
+#   $1 - Repository-relative path to package.json
+#
+# Global Variables:
+#   SIGNALS_JSON - Output array of signal objects
+#   WARNINGS - Warning messages
+#
+# Returns:
+#   None
+#
+# Usage:
+#   dependency_signals_from_package_json "package.json"
+#
+#######################################
+function dependency_signals_from_package_json {
+    local path="$1"
+    local dir lock_path name version snippet resolved line_num
+    local line_content current_line
+
+    [[ -f ${path} ]] || return 0
+
+    if ! command -v jq > /dev/null 2>&1; then
+        WARNINGS+=("dependency sensor skipped for package.json: jq not available")
+        return 0
+    fi
+
+    dir="$(dirname "${path}")"
+    if [[ ${dir} == "." ]]; then
+        lock_path="package-lock.json"
+    else
+        lock_path="${dir}/package-lock.json"
+    fi
+
+    declare -A dep_lines=()
+    current_line=0
+    while IFS= read -r line_content || [[ -n ${line_content} ]]; do
+        current_line=$((current_line + 1))
+        if [[ ${line_content} =~ \"([^\"]+)\"[[:space:]]*:[[:space:]]*\"([^\"]+)\" ]]; then
+            dep_lines["${BASH_REMATCH[1]}"]="${current_line}"
+        fi
+    done < "${path}"
+
+    while IFS=$'\t' read -r name version; do
+        [[ -z ${name} ]] && continue
+
+        line_num="${dep_lines[${name}]:-1}"
+        snippet="\"${name}\": \"${version}\""
+
+        if dependency_is_version_range "${version}"; then
+            append_signal "version_range" "${path}" "${line_num}" "${snippet}" "package_json" "dependency_version" || true
+            continue
+        fi
+
+        if [[ ! -f ${lock_path} ]]; then
+            continue
+        fi
+
+        resolved="$(jq -r --arg pkg "${name}" '
+            .packages["node_modules/" + $pkg].version //
+            .dependencies[$pkg].version //
+            empty
+        ' "${lock_path}" 2> /dev/null || true)"
+        if [[ -n ${resolved} && ${version} != "${resolved}" ]]; then
+            snippet="\"${name}\": \"${version}\" (lock: ${resolved})"
+            append_signal "pin_drift" "${path}" "${line_num}" "${snippet}" "package_json" "dependency_version" || true
+        fi
+    done < <(jq -r '
+        (.dependencies // {}), (.devDependencies // {}) | to_entries[] | [.key, .value] | @tsv
+    ' "${path}" 2> /dev/null || true)
 }
 
 #######################################
@@ -573,6 +810,7 @@ function signals_array_json {
 function main {
     parse_arguments "$@"
     collect_marker_signals
+    collect_dependency_signals
     output_json
 }
 
