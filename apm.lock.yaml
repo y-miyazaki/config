@@ -1,6 +1,6 @@
 lockfile_version: '1'
-generated_at: '2026-07-17T09:46:29.490809+00:00'
-apm_version: 0.24.0
+generated_at: '2026-07-19T01:53:11.290196+00:00'
+apm_version: 0.24.1
 dependencies:
 - repo_url: _local/common
   name: config-common
@@ -1153,7 +1153,7 @@ dependencies:
     .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml: sha256:210f615c53b7828e5e442a7064391f462c40b522ea693461eee1e361bd07f9fc
     .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-noaction.yaml: sha256:86df7cbd5a7f712123fc014ad92c141fe46f581f2271ba8bd570135e2f8ebad5
     .agents/skills/loop-ci-sweeper/references/category-input-schema.md: sha256:6e6fca889e2454353d70d0563b3f788afd68237a678eae2e15f2555b69819572
-    .agents/skills/loop-ci-sweeper/references/category-run-ledger.md: sha256:f1b1441bfe87c9d643cba63484fc3533d6ff09dd2b73c5ae40ec7f43d243d5c0
+    .agents/skills/loop-ci-sweeper/references/category-run-ledger.md: sha256:055c9c821ffaa06f56fbc8cf991e1182cfa1f6a0a9f5b5c7e13411f26231e976
     .agents/skills/loop-ci-sweeper/references/category-scope.md: sha256:e629a55899f59aa6cc007fe68ffc706e7971f4223827030bdf8f817a25f4de26
     .agents/skills/loop-ci-sweeper/references/category-validation-commands.md: sha256:6f0ecb53005eb37b3f4860ffdd0d1bb4938f61476cad97f32bae1d5f2c124e26
     .agents/skills/loop-ci-sweeper/references/common-checklist.md: sha256:68f1e9423c46c11c6317ba69fd38004e4eee6d90a9cb79463b8260e38e0e900e
@@ -1173,7 +1173,7 @@ dependencies:
     .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml: sha256:210f615c53b7828e5e442a7064391f462c40b522ea693461eee1e361bd07f9fc
     .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-noaction.yaml: sha256:86df7cbd5a7f712123fc014ad92c141fe46f581f2271ba8bd570135e2f8ebad5
     .claude/skills/loop-ci-sweeper/references/category-input-schema.md: sha256:6e6fca889e2454353d70d0563b3f788afd68237a678eae2e15f2555b69819572
-    .claude/skills/loop-ci-sweeper/references/category-run-ledger.md: sha256:f1b1441bfe87c9d643cba63484fc3533d6ff09dd2b73c5ae40ec7f43d243d5c0
+    .claude/skills/loop-ci-sweeper/references/category-run-ledger.md: sha256:055c9c821ffaa06f56fbc8cf991e1182cfa1f6a0a9f5b5c7e13411f26231e976
     .claude/skills/loop-ci-sweeper/references/category-scope.md: sha256:e629a55899f59aa6cc007fe68ffc706e7971f4223827030bdf8f817a25f4de26
     .claude/skills/loop-ci-sweeper/references/category-validation-commands.md: sha256:6f0ecb53005eb37b3f4860ffdd0d1bb4938f61476cad97f32bae1d5f2c124e26
     .claude/skills/loop-ci-sweeper/references/common-checklist.md: sha256:68f1e9423c46c11c6317ba69fd38004e4eee6d90a9cb79463b8260e38e0e900e
@@ -1573,3 +1573,9 @@ mcp_configs:
     - lean-ctx-bin
     registry: false
     command: npx
+mcp_config_provenance:
+  codebase-memory-mcp: config-common
+  context7: config-common
+  fetch: config-common
+  github: config-common
+  lean-ctx: config-common
