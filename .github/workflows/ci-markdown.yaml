@@ -53,7 +53,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@01d6d683ccf6b0853c6d84b8f73b00f27b8754f9 # v1.8.45
+        uses: y-miyazaki/config/.github/actions/summary@cc094c789980dae42e8c7f5a89b0fd05bd1c4526 # v1.8.45
         with:
           artifacts: |
             (none)
