@@ -323,19 +323,19 @@ function collect_dependency_signals {
 #######################################
 function collect_doc_signals {
     local stale_days="${TECH_DEBT_STALE_DAYS:-365}"
-    local mlc_bin file
+    local mlc_cli file
 
     if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
         return 0
     fi
 
-    if mlc_bin="$(ensure_markdown_link_check)"; then
+    if mlc_cli="$(ensure_markdown_link_check)"; then
         while IFS= read -r file; do
             [[ -z ${file} ]] && continue
             if path_is_pruned "${file}"; then
                 continue
             fi
-            doc_broken_links_from_mlc "${mlc_bin}" "${file}" || true
+            doc_broken_links_from_mlc "${mlc_cli}" "${file}" || true
         done < <(git ls-files 2> /dev/null | grep -E '\.md$' || true)
     fi
 
@@ -675,27 +675,29 @@ function doc_age_days_mtime {
 # doc_broken_links_from_mlc: Emit broken_doc_ref signals for one markdown file
 #
 # Arguments:
-#   $1 - Path to markdown-link-check CLI (under self-contained cache)
+#   $1 - Path to markdown-link-check CLI from ensure_markdown_link_check
+#        (cache install prefix is derived as three parents above .bin/)
 #   $2 - Repository-relative markdown file path
 #
 # Global Variables:
 #   SIGNALS_JSON - Output array of signal objects
+#   WARNINGS - Warning messages appended on recoverable mlc/jq failures
 #
 # Returns:
 #   0 always
 #
 # Usage:
-#   doc_broken_links_from_mlc "${mlc_bin}" "docs/index.md"
+#   doc_broken_links_from_mlc "${mlc_cli}" "docs/index.md"
 #
 #######################################
 function doc_broken_links_from_mlc {
-    local mlc_bin="$1"
+    local mlc_cli="$1"
     local file="$2"
     local mlc_cache json_output link line_num snippet status_code
 
-    mlc_cache="$(dirname "$(dirname "$(dirname "${mlc_bin}")")")"
+    mlc_cache="$(dirname "$(dirname "$(dirname "${mlc_cli}")")")"
 
-    json_output="$(NODE_PATH="${mlc_cache}/node_modules" node -e "
+    if ! json_output="$(NODE_PATH="${mlc_cache}/node_modules" node -e "
 const fs = require('fs');
 const path = require('path');
 const mlc = require('markdown-link-check');
@@ -710,11 +712,15 @@ mlc(md, { baseUrl }, (err, results) => {
     const dead = (results || []).filter((result) => result.status === 'dead');
     process.stdout.write(JSON.stringify(dead));
 });
-" "${file}" 2> /dev/null)" || return 0
+" "${file}" 2> /dev/null)"; then
+        doc_warn_once "docs link sensor skipped: markdown-link-check run failed"
+        return 0
+    fi
 
     [[ -n ${json_output} && ${json_output} != "[]" ]] || return 0
 
     if ! command -v jq > /dev/null 2>&1; then
+        doc_warn_once "docs link sensor skipped: jq not available"
         return 0
     fi
 
@@ -785,15 +791,51 @@ function doc_line_for_link {
 function doc_maybe_emit_stale_signal {
     local file="$1"
     local stale_days="$2"
-    local git_age mtime_age snippet
+    local git_age mtime_age snippet source
 
     git_age="$(doc_age_days_git "${file}")"
     mtime_age="$(doc_age_days_mtime "${file}")"
 
-    if [[ ${git_age} -ge ${stale_days} || ${mtime_age} -ge ${stale_days} ]]; then
+    if [[ ${git_age} -ge ${stale_days} ]]; then
         snippet="last updated ${git_age}d ago (git)"
-        SIGNALS_JSON+=("$(signal_object_json "stale_doc" "${file}" "1" "${snippet}" "git_log" "documentation")")
+        source="git_log"
+    elif [[ ${mtime_age} -ge ${stale_days} ]]; then
+        snippet="last modified ${mtime_age}d ago (mtime)"
+        source="mtime"
+    else
+        return 0
     fi
+
+    SIGNALS_JSON+=("$(signal_object_json "stale_doc" "${file}" "1" "${snippet}" "${source}" "documentation")")
+}
+
+#######################################
+# doc_warn_once: Append a docs-sensor warning when not already present
+#
+# Arguments:
+#   $1 - Warning message
+#
+# Global Variables:
+#   WARNINGS - Warning messages
+#
+# Returns:
+#   None
+#
+# Usage:
+#   doc_warn_once "docs link sensor skipped: jq not available"
+#
+#######################################
+function doc_warn_once {
+    local message="$1"
+    local existing
+
+    for existing in "${WARNINGS[@]}"; do
+        if [[ ${existing} == "${message}" ]]; then
+            return 0
+        fi
+    done
+
+    WARNINGS+=("${message}")
 }
 
 #######################################
@@ -810,11 +852,11 @@ function doc_maybe_emit_stale_signal {
 #   0 with CLI path on stdout when available; 1 when skipped
 #
 # Usage:
-#   mlc_bin="$(ensure_markdown_link_check)"
+#   mlc_cli="$(ensure_markdown_link_check)"
 #
 #######################################
 function ensure_markdown_link_check {
-    local cache_dir mlc_bin
+    local cache_dir mlc_cli
 
     if [[ ${TECH_DEBT_SKIP_MLC:-} == "true" ]]; then
         WARNINGS+=("docs link sensor skipped: TECH_DEBT_SKIP_MLC is set")
@@ -832,21 +874,21 @@ function ensure_markdown_link_check {
     fi
 
     cache_dir="${TMPDIR:-/tmp}/loop-tech-debt-mlc/${MLC_VERSION}"
-    mlc_bin="${cache_dir}/node_modules/.bin/markdown-link-check"
+    mlc_cli="${cache_dir}/node_modules/.bin/markdown-link-check"
 
-    if [[ ! -x ${mlc_bin} ]]; then
+    if [[ ! -x ${mlc_cli} ]]; then
         if ! npm install --prefix "${cache_dir}" "markdown-link-check@${MLC_VERSION}" > /dev/null 2>&1; then
             WARNINGS+=("docs link sensor skipped: markdown-link-check install failed")
             return 1
         fi
-        mlc_bin="${cache_dir}/node_modules/.bin/markdown-link-check"
-        if [[ ! -x ${mlc_bin} ]]; then
+        mlc_cli="${cache_dir}/node_modules/.bin/markdown-link-check"
+        if [[ ! -x ${mlc_cli} ]]; then
             WARNINGS+=("docs link sensor skipped: markdown-link-check binary missing after install")
             return 1
         fi
     fi
 
-    printf '%s' "${mlc_bin}"
+    printf '%s' "${mlc_cli}"
     return 0
 }
 

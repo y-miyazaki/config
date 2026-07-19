@@ -71,6 +71,20 @@ EOF
     [[ $output == *'"stale_doc"'* ]]
 }
 
+@test "detect_tech_debt stale_doc uses mtime source when only mtime exceeds threshold" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/docs"
+    printf '# Old\n' > "${GIT_TEST_REPO}/docs/old.md"
+    git -C "${GIT_TEST_REPO}" add .
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    touch -d "2 years ago" "${GIT_TEST_REPO}/docs/old.md"
+    git_test_repo_run "env TECH_DEBT_STALE_DAYS=30 TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    [[ $output == *'"stale_doc"'* ]]
+    [[ $output == *'"source": "mtime"'* ]] || [[ $output == *'"source":"mtime"'* ]]
+    [[ $output == *'(mtime)'* ]]
+}
+
 @test "detect_tech_debt emits todo_comment and fixme marker signals" {
     git_test_repo_setup
     mkdir -p "${GIT_TEST_REPO}/src"
