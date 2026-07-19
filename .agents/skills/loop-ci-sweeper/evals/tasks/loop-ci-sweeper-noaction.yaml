@@ -6,13 +6,16 @@ tags:
   - negative
 inputs:
   prompt: >-
-    Use loop-ci-sweeper. Context JSON has skip=true and failures=[]. Report no
-    actionable work.
+    Use loop-ci-sweeper. Context JSON has skip=true and failures=[]. Emit the
+    full triage report with Actionable Fixes, Watch Items, Ignored, and Summary.
+    Outcome must indicate no actionable failures.
   context:
     skip: true
     failures: []
 expected:
   output_contains:
+    - Actionable Fixes
+    - Watch Items
     - no actionable
   outcomes:
     - type: task_completed

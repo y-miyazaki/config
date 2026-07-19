@@ -1,0 +1,40 @@
+name: loop-tech-debt-eval
+description: >-
+  Evaluation suite for loop-tech-debt.
+  Verifies taxonomy classification, session-summary contract, L1 report-only
+  behavior, and skip/no-action exits.
+skill: loop-tech-debt
+version: "1.0"
+config:
+  trials_per_task: 5
+  timeout_seconds: 180
+  parallel: false
+  executor: mock
+  model: claude-sonnet-4-20250514
+metrics:
+  - name: task_completion
+    weight: 1.0
+    threshold: 0.8
+    description: Verify evaluation task completes successfully.
+graders:
+  - type: code
+    name: has_structured_output
+    weight: 1.0
+    config:
+      assertions:
+        - "'High-Priority' in output or 'Watch' in output"
+  - type: text
+    name: report_sections
+    weight: 0.5
+    config:
+      regex_match:
+        - (High-Priority|Watch)
+  - type: behavior
+    name: bounded_runtime
+    weight: 0.5
+    config:
+      max_tool_calls: 30
+      max_tokens: 120000
+      max_duration_ms: 180000
+tasks:
+  - evals/tasks/*.yaml

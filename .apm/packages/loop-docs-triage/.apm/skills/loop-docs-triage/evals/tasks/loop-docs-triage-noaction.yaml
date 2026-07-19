@@ -1,16 +1,14 @@
 id: loop-docs-triage-noaction-001
 name: loop-docs-triage handles empty findings
-description:
-  "Validate loop-docs-triage defines behavior for no actionable items.
-
-  "
+description: Validate loop-docs-triage defines behavior for no actionable items.
 tags:
   - quality
   - edge-case
 inputs:
-  prompt:
-    Use loop-docs-triage. Context has skip=true and findings=[]. Emit four-section
-    report with Summary outcome indicating no documentation impact.
+  prompt: >-
+    Use loop-docs-triage. Context has skip=true and findings=[]. Emit the full
+    four-section report with High-Priority, Watch, Noise / Ignore, and Summary.
+    Outcome must indicate No documentation impact detected. Do not edit files.
   context:
     skip: true
     findings: []
@@ -18,5 +16,6 @@ expected:
   output_contains:
     - No documentation impact detected
     - High-Priority
+    - Watch
   outcomes:
     - type: task_completed
