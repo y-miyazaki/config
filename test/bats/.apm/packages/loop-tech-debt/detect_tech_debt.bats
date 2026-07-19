@@ -177,6 +177,14 @@ EOF
     assert_detect_tech_debt_error_json "${output}" "scope"
 }
 
+@test "detect_tech_debt returns error when not inside a git repository" {
+    local no_git_dir="${BATS_TEST_TMPDIR}/no-git"
+    mkdir -p "${no_git_dir}"
+    run bash -c "cd '${no_git_dir}' && bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    assert_detect_tech_debt_error_json "${output}" "Not a git repository"
+}
+
 @test "detect_tech_debt warns and continues when TECH_DEBT_SKIP_MLC=true" {
     git_test_repo_setup
     printf '# x\n' > "${GIT_TEST_REPO}/README.md"

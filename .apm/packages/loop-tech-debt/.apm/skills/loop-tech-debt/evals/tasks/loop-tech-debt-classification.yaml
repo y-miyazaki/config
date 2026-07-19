@@ -22,10 +22,11 @@ inputs:
         line: 5
         snippet: "TODO: extract shared validator used by HandleCreate and HandleUpdate"
         hint: code_quality
-      - kind: eol_dep
+      - kind: eol_hint
         path: evals/files/go.mod.txt
         line: 5
-        snippet: "github.com/old/lib v1.2.3 // EOL: upstream unsupported since 2024"
+        snippet: "require github.com/old/lib v1.2.3"
+        source: go_mod
         hint: dependency_version
       - kind: stale_doc
         path: evals/files/README.md
