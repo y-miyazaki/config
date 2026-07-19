@@ -279,6 +279,13 @@
       "addLabels": ["zizmor"]
     },
     {
+      "description": "Rules: Group lean-ctx updates across mise and apm MCP",
+      "groupName": "lean-ctx",
+      "matchPackageNames": ["lean-ctx-bin", "npm:lean-ctx-bin"],
+      "commitMessagePrefix": "renovate(lean-ctx):",
+      "addLabels": ["lean-ctx"]
+    },
+    {
       "description": "Rules: Safe automerge only for lockfile/digest/pin/replacement updates",
       "matchUpdateTypes": [
         "digest",

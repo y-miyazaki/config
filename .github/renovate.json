@@ -1,6 +1,7 @@
 {
   "extends": [
     "github>y-miyazaki/config//renovate/default",
+    "github>y-miyazaki/config//renovate/apm-mcp-version",
     "github>y-miyazaki/config//renovate/github-actions-tool-version",
     "github>y-miyazaki/config//renovate/pre-commit-config-tool-version"
   ]

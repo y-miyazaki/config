@@ -1,0 +1,101 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "customManagers": [
+    {
+      "description": "CustomManager: Update @upstash/context7-mcp in apm.yml",
+      "customType": "regex",
+      "fileMatch": ["^\\.apm/packages/.*/apm\\.yml$"],
+      "matchStrings": ["@upstash/context7-mcp@(?<currentValue>[\\d.]+)"],
+      "depNameTemplate": "@upstash/context7-mcp",
+      "datasourceTemplate": "npm"
+    },
+    {
+      "description": "CustomManager: Update lean-ctx-bin in apm.yml",
+      "customType": "regex",
+      "fileMatch": ["^\\.apm/packages/.*/apm\\.yml$"],
+      "matchStrings": ["lean-ctx-bin@(?<currentValue>[\\d.]+)"],
+      "depNameTemplate": "lean-ctx-bin",
+      "datasourceTemplate": "npm"
+    },
+    {
+      "description": "CustomManager: Update terraform-mcp-server in apm.yml",
+      "customType": "regex",
+      "fileMatch": ["^\\.apm/packages/.*/apm\\.yml$"],
+      "matchStrings": ["terraform-mcp-server@(?<currentValue>[\\d.]+)"],
+      "depNameTemplate": "terraform-mcp-server",
+      "datasourceTemplate": "npm"
+    },
+    {
+      "description": "CustomManager: Update mcp-server-fetch in apm.yml",
+      "customType": "regex",
+      "fileMatch": ["^\\.apm/packages/.*/apm\\.yml$"],
+      "matchStrings": ["mcp-server-fetch==(?<currentValue>[\\d.]+)"],
+      "depNameTemplate": "mcp-server-fetch",
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "description": "CustomManager: Update mcp-compressor in apm.yml",
+      "customType": "regex",
+      "fileMatch": ["^\\.apm/packages/.*/apm\\.yml$"],
+      "matchStrings": ["mcp-compressor==(?<currentValue>[\\d.]+)"],
+      "depNameTemplate": "mcp-compressor",
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "description": "CustomManager: Update mcp-proxy in apm.yml",
+      "customType": "regex",
+      "fileMatch": ["^\\.apm/packages/.*/apm\\.yml$"],
+      "matchStrings": ["mcp-proxy==(?<currentValue>[\\d.]+)"],
+      "depNameTemplate": "mcp-proxy",
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "description": "CustomManager: Update awslabs.aws-documentation-mcp-server in apm.yml",
+      "customType": "regex",
+      "fileMatch": ["^\\.apm/packages/.*/apm\\.yml$"],
+      "matchStrings": [
+        "awslabs\\.aws-documentation-mcp-server==(?<currentValue>[\\d.]+)"
+      ],
+      "depNameTemplate": "awslabs.aws-documentation-mcp-server",
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "description": "CustomManager: Update awslabs.aws-pricing-mcp-server in apm.yml",
+      "customType": "regex",
+      "fileMatch": ["^\\.apm/packages/.*/apm\\.yml$"],
+      "matchStrings": [
+        "awslabs\\.aws-pricing-mcp-server==(?<currentValue>[\\d.]+)"
+      ],
+      "depNameTemplate": "awslabs.aws-pricing-mcp-server",
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "description": "CustomManager: Update awslabs.terraform-mcp-server in apm.yml",
+      "customType": "regex",
+      "fileMatch": ["^\\.apm/packages/.*/apm\\.yml$"],
+      "matchStrings": [
+        "awslabs\\.terraform-mcp-server==(?<currentValue>[\\d.]+)"
+      ],
+      "depNameTemplate": "awslabs.terraform-mcp-server",
+      "datasourceTemplate": "pypi"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Rules: Update MCP package versions in apm.yml",
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": [".apm/packages/**/apm.yml"],
+      "commitMessagePrefix": "renovate(apm-mcp):",
+      "addLabels": ["apm-mcp"]
+    },
+    {
+      "description": "Rules: Automerge patch updates for apm.yml MCP packages",
+      "matchManagers": ["custom.regex"],
+      "matchFileNames": [".apm/packages/**/apm.yml"],
+      "matchUpdateTypes": ["patch"],
+      "addLabels": ["automerge"],
+      "automerge": true,
+      "platformAutomerge": true
+    }
+  ]
+}

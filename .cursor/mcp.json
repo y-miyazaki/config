@@ -26,7 +26,7 @@
     "lean-ctx": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "lean-ctx-bin"]
+      "args": ["-y", "lean-ctx-bin@3.9.7"]
     }
   }
 }

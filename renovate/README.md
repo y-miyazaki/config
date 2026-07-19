@@ -3,6 +3,7 @@
 This directory contains Renovate configuration files for dependency update automation and review policy.
 
 - `default.json`: main Renovate policy for this repository
+- `apm-mcp-version.json`: custom regex managers for MCP package versions in `.apm/packages/**/apm.yml`
 - `github-actions-tool-version.json`: custom regex managers for tool-version inputs in GitHub Actions workflows
 - `pre-commit-config-tool-version.json`: custom regex managers for hook rev versions in `.pre-commit-config.yaml`
 
@@ -47,7 +48,7 @@ This section defines the intended update policy first, independent from implemen
 - Python: `python`
 - Terraform: `terraform`
 - tflint plugins: `tflint`
-- Cross-file grouped tools: `ecspresso`, `ecschedule`, `golangci-lint`, `goreleaser`, `mise`, `terraform`, `tflint`, `trivy`, `zizmor`
+- Cross-file grouped tools: `ecspresso`, `ecschedule`, `golangci-lint`, `goreleaser`, `lean-ctx`, `mise`, `terraform`, `tflint`, `trivy`, `zizmor`
 - Automerged updates: `automerge`
 - Baseline for dependency PRs: `dependencies`
 
@@ -160,6 +161,7 @@ Tools that appear in both GitHub Actions workflow inputs (`github-actions-tool-v
 | ecschedule    | `Songmu/ecschedule`                          | `aqua:Songmu/ecschedule`        |
 | golangci-lint | `golangci/golangci-lint`                     | `aqua:golangci/golangci-lint`   |
 | goreleaser    | `goreleaser/goreleaser`                      | `aqua:goreleaser/goreleaser`    |
+| lean-ctx      | `lean-ctx-bin` (apm.yml MCP)                 | `npm:lean-ctx-bin` (mise)       |
 | mise          | `jdx/mise` (workflow input + Dockerfile ARG) | —                               |
 | terraform     | `hashicorp/terraform`                        | `aqua:hashicorp/terraform`      |
 | tflint        | `terraform-linters/tflint`                   | `aqua:terraform-linters/tflint` |
@@ -219,6 +221,42 @@ Disabled managers (checksum-coupled updates) include:
 - `suzuki-shunsuke/tfcmt`
 - `rhysd/actionlint`
 - `suzuki-shunsuke/ghalint`
+
+## APM MCP Version Rules (`apm-mcp-version.json`)
+
+### Scope
+
+- Uses `custom.regex` managers
+- Targets `.apm/packages/**/apm.yml`
+- Detects pinned MCP package versions in `npx` (`package@X.Y.Z`) and `uvx` (`package==X.Y.Z`) args
+
+### Labels and Automerge
+
+- Label all matched updates with `apm-mcp`
+- Automerge patch updates
+- Add `automerge` label to automerged updates
+- Commit prefix: `renovate(apm-mcp):`
+
+### Managed Packages
+
+npm (`datasource: npm`):
+
+- `@upstash/context7-mcp`
+- `lean-ctx-bin`
+- `terraform-mcp-server`
+
+PyPI (`datasource: pypi`):
+
+- `mcp-server-fetch`
+- `mcp-compressor`
+- `mcp-proxy`
+- `awslabs.aws-documentation-mcp-server`
+- `awslabs.aws-pricing-mcp-server`
+- `awslabs.terraform-mcp-server`
+
+Lockfile maintenance: when Renovate updates `.apm/packages/**/apm.yml`, the `on-ci-push-apm-update-lock` workflow regenerates `apm.lock.yaml` via `apm install --update`.
+
+mise installs `npm:lean-ctx-bin` with `allow_builds = ["lean-ctx-bin"]` so the package `postinstall` can download the native binary (mise disables npm lifecycle scripts by default).
 
 ## Pre-commit Config Tool Version Rules (`pre-commit-config-tool-version.json`)
 

@@ -512,6 +512,7 @@ This repository shares centrally managed Renovate policy presets.
 The repository must provide centrally managed Renovate defaults.
 
 - shared policy baseline is defined in `renovate/default.json`
+- APM MCP package version updates are defined in `renovate/apm-mcp-version.json`
 - workflow tool-version updates are defined in `renovate/github-actions-tool-version.json`
 - pre-commit hook version updates are defined in `renovate/pre-commit-config-tool-version.json`
 - consumers can extend the baseline via `.github/renovate.json`
@@ -519,6 +520,7 @@ The repository must provide centrally managed Renovate defaults.
 ### Scope
 
 - `renovate/default.json`: baseline policy
+- `renovate/apm-mcp-version.json`: APM MCP package version update rules
 - `renovate/github-actions-tool-version.json`: workflow tool-version update rules
 - `renovate/pre-commit-config-tool-version.json`: pre-commit hook rev update rules
 - `renovate/README.md`: policy details and operational notes
