@@ -101,7 +101,7 @@ The human PR is **never** auto-merged by the loop. L3 auto-merge applies only to
 
 Keys are passed in `on-loop-ci-sweeper.yaml` via `with:` on `ci-loop-caller-full-github.yaml` (alphabetically ordered). Multiline values (`agent_verifier_criteria`, `pr_body`, `prompt_instructions`) are defined inline in the caller workflow.
 
-Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md). Legacy env name mapping: [Loop Caller `env` Reference](loop-caller-env-reference.md). Platform branch/finalize caps: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
+Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md). Platform branch/finalize caps: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
 
 **Dogfood minimum (autonomy + PR watch):**
 

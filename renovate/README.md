@@ -254,8 +254,6 @@ PyPI (`datasource: pypi`):
 - `awslabs.aws-pricing-mcp-server`
 - `awslabs.terraform-mcp-server`
 
-Lockfile maintenance: when Renovate updates `.apm/packages/**/apm.yml`, the `on-ci-push-apm-update-lock` workflow regenerates `apm.lock.yaml` via `apm install --update`.
-
 mise installs `npm:lean-ctx-bin` with `allow_builds = ["lean-ctx-bin"]` so the package `postinstall` can download the native binary (mise disables npm lifecycle scripts by default).
 
 ## Pre-commit Config Tool Version Rules (`pre-commit-config-tool-version.json`)

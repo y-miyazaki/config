@@ -72,7 +72,6 @@ nav:
           - Loop Caller Workflows Design: explanation/loop-engineering/loop-caller-workflows-design.md
           - Loop Caller Reusable Workflow Design: explanation/loop-engineering/loop-caller-reusable-design.md
           - Loop Workflows:
-              - Caller env Reference: explanation/loop-engineering/workflows/loop-caller-env-reference.md
               - Caller Inputs Reference: explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
               - Changelog: explanation/loop-engineering/workflows/loop-changelog-workflow-design.md
               - CI Sweeper: explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md

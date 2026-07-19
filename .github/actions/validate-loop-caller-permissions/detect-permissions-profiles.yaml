@@ -20,14 +20,16 @@ profiles:
       actions: write
 
   pr-scan:
-    caller_workflow: ci-loop-caller.yaml
-    description: PR head enumeration (not yet implemented in ci-loop-caller)
-    implemented: false
-    job: detect-pr-scan
+    caller_workflow: ci-loop-caller-pr-scan.yaml
+    description: PR head enumeration when pr_enabled=true (no Actions API CI scan)
+    implemented: true
+    job: detect
     job_permissions:
+      actions: write
       contents: read
       pull-requests: read
-    caller_adds: {}
+    caller_adds:
+      actions: write
 
   ci-monitor:
     caller_workflow: ci-loop-caller.yaml

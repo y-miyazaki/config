@@ -111,7 +111,7 @@ All `.loop/*` writes in **finalize step** via `loop-finalize` — not separate c
 
 Push branch: `LOOP_STATE_PUSH_BRANCH`, **not** `target.to.branch`.
 
-**Merge-gated state (L2 `open_pr`):** `loop-finalize` writes `pending` to `branch_state` after creating the domain-only PR. `on-loop-state-promote.yaml` (`pull_request_target` `closed`) promotes `pending` → `last_sha` on merge. L3 `push` / `push_head` advances `last_sha` in the same finalize run.
+**Merge-gated state (L2 `open_pr`):** `loop-finalize` writes `pending` to `branch_state` after creating the domain-only PR. `on-loop-state-promote.yaml` (`pull_request_target` `closed`) promotes `pending` → `last_sha` on merge (direct push preferred; auto-merge state PR when push is blocked). L3 `push` / `push_head` advances `last_sha` in the same finalize run.
 
 **Invariant:** Finalize does not edit application/doc **source under repair**.
 
@@ -195,20 +195,20 @@ Each matrix cell = one `max_runs_per_day` consumption. Cap enumeration in `loop-
 | record-skip | `contents: write`, `pull-requests: write` (run-log PR fallback on protected branches)                                          |
 | finalize    | Runs inside `ci-loop-agent`; inherits caller `execute` job permissions                                                         |
 
-`ci-loop-agent` `agent-l2` also needs `pull-requests: write` — `loop-state-write` opens a state PR when `LOOP_STATE_PUSH_BRANCH` blocks direct push.
+`on-loop-state-promote` needs `contents: write` and a token with `pull-requests: write` when `loop-state-promote` opens a state PR fallback (dogfood: maintenance bot app token).
 
-## env Conventions
+`ci-loop-agent` `agent-l2` needs `pull-requests: write` when `loop-run-log` or `loop-state-write` opens a PR fallback on protected branches.
+
+## Caller input conventions
 
 - Keys **alphabetically ordered** (repository workflow convention).
-- Shared caller keys: [Loop Caller `env` Reference](workflows/loop-caller-env-reference.md).
+- Shared caller keys: [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md).
 - `LOOP_*` branch/finalize caps: [Multi-Branch canonical table](multi-branch-loops-design.md#caller-configuration-canonical).
 - Domain vars (`CI_SWEEPER_*`, `CHANGELOG_*`, `DOCS_TRIAGE_*`, `LOOP_DETECT_SCRIPT`) in each [workflow design doc](multi-branch-loops-design.md#workflow-design-documents).
 
 ## Adding a New Loop Caller
 
-After [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md) is implemented, copy a thin `on-loop-*.yaml` (triggers + `with:` only).
-
-Until then:
+Copy a thin `on-loop-*.yaml` (triggers + `with:` only). See [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md).
 
 1. Copy `on-loop-changelog.yaml`, `on-loop-docs-triage.yaml`, or `on-loop-ci-sweeper.yaml` skeleton.
 2. Add `docs/explanation/loop-engineering/workflows/loop-<name>-workflow-design.md`.
@@ -228,7 +228,7 @@ Historical debt from early caller implementations. **All items below are resolve
 | Single `DEFAULT_BASE_BRANCH` only                | all                                          | `LOOP_INTEGRATION_BRANCHES`                                        |
 | `docs-updater` detect path                       | `on-loop-docs-triage`                        | `loop-docs-triage/scripts/detect_changes.sh`                       |
 
-Next structural improvement: [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md) (`ci-loop-caller.yaml`).
+Structural baseline: [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md) (`ci-loop-caller.yaml`).
 
 ## References
 

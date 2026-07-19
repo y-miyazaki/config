@@ -101,10 +101,6 @@ inputs:
     default: "none"
     description: "Detect skip reason recorded in run log"
     required: false
-  state_bundle_with_fix_pr:
-    default: "false"
-    description: "Deprecated: commit state on fix branch before open_pr"
-    required: false
   state_file:
     description: "Path to state JSON file"
     required: true
@@ -207,19 +203,12 @@ runs:
       id: state_mode
       shell: bash
       env:
-        BUNDLE_STATE: ${{ inputs.state_bundle_with_fix_pr }}
         FINALIZE_STRATEGY: ${{ steps.target.outputs.finalize_strategy }}
         HAS_CHANGES: ${{ inputs.has_changes }}
         OUTCOME: ${{ steps.outcome.outputs.value }}
         VERDICT: ${{ inputs.verdict }}
       run: |
         set -euo pipefail
-        if [[ "${BUNDLE_STATE}" == "true" && "${VERDICT}" == "APPROVE" && "${HAS_CHANGES}" == "true" && "${FINALIZE_STRATEGY}" == "open_pr" ]]; then
-          echo "mode=advance" >> "$GITHUB_OUTPUT"
-          echo "bundle=true" >> "$GITHUB_OUTPUT"
-          exit 0
-        fi
-        echo "bundle=false" >> "$GITHUB_OUTPUT"
         if [[ "${VERDICT}" == "APPROVE" && "${HAS_CHANGES}" == "true" ]]; then
           case "${FINALIZE_STRATEGY}" in
             open_pr)
@@ -250,33 +239,6 @@ runs:
       run: |
         set -euo pipefail
         bash "${DOMAIN_PERSISTENCE_SCRIPT}"
-
-    - name: Write Bundled State
-      if: >-
-        inputs.current_sha != '' &&
-        steps.state_mode.outputs.bundle == 'true' &&
-        inputs.branch != ''
-      shell: bash
-      env:
-        ACTING_ON_ACTION: clear
-        ACTING_ON_LOOP_NAME: ${{ inputs.loop_name }}
-        ACTING_ON_TARGET_KEY: ${{ steps.target.outputs.target_key }}
-        ADDITIONAL_COMMIT_PATHS: ${{ inputs.additional_commit_paths }}
-        BASE_BRANCH: ${{ inputs.base_branch }}
-        COMMIT_TARGET_BRANCH: ${{ inputs.branch }}
-        GH_TOKEN: ${{ inputs.token }}
-        LOOP_NAME: ${{ inputs.loop_name }}
-        OPEN_REJECTIONS: ${{ inputs.open_rejections }}
-        OUTCOME: ${{ steps.outcome.outputs.value }}
-        REJECT_REASON: ${{ inputs.reject_reason }}
-        SHA: ${{ inputs.current_sha }}
-        SKIP_STATE_PR: "true"
-        STATE_FILE: ${{ inputs.state_file }}
-        STATE_PUSH_BRANCH: ${{ inputs.state_push_branch }}
-        STATE_WRITE_MODE: advance
-        TARGET_KEY: ${{ steps.target.outputs.target_key }}
-        WRITE_TARGET_STATE: "true"
-      run: bash "${GITHUB_ACTION_PATH}/../loop-state-write/lib/run.sh"
 
     - name: Push to Target Branch
       id: push_target
@@ -343,14 +305,9 @@ runs:
         fi
 
     - name: Write State
-      if: >-
-        inputs.current_sha != '' &&
-        steps.state_mode.outputs.bundle != 'true'
+      if: inputs.current_sha != ''
       shell: bash
       env:
-        ACTING_ON_ACTION: clear
-        ACTING_ON_LOOP_NAME: ${{ inputs.loop_name }}
-        ACTING_ON_TARGET_KEY: ${{ steps.target.outputs.target_key }}
         ADDITIONAL_COMMIT_PATHS: ${{ inputs.additional_commit_paths }}
         BASE_BRANCH: ${{ inputs.base_branch }}
         GH_TOKEN: ${{ inputs.token }}

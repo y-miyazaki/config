@@ -84,7 +84,7 @@ Note: At L3, `loop-finalize` enables auto-merge (`gh pr merge --auto --squash`) 
 
 Most caller workflows define configuration in `env:` when jobs are inlined in the caller. Not placed in `workflow_dispatch` inputs (cron-triggered runs have no inputs context).
 
-**Exception — loop callers:** `on-loop-*.yaml` will pass configuration via `with:` on `ci-loop-caller.yaml` (no caller `env:`), matching `on-ci-push-*.yaml`. See [Loop Caller Reusable Workflow Design](loop-engineering/loop-caller-reusable-design.md). Until that refactor lands, loop callers still use `env:` — see [Loop Caller `env` Reference](loop-engineering/workflows/loop-caller-env-reference.md).
+**Loop callers:** `on-loop-*.yaml` pass configuration via `with:` on `ci-loop-caller.yaml` (no caller `env:`), matching `on-ci-push-*.yaml`. See [Loop Caller Reusable Workflow Design](loop-engineering/loop-caller-reusable-design.md) and [Loop Caller Inputs Reference](loop-engineering/workflows/loop-caller-inputs-reference.md).
 
 ```yaml
 env:

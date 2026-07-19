@@ -1,6 +1,6 @@
 # Platform workflow: promote pending loop state when a fix PR closes.
 # Design: docs/explanation/loop-engineering/multi-branch-loops-design.md#state-delivery-philosophy
-# Requires MAINTENANCE_BOT_APP_CLIENT_ID and MAINTENANCE_BOT_APP_PRIVATE_KEY (passed via repository secrets).
+# Requires MAINTENANCE_BOT_APP_CLIENT_ID and MAINTENANCE_BOT_APP_PRIVATE_KEY (environment: default).
 #
 # Trigger: pull_request_target (not pull_request) so a [skip ci] annotation on the closed
 # PR HEAD cannot suppress this merge-gate handler (GitHub skips pull_request for skip-ci HEADs).

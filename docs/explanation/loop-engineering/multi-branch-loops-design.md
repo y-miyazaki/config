@@ -191,40 +191,32 @@ Recorded in [Specification](../../reference/specification.md).
 
 Field sets differ by loop — see each workflow design doc.
 
-### Per-target state delivery (`state_bundle_with_fix_pr`)
+### Per-target state delivery
 
-Caller input on `ci-loop-caller` (see [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md)). Controls whether **per-target cursor fields** (`last_sha`, `outcome`, …) are committed on the **fix branch** before `open_pr`, or pushed to `branch_state` separately.
+L2 `open_pr` loops use **merge-gated `pending`**: fix PRs carry domain files only; `loop-finalize` writes `targets[key].pending` to `branch_state` without advancing `last_sha`; `on-loop-state-promote` promotes `pending.sha` → `last_sha` when the fix PR merges.
 
-| Mode                      | `state_bundle_with_fix_pr` | Reviewer sees                                         | When to use                                                                                                                              |
-| ------------------------- | -------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| **Bundled**               | `true`                     | One PR: domain fix + `.loop/state-<loop>.json`        | Watch branch equals fix branch **and** equals `branch_state` (typical dogfood: all `main`). Cursor advances only when the fix PR merges. |
-| **Centralized** (default) | `false`                    | Fix PR + optional separate state PR to `branch_state` | Multi-branch watch while `branch_state` stays `main`; PR-head fixes use bot fix PR + `loop-notify-pr` on human PR.                       |
-
-**Always on `branch_state` (not bundled):** run log, budget — operational metadata, not reviewer-facing.
+**Always on `branch_state` (not in fix PRs):** run log, budget, and per-target cursor state — operational metadata, not reviewer-facing.
 
 **On `REJECT`:** finalize still writes target state to `branch_state` (failure accounting without a fix PR).
 
 #### Loop defaults (dogfood)
 
-| Loop               | Default           | Rationale                                                                            |
-| ------------------ | ----------------- | ------------------------------------------------------------------------------------ |
-| `loop-changelog`   | `false` (default) | Merge-gated `pending` via `on-loop-state-promote`                                    |
-| `loop-docs-triage` | `false`           | Merge-gated `pending` (same as changelog; do not bundle state in fix PR)             |
-| `loop-ci-sweeper`  | `false`           | Merge-gated `pending` for integration and PR-head bot fix PRs; run ledger for dedupe |
-
-Bundling is **per-loop opt-in**, not a global LE requirement. The historical default (centralized on `branch_state`) exists for [multi-branch watch + shared state file](#branch-roles-and-fix-direction), not because users prefer two PRs.
+| Loop               | State delivery                                    |
+| ------------------ | ------------------------------------------------- |
+| `loop-changelog`   | Merge-gated `pending` via `on-loop-state-promote` |
+| `loop-docs-triage` | Merge-gated `pending` (same as changelog)         |
+| `loop-ci-sweeper`  | Merge-gated `pending`; run ledger for dedupe      |
 
 ### State delivery philosophy
 
 **State is not a reviewer-facing deliverable.** `.loop/state-*.json` holds machine cursors (`last_sha`), outcomes, and circuit-breaker counters — analogous to a CI cache key or migration ledger, not to `CHANGELOG.md` or doc fixes. Asking humans to approve state in a PR is a category error.
 
-| Delivery                                                                                                | Verdict                                                                                                                       |
-| ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **Direct push to `branch_state`** (bot token + branch-protection bypass for `.loop/*`)                  | **Target.** State updates are infrastructure writes, not review gates.                                                        |
-| **Merge-gated state push** (`pull_request_target` `closed` + `merged` → promote `pending` → `last_sha`) | **Chosen L2 model.** Fix PR is domain-only; state advances on the merge **event**, not because a human approved a state diff. |
-| **State-only PR** (including auto-merge queue)                                                          | **Anti-pattern.** A fallback when push is blocked; must not be the designed happy path.                                       |
-| **`state_bundle_with_fix_pr`**                                                                          | **Deprecated interim.** Mixed machine state into a human PR; retire after merge-gated push.                                   |
-| **L3 `push` / `push_head`**                                                                             | **Platform exception.** Dogfood uses `open_pr` + GitHub auto-merge instead of direct push.                                    |
+| Delivery                                                                                                | Verdict                                                                                                                                                                                                                           |
+| ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Direct push to `branch_state`** (bot token + branch-protection bypass for `.loop/*`)                  | **Target.** State updates are infrastructure writes, not review gates.                                                                                                                                                            |
+| **Merge-gated state push** (`pull_request_target` `closed` + `merged` → promote `pending` → `last_sha`) | **Chosen L2 model.** Fix PR is domain-only; state advances on the merge **event**, not because a human approved a state diff.                                                                                                     |
+| **State-only PR** (auto-merge fallback when direct push blocked)                                        | **External-repo fallback.** Same pattern as run-log PR; not the L2 happy path. Blocked for `advance` + `pr-created` (use `pending`). Humans should not review state in normal operation — configure ruleset bypass when possible. |
+| **L3 `push` / `push_head`**                                                                             | **Platform exception.** Dogfood uses `open_pr` + GitHub auto-merge instead of direct push.                                                                                                                                        |
 
 **What matters more than PR vs push is _when_ `last_sha` advances:**
 
@@ -240,9 +232,8 @@ So “state should be pushed, not PR’d” is right for **delivery mechanism**.
 1. **L2:** Fix PR carries **domain files only**. On `pull_request_target` `closed` + `merged`, a platform handler **direct-pushes** state to `branch_state` (promote `pending` → `last_sha`). Humans never review or merge state.
 2. **L2 + `to.branch != branch_state`:** Same merge hook; state always lands on `branch_state`, not on the fix branch.
 3. **L3:** `finalize: push` / `push_head` — single atomic push to the watched branch; no **new fix PR**, no `pending` state cursor.
-4. **`state_bundle_with_fix_pr`:** **Deprecated interim.** Dogfood loops use merge-gated `pending` (`false`). Do not adopt for new loops.
 
-**Pending cursor:** On `pr-created`, finalize writes `targets[key].pending = { sha, pr, … }` to `branch_state` via direct push **without** advancing `last_sha`. `on-loop-state-promote` (`pull_request_target` `closed`) promotes `pending.sha` → `last_sha` on merge or clears `pending` when closed without merge. Promote updates **only** `branch_state` / the repository default branch (or an explicit `state_push_branch` override) — never open fix-PR heads — so `[skip ci]` state commits cannot pollute a PR HEAD and suppress Actions. Detect blocks on `pending.pr` only while that PR is `OPEN`; `CLOSED` / `MERGED` pending is treated as stale (warn and continue) until promote clears it. Re-open detect therefore still sees the same commits if the fix PR is closed without merge (after stale pending is ignored or cleared).
+**Pending cursor:** On `pr-created`, finalize writes `targets[key].pending = { sha, pr, … }` to `branch_state` via direct push **without** advancing `last_sha` (state PR fallback when push is blocked). `on-loop-state-promote` (`pull_request_target` `closed`) promotes `pending.sha` → `last_sha` on merge or clears `pending` when closed without merge (same push / PR-fallback pattern). Promote updates **only** `branch_state` / the repository default branch (or an explicit `state_push_branch` override) — never open fix-PR heads — so `[skip ci]` state commits cannot pollute a PR HEAD and suppress Actions. Detect blocks on `pending.pr` only while that PR is `OPEN`; `CLOSED` / `MERGED` pending is treated as stale (warn and continue) until promote clears it. Re-open detect therefore still sees the same commits if the fix PR is closed without merge (after stale pending is ignored or cleared).
 
 ### Migration
 
@@ -284,7 +275,7 @@ See [Loop Caller Workflows — Concurrency](loop-caller-workflows-design.md#conc
 | **4** | `workflow_run` per loop ops checklist                                              | ✅ Done (ci-sweeper dogfood; other loops TBD)      |
 | **5** | L3 integration `push` (opt-in)                                                     | Planned                                            |
 | **6** | Optional `repository` on target                                                    | Future                                             |
-| **7** | `ci-loop-caller.yaml` — thin callers + `with:`                                     | Planned ([design](loop-caller-reusable-design.md)) |
+| **7** | `ci-loop-caller.yaml` — thin callers + `with:`                                     | ✅ Done ([design](loop-caller-reusable-design.md)) |
 | **8** | Merge-gated state push (`on-loop-state-promote`)                                   | ✅ Done                                            |
 
 Caller/workflow steps: [Loop Caller Workflows Design](loop-caller-workflows-design.md).
@@ -299,21 +290,21 @@ Caller/workflow steps: [Loop Caller Workflows Design](loop-caller-workflows-desi
 
 Add new loops as `docs/explanation/loop-engineering/workflows/<name>-workflow-design.md` without growing this file.
 
-Shared caller configuration: [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md) (planned `with:` on `ci-loop-caller`). Legacy: [Loop Caller `env` Reference](workflows/loop-caller-env-reference.md).
+Shared caller configuration: [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md).
 
 ## Decision Summary
 
-| Question                    | Decision                                                                                                                                                                 |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Config                      | Caller `with:` on `ci-loop-caller` ([inputs reference](workflows/loop-caller-inputs-reference.md))                                                                       |
-| Target shape                | `mode` + from/to/base                                                                                                                                                    |
-| Branch scan                 | `loop-detect` enumerates + checkout; detect script per context                                                                                                           |
-| Fan-out                     | `target_matrix` → execute/finalize matrix                                                                                                                                |
-| State persistence           | Direct push to `branch_state` (no state PR); per-loop [delivery modes](#per-target-state-delivery-state_bundle_with_fix_pr) and [philosophy](#state-delivery-philosophy) |
-| `loop-pr-ci-healer` package | **No**                                                                                                                                                                   |
-| Levels                      | Single `DEFAULT_LEVEL`; L2 default                                                                                                                                       |
-| Bot PRs                     | Excluded; `LOOP_PR_INCLUDE_BOTS` opt-in                                                                                                                                  |
-| Detect filters              | Stable mechanical only; Skill classifies Watch                                                                                                                           |
+| Question                    | Decision                                                                                                        |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Config                      | Caller `with:` on `ci-loop-caller` ([inputs reference](workflows/loop-caller-inputs-reference.md))              |
+| Target shape                | `mode` + from/to/base                                                                                           |
+| Branch scan                 | `loop-detect` enumerates + checkout; detect script per context                                                  |
+| Fan-out                     | `target_matrix` → execute/finalize matrix                                                                       |
+| State persistence           | Direct push to `branch_state` (no state PR); merge-gated `pending` and [philosophy](#state-delivery-philosophy) |
+| `loop-pr-ci-healer` package | **No**                                                                                                          |
+| Levels                      | Single `DEFAULT_LEVEL`; L2 default                                                                              |
+| Bot PRs                     | Excluded; `LOOP_PR_INCLUDE_BOTS` opt-in                                                                         |
+| Detect filters              | Stable mechanical only; Skill classifies Watch                                                                  |
 
 ## References
 

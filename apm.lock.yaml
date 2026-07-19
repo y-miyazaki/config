@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-19T03:19:14.310077+00:00'
+generated_at: '2026-07-19T04:52:21.756415+00:00'
 apm_version: 0.24.1
 dependencies:
 - repo_url: _local/common
@@ -1418,7 +1418,7 @@ dependencies:
     .agents/skills/shell-script-review/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/shell-script-review/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .agents/skills/shell-script-review/scripts/validate.sh: sha256:da25a7b3fd66ae49cf99f7cb6d6153bb7c55c6ded626e60c53243a8e194a7677
-    .agents/skills/shell-script-validation/SKILL.md: sha256:4d70d5d0d29c55e2e66d9522b451633a3fa371ec699ff54035b092b5848d3726
+    .agents/skills/shell-script-validation/SKILL.md: sha256:21854ad2cc2975192169f65885a88557d194ff2b888e5c5f679b823861a0af3a
     .agents/skills/shell-script-validation/eval.yaml: sha256:6f2518a30fe2dbd04da7b10693bd4eb8cc076d9983646c98f0591e9712ffcfd8
     .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-basic.yaml: sha256:d2df5946a3fcf3765e52405d29b0bb478e6a64dc4d05310a76a1ce6ee763d005
     .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-boundary-guardrail.yaml: sha256:1238638e16effa3f2f1c58c5e12768624d65b5821b4c8b7b20d40878eeca8104
@@ -1437,7 +1437,7 @@ dependencies:
     .agents/skills/shell-script-validation/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
     .agents/skills/shell-script-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/shell-script-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .agents/skills/shell-script-validation/scripts/validate.sh: sha256:144cbecbd76a2f1e8ce266570627193afa952ecc756bf0b03b0fb45f8713fc04
+    .agents/skills/shell-script-validation/scripts/validate.sh: sha256:1603fb552850030d7c9e0b66e02c75f1d978869d718e1c2594184d73c022a694
     .claude/rules/bats.md: sha256:0abe424dd9f1e8aac7eccc5d5769d6891dd7be51f5249d063096b9df10dcc451
     .claude/rules/shell-script.md: sha256:a38cb90bd2e866062fa3fc9874b3f0330dd78cf4071726df9d6082a9c8547db4
     .claude/skills/shell-script-review/SKILL.md: sha256:dfd8a2f213e1b32f39b608351026e29c8a39b29fff61d78932413d6e445e0d39
@@ -1469,7 +1469,7 @@ dependencies:
     .claude/skills/shell-script-review/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/shell-script-review/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .claude/skills/shell-script-review/scripts/validate.sh: sha256:da25a7b3fd66ae49cf99f7cb6d6153bb7c55c6ded626e60c53243a8e194a7677
-    .claude/skills/shell-script-validation/SKILL.md: sha256:4d70d5d0d29c55e2e66d9522b451633a3fa371ec699ff54035b092b5848d3726
+    .claude/skills/shell-script-validation/SKILL.md: sha256:21854ad2cc2975192169f65885a88557d194ff2b888e5c5f679b823861a0af3a
     .claude/skills/shell-script-validation/eval.yaml: sha256:6f2518a30fe2dbd04da7b10693bd4eb8cc076d9983646c98f0591e9712ffcfd8
     .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-basic.yaml: sha256:d2df5946a3fcf3765e52405d29b0bb478e6a64dc4d05310a76a1ce6ee763d005
     .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-boundary-guardrail.yaml: sha256:1238638e16effa3f2f1c58c5e12768624d65b5821b4c8b7b20d40878eeca8104
@@ -1488,7 +1488,7 @@ dependencies:
     .claude/skills/shell-script-validation/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
     .claude/skills/shell-script-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/shell-script-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .claude/skills/shell-script-validation/scripts/validate.sh: sha256:144cbecbd76a2f1e8ce266570627193afa952ecc756bf0b03b0fb45f8713fc04
+    .claude/skills/shell-script-validation/scripts/validate.sh: sha256:1603fb552850030d7c9e0b66e02c75f1d978869d718e1c2594184d73c022a694
     .cursor/rules/bats.mdc: sha256:9771ea0e306d78b09d25cc54d987ef816bc1bbe14e684621b9b2d3597ffb3733
     .cursor/rules/shell-script.mdc: sha256:4451457d8a7afaf09ca8389118d9e61bd5e83d3dd3c334042276ee90b3384d34
   source: local

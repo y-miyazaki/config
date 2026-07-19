@@ -9,7 +9,8 @@
 #
 # Design Rules:
 #   - state_write_mode controls whether last_sha, pending, or metadata is updated
-#   - Direct push to branch_state is preferred; state PR is a fallback only
+#   - Prefer direct push to branch_state; open auto-merge state PR when push is blocked
+#   - PR fallback is blocked for advance + pr-created (use pending mode for L2 open_pr)
 #
 # Output:
 #   Commits state (and optional additional paths) to the resolved push branch
@@ -36,13 +37,8 @@ source "${SCRIPT_DIR}/prune_targets.sh"
 REJECT_REASON="${REJECT_REASON:-}"
 OPEN_REJECTIONS="${OPEN_REJECTIONS:-[]}"
 WRITE_TARGET_STATE="${WRITE_TARGET_STATE:-true}"
-ACTING_ON_ACTION="${ACTING_ON_ACTION:-}"
-ACTING_ON_TARGET_KEY="${ACTING_ON_TARGET_KEY:-}"
-ACTING_ON_LOOP_NAME="${ACTING_ON_LOOP_NAME:-}"
 ADDITIONAL_COMMIT_PATHS="${ADDITIONAL_COMMIT_PATHS:-}"
 STATE_PUSH_BRANCH="${STATE_PUSH_BRANCH:-}"
-COMMIT_TARGET_BRANCH="${COMMIT_TARGET_BRANCH:-}"
-SKIP_STATE_PR="${SKIP_STATE_PR:-false}"
 BASE_BRANCH="${BASE_BRANCH:-main}"
 TARGET_KEY="${TARGET_KEY:-}"
 OUTCOME="${OUTCOME:-}"
@@ -51,6 +47,7 @@ STATE_WRITE_MODE="${STATE_WRITE_MODE:-advance}"
 PENDING_PR_NUMBER="${PENDING_PR_NUMBER:-}"
 PENDING_PR_URL="${PENDING_PR_URL:-}"
 LOOP_NAME="${LOOP_NAME:-}"
+SKIP_STATE_PR="${SKIP_STATE_PR:-false}"
 
 READ_BRANCH=""
 PUSH_BRANCH=""
@@ -66,8 +63,9 @@ STATE_TMP=""
 #   STATE_FILE - Path to state JSON
 #   STATE_TMP - Prepared state content
 #   PUSH_BRANCH - Git push destination branch
-#   READ_BRANCH - Base branch for state PR fallback
+#   READ_BRANCH - branch_state for direct push
 #   SKIP_STATE_PR - When true, skip PR fallback on push failure
+#   STATE_WRITE_MODE - advance|pending|metadata|promote|clear_pending
 #   ADDITIONAL_COMMIT_PATHS - Optional comma-separated extra paths
 #   SHA - Cursor SHA for PR body text
 #   OUTCOME - Outcome for PR body text
@@ -122,7 +120,53 @@ function commit_and_push_state {
         return 0
     fi
 
+    if [[ ${STATE_WRITE_MODE} == "advance" && ${OUTCOME} == "pr-created" ]]; then
+        echo "::error::Direct push to ${PUSH_BRANCH} blocked and state PR fallback refused: advance mode with pr-created outcome. Use state_write_mode=pending for L2 open_pr."
+        exit 1
+    fi
+
     open_state_pr_fallback
+}
+
+#######################################
+# open_state_pr_fallback: Open auto-merge state PR when direct push is blocked
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   READ_BRANCH - PR base branch
+#   SHA - Cursor SHA for PR body
+#   OUTCOME - Outcome for PR body
+#   GH_TOKEN - GitHub token
+#
+# Returns:
+#   Exits 1 when state branch push fails
+#
+#######################################
+function open_state_pr_fallback {
+    local state_branch pr_url
+
+    echo "Direct push blocked; opening state PR."
+    state_branch="loop/state-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-$(openssl rand -hex 4)"
+    git checkout -B "${state_branch}"
+    if ! git push origin "${state_branch}"; then
+        echo "::error::Failed to push state branch ${state_branch}"
+        exit 1
+    fi
+    pr_url=$(gh pr create \
+        --repo "${GITHUB_REPOSITORY}" \
+        --base "${READ_BRANCH}" \
+        --head "${state_branch}" \
+        --title "chore(loop): update state [skip ci]" \
+        --body "Automated loop state update (mode: ${STATE_WRITE_MODE}, outcome: ${OUTCOME}, sha: ${SHA}).")
+    if gh pr merge "${pr_url}" --auto --delete-branch --squash 2> /dev/null; then
+        echo "State PR queued for auto-merge: ${pr_url}"
+    elif gh pr merge "${pr_url}" --delete-branch --squash 2> /dev/null; then
+        echo "State PR merged: ${pr_url}"
+    else
+        echo "::warning::State PR requires manual merge: ${pr_url}"
+    fi
 }
 
 #######################################
@@ -157,7 +201,6 @@ function configure_git_auth {
 #   READ_BRANCH - Branch used to read existing state
 #   PUSH_BRANCH - Branch used for checkout before commit
 #   STATE_FILE - State file path
-#   COMMIT_TARGET_BRANCH - Optional override push branch
 #
 # Returns:
 #   None
@@ -168,9 +211,6 @@ function load_state_tmp {
     trap 'rm -f "${STATE_TMP}"' EXIT
 
     git fetch origin "${READ_BRANCH}" --prune
-    if [[ -n ${COMMIT_TARGET_BRANCH} ]]; then
-        git fetch origin "${COMMIT_TARGET_BRANCH}" --prune 2> /dev/null || true
-    fi
 
     if git show "origin/${READ_BRANCH}:${STATE_FILE}" > "${STATE_TMP}" 2> /dev/null; then
         :
@@ -188,47 +228,6 @@ function load_state_tmp {
         git checkout -B "${PUSH_BRANCH}" "origin/${PUSH_BRANCH}"
     else
         git checkout -B "${PUSH_BRANCH}" "origin/${READ_BRANCH}" 2> /dev/null || git checkout -B "${PUSH_BRANCH}"
-    fi
-}
-
-#######################################
-# open_state_pr_fallback: Open auto-merge state PR when direct push is blocked
-#
-# Arguments:
-#   None
-#
-# Global Variables:
-#   READ_BRANCH - PR base branch
-#   SHA - Cursor SHA for PR body
-#   OUTCOME - Outcome for PR body
-#   GH_TOKEN - GitHub token
-#
-# Returns:
-#   Exits 1 when state branch push fails
-#
-#######################################
-function open_state_pr_fallback {
-    local state_branch pr_url
-
-    echo "Direct push blocked; opening state PR."
-    state_branch="loop/state-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-$(openssl rand -hex 4)"
-    git checkout -B "${state_branch}"
-    if ! git push origin "${state_branch}"; then
-        echo "::error::Failed to push state branch ${state_branch}"
-        exit 1
-    fi
-    pr_url=$(gh pr create \
-        --repo "${GITHUB_REPOSITORY}" \
-        --base "${READ_BRANCH}" \
-        --head "${state_branch}" \
-        --title "chore(loop): update state [skip ci]" \
-        --body "Automated loop state advance to ${SHA} (outcome: ${OUTCOME}).")
-    if gh pr merge "${pr_url}" --auto --delete-branch --squash 2> /dev/null; then
-        echo "State PR queued for auto-merge: ${pr_url}"
-    elif gh pr merge "${pr_url}" --delete-branch --squash 2> /dev/null; then
-        echo "State PR merged: ${pr_url}"
-    else
-        echo "::warning::State PR requires manual merge: ${pr_url}"
     fi
 }
 
@@ -665,7 +664,7 @@ function main {
     configure_git_auth
 
     READ_BRANCH="${STATE_PUSH_BRANCH:-${BASE_BRANCH}}"
-    PUSH_BRANCH="${COMMIT_TARGET_BRANCH:-${READ_BRANCH}}"
+    PUSH_BRANCH="${READ_BRANCH}"
 
     validate_branches
     validate_required_inputs

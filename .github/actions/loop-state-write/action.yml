@@ -8,11 +8,7 @@ inputs:
     required: false
   base_branch:
     default: "main"
-    description: "Base branch for state PR when direct push to a protected branch is blocked"
-    required: false
-  branch:
-    default: ""
-    description: "Deprecated: state always commits to state_push_branch"
+    description: "Default branch when state_push_branch is empty"
     required: false
   loop_name:
     default: ""
@@ -42,13 +38,9 @@ inputs:
     default: ""
     description: "Commit SHA to record in state for target"
     required: false
-  commit_target_branch:
-    default: ""
-    description: "When set, commit state to this branch instead of state_push_branch (bundle with fix PR)"
-    required: false
   skip_state_pr:
     default: "false"
-    description: "When true, do not open a state PR if direct push is blocked"
+    description: "When true, skip state PR fallback when direct push to branch_state is blocked"
     required: false
   state_file:
     description: "Path to state JSON file (e.g. .loop/state-docs-triage.json)"
@@ -81,7 +73,6 @@ runs:
       env:
         ADDITIONAL_COMMIT_PATHS: ${{ inputs.additional_commit_paths }}
         BASE_BRANCH: ${{ inputs.base_branch }}
-        COMMIT_TARGET_BRANCH: ${{ inputs.commit_target_branch }}
         GH_TOKEN: ${{ inputs.token }}
         LOOP_NAME: ${{ inputs.loop_name }}
         OPEN_REJECTIONS: ${{ inputs.open_rejections }}

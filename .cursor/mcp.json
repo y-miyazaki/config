@@ -1,27 +1,27 @@
 {
   "mcpServers": {
+    "codebase-memory-mcp": {
+      "args": [],
+      "command": "codebase-memory-mcp",
+      "type": "stdio"
+    },
     "context7": {
-      "type": "stdio",
+      "args": ["-y", "@upstash/context7-mcp@2.2.5"],
       "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp@2.2.5"]
+      "type": "stdio"
     },
     "fetch": {
-      "type": "stdio",
+      "args": ["mcp-server-fetch==2025.4.7"],
       "command": "uvx",
-      "args": ["mcp-server-fetch==2025.4.7"]
+      "type": "stdio"
     },
     "github": {
-      "type": "stdio",
-      "command": "bash",
       "args": [
         "-lc",
         "TOKEN=\"${GH_TOKEN:-$GITHUB_TOKEN}\"; exec uvx mcp-compressor==0.31.5 -- https://api.githubcopilot.com/mcp/ -H \"Authorization=Bearer ${TOKEN}\" --auth explicit-headers"
-      ]
-    },
-    "codebase-memory-mcp": {
-      "type": "stdio",
-      "command": "codebase-memory-mcp",
-      "args": []
+      ],
+      "command": "bash",
+      "type": "stdio"
     },
     "lean-ctx": {
       "type": "stdio",

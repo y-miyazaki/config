@@ -167,7 +167,7 @@ profiles = registry.get("profiles", {})
 
 PROFILE_RE = re.compile(r"^\s*detect_permissions_profile:\s*([^\s#]+)\s*$", re.MULTILINE)
 CALLER_USES_RE = re.compile(
-    r"uses:\s*\./\.github/workflows/(ci-loop-caller(?:-full-github)?\.yaml)",
+    r"uses:\s*\./\.github/workflows/(ci-loop-caller(?:-(?:full-github|pr-scan))?\.yaml)",
     re.MULTILINE,
 )
 PERMS_BLOCK_RE = re.compile(

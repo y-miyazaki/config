@@ -7,17 +7,6 @@
 name: on-loop-ci-sweeper
 
 on:
-  workflow_call:
-    secrets:
-      AGENT_TOKEN:
-        description: "Engine API key (mapped per engine input)"
-        required: true
-      MAINTENANCE_BOT_APP_CLIENT_ID:
-        description: "GitHub App client ID; remapped to BOT_APP_CLIENT_ID on ci-loop-caller"
-        required: false
-      MAINTENANCE_BOT_APP_PRIVATE_KEY:
-        description: "GitHub App private key; remapped to BOT_APP_PRIVATE_KEY on ci-loop-caller"
-        required: false
   workflow_dispatch: {}
   workflow_run: # zizmor: ignore[dangerous-triggers]
     types:
@@ -46,7 +35,7 @@ jobs:
       github.event_name != 'workflow_run' ||
       github.event.workflow_run.conclusion == 'failure' ||
       github.event.workflow_run.conclusion == 'startup_failure'
-    uses: ./.github/workflows/ci-loop-caller-full-github.yaml
+    uses: y-miyazaki/config/.github/workflows/ci-loop-caller-full-github.yaml@4a0df8bd929df6eeddc8f1286bdda0ad129d11d7 # v1.8.42
     with:
       additional_commit_paths: .loop/state-ci-sweeper-run-ledger.json
       agent_implementer_max_turns: 8
@@ -72,6 +61,8 @@ jobs:
         - Missing validation when the failure type is lint/syntax/test
         - Fixes for infra/env failures that should have been deferred
         - Hallucinated paths, commands, or APIs not present in the repository
+        - Diffs whose primary purpose is raising test coverage thresholds (coverage gate failures) — classify Watch, no edit
+        - Diffs whose primary purpose is dependency version bumps or lockfile churn from Renovate/Dependabot-class failures — classify Watch unless a named dependency-repair domain skill is in caller instructions
       agent_verifier_max_turns: 3
       agent_verifier_model: composer-2.5
       allowlist: ".github/**,.apm/packages/**,scripts/**,apm.yml,mise.toml,renovate/**,docs/**/*.md,README.md,mkdocs.yml"
@@ -84,7 +75,7 @@ jobs:
       # Keys must stay alphabetically ordered.
       detect_domain_env_json: |
         ${{ format(
-          '{"CI_SWEEPER_EVENT_HEAD_BRANCH":"{0}","CI_SWEEPER_HEAD_BRANCH":"{0}","CI_SWEEPER_HEAD_SHA":"{1}","CI_SWEEPER_LEDGER_FILE":".loop/state-ci-sweeper-run-ledger.json","CI_SWEEPER_REJECT_MAX_RETRIES":"3","CI_SWEEPER_REJECT_RETRY_POLICY":"block","CI_SWEEPER_RUN_URL":"{2}","CI_SWEEPER_WORKFLOW_NAME":"{3}","CI_SWEEPER_WORKFLOW_RUN_ID":"{4}"}',
+          '{{"CI_SWEEPER_EVENT_HEAD_BRANCH":"{0}","CI_SWEEPER_HEAD_BRANCH":"{0}","CI_SWEEPER_HEAD_SHA":"{1}","CI_SWEEPER_LEDGER_FILE":".loop/state-ci-sweeper-run-ledger.json","CI_SWEEPER_REJECT_MAX_RETRIES":"3","CI_SWEEPER_REJECT_RETRY_POLICY":"block","CI_SWEEPER_RUN_URL":"{2}","CI_SWEEPER_WORKFLOW_NAME":"{3}","CI_SWEEPER_WORKFLOW_RUN_ID":"{4}"}}',
           github.event.workflow_run.head_branch || 'main',
           github.event.workflow_run.head_sha || github.sha,
           github.event.workflow_run.html_url || '',
@@ -114,7 +105,18 @@ jobs:
         Fix the failing CI checks identified in the detection result.
         Classify flakes and infra/env failures as Watch — do not edit code for those.
         Apply the smallest change that resolves the logged failure.
-        Run stack-appropriate validation skills before finishing.
+
+        ## Stack routing (validation / repair skills)
+
+        | Failed workflow (hint)              | Domain skill to invoke                          |
+        | ----------------------------------- | ----------------------------------------------- |
+        | on-ci-push-github-actions-workflow  | github-actions-validation                       |
+        | on-ci-push-shell-script             | shell-script-validation                         |
+        | on-ci-push-markdown, on-cd-mkdocs    | markdown-validation                             |
+        | on-ci-push-mise-update-lock         | (minimal lockfile edit; run affected CI checks) |
+
+        Read each skill's SKILL.md under `.agents/skills/` or `.claude/skills/` before invoking.
+        Coverage-threshold and dependency-breakage failures: classify Watch — do not edit until caller verifier allows.
       skill_name: loop-ci-sweeper
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}

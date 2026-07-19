@@ -32,7 +32,6 @@ setup() {
     PENDING_PR_BLOCKED=0
     CIRCUIT_BREAKER_BLOCKED=0
     STATE_SCAN_GLOB="${DETECT_TMP}/state-*.json"
-    ACTING_ON_TTL_SECONDS=5400
 }
 
 teardown() {

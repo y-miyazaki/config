@@ -80,12 +80,13 @@ EOF
 }
 
 @test "fails when profile is not implemented" {
-    write_loop_caller_fixture "on-loop-pr-scan" \
-        "  contents: write
+    write_loop_caller_fixture "on-loop-ci-monitor" \
+        "  actions: read
+  contents: write
   copilot-requests: write
   pull-requests: write" \
         "ci-loop-caller.yaml" \
-        "      detect_permissions_profile: pr-scan"
+        "      detect_permissions_profile: ci-monitor"
 
     run bash "${VALIDATE_SCRIPT}"
     [ "$status" -eq 1 ]

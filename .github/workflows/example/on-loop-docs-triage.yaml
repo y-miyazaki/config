@@ -3,22 +3,12 @@
 # Design doc: docs/explanation/loop-engineering/workflows/loop-docs-triage-workflow-design.md
 # Caller inputs: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
 # Requires repository secret: AGENT_TOKEN (engine API key; see engine input).
+# Pass credentials via secrets: (callee BOT_APP_* / AGENT_TOKEN; remap MAINTENANCE_BOT_*). Optional with.environment for env-scoped secrets inside the reusable.
 name: on-loop-docs-triage
 
 on:
   schedule:
     - cron: "0 9 * * 1-5"
-  workflow_call:
-    secrets:
-      AGENT_TOKEN:
-        description: "Engine API key (mapped per engine input)"
-        required: true
-      MAINTENANCE_BOT_APP_CLIENT_ID:
-        description: "GitHub App client ID; remapped to BOT_APP_CLIENT_ID on ci-loop-caller"
-        required: false
-      MAINTENANCE_BOT_APP_PRIVATE_KEY:
-        description: "GitHub App private key; remapped to BOT_APP_PRIVATE_KEY on ci-loop-caller"
-        required: false
   workflow_dispatch: {}
 
 permissions:
@@ -34,7 +24,7 @@ concurrency:
 
 jobs:
   loop:
-    uses: ./.github/workflows/ci-loop-caller.yaml
+    uses: y-miyazaki/config/.github/workflows/ci-loop-caller.yaml@4a0df8bd929df6eeddc8f1286bdda0ad129d11d7 # v1.8.42
     with:
       agent_implementer_max_turns: 5
       agent_implementer_model: cursor-grok-4.5-low

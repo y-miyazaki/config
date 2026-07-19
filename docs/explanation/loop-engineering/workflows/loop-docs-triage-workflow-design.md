@@ -51,7 +51,7 @@ Skill execution boundaries: `loop-docs-triage` SKILL.md (`USE FOR` / `DO NOT USE
 
 Keys are passed in `on-loop-docs-triage.yaml` via `with:` on `ci-loop-caller.yaml` (alphabetically ordered). Multiline values (`agent_verifier_criteria`, `pr_body`, `prompt_instructions`) are defined inline in the caller workflow.
 
-Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md). Legacy env name mapping: [Loop Caller `env` Reference](loop-caller-env-reference.md). Platform branch/finalize caps: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
+Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md). Platform branch/finalize caps: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
 
 | Input / JSON key                                     | Description                                                                                                                                                                            | Dogfood value                                                  |
 | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
@@ -145,7 +145,7 @@ No `domain_persistence_script`.
 
 See [State delivery philosophy](../multi-branch-loops-design.md#state-delivery-philosophy) for platform rules.
 
-**Target (dogfood):** merge-gated `pending` + `on-loop-state-promote` — same as changelog. Do **not** enable `state_bundle_with_fix_pr`.
+**Target (dogfood):** merge-gated `pending` + `on-loop-state-promote` — same as changelog.
 
 Persistence: `state-docs-triage.json` on `branch_state` via [finalize inside ci-loop-agent](../loop-caller-workflows-design.md#finalize-inside-ci-loop-agent).
 

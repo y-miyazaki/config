@@ -7,11 +7,13 @@
 # - validation: missing target_key / invalid state push branch
 # - advance mode: last_sha + outcome; reset consecutive_failures on pr-created
 # - rejected outcome increments consecutive_failures / stores open_rejections
-# - acting_on set/clear without target write; no-op when unchanged
+# - no-op when unchanged
 # - metadata mode: outcome without advancing last_sha
 # - pending mode: record pending without advancing last_sha (finalize open_pr path)
 # - promote mode: pending.sha → last_sha; clear pending
 # - clear_pending mode: clear pending only; last_sha unchanged
+# - refuses PR fallback for advance + pr-created when push is blocked
+# - skip_state_pr warns when direct push is blocked
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -49,6 +51,38 @@ state_write_seed() {
     git -C "${STATE_WRITE_WORK}" push -q origin main
 }
 
+state_write_block_push() {
+    cat > "${STATE_WRITE_BARE}/hooks/pre-receive" << 'EOF'
+#!/bin/sh
+while read -r _ _ refname; do
+    case "${refname}" in
+        refs/heads/main) exit 1 ;;
+    esac
+done
+exit 0
+EOF
+    chmod +x "${STATE_WRITE_BARE}/hooks/pre-receive"
+}
+
+state_write_mock_gh() {
+    MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${MOCK_BIN}"
+    cat > "${MOCK_BIN}/gh" << 'EOF'
+#!/bin/bash
+if [[ "$1" == "pr" && "$2" == "create" ]]; then
+    echo "https://github.com/test/repo/pull/99"
+    exit 0
+fi
+if [[ "$1" == "pr" && "$2" == "merge" ]]; then
+    exit 0
+fi
+printf 'unexpected gh: %s\n' "$*" >&2
+exit 1
+EOF
+    chmod +x "${MOCK_BIN}/gh"
+    export PATH="${MOCK_BIN}:${PATH}"
+}
+
 setup() {
     state_write_git_setup
 }
@@ -60,7 +94,6 @@ setup() {
         BASE_BRANCH='main' \
         TARGET_KEY='' \
         WRITE_TARGET_STATE='false' \
-        ACTING_ON_ACTION='' \
         GITHUB_REPOSITORY='test/repo' \
         GITHUB_RUN_ID='1' \
         GITHUB_RUN_ATTEMPT='1'
@@ -76,7 +109,6 @@ setup() {
         STATE_PUSH_BRANCH='bad branch' \
         TARGET_KEY='integration:main' \
         WRITE_TARGET_STATE='false' \
-        ACTING_ON_ACTION='' \
         GITHUB_REPOSITORY='test/repo' \
         GITHUB_RUN_ID='1' \
         GITHUB_RUN_ATTEMPT='1'
@@ -94,7 +126,6 @@ setup() {
         OUTCOME='pr-created' \
         SHA='abcdefghi' \
         OPEN_REJECTIONS='[]' \
-        ACTING_ON_ACTION='' \
         GITHUB_REPOSITORY='test/repo' \
         GITHUB_RUN_ID='1' \
         GITHUB_RUN_ATTEMPT='1'
@@ -125,7 +156,6 @@ setup() {
         SHA='def456' \
         OPEN_REJECTIONS='[{"id":"r1"}]' \
         REJECT_REASON='verifier rejected' \
-        ACTING_ON_ACTION='' \
         GITHUB_REPOSITORY='test/repo' \
         GITHUB_RUN_ID='2' \
         GITHUB_RUN_ATTEMPT='1'
@@ -138,42 +168,6 @@ setup() {
     [ "$status" -eq 0 ]
 }
 
-@test "run.sh applies acting_on set and clear without target write" {
-    state_write_run \
-        GH_TOKEN='test-token' \
-        STATE_FILE='.loop/state.json' \
-        BASE_BRANCH='main' \
-        TARGET_KEY='integration:main' \
-        WRITE_TARGET_STATE='false' \
-        ACTING_ON_ACTION='set' \
-        ACTING_ON_TARGET_KEY='integration:main' \
-        ACTING_ON_LOOP_NAME='docs-triage' \
-        GITHUB_REPOSITORY='test/repo' \
-        GITHUB_RUN_ID='3' \
-        GITHUB_RUN_ATTEMPT='1'
-    [ "$status" -eq 0 ]
-    run jq -e \
-        '.acting_on.target_key == "integration:main"
-         and .acting_on.loop_name == "docs-triage"
-         and (.acting_on.started_at | type) == "string"' \
-        "${STATE_WRITE_WORK}/.loop/state.json"
-    [ "$status" -eq 0 ]
-
-    state_write_run \
-        GH_TOKEN='test-token' \
-        STATE_FILE='.loop/state.json' \
-        BASE_BRANCH='main' \
-        TARGET_KEY='integration:main' \
-        WRITE_TARGET_STATE='false' \
-        ACTING_ON_ACTION='clear' \
-        GITHUB_REPOSITORY='test/repo' \
-        GITHUB_RUN_ID='4' \
-        GITHUB_RUN_ATTEMPT='1'
-    [ "$status" -eq 0 ]
-    run jq -e 'has("acting_on") | not' "${STATE_WRITE_WORK}/.loop/state.json"
-    [ "$status" -eq 0 ]
-}
-
 @test "run.sh exits cleanly when state file has no changes" {
     state_write_run \
         GH_TOKEN='test-token' \
@@ -181,7 +175,6 @@ setup() {
         BASE_BRANCH='main' \
         TARGET_KEY='integration:main' \
         WRITE_TARGET_STATE='false' \
-        ACTING_ON_ACTION='' \
         GITHUB_REPOSITORY='test/repo' \
         GITHUB_RUN_ID='6' \
         GITHUB_RUN_ATTEMPT='1'
@@ -204,7 +197,6 @@ setup() {
         OUTCOME='rejected' \
         SHA='ignored000000' \
         OPEN_REJECTIONS='[]' \
-        ACTING_ON_ACTION='' \
         GITHUB_REPOSITORY='test/repo' \
         GITHUB_RUN_ID='7' \
         GITHUB_RUN_ATTEMPT='1'
@@ -235,7 +227,6 @@ setup() {
         PENDING_PR_URL='https://github.com/owner/repo/pull/42' \
         LOOP_NAME='changelog' \
         OPEN_REJECTIONS='[]' \
-        ACTING_ON_ACTION='' \
         GITHUB_REPOSITORY='test/repo' \
         GITHUB_RUN_ID='8' \
         GITHUB_RUN_ATTEMPT='1'
@@ -263,7 +254,6 @@ setup() {
         OUTCOME='merged' \
         PENDING_PR_NUMBER='99' \
         OPEN_REJECTIONS='[]' \
-        ACTING_ON_ACTION='' \
         GITHUB_REPOSITORY='test/repo' \
         GITHUB_RUN_ID='9' \
         GITHUB_RUN_ATTEMPT='1'
@@ -291,7 +281,6 @@ setup() {
         OUTCOME='pr-closed' \
         PENDING_PR_NUMBER='99' \
         OPEN_REJECTIONS='[]' \
-        ACTING_ON_ACTION='' \
         GITHUB_REPOSITORY='test/repo' \
         GITHUB_RUN_ID='10' \
         GITHUB_RUN_ATTEMPT='1'
@@ -302,6 +291,47 @@ setup() {
          and .targets["integration:main"].outcome == "pr-closed"' \
         "${STATE_WRITE_WORK}/.loop/state.json"
     [ "$status" -eq 0 ]
+}
+
+@test "run.sh refuses advance pr-created when direct push is blocked" {
+    state_write_block_push
+
+    state_write_run \
+        GH_TOKEN='test-token' \
+        STATE_FILE='.loop/state.json' \
+        BASE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='advance' \
+        OUTCOME='pr-created' \
+        SHA='abcdefghi' \
+        OPEN_REJECTIONS='[]' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='12' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 1 ]
+    [[ $output == *"state PR fallback refused"* ]]
+    [[ $output == *"advance mode with pr-created outcome"* ]]
+}
+
+@test "run.sh skips state PR fallback when skip_state_pr is true" {
+    state_write_block_push
+
+    state_write_run \
+        GH_TOKEN='test-token' \
+        STATE_FILE='.loop/state.json' \
+        BASE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        OUTCOME='merged' \
+        SHA='abcdefghi' \
+        OPEN_REJECTIONS='[]' \
+        SKIP_STATE_PR='true' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='13' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ $output == *"skip_state_pr=true"* ]]
 }
 
 @test "run.sh clear_pending mode no-ops when pending pr does not match" {
@@ -319,7 +349,6 @@ setup() {
         OUTCOME='pr-closed' \
         PENDING_PR_NUMBER='99' \
         OPEN_REJECTIONS='[]' \
-        ACTING_ON_ACTION='' \
         GITHUB_REPOSITORY='test/repo' \
         GITHUB_RUN_ID='11' \
         GITHUB_RUN_ATTEMPT='1'

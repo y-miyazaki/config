@@ -1,8 +1,8 @@
-# Reusable workflow: Loop caller orchestration
-# Shared detect → execute (matrix) → record-skip job graph for on-loop-*.yaml callers.
+# Reusable workflow: Loop caller orchestration (pr-scan detect profile)
+# Detect requires pull-requests: read — use only from callers that grant them.
 # Design doc: docs/explanation/loop-engineering/loop-caller-reusable-design.md
 # Inputs reference: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
-name: ci-loop-caller
+name: ci-loop-caller-pr-scan
 
 on:
   workflow_call:
@@ -202,6 +202,7 @@ jobs:
     permissions:
       actions: write
       contents: read
+      pull-requests: read
     outputs:
       additional_commit_paths: ${{ inputs.additional_commit_paths }}
       agent_implementer_max_turns: ${{ steps.detect.outputs.agent_implementer_max_turns }}

@@ -7,17 +7,6 @@
 name: on-loop-ci-sweeper
 
 on:
-  workflow_call:
-    secrets:
-      AGENT_TOKEN:
-        description: "Engine API key (mapped per engine input)"
-        required: true
-      MAINTENANCE_BOT_APP_CLIENT_ID:
-        description: "GitHub App client ID; remapped to BOT_APP_CLIENT_ID on ci-loop-caller"
-        required: false
-      MAINTENANCE_BOT_APP_PRIVATE_KEY:
-        description: "GitHub App private key; remapped to BOT_APP_PRIVATE_KEY on ci-loop-caller"
-        required: false
   workflow_dispatch: {}
   workflow_run: # zizmor: ignore[dangerous-triggers]
     types:

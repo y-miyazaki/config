@@ -41,5 +41,3 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    with:
-      markdownlint_flags: "README*.md docs/**/*.md"

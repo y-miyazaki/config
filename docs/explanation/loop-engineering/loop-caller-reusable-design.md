@@ -4,11 +4,11 @@ Extract shared `detect` → `execute` → `record-skip` job graph from `on-loop-
 
 **Status:** Implemented  
 **Scope:** GitHub Actions workflow structure for loop callers. Domain detect logic and platform target model are unchanged.  
-**Supersedes (partially):** caller-level `env:` blocks documented in [Loop Caller `env` Reference](workflows/loop-caller-env-reference.md).
+**Supersedes (partially):** caller-level `env:` blocks (see [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md)).
 
 ## Problem
 
-Today each `on-loop-<name>.yaml` duplicates ~150 lines of identical job wiring:
+Each `on-loop-<name>.yaml` previously duplicated ~150 lines of identical job wiring (resolved by `ci-loop-caller.yaml`; see [Implementation checklist](#implementation-checklist)).
 
 | Job | Actions / reusable called |
 | detect | `loop-detect` |
@@ -74,7 +74,7 @@ These constraints come from [Loop Caller Workflows Design](loop-caller-workflows
 | **Shared workflow concurrency**     | `on-loop-*.yaml` use `loop-state-<branch_state>` with `cancel-in-progress: false` and `queue: max` so detect runs on fresh state before execute                                                                              |
 | **Budget / circuit breaker**        | `record-skip` when `should_run == false` and `skip_reason` is `budget` or `circuit_breaker`                                                                                                                                  |
 | **`target_budget` deferral**        | When fan-out cap defers targets, `should_run` stays `true` and execute runs; `skip_reason=target_budget` is informational only — not recorded by `record-skip` (by design)                                                   |
-| **State push branch**               | `.loop/*` run-log/budget persistence uses `branch_state`. Changelog uses merge-gated `pending` on `branch_state` and `on-loop-state-promote` (default `state_bundle_with_fix_pr: false`).                                    |
+| **State push branch**               | `.loop/*` run-log/budget persistence uses `branch_state`. L2 `open_pr` loops use merge-gated `pending` on `branch_state` and `on-loop-state-promote`.                                                                        |
 | **Alphabetical keys**               | `inputs`, `with`, `env` (inside reusable jobs), `permissions` keys sorted A→Z                                                                                                                                                |
 
 ## Thin Caller Pattern
@@ -250,9 +250,10 @@ Detect job permissions are **profile-based** and declared per reusable workflow 
 | Profile       | Reusable workflow                 | Detect job | Job permissions                                           | Callers                |
 | ------------- | --------------------------------- | ---------- | --------------------------------------------------------- | ---------------------- |
 | `default`     | `ci-loop-caller.yaml`             | `detect`   | `actions: write`, `contents: read`                        | changelog, docs-triage |
+| `pr-scan`     | `ci-loop-caller-pr-scan.yaml`     | `detect`   | `actions: write`, `contents: read`, `pull-requests: read` | PR-watch loops         |
 | `full-github` | `ci-loop-caller-full-github.yaml` | `detect`   | `actions: write`, `contents: read`, `pull-requests: read` | ci-sweeper             |
 
-Caller workflow `permissions` = **execute baseline** (`actions: read`, `contents: write`, `pull-requests: write`, `copilot-requests: write`) + **profile `caller_adds`** (`actions: write` for both profiles). Reusable workflows cannot escalate beyond the caller grant. Thin callers select the profile by which reusable workflow they `uses:` (ci-sweeper → `ci-loop-caller-full-github.yaml`; changelog and docs-triage → `ci-loop-caller.yaml`).
+Caller workflow `permissions` = **execute baseline** (`actions: read`, `contents: write`, `pull-requests: write`, `copilot-requests: write`) + **profile `caller_adds`** (`actions: write` for default, pr-scan, and full-github). Reusable workflows cannot escalate beyond the caller grant. Thin callers select the profile by which reusable workflow they `uses:` (`ci-loop-caller.yaml` for integration-only; `ci-loop-caller-pr-scan.yaml` for `pr_enabled` without Actions API scan; `ci-loop-caller-full-github.yaml` for ci-sweeper).
 
 CI validation: `validate-loop-caller-permissions` composite action (run in `ci-github-actions-workflow`; local wrapper: `scripts/ci/validate_loop_caller_permissions.sh`).
 
@@ -318,7 +319,7 @@ New domain env keys go into `detect_domain_env_json` without editing reusable jo
 
 - [x] Add [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md) (specification; implementation pending).
 - [x] Update [Loop Caller Workflows Design](loop-caller-workflows-design.md) (planned refactor note, Phase 0 status).
-- [x] Mark [Loop Caller `env` Reference](workflows/loop-caller-env-reference.md) as deprecated; link to inputs reference.
+- [x] Remove legacy Loop Caller `env` Reference doc; link to inputs reference instead.
 - [x] Update per-loop workflow design docs (`Environment variables` → `Caller inputs`).
 - [x] Update [GitHub Workflows Design](../github-workflows-design.md) loop exception note.
 - [x] Register nav in `mkdocs.yml`.
@@ -329,8 +330,11 @@ New domain env keys go into `detect_domain_env_json` without editing reusable jo
 - [x] `ghalint run`
 - [x] `zizmor .github/workflows/`
 - [x] `scripts/ci/validate_loop_caller_permissions.sh`
+
+### 5. Release maintainer (manual)
+
 - [ ] Bump remote pins in `ci-loop-caller.yaml` / `ci-loop-agent.yaml` to release SHA containing merge-gated `pending`, `pending_pr` detect blocking, and `loop-state-promote`
-- [ ] `workflow_dispatch` smoke per loop (optional in implementation PR).
+- [ ] `workflow_dispatch` smoke per loop (optional)
 
 ## Risk Register
 
@@ -345,7 +349,7 @@ New domain env keys go into `detect_domain_env_json` without editing reusable jo
 ## References
 
 - [Loop Caller Workflows Design](loop-caller-workflows-design.md) — current job graph and invariants
-- [Loop Caller `env` Reference](workflows/loop-caller-env-reference.md) — legacy env keys (to be superseded)
+- [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md) — caller `with:` keys
 - [GitHub Workflows Design](../github-workflows-design.md) — `on-*` / `ci-*` naming and caller conventions
 - [Multi-Branch Loops Design](multi-branch-loops-design.md) — platform `LOOP_*` semantics
 - [Loop Engineering Design](loop-engineering-design.md) — L1/L2/L3 and finalize behavior

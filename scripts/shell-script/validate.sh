@@ -65,6 +65,8 @@ WARNINGS_COUNT=0
 declare -a PASSED_SCRIPTS_LIST=()
 declare -a FAILED_SCRIPTS_LIST=()
 declare -a WARNING_SCRIPTS_LIST=()
+declare -a BATS_FAILED_TESTS=()
+BATS_SUMMARY=""
 
 #######################################
 # show_usage: Display script usage information
@@ -624,6 +626,9 @@ function generate_summary_report {
     echo "  Total scripts validated: $TOTAL_SCRIPTS"
     echo "  Scripts passed: $PASSED_SCRIPTS"
     echo "  Scripts failed: $FAILED_SCRIPTS"
+    if [[ ${#BATS_FAILED_TESTS[@]} -gt 0 ]]; then
+        echo "  Bats test failures: ${#BATS_FAILED_TESTS[@]}"
+    fi
     echo "  Warnings issued: $WARNINGS_COUNT"
     echo ""
 
@@ -643,6 +648,17 @@ function generate_summary_report {
         echo ""
     fi
 
+    if [[ ${#BATS_FAILED_TESTS[@]} -gt 0 ]]; then
+        echo "❌ Bats test failures (${#BATS_FAILED_TESTS[@]}):"
+        for test in "${BATS_FAILED_TESTS[@]}"; do
+            echo "  - $test"
+        done
+        if [[ -n $BATS_SUMMARY ]]; then
+            echo "  Summary: $BATS_SUMMARY"
+        fi
+        echo ""
+    fi
+
     if [[ ${#WARNING_SCRIPTS_LIST[@]} -gt 0 ]]; then
         echo "⚠️  Scripts with warnings:"
         for script in "${WARNING_SCRIPTS_LIST[@]}"; do
@@ -652,14 +668,170 @@ function generate_summary_report {
     fi
 
     # Overall result
-    if [[ $FAILED_SCRIPTS -eq 0 ]]; then
+    if [[ $FAILED_SCRIPTS -eq 0 && ${#BATS_FAILED_TESTS[@]} -eq 0 ]]; then
         if [[ $WARNINGS_COUNT -eq 0 ]]; then
             echo "🎉 All scripts passed validation with no warnings!"
         else
             echo "✅ All scripts passed validation (with $WARNINGS_COUNT warnings)"
         fi
     else
-        echo "❌ $FAILED_SCRIPTS script(s) failed validation"
+        local failure_parts=()
+        if [[ $FAILED_SCRIPTS -gt 0 ]]; then
+            failure_parts+=("$FAILED_SCRIPTS script(s)")
+        fi
+        if [[ ${#BATS_FAILED_TESTS[@]} -gt 0 ]]; then
+            failure_parts+=("${#BATS_FAILED_TESTS[@]} bats test(s)")
+        fi
+        local joined=""
+        if [[ ${#failure_parts[@]} -eq 2 ]]; then
+            joined="${failure_parts[0]} and ${failure_parts[1]}"
+        elif [[ ${#failure_parts[@]} -eq 1 ]]; then
+            joined="${failure_parts[0]}"
+        fi
+        echo "❌ Validation failed: $joined"
+    fi
+}
+
+#######################################
+# print_bats_output: Print bats results (full or failures-only)
+#
+# Description:
+#   In verbose mode, prints full bats output. Otherwise prints only failing
+#   test blocks and the final summary line.
+#
+# Arguments:
+#   $1 - Path to captured bats TAP output file
+#   $2 - Bats exit code
+#
+# Global Variables:
+#   VERBOSE - Enable verbose output
+#   BATS_FAILED_TESTS - Populated with "file: test name" entries on failure
+#   BATS_SUMMARY - Final "N tests, ..." summary line
+#
+# Returns:
+#   None
+#
+# Usage:
+#   print_bats_output "/tmp/bats.out" 1
+#
+#######################################
+function print_bats_output {
+    local output_file="$1"
+    local bats_exit="$2"
+
+    collect_bats_failures_from_tap "$output_file"
+
+    if [[ $VERBOSE == "true" ]]; then
+        cat "$output_file"
+        return
+    fi
+
+    if [[ $bats_exit -eq 0 ]]; then
+        if [[ -n $BATS_SUMMARY ]]; then
+            echo "$BATS_SUMMARY"
+        else
+            echo "Bats tests passed"
+        fi
+        return
+    fi
+
+    local in_failure=false
+    while IFS= read -r line || [[ -n $line ]]; do
+        case "$line" in
+            not\ ok\ *)
+                in_failure=true
+                echo "$line"
+                ;;
+            ok\ *)
+                in_failure=false
+                ;;
+            \#*)
+                if [[ $in_failure == "true" ]]; then
+                    echo "$line"
+                fi
+                ;;
+        esac
+    done < "$output_file"
+
+    if [[ -n $BATS_SUMMARY ]]; then
+        echo ""
+        echo "$BATS_SUMMARY"
+    fi
+}
+
+#######################################
+# collect_bats_failures_from_tap: Populate BATS_FAILED_TESTS from TAP output
+#
+# Description:
+#   Parses bats TAP-format output and records failing tests.
+#
+# Arguments:
+#   $1 - Path to captured bats TAP output file
+#
+# Global Variables:
+#   BATS_FAILED_TESTS - Populated with "file: test name" entries
+#   BATS_SUMMARY - Human-readable test count summary
+#
+# Returns:
+#   None
+#
+# Usage:
+#   collect_bats_failures_from_tap "/tmp/bats.out"
+#
+#######################################
+function collect_bats_failures_from_tap {
+    local output_file="$1"
+    local current_test=""
+    local current_file=""
+    local ok_count=0
+    local fail_count=0
+    local skip_count=0
+    local total_count=0
+
+    BATS_FAILED_TESTS=()
+    BATS_SUMMARY=""
+
+    while IFS= read -r line || [[ -n $line ]]; do
+        case "$line" in
+            1..*)
+                total_count="${line#1..}"
+                ;;
+            ok\ *)
+                ok_count=$((ok_count + 1))
+                if [[ $line == *"# skip"* ]]; then
+                    skip_count=$((skip_count + 1))
+                fi
+                ;;
+            not\ ok\ *)
+                fail_count=$((fail_count + 1))
+                current_test="${line#not ok }"
+                current_test="${current_test#* }"
+                ;;
+            \#\ \(in\ test\ file\ *)
+                current_file="${line#\# (in test file }"
+                current_file="${current_file%%, line*}"
+                if [[ -n $current_test && -n $current_file ]]; then
+                    BATS_FAILED_TESTS+=("${current_file}: ${current_test}")
+                    current_test=""
+                fi
+                ;;
+        esac
+    done < "$output_file"
+
+    if [[ $total_count -gt 0 ]]; then
+        if [[ $fail_count -eq 0 ]]; then
+            if [[ $skip_count -gt 0 ]]; then
+                BATS_SUMMARY="${total_count} tests, 0 failures, ${skip_count} skipped"
+            else
+                BATS_SUMMARY="${total_count} tests passed"
+            fi
+        else
+            if [[ $skip_count -gt 0 ]]; then
+                BATS_SUMMARY="${total_count} tests, ${fail_count} failures, ${skip_count} skipped"
+            else
+                BATS_SUMMARY="${total_count} tests, ${fail_count} failures"
+            fi
+        fi
     fi
 }
 
@@ -704,26 +876,34 @@ function run_bats_tests {
     fi
 
     custom_log "INFO" "Running Bats tests with: $bats_bin"
+
+    local bats_output
+    bats_output=$(mktemp)
+    local bats_exit=0
+
     # Prefer running the test folder directly if present; run with -r to recurse into subdirectories
     if [[ -d "$WORKSPACE_ROOT/test/bats" ]]; then
-        # Change to workspace root so relative paths in tests work correctly
         pushd "$WORKSPACE_ROOT" > /dev/null || return 1
-        if "$bats_bin" -r "test/bats"; then
-            custom_log "INFO" "Bats tests passed"
-            popd > /dev/null || true
-            return 0
+        if "$bats_bin" -r "test/bats" --formatter tap > "$bats_output" 2>&1; then
+            bats_exit=0
         else
-            custom_log "ERROR" "Bats tests failed"
-            popd > /dev/null || true
-            return 1
+            bats_exit=$?
         fi
+        popd > /dev/null || true
+    elif "$bats_bin" "${tests[@]}" --formatter tap > "$bats_output" 2>&1; then
+        bats_exit=0
+    else
+        bats_exit=$?
     fi
 
-    if "$bats_bin" "${tests[@]}"; then
+    print_bats_output "$bats_output" "$bats_exit"
+    rm -f "$bats_output"
+
+    if [[ $bats_exit -eq 0 ]]; then
         custom_log "INFO" "Bats tests passed"
         return 0
     else
-        custom_log "ERROR" "Bats tests failed"
+        custom_log "ERROR" "Bats tests failed (${#BATS_FAILED_TESTS[@]} failure(s))"
         return 1
     fi
 }
@@ -1101,11 +1281,8 @@ function main {
     custom_echo_section "Bats Tests"
     mapfile -t bats_files < <(find_bats_tests)
     if [[ ${#bats_files[@]} -gt 0 ]]; then
-        # Run Bats tests; if failure, mark as failed
-        if ! run_bats_tests "${bats_files[@]}"; then
-            FAILED_SCRIPTS=$((FAILED_SCRIPTS + 1))
-            FAILED_SCRIPTS_LIST+=("bats tests failed")
-        fi
+        # Run Bats tests; failures are tracked in BATS_FAILED_TESTS
+        run_bats_tests "${bats_files[@]}" || true
     else
         custom_log "INFO" "No bats tests found to run"
     fi
@@ -1119,7 +1296,7 @@ function main {
     custom_echo_section "Validation Complete"
 
     # Exit with appropriate code
-    if [[ $FAILED_SCRIPTS -gt 0 ]]; then
+    if [[ $FAILED_SCRIPTS -gt 0 ]] || [[ ${#BATS_FAILED_TESTS[@]} -gt 0 ]]; then
         exit 1
     fi
 }

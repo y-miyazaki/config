@@ -28,6 +28,7 @@ Structured results for bash -n and shellcheck (syntax and lint only).
 - Script runs checks in fixed order.
 - Individual commands are for debugging only (see [references/common-individual-commands.md](references/common-individual-commands.md)).
 - **Do not review code design decisions** (use shell-script-review for that)
+- **Bats output:** By default only failing tests and the summary line are printed. Use `-v` for the full pass/fail listing.
 
 ### USE FOR:
 

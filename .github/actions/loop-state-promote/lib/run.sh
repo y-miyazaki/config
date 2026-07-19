@@ -12,6 +12,7 @@
 #   - Merged PRs promote pending.sha to last_sha
 #   - Closed-without-merge PRs clear pending only
 #   - Never push state commits onto fix-PR heads (avoids [skip ci] pollution)
+#   - Prefer direct push to branch_state; open auto-merge state PR when push is blocked
 #
 # Output:
 #   Commits updated state files to branch_state when matches exist
@@ -33,6 +34,7 @@ export LC_ALL=C.UTF-8
 MERGED="${MERGED:-false}"
 PR_NUMBER="${PR_NUMBER:?}"
 STATE_PUSH_BRANCH="${STATE_PUSH_BRANCH:-}"
+SKIP_STATE_PR="${SKIP_STATE_PR:-false}"
 OUTCOME=""
 WRITE_MODE=""
 
@@ -131,8 +133,58 @@ function commit_changed_state_files {
     fi
 
     git commit -m "chore(loop): ${WRITE_MODE} state for PR #${PR_NUMBER} [skip ci]"
-    git push origin HEAD:"${push_branch}"
-    echo "State ${WRITE_MODE} pushed to ${push_branch} for PR #${PR_NUMBER}."
+    if git push origin HEAD:"${push_branch}" 2> /dev/null; then
+        echo "State ${WRITE_MODE} pushed to ${push_branch} for PR #${PR_NUMBER}."
+        return 0
+    fi
+
+    if [[ ${SKIP_STATE_PR} == "true" ]]; then
+        echo "::warning::Direct push blocked; skipping state PR (skip_state_pr=true)."
+        return 0
+    fi
+
+    open_state_pr_fallback "${push_branch}"
+}
+
+#######################################
+# open_state_pr_fallback: Open auto-merge state PR when direct push is blocked
+#
+# Arguments:
+#   $1 - Base branch for the state PR
+#
+# Global Variables:
+#   PR_NUMBER - Closed pull request number
+#   WRITE_MODE - promote|clear_pending
+#   GH_TOKEN - GitHub token
+#
+# Returns:
+#   Exits 1 when state branch push fails
+#
+#######################################
+function open_state_pr_fallback {
+    local push_branch="$1"
+    local state_branch pr_url
+
+    echo "Direct push blocked; opening state promote PR."
+    state_branch="loop/state-promote-${GITHUB_RUN_ID:-0}-${GITHUB_RUN_ATTEMPT:-0}-$(openssl rand -hex 4)"
+    git checkout -B "${state_branch}"
+    if ! git push origin "${state_branch}"; then
+        echo "::error::Failed to push state branch ${state_branch}"
+        exit 1
+    fi
+    pr_url=$(gh pr create \
+        --repo "${GITHUB_REPOSITORY}" \
+        --base "${push_branch}" \
+        --head "${state_branch}" \
+        --title "chore(loop): ${WRITE_MODE} state for PR #${PR_NUMBER} [skip ci]" \
+        --body "Automated loop state ${WRITE_MODE} after PR #${PR_NUMBER} closed.")
+    if gh pr merge "${pr_url}" --auto --delete-branch --squash 2> /dev/null; then
+        echo "State promote PR queued for auto-merge: ${pr_url}"
+    elif gh pr merge "${pr_url}" --delete-branch --squash 2> /dev/null; then
+        echo "State promote PR merged: ${pr_url}"
+    else
+        echo "::warning::State promote PR requires manual merge: ${pr_url}"
+    fi
 }
 
 #######################################
