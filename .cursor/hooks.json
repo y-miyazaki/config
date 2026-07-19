@@ -3,69 +3,57 @@
     "stop": [
       {
         "command": ".cursor/hooks/common-hooks-cursor/scripts/actionlint.sh",
-        "timeoutSec": 60,
-        "_apm_source": "common-hooks-cursor"
+        "timeoutSec": 60
       },
       {
         "command": ".cursor/hooks/common-hooks-cursor/scripts/ghalint.sh",
-        "timeoutSec": 60,
-        "_apm_source": "common-hooks-cursor"
+        "timeoutSec": 60
       },
       {
         "command": ".cursor/hooks/common-hooks-cursor/scripts/zizmor.sh",
-        "timeoutSec": 60,
-        "_apm_source": "common-hooks-cursor"
+        "timeoutSec": 60
       },
       {
         "command": ".cursor/hooks/common-hooks-cursor/scripts/gitleaks.sh",
-        "timeoutSec": 60,
-        "_apm_source": "common-hooks-cursor"
+        "timeoutSec": 60
       },
       {
         "command": ".cursor/hooks/common-hooks-cursor/scripts/markdown_link_check.sh",
-        "timeoutSec": 240,
-        "_apm_source": "common-hooks-cursor"
+        "timeoutSec": 240
       },
       {
         "command": ".cursor/hooks/common-hooks-cursor/scripts/markdownlint_cli2.sh",
-        "timeoutSec": 120,
-        "_apm_source": "common-hooks-cursor"
+        "timeoutSec": 120
       },
       {
         "command": ".cursor/hooks/go-hooks-cursor/scripts/golangci_lint.sh",
-        "timeoutSec": 120,
-        "_apm_source": "go-hooks-cursor"
+        "timeoutSec": 120
       },
       {
         "command": ".cursor/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh",
-        "timeoutSec": 120,
-        "_apm_source": "shell-script-hooks-cursor"
+        "timeoutSec": 120
       }
     ],
     "postToolUse": [
       {
         "command": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook observe",
-        "timeoutSec": 5,
-        "_apm_source": "common-hooks-cursor"
+        "timeoutSec": 5
       }
     ],
     "preToolUse": [
       {
         "command": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook rewrite",
-        "timeoutSec": 15,
-        "_apm_source": "common-hooks-cursor"
+        "timeoutSec": 15
       },
       {
         "command": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook redirect",
-        "timeoutSec": 5,
-        "_apm_source": "common-hooks-cursor"
+        "timeoutSec": 5
       }
     ],
     "afterFileEdit": [
       {
         "command": ".cursor/hooks/shell-script-hooks-cursor/scripts/shfmt.sh",
-        "timeoutSec": 120,
-        "_apm_source": "shell-script-hooks-cursor"
+        "timeoutSec": 120
       }
     ]
   },
