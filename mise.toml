@@ -35,7 +35,7 @@ pnpm = { version = "11.11.0", depends = ["node"] }
 python = "3.14.6"
 
 # AI agent tools
-"github:microsoft/apm" = "v0.24.1"               # agent package manager
+"github:microsoft/apm" = "v0.25.0"               # agent package manager
 claude = "2.1.207"                               # Claude Code CLI
 "github:DeusData/codebase-memory-mcp" = "v0.9.0" # codebase memory MCP server
 "aqua:github/copilot-cli" = "1.0.70"             # GitHub Copilot CLI
