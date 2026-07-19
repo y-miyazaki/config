@@ -48,9 +48,15 @@ source "${SCRIPT_DIR}/lib/all.sh"
 SCOPE="all"
 SINCE_REF=""
 
+MARKER_PER_FILE_CAP=10
+MARKER_GLOBAL_CAP=50
+
 declare -a SIGNALS_JSON=()
 declare -a HOTSPOTS_JSON=()
 declare -a WARNINGS=()
+declare -A MARKER_FILE_COUNTS=()
+MARKER_GLOBAL_COUNT=0
+MARKER_TRUNCATED=false
 
 #######################################
 # show_usage: Display script usage information
@@ -143,6 +149,111 @@ function parse_arguments {
 }
 
 #######################################
+# append_signal: Append one signal object when marker caps allow
+#
+# Arguments:
+#   $1-$6 - kind, path, line, snippet, source, hint (hint optional)
+#
+# Global Variables:
+#   SIGNALS_JSON - Output array of signal objects
+#   MARKER_FILE_COUNTS - Per-file marker counts
+#   MARKER_GLOBAL_COUNT - Total marker signals collected
+#   MARKER_TRUNCATED - Set true when a cap is reached
+#   MARKER_PER_FILE_CAP - Maximum markers per file
+#   MARKER_GLOBAL_CAP - Maximum markers across the repository
+#
+# Returns:
+#   0 when appended; 1 when skipped due to caps
+#
+# Usage:
+#   append_signal "todo_comment" "src/main.go" "2" "// TODO: x" "git_grep" "code_quality"
+#
+#######################################
+function append_signal {
+    local kind="$1"
+    local path="$2"
+    local line="$3"
+    local snippet="$4"
+    local source="$5"
+    local hint="${6:-}"
+    local file_count
+
+    if [[ ${MARKER_GLOBAL_COUNT} -ge ${MARKER_GLOBAL_CAP} ]]; then
+        MARKER_TRUNCATED=true
+        return 1
+    fi
+
+    file_count="${MARKER_FILE_COUNTS[${path}]:-0}"
+    if [[ ${file_count} -ge ${MARKER_PER_FILE_CAP} ]]; then
+        MARKER_TRUNCATED=true
+        return 1
+    fi
+
+    MARKER_FILE_COUNTS[${path}]=$((file_count + 1))
+    MARKER_GLOBAL_COUNT=$((MARKER_GLOBAL_COUNT + 1))
+    SIGNALS_JSON+=("$(signal_object_json "${kind}" "${path}" "${line}" "${snippet}" "${source}" "${hint}")")
+}
+
+#######################################
+# collect_marker_signals: Scan tracked files for TODO/FIXME/HACK/XXX markers
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   SIGNALS_JSON - Output array of signal objects
+#   WARNINGS - Warning messages
+#   MARKER_FILE_COUNTS - Per-file marker counts (reset per run)
+#   MARKER_GLOBAL_COUNT - Total marker signals collected (reset per run)
+#   MARKER_TRUNCATED - Truncation flag (reset per run)
+#
+# Returns:
+#   None
+#
+# Usage:
+#   collect_marker_signals
+#
+#######################################
+function collect_marker_signals {
+    local marker_pattern='//[[:space:]]*(TODO|FIXME|HACK|XXX)\b|#[[:space:]]*(TODO|FIXME|HACK|XXX)\b|/\*[[:space:]]*(TODO|HACK|FIXME|XXX)\b|\b(TODO|FIXME|HACK|XXX):'
+    local grep_line file rest line content kind
+
+    MARKER_FILE_COUNTS=()
+    MARKER_GLOBAL_COUNT=0
+    MARKER_TRUNCATED=false
+
+    if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+        return 0
+    fi
+
+    while IFS= read -r grep_line; do
+        [[ -z ${grep_line} ]] && continue
+        if [[ ${MARKER_GLOBAL_COUNT} -ge ${MARKER_GLOBAL_CAP} ]]; then
+            MARKER_TRUNCATED=true
+            break
+        fi
+
+        file="${grep_line%%:*}"
+        rest="${grep_line#*:}"
+        line="${rest%%:*}"
+        content="${rest#*:}"
+
+        if path_is_pruned "${file}"; then
+            continue
+        fi
+
+        kind="$(marker_kind_from_line "${content}")"
+        [[ -z ${kind} ]] && continue
+
+        append_signal "${kind}" "${file}" "${line}" "${content}" "git_grep" "code_quality" || true
+    done < <(git grep -nI -E "${marker_pattern}" 2> /dev/null || true)
+
+    if [[ ${MARKER_TRUNCATED} == "true" ]]; then
+        WARNINGS+=("marker signals truncated")
+    fi
+}
+
+#######################################
 # hotspot_object_json: Build one hotspot object as JSON
 #
 # Arguments:
@@ -206,6 +317,36 @@ function hotspots_array_json {
         joined+="${hotspot}"
     done
     printf '[%s]' "${joined}"
+}
+
+#######################################
+# marker_kind_from_line: Map a matched line to a closed marker kind
+#
+# Arguments:
+#   $1 - Line content from git grep
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Marker kind on stdout, or empty when no marker is recognized
+#
+# Usage:
+#   kind="$(marker_kind_from_line "${content}")"
+#
+#######################################
+function marker_kind_from_line {
+    local line="$1"
+
+    if [[ ${line} =~ (^|[^A-Za-z])TODO([^A-Za-z]|$|:) ]]; then
+        printf 'todo_comment'
+    elif [[ ${line} =~ (^|[^A-Za-z])FIXME([^A-Za-z]|$|:) ]]; then
+        printf 'fixme'
+    elif [[ ${line} =~ (^|[^A-Za-z])HACK([^A-Za-z]|$|:) ]]; then
+        printf 'hack'
+    elif [[ ${line} =~ (^|[^A-Za-z])XXX([^A-Za-z]|$|:) ]]; then
+        printf 'xxx'
+    fi
 }
 
 #######################################
@@ -282,6 +423,53 @@ function output_json {
     json_field_array "hotspots" "${hotspots_array}" ","
     json_field_array "warnings" "${warnings_array}" ""
     json_object_end
+}
+
+#######################################
+# path_is_pruned: Return whether a repository path should be excluded
+#
+# Arguments:
+#   $1 - Repository-relative file path
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   0 when pruned; 1 when the path should be scanned
+#
+# Usage:
+#   path_is_pruned "node_modules/pkg/index.js"
+#
+#######################################
+function path_is_pruned {
+    local path="$1"
+    local part
+
+    path="${path#./}"
+
+    case "${path}" in
+        .git | .git/*) return 0 ;;
+        .agents | .agents/*) return 0 ;;
+        .cursor | .cursor/*) return 0 ;;
+        .claude | .claude/*) return 0 ;;
+        .kiro | .kiro/*) return 0 ;;
+        .vscode | .vscode/*) return 0 ;;
+        apm_modules | apm_modules/*) return 0 ;;
+        node_modules | node_modules/*) return 0 ;;
+        dist | dist/*) return 0 ;;
+        build | build/*) return 0 ;;
+        bin | bin/*) return 0 ;;
+        docs/report | docs/report/*) return 0 ;;
+    esac
+
+    IFS='/' read -ra parts <<< "${path}"
+    for part in "${parts[@]}"; do
+        if [[ ${part} == .* ]]; then
+            return 0
+        fi
+    done
+
+    return 1
 }
 
 #######################################
@@ -384,7 +572,7 @@ function signals_array_json {
 #######################################
 function main {
     parse_arguments "$@"
-    # Sensors (markers, deps, docs, churn) added in later tasks
+    collect_marker_signals
     output_json
 }
 

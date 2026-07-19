@@ -47,3 +47,18 @@ DETECT_SCRIPT="$(apm_skill_script_path loop-tech-debt detect_tech_debt.sh)"
     [ "$status" -eq 0 ]
     assert_detect_tech_debt_error_json "${output}" "requires --since"
 }
+
+@test "detect_tech_debt emits todo_comment and fixme marker signals" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/src"
+    printf 'package main\n// TODO: extract helper\n// FIXME: handle nil\nfunc main() {}\n' \
+        > "${GIT_TEST_REPO}/src/main.go"
+    git -C "${GIT_TEST_REPO}" add .
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_run "bash '${DETECT_SCRIPT}' --scope all"
+    [ "$status" -eq 0 ]
+    assert_detect_tech_debt_ok_json "${output}" "all" ""
+    [[ $output == *'"skip": false'* ]]
+    [[ $output == *'"todo_comment"'* ]]
+    [[ $output == *'"fixme"'* ]]
+}
