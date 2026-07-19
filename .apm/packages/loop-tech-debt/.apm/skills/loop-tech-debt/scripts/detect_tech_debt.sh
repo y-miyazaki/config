@@ -411,13 +411,13 @@ function collect_dependency_signals {
 #######################################
 function collect_doc_signals {
     local stale_days="${TECH_DEBT_STALE_DAYS:-365}"
-    local mlc_cli file
+    local mlc_cli="" file
 
     if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
         return 0
     fi
 
-    if mlc_cli="$(ensure_markdown_link_check)"; then
+    if ensure_markdown_link_check mlc_cli; then
         while IFS= read -r file; do
             [[ -z ${file} ]] && continue
             if path_is_pruned "${file}"; then
@@ -937,14 +937,17 @@ function doc_warn_once {
 #   MLC_VERSION - Pinned markdown-link-check version
 #
 # Returns:
-#   0 with CLI path on stdout when available; 1 when skipped
+#   0 when CLI path is written to the output variable; 1 when skipped
 #
 # Usage:
-#   mlc_cli="$(ensure_markdown_link_check)"
+#   ensure_markdown_link_check mlc_cli
 #
 #######################################
 function ensure_markdown_link_check {
-    local cache_dir mlc_cli
+    local -n out_path="${1:?output variable name required}"
+    local cache_dir candidate_cli
+
+    out_path=""
 
     if [[ ${TECH_DEBT_SKIP_MLC:-} == "true" ]]; then
         WARNINGS+=("docs link sensor skipped: TECH_DEBT_SKIP_MLC is set")
@@ -962,21 +965,22 @@ function ensure_markdown_link_check {
     fi
 
     cache_dir="${TMPDIR:-/tmp}/loop-tech-debt-mlc/${MLC_VERSION}"
-    mlc_cli="${cache_dir}/node_modules/.bin/markdown-link-check"
+    candidate_cli="${cache_dir}/node_modules/.bin/markdown-link-check"
 
-    if [[ ! -x ${mlc_cli} ]]; then
+    if [[ ! -x ${candidate_cli} ]]; then
         if ! npm install --prefix "${cache_dir}" "markdown-link-check@${MLC_VERSION}" > /dev/null 2>&1; then
             WARNINGS+=("docs link sensor skipped: markdown-link-check install failed")
             return 1
         fi
-        mlc_cli="${cache_dir}/node_modules/.bin/markdown-link-check"
-        if [[ ! -x ${mlc_cli} ]]; then
+        candidate_cli="${cache_dir}/node_modules/.bin/markdown-link-check"
+        if [[ ! -x ${candidate_cli} ]]; then
             WARNINGS+=("docs link sensor skipped: markdown-link-check binary missing after install")
             return 1
         fi
     fi
 
-    printf '%s' "${mlc_cli}"
+    # shellcheck disable=SC2034 # out_path is a nameref; assignment writes caller output
+    out_path="${candidate_cli}"
     return 0
 }
 
