@@ -29,4 +29,18 @@ Provided via prompt context by the calling workflow (loop-prompt-generate action
 
 `findings` may be an empty array. `level` defaults to `L2` when omitted by the workflow.
 
+### Detect → findings pipeline
+
+1. **`detect_changes.sh`** emits mechanical facts: `changed_files`, `deleted_files`, `renamed_files`, `affected_docs`, `commit_range`, `skip`. It does not build semantic `findings[]`.
+2. **`loop-prompt-generate`** (caller) maps detect facts into `findings[]` with `file`, `reason`, and `source_commit` before invoking this skill.
+3. **This skill** classifies each `findings[]` entry, fixes High-Priority items at `L2`/`L3`, and emits the triage report.
+
+### Operating levels
+
+| Level | Agent behavior for loop-docs-triage                       |
+| ----- | --------------------------------------------------------- |
+| `L1`  | Emit triage report only — do not edit documentation files |
+| `L2`  | Emit report and fix High-Priority items within allowlist  |
+| `L3`  | Same edits as `L2`; caller may auto-merge the docs PR     |
+
 Path allowlist and denylist are not JSON fields. They are injected in the implementer prompt `## Constraints` section from the caller (`LOOP_ALLOWLIST`, `LOOP_DENYLIST`). See [category-scope.md](category-scope.md).

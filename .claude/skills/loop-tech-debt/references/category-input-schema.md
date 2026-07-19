@@ -72,4 +72,12 @@ Detect emits only these kinds. Unexpected kinds → classify as Watch or Noise.
 
 `signals` and `hotspots` may be empty arrays. `level` defaults to `L2` when omitted by the workflow.
 
+### Operating levels
+
+| Level | Agent behavior for loop-tech-debt                                                                 |
+| ----- | ------------------------------------------------------------------------------------------------- |
+| `L1`  | Classify signals; emit session summary only — do not write `report_file`                          |
+| `L2`  | Classify signals; emit session summary and write `report_file` within allowlist                   |
+| `L3`  | Same file writes as `L2`; caller may auto-merge the report PR — still no application source edits |
+
 Path allowlist and denylist are not JSON fields. They are injected in the implementer prompt `## Constraints` section from the caller (`LOOP_ALLOWLIST`, `LOOP_DENYLIST`). See [category-scope.md](category-scope.md).

@@ -8,12 +8,16 @@ description: >-
 license: Apache-2.0
 metadata:
   author: y-miyazaki
-  version: "1.4.0"
+  version: "1.4.1"
 ---
 
 ## Input
 
 Injected JSON from loop-prompt-generate — see [category-input-schema.md](references/category-input-schema.md).
+
+## Operating levels
+
+`level` arrives in injected JSON — see [category-input-schema.md](references/category-input-schema.md#operating-levels).
 
 ## Output Specification
 

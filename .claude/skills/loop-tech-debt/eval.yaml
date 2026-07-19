@@ -1,10 +1,10 @@
 name: loop-tech-debt-eval
 description: >-
   Evaluation suite for loop-tech-debt.
-  Verifies taxonomy classification, session-summary contract, L1 report-only
-  behavior, and skip/no-action exits.
+  Verifies taxonomy classification, level behavior, previous_report comparison,
+  hotspot handling, truncation cap, and skip exits.
 skill: loop-tech-debt
-version: "1.0"
+version: "1.1"
 config:
   trials_per_task: 5
   timeout_seconds: 180
@@ -22,7 +22,9 @@ graders:
     weight: 1.0
     config:
       assertions:
-        - "'High-Priority' in output or 'Watch' in output"
+        - "'Summary' in output"
+        - "'Category' in output or 'No technical debt signals detected' in output"
+        - "'High-Priority' in output or 'Watch' in output or 'No technical debt signals detected' in output"
   - type: text
     name: report_sections
     weight: 0.5

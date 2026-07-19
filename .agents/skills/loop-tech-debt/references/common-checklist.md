@@ -6,11 +6,11 @@ Read [category-debt-taxonomy.md](category-debt-taxonomy.md) first. For each sign
 
 1. Assign one primary `category` using the decision order in the taxonomy
 2. Assign severity → report section (Critical / High-Priority / Watch / Noise)
-3. Add `nature` only when Fowler quadrant evidence is clear
+3. Add `nature` only when narrative evidence is clear (snippet, ADR, trade-off note) — omit for metrics-only signals (churn, `eol_hint`, `pin_drift`)
 
 ## Detect vs lint
 
-Classify detect facts only. Do not duplicate linter/SAST territory (complexity, style, unused, naming). Markers (`todo_comment`, `fixme`, `hack`, `xxx`) are secondary — default to Watch unless systemic.
+Classify detect facts only. Do not run or restate linter/SAST results. Use `code_quality` for maintainability inferred from markers/churn plus context — not linter metric duplication. Markers (`todo_comment`, `fixme`, `hack`, `xxx`) are secondary — default to Watch unless **systemic** (same marker theme or debt pattern across multiple core files, packages, or architectural boundaries — not an isolated comment).
 
 ## Out of scope
 
@@ -20,21 +20,39 @@ Report EOL/deprecation facts; do not recommend new-technology or tool migration 
 
 - Write only paths in the prompt `## Constraints` allowlist; never touch denylist paths (see `category-scope.md`)
 - Read source outside the allowlist for evidence only — never edit it
-- Cap Critical + High-Priority persisted findings at 25; defer overflow to Watch with a truncation note
+- Cap Critical + High-Priority persisted findings at 25; retain all Critical first, then High-Priority until the cap; defer overflow to Watch with a truncation note
 - Do not invent APIs, paths, metrics, ownership, or CVEs
 
 ## Evidence Rules
 
 - Cite `path` + `line` (or hotspot metric) from detect facts
 - Read ±30 lines around each signal before classifying
-- Compare against `previous_report` when present: mark resolved, recurring, or new
+- When `previous_report` is set, compare per [Previous report comparison](#previous-report-comparison) — match by path + kind + snippet/context; ignore line-number drift alone
 - Prefer taxonomy source language in `Reason` (e.g. "maintainability / complexity", "version lock", "wrong Diátaxis form")
+
+## Previous report comparison
+
+When `previous_report` is set and readable, match findings by **identity**, not line number alone:
+
+| Priority | Identity key                                      | Notes                                             |
+| -------- | ------------------------------------------------- | ------------------------------------------------- |
+| 1        | `path` + `kind` + normalized `snippet` / Evidence | Strip whitespace; compare substantive text        |
+| 2        | `path` + `kind`                                   | When snippet drifted but same marker or debt type |
+| 3        | `path` + `metric` (hotspots)                      | Churn-only hotspots                               |
+
+- **Resolved**: identity in previous Critical/High/Watch tables absent from current signals/hotspots with no equivalent source evidence
+- **Recurring**: same identity in both runs
+- **Regression**: identity listed under previous "Resolved Since Previous" but present again this run
+- **New**: identity in current run with no previous match
+
+Do not mark Resolved when only `line` shifted but `path` + `kind` + snippet still match.
 
 ## Output
 
 - Emit the session summary sections per `common-output-format.md`
 - Include `Category` (and `Nature` when set) on every Critical / High-Priority / Watch item
-- At `L2`/`L3`, also write the persisted report file per `common-output-format.md#persisted-report-file`
+- At `L1`, emit session summary only — do not write `report_file`
+- At `L2`/`L3`, write only allowlisted `report_file` per [category-scope.md](category-scope.md)
 
 ## Error Handling
 
@@ -56,3 +74,4 @@ Report EOL/deprecation facts; do not recommend new-technology or tool migration 
 | Hardcoded secret-like token in sample config           | `security`                       | Critical (report only)    |
 | High churn file, no concrete defect                    | `code_quality` or `architecture` | Watch                     |
 | `TODO: maybe later` with no actionable path            | —                                | Noise / Ignore            |
+| Same `hack` marker theme across 3+ core service files  | `code_quality` or `architecture` | High-Priority or Watch    |

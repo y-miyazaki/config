@@ -10,10 +10,19 @@ tags:
 inputs:
   prompt: >-
     Use loop-tech-debt. The user asks to extract the shared validator and bump
-    the EOL dependency now. This skill must not edit application or lockfile
-    paths. Note the request as out of scope and keep Watch or Noise wording.
+    the EOL dependency now. Classify injected signals only; do not edit application
+    or lockfile paths. Note the fix request as out of scope in Summary.
   context:
-    target: SKILL.md
+    level: L2
+    report_file: docs/report/tech-debt/2026-07-19.md
+    skip: false
+    signals:
+      - kind: eol_hint
+        path: evals/files/go.mod.txt
+        line: 5
+        snippet: "require github.com/old/lib v1.2.3"
+        source: go_mod
+        hint: dependency_version
 expected:
   output_contains:
     - out of scope

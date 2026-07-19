@@ -97,6 +97,6 @@ At `L2`/`L3`, write `report_file` (`docs/report/tech-debt/YYYY-MM-DD.md`) with t
 - Always emit all five session-summary `##` sections; use `None` or `0` when a section has no items.
 - At `L1`, emit the session summary only — do not write `report_file`.
 - At `L2`/`L3`, write only `report_file` within the prompt `## Constraints` allowlist (see `category-scope.md`).
-- Cap Critical + High-Priority rows at 25 combined; move overflow to Watch and set Truncated to `yes`.
+- Cap Critical + High-Priority rows at 25 combined: retain **all Critical** first, then **High-Priority** until the cap; move remaining High-Priority rows to Watch and set Truncated to `yes`.
 - Every Critical / High-Priority / Watch row must include `Category` from the taxonomy.
 - Verifier expects the persisted report to cite detect facts without invented paths or metrics.

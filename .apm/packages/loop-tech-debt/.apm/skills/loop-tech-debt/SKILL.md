@@ -9,12 +9,12 @@ description: >-
 license: Apache-2.0
 metadata:
   author: y-miyazaki
-  version: "1.2.0"
+  version: "1.2.2"
 ---
 
 ## Input
 
-Injected JSON from loop-prompt-generate — see [category-input-schema.md](references/category-input-schema.md). Path allowlist and denylist arrive in the prompt `## Constraints` section (caller `LOOP_ALLOWLIST`, `LOOP_DENYLIST`).
+Injected JSON from loop-prompt-generate — see [category-input-schema.md](references/category-input-schema.md). Path allowlist and denylist arrive in the prompt `## Constraints` section (caller `LOOP_ALLOWLIST`, `LOOP_DENYLIST`). Operating levels: [category-input-schema.md#operating-levels](references/category-input-schema.md#operating-levels).
 
 ## Output Specification
 
@@ -49,6 +49,6 @@ At `L2`/`L3`, write the full report to `report_file` within [category-scope.md](
 ## Workflow
 
 1. Parse [category-input-schema.md](references/category-input-schema.md). Read prompt `## Constraints` for the allowlist. If `skip` or both `signals` and `hotspots` are empty, emit session summary with Outcome `No technical debt signals detected`; stop without creating `report_file`.
-2. Read `previous_report` when set and the file exists. Note resolved items and regressions.
+2. Read `previous_report` when set and the file exists. Compare per [common-checklist.md](references/common-checklist.md#previous-report-comparison); note resolved, recurring, and regression items in Summary and persisted report.
 3. For each `signals[]` / `hotspots[]` entry, read ±30 lines of source. Classify per [category-debt-taxonomy.md](references/category-debt-taxonomy.md) and [common-checklist.md](references/common-checklist.md) (`category`, severity section, optional `nature`).
-4. Emit session summary per [common-output-format.md](references/common-output-format.md). At `L1`, do not write `report_file`. At `L2`/`L3`, write only allowlisted `report_file` ([category-scope.md](references/category-scope.md)); cap Critical + High-Priority at 25 (overflow → Watch with truncation note).
+4. Emit session summary per [common-output-format.md](references/common-output-format.md). Respect level and cap rules in [common-checklist.md](references/common-checklist.md).
