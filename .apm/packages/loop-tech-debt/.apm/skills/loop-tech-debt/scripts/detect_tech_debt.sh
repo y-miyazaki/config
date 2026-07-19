@@ -33,6 +33,9 @@
 #   TECH_DEBT_EOL_MODULES - Comma-separated module paths/names for eol_hint signals
 #   TECH_DEBT_STALE_DAYS    - Days before a markdown file is stale (default: 365)
 #   TECH_DEBT_SKIP_MLC      - When true, skip broken_doc_ref checks with a warning
+#   TECH_DEBT_CHURN_WINDOW  - Git log window for churn hotspots (default: 90d)
+#   TECH_DEBT_CHURN_MIN     - Minimum commit touches per path (default: 5)
+#   TECH_DEBT_CHURN_TOP     - Maximum churn hotspots to emit (default: 20)
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -207,6 +210,31 @@ function append_dependency_signal {
 }
 
 #######################################
+# append_hotspot: Append one hotspot object to HOTSPOTS_JSON
+#
+# Arguments:
+#   $1-$4 - path, metric, value, window
+#
+# Global Variables:
+#   HOTSPOTS_JSON - Output array of hotspot objects
+#
+# Returns:
+#   0 always
+#
+# Usage:
+#   append_hotspot "src/hot.go" "churn" "12" "90d"
+#
+#######################################
+function append_hotspot {
+    local path="$1"
+    local metric="$2"
+    local value="$3"
+    local window="$4"
+
+    HOTSPOTS_JSON+=("$(hotspot_object_json "${path}" "${metric}" "${value}" "${window}")")
+}
+
+#######################################
 # append_signal: Append one marker signal object when marker caps allow
 #
 # Arguments:
@@ -250,6 +278,66 @@ function append_signal {
     MARKER_FILE_COUNTS[${path}]=$((file_count + 1))
     MARKER_GLOBAL_COUNT=$((MARKER_GLOBAL_COUNT + 1))
     SIGNALS_JSON+=("$(signal_object_json "${kind}" "${path}" "${line}" "${snippet}" "${source}" "${hint}")")
+}
+
+#######################################
+# collect_churn_hotspots: Rank repository paths by recent git commit frequency
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   HOTSPOTS_JSON - Output array of hotspot objects
+#   WARNINGS - Warning messages when git log fails
+#
+# Returns:
+#   None
+#
+# Usage:
+#   collect_churn_hotspots
+#
+#######################################
+function collect_churn_hotspots {
+    local window="${TECH_DEBT_CHURN_WINDOW:-90d}"
+    local min_count="${TECH_DEBT_CHURN_MIN:-5}"
+    local top_n="${TECH_DEBT_CHURN_TOP:-20}"
+    local emitted=0
+    local count path
+    local log_output
+
+    if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+        return 0
+    fi
+
+    if ! log_output="$(git log --since="${window}" --name-only --pretty=format: 2> /dev/null)"; then
+        WARNINGS+=("churn sensor skipped: git log failed")
+        return
+    fi
+
+    if [[ -z ${log_output} ]]; then
+        return
+    fi
+
+    while read -r count path; do
+        [[ -z ${path} ]] && continue
+        if path_is_pruned "${path}"; then
+            continue
+        fi
+        if [[ ${count} -lt ${min_count} ]]; then
+            break
+        fi
+        append_hotspot "${path}" "churn" "${count}" "${window}"
+        emitted=$((emitted + 1))
+        if [[ ${emitted} -ge ${top_n} ]]; then
+            break
+        fi
+    done < <(
+        printf '%s\n' "${log_output}" \
+            | grep -v '^[[:space:]]*$' \
+            | sort \
+            | uniq -c \
+            | sort -rn
+    )
 }
 
 #######################################
@@ -1214,6 +1302,7 @@ function main {
     collect_marker_signals
     collect_dependency_signals
     collect_doc_signals
+    collect_churn_hotspots
     output_json
 }
 

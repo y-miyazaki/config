@@ -10,6 +10,7 @@
 # - detect_tech_debt emits marker and dependency signals
 # - detect_tech_debt emits broken_doc_ref via markdown-link-check (node+network on first run)
 # - detect_tech_debt emits stale_doc when TECH_DEBT_STALE_DAYS is zero
+# - detect_tech_debt emits churn hotspots for frequently edited files
 # - detect_tech_debt warns and continues when TECH_DEBT_SKIP_MLC=true
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -42,6 +43,23 @@ DETECT_SCRIPT="$(apm_skill_script_path loop-tech-debt detect_tech_debt.sh)"
     [ "$status" -eq 0 ]
     assert_detect_tech_debt_ok_json "${output}" "all" ""
     [[ $output == *'"broken_doc_ref"'* ]] || [[ $output == *'docs link sensor skipped'* ]]
+}
+
+@test "detect_tech_debt emits churn hotspot for frequently edited file" {
+    git_test_repo_setup
+    printf 'v1\n' > "${GIT_TEST_REPO}/hot.txt"
+    git -C "${GIT_TEST_REPO}" add hot.txt
+    git -C "${GIT_TEST_REPO}" commit -q -m "c1"
+    local i
+    for i in 2 3 4 5 6; do
+        echo "v${i}" >> "${GIT_TEST_REPO}/hot.txt"
+        git -C "${GIT_TEST_REPO}" add hot.txt
+        git -C "${GIT_TEST_REPO}" commit -q -m "c${i}"
+    done
+    git_test_repo_run "env TECH_DEBT_CHURN_MIN=5 TECH_DEBT_CHURN_WINDOW=365d TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    [[ $output == *'"metric": "churn"'* ]] || [[ $output == *'"metric":"churn"'* ]]
+    [[ $output == *'hot.txt'* ]]
 }
 
 @test "detect_tech_debt emits eol_hint when TECH_DEBT_EOL_MODULES matches go.mod require" {
