@@ -28,7 +28,7 @@ dependencies:
       registry: false
       transport: stdio
       command: uvx
-      args: ["awslabs.aws-documentation-mcp-server==1.1.24"]
+      args: ["awslabs.aws-documentation-mcp-server==1.1.26"]
     - name: aws-pricing-mcp-server
       registry: false
       transport: stdio
