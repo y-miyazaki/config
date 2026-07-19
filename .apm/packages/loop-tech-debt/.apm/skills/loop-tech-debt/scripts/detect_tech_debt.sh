@@ -26,10 +26,13 @@
 # - git
 #
 # Optional dependencies:
-# - jq (package.json dependency sensor)
+# - jq (package.json dependency sensor; mlc JSON parsing)
+# - node, npm (docs link sensor; self-contained markdown-link-check install)
 #
 # Optional environment:
 #   TECH_DEBT_EOL_MODULES - Comma-separated module paths/names for eol_hint signals
+#   TECH_DEBT_STALE_DAYS    - Days before a markdown file is stale (default: 365)
+#   TECH_DEBT_SKIP_MLC      - When true, skip broken_doc_ref checks with a warning
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -55,6 +58,7 @@ MARKER_PER_FILE_CAP=10
 MARKER_GLOBAL_CAP=50
 DEP_PER_FILE_CAP=20
 DEP_GLOBAL_CAP=50
+MLC_VERSION="3.14.2"
 
 declare -a SIGNALS_JSON=()
 declare -a HOTSPOTS_JSON=()
@@ -297,6 +301,51 @@ function collect_dependency_signals {
     if [[ ${DEP_TRUNCATED} == "true" ]]; then
         WARNINGS+=("dependency signals truncated")
     fi
+}
+
+#######################################
+# collect_doc_signals: Scan markdown for broken links and staleness
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   SIGNALS_JSON - Output array of signal objects
+#   WARNINGS - Warning messages
+#   MLC_VERSION - Pinned markdown-link-check version
+#
+# Returns:
+#   None
+#
+# Usage:
+#   collect_doc_signals
+#
+#######################################
+function collect_doc_signals {
+    local stale_days="${TECH_DEBT_STALE_DAYS:-365}"
+    local mlc_bin file
+
+    if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+        return 0
+    fi
+
+    if mlc_bin="$(ensure_markdown_link_check)"; then
+        while IFS= read -r file; do
+            [[ -z ${file} ]] && continue
+            if path_is_pruned "${file}"; then
+                continue
+            fi
+            doc_broken_links_from_mlc "${mlc_bin}" "${file}" || true
+        done < <(git ls-files 2> /dev/null | grep -E '\.md$' || true)
+    fi
+
+    while IFS= read -r file; do
+        [[ -z ${file} ]] && continue
+        if path_is_pruned "${file}"; then
+            continue
+        fi
+        doc_maybe_emit_stale_signal "${file}" "${stale_days}" || true
+    done < <(git ls-files 2> /dev/null | grep -E '\.md$' || true)
 }
 
 #######################################
@@ -553,6 +602,252 @@ function dependency_signals_from_package_json {
     done < <(jq -r '
         (.dependencies // {}), (.devDependencies // {}) | to_entries[] | [.key, .value] | @tsv
     ' "${path}" 2> /dev/null || true)
+}
+
+#######################################
+# doc_age_days_git: Return days since the last git commit touching a file
+#
+# Arguments:
+#   $1 - Repository-relative file path
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Age in whole days on stdout
+#
+# Usage:
+#   age="$(doc_age_days_git "docs/guide.md")"
+#
+#######################################
+function doc_age_days_git {
+    local file="$1"
+    local ts now age
+
+    ts="$(git log -1 --format=%ct -- "${file}" 2> /dev/null || true)"
+    if [[ -z ${ts} ]]; then
+        printf '0'
+        return 0
+    fi
+
+    now="$(date +%s)"
+    age=$(((now - ts) / 86400))
+    printf '%s' "${age}"
+}
+
+#######################################
+# doc_age_days_mtime: Return days since file mtime
+#
+# Arguments:
+#   $1 - Repository-relative file path
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Age in whole days on stdout
+#
+# Usage:
+#   age="$(doc_age_days_mtime "docs/guide.md")"
+#
+#######################################
+function doc_age_days_mtime {
+    local file="$1"
+    local ts now age
+
+    [[ -f ${file} ]] || {
+        printf '0'
+        return 0
+    }
+
+    if stat --version > /dev/null 2>&1; then
+        ts="$(stat -c %Y "${file}" 2> /dev/null || printf '0')"
+    else
+        ts="$(stat -f %m "${file}" 2> /dev/null || printf '0')"
+    fi
+
+    now="$(date +%s)"
+    age=$(((now - ts) / 86400))
+    printf '%s' "${age}"
+}
+
+#######################################
+# doc_broken_links_from_mlc: Emit broken_doc_ref signals for one markdown file
+#
+# Arguments:
+#   $1 - Path to markdown-link-check CLI (under self-contained cache)
+#   $2 - Repository-relative markdown file path
+#
+# Global Variables:
+#   SIGNALS_JSON - Output array of signal objects
+#
+# Returns:
+#   0 always
+#
+# Usage:
+#   doc_broken_links_from_mlc "${mlc_bin}" "docs/index.md"
+#
+#######################################
+function doc_broken_links_from_mlc {
+    local mlc_bin="$1"
+    local file="$2"
+    local mlc_cache json_output link line_num snippet status_code
+
+    mlc_cache="$(dirname "$(dirname "$(dirname "${mlc_bin}")")")"
+
+    json_output="$(NODE_PATH="${mlc_cache}/node_modules" node -e "
+const fs = require('fs');
+const path = require('path');
+const mlc = require('markdown-link-check');
+const file = process.argv[1];
+const resolved = path.resolve(file);
+const baseUrl = process.platform === 'win32'
+    ? 'file://' + path.dirname(resolved).replace(/\\\\/g, '/')
+    : 'file://' + path.dirname(resolved);
+const md = fs.readFileSync(file, 'utf8');
+mlc(md, { baseUrl }, (err, results) => {
+    if (err) process.exit(2);
+    const dead = (results || []).filter((result) => result.status === 'dead');
+    process.stdout.write(JSON.stringify(dead));
+});
+" "${file}" 2> /dev/null)" || return 0
+
+    [[ -n ${json_output} && ${json_output} != "[]" ]] || return 0
+
+    if ! command -v jq > /dev/null 2>&1; then
+        return 0
+    fi
+
+    while IFS=$'\t' read -r link status_code; do
+        [[ -z ${link} ]] && continue
+        line_num="$(doc_line_for_link "${file}" "${link}")"
+        snippet="dead link: ${link} (${status_code})"
+        SIGNALS_JSON+=("$(signal_object_json "broken_doc_ref" "${file}" "${line_num}" "${snippet}" "markdown_link_check" "documentation")")
+    done < <(jq -r '.[] | [.link, (.statusCode | tostring)] | @tsv' <<< "${json_output}" 2> /dev/null || true)
+}
+
+#######################################
+# doc_line_for_link: Find the first line number containing a link target
+#
+# Arguments:
+#   $1 - Repository-relative markdown file path
+#   $2 - Link URL or path to locate
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   1-based line number on stdout (defaults to 1)
+#
+# Usage:
+#   line="$(doc_line_for_link "docs/index.md" "./nope.md")"
+#
+#######################################
+function doc_line_for_link {
+    local file="$1"
+    local link="$2"
+    local line_num=1
+    local line_content
+
+    [[ -f ${file} ]] || {
+        printf '1'
+        return 0
+    }
+
+    while IFS= read -r line_content || [[ -n ${line_content} ]]; do
+        if [[ ${line_content} == *"${link}"* ]]; then
+            printf '%s' "${line_num}"
+            return 0
+        fi
+        line_num=$((line_num + 1))
+    done < "${file}"
+
+    printf '1'
+}
+
+#######################################
+# doc_maybe_emit_stale_signal: Emit stale_doc when age meets threshold
+#
+# Arguments:
+#   $1 - Repository-relative markdown file path
+#   $2 - Staleness threshold in days
+#
+# Global Variables:
+#   SIGNALS_JSON - Output array of signal objects
+#
+# Returns:
+#   0 always
+#
+# Usage:
+#   doc_maybe_emit_stale_signal "docs/old.md" "365"
+#
+#######################################
+function doc_maybe_emit_stale_signal {
+    local file="$1"
+    local stale_days="$2"
+    local git_age mtime_age snippet
+
+    git_age="$(doc_age_days_git "${file}")"
+    mtime_age="$(doc_age_days_mtime "${file}")"
+
+    if [[ ${git_age} -ge ${stale_days} || ${mtime_age} -ge ${stale_days} ]]; then
+        snippet="last updated ${git_age}d ago (git)"
+        SIGNALS_JSON+=("$(signal_object_json "stale_doc" "${file}" "1" "${snippet}" "git_log" "documentation")")
+    fi
+}
+
+#######################################
+# ensure_markdown_link_check: Install or locate pinned markdown-link-check
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   WARNINGS - Warning messages appended on recoverable failure
+#   MLC_VERSION - Pinned markdown-link-check version
+#
+# Returns:
+#   0 with CLI path on stdout when available; 1 when skipped
+#
+# Usage:
+#   mlc_bin="$(ensure_markdown_link_check)"
+#
+#######################################
+function ensure_markdown_link_check {
+    local cache_dir mlc_bin
+
+    if [[ ${TECH_DEBT_SKIP_MLC:-} == "true" ]]; then
+        WARNINGS+=("docs link sensor skipped: TECH_DEBT_SKIP_MLC is set")
+        return 1
+    fi
+
+    if ! command -v node > /dev/null 2>&1 || ! node -e "process.exit(0)" > /dev/null 2>&1; then
+        WARNINGS+=("docs link sensor skipped: node not available")
+        return 1
+    fi
+
+    if ! command -v npm > /dev/null 2>&1 || ! npm --version > /dev/null 2>&1; then
+        WARNINGS+=("docs link sensor skipped: npm not available")
+        return 1
+    fi
+
+    cache_dir="${TMPDIR:-/tmp}/loop-tech-debt-mlc/${MLC_VERSION}"
+    mlc_bin="${cache_dir}/node_modules/.bin/markdown-link-check"
+
+    if [[ ! -x ${mlc_bin} ]]; then
+        if ! npm install --prefix "${cache_dir}" "markdown-link-check@${MLC_VERSION}" > /dev/null 2>&1; then
+            WARNINGS+=("docs link sensor skipped: markdown-link-check install failed")
+            return 1
+        fi
+        mlc_bin="${cache_dir}/node_modules/.bin/markdown-link-check"
+        if [[ ! -x ${mlc_bin} ]]; then
+            WARNINGS+=("docs link sensor skipped: markdown-link-check binary missing after install")
+            return 1
+        fi
+    fi
+
+    printf '%s' "${mlc_bin}"
+    return 0
 }
 
 #######################################
@@ -876,6 +1171,7 @@ function main {
     parse_arguments "$@"
     collect_marker_signals
     collect_dependency_signals
+    collect_doc_signals
     output_json
 }
 

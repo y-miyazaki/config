@@ -8,6 +8,9 @@
 # - detect_tech_debt rejects unknown --scope
 # - detect_tech_debt range without --since returns error JSON exit 0
 # - detect_tech_debt emits marker and dependency signals
+# - detect_tech_debt emits broken_doc_ref via markdown-link-check (node+network on first run)
+# - detect_tech_debt emits stale_doc when TECH_DEBT_STALE_DAYS is zero
+# - detect_tech_debt warns and continues when TECH_DEBT_SKIP_MLC=true
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -29,6 +32,18 @@ DETECT_SCRIPT="$(apm_skill_script_path loop-tech-debt detect_tech_debt.sh)"
     [[ $output == *'"skip": true'* ]]
 }
 
+@test "detect_tech_debt emits broken_doc_ref for missing relative markdown link" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/docs"
+    printf '# Doc\n\nSee [missing](./nope.md)\n' > "${GIT_TEST_REPO}/docs/index.md"
+    git -C "${GIT_TEST_REPO}" add .
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_run "bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    assert_detect_tech_debt_ok_json "${output}" "all" ""
+    [[ $output == *'"broken_doc_ref"'* ]] || [[ $output == *'docs link sensor skipped'* ]]
+}
+
 @test "detect_tech_debt emits eol_hint when TECH_DEBT_EOL_MODULES matches go.mod require" {
     git_test_repo_setup
     cat > "${GIT_TEST_REPO}/go.mod" << 'EOF'
@@ -43,6 +58,17 @@ EOF
     git_test_repo_run "env TECH_DEBT_EOL_MODULES='github.com/old/lib' bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     [[ $output == *'"eol_hint"'* ]]
+}
+
+@test "detect_tech_debt emits stale_doc when TECH_DEBT_STALE_DAYS is zero" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/docs"
+    printf '# Old\n' > "${GIT_TEST_REPO}/docs/old.md"
+    git -C "${GIT_TEST_REPO}" add .
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_run "env TECH_DEBT_STALE_DAYS=0 TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    [[ $output == *'"stale_doc"'* ]]
 }
 
 @test "detect_tech_debt emits todo_comment and fixme marker signals" {
@@ -71,26 +97,6 @@ EOF
     [[ $output == *'"version_range"'* ]]
 }
 
-@test "detect_tech_debt range without --since returns error JSON exit 0" {
-    git_test_repo_setup
-    touch "${GIT_TEST_REPO}/file.txt"
-    git -C "${GIT_TEST_REPO}" add file.txt
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
-    git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range"
-    [ "$status" -eq 0 ]
-    assert_detect_tech_debt_error_json "${output}" "requires --since"
-}
-
-@test "detect_tech_debt rejects unknown --scope" {
-    git_test_repo_setup
-    touch "${GIT_TEST_REPO}/file.txt"
-    git -C "${GIT_TEST_REPO}" add file.txt
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
-    git_test_repo_run "bash '${DETECT_SCRIPT}' --scope weird"
-    [ "$status" -eq 0 ]
-    assert_detect_tech_debt_error_json "${output}" "scope"
-}
-
 @test "detect_tech_debt keeps dependency signals when marker cap is reached" {
     git_test_repo_setup
     mkdir -p "${GIT_TEST_REPO}/src"
@@ -117,4 +123,34 @@ EOF
     [ "$status" -eq 0 ]
     [[ $output == *'"marker signals truncated"'* ]]
     [[ $output == *'"eol_hint"'* ]]
+}
+
+@test "detect_tech_debt range without --since returns error JSON exit 0" {
+    git_test_repo_setup
+    touch "${GIT_TEST_REPO}/file.txt"
+    git -C "${GIT_TEST_REPO}" add file.txt
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range"
+    [ "$status" -eq 0 ]
+    assert_detect_tech_debt_error_json "${output}" "requires --since"
+}
+
+@test "detect_tech_debt rejects unknown --scope" {
+    git_test_repo_setup
+    touch "${GIT_TEST_REPO}/file.txt"
+    git -C "${GIT_TEST_REPO}" add file.txt
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_run "bash '${DETECT_SCRIPT}' --scope weird"
+    [ "$status" -eq 0 ]
+    assert_detect_tech_debt_error_json "${output}" "scope"
+}
+
+@test "detect_tech_debt warns and continues when TECH_DEBT_SKIP_MLC=true" {
+    git_test_repo_setup
+    printf '# x\n' > "${GIT_TEST_REPO}/README.md"
+    git -C "${GIT_TEST_REPO}" add .
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_run "env TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    [[ $output == *'"warnings"'* ]]
 }
