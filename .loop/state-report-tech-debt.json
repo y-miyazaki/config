@@ -1,11 +1,36 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-07-20T08:09:58Z",
-      "outcome": "merged",
-      "consecutive_failures": 0,
-      "open_rejections": [],
-      "last_reject_reason": "Single allowlisted report file; 24 signals and 20 hotspots classified with verified paths, metrics, and evidence; 0 Critical/High findings.",
+      "last_run": "2026-07-20T10:06:02Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
+      "open_rejections": [
+        {
+          "attempt": 1,
+          "files": [
+            "docs/report/report-tech-debt/2026-07-20.md"
+          ],
+          "issue": "Verifier output missing or unclear",
+          "fix": "Verifier output missing or unclear"
+        },
+        {
+          "attempt": 2,
+          "files": [
+            "docs/report/report-tech-debt/2026-07-20.md"
+          ],
+          "issue": "Verifier output missing or unclear",
+          "fix": "Verifier output missing or unclear"
+        },
+        {
+          "attempt": 3,
+          "files": [
+            "docs/report/report-tech-debt/2026-07-20.md"
+          ],
+          "issue": "Verifier output missing or unclear",
+          "fix": "Verifier output missing or unclear"
+        }
+      ],
+      "last_reject_reason": "Verifier output missing or unclear",
       "last_sha": "f62642e2ae2becc53dd10e1d5f4b54d7b278e653"
     }
   }
