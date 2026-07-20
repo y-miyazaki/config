@@ -69,7 +69,7 @@ jobs:
           private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
 
       - name: Configure git auth
-        uses: y-miyazaki/config/.github/actions/git-auth@c45fee35a1345e33d430261aecce14c71c1d296f # v1.8.47
+        uses: y-miyazaki/config/.github/actions/git-auth@a70151a9a3ce078c8f8b1f2db6bb96c9313dd222 # v1.8.47
         with:
           operation: configure
           token: ${{ steps.app-token.outputs.token }}
@@ -85,14 +85,14 @@ jobs:
 
       - name: Clear git auth
         if: always()
-        uses: y-miyazaki/config/.github/actions/git-auth@c45fee35a1345e33d430261aecce14c71c1d296f # v1.8.47
+        uses: y-miyazaki/config/.github/actions/git-auth@a70151a9a3ce078c8f8b1f2db6bb96c9313dd222 # v1.8.47
         with:
           operation: clear
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@c45fee35a1345e33d430261aecce14c71c1d296f # v1.8.47
+        uses: y-miyazaki/config/.github/actions/summary@a70151a9a3ce078c8f8b1f2db6bb96c9313dd222 # v1.8.47
         with:
           params: |
             environment: ${{ inputs.environment }}
