@@ -9,7 +9,7 @@ inputs:
     Use loop-changelog. Context has skip=true and empty commits/releases.
     Emit the full changelog report with Commits Processed, Skipped Commits, and
     Summary. Outcome must be No unreleased changelog commits. Do not edit
-    CHANGELOG.md.
+    CHANGELOG.md. Emit PR ## Overview and ## Summary plus Session Metrics table with Commits Processed and Skipped Commits sections.
   context:
     changelog_file: CHANGELOG.md
     changelog_exists: true

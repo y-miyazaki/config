@@ -63,13 +63,7 @@ jobs:
       loop_name: report-tech-debt
       max_targets_per_schedule: 1
       no_changes_verdict: REJECT
-      pr_body: |
-        ## Summary
-
-        Automated technical debt report by `loop-report-tech-debt`.
-
-        ---
-        *This PR was created by a loop automation. Review before merging.*
+      pr_body: ""
       pr_enabled: false
       pr_title: "docs(report): technical debt report (loop-report-tech-debt)"
       prompt_instructions: |

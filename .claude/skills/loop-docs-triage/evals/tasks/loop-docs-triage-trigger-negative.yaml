@@ -12,7 +12,7 @@ inputs:
   prompt: >-
     Use loop-docs-triage. The user asks to fix a bug in src/handler.go. This is
     not documentation triage. Note the request as out of scope. Emit High-Priority,
-    Watch, Noise / Ignore, and Summary without editing src paths.
+    Watch, Noise / Ignore, and Summary without editing src paths. Emit PR ## Overview and ## Summary plus Session Metrics table with High-Priority Items, Watch Items, and Noise / Ignore sections.
   context:
     level: L2
     skip: false

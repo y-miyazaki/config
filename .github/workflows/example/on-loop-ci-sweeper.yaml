@@ -90,13 +90,7 @@ jobs:
       loop_name: ci-sweeper
       max_targets_per_schedule: 3
       no_changes_verdict: REJECT
-      pr_body: |
-        ## Summary
-
-        Automated minimal CI fix by `loop-ci-sweeper`.
-
-        ---
-        *This PR was created by a loop automation. Review before merging.*
+      pr_body: ""
       pr_enabled: true
       pr_exclude: fork,draft,label:no-loop
       pr_include_bots: ""

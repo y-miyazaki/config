@@ -70,13 +70,7 @@ jobs:
       loop_name: changelog
       max_targets_per_schedule: 3
       no_changes_verdict: REJECT
-      pr_body: |
-        ## Summary
-
-        Automated CHANGELOG.md update by `loop-changelog`.
-
-        ---
-        *This PR was created by a loop automation. Review before merging.*
+      pr_body: ""
       pr_title: "chore(changelog): update CHANGELOG.md (loop-changelog)"
       prompt_instructions: |
         Update the target changelog file using Keep a Changelog section names.

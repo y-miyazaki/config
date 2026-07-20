@@ -10,7 +10,7 @@ inputs:
   prompt: >-
     Use loop-ci-sweeper at L2. Classify the injected shellcheck regression from
     failures[]. Emit the full triage report with Actionable Fixes, Watch Items,
-    Ignored, and Summary. Do not edit files in this mock eval.
+    Ignored, and Summary. Do not edit files in this mock eval. Emit PR ## Overview and ## Summary plus Session Metrics table with Actionable Fixes, Watch Items, and Ignored sections.
   context:
     level: L2
     skip: false

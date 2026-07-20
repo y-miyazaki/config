@@ -9,7 +9,7 @@ inputs:
     Use loop-docs-triage at L2. A finding points at src/infrastructure/deploy.md
     which is on the denylist. Classify it as Watch or Noise / Ignore; do not
     edit denylist paths. Fix only the allowlisted stale doc finding as
-    High-Priority.
+    High-Priority. Emit PR ## Overview and ## Summary plus Session Metrics table with High-Priority Items, Watch Items, and Noise / Ignore sections.
   context:
     commit_range: eval0001..eval0002
     level: L2

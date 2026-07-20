@@ -49,7 +49,7 @@ At `L2`/`L3`, edit `CHANGELOG.md` within [category-scope.md](references/category
 
 ## Workflow
 
-1. Parse [category-input-schema.md](references/category-input-schema.md). If `skip` or both `commits` and `releases` are empty, emit report with Summary `No unreleased changelog commits`; stop.
+1. Parse [category-input-schema.md](references/category-input-schema.md). If `skip` or both `commits` and `releases` are empty, emit report with Session Metrics Outcome `No unreleased changelog commits`; stop.
 2. Map commits and promote releases per [common-checklist.md](references/common-checklist.md).
 3. At `L2`/`L3`, edit only `changelog_file` per [category-scope.md](references/category-scope.md).
-4. Output per [common-output-format.md](references/common-output-format.md).
+4. Output session report per [common-output-format.md](references/common-output-format.md); at synthesis time load `assets/pr-body-template.md` and emit `## Overview` (commits processed, CHANGELOG sections updated) + `## Summary` for PR composition.

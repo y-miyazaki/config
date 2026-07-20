@@ -191,12 +191,14 @@ function create_pr_body {
     target_json="$(normalize_json_object "$(read_json_payload "${_JSON_FILE_TARGET}" "${TARGET_JSON:-"{}"}")")"
 
     CHANGED_FILES_JSON="$(jq -c '.changed_files // []' <<< "${notify_json}")"
+    AGENT_REPORT_OVERVIEW="$(jq -r '.agent_report_overview // empty' <<< "${notify_json}")"
     AGENT_REPORT_SUMMARY="$(jq -r '.agent_report_summary // empty' <<< "${notify_json}")"
     TARGET_KEY="$(jq -r '.key // empty' <<< "${target_json}" 2> /dev/null || true)"
 
     export PR_BODY_PREFIX="${PR_BODY}"
     export DETECT_RESULT_JSON="${detect_json}"
     export CHANGED_FILES_JSON
+    export AGENT_REPORT_OVERVIEW
     export AGENT_REPORT_SUMMARY
     export LEVEL
     export TARGET_KEY

@@ -11,7 +11,7 @@ inputs:
     Use loop-report-tech-debt at L1. Classify the injected signal with Category
     code_quality under High-Priority (or Watch if evidence is weak). Emit the
     full session summary including Critical, High-Priority, Watch, Noise / Ignore,
-    and Summary. Do not write report_file.
+    and Summary. Do not write report_file. Emit PR ## Overview and ## Summary plus Session Metrics table with Critical, High-Priority, Watch, and Noise / Ignore sections including Category fields.
   context:
     level: L1
     report_file: docs/report/report-tech-debt/2026-07-19.md

@@ -4,6 +4,7 @@
 # Tests for .github/actions/loop-notify-pr/lib/notify.sh
 
 # Use cases:
+# - build_comment_body includes agent overview and summary from notify json
 # - build_comment_body includes agent appendix when present
 # - build_comment_body includes fix context from notify json
 # - build_comment_body includes marker and outcome
@@ -48,6 +49,20 @@ setup() {
 
 teardown() {
     rm -f "${GITHUB_OUTPUT:-}"
+}
+
+@test "build_comment_body includes agent overview and summary from notify json" {
+    NOTIFY_CONTEXT_JSON='{"changed_files":["docs/a.md"],"diff_stat":" 1 file changed","fix_summary":"Address CI failure in lint (ci-test)","agent_report_overview":"CI failed on MD001; fixed heading in docs/foo.md.","agent_report_summary":"### Fixes Applied\n\n| Workflow / Job | Root cause | Fix |\n| --- | --- | --- |\n| ci / lint | MD001 | heading fix |","agent_summary":"","baseline_ref":"abc"}'
+    run build_comment_body "loop-bot"
+    [ "$status" -eq 0 ]
+    [[ $output == *"### Overview"* ]]
+    [[ $output == *"MD001"* ]]
+    [[ $output == *"### Summary"* ]]
+    [[ $output == *"### Fixes Applied"* ]]
+    [[ $output == *"### Changes"* ]]
+    [[ $output == *"docs/a.md"* ]]
+    [[ $output != *"### Fix context"* ]]
+    [[ $output != *"Address CI failure in lint"* ]]
 }
 
 @test "build_comment_body includes agent appendix when present" {

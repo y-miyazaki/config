@@ -2,7 +2,7 @@
 #######################################
 # Description:
 #   Compose hybrid PR body markdown from caller prefix, detect failures,
-#   changed files, agent summary, and footer fields.
+#   changed files, agent overview/summary, and run metadata.
 #   Environment variables mirror loop-finalize Create PR step inputs.
 #
 # Usage:
@@ -31,11 +31,14 @@ export LC_ALL=C.UTF-8
 #######################################
 # Global variables
 #######################################
+AGENT_REPORT_OVERVIEW="${AGENT_REPORT_OVERVIEW:-}"
+AGENT_REPORT_OVERVIEW="${AGENT_REPORT_OVERVIEW:-}"
 AGENT_REPORT_SUMMARY="${AGENT_REPORT_SUMMARY:-}"
 CHANGED_FILES_JSON="${CHANGED_FILES_JSON:-"[]"}"
 DETECT_RESULT_JSON="${DETECT_RESULT_JSON:-"{}"}"
 FAILURES_MAX="${FAILURES_MAX:-5}"
 LEVEL="${LEVEL:-}"
+OVERVIEW_MAX_CHARS="${OVERVIEW_MAX_CHARS:-2000}"
 PR_BODY_PREFIX="${PR_BODY_PREFIX:-}"
 SKIP_REASON="${SKIP_REASON:-}"
 SUMMARY_MAX_CHARS="${SUMMARY_MAX_CHARS:-4000}"
@@ -70,6 +73,35 @@ function redact_sensitive_text {
     text=$(sed -E 's/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/[REDACTED-JWT]/g' <<< "${text}")
     text=$(sed -E 's/-----BEGIN [A-Z ]+-----[^-]*-----END [A-Z ]+-----/[REDACTED-PEM]/g' <<< "${text}")
     printf '%s' "${text}"
+}
+
+#######################################
+# render_agent_overview_section: Render agent ## Overview section
+#
+# Description:
+#   Wrap pre-extracted agent overview body text under a ## Overview heading.
+#   Empty input yields no output.
+#
+# Arguments:
+#   $1 - Pre-extracted overview body text (no heading)
+#
+# Global Variables:
+#   OVERVIEW_MAX_CHARS - Maximum length after redact
+#
+# Returns:
+#   Section markdown to stdout (empty when blank)
+#
+#######################################
+function render_agent_overview_section {
+    local text="${1:-}"
+
+    text="$(truncate_text "$(redact_sensitive_text "${text}")" "${OVERVIEW_MAX_CHARS}")"
+    if [[ -z ${text} ]]; then
+        return 0
+    fi
+    printf '%s\n' "## Overview"
+    printf '%s\n' "${text}"
+    printf '\n'
 }
 
 #######################################
@@ -209,10 +241,29 @@ function render_failure_context {
 }
 
 #######################################
-# render_footer: Render Level/Target/Skip reason footer
+# escape_markdown_table_cell: Escape pipe and newline for table cells
+#
+# Arguments:
+#   $1 - Raw cell text
+#
+# Returns:
+#   Escaped text to stdout
+#
+#######################################
+function escape_markdown_table_cell {
+    local text="$1"
+    text="${text//$'\r'/}"
+    text="${text//$'\n'/ }"
+    text="${text//|/\\|}"
+    printf '%s' "${text}"
+}
+
+#######################################
+# render_run_metadata: Render ## Run Metadata table
 #
 # Description:
-#   Emit the existing loop PR footer bullets when any field is set.
+#   Emit Level, Target, and Skip reason as a Field | Value table when any
+#   field is set.
 #
 # Arguments:
 #   $1 - Level (e.g. L2)
@@ -223,10 +274,10 @@ function render_failure_context {
 #   None
 #
 # Returns:
-#   Footer markdown to stdout (empty when all fields blank)
+#   Section markdown to stdout (empty when all fields blank)
 #
 #######################################
-function render_footer {
+function render_run_metadata {
     local level="${1:-}"
     local target_key="${2:-}"
     local skip_reason="${3:-}"
@@ -234,30 +285,54 @@ function render_footer {
     if [[ -z ${level}${target_key}${skip_reason} ]]; then
         return 0
     fi
-    [[ -n ${level} ]] && printf '%s\n' "- Level: ${level}"
-    [[ -n ${target_key} ]] && printf '%s\n' "- Target: \`${target_key}\`"
-    [[ -n ${skip_reason} ]] && printf '%s\n' "- Skip reason: ${skip_reason}"
-    return 0
+    printf '%s\n' "## Run Metadata"
+    printf '%s\n' "| Field | Value |"
+    printf '%s\n' "| ----- | ----- |"
+    [[ -n ${level} ]] && printf '%s\n' "| Level | $(escape_markdown_table_cell "${level}") |"
+    [[ -n ${target_key} ]] && printf '%s\n' "| Target | \`$(escape_markdown_table_cell "${target_key}")\` |"
+    [[ -n ${skip_reason} ]] && printf '%s\n' "| Skip reason | $(escape_markdown_table_cell "${skip_reason}") |"
+    printf '\n'
+}
+
+#######################################
+# render_automation_disclaimer: Render loop automation footer line
+#
+# Description:
+#   Emit the standard disclaimer appended to every loop-created PR body.
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Disclaimer markdown to stdout
+#
+#######################################
+function render_automation_disclaimer {
+    printf '%s\n\n' $'---\n*This PR was created by a loop automation. Review before merging.*'
 }
 
 #######################################
 # render_pr_body: Compose full PR body from environment
 #
 # Description:
-#   Assemble prefix, Failure context, Changes, agent Summary, and footer
-#   in that order. Missing optional sections are skipped.
+#   Assemble prefix, Overview, Failure context, Summary, Changes, Run
+#   Metadata, and disclaimer in that order. Missing optional sections are skipped.
 #
 # Arguments:
 #   None
 #
 # Global Variables:
+#   AGENT_REPORT_OVERVIEW - Agent overview body text
 #   AGENT_REPORT_SUMMARY - Agent summary body text
 #   CHANGED_FILES_JSON - JSON string array of changed paths
 #   DETECT_RESULT_JSON - Detect JSON with failures array
-#   LEVEL - Footer level
+#   LEVEL - Run metadata level
 #   PR_BODY_PREFIX - Caller static prefix
-#   SKIP_REASON - Footer skip reason
-#   TARGET_KEY - Footer target key
+#   SKIP_REASON - Run metadata skip reason
+#   TARGET_KEY - Run metadata target key
 #
 # Returns:
 #   Full PR body markdown to stdout
@@ -273,16 +348,20 @@ function render_pr_body {
         printf '%s\n\n' "${prefix}"
     fi
 
-    section="$(render_failure_context "${DETECT_RESULT_JSON}")"
+    section="$(render_agent_overview_section "${AGENT_REPORT_OVERVIEW}")"
     [[ -n ${section} ]] && printf '%s\n' "${section}"
 
-    section="$(render_changes_section "${CHANGED_FILES_JSON}")"
+    section="$(render_failure_context "${DETECT_RESULT_JSON}")"
     [[ -n ${section} ]] && printf '%s\n' "${section}"
 
     section="$(render_agent_summary_section "${AGENT_REPORT_SUMMARY}")"
     [[ -n ${section} ]] && printf '%s\n' "${section}"
 
-    render_footer "${LEVEL}" "${TARGET_KEY}" "${SKIP_REASON}"
+    section="$(render_changes_section "${CHANGED_FILES_JSON}")"
+    [[ -n ${section} ]] && printf '%s\n' "${section}"
+
+    render_run_metadata "${LEVEL}" "${TARGET_KEY}" "${SKIP_REASON}"
+    render_automation_disclaimer
 }
 
 #######################################

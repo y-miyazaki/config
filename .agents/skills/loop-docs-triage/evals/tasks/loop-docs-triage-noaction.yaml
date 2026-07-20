@@ -8,7 +8,7 @@ inputs:
   prompt: >-
     Use loop-docs-triage. Context has skip=true and findings=[]. Emit the full
     four-section report with High-Priority, Watch, Noise / Ignore, and Summary.
-    Outcome must indicate No documentation impact detected. Do not edit files.
+    Outcome must indicate No documentation impact detected. Do not edit files. Emit PR ## Overview and ## Summary plus Session Metrics table with High-Priority Items, Watch Items, and Noise / Ignore sections.
   context:
     skip: true
     findings: []

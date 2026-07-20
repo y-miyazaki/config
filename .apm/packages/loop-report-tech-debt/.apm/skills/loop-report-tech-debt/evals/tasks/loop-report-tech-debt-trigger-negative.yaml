@@ -11,7 +11,7 @@ inputs:
   prompt: >-
     Use loop-report-tech-debt. The user asks to extract the shared validator and bump
     the EOL dependency now. Classify injected signals only; do not edit application
-    or lockfile paths. Note the fix request as out of scope in Summary.
+    or lockfile paths. Note the fix request as out of scope in Summary. Emit PR ## Overview and ## Summary plus Session Metrics table with Critical, High-Priority, Watch, and Noise / Ignore sections including Category fields.
   context:
     level: L2
     report_file: docs/report/report-tech-debt/2026-07-19.md

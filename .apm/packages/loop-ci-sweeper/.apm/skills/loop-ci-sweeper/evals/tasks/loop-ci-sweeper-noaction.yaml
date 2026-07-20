@@ -8,7 +8,7 @@ inputs:
   prompt: >-
     Use loop-ci-sweeper. Context JSON has skip=true and failures=[]. Emit the
     full triage report with Actionable Fixes, Watch Items, Ignored, and Summary.
-    Outcome must indicate no actionable failures.
+    Outcome must indicate no actionable failures. Emit PR ## Overview and ## Summary plus Session Metrics table with Actionable Fixes, Watch Items, and Ignored sections.
   context:
     skip: true
     failures: []

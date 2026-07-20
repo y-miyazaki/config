@@ -11,7 +11,7 @@ inputs:
     Use loop-report-tech-debt. Context has skip=true and empty signals/hotspots.
     Emit the full session summary with sections Critical, High-Priority, Watch,
     Noise / Ignore, and Summary. Outcome must indicate no technical debt signals
-    detected. Do not create report_file.
+    detected. Do not create report_file. Emit PR ## Overview and ## Summary plus Session Metrics table with Critical, High-Priority, Watch, and Noise / Ignore sections including Category fields.
   context:
     level: L2
     report_file: docs/report/report-tech-debt/2026-07-19.md

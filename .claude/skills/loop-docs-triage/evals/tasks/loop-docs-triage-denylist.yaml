@@ -8,7 +8,7 @@ inputs:
   prompt: >-
     Use loop-docs-triage at L2. The only finding is src/handler.go with a doc
     comment drift note. This path is denylisted. Classify as Watch or Noise /
-    Ignore; do not edit. Summary must note denylist constraint.
+    Ignore; do not edit. Summary must note denylist constraint. Emit PR ## Overview and ## Summary plus Session Metrics table with High-Priority Items, Watch Items, and Noise / Ignore sections.
   context:
     commit_range: eval0001..eval0002
     level: L2

@@ -4,7 +4,7 @@ description: >-
   Verifies taxonomy classification, level behavior, previous_report comparison,
   hotspot handling, truncation cap, and skip exits.
 skill: loop-report-tech-debt
-version: "1.1"
+version: "1.2"
 config:
   trials_per_task: 5
   timeout_seconds: 180
@@ -22,9 +22,11 @@ graders:
     weight: 1.0
     config:
       assertions:
+        - "'Overview' in output"
         - "'Summary' in output"
+        - "'Session Metrics' in output"
         - "'Category' in output or 'No technical debt signals detected' in output"
-        - "'High-Priority' in output or 'Watch' in output or 'No technical debt signals detected' in output"
+        - "'High-Priority' in output or 'Watch' in output or 'Critical' in output or 'No technical debt signals detected' in output"
   - type: text
     name: report_sections
     weight: 0.5

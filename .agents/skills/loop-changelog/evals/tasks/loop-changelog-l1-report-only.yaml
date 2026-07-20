@@ -7,7 +7,7 @@ tags:
 inputs:
   prompt: >-
     Use loop-changelog at L1. Process the injected feat commit in the report
-    with Commits Processed and Summary sections. Do not edit CHANGELOG.md.
+    with Commits Processed and Summary sections. Do not edit CHANGELOG.md. Emit PR ## Overview and ## Summary plus Session Metrics table with Commits Processed and Skipped Commits sections.
   context:
     changelog_file: CHANGELOG.md
     changelog_exists: true

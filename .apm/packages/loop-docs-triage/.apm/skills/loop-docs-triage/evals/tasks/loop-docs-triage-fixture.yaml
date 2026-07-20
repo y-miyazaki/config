@@ -8,7 +8,7 @@ inputs:
   prompt: >-
     Use loop-docs-triage at L2. Fix the High-Priority stale workflow reference in
     evals/files/README.stale.md per injected finding. Report the fix in
-    High-Priority Items (Fixed) and Summary.
+    High-Priority Items (Fixed) and Summary. Emit PR ## Overview and ## Summary plus Session Metrics table with High-Priority Items, Watch Items, and Noise / Ignore sections.
   context:
     commit_range: eval0001..eval0002
     level: L2

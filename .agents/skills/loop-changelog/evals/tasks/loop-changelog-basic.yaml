@@ -10,7 +10,7 @@ inputs:
   prompt: >-
     Use loop-changelog at L2. Process the injected conventional commits and emit
     the full changelog report with sections Commits Processed, Skipped Commits,
-    and Summary. Include Commits Processed and Summary wording in the report.
+    and Summary. Include Commits Processed and Summary wording in the report. Emit PR ## Overview and ## Summary plus Session Metrics table with Commits Processed and Skipped Commits sections.
   context:
     changelog_file: CHANGELOG.md
     commit_range: eval0001..eval0002

@@ -22,7 +22,7 @@ setup() {
 
 @test "create_pr_body renders prefix and footer from inline JSON" {
     PR_BODY="## Summary"
-    NOTIFY_CONTEXT_JSON='{"changed_files":["CHANGELOG.md"],"agent_report_summary":"done"}'
+    NOTIFY_CONTEXT_JSON='{"changed_files":["CHANGELOG.md"],"agent_report_overview":"Updated changelog from 4 commits.","agent_report_summary":"done"}'
     DETECT_RESULT_JSON='{"failures":[{"workflow_name":"ci","job_name":"test","failure_type":"test","reason":"boom"}]}'
     TARGET_JSON='{"key":"integration:main"}'
     LEVEL="L2"
@@ -30,8 +30,10 @@ setup() {
 
     run create_pr_body
     [ "$status" -eq 0 ]
-    [[ $output == *"## Summary"* ]]
+    [[ $output == *"## Overview"* ]]
+    [[ $output == *"Updated changelog"* ]]
     [[ $output == *"CHANGELOG.md"* ]]
+    [[ $output == *"## Run Metadata"* ]]
     [[ $output == *"integration:main"* ]]
     [[ $output == *"## Failure context"* ]]
 }

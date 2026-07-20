@@ -9,7 +9,7 @@ inputs:
     Use loop-ci-sweeper. The user asks you to manually debug a flaky test on
     their laptop. This skill runs only from loop automation with injected
     failures[]. Explain the request is out of scope. Emit triage report sections
-    with Summary Outcome indicating no actionable failures when failures is empty.
+    with Summary Outcome indicating no actionable failures when failures is empty. Emit PR ## Overview and ## Summary plus Session Metrics table with Actionable Fixes, Watch Items, and Ignored sections.
   context:
     level: L2
     skip: true

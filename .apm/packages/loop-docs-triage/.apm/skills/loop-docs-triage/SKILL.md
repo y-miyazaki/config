@@ -47,7 +47,7 @@ At `L2`/`L3`, edit High-Priority items within the active allowlist ([category-sc
 
 ## Workflow
 
-1. Parse [category-input-schema.md](references/category-input-schema.md). Read prompt `## Constraints` for the active allowlist. If `skip` or no actionable `findings`, emit report with Summary `No documentation impact detected`; stop.
+1. Parse [category-input-schema.md](references/category-input-schema.md). Read prompt `## Constraints` for the active allowlist. If `skip` or no actionable `findings`, emit report with Session Metrics Outcome `No documentation impact detected`; stop.
 2. Classify per [common-checklist.md](references/common-checklist.md); fix High-Priority items from `findings`.
 3. At `L2`/`L3`, edit only paths allowed by `## Constraints` and [category-scope.md](references/category-scope.md).
-4. Output per [common-output-format.md](references/common-output-format.md).
+4. Output session report per [common-output-format.md](references/common-output-format.md); at synthesis time load `assets/pr-body-template.md` and emit `## Overview` (trigger → problem → action, plain language) + `## Summary` for PR composition.

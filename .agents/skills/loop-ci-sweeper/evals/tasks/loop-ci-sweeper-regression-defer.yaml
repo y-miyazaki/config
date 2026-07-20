@@ -8,7 +8,7 @@ inputs:
   prompt: >-
     Use loop-ci-sweeper at L2. Context has four regression failures. Fix only
     the first regression; defer the other three as Watch Items. Emit Actionable
-    Fixes, Watch Items, Ignored, and Summary noting deferral.
+    Fixes, Watch Items, Ignored, and Summary noting deferral. Emit PR ## Overview and ## Summary plus Session Metrics table with Actionable Fixes, Watch Items, and Ignored sections.
   context:
     level: L2
     skip: false

@@ -76,6 +76,7 @@ function build_comment_body {
     local actor="$1"
     local marker branch to_branch workflow_name workflow_run_id workflow_url
     local loop_run_url commit_url short_sha verdict_display fix_context agent_summary
+    local agent_report_overview agent_report_summary has_agent_narrative
     local changed_files diff_stat fix_summary reject_display timestamp bot_fix_pr next_step
 
     marker="<!-- loop-notify-pr:v1:${LOOP_NAME} -->"
@@ -117,33 +118,46 @@ function build_comment_body {
     if [[ -n ${NOTIFY_CONTEXT_JSON} ]] && jq -e . <<< "${NOTIFY_CONTEXT_JSON}" > /dev/null 2>&1; then
         fix_summary=$(jq -r '.fix_summary // ""' <<< "${NOTIFY_CONTEXT_JSON}")
         diff_stat=$(jq -r '.diff_stat // ""' <<< "${NOTIFY_CONTEXT_JSON}")
+        agent_report_overview=$(jq -r '.agent_report_overview // ""' <<< "${NOTIFY_CONTEXT_JSON}")
+        agent_report_summary=$(jq -r '.agent_report_summary // ""' <<< "${NOTIFY_CONTEXT_JSON}")
         agent_summary=$(jq -r '.agent_summary // ""' <<< "${NOTIFY_CONTEXT_JSON}")
         changed_files=$(jq -r '.changed_files[]? // empty' <<< "${NOTIFY_CONTEXT_JSON}" | paste -sd, - || true)
     else
+        agent_report_overview=""
+        agent_report_summary=""
         fix_summary=""
         diff_stat=""
         agent_summary=""
         changed_files=""
     fi
 
+    agent_report_overview="$(truncate_text "$(redact_sensitive_text "${agent_report_overview}")" 2000)"
+    agent_report_summary="$(truncate_text "$(redact_sensitive_text "${agent_report_summary}")" 4000)"
     fix_summary="$(truncate_text "$(redact_sensitive_text "${fix_summary}")" 2000)"
     agent_summary="$(truncate_text "$(redact_sensitive_text "${agent_summary}")" 2000)"
     reject_display="$(truncate_text "$(redact_sensitive_text "${REJECT_REASON}")" 2000)"
 
-    if [[ -n ${changed_files} || -n ${diff_stat} ]]; then
-        fix_context="**${fix_summary}**"
-        if [[ -n ${changed_files} ]]; then
-            fix_context="${fix_context}"$'\n\n'"Changed files: \`${changed_files}\`"
+    has_agent_narrative=false
+    if [[ -n ${agent_report_overview}${agent_report_summary} ]]; then
+        has_agent_narrative=true
+    fi
+
+    if [[ ${has_agent_narrative} != true ]]; then
+        if [[ -n ${changed_files} || -n ${diff_stat} ]]; then
+            fix_context="**${fix_summary}**"
+            if [[ -n ${changed_files} ]]; then
+                fix_context="${fix_context}"$'\n\n'"Changed files: \`${changed_files}\`"
+            fi
+            if [[ -n ${diff_stat} ]]; then
+                fix_context="${fix_context}"$'\n\n'"\`${diff_stat}\`"
+            fi
+        elif [[ ${OUTCOME} == "watch" ]]; then
+            fix_context="No file changes; classified as **watch**."
+        elif [[ -n ${reject_display} ]]; then
+            fix_context="${reject_display}"
+        else
+            fix_context="No mechanical fix context available."
         fi
-        if [[ -n ${diff_stat} ]]; then
-            fix_context="${fix_context}"$'\n\n'"\`${diff_stat}\`"
-        fi
-    elif [[ ${OUTCOME} == "watch" ]]; then
-        fix_context="No file changes; classified as **watch**."
-    elif [[ -n ${reject_display} ]]; then
-        fix_context="${reject_display}"
-    else
-        fix_context="No mechanical fix context available."
     fi
 
     if [[ -n ${FIX_PR_NUMBER} && -n ${FIX_PR_URL} ]]; then
@@ -177,11 +191,56 @@ ${marker}
 | Loop run | [actions run](${loop_run_url}) |
 | Attempt | ${ATTEMPTS:-—}/${MAX_ATTEMPTS:-—} |
 | Timestamp | ${timestamp} |
+EOF
+
+    if [[ -n ${agent_report_overview} ]]; then
+        cat << EOF
+
+### Overview
+
+${agent_report_overview}
+EOF
+    fi
+
+    if [[ -n ${agent_report_summary} ]]; then
+        cat << EOF
+
+### Summary
+
+${agent_report_summary}
+EOF
+    fi
+
+    if [[ ${has_agent_narrative} == true ]]; then
+        if [[ -n ${changed_files} || -n ${diff_stat} ]]; then
+            cat << EOF
+
+### Changes
+EOF
+            if [[ -n ${changed_files} ]]; then
+                # shellcheck disable=SC2016
+                printf '\nChanged files: `%s`\n' "${changed_files}"
+            fi
+            if [[ -n ${diff_stat} ]]; then
+                # shellcheck disable=SC2016
+                printf '\n`%s`\n' "${diff_stat}"
+            fi
+        elif [[ ${OUTCOME} == "watch" ]]; then
+            cat << EOF
+
+### Fix context
+
+No file changes; classified as **watch**.
+EOF
+        fi
+    else
+        cat << EOF
 
 ### Fix context
 
 ${fix_context}
 EOF
+    fi
 
     if [[ -n ${next_step} ]]; then
         cat << EOF
@@ -190,7 +249,7 @@ ${next_step}
 EOF
     fi
 
-    if [[ -n ${agent_summary} ]]; then
+    if [[ -n ${agent_summary} && -z ${agent_report_summary} ]]; then
         cat << EOF
 
 ### Agent summary (appendix)
@@ -418,7 +477,11 @@ function main {
 
     if [[ $(wc -c < "${body_file}") -gt 65536 ]]; then
         echo "::warning::loop-notify-pr comment exceeds GitHub limit; truncating appendix"
-        sed -i '/^### Agent summary/,$d' "${body_file}" || true
+        sed -i '/^### Agent summary (appendix)/,$d' "${body_file}" || true
+    fi
+    if [[ $(wc -c < "${body_file}") -gt 65536 ]]; then
+        echo "::warning::loop-notify-pr comment still exceeds limit; truncating Summary"
+        sed -i '/^### Summary$/,$d' "${body_file}" || true
     fi
 
     if ! upsert_comment "${body_file}" "${marker}"; then

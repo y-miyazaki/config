@@ -66,13 +66,7 @@ jobs:
       loop_name: docs-triage
       max_targets_per_schedule: 3
       no_changes_verdict: REJECT
-      pr_body: |
-        ## Summary
-
-        Automated documentation update by `loop-docs-triage`.
-
-        ---
-        *This PR was created by a loop automation. Review before merging.*
+      pr_body: ""
       pr_title: "fix(docs): automated documentation update (loop-docs-triage)"
       prompt_instructions: |
         Edit files directly to address the documented triage findings.

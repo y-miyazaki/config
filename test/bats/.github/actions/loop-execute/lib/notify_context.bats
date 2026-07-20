@@ -6,7 +6,8 @@
 # Use cases:
 # - build_fix_summary falls back for invalid json
 # - build_fix_summary formats job and workflow from failures
-# - extract_agent_report_summary takes ## Summary until next H2
+# - extract_agent_report_overview takes ## Overview until next H2
+# - main parses agent_report_overview from status dir
 # - main includes changed files when has_changes is true
 # - main includes changed files when origin base ref is missing
 # - main parses agent_report_summary from status dir
@@ -66,6 +67,27 @@ teardown() {
     run build_fix_summary "${detect_json}"
     [ "$status" -eq 0 ]
     [ "$output" = "Address CI failure in lint (on-ci-push)" ]
+}
+
+@test "extract_agent_report_overview takes ## Overview until next H2" {
+    local f
+    f="${BATS_TEST_TMPDIR}/agent-output.txt"
+    cat > "$f" << 'EOF'
+noise
+## Overview
+Docs drift scan found stale nav entries.
+
+## Summary
+- **Outcome:** fixed
+
+## Ignored
+- none
+EOF
+    run extract_agent_report_overview "$f"
+    [ "$status" -eq 0 ]
+    [[ $output == *"stale nav"* ]]
+    [[ $output != *"## Summary"* ]]
+    [[ $output != *"## Overview"* ]]
 }
 
 @test "extract_agent_report_summary takes ## Summary until next H2" {
@@ -145,6 +167,30 @@ EOF
     json="$(awk '/^notify_context_json<</{found=1;next} found{if($0 ~ /^NOTIFY_CONTEXT_/) exit; print}' "${GITHUB_OUTPUT}")"
     run jq -e '(.changed_files | index("file.txt") != null) and (.diff_stat | length) > 0' <<< "${json}"
     [ "$status" -eq 0 ]
+}
+
+@test "main parses agent_report_overview from status dir" {
+    local status_dir json
+    notify_context_git_setup
+    status_dir="${BATS_TEST_TMPDIR}/status"
+    mkdir -p "${status_dir}/attempt-1"
+    cat > "${status_dir}/attempt-1/agent-output.txt" << 'EOF'
+noise before
+## Overview
+CI failed on MD001; fixed heading in docs/foo.md.
+
+## Summary
+- **Outcome:** fixed
+EOF
+
+    GITHUB_OUTPUT="$(mktemp)"
+    run bash -c "HAS_CHANGES='false' WORKTREE_PATH='${GIT_TEST_REPO}' BASE_BRANCH='main' DETECT_RESULT_JSON='{}' GITHUB_OUTPUT='${GITHUB_OUTPUT}' STATUS_DIR='${status_dir}' bash '${NOTIFY_CONTEXT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+
+    json="$(awk '/^notify_context_json<</{found=1;next} found{if($0 ~ /^NOTIFY_CONTEXT_/) exit; print}' "${GITHUB_OUTPUT}")"
+    run jq -er '.agent_report_overview' <<< "${json}"
+    [ "$status" -eq 0 ]
+    [[ $output == *"MD001"* ]]
 }
 
 @test "main parses agent_report_summary from status dir" {
@@ -238,6 +284,7 @@ EOF
       and .fix_summary == "Address CI failure in CI (workflow)"
       and .agent_summary == ""
       and .agent_report_summary == ""
+      and .agent_report_overview == ""
       and (.baseline_ref | length) > 0
     ' <<< "${json}"
     [ "$status" -eq 0 ]

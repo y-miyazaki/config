@@ -1,6 +1,6 @@
 # Loop PR Body Hybrid Design
 
-**Status:** Approved for planning  
+**Status:** Superseded by [Loop PR Body Readable Design](2026-07-21-loop-pr-body-readable-design.md) (2026-07-21)  
 **Date:** 2026-07-17  
 **Trigger:** [PR #417](https://github.com/y-miyazaki/config/pull/417) summary lacked failure reason and fix details; static caller `pr_body` was used as-is.
 

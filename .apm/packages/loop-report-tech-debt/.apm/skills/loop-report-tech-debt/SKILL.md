@@ -49,6 +49,6 @@ At `L2`/`L3`, write the full report to `report_file` within [category-scope.md](
 ## Workflow
 
 1. Parse [category-input-schema.md](references/category-input-schema.md). Read prompt `## Constraints` for the allowlist. If `skip` or both `signals` and `hotspots` are empty, emit session summary with Outcome `No technical debt signals detected`; stop without creating `report_file`.
-2. Read `previous_report` when set and the file exists. Compare per [common-checklist.md](references/common-checklist.md#previous-report-comparison); note resolved, recurring, and regression items in Summary and persisted report.
+2. Read `previous_report` when set and the file exists. Compare per [common-checklist.md](references/common-checklist.md#previous-report-comparison); note resolved, recurring, and regression items in session report sections and the persisted report (not in PR `## Summary` — that is emitted at synthesis from `assets/pr-body-template.md`).
 3. For each `signals[]` / `hotspots[]` entry, read ±30 lines of source. Classify per [category-debt-taxonomy.md](references/category-debt-taxonomy.md) and [common-checklist.md](references/common-checklist.md) (`category`, severity section, optional `nature`).
-4. Emit session summary per [common-output-format.md](references/common-output-format.md). Respect level and cap rules in [common-checklist.md](references/common-checklist.md).
+4. Emit session summary per [common-output-format.md](references/common-output-format.md). At synthesis time load `assets/pr-body-template.md` and emit `## Overview` (scan scope, severity, report path) + `## Summary` for PR composition. Respect level and cap rules in [common-checklist.md](references/common-checklist.md).

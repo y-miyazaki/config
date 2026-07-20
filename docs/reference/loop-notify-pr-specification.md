@@ -102,7 +102,9 @@ L2 success messaging must include **merge or close the bot fix PR** guidance.
 
 ### Appendix — Skill (optional)
 
-Optional `<!-- loop-agent-summary:v1 -->` block via `notify_context_json.agent_summary`.
+When `agent_report_overview` / `agent_report_summary` are present in `notify_context_json` (from agent `## Overview` / `## Summary`), render them after the platform table — same narrative density as the bot fix PR body.
+
+Legacy `<!-- loop-agent-summary:v1 -->` block via `notify_context_json.agent_summary` is used only when `agent_report_summary` is empty.
 
 ## Comment Format
 
@@ -123,9 +125,21 @@ Marker: `<!-- loop-notify-pr:v1:{loop_name} -->`
 | Failed run | [{workflow_name} #{run_id}]({run_url}) |
 | Loop run   | [actions run]({loop_run_url})          |
 
+### Overview
+
+{agent_report_overview when present}
+
+### Summary
+
+{agent_report_summary when present}
+
+### Changes
+
+{changed_files + diff_stat when agent narrative present}
+
 ### Fix context
 
-{Layer 2 bullets}
+{Layer 2 bullets when agent narrative absent}
 
 **Next step (L2):** Merge or close the bot fix PR above, then re-run CI on this PR.
 **Next step (L3):** Bot fix PR auto-merge enabled when checks pass.

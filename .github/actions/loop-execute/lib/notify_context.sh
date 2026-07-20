@@ -12,6 +12,7 @@
 #   - changed_files and diff_stat come from origin/BASE...HEAD (excludes .loop/)
 #     with HEAD^ fallback when origin/BASE is unavailable
 #   - agent_summary is optional; parsed from <!-- loop-agent-summary:v1 --> only
+#   - agent_report_overview is optional; parsed from ## Overview until next H2
 #   - agent_report_summary is optional; parsed from ## Summary until next H2
 #
 # Output:
@@ -66,6 +67,48 @@ function build_fix_summary {
 }
 
 #######################################
+# extract_agent_section: Extract a ## heading section from agent output
+#
+# Arguments:
+#   $1 - Agent output file path
+#   $2 - Section title (e.g. Overview, Summary)
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Section body to stdout (may be empty)
+#
+#######################################
+function extract_agent_section {
+    local output_file="$1"
+    local section_title="$2"
+    [[ -f ${output_file} ]] || return 0
+    awk -v title="${section_title}" '
+      $0 ~ "^## " title "[[:space:]]*$" {grab=1; next}
+      /^## / {if (grab) exit}
+      grab {print}
+    ' "${output_file}" | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}'
+}
+
+#######################################
+# extract_agent_report_overview: Extract ## Overview section from agent output
+#
+# Arguments:
+#   $1 - Agent output file path
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Overview section body to stdout (may be empty)
+#
+#######################################
+function extract_agent_report_overview {
+    extract_agent_section "$1" "Overview"
+}
+
+#######################################
 # extract_agent_report_summary: Extract ## Summary section from agent output
 #
 # Arguments:
@@ -79,13 +122,7 @@ function build_fix_summary {
 #
 #######################################
 function extract_agent_report_summary {
-    local output_file="$1"
-    [[ -f ${output_file} ]] || return 0
-    awk '
-      /^## Summary[[:space:]]*$/ {grab=1; next}
-      /^## / {if (grab) exit}
-      grab {print}
-    ' "${output_file}" | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}'
+    extract_agent_section "$1" "Summary"
 }
 
 #######################################
@@ -235,6 +272,7 @@ function main {
     local loop_detect_lib
     local has_changes="${HAS_CHANGES}"
     local baseline_ref changed_files_json diff_stat fix_summary agent_summary=""
+    local agent_report_overview=""
     local agent_report_summary=""
     local -a files=()
     local file count=0 extra=0 last_output notify_json
@@ -309,6 +347,8 @@ function main {
         if [[ -n ${last_output} ]]; then
             agent_summary="$(parse_agent_summary "${last_output}")"
             agent_summary="$(truncate_text "$(redact_sensitive_text "${agent_summary}")" 2000)"
+            agent_report_overview="$(extract_agent_report_overview "${last_output}")"
+            agent_report_overview="$(truncate_text "$(redact_sensitive_text "${agent_report_overview}")" 2000)"
             agent_report_summary="$(extract_agent_report_summary "${last_output}")"
             agent_report_summary="$(truncate_text "$(redact_sensitive_text "${agent_report_summary}")" 4000)"
         fi
@@ -318,15 +358,17 @@ function main {
         --argjson changed_files "${changed_files_json}" \
         --arg diff_stat "${diff_stat}" \
         --arg fix_summary "${fix_summary}" \
-        --arg agent_summary "${agent_summary}" \
+        --arg agent_report_overview "${agent_report_overview}" \
         --arg agent_report_summary "${agent_report_summary}" \
+        --arg agent_summary "${agent_summary}" \
         --arg baseline_ref "${baseline_ref}" \
         '{
             changed_files: $changed_files,
             diff_stat: $diff_stat,
             fix_summary: $fix_summary,
-            agent_summary: $agent_summary,
+            agent_report_overview: $agent_report_overview,
             agent_report_summary: $agent_report_summary,
+            agent_summary: $agent_summary,
             baseline_ref: $baseline_ref
         }')"
 

@@ -9,7 +9,7 @@ inputs:
     Use loop-report-tech-debt at L2. Assume classification yields 20 High-Priority marker
     findings plus 6 Critical security findings (26 total above cap). Retain all
     Critical first, then High-Priority until 25 combined; move overflow to Watch.
-    Set Truncated to yes in Summary.
+    Set Truncated to yes in Summary. Emit PR ## Overview and ## Summary plus Session Metrics table with Critical, High-Priority, Watch, and Noise / Ignore sections including Category fields.
   context:
     level: L2
     report_file: docs/report/report-tech-debt/2026-07-19.md

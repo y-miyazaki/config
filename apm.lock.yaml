@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-20T14:47:12.911636+00:00'
+generated_at: '2026-07-20T15:54:23.693988+00:00'
 apm_version: 0.26.0
 dependencies:
 - repo_url: _local/common
@@ -1067,6 +1067,7 @@ dependencies:
   deployed_files:
   - .agents/skills/loop-changelog
   - .agents/skills/loop-changelog/SKILL.md
+  - .agents/skills/loop-changelog/assets/pr-body-template.md
   - .agents/skills/loop-changelog/eval.yaml
   - .agents/skills/loop-changelog/evals/files/CHANGELOG.sample.md
   - .agents/skills/loop-changelog/evals/tasks/loop-changelog-basic.yaml
@@ -1091,6 +1092,7 @@ dependencies:
   - .agents/skills/loop-changelog/scripts/lib/validation.sh
   - .claude/skills/loop-changelog
   - .claude/skills/loop-changelog/SKILL.md
+  - .claude/skills/loop-changelog/assets/pr-body-template.md
   - .claude/skills/loop-changelog/eval.yaml
   - .claude/skills/loop-changelog/evals/files/CHANGELOG.sample.md
   - .claude/skills/loop-changelog/evals/tasks/loop-changelog-basic.yaml
@@ -1114,19 +1116,20 @@ dependencies:
   - .claude/skills/loop-changelog/scripts/lib/terraform.sh
   - .claude/skills/loop-changelog/scripts/lib/validation.sh
   deployed_file_hashes:
-    .agents/skills/loop-changelog/SKILL.md: sha256:795e6b9929cba62d5f6c5a9db9db5ff4f014653be71555fbadb85a61912f72ea
-    .agents/skills/loop-changelog/eval.yaml: sha256:1783563dbe7b004b65580a40d7dd5ff09000c81fb208de0af543160c680e4d89
+    .agents/skills/loop-changelog/SKILL.md: sha256:c55caa168d548baefa262002baed039c2c6602855c60ac670918dba36d17dbb2
+    .agents/skills/loop-changelog/assets/pr-body-template.md: sha256:c50a48095a4654482cacd5598e04e341eaedcbd0a7b41ac4ec4e248bff76b6f7
+    .agents/skills/loop-changelog/eval.yaml: sha256:0f6e6c1456f5f443b6fa3bd23037cf09670bddca48512dc37f8a81f973095783
     .agents/skills/loop-changelog/evals/files/CHANGELOG.sample.md: sha256:ed3e7f0d4977a16dccbcaafca70c99ee9293176db405171a30693ad231bbcc64
-    .agents/skills/loop-changelog/evals/tasks/loop-changelog-basic.yaml: sha256:148adb6968570a13bae54be05761def46188a1fa663c2368b2cddad16db6d8dc
-    .agents/skills/loop-changelog/evals/tasks/loop-changelog-create-template.yaml: sha256:9ccad431388d5ed3fb62b64d7bd39cf254dc0c62e10dfb73cae3117ed540ab39
-    .agents/skills/loop-changelog/evals/tasks/loop-changelog-l1-report-only.yaml: sha256:a81c1b8b90646176313bf31a67e20c7e7c49e83ae77d1515e474a7ad5e31e4e0
-    .agents/skills/loop-changelog/evals/tasks/loop-changelog-noaction.yaml: sha256:b0e91cece042c59bca7e6291324574ec1bc16fbcde861a32c9bf037da20f5a4d
-    .agents/skills/loop-changelog/evals/tasks/loop-changelog-release-promotion.yaml: sha256:6da395b8dc952e4d243b56604aa20f5ad7e461dfde6c95b078aa4f2718b76e45
-    .agents/skills/loop-changelog/evals/tasks/loop-changelog-trigger-negative.yaml: sha256:a6f1ea7ff94b46de4eeb7839b6eef253f01eb0077d48090a440d7c49aa192ec2
+    .agents/skills/loop-changelog/evals/tasks/loop-changelog-basic.yaml: sha256:e5d97ce009c4f3d62c6bd4c26fec2d252c83e9db2071a5235983e40863c4cd3e
+    .agents/skills/loop-changelog/evals/tasks/loop-changelog-create-template.yaml: sha256:d67cf3830f31c3680b41d91c40b66c36d931241b71317435d8fbd211128da74f
+    .agents/skills/loop-changelog/evals/tasks/loop-changelog-l1-report-only.yaml: sha256:159b9bd3c4e48bed344d34197476425f2c749ca6460e4ce6c5a99e850bac3aee
+    .agents/skills/loop-changelog/evals/tasks/loop-changelog-noaction.yaml: sha256:69926691c5b2704555789dc7c055d12a45559438eea4015a2c111bb73f345a1e
+    .agents/skills/loop-changelog/evals/tasks/loop-changelog-release-promotion.yaml: sha256:480d63abe2ccf119f57c144b7a9ca5a9e886ece95ce72e6ab6f5d799d0df8770
+    .agents/skills/loop-changelog/evals/tasks/loop-changelog-trigger-negative.yaml: sha256:ef32704b68464e01499c9d9593fffcb9ce6904d85f5ba8ea3d50d601f2aeff06
     .agents/skills/loop-changelog/references/category-input-schema.md: sha256:73cea54829784a6f5ddf4cc6384ef45f7444a473ce5ade7d2ffc63307b405868
     .agents/skills/loop-changelog/references/category-scope.md: sha256:befd337c4d5585c9888b16b3a24d18770bcfc7ddfa73c0ff224d44893c7fe3b5
     .agents/skills/loop-changelog/references/common-checklist.md: sha256:f1d108abf8264c6698c601c8872d59405db03434870da954ac84baa615117da5
-    .agents/skills/loop-changelog/references/common-output-format.md: sha256:cfa1278e2a4e2c5beaa96654a783381189a230b318c6ef0b37a58c6183c27cd0
+    .agents/skills/loop-changelog/references/common-output-format.md: sha256:c93a31012ab4906b755ac92943736e14f241ba41d833f0e5c4ac22f03473cf98
     .agents/skills/loop-changelog/references/common-troubleshooting.md: sha256:a8fee7f3104e14fc626d4b6fcc7dcfc4c17af35752ee9ee9c57f6e4101e29b0f
     .agents/skills/loop-changelog/scripts/detect_changelog_commits.sh: sha256:c55cb383b5aaeb67ee9d0fdb8b09a3118a39be3a1905dc8118e7c54154fbc751
     .agents/skills/loop-changelog/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
@@ -1137,19 +1140,20 @@ dependencies:
     .agents/skills/loop-changelog/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .agents/skills/loop-changelog/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/loop-changelog/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .claude/skills/loop-changelog/SKILL.md: sha256:795e6b9929cba62d5f6c5a9db9db5ff4f014653be71555fbadb85a61912f72ea
-    .claude/skills/loop-changelog/eval.yaml: sha256:1783563dbe7b004b65580a40d7dd5ff09000c81fb208de0af543160c680e4d89
+    .claude/skills/loop-changelog/SKILL.md: sha256:c55caa168d548baefa262002baed039c2c6602855c60ac670918dba36d17dbb2
+    .claude/skills/loop-changelog/assets/pr-body-template.md: sha256:c50a48095a4654482cacd5598e04e341eaedcbd0a7b41ac4ec4e248bff76b6f7
+    .claude/skills/loop-changelog/eval.yaml: sha256:0f6e6c1456f5f443b6fa3bd23037cf09670bddca48512dc37f8a81f973095783
     .claude/skills/loop-changelog/evals/files/CHANGELOG.sample.md: sha256:ed3e7f0d4977a16dccbcaafca70c99ee9293176db405171a30693ad231bbcc64
-    .claude/skills/loop-changelog/evals/tasks/loop-changelog-basic.yaml: sha256:148adb6968570a13bae54be05761def46188a1fa663c2368b2cddad16db6d8dc
-    .claude/skills/loop-changelog/evals/tasks/loop-changelog-create-template.yaml: sha256:9ccad431388d5ed3fb62b64d7bd39cf254dc0c62e10dfb73cae3117ed540ab39
-    .claude/skills/loop-changelog/evals/tasks/loop-changelog-l1-report-only.yaml: sha256:a81c1b8b90646176313bf31a67e20c7e7c49e83ae77d1515e474a7ad5e31e4e0
-    .claude/skills/loop-changelog/evals/tasks/loop-changelog-noaction.yaml: sha256:b0e91cece042c59bca7e6291324574ec1bc16fbcde861a32c9bf037da20f5a4d
-    .claude/skills/loop-changelog/evals/tasks/loop-changelog-release-promotion.yaml: sha256:6da395b8dc952e4d243b56604aa20f5ad7e461dfde6c95b078aa4f2718b76e45
-    .claude/skills/loop-changelog/evals/tasks/loop-changelog-trigger-negative.yaml: sha256:a6f1ea7ff94b46de4eeb7839b6eef253f01eb0077d48090a440d7c49aa192ec2
+    .claude/skills/loop-changelog/evals/tasks/loop-changelog-basic.yaml: sha256:e5d97ce009c4f3d62c6bd4c26fec2d252c83e9db2071a5235983e40863c4cd3e
+    .claude/skills/loop-changelog/evals/tasks/loop-changelog-create-template.yaml: sha256:d67cf3830f31c3680b41d91c40b66c36d931241b71317435d8fbd211128da74f
+    .claude/skills/loop-changelog/evals/tasks/loop-changelog-l1-report-only.yaml: sha256:159b9bd3c4e48bed344d34197476425f2c749ca6460e4ce6c5a99e850bac3aee
+    .claude/skills/loop-changelog/evals/tasks/loop-changelog-noaction.yaml: sha256:69926691c5b2704555789dc7c055d12a45559438eea4015a2c111bb73f345a1e
+    .claude/skills/loop-changelog/evals/tasks/loop-changelog-release-promotion.yaml: sha256:480d63abe2ccf119f57c144b7a9ca5a9e886ece95ce72e6ab6f5d799d0df8770
+    .claude/skills/loop-changelog/evals/tasks/loop-changelog-trigger-negative.yaml: sha256:ef32704b68464e01499c9d9593fffcb9ce6904d85f5ba8ea3d50d601f2aeff06
     .claude/skills/loop-changelog/references/category-input-schema.md: sha256:73cea54829784a6f5ddf4cc6384ef45f7444a473ce5ade7d2ffc63307b405868
     .claude/skills/loop-changelog/references/category-scope.md: sha256:befd337c4d5585c9888b16b3a24d18770bcfc7ddfa73c0ff224d44893c7fe3b5
     .claude/skills/loop-changelog/references/common-checklist.md: sha256:f1d108abf8264c6698c601c8872d59405db03434870da954ac84baa615117da5
-    .claude/skills/loop-changelog/references/common-output-format.md: sha256:cfa1278e2a4e2c5beaa96654a783381189a230b318c6ef0b37a58c6183c27cd0
+    .claude/skills/loop-changelog/references/common-output-format.md: sha256:c93a31012ab4906b755ac92943736e14f241ba41d833f0e5c4ac22f03473cf98
     .claude/skills/loop-changelog/references/common-troubleshooting.md: sha256:a8fee7f3104e14fc626d4b6fcc7dcfc4c17af35752ee9ee9c57f6e4101e29b0f
     .claude/skills/loop-changelog/scripts/detect_changelog_commits.sh: sha256:c55cb383b5aaeb67ee9d0fdb8b09a3118a39be3a1905dc8118e7c54154fbc751
     .claude/skills/loop-changelog/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
@@ -1170,6 +1174,7 @@ dependencies:
   deployed_files:
   - .agents/skills/loop-ci-sweeper
   - .agents/skills/loop-ci-sweeper/SKILL.md
+  - .agents/skills/loop-ci-sweeper/assets/pr-body-template.md
   - .agents/skills/loop-ci-sweeper/eval.yaml
   - .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-basic.yaml
   - .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml
@@ -1195,6 +1200,7 @@ dependencies:
   - .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh
   - .claude/skills/loop-ci-sweeper
   - .claude/skills/loop-ci-sweeper/SKILL.md
+  - .claude/skills/loop-ci-sweeper/assets/pr-body-template.md
   - .claude/skills/loop-ci-sweeper/eval.yaml
   - .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-basic.yaml
   - .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml
@@ -1219,19 +1225,20 @@ dependencies:
   - .claude/skills/loop-ci-sweeper/scripts/lib/validation.sh
   - .claude/skills/loop-ci-sweeper/scripts/update_run_ledger.sh
   deployed_file_hashes:
-    .agents/skills/loop-ci-sweeper/SKILL.md: sha256:3bf2acfea1aadc40006ac77f0a90f124d4f8df820311ea4e129494f5f7d5d678
-    .agents/skills/loop-ci-sweeper/eval.yaml: sha256:88c7307fe8470370975586db4bedb37aad26629a0e5427e39cd6a03cee11a985
-    .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-basic.yaml: sha256:d40c0a48095d274858dba0b54a0b71d863d03d0430f0247b2e6a6cf9e800bd95
-    .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml: sha256:17d51ab9fc37d0a1435af9a97587b82cedfdb7c75736b098a860ffe1fc4e29e2
-    .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-noaction.yaml: sha256:32c3e9ff548ceef4558b931fce2da03bd83b7cc59f7fc05ee3d91dfeb5829848
-    .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-regression-defer.yaml: sha256:455c044b9c1e448f8c9a70cab2ff5ef780b69d55ecb01a229c574c5efee9bb4a
-    .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-trigger-negative.yaml: sha256:8182ecda6cc314c402746541bfdf2818458998f3c009fb34b1596d776dbcba85
+    .agents/skills/loop-ci-sweeper/SKILL.md: sha256:ebd2ef4950c7da3096b6cd9dda5b9354e9e26f34e044f6aeae7269baad62bdae
+    .agents/skills/loop-ci-sweeper/assets/pr-body-template.md: sha256:0a8e0a1dbc4b6c585a030a5544897fb580178891146c73471db72e3c59984b88
+    .agents/skills/loop-ci-sweeper/eval.yaml: sha256:32058bfc1581927639e2db8f71de6eabeee6ed0ea1d5652ca4988e20b7fe98f8
+    .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-basic.yaml: sha256:9eb773e91d5a1d5a63c068ccef2414fb66e37cd6218a5b709e9234a793c0378a
+    .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml: sha256:06e561f952b2ed402f099f7807307109a3a3e505ecb34b0a2c4d315199b831fa
+    .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-noaction.yaml: sha256:6534ab2d2687a63159c316f5efd53a745161012f84267ecd43e9b59bd577388f
+    .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-regression-defer.yaml: sha256:af729d5f43c82c6d301148120d5b73649f31e56dedd283520fc2ea16874eac92
+    .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-trigger-negative.yaml: sha256:bca779c18aaa40e83b4a69cec34e3a55822405472e12babf53517a76418963d4
     .agents/skills/loop-ci-sweeper/references/category-input-schema.md: sha256:bef50f75ac1bdfbd971068cebf7e6987dc15d663c138d4a53cb6f41a9e2b0c82
     .agents/skills/loop-ci-sweeper/references/category-run-ledger.md: sha256:055c9c821ffaa06f56fbc8cf991e1182cfa1f6a0a9f5b5c7e13411f26231e976
     .agents/skills/loop-ci-sweeper/references/category-scope.md: sha256:e629a55899f59aa6cc007fe68ffc706e7971f4223827030bdf8f817a25f4de26
     .agents/skills/loop-ci-sweeper/references/category-validation-commands.md: sha256:6f0ecb53005eb37b3f4860ffdd0d1bb4938f61476cad97f32bae1d5f2c124e26
     .agents/skills/loop-ci-sweeper/references/common-checklist.md: sha256:68f1e9423c46c11c6317ba69fd38004e4eee6d90a9cb79463b8260e38e0e900e
-    .agents/skills/loop-ci-sweeper/references/common-output-format.md: sha256:fca5a2d50861f0761ad5bcfce98b98ed5aae911e9c2ba8c668550b225b074e22
+    .agents/skills/loop-ci-sweeper/references/common-output-format.md: sha256:8c0e46673cf48a7956b898750fd32e5aaf51607b693e16d6995999fdf5436382
     .agents/skills/loop-ci-sweeper/references/common-troubleshooting.md: sha256:5ebe3285be3c1d405a712b6aff68392050c2e83adf83f2774d38c1afaf26547d
     .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh: sha256:b9d917640bcafb6928b528e28d4f391f904e535afe57538a08459c9d05e9fc39
     .agents/skills/loop-ci-sweeper/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
@@ -1243,19 +1250,20 @@ dependencies:
     .agents/skills/loop-ci-sweeper/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/loop-ci-sweeper/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh: sha256:e410ae7a424a52e8308b2044dfaba1811ff72859e9bdf69fba79056808652200
-    .claude/skills/loop-ci-sweeper/SKILL.md: sha256:3bf2acfea1aadc40006ac77f0a90f124d4f8df820311ea4e129494f5f7d5d678
-    .claude/skills/loop-ci-sweeper/eval.yaml: sha256:88c7307fe8470370975586db4bedb37aad26629a0e5427e39cd6a03cee11a985
-    .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-basic.yaml: sha256:d40c0a48095d274858dba0b54a0b71d863d03d0430f0247b2e6a6cf9e800bd95
-    .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml: sha256:17d51ab9fc37d0a1435af9a97587b82cedfdb7c75736b098a860ffe1fc4e29e2
-    .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-noaction.yaml: sha256:32c3e9ff548ceef4558b931fce2da03bd83b7cc59f7fc05ee3d91dfeb5829848
-    .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-regression-defer.yaml: sha256:455c044b9c1e448f8c9a70cab2ff5ef780b69d55ecb01a229c574c5efee9bb4a
-    .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-trigger-negative.yaml: sha256:8182ecda6cc314c402746541bfdf2818458998f3c009fb34b1596d776dbcba85
+    .claude/skills/loop-ci-sweeper/SKILL.md: sha256:ebd2ef4950c7da3096b6cd9dda5b9354e9e26f34e044f6aeae7269baad62bdae
+    .claude/skills/loop-ci-sweeper/assets/pr-body-template.md: sha256:0a8e0a1dbc4b6c585a030a5544897fb580178891146c73471db72e3c59984b88
+    .claude/skills/loop-ci-sweeper/eval.yaml: sha256:32058bfc1581927639e2db8f71de6eabeee6ed0ea1d5652ca4988e20b7fe98f8
+    .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-basic.yaml: sha256:9eb773e91d5a1d5a63c068ccef2414fb66e37cd6218a5b709e9234a793c0378a
+    .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml: sha256:06e561f952b2ed402f099f7807307109a3a3e505ecb34b0a2c4d315199b831fa
+    .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-noaction.yaml: sha256:6534ab2d2687a63159c316f5efd53a745161012f84267ecd43e9b59bd577388f
+    .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-regression-defer.yaml: sha256:af729d5f43c82c6d301148120d5b73649f31e56dedd283520fc2ea16874eac92
+    .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-trigger-negative.yaml: sha256:bca779c18aaa40e83b4a69cec34e3a55822405472e12babf53517a76418963d4
     .claude/skills/loop-ci-sweeper/references/category-input-schema.md: sha256:bef50f75ac1bdfbd971068cebf7e6987dc15d663c138d4a53cb6f41a9e2b0c82
     .claude/skills/loop-ci-sweeper/references/category-run-ledger.md: sha256:055c9c821ffaa06f56fbc8cf991e1182cfa1f6a0a9f5b5c7e13411f26231e976
     .claude/skills/loop-ci-sweeper/references/category-scope.md: sha256:e629a55899f59aa6cc007fe68ffc706e7971f4223827030bdf8f817a25f4de26
     .claude/skills/loop-ci-sweeper/references/category-validation-commands.md: sha256:6f0ecb53005eb37b3f4860ffdd0d1bb4938f61476cad97f32bae1d5f2c124e26
     .claude/skills/loop-ci-sweeper/references/common-checklist.md: sha256:68f1e9423c46c11c6317ba69fd38004e4eee6d90a9cb79463b8260e38e0e900e
-    .claude/skills/loop-ci-sweeper/references/common-output-format.md: sha256:fca5a2d50861f0761ad5bcfce98b98ed5aae911e9c2ba8c668550b225b074e22
+    .claude/skills/loop-ci-sweeper/references/common-output-format.md: sha256:8c0e46673cf48a7956b898750fd32e5aaf51607b693e16d6995999fdf5436382
     .claude/skills/loop-ci-sweeper/references/common-troubleshooting.md: sha256:5ebe3285be3c1d405a712b6aff68392050c2e83adf83f2774d38c1afaf26547d
     .claude/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh: sha256:b9d917640bcafb6928b528e28d4f391f904e535afe57538a08459c9d05e9fc39
     .claude/skills/loop-ci-sweeper/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
@@ -1277,6 +1285,7 @@ dependencies:
   deployed_files:
   - .agents/skills/loop-docs-triage
   - .agents/skills/loop-docs-triage/SKILL.md
+  - .agents/skills/loop-docs-triage/assets/pr-body-template.md
   - .agents/skills/loop-docs-triage/eval.yaml
   - .agents/skills/loop-docs-triage/evals/files/README.stale.md
   - .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-basic.yaml
@@ -1302,6 +1311,7 @@ dependencies:
   - .agents/skills/loop-docs-triage/scripts/lib/validation.sh
   - .claude/skills/loop-docs-triage
   - .claude/skills/loop-docs-triage/SKILL.md
+  - .claude/skills/loop-docs-triage/assets/pr-body-template.md
   - .claude/skills/loop-docs-triage/eval.yaml
   - .claude/skills/loop-docs-triage/evals/files/README.stale.md
   - .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-basic.yaml
@@ -1326,20 +1336,21 @@ dependencies:
   - .claude/skills/loop-docs-triage/scripts/lib/terraform.sh
   - .claude/skills/loop-docs-triage/scripts/lib/validation.sh
   deployed_file_hashes:
-    .agents/skills/loop-docs-triage/SKILL.md: sha256:00cf1a82a20ac74aa2079feefe80af6d0b9dd2c47d29c96d073661f751d36006
-    .agents/skills/loop-docs-triage/eval.yaml: sha256:1764308c12bf27a8f008e0d4df24e80525a89ca74a7af26b3ed74abe8d0e4ef4
+    .agents/skills/loop-docs-triage/SKILL.md: sha256:c08f43d66970f810e495d96a199a21de63e0cd68d9aa4dc68272e1cee04c586b
+    .agents/skills/loop-docs-triage/assets/pr-body-template.md: sha256:b5a2dd6170c6aacc7adf4f2446742740e19624da544e8a4486f918b5e30abcc1
+    .agents/skills/loop-docs-triage/eval.yaml: sha256:e316b1b802b011860565e161ad729e0dff96e0682517e9253838400199d91930
     .agents/skills/loop-docs-triage/evals/files/README.stale.md: sha256:9776631e8f9c4fd404feecb53c6eb0b59362d970150277c65136242e06efcb64
-    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-basic.yaml: sha256:99e120670ca9a3d493d166d628cf793d05a6abe65838576ee6ad4aa80811f31f
-    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-boundary.yaml: sha256:b4e361de263c0c1850f1ed53d7ced00a72a8914561b08ac7b0267b37286acd7d
-    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-classification.yaml: sha256:f261ac76086a17dedcb4075236197df425a93d5c9fac1422f3f97ade96259fc9
-    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-denylist.yaml: sha256:9ece7b8b3cb2609d93ef3039ca11a4bfb635202bd068f2316bcccbd47dd12ed7
-    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-fixture.yaml: sha256:656475ed3d9c7a3809618c2a0591b442490c836bb121ebe59955ed16616467fa
-    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-noaction.yaml: sha256:04f16693751a12f7b10d9d5dca363984aacfdfec704442f41b15aaa7ccc2001e
-    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-trigger-negative.yaml: sha256:a74d839ca3d7c38f8ab3f820f61a5d8af80b9b05ee46162fd72ab0176568de1b
+    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-basic.yaml: sha256:50f0d24f7f2dbee55cd501f40e76adf26a75fa2c8bb3d84266dc939b429e27de
+    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-boundary.yaml: sha256:2657d5568f3fb4bab5f2167ced9e0266fee9d702f9deebcb83511164d3b6b40c
+    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-classification.yaml: sha256:98f1f851993cadcfc1f6833680afdce5fb4cfcedac2a22e14fa114fa4b06def2
+    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-denylist.yaml: sha256:461e92520b01001e6d0cd7dc267ae8d2ac4c055231b0fd92e1dce1570d14ab3e
+    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-fixture.yaml: sha256:df79263c63a8fa317178b9eddbbc411e51f9257b6ae50d9544ed74e6bbe5be84
+    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-noaction.yaml: sha256:f73b1eafcaf290849afb5d6ca152ed309e712baf930b6d211f7dfcfc0ba8ad16
+    .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-trigger-negative.yaml: sha256:d456a01f6af3e63c2aff65c010fd8d4e484bfd761f667e2728749539772daab2
     .agents/skills/loop-docs-triage/references/category-input-schema.md: sha256:45e42269e4d0c5b8faac17285c951d044e62046c3b4cc7bddd55304569e7f66d
     .agents/skills/loop-docs-triage/references/category-scope.md: sha256:b9a408861108ff9026a5c5888d5197b4c3e05aa4deb54652fc7ffe42013e8da8
     .agents/skills/loop-docs-triage/references/common-checklist.md: sha256:6593968b0046fa64270ef1f8fc2236f0f6a40783d363e1c0d97a9ff06ae9c08c
-    .agents/skills/loop-docs-triage/references/common-output-format.md: sha256:c5c07aa7760970b7f2b0fdb2d4201c67dc2b849490e5b02ba34df3cd0b1486f3
+    .agents/skills/loop-docs-triage/references/common-output-format.md: sha256:af0b084c5182015f50f9420250e3baba4b0cb0e4e73458c65304bef2042c0ace
     .agents/skills/loop-docs-triage/references/common-troubleshooting.md: sha256:3271f7131861164b00151b69eb77f5fd5088a65b979cb0d77449ae144ba80b96
     .agents/skills/loop-docs-triage/scripts/detect_changes.sh: sha256:818c1f354a54c508d39d3ff0128685b0ad974d1340931d18938c1e3e4cb7d975
     .agents/skills/loop-docs-triage/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
@@ -1350,20 +1361,21 @@ dependencies:
     .agents/skills/loop-docs-triage/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .agents/skills/loop-docs-triage/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/loop-docs-triage/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .claude/skills/loop-docs-triage/SKILL.md: sha256:00cf1a82a20ac74aa2079feefe80af6d0b9dd2c47d29c96d073661f751d36006
-    .claude/skills/loop-docs-triage/eval.yaml: sha256:1764308c12bf27a8f008e0d4df24e80525a89ca74a7af26b3ed74abe8d0e4ef4
+    .claude/skills/loop-docs-triage/SKILL.md: sha256:c08f43d66970f810e495d96a199a21de63e0cd68d9aa4dc68272e1cee04c586b
+    .claude/skills/loop-docs-triage/assets/pr-body-template.md: sha256:b5a2dd6170c6aacc7adf4f2446742740e19624da544e8a4486f918b5e30abcc1
+    .claude/skills/loop-docs-triage/eval.yaml: sha256:e316b1b802b011860565e161ad729e0dff96e0682517e9253838400199d91930
     .claude/skills/loop-docs-triage/evals/files/README.stale.md: sha256:9776631e8f9c4fd404feecb53c6eb0b59362d970150277c65136242e06efcb64
-    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-basic.yaml: sha256:99e120670ca9a3d493d166d628cf793d05a6abe65838576ee6ad4aa80811f31f
-    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-boundary.yaml: sha256:b4e361de263c0c1850f1ed53d7ced00a72a8914561b08ac7b0267b37286acd7d
-    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-classification.yaml: sha256:f261ac76086a17dedcb4075236197df425a93d5c9fac1422f3f97ade96259fc9
-    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-denylist.yaml: sha256:9ece7b8b3cb2609d93ef3039ca11a4bfb635202bd068f2316bcccbd47dd12ed7
-    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-fixture.yaml: sha256:656475ed3d9c7a3809618c2a0591b442490c836bb121ebe59955ed16616467fa
-    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-noaction.yaml: sha256:04f16693751a12f7b10d9d5dca363984aacfdfec704442f41b15aaa7ccc2001e
-    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-trigger-negative.yaml: sha256:a74d839ca3d7c38f8ab3f820f61a5d8af80b9b05ee46162fd72ab0176568de1b
+    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-basic.yaml: sha256:50f0d24f7f2dbee55cd501f40e76adf26a75fa2c8bb3d84266dc939b429e27de
+    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-boundary.yaml: sha256:2657d5568f3fb4bab5f2167ced9e0266fee9d702f9deebcb83511164d3b6b40c
+    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-classification.yaml: sha256:98f1f851993cadcfc1f6833680afdce5fb4cfcedac2a22e14fa114fa4b06def2
+    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-denylist.yaml: sha256:461e92520b01001e6d0cd7dc267ae8d2ac4c055231b0fd92e1dce1570d14ab3e
+    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-fixture.yaml: sha256:df79263c63a8fa317178b9eddbbc411e51f9257b6ae50d9544ed74e6bbe5be84
+    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-noaction.yaml: sha256:f73b1eafcaf290849afb5d6ca152ed309e712baf930b6d211f7dfcfc0ba8ad16
+    .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-trigger-negative.yaml: sha256:d456a01f6af3e63c2aff65c010fd8d4e484bfd761f667e2728749539772daab2
     .claude/skills/loop-docs-triage/references/category-input-schema.md: sha256:45e42269e4d0c5b8faac17285c951d044e62046c3b4cc7bddd55304569e7f66d
     .claude/skills/loop-docs-triage/references/category-scope.md: sha256:b9a408861108ff9026a5c5888d5197b4c3e05aa4deb54652fc7ffe42013e8da8
     .claude/skills/loop-docs-triage/references/common-checklist.md: sha256:6593968b0046fa64270ef1f8fc2236f0f6a40783d363e1c0d97a9ff06ae9c08c
-    .claude/skills/loop-docs-triage/references/common-output-format.md: sha256:c5c07aa7760970b7f2b0fdb2d4201c67dc2b849490e5b02ba34df3cd0b1486f3
+    .claude/skills/loop-docs-triage/references/common-output-format.md: sha256:af0b084c5182015f50f9420250e3baba4b0cb0e4e73458c65304bef2042c0ace
     .claude/skills/loop-docs-triage/references/common-troubleshooting.md: sha256:3271f7131861164b00151b69eb77f5fd5088a65b979cb0d77449ae144ba80b96
     .claude/skills/loop-docs-triage/scripts/detect_changes.sh: sha256:818c1f354a54c508d39d3ff0128685b0ad974d1340931d18938c1e3e4cb7d975
     .claude/skills/loop-docs-triage/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
@@ -1384,6 +1396,7 @@ dependencies:
   deployed_files:
   - .agents/skills/loop-report-tech-debt
   - .agents/skills/loop-report-tech-debt/SKILL.md
+  - .agents/skills/loop-report-tech-debt/assets/pr-body-template.md
   - .agents/skills/loop-report-tech-debt/eval.yaml
   - .agents/skills/loop-report-tech-debt/evals/files/README.md
   - .agents/skills/loop-report-tech-debt/evals/files/go.mod.txt
@@ -1417,6 +1430,7 @@ dependencies:
   - .agents/skills/loop-report-tech-debt/scripts/lib/validation.sh
   - .claude/skills/loop-report-tech-debt
   - .claude/skills/loop-report-tech-debt/SKILL.md
+  - .claude/skills/loop-report-tech-debt/assets/pr-body-template.md
   - .claude/skills/loop-report-tech-debt/eval.yaml
   - .claude/skills/loop-report-tech-debt/evals/files/README.md
   - .claude/skills/loop-report-tech-debt/evals/files/go.mod.txt
@@ -1449,27 +1463,28 @@ dependencies:
   - .claude/skills/loop-report-tech-debt/scripts/lib/terraform.sh
   - .claude/skills/loop-report-tech-debt/scripts/lib/validation.sh
   deployed_file_hashes:
-    .agents/skills/loop-report-tech-debt/SKILL.md: sha256:2a7a421f22948eeef1179549a4f746cc9e9273d2b3345b26ac291455362a6902
-    .agents/skills/loop-report-tech-debt/eval.yaml: sha256:53d4ee96f7fde1c27b71628388f114e8e1d0b3458cea0c0527e3235f380be412
+    .agents/skills/loop-report-tech-debt/SKILL.md: sha256:ade5c3742eceaad24bfcd011bae390fdf6883191c6c55d32f921cec33f976935
+    .agents/skills/loop-report-tech-debt/assets/pr-body-template.md: sha256:8e74dc94299cfe9b5d671277aaf9d5ab64549797e27cad0fb8a8d0bb4fc19b04
+    .agents/skills/loop-report-tech-debt/eval.yaml: sha256:e6990687c342188eec3508b4aa5bb72d947acbdbe9e78204664323f4c13963b9
     .agents/skills/loop-report-tech-debt/evals/files/README.md: sha256:72115b1eeabe18a192e21dc65b707f07d2ddb699e2f4c90c7dff2b438028961f
     .agents/skills/loop-report-tech-debt/evals/files/go.mod.txt: sha256:6337da5cc0454697de17006a91847d56e62dd5cd9fd3a245f2e873ecc1246395
     .agents/skills/loop-report-tech-debt/evals/files/noise.go.txt: sha256:095a192120fd822a7a7e2034ae84fbc6fdfdf7e4dbee7160266295e9e372c154
     .agents/skills/loop-report-tech-debt/evals/files/previous-report.sample.md: sha256:98c283fffe6da93c1c3b783e8173c47c27be518ceec0d0fe0021f10056579e21
     .agents/skills/loop-report-tech-debt/evals/files/sample_service.go.txt: sha256:5a4aeb7c5caf81a5f86e46e54e135d39634103f012fdf90afcf1bbc942325bb3
-    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-basic.yaml: sha256:d112912609520624295a954b4e34e9cb210d2622016d1a55467bce0dcf5e19e6
-    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-classification.yaml: sha256:3caa71f0bcc7a531f99731e58009e07df4f93266003acf211f1b7b3dea4b447d
-    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-hotspot-only.yaml: sha256:fc86da7193dca6a60c4b67e4d6f38b14e6dda0279903853c815641585eda9a31
-    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l1-report-only.yaml: sha256:227ec0dd2415aeffd52bdde203076d25eab45dd0b1b726b4b98e3b5037787209
-    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l2-report-write.yaml: sha256:e46ac2099794aae70bb923e2473a16065151da1cfd39fe7aa127caf733b63b8d
-    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-noaction.yaml: sha256:66a094199ca60d10df3efbf25070a87b0024b6135e640f9ca9b82f07b40bd39c
-    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-previous-report.yaml: sha256:1ae66d05d775132e18eb8e70d4222ada055ea634a1142be1914c7044bc8ec7d6
-    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-trigger-negative.yaml: sha256:a0c9dd7020cabcf3af5152071a41c3958c270048097c97f86a0b001d651bcb4f
-    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-truncation-cap.yaml: sha256:534320eaeeecd9323b4e71d3f1bbe72ac2306b11b64798b9b333959da72262ed
+    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-basic.yaml: sha256:40388d7eda7463f5bf75df0f8c1e3375b07075550c6a711e637cf3131f3129aa
+    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-classification.yaml: sha256:cd206d5041e3095a5ab3d3345f451a3832390c4a6212b4a73569762890478621
+    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-hotspot-only.yaml: sha256:ff2b340fda7c748bd20e2e45a9a33b3edd17d7482b5b144f7b0e8e63d96e9946
+    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l1-report-only.yaml: sha256:a6b653fca6813824464ef5e243d6928966fdfb484e32dfa707766c2ba77f69f6
+    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l2-report-write.yaml: sha256:e209bfea2c883f7007dfe4678d4d2e4dbc8a3b14593de93ab9cd0056cef5ee31
+    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-noaction.yaml: sha256:3b86a3da547d5d86bb08f69414145a6a0af1e76eb27c2c70bcb8cc05576d12a9
+    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-previous-report.yaml: sha256:27531ffac1120e372531391661e26177047a643b2dad539989983a77f6c93bce
+    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-trigger-negative.yaml: sha256:faba474f6000e72574174d85c26751967e891dd2aee952a676cc1f8d95148ce8
+    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-truncation-cap.yaml: sha256:b0fd7139ddb1808523de098092d7803459e8243001ea57b318834d583999d322
     .agents/skills/loop-report-tech-debt/references/category-debt-taxonomy.md: sha256:4268125d2b7c263d7e1c7ba1d0d79fb8ed49de04de07531f5e944fc3d9c6a498
     .agents/skills/loop-report-tech-debt/references/category-input-schema.md: sha256:bbc1229fb30fd480ac50646d91221be0fa37fbf0d1c94c3df50e95891cc4ea3b
     .agents/skills/loop-report-tech-debt/references/category-scope.md: sha256:12a6e9e5213d78dc67a1a2467a2a902c97dc55b5da3e56c2b7b36683ce7d15f9
     .agents/skills/loop-report-tech-debt/references/common-checklist.md: sha256:d3c24fa34abb135fc0e6521b1c1635b89097a2d60c97c91c393c43dd9982bbb7
-    .agents/skills/loop-report-tech-debt/references/common-output-format.md: sha256:21c7e0ea9c6923130318b1f1e84372897abf635225a7dfddff9384e63ded43c9
+    .agents/skills/loop-report-tech-debt/references/common-output-format.md: sha256:b9725b54608b9e8fbab796fbb974252d07e7cb201caa7fde798dc1416868e074
     .agents/skills/loop-report-tech-debt/references/common-troubleshooting.md: sha256:28e9a9acf32642f50167c5a6e25a0de9410cc33cf4ec1a23a06deb92f21b9e1b
     .agents/skills/loop-report-tech-debt/scripts/detect_report_tech_debt.sh: sha256:b8517a783d0a89b35ee0dcb14eed3f926fa592e22a596bb42bfd5498e7aabdf2
     .agents/skills/loop-report-tech-debt/scripts/detect_report_tech_debt_sensors.sh: sha256:c49c50630e015ad44342d8c640986e52d92a2a777b90c1ca2ea09b00058153d7
@@ -1481,27 +1496,28 @@ dependencies:
     .agents/skills/loop-report-tech-debt/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .agents/skills/loop-report-tech-debt/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/loop-report-tech-debt/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .claude/skills/loop-report-tech-debt/SKILL.md: sha256:2a7a421f22948eeef1179549a4f746cc9e9273d2b3345b26ac291455362a6902
-    .claude/skills/loop-report-tech-debt/eval.yaml: sha256:53d4ee96f7fde1c27b71628388f114e8e1d0b3458cea0c0527e3235f380be412
+    .claude/skills/loop-report-tech-debt/SKILL.md: sha256:ade5c3742eceaad24bfcd011bae390fdf6883191c6c55d32f921cec33f976935
+    .claude/skills/loop-report-tech-debt/assets/pr-body-template.md: sha256:8e74dc94299cfe9b5d671277aaf9d5ab64549797e27cad0fb8a8d0bb4fc19b04
+    .claude/skills/loop-report-tech-debt/eval.yaml: sha256:e6990687c342188eec3508b4aa5bb72d947acbdbe9e78204664323f4c13963b9
     .claude/skills/loop-report-tech-debt/evals/files/README.md: sha256:72115b1eeabe18a192e21dc65b707f07d2ddb699e2f4c90c7dff2b438028961f
     .claude/skills/loop-report-tech-debt/evals/files/go.mod.txt: sha256:6337da5cc0454697de17006a91847d56e62dd5cd9fd3a245f2e873ecc1246395
     .claude/skills/loop-report-tech-debt/evals/files/noise.go.txt: sha256:095a192120fd822a7a7e2034ae84fbc6fdfdf7e4dbee7160266295e9e372c154
     .claude/skills/loop-report-tech-debt/evals/files/previous-report.sample.md: sha256:98c283fffe6da93c1c3b783e8173c47c27be518ceec0d0fe0021f10056579e21
     .claude/skills/loop-report-tech-debt/evals/files/sample_service.go.txt: sha256:5a4aeb7c5caf81a5f86e46e54e135d39634103f012fdf90afcf1bbc942325bb3
-    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-basic.yaml: sha256:d112912609520624295a954b4e34e9cb210d2622016d1a55467bce0dcf5e19e6
-    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-classification.yaml: sha256:3caa71f0bcc7a531f99731e58009e07df4f93266003acf211f1b7b3dea4b447d
-    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-hotspot-only.yaml: sha256:fc86da7193dca6a60c4b67e4d6f38b14e6dda0279903853c815641585eda9a31
-    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l1-report-only.yaml: sha256:227ec0dd2415aeffd52bdde203076d25eab45dd0b1b726b4b98e3b5037787209
-    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l2-report-write.yaml: sha256:e46ac2099794aae70bb923e2473a16065151da1cfd39fe7aa127caf733b63b8d
-    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-noaction.yaml: sha256:66a094199ca60d10df3efbf25070a87b0024b6135e640f9ca9b82f07b40bd39c
-    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-previous-report.yaml: sha256:1ae66d05d775132e18eb8e70d4222ada055ea634a1142be1914c7044bc8ec7d6
-    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-trigger-negative.yaml: sha256:a0c9dd7020cabcf3af5152071a41c3958c270048097c97f86a0b001d651bcb4f
-    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-truncation-cap.yaml: sha256:534320eaeeecd9323b4e71d3f1bbe72ac2306b11b64798b9b333959da72262ed
+    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-basic.yaml: sha256:40388d7eda7463f5bf75df0f8c1e3375b07075550c6a711e637cf3131f3129aa
+    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-classification.yaml: sha256:cd206d5041e3095a5ab3d3345f451a3832390c4a6212b4a73569762890478621
+    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-hotspot-only.yaml: sha256:ff2b340fda7c748bd20e2e45a9a33b3edd17d7482b5b144f7b0e8e63d96e9946
+    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l1-report-only.yaml: sha256:a6b653fca6813824464ef5e243d6928966fdfb484e32dfa707766c2ba77f69f6
+    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l2-report-write.yaml: sha256:e209bfea2c883f7007dfe4678d4d2e4dbc8a3b14593de93ab9cd0056cef5ee31
+    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-noaction.yaml: sha256:3b86a3da547d5d86bb08f69414145a6a0af1e76eb27c2c70bcb8cc05576d12a9
+    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-previous-report.yaml: sha256:27531ffac1120e372531391661e26177047a643b2dad539989983a77f6c93bce
+    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-trigger-negative.yaml: sha256:faba474f6000e72574174d85c26751967e891dd2aee952a676cc1f8d95148ce8
+    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-truncation-cap.yaml: sha256:b0fd7139ddb1808523de098092d7803459e8243001ea57b318834d583999d322
     .claude/skills/loop-report-tech-debt/references/category-debt-taxonomy.md: sha256:4268125d2b7c263d7e1c7ba1d0d79fb8ed49de04de07531f5e944fc3d9c6a498
     .claude/skills/loop-report-tech-debt/references/category-input-schema.md: sha256:bbc1229fb30fd480ac50646d91221be0fa37fbf0d1c94c3df50e95891cc4ea3b
     .claude/skills/loop-report-tech-debt/references/category-scope.md: sha256:12a6e9e5213d78dc67a1a2467a2a902c97dc55b5da3e56c2b7b36683ce7d15f9
     .claude/skills/loop-report-tech-debt/references/common-checklist.md: sha256:d3c24fa34abb135fc0e6521b1c1635b89097a2d60c97c91c393c43dd9982bbb7
-    .claude/skills/loop-report-tech-debt/references/common-output-format.md: sha256:21c7e0ea9c6923130318b1f1e84372897abf635225a7dfddff9384e63ded43c9
+    .claude/skills/loop-report-tech-debt/references/common-output-format.md: sha256:b9725b54608b9e8fbab796fbb974252d07e7cb201caa7fde798dc1416868e074
     .claude/skills/loop-report-tech-debt/references/common-troubleshooting.md: sha256:28e9a9acf32642f50167c5a6e25a0de9410cc33cf4ec1a23a06deb92f21b9e1b
     .claude/skills/loop-report-tech-debt/scripts/detect_report_tech_debt.sh: sha256:b8517a783d0a89b35ee0dcb14eed3f926fa592e22a596bb42bfd5498e7aabdf2
     .claude/skills/loop-report-tech-debt/scripts/detect_report_tech_debt_sensors.sh: sha256:c49c50630e015ad44342d8c640986e52d92a2a777b90c1ca2ea09b00058153d7
@@ -3962,7 +3978,16 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:795e6b9929cba62d5f6c5a9db9db5ff4f014653be71555fbadb85a61912f72ea
+  content_hash: sha256:c55caa168d548baefa262002baed039c2c6602855c60ac670918dba36d17dbb2
+- kind: project-relative
+  target: claude
+  value: .claude/skills/loop-changelog/assets/pr-body-template.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/loop-changelog
+  active_owner: ./.apm/packages/loop-changelog
+  content_hash: sha256:c50a48095a4654482cacd5598e04e341eaedcbd0a7b41ac4ec4e248bff76b6f7
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-changelog/eval.yaml
@@ -3971,7 +3996,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:1783563dbe7b004b65580a40d7dd5ff09000c81fb208de0af543160c680e4d89
+  content_hash: sha256:0f6e6c1456f5f443b6fa3bd23037cf09670bddca48512dc37f8a81f973095783
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-changelog/evals/files/CHANGELOG.sample.md
@@ -3989,7 +4014,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:148adb6968570a13bae54be05761def46188a1fa663c2368b2cddad16db6d8dc
+  content_hash: sha256:e5d97ce009c4f3d62c6bd4c26fec2d252c83e9db2071a5235983e40863c4cd3e
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-changelog/evals/tasks/loop-changelog-create-template.yaml
@@ -3998,7 +4023,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:9ccad431388d5ed3fb62b64d7bd39cf254dc0c62e10dfb73cae3117ed540ab39
+  content_hash: sha256:d67cf3830f31c3680b41d91c40b66c36d931241b71317435d8fbd211128da74f
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-changelog/evals/tasks/loop-changelog-l1-report-only.yaml
@@ -4007,7 +4032,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:a81c1b8b90646176313bf31a67e20c7e7c49e83ae77d1515e474a7ad5e31e4e0
+  content_hash: sha256:159b9bd3c4e48bed344d34197476425f2c749ca6460e4ce6c5a99e850bac3aee
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-changelog/evals/tasks/loop-changelog-noaction.yaml
@@ -4016,7 +4041,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:b0e91cece042c59bca7e6291324574ec1bc16fbcde861a32c9bf037da20f5a4d
+  content_hash: sha256:69926691c5b2704555789dc7c055d12a45559438eea4015a2c111bb73f345a1e
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-changelog/evals/tasks/loop-changelog-release-promotion.yaml
@@ -4025,7 +4050,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:6da395b8dc952e4d243b56604aa20f5ad7e461dfde6c95b078aa4f2718b76e45
+  content_hash: sha256:480d63abe2ccf119f57c144b7a9ca5a9e886ece95ce72e6ab6f5d799d0df8770
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-changelog/evals/tasks/loop-changelog-trigger-negative.yaml
@@ -4034,7 +4059,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:a6f1ea7ff94b46de4eeb7839b6eef253f01eb0077d48090a440d7c49aa192ec2
+  content_hash: sha256:ef32704b68464e01499c9d9593fffcb9ce6904d85f5ba8ea3d50d601f2aeff06
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-changelog/references/category-input-schema.md
@@ -4070,7 +4095,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:cfa1278e2a4e2c5beaa96654a783381189a230b318c6ef0b37a58c6183c27cd0
+  content_hash: sha256:c93a31012ab4906b755ac92943736e14f241ba41d833f0e5c4ac22f03473cf98
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-changelog/references/common-troubleshooting.md
@@ -4178,7 +4203,16 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:3bf2acfea1aadc40006ac77f0a90f124d4f8df820311ea4e129494f5f7d5d678
+  content_hash: sha256:ebd2ef4950c7da3096b6cd9dda5b9354e9e26f34e044f6aeae7269baad62bdae
+- kind: project-relative
+  target: claude
+  value: .claude/skills/loop-ci-sweeper/assets/pr-body-template.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/loop-ci-sweeper
+  active_owner: ./.apm/packages/loop-ci-sweeper
+  content_hash: sha256:0a8e0a1dbc4b6c585a030a5544897fb580178891146c73471db72e3c59984b88
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-ci-sweeper/eval.yaml
@@ -4187,7 +4221,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:88c7307fe8470370975586db4bedb37aad26629a0e5427e39cd6a03cee11a985
+  content_hash: sha256:32058bfc1581927639e2db8f71de6eabeee6ed0ea1d5652ca4988e20b7fe98f8
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-basic.yaml
@@ -4196,7 +4230,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:d40c0a48095d274858dba0b54a0b71d863d03d0430f0247b2e6a6cf9e800bd95
+  content_hash: sha256:9eb773e91d5a1d5a63c068ccef2414fb66e37cd6218a5b709e9234a793c0378a
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml
@@ -4205,7 +4239,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:17d51ab9fc37d0a1435af9a97587b82cedfdb7c75736b098a860ffe1fc4e29e2
+  content_hash: sha256:06e561f952b2ed402f099f7807307109a3a3e505ecb34b0a2c4d315199b831fa
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-noaction.yaml
@@ -4214,7 +4248,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:32c3e9ff548ceef4558b931fce2da03bd83b7cc59f7fc05ee3d91dfeb5829848
+  content_hash: sha256:6534ab2d2687a63159c316f5efd53a745161012f84267ecd43e9b59bd577388f
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-regression-defer.yaml
@@ -4223,7 +4257,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:455c044b9c1e448f8c9a70cab2ff5ef780b69d55ecb01a229c574c5efee9bb4a
+  content_hash: sha256:af729d5f43c82c6d301148120d5b73649f31e56dedd283520fc2ea16874eac92
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-trigger-negative.yaml
@@ -4232,7 +4266,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:8182ecda6cc314c402746541bfdf2818458998f3c009fb34b1596d776dbcba85
+  content_hash: sha256:bca779c18aaa40e83b4a69cec34e3a55822405472e12babf53517a76418963d4
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-ci-sweeper/references/category-input-schema.md
@@ -4286,7 +4320,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:fca5a2d50861f0761ad5bcfce98b98ed5aae911e9c2ba8c668550b225b074e22
+  content_hash: sha256:8c0e46673cf48a7956b898750fd32e5aaf51607b693e16d6995999fdf5436382
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-ci-sweeper/references/common-troubleshooting.md
@@ -4403,7 +4437,16 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:00cf1a82a20ac74aa2079feefe80af6d0b9dd2c47d29c96d073661f751d36006
+  content_hash: sha256:c08f43d66970f810e495d96a199a21de63e0cd68d9aa4dc68272e1cee04c586b
+- kind: project-relative
+  target: claude
+  value: .claude/skills/loop-docs-triage/assets/pr-body-template.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/loop-docs-triage
+  active_owner: ./.apm/packages/loop-docs-triage
+  content_hash: sha256:b5a2dd6170c6aacc7adf4f2446742740e19624da544e8a4486f918b5e30abcc1
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-docs-triage/eval.yaml
@@ -4412,7 +4455,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:1764308c12bf27a8f008e0d4df24e80525a89ca74a7af26b3ed74abe8d0e4ef4
+  content_hash: sha256:e316b1b802b011860565e161ad729e0dff96e0682517e9253838400199d91930
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-docs-triage/evals/files/README.stale.md
@@ -4430,7 +4473,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:99e120670ca9a3d493d166d628cf793d05a6abe65838576ee6ad4aa80811f31f
+  content_hash: sha256:50f0d24f7f2dbee55cd501f40e76adf26a75fa2c8bb3d84266dc939b429e27de
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-boundary.yaml
@@ -4439,7 +4482,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:b4e361de263c0c1850f1ed53d7ced00a72a8914561b08ac7b0267b37286acd7d
+  content_hash: sha256:2657d5568f3fb4bab5f2167ced9e0266fee9d702f9deebcb83511164d3b6b40c
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-classification.yaml
@@ -4448,7 +4491,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:f261ac76086a17dedcb4075236197df425a93d5c9fac1422f3f97ade96259fc9
+  content_hash: sha256:98f1f851993cadcfc1f6833680afdce5fb4cfcedac2a22e14fa114fa4b06def2
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-denylist.yaml
@@ -4457,7 +4500,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:9ece7b8b3cb2609d93ef3039ca11a4bfb635202bd068f2316bcccbd47dd12ed7
+  content_hash: sha256:461e92520b01001e6d0cd7dc267ae8d2ac4c055231b0fd92e1dce1570d14ab3e
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-fixture.yaml
@@ -4466,7 +4509,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:656475ed3d9c7a3809618c2a0591b442490c836bb121ebe59955ed16616467fa
+  content_hash: sha256:df79263c63a8fa317178b9eddbbc411e51f9257b6ae50d9544ed74e6bbe5be84
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-noaction.yaml
@@ -4475,7 +4518,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:04f16693751a12f7b10d9d5dca363984aacfdfec704442f41b15aaa7ccc2001e
+  content_hash: sha256:f73b1eafcaf290849afb5d6ca152ed309e712baf930b6d211f7dfcfc0ba8ad16
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-docs-triage/evals/tasks/loop-docs-triage-trigger-negative.yaml
@@ -4484,7 +4527,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:a74d839ca3d7c38f8ab3f820f61a5d8af80b9b05ee46162fd72ab0176568de1b
+  content_hash: sha256:d456a01f6af3e63c2aff65c010fd8d4e484bfd761f667e2728749539772daab2
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-docs-triage/references/category-input-schema.md
@@ -4520,7 +4563,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:c5c07aa7760970b7f2b0fdb2d4201c67dc2b849490e5b02ba34df3cd0b1486f3
+  content_hash: sha256:af0b084c5182015f50f9420250e3baba4b0cb0e4e73458c65304bef2042c0ace
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-docs-triage/references/common-troubleshooting.md
@@ -4628,7 +4671,16 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:2a7a421f22948eeef1179549a4f746cc9e9273d2b3345b26ac291455362a6902
+  content_hash: sha256:ade5c3742eceaad24bfcd011bae390fdf6883191c6c55d32f921cec33f976935
+- kind: project-relative
+  target: claude
+  value: .claude/skills/loop-report-tech-debt/assets/pr-body-template.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:8e74dc94299cfe9b5d671277aaf9d5ab64549797e27cad0fb8a8d0bb4fc19b04
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-report-tech-debt/eval.yaml
@@ -4637,7 +4689,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:53d4ee96f7fde1c27b71628388f114e8e1d0b3458cea0c0527e3235f380be412
+  content_hash: sha256:e6990687c342188eec3508b4aa5bb72d947acbdbe9e78204664323f4c13963b9
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-report-tech-debt/evals/files/README.md
@@ -4691,7 +4743,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:d112912609520624295a954b4e34e9cb210d2622016d1a55467bce0dcf5e19e6
+  content_hash: sha256:40388d7eda7463f5bf75df0f8c1e3375b07075550c6a711e637cf3131f3129aa
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-classification.yaml
@@ -4700,7 +4752,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:3caa71f0bcc7a531f99731e58009e07df4f93266003acf211f1b7b3dea4b447d
+  content_hash: sha256:cd206d5041e3095a5ab3d3345f451a3832390c4a6212b4a73569762890478621
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-hotspot-only.yaml
@@ -4709,7 +4761,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:fc86da7193dca6a60c4b67e4d6f38b14e6dda0279903853c815641585eda9a31
+  content_hash: sha256:ff2b340fda7c748bd20e2e45a9a33b3edd17d7482b5b144f7b0e8e63d96e9946
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l1-report-only.yaml
@@ -4718,7 +4770,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:227ec0dd2415aeffd52bdde203076d25eab45dd0b1b726b4b98e3b5037787209
+  content_hash: sha256:a6b653fca6813824464ef5e243d6928966fdfb484e32dfa707766c2ba77f69f6
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l2-report-write.yaml
@@ -4727,7 +4779,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:e46ac2099794aae70bb923e2473a16065151da1cfd39fe7aa127caf733b63b8d
+  content_hash: sha256:e209bfea2c883f7007dfe4678d4d2e4dbc8a3b14593de93ab9cd0056cef5ee31
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-noaction.yaml
@@ -4736,7 +4788,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:66a094199ca60d10df3efbf25070a87b0024b6135e640f9ca9b82f07b40bd39c
+  content_hash: sha256:3b86a3da547d5d86bb08f69414145a6a0af1e76eb27c2c70bcb8cc05576d12a9
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-previous-report.yaml
@@ -4745,7 +4797,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:1ae66d05d775132e18eb8e70d4222ada055ea634a1142be1914c7044bc8ec7d6
+  content_hash: sha256:27531ffac1120e372531391661e26177047a643b2dad539989983a77f6c93bce
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-trigger-negative.yaml
@@ -4754,7 +4806,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:a0c9dd7020cabcf3af5152071a41c3958c270048097c97f86a0b001d651bcb4f
+  content_hash: sha256:faba474f6000e72574174d85c26751967e891dd2aee952a676cc1f8d95148ce8
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-truncation-cap.yaml
@@ -4763,7 +4815,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:534320eaeeecd9323b4e71d3f1bbe72ac2306b11b64798b9b333959da72262ed
+  content_hash: sha256:b0fd7139ddb1808523de098092d7803459e8243001ea57b318834d583999d322
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-report-tech-debt/references/category-debt-taxonomy.md
@@ -4808,7 +4860,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:21c7e0ea9c6923130318b1f1e84372897abf635225a7dfddff9384e63ded43c9
+  content_hash: sha256:b9725b54608b9e8fbab796fbb974252d07e7cb201caa7fde798dc1416868e074
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-report-tech-debt/references/common-troubleshooting.md
@@ -7526,7 +7578,16 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:795e6b9929cba62d5f6c5a9db9db5ff4f014653be71555fbadb85a61912f72ea
+  content_hash: sha256:c55caa168d548baefa262002baed039c2c6602855c60ac670918dba36d17dbb2
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/loop-changelog/assets/pr-body-template.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/loop-changelog
+  active_owner: ./.apm/packages/loop-changelog
+  content_hash: sha256:c50a48095a4654482cacd5598e04e341eaedcbd0a7b41ac4ec4e248bff76b6f7
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-changelog/eval.yaml
@@ -7535,7 +7596,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:1783563dbe7b004b65580a40d7dd5ff09000c81fb208de0af543160c680e4d89
+  content_hash: sha256:0f6e6c1456f5f443b6fa3bd23037cf09670bddca48512dc37f8a81f973095783
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-changelog/evals/files/CHANGELOG.sample.md
@@ -7553,7 +7614,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:148adb6968570a13bae54be05761def46188a1fa663c2368b2cddad16db6d8dc
+  content_hash: sha256:e5d97ce009c4f3d62c6bd4c26fec2d252c83e9db2071a5235983e40863c4cd3e
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-changelog/evals/tasks/loop-changelog-create-template.yaml
@@ -7562,7 +7623,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:9ccad431388d5ed3fb62b64d7bd39cf254dc0c62e10dfb73cae3117ed540ab39
+  content_hash: sha256:d67cf3830f31c3680b41d91c40b66c36d931241b71317435d8fbd211128da74f
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-changelog/evals/tasks/loop-changelog-l1-report-only.yaml
@@ -7571,7 +7632,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:a81c1b8b90646176313bf31a67e20c7e7c49e83ae77d1515e474a7ad5e31e4e0
+  content_hash: sha256:159b9bd3c4e48bed344d34197476425f2c749ca6460e4ce6c5a99e850bac3aee
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-changelog/evals/tasks/loop-changelog-noaction.yaml
@@ -7580,7 +7641,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:b0e91cece042c59bca7e6291324574ec1bc16fbcde861a32c9bf037da20f5a4d
+  content_hash: sha256:69926691c5b2704555789dc7c055d12a45559438eea4015a2c111bb73f345a1e
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-changelog/evals/tasks/loop-changelog-release-promotion.yaml
@@ -7589,7 +7650,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:6da395b8dc952e4d243b56604aa20f5ad7e461dfde6c95b078aa4f2718b76e45
+  content_hash: sha256:480d63abe2ccf119f57c144b7a9ca5a9e886ece95ce72e6ab6f5d799d0df8770
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-changelog/evals/tasks/loop-changelog-trigger-negative.yaml
@@ -7598,7 +7659,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:a6f1ea7ff94b46de4eeb7839b6eef253f01eb0077d48090a440d7c49aa192ec2
+  content_hash: sha256:ef32704b68464e01499c9d9593fffcb9ce6904d85f5ba8ea3d50d601f2aeff06
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-changelog/references/category-input-schema.md
@@ -7634,7 +7695,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:cfa1278e2a4e2c5beaa96654a783381189a230b318c6ef0b37a58c6183c27cd0
+  content_hash: sha256:c93a31012ab4906b755ac92943736e14f241ba41d833f0e5c4ac22f03473cf98
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-changelog/references/common-troubleshooting.md
@@ -7742,7 +7803,16 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:3bf2acfea1aadc40006ac77f0a90f124d4f8df820311ea4e129494f5f7d5d678
+  content_hash: sha256:ebd2ef4950c7da3096b6cd9dda5b9354e9e26f34e044f6aeae7269baad62bdae
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/loop-ci-sweeper/assets/pr-body-template.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/loop-ci-sweeper
+  active_owner: ./.apm/packages/loop-ci-sweeper
+  content_hash: sha256:0a8e0a1dbc4b6c585a030a5544897fb580178891146c73471db72e3c59984b88
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-ci-sweeper/eval.yaml
@@ -7751,7 +7821,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:88c7307fe8470370975586db4bedb37aad26629a0e5427e39cd6a03cee11a985
+  content_hash: sha256:32058bfc1581927639e2db8f71de6eabeee6ed0ea1d5652ca4988e20b7fe98f8
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-basic.yaml
@@ -7760,7 +7830,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:d40c0a48095d274858dba0b54a0b71d863d03d0430f0247b2e6a6cf9e800bd95
+  content_hash: sha256:9eb773e91d5a1d5a63c068ccef2414fb66e37cd6218a5b709e9234a793c0378a
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-classification.yaml
@@ -7769,7 +7839,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:17d51ab9fc37d0a1435af9a97587b82cedfdb7c75736b098a860ffe1fc4e29e2
+  content_hash: sha256:06e561f952b2ed402f099f7807307109a3a3e505ecb34b0a2c4d315199b831fa
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-noaction.yaml
@@ -7778,7 +7848,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:32c3e9ff548ceef4558b931fce2da03bd83b7cc59f7fc05ee3d91dfeb5829848
+  content_hash: sha256:6534ab2d2687a63159c316f5efd53a745161012f84267ecd43e9b59bd577388f
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-regression-defer.yaml
@@ -7787,7 +7857,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:455c044b9c1e448f8c9a70cab2ff5ef780b69d55ecb01a229c574c5efee9bb4a
+  content_hash: sha256:af729d5f43c82c6d301148120d5b73649f31e56dedd283520fc2ea16874eac92
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-ci-sweeper/evals/tasks/loop-ci-sweeper-trigger-negative.yaml
@@ -7796,7 +7866,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:8182ecda6cc314c402746541bfdf2818458998f3c009fb34b1596d776dbcba85
+  content_hash: sha256:bca779c18aaa40e83b4a69cec34e3a55822405472e12babf53517a76418963d4
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-ci-sweeper/references/category-input-schema.md
@@ -7850,7 +7920,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:fca5a2d50861f0761ad5bcfce98b98ed5aae911e9c2ba8c668550b225b074e22
+  content_hash: sha256:8c0e46673cf48a7956b898750fd32e5aaf51607b693e16d6995999fdf5436382
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-ci-sweeper/references/common-troubleshooting.md
@@ -7967,7 +8037,16 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:00cf1a82a20ac74aa2079feefe80af6d0b9dd2c47d29c96d073661f751d36006
+  content_hash: sha256:c08f43d66970f810e495d96a199a21de63e0cd68d9aa4dc68272e1cee04c586b
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/loop-docs-triage/assets/pr-body-template.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/loop-docs-triage
+  active_owner: ./.apm/packages/loop-docs-triage
+  content_hash: sha256:b5a2dd6170c6aacc7adf4f2446742740e19624da544e8a4486f918b5e30abcc1
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-docs-triage/eval.yaml
@@ -7976,7 +8055,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:1764308c12bf27a8f008e0d4df24e80525a89ca74a7af26b3ed74abe8d0e4ef4
+  content_hash: sha256:e316b1b802b011860565e161ad729e0dff96e0682517e9253838400199d91930
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-docs-triage/evals/files/README.stale.md
@@ -7994,7 +8073,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:99e120670ca9a3d493d166d628cf793d05a6abe65838576ee6ad4aa80811f31f
+  content_hash: sha256:50f0d24f7f2dbee55cd501f40e76adf26a75fa2c8bb3d84266dc939b429e27de
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-boundary.yaml
@@ -8003,7 +8082,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:b4e361de263c0c1850f1ed53d7ced00a72a8914561b08ac7b0267b37286acd7d
+  content_hash: sha256:2657d5568f3fb4bab5f2167ced9e0266fee9d702f9deebcb83511164d3b6b40c
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-classification.yaml
@@ -8012,7 +8091,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:f261ac76086a17dedcb4075236197df425a93d5c9fac1422f3f97ade96259fc9
+  content_hash: sha256:98f1f851993cadcfc1f6833680afdce5fb4cfcedac2a22e14fa114fa4b06def2
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-denylist.yaml
@@ -8021,7 +8100,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:9ece7b8b3cb2609d93ef3039ca11a4bfb635202bd068f2316bcccbd47dd12ed7
+  content_hash: sha256:461e92520b01001e6d0cd7dc267ae8d2ac4c055231b0fd92e1dce1570d14ab3e
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-fixture.yaml
@@ -8030,7 +8109,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:656475ed3d9c7a3809618c2a0591b442490c836bb121ebe59955ed16616467fa
+  content_hash: sha256:df79263c63a8fa317178b9eddbbc411e51f9257b6ae50d9544ed74e6bbe5be84
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-noaction.yaml
@@ -8039,7 +8118,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:04f16693751a12f7b10d9d5dca363984aacfdfec704442f41b15aaa7ccc2001e
+  content_hash: sha256:f73b1eafcaf290849afb5d6ca152ed309e712baf930b6d211f7dfcfc0ba8ad16
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-docs-triage/evals/tasks/loop-docs-triage-trigger-negative.yaml
@@ -8048,7 +8127,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:a74d839ca3d7c38f8ab3f820f61a5d8af80b9b05ee46162fd72ab0176568de1b
+  content_hash: sha256:d456a01f6af3e63c2aff65c010fd8d4e484bfd761f667e2728749539772daab2
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-docs-triage/references/category-input-schema.md
@@ -8084,7 +8163,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:c5c07aa7760970b7f2b0fdb2d4201c67dc2b849490e5b02ba34df3cd0b1486f3
+  content_hash: sha256:af0b084c5182015f50f9420250e3baba4b0cb0e4e73458c65304bef2042c0ace
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-docs-triage/references/common-troubleshooting.md
@@ -8192,7 +8271,16 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:2a7a421f22948eeef1179549a4f746cc9e9273d2b3345b26ac291455362a6902
+  content_hash: sha256:ade5c3742eceaad24bfcd011bae390fdf6883191c6c55d32f921cec33f976935
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/loop-report-tech-debt/assets/pr-body-template.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:8e74dc94299cfe9b5d671277aaf9d5ab64549797e27cad0fb8a8d0bb4fc19b04
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-report-tech-debt/eval.yaml
@@ -8201,7 +8289,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:53d4ee96f7fde1c27b71628388f114e8e1d0b3458cea0c0527e3235f380be412
+  content_hash: sha256:e6990687c342188eec3508b4aa5bb72d947acbdbe9e78204664323f4c13963b9
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-report-tech-debt/evals/files/README.md
@@ -8255,7 +8343,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:d112912609520624295a954b4e34e9cb210d2622016d1a55467bce0dcf5e19e6
+  content_hash: sha256:40388d7eda7463f5bf75df0f8c1e3375b07075550c6a711e637cf3131f3129aa
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-classification.yaml
@@ -8264,7 +8352,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:3caa71f0bcc7a531f99731e58009e07df4f93266003acf211f1b7b3dea4b447d
+  content_hash: sha256:cd206d5041e3095a5ab3d3345f451a3832390c4a6212b4a73569762890478621
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-hotspot-only.yaml
@@ -8273,7 +8361,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:fc86da7193dca6a60c4b67e4d6f38b14e6dda0279903853c815641585eda9a31
+  content_hash: sha256:ff2b340fda7c748bd20e2e45a9a33b3edd17d7482b5b144f7b0e8e63d96e9946
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l1-report-only.yaml
@@ -8282,7 +8370,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:227ec0dd2415aeffd52bdde203076d25eab45dd0b1b726b4b98e3b5037787209
+  content_hash: sha256:a6b653fca6813824464ef5e243d6928966fdfb484e32dfa707766c2ba77f69f6
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l2-report-write.yaml
@@ -8291,7 +8379,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:e46ac2099794aae70bb923e2473a16065151da1cfd39fe7aa127caf733b63b8d
+  content_hash: sha256:e209bfea2c883f7007dfe4678d4d2e4dbc8a3b14593de93ab9cd0056cef5ee31
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-noaction.yaml
@@ -8300,7 +8388,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:66a094199ca60d10df3efbf25070a87b0024b6135e640f9ca9b82f07b40bd39c
+  content_hash: sha256:3b86a3da547d5d86bb08f69414145a6a0af1e76eb27c2c70bcb8cc05576d12a9
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-previous-report.yaml
@@ -8309,7 +8397,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:1ae66d05d775132e18eb8e70d4222ada055ea634a1142be1914c7044bc8ec7d6
+  content_hash: sha256:27531ffac1120e372531391661e26177047a643b2dad539989983a77f6c93bce
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-trigger-negative.yaml
@@ -8318,7 +8406,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:a0c9dd7020cabcf3af5152071a41c3958c270048097c97f86a0b001d651bcb4f
+  content_hash: sha256:faba474f6000e72574174d85c26751967e891dd2aee952a676cc1f8d95148ce8
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-truncation-cap.yaml
@@ -8327,7 +8415,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:534320eaeeecd9323b4e71d3f1bbe72ac2306b11b64798b9b333959da72262ed
+  content_hash: sha256:b0fd7139ddb1808523de098092d7803459e8243001ea57b318834d583999d322
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-report-tech-debt/references/category-debt-taxonomy.md
@@ -8372,7 +8460,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-report-tech-debt
   active_owner: ./.apm/packages/loop-report-tech-debt
-  content_hash: sha256:21c7e0ea9c6923130318b1f1e84372897abf635225a7dfddff9384e63ded43c9
+  content_hash: sha256:b9725b54608b9e8fbab796fbb974252d07e7cb201caa7fde798dc1416868e074
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-report-tech-debt/references/common-troubleshooting.md

@@ -8,7 +8,7 @@ inputs:
   prompt: >-
     Use loop-docs-triage. Classify injected findings: missing required README
     section is High-Priority; slightly outdated version is Watch. Emit all four
-    report sections.
+    report sections. Emit PR ## Overview and ## Summary plus Session Metrics table with High-Priority Items, Watch Items, and Noise / Ignore sections.
   context:
     commit_range: eval0001..eval0002
     level: L2

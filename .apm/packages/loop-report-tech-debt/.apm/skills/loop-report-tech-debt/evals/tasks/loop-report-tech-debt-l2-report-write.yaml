@@ -9,7 +9,7 @@ inputs:
     Use loop-report-tech-debt at L2. Classify the injected eol_hint as dependency_version
     under High-Priority. Emit full session summary and write report_file
     docs/report/report-tech-debt/2026-07-19.md per allowlist. State report_file path in
-    Summary.
+    Summary. Emit PR ## Overview and ## Summary plus Session Metrics table with Critical, High-Priority, Watch, and Noise / Ignore sections including Category fields.
   context:
     level: L2
     report_file: docs/report/report-tech-debt/2026-07-19.md

@@ -2,6 +2,8 @@
 
 Use this structure for every run, including no-action exits.
 
+## Session report (verifier / logs)
+
 ```markdown
 # Changelog Loop Report
 
@@ -15,17 +17,41 @@ Use this structure for every run, including no-action exits.
 
 - <already listed in CHANGELOG or non-conventional, or "None">
 
-## Summary
+## Session Metrics
 
-- **Level:** <L1|L2|L3>
-- **Commit range:** <commit_range>
-- **Commits assessed:** <count>
-- **File modified:** <changelog_file or "None">
-- **Outcome:** <one-line result>
+| Field            | Value                      |
+| ---------------- | -------------------------- |
+| Level            | <L1\|L2\|L3>               |
+| Commit range     | <commit_range>             |
+| Commits assessed | <count>                    |
+| File modified    | <changelog_file or "None"> |
+| Outcome          | <one-line result>          |
 ```
+
+## PR body contract (human-facing)
+
+At synthesis time, load `assets/pr-body-template.md` and emit `## Overview` and `## Summary` with the Changes Applied table.
+
+Pattern reference: [APM triage-panel](https://github.com/microsoft/apm/blob/main/.github/workflows/triage-panel.md).
+
+### Overview (skill-specific)
+
+Emit one paragraph under `## Overview` that answers:
+
+| Element | changelog content                                                           |
+| ------- | --------------------------------------------------------------------------- |
+| Trigger | Commits/releases since last processed SHA                                   |
+| Problem | What was missing from `CHANGELOG.md` (Unreleased bullets, version sections) |
+| Action  | Entries added, releases promoted, or "no changes needed"                    |
+
+**Good:** `Processed 4 conventional commits since last changelog SHA; added 3 Unreleased bullets under Changed and promoted v1.2.0 release section.`
+
+**Bad:** `Changelog loop run finished.` / listing every commit SHA in Overview
 
 ## Rules
 
-- Always emit all three `##` sections; use `None` or `0` when empty.
+- Always emit all session `##` sections; use `None` or `0` when empty.
+- `## Session Metrics` MUST use a Field \| Value table (not bullet list).
+- Always emit PR `## Overview` and `## Summary` after session report.
 - At `L1`, list intended entries under Commits Processed but do not edit files.
 - At `L2`/`L3`, update only `CHANGELOG.md` under `## [Unreleased]`.
