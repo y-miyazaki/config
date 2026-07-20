@@ -40,6 +40,7 @@ _Understanding-oriented discussion of concepts and decisions._
 - [CI Sweeper Workflow Design](explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md)
 - [Changelog Workflow Design](explanation/loop-engineering/workflows/loop-changelog-workflow-design.md)
 - [Docs Triage Workflow Design](explanation/loop-engineering/workflows/loop-docs-triage-workflow-design.md)
+- [Report Tech Debt Workflow Design](explanation/loop-engineering/workflows/loop-report-tech-debt-workflow-design.md)
 
 ## Report
 

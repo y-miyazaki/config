@@ -65,6 +65,7 @@ The repository structure is function-oriented.
   - `loop-docs-triage/`: Documentation update loop (self-contained skill package)
   - `loop-ci-sweeper/`: CI failure sweeper loop (self-contained skill package)
   - `loop-changelog/`: Changelog maintenance loop (self-contained skill package)
+  - `loop-report-tech-debt/`: Technical debt report loop (self-contained skill package)
 - `apm.yml`: APM package metadata and dependency entry point
 - `apm.lock.yaml`: lock file for deterministic APM resolution
 - `apm_modules/`: locally materialized module content
@@ -184,7 +185,7 @@ Prefer ephemeral runners with pinned versions:
 ```yaml
 - name: context7
   command: npx
-  args: ["-y", "@upstash/context7-mcp@2.2.5"]
+  args: ["-y", "@upstash/context7-mcp@3.2.3"]
 ```
 
 Optional binary MCP servers (no npm/PyPI package) use a bare command and require separate consumer install — for example `codebase-memory-mcp`. Consumers may omit these servers.
@@ -399,19 +400,29 @@ Each `loop-*` APM package is self-contained. Domain detection and agent behavior
 
 | Action                 | Purpose                                                                                                                                                                                                                                                             |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `loop-agent-once`      | Single read-only agent session (L1)                                                                                                                                                                                                                                 |
+| `loop-agent-once`      | Single read-only agent session (L1); accepts `node_version` / `uv_version` and enables workspace MCP via `lib/mcp.sh`                                                                                                                                                |
 | `loop-config-pack`     | Pack caller agent config into standardized outputs for detect/execute handoff (standalone; `loop-detect` inlines the same pack step)                                                                                                                                |
 | `loop-detect`          | Read `LOOP_*`, enumerate branches/PRs, checkout per context, invoke `detect_script` per context, assemble candidates, write **loop-handoff** artifact, output slim `target_matrix`; guards (`budget`, circuit breaker). **No caller re-run of detect script**       |
-| `loop-execute`         | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`; worktree from `from.ref` @ `from.branch`                                                                                                                                       |
+| `loop-execute`         | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`, `node_version`, `uv_version`; enables workspace MCP via `lib/mcp.sh`; worktree from `from.ref` @ `from.branch`                                                                  |
 | `loop-finalize`        | Finalize per `target.finalize`, branch cleanup, per-target state, run-log, optional `domain_persistence_script`; `.loop/*` to `LOOP_STATE_PUSH_BRANCH`                                                                                                              |
 | `loop-notify-pr`       | Post or update marker PR comment after finalize on `pull_request` targets (sibling step in `ci-loop-agent`, not nested in `loop-finalize`). Platform-owned Layers 1–2; optional skill appendix. See [loop-notify-pr Specification](loop-notify-pr-specification.md) |
-| `loop-install-cli`     | Install and cache the selected engine CLI                                                                                                                                                                                                                           |
+| `loop-install-cli`     | Install and cache the selected engine CLI; accepts `node_version` / `uv_version` so MCP servers can resolve via `npx` / `uvx`                                                                                                                                        |
 | `loop-prompt-generate` | Assemble implementer prompt: skill invocation, caller context/instructions, generic loop constraints                                                                                                                                                                |
 | `loop-run-log`         | Append one JSONL entry to `.loop/loop-run-log.md`, prune entries older than 30 days                                                                                                                                                                                 |
 | `loop-state-promote`   | Promote or clear `pending` loop state after a fix PR closes (`pull_request` `closed` handler). Prefer direct push; auto-merge state PR when push is blocked (`skip_state_pr` opts out).                                                                             |
 | `loop-state-read`      | Read `targets` map; per-target cursors                                                                                                                                                                                                                              |
 | `loop-state-write`     | Write per-target entry in `targets` map; commit to `LOOP_STATE_PUSH_BRANCH`. Prefer direct push; auto-merge state PR when push is blocked (`skip_state_pr` opts out). Refuses PR fallback for `advance` + `pr-created` (use `pending` for L2 `open_pr`).            |
 | `loop-worktree-setup`  | Isolated worktree at `base_ref` on `base_branch` + agent branch (L2/L3)                                                                                                                                                                                             |
+
+### Loop agent MCP enablement
+
+`loop-agent-once`, `loop-execute`, and `loop-install-cli` accept `node_version` and `uv_version` so workspace MCP servers can resolve via `npx` / `uvx` during CI agent runs (keep aligned with `mise.toml` Node and uv pins).
+
+`loop-execute` / `loop-agent-once` source `.github/actions/loop-execute/lib/mcp.sh` to:
+
+- Prefer the MCP manifest at `.mcp.json`, then `.cursor/mcp.json`, then `.github/mcp.json`
+- Pass engine-specific non-interactive MCP approval flags (Claude project MCP settings, Copilot `--allow-all-tools`, Cursor `--approve-mcps`)
+- For Codex, materialize an isolated `CODEX_HOME/config.toml` from the shared manifest (Codex does not read project `.mcp.json` automatically)
 
 ### Detect script output (per context)
 
