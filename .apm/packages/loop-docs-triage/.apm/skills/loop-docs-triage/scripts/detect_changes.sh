@@ -215,24 +215,15 @@ function append_docs_from_extra_files {
 #
 #######################################
 function append_docs_from_find {
+    local -a find_args=(.)
     local doc_file
+
+    repo_append_find_prune_args find_args
+    find_args+=(-name '*.md' -type f -print)
 
     while IFS= read -r doc_file; do
         append_unique_doc "${doc_file}"
-    done < <(find . \
-        \( -path './.git' -o \
-        -path '*/.*' -o \
-        -path './.agents' -o \
-        -path './.cursor' -o \
-        -path './.claude' -o \
-        -path './.kiro' -o \
-        -path './.vscode' -o \
-        -path './apm_modules' -o \
-        -path './node_modules' -o \
-        -path './dist' -o \
-        -path './build' -o \
-        -path './bin' \) -prune -o \
-        -name '*.md' -type f -print 2> /dev/null | sed 's|^\./||')
+    done < <(find "${find_args[@]}" 2> /dev/null | sed 's|^\./||' | repo_filter_paths)
 }
 
 #######################################
@@ -295,6 +286,9 @@ function append_unique_doc {
 
     [[ -z ${path} ]] && return 0
     [[ ! -f ${path} ]] && return 0
+    if repo_path_should_skip "${path}"; then
+        return 0
+    fi
 
     for existing in "${AFFECTED_DOCS[@]}"; do
         [[ ${existing} == "${path}" ]] && return 0
@@ -429,8 +423,8 @@ function collect_changes {
         COMMIT_RANGE="${diff_ref}"
     fi
 
-    mapfile -t CHANGED_FILES < <(git diff "${diff_ref}" --name-only --diff-filter=ACMR 2> /dev/null || true)
-    mapfile -t DELETED_FILES < <(git diff "${diff_ref}" --name-only --diff-filter=D 2> /dev/null || true)
+    mapfile -t CHANGED_FILES < <(git diff "${diff_ref}" --name-only --diff-filter=ACMR 2> /dev/null | repo_filter_paths || true)
+    mapfile -t DELETED_FILES < <(git diff "${diff_ref}" --name-only --diff-filter=D 2> /dev/null | repo_filter_paths || true)
 
     local rename_lines
     mapfile -t rename_lines < <(git diff "${diff_ref}" -M --diff-filter=R --name-status 2> /dev/null || true)
@@ -441,14 +435,14 @@ function collect_changes {
         old="$(echo "${line}" | cut -f2)"
         new="$(echo "${line}" | cut -f3)"
         if [[ -n ${old} && -n ${new} ]]; then
-            RENAMED_FILES+=("${old}->${new}")
+            repo_apply_git_rename "${old}" "${new}" RENAMED_FILES DELETED_FILES CHANGED_FILES
         fi
     done
 
     # Include untracked files only for 'all' scope (not range)
     if [[ ${SCOPE} == "all" ]]; then
         local untracked
-        mapfile -t untracked < <(git ls-files --others --exclude-standard 2> /dev/null || true)
+        mapfile -t untracked < <(git ls-files --others --exclude-standard 2> /dev/null | repo_filter_paths || true)
         CHANGED_FILES+=("${untracked[@]}")
     fi
 }
@@ -524,6 +518,28 @@ function trim_whitespace {
 }
 
 #######################################
+# configure_detect_environment: Normalize domain env into globals once at startup
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   DOCS_TRIAGE_DOC_GLOBS - Comma-separated glob patterns for candidate doc discovery
+#   DOCS_TRIAGE_EXTRA_FILES - Comma-separated non-markdown documentation config paths
+#
+# Returns:
+#   None
+#
+# Usage:
+#   configure_detect_environment
+#
+#######################################
+function configure_detect_environment {
+    DOCS_TRIAGE_DOC_GLOBS="${DOCS_TRIAGE_DOC_GLOBS:-}"
+    DOCS_TRIAGE_EXTRA_FILES="${DOCS_TRIAGE_EXTRA_FILES:-}"
+}
+
+#######################################
 # main: Entry point
 #
 # Arguments:
@@ -540,6 +556,7 @@ function trim_whitespace {
 #
 #######################################
 function main {
+    configure_detect_environment
     parse_arguments "$@"
     collect_changes
     collect_affected_docs

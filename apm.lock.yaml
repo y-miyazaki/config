@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-19T17:29:48.971906+00:00'
+generated_at: '2026-07-20T07:09:04.931610+00:00'
 apm_version: 0.26.0
 dependencies:
 - repo_url: _local/common
@@ -27,6 +27,7 @@ dependencies:
   - .agents/skills/agent-skills-review/scripts/lib/common.sh
   - .agents/skills/agent-skills-review/scripts/lib/csv.sh
   - .agents/skills/agent-skills-review/scripts/lib/json.sh
+  - .agents/skills/agent-skills-review/scripts/lib/repo_paths.sh
   - .agents/skills/agent-skills-review/scripts/lib/terraform.sh
   - .agents/skills/agent-skills-review/scripts/lib/validation.sh
   - .agents/skills/agent-skills-review/scripts/validate.sh
@@ -60,6 +61,7 @@ dependencies:
   - .agents/skills/docs-updater/scripts/lib/common.sh
   - .agents/skills/docs-updater/scripts/lib/csv.sh
   - .agents/skills/docs-updater/scripts/lib/json.sh
+  - .agents/skills/docs-updater/scripts/lib/repo_paths.sh
   - .agents/skills/docs-updater/scripts/lib/terraform.sh
   - .agents/skills/docs-updater/scripts/lib/validation.sh
   - .agents/skills/github-actions-review
@@ -84,6 +86,7 @@ dependencies:
   - .agents/skills/github-actions-review/scripts/lib/common.sh
   - .agents/skills/github-actions-review/scripts/lib/csv.sh
   - .agents/skills/github-actions-review/scripts/lib/json.sh
+  - .agents/skills/github-actions-review/scripts/lib/repo_paths.sh
   - .agents/skills/github-actions-review/scripts/lib/terraform.sh
   - .agents/skills/github-actions-review/scripts/lib/validation.sh
   - .agents/skills/github-actions-review/scripts/validate.sh
@@ -105,6 +108,7 @@ dependencies:
   - .agents/skills/github-actions-validation/scripts/lib/common.sh
   - .agents/skills/github-actions-validation/scripts/lib/csv.sh
   - .agents/skills/github-actions-validation/scripts/lib/json.sh
+  - .agents/skills/github-actions-validation/scripts/lib/repo_paths.sh
   - .agents/skills/github-actions-validation/scripts/lib/terraform.sh
   - .agents/skills/github-actions-validation/scripts/lib/validation.sh
   - .agents/skills/github-actions-validation/scripts/validate.sh
@@ -130,6 +134,7 @@ dependencies:
   - .agents/skills/github-pr-body/scripts/lib/common.sh
   - .agents/skills/github-pr-body/scripts/lib/csv.sh
   - .agents/skills/github-pr-body/scripts/lib/json.sh
+  - .agents/skills/github-pr-body/scripts/lib/repo_paths.sh
   - .agents/skills/github-pr-body/scripts/lib/terraform.sh
   - .agents/skills/github-pr-body/scripts/lib/validation.sh
   - .agents/skills/github-pr-body/scripts/pr_body.sh
@@ -158,6 +163,7 @@ dependencies:
   - .agents/skills/instructions-review/scripts/lib/common.sh
   - .agents/skills/instructions-review/scripts/lib/csv.sh
   - .agents/skills/instructions-review/scripts/lib/json.sh
+  - .agents/skills/instructions-review/scripts/lib/repo_paths.sh
   - .agents/skills/instructions-review/scripts/lib/terraform.sh
   - .agents/skills/instructions-review/scripts/lib/validation.sh
   - .agents/skills/instructions-review/scripts/validate.sh
@@ -178,6 +184,7 @@ dependencies:
   - .agents/skills/markdown-validation/scripts/lib/common.sh
   - .agents/skills/markdown-validation/scripts/lib/csv.sh
   - .agents/skills/markdown-validation/scripts/lib/json.sh
+  - .agents/skills/markdown-validation/scripts/lib/repo_paths.sh
   - .agents/skills/markdown-validation/scripts/lib/terraform.sh
   - .agents/skills/markdown-validation/scripts/lib/validation.sh
   - .agents/skills/markdown-validation/scripts/validate.sh
@@ -207,6 +214,7 @@ dependencies:
   - .claude/skills/agent-skills-review/scripts/lib/common.sh
   - .claude/skills/agent-skills-review/scripts/lib/csv.sh
   - .claude/skills/agent-skills-review/scripts/lib/json.sh
+  - .claude/skills/agent-skills-review/scripts/lib/repo_paths.sh
   - .claude/skills/agent-skills-review/scripts/lib/terraform.sh
   - .claude/skills/agent-skills-review/scripts/lib/validation.sh
   - .claude/skills/agent-skills-review/scripts/validate.sh
@@ -240,6 +248,7 @@ dependencies:
   - .claude/skills/docs-updater/scripts/lib/common.sh
   - .claude/skills/docs-updater/scripts/lib/csv.sh
   - .claude/skills/docs-updater/scripts/lib/json.sh
+  - .claude/skills/docs-updater/scripts/lib/repo_paths.sh
   - .claude/skills/docs-updater/scripts/lib/terraform.sh
   - .claude/skills/docs-updater/scripts/lib/validation.sh
   - .claude/skills/github-actions-review
@@ -264,6 +273,7 @@ dependencies:
   - .claude/skills/github-actions-review/scripts/lib/common.sh
   - .claude/skills/github-actions-review/scripts/lib/csv.sh
   - .claude/skills/github-actions-review/scripts/lib/json.sh
+  - .claude/skills/github-actions-review/scripts/lib/repo_paths.sh
   - .claude/skills/github-actions-review/scripts/lib/terraform.sh
   - .claude/skills/github-actions-review/scripts/lib/validation.sh
   - .claude/skills/github-actions-review/scripts/validate.sh
@@ -285,6 +295,7 @@ dependencies:
   - .claude/skills/github-actions-validation/scripts/lib/common.sh
   - .claude/skills/github-actions-validation/scripts/lib/csv.sh
   - .claude/skills/github-actions-validation/scripts/lib/json.sh
+  - .claude/skills/github-actions-validation/scripts/lib/repo_paths.sh
   - .claude/skills/github-actions-validation/scripts/lib/terraform.sh
   - .claude/skills/github-actions-validation/scripts/lib/validation.sh
   - .claude/skills/github-actions-validation/scripts/validate.sh
@@ -310,6 +321,7 @@ dependencies:
   - .claude/skills/github-pr-body/scripts/lib/common.sh
   - .claude/skills/github-pr-body/scripts/lib/csv.sh
   - .claude/skills/github-pr-body/scripts/lib/json.sh
+  - .claude/skills/github-pr-body/scripts/lib/repo_paths.sh
   - .claude/skills/github-pr-body/scripts/lib/terraform.sh
   - .claude/skills/github-pr-body/scripts/lib/validation.sh
   - .claude/skills/github-pr-body/scripts/pr_body.sh
@@ -338,6 +350,7 @@ dependencies:
   - .claude/skills/instructions-review/scripts/lib/common.sh
   - .claude/skills/instructions-review/scripts/lib/csv.sh
   - .claude/skills/instructions-review/scripts/lib/json.sh
+  - .claude/skills/instructions-review/scripts/lib/repo_paths.sh
   - .claude/skills/instructions-review/scripts/lib/terraform.sh
   - .claude/skills/instructions-review/scripts/lib/validation.sh
   - .claude/skills/instructions-review/scripts/validate.sh
@@ -358,6 +371,7 @@ dependencies:
   - .claude/skills/markdown-validation/scripts/lib/common.sh
   - .claude/skills/markdown-validation/scripts/lib/csv.sh
   - .claude/skills/markdown-validation/scripts/lib/json.sh
+  - .claude/skills/markdown-validation/scripts/lib/repo_paths.sh
   - .claude/skills/markdown-validation/scripts/lib/terraform.sh
   - .claude/skills/markdown-validation/scripts/lib/validation.sh
   - .claude/skills/markdown-validation/scripts/validate.sh
@@ -382,15 +396,16 @@ dependencies:
     .agents/skills/agent-skills-review/references/common-checklist.md: sha256:f4d88a69a3336037bc3b9ac6158a0bcde986df4e2bb657ac0c9a40d4ae4ce903
     .agents/skills/agent-skills-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .agents/skills/agent-skills-review/references/common-troubleshooting.md: sha256:5dbb882894876af04f588e84dcf7e48147384d0bf7f2daa26750665c8a1ea90c
-    .agents/skills/agent-skills-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .agents/skills/agent-skills-review/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/agent-skills-review/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/agent-skills-review/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .agents/skills/agent-skills-review/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .agents/skills/agent-skills-review/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .agents/skills/agent-skills-review/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .agents/skills/agent-skills-review/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/agent-skills-review/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .agents/skills/agent-skills-review/scripts/validate.sh: sha256:1716fb84bb48f5f175240b8ce872e77a542545b5cd6b995329e7baa600af4a23
-    .agents/skills/agent-skills-review/scripts/validate_waza.sh: sha256:450e89fe89ab725f9b634ae7ba807f1b92832d0eaf5113fbc5396170a958dec3
+    .agents/skills/agent-skills-review/scripts/validate.sh: sha256:f84077fb349695ca0c62882a1362ea22762c8dd5432ce3b10e386651313e7849
+    .agents/skills/agent-skills-review/scripts/validate_waza.sh: sha256:a78e9e644496af97bcfa8117623935ccf34e21b8db0b3512b1ffa531ebefe217
     .agents/skills/docs-creator/SKILL.md: sha256:450250585e8115b96da3419bae6d539bfaa27e56f0cb9b6a154b13a6bb7eb954
     .agents/skills/docs-creator/eval.yaml: sha256:ab4edc88b41fc06252e43922e0a023f74d2ddcd37665d7cd23fd58063301a69d
     .agents/skills/docs-creator/evals/tasks/docs-creation-basic.yaml: sha256:7db56dda19d13dc0303e00ed279fc1f97c20d84cd30c3bcd132b403dac035984
@@ -412,12 +427,13 @@ dependencies:
     .agents/skills/docs-updater/references/common-checklist.md: sha256:abdabc4d6dab24486bb351834228d7aff31c7eaf5a102b143fc231fc94cb5264
     .agents/skills/docs-updater/references/common-impact-map.md: sha256:fd106b4d61d06fd46f25db656699c63e0917fb68e1c03ad7cd5d04cb5f0f3e8c
     .agents/skills/docs-updater/references/common-output-format.md: sha256:30c95cc34f7724933700a3b7bd6e421b0055e1c18c5246f654c9370e29704c78
-    .agents/skills/docs-updater/scripts/detect_changes.sh: sha256:826c7aa5ac8852579a610b9a8e804e34a67a94e8d38aa2cc1632d386fb59512d
-    .agents/skills/docs-updater/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .agents/skills/docs-updater/scripts/detect_changes.sh: sha256:03ee4ba705064b868d8d897940be0a8be9a382cf639391c235760a4332ed86dc
+    .agents/skills/docs-updater/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/docs-updater/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/docs-updater/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .agents/skills/docs-updater/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .agents/skills/docs-updater/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .agents/skills/docs-updater/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .agents/skills/docs-updater/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/docs-updater/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .agents/skills/github-actions-review/SKILL.md: sha256:454ec67cfa34a9d7719c96d689a9e21ceebadc26d0d0642a185ad08f34b514a8
@@ -436,14 +452,15 @@ dependencies:
     .agents/skills/github-actions-review/references/common-checklist.md: sha256:8878deffa623c0e468561b5e6fbf5d1ea20b7b49f98dd60225c5db9732d2eb77
     .agents/skills/github-actions-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .agents/skills/github-actions-review/references/common-troubleshooting.md: sha256:2eb61d3296bd3adc85e4e250d74fec87f9037aa7ca762bd377b90cd9ff438272
-    .agents/skills/github-actions-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .agents/skills/github-actions-review/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/github-actions-review/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/github-actions-review/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .agents/skills/github-actions-review/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .agents/skills/github-actions-review/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .agents/skills/github-actions-review/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .agents/skills/github-actions-review/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/github-actions-review/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .agents/skills/github-actions-review/scripts/validate.sh: sha256:da25a7b3fd66ae49cf99f7cb6d6153bb7c55c6ded626e60c53243a8e194a7677
+    .agents/skills/github-actions-review/scripts/validate.sh: sha256:17bd05ce5334902891b33f2177903446d3dde3e028d6c53b07ca07ab0d65600e
     .agents/skills/github-actions-validation/SKILL.md: sha256:6d59413e117f7937172f60a3777c1144737db4430cbef62c463c18e471ed48e1
     .agents/skills/github-actions-validation/eval.yaml: sha256:763e034cd1c5a82dd7acf2adce0599b7ab35bbb3abd38aa3be8a2a946e70b8f8
     .agents/skills/github-actions-validation/evals/tasks/github-actions-validation-basic.yaml: sha256:5016688df338ebe882adf12aff8473d5f372c8bde77ebaaf2e13d38051796171
@@ -456,11 +473,12 @@ dependencies:
     .agents/skills/github-actions-validation/references/common-individual-commands.md: sha256:88c73b0244439114b22bfa16798d76e86d536164974879285af7c793c1ce22be
     .agents/skills/github-actions-validation/references/common-output-format.md: sha256:2b85247011ce57c2b2564b60d48052033ed77d11a12de1571254c5ca9968fede
     .agents/skills/github-actions-validation/references/common-troubleshooting.md: sha256:85e3f14ea203c0fe30ea4c5690720c6cf00ec4c73ceb5bde133a7df1caa9f672
-    .agents/skills/github-actions-validation/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .agents/skills/github-actions-validation/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/github-actions-validation/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/github-actions-validation/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .agents/skills/github-actions-validation/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .agents/skills/github-actions-validation/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .agents/skills/github-actions-validation/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .agents/skills/github-actions-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/github-actions-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .agents/skills/github-actions-validation/scripts/validate.sh: sha256:173433b3398001e0033cbcb26373be83e336efb2dfb594508328d90d804499b4
@@ -480,11 +498,12 @@ dependencies:
     .agents/skills/github-pr-body/references/common-checklist.md: sha256:69be5cfb7b639a2cf5d64edc6ac92ec1eb00df00bf406102ca2bdefdd7551faa
     .agents/skills/github-pr-body/references/common-output-format.md: sha256:f1e50b57a8f2ddcfeb27ff2a844d4337dedf79fe2cda728fea157b9b51ec4742
     .agents/skills/github-pr-body/references/common-troubleshooting.md: sha256:52efeac88c2c5a6c00b1e8dde873726ff79fb35a7fa7708ca1083223e20d1046
-    .agents/skills/github-pr-body/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .agents/skills/github-pr-body/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/github-pr-body/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/github-pr-body/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .agents/skills/github-pr-body/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .agents/skills/github-pr-body/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .agents/skills/github-pr-body/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .agents/skills/github-pr-body/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/github-pr-body/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .agents/skills/github-pr-body/scripts/pr_body.sh: sha256:c46f5a2cffa2aa9c9904af109c0ee5fe98a532be3eb38268e858b5e2dcc0877d
@@ -507,14 +526,15 @@ dependencies:
     .agents/skills/instructions-review/references/common-checklist.md: sha256:6bca93055ef96f9a50cb2377b64e68a170f3861356b81c48d774422af37f6f2b
     .agents/skills/instructions-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .agents/skills/instructions-review/references/common-troubleshooting.md: sha256:dbd5b9daa2c1207898f55cd62bb6d81b5a7e0d09805dd0d872848ac8edfe3f2c
-    .agents/skills/instructions-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .agents/skills/instructions-review/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/instructions-review/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/instructions-review/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .agents/skills/instructions-review/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .agents/skills/instructions-review/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .agents/skills/instructions-review/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .agents/skills/instructions-review/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/instructions-review/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .agents/skills/instructions-review/scripts/validate.sh: sha256:2f60083655785514f35a31a3309a4cf754464659879a11480dcb100550f398c8
+    .agents/skills/instructions-review/scripts/validate.sh: sha256:b6514ce3da7dd5d7509c8e3208d2f4ed2107ecfa316dc9d3dde6f99cd2a1a93b
     .agents/skills/markdown-validation/SKILL.md: sha256:a1bac78bb908415caac8ae8e16f6fcaa7dc1f08f5c2ebac3a88c2c538437d874
     .agents/skills/markdown-validation/eval.yaml: sha256:f8f1ac7e23a7df5b47303cc2fccc40752a63bb7439791d139bd5fe0c6612861f
     .agents/skills/markdown-validation/evals/tasks/markdown-validation-basic.yaml: sha256:6dc08d54f13e3d8292c804a27dcf04134b945825f911fb442bc53b9715687581
@@ -526,17 +546,18 @@ dependencies:
     .agents/skills/markdown-validation/references/common-individual-commands.md: sha256:22b0005e59cdbbc86e74059d2adbf73ec33d30deb99d22c980cfe12139a9d25b
     .agents/skills/markdown-validation/references/common-output-format.md: sha256:75af37ab21d8c22bf1bc501364f690997031a5f231185a8436aa2d93272128f6
     .agents/skills/markdown-validation/references/common-troubleshooting.md: sha256:067ec535b236546cd69f5ddfa516ca01383c7860c680f48732ac4827761093f3
-    .agents/skills/markdown-validation/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .agents/skills/markdown-validation/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/markdown-validation/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/markdown-validation/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .agents/skills/markdown-validation/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .agents/skills/markdown-validation/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .agents/skills/markdown-validation/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .agents/skills/markdown-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/markdown-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .agents/skills/markdown-validation/scripts/validate.sh: sha256:e7d8b5242395d6c75df754357724868b688ee3293912037a62d7fdde8a784802
     .claude/agents/code-review.md: sha256:76ae6714a9b4317beb9b4285df84fe2c9b5968d0e64121826607ae449bfb9dd0
     .claude/agents/test-engineer.md: sha256:ca60db7c610953801780bbf437ebaf2e15aecc1962549c4d112f7bbc5ff1bc56
-    .claude/rules/agent-skills.md: sha256:89ed3766780ede5a6c181553280d5a914b67936990e47c4dd271255bb8fd627f
+    .claude/rules/agent-skills.md: sha256:8795c14376e3a222326fbd919f9bae7d20573e860243db570144094f2ea7f960
     .claude/rules/github-actions-workflow.md: sha256:a7bdb1ddae7062cb2361322d8b43c91c16f0787ad41f7fde3445a53375383526
     .claude/rules/instructions.md: sha256:9ad607e3d36f00040272ffc3454b57d0a5958494e214804f2f8c3e127b6000c0
     .claude/rules/markdown.md: sha256:e9a9d6f79f2af0a189cc080df8681d57a303424714e9be3dc4b4585766ea3476
@@ -554,15 +575,16 @@ dependencies:
     .claude/skills/agent-skills-review/references/common-checklist.md: sha256:f4d88a69a3336037bc3b9ac6158a0bcde986df4e2bb657ac0c9a40d4ae4ce903
     .claude/skills/agent-skills-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .claude/skills/agent-skills-review/references/common-troubleshooting.md: sha256:5dbb882894876af04f588e84dcf7e48147384d0bf7f2daa26750665c8a1ea90c
-    .claude/skills/agent-skills-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .claude/skills/agent-skills-review/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/agent-skills-review/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/agent-skills-review/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .claude/skills/agent-skills-review/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .claude/skills/agent-skills-review/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .claude/skills/agent-skills-review/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .claude/skills/agent-skills-review/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/agent-skills-review/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .claude/skills/agent-skills-review/scripts/validate.sh: sha256:1716fb84bb48f5f175240b8ce872e77a542545b5cd6b995329e7baa600af4a23
-    .claude/skills/agent-skills-review/scripts/validate_waza.sh: sha256:450e89fe89ab725f9b634ae7ba807f1b92832d0eaf5113fbc5396170a958dec3
+    .claude/skills/agent-skills-review/scripts/validate.sh: sha256:f84077fb349695ca0c62882a1362ea22762c8dd5432ce3b10e386651313e7849
+    .claude/skills/agent-skills-review/scripts/validate_waza.sh: sha256:a78e9e644496af97bcfa8117623935ccf34e21b8db0b3512b1ffa531ebefe217
     .claude/skills/docs-creator/SKILL.md: sha256:450250585e8115b96da3419bae6d539bfaa27e56f0cb9b6a154b13a6bb7eb954
     .claude/skills/docs-creator/eval.yaml: sha256:ab4edc88b41fc06252e43922e0a023f74d2ddcd37665d7cd23fd58063301a69d
     .claude/skills/docs-creator/evals/tasks/docs-creation-basic.yaml: sha256:7db56dda19d13dc0303e00ed279fc1f97c20d84cd30c3bcd132b403dac035984
@@ -584,12 +606,13 @@ dependencies:
     .claude/skills/docs-updater/references/common-checklist.md: sha256:abdabc4d6dab24486bb351834228d7aff31c7eaf5a102b143fc231fc94cb5264
     .claude/skills/docs-updater/references/common-impact-map.md: sha256:fd106b4d61d06fd46f25db656699c63e0917fb68e1c03ad7cd5d04cb5f0f3e8c
     .claude/skills/docs-updater/references/common-output-format.md: sha256:30c95cc34f7724933700a3b7bd6e421b0055e1c18c5246f654c9370e29704c78
-    .claude/skills/docs-updater/scripts/detect_changes.sh: sha256:826c7aa5ac8852579a610b9a8e804e34a67a94e8d38aa2cc1632d386fb59512d
-    .claude/skills/docs-updater/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .claude/skills/docs-updater/scripts/detect_changes.sh: sha256:03ee4ba705064b868d8d897940be0a8be9a382cf639391c235760a4332ed86dc
+    .claude/skills/docs-updater/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/docs-updater/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/docs-updater/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .claude/skills/docs-updater/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .claude/skills/docs-updater/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .claude/skills/docs-updater/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .claude/skills/docs-updater/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/docs-updater/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .claude/skills/github-actions-review/SKILL.md: sha256:454ec67cfa34a9d7719c96d689a9e21ceebadc26d0d0642a185ad08f34b514a8
@@ -608,14 +631,15 @@ dependencies:
     .claude/skills/github-actions-review/references/common-checklist.md: sha256:8878deffa623c0e468561b5e6fbf5d1ea20b7b49f98dd60225c5db9732d2eb77
     .claude/skills/github-actions-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .claude/skills/github-actions-review/references/common-troubleshooting.md: sha256:2eb61d3296bd3adc85e4e250d74fec87f9037aa7ca762bd377b90cd9ff438272
-    .claude/skills/github-actions-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .claude/skills/github-actions-review/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/github-actions-review/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/github-actions-review/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .claude/skills/github-actions-review/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .claude/skills/github-actions-review/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .claude/skills/github-actions-review/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .claude/skills/github-actions-review/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/github-actions-review/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .claude/skills/github-actions-review/scripts/validate.sh: sha256:da25a7b3fd66ae49cf99f7cb6d6153bb7c55c6ded626e60c53243a8e194a7677
+    .claude/skills/github-actions-review/scripts/validate.sh: sha256:17bd05ce5334902891b33f2177903446d3dde3e028d6c53b07ca07ab0d65600e
     .claude/skills/github-actions-validation/SKILL.md: sha256:6d59413e117f7937172f60a3777c1144737db4430cbef62c463c18e471ed48e1
     .claude/skills/github-actions-validation/eval.yaml: sha256:763e034cd1c5a82dd7acf2adce0599b7ab35bbb3abd38aa3be8a2a946e70b8f8
     .claude/skills/github-actions-validation/evals/tasks/github-actions-validation-basic.yaml: sha256:5016688df338ebe882adf12aff8473d5f372c8bde77ebaaf2e13d38051796171
@@ -628,11 +652,12 @@ dependencies:
     .claude/skills/github-actions-validation/references/common-individual-commands.md: sha256:88c73b0244439114b22bfa16798d76e86d536164974879285af7c793c1ce22be
     .claude/skills/github-actions-validation/references/common-output-format.md: sha256:2b85247011ce57c2b2564b60d48052033ed77d11a12de1571254c5ca9968fede
     .claude/skills/github-actions-validation/references/common-troubleshooting.md: sha256:85e3f14ea203c0fe30ea4c5690720c6cf00ec4c73ceb5bde133a7df1caa9f672
-    .claude/skills/github-actions-validation/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .claude/skills/github-actions-validation/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/github-actions-validation/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/github-actions-validation/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .claude/skills/github-actions-validation/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .claude/skills/github-actions-validation/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .claude/skills/github-actions-validation/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .claude/skills/github-actions-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/github-actions-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .claude/skills/github-actions-validation/scripts/validate.sh: sha256:173433b3398001e0033cbcb26373be83e336efb2dfb594508328d90d804499b4
@@ -652,11 +677,12 @@ dependencies:
     .claude/skills/github-pr-body/references/common-checklist.md: sha256:69be5cfb7b639a2cf5d64edc6ac92ec1eb00df00bf406102ca2bdefdd7551faa
     .claude/skills/github-pr-body/references/common-output-format.md: sha256:f1e50b57a8f2ddcfeb27ff2a844d4337dedf79fe2cda728fea157b9b51ec4742
     .claude/skills/github-pr-body/references/common-troubleshooting.md: sha256:52efeac88c2c5a6c00b1e8dde873726ff79fb35a7fa7708ca1083223e20d1046
-    .claude/skills/github-pr-body/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .claude/skills/github-pr-body/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/github-pr-body/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/github-pr-body/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .claude/skills/github-pr-body/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .claude/skills/github-pr-body/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .claude/skills/github-pr-body/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .claude/skills/github-pr-body/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/github-pr-body/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .claude/skills/github-pr-body/scripts/pr_body.sh: sha256:c46f5a2cffa2aa9c9904af109c0ee5fe98a532be3eb38268e858b5e2dcc0877d
@@ -679,14 +705,15 @@ dependencies:
     .claude/skills/instructions-review/references/common-checklist.md: sha256:6bca93055ef96f9a50cb2377b64e68a170f3861356b81c48d774422af37f6f2b
     .claude/skills/instructions-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .claude/skills/instructions-review/references/common-troubleshooting.md: sha256:dbd5b9daa2c1207898f55cd62bb6d81b5a7e0d09805dd0d872848ac8edfe3f2c
-    .claude/skills/instructions-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .claude/skills/instructions-review/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/instructions-review/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/instructions-review/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .claude/skills/instructions-review/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .claude/skills/instructions-review/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .claude/skills/instructions-review/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .claude/skills/instructions-review/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/instructions-review/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .claude/skills/instructions-review/scripts/validate.sh: sha256:2f60083655785514f35a31a3309a4cf754464659879a11480dcb100550f398c8
+    .claude/skills/instructions-review/scripts/validate.sh: sha256:b6514ce3da7dd5d7509c8e3208d2f4ed2107ecfa316dc9d3dde6f99cd2a1a93b
     .claude/skills/markdown-validation/SKILL.md: sha256:a1bac78bb908415caac8ae8e16f6fcaa7dc1f08f5c2ebac3a88c2c538437d874
     .claude/skills/markdown-validation/eval.yaml: sha256:f8f1ac7e23a7df5b47303cc2fccc40752a63bb7439791d139bd5fe0c6612861f
     .claude/skills/markdown-validation/evals/tasks/markdown-validation-basic.yaml: sha256:6dc08d54f13e3d8292c804a27dcf04134b945825f911fb442bc53b9715687581
@@ -698,17 +725,18 @@ dependencies:
     .claude/skills/markdown-validation/references/common-individual-commands.md: sha256:22b0005e59cdbbc86e74059d2adbf73ec33d30deb99d22c980cfe12139a9d25b
     .claude/skills/markdown-validation/references/common-output-format.md: sha256:75af37ab21d8c22bf1bc501364f690997031a5f231185a8436aa2d93272128f6
     .claude/skills/markdown-validation/references/common-troubleshooting.md: sha256:067ec535b236546cd69f5ddfa516ca01383c7860c680f48732ac4827761093f3
-    .claude/skills/markdown-validation/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .claude/skills/markdown-validation/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/markdown-validation/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/markdown-validation/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .claude/skills/markdown-validation/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .claude/skills/markdown-validation/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .claude/skills/markdown-validation/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .claude/skills/markdown-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/markdown-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .claude/skills/markdown-validation/scripts/validate.sh: sha256:e7d8b5242395d6c75df754357724868b688ee3293912037a62d7fdde8a784802
     .cursor/agents/code-review.md: sha256:76ae6714a9b4317beb9b4285df84fe2c9b5968d0e64121826607ae449bfb9dd0
     .cursor/agents/test-engineer.md: sha256:ca60db7c610953801780bbf437ebaf2e15aecc1962549c4d112f7bbc5ff1bc56
-    .cursor/rules/agent-skills.mdc: sha256:790f4ba136c6e467a4c6652ee36eeab847009b4caf9045426def7ce0f71d8634
+    .cursor/rules/agent-skills.mdc: sha256:1fb20dd2e5be1cef1e9a0ce60126b118b72d4074d824909d98a375c8089f92a5
     .cursor/rules/github-actions-workflow.mdc: sha256:db7b654240b111aa018ff6dfd0ffdb8f1d94dcc782e8ff53c96d2ea00ecb582c
     .cursor/rules/instructions.mdc: sha256:eec20c1fbcd0562d21a461586bcb8106d3ace514ac0d8019152b3b23d537fe15
     .cursor/rules/markdown.mdc: sha256:f3e35af3484e3fcc468dff2c0ea158d4a855edf110c52ea2deae4f4abc4732b2
@@ -814,6 +842,7 @@ dependencies:
   - .agents/skills/go-review/scripts/lib/common.sh
   - .agents/skills/go-review/scripts/lib/csv.sh
   - .agents/skills/go-review/scripts/lib/json.sh
+  - .agents/skills/go-review/scripts/lib/repo_paths.sh
   - .agents/skills/go-review/scripts/lib/terraform.sh
   - .agents/skills/go-review/scripts/lib/validation.sh
   - .agents/skills/go-review/scripts/validate.sh
@@ -836,6 +865,7 @@ dependencies:
   - .agents/skills/go-validation/scripts/lib/common.sh
   - .agents/skills/go-validation/scripts/lib/csv.sh
   - .agents/skills/go-validation/scripts/lib/json.sh
+  - .agents/skills/go-validation/scripts/lib/repo_paths.sh
   - .agents/skills/go-validation/scripts/lib/terraform.sh
   - .agents/skills/go-validation/scripts/lib/validation.sh
   - .agents/skills/go-validation/scripts/validate.sh
@@ -868,6 +898,7 @@ dependencies:
   - .claude/skills/go-review/scripts/lib/common.sh
   - .claude/skills/go-review/scripts/lib/csv.sh
   - .claude/skills/go-review/scripts/lib/json.sh
+  - .claude/skills/go-review/scripts/lib/repo_paths.sh
   - .claude/skills/go-review/scripts/lib/terraform.sh
   - .claude/skills/go-review/scripts/lib/validation.sh
   - .claude/skills/go-review/scripts/validate.sh
@@ -890,6 +921,7 @@ dependencies:
   - .claude/skills/go-validation/scripts/lib/common.sh
   - .claude/skills/go-validation/scripts/lib/csv.sh
   - .claude/skills/go-validation/scripts/lib/json.sh
+  - .claude/skills/go-validation/scripts/lib/repo_paths.sh
   - .claude/skills/go-validation/scripts/lib/terraform.sh
   - .claude/skills/go-validation/scripts/lib/validation.sh
   - .claude/skills/go-validation/scripts/validate.sh
@@ -917,14 +949,15 @@ dependencies:
     .agents/skills/go-review/references/common-checklist.md: sha256:6e516d1be0e440fdd2c542304b3181d244537a095ccd335c689b50900bd09359
     .agents/skills/go-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .agents/skills/go-review/references/common-troubleshooting.md: sha256:503ec07ab77ab8567fe8b6eb2959fd9ef37e726993da5e5663efc883c1489242
-    .agents/skills/go-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .agents/skills/go-review/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/go-review/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/go-review/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .agents/skills/go-review/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .agents/skills/go-review/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .agents/skills/go-review/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .agents/skills/go-review/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/go-review/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .agents/skills/go-review/scripts/validate.sh: sha256:da25a7b3fd66ae49cf99f7cb6d6153bb7c55c6ded626e60c53243a8e194a7677
+    .agents/skills/go-review/scripts/validate.sh: sha256:17bd05ce5334902891b33f2177903446d3dde3e028d6c53b07ca07ab0d65600e
     .agents/skills/go-validation/SKILL.md: sha256:4aee9b7494b43ac0bb710ed43e7740661162a4b34811e1bb18cfabd4f0520a93
     .agents/skills/go-validation/eval.yaml: sha256:3d73d5fc24f17d2d083a12b8b126ff5abbb53e320f4a3ff90d4d7c2a3ff7a00c
     .agents/skills/go-validation/evals/tasks/go-validation-basic.yaml: sha256:2b253e635832329d35745fd2f855e00cafd8f65eb68a040bb6269aa8790bb76e
@@ -938,11 +971,12 @@ dependencies:
     .agents/skills/go-validation/references/common-individual-commands.md: sha256:a0384efde65047e409f0cc5c4c4226bf42ea7c03c72d6173d6bcc9a3e2eed0c4
     .agents/skills/go-validation/references/common-output-format.md: sha256:e21f30fe399e9851ec5b7e0a249722685f041bb647cd1255aa40b3f215062408
     .agents/skills/go-validation/references/common-troubleshooting.md: sha256:6af5a25ee372f46769f726bbe16140a8fe65e01883c5fb15b680ba3c14ac5b4b
-    .agents/skills/go-validation/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .agents/skills/go-validation/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/go-validation/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/go-validation/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .agents/skills/go-validation/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .agents/skills/go-validation/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .agents/skills/go-validation/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .agents/skills/go-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/go-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .agents/skills/go-validation/scripts/validate.sh: sha256:81bdb45bb70ab2e6685e5984c845c55ac58f5acb9b9a3bb4662434cf5b7971dd
@@ -969,14 +1003,15 @@ dependencies:
     .claude/skills/go-review/references/common-checklist.md: sha256:6e516d1be0e440fdd2c542304b3181d244537a095ccd335c689b50900bd09359
     .claude/skills/go-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .claude/skills/go-review/references/common-troubleshooting.md: sha256:503ec07ab77ab8567fe8b6eb2959fd9ef37e726993da5e5663efc883c1489242
-    .claude/skills/go-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .claude/skills/go-review/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/go-review/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/go-review/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .claude/skills/go-review/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .claude/skills/go-review/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .claude/skills/go-review/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .claude/skills/go-review/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/go-review/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .claude/skills/go-review/scripts/validate.sh: sha256:da25a7b3fd66ae49cf99f7cb6d6153bb7c55c6ded626e60c53243a8e194a7677
+    .claude/skills/go-review/scripts/validate.sh: sha256:17bd05ce5334902891b33f2177903446d3dde3e028d6c53b07ca07ab0d65600e
     .claude/skills/go-validation/SKILL.md: sha256:4aee9b7494b43ac0bb710ed43e7740661162a4b34811e1bb18cfabd4f0520a93
     .claude/skills/go-validation/eval.yaml: sha256:3d73d5fc24f17d2d083a12b8b126ff5abbb53e320f4a3ff90d4d7c2a3ff7a00c
     .claude/skills/go-validation/evals/tasks/go-validation-basic.yaml: sha256:2b253e635832329d35745fd2f855e00cafd8f65eb68a040bb6269aa8790bb76e
@@ -990,11 +1025,12 @@ dependencies:
     .claude/skills/go-validation/references/common-individual-commands.md: sha256:a0384efde65047e409f0cc5c4c4226bf42ea7c03c72d6173d6bcc9a3e2eed0c4
     .claude/skills/go-validation/references/common-output-format.md: sha256:e21f30fe399e9851ec5b7e0a249722685f041bb647cd1255aa40b3f215062408
     .claude/skills/go-validation/references/common-troubleshooting.md: sha256:6af5a25ee372f46769f726bbe16140a8fe65e01883c5fb15b680ba3c14ac5b4b
-    .claude/skills/go-validation/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .claude/skills/go-validation/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/go-validation/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/go-validation/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .claude/skills/go-validation/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .claude/skills/go-validation/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .claude/skills/go-validation/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .claude/skills/go-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/go-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .claude/skills/go-validation/scripts/validate.sh: sha256:81bdb45bb70ab2e6685e5984c845c55ac58f5acb9b9a3bb4662434cf5b7971dd
@@ -1054,6 +1090,7 @@ dependencies:
   - .agents/skills/loop-changelog/scripts/lib/common.sh
   - .agents/skills/loop-changelog/scripts/lib/csv.sh
   - .agents/skills/loop-changelog/scripts/lib/json.sh
+  - .agents/skills/loop-changelog/scripts/lib/repo_paths.sh
   - .agents/skills/loop-changelog/scripts/lib/terraform.sh
   - .agents/skills/loop-changelog/scripts/lib/validation.sh
   - .claude/skills/loop-changelog
@@ -1077,6 +1114,7 @@ dependencies:
   - .claude/skills/loop-changelog/scripts/lib/common.sh
   - .claude/skills/loop-changelog/scripts/lib/csv.sh
   - .claude/skills/loop-changelog/scripts/lib/json.sh
+  - .claude/skills/loop-changelog/scripts/lib/repo_paths.sh
   - .claude/skills/loop-changelog/scripts/lib/terraform.sh
   - .claude/skills/loop-changelog/scripts/lib/validation.sh
   deployed_file_hashes:
@@ -1094,12 +1132,13 @@ dependencies:
     .agents/skills/loop-changelog/references/common-checklist.md: sha256:f1d108abf8264c6698c601c8872d59405db03434870da954ac84baa615117da5
     .agents/skills/loop-changelog/references/common-output-format.md: sha256:cfa1278e2a4e2c5beaa96654a783381189a230b318c6ef0b37a58c6183c27cd0
     .agents/skills/loop-changelog/references/common-troubleshooting.md: sha256:a8fee7f3104e14fc626d4b6fcc7dcfc4c17af35752ee9ee9c57f6e4101e29b0f
-    .agents/skills/loop-changelog/scripts/detect_changelog_commits.sh: sha256:3383cf9fea2b5980a66ca049ce483f7d65c15268d5c38fdbec6f095fdafb8f59
-    .agents/skills/loop-changelog/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .agents/skills/loop-changelog/scripts/detect_changelog_commits.sh: sha256:c55cb383b5aaeb67ee9d0fdb8b09a3118a39be3a1905dc8118e7c54154fbc751
+    .agents/skills/loop-changelog/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/loop-changelog/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/loop-changelog/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .agents/skills/loop-changelog/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .agents/skills/loop-changelog/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .agents/skills/loop-changelog/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .agents/skills/loop-changelog/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/loop-changelog/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .claude/skills/loop-changelog/SKILL.md: sha256:795e6b9929cba62d5f6c5a9db9db5ff4f014653be71555fbadb85a61912f72ea
@@ -1116,12 +1155,13 @@ dependencies:
     .claude/skills/loop-changelog/references/common-checklist.md: sha256:f1d108abf8264c6698c601c8872d59405db03434870da954ac84baa615117da5
     .claude/skills/loop-changelog/references/common-output-format.md: sha256:cfa1278e2a4e2c5beaa96654a783381189a230b318c6ef0b37a58c6183c27cd0
     .claude/skills/loop-changelog/references/common-troubleshooting.md: sha256:a8fee7f3104e14fc626d4b6fcc7dcfc4c17af35752ee9ee9c57f6e4101e29b0f
-    .claude/skills/loop-changelog/scripts/detect_changelog_commits.sh: sha256:3383cf9fea2b5980a66ca049ce483f7d65c15268d5c38fdbec6f095fdafb8f59
-    .claude/skills/loop-changelog/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .claude/skills/loop-changelog/scripts/detect_changelog_commits.sh: sha256:c55cb383b5aaeb67ee9d0fdb8b09a3118a39be3a1905dc8118e7c54154fbc751
+    .claude/skills/loop-changelog/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/loop-changelog/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/loop-changelog/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .claude/skills/loop-changelog/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .claude/skills/loop-changelog/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .claude/skills/loop-changelog/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .claude/skills/loop-changelog/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/loop-changelog/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
   source: local
@@ -1153,6 +1193,7 @@ dependencies:
   - .agents/skills/loop-ci-sweeper/scripts/lib/common.sh
   - .agents/skills/loop-ci-sweeper/scripts/lib/csv.sh
   - .agents/skills/loop-ci-sweeper/scripts/lib/json.sh
+  - .agents/skills/loop-ci-sweeper/scripts/lib/repo_paths.sh
   - .agents/skills/loop-ci-sweeper/scripts/lib/terraform.sh
   - .agents/skills/loop-ci-sweeper/scripts/lib/validation.sh
   - .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh
@@ -1177,6 +1218,7 @@ dependencies:
   - .claude/skills/loop-ci-sweeper/scripts/lib/common.sh
   - .claude/skills/loop-ci-sweeper/scripts/lib/csv.sh
   - .claude/skills/loop-ci-sweeper/scripts/lib/json.sh
+  - .claude/skills/loop-ci-sweeper/scripts/lib/repo_paths.sh
   - .claude/skills/loop-ci-sweeper/scripts/lib/terraform.sh
   - .claude/skills/loop-ci-sweeper/scripts/lib/validation.sh
   - .claude/skills/loop-ci-sweeper/scripts/update_run_ledger.sh
@@ -1195,12 +1237,13 @@ dependencies:
     .agents/skills/loop-ci-sweeper/references/common-checklist.md: sha256:68f1e9423c46c11c6317ba69fd38004e4eee6d90a9cb79463b8260e38e0e900e
     .agents/skills/loop-ci-sweeper/references/common-output-format.md: sha256:fca5a2d50861f0761ad5bcfce98b98ed5aae911e9c2ba8c668550b225b074e22
     .agents/skills/loop-ci-sweeper/references/common-troubleshooting.md: sha256:5ebe3285be3c1d405a712b6aff68392050c2e83adf83f2774d38c1afaf26547d
-    .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh: sha256:6f1e8cf59ce692ef7252a5aa4457270396099bc1ad550bd58e5b5b2dd8d3e6f5
-    .agents/skills/loop-ci-sweeper/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh: sha256:b9d917640bcafb6928b528e28d4f391f904e535afe57538a08459c9d05e9fc39
+    .agents/skills/loop-ci-sweeper/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/loop-ci-sweeper/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/loop-ci-sweeper/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .agents/skills/loop-ci-sweeper/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .agents/skills/loop-ci-sweeper/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .agents/skills/loop-ci-sweeper/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .agents/skills/loop-ci-sweeper/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/loop-ci-sweeper/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh: sha256:e410ae7a424a52e8308b2044dfaba1811ff72859e9bdf69fba79056808652200
@@ -1218,12 +1261,13 @@ dependencies:
     .claude/skills/loop-ci-sweeper/references/common-checklist.md: sha256:68f1e9423c46c11c6317ba69fd38004e4eee6d90a9cb79463b8260e38e0e900e
     .claude/skills/loop-ci-sweeper/references/common-output-format.md: sha256:fca5a2d50861f0761ad5bcfce98b98ed5aae911e9c2ba8c668550b225b074e22
     .claude/skills/loop-ci-sweeper/references/common-troubleshooting.md: sha256:5ebe3285be3c1d405a712b6aff68392050c2e83adf83f2774d38c1afaf26547d
-    .claude/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh: sha256:6f1e8cf59ce692ef7252a5aa4457270396099bc1ad550bd58e5b5b2dd8d3e6f5
-    .claude/skills/loop-ci-sweeper/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .claude/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh: sha256:b9d917640bcafb6928b528e28d4f391f904e535afe57538a08459c9d05e9fc39
+    .claude/skills/loop-ci-sweeper/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/loop-ci-sweeper/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/loop-ci-sweeper/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .claude/skills/loop-ci-sweeper/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .claude/skills/loop-ci-sweeper/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .claude/skills/loop-ci-sweeper/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .claude/skills/loop-ci-sweeper/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/loop-ci-sweeper/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .claude/skills/loop-ci-sweeper/scripts/update_run_ledger.sh: sha256:e410ae7a424a52e8308b2044dfaba1811ff72859e9bdf69fba79056808652200
@@ -1257,6 +1301,7 @@ dependencies:
   - .agents/skills/loop-docs-triage/scripts/lib/common.sh
   - .agents/skills/loop-docs-triage/scripts/lib/csv.sh
   - .agents/skills/loop-docs-triage/scripts/lib/json.sh
+  - .agents/skills/loop-docs-triage/scripts/lib/repo_paths.sh
   - .agents/skills/loop-docs-triage/scripts/lib/terraform.sh
   - .agents/skills/loop-docs-triage/scripts/lib/validation.sh
   - .claude/skills/loop-docs-triage
@@ -1281,6 +1326,7 @@ dependencies:
   - .claude/skills/loop-docs-triage/scripts/lib/common.sh
   - .claude/skills/loop-docs-triage/scripts/lib/csv.sh
   - .claude/skills/loop-docs-triage/scripts/lib/json.sh
+  - .claude/skills/loop-docs-triage/scripts/lib/repo_paths.sh
   - .claude/skills/loop-docs-triage/scripts/lib/terraform.sh
   - .claude/skills/loop-docs-triage/scripts/lib/validation.sh
   deployed_file_hashes:
@@ -1299,12 +1345,13 @@ dependencies:
     .agents/skills/loop-docs-triage/references/common-checklist.md: sha256:6593968b0046fa64270ef1f8fc2236f0f6a40783d363e1c0d97a9ff06ae9c08c
     .agents/skills/loop-docs-triage/references/common-output-format.md: sha256:c5c07aa7760970b7f2b0fdb2d4201c67dc2b849490e5b02ba34df3cd0b1486f3
     .agents/skills/loop-docs-triage/references/common-troubleshooting.md: sha256:3271f7131861164b00151b69eb77f5fd5088a65b979cb0d77449ae144ba80b96
-    .agents/skills/loop-docs-triage/scripts/detect_changes.sh: sha256:bc4cae400c415e1432a6fbb03a456fcc95de6c712a80cfbfdd790fcb78fafca4
-    .agents/skills/loop-docs-triage/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .agents/skills/loop-docs-triage/scripts/detect_changes.sh: sha256:818c1f354a54c508d39d3ff0128685b0ad974d1340931d18938c1e3e4cb7d975
+    .agents/skills/loop-docs-triage/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/loop-docs-triage/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/loop-docs-triage/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .agents/skills/loop-docs-triage/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .agents/skills/loop-docs-triage/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .agents/skills/loop-docs-triage/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .agents/skills/loop-docs-triage/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/loop-docs-triage/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .claude/skills/loop-docs-triage/SKILL.md: sha256:00cf1a82a20ac74aa2079feefe80af6d0b9dd2c47d29c96d073661f751d36006
@@ -1322,147 +1369,156 @@ dependencies:
     .claude/skills/loop-docs-triage/references/common-checklist.md: sha256:6593968b0046fa64270ef1f8fc2236f0f6a40783d363e1c0d97a9ff06ae9c08c
     .claude/skills/loop-docs-triage/references/common-output-format.md: sha256:c5c07aa7760970b7f2b0fdb2d4201c67dc2b849490e5b02ba34df3cd0b1486f3
     .claude/skills/loop-docs-triage/references/common-troubleshooting.md: sha256:3271f7131861164b00151b69eb77f5fd5088a65b979cb0d77449ae144ba80b96
-    .claude/skills/loop-docs-triage/scripts/detect_changes.sh: sha256:bc4cae400c415e1432a6fbb03a456fcc95de6c712a80cfbfdd790fcb78fafca4
-    .claude/skills/loop-docs-triage/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .claude/skills/loop-docs-triage/scripts/detect_changes.sh: sha256:818c1f354a54c508d39d3ff0128685b0ad974d1340931d18938c1e3e4cb7d975
+    .claude/skills/loop-docs-triage/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/loop-docs-triage/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/loop-docs-triage/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .claude/skills/loop-docs-triage/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .claude/skills/loop-docs-triage/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .claude/skills/loop-docs-triage/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .claude/skills/loop-docs-triage/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/loop-docs-triage/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
   source: local
   local_path: ./.apm/packages/loop-docs-triage
   declared_license: Apache-2.0
-- repo_url: _local/loop-tech-debt
-  name: config-loop-tech-debt
+- repo_url: _local/loop-report-tech-debt
+  name: config-loop-report-tech-debt
   version: 1.0.0
   package_type: apm_package
   deployed_files:
-  - .agents/skills/loop-tech-debt
-  - .agents/skills/loop-tech-debt/SKILL.md
-  - .agents/skills/loop-tech-debt/eval.yaml
-  - .agents/skills/loop-tech-debt/evals/files/README.md
-  - .agents/skills/loop-tech-debt/evals/files/go.mod.txt
-  - .agents/skills/loop-tech-debt/evals/files/noise.go.txt
-  - .agents/skills/loop-tech-debt/evals/files/previous-report.sample.md
-  - .agents/skills/loop-tech-debt/evals/files/sample_service.go.txt
-  - .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-basic.yaml
-  - .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-classification.yaml
-  - .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-hotspot-only.yaml
-  - .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-l1-report-only.yaml
-  - .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-l2-report-write.yaml
-  - .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-noaction.yaml
-  - .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-previous-report.yaml
-  - .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-trigger-negative.yaml
-  - .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-truncation-cap.yaml
-  - .agents/skills/loop-tech-debt/references/category-debt-taxonomy.md
-  - .agents/skills/loop-tech-debt/references/category-input-schema.md
-  - .agents/skills/loop-tech-debt/references/category-scope.md
-  - .agents/skills/loop-tech-debt/references/common-checklist.md
-  - .agents/skills/loop-tech-debt/references/common-output-format.md
-  - .agents/skills/loop-tech-debt/references/common-troubleshooting.md
-  - .agents/skills/loop-tech-debt/scripts/detect_tech_debt.sh
-  - .agents/skills/loop-tech-debt/scripts/lib/all.sh
-  - .agents/skills/loop-tech-debt/scripts/lib/aws.sh
-  - .agents/skills/loop-tech-debt/scripts/lib/common.sh
-  - .agents/skills/loop-tech-debt/scripts/lib/csv.sh
-  - .agents/skills/loop-tech-debt/scripts/lib/json.sh
-  - .agents/skills/loop-tech-debt/scripts/lib/terraform.sh
-  - .agents/skills/loop-tech-debt/scripts/lib/validation.sh
-  - .claude/skills/loop-tech-debt
-  - .claude/skills/loop-tech-debt/SKILL.md
-  - .claude/skills/loop-tech-debt/eval.yaml
-  - .claude/skills/loop-tech-debt/evals/files/README.md
-  - .claude/skills/loop-tech-debt/evals/files/go.mod.txt
-  - .claude/skills/loop-tech-debt/evals/files/noise.go.txt
-  - .claude/skills/loop-tech-debt/evals/files/previous-report.sample.md
-  - .claude/skills/loop-tech-debt/evals/files/sample_service.go.txt
-  - .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-basic.yaml
-  - .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-classification.yaml
-  - .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-hotspot-only.yaml
-  - .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-l1-report-only.yaml
-  - .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-l2-report-write.yaml
-  - .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-noaction.yaml
-  - .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-previous-report.yaml
-  - .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-trigger-negative.yaml
-  - .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-truncation-cap.yaml
-  - .claude/skills/loop-tech-debt/references/category-debt-taxonomy.md
-  - .claude/skills/loop-tech-debt/references/category-input-schema.md
-  - .claude/skills/loop-tech-debt/references/category-scope.md
-  - .claude/skills/loop-tech-debt/references/common-checklist.md
-  - .claude/skills/loop-tech-debt/references/common-output-format.md
-  - .claude/skills/loop-tech-debt/references/common-troubleshooting.md
-  - .claude/skills/loop-tech-debt/scripts/detect_tech_debt.sh
-  - .claude/skills/loop-tech-debt/scripts/lib/all.sh
-  - .claude/skills/loop-tech-debt/scripts/lib/aws.sh
-  - .claude/skills/loop-tech-debt/scripts/lib/common.sh
-  - .claude/skills/loop-tech-debt/scripts/lib/csv.sh
-  - .claude/skills/loop-tech-debt/scripts/lib/json.sh
-  - .claude/skills/loop-tech-debt/scripts/lib/terraform.sh
-  - .claude/skills/loop-tech-debt/scripts/lib/validation.sh
+  - .agents/skills/loop-report-tech-debt
+  - .agents/skills/loop-report-tech-debt/SKILL.md
+  - .agents/skills/loop-report-tech-debt/eval.yaml
+  - .agents/skills/loop-report-tech-debt/evals/files/README.md
+  - .agents/skills/loop-report-tech-debt/evals/files/go.mod.txt
+  - .agents/skills/loop-report-tech-debt/evals/files/noise.go.txt
+  - .agents/skills/loop-report-tech-debt/evals/files/previous-report.sample.md
+  - .agents/skills/loop-report-tech-debt/evals/files/sample_service.go.txt
+  - .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-basic.yaml
+  - .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-classification.yaml
+  - .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-hotspot-only.yaml
+  - .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l1-report-only.yaml
+  - .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l2-report-write.yaml
+  - .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-noaction.yaml
+  - .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-previous-report.yaml
+  - .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-trigger-negative.yaml
+  - .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-truncation-cap.yaml
+  - .agents/skills/loop-report-tech-debt/references/category-debt-taxonomy.md
+  - .agents/skills/loop-report-tech-debt/references/category-input-schema.md
+  - .agents/skills/loop-report-tech-debt/references/category-scope.md
+  - .agents/skills/loop-report-tech-debt/references/common-checklist.md
+  - .agents/skills/loop-report-tech-debt/references/common-output-format.md
+  - .agents/skills/loop-report-tech-debt/references/common-troubleshooting.md
+  - .agents/skills/loop-report-tech-debt/scripts/detect_report_tech_debt.sh
+  - .agents/skills/loop-report-tech-debt/scripts/detect_report_tech_debt_sensors.sh
+  - .agents/skills/loop-report-tech-debt/scripts/lib/all.sh
+  - .agents/skills/loop-report-tech-debt/scripts/lib/aws.sh
+  - .agents/skills/loop-report-tech-debt/scripts/lib/common.sh
+  - .agents/skills/loop-report-tech-debt/scripts/lib/csv.sh
+  - .agents/skills/loop-report-tech-debt/scripts/lib/json.sh
+  - .agents/skills/loop-report-tech-debt/scripts/lib/repo_paths.sh
+  - .agents/skills/loop-report-tech-debt/scripts/lib/terraform.sh
+  - .agents/skills/loop-report-tech-debt/scripts/lib/validation.sh
+  - .claude/skills/loop-report-tech-debt
+  - .claude/skills/loop-report-tech-debt/SKILL.md
+  - .claude/skills/loop-report-tech-debt/eval.yaml
+  - .claude/skills/loop-report-tech-debt/evals/files/README.md
+  - .claude/skills/loop-report-tech-debt/evals/files/go.mod.txt
+  - .claude/skills/loop-report-tech-debt/evals/files/noise.go.txt
+  - .claude/skills/loop-report-tech-debt/evals/files/previous-report.sample.md
+  - .claude/skills/loop-report-tech-debt/evals/files/sample_service.go.txt
+  - .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-basic.yaml
+  - .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-classification.yaml
+  - .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-hotspot-only.yaml
+  - .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l1-report-only.yaml
+  - .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l2-report-write.yaml
+  - .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-noaction.yaml
+  - .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-previous-report.yaml
+  - .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-trigger-negative.yaml
+  - .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-truncation-cap.yaml
+  - .claude/skills/loop-report-tech-debt/references/category-debt-taxonomy.md
+  - .claude/skills/loop-report-tech-debt/references/category-input-schema.md
+  - .claude/skills/loop-report-tech-debt/references/category-scope.md
+  - .claude/skills/loop-report-tech-debt/references/common-checklist.md
+  - .claude/skills/loop-report-tech-debt/references/common-output-format.md
+  - .claude/skills/loop-report-tech-debt/references/common-troubleshooting.md
+  - .claude/skills/loop-report-tech-debt/scripts/detect_report_tech_debt.sh
+  - .claude/skills/loop-report-tech-debt/scripts/detect_report_tech_debt_sensors.sh
+  - .claude/skills/loop-report-tech-debt/scripts/lib/all.sh
+  - .claude/skills/loop-report-tech-debt/scripts/lib/aws.sh
+  - .claude/skills/loop-report-tech-debt/scripts/lib/common.sh
+  - .claude/skills/loop-report-tech-debt/scripts/lib/csv.sh
+  - .claude/skills/loop-report-tech-debt/scripts/lib/json.sh
+  - .claude/skills/loop-report-tech-debt/scripts/lib/repo_paths.sh
+  - .claude/skills/loop-report-tech-debt/scripts/lib/terraform.sh
+  - .claude/skills/loop-report-tech-debt/scripts/lib/validation.sh
   deployed_file_hashes:
-    .agents/skills/loop-tech-debt/SKILL.md: sha256:7a88e3e69df21b9c671dd0bcc2e7c107ca871e14f4a76732732a11dfc75cf03e
-    .agents/skills/loop-tech-debt/eval.yaml: sha256:58a318ed85c73c269eb3c428a1f065659ba41076679bfb04330c19a9826c5e04
-    .agents/skills/loop-tech-debt/evals/files/README.md: sha256:72115b1eeabe18a192e21dc65b707f07d2ddb699e2f4c90c7dff2b438028961f
-    .agents/skills/loop-tech-debt/evals/files/go.mod.txt: sha256:6337da5cc0454697de17006a91847d56e62dd5cd9fd3a245f2e873ecc1246395
-    .agents/skills/loop-tech-debt/evals/files/noise.go.txt: sha256:095a192120fd822a7a7e2034ae84fbc6fdfdf7e4dbee7160266295e9e372c154
-    .agents/skills/loop-tech-debt/evals/files/previous-report.sample.md: sha256:98c283fffe6da93c1c3b783e8173c47c27be518ceec0d0fe0021f10056579e21
-    .agents/skills/loop-tech-debt/evals/files/sample_service.go.txt: sha256:5a4aeb7c5caf81a5f86e46e54e135d39634103f012fdf90afcf1bbc942325bb3
-    .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-basic.yaml: sha256:e5dee77e213cde1ada02a99233fa3bb8b1f627446a883d00190fbd41eb2613f1
-    .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-classification.yaml: sha256:9393167fe3c2b5ceaaec1b9ba532c46cb65c46a223788f223fa0b04677040db5
-    .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-hotspot-only.yaml: sha256:938583d615dc6e192e839a347280b12f9429199c07e6dea42fe2e9836c91d73e
-    .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-l1-report-only.yaml: sha256:cf150bf957253fde71eb80e0cb80845c2a927062716536d8c09ea231e4eefd88
-    .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-l2-report-write.yaml: sha256:ebc78bddce17e75ecca988a63777df8f175aa25d703d66820e20b193458f69b1
-    .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-noaction.yaml: sha256:8f6e6995c20e100bd6d3c20266afb80568084eabb4f50b94f03c6ce191c55e57
-    .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-previous-report.yaml: sha256:9fd0c9c09e0df9ed2cde0d0bb3fa86e909bc2e8d25c7a0672c86a48df0adca37
-    .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-trigger-negative.yaml: sha256:5d07cfbb743ab9aa41c5a9bf7ecbd2c1702ad93752d03db211d5473a42c3b735
-    .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-truncation-cap.yaml: sha256:4898ce333f71f325879af62fa2cccf6e53500a09f120fc6c00664b3550d76262
-    .agents/skills/loop-tech-debt/references/category-debt-taxonomy.md: sha256:4268125d2b7c263d7e1c7ba1d0d79fb8ed49de04de07531f5e944fc3d9c6a498
-    .agents/skills/loop-tech-debt/references/category-input-schema.md: sha256:a9bbe37bb6a2b9744096203b0d7ccb8ea468b0170ff0d60706581076d33a4e1e
-    .agents/skills/loop-tech-debt/references/category-scope.md: sha256:4eb9db60c556394839892e43cae2c7f0935afcdfd9d690c9e1161599295fbf92
-    .agents/skills/loop-tech-debt/references/common-checklist.md: sha256:4ff7430b28ba725214a5c16c6cb179ba22456180eeed7430c144164f10ccfc80
-    .agents/skills/loop-tech-debt/references/common-output-format.md: sha256:7136dcc31a9deae9b9fb2ba33fcb5cc6e67ab06d09f00ed28fa6fcdbcf10395b
-    .agents/skills/loop-tech-debt/references/common-troubleshooting.md: sha256:28e9a9acf32642f50167c5a6e25a0de9410cc33cf4ec1a23a06deb92f21b9e1b
-    .agents/skills/loop-tech-debt/scripts/detect_tech_debt.sh: sha256:852128891a73523b690374140bbf2ea2e0d5918631d5a0ef99cdad8bcd88c821
-    .agents/skills/loop-tech-debt/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
-    .agents/skills/loop-tech-debt/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
-    .agents/skills/loop-tech-debt/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
-    .agents/skills/loop-tech-debt/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
-    .agents/skills/loop-tech-debt/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
-    .agents/skills/loop-tech-debt/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
-    .agents/skills/loop-tech-debt/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .claude/skills/loop-tech-debt/SKILL.md: sha256:7a88e3e69df21b9c671dd0bcc2e7c107ca871e14f4a76732732a11dfc75cf03e
-    .claude/skills/loop-tech-debt/eval.yaml: sha256:58a318ed85c73c269eb3c428a1f065659ba41076679bfb04330c19a9826c5e04
-    .claude/skills/loop-tech-debt/evals/files/README.md: sha256:72115b1eeabe18a192e21dc65b707f07d2ddb699e2f4c90c7dff2b438028961f
-    .claude/skills/loop-tech-debt/evals/files/go.mod.txt: sha256:6337da5cc0454697de17006a91847d56e62dd5cd9fd3a245f2e873ecc1246395
-    .claude/skills/loop-tech-debt/evals/files/noise.go.txt: sha256:095a192120fd822a7a7e2034ae84fbc6fdfdf7e4dbee7160266295e9e372c154
-    .claude/skills/loop-tech-debt/evals/files/previous-report.sample.md: sha256:98c283fffe6da93c1c3b783e8173c47c27be518ceec0d0fe0021f10056579e21
-    .claude/skills/loop-tech-debt/evals/files/sample_service.go.txt: sha256:5a4aeb7c5caf81a5f86e46e54e135d39634103f012fdf90afcf1bbc942325bb3
-    .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-basic.yaml: sha256:e5dee77e213cde1ada02a99233fa3bb8b1f627446a883d00190fbd41eb2613f1
-    .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-classification.yaml: sha256:9393167fe3c2b5ceaaec1b9ba532c46cb65c46a223788f223fa0b04677040db5
-    .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-hotspot-only.yaml: sha256:938583d615dc6e192e839a347280b12f9429199c07e6dea42fe2e9836c91d73e
-    .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-l1-report-only.yaml: sha256:cf150bf957253fde71eb80e0cb80845c2a927062716536d8c09ea231e4eefd88
-    .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-l2-report-write.yaml: sha256:ebc78bddce17e75ecca988a63777df8f175aa25d703d66820e20b193458f69b1
-    .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-noaction.yaml: sha256:8f6e6995c20e100bd6d3c20266afb80568084eabb4f50b94f03c6ce191c55e57
-    .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-previous-report.yaml: sha256:9fd0c9c09e0df9ed2cde0d0bb3fa86e909bc2e8d25c7a0672c86a48df0adca37
-    .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-trigger-negative.yaml: sha256:5d07cfbb743ab9aa41c5a9bf7ecbd2c1702ad93752d03db211d5473a42c3b735
-    .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-truncation-cap.yaml: sha256:4898ce333f71f325879af62fa2cccf6e53500a09f120fc6c00664b3550d76262
-    .claude/skills/loop-tech-debt/references/category-debt-taxonomy.md: sha256:4268125d2b7c263d7e1c7ba1d0d79fb8ed49de04de07531f5e944fc3d9c6a498
-    .claude/skills/loop-tech-debt/references/category-input-schema.md: sha256:a9bbe37bb6a2b9744096203b0d7ccb8ea468b0170ff0d60706581076d33a4e1e
-    .claude/skills/loop-tech-debt/references/category-scope.md: sha256:4eb9db60c556394839892e43cae2c7f0935afcdfd9d690c9e1161599295fbf92
-    .claude/skills/loop-tech-debt/references/common-checklist.md: sha256:4ff7430b28ba725214a5c16c6cb179ba22456180eeed7430c144164f10ccfc80
-    .claude/skills/loop-tech-debt/references/common-output-format.md: sha256:7136dcc31a9deae9b9fb2ba33fcb5cc6e67ab06d09f00ed28fa6fcdbcf10395b
-    .claude/skills/loop-tech-debt/references/common-troubleshooting.md: sha256:28e9a9acf32642f50167c5a6e25a0de9410cc33cf4ec1a23a06deb92f21b9e1b
-    .claude/skills/loop-tech-debt/scripts/detect_tech_debt.sh: sha256:852128891a73523b690374140bbf2ea2e0d5918631d5a0ef99cdad8bcd88c821
-    .claude/skills/loop-tech-debt/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
-    .claude/skills/loop-tech-debt/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
-    .claude/skills/loop-tech-debt/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
-    .claude/skills/loop-tech-debt/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
-    .claude/skills/loop-tech-debt/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
-    .claude/skills/loop-tech-debt/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
-    .claude/skills/loop-tech-debt/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
+    .agents/skills/loop-report-tech-debt/SKILL.md: sha256:2a7a421f22948eeef1179549a4f746cc9e9273d2b3345b26ac291455362a6902
+    .agents/skills/loop-report-tech-debt/eval.yaml: sha256:53d4ee96f7fde1c27b71628388f114e8e1d0b3458cea0c0527e3235f380be412
+    .agents/skills/loop-report-tech-debt/evals/files/README.md: sha256:72115b1eeabe18a192e21dc65b707f07d2ddb699e2f4c90c7dff2b438028961f
+    .agents/skills/loop-report-tech-debt/evals/files/go.mod.txt: sha256:6337da5cc0454697de17006a91847d56e62dd5cd9fd3a245f2e873ecc1246395
+    .agents/skills/loop-report-tech-debt/evals/files/noise.go.txt: sha256:095a192120fd822a7a7e2034ae84fbc6fdfdf7e4dbee7160266295e9e372c154
+    .agents/skills/loop-report-tech-debt/evals/files/previous-report.sample.md: sha256:98c283fffe6da93c1c3b783e8173c47c27be518ceec0d0fe0021f10056579e21
+    .agents/skills/loop-report-tech-debt/evals/files/sample_service.go.txt: sha256:5a4aeb7c5caf81a5f86e46e54e135d39634103f012fdf90afcf1bbc942325bb3
+    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-basic.yaml: sha256:d112912609520624295a954b4e34e9cb210d2622016d1a55467bce0dcf5e19e6
+    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-classification.yaml: sha256:3caa71f0bcc7a531f99731e58009e07df4f93266003acf211f1b7b3dea4b447d
+    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-hotspot-only.yaml: sha256:fc86da7193dca6a60c4b67e4d6f38b14e6dda0279903853c815641585eda9a31
+    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l1-report-only.yaml: sha256:227ec0dd2415aeffd52bdde203076d25eab45dd0b1b726b4b98e3b5037787209
+    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l2-report-write.yaml: sha256:e46ac2099794aae70bb923e2473a16065151da1cfd39fe7aa127caf733b63b8d
+    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-noaction.yaml: sha256:66a094199ca60d10df3efbf25070a87b0024b6135e640f9ca9b82f07b40bd39c
+    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-previous-report.yaml: sha256:1ae66d05d775132e18eb8e70d4222ada055ea634a1142be1914c7044bc8ec7d6
+    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-trigger-negative.yaml: sha256:a0c9dd7020cabcf3af5152071a41c3958c270048097c97f86a0b001d651bcb4f
+    .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-truncation-cap.yaml: sha256:534320eaeeecd9323b4e71d3f1bbe72ac2306b11b64798b9b333959da72262ed
+    .agents/skills/loop-report-tech-debt/references/category-debt-taxonomy.md: sha256:4268125d2b7c263d7e1c7ba1d0d79fb8ed49de04de07531f5e944fc3d9c6a498
+    .agents/skills/loop-report-tech-debt/references/category-input-schema.md: sha256:bbc1229fb30fd480ac50646d91221be0fa37fbf0d1c94c3df50e95891cc4ea3b
+    .agents/skills/loop-report-tech-debt/references/category-scope.md: sha256:12a6e9e5213d78dc67a1a2467a2a902c97dc55b5da3e56c2b7b36683ce7d15f9
+    .agents/skills/loop-report-tech-debt/references/common-checklist.md: sha256:d3c24fa34abb135fc0e6521b1c1635b89097a2d60c97c91c393c43dd9982bbb7
+    .agents/skills/loop-report-tech-debt/references/common-output-format.md: sha256:21c7e0ea9c6923130318b1f1e84372897abf635225a7dfddff9384e63ded43c9
+    .agents/skills/loop-report-tech-debt/references/common-troubleshooting.md: sha256:28e9a9acf32642f50167c5a6e25a0de9410cc33cf4ec1a23a06deb92f21b9e1b
+    .agents/skills/loop-report-tech-debt/scripts/detect_report_tech_debt.sh: sha256:b8517a783d0a89b35ee0dcb14eed3f926fa592e22a596bb42bfd5498e7aabdf2
+    .agents/skills/loop-report-tech-debt/scripts/detect_report_tech_debt_sensors.sh: sha256:c49c50630e015ad44342d8c640986e52d92a2a777b90c1ca2ea09b00058153d7
+    .agents/skills/loop-report-tech-debt/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
+    .agents/skills/loop-report-tech-debt/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
+    .agents/skills/loop-report-tech-debt/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
+    .agents/skills/loop-report-tech-debt/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
+    .agents/skills/loop-report-tech-debt/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .agents/skills/loop-report-tech-debt/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
+    .agents/skills/loop-report-tech-debt/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
+    .agents/skills/loop-report-tech-debt/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
+    .claude/skills/loop-report-tech-debt/SKILL.md: sha256:2a7a421f22948eeef1179549a4f746cc9e9273d2b3345b26ac291455362a6902
+    .claude/skills/loop-report-tech-debt/eval.yaml: sha256:53d4ee96f7fde1c27b71628388f114e8e1d0b3458cea0c0527e3235f380be412
+    .claude/skills/loop-report-tech-debt/evals/files/README.md: sha256:72115b1eeabe18a192e21dc65b707f07d2ddb699e2f4c90c7dff2b438028961f
+    .claude/skills/loop-report-tech-debt/evals/files/go.mod.txt: sha256:6337da5cc0454697de17006a91847d56e62dd5cd9fd3a245f2e873ecc1246395
+    .claude/skills/loop-report-tech-debt/evals/files/noise.go.txt: sha256:095a192120fd822a7a7e2034ae84fbc6fdfdf7e4dbee7160266295e9e372c154
+    .claude/skills/loop-report-tech-debt/evals/files/previous-report.sample.md: sha256:98c283fffe6da93c1c3b783e8173c47c27be518ceec0d0fe0021f10056579e21
+    .claude/skills/loop-report-tech-debt/evals/files/sample_service.go.txt: sha256:5a4aeb7c5caf81a5f86e46e54e135d39634103f012fdf90afcf1bbc942325bb3
+    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-basic.yaml: sha256:d112912609520624295a954b4e34e9cb210d2622016d1a55467bce0dcf5e19e6
+    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-classification.yaml: sha256:3caa71f0bcc7a531f99731e58009e07df4f93266003acf211f1b7b3dea4b447d
+    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-hotspot-only.yaml: sha256:fc86da7193dca6a60c4b67e4d6f38b14e6dda0279903853c815641585eda9a31
+    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l1-report-only.yaml: sha256:227ec0dd2415aeffd52bdde203076d25eab45dd0b1b726b4b98e3b5037787209
+    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l2-report-write.yaml: sha256:e46ac2099794aae70bb923e2473a16065151da1cfd39fe7aa127caf733b63b8d
+    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-noaction.yaml: sha256:66a094199ca60d10df3efbf25070a87b0024b6135e640f9ca9b82f07b40bd39c
+    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-previous-report.yaml: sha256:1ae66d05d775132e18eb8e70d4222ada055ea634a1142be1914c7044bc8ec7d6
+    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-trigger-negative.yaml: sha256:a0c9dd7020cabcf3af5152071a41c3958c270048097c97f86a0b001d651bcb4f
+    .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-truncation-cap.yaml: sha256:534320eaeeecd9323b4e71d3f1bbe72ac2306b11b64798b9b333959da72262ed
+    .claude/skills/loop-report-tech-debt/references/category-debt-taxonomy.md: sha256:4268125d2b7c263d7e1c7ba1d0d79fb8ed49de04de07531f5e944fc3d9c6a498
+    .claude/skills/loop-report-tech-debt/references/category-input-schema.md: sha256:bbc1229fb30fd480ac50646d91221be0fa37fbf0d1c94c3df50e95891cc4ea3b
+    .claude/skills/loop-report-tech-debt/references/category-scope.md: sha256:12a6e9e5213d78dc67a1a2467a2a902c97dc55b5da3e56c2b7b36683ce7d15f9
+    .claude/skills/loop-report-tech-debt/references/common-checklist.md: sha256:d3c24fa34abb135fc0e6521b1c1635b89097a2d60c97c91c393c43dd9982bbb7
+    .claude/skills/loop-report-tech-debt/references/common-output-format.md: sha256:21c7e0ea9c6923130318b1f1e84372897abf635225a7dfddff9384e63ded43c9
+    .claude/skills/loop-report-tech-debt/references/common-troubleshooting.md: sha256:28e9a9acf32642f50167c5a6e25a0de9410cc33cf4ec1a23a06deb92f21b9e1b
+    .claude/skills/loop-report-tech-debt/scripts/detect_report_tech_debt.sh: sha256:b8517a783d0a89b35ee0dcb14eed3f926fa592e22a596bb42bfd5498e7aabdf2
+    .claude/skills/loop-report-tech-debt/scripts/detect_report_tech_debt_sensors.sh: sha256:c49c50630e015ad44342d8c640986e52d92a2a777b90c1ca2ea09b00058153d7
+    .claude/skills/loop-report-tech-debt/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
+    .claude/skills/loop-report-tech-debt/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
+    .claude/skills/loop-report-tech-debt/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
+    .claude/skills/loop-report-tech-debt/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
+    .claude/skills/loop-report-tech-debt/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .claude/skills/loop-report-tech-debt/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
+    .claude/skills/loop-report-tech-debt/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
+    .claude/skills/loop-report-tech-debt/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
   source: local
-  local_path: ./.apm/packages/loop-tech-debt
+  local_path: ./.apm/packages/loop-report-tech-debt
   declared_license: Apache-2.0
 - repo_url: _local/shell-script
   name: config-shell-script
@@ -1496,6 +1552,7 @@ dependencies:
   - .agents/skills/shell-script-review/scripts/lib/common.sh
   - .agents/skills/shell-script-review/scripts/lib/csv.sh
   - .agents/skills/shell-script-review/scripts/lib/json.sh
+  - .agents/skills/shell-script-review/scripts/lib/repo_paths.sh
   - .agents/skills/shell-script-review/scripts/lib/terraform.sh
   - .agents/skills/shell-script-review/scripts/lib/validation.sh
   - .agents/skills/shell-script-review/scripts/validate.sh
@@ -1517,6 +1574,7 @@ dependencies:
   - .agents/skills/shell-script-validation/scripts/lib/common.sh
   - .agents/skills/shell-script-validation/scripts/lib/csv.sh
   - .agents/skills/shell-script-validation/scripts/lib/json.sh
+  - .agents/skills/shell-script-validation/scripts/lib/repo_paths.sh
   - .agents/skills/shell-script-validation/scripts/lib/terraform.sh
   - .agents/skills/shell-script-validation/scripts/lib/validation.sh
   - .agents/skills/shell-script-validation/scripts/validate.sh
@@ -1549,6 +1607,7 @@ dependencies:
   - .claude/skills/shell-script-review/scripts/lib/common.sh
   - .claude/skills/shell-script-review/scripts/lib/csv.sh
   - .claude/skills/shell-script-review/scripts/lib/json.sh
+  - .claude/skills/shell-script-review/scripts/lib/repo_paths.sh
   - .claude/skills/shell-script-review/scripts/lib/terraform.sh
   - .claude/skills/shell-script-review/scripts/lib/validation.sh
   - .claude/skills/shell-script-review/scripts/validate.sh
@@ -1570,6 +1629,7 @@ dependencies:
   - .claude/skills/shell-script-validation/scripts/lib/common.sh
   - .claude/skills/shell-script-validation/scripts/lib/csv.sh
   - .claude/skills/shell-script-validation/scripts/lib/json.sh
+  - .claude/skills/shell-script-validation/scripts/lib/repo_paths.sh
   - .claude/skills/shell-script-validation/scripts/lib/terraform.sh
   - .claude/skills/shell-script-validation/scripts/lib/validation.sh
   - .claude/skills/shell-script-validation/scripts/validate.sh
@@ -1597,14 +1657,15 @@ dependencies:
     .agents/skills/shell-script-review/references/common-checklist.md: sha256:434c4e1e23863fc79365fa0bb493f8372b22a7c0262db316fc360161c3f6f605
     .agents/skills/shell-script-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .agents/skills/shell-script-review/references/common-troubleshooting.md: sha256:fa4bc89706e6c30ea58d4b882ee85f001b0ae832618f98648ab465274a17305f
-    .agents/skills/shell-script-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .agents/skills/shell-script-review/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/shell-script-review/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/shell-script-review/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .agents/skills/shell-script-review/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .agents/skills/shell-script-review/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .agents/skills/shell-script-review/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .agents/skills/shell-script-review/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/shell-script-review/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .agents/skills/shell-script-review/scripts/validate.sh: sha256:da25a7b3fd66ae49cf99f7cb6d6153bb7c55c6ded626e60c53243a8e194a7677
+    .agents/skills/shell-script-review/scripts/validate.sh: sha256:17bd05ce5334902891b33f2177903446d3dde3e028d6c53b07ca07ab0d65600e
     .agents/skills/shell-script-validation/SKILL.md: sha256:21854ad2cc2975192169f65885a88557d194ff2b888e5c5f679b823861a0af3a
     .agents/skills/shell-script-validation/eval.yaml: sha256:6f2518a30fe2dbd04da7b10693bd4eb8cc076d9983646c98f0591e9712ffcfd8
     .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-basic.yaml: sha256:d2df5946a3fcf3765e52405d29b0bb478e6a64dc4d05310a76a1ce6ee763d005
@@ -1617,11 +1678,12 @@ dependencies:
     .agents/skills/shell-script-validation/references/common-individual-commands.md: sha256:4630375e0015c89f53e85ab1aab5cdbbd69e0d68dc626ea02a794822ca73ad40
     .agents/skills/shell-script-validation/references/common-output-format.md: sha256:511c268f7abfa4bd6081402b03132da89a2a64be224fb63f91c98b3e9e77fe06
     .agents/skills/shell-script-validation/references/common-troubleshooting.md: sha256:4b815b33130af54c157d9856e59bc0d54239d2529643555eb2c27f82731dc69a
-    .agents/skills/shell-script-validation/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .agents/skills/shell-script-validation/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/shell-script-validation/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .agents/skills/shell-script-validation/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .agents/skills/shell-script-validation/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .agents/skills/shell-script-validation/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .agents/skills/shell-script-validation/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .agents/skills/shell-script-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/shell-script-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .agents/skills/shell-script-validation/scripts/validate.sh: sha256:1603fb552850030d7c9e0b66e02c75f1d978869d718e1c2594184d73c022a694
@@ -1648,14 +1710,15 @@ dependencies:
     .claude/skills/shell-script-review/references/common-checklist.md: sha256:434c4e1e23863fc79365fa0bb493f8372b22a7c0262db316fc360161c3f6f605
     .claude/skills/shell-script-review/references/common-output-format.md: sha256:85b6155052ac6630d8f093b04336a543982a5a67086ac02c91c6b28fe9d83eaf
     .claude/skills/shell-script-review/references/common-troubleshooting.md: sha256:fa4bc89706e6c30ea58d4b882ee85f001b0ae832618f98648ab465274a17305f
-    .claude/skills/shell-script-review/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .claude/skills/shell-script-review/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/shell-script-review/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/shell-script-review/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .claude/skills/shell-script-review/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .claude/skills/shell-script-review/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .claude/skills/shell-script-review/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .claude/skills/shell-script-review/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/shell-script-review/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
-    .claude/skills/shell-script-review/scripts/validate.sh: sha256:da25a7b3fd66ae49cf99f7cb6d6153bb7c55c6ded626e60c53243a8e194a7677
+    .claude/skills/shell-script-review/scripts/validate.sh: sha256:17bd05ce5334902891b33f2177903446d3dde3e028d6c53b07ca07ab0d65600e
     .claude/skills/shell-script-validation/SKILL.md: sha256:21854ad2cc2975192169f65885a88557d194ff2b888e5c5f679b823861a0af3a
     .claude/skills/shell-script-validation/eval.yaml: sha256:6f2518a30fe2dbd04da7b10693bd4eb8cc076d9983646c98f0591e9712ffcfd8
     .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-basic.yaml: sha256:d2df5946a3fcf3765e52405d29b0bb478e6a64dc4d05310a76a1ce6ee763d005
@@ -1668,11 +1731,12 @@ dependencies:
     .claude/skills/shell-script-validation/references/common-individual-commands.md: sha256:4630375e0015c89f53e85ab1aab5cdbbd69e0d68dc626ea02a794822ca73ad40
     .claude/skills/shell-script-validation/references/common-output-format.md: sha256:511c268f7abfa4bd6081402b03132da89a2a64be224fb63f91c98b3e9e77fe06
     .claude/skills/shell-script-validation/references/common-troubleshooting.md: sha256:4b815b33130af54c157d9856e59bc0d54239d2529643555eb2c27f82731dc69a
-    .claude/skills/shell-script-validation/scripts/lib/all.sh: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+    .claude/skills/shell-script-validation/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/shell-script-validation/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
     .claude/skills/shell-script-validation/scripts/lib/common.sh: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
     .claude/skills/shell-script-validation/scripts/lib/csv.sh: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
     .claude/skills/shell-script-validation/scripts/lib/json.sh: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+    .claude/skills/shell-script-validation/scripts/lib/repo_paths.sh: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
     .claude/skills/shell-script-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/shell-script-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .claude/skills/shell-script-validation/scripts/validate.sh: sha256:1603fb552850030d7c9e0b66e02c75f1d978869d718e1c2594184d73c022a694
@@ -1904,7 +1968,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:89ed3766780ede5a6c181553280d5a914b67936990e47c4dd271255bb8fd627f
+  content_hash: sha256:8795c14376e3a222326fbd919f9bae7d20573e860243db570144094f2ea7f960
 - kind: project-relative
   target: claude
   value: .claude/rules/bats.md
@@ -2102,7 +2166,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: claude
   value: .claude/skills/agent-skills-review/scripts/lib/aws.sh
@@ -2141,6 +2205,15 @@ deployments:
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
 - kind: project-relative
   target: claude
+  value: .claude/skills/agent-skills-review/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
+- kind: project-relative
+  target: claude
   value: .claude/skills/agent-skills-review/scripts/lib/terraform.sh
   runtime: null
   scope: project
@@ -2165,7 +2238,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:1716fb84bb48f5f175240b8ce872e77a542545b5cd6b995329e7baa600af4a23
+  content_hash: sha256:f84077fb349695ca0c62882a1362ea22762c8dd5432ce3b10e386651313e7849
 - kind: project-relative
   target: claude
   value: .claude/skills/agent-skills-review/scripts/validate_waza.sh
@@ -2174,7 +2247,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:450e89fe89ab725f9b634ae7ba807f1b92832d0eaf5113fbc5396170a958dec3
+  content_hash: sha256:a78e9e644496af97bcfa8117623935ccf34e21b8db0b3512b1ffa531ebefe217
 - kind: project-relative
   target: claude
   value: .claude/skills/docs-creator
@@ -2390,7 +2463,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:826c7aa5ac8852579a610b9a8e804e34a67a94e8d38aa2cc1632d386fb59512d
+  content_hash: sha256:03ee4ba705064b868d8d897940be0a8be9a382cf639391c235760a4332ed86dc
 - kind: project-relative
   target: claude
   value: .claude/skills/docs-updater/scripts/lib/all.sh
@@ -2399,7 +2472,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: claude
   value: .claude/skills/docs-updater/scripts/lib/aws.sh
@@ -2436,6 +2509,15 @@ deployments:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+- kind: project-relative
+  target: claude
+  value: .claude/skills/docs-updater/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
 - kind: project-relative
   target: claude
   value: .claude/skills/docs-updater/scripts/lib/terraform.sh
@@ -2615,7 +2697,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: claude
   value: .claude/skills/github-actions-review/scripts/lib/aws.sh
@@ -2654,6 +2736,15 @@ deployments:
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
 - kind: project-relative
   target: claude
+  value: .claude/skills/github-actions-review/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
+- kind: project-relative
+  target: claude
   value: .claude/skills/github-actions-review/scripts/lib/terraform.sh
   runtime: null
   scope: project
@@ -2678,7 +2769,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:da25a7b3fd66ae49cf99f7cb6d6153bb7c55c6ded626e60c53243a8e194a7677
+  content_hash: sha256:17bd05ce5334902891b33f2177903446d3dde3e028d6c53b07ca07ab0d65600e
 - kind: project-relative
   target: claude
   value: .claude/skills/github-actions-validation
@@ -2804,7 +2895,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: claude
   value: .claude/skills/github-actions-validation/scripts/lib/aws.sh
@@ -2841,6 +2932,15 @@ deployments:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+- kind: project-relative
+  target: claude
+  value: .claude/skills/github-actions-validation/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
 - kind: project-relative
   target: claude
   value: .claude/skills/github-actions-validation/scripts/lib/terraform.sh
@@ -3029,7 +3129,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: claude
   value: .claude/skills/github-pr-body/scripts/lib/aws.sh
@@ -3066,6 +3166,15 @@ deployments:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+- kind: project-relative
+  target: claude
+  value: .claude/skills/github-pr-body/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
 - kind: project-relative
   target: claude
   value: .claude/skills/github-pr-body/scripts/lib/terraform.sh
@@ -3335,7 +3444,7 @@ deployments:
   owners:
   - ./.apm/packages/go
   active_owner: ./.apm/packages/go
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: claude
   value: .claude/skills/go-review/scripts/lib/aws.sh
@@ -3374,6 +3483,15 @@ deployments:
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
 - kind: project-relative
   target: claude
+  value: .claude/skills/go-review/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/go
+  active_owner: ./.apm/packages/go
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
+- kind: project-relative
+  target: claude
   value: .claude/skills/go-review/scripts/lib/terraform.sh
   runtime: null
   scope: project
@@ -3398,7 +3516,7 @@ deployments:
   owners:
   - ./.apm/packages/go
   active_owner: ./.apm/packages/go
-  content_hash: sha256:da25a7b3fd66ae49cf99f7cb6d6153bb7c55c6ded626e60c53243a8e194a7677
+  content_hash: sha256:17bd05ce5334902891b33f2177903446d3dde3e028d6c53b07ca07ab0d65600e
 - kind: project-relative
   target: claude
   value: .claude/skills/go-validation
@@ -3533,7 +3651,7 @@ deployments:
   owners:
   - ./.apm/packages/go
   active_owner: ./.apm/packages/go
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: claude
   value: .claude/skills/go-validation/scripts/lib/aws.sh
@@ -3570,6 +3688,15 @@ deployments:
   - ./.apm/packages/go
   active_owner: ./.apm/packages/go
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+- kind: project-relative
+  target: claude
+  value: .claude/skills/go-validation/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/go
+  active_owner: ./.apm/packages/go
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
 - kind: project-relative
   target: claude
   value: .claude/skills/go-validation/scripts/lib/terraform.sh
@@ -3758,7 +3885,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: claude
   value: .claude/skills/instructions-review/scripts/lib/aws.sh
@@ -3797,6 +3924,15 @@ deployments:
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
 - kind: project-relative
   target: claude
+  value: .claude/skills/instructions-review/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
+- kind: project-relative
+  target: claude
   value: .claude/skills/instructions-review/scripts/lib/terraform.sh
   runtime: null
   scope: project
@@ -3821,7 +3957,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:2f60083655785514f35a31a3309a4cf754464659879a11480dcb100550f398c8
+  content_hash: sha256:b6514ce3da7dd5d7509c8e3208d2f4ed2107ecfa316dc9d3dde6f99cd2a1a93b
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-changelog
@@ -3965,7 +4101,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:3383cf9fea2b5980a66ca049ce483f7d65c15268d5c38fdbec6f095fdafb8f59
+  content_hash: sha256:c55cb383b5aaeb67ee9d0fdb8b09a3118a39be3a1905dc8118e7c54154fbc751
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-changelog/scripts/lib/all.sh
@@ -3974,7 +4110,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-changelog/scripts/lib/aws.sh
@@ -4011,6 +4147,15 @@ deployments:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+- kind: project-relative
+  target: claude
+  value: .claude/skills/loop-changelog/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/loop-changelog
+  active_owner: ./.apm/packages/loop-changelog
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-changelog/scripts/lib/terraform.sh
@@ -4172,7 +4317,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:6f1e8cf59ce692ef7252a5aa4457270396099bc1ad550bd58e5b5b2dd8d3e6f5
+  content_hash: sha256:b9d917640bcafb6928b528e28d4f391f904e535afe57538a08459c9d05e9fc39
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-ci-sweeper/scripts/lib/all.sh
@@ -4181,7 +4326,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-ci-sweeper/scripts/lib/aws.sh
@@ -4218,6 +4363,15 @@ deployments:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+- kind: project-relative
+  target: claude
+  value: .claude/skills/loop-ci-sweeper/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/loop-ci-sweeper
+  active_owner: ./.apm/packages/loop-ci-sweeper
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-ci-sweeper/scripts/lib/terraform.sh
@@ -4397,7 +4551,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:bc4cae400c415e1432a6fbb03a456fcc95de6c712a80cfbfdd790fcb78fafca4
+  content_hash: sha256:818c1f354a54c508d39d3ff0128685b0ad974d1340931d18938c1e3e4cb7d975
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-docs-triage/scripts/lib/all.sh
@@ -4406,7 +4560,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-docs-triage/scripts/lib/aws.sh
@@ -4445,6 +4599,15 @@ deployments:
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
 - kind: project-relative
   target: claude
+  value: .claude/skills/loop-docs-triage/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/loop-docs-triage
+  active_owner: ./.apm/packages/loop-docs-triage
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
+- kind: project-relative
+  target: claude
   value: .claude/skills/loop-docs-triage/scripts/lib/terraform.sh
   runtime: null
   scope: project
@@ -4463,282 +4626,300 @@ deployments:
   content_hash: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt
+  value: .claude/skills/loop-report-tech-debt
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: null
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/SKILL.md
+  value: .claude/skills/loop-report-tech-debt/SKILL.md
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:7a88e3e69df21b9c671dd0bcc2e7c107ca871e14f4a76732732a11dfc75cf03e
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:2a7a421f22948eeef1179549a4f746cc9e9273d2b3345b26ac291455362a6902
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/eval.yaml
+  value: .claude/skills/loop-report-tech-debt/eval.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:58a318ed85c73c269eb3c428a1f065659ba41076679bfb04330c19a9826c5e04
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:53d4ee96f7fde1c27b71628388f114e8e1d0b3458cea0c0527e3235f380be412
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/evals/files/README.md
+  value: .claude/skills/loop-report-tech-debt/evals/files/README.md
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:72115b1eeabe18a192e21dc65b707f07d2ddb699e2f4c90c7dff2b438028961f
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/evals/files/go.mod.txt
+  value: .claude/skills/loop-report-tech-debt/evals/files/go.mod.txt
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:6337da5cc0454697de17006a91847d56e62dd5cd9fd3a245f2e873ecc1246395
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/evals/files/noise.go.txt
+  value: .claude/skills/loop-report-tech-debt/evals/files/noise.go.txt
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:095a192120fd822a7a7e2034ae84fbc6fdfdf7e4dbee7160266295e9e372c154
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/evals/files/previous-report.sample.md
+  value: .claude/skills/loop-report-tech-debt/evals/files/previous-report.sample.md
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:98c283fffe6da93c1c3b783e8173c47c27be518ceec0d0fe0021f10056579e21
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/evals/files/sample_service.go.txt
+  value: .claude/skills/loop-report-tech-debt/evals/files/sample_service.go.txt
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:5a4aeb7c5caf81a5f86e46e54e135d39634103f012fdf90afcf1bbc942325bb3
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-basic.yaml
+  value: .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-basic.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:e5dee77e213cde1ada02a99233fa3bb8b1f627446a883d00190fbd41eb2613f1
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:d112912609520624295a954b4e34e9cb210d2622016d1a55467bce0dcf5e19e6
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-classification.yaml
+  value: .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-classification.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:9393167fe3c2b5ceaaec1b9ba532c46cb65c46a223788f223fa0b04677040db5
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:3caa71f0bcc7a531f99731e58009e07df4f93266003acf211f1b7b3dea4b447d
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-hotspot-only.yaml
+  value: .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-hotspot-only.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:938583d615dc6e192e839a347280b12f9429199c07e6dea42fe2e9836c91d73e
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:fc86da7193dca6a60c4b67e4d6f38b14e6dda0279903853c815641585eda9a31
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-l1-report-only.yaml
+  value: .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l1-report-only.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:cf150bf957253fde71eb80e0cb80845c2a927062716536d8c09ea231e4eefd88
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:227ec0dd2415aeffd52bdde203076d25eab45dd0b1b726b4b98e3b5037787209
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-l2-report-write.yaml
+  value: .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l2-report-write.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:ebc78bddce17e75ecca988a63777df8f175aa25d703d66820e20b193458f69b1
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:e46ac2099794aae70bb923e2473a16065151da1cfd39fe7aa127caf733b63b8d
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-noaction.yaml
+  value: .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-noaction.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:8f6e6995c20e100bd6d3c20266afb80568084eabb4f50b94f03c6ce191c55e57
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:66a094199ca60d10df3efbf25070a87b0024b6135e640f9ca9b82f07b40bd39c
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-previous-report.yaml
+  value: .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-previous-report.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:9fd0c9c09e0df9ed2cde0d0bb3fa86e909bc2e8d25c7a0672c86a48df0adca37
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:1ae66d05d775132e18eb8e70d4222ada055ea634a1142be1914c7044bc8ec7d6
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-trigger-negative.yaml
+  value: .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-trigger-negative.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:5d07cfbb743ab9aa41c5a9bf7ecbd2c1702ad93752d03db211d5473a42c3b735
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:a0c9dd7020cabcf3af5152071a41c3958c270048097c97f86a0b001d651bcb4f
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/evals/tasks/loop-tech-debt-truncation-cap.yaml
+  value: .claude/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-truncation-cap.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:4898ce333f71f325879af62fa2cccf6e53500a09f120fc6c00664b3550d76262
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:534320eaeeecd9323b4e71d3f1bbe72ac2306b11b64798b9b333959da72262ed
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/references/category-debt-taxonomy.md
+  value: .claude/skills/loop-report-tech-debt/references/category-debt-taxonomy.md
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:4268125d2b7c263d7e1c7ba1d0d79fb8ed49de04de07531f5e944fc3d9c6a498
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/references/category-input-schema.md
+  value: .claude/skills/loop-report-tech-debt/references/category-input-schema.md
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:a9bbe37bb6a2b9744096203b0d7ccb8ea468b0170ff0d60706581076d33a4e1e
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:bbc1229fb30fd480ac50646d91221be0fa37fbf0d1c94c3df50e95891cc4ea3b
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/references/category-scope.md
+  value: .claude/skills/loop-report-tech-debt/references/category-scope.md
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:4eb9db60c556394839892e43cae2c7f0935afcdfd9d690c9e1161599295fbf92
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:12a6e9e5213d78dc67a1a2467a2a902c97dc55b5da3e56c2b7b36683ce7d15f9
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/references/common-checklist.md
+  value: .claude/skills/loop-report-tech-debt/references/common-checklist.md
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:4ff7430b28ba725214a5c16c6cb179ba22456180eeed7430c144164f10ccfc80
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:d3c24fa34abb135fc0e6521b1c1635b89097a2d60c97c91c393c43dd9982bbb7
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/references/common-output-format.md
+  value: .claude/skills/loop-report-tech-debt/references/common-output-format.md
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:7136dcc31a9deae9b9fb2ba33fcb5cc6e67ab06d09f00ed28fa6fcdbcf10395b
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:21c7e0ea9c6923130318b1f1e84372897abf635225a7dfddff9384e63ded43c9
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/references/common-troubleshooting.md
+  value: .claude/skills/loop-report-tech-debt/references/common-troubleshooting.md
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:28e9a9acf32642f50167c5a6e25a0de9410cc33cf4ec1a23a06deb92f21b9e1b
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/scripts/detect_tech_debt.sh
+  value: .claude/skills/loop-report-tech-debt/scripts/detect_report_tech_debt.sh
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:852128891a73523b690374140bbf2ea2e0d5918631d5a0ef99cdad8bcd88c821
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:b8517a783d0a89b35ee0dcb14eed3f926fa592e22a596bb42bfd5498e7aabdf2
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/scripts/lib/all.sh
+  value: .claude/skills/loop-report-tech-debt/scripts/detect_report_tech_debt_sensors.sh
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:c49c50630e015ad44342d8c640986e52d92a2a777b90c1ca2ea09b00058153d7
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/scripts/lib/aws.sh
+  value: .claude/skills/loop-report-tech-debt/scripts/lib/all.sh
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
+- kind: project-relative
+  target: claude
+  value: .claude/skills/loop-report-tech-debt/scripts/lib/aws.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/scripts/lib/common.sh
+  value: .claude/skills/loop-report-tech-debt/scripts/lib/common.sh
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/scripts/lib/csv.sh
+  value: .claude/skills/loop-report-tech-debt/scripts/lib/csv.sh
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/scripts/lib/json.sh
+  value: .claude/skills/loop-report-tech-debt/scripts/lib/json.sh
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/scripts/lib/terraform.sh
+  value: .claude/skills/loop-report-tech-debt/scripts/lib/repo_paths.sh
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
+- kind: project-relative
+  target: claude
+  value: .claude/skills/loop-report-tech-debt/scripts/lib/terraform.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
 - kind: project-relative
   target: claude
-  value: .claude/skills/loop-tech-debt/scripts/lib/validation.sh
+  value: .claude/skills/loop-report-tech-debt/scripts/lib/validation.sh
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
 - kind: project-relative
   target: claude
@@ -4856,7 +5037,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: claude
   value: .claude/skills/markdown-validation/scripts/lib/aws.sh
@@ -4893,6 +5074,15 @@ deployments:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+- kind: project-relative
+  target: claude
+  value: .claude/skills/markdown-validation/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
 - kind: project-relative
   target: claude
   value: .claude/skills/markdown-validation/scripts/lib/terraform.sh
@@ -5126,7 +5316,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: claude
   value: .claude/skills/shell-script-review/scripts/lib/aws.sh
@@ -5165,6 +5355,15 @@ deployments:
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
 - kind: project-relative
   target: claude
+  value: .claude/skills/shell-script-review/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/shell-script
+  active_owner: ./.apm/packages/shell-script
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
+- kind: project-relative
+  target: claude
   value: .claude/skills/shell-script-review/scripts/lib/terraform.sh
   runtime: null
   scope: project
@@ -5189,7 +5388,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:da25a7b3fd66ae49cf99f7cb6d6153bb7c55c6ded626e60c53243a8e194a7677
+  content_hash: sha256:17bd05ce5334902891b33f2177903446d3dde3e028d6c53b07ca07ab0d65600e
 - kind: project-relative
   target: claude
   value: .claude/skills/shell-script-validation
@@ -5315,7 +5514,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: claude
   value: .claude/skills/shell-script-validation/scripts/lib/aws.sh
@@ -5352,6 +5551,15 @@ deployments:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+- kind: project-relative
+  target: claude
+  value: .claude/skills/shell-script-validation/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/shell-script
+  active_owner: ./.apm/packages/shell-script
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
 - kind: project-relative
   target: claude
   value: .claude/skills/shell-script-validation/scripts/lib/terraform.sh
@@ -5522,7 +5730,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: cursor
   value: .agents/skills/agent-skills-review/scripts/lib/aws.sh
@@ -5561,6 +5769,15 @@ deployments:
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
 - kind: project-relative
   target: cursor
+  value: .agents/skills/agent-skills-review/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
+- kind: project-relative
+  target: cursor
   value: .agents/skills/agent-skills-review/scripts/lib/terraform.sh
   runtime: null
   scope: project
@@ -5585,7 +5802,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:1716fb84bb48f5f175240b8ce872e77a542545b5cd6b995329e7baa600af4a23
+  content_hash: sha256:f84077fb349695ca0c62882a1362ea22762c8dd5432ce3b10e386651313e7849
 - kind: project-relative
   target: cursor
   value: .agents/skills/agent-skills-review/scripts/validate_waza.sh
@@ -5594,7 +5811,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:450e89fe89ab725f9b634ae7ba807f1b92832d0eaf5113fbc5396170a958dec3
+  content_hash: sha256:a78e9e644496af97bcfa8117623935ccf34e21b8db0b3512b1ffa531ebefe217
 - kind: project-relative
   target: cursor
   value: .agents/skills/docs-creator
@@ -5810,7 +6027,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:826c7aa5ac8852579a610b9a8e804e34a67a94e8d38aa2cc1632d386fb59512d
+  content_hash: sha256:03ee4ba705064b868d8d897940be0a8be9a382cf639391c235760a4332ed86dc
 - kind: project-relative
   target: cursor
   value: .agents/skills/docs-updater/scripts/lib/all.sh
@@ -5819,7 +6036,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: cursor
   value: .agents/skills/docs-updater/scripts/lib/aws.sh
@@ -5856,6 +6073,15 @@ deployments:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/docs-updater/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
 - kind: project-relative
   target: cursor
   value: .agents/skills/docs-updater/scripts/lib/terraform.sh
@@ -6035,7 +6261,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-actions-review/scripts/lib/aws.sh
@@ -6074,6 +6300,15 @@ deployments:
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
 - kind: project-relative
   target: cursor
+  value: .agents/skills/github-actions-review/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
+- kind: project-relative
+  target: cursor
   value: .agents/skills/github-actions-review/scripts/lib/terraform.sh
   runtime: null
   scope: project
@@ -6098,7 +6333,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:da25a7b3fd66ae49cf99f7cb6d6153bb7c55c6ded626e60c53243a8e194a7677
+  content_hash: sha256:17bd05ce5334902891b33f2177903446d3dde3e028d6c53b07ca07ab0d65600e
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-actions-validation
@@ -6224,7 +6459,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-actions-validation/scripts/lib/aws.sh
@@ -6261,6 +6496,15 @@ deployments:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/github-actions-validation/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-actions-validation/scripts/lib/terraform.sh
@@ -6449,7 +6693,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-pr-body/scripts/lib/aws.sh
@@ -6486,6 +6730,15 @@ deployments:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/github-pr-body/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-pr-body/scripts/lib/terraform.sh
@@ -6755,7 +7008,7 @@ deployments:
   owners:
   - ./.apm/packages/go
   active_owner: ./.apm/packages/go
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: cursor
   value: .agents/skills/go-review/scripts/lib/aws.sh
@@ -6794,6 +7047,15 @@ deployments:
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
 - kind: project-relative
   target: cursor
+  value: .agents/skills/go-review/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/go
+  active_owner: ./.apm/packages/go
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
+- kind: project-relative
+  target: cursor
   value: .agents/skills/go-review/scripts/lib/terraform.sh
   runtime: null
   scope: project
@@ -6818,7 +7080,7 @@ deployments:
   owners:
   - ./.apm/packages/go
   active_owner: ./.apm/packages/go
-  content_hash: sha256:da25a7b3fd66ae49cf99f7cb6d6153bb7c55c6ded626e60c53243a8e194a7677
+  content_hash: sha256:17bd05ce5334902891b33f2177903446d3dde3e028d6c53b07ca07ab0d65600e
 - kind: project-relative
   target: cursor
   value: .agents/skills/go-validation
@@ -6953,7 +7215,7 @@ deployments:
   owners:
   - ./.apm/packages/go
   active_owner: ./.apm/packages/go
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: cursor
   value: .agents/skills/go-validation/scripts/lib/aws.sh
@@ -6990,6 +7252,15 @@ deployments:
   - ./.apm/packages/go
   active_owner: ./.apm/packages/go
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/go-validation/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/go
+  active_owner: ./.apm/packages/go
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
 - kind: project-relative
   target: cursor
   value: .agents/skills/go-validation/scripts/lib/terraform.sh
@@ -7178,7 +7449,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: cursor
   value: .agents/skills/instructions-review/scripts/lib/aws.sh
@@ -7217,6 +7488,15 @@ deployments:
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
 - kind: project-relative
   target: cursor
+  value: .agents/skills/instructions-review/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
+- kind: project-relative
+  target: cursor
   value: .agents/skills/instructions-review/scripts/lib/terraform.sh
   runtime: null
   scope: project
@@ -7241,7 +7521,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:2f60083655785514f35a31a3309a4cf754464659879a11480dcb100550f398c8
+  content_hash: sha256:b6514ce3da7dd5d7509c8e3208d2f4ed2107ecfa316dc9d3dde6f99cd2a1a93b
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-changelog
@@ -7385,7 +7665,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:3383cf9fea2b5980a66ca049ce483f7d65c15268d5c38fdbec6f095fdafb8f59
+  content_hash: sha256:c55cb383b5aaeb67ee9d0fdb8b09a3118a39be3a1905dc8118e7c54154fbc751
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-changelog/scripts/lib/all.sh
@@ -7394,7 +7674,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-changelog/scripts/lib/aws.sh
@@ -7431,6 +7711,15 @@ deployments:
   - ./.apm/packages/loop-changelog
   active_owner: ./.apm/packages/loop-changelog
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/loop-changelog/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/loop-changelog
+  active_owner: ./.apm/packages/loop-changelog
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-changelog/scripts/lib/terraform.sh
@@ -7592,7 +7881,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:6f1e8cf59ce692ef7252a5aa4457270396099bc1ad550bd58e5b5b2dd8d3e6f5
+  content_hash: sha256:b9d917640bcafb6928b528e28d4f391f904e535afe57538a08459c9d05e9fc39
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-ci-sweeper/scripts/lib/all.sh
@@ -7601,7 +7890,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-ci-sweeper/scripts/lib/aws.sh
@@ -7638,6 +7927,15 @@ deployments:
   - ./.apm/packages/loop-ci-sweeper
   active_owner: ./.apm/packages/loop-ci-sweeper
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/loop-ci-sweeper/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/loop-ci-sweeper
+  active_owner: ./.apm/packages/loop-ci-sweeper
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-ci-sweeper/scripts/lib/terraform.sh
@@ -7817,7 +8115,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:bc4cae400c415e1432a6fbb03a456fcc95de6c712a80cfbfdd790fcb78fafca4
+  content_hash: sha256:818c1f354a54c508d39d3ff0128685b0ad974d1340931d18938c1e3e4cb7d975
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-docs-triage/scripts/lib/all.sh
@@ -7826,7 +8124,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-docs-triage
   active_owner: ./.apm/packages/loop-docs-triage
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-docs-triage/scripts/lib/aws.sh
@@ -7865,6 +8163,15 @@ deployments:
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
 - kind: project-relative
   target: cursor
+  value: .agents/skills/loop-docs-triage/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/loop-docs-triage
+  active_owner: ./.apm/packages/loop-docs-triage
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
+- kind: project-relative
+  target: cursor
   value: .agents/skills/loop-docs-triage/scripts/lib/terraform.sh
   runtime: null
   scope: project
@@ -7883,282 +8190,300 @@ deployments:
   content_hash: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt
+  value: .agents/skills/loop-report-tech-debt
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: null
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/SKILL.md
+  value: .agents/skills/loop-report-tech-debt/SKILL.md
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:7a88e3e69df21b9c671dd0bcc2e7c107ca871e14f4a76732732a11dfc75cf03e
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:2a7a421f22948eeef1179549a4f746cc9e9273d2b3345b26ac291455362a6902
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/eval.yaml
+  value: .agents/skills/loop-report-tech-debt/eval.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:58a318ed85c73c269eb3c428a1f065659ba41076679bfb04330c19a9826c5e04
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:53d4ee96f7fde1c27b71628388f114e8e1d0b3458cea0c0527e3235f380be412
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/evals/files/README.md
+  value: .agents/skills/loop-report-tech-debt/evals/files/README.md
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:72115b1eeabe18a192e21dc65b707f07d2ddb699e2f4c90c7dff2b438028961f
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/evals/files/go.mod.txt
+  value: .agents/skills/loop-report-tech-debt/evals/files/go.mod.txt
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:6337da5cc0454697de17006a91847d56e62dd5cd9fd3a245f2e873ecc1246395
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/evals/files/noise.go.txt
+  value: .agents/skills/loop-report-tech-debt/evals/files/noise.go.txt
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:095a192120fd822a7a7e2034ae84fbc6fdfdf7e4dbee7160266295e9e372c154
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/evals/files/previous-report.sample.md
+  value: .agents/skills/loop-report-tech-debt/evals/files/previous-report.sample.md
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:98c283fffe6da93c1c3b783e8173c47c27be518ceec0d0fe0021f10056579e21
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/evals/files/sample_service.go.txt
+  value: .agents/skills/loop-report-tech-debt/evals/files/sample_service.go.txt
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:5a4aeb7c5caf81a5f86e46e54e135d39634103f012fdf90afcf1bbc942325bb3
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-basic.yaml
+  value: .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-basic.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:e5dee77e213cde1ada02a99233fa3bb8b1f627446a883d00190fbd41eb2613f1
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:d112912609520624295a954b4e34e9cb210d2622016d1a55467bce0dcf5e19e6
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-classification.yaml
+  value: .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-classification.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:9393167fe3c2b5ceaaec1b9ba532c46cb65c46a223788f223fa0b04677040db5
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:3caa71f0bcc7a531f99731e58009e07df4f93266003acf211f1b7b3dea4b447d
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-hotspot-only.yaml
+  value: .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-hotspot-only.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:938583d615dc6e192e839a347280b12f9429199c07e6dea42fe2e9836c91d73e
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:fc86da7193dca6a60c4b67e4d6f38b14e6dda0279903853c815641585eda9a31
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-l1-report-only.yaml
+  value: .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l1-report-only.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:cf150bf957253fde71eb80e0cb80845c2a927062716536d8c09ea231e4eefd88
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:227ec0dd2415aeffd52bdde203076d25eab45dd0b1b726b4b98e3b5037787209
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-l2-report-write.yaml
+  value: .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-l2-report-write.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:ebc78bddce17e75ecca988a63777df8f175aa25d703d66820e20b193458f69b1
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:e46ac2099794aae70bb923e2473a16065151da1cfd39fe7aa127caf733b63b8d
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-noaction.yaml
+  value: .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-noaction.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:8f6e6995c20e100bd6d3c20266afb80568084eabb4f50b94f03c6ce191c55e57
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:66a094199ca60d10df3efbf25070a87b0024b6135e640f9ca9b82f07b40bd39c
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-previous-report.yaml
+  value: .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-previous-report.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:9fd0c9c09e0df9ed2cde0d0bb3fa86e909bc2e8d25c7a0672c86a48df0adca37
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:1ae66d05d775132e18eb8e70d4222ada055ea634a1142be1914c7044bc8ec7d6
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-trigger-negative.yaml
+  value: .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-trigger-negative.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:5d07cfbb743ab9aa41c5a9bf7ecbd2c1702ad93752d03db211d5473a42c3b735
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:a0c9dd7020cabcf3af5152071a41c3958c270048097c97f86a0b001d651bcb4f
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/evals/tasks/loop-tech-debt-truncation-cap.yaml
+  value: .agents/skills/loop-report-tech-debt/evals/tasks/loop-report-tech-debt-truncation-cap.yaml
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:4898ce333f71f325879af62fa2cccf6e53500a09f120fc6c00664b3550d76262
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:534320eaeeecd9323b4e71d3f1bbe72ac2306b11b64798b9b333959da72262ed
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/references/category-debt-taxonomy.md
+  value: .agents/skills/loop-report-tech-debt/references/category-debt-taxonomy.md
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:4268125d2b7c263d7e1c7ba1d0d79fb8ed49de04de07531f5e944fc3d9c6a498
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/references/category-input-schema.md
+  value: .agents/skills/loop-report-tech-debt/references/category-input-schema.md
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:a9bbe37bb6a2b9744096203b0d7ccb8ea468b0170ff0d60706581076d33a4e1e
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:bbc1229fb30fd480ac50646d91221be0fa37fbf0d1c94c3df50e95891cc4ea3b
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/references/category-scope.md
+  value: .agents/skills/loop-report-tech-debt/references/category-scope.md
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:4eb9db60c556394839892e43cae2c7f0935afcdfd9d690c9e1161599295fbf92
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:12a6e9e5213d78dc67a1a2467a2a902c97dc55b5da3e56c2b7b36683ce7d15f9
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/references/common-checklist.md
+  value: .agents/skills/loop-report-tech-debt/references/common-checklist.md
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:4ff7430b28ba725214a5c16c6cb179ba22456180eeed7430c144164f10ccfc80
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:d3c24fa34abb135fc0e6521b1c1635b89097a2d60c97c91c393c43dd9982bbb7
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/references/common-output-format.md
+  value: .agents/skills/loop-report-tech-debt/references/common-output-format.md
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:7136dcc31a9deae9b9fb2ba33fcb5cc6e67ab06d09f00ed28fa6fcdbcf10395b
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:21c7e0ea9c6923130318b1f1e84372897abf635225a7dfddff9384e63ded43c9
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/references/common-troubleshooting.md
+  value: .agents/skills/loop-report-tech-debt/references/common-troubleshooting.md
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:28e9a9acf32642f50167c5a6e25a0de9410cc33cf4ec1a23a06deb92f21b9e1b
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/scripts/detect_tech_debt.sh
+  value: .agents/skills/loop-report-tech-debt/scripts/detect_report_tech_debt.sh
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:852128891a73523b690374140bbf2ea2e0d5918631d5a0ef99cdad8bcd88c821
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:b8517a783d0a89b35ee0dcb14eed3f926fa592e22a596bb42bfd5498e7aabdf2
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/scripts/lib/all.sh
+  value: .agents/skills/loop-report-tech-debt/scripts/detect_report_tech_debt_sensors.sh
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:c49c50630e015ad44342d8c640986e52d92a2a777b90c1ca2ea09b00058153d7
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/scripts/lib/aws.sh
+  value: .agents/skills/loop-report-tech-debt/scripts/lib/all.sh
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/loop-report-tech-debt/scripts/lib/aws.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/scripts/lib/common.sh
+  value: .agents/skills/loop-report-tech-debt/scripts/lib/common.sh
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:e85d7177a2ddc6ff45dfe947f5edabba39b436218d7883931eb2a5da82cee667
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/scripts/lib/csv.sh
+  value: .agents/skills/loop-report-tech-debt/scripts/lib/csv.sh
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:f0b91cb71cf5cce3c0a3260aba1ceef84b04619b35e54714604d4e7a82b2634a
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/scripts/lib/json.sh
+  value: .agents/skills/loop-report-tech-debt/scripts/lib/json.sh
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/scripts/lib/terraform.sh
+  value: .agents/skills/loop-report-tech-debt/scripts/lib/repo_paths.sh
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/loop-report-tech-debt/scripts/lib/terraform.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
 - kind: project-relative
   target: cursor
-  value: .agents/skills/loop-tech-debt/scripts/lib/validation.sh
+  value: .agents/skills/loop-report-tech-debt/scripts/lib/validation.sh
   runtime: null
   scope: project
   owners:
-  - ./.apm/packages/loop-tech-debt
-  active_owner: ./.apm/packages/loop-tech-debt
+  - ./.apm/packages/loop-report-tech-debt
+  active_owner: ./.apm/packages/loop-report-tech-debt
   content_hash: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
 - kind: project-relative
   target: cursor
@@ -8276,7 +8601,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: cursor
   value: .agents/skills/markdown-validation/scripts/lib/aws.sh
@@ -8313,6 +8638,15 @@ deployments:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/markdown-validation/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
 - kind: project-relative
   target: cursor
   value: .agents/skills/markdown-validation/scripts/lib/terraform.sh
@@ -8546,7 +8880,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: cursor
   value: .agents/skills/shell-script-review/scripts/lib/aws.sh
@@ -8585,6 +8919,15 @@ deployments:
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
 - kind: project-relative
   target: cursor
+  value: .agents/skills/shell-script-review/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/shell-script
+  active_owner: ./.apm/packages/shell-script
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
+- kind: project-relative
+  target: cursor
   value: .agents/skills/shell-script-review/scripts/lib/terraform.sh
   runtime: null
   scope: project
@@ -8609,7 +8952,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:da25a7b3fd66ae49cf99f7cb6d6153bb7c55c6ded626e60c53243a8e194a7677
+  content_hash: sha256:17bd05ce5334902891b33f2177903446d3dde3e028d6c53b07ca07ab0d65600e
 - kind: project-relative
   target: cursor
   value: .agents/skills/shell-script-validation
@@ -8735,7 +9078,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:0d88a016895c06c762269263629f266d8657b91e207683ffd69ea7ae41ec6683
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
 - kind: project-relative
   target: cursor
   value: .agents/skills/shell-script-validation/scripts/lib/aws.sh
@@ -8772,6 +9115,15 @@ deployments:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
   content_hash: sha256:eef7f6ee6fa1c49632d6618e89035a8bbe6e3c6ce1f9bcedb75ff2b68db2d348
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/shell-script-validation/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/shell-script
+  active_owner: ./.apm/packages/shell-script
+  content_hash: sha256:46840e07675c66861ef612919f90afd6a7e6d5d4b15f9717b8a1265995907045
 - kind: project-relative
   target: cursor
   value: .agents/skills/shell-script-validation/scripts/lib/terraform.sh
@@ -8987,7 +9339,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:790f4ba136c6e467a4c6652ee36eeab847009b4caf9045426def7ce0f71d8634
+  content_hash: sha256:1fb20dd2e5be1cef1e9a0ce60126b118b72d4074d824909d98a375c8089f92a5
 - kind: project-relative
   target: cursor
   value: .cursor/rules/bats.mdc

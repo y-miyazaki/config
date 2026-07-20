@@ -152,8 +152,8 @@ function parse_arguments {
 
     SKILL_FILE="$(realpath "${SKILL_FILE}")"
 
-    if [[ ! ${SKILL_FILE} =~ /(\.github|\.agents|\.claude|\.cursor|cursor|\.kiro|kiro)/skills/.*/SKILL\.md$ ]]; then
-        error_exit "Error: File must match <agent-root>/skills/*/SKILL.md where agent-root is one of .github,.agents,.claude,.cursor,cursor,.kiro,kiro: ${SKILL_FILE}"
+    if [[ ! ${SKILL_FILE} =~ /(\.github|\.agents|\.claude|\.codex|\.cursor|cursor|\.kiro|kiro)/skills/.*/SKILL\.md$ ]]; then
+        error_exit "Error: File must match <agent-root>/skills/*/SKILL.md where agent-root is one of .github,.agents,.claude,.codex,.cursor,cursor,.kiro,kiro: ${SKILL_FILE}"
     fi
 }
 

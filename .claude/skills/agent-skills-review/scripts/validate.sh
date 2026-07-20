@@ -80,7 +80,7 @@ Description: Deterministic validation for Agent Skills SKILL.md files
 Arguments:
   SKILL.md       Path to SKILL.md file to validate (required)
                                  Must match pattern: <agent-root>/skills/*/SKILL.md
-                                 agent-root: .github, .agents, .claude, .cursor, cursor, .kiro, kiro
+                                 agent-root: .github, .agents, .claude, .codex, .cursor, cursor, .kiro, kiro
 
 Validation Checks:
     - Structural Completeness: 5 required sections exist
@@ -149,8 +149,8 @@ function parse_arguments {
     SKILL_FILE="$(realpath "$input_path")"
 
     # Validate path matches expected pattern (SEC-01)
-    if [[ ! $SKILL_FILE =~ /(\.github|\.agents|\.claude|\.cursor|cursor|\.kiro|kiro)/skills/.*/SKILL\.md$ ]]; then
-        error_exit "Error: File must match <agent-root>/skills/*/SKILL.md where agent-root is one of .github,.agents,.claude,.cursor,cursor,.kiro,kiro: $SKILL_FILE"
+    if [[ ! $SKILL_FILE =~ /(\.github|\.agents|\.claude|\.codex|\.cursor|cursor|\.kiro|kiro)/skills/.*/SKILL\.md$ ]]; then
+        error_exit "Error: File must match <agent-root>/skills/*/SKILL.md where agent-root is one of .github,.agents,.claude,.codex,.cursor,cursor,.kiro,kiro (see agent-skills.instructions.md S-06): $SKILL_FILE"
     fi
 }
 

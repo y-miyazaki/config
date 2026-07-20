@@ -35,6 +35,7 @@ setup() {
     # Notices are enabled under GITHUB_ACTIONS; keep unit tests stdout-clean.
     unset GITHUB_ACTIONS CI_SWEEPER_DEBUG_LOG
     bats_source_apm_skill loop-ci-sweeper detect_ci_failures.sh
+    configure_detect_environment
 }
 
 teardown() {

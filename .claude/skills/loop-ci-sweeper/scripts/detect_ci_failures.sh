@@ -59,11 +59,6 @@ source "${SCRIPT_DIR}/lib/all.sh"
 #######################################
 SCOPE="range"
 SINCE_REF=""
-DEFAULT_BRANCH="${DEFAULT_BASE_BRANCH:-${DEFAULT_BRANCH:-main}}"
-LEDGER_FILE="${CI_SWEEPER_LEDGER_FILE:-.loop/state-ci-sweeper-run-ledger.json}"
-SCAN_BRANCH_RUN_LIMIT="${SCAN_BRANCH_RUN_LIMIT:-100}"
-REJECT_RETRY_POLICY="${CI_SWEEPER_REJECT_RETRY_POLICY:-block}"
-REJECT_MAX_RETRIES="${CI_SWEEPER_REJECT_MAX_RETRIES:-3}"
 
 declare -a FAILURES_JSON=()
 declare -a IGNORED_JSON=()
@@ -1051,6 +1046,35 @@ function output_json {
 }
 
 #######################################
+# configure_detect_environment: Normalize domain env into globals once at startup
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   DEFAULT_BRANCH - Fallback branch when checkout context is unavailable
+#   LEDGER_FILE - Path to run ledger JSON
+#   SCAN_BRANCH_RUN_LIMIT - Max failed runs to scan per branch
+#   REJECT_RETRY_POLICY - block | retry | limited
+#   REJECT_MAX_RETRIES - Max REJECT retries when policy is limited
+#
+# Returns:
+#   None
+#
+# Usage:
+#   configure_detect_environment
+#
+#######################################
+function configure_detect_environment {
+    DEFAULT_BRANCH="${DEFAULT_BASE_BRANCH:-${DEFAULT_BRANCH:-main}}"
+    LEDGER_FILE="${CI_SWEEPER_LEDGER_FILE:-.loop/state-ci-sweeper-run-ledger.json}"
+    LEDGER_FILE="${LEDGER_FILE#./}"
+    SCAN_BRANCH_RUN_LIMIT="${SCAN_BRANCH_RUN_LIMIT:-100}"
+    REJECT_RETRY_POLICY="${CI_SWEEPER_REJECT_RETRY_POLICY:-block}"
+    REJECT_MAX_RETRIES="${CI_SWEEPER_REJECT_MAX_RETRIES:-3}"
+}
+
+#######################################
 # main: Entry point
 #
 # Arguments:
@@ -1067,6 +1091,7 @@ function output_json {
 #
 #######################################
 function main {
+    configure_detect_environment
     parse_arguments "$@"
     validate_ledger_file "${LEDGER_FILE}"
 

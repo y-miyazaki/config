@@ -270,6 +270,8 @@ Select the profile by which reusable workflow the thin caller `uses:` — not by
 
 JSON object string. Exported to the detect job environment before `loop-detect` runs. Keys use **detect-script env names** (historically `CHANGELOG_*`, `CI_SWEEPER_*`, etc.). Empty object `{}` when no domain env is required.
 
+Each detect script normalizes these keys once at startup via `configure_detect_environment` (defaults, `./` stripping). Detect CLI stays `--scope` / `--since` only so `loop-detect` can invoke every domain script uniformly.
+
 ```yaml
 detect_domain_env_json: >-
   {"CHANGELOG_FILE":"CHANGELOG.md","CHANGELOG_MERGE_COMMITS":"false"}
@@ -280,6 +282,7 @@ detect_domain_env_json: >-
 | JSON key                  | Description                                                      | Dogfood value  |
 | ------------------------- | ---------------------------------------------------------------- | -------------- |
 | `CHANGELOG_FILE`          | Target changelog path                                            | `CHANGELOG.md` |
+| `CHANGELOG_MAX_COMMITS`   | Max commits for `--scope all` (local debugging)                  | `100`          |
 | `CHANGELOG_MERGE_COMMITS` | `"true"` includes merge commits; `"false"` applies `--no-merges` | `"false"`      |
 
 ### CI sweeper (`loop-ci-sweeper`)
@@ -314,6 +317,37 @@ detect_domain_env_json: ${{ format('{{"CI_SWEEPER_EVENT_HEAD_BRANCH":"{0}","CI_S
 | `DOCS_TRIAGE_DOC_GLOBS`   | Comma-separated doc file globs for git-diff analysis | `docs/**/*.md,README.md` |
 | `DOCS_TRIAGE_EXTRA_FILES` | Additional non-glob paths                            | `mkdocs.yml`             |
 
+When `DOCS_TRIAGE_DOC_GLOBS` is unset, detect falls back to a repository-wide `*.md` find with standard `repo_paths` pruning (excludes `.agents/`, generated trees, etc.). Production callers should set globs explicitly; the fallback is mainly for local runs and tests.
+
+### Report tech debt (`loop-report-tech-debt`)
+
+Domain paths and filenames are **environment variables** (via `detect_domain_env_json` or manual invocation). Detect CLI stays `--scope` / `--since` only so `loop-detect` can invoke every domain script uniformly.
+
+| JSON key / env var                    | Description                                                | Dogfood value                  |
+| ------------------------------------- | ---------------------------------------------------------- | ------------------------------ |
+| `REPORT_TECH_DEBT_DIR`                | Report output directory                                    | `docs/report/report-tech-debt` |
+| `REPORT_TECH_DEBT_LEGACY_SEARCH_DIRS` | Comma-separated prior-report search roots                  | `docs/report/tech-debt`        |
+| `REPORT_TECH_DEBT_DATE_FORMAT`        | UTC `strftime` for report basename                         | `%Y-%m-%d`                     |
+| `REPORT_TECH_DEBT_FILE_EXTENSION`     | Report filename extension (include dot)                    | `.md`                          |
+| `REPORT_TECH_DEBT_PREVIOUS_GLOB`      | Glob for prior reports under search dirs                   | `????-??-??.md`                |
+| `REPO_PATHS_EXTRA_PRUNES`             | Optional extra detect prune roots (default: report parent) | unset                          |
+
+Example caller override (align `allowlist` / `infer_files_pattern` when changing `REPORT_TECH_DEBT_DIR`):
+
+```yaml
+detect_domain_env_json: >-
+  {"REPORT_TECH_DEBT_DIR":"docs/report/report-tech-debt"}
+```
+
+### Docs updater (hook / manual)
+
+Not a loop caller; configure via environment when invoking `detect_changes.sh` outside defaults.
+
+| Env var                    | Description                 | Default      |
+| -------------------------- | --------------------------- | ------------ |
+| `DOCS_UPDATER_DOCS_ROOT`   | Documentation tree root     | `docs`       |
+| `DOCS_UPDATER_SITE_CONFIG` | Site navigation config path | `mkdocs.yml` |
+
 ## Legacy `env` name mapping
 
 | Legacy caller `env`                                           | `ci-loop-caller` input                                        |
@@ -339,11 +373,12 @@ detect_domain_env_json: ${{ format('{{"CI_SWEEPER_EVENT_HEAD_BRANCH":"{0}","CI_S
 
 ## Per-loop design docs
 
-| Loop        | Design doc                                                         | Caller workflow            |
-| ----------- | ------------------------------------------------------------------ | -------------------------- |
-| changelog   | [Changelog Workflow Design](loop-changelog-workflow-design.md)     | `on-loop-changelog.yaml`   |
-| ci-sweeper  | [CI Sweeper Workflow Design](loop-ci-sweeper-workflow-design.md)   | `on-loop-ci-sweeper.yaml`  |
-| docs-triage | [Docs Triage Workflow Design](loop-docs-triage-workflow-design.md) | `on-loop-docs-triage.yaml` |
+| Loop             | Design doc                                                                   | Caller workflow                 |
+| ---------------- | ---------------------------------------------------------------------------- | ------------------------------- |
+| changelog        | [Changelog Workflow Design](loop-changelog-workflow-design.md)               | `on-loop-changelog.yaml`        |
+| ci-sweeper       | [CI Sweeper Workflow Design](loop-ci-sweeper-workflow-design.md)             | `on-loop-ci-sweeper.yaml`       |
+| docs-triage      | [Docs Triage Workflow Design](loop-docs-triage-workflow-design.md)           | `on-loop-docs-triage.yaml`      |
+| report-tech-debt | [Report Tech Debt Workflow Design](loop-report-tech-debt-workflow-design.md) | `on-loop-report-tech-debt.yaml` |
 
 ## References
 

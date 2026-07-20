@@ -8,8 +8,41 @@ crush_verbatim_json = true
 enable_wakeup_ctx = false
 minimal_overhead = true
 output_density = "terse"
+shell_allowlist_extra = [
+    "actionlint",
+    "apm",
+    "bash",
+    "bats",
+    "cat",
+    "cd",
+    "command",
+    "diff",
+    "echo",
+    "find",
+    "ghalint",
+    "git add",
+    "git diff",
+    "git log",
+    "git status",
+    "go test",
+    "golangci-lint",
+    "head",
+    "jq",
+    "ls",
+    "markdown-link-check",
+    "markdownlint-cli2",
+    "npm run",
+    "npm test",
+    "rg",
+    "shellcheck",
+    "shfmt",
+    "tail",
+    "which",
+    "zizmor",
+]
 structure_first = true
 symbol_map_auto = true
+
 
 # Net savings: power profile advertises 81 tools (~27K tok/turn fixed overhead);
 # standard keeps the 16 most-used tools (~20K) while ctx_call still reaches the rest.

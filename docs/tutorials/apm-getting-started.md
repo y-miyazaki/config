@@ -6,8 +6,10 @@ Install shared AI agent configuration packages (MCP servers, hooks, instructions
 
 - [APM CLI](https://github.com/microsoft/apm) installed
 - A target repository with `git init` completed
-- One of the supported AI agents: Claude Code, GitHub Copilot CLI, or Cursor
+- One of the supported AI agents: Claude Code, GitHub Copilot CLI, Cursor, or OpenAI Codex CLI
 - Node.js (`npx`) and/or Python with [uv](https://docs.astral.sh/uv/) (`uvx`) for MCP runtime resolution
+
+**Note:** [Loop Engineering](../explanation/loop-engineering/loop-engineering-design.md) callers also support `codex` as a runtime engine (`claude` \| `copilot` \| `codex` \| `cursor`). APM `targets` in this repository currently deploy to `claude` and `cursor` only; Codex skills/hooks packages are not distributed yet.
 
 **Minimal setup** — `apm install` plus runtime runners above. MCP servers fetch on demand; per-linter global installs are not required.
 
@@ -81,7 +83,7 @@ This creates `apm_modules/` (gitignored) and deploys configuration to agent-spec
 ls apm_modules/
 
 # Check agent config files exist
-ls .copilot/ 2>/dev/null || ls .claude/ 2>/dev/null || ls .cursor/ 2>/dev/null
+ls .copilot/ 2>/dev/null || ls .claude/ 2>/dev/null || ls .codex/ 2>/dev/null || ls .cursor/ 2>/dev/null
 
 # Validate integrity
 apm audit
