@@ -1,11 +1,10 @@
 name: loop-changelog-eval
-description: "Evaluation suite for loop-changelog.
-
-  Verifies skill produces structured changelog report and respects path constraints.
-
-  "
+description: >-
+  Evaluation suite for loop-changelog.
+  Verifies changelog report contract, level behavior, release promotion, and
+  out-of-scope rejection.
 skill: loop-changelog
-version: "1.0"
+version: "1.1"
 config:
   trials_per_task: 5
   timeout_seconds: 180
@@ -23,7 +22,8 @@ graders:
     weight: 1.0
     config:
       assertions:
-        - "'Commits Processed' in output or 'Summary' in output"
+        - "'Summary' in output"
+        - "'Commits Processed' in output or 'No unreleased changelog commits' in output"
   - type: behavior
     name: bounded_runtime
     weight: 0.5

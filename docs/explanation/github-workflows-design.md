@@ -29,7 +29,7 @@ This repository serves as a **distribution source**. Consumer repositories refer
 
 Reusable Workflows and Composite Actions **must not**:
 
-- Hardcode APM target paths (`.claude/`, `.agents/`, `.kiro/`)
+- Hardcode APM target paths (`.agents/`, `.claude/`, `.codex/`, `.cursor/`, `.kiro/`)
 - Directly reference consumer repository scripts (`scripts/`, `skills/`)
 - Assume consumer directory structure
 

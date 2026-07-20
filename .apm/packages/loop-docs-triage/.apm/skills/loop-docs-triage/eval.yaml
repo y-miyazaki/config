@@ -1,11 +1,9 @@
 name: loop-docs-triage-eval
-description: "Evaluation suite for loop-docs-triage.
-
-  Verifies skill produces structured triage report and respects path constraints.
-
-  "
+description: >-
+  Evaluation suite for loop-docs-triage.
+  Verifies triage classification, denylist guards, fixtures, and no-action exits.
 skill: loop-docs-triage
-version: "1.0"
+version: "1.1"
 config:
   trials_per_task: 5
   timeout_seconds: 180
@@ -23,7 +21,9 @@ graders:
     weight: 1.0
     config:
       assertions:
-        - "'High-Priority' in output or 'Watch' in output"
+        - "'High-Priority' in output"
+        - "'Summary' in output"
+        - "'Watch' in output or 'No documentation impact detected' in output"
   - type: text
     name: triage_sections
     weight: 0.5

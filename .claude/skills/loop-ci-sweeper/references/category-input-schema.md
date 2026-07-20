@@ -45,3 +45,11 @@ Provided via prompt context by the calling workflow (loop-prompt-generate action
 | `failures[].reason`          | string  | Human-readable failure summary                                                                  |
 
 `failures` may be an empty array. `level` defaults to `L2` when omitted by the workflow.
+
+### Operating levels
+
+| Level | Agent behavior for loop-ci-sweeper                   |
+| ----- | ---------------------------------------------------- |
+| `L1`  | Emit triage report only — do not edit files          |
+| `L2`  | Emit report and apply minimal fixes within allowlist |
+| `L3`  | Same edits as `L2`; caller may auto-merge the fix PR |

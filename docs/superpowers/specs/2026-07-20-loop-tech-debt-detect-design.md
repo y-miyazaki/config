@@ -67,7 +67,7 @@ detect_tech_debt.sh
 loop-prompt-generate → loop-tech-debt skill (LLM classifies; hint optional)
 ```
 
-**Prune paths** (align with docs-triage find prune): `.git`, hidden dirs, `.agents`/`.cursor`/`.claude`/`.kiro`/`.vscode`, `apm_modules`, `node_modules`, `dist`/`build`/`bin`, `docs/report/**` (avoid self-noise).
+**Prune paths** (align with docs-triage find prune): `.git`, hidden dirs, `.agents`/`.cursor`/`.claude`/`.codex`/`.kiro`/`.vscode`, `apm_modules`, `node_modules`, `dist`/`build`/`bin`, `docs/report/**` (avoid self-noise).
 
 ## Script authoring contract (normative)
 

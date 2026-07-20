@@ -52,11 +52,6 @@ source "${SCRIPT_DIR}/lib/all.sh"
 #######################################
 SCOPE="range"
 SINCE_REF=""
-CHANGELOG_FILE="${CHANGELOG_FILE:-CHANGELOG.md}"
-CHANGELOG_MAX_COMMITS="${CHANGELOG_MAX_COMMITS:-100}"
-CHANGELOG_MERGE_COMMITS="${CHANGELOG_MERGE_COMMITS:-false}"
-REPOSITORY="${CHANGELOG_REPOSITORY:-}"
-REPOSITORY_URL="${CHANGELOG_REPOSITORY_URL:-}"
 COMPARE_URL=""
 HEAD_SHA=""
 COMMIT_RANGE=""
@@ -854,6 +849,35 @@ function collect_releases {
 }
 
 #######################################
+# configure_detect_environment: Normalize domain env into globals once at startup
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   CHANGELOG_FILE - Target changelog path
+#   CHANGELOG_MAX_COMMITS - Max commits for --scope all
+#   CHANGELOG_MERGE_COMMITS - Include merge commits when "true"
+#   REPOSITORY - owner/repo override
+#   REPOSITORY_URL - Repository web base URL override
+#
+# Returns:
+#   None
+#
+# Usage:
+#   configure_detect_environment
+#
+#######################################
+function configure_detect_environment {
+    CHANGELOG_FILE="${CHANGELOG_FILE:-CHANGELOG.md}"
+    CHANGELOG_FILE="${CHANGELOG_FILE#./}"
+    CHANGELOG_MAX_COMMITS="${CHANGELOG_MAX_COMMITS:-100}"
+    CHANGELOG_MERGE_COMMITS="${CHANGELOG_MERGE_COMMITS:-false}"
+    REPOSITORY="${CHANGELOG_REPOSITORY:-}"
+    REPOSITORY_URL="${CHANGELOG_REPOSITORY_URL:-}"
+}
+
+#######################################
 # main: Entry point
 #
 # Arguments:
@@ -870,6 +894,7 @@ function collect_releases {
 #
 #######################################
 function main {
+    configure_detect_environment
     parse_arguments "$@"
     collect_commits
     collect_releases

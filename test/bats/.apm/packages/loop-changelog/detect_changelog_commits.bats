@@ -173,6 +173,16 @@ setup() {
     assert_detect_changelog_error_json "${output}" "must be all or range"
 }
 
+@test "detect_changelog_commits honors CHANGELOG_FILE for changelog_file path" {
+    git_test_repo_setup
+    touch "${GIT_TEST_REPO}/file.txt"
+    git_test_repo_commit "chore: init"
+    git_test_repo_run "env CHANGELOG_FILE='notes/CHANGES.md' bash '${DETECT_SCRIPT}' --scope staged"
+    [ "$status" -eq 0 ]
+    [[ $output == *'"changelog_file": "notes/CHANGES.md"'* ]] \
+        || [[ $output == *'"changelog_file":"notes/CHANGES.md"'* ]]
+}
+
 @test "detect_changelog_commits detects undocumented release from pin subject" {
     git_test_repo_setup
     printf '# Changelog\n\n## [Unreleased]\n\n## [1.8.5] - 2026-07-11\n' > "${GIT_TEST_REPO}/CHANGELOG.md"

@@ -121,7 +121,7 @@ Remove Phase 0 debt: `on-loop-ci-sweeper.yaml` `Update CI Sweeper Run Ledger` ca
 
 Document applicable triggers in every caller. Prefer one primary poll/event path plus `workflow_dispatch`.
 
-Dogfood `on-loop-ci-sweeper.yaml` uses `workflow_run` (repair-target `workflows:` list) + `workflow_dispatch` — no `schedule`. Changelog and docs-triage callers keep `schedule` + `workflow_dispatch`.
+Dogfood `on-loop-ci-sweeper.yaml` uses `workflow_run` (repair-target `workflows:` list) + `workflow_dispatch` — no `schedule`. Changelog, docs-triage, and report-tech-debt callers keep `schedule` + `workflow_dispatch`.
 
 ```yaml
 # Example: event-driven CI sweeper (dogfood)
@@ -135,18 +135,26 @@ on:
 ```
 
 ```yaml
-# Example: schedule polling (changelog / docs-triage)
+# Example: schedule polling (changelog / docs-triage / report-tech-debt)
 on:
   schedule:
-    - cron: "*/15 * * * 1-5"
+    - cron: "*/15 * * * 1-5" # docs-triage (weekdays)
   workflow_dispatch: {}
 ```
 
-| Trigger             | Typical use                                               |
-| ------------------- | --------------------------------------------------------- |
-| `schedule`          | Integration branch polling (changelog, docs-triage)       |
-| `workflow_run`      | Low-latency CI failure (ci-sweeper; ops checklist)        |
-| `workflow_dispatch` | Manual debug / `gh run list` scan without an event run ID |
+```yaml
+# Example: weekly report-tech-debt scan (on-loop-report-tech-debt.yaml)
+on:
+  schedule:
+    - cron: "0 8 * * 1" # Monday 08:00 UTC
+  workflow_dispatch: {}
+```
+
+| Trigger             | Typical use                                                           |
+| ------------------- | --------------------------------------------------------------------- |
+| `schedule`          | Integration branch polling (changelog, docs-triage, report-tech-debt) |
+| `workflow_run`      | Low-latency CI failure (ci-sweeper; ops checklist)                    |
+| `workflow_dispatch` | Manual debug / `gh run list` scan without an event run ID             |
 
 ## Concurrency
 
@@ -238,3 +246,4 @@ Structural baseline: [Loop Caller Reusable Workflow Design](loop-caller-reusable
 - [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md)
 - [Changelog Workflow](workflows/loop-changelog-workflow-design.md)
 - [Docs Triage Workflow](workflows/loop-docs-triage-workflow-design.md)
+- [Report Tech Debt Workflow](workflows/loop-report-tech-debt-workflow-design.md)

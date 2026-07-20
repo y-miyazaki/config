@@ -132,11 +132,16 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 │       ├── SKILL.md
 │       ├── scripts/detect_ci_failures.sh
 │       └── scripts/update_run_ledger.sh
-└── loop-changelog/      # Changelog maintenance loop (self-contained)
+├── loop-changelog/      # Changelog maintenance loop (self-contained)
+│   ├── apm.yml
+│   └── .apm/skills/loop-changelog/
+│       ├── SKILL.md
+│       └── scripts/detect_changelog_commits.sh
+└── loop-report-tech-debt/  # Technical debt report loop (self-contained)
     ├── apm.yml
-    └── .apm/skills/loop-changelog/
+    └── .apm/skills/loop-report-tech-debt/
         ├── SKILL.md
-        └── scripts/detect_changelog_commits.sh
+        └── scripts/detect_report_tech_debt.sh
 ```
 
 ### Distribution Behavior
@@ -273,25 +278,26 @@ Skills provide **on-demand validation** when an agent invokes them through `scri
 
 Skills are defined under each package's `.apm/skills/` directory. Each skill contains a `SKILL.md`, references, scripts, and eval definitions.
 
-| Package          | Skill                     |
-| ---------------- | ------------------------- |
-| common           | agent-skills-review       |
-| common           | docs-creator              |
-| common           | docs-updater              |
-| common           | github-actions-review     |
-| common           | github-actions-validation |
-| common           | github-pr-body            |
-| common           | instructions-review       |
-| common           | markdown-validation       |
-| go               | go-review                 |
-| go               | go-validation             |
-| terraform        | terraform-review          |
-| terraform        | terraform-validation      |
-| shell-script     | shell-script-review       |
-| shell-script     | shell-script-validation   |
-| loop-docs-triage | loop-docs-triage          |
-| loop-ci-sweeper  | loop-ci-sweeper           |
-| loop-changelog   | loop-changelog            |
+| Package               | Skill                     |
+| --------------------- | ------------------------- |
+| common                | agent-skills-review       |
+| common                | docs-creator              |
+| common                | docs-updater              |
+| common                | github-actions-review     |
+| common                | github-actions-validation |
+| common                | github-pr-body            |
+| common                | instructions-review       |
+| common                | markdown-validation       |
+| go                    | go-review                 |
+| go                    | go-validation             |
+| terraform             | terraform-review          |
+| terraform             | terraform-validation      |
+| shell-script          | shell-script-review       |
+| shell-script          | shell-script-validation   |
+| loop-docs-triage      | loop-docs-triage          |
+| loop-ci-sweeper       | loop-ci-sweeper           |
+| loop-changelog        | loop-changelog            |
+| loop-report-tech-debt | loop-report-tech-debt     |
 
 ### Instructions
 
@@ -370,13 +376,14 @@ Loop **composite actions** must not nest other repository composite actions via 
 
 ### Loop Engineering Workflows
 
-| Workflow                     | Type     | Purpose                                                                                                                                                |
-| ---------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ci-loop-agent.yaml`         | Reusable | Engine-agnostic agent invocation (Claude / Copilot / Codex / Cursor). L1: `loop-agent-once`; L2/L3: worktree + bounded Agent→Verify via `loop-execute` |
-| `on-loop-changelog.yaml`     | Caller   | Cron-driven CHANGELOG.md maintenance (detect → execute → finalize)                                                                                     |
-| `on-loop-ci-sweeper.yaml`    | Caller   | Schedule-driven CI failure repair (detect → execute → finalize)                                                                                        |
-| `on-loop-docs-triage.yaml`   | Caller   | Cron-driven documentation triage (detect → execute → finalize)                                                                                         |
-| `on-loop-state-promote.yaml` | Platform | Merge-gated `pending` → `last_sha` promotion when a `loop-automation` fix PR closes                                                                    |
+| Workflow                        | Type     | Purpose                                                                                                                                                |
+| ------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ci-loop-agent.yaml`            | Reusable | Engine-agnostic agent invocation (Claude / Copilot / Codex / Cursor). L1: `loop-agent-once`; L2/L3: worktree + bounded Agent→Verify via `loop-execute` |
+| `on-loop-changelog.yaml`        | Caller   | Cron-driven CHANGELOG.md maintenance (detect → execute → finalize)                                                                                     |
+| `on-loop-ci-sweeper.yaml`       | Caller   | Schedule-driven CI failure repair (detect → execute → finalize)                                                                                        |
+| `on-loop-docs-triage.yaml`      | Caller   | Cron-driven documentation triage (detect → execute → finalize)                                                                                         |
+| `on-loop-report-tech-debt.yaml` | Caller   | Weekly technical debt report (detect → execute → finalize)                                                                                             |
+| `on-loop-state-promote.yaml`    | Platform | Merge-gated `pending` → `last_sha` promotion when a `loop-automation` fix PR closes                                                                    |
 
 ### Loop Skill Package Pattern
 

@@ -7,12 +7,16 @@ description: >-
 license: Apache-2.0
 metadata:
   author: y-miyazaki
-  version: "2.5.0"
+  version: "2.5.1"
 ---
 
 ## Input
 
 Injected JSON from loop-prompt-generate — see [category-input-schema.md](references/category-input-schema.md). Path allowlist and denylist arrive in the prompt `## Constraints` section (caller `LOOP_ALLOWLIST`, `LOOP_DENYLIST`).
+
+## Operating levels
+
+`level` arrives in injected JSON — see [category-input-schema.md](references/category-input-schema.md#operating-levels).
 
 ## Output Specification
 

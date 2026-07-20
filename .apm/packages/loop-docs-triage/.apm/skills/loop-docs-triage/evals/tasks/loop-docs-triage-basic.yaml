@@ -1,22 +1,33 @@
 id: loop-docs-triage-contract-001
-name: loop-docs-triage output contract sections
-description:
-  "Validate loop-docs-triage defines High-Priority triage report with Watch
-  classification.
-
-  "
+name: loop-docs-triage triages injected stale doc finding
+description: >-
+  Validate loop-docs-triage classifies injected findings into High-Priority and
+  Watch with full report sections.
 tags:
   - quality
   - output-contract
 inputs:
-  prompt:
-    Use loop-docs-triage. Show triage report structure with High-Priority and
-    Watch sections.
+  prompt: >-
+    Use loop-docs-triage at L2. Classify the injected findings. The stale
+    workflow reference is High-Priority; the version drift is Watch. Emit
+    High-Priority, Watch, Noise / Ignore, and Summary. Do not edit files in
+    this mock eval.
   context:
-    target: SKILL.md
+    commit_range: eval0001..eval0002
+    level: L2
+    skip: false
+    findings:
+      - file: evals/files/README.stale.md
+        reason: references deleted workflow ci-build.yaml
+        source_commit: eval0002
+      - file: docs/guide/overview.md
+        reason: version number slightly outdated (1.0.0 vs 1.0.1)
+        source_commit: eval0002
 expected:
   output_contains:
-    - triage
     - High-Priority
+    - Watch
+    - Summary
+    - README.stale.md
   outcomes:
     - type: task_completed

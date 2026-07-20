@@ -5,8 +5,9 @@ tags:
   - classification
 inputs:
   prompt: >-
-    Use loop-ci-sweeper. One failure has failure_type=infra (runner OOM). Classify
-    as Watch and do not edit files.
+    Use loop-ci-sweeper. One failure has failure_type=infra (runner OOM). Emit
+    the full triage report with Actionable Fixes and Watch Items sections.
+    Classify the infra failure under Watch Items and do not edit files.
   context:
     failures:
       - workflow_name: ci-go
@@ -15,6 +16,8 @@ inputs:
         reason: runner OOM
 expected:
   output_contains:
+    - Actionable Fixes
+    - Watch Items
     - Watch
   outcomes:
     - type: task_completed

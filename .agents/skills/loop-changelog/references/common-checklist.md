@@ -18,7 +18,7 @@
 When detect JSON includes `repository_url`:
 
 - Each new bullet ends with a parenthesized commit link: opening paren, bracketed 7-char sha, URL `{repository_url}/commit/{full sha}`, closing paren
-- Use the commit `subject` as the leading text (add scope in prose when helpful)
+- Use the commit `subject` as the leading text; when `commits[].scope` is non-empty, prefix with `({scope})` before the subject
 - When `repository_url` is empty, omit links (subject-only bullets)
 
 When detect JSON includes `compare_url` and `## [Unreleased]` has no diff link yet:

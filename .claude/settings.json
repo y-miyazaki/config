@@ -4,6 +4,8 @@
     "allow": [
       "Bash(actionlint *)",
       "Bash(apm *)",
+      "Bash(bash *)",
+      "Bash(bats *)",
       "Bash(cat *)",
       "Bash(cd *)",
       "Bash(command *)",

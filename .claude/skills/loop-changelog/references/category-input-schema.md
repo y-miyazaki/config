@@ -55,4 +55,12 @@ Provided via prompt context by the calling workflow (loop-prompt-generate action
 | `releases[].date` | string | Release date (`YYYY-MM-DD`) |
 | `releases[].commit_shas` | array | Commit SHAs whose bullets move from `## [Unreleased]` into this release |
 
+### Operating levels
+
+| Level | Agent behavior for loop-changelog                               |
+| ----- | --------------------------------------------------------------- |
+| `L1`  | Emit changelog report only — do not edit `changelog_file`       |
+| `L2`  | Emit report and edit `changelog_file` within allowlist          |
+| `L3`  | Same file edits as `L2`; caller may auto-merge the changelog PR |
+
 Path allowlist is injected in the implementer prompt `## Constraints` section from the caller (`LOOP_ALLOWLIST`). See [category-scope.md](category-scope.md).

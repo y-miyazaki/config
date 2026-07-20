@@ -43,7 +43,8 @@ description: "AI Assistant Instructions for Agent Skills Development"
 ### Agent Root Canonical List
 
 - **S-06 (MUST)**: Use `<agent-root>` placeholder for portable paths; do not hardcode `.github/skills`.
-- Canonical `agent-root` list (single source of truth): `.github`, `.agents`, `.claude`, `.cursor`, `cursor`, `.kiro`, `kiro`.
+- Canonical `agent-root` list (single source of truth): `.github`, `.agents`, `.claude`, `.codex`, `.cursor`, `cursor`, `.kiro`, `kiro`.
+- `.vscode` is editor-local configuration, not an agent-root for skill paths; `scripts/lib/repo_paths.sh` excludes it from repository scans separately.
 - Keep markdown examples portable by using `<agent-root>` in paths.
 - Preferred markdown path forms:
   - Cross-skill path: `<agent-root>/skills/<skill-name>/...`

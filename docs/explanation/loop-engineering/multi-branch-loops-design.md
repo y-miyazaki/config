@@ -255,12 +255,13 @@ On first Phase 1+ read, if legacy flat `last_sha` exists and `targets` is absent
 
 Loop callers (`on-loop-*.yaml`) and `on-loop-state-promote.yaml` share a workflow-level concurrency group keyed by state branch (e.g. `loop-state-main` when `branch_state: main`). Runs queue with `cancel-in-progress: false` and `queue: max` so detect always sees fresh repository state before execute.
 
-| Workflow                | `concurrency.group` | Notes                                              |
-| ----------------------- | ------------------- | -------------------------------------------------- |
-| `on-loop-changelog`     | `loop-state-main`   | Serializes with other loops on same `branch_state` |
-| `on-loop-docs-triage`   | `loop-state-main`   | Same                                               |
-| `on-loop-ci-sweeper`    | `loop-state-main`   | Same (replaces per-`workflow_run` group)           |
-| `on-loop-state-promote` | `loop-state-main`   | Avoids state PR races during loop runs             |
+| Workflow                   | `concurrency.group` | Notes                                              |
+| -------------------------- | ------------------- | -------------------------------------------------- |
+| `on-loop-changelog`        | `loop-state-main`   | Serializes with other loops on same `branch_state` |
+| `on-loop-docs-triage`      | `loop-state-main`   | Same                                               |
+| `on-loop-ci-sweeper`       | `loop-state-main`   | Same (replaces per-`workflow_run` group)           |
+| `on-loop-report-tech-debt` | `loop-state-main`   | Same                                               |
+| `on-loop-state-promote`    | `loop-state-main`   | Avoids state PR races during loop runs             |
 
 See [Loop Caller Workflows — Concurrency](loop-caller-workflows-design.md#concurrency).
 
@@ -282,11 +283,12 @@ Caller/workflow steps: [Loop Caller Workflows Design](loop-caller-workflows-desi
 
 ## Workflow Design Documents
 
-| Loop                 | Document                                                                     | Caller workflow            |
-| -------------------- | ---------------------------------------------------------------------------- | -------------------------- |
-| **loop-changelog**   | [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md)     | `on-loop-changelog.yaml`   |
-| **loop-ci-sweeper**  | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md)   | `on-loop-ci-sweeper.yaml`  |
-| **loop-docs-triage** | [Docs Triage Workflow Design](workflows/loop-docs-triage-workflow-design.md) | `on-loop-docs-triage.yaml` |
+| Loop                      | Document                                                                               | Caller workflow                 |
+| ------------------------- | -------------------------------------------------------------------------------------- | ------------------------------- |
+| **loop-changelog**        | [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md)               | `on-loop-changelog.yaml`        |
+| **loop-ci-sweeper**       | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md)             | `on-loop-ci-sweeper.yaml`       |
+| **loop-docs-triage**      | [Docs Triage Workflow Design](workflows/loop-docs-triage-workflow-design.md)           | `on-loop-docs-triage.yaml`      |
+| **loop-report-tech-debt** | [Report Tech Debt Workflow Design](workflows/loop-report-tech-debt-workflow-design.md) | `on-loop-report-tech-debt.yaml` |
 
 Add new loops as `docs/explanation/loop-engineering/workflows/<name>-workflow-design.md` without growing this file.
 

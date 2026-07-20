@@ -307,8 +307,8 @@ function assert_detect_ci_failures_error_json {
     ' <<< "${json}"
 }
 
-# assert_detect_tech_debt_ok_json: Validate detect_tech_debt.sh success JSON
-function assert_detect_tech_debt_ok_json {
+# assert_detect_report_tech_debt_ok_json: Validate detect_report_tech_debt.sh success JSON
+function assert_detect_report_tech_debt_ok_json {
     local json="$1"
     local expected_scope="${2:-all}"
     local expected_since="${3:-}"
@@ -329,10 +329,13 @@ function assert_detect_tech_debt_ok_json {
             and (.value | type == "number")
             and (.window | type == "string" and length > 0);
         type == "object"
+        and (keys | sort) == ["hotspots", "previous_report", "report_file", "scope", "signals", "since", "skip", "status", "warnings"]
         and (.status == "ok")
         and .scope == $expected_scope
         and (.since | type == "string")
         and ($expected_since == "" or .since == $expected_since)
+        and (.report_file | type == "string" and length > 0)
+        and (.previous_report | type == "string")
         and (.skip | type == "boolean")
         and (.signals | type == "array")
         and (.hotspots | type == "array")
@@ -343,16 +346,19 @@ function assert_detect_tech_debt_ok_json {
     ' <<< "${json}"
 }
 
-# assert_detect_tech_debt_error_json: Validate detect_tech_debt.sh error JSON
-function assert_detect_tech_debt_error_json {
+# assert_detect_report_tech_debt_error_json: Validate detect_report_tech_debt.sh error JSON
+function assert_detect_report_tech_debt_error_json {
     local json="$1"
     local expected_message="${2:-}"
 
     jq -e --arg expected_message "${expected_message}" '
         type == "object"
+        and (keys | sort) == ["hotspots", "message", "previous_report", "report_file", "scope", "signals", "since", "skip", "status", "warnings"]
         and .status == "error"
         and (.scope | type == "string")
         and (.since | type == "string")
+        and (.report_file | type == "string")
+        and (.previous_report | type == "string")
         and .skip == true
         and (.signals | type == "array" and length == 0)
         and (.hotspots | type == "array" and length == 0)
@@ -388,5 +394,5 @@ export -f bats_resolve_since_ref
 export -f assert_detect_changelog_ok_json assert_detect_changelog_error_json
 export -f assert_detect_changes_ok_json assert_detect_changes_error_json
 export -f assert_detect_ci_failures_ok_json assert_detect_ci_failures_error_json
-export -f assert_detect_tech_debt_ok_json assert_detect_tech_debt_error_json
+export -f assert_detect_report_tech_debt_ok_json assert_detect_report_tech_debt_error_json
 export -f assert_loop_run_log_entry_json

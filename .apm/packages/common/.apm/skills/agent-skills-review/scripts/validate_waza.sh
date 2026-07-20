@@ -73,7 +73,7 @@ Description: Run deterministic waza readiness checks for a target skill.
 Arguments:
     skill-name     Skill directory name under <agent-root>/skills (for example: terraform-review)
     SKILL.md       Absolute or relative path to <agent-root>/skills/*/SKILL.md
-                                 agent-root: .github, .agents, .claude, .cursor, cursor, .kiro, kiro
+                                 agent-root: .github, .agents, .claude, .codex, .cursor, cursor, .kiro, kiro
 
 Options:
   -h, --help     Display this help message
@@ -162,8 +162,8 @@ function resolve_target_skill {
         fi
 
         target_path="$(realpath "$TARGET_INPUT")"
-        if [[ ! $target_path =~ /(\.github|\.agents|\.claude|\.cursor|cursor|\.kiro|kiro)/skills/([^/]+)/SKILL\.md$ ]]; then
-            error_exit "Path must match <agent-root>/skills/*/SKILL.md where agent-root is one of .github,.agents,.claude,.cursor,cursor,.kiro,kiro: $target_path"
+        if [[ ! $target_path =~ /(\.github|\.agents|\.claude|\.codex|\.cursor|cursor|\.kiro|kiro)/skills/([^/]+)/SKILL\.md$ ]]; then
+            error_exit "Path must match <agent-root>/skills/*/SKILL.md where agent-root is one of .github,.agents,.claude,.codex,.cursor,cursor,.kiro,kiro: $target_path"
         fi
 
         TARGET_SKILL_NAME="${BASH_REMATCH[2]}"
