@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-20T07:09:04.931610+00:00'
+generated_at: '2026-07-20T14:47:12.911636+00:00'
 apm_version: 0.26.0
 dependencies:
 - repo_url: _local/common
@@ -188,7 +188,6 @@ dependencies:
   - .agents/skills/markdown-validation/scripts/lib/terraform.sh
   - .agents/skills/markdown-validation/scripts/lib/validation.sh
   - .agents/skills/markdown-validation/scripts/validate.sh
-  - .claude/agents/code-review.md
   - .claude/agents/test-engineer.md
   - .claude/rules/agent-skills.md
   - .claude/rules/github-actions-workflow.md
@@ -375,7 +374,6 @@ dependencies:
   - .claude/skills/markdown-validation/scripts/lib/terraform.sh
   - .claude/skills/markdown-validation/scripts/lib/validation.sh
   - .claude/skills/markdown-validation/scripts/validate.sh
-  - .cursor/agents/code-review.md
   - .cursor/agents/test-engineer.md
   - .cursor/rules/agent-skills.mdc
   - .cursor/rules/github-actions-workflow.mdc
@@ -555,8 +553,7 @@ dependencies:
     .agents/skills/markdown-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/markdown-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .agents/skills/markdown-validation/scripts/validate.sh: sha256:e7d8b5242395d6c75df754357724868b688ee3293912037a62d7fdde8a784802
-    .claude/agents/code-review.md: sha256:76ae6714a9b4317beb9b4285df84fe2c9b5968d0e64121826607ae449bfb9dd0
-    .claude/agents/test-engineer.md: sha256:ca60db7c610953801780bbf437ebaf2e15aecc1962549c4d112f7bbc5ff1bc56
+    .claude/agents/test-engineer.md: sha256:8dfd917e4b2652f8eedc6355660732645a18a85ee803cc8e82a83884d9e5c390
     .claude/rules/agent-skills.md: sha256:8795c14376e3a222326fbd919f9bae7d20573e860243db570144094f2ea7f960
     .claude/rules/github-actions-workflow.md: sha256:a7bdb1ddae7062cb2361322d8b43c91c16f0787ad41f7fde3445a53375383526
     .claude/rules/instructions.md: sha256:9ad607e3d36f00040272ffc3454b57d0a5958494e214804f2f8c3e127b6000c0
@@ -734,8 +731,7 @@ dependencies:
     .claude/skills/markdown-validation/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .claude/skills/markdown-validation/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .claude/skills/markdown-validation/scripts/validate.sh: sha256:e7d8b5242395d6c75df754357724868b688ee3293912037a62d7fdde8a784802
-    .cursor/agents/code-review.md: sha256:76ae6714a9b4317beb9b4285df84fe2c9b5968d0e64121826607ae449bfb9dd0
-    .cursor/agents/test-engineer.md: sha256:ca60db7c610953801780bbf437ebaf2e15aecc1962549c4d112f7bbc5ff1bc56
+    .cursor/agents/test-engineer.md: sha256:8dfd917e4b2652f8eedc6355660732645a18a85ee803cc8e82a83884d9e5c390
     .cursor/rules/agent-skills.mdc: sha256:1fb20dd2e5be1cef1e9a0ce60126b118b72d4074d824909d98a375c8089f92a5
     .cursor/rules/github-actions-workflow.mdc: sha256:db7b654240b111aa018ff6dfd0ffdb8f1d94dcc782e8ff53c96d2ea00ecb582c
     .cursor/rules/instructions.mdc: sha256:eec20c1fbcd0562d21a461586bcb8106d3ace514ac0d8019152b3b23d537fe15
@@ -1782,22 +1778,13 @@ dependencies:
 deployments:
 - kind: project-relative
   target: claude
-  value: .claude/agents/code-review.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:76ae6714a9b4317beb9b4285df84fe2c9b5968d0e64121826607ae449bfb9dd0
-- kind: project-relative
-  target: claude
   value: .claude/agents/test-engineer.md
   runtime: null
   scope: project
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:ca60db7c610953801780bbf437ebaf2e15aecc1962549c4d112f7bbc5ff1bc56
+  content_hash: sha256:8dfd917e4b2652f8eedc6355660732645a18a85ee803cc8e82a83884d9e5c390
 - kind: project-relative
   target: claude
   value: .claude/hooks/common-hooks-claude/scripts/actionlint.sh
@@ -9153,22 +9140,13 @@ deployments:
   content_hash: sha256:1603fb552850030d7c9e0b66e02c75f1d978869d718e1c2594184d73c022a694
 - kind: project-relative
   target: cursor
-  value: .cursor/agents/code-review.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:76ae6714a9b4317beb9b4285df84fe2c9b5968d0e64121826607ae449bfb9dd0
-- kind: project-relative
-  target: cursor
   value: .cursor/agents/test-engineer.md
   runtime: null
   scope: project
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:ca60db7c610953801780bbf437ebaf2e15aecc1962549c4d112f7bbc5ff1bc56
+  content_hash: sha256:8dfd917e4b2652f8eedc6355660732645a18a85ee803cc8e82a83884d9e5c390
 - kind: project-relative
   target: cursor
   value: .cursor/hooks/common-hooks-claude/scripts/actionlint.sh
