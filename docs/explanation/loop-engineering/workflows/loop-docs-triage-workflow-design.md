@@ -161,7 +161,7 @@ Persistence: `state-docs-triage.json` on `branch_state` via [finalize inside ci-
 
 ## Cross-Loop Note
 
-If `loop-ci-sweeper` and `loop-docs-triage` both target `integration:main`, [workflow concurrency](../multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency_on) and separate concurrency groups apply. CI failure on `main` is loop-ci-sweeper priority; doc-only drift is loop-docs-triage.
+If `loop-ci-sweeper` and `loop-docs-triage` both target `integration:main`, [workflow concurrency](../multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency) and separate concurrency groups apply. CI failure on `main` is loop-ci-sweeper priority; doc-only drift is loop-docs-triage.
 
 ## References
 
