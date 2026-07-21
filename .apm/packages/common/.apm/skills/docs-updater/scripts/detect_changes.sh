@@ -115,51 +115,56 @@ function parse_arguments {
                 ;;
             --scope)
                 if [[ $# -lt 2 ]]; then
-                    json_object_start
-                    json_field_string "status" "error" ","
-                    json_field_string "message" "--scope requires a value" ""
-                    json_object_end
-                    exit 0
+                    emit_error_json "--scope requires a value"
                 fi
                 SCOPE="$2"
                 shift 2
                 ;;
             --since)
                 if [[ $# -lt 2 ]]; then
-                    json_object_start
-                    json_field_string "status" "error" ","
-                    json_field_string "message" "--since requires a value" ""
-                    json_object_end
-                    exit 0
+                    emit_error_json "--since requires a value"
                 fi
                 SINCE_REF="$2"
                 shift 2
                 ;;
             *)
-                json_object_start
-                json_field_string "status" "error" ","
-                json_field_string "message" "Unknown argument: $1" ""
-                json_object_end
-                exit 0
+                emit_error_json "Unknown argument: $1"
                 ;;
         esac
     done
 
     if [[ ${SCOPE} != "staged" && ${SCOPE} != "all" && ${SCOPE} != "range" ]]; then
-        json_object_start
-        json_field_string "status" "error" ","
-        json_field_string "message" "--scope must be staged, all, or range" ""
-        json_object_end
-        exit 0
+        emit_error_json "--scope must be staged, all, or range"
     fi
 
     if [[ ${SCOPE} == "range" && -z ${SINCE_REF} ]]; then
-        json_object_start
-        json_field_string "status" "error" ","
-        json_field_string "message" "--scope range requires --since <ref>" ""
-        json_object_end
-        exit 0
+        emit_error_json "--scope range requires --since <ref>"
     fi
+}
+
+#######################################
+# emit_error_json: Print error status JSON and exit 0
+#
+# Arguments:
+#   $1 - Error message string
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Exits with code 0 after printing JSON
+#
+# Usage:
+#   emit_error_json "--scope requires a value"
+#
+#######################################
+function emit_error_json {
+    local message="$1"
+    json_object_start
+    json_field_string "status" "error" ","
+    json_field_string "message" "${message}" ""
+    json_object_end
+    exit 0
 }
 
 #######################################
@@ -183,11 +188,7 @@ function parse_arguments {
 #######################################
 function collect_changes {
     if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-        json_object_start
-        json_field_string "status" "error" ","
-        json_field_string "message" "Not a git repository" ""
-        json_object_end
-        exit 0
+        emit_error_json "Not a git repository"
     fi
 
     local diff_ref
