@@ -55,12 +55,6 @@ declare -a AFFECTED_DOCS=()
 #######################################
 # show_usage: Display script usage information
 #
-# Arguments:
-#   None
-#
-# Global Variables:
-#   None
-#
 # Returns:
 #   Exits with code 0
 #
@@ -329,12 +323,6 @@ function collect_affected_docs {
 
 #######################################
 # output_json: Print structured JSON result using lib/json.sh helpers
-#
-# Arguments:
-#   None
-#
-# Global Variables:
-#   None
 #
 # Returns:
 #   None
