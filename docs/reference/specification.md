@@ -66,6 +66,8 @@ The repository structure is function-oriented.
   - `loop-ci-sweeper/`: CI failure sweeper loop (self-contained skill package)
   - `loop-changelog/`: Changelog maintenance loop (self-contained skill package)
   - `loop-report-tech-debt/`: Technical debt report loop (self-contained skill package)
+  - `loop-refactor/`: Structural refactor action loop (self-contained skill package)
+  - `refactor/`: Behavior-preserving refactor skill (interactive; used by loop-refactor)
 - `apm.yml`: APM package metadata and dependency entry point
 - `apm.lock.yaml`: lock file for deterministic APM resolution
 - `apm_modules/`: locally materialized module content
@@ -138,11 +140,20 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 │   └── .apm/skills/loop-changelog/
 │       ├── SKILL.md
 │       └── scripts/detect_changelog_commits.sh
-└── loop-report-tech-debt/  # Technical debt report loop (self-contained)
+├── loop-report-tech-debt/  # Technical debt report loop (self-contained)
+│   ├── apm.yml
+│   └── .apm/skills/loop-report-tech-debt/
+│       ├── SKILL.md
+│       └── scripts/detect_report_tech_debt.sh
+├── loop-refactor/       # Structural refactor action loop (self-contained)
+│   ├── apm.yml
+│   └── .apm/skills/loop-refactor/
+│       ├── SKILL.md
+│       └── scripts/detect_refactor.sh
+└── refactor/            # Behavior-preserving refactor skill (interactive)
     ├── apm.yml
-    └── .apm/skills/loop-report-tech-debt/
-        ├── SKILL.md
-        └── scripts/detect_report_tech_debt.sh
+    └── .apm/skills/refactor/
+        └── SKILL.md
 ```
 
 ### Distribution Behavior

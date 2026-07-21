@@ -36,13 +36,14 @@ Run a full-repository mechanical technical-debt scan, classify findings via the 
 
 Report loops use the **`loop-report-<domain>`** naming prefix (e.g. `loop-report-tech-debt`, future `loop-report-errors`). They emit structured artifacts under `docs/report/<domain>/` via merge-gated PRs.
 
-**Action loops** (`loop-docs-triage`, `loop-ci-sweeper`, future `loop-refactor-*`) modify application or documentation source to fix drift or failures. Report loops classify mechanical signals and publish reports only — they do not edit source outside the report allowlist.
+**Action loops** (`loop-docs-triage`, `loop-ci-sweeper`, `loop-refactor`) modify application or documentation source to fix drift or failures. Report loops classify mechanical signals and publish reports only — they do not edit source outside the report allowlist.
 
 | Package                 | Role                                              | Trigger                         |
 | ----------------------- | ------------------------------------------------- | ------------------------------- |
 | `loop-report-tech-debt` | Cron loop: detect signals + skill classify/report | `on-loop-report-tech-debt.yaml` |
 | `loop-docs-triage`      | Action loop: doc drift detect + fix PR            | `on-loop-docs-triage.yaml`      |
 | `loop-ci-sweeper`       | Action loop: CI failure detect + fix PR           | `on-loop-ci-sweeper.yaml`       |
+| `loop-refactor`         | Action loop: H1 structural refactor fix PR        | `on-loop-refactor.yaml`         |
 
 Detect script path: **`loop-report-tech-debt/scripts/detect_report_tech_debt.sh`**.
 
@@ -180,9 +181,9 @@ See [State delivery philosophy](../multi-branch-loops-design.md#state-delivery-p
 
 Persistence: `state-report-tech-debt.json` on `branch_state` via [finalize inside ci-loop-agent](../loop-caller-workflows-design.md#finalize-inside-ci-loop-agent).
 
-## Future work
+## Related action loops
 
-Refactoring loops (`loop-refactor-*`, TBD) are **action loops** that apply code changes via fix PRs — not members of the `loop-report-*` family. They may consume report findings as input context but belong alongside `loop-docs-triage` and `loop-ci-sweeper`, not `loop-report-tech-debt`.
+`loop-refactor` is an **action loop** that applies O1/O2 structural refactors via fix PRs — not a member of the `loop-report-*` family. It may consume report findings as input context but belongs alongside `loop-docs-triage` and `loop-ci-sweeper`, not `loop-report-tech-debt`. See [Refactor Workflow Design](loop-refactor-workflow-design.md).
 
 ## Implementation Checklist
 
