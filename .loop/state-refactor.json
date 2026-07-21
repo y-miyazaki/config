@@ -1,0 +1,18 @@
+{
+  "targets": {
+    "integration:main": {
+      "pending": {
+        "sha": "b884389531d8968726dcbd277d307de69f214d29",
+        "pr": 450,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/450",
+        "loop_name": "refactor",
+        "created_at": "2026-07-21T07:00:12Z"
+      },
+      "last_run": "2026-07-21T07:00:12Z",
+      "outcome": "pr-created",
+      "consecutive_failures": 0,
+      "open_rejections": [],
+      "last_reject_reason": "Attempt 2 removes the duplicated Arguments/Global Variables doc blocks from show_usage and output_json, resolving the prior 57-64/331-338 hint with behavior-preserving O1 dedupe."
+    }
+  }
+}
