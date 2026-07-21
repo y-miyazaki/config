@@ -20,6 +20,9 @@ set -euo pipefail
 umask 027
 export LC_ALL=C.UTF-8
 
+#######################################
+# Global variables
+#######################################
 RUN_LOG_HEADER='# Loop Run Log
 
 Append one entry per run. Prune entries older than 30 days.

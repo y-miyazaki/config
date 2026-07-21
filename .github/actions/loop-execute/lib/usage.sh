@@ -13,6 +13,9 @@
 # - Other engines remain estimate-only until structured usage capture is added
 #######################################
 
+#######################################
+# Global variables
+#######################################
 # Cumulative measured token totals across all agent sessions in one loop run
 USAGE_INPUT_TOTAL=0
 USAGE_OUTPUT_TOTAL=0

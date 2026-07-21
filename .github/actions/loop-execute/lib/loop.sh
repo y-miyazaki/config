@@ -23,6 +23,8 @@ umask 027
 export LC_ALL=C.UTF-8
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Load initialization library
 # shellcheck source=./_init.sh
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/_init.sh"

@@ -212,13 +212,13 @@ Confirm YAML frontmatter has `name`, `description`, `license`, `metadata.author`
 
 ## Operations
 
-- Stay in O1/O2 closed set ([category-operations.md](category-operations.md))
+- Stay in O1/O2 closed set (`category-operations.md`)
 - No public API semantics changes; no feature behavior changes
 - O3 (deep redesign, GoF, large boundary splits) → Watch / stop — do not apply under this skill's automation path
 
 ## Verification
 
-- Establish characterization / stack gate before or with the edit ([category-verification.md](category-verification.md))
+- Establish characterization / stack gate before or with the edit (`category-verification.md`)
 - If O2 lacks an adequate gate → downgrade to O1 or Watch (V4)
 - Unsupported language → Watch / skip — do not invent tests for an unknown stack
 - Lint tools may run as part of a stack gate; lint-only findings must not expand the target

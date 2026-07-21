@@ -13,17 +13,18 @@ Understanding-oriented design docs for autonomous CI and documentation loops in 
 
 ## Topic index
 
-| Topic                                                                | Document                                                                                             |
-| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Platform (targets, `LOOP_*`, state)                                  | [Multi-Branch Loops Design](multi-branch-loops-design.md)                                            |
-| Shared `on-loop-*.yaml` layout                                       | [Loop Caller Workflows Design](loop-caller-workflows-design.md)                                      |
-| **loop-docs-triage** workflow + doc drift detect                     | [Docs Triage Workflow Design](workflows/loop-docs-triage-workflow-design.md)                         |
-| **loop-ci-sweeper** workflow + detect + CI env                       | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md)                           |
-| **loop-changelog** workflow + conventional commits                   | [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md)                             |
-| **loop-report-tech-debt** workflow + debt report                     | [Report Tech Debt Workflow Design](workflows/loop-report-tech-debt-workflow-design.md)               |
-| **refactor** skill (Phase 1); future **loop-refactor** (action loop) | [Refactor skill & loop design](../../superpowers/specs/2026-07-21-refactor-skill-and-loop-design.md) |
-| Loop invariants + L3 gates                                           | [Loop Engineering Design](loop-engineering-design.md)                                                |
-| Ubiquitous language (detect, A'/B, findings)                         | [Ubiquitous Language](CONTEXT.md)                                                                    |
+| Topic                                                             | Document                                                                                             |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Platform (targets, `LOOP_*`, state)                               | [Multi-Branch Loops Design](multi-branch-loops-design.md)                                            |
+| Shared `on-loop-*.yaml` layout                                    | [Loop Caller Workflows Design](loop-caller-workflows-design.md)                                      |
+| **loop-docs-triage** workflow + doc drift detect                  | [Docs Triage Workflow Design](workflows/loop-docs-triage-workflow-design.md)                         |
+| **loop-ci-sweeper** workflow + detect + CI env                    | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md)                           |
+| **loop-changelog** workflow + conventional commits                | [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md)                             |
+| **loop-report-tech-debt** workflow + debt report                  | [Report Tech Debt Workflow Design](workflows/loop-report-tech-debt-workflow-design.md)               |
+| **loop-refactor** workflow + H1 detect                            | [Refactor Workflow Design](workflows/loop-refactor-workflow-design.md)                               |
+| **refactor** skill (interactive); **loop-refactor** (action loop) | [Refactor skill & loop design](../../superpowers/specs/2026-07-21-refactor-skill-and-loop-design.md) |
+| Loop invariants + L3 gates                                        | [Loop Engineering Design](loop-engineering-design.md)                                                |
+| Ubiquitous language (detect, A'/B, findings)                      | [Ubiquitous Language](CONTEXT.md)                                                                    |
 
 ## Reference (outside this section)
 

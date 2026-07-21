@@ -10,6 +10,7 @@ For concrete specifications (Actions/Workflows list, interfaces), see [Specifica
 | `loop-docs-triage`  | Phase 0 done; multi-branch in progress | L2 (Assisted) |
 | `loop-ci-sweeper`   | Phase 0 done; multi-branch in progress | L2 (Assisted) |
 | `loop-changelog`    | Phase 0 done; workflow design complete | L2 (Assisted) |
+| `loop-refactor`     | Phase 0 done; workflow design complete | L2 (Assisted) |
 | `loop-issue-triage` | Not started                            | -             |
 | `loop-stale-pr`     | Not started                            | -             |
 
@@ -26,6 +27,7 @@ Referencing the design philosophy of GitHub Agentic Workflows ([official blog](h
 | **loop-docs-triage** | git diff: doc drift facts on integration branches   | Triage stale docs; open fix PR    | L2 — see [Docs Triage Workflow](workflows/loop-docs-triage-workflow-design.md)                  |
 | **loop-ci-sweeper**  | GitHub API: failed runs (integration + optional PR) | Auto-fix; PR or push per mode     | L2 default; L3 opt-in — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md) |
 | **loop-changelog**   | git log: parse conventional commits                 | Auto-generate/update CHANGELOG.md | L2 — see [Changelog Workflow](workflows/loop-changelog-workflow-design.md)                      |
+| **loop-refactor**    | repo scan: duplication_block / oversized_unit hints | O1/O2 structural fix; open PR     | L2 — see [Refactor Workflow](workflows/loop-refactor-workflow-design.md)                        |
 
 #### CI failure repair — one package, layered responsibilities
 
@@ -139,6 +141,10 @@ Each `loop-*` package ships **Skill + detect script** (+ optional ledger script)
     .apm/skills/loop-changelog/
       SKILL.md
       scripts/detect_changelog_commits.sh
+  loop-refactor/
+    .apm/skills/loop-refactor/
+      SKILL.md
+      scripts/detect_refactor.sh
 ```
 
 Hook/manual skills (e.g. `docs-updater` in `common`) are **not** loop packages — see [Docs Triage Workflow Design](workflows/loop-docs-triage-workflow-design.md#separation-from-docs-updater).
@@ -181,6 +187,15 @@ For workflow env and behavior, see [CI Sweeper Workflow Design](workflows/loop-c
 | `eval.yaml` + `evals/tasks/`                                     | waza evaluation suite                                   |
 
 For workflow env and behavior, see [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md).
+
+## loop-refactor (Structural Refactor)
+
+| Component                                              | Description                                                         |
+| ------------------------------------------------------ | ------------------------------------------------------------------- |
+| `.apm/skills/loop-refactor/SKILL.md`                   | Map one H1 hint to O1/O2 structural apply (wrapper over `refactor`) |
+| `.apm/skills/loop-refactor/scripts/detect_refactor.sh` | Mechanical hints (`duplication_block`, `oversized_unit`)            |
+
+For workflow env and behavior, see [Refactor Workflow Design](workflows/loop-refactor-workflow-design.md).
 
 ## Execution Flow
 

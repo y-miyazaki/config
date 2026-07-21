@@ -368,6 +368,52 @@ function assert_detect_report_tech_debt_error_json {
     ' <<< "${json}"
 }
 
+# assert_detect_refactor_ok_json: Validate detect_refactor.sh success JSON
+function assert_detect_refactor_ok_json {
+    local json="$1"
+    local expected_scope="${2:-all}"
+    local expected_since="${3:-}"
+
+    jq -e --arg expected_scope "${expected_scope}" --arg expected_since "${expected_since}" '
+        def hint_object:
+            type == "object"
+            and (keys | sort) == ["detail", "kind", "lines", "path"]
+            and (.kind | type == "string" and (. == "duplication_block" or . == "oversized_unit"))
+            and (.path | type == "string" and length > 0)
+            and (.detail | type == "string" and length > 0)
+            and (.lines | type == "number");
+        type == "object"
+        and (keys | sort) == ["commit_range", "hints", "scope", "since", "skip", "status"]
+        and .status == "ok"
+        and .scope == $expected_scope
+        and (.since | type == "string")
+        and ($expected_since == "" or .since == $expected_since)
+        and (.commit_range | type == "string")
+        and (.skip | type == "boolean")
+        and (.hints | type == "array")
+        and (.hints | all(hint_object))
+    ' <<< "${json}"
+}
+
+# assert_detect_refactor_error_json: Validate detect_refactor.sh error JSON
+function assert_detect_refactor_error_json {
+    local json="$1"
+    local expected_message="${2:-}"
+
+    jq -e --arg expected_message "${expected_message}" '
+        type == "object"
+        and (keys | sort) == ["commit_range", "hints", "message", "scope", "since", "skip", "status"]
+        and .status == "error"
+        and (.scope | type == "string")
+        and (.since | type == "string")
+        and (.commit_range | type == "string")
+        and .skip == true
+        and (.hints | type == "array" and length == 0)
+        and (.message | type == "string" and length > 0)
+        and ($expected_message == "" or (.message | contains($expected_message)))
+    ' <<< "${json}"
+}
+
 # assert_loop_run_log_entry_json: Validate loop_run_log_build_entry JSON
 function assert_loop_run_log_entry_json {
     local json="$1"
@@ -395,4 +441,5 @@ export -f assert_detect_changelog_ok_json assert_detect_changelog_error_json
 export -f assert_detect_changes_ok_json assert_detect_changes_error_json
 export -f assert_detect_ci_failures_ok_json assert_detect_ci_failures_error_json
 export -f assert_detect_report_tech_debt_ok_json assert_detect_report_tech_debt_error_json
+export -f assert_detect_refactor_ok_json assert_detect_refactor_error_json
 export -f assert_loop_run_log_entry_json

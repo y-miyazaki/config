@@ -13,6 +13,9 @@
 # - Execute/finalize jobs download the artifact and resolve by handoff_key
 #######################################
 
+#######################################
+# Global variables
+#######################################
 LOOP_HANDOFF_VERSION=1
 
 #######################################

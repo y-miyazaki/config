@@ -289,6 +289,7 @@ Caller/workflow steps: [Loop Caller Workflows Design](loop-caller-workflows-desi
 | **loop-ci-sweeper**       | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md)             | `on-loop-ci-sweeper.yaml`       |
 | **loop-docs-triage**      | [Docs Triage Workflow Design](workflows/loop-docs-triage-workflow-design.md)           | `on-loop-docs-triage.yaml`      |
 | **loop-report-tech-debt** | [Report Tech Debt Workflow Design](workflows/loop-report-tech-debt-workflow-design.md) | `on-loop-report-tech-debt.yaml` |
+| **loop-refactor**         | [Refactor Workflow Design](workflows/loop-refactor-workflow-design.md)                 | `on-loop-refactor.yaml`         |
 
 Add new loops as `docs/explanation/loop-engineering/workflows/<name>-workflow-design.md` without growing this file.
 

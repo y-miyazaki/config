@@ -16,6 +16,10 @@
 if [[ ${_LOOP_LIB_LOADED:-} == "true" ]]; then
     return 0
 fi
+
+#######################################
+# Global variables
+#######################################
 _LOOP_LIB_LOADED=true
 
 LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

@@ -186,13 +186,23 @@ Refactoring loops (`loop-refactor-*`, TBD) are **action loops** that apply code 
 
 ## Implementation Checklist
 
-- [x] `loop-report-tech-debt/scripts/detect_report_tech_debt.sh` (signals output + enrich fields)
+Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loops-design.md#implementation-phases).
+
+### Platform (all loops)
+
+- [x] `loop-report-tech-debt/scripts/detect_report_tech_debt.sh` (facts output)
+- [x] `on-loop-report-tech-debt.yaml` dogfood caller via `ci-loop-caller`
+- [x] `branch_match` + per-branch `targets["integration:<branch>"]`
+- [x] State migration: flat `last_sha` removed (`targets` map only)
+- [x] `target_matrix` through detect → matrix execute/finalize
+- [x] `verifier_context` on execute path (`build_verifier_context_from_result` `.signals` branch)
+- [x] Merge-gated state via `on-loop-state-promote.yaml` (`pending` → `last_sha`)
+- [x] Readable PR body: agent Overview/Summary + finalize Run Metadata (`render_pr_body.sh`, `loop-notify-pr`)
+
+### Loop-specific
+
 - [x] APM package rename: `loop-tech-debt` → `loop-report-tech-debt`
-- [x] `on-loop-report-tech-debt.yaml` caller (cron `0 8 * * 1`)
 - [x] `.loop/loop-budget.json` entry for `report-tech-debt`
-- [ ] Per-branch `targets["integration:<branch>"]`
-- [ ] `target_matrix` through detect → matrix execute/finalize
-- [ ] `verifier_context` on execute path
 
 ## References
 

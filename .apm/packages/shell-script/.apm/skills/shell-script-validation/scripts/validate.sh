@@ -40,6 +40,11 @@ export LC_ALL=C.UTF-8
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Load all-in-one library
+# shellcheck source=./lib/all.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/lib/all.sh"
+
 #######################################
 # Global variables
 #######################################
@@ -49,11 +54,6 @@ QUIET=false
 WORKSPACE_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 # Global variable for script search paths
 SEARCH_PATHS=()
-
-# Load all-in-one library
-# shellcheck source=./lib/all.sh
-# shellcheck disable=SC1091
-source "${SCRIPT_DIR}/lib/all.sh"
 
 # Counters for statistics
 TOTAL_SCRIPTS=0

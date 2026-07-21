@@ -263,16 +263,27 @@ Dogfood: **`level=L2`** until [L3 promotion gate](../loop-engineering-design.md)
 
 ## Implementation Checklist
 
-- [ ] Single detect path via `loop-detect` (no caller re-run)
-- [ ] `branch_match` / `pr_enabled` (`pull_requests` wire)
-- [ ] State `targets` map; flat `last_sha` removed
-- [ ] `target_matrix` + matrix execute/finalize
-- [ ] `verifier_context` always on execute
-- [ ] Ledger via `domain_persistence_script` in `loop-finalize`
-- [ ] `outcome: watch` for Skill Watch classification
-- [ ] `loop-notify-pr` on human PR for `pull_request` mode
-- [ ] `open_pr` finalize for PR head targets (implementation migration from `push_head`-only)
+Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loops-design.md#implementation-phases).
+
+### Platform (all loops)
+
+- [x] `loop-ci-sweeper/scripts/detect_ci_failures.sh` (facts output)
+- [x] `on-loop-ci-sweeper.yaml` dogfood caller via `ci-loop-caller-full-github`
+- [x] `branch_match` + per-branch `targets["integration:<branch>"]`
+- [x] State migration: flat `last_sha` removed (`targets` map only)
+- [x] `target_matrix` through detect → matrix execute/finalize
+- [x] `verifier_context` on execute path (`build_verifier_context_from_result` `.failures` branch)
+- [x] Merge-gated state via `on-loop-state-promote.yaml` (`pending` → `last_sha`)
 - [x] Readable PR body: agent Overview/Summary + finalize Run Metadata (`render_pr_body.sh`, `loop-notify-pr`)
+
+### Loop-specific
+
+- [x] Single detect path via `loop-detect` (no caller re-run)
+- [x] `pr_enabled` (`pull_requests` wire)
+- [x] Ledger via `domain_persistence_script` in `loop-finalize`
+- [x] `outcome: watch` for Skill Watch classification
+- [x] `loop-notify-pr` on human PR for `pull_request` mode
+- [x] `open_pr` finalize for PR head targets (`finalize_pull_request` default)
 
 ## workflow_run Operational Checklist
 

@@ -17,6 +17,7 @@ Stack-specific gates. Prefer existing `*-validation` skills named in `## Instruc
 - Capture **existing** behavior only — do not expand into feature specs
 - Add tests/checks before or in the same change as the refactor when the stack is supported and no net exists
 - After tests are green on current behavior, apply O1/O2 depth (local or same-package), then re-run gates
+- Architecture Phase A (proposal): skip characterization and apply — proposal only
 
 ### Downgrade (V4)
 

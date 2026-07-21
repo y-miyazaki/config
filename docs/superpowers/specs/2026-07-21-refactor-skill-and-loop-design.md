@@ -1,6 +1,6 @@
 # Refactor Skill and Loop Design
 
-**Status:** Approved (grill-me session 2026-07-21); implementation not started  
+**Status:** Approved (grill-me session 2026-07-21); O3 intent routing added 2026-07-21  
 **Date:** 2026-07-21  
 **Primary package (Phase 1):** `.apm/packages/refactor` → skill `refactor`  
 **Future package (Phase 2):** `.apm/packages/loop-refactor` → skill `loop-refactor` + `detect_refactor.sh`  
@@ -28,7 +28,7 @@ The gap is a **shared skill contract** usable interactively and later as a loop 
 
 - Putting Apply into `loop-report-tech-debt` or renaming that loop to absorb refactor.
 - Using tech-debt report findings as the primary detect input in Phase 1–2 (R1 deferred indefinitely unless a later ADR reopens it).
-- L2 automation of deep-module redesign, GoF introduction, or schema / architecture migration (O3 — human / interactive only).
+- L2 automation of deep-module redesign, GoF introduction, or schema / architecture migration (O3 — loop L2 forbidden; interactive proposal path only).
 - Detect or skill criteria centered on lint/SAST smells (long method, naming, unused, complexity scores).
 - Default SonarQube (or similar) as detect; optional duplication-only opt-in is a later caller feature, not Phase 1.
 - Mandatory dedicated SubAgent product surface; platform Implementer / Verifier and optional explore subagents suffice.
@@ -44,6 +44,7 @@ The gap is a **shared skill contract** usable interactively and later as a loop 
 | H   | Hint kinds (Phase 2 detect) | **H1**: `duplication_block`, `oversized_unit` only. No TODO/refactor markers (those stay tech-debt). Sonar default off; future opt-in may feed **duplication only**.                               |
 | S   | Skill packaging             | **S2**: generic orchestration skill + language/stack domain via A'. No required custom SubAgent definitions.                                                                                       |
 | O   | Allowed operations (L2)     | **O2**: O1 plus shallow same-package moves and import/wiring cleanup. **O3** (deep redesign, patterns) out of L2.                                                                                  |
+| I   | Interactive O3 entry        | **Architecture-improvement intent** (natural language — not `max_tier`). Phase A: proposal only. Phase B: one O2 slice per run after explicit user approval.                                       |
 | V   | Verification                | **V4**: stack-specific gates; if insufficient for O2, auto-downgrade to O1. If no characterization net exists for a supported language, **add tests/checks first** (or same PR), then apply.       |
 | D   | Delivery order              | **D1 + D3**: design → `refactor` skill → add language domain material only when validation reuse cannot cover test-addition or O2 steps; reuse `*-validation`. Loop package after skill is stable. |
 | N   | Naming                      | **N1**: skill `refactor`; future loop package / entry `loop-refactor`.                                                                                                                             |
@@ -54,7 +55,22 @@ The gap is a **shared skill contract** usable interactively and later as a loop 
 | ---- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
 | O1   | Deduplicate; clarify expression without API change; extract/inline function or module; remove dead branch when behavior equivalence is proven | Feature changes; public API semantics changes      |
 | O2   | O1 + shallow move within the same package/module boundary; import and wiring cleanup                                                          | Cross-package redesign; new patterns; deep modules |
-| O3   | (Interactive / human) deep-module redesign, GoF, large boundary splits                                                                        | Not invoked by Phase 2 loop                        |
+| O3   | Architecture-improvement intent: Phase A proposal; Phase B one approved O2 slice per run                                                      | Not invoked by Phase 2 loop; no one-shot apply     |
+
+### Architecture-improvement intent (interactive O3 — normative)
+
+Users do **not** pass `max_tier: O3`. Classify intent from natural language before edits:
+
+| Intent           | Triggers (examples)                                                                                                                                                                       | Path                                              |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| **structural**   | dedupe, extract, clarify, shallow move; default when ambiguous                                                                                                                            | O1/O2 apply workflow                              |
+| **architecture** | architecture improvement, module boundary, deep module, redesign, responsibility split, testability at seams (JA: アーキテクチャ改善, 設計見直し, モジュール整理, 境界の見直し, 責務分離) | Phase A → user approval → Phase B (O2 slice only) |
+
+**Phase A (architecture):** explore target area; emit deepening proposal (problem, candidates, phased plan, risks). Outcome `proposal`. No cross-boundary apply.
+
+**Phase B (architecture):** user names **one** approved slice → run structural path (O2 cap) for that slice only.
+
+`constraints.max_tier` remains a **loop / tool cap** (`O1` \| `O2` only) — not the primary interactive O3 entry.
 
 ### Verification (normative)
 
@@ -78,8 +94,10 @@ Lint tools may run as part of a stack gate. Findings that are purely lint-territ
 User or agent
   → skill `refactor`
        → read ## Instructions (optional A' skill names)
+       → classify intent: structural (default) | architecture-improvement
        → pick ONE target (path/symbol) within allowlist if present
-       → ensure characterization / stack gate (add tests if supported & missing)
+       → [architecture] Phase A: proposal report only — stop unless user approved one slice
+       → [structural or Phase B] ensure characterization / stack gate (add tests if supported & missing)
        → apply O1 or O2 change (downgrade if gate weak)
        → run validation skills / commands
        → session report (structured)
@@ -120,7 +138,7 @@ Entry skill remains **repository-neutral**. Consumer caller supplies `prompt_ins
       common-output-format.md
       category-scope.md
       category-input-schema.md          # interactive + future loop envelope
-      category-operations.md            # O1/O2 closed ops; O3 out of scope
+      category-operations.md            # O1/O2 closed ops; O3 architecture intent (interactive)
       category-verification.md          # V4 + test-addition rules; lint exclusion
     scripts/                            # optional helpers; prefer validation skills
 ```
@@ -136,6 +154,7 @@ Full text lives in SKILL.md + references; this section is normative for implemen
 ### USE FOR
 
 - Behavior-preserving structural edits in O1/O2
+- Architecture-improvement requests: Phase A proposal; Phase B one approved O2 slice per run
 - Adding characterization tests/checks when the target stack is supported and no net exists
 - Invoking named validation skills listed in `## Instructions`
 
@@ -143,7 +162,8 @@ Full text lives in SKILL.md + references; this section is normative for implemen
 
 - Feature work, bugfix that changes intended behavior, dependency upgrades
 - Lint-driven cleanup as the primary mission
-- O3 architecture / pattern introduction under automation
+- One-shot cross-boundary apply or GoF introduction (architecture path is propose → approve → slice)
+- O3 apply under loop L2 automation
 - Detect script ownership or loop state management (Phase 2 entry may wrap; detect stays in `scripts/`)
 - Consuming `docs/report/report-tech-debt/**` as required input
 
@@ -151,11 +171,13 @@ Full text lives in SKILL.md + references; this section is normative for implemen
 
 1. Parse input (paths, optional hint, constraints). If nothing actionable → report No-op; stop.
 2. Load checklist + operations + verification references.
-3. Select **one** target. Prefer H1-like evidence when present; otherwise user-specified symbol/path.
-4. Establish verification foundation (add characterization tests/checks if required and language supported).
-5. Apply minimal O1/O2 diff. If O2 gate fails → O1 only or Watch.
-6. Run stack validation (A' skills / commands). On failure → repair once within scope or revert and Watch.
-7. Emit structured session report per `common-output-format.md`.
+3. Classify intent: **structural** (default) or **architecture-improvement** (`category-operations.md` triggers). Record in session report.
+4. Select **one** target. Prefer H1-like evidence when present; otherwise user-specified symbol/path.
+5. **Architecture intent, no approved slice:** Phase A — emit proposal (problem, candidates, phased plan, risks). Outcome `proposal`; stop.
+6. **Structural intent, or architecture Phase B with one approved slice:** establish verification foundation (add characterization tests/checks if required and language supported).
+7. Apply minimal O1/O2 diff. If O2 gate fails → O1 only or Watch.
+8. Run stack validation (A' skills / commands). On failure → repair once within scope or revert and Watch.
+9. Emit structured session report per `common-output-format.md`.
 
 ## Detect contract (Phase 2 — summary)
 
@@ -172,14 +194,14 @@ Prune paths: align with other loop detects (`.git`, agent roots, `node_modules`,
 
 ## Reference skills (borrow / avoid)
 
-| Source                                         | Borrow                                        | Avoid in L2 center                   |
-| ---------------------------------------------- | --------------------------------------------- | ------------------------------------ |
-| skillcreatorai-style behavior-preserving flows | Test-before/after, small steps                | Smell auto-detect as primary         |
-| apothem `refactor-extract`                     | Behavioral spec → change → regression verify  | Clean-room rewrite of large surfaces |
-| Fowler catalog                                 | Named operations for O1/O2 steps              | Full smell taxonomy overlapping lint |
-| mattpocock `tdd`                               | Red-green discipline when adding tests        | Making TDD the only entry            |
-| mattpocock `improve-codebase-architecture`     | Deep-module vocabulary for **interactive O3** | Automatic L2 deepening               |
-| VoltAgent-style broad specialists              | —                                             | GoF/DB/architecture in the loop      |
+| Source                                         | Borrow                                       | Avoid in L2 center                     |
+| ---------------------------------------------- | -------------------------------------------- | -------------------------------------- |
+| skillcreatorai-style behavior-preserving flows | Test-before/after, small steps               | Smell auto-detect as primary           |
+| apothem `refactor-extract`                     | Behavioral spec → change → regression verify | Clean-room rewrite of large surfaces   |
+| Fowler catalog                                 | Named operations for O1/O2 steps             | Full smell taxonomy overlapping lint   |
+| mattpocock `tdd`                               | Red-green discipline when adding tests       | Making TDD the only entry              |
+| mattpocock `improve-codebase-architecture`     | Deep-module vocabulary; proposal-first flow  | Automatic L2 deepening; one-shot apply |
+| VoltAgent-style broad specialists              | —                                            | GoF/DB/architecture in the loop        |
 
 ## Implementation phases
 
@@ -208,13 +230,15 @@ Prune paths: align with other loop detects (`.git`, agent roots, `node_modules`,
 
 ## Risks
 
-| Risk                                       | Mitigation                                                      |
-| ------------------------------------------ | --------------------------------------------------------------- |
-| Skill becomes lint cleanup                 | Checklist + DO NOT USE FOR; verifier REJECT lint-only diffs     |
-| Test addition expands into feature specs   | Characterization of **existing** behavior only                  |
-| O2 moves without adequate gates            | V4 downgrade to O1                                              |
-| Drift into tech-debt coupling              | Explicit non-goal; no report path in input schema v1            |
-| Token / scope blowups on full-repo explore | One target per run; allowlist; lean-ctx for agent context fetch |
+| Risk                                       | Mitigation                                                               |
+| ------------------------------------------ | ------------------------------------------------------------------------ |
+| Skill becomes lint cleanup                 | Checklist + DO NOT USE FOR; verifier REJECT lint-only diffs              |
+| Test addition expands into feature specs   | Characterization of **existing** behavior only                           |
+| O2 moves without adequate gates            | V4 downgrade to O1                                                       |
+| Architecture intent misclassified          | Default to structural when ambiguous; architecture triggers in checklist |
+| O3 one-shot apply on user request          | Phase A proposal first; Phase B one O2 slice only after approval         |
+| Drift into tech-debt coupling              | Explicit non-goal; no report path in input schema v1                     |
+| Token / scope blowups on full-repo explore | One target per run; allowlist; lean-ctx for agent context fetch          |
 
 ## Open items (explicit, non-blocking for Phase 1)
 

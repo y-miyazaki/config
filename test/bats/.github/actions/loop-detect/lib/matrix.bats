@@ -2,12 +2,15 @@
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
 # Tests for .github/actions/loop-detect/lib/matrix.sh
-
+#
 # Use cases:
 # - build_verifier_context_from_result formats changelog commits
 # - build_verifier_context_from_result returns empty for empty commits array
 # - build_verifier_context_from_result prefers explicit verifier_context
 # - build_verifier_context_from_result still formats affected_docs
+# - build_verifier_context_from_result renders refactor hints markdown
+# - build_verifier_context_from_result returns empty string for empty hints array
+# - build_verifier_context_from_result renders tech-debt signals and hotspots markdown
 # - candidate_priority_rank follows LOOP_PRIORITY order
 # - shrink_matrix_candidate_for_output strips result and sets handoff_key
 # - sort_candidates_by_priority puts integration before pull_request by default
@@ -84,6 +87,63 @@ setup() {
     [[ $output == *"affected_docs: docs/a.md"* ]]
 }
 
+@test "build_verifier_context_from_result renders refactor hints markdown" {
+    local detect_result
+    detect_result="$(jq -nc '
+        {
+            scope: "all",
+            commit_range: "abc..def",
+            hints: [
+                {kind: "oversized_unit", path: "scripts/foo.sh", detail: "file lines=450"}
+            ]
+        }
+    ')"
+    run build_verifier_context_from_result "${detect_result}"
+    [ "$status" -eq 0 ]
+    [[ $output == *"## Refactor Hints"* ]]
+    [[ $output == *"oversized_unit"* ]]
+    [[ $output == *"scripts/foo.sh"* ]]
+    [[ $output == *"file lines=450"* ]]
+}
+
+@test "build_verifier_context_from_result returns empty string for empty hints array" {
+    local detect_result
+    detect_result="$(jq -nc '{scope: "all", commit_range: "", hints: []}')"
+    run build_verifier_context_from_result "${detect_result}"
+    [ "$status" -eq 0 ]
+    [ -z "${output}" ]
+}
+
+@test "build_verifier_context_from_result renders tech-debt signals and hotspots markdown" {
+    local detect_result
+    detect_result="$(jq -nc '
+        {
+            report_file: "docs/report/report-tech-debt/2026-07-21.md",
+            previous_report: "docs/report/report-tech-debt/2026-07-14.md",
+            signals: [
+                {
+                    kind: "todo_comment",
+                    path: "src/app.go",
+                    line: 10,
+                    snippet: "// TODO: fix"
+                }
+            ],
+            hotspots: [
+                {path: "src/app.go", metric: "churn", value: 12, window: "90d"}
+            ],
+            warnings: ["sensor skipped"]
+        }
+    ')"
+    run build_verifier_context_from_result "${detect_result}"
+    [ "$status" -eq 0 ]
+    [[ $output == *"## Tech Debt Signals"* ]]
+    [[ $output == *"todo_comment"* ]]
+    [[ $output == *"src/app.go"* ]]
+    [[ $output == *"## Hotspots"* ]]
+    [[ $output == *"churn=12"* ]]
+    [[ $output == *"sensor skipped"* ]]
+}
+
 @test "candidate_priority_rank follows LOOP_PRIORITY order" {
     LOOP_PRIORITY="pull_request,integration"
 
@@ -98,22 +158,6 @@ setup() {
     run candidate_priority_rank "unknown"
     [ "$status" -eq 0 ]
     [ "$output" = "99" ]
-}
-
-@test "sort_candidates_by_priority puts integration before pull_request by default" {
-    LOOP_PRIORITY="integration,pull_request"
-    CANDIDATES_JSON=(
-        '{"target_json":{"mode":"pull_request","key":"pull_request:265"},"prompt":"pr"}'
-        '{"target_json":{"mode":"integration","key":"integration:main"},"prompt":"int"}'
-    )
-
-    sort_candidates_by_priority
-
-    [ "${#CANDIDATES_JSON[@]}" -eq 2 ]
-    run jq -r '.target_json.key' <<< "${CANDIDATES_JSON[0]}"
-    [ "$output" = "integration:main" ]
-    run jq -r '.target_json.key' <<< "${CANDIDATES_JSON[1]}"
-    [ "$output" = "pull_request:265" ]
 }
 
 @test "build_prompt_text uses detect marker instead of embedding JSON" {
@@ -134,4 +178,20 @@ setup() {
     shrunk="$(shrink_matrix_candidate_for_output "${candidate}")"
     run jq -e '.handoff_key == "integration:main" and .verifier_context == "" and (.result? | not)' <<< "${shrunk}"
     [ "$status" -eq 0 ]
+}
+
+@test "sort_candidates_by_priority puts integration before pull_request by default" {
+    LOOP_PRIORITY="integration,pull_request"
+    CANDIDATES_JSON=(
+        '{"target_json":{"mode":"pull_request","key":"pull_request:265"},"prompt":"pr"}'
+        '{"target_json":{"mode":"integration","key":"integration:main"},"prompt":"int"}'
+    )
+
+    sort_candidates_by_priority
+
+    [ "${#CANDIDATES_JSON[@]}" -eq 2 ]
+    run jq -r '.target_json.key' <<< "${CANDIDATES_JSON[0]}"
+    [ "$output" = "integration:main" ]
+    run jq -r '.target_json.key' <<< "${CANDIDATES_JSON[1]}"
+    [ "$output" = "pull_request:265" ]
 }

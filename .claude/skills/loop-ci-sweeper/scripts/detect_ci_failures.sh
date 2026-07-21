@@ -50,7 +50,8 @@ export LC_ALL=C.UTF-8
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# shellcheck source=lib/all.sh
+# Load all-in-one library
+# shellcheck source=./lib/all.sh
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/lib/all.sh"
 

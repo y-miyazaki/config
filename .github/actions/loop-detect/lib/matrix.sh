@@ -13,6 +13,9 @@
 # - Implementer prompts use LOOP_DETECT_RESULT_MARKER; detect JSON is file-backed at execute
 #######################################
 
+#######################################
+# Global variables
+#######################################
 LOOP_DETECT_RESULT_MARKER='__LOOP_DETECT_RESULT_JSON__'
 
 #######################################
@@ -188,6 +191,56 @@ function build_verifier_context_from_result {
             + "- deleted: " + ((.deleted_files // []) | join(", ")) + "\n"
             + "- renamed: " + ((.renamed_files // []) | join(", ")) + "\n"
             + "- affected_docs: " + ((.affected_docs // []) | join(", "))
+        ' <<< "${detect_result}"
+        return 0
+    fi
+
+    if jq -e '.hints' <<< "${detect_result}" > /dev/null 2>&1; then
+        jq -r '
+            if (.hints | length) == 0 then ""
+            else
+                "## Refactor Hints\n"
+                + "- scope: " + (.scope // "-") + "\n"
+                + "- commit_range: " + (.commit_range // "-") + "\n"
+                + (.hints[] |
+                    "- **\(.kind)**: `\(.path)` — \(.detail)\n"
+                )
+            end
+        ' <<< "${detect_result}"
+        return 0
+    fi
+
+    if jq -e '.signals' <<< "${detect_result}" > /dev/null 2>&1; then
+        jq -r '
+            if ((.signals // []) | length) == 0 and ((.hotspots // []) | length) == 0 then ""
+            else
+                "## Tech Debt Signals\n"
+                + "- report_file: " + (.report_file // "-") + "\n"
+                + "- previous_report: " + (.previous_report // "-") + "\n"
+                + "- signal_count: " + (((.signals // []) | length) | tostring) + "\n"
+                + "- hotspot_count: " + (((.hotspots // []) | length) | tostring) + "\n"
+                + (
+                    if ((.warnings // []) | length) == 0 then ""
+                    else "- warnings: " + ((.warnings // []) | join("; ")) + "\n"
+                    end
+                )
+                + (
+                    if ((.signals // []) | length) == 0 then ""
+                    else (.signals[:10][] |
+                        "- **\(.kind)**: `\(.path)`:\(.line) — \(.snippet // "" | .[0:120])\n"
+                    )
+                    end
+                )
+                + (
+                    if ((.hotspots // []) | length) == 0 then ""
+                    else
+                        "\n## Hotspots\n"
+                        + (.hotspots[:5][] |
+                            "- `\(.path)` \(.metric)=\(.value) (\(.window))\n"
+                        )
+                    end
+                )
+            end
         ' <<< "${detect_result}"
         return 0
     fi

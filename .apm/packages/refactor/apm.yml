@@ -1,6 +1,6 @@
 name: config-refactor
 version: 1.0.0
-description: Behavior-preserving refactor orchestration skill (O1/O2) with stack verification via Instructions
+description: Behavior-preserving refactor orchestration skill (O1/O2 apply; architecture proposal + phased slices) with stack verification via Instructions
 author: y-miyazaki
 license: Apache-2.0
 target: all

@@ -15,6 +15,10 @@
 if [[ ${_LOOP_DETECT_LIB_LOADED:-} == "true" ]]; then
     return 0
 fi
+
+#######################################
+# Global variables
+#######################################
 _LOOP_DETECT_LIB_LOADED=true
 
 LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -32,9 +36,6 @@ source "${LIB_DIR}/matrix.sh"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/handoff.sh"
 
-#######################################
-# Global variables
-#######################################
 LOOP_BRANCH_MATCH="${LOOP_BRANCH_MATCH:-glob}"
 LOOP_FINALIZE_INTEGRATION="${LOOP_FINALIZE_INTEGRATION:-open_pr}"
 LOOP_FINALIZE_PULL_REQUEST="${LOOP_FINALIZE_PULL_REQUEST:-open_pr}"

@@ -52,11 +52,10 @@ REPO_ROOT="$(git rev-parse --show-toplevel 2> /dev/null || echo "${SCRIPT_DIR}/.
 #######################################
 # Global variables
 #######################################
-VERBOSE=false
 export VERBOSE
+DB_TYPE="all"
 DRY_RUN=false
 FORCE_INSTALL=false
-DB_TYPE="all"
 SKIP_JAVA=false
 SKIP_GRAPHVIZ=false
 SKIP_SCHEMASPY=false

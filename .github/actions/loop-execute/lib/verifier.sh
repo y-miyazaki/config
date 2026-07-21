@@ -12,6 +12,9 @@
 # - Verifier output prefers fenced JSON; legacy formats are fallback only
 #######################################
 
+#######################################
+# Global variables
+#######################################
 parsed=""
 verdict=""
 reason=""
