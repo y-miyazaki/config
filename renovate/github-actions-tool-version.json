@@ -232,7 +232,7 @@
       "matchStrings": [
         "zizmor_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
       ],
-      "depNameTemplate": "woodruffw/zizmor",
+      "depNameTemplate": "zizmorcore/zizmor",
       "datasourceTemplate": "github-releases",
       "extractVersionTemplate": "^v(?<version>.*)$"
     }

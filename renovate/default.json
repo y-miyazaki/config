@@ -272,9 +272,13 @@
       "addLabels": ["trivy"]
     },
     {
-      "description": "Rules: Group zizmor updates across GitHub Actions workflow inputs and mise",
+      "description": "Rules: Group zizmor updates across GitHub Actions workflow inputs, mise, and pre-commit",
       "groupName": "zizmor",
-      "matchPackageNames": ["woodruffw/zizmor", "aqua:zizmorcore/zizmor"],
+      "matchPackageNames": [
+        "zizmorcore/zizmor",
+        "aqua:zizmorcore/zizmor",
+        "zizmorcore/zizmor-pre-commit"
+      ],
       "commitMessagePrefix": "renovate(zizmor):",
       "addLabels": ["zizmor"]
     },

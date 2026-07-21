@@ -153,20 +153,20 @@ Reference: Verifying if minimumReleaseAge applies to images via ECR pull-through
 
 ### Cross-File Grouping Rules
 
-Tools that appear in both GitHub Actions workflow inputs (`github-actions-tool-version.json`) and mise (`mise.toml`) are grouped into a single PR per tool using `groupName`. This avoids version drift between CI and local development environments.
+Tools that appear in GitHub Actions workflow inputs (`github-actions-tool-version.json`), mise (`mise.toml`), and/or pre-commit (`pre-commit-config-tool-version.json`) are grouped into a single PR per tool using `groupName`. This avoids version drift between CI, local development, and pre-commit hooks.
 
-| Group         | GitHub Actions input package                 | mise package                    |
-| ------------- | -------------------------------------------- | ------------------------------- |
-| ecspresso     | `kayac/ecspresso`                            | `aqua:kayac/ecspresso`          |
-| ecschedule    | `Songmu/ecschedule`                          | `aqua:Songmu/ecschedule`        |
-| golangci-lint | `golangci/golangci-lint`                     | `aqua:golangci/golangci-lint`   |
-| goreleaser    | `goreleaser/goreleaser`                      | `aqua:goreleaser/goreleaser`    |
-| lean-ctx      | `lean-ctx-bin` (apm.yml MCP)                 | `npm:lean-ctx-bin` (mise)       |
-| mise          | `jdx/mise` (workflow input + Dockerfile ARG) | —                               |
-| terraform     | `hashicorp/terraform`                        | `aqua:hashicorp/terraform`      |
-| tflint        | `terraform-linters/tflint`                   | `aqua:terraform-linters/tflint` |
-| trivy         | `aquasecurity/trivy`                         | `aqua:aquasecurity/trivy`       |
-| zizmor        | `woodruffw/zizmor`                           | `aqua:zizmorcore/zizmor`        |
+| Group         | GitHub Actions input package                 | mise package                    | pre-commit package             |
+| ------------- | -------------------------------------------- | ------------------------------- | ------------------------------ |
+| ecspresso     | `kayac/ecspresso`                            | `aqua:kayac/ecspresso`          | —                              |
+| ecschedule    | `Songmu/ecschedule`                          | `aqua:Songmu/ecschedule`        | —                              |
+| golangci-lint | `golangci/golangci-lint`                     | `aqua:golangci/golangci-lint`   | —                              |
+| goreleaser    | `goreleaser/goreleaser`                      | `aqua:goreleaser/goreleaser`    | —                              |
+| lean-ctx      | `lean-ctx-bin` (apm.yml MCP)                 | `npm:lean-ctx-bin` (mise)       | —                              |
+| mise          | `jdx/mise` (workflow input + Dockerfile ARG) | —                               | —                              |
+| terraform     | `hashicorp/terraform`                        | `aqua:hashicorp/terraform`      | —                              |
+| tflint        | `terraform-linters/tflint`                   | `aqua:terraform-linters/tflint` | —                              |
+| trivy         | `aquasecurity/trivy`                         | `aqua:aquasecurity/trivy`       | —                              |
+| zizmor        | `zizmorcore/zizmor`                          | `aqua:zizmorcore/zizmor`        | `zizmorcore/zizmor-pre-commit` |
 
 Each group rule sets:
 
@@ -205,7 +205,7 @@ Enabled managers include:
 - `Songmu/ecschedule`
 - `hashicorp/terraform`
 - `terraform-linters/tflint`
-- `woodruffw/zizmor`
+- `zizmorcore/zizmor`
 - `golangci/golangci-lint`
 - `golang/vuln` (uses `extractVersionTemplate` to parse `govulncheck/vX.Y.Z` tags)
 - `golang/go`
