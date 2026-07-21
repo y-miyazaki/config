@@ -54,7 +54,7 @@ claude = "2.1.209"                               # Claude Code CLI
   "node",
 ], install_env = { NPM_CONFIG_IGNORE_SCRIPTS = "true" } } # AWS profile switcher
 "aqua:kayac/ecspresso" = "2.8.5"    # ECS deployment tool
-"aqua:Songmu/ecschedule" = "0.19.0" # ECS scheduled tasks deployment tool
+"aqua:Songmu/ecschedule" = "0.20.0" # ECS scheduled tasks deployment tool
 "pipx:aws-mfa" = { version = "0.0.12", depends = ["python"] } # AWS MFA helper
 
 # GitHub related tools
