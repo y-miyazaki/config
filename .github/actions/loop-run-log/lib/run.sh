@@ -52,13 +52,13 @@ WORKFLOW_RUN="${WORKFLOW_RUN:-}"
 #######################################
 # append_run_log_entry: Build JSON entry and append to run log file
 #
-# Arguments:
-#   $1 - Duration in seconds
-#
 # Globals:
 #   RUN_LOG_FILE - Target run log path
 #   ATTEMPTS, HAS_CHANGES, LOOP_NAME, OUTCOME, SKIP_REASON, TOKENS_ESTIMATE
 #   VERDICT, WORKFLOW_RUN, USAGE_JSON - Entry fields
+#
+# Arguments:
+#   $1 - Duration in seconds
 #
 # Outputs:
 #   Entry JSON on stdout
@@ -89,12 +89,12 @@ function append_run_log_entry {
 #######################################
 # resolve_duration_s: Resolve run duration from explicit input or start time
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   DURATION_S_INPUT - Optional explicit duration
 #   RUN_STARTED_AT - Optional ISO start timestamp
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   Duration seconds on stdout
@@ -114,13 +114,13 @@ function resolve_duration_s {
 #######################################
 # validate_required_inputs: Validate required loop-run-log environment
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   LOOP_NAME - Required loop identifier
 #   OUTCOME - Required run outcome
 #   TOKEN - Required GitHub token for push
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -138,11 +138,11 @@ function validate_required_inputs {
 #######################################
 # write_entry_json_output: Write entry_json multiline output when GITHUB_OUTPUT is set
 #
-# Arguments:
-#   $1 - JSON entry string
-#
 # Globals:
 #   GITHUB_OUTPUT - Optional GitHub Actions output file path
+#
+# Arguments:
+#   $1 - JSON entry string
 #
 # Outputs:
 #   None
@@ -170,11 +170,11 @@ function write_entry_json_output {
 #######################################
 # main: Append run log entry and push to base branch
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   BASE_BRANCH - Branch for commit and PR fallback
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None

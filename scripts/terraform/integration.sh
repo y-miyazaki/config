@@ -31,10 +31,10 @@ source "${SCRIPT_DIR}/../lib/all.sh"
 # Description:
 #   Displays usage information for the script, including required environment variables and examples
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -85,10 +85,10 @@ fi
 # Description:
 #   Runs additional checks including tflint linting and trivy security scanning
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -131,11 +131,11 @@ function run_additional_checks {
 # Description:
 #   Runs the Terraform workflow for planning (without applying changes)
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   ENV - Environment for workflow
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -157,12 +157,12 @@ function run_terraform_workflow {
 # Description:
 #   Validates Terraform environment and dependencies, then changes to target directory
 #
-# Arguments:
-#   $1 - Target directory path
-#
 # Globals:
 #   ENV - Environment variable
 #   TF_PLUGIN_CACHE_DIR - Terraform plugin cache directory
+#
+# Arguments:
+#   $1 - Target directory path
 #
 # Outputs:
 #   None
@@ -195,11 +195,11 @@ function validate_and_prepare {
 # Description:
 #   Main function to execute the script logic for Terraform integration testing
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None

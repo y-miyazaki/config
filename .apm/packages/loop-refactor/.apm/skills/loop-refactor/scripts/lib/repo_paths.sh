@@ -27,15 +27,15 @@ declare -A REPO_PATHS_GITIGNORE_CACHE=()
 # append the scannable side to deleted_files or changed_files when git diff filters
 # omit it, and always record old->new in renamed_files for downstream rename logic.
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Old repository-relative path
 #   $2 - New repository-relative path
 #   $3 - Name reference to renamed_files array (old->new strings)
 #   $4 - Name reference to deleted_files array
 #   $5 - Name reference to changed_files array
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -89,12 +89,12 @@ function repo_apply_git_rename {
 #######################################
 # repo_array_append_unique: Append a path to an array when absent
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Name reference to output array
 #   $2 - Repository-relative path to append
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -122,13 +122,13 @@ function repo_array_append_unique {
 #######################################
 # repo_append_find_prune_args: Append standard find prune predicates to an array
 #
-# Arguments:
-#   $1 - Name reference to find argument array
-#   $@ - Optional extra repository-relative prune roots (merged with REPO_PATHS_EXTRA_PRUNES)
-#
 # Globals:
 #   REPO_PATHS_EXTRA_PRUNES - Comma-separated repository-relative prune roots
 #   REPO_PATHS_INCLUDE_AGENTS - When true, do not prune agent directories
+#
+# Arguments:
+#   $1 - Name reference to find argument array
+#   $@ - Optional extra repository-relative prune roots (merged with REPO_PATHS_EXTRA_PRUNES)
 #
 # Outputs:
 #   None
@@ -168,13 +168,13 @@ function repo_append_find_prune_args {
 #######################################
 # repo_emit_tracked_paths: Emit filtered tracked repository paths
 #
-# Arguments:
-#   $1 - Optional extended-regex path filter (empty = all tracked paths)
-#
 # Globals:
 #   REPO_PATHS_EXTRA_PRUNES - Comma-separated repository-relative prune roots
 #   REPO_PATHS_INCLUDE_AGENTS - When true, do not exclude agent directories
 #   REPO_PATHS_INCLUDE_GITIGNORED - When true, do not exclude gitignored paths
+#
+# Arguments:
+#   $1 - Optional extended-regex path filter (empty = all tracked paths)
 #
 # Outputs:
 #   Filtered repository-relative paths on stdout (one per line)
@@ -209,13 +209,13 @@ function repo_emit_tracked_paths {
 #######################################
 # repo_filter_paths: Emit stdin paths that should be scanned
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   REPO_PATHS_EXTRA_PRUNES - Comma-separated repository-relative prune roots
 #   REPO_PATHS_INCLUDE_AGENTS - When true, do not exclude agent directories
 #   REPO_PATHS_INCLUDE_GITIGNORED - When true, do not exclude gitignored paths
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   Filtered repository-relative paths on stdout (one per line)
@@ -243,11 +243,11 @@ function repo_filter_paths {
 #######################################
 # repo_list_extra_prune_roots: Emit merged env and call-time prune roots
 #
-# Arguments:
-#   $@ - Optional extra repository-relative prune roots
-#
 # Globals:
 #   REPO_PATHS_EXTRA_PRUNES - Comma-separated repository-relative prune roots
+#
+# Arguments:
+#   $@ - Optional extra repository-relative prune roots
 #
 # Outputs:
 #   Repository-relative prune roots on stdout (one per line)
@@ -287,11 +287,11 @@ function repo_list_extra_prune_roots {
 # segment (filename) is never excluded by this rule. Structural scannable
 # dot directories are .github and .apm only.
 #
-# Arguments:
-#   $1 - Repository-relative file path
-#
 # Globals:
 #   REPO_PATHS_INCLUDE_AGENTS - When true, agent directory segments are scannable
+#
+# Arguments:
+#   $1 - Repository-relative file path
 #
 # Outputs:
 #   None
@@ -339,11 +339,11 @@ function repo_path_has_excluded_dot_directory {
 #######################################
 # repo_path_is_generated_or_agent: Return whether a path is generated or agent-local
 #
-# Arguments:
-#   $1 - Repository-relative file path
-#
 # Globals:
 #   REPO_PATHS_INCLUDE_AGENTS - When true, do not treat agent directories as generated
+#
+# Arguments:
+#   $1 - Repository-relative file path
 #
 # Outputs:
 #   None
@@ -390,12 +390,12 @@ function repo_path_is_generated_or_agent {
 #######################################
 # repo_path_is_gitignored: Return whether git ignores a repository path
 #
-# Arguments:
-#   $1 - Repository-relative file path
-#
 # Globals:
 #   REPO_PATHS_GITIGNORE_CACHE - Memoized git check-ignore results per path
 #   REPO_PATHS_INCLUDE_GITIGNORED - When true, never treat paths as ignored
+#
+# Arguments:
+#   $1 - Repository-relative file path
 #
 # Outputs:
 #   None
@@ -449,12 +449,12 @@ function repo_path_is_gitignored {
 #######################################
 # repo_path_matches_extra_prune: Return whether a path matches extra prune roots
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Repository-relative file path
 #   $@ - Extra repository-relative prune roots
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -485,14 +485,14 @@ function repo_path_matches_extra_prune {
 #######################################
 # repo_path_should_skip: Return whether a repository path should be excluded
 #
-# Arguments:
-#   $1 - Repository-relative file path
-#   $@ - Optional extra repository-relative prune roots (merged with REPO_PATHS_EXTRA_PRUNES)
-#
 # Globals:
 #   REPO_PATHS_EXTRA_PRUNES - Comma-separated repository-relative prune roots
 #   REPO_PATHS_INCLUDE_AGENTS - When true, do not exclude agent directories
 #   REPO_PATHS_INCLUDE_GITIGNORED - When true, do not exclude gitignored paths
+#
+# Arguments:
+#   $1 - Repository-relative file path
+#   $@ - Optional extra repository-relative prune roots (merged with REPO_PATHS_EXTRA_PRUNES)
 #
 # Outputs:
 #   None
@@ -516,13 +516,13 @@ function repo_path_should_skip {
 #######################################
 # repo_path_should_skip_base: Compose standard detect path exclusions
 #
-# Arguments:
-#   $1 - Repository-relative file path
-#   $@ - Optional extra repository-relative prune roots
-#
 # Globals:
 #   REPO_PATHS_INCLUDE_AGENTS - When true, do not exclude agent directories
 #   REPO_PATHS_INCLUDE_GITIGNORED - When true, do not exclude gitignored paths
+#
+# Arguments:
+#   $1 - Repository-relative file path
+#   $@ - Optional extra repository-relative prune roots
 #
 # Outputs:
 #   None

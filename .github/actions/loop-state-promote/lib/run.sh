@@ -41,15 +41,15 @@ WRITE_MODE=""
 #######################################
 # apply_pending_update: Apply promote or clear_pending jq transform for one target
 #
+# Globals:
+#   PR_NUMBER - Pull request number to match
+#
 # Arguments:
 #   $1 - State temp file path
 #   $2 - Target key
 #   $3 - ISO timestamp
 #   $4 - Outcome string (merged|pr-closed)
 #   $5 - Write mode (promote|clear_pending)
-#
-# Globals:
-#   PR_NUMBER - Pull request number to match
 #
 # Outputs:
 #   None
@@ -112,13 +112,13 @@ function apply_pending_update {
 #######################################
 # commit_changed_state_files: Commit and push modified state files
 #
-# Arguments:
-#   $1 - State push branch
-#   $@ - Changed state file paths
-#
 # Globals:
 #   PR_NUMBER - Pull request number for commit message
 #   WRITE_MODE - promote|clear_pending
+#
+# Arguments:
+#   $1 - State push branch
+#   $@ - Changed state file paths
 #
 # Outputs:
 #   None
@@ -155,13 +155,13 @@ function commit_changed_state_files {
 #######################################
 # open_state_pr_fallback: Open auto-merge state PR when direct push is blocked
 #
-# Arguments:
-#   $1 - Base branch for the state PR
-#
 # Globals:
 #   PR_NUMBER - Closed pull request number
 #   WRITE_MODE - promote|clear_pending
 #   GH_TOKEN - GitHub token
+#
+# Arguments:
+#   $1 - Base branch for the state PR
 #
 # Outputs:
 #   None
@@ -199,11 +199,11 @@ function open_state_pr_fallback {
 #######################################
 # configure_git_auth: Configure git identity and GitHub auth header
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   GH_TOKEN - GitHub token
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -223,11 +223,11 @@ function configure_git_auth {
 #######################################
 # list_state_files: List loop state JSON paths on a branch
 #
-# Arguments:
-#   $1 - Branch name
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Branch name
 #
 # Outputs:
 #   Newline-separated state file paths on stdout
@@ -246,11 +246,11 @@ function list_state_files {
 #######################################
 # validate_state_push_branch: Validate resolved state push branch name
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   STATE_PUSH_BRANCH - Branch name set in main before call
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -269,12 +269,12 @@ function validate_state_push_branch {
 #######################################
 # discover_state_push_branches: Resolve the single branch that hosts loop state
 #
-# Arguments:
-#   $1 - Pull request number (unused; kept for call-site compatibility)
-#
 # Globals:
 #   STATE_PUSH_BRANCH - Optional explicit branch override
 #   GITHUB_REPOSITORY - Repository slug for default-branch lookup
+#
+# Arguments:
+#   $1 - Pull request number (unused; kept for call-site compatibility)
 #
 # Outputs:
 #   One branch name on stdout (explicit override or repository default)
@@ -299,14 +299,14 @@ function discover_state_push_branches {
 #######################################
 # process_state_push_branch: Promote or clear pending state on one branch
 #
-# Arguments:
-#   $1 - Branch name
-#
 # Globals:
 #   PR_NUMBER - Closed pull request number
 #   MERGED - Whether the pull request merged
 #   OUTCOME - Set from MERGED flag
 #   WRITE_MODE - promote|clear_pending
+#
+# Arguments:
+#   $1 - Branch name
 #
 # Outputs:
 #   None
@@ -373,15 +373,15 @@ function process_state_push_branch {
 #######################################
 # main: Promote or clear pending state for a closed pull request
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   MERGED - Whether the pull request merged
 #   PR_NUMBER - Closed pull request number
 #   STATE_PUSH_BRANCH - Optional branch override for .loop/* state files
 #   OUTCOME - Set from MERGED flag
 #   WRITE_MODE - promote|clear_pending
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None

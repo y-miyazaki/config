@@ -14,15 +14,15 @@
 #######################################
 # budget_exceeded: Return 0 when daily budget is exceeded
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Loop name
 #   $2 - Budget file path
 #   $3 - Run log file path
 #   $4 - Default max runs per day
 #   $5 - Default max tokens per day
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -85,14 +85,14 @@ function budget_exceeded {
 #######################################
 # read_budget_limits: Echo max_runs and max_tokens for loop name
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Loop name
 #   $2 - Budget file path
 #   $3 - Default max runs
 #   $4 - Default max tokens
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   "max_runs max_tokens" on stdout
@@ -120,11 +120,11 @@ function read_budget_limits {
 #######################################
 # target_circuit_breaker_open: Return 0 when consecutive_failures >= 3
 #
-# Arguments:
-#   $1 - Consecutive failure count
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Consecutive failure count
 #
 # Outputs:
 #   None

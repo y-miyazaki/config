@@ -34,11 +34,11 @@ fi
 # Description:
 #   Executes AWS CLI commands with proper error handling and logging
 #
-# Arguments:
-#   $@ - AWS CLI command and arguments
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - AWS CLI command and arguments
 #
 # Outputs:
 #   Writes command result to stdout
@@ -96,12 +96,12 @@ function aws_safe_exec {
 # Description:
 #   Executes AWS CLI commands with automatic retry and exponential backoff
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - max retries (optional, defaults to 3)
 #   $@ - AWS CLI command and arguments
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Writes command result to stdout
@@ -172,12 +172,12 @@ function aws_retry_exec {
 # Description:
 #   Handles pagination for AWS CLI list operations that use NextToken
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - jq array key for extracting items
 #   $@ - AWS CLI command and arguments
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Writes each JSON array item line-by-line to stdout
@@ -294,10 +294,10 @@ function aws_paginate_items {
 # Description:
 #   Validates AWS credentials by attempting to get caller identity
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -327,14 +327,14 @@ function check_aws_credentials {
 # Description:
 #   Extracts array values from JSON using jq and joins them with a separator
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - JSON data
 #   $2 - jq query for array
 #   $3 - default value (optional, defaults to "N/A")
 #   $4 - separator (optional, defaults to ",")
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Comma-separated values or custom separator-separated values to stdout
@@ -384,13 +384,13 @@ function extract_jq_array {
 # Description:
 #   Extracts a single value from JSON using jq with default value support
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - JSON data
 #   $2 - jq query
 #   $3 - default value (optional, defaults to "N/A")
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Extracted value or default to stdout
@@ -434,11 +434,11 @@ function extract_jq_value {
 # Description:
 #   Converts Unix timestamp (seconds or milliseconds) to human-readable date format
 #
-# Arguments:
-#   $1 - Unix timestamp (seconds or milliseconds)
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Unix timestamp (seconds or milliseconds)
 #
 # Outputs:
 #   Formatted date string (YYYY-MM-DD HH:MM:SS) or "N/A" to stdout
@@ -479,10 +479,10 @@ function format_aws_timestamp {
 # Description:
 #   Retrieves the current AWS account ID from caller identity
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -511,10 +511,10 @@ function get_aws_account_id {
 # Description:
 #   Determines the current AWS region from configuration or instance metadata
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -554,12 +554,12 @@ function get_aws_region {
 # Description:
 #   Resolves a KMS Key ARN or Key ID to a human-friendly alias/name
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - KMS Key ARN or Key ID
 #   $2 - AWS region (optional, defaults to current region)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   KMS alias/name or original input to stdout
@@ -625,12 +625,12 @@ function get_kms_name {
 # Description:
 #   Resolves a Security Group ID to a human-friendly name using tags
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Security Group ID
 #   $2 - AWS region (optional, defaults to current region)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Security Group name or original ID to stdout
@@ -685,12 +685,12 @@ function get_security_group_name {
 # Description:
 #   Resolves a Subnet ID to a human-friendly name using tags
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Subnet ID
 #   $2 - AWS region (optional, defaults to current region)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Subnet name or original ID to stdout
@@ -745,11 +745,11 @@ function get_subnet_name {
 # Description:
 #   Extracts the resource name from an AWS ARN
 #
-# Arguments:
-#   $1 - AWS ARN
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - AWS ARN
 #
 # Outputs:
 #   Resource name (to stdout) or exits on error
@@ -788,12 +788,12 @@ function get_resource_name_from_arn {
 # Description:
 #   Resolves a VPC ID to a human-friendly name using tags
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - VPC ID
 #   $2 - AWS region (optional, defaults to current region)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   VPC name or original ID to stdout
@@ -848,12 +848,12 @@ function get_vpc_name {
 # Description:
 #   Retrieves the WAF Web ACL ARN associated with a resource
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Resource ARN
 #   $2 - AWS region
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   WAF Web ACL ARN or "N/A" to stdout
@@ -882,12 +882,12 @@ function get_waf_association {
 # Description:
 #   Resolves a WAFv2 WebACL ARN to its human-friendly Name
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - WAF WebACL ARN
 #   $2 - AWS region (optional, defaults to current region)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   WebACL Name or ARN to stdout
@@ -946,12 +946,12 @@ function get_waf_name {
 # Description:
 #   Checks if a specific AWS service is available in the given region
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - AWS service name
 #   $2 - AWS region (optional, defaults to current region)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -1010,11 +1010,11 @@ function is_service_available_in_region {
 # Description:
 #   Parses an AWS ARN into its component parts
 #
-# Arguments:
-#   $1 - AWS ARN
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - AWS ARN
 #
 # Outputs:
 #   JSON object with ARN components (to stdout) or exits on error
@@ -1060,10 +1060,10 @@ function parse_arn {
 # Description:
 #   Validates that AWS CLI is properly configured and accessible
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:

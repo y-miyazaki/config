@@ -40,12 +40,12 @@ Append one entry per run. Prune entries older than 30 days.
 #   Reads existing JSONL lines, drops entries older than 30 days, and writes the
 #   markdown header plus kept lines plus the new entry_json.
 #
+# Globals:
+#   RUN_LOG_HEADER - Markdown header prepended on each rewrite
+#
 # Arguments:
 #   $1 - Run log file path
 #   $2 - JSON log entry to append
-#
-# Globals:
-#   RUN_LOG_HEADER - Markdown header prepended on each rewrite
 #
 # Outputs:
 #   None
@@ -92,6 +92,9 @@ function loop_run_log_append_entry {
 #   Assembles the JSONL entry for a single loop run. Always includes
 #   tokens_estimate; merges usage_json when measured usage is available.
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1  - Attempt count (empty when execute did not run)
 #   $2  - Duration in seconds
@@ -103,9 +106,6 @@ function loop_run_log_append_entry {
 #   $8  - Verifier verdict (optional)
 #   $9  - Workflow run id
 #   $10 - Measured usage JSON (optional)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   JSON object to stdout
@@ -163,13 +163,13 @@ function loop_run_log_build_entry {
 #   Commits the run log file when changed. Pushes directly when allowed; otherwise
 #   opens a squash-merge PR against base_branch.
 #
+# Globals:
+#   GITHUB_REPOSITORY, GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT - Used for PR metadata
+#
 # Arguments:
 #   $1 - Base branch for PR fallback
 #   $2 - Run log file path
 #   $3 - GitHub token
-#
-# Globals:
-#   GITHUB_REPOSITORY, GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT - Used for PR metadata
 #
 # Outputs:
 #   None
@@ -223,11 +223,11 @@ function loop_run_log_commit_and_push {
 #######################################
 # loop_run_log_compute_duration: Compute run duration from ISO start timestamp
 #
-# Arguments:
-#   $1 - Run start timestamp (ISO 8601, empty returns 0)
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Run start timestamp (ISO 8601, empty returns 0)
 #
 # Outputs:
 #   Elapsed seconds to stdout
@@ -256,10 +256,10 @@ function loop_run_log_compute_duration {
 #######################################
 # loop_run_log_prune_cutoff_date: Return UTC date string for 30-day prune window
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:

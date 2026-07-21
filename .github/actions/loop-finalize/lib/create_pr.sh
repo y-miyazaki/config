@@ -51,9 +51,6 @@ TARGET_JSON="${TARGET_JSON:-}"
 #######################################
 # main: Resolve payloads, compose body, create PR
 #
-# Arguments:
-#   $@ - Unused (reads environment variables)
-#
 # Globals:
 #   BRANCH - Head branch for the new PR
 #   DETECT_RESULT_JSON - Inline detect JSON (optional)
@@ -70,6 +67,9 @@ TARGET_JSON="${TARGET_JSON:-}"
 #   PR_TITLE - PR title
 #   SKIP_REASON - Footer skip reason (optional)
 #   TARGET_JSON - Target JSON (optional)
+#
+# Arguments:
+#   $@ - Unused (reads environment variables)
 #
 # Outputs:
 #   PR URL to stdout; url and number to GITHUB_OUTPUT when set

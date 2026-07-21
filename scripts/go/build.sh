@@ -45,10 +45,10 @@ MIN_VERSION="1.25"
 # Description:
 #   Displays usage information for the script, including options and examples
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -90,11 +90,11 @@ EOF
 # Description:
 #   Parses command line arguments and sets global variables accordingly
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None
@@ -157,11 +157,11 @@ function parse_arguments {
 # Description:
 #   Builds a single Go Lambda function from a main.go file
 #
-# Arguments:
-#   $1 - Path to the main.go file
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Path to the main.go file
 #
 # Outputs:
 #   None
@@ -207,11 +207,11 @@ function build_function {
 # Description:
 #   Builds all Go Lambda functions from the provided list of main.go files
 #
-# Arguments:
-#   $1 - Newline-separated list of main.go file paths
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Newline-separated list of main.go file paths
 #
 # Outputs:
 #   None
@@ -258,10 +258,10 @@ function build_lambda_functions {
 # Description:
 #   Finds all main.go files in the source directory to build Lambda functions
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -298,10 +298,10 @@ function find_lambda_functions {
 # Description:
 #   Sets up the build environment by updating dependencies and creating output directories
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -340,10 +340,10 @@ function prepare_build_environment {
 # Description:
 #   Validates that Go is installed and meets minimum version requirements
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -378,11 +378,11 @@ function validate_go_environment {
 # Description:
 #   Main entry point that orchestrates the build process
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None

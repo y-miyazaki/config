@@ -56,11 +56,11 @@ STATE_FILE="${STATE_FILE-}"
 # Must run before any target checkout. Relative detect scripts otherwise resolve
 # against the watched branch worktree (stale PR heads can ship older detect logic).
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   DETECT_SCRIPT - Updated in place to an absolute path
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -111,11 +111,11 @@ function resolve_detect_script_path {
 # Callers may also set LOOP_SCOPED_HEAD_BRANCH explicitly (wins).
 # Empty result = scan all resolved integration branches / open PRs (schedule).
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   LOOP_SCOPED_HEAD_BRANCH, CI_SWEEPER_WORKFLOW_RUN_ID, CI_SWEEPER_EVENT_HEAD_BRANCH
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   Scoped branch name on stdout (may be empty)
@@ -147,11 +147,11 @@ function resolve_scoped_head_branch {
 # A workflow_run id without a scoped head would otherwise fall through to a full
 # watch-list scan (integration + all open PRs). Refuse that fan-out.
 #
-# Arguments:
-#   $1 - Scoped head branch from resolve_scoped_head_branch
-#
 # Globals:
 #   CI_SWEEPER_WORKFLOW_RUN_ID - when set, scoped head is required
+#
+# Arguments:
+#   $1 - Scoped head branch from resolve_scoped_head_branch
 #
 # Outputs:
 #   None
@@ -183,11 +183,11 @@ function require_scoped_head_for_workflow_run {
 # - workflow_run on PR head → only that pull_request target
 # - empty scoped head → no-op (schedule / workflow_dispatch full scan)
 #
-# Arguments:
-#   $1 - Scoped head branch (empty = no-op)
-#
 # Globals:
 #   INTEGRATION_BRANCHES, OPEN_PRS_JSON - Filtered in place
+#
+# Arguments:
+#   $1 - Scoped head branch (empty = no-op)
 #
 # Outputs:
 #   None
@@ -234,13 +234,13 @@ function apply_scoped_head_filter {
 #######################################
 # append_integration_candidate: Scan one integration branch
 #
-# Arguments:
-#   $1 - Branch name
-#
 # Globals:
 #   CANDIDATES_JSON - Appended when actionable work is found
 #   STATE_FILE, BASE_BRANCH, DETECT_SCRIPT, SKILL_NAME, LEVEL, ALLOWLIST
 #   PROMPT_INSTRUCTIONS, LOOP_FINALIZE_INTEGRATION
+#
+# Arguments:
+#   $1 - Branch name
 #
 # Outputs:
 #   None
@@ -318,13 +318,13 @@ function append_integration_candidate {
 #######################################
 # append_pull_request_candidate: Scan one open pull request head
 #
-# Arguments:
-#   $1 - PR JSON object
-#
 # Globals:
 #   CANDIDATES_JSON - Appended when actionable work is found
 #   STATE_FILE, BASE_BRANCH, DETECT_SCRIPT, SKILL_NAME, LEVEL, ALLOWLIST
 #   PROMPT_INSTRUCTIONS, LOOP_FINALIZE_PULL_REQUEST
+#
+# Arguments:
+#   $1 - PR JSON object
 #
 # Outputs:
 #   None
@@ -410,11 +410,11 @@ function append_pull_request_candidate {
 #######################################
 # apply_target_cap: Cap candidates at LOOP_MAX_TARGETS_PER_SCHEDULE
 #
-# Arguments:
-#   $1 - Maximum targets per schedule
-#
 # Globals:
 #   CANDIDATES_JSON - Truncated in place when over cap
+#
+# Arguments:
+#   $1 - Maximum targets per schedule
 #
 # Outputs:
 #   None
@@ -441,15 +441,15 @@ function apply_target_cap {
 #######################################
 # build_loop_candidate_json: Assemble one matrix cell from detect payloads
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Target key (for logs)
 #   $2 - target_json object string
 #   $3 - Prompt text
 #   $4 - Verifier context markdown
 #   $5 - Detect script JSON result
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Candidate JSON to stdout; non-zero when assembly fails
@@ -516,12 +516,12 @@ function build_loop_candidate_json {
 #######################################
 # checkout_context: Fetch and checkout branch at optional ref
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Branch name
 #   $2 - Optional ref (default: origin/branch)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -550,11 +550,11 @@ function checkout_context {
 #######################################
 # detect_result_skip: Return 0 when detect script JSON indicates skip
 #
-# Arguments:
-#   $1 - Detect script JSON result
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Detect script JSON result
 #
 # Outputs:
 #   None
@@ -577,12 +577,12 @@ function detect_result_skip {
 #######################################
 # enrich_target_json_with_ci_context: Add CI failure fields to target_json
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Base target_json object string
 #   $2 - Detect script JSON result
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Enriched target_json on stdout
@@ -651,11 +651,11 @@ function enrich_target_json_with_ci_context {
 #######################################
 # log_detect_error: Emit a GitHub Actions error annotation
 #
-# Arguments:
-#   $1 - Message
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Message
 #
 # Outputs:
 #   None
@@ -671,13 +671,13 @@ function log_detect_error {
 #######################################
 # log_detect_json_invalid: Log JSON validation failure with jq diagnostics
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Context (function or stage name)
 #   $2 - Label for the invalid payload (e.g. detect_result)
 #   $3 - Raw JSON string that failed validation
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -702,13 +702,13 @@ function log_detect_json_invalid {
 #######################################
 # log_detect_notice: Emit a GitHub Actions notice for detect diagnostics
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Stage name
 #   $2 - Target key or scope
 #   $3 - Detail text
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -727,11 +727,11 @@ function log_detect_notice {
 #######################################
 # validate_branch_match: Return 0 when LOOP_BRANCH_MATCH is valid
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   LOOP_BRANCH_MATCH - Match mode under validation
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -753,11 +753,11 @@ function validate_branch_match {
 #######################################
 # write_legacy_outputs: Backward-compatible single-target outputs
 #
-# Arguments:
-#   $1 - target_matrix JSON array string
-#
 # Globals:
 #   GITHUB_OUTPUT, STATE_FILE, BASE_BRANCH
+#
+# Arguments:
+#   $1 - target_matrix JSON array string
 #
 # Outputs:
 #   None
@@ -802,11 +802,11 @@ function write_legacy_outputs {
 #######################################
 # main: Entry point for loop-detect
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   CANDIDATES_JSON, INTEGRATION_BRANCHES, OPEN_PRS_JSON - Populated during run
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None

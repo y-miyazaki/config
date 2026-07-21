@@ -15,11 +15,11 @@
 #######################################
 # collect_allowlist_violations: Find changed files outside the allowlist
 #
-# Arguments:
-#   $1 - Newline-separated changed file paths
-#
 # Globals:
 #   ALLOWLIST - Comma-separated glob allowlist (optional)
+#
+# Arguments:
+#   $1 - Newline-separated changed file paths
 #
 # Outputs:
 #   Newline-separated violating paths to stdout, or nothing
@@ -56,11 +56,11 @@ function collect_allowlist_violations {
 #######################################
 # collect_denylist_violations: Find changed files matching the denylist
 #
-# Arguments:
-#   $1 - Newline-separated changed file paths
-#
 # Globals:
 #   DENYLIST - Comma-separated glob denylist
+#
+# Arguments:
+#   $1 - Newline-separated changed file paths
 #
 # Outputs:
 #   Newline-separated matching paths to stdout, or nothing
@@ -92,11 +92,11 @@ function collect_denylist_violations {
 #######################################
 # component_to_ere: Convert one path segment glob to ERE
 #
-# Arguments:
-#   $1 - Single path segment (no slashes)
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Single path segment (no slashes)
 #
 # Outputs:
 #   ERE fragment to stdout
@@ -134,11 +134,11 @@ function component_to_ere {
 #   component matches zero or more directory segments so docs/**/*.md also
 #   matches docs/index.md (bash [[ == ]] cannot express this).
 #
-# Arguments:
-#   $1 - Glob pattern (may include / and **)
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Glob pattern (may include / and **)
 #
 # Outputs:
 #   Anchored ERE to stdout
@@ -191,12 +191,12 @@ function glob_to_ere {
 #######################################
 # infer_files_from_text: Infer file paths from verifier text
 #
+# Globals:
+#   INFER_FILES_PATTERN - Optional extended-regex override
+#
 # Arguments:
 #   $1 - Verifier text to scan
 #   $2 - Fallback comma-separated file paths
-#
-# Globals:
-#   INFER_FILES_PATTERN - Optional extended-regex override
 #
 # Outputs:
 #   Comma-separated file paths to stdout
@@ -224,12 +224,12 @@ function infer_files_from_text {
 #######################################
 # path_matches_glob: Test whether a file path matches a glob pattern
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Repo-relative file path
 #   $2 - Glob pattern
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None

@@ -35,10 +35,10 @@ VALIDATE_SCRIPT="${ACTION_ROOT}/lib/validate.sh"
 # Description:
 #   Prints usage information and exits successfully.
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -67,11 +67,11 @@ EOF
 # Description:
 #   Supports --verbose and --help.
 #
-# Arguments:
-#   $@ - Command line arguments
-#
 # Globals:
 #   VERBOSE - Set to true when --verbose is passed
+#
+# Arguments:
+#   $@ - Command line arguments
 #
 # Outputs:
 #   None
@@ -108,11 +108,11 @@ function parse_arguments {
 # Description:
 #   Exports local paths and delegates to the composite action library.
 #
-# Arguments:
-#   $@ - Command line arguments
-#
 # Globals:
 #   VERBOSE - Verbose logging flag
+#
+# Arguments:
+#   $@ - Command line arguments
 #
 # Outputs:
 #   None

@@ -29,13 +29,13 @@ USAGE_MODEL=""
 #   Adds input/output token counts from terminal result events and records the
 #   model name from system init or result metadata when present.
 #
-# Arguments:
-#   $1 - Path to captured stream-json output file
-#
 # Globals:
 #   USAGE_INPUT_TOTAL - Running total of input tokens
 #   USAGE_OUTPUT_TOTAL - Running total of output tokens
 #   USAGE_MODEL - Last known model name from the stream
+#
+# Arguments:
+#   $1 - Path to captured stream-json output file
 #
 # Outputs:
 #   None
@@ -62,13 +62,13 @@ function accumulate_cursor_stream_usage {
 #   Ignores non-JSON lines. Handles system init (model) and result (usage) events.
 #   Accepts camelCase and snake_case usage field names from Cursor CLI versions.
 #
-# Arguments:
-#   $1 - Single NDJSON line from cursor stream-json output
-#
 # Globals:
 #   USAGE_INPUT_TOTAL - Incremented when result usage is present
 #   USAGE_OUTPUT_TOTAL - Incremented when result usage is present
 #   USAGE_MODEL - Set from system init or result metadata
+#
+# Arguments:
+#   $1 - Single NDJSON line from cursor stream-json output
 #
 # Outputs:
 #   None
@@ -119,13 +119,13 @@ function accumulate_cursor_usage_from_line {
 #   Emits a compact JSON object for loop-execute usage_json output and run log.
 #   Returns an empty string when no measured tokens were captured.
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   USAGE_INPUT_TOTAL - Total input tokens captured
 #   USAGE_OUTPUT_TOTAL - Total output tokens captured
 #   USAGE_MODEL - Model name when reported by the CLI
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   JSON object to stdout, or empty string when usage is unavailable
@@ -153,13 +153,13 @@ function build_usage_json {
 # Description:
 #   Resets module globals at the start of each loop-execute run.
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   USAGE_INPUT_TOTAL - Reset to 0
 #   USAGE_OUTPUT_TOTAL - Reset to 0
 #   USAGE_MODEL - Reset to empty string
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -177,11 +177,11 @@ function reset_usage_totals {
 #######################################
 # is_cursor_stream_json_file: Detect Cursor CLI stream-json capture files
 #
-# Arguments:
-#   $1 - Path to candidate capture file
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Path to candidate capture file
 #
 # Outputs:
 #   None
@@ -208,11 +208,11 @@ function is_cursor_stream_json_file {
 #   Concatenates assistant message text and falls back to the terminal result
 #   field so downstream parsers can read fenced JSON verdict blocks.
 #
-# Arguments:
-#   $1 - Path to stream-json capture file
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Path to stream-json capture file
 #
 # Outputs:
 #   Extracted assistant text to stdout
@@ -258,11 +258,11 @@ function extract_cursor_stream_text {
 #######################################
 # cursor_stream_tool_summary_line: Format one tool_call started event for logs
 #
-# Arguments:
-#   $1 - Single NDJSON line
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Single NDJSON line
 #
 # Outputs:
 #   One-line tool summary to stdout, or nothing when not a started tool call
@@ -314,11 +314,11 @@ function cursor_stream_tool_summary_line {
 #   Emits model, tool call summaries, token usage, and the extracted assistant
 #   text so tee'd artifacts remain parseable by the verifier.
 #
-# Arguments:
-#   $1 - Path to stream-json capture file
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Path to stream-json capture file
 #
 # Outputs:
 #   Human-readable summary to stdout
@@ -375,12 +375,12 @@ function render_cursor_stream_log_summary {
 #   Invokes the Cursor agent in headless stream-json mode, captures raw NDJSON
 #   for usage accounting, and prints a concise summary for CI logs.
 #
+# Globals:
+#   USAGE_INPUT_TOTAL, USAGE_OUTPUT_TOTAL, USAGE_MODEL - Updated after run
+#
 # Arguments:
 #   $1 - Agent binary name (agent or cursor-agent)
 #   $@ - Remaining arguments forwarded to the Cursor CLI
-#
-# Globals:
-#   USAGE_INPUT_TOTAL, USAGE_OUTPUT_TOTAL, USAGE_MODEL - Updated after run
 #
 # Outputs:
 #   None

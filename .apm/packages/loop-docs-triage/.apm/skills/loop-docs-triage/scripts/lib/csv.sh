@@ -18,11 +18,11 @@
 # Description:
 #   Sorts CSV data with proper handling of quoted fields containing commas and newlines
 #
-# Arguments:
-#   $1 - CSV data to sort
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - CSV data to sort
 #
 # Outputs:
 #   Sorted CSV data to stdout
@@ -79,11 +79,11 @@ except Exception as e:
 # Description:
 #   Makes values safe for CSV output by handling special characters and quoting
 #
-# Arguments:
-#   $1 - value to make CSV-safe
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - value to make CSV-safe
 #
 # Outputs:
 #   CSV-safe value with proper quoting and escaping to stdout
@@ -133,11 +133,11 @@ function make_csv_safe {
 # Description:
 #   Normalizes and quotes a value for safe CSV output with proper escaping
 #
-# Arguments:
-#   $1 - value to normalize
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - value to normalize
 #
 # Outputs:
 #   CSV-safe value; quoted when needed to stdout

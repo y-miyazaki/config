@@ -53,10 +53,10 @@ SERVICE_PATH=""
 # Description:
 #   Displays usage information for the script, including actions, options, and examples
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -100,14 +100,14 @@ EOF
 # Description:
 #   Parses command line arguments and validates required options
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   ACTION       - Set to the provided action (deploy, verify, destroy)
 #   AWS_REGION   - Set to the provided AWS region
 #   ENV          - Set to the provided target environment
 #   SERVICE_PATH - Set to the provided ECS service directory path
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None
@@ -167,14 +167,14 @@ function parse_arguments {
 #   Skips deploy if no changes detected (prevents unnecessary task definition
 #   revisions and deployment cycles)
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   ACCOUNT_ID - AWS account ID
 #   AWS_REGION - AWS region
 #   ENV        - Target environment name
 #   SERVICE_NAME - ECS service name
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -247,13 +247,13 @@ function deploy_service {
 # Description:
 #   Destroys the ECS service using ecspresso destroy
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   ACCOUNT_ID - AWS account ID
 #   AWS_REGION - AWS region
 #   ENV        - Target environment name
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -282,13 +282,13 @@ function destroy_service {
 # Description:
 #   Verifies that the ECS service configuration is valid using ecspresso verify
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   ACCOUNT_ID - AWS account ID
 #   AWS_REGION - AWS region
 #   ENV        - Target environment name
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -317,15 +317,15 @@ function verify_service {
 # Description:
 #   Main function to execute the ECS service deployment workflow
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   ACTION       - Action to perform (deploy, verify, destroy)
 #   ACCOUNT_ID   - AWS account ID
 #   AWS_REGION   - AWS region
 #   ENV          - Target environment name
 #   SERVICE_PATH - Path to ECS service directory
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None

@@ -60,10 +60,10 @@ BUILD_DIRS=(
 # Description:
 #   Displays usage information for the script, including options and examples
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -105,13 +105,13 @@ EOF
 # Description:
 #   Parses command line arguments and sets global variables accordingly
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   ROOT_DIR - Root directory to scan
 #   VERBOSE - Enable verbose output
 #   DRY_RUN - Enable dry-run mode
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None
@@ -166,11 +166,11 @@ function parse_arguments {
 #   via `od` for environments where `file` is not installed.
 #   Detects ELF (Linux), Mach-O (macOS), and PE32 (Windows) executables.
 #
-# Arguments:
-#   $1 - File path to check
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - File path to check
 #
 # Outputs:
 #   None
@@ -210,13 +210,13 @@ function is_binary_executable {
 # Description:
 #   Displays a summary of removed (or would-be-removed) files and directories
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   BINARY_COUNT - Number of binary files removed
 #   DIR_COUNT - Number of directories removed
 #   DRY_RUN - Whether running in dry-run mode
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None (outputs to stderr via log)
@@ -241,14 +241,14 @@ function print_summary {
 #   Walks ROOT_DIR recursively, identifies binary executables via `file` command,
 #   and removes them. .git/ is excluded.
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   ROOT_DIR - Root directory to scan
 #   DRY_RUN - Whether running in dry-run mode
 #   VERBOSE - Whether to show verbose output
 #   BINARY_COUNT - Incremented for each binary found
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -284,15 +284,15 @@ function remove_binary_files {
 #   Removes well-known build output directories (bin/, dist/, builds/)
 #   relative to ROOT_DIR.
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   ROOT_DIR - Root directory to scan
 #   BUILD_DIRS - Array of directories to remove
 #   DRY_RUN - Whether running in dry-run mode
 #   VERBOSE - Whether to show verbose output
 #   DIR_COUNT - Incremented for each directory removed
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -328,11 +328,11 @@ function remove_build_dirs {
 # Description:
 #   Entry point: parses arguments, runs cleanup, prints summary
 #
-# Arguments:
-#   $@ - All command line arguments
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - All command line arguments
 #
 # Outputs:
 #   None

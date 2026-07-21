@@ -42,11 +42,11 @@ WORKTREE_PATH="${WORKTREE_PATH:-}"
 #######################################
 # build_fix_summary: Template fix summary from detect facts
 #
-# Arguments:
-#   $1 - Detect result JSON
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Detect result JSON
 #
 # Outputs:
 #   Summary string to stdout
@@ -72,12 +72,12 @@ function build_fix_summary {
 #######################################
 # extract_agent_section: Extract a ## heading section from agent output
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Agent output file path
 #   $2 - Section title (e.g. Overview, Summary)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Section body to stdout (may be empty)
@@ -100,11 +100,11 @@ function extract_agent_section {
 #######################################
 # extract_agent_report_overview: Extract ## Overview section from agent output
 #
-# Arguments:
-#   $1 - Agent output file path
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Agent output file path
 #
 # Outputs:
 #   Overview section body to stdout (may be empty)
@@ -120,11 +120,11 @@ function extract_agent_report_overview {
 #######################################
 # extract_agent_report_summary: Extract ## Summary section from agent output
 #
-# Arguments:
-#   $1 - Agent output file path
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Agent output file path
 #
 # Outputs:
 #   Summary section body to stdout (may be empty)
@@ -140,11 +140,11 @@ function extract_agent_report_summary {
 #######################################
 # parse_agent_summary: Extract optional agent summary block
 #
-# Arguments:
-#   $1 - Agent output file path
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Agent output file path
 #
 # Outputs:
 #   Summary text to stdout (may be empty)
@@ -171,11 +171,11 @@ function parse_agent_summary {
 #######################################
 # redact_sensitive_text: Redact common secret patterns
 #
-# Arguments:
-#   $1 - Input text
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Input text
 #
 # Outputs:
 #   Redacted text to stdout
@@ -201,12 +201,12 @@ function redact_sensitive_text {
 #######################################
 # truncate_text: Truncate text to max length
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Input text
 #   $2 - Maximum length
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Truncated text to stdout
@@ -228,13 +228,13 @@ function truncate_text {
 #######################################
 # validate_required_inputs: Validate required notify_context environment
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   BASE_BRANCH - Base branch for merge-base diff
 #   GITHUB_OUTPUT - GitHub Actions output file path
 #   WORKTREE_PATH - Absolute path to the worktree
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -252,11 +252,11 @@ function validate_required_inputs {
 #######################################
 # write_notify_context_output: Write notify_context_json multiline output
 #
-# Arguments:
-#   $1 - notify_context JSON string
-#
 # Globals:
 #   GITHUB_OUTPUT - GitHub Actions output file path
+#
+# Arguments:
+#   $1 - notify_context JSON string
 #
 # Outputs:
 #   None
@@ -280,15 +280,15 @@ function write_notify_context_output {
 #######################################
 # main: Build and write notify_context_json
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   BASE_BRANCH - Base branch for merge-base diff
 #   DETECT_RESULT_JSON - Detect script JSON result (optional)
 #   HAS_CHANGES - Whether loop produced commits (true/false)
 #   STATUS_DIR - Attempt artifact directory (optional)
 #   WORKTREE_PATH - Absolute path to the worktree
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None

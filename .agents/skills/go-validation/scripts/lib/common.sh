@@ -26,11 +26,11 @@
 # Description:
 #   Displays formatted section headers for organized output
 #
-# Arguments:
-#   $1 - Section title
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Section title
 #
 # Outputs:
 #   Writes to stderr
@@ -54,12 +54,12 @@ function echo_section {
 # Description:
 #   Displays formatted section footer with elapsed time since start
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Section title
 #   $2 - Start time (epoch seconds)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Writes to stderr
@@ -89,12 +89,12 @@ function end_echo_section {
 # Description:
 #   Displays an error message and exits the script with specified code
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Error message
 #   $2 - Exit code (optional, defaults to 1)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -119,11 +119,11 @@ function error_exit {
 # Description:
 #   Executes a command with support for dry-run mode
 #
-# Arguments:
-#   $@ - Command to execute
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - Command to execute
 #
 # Outputs:
 #   None
@@ -162,11 +162,11 @@ function execute_command {
 #   Use this only for internally constructed commands where argument-array
 #   execution is not practical.
 #
-# Arguments:
-#   $1 - Command string to execute
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Command string to execute
 #
 # Outputs:
 #   None
@@ -201,10 +201,10 @@ function execute_command_string {
 # Description:
 #   Returns the current epoch time for timing measurements
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -227,10 +227,10 @@ function get_start_time {
 # Description:
 #   Checks if the script is running in dry-run mode
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -253,12 +253,12 @@ function is_dry_run {
 # Description:
 #   Logs messages with timestamp and log level to stderr
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Log level (INFO, WARN, ERROR, DEBUG)
 #   $2 - Log message
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Writes to stderr when log level matches
@@ -286,11 +286,11 @@ function log {
 # Description:
 #   Checks that all required command line tools are available in PATH
 #
-# Arguments:
-#   $@ - List of required tools/commands
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - List of required tools/commands
 #
 # Outputs:
 #   None
@@ -325,11 +325,11 @@ function validate_dependencies {
 # Description:
 #   Checks that all required environment variables are set
 #
-# Arguments:
-#   $@ - List of required environment variable names
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - List of required environment variable names
 #
 # Outputs:
 #   None

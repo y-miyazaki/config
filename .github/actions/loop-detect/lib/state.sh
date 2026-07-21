@@ -14,12 +14,12 @@
 #######################################
 # migrate_state_targets: Ensure targets map exists with legacy migration
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - State file path
 #   $2 - Default branch for migration key
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -74,13 +74,13 @@ function migrate_state_targets {
 #######################################
 # read_target_state: Echo JSON object for one target key
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - State file path
 #   $2 - Target key
 #   $3 - Default branch for migration
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Target state JSON on stdout
@@ -101,11 +101,11 @@ function read_target_state {
 #######################################
 # target_consecutive_failures: Read consecutive_failures for target
 #
-# Arguments:
-#   $1 - Target state JSON
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Target state JSON
 #
 # Outputs:
 #   Failure count on stdout
@@ -122,12 +122,12 @@ function target_consecutive_failures {
 #######################################
 # target_last_sha: Resolve last_sha for target with fallback
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Target state JSON
 #   $2 - Branch ref for git fallback
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Commit SHA on stdout
@@ -155,11 +155,11 @@ function target_last_sha {
 #######################################
 # target_pending_blocks_detect: Return 0 when an open pending fix PR blocks detect
 #
-# Arguments:
-#   $1 - Target state JSON
-#
 # Globals:
 #   GH_TOKEN / GITHUB_TOKEN - Used for live PR state lookup when pending.pr is set
+#
+# Arguments:
+#   $1 - Target state JSON
 #
 # Outputs:
 #   None
@@ -204,11 +204,11 @@ function target_pending_blocks_detect {
 #######################################
 # target_open_rejections_prompt: Format open rejections for prompt injection
 #
-# Arguments:
-#   $1 - Target state JSON
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Target state JSON
 #
 # Outputs:
 #   Markdown prompt section on stdout (empty when none)

@@ -61,10 +61,10 @@ TASK_PATH=""
 # Description:
 #   Displays usage information for the script, including actions, options, and examples
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -109,9 +109,6 @@ EOF
 # Description:
 #   Parses command line arguments and validates required options
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   ACTION     - Set to the provided action (apply, diff, run)
 #   AWS_REGION - Set to the provided AWS region
@@ -119,10 +116,14 @@ EOF
 #   RULE_NAME  - Set to the EventBridge rule name (for run action)
 #   TASK_PATH  - Set to the provided ECS scheduled task directory path
 #
+# Arguments:
+#   $@ - All command line arguments passed to the script
+#
 # Outputs:
 #   None
 #
 # Returns:
+#   0 on success, 1 on failure
 #
 # Usage:
 #   parse_arguments "$@"
@@ -184,13 +185,13 @@ function parse_arguments {
 #   Step 3: Applies EventBridge rules via ecschedule if rules changed
 #   Skips deploy entirely if neither has changed (prevents unnecessary revisions)
 #
-# Arguments:
-#   $1 - Path to the rendered ecschedule JSON config (temp file)
-#
 # Globals:
 #   ACCOUNT_ID - AWS account ID
 #   AWS_REGION - AWS region
 #   ENV        - Target environment name
+#
+# Arguments:
+#   $1 - Path to the rendered ecschedule JSON config (temp file)
 #
 # Outputs:
 #   None
@@ -277,13 +278,13 @@ function apply_scheduled_task {
 #   Displays the task definition diff via ecspresso and EventBridge rules diff
 #   via ecschedule for the specified environment
 #
-# Arguments:
-#   $1 - Path to the rendered ecschedule JSON config (temp file)
-#
 # Globals:
 #   ACCOUNT_ID - AWS account ID
 #   AWS_REGION - AWS region
 #   ENV        - Target environment name
+#
+# Arguments:
+#   $1 - Path to the rendered ecschedule JSON config (temp file)
 #
 # Outputs:
 #   None
@@ -319,11 +320,11 @@ function diff_scheduled_task {
 # Description:
 #   Triggers a specific EventBridge rule immediately via ecschedule run
 #
-# Arguments:
-#   $1 - Path to the rendered ecschedule JSON config (temp file)
-#
 # Globals:
 #   RULE_NAME - EventBridge rule name to trigger
+#
+# Arguments:
+#   $1 - Path to the rendered ecschedule JSON config (temp file)
 #
 # Outputs:
 #   None
@@ -350,9 +351,6 @@ function run_scheduled_task {
 #   Renders Jsonnet config to a temporary JSON file for ecschedule,
 #   then delegates to the appropriate action function.
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   ACTION     - Action to perform (apply, diff, run)
 #   ACCOUNT_ID - AWS account ID
@@ -360,6 +358,9 @@ function run_scheduled_task {
 #   ENV        - Target environment name
 #   RULE_NAME  - EventBridge rule name (for run action)
 #   TASK_PATH  - Path to ECS scheduled task directory
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None

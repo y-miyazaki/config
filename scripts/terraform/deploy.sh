@@ -44,10 +44,10 @@ source "${SCRIPT_DIR}/../lib/all.sh"
 # Description:
 #   Displays usage information for the script, including required environment variables and examples
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -91,11 +91,11 @@ fi
 # Description:
 #   Runs the complete Terraform workflow for deployment with auto-approval
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   ENV - Environment for deployment
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -118,12 +118,12 @@ function run_terraform_deployment {
 # Description:
 #   Validates required environment variables and dependencies, then changes to target directory
 #
-# Arguments:
-#   $1 - Target directory path
-#
 # Globals:
 #   ENV - Environment variable
 #   TF_PLUGIN_CACHE_DIR - Terraform plugin cache directory
+#
+# Arguments:
+#   $1 - Target directory path
 #
 # Outputs:
 #   None
@@ -156,11 +156,11 @@ function validate_and_prepare {
 # Description:
 #   Main function to execute the script logic for Terraform deployment
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None

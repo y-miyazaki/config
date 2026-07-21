@@ -52,9 +52,6 @@ VERDICT="${VERDICT:-}"
 #######################################
 # build_comment_body: Render marker comment markdown
 #
-# Arguments:
-#   $1 - Actor login
-#
 # Globals:
 #   ATTEMPTS - Attempt count for display
 #   COMMIT_SHA - Pushed commit SHA when present
@@ -67,6 +64,9 @@ VERDICT="${VERDICT:-}"
 #   REJECT_REASON - Verifier rejection reason
 #   TARGET_JSON - Target descriptor JSON
 #   VERDICT - Verifier verdict when present
+#
+# Arguments:
+#   $1 - Actor login
 #
 # Outputs:
 #   Comment body to stdout
@@ -265,12 +265,12 @@ EOF
 #######################################
 # find_existing_comment: Find comment id by loop marker
 #
-# Arguments:
-#   $1 - Marker substring
-#
 # Globals:
 #   PR_NUMBER - Target pull request number
 #   REPOSITORY - Repository owner/name
+#
+# Arguments:
+#   $1 - Marker substring
 #
 # Outputs:
 #   Comment GraphQL node id to stdout, or empty
@@ -291,11 +291,11 @@ function find_existing_comment {
 #######################################
 # redact_sensitive_text: Redact common secret patterns
 #
-# Arguments:
-#   $1 - Input text
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Input text
 #
 # Outputs:
 #   Redacted text to stdout
@@ -321,12 +321,12 @@ function redact_sensitive_text {
 #######################################
 # truncate_text: Truncate text to max length
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Input text
 #   $2 - Maximum length
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Truncated text to stdout
@@ -348,14 +348,14 @@ function truncate_text {
 #######################################
 # upsert_comment: Create or update PR comment
 #
-# Arguments:
-#   $1 - Comment body file path
-#   $2 - Marker substring
-#
 # Globals:
 #   GITHUB_OUTPUT - GitHub Actions output file path
 #   PR_NUMBER - Target pull request number
 #   REPOSITORY - Repository owner/name
+#
+# Arguments:
+#   $1 - Comment body file path
+#   $2 - Marker substring
 #
 # Outputs:
 #   None
@@ -416,9 +416,6 @@ function upsert_comment {
 #######################################
 # validate_required_inputs: Validate required loop-notify-pr environment
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   GITHUB_OUTPUT - GitHub Actions output file path
 #   LOOP_NAME - Loop name for marker scoping
@@ -426,6 +423,9 @@ function upsert_comment {
 #   PR_NUMBER - Target pull request number
 #   REPOSITORY - Repository owner/name
 #   TOKEN - GitHub token with pull-requests: write
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -446,9 +446,6 @@ function validate_required_inputs {
 #######################################
 # main: Post or update loop-notify-pr marker comment
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   ATTEMPTS - Attempt count for display
 #   COMMIT_SHA - Pushed commit SHA when present
@@ -465,6 +462,9 @@ function validate_required_inputs {
 #   TARGET_JSON - Target descriptor JSON
 #   TOKEN - GitHub token (exported as GH_TOKEN for gh CLI)
 #   VERDICT - Verifier verdict when present
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None

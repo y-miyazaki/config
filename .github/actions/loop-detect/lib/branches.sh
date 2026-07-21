@@ -14,12 +14,12 @@
 #######################################
 # branch_matches_pattern: Return 0 when branch matches pattern
 #
+# Globals:
+#   LOOP_BRANCH_MATCH - Match mode (list|glob|regex)
+#
 # Arguments:
 #   $1 - Branch name
 #   $2 - Pattern from LOOP_INTEGRATION_BRANCHES
-#
-# Globals:
-#   LOOP_BRANCH_MATCH - Match mode (list|glob|regex)
 #
 # Outputs:
 #   None
@@ -53,10 +53,10 @@ function branch_matches_pattern {
 #######################################
 # list_remote_branches: List origin remote branch short names
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -76,12 +76,12 @@ function list_remote_branches {
 #######################################
 # resolve_integration_branches: Populate INTEGRATION_BRANCHES array
 #
+# Globals:
+#   INTEGRATION_BRANCHES - Output array of branch names
+#
 # Arguments:
 #   $1 - Comma-separated branch patterns
 #   $2 - Fallback branch when patterns are empty
-#
-# Globals:
-#   INTEGRATION_BRANCHES - Output array of branch names
 #
 # Outputs:
 #   None
@@ -134,12 +134,12 @@ function resolve_integration_branches {
 #######################################
 # split_csv: Split comma-separated values into a named array
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Comma-separated string
 #   $2 - Name of target array variable
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None

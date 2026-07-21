@@ -34,10 +34,10 @@ REPO_ROOT="$(git rev-parse --show-toplevel 2> /dev/null || echo "${SCRIPT_DIR}/.
 # Description:
 #   Displays usage information for the script, including options and examples
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -78,12 +78,12 @@ EOF
 # Description:
 #   Builds a Docker image for the specified Node.js module
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Module name
 #   $2 - Docker image name
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -108,11 +108,11 @@ function build_docker_image {
 # Description:
 #   Runs tests for the Node.js module inside a Docker container
 #
-# Arguments:
-#   $1 - Docker image name
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Docker image name
 #
 # Outputs:
 #   None
@@ -141,11 +141,11 @@ function run_tests {
 # Description:
 #   Checks that the specified Node.js module directory exists
 #
-# Arguments:
-#   $1 - Module name
-#
 # Globals:
 #   REPO_ROOT - Repository root directory
+#
+# Arguments:
+#   $1 - Module name
 #
 # Outputs:
 #   None
@@ -168,11 +168,11 @@ function validate_module {
 # Description:
 #   Main entry point that orchestrates the testing process for Node.js modules
 #
-# Arguments:
-#   $1 - Module name (optional, defaults to kinesis_data_firehose_cloudwatch_logs_processor)
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Module name (optional, defaults to kinesis_data_firehose_cloudwatch_logs_processor)
 #
 # Outputs:
 #   None

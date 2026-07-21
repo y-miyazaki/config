@@ -15,14 +15,14 @@
 #######################################
 # list_open_prs: Populate OPEN_PRS_JSON array with eligible PR objects
 #
+# Globals:
+#   OPEN_PRS_JSON - Output array
+#   LOOP_PR_ENABLED - Enable flag (read)
+#
 # Arguments:
 #   $1 - LOOP_PR_EXCLUDE csv
 #   $2 - LOOP_PR_INCLUDE_BOTS csv
 #   $3 - GitHub token
-#
-# Globals:
-#   OPEN_PRS_JSON - Output array
-#   LOOP_PR_ENABLED - Enable flag (read)
 #
 # Outputs:
 #   None
@@ -63,13 +63,13 @@ function list_open_prs {
 #######################################
 # pr_excluded: Return 0 when PR should be excluded
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - PR JSON object
 #   $2 - Exclusion token csv
 #   $3 - Bot include list csv
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None

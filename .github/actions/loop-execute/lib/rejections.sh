@@ -15,14 +15,14 @@
 #######################################
 # append_open_rejection: Append one structured rejection to OPEN_REJECTIONS_JSON
 #
+# Globals:
+#   OPEN_REJECTIONS_JSON - JSON array of open rejections
+#
 # Arguments:
 #   $1 - Attempt number
 #   $2 - Comma-separated file paths
 #   $3 - Issue description
 #   $4 - Required fix description
-#
-# Globals:
-#   OPEN_REJECTIONS_JSON - JSON array of open rejections
 #
 # Outputs:
 #   None
@@ -48,11 +48,11 @@ function append_open_rejection {
 #######################################
 # format_open_rejections_for_prompt: Format open rejections as markdown
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   OPEN_REJECTIONS_JSON - JSON array of open rejections
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   Markdown block to stdout, or nothing when empty
@@ -72,6 +72,10 @@ function format_open_rejections_for_prompt {
 #######################################
 # record_structured_reject: Persist rejection artifacts for one attempt
 #
+# Globals:
+#   OPEN_REJECTIONS_JSON - Updated via append_open_rejection
+#   REJECT_FEEDBACK - Updated via sync_reject_feedback
+#
 # Arguments:
 #   $1 - Attempt directory
 #   $2 - Attempt number
@@ -79,10 +83,6 @@ function format_open_rejections_for_prompt {
 #   $4 - Issue description
 #   $5 - Required fix description
 #   $6 - One-line summary for logs
-#
-# Globals:
-#   OPEN_REJECTIONS_JSON - Updated via append_open_rejection
-#   REJECT_FEEDBACK - Updated via sync_reject_feedback
 #
 # Outputs:
 #   None
@@ -110,11 +110,11 @@ function record_structured_reject {
 #######################################
 # sync_reject_feedback: Refresh REJECT_FEEDBACK from OPEN_REJECTIONS_JSON
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   REJECT_FEEDBACK - Markdown feedback for implementer retry prompt
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None

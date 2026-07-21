@@ -42,10 +42,10 @@ AWS_REGION="${AWS_REGION:-}"
 # Description:
 #   Displays usage information for the script, including options and examples
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -82,11 +82,11 @@ EOF
 # Description:
 #   Parses command line arguments and validates required VPC ID
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   VPC_ID - Set to the provided VPC ID
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None
@@ -132,12 +132,12 @@ function parse_arguments {
 # Description:
 #   Checks for EC2 instances running in the specified VPC
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   VPC_ID - VPC ID to check
 #   REGION - AWS region to query
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   EC2 instance information
@@ -164,12 +164,12 @@ function check_ec2_instances {
 # Description:
 #   Checks for NAT gateways in the specified VPC
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   VPC_ID - VPC ID to check
 #   REGION - AWS region to query
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   NAT gateway information
@@ -196,12 +196,12 @@ function check_nat_gateways {
 # Description:
 #   Checks for network interfaces in the specified VPC
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   VPC_ID - VPC ID to check
 #   REGION - AWS region to query
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   network interface information
@@ -228,12 +228,12 @@ function check_network_interfaces {
 # Description:
 #   Checks for VPN gateways attached to the specified VPC
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   VPC_ID - VPC ID to check
 #   REGION - AWS region to query
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   VPN gateway information
@@ -260,12 +260,12 @@ function check_vpn_gateways {
 # Description:
 #   Checks for VPC peering connections associated with the specified VPC
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   VPC_ID - VPC ID to check
 #   REGION - AWS region to query
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   VPC peering connection information
@@ -292,12 +292,12 @@ function check_vpc_peering {
 # Description:
 #   Main function to execute the script logic for retrieving VPC resource information
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   VPC_ID - VPC ID to query
 #   REGION - AWS region to query
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None

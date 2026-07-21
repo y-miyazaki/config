@@ -64,10 +64,10 @@ REPOSITORY_NAME=""
 # Description:
 #   Displays usage information for the script, including options and examples
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -131,9 +131,6 @@ EOF
 # Description:
 #   Parses command line arguments and validates required repository name
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   AWS_REGION - Set to specified AWS region
 #   VERBOSE - Set to true if verbose mode enabled
@@ -144,6 +141,9 @@ EOF
 #   DOCKERFILE_PATH - Set to specified Dockerfile path
 #   BUILD_CONTEXT - Set to specified build context
 #   REPOSITORY_NAME - Set to specified repository name
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None
@@ -222,12 +222,12 @@ function parse_arguments {
 # Description:
 #   Authenticates Docker to AWS ECR registry using AWS credentials
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   AWS_REGION - AWS region for ECR registry
 #   DRY_RUN - Whether to run in dry-run mode
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   the ECR registry URL
@@ -284,16 +284,16 @@ function authenticate_ecr {
 # Description:
 #   Builds a Docker image with specified parameters and tags it for ECR
 #
-# Arguments:
-#   $1 - Repository name
-#   $2 - ECR registry URL
-#
 # Globals:
 #   DOCKER_PLATFORM - Docker platform to build for
 #   IMAGE_TAG - Image tag to use
 #   DOCKERFILE_PATH - Path to Dockerfile
 #   BUILD_CONTEXT - Build context path
 #   DRY_RUN - Whether to run in dry-run mode
+#
+# Arguments:
+#   $1 - Repository name
+#   $2 - ECR registry URL
 #
 # Outputs:
 #   the full image name (registry/repository:tag)
@@ -343,11 +343,11 @@ function build_docker_image {
 # Description:
 #   Pushes the built Docker image to AWS ECR
 #
-# Arguments:
-#   $1 - Full image name (registry/repository:tag)
-#
 # Globals:
 #   DRY_RUN - Whether to run in dry-run mode
+#
+# Arguments:
+#   $1 - Full image name (registry/repository:tag)
 #
 # Outputs:
 #   None
@@ -383,14 +383,14 @@ function push_docker_image {
 #   Tags an existing local Docker image with ECR registry URL and pushes it to ECR
 #   without rebuilding
 #
+# Globals:
+#   IMAGE_TAG - Image tag to use in ECR (default: latest)
+#   DRY_RUN - Whether to run in dry-run mode
+#
 # Arguments:
 #   $1 - Repository name
 #   $2 - ECR registry URL
 #   $3 - Existing image name (format: image:tag)
-#
-# Globals:
-#   IMAGE_TAG - Image tag to use in ECR (default: latest)
-#   DRY_RUN - Whether to run in dry-run mode
 #
 # Outputs:
 #   the full image name (registry/repository:tag)
@@ -438,12 +438,12 @@ function tag_existing_image {
 # Description:
 #   Validates that Dockerfile exists and build context is accessible
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   DOCKERFILE_PATH - Path to Dockerfile to validate
 #   BUILD_CONTEXT - Build context path to validate
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -473,9 +473,6 @@ function validate_build_requirements {
 # Description:
 #   Main function to execute the script logic for uploading Docker image to ECR
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   REPOSITORY_NAME - ECR repository name
 #   AWS_REGION - AWS region
@@ -484,6 +481,9 @@ function validate_build_requirements {
 #   DOCKERFILE_PATH - Dockerfile path
 #   BUILD_CONTEXT - Build context path
 #   DRY_RUN - Whether to run in dry-run mode
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None

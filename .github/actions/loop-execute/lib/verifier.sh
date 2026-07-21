@@ -25,11 +25,11 @@ fix=""
 #######################################
 # extract_last_json_fence: Extract the last ```json fenced block from output
 #
-# Arguments:
-#   $1 - Output file path
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Output file path
 #
 # Outputs:
 #   JSON blob to stdout, or empty string
@@ -51,9 +51,6 @@ function extract_last_json_fence {
 #######################################
 # parse_verifier_output: Parse verifier agent output into structured fields
 #
-# Arguments:
-#   $1 - Output file path
-#
 # Globals:
 #   parsed - true when any format was recognized
 #   verdict - APPROVE or REJECT
@@ -61,6 +58,9 @@ function extract_last_json_fence {
 #   files - Comma-separated file paths on REJECT
 #   issue - Issue description on REJECT
 #   fix - Required fix description on REJECT
+#
+# Arguments:
+#   $1 - Output file path
 #
 # Outputs:
 #   None
@@ -164,11 +164,11 @@ function parse_verifier_output {
 #######################################
 # write_verifier_output_contract: Print verifier JSON output contract
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   PROMPT_VERIFIER_OUTPUT_CONTRACT - Contract markdown
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   Contract markdown to stdout
@@ -184,16 +184,16 @@ function write_verifier_output_contract {
 #######################################
 # run_verify: Run one verifier session for the current attempt
 #
-# Arguments:
-#   $1 - Attempt directory
-#   $2 - Attempt number
-#   $3 - Whether this attempt created a commit (true|false)
-#
 # Globals:
 #   BASE_BRANCH, DENYLIST, ALLOWLIST, WORKTREE_PATH
 #   AGENT_VERIFIER_CRITERIA, AGENT_VERIFIER_MAX_TURNS, AGENT_VERIFIER_MODEL
 #   OPEN_REJECTIONS_JSON, SKILL_NAME, VERIFIER_CONTEXT
 #   PROMPT_VERIFIER_* prompt env vars
+#
+# Arguments:
+#   $1 - Attempt directory
+#   $2 - Attempt number
+#   $3 - Whether this attempt created a commit (true|false)
 #
 # Outputs:
 #   None

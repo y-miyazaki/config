@@ -38,10 +38,10 @@ source "${SCRIPT_DIR}/../lib/all.sh"
 # Description:
 #   Displays usage information for the script, including options and examples
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -75,11 +75,11 @@ EOF
 # Description:
 #   Parses command line arguments and options, handling help and unknown options
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None
@@ -113,11 +113,11 @@ function parse_arguments {
 # Description:
 #   Generates Terraform configuration format output for DLQ information
 #
-# Arguments:
-#   $@ - Array of DLQ names
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - Array of DLQ names
 #
 # Outputs:
 #   formatted Terraform configuration items as a string
@@ -153,10 +153,10 @@ function generate_terraform_output {
 # Description:
 #   Retrieves all SQS queue URLs from AWS using the AWS CLI and outputs them
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -185,11 +185,11 @@ function get_sqs_queues {
 # Description:
 #   Outputs the final formatted result in JSON array format
 #
-# Arguments:
-#   $1 - Formatted items string
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Formatted items string
 #
 # Outputs:
 #   the result to stdout
@@ -216,11 +216,11 @@ function output_result {
 # Description:
 #   Processes SQS queue URLs to extract Dead Letter Queue information from RedrivePolicy
 #
-# Arguments:
-#   $1 - Newline-separated string of SQS queue URLs
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Newline-separated string of SQS queue URLs
 #
 # Outputs:
 #   unique DLQ names as newline-separated strings
@@ -276,11 +276,11 @@ function process_dlq_information {
 # Description:
 #   Main function to execute the script logic for retrieving SQS DLQ information
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None

@@ -50,13 +50,13 @@ _JSON_FILE_TARGET=""
 #######################################
 # parse_create_pr_body_args: Parse optional JSON file path arguments
 #
-# Arguments:
-#   $@ - CLI arguments
-#
 # Globals:
 #   _JSON_FILE_DETECT - Path to detect JSON payload (set)
 #   _JSON_FILE_NOTIFY - Path to notify JSON payload (set)
 #   _JSON_FILE_TARGET - Path to target JSON payload (set)
+#
+# Arguments:
+#   $@ - CLI arguments
 #
 # Outputs:
 #   None
@@ -100,11 +100,11 @@ function parse_create_pr_body_args {
 #   Accept a JSON string. Empty or invalid input becomes {}.
 #   Callers must pass defaults as quoted "{}" — not ${VAR:-{}}.
 #
-# Arguments:
-#   $1 - Raw JSON string (may be empty)
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Raw JSON string (may be empty)
 #
 # Outputs:
 #   JSON object text to stdout
@@ -126,12 +126,12 @@ function normalize_json_object {
 #######################################
 # read_json_payload: Load JSON from file or inline string
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Optional file path
 #   $2 - Inline JSON fallback
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Raw JSON text to stdout (may be empty)
@@ -154,11 +154,11 @@ function read_json_payload {
 #######################################
 # slim_detect_json_for_pr_body: Keep only failures[] for PR rendering
 #
-# Arguments:
-#   $1 - Detect result JSON object string
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Detect result JSON object string
 #
 # Outputs:
 #   Small JSON with failures array to stdout
@@ -184,9 +184,6 @@ function slim_detect_json_for_pr_body {
 #   Apply Create PR JSON defaults, extract notify fields, export renderer
 #   env, and print composed markdown.
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   DETECT_RESULT_JSON - Detect JSON (optional)
 #   LEVEL - Footer level
@@ -194,6 +191,9 @@ function slim_detect_json_for_pr_body {
 #   PR_BODY - Caller static prefix
 #   SKIP_REASON - Footer skip reason
 #   TARGET_JSON - Target JSON with .key (optional)
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   Composed PR body to stdout
@@ -232,11 +232,11 @@ function create_pr_body {
 #######################################
 # main: Entry point
 #
-# Arguments:
-#   $@ - Optional --detect-json-file / --notify-json-file / --target-json-file
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - Optional --detect-json-file / --notify-json-file / --target-json-file
 #
 # Outputs:
 #   Composed PR body markdown to stdout

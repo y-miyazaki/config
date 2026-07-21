@@ -86,10 +86,10 @@ AWS_RESOURCE_CATEGORIES=(
 # Description:
 #   Displays usage information for the script, including options and examples
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -132,9 +132,6 @@ EOF
 # Description:
 #   Parses command line arguments and options
 #
-# Arguments:
-#   $@ - Command line arguments
-#
 # Globals:
 #   VERBOSE - Enable verbose output
 #   DRY_RUN - Enable dry-run mode
@@ -142,6 +139,9 @@ EOF
 #   AWS_REGION - AWS region to query
 #   OUTPUT_FORMAT - Output format for diagram
 #   GIT_COMMIT - Enable git commit flag
+#
+# Arguments:
+#   $@ - Command line arguments
 #
 # Outputs:
 #   None
@@ -249,13 +249,13 @@ RESOURCE_CONFIGS[dynamodb]="dynamodb|list-tables|TableName|AWS::DynamoDB::Table|
 # Description:
 #   Generate diagram using awsdac
 #
-# Arguments:
-#   $1 - YAML file path
-#   $2 - Output file path
-#
 # Globals:
 #   VERBOSE - Enable verbose output
 #   OUTPUT_FORMAT - Output format
+#
+# Arguments:
+#   $1 - YAML file path
+#   $2 - Output file path
 #
 # Outputs:
 #   None
@@ -297,15 +297,15 @@ function generate_diagram {
 # Description:
 #   Generic resource generator for simple resources
 #
-# Arguments:
-#   $1 - Resource name
-#   $2 - Data source (ignored for AWS CLI mode)
-#   $3 - Output mode (optional, default: yaml)
-#
 # Globals:
 #   RESOURCE_CONFIGS - Associative array of resource configurations
 #   REGIONS_TO_CHECK - Array of regions to check
 #   TEMP_YAML_FILE - Temporary YAML file path
+#
+# Arguments:
+#   $1 - Resource name
+#   $2 - Data source (ignored for AWS CLI mode)
+#   $3 - Output mode (optional, default: yaml)
 #
 # Outputs:
 #   None
@@ -445,13 +445,13 @@ EOF
 # Description:
 #   Generate stack children for a given category and region
 #
-# Arguments:
-#   $1 - Category
-#   $2 - Safe region name
-#
 # Globals:
 #   HIERARCHICAL_CONFIGS - Associative array of hierarchical configurations
 #   RESOURCE_CONFIGS - Associative array of resource configurations
+#
+# Arguments:
+#   $1 - Category
+#   $2 - Safe region name
 #
 # Outputs:
 #   None
@@ -509,13 +509,13 @@ function generate_stack_children {
 # Description:
 #   Generate VPC resources hierarchically
 #
-# Arguments:
-#   $1 - Data source (ignored for AWS CLI mode)
-#   $2 - Output mode (optional, default: yaml)
-#
 # Globals:
 #   REGIONS_TO_CHECK - Array of regions to check
 #   TEMP_YAML_FILE - Temporary YAML file path
+#
+# Arguments:
+#   $1 - Data source (ignored for AWS CLI mode)
+#   $2 - Output mode (optional, default: yaml)
 #
 # Outputs:
 #   Stack list or complete YAML depending on output mode
@@ -1037,12 +1037,12 @@ EOF
 # Description:
 #   Function to initialize regions to check
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   AWS_REGION - AWS region to query
 #   REGIONS_TO_CHECK - Array of regions to check
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -1068,13 +1068,13 @@ function initialize_regions {
 # Description:
 #   Generate awsdac YAML from AWS CLI
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   TEMP_YAML_FILE - Temporary YAML file path
 #   REGIONS_TO_CHECK - Array of regions to check
 #   AWS_RESOURCE_CATEGORIES - Array of resource categories
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -1178,12 +1178,12 @@ EOF
 # Description:
 #   Update git repository if requested
 #
-# Arguments:
-#   $1 - Diagram file path
-#
 # Globals:
 #   GIT_COMMIT - Enable git commit flag
 #   VERBOSE - Enable verbose output
+#
+# Arguments:
+#   $1 - Diagram file path
 #
 # Outputs:
 #   None
@@ -1240,9 +1240,6 @@ function update_git_repository {
 # Description:
 #   Main execution function
 #
-# Arguments:
-#   $@ - Command line arguments
-#
 # Globals:
 #   DRY_RUN - Dry-run mode flag
 #   OUTPUT_FILE - Output diagram file path
@@ -1250,6 +1247,9 @@ function update_git_repository {
 #   AWS_REGION - AWS region
 #   TEMP_YAML_FILE - Temporary YAML file path
 #   OUTPUT_FILE - Output file path
+#
+# Arguments:
+#   $@ - Command line arguments
 #
 # Outputs:
 #   None

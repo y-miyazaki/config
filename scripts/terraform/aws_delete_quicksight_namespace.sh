@@ -32,10 +32,10 @@ AWS_ACCOUNT_ID=""
 # Description:
 #   Displays usage information for the script, including options and examples
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -68,11 +68,11 @@ EOF
 # Description:
 #   Parses command line arguments and handles help option
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None
@@ -106,10 +106,10 @@ function parse_arguments {
 # Description:
 #   Retrieves all QuickSight namespaces for the current AWS account and deletes each one
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -141,11 +141,11 @@ function delete_quicksight_namespaces {
 # Description:
 #   Main entry point that orchestrates the QuickSight namespace deletion process
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None

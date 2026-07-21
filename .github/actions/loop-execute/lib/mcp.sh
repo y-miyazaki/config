@@ -17,12 +17,12 @@
 #######################################
 # append_agent_mcp_args: Add engine-specific MCP approval flags to an ARGS array
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Name of the ARGS array variable (nameref)
 #   $2 - Engine name (claude|copilot|codex|cursor)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -56,13 +56,13 @@ function append_agent_mcp_args {
 #   Codex does not read project .mcp.json automatically. When ENGINE is codex,
 #   render an isolated CODEX_HOME/config.toml from the shared MCP manifest.
 #
-# Arguments:
-#   $1 - Engine name (claude|copilot|codex|cursor)
-#   $2 - Workspace root (default: .)
-#
 # Globals:
 #   CODEX_HOME - Set for codex runs to an isolated config directory
 #   RUNNER_TEMP - GitHub Actions temp directory used for the default CODEX_HOME parent
+#
+# Arguments:
+#   $1 - Engine name (claude|copilot|codex|cursor)
+#   $2 - Workspace root (default: .)
 #
 # Outputs:
 #   None
@@ -98,11 +98,11 @@ function prepare_agent_mcps {
 #   working_directory label is not appended twice when the step already cd'd
 #   into that directory.
 #
-# Arguments:
-#   $1 - Workspace root hint (default: .)
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Workspace root hint (default: .)
 #
 # Outputs:
 #   Manifest path to stdout, 1 when none exists
@@ -139,12 +139,12 @@ function resolve_mcp_json_path {
 #######################################
 # write_codex_mcp_config: Render Codex config.toml MCP tables from mcp.json
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Source mcp.json path
 #   $2 - Destination config.toml path
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None

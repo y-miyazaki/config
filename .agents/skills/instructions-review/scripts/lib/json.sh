@@ -16,11 +16,11 @@
 #######################################
 # json_escape: Escape a string for safe JSON embedding
 #
-# Arguments:
-#   $1 - String to escape
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - String to escape
 #
 # Outputs:
 #   JSON-safe escaped string to stdout
@@ -77,11 +77,11 @@ function json_escape {
 #######################################
 # json_string_array: Output a bash array as a JSON array of strings
 #
-# Arguments:
-#   $@ - Array elements (pass as "${array[@]}")
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - Array elements (pass as "${array[@]}")
 #
 # Outputs:
 #   JSON array string to stdout
@@ -131,11 +131,11 @@ function json_string_array {
 #######################################
 # json_object_start: Print opening brace with optional indentation
 #
-# Arguments:
-#   $1 - Indent level (optional, default 0)
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Indent level (optional, default 0)
 #
 # Outputs:
 #   Writes to stdout
@@ -154,10 +154,10 @@ function json_object_start {
 #######################################
 # json_object_end: Print closing brace
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -177,13 +177,13 @@ function json_object_end {
 #######################################
 # json_field_string: Output a JSON key-value pair (string value)
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Key name
 #   $2 - String value
 #   $3 - Trailing comma ("," or "", default ",")
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Writes to stdout
@@ -208,13 +208,13 @@ function json_field_string {
 #######################################
 # json_field_bool: Output a JSON key-value pair (boolean value)
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Key name
 #   $2 - Boolean value ("true" or "false")
 #   $3 - Trailing comma ("," or "", default ",")
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Writes to stdout
@@ -236,13 +236,13 @@ function json_field_bool {
 #######################################
 # json_field_array: Output a JSON key-value pair (array value)
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Key name
 #   $2 - JSON array string (from json_string_array)
 #   $3 - Trailing comma ("," or "", default ",")
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Writes to stdout

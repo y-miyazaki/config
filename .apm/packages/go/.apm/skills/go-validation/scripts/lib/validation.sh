@@ -33,12 +33,12 @@ fi
 # Description:
 #   Validates a configuration file based on its format type
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Configuration file path
 #   $2 - Format type (json, yaml, ini, etc.)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -74,12 +74,12 @@ function validate_config_format {
 # Description:
 #   Checks that a directory exists and is accessible
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Directory path
 #   $2 - Description (optional, for error messages)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -112,12 +112,12 @@ function validate_directory_exists {
 # Description:
 #   Checks that a file exists and is readable
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - File path
 #   $2 - Description (optional, for error messages)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -150,12 +150,12 @@ function validate_file_exists {
 # Description:
 #   Checks that a file has the required permissions
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - File path
 #   $2 - Required permissions (e.g., "755", "644")
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -191,13 +191,13 @@ function validate_file_permissions {
 # Description:
 #   Validates all files with a specific extension in a directory
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Directory path
 #   $2 - File extension (e.g., "sh", "json", "tf")
 #   $3 - Validation function name
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -250,11 +250,11 @@ function validate_files_in_directory {
 # Description:
 #   Validates that a file contains valid JSON syntax
 #
-# Arguments:
-#   $1 - JSON file path
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - JSON file path
 #
 # Outputs:
 #   None
@@ -286,12 +286,12 @@ function validate_json_file {
 # Description:
 #   Tests network connectivity to a host or URL
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Host/URL to test
 #   $2 - Timeout in seconds (optional, defaults to 5)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -332,11 +332,11 @@ function validate_network_connectivity {
 # Description:
 #   Checks that a script file has executable permissions
 #
-# Arguments:
-#   $1 - Script file path
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Script file path
 #
 # Outputs:
 #   None
@@ -368,11 +368,11 @@ function validate_script_executable {
 # Description:
 #   Validates the syntax of a shell script using bash -n
 #
-# Arguments:
-#   $1 - Script file path
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Script file path
 #
 # Outputs:
 #   None
@@ -412,13 +412,13 @@ function validate_script_syntax {
 # Description:
 #   Tests if a network port is open and available on a host
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Host
 #   $2 - Port
 #   $3 - Timeout in seconds (optional, defaults to 3)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -460,11 +460,11 @@ function validate_port_availability {
 # Description:
 #   Validates that a file contains valid YAML syntax
 #
-# Arguments:
-#   $1 - YAML file path
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - YAML file path
 #
 # Outputs:
 #   None

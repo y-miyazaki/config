@@ -69,3 +69,60 @@ EOF
     run bash "${TARGET_SCRIPT}" --check-function-docs "${FIXTURE_DIR}/bad.sh" -q
     [ "$status" -eq 1 ]
 }
+
+@test "--check-function-docs fails when canonical sections are out of order" {
+    cat > "${FIXTURE_DIR}/order.sh" << 'EOF'
+#!/bin/bash
+set -euo pipefail
+
+#######################################
+# Echo a greeting.
+# Arguments:
+#   $1 - name to greet
+# Globals:
+#   None
+# Outputs:
+#   None
+# Returns:
+#   0 on success
+#######################################
+function greet() {
+    echo "hello $1"
+}
+EOF
+    chmod +x "${FIXTURE_DIR}/order.sh"
+
+    run bash "${TARGET_SCRIPT}" --check-function-docs "${FIXTURE_DIR}/order.sh" -q
+    [ "$status" -eq 1 ]
+    [[ $output == *":9:"* ]] || [[ $output == *"sections out of order"* ]]
+    [[ $output == *"${FIXTURE_DIR}/order.sh:"* ]]
+}
+
+@test "-f --check-function-docs reorders function doc sections" {
+    cat > "${FIXTURE_DIR}/reorder.sh" << 'EOF'
+#!/bin/bash
+set -euo pipefail
+
+#######################################
+# Echo a greeting.
+# Arguments:
+#   $1 - name to greet
+# Globals:
+#   None
+# Outputs:
+#   None
+# Returns:
+#   0 on success
+#######################################
+function greet() {
+    echo "hello $1"
+}
+EOF
+    chmod +x "${FIXTURE_DIR}/reorder.sh"
+
+    run bash "${TARGET_SCRIPT}" -f --check-function-docs "${FIXTURE_DIR}/reorder.sh" -q
+    [ "$status" -eq 0 ]
+    globals_line=$(grep -n '^# Globals:' "${FIXTURE_DIR}/reorder.sh" | head -1 | cut -d: -f1)
+    arguments_line=$(grep -n '^# Arguments:' "${FIXTURE_DIR}/reorder.sh" | head -1 | cut -d: -f1)
+    [ "$globals_line" -lt "$arguments_line" ]
+}

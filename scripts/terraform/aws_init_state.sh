@@ -42,11 +42,11 @@ AWS_ACCOUNT_ID=""
 # Description:
 #   Displays usage information for the script, including options and examples
 #
-# Arguments:
-#   $1 - Optional error message to display before help
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Optional error message to display before help
 #
 # Outputs:
 #   Writes help to stdout
@@ -90,13 +90,13 @@ EOF
 # Description:
 #   Parses command line arguments using getopts and validates required parameters
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   BUCKET - Set to the provided bucket name
 #   REGION - Set to the provided AWS region
 #   IS_BUCKET_AUTO_HASH - Set to 1 if hash suffix is requested
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None
@@ -135,13 +135,13 @@ function parse_arguments {
 # Description:
 #   Applies a bucket policy template to restrict access to Terraform state files
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   SCRIPT_DIR - Script directory path
 #   BUCKET - S3 bucket name
 #   AWS_ACCOUNT_ID - AWS account ID
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -180,11 +180,11 @@ function apply_bucket_policy {
 # Description:
 #   Configures security settings including public access block, versioning, encryption, and lifecycle
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   BUCKET - S3 bucket name
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -255,12 +255,12 @@ function configure_bucket_security {
 # Description:
 #   Creates an S3 bucket, handling the special case for us-east-1 region
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   BUCKET - S3 bucket name
 #   REGION - AWS region
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -294,13 +294,13 @@ function create_s3_bucket {
 # Description:
 #   Displays a summary of the completed setup including Terraform backend configuration
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   BUCKET - S3 bucket name
 #   REGION - AWS region
 #   AWS_ACCOUNT_ID - AWS account ID
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   completion information to stdout
@@ -340,12 +340,12 @@ EOF
 # Description:
 #   Appends a random hash suffix to the bucket name for uniqueness if requested
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   IS_BUCKET_AUTO_HASH - Flag indicating if hash should be added
 #   BUCKET - S3 bucket name (modified in place)
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -373,11 +373,11 @@ function generate_bucket_name {
 # Description:
 #   Verifies the bucket configuration by checking location, versioning, and encryption
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   BUCKET - S3 bucket name
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   verification information, logs warnings if checks fail
@@ -408,14 +408,14 @@ function verify_bucket_config {
 # Description:
 #   Main function to execute the script logic for creating Terraform state bucket
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   BUCKET - S3 bucket name
 #   REGION - AWS region
 #   IS_BUCKET_AUTO_HASH - Flag for hash suffix
 #   AWS_ACCOUNT_ID - AWS account ID
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None

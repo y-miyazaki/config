@@ -132,10 +132,10 @@ GLUE_DATA='0.9|deprecated|2022-06-01|2026-04-01|false
 # Description:
 #   Displays usage information for the script, including options and examples
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -180,15 +180,15 @@ EOF
 # Description:
 #   Parses command line arguments and options, setting global variables accordingly
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   VERBOSE - Set to true if verbose mode is enabled
 #   DRY_RUN - Set to true if dry-run mode is enabled
 #   OUTPUT_FILE - Set to specified output file path
 #   AWS_REGION - Set to specified AWS region
 #   CATEGORIES - Set to specified categories string
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None
@@ -243,11 +243,11 @@ function parse_arguments {
 # Description:
 #   Collects Glue versions from predefined data and formats as CSV
 #
-# Arguments:
-#   $1 - AWS region or "header" for header output
-#
 # Globals:
 #   GLUE_DATA - Predefined Glue version data
+#
+# Arguments:
+#   $1 - AWS region or "header" for header output
 #
 # Outputs:
 #   CSV formatted data or header
@@ -293,11 +293,11 @@ function collect_glue_versions {
 # Description:
 #   Collects Lambda runtime versions from predefined data and formats as CSV
 #
-# Arguments:
-#   $1 - AWS region or "header" for header output
-#
 # Globals:
 #   LAMBDA_DATA - Predefined Lambda runtime data
+#
+# Arguments:
+#   $1 - AWS region or "header" for header output
 #
 # Outputs:
 #   CSV formatted data or header
@@ -343,11 +343,11 @@ function collect_lambda_versions {
 # Description:
 #   Collects RDS engine versions using AWS API and formats as CSV
 #
-# Arguments:
-#   $1 - AWS region or "header" for header output
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - AWS region or "header" for header output
 #
 # Outputs:
 #   CSV formatted data or header
@@ -414,12 +414,12 @@ function collect_rds_versions {
 # Description:
 #   Generic function to collect runtime versions for a specific category across regions
 #
-# Arguments:
-#   $1 - Category name (lambda, glue, rds)
-#
 # Globals:
 #   AWS_REGION - AWS region to query
 #   NO_SORT_CATEGORIES - Categories that should not be sorted
+#
+# Arguments:
+#   $1 - Category name (lambda, glue, rds)
 #
 # Outputs:
 #   Calls output_csv_data to write results
@@ -469,14 +469,14 @@ function collect_runtime_versions {
 # Description:
 #   Writes CSV data to the output file with proper header and data formatting, with optional sorting
 #
+# Globals:
+#   OUTPUT_FILE - Path to output CSV file
+#
 # Arguments:
 #   $1 - Runtime/engine category name
 #   $2 - CSV header line
 #   $3 - CSV data buffer
 #   $4 - Whether to sort output (optional, defaults to true)
-#
-# Globals:
-#   OUTPUT_FILE - Path to output CSV file
 #
 # Outputs:
 #   None
@@ -514,14 +514,14 @@ function output_csv_data {
 # Description:
 #   Main function to execute the script logic for collecting AWS runtime versions
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   OUTPUT_FILE - Output CSV file path
 #   AWS_REGION - AWS region to query
 #   CATEGORIES - Categories to process
 #   DRY_RUN - Whether to run in dry-run mode
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None

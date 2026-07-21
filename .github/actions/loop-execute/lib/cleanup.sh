@@ -26,10 +26,10 @@ export LC_ALL=C.UTF-8
 #######################################
 # main: Remove worktree and prune stale entries
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:

@@ -56,10 +56,10 @@ PROJECTS_FAILED=0
 # Description:
 #   Displays usage information for the script, including options and examples
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -103,11 +103,11 @@ EOF
 # Description:
 #   Parses command line arguments and sets global variables accordingly
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None
@@ -169,11 +169,11 @@ function parse_arguments {
 # Description:
 #   Validates the existence of package-lock.json and checks synchronization with package.json
 #
-# Arguments:
-#   $1 - Project directory
-#
 # Globals:
 #   LOCKFILE_FAILED - Set to 1 on failure
+#
+# Arguments:
+#   $1 - Project directory
 #
 # Outputs:
 #   None
@@ -204,11 +204,11 @@ function check_package_lockfile {
 # Description:
 #   Uses npm ci --dry-run to verify synchronization between package files
 #
-# Arguments:
-#   $1 - Project directory
-#
 # Globals:
 #   SYNC_FAILED - Set to 1 on failure
+#
+# Arguments:
+#   $1 - Project directory
 #
 # Outputs:
 #   None
@@ -248,11 +248,11 @@ function check_package_sync {
 #   Searches for package.json files (excluding node_modules and other common directories) to identify Node.js projects
 #   Only returns directories that are actual project roots (not nested dependencies)
 #
-# Arguments:
-#   $1 - Base directory to search (optional, defaults to TARGET_DIR)
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Base directory to search (optional, defaults to TARGET_DIR)
 #
 # Outputs:
 #   Array of project directories (to stdout, one per line)
@@ -285,11 +285,11 @@ function find_nodejs_projects {
 # Description:
 #   Installs npm dependencies for the project
 #
-# Arguments:
-#   $1 - Project directory
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Project directory
 #
 # Outputs:
 #   None
@@ -347,12 +347,12 @@ function run_npm_install {
 # Description:
 #   Checks if any packages have newer versions available
 #
-# Arguments:
-#   $1 - Project directory
-#
 # Globals:
 #   DRY_RUN - Whether running in dry-run mode
 #   VERBOSE - Whether to show verbose output
+#
+# Arguments:
+#   $1 - Project directory
 #
 # Outputs:
 #   None
@@ -396,9 +396,6 @@ function run_outdated_check {
 # Description:
 #   Checks for known security vulnerabilities in dependencies
 #
-# Arguments:
-#   $1 - Project directory
-#
 # Globals:
 #   DRY_RUN - Whether running in dry-run mode
 #   FIX_MODE - Whether to attempt auto-fix
@@ -406,6 +403,9 @@ function run_outdated_check {
 #   AUDIT_VULNERABILITIES - Incremented with vulnerability count
 #   AUDIT_FAILED - Set to 1 on failure
 #   EXIT_CODE - Set to 1 on failure
+#
+# Arguments:
+#   $1 - Project directory
 #
 # Outputs:
 #   None
@@ -493,11 +493,11 @@ function run_security_audit {
 # Description:
 #   Executes the test suite defined in package.json
 #
-# Arguments:
-#   $1 - Project directory
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Project directory
 #
 # Outputs:
 #   None
@@ -562,11 +562,11 @@ function run_tests {
 # Description:
 #   Performs all validation checks on a single Node.js project
 #
-# Arguments:
-#   $1 - Project directory
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Project directory
 #
 # Outputs:
 #   None
@@ -640,11 +640,11 @@ function validate_project {
 #   Main entry point for the validation script
 #   Coordinates all validation activities
 #
-# Arguments:
-#   $@ - All command line arguments
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - All command line arguments
 #
 # Outputs:
 #   None

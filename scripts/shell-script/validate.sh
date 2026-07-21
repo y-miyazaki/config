@@ -76,10 +76,10 @@ BATS_EXIT_CODE=0
 # Description:
 #   Displays usage information for the script, including options and examples
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -146,14 +146,14 @@ EOF
 # Description:
 #   Parses command line arguments and options
 #
-# Arguments:
-#   $@ - Command line arguments
-#
 # Globals:
 #   VERBOSE - Enable verbose output
 #   AUTO_FIX - Enable auto-fix mode
 #   QUIET - Suppress non-error output
 #   CHECK_FUNCTION_DOCS - Enable function doc block section checks
+#
+# Arguments:
+#   $@ - Command line arguments
 #
 # Outputs:
 #   None
@@ -206,11 +206,11 @@ function parse_arguments {
 # Description:
 #   Function to analyze script functions
 #
-# Arguments:
-#   $1 - Script path
-#
 # Globals:
 #   VERBOSE - Enable verbose output
+#
+# Arguments:
+#   $1 - Script path
 #
 # Outputs:
 #   None
@@ -252,11 +252,11 @@ function analyze_functions {
 # Description:
 #   Function to auto-fix script formatting with shfmt
 #
-# Arguments:
-#   $1 - Script path
-#
 # Globals:
 #   AUTO_FIX - Enable auto-fix mode
+#
+# Arguments:
+#   $1 - Script path
 #
 # Outputs:
 #   None
@@ -299,11 +299,11 @@ function auto_fix_formatting {
 # Description:
 #   Function to auto-fix shellcheck issues
 #
-# Arguments:
-#   $1 - Script path
-#
 # Globals:
 #   AUTO_FIX - Enable auto-fix mode
+#
+# Arguments:
+#   $1 - Script path
 #
 # Outputs:
 #   None
@@ -350,11 +350,11 @@ function auto_fix_shellcheck {
 # Description:
 #   Function to check script complexity
 #
-# Arguments:
-#   $1 - Script path
-#
 # Globals:
 #   VERBOSE - Enable verbose output
+#
+# Arguments:
+#   $1 - Script path
 #
 # Outputs:
 #   None
@@ -415,11 +415,11 @@ function check_complexity {
 # Description:
 #   Override echo_section for quiet mode support
 #
-# Arguments:
-#   $1 - Section title
-#
 # Globals:
 #   QUIET - Suppress non-error output
+#
+# Arguments:
+#   $1 - Section title
 #
 # Outputs:
 #   None
@@ -443,13 +443,13 @@ function custom_echo_section {
 # Description:
 #   Override log function to handle warning counter and quiet mode
 #
-# Arguments:
-#   $1 - Log level
-#   $2 - Message
-#
 # Globals:
 #   QUIET - Suppress non-error output
 #   WARNINGS_COUNT - Counter for warnings
+#
+# Arguments:
+#   $1 - Log level
+#   $2 - Message
 #
 # Outputs:
 #   None
@@ -485,11 +485,11 @@ function custom_log {
 # Description:
 #   Function to find Bats tests in the repository
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   WORKSPACE_ROOT - Workspace root directory
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -518,11 +518,11 @@ function find_bats_tests {
 # Description:
 #   Function to find all shell scripts recursively
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   SEARCH_PATHS - Array of search paths
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -540,9 +540,9 @@ function find_shell_scripts {
     for search_path in "${SEARCH_PATHS[@]}"; do
         local resolved_search_path
         if [[ $search_path == /* ]]; then
-            resolved_search_path="$search_path"
+            resolved_search_path="$(normalize_path "$search_path")"
         else
-            resolved_search_path="$WORKSPACE_ROOT/$search_path"
+            resolved_search_path="$(normalize_path "$WORKSPACE_ROOT/$search_path")"
         fi
 
         if [[ -f $resolved_search_path ]]; then
@@ -557,7 +557,7 @@ function find_shell_scripts {
             while IFS= read -r -d '' script; do
                 # Double-check it's a file (not directory)
                 if [[ -f $script ]]; then
-                    scripts+=("$script")
+                    scripts+=("$(normalize_path "$script")")
                 fi
             done < <(find "$resolved_search_path" -type f -name "*.sh" -print0 2> /dev/null)
 
@@ -573,7 +573,7 @@ function find_shell_scripts {
                         fi
                     done
                     if [[ $already_added == "false" ]]; then
-                        scripts+=("$script")
+                        scripts+=("$(normalize_path "$script")")
                     fi
                 fi
             done < <(find "$resolved_search_path" -type f ! -name "*.sh" -executable -print0 2> /dev/null)
@@ -597,12 +597,12 @@ function find_shell_scripts {
 # Description:
 #   Function to generate recommendations
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   VERBOSE - Enable verbose output
 #   FAILED_SCRIPTS - Counter for failed scripts
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -644,9 +644,6 @@ function generate_recommendations {
 # Description:
 #   Function to generate summary report
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   TOTAL_SCRIPTS - Total scripts counter
 #   PASSED_SCRIPTS - Passed scripts counter
@@ -655,6 +652,9 @@ function generate_recommendations {
 #   PASSED_SCRIPTS_LIST - List of passed scripts
 #   FAILED_SCRIPTS_LIST - List of failed scripts
 #   WARNING_SCRIPTS_LIST - List of warning scripts
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -758,14 +758,14 @@ function generate_summary_report {
 #   In verbose mode, prints full bats output. Otherwise prints only failing
 #   test blocks and the final summary line.
 #
-# Arguments:
-#   $1 - Path to captured bats TAP output file
-#   $2 - Bats exit code
-#
 # Globals:
 #   VERBOSE - Enable verbose output
 #   BATS_FAILED_TESTS - Populated with "file: test name" entries on failure
 #   BATS_SUMMARY - Final "N tests, ..." summary line
+#
+# Arguments:
+#   $1 - Path to captured bats TAP output file
+#   $2 - Bats exit code
 #
 # Outputs:
 #   None
@@ -827,12 +827,12 @@ function print_bats_output {
 # Description:
 #   Parses bats TAP-format output and records failing tests.
 #
-# Arguments:
-#   $1 - Path to captured bats TAP output file
-#
 # Globals:
 #   BATS_FAILED_TESTS - Populated with "file: test name" entries
 #   BATS_SUMMARY - Human-readable test count summary
+#
+# Arguments:
+#   $1 - Path to captured bats TAP output file
 #
 # Outputs:
 #   None
@@ -906,11 +906,11 @@ function collect_bats_failures_from_tap {
 # Description:
 #   Run bats test files given as arguments
 #
-# Arguments:
-#   $@ - List of test files
-#
 # Globals:
 #   WORKSPACE_ROOT - Workspace root directory
+#
+# Arguments:
+#   $@ - List of test files
 #
 # Outputs:
 #   None
@@ -987,11 +987,11 @@ function run_bats_tests {
 # Description:
 #   Function to run shellcheck
 #
-# Arguments:
-#   $1 - Script path
-#
 # Globals:
 #   VERBOSE - Enable verbose output
+#
+# Arguments:
+#   $1 - Script path
 #
 # Outputs:
 #   None
@@ -1031,11 +1031,11 @@ function run_shellcheck {
 # Description:
 #   Function to validate file permissions
 #
-# Arguments:
-#   $1 - Script path
-#
 # Globals:
 #   AUTO_FIX - Enable auto-fix mode
+#
+# Arguments:
+#   $1 - Script path
 #
 # Outputs:
 #   None
@@ -1079,9 +1079,6 @@ function validate_permissions {
 # Description:
 #   Function to validate a single script
 #
-# Arguments:
-#   $1 - Script path
-#
 # Globals:
 #   WORKSPACE_ROOT - Workspace root directory
 #   TOTAL_SCRIPTS - Total scripts counter
@@ -1092,6 +1089,9 @@ function validate_permissions {
 #   WARNING_SCRIPTS_LIST - List of warning scripts
 #   VERBOSE - Enable verbose output
 #   AUTO_FIX - Enable auto-fix mode
+#
+# Arguments:
+#   $1 - Script path
 #
 # Outputs:
 #   None
@@ -1104,7 +1104,8 @@ function validate_permissions {
 #
 #######################################
 function validate_script {
-    local script="$1"
+    local script
+    script="$(normalize_path "$1")"
     local script_name
     script_name="$(basename "$script")"
     local relative_path
@@ -1190,11 +1191,11 @@ function validate_script {
 # Description:
 #   Function to validate shebang
 #
-# Arguments:
-#   $1 - Script path
-#
 # Globals:
 #   AUTO_FIX - Enable auto-fix mode
+#
+# Arguments:
+#   $1 - Script path
 #
 # Outputs:
 #   None
@@ -1262,12 +1263,12 @@ function validate_shebang {
 #   Returns lines from the nearest preceding separator through the line before
 #   the function definition.
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Script path
 #   $2 - Function definition line number
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Doc block lines to stdout
@@ -1319,12 +1320,12 @@ function extract_function_doc_block {
 # Description:
 #   Validates Globals, Arguments, Outputs, and Returns with explicit body lines.
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Doc block text
 #   $2 - Function signature reference (for error messages)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Issue strings to stdout (one per line)
@@ -1377,15 +1378,60 @@ function function_doc_section_issues {
                     }
                 }
                 if (!found) {
-                    print func_ref ": missing " sec " section"
+                    print "missing " sec " section"
                     continue
                 }
                 if (section_body_missing(sec)) {
-                    print func_ref ": " sec " section has no body (use None)"
+                    print sec " section has no body (use None)"
                 }
             }
         }
     ' <<< "${doc_chunk}"
+}
+
+#######################################
+# format_function_doc_issue: Format a function doc issue for terminal navigation
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Script path
+#   $2 - Line number
+#   $3 - Issue message
+#
+# Outputs:
+#   file:line: message to stdout
+#
+# Returns:
+#   0 on success
+#######################################
+function normalize_path {
+    local path="$1"
+
+    if [[ -z $path ]]; then
+        return 1
+    fi
+
+    if [[ -e $path ]]; then
+        realpath "$path"
+        return 0
+    fi
+
+    local dir base
+    dir="$(dirname "$path")"
+    base="$(basename "$path")"
+    if [[ -d $dir ]]; then
+        printf '%s/%s' "$(realpath "$dir")" "$base"
+    else
+        realpath -m "$path"
+    fi
+}
+
+function format_function_doc_issue {
+    local script
+    script="$(normalize_path "$1")"
+    printf '%s:%s: %s' "$script" "$2" "$3"
 }
 
 #######################################
@@ -1395,12 +1441,12 @@ function function_doc_section_issues {
 #   When CHECK_FUNCTION_DOCS is true, verify each function has a preceding doc
 #   block with Globals, Arguments, Outputs, and Returns (explicit None allowed).
 #
-# Arguments:
-#   $1 - Script path
-#
 # Globals:
 #   CHECK_FUNCTION_DOCS - Enable function doc block section checks
 #   VERBOSE - Enable verbose output
+#
+# Arguments:
+#   $1 - Script path
 #
 # Outputs:
 #   None
@@ -1435,21 +1481,19 @@ function validate_function_docs {
         doc_chunk="$(extract_function_doc_block "$script" "$line_num")"
 
         if ! grep -E '^# .+' <<< "${doc_chunk}" | grep -qvE '^# (Globals|Arguments|Outputs|Returns):'; then
-            missing+=("${func_sig}@${line_num}: missing function description line")
+            missing+=("$(format_function_doc_issue "$script" "$line_num" "missing function description line")")
             continue
         fi
 
         while IFS= read -r issue; do
             [[ -z ${issue} ]] && continue
-            missing+=("${issue} @${line_num}")
+            missing+=("$(format_function_doc_issue "$script" "$line_num" "$issue")")
         done < <(function_doc_section_issues "${doc_chunk}" "${func_sig}")
     done < <(grep -nE '^function [a-zA-Z_][a-zA-Z0-9_]*(\(\))? \{' "$script" 2> /dev/null | cut -d: -f1 || true)
 
     if [[ ${#missing[@]} -gt 0 ]]; then
         custom_log "ERROR" "❌ Function doc block validation failed: $script_name"
-        if [[ $VERBOSE == "true" ]]; then
-            printf '  %s\n' "${missing[@]}"
-        fi
+        printf '%s\n' "${missing[@]}" >&2
         return 1
     fi
 
@@ -1463,11 +1507,11 @@ function validate_function_docs {
 # Description:
 #   Function to validate script syntax
 #
-# Arguments:
-#   $1 - Script path
-#
 # Globals:
 #   VERBOSE - Enable verbose output
+#
+# Arguments:
+#   $1 - Script path
 #
 # Outputs:
 #   None
@@ -1513,15 +1557,15 @@ function validate_syntax {
 # Description:
 #   Main process
 #
-# Arguments:
-#   $@ - Command line arguments
-#
 # Globals:
 #   WORKSPACE_ROOT - Workspace root directory
 #   AUTO_FIX - Enable auto-fix mode
 #   VERBOSE - Enable verbose output
 #   QUIET - Suppress non-error output
 #   FAILED_SCRIPTS - Counter for failed scripts
+#
+# Arguments:
+#   $@ - Command line arguments
 #
 # Outputs:
 #   None

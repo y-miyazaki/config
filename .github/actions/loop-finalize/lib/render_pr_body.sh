@@ -51,11 +51,11 @@ TARGET_KEY="${TARGET_KEY:-}"
 #   Replace common credential patterns with placeholders. Keep patterns
 #   aligned with loop-execute/lib/notify_context.sh.
 #
-# Arguments:
-#   $1 - Input text
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Input text
 #
 # Outputs:
 #   Redacted text to stdout
@@ -85,11 +85,11 @@ function redact_sensitive_text {
 #   Wrap pre-extracted agent overview body text under a ## Overview heading.
 #   Empty input yields no output.
 #
-# Arguments:
-#   $1 - Pre-extracted overview body text (no heading)
-#
 # Globals:
 #   OVERVIEW_MAX_CHARS - Maximum length after redact
+#
+# Arguments:
+#   $1 - Pre-extracted overview body text (no heading)
 #
 # Outputs:
 #   Section markdown to stdout (empty when blank)
@@ -117,11 +117,11 @@ function render_agent_overview_section {
 #   Wrap pre-extracted agent summary body text under a ## Summary heading.
 #   Empty input yields no output.
 #
-# Arguments:
-#   $1 - Pre-extracted summary body text (no heading)
-#
 # Globals:
 #   SUMMARY_MAX_CHARS - Maximum length after redact
+#
+# Arguments:
+#   $1 - Pre-extracted summary body text (no heading)
 #
 # Outputs:
 #   Section markdown to stdout (empty when blank)
@@ -150,11 +150,11 @@ function render_agent_summary_section {
 #   overflow notes (… (+N more)) before listing; preserves or recomputes
 #   overflow. Caps display at 20 paths when no notify note is present.
 #
-# Arguments:
-#   $1 - JSON string array of changed file paths
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - JSON string array of changed file paths
 #
 # Outputs:
 #   Section markdown to stdout (empty when no files)
@@ -206,11 +206,11 @@ function render_changes_section {
 #   Enumerate detect failures with workflow, run URL, job, type, and reason.
 #   Lists up to FAILURES_MAX entries then an overflow line.
 #
-# Arguments:
-#   $1 - Detect result JSON
-#
 # Globals:
 #   FAILURES_MAX - Maximum failure entries to list (default 5)
+#
+# Arguments:
+#   $1 - Detect result JSON
 #
 # Outputs:
 #   Section markdown to stdout (empty when no failures)
@@ -258,11 +258,11 @@ function render_failure_context {
 #######################################
 # escape_markdown_table_cell: Escape pipe and newline for table cells
 #
-# Arguments:
-#   $1 - Raw cell text
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Raw cell text
 #
 # Outputs:
 #   Escaped text to stdout
@@ -286,13 +286,13 @@ function escape_markdown_table_cell {
 #   Emit Level, Target, and Skip reason as a Field | Value table when any
 #   field is set.
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Level (e.g. L2)
 #   $2 - Target key (e.g. integration:main)
 #   $3 - Skip reason
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Section markdown to stdout (empty when all fields blank)
@@ -324,10 +324,10 @@ function render_run_metadata {
 # Description:
 #   Emit the standard disclaimer appended to every loop-created PR body.
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -348,9 +348,6 @@ function render_automation_disclaimer {
 #   Assemble prefix, Overview, Failure context, Summary, Changes, Run
 #   Metadata, and disclaimer in that order. Missing optional sections are skipped.
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   AGENT_REPORT_OVERVIEW - Agent overview body text
 #   AGENT_REPORT_SUMMARY - Agent summary body text
@@ -360,6 +357,9 @@ function render_automation_disclaimer {
 #   PR_BODY_PREFIX - Caller static prefix
 #   SKIP_REASON - Run metadata skip reason
 #   TARGET_KEY - Run metadata target key
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   Full PR body markdown to stdout
@@ -400,12 +400,12 @@ function render_pr_body {
 # Description:
 #   Return the input unchanged when within max; otherwise cut to max chars.
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Input text
 #   $2 - Maximum length
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Truncated text to stdout
@@ -431,11 +431,11 @@ function truncate_text {
 # Description:
 #   Entry point when this file is executed (not sourced).
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   None (delegates to render_pr_body)
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None

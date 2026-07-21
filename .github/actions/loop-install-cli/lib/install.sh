@@ -35,12 +35,12 @@ RESOLVED=""
 #######################################
 # install_cursor_cli: Download and register Cursor CLI bindir
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   HOME - Used to locate installed agent binary
 #   GITHUB_PATH - Optional path file for workflow PATH updates
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -68,12 +68,12 @@ function install_cursor_cli {
 #######################################
 # install_npm_package: Install resolved npm package without saving to package.json
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   PKG - npm package name
 #   RESOLVED - Resolved package version
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -89,12 +89,12 @@ function install_npm_package {
 #######################################
 # resolve_engine_package: Map ENGINE to npm package identifier
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   ENGINE - Engine slug (claude|copilot|codex|cursor)
 #   PKG - Set to package name on success
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -119,14 +119,14 @@ function resolve_engine_package {
 #######################################
 # resolve_package_version: Resolve CLI_VERSION to concrete version string
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   ENGINE - Engine slug
 #   CLI_VERSION - Requested version or latest
 #   PKG - npm package name for non-cursor engines
 #   RESOLVED - Set to resolved version
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -150,11 +150,11 @@ function resolve_package_version {
 #######################################
 # validate_engine: Ensure ENGINE is provided
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   ENGINE - Required engine slug
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -170,13 +170,13 @@ function validate_engine {
 #######################################
 # write_install_outputs: Write package and version to GITHUB_OUTPUT
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   PKG - Package identifier
 #   RESOLVED - Resolved version
 #   GITHUB_OUTPUT - GitHub Actions output file
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -195,11 +195,11 @@ function write_install_outputs {
 #######################################
 # main: Install engine CLI and record outputs
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   ENGINE, CLI_VERSION, PKG, RESOLVED
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None

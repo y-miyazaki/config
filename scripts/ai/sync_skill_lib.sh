@@ -48,10 +48,10 @@ SYNC_COUNT=0
 #######################################
 # show_usage: Display usage information
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -84,11 +84,11 @@ EOF
 #######################################
 # parse_arguments: Parse command line arguments
 #
-# Arguments:
-#   $@ - Command line arguments
-#
 # Globals:
 #   CHECK_MODE - Whether to run in check-only mode
+#
+# Arguments:
+#   $@ - Command line arguments
 #
 # Outputs:
 #   None
@@ -121,14 +121,14 @@ function parse_arguments {
 #######################################
 # sync_one_skill: Sync lib to a single skill's scripts/lib/
 #
-# Arguments:
-#   $1 - Path to skill's scripts/ directory
-#
 # Globals:
 #   SOURCE_LIB - Source lib directory
 #   CHECK_MODE - Check-only flag
 #   DRIFT_COUNT - Incremented on drift
 #   SYNC_COUNT - Incremented on sync
+#
+# Arguments:
+#   $1 - Path to skill's scripts/ directory
 #
 # Outputs:
 #   None
@@ -170,11 +170,11 @@ function sync_one_skill {
 #######################################
 # main: Find all skills with scripts/ and sync lib
 #
-# Arguments:
-#   $@ - Command line arguments
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - Command line arguments
 #
 # Outputs:
 #   None

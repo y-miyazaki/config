@@ -16,12 +16,12 @@
 #######################################
 # build_agent_prompt: Build implementer prompt with optional verifier feedback
 #
-# Arguments:
-#   $1 - Verifier feedback markdown (may be empty)
-#
 # Globals:
 #   PROMPT_TEXT - Base implementer prompt
 #   PROMPT_IMPLEMENTER_FEEDBACK - Retry prompt template
+#
+# Arguments:
+#   $1 - Verifier feedback markdown (may be empty)
 #
 # Outputs:
 #   Full implementer prompt to stdout
@@ -45,11 +45,11 @@ function build_agent_prompt {
 #######################################
 # commit_worktree_if_needed: Commit worktree changes when dirty
 #
-# Arguments:
-#   $1 - Commit message
-#
 # Globals:
 #   WORKTREE_PATH - Absolute path to the isolated worktree
+#
+# Arguments:
+#   $1 - Commit message
 #
 # Outputs:
 #   None
@@ -79,12 +79,12 @@ function commit_worktree_if_needed {
 #   CI logs, and returns the agent exit code. Avoids `cmd | tee` so USAGE_*
 #   globals updated inside run_agent remain visible to the caller.
 #
+# Globals:
+#   USAGE_* - Preserved from run_agent / run_cursor_agent_with_usage
+#
 # Arguments:
 #   $1 - Output file path
 #   $2 - allow_writes flag (true|false), forwarded to run_agent
-#
-# Globals:
-#   USAGE_* - Preserved from run_agent / run_cursor_agent_with_usage
 #
 # Outputs:
 #   None
@@ -106,9 +106,6 @@ function run_agent_capture {
 #######################################
 # run_agent: Execute the configured AI engine CLI
 #
-# Arguments:
-#   $1 - allow_writes flag (true|false). Verifier uses false.
-#
 # Globals:
 #   AGENT_TOKEN - Authentication token for the selected engine
 #   ENGINE - Engine name (claude|copilot|codex|cursor)
@@ -116,6 +113,9 @@ function run_agent_capture {
 #   MODEL - Optional model override
 #   PROMPT - Prompt text
 #   WORKING_DIRECTORY - Working directory for write-capable engines
+#
+# Arguments:
+#   $1 - allow_writes flag (true|false). Verifier uses false.
 #
 # Outputs:
 #   None

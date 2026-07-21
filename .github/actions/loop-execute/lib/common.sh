@@ -23,9 +23,6 @@ _LOOP_EXECUTE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Description:
 #   Fills empty PROMPT_* env vars with loop-execute defaults.
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   PROMPT_IMPLEMENTER_FEEDBACK - Implementer retry template
 #   PROMPT_VERIFIER_INITIAL - Verifier initial-mode intro
@@ -33,6 +30,9 @@ _LOOP_EXECUTE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 #   PROMPT_VERIFIER_TASK - Verifier task section
 #   PROMPT_VERIFIER_OUTPUT_CONTRACT - Verifier JSON output contract
 #   PROMPT_VERIFIER_DEFAULT_CRITERIA - Default APPROVE/REJECT criteria
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -68,11 +68,11 @@ function load_default_prompts {
 # Description:
 #   Coerces NO_CHANGES_VERDICT to APPROVE or REJECT (default APPROVE).
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   NO_CHANGES_VERDICT - Verdict when implementer produces no file changes
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -98,15 +98,15 @@ function normalize_no_changes_verdict {
 #   to a runner-local file and point the implementer prompt at that path instead
 #   of inlining JSON into PROMPT_TEXT. Rebuild verifier_context from the same JSON.
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   DETECT_RESULT_JSON - Detect script JSON from matrix cell (read)
 #   PROMPT_TEXT - Implementer prompt (read/write)
 #   STATUS_DIR - Runner-local status directory for materialized detect JSON (read)
 #   DETECT_JSON_FILE - Path to materialized detect JSON when prompt uses marker (write)
 #   VERIFIER_CONTEXT - Verifier markdown context (read/write)
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -176,12 +176,12 @@ function materialize_matrix_handoff_context {
 #######################################
 # parse_output_field: Extract a legacy line-oriented field from agent output
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Output file path
 #   $2 - Field name (e.g. REASON, FILES)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Field value to stdout, or empty string
@@ -199,12 +199,12 @@ function parse_output_field {
 #######################################
 # render_template: Replace {{key}} placeholders in a template string
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Template string
 #   $2.. - Alternating key/value pairs
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Rendered template to stdout

@@ -36,10 +36,10 @@ VERBOSE="${VERBOSE:-false}"
 # Description:
 #   Prints usage information and exits successfully.
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -67,11 +67,11 @@ EOF
 # Description:
 #   Supports --verbose and --help.
 #
-# Arguments:
-#   $@ - Command line arguments
-#
 # Globals:
 #   VERBOSE - Set to true when --verbose is passed
+#
+# Arguments:
+#   $@ - Command line arguments
 #
 # Outputs:
 #   None
@@ -104,12 +104,12 @@ function parse_arguments {
 # Description:
 #   Ensures python3 is available and required environment variables are set.
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   REGISTRY_FILE - Required registry path
 #   WORKFLOWS_DIR - Required workflows directory path
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -146,13 +146,13 @@ function require_dependencies {
 # Description:
 #   Compares on-loop-* caller workflow permissions against profile registry data.
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   REGISTRY_FILE - Registry YAML path
 #   WORKFLOWS_DIR - Directory containing caller workflows
 #   VERBOSE       - Enables per-caller OK logging
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -288,11 +288,11 @@ PY
 # Description:
 #   Parses arguments, validates dependencies, and runs caller permission checks.
 #
-# Arguments:
-#   $@ - Command line arguments
-#
 # Globals:
 #   VERBOSE - Verbose logging flag
+#
+# Arguments:
+#   $@ - Command line arguments
 #
 # Outputs:
 #   None

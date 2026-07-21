@@ -51,10 +51,10 @@ LAMBDA_PATH=""
 # Description:
 #   Displays usage information for the script, including actions, options, and examples
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -98,14 +98,14 @@ EOF
 # Description:
 #   Parses command line arguments and validates required options
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   ACTION      - Set to the provided action (deploy, validate, delete)
 #   AWS_REGION  - Set to the provided AWS region
 #   ENV         - Set to the provided target environment
 #   LAMBDA_PATH - Set to the provided Lambda project directory path
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None
@@ -161,14 +161,14 @@ function parse_arguments {
 # Description:
 #   Main function to execute the Lambda deployment workflow
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   ACTION      - Action to perform (deploy, validate, delete)
 #   AWS_REGION  - AWS region
 #   ENV         - Target environment name
 #   LAMBDA_PATH - Path to Lambda project directory
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None

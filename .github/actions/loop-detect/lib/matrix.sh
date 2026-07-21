@@ -21,6 +21,9 @@ LOOP_DETECT_RESULT_MARKER='__LOOP_DETECT_RESULT_JSON__'
 #######################################
 # build_prompt_text: Assemble implementer prompt for one candidate
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Skill name
 #   $2 - Autonomy level
@@ -31,9 +34,6 @@ LOOP_DETECT_RESULT_MARKER='__LOOP_DETECT_RESULT_JSON__'
 #   $7 - Detect result JSON
 #   $8 - Open rejections prompt markdown
 #   $9 - Consecutive failures count
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Prompt text on stdout
@@ -97,11 +97,11 @@ function build_prompt_text {
 #######################################
 # shrink_matrix_candidate_for_output: Trim matrix payload for job output limits
 #
-# Arguments:
-#   $1 - Candidate JSON object string
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Candidate JSON object string
 #
 # Outputs:
 #   Compacted candidate JSON on stdout
@@ -128,11 +128,11 @@ function shrink_matrix_candidate_for_output {
 #######################################
 # build_verifier_context_from_result: Derive verifier_context markdown
 #
-# Arguments:
-#   $1 - Detect script JSON result
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Detect script JSON result
 #
 # Outputs:
 #   Markdown context on stdout (may be empty)
@@ -260,11 +260,11 @@ function build_verifier_context_from_result {
 #######################################
 # candidate_priority_rank: Echo numeric rank for mode (lower runs first)
 #
-# Arguments:
-#   $1 - Target mode (integration|pull_request)
-#
 # Globals:
 #   LOOP_PRIORITY - Comma-separated mode order
+#
+# Arguments:
+#   $1 - Target mode (integration|pull_request)
 #
 # Outputs:
 #   Rank integer on stdout
@@ -295,11 +295,11 @@ function candidate_priority_rank {
 #######################################
 # sort_candidates_by_priority: Sort CANDIDATES_JSON by LOOP_PRIORITY
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   CANDIDATES_JSON - Array to sort in place
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -340,13 +340,13 @@ function sort_candidates_by_priority {
 #######################################
 # write_detect_outputs: Write should_run, skip_reason, target_matrix
 #
+# Globals:
+#   GITHUB_OUTPUT - GitHub Actions output file
+#
 # Arguments:
 #   $1 - should_run (true|false)
 #   $2 - skip_reason
 #   $3 - target_matrix JSON array string
-#
-# Globals:
-#   GITHUB_OUTPUT - GitHub Actions output file
 #
 # Outputs:
 #   None

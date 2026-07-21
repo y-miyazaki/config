@@ -35,11 +35,11 @@ source "${SCRIPT_DIR}/../lib/all.sh"
 # Description:
 #   Displays usage information for the script, including options and examples
 #
-# Arguments:
-#   $1 - Error message to display (optional)
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Error message to display (optional)
 #
 # Outputs:
 #   Writes to stdout
@@ -83,10 +83,10 @@ EOF
 # Description:
 #   Builds the Go Lambda project using make build
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -112,11 +112,11 @@ function build_project {
 # Description:
 #   Deploys the built Lambda functions to AWS using Serverless Framework
 #
-# Arguments:
-#   $1 - Deployment stage (dev, staging, prod)
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Deployment stage (dev, staging, prod)
 #
 # Outputs:
 #   None
@@ -143,10 +143,10 @@ function deploy_to_aws {
 # Description:
 #   Installs project dependencies using npm ci
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -172,11 +172,11 @@ function install_dependencies {
 # Description:
 #   Validates that required arguments are provided
 #
-# Arguments:
-#   $1 - Deployment stage
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Deployment stage
 #
 # Outputs:
 #   None
@@ -202,11 +202,11 @@ function validate_arguments {
 # Description:
 #   Main entry point that orchestrates the deployment process
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None

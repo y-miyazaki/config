@@ -33,13 +33,13 @@ fi
 # Description:
 #   Applies the Terraform configuration to create or update infrastructure
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Environment name (optional, uses ENV if not provided)
 #   $2 - Plan file path (optional, if provided, applies from plan file)
 #   $3 - Auto-approve flag (optional, "auto-approve" to skip confirmation)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -89,12 +89,12 @@ function terraform_apply {
 # Description:
 #   Destroys all resources managed by the Terraform configuration
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Environment name (optional, uses ENV if not provided)
 #   $2 - Auto-approve flag (optional, "auto-approve" to skip confirmation)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -138,10 +138,10 @@ function terraform_destroy {
 # Description:
 #   Returns the name of the currently selected Terraform workspace
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -164,11 +164,11 @@ function terraform_get_workspace {
 # Description:
 #   Formats Terraform configuration files or checks formatting compliance
 #
-# Arguments:
-#   $1 - Check only mode (optional, "check" to only check formatting)
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Check only mode (optional, "check" to only check formatting)
 #
 # Outputs:
 #   None
@@ -205,12 +205,12 @@ function terraform_format {
 # Description:
 #   Initializes Terraform with the specified backend configuration
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Environment name (optional, uses ENV if not provided)
 #   $2 - Additional init options (optional)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -252,13 +252,13 @@ function terraform_init {
 # Description:
 #   Creates a Terraform execution plan
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Environment name (optional, uses ENV if not provided)
 #   $2 - Plan file path (optional, defaults to terraform.tfplan)
 #   $3 - Additional plan options (optional)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -301,11 +301,11 @@ function terraform_plan {
 # Description:
 #   Switches to the specified Terraform workspace, creating it if it doesn't exist
 #
-# Arguments:
-#   $1 - Workspace name
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Workspace name
 #
 # Outputs:
 #   None
@@ -341,10 +341,10 @@ function terraform_select_workspace {
 # Description:
 #   Validates the Terraform configuration files
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -373,11 +373,11 @@ function terraform_validate {
 # Description:
 #   Runs tflint to lint Terraform configuration files
 #
-# Arguments:
-#   $1 - Recursive mode (optional, "recursive" to run recursively)
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Recursive mode (optional, "recursive" to run recursively)
 #
 # Outputs:
 #   None
@@ -425,13 +425,13 @@ function terraform_lint {
 # Description:
 #   Runs a complete Terraform workflow including init, validate, and specified action
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Environment name (optional, uses ENV if not provided)
 #   $2 - Workflow type (optional: "plan", "apply", "destroy", defaults to "apply")
 #   $3 - Auto-approve flag (optional, "auto-approve" to skip confirmation)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -482,11 +482,11 @@ function terraform_workflow {
 # Description:
 #   Validates required Terraform environment variables and dependencies
 #
-# Arguments:
-#   $1 - Environment name (optional, uses ENV if not provided)
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Environment name (optional, uses ENV if not provided)
 #
 # Outputs:
 #   None

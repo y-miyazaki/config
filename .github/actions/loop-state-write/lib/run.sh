@@ -56,9 +56,6 @@ STATE_TMP=""
 #######################################
 # commit_and_push_state: Commit state paths and push or open fallback PR
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   STATE_FILE - Path to state JSON
 #   STATE_TMP - Prepared state content
@@ -69,6 +66,9 @@ STATE_TMP=""
 #   ADDITIONAL_COMMIT_PATHS - Optional comma-separated extra paths
 #   SHA - Cursor SHA for PR body text
 #   OUTCOME - Outcome for PR body text
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -134,14 +134,14 @@ function commit_and_push_state {
 #######################################
 # open_state_pr_fallback: Open auto-merge state PR when direct push is blocked
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   READ_BRANCH - PR base branch
 #   SHA - Cursor SHA for PR body
 #   OUTCOME - Outcome for PR body
 #   GH_TOKEN - GitHub token
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -178,11 +178,11 @@ function open_state_pr_fallback {
 #######################################
 # configure_git_auth: Configure git identity and GitHub auth header
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   GH_TOKEN - GitHub token for push and gh CLI
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -202,14 +202,14 @@ function configure_git_auth {
 #######################################
 # load_state_tmp: Fetch branches and load state JSON into STATE_TMP
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   STATE_TMP - Set to temp file path with loaded JSON
 #   READ_BRANCH - Branch used to read existing state
 #   PUSH_BRANCH - Branch used for checkout before commit
 #   STATE_FILE - State file path
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -246,14 +246,14 @@ function load_state_tmp {
 #######################################
 # resolve_consecutive_failures: Compute consecutive_failures for outcome
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   TARGET_KEY - Target key in state file
 #   STATE_TMP - Current state JSON temp file
 #   OUTCOME - Run outcome
 #   OPEN_REJECTIONS - JSON array; may be reset
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   Consecutive failure count on stdout
@@ -291,12 +291,12 @@ function resolve_consecutive_failures {
 #######################################
 # validate_branches: Validate read and push branch names
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   READ_BRANCH - Set before call in main
 #   PUSH_BRANCH - Set before call in main
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -319,9 +319,6 @@ function validate_branches {
 #######################################
 # validate_required_inputs: Validate required env for target state writes
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   TARGET_KEY - Required target key
 #   WRITE_TARGET_STATE - When true, outcome and mode-specific fields are required
@@ -329,6 +326,9 @@ function validate_branches {
 #   SHA - Cursor SHA
 #   STATE_WRITE_MODE - advance|pending|metadata|promote|clear_pending
 #   PENDING_PR_NUMBER - Required for pending/promote/clear_pending
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -370,10 +370,6 @@ function validate_required_inputs {
 #######################################
 # write_state_advance: Set last_sha and clear pending
 #
-# Arguments:
-#   $1 - ISO timestamp
-#   $2 - consecutive_failures value
-#
 # Globals:
 #   STATE_TMP - State JSON temp file
 #   TARGET_KEY - Target key
@@ -381,6 +377,10 @@ function validate_required_inputs {
 #   OUTCOME - Run outcome
 #   REJECT_REASON - Optional rejection reason
 #   OPEN_REJECTIONS - JSON array
+#
+# Arguments:
+#   $1 - ISO timestamp
+#   $2 - consecutive_failures value
 #
 # Outputs:
 #   None
@@ -420,10 +420,6 @@ function write_state_advance {
 #######################################
 # write_state_clear_pending: Clear pending without advancing last_sha
 #
-# Arguments:
-#   $1 - ISO timestamp
-#   $2 - consecutive_failures value
-#
 # Globals:
 #   STATE_TMP - State JSON temp file
 #   TARGET_KEY - Target key
@@ -431,6 +427,10 @@ function write_state_advance {
 #   OUTCOME - Run outcome
 #   REJECT_REASON - Optional rejection reason
 #   OPEN_REJECTIONS - JSON array
+#
+# Arguments:
+#   $1 - ISO timestamp
+#   $2 - consecutive_failures value
 #
 # Outputs:
 #   None
@@ -476,16 +476,16 @@ function write_state_clear_pending {
 #######################################
 # write_state_metadata: Update outcome metadata without changing last_sha
 #
-# Arguments:
-#   $1 - ISO timestamp
-#   $2 - consecutive_failures value
-#
 # Globals:
 #   STATE_TMP - State JSON temp file
 #   TARGET_KEY - Target key
 #   OUTCOME - Run outcome
 #   REJECT_REASON - Optional rejection reason
 #   OPEN_REJECTIONS - JSON array
+#
+# Arguments:
+#   $1 - ISO timestamp
+#   $2 - consecutive_failures value
 #
 # Outputs:
 #   None
@@ -522,10 +522,6 @@ function write_state_metadata {
 #######################################
 # write_state_pending: Record pending cursor without advancing last_sha
 #
-# Arguments:
-#   $1 - ISO timestamp
-#   $2 - consecutive_failures value
-#
 # Globals:
 #   STATE_TMP - State JSON temp file
 #   TARGET_KEY - Target key
@@ -536,6 +532,10 @@ function write_state_metadata {
 #   OUTCOME - Run outcome
 #   REJECT_REASON - Optional rejection reason
 #   OPEN_REJECTIONS - JSON array
+#
+# Arguments:
+#   $1 - ISO timestamp
+#   $2 - consecutive_failures value
 #
 # Outputs:
 #   None
@@ -584,10 +584,6 @@ function write_state_pending {
 #######################################
 # write_state_promote: Promote pending.sha to last_sha
 #
-# Arguments:
-#   $1 - ISO timestamp
-#   $2 - consecutive_failures value
-#
 # Globals:
 #   STATE_TMP - State JSON temp file
 #   TARGET_KEY - Target key
@@ -595,6 +591,10 @@ function write_state_pending {
 #   OUTCOME - Run outcome
 #   REJECT_REASON - Optional rejection reason
 #   OPEN_REJECTIONS - JSON array
+#
+# Arguments:
+#   $1 - ISO timestamp
+#   $2 - consecutive_failures value
 #
 # Outputs:
 #   None
@@ -641,12 +641,12 @@ function write_state_promote {
 #######################################
 # write_target_state: Dispatch state write by state_write_mode
 #
+# Globals:
+#   STATE_WRITE_MODE - advance|pending|metadata|promote|clear_pending
+#
 # Arguments:
 #   $1 - ISO timestamp
 #   $2 - consecutive_failures value
-#
-# Globals:
-#   STATE_WRITE_MODE - advance|pending|metadata|promote|clear_pending
 #
 # Outputs:
 #   None
@@ -685,10 +685,10 @@ function write_target_state {
 #######################################
 # main: Write loop state and push to branch_state
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:

@@ -28,10 +28,10 @@ export LC_ALL=C.UTF-8
 #######################################
 # main: Push branch when loop produced changes
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:

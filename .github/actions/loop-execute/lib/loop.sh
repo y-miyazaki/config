@@ -43,11 +43,11 @@ OUTCOME_OVERRIDE=""
 #######################################
 # initialize_loop_state: Prepare status directory and prompt defaults
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   STATUS_DIR - Caller env directory for attempt artifacts (read)
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -67,11 +67,11 @@ function initialize_loop_state {
 #######################################
 # parse_outcome_override_from_agent_output: Detect Skill watch outcome from implementer text
 #
-# Arguments:
-#   $1 - Implementer agent output text
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Implementer agent output text
 #
 # Outputs:
 #   None
@@ -95,9 +95,6 @@ function parse_outcome_override_from_agent_output {
 #######################################
 # write_loop_outputs: Write step outputs to GITHUB_OUTPUT
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   ATTEMPT - Final attempt count (read)
 #   GITHUB_OUTPUT - GitHub Actions output file path (read)
@@ -106,6 +103,9 @@ function parse_outcome_override_from_agent_output {
 #   OUTCOME_OVERRIDE - Skill watch override when set (read)
 #   REASON - Final verdict reason (read)
 #   VERDICT - Final loop verdict (read)
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -150,9 +150,6 @@ function write_loop_outputs {
 #######################################
 # run_bounded_loop: Execute implementer→verifier attempts until APPROVE or max attempts
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   ATTEMPT - Current attempt counter (read/write)
 #   HAS_CHANGES - Whether commits were produced (read/write)
@@ -161,6 +158,9 @@ function write_loop_outputs {
 #   REASON - Verdict reason for current attempt (read/write)
 #   REJECT_FEEDBACK - Verifier feedback for retry prompt (read)
 #   VERDICT - Loop verdict for current attempt (read/write)
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -271,9 +271,6 @@ function run_bounded_loop {
 #######################################
 # main: Entry point for bounded loop execution
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   AGENT_LOOP_MAX_ATTEMPTS - Maximum implementer attempts (read)
 #   AGENT_TOKEN - Authentication token for the selected engine (read)
@@ -282,6 +279,9 @@ function run_bounded_loop {
 #   PROMPT_TEXT - Base implementer prompt (read)
 #   STATUS_DIR - Status directory for attempt artifacts (read)
 #   WORKTREE_PATH - Isolated git worktree path (read)
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None

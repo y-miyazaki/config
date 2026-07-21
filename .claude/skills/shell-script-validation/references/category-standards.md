@@ -63,19 +63,23 @@ When `--check-function-docs` is passed to `validate.sh`, enforce [Google Shell S
 ```bash
 #######################################
 # Brief description of what the function does.
+#
 # Globals:
 #   None
+#
 # Arguments:
 #   $1 - path to process
+#
 # Outputs:
 #   None
+#
 # Returns:
 #   0 on success, 1 on failure
 #######################################
 function my_function() {
 ```
 
-Required section headers: `Globals:`, `Arguments:`, `Outputs:`, `Returns:`. Each section must have a body line (content or `None`).
+Required section headers in this order: `Globals:`, `Arguments:`, `Outputs:`, `Returns:`. Each section must have a body line (content or `None`). Use `scripts/fix_function_doc_order.sh` to normalize section order (accepts files or directories such as `scripts/lib/` and `.github/actions/`).
 
 ## Error Handling
 

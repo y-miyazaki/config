@@ -31,10 +31,10 @@ source "${SCRIPT_DIR}/../lib/all.sh"
 # Description:
 #   Displays usage information for the script, including options and examples
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -68,11 +68,11 @@ EOF
 # Description:
 #   Parses command line arguments and handles help option
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None
@@ -106,11 +106,11 @@ function parse_arguments {
 # Description:
 #   Processes task definition ARNs and extracts unique family names
 #
-# Arguments:
-#   $1 - Space-separated string of task definition ARNs
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Space-separated string of task definition ARNs
 #
 # Outputs:
 #   None
@@ -157,11 +157,11 @@ function extract_unique_families {
 # Description:
 #   Formats task definition families into Terraform configuration format
 #
-# Arguments:
-#   $@ - Array of task definition family names
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - Array of task definition family names
 #
 # Outputs:
 #   None
@@ -197,10 +197,10 @@ function generate_terraform_output {
 # Description:
 #   Retrieves all ECS task definition ARNs from AWS using AWS CLI
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -229,11 +229,11 @@ function get_task_definitions {
 # Description:
 #   Outputs the formatted Terraform configuration in JSON array format
 #
-# Arguments:
-#   $1 - Formatted Terraform configuration items string
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Formatted Terraform configuration items string
 #
 # Outputs:
 #   Writes to stdout
@@ -260,11 +260,11 @@ function output_result {
 # Description:
 #   Main entry point that orchestrates the ECS task definition family extraction process
 #
-# Arguments:
-#   $@ - All command line arguments passed to the script
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - All command line arguments passed to the script
 #
 # Outputs:
 #   None
