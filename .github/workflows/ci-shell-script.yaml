@@ -54,7 +54,7 @@ jobs:
 
       - name: Configure git auth
         if: github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@0575b2ab2981ecfab8ac1a60a19eefc602af6fc3 # v1.8.49
+        uses: y-miyazaki/config/.github/actions/git-auth@b7dbe0b8b43ebe4e476c2466c858fefd9b7728d9 # v1.8.49
         with:
           operation: configure
           token: ${{ github.token }}
@@ -201,14 +201,14 @@ jobs:
 
       - name: Clear git auth
         if: always() && github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@0575b2ab2981ecfab8ac1a60a19eefc602af6fc3 # v1.8.49
+        uses: y-miyazaki/config/.github/actions/git-auth@b7dbe0b8b43ebe4e476c2466c858fefd9b7728d9 # v1.8.49
         with:
           operation: clear
           token: ${{ github.token }}
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@0575b2ab2981ecfab8ac1a60a19eefc602af6fc3 # v1.8.49
+        uses: y-miyazaki/config/.github/actions/summary@b7dbe0b8b43ebe4e476c2466c858fefd9b7728d9 # v1.8.49
         with:
           artifacts: |
             (none)
