@@ -18,11 +18,14 @@
 # Arguments:
 #   $1 - Newline-separated changed file paths
 #
-# Global Variables:
+# Globals:
 #   ALLOWLIST - Comma-separated glob allowlist (optional)
 #
-# Returns:
+# Outputs:
 #   Newline-separated violating paths to stdout, or nothing
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function collect_allowlist_violations {
@@ -56,11 +59,14 @@ function collect_allowlist_violations {
 # Arguments:
 #   $1 - Newline-separated changed file paths
 #
-# Global Variables:
+# Globals:
 #   DENYLIST - Comma-separated glob denylist
 #
-# Returns:
+# Outputs:
 #   Newline-separated matching paths to stdout, or nothing
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function collect_denylist_violations {
@@ -89,11 +95,14 @@ function collect_denylist_violations {
 # Arguments:
 #   $1 - Single path segment (no slashes)
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   ERE fragment to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function component_to_ere {
@@ -128,11 +137,14 @@ function component_to_ere {
 # Arguments:
 #   $1 - Glob pattern (may include / and **)
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Anchored ERE to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function glob_to_ere {
@@ -183,11 +195,14 @@ function glob_to_ere {
 #   $1 - Verifier text to scan
 #   $2 - Fallback comma-separated file paths
 #
-# Global Variables:
+# Globals:
 #   INFER_FILES_PATTERN - Optional extended-regex override
 #
-# Returns:
+# Outputs:
 #   Comma-separated file paths to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function infer_files_from_text {
@@ -213,7 +228,10 @@ function infer_files_from_text {
 #   $1 - Repo-relative file path
 #   $2 - Glob pattern
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

@@ -59,8 +59,11 @@ STATE_FILE="${STATE_FILE-}"
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   DETECT_SCRIPT - Updated in place to an absolute path
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success; non-zero when the script cannot be resolved
@@ -111,11 +114,14 @@ function resolve_detect_script_path {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   LOOP_SCOPED_HEAD_BRANCH, CI_SWEEPER_WORKFLOW_RUN_ID, CI_SWEEPER_EVENT_HEAD_BRANCH
 #
-# Returns:
+# Outputs:
 #   Scoped branch name on stdout (may be empty)
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function resolve_scoped_head_branch {
@@ -144,8 +150,11 @@ function resolve_scoped_head_branch {
 # Arguments:
 #   $1 - Scoped head branch from resolve_scoped_head_branch
 #
-# Global Variables:
+# Globals:
 #   CI_SWEEPER_WORKFLOW_RUN_ID - when set, scoped head is required
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 when safe to continue; 1 when detect should abort with config_error
@@ -177,8 +186,11 @@ function require_scoped_head_for_workflow_run {
 # Arguments:
 #   $1 - Scoped head branch (empty = no-op)
 #
-# Global Variables:
+# Globals:
 #   INTEGRATION_BRANCHES, OPEN_PRS_JSON - Filtered in place
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -225,10 +237,13 @@ function apply_scoped_head_filter {
 # Arguments:
 #   $1 - Branch name
 #
-# Global Variables:
+# Globals:
 #   CANDIDATES_JSON - Appended when actionable work is found
 #   STATE_FILE, BASE_BRANCH, DETECT_SCRIPT, SKILL_NAME, LEVEL, ALLOWLIST
 #   PROMPT_INSTRUCTIONS, LOOP_FINALIZE_INTEGRATION
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -306,10 +321,13 @@ function append_integration_candidate {
 # Arguments:
 #   $1 - PR JSON object
 #
-# Global Variables:
+# Globals:
 #   CANDIDATES_JSON - Appended when actionable work is found
 #   STATE_FILE, BASE_BRANCH, DETECT_SCRIPT, SKILL_NAME, LEVEL, ALLOWLIST
 #   PROMPT_INSTRUCTIONS, LOOP_FINALIZE_PULL_REQUEST
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -395,8 +413,11 @@ function append_pull_request_candidate {
 # Arguments:
 #   $1 - Maximum targets per schedule
 #
-# Global Variables:
+# Globals:
 #   CANDIDATES_JSON - Truncated in place when over cap
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -427,11 +448,14 @@ function apply_target_cap {
 #   $4 - Verifier context markdown
 #   $5 - Detect script JSON result
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Candidate JSON to stdout; non-zero when assembly fails
+#
 # Returns:
-#   Candidate JSON on stdout; non-zero when assembly fails
+#   0 on success
 #
 #######################################
 function build_loop_candidate_json {
@@ -496,7 +520,10 @@ function build_loop_candidate_json {
 #   $1 - Branch name
 #   $2 - Optional ref (default: origin/branch)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -526,7 +553,10 @@ function checkout_context {
 # Arguments:
 #   $1 - Detect script JSON result
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -551,11 +581,14 @@ function detect_result_skip {
 #   $1 - Base target_json object string
 #   $2 - Detect script JSON result
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Enriched target_json on stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function enrich_target_json_with_ci_context {
@@ -621,7 +654,10 @@ function enrich_target_json_with_ci_context {
 # Arguments:
 #   $1 - Message
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -640,7 +676,10 @@ function log_detect_error {
 #   $2 - Label for the invalid payload (e.g. detect_result)
 #   $3 - Raw JSON string that failed validation
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -668,7 +707,10 @@ function log_detect_json_invalid {
 #   $2 - Target key or scope
 #   $3 - Detail text
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -688,8 +730,11 @@ function log_detect_notice {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   LOOP_BRANCH_MATCH - Match mode under validation
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 when valid, 1 otherwise
@@ -711,8 +756,11 @@ function validate_branch_match {
 # Arguments:
 #   $1 - target_matrix JSON array string
 #
-# Global Variables:
+# Globals:
 #   GITHUB_OUTPUT, STATE_FILE, BASE_BRANCH
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -757,8 +805,11 @@ function write_legacy_outputs {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   CANDIDATES_JSON, INTEGRATION_BRANCHES, OPEN_PRS_JSON - Populated during run
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None

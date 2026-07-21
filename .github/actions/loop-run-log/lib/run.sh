@@ -55,13 +55,16 @@ WORKFLOW_RUN="${WORKFLOW_RUN:-}"
 # Arguments:
 #   $1 - Duration in seconds
 #
-# Global Variables:
+# Globals:
 #   RUN_LOG_FILE - Target run log path
 #   ATTEMPTS, HAS_CHANGES, LOOP_NAME, OUTCOME, SKIP_REASON, TOKENS_ESTIMATE
 #   VERDICT, WORKFLOW_RUN, USAGE_JSON - Entry fields
 #
-# Returns:
+# Outputs:
 #   Entry JSON on stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function append_run_log_entry {
@@ -89,12 +92,15 @@ function append_run_log_entry {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   DURATION_S_INPUT - Optional explicit duration
 #   RUN_STARTED_AT - Optional ISO start timestamp
 #
-# Returns:
+# Outputs:
 #   Duration seconds on stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function resolve_duration_s {
@@ -111,10 +117,13 @@ function resolve_duration_s {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   LOOP_NAME - Required loop identifier
 #   OUTCOME - Required run outcome
 #   TOKEN - Required GitHub token for push
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 1 when required input is missing
@@ -132,8 +141,11 @@ function validate_required_inputs {
 # Arguments:
 #   $1 - JSON entry string
 #
-# Global Variables:
+# Globals:
 #   GITHUB_OUTPUT - Optional GitHub Actions output file path
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -161,8 +173,11 @@ function write_entry_json_output {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   BASE_BRANCH - Branch for commit and PR fallback
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with script status

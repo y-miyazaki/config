@@ -56,7 +56,7 @@ Applies to `source`d modules (for example `lib/*.sh`, `scripts/lib/*.sh`):
 - Omit items 2, 3, 5 (`show_usage` / `parse_arguments` / `main`), and 6 from the executable list above
 - Match comment style, separators, and function doc blocks used by sibling files in the same directory
 - List functions in a-z order (G-03)
-- Every function doc block must include **Arguments**, **Global Variables**, and **Returns** (`None` when a section does not apply)
+- Every function doc block must include **Globals**, **Arguments**, **Outputs**, and **Returns** (`None` when a section does not apply)
 - When refactoring logic, **do not remove** header or function comment blocks to save tokens
 
 ### Header Comment Format
@@ -79,40 +79,41 @@ Applies to `source`d modules (for example `lib/*.sh`, `scripts/lib/*.sh`):
 
 ### Function Documentation
 
+Based on [Google Shell Style Guide — Function Comments](https://google.github.io/styleguide/shellguide.html#s4.2-function-comments). List all API sections explicitly; write `None` when a section does not apply (clearer than omitting the section).
+
 ```bash
-# function_name: concise description (one line)
-#
-# Description:
-#   What this function does (one paragraph).
+#######################################
+# Brief description of what the function does.
+# Globals:
+#   VAR_NAME - globals read or written (or None)
 #
 # Arguments:
-#   $1 - description of argument 1
+#   $1 - description of argument 1 (or None)
 #
-# Global Variables:
-#   VAR_NAME - description of global variable set or used
+# Outputs:
+#   STDOUT/STDERR description (or None)
 #
 # Returns:
-#   exit code or output description
-#
+#   Exit status description (or None)
+#######################################
+function my_function() {
 ```
 
-Write `None` for sections that do not apply. **Do not omit sections** — especially `Global Variables`; when a function reads or writes no caller globals, write `Global Variables:` followed by `None`.
+**Do not omit sections** — write `None` on the next line when a section has no applicable content.
 
 ## Guidelines
 
 ### Anti-Patterns (AP)
-
 - AP-01 (SHOULD): Executable Rules on Sourced Libraries
   - Check: Are executable-script requirements (`set -euo pipefail`, `main`, entry guard) avoided on sourced library files?
 - AP-02 (SHOULD): Preserve DOC Comment Blocks
   - Check: Are header and function DOC blocks kept when refactoring?
-- AP-03 (SHOULD): Global Variables Section Required
-  - Check: Does every function doc block include `Global Variables:` with `None` when no caller globals apply?
+- AP-03 (SHOULD): Globals Section Required
+  - Check: Does every function doc block include `Globals:` with `None` when no caller globals apply?
 - AP-04 (SHOULD): Consistent Library Comment Style
   - Check: Do sibling `lib/*.sh` files share the same comment and separator style?
 
 ### Code Standards (CODE)
-
 - CODE-01 (SHOULD): Proper Array Usage
   - Check: Are paths with spaces and multiple values managed with arrays?
 - CODE-02 (SHOULD): Minimize Global Variables
@@ -125,20 +126,18 @@ Write `None` for sections that do not apply. **Do not omit sections** — especi
   - Check: Do functions have single responsibility and accept arguments explicitly?
 
 ### Dependencies (DEP)
-
 - DEP-01 (SHOULD): Document Required Commands
   - Check: Are dependent commands documented in README?
 - DEP-02 (SHOULD): Command Existence Check
   - Check: Are commands verified with command -v with clear error messages?
 
 ### Documentation (DOC)
-
 - DOC-01 (MUST): Standard Header Format
   - Check: Does file header contain Description/Usage/Design Rules?
 - DOC-02 (SHOULD): show_usage Required
   - Check: Is show_usage function implemented?
 - DOC-03 (SHOULD): Function Comment Blocks
-  - Check: Does each function include Description, Arguments, Global Variables, and Returns sections, using the same separator or spacing convention as sibling files in the directory?
+  - Check: Does each function include a description line plus `Globals`, `Arguments`, `Outputs`, and `Returns` sections with explicit `None` when a section does not apply, using the same separator convention as sibling files?
 - DOC-04 (SHOULD): Complex Logic Comments
   - Check: Do complex algorithms have Why comments?
 - DOC-05 (SHOULD): Variable Documentation
@@ -153,7 +152,6 @@ Write `None` for sections that do not apply. **Do not omit sections** — especi
   - Check: Is CHANGELOG.md maintained with breaking changes documented?
 
 ### Error Handling (ERR)
-
 - ERR-01 (SHOULD): Trap Configuration
   - Check: Are trap handlers set for EXIT, ERR, INT, TERM?
 - ERR-02 (SHOULD): Exit Code Checking
@@ -170,7 +168,6 @@ Write `None` for sections that do not apply. **Do not omit sections** — especi
   - Check: Are errors persistently logged to a log file?
 
 ### Function Design (FUNC)
-
 - FUNC-01 (SHOULD): Functions Under 50 Lines Recommended
   - Check: Are functions 50 lines or less?
 - FUNC-02 (SHOULD): Standardize parse_arguments
@@ -183,7 +180,6 @@ Write `None` for sections that do not apply. **Do not omit sections** — especi
   - Check: Is main function implemented with minimized global scope processing?
 
 ### Global / Base (G)
-
 - G-01 (MUST): Set SCRIPT_DIR
   - Check: When the script sources libraries or resolves relative paths, is `SCRIPT_DIR` set?
 - G-02 (SHOULD): No Hardcoded Secrets
@@ -196,7 +192,6 @@ Write `None` for sections that do not apply. **Do not omit sections** — especi
   - Check: Does script run without errors on re-execution?
 
 ### Logging (LOG)
-
 - LOG-01 (SHOULD): Separate stdout/stderr
   - Check: Are errors clearly separated to >&2 and info to stdout?
 - LOG-02 (SHOULD): Implement Log Levels
@@ -209,7 +204,6 @@ Write `None` for sections that do not apply. **Do not omit sections** — especi
   - Check: Is detailed log control available with -v/--verbose option?
 
 ### Performance (PERF)
-
 - PERF-01 (SHOULD): Minimize External Commands
   - Check: Are external commands in loops minimized and Bash built-ins prioritized?
 - PERF-02 (SHOULD): Reduce Subshells
@@ -232,7 +226,6 @@ Write `None` for sections that do not apply. **Do not omit sections** — especi
   - Check: Are performance bottlenecks identified with set -x and time?
 
 ### Security (SEC)
-
 - SEC-01 (SHOULD): Input Validation
   - Check: Is user input validated with regex patterns or whitelists?
 - SEC-02 (SHOULD): Command Injection Prevention
@@ -253,7 +246,6 @@ Write `None` for sections that do not apply. **Do not omit sections** — especi
   - Check: Is umask 027 set and least privilege principle applied?
 
 ### Testing (TEST)
-
 - TEST-00 (MUST): Add Tests With Script Changes
   - Check: When adding or materially changing a shell script or sourced library, is a matching Bats suite added or updated in the same change?
 - TEST-01 (MUST): Implement Unit Tests
@@ -266,6 +258,7 @@ Write `None` for sections that do not apply. **Do not omit sections** — especi
 ### Code Modification Guidelines
 
 - When adding or changing shell scripts or sourced libraries, add or update matching Bats suites under test/bats/ (mirror the script path) in the same change; follow companion Bats rules (stem `bats`) for suite layout.
+
 
 ## Testing and Validation
 

@@ -24,11 +24,14 @@ LOOP_HANDOFF_VERSION=1
 # Arguments:
 #   $1 - Handoff bundle directory
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Echoes handoff directory on stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function loop_handoff_init_bundle {
@@ -46,11 +49,14 @@ function loop_handoff_init_bundle {
 #   $1 - Handoff bundle directory
 #   $2 - Target key
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Absolute or relative payload path on stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function loop_handoff_payload_path {
@@ -66,11 +72,14 @@ function loop_handoff_payload_path {
 #   $1 - Handoff bundle directory
 #   $2 - Target key
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Detect result JSON to stdout; non-zero when payload is missing
+#
 # Returns:
-#   Detect result JSON on stdout; non-zero when payload is missing
+#   0 on success
 #
 #######################################
 function loop_handoff_read_detect_result {
@@ -89,11 +98,14 @@ function loop_handoff_read_detect_result {
 #   $1 - Handoff bundle directory
 #   $2 - Target key
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Payload JSON to stdout; non-zero when missing or invalid
+#
 # Returns:
-#   Payload JSON on stdout; non-zero when missing or invalid
+#   0 on success
 #
 #######################################
 function loop_handoff_read_payload {
@@ -118,11 +130,14 @@ function loop_handoff_read_payload {
 #   $1 - Handoff bundle directory
 #   $2 - Target key
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Verifier context markdown on stdout (may be empty)
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function loop_handoff_read_verifier_context {
@@ -140,13 +155,16 @@ function loop_handoff_read_verifier_context {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   DETECT_RESULT_JSON - Inline detect JSON from workflow input (read)
 #   HANDOFF_KEY - Target key for artifact payload lookup (read)
 #   LOOP_HANDOFF_DIR - Downloaded handoff bundle directory (read)
 #
-# Returns:
+# Outputs:
 #   Detect result JSON on stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function loop_handoff_resolve_detect_result_json {
@@ -170,11 +188,14 @@ function loop_handoff_resolve_detect_result_json {
 # Arguments:
 #   $1 - Target key (e.g. integration:main)
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Sanitized stem on stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function loop_handoff_sanitize_key {
@@ -189,8 +210,11 @@ function loop_handoff_sanitize_key {
 #   $1 - Handoff bundle directory
 #   $2.. - Full candidate JSON object strings
 #
-# Global Variables:
+# Globals:
 #   LOOP_HANDOFF_VERSION - Manifest schema version (read)
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success
@@ -230,7 +254,10 @@ function loop_handoff_write_bundle {
 #   $1 - Handoff bundle directory
 #   $2 - Full candidate JSON object string
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

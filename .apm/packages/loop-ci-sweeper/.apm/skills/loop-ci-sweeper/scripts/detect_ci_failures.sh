@@ -70,7 +70,10 @@ declare -a IGNORED_JSON=()
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -107,9 +110,12 @@ EOF
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Git ref for range scope
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None (calls output_error on invalid input)
@@ -159,7 +165,10 @@ function parse_arguments {
 # Arguments:
 #   $1 - Error message
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -183,17 +192,22 @@ function output_error {
     exit 0
 }
 
+#######################################
 # validate_ledger_file: Ensure ledger path stays under .loop/
 #
 # Arguments:
 #   $1 - Ledger file path
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
 #   Exits via output_error when invalid
 #
+#######################################
 function validate_ledger_file {
     local path="$1"
     local repo_root resolved ledger_root
@@ -208,17 +222,22 @@ function validate_ledger_file {
     fi
 }
 
+#######################################
 # scan_branch_name: Resolve branch to scan from checkout context
 #
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
-#   Branch name on stdout
+# Outputs:
+#   Branch name to stdout
 #
+# Returns:
+#   0 on success
+#
+#######################################
 function scan_branch_name {
     local branch="${CI_SWEEPER_HEAD_BRANCH:-}"
     if [[ -z ${branch} ]]; then
@@ -236,7 +255,10 @@ function scan_branch_name {
 # Arguments:
 #   $1 - Workflow run conclusion
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -257,7 +279,10 @@ function is_definition_error_conclusion {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -277,7 +302,10 @@ function gh_available {
 # Arguments:
 #   $1 - Commit SHA
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -307,11 +335,14 @@ function commit_is_relevant {
 # Arguments:
 #   $1 - Workflow run ID
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Outcome string on stdout, empty when not ledgered
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   outcome="$(ledger_outcome_for_run "${run_id}")"
@@ -331,11 +362,14 @@ function ledger_outcome_for_run {
 # Arguments:
 #   $1 - Workflow run ID
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Reject count on stdout
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   reject_count="$(ledger_reject_count_for_run "${run_id}")"
@@ -356,11 +390,14 @@ function ledger_reject_count_for_run {
 # Arguments:
 #   $1 - Policy value
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Normalized policy on stdout
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   policy="$(normalize_reject_retry_policy "${REJECT_RETRY_POLICY}")"
@@ -394,11 +431,14 @@ function normalize_reject_retry_policy {
 # Arguments:
 #   $1 - Workflow run ID
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Head branch name on stdout, empty when unavailable
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   branch="$(run_head_branch_for_run "${run_id}")"
@@ -424,7 +464,10 @@ function run_head_branch_for_run {
 # Arguments:
 #   $1 - Workflow run ID
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -474,11 +517,14 @@ function should_skip_processed_run {
 #   $2 - Scope / subject
 #   $3 - Detail text
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   None (writes to stderr so stdout JSON/excerpts stay clean)
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function log_ci_sweeper_notice {
@@ -498,7 +544,10 @@ function log_ci_sweeper_notice {
 #   $2 - Scope / subject
 #   $3 - Detail text
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -520,11 +569,14 @@ function log_ci_sweeper_warning {
 # Arguments:
 #   $1 - Log excerpt
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Failure type on stdout (infra, env, flake, regression)
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   failure_type="$(classify_failure_type "${log_excerpt}")"
@@ -544,7 +596,22 @@ function classify_failure_type {
     fi
 }
 
+#######################################
 # sanitize_log_excerpt: Redact likely secrets from CI log text
+#
+# Arguments:
+#   None
+#
+# Globals:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
+#######################################
 function sanitize_log_excerpt {
     local excerpt="$1"
     excerpt="$(sed -E 's/gh[pousr]_[A-Za-z0-9_]{20,}/[REDACTED]/g' <<< "${excerpt}")"
@@ -564,11 +631,14 @@ function sanitize_log_excerpt {
 # Arguments:
 #   $1 - Workflow run ID
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   JSON lines for failed jobs on stdout
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   fetch_failed_jobs "${run_id}"
@@ -588,11 +658,14 @@ function fetch_failed_jobs {
 #   $1 - Workflow run ID
 #   $2 - Job name
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Log excerpt on stdout
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   log_excerpt="$(fetch_log_excerpt "${run_id}" "${job_name}")"
@@ -640,11 +713,14 @@ function fetch_log_excerpt {
 #   $1 - Workflow run ID
 #   $2 - Workflow run conclusion
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Log excerpt on stdout
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   fetch_definition_error_excerpt "${run_id}" "${conclusion}"
@@ -667,11 +743,14 @@ function fetch_definition_error_excerpt {
 # Arguments:
 #   $1-$8 - workflow_name, run_id, head_sha, head_branch, run_url, job_name, failure_type, log_excerpt
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   JSON object to stdout
+#
 # Returns:
-#   JSON object on stdout
+#   0 on success
 #
 # Usage:
 #   failure_object_json "${workflow_name}" ...
@@ -710,7 +789,10 @@ EOF
 # Arguments:
 #   $1-$8 - workflow_name, run_id, head_sha, head_branch, run_url, job_name, failure_type, log_excerpt
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -734,17 +816,22 @@ function append_failure {
         "${run_url}" "${job_name}" "${failure_type}" "${log_excerpt}")")
 }
 
+#######################################
 # ignored_object_json: Build one ignored entry as JSON
 #
 # Arguments:
 #   $1-$6 - workflow_name, run_id, head_branch, job_name, failure_type, reason
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
-#   JSON object on stdout
+# Outputs:
+#   JSON object to stdout
 #
+# Returns:
+#   0 on success
+#
+#######################################
 function ignored_object_json {
     local workflow_name="$1"
     local run_id="$2"
@@ -765,17 +852,22 @@ function ignored_object_json {
 EOF
 }
 
+#######################################
 # append_ignored: Append one ignored entry to IGNORED_JSON
 #
 # Arguments:
 #   $1-$6 - workflow_name, run_id, head_branch, job_name, failure_type, reason
 #
-# Global Variables:
+# Globals:
 #   None
 #
 # Returns:
 #   None
 #
+# Outputs:
+#   None
+#
+#######################################
 function append_ignored {
     local workflow_name="$1"
     local run_id="$2"
@@ -797,7 +889,10 @@ function append_ignored {
 #   $1-$5 - workflow_name, run_id, head_sha, head_branch, run_url
 #   $6    - Workflow run conclusion (optional; fetched when empty)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -867,7 +962,10 @@ function collect_failures_for_run {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -924,7 +1022,10 @@ function collect_from_workflow_run_event {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -964,11 +1065,14 @@ function collect_recent_failures {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   FAILURES_JSON - Source failure objects
 #
+# Outputs:
+#   JSON array string to stdout
+#
 # Returns:
-#   JSON array string on stdout
+#   0 on success
 #
 # Usage:
 #   failures_array="$(failures_array_json)"
@@ -992,6 +1096,19 @@ function failures_array_json {
 
 #######################################
 # ignored_array_json: Join ignored objects into a JSON array string
+#
+# Arguments:
+#   None
+#
+# Globals:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
 #######################################
 function ignored_array_json {
     local joined=""
@@ -1015,7 +1132,10 @@ function ignored_array_json {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -1052,12 +1172,15 @@ function output_json {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   DEFAULT_BRANCH - Fallback branch when checkout context is unavailable
 #   LEDGER_FILE - Path to run ledger JSON
 #   SCAN_BRANCH_RUN_LIMIT - Max failed runs to scan per branch
 #   REJECT_RETRY_POLICY - block | retry | limited
 #   REJECT_MAX_RETRIES - Max REJECT retries when policy is limited
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -1081,7 +1204,10 @@ function configure_detect_environment {
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

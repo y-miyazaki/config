@@ -28,11 +28,14 @@ fix=""
 # Arguments:
 #   $1 - Output file path
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   JSON blob to stdout, or empty string
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function extract_last_json_fence {
@@ -51,13 +54,16 @@ function extract_last_json_fence {
 # Arguments:
 #   $1 - Output file path
 #
-# Global Variables:
+# Globals:
 #   parsed - true when any format was recognized
 #   verdict - APPROVE or REJECT
 #   reason - One-line summary
 #   files - Comma-separated file paths on REJECT
 #   issue - Issue description on REJECT
 #   fix - Required fix description on REJECT
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0
@@ -161,11 +167,14 @@ function parse_verifier_output {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   PROMPT_VERIFIER_OUTPUT_CONTRACT - Contract markdown
 #
-# Returns:
+# Outputs:
 #   Contract markdown to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function write_verifier_output_contract {
@@ -180,11 +189,14 @@ function write_verifier_output_contract {
 #   $2 - Attempt number
 #   $3 - Whether this attempt created a commit (true|false)
 #
-# Global Variables:
+# Globals:
 #   BASE_BRANCH, DENYLIST, ALLOWLIST, WORKTREE_PATH
 #   AGENT_VERIFIER_CRITERIA, AGENT_VERIFIER_MAX_TURNS, AGENT_VERIFIER_MODEL
 #   OPEN_REJECTIONS_JSON, SKILL_NAME, VERIFIER_CONTEXT
 #   PROMPT_VERIFIER_* prompt env vars
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0

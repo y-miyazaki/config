@@ -41,11 +41,14 @@ source "${SCRIPT_DIR}/../lib/all.sh"
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stdout
+#
 # Returns:
-#   None (outputs to stdout)
+#   None
 #
 # Usage:
 #   show_usage
@@ -75,7 +78,10 @@ EOF
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -110,11 +116,14 @@ function parse_arguments {
 # Arguments:
 #   $@ - Array of DLQ names
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   formatted Terraform configuration items as a string
+#
 # Returns:
-#   Outputs formatted Terraform configuration items as a string
+#   0 on success
 #
 # Usage:
 #   terraform_output=$(generate_terraform_output "${dlqs[@]}")
@@ -147,11 +156,14 @@ function generate_terraform_output {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   queue URLs as newline-separated strings, exits with error on failure
+#
 # Returns:
-#   Outputs queue URLs as newline-separated strings, exits with error on failure
+#   0 on success
 #
 # Usage:
 #   queue_urls=$(get_sqs_queues)
@@ -176,11 +188,14 @@ function get_sqs_queues {
 # Arguments:
 #   $1 - Formatted items string
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   the result to stdout
+#
 # Returns:
-#   Outputs the result to stdout
+#   0 on success
 #
 # Usage:
 #   output_result "$formatted_items"
@@ -204,11 +219,14 @@ function output_result {
 # Arguments:
 #   $1 - Newline-separated string of SQS queue URLs
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   unique DLQ names as newline-separated strings
+#
 # Returns:
-#   Outputs unique DLQ names as newline-separated strings
+#   0 on success
 #
 # Usage:
 #   unique_dlqs=$(process_dlq_information "$queue_urls")
@@ -261,7 +279,10 @@ function process_dlq_information {
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

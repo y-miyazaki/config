@@ -34,11 +34,14 @@ source "${SCRIPT_DIR}/../lib/all.sh"
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stdout
+#
 # Returns:
-#   None (outputs to stdout)
+#   None
 #
 # Usage:
 #   show_usage
@@ -68,7 +71,10 @@ EOF
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -103,7 +109,10 @@ function parse_arguments {
 # Arguments:
 #   $1 - Space-separated string of task definition ARNs
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -151,7 +160,10 @@ function extract_unique_families {
 # Arguments:
 #   $@ - Array of task definition family names
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -188,7 +200,10 @@ function generate_terraform_output {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -217,11 +232,14 @@ function get_task_definitions {
 # Arguments:
 #   $1 - Formatted Terraform configuration items string
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stdout
+#
 # Returns:
-#   None (outputs to stdout)
+#   None
 #
 # Usage:
 #   output_result "$formatted_items"
@@ -245,7 +263,10 @@ function output_result {
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

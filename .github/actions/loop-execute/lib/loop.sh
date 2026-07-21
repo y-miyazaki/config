@@ -46,8 +46,11 @@ OUTCOME_OVERRIDE=""
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   STATUS_DIR - Caller env directory for attempt artifacts (read)
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -67,7 +70,10 @@ function initialize_loop_state {
 # Arguments:
 #   $1 - Implementer agent output text
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -92,7 +98,7 @@ function parse_outcome_override_from_agent_output {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   ATTEMPT - Final attempt count (read)
 #   GITHUB_OUTPUT - GitHub Actions output file path (read)
 #   HAS_CHANGES - Whether commits were produced (read)
@@ -100,6 +106,9 @@ function parse_outcome_override_from_agent_output {
 #   OUTCOME_OVERRIDE - Skill watch override when set (read)
 #   REASON - Final verdict reason (read)
 #   VERDICT - Final loop verdict (read)
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -144,7 +153,7 @@ function write_loop_outputs {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   ATTEMPT - Current attempt counter (read/write)
 #   HAS_CHANGES - Whether commits were produced (read/write)
 #   OPEN_REJECTIONS_JSON - Open rejection array JSON (read/write)
@@ -152,6 +161,9 @@ function write_loop_outputs {
 #   REASON - Verdict reason for current attempt (read/write)
 #   REJECT_FEEDBACK - Verifier feedback for retry prompt (read)
 #   VERDICT - Loop verdict for current attempt (read/write)
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -262,7 +274,7 @@ function run_bounded_loop {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   AGENT_LOOP_MAX_ATTEMPTS - Maximum implementer attempts (read)
 #   AGENT_TOKEN - Authentication token for the selected engine (read)
 #   ENGINE - Agent engine name (read)
@@ -270,6 +282,9 @@ function run_bounded_loop {
 #   PROMPT_TEXT - Base implementer prompt (read)
 #   STATUS_DIR - Status directory for attempt artifacts (read)
 #   WORKTREE_PATH - Isolated git worktree path (read)
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success

@@ -34,7 +34,10 @@ declare -A REPO_PATHS_GITIGNORE_CACHE=()
 #   $4 - Name reference to deleted_files array
 #   $5 - Name reference to changed_files array
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -90,7 +93,10 @@ function repo_apply_git_rename {
 #   $1 - Name reference to output array
 #   $2 - Repository-relative path to append
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -120,9 +126,12 @@ function repo_array_append_unique {
 #   $1 - Name reference to find argument array
 #   $@ - Optional extra repository-relative prune roots (merged with REPO_PATHS_EXTRA_PRUNES)
 #
-# Global Variables:
+# Globals:
 #   REPO_PATHS_EXTRA_PRUNES - Comma-separated repository-relative prune roots
 #   REPO_PATHS_INCLUDE_AGENTS - When true, do not prune agent directories
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -162,13 +171,16 @@ function repo_append_find_prune_args {
 # Arguments:
 #   $1 - Optional extended-regex path filter (empty = all tracked paths)
 #
-# Global Variables:
+# Globals:
 #   REPO_PATHS_EXTRA_PRUNES - Comma-separated repository-relative prune roots
 #   REPO_PATHS_INCLUDE_AGENTS - When true, do not exclude agent directories
 #   REPO_PATHS_INCLUDE_GITIGNORED - When true, do not exclude gitignored paths
 #
-# Returns:
+# Outputs:
 #   Filtered repository-relative paths on stdout (one per line)
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   repo_emit_tracked_paths '\.md$'
@@ -200,13 +212,16 @@ function repo_emit_tracked_paths {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   REPO_PATHS_EXTRA_PRUNES - Comma-separated repository-relative prune roots
 #   REPO_PATHS_INCLUDE_AGENTS - When true, do not exclude agent directories
 #   REPO_PATHS_INCLUDE_GITIGNORED - When true, do not exclude gitignored paths
 #
-# Returns:
+# Outputs:
 #   Filtered repository-relative paths on stdout (one per line)
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   git diff --name-only | repo_filter_paths
@@ -231,11 +246,14 @@ function repo_filter_paths {
 # Arguments:
 #   $@ - Optional extra repository-relative prune roots
 #
-# Global Variables:
+# Globals:
 #   REPO_PATHS_EXTRA_PRUNES - Comma-separated repository-relative prune roots
 #
-# Returns:
+# Outputs:
 #   Repository-relative prune roots on stdout (one per line)
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   mapfile -t extras < <(repo_list_extra_prune_roots "docs/report")
@@ -272,8 +290,11 @@ function repo_list_extra_prune_roots {
 # Arguments:
 #   $1 - Repository-relative file path
 #
-# Global Variables:
+# Globals:
 #   REPO_PATHS_INCLUDE_AGENTS - When true, agent directory segments are scannable
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 when a non-scannable dot directory is present; 1 otherwise
@@ -321,8 +342,11 @@ function repo_path_has_excluded_dot_directory {
 # Arguments:
 #   $1 - Repository-relative file path
 #
-# Global Variables:
+# Globals:
 #   REPO_PATHS_INCLUDE_AGENTS - When true, do not treat agent directories as generated
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 when excluded; 1 when the path may be scanned
@@ -369,9 +393,12 @@ function repo_path_is_generated_or_agent {
 # Arguments:
 #   $1 - Repository-relative file path
 #
-# Global Variables:
+# Globals:
 #   REPO_PATHS_GITIGNORE_CACHE - Memoized git check-ignore results per path
 #   REPO_PATHS_INCLUDE_GITIGNORED - When true, never treat paths as ignored
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 when git ignores the path; 1 otherwise
@@ -426,7 +453,10 @@ function repo_path_is_gitignored {
 #   $1 - Repository-relative file path
 #   $@ - Extra repository-relative prune roots
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -459,10 +489,13 @@ function repo_path_matches_extra_prune {
 #   $1 - Repository-relative file path
 #   $@ - Optional extra repository-relative prune roots (merged with REPO_PATHS_EXTRA_PRUNES)
 #
-# Global Variables:
+# Globals:
 #   REPO_PATHS_EXTRA_PRUNES - Comma-separated repository-relative prune roots
 #   REPO_PATHS_INCLUDE_AGENTS - When true, do not exclude agent directories
 #   REPO_PATHS_INCLUDE_GITIGNORED - When true, do not exclude gitignored paths
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 when excluded; 1 when the path should be scanned
@@ -487,9 +520,12 @@ function repo_path_should_skip {
 #   $1 - Repository-relative file path
 #   $@ - Optional extra repository-relative prune roots
 #
-# Global Variables:
+# Globals:
 #   REPO_PATHS_INCLUDE_AGENTS - When true, do not exclude agent directories
 #   REPO_PATHS_INCLUDE_GITIGNORED - When true, do not exclude gitignored paths
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 when excluded; 1 when the path should be scanned

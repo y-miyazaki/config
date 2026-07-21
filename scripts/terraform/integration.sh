@@ -34,11 +34,14 @@ source "${SCRIPT_DIR}/../lib/all.sh"
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes help to stdout
+#
 # Returns:
-#   Exits with status 1 after displaying help
+#   Exits with status 1
 #
 # Usage:
 #   show_usage
@@ -85,7 +88,10 @@ fi
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -128,8 +134,11 @@ function run_additional_checks {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   ENV - Environment for workflow
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -151,9 +160,12 @@ function run_terraform_workflow {
 # Arguments:
 #   $1 - Target directory path
 #
-# Global Variables:
+# Globals:
 #   ENV - Environment variable
 #   TF_PLUGIN_CACHE_DIR - Terraform plugin cache directory
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with error if validation fails or directory change fails
@@ -186,7 +198,10 @@ function validate_and_prepare {
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

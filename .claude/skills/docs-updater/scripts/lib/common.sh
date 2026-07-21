@@ -29,11 +29,14 @@
 # Arguments:
 #   $1 - Section title
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stderr
+#
 # Returns:
-#   None (outputs to stderr)
+#   None
 #
 # Usage:
 #   echo_section "Starting deployment"
@@ -55,11 +58,14 @@ function echo_section {
 #   $1 - Section title
 #   $2 - Start time (epoch seconds)
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stderr
+#
 # Returns:
-#   None (outputs to stderr)
+#   None
 #
 # Usage:
 #   end_echo_section "Deployment" "$start_time"
@@ -87,7 +93,10 @@ function end_echo_section {
 #   $1 - Error message
 #   $2 - Exit code (optional, defaults to 1)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -113,7 +122,10 @@ function error_exit {
 # Arguments:
 #   $@ - Command to execute
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -153,7 +165,10 @@ function execute_command {
 # Arguments:
 #   $1 - Command string to execute
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -189,11 +204,14 @@ function execute_command_string {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Current epoch time in seconds to stdout
+#
 # Returns:
-#   Current epoch time in seconds (to stdout)
+#   0 on success
 #
 # Usage:
 #   start_time=$(get_start_time)
@@ -212,7 +230,10 @@ function get_start_time {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -236,11 +257,14 @@ function is_dry_run {
 #   $1 - Log level (INFO, WARN, ERROR, DEBUG)
 #   $2 - Log message
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stderr when log level matches
+#
 # Returns:
-#   0 always (outputs to stderr when level matches)
+#   0 always
 #
 # Usage:
 #   log "INFO" "Process completed successfully"
@@ -265,7 +289,10 @@ function log {
 # Arguments:
 #   $@ - List of required tools/commands
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -301,7 +328,10 @@ function validate_dependencies {
 # Arguments:
 #   $@ - List of required environment variable names
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

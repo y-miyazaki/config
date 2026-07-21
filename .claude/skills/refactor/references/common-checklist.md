@@ -18,6 +18,9 @@
 
 ## Operations
 
+- Treat `duplication_block` as **logic duplication** — dedupe executable/shared logic (extract helper, consolidate calls), not documentation or comment-only templates
+- If overlapping text is comments or doc blocks only, Outcome `no-op` / Watch — not an apply target
+- When deduplicating logic, preserve file headers and symbol documentation unless consolidating documented behavior in the same edit
 - Do not invent a dedicated SubAgent product; reuse platform Implementer/Verifier and existing validation skills via caller `## Instructions` (A')
 - Stay in closed depth tiers O1/O2 for apply ([category-operations.md](category-operations.md)): **O1** = local structure same behavior; **O2** = plus shallow same-package move
 - No public API semantics changes; no feature behavior changes

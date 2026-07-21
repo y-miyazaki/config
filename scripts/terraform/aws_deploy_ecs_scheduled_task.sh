@@ -64,11 +64,14 @@ TASK_PATH=""
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stdout
+#
 # Returns:
-#   None (outputs to stdout, then exits with status 0)
+#   Exits with status 0
 #
 # Usage:
 #   show_usage
@@ -109,12 +112,15 @@ EOF
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
 #   ACTION     - Set to the provided action (apply, diff, run)
 #   AWS_REGION - Set to the provided AWS region
 #   ENV        - Set to the provided target environment
 #   RULE_NAME  - Set to the EventBridge rule name (for run action)
 #   TASK_PATH  - Set to the provided ECS scheduled task directory path
+#
+# Outputs:
+#   None
 #
 # Returns:
 #
@@ -181,10 +187,13 @@ function parse_arguments {
 # Arguments:
 #   $1 - Path to the rendered ecschedule JSON config (temp file)
 #
-# Global Variables:
+# Globals:
 #   ACCOUNT_ID - AWS account ID
 #   AWS_REGION - AWS region
 #   ENV        - Target environment name
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with status 0 if no changes detected, non-zero on failure
@@ -271,10 +280,13 @@ function apply_scheduled_task {
 # Arguments:
 #   $1 - Path to the rendered ecschedule JSON config (temp file)
 #
-# Global Variables:
+# Globals:
 #   ACCOUNT_ID - AWS account ID
 #   AWS_REGION - AWS region
 #   ENV        - Target environment name
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with non-zero status on failure
@@ -310,8 +322,11 @@ function diff_scheduled_task {
 # Arguments:
 #   $1 - Path to the rendered ecschedule JSON config (temp file)
 #
-# Global Variables:
+# Globals:
 #   RULE_NAME - EventBridge rule name to trigger
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with non-zero status on failure
@@ -338,13 +353,16 @@ function run_scheduled_task {
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
 #   ACTION     - Action to perform (apply, diff, run)
 #   ACCOUNT_ID - AWS account ID
 #   AWS_REGION - AWS region
 #   ENV        - Target environment name
 #   RULE_NAME  - EventBridge rule name (for run action)
 #   TASK_PATH  - Path to ECS scheduled task directory
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with status 0 on success, non-zero on failure

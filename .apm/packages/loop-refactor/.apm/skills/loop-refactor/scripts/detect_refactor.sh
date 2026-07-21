@@ -12,6 +12,7 @@
 #
 # Design Rules:
 # - Emit facts only: duplication_block | oversized_unit (closed kinds)
+# - duplication_block compares consecutive non-comment, non-blank lines only
 # - No lint/SAST smell scores
 # - Output structured JSON via shared lib/json.sh
 # - Exit 0 always (errors reported in JSON status field)
@@ -22,7 +23,7 @@
 # - git
 #
 # Optional environment:
-#   REFACTOR_DUP_MIN_LINES          Minimum non-empty lines for duplication_block (default: 8)
+#   REFACTOR_DUP_MIN_LINES          Minimum non-comment, non-empty lines for duplication_block (default: 8)
 #   REFACTOR_MAX_HINTS              Cap hints emitted per run (default: 20)
 #   REFACTOR_OVERSIZED_FILE_LINES   File line threshold for oversized_unit (default: 400)
 #   REFACTOR_SCAN_GLOBS             Comma-separated globs to scan (default: .apm/packages/**,scripts/**)
@@ -59,7 +60,10 @@ declare -a HINTS_JSON=()
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -96,9 +100,12 @@ EOF
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Git ref for range scope
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -143,8 +150,11 @@ function parse_arguments {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   REFACTOR_* - Detect thresholds and scan globs
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -163,7 +173,10 @@ function configure_detect_environment {
 # Arguments:
 #   $1 - Repository-relative file path
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -198,8 +211,11 @@ function is_pruned_path {
 # Arguments:
 #   $1 - Repository-relative file path
 #
-# Global Variables:
+# Globals:
 #   REFACTOR_SCAN_GLOBS - Comma-separated glob list
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 when matched, 1 otherwise
@@ -236,8 +252,11 @@ function path_matches_scan_globs {
 # Arguments:
 #   $1 - Repository-relative file path
 #
-# Global Variables:
+# Globals:
 #   SCAN_FILES - Output file list
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -267,8 +286,11 @@ function append_scan_file {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   SCAN_FILES, REFACTOR_SCAN_GLOBS
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -300,9 +322,12 @@ function collect_scan_files_from_globs {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   SCAN_FILES - Output file list
 #   SCOPE, SINCE_REF, COMMIT_RANGE
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -356,8 +381,11 @@ function collect_scan_files {
 #   $3 - detail
 #   $4 - lines (number)
 #
-# Global Variables:
+# Globals:
 #   HINTS_JSON, REFACTOR_MAX_HINTS
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -389,8 +417,11 @@ function append_hint_json {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   SCAN_FILES, REFACTOR_DUP_MIN_LINES, HINTS_JSON
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -417,6 +448,13 @@ function find_duplication_blocks {
             sub(/[[:space:]]+$/, "", s)
             return s
         }
+        function is_comment_line(line) {
+            return line ~ /^#/ \
+                || line ~ /^\/\// \
+                || line ~ /^\/\*/ \
+                || line ~ /^\*/ \
+                || line ~ /^--/
+        }
         function make_loc(file, start_line, end_line) {
             return file ":" start_line ":" end_line
         }
@@ -428,7 +466,7 @@ function find_duplication_blocks {
         }
         {
             line = trim($0)
-            if (line == "") {
+            if (line == "" || is_comment_line(line)) {
                 next
             }
             buf_count++
@@ -481,8 +519,11 @@ function find_duplication_blocks {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   SCAN_FILES, REFACTOR_OVERSIZED_FILE_LINES, HINTS_JSON
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -509,11 +550,14 @@ function find_oversized_units {
 # Arguments:
 #   $1 - Input string
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Trimmed string on stdout
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   value="$(trim_whitespace "${input}")"
@@ -532,8 +576,11 @@ function trim_whitespace {
 # Arguments:
 #   $1 - Error message
 #
-# Global Variables:
+# Globals:
 #   SCOPE, SINCE_REF
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with code 0
@@ -562,8 +609,11 @@ function emit_error_json {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   HINTS_JSON, SCOPE, SINCE_REF, COMMIT_RANGE
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -600,7 +650,10 @@ function emit_ok_json {
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

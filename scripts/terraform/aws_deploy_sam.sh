@@ -54,11 +54,14 @@ LAMBDA_PATH=""
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stdout
+#
 # Returns:
-#   None (outputs to stdout, then exits with status 0)
+#   Exits with status 0
 #
 # Usage:
 #   show_usage
@@ -98,11 +101,14 @@ EOF
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
 #   ACTION      - Set to the provided action (deploy, validate, delete)
 #   AWS_REGION  - Set to the provided AWS region
 #   ENV         - Set to the provided target environment
 #   LAMBDA_PATH - Set to the provided Lambda project directory path
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with error if required options are missing or unknown arguments are given
@@ -158,11 +164,14 @@ function parse_arguments {
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
 #   ACTION      - Action to perform (deploy, validate, delete)
 #   AWS_REGION  - AWS region
 #   ENV         - Target environment name
 #   LAMBDA_PATH - Path to Lambda project directory
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with status 0 on success, non-zero on failure

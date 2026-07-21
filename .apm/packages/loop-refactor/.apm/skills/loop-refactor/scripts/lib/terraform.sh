@@ -38,7 +38,10 @@ fi
 #   $2 - Plan file path (optional, if provided, applies from plan file)
 #   $3 - Auto-approve flag (optional, "auto-approve" to skip confirmation)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -90,7 +93,10 @@ function terraform_apply {
 #   $1 - Environment name (optional, uses ENV if not provided)
 #   $2 - Auto-approve flag (optional, "auto-approve" to skip confirmation)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -135,11 +141,14 @@ function terraform_destroy {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Current workspace name to stdout
+#
 # Returns:
-#   Current workspace name (to stdout)
+#   0 on success
 #
 # Usage:
 #   current_workspace=$(terraform_get_workspace)
@@ -158,7 +167,10 @@ function terraform_get_workspace {
 # Arguments:
 #   $1 - Check only mode (optional, "check" to only check formatting)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -197,7 +209,10 @@ function terraform_format {
 #   $1 - Environment name (optional, uses ENV if not provided)
 #   $2 - Additional init options (optional)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -242,7 +257,10 @@ function terraform_init {
 #   $2 - Plan file path (optional, defaults to terraform.tfplan)
 #   $3 - Additional plan options (optional)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -286,7 +304,10 @@ function terraform_plan {
 # Arguments:
 #   $1 - Workspace name
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -323,7 +344,10 @@ function terraform_select_workspace {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -352,7 +376,10 @@ function terraform_validate {
 # Arguments:
 #   $1 - Recursive mode (optional, "recursive" to run recursively)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -403,7 +430,10 @@ function terraform_lint {
 #   $2 - Workflow type (optional: "plan", "apply", "destroy", defaults to "apply")
 #   $3 - Auto-approve flag (optional, "auto-approve" to skip confirmation)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -455,7 +485,10 @@ function terraform_workflow {
 # Arguments:
 #   $1 - Environment name (optional, uses ENV if not provided)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

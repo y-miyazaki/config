@@ -50,6 +50,33 @@ TARGET_JSON="${TARGET_JSON:-}"
 
 #######################################
 # main: Resolve payloads, compose body, create PR
+#
+# Arguments:
+#   $@ - Unused (reads environment variables)
+#
+# Globals:
+#   BRANCH - Head branch for the new PR
+#   DETECT_RESULT_JSON - Inline detect JSON (optional)
+#   GH_TOKEN - GitHub token for gh
+#   GITHUB_OUTPUT - GITHUB_OUTPUT file path (optional)
+#   GITHUB_REPOSITORY - owner/repo
+#   HANDOFF_KEY - Handoff key for detect JSON (optional)
+#   LABELS - PR labels (optional)
+#   LEVEL - Notify level for PR body (optional)
+#   LOOP_HANDOFF_DIR - Handoff directory (optional)
+#   NOTIFY_CONTEXT_JSON - Notify context JSON
+#   PR_BASE_BRANCH - Base branch
+#   PR_BODY - Static PR body prefix (optional)
+#   PR_TITLE - PR title
+#   SKIP_REASON - Footer skip reason (optional)
+#   TARGET_JSON - Target JSON (optional)
+#
+# Outputs:
+#   PR URL to stdout; url and number to GITHUB_OUTPUT when set
+#
+# Returns:
+#   0 on success
+#
 #######################################
 function main {
     local script_dir loop_detect_lib work_dir

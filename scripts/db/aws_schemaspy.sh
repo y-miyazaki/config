@@ -89,7 +89,10 @@ JDBC_DRIVER=""
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -157,7 +160,7 @@ EOF
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   VERBOSE - Enable verbose output
 #   DRY_RUN - Enable dry-run mode
 #   ENVIRONMENT - Environment name
@@ -173,6 +176,9 @@ EOF
 #   SSL_MODE - SSL mode for database connection
 #   DB_THREADS - Number of database threads
 #   SKIP_CLEANUP - Skip SSM session cleanup
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -266,7 +272,7 @@ parse_arguments() {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   ENVIRONMENT - Environment name
 #   DB_NAME - Database name
 #   SECRET_ID - AWS Secrets Manager secret ID
@@ -277,6 +283,9 @@ parse_arguments() {
 #   SSL_MODE - SSL mode for database connection
 #   SCHEMASPY_VERSION - SchemaSpy version
 #   DB_THREADS - Number of database threads
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None

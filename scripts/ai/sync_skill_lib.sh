@@ -51,7 +51,10 @@ SYNC_COUNT=0
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -84,8 +87,11 @@ EOF
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   CHECK_MODE - Whether to run in check-only mode
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -118,11 +124,14 @@ function parse_arguments {
 # Arguments:
 #   $1 - Path to skill's scripts/ directory
 #
-# Global Variables:
+# Globals:
 #   SOURCE_LIB - Source lib directory
 #   CHECK_MODE - Check-only flag
 #   DRIFT_COUNT - Incremented on drift
 #   SYNC_COUNT - Incremented on sync
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -164,7 +173,10 @@ function sync_one_skill {
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

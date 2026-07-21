@@ -52,6 +52,19 @@ LOOP_RUN_ID="${GITHUB_RUN_ID:-}"
 
 #######################################
 # show_usage: Display script usage information
+#
+# Arguments:
+#   None
+#
+# Globals:
+#   None
+#
+# Outputs:
+#   Result text to stdout
+#
+# Returns:
+#   Exits with code 0
+#
 #######################################
 function show_usage {
     cat << 'EOF'
@@ -75,6 +88,19 @@ EOF
 
 #######################################
 # parse_arguments: Parse command line arguments
+#
+# Arguments:
+#   $@ - Command line arguments
+
+# Globals:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
 #######################################
 function parse_arguments {
     while [[ $# -gt 0 ]]; do
@@ -136,9 +162,12 @@ function parse_arguments {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   RUN_ID, WORKFLOW_NAME, HEAD_SHA, OUTCOME - Updated when unset
 #   TARGET_JSON, VERDICT - Read from environment
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -173,13 +202,40 @@ function resolve_from_env {
     esac
 }
 
+#######################################
 # should_skip_ledger_update: Return 0 when ledger must not be written
+#
+# Arguments:
+#   None
+#
+# Globals:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
+#######################################
 function should_skip_ledger_update {
     [[ -z ${OUTCOME} ]]
 }
 
 #######################################
 # validate_ledger_file: Ensure ledger path stays under .loop/
+# Arguments:
+#   None
+#
+# Globals:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
 #######################################
 function validate_ledger_file {
     local path="$1"
@@ -191,6 +247,19 @@ function validate_ledger_file {
 
 #######################################
 # update_ledger: Merge run outcome into the ledger file
+#
+# Arguments:
+#   None
+#
+# Globals:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
 #######################################
 function update_ledger {
     local now cutoff updated
@@ -226,6 +295,19 @@ function update_ledger {
 
 #######################################
 # main: Entry point
+#
+# Arguments:
+#   $@ - Command line arguments
+
+# Globals:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
 #######################################
 function main {
     parse_arguments "$@"

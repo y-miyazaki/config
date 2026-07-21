@@ -53,10 +53,13 @@ _JSON_FILE_TARGET=""
 # Arguments:
 #   $@ - CLI arguments
 #
-# Global Variables:
+# Globals:
 #   _JSON_FILE_DETECT - Path to detect JSON payload (set)
 #   _JSON_FILE_NOTIFY - Path to notify JSON payload (set)
 #   _JSON_FILE_TARGET - Path to target JSON payload (set)
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 2 on unknown arguments
@@ -100,11 +103,14 @@ function parse_create_pr_body_args {
 # Arguments:
 #   $1 - Raw JSON string (may be empty)
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   JSON object text to stdout
+#
 # Returns:
-#   JSON object text on stdout
+#   0 on success
 #
 #######################################
 function normalize_json_object {
@@ -124,8 +130,14 @@ function normalize_json_object {
 #   $1 - Optional file path
 #   $2 - Inline JSON fallback
 #
+# Globals:
+#   None
+#
+# Outputs:
+#   Raw JSON text to stdout (may be empty)
+#
 # Returns:
-#   Raw JSON text on stdout (may be empty)
+#   0 on success
 #
 #######################################
 function read_json_payload {
@@ -145,8 +157,14 @@ function read_json_payload {
 # Arguments:
 #   $1 - Detect result JSON object string
 #
+# Globals:
+#   None
+#
+# Outputs:
+#   Small JSON with failures array to stdout
+#
 # Returns:
-#   Small JSON with failures array on stdout
+#   0 on success
 #
 #######################################
 function slim_detect_json_for_pr_body {
@@ -169,7 +187,7 @@ function slim_detect_json_for_pr_body {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   DETECT_RESULT_JSON - Detect JSON (optional)
 #   LEVEL - Footer level
 #   NOTIFY_CONTEXT_JSON - Notify context JSON (optional)
@@ -177,8 +195,11 @@ function slim_detect_json_for_pr_body {
 #   SKIP_REASON - Footer skip reason
 #   TARGET_JSON - Target JSON with .key (optional)
 #
+# Outputs:
+#   Composed PR body to stdout
+#
 # Returns:
-#   Composed PR body on stdout
+#   0 on success
 #
 #######################################
 function create_pr_body {
@@ -210,6 +231,19 @@ function create_pr_body {
 
 #######################################
 # main: Entry point
+#
+# Arguments:
+#   $@ - Optional --detect-json-file / --notify-json-file / --target-json-file
+#
+# Globals:
+#   None
+#
+# Outputs:
+#   Composed PR body markdown to stdout
+#
+# Returns:
+#   0 on success
+#
 #######################################
 function main {
     if [[ $# -gt 0 ]]; then

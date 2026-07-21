@@ -84,11 +84,14 @@ trap 'echo "[ERROR] Aborted while processing: ${CURRENT_FILE_BEING_SCANNED:-N/A}
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stdout
+#
 # Returns:
-#   None (outputs to stdout)
+#   None
 #
 # Usage:
 #   show_usage
@@ -138,13 +141,16 @@ EOF
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   VERBOSE - Enable verbose output
 #   DRY_RUN - Run in dry-run mode
 #   CHECK_ONLY - Check only mode
 #   RECURSIVE_SEARCH - Search recursively
 #   NO_PLAN - Skip plan/validation
 #   TERRAFORM_DIR - Target Terraform directory
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success, exits on error
@@ -211,8 +217,11 @@ function parse_arguments {
 # Arguments:
 #   $1 - Project directory path
 #
-# Global Variables:
+# Globals:
 #   BACKUP_DIR - Main backup directory
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Path to the artifact directory
@@ -241,7 +250,10 @@ function artifact_dir_for {
 # Arguments:
 #   $1 - Path to file to backup
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -281,11 +293,14 @@ function backup_file {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   BACKUP_DIR - Main backup directory path
 #   TERRAFORM_DIR - Base terraform directory
 #   RECURSIVE_SEARCH - Whether recursive search was used
 #   NO_PLAN - Whether plan mode was disabled
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success
@@ -371,7 +386,10 @@ function cleanup_all_artifacts {
 # Arguments:
 #   $1 - Path to Terraform directory to clean
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -419,10 +437,13 @@ function cleanup_plan_files {
 #   $3 - Current version string
 #   $4 - Latest version string
 #
-# Global Variables:
+# Globals:
 #   MODULE_FILES_MAP - Map of module source to list of files
 #   MODULE_VERSIONS_MAP - Map of module source to version info
 #   PROJECT_DIRS_MAP - Map of project dir to 1
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -465,9 +486,12 @@ function collect_module_for_batch_update {
 #   $1 - Terraform directory
 #   $2 - Environment (optional)
 #
-# Global Variables:
+# Globals:
 #   ENV - Environment variable
 #   DEFAULT_ENV - Default environment
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success, 1 on failure
@@ -557,11 +581,14 @@ function create_baseline_plan {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   PROJECT_DIRS_MAP - Map of project dir to 1
 #   BASELINE_CREATED_MAP - Map of project dir to baseline creation status
 #   ENV - Environment variable
 #   DEFAULT_ENV - Default environment
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -603,7 +630,10 @@ function create_baseline_plans_for_projects {
 # Arguments:
 #   $1 - Path to Terraform file to parse
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -658,7 +688,10 @@ function extract_modules_from_file {
 #   $1 - Directory to search in
 #   $2 - Whether to search recursively (true/false, default: false)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -692,7 +725,10 @@ function find_terraform_modules {
 # Arguments:
 #   $1 - Path to a file within the Terraform project
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -740,7 +776,10 @@ function find_terraform_project_root {
 # Arguments:
 #   $1 - Module source URL/path
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -821,12 +860,15 @@ function get_latest_version {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   TOTAL_MODULES - Total modules scanned
 #   UPDATED_MODULES - Number of successfully updated modules
 #   FAILED_MODULES - Number of failed module updates
 #   UPDATED_MODULES_LIST - List of successfully updated modules
 #   FAILED_MODULES_LIST - List of failed modules
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success
@@ -870,7 +912,7 @@ function generate_summary_report {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   MODULE_FILES_MAP - Map of module source to list of files
 #   MODULE_VERSIONS_MAP - Map of module source to version info
 #   UPDATED_MODULES - Counter for updated modules
@@ -878,6 +920,9 @@ function generate_summary_report {
 #   UPDATED_MODULES_LIST - List of updated modules
 #   FAILED_MODULES_LIST - List of failed modules
 #   NO_PLAN - Skip plan/validation flag
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -977,7 +1022,10 @@ function process_batch_module_updates {
 #   $3 - Current version string
 #   $4 - Latest version string
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -1013,7 +1061,10 @@ function process_single_module_update {
 # Arguments:
 #   $1 - Path to Terraform directory to process
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -1123,7 +1174,10 @@ function process_terraform_directory {
 #   $1 - Module source identifier
 #   $@ - List of file paths to rollback
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -1182,9 +1236,12 @@ function rollback_module_files {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   TERRAFORM_DIR - Base terraform directory
 #   BACKUP_DIR - Set to the created backup directory path
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success
@@ -1213,7 +1270,10 @@ function setup_backup_directory {
 #   $3 - Current version string
 #   $4 - New version string
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -1265,10 +1325,13 @@ function update_module_version {
 # Arguments:
 #   $@ - List of file paths
 #
-# Global Variables:
+# Globals:
 #   BASELINE_CREATED_MAP - Map of project dir to baseline creation status
 #   ENV - Environment variable
 #   DEFAULT_ENV - Default environment
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success, 1 on failure
@@ -1330,10 +1393,13 @@ function validate_all_affected_projects {
 #   $1 - Terraform directory
 #   $2 - Environment (optional)
 #
-# Global Variables:
+# Globals:
 #   ENV - Environment variable
 #   DEFAULT_ENV - Default environment
 #   VERBOSE - Enable verbose output
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success, 1 on failure
@@ -1492,12 +1558,15 @@ function validate_terraform_with_plan_comparison {
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   TERRAFORM_DIR - Target Terraform directory
 #   RECURSIVE_SEARCH - Search recursively flag
 #   CHECK_ONLY - Check only mode flag
 #   DRY_RUN - Dry-run mode flag
 #   FAILED_MODULES - Counter for failed modules
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success, 1 on failure

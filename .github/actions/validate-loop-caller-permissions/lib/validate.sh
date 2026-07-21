@@ -39,7 +39,10 @@ VERBOSE="${VERBOSE:-false}"
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -67,8 +70,11 @@ EOF
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   VERBOSE - Set to true when --verbose is passed
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -101,9 +107,12 @@ function parse_arguments {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   REGISTRY_FILE - Required registry path
 #   WORKFLOWS_DIR - Required workflows directory path
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 1 when a dependency or input is missing
@@ -140,10 +149,13 @@ function require_dependencies {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   REGISTRY_FILE - Registry YAML path
 #   WORKFLOWS_DIR - Directory containing caller workflows
 #   VERBOSE       - Enables per-caller OK logging
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with python subprocess status
@@ -279,8 +291,11 @@ PY
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   VERBOSE - Verbose logging flag
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with validation status

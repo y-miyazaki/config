@@ -54,7 +54,10 @@ declare -a markdown_files=()
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -77,7 +80,10 @@ function cleanup {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -119,8 +125,11 @@ EOF
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   TARGET_PATH - Normalized target path
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with error when input is invalid
@@ -158,9 +167,12 @@ function parse_arguments {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   TARGET_PATH - Source path to scan
 #   markdown_files - Resolved markdown file list
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with error when a file target is not .md
@@ -192,7 +204,10 @@ function collect_markdown_files {
 # Arguments:
 #   $1 - Overall status (PASS/FAIL)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -213,7 +228,10 @@ function collect_markdown_files {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -296,6 +314,25 @@ function validate_markdown_files {
         fi
     fi
 }
+#######################################
+# print_json_results: Function implementation
+#
+# Globals:
+#   check_names - Parallel validation result names
+#   check_statuses - Parallel validation statuses
+#   check_details - Parallel validation details
+#
+# Arguments:
+#   $1 - Overall status string
+#
+# Outputs:
+#   JSON validation summary to stdout
+#
+# Returns:
+#   None
+#
+#######################################
+
 function print_json_results {
     local overall_status="$1"
     local i
@@ -334,7 +371,10 @@ function print_json_results {
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

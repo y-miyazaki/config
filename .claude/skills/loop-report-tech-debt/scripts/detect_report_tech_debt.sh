@@ -74,7 +74,10 @@ PREVIOUS_REPORT=""
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -112,12 +115,15 @@ EOF
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Git ref for range scope
 #
+# Outputs:
+#   Calls output_error on invalid input
+#
 # Returns:
-#   None (calls output_error on invalid input)
+#   None
 #
 # Usage:
 #   parse_arguments "$@"
@@ -168,12 +174,15 @@ source "${SCRIPT_DIR}/detect_report_tech_debt_sensors.sh"
 # Arguments:
 #   $1 - Error message
 #
-# Global Variables:
+# Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Git ref for range scope
 #   REPORT_FILE - Target report path
 #   PREVIOUS_REPORT - Latest prior report path
 #   WARNINGS - Warning messages
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with code 0
@@ -209,7 +218,7 @@ function output_error {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Git ref for range scope
 #   REPORT_FILE - Target report path
@@ -217,6 +226,9 @@ function output_error {
 #   SIGNALS_JSON - Detected signal objects
 #   HOTSPOTS_JSON - Detected hotspot objects
 #   WARNINGS - Warning messages
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -259,13 +271,16 @@ function output_json {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   REPORT_TECH_DEBT_DIR - Report output directory
 #   REPORT_TECH_DEBT_DATE_FORMAT - UTC strftime for report basename
 #   REPORT_TECH_DEBT_FILE_EXTENSION - Report filename extension including dot
 #   REPORT_TECH_DEBT_LEGACY_SEARCH_DIRS - Comma-separated prior-report search roots
 #   REPORT_TECH_DEBT_PREVIOUS_GLOB - Glob for prior report files under search dirs
 #   REPO_PATHS_EXTRA_PRUNES - Set when unset to parent of REPORT_TECH_DEBT_DIR
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -294,7 +309,10 @@ function configure_detect_environment {
 #   $1 - Name reference to output directory array
 #   $2 - Comma-separated repository-relative directory paths
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -333,9 +351,12 @@ function append_report_search_dirs_from_csv {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   REPORT_FILE - Today's target report path (excluded from selection)
 #   PREVIOUS_REPORT - Latest prior report path (set by this function; empty when none)
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -381,8 +402,11 @@ function resolve_previous_report {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   REPORT_FILE - Target report path (set by this function)
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -401,11 +425,14 @@ function resolve_report_file {
 # Arguments:
 #   $1-$6 - kind, path, line, snippet, source, hint (hint optional)
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   JSON object on stdout
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   signal_object_json "todo_comment" "pkg/foo.go" "10" "// TODO" "markers" ""
@@ -416,11 +443,14 @@ function resolve_report_file {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   SIGNALS_JSON - Source signal objects
 #
-# Returns:
+# Outputs:
 #   JSON array string on stdout
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   signals_array="$(signals_array_json)"
@@ -450,7 +480,10 @@ function signals_array_json {
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

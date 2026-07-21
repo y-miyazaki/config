@@ -37,7 +37,10 @@ fi
 #   $1 - Configuration file path
 #   $2 - Format type (json, yaml, ini, etc.)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -75,7 +78,10 @@ function validate_config_format {
 #   $1 - Directory path
 #   $2 - Description (optional, for error messages)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -110,7 +116,10 @@ function validate_directory_exists {
 #   $1 - File path
 #   $2 - Description (optional, for error messages)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -145,7 +154,10 @@ function validate_file_exists {
 #   $1 - File path
 #   $2 - Required permissions (e.g., "755", "644")
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -184,7 +196,10 @@ function validate_file_permissions {
 #   $2 - File extension (e.g., "sh", "json", "tf")
 #   $3 - Validation function name
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -238,7 +253,10 @@ function validate_files_in_directory {
 # Arguments:
 #   $1 - JSON file path
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -272,7 +290,10 @@ function validate_json_file {
 #   $1 - Host/URL to test
 #   $2 - Timeout in seconds (optional, defaults to 5)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -314,7 +335,10 @@ function validate_network_connectivity {
 # Arguments:
 #   $1 - Script file path
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -347,7 +371,10 @@ function validate_script_executable {
 # Arguments:
 #   $1 - Script file path
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -390,7 +417,10 @@ function validate_script_syntax {
 #   $2 - Port
 #   $3 - Timeout in seconds (optional, defaults to 3)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -433,7 +463,10 @@ function validate_port_availability {
 # Arguments:
 #   $1 - YAML file path
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

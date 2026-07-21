@@ -56,11 +56,14 @@ SERVICE_PATH=""
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stdout
+#
 # Returns:
-#   None (outputs to stdout, then exits with status 0)
+#   Exits with status 0
 #
 # Usage:
 #   show_usage
@@ -100,11 +103,14 @@ EOF
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
 #   ACTION       - Set to the provided action (deploy, verify, destroy)
 #   AWS_REGION   - Set to the provided AWS region
 #   ENV          - Set to the provided target environment
 #   SERVICE_PATH - Set to the provided ECS service directory path
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with error if required options are missing or unknown arguments are given
@@ -164,11 +170,14 @@ function parse_arguments {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   ACCOUNT_ID - AWS account ID
 #   AWS_REGION - AWS region
 #   ENV        - Target environment name
 #   SERVICE_NAME - ECS service name
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with status 0 if no changes detected, non-zero on failure
@@ -241,10 +250,13 @@ function deploy_service {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   ACCOUNT_ID - AWS account ID
 #   AWS_REGION - AWS region
 #   ENV        - Target environment name
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with non-zero status on failure
@@ -273,10 +285,13 @@ function destroy_service {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   ACCOUNT_ID - AWS account ID
 #   AWS_REGION - AWS region
 #   ENV        - Target environment name
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with non-zero status on failure
@@ -305,12 +320,15 @@ function verify_service {
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
 #   ACTION       - Action to perform (deploy, verify, destroy)
 #   ACCOUNT_ID   - AWS account ID
 #   AWS_REGION   - AWS region
 #   ENV          - Target environment name
 #   SERVICE_PATH - Path to ECS service directory
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with status 0 on success, non-zero on failure

@@ -19,11 +19,14 @@
 # Arguments:
 #   $1 - String to escape
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   JSON-safe escaped string to stdout
+#
 # Returns:
-#   JSON-safe escaped string (to stdout)
+#   0 on success
 #
 # Usage:
 #   escaped=$(json_escape "path/to \"file\"")
@@ -77,11 +80,14 @@ function json_escape {
 # Arguments:
 #   $@ - Array elements (pass as "${array[@]}")
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   JSON array string to stdout
+#
 # Returns:
-#   JSON array string (to stdout)
+#   0 on success
 #
 # Usage:
 #   files=("a.txt" "b.txt")
@@ -128,11 +134,14 @@ function json_string_array {
 # Arguments:
 #   $1 - Indent level (optional, default 0)
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stdout
+#
 # Returns:
-#   None (outputs to stdout)
+#   None
 #
 # Usage:
 #   json_object_start
@@ -148,11 +157,14 @@ function json_object_start {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stdout
+#
 # Returns:
-#   None (outputs to stdout)
+#   None
 #
 # Usage:
 #   json_object_end
@@ -170,11 +182,14 @@ function json_object_end {
 #   $2 - String value
 #   $3 - Trailing comma ("," or "", default ",")
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stdout
+#
 # Returns:
-#   None (outputs to stdout)
+#   None
 #
 # Usage:
 #   json_field_string "status" "ok" ","
@@ -198,11 +213,14 @@ function json_field_string {
 #   $2 - Boolean value ("true" or "false")
 #   $3 - Trailing comma ("," or "", default ",")
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stdout
+#
 # Returns:
-#   None (outputs to stdout)
+#   None
 #
 # Usage:
 #   json_field_bool "skip" "true" ","
@@ -223,11 +241,14 @@ function json_field_bool {
 #   $2 - JSON array string (from json_string_array)
 #   $3 - Trailing comma ("," or "", default ",")
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stdout
+#
 # Returns:
-#   None (outputs to stdout)
+#   None
 #
 # Usage:
 #   arr=$(json_string_array "${files[@]}")

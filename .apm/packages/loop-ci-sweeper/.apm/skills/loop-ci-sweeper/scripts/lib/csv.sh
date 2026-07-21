@@ -21,11 +21,14 @@
 # Arguments:
 #   $1 - CSV data to sort
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Sorted CSV data to stdout
+#
 # Returns:
-#   Sorted CSV data (to stdout)
+#   0 on success
 #
 # Usage:
 #   sorted_data=$(csv_sort "$csv_data")
@@ -79,11 +82,14 @@ except Exception as e:
 # Arguments:
 #   $1 - value to make CSV-safe
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   CSV-safe value with proper quoting and escaping to stdout
+#
 # Returns:
-#   CSV-safe value with proper quoting and escaping (to stdout)
+#   0 on success
 #
 # Usage:
 #   safe_value=$(make_csv_safe "value,with,commas")
@@ -130,11 +136,14 @@ function make_csv_safe {
 # Arguments:
 #   $1 - value to normalize
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   CSV-safe value; quoted when needed to stdout
+#
 # Returns:
-#   CSV-safe value; quoted when needed (to stdout)
+#   0 on success
 #
 # Usage:
 #   quoted_value=$(normalize_csv_value "value with \"quotes\"")

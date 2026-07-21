@@ -20,9 +20,12 @@
 #   $2 - LOOP_PR_INCLUDE_BOTS csv
 #   $3 - GitHub token
 #
-# Global Variables:
+# Globals:
 #   OPEN_PRS_JSON - Output array
 #   LOOP_PR_ENABLED - Enable flag (read)
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success, 1 when gh is required but unavailable
@@ -65,7 +68,10 @@ function list_open_prs {
 #   $2 - Exclusion token csv
 #   $3 - Bot include list csv
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

@@ -68,7 +68,10 @@ declare -a RELEASES_JSON=()
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -104,9 +107,12 @@ EOF
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Git ref for range scope
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None (calls output_error on invalid input)
@@ -159,7 +165,7 @@ function parse_arguments {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Range start ref
 #   COMMIT_RANGE - Active diff range label
@@ -167,6 +173,9 @@ function parse_arguments {
 #   CHANGELOG_EXISTS - Whether CHANGELOG_FILE exists
 #   CHANGELOG_MERGE_COMMITS - Merge commit inclusion flag
 #   COMMITS_JSON - Output array of commit JSON objects
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None (calls output_error on fatal errors)
@@ -217,11 +226,22 @@ function collect_commits {
     HEAD_SHA="$(git rev-parse HEAD 2> /dev/null || true)"
 }
 
+#######################################
 # get_repository_from_git: Resolve owner/repo from origin remote URL
 #
-# Returns:
-#   0 with owner/repo on stdout when detected, 1 otherwise
+# Outputs:
+#   owner/repo on stdout when detected
 #
+# Returns:
+#   0 on success, 1 otherwise
+#
+# Arguments:
+#   None
+#
+# Globals:
+#   None
+#
+#######################################
 function get_repository_from_git {
     local remote_url
 
@@ -238,11 +258,25 @@ function get_repository_from_git {
     return 1
 }
 
+#######################################
 # resolve_repository_context: Populate REPOSITORY and REPOSITORY_URL
 #
 # Description:
 #   Prefer CHANGELOG_* overrides, then GitHub Actions env, then git remote.
 #
+# Arguments:
+#   None
+#
+# Globals:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
+#######################################
 function resolve_repository_context {
     local detected_repo=""
 
@@ -277,8 +311,22 @@ function resolve_repository_context {
     REPOSITORY_URL=""
 }
 
+#######################################
 # resolve_compare_url: Set COMPARE_URL from repository context and active range
 #
+# Arguments:
+#   None
+#
+# Globals:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
+#######################################
 function resolve_compare_url {
     COMPARE_URL=""
 
@@ -301,11 +349,14 @@ function resolve_compare_url {
 #   $4 - Breaking flag (true|false)
 #   $5 - Subject text after the prefix
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   JSON object to stdout
+#
 # Returns:
-#   JSON object on stdout
+#   0 on success
 #
 # Usage:
 #   commit_object_json "${sha}" "${commit_type}" "${scope}" "${breaking}" "${rest}"
@@ -335,11 +386,14 @@ EOF
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   COMMITS_JSON - Source commit objects
 #
+# Outputs:
+#   JSON array string to stdout
+#
 # Returns:
-#   JSON array string on stdout
+#   0 on success
 #
 # Usage:
 #   commits_array="$(commits_array_json)"
@@ -366,9 +420,12 @@ function commits_array_json {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   CHANGELOG_FILE - Path to inspect
 #   CHANGELOG_EXISTS - Set to true when the file exists
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -389,8 +446,11 @@ function detect_changelog_exists {
 # Arguments:
 #   $1 - Commit type prefix
 #
-# Global Variables:
+# Globals:
 #   CONVENTIONAL_TYPES - Allowed conventional type list
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 if conventional, 1 otherwise
@@ -420,7 +480,10 @@ function is_conventional_type {
 #   $2 - Parsed commit scope
 #   $3 - Subject text after the prefix
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -450,12 +513,15 @@ function is_loop_maintenance_commit {
 # Arguments:
 #   $1 - Error message
 #
-# Global Variables:
+# Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Range start ref
 #   CHANGELOG_FILE - Target changelog path
 #   CHANGELOG_EXISTS - Whether CHANGELOG_FILE exists
 #   COMMIT_RANGE - Active diff range label
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with code 0
@@ -490,13 +556,16 @@ function output_error {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Range start ref
 #   CHANGELOG_FILE - Target changelog path
 #   CHANGELOG_EXISTS - Whether CHANGELOG_FILE exists
 #   COMMIT_RANGE - Active diff range label
 #   COMMITS_JSON - Collected commit objects
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -548,8 +617,11 @@ function output_json {
 #   $4 - Nameref for breaking flag output
 #   $5 - Nameref for subject text output
 #
-# Global Variables:
+# Globals:
 #   CONVENTIONAL_TYPES - Allowed conventional type list
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 when parsed, 1 when the subject should be skipped
@@ -608,8 +680,14 @@ function parse_commit_subject {
 # Arguments:
 #   $1 - Semantic version without leading v (e.g. 1.8.16)
 #
+# Outputs:
+#   None
+#
 # Returns:
 #   0 when documented, 1 otherwise
+#
+# Globals:
+#   None
 #
 #######################################
 function version_documented_in_changelog {
@@ -625,8 +703,14 @@ function version_documented_in_changelog {
 # Arguments:
 #   $1 - Commit subject text after prefix
 #
+# Outputs:
+#   version on stdout when matched
+#
 # Returns:
-#   0 with version on stdout when matched, 1 otherwise
+#   0 on success, 1 otherwise
+#
+# Globals:
+#   None
 #
 #######################################
 function extract_release_version_from_subject {
@@ -652,8 +736,14 @@ function extract_release_version_from_subject {
 #   $4 - Release date (YYYY-MM-DD)
 #   $5 - JSON array string of commit SHAs
 #
+# Outputs:
+#   JSON object to stdout
+#
 # Returns:
-#   JSON object on stdout
+#   0 on success
+#
+# Globals:
+#   None
 #
 #######################################
 function release_object_json {
@@ -677,8 +767,17 @@ EOF
 #######################################
 # releases_array_json: Join release objects into a JSON array string
 #
+# Outputs:
+#   JSON array string to stdout
+#
 # Returns:
-#   JSON array string on stdout
+#   0 on success
+#
+# Arguments:
+#   None
+#
+# Globals:
+#   None
 #
 #######################################
 function releases_array_json {
@@ -703,13 +802,17 @@ function releases_array_json {
 #   $1 - Commit SHA
 #   $2 - Tag anchor commit SHA
 #
-# Global Variables:
+# Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Range start ref for range scope
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 when the commit is in the release range, 1 otherwise
 #
+#######################################
 function commit_in_tag_release_range {
     local sha="$1"
     local tag_sha="$2"
@@ -722,6 +825,7 @@ function commit_in_tag_release_range {
     return 0
 }
 
+#######################################
 # release_commit_shas_json: Build commit_shas JSON array for one release version
 #
 # Arguments:
@@ -729,12 +833,16 @@ function commit_in_tag_release_range {
 #   $2 - Tag anchor commit SHA
 #   $3 - Optional comma-separated quoted pin-commit SHA list
 #
-# Global Variables:
+# Globals:
 #   COMMITS_JSON - Collected commits
 #
-# Returns:
-#   JSON array string on stdout
+# Outputs:
+#   JSON array string to stdout
 #
+# Returns:
+#   0 on success
+#
+#######################################
 function release_commit_shas_json {
     local version="$1"
     local tag_sha="$2"
@@ -776,12 +884,24 @@ function release_commit_shas_json {
     done
     printf '[%s]' "${joined}"
 }
+
+#######################################
+# collect_releases: Build RELEASES_JSON from tags and undocumented versions
 #
-# Global Variables:
+# Arguments:
+#   None
+#
+# Globals:
 #   CHANGELOG_FILE - Target changelog path
 #   COMMITS_JSON - Collected commits (used for pin grouping)
 #   RELEASES_JSON - Output release objects
 #   SINCE_REF - Range start ref
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
 #
 #######################################
 function collect_releases {
@@ -855,12 +975,15 @@ function collect_releases {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   CHANGELOG_FILE - Target changelog path
 #   CHANGELOG_MAX_COMMITS - Max commits for --scope all
 #   CHANGELOG_MERGE_COMMITS - Include merge commits when "true"
 #   REPOSITORY - owner/repo override
 #   REPOSITORY_URL - Repository web base URL override
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -884,7 +1007,10 @@ function configure_detect_environment {
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

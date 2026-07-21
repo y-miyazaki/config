@@ -5,6 +5,7 @@
 #
 # Use cases:
 # - detect_refactor.sh emits valid ok JSON with skip when no scan targets match
+# - detect_refactor.sh ignores comment-only duplicate blocks (function doc templates)
 # - detect_refactor.sh reports duplication_block for repeated line blocks in one file
 # - detect_refactor.sh reports duplication_block across files in the scan set
 # - detect_refactor.sh reports physical line ranges when blank lines separate blocks
@@ -32,6 +33,102 @@ setup() {
     [ "$status" -eq 0 ]
     assert_detect_refactor_ok_json "${output}" "all"
     run jq -e '.skip == true and (.hints | length) == 0' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_refactor.sh ignores comment-only duplicate blocks" {
+    mkdir -p "${GIT_TEST_REPO}/scripts"
+    cat > "${GIT_TEST_REPO}/scripts/a.sh" << 'EOF'
+#!/bin/bash
+#######################################
+# show_usage: Display script usage information
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Exits with code 0
+#
+# Usage:
+#   show_usage
+#
+#######################################
+function show_usage {
+    echo usage_a
+}
+
+#######################################
+# output_json: Print structured JSON result
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   None
+#
+# Usage:
+#   output_json
+#
+#######################################
+function output_json {
+    echo json_a
+}
+EOF
+    cat > "${GIT_TEST_REPO}/scripts/b.sh" << 'EOF'
+#!/bin/bash
+#######################################
+# show_usage: Display script usage information
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   Exits with code 0
+#
+# Usage:
+#   show_usage
+#
+#######################################
+function show_usage {
+    echo usage_b
+}
+
+#######################################
+# output_json: Print structured JSON result
+#
+# Arguments:
+#   None
+#
+# Global Variables:
+#   None
+#
+# Returns:
+#   None
+#
+# Usage:
+#   output_json
+#
+#######################################
+function output_json {
+    echo json_b
+}
+EOF
+    git -C "${GIT_TEST_REPO}" add -A
+    git -C "${GIT_TEST_REPO}" commit -q -m "add scripts with identical function doc templates"
+
+    git_test_repo_run "REFACTOR_SCAN_GLOBS='scripts/**' REFACTOR_DUP_MIN_LINES='4' bash '${TARGET_SCRIPT}' --scope all"
+    [ "$status" -eq 0 ]
+    assert_detect_refactor_ok_json "${output}" "all"
+    run jq -e '.skip == true or ([.hints[] | select(.kind == "duplication_block")] | length) == 0' <<< "${output}"
     [ "$status" -eq 0 ]
 }
 

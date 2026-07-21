@@ -32,10 +32,13 @@ USAGE_MODEL=""
 # Arguments:
 #   $1 - Path to captured stream-json output file
 #
-# Global Variables:
+# Globals:
 #   USAGE_INPUT_TOTAL - Running total of input tokens
 #   USAGE_OUTPUT_TOTAL - Running total of output tokens
 #   USAGE_MODEL - Last known model name from the stream
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -62,10 +65,13 @@ function accumulate_cursor_stream_usage {
 # Arguments:
 #   $1 - Single NDJSON line from cursor stream-json output
 #
-# Global Variables:
+# Globals:
 #   USAGE_INPUT_TOTAL - Incremented when result usage is present
 #   USAGE_OUTPUT_TOTAL - Incremented when result usage is present
 #   USAGE_MODEL - Set from system init or result metadata
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -116,13 +122,16 @@ function accumulate_cursor_usage_from_line {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   USAGE_INPUT_TOTAL - Total input tokens captured
 #   USAGE_OUTPUT_TOTAL - Total output tokens captured
 #   USAGE_MODEL - Model name when reported by the CLI
 #
-# Returns:
+# Outputs:
 #   JSON object to stdout, or empty string when usage is unavailable
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function build_usage_json {
@@ -147,10 +156,13 @@ function build_usage_json {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   USAGE_INPUT_TOTAL - Reset to 0
 #   USAGE_OUTPUT_TOTAL - Reset to 0
 #   USAGE_MODEL - Reset to empty string
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -168,7 +180,10 @@ function reset_usage_totals {
 # Arguments:
 #   $1 - Path to candidate capture file
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -196,11 +211,14 @@ function is_cursor_stream_json_file {
 # Arguments:
 #   $1 - Path to stream-json capture file
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Extracted assistant text to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function extract_cursor_stream_text {
@@ -243,11 +261,14 @@ function extract_cursor_stream_text {
 # Arguments:
 #   $1 - Single NDJSON line
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   One-line tool summary to stdout, or nothing when not a started tool call
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function cursor_stream_tool_summary_line {
@@ -296,11 +317,14 @@ function cursor_stream_tool_summary_line {
 # Arguments:
 #   $1 - Path to stream-json capture file
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Human-readable summary to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function render_cursor_stream_log_summary {
@@ -355,8 +379,11 @@ function render_cursor_stream_log_summary {
 #   $1 - Agent binary name (agent or cursor-agent)
 #   $@ - Remaining arguments forwarded to the Cursor CLI
 #
-# Global Variables:
+# Globals:
 #   USAGE_INPUT_TOTAL, USAGE_OUTPUT_TOTAL, USAGE_MODEL - Updated after run
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Cursor CLI exit code

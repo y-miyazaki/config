@@ -135,11 +135,14 @@ GLUE_DATA='0.9|deprecated|2022-06-01|2026-04-01|false
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes help to stdout
+#
 # Returns:
-#   Exits with status 0 after displaying help
+#   Exits with status 0
 #
 # Usage:
 #   show_usage
@@ -180,12 +183,15 @@ EOF
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
 #   VERBOSE - Set to true if verbose mode is enabled
 #   DRY_RUN - Set to true if dry-run mode is enabled
 #   OUTPUT_FILE - Set to specified output file path
 #   AWS_REGION - Set to specified AWS region
 #   CATEGORIES - Set to specified categories string
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with error if unknown arguments are provided
@@ -240,11 +246,14 @@ function parse_arguments {
 # Arguments:
 #   $1 - AWS region or "header" for header output
 #
-# Global Variables:
+# Globals:
 #   GLUE_DATA - Predefined Glue version data
 #
+# Outputs:
+#   CSV formatted data or header
+#
 # Returns:
-#   Outputs CSV formatted data or header
+#   0 on success
 #
 # Usage:
 #   collect_glue_versions "us-east-1"
@@ -287,11 +296,14 @@ function collect_glue_versions {
 # Arguments:
 #   $1 - AWS region or "header" for header output
 #
-# Global Variables:
+# Globals:
 #   LAMBDA_DATA - Predefined Lambda runtime data
 #
+# Outputs:
+#   CSV formatted data or header
+#
 # Returns:
-#   Outputs CSV formatted data or header
+#   0 on success
 #
 # Usage:
 #   collect_lambda_versions "us-east-1"
@@ -334,11 +346,14 @@ function collect_lambda_versions {
 # Arguments:
 #   $1 - AWS region or "header" for header output
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   CSV formatted data or header
+#
 # Returns:
-#   Outputs CSV formatted data or header
+#   0 on success
 #
 # Usage:
 #   collect_rds_versions "us-east-1"
@@ -402,12 +417,15 @@ function collect_rds_versions {
 # Arguments:
 #   $1 - Category name (lambda, glue, rds)
 #
-# Global Variables:
+# Globals:
 #   AWS_REGION - AWS region to query
 #   NO_SORT_CATEGORIES - Categories that should not be sorted
 #
-# Returns:
+# Outputs:
 #   Calls output_csv_data to write results
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   collect_runtime_versions "lambda"
@@ -457,8 +475,11 @@ function collect_runtime_versions {
 #   $3 - CSV data buffer
 #   $4 - Whether to sort output (optional, defaults to true)
 #
-# Global Variables:
+# Globals:
 #   OUTPUT_FILE - Path to output CSV file
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success
@@ -496,11 +517,14 @@ function output_csv_data {
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
 #   OUTPUT_FILE - Output CSV file path
 #   AWS_REGION - AWS region to query
 #   CATEGORIES - Categories to process
 #   DRY_RUN - Whether to run in dry-run mode
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with status 0 on success, non-zero on failure

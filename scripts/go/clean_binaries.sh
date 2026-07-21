@@ -63,11 +63,14 @@ BUILD_DIRS=(
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stdout
+#
 # Returns:
-#   None (outputs to stdout)
+#   None
 #
 #######################################
 function show_usage {
@@ -105,10 +108,13 @@ EOF
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
 #   ROOT_DIR - Root directory to scan
 #   VERBOSE - Enable verbose output
 #   DRY_RUN - Enable dry-run mode
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None (sets global variables ROOT_DIR, VERBOSE, DRY_RUN)
@@ -163,7 +169,10 @@ function parse_arguments {
 # Arguments:
 #   $1 - File path to check
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -204,13 +213,16 @@ function is_binary_executable {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   BINARY_COUNT - Number of binary files removed
 #   DIR_COUNT - Number of directories removed
 #   DRY_RUN - Whether running in dry-run mode
 #
-# Returns:
+# Outputs:
 #   None (outputs to stderr via log)
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function print_summary {
@@ -232,11 +244,14 @@ function print_summary {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   ROOT_DIR - Root directory to scan
 #   DRY_RUN - Whether running in dry-run mode
 #   VERBOSE - Whether to show verbose output
 #   BINARY_COUNT - Incremented for each binary found
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None (increments BINARY_COUNT)
@@ -272,12 +287,15 @@ function remove_binary_files {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   ROOT_DIR - Root directory to scan
 #   BUILD_DIRS - Array of directories to remove
 #   DRY_RUN - Whether running in dry-run mode
 #   VERBOSE - Whether to show verbose output
 #   DIR_COUNT - Incremented for each directory removed
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None (increments DIR_COUNT)
@@ -313,7 +331,10 @@ function remove_build_dirs {
 # Arguments:
 #   $@ - All command line arguments
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

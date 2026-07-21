@@ -37,11 +37,14 @@ fi
 # Arguments:
 #   $@ - AWS CLI command and arguments
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes command result to stdout
+#
 # Returns:
-#   0 on success, non-zero on error (outputs command result to stdout)
+#   0 on success, non-zero on error
 #
 # Usage:
 #   result=$(aws_safe_exec aws s3 ls)
@@ -97,11 +100,14 @@ function aws_safe_exec {
 #   $1 - max retries (optional, defaults to 3)
 #   $@ - AWS CLI command and arguments
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes command result to stdout
+#
 # Returns:
-#   0 on success, non-zero on final failure (outputs command result to stdout)
+#   0 on success, non-zero on failure
 #
 # Usage:
 #   result=$(aws_retry_exec aws s3 ls)
@@ -170,11 +176,14 @@ function aws_retry_exec {
 #   $1 - jq array key for extracting items
 #   $@ - AWS CLI command and arguments
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes each JSON array item line-by-line to stdout
+#
 # Returns:
-#   None (outputs each JSON array item line-by-line to stdout)
+#   None
 #
 # Usage:
 #   aws_paginate_items 'UserPools' aws cognito-idp list-user-pools --region us-east-1
@@ -288,7 +297,10 @@ function aws_paginate_items {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -321,11 +333,14 @@ function check_aws_credentials {
 #   $3 - default value (optional, defaults to "N/A")
 #   $4 - separator (optional, defaults to ",")
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Comma-separated values or custom separator-separated values to stdout
+#
 # Returns:
-#   Comma-separated values or custom separator-separated values (to stdout)
+#   0 on success
 #
 # Usage:
 #   result=$(extract_jq_array "$json" ".items[]")
@@ -374,11 +389,14 @@ function extract_jq_array {
 #   $2 - jq query
 #   $3 - default value (optional, defaults to "N/A")
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Extracted value or default to stdout
+#
 # Returns:
-#   Extracted value or default (to stdout)
+#   0 on success
 #
 # Usage:
 #   result=$(extract_jq_value "$json" ".name")
@@ -419,11 +437,14 @@ function extract_jq_value {
 # Arguments:
 #   $1 - Unix timestamp (seconds or milliseconds)
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Formatted date string (YYYY-MM-DD HH:MM:SS) or "N/A" to stdout
+#
 # Returns:
-#   Formatted date string (YYYY-MM-DD HH:MM:SS) or "N/A" (to stdout)
+#   0 on success
 #
 # Usage:
 #   date=$(format_aws_timestamp 1640995200)
@@ -461,11 +482,14 @@ function format_aws_timestamp {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   AWS account ID (to stdout) or exits on error
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   account_id=$(get_aws_account_id)
@@ -490,11 +514,14 @@ function get_aws_account_id {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Current AWS region (to stdout) or exits on error
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   region=$(get_aws_region)
@@ -531,11 +558,14 @@ function get_aws_region {
 #   $1 - KMS Key ARN or Key ID
 #   $2 - AWS region (optional, defaults to current region)
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   KMS alias/name or original input to stdout
+#
 # Returns:
-#   KMS alias/name or original input (to stdout)
+#   0 on success
 #
 # Usage:
 #   name=$(get_kms_name "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012")
@@ -599,11 +629,14 @@ function get_kms_name {
 #   $1 - Security Group ID
 #   $2 - AWS region (optional, defaults to current region)
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Security Group name or original ID to stdout
+#
 # Returns:
-#   Security Group name or original ID (to stdout)
+#   0 on success
 #
 # Usage:
 #   name=$(get_security_group_name "sg-0123456789abcdef0")
@@ -656,11 +689,14 @@ function get_security_group_name {
 #   $1 - Subnet ID
 #   $2 - AWS region (optional, defaults to current region)
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Subnet name or original ID to stdout
+#
 # Returns:
-#   Subnet name or original ID (to stdout)
+#   0 on success
 #
 # Usage:
 #   name=$(get_subnet_name "subnet-0123456789abcdef0")
@@ -712,11 +748,14 @@ function get_subnet_name {
 # Arguments:
 #   $1 - AWS ARN
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Resource name (to stdout) or exits on error
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   name=$(get_resource_name_from_arn "arn:aws:s3:::my-bucket")
@@ -753,11 +792,14 @@ function get_resource_name_from_arn {
 #   $1 - VPC ID
 #   $2 - AWS region (optional, defaults to current region)
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   VPC name or original ID to stdout
+#
 # Returns:
-#   VPC name or original ID (to stdout)
+#   0 on success
 #
 # Usage:
 #   name=$(get_vpc_name "vpc-0123456789abcdef0")
@@ -810,11 +852,14 @@ function get_vpc_name {
 #   $1 - Resource ARN
 #   $2 - AWS region
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   WAF Web ACL ARN or "N/A" to stdout
+#
 # Returns:
-#   WAF Web ACL ARN or "N/A" (to stdout)
+#   0 on success
 #
 # Usage:
 #   waf_arn=$(get_waf_association "arn:aws:cloudfront::123456789012:distribution/ABC123" "us-east-1")
@@ -841,11 +886,14 @@ function get_waf_association {
 #   $1 - WAF WebACL ARN
 #   $2 - AWS region (optional, defaults to current region)
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   WebACL Name or ARN to stdout
+#
 # Returns:
-#   WebACL Name or ARN (to stdout)
+#   0 on success
 #
 # Usage:
 #   name=$(get_waf_name "arn:aws:wafv2:us-east-1:123456789012:regional/webacl/MyWebACL/uuid")
@@ -902,7 +950,10 @@ function get_waf_name {
 #   $1 - AWS service name
 #   $2 - AWS region (optional, defaults to current region)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -962,11 +1013,14 @@ function is_service_available_in_region {
 # Arguments:
 #   $1 - AWS ARN
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   JSON object with ARN components (to stdout) or exits on error
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   components=$(parse_arn "arn:aws:s3:::my-bucket")
@@ -1009,7 +1063,10 @@ function parse_arn {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

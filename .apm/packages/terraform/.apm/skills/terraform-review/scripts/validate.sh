@@ -54,7 +54,10 @@ declare -a required_fields=("name" "description" "license")
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -79,7 +82,10 @@ function cleanup {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -124,8 +130,11 @@ EOF
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   SKILL_FILE - Normalized target file path
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with error when input is invalid
@@ -167,7 +176,10 @@ function parse_arguments {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -203,8 +215,11 @@ function check_frontmatter_exists {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   TMP_FRONTMATTER - Temporary frontmatter file path
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None (stores check result)
@@ -269,7 +284,10 @@ function check_yaml_syntax {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -311,7 +329,10 @@ function check_required_sections {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -353,7 +374,10 @@ function check_yaml_fields {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -389,7 +413,10 @@ function check_word_count {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -435,7 +462,10 @@ function check_resource_separation {
 # Arguments:
 #   $1 - Overall status (PASS/FAIL)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -483,7 +513,10 @@ function print_json_results {
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

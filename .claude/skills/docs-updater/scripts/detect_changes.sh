@@ -58,7 +58,10 @@ declare -a AFFECTED_DOCS=()
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -97,8 +100,11 @@ EOF
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   SCOPE - Detection scope (staged or all)
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -168,11 +174,14 @@ function parse_arguments {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   SCOPE - Detection scope
 #   CHANGED_FILES - Array of changed file paths
 #   RENAMED_FILES - Array of "old->new" rename pairs
 #   DELETED_FILES - Array of deleted file paths
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -247,11 +256,14 @@ function collect_changes {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   CHANGED_FILES - Source of change detection
 #   DELETED_FILES - Deleted files
 #   RENAMED_FILES - Renamed files
 #   AFFECTED_DOCS - Output array of candidate document paths
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -332,7 +344,10 @@ function collect_affected_docs {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -371,9 +386,12 @@ function output_json {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   DOCS_UPDATER_DOCS_ROOT - Documentation tree root
 #   DOCS_UPDATER_SITE_CONFIG - Site navigation config path
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -395,7 +413,10 @@ function configure_detect_environment {
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

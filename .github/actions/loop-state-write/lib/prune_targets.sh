@@ -28,6 +28,19 @@ export LC_ALL=C.UTF-8
 
 #######################################
 # prune_targets_cutoff_date: UTC YYYY-MM-DD for 30-day window
+#
+# Arguments:
+#   None
+#
+# Globals:
+#   None
+#
+# Outputs:
+#   Cutoff date to stdout
+#
+# Returns:
+#   0 on success
+#
 #######################################
 function prune_targets_cutoff_date {
     date -u -d '30 days ago' +%Y-%m-%d 2> /dev/null || date -u -v-30d +%Y-%m-%d
@@ -40,8 +53,15 @@ function prune_targets_cutoff_date {
 #   $1 - Optional state JSON string (default: read stdin when empty and sourced carefully)
 #        Prefer passing JSON as $1.
 #
+# Globals:
+#   None
+#
+# Outputs:
+#   Pruned state JSON to stdout
+#
 # Returns:
-#   Pruned state JSON on stdout
+#   0 on success
+#
 #######################################
 function prune_targets_json {
     local state_json="${1:-}"
@@ -100,6 +120,12 @@ function prune_targets_json {
 #
 # Arguments:
 #   $1 - Path to state JSON file
+#
+# Globals:
+#   None
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 always (fail-safe); file updated when prune changes content

@@ -3,6 +3,7 @@
 ## Hint selection
 
 - Process **one** hint per run — first actionable entry in `hints[]`
+- If `duplication_block` spans comment-only or documentation-template lines only → Outcome `no-op`; stop
 - Closed kinds only: `duplication_block`, `oversized_unit`
 - Map hint to `refactor` structural path; force `intent: structural`
 - Architecture-improvement language → Watch / no-op in this loop (use interactive `refactor` skill)

@@ -59,11 +59,14 @@ PROJECTS_FAILED=0
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stdout
+#
 # Returns:
-#   None (outputs to stdout)
+#   None
 #
 # Usage:
 #   show_usage
@@ -103,7 +106,10 @@ EOF
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -166,8 +172,11 @@ function parse_arguments {
 # Arguments:
 #   $1 - Project directory
 #
-# Global Variables:
+# Globals:
 #   LOCKFILE_FAILED - Set to 1 on failure
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 if lockfile exists and is in sync, 1 otherwise
@@ -198,8 +207,11 @@ function check_package_lockfile {
 # Arguments:
 #   $1 - Project directory
 #
-# Global Variables:
+# Globals:
 #   SYNC_FAILED - Set to 1 on failure
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 if files are in sync, 1 otherwise
@@ -239,11 +251,14 @@ function check_package_sync {
 # Arguments:
 #   $1 - Base directory to search (optional, defaults to TARGET_DIR)
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Array of project directories (to stdout, one per line)
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   projects=$(find_nodejs_projects "/path/to/dir")
@@ -273,7 +288,10 @@ function find_nodejs_projects {
 # Arguments:
 #   $1 - Project directory
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -332,9 +350,12 @@ function run_npm_install {
 # Arguments:
 #   $1 - Project directory
 #
-# Global Variables:
+# Globals:
 #   DRY_RUN - Whether running in dry-run mode
 #   VERBOSE - Whether to show verbose output
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Always returns 0 (informational only)
@@ -378,13 +399,16 @@ function run_outdated_check {
 # Arguments:
 #   $1 - Project directory
 #
-# Global Variables:
+# Globals:
 #   DRY_RUN - Whether running in dry-run mode
 #   FIX_MODE - Whether to attempt auto-fix
 #   VERBOSE - Whether to show verbose output
 #   AUDIT_VULNERABILITIES - Incremented with vulnerability count
 #   AUDIT_FAILED - Set to 1 on failure
 #   EXIT_CODE - Set to 1 on failure
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 if no vulnerabilities found, 1 otherwise
@@ -472,7 +496,10 @@ function run_security_audit {
 # Arguments:
 #   $1 - Project directory
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -538,7 +565,10 @@ function run_tests {
 # Arguments:
 #   $1 - Project directory
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -613,7 +643,10 @@ function validate_project {
 # Arguments:
 #   $@ - All command line arguments
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

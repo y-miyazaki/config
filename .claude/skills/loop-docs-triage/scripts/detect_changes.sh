@@ -63,7 +63,10 @@ declare -a AFFECTED_DOCS=()
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -100,9 +103,12 @@ EOF
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Git ref for range scope
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -174,9 +180,12 @@ function parse_arguments {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   AFFECTED_DOCS - Output array of candidate document paths
 #   DOCS_TRIAGE_EXTRA_FILES - Comma-separated repository-relative paths (caller env)
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -205,8 +214,11 @@ function append_docs_from_extra_files {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   AFFECTED_DOCS - Output array of candidate document paths
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -235,8 +247,11 @@ function append_docs_from_find {
 # Arguments:
 #   $1 - Comma-separated glob patterns (repository-relative)
 #
-# Global Variables:
+# Globals:
 #   AFFECTED_DOCS - Output array of candidate document paths
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -271,8 +286,11 @@ function append_docs_from_globs {
 # Arguments:
 #   $1 - Repository-relative file path
 #
-# Global Variables:
+# Globals:
 #   AFFECTED_DOCS - Output array of candidate document paths
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -306,12 +324,15 @@ function append_unique_doc {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   CHANGED_FILES - Source of change detection
 #   DELETED_FILES - Deleted files
 #   RENAMED_FILES - Renamed files
 #   AFFECTED_DOCS - Output array of candidate document paths
 #   DOCS_TRIAGE_DOC_GLOBS - Comma-separated glob patterns (caller env)
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -375,13 +396,16 @@ function collect_affected_docs {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Range start ref
 #   COMMIT_RANGE - Populated for range scope
 #   CHANGED_FILES - Array of changed file paths
 #   RENAMED_FILES - Array of old->new rename pairs
 #   DELETED_FILES - Array of deleted file paths
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -454,7 +478,7 @@ function collect_changes {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Range start ref
 #   COMMIT_RANGE - Active diff range label
@@ -462,6 +486,9 @@ function collect_changes {
 #   DELETED_FILES - Array of deleted file paths
 #   RENAMED_FILES - Array of old->new rename pairs
 #   AFFECTED_DOCS - Array of candidate document paths
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -501,11 +528,14 @@ function output_json {
 # Arguments:
 #   $1 - Input string
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Trimmed string on stdout
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   value="$(trim_whitespace "${input}")"
@@ -524,9 +554,12 @@ function trim_whitespace {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   DOCS_TRIAGE_DOC_GLOBS - Comma-separated glob patterns for candidate doc discovery
 #   DOCS_TRIAGE_EXTRA_FILES - Comma-separated non-markdown documentation config paths
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -546,7 +579,10 @@ function configure_detect_environment {
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

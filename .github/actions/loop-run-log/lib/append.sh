@@ -44,8 +44,11 @@ Append one entry per run. Prune entries older than 30 days.
 #   $1 - Run log file path
 #   $2 - JSON log entry to append
 #
-# Global Variables:
+# Globals:
 #   RUN_LOG_HEADER - Markdown header prepended on each rewrite
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -101,11 +104,14 @@ function loop_run_log_append_entry {
 #   $9  - Workflow run id
 #   $10 - Measured usage JSON (optional)
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   JSON object to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function loop_run_log_build_entry {
@@ -162,8 +168,11 @@ function loop_run_log_build_entry {
 #   $2 - Run log file path
 #   $3 - GitHub token
 #
-# Global Variables:
+# Globals:
 #   GITHUB_REPOSITORY, GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT - Used for PR metadata
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success or when there are no changes to commit
@@ -217,11 +226,14 @@ function loop_run_log_commit_and_push {
 # Arguments:
 #   $1 - Run start timestamp (ISO 8601, empty returns 0)
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Elapsed seconds to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function loop_run_log_compute_duration {
@@ -247,11 +259,14 @@ function loop_run_log_compute_duration {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   YYYY-MM-DD cutoff date to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function loop_run_log_prune_cutoff_date {

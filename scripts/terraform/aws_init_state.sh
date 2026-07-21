@@ -45,11 +45,14 @@ AWS_ACCOUNT_ID=""
 # Arguments:
 #   $1 - Optional error message to display before help
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes help to stdout
+#
 # Returns:
-#   Exits with status 0 after displaying help, or calls error_exit if error message provided
+#   Exits with status 0
 #
 # Usage:
 #   show_usage
@@ -90,10 +93,13 @@ EOF
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
 #   BUCKET - Set to the provided bucket name
 #   REGION - Set to the provided AWS region
 #   IS_BUCKET_AUTO_HASH - Set to 1 if hash suffix is requested
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with error if required parameters are missing
@@ -132,10 +138,13 @@ function parse_arguments {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   SCRIPT_DIR - Script directory path
 #   BUCKET - S3 bucket name
 #   AWS_ACCOUNT_ID - AWS account ID
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with error if policy application fails
@@ -174,8 +183,11 @@ function apply_bucket_policy {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   BUCKET - S3 bucket name
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with error if any configuration fails
@@ -246,9 +258,12 @@ function configure_bucket_security {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   BUCKET - S3 bucket name
 #   REGION - AWS region
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Continues execution even if bucket creation fails (may already exist)
@@ -282,13 +297,16 @@ function create_s3_bucket {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   BUCKET - S3 bucket name
 #   REGION - AWS region
 #   AWS_ACCOUNT_ID - AWS account ID
 #
+# Outputs:
+#   completion information to stdout
+#
 # Returns:
-#   Outputs completion information to stdout
+#   0 on success
 #
 # Usage:
 #   display_completion_summary
@@ -325,9 +343,12 @@ EOF
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   IS_BUCKET_AUTO_HASH - Flag indicating if hash should be added
 #   BUCKET - S3 bucket name (modified in place)
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Modifies BUCKET variable if hash is requested
@@ -355,11 +376,14 @@ function generate_bucket_name {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   BUCKET - S3 bucket name
 #
+# Outputs:
+#   verification information, logs warnings if checks fail
+#
 # Returns:
-#   Outputs verification information, logs warnings if checks fail
+#   0 on success
 #
 # Usage:
 #   verify_bucket_config
@@ -387,11 +411,14 @@ function verify_bucket_config {
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
 #   BUCKET - S3 bucket name
 #   REGION - AWS region
 #   IS_BUCKET_AUTO_HASH - Flag for hash suffix
 #   AWS_ACCOUNT_ID - AWS account ID
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with status 0 on success, non-zero on failure

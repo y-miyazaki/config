@@ -38,9 +38,12 @@ RESOLVED=""
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   HOME - Used to locate installed agent binary
 #   GITHUB_PATH - Optional path file for workflow PATH updates
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 1 when Cursor CLI is not found after install
@@ -68,9 +71,12 @@ function install_cursor_cli {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   PKG - npm package name
 #   RESOLVED - Resolved package version
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with npm install status
@@ -86,9 +92,12 @@ function install_npm_package {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   ENGINE - Engine slug (claude|copilot|codex|cursor)
 #   PKG - Set to package name on success
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 1 on unsupported ENGINE
@@ -113,11 +122,14 @@ function resolve_engine_package {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   ENGINE - Engine slug
 #   CLI_VERSION - Requested version or latest
 #   PKG - npm package name for non-cursor engines
 #   RESOLVED - Set to resolved version
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -141,8 +153,11 @@ function resolve_package_version {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   ENGINE - Required engine slug
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 1 when ENGINE is empty
@@ -158,10 +173,13 @@ function validate_engine {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   PKG - Package identifier
 #   RESOLVED - Resolved version
 #   GITHUB_OUTPUT - GitHub Actions output file
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -180,8 +198,11 @@ function write_install_outputs {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   ENGINE, CLI_VERSION, PKG, RESOLVED
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with install status

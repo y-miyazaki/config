@@ -59,7 +59,7 @@ STATE_TMP=""
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   STATE_FILE - Path to state JSON
 #   STATE_TMP - Prepared state content
 #   PUSH_BRANCH - Git push destination branch
@@ -69,6 +69,9 @@ STATE_TMP=""
 #   ADDITIONAL_COMMIT_PATHS - Optional comma-separated extra paths
 #   SHA - Cursor SHA for PR body text
 #   OUTCOME - Outcome for PR body text
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 0 when there is nothing to commit or push succeeds
@@ -134,11 +137,14 @@ function commit_and_push_state {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   READ_BRANCH - PR base branch
 #   SHA - Cursor SHA for PR body
 #   OUTCOME - Outcome for PR body
 #   GH_TOKEN - GitHub token
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 1 when state branch push fails
@@ -175,8 +181,11 @@ function open_state_pr_fallback {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   GH_TOKEN - GitHub token for push and gh CLI
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -196,11 +205,14 @@ function configure_git_auth {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   STATE_TMP - Set to temp file path with loaded JSON
 #   READ_BRANCH - Branch used to read existing state
 #   PUSH_BRANCH - Branch used for checkout before commit
 #   STATE_FILE - State file path
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -237,14 +249,17 @@ function load_state_tmp {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   TARGET_KEY - Target key in state file
 #   STATE_TMP - Current state JSON temp file
 #   OUTCOME - Run outcome
 #   OPEN_REJECTIONS - JSON array; may be reset
 #
-# Returns:
+# Outputs:
 #   Consecutive failure count on stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function resolve_consecutive_failures {
@@ -279,9 +294,12 @@ function resolve_consecutive_failures {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   READ_BRANCH - Set before call in main
 #   PUSH_BRANCH - Set before call in main
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 1 on invalid branch name
@@ -304,13 +322,16 @@ function validate_branches {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   TARGET_KEY - Required target key
 #   WRITE_TARGET_STATE - When true, outcome and mode-specific fields are required
 #   OUTCOME - Run outcome
 #   SHA - Cursor SHA
 #   STATE_WRITE_MODE - advance|pending|metadata|promote|clear_pending
 #   PENDING_PR_NUMBER - Required for pending/promote/clear_pending
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 1 when required input is missing
@@ -353,13 +374,16 @@ function validate_required_inputs {
 #   $1 - ISO timestamp
 #   $2 - consecutive_failures value
 #
-# Global Variables:
+# Globals:
 #   STATE_TMP - State JSON temp file
 #   TARGET_KEY - Target key
 #   SHA - Cursor SHA
 #   OUTCOME - Run outcome
 #   REJECT_REASON - Optional rejection reason
 #   OPEN_REJECTIONS - JSON array
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -400,13 +424,16 @@ function write_state_advance {
 #   $1 - ISO timestamp
 #   $2 - consecutive_failures value
 #
-# Global Variables:
+# Globals:
 #   STATE_TMP - State JSON temp file
 #   TARGET_KEY - Target key
 #   PENDING_PR_NUMBER - PR number to match
 #   OUTCOME - Run outcome
 #   REJECT_REASON - Optional rejection reason
 #   OPEN_REJECTIONS - JSON array
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 0 when no matching pending entry exists
@@ -453,12 +480,15 @@ function write_state_clear_pending {
 #   $1 - ISO timestamp
 #   $2 - consecutive_failures value
 #
-# Global Variables:
+# Globals:
 #   STATE_TMP - State JSON temp file
 #   TARGET_KEY - Target key
 #   OUTCOME - Run outcome
 #   REJECT_REASON - Optional rejection reason
 #   OPEN_REJECTIONS - JSON array
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -496,7 +526,7 @@ function write_state_metadata {
 #   $1 - ISO timestamp
 #   $2 - consecutive_failures value
 #
-# Global Variables:
+# Globals:
 #   STATE_TMP - State JSON temp file
 #   TARGET_KEY - Target key
 #   SHA - Pending cursor SHA
@@ -506,6 +536,9 @@ function write_state_metadata {
 #   OUTCOME - Run outcome
 #   REJECT_REASON - Optional rejection reason
 #   OPEN_REJECTIONS - JSON array
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -555,13 +588,16 @@ function write_state_pending {
 #   $1 - ISO timestamp
 #   $2 - consecutive_failures value
 #
-# Global Variables:
+# Globals:
 #   STATE_TMP - State JSON temp file
 #   TARGET_KEY - Target key
 #   PENDING_PR_NUMBER - PR number to match
 #   OUTCOME - Run outcome
 #   REJECT_REASON - Optional rejection reason
 #   OPEN_REJECTIONS - JSON array
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 0 when no matching pending entry exists
@@ -609,8 +645,11 @@ function write_state_promote {
 #   $1 - ISO timestamp
 #   $2 - consecutive_failures value
 #
-# Global Variables:
+# Globals:
 #   STATE_WRITE_MODE - advance|pending|metadata|promote|clear_pending
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 1 on invalid state_write_mode
@@ -649,7 +688,10 @@ function write_target_state {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

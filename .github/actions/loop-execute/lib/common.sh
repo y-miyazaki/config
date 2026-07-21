@@ -26,13 +26,16 @@ _LOOP_EXECUTE_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   PROMPT_IMPLEMENTER_FEEDBACK - Implementer retry template
 #   PROMPT_VERIFIER_INITIAL - Verifier initial-mode intro
 #   PROMPT_VERIFIER_REGRESSION - Verifier regression-mode body
 #   PROMPT_VERIFIER_TASK - Verifier task section
 #   PROMPT_VERIFIER_OUTPUT_CONTRACT - Verifier JSON output contract
 #   PROMPT_VERIFIER_DEFAULT_CRITERIA - Default APPROVE/REJECT criteria
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -68,8 +71,11 @@ function load_default_prompts {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   NO_CHANGES_VERDICT - Verdict when implementer produces no file changes
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -95,12 +101,15 @@ function normalize_no_changes_verdict {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   DETECT_RESULT_JSON - Detect script JSON from matrix cell (read)
 #   PROMPT_TEXT - Implementer prompt (read/write)
 #   STATUS_DIR - Runner-local status directory for materialized detect JSON (read)
 #   DETECT_JSON_FILE - Path to materialized detect JSON when prompt uses marker (write)
 #   VERIFIER_CONTEXT - Verifier markdown context (read/write)
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -171,11 +180,14 @@ function materialize_matrix_handoff_context {
 #   $1 - Output file path
 #   $2 - Field name (e.g. REASON, FILES)
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Field value to stdout, or empty string
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function parse_output_field {
@@ -191,11 +203,14 @@ function parse_output_field {
 #   $1 - Template string
 #   $2.. - Alternating key/value pairs
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Rendered template to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function render_template {

@@ -48,8 +48,11 @@ WRITE_MODE=""
 #   $4 - Outcome string (merged|pr-closed)
 #   $5 - Write mode (promote|clear_pending)
 #
-# Global Variables:
+# Globals:
 #   PR_NUMBER - Pull request number to match
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -113,9 +116,12 @@ function apply_pending_update {
 #   $1 - State push branch
 #   $@ - Changed state file paths
 #
-# Global Variables:
+# Globals:
 #   PR_NUMBER - Pull request number for commit message
 #   WRITE_MODE - promote|clear_pending
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 0 when there is nothing to push
@@ -152,10 +158,13 @@ function commit_changed_state_files {
 # Arguments:
 #   $1 - Base branch for the state PR
 #
-# Global Variables:
+# Globals:
 #   PR_NUMBER - Closed pull request number
 #   WRITE_MODE - promote|clear_pending
 #   GH_TOKEN - GitHub token
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 1 when state branch push fails
@@ -193,8 +202,11 @@ function open_state_pr_fallback {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   GH_TOKEN - GitHub token
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -214,11 +226,14 @@ function configure_git_auth {
 # Arguments:
 #   $1 - Branch name
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Newline-separated state file paths on stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function list_state_files {
@@ -234,8 +249,11 @@ function list_state_files {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   STATE_PUSH_BRANCH - Branch name set in main before call
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 1 on invalid branch name
@@ -254,12 +272,15 @@ function validate_state_push_branch {
 # Arguments:
 #   $1 - Pull request number (unused; kept for call-site compatibility)
 #
-# Global Variables:
+# Globals:
 #   STATE_PUSH_BRANCH - Optional explicit branch override
 #   GITHUB_REPOSITORY - Repository slug for default-branch lookup
 #
-# Returns:
+# Outputs:
 #   One branch name on stdout (explicit override or repository default)
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function discover_state_push_branches {
@@ -281,11 +302,14 @@ function discover_state_push_branches {
 # Arguments:
 #   $1 - Branch name
 #
-# Global Variables:
+# Globals:
 #   PR_NUMBER - Closed pull request number
 #   MERGED - Whether the pull request merged
 #   OUTCOME - Set from MERGED flag
 #   WRITE_MODE - promote|clear_pending
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 0 when there is nothing to push on this branch
@@ -352,12 +376,15 @@ function process_state_push_branch {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   MERGED - Whether the pull request merged
 #   PR_NUMBER - Closed pull request number
 #   STATE_PUSH_BRANCH - Optional branch override for .loop/* state files
 #   OUTCOME - Set from MERGED flag
 #   WRITE_MODE - promote|clear_pending
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with script status

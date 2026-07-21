@@ -48,11 +48,14 @@ MIN_VERSION="1.25"
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stdout
+#
 # Returns:
-#   None (outputs to stdout)
+#   None
 #
 # Usage:
 #   show_usage
@@ -90,7 +93,10 @@ EOF
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -154,7 +160,10 @@ function parse_arguments {
 # Arguments:
 #   $1 - Path to the main.go file
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -201,7 +210,10 @@ function build_function {
 # Arguments:
 #   $1 - Newline-separated list of main.go file paths
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -249,11 +261,14 @@ function build_lambda_functions {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Newline-separated list of main.go file paths to stdout
+#
 # Returns:
-#   Newline-separated list of main.go file paths (to stdout)
+#   0 on success
 #
 # Usage:
 #   files=$(find_lambda_functions)
@@ -286,7 +301,10 @@ function find_lambda_functions {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -325,7 +343,10 @@ function prepare_build_environment {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -360,7 +381,10 @@ function validate_go_environment {
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

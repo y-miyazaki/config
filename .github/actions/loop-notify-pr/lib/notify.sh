@@ -55,7 +55,7 @@ VERDICT="${VERDICT:-}"
 # Arguments:
 #   $1 - Actor login
 #
-# Global Variables:
+# Globals:
 #   ATTEMPTS - Attempt count for display
 #   COMMIT_SHA - Pushed commit SHA when present
 #   GITHUB_SERVER_URL - GitHub server URL prefix
@@ -68,8 +68,11 @@ VERDICT="${VERDICT:-}"
 #   TARGET_JSON - Target descriptor JSON
 #   VERDICT - Verifier verdict when present
 #
-# Returns:
+# Outputs:
 #   Comment body to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function build_comment_body {
@@ -265,12 +268,15 @@ EOF
 # Arguments:
 #   $1 - Marker substring
 #
-# Global Variables:
+# Globals:
 #   PR_NUMBER - Target pull request number
 #   REPOSITORY - Repository owner/name
 #
-# Returns:
+# Outputs:
 #   Comment GraphQL node id to stdout, or empty
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function find_existing_comment {
@@ -288,11 +294,14 @@ function find_existing_comment {
 # Arguments:
 #   $1 - Input text
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Redacted text to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function redact_sensitive_text {
@@ -316,11 +325,14 @@ function redact_sensitive_text {
 #   $1 - Input text
 #   $2 - Maximum length
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Truncated text to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function truncate_text {
@@ -340,10 +352,13 @@ function truncate_text {
 #   $1 - Comment body file path
 #   $2 - Marker substring
 #
-# Global Variables:
+# Globals:
 #   GITHUB_OUTPUT - GitHub Actions output file path
 #   PR_NUMBER - Target pull request number
 #   REPOSITORY - Repository owner/name
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success, 1 on failure
@@ -404,13 +419,16 @@ function upsert_comment {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   GITHUB_OUTPUT - GitHub Actions output file path
 #   LOOP_NAME - Loop name for marker scoping
 #   OUTCOME - Finalize outcome enum
 #   PR_NUMBER - Target pull request number
 #   REPOSITORY - Repository owner/name
 #   TOKEN - GitHub token with pull-requests: write
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 1 when required input is missing
@@ -431,7 +449,7 @@ function validate_required_inputs {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   ATTEMPTS - Attempt count for display
 #   COMMIT_SHA - Pushed commit SHA when present
 #   GITHUB_OUTPUT - GitHub Actions output file path
@@ -447,6 +465,9 @@ function validate_required_inputs {
 #   TARGET_JSON - Target descriptor JSON
 #   TOKEN - GitHub token (exported as GH_TOKEN for gh CLI)
 #   VERDICT - Verifier verdict when present
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success or when prerequisites are missing

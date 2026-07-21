@@ -32,11 +32,14 @@ LOOP_DETECT_RESULT_MARKER='__LOOP_DETECT_RESULT_JSON__'
 #   $8 - Open rejections prompt markdown
 #   $9 - Consecutive failures count
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Prompt text on stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function build_prompt_text {
@@ -97,11 +100,14 @@ function build_prompt_text {
 # Arguments:
 #   $1 - Candidate JSON object string
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Compacted candidate JSON on stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function shrink_matrix_candidate_for_output {
@@ -125,11 +131,14 @@ function shrink_matrix_candidate_for_output {
 # Arguments:
 #   $1 - Detect script JSON result
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Markdown context on stdout (may be empty)
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function build_verifier_context_from_result {
@@ -254,11 +263,14 @@ function build_verifier_context_from_result {
 # Arguments:
 #   $1 - Target mode (integration|pull_request)
 #
-# Global Variables:
+# Globals:
 #   LOOP_PRIORITY - Comma-separated mode order
 #
-# Returns:
+# Outputs:
 #   Rank integer on stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function candidate_priority_rank {
@@ -286,8 +298,11 @@ function candidate_priority_rank {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   CANDIDATES_JSON - Array to sort in place
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -330,8 +345,11 @@ function sort_candidates_by_priority {
 #   $2 - skip_reason
 #   $3 - target_matrix JSON array string
 #
-# Global Variables:
+# Globals:
 #   GITHUB_OUTPUT - GitHub Actions output file
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None

@@ -45,11 +45,14 @@ AWS_REGION="${AWS_REGION:-}"
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stdout
+#
 # Returns:
-#   None (outputs to stdout)
+#   None
 #
 # Usage:
 #   show_usage
@@ -82,8 +85,11 @@ EOF
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
 #   VPC_ID - Set to the provided VPC ID
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with error if VPC ID is not provided or unknown arguments are given
@@ -129,12 +135,15 @@ function parse_arguments {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   VPC_ID - VPC ID to check
 #   REGION - AWS region to query
 #
+# Outputs:
+#   EC2 instance information
+#
 # Returns:
-#   Outputs EC2 instance information
+#   0 on success
 #
 # Usage:
 #   check_ec2_instances
@@ -158,12 +167,15 @@ function check_ec2_instances {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   VPC_ID - VPC ID to check
 #   REGION - AWS region to query
 #
+# Outputs:
+#   NAT gateway information
+#
 # Returns:
-#   Outputs NAT gateway information
+#   0 on success
 #
 # Usage:
 #   check_nat_gateways
@@ -187,12 +199,15 @@ function check_nat_gateways {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   VPC_ID - VPC ID to check
 #   REGION - AWS region to query
 #
+# Outputs:
+#   network interface information
+#
 # Returns:
-#   Outputs network interface information
+#   0 on success
 #
 # Usage:
 #   check_network_interfaces
@@ -216,12 +231,15 @@ function check_network_interfaces {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   VPC_ID - VPC ID to check
 #   REGION - AWS region to query
 #
+# Outputs:
+#   VPN gateway information
+#
 # Returns:
-#   Outputs VPN gateway information
+#   0 on success
 #
 # Usage:
 #   check_vpn_gateways
@@ -245,12 +263,15 @@ function check_vpn_gateways {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   VPC_ID - VPC ID to check
 #   REGION - AWS region to query
 #
+# Outputs:
+#   VPC peering connection information
+#
 # Returns:
-#   Outputs VPC peering connection information
+#   0 on success
 #
 # Usage:
 #   check_vpc_peering
@@ -274,9 +295,12 @@ function check_vpc_peering {
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
 #   VPC_ID - VPC ID to query
 #   REGION - AWS region to query
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with status 0 on success, non-zero on failure

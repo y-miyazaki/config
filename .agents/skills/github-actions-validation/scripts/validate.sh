@@ -58,11 +58,14 @@ WORKFLOWS_DIR=".github/workflows"
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stdout
+#
 # Returns:
-#   None (outputs to stdout)
+#   None
 #
 # Usage:
 #   show_usage
@@ -99,10 +102,13 @@ EOF
 # Arguments:
 #   $@ - All command line arguments passed to the script
 #
-# Global Variables:
+# Globals:
 #   VERBOSE - Enable verbose output
 #   QUIET - Suppress non-error output
 #   WORKFLOWS_DIR - Path to workflows directory
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with error if unknown options are provided
@@ -146,7 +152,10 @@ function parse_arguments {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -181,7 +190,10 @@ function validate_actionlint {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -216,7 +228,10 @@ function validate_ghalint {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -262,10 +277,13 @@ function validate_zizmor {
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   VERBOSE - Enable verbose output
 #   QUIET - Suppress non-error output
 #   WORKFLOWS_DIR - Path to workflows directory
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success, 1 on failure

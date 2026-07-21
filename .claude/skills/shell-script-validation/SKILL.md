@@ -14,13 +14,13 @@ metadata:
 
 - Shell script path or directory (required)
 - Validation script: `scripts/validate.sh` (required)
-- Optional flags: `-v`, `-f`
+- Optional flags: `-v`, `-f`, `--check-function-docs` (Google function header sections + explicit `None`)
 
 ## Output Specification
 
 Return structured Markdown in accordance with [references/common-output-format.md](references/common-output-format.md).
 
-Structured results for bash -n and shellcheck (syntax and lint only).
+Structured results for bash -n and shellcheck (syntax and lint only). With `--check-function-docs`, also reports [Google Shell Style Guide](https://google.github.io/styleguide/shellguide.html#s4.2-function-comments) function header sections.
 
 ## Execution Scope
 
@@ -65,4 +65,5 @@ Structured results for bash -n and shellcheck (syntax and lint only).
 bash scripts/validate.sh
 bash scripts/validate.sh ./scripts/deploy.sh -v
 bash scripts/validate.sh -f
+bash scripts/validate.sh --check-function-docs ./scripts/deploy.sh
 ```

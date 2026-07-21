@@ -89,11 +89,14 @@ AWS_RESOURCE_CATEGORIES=(
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
+# Outputs:
+#   Writes to stdout
+#
 # Returns:
-#   None (outputs to stdout)
+#   None
 #
 # Usage:
 #   show_usage
@@ -132,13 +135,16 @@ EOF
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   VERBOSE - Enable verbose output
 #   DRY_RUN - Enable dry-run mode
 #   OUTPUT_FILE - Output diagram file path
 #   AWS_REGION - AWS region to query
 #   OUTPUT_FORMAT - Output format for diagram
 #   GIT_COMMIT - Enable git commit flag
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -247,9 +253,12 @@ RESOURCE_CONFIGS[dynamodb]="dynamodb|list-tables|TableName|AWS::DynamoDB::Table|
 #   $1 - YAML file path
 #   $2 - Output file path
 #
-# Global Variables:
+# Globals:
 #   VERBOSE - Enable verbose output
 #   OUTPUT_FORMAT - Output format
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success, exits on failure
@@ -293,10 +302,13 @@ function generate_diagram {
 #   $2 - Data source (ignored for AWS CLI mode)
 #   $3 - Output mode (optional, default: yaml)
 #
-# Global Variables:
+# Globals:
 #   RESOURCE_CONFIGS - Associative array of resource configurations
 #   REGIONS_TO_CHECK - Array of regions to check
 #   TEMP_YAML_FILE - Temporary YAML file path
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success
@@ -437,9 +449,12 @@ EOF
 #   $1 - Category
 #   $2 - Safe region name
 #
-# Global Variables:
+# Globals:
 #   HIERARCHICAL_CONFIGS - Associative array of hierarchical configurations
 #   RESOURCE_CONFIGS - Associative array of resource configurations
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Stack children lines
@@ -498,12 +513,15 @@ function generate_stack_children {
 #   $1 - Data source (ignored for AWS CLI mode)
 #   $2 - Output mode (optional, default: yaml)
 #
-# Global Variables:
+# Globals:
 #   REGIONS_TO_CHECK - Array of regions to check
 #   TEMP_YAML_FILE - Temporary YAML file path
 #
-# Returns:
+# Outputs:
 #   Stack list or complete YAML depending on output mode
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   generate_vpc_hierarchical_resources "data_source" "output_mode"
@@ -774,7 +792,10 @@ EOF
 # Arguments:
 #   $1 - Resource name
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -810,7 +831,10 @@ generate_hierarchical_resources() {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -835,9 +859,12 @@ generate_lambda_vpc_hierarchical_resources() {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   REGIONS_TO_CHECK - Array of regions to check
 #   TEMP_YAML_FILE - Temporary YAML file path
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -924,9 +951,12 @@ EOF
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   REGIONS_TO_CHECK - Array of regions to check
 #   TEMP_YAML_FILE - Temporary YAML file path
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -1010,9 +1040,12 @@ EOF
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   AWS_REGION - AWS region to query
 #   REGIONS_TO_CHECK - Array of regions to check
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -1038,10 +1071,13 @@ function initialize_regions {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   TEMP_YAML_FILE - Temporary YAML file path
 #   REGIONS_TO_CHECK - Array of regions to check
 #   AWS_RESOURCE_CATEGORIES - Array of resource categories
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success
@@ -1145,9 +1181,12 @@ EOF
 # Arguments:
 #   $1 - Diagram file path
 #
-# Global Variables:
+# Globals:
 #   GIT_COMMIT - Enable git commit flag
 #   VERBOSE - Enable verbose output
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success, exits on failure
@@ -1204,13 +1243,16 @@ function update_git_repository {
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   DRY_RUN - Dry-run mode flag
 #   OUTPUT_FILE - Output diagram file path
 #   GIT_COMMIT - Git commit flag
 #   AWS_REGION - AWS region
 #   TEMP_YAML_FILE - Temporary YAML file path
 #   OUTPUT_FILE - Output file path
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success, exits on failure

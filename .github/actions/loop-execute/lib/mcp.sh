@@ -21,7 +21,10 @@
 #   $1 - Name of the ARGS array variable (nameref)
 #   $2 - Engine name (claude|copilot|codex|cursor)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -57,9 +60,12 @@ function append_agent_mcp_args {
 #   $1 - Engine name (claude|copilot|codex|cursor)
 #   $2 - Workspace root (default: .)
 #
-# Global Variables:
+# Globals:
 #   CODEX_HOME - Set for codex runs to an isolated config directory
 #   RUNNER_TEMP - GitHub Actions temp directory used for the default CODEX_HOME parent
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 when setup completes or MCP is not configured
@@ -95,11 +101,14 @@ function prepare_agent_mcps {
 # Arguments:
 #   $1 - Workspace root hint (default: .)
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Manifest path to stdout, 1 when none exists
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function resolve_mcp_json_path {
@@ -134,7 +143,10 @@ function resolve_mcp_json_path {
 #   $1 - Source mcp.json path
 #   $2 - Destination config.toml path
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

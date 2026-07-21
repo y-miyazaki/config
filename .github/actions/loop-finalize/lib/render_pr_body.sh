@@ -54,11 +54,14 @@ TARGET_KEY="${TARGET_KEY:-}"
 # Arguments:
 #   $1 - Input text
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Redacted text to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function redact_sensitive_text {
@@ -85,11 +88,14 @@ function redact_sensitive_text {
 # Arguments:
 #   $1 - Pre-extracted overview body text (no heading)
 #
-# Global Variables:
+# Globals:
 #   OVERVIEW_MAX_CHARS - Maximum length after redact
 #
-# Returns:
+# Outputs:
 #   Section markdown to stdout (empty when blank)
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function render_agent_overview_section {
@@ -114,11 +120,14 @@ function render_agent_overview_section {
 # Arguments:
 #   $1 - Pre-extracted summary body text (no heading)
 #
-# Global Variables:
+# Globals:
 #   SUMMARY_MAX_CHARS - Maximum length after redact
 #
-# Returns:
+# Outputs:
 #   Section markdown to stdout (empty when blank)
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function render_agent_summary_section {
@@ -144,11 +153,14 @@ function render_agent_summary_section {
 # Arguments:
 #   $1 - JSON string array of changed file paths
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Section markdown to stdout (empty when no files)
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function render_changes_section {
@@ -197,11 +209,14 @@ function render_changes_section {
 # Arguments:
 #   $1 - Detect result JSON
 #
-# Global Variables:
+# Globals:
 #   FAILURES_MAX - Maximum failure entries to list (default 5)
 #
-# Returns:
+# Outputs:
 #   Section markdown to stdout (empty when no failures)
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function render_failure_context {
@@ -246,8 +261,14 @@ function render_failure_context {
 # Arguments:
 #   $1 - Raw cell text
 #
-# Returns:
+# Globals:
+#   None
+#
+# Outputs:
 #   Escaped text to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function escape_markdown_table_cell {
@@ -270,11 +291,14 @@ function escape_markdown_table_cell {
 #   $2 - Target key (e.g. integration:main)
 #   $3 - Skip reason
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Section markdown to stdout (empty when all fields blank)
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function render_run_metadata {
@@ -303,11 +327,14 @@ function render_run_metadata {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Disclaimer markdown to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function render_automation_disclaimer {
@@ -324,7 +351,7 @@ function render_automation_disclaimer {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   AGENT_REPORT_OVERVIEW - Agent overview body text
 #   AGENT_REPORT_SUMMARY - Agent summary body text
 #   CHANGED_FILES_JSON - JSON string array of changed paths
@@ -334,8 +361,11 @@ function render_automation_disclaimer {
 #   SKIP_REASON - Run metadata skip reason
 #   TARGET_KEY - Run metadata target key
 #
-# Returns:
+# Outputs:
 #   Full PR body markdown to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function render_pr_body {
@@ -374,11 +404,14 @@ function render_pr_body {
 #   $1 - Input text
 #   $2 - Maximum length
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Truncated text to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function truncate_text {
@@ -401,8 +434,11 @@ function truncate_text {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None (delegates to render_pr_body)
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success

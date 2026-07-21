@@ -21,7 +21,10 @@
 #   $4 - Default max runs per day
 #   $5 - Default max tokens per day
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -88,11 +91,14 @@ function budget_exceeded {
 #   $3 - Default max runs
 #   $4 - Default max tokens
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   "max_runs max_tokens" on stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function read_budget_limits {
@@ -117,7 +123,10 @@ function read_budget_limits {
 # Arguments:
 #   $1 - Consecutive failure count
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

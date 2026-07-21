@@ -37,11 +37,14 @@ REPO_ROOT="$(git rev-parse --show-toplevel 2> /dev/null || echo "${SCRIPT_DIR}/.
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   None (outputs to stdout and exits)
+#
+# Returns:
+#   0 on success
 #
 # Usage:
 #   show_usage
@@ -79,7 +82,10 @@ EOF
 #   $1 - Module name
 #   $2 - Docker image name
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -105,7 +111,10 @@ function build_docker_image {
 # Arguments:
 #   $1 - Docker image name
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -135,8 +144,11 @@ function run_tests {
 # Arguments:
 #   $1 - Module name
 #
-# Global Variables:
+# Globals:
 #   REPO_ROOT - Repository root directory
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None (exits on validation failure)
@@ -159,7 +171,10 @@ function validate_module {
 # Arguments:
 #   $1 - Module name (optional, defaults to kinesis_data_firehose_cloudwatch_logs_processor)
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

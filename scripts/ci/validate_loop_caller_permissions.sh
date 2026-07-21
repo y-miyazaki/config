@@ -38,7 +38,10 @@ VALIDATE_SCRIPT="${ACTION_ROOT}/lib/validate.sh"
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -67,8 +70,11 @@ EOF
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   VERBOSE - Set to true when --verbose is passed
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 1 on unknown options
@@ -105,8 +111,11 @@ function parse_arguments {
 # Arguments:
 #   $@ - Command line arguments
 #
-# Global Variables:
+# Globals:
 #   VERBOSE - Verbose logging flag
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits with delegated validation status

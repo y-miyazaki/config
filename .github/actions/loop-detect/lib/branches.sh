@@ -18,8 +18,11 @@
 #   $1 - Branch name
 #   $2 - Pattern from LOOP_INTEGRATION_BRANCHES
 #
-# Global Variables:
+# Globals:
 #   LOOP_BRANCH_MATCH - Match mode (list|glob|regex)
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 when matched, 1 otherwise
@@ -53,11 +56,14 @@ function branch_matches_pattern {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Branch names on stdout (one per line)
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function list_remote_branches {
@@ -74,8 +80,11 @@ function list_remote_branches {
 #   $1 - Comma-separated branch patterns
 #   $2 - Fallback branch when patterns are empty
 #
-# Global Variables:
+# Globals:
 #   INTEGRATION_BRANCHES - Output array of branch names
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -129,7 +138,10 @@ function resolve_integration_branches {
 #   $1 - Comma-separated string
 #   $2 - Name of target array variable
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:

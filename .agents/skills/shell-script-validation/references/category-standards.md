@@ -56,6 +56,27 @@ Scripts that use only environment variables or absolute paths omit `SCRIPT_DIR` 
 2. Other functions in alphabetical order
 3. main function last
 
+## Function Documentation (opt-in validation)
+
+When `--check-function-docs` is passed to `validate.sh`, enforce [Google Shell Style Guide — Function Comments](https://google.github.io/styleguide/shellguide.html#s4.2-function-comments) plus explicit `None` for non-applicable sections:
+
+```bash
+#######################################
+# Brief description of what the function does.
+# Globals:
+#   None
+# Arguments:
+#   $1 - path to process
+# Outputs:
+#   None
+# Returns:
+#   0 on success, 1 on failure
+#######################################
+function my_function() {
+```
+
+Required section headers: `Globals:`, `Arguments:`, `Outputs:`, `Returns:`. Each section must have a body line (content or `None`).
+
 ## Error Handling
 
 - Use error_exit from common library

@@ -19,12 +19,15 @@
 # Arguments:
 #   $1 - Verifier feedback markdown (may be empty)
 #
-# Global Variables:
+# Globals:
 #   PROMPT_TEXT - Base implementer prompt
 #   PROMPT_IMPLEMENTER_FEEDBACK - Retry prompt template
 #
-# Returns:
+# Outputs:
 #   Full implementer prompt to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function build_agent_prompt {
@@ -45,8 +48,11 @@ function build_agent_prompt {
 # Arguments:
 #   $1 - Commit message
 #
-# Global Variables:
+# Globals:
 #   WORKTREE_PATH - Absolute path to the isolated worktree
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 when a commit was created, 1 when no changes existed
@@ -77,8 +83,11 @@ function commit_worktree_if_needed {
 #   $1 - Output file path
 #   $2 - allow_writes flag (true|false), forwarded to run_agent
 #
-# Global Variables:
+# Globals:
 #   USAGE_* - Preserved from run_agent / run_cursor_agent_with_usage
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Engine CLI exit code
@@ -100,13 +109,16 @@ function run_agent_capture {
 # Arguments:
 #   $1 - allow_writes flag (true|false). Verifier uses false.
 #
-# Global Variables:
+# Globals:
 #   AGENT_TOKEN - Authentication token for the selected engine
 #   ENGINE - Engine name (claude|copilot|codex|cursor)
 #   MAX_TURNS - Optional max turns override
 #   MODEL - Optional model override
 #   PROMPT - Prompt text
 #   WORKING_DIRECTORY - Working directory for write-capable engines
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Engine CLI exit code

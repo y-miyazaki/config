@@ -45,11 +45,14 @@ WORKTREE_PATH="${WORKTREE_PATH:-}"
 # Arguments:
 #   $1 - Detect result JSON
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Summary string to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function build_fix_summary {
@@ -73,11 +76,14 @@ function build_fix_summary {
 #   $1 - Agent output file path
 #   $2 - Section title (e.g. Overview, Summary)
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Section body to stdout (may be empty)
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function extract_agent_section {
@@ -97,11 +103,14 @@ function extract_agent_section {
 # Arguments:
 #   $1 - Agent output file path
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Overview section body to stdout (may be empty)
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function extract_agent_report_overview {
@@ -114,11 +123,14 @@ function extract_agent_report_overview {
 # Arguments:
 #   $1 - Agent output file path
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Summary section body to stdout (may be empty)
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function extract_agent_report_summary {
@@ -131,11 +143,14 @@ function extract_agent_report_summary {
 # Arguments:
 #   $1 - Agent output file path
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Summary text to stdout (may be empty)
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function parse_agent_summary {
@@ -159,11 +174,14 @@ function parse_agent_summary {
 # Arguments:
 #   $1 - Input text
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Redacted text to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function redact_sensitive_text {
@@ -187,11 +205,14 @@ function redact_sensitive_text {
 #   $1 - Input text
 #   $2 - Maximum length
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Truncated text to stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function truncate_text {
@@ -210,10 +231,13 @@ function truncate_text {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   BASE_BRANCH - Base branch for merge-base diff
 #   GITHUB_OUTPUT - GitHub Actions output file path
 #   WORKTREE_PATH - Absolute path to the worktree
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   Exits 1 when required input is missing
@@ -231,8 +255,11 @@ function validate_required_inputs {
 # Arguments:
 #   $1 - notify_context JSON string
 #
-# Global Variables:
+# Globals:
 #   GITHUB_OUTPUT - GitHub Actions output file path
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -256,12 +283,15 @@ function write_notify_context_output {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   BASE_BRANCH - Base branch for merge-base diff
 #   DETECT_RESULT_JSON - Detect script JSON result (optional)
 #   HAS_CHANGES - Whether loop produced commits (true/false)
 #   STATUS_DIR - Attempt artifact directory (optional)
 #   WORKTREE_PATH - Absolute path to the worktree
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 on success

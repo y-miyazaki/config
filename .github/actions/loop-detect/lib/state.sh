@@ -18,7 +18,10 @@
 #   $1 - State file path
 #   $2 - Default branch for migration key
 #
-# Global Variables:
+# Globals:
+#   None
+#
+# Outputs:
 #   None
 #
 # Returns:
@@ -76,11 +79,14 @@ function migrate_state_targets {
 #   $2 - Target key
 #   $3 - Default branch for migration
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Target state JSON on stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function read_target_state {
@@ -98,11 +104,14 @@ function read_target_state {
 # Arguments:
 #   $1 - Target state JSON
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Failure count on stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function target_consecutive_failures {
@@ -117,11 +126,14 @@ function target_consecutive_failures {
 #   $1 - Target state JSON
 #   $2 - Branch ref for git fallback
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Commit SHA on stdout
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function target_last_sha {
@@ -146,8 +158,11 @@ function target_last_sha {
 # Arguments:
 #   $1 - Target state JSON
 #
-# Global Variables:
+# Globals:
 #   GH_TOKEN / GITHUB_TOKEN - Used for live PR state lookup when pending.pr is set
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   0 when pending.pr refers to an OPEN PR (or PR state cannot be resolved),
@@ -192,11 +207,14 @@ function target_pending_blocks_detect {
 # Arguments:
 #   $1 - Target state JSON
 #
-# Global Variables:
+# Globals:
 #   None
 #
-# Returns:
+# Outputs:
 #   Markdown prompt section on stdout (empty when none)
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function target_open_rejections_prompt {

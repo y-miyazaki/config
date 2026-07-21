@@ -21,8 +21,11 @@
 #   $3 - Issue description
 #   $4 - Required fix description
 #
-# Global Variables:
+# Globals:
 #   OPEN_REJECTIONS_JSON - JSON array of open rejections
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -48,11 +51,14 @@ function append_open_rejection {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   OPEN_REJECTIONS_JSON - JSON array of open rejections
 #
-# Returns:
+# Outputs:
 #   Markdown block to stdout, or nothing when empty
+#
+# Returns:
+#   0 on success
 #
 #######################################
 function format_open_rejections_for_prompt {
@@ -74,9 +80,12 @@ function format_open_rejections_for_prompt {
 #   $5 - Required fix description
 #   $6 - One-line summary for logs
 #
-# Global Variables:
+# Globals:
 #   OPEN_REJECTIONS_JSON - Updated via append_open_rejection
 #   REJECT_FEEDBACK - Updated via sync_reject_feedback
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
@@ -104,8 +113,11 @@ function record_structured_reject {
 # Arguments:
 #   None
 #
-# Global Variables:
+# Globals:
 #   REJECT_FEEDBACK - Markdown feedback for implementer retry prompt
+#
+# Outputs:
+#   None
 #
 # Returns:
 #   None
