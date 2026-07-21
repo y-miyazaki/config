@@ -1,19 +1,12 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-07-21T10:24:38Z",
-      "outcome": "pr-created",
+      "last_run": "2026-07-21T10:27:11Z",
+      "outcome": "merged",
       "consecutive_failures": 0,
       "open_rejections": [],
       "last_reject_reason": "Prior rejection fixed: specification.md Skills and Loop Engineering Workflows tables now include loop-refactor, refactor, and on-loop-refactor.yaml with accurate codebase alignment.",
-      "last_sha": "23ae2529938a08c4a700b8c4d0c9990fe606a94c",
-      "pending": {
-        "sha": "f899b729c39776d99ad27f9fed7851e6629a6f24",
-        "pr": 454,
-        "pr_url": "https://github.com/y-miyazaki/config/pull/454",
-        "loop_name": "docs-triage",
-        "created_at": "2026-07-21T10:24:38Z"
-      }
+      "last_sha": "f899b729c39776d99ad27f9fed7851e6629a6f24"
     }
   }
 }
