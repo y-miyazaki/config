@@ -18,7 +18,10 @@
 # - render_agent_overview_section omitted when empty
 # - render_agent_overview_section wraps heading
 # - render_pr_body empty prefix shows mechanical sections
-# - render_pr_body orders prefix overview failure summary changes metadata
+# - render_pr_body skips mechanical Changes when summary has ### Changes
+# - render_pr_body orders overview failure summary verification changes metadata
+# - render_agent_verification_section wraps heading
+# - agent_summary_has_detailed_changes detects Changes subsection
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -169,27 +172,60 @@ setup() {
     [[ $output != *"- Level:"* ]]
 }
 
-@test "render_pr_body orders prefix overview failure summary changes metadata" {
-    export PR_BODY_PREFIX=$'Prefix only.\n'
-    export AGENT_REPORT_OVERVIEW='Docs drift scan found stale nav entries.'
-    export DETECT_RESULT_JSON='{"failures":[{"workflow_name":"wf","run_url":"https://example/r","job_name":"job","failure_type":"regression","reason":"boom"}]}'
+@test "render_agent_verification_section wraps heading" {
+    run render_agent_verification_section '| shellcheck | pass |'
+    [ "$status" -eq 0 ]
+    [[ $output == *"## Verification"* ]]
+    [[ $output == *"shellcheck"* ]]
+}
+
+@test "agent_summary_has_detailed_changes detects Changes subsection" {
+    run agent_summary_has_detailed_changes $'### Changes\n| a | b |'
+    [ "$status" -eq 0 ]
+    run agent_summary_has_detailed_changes 'no changes here'
+    [ "$status" -eq 1 ]
+}
+
+@test "render_pr_body skips mechanical Changes when summary has ### Changes" {
+    export PR_BODY_PREFIX=''
+    export AGENT_REPORT_OVERVIEW='Updated one doc.'
+    export DETECT_RESULT_JSON='{}'
     export CHANGED_FILES_JSON='["docs/x.md"]'
-    export AGENT_REPORT_SUMMARY=$'- **Fix applied:** tweak\n'
+    export AGENT_REPORT_SUMMARY=$'### Changes\n| docs/x.md | stale | fixed |\n'
+    export AGENT_REPORT_VERIFICATION='| markdownlint | pass |'
     export LEVEL=L2
     export TARGET_KEY=integration:main
     export SKIP_REASON=none
     run render_pr_body
     [ "$status" -eq 0 ]
-    local prefix_i overview_i fail_i sum_i changes_i meta_i
+    [[ $output == *"## Verification"* ]]
+    [[ $output != *$'\n## Changes\n'* ]]
+    [[ $output == *"## Run Metadata"* ]]
+}
+
+@test "render_pr_body orders prefix overview failure summary verification changes metadata" {
+    export PR_BODY_PREFIX=$'Prefix only.\n'
+    export AGENT_REPORT_OVERVIEW='Docs drift scan found stale nav entries.'
+    export DETECT_RESULT_JSON='{"failures":[{"workflow_name":"wf","run_url":"https://example/r","job_name":"job","failure_type":"regression","reason":"boom"}]}'
+    export CHANGED_FILES_JSON='["docs/x.md"]'
+    export AGENT_REPORT_SUMMARY=$'### Changes\n| docs/x.md | stale | fixed |\n'
+    export AGENT_REPORT_VERIFICATION='| markdownlint | pass |'
+    export LEVEL=L2
+    export TARGET_KEY=integration:main
+    export SKIP_REASON=none
+    run render_pr_body
+    [ "$status" -eq 0 ]
+    local prefix_i overview_i fail_i sum_i ver_i meta_i
     prefix_i="$(printf '%s\n' "${output}" | grep -n 'Prefix only' | head -1 | cut -d: -f1)"
     overview_i="$(printf '%s\n' "${output}" | grep -n '## Overview' | head -1 | cut -d: -f1)"
     fail_i="$(printf '%s\n' "${output}" | grep -n '## Failure context' | head -1 | cut -d: -f1)"
-    sum_i="$(printf '%s\n' "${output}" | grep -n 'Fix applied' | head -1 | cut -d: -f1)"
-    changes_i="$(printf '%s\n' "${output}" | grep -n '## Changes' | head -1 | cut -d: -f1)"
+    sum_i="$(printf '%s\n' "${output}" | grep -n '### Changes' | head -1 | cut -d: -f1)"
+    ver_i="$(printf '%s\n' "${output}" | grep -n '## Verification' | head -1 | cut -d: -f1)"
     meta_i="$(printf '%s\n' "${output}" | grep -n '## Run Metadata' | head -1 | cut -d: -f1)"
     [ "${prefix_i}" -lt "${overview_i}" ]
     [ "${overview_i}" -lt "${fail_i}" ]
     [ "${fail_i}" -lt "${sum_i}" ]
-    [ "${sum_i}" -lt "${changes_i}" ]
-    [ "${changes_i}" -lt "${meta_i}" ]
+    [ "${sum_i}" -lt "${ver_i}" ]
+    [ "${ver_i}" -lt "${meta_i}" ]
+    [[ $output != *$'\n## Changes\n'* ]]
 }

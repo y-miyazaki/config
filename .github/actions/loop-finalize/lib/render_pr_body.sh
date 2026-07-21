@@ -32,8 +32,8 @@ export LC_ALL=C.UTF-8
 # Global variables
 #######################################
 AGENT_REPORT_OVERVIEW="${AGENT_REPORT_OVERVIEW:-}"
-AGENT_REPORT_OVERVIEW="${AGENT_REPORT_OVERVIEW:-}"
 AGENT_REPORT_SUMMARY="${AGENT_REPORT_SUMMARY:-}"
+AGENT_REPORT_VERIFICATION="${AGENT_REPORT_VERIFICATION:-}"
 CHANGED_FILES_JSON="${CHANGED_FILES_JSON:-"[]"}"
 DETECT_RESULT_JSON="${DETECT_RESULT_JSON:-"{}"}"
 FAILURES_MAX="${FAILURES_MAX:-5}"
@@ -43,6 +43,7 @@ PR_BODY_PREFIX="${PR_BODY_PREFIX:-}"
 SKIP_REASON="${SKIP_REASON:-}"
 SUMMARY_MAX_CHARS="${SUMMARY_MAX_CHARS:-4000}"
 TARGET_KEY="${TARGET_KEY:-}"
+VERIFICATION_MAX_CHARS="${VERIFICATION_MAX_CHARS:-2000}"
 
 #######################################
 # redact_sensitive_text: Redact common secret patterns
@@ -79,6 +80,42 @@ function redact_sensitive_text {
 }
 
 #######################################
+# render_agent_section: Render a redacted agent report section with heading
+#
+# Description:
+#   Wrap pre-extracted agent body text under a ## heading. Empty input yields
+#   no output.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Pre-extracted body text (no heading)
+#   $2 - Section heading (e.g. ## Overview)
+#   $3 - Maximum length after redact
+#
+# Outputs:
+#   Section markdown to stdout (empty when blank)
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function render_agent_section {
+    local text="${1:-}"
+    local heading="${2:-}"
+    local max_chars="${3:-}"
+
+    text="$(truncate_text "$(redact_sensitive_text "${text}")" "${max_chars}")"
+    if [[ -z ${text} ]]; then
+        return 0
+    fi
+    printf '%s\n' "${heading}"
+    printf '%s\n' "${text}"
+    printf '\n'
+}
+
+#######################################
 # render_agent_overview_section: Render agent ## Overview section
 #
 # Description:
@@ -99,15 +136,7 @@ function redact_sensitive_text {
 #
 #######################################
 function render_agent_overview_section {
-    local text="${1:-}"
-
-    text="$(truncate_text "$(redact_sensitive_text "${text}")" "${OVERVIEW_MAX_CHARS}")"
-    if [[ -z ${text} ]]; then
-        return 0
-    fi
-    printf '%s\n' "## Overview"
-    printf '%s\n' "${text}"
-    printf '\n'
+    render_agent_section "${1:-}" "## Overview" "${OVERVIEW_MAX_CHARS}"
 }
 
 #######################################
@@ -131,15 +160,57 @@ function render_agent_overview_section {
 #
 #######################################
 function render_agent_summary_section {
-    local text="${1:-}"
+    render_agent_section "${1:-}" "## Summary" "${SUMMARY_MAX_CHARS}"
+}
 
-    text="$(truncate_text "$(redact_sensitive_text "${text}")" "${SUMMARY_MAX_CHARS}")"
-    if [[ -z ${text} ]]; then
-        return 0
-    fi
-    printf '%s\n' "## Summary"
-    printf '%s\n' "${text}"
-    printf '\n'
+#######################################
+# render_agent_verification_section: Render agent ## Verification section
+#
+# Description:
+#   Wrap pre-extracted agent verification body text under a ## Verification heading.
+#   Empty input yields no output.
+#
+# Globals:
+#   VERIFICATION_MAX_CHARS - Maximum length after redact
+#
+# Arguments:
+#   $1 - Pre-extracted verification body text (no heading)
+#
+# Outputs:
+#   Section markdown to stdout (empty when blank)
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function render_agent_verification_section {
+    render_agent_section "${1:-}" "## Verification" "${VERIFICATION_MAX_CHARS}"
+}
+
+#######################################
+# agent_summary_has_detailed_changes: Return whether summary owns change detail
+#
+# Description:
+#   When the agent Summary includes a Changes (or legacy Fixes Applied) subsection,
+#   skip the mechanical git-diff ## Changes list to avoid duplicate file rosters.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Agent summary body text
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 when detailed changes subsection is present; 1 otherwise
+#
+#######################################
+function agent_summary_has_detailed_changes {
+    local summary="${1:-}"
+
+    [[ ${summary} == *"### Changes"* || ${summary} == *"### Fixes Applied"* ]]
 }
 
 #######################################
@@ -351,6 +422,7 @@ function render_automation_disclaimer {
 # Globals:
 #   AGENT_REPORT_OVERVIEW - Agent overview body text
 #   AGENT_REPORT_SUMMARY - Agent summary body text
+#   AGENT_REPORT_VERIFICATION - Agent verification body text
 #   CHANGED_FILES_JSON - JSON string array of changed paths
 #   DETECT_RESULT_JSON - Detect JSON with failures array
 #   LEVEL - Run metadata level
@@ -387,8 +459,13 @@ function render_pr_body {
     section="$(render_agent_summary_section "${AGENT_REPORT_SUMMARY}")"
     [[ -n ${section} ]] && printf '%s\n' "${section}"
 
-    section="$(render_changes_section "${CHANGED_FILES_JSON}")"
+    section="$(render_agent_verification_section "${AGENT_REPORT_VERIFICATION}")"
     [[ -n ${section} ]] && printf '%s\n' "${section}"
+
+    if ! agent_summary_has_detailed_changes "${AGENT_REPORT_SUMMARY}"; then
+        section="$(render_changes_section "${CHANGED_FILES_JSON}")"
+        [[ -n ${section} ]] && printf '%s\n' "${section}"
+    fi
 
     render_run_metadata "${LEVEL}" "${TARGET_KEY}" "${SKIP_REASON}"
     render_automation_disclaimer

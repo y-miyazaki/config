@@ -15,12 +15,12 @@ Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.
 
 ## Purpose
 
-Detect mechanical structure hints on integration branches and open fix PRs after bounded O1/O2 refactors.
+Detect mechanical structure hints on integration branches and open fix PRs after bounded O1/O2 refactors. Each loop run **surveys all hints** in the detection envelope, then **applies every actionable candidate** in one Agent→Verify cycle.
 
 ### Supported use cases
 
 - Cron scan of integration branches for H1 hints (`duplication_block`, `oversized_unit`)
-- Apply one structural refactor per hint with stack validation (A')
+- Apply all actionable structural refactors from the surveyed hint set with stack validation (A')
 - Open an L2 review PR to the watch integration branch
 - Coordinate with peer loops via [workflow concurrency](../multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency)
 
@@ -38,7 +38,7 @@ Detect mechanical structure hints on integration branches and open fix PRs after
 
 Detect script path: **`refactor/scripts/detect_refactor.sh`** (under `common` package).
 
-Entry skill (`refactor`) handles interactive and loop paths: loop runs use **structural intent only**, one hint → one target, O2 cap. Architecture-improvement language in user prompts is out of scope for this loop.
+Entry skill (`refactor`) handles interactive and loop paths: loop runs use **structural intent only**, survey all `hints[]`, apply every apply candidate, O2 cap. Architecture-improvement language in user prompts is out of scope for this loop.
 
 ### Modes
 
@@ -79,7 +79,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `no_changes_verdict`                                       | `APPROVE` or `REJECT` when implementer produces no file diff.                        | `REJECT`                                                  |
 | `pr_body`                                                  | Optional static prefix (dogfood: `""`).                                              | `""`                                                      |
 | `pr_title`                                                 | PR title when finalize strategy is `open_pr`.                                        | `refactor(loop): structural improvement`                  |
-| `prompt_instructions`                                      | Domain instructions: invoke `refactor` structural path; stack validation via A'.     | Inline in caller workflow                                 |
+| `prompt_instructions`                                      | Domain instructions: invoke `refactor` survey-then-apply-all path; stack validation via A'. | Inline in caller workflow                                 |
 | `pull_requests`                                            | Enumerate open PR heads. Refactor loop uses integration branches only.               | `false`                                                   |
 | `skill_name`                                               | Skill package to invoke.                                                             | `refactor`                                           |
 
@@ -100,7 +100,7 @@ Detect script outputs **facts** (not semantic repair decisions):
 | `commit_range` | Passed through prompt context when scope is `range`         |
 | `skip`         | `true` when no hints after allowlist filter                 |
 
-**Skill** (`loop-refactor`) maps the first actionable hint to one `refactor` target per run.
+**Skill** (`refactor`) maps **every** `hints[]` entry to survey rows; at L2/L3 applies all candidates marked apply in one run.
 
 `loop-detect` emits per-branch `target_json`:
 
@@ -131,7 +131,7 @@ No infra/env classification — not applicable.
 - Verifier diff baseline: `to.branch`
 - `verifier_context`: detect hint summary (kind, path, detail)
 - **Intent:** always `structural` — O2 cap; no architecture Phase A/B
-- One hint → one target; follow `refactor` skill O1/O2 contract via caller `prompt_instructions` (A')
+- Survey all hints; apply every apply candidate; follow `refactor` skill contract via caller `prompt_instructions` (A')
 
 ## Finalize
 
@@ -181,4 +181,5 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 - [Loop Caller Workflows Design](../loop-caller-workflows-design.md)
 - [Refactor skill & loop design](../../../superpowers/specs/2026-07-21-refactor-skill-and-loop-design.md)
 - [Specification](../../../reference/specification.md)
+
 

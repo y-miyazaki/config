@@ -10,11 +10,27 @@ This skill uses short labels **O1 / O2 / O3** for how deep a change may go. They
 
 Closed set for apply: O1/O2 only. O3 is proposal-first, then O2 slices after user approval.
 
+## Execution phases
+
+| Phase | Name   | When                         | Edits |
+| ----- | ------ | ---------------------------- | ----- |
+| A     | Survey | Every run                    | No    |
+| B     | Apply  | `mode: apply` and level allows | Yes   |
+
+Survey discovers **all** candidates in scope. Apply fixes **every** candidate marked apply in survey order. Do not stop after the first candidate.
+
+## Execution modes
+
+| Mode    | Phase A | Phase B | Typical trigger                                      |
+| ------- | ------- | ------- | ---------------------------------------------------- |
+| `survey`| Yes     | No      | 洗い出し, list candidates, inventory; loop `L1`        |
+| `apply` | Yes     | Yes     | リファクタリング実施, `/refactor`; loop `L2`/`L3` default |
+
 ## Intent classification (before edits)
 
 | Intent           | When to use                                                                                        | Path                                    |
 | ---------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| **structural**   | Dedupe, extract, clarify, shallow move; default when ambiguous                                     | O1/O2 apply workflow                    |
+| **structural**   | Dedupe, extract, clarify, shallow move; default when ambiguous                                     | Survey → apply all O1/O2 candidates     |
 | **architecture** | User mission is module boundary, deep module, redesign, responsibility split, testability at seams | Phase A → approval → Phase B (O2 slice) |
 
 ### Architecture-improvement triggers (examples)
@@ -65,8 +81,7 @@ Forbidden on L2 / automation path:
 **Phase B (after explicit user approval of one slice):**
 
 - User names **one** approved slice from the proposal
-- Run the structural path for that slice only — **O2 cap**
+- Run survey + apply for that slice only — **O2 cap**
 - Same verification and validation gates as structural intent
 
 **Never on loop L2:** loop callers and detect hints stay structural (O1/O2) only.
-

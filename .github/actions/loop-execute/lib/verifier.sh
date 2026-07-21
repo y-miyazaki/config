@@ -187,7 +187,7 @@ function write_verifier_output_contract {
 # Globals:
 #   BASE_BRANCH, DENYLIST, ALLOWLIST, WORKTREE_PATH
 #   AGENT_VERIFIER_CRITERIA, AGENT_VERIFIER_MAX_TURNS, AGENT_VERIFIER_MODEL
-#   OPEN_REJECTIONS_JSON, SKILL_NAME, VERIFIER_CONTEXT
+#   LIB_DIR, OPEN_REJECTIONS_JSON, SKILL_NAME, VERIFIER_CONTEXT
 #   PROMPT_VERIFIER_* prompt env vars
 #
 # Arguments:
@@ -245,6 +245,21 @@ function run_verify {
         return 0
     fi
 
+    local agent_output_file="${attempt_dir}/agent-output.txt"
+    local format_violations=""
+    if [[ -f ${agent_output_file} ]] \
+        && agent_report_skill_requires_format_check "${SKILL_NAME}"; then
+        format_violations="$(validate_agent_report "${agent_output_file}" "${changed_files}" "${SKILL_NAME}" || true)"
+        if [[ -n ${format_violations} ]]; then
+            record_structured_reject "${attempt_dir}" "${attempt_num}" "${changed_files//$'\n'/,}" \
+                "Agent report output format or Changes/Deferred consistency failed" \
+                "Emit ## Overview, ## Summary (### Changes + ### Deferred), and ## Verification per loop PR body skill contract; reconcile with git diff before synthesis" \
+                "${format_violations}"
+            cd "${old_pwd}" || return 1
+            return 0
+        fi
+    fi
+
     diff_stat=$(git diff --stat "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/' || true)
     attempt_diff_stat=""
     if [[ ${attempt_committed} == "true" ]] && git rev-parse HEAD~1 > /dev/null 2>&1; then
@@ -256,6 +271,12 @@ function run_verify {
     criteria="${AGENT_VERIFIER_CRITERIA}"
     if [[ -z ${criteria} ]]; then
         criteria="${PROMPT_VERIFIER_DEFAULT_CRITERIA}"
+    fi
+    if agent_report_skill_requires_format_check "${SKILL_NAME}"; then
+        local format_criteria_file="${LIB_DIR}/agent_output_format_criteria.md"
+        if [[ -f ${format_criteria_file} ]]; then
+            criteria="${criteria}"$'\n\n'"$(cat "${format_criteria_file}")"
+        fi
     fi
 
     prompt_file="${attempt_dir}/verifier-prompt.txt"

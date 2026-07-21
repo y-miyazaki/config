@@ -8,9 +8,9 @@ tags:
 inputs:
   prompt: >-
     Use refactor (loop path). Context JSON has skip=true and hints=[]. Emit no-op
-    Refactor Session Report per common-output-format-loop.md with Target showing none,
-    Applied Change none or no-op, Session Metrics, plus ## Overview and ## Summary.
-    Do not edit files.
+    Refactor Session Report per common-output-format-loop.md with Session Metrics,
+    ## Overview explaining no actionable hint, ## Summary with no-op outcome, and
+    ## Verification. Do not edit files.
   context:
     level: L2
     skip: true

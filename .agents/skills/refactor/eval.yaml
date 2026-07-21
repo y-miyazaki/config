@@ -1,9 +1,9 @@
 name: refactor-eval
 description: >-
   Evaluation suite for refactor.
-  Verifies session report sections, O1/O2 scope language, and no-op exits.
+  Verifies Refactor Result / Session Report sections, O1/O2 scope language, and no-op exits.
 skill: refactor
-version: "1.0"
+version: "1.2"
 config:
   trials_per_task: 5
   timeout_seconds: 180
@@ -21,15 +21,22 @@ graders:
     weight: 1.0
     config:
       assertions:
-        - "'Session Metrics' in output"
-        - "'Target' in output"
-        - "'Applied Change' in output or 'no-op' in output or 'Watch' in output"
+        - "'## Overview' in output"
+        - "'## Summary' in output"
+        - "'Refactor Result' in output or 'Refactor Session Report' in output"
+        - >-
+          '## Verification' in output or '### Candidates' in output
+          or 'no-op' in output.lower() or 'proposal' in output.lower()
+        - >-
+          '### Changes' in output or '### Candidates' in output
+          or 'no-op' in output.lower() or 'Session Metrics' in output
+          or 'proposal' in output.lower()
   - type: text
     name: report_sections
     weight: 0.5
     config:
       regex_match:
-        - (Target|Applied Change|Session Metrics)
+        - (## Overview|## Summary|Refactor Result|Refactor Session Report)
   - type: behavior
     name: bounded_runtime
     weight: 0.5
@@ -39,4 +46,3 @@ graders:
       max_duration_ms: 180000
 tasks:
   - evals/tasks/*.yaml
-

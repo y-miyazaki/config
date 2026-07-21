@@ -2,24 +2,20 @@
 Canonical PR-facing template for loop-ci-sweeper.
 
 Load ONLY at synthesis time, after triage and file edits complete.
-loop-finalize adds ## Failure context from detect; this template covers Overview + Summary.
+loop-finalize adds ## Failure context from detect; this template covers Overview + Summary + Verification.
 
 Rules:
-- Keep top-level ## Overview and ## Summary headings exactly as written.
-- Do not duplicate detect failure URLs here — Overview is plain language only.
-- Use Markdown tables in Summary.
-- Overview: Trigger → Problem → Action in 1-2 sentences (see common-output-format.md).
-- Name workflow/job in Overview; URLs belong in platform ## Failure context only.
+- Keep top-level ## Overview, ## Summary, and ## Verification headings exactly as written.
+- Do not duplicate detect failure URLs in Overview — URLs belong in platform ## Failure context.
+- Summary contains ### Changes and ### Deferred only.
+- Do NOT emit Outcome, Suggested next action, or top-level ## Changes.
+- Deferred = failures with NO fix in final working tree; reconcile with git diff before synthesis.
 -->
 
 ## Overview
 
 <!--
-  Trigger: which workflow/job failed (name only)
-  Problem: root cause from log_excerpt in plain language
-  Action: fix applied and validation result
-
-  GOOD: CI failed on markdownlint MD001 in docs/foo.md; fixed heading style in 1 file and re-ran markdownlint-cli2 clean.
+  GOOD: CI failed on markdownlint MD001 in docs/foo.md; fixed heading style in one file.
   BAD:  CI sweeper addressed actionable failures.
 -->
 
@@ -27,26 +23,20 @@ Rules:
 
 ## Summary
 
-### Fixes Applied
+### Changes
 
-| Workflow / Job     | Root cause         | Fix                                 |
-| ------------------ | ------------------ | ----------------------------------- |
-| <workflow> / <job> | <from log_excerpt> | <minimal change summary, or "None"> |
+| Workflow / Job     | What was wrong | What changed |
+| ------------------ | -------------- | ------------ |
+| <workflow> / <job> | <root cause>   | <minimal fix summary> |
 
 ### Deferred
 
-| Workflow / Job                 | Type                                    | Reason                |
-| ------------------------------ | --------------------------------------- | --------------------- |
-| <workflow> / <job or "_None_"> | <flake\|infra\|env\|needs-human or "—"> | <why deferred or "—"> |
+| Workflow / Job     | Why deferred |
+| ------------------ | ------------ |
+| <workflow> / <job> | <plain-language reason> |
 
-### Validation
+## Verification
 
-| Command       | Result                  |
-| ------------- | ----------------------- |
-| <command run> | <pass / fail / not run> |
-
-### Suggested next action
-
-<one sentence, e.g. "Merge bot fix PR and re-run CI on the human PR.">
-
-**Outcome:** <one-line result, e.g. "Fixed MD001 in docs/foo.md; markdownlint clean">
+| Check | Result |
+| ----- | ------ |
+| <command run> | <pass \| fail \| skip \| blocked> |

@@ -8,7 +8,7 @@ description: >-
 license: Apache-2.0
 metadata:
   author: y-miyazaki
-  version: "1.3.3"
+  version: "1.3.4"
 ---
 
 ## Input

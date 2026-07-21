@@ -36,5 +36,7 @@ source "${LIB_DIR}/mcp.sh"
 source "${LIB_DIR}/agent.sh"
 # shellcheck source=./usage.sh
 source "${LIB_DIR}/usage.sh"
+# shellcheck source=./validate_agent_report.sh
+source "${LIB_DIR}/validate_agent_report.sh"
 # shellcheck source=./verifier.sh
 source "${LIB_DIR}/verifier.sh"

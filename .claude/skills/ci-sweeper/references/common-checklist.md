@@ -9,7 +9,7 @@
 
 ## Scope Guards
 
-- Edit only paths in the allowlist; never touch denylist paths (see `category-scope.md`)
+- Respect path scope per `category-scope.md` (interactive: no skill allowlist/denylist; loop: caller `allowlist` in `## Constraints`, caller `denylist` via verifier)
 - Fix at most one regression when more than three failures are present
 - Defer fixes requiring more than five files as Watch
 
@@ -22,6 +22,8 @@
 
 - Emit all four report sections per `common-output-format.md`
 - Include `Actionable Fixes` and `Watch Items` headings even when empty
+- Before PR synthesis: reconcile **Fixes Applied** / **Deferred** with `git diff --name-only` per [common-output-format.md](common-output-format.md)
+- **Deferred** failures MUST NOT leave edits in git diff — revert stray fixes from earlier attempts
 
 ## Error Handling
 
@@ -35,3 +37,4 @@
 - Workflow lint failure (actionlint) → fix workflow YAML syntax only
 - Shell script lint failure (shellcheck) → fix the reported script line only
 - Runner OOM in logs → Watch item, set **Outcome** to `watch`, escalate (no code change)
+

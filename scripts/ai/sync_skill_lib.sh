@@ -153,9 +153,10 @@ function sync_one_skill {
             return
         fi
 
-        if ! diff -qr "${SOURCE_LIB}" "${target_lib}" > /dev/null 2>&1; then
+        local diff_output
+        if ! diff_output=$(diff -qr "${SOURCE_LIB}" "${target_lib}" 2>&1); then
             echo "  DRIFT: ${skill_name}"
-            diff -qr "${SOURCE_LIB}" "${target_lib}" 2> /dev/null | sed 's/^/    /'
+            printf '%s\n' "${diff_output}" | sed 's/^/    /'
             DRIFT_COUNT=$((DRIFT_COUNT + 1))
         fi
     else

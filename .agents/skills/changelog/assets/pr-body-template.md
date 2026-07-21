@@ -4,19 +4,15 @@ Canonical PR-facing template for loop-changelog.
 Load ONLY at synthesis time, after CHANGELOG.md edits complete.
 
 Rules:
-- Keep top-level ## Overview and ## Summary headings exactly as written.
-- Overview: Trigger → Problem → Action in 1-2 sentences (see common-output-format.md).
-- Do not list every commit SHA in Overview — use counts and section names.
+- Keep top-level ## Overview, ## Summary, and ## Verification headings exactly as written.
+- Use ### Skipped (not Deferred) for commits not added to CHANGELOG.
+- Do NOT emit Outcome or Suggested next action.
 -->
 
 ## Overview
 
 <!--
-  Trigger: commits/releases since last processed SHA
-  Problem: what was missing from CHANGELOG.md
-  Action: entries added or releases promoted
-
-  GOOD: Processed 4 conventional commits since last changelog SHA; added 3 Unreleased bullets under Changed and promoted v1.2.0 release section.
+  GOOD: Processed 4 conventional commits since last changelog SHA; added 3 Unreleased bullets under Changed.
   BAD:  Changelog loop run finished.
 -->
 
@@ -24,20 +20,20 @@ Rules:
 
 ## Summary
 
-### Changes Applied
+### Changes
 
-| Commit      | Type   | Entry                                |
-| ----------- | ------ | ------------------------------------ |
+| Commit      | Type   | Entry |
+| ----------- | ------ | ----- |
 | <short sha> | <type> | <Unreleased bullet added or updated> |
 
 ### Skipped
 
-| Commit            | Reason                                     |
-| ----------------- | ------------------------------------------ |
-| <sha or "_None_"> | <already listed / non-conventional or "—"> |
+| Commit | Why skipped |
+| ------ | ----------- |
+| <sha>  | <already listed / non-conventional> |
 
-### Suggested next action
+## Verification
 
-<one sentence, e.g. "Merge to advance Unreleased entries before next release tag.">
-
-**Outcome:** <one-line result>
+| Check | Result |
+| ----- | ------ |
+| `CHANGELOG.md` structure | <pass \| fail> |

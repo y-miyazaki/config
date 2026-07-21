@@ -1,72 +1,51 @@
 # Documentation Triage Report Format
 
-Use this structure for every run, including no-action exits.
+Use this structure for every loop run, including no-action exits.
 
 ## Session report (verifier / logs)
 
 ```markdown
 # Documentation Triage Report
 
-## High-Priority Items (Fixed)
-
-- **File:** <path>
-- **Reason:** <from findings>
-- **Fix applied:** <minimal change summary, or "None">
-
-## Watch Items (Deferred)
-
-- **File:** <path>
-- **Reason:** <why deferred>
-
-## Noise / Ignore
-
-- <out-of-scope, duplicate, or excluded items, or "None">
-
 ## Session Metrics
 
-| Field             | Value                                                      |
-| ----------------- | ---------------------------------------------------------- |
-| Level             | <L1\|L2\|L3>                                               |
-| Commit range      | <commit_range>                                             |
-| Findings assessed | <count>                                                    |
-| Files modified    | <count>                                                    |
-| Outcome           | <one-line result, e.g. "No documentation impact detected"> |
+| Field             | Value |
+| ----------------- | ----- |
+| Level             | <L1\|L2\|L3> |
+| Commit range      | <commit_range> |
+| Findings assessed | <count> |
+| Files modified    | <count> |
+| Outcome           | <one-line verifier result> |
 ```
 
 ## PR body contract (human-facing)
 
-At synthesis time (after triage and edits), load `assets/pr-body-template.md` and emit **exactly** its `## Overview` and `## Summary` sections. `loop-finalize` extracts these for the PR body.
+At synthesis time, load `assets/pr-body-template.md` and emit **exactly**:
 
-Pattern reference: [APM triage-panel](https://github.com/microsoft/apm/blob/main/.github/workflows/triage-panel.md) — skill owns the verdict template; platform passthrough only.
+1. `## Overview`
+2. `## Summary` (`### Changes`, `### Deferred`)
+3. `## Verification`
 
-| Triage panel                | docs-updater (loop path)            |
-| --------------------------- | ----------------------------------- |
-| `assets/triage-template.md` | `assets/pr-body-template.md`        |
-| Synthesized verdict         | `## Overview` + `## Summary` tables |
-| Decision table              | `## Run Metadata` (finalize-owned)  |
+`loop-finalize` adds `## Run Metadata` and omits mechanical `## Changes` when Summary contains `### Changes`.
 
-PR-facing `## Summary` MUST use Markdown tables for Fixes Applied and Deferred (not metadata bullets).
+See repository `docs/explanation/loop-engineering/loop-pr-body-skill-contract.md`.
 
-### Overview (skill-specific)
+## Fixes / Deferred consistency
 
-Emit one paragraph under `## Overview` that answers:
+**Deferred** means no fix remains in the working tree for that path.
 
-| Element | docs-triage content                                                         |
-| ------- | --------------------------------------------------------------------------- |
-| Trigger | Docs drift scan over `<commit_range>` (or "scheduled scan")                 |
-| Problem | What was stale, missing, or broken (nav entry, broken link, version pin, …) |
-| Action  | How many files fixed vs deferred; name paths when ≤3                        |
+| Rule | Requirement |
+| ---- | ----------- |
+| Mutual exclusion | A path MUST NOT appear in both **Changes** and **Deferred** |
+| Git alignment | Every path in `git diff` MUST have a **Changes** row |
+| Deferred = no edit | Revert edits to deferred paths before synthesis |
 
-**Good:** `Docs drift scan found 3 stale package references in mkdocs nav; this run updated README and mkdocs.yml and deferred 1 Watch item in a generated directory.`
+Before PR synthesis, run `git diff --name-only` and reconcile **Changes** and **Deferred**.
 
-**Bad:** `Documentation triage loop completed at L2.` / `See Summary below.` / bullet list of metadata
+**Bad example ([PR #454](https://github.com/y-miyazaki/config/pull/454)):** Deferred lists `architecture.md` but git diff / platform Changes still includes it.
 
 ## Rules
 
-- Always emit all session `##` sections; use `None` or `0` when a section has no items.
-- `## Session Metrics` MUST use a Field \| Value table (not bullet list).
-- Always emit PR `## Overview` and `## Summary` after session report (even on no-action exits).
-- At `L1`, list fixes in High-Priority Items but do not edit files.
-- At `L2`/`L3`, edit only High-Priority items within the prompt `## Constraints` allowlist (see `category-scope.md`).
-- Verifier expects changes to address triage findings with factual consistency and preserved structure.
-
+- Emit session **Session Metrics** for verifier/logs only.
+- At `L1`, fill PR **Changes** as intended edits but do not modify files.
+- At `L2`/`L3`, edit only within prompt `## Constraints` allowlist (see `category-scope.md`).

@@ -1,13 +1,31 @@
 ## Path Scope
 
-Allowlist and denylist are configured by the caller workflow (`LOOP_ALLOWLIST`, `LOOP_DENYLIST` / verifier denylist). Defaults below match this repository's dogfood caller.
+### How scope is resolved
 
-### Allowlist (dogfood example)
+| Mode | Allowlist | Denylist |
+| ---- | --------- | -------- |
+| **Interactive** — no path constraints in prompt or JSON | **Unrestricted** within [Skill-specific limits](#skill-specific-limits) and [ignore conventions](#ignore-conventions) | **None from skill** — follow repository security instructions |
+| **Interactive** — user `allowlist` / `denylist` | User allowlist globs only (within skill-specific limits) | User denylist globs |
+| **Loop** | Caller `allowlist` — repeated in prompt `## Constraints` as `Allowed paths: …` | Caller `denylist` — enforced by loop-execute verifier (may be empty; not inlined in prompt unless caller criteria mention it) |
 
-`.github/**`, `.apm/packages/**`, `scripts/**`, `apm.yml`, `mise.toml`, `renovate/**`, `docs/**/*.md`, `README.md`, `mkdocs.yml`
+Skills do **not** ship a repository-wide default denylist. Per-repo deny rules belong in caller workflows, repository instructions (`AGENTS.md`), or explicit user constraints — not in skill references.
 
-### Denylist
+Do **not** treat [Loop caller examples](#loop-caller-examples-this-repository) as interactive scope. Those configure `on-loop-*.yaml` only.
 
-`**/.env`, `**/credentials*`, `**/secrets*`, `**/migration/*.sql`, `**/infrastructure/**`
+### Ignore conventions
 
-Edit only allowlist paths. Never touch denylist paths.
+When discovering targets, skip paths ignored by `.gitignore` or `.cursorignore` unless the user explicitly names the path.
+
+Do not edit paths that appear to hold secrets (environment files, credential stores, private keys) even when no denylist is set — follow repository security instructions.
+
+### Skill-specific limits
+
+- Fix at most one `regression` when more than three failures are present
+- Defer fixes requiring more than five files as Watch
+
+### Loop caller examples (this repository)
+
+| Key | Example |
+| --- | ------- |
+| `allowlist` | `.github/**`, `.apm/packages/**`, `scripts/**`, `apm.yml`, `mise.toml`, `renovate/**`, `docs/**/*.md`, `README.md`, `mkdocs.yml` |
+| `denylist` | `**/.env`, `**/credentials*`, `**/secrets*`, `**/migration/*.sql`, `**/infrastructure/**` |

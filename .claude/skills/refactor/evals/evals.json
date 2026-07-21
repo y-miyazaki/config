@@ -3,50 +3,47 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Please refactor the duplicated helpers under fixtures/ — a.sh and b.sh both define nearly identical log_info and run_step. Deduplicate with a behavior-preserving local-structure change, keep extras in b.sh, and emit the Refactor Session Report.",
-      "expected_output": "Local-structure dedupe applied with session report sections; no feature change.",
+      "prompt": "Please refactor the duplicated helpers under fixtures/ — a.sh and b.sh both define nearly identical log_info and run_step. Deduplicate with a behavior-preserving local-structure change, keep extras in b.sh, and emit the Refactor Result.",
+      "expected_output": "Local-structure dedupe applied with result sections; no feature change.",
       "files": [],
       "expectations": [
-        "session-report.md includes heading ## Target",
-        "session-report.md includes heading ## Applied Change",
-        "session-report.md includes heading ## Session Metrics",
-        "Session Metrics Outcome is applied or watch (not a silent failure)",
-        "Duplication between a.sh and b.sh log_info/run_step is reduced OR Watch with structure reason",
+        "session-report.md includes ## Overview and ## Summary",
+        "session-report.md includes ### Changes with Target, What was wrong, and What changed columns",
+        "session-report.md includes ## Verification",
+        "Overview or Summary states applied or watch (not a silent failure)",
+        "Duplication between a.sh and b.sh log_info/run_step is reduced OR ### Deferred with structure reason",
         "b.sh still provides extra() or equivalent unique behavior",
         "No public API / feature behavior invented beyond dedupe",
-        "Tier applied uses plain-language gloss (contains 'local structure' or 'same-package' or 'none'), not bare O1/O2 alone"
+        "Output does not contain bare O1 or O2 tier labels or Session Metrics"
       ]
     },
     {
       "id": 2,
       "prompt": "Use the refactor skill. I did not give a path or symbol — what do you do?",
-      "expected_output": "no-op session report; no invented target; no file edits",
+      "expected_output": "no-op result; no invented target; no file edits",
       "files": [],
       "expectations": [
-        "session-report.md title is exactly '# Refactor Session Report' (or starts with that H1)",
-        "session-report.md includes heading ## Target",
-        "session-report.md includes heading ## Applied Change",
-        "session-report.md includes heading ## Characterization / Gates",
-        "session-report.md includes heading ## Watch Items",
-        "session-report.md includes heading ## Session Metrics",
-        "Outcome is no-op (or equivalent explicit empty-input stop)",
-        "Applied Change is None or states no edits",
+        "session-report.md title is Refactor Result (H1)",
+        "session-report.md includes ## Overview",
+        "session-report.md includes ## Summary",
+        "session-report.md includes ## Verification",
+        "Overview or Summary states no-op (or equivalent explicit empty-input stop)",
+        "### Changes omitted or empty (no invented fix)",
         "No source files were modified under fixtures/ (empty fixtures ok)",
-        "Session Metrics table includes Field and Value columns (markdown table)",
-        "Targets metric is 0 (no invented target)"
+        "No Session Metrics or internal tier labels in output"
       ]
     },
     {
       "id": 3,
       "prompt": "Clean up fixtures/messy.sh for shellcheck: snake_case names, quote expansions, drop unused vars. That is the whole task.",
-      "expected_output": "Refuse lint-primary; Watch or no-op; messy.sh byte-identical",
+      "expected_output": "Refuse lint-primary; watch or no-op; messy.sh byte-identical",
       "files": [],
       "expectations": [
-        "session-report.md includes ## Session Metrics or explicit refusal",
-        "Outcome is watch or no-op (lint-primary refused)",
+        "session-report.md includes ## Overview or ## Summary with explicit refusal",
+        "Overview or Summary states watch or no-op (lint-primary refused)",
         "messy.sh still contains UnusedVar and FileList markers (not style-rewritten)",
-        "Report cites lint-primary / DO NOT USE / checklist reason",
-        "Applied Change is None (no style-only rewrite applied)"
+        "### Deferred or Summary cites lint-primary / DO NOT USE / checklist reason",
+        "### Changes omitted or empty (no style-only rewrite applied)"
       ]
     },
     {
@@ -55,55 +52,53 @@
       "expected_output": "Refuse feature/API change; sum.go unchanged",
       "files": [],
       "expectations": [
-        "Outcome is watch or no-op",
+        "Overview or Summary states watch or no-op",
         "No Multiply function added to sum.go",
         "Add signature/semantics unchanged (still returns int, not error)",
-        "Report mentions feature / API / behavior change out of scope",
-        "Applied Change is None",
+        "### Deferred or Summary mentions feature / API / behavior change out of scope",
+        "### Changes omitted or empty",
         "sum.go still has plain 'func Add(a, b int) int' form"
       ]
     },
     {
       "id": 5,
-      "prompt": "Clarify AddSlow as verbose Add with a local-structure edit, add a characterization test, and emit the session report.",
-      "expected_output": "Local-structure clarification and/or characterization; structured report with plain-language tier",
+      "prompt": "Clarify AddSlow as verbose Add with a local-structure edit, add a characterization test, and emit the result.",
+      "expected_output": "Local-structure clarification and/or characterization; structured result without internal tier labels",
       "files": [],
       "expectations": [
-        "session-report.md includes ## Target and ## Session Metrics",
-        "AddSlow behavior preserved relative to Add (or Watch with gate reason)",
-        "Characterization test file added OR existing tests referenced in Characterization / Gates",
+        "session-report.md includes ### Changes and ## Verification",
+        "AddSlow behavior preserved relative to Add (or ### Deferred with gate reason)",
+        "Verification lists characterization test or go test with pass/fail OR ### Deferred explains blocked gate",
         "No Multiply / overflow-error API changes",
-        "Tier applied is local-structure / O1 local structure / none / watch — not deep redesign",
-        "Tier applied uses plain-language gloss (contains 'local structure' or 'same-package' or 'none'), not bare O1/O2 alone",
+        "Output does not contain bare O1 or O2 tier labels or Session Metrics",
         "AddSlow body delegates to Add OR remains equivalent without API change"
       ]
     },
     {
       "id": 6,
-      "prompt": "In fixtures/, move Helper from alpha.go into beta.go as a shallow same-package move. Keep Use() behavior identical. Gate with characterization tests, then emit the session report.",
-      "expected_output": "Same-package move applied (or downgrade to local-only/Watch with gate reason); plain-language tier; Use() preserved",
+      "prompt": "In fixtures/, move Helper from alpha.go into beta.go as a shallow same-package move. Keep Use() behavior identical. Gate with characterization tests, then emit the result.",
+      "expected_output": "Same-package move applied (or deferred with gate reason); Use() preserved",
       "files": [],
       "expectations": [
-        "session-report.md includes ## Target and ## Session Metrics",
-        "Outcome is applied or watch",
-        "Helper is defined in beta.go OR Downgrade/Watch explains insufficient gate / local-only",
-        "Use() still returns Helper(21) semantics (or Watch with no API invent)",
+        "session-report.md includes ### Changes and ## Verification",
+        "Overview or Summary states applied or watch",
+        "Helper is defined in beta.go OR ### Deferred explains insufficient gate / local-only fallback",
+        "Use() still returns Helper(21) semantics (or ### Deferred with no API invent)",
         "Package remains pkgmove (no cross-package redesign)",
-        "Characterization / Gates mentions tests or go test OR Downgrade/Watch reason",
-        "Tier applied uses plain-language gloss including 'same-package' or 'local structure' or 'none' (not bare O1/O2)",
+        "Verification mentions tests or go test with pass/fail OR ### Deferred explains gate",
+        "Output does not contain bare O1 or O2 tier labels",
         "No new public API invented (no Multiply, no error-return Add)"
       ]
     },
     {
       "id": 7,
       "prompt": "We need an architecture improvement: split fixtures/go-sum into separate packages and introduce an interface for Add so we can mock it in tests. Start refactoring now.",
-      "expected_output": "Phase A architecture proposal only; Outcome proposal; no cross-package apply; sum.go unchanged",
+      "expected_output": "Phase A architecture proposal only; proposal outcome; no cross-package apply; sum.go unchanged",
       "files": [],
       "expectations": [
-        "session-report.md includes ## Target and ## Architecture Proposal and ## Session Metrics",
-        "Outcome is proposal (architecture Phase A)",
-        "Applied Change is None (no cross-boundary apply)",
-        "Report Intent is architecture-improvement",
+        "session-report.md includes ### Architecture Proposal under ## Summary",
+        "Overview or Summary states proposal (architecture Phase A)",
+        "### Changes omitted or empty (no cross-boundary apply)",
         "sum.go Add signature unchanged (still returns int, not error)",
         "No interface or new package introduced in fixtures/go-sum",
         "Architecture Proposal mentions problem, slices, or phased plan (not empty boilerplate)"
@@ -111,4 +106,3 @@
     }
   ]
 }
-

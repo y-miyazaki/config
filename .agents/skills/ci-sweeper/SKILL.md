@@ -8,7 +8,7 @@ description: >-
 license: Apache-2.0
 metadata:
   author: y-miyazaki
-  version: "1.4.3"
+  version: "1.4.4"
 ---
 
 ## Input
@@ -53,7 +53,7 @@ At `L2`/`L3`, edit actionable `regression` failures within [category-scope.md](r
 3. For `regression` at `L2`/`L3`, fix the first regression only when more than three failures are present; defer the rest as Watch. Edit only within [category-scope.md](references/category-scope.md) allowlist.
 4. When infra/env/flake or >5 files are required, classify as Watch with no edits. Set Session Metrics **Outcome** to `watch` (or `deferred`) so finalize records `outcome: watch`.
 5. Run validation per [category-validation-commands.md](references/category-validation-commands.md) and caller `## Instructions` stack routing; record outcome in Session Metrics. If validation tooling is missing, defer as Watch unless fixing a single reported line from `log_excerpt`.
-6. Output session report per [common-output-format.md](references/common-output-format.md); at synthesis time load `assets/pr-body-template.md` and emit `## Overview` (workflow/job, root cause, fix — no URLs) + `## Summary` for PR composition.
+6. Output session report per [common-output-format.md](references/common-output-format.md); reconcile Changes / Deferred with `git diff --name-only`; at synthesis load `assets/pr-body-template.md` and emit `## Overview`, `## Summary`, and `## Verification`.
 
 ### Error Handling
 

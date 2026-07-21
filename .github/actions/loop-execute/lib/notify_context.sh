@@ -14,6 +14,7 @@
 #   - agent_summary is optional; parsed from <!-- loop-agent-summary:v1 --> only
 #   - agent_report_overview is optional; parsed from ## Overview until next H2
 #   - agent_report_summary is optional; parsed from ## Summary until next H2
+#   - agent_report_verification is optional; parsed from ## Verification until next H2
 #
 # Output:
 #   Writes notify_context_json multiline output to GITHUB_OUTPUT
@@ -135,6 +136,26 @@ function extract_agent_report_overview {
 #######################################
 function extract_agent_report_summary {
     extract_agent_section "$1" "Summary"
+}
+
+#######################################
+# extract_agent_report_verification: Extract ## Verification section from agent output
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Agent output file path
+#
+# Outputs:
+#   Verification section body to stdout (may be empty)
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function extract_agent_report_verification {
+    extract_agent_section "$1" "Verification"
 }
 
 #######################################
@@ -304,6 +325,7 @@ function main {
     local baseline_ref changed_files_json diff_stat fix_summary agent_summary=""
     local agent_report_overview=""
     local agent_report_summary=""
+    local agent_report_verification=""
     local -a files=()
     local file count=0 extra=0 last_output notify_json
 
@@ -381,6 +403,8 @@ function main {
             agent_report_overview="$(truncate_text "$(redact_sensitive_text "${agent_report_overview}")" 2000)"
             agent_report_summary="$(extract_agent_report_summary "${last_output}")"
             agent_report_summary="$(truncate_text "$(redact_sensitive_text "${agent_report_summary}")" 4000)"
+            agent_report_verification="$(extract_agent_report_verification "${last_output}")"
+            agent_report_verification="$(truncate_text "$(redact_sensitive_text "${agent_report_verification}")" 2000)"
         fi
     fi
 
@@ -390,6 +414,7 @@ function main {
         --arg fix_summary "${fix_summary}" \
         --arg agent_report_overview "${agent_report_overview}" \
         --arg agent_report_summary "${agent_report_summary}" \
+        --arg agent_report_verification "${agent_report_verification}" \
         --arg agent_summary "${agent_summary}" \
         --arg baseline_ref "${baseline_ref}" \
         '{
@@ -398,6 +423,7 @@ function main {
             fix_summary: $fix_summary,
             agent_report_overview: $agent_report_overview,
             agent_report_summary: $agent_report_summary,
+            agent_report_verification: $agent_report_verification,
             agent_summary: $agent_summary,
             baseline_ref: $baseline_ref
         }')"

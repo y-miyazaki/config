@@ -9,7 +9,7 @@ description: >-
 license: Apache-2.0
 metadata:
   author: y-miyazaki
-  version: "3.0.6"
+  version: "3.1.0"
 ---
 
 **UTILITY SKILL** — automated diff-sync and drift repair, not content authoring.
@@ -17,7 +17,7 @@ metadata:
 ## Input
 
 - **Interactive / hook:** trigger source + `scope` (`staged`, `all`, `range` with `--since`) — run `scripts/detect_changes.sh`
-- **Loop:** injected JSON from loop-prompt-generate with `findings[]` — see [category-loop-input-schema.md](references/category-loop-input-schema.md). Path allowlist in prompt `## Constraints` (caller `LOOP_ALLOWLIST`, `LOOP_DENYLIST`).
+- **Loop:** injected JSON from loop-prompt-generate with `findings[]` — see [category-loop-input-schema.md](references/category-loop-input-schema.md). Caller `allowlist` / `denylist` (`LOOP_ALLOWLIST` / `LOOP_DENYLIST`); see [category-scope.md](references/category-scope.md).
 
 ## Operating levels
 
@@ -47,7 +47,7 @@ Target: root `*.md`, `docs/**/*.md`, nested `**/README.md` (excluding generated 
 
 ## Reference Files Guide
 
-- [common-checklist.md](references/common-checklist.md) (always read)
+- [common-checklist.md](references/common-checklist.md) (always read — interactive / hook path)
 - [common-output-format.md](references/common-output-format.md) (always read)
 - [common-impact-map.md](references/common-impact-map.md) (always read — interactive path)
 - [common-checklist-loop.md](references/common-checklist-loop.md) (always read — loop path)
@@ -63,7 +63,7 @@ Target: root `*.md`, `docs/**/*.md`, nested `**/README.md` (excluding generated 
 1. Parse [category-loop-input-schema.md](references/category-loop-input-schema.md). Read `## Constraints` when present.
 2. If input `skip` is true or no actionable `findings[]` → emit loop report with Outcome `No documentation impact detected`; stop.
 3. Classify per [common-checklist-loop.md](references/common-checklist-loop.md); fix High-Priority at L2/L3 within [category-scope.md](references/category-scope.md).
-4. Emit report per [common-output-format-loop.md](references/common-output-format-loop.md); at synthesis load `assets/pr-body-template.md` for `## Overview` + `## Summary`.
+4. Emit report per [common-output-format-loop.md](references/common-output-format-loop.md); reconcile Fixes Applied / Deferred with `git diff --name-only`; at synthesis load `assets/pr-body-template.md` for `## Overview` + `## Summary`.
 
 ### Interactive / hook path
 

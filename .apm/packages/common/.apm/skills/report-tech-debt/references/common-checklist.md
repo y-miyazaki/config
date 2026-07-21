@@ -18,7 +18,7 @@ Report EOL/deprecation facts; do not recommend new-technology or tool migration 
 
 ## Scope Guards
 
-- Write only paths in the prompt `## Constraints` allowlist; never touch denylist paths (see `category-scope.md`)
+- On loop path, respect caller `allowlist` / `denylist` per `category-scope.md` (allowlist in `## Constraints`; denylist enforced by verifier)
 - Read source outside the allowlist for evidence only — never edit it
 - Cap Critical + High-Priority persisted findings at 25; retain all Critical first, then High-Priority until the cap; defer overflow to Watch with a truncation note
 - Do not invent APIs, paths, metrics, ownership, or CVEs
@@ -75,3 +75,4 @@ Do not mark Resolved when only `line` shifted but `path` + `kind` + snippet stil
 | High churn file, no concrete defect                    | `code_quality` or `architecture` | Watch                     |
 | `TODO: maybe later` with no actionable path            | —                                | Noise / Ignore            |
 | Same `hack` marker theme across 3+ core service files  | `code_quality` or `architecture` | High-Priority or Watch    |
+

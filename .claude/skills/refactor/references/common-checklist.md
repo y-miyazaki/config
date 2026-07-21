@@ -9,44 +9,50 @@
 - Architecture Phase B → user names **one** approved slice; apply as O2 cap only
 - Do not require users to pass `max_tier: O3` or bare O3 labels
 
-## Target selection
+## Survey (Phase A)
 
-- Exactly **one** target (path or symbol) per run
+- Run **before** any file edit in `apply` mode; sole phase in `survey` mode
+- Discover **all** candidates in scope — loop: every `hints[]` entry; interactive: user paths or in-scope exploration
 - Prefer structure-driven evidence (duplication, oversized unit, user-named symbol) — not lint/SAST smell scores
-- If the user mission is lint/style-only (shellcheck rename/quote, gofmt-only) or feature/API change → Watch / no-op; do not apply
+- Emit `### Candidates` with one row per candidate (see [common-output-format.md](common-output-format.md))
+- Mark each row **apply** or **watch**; lint/style-only, feature/API, comment-only, or cross-boundary → **watch**
+- Zero candidates → Outcome `no-op`; stop
 - Do not require or read `docs/report/report-tech-debt/**`
 
-## Operations
+## Apply (Phase B)
 
-- Pick **one** technique from [category-techniques.md](category-techniques.md) before editing; record it in session report **Technique**
-- Treat `duplication_block` as **logic duplication** — dedupe executable/shared logic (extract helper, consolidate calls), not documentation or comment-only templates
-- If overlapping text is comments or doc blocks only, Outcome `no-op` / Watch — not an apply target
+- Run only when `mode: apply` and level allows edits (`L2`/`L3` loop; interactive default)
+- Apply **every** candidate marked **apply** in survey order
+- Pick **one** technique per candidate from [category-techniques.md](category-techniques.md)
+- Treat `duplication_block` as **logic duplication** — dedupe executable/shared logic, not documentation or comment-only templates
 - When deduplicating logic, preserve file headers and symbol documentation unless consolidating documented behavior in the same edit
-- Do not invent a dedicated SubAgent product; reuse platform Implementer/Verifier and existing validation skills via caller `## Instructions` (A')
-- Stay in closed depth tiers O1/O2 for apply ([category-operations.md](category-operations.md)): **O1** = local structure same behavior; **O2** = plus shallow same-package move
+- Stay in closed depth tiers O1/O2 ([category-operations.md](category-operations.md)): **O1** = local structure same behavior; **O2** = plus shallow same-package move
 - No public API semantics changes; no feature behavior changes
 - No one-shot cross-boundary apply or GoF introduction — architecture path is propose → approve → one O2 slice
-- Loop L2: structural intent only; no architecture Phase A/B
+- Loop L2/L3: structural intent only; no architecture Phase A/B during apply
+- Failed gate for one candidate → revert that edit; record under **Deferred**; continue remaining candidates
 
 ## Verification
 
-- Establish characterization / stack gate before or with the edit ([category-verification.md](category-verification.md))
+- Establish characterization / stack gate before or with edits ([category-verification.md](category-verification.md))
 - Architecture Phase A: skip apply and stack validation — proposal only
-- If a same-package move (O2) lacks an adequate gate → downgrade to local-only (O1) or Watch (V4)
-- Unsupported language → Watch / skip — do not invent tests for an unknown stack
+- Re-run stack gates on all touched packages after Phase B completes
+- If a same-package move (O2) lacks an adequate gate → downgrade that candidate to O1 or watch
+- Unsupported language → watch on candidate — do not invent tests for an unknown stack
 - Lint tools may run as part of a stack gate; lint-only findings must not expand the target
 
 ## Output
 
-- Emit all session report sections per [common-output-format.md](common-output-format.md)
-- Record **Intent** in session report (`structural` or `architecture-improvement`)
-- Tier fields use plain-language depth labels (`O1 local structure`, `O2 same-package move`, `none`) — not bare `O1`/`O2`
-- Architecture Phase A: fill **Architecture Proposal** section; Outcome `proposal`
+- Pick **one** result shape per run — survey-only **or** apply — per [common-output-format.md](common-output-format.md) (interactive) or [common-output-format-loop.md](common-output-format-loop.md) (loop)
+- **Survey** (`mode: survey`, loop `L1`): `### Candidates` (+ optional `### Watch`); **MUST NOT** emit `### Changes`, `### Deferred`, or `## Verification`
+- **Apply** (`mode: apply`, loop `L2`/`L3`): `### Changes` (+ optional `### Deferred`) and `## Verification`; **MUST NOT** emit `### Candidates` or `### Watch` in final output
+- Classify intent and depth tier internally before edits; **do not** put `O1`/`O2`/`O3`, intent labels, or Fowler technique names in user-facing tables
+- Before PR synthesis (apply mode): reconcile **Changes** / **Deferred** with `git diff --name-only`
+- Architecture Phase A: use survey shape + **Architecture Proposal**; no file edits
 - Do not claim validation passed when commands failed or were not run
 
 ## Error handling
 
-- Nothing actionable → Outcome `no-op`, empty Applied Change, stop
-- Validation fails after one in-scope repair → revert or leave Watch; record failure
-- Missing validation tooling named in Instructions → note in Session Metrics; Watch unless a single safe local (O1) clarification remains gated by existing tests
-
+- Nothing actionable after survey → Outcome `no-op`, empty Changes, stop
+- Validation fails for one candidate → revert that candidate; Deferred; continue batch
+- Missing validation tooling named in Instructions → note in Session Metrics; watch affected candidates

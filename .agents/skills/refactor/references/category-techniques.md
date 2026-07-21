@@ -1,14 +1,14 @@
 ## Technique selection
 
-Pick **one** Fowler-style transformation per run ([category-operations.md](category-operations.md) O1/O2 cap). Re-run for the next transformation after verification passes ([category-verification.md](category-verification.md)).
+Pick **one** Fowler-style transformation **per candidate** during Phase B apply ([category-operations.md](category-operations.md) O1/O2 cap). Re-run stack gates after the full apply batch ([category-verification.md](category-verification.md)).
 
 ### Core rules
 
-- One transformation per run; do not batch unrelated edits
-- If verification fails, revert or shrink the step — do not mix behavior changes
+- One transformation per candidate; do not batch unrelated edits into one candidate row
+- If verification fails for one candidate, revert or shrink that step — continue other candidates
 - Prefer the smallest technique that addresses the evidence (80/20)
 - O2 (same-package move) only when extract/rename requires relocating a symbol within the same package/module
-- If branches are near-duplicates but not identical, prefer **Duplicate Before Unifying** only when a single run can complete one safe step; defer the second step to a follow-up run
+- If branches are near-duplicates but not identical, prefer **Duplicate Before Unifying** only when a single candidate step is safe; split near-duplicates into separate candidate rows when needed
 
 ## Hint and smell → technique
 

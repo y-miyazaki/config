@@ -39,7 +39,7 @@ When detect JSON includes `releases[]`:
 
 ## Scope Guards
 
-- Edit only `changelog_file` from input (must match allowlist)
+- Edit only `changelog_file` from input per `category-scope.md` (loop: must match caller `LOOP_ALLOWLIST`)
 - Do not remove or rewrite released version sections except to promote listed commits out of `## [Unreleased]`
 - Loop state (`.loop/state-*.json`) is committed by finalize — do not edit state files
 
@@ -54,3 +54,4 @@ When detect JSON includes `releases[]`:
 - `skip` true or empty `commits` and `releases` → report with Summary `No unreleased changelog commits`; stop
 - `changelog_exists` false → create Keep a Changelog template, then add bullets
 - Malformed existing changelog → preserve released sections; append/fix only `## [Unreleased]` and new detect `releases[]` sections
+

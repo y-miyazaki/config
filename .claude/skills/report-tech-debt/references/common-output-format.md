@@ -51,11 +51,11 @@ Category and severity rules: [category-debt-taxonomy.md](category-debt-taxonomy.
 
 ## PR body contract (human-facing)
 
-At synthesis time, load `assets/pr-body-template.md` and emit `## Overview` and `## Summary` (table summary of Critical/High/Watch).
+At synthesis time, load `assets/pr-body-template.md` and emit `## Overview`, `## Summary`, and `## Verification`.
 
 The persisted report file (`docs/report/report-tech-debt/YYYY-MM-DD.md`) may contain fuller tables; the PR body template is the concise human-facing summary.
 
-Pattern reference: [APM triage-panel](https://github.com/microsoft/apm/blob/main/.github/workflows/triage-panel.md) — same skill-owned template discipline as `assets/triage-template.md`.
+See repository `docs/explanation/loop-engineering/loop-pr-body-skill-contract.md`.
 
 ### Overview (skill-specific)
 
@@ -65,9 +65,9 @@ Emit one paragraph under `## Overview` that answers:
 | ------- | -------------------------------------------------------------------------------- |
 | Trigger | Debt scan scope (`<commit_range>` or hotspot/signal scan)                        |
 | Problem | Whether Critical/High debt exists; dominant categories if any                    |
-| Action  | Report file path; fix count (usually 0 — this skill reports, does not edit code) |
+| Action  | Report file path; this skill reports, does not edit application code             |
 
-**Good:** `Debt scan over abc..def found no Critical/High items; 21 Watch signals recorded in docs/report/report-tech-debt/2026-07-21.md for scheduled review.`
+**Good:** `Debt scan over abc..def found no Critical/High items; 21 Watch signals recorded in docs/report/report-tech-debt/2026-07-21.md.`
 
 **Bad:** `Technical debt loop completed.` / listing every signal in Overview
 
@@ -118,10 +118,11 @@ At `L2`/`L3`, write `report_file` (`docs/report/report-tech-debt/YYYY-MM-DD.md`)
 
 ## Rules
 
-- Always emit all five session `##` sections plus PR `## Overview` and `## Summary`.
+- Always emit all five session `##` sections plus PR `## Overview`, `## Summary`, and `## Verification`.
 - `## Session Metrics` MUST use a Field \| Value table (not bullet list).
 - At `L1`, emit the session summary only — do not write `report_file`.
 - At `L2`/`L3`, write only `report_file` within the prompt `## Constraints` allowlist (see `category-scope.md`).
 - Cap Critical + High-Priority rows at 25 combined: retain **all Critical** first, then **High-Priority** until the cap; move remaining High-Priority rows to Watch and set Truncated to `yes`.
 - Every Critical / High-Priority / Watch row must include `Category` from the taxonomy.
 - Verifier expects the persisted report to cite detect facts without invented paths or metrics.
+

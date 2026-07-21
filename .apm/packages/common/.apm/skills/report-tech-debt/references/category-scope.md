@@ -1,17 +1,30 @@
 ## Path Scope
 
-Allowlist and denylist are configured by the caller workflow (`LOOP_ALLOWLIST`, `LOOP_DENYLIST` / verifier denylist). The implementer prompt `## Constraints` section repeats the active allowlist. Defaults below match this repository's dogfood caller.
+### How scope is resolved
 
-This skill writes technical debt reports only. Callers must keep `LOOP_ALLOWLIST` narrow to report paths; do not widen it to application source or infrastructure paths for edits.
+| Mode | Allowlist | Denylist |
+| ---- | --------- | -------- |
+| **Interactive** — no path constraints in prompt or JSON | **Unrestricted** within [Skill-specific limits](#skill-specific-limits) and [ignore conventions](#ignore-conventions) | **None from skill** — follow repository security instructions |
+| **Interactive** — user `allowlist` / `denylist` | User allowlist globs only (within skill-specific limits) | User denylist globs |
+| **Loop** | Caller `allowlist` — repeated in prompt `## Constraints` as `Allowed paths: …` | Caller `denylist` — enforced by loop-execute verifier (may be empty; not inlined in prompt unless caller criteria mention it) |
 
-### Allowlist (dogfood example)
+Skills do **not** ship a repository-wide default denylist. Per-repo deny rules belong in caller workflows, repository instructions (`AGENTS.md`), or explicit user constraints — not in skill references.
 
-`docs/report/report-tech-debt/**/*.md`
+Do **not** treat [Loop caller examples](#loop-caller-examples-this-repository) as interactive scope. Those configure `on-loop-*.yaml` only.
 
-### Denylist
+### Ignore conventions
 
-`**/.env`, `**/credentials*`, `**/secrets*`, `**/migration/*.sql`, `**/infrastructure/**`, `src/**`, `.github/**`
+When discovering targets, skip paths ignored by `.gitignore` or `.cursorignore` unless the user explicitly names the path.
 
-Edit only allowlist paths. Never touch denylist paths.
+Do not edit paths that appear to hold secrets (environment files, credential stores, private keys) even when no denylist is set — follow repository security instructions.
 
-Read source files outside the allowlist for evidence only. Do not modify them.
+### Skill-specific limits
+
+This skill writes technical debt reports only. Read source files outside the report paths for evidence; do not modify them.
+
+### Loop caller examples (this repository)
+
+| Key | Example |
+| --- | ------- |
+| `allowlist` | `docs/report/report-tech-debt/**/*.md` |
+| `denylist` | `**/.env`, `**/credentials*`, `**/secrets*`, `**/migration/*.sql`, `**/infrastructure/**`, `src/**`, `.github/**` |

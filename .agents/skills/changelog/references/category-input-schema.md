@@ -63,4 +63,5 @@ Provided via prompt context by the calling workflow (loop-prompt-generate action
 | `L2`  | Emit report and edit `changelog_file` within allowlist          |
 | `L3`  | Same file edits as `L2`; caller may auto-merge the changelog PR |
 
-Path allowlist is injected in the implementer prompt `## Constraints` section from the caller (`LOOP_ALLOWLIST`). See [category-scope.md](category-scope.md).
+Path allowlist is injected in the implementer prompt `## Constraints` section from the caller (`LOOP_ALLOWLIST`). Denylist is a caller `denylist` input enforced by loop-execute verifier. When `LOOP_ALLOWLIST` is absent, no allowlist restriction within skill-specific limits — see [category-scope.md](category-scope.md).
+
