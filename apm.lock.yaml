@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-21T06:27:39.918278+00:00'
+generated_at: '2026-07-21T06:32:02.182257+00:00'
 apm_version: 0.26.0
 dependencies:
 - repo_url: _local/common
@@ -1428,11 +1428,11 @@ dependencies:
   - .claude/skills/loop-refactor/scripts/lib/validation.sh
   deployed_file_hashes:
     .agents/skills/loop-refactor/SKILL.md: sha256:4c762afb1b184a79aa1658ebba603a37d551111c9d36147129ac19990fc815db
-    .agents/skills/loop-refactor/assets/pr-body-template.md: sha256:31bae4aeb02fc1606008429a744a25cee3848ce7b8f563cba27dc02684dfa881
-    .agents/skills/loop-refactor/references/category-input-schema.md: sha256:4a29745835cd4b5477a74909593610c3ed9461ed64dc5ed1a1f55f7357113e21
+    .agents/skills/loop-refactor/assets/pr-body-template.md: sha256:3d3dd771d75de469893a9f685de2b7d7a37a3e60ef19a0a3a197f300d93ca1a3
+    .agents/skills/loop-refactor/references/category-input-schema.md: sha256:fad5e463c10147ba88115e21dbcf0a3407bbf33244b880522d851c21be3fc500
     .agents/skills/loop-refactor/references/category-scope.md: sha256:e0240c7f4e5e6b6f0889921c57917341939bc014ee97fd48fef69f7704366cd9
     .agents/skills/loop-refactor/references/common-checklist.md: sha256:3856540aab0d86958273964fd9d4851410d0e772ac371d311c6f43e67820d8d5
-    .agents/skills/loop-refactor/references/common-output-format.md: sha256:f20e1769cf16ecb4abd61ed95c04d2611d16988d639f857ff89c62f6fd4fa2e0
+    .agents/skills/loop-refactor/references/common-output-format.md: sha256:1baa19e2ac905899d50e503fa6fddc2c2d302fb1733c4456f7dbe7c602f5c769
     .agents/skills/loop-refactor/scripts/detect_refactor.sh: sha256:9c44e715737d01447c1cae7583ecc9b6500c6aae35c871023d999d88a93824c8
     .agents/skills/loop-refactor/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/loop-refactor/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
@@ -1443,11 +1443,11 @@ dependencies:
     .agents/skills/loop-refactor/scripts/lib/terraform.sh: sha256:f39b92f371c15da788fd0906ef5f56da6f0f3ccfbcb7c408e22f9385ac3102d3
     .agents/skills/loop-refactor/scripts/lib/validation.sh: sha256:9352a6a7ec415b58bd2829e35d9638325e0b85cbe42da989c2bf411540ec6a27
     .claude/skills/loop-refactor/SKILL.md: sha256:4c762afb1b184a79aa1658ebba603a37d551111c9d36147129ac19990fc815db
-    .claude/skills/loop-refactor/assets/pr-body-template.md: sha256:31bae4aeb02fc1606008429a744a25cee3848ce7b8f563cba27dc02684dfa881
-    .claude/skills/loop-refactor/references/category-input-schema.md: sha256:4a29745835cd4b5477a74909593610c3ed9461ed64dc5ed1a1f55f7357113e21
+    .claude/skills/loop-refactor/assets/pr-body-template.md: sha256:3d3dd771d75de469893a9f685de2b7d7a37a3e60ef19a0a3a197f300d93ca1a3
+    .claude/skills/loop-refactor/references/category-input-schema.md: sha256:fad5e463c10147ba88115e21dbcf0a3407bbf33244b880522d851c21be3fc500
     .claude/skills/loop-refactor/references/category-scope.md: sha256:e0240c7f4e5e6b6f0889921c57917341939bc014ee97fd48fef69f7704366cd9
     .claude/skills/loop-refactor/references/common-checklist.md: sha256:3856540aab0d86958273964fd9d4851410d0e772ac371d311c6f43e67820d8d5
-    .claude/skills/loop-refactor/references/common-output-format.md: sha256:f20e1769cf16ecb4abd61ed95c04d2611d16988d639f857ff89c62f6fd4fa2e0
+    .claude/skills/loop-refactor/references/common-output-format.md: sha256:1baa19e2ac905899d50e503fa6fddc2c2d302fb1733c4456f7dbe7c602f5c769
     .claude/skills/loop-refactor/scripts/detect_refactor.sh: sha256:9c44e715737d01447c1cae7583ecc9b6500c6aae35c871023d999d88a93824c8
     .claude/skills/loop-refactor/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/loop-refactor/scripts/lib/aws.sh: sha256:854eb29dde6526e73c4127f9f1452d05f4e943c1418cf612cd53edbc5012d190
@@ -1638,23 +1638,23 @@ dependencies:
     .agents/skills/refactor/evals/README.md: sha256:31c1ba6ede251f5bb852971dacb598b87dce43bdcb02b51fcb47c327b2a77177
     .agents/skills/refactor/evals/evals.json: sha256:5b3c04f925cebb96b9b22a004d07b9188a67f4b2501c1e5594aca808ab171929
     .agents/skills/refactor/evals/tasks/refactor-noop.yaml: sha256:3096b436c58e1d995bb78639ff6ebc4f5e5a654a3363287f3d91cb06ffda9282
-    .agents/skills/refactor/references/category-input-schema.md: sha256:4c58d5c72fe1f923728f490e506f85571f74f04ed6e021bffb3dbeacde99f92c
-    .agents/skills/refactor/references/category-operations.md: sha256:ca4cb2bcf58d83ccd9bb2b5d79b00b3037ed7623fb0fc4b67cd12c59f106e2af
+    .agents/skills/refactor/references/category-input-schema.md: sha256:2e180ba7eb9f9804adf825b753ba6a04a7acb33ed5fc12f3fdf1182c7991775d
+    .agents/skills/refactor/references/category-operations.md: sha256:8433f52ab0e5e9d6ece93646df18711bc3ad7f1df46b5775143c47f63e30ec31
     .agents/skills/refactor/references/category-scope.md: sha256:f0182c8a73dba1b4d40668863cf315033034c7d8c67b1ce047dfe657860f79a1
-    .agents/skills/refactor/references/category-verification.md: sha256:d7eb8c79a33dd89078e03f107c1cfe84403f7882c151cd9c48ac8be132f1a99f
+    .agents/skills/refactor/references/category-verification.md: sha256:1479c8dcc01dc1c13954a1ee65eefeb10d57d3c988aa9fe291d3ad3265127d21
     .agents/skills/refactor/references/common-checklist.md: sha256:cbeef7af4ac909c45e8b3deed1018b9c7e2729f670b173109b3a2966c1d21e3f
-    .agents/skills/refactor/references/common-output-format.md: sha256:4d34514e05813a8fb03ff3505e2cf859afdaf55899815752b18020d08a848fd9
+    .agents/skills/refactor/references/common-output-format.md: sha256:126719853920f0570c53e243c68b9403c7e7ec39b3a0610654e79d3374d6214e
     .claude/skills/refactor/SKILL.md: sha256:457dc54bb0c4004de4a401319782f989a724fb7180a1a75d68fcf734e34ae644
     .claude/skills/refactor/eval.yaml: sha256:832339f1a004f62c38467ef7ec1baea18efe1d133e94dfddd03a495eb87f3c1c
     .claude/skills/refactor/evals/README.md: sha256:31c1ba6ede251f5bb852971dacb598b87dce43bdcb02b51fcb47c327b2a77177
     .claude/skills/refactor/evals/evals.json: sha256:5b3c04f925cebb96b9b22a004d07b9188a67f4b2501c1e5594aca808ab171929
     .claude/skills/refactor/evals/tasks/refactor-noop.yaml: sha256:3096b436c58e1d995bb78639ff6ebc4f5e5a654a3363287f3d91cb06ffda9282
-    .claude/skills/refactor/references/category-input-schema.md: sha256:4c58d5c72fe1f923728f490e506f85571f74f04ed6e021bffb3dbeacde99f92c
-    .claude/skills/refactor/references/category-operations.md: sha256:ca4cb2bcf58d83ccd9bb2b5d79b00b3037ed7623fb0fc4b67cd12c59f106e2af
+    .claude/skills/refactor/references/category-input-schema.md: sha256:2e180ba7eb9f9804adf825b753ba6a04a7acb33ed5fc12f3fdf1182c7991775d
+    .claude/skills/refactor/references/category-operations.md: sha256:8433f52ab0e5e9d6ece93646df18711bc3ad7f1df46b5775143c47f63e30ec31
     .claude/skills/refactor/references/category-scope.md: sha256:f0182c8a73dba1b4d40668863cf315033034c7d8c67b1ce047dfe657860f79a1
-    .claude/skills/refactor/references/category-verification.md: sha256:d7eb8c79a33dd89078e03f107c1cfe84403f7882c151cd9c48ac8be132f1a99f
+    .claude/skills/refactor/references/category-verification.md: sha256:1479c8dcc01dc1c13954a1ee65eefeb10d57d3c988aa9fe291d3ad3265127d21
     .claude/skills/refactor/references/common-checklist.md: sha256:cbeef7af4ac909c45e8b3deed1018b9c7e2729f670b173109b3a2966c1d21e3f
-    .claude/skills/refactor/references/common-output-format.md: sha256:4d34514e05813a8fb03ff3505e2cf859afdaf55899815752b18020d08a848fd9
+    .claude/skills/refactor/references/common-output-format.md: sha256:126719853920f0570c53e243c68b9403c7e7ec39b3a0610654e79d3374d6214e
   source: local
   local_path: ./.apm/packages/refactor
   declared_license: Apache-2.0
@@ -4806,7 +4806,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-refactor
   active_owner: ./.apm/packages/loop-refactor
-  content_hash: sha256:31bae4aeb02fc1606008429a744a25cee3848ce7b8f563cba27dc02684dfa881
+  content_hash: sha256:3d3dd771d75de469893a9f685de2b7d7a37a3e60ef19a0a3a197f300d93ca1a3
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-refactor/references/category-input-schema.md
@@ -4815,7 +4815,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-refactor
   active_owner: ./.apm/packages/loop-refactor
-  content_hash: sha256:4a29745835cd4b5477a74909593610c3ed9461ed64dc5ed1a1f55f7357113e21
+  content_hash: sha256:fad5e463c10147ba88115e21dbcf0a3407bbf33244b880522d851c21be3fc500
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-refactor/references/category-scope.md
@@ -4842,7 +4842,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-refactor
   active_owner: ./.apm/packages/loop-refactor
-  content_hash: sha256:f20e1769cf16ecb4abd61ed95c04d2611d16988d639f857ff89c62f6fd4fa2e0
+  content_hash: sha256:1baa19e2ac905899d50e503fa6fddc2c2d302fb1733c4456f7dbe7c602f5c769
 - kind: project-relative
   target: claude
   value: .claude/skills/loop-refactor/scripts/detect_refactor.sh
@@ -5481,7 +5481,7 @@ deployments:
   owners:
   - ./.apm/packages/refactor
   active_owner: ./.apm/packages/refactor
-  content_hash: sha256:4c58d5c72fe1f923728f490e506f85571f74f04ed6e021bffb3dbeacde99f92c
+  content_hash: sha256:2e180ba7eb9f9804adf825b753ba6a04a7acb33ed5fc12f3fdf1182c7991775d
 - kind: project-relative
   target: claude
   value: .claude/skills/refactor/references/category-operations.md
@@ -5490,7 +5490,7 @@ deployments:
   owners:
   - ./.apm/packages/refactor
   active_owner: ./.apm/packages/refactor
-  content_hash: sha256:ca4cb2bcf58d83ccd9bb2b5d79b00b3037ed7623fb0fc4b67cd12c59f106e2af
+  content_hash: sha256:8433f52ab0e5e9d6ece93646df18711bc3ad7f1df46b5775143c47f63e30ec31
 - kind: project-relative
   target: claude
   value: .claude/skills/refactor/references/category-scope.md
@@ -5508,7 +5508,7 @@ deployments:
   owners:
   - ./.apm/packages/refactor
   active_owner: ./.apm/packages/refactor
-  content_hash: sha256:d7eb8c79a33dd89078e03f107c1cfe84403f7882c151cd9c48ac8be132f1a99f
+  content_hash: sha256:1479c8dcc01dc1c13954a1ee65eefeb10d57d3c988aa9fe291d3ad3265127d21
 - kind: project-relative
   target: claude
   value: .claude/skills/refactor/references/common-checklist.md
@@ -5526,7 +5526,7 @@ deployments:
   owners:
   - ./.apm/packages/refactor
   active_owner: ./.apm/packages/refactor
-  content_hash: sha256:4d34514e05813a8fb03ff3505e2cf859afdaf55899815752b18020d08a848fd9
+  content_hash: sha256:126719853920f0570c53e243c68b9403c7e7ec39b3a0610654e79d3374d6214e
 - kind: project-relative
   target: claude
   value: .claude/skills/shell-script-review
@@ -8658,7 +8658,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-refactor
   active_owner: ./.apm/packages/loop-refactor
-  content_hash: sha256:31bae4aeb02fc1606008429a744a25cee3848ce7b8f563cba27dc02684dfa881
+  content_hash: sha256:3d3dd771d75de469893a9f685de2b7d7a37a3e60ef19a0a3a197f300d93ca1a3
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-refactor/references/category-input-schema.md
@@ -8667,7 +8667,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-refactor
   active_owner: ./.apm/packages/loop-refactor
-  content_hash: sha256:4a29745835cd4b5477a74909593610c3ed9461ed64dc5ed1a1f55f7357113e21
+  content_hash: sha256:fad5e463c10147ba88115e21dbcf0a3407bbf33244b880522d851c21be3fc500
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-refactor/references/category-scope.md
@@ -8694,7 +8694,7 @@ deployments:
   owners:
   - ./.apm/packages/loop-refactor
   active_owner: ./.apm/packages/loop-refactor
-  content_hash: sha256:f20e1769cf16ecb4abd61ed95c04d2611d16988d639f857ff89c62f6fd4fa2e0
+  content_hash: sha256:1baa19e2ac905899d50e503fa6fddc2c2d302fb1733c4456f7dbe7c602f5c769
 - kind: project-relative
   target: cursor
   value: .agents/skills/loop-refactor/scripts/detect_refactor.sh
@@ -9333,7 +9333,7 @@ deployments:
   owners:
   - ./.apm/packages/refactor
   active_owner: ./.apm/packages/refactor
-  content_hash: sha256:4c58d5c72fe1f923728f490e506f85571f74f04ed6e021bffb3dbeacde99f92c
+  content_hash: sha256:2e180ba7eb9f9804adf825b753ba6a04a7acb33ed5fc12f3fdf1182c7991775d
 - kind: project-relative
   target: cursor
   value: .agents/skills/refactor/references/category-operations.md
@@ -9342,7 +9342,7 @@ deployments:
   owners:
   - ./.apm/packages/refactor
   active_owner: ./.apm/packages/refactor
-  content_hash: sha256:ca4cb2bcf58d83ccd9bb2b5d79b00b3037ed7623fb0fc4b67cd12c59f106e2af
+  content_hash: sha256:8433f52ab0e5e9d6ece93646df18711bc3ad7f1df46b5775143c47f63e30ec31
 - kind: project-relative
   target: cursor
   value: .agents/skills/refactor/references/category-scope.md
@@ -9360,7 +9360,7 @@ deployments:
   owners:
   - ./.apm/packages/refactor
   active_owner: ./.apm/packages/refactor
-  content_hash: sha256:d7eb8c79a33dd89078e03f107c1cfe84403f7882c151cd9c48ac8be132f1a99f
+  content_hash: sha256:1479c8dcc01dc1c13954a1ee65eefeb10d57d3c988aa9fe291d3ad3265127d21
 - kind: project-relative
   target: cursor
   value: .agents/skills/refactor/references/common-checklist.md
@@ -9378,7 +9378,7 @@ deployments:
   owners:
   - ./.apm/packages/refactor
   active_owner: ./.apm/packages/refactor
-  content_hash: sha256:4d34514e05813a8fb03ff3505e2cf859afdaf55899815752b18020d08a848fd9
+  content_hash: sha256:126719853920f0570c53e243c68b9403c7e7ec39b3a0610654e79d3374d6214e
 - kind: project-relative
   target: cursor
   value: .agents/skills/shell-script-review
