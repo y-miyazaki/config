@@ -37,11 +37,35 @@
       "last_reject_reason": "No meaningful changes outside .loop/"
     },
     "pull_request:452": {
-      "last_run": "2026-07-21T17:04:39Z",
+      "last_run": "2026-07-21T17:46:02Z",
       "outcome": "error",
       "consecutive_failures": 1,
-      "open_rejections": [],
-      "last_reject_reason": "No meaningful changes outside .loop/"
+      "open_rejections": [
+        {
+          "attempt": 1,
+          "files": [
+            ".pre-commit-config.yaml",
+            "mise.lock"
+          ],
+          "issue": "Changed files are outside the allowlist",
+          "fix": "Limit changes to allowlisted paths or update the allowlist in the caller workflow"
+        },
+        {
+          "attempt": 2,
+          "files": [],
+          "issue": "Implementer produced no file changes on retry",
+          "fix": "Edit the files listed in prior open rejections and commit the fixes"
+        },
+        {
+          "attempt": 3,
+          "files": [
+            "example/on-loop-ci-sweeper.yaml"
+          ],
+          "issue": "Prior allowlist rejection not correctly fixed: allowlist expanded only in example/on-loop-ci-sweeper.yaml while production caller on-loop-ci-sweeper.yaml was unchanged; attempt 3 reverted zizmor in pre-commit/mise files still outside the effective allowlist without addressing Unknown version: 1.27.0",
+          "fix": "Update allowlist in .github/workflows/on-loop-ci-sweeper.yaml; keep ci-github-actions-workflow.yaml zizmor-action v0.6.0 as the CI fix; restore zizmor 1.27.0 in mise.toml, mise.lock, and .pre-commit-config.yaml to align with the workflow bump"
+        }
+      ],
+      "last_reject_reason": "Allowlist fix applied to wrong workflow file; misdirected pre-commit/mise reverts do not fix CI failure"
     }
   }
 }
