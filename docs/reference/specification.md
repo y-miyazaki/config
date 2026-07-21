@@ -66,6 +66,8 @@ The repository structure is function-oriented.
   - `loop-ci-sweeper/`: CI failure sweeper loop (self-contained skill package)
   - `loop-changelog/`: Changelog maintenance loop (self-contained skill package)
   - `loop-report-tech-debt/`: Technical debt report loop (self-contained skill package)
+  - `loop-refactor/`: Structural refactor action loop (self-contained skill package)
+  - `refactor/`: Behavior-preserving refactor skill (interactive; used by loop-refactor)
 - `apm.yml`: APM package metadata and dependency entry point
 - `apm.lock.yaml`: lock file for deterministic APM resolution
 - `apm_modules/`: locally materialized module content
@@ -138,11 +140,20 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 │   └── .apm/skills/loop-changelog/
 │       ├── SKILL.md
 │       └── scripts/detect_changelog_commits.sh
-└── loop-report-tech-debt/  # Technical debt report loop (self-contained)
+├── loop-report-tech-debt/  # Technical debt report loop (self-contained)
+│   ├── apm.yml
+│   └── .apm/skills/loop-report-tech-debt/
+│       ├── SKILL.md
+│       └── scripts/detect_report_tech_debt.sh
+├── loop-refactor/       # Structural refactor action loop (self-contained)
+│   ├── apm.yml
+│   └── .apm/skills/loop-refactor/
+│       ├── SKILL.md
+│       └── scripts/detect_refactor.sh
+└── refactor/            # Behavior-preserving refactor skill (interactive)
     ├── apm.yml
-    └── .apm/skills/loop-report-tech-debt/
-        ├── SKILL.md
-        └── scripts/detect_report_tech_debt.sh
+    └── .apm/skills/refactor/
+        └── SKILL.md
 ```
 
 ### Distribution Behavior
@@ -299,6 +310,8 @@ Skills are defined under each package's `.apm/skills/` directory. Each skill con
 | loop-ci-sweeper       | loop-ci-sweeper           |
 | loop-changelog        | loop-changelog            |
 | loop-report-tech-debt | loop-report-tech-debt     |
+| loop-refactor         | loop-refactor             |
+| refactor              | refactor                  |
 
 ### Instructions
 
@@ -383,6 +396,7 @@ Loop **composite actions** must not nest other repository composite actions via 
 | `on-loop-changelog.yaml`        | Caller   | Cron-driven CHANGELOG.md maintenance (detect → execute → finalize)                                                                                     |
 | `on-loop-ci-sweeper.yaml`       | Caller   | Schedule-driven CI failure repair (detect → execute → finalize)                                                                                        |
 | `on-loop-docs-triage.yaml`      | Caller   | Cron-driven documentation triage (detect → execute → finalize)                                                                                         |
+| `on-loop-refactor.yaml`         | Caller   | Cron-driven structural refactor (detect → execute → finalize)                                                                                          |
 | `on-loop-report-tech-debt.yaml` | Caller   | Weekly technical debt report (detect → execute → finalize)                                                                                             |
 | `on-loop-state-promote.yaml`    | Platform | Merge-gated `pending` → `last_sha` promotion when a `loop-automation` fix PR closes                                                                    |
 

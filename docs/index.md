@@ -37,9 +37,11 @@ _Understanding-oriented discussion of concepts and decisions._
 - [Multi-Branch Loops Design](explanation/loop-engineering/multi-branch-loops-design.md)
 - [Loop Caller Workflows Design](explanation/loop-engineering/loop-caller-workflows-design.md)
 - [Loop Caller Reusable Workflow Design](explanation/loop-engineering/loop-caller-reusable-design.md)
+- [Loop PR Body Skill Contract](explanation/loop-engineering/loop-pr-body-skill-contract.md)
 - [CI Sweeper Workflow Design](explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md)
 - [Changelog Workflow Design](explanation/loop-engineering/workflows/loop-changelog-workflow-design.md)
 - [Docs Triage Workflow Design](explanation/loop-engineering/workflows/loop-docs-triage-workflow-design.md)
+- [Refactor Workflow Design](explanation/loop-engineering/workflows/loop-refactor-workflow-design.md)
 - [Report Tech Debt Workflow Design](explanation/loop-engineering/workflows/loop-report-tech-debt-workflow-design.md)
 
 ## Report

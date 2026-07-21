@@ -38,6 +38,8 @@ The architecture separates:
 - `.apm/packages/loop-ci-sweeper/`: CI failure sweeper loop (self-contained skill package)
 - `.apm/packages/loop-changelog/`: changelog maintenance loop (self-contained skill package)
 - `.apm/packages/loop-report-tech-debt/`: technical debt report loop (self-contained skill package)
+- `.apm/packages/loop-refactor/`: structural refactor action loop (self-contained skill package)
+- `.apm/packages/refactor/`: behavior-preserving refactor skill (interactive; used by loop-refactor)
 
 Each package can be consumed independently through APM path-based dependencies.
 
