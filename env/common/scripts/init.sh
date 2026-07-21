@@ -117,6 +117,7 @@ if command -v lean-ctx > /dev/null 2>&1; then
     mkdir -p "${HOME}/.config/lean-ctx"
     lean-ctx config set setup.auto_update_mcp false > /dev/null 2>&1 \
         || echo "[warn] lean-ctx config set (auto_update_mcp) failed" >&2
+    lean-ctx trust || echo "[warn] lean trust failed" >&2
 fi
 
 #######################################

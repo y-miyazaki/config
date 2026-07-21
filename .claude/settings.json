@@ -192,7 +192,7 @@
   "hooks": {
     "Stop": [
       {
-        "matcher": "*",
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
@@ -202,7 +202,7 @@
         ]
       },
       {
-        "matcher": "*",
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
@@ -212,7 +212,7 @@
         ]
       },
       {
-        "matcher": "*",
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
@@ -222,7 +222,7 @@
         ]
       },
       {
-        "matcher": "*",
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
@@ -232,7 +232,7 @@
         ]
       },
       {
-        "matcher": "*",
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
@@ -242,7 +242,7 @@
         ]
       },
       {
-        "matcher": "*",
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
@@ -252,7 +252,7 @@
         ]
       },
       {
-        "matcher": "*",
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
@@ -262,7 +262,7 @@
         ]
       },
       {
-        "matcher": "*",
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
@@ -274,7 +274,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "*",
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
@@ -284,13 +284,8 @@
         ]
       },
       {
-        "matcher": "*",
-        "hooks": [
-          {
-            "command": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook observe",
-            "timeout": 5
-          }
-        ]
+        "command": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook observe",
+        "timeoutSec": 5
       },
       {
         "matcher": "Write",
@@ -315,7 +310,7 @@
         ]
       },
       {
-        "matcher": "*",
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
@@ -325,107 +320,52 @@
         ]
       },
       {
-        "matcher": "*",
-        "hooks": [
-          {
-            "command": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook rewrite",
-            "timeout": 15
-          }
-        ]
+        "command": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook rewrite",
+        "timeoutSec": 15
       },
       {
-        "matcher": "*",
-        "hooks": [
-          {
-            "command": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook redirect",
-            "timeout": 5
-          }
-        ]
+        "command": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook redirect",
+        "timeoutSec": 5
       }
     ],
     "stop": [
       {
-        "matcher": "*",
-        "hooks": [
-          {
-            "command": ".claude/hooks/common-hooks-cursor/scripts/actionlint.sh",
-            "timeout": 60
-          }
-        ]
+        "command": ".claude/hooks/common-hooks-cursor/scripts/actionlint.sh",
+        "timeoutSec": 60
       },
       {
-        "matcher": "*",
-        "hooks": [
-          {
-            "command": ".claude/hooks/common-hooks-cursor/scripts/ghalint.sh",
-            "timeout": 60
-          }
-        ]
+        "command": ".claude/hooks/common-hooks-cursor/scripts/ghalint.sh",
+        "timeoutSec": 60
       },
       {
-        "matcher": "*",
-        "hooks": [
-          {
-            "command": ".claude/hooks/common-hooks-cursor/scripts/zizmor.sh",
-            "timeout": 60
-          }
-        ]
+        "command": ".claude/hooks/common-hooks-cursor/scripts/zizmor.sh",
+        "timeoutSec": 60
       },
       {
-        "matcher": "*",
-        "hooks": [
-          {
-            "command": ".claude/hooks/common-hooks-cursor/scripts/gitleaks.sh",
-            "timeout": 60
-          }
-        ]
+        "command": ".claude/hooks/common-hooks-cursor/scripts/gitleaks.sh",
+        "timeoutSec": 60
       },
       {
-        "matcher": "*",
-        "hooks": [
-          {
-            "command": ".claude/hooks/common-hooks-cursor/scripts/markdown_link_check.sh",
-            "timeout": 240
-          }
-        ]
+        "command": ".claude/hooks/common-hooks-cursor/scripts/markdown_link_check.sh",
+        "timeoutSec": 240
       },
       {
-        "matcher": "*",
-        "hooks": [
-          {
-            "command": ".claude/hooks/common-hooks-cursor/scripts/markdownlint_cli2.sh",
-            "timeout": 120
-          }
-        ]
+        "command": ".claude/hooks/common-hooks-cursor/scripts/markdownlint_cli2.sh",
+        "timeoutSec": 120
       },
       {
-        "matcher": "*",
-        "hooks": [
-          {
-            "command": ".claude/hooks/go-hooks-cursor/scripts/golangci_lint.sh",
-            "timeout": 120
-          }
-        ]
+        "command": ".claude/hooks/go-hooks-cursor/scripts/golangci_lint.sh",
+        "timeoutSec": 120
       },
       {
-        "matcher": "*",
-        "hooks": [
-          {
-            "command": ".claude/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh",
-            "timeout": 120
-          }
-        ]
+        "command": ".claude/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh",
+        "timeoutSec": 120
       }
     ],
     "afterFileEdit": [
       {
-        "matcher": "*",
-        "hooks": [
-          {
-            "command": ".claude/hooks/shell-script-hooks-cursor/scripts/shfmt.sh",
-            "timeout": 120
-          }
-        ]
+        "command": ".claude/hooks/shell-script-hooks-cursor/scripts/shfmt.sh",
+        "timeoutSec": 120
       }
     ]
   }
