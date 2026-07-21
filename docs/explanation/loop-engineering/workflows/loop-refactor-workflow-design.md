@@ -9,7 +9,7 @@ Workflow and domain design for the `loop-refactor` (`refactor`) action loop.
 | Invariants   | [Loop Engineering Design](../loop-engineering-design.md)                                                |
 | Skill spec   | [Refactor skill & loop design](../../../superpowers/specs/2026-07-21-refactor-skill-and-loop-design.md) |
 
-**Artifacts:** `on-loop-refactor.yaml` · skill `loop-refactor` · `scripts/detect_refactor.sh`
+**Artifacts:** `on-loop-refactor.yaml` · skill `refactor` · `scripts/detect_refactor.sh`
 
 Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md).
 
@@ -32,16 +32,13 @@ Detect mechanical structure hints on integration branches and open fix PRs after
 - `loop-report-tech-debt` report input or Apply under `report-*` names
 - Sonar CPD default-on (future caller opt-in for duplication only)
 
-| Package         | Role                                                 | Trigger                 |
-| --------------- | ---------------------------------------------------- | ----------------------- |
-| `refactor`      | Interactive / agent-invoked O1/O2 + O3 proposal path | User-invoked            |
-| `loop-refactor` | Cron loop: detect H1 hints + structural apply        | `on-loop-refactor.yaml` |
+| `refactor` (in `common`) | Interactive / loop structural O1/O2 apply | User or `on-loop-refactor.yaml` |
 
 ### Separation from refactor skill
 
-Detect script path: **`loop-refactor/scripts/detect_refactor.sh`**.
+Detect script path: **`refactor/scripts/detect_refactor.sh`** (under `common` package).
 
-Entry skill (`loop-refactor`) wraps the `refactor` contract: **structural intent only**, one hint → one target, O2 cap. Architecture-improvement language in user prompts is out of scope for this loop.
+Entry skill (`refactor`) handles interactive and loop paths: loop runs use **structural intent only**, one hint → one target, O2 cap. Architecture-improvement language in user prompts is out of scope for this loop.
 
 ### Modes
 
@@ -72,7 +69,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `detect_domain_env_json` → `REFACTOR_DUP_MIN_LINES`        | Minimum consecutive non-empty lines for `duplication_block` hints.                   | `8`                                                       |
 | `detect_domain_env_json` → `REFACTOR_OVERSIZED_FILE_LINES` | File line count threshold for `oversized_unit` hints (size only).                    | `400`                                                     |
 | `detect_domain_env_json` → `REFACTOR_SCAN_GLOBS`           | Comma-separated globs for scan roots.                                                | `.apm/packages/**,scripts/**`                             |
-| `detect_script`                                            | Domain detect script path.                                                           | `.agents/skills/loop-refactor/scripts/detect_refactor.sh` |
+| `detect_script`                                            | Domain detect script path.                                                           | `.agents/skills/refactor/scripts/detect_refactor.sh` |
 | `engine`                                                   | AI engine (`claude`, `copilot`, `codex`, `cursor`).                                  | `cursor`                                                  |
 | `finalize_integration`                                     | Finalize strategy for integration targets: `open_pr` or `push` (L3).                 | `open_pr`                                                 |
 | `infer_files_pattern`                                      | Extended regex to infer file paths from verifier text.                               | See caller workflow                                       |
@@ -81,10 +78,10 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `max_targets_per_schedule`                                 | Max hints processed per cron tick.                                                   | `1`                                                       |
 | `no_changes_verdict`                                       | `APPROVE` or `REJECT` when implementer produces no file diff.                        | `REJECT`                                                  |
 | `pr_body`                                                  | Optional static prefix (dogfood: `""`).                                              | `""`                                                      |
-| `pr_title`                                                 | PR title when finalize strategy is `open_pr`.                                        | `refactor(loop): structural improvement (loop-refactor)`  |
+| `pr_title`                                                 | PR title when finalize strategy is `open_pr`.                                        | `refactor(loop): structural improvement`                  |
 | `prompt_instructions`                                      | Domain instructions: invoke `refactor` structural path; stack validation via A'.     | Inline in caller workflow                                 |
 | `pull_requests`                                            | Enumerate open PR heads. Refactor loop uses integration branches only.               | `false`                                                   |
-| `skill_name`                                               | Skill package to invoke.                                                             | `loop-refactor`                                           |
+| `skill_name`                                               | Skill package to invoke.                                                             | `refactor`                                           |
 
 ## Detect
 
@@ -184,3 +181,4 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 - [Loop Caller Workflows Design](../loop-caller-workflows-design.md)
 - [Refactor skill & loop design](../../../superpowers/specs/2026-07-21-refactor-skill-and-loop-design.md)
 - [Specification](../../../reference/specification.md)
+

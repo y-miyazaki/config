@@ -50,20 +50,20 @@ function bats_source_rel {
     source "${rel}"
 }
 
-# apm_skill_script_path: Resolve an APM loop skill script path
+# apm_skill_script_path: Resolve an APM skill script under common package
 #
 # Arguments:
-#   $1 - Package name (for example loop-changelog)
-#   $2 - Script file name (for example detect_changelog_commits.sh)
+#   $1 - Skill name (for example refactor, changelog)
+#   $2 - Script file name (for example detect_refactor.sh)
 #
 # Returns:
 #   Absolute script path on stdout
 #
 function apm_skill_script_path {
-    local package="$1"
+    local skill="$1"
     local script="$2"
-    printf '%s/.apm/packages/%s/.apm/skills/%s/scripts/%s' \
-        "$(bats_workspace_root)" "${package}" "${package}" "${script}"
+    printf '%s/.apm/packages/common/.apm/skills/%s/scripts/%s' \
+        "$(bats_workspace_root)" "${skill}" "${script}"
 }
 
 # bats_source_apm_skill: Source an APM loop skill script

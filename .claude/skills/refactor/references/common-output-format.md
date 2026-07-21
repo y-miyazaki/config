@@ -12,6 +12,7 @@ Use this structure for every run, including no-op and proposal exits.
 - **Path/symbol:** <one target>
 - **Intent:** <structural | architecture-improvement>
 - **Evidence:** <user request | duplication_block | oversized_unit | other structure hint>
+- **Technique:** <Fowler name from category-techniques.md | none>
 - **Tier applied:** <O1 local structure | O2 same-package move | none>
 
 ## Architecture Proposal
@@ -51,3 +52,4 @@ Use this structure for every run, including no-op and proposal exits.
 - Architecture Phase B: record approved slice in **Evidence** or **Architecture Proposal**; run structural apply path.
 - Do not claim validation passed when commands failed or were not run.
 - Do not include tech-debt report paths as required inputs or evidence.
+

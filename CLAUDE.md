@@ -20,7 +20,7 @@ These contain agent instructions, skills, and editor settings assembled from `.a
 To modify agent instructions or skills:
 
 1. Read `.apm/AGENTS.md` for distributable-package authoring rules.
-2. Edit the source at `.apm/packages/<name>/` (e.g. `.apm/packages/loop-docs-triage/.apm/skills/loop-docs-triage/SKILL.md`)
+2. Edit the source at `.apm/packages/<domain>/<name>/` (e.g. `.apm/packages/common/.apm/skills/refactor/SKILL.md`)
 3. Run `apm install --update` to regenerate the target directories
 4. Verify with `apm audit --ci`
 
@@ -59,14 +59,6 @@ When structure, modules, or features change, update related `README.md` and `doc
 
 ## Token Optimization
 
-### Context Exclusions
-
-- Lock files: `*.lock`, `*.lock.*`, `go.sum`
-- Dependencies: `node_modules/`, `apm_modules/`
-- Build artifacts: `dist/`, `build/`, `bin/`
-- Reports: `docs/report/` (research documents, not specifications)
-- Temporary: `tmp/`, `.cache/`, `env/common/tmp/`
-
 ### MCP Policies
 
 - lean-ctx, fetch should be used for all context fetching for optimization
@@ -79,3 +71,4 @@ Only read `docs/report/` files when explicitly asked or when comparison/research
 
 - Secrets MUST NOT appear in source code, logs, or test data.
 - No destructive operations as defaults in command examples.
+

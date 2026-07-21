@@ -161,7 +161,7 @@ Optional platform overrides (dogfood omit): `finalize_integration`, `finalize_pu
 | `agent_verifier_model`        | string | Verifier model ID                                                          | `composer-2.5`          |
 | `engine`                      | string | AI engine: `claude` \| `copilot` \| `codex` \| `cursor`                    | `cursor`                |
 | `level`                       | string | Autonomy: `L1` \| `L2` \| `L3`                                             | `L2`                    |
-| `skill_name`                  | string | Skill package (e.g. `loop-changelog`). Must match `.agents/skills/<name>/` | Per loop                |
+| `skill_name`                  | string | Skill package (e.g. `changelog`). Must match `.agents/skills/<name>/` | Per loop                |
 
 ## Platform inputs
 
@@ -176,7 +176,7 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `budget_max_runs_per_day`   | number  | Daily run cap keyed by `loop_name` (each matrix cell counts). `.loop/loop-budget.json` overrides when present (ci-sweeper dogfood: `50`)                                                                                                                                                                                    | `1`–`5` (caller; budget file may be higher) |
 | `budget_max_tokens_per_day` | number  | Daily aggregated token cap                                                                                                                                                                                                                                                                                                  | `500000`–`1000000`                          |
 | `denylist`                  | string  | Comma-separated globs the implementer must not touch                                                                                                                                                                                                                                                                        | ci-sweeper only                             |
-| `detect_script`             | string  | Path to domain `detect_*.sh` under loop skill package                                                                                                                                                                                                                                                                       | Per loop                                    |
+| `detect_script`             | string  | Path to domain `detect_*.sh` under the skill package (e.g. `.agents/skills/docs-updater/scripts/detect_changes.sh`)                                                                                                                                                                                                                                                                       | Per loop                                    |
 | `finalize_integration`      | string  | **Optional override.** Default `open_pr`. Exception: `push` (direct write; not dogfood).                                                                                                                                                                                                                                    | Omit (platform default)                     |
 | `finalize_pull_request`     | string  | **Optional override.** Default `open_pr`. Exception: `push_head` (not dogfood).                                                                                                                                                                                                                                             | Omit (platform default)                     |
 | `infer_files_pattern`       | string  | Extended regex to infer file paths from verifier text                                                                                                                                                                                                                                                                       | Per loop                                    |
@@ -385,3 +385,4 @@ Not a loop caller; configure via environment when invoking `detect_changes.sh` o
 - [Loop Caller Reusable Workflow Design](../loop-caller-reusable-design.md)
 - [Loop Caller Workflows Design](../loop-caller-workflows-design.md)
 - [Specification](../../../reference/specification.md)
+

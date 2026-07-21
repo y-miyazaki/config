@@ -24,7 +24,7 @@ The architecture separates:
 
 ### Package Layer
 
-- `.apm/packages/common/`: shared instructions, skills, and MCP integrations (5 MCP servers, 4 instructions, 8 skills)
+- `.apm/packages/common/`: shared instructions, skills (including refactor, docs-updater, ci-sweeper, changelog, report-tech-debt), and MCP integrations
 - `.apm/packages/common-hooks-*`: target-specific common hooks (6 hooks per target: Claude, Copilot, Cursor)
 - `.apm/packages/aws/`: AWS-focused MCP integrations (5 MCP servers)
 - `.apm/packages/terraform/`: Terraform-focused integrations (1 MCP server, 1 instruction, 2 skills)
@@ -34,12 +34,8 @@ The architecture separates:
 - `.apm/packages/go-hooks-*`: target-specific Go hooks (1 hook per target: Claude, Copilot, Cursor)
 - `.apm/packages/shell-script/`: shell-focused instructions and skills (2 instructions, 2 skills)
 - `.apm/packages/shell-script-hooks-*`: target-specific shell script hooks (2 hooks per target: Claude, Copilot, Cursor)
-- `.apm/packages/loop-docs-triage/`: documentation triage loop (self-contained skill package)
-- `.apm/packages/loop-ci-sweeper/`: CI failure sweeper loop (self-contained skill package)
-- `.apm/packages/loop-changelog/`: changelog maintenance loop (self-contained skill package)
-- `.apm/packages/loop-report-tech-debt/`: technical debt report loop (self-contained skill package)
-- `.apm/packages/loop-refactor/`: structural refactor action loop (self-contained skill package)
-- `.apm/packages/refactor/`: behavior-preserving refactor skill (interactive; used by loop-refactor)
+
+Loop callers (`on-loop-*.yaml`) invoke skills under `common` (`refactor`, `docs-updater`, `ci-sweeper`, `changelog`, `report-tech-debt`) via `skill_name`; detect scripts live beside each skill under `.apm/skills/<name>/scripts/`.
 
 Each package can be consumed independently through APM path-based dependencies.
 
@@ -119,3 +115,4 @@ Validation is layered to reduce drift:
 - package paths and file names must remain stable for downstream consumers
 - generated artifacts should remain in ignored temporary locations
 - instruction and skill changes should be validated before release
+

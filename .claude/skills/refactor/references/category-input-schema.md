@@ -43,3 +43,50 @@ Interactive runs may pass free-form path/symbol in the user prompt. When structu
 - Loop envelope: `intent` is always `structural`; `constraints.max_tier` is `O1` or `O2` only
 - Do **not** accept tech-debt report file paths as required input fields in v1
 - Stack skill names are **not** schema fields — they arrive under `## Instructions` (A')
+
+## Loop envelope (caller JSON)
+
+When `hints[]` is present (from `loop-prompt-generate` / `detect_refactor.sh`):
+
+```json
+{
+  "commit_range": "abc1234..def5678",
+  "level": "L2",
+  "skip": false,
+  "hints": [
+    {
+      "kind": "duplication_block",
+      "path": "scripts/example.sh",
+      "detail": "lines 10-17 duplicate scripts/other.sh:40-47",
+      "lines": 8
+    }
+  ]
+}
+```
+
+| Field            | Type    | Description                                                                     |
+| ---------------- | ------- | ------------------------------------------------------------------------------- |
+| `commit_range`   | string  | SHA range when detect scope is `range`                                          |
+| `level`          | enum    | `L1` (report only), `L2` (edit + PR), `L3` (edit + auto-merge)                   |
+| `skip`           | boolean | When true, no actionable hints                                                  |
+| `hints`          | array   | Mechanical H1 hints from detect                                                 |
+| `hints[].kind`   | enum    | `duplication_block` or `oversized_unit` only                                    |
+| `hints[].path`   | string  | Primary file path for the hint                                                  |
+| `hints[].detail` | string  | Locator (line range, peer path, line count)                                     |
+| `hints[].lines`  | number  | Optional size metric                                                            |
+
+### Operating levels
+
+| Level | Agent behavior for refactor (loop path)                    |
+| ----- | ---------------------------------------------------------- |
+| `L1`  | Emit session report only — do not edit files               |
+| `L2`  | Emit report and apply one structural hint within allowlist |
+| `L3`  | Same edits as `L2`; caller may auto-merge the fix PR       |
+
+### Loop rules
+
+- Select **one** hint — first actionable entry in `hints[]`. Force `intent: structural`; `constraints.max_tier: O2`.
+- Allowlist/denylist arrive in prompt `## Constraints` (`LOOP_ALLOWLIST`, `LOOP_DENYLIST`); fall back to [category-scope.md](category-scope.md) defaults when absent.
+- Session report per [common-output-format-loop.md](common-output-format-loop.md).
+- `level` defaults to `L2` when omitted.
+

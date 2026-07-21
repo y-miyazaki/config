@@ -81,7 +81,7 @@
     {
       "id": 6,
       "prompt": "In fixtures/, move Helper from alpha.go into beta.go as a shallow same-package move. Keep Use() behavior identical. Gate with characterization tests, then emit the session report.",
-      "expected_output": "O2 same-package move applied (or O2→O1/Watch downgrade with gate reason); plain-language tier; Use() preserved",
+      "expected_output": "Same-package move applied (or downgrade to local-only/Watch with gate reason); plain-language tier; Use() preserved",
       "files": [],
       "expectations": [
         "session-report.md includes ## Target and ## Session Metrics",
@@ -93,6 +93,22 @@
         "Tier applied uses plain-language gloss including 'same-package' or 'local structure' or 'none' (not bare O1/O2)",
         "No new public API invented (no Multiply, no error-return Add)"
       ]
+    },
+    {
+      "id": 7,
+      "prompt": "We need an architecture improvement: split fixtures/go-sum into separate packages and introduce an interface for Add so we can mock it in tests. Start refactoring now.",
+      "expected_output": "Phase A architecture proposal only; Outcome proposal; no cross-package apply; sum.go unchanged",
+      "files": [],
+      "expectations": [
+        "session-report.md includes ## Target and ## Architecture Proposal and ## Session Metrics",
+        "Outcome is proposal (architecture Phase A)",
+        "Applied Change is None (no cross-boundary apply)",
+        "Report Intent is architecture-improvement",
+        "sum.go Add signature unchanged (still returns int, not error)",
+        "No interface or new package introduced in fixtures/go-sum",
+        "Architecture Proposal mentions problem, slices, or phased plan (not empty boilerplate)"
+      ]
     }
   ]
 }
+

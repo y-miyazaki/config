@@ -3,7 +3,7 @@
 ## Intent classification
 
 - Classify **structural** (default) or **architecture-improvement** before edits ([category-operations.md](category-operations.md))
-- Architecture triggers: module boundary, deep module, redesign, responsibility split, testability at seams (JA: アーキテクチャ改善, 設計見直し, モジュール整理, 境界の見直し, 責務分離)
+- Architecture triggers: architecture improvement, redesign, module boundary, deep module, responsibility split, testability at seams
 - When ambiguous → **structural**
 - Architecture intent without user-approved slice → Phase A proposal only; Outcome `proposal`; no apply
 - Architecture Phase B → user names **one** approved slice; apply as O2 cap only
@@ -18,6 +18,7 @@
 
 ## Operations
 
+- Pick **one** technique from [category-techniques.md](category-techniques.md) before editing; record it in session report **Technique**
 - Treat `duplication_block` as **logic duplication** — dedupe executable/shared logic (extract helper, consolidate calls), not documentation or comment-only templates
 - If overlapping text is comments or doc blocks only, Outcome `no-op` / Watch — not an apply target
 - When deduplicating logic, preserve file headers and symbol documentation unless consolidating documented behavior in the same edit
@@ -48,3 +49,4 @@
 - Nothing actionable → Outcome `no-op`, empty Applied Change, stop
 - Validation fails after one in-scope repair → revert or leave Watch; record failure
 - Missing validation tooling named in Instructions → note in Session Metrics; Watch unless a single safe local (O1) clarification remains gated by existing tests
+

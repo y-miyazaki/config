@@ -15,8 +15,9 @@ Stack-specific gates. Prefer existing `*-validation` skills named in `## Instruc
 ### Characterization tests
 
 - Capture **existing** behavior only — do not expand into feature specs
+- Red-green discipline: add or run characterization tests on current behavior first; only then apply the structural edit; re-run gates after
 - Add tests/checks before or in the same change as the refactor when the stack is supported and no net exists
-- After tests are green on current behavior, apply O1/O2 depth (local or same-package), then re-run gates
+- After tests are green on current behavior, apply local or same-package depth ([category-operations.md](category-operations.md)), then re-run gates
 - Architecture Phase A (proposal): skip characterization and apply — proposal only
 
 ### Downgrade (V4)
@@ -29,3 +30,4 @@ Stack-specific gates. Prefer existing `*-validation` skills named in `## Instruc
 
 - Read `## Instructions` for named validation skills and commands
 - Do not hardcode consumer skill package paths into this reference
+

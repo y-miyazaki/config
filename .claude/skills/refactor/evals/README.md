@@ -18,5 +18,7 @@ Iteration artifacts live under `tmp/refactor-skill-eval/`.
 - iteration-1: with_skill vs without_skill — with_skill 100%
 - iteration-2: with_skill (v1.0.3) vs old_skill (v1.0.0) — plain-language Tier gloss; 100% / ~95%
 - iteration-3: residual risks — O2 same-package move (eval-6), de-coached refusal prompts, synced install trees
+- iteration-4: v2.1.0 — SKILL token trim, plain-language tiers in body, architecture Phase A eval (eval-7)
 
 Viewer: `tmp/refactor-skill-eval/iteration-3/review.html` (fallback: iteration-2)
+

@@ -62,7 +62,7 @@ jobs:
       budget_max_tokens_per_day: 500000
       detect_domain_env_json: >-
         {"CHANGELOG_FILE":"CHANGELOG.md","CHANGELOG_MERGE_COMMITS":"false"}
-      detect_script: .agents/skills/loop-changelog/scripts/detect_changelog_commits.sh
+      detect_script: .agents/skills/changelog/scripts/detect_changelog_commits.sh
       engine: cursor
       environment: default
       finalize_integration: open_pr
@@ -71,7 +71,7 @@ jobs:
       max_targets_per_schedule: 3
       no_changes_verdict: REJECT
       pr_body: ""
-      pr_title: "chore(changelog): update CHANGELOG.md (loop-changelog)"
+      pr_title: "chore(changelog): update CHANGELOG.md"
       prompt_instructions: |
         Update the target changelog file using Keep a Changelog section names.
         Map each provided commit to a single bullet under `## [Unreleased]`.
@@ -83,8 +83,9 @@ jobs:
         - Add or update footer compare links `[version]: repository_url/compare/previous_tag...tag_sha` when `repository_url` is present
         Preserve existing released sections; do not invent versions outside detect `releases[]`.
       pr_enabled: false
-      skill_name: loop-changelog
+      skill_name: changelog
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
       BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
+

@@ -51,7 +51,7 @@ See [Config Repository Architecture](../docs/explanation/architecture.md#configu
 
 Package instructions, skills, and references must work in any consumer project. Do **not** embed:
 
-- Paths or names from this config repository (for example `.github/actions/loop-*`, `.apm/packages/loop-*`, internal script filenames).
+- Paths or names from this config repository (for example `.github/actions/loop-*`, internal script filenames).
 - References to a single file as the canonical example ("use `path/to/specific.sh` as the reference").
 - Test helpers, fixtures, or support APIs that exist only in this repository (`bats_source_apm_skill`, project-local `common.bash` contracts, and similar).
 - Domain jargon tied to one consumer's layout unless expressed as a generic pattern (for example `lib/*.sh`, `scripts/lib/*.sh`).
@@ -123,6 +123,60 @@ done
 - Skill authoring standards: `agent-skills` instruction and `agent-skills-review` skill.
 - Shared shell libraries: edit `scripts/lib/`, then `bash scripts/ai/sync_skill_lib.sh`, then `apm install --update`.
 - Do not create skill-specific minimal copies of `scripts/lib/` (for example a `json.sh`-only loader).
+
+### SKILL.md documentation level (sibling consistency)
+
+**Priority:** Keep **the same documentation level across sibling skills** in a package and across **shared domain packages** (`common`, `go`, `shell-script`, `terraform`). Validation/review pairs in the same domain (for example `go-validation` ↔ `go-review`) should share Reference Files Guide load-contract phrasing and `### Error Handling` table format. Misaligned depth, section layout, or reference-load wording causes execution drift between skills — that is a higher risk than token count.
+
+**Token budget:** External tooling may warn when `SKILL.md` exceeds ~500 tokens. Treat that as **advisory only**. Do **not** compress one skill in isolation to satisfy a token gate if sibling skills remain at full depth. Token reduction, when desired, is a **package-wide** pass after structure is aligned.
+
+**Canonical patterns** (match `ci-sweeper`, `changelog`, `docs-updater`, `report-tech-debt` unless the whole family is revised together):
+
+| Element | Convention |
+| ------- | ---------- |
+| `## Workflow` | **S-01 MUST** — one of five required H2 sections; numbered steps or explicit `###` path branches (Q-03 SHOULD) |
+| Utility skills | Lead with `**UTILITY SKILL** — …` when the skill patches/syncs rather than authors content |
+| Loop skills | `## Operating levels` H2 pointing at `category-*-input-schema.md#operating-levels` |
+| Dual-path skills | Separate `### Loop path` / `### Interactive` (or hook) under `## Workflow` with numbered steps |
+| `## Reference Files Guide` | One bullet per file; explicit load contract on every line |
+| `### Error Handling` | **Q-10 SHOULD** — table under `## Workflow` (not a sixth H2). Required for loop/utility/review skills with recoverable or fatal branches; match sibling table format |
+
+**S-01 vs Q-10:** `agent-skills-review` requires `## Workflow` (MUST). It does **not** require a top-level `## Error Handling` H2 — that was removed as redundant with standard tool behavior. Error paths belong in `### Error Handling` **inside** Workflow (condition \| severity \| action), per Q-10 (SHOULD). When one loop skill has this table, siblings in the same family should too.
+
+**Reference Files Guide — load contracts (determinism):**
+
+Use a fixed phrase per line so agents do not infer load timing from prose elsewhere.
+
+| Phrase | When to use |
+| ------ | ----------- |
+| `(always read)` | Load on every run for this skill |
+| `(always read — loop path)` | Load when `## Workflow` loop branch runs |
+| `(always read — interactive path)` | Load when interactive/hook branch runs |
+| `(read on failure)` | Optional diagnostics only (`common-troubleshooting.md`, debug command catalogs) |
+
+**Avoid** vague triggers such as `Read when parsing context`, `— apply`, or `— loop` without `(always read …)` — they duplicate workflow conditions and diverge across skills. If workflow step 1 always parses a schema, that schema is `(always read)` (or path-qualified), not conditional.
+
+When adding or changing one skill's `SKILL.md`, compare against siblings in the same package **and the matching skill in sibling domain packages** (validation ↔ review pairs), then align section depth and reference phrasing in the **same change**.
+
+### Skill eval packaging (waza / skill-creator)
+
+Ship **thin eval harnesses inside each skill**; keep **heavy verification outside** the distributable package.
+
+| Layer | Location | Purpose | Download cost |
+| ----- | -------- | ------- | ------------- |
+| **Contract eval** | `skills/<name>/eval.yaml` + `evals/tasks/*.yaml` | Output sections, boundary guardrails, mock-smoke | Small (YAML only; keep in skill) |
+| **Optional fixtures** | `evals/files/` only when mock requires paths | Minimal stubs; avoid large binaries | Small if tiny text files; skip when prompt can embed context |
+| **Behavior verification** | Repo CI: `test/bats/`, `scripts/*/validate.sh`, `waza run --baseline` / real executor | Scripts, integration, with-vs-without-skill | Not shipped to consumers |
+| **Description tuning** | `tmp/` or maintainer workspace | Trigger optimization experiments | Not shipped |
+
+**Rules:**
+
+- Every skill SHOULD have `eval.yaml` with at least: output-contract, one happy path, one boundary/trigger-negative where applicable.
+- Prefer **inline JSON/context in prompts** over `evals/files/` for mock runs (mock echoes prompts; fixtures add bytes without improving discrimination).
+- Do **not** bundle large test corpora in APM packages — consumers download skills for execution instructions, not regression datasets.
+- Mock eval passing means **structure/regression of the contract**, not that the skill works in production. Treat **100% mock + CI green** as the release bar for this repository.
+
+`evals/evals.json` (skill-creator format) is optional and maintainer-facing; use for A/B description or subagent benchmarks, not required in every skill.
 
 ### Validation Scripts Mirror (`scripts/` ↔ skill)
 

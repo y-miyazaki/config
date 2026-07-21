@@ -19,10 +19,11 @@ Closed set for apply: O1/O2 only. O3 is proposal-first, then O2 slices after use
 
 ### Architecture-improvement triggers (examples)
 
-- EN: architecture improvement, redesign, module boundary, deep module, consolidate modules, improve testability at seams, responsibility split
-- JA: アーキテクチャ改善, 設計見直し, モジュール整理, 境界の見直し, 責務分離, 深いモジュール化, テストしやすい構造に
+- architecture improvement, redesign, module boundary, deep module, consolidate modules, improve testability at seams, responsibility split
 
 When triggers are mixed with structural work, prefer **structural** unless architecture language is the primary mission.
+
+Technique selection for structural apply: [category-techniques.md](category-techniques.md).
 
 ### O1 — local structure (same behavior)
 
@@ -68,3 +69,4 @@ Forbidden on L2 / automation path:
 - Same verification and validation gates as structural intent
 
 **Never on loop L2:** loop callers and detect hints stay structural (O1/O2) only.
+

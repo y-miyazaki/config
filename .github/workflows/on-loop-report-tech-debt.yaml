@@ -55,7 +55,7 @@ jobs:
       budget_max_tokens_per_day: 750000
       denylist: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**,src/**,.github/**"
       detect_domain_env_json: "{}"
-      detect_script: .agents/skills/loop-report-tech-debt/scripts/detect_report_tech_debt.sh
+      detect_script: .agents/skills/report-tech-debt/scripts/detect_report_tech_debt.sh
       engine: cursor
       environment: default
       infer_files_pattern: 'docs/report/report-tech-debt/[0-9]{4}-[0-9]{2}-[0-9]{2}\.md'
@@ -65,14 +65,15 @@ jobs:
       no_changes_verdict: REJECT
       pr_body: ""
       pr_enabled: false
-      pr_title: "docs(report): technical debt report (loop-report-tech-debt)"
+      pr_title: "docs(report): technical debt report"
       prompt_instructions: |
         Classify mechanical debt signals per the skill taxonomy.
         Write the dated report to `report_file` at L2 within the allowlist.
         Compare against `previous_report` for resolved, recurring, and regression items.
         Do not create GitHub Issues.
-      skill_name: loop-report-tech-debt
+      skill_name: report-tech-debt
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
       BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
+

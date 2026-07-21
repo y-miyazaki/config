@@ -82,8 +82,8 @@ jobs:
           github.event.workflow_run.name || '',
           github.event.workflow_run.id || ''
         ) }}
-      detect_script: .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh
-      domain_persistence_script: .agents/skills/loop-ci-sweeper/scripts/update_run_ledger.sh
+      detect_script: .agents/skills/ci-sweeper/scripts/detect_ci_failures.sh
+      domain_persistence_script: .agents/skills/ci-sweeper/scripts/update_run_ledger.sh
       engine: cursor
       environment: default
       infer_files_pattern: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|ya?ml|sh|go|toml|json)'
@@ -94,7 +94,7 @@ jobs:
       pr_enabled: true
       pr_exclude: fork,draft,label:no-loop
       pr_include_bots: ""
-      pr_title: "fix(ci): automated CI repair (loop-ci-sweeper)"
+      pr_title: "fix(ci): automated CI repair"
       prompt_instructions: |
         Fix the failing CI checks identified in the detection result.
         Classify flakes and infra/env failures as Watch — do not edit code for those.
@@ -111,7 +111,7 @@ jobs:
 
         Read each skill's SKILL.md under `.agents/skills/` or `.claude/skills/` before invoking.
         Coverage-threshold and dependency-breakage failures: classify Watch — do not edit until caller verifier allows.
-      skill_name: loop-ci-sweeper
+      skill_name: ci-sweeper
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}

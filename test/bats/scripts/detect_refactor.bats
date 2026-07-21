@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
-# Tests for .apm/packages/loop-refactor/.apm/skills/loop-refactor/scripts/detect_refactor.sh
+# Tests for .apm/packages/common/.apm/skills/refactor/scripts/detect_refactor.sh
 #
 # Use cases:
 # - detect_refactor.sh emits valid ok JSON with skip when no scan targets match
@@ -22,7 +22,7 @@ done
 source "${_bats_support}/support/common.bash"
 
 setup() {
-    TARGET_SCRIPT="$(apm_skill_script_path loop-refactor detect_refactor.sh)"
+    TARGET_SCRIPT="$(apm_skill_script_path refactor detect_refactor.sh)"
     git_test_repo_setup
 }
 

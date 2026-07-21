@@ -37,7 +37,7 @@ What causes detect to run and what facts it can see (failed workflow run, git di
 _Avoid_: Detect method, cron
 
 **CI Failure Sensor**:
-Detect path that lists failed workflow runs (`loop-ci-sweeper` / `detect_ci_failures.sh`). One observation trigger family among several.
+Detect path that lists failed workflow runs (`ci-sweeper` / `detect_ci_failures.sh`). One observation trigger family among several.
 _Avoid_: CI sweeper (when meaning the whole loop), self-healing CI
 
 **Target**:
@@ -67,3 +67,4 @@ _Avoid_: Detect gate (for defer policy alone); named skills in entry skill refer
 **GitHub API Action (Execute)**:
 Issue labels, comments, or PR comments applied during **Execute** by the entry skill (via `gh` / API) — not Finalize. Caller supplies permissions; verifier confirms API outcome fit. Finalize records state cursor and run-log.
 _Avoid_: Finalize (for label/comment delivery)
+

@@ -7,7 +7,7 @@
 # - detect_changes range scope lists changed_files for .apm package source edits
 # - detect_changes range scope lists changed_files for .github workflow edits
 # - detect_changes range scope asserts exact changed_files for github workflow edits
-# - detect_changes range scope includes affected docs when workflows change
+# - detect_changes range scope includes affected docs and site config when workflows change
 # - detect_changes range scope skips when only markdown files change
 # - detect_changes range scope records scannable path renames in renamed_files
 # - detect_changes range scope excludes agent directory renames from renamed_files
@@ -15,6 +15,13 @@
 # - detect_changes honors DOCS_UPDATER_DOCS_ROOT and DOCS_UPDATER_SITE_CONFIG
 # - detect_changes range scope includes affected docs when markdown is renamed
 # - detect_changes range scope records cross-zone renames between agent and scannable paths
+# - trim_whitespace and append_unique_doc helpers behave for loop discovery
+# - detect_changes loop globs include affected docs when markdown is deleted
+# - detect_changes rejects range scope without since ref
+# - detect_changes includes DOCS_TRIAGE_EXTRA_FILES in affected_docs
+# - detect_changes loop range without globs discovers scannable markdown excluding agents
+# - detect_changes validates ok response format on workspace repo with loop globs
+# - detect_changes defaults to staged scope when invoked without arguments
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -23,7 +30,11 @@ done
 # shellcheck disable=SC1091
 source "${_bats_support}/support/common.bash"
 
-DETECT_SCRIPT="$(bats_workspace_root)/.apm/packages/common/.apm/skills/docs-updater/scripts/detect_changes.sh"
+DETECT_SCRIPT="$(apm_skill_script_path docs-updater detect_changes.sh)"
+
+setup() {
+    bats_source_apm_skill docs-updater detect_changes.sh
+}
 
 @test "detect_changes range scope lists changed_files for apm package source edits" {
     git_test_repo_setup
@@ -88,6 +99,7 @@ DETECT_SCRIPT="$(bats_workspace_root)/.apm/packages/common/.apm/skills/docs-upda
     git_test_repo_setup
     mkdir -p "${GIT_TEST_REPO}/.github/workflows" "${GIT_TEST_REPO}/docs"
     printf '# Docs\n' > "${GIT_TEST_REPO}/docs/index.md"
+    printf 'site_name: Test\n' > "${GIT_TEST_REPO}/mkdocs.yml"
     printf 'name: ci\n' > "${GIT_TEST_REPO}/.github/workflows/ci.yaml"
     git -C "${GIT_TEST_REPO}" add .
     git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
@@ -98,9 +110,13 @@ DETECT_SCRIPT="$(bats_workspace_root)/.apm/packages/common/.apm/skills/docs-upda
     git -C "${GIT_TEST_REPO}" commit -q -m "ci: update workflow"
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
     [ "$status" -eq 0 ]
-    [[ $output == *'"skip": false'* ]]
-    [[ $output == *'"affected_docs":'* ]]
-    [[ $output == *"docs/index.md"* ]]
+    run jq -e '
+        .status == "ok"
+        and .skip == false
+        and (.affected_docs | index("docs/index.md")) != null
+        and (.affected_docs | index("mkdocs.yml")) != null
+    ' <<< "${output}"
+    [ "$status" -eq 0 ]
 }
 
 @test "detect_changes range scope excludes agent directory renames from renamed_files" {
@@ -276,4 +292,140 @@ DETECT_SCRIPT="$(bats_workspace_root)/.apm/packages/common/.apm/skills/docs-upda
     [ "$status" -eq 0 ]
     [[ $output == *'"skip": true'* ]]
     [[ $output == *'"affected_docs": []'* ]]
+}
+
+@test "detect_changes defaults to staged scope when invoked without arguments" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/docs" "${GIT_TEST_REPO}/src"
+    printf '# Docs\n' > "${GIT_TEST_REPO}/docs/index.md"
+    printf 'package main\n' > "${GIT_TEST_REPO}/src/app.go"
+    git -C "${GIT_TEST_REPO}" add .
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    printf '\n' >> "${GIT_TEST_REPO}/src/app.go"
+    git -C "${GIT_TEST_REPO}" add src/app.go
+    git_test_repo_run "bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    run jq -e '.status == "ok" and .scope == "staged" and .skip == false' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "trim_whitespace removes leading and trailing spaces" {
+    result="$(trim_whitespace '  hello world  ')"
+    [ "${result}" = "hello world" ]
+}
+
+@test "append_unique_doc adds existing paths once" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/docs"
+    printf '# Doc\n' > "${GIT_TEST_REPO}/docs/index.md"
+    git -C "${GIT_TEST_REPO}" add docs/index.md
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    pushd "${GIT_TEST_REPO}" > /dev/null || return 1
+    AFFECTED_DOCS=()
+    append_unique_doc "docs/index.md"
+    append_unique_doc "docs/index.md"
+    [ "${#AFFECTED_DOCS[@]}" -eq 1 ]
+    [ "${AFFECTED_DOCS[0]}" = "docs/index.md" ]
+    popd > /dev/null || return 1
+}
+
+@test "detect_changes loop globs include affected docs when markdown is deleted" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/docs"
+    printf '# Old\n' > "${GIT_TEST_REPO}/docs/legacy.md"
+    printf '# Keep\n' > "${GIT_TEST_REPO}/docs/index.md"
+    touch "${GIT_TEST_REPO}/file.txt"
+    git -C "${GIT_TEST_REPO}" add .
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    local base
+    base="$(git -C "${GIT_TEST_REPO}" rev-parse HEAD)"
+    git -C "${GIT_TEST_REPO}" rm docs/legacy.md
+    git -C "${GIT_TEST_REPO}" commit -q -m "docs: remove legacy page"
+    git_test_repo_run "env DOCS_TRIAGE_DOC_GLOBS='docs/**/*.md' bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
+    [ "$status" -eq 0 ]
+    [[ $output == *'"skip": false'* ]]
+    [[ $output == *"docs/index.md"* ]]
+    [[ $output == *'"deleted_files":'* ]]
+    [[ $output == *"docs/legacy.md"* ]]
+}
+
+@test "detect_changes rejects range scope without since ref" {
+    git_test_repo_setup
+    touch "${GIT_TEST_REPO}/file.txt"
+    git -C "${GIT_TEST_REPO}" add file.txt
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range"
+    [ "$status" -eq 0 ]
+    assert_detect_changes_error_json "${output}" "requires --since"
+}
+
+@test "detect_changes includes DOCS_TRIAGE_EXTRA_FILES in affected_docs" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/docs"
+    printf '# Docs\n' > "${GIT_TEST_REPO}/docs/index.md"
+    printf 'site_name: Test\n' > "${GIT_TEST_REPO}/mkdocs.yml"
+    touch "${GIT_TEST_REPO}/file.txt"
+    git -C "${GIT_TEST_REPO}" add .
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    local base
+    base="$(git -C "${GIT_TEST_REPO}" rev-parse HEAD)"
+    printf '\n' >> "${GIT_TEST_REPO}/file.txt"
+    git -C "${GIT_TEST_REPO}" add file.txt
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: touch file"
+    git_test_repo_run "env DOCS_TRIAGE_DOC_GLOBS='docs/**/*.md' DOCS_TRIAGE_EXTRA_FILES='mkdocs.yml' bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
+    [ "$status" -eq 0 ]
+    run jq -e '
+        .status == "ok"
+        and .skip == false
+        and (.affected_docs | index("mkdocs.yml")) != null
+        and (.affected_docs | index("docs/index.md")) != null
+    ' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_changes loop range without globs discovers scannable markdown excluding agents" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/.apm/packages/foo/.apm/skills/foo" \
+        "${GIT_TEST_REPO}/.agents/skills/foo" \
+        "${GIT_TEST_REPO}/src"
+    cat > "${GIT_TEST_REPO}/.apm/packages/foo/.apm/skills/foo/SKILL.md" << 'EOF'
+---
+name: foo
+---
+EOF
+    printf 'skill\n' > "${GIT_TEST_REPO}/.agents/skills/foo/SKILL.md"
+    printf 'package main\n' > "${GIT_TEST_REPO}/src/app.go"
+    touch "${GIT_TEST_REPO}/file.txt"
+    git -C "${GIT_TEST_REPO}" add .
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    local base
+    base="$(git -C "${GIT_TEST_REPO}" rev-parse HEAD)"
+    printf '\n' >> "${GIT_TEST_REPO}/src/app.go"
+    git -C "${GIT_TEST_REPO}" add src/app.go
+    git -C "${GIT_TEST_REPO}" commit -q -m "feat: update app"
+    git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
+    [ "$status" -eq 0 ]
+    run jq -e '
+        .status == "ok"
+        and .skip == false
+        and (.affected_docs | index(".apm/packages/foo/.apm/skills/foo/SKILL.md")) != null
+        and (.affected_docs | index(".agents/skills/foo/SKILL.md")) == null
+    ' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_changes validates ok response format on workspace repo with loop globs" {
+    local workspace since_ref json
+
+    workspace="$(bats_workspace_root)"
+    if ! since_ref="$(bats_resolve_since_ref "${workspace}")"; then
+        skip "not enough git history for relative since ref"
+    fi
+
+    run bash -c "cd '${workspace}' && env DOCS_TRIAGE_DOC_GLOBS='docs/**/*.md,README.md' bash '${DETECT_SCRIPT}' --scope range --since '${since_ref}'"
+    [ "$status" -eq 0 ]
+    json="${output}"
+    assert_detect_changes_ok_json "${json}" "range" "${since_ref}"
+    run jq -e --arg since_ref "${since_ref}" '.commit_range == ($since_ref + "..HEAD")' <<< "${json}"
+    [ "$status" -eq 0 ]
 }

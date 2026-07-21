@@ -5,14 +5,14 @@ For concrete specifications (Actions/Workflows list, interfaces), see [Specifica
 
 ## Implementation Status
 
-| Package             | Status                                 | Level         |
-| ------------------- | -------------------------------------- | ------------- |
-| `loop-docs-triage`  | Phase 0 done; multi-branch in progress | L2 (Assisted) |
-| `loop-ci-sweeper`   | Phase 0 done; multi-branch in progress | L2 (Assisted) |
-| `loop-changelog`    | Phase 0 done; workflow design complete | L2 (Assisted) |
-| `loop-refactor`     | Phase 0 done; workflow design complete | L2 (Assisted) |
-| `loop-issue-triage` | Not started                            | -             |
-| `loop-stale-pr`     | Not started                            | -             |
+| Loop (`loop_name`)   | Skill (`common`)   | Status                                 | Level         |
+| -------------------- | ------------------ | -------------------------------------- | ------------- |
+| `docs-triage`        | `docs-updater`     | Phase 0 done; multi-branch in progress | L2 (Assisted) |
+| `ci-sweeper`         | `ci-sweeper`       | Phase 0 done; multi-branch in progress | L2 (Assisted) |
+| `changelog`          | `changelog`        | Phase 0 done; workflow design complete | L2 (Assisted) |
+| `refactor`           | `refactor`         | Phase 0 done; workflow design complete | L2 (Assisted) |
+| `loop-issue-triage`  | —                  | Not started                            | -             |
+| `loop-stale-pr`      | —                  | Not started                            | -             |
 
 Platform actions (`loop-detect` `target_matrix`, `domain_persistence_script`) are in progress — see [Multi-Branch Loops Design](multi-branch-loops-design.md).
 
@@ -24,14 +24,14 @@ Referencing the design philosophy of GitHub Agentic Workflows ([official blog](h
 
 | Loop                 | Detection Method                                    | Agent Behavior                    | Expected Level                                                                                  |
 | -------------------- | --------------------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------- |
-| **loop-docs-triage** | git diff: doc drift facts on integration branches   | Triage stale docs; open fix PR    | L2 — see [Docs Triage Workflow](workflows/loop-docs-triage-workflow-design.md)                  |
-| **loop-ci-sweeper**  | GitHub API: failed runs (integration + optional PR) | Auto-fix; PR or push per mode     | L2 default; L3 opt-in — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md) |
-| **loop-changelog**   | git log: parse conventional commits                 | Auto-generate/update CHANGELOG.md | L2 — see [Changelog Workflow](workflows/loop-changelog-workflow-design.md)                      |
-| **loop-refactor**    | repo scan: duplication_block / oversized_unit hints | O1/O2 structural fix; open PR     | L2 — see [Refactor Workflow](workflows/loop-refactor-workflow-design.md)                        |
+| **docs-triage** (`docs-updater`) | git diff: doc drift facts on integration branches   | Triage stale docs; open fix PR    | L2 — see [Docs Triage Workflow](workflows/loop-docs-triage-workflow-design.md)                  |
+| **ci-sweeper**                   | GitHub API: failed runs (integration + optional PR) | Auto-fix; PR or push per mode     | L2 default; L3 opt-in — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md) |
+| **changelog**                    | git log: parse conventional commits                 | Auto-generate/update CHANGELOG.md | L2 — see [Changelog Workflow](workflows/loop-changelog-workflow-design.md)                      |
+| **refactor**                     | repo scan: duplication_block / oversized_unit hints | O1/O2 structural fix; open PR     | L2 — see [Refactor Workflow](workflows/loop-refactor-workflow-design.md)                        |
 
 #### CI failure repair — one package, layered responsibilities
 
-`loop-ci-sweeper` stays **one loop package** (one detect script, one entry skill, one caller). CI failure repair does not split into stack-specific loop packages. Routing and defer rules split across detect facts, entry skill references, and caller config.
+`ci-sweeper` stays **one loop** (one detect script, one entry skill, one caller). CI failure repair does not split into stack-specific loop packages. Routing and defer rules split across detect facts, entry skill references, and caller config.
 
 See also [Ubiquitous Language](CONTEXT.md) and [Detect Script Output](#detect-script-output).
 
@@ -47,11 +47,11 @@ Every detect script emits a common envelope (see [Specification — Detect scrip
 
 The `result` body is **observation-trigger-specific** — not one shared schema:
 
-| Trigger family | Loop               | Example `result` fields                                  |
-| -------------- | ------------------ | -------------------------------------------------------- |
-| CI failure     | `loop-ci-sweeper`  | `failures[]`, `failure_type` hint, (future) `stack_hint` |
-| Doc drift      | `loop-docs-triage` | `changed_files`, `affected_docs`, …                      |
-| Changelog      | `loop-changelog`   | `commits[]`, …                                           |
+| Trigger family | Loop (`loop_name`) | Skill (`common`)   | Example `result` fields                                  |
+| -------------- | ------------------ | ------------------ | -------------------------------------------------------- |
+| CI failure     | `ci-sweeper`       | `ci-sweeper`       | `failures[]`, `failure_type` hint, (future) `stack_hint` |
+| Doc drift      | `docs-triage`      | `docs-updater`     | `changed_files`, `affected_docs`, …                      |
+| Changelog      | `changelog`        | `changelog`        | `commits[]`, …                                           |
 
 Semantic arrays such as `findings[]` are **Execute** output only — see [Semantic Findings](CONTEXT.md#language). Detect emits mechanical facts.
 
@@ -87,7 +87,7 @@ For failure kinds outside minimal CI repair (coverage threshold, dependency brea
 | Entry skill                      | Generic `DO NOT USE FOR`, checklist — classify Watch, no edit (no named consumer skills) |
 | Caller `agent_verifier_criteria` | Appendix — REJECT diffs that address deferred kinds; may name expected domain skills     |
 
-CI failure kinds outside minimal repair (coverage threshold, dependency breakage) stay in **`loop-ci-sweeper`** — defer via [Failure kind defer (B)](#failure-kind-defer-b), optional domain skills in caller `prompt_instructions` / verifier appendix. No separate `loop-test-coverage` package.
+CI failure kinds outside minimal repair (coverage threshold, dependency breakage) stay in **`ci-sweeper`** — defer via [Failure kind defer (B)](#failure-kind-defer-b), optional domain skills in caller `prompt_instructions` / verifier appendix. No separate `loop-test-coverage` package.
 
 ### Tier 2 (Medium Priority — new observation triggers)
 
@@ -103,7 +103,7 @@ CI failure kinds outside minimal repair (coverage threshold, dependency breakage
 | **security-advisory** | GitHub Advisory DB: new CVEs | Create PR for vulnerability remediation | L1 (report only) |
 | **api-docs**          | OpenAPI spec diff (git diff) | API documentation sync                  | L2               |
 
-**CI failure extensions (not new loops):** Renovate/bot PR handling and dependency-breakage repair are **caller filters** (`pr_include_bots`, `pr_exclude`) plus domain skills under `loop-ci-sweeper` — see [CI Sweeper — dependency update](workflows/loop-ci-sweeper-workflow-design.md#dependency-update-caller-filter--domain-skill).
+**CI failure extensions (not new loops):** Renovate/bot PR handling and dependency-breakage repair are **caller filters** (`pr_include_bots`, `pr_exclude`) plus domain skills under `ci-sweeper` — see [CI Sweeper — dependency update](workflows/loop-ci-sweeper-workflow-design.md#dependency-update-caller-filter--domain-skill).
 
 ### Selection Criteria
 
@@ -124,76 +124,74 @@ Priority assessment when adding new loops:
 
 ## Package Structure
 
-Each `loop-*` package ships **Skill + detect script** (+ optional ledger script). Shared actions stay domain-agnostic.
+Maintenance loop skills ship under `.apm/packages/common/.apm/skills/` (**Skill + detect script** per domain; optional ledger script). Shared actions stay domain-agnostic.
 
 ```text
-.apm/packages/
-  loop-docs-triage/
-    .apm/skills/loop-docs-triage/
-      SKILL.md
-      scripts/detect_changes.sh
-  loop-ci-sweeper/
-    .apm/skills/loop-ci-sweeper/
-      SKILL.md
-      scripts/detect_ci_failures.sh
-      scripts/update_run_ledger.sh
-  loop-changelog/
-    .apm/skills/loop-changelog/
-      SKILL.md
-      scripts/detect_changelog_commits.sh
-  loop-refactor/
-    .apm/skills/loop-refactor/
-      SKILL.md
-      scripts/detect_refactor.sh
+.apm/packages/common/.apm/skills/
+  docs-updater/
+    SKILL.md
+    scripts/detect_changes.sh
+  ci-sweeper/
+    SKILL.md
+    scripts/detect_ci_failures.sh
+    scripts/update_run_ledger.sh
+  changelog/
+    SKILL.md
+    scripts/detect_changelog_commits.sh
+  refactor/
+    SKILL.md
+    scripts/detect_refactor.sh
+  report-tech-debt/
+    SKILL.md
+    scripts/detect_report_tech_debt.sh
 ```
 
-Hook/manual skills (e.g. `docs-updater` in `common`) are **not** loop packages — see [Docs Triage Workflow Design](workflows/loop-docs-triage-workflow-design.md#separation-from-docs-updater).
+Callers reference installed paths (e.g. `.agents/skills/<skill-name>/scripts/...`). Workflow filenames remain `on-loop-<loop_name>.yaml`.
+
+Hook/manual and loop skills live under `.apm/packages/common/.apm/skills/` — see [Loop Skill Consolidation Design](../../superpowers/specs/2026-07-21-loop-skill-consolidation-design.md).
 
 ## Naming Conventions
 
-| Package Type         | Naming Pattern                                | Example                               |
-| -------------------- | --------------------------------------------- | ------------------------------------- |
-| Domain-specific loop | `loop-<skill-name>` (matches skill directory) | `loop-docs-triage`, `loop-ci-sweeper` |
+| Identifier type | Naming pattern              | Example                                      |
+| --------------- | --------------------------- | -------------------------------------------- |
+| Workflow file   | `on-loop-<loop_name>.yaml`  | `on-loop-docs-triage.yaml`                   |
+| `loop_name`     | kebab-case (state key)      | `docs-triage`, `ci-sweeper`, `changelog`     |
+| Skill directory | kebab-case (no `loop-`)     | `docs-updater`, `ci-sweeper`, `refactor`     |
 
-## Dependencies
+## docs-triage (Docs Update Loop)
 
-Each `loop-*` package is self-contained (no dependencies on other packages).
-APM packages provide Skills only and do not distribute Workflows/Actions.
+| Component                                                     | Description                                                   |
+| ------------------------------------------------------------- | ------------------------------------------------------------- |
+| `.apm/packages/common/.apm/skills/docs-updater/SKILL.md`      | Hook/manual + loop triage; loop path uses `findings[]`        |
+| `.apm/packages/common/.apm/skills/docs-updater/scripts/detect_changes.sh` | Per-branch doc drift facts (`changed_files`, `affected_docs`) |
+| `eval.yaml` + `evals/tasks/`                                  | waza evaluation suite (interactive + loop paths)              |
 
-## loop-docs-triage (Docs Update Loop)
+## ci-sweeper (CI Sweeper)
 
-| Component                                                | Description                                                   |
-| -------------------------------------------------------- | ------------------------------------------------------------- |
-| `.apm/skills/loop-docs-triage/SKILL.md`                  | Triage + document editing from detect facts                   |
-| `.apm/skills/loop-docs-triage/scripts/detect_changes.sh` | Per-branch doc drift facts (`changed_files`, `affected_docs`) |
-| `eval.yaml` + `evals/tasks/`                             | waza evaluation suite                                         |
-
-## loop-ci-sweeper (CI Sweeper)
-
-| Component                                                   | Description                                               |
-| ----------------------------------------------------------- | --------------------------------------------------------- |
-| `.apm/skills/loop-ci-sweeper/SKILL.md`                      | Fix / Watch / Escalate classification + minimal CI repair |
-| `.apm/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh` | Failed run detection (stable filters only)                |
-| `.apm/skills/loop-ci-sweeper/scripts/update_run_ledger.sh`  | `domain_persistence_script` target for finalize           |
+| Component                                                              | Description                                               |
+| ---------------------------------------------------------------------- | --------------------------------------------------------- |
+| `.apm/packages/common/.apm/skills/ci-sweeper/SKILL.md`                 | Fix / Watch / Escalate classification + minimal CI repair |
+| `.apm/packages/common/.apm/skills/ci-sweeper/scripts/detect_ci_failures.sh` | Failed run detection (stable filters only)                |
+| `.apm/packages/common/.apm/skills/ci-sweeper/scripts/update_run_ledger.sh`  | `domain_persistence_script` target for finalize           |
 
 For workflow env and behavior, see [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md).
 
-## loop-changelog (Changelog Maintenance)
+## changelog (Changelog Maintenance)
 
-| Component                                                        | Description                                             |
-| ---------------------------------------------------------------- | ------------------------------------------------------- |
-| `.apm/skills/loop-changelog/SKILL.md`                            | Keep a Changelog editing from conventional commit facts |
-| `.apm/skills/loop-changelog/scripts/detect_changelog_commits.sh` | Per-branch conventional commit facts (`commits[]`)      |
-| `eval.yaml` + `evals/tasks/`                                     | waza evaluation suite                                   |
+| Component                                                                   | Description                                             |
+| --------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `.apm/packages/common/.apm/skills/changelog/SKILL.md`                       | Keep a Changelog editing from conventional commit facts |
+| `.apm/packages/common/.apm/skills/changelog/scripts/detect_changelog_commits.sh` | Per-branch conventional commit facts (`commits[]`)      |
+| `eval.yaml` + `evals/tasks/`                                                | waza evaluation suite                                   |
 
 For workflow env and behavior, see [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md).
 
-## loop-refactor (Structural Refactor)
+## refactor (Structural Refactor)
 
-| Component                                              | Description                                                         |
-| ------------------------------------------------------ | ------------------------------------------------------------------- |
-| `.apm/skills/loop-refactor/SKILL.md`                   | Map one H1 hint to O1/O2 structural apply (wrapper over `refactor`) |
-| `.apm/skills/loop-refactor/scripts/detect_refactor.sh` | Mechanical hints (`duplication_block`, `oversized_unit`)            |
+| Component                                                             | Description                                              |
+| --------------------------------------------------------------------- | -------------------------------------------------------- |
+| `.apm/packages/common/.apm/skills/refactor/SKILL.md`                  | Interactive + loop structural O1/O2 apply                |
+| `.apm/packages/common/.apm/skills/refactor/scripts/detect_refactor.sh` | Mechanical hints (`duplication_block`, `oversized_unit`) |
 
 For workflow env and behavior, see [Refactor Workflow Design](workflows/loop-refactor-workflow-design.md).
 
@@ -378,8 +376,8 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 | Reusable Workflow | `.github/workflows/ci-loop-*.yaml`  | Generic logic only. Domain-specific criteria are passed from the caller via inputs                                                     |
 | Composite Action  | `.github/actions/loop-*`            | Aggregation of generic steps. Must not depend on specific scripts, repository-specific paths, or domain vocabulary                     |
 | Caller Workflow   | `.github/workflows/on-loop-*.yaml`  | Domain-specific logic: detection script path, verifier criteria, allowlist, `prompt_instructions`, PR metadata                         |
-| APM Package       | `.apm/packages/loop-*/`             | Distributes Agent Skills only. Does not distribute Workflows or Actions                                                                |
-| Skill             | `.apm/packages/loop-*/.apm/skills/` | Generic orchestration + boundaries. Named consumer domain skills live in caller `prompt_instructions`, not distributable `references/` |
+| APM Package       | `.apm/packages/<domain>/<name>/`   | Distributes Agent Skills only. Does not distribute Workflows or Actions                                                                |
+| Skill             | `.apm/packages/<domain>/<name>/.apm/skills/` | Generic orchestration + boundaries. Named consumer domain skills live in caller `prompt_instructions`, not distributable `references/` |
 
 **Decision criterion**: If the answer to "Can another repository use this via remote reference?" is YES, it belongs in an action/workflow. If NO (depends on specific paths or scripts), write it inline in the caller.
 
@@ -404,7 +402,7 @@ jobs:
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
       loop_name: ci-sweeper
-      detect_script: .agents/skills/loop-ci-sweeper/scripts/detect_ci_failures.sh
+      detect_script: .agents/skills/ci-sweeper/scripts/detect_ci_failures.sh
       allowlist: "src/**,tests/**"
       prompt_instructions: |
         Fix the failing CI checks identified in the detection result.
@@ -771,7 +769,7 @@ When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as
 
 **Do not** map `L3` → auto-merge alone. `push` and `push_head` never enable auto-merge.
 
-**Merge-gated cursor (all L2 `open_pr` loops):** Fix PRs carry domain files only. `loop-finalize` writes `targets[key].pending` to `branch_state` without advancing `last_sha`. `on-loop-state-promote.yaml` (`pull_request_target` `closed`, label `loop-automation`) promotes `pending.sha` → `last_sha` on merge or clears `pending` when closed without merge. Writes land only on `branch_state` / repository default (never on fix-PR heads). **Required for every loop that opens review PRs** — dogfood target: unified across `loop-changelog`, `loop-docs-triage`, and `loop-ci-sweeper`. See [State delivery philosophy](multi-branch-loops-design.md#state-delivery-philosophy).
+**Merge-gated cursor (all L2 `open_pr` loops):** Fix PRs carry domain files only. `loop-finalize` writes `targets[key].pending` to `branch_state` without advancing `last_sha`. `on-loop-state-promote.yaml` (`pull_request_target` `closed`, label `loop-automation`) promotes `pending.sha` → `last_sha` on merge or clears `pending` when closed without merge. Writes land only on `branch_state` / repository default (never on fix-PR heads). **Required for every loop that opens review PRs** — dogfood target: unified across `changelog`, `docs-triage`, and `ci-sweeper`. See [State delivery philosophy](multi-branch-loops-design.md#state-delivery-philosophy).
 
 **GitHub API deliverables (issue-triage, stale-pr):** Label, comment, and close **actions run in Execute** via the entry skill (e.g. `gh` / GitHub API) — not in Finalize. Finalize persists loop state and run-log only. Platform work for Tier 2 loops is **caller permissions** (`issues: write`, `pull-requests: write` as needed) plus verifier rubric for API outcome fit.
 

@@ -106,7 +106,7 @@ All `.loop/*` writes in **finalize step** via `loop-finalize` — not separate c
 | Input                       | Example                                                          |
 | --------------------------- | ---------------------------------------------------------------- |
 | `target_json`               | Matrix cell                                                      |
-| `domain_persistence_script` | loop-ci-sweeper: `update_run_ledger.sh`; loop-docs-triage: empty |
+| `domain_persistence_script` | ci-sweeper: `update_run_ledger.sh`; docs-triage: empty |
 | `state_push_branch`         | `LOOP_STATE_PUSH_BRANCH` or default branch                       |
 
 Push branch: `LOOP_STATE_PUSH_BRANCH`, **not** `target.to.branch`.
@@ -222,7 +222,7 @@ Copy a thin `on-loop-*.yaml` (triggers + `with:` only). See [Loop Caller Reusabl
 2. Add `docs/explanation/loop-engineering/workflows/loop-<name>-workflow-design.md`.
 3. Link from [Multi-Branch workflow index](multi-branch-loops-design.md#workflow-design-documents).
 4. Register in `mkdocs.yml` under **Explanation → Loop Engineering → Loop Workflows**.
-5. Package: `.apm/packages/loop-<name>/` with `SKILL.md` + `scripts/detect_*.sh` (+ optional ledger script).
+5. Package: `.apm/packages/<domain>/<name>/` with `SKILL.md` + `scripts/detect_*.sh` (+ optional ledger script).
 
 ## Phase 0 Debt (resolved)
 
@@ -234,7 +234,7 @@ Historical debt from early caller implementations. **All items below are resolve
 | Caller ledger `git push`                         | ci-sweeper pushed ledger from caller         | `domain_persistence_script` in `loop-finalize` via `ci-loop-agent` |
 | `auto_merge: level == L3` without finalize check | all L2+ callers                              | `finalize == 'open_pr'` guard on `auto_merge`                      |
 | Single `DEFAULT_BASE_BRANCH` only                | all                                          | `LOOP_INTEGRATION_BRANCHES`                                        |
-| `docs-updater` detect path                       | `on-loop-docs-triage`                        | `loop-docs-triage/scripts/detect_changes.sh`                       |
+| `docs-updater` detect path                       | `on-loop-docs-triage`                        | `docs-updater/scripts/detect_changes.sh`                           |
 
 Structural baseline: [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md) (`ci-loop-caller.yaml`).
 
@@ -247,3 +247,4 @@ Structural baseline: [Loop Caller Reusable Workflow Design](loop-caller-reusable
 - [Changelog Workflow](workflows/loop-changelog-workflow-design.md)
 - [Docs Triage Workflow](workflows/loop-docs-triage-workflow-design.md)
 - [Report Tech Debt Workflow](workflows/loop-report-tech-debt-workflow-design.md)
+

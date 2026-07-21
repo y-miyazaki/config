@@ -1,0 +1,30 @@
+id: refactor-loop-duplication-001
+name: refactor loop path processes duplication hint
+description: Validate loop path selects one hint and reports structural intent.
+tags:
+  - quality
+  - loop-path
+  - classification
+inputs:
+  prompt: >-
+    Use refactor (loop path) at L2. Process the injected duplication_block hint for
+    scripts/example.sh. Apply one O2 structural technique or classify Watch if gate
+    fails. Emit Refactor Session Report with Target, Applied Change, Session Metrics,
+    plus ## Overview and ## Summary.
+  context:
+    commit_range: eval0001..eval0002
+    level: L2
+    skip: false
+    hints:
+      - kind: duplication_block
+        path: scripts/example.sh
+        detail: lines 10-17 duplicate scripts/other.sh:40-47
+        lines: 8
+expected:
+  output_contains:
+    - Target
+    - duplication_block
+    - Applied Change
+    - Session Metrics
+  outcomes:
+    - type: task_completed

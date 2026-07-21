@@ -119,7 +119,7 @@ jobs:
       budget_max_tokens_per_day: 500000
       detect_domain_env_json: >-
         {"CHANGELOG_FILE":"CHANGELOG.md","CHANGELOG_MERGE_COMMITS":"false"}
-      detect_script: .agents/skills/loop-changelog/scripts/detect_changelog_commits.sh
+      detect_script: .agents/skills/changelog/scripts/detect_changelog_commits.sh
       engine: cursor
       finalize_integration: open_pr
       infer_files_pattern: 'CHANGELOG\.md'
@@ -129,11 +129,11 @@ jobs:
       pr_body: |
         ## Summary
         ...
-      pr_title: "chore(changelog): update CHANGELOG.md (loop-changelog)"
+      pr_title: "chore(changelog): update CHANGELOG.md"
       prompt_instructions: |
         Update the target changelog file under `## [Unreleased]` ...
       pull_requests: false
-      skill_name: loop-changelog
+      skill_name: changelog
 ```
 
 **No workflow-level `env:` block.** Callers pass `agent_token` (and optional bot credentials) via `with:`.
@@ -278,7 +278,7 @@ Two levels of reusable workflows — well within GitHub Actions nesting limits.
 
 ## Extensibility: Adding a New Loop
 
-1. Add `.apm/packages/loop-<name>/` (skill + `scripts/detect_*.sh`).
+1. Add `.apm/packages/<domain>/<name>/` (skill + `scripts/detect_*.sh`).
 2. Add `docs/explanation/loop-engineering/workflows/loop-<name>-workflow-design.md`.
 3. Copy thin caller from `on-loop-changelog.yaml`; set `on:`, `with:`, workflow `name:`.
 4. For CI sweeper callers: list only repair-target workflows under `workflow_run.workflows` (omit `on-loop-*` / `ci-loop-*`).
@@ -353,3 +353,4 @@ New domain env keys go into `detect_domain_env_json` without editing reusable jo
 - [GitHub Workflows Design](../github-workflows-design.md) — `on-*` / `ci-*` naming and caller conventions
 - [Multi-Branch Loops Design](multi-branch-loops-design.md) — platform `LOOP_*` semantics
 - [Loop Engineering Design](loop-engineering-design.md) — L1/L2/L3 and finalize behavior
+

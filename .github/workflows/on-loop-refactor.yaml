@@ -61,7 +61,7 @@ jobs:
       budget_max_tokens_per_day: 500000
       detect_domain_env_json: >-
         {"REFACTOR_DUP_MIN_LINES":"8","REFACTOR_OVERSIZED_FILE_LINES":"400","REFACTOR_SCAN_GLOBS":".apm/packages/**,scripts/**"}
-      detect_script: .agents/skills/loop-refactor/scripts/detect_refactor.sh
+      detect_script: .agents/skills/refactor/scripts/detect_refactor.sh
       engine: cursor
       environment: default
       finalize_integration: open_pr
@@ -70,16 +70,17 @@ jobs:
       max_targets_per_schedule: 1
       no_changes_verdict: REJECT
       pr_body: ""
-      pr_title: "refactor(loop): structural improvement (loop-refactor)"
+      pr_title: "refactor(loop): structural improvement"
       prompt_instructions: |
-        Run the loop-refactor skill for one mechanical hint (duplication_block or oversized_unit).
+        Run the refactor skill for one mechanical hint (duplication_block or oversized_unit).
         Force structural intent only — O2 cap; no architecture-improvement / O3 proposal path.
         Follow the refactor skill contract: one target, characterization when required, minimal O1/O2 diff.
         Stack validation (A'): shell-script-validation, go-validation, github-actions-validation, markdown-validation as applicable via ## Instructions.
         Invoke named validation skills for touched stacks before finalize.
       pr_enabled: false
-      skill_name: loop-refactor
+      skill_name: refactor
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
       BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
+
