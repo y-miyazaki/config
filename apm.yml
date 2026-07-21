@@ -52,4 +52,5 @@ dependencies:
     - ./.apm/packages/loop-ci-sweeper
     - ./.apm/packages/loop-docs-triage
     - ./.apm/packages/loop-report-tech-debt
+    - ./.apm/packages/refactor
   mcp: []
