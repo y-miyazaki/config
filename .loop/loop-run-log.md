@@ -54,3 +54,6 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-07-21T17:04:41Z","pattern":"ci-sweeper","duration_s":215,"outcome":"error","skip_reason":"none","tokens_estimate":52000,"workflow_run":"29851085245","attempts":1,"verdict":"APPROVE","usage":{"total_input_tokens":58776,"total_output_tokens":7273,"model":"Cursor Grok 4.5 Low"}}
 {"run_id":"2026-07-21T17:46:04Z","pattern":"ci-sweeper","duration_s":999,"outcome":"error","skip_reason":"none","tokens_estimate":52000,"workflow_run":"29853145737","attempts":3,"verdict":"REJECT","usage":{"total_input_tokens":247583,"total_output_tokens":51555,"model":"Cursor Grok 4.5 Low"}}
 {"run_id":"2026-07-21T19:01:21Z","pattern":"ci-sweeper","duration_s":12,"outcome":"skipped","skip_reason":"budget","tokens_estimate":52000,"workflow_run":"29859701917"}
+{"run_id":"2026-07-21T19:01:01Z","pattern":"ci-sweeper","duration_s":10,"outcome":"skipped","skip_reason":"budget","tokens_estimate":52000,"workflow_run":"29859681355"}
+{"run_id":"2026-07-21T19:03:53Z","pattern":"ci-sweeper","duration_s":11,"outcome":"skipped","skip_reason":"budget","tokens_estimate":52000,"workflow_run":"29859889710"}
+{"run_id":"2026-07-21T23:43:26Z","pattern":"ci-sweeper","duration_s":12,"outcome":"skipped","skip_reason":"budget","tokens_estimate":52000,"workflow_run":"29877988880"}
