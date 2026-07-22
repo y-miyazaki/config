@@ -30,11 +30,12 @@ readonly REPO_RAW_BASE="https://raw.githubusercontent.com/y-miyazaki/config/main
 # Mapping: destination filename:source filename in repository
 # Uses colon-separated pairs for bash 3.2 compatibility (no associative arrays).
 readonly FILE_PAIRS=(
-    ".pre-commit-config.yaml:.pre-commit-config-go.yaml"
+    ".commitlintrc.yaml:.commitlintrc.yaml"
+    ".editorconfig:.editorconfig"
+    ".gitleaks.toml:.gitleaks.toml"
     ".golangci.yaml:.golangci.yaml"
     ".markdownlint-cli2.yaml:.markdownlint-cli2.yaml"
-    ".gitleaks.toml:.gitleaks.toml"
-    ".commitlintrc.yaml:.commitlintrc.yaml"
+    ".pre-commit-config.yaml:.pre-commit-config-go.yaml"
     "trivy.yaml:trivy.yaml"
 )
 
