@@ -14,7 +14,7 @@ inputs:
     description: "Node.js version for MCP servers (npx); keep aligned with mise.toml node"
     required: false
   uv_version:
-    default: "0.11.28"
+    default: "0.11.29"
     description: "uv version for MCP servers (uvx); keep aligned with mise.toml aqua:astral-sh/uv"
     required: false
 
