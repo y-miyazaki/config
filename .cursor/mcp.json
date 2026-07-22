@@ -6,27 +6,35 @@
       "type": "stdio"
     },
     "context7": {
-      "args": ["-y", "@upstash/context7-mcp@3.2.3"],
+      "args": [
+        "-y",
+        "@upstash/context7-mcp@3.2.3"
+      ],
       "command": "npx",
       "type": "stdio"
     },
     "fetch": {
-      "args": ["mcp-server-fetch==2026.7.10"],
+      "args": [
+        "mcp-server-fetch==2026.7.10"
+      ],
       "command": "uvx",
       "type": "stdio"
     },
     "github": {
+      "type": "stdio",
+      "command": "bash",
       "args": [
         "-lc",
-        "TOKEN=\"${GH_TOKEN:-$GITHUB_TOKEN}\"; exec uvx mcp-compressor==0.31.5 -- https://api.githubcopilot.com/mcp/ -H \"Authorization=Bearer ${TOKEN}\" --auth explicit-headers"
-      ],
-      "command": "bash",
-      "type": "stdio"
+        "TOKEN=\"${GH_TOKEN:-$GITHUB_TOKEN}\"; exec uvx mcp-compressor==0.31.6 -- https://api.githubcopilot.com/mcp/ -H \"Authorization=Bearer ${TOKEN}\" --auth explicit-headers"
+      ]
     },
     "lean-ctx": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "lean-ctx-bin@3.9.12"]
+      "args": [
+        "-y",
+        "lean-ctx-bin@3.9.12"
+      ]
     }
   }
 }

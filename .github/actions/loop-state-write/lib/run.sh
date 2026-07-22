@@ -368,6 +368,91 @@ function validate_required_inputs {
 }
 
 #######################################
+# apply_state_patch: Apply a fixed-mode target update and atomically rewrite STATE_TMP
+#
+# Globals:
+#   STATE_TMP - State JSON temp file
+#   TARGET_KEY - Target key
+#   OUTCOME - Run outcome
+#   REJECT_REASON - Optional rejection reason
+#   OPEN_REJECTIONS - JSON array
+#   SHA - Cursor SHA (advance/pending)
+#   PENDING_PR_NUMBER - Pending PR number (clear_pending/pending/promote)
+#   PENDING_PR_URL - Pending PR URL (pending)
+#   LOOP_NAME - Loop name (pending)
+#
+# Arguments:
+#   $1 - ISO timestamp
+#   $2 - consecutive_failures value
+#   $3 - Mode: advance|clear_pending|metadata|pending|promote
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   Exits 1 on invalid mode
+#
+#######################################
+function apply_state_patch {
+    local now="$1"
+    local consecutive="$2"
+    local mode="$3"
+
+    case "${mode}" in
+        advance | clear_pending | metadata | pending | promote) ;;
+        *)
+            echo "::error::Invalid apply_state_patch mode: ${mode}"
+            exit 1
+            ;;
+    esac
+
+    # shellcheck disable=SC2016  # jq filter; $vars are bound via --arg/--argjson below
+    jq \
+        --arg mode "${mode}" \
+        --arg key "${TARGET_KEY}" \
+        --arg last_run "${now}" \
+        --arg outcome "${OUTCOME}" \
+        --arg last_reject_reason "${REJECT_REASON}" \
+        --arg sha "${SHA:-}" \
+        --arg pending_pr "${PENDING_PR_NUMBER:-0}" \
+        --arg pending_pr_url "${PENDING_PR_URL:-}" \
+        --arg loop_name "${LOOP_NAME:-}" \
+        --arg created_at "${now}" \
+        --argjson pr "${PENDING_PR_NUMBER:--1}" \
+        --argjson consecutive_failures "${consecutive}" \
+        --argjson open_rejections "${OPEN_REJECTIONS}" \
+        '
+        .targets = (.targets // {}) |
+        .targets[$key] = (
+          (.targets[$key] // {})
+          | if $mode == "advance" then
+              .last_sha = $sha | del(.pending)
+            elif $mode == "clear_pending" then
+              if (.pending.pr // -1) != $pr then . else del(.pending) end
+            elif $mode == "pending" then
+              .pending = {
+                sha: $sha,
+                pr: ($pending_pr | tonumber),
+                pr_url: (if $pending_pr_url != "" then $pending_pr_url else null end),
+                loop_name: (if $loop_name != "" then $loop_name else null end),
+                created_at: $created_at
+              }
+            elif $mode == "promote" then
+              if (.pending.pr // -1) != $pr then . else .last_sha = .pending.sha | del(.pending) end
+            else
+              .
+            end
+          | .last_run = $last_run
+          | .outcome = $outcome
+          | .consecutive_failures = $consecutive_failures
+          | .open_rejections = $open_rejections
+          | if $last_reject_reason != "" then .last_reject_reason = $last_reject_reason else . end
+        )
+        ' "${STATE_TMP}" > "${STATE_TMP}.next"
+    mv "${STATE_TMP}.next" "${STATE_TMP}"
+}
+
+#######################################
 # write_state_advance: Set last_sha and clear pending
 #
 # Globals:
@@ -393,28 +478,7 @@ function write_state_advance {
     local now="$1"
     local consecutive="$2"
 
-    jq \
-        --arg key "${TARGET_KEY}" \
-        --arg sha "${SHA}" \
-        --arg last_run "${now}" \
-        --arg outcome "${OUTCOME}" \
-        --arg last_reject_reason "${REJECT_REASON}" \
-        --argjson consecutive_failures "${consecutive}" \
-        --argjson open_rejections "${OPEN_REJECTIONS}" \
-        '
-        .targets = (.targets // {}) |
-        .targets[$key] = (
-          (.targets[$key] // {})
-          | .last_sha = $sha
-          | del(.pending)
-          | .last_run = $last_run
-          | .outcome = $outcome
-          | .consecutive_failures = $consecutive_failures
-          | .open_rejections = $open_rejections
-          | if $last_reject_reason != "" then .last_reject_reason = $last_reject_reason else . end
-        )
-        ' "${STATE_TMP}" > "${STATE_TMP}.next"
-    mv "${STATE_TMP}.next" "${STATE_TMP}"
+    apply_state_patch "${now}" "${consecutive}" "advance"
 }
 
 #######################################
@@ -423,17 +487,14 @@ function write_state_advance {
 # Globals:
 #   STATE_TMP - State JSON temp file
 #   TARGET_KEY - Target key
-#   PENDING_PR_NUMBER - PR number to match
-#   OUTCOME - Run outcome
-#   REJECT_REASON - Optional rejection reason
-#   OPEN_REJECTIONS - JSON array
+#   PENDING_PR_NUMBER - Pending PR number that must match
 #
 # Arguments:
 #   $1 - ISO timestamp
 #   $2 - consecutive_failures value
 #
 # Outputs:
-#   None
+#   Skip message to stdout when pending PR does not match
 #
 # Returns:
 #   Exits 0 when no matching pending entry exists
@@ -448,40 +509,14 @@ function write_state_clear_pending {
         echo "No matching pending entry for ${TARGET_KEY} PR #${PENDING_PR_NUMBER}; skipping clear."
         exit 0
     fi
-    jq \
-        --arg key "${TARGET_KEY}" \
-        --argjson pr "${PENDING_PR_NUMBER}" \
-        --arg last_run "${now}" \
-        --arg outcome "${OUTCOME}" \
-        --arg last_reject_reason "${REJECT_REASON}" \
-        --argjson consecutive_failures "${consecutive}" \
-        --argjson open_rejections "${OPEN_REJECTIONS}" \
-        '
-        .targets = (.targets // {}) |
-        .targets[$key] = (
-          (.targets[$key] // {})
-          | if (.pending.pr // -1) != $pr then . else
-              del(.pending)
-              | .last_run = $last_run
-              | .outcome = $outcome
-              | .consecutive_failures = $consecutive_failures
-              | .open_rejections = $open_rejections
-              | if $last_reject_reason != "" then .last_reject_reason = $last_reject_reason else . end
-            end
-        )
-        ' "${STATE_TMP}" > "${STATE_TMP}.next"
-    mv "${STATE_TMP}.next" "${STATE_TMP}"
+    apply_state_patch "${now}" "${consecutive}" "clear_pending"
 }
 
 #######################################
 # write_state_metadata: Update outcome metadata without changing last_sha
 #
 # Globals:
-#   STATE_TMP - State JSON temp file
-#   TARGET_KEY - Target key
-#   OUTCOME - Run outcome
-#   REJECT_REASON - Optional rejection reason
-#   OPEN_REJECTIONS - JSON array
+#   None beyond apply_state_patch
 #
 # Arguments:
 #   $1 - ISO timestamp
@@ -498,40 +533,14 @@ function write_state_metadata {
     local now="$1"
     local consecutive="$2"
 
-    jq \
-        --arg key "${TARGET_KEY}" \
-        --arg last_run "${now}" \
-        --arg outcome "${OUTCOME}" \
-        --arg last_reject_reason "${REJECT_REASON}" \
-        --argjson consecutive_failures "${consecutive}" \
-        --argjson open_rejections "${OPEN_REJECTIONS}" \
-        '
-        .targets = (.targets // {}) |
-        .targets[$key] = (
-          (.targets[$key] // {})
-          | .last_run = $last_run
-          | .outcome = $outcome
-          | .consecutive_failures = $consecutive_failures
-          | .open_rejections = $open_rejections
-          | if $last_reject_reason != "" then .last_reject_reason = $last_reject_reason else . end
-        )
-        ' "${STATE_TMP}" > "${STATE_TMP}.next"
-    mv "${STATE_TMP}.next" "${STATE_TMP}"
+    apply_state_patch "${now}" "${consecutive}" "metadata"
 }
 
 #######################################
 # write_state_pending: Record pending cursor without advancing last_sha
 #
 # Globals:
-#   STATE_TMP - State JSON temp file
-#   TARGET_KEY - Target key
-#   SHA - Pending cursor SHA
-#   PENDING_PR_NUMBER - Fix PR number
-#   PENDING_PR_URL - Fix PR URL
-#   LOOP_NAME - Loop name for pending metadata
-#   OUTCOME - Run outcome
-#   REJECT_REASON - Optional rejection reason
-#   OPEN_REJECTIONS - JSON array
+#   SHA, PENDING_PR_NUMBER, PENDING_PR_URL, LOOP_NAME
 #
 # Arguments:
 #   $1 - ISO timestamp
@@ -548,37 +557,7 @@ function write_state_pending {
     local now="$1"
     local consecutive="$2"
 
-    jq \
-        --arg key "${TARGET_KEY}" \
-        --arg sha "${SHA}" \
-        --arg last_run "${now}" \
-        --arg outcome "${OUTCOME}" \
-        --arg last_reject_reason "${REJECT_REASON}" \
-        --arg pending_pr "${PENDING_PR_NUMBER}" \
-        --arg pending_pr_url "${PENDING_PR_URL}" \
-        --arg loop_name "${LOOP_NAME}" \
-        --arg created_at "${now}" \
-        --argjson consecutive_failures "${consecutive}" \
-        --argjson open_rejections "${OPEN_REJECTIONS}" \
-        '
-        .targets = (.targets // {}) |
-        .targets[$key] = (
-          (.targets[$key] // {})
-          | .pending = {
-              sha: $sha,
-              pr: ($pending_pr | tonumber),
-              pr_url: (if $pending_pr_url != "" then $pending_pr_url else null end),
-              loop_name: (if $loop_name != "" then $loop_name else null end),
-              created_at: $created_at
-            }
-          | .last_run = $last_run
-          | .outcome = $outcome
-          | .consecutive_failures = $consecutive_failures
-          | .open_rejections = $open_rejections
-          | if $last_reject_reason != "" then .last_reject_reason = $last_reject_reason else . end
-        )
-        ' "${STATE_TMP}" > "${STATE_TMP}.next"
-    mv "${STATE_TMP}.next" "${STATE_TMP}"
+    apply_state_patch "${now}" "${consecutive}" "pending"
 }
 
 #######################################
@@ -587,17 +566,14 @@ function write_state_pending {
 # Globals:
 #   STATE_TMP - State JSON temp file
 #   TARGET_KEY - Target key
-#   PENDING_PR_NUMBER - PR number to match
-#   OUTCOME - Run outcome
-#   REJECT_REASON - Optional rejection reason
-#   OPEN_REJECTIONS - JSON array
+#   PENDING_PR_NUMBER - Pending PR number that must match
 #
 # Arguments:
 #   $1 - ISO timestamp
 #   $2 - consecutive_failures value
 #
 # Outputs:
-#   None
+#   Skip message to stdout when pending PR does not match
 #
 # Returns:
 #   Exits 0 when no matching pending entry exists
@@ -612,33 +588,9 @@ function write_state_promote {
         echo "No matching pending entry for ${TARGET_KEY} PR #${PENDING_PR_NUMBER}; skipping promote."
         exit 0
     fi
-    jq \
-        --arg key "${TARGET_KEY}" \
-        --argjson pr "${PENDING_PR_NUMBER}" \
-        --arg last_run "${now}" \
-        --arg outcome "${OUTCOME}" \
-        --arg last_reject_reason "${REJECT_REASON}" \
-        --argjson consecutive_failures "${consecutive}" \
-        --argjson open_rejections "${OPEN_REJECTIONS}" \
-        '
-        .targets = (.targets // {}) |
-        .targets[$key] = (
-          (.targets[$key] // {})
-          | if (.pending.pr // -1) != $pr then . else
-              .last_sha = .pending.sha
-              | del(.pending)
-              | .last_run = $last_run
-              | .outcome = $outcome
-              | .consecutive_failures = $consecutive_failures
-              | .open_rejections = $open_rejections
-              | if $last_reject_reason != "" then .last_reject_reason = $last_reject_reason else . end
-            end
-        )
-        ' "${STATE_TMP}" > "${STATE_TMP}.next"
-    mv "${STATE_TMP}.next" "${STATE_TMP}"
+    apply_state_patch "${now}" "${consecutive}" "promote"
 }
 
-#######################################
 # write_target_state: Dispatch state write by state_write_mode
 #
 # Globals:

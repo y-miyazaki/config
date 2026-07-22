@@ -1,4 +1,5 @@
 #!/bin/bash
+#######################################
 # Simple devcontainer initialization script
 # Responsibilities:
 #  - Adjust ownership for common config directories (e.g., .aws, .gitconfig, .local, .ssh)
@@ -9,6 +10,9 @@
 #  - Install pre-commit hooks (if pre-commit is available)
 #  - Create Terraform plugin cache directory
 #  - Set up GitHub credential helper for repositories with GitHub remotes (if gh is available)
+#######################################
+
+# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
 
 # Workspace root (resolved from devcontainer env; falls back to /workspace)

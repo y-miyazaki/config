@@ -62,10 +62,10 @@ declare -a AFFECTED_DOCS=()
 #######################################
 # show_usage: Display script usage information
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -103,12 +103,12 @@ EOF
 #######################################
 # parse_arguments: Parse command line arguments
 #
-# Arguments:
-#   $@ - Command line arguments
-#
 # Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Git ref for range scope
+#
+# Arguments:
+#   $@ - Command line arguments
 #
 # Outputs:
 #   None
@@ -180,12 +180,12 @@ function parse_arguments {
 #
 # Append paths from DOCS_TRIAGE_EXTRA_FILES when each file exists.
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   AFFECTED_DOCS - Output array of candidate document paths
 #   DOCS_TRIAGE_EXTRA_FILES - Comma-separated repository-relative paths (caller env)
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -214,11 +214,11 @@ function append_docs_from_extra_files {
 #
 # Find repository markdown files excluding generated and hidden directories.
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   AFFECTED_DOCS - Output array of candidate document paths
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -247,11 +247,11 @@ function append_docs_from_find {
 #
 # Resolve caller-configured glob patterns into existing documentation paths.
 #
-# Arguments:
-#   $1 - Comma-separated glob patterns (repository-relative)
-#
 # Globals:
 #   AFFECTED_DOCS - Output array of candidate document paths
+#
+# Arguments:
+#   $1 - Comma-separated glob patterns (repository-relative)
 #
 # Outputs:
 #   None
@@ -286,11 +286,11 @@ function append_docs_from_globs {
 #
 # Append a repository-relative path when the file exists and is not duplicated.
 #
-# Arguments:
-#   $1 - Repository-relative file path
-#
 # Globals:
 #   AFFECTED_DOCS - Output array of candidate document paths
+#
+# Arguments:
+#   $1 - Repository-relative file path
 #
 # Outputs:
 #   None
@@ -323,13 +323,13 @@ function append_unique_doc {
 #
 # Root markdown, docs tree, nested README files, and site config.
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   AFFECTED_DOCS - Output array of candidate document paths
 #   DOCS_UPDATER_DOCS_ROOT - Documentation tree root
 #   DOCS_UPDATER_SITE_CONFIG - Site navigation config path
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -371,15 +371,15 @@ function append_docs_for_hook_path {
 # When non-markdown changes or markdown deletes/renames exist, populate
 # AFFECTED_DOCS from loop globs, generic markdown scan, or hook defaults.
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   CHANGED_FILES - Source of change detection
 #   DELETED_FILES - Deleted files
 #   RENAMED_FILES - Renamed files
 #   AFFECTED_DOCS - Output array of candidate document paths
 #   DOCS_TRIAGE_DOC_GLOBS - Comma-separated glob patterns (caller env)
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -451,9 +451,6 @@ function collect_affected_docs {
 #######################################
 # collect_changes: Collect changed files from git
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Range start ref
@@ -461,6 +458,9 @@ function collect_affected_docs {
 #   CHANGED_FILES - Array of changed file paths
 #   RENAMED_FILES - Array of old->new rename pairs
 #   DELETED_FILES - Array of deleted file paths
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -533,9 +533,6 @@ function collect_changes {
 #######################################
 # output_json: Print structured JSON result using lib/json.sh helpers
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Range start ref
@@ -544,6 +541,9 @@ function collect_changes {
 #   DELETED_FILES - Array of deleted file paths
 #   RENAMED_FILES - Array of old->new rename pairs
 #   AFFECTED_DOCS - Array of candidate document paths
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -583,11 +583,11 @@ function output_json {
 #######################################
 # trim_whitespace: Remove leading and trailing whitespace from a string
 #
-# Arguments:
-#   $1 - Input string
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Input string
 #
 # Outputs:
 #   Trimmed string on stdout
@@ -609,14 +609,14 @@ function trim_whitespace {
 #######################################
 # configure_detect_environment: Normalize domain env into globals once at startup
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   DOCS_UPDATER_DOCS_ROOT - Documentation tree root
 #   DOCS_UPDATER_SITE_CONFIG - Site navigation config path
 #   DOCS_TRIAGE_DOC_GLOBS - Comma-separated glob patterns for candidate doc discovery
 #   DOCS_TRIAGE_EXTRA_FILES - Comma-separated non-markdown documentation config paths
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -640,11 +640,11 @@ function configure_detect_environment {
 #######################################
 # main: Entry point
 #
-# Arguments:
-#   $@ - Command line arguments
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - Command line arguments
 #
 # Outputs:
 #   None

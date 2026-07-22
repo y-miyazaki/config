@@ -21,6 +21,9 @@ set -euo pipefail
 umask 027
 export LC_ALL=C.UTF-8
 
+#######################################
+# Global variables
+#######################################
 # Source repository raw URL base
 readonly REPO_RAW_BASE="https://raw.githubusercontent.com/y-miyazaki/config/main"
 

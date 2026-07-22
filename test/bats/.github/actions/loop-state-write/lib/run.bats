@@ -12,6 +12,10 @@
 # - pending mode: record pending without advancing last_sha (finalize open_pr path)
 # - promote mode: pending.sha → last_sha; clear pending
 # - clear_pending mode: clear pending only; last_sha unchanged
+# - apply_state_patch updates state via write_state_advance helper
+# - write_state_pending records pending without advancing last_sha
+# - write_state_promote promotes pending sha to last_sha
+# - write_state_clear_pending clears pending without advancing last_sha
 # - refuses PR fallback for advance + pr-created when push is blocked
 # - skip_state_pr warns when direct push is blocked
 
@@ -83,64 +87,102 @@ EOF
     export PATH="${MOCK_BIN}:${PATH}"
 }
 
+state_write_source_helpers() {
+    # shellcheck disable=SC1090,SC1091
+    source "${RUN_SCRIPT}"
+}
+
 setup() {
     state_write_git_setup
 }
 
-@test "run.sh rejects missing target_key" {
-    state_write_run \
-        GH_TOKEN='test-token' \
-        STATE_FILE='.loop/state.json' \
-        BASE_BRANCH='main' \
-        TARGET_KEY='' \
-        WRITE_TARGET_STATE='false' \
-        GITHUB_REPOSITORY='test/repo' \
-        GITHUB_RUN_ID='1' \
-        GITHUB_RUN_ATTEMPT='1'
-    [ "$status" -eq 1 ]
-    [[ $output == *"target_key is required"* ]]
-}
+@test "apply_state_patch advances last_sha and clears pending via write_state_advance" {
+    TARGET_KEY='integration:main'
+    SHA='newsha111111'
+    OUTCOME='merged'
+    REJECT_REASON=''
+    OPEN_REJECTIONS='[]'
 
-@test "run.sh rejects invalid state push branch" {
-    state_write_run \
-        GH_TOKEN='test-token' \
-        STATE_FILE='.loop/state.json' \
-        BASE_BRANCH='main' \
-        STATE_PUSH_BRANCH='bad branch' \
-        TARGET_KEY='integration:main' \
-        WRITE_TARGET_STATE='false' \
-        GITHUB_REPOSITORY='test/repo' \
-        GITHUB_RUN_ID='1' \
-        GITHUB_RUN_ATTEMPT='1'
-    [ "$status" -eq 1 ]
-    [[ $output == *"Invalid state read branch"* ]]
-}
+    state_write_source_helpers
+    STATE_TMP="$(mktemp)"
+    printf '%s\n' '{"targets":{"integration:main":{"last_sha":"oldsha000000","pending":{"pr":1,"sha":"pendingsha"}}}}' \
+        > "${STATE_TMP}"
 
-@test "run.sh writes target state and resets consecutive_failures on pr-created" {
+    write_state_advance "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" 0
+
+    run jq -e \
+        '.targets["integration:main"].last_sha == "newsha111111"
+         and (.targets["integration:main"] | has("pending") | not)
+         and .targets["integration:main"].outcome == "merged"' \
+        "${STATE_TMP}"
+    [ "$status" -eq 0 ]
+    rm -f "${STATE_TMP}"
+}
+@test "run.sh clear_pending mode clears pending without advancing last_sha" {
+    printf '%s\n' '{"targets":{"integration:main":{"last_sha":"oldsha000000","pending":{"sha":"newsha111111","pr":99}}}}' \
+        > "${STATE_WRITE_WORK}/.loop/state.json"
+    state_write_seed
+
     state_write_run \
         GH_TOKEN='test-token' \
         STATE_FILE='.loop/state.json' \
         BASE_BRANCH='main' \
         TARGET_KEY='integration:main' \
         WRITE_TARGET_STATE='true' \
-        OUTCOME='pr-created' \
-        SHA='abcdefghi' \
+        STATE_WRITE_MODE='clear_pending' \
+        OUTCOME='pr-closed' \
+        PENDING_PR_NUMBER='99' \
         OPEN_REJECTIONS='[]' \
         GITHUB_REPOSITORY='test/repo' \
-        GITHUB_RUN_ID='1' \
+        GITHUB_RUN_ID='10' \
         GITHUB_RUN_ATTEMPT='1'
     [ "$status" -eq 0 ]
-    [[ $output == *"State pushed to main"* ]]
     run jq -e \
-        --arg sha 'abcdefghi' \
-        '.targets["integration:main"].last_sha == $sha
-         and .targets["integration:main"].outcome == "pr-created"
-         and .targets["integration:main"].consecutive_failures == 0
-         and .targets["integration:main"].open_rejections == []' \
+        '.targets["integration:main"].last_sha == "oldsha000000"
+         and (.targets["integration:main"] | has("pending") | not)
+         and .targets["integration:main"].outcome == "pr-closed"' \
         "${STATE_WRITE_WORK}/.loop/state.json"
     [ "$status" -eq 0 ]
 }
+@test "run.sh clear_pending mode no-ops when pending pr does not match" {
+    printf '%s\n' '{"targets":{"integration:main":{"last_sha":"oldsha000000","pending":{"sha":"newsha111111","pr":42}}}}' \
+        > "${STATE_WRITE_WORK}/.loop/state.json"
+    state_write_seed
 
+    state_write_run \
+        GH_TOKEN='test-token' \
+        STATE_FILE='.loop/state.json' \
+        BASE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='clear_pending' \
+        OUTCOME='pr-closed' \
+        PENDING_PR_NUMBER='99' \
+        OPEN_REJECTIONS='[]' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='11' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ ${output} == *"No matching pending entry"* ]]
+    run jq -e \
+        '.targets["integration:main"].pending.pr == 42
+         and .targets["integration:main"].last_sha == "oldsha000000"' \
+        "${STATE_WRITE_WORK}/.loop/state.json"
+    [ "$status" -eq 0 ]
+}
+@test "run.sh exits cleanly when state file has no changes" {
+    state_write_run \
+        GH_TOKEN='test-token' \
+        STATE_FILE='.loop/state.json' \
+        BASE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='false' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='6' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ $output == *"No state changes to commit."* ]]
+}
 @test "run.sh increments consecutive_failures on rejected outcome" {
     printf '%s\n' '{"targets":{"integration:main":{"consecutive_failures":2}}}' \
         > "${STATE_WRITE_WORK}/.loop/state.json"
@@ -167,21 +209,6 @@ setup() {
         "${STATE_WRITE_WORK}/.loop/state.json"
     [ "$status" -eq 0 ]
 }
-
-@test "run.sh exits cleanly when state file has no changes" {
-    state_write_run \
-        GH_TOKEN='test-token' \
-        STATE_FILE='.loop/state.json' \
-        BASE_BRANCH='main' \
-        TARGET_KEY='integration:main' \
-        WRITE_TARGET_STATE='false' \
-        GITHUB_REPOSITORY='test/repo' \
-        GITHUB_RUN_ID='6' \
-        GITHUB_RUN_ATTEMPT='1'
-    [ "$status" -eq 0 ]
-    [[ $output == *"No state changes to commit."* ]]
-}
-
 @test "run.sh metadata mode updates outcome without advancing last_sha" {
     printf '%s\n' '{"targets":{"integration:main":{"last_sha":"oldsha000000","consecutive_failures":0}}}' \
         > "${STATE_WRITE_WORK}/.loop/state.json"
@@ -208,7 +235,6 @@ setup() {
         "${STATE_WRITE_WORK}/.loop/state.json"
     [ "$status" -eq 0 ]
 }
-
 @test "run.sh pending mode records pending without advancing last_sha" {
     printf '%s\n' '{"targets":{"integration:main":{"last_sha":"oldsha000000"}}}' \
         > "${STATE_WRITE_WORK}/.loop/state.json"
@@ -238,7 +264,6 @@ setup() {
         "${STATE_WRITE_WORK}/.loop/state.json"
     [ "$status" -eq 0 ]
 }
-
 @test "run.sh promote mode advances last_sha from pending" {
     printf '%s\n' '{"targets":{"integration:main":{"last_sha":"oldsha000000","pending":{"sha":"newsha111111","pr":99}}}}' \
         > "${STATE_WRITE_WORK}/.loop/state.json"
@@ -265,34 +290,6 @@ setup() {
         "${STATE_WRITE_WORK}/.loop/state.json"
     [ "$status" -eq 0 ]
 }
-
-@test "run.sh clear_pending mode clears pending without advancing last_sha" {
-    printf '%s\n' '{"targets":{"integration:main":{"last_sha":"oldsha000000","pending":{"sha":"newsha111111","pr":99}}}}' \
-        > "${STATE_WRITE_WORK}/.loop/state.json"
-    state_write_seed
-
-    state_write_run \
-        GH_TOKEN='test-token' \
-        STATE_FILE='.loop/state.json' \
-        BASE_BRANCH='main' \
-        TARGET_KEY='integration:main' \
-        WRITE_TARGET_STATE='true' \
-        STATE_WRITE_MODE='clear_pending' \
-        OUTCOME='pr-closed' \
-        PENDING_PR_NUMBER='99' \
-        OPEN_REJECTIONS='[]' \
-        GITHUB_REPOSITORY='test/repo' \
-        GITHUB_RUN_ID='10' \
-        GITHUB_RUN_ATTEMPT='1'
-    [ "$status" -eq 0 ]
-    run jq -e \
-        '.targets["integration:main"].last_sha == "oldsha000000"
-         and (.targets["integration:main"] | has("pending") | not)
-         and .targets["integration:main"].outcome == "pr-closed"' \
-        "${STATE_WRITE_WORK}/.loop/state.json"
-    [ "$status" -eq 0 ]
-}
-
 @test "run.sh refuses advance pr-created when direct push is blocked" {
     state_write_block_push
 
@@ -313,7 +310,33 @@ setup() {
     [[ $output == *"state PR fallback refused"* ]]
     [[ $output == *"advance mode with pr-created outcome"* ]]
 }
-
+@test "run.sh rejects invalid state push branch" {
+    state_write_run \
+        GH_TOKEN='test-token' \
+        STATE_FILE='.loop/state.json' \
+        BASE_BRANCH='main' \
+        STATE_PUSH_BRANCH='bad branch' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='false' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='1' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 1 ]
+    [[ $output == *"Invalid state read branch"* ]]
+}
+@test "run.sh rejects missing target_key" {
+    state_write_run \
+        GH_TOKEN='test-token' \
+        STATE_FILE='.loop/state.json' \
+        BASE_BRANCH='main' \
+        TARGET_KEY='' \
+        WRITE_TARGET_STATE='false' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='1' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 1 ]
+    [[ $output == *"target_key is required"* ]]
+}
 @test "run.sh skips state PR fallback when skip_state_pr is true" {
     state_write_block_push
 
@@ -333,30 +356,93 @@ setup() {
     [ "$status" -eq 0 ]
     [[ $output == *"skip_state_pr=true"* ]]
 }
-
-@test "run.sh clear_pending mode no-ops when pending pr does not match" {
-    printf '%s\n' '{"targets":{"integration:main":{"last_sha":"oldsha000000","pending":{"sha":"newsha111111","pr":42}}}}' \
-        > "${STATE_WRITE_WORK}/.loop/state.json"
-    state_write_seed
-
+@test "run.sh writes target state and resets consecutive_failures on pr-created" {
     state_write_run \
         GH_TOKEN='test-token' \
         STATE_FILE='.loop/state.json' \
         BASE_BRANCH='main' \
         TARGET_KEY='integration:main' \
         WRITE_TARGET_STATE='true' \
-        STATE_WRITE_MODE='clear_pending' \
-        OUTCOME='pr-closed' \
-        PENDING_PR_NUMBER='99' \
+        OUTCOME='pr-created' \
+        SHA='abcdefghi' \
         OPEN_REJECTIONS='[]' \
         GITHUB_REPOSITORY='test/repo' \
-        GITHUB_RUN_ID='11' \
+        GITHUB_RUN_ID='1' \
         GITHUB_RUN_ATTEMPT='1'
     [ "$status" -eq 0 ]
-    [[ ${output} == *"No matching pending entry"* ]]
+    [[ $output == *"State pushed to main"* ]]
     run jq -e \
-        '.targets["integration:main"].pending.pr == 42
-         and .targets["integration:main"].last_sha == "oldsha000000"' \
+        --arg sha 'abcdefghi' \
+        '.targets["integration:main"].last_sha == $sha
+         and .targets["integration:main"].outcome == "pr-created"
+         and .targets["integration:main"].consecutive_failures == 0
+         and .targets["integration:main"].open_rejections == []' \
         "${STATE_WRITE_WORK}/.loop/state.json"
     [ "$status" -eq 0 ]
+}
+@test "write_state_clear_pending clears pending without advancing last_sha" {
+    TARGET_KEY='integration:main'
+    OUTCOME='pr-closed'
+    REJECT_REASON=''
+    OPEN_REJECTIONS='[]'
+    PENDING_PR_NUMBER='42'
+
+    state_write_source_helpers
+    STATE_TMP="$(mktemp)"
+    printf '%s\n' '{"targets":{"integration:main":{"last_sha":"oldsha000000","pending":{"pr":42,"sha":"pendingsha111"}}}}' \
+        > "${STATE_TMP}"
+
+    write_state_clear_pending "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" 0
+
+    run jq -e \
+        '.targets["integration:main"].last_sha == "oldsha000000"
+         and (.targets["integration:main"] | has("pending") | not)' \
+        "${STATE_TMP}"
+    [ "$status" -eq 0 ]
+    rm -f "${STATE_TMP}"
+}
+@test "write_state_pending records pending without advancing last_sha" {
+    TARGET_KEY='integration:main'
+    SHA='pendingsha111'
+    OUTCOME='open_pr'
+    REJECT_REASON=''
+    OPEN_REJECTIONS='[]'
+    PENDING_PR_NUMBER='42'
+    PENDING_PR_URL='https://github.com/test/repo/pull/42'
+    LOOP_NAME='loop-ci-sweeper'
+
+    state_write_source_helpers
+    STATE_TMP="$(mktemp)"
+    printf '%s\n' '{"targets":{"integration:main":{"last_sha":"oldsha000000"}}}' > "${STATE_TMP}"
+
+    write_state_pending "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" 0
+
+    run jq -e \
+        '.targets["integration:main"].last_sha == "oldsha000000"
+         and .targets["integration:main"].pending.sha == "pendingsha111"
+         and .targets["integration:main"].pending.pr == 42' \
+        "${STATE_TMP}"
+    [ "$status" -eq 0 ]
+    rm -f "${STATE_TMP}"
+}
+@test "write_state_promote promotes pending sha to last_sha" {
+    TARGET_KEY='integration:main'
+    OUTCOME='merged'
+    REJECT_REASON=''
+    OPEN_REJECTIONS='[]'
+    PENDING_PR_NUMBER='42'
+
+    state_write_source_helpers
+    STATE_TMP="$(mktemp)"
+    printf '%s\n' '{"targets":{"integration:main":{"last_sha":"oldsha000000","pending":{"pr":42,"sha":"promotedsha111"}}}}' \
+        > "${STATE_TMP}"
+
+    write_state_promote "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" 0
+
+    run jq -e \
+        '.targets["integration:main"].last_sha == "promotedsha111"
+         and (.targets["integration:main"] | has("pending") | not)' \
+        "${STATE_TMP}"
+    [ "$status" -eq 0 ]
+    rm -f "${STATE_TMP}"
 }

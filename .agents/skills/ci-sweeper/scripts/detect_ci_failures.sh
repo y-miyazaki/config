@@ -67,10 +67,10 @@ declare -a IGNORED_JSON=()
 #######################################
 # show_usage: Display script usage information
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -107,12 +107,12 @@ EOF
 #######################################
 # parse_arguments: Parse command line arguments
 #
-# Arguments:
-#   $@ - Command line arguments
-#
 # Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Git ref for range scope
+#
+# Arguments:
+#   $@ - Command line arguments
 #
 # Outputs:
 #   None
@@ -162,11 +162,11 @@ function parse_arguments {
 #######################################
 # output_error: Print structured JSON error and exit
 #
-# Arguments:
-#   $1 - Error message
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Error message
 #
 # Outputs:
 #   None
@@ -195,11 +195,11 @@ function output_error {
 #######################################
 # validate_ledger_file: Ensure ledger path stays under .loop/
 #
-# Arguments:
-#   $1 - Ledger file path
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Ledger file path
 #
 # Outputs:
 #   None
@@ -225,10 +225,10 @@ function validate_ledger_file {
 #######################################
 # scan_branch_name: Resolve branch to scan from checkout context
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -252,11 +252,11 @@ function scan_branch_name {
 #######################################
 # is_definition_error_conclusion: Whether the run failed before jobs started
 #
-# Arguments:
-#   $1 - Workflow run conclusion
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Workflow run conclusion
 #
 # Outputs:
 #   None
@@ -276,10 +276,10 @@ function is_definition_error_conclusion {
 #######################################
 # gh_available: Check whether gh and jq are available
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -299,11 +299,11 @@ function gh_available {
 #######################################
 # commit_is_relevant: Check whether a commit is within the since range
 #
-# Arguments:
-#   $1 - Commit SHA
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Commit SHA
 #
 # Outputs:
 #   None
@@ -332,11 +332,11 @@ function commit_is_relevant {
 #######################################
 # ledger_outcome_for_run: Read ledger outcome for a workflow run
 #
-# Arguments:
-#   $1 - Workflow run ID
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Workflow run ID
 #
 # Outputs:
 #   Outcome string on stdout, empty when not ledgered
@@ -359,11 +359,11 @@ function ledger_outcome_for_run {
 #######################################
 # ledger_reject_count_for_run: Read reject count for a workflow run
 #
-# Arguments:
-#   $1 - Workflow run ID
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Workflow run ID
 #
 # Outputs:
 #   Reject count on stdout
@@ -387,11 +387,11 @@ function ledger_reject_count_for_run {
 #######################################
 # normalize_reject_retry_policy: Normalize policy name and aliases
 #
-# Arguments:
-#   $1 - Policy value
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Policy value
 #
 # Outputs:
 #   Normalized policy on stdout
@@ -428,11 +428,11 @@ function normalize_reject_retry_policy {
 #######################################
 # run_head_branch_for_run: Resolve head branch for a workflow run ID
 #
-# Arguments:
-#   $1 - Workflow run ID
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Workflow run ID
 #
 # Outputs:
 #   Head branch name on stdout, empty when unavailable
@@ -461,11 +461,11 @@ function run_head_branch_for_run {
 #######################################
 # should_skip_processed_run: Decide whether a run was already processed per policy
 #
-# Arguments:
-#   $1 - Workflow run ID
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Workflow run ID
 #
 # Outputs:
 #   None
@@ -512,13 +512,13 @@ function should_skip_processed_run {
 #######################################
 # log_ci_sweeper_notice: Emit a GitHub Actions notice for ci-sweeper detect diagnostics
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Stage name
 #   $2 - Scope / subject
 #   $3 - Detail text
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None (writes to stderr so stdout JSON/excerpts stay clean)
@@ -539,13 +539,13 @@ function log_ci_sweeper_notice {
 #######################################
 # log_ci_sweeper_warning: Emit a GitHub Actions warning for ci-sweeper detect diagnostics
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Stage name
 #   $2 - Scope / subject
 #   $3 - Detail text
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -566,11 +566,11 @@ function log_ci_sweeper_warning {
 #######################################
 # classify_failure_type: Classify failure from log excerpt heuristics
 #
-# Arguments:
-#   $1 - Log excerpt
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Log excerpt
 #
 # Outputs:
 #   Failure type on stdout (infra, env, flake, regression)
@@ -599,10 +599,10 @@ function classify_failure_type {
 #######################################
 # sanitize_log_excerpt: Redact likely secrets from CI log text
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -628,11 +628,11 @@ function sanitize_log_excerpt {
 #######################################
 # fetch_failed_jobs: Fetch failed jobs for a workflow run
 #
-# Arguments:
-#   $1 - Workflow run ID
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Workflow run ID
 #
 # Outputs:
 #   JSON lines for failed jobs on stdout
@@ -654,12 +654,12 @@ function fetch_failed_jobs {
 #######################################
 # fetch_log_excerpt: Fetch truncated failed log excerpt for a job
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Workflow run ID
 #   $2 - Job name
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Log excerpt on stdout
@@ -709,12 +709,12 @@ function fetch_log_excerpt {
 #######################################
 # fetch_definition_error_excerpt: Build context for startup_failure runs
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Workflow run ID
 #   $2 - Workflow run conclusion
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   Log excerpt on stdout
@@ -740,11 +740,11 @@ function fetch_definition_error_excerpt {
 #######################################
 # failure_object_json: Build one failure object as JSON
 #
-# Arguments:
-#   $1-$8 - workflow_name, run_id, head_sha, head_branch, run_url, job_name, failure_type, log_excerpt
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1-$8 - workflow_name, run_id, head_sha, head_branch, run_url, job_name, failure_type, log_excerpt
 #
 # Outputs:
 #   JSON object to stdout
@@ -786,11 +786,11 @@ EOF
 #######################################
 # append_failure: Append one failure object to FAILURES_JSON
 #
-# Arguments:
-#   $1-$8 - workflow_name, run_id, head_sha, head_branch, run_url, job_name, failure_type, log_excerpt
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1-$8 - workflow_name, run_id, head_sha, head_branch, run_url, job_name, failure_type, log_excerpt
 #
 # Outputs:
 #   None
@@ -819,11 +819,11 @@ function append_failure {
 #######################################
 # ignored_object_json: Build one ignored entry as JSON
 #
-# Arguments:
-#   $1-$6 - workflow_name, run_id, head_branch, job_name, failure_type, reason
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1-$6 - workflow_name, run_id, head_branch, job_name, failure_type, reason
 #
 # Outputs:
 #   JSON object to stdout
@@ -855,16 +855,16 @@ EOF
 #######################################
 # append_ignored: Append one ignored entry to IGNORED_JSON
 #
-# Arguments:
-#   $1-$6 - workflow_name, run_id, head_branch, job_name, failure_type, reason
-#
 # Globals:
 #   None
 #
-# Returns:
-#   None
+# Arguments:
+#   $1-$6 - workflow_name, run_id, head_branch, job_name, failure_type, reason
 #
 # Outputs:
+#   None
+#
+# Returns:
 #   None
 #
 #######################################
@@ -885,12 +885,12 @@ function append_ignored {
 #######################################
 # collect_failures_for_run: Collect failures from one workflow run
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1-$5 - workflow_name, run_id, head_sha, head_branch, run_url
 #   $6    - Workflow run conclusion (optional; fetched when empty)
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -959,10 +959,10 @@ function collect_failures_for_run {
 #######################################
 # collect_from_workflow_run_event: Collect failures from workflow_run event env context
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -1019,10 +1019,10 @@ function collect_from_workflow_run_event {
 #######################################
 # collect_recent_failures: Collect recent failed runs from the current scan branch
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -1062,11 +1062,11 @@ function collect_recent_failures {
 #######################################
 # failures_array_json: Join failure objects into a JSON array string
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   FAILURES_JSON - Source failure objects
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   JSON array string to stdout
@@ -1097,10 +1097,10 @@ function failures_array_json {
 #######################################
 # ignored_array_json: Join ignored objects into a JSON array string
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -1129,10 +1129,10 @@ function ignored_array_json {
 #######################################
 # output_json: Print structured JSON result using lib/json.sh helpers
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -1169,15 +1169,15 @@ function output_json {
 #######################################
 # configure_detect_environment: Normalize domain env into globals once at startup
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   DEFAULT_BRANCH - Fallback branch when checkout context is unavailable
 #   LEDGER_FILE - Path to run ledger JSON
 #   SCAN_BRANCH_RUN_LIMIT - Max failed runs to scan per branch
 #   REJECT_RETRY_POLICY - block | retry | limited
 #   REJECT_MAX_RETRIES - Max REJECT retries when policy is limited
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -1201,11 +1201,11 @@ function configure_detect_environment {
 #######################################
 # main: Entry point
 #
-# Arguments:
-#   $@ - Command line arguments
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - Command line arguments
 #
 # Outputs:
 #   None

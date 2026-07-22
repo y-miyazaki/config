@@ -71,10 +71,10 @@ PREVIOUS_REPORT=""
 #######################################
 # show_usage: Display script usage information
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -112,12 +112,12 @@ EOF
 #######################################
 # parse_arguments: Parse command line arguments
 #
-# Arguments:
-#   $@ - Command line arguments
-#
 # Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Git ref for range scope
+#
+# Arguments:
+#   $@ - Command line arguments
 #
 # Outputs:
 #   Calls output_error on invalid input
@@ -171,15 +171,15 @@ source "${SCRIPT_DIR}/detect_report_tech_debt_sensors.sh"
 #######################################
 # output_error: Print structured JSON error and exit
 #
-# Arguments:
-#   $1 - Error message
-#
 # Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Git ref for range scope
 #   REPORT_FILE - Target report path
 #   PREVIOUS_REPORT - Latest prior report path
 #   WARNINGS - Warning messages
+#
+# Arguments:
+#   $1 - Error message
 #
 # Outputs:
 #   None
@@ -215,9 +215,6 @@ function output_error {
 #######################################
 # output_json: Print structured JSON result using lib/json.sh helpers
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Git ref for range scope
@@ -226,6 +223,9 @@ function output_error {
 #   SIGNALS_JSON - Detected signal objects
 #   HOTSPOTS_JSON - Detected hotspot objects
 #   WARNINGS - Warning messages
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -268,9 +268,6 @@ function output_json {
 #######################################
 # configure_detect_environment: Normalize domain env into globals once at startup
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   REPORT_TECH_DEBT_DIR - Report output directory
 #   REPORT_TECH_DEBT_DATE_FORMAT - UTC strftime for report basename
@@ -278,6 +275,9 @@ function output_json {
 #   REPORT_TECH_DEBT_LEGACY_SEARCH_DIRS - Comma-separated prior-report search roots
 #   REPORT_TECH_DEBT_PREVIOUS_GLOB - Glob for prior report files under search dirs
 #   REPO_PATHS_EXTRA_PRUNES - Set when unset to parent of REPORT_TECH_DEBT_DIR
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -305,12 +305,12 @@ function configure_detect_environment {
 #######################################
 # append_report_search_dirs_from_csv: Append unique repository-relative dirs from CSV
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Name reference to output directory array
 #   $2 - Comma-separated repository-relative directory paths
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   None
@@ -348,12 +348,12 @@ function append_report_search_dirs_from_csv {
 #######################################
 # resolve_previous_report: Set PREVIOUS_REPORT to latest dated report before today
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   REPORT_FILE - Today's target report path (excluded from selection)
 #   PREVIOUS_REPORT - Latest prior report path (set by this function; empty when none)
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -399,11 +399,11 @@ function resolve_previous_report {
 #######################################
 # resolve_report_file: Set REPORT_FILE to today's UTC-dated report path
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   REPORT_FILE - Target report path (set by this function)
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -440,11 +440,11 @@ function resolve_report_file {
 #######################################
 # signals_array_json: Join signal objects into a JSON array string
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   SIGNALS_JSON - Source signal objects
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   JSON array string on stdout
@@ -477,11 +477,11 @@ function signals_array_json {
 #######################################
 # main: Entry point
 #
-# Arguments:
-#   $@ - Command line arguments
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - Command line arguments
 #
 # Outputs:
 #   None

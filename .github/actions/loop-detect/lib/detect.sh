@@ -231,120 +231,140 @@ function apply_scoped_head_filter {
         "integration=${#INTEGRATION_BRANCHES[@]} pull_request=${#OPEN_PRS_JSON[@]}"
 }
 
-#######################################
-# append_integration_candidate: Scan one integration branch
+############################################
+# build_integration_target_json: Build target JSON for integration mode
 #
 # Globals:
-#   CANDIDATES_JSON - Appended when actionable work is found
-#   STATE_FILE, BASE_BRANCH, DETECT_SCRIPT, SKILL_NAME, LEVEL, ALLOWLIST
-#   PROMPT_INSTRUCTIONS, LOOP_FINALIZE_INTEGRATION
+#   None
 #
 # Arguments:
-#   $1 - Branch name
+#   $1 - target_key
+#   $2 - branch name
+#   $3 - current SHA
+#   $4 - finalize action
 #
 # Outputs:
-#   None
+#   Target JSON to stdout
 #
 # Returns:
-#   None
+#   0 on success
 #
 #######################################
-function append_integration_candidate {
-    local branch="$1"
-    local target_key="integration:${branch}"
-    local target_state last_sha current_sha detect_result verifier_context prompt_text open_prompt consecutive
-    local target_json candidate
+function build_integration_target_json {
+    local target_key="$1"
+    local branch="$2"
+    local current_sha="$3"
+    local finalize="$4"
 
-    checkout_context "${branch}" || return 0
-
-    target_state="$(read_target_state "${STATE_FILE}" "${target_key}" "${BASE_BRANCH}")"
-    consecutive="$(target_consecutive_failures "${target_state}")"
-    if target_circuit_breaker_open "${consecutive}"; then
-        echo "::warning::Circuit breaker open for ${target_key}"
-        CIRCUIT_BREAKER_BLOCKED=$((CIRCUIT_BREAKER_BLOCKED + 1))
-        return 0
-    fi
-
-    if target_pending_blocks_detect "${target_state}"; then
-        pending_pr=$(jq -r '.pending.pr // empty' <<< "${target_state}")
-        echo "::warning::Pending PR #${pending_pr} blocks detect for ${target_key}"
-        PENDING_PR_BLOCKED=$((PENDING_PR_BLOCKED + 1))
-        return 0
-    fi
-
-    last_sha="$(target_last_sha "${target_state}" "${branch}")"
-    current_sha="$(git rev-parse HEAD)"
-    export CI_SWEEPER_HEAD_BRANCH="${branch}"
-    export DEFAULT_BASE_BRANCH="${BASE_BRANCH}"
-    detect_result="$(bash "${DETECT_SCRIPT}" --scope range --since "${last_sha}")"
-
-    if detect_result_skip "${detect_result}"; then
-        log_detect_notice "skip" "${target_key}" \
-            "detect skip=true failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") ignored=$(jq -r '.ignored|length // 0' <<< "${detect_result}") ignored_reasons=$(jq -r '[.ignored[]?.reason // empty] | join("; ")' <<< "${detect_result}")"
-        return 0
-    fi
-
-    open_prompt="$(target_open_rejections_prompt "${target_state}")"
-    verifier_context="$(build_verifier_context_from_result "${detect_result}")"
-    prompt_text="$(build_prompt_text \
-        "${SKILL_NAME}" "${LEVEL}" "${ALLOWLIST}" "${PROMPT_INSTRUCTIONS}" \
-        "${last_sha}" "${current_sha}" "${detect_result}" "${open_prompt}" "${consecutive}")"
-
-    target_json="$(jq -nc \
+    jq -nc \
         --arg mode "integration" \
         --arg key "${target_key}" \
         --arg from_branch "${branch}" \
         --arg from_ref "${current_sha}" \
         --arg to_branch "${branch}" \
-        --arg finalize "${LOOP_FINALIZE_INTEGRATION}" \
+        --arg finalize "${finalize}" \
         '{
             mode: $mode,
             key: $key,
             from: {branch: $from_branch, ref: $from_ref},
             to: {branch: $to_branch},
             finalize: $finalize
-        }')"
-    target_json="$(enrich_target_json_with_ci_context "${target_json}" "${detect_result}")"
-
-    candidate="$(build_loop_candidate_json \
-        "${target_key}" "${target_json}" "${prompt_text}" "${verifier_context}" "${detect_result}")" \
-        || return 0
-
-    log_detect_notice "accept" "${target_key}" \
-        "failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") failure_types=$(jq -r '[.failures[]?.failure_type // empty] | unique | join(",")' <<< "${detect_result}")"
-    CANDIDATES_JSON+=("${candidate}")
+        }'
 }
 
 #######################################
-# append_pull_request_candidate: Scan one open pull request head
+# build_pull_request_target_json: Build target JSON for pull_request mode
 #
 # Globals:
-#   CANDIDATES_JSON - Appended when actionable work is found
-#   STATE_FILE, BASE_BRANCH, DETECT_SCRIPT, SKILL_NAME, LEVEL, ALLOWLIST
-#   PROMPT_INSTRUCTIONS, LOOP_FINALIZE_PULL_REQUEST
+#   None
 #
 # Arguments:
-#   $1 - PR JSON object
+#   $1 - target_key
+#   $2 - head branch
+#   $3 - current SHA
+#   $4 - finalize action
+#   $5 - PR number
+#   $6 - base branch
 #
 # Outputs:
-#   None
+#   Target JSON to stdout
 #
 # Returns:
-#   None
+#   0 on success
 #
 #######################################
-function append_pull_request_candidate {
-    local pr_json="$1"
-    local pr_number head_branch head_ref base_branch target_key target_state last_sha current_sha
-    local detect_result verifier_context prompt_text open_prompt consecutive candidate target_json
+function build_pull_request_target_json {
+    local target_key="$1"
+    local head_branch="$2"
+    local current_sha="$3"
+    local finalize="$4"
+    local pr_number="$5"
+    local base_branch="$6"
 
-    pr_number=$(jq -r '.number' <<< "${pr_json}")
-    head_branch=$(jq -r '.headRefName' <<< "${pr_json}")
-    head_ref=$(jq -r '.headRefOid' <<< "${pr_json}")
-    base_branch=$(jq -r '.baseRefName' <<< "${pr_json}")
-    target_key="pull_request:${pr_number}"
+    jq -nc \
+        --arg mode "pull_request" \
+        --arg key "${target_key}" \
+        --arg from_branch "${head_branch}" \
+        --arg from_ref "${current_sha}" \
+        --arg to_branch "${head_branch}" \
+        --argjson pr_number "${pr_number}" \
+        --arg base_branch "${base_branch}" \
+        --arg finalize "${finalize}" \
+        '{
+            mode: $mode,
+            key: $key,
+            from: {branch: $from_branch, ref: $from_ref},
+            to: {branch: $to_branch, pr_number: $pr_number},
+            base: {branch: $base_branch},
+            finalize: $finalize
+        }'
+}
 
-    checkout_context "${head_branch}" "${head_ref}" || return 0
+#######################################
+# append_detect_candidate: Shared detect/checkout/circuit/pending candidate pipeline
+#
+# Globals:
+#   CANDIDATES_JSON - Candidate JSON strings appended on success
+#   CIRCUIT_BREAKER_BLOCKED - Incremented when circuit breaker is open
+#   PENDING_PR_BLOCKED - Incremented when pending PR blocks detect
+#   STATE_FILE - Loop state JSON path
+#   BASE_BRANCH - Default base branch
+#   DETECT_SCRIPT - Detect script path
+#   SKILL_NAME, LEVEL, ALLOWLIST, PROMPT_INSTRUCTIONS - Prompt inputs
+#
+# Arguments:
+#   $1 - Target key
+#   $2 - Head branch name
+#   $3 - Optional checkout ref (empty string to omit)
+#   $4 - Finalize mode
+#   $5 - Optional accept-log extra text
+#   $6 - Target JSON builder function name
+#   $7+ - Extra args forwarded to the builder after common args
+#
+# Outputs:
+#   Warning/notice annotations via helper loggers
+#
+# Returns:
+#   None (returns early on checkout/circuit/pending/skip failures)
+#
+#######################################
+function append_detect_candidate {
+    local target_key="$1"
+    local head_branch="$2"
+    local checkout_ref="${3:-}"
+    local finalize="$4"
+    local accept_log_extra="${5:-}"
+    local target_json_builder="$6"
+    shift 6
+    local builder_args=("$@")
+    local target_state last_sha current_sha detect_result verifier_context prompt_text open_prompt consecutive pending_pr
+    local target_json candidate
+
+    if [[ -n $checkout_ref ]]; then
+        checkout_context "${head_branch}" "${checkout_ref}" || return 0
+    else
+        checkout_context "${head_branch}" || return 0
+    fi
 
     target_state="$(read_target_state "${STATE_FILE}" "${target_key}" "${BASE_BRANCH}")"
     consecutive="$(target_consecutive_failures "${target_state}")"
@@ -379,32 +399,85 @@ function append_pull_request_candidate {
         "${SKILL_NAME}" "${LEVEL}" "${ALLOWLIST}" "${PROMPT_INSTRUCTIONS}" \
         "${last_sha}" "${current_sha}" "${detect_result}" "${open_prompt}" "${consecutive}")"
 
-    target_json="$(jq -nc \
-        --arg mode "pull_request" \
-        --arg key "${target_key}" \
-        --arg from_branch "${head_branch}" \
-        --arg from_ref "${current_sha}" \
-        --arg to_branch "${head_branch}" \
-        --argjson pr_number "${pr_number}" \
-        --arg base_branch "${base_branch}" \
-        --arg finalize "${LOOP_FINALIZE_PULL_REQUEST}" \
-        '{
-            mode: $mode,
-            key: $key,
-            from: {branch: $from_branch, ref: $from_ref},
-            to: {branch: $to_branch, pr_number: $pr_number},
-            base: {branch: $base_branch},
-            finalize: $finalize
-        }')"
+    target_json="$("${target_json_builder}" "${target_key}" "${head_branch}" "${current_sha}" "${finalize}" "${builder_args[@]}")"
     target_json="$(enrich_target_json_with_ci_context "${target_json}" "${detect_result}")"
 
     candidate="$(build_loop_candidate_json \
         "${target_key}" "${target_json}" "${prompt_text}" "${verifier_context}" "${detect_result}")" \
         || return 0
 
-    log_detect_notice "accept" "${target_key}" \
-        "failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") failure_types=$(jq -r '[.failures[]?.failure_type // empty] | unique | join(",")' <<< "${detect_result}") head=${head_branch}"
+    if [[ -n $accept_log_extra ]]; then
+        log_detect_notice "accept" "${target_key}" \
+            "failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") failure_types=$(jq -r '[.failures[]?.failure_type // empty] | unique | join(",")' <<< "${detect_result}") ${accept_log_extra}"
+    else
+        log_detect_notice "accept" "${target_key}" \
+            "failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") failure_types=$(jq -r '[.failures[]?.failure_type // empty] | unique | join(",")' <<< "${detect_result}")"
+    fi
     CANDIDATES_JSON+=("${candidate}")
+}
+
+#######################################
+# append_integration_candidate: Scan one integration branch
+#
+# Globals:
+#   LOOP_FINALIZE_INTEGRATION - Finalize mode for integration targets
+#
+# Arguments:
+#   $1 - Branch name
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
+#######################################
+function append_integration_candidate {
+    local branch="$1"
+    append_detect_candidate \
+        "integration:${branch}" \
+        "${branch}" \
+        "" \
+        "${LOOP_FINALIZE_INTEGRATION}" \
+        "" \
+        build_integration_target_json \
+        "${branch}"
+}
+
+#######################################
+# append_pull_request_candidate: Scan one open pull request head
+#
+# Globals:
+#   LOOP_FINALIZE_PULL_REQUEST - Finalize mode for pull request targets
+#
+# Arguments:
+#   $1 - PR JSON object
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
+#######################################
+function append_pull_request_candidate {
+    local pr_json="$1"
+    local pr_number head_branch head_ref base_branch
+
+    pr_number=$(jq -r '.number' <<< "${pr_json}")
+    head_branch=$(jq -r '.headRefName' <<< "${pr_json}")
+    head_ref=$(jq -r '.headRefOid' <<< "${pr_json}")
+    base_branch=$(jq -r '.baseRefName' <<< "${pr_json}")
+
+    append_detect_candidate \
+        "pull_request:${pr_number}" \
+        "${head_branch}" \
+        "${head_ref}" \
+        "${LOOP_FINALIZE_PULL_REQUEST}" \
+        "head=${head_branch}" \
+        build_pull_request_target_json \
+        "${pr_number}" \
+        "${base_branch}"
 }
 
 #######################################
@@ -517,34 +590,62 @@ function build_loop_candidate_json {
 # checkout_context: Fetch and checkout branch at optional ref
 #
 # Globals:
-#   None
+#   CHECKOUT_FAILED - Incremented on fetch or checkout failure
 #
 # Arguments:
 #   $1 - Branch name
 #   $2 - Optional ref (default: origin/branch)
 #
 # Outputs:
-#   None
+#   Warning/error annotations to stdout
 #
 # Returns:
-#   0 on success, 1 on invalid branch name
+#   0 on success, 1 on invalid branch name, fetch exhaustion, or checkout failure
 #
 #######################################
 function checkout_context {
     local branch="$1"
     local ref="${2:-}"
+    local attempt
+    local fetch_ok=false
 
     if ! [[ ${branch} =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
         echo "::error::Invalid branch name: ${branch}"
         return 1
     fi
 
-    git fetch origin "${branch}" --prune > /dev/null 2>&1 || true
-    if [[ -n ${ref} ]]; then
-        git checkout -q "${ref}" 2> /dev/null || git checkout -q -B "${branch}" "origin/${branch}" 2> /dev/null
-    else
-        git checkout -q -B "${branch}" "origin/${branch}" 2> /dev/null || git checkout -q "${branch}"
+    for attempt in 1 2 3; do
+        if git fetch origin "${branch}" --prune > /dev/null 2>&1; then
+            fetch_ok=true
+            break
+        fi
+        if [[ ${attempt} -lt 3 ]]; then
+            sleep 1
+        fi
+    done
+
+    if [[ ${fetch_ok} != "true" ]]; then
+        echo "::warning::loop-detect/checkout: fetch failed for branch ${branch} after 3 attempts"
+        CHECKOUT_FAILED=$((CHECKOUT_FAILED + 1))
+        return 1
     fi
+
+    if [[ -n ${ref} ]]; then
+        if git checkout -q "${ref}" 2> /dev/null || git checkout -q -B "${branch}" "origin/${branch}" 2> /dev/null; then
+            return 0
+        fi
+        echo "::warning::loop-detect/checkout: checkout failed for ${branch} ref ${ref}"
+        CHECKOUT_FAILED=$((CHECKOUT_FAILED + 1))
+        return 1
+    fi
+
+    if git checkout -q -B "${branch}" "origin/${branch}" 2> /dev/null || git checkout -q "${branch}" 2> /dev/null; then
+        return 0
+    fi
+
+    echo "::warning::loop-detect/checkout: checkout failed for branch ${branch}"
+    CHECKOUT_FAILED=$((CHECKOUT_FAILED + 1))
+    return 1
 }
 
 #######################################
@@ -751,6 +852,38 @@ function validate_branch_match {
 }
 
 #######################################
+# write_empty_candidates_outputs: Emit skip outputs when no candidates remain
+#
+# Globals:
+#   CHECKOUT_FAILED - Checkout failure count
+#   CIRCUIT_BREAKER_BLOCKED - Circuit breaker block count
+#   PENDING_PR_BLOCKED - Pending PR block count
+#   GITHUB_OUTPUT - Written via write_detect_outputs / write_legacy_outputs
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Skip reason outputs to GITHUB_OUTPUT
+#
+# Returns:
+#   None
+#
+#######################################
+function write_empty_candidates_outputs {
+    if [[ ${CIRCUIT_BREAKER_BLOCKED} -gt 0 ]]; then
+        write_detect_outputs "false" "circuit_breaker" "[]"
+    elif [[ ${PENDING_PR_BLOCKED} -gt 0 ]]; then
+        write_detect_outputs "false" "pending_pr" "[]"
+    elif [[ ${CHECKOUT_FAILED} -gt 0 ]]; then
+        write_detect_outputs "false" "checkout_failed" "[]"
+    else
+        write_detect_outputs "false" "no_changes" "[]"
+    fi
+    write_legacy_outputs "[]"
+}
+
+#######################################
 # write_legacy_outputs: Backward-compatible single-target outputs
 #
 # Globals:
@@ -830,6 +963,7 @@ function main {
     local branch pr_json gh_token="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
     local pre_cap_count
     local scoped_head
+    CHECKOUT_FAILED=0
 
     # Pin detect script before any target checkout (stale PR trees must not supply it).
     if ! resolve_detect_script_path; then
@@ -884,14 +1018,7 @@ function main {
     done
 
     if [[ ${#CANDIDATES_JSON[@]} -eq 0 ]]; then
-        if [[ ${CIRCUIT_BREAKER_BLOCKED} -gt 0 ]]; then
-            write_detect_outputs "false" "circuit_breaker" "[]"
-        elif [[ ${PENDING_PR_BLOCKED} -gt 0 ]]; then
-            write_detect_outputs "false" "pending_pr" "[]"
-        else
-            write_detect_outputs "false" "no_changes" "[]"
-        fi
-        write_legacy_outputs "[]"
+        write_empty_candidates_outputs
         return 0
     fi
 

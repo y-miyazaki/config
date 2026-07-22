@@ -28,20 +28,19 @@ DEP_TRUNCATED=false
 #######################################
 # signal_object_json: Function implementation
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   None
 #
+# Arguments:
+#   $1-$6 - kind, path, line, snippet, source, hint (hint optional)
+#
 # Outputs:
-#   None
+#   JSON object on stdout
 #
 # Returns:
-#   None
+#   0 on success
 #
 #######################################
-
 function signal_object_json {
     local kind="$1"
     local path="$2"
@@ -77,9 +76,6 @@ EOF
 #######################################
 # append_dependency_signal: Append one dependency signal when dep caps allow
 #
-# Arguments:
-#   $1-$6 - kind, path, line, snippet, source, hint (hint optional)
-#
 # Globals:
 #   SIGNALS_JSON - Output array of signal objects
 #   DEP_FILE_COUNTS - Per-file dependency signal counts
@@ -87,6 +83,9 @@ EOF
 #   DEP_TRUNCATED - Set true when a dep cap is reached
 #   DEP_PER_FILE_CAP - Maximum dependency signals per manifest file
 #   DEP_GLOBAL_CAP - Maximum dependency signals across the repository
+#
+# Arguments:
+#   $1-$6 - kind, path, line, snippet, source, hint (hint optional)
 #
 # Outputs:
 #   None
@@ -126,11 +125,11 @@ function append_dependency_signal {
 #######################################
 # append_hotspot: Append one hotspot object to HOTSPOTS_JSON
 #
-# Arguments:
-#   $1-$4 - path, metric, value, window
-#
 # Globals:
 #   HOTSPOTS_JSON - Output array of hotspot objects
+#
+# Arguments:
+#   $1-$4 - path, metric, value, window
 #
 # Outputs:
 #   None
@@ -154,9 +153,6 @@ function append_hotspot {
 #######################################
 # append_signal: Append one marker signal object when marker caps allow
 #
-# Arguments:
-#   $1-$6 - kind, path, line, snippet, source, hint (hint optional)
-#
 # Globals:
 #   SIGNALS_JSON - Output array of signal objects
 #   MARKER_FILE_COUNTS - Per-file marker counts
@@ -164,6 +160,9 @@ function append_hotspot {
 #   MARKER_TRUNCATED - Set true when a cap is reached
 #   MARKER_PER_FILE_CAP - Maximum markers per file
 #   MARKER_GLOBAL_CAP - Maximum markers across the repository
+#
+# Arguments:
+#   $1-$6 - kind, path, line, snippet, source, hint (hint optional)
 #
 # Outputs:
 #   None
@@ -203,15 +202,18 @@ function append_signal {
 #######################################
 # collect_churn_hotspots: Rank repository paths by recent git commit frequency
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   HOTSPOTS_JSON - Output array of hotspot objects
+#   TECH_DEBT_CHURN_WINDOW - Churn window (default: 90d)
+#   TECH_DEBT_CHURN_MIN - Minimum commit count (default: 5)
+#   TECH_DEBT_CHURN_TOP - Top N paths to emit (default: 20)
 #   WARNINGS - Warning messages when git log fails
 #
+# Arguments:
+#   $1-$4 - path, metric, value, window
+#
 # Outputs:
-#   None
+#   JSON array string on stdout
 #
 # Returns:
 #   None
@@ -266,15 +268,15 @@ function collect_churn_hotspots {
 #######################################
 # collect_dependency_signals: Scan manifests for dependency version facts
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   SIGNALS_JSON - Output array of signal objects
 #   WARNINGS - Warning messages
 #   DEP_FILE_COUNTS - Per-file dependency signal counts (reset per run)
 #   DEP_GLOBAL_COUNT - Total dependency signals collected (reset per run)
 #   DEP_TRUNCATED - Truncation flag (reset per run)
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -317,13 +319,13 @@ function collect_dependency_signals {
 #######################################
 # collect_doc_signals: Scan markdown for broken links and staleness
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   SIGNALS_JSON - Output array of signal objects
 #   WARNINGS - Warning messages
 #   MLC_VERSION - Pinned markdown-link-check version
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -359,15 +361,15 @@ function collect_doc_signals {
 #######################################
 # collect_marker_signals: Scan tracked files for TODO/FIXME/HACK/XXX markers
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   SIGNALS_JSON - Output array of signal objects
 #   WARNINGS - Warning messages
 #   MARKER_FILE_COUNTS - Per-file marker counts (reset per run)
 #   MARKER_GLOBAL_COUNT - Total marker signals collected (reset per run)
 #   MARKER_TRUNCATED - Truncation flag (reset per run)
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -421,11 +423,11 @@ function collect_marker_signals {
 #######################################
 # dependency_eol_module_listed: Return whether a module is in TECH_DEBT_EOL_MODULES
 #
-# Arguments:
-#   $1 - Module path or package name
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Module path or package name
 #
 # Outputs:
 #   None
@@ -458,11 +460,11 @@ function dependency_eol_module_listed {
 #######################################
 # dependency_is_version_range: Return whether a version string is a loose range
 #
-# Arguments:
-#   $1 - Version string from a manifest
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Version string from a manifest
 #
 # Outputs:
 #   None
@@ -488,11 +490,11 @@ function dependency_is_version_range {
 #######################################
 # dependency_signals_from_go_mod: Emit eol_hint signals from a go.mod file
 #
-# Arguments:
-#   $1 - Repository-relative path to go.mod
-#
 # Globals:
 #   SIGNALS_JSON - Output array of signal objects
+#
+# Arguments:
+#   $1 - Repository-relative path to go.mod
 #
 # Outputs:
 #   None
@@ -553,12 +555,12 @@ function dependency_signals_from_go_mod {
 #######################################
 # dependency_signals_from_package_json: Emit npm dependency version signals
 #
-# Arguments:
-#   $1 - Repository-relative path to package.json
-#
 # Globals:
 #   SIGNALS_JSON - Output array of signal objects
 #   WARNINGS - Warning messages
+#
+# Arguments:
+#   $1 - Repository-relative path to package.json
 #
 # Outputs:
 #   None
@@ -630,11 +632,11 @@ function dependency_signals_from_package_json {
 #######################################
 # doc_age_days_git: Return days since the last git commit touching a file
 #
-# Arguments:
-#   $1 - Repository-relative file path
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Repository-relative file path
 #
 # Outputs:
 #   Age in whole days on stdout
@@ -664,11 +666,11 @@ function doc_age_days_git {
 #######################################
 # doc_age_days_mtime: Return days since file mtime
 #
-# Arguments:
-#   $1 - Repository-relative file path
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Repository-relative file path
 #
 # Outputs:
 #   Age in whole days on stdout
@@ -703,14 +705,14 @@ function doc_age_days_mtime {
 #######################################
 # doc_broken_links_from_mlc: Emit broken_doc_ref signals for one markdown file
 #
+# Globals:
+#   SIGNALS_JSON - Output array of signal objects
+#   WARNINGS - Warning messages appended on recoverable mlc/jq failures
+#
 # Arguments:
 #   $1 - Path to markdown-link-check CLI from ensure_markdown_link_check
 #        (cache install prefix is derived as three parents above .bin/)
 #   $2 - Repository-relative markdown file path
-#
-# Globals:
-#   SIGNALS_JSON - Output array of signal objects
-#   WARNINGS - Warning messages appended on recoverable mlc/jq failures
 #
 # Outputs:
 #   None
@@ -767,12 +769,12 @@ mlc(md, { baseUrl }, (err, results) => {
 #######################################
 # doc_line_for_link: Find the first line number containing a link target
 #
+# Globals:
+#   None
+#
 # Arguments:
 #   $1 - Repository-relative markdown file path
 #   $2 - Link URL or path to locate
-#
-# Globals:
-#   None
 #
 # Outputs:
 #   1-based line number on stdout (defaults to 1)
@@ -809,12 +811,12 @@ function doc_line_for_link {
 #######################################
 # doc_maybe_emit_stale_signal: Emit stale_doc when age meets threshold
 #
+# Globals:
+#   SIGNALS_JSON - Output array of signal objects
+#
 # Arguments:
 #   $1 - Repository-relative markdown file path
 #   $2 - Staleness threshold in days
-#
-# Globals:
-#   SIGNALS_JSON - Output array of signal objects
 #
 # Outputs:
 #   None
@@ -850,11 +852,11 @@ function doc_maybe_emit_stale_signal {
 #######################################
 # doc_warn_once: Append a docs-sensor warning when not already present
 #
-# Arguments:
-#   $1 - Warning message
-#
 # Globals:
 #   WARNINGS - Warning messages
+#
+# Arguments:
+#   $1 - Warning message
 #
 # Outputs:
 #   None
@@ -882,12 +884,12 @@ function doc_warn_once {
 #######################################
 # ensure_markdown_link_check: Install or locate pinned markdown-link-check
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   WARNINGS - Warning messages appended on recoverable failure
 #   MLC_VERSION - Pinned markdown-link-check version
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   0 when CLI path is written to the output variable; 1 when skipped
@@ -943,11 +945,11 @@ function ensure_markdown_link_check {
 #######################################
 # hotspot_object_json: Build one hotspot object as JSON
 #
-# Arguments:
-#   $1-$4 - path, metric, value, window
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1-$4 - path, metric, value, window
 #
 # Outputs:
 #   JSON object on stdout
@@ -978,11 +980,11 @@ EOF
 #######################################
 # hotspots_array_json: Join hotspot objects into a JSON array string
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   HOTSPOTS_JSON - Source hotspot objects
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   JSON array string on stdout
@@ -1015,11 +1017,11 @@ function hotspots_array_json {
 #######################################
 # marker_kind_from_line: Map a matched line to a closed marker kind
 #
-# Arguments:
-#   $1 - Line content from git grep
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Line content from git grep
 #
 # Outputs:
 #   Marker kind on stdout, or empty when no marker is recognized

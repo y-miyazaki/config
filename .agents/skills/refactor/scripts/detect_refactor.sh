@@ -57,10 +57,10 @@ declare -a HINTS_JSON=()
 #######################################
 # show_usage: Display script usage information
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -97,12 +97,12 @@ EOF
 #######################################
 # parse_arguments: Parse command line arguments
 #
-# Arguments:
-#   $@ - Command line arguments
-#
 # Globals:
 #   SCOPE - Detection scope
 #   SINCE_REF - Git ref for range scope
+#
+# Arguments:
+#   $@ - Command line arguments
 #
 # Outputs:
 #   None
@@ -147,11 +147,11 @@ function parse_arguments {
 #######################################
 # configure_detect_environment: Load domain env into globals
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   REFACTOR_* - Detect thresholds and scan globs
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -170,11 +170,11 @@ function configure_detect_environment {
 #######################################
 # is_pruned_path: Return whether a path must be excluded from scan
 #
-# Arguments:
-#   $1 - Repository-relative file path
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Repository-relative file path
 #
 # Outputs:
 #   None
@@ -208,11 +208,11 @@ function is_pruned_path {
 #######################################
 # path_matches_scan_globs: Test path against comma-separated globs
 #
-# Arguments:
-#   $1 - Repository-relative file path
-#
 # Globals:
 #   REFACTOR_SCAN_GLOBS - Comma-separated glob list
+#
+# Arguments:
+#   $1 - Repository-relative file path
 #
 # Outputs:
 #   None
@@ -249,11 +249,11 @@ function path_matches_scan_globs {
 #######################################
 # append_scan_file: Add a unique scan candidate path
 #
-# Arguments:
-#   $1 - Repository-relative file path
-#
 # Globals:
 #   SCAN_FILES - Output file list
+#
+# Arguments:
+#   $1 - Repository-relative file path
 #
 # Outputs:
 #   None
@@ -283,11 +283,11 @@ function append_scan_file {
 #######################################
 # collect_scan_files_from_globs: Populate SCAN_FILES via globstar expansion
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   SCAN_FILES, REFACTOR_SCAN_GLOBS
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -319,12 +319,12 @@ function collect_scan_files_from_globs {
 #######################################
 # collect_scan_files: Populate SCAN_FILES for the active scope
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   SCAN_FILES - Output file list
 #   SCOPE, SINCE_REF, COMMIT_RANGE
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -375,14 +375,14 @@ function collect_scan_files {
 #######################################
 # append_hint_json: Append one hint object string to HINTS_JSON
 #
+# Globals:
+#   HINTS_JSON, REFACTOR_MAX_HINTS
+#
 # Arguments:
 #   $1 - kind
 #   $2 - path
 #   $3 - detail
 #   $4 - lines (number)
-#
-# Globals:
-#   HINTS_JSON, REFACTOR_MAX_HINTS
 #
 # Outputs:
 #   None
@@ -414,11 +414,11 @@ function append_hint_json {
 #######################################
 # find_duplication_blocks: Emit duplication_block hints across scan set
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   SCAN_FILES, REFACTOR_DUP_MIN_LINES, HINTS_JSON
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -516,11 +516,11 @@ function find_duplication_blocks {
 #######################################
 # find_oversized_units: Emit oversized_unit hints for large files
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   SCAN_FILES, REFACTOR_OVERSIZED_FILE_LINES, HINTS_JSON
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -547,11 +547,11 @@ function find_oversized_units {
 #######################################
 # trim_whitespace: Remove leading and trailing whitespace
 #
-# Arguments:
-#   $1 - Input string
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $1 - Input string
 #
 # Outputs:
 #   Trimmed string on stdout
@@ -573,11 +573,11 @@ function trim_whitespace {
 #######################################
 # emit_error_json: Print error envelope JSON and exit 0
 #
-# Arguments:
-#   $1 - Error message
-#
 # Globals:
 #   SCOPE, SINCE_REF
+#
+# Arguments:
+#   $1 - Error message
 #
 # Outputs:
 #   None
@@ -606,11 +606,11 @@ function emit_error_json {
 #######################################
 # emit_ok_json: Print success envelope JSON
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   HINTS_JSON, SCOPE, SINCE_REF, COMMIT_RANGE
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -647,11 +647,11 @@ function emit_ok_json {
 #######################################
 # main: Entry point
 #
-# Arguments:
-#   $@ - Command line arguments
-#
 # Globals:
 #   None
+#
+# Arguments:
+#   $@ - Command line arguments
 #
 # Outputs:
 #   None

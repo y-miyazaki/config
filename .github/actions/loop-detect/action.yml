@@ -191,7 +191,7 @@ outputs:
     description: "Skill name"
     value: ${{ steps.config.outputs.skill_name }}
   skip_reason:
-    description: "Why execution was skipped (none | no_changes | circuit_breaker | budget | target_budget | config_error | pending_pr)"
+    description: "Why execution was skipped (none | no_changes | circuit_breaker | budget | target_budget | checkout_failed | config_error | pending_pr)"
     value: ${{ steps.detect.outputs.skip_reason }}
   state_file:
     description: "Resolved loop state JSON path"
@@ -294,3 +294,4 @@ runs:
         name: loop-handoff-${{ github.run_id }}
         path: ${{ runner.temp }}/loop-handoff
         retention-days: 1
+

@@ -53,10 +53,10 @@ LOOP_RUN_ID="${GITHUB_RUN_ID:-}"
 #######################################
 # show_usage: Display script usage information
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -89,12 +89,12 @@ EOF
 #######################################
 # parse_arguments: Parse command line arguments
 #
-# Arguments:
-#   $@ - Command line arguments
-
 # Globals:
 #   None
 #
+# Arguments:
+#   $@ - Command line arguments
+
 # Outputs:
 #   None
 #
@@ -159,12 +159,12 @@ function parse_arguments {
 #######################################
 # resolve_from_env: Fill missing fields from domain_persistence_script env
 #
-# Arguments:
-#   None
-#
 # Globals:
 #   RUN_ID, WORKFLOW_NAME, HEAD_SHA, OUTCOME - Updated when unset
 #   TARGET_JSON, VERDICT - Read from environment
+#
+# Arguments:
+#   None
 #
 # Outputs:
 #   None
@@ -205,10 +205,10 @@ function resolve_from_env {
 #######################################
 # should_skip_ledger_update: Return 0 when ledger must not be written
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -224,10 +224,10 @@ function should_skip_ledger_update {
 
 #######################################
 # validate_ledger_file: Ensure ledger path stays under .loop/
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -248,10 +248,10 @@ function validate_ledger_file {
 #######################################
 # update_ledger: Merge run outcome into the ledger file
 #
-# Arguments:
+# Globals:
 #   None
 #
-# Globals:
+# Arguments:
 #   None
 #
 # Outputs:
@@ -296,12 +296,12 @@ function update_ledger {
 #######################################
 # main: Entry point
 #
-# Arguments:
-#   $@ - Command line arguments
-
 # Globals:
 #   None
 #
+# Arguments:
+#   $@ - Command line arguments
+
 # Outputs:
 #   None
 #
