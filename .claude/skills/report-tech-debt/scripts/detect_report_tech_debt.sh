@@ -21,7 +21,7 @@
 # - Per-sensor recoverable failures append to warnings[] and continue
 # - Docs links use self-contained markdown-link-check (mlc) when Node is available
 # - Sensor logic lives in detect_report_tech_debt_sensors.sh (sourced below)
-# - Source shared helpers from scripts/lib/all.sh (synced via scripts/ai/sync_skill_lib.sh)
+# - Source shared helpers from scripts/lib/all.sh (synced via scripts/self/ai/sync_skill_lib.sh)
 #
 # Dependencies:
 # - bash (POSIX bash, /bin/bash)

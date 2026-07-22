@@ -41,7 +41,7 @@ Structured results for bash -n and shellcheck (syntax and lint only). With `--ch
 ### Common target paths
 
 - `scripts/` — workspace shell scripts
-- `scripts/lib/` — shared library modules (source of truth; sync to skills via `bash scripts/ai/sync_skill_lib.sh`)
+- `scripts/lib/` — shared library modules (source of truth; sync to skills via `bash scripts/self/ai/sync_skill_lib.sh`)
 - `.github/actions/` — composite action helper scripts
 
 ### DO NOT USE FOR:
@@ -61,7 +61,7 @@ Structured results for bash -n and shellcheck (syntax and lint only). With `--ch
 
 ## Workflow
 
-1. When `scripts/lib/` changed, sync to skill copies: `bash scripts/ai/sync_skill_lib.sh` then `apm install --update`.
+1. When `scripts/lib/` changed, sync to skill copies: `bash scripts/self/ai/sync_skill_lib.sh` then `apm install --update`.
 2. Run `bash scripts/validate.sh -v -f --check-function-docs` with an optional target path (for example `scripts/deploy.sh`, `scripts/lib/`, or `.github/actions/`).
 3. When function doc sections are out of order, run `bash scripts/fix_function_doc_order.sh` on the target path or directory before re-validating.
 4. Review auto-fix diffs from `-f` before continuing.
