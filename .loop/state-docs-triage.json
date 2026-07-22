@@ -1,11 +1,11 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-07-21T10:27:11Z",
-      "outcome": "merged",
-      "consecutive_failures": 0,
+      "last_run": "2026-07-22T09:54:05Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
       "open_rejections": [],
-      "last_reject_reason": "Prior rejection fixed: specification.md Skills and Loop Engineering Workflows tables now include loop-refactor, refactor, and on-loop-refactor.yaml with accurate codebase alignment.",
+      "last_reject_reason": "No file changes produced",
       "last_sha": "f899b729c39776d99ad27f9fed7851e6629a6f24"
     }
   }
