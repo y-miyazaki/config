@@ -25,7 +25,7 @@ export LC_ALL=C.UTF-8
 # Global variables
 #######################################
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 ACTION_ROOT="${REPO_ROOT}/.github/actions/validate-loop-caller-permissions"
 VALIDATE_SCRIPT="${ACTION_ROOT}/lib/validate.sh"
 
