@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
-# Tests for scripts/ai/sync_validate_mirror.sh
+# Tests for scripts/self/ai/sync_validate_mirror.sh
 
 # Use cases:
 # - --help exits successfully
@@ -18,7 +18,7 @@ done
 # shellcheck disable=SC1091
 source "${_bats_support}/support/common.bash"
 
-SYNC_SCRIPT="$(bats_workspace_root)/scripts/ai/sync_validate_mirror.sh"
+SYNC_SCRIPT="$(bats_workspace_root)/scripts/self/ai/sync_validate_mirror.sh"
 
 repo_validate_body() {
     cat << 'EOF'

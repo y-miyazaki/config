@@ -89,7 +89,7 @@ To modify agent instructions or skills:
 
 ### After package changes
 
-1. Run `scripts/apm/sync_guidelines_from_categories.pl` when `category-*.md` or sync-mapped instructions change.
+1. Run `scripts/self/apm/sync_guidelines_from_categories.pl` when `category-*.md` or sync-mapped instructions change.
 2. Run `apm install --update`.
 3. Verify with `apm audit --ci`.
 
@@ -105,7 +105,7 @@ Path-layout detail for validation mirrors (skill vs repo import paths): [Validat
 
 ### Sync-Managed Files
 
-`scripts/apm/sync_guidelines_from_categories.pl` regenerates `## Guidelines` (and `common-checklist.md`) from `category-*.md` for mapped review skills. See [Instructions Sync Workflow](../docs/explanation/instructions-sync-workflow.md).
+`scripts/self/apm/sync_guidelines_from_categories.pl` regenerates `## Guidelines` (and `common-checklist.md`) from `category-*.md` for mapped review skills. See [Instructions Sync Workflow](../docs/explanation/instructions-sync-workflow.md).
 
 - Edit review criteria in `.apm/packages/<pkg>/.apm/skills/<skill>-review/references/category-*.md`.
 - Re-run the sync script; do not hand-edit generated guideline bullets unless you accept they will be overwritten.
@@ -136,7 +136,7 @@ done
 ## Skills and Shared Libraries
 
 - Skill authoring standards: `agent-skills` instruction and `agent-skills-review` skill.
-- Shared shell libraries: edit `scripts/lib/`, then `bash scripts/ai/sync_skill_lib.sh`, then `apm install --update` (see [CLAUDE.md section Scripts and Skill Mirrors](../CLAUDE.md#scripts-and-skill-mirrors)).
+- Shared shell libraries: edit `scripts/lib/`, then `bash scripts/self/ai/sync_skill_lib.sh`, then `apm install --update` (see [CLAUDE.md section Scripts and Skill Mirrors](../CLAUDE.md#scripts-and-skill-mirrors)).
 - Do not create skill-specific minimal copies of `scripts/lib/` (for example a `json.sh`-only loader).
 
 ### SKILL.md documentation level (sibling consistency)
@@ -195,7 +195,7 @@ Ship **thin eval harnesses inside each skill**; keep **heavy verification outsid
 
 ### Validation Scripts Mirror (`scripts/` ↔ skill)
 
-Domain validation entrypoints exist in **two places** in this repository. Keep them aligned via `bash scripts/ai/sync_validate_mirror.sh`  - edit one side, run the sync script; do not hand-edit the paired copy.
+Domain validation entrypoints exist in **two places** in this repository. Keep them aligned via `bash scripts/self/ai/sync_validate_mirror.sh`  - edit one side, run the sync script; do not hand-edit the paired copy.
 
 | Domain         | Mirrored files (repo `scripts/<domain>/` → skill `scripts/`) |
 | -------------- | ------------------------------------------------------------ |
@@ -216,7 +216,7 @@ Domain validation entrypoints exist in **two places** in this repository. Keep t
 **Workflow**:
 
 1. Edit the repo or skill copy (not both manually).
-2. Run `bash scripts/ai/sync_validate_mirror.sh` (or `--from-skill` when the skill copy was edited; `--domain` to limit scope).
+2. Run `bash scripts/self/ai/sync_validate_mirror.sh` (or `--from-skill` when the skill copy was edited; `--domain` to limit scope).
 3. Run the relevant Bats suites under `test/bats/scripts/<domain>/` when behavior changes.
 
 `scripts/lib/` follows the one-way sync in [CLAUDE.md section Scripts and Skill Mirrors](../CLAUDE.md#scripts-and-skill-mirrors). Do not edit skill `scripts/lib/` directly.

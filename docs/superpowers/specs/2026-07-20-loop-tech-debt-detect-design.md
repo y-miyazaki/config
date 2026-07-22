@@ -78,7 +78,7 @@ Match **sibling loop detects** (`detect_changes.sh`, `detect_ci_failures.sh`) an
 1. `#!/bin/bash`
 2. Header block wrapped in `#######################################` with: **Description**, **Usage**, **Output**, **Design Rules**, **Dependencies**, **Optional environment** (same sections/order as ci-sweeper/docs-triage detects).
 3. `set -euo pipefail` + `umask 027` + `export LC_ALL=C.UTF-8`
-4. `SCRIPT_DIR=...` then `source "${SCRIPT_DIR}/lib/all.sh"` (copy via `scripts/ai/sync_skill_lib.sh`; do not hand-edit skill `scripts/lib/`).
+4. `SCRIPT_DIR=...` then `source "${SCRIPT_DIR}/lib/all.sh"` (copy via `scripts/self/ai/sync_skill_lib.sh`; do not hand-edit skill `scripts/lib/`).
 5. `# Global variables` block with purpose comments where non-obvious (DOC-05).
 6. Functions: `show_usage` → `parse_arguments` → remaining functions **a-z** → `main` last (G-03).
 7. Entry: `if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then main "$@"; fi`

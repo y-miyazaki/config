@@ -45,7 +45,7 @@ Refactor scan found duplicated diff logic; this run deduplicated one call.
 
 | Target | What was wrong | What changed |
 | ------ | -------------- | ------------ |
-| `scripts/ai/sync_skill_lib.sh` | diff ran twice | capture once |
+| `scripts/self/ai/sync_skill_lib.sh` | diff ran twice | capture once |
 
 ## Verification
 
@@ -53,7 +53,7 @@ Refactor scan found duplicated diff logic; this run deduplicated one call.
 | ----- | ------ |
 | shellcheck | pass |
 EOF
-    run validate_agent_report "${out}" $'scripts/ai/sync_skill_lib.sh\n' "refactor"
+    run validate_agent_report "${out}" $'scripts/self/ai/sync_skill_lib.sh\n' "refactor"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }

@@ -431,7 +431,7 @@ function main {
         done
         echo ""
         if [[ ${DRIFT_COUNT} -gt 0 ]]; then
-            echo "FAIL: ${DRIFT_COUNT} mirrored file(s) have drifted. Run: bash scripts/ai/sync_validate_mirror.sh"
+            echo "FAIL: ${DRIFT_COUNT} mirrored file(s) have drifted. Run: bash scripts/self/ai/sync_validate_mirror.sh"
             exit 1
         fi
         echo "OK: All validation mirrors are in sync."

@@ -30,7 +30,7 @@ Full-scan is delta-driven with a fixed `**/*` work set — only enumeration diff
 
 ## Shared library (`scripts/lib/repo_paths.sh`)
 
-Synced to skill `scripts/lib/` via `scripts/ai/sync_skill_lib.sh`.
+Synced to skill `scripts/lib/` via `scripts/self/ai/sync_skill_lib.sh`.
 
 ### Predicate layer
 

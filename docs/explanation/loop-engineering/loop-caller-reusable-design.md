@@ -255,7 +255,7 @@ Detect job permissions are **profile-based** and declared per reusable workflow 
 
 Caller workflow `permissions` = **execute baseline** (`actions: read`, `contents: write`, `pull-requests: write`, `copilot-requests: write`) + **profile `caller_adds`** (`actions: write` for default, pr-scan, and full-github). Reusable workflows cannot escalate beyond the caller grant. Thin callers select the profile by which reusable workflow they `uses:` (`ci-loop-caller.yaml` for integration-only; `ci-loop-caller-pr-scan.yaml` for `pr_enabled` without Actions API scan; `ci-loop-caller-full-github.yaml` for ci-sweeper).
 
-CI validation: `validate-loop-caller-permissions` composite action (run in `ci-github-actions-workflow`; local wrapper: `scripts/ci/validate_loop_caller_permissions.sh`).
+CI validation: `validate-loop-caller-permissions` composite action (run in `ci-github-actions-workflow`; local wrapper: `scripts/self/ci/validate_loop_caller_permissions.sh`).
 
 ### Credentials (via `with:`)
 
@@ -329,7 +329,7 @@ New domain env keys go into `detect_domain_env_json` without editing reusable jo
 - [x] `actionlint .github/workflows/ci-loop-caller.yaml .github/workflows/on-loop-*.yaml`
 - [x] `ghalint run`
 - [x] `zizmor .github/workflows/`
-- [x] `scripts/ci/validate_loop_caller_permissions.sh`
+- [x] `scripts/self/ci/validate_loop_caller_permissions.sh`
 
 ### 5. Release maintainer (manual)
 

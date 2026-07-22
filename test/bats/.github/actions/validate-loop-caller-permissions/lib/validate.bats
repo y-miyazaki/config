@@ -22,7 +22,7 @@ source "${_bats_support}/support/common.bash"
 
 VALIDATE_SCRIPT="$(bats_workspace_root)/.github/actions/validate-loop-caller-permissions/lib/validate.sh"
 REGISTRY_FILE="$(bats_workspace_root)/.github/actions/validate-loop-caller-permissions/detect-permissions-profiles.yaml"
-WRAPPER_SCRIPT="$(bats_workspace_root)/scripts/ci/validate_loop_caller_permissions.sh"
+WRAPPER_SCRIPT="$(bats_workspace_root)/scripts/self/ci/validate_loop_caller_permissions.sh"
 
 setup() {
     WORKFLOWS_TMPDIR="$(mktemp -d)"

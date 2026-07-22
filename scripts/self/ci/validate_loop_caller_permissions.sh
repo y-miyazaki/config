@@ -4,7 +4,7 @@
 #   Local wrapper for validate-loop-caller-permissions composite action.
 #
 # Usage:
-#   bash scripts/ci/validate_loop_caller_permissions.sh [--verbose]
+#   bash scripts/self/ci/validate_loop_caller_permissions.sh [--verbose]
 #
 # Design Rules:
 #   - Delegates to .github/actions/validate-loop-caller-permissions/lib/validate.sh

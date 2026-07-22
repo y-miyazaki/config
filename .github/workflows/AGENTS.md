@@ -192,7 +192,7 @@ bash .agents/skills/github-actions-validation/scripts/validate.sh .github/workfl
 When loop caller permissions change:
 
 ```bash
-bash scripts/ci/validate_loop_caller_permissions.sh
+bash scripts/self/ci/validate_loop_caller_permissions.sh
 ```
 
 ## Security

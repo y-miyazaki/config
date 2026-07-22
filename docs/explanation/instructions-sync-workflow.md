@@ -12,7 +12,7 @@ Applies to:
 
 - Instruction files under `.apm/packages/*/.apm/instructions/*.instructions.md`
 - Review references under `.apm/packages/*/.apm/skills/*-review/references/`
-- Sync script: `scripts/apm/sync_guidelines_from_categories.pl`
+- Sync script: `scripts/self/apm/sync_guidelines_from_categories.pl`
 
 ## Instruction File Structure
 
@@ -76,7 +76,7 @@ When changing distributable instructions, keep content **repository-neutral** (n
 
 ## Script Behavior
 
-Path: `scripts/apm/sync_guidelines_from_categories.pl`
+Path: `scripts/self/apm/sync_guidelines_from_categories.pl`
 
 Main behavior:
 
@@ -92,7 +92,7 @@ Main behavior:
 
 ### Code Modification Guidelines Defaults
 
-Operational bullets under `### Code Modification Guidelines` live in `scripts/apm/sync_guidelines_from_categories.pl` (`%code_mod_guidelines`). Update that hash when adding cross-cutting authoring rules (for example, “add tests in the same change”). Do **not** put always-run lint/`validate.sh` mandates there — those belong in Agent hooks and on-demand validation skills.
+Operational bullets under `### Code Modification Guidelines` live in `scripts/self/apm/sync_guidelines_from_categories.pl` (`%code_mod_guidelines`). Update that hash when adding cross-cutting authoring rules (for example, “add tests in the same change”). Do **not** put always-run lint/`validate.sh` mandates there — those belong in Agent hooks and on-demand validation skills.
 
 Current defaults (domain-only):
 
@@ -110,8 +110,8 @@ Corresponding review criteria belong in `category-testing.md` as `TEST-00 (MUST)
 ## Changing Review Criteria
 
 1. Edit the relevant `category-*.md` under `.apm/packages/<package>/.apm/skills/<skill>-review/references/`.
-2. If Code Modification Guidelines need changes, update `%code_mod_guidelines` in `scripts/apm/sync_guidelines_from_categories.pl`.
-3. Run `scripts/apm/sync_guidelines_from_categories.pl` (skills → instructions Guidelines).
+2. If Code Modification Guidelines need changes, update `%code_mod_guidelines` in `scripts/self/apm/sync_guidelines_from_categories.pl`.
+3. Run `scripts/self/apm/sync_guidelines_from_categories.pl` (skills → instructions Guidelines).
 4. If the rule is operational and not covered by automation (coverage targets, suite verification notes, on-demand skill pointer), update `## Testing and Validation` in the instruction file manually.
 5. If the rule is Bats-specific and not shell authoring, update `bats.instructions.md` manually.
 6. Run the re-evaluation commands below.
@@ -121,7 +121,7 @@ Corresponding review criteria belong in `category-testing.md` as `TEST-00 (MUST)
 ## How To Run
 
 ```bash
-scripts/apm/sync_guidelines_from_categories.pl
+scripts/self/apm/sync_guidelines_from_categories.pl
 ```
 
 ## Required Re-Evaluation After Instruction Changes
