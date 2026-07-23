@@ -62,12 +62,6 @@ The repository structure is function-oriented.
   - `go-hooks-claude/`, `go-hooks-copilot/`, `go-hooks-cursor/`: target-specific Go hooks
   - `shell-script/`: Shell script development (hook + instruction + skills)
   - `shell-script-hooks-claude/`, `shell-script-hooks-copilot/`, `shell-script-hooks-cursor/`: target-specific shell script hooks
-  - `loop-docs-triage/`: Documentation update loop (self-contained skill package)
-  - `loop-ci-sweeper/`: CI failure sweeper loop (self-contained skill package)
-  - `loop-changelog/`: Changelog maintenance loop (self-contained skill package)
-  - `loop-tech-debt/`: Technical debt report loop (self-contained skill package)
-  - `loop-refactor/`: Structural refactor action loop (self-contained skill package)
-  - `refactor/`: Behavior-preserving refactor skill (interactive; used by loop-refactor)
 - `apm.yml`: APM package metadata and dependency entry point
 - `apm.lock.yaml`: lock file for deterministic APM resolution
 - `apm_modules/`: locally materialized module content
@@ -92,7 +86,7 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 │   ├── apm.yml      # 5 MCP servers
 │   └── .apm/
 │       ├── instructions/  # 4 instruction files
-│       └── skills/        # 8 skills
+│       └── skills/        # 12 skills (includes loop maintenance: docs-updater, changelog, ci-sweeper, refactor, tech-debt)
 ├── common-hooks-claude/   # Common hooks for Claude Code (6 hooks)
 ├── common-hooks-copilot/  # Common hooks for GitHub Copilot CLI (6 hooks)
 ├── common-hooks-cursor/   # Common hooks for Cursor (6 hooks)
@@ -123,37 +117,7 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 │       └── skills/        # 2 skills
 ├── shell-script-hooks-claude/  # Shell script hooks for Claude Code (2 hooks)
 ├── shell-script-hooks-copilot/ # Shell script hooks for GitHub Copilot CLI (2 hooks)
-├── shell-script-hooks-cursor/  # Shell script hooks for Cursor (2 hooks)
-├── loop-docs-triage/    # Documentation update loop (self-contained)
-│   ├── apm.yml
-│   └── .apm/skills/loop-docs-triage/
-│       ├── SKILL.md
-│       └── scripts/detect_changes.sh
-├── loop-ci-sweeper/     # CI failure sweeper loop (self-contained)
-│   ├── apm.yml
-│   └── .apm/skills/loop-ci-sweeper/
-│       ├── SKILL.md
-│       ├── scripts/detect_ci_failures.sh
-│       └── scripts/update_run_ledger.sh
-├── loop-changelog/      # Changelog maintenance loop (self-contained)
-│   ├── apm.yml
-│   └── .apm/skills/loop-changelog/
-│       ├── SKILL.md
-│       └── scripts/detect_changelog_commits.sh
-├── loop-tech-debt/  # Technical debt report loop (self-contained)
-│   ├── apm.yml
-│   └── .apm/skills/loop-tech-debt/
-│       ├── SKILL.md
-│       └── scripts/detect_tech_debt.sh
-├── loop-refactor/       # Structural refactor action loop (self-contained)
-│   ├── apm.yml
-│   └── .apm/skills/loop-refactor/
-│       ├── SKILL.md
-│       └── scripts/detect_refactor.sh
-└── refactor/            # Behavior-preserving refactor skill (interactive)
-    ├── apm.yml
-    └── .apm/skills/refactor/
-        └── SKILL.md
+└── shell-script-hooks-cursor/  # Shell script hooks for Cursor (2 hooks)
 ```
 
 ### Distribution Behavior
@@ -293,6 +257,8 @@ Skills are defined under each package's `.apm/skills/` directory. Each skill con
 | Package          | Skill                     |
 | ---------------- | ------------------------- |
 | common           | agent-skills-review       |
+| common           | changelog                 |
+| common           | ci-sweeper                |
 | common           | docs-creator              |
 | common           | docs-updater              |
 | common           | github-actions-review     |
@@ -300,18 +266,14 @@ Skills are defined under each package's `.apm/skills/` directory. Each skill con
 | common           | github-pr-body            |
 | common           | instructions-review       |
 | common           | markdown-validation       |
+| common           | refactor                  |
+| common           | tech-debt                 |
 | go               | go-review                 |
 | go               | go-validation             |
 | terraform        | terraform-review          |
 | terraform        | terraform-validation      |
 | shell-script     | shell-script-review       |
 | shell-script     | shell-script-validation   |
-| loop-docs-triage | loop-docs-triage          |
-| loop-ci-sweeper  | loop-ci-sweeper           |
-| loop-changelog   | loop-changelog            |
-| loop-tech-debt   | loop-tech-debt            |
-| loop-refactor    | loop-refactor             |
-| refactor         | refactor                  |
 
 ### Instructions
 
@@ -402,13 +364,13 @@ Loop **composite actions** must not nest other repository composite actions via 
 
 ### Loop Skill Package Pattern
 
-Each `loop-*` APM package is self-contained. Domain detection and agent behavior live in the same package — not in shared actions or unrelated skills (`docs-updater` is hook/manual only; `loop-docs-triage` owns its detect script).
+Maintenance loop skills live under `.apm/packages/common/.apm/skills/` (no separate `loop-*` APM packages). Domain detection and agent behavior share the same skill directory; loop callers pass the JSON envelope plus `## Constraints`. Workflow filenames remain `on-loop-*.yaml`.
 
-| Artifact                      | Location                                        | Role                                                          |
-| ----------------------------- | ----------------------------------------------- | ------------------------------------------------------------- |
-| Skill                         | `.apm/skills/loop-<domain>/SKILL.md`            | Implementer behavior, classification, allowed paths           |
-| Detect script                 | `.apm/skills/loop-<domain>/scripts/detect_*.sh` | Per-target scan in branch context set by `loop-detect`        |
-| Persistence script (optional) | `.apm/skills/loop-<domain>/scripts/*_ledger.sh` | Domain ledger via `loop-finalize` `domain_persistence_script` |
+| Artifact                      | Location                                                       | Role                                                          |
+| ----------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------- |
+| Skill                         | `.apm/packages/common/.apm/skills/<skill>/SKILL.md`            | Implementer behavior, classification, allowed paths           |
+| Detect script                 | `.apm/packages/common/.apm/skills/<skill>/scripts/detect_*.sh` | Per-target scan in branch context set by `loop-detect`        |
+| Persistence script (optional) | `.apm/packages/common/.apm/skills/<skill>/scripts/*_ledger.sh` | Domain ledger via `loop-finalize` `domain_persistence_script` |
 
 ### Loop Engineering Actions
 

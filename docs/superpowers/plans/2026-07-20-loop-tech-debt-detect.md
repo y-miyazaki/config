@@ -23,7 +23,7 @@
 - No dual broken-link implementations (mlc only; no bash existence fallback).
 - No new-technology / migration playbook text beyond one explicit out-of-scope line.
 - Bats path: `test/bats/.apm/packages/loop-tech-debt/detect_tech_debt.bats` (same layout as sibling loops).
-- `scripts/lib/` only via `bash scripts/self/ai/sync_skill_lib.sh` (never hand-edit skill lib copies).
+- `scripts/lib/` only via `bash scripts/self/apm/sync_skill_lib.sh` (never hand-edit skill lib copies).
 - Pin: `markdown-link-check@3.14.2` (matches `mise.toml`).
 
 ## File map
@@ -48,7 +48,7 @@
 - Create: `.apm/packages/loop-tech-debt/.apm/skills/loop-tech-debt/scripts/detect_tech_debt.sh`
 - Create: `test/bats/.apm/packages/loop-tech-debt/detect_tech_debt.bats`
 - Modify: `test/bats/support/common.bash` (assert helpers)
-- Run: `bash scripts/self/ai/sync_skill_lib.sh` (creates `scripts/lib/`)
+- Run: `bash scripts/self/apm/sync_skill_lib.sh` (creates `scripts/lib/`)
 
 **Interfaces:**
 
@@ -188,7 +188,7 @@ Expected: FAIL resolving/running `detect_tech_debt.sh`.
 
 ```bash
 mkdir -p .apm/packages/loop-tech-debt/.apm/skills/loop-tech-debt/scripts
-bash scripts/self/ai/sync_skill_lib.sh
+bash scripts/self/apm/sync_skill_lib.sh
 ```
 
 Implement `detect_tech_debt.sh` skeleton (full DOC header matching siblings). Required behavior for this task:
@@ -530,7 +530,7 @@ Add short sections:
 - [ ] **Step 1: Sync check**
 
 ```bash
-bash scripts/self/ai/sync_skill_lib.sh --check
+bash scripts/self/apm/sync_skill_lib.sh --check
 ```
 
 Expected: exit 0

@@ -288,9 +288,9 @@ graph LR
 
     %% Skills
     subgraph skills["Skills"]
-        SK1[loop-changelog]
-        SK2[loop-docs-triage]
-        SK3[loop-ci-sweeper]
+        SK1[changelog]
+        SK2[docs-updater]
+        SK3[ci-sweeper]
     end
 
     %% State
@@ -343,9 +343,9 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 
 ```text
 .loop/
-  state-docs-triage.json    ← owned by loop-docs-triage
-  state-ci-sweeper.json     ← owned by loop-ci-sweeper
-  state-changelog.json      ← owned by loop-changelog
+  state-docs-triage.json    ← owned by docs-triage loop (docs-updater skill)
+  state-ci-sweeper.json     ← owned by ci-sweeper loop (ci-sweeper skill)
+  state-changelog.json      ← owned by changelog loop (changelog skill)
   loop-budget.json          ← per-loop daily run/token caps (read by loop-detect)
   loop-run-log.md           ← shared JSONL run history (append via loop-run-log; 30-day prune)
   .gitkeep

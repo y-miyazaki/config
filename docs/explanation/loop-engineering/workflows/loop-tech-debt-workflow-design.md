@@ -8,7 +8,7 @@ Workflow and domain design for the `loop-tech-debt` (`tech-debt`) loop.
 | Caller shell | [Loop Caller Workflows Design](../loop-caller-workflows-design.md) |
 | Invariants   | [Loop Engineering Design](../loop-engineering-design.md)           |
 
-**Artifacts:** `on-loop-tech-debt.yaml` · skill `loop-tech-debt` · `scripts/detect_tech_debt.sh`
+**Artifacts:** `on-loop-tech-debt.yaml` · skill `tech-debt` · `scripts/detect_tech_debt.sh`
 
 Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md).
 
@@ -47,7 +47,7 @@ Report loops use the **`loop-report-<domain>`** naming prefix (e.g. `loop-tech-d
 
 Detect script path: **`loop-tech-debt/scripts/detect_tech_debt.sh`**.
 
-Skill execution boundaries: `loop-tech-debt` SKILL.md (`USE FOR` / `DO NOT USE FOR`).
+Skill execution boundaries: `tech-debt` SKILL.md (`USE FOR` / `DO NOT USE FOR`).
 
 ### Modes
 
@@ -113,7 +113,7 @@ Detect script outputs **mechanical signals** (not semantic findings):
 
 **Default scope:** full repository (sensors read source for evidence; `docs/report/**` excluded from sensors per skill references).
 
-**Skill** (`loop-tech-debt`) classifies signals into prioritized findings and writes `report_file` at L2.
+**Skill** (`tech-debt`) classifies signals into prioritized findings and writes `report_file` at L2.
 
 `loop-detect` emits per-branch `target_json`:
 
