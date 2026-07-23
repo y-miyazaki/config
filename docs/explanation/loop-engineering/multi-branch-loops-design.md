@@ -260,6 +260,7 @@ Loop callers (`on-loop-*.yaml`) and `on-loop-state-promote.yaml` share a workflo
 | `on-loop-changelog`     | `loop-state-main`   | Serializes with other loops on same `branch_state` |
 | `on-loop-docs-triage`   | `loop-state-main`   | Same                                               |
 | `on-loop-ci-sweeper`    | `loop-state-main`   | Same (replaces per-`workflow_run` group)           |
+| `on-loop-refactor`      | `loop-state-main`   | Same                                               |
 | `on-loop-tech-debt`     | `loop-state-main`   | Same                                               |
 | `on-loop-state-promote` | `loop-state-main`   | Avoids state PR races during loop runs             |
 

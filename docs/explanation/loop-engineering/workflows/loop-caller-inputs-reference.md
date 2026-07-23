@@ -378,6 +378,7 @@ Not a loop caller; configure via environment when invoking `detect_changes.sh` o
 | changelog   | [Changelog Workflow Design](loop-changelog-workflow-design.md)        | `on-loop-changelog.yaml`   |
 | ci-sweeper  | [CI Sweeper Workflow Design](loop-ci-sweeper-workflow-design.md)      | `on-loop-ci-sweeper.yaml`  |
 | docs-triage | [Docs Triage Workflow Design](loop-docs-triage-workflow-design.md)    | `on-loop-docs-triage.yaml` |
+| refactor    | [Refactor Workflow Design](loop-refactor-workflow-design.md)          | `on-loop-refactor.yaml`    |
 | tech-debt   | [Report Tech Debt Workflow Design](loop-tech-debt-workflow-design.md) | `on-loop-tech-debt.yaml`   |
 
 ## References
