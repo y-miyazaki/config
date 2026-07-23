@@ -665,7 +665,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@f2981bb87562e87ec86dd35c73c52715c67f79ec # v1.8.53
+        uses: y-miyazaki/config/.github/actions/summary@2bfcc63075ce3359b848a64a2c7bd5c197d4b86a # v1.8.53
         with:
           artifacts: |
             ${{ steps.setup-parameters.outputs.artifact_name }}

@@ -291,7 +291,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Agent Once
-        uses: y-miyazaki/config/.github/actions/loop-agent-once@f2981bb87562e87ec86dd35c73c52715c67f79ec # v1.8.53
+        uses: y-miyazaki/config/.github/actions/loop-agent-once@2bfcc63075ce3359b848a64a2c7bd5c197d4b86a # v1.8.53
         with:
           agent_token: ${{ secrets.AGENT_TOKEN }}
           cli_version: ${{ inputs.cli_version }}
@@ -404,7 +404,7 @@ jobs:
 
       - name: Setup Worktree
         id: worktree
-        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@f2981bb87562e87ec86dd35c73c52715c67f79ec # v1.8.53
+        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@2bfcc63075ce3359b848a64a2c7bd5c197d4b86a # v1.8.53
         with:
           base_branch: ${{ steps.target.outputs.worktree_branch }}
           base_ref: ${{ steps.target.outputs.worktree_ref }}
@@ -414,7 +414,7 @@ jobs:
 
       - name: Execute Bounded Loop
         id: execute
-        uses: y-miyazaki/config/.github/actions/loop-execute@f2981bb87562e87ec86dd35c73c52715c67f79ec # v1.8.53
+        uses: y-miyazaki/config/.github/actions/loop-execute@2bfcc63075ce3359b848a64a2c7bd5c197d4b86a # v1.8.53
         with:
           agent_implementer_max_turns: ${{ inputs.agent_implementer_max_turns }}
           agent_implementer_model: ${{ inputs.agent_implementer_model }}
@@ -533,7 +533,7 @@ jobs:
 
       - name: Finalize
         id: finalize
-        uses: y-miyazaki/config/.github/actions/loop-finalize@f2981bb87562e87ec86dd35c73c52715c67f79ec # v1.8.53
+        uses: y-miyazaki/config/.github/actions/loop-finalize@2bfcc63075ce3359b848a64a2c7bd5c197d4b86a # v1.8.53
         with:
           additional_commit_paths: ${{ inputs.additional_commit_paths }}
           agent_result: ${{ needs.agent-l2.result }}
@@ -571,7 +571,7 @@ jobs:
         if: >-
           always() &&
           steps.notify_target.outputs.pr_number != ''
-        uses: y-miyazaki/config/.github/actions/loop-notify-pr@f2981bb87562e87ec86dd35c73c52715c67f79ec # v1.8.53
+        uses: y-miyazaki/config/.github/actions/loop-notify-pr@2bfcc63075ce3359b848a64a2c7bd5c197d4b86a # v1.8.53
         with:
           attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
           auto_merge: ${{ inputs.auto_merge }}
