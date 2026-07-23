@@ -30,7 +30,7 @@ ALL of the following must be true:
 3. Deferred-style subsection when items were not fixed:
    - `docs-updater`, `refactor`, `ci-sweeper`, `tech-debt`: `### Deferred` (omit when empty)
    - `changelog`: `### Skipped` (omit when empty)
-4. **Changes / Deferred consistency:** every path in the branch diff appears under `### Changes` and **no** deferred/skipped path appears in the branch diff
+4. **Changes / Deferred consistency:** every path in the branch diff (`origin/<base>...HEAD`, not only this attempt's delta) appears under `### Changes` and **no** deferred/skipped path appears in the branch diff
 5. Overview names what was fixed or recorded — not counts alone
 6. Verification lists checks the agent ran with pass/fail/skip/blocked
 7. Branch diff MUST be empty for survey mode; non-empty diff requires apply mode

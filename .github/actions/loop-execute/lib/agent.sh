@@ -32,14 +32,52 @@
 #######################################
 function build_agent_prompt {
     local feedback="$1"
+    local synthesis_block="${2:-}"
+    local prompt=""
+
     if [[ -z ${feedback} ]]; then
-        printf '%s\n' "${PROMPT_TEXT}"
-        return
+        prompt="${PROMPT_TEXT}"
+    else
+        prompt="$(render_template "${PROMPT_IMPLEMENTER_FEEDBACK}" \
+            base_prompt "${PROMPT_TEXT}" \
+            feedback "${feedback}")"
     fi
-    render_template "${PROMPT_IMPLEMENTER_FEEDBACK}" \
-        base_prompt "${PROMPT_TEXT}" \
-        feedback "${feedback}"
-    printf '\n'
+    if [[ -n ${synthesis_block} ]]; then
+        prompt="${prompt}"$'\n\n'"${synthesis_block}"
+    fi
+    printf '%s\n' "${prompt}"
+}
+
+#######################################
+# build_branch_diff_synthesis_block: Prompt block listing full branch diff paths
+#
+# Globals:
+#   BASE_BRANCH - Branch diff baseline (read)
+#
+# Arguments:
+#   $1 - Changed files (newline-separated, repository-relative)
+#
+# Outputs:
+#   Synthesis checklist markdown to stdout
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function build_branch_diff_synthesis_block {
+    local changed_files="$1"
+    local path
+
+    printf '%s\n' \
+        "## Report synthesis (required before finishing)" \
+        "The mechanical verifier compares your \`### Changes\` table to the **full branch diff** (\`origin/${BASE_BRANCH}...HEAD\`), including files committed in earlier loop attempts on this branch." \
+        "Run \`git diff --name-only origin/${BASE_BRANCH}...HEAD -- . ':!.loop/'\` and ensure **every** listed path has a row under \`### Changes\`." \
+        "" \
+        "Paths currently in the branch diff:"
+    while IFS= read -r path; do
+        [[ -z ${path} ]] && continue
+        printf -- "- \`%s\`\n" "${path}"
+    done <<< "${changed_files}"
 }
 
 #######################################

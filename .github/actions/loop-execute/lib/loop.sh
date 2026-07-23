@@ -180,7 +180,21 @@ function run_bounded_loop {
         attempt_committed="false"
         sync_reject_feedback
 
-        agent_prompt="$(build_agent_prompt "${REJECT_FEEDBACK}")"
+        synthesis_block=""
+        if agent_report_skill_requires_format_check "${SKILL_NAME}" \
+            && { [[ ${HAS_CHANGES} == "true" ]] || [[ ${ATTEMPT} -gt 1 ]]; }; then
+            local pre_branch_files
+            pre_branch_files="$(
+                cd "${WORKTREE_PATH}" || exit 1
+                git fetch origin "${BASE_BRANCH}" --depth=1 2> /dev/null || true
+                git diff --name-only "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/' || true
+            )"
+            if [[ -n ${pre_branch_files} ]]; then
+                synthesis_block="$(build_branch_diff_synthesis_block "${pre_branch_files}")"
+            fi
+        fi
+
+        agent_prompt="$(build_agent_prompt "${REJECT_FEEDBACK}" "${synthesis_block}")"
         printf '%s\n' "${agent_prompt}" > "${attempt_dir}/agent-prompt.txt"
         if [[ -n ${REJECT_FEEDBACK} ]]; then
             echo "::group::Verifier feedback injected for attempt ${ATTEMPT}"

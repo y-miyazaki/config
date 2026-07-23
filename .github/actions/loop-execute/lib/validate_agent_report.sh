@@ -173,6 +173,133 @@ function normalize_report_path {
 }
 
 #######################################
+# reconcile_agent_report_with_branch_diff: Append missing branch-diff paths to Changes table
+#
+# Description:
+#   On multi-attempt loops the implementer may document only the current attempt's
+#   edits while the verifier checks the cumulative branch diff. Add placeholder rows
+#   for omitted paths so mechanical validation reflects git truth.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Agent output file path (modified in place)
+#   $2 - Changed files (newline-separated, repository-relative)
+#   $3 - Skill name
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function reconcile_agent_report_with_branch_diff {
+    local output_file="$1"
+    local changed_files="$2"
+    local skill_name="$3"
+    local primary path norm changed_path found
+    local -a change_paths=() missing_paths=()
+
+    if ! agent_report_skill_requires_format_check "${skill_name}"; then
+        return 0
+    fi
+    if [[ ! -f ${output_file} || -z ${changed_files} ]]; then
+        return 0
+    fi
+    if agent_report_is_survey_output "${output_file}" "${changed_files}"; then
+        return 0
+    fi
+
+    primary="$(agent_report_primary_subsection "${skill_name}")"
+    mapfile -t change_paths < <(extract_subsection_table_col1 "${output_file}" "${primary}")
+
+    while IFS= read -r changed_path; do
+        [[ -z ${changed_path} ]] && continue
+        changed_path="${changed_path#./}"
+        found=false
+        for path in "${change_paths[@]}"; do
+            [[ -z ${path} ]] && continue
+            if [[ $(normalize_report_path "${path}") == "${changed_path}" ]]; then
+                found=true
+                break
+            fi
+        done
+        if [[ ${found} == false ]]; then
+            missing_paths+=("${changed_path}")
+        fi
+    done <<< "${changed_files}"
+
+    if [[ ${#missing_paths[@]} -eq 0 ]]; then
+        return 0
+    fi
+
+    python3 - "${output_file}" "${primary}" "${missing_paths[@]}" << 'PY'
+import sys
+from pathlib import Path
+
+output_path = Path(sys.argv[1])
+primary = sys.argv[2]
+missing = sys.argv[3:]
+text = output_path.read_text(encoding="utf-8")
+rows = [
+    f"| `{path}` | Updated in an earlier loop attempt | See branch diff |"
+    for path in missing
+]
+section_header = f"### {primary}"
+if section_header not in text:
+    insert_at = text.find("## Verification")
+    block = (
+        "## Summary\n\n"
+        f"{section_header}\n\n"
+        "| Target | What was wrong | What changed |\n"
+        "| ------ | -------------- | ------------ |\n"
+        + "\n".join(rows)
+        + "\n\n"
+    )
+    if insert_at == -1:
+        text = text.rstrip() + "\n\n" + block
+    else:
+        text = text[:insert_at] + block + text[insert_at:]
+    output_path.write_text(text, encoding="utf-8")
+    sys.exit(0)
+
+lines = text.splitlines()
+out = []
+in_section = False
+inserted = False
+section_re = section_header
+for idx, line in enumerate(lines):
+    if line.strip() == section_re:
+        in_section = True
+        out.append(line)
+        continue
+    if in_section and (line.startswith("### ") or line.startswith("## ")):
+        if not inserted:
+            out.extend(rows)
+            inserted = True
+        in_section = False
+    if in_section and line.startswith("|") and "---" not in line:
+        out.append(line)
+        if idx + 1 >= len(lines) or not (
+            lines[idx + 1].startswith("|") and "---" not in lines[idx + 1]
+        ):
+            if not inserted:
+                out.extend(rows)
+                inserted = True
+                in_section = False
+        continue
+    out.append(line)
+
+if in_section and not inserted:
+    out.extend(rows)
+
+output_path.write_text("\n".join(out) + ("\n" if text.endswith("\n") else ""), encoding="utf-8")
+PY
+}
+
+#######################################
 # validate_agent_report: Validate implementer output format and diff consistency
 #
 # Globals:

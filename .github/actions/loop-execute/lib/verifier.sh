@@ -249,6 +249,7 @@ function run_verify {
     local format_violations=""
     if [[ -f ${agent_output_file} ]] \
         && agent_report_skill_requires_format_check "${SKILL_NAME}"; then
+        reconcile_agent_report_with_branch_diff "${agent_output_file}" "${changed_files}" "${SKILL_NAME}"
         format_violations="$(validate_agent_report "${agent_output_file}" "${changed_files}" "${SKILL_NAME}" || true)"
         if [[ -n ${format_violations} ]]; then
             record_structured_reject "${attempt_dir}" "${attempt_num}" "${changed_files//$'\n'/,}" \

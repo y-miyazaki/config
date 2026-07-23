@@ -242,6 +242,33 @@ EOF
     [[ $output == *"docs/b.md"* ]]
 }
 
+@test "reconcile_agent_report_with_branch_diff appends missing branch-diff rows" {
+    local out="${TEST_TMP}/reconcile.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Updated one doc file.
+
+## Summary
+
+### Changes
+
+| File | What was wrong | What changed |
+| ---- | -------------- | ------------ |
+| docs/a.md | stale | fixed |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| markdownlint | pass |
+EOF
+    reconcile_agent_report_with_branch_diff "${out}" $'docs/a.md\ndocs/b.md\n' "docs-updater"
+    run validate_agent_report "${out}" $'docs/a.md\ndocs/b.md\n' "docs-updater"
+    [ "$status" -eq 0 ]
+    grep -q 'docs/b.md' "${out}"
+}
+
 @test "validate_agent_report rejects legacy Fixes Applied and Outcome sections" {
     local out="${TEST_TMP}/legacy.txt"
     cat > "${out}" << 'EOF'
