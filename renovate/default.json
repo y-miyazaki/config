@@ -167,11 +167,31 @@
       "platformAutomerge": false
     },
     {
+      "description": "Rules: Update Terraform providers and refresh .terraform.lock.hcl",
+      "addLabels": ["terraform"],
+      "automerge": false,
+      "commitMessagePrefix": "renovate(terraform):",
+      "matchDatasources": ["terraform-provider"],
+      "matchDepTypes": ["provider", "required_provider"],
+      "matchFileNames": ["**/*.tf", "**/*.tfvars", "**/.terraform.lock.hcl"],
+      "matchManagers": ["terraform"],
+      "platformAutomerge": false,
+      "postUpdateOptions": ["terraformLockFileMaintenance"]
+    },
+    {
       "description": "Rules: Update Terraform modules / providers grouping",
       "commitMessagePrefix": "renovate(terraform):",
+      "groupName": "terraform dependencies",
+      "matchFileNames": ["**/*.tf", "**/*.tfvars", "**/.terraform.lock.hcl"],
+      "matchManagers": ["terraform"]
+    },
+    {
+      "description": "Rules: Terraform lock file maintenance for provider hashes",
+      "addLabels": ["terraform"],
+      "commitMessagePrefix": "renovate(terraform):",
+      "matchFileNames": ["**/.terraform.lock.hcl"],
       "matchManagers": ["terraform"],
-      "matchFileNames": ["**/*.tf", "**/*.tfvars"],
-      "groupName": "terraform dependencies"
+      "matchUpdateTypes": ["lockFileMaintenance"]
     },
     {
       "description": "Rules: Update tflint plugins",
@@ -248,11 +268,12 @@
       "addLabels": ["mise"]
     },
     {
-      "description": "Rules: Group terraform updates across GitHub Actions workflow inputs and mise",
-      "groupName": "terraform",
-      "matchPackageNames": ["hashicorp/terraform", "aqua:hashicorp/terraform"],
+      "description": "Rules: Group terraform CLI updates across GitHub Actions workflow inputs and mise (exclude Terraform provider)",
+      "addLabels": ["terraform"],
       "commitMessagePrefix": "renovate(terraform):",
-      "addLabels": ["terraform"]
+      "excludeDatasources": ["terraform-provider"],
+      "groupName": "terraform",
+      "matchPackageNames": ["hashicorp/terraform", "aqua:hashicorp/terraform"]
     },
     {
       "description": "Rules: Group tflint updates across GitHub Actions workflow inputs and mise",
