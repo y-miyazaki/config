@@ -267,7 +267,7 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 
 ### Platform (all loops)
 
-- [x] `loop-ci-sweeper/scripts/detect_ci_failures.sh` (facts output)
+- [x] `.apm/packages/common/.apm/skills/ci-sweeper/scripts/detect_ci_failures.sh` (facts output)
 - [x] `on-loop-ci-sweeper.yaml` dogfood caller via `ci-loop-caller-full-github`
 - [x] `branch_match` + per-branch `targets["integration:<branch>"]`
 - [x] State migration: flat `last_sha` removed (`targets` map only)

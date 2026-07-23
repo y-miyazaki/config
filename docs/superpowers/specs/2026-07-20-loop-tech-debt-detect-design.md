@@ -2,16 +2,16 @@
 
 **Status:** Implemented  
 **Date:** 2026-07-20  
-**Package:** `.apm/packages/loop-tech-debt`  
-**Skill:** `loop-tech-debt` (Execute / classify already exists; this design adds Detect)
+**Package:** `.apm/packages/common`  
+**Skill:** `tech-debt` under `.apm/packages/common/.apm/skills/tech-debt/` (Execute / classify already exists; this design adds Detect)
 
 ## Problem
 
-`loop-tech-debt` classifies injected `signals[]` / `hotspots[]` and writes reports, but there is **no `detect_*.sh`**. Without a facts-only detect script, the loop cannot run end-to-end under `loop-detect`. Mechanical sensors must cover what lint does **not**, scan the **whole repository** by default, and match sibling loop script quality (DOC-01, structure, bats).
+`tech-debt` classifies injected `signals[]` / `hotspots[]` and writes reports, but there is **no `detect_*.sh`**. Without a facts-only detect script, the loop cannot run end-to-end under `loop-detect`. Mechanical sensors must cover what lint does **not**, scan the **whole repository** by default, and match sibling loop script quality (DOC-01, structure, bats).
 
 ## Goals
 
-- Add `detect_tech_debt.sh` that emits facts-only JSON matching `.apm/packages/loop-tech-debt/.apm/skills/loop-tech-debt/references/category-input-schema.md` (closed `kind` set + optional `warnings[]`).
+- Add `detect_tech_debt.sh` that emits facts-only JSON matching `.apm/packages/common/.apm/skills/tech-debt/references/category-input-schema.md` (closed `kind` set + optional `warnings[]`).
 - Default scan: **full repository** (`scope=all`). Git range is optional debug only; not the debt observation model.
 - Sensors: **core** deps + docs (via self-contained `markdown-link-check`) + churn; **secondary** TODO/FIXME/HACK/XXX for report enrichment.
 - Exclude lint/SAST territory (complexity, style, unused, naming).
@@ -64,7 +64,7 @@ detect_tech_debt.sh
   output_json                   # status, skip, signals, hotspots, warnings
         │
         ▼
-loop-prompt-generate → loop-tech-debt skill (LLM classifies; hint optional)
+loop-prompt-generate → tech-debt skill (LLM classifies; hint optional)
 ```
 
 **Prune paths** (align with docs-triage find prune): `.git`, hidden dirs, `.agents`/`.cursor`/`.claude`/`.codex`/`.kiro`/`.vscode`, `apm_modules`, `node_modules`, `dist`/`build`/`bin`, `docs/report/**` (avoid self-noise).

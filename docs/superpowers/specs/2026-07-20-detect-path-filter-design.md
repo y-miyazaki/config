@@ -18,11 +18,11 @@ Filtering was duplicated as `find -prune` blocks and per-sensor `path_is_pruned`
 
 Enumeration strategy differs by detect type:
 
-| Type         | Work-set source                   | Example            |
-| ------------ | --------------------------------- | ------------------ |
-| Delta-driven | `git diff` (+ optional expansion) | `loop-docs-triage` |
-| Full-scan    | `**/*` patterns / tracked tree    | `loop-tech-debt`   |
-| Event-driven | External events                   | `loop-ci-sweeper`  |
+| Type         | Work-set source                   | Example                           |
+| ------------ | --------------------------------- | --------------------------------- |
+| Delta-driven | `git diff` (+ optional expansion) | `docs-updater` (docs-triage loop) |
+| Full-scan    | `**/*` patterns / tracked tree    | `tech-debt`                       |
+| Event-driven | External events                   | `ci-sweeper`                      |
 
 **Filtering is identical** across types: every enumerated path passes through `repo_path_should_skip()`.
 
@@ -78,17 +78,17 @@ Callers that need domain-specific exclusions set `REPO_PATHS_EXTRA_PRUNES` (or p
 
 ## Consumers
 
-| Script                               | `REPO_PATHS_EXTRA_PRUNES`            | Notes                    |
-| ------------------------------------ | ------------------------------------ | ------------------------ |
-| `detect_tech_debt.sh`                | Parent of `TECH_DEBT_DIR` when unset | Full-scan sensors        |
-| `loop-docs-triage/detect_changes.sh` | none (lib default)                   | Delta + doc expansion    |
-| `docs-updater/detect_changes.sh`     | none                                 | Hook-triggered doc drift |
+| Script                                                                       | `REPO_PATHS_EXTRA_PRUNES`            | Notes                                 |
+| ---------------------------------------------------------------------------- | ------------------------------------ | ------------------------------------- |
+| `.apm/packages/common/.apm/skills/tech-debt/scripts/detect_tech_debt.sh`     | Parent of `TECH_DEBT_DIR` when unset | Full-scan sensors                     |
+| `.apm/packages/common/.apm/skills/docs-updater/scripts/detect_changes.sh`    | none (lib default)                   | Delta + doc expansion / loop findings |
+| `.agents/skills/docs-updater/scripts/detect_changes.sh` (runtime)            | none                                 | Installed path after `apm install`    |
 
 ## Out of scope
 
 - Unifying enumeration strategy across detect types
 - Changing detect JSON output contracts
-- `loop-ci-sweeper` / `loop-changelog` (no repository file walk)
+- `ci-sweeper` / `changelog` detect scripts (no repository file walk)
 
 ## Spec self-review
 

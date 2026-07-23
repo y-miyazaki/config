@@ -1,6 +1,6 @@
 # loop-tech-debt Detect Layer Implementation Plan
 
-> **Superseded:** Package and skill were renamed to `loop-tech-debt` (`detect_tech_debt.sh`). See [loop-tech-debt plan](2026-07-20-loop-tech-debt.md). Retained for historical task context only.
+> **Superseded:** Skill lives under `.apm/packages/common/.apm/skills/tech-debt/` (`detect_tech_debt.sh`); separate `loop-*` APM packages were removed. See [loop-tech-debt plan](2026-07-20-loop-tech-debt.md). Retained for historical task context only.
 >
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -14,7 +14,7 @@
 
 ## Global Constraints
 
-- Edit APM sources under `.apm/packages/loop-tech-debt/` only for skill/script; regenerate distributed trees with `apm install --update` when needed.
+- Edit APM sources under `.apm/packages/common/.apm/skills/tech-debt/` only for skill/script; regenerate distributed trees with `apm install --update` when needed.
 - Script DOC/structure must match `detect_changes.sh` / `detect_ci_failures.sh` + `shell-script.instructions.md` (`#######################################` headers; Arguments/Global Variables/Returns on every function; `show_usage` → `parse_arguments` → a-z → `main`).
 - Default `SCOPE=all` (full repo). Accept `staged`/`range` for loop-detect parity.
 - Exit 0 always; errors in JSON `status=error`.
@@ -22,7 +22,7 @@
 - No `on-loop-tech-debt.yaml` in this plan.
 - No dual broken-link implementations (mlc only; no bash existence fallback).
 - No new-technology / migration playbook text beyond one explicit out-of-scope line.
-- Bats path: `test/bats/.apm/packages/loop-tech-debt/detect_tech_debt.bats` (same layout as sibling loops).
+- Bats path: `test/bats/.apm/packages/common/tech-debt/detect_tech_debt.bats` (same layout as sibling loops).
 - `scripts/lib/` only via `bash scripts/self/apm/sync_skill_lib.sh` (never hand-edit skill lib copies).
 - Pin: `markdown-link-check@3.14.2` (matches `mise.toml`).
 
@@ -30,9 +30,9 @@
 
 | Path                                                                                  | Role                                                     |
 | ------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| `.apm/packages/loop-tech-debt/.apm/skills/loop-tech-debt/scripts/detect_tech_debt.sh` | Detect entry (create)                                    |
-| `.apm/packages/loop-tech-debt/.apm/skills/loop-tech-debt/scripts/lib/*`               | Synced from `scripts/lib/`                               |
-| `test/bats/.apm/packages/loop-tech-debt/detect_tech_debt.bats`                        | Suite (create)                                           |
+| `.apm/packages/common/.apm/skills/tech-debt/scripts/detect_tech_debt.sh` | Detect entry (create)                                    |
+| `.apm/packages/common/.apm/skills/tech-debt/scripts/lib/*`               | Synced from `scripts/lib/`                               |
+| `test/bats/.apm/packages/common/tech-debt/detect_tech_debt.bats`                        | Suite (create)                                           |
 | `test/bats/support/common.bash`                                                       | Add `assert_detect_tech_debt_*_json` helpers             |
 | `references/category-input-schema.md`                                                 | Closed kinds + `warnings[]`                              |
 | `references/category-debt-taxonomy.md`                                                | Lint exclusion + no migration playbook                   |
@@ -45,8 +45,8 @@
 
 **Files:**
 
-- Create: `.apm/packages/loop-tech-debt/.apm/skills/loop-tech-debt/scripts/detect_tech_debt.sh`
-- Create: `test/bats/.apm/packages/loop-tech-debt/detect_tech_debt.bats`
+- Create: `.apm/packages/common/.apm/skills/tech-debt/scripts/detect_tech_debt.sh`
+- Create: `test/bats/.apm/packages/common/tech-debt/detect_tech_debt.bats`
 - Modify: `test/bats/support/common.bash` (assert helpers)
 - Run: `bash scripts/self/apm/sync_skill_lib.sh` (creates `scripts/lib/`)
 
@@ -57,13 +57,13 @@
 
 - [ ] **Step 1: Write failing bats (CLI + empty skip)**
 
-Create `test/bats/.apm/packages/loop-tech-debt/detect_tech_debt.bats`:
+Create `test/bats/.apm/packages/common/tech-debt/detect_tech_debt.bats`:
 
 ```bash
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
-# Tests for .apm/packages/loop-tech-debt/.apm/skills/loop-tech-debt/scripts/detect_tech_debt.sh
+# Tests for .apm/packages/common/.apm/skills/tech-debt/scripts/detect_tech_debt.sh
 #
 # Use cases:
 # - detect_tech_debt defaults to scope all and skips on empty fixture repo
@@ -77,7 +77,7 @@ done
 # shellcheck disable=SC1091
 source "${_bats_support}/support/common.bash"
 
-DETECT_SCRIPT="$(apm_skill_script_path loop-tech-debt detect_tech_debt.sh)"
+DETECT_SCRIPT="$(apm_skill_script_path tech-debt detect_tech_debt.sh)"
 
 @test "detect_tech_debt defaults to scope all and skips on empty fixture repo" {
     git_test_repo_setup
@@ -179,7 +179,7 @@ export -f assert_detect_tech_debt_ok_json assert_detect_tech_debt_error_json
 - [ ] **Step 2: Run bats — expect FAIL (script missing)**
 
 ```bash
-bats test/bats/.apm/packages/loop-tech-debt/detect_tech_debt.bats
+bats test/bats/.apm/packages/common/tech-debt/detect_tech_debt.bats
 ```
 
 Expected: FAIL resolving/running `detect_tech_debt.sh`.
@@ -187,7 +187,7 @@ Expected: FAIL resolving/running `detect_tech_debt.sh`.
 - [ ] **Step 3: Create scripts dir, sync lib, implement scaffold**
 
 ```bash
-mkdir -p .apm/packages/loop-tech-debt/.apm/skills/loop-tech-debt/scripts
+mkdir -p .apm/packages/common/.apm/skills/tech-debt/scripts
 bash scripts/self/apm/sync_skill_lib.sh
 ```
 
@@ -224,14 +224,14 @@ Header must document Design Rules: facts only; exit 0; full-repo default; no lin
 - [ ] **Step 4: Re-run bats — expect PASS for Task 1 tests**
 
 ```bash
-bats test/bats/.apm/packages/loop-tech-debt/detect_tech_debt.bats
+bats test/bats/.apm/packages/common/tech-debt/detect_tech_debt.bats
 ```
 
 - [ ] **Step 5: Commit** (only if user requested commits)
 
 ```bash
-git add .apm/packages/loop-tech-debt/.apm/skills/loop-tech-debt/scripts \
-  test/bats/.apm/packages/loop-tech-debt/detect_tech_debt.bats \
+git add .apm/packages/common/.apm/skills/tech-debt/scripts \
+  test/bats/.apm/packages/common/tech-debt/detect_tech_debt.bats \
   test/bats/support/common.bash
 git commit -m "$(cat <<'EOF'
 feat(loop-tech-debt): scaffold detect_tech_debt CLI and JSON contract
@@ -538,8 +538,8 @@ Expected: exit 0
 - [ ] **Step 2: Shell validation**
 
 ```bash
-bash -n .apm/packages/loop-tech-debt/.apm/skills/loop-tech-debt/scripts/detect_tech_debt.sh
-shellcheck .apm/packages/loop-tech-debt/.apm/skills/loop-tech-debt/scripts/detect_tech_debt.sh
+bash -n .apm/packages/common/.apm/skills/tech-debt/scripts/detect_tech_debt.sh
+shellcheck .apm/packages/common/.apm/skills/tech-debt/scripts/detect_tech_debt.sh
 ```
 
 Expected: clean (or only justified disables matching siblings)
@@ -547,7 +547,7 @@ Expected: clean (or only justified disables matching siblings)
 - [ ] **Step 3: Full bats suite**
 
 ```bash
-bats test/bats/.apm/packages/loop-tech-debt/detect_tech_debt.bats
+bats test/bats/.apm/packages/common/tech-debt/detect_tech_debt.bats
 ```
 
 Expected: all PASS

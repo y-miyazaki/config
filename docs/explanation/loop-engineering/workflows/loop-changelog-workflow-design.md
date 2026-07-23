@@ -158,7 +158,7 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 
 ### Platform (all loops)
 
-- [x] `loop-changelog/scripts/detect_changelog_commits.sh` (facts output)
+- [x] `.apm/packages/common/.apm/skills/changelog/scripts/detect_changelog_commits.sh` (facts output)
 - [x] `on-loop-changelog.yaml` dogfood caller via `ci-loop-caller`
 - [x] `branch_match` + per-branch `targets["integration:<branch>"]`
 - [x] State migration: flat `last_sha` removed (`targets` map only)

@@ -195,6 +195,16 @@ For workflow env and behavior, see [Changelog Workflow Design](workflows/loop-ch
 
 For workflow env and behavior, see [Refactor Workflow Design](workflows/loop-refactor-workflow-design.md).
 
+## tech-debt (Technical Debt Report)
+
+| Component                                                                | Description                                                          |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| `.apm/packages/common/.apm/skills/tech-debt/SKILL.md`                    | Classify mechanical signals; write dated report under `docs/report/` |
+| `.apm/packages/common/.apm/skills/tech-debt/scripts/detect_tech_debt.sh` | Full-repo mechanical debt signals (`signals[]`, `hotspots[]`)        |
+| `eval.yaml` + `evals/tasks/`                                             | waza evaluation suite                                                |
+
+For workflow env and behavior, see [Report Tech Debt Workflow Design](workflows/loop-tech-debt-workflow-design.md).
+
 ## Execution Flow
 
 ```text
