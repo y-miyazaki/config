@@ -45,7 +45,7 @@ claude = "2.1.211"                               # Claude Code CLI
 ], allow_builds = [
   "lean-ctx-bin",
 ] } # context optimizer (hooks CLI + MCP npm)
-"github:microsoft/waza" = "v0.38.0"               # agent skill evaluator
+"github:microsoft/waza" = "v0.38.2"               # agent skill evaluator
 
 # AWS related tools
 "aqua:aws/aws-cli" = "2.35.24"      # AWS CLI
