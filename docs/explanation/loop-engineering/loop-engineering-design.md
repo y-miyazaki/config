@@ -11,6 +11,7 @@ For concrete specifications (Actions/Workflows list, interfaces), see [Specifica
 | `ci-sweeper`        | `ci-sweeper`     | Phase 0 done; multi-branch in progress | L2 (Assisted) |
 | `changelog`         | `changelog`      | Phase 0 done; workflow design complete | L2 (Assisted) |
 | `refactor`          | `refactor`       | Phase 0 done; workflow design complete | L2 (Assisted) |
+| `tech-debt`         | `tech-debt`      | Phase 0 done; workflow design complete | L2 (Assisted) |
 | `loop-issue-triage` | —                | Not started                            | -             |
 | `loop-stale-pr`     | —                | Not started                            | -             |
 
@@ -28,6 +29,7 @@ Referencing the design philosophy of GitHub Agentic Workflows ([official blog](h
 | **ci-sweeper**                   | GitHub API: failed runs (integration + optional PR) | Auto-fix; PR or push per mode     | L2 default; L3 opt-in — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md) |
 | **changelog**                    | git log: parse conventional commits                 | Auto-generate/update CHANGELOG.md | L2 — see [Changelog Workflow](workflows/loop-changelog-workflow-design.md)                      |
 | **refactor**                     | repo scan: duplication_block / oversized_unit hints | O1/O2 structural fix; open PR     | L2 — see [Refactor Workflow](workflows/loop-refactor-workflow-design.md)                        |
+| **tech-debt**                    | full-repo mechanical debt sensors                   | Classify + write dated report PR  | L2 — see [Report Tech Debt Workflow](workflows/loop-tech-debt-workflow-design.md)              |
 
 #### CI failure repair — one package, layered responsibilities
 
@@ -52,6 +54,8 @@ The `result` body is **observation-trigger-specific** — not one shared schema:
 | CI failure     | `ci-sweeper`       | `ci-sweeper`     | `failures[]`, `failure_type` hint, (future) `stack_hint` |
 | Doc drift      | `docs-triage`      | `docs-updater`   | `changed_files`, `affected_docs`, …                      |
 | Changelog      | `changelog`        | `changelog`      | `commits[]`, …                                           |
+| Refactor hints | `refactor`         | `refactor`       | `hints[]` (`duplication_block`, `oversized_unit`)        |
+| Tech debt      | `tech-debt`        | `tech-debt`      | `signals[]`, `hotspots[]`, `previous_report`             |
 
 Semantic arrays such as `findings[]` are **Execute** output only — see [Semantic Findings](CONTEXT.md#language). Detect emits mechanical facts.
 
@@ -154,9 +158,9 @@ Hook/manual and loop skills live under `.apm/packages/common/.apm/skills/` — s
 
 | Identifier type | Naming pattern             | Example                                  |
 | --------------- | -------------------------- | ---------------------------------------- |
-| Workflow file   | `on-loop-<loop_name>.yaml` | `on-loop-docs-triage.yaml`               |
-| `loop_name`     | kebab-case (state key)     | `docs-triage`, `ci-sweeper`, `changelog` |
-| Skill directory | kebab-case (no `loop-`)    | `docs-updater`, `ci-sweeper`, `refactor` |
+| Workflow file   | `on-loop-<loop_name>.yaml` | `on-loop-docs-triage.yaml`                            |
+| `loop_name`     | kebab-case (state key)     | `docs-triage`, `ci-sweeper`, `changelog`, `tech-debt` |
+| Skill directory | kebab-case (no `loop-`)    | `docs-updater`, `ci-sweeper`, `refactor`, `tech-debt` |
 
 ## docs-triage (Docs Update Loop)
 
@@ -194,6 +198,16 @@ For workflow env and behavior, see [Changelog Workflow Design](workflows/loop-ch
 | `.apm/packages/common/.apm/skills/refactor/scripts/detect_refactor.sh` | Mechanical hints (`duplication_block`, `oversized_unit`) |
 
 For workflow env and behavior, see [Refactor Workflow Design](workflows/loop-refactor-workflow-design.md).
+
+## tech-debt (Technical Debt Report)
+
+| Component                                                                | Description                                                          |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| `.apm/packages/common/.apm/skills/tech-debt/SKILL.md`                    | Classify mechanical debt signals; write dated report under allowlist |
+| `.apm/packages/common/.apm/skills/tech-debt/scripts/detect_tech_debt.sh` | Full-repo sensors (`signals[]`, `hotspots[]`)                        |
+| `eval.yaml` + `evals/tasks/`                                             | waza evaluation suite                                                |
+
+For workflow env and behavior, see [Report Tech Debt Workflow Design](workflows/loop-tech-debt-workflow-design.md).
 
 ## Execution Flow
 
@@ -288,9 +302,9 @@ graph LR
 
     %% Skills
     subgraph skills["Skills"]
-        SK1[loop-changelog]
-        SK2[loop-docs-triage]
-        SK3[loop-ci-sweeper]
+        SK1[changelog]
+        SK2[docs-updater]
+        SK3[ci-sweeper]
     end
 
     %% State
@@ -343,9 +357,11 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 
 ```text
 .loop/
-  state-docs-triage.json    ← owned by loop-docs-triage
-  state-ci-sweeper.json     ← owned by loop-ci-sweeper
-  state-changelog.json      ← owned by loop-changelog
+  state-docs-triage.json    ← owned by docs-triage
+  state-ci-sweeper.json     ← owned by ci-sweeper
+  state-changelog.json      ← owned by changelog
+  state-refactor.json       ← owned by refactor
+  state-tech-debt.json      ← owned by tech-debt
   loop-budget.json          ← per-loop daily run/token caps (read by loop-detect)
   loop-run-log.md           ← shared JSONL run history (append via loop-run-log; 30-day prune)
   .gitkeep
@@ -665,7 +681,7 @@ stateDiagram-v2
 | Skill Watch (no code edit)                 | Finalize records `watch`; ledger/state cursor advances; no `consecutive_failures` increment                               | `outcome: watch`      |
 | Agent produces no changes (non-actionable) | Finalize records `no-op`. Cursor advances                                                                                 | `outcome: no-op`      |
 | Verifier REJECT                            | Finalize deletes branch, records rejection. SHA advances. The rejected diff is not retried — only new commits are scanned | `outcome: rejected`   |
-| Verifier APPROVE → PR CI fails             | PR remains open (blocked by Required Status Checks). SHA advances. loop-ci-sweeper handles cleanup                        | `outcome: pr-created` |
+| Verifier APPROVE → PR CI fails             | PR remains open (blocked by Required Status Checks). SHA advances. ci-sweeper handles cleanup                        | `outcome: pr-created` |
 | Agent job cancelled (user/concurrency)     | Finalize does not run. No state update. Next cron retries from same SHA                                                   | No change             |
 
 **Design rationale**: SHA always advances on successful detect (even if later phases fail). This prevents infinite retry of the same failing diff. If the underlying issue persists, new commits touching the same area will trigger a fresh detection.

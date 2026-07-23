@@ -1,6 +1,6 @@
 # Refactor Workflow Design
 
-Workflow and domain design for the `loop-refactor` (`refactor`) action loop.
+Workflow and domain design for the `refactor` action loop.
 
 | Layer        | Document                                                                                                |
 | ------------ | ------------------------------------------------------------------------------------------------------- |
@@ -9,7 +9,7 @@ Workflow and domain design for the `loop-refactor` (`refactor`) action loop.
 | Invariants   | [Loop Engineering Design](../loop-engineering-design.md)                                                |
 | Skill spec   | [Refactor skill & loop design](../../../superpowers/specs/2026-07-21-refactor-skill-and-loop-design.md) |
 
-**Artifacts:** `on-loop-refactor.yaml` · skill `refactor` · `scripts/detect_refactor.sh`
+**Artifacts:** `on-loop-refactor.yaml` · skill `refactor` · `refactor/scripts/detect_refactor.sh`
 
 Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md).
 
@@ -29,7 +29,7 @@ Detect mechanical structure hints on integration branches and open fix PRs after
 - PR head healing (`pull_requests` default off)
 - Interactive or architecture-improvement intent (O3 proposal path) — use skill `refactor` manually
 - Lint/SAST smell scores as primary detect or repair mission
-- `loop-tech-debt` report input or Apply under `report-*` names
+- `tech-debt` report input or Apply under `report-*` names
 - Sonar CPD default-on (future caller opt-in for duplication only)
 
 | `refactor` (in `common`) | Interactive / loop structural O1/O2 apply | User or `on-loop-refactor.yaml` |
@@ -159,7 +159,7 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 
 ### Platform (all loops)
 
-- [x] `loop-refactor/scripts/detect_refactor.sh` (H1 facts output)
+- [x] `refactor/scripts/detect_refactor.sh` (H1 facts output)
 - [x] `on-loop-refactor.yaml` dogfood caller via `ci-loop-caller`
 - [x] `branch_match` + per-branch `targets["integration:<branch>"]`
 - [x] State migration: flat `last_sha` removed (`targets` map only)
@@ -170,12 +170,12 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 
 ### Loop-specific
 
-- [x] `loop-refactor` skill + references
+- [x] `refactor` skill + references
 - [x] Bats suite for detect script (TEST-00)
 
 ## Cross-Loop Note
 
-`loop-refactor` is orthogonal to `loop-ci-sweeper` and `loop-tech-debt`. It does not consume tech-debt reports. If CI fails during a refactor PR, `loop-ci-sweeper` owns repair.
+`refactor` is orthogonal to `ci-sweeper` and `tech-debt`. It does not consume tech-debt reports. If CI fails during a refactor PR, `ci-sweeper` owns repair.
 
 ## References
 

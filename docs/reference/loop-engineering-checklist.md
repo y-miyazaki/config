@@ -74,7 +74,7 @@ See [CONTEXT — Semantic Findings](../explanation/loop-engineering/CONTEXT.md#l
 
 #### Caller (`on-loop-*.yaml`)
 
-- [ ] `prompt_instructions` includes repo-specific overlay (stack routing table for `loop-ci-sweeper`-type loops)
+- [ ] `prompt_instructions` includes repo-specific overlay (stack routing table for `ci-sweeper`-type loops)
 - [ ] `agent_verifier_criteria` matches observation trigger (CI log fit, doc factual accuracy, changelog version rules, …)
 - [ ] Fix PRs labeled `loop-automation` for `on-loop-state-promote` matching
 

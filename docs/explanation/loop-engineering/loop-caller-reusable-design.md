@@ -145,7 +145,7 @@ Cron and `workflow_dispatch` runs have no `github.event.inputs` — fixed litera
 
 ### `workflow_run` trigger (ci-sweeper)
 
-Canonical example: [Loop Caller Inputs Reference — Event keys](workflows/loop-caller-inputs-reference.md#ci-sweeper-loop-ci-sweeper) (`detect_domain_env_json` with `CI_SWEEPER_*` uppercase keys).
+Canonical example: [Loop Caller Inputs Reference — Event keys](workflows/loop-caller-inputs-reference.md#ci-sweeper-ci-sweeper) (`detect_domain_env_json` with `CI_SWEEPER_*` uppercase keys).
 
 Enable `workflow_run` on the caller only; reusable workflow stays trigger-agnostic.
 

@@ -1,6 +1,6 @@
 # Changelog Loop Workflow Design
 
-Workflow and domain design for the `loop-changelog` (`changelog`) loop.
+Workflow and domain design for the `changelog` loop.
 
 | Layer        | Document                                                           |
 | ------------ | ------------------------------------------------------------------ |
@@ -8,7 +8,7 @@ Workflow and domain design for the `loop-changelog` (`changelog`) loop.
 | Caller shell | [Loop Caller Workflows Design](../loop-caller-workflows-design.md) |
 | Invariants   | [Loop Engineering Design](../loop-engineering-design.md)           |
 
-**Artifacts:** `on-loop-changelog.yaml` · skill `loop-changelog` · `scripts/detect_changelog_commits.sh`
+**Artifacts:** `on-loop-changelog.yaml` · skill `changelog` · `changelog/scripts/detect_changelog_commits.sh`
 
 Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md).
 
@@ -32,7 +32,7 @@ Maintain [Keep a Changelog](https://keepachangelog.com/) `CHANGELOG.md` on integ
 - Commits without a clear `prefix: description` or `prefix(scope): description` shape
 - Implementer edits to loop state (finalize bundles state after verification)
 
-Skill execution boundaries: `loop-changelog` SKILL.md (`USE FOR` / `DO NOT USE FOR`).
+Skill execution boundaries: `changelog` SKILL.md (`USE FOR` / `DO NOT USE FOR`).
 
 ### User-facing invariants
 
@@ -105,7 +105,7 @@ Detect script outputs **facts** (not formatted changelog prose):
 | `repository_url`   | Web base for commit links (`GITHUB_*`, git remote, or override)                                                |
 | `skip`             | `true` when no unreleased commits and no undocumented releases                                                 |
 
-**Skill** (`loop-changelog`) creates the Keep a Changelog template when `changelog_exists` is false, groups commits under `## [Unreleased]`, and promotes `releases[]` into versioned sections.
+**Skill** (`changelog`) creates the Keep a Changelog template when `changelog_exists` is false, groups commits under `## [Unreleased]`, and promotes `releases[]` into versioned sections.
 
 `loop-detect` emits per-branch `target_json`:
 
@@ -163,7 +163,7 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 
 ### Platform (all loops)
 
-- [x] `loop-changelog/scripts/detect_changelog_commits.sh` (facts output)
+- [x] `changelog/scripts/detect_changelog_commits.sh` (facts output)
 - [x] `on-loop-changelog.yaml` dogfood caller via `ci-loop-caller`
 - [x] `branch_match` + per-branch `targets["integration:<branch>"]`
 - [x] State migration: flat `last_sha` removed (`targets` map only)
@@ -179,7 +179,7 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 
 ## Cross-Loop Note
 
-Changelog runs are doc-metadata only (`CHANGELOG.md`). Coordinate with `loop-docs-triage` via workflow `concurrency` when both target `integration:main`.
+Changelog runs are doc-metadata only (`CHANGELOG.md`). Coordinate with `docs-triage` via workflow `concurrency` when both target `integration:main`.
 
 ## References
 

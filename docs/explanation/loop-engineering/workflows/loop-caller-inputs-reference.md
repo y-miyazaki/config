@@ -279,7 +279,7 @@ detect_domain_env_json: >-
   {"CHANGELOG_FILE":"CHANGELOG.md","CHANGELOG_MERGE_COMMITS":"false"}
 ```
 
-### Changelog (`loop-changelog`)
+### Changelog (`changelog`)
 
 | JSON key                  | Description                                                      | Dogfood value  |
 | ------------------------- | ---------------------------------------------------------------- | -------------- |
@@ -287,7 +287,7 @@ detect_domain_env_json: >-
 | `CHANGELOG_MAX_COMMITS`   | Max commits for `--scope all` (local debugging)                  | `100`          |
 | `CHANGELOG_MERGE_COMMITS` | `"true"` includes merge commits; `"false"` applies `--no-merges` | `"false"`      |
 
-### CI sweeper (`loop-ci-sweeper`)
+### CI sweeper (`ci-sweeper`)
 
 | JSON key                         | Description                                     | Dogfood value                            |
 | -------------------------------- | ----------------------------------------------- | ---------------------------------------- |
@@ -312,7 +312,7 @@ detect_domain_env_json: ${{ format('{{"CI_SWEEPER_EVENT_HEAD_BRANCH":"{0}","CI_S
 | `CI_SWEEPER_WORKFLOW_NAME`     | Failed workflow display name                                                                                     |
 | `CI_SWEEPER_RUN_URL`           | HTML URL of failed run                                                                                           |
 
-### Docs triage (`loop-docs-triage`)
+### Docs triage (`docs-triage`)
 
 | JSON key                  | Description                                          | Dogfood value            |
 | ------------------------- | ---------------------------------------------------- | ------------------------ |
@@ -321,7 +321,7 @@ detect_domain_env_json: ${{ format('{{"CI_SWEEPER_EVENT_HEAD_BRANCH":"{0}","CI_S
 
 When `DOCS_TRIAGE_DOC_GLOBS` is unset, detect falls back to a repository-wide `*.md` find with standard `repo_paths` pruning (excludes `.agents/`, generated trees, etc.). Production callers should set globs explicitly; the fallback is mainly for local runs and tests.
 
-### Report tech debt (`loop-tech-debt`)
+### Report tech debt (`tech-debt`)
 
 Domain paths and filenames are **environment variables** (via `detect_domain_env_json` or manual invocation). Detect CLI stays `--scope` / `--since` only so `loop-detect` can invoke every domain script uniformly.
 
@@ -378,6 +378,7 @@ Not a loop caller; configure via environment when invoking `detect_changes.sh` o
 | changelog   | [Changelog Workflow Design](loop-changelog-workflow-design.md)        | `on-loop-changelog.yaml`   |
 | ci-sweeper  | [CI Sweeper Workflow Design](loop-ci-sweeper-workflow-design.md)      | `on-loop-ci-sweeper.yaml`  |
 | docs-triage | [Docs Triage Workflow Design](loop-docs-triage-workflow-design.md)    | `on-loop-docs-triage.yaml` |
+| refactor    | [Refactor Workflow Design](loop-refactor-workflow-design.md)          | `on-loop-refactor.yaml`    |
 | tech-debt   | [Report Tech Debt Workflow Design](loop-tech-debt-workflow-design.md) | `on-loop-tech-debt.yaml`   |
 
 ## References
