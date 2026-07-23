@@ -18,7 +18,7 @@ metadata:
 ## Input
 
 - **Interactive:** paths/symbols and optional mode — constraints in `## Constraints` or [category-scope.md](references/category-scope.md)
-- **Automation:** detect JSON with `hints[]` in prompt; read `may_edit` from `## Constraints` per [category-automation-envelope.md](references/category-automation-envelope.md)
+- **Automation:** detect JSON with `hints[]` in prompt; read `may_edit`, `write_target`, and `report_file` (when `write_target: report`) from `## Constraints` per [category-automation-envelope.md](references/category-automation-envelope.md)
 
 Path allowlist, when present, arrives in `## Constraints`.
 
@@ -61,7 +61,9 @@ Resolve **may_edit** before Phase B:
 | Interactive — follow-up after a prior survey in the session | `true` when the user asks to apply, fix, or refactor listed candidates                                                   |
 | Automation — `## Constraints`                               | `may_edit: true` or `may_edit: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
 
-Every run has **Phase A — Survey** (discover candidates). **Phase B — Apply** runs only when `may_edit` is `true`.
+When `may_edit` is `true`, resolve `write_target`: on the **interactive** path use `fix` (this skill); on the **automation** path read `write_target` from `## Constraints`. Do not branch on `level` or `delivery`.
+
+Every run has **Phase A — Survey** (discover candidates). **Phase B — Apply** runs only when `may_edit` is `true` and `write_target` is `fix`.
 
 ### Phase A — Survey (always)
 
@@ -71,7 +73,7 @@ Every run has **Phase A — Survey** (discover candidates). **Phase B — Apply*
 4. Lint-primary, feature/API, comment-only overlap, or cross-boundary items → mark **watch** on the candidate row; do not plan apply.
 5. Emit survey result shape per [common-output-format.md](references/common-output-format.md) (`### Candidates` only; no Changes/Deferred/Verification). If zero actionable candidates → no-op report; stop.
 
-### Phase B — Apply (`may_edit: true` only)
+### Phase B — Apply (`may_edit: true` and `write_target: fix` only)
 
 1. For each **apply** candidate in survey order: pick one technique per [category-techniques.md](references/category-techniques.md); minimal in-scope structural edit.
 2. Gate per [category-verification.md](references/category-verification.md). Failed gate for one candidate → revert that edit; move row to **Deferred**; continue remaining candidates.
@@ -84,24 +86,26 @@ Every run has **Phase A — Survey** (discover candidates). **Phase B — Apply*
 2. If empty/`skip` → no-op report; stop.
 3. Run Phase A on **all** `hints[]` entries (not only the first).
 4. When `may_edit` is `false` → stop after Phase A; emit survey shape with `### Candidates`; load `assets/pr-body-template-survey.md` at synthesis; append `## Session Metrics` per [category-automation-envelope.md](references/category-automation-envelope.md); no file edits.
-5. When `may_edit` is `true` → Phase B for every apply candidate within allowlist; structural intent only; load `assets/pr-body-template.md` at synthesis; append `## Session Metrics`.
+5. When `may_edit` is `true` and `write_target` is `fix` → Phase B for every apply candidate within allowlist; structural intent only; load `assets/pr-body-template.md` at synthesis; append `## Session Metrics`.
+6. When `may_edit` is `true` and `write_target` is not `fix` → stop after Phase A; emit survey shape; note expected `write_target: fix` in Overview; append `## Session Metrics`.
 
 ### Interactive path
 
 1. Resolve `may_edit`: structured JSON `mode` per [category-input-schema.md](references/category-input-schema.md) (`survey` → `false`, `apply` → `true`; default `survey` when omitted); else natural language per the table above (default `false` unless apply language or follow-up).
 2. Run Phase A.
 3. `may_edit: false` → emit **survey** result shape; stop; no file edits.
-4. `may_edit: true` → Phase B for all apply candidates; architecture without `approved_slice` → proposal only (no Phase B).
+4. `may_edit: true` → implicit `write_target: fix` on the interactive path; run Phase B for all apply candidates; architecture without `approved_slice` → proposal only (no Phase B).
 5. Emit result shape per [common-output-format.md](references/common-output-format.md).
 
 ### Error Handling
 
-| Condition                                 | Severity    | Action                                                                          |
-| ----------------------------------------- | ----------- | ------------------------------------------------------------------------------- |
-| Automation: empty/`skip`                  | Info        | No-op report; stop                                                              |
-| Survey: zero candidates                   | Info        | No-op report; stop                                                              |
-| Architecture request without slice        | Recoverable | Architecture proposal only; stop                                                |
-| Lint-primary or feature/API candidate     | Recoverable | Watch on candidate; skip apply                                                  |
-| Weak or failed gate for one candidate     | Recoverable | Revert that candidate; Deferred; continue                                       |
-| Cross-boundary or out-of-scope target     | Recoverable | Watch on candidate; skip apply                                                  |
-| Apply requested but `may_edit` is `false` | Info        | Survey only; note that edits require explicit apply request or `may_edit: true` |
+| Condition                                     | Severity    | Action                                                                          |
+| --------------------------------------------- | ----------- | ------------------------------------------------------------------------------- |
+| Automation: empty/`skip`                      | Info        | No-op report; stop                                                              |
+| Survey: zero candidates                       | Info        | No-op report; stop                                                              |
+| Architecture request without slice            | Recoverable | Architecture proposal only; stop                                                |
+| Lint-primary or feature/API candidate         | Recoverable | Watch on candidate; skip apply                                                  |
+| Weak or failed gate for one candidate         | Recoverable | Revert that candidate; Deferred; continue                                       |
+| Cross-boundary or out-of-scope target         | Recoverable | Watch on candidate; skip apply                                                  |
+| Apply requested but `may_edit` is `false`     | Info        | Survey only; note that edits require explicit apply request or `may_edit: true` |
+| `may_edit` true with `write_target` not `fix` | Recoverable | Survey only; note expected `write_target: fix`                                  |

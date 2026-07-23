@@ -36,20 +36,20 @@ Defined here only. Other docs link to this section.
 
 `ci-loop-caller` workflow inputs map to these `loop-detect` environment variables — see [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md#branch-configuration).
 
-| Variable                        | `ci-loop-caller` input         | Description                                                                                                            | Default / empty            |
-| ------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `LOOP_INTEGRATION_BRANCHES`     | `branch_match`                 | Comma-separated branch patterns. Empty = watch `branch_state` only.                                                    | `""`                       |
-| `LOOP_PULL_REQUESTS`            | `pr_enabled` / `pull_requests` | `true` / `false`. Watch open PR heads.                                                                                 | `false`                    |
-| `LOOP_BRANCH_MATCH`             | `branch_match_mode`            | `list` \| `glob` \| `regex`.                                                                                           | `glob`                     |
-| `LOOP_PRIORITY`                 | `priority`                     | Cron mode order. Overridden by [trigger-aware priority](#trigger-aware-priority).                                      | `integration,pull_request` |
-| `LOOP_SCOPED_HEAD_BRANCH`       | (env / future input)           | When set, detect enumerates only this integration branch or PR head. `workflow_run` dogfood derives from event head.   | `""` (scan all)            |
-| `LOOP_FINALIZE_INTEGRATION`     | `finalize_integration`         | Optional override. Default **`open_pr`**. Exception: `push` (not dogfood).                                             | `open_pr` (internal)       |
-| `LOOP_FINALIZE_PULL_REQUEST`    | `finalize_pull_request`        | Optional override. Default **`open_pr`**. Exception: `push_head` (not dogfood).                                        | `open_pr` (internal)       |
-| `DEFAULT_LEVEL`                 | `level`                        | `L1` \| `L2` \| `L3`. L3 + `open_pr` → GitHub auto-merge on bot fix PR. [Single level switch](#single-level-switch).   | `L2`                       |
-| `LOOP_PR_EXCLUDE`               | `pr_exclude`                   | PR exclusion tokens — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md#pr-exclusion-pr_exclude). | `fork,draft,label:no-loop` |
-| `LOOP_PR_INCLUDE_BOTS`          | `pr_include_bots`              | Bot logins to include. Empty = all bots excluded.                                                                      | `""`                       |
-| `LOOP_MAX_TARGETS_PER_SCHEDULE` | `max_targets_per_schedule`     | Max targets per cron tick (fan-out cap).                                                                               | `3`                        |
-| `LOOP_STATE_PUSH_BRANCH`        | `branch_state`                 | Branch for `.loop/*` persistence commits and state migration fallback.                                                 | repository default branch  |
+| Variable                        | `ci-loop-caller` input         | Description                                                                                                                    | Default / empty            |
+| ------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------- |
+| `LOOP_INTEGRATION_BRANCHES`     | `branch_match`                 | Comma-separated branch patterns. Empty = watch `branch_state` only.                                                            | `""`                       |
+| `LOOP_PULL_REQUESTS`            | `pr_enabled` / `pull_requests` | `true` / `false`. Watch open PR heads.                                                                                         | `false`                    |
+| `LOOP_BRANCH_MATCH`             | `branch_match_mode`            | `list` \| `glob` \| `regex`.                                                                                                   | `glob`                     |
+| `LOOP_PRIORITY`                 | `priority`                     | Cron mode order. Overridden by [trigger-aware priority](#trigger-aware-priority).                                              | `integration,pull_request` |
+| `LOOP_SCOPED_HEAD_BRANCH`       | (env / future input)           | When set, detect enumerates only this integration branch or PR head. `workflow_run` dogfood derives from event head.           | `""` (scan all)            |
+| `GIT_LANDING_INTEGRATION`       | (`loop-detect` action only)    | Advanced override when `delivery: open_pr`. Default **`open_pr`**. Exception: `push` (not dogfood).                            | `open_pr` (internal)       |
+| `GIT_LANDING_PULL_REQUEST`      | (`loop-detect` action only)    | Advanced override when `delivery: open_pr`. Default **`open_pr`**. Exception: `push_head` (not dogfood).                       | `open_pr` (internal)       |
+| `DEFAULT_LEVEL`                 | `level`                        | `L1` \| `L2` \| `L3`. L3 + `delivery: open_pr` → GitHub auto-merge on bot fix PR. [Single level switch](#single-level-switch). | `L2`                       |
+| `LOOP_PR_EXCLUDE`               | `pr_exclude`                   | PR exclusion tokens — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md#pr-exclusion-pr_exclude).         | `fork,draft,label:no-loop` |
+| `LOOP_PR_INCLUDE_BOTS`          | `pr_include_bots`              | Bot logins to include. Empty = all bots excluded.                                                                              | `""`                       |
+| `LOOP_MAX_TARGETS_PER_SCHEDULE` | `max_targets_per_schedule`     | Max targets per cron tick (fan-out cap).                                                                                       | `3`                        |
+| `LOOP_STATE_PUSH_BRANCH`        | `branch_state`                 | Branch for `.loop/*` persistence commits and state migration fallback.                                                         | repository default branch  |
 
 `.loop/*` metadata is **always centralized** on `branch_state` (typically `main`), aligned with [cobusgreyling loop-engineering](https://github.com/cobusgreyling/loop-engineering). Fix PRs may target other branches; state does not follow `target.to.branch`.
 

@@ -68,6 +68,7 @@ source "${_bats_support}/support/common.bash"
 ### Support Library
 
 | File | Role |
+| ----- | ----- |
 | `test/bats/support/common.bash` | Optional shared helpers (source paths, fixtures, temp dirs) |
 | `test/bats/support/*.bash` | Domain mocks; load from `setup()` or per-test as needed |
 

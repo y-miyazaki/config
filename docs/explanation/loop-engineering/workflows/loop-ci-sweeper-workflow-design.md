@@ -103,15 +103,18 @@ Keys are passed in `on-loop-ci-sweeper.yaml` via `with:` on `ci-loop-caller-full
 
 Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md). Platform branch/finalize caps: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
 
-**Dogfood minimum (autonomy + PR watch):**
+**Dogfood minimum (autonomy + delivery + PR watch):**
 
 ```yaml
+delivery: open_pr
 level: L2
+may_edit: true
 pr_enabled: true # target name; wire name today: pull_requests
 pr_exclude: fork,draft,label:no-loop
+write_target: fix
 ```
 
-Do **not** set caller `finalize_integration` or `finalize_pull_request` for ci-sweeper — platform defaults to `open_pr` for both modes. See [Level × finalize matrix](loop-caller-inputs-reference.md#level--finalize-matrix).
+Git landing (`open_pr` / `push` / `push_head`) is derived from `delivery` inside `loop-detect`. Advanced overrides use `git_landing_*` on the action only — not caller inputs. See [Level × finalize matrix](loop-caller-inputs-reference.md#level--finalize-matrix).
 
 | Input / JSON key                                            | Description                                                                                                                                                                                                               | Dogfood value                                                                                            |
 | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
@@ -147,7 +150,7 @@ Do **not** set caller `finalize_integration` or `finalize_pull_request` for ci-s
 | `prompt_instructions`                                       | Domain instructions: classify Watch vs Fix; minimal diff; run validation skills.                                                                                                                                          | Inline in caller workflow                                                                                |
 | `skill_name`                                                | Skill package to invoke.                                                                                                                                                                                                  | `ci-sweeper`                                                                                             |
 
-**Removed from dogfood (do not set):** `pr_require`, `finalize_integration`, `finalize_pull_request`.
+**Removed from dogfood (do not set):** `pr_require`, `finalize_integration`, `finalize_pull_request` (replaced by `delivery`).
 
 **Event keys** (embedded in `detect_domain_env_json` when `workflow_run` fires; dogfood caller enables this trigger):
 
@@ -283,7 +286,7 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 - [x] Ledger via `domain_persistence_script` in `loop-finalize`
 - [x] `outcome: watch` for Skill Watch classification
 - [x] `loop-notify-pr` on human PR for `pull_request` mode
-- [x] `open_pr` finalize for PR head targets (`finalize_pull_request` default)
+- [x] `open_pr` git landing for PR head targets (derived from `delivery: open_pr`)
 
 ## workflow_run Operational Checklist
 

@@ -6,7 +6,7 @@ tags:
   - automation
 inputs:
   prompt: >-
-    Use ci-sweeper. ## Constraints may_edit: true You MUST persist edits to disk in the
+    Use ci-sweeper. ## Constraints may_edit: true write_target: fix You MUST persist edits to disk in the
     worktree; a report alone is not sufficient when may_edit is true. Allowed paths:
     scripts/**. Classify the injected regression; emit apply shape with ### Changes and ##
     Verification plus ## Session Metrics. Do not emit ### Candidates. Emit ## Overview and

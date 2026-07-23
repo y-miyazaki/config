@@ -71,17 +71,19 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `detect_domain_env_json` → `REFACTOR_SCAN_GLOBS`           | Comma-separated globs for scan roots.                                                                              | `.apm/packages/**,scripts/**`                        |
 | `detect_script`                                            | Domain detect script path.                                                                                         | `.agents/skills/refactor/scripts/detect_refactor.sh` |
 | `engine`                                                   | AI engine (`claude`, `copilot`, `codex`, `cursor`).                                                                | `cursor`                                             |
-| `finalize_integration`                                     | Finalize strategy for integration targets: `open_pr` or `push` (L3).                                               | `open_pr`                                            |
+| `delivery`                                                 | Platform delivery after APPROVE (`open_pr` for dogfood).                                                           | `open_pr`                                            |
 | `infer_files_pattern`                                      | Extended regex to infer file paths from verifier text.                                                             | See caller workflow                                  |
 | `level`                                                    | Autonomy level (`L1`, `L2`, `L3`). L2 opens review PR.                                                             | `L2`                                                 |
 | `loop_name`                                                | Loop identifier; state file `.loop/state-refactor.json`.                                                           | `refactor`                                           |
 | `max_targets_per_schedule`                                 | Max hints processed per cron tick.                                                                                 | `1`                                                  |
+| `may_edit`                                                 | Agent worktree edit gate (`true` for dogfood).                                                                     | `true`                                               |
 | `no_changes_verdict`                                       | `APPROVE` or `REJECT` when implementer produces no file diff.                                                      | `REJECT`                                             |
 | `pr_body`                                                  | Optional static prefix (dogfood: `""`).                                                                            | `""`                                                 |
 | `pr_title`                                                 | PR title when finalize strategy is `open_pr`.                                                                      | `refactor(loop): structural improvement`             |
 | `prompt_instructions`                                      | Domain instructions: invoke `refactor` survey-then-apply-all path; stack validation via A'.                        | Inline in caller workflow                            |
 | `pull_requests`                                            | Enumerate open PR heads. Refactor loop uses integration branches only.                                             | `false`                                              |
 | `skill_name`                                               | Skill package to invoke.                                                                                           | `refactor`                                           |
+| `write_target`                                             | Agent artifact when `may_edit` is true (`fix` for dogfood).                                                        | `fix`                                                |
 
 ## Detect
 

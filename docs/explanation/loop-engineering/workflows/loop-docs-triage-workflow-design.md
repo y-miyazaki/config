@@ -40,9 +40,10 @@ Both paths share `docs-updater/scripts/detect_changes.sh` for mechanical facts. 
 
 ### Modes
 
-| Mode | Default | Behavior |
-| `integration` | on | Detect on watch branch → fix PR to same branch |
-| `pull_request`| off | not supported for this loop |
+| Mode           | Default | Behavior                                       |
+| -------------- | ------- | ---------------------------------------------- |
+| `integration`  | on      | Detect on watch branch → fix PR to same branch |
+| `pull_request` | off     | not supported for this loop                    |
 
 ## Caller inputs
 
@@ -67,17 +68,19 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `detect_domain_env_json` → `DOCS_TRIAGE_EXTRA_FILES` | Additional non-glob paths (site config) included in doc impact scan.                                                                                                                                                      | `mkdocs.yml`                                             |
 | `detect_script`                                      | Domain detect script path (shared with docs-updater hook path).                                                                                                                                                           | `.agents/skills/docs-updater/scripts/detect_changes.sh`  |
 | `engine`                                             | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                                                                                                                                     | `cursor`                                                 |
-| `finalize_integration`                               | Finalize strategy for integration targets: `open_pr` or `push` (L3).                                                                                                                                                      | `open_pr`                                                |
+| `delivery`                                           | Platform delivery after APPROVE (`open_pr` for dogfood).                                                                                                                                                                  | `open_pr`                                                |
 | `infer_files_pattern`                                | Extended regex to infer file paths from verifier text.                                                                                                                                                                    | See caller workflow                                      |
 | `level`                                              | Autonomy level (`L1`, `L2`, `L3`). L2 opens review PR.                                                                                                                                                                    | `L2`                                                     |
 | `loop_name`                                          | Loop identifier; state file `.loop/state-docs-triage.json`.                                                                                                                                                               | `docs-triage`                                            |
 | `max_targets_per_schedule`                           | Max targets per cron tick after priority filters.                                                                                                                                                                         | `3`                                                      |
+| `may_edit`                                           | Agent worktree edit gate (`true` for dogfood).                                                                                                                                                                            | `true`                                                   |
 | `no_changes_verdict`                                 | `APPROVE` or `REJECT` when implementer produces no file diff.                                                                                                                                                             | `REJECT`                                                 |
 | `pr_body`                                            | Optional static prefix (dogfood: `""`). `loop-finalize` composes agent Overview/Summary + mechanical sections. See [Loop PR Body Readable Design](../../../superpowers/specs/2026-07-21-loop-pr-body-readable-design.md). | `""`                                                     |
 | `pr_title`                                           | PR title when finalize strategy is `open_pr`.                                                                                                                                                                             | `fix(docs): automated documentation update`              |
 | `prompt_instructions`                                | Domain instructions: run docs-updater loop path; address triage findings.                                                                                                                                                 | Inline in caller workflow                                |
 | `pull_requests`                                      | Enumerate open PR heads. Docs-triage uses integration branches only.                                                                                                                                                      | `false`                                                  |
 | `skill_name`                                         | Skill package to invoke.                                                                                                                                                                                                  | `docs-updater`                                           |
+| `write_target`                                       | Agent artifact when `may_edit` is true (`fix` for dogfood).                                                                                                                                                               | `fix`                                                    |
 
 ## Detect
 

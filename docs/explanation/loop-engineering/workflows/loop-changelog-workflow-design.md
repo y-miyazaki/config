@@ -2,10 +2,11 @@
 
 Workflow and domain design for the `loop-changelog` (`changelog`) loop.
 
-| Layer | Document |
-| Platform | [Multi-Branch Loops Design](../multi-branch-loops-design.md) |
+| Layer        | Document                                                           |
+| ------------ | ------------------------------------------------------------------ |
+| Platform     | [Multi-Branch Loops Design](../multi-branch-loops-design.md)       |
 | Caller shell | [Loop Caller Workflows Design](../loop-caller-workflows-design.md) |
-| Invariants | [Loop Engineering Design](../loop-engineering-design.md) |
+| Invariants   | [Loop Engineering Design](../loop-engineering-design.md)           |
 
 **Artifacts:** `on-loop-changelog.yaml` · skill `loop-changelog` · `scripts/detect_changelog_commits.sh`
 
@@ -22,7 +23,7 @@ Maintain [Keep a Changelog](https://keepachangelog.com/) `CHANGELOG.md` on integ
 - Ingest [Conventional Commits](https://www.conventionalcommits.org/) and other explicit prefixed subjects (for example `renovate(scope):`, `chore(deps):`)
 - Promote detect `releases[]` into `## [x.y.z] - date` sections (from git tags and pin/finalize subjects)
 - Add commit links when `repository_url` is resolved (GitHub Actions `GITHUB_*` or git remote; optional `CHANGELOG_REPOSITORY_URL` override)
-- Open an L2 review PR to the watch integration branch; L3 enables GitHub auto-merge on that fix PR. Platform default finalize is `open_pr` — caller need not set `finalize_integration`
+- Open an L2 review PR to the watch integration branch; L3 enables GitHub auto-merge on that fix PR. Set `delivery: open_pr` on the caller (git landing is derived inside `loop-detect`).
 
 ### Out of scope
 
@@ -35,16 +36,18 @@ Skill execution boundaries: `loop-changelog` SKILL.md (`USE FOR` / `DO NOT USE F
 
 ### User-facing invariants
 
-| Invariant | Rationale |
-| One review PR (domain only) | Reviewers judge `CHANGELOG.md` only; loop state advances on merge via `on-loop-state-promote` |
-| No orphan state PRs | Workflow concurrency (`loop-state-main`) serializes with peer loops; merge-gated `pending` lands on `branch_state` |
-| Release sections from facts | Skill may add `## [version] - date` only for versions in detect `releases[]` — never invented versions |
+| Invariant                   | Rationale                                                                                                          |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| One review PR (domain only) | Reviewers judge `CHANGELOG.md` only; loop state advances on merge via `on-loop-state-promote`                      |
+| No orphan state PRs         | Workflow concurrency (`loop-state-main`) serializes with peer loops; merge-gated `pending` lands on `branch_state` |
+| Release sections from facts | Skill may add `## [version] - date` only for versions in detect `releases[]` — never invented versions             |
 
 ### Modes
 
-| Mode | Default | Behavior |
-| `integration` | on | Detect on watch branch → fix PR to same branch |
-| `pull_request`| off | not supported for this loop |
+| Mode           | Default | Behavior                                       |
+| -------------- | ------- | ---------------------------------------------- |
+| `integration`  | on      | Detect on watch branch → fix PR to same branch |
+| `pull_request` | off     | not supported for this loop                    |
 
 ## Caller inputs
 
@@ -90,16 +93,17 @@ Per watch branch, `loop-detect` checks out the branch and invokes `detect_change
 
 Detect script outputs **facts** (not formatted changelog prose):
 
-| Field | Role |
-| `changelog_file` | Target path (default `CHANGELOG.md`) |
-| `changelog_exists` | Whether the changelog file already exists on the scanned branch |
-| `commit_range` | Active git range label |
-| `commits` | Changelog-worthy commits (`sha`, `type`, `subject`, …) |
-| `releases` | Undocumented versions from tags and pin/finalize subjects (`version`, `tag`, `tag_sha`, `date`, `commit_shas`) |
-| `compare_url` | Optional GitHub compare URL for `commit_range` (empty when unknown) |
-| `repository` | `owner/repo` when resolved |
-| `repository_url` | Web base for commit links (`GITHUB_*`, git remote, or override) |
-| `skip` | `true` when no unreleased commits and no undocumented releases |
+| Field              | Role                                                                                                           |
+| ------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `changelog_file`   | Target path (default `CHANGELOG.md`)                                                                           |
+| `changelog_exists` | Whether the changelog file already exists on the scanned branch                                                |
+| `commit_range`     | Active git range label                                                                                         |
+| `commits`          | Changelog-worthy commits (`sha`, `type`, `subject`, …)                                                         |
+| `releases`         | Undocumented versions from tags and pin/finalize subjects (`version`, `tag`, `tag_sha`, `date`, `commit_shas`) |
+| `compare_url`      | Optional GitHub compare URL for `commit_range` (empty when unknown)                                            |
+| `repository`       | `owner/repo` when resolved                                                                                     |
+| `repository_url`   | Web base for commit links (`GITHUB_*`, git remote, or override)                                                |
+| `skip`             | `true` when no unreleased commits and no undocumented releases                                                 |
 
 **Skill** (`loop-changelog`) creates the Keep a Changelog template when `changelog_exists` is false, groups commits under `## [Unreleased]`, and promotes `releases[]` into versioned sections.
 
@@ -122,11 +126,12 @@ Detect script outputs **facts** (not formatted changelog prose):
 
 ### State fields (per target key)
 
-| Field | Role |
-| `last_sha` | Scan cursor; advances when fix PR merges (`on-loop-state-promote`) |
-| `pending` | Written at finalize (`pr-created`); holds `{ sha, pr, … }` until merge |
-| `outcome` | `pr-created`, `rejected`, `no-op`, … |
-| `consecutive_failures` | Circuit breaker |
+| Field                  | Role                                                                   |
+| ---------------------- | ---------------------------------------------------------------------- |
+| `last_sha`             | Scan cursor; advances when fix PR merges (`on-loop-state-promote`)     |
+| `pending`              | Written at finalize (`pr-created`); holds `{ sha, pr, … }` until merge |
+| `outcome`              | `pr-created`, `rejected`, `no-op`, …                                   |
+| `consecutive_failures` | Circuit breaker                                                        |
 
 ## Execute
 

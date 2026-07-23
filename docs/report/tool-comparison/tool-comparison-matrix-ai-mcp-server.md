@@ -124,17 +124,18 @@ MCP Server の選定・比較の判断材料。
 
 本リポジトリは `common-hooks-*` で lean-ctx の `hook rewrite` / `hook redirect` / `hook observe` を既に配布している。rtk の `rtk init -g --agent cursor` も同じ Hook 型・同じ Bash 出力圧縮の思想だが、**同一 PreToolUse 層への併用は非推奨**（後述 Guidelines 参照）。
 
-| 比較項目 | lean-ctx (採用) | rtk (rtk-ai/rtk) |
-| 提供元 | yvgude | rtk-ai |
-| リポジトリ | [GitHub](https://github.com/yvgude/lean-ctx) | [GitHub](https://github.com/rtk-ai/rtk) |
-| 適用レイヤー | Shell Hook + MCP Server | Shell Hook のみ |
-| Cursor 統合 | `lean-ctx hook rewrite` 等 (APM) | `rtk init -g --agent cursor` |
-| 削減方針 | 情報保全優先 (passthrough rules) | 積極的圧縮 (60-90%) |
-| `git diff` 巨大出力 | 素通し (設計意図) | 高削減 (実測 99% 級) |
-| 再読込キャッシュ | ✅ (~13 tokens/再読み込み) | ❌ |
-| Read/Grep 置換 | ✅ (`hook redirect` + MCP) | ❌ (Bash のみ) |
-| lean-ctx との併用 | — | **非推奨** (同一 Hook 層) |
-| 本リポジトリ採用 | ✅ | ❌ |
+| 比較項目            | lean-ctx (採用)                              | rtk (rtk-ai/rtk)                        |
+| ------------------- | -------------------------------------------- | --------------------------------------- |
+| 提供元              | yvgude                                       | rtk-ai                                  |
+| リポジトリ          | [GitHub](https://github.com/yvgude/lean-ctx) | [GitHub](https://github.com/rtk-ai/rtk) |
+| 適用レイヤー        | Shell Hook + MCP Server                      | Shell Hook のみ                         |
+| Cursor 統合         | `lean-ctx hook rewrite` 等 (APM)             | `rtk init -g --agent cursor`            |
+| 削減方針            | 情報保全優先 (passthrough rules)             | 積極的圧縮 (60-90%)                     |
+| `git diff` 巨大出力 | 素通し (設計意図)                            | 高削減 (実測 99% 級)                    |
+| 再読込キャッシュ    | ✅ (~13 tokens/再読み込み)                   | ❌                                      |
+| Read/Grep 置換      | ✅ (`hook redirect` + MCP)                   | ❌ (Bash のみ)                          |
+| lean-ctx との併用   | —                                            | **非推奨** (同一 Hook 層)               |
+| 本リポジトリ採用    | ✅                                           | ❌                                      |
 
 参考: [rtk vs lean-ctx 実測比較 (Elcamy Tech Blog)](https://blog.elcamy.com/articles/token-killer-bench)
 

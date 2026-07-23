@@ -21,7 +21,8 @@
 # Optional environment:
 #   DETECT_SCRIPT, STATE_FILE, LOOP_NAME, BASE_BRANCH, SKILL_NAME, LEVEL, ALLOWLIST
 #   LOOP_INTEGRATION_BRANCHES, LOOP_PR_ENABLED, LOOP_BRANCH_MATCH, LOOP_PRIORITY
-#   LOOP_FINALIZE_INTEGRATION, LOOP_FINALIZE_PULL_REQUEST, LOOP_MAX_TARGETS_PER_SCHEDULE
+#   DELIVERY, GIT_FINALIZE_INTEGRATION, GIT_FINALIZE_PULL_REQUEST, GIT_LANDING_INTEGRATION, GIT_LANDING_PULL_REQUEST
+#   LOOP_MAX_TARGETS_PER_SCHEDULE
 #   LOOP_PR_EXCLUDE, LOOP_PR_INCLUDE_BOTS, LOOP_PR_ENABLED, PROMPT_INSTRUCTIONS, BUDGET_FILE, RUN_LOG_FILE
 #   LOOP_SCOPED_HEAD_BRANCH - when set, only scan this integration branch / PR head
 #   CI_SWEEPER_WORKFLOW_RUN_ID + CI_SWEEPER_EVENT_HEAD_BRANCH - workflow_run scope fallback
@@ -395,12 +396,17 @@ function append_detect_candidate {
 
     open_prompt="$(target_open_rejections_prompt "${target_state}")"
     verifier_context="$(build_verifier_context_from_result "${detect_result}")"
-    prompt_text="$(build_prompt_text \
-        "${SKILL_NAME}" "${LEVEL}" "${ALLOWLIST}" "${PROMPT_INSTRUCTIONS}" \
-        "${last_sha}" "${current_sha}" "${detect_result}" "${open_prompt}" "${consecutive}")"
 
     target_json="$("${target_json_builder}" "${target_key}" "${head_branch}" "${current_sha}" "${finalize}" "${builder_args[@]}")"
     target_json="$(enrich_target_json_with_ci_context "${target_json}" "${detect_result}")"
+    target_json="$(enrich_target_json_with_detect_fields "${target_json}" "${detect_result}")"
+
+    local report_file
+    report_file="$(jq -r '.report_file // ""' <<< "${detect_result}" 2> /dev/null || echo "")"
+    prompt_text="$(build_prompt_text \
+        "${SKILL_NAME}" "${LEVEL}" "${ALLOWLIST}" "${PROMPT_INSTRUCTIONS}" \
+        "${last_sha}" "${current_sha}" "${detect_result}" "${open_prompt}" "${consecutive}" \
+        "${MAY_EDIT}" "${WRITE_TARGET}" "${report_file}")"
 
     candidate="$(build_loop_candidate_json \
         "${target_key}" "${target_json}" "${prompt_text}" "${verifier_context}" "${detect_result}")" \
@@ -420,7 +426,7 @@ function append_detect_candidate {
 # append_integration_candidate: Scan one integration branch
 #
 # Globals:
-#   LOOP_FINALIZE_INTEGRATION - Finalize mode for integration targets
+#   GIT_FINALIZE_INTEGRATION - Git landing strategy for integration targets (derived from delivery)
 #
 # Arguments:
 #   $1 - Branch name
@@ -438,7 +444,7 @@ function append_integration_candidate {
         "integration:${branch}" \
         "${branch}" \
         "" \
-        "${LOOP_FINALIZE_INTEGRATION}" \
+        "${GIT_FINALIZE_INTEGRATION}" \
         "" \
         build_integration_target_json \
         "${branch}"
@@ -448,7 +454,7 @@ function append_integration_candidate {
 # append_pull_request_candidate: Scan one open pull request head
 #
 # Globals:
-#   LOOP_FINALIZE_PULL_REQUEST - Finalize mode for pull request targets
+#   GIT_FINALIZE_PULL_REQUEST - Git landing strategy for pull request targets (derived from delivery)
 #
 # Arguments:
 #   $1 - PR JSON object
@@ -473,7 +479,7 @@ function append_pull_request_candidate {
         "pull_request:${pr_number}" \
         "${head_branch}" \
         "${head_ref}" \
-        "${LOOP_FINALIZE_PULL_REQUEST}" \
+        "${GIT_FINALIZE_PULL_REQUEST}" \
         "head=${head_branch}" \
         build_pull_request_target_json \
         "${pr_number}" \
@@ -750,6 +756,128 @@ function enrich_target_json_with_ci_context {
 }
 
 #######################################
+# enrich_target_json_with_detect_fields: Add detect-owned fields to target_json
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Base target_json object string
+#   $2 - Detect script JSON result
+#
+# Outputs:
+#   Enriched target_json on stdout
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function enrich_target_json_with_detect_fields {
+    local target_json="$1"
+    local detect_result="$2"
+    local report_file
+
+    if ! jq -e . <<< "${target_json}" > /dev/null 2>&1; then
+        log_detect_json_invalid "enrich_target_json_with_detect_fields" "target_json" "${target_json}"
+        return 1
+    fi
+
+    report_file="$(jq -r '.report_file // ""' <<< "${detect_result}" 2> /dev/null || echo "")"
+    if [[ -z ${report_file} ]]; then
+        printf '%s' "${target_json}"
+        return 0
+    fi
+
+    jq -c --arg rf "${report_file}" '. + {report_file: $rf}' <<< "${target_json}"
+}
+
+#######################################
+# resolve_git_finalize_strategies: Map delivery to git finalize modes
+#
+# Globals:
+#   DELIVERY, GIT_LANDING_INTEGRATION, GIT_LANDING_PULL_REQUEST - Read
+#   GIT_FINALIZE_INTEGRATION, GIT_FINALIZE_PULL_REQUEST - Set on success
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 on success; 1 when delivery or git_landing values are invalid
+#
+#######################################
+function resolve_git_finalize_strategies {
+    case "${DELIVERY}" in
+        open_pr)
+            GIT_FINALIZE_INTEGRATION="${GIT_LANDING_INTEGRATION:-open_pr}"
+            GIT_FINALIZE_PULL_REQUEST="${GIT_LANDING_PULL_REQUEST:-open_pr}"
+            case "${GIT_FINALIZE_INTEGRATION}" in
+                open_pr | push) ;;
+                *)
+                    echo "::error::git_landing_integration must be open_pr or push (got: ${GIT_FINALIZE_INTEGRATION})" >&2
+                    return 1
+                    ;;
+            esac
+            case "${GIT_FINALIZE_PULL_REQUEST}" in
+                open_pr | push_head) ;;
+                *)
+                    echo "::error::git_landing_pull_request must be open_pr or push_head (got: ${GIT_FINALIZE_PULL_REQUEST})" >&2
+                    return 1
+                    ;;
+            esac
+            ;;
+        none | log | issue | notion)
+            GIT_FINALIZE_INTEGRATION="none"
+            GIT_FINALIZE_PULL_REQUEST="none"
+            ;;
+        *)
+            echo "::error::delivery must be log|issue|notion|open_pr|none (got: ${DELIVERY})" >&2
+            return 1
+            ;;
+    esac
+}
+
+#######################################
+# resolve_loop_write_contract: Resolve and validate loop write/delivery contract
+#
+# Globals:
+#   MAY_EDIT, WRITE_TARGET, DELIVERY, LEVEL - Read and updated in place
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 on success; 1 when validation fails
+#
+#######################################
+function resolve_loop_write_contract {
+    MAY_EDIT="${MAY_EDIT:-}"
+    WRITE_TARGET="${WRITE_TARGET:-}"
+    DELIVERY="${DELIVERY:-open_pr}"
+
+    if [[ -z ${MAY_EDIT} ]]; then
+        echo "::error::may_edit is required; set may_edit on the caller" >&2
+        return 1
+    fi
+
+    if ! declare -f validate_loop_write_contract > /dev/null 2>&1; then
+        # shellcheck disable=SC1091
+        source "${SCRIPT_DIR}/../../loop-prompt-generate/lib/validate_loop_write_contract.sh"
+    fi
+
+    if ! validate_loop_write_contract "${MAY_EDIT}" "${WRITE_TARGET}" "${DELIVERY}" "${LEVEL}"; then
+        return 1
+    fi
+
+    resolve_git_finalize_strategies
+}
+
+#######################################
 # log_detect_error: Emit a GitHub Actions error annotation
 #
 # Globals:
@@ -956,6 +1084,12 @@ function main {
     : "${SKILL_NAME:?}"
     : "${LEVEL:?}"
     : "${ALLOWLIST:?}"
+
+    if ! resolve_loop_write_contract; then
+        write_detect_outputs "false" "config_error" "[]"
+        write_legacy_outputs "[]"
+        return 0
+    fi
 
     local should_run="false"
     local skip_reason="none"

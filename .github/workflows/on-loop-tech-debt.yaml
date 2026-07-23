@@ -55,6 +55,7 @@ jobs:
       branch_state: main
       budget_max_runs_per_day: 2
       budget_max_tokens_per_day: 750000
+      delivery: open_pr
       denylist: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**,src/**,.github/**"
       detect_domain_env_json: "{}"
       detect_script: .agents/skills/tech-debt/scripts/detect_tech_debt.sh
@@ -64,6 +65,7 @@ jobs:
       level: L2
       loop_name: tech-debt
       max_targets_per_schedule: 1
+      may_edit: true
       no_changes_verdict: REJECT
       pr_body: ""
       pr_enabled: false
@@ -74,6 +76,7 @@ jobs:
         Compare against `previous_report` for resolved, recurring, and regression items.
         Do not create GitHub Issues.
       skill_name: tech-debt
+      write_target: report
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}

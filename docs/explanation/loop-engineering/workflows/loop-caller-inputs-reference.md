@@ -89,18 +89,16 @@ Dogfood sets `branch_match: main` and `branch_state: main`. That matches the usu
 
 ### Level × finalize matrix
 
-Dogfood loops (changelog, docs-triage, ci-sweeper) use **`open_pr` for all modes**. Callers set **`level` only** — not `finalize_integration` / `finalize_pull_request`.
+Dogfood loops use **`delivery: open_pr`** only — git landing (`open_pr` / `push` / `push_head`) is derived inside `loop-detect` from `delivery`. Advanced overrides: optional `git_landing_integration` / `git_landing_pull_request` on `ci-loop-caller` (forwarded to `loop-detect`).
 
-| Mode           | `target.finalize` (platform default) | L2                                    | L3                                                    |
-| -------------- | ------------------------------------ | ------------------------------------- | ----------------------------------------------------- |
-| `integration`  | `open_pr`                            | Bot fix PR → `to.branch`; human merge | Bot fix PR → `to.branch`; **auto-merge**              |
-| `pull_request` | `open_pr`                            | Bot fix PR → PR head; notify human PR | Bot fix PR → PR head; **auto-merge**; notify human PR |
+| Mode           | `target.finalize` (derived from `delivery`) | L2                                    | L3                                                    |
+| -------------- | ------------------------------------------- | ------------------------------------- | ----------------------------------------------------- |
+| `integration`  | `open_pr`                                   | Bot fix PR → `to.branch`; human merge | Bot fix PR → `to.branch`; **auto-merge**              |
+| `pull_request` | `open_pr`                                   | Bot fix PR → PR head; notify human PR | Bot fix PR → PR head; **auto-merge**; notify human PR |
 
 L3 **auto-merge** is [GitHub PR auto-merge](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/automatically-merging-a-pull-request) on the **bot fix PR** — not direct push to the branch. The human's open PR is not auto-merged.
 
-Platform exception paths (`push`, `push_head`) exist for advanced callers; dogfood does not use them. See [Finalize strategy matrix](../loop-engineering-design.md#finalize-strategy-matrix).
-
-Optional overrides (not used in dogfood): `finalize_integration`, `finalize_pull_request` on `ci-loop-caller.yaml` → `loop-detect` env. Default when omitted: integration and pull_request both resolve to `open_pr`.
+Platform exception paths (`push`, `push_head`) are advanced `git_landing_*` overrides when `delivery: open_pr`; dogfood does not set them. See [Finalize strategy matrix](../loop-engineering-design.md#finalize-strategy-matrix).
 
 ### Fix direction: integration vs `pull_request`
 
@@ -147,8 +145,6 @@ pull_request mode (ci-sweeper, pr_enabled: true)
 
 Related but not branch-scoped: `max_targets_per_schedule` (fan-out cap after watch), `pr_exclude` / `pr_include_bots` (PR watch filters).
 
-Optional platform overrides (dogfood omit): `finalize_integration`, `finalize_pull_request` — default `open_pr` for both modes. See [Level × finalize matrix](#level--finalize-matrix).
-
 ## Agent and engine
 
 | Input                         | Type   | Description                                                           | Default (dogfood)       |
@@ -176,12 +172,12 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `budget_max_runs_per_day`   | number  | Daily run cap keyed by `loop_name` (each matrix cell counts). `.loop/loop-budget.json` overrides when present (ci-sweeper dogfood: `50`)                                                                                                                                                                                    | `1`–`5` (caller; budget file may be higher) |
 | `budget_max_tokens_per_day` | number  | Daily aggregated token cap                                                                                                                                                                                                                                                                                                  | `500000`–`1000000`                          |
 | `denylist`                  | string  | Comma-separated globs the implementer must not touch                                                                                                                                                                                                                                                                        | ci-sweeper only                             |
+| `delivery`                  | string  | Platform delivery after APPROVE: `log` \| `issue` \| `notion` \| `open_pr` \| `none` (not passed to skills). Drives `target.finalize` inside `loop-detect`.                                                                                                                                                                 | `open_pr`                                   |
 | `detect_script`             | string  | Path to domain `detect_*.sh` under the skill package (e.g. `.agents/skills/docs-updater/scripts/detect_changes.sh`)                                                                                                                                                                                                         | Per loop                                    |
-| `finalize_integration`      | string  | **Optional override.** Default `open_pr`. Exception: `push` (direct write; not dogfood).                                                                                                                                                                                                                                    | Omit (platform default)                     |
-| `finalize_pull_request`     | string  | **Optional override.** Default `open_pr`. Exception: `push_head` (not dogfood).                                                                                                                                                                                                                                             | Omit (platform default)                     |
 | `infer_files_pattern`       | string  | Extended regex to infer file paths from verifier text                                                                                                                                                                                                                                                                       | Per loop                                    |
 | `loop_name`                 | string  | Loop identifier: `.loop/state-<loop_name>.json`, budget key, run-log tag. Align caller filename: `on-loop-<loop_name>.yaml`                                                                                                                                                                                                 | Per loop                                    |
 | `max_targets_per_schedule`  | number  | Max targets per cron tick after priority filters                                                                                                                                                                                                                                                                            | `3`                                         |
+| `may_edit`                  | boolean | Agent worktree edit gate: `true` \| `false` (required; injected into `## Constraints`)                                                                                                                                                                                                                                      | Per loop (explicit in dogfood callers)      |
 | `no_changes_verdict`        | string  | `APPROVE` \| `REJECT` when implementer produces no file diff                                                                                                                                                                                                                                                                | `REJECT`                                    |
 | `pr_body`                   | string  | Optional static prefix (dogfood: `""`). `loop-finalize` composes the PR body: agent `## Overview` + `## Summary`, mechanical `## Failure context` / `## Changes` / `## Run Metadata`, and automation disclaimer. See [Loop PR Body Readable Design](../../../superpowers/specs/2026-07-21-loop-pr-body-readable-design.md). | `""`                                        |
 | `pr_exclude`                | string  | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`                                                                                                                                                                                                                                                           | ci-sweeper                                  |
@@ -190,6 +186,9 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `prompt_instructions`       | string  | Domain-specific implementer instructions for `loop-prompt-generate`                                                                                                                                                                                                                                                         | Per loop                                    |
 | `pr_enabled`                | boolean | Watch open PR heads for detect. **Wire name today:** `pull_requests`                                                                                                                                                                                                                                                        | `false` except ci-sweeper                   |
 | `state_file`                | string  | Override state JSON path                                                                                                                                                                                                                                                                                                    | `.loop/state-<loop_name>.json`              |
+| `write_target`              | string  | Agent artifact when `may_edit` is `true`: `fix` \| `report` (injected into `## Constraints`)                                                                                                                                                                                                                                | Per loop (`fix` except tech-debt `report`)  |
+
+**Four-plane contract:** See [Loop write target & delivery design](../../../superpowers/specs/2026-07-23-loop-write-target-delivery-design.md). `level` controls autonomy only; `may_edit` + `write_target` + `report_file` control agent edits; `delivery` controls platform finalize (skills do not see `delivery`).
 
 **Readable PR body:** Dogfood callers set `pr_body: ""`; narrative is agent-owned (`## Overview`, `## Summary` tables). See [Loop PR Body Skill Contract](../loop-pr-body-skill-contract.md).
 
@@ -221,14 +220,16 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `budget_file`                  | `budget_file`                           |
 | `budget_max_runs_per_day`      | `budget_max_runs_per_day`               |
 | `budget_max_tokens_per_day`    | `budget_max_tokens_per_day`             |
+| `delivery`                     | `delivery`                              |
 | `detect_script`                | `detect_script`                         |
 | `engine`                       | `engine`                                |
-| `finalize_integration`         | `loop_finalize_integration`             |
-| `finalize_pull_request`        | `loop_finalize_pull_request`            |
+| `git_landing_integration`      | `git_landing_integration`               |
+| `git_landing_pull_request`     | `git_landing_pull_request`              |
 | `infer_files_pattern`          | `infer_files_pattern`                   |
 | `level`                        | `level`                                 |
 | `loop_name`                    | `loop_name`                             |
 | `max_targets_per_schedule`     | `loop_max_targets_per_schedule`         |
+| `may_edit`                     | `may_edit`                              |
 | `no_changes_verdict`           | `no_changes_verdict`                    |
 | `pr_body`                      | `pr_body`                               |
 | `pr_exclude`                   | `loop_pr_exclude`                       |
@@ -240,6 +241,7 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `skill_name`                   | `skill_name`                            |
 | `state_file`                   | `state_file`                            |
 | `token`                        | `token`                                 |
+| `write_target`                 | `write_target`                          |
 
 Domain-specific detect script variables use `detect_domain_env_json` keys (not `loop-detect` inputs).
 
@@ -359,8 +361,6 @@ Not a loop caller; configure via environment when invoking `detect_changes.sh` o
 | `LOOP_BUDGET_MAX_TOKENS_PER_DAY`                              | `budget_max_tokens_per_day`                                   |
 | `LOOP_DENYLIST`                                               | `denylist`                                                    |
 | `LOOP_DETECT_SCRIPT`                                          | `detect_script`                                               |
-| `LOOP_FINALIZE_INTEGRATION`                                   | `finalize_integration`                                        |
-| `LOOP_FINALIZE_PULL_REQUEST`                                  | `finalize_pull_request`                                       |
 | `LOOP_INFER_FILES_PATTERN`                                    | `infer_files_pattern`                                         |
 | `LOOP_INTEGRATION_BRANCHES`                                   | `branch_match`                                                |
 | `LOOP_BRANCH_MATCH`                                           | `branch_match_mode`                                           |

@@ -97,12 +97,13 @@ Separate from PR body. Emit after survey or apply work per [category-automation-
 ```markdown
 ## Session Metrics
 
-| Field | Value |
-| may_edit | <true\|false> |
-| Commit range | <commit_range> |
-| Findings assessed | <count> |
-| Files modified | <count> |
-| Outcome | <one-line verifier result> |
+| Field             | Value                      |
+| ----------------- | -------------------------- |
+| may_edit          | <true\|false>              |
+| Commit range      | <commit_range>             |
+| Findings assessed | <count>                    |
+| Files modified    | <count>                    |
+| Outcome           | <one-line verifier result> |
 ```
 
 ## PR body templates

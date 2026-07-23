@@ -40,6 +40,9 @@ fi
 #   $7 - Detect result JSON
 #   $8 - Open rejections prompt markdown
 #   $9 - Consecutive failures count
+#   $10 - may_edit (required when ## Constraints is emitted)
+#   $11 - write_target (required when may_edit is true)
+#   $12 - report_file (optional; falls back to detect JSON)
 #
 # Outputs:
 #   Prompt text on stdout
@@ -58,6 +61,13 @@ function build_prompt_text {
     local detect_result="$7"
     local open_rejections_prompt="$8"
     local consecutive_failures="$9"
+    local may_edit="${10:-}"
+    local write_target="${11:-}"
+    local report_file="${12:-}"
+
+    if [[ -z ${report_file} ]]; then
+        report_file="$(jq -r '.report_file // ""' <<< "${detect_result}" 2> /dev/null || echo "")"
+    fi
 
     {
         echo "Run the ${skill_name} skill."
@@ -84,7 +94,11 @@ function build_prompt_text {
         fi
         if [[ -n ${level} || -n ${allowlist} ]]; then
             echo ""
-            emit_loop_constraints "${level}" "${allowlist}"
+            if [[ -z ${may_edit} ]]; then
+                echo "::error::may_edit is required for prompt constraints" >&2
+                return 1
+            fi
+            emit_loop_constraints "${may_edit}" "${write_target}" "${allowlist}" "${report_file}"
         fi
     }
 }
@@ -358,6 +372,7 @@ function write_detect_outputs {
     {
         echo "should_run=${should_run}"
         echo "skip_reason=${skip_reason}"
+        echo "delivery=${DELIVERY:-}"
         local delim
         delim="TARGET_MATRIX_$(openssl rand -hex 8)"
         echo "target_matrix<<${delim}"

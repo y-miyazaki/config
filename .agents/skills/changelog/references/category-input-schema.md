@@ -33,6 +33,7 @@ From `scripts/detect_changelog_commits.sh` or caller-supplied JSON.
 ```
 
 | Field | Type | Description |
+| ----- | ----- |
 | `changelog_file` | string | Repository-relative path to update |
 | `changelog_exists` | boolean | When false, create Keep a Changelog template before editing |
 | `commit_range` | string | SHA range that triggered detection |

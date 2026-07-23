@@ -4,7 +4,11 @@ Applies when the implementer ran a loop fix skill (`docs-updater`, `refactor`, `
 
 Canonical shapes: repository `docs/explanation/loop-engineering/common-loop-triage-format.md`.
 
-Resolve mode from **`may_edit`** in `## Constraints` (automation) or from the skill's interactive `may_edit` resolution — not from caller `level` metadata alone.
+Resolve mode from **`may_edit`** and **`write_target`** in `## Constraints` (automation) or from the skill's interactive resolution — not from caller `level` or `delivery` metadata alone.
+
+### Apply mode — `write_target: report`
+
+When `write_target` is `report`, `### Changes` must include the `report_file` path when the branch diff is non-empty. Persisted report content may differ from PR Summary shape per skill references.
 
 ### Survey mode (`may_edit: false`)
 

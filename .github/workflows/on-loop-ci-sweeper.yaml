@@ -70,6 +70,7 @@ jobs:
       branch_state: main
       budget_max_runs_per_day: 5
       budget_max_tokens_per_day: 1000000
+      delivery: open_pr
       denylist: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
       # detect_domain_env_json: LEDGER/REJECT_*; workflow_run event keys (EVENT_/HEAD_*/WORKFLOW_*) when present
       # Keys must stay alphabetically ordered.
@@ -89,6 +90,7 @@ jobs:
       infer_files_pattern: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|ya?ml|sh|go|toml|json)'
       loop_name: ci-sweeper
       max_targets_per_schedule: 3
+      may_edit: true
       no_changes_verdict: REJECT
       pr_body: ""
       pr_enabled: true
@@ -112,6 +114,7 @@ jobs:
         Read each skill's SKILL.md under `.agents/skills/` or `.claude/skills/` before invoking.
         Coverage-threshold and dependency-breakage failures: classify Watch — do not edit until caller verifier allows.
       skill_name: ci-sweeper
+      write_target: fix
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}

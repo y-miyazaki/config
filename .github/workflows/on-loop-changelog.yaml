@@ -60,15 +60,16 @@ jobs:
       branch_state: main
       budget_max_runs_per_day: 1
       budget_max_tokens_per_day: 500000
+      delivery: open_pr
       detect_domain_env_json: >-
         {"CHANGELOG_FILE":"CHANGELOG.md","CHANGELOG_MERGE_COMMITS":"false"}
       detect_script: .agents/skills/changelog/scripts/detect_changelog_commits.sh
       engine: cursor
       environment: default
-      finalize_integration: open_pr
       infer_files_pattern: 'CHANGELOG\.md'
       loop_name: changelog
       max_targets_per_schedule: 3
+      may_edit: true
       no_changes_verdict: REJECT
       pr_body: ""
       pr_title: "chore(changelog): update CHANGELOG.md (loop-changelog)"
@@ -84,6 +85,7 @@ jobs:
         Preserve existing released sections; do not invent versions outside detect `releases[]`.
       pr_enabled: false
       skill_name: changelog
+      write_target: fix
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}

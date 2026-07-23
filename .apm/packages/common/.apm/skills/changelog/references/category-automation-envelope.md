@@ -1,6 +1,6 @@
 ## Automation Envelope
 
-For LE workflow-driven runs. Load on the automation path — see [SKILL.md](../SKILL.md) Reference Files Guide.
+For LE workflow-driven runs. Load on the automation path — see SKILL.md Reference Files Guide.
 
 ### Constraints
 
@@ -9,17 +9,28 @@ The caller injects `## Constraints` after detect JSON via `loop-prompt-generate`
 | Field           | Type    | Description                                                                                                    |
 | --------------- | ------- | -------------------------------------------------------------------------------------------------------------- |
 | `may_edit`      | boolean | `false` — survey shape only; do not edit `changelog_file`. `true` — edit `changelog_file` and emit apply shape |
+| `write_target`  | string  | `fix` when `may_edit: true` for this skill (`report` is invalid here)                                          |
+| `report_file`   | string  | Not used for this skill                                                                                        |
 | `Allowed paths` | string  | Optional allowlist globs (`LOOP_ALLOWLIST`)                                                                    |
 
-`loop-prompt-generate` maps `level` to `may_edit` (`L1` → `false`; `L2`/`L3` → `true`). The skill branches on `may_edit` only — do not interpret `level`.
+Callers supply `may_edit`, `write_target` (`fix` | `report`), and optional `report_file` in `## Constraints`. The skill branches on `may_edit` and `write_target` only — do not interpret `level` or `delivery`.
 
 Denylist is enforced by the loop verifier — see [category-scope.md](category-scope.md).
 
-Example:
+Example (survey):
 
 ```text
 ## Constraints
 may_edit: false
+Allowed paths: CHANGELOG.md
+```
+
+Example (apply):
+
+```text
+## Constraints
+may_edit: true
+write_target: fix
 Allowed paths: CHANGELOG.md
 ```
 
@@ -31,6 +42,8 @@ Use [common-output-format.md](common-output-format.md) for report shape. At synt
 | ---------- | ----------------------------------- |
 | `false`    | `assets/pr-body-template-survey.md` |
 | `true`     | `assets/pr-body-template.md`        |
+
+When `may_edit: true` but the run emits survey shape (`write_target` mismatch), use `assets/pr-body-template-survey.md` at synthesis.
 
 PR body rules:
 
@@ -50,12 +63,13 @@ After survey or apply work, append:
 ```markdown
 ## Session Metrics
 
-| Field | Value |
-| may_edit | <true\|false> |
-| Commit range | <commit_range> |
-| Commits assessed | <count> |
-| File modified | <changelog_file or "None"> |
-| Outcome | <one-line result> |
+| Field            | Value                      |
+| ---------------- | -------------------------- |
+| may_edit         | <true\|false>              |
+| Commit range     | <commit_range>             |
+| Commits assessed | <count>                    |
+| File modified    | <changelog_file or "None"> |
+| Outcome          | <one-line result>          |
 ```
 
 Optional caller metadata (`level`, run id) may be appended when supplied — do not branch behavior on it.

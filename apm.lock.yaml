@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-23T08:57:03.425939+00:00'
+generated_at: '2026-07-23T11:05:45.859254+00:00'
 apm_version: 0.26.0
 dependencies:
 - repo_url: _local/common
@@ -730,12 +730,12 @@ dependencies:
     .agents/skills/agent-skills-review/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
     .agents/skills/agent-skills-review/scripts/validate.sh: sha256:0c05b97a6cd217cc7513efe0d18b12c3aa681f73b5ee1f1d6c643f26955b1de0
     .agents/skills/agent-skills-review/scripts/validate_waza.sh: sha256:ba503378523d596771a58385802044d50de9ce6a8853841a32a1d4107bbbf6f7
-    .agents/skills/changelog/SKILL.md: sha256:db8b27ee7ee0aa1517c3eb8b2b4e5c30a48bff1fe488d37e8665dbf017a97e75
+    .agents/skills/changelog/SKILL.md: sha256:4cec7e3b67cab48efe1792e6b9d45db7707f58286a3562dcb258bd6a274c2386
     .agents/skills/changelog/assets/pr-body-template-survey.md: sha256:f6de17652ced8450f5bb7eff8bd2655ca143349450c7a9ec0efac0e42746d663
     .agents/skills/changelog/assets/pr-body-template.md: sha256:ae19cbc59c709d74d412de98b0808821a3d39eb0280d2c4ca55180866b8ca908
     .agents/skills/changelog/eval.yaml: sha256:54dc22a46aad52e05c67ae1e23e6342ffe8fe25d74cf9d583050ec1fb9ad1c91
     .agents/skills/changelog/evals/files/CHANGELOG.sample.md: sha256:fcddda48be4fc8f067d64c64ea6e2519464236e7645a49fc9558dca166eaf053
-    .agents/skills/changelog/evals/tasks/automation-production-constraints.yaml: sha256:d4f2f9150bd4d56c79d8a64284fe9d616bb91ac75ce991202d19043231d0de0d
+    .agents/skills/changelog/evals/tasks/automation-production-constraints.yaml: sha256:bb57fd6be0c4392b6ae96957bc3afa762993d5a4c4b5a83af226e2afb96439b0
     .agents/skills/changelog/evals/tasks/basic.yaml: sha256:0be8c0d65b077fd6c2c68a52929414498999079dc99d11e2b3c9f4f130698947
     .agents/skills/changelog/evals/tasks/create-template.yaml: sha256:0f13f159fb3d54ac63569dd157b5c8ed2926ff24b83dd267245c41de85714e67
     .agents/skills/changelog/evals/tasks/interactive-fix-follow-up.yaml: sha256:53f5bdd2048b38b2beda06685182adc47d3dfbb1b1b52eaf07a450fc1600f930
@@ -745,10 +745,10 @@ dependencies:
     .agents/skills/changelog/evals/tasks/noaction.yaml: sha256:731e1f6f319be7141517c14643cec982ea5a9e00294257685c6d8d696a10d2ce
     .agents/skills/changelog/evals/tasks/release-promotion.yaml: sha256:8e08b24afa503fe18d731487d6e0057da50a4a0d80b261d9e90af6e4fbfdc8fd
     .agents/skills/changelog/evals/tasks/trigger-negative.yaml: sha256:84c759624e4292d5cefac63463dcd4c515dcb109fbed1747f637310771a16d0e
-    .agents/skills/changelog/references/category-automation-envelope.md: sha256:917d84b7e0e02f2ba8e1fe5fac5f77ae91d96b66f9403e3e22b0e25b7baeb4ba
-    .agents/skills/changelog/references/category-input-schema.md: sha256:4b47f5ebd769e3a36ad33d12698eecd06a7e8f09996b49db7d68928b373aeff5
-    .agents/skills/changelog/references/category-scope.md: sha256:2e464f0221e24e1b7cb93a9c03b3f3a1eff9fcfa3ca4a750cf6282833003003b
-    .agents/skills/changelog/references/common-checklist.md: sha256:e97224d4d1debeae2249b4dad1ff0b709a0ead5cb06e0f58052c84f030d49e24
+    .agents/skills/changelog/references/category-automation-envelope.md: sha256:49422cd6d835cbbe4f8b8138b76e922888543edda0255f8c4ffab208b5e7efbc
+    .agents/skills/changelog/references/category-input-schema.md: sha256:1e48759dc71fa3027bbf9c3869b3a94faeb0284b74b703adc194d0cb80bfca56
+    .agents/skills/changelog/references/category-scope.md: sha256:efd42b6cc5b6bcc91e7d6256532ddb5ebc9627c22a21f90b87c79becf63ed989
+    .agents/skills/changelog/references/common-checklist.md: sha256:afee5a25782d6c9964742d93f41ff14e3bf047070647cafb154b7996cbbef254
     .agents/skills/changelog/references/common-output-format.md: sha256:edd1400a2edb12de48b5b078eafb932a66bdfed937763eae67a5e136821f5ead
     .agents/skills/changelog/references/common-troubleshooting.md: sha256:98075ca300f98b1074fc4f46d61ec1dbc71a9ed557f7b62553dfafc2c87f7fd3
     .agents/skills/changelog/scripts/detect_changelog_commits.sh: sha256:4f5a2d2641c2580ad49e9123236d34a9c34185d88725f114a2579c38d9190f28
@@ -760,11 +760,11 @@ dependencies:
     .agents/skills/changelog/scripts/lib/repo_paths.sh: sha256:eba82b537aeaefd4b76de13d2a64b73a74817c0a36a3a0bd47195a122d461a98
     .agents/skills/changelog/scripts/lib/terraform.sh: sha256:02e0fa54a1d73191dfd78c7f5aba848027c6f75b92fc38f4e62d10869d5ee15d
     .agents/skills/changelog/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
-    .agents/skills/ci-sweeper/SKILL.md: sha256:136cb6fd16d0464c0b7f945ebf2ea6ccdea41734bc2b6923e0135c5c72e9fc6a
+    .agents/skills/ci-sweeper/SKILL.md: sha256:39e21dddfb4e07bf7d78eb938b2cf862491151c3f21bbb954a476721cf670a6f
     .agents/skills/ci-sweeper/assets/pr-body-template-survey.md: sha256:7d0abb2c1cb79eaf8032d0823a1caf58ce11ccc300629d32223a16a3fe8fd417
     .agents/skills/ci-sweeper/assets/pr-body-template.md: sha256:5d2ae7f6b5233bb6adac784cf53526c79e51de94078fe954fc02c05bac9f7e82
     .agents/skills/ci-sweeper/eval.yaml: sha256:0891ddb0f71dd41a09fd9661de43f8bd2d9cc33ff741f4cdd51408bbf690347e
-    .agents/skills/ci-sweeper/evals/tasks/automation-production-constraints.yaml: sha256:00bd812308567db35d9f41f0dbd5e35bfa2d317fb4a577bd8c917c2206e89853
+    .agents/skills/ci-sweeper/evals/tasks/automation-production-constraints.yaml: sha256:8f5bd84ab9d828ebb482d992c2ee81818755ffdb6054fd884ed9ce7db555fb23
     .agents/skills/ci-sweeper/evals/tasks/basic.yaml: sha256:045cfd1efa7e67efd6b67fbfa35e3471c1ea738ca38f5e7f09d5de1636853e91
     .agents/skills/ci-sweeper/evals/tasks/classification.yaml: sha256:d5d3a13a6f42da355bc4a1991fa82e4813b22f337f7adf65440fc83ab4b42eeb
     .agents/skills/ci-sweeper/evals/tasks/interactive-fix-follow-up.yaml: sha256:49fcf16a95f83fb8e13e359dda23df60163c21d68ca681451bbf966f99538912
@@ -774,8 +774,8 @@ dependencies:
     .agents/skills/ci-sweeper/evals/tasks/noaction.yaml: sha256:9c4aed5a2dcdc1ff112d3095c71b45b6acc93c442d532beaa3d0eb2913f967fb
     .agents/skills/ci-sweeper/evals/tasks/regression-defer.yaml: sha256:30257e9f85be4bc2de458f970250095f828ce3f3fde64908000b8ec6e2a481f2
     .agents/skills/ci-sweeper/evals/tasks/trigger-negative.yaml: sha256:075bba648c6d0b2c131b176786f1f6d9e881770cc0bb89a0c2e98eb00e4ef8d9
-    .agents/skills/ci-sweeper/references/category-automation-envelope.md: sha256:ad4a978253458de127e077a5b25bda4ce7aae9feb9dc576357e5eb40e7e78cfc
-    .agents/skills/ci-sweeper/references/category-input-schema.md: sha256:b9e62db8e7daedc7726d5d7fe0ed3938696b5662c2635afd8846a3858b700b47
+    .agents/skills/ci-sweeper/references/category-automation-envelope.md: sha256:bc7e38f96bfec2bb363693e0bfa39a6549f97d18ee124930ee6c08c995374779
+    .agents/skills/ci-sweeper/references/category-input-schema.md: sha256:6a515605673940184fe88fdc77d028321988f110b9c4828c8d9acfd407845d3f
     .agents/skills/ci-sweeper/references/category-run-ledger.md: sha256:055c9c821ffaa06f56fbc8cf991e1182cfa1f6a0a9f5b5c7e13411f26231e976
     .agents/skills/ci-sweeper/references/category-scope.md: sha256:4d6455dbf1b2ac436b169e898edef5b977fc4799c4850242c4efc81ade3c24d5
     .agents/skills/ci-sweeper/references/category-validation-commands.md: sha256:6f0ecb53005eb37b3f4860ffdd0d1bb4938f61476cad97f32bae1d5f2c124e26
@@ -802,17 +802,17 @@ dependencies:
     .agents/skills/docs-creator/references/category-diataxis-mapping.md: sha256:4e2f935a6761c8f3cd45e3cea177e25df457e30758de1e36f36b02e458a31cf9
     .agents/skills/docs-creator/references/common-checklist.md: sha256:7632a76ba33d49a1a6ec3d972b7c43b71b18445506a5cc651d0112c34d2b094c
     .agents/skills/docs-creator/references/common-output-format.md: sha256:e51da622747d4be617a6655dc3a7199af17e0d4fd8927296109ccc8b8507dec0
-    .agents/skills/docs-updater/SKILL.md: sha256:26beb6d0f61a6eb9c274f6fd01612dbfdb7668e55c1dedd86eefc14c2840f544
+    .agents/skills/docs-updater/SKILL.md: sha256:8099f03fdaa1c5bb2fcf00d99de3cffb2bcb271359c85a2eeaed038607ea9b79
     .agents/skills/docs-updater/assets/pr-body-template-survey.md: sha256:2af097b6665f8e6083a744a90ea750854824290430d16f2b39455dfb8ce34add
     .agents/skills/docs-updater/assets/pr-body-template.md: sha256:a492194d9b3917629ecd635203617e5cd20b692c5da742bdf4c310acebf13b19
     .agents/skills/docs-updater/eval.yaml: sha256:6ff2aa6396ee9a8b88a7dc5dc20fc1f1dc9a262b6eed7469513ba776a3525f0b
     .agents/skills/docs-updater/evals/evals.json: sha256:31d2631eca00b7e8a32c081c66549a74d371aa7551950adfeafe045b0fe5107d
     .agents/skills/docs-updater/evals/files/README.stale.md: sha256:9776631e8f9c4fd404feecb53c6eb0b59362d970150277c65136242e06efcb64
     .agents/skills/docs-updater/evals/files/detect-hook-staged.json: sha256:1c8aa83cc0963ac9b262ffe8378aa78277e25778d7a6b3801e0d5d3d41331dc9
-    .agents/skills/docs-updater/evals/tasks/docs-updater-automation-production-constraints.yaml: sha256:4d3c6a014388535df6c073549da491ec8aaf9f8fe7915957c198a68a09162549
-    .agents/skills/docs-updater/evals/tasks/docs-updater-basic.yaml: sha256:ae0e4a3d992b9601de80a4d233d11b577db71292b4fbb9cda09613d589d3c9d4
-    .agents/skills/docs-updater/evals/tasks/docs-updater-deletion-deadlink.yaml: sha256:c7570f758c3afb10b509e21a6d3f553e7e7f6810563d3004b42c461bee74017c
-    .agents/skills/docs-updater/evals/tasks/docs-updater-exceeded-scope.yaml: sha256:c7d1d621938e4ce77be44f36dd36dd112945d0236b972945a65075143593b4ca
+    .agents/skills/docs-updater/evals/tasks/docs-updater-automation-production-constraints.yaml: sha256:584f4c863ff63a3833b27f2b9fafd073ccb65663eaad86240b01b7ab0d00122e
+    .agents/skills/docs-updater/evals/tasks/docs-updater-basic.yaml: sha256:cac80aaac286c267329b50480529a34b237dc3ef6ac39501456e3fe38be0431c
+    .agents/skills/docs-updater/evals/tasks/docs-updater-deletion-deadlink.yaml: sha256:b9535717b788af6698c5779c96066aa8e20e581539aa0e193f5a40dfaee5f41b
+    .agents/skills/docs-updater/evals/tasks/docs-updater-exceeded-scope.yaml: sha256:14a7d2714b2fc86f9d379a27ab2ec0d08d50a64f511605ac9bfc2ec0eb2eed1d
     .agents/skills/docs-updater/evals/tasks/docs-updater-hook-detect.yaml: sha256:6ac7f2e8470e164e6f4cc142a54c8aac2b79c884664f9de1c60b94bd97719f38
     .agents/skills/docs-updater/evals/tasks/docs-updater-interactive-fix-follow-up.yaml: sha256:514148ee0ca18e61c5a3346a0cbadb0ec909d5364d5e69a7a47559f4e9d24682
     .agents/skills/docs-updater/evals/tasks/docs-updater-interactive-fix-same-turn.yaml: sha256:0ad2a2ffadd14859dbc5ee55157eb8d299bf69ac2230f87a40dc5102397d4279
@@ -828,13 +828,13 @@ dependencies:
     .agents/skills/docs-updater/evals/tasks/docs-updater-rename-detection.yaml: sha256:e5b49f3952b018231bb33af4c8ea768c1ac07960f726f284593e75e33a26d059
     .agents/skills/docs-updater/evals/tasks/docs-updater-skip.yaml: sha256:f46f6ddb627a2f33df56caa396a65c1704a98a2112b1d486e05a57e6112376d8
     .agents/skills/docs-updater/evals/tasks/docs-updater-trigger-negative.yaml: sha256:4b18ad1af16d9e2756b2264fbc550889fa4fa8df88bf1ad1b4cd1ecffdb1e1b0
-    .agents/skills/docs-updater/references/category-automation-envelope.md: sha256:56610511d26bef331ef3c98505e533c0f24790d4a2bfd56f544b0f644c3c5ff1
-    .agents/skills/docs-updater/references/category-loop-input-schema.md: sha256:8bcb4e06e32ca1250e3f3314b1cc681fb73a7eccaedc6f449587a06f24242ee5
+    .agents/skills/docs-updater/references/category-automation-envelope.md: sha256:62d856dc7aa7ed2a03470944fa542939bee9452ff2cc2ad885d61bf902daf128
+    .agents/skills/docs-updater/references/category-loop-input-schema.md: sha256:17404350ccfa6e9e44e9e2ffdecfdfb17cbb6d221ae2094f0054044a41a9e65a
     .agents/skills/docs-updater/references/category-scope.md: sha256:8a667993e66630813a033d9e35895a43208c73a5501c12ec8c1beef231bff8fc
     .agents/skills/docs-updater/references/common-checklist-loop.md: sha256:53a169ed58eedd3d840a36dfbcbebda018d00a5f36e5a8c706012f704a87c550
     .agents/skills/docs-updater/references/common-checklist.md: sha256:abdabc4d6dab24486bb351834228d7aff31c7eaf5a102b143fc231fc94cb5264
     .agents/skills/docs-updater/references/common-impact-map.md: sha256:fd106b4d61d06fd46f25db656699c63e0917fb68e1c03ad7cd5d04cb5f0f3e8c
-    .agents/skills/docs-updater/references/common-output-format-loop.md: sha256:4a69b15b87261933012ee25153b64a7671b92236905b1b91dad537cf2bcce7e7
+    .agents/skills/docs-updater/references/common-output-format-loop.md: sha256:b73b787c1f0247c5a2438eee42fda5d94d4a6880a550a67228427388638ad7fe
     .agents/skills/docs-updater/references/common-output-format.md: sha256:ea2bd9ac91d6223521b59a5158359df8be5a30edbf0feac0f79f939cb2bed96d
     .agents/skills/docs-updater/references/common-troubleshooting.md: sha256:34270cd005a0a36d0e79ddfad15ff97c1f89b756b8aac66e90cae73dc2adcbf2
     .agents/skills/docs-updater/scripts/detect_changes.sh: sha256:8ac780f29d013775b6efa5a407086ce3d5cd2f26a8022de56f9991c312ea1d65
@@ -965,13 +965,13 @@ dependencies:
     .agents/skills/markdown-validation/scripts/lib/terraform.sh: sha256:02e0fa54a1d73191dfd78c7f5aba848027c6f75b92fc38f4e62d10869d5ee15d
     .agents/skills/markdown-validation/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
     .agents/skills/markdown-validation/scripts/validate.sh: sha256:edde4875be0d22f25ab235b14a41408282f5078c75fc5fb502260c35a0aa5ee1
-    .agents/skills/refactor/SKILL.md: sha256:a457c55253696797b99cac4795b6705acc365191f4f9c8e360e6322fb0521706
+    .agents/skills/refactor/SKILL.md: sha256:a328028bb63011547126a6146b6dab3a9d62457024e97fdb4905a76ced859aa3
     .agents/skills/refactor/assets/pr-body-template-survey.md: sha256:405d2787fd44ac165895e9d870b06f7ae68f33e7707fa9d238cdf6e78be10fba
     .agents/skills/refactor/assets/pr-body-template.md: sha256:5be2bc68d10dccf94a41f98675b6d73c0ab082c62bd76a249104fea19bf04545
     .agents/skills/refactor/eval.yaml: sha256:42d8fb91d9f05189f36106a27053b7329900f301de9cd7b6d07446f7b6fbcd6c
     .agents/skills/refactor/evals/README.md: sha256:518840fd22d11d11899deea08a7bc2771bbeda305c6f050950024344720551f0
     .agents/skills/refactor/evals/evals.json: sha256:daf0fd59dc78d05326cc5c37a31677b52ff7c961c0a6c7f99d5def77725ba462
-    .agents/skills/refactor/evals/tasks/automation-production-constraints.yaml: sha256:e56baa5c77b1236750e33ab6d33e3b90081af29eb00564964519e5c87026318b
+    .agents/skills/refactor/evals/tasks/automation-production-constraints.yaml: sha256:947c44b306a0d5fb46c4abbecb6e2503c7dcfba8b63e969636e62f881231c522
     .agents/skills/refactor/evals/tasks/interactive-fix-follow-up.yaml: sha256:b1a7db864ba3024a1f1ad649266acbafce0eb9c2e0d62c4acce129a3e07d19b9
     .agents/skills/refactor/evals/tasks/interactive-fix-same-turn.yaml: sha256:a9c6602a7c526cd3cfde71af3a6fab0004705bbb598592aad6efa2bcb7c36704
     .agents/skills/refactor/evals/tasks/interactive-survey-default.yaml: sha256:1f9e649fbcd00a93eb19f0a44852b9e7acabb4cfbacca75d1a114706dcdeee61
@@ -980,14 +980,14 @@ dependencies:
     .agents/skills/refactor/evals/tasks/refactor-loop-noaction.yaml: sha256:75765f6940459e9c2041d108c01bdc2031502e1025f780dbe7931694af647e55
     .agents/skills/refactor/evals/tasks/refactor-noop.yaml: sha256:2ec45941866112311c0baa7d18f5663d366dc730c3efc1f0e1884045cc3ad06d
     .agents/skills/refactor/evals/tasks/refactor-survey.yaml: sha256:744bc820a60c32afe4a388f86064e91ed13dbb9f06198e7a17240f880ebda61d
-    .agents/skills/refactor/references/category-automation-envelope.md: sha256:df28823107d1a97a8db16d4b6b7a9fcbd0500652cd747f19528ad1c681b50b26
-    .agents/skills/refactor/references/category-input-schema.md: sha256:f1ca1a57860400306d846df4438a6fe2980d5db307ab3dd559e79fb4ff25b705
-    .agents/skills/refactor/references/category-operations.md: sha256:22932a9a815b8e19bf53045b5ea5c14ad9d43acb00a555774f0a8a513569d91b
+    .agents/skills/refactor/references/category-automation-envelope.md: sha256:dfd794b00b19b5981a6a1a0b96d49449215e1d5672e344d0d721afe33439b12f
+    .agents/skills/refactor/references/category-input-schema.md: sha256:f573d7a25a8e8770e2a0685b0ac6871d09ecfdfda339add3fe5c19b92393dd0c
+    .agents/skills/refactor/references/category-operations.md: sha256:4bbd9fb6bb953e50c41681c3e6ff8876679ca3a59791e087e52a8ba210c988f5
     .agents/skills/refactor/references/category-scope.md: sha256:101f12da822676c574362148a055c485acaff1ea959315414d1bd9f02451236e
     .agents/skills/refactor/references/category-techniques.md: sha256:6364055974554582ecd7afeb5d3a566781b844dda86e060b4d1d6de764e73e1b
     .agents/skills/refactor/references/category-verification.md: sha256:447dc5efd2ff6e6ffe8cc36cebcf387d5031b568fae916d37cf48d4b16d0b3b5
     .agents/skills/refactor/references/common-checklist.md: sha256:e08fa9314026b61ba1a3518ee8ef20df640ac73fa3d58101f02dc7e2c5dad248
-    .agents/skills/refactor/references/common-output-format-loop.md: sha256:7498ccfa0850e107fbf8d476a6c97f4df33682100449303948bb5ebbf5ad1d19
+    .agents/skills/refactor/references/common-output-format-loop.md: sha256:5841772ddb13c14843dbc1e8b566c8da3c307929abe9c1c96670e09989829050
     .agents/skills/refactor/references/common-output-format.md: sha256:9eb2d5c6868117640494fe6e932c7cbe40f35e2ceea7abe9bcf60be1037a23e2
     .agents/skills/refactor/references/common-troubleshooting.md: sha256:e4fc2cfdb7eb2bbd15460b6832f7fb3fc5f3e3b5e5b1fe57542d08ae31e9f585
     .agents/skills/refactor/scripts/detect_refactor.sh: sha256:401d01438014229efedc709f6fb4ede36cbc2f7b7f10d922dfd1bbb15dc9627e
@@ -999,7 +999,7 @@ dependencies:
     .agents/skills/refactor/scripts/lib/repo_paths.sh: sha256:eba82b537aeaefd4b76de13d2a64b73a74817c0a36a3a0bd47195a122d461a98
     .agents/skills/refactor/scripts/lib/terraform.sh: sha256:02e0fa54a1d73191dfd78c7f5aba848027c6f75b92fc38f4e62d10869d5ee15d
     .agents/skills/refactor/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
-    .agents/skills/tech-debt/SKILL.md: sha256:d2c2d411739a2045354d55747acee259f605f6f7590d233e8aa67b206ff61407
+    .agents/skills/tech-debt/SKILL.md: sha256:877dd6721c2a93f58432bd4e257e0e00b64e52c6c8c041527b8a6148323c6c11
     .agents/skills/tech-debt/assets/pr-body-template-survey.md: sha256:0023d11f42396cff787f299b79981a9fea8bf09ead91f6c47c1629d0b6bdbdab
     .agents/skills/tech-debt/assets/pr-body-template.md: sha256:568c66db5a2121aff671e1d84d29432ab1afbafa7c4e5fde72dc0245a9f6e28f
     .agents/skills/tech-debt/eval.yaml: sha256:000e32e87f7d0eeeffa4938552a9e6867468ed7db71b1e3ae743c468e58d1259
@@ -1008,7 +1008,7 @@ dependencies:
     .agents/skills/tech-debt/evals/files/noise.go.txt: sha256:095a192120fd822a7a7e2034ae84fbc6fdfdf7e4dbee7160266295e9e372c154
     .agents/skills/tech-debt/evals/files/previous-report.sample.md: sha256:98c283fffe6da93c1c3b783e8173c47c27be518ceec0d0fe0021f10056579e21
     .agents/skills/tech-debt/evals/files/sample_service.go.txt: sha256:5a4aeb7c5caf81a5f86e46e54e135d39634103f012fdf90afcf1bbc942325bb3
-    .agents/skills/tech-debt/evals/tasks/automation-production-constraints.yaml: sha256:d532a8a0465cc348a7c3666a14f9a07283fafd464bb65c6d592d8ecf8baab97a
+    .agents/skills/tech-debt/evals/tasks/automation-production-constraints.yaml: sha256:347198743aa7f70c950f7973f759f889d5d0557847e4eff64d97cac6e3f28bf2
     .agents/skills/tech-debt/evals/tasks/basic.yaml: sha256:f3c831f018fb39c422c75fd0da74ed6e2263be39106039f7e96075384e1b6a0a
     .agents/skills/tech-debt/evals/tasks/classification.yaml: sha256:b5b6f400a5a615af41f86a54b850a010e524e84d73a69d4d4993261dd937c316
     .agents/skills/tech-debt/evals/tasks/hotspot-only.yaml: sha256:3e72fa67ccfd5dcf15832dcab3ab90116e564fa9f9c9f094d93147c8d5acc4c4
@@ -1021,10 +1021,10 @@ dependencies:
     .agents/skills/tech-debt/evals/tasks/tech-debt-may-edit-true-write.yaml: sha256:b6bd29ffb237c19520c8e9c540700835df25656999f95a257977bfb04a563289
     .agents/skills/tech-debt/evals/tasks/trigger-negative.yaml: sha256:47204e25144ef22cb8f50066f8964532d05ff80d218b0bb2522629a68a2511bc
     .agents/skills/tech-debt/evals/tasks/truncation-cap.yaml: sha256:2bfad32b0cd4c86760cc1d204e4322a9b86c71d38c73cb1a9626167ee18a1289
-    .agents/skills/tech-debt/references/category-automation-envelope.md: sha256:1f8dbbdda11d7a1d27c81ee86434c91925dd0c5fc6c8ac8e5bfa2c44cf268ede
+    .agents/skills/tech-debt/references/category-automation-envelope.md: sha256:495f202ac5794940ba3e0e35636552fe91e2bd0832d08c1aabf8b39069cc6089
     .agents/skills/tech-debt/references/category-debt-taxonomy.md: sha256:4268125d2b7c263d7e1c7ba1d0d79fb8ed49de04de07531f5e944fc3d9c6a498
     .agents/skills/tech-debt/references/category-input-schema.md: sha256:0fa827a161377914e556434e34dcc7cd27a463a0bf73a32c52b3970713a67c64
-    .agents/skills/tech-debt/references/category-scope.md: sha256:ac64c6e5581aea11924745a5d61af565ee5d83dadbb223142ced86e6356d4732
+    .agents/skills/tech-debt/references/category-scope.md: sha256:4e82d1f0bd2e6bded84157f2ce087e18d1820cd48df72c622381936d0272316a
     .agents/skills/tech-debt/references/common-checklist.md: sha256:444825c592a6b29bd0d1854b291086440d61ec5689edf6e4004d5b5c10457960
     .agents/skills/tech-debt/references/common-output-format.md: sha256:daa8a6dcb8a7e5702cd971b5d605346bc0bcdc33c11cb87b3158ccb2f36d3253
     .agents/skills/tech-debt/references/common-troubleshooting.md: sha256:28e9a9acf32642f50167c5a6e25a0de9410cc33cf4ec1a23a06deb92f21b9e1b
@@ -1067,12 +1067,12 @@ dependencies:
     .claude/skills/agent-skills-review/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
     .claude/skills/agent-skills-review/scripts/validate.sh: sha256:0c05b97a6cd217cc7513efe0d18b12c3aa681f73b5ee1f1d6c643f26955b1de0
     .claude/skills/agent-skills-review/scripts/validate_waza.sh: sha256:ba503378523d596771a58385802044d50de9ce6a8853841a32a1d4107bbbf6f7
-    .claude/skills/changelog/SKILL.md: sha256:db8b27ee7ee0aa1517c3eb8b2b4e5c30a48bff1fe488d37e8665dbf017a97e75
+    .claude/skills/changelog/SKILL.md: sha256:4cec7e3b67cab48efe1792e6b9d45db7707f58286a3562dcb258bd6a274c2386
     .claude/skills/changelog/assets/pr-body-template-survey.md: sha256:f6de17652ced8450f5bb7eff8bd2655ca143349450c7a9ec0efac0e42746d663
     .claude/skills/changelog/assets/pr-body-template.md: sha256:ae19cbc59c709d74d412de98b0808821a3d39eb0280d2c4ca55180866b8ca908
     .claude/skills/changelog/eval.yaml: sha256:54dc22a46aad52e05c67ae1e23e6342ffe8fe25d74cf9d583050ec1fb9ad1c91
     .claude/skills/changelog/evals/files/CHANGELOG.sample.md: sha256:fcddda48be4fc8f067d64c64ea6e2519464236e7645a49fc9558dca166eaf053
-    .claude/skills/changelog/evals/tasks/automation-production-constraints.yaml: sha256:d4f2f9150bd4d56c79d8a64284fe9d616bb91ac75ce991202d19043231d0de0d
+    .claude/skills/changelog/evals/tasks/automation-production-constraints.yaml: sha256:bb57fd6be0c4392b6ae96957bc3afa762993d5a4c4b5a83af226e2afb96439b0
     .claude/skills/changelog/evals/tasks/basic.yaml: sha256:0be8c0d65b077fd6c2c68a52929414498999079dc99d11e2b3c9f4f130698947
     .claude/skills/changelog/evals/tasks/create-template.yaml: sha256:0f13f159fb3d54ac63569dd157b5c8ed2926ff24b83dd267245c41de85714e67
     .claude/skills/changelog/evals/tasks/interactive-fix-follow-up.yaml: sha256:53f5bdd2048b38b2beda06685182adc47d3dfbb1b1b52eaf07a450fc1600f930
@@ -1082,10 +1082,10 @@ dependencies:
     .claude/skills/changelog/evals/tasks/noaction.yaml: sha256:731e1f6f319be7141517c14643cec982ea5a9e00294257685c6d8d696a10d2ce
     .claude/skills/changelog/evals/tasks/release-promotion.yaml: sha256:8e08b24afa503fe18d731487d6e0057da50a4a0d80b261d9e90af6e4fbfdc8fd
     .claude/skills/changelog/evals/tasks/trigger-negative.yaml: sha256:84c759624e4292d5cefac63463dcd4c515dcb109fbed1747f637310771a16d0e
-    .claude/skills/changelog/references/category-automation-envelope.md: sha256:917d84b7e0e02f2ba8e1fe5fac5f77ae91d96b66f9403e3e22b0e25b7baeb4ba
-    .claude/skills/changelog/references/category-input-schema.md: sha256:4b47f5ebd769e3a36ad33d12698eecd06a7e8f09996b49db7d68928b373aeff5
-    .claude/skills/changelog/references/category-scope.md: sha256:2e464f0221e24e1b7cb93a9c03b3f3a1eff9fcfa3ca4a750cf6282833003003b
-    .claude/skills/changelog/references/common-checklist.md: sha256:e97224d4d1debeae2249b4dad1ff0b709a0ead5cb06e0f58052c84f030d49e24
+    .claude/skills/changelog/references/category-automation-envelope.md: sha256:49422cd6d835cbbe4f8b8138b76e922888543edda0255f8c4ffab208b5e7efbc
+    .claude/skills/changelog/references/category-input-schema.md: sha256:1e48759dc71fa3027bbf9c3869b3a94faeb0284b74b703adc194d0cb80bfca56
+    .claude/skills/changelog/references/category-scope.md: sha256:efd42b6cc5b6bcc91e7d6256532ddb5ebc9627c22a21f90b87c79becf63ed989
+    .claude/skills/changelog/references/common-checklist.md: sha256:afee5a25782d6c9964742d93f41ff14e3bf047070647cafb154b7996cbbef254
     .claude/skills/changelog/references/common-output-format.md: sha256:edd1400a2edb12de48b5b078eafb932a66bdfed937763eae67a5e136821f5ead
     .claude/skills/changelog/references/common-troubleshooting.md: sha256:98075ca300f98b1074fc4f46d61ec1dbc71a9ed557f7b62553dfafc2c87f7fd3
     .claude/skills/changelog/scripts/detect_changelog_commits.sh: sha256:4f5a2d2641c2580ad49e9123236d34a9c34185d88725f114a2579c38d9190f28
@@ -1097,11 +1097,11 @@ dependencies:
     .claude/skills/changelog/scripts/lib/repo_paths.sh: sha256:eba82b537aeaefd4b76de13d2a64b73a74817c0a36a3a0bd47195a122d461a98
     .claude/skills/changelog/scripts/lib/terraform.sh: sha256:02e0fa54a1d73191dfd78c7f5aba848027c6f75b92fc38f4e62d10869d5ee15d
     .claude/skills/changelog/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
-    .claude/skills/ci-sweeper/SKILL.md: sha256:136cb6fd16d0464c0b7f945ebf2ea6ccdea41734bc2b6923e0135c5c72e9fc6a
+    .claude/skills/ci-sweeper/SKILL.md: sha256:39e21dddfb4e07bf7d78eb938b2cf862491151c3f21bbb954a476721cf670a6f
     .claude/skills/ci-sweeper/assets/pr-body-template-survey.md: sha256:7d0abb2c1cb79eaf8032d0823a1caf58ce11ccc300629d32223a16a3fe8fd417
     .claude/skills/ci-sweeper/assets/pr-body-template.md: sha256:5d2ae7f6b5233bb6adac784cf53526c79e51de94078fe954fc02c05bac9f7e82
     .claude/skills/ci-sweeper/eval.yaml: sha256:0891ddb0f71dd41a09fd9661de43f8bd2d9cc33ff741f4cdd51408bbf690347e
-    .claude/skills/ci-sweeper/evals/tasks/automation-production-constraints.yaml: sha256:00bd812308567db35d9f41f0dbd5e35bfa2d317fb4a577bd8c917c2206e89853
+    .claude/skills/ci-sweeper/evals/tasks/automation-production-constraints.yaml: sha256:8f5bd84ab9d828ebb482d992c2ee81818755ffdb6054fd884ed9ce7db555fb23
     .claude/skills/ci-sweeper/evals/tasks/basic.yaml: sha256:045cfd1efa7e67efd6b67fbfa35e3471c1ea738ca38f5e7f09d5de1636853e91
     .claude/skills/ci-sweeper/evals/tasks/classification.yaml: sha256:d5d3a13a6f42da355bc4a1991fa82e4813b22f337f7adf65440fc83ab4b42eeb
     .claude/skills/ci-sweeper/evals/tasks/interactive-fix-follow-up.yaml: sha256:49fcf16a95f83fb8e13e359dda23df60163c21d68ca681451bbf966f99538912
@@ -1111,8 +1111,8 @@ dependencies:
     .claude/skills/ci-sweeper/evals/tasks/noaction.yaml: sha256:9c4aed5a2dcdc1ff112d3095c71b45b6acc93c442d532beaa3d0eb2913f967fb
     .claude/skills/ci-sweeper/evals/tasks/regression-defer.yaml: sha256:30257e9f85be4bc2de458f970250095f828ce3f3fde64908000b8ec6e2a481f2
     .claude/skills/ci-sweeper/evals/tasks/trigger-negative.yaml: sha256:075bba648c6d0b2c131b176786f1f6d9e881770cc0bb89a0c2e98eb00e4ef8d9
-    .claude/skills/ci-sweeper/references/category-automation-envelope.md: sha256:ad4a978253458de127e077a5b25bda4ce7aae9feb9dc576357e5eb40e7e78cfc
-    .claude/skills/ci-sweeper/references/category-input-schema.md: sha256:b9e62db8e7daedc7726d5d7fe0ed3938696b5662c2635afd8846a3858b700b47
+    .claude/skills/ci-sweeper/references/category-automation-envelope.md: sha256:bc7e38f96bfec2bb363693e0bfa39a6549f97d18ee124930ee6c08c995374779
+    .claude/skills/ci-sweeper/references/category-input-schema.md: sha256:6a515605673940184fe88fdc77d028321988f110b9c4828c8d9acfd407845d3f
     .claude/skills/ci-sweeper/references/category-run-ledger.md: sha256:055c9c821ffaa06f56fbc8cf991e1182cfa1f6a0a9f5b5c7e13411f26231e976
     .claude/skills/ci-sweeper/references/category-scope.md: sha256:4d6455dbf1b2ac436b169e898edef5b977fc4799c4850242c4efc81ade3c24d5
     .claude/skills/ci-sweeper/references/category-validation-commands.md: sha256:6f0ecb53005eb37b3f4860ffdd0d1bb4938f61476cad97f32bae1d5f2c124e26
@@ -1139,17 +1139,17 @@ dependencies:
     .claude/skills/docs-creator/references/category-diataxis-mapping.md: sha256:4e2f935a6761c8f3cd45e3cea177e25df457e30758de1e36f36b02e458a31cf9
     .claude/skills/docs-creator/references/common-checklist.md: sha256:7632a76ba33d49a1a6ec3d972b7c43b71b18445506a5cc651d0112c34d2b094c
     .claude/skills/docs-creator/references/common-output-format.md: sha256:e51da622747d4be617a6655dc3a7199af17e0d4fd8927296109ccc8b8507dec0
-    .claude/skills/docs-updater/SKILL.md: sha256:26beb6d0f61a6eb9c274f6fd01612dbfdb7668e55c1dedd86eefc14c2840f544
+    .claude/skills/docs-updater/SKILL.md: sha256:8099f03fdaa1c5bb2fcf00d99de3cffb2bcb271359c85a2eeaed038607ea9b79
     .claude/skills/docs-updater/assets/pr-body-template-survey.md: sha256:2af097b6665f8e6083a744a90ea750854824290430d16f2b39455dfb8ce34add
     .claude/skills/docs-updater/assets/pr-body-template.md: sha256:a492194d9b3917629ecd635203617e5cd20b692c5da742bdf4c310acebf13b19
     .claude/skills/docs-updater/eval.yaml: sha256:6ff2aa6396ee9a8b88a7dc5dc20fc1f1dc9a262b6eed7469513ba776a3525f0b
     .claude/skills/docs-updater/evals/evals.json: sha256:31d2631eca00b7e8a32c081c66549a74d371aa7551950adfeafe045b0fe5107d
     .claude/skills/docs-updater/evals/files/README.stale.md: sha256:9776631e8f9c4fd404feecb53c6eb0b59362d970150277c65136242e06efcb64
     .claude/skills/docs-updater/evals/files/detect-hook-staged.json: sha256:1c8aa83cc0963ac9b262ffe8378aa78277e25778d7a6b3801e0d5d3d41331dc9
-    .claude/skills/docs-updater/evals/tasks/docs-updater-automation-production-constraints.yaml: sha256:4d3c6a014388535df6c073549da491ec8aaf9f8fe7915957c198a68a09162549
-    .claude/skills/docs-updater/evals/tasks/docs-updater-basic.yaml: sha256:ae0e4a3d992b9601de80a4d233d11b577db71292b4fbb9cda09613d589d3c9d4
-    .claude/skills/docs-updater/evals/tasks/docs-updater-deletion-deadlink.yaml: sha256:c7570f758c3afb10b509e21a6d3f553e7e7f6810563d3004b42c461bee74017c
-    .claude/skills/docs-updater/evals/tasks/docs-updater-exceeded-scope.yaml: sha256:c7d1d621938e4ce77be44f36dd36dd112945d0236b972945a65075143593b4ca
+    .claude/skills/docs-updater/evals/tasks/docs-updater-automation-production-constraints.yaml: sha256:584f4c863ff63a3833b27f2b9fafd073ccb65663eaad86240b01b7ab0d00122e
+    .claude/skills/docs-updater/evals/tasks/docs-updater-basic.yaml: sha256:cac80aaac286c267329b50480529a34b237dc3ef6ac39501456e3fe38be0431c
+    .claude/skills/docs-updater/evals/tasks/docs-updater-deletion-deadlink.yaml: sha256:b9535717b788af6698c5779c96066aa8e20e581539aa0e193f5a40dfaee5f41b
+    .claude/skills/docs-updater/evals/tasks/docs-updater-exceeded-scope.yaml: sha256:14a7d2714b2fc86f9d379a27ab2ec0d08d50a64f511605ac9bfc2ec0eb2eed1d
     .claude/skills/docs-updater/evals/tasks/docs-updater-hook-detect.yaml: sha256:6ac7f2e8470e164e6f4cc142a54c8aac2b79c884664f9de1c60b94bd97719f38
     .claude/skills/docs-updater/evals/tasks/docs-updater-interactive-fix-follow-up.yaml: sha256:514148ee0ca18e61c5a3346a0cbadb0ec909d5364d5e69a7a47559f4e9d24682
     .claude/skills/docs-updater/evals/tasks/docs-updater-interactive-fix-same-turn.yaml: sha256:0ad2a2ffadd14859dbc5ee55157eb8d299bf69ac2230f87a40dc5102397d4279
@@ -1165,13 +1165,13 @@ dependencies:
     .claude/skills/docs-updater/evals/tasks/docs-updater-rename-detection.yaml: sha256:e5b49f3952b018231bb33af4c8ea768c1ac07960f726f284593e75e33a26d059
     .claude/skills/docs-updater/evals/tasks/docs-updater-skip.yaml: sha256:f46f6ddb627a2f33df56caa396a65c1704a98a2112b1d486e05a57e6112376d8
     .claude/skills/docs-updater/evals/tasks/docs-updater-trigger-negative.yaml: sha256:4b18ad1af16d9e2756b2264fbc550889fa4fa8df88bf1ad1b4cd1ecffdb1e1b0
-    .claude/skills/docs-updater/references/category-automation-envelope.md: sha256:56610511d26bef331ef3c98505e533c0f24790d4a2bfd56f544b0f644c3c5ff1
-    .claude/skills/docs-updater/references/category-loop-input-schema.md: sha256:8bcb4e06e32ca1250e3f3314b1cc681fb73a7eccaedc6f449587a06f24242ee5
+    .claude/skills/docs-updater/references/category-automation-envelope.md: sha256:62d856dc7aa7ed2a03470944fa542939bee9452ff2cc2ad885d61bf902daf128
+    .claude/skills/docs-updater/references/category-loop-input-schema.md: sha256:17404350ccfa6e9e44e9e2ffdecfdfb17cbb6d221ae2094f0054044a41a9e65a
     .claude/skills/docs-updater/references/category-scope.md: sha256:8a667993e66630813a033d9e35895a43208c73a5501c12ec8c1beef231bff8fc
     .claude/skills/docs-updater/references/common-checklist-loop.md: sha256:53a169ed58eedd3d840a36dfbcbebda018d00a5f36e5a8c706012f704a87c550
     .claude/skills/docs-updater/references/common-checklist.md: sha256:abdabc4d6dab24486bb351834228d7aff31c7eaf5a102b143fc231fc94cb5264
     .claude/skills/docs-updater/references/common-impact-map.md: sha256:fd106b4d61d06fd46f25db656699c63e0917fb68e1c03ad7cd5d04cb5f0f3e8c
-    .claude/skills/docs-updater/references/common-output-format-loop.md: sha256:4a69b15b87261933012ee25153b64a7671b92236905b1b91dad537cf2bcce7e7
+    .claude/skills/docs-updater/references/common-output-format-loop.md: sha256:b73b787c1f0247c5a2438eee42fda5d94d4a6880a550a67228427388638ad7fe
     .claude/skills/docs-updater/references/common-output-format.md: sha256:ea2bd9ac91d6223521b59a5158359df8be5a30edbf0feac0f79f939cb2bed96d
     .claude/skills/docs-updater/references/common-troubleshooting.md: sha256:34270cd005a0a36d0e79ddfad15ff97c1f89b756b8aac66e90cae73dc2adcbf2
     .claude/skills/docs-updater/scripts/detect_changes.sh: sha256:8ac780f29d013775b6efa5a407086ce3d5cd2f26a8022de56f9991c312ea1d65
@@ -1302,13 +1302,13 @@ dependencies:
     .claude/skills/markdown-validation/scripts/lib/terraform.sh: sha256:02e0fa54a1d73191dfd78c7f5aba848027c6f75b92fc38f4e62d10869d5ee15d
     .claude/skills/markdown-validation/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
     .claude/skills/markdown-validation/scripts/validate.sh: sha256:edde4875be0d22f25ab235b14a41408282f5078c75fc5fb502260c35a0aa5ee1
-    .claude/skills/refactor/SKILL.md: sha256:a457c55253696797b99cac4795b6705acc365191f4f9c8e360e6322fb0521706
+    .claude/skills/refactor/SKILL.md: sha256:a328028bb63011547126a6146b6dab3a9d62457024e97fdb4905a76ced859aa3
     .claude/skills/refactor/assets/pr-body-template-survey.md: sha256:405d2787fd44ac165895e9d870b06f7ae68f33e7707fa9d238cdf6e78be10fba
     .claude/skills/refactor/assets/pr-body-template.md: sha256:5be2bc68d10dccf94a41f98675b6d73c0ab082c62bd76a249104fea19bf04545
     .claude/skills/refactor/eval.yaml: sha256:42d8fb91d9f05189f36106a27053b7329900f301de9cd7b6d07446f7b6fbcd6c
     .claude/skills/refactor/evals/README.md: sha256:518840fd22d11d11899deea08a7bc2771bbeda305c6f050950024344720551f0
     .claude/skills/refactor/evals/evals.json: sha256:daf0fd59dc78d05326cc5c37a31677b52ff7c961c0a6c7f99d5def77725ba462
-    .claude/skills/refactor/evals/tasks/automation-production-constraints.yaml: sha256:e56baa5c77b1236750e33ab6d33e3b90081af29eb00564964519e5c87026318b
+    .claude/skills/refactor/evals/tasks/automation-production-constraints.yaml: sha256:947c44b306a0d5fb46c4abbecb6e2503c7dcfba8b63e969636e62f881231c522
     .claude/skills/refactor/evals/tasks/interactive-fix-follow-up.yaml: sha256:b1a7db864ba3024a1f1ad649266acbafce0eb9c2e0d62c4acce129a3e07d19b9
     .claude/skills/refactor/evals/tasks/interactive-fix-same-turn.yaml: sha256:a9c6602a7c526cd3cfde71af3a6fab0004705bbb598592aad6efa2bcb7c36704
     .claude/skills/refactor/evals/tasks/interactive-survey-default.yaml: sha256:1f9e649fbcd00a93eb19f0a44852b9e7acabb4cfbacca75d1a114706dcdeee61
@@ -1317,14 +1317,14 @@ dependencies:
     .claude/skills/refactor/evals/tasks/refactor-loop-noaction.yaml: sha256:75765f6940459e9c2041d108c01bdc2031502e1025f780dbe7931694af647e55
     .claude/skills/refactor/evals/tasks/refactor-noop.yaml: sha256:2ec45941866112311c0baa7d18f5663d366dc730c3efc1f0e1884045cc3ad06d
     .claude/skills/refactor/evals/tasks/refactor-survey.yaml: sha256:744bc820a60c32afe4a388f86064e91ed13dbb9f06198e7a17240f880ebda61d
-    .claude/skills/refactor/references/category-automation-envelope.md: sha256:df28823107d1a97a8db16d4b6b7a9fcbd0500652cd747f19528ad1c681b50b26
-    .claude/skills/refactor/references/category-input-schema.md: sha256:f1ca1a57860400306d846df4438a6fe2980d5db307ab3dd559e79fb4ff25b705
-    .claude/skills/refactor/references/category-operations.md: sha256:22932a9a815b8e19bf53045b5ea5c14ad9d43acb00a555774f0a8a513569d91b
+    .claude/skills/refactor/references/category-automation-envelope.md: sha256:dfd794b00b19b5981a6a1a0b96d49449215e1d5672e344d0d721afe33439b12f
+    .claude/skills/refactor/references/category-input-schema.md: sha256:f573d7a25a8e8770e2a0685b0ac6871d09ecfdfda339add3fe5c19b92393dd0c
+    .claude/skills/refactor/references/category-operations.md: sha256:4bbd9fb6bb953e50c41681c3e6ff8876679ca3a59791e087e52a8ba210c988f5
     .claude/skills/refactor/references/category-scope.md: sha256:101f12da822676c574362148a055c485acaff1ea959315414d1bd9f02451236e
     .claude/skills/refactor/references/category-techniques.md: sha256:6364055974554582ecd7afeb5d3a566781b844dda86e060b4d1d6de764e73e1b
     .claude/skills/refactor/references/category-verification.md: sha256:447dc5efd2ff6e6ffe8cc36cebcf387d5031b568fae916d37cf48d4b16d0b3b5
     .claude/skills/refactor/references/common-checklist.md: sha256:e08fa9314026b61ba1a3518ee8ef20df640ac73fa3d58101f02dc7e2c5dad248
-    .claude/skills/refactor/references/common-output-format-loop.md: sha256:7498ccfa0850e107fbf8d476a6c97f4df33682100449303948bb5ebbf5ad1d19
+    .claude/skills/refactor/references/common-output-format-loop.md: sha256:5841772ddb13c14843dbc1e8b566c8da3c307929abe9c1c96670e09989829050
     .claude/skills/refactor/references/common-output-format.md: sha256:9eb2d5c6868117640494fe6e932c7cbe40f35e2ceea7abe9bcf60be1037a23e2
     .claude/skills/refactor/references/common-troubleshooting.md: sha256:e4fc2cfdb7eb2bbd15460b6832f7fb3fc5f3e3b5e5b1fe57542d08ae31e9f585
     .claude/skills/refactor/scripts/detect_refactor.sh: sha256:401d01438014229efedc709f6fb4ede36cbc2f7b7f10d922dfd1bbb15dc9627e
@@ -1336,7 +1336,7 @@ dependencies:
     .claude/skills/refactor/scripts/lib/repo_paths.sh: sha256:eba82b537aeaefd4b76de13d2a64b73a74817c0a36a3a0bd47195a122d461a98
     .claude/skills/refactor/scripts/lib/terraform.sh: sha256:02e0fa54a1d73191dfd78c7f5aba848027c6f75b92fc38f4e62d10869d5ee15d
     .claude/skills/refactor/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
-    .claude/skills/tech-debt/SKILL.md: sha256:d2c2d411739a2045354d55747acee259f605f6f7590d233e8aa67b206ff61407
+    .claude/skills/tech-debt/SKILL.md: sha256:877dd6721c2a93f58432bd4e257e0e00b64e52c6c8c041527b8a6148323c6c11
     .claude/skills/tech-debt/assets/pr-body-template-survey.md: sha256:0023d11f42396cff787f299b79981a9fea8bf09ead91f6c47c1629d0b6bdbdab
     .claude/skills/tech-debt/assets/pr-body-template.md: sha256:568c66db5a2121aff671e1d84d29432ab1afbafa7c4e5fde72dc0245a9f6e28f
     .claude/skills/tech-debt/eval.yaml: sha256:000e32e87f7d0eeeffa4938552a9e6867468ed7db71b1e3ae743c468e58d1259
@@ -1345,7 +1345,7 @@ dependencies:
     .claude/skills/tech-debt/evals/files/noise.go.txt: sha256:095a192120fd822a7a7e2034ae84fbc6fdfdf7e4dbee7160266295e9e372c154
     .claude/skills/tech-debt/evals/files/previous-report.sample.md: sha256:98c283fffe6da93c1c3b783e8173c47c27be518ceec0d0fe0021f10056579e21
     .claude/skills/tech-debt/evals/files/sample_service.go.txt: sha256:5a4aeb7c5caf81a5f86e46e54e135d39634103f012fdf90afcf1bbc942325bb3
-    .claude/skills/tech-debt/evals/tasks/automation-production-constraints.yaml: sha256:d532a8a0465cc348a7c3666a14f9a07283fafd464bb65c6d592d8ecf8baab97a
+    .claude/skills/tech-debt/evals/tasks/automation-production-constraints.yaml: sha256:347198743aa7f70c950f7973f759f889d5d0557847e4eff64d97cac6e3f28bf2
     .claude/skills/tech-debt/evals/tasks/basic.yaml: sha256:f3c831f018fb39c422c75fd0da74ed6e2263be39106039f7e96075384e1b6a0a
     .claude/skills/tech-debt/evals/tasks/classification.yaml: sha256:b5b6f400a5a615af41f86a54b850a010e524e84d73a69d4d4993261dd937c316
     .claude/skills/tech-debt/evals/tasks/hotspot-only.yaml: sha256:3e72fa67ccfd5dcf15832dcab3ab90116e564fa9f9c9f094d93147c8d5acc4c4
@@ -1358,10 +1358,10 @@ dependencies:
     .claude/skills/tech-debt/evals/tasks/tech-debt-may-edit-true-write.yaml: sha256:b6bd29ffb237c19520c8e9c540700835df25656999f95a257977bfb04a563289
     .claude/skills/tech-debt/evals/tasks/trigger-negative.yaml: sha256:47204e25144ef22cb8f50066f8964532d05ff80d218b0bb2522629a68a2511bc
     .claude/skills/tech-debt/evals/tasks/truncation-cap.yaml: sha256:2bfad32b0cd4c86760cc1d204e4322a9b86c71d38c73cb1a9626167ee18a1289
-    .claude/skills/tech-debt/references/category-automation-envelope.md: sha256:1f8dbbdda11d7a1d27c81ee86434c91925dd0c5fc6c8ac8e5bfa2c44cf268ede
+    .claude/skills/tech-debt/references/category-automation-envelope.md: sha256:495f202ac5794940ba3e0e35636552fe91e2bd0832d08c1aabf8b39069cc6089
     .claude/skills/tech-debt/references/category-debt-taxonomy.md: sha256:4268125d2b7c263d7e1c7ba1d0d79fb8ed49de04de07531f5e944fc3d9c6a498
     .claude/skills/tech-debt/references/category-input-schema.md: sha256:0fa827a161377914e556434e34dcc7cd27a463a0bf73a32c52b3970713a67c64
-    .claude/skills/tech-debt/references/category-scope.md: sha256:ac64c6e5581aea11924745a5d61af565ee5d83dadbb223142ced86e6356d4732
+    .claude/skills/tech-debt/references/category-scope.md: sha256:4e82d1f0bd2e6bded84157f2ce087e18d1820cd48df72c622381936d0272316a
     .claude/skills/tech-debt/references/common-checklist.md: sha256:444825c592a6b29bd0d1854b291086440d61ec5689edf6e4004d5b5c10457960
     .claude/skills/tech-debt/references/common-output-format.md: sha256:daa8a6dcb8a7e5702cd971b5d605346bc0bcdc33c11cb87b3158ccb2f36d3253
     .claude/skills/tech-debt/references/common-troubleshooting.md: sha256:28e9a9acf32642f50167c5a6e25a0de9410cc33cf4ec1a23a06deb92f21b9e1b
@@ -1886,7 +1886,7 @@ dependencies:
     .agents/skills/shell-script-validation/scripts/lib/terraform.sh: sha256:02e0fa54a1d73191dfd78c7f5aba848027c6f75b92fc38f4e62d10869d5ee15d
     .agents/skills/shell-script-validation/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
     .agents/skills/shell-script-validation/scripts/validate.sh: sha256:ab65f1617ac7d3d39ef47c3d0919cd81c8513cf6287b9d4227e813d99f5545a7
-    .claude/rules/bats.md: sha256:4b0460fc57f896be133fb6c28082ee92b8edb85eb63f476f30c9719a7a7a1bb1
+    .claude/rules/bats.md: sha256:c0a89c3ca977ccad97a160a9c871d0d16ecd7019d48e555664c17e35c05f348f
     .claude/rules/shell-script.md: sha256:f1b51e10adccbfd18fd25d04c8df2d22f873b9c98e302653cd2d05e6ec00a63a
     .claude/skills/shell-script-review/SKILL.md: sha256:1453172abd4bee98c43cebd859203e1ed955c15f0410ba67e2c10e149bda316f
     .claude/skills/shell-script-review/eval.yaml: sha256:787b28497c258dc8bb5850176f43f9956d26b979c19319a149e00dff0de1084a
@@ -1944,7 +1944,7 @@ dependencies:
     .claude/skills/shell-script-validation/scripts/lib/terraform.sh: sha256:02e0fa54a1d73191dfd78c7f5aba848027c6f75b92fc38f4e62d10869d5ee15d
     .claude/skills/shell-script-validation/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
     .claude/skills/shell-script-validation/scripts/validate.sh: sha256:ab65f1617ac7d3d39ef47c3d0919cd81c8513cf6287b9d4227e813d99f5545a7
-    .cursor/rules/bats.mdc: sha256:d9edc2d05c9f9c0e7ecd84500ae54508955f566e045d5ec36b8aad8ba5d2388f
+    .cursor/rules/bats.mdc: sha256:bbee3f434f429b11f41e42a47056b27f2f4b9cf1fc2550278ab1b58d4edc675c
     .cursor/rules/shell-script.mdc: sha256:04abbfbfd0729d8927f00b87757e21ccf0ba2e1dd8b816465d51f2346cb1dbf3
   source: local
   local_path: ./.apm/packages/shell-script
@@ -2172,7 +2172,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:4b0460fc57f896be133fb6c28082ee92b8edb85eb63f476f30c9719a7a7a1bb1
+  content_hash: sha256:c0a89c3ca977ccad97a160a9c871d0d16ecd7019d48e555664c17e35c05f348f
 - kind: project-relative
   target: claude
   value: .claude/rules/github-actions-workflow.md
@@ -2460,7 +2460,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:db8b27ee7ee0aa1517c3eb8b2b4e5c30a48bff1fe488d37e8665dbf017a97e75
+  content_hash: sha256:4cec7e3b67cab48efe1792e6b9d45db7707f58286a3562dcb258bd6a274c2386
 - kind: project-relative
   target: claude
   value: .claude/skills/changelog/assets/pr-body-template-survey.md
@@ -2505,7 +2505,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:d4f2f9150bd4d56c79d8a64284fe9d616bb91ac75ce991202d19043231d0de0d
+  content_hash: sha256:bb57fd6be0c4392b6ae96957bc3afa762993d5a4c4b5a83af226e2afb96439b0
 - kind: project-relative
   target: claude
   value: .claude/skills/changelog/evals/tasks/basic.yaml
@@ -2595,7 +2595,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:917d84b7e0e02f2ba8e1fe5fac5f77ae91d96b66f9403e3e22b0e25b7baeb4ba
+  content_hash: sha256:49422cd6d835cbbe4f8b8138b76e922888543edda0255f8c4ffab208b5e7efbc
 - kind: project-relative
   target: claude
   value: .claude/skills/changelog/references/category-input-schema.md
@@ -2604,7 +2604,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:4b47f5ebd769e3a36ad33d12698eecd06a7e8f09996b49db7d68928b373aeff5
+  content_hash: sha256:1e48759dc71fa3027bbf9c3869b3a94faeb0284b74b703adc194d0cb80bfca56
 - kind: project-relative
   target: claude
   value: .claude/skills/changelog/references/category-scope.md
@@ -2613,7 +2613,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:2e464f0221e24e1b7cb93a9c03b3f3a1eff9fcfa3ca4a750cf6282833003003b
+  content_hash: sha256:efd42b6cc5b6bcc91e7d6256532ddb5ebc9627c22a21f90b87c79becf63ed989
 - kind: project-relative
   target: claude
   value: .claude/skills/changelog/references/common-checklist.md
@@ -2622,7 +2622,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:e97224d4d1debeae2249b4dad1ff0b709a0ead5cb06e0f58052c84f030d49e24
+  content_hash: sha256:afee5a25782d6c9964742d93f41ff14e3bf047070647cafb154b7996cbbef254
 - kind: project-relative
   target: claude
   value: .claude/skills/changelog/references/common-output-format.md
@@ -2739,7 +2739,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:136cb6fd16d0464c0b7f945ebf2ea6ccdea41734bc2b6923e0135c5c72e9fc6a
+  content_hash: sha256:39e21dddfb4e07bf7d78eb938b2cf862491151c3f21bbb954a476721cf670a6f
 - kind: project-relative
   target: claude
   value: .claude/skills/ci-sweeper/assets/pr-body-template-survey.md
@@ -2775,7 +2775,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:00bd812308567db35d9f41f0dbd5e35bfa2d317fb4a577bd8c917c2206e89853
+  content_hash: sha256:8f5bd84ab9d828ebb482d992c2ee81818755ffdb6054fd884ed9ce7db555fb23
 - kind: project-relative
   target: claude
   value: .claude/skills/ci-sweeper/evals/tasks/basic.yaml
@@ -2865,7 +2865,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:ad4a978253458de127e077a5b25bda4ce7aae9feb9dc576357e5eb40e7e78cfc
+  content_hash: sha256:bc7e38f96bfec2bb363693e0bfa39a6549f97d18ee124930ee6c08c995374779
 - kind: project-relative
   target: claude
   value: .claude/skills/ci-sweeper/references/category-input-schema.md
@@ -2874,7 +2874,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:b9e62db8e7daedc7726d5d7fe0ed3938696b5662c2635afd8846a3858b700b47
+  content_hash: sha256:6a515605673940184fe88fdc77d028321988f110b9c4828c8d9acfd407845d3f
 - kind: project-relative
   target: claude
   value: .claude/skills/ci-sweeper/references/category-run-ledger.md
@@ -3135,7 +3135,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:26beb6d0f61a6eb9c274f6fd01612dbfdb7668e55c1dedd86eefc14c2840f544
+  content_hash: sha256:8099f03fdaa1c5bb2fcf00d99de3cffb2bcb271359c85a2eeaed038607ea9b79
 - kind: project-relative
   target: claude
   value: .claude/skills/docs-updater/assets/pr-body-template-survey.md
@@ -3198,7 +3198,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:4d3c6a014388535df6c073549da491ec8aaf9f8fe7915957c198a68a09162549
+  content_hash: sha256:584f4c863ff63a3833b27f2b9fafd073ccb65663eaad86240b01b7ab0d00122e
 - kind: project-relative
   target: claude
   value: .claude/skills/docs-updater/evals/tasks/docs-updater-basic.yaml
@@ -3207,7 +3207,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:ae0e4a3d992b9601de80a4d233d11b577db71292b4fbb9cda09613d589d3c9d4
+  content_hash: sha256:cac80aaac286c267329b50480529a34b237dc3ef6ac39501456e3fe38be0431c
 - kind: project-relative
   target: claude
   value: .claude/skills/docs-updater/evals/tasks/docs-updater-deletion-deadlink.yaml
@@ -3216,7 +3216,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:c7570f758c3afb10b509e21a6d3f553e7e7f6810563d3004b42c461bee74017c
+  content_hash: sha256:b9535717b788af6698c5779c96066aa8e20e581539aa0e193f5a40dfaee5f41b
 - kind: project-relative
   target: claude
   value: .claude/skills/docs-updater/evals/tasks/docs-updater-exceeded-scope.yaml
@@ -3225,7 +3225,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:c7d1d621938e4ce77be44f36dd36dd112945d0236b972945a65075143593b4ca
+  content_hash: sha256:14a7d2714b2fc86f9d379a27ab2ec0d08d50a64f511605ac9bfc2ec0eb2eed1d
 - kind: project-relative
   target: claude
   value: .claude/skills/docs-updater/evals/tasks/docs-updater-hook-detect.yaml
@@ -3369,7 +3369,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:56610511d26bef331ef3c98505e533c0f24790d4a2bfd56f544b0f644c3c5ff1
+  content_hash: sha256:62d856dc7aa7ed2a03470944fa542939bee9452ff2cc2ad885d61bf902daf128
 - kind: project-relative
   target: claude
   value: .claude/skills/docs-updater/references/category-loop-input-schema.md
@@ -3378,7 +3378,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:8bcb4e06e32ca1250e3f3314b1cc681fb73a7eccaedc6f449587a06f24242ee5
+  content_hash: sha256:17404350ccfa6e9e44e9e2ffdecfdfb17cbb6d221ae2094f0054044a41a9e65a
 - kind: project-relative
   target: claude
   value: .claude/skills/docs-updater/references/category-scope.md
@@ -3423,7 +3423,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:4a69b15b87261933012ee25153b64a7671b92236905b1b91dad537cf2bcce7e7
+  content_hash: sha256:b73b787c1f0247c5a2438eee42fda5d94d4a6880a550a67228427388638ad7fe
 - kind: project-relative
   target: claude
   value: .claude/skills/docs-updater/references/common-output-format.md
@@ -5151,7 +5151,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:a457c55253696797b99cac4795b6705acc365191f4f9c8e360e6322fb0521706
+  content_hash: sha256:a328028bb63011547126a6146b6dab3a9d62457024e97fdb4905a76ced859aa3
 - kind: project-relative
   target: claude
   value: .claude/skills/refactor/assets/pr-body-template-survey.md
@@ -5205,7 +5205,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:e56baa5c77b1236750e33ab6d33e3b90081af29eb00564964519e5c87026318b
+  content_hash: sha256:947c44b306a0d5fb46c4abbecb6e2503c7dcfba8b63e969636e62f881231c522
 - kind: project-relative
   target: claude
   value: .claude/skills/refactor/evals/tasks/interactive-fix-follow-up.yaml
@@ -5286,7 +5286,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:df28823107d1a97a8db16d4b6b7a9fcbd0500652cd747f19528ad1c681b50b26
+  content_hash: sha256:dfd794b00b19b5981a6a1a0b96d49449215e1d5672e344d0d721afe33439b12f
 - kind: project-relative
   target: claude
   value: .claude/skills/refactor/references/category-input-schema.md
@@ -5295,7 +5295,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:f1ca1a57860400306d846df4438a6fe2980d5db307ab3dd559e79fb4ff25b705
+  content_hash: sha256:f573d7a25a8e8770e2a0685b0ac6871d09ecfdfda339add3fe5c19b92393dd0c
 - kind: project-relative
   target: claude
   value: .claude/skills/refactor/references/category-operations.md
@@ -5304,7 +5304,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:22932a9a815b8e19bf53045b5ea5c14ad9d43acb00a555774f0a8a513569d91b
+  content_hash: sha256:4bbd9fb6bb953e50c41681c3e6ff8876679ca3a59791e087e52a8ba210c988f5
 - kind: project-relative
   target: claude
   value: .claude/skills/refactor/references/category-scope.md
@@ -5349,7 +5349,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:7498ccfa0850e107fbf8d476a6c97f4df33682100449303948bb5ebbf5ad1d19
+  content_hash: sha256:5841772ddb13c14843dbc1e8b566c8da3c307929abe9c1c96670e09989829050
 - kind: project-relative
   target: claude
   value: .claude/skills/refactor/references/common-output-format.md
@@ -5988,7 +5988,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:d2c2d411739a2045354d55747acee259f605f6f7590d233e8aa67b206ff61407
+  content_hash: sha256:877dd6721c2a93f58432bd4e257e0e00b64e52c6c8c041527b8a6148323c6c11
 - kind: project-relative
   target: claude
   value: .claude/skills/tech-debt/assets/pr-body-template-survey.md
@@ -6069,7 +6069,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:d532a8a0465cc348a7c3666a14f9a07283fafd464bb65c6d592d8ecf8baab97a
+  content_hash: sha256:347198743aa7f70c950f7973f759f889d5d0557847e4eff64d97cac6e3f28bf2
 - kind: project-relative
   target: claude
   value: .claude/skills/tech-debt/evals/tasks/basic.yaml
@@ -6186,7 +6186,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:1f8dbbdda11d7a1d27c81ee86434c91925dd0c5fc6c8ac8e5bfa2c44cf268ede
+  content_hash: sha256:495f202ac5794940ba3e0e35636552fe91e2bd0832d08c1aabf8b39069cc6089
 - kind: project-relative
   target: claude
   value: .claude/skills/tech-debt/references/category-debt-taxonomy.md
@@ -6213,7 +6213,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:ac64c6e5581aea11924745a5d61af565ee5d83dadbb223142ced86e6356d4732
+  content_hash: sha256:4e82d1f0bd2e6bded84157f2ce087e18d1820cd48df72c622381936d0272316a
 - kind: project-relative
   target: claude
   value: .claude/skills/tech-debt/references/common-checklist.md
@@ -6573,7 +6573,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:db8b27ee7ee0aa1517c3eb8b2b4e5c30a48bff1fe488d37e8665dbf017a97e75
+  content_hash: sha256:4cec7e3b67cab48efe1792e6b9d45db7707f58286a3562dcb258bd6a274c2386
 - kind: project-relative
   target: cursor
   value: .agents/skills/changelog/assets/pr-body-template-survey.md
@@ -6618,7 +6618,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:d4f2f9150bd4d56c79d8a64284fe9d616bb91ac75ce991202d19043231d0de0d
+  content_hash: sha256:bb57fd6be0c4392b6ae96957bc3afa762993d5a4c4b5a83af226e2afb96439b0
 - kind: project-relative
   target: cursor
   value: .agents/skills/changelog/evals/tasks/basic.yaml
@@ -6708,7 +6708,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:917d84b7e0e02f2ba8e1fe5fac5f77ae91d96b66f9403e3e22b0e25b7baeb4ba
+  content_hash: sha256:49422cd6d835cbbe4f8b8138b76e922888543edda0255f8c4ffab208b5e7efbc
 - kind: project-relative
   target: cursor
   value: .agents/skills/changelog/references/category-input-schema.md
@@ -6717,7 +6717,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:4b47f5ebd769e3a36ad33d12698eecd06a7e8f09996b49db7d68928b373aeff5
+  content_hash: sha256:1e48759dc71fa3027bbf9c3869b3a94faeb0284b74b703adc194d0cb80bfca56
 - kind: project-relative
   target: cursor
   value: .agents/skills/changelog/references/category-scope.md
@@ -6726,7 +6726,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:2e464f0221e24e1b7cb93a9c03b3f3a1eff9fcfa3ca4a750cf6282833003003b
+  content_hash: sha256:efd42b6cc5b6bcc91e7d6256532ddb5ebc9627c22a21f90b87c79becf63ed989
 - kind: project-relative
   target: cursor
   value: .agents/skills/changelog/references/common-checklist.md
@@ -6735,7 +6735,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:e97224d4d1debeae2249b4dad1ff0b709a0ead5cb06e0f58052c84f030d49e24
+  content_hash: sha256:afee5a25782d6c9964742d93f41ff14e3bf047070647cafb154b7996cbbef254
 - kind: project-relative
   target: cursor
   value: .agents/skills/changelog/references/common-output-format.md
@@ -6852,7 +6852,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:136cb6fd16d0464c0b7f945ebf2ea6ccdea41734bc2b6923e0135c5c72e9fc6a
+  content_hash: sha256:39e21dddfb4e07bf7d78eb938b2cf862491151c3f21bbb954a476721cf670a6f
 - kind: project-relative
   target: cursor
   value: .agents/skills/ci-sweeper/assets/pr-body-template-survey.md
@@ -6888,7 +6888,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:00bd812308567db35d9f41f0dbd5e35bfa2d317fb4a577bd8c917c2206e89853
+  content_hash: sha256:8f5bd84ab9d828ebb482d992c2ee81818755ffdb6054fd884ed9ce7db555fb23
 - kind: project-relative
   target: cursor
   value: .agents/skills/ci-sweeper/evals/tasks/basic.yaml
@@ -6978,7 +6978,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:ad4a978253458de127e077a5b25bda4ce7aae9feb9dc576357e5eb40e7e78cfc
+  content_hash: sha256:bc7e38f96bfec2bb363693e0bfa39a6549f97d18ee124930ee6c08c995374779
 - kind: project-relative
   target: cursor
   value: .agents/skills/ci-sweeper/references/category-input-schema.md
@@ -6987,7 +6987,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:b9e62db8e7daedc7726d5d7fe0ed3938696b5662c2635afd8846a3858b700b47
+  content_hash: sha256:6a515605673940184fe88fdc77d028321988f110b9c4828c8d9acfd407845d3f
 - kind: project-relative
   target: cursor
   value: .agents/skills/ci-sweeper/references/category-run-ledger.md
@@ -7248,7 +7248,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:26beb6d0f61a6eb9c274f6fd01612dbfdb7668e55c1dedd86eefc14c2840f544
+  content_hash: sha256:8099f03fdaa1c5bb2fcf00d99de3cffb2bcb271359c85a2eeaed038607ea9b79
 - kind: project-relative
   target: cursor
   value: .agents/skills/docs-updater/assets/pr-body-template-survey.md
@@ -7311,7 +7311,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:4d3c6a014388535df6c073549da491ec8aaf9f8fe7915957c198a68a09162549
+  content_hash: sha256:584f4c863ff63a3833b27f2b9fafd073ccb65663eaad86240b01b7ab0d00122e
 - kind: project-relative
   target: cursor
   value: .agents/skills/docs-updater/evals/tasks/docs-updater-basic.yaml
@@ -7320,7 +7320,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:ae0e4a3d992b9601de80a4d233d11b577db71292b4fbb9cda09613d589d3c9d4
+  content_hash: sha256:cac80aaac286c267329b50480529a34b237dc3ef6ac39501456e3fe38be0431c
 - kind: project-relative
   target: cursor
   value: .agents/skills/docs-updater/evals/tasks/docs-updater-deletion-deadlink.yaml
@@ -7329,7 +7329,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:c7570f758c3afb10b509e21a6d3f553e7e7f6810563d3004b42c461bee74017c
+  content_hash: sha256:b9535717b788af6698c5779c96066aa8e20e581539aa0e193f5a40dfaee5f41b
 - kind: project-relative
   target: cursor
   value: .agents/skills/docs-updater/evals/tasks/docs-updater-exceeded-scope.yaml
@@ -7338,7 +7338,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:c7d1d621938e4ce77be44f36dd36dd112945d0236b972945a65075143593b4ca
+  content_hash: sha256:14a7d2714b2fc86f9d379a27ab2ec0d08d50a64f511605ac9bfc2ec0eb2eed1d
 - kind: project-relative
   target: cursor
   value: .agents/skills/docs-updater/evals/tasks/docs-updater-hook-detect.yaml
@@ -7482,7 +7482,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:56610511d26bef331ef3c98505e533c0f24790d4a2bfd56f544b0f644c3c5ff1
+  content_hash: sha256:62d856dc7aa7ed2a03470944fa542939bee9452ff2cc2ad885d61bf902daf128
 - kind: project-relative
   target: cursor
   value: .agents/skills/docs-updater/references/category-loop-input-schema.md
@@ -7491,7 +7491,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:8bcb4e06e32ca1250e3f3314b1cc681fb73a7eccaedc6f449587a06f24242ee5
+  content_hash: sha256:17404350ccfa6e9e44e9e2ffdecfdfb17cbb6d221ae2094f0054044a41a9e65a
 - kind: project-relative
   target: cursor
   value: .agents/skills/docs-updater/references/category-scope.md
@@ -7536,7 +7536,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:4a69b15b87261933012ee25153b64a7671b92236905b1b91dad537cf2bcce7e7
+  content_hash: sha256:b73b787c1f0247c5a2438eee42fda5d94d4a6880a550a67228427388638ad7fe
 - kind: project-relative
   target: cursor
   value: .agents/skills/docs-updater/references/common-output-format.md
@@ -9264,7 +9264,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:a457c55253696797b99cac4795b6705acc365191f4f9c8e360e6322fb0521706
+  content_hash: sha256:a328028bb63011547126a6146b6dab3a9d62457024e97fdb4905a76ced859aa3
 - kind: project-relative
   target: cursor
   value: .agents/skills/refactor/assets/pr-body-template-survey.md
@@ -9318,7 +9318,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:e56baa5c77b1236750e33ab6d33e3b90081af29eb00564964519e5c87026318b
+  content_hash: sha256:947c44b306a0d5fb46c4abbecb6e2503c7dcfba8b63e969636e62f881231c522
 - kind: project-relative
   target: cursor
   value: .agents/skills/refactor/evals/tasks/interactive-fix-follow-up.yaml
@@ -9399,7 +9399,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:df28823107d1a97a8db16d4b6b7a9fcbd0500652cd747f19528ad1c681b50b26
+  content_hash: sha256:dfd794b00b19b5981a6a1a0b96d49449215e1d5672e344d0d721afe33439b12f
 - kind: project-relative
   target: cursor
   value: .agents/skills/refactor/references/category-input-schema.md
@@ -9408,7 +9408,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:f1ca1a57860400306d846df4438a6fe2980d5db307ab3dd559e79fb4ff25b705
+  content_hash: sha256:f573d7a25a8e8770e2a0685b0ac6871d09ecfdfda339add3fe5c19b92393dd0c
 - kind: project-relative
   target: cursor
   value: .agents/skills/refactor/references/category-operations.md
@@ -9417,7 +9417,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:22932a9a815b8e19bf53045b5ea5c14ad9d43acb00a555774f0a8a513569d91b
+  content_hash: sha256:4bbd9fb6bb953e50c41681c3e6ff8876679ca3a59791e087e52a8ba210c988f5
 - kind: project-relative
   target: cursor
   value: .agents/skills/refactor/references/category-scope.md
@@ -9462,7 +9462,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:7498ccfa0850e107fbf8d476a6c97f4df33682100449303948bb5ebbf5ad1d19
+  content_hash: sha256:5841772ddb13c14843dbc1e8b566c8da3c307929abe9c1c96670e09989829050
 - kind: project-relative
   target: cursor
   value: .agents/skills/refactor/references/common-output-format.md
@@ -10101,7 +10101,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:d2c2d411739a2045354d55747acee259f605f6f7590d233e8aa67b206ff61407
+  content_hash: sha256:877dd6721c2a93f58432bd4e257e0e00b64e52c6c8c041527b8a6148323c6c11
 - kind: project-relative
   target: cursor
   value: .agents/skills/tech-debt/assets/pr-body-template-survey.md
@@ -10182,7 +10182,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:d532a8a0465cc348a7c3666a14f9a07283fafd464bb65c6d592d8ecf8baab97a
+  content_hash: sha256:347198743aa7f70c950f7973f759f889d5d0557847e4eff64d97cac6e3f28bf2
 - kind: project-relative
   target: cursor
   value: .agents/skills/tech-debt/evals/tasks/basic.yaml
@@ -10299,7 +10299,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:1f8dbbdda11d7a1d27c81ee86434c91925dd0c5fc6c8ac8e5bfa2c44cf268ede
+  content_hash: sha256:495f202ac5794940ba3e0e35636552fe91e2bd0832d08c1aabf8b39069cc6089
 - kind: project-relative
   target: cursor
   value: .agents/skills/tech-debt/references/category-debt-taxonomy.md
@@ -10326,7 +10326,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:ac64c6e5581aea11924745a5d61af565ee5d83dadbb223142ced86e6356d4732
+  content_hash: sha256:4e82d1f0bd2e6bded84157f2ce087e18d1820cd48df72c622381936d0272316a
 - kind: project-relative
   target: cursor
   value: .agents/skills/tech-debt/references/common-checklist.md
@@ -10632,7 +10632,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:d9edc2d05c9f9c0e7ecd84500ae54508955f566e045d5ec36b8aad8ba5d2388f
+  content_hash: sha256:bbee3f434f429b11f41e42a47056b27f2f4b9cf1fc2550278ab1b58d4edc675c
 - kind: project-relative
   target: cursor
   value: .cursor/rules/github-actions-workflow.mdc

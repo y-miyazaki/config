@@ -61,15 +61,16 @@ jobs:
       branch_state: main
       budget_max_runs_per_day: 1
       budget_max_tokens_per_day: 500000
+      delivery: open_pr
       detect_domain_env_json: >-
         {"REFACTOR_DUP_MIN_LINES":"8","REFACTOR_OVERSIZED_FILE_LINES":"400","REFACTOR_SCAN_GLOBS":".apm/packages/**,scripts/**"}
       detect_script: .agents/skills/refactor/scripts/detect_refactor.sh
       engine: cursor
       environment: default
-      finalize_integration: open_pr
       infer_files_pattern: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|ya?ml|sh|go|toml|json)'
       loop_name: refactor
       max_targets_per_schedule: 1
+      may_edit: true
       no_changes_verdict: REJECT
       pr_body: ""
       pr_title: "chore(refactor): structural improvement (loop-refactor)"
@@ -83,6 +84,7 @@ jobs:
         Invoke named validation skills for touched stacks before finalize.
       pr_enabled: false
       skill_name: refactor
+      write_target: fix
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}

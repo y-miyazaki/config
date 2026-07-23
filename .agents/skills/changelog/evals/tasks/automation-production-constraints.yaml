@@ -6,7 +6,7 @@ tags:
   - automation
 inputs:
   prompt: >-
-    Use changelog. ## Constraints may_edit: true You MUST persist edits to disk in the
+    Use changelog. ## Constraints may_edit: true write_target: fix You MUST persist edits to disk in the
     worktree; a report alone is not sufficient when may_edit is true. Allowed paths:
     CHANGELOG.md. Process injected commits; emit apply shape with ### Changes and ##
     Verification plus ## Session Metrics. Do not emit ### Candidates. Emit ## Overview and

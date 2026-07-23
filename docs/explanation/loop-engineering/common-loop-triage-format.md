@@ -22,6 +22,26 @@ Automation runs branch on **`may_edit`** from `## Constraints` (injected by `loo
 
 Interactive runs resolve `may_edit` from natural language (default survey; explicit fix language → apply). See each skill's `SKILL.md` Workflow.
 
+## Four-plane contract (caller vs skill)
+
+Loop callers configure four independent planes. Skills branch only on planes 2–3 from `## Constraints`; they **must not** read `level` or `delivery`.
+
+| Plane     | Caller inputs                                                 | Visible to skill?         |
+| --------- | ------------------------------------------------------------- | ------------------------- |
+| Autonomy  | `level` (L1/L2/L3)                                            | No — platform job routing |
+| Edit gate | `may_edit`                                                    | Yes                       |
+| Artifact  | `write_target` (`fix` \| `report`), `report_file` when report | Yes                       |
+| Delivery  | `delivery` (`open_pr`, `issue`, `log`, …)                     | No — `loop-finalize` only |
+
+Spec: [Loop write target & delivery design](../../superpowers/specs/2026-07-23-loop-write-target-delivery-design.md). Caller reference: [loop-caller-inputs-reference.md](workflows/loop-caller-inputs-reference.md).
+
+When `may_edit: true`:
+
+| `write_target` | Agent persists                                    |
+| -------------- | ------------------------------------------------- |
+| `fix`          | Source/docs/manifests within allowlist            |
+| `report`       | Structured file at `report_file` within allowlist |
+
 ## Skills using this pattern
 
 | Skill        | Survey primary   | Apply primary | Skip / defer subsection                  |

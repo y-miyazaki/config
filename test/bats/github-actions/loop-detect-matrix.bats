@@ -22,15 +22,30 @@ setup() {
 }
 
 @test "build_prompt_text emits may_edit false at L1" {
-    run build_prompt_text "changelog" "L1" "CHANGELOG.md" "" "abc" "def" "{}" "" "0"
+    run build_prompt_text "changelog" "L1" "CHANGELOG.md" "" "abc" "def" "{}" "" "0" "false" ""
     [ "$status" -eq 0 ]
     [[ $output == *"may_edit: false"* ]]
     [[ $output == *"## Constraints"* ]]
 }
 
 @test "build_prompt_text emits may_edit true at L2" {
-    run build_prompt_text "ci-sweeper" "L2" "scripts/**" "" "abc" "def" "{}" "" "0"
+    run build_prompt_text "ci-sweeper" "L2" "scripts/**" "" "abc" "def" "{}" "" "0" "true" "fix" ""
     [ "$status" -eq 0 ]
     [[ $output == *"may_edit: true"* ]]
-    [[ $output == *"persist edits to disk"* ]]
+    [[ $output == *"persist fixes within allowlist"* ]]
+}
+
+@test "build_prompt_text emits write_target report when configured" {
+    run build_prompt_text "tech-debt" "L2" "docs/report/**" "" "abc" "def" \
+        '{"report_file":"docs/report/tech-debt/2026-07-23.md"}' "" "0" \
+        "true" "report" "docs/report/tech-debt/2026-07-23.md"
+    [ "$status" -eq 0 ]
+    [[ $output == *"write_target: report"* ]]
+    [[ $output == *"report_file: docs/report/tech-debt/2026-07-23.md"* ]]
+}
+
+@test "build_prompt_text rejects omitted may_edit" {
+    run build_prompt_text "changelog" "L2" "CHANGELOG.md" "" "abc" "def" "{}" "" "0" "" "fix" ""
+    [ "$status" -eq 1 ]
+    [[ $output == *"may_edit is required"* ]]
 }

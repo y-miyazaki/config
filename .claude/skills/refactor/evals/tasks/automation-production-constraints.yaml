@@ -6,7 +6,7 @@ tags:
   - automation
 inputs:
   prompt: >-
-    Use refactor (automation path). ## Constraints may_edit: true You MUST persist edits to
+    Use refactor (automation path). ## Constraints may_edit: true write_target: fix You MUST persist edits to
     disk in the worktree; a report alone is not sufficient when may_edit is true. Allowed
     paths: scripts/**. Apply every apply candidate from hints[]; emit apply shape with ###
     Changes and ## Verification plus ## Session Metrics. Emit ## Overview and ## Summary per

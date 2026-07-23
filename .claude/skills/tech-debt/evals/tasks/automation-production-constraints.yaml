@@ -6,8 +6,8 @@ tags:
   - automation
 inputs:
   prompt: >-
-    Use tech-debt. ## Constraints may_edit: true You MUST persist edits to disk in the
-    worktree; a report alone is not sufficient when may_edit is true. Allowed paths:
+    Use tech-debt. ## Constraints may_edit: true write_target: report report_file:
+    docs/report/tech-debt/2026-07-19.md You MUST persist report_file within allowlist. Allowed paths:
     docs/report/tech-debt/**/*.md. Classify injected eol_hint as dependency_version; emit
     apply shape with ### Changes and ## Verification plus ## Session Metrics. Emit ##
     Overview and ## Summary per common-output-format.md. Include Category labels on rows.

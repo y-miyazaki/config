@@ -16,11 +16,23 @@ inputs:
     required: false
   level:
     default: ""
-    description: "Autonomy level (L1 | L2 | L3) for generic level constraints"
+    description: "Autonomy level (L1 | L2 | L3) for legacy level constraints shim"
+    required: false
+  may_edit:
+    default: ""
+    description: "Agent worktree edit gate: true | false"
+    required: false
+  report_file:
+    default: ""
+    description: "Report output path when write_target is report"
     required: false
   skill_name:
     description: "Name of the skill to invoke (e.g. loop-docs-triage)"
     required: true
+  write_target:
+    default: ""
+    description: "Agent artifact when may_edit is true: fix | report"
+    required: false
 
 outputs:
   prompt:
@@ -38,7 +50,10 @@ runs:
         CONTEXT: ${{ inputs.context }}
         INSTRUCTIONS: ${{ inputs.instructions }}
         LEVEL: ${{ inputs.level }}
+        MAY_EDIT: ${{ inputs.may_edit }}
+        REPORT_FILE: ${{ inputs.report_file }}
         SKILL_NAME: ${{ inputs.skill_name }}
+        WRITE_TARGET: ${{ inputs.write_target }}
       run: |
         set -euo pipefail
         # shellcheck disable=SC1091
@@ -57,7 +72,10 @@ runs:
             echo "## Instructions"
             echo "${INSTRUCTIONS}"
           fi
-          if [[ -n "${LEVEL}" || -n "${ALLOWLIST}" ]]; then
+          if [[ -n "${MAY_EDIT}" ]]; then
+            echo ""
+            emit_loop_constraints "${MAY_EDIT}" "${WRITE_TARGET}" "${ALLOWLIST}" "${REPORT_FILE}"
+          elif [[ -n "${LEVEL}" || -n "${ALLOWLIST}" ]]; then
             echo ""
             emit_loop_constraints "${LEVEL}" "${ALLOWLIST}"
           fi

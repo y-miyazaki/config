@@ -67,6 +67,11 @@ on:
         description: "Daily aggregated token cap"
         required: false
         type: number
+      delivery:
+        default: open_pr
+        description: "Platform delivery after APPROVE: log | issue | notion | open_pr | none"
+        required: false
+        type: string
       denylist:
         default: ""
         description: "Comma-separated globs the implementer must not touch"
@@ -95,14 +100,14 @@ on:
         description: "GitHub environment for maintenance bot secrets"
         required: false
         type: string
-      finalize_integration:
+      git_landing_integration:
         default: open_pr
-        description: "Finalize for integration targets: open_pr | push"
+        description: "Advanced git landing when delivery is open_pr: open_pr | push (integration targets)"
         required: false
         type: string
-      finalize_pull_request:
+      git_landing_pull_request:
         default: open_pr
-        description: "Finalize for PR head targets: open_pr | push_head"
+        description: "Advanced git landing when delivery is open_pr: open_pr | push_head (pull_request targets)"
         required: false
         type: string
       infer_files_pattern:
@@ -124,6 +129,10 @@ on:
         description: "Max targets per cron tick after filters"
         required: false
         type: number
+      may_edit:
+        description: "Agent worktree edit gate: true | false (required)"
+        required: true
+        type: boolean
       no_changes_verdict:
         default: REJECT
         description: "APPROVE | REJECT when implementer produces no file diff"
@@ -178,6 +187,10 @@ on:
         description: "Override state JSON path (default .loop/state-<loop_name>.json)"
         required: false
         type: string
+      write_target:
+        description: "Agent artifact when may_edit is true: fix | report (required)"
+        required: true
+        type: string
     secrets:
       AGENT_TOKEN:
         description: "Authentication token for the selected engine"
@@ -214,6 +227,7 @@ jobs:
       allowlist: ${{ steps.detect.outputs.allowlist }}
       branch_state: ${{ inputs.branch_state }}
       denylist: ${{ inputs.denylist }}
+      delivery: ${{ steps.detect.outputs.delivery }}
       domain_persistence_script: ${{ inputs.domain_persistence_script }}
       engine: ${{ steps.detect.outputs.engine }}
       handoff_artifact_name: ${{ steps.detect.outputs.handoff_artifact_name }}
@@ -282,13 +296,14 @@ jobs:
           budget_file: ${{ inputs.budget_file }}
           budget_max_runs_per_day: ${{ inputs.budget_max_runs_per_day != null && format('{0}', inputs.budget_max_runs_per_day) || '' }}
           budget_max_tokens_per_day: ${{ inputs.budget_max_tokens_per_day != null && format('{0}', inputs.budget_max_tokens_per_day) || '' }}
+          delivery: ${{ inputs.delivery }}
           detect_script: ${{ inputs.detect_script }}
           engine: ${{ inputs.engine }}
+          git_landing_integration: ${{ inputs.git_landing_integration }}
+          git_landing_pull_request: ${{ inputs.git_landing_pull_request }}
           infer_files_pattern: ${{ inputs.infer_files_pattern }}
           level: ${{ inputs.level }}
           loop_branch_match: ${{ inputs.branch_match_mode }}
-          loop_finalize_integration: ${{ inputs.finalize_integration }}
-          loop_finalize_pull_request: ${{ inputs.finalize_pull_request }}
           loop_integration_branches: ${{ inputs.branch_match }}
           loop_max_targets_per_schedule: ${{ format('{0}', inputs.max_targets_per_schedule) }}
           loop_name: ${{ inputs.loop_name }}
@@ -297,6 +312,7 @@ jobs:
           loop_pr_enabled: ${{ inputs.pr_enabled && 'true' || 'false' }}
           loop_priority: ${{ inputs.priority }}
           loop_state_push_branch: ${{ inputs.branch_state }}
+          may_edit: ${{ inputs.may_edit == true && 'true' || inputs.may_edit == false && 'false' || '' }}
           no_changes_verdict: ${{ inputs.no_changes_verdict }}
           pr_body: ${{ inputs.pr_body }}
           pr_title: ${{ inputs.pr_title }}
@@ -305,6 +321,7 @@ jobs:
           skill_name: ${{ inputs.skill_name }}
           state_file: ${{ inputs.state_file }}
           token: ${{ secrets.GH_TOKEN_OVERRIDE != '' && secrets.GH_TOKEN_OVERRIDE || github.token }}
+          write_target: ${{ inputs.write_target }}
 
   execute:
     if: needs.detect.outputs.should_run == 'true'
@@ -328,7 +345,7 @@ jobs:
       agent_verifier_max_turns: ${{ needs.detect.outputs.agent_verifier_max_turns }}
       agent_verifier_model: ${{ needs.detect.outputs.agent_verifier_model }}
       allowlist: ${{ needs.detect.outputs.allowlist }}
-      auto_merge: ${{ (needs.detect.outputs.level == 'L3' && matrix.target.target_json.finalize == 'open_pr') && 'true' || 'false' }}
+      auto_merge: ${{ (needs.detect.outputs.delivery == 'open_pr' && needs.detect.outputs.level == 'L3' && matrix.target.target_json.finalize == 'open_pr') && 'true' || 'false' }}
       base_branch: ${{ matrix.target.target_json.mode == 'pull_request' && matrix.target.target_json.base.branch || matrix.target.target_json.to.branch }}
       current_sha: ${{ matrix.target.target_json.from.ref }}
       denylist: ${{ needs.detect.outputs.denylist }}
@@ -336,7 +353,7 @@ jobs:
       domain_persistence_script: ${{ needs.detect.outputs.domain_persistence_script }}
       engine: ${{ needs.detect.outputs.engine }}
       environment: ${{ inputs.environment }}
-      finalize_enabled: true
+      finalize_enabled: ${{ needs.detect.outputs.delivery == 'open_pr' }}
       handoff_artifact_name: ${{ needs.detect.outputs.handoff_artifact_name }}
       handoff_key: ${{ matrix.target.handoff_key }}
       infer_files_pattern: ${{ needs.detect.outputs.infer_files_pattern }}

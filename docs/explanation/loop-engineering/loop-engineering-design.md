@@ -450,11 +450,11 @@ Design how a loop stops before creating the loop itself. Never launch L3 without
 
 New patterns always start at L1. Even if an existing loop is at L3, new features start at L1.
 
-| Tier            | Description                                                                                                               | Approximate Duration            |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| L1 (Report)     | Read-only agent session; structured outcome in `.loop/state-*.json` and/or GitHub comment — no file edits in the worktree | 1-2 weeks                       |
-| L2 (Assisted)   | Worktree modifications + PR creation only when verifier approves. Auto-merge limited to path allowlist                    | Consider L3 after stabilization |
-| L3 (Unattended) | Only when denylist + budget cap + metrics + human gate are all established                                                | Only after conditions are met   |
+| Tier            | Description                                                                                                                | Approximate Duration            |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| L1 (Report)     | Read-only agent session; structured outcome in `.loop/state-*.json` and/or GitHub comment — no file edits in the worktree  | 1-2 weeks                       |
+| L2 (Assisted)   | Worktree modifications + bot review PR when `delivery: open_pr`; human merges fix PR. Auto-merge limited to path allowlist | Consider L3 after stabilization |
+| L3 (Unattended) | Only when denylist + budget cap + metrics + human gate are all established                                                 | Only after conditions are met   |
 
 L1 → L2 migration checklist:
 
@@ -593,7 +593,7 @@ Cross-loop serialization uses shared workflow concurrency (`loop-state-<branch_s
 
 Absolute rules that must never be violated regardless of loop type, level, or engine. Use these as the primary checklist during design review.
 
-1. **Agent never writes to integration branches directly during Execute** — Implementer edits run in an isolated worktree. At **L2**, integration-branch changes reach `to.branch` only via a fix PR. At **L3** with `LOOP_FINALIZE_INTEGRATION=push`, **Finalize** may push verifier-approved commits to `to.branch` (explicit opt-in; see [Finalize strategy matrix](#finalize-strategy-matrix))
+1. **Agent never writes to integration branches directly during Execute** — Implementer edits run in an isolated worktree. At **L2**, integration-branch changes reach `to.branch` only via a fix PR. At **L3** with `delivery: open_pr` and advanced `git_landing_integration=push` on `loop-detect`, **Finalize** may push verifier-approved commits to `to.branch` (explicit opt-in; see [Finalize strategy matrix](#finalize-strategy-matrix))
 2. **Verifier never modifies the repository** — Verify phase is strictly read-only
 3. **Detect never writes state** — State changes only in Finalize
 4. **Finalize never changes source under repair** — It persists outcomes (PR, push, state, `.loop/*` metadata). Application/documentation files being fixed are not edited in Finalize
@@ -775,12 +775,12 @@ When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as
 
 **State cursor (general rule):**
 
-| Loop shape                     | When `last_sha` / entity cursor advances                                                                    |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| L2 `open_pr` (file fix PR)     | On fix PR **merge** via `on-loop-state-promote` (`pending` → `last_sha`)                                    |
-| L3 `push` / `push_head`        | Same finalize run as successful push                                                                        |
-| API-only / `has_changes=false` | Same finalize run on verifier **APPROVE** (entity cursor e.g. `last_issue_number` in `targets[key]`)        |
-| L1 report-only                 | Run-log always; cursor advance optional per workflow design — default **APPROVE → finalize updates cursor** |
+| Loop shape                          | When `last_sha` / entity cursor advances                                                                    |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| L2 `open_pr` (worktree + review PR) | On fix PR **merge** via `on-loop-state-promote` (`pending` → `last_sha`)                                    |
+| L3 `push` / `push_head`             | Same finalize run as successful push                                                                        |
+| API-only / `has_changes=false`      | Same finalize run on verifier **APPROVE** (entity cursor e.g. `last_issue_number` in `targets[key]`)        |
+| L1 report-only                      | Run-log always; cursor advance optional per workflow design — default **APPROVE → finalize updates cursor** |
 
 No separate finalize strategy enum for comments/labels.
 

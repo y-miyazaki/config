@@ -10,10 +10,11 @@ Extract shared `detect` → `execute` → `record-skip` job graph from `on-loop-
 
 Each `on-loop-<name>.yaml` previously duplicated ~150 lines of identical job wiring (resolved by `ci-loop-caller.yaml`; see [Implementation checklist](#implementation-checklist)).
 
-| Job | Actions / reusable called |
-| detect | `loop-detect` |
-| execute | `ci-loop-agent.yaml` (matrix over `target_matrix`) |
-| record-skip | `loop-run-log` |
+| Job         | Actions / reusable called                          |
+| ----------- | -------------------------------------------------- |
+| detect      | `loop-detect`                                      |
+| execute     | `ci-loop-agent.yaml` (matrix over `target_matrix`) |
+| record-skip | `loop-run-log`                                     |
 
 Loop-specific values (budget, allowlist, verifier rubric, detect script path) differ per file. Because `workflow_call` does not accept a shared job graph without duplication, configuration was placed in workflow-level `env:` and mapped into action `with:` inside each caller.
 
@@ -121,7 +122,9 @@ jobs:
         {"CHANGELOG_FILE":"CHANGELOG.md","CHANGELOG_MERGE_COMMITS":"false"}
       detect_script: .agents/skills/changelog/scripts/detect_changelog_commits.sh
       engine: cursor
-      finalize_integration: open_pr
+      delivery: open_pr
+      may_edit: true
+      write_target: fix
       infer_files_pattern: 'CHANGELOG\.md'
       loop_name: changelog
       max_targets_per_schedule: 3
@@ -188,8 +191,9 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 | `budget_max_tokens_per_day` | number  | no       | omitted                    | `loop-detect`                                           |
 | `denylist`                  | string  | no       | `""`                       | `ci-loop-agent` execute only                            |
 | `detect_script`             | string  | yes      | —                          | `loop-detect`                                           |
-| `finalize_integration`      | string  | no       | `open_pr`                  | `loop-detect` (optional; dogfood omit)                  |
-| `finalize_pull_request`     | string  | no       | `open_pr`                  | `loop-detect` (optional; dogfood omit)                  |
+| `delivery`                  | string  | no       | `open_pr`                  | `loop-detect`                                           |
+| `may_edit`                  | boolean | yes      | —                          | `loop-detect` → `## Constraints`                        |
+| `write_target`              | string  | no       | `fix`                      | `loop-detect` → `## Constraints`                        |
 | `infer_files_pattern`       | string  | no       | `""`                       | detect → execute                                        |
 | `loop_name`                 | string  | yes      | —                          | detect, execute, record-skip, concurrency group         |
 | `max_targets_per_schedule`  | number  | no       | `3`                        | `loop-detect`                                           |

@@ -38,12 +38,24 @@ inputs:
     default: ""
     description: "Default daily token limit when budget file is absent or omits max_tokens_per_day"
     required: false
+  delivery:
+    default: "open_pr"
+    description: "Platform delivery after APPROVE: log | issue | notion | open_pr | none"
+    required: false
   detect_script:
     description: "Path to domain detect script (bash)"
     required: true
   engine:
     description: "AI engine (claude | copilot | codex | cursor)"
     required: true
+  git_landing_integration:
+    default: "open_pr"
+    description: "Advanced git landing when delivery is open_pr: open_pr | push (integration targets)"
+    required: false
+  git_landing_pull_request:
+    default: "open_pr"
+    description: "Advanced git landing when delivery is open_pr: open_pr | push_head (pull_request targets)"
+    required: false
   infer_files_pattern:
     default: ""
     description: "Optional extended-regex to infer file paths from verifier text"
@@ -54,14 +66,6 @@ inputs:
   loop_branch_match:
     default: "glob"
     description: "Branch pattern mode: list | glob | regex"
-    required: false
-  loop_finalize_integration:
-    default: "open_pr"
-    description: "Finalize strategy for integration targets: open_pr | push"
-    required: false
-  loop_finalize_pull_request:
-    default: "open_pr"
-    description: "Finalize strategy for pull_request targets: open_pr | push_head"
     required: false
   loop_integration_branches:
     default: ""
@@ -94,6 +98,10 @@ inputs:
     default: ""
     description: "Branch for .loop/* persistence (empty = repository default branch)"
     required: false
+  may_edit:
+    default: ""
+    description: "Agent worktree edit gate: true | false (required)"
+    required: false
   no_changes_verdict:
     default: "APPROVE"
     description: "Verdict when implementer produces no file changes (APPROVE or REJECT)"
@@ -124,6 +132,10 @@ inputs:
   token:
     description: "GitHub token for PR enumeration (defaults to github.token in caller)"
     default: ""
+    required: false
+  write_target:
+    default: ""
+    description: "Agent artifact when may_edit is true: fix | report (required when may_edit is true)"
     required: false
 
 outputs:
@@ -157,6 +169,9 @@ outputs:
   current_sha:
     description: "Current SHA for first matrix cell (legacy compat)"
     value: ${{ steps.detect.outputs.current_sha }}
+  delivery:
+    description: "Resolved platform delivery channel"
+    value: ${{ steps.detect.outputs.delivery }}
   engine:
     description: "AI engine"
     value: ${{ steps.config.outputs.engine }}
@@ -261,12 +276,13 @@ runs:
         BUDGET_FILE: ${{ inputs.budget_file }}
         BUDGET_MAX_RUNS_PER_DAY: ${{ inputs.budget_max_runs_per_day }}
         BUDGET_MAX_TOKENS_PER_DAY: ${{ inputs.budget_max_tokens_per_day }}
+        DELIVERY: ${{ inputs.delivery }}
         DETECT_SCRIPT: ${{ inputs.detect_script }}
         GH_TOKEN: ${{ inputs.token != '' && inputs.token || github.token }}
+        GIT_LANDING_INTEGRATION: ${{ inputs.git_landing_integration }}
+        GIT_LANDING_PULL_REQUEST: ${{ inputs.git_landing_pull_request }}
         LEVEL: ${{ inputs.level }}
         LOOP_BRANCH_MATCH: ${{ inputs.loop_branch_match }}
-        LOOP_FINALIZE_INTEGRATION: ${{ inputs.loop_finalize_integration }}
-        LOOP_FINALIZE_PULL_REQUEST: ${{ inputs.loop_finalize_pull_request }}
         LOOP_INTEGRATION_BRANCHES: ${{ inputs.loop_integration_branches }}
         LOOP_MAX_TARGETS_PER_SCHEDULE: ${{ inputs.loop_max_targets_per_schedule }}
         LOOP_NAME: ${{ inputs.loop_name }}
@@ -275,10 +291,12 @@ runs:
         LOOP_PR_ENABLED: ${{ inputs.loop_pr_enabled }}
         LOOP_PRIORITY: ${{ inputs.loop_priority }}
         LOOP_STATE_PUSH_BRANCH: ${{ inputs.loop_state_push_branch }}
+        MAY_EDIT: ${{ inputs.may_edit }}
         PROMPT_INSTRUCTIONS: ${{ inputs.prompt_instructions }}
         RUN_LOG_FILE: ${{ inputs.run_log_file }}
         SKILL_NAME: ${{ inputs.skill_name }}
         STATE_FILE: ${{ steps.paths.outputs.state_file }}
+        WRITE_TARGET: ${{ inputs.write_target }}
       run: bash "${GITHUB_ACTION_PATH}/lib/detect.sh"
 
     - name: Record Handoff Artifact Name

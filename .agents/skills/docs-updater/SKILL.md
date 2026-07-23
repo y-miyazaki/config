@@ -19,7 +19,7 @@ metadata:
 ## Input
 
 - **Interactive / hook:** trigger source + `scope` (`staged`, `all`, `range` with `--since`) — run `scripts/detect_changes.sh` — parse per [common-checklist.md](references/common-checklist.md) and [common-impact-map.md](references/common-impact-map.md)
-- **Automation:** `findings[]` JSON in prompt; read `may_edit` from `## Constraints` per [category-automation-envelope.md](references/category-automation-envelope.md)
+- **Automation:** `findings[]` JSON in prompt; read `may_edit`, `write_target`, and `report_file` (when `write_target: report`) from `## Constraints` per [category-automation-envelope.md](references/category-automation-envelope.md)
 
 Path allowlist, when present, arrives in `## Constraints` (automation path).
 
@@ -68,6 +68,8 @@ Resolve **may_edit** before classifying findings or patching documentation:
 | Interactive / hook — follow-up after a prior survey in the session | `true` when the user asks to fix, apply, or patch documentation                                                          |
 | Automation — `## Constraints`                                      | `may_edit: true` or `may_edit: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
 
+When `may_edit` is `true`, resolve `write_target`: on the **interactive** path use `fix` (this skill); on the **automation** path read `write_target` from `## Constraints`. Do not branch on `level` or `delivery`.
+
 ### Automation path (`findings[]` in detect JSON)
 
 Read `may_edit` from `## Constraints` per [category-automation-envelope.md](references/category-automation-envelope.md) (`false` — survey only; `true` — apply edits).
@@ -77,7 +79,8 @@ Read `may_edit` from `## Constraints` per [category-automation-envelope.md](refe
 3. If input `skip` is true or no actionable `findings[]` → emit survey no-op; on automation path append `## Session Metrics` per [category-automation-envelope.md](references/category-automation-envelope.md); stop.
 4. Classify per [common-checklist-loop.md](references/common-checklist-loop.md).
 5. When `may_edit` is `false`, emit survey shape with `### Candidates`; load `assets/pr-body-template-survey.md` at synthesis; append `## Session Metrics` per [category-automation-envelope.md](references/category-automation-envelope.md); stop — do not edit documentation files.
-6. When `may_edit` is `true`, fix High-Priority items within [category-scope.md](references/category-scope.md); emit apply shape with `### Changes` and `## Verification`; load `assets/pr-body-template.md` at synthesis and append `## Session Metrics` per [category-automation-envelope.md](references/category-automation-envelope.md).
+6. When `may_edit` is `true` and `write_target` is not `fix` → emit survey shape; note expected `write_target: fix` in Overview; stop — do not edit documentation files.
+7. When `may_edit` is `true` and `write_target` is `fix`, fix High-Priority items within [category-scope.md](references/category-scope.md); emit apply shape with `### Changes` and `## Verification`; load `assets/pr-body-template.md` at synthesis and append `## Session Metrics` per [category-automation-envelope.md](references/category-automation-envelope.md).
 
 ### Interactive / hook path
 
@@ -89,11 +92,12 @@ Read `may_edit` from `## Constraints` per [category-automation-envelope.md](refe
 
 ### Error Handling
 
-| Condition                               | Severity    | Action                                                                           |
-| --------------------------------------- | ----------- | -------------------------------------------------------------------------------- |
-| No git repository                       | Fatal       | Stop                                                                             |
-| Empty diff / no findings                | Info        | Report skip, exit                                                                |
-| Affected doc file missing               | Recoverable | Skip file; note in report                                                        |
-| Exceeds scope (>3 H2, etc.)             | Recoverable | Stop for file; recommend docs-creator                                            |
-| mkdocs.yml missing                      | Recoverable | Skip nav update                                                                  |
-| Fix requested but `may_edit` is `false` | Info        | Survey only; note that edits require an explicit fix request or `may_edit: true` |
+| Condition                                     | Severity    | Action                                                                           |
+| --------------------------------------------- | ----------- | -------------------------------------------------------------------------------- |
+| No git repository                             | Fatal       | Stop                                                                             |
+| Empty diff / no findings                      | Info        | Report skip, exit                                                                |
+| Affected doc file missing                     | Recoverable | Skip file; note in report                                                        |
+| Exceeds scope (>3 H2, etc.)                   | Recoverable | Stop for file; recommend docs-creator                                            |
+| mkdocs.yml missing                            | Recoverable | Skip nav update                                                                  |
+| Fix requested but `may_edit` is `false`       | Info        | Survey only; note that edits require an explicit fix request or `may_edit: true` |
+| `may_edit` true with `write_target` not `fix` | Recoverable | Survey only; note expected `write_target: fix`                                   |

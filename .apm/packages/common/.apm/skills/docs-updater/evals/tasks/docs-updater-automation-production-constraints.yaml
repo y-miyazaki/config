@@ -6,7 +6,7 @@ tags:
   - automation
 inputs:
   prompt: >-
-    Use docs-updater (automation path). ## Constraints may_edit: true You MUST persist edits
+    Use docs-updater (automation path). ## Constraints may_edit: true write_target: fix You MUST persist edits
     to disk in the worktree; a report alone is not sufficient when may_edit is true. Allowed
     paths: docs/**/*.md. Fix the injected High-Priority finding; emit apply shape with ###
     Changes and ## Verification plus ## Session Metrics. Emit ## Overview and ## Summary per
