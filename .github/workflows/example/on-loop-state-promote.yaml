@@ -48,7 +48,7 @@ jobs:
           private-key: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
 
       - name: Promote Pending State
-        uses: y-miyazaki/config/.github/actions/loop-state-promote@ff0ef354f01b9108273706cae86c4343ded2fdd0 # v1.8.52
+        uses: y-miyazaki/config/.github/actions/loop-state-promote@1d689aa8bf3617c8927c76db3f2ec79f874d7986 # v1.8.52
         with:
           merged: ${{ github.event.pull_request.merged && 'true' || 'false' }}
           pr_number: ${{ github.event.pull_request.number }}
