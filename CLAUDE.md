@@ -39,7 +39,6 @@ Run on demand when troubleshooting CI or when explicitly requested:
 
 - Mirror drift: `bash scripts/self/apm/sync_apm_artifacts.sh --check`
 - APM integrity: `apm install --update`, `apm audit --ci`
-- Workflow lint: `actionlint`, `ghalint run`, `zizmor .github/workflows/` (see `github-actions-validation` skill)
 
 ### Temporary Artifacts
 
@@ -54,12 +53,3 @@ When structure, modules, or features change, update related `README.md` and `doc
 ### MCP Policies
 
 - lean-ctx, fetch should be used for all context fetching for optimization
-
-### When to Read Reports
-
-Only read `docs/report/` files when explicitly asked or when comparison/research context is needed.
-
-## Security Guidelines
-
-- Secrets MUST NOT appear in source code, logs, or test data.
-- No destructive operations as defaults in command examples.
