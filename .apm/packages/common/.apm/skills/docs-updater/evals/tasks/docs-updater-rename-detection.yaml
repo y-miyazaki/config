@@ -1,31 +1,42 @@
 id: docs-updater-rename-001
 name: docs-updater rename detection
-description: Validate renamed files surface documentation path updates under Candidates.
+description: Validate rename triage maps detect JSON into interactive survey Candidates.
 tags:
   - quality
   - rename-path
   - edge-case
 inputs:
   prompt: >-
-    Use docs-updater. Git detected a rename from '.github/workflows/ci-build.yaml' to
-    '.github/workflows/ci-build-deploy.yaml'. Survey which documentation files need path
-    updates (including mkdocs.yml nav when applicable). Emit ## Overview and ## Summary
-    with ### Candidates per common-output-format.md. Do not edit files. State no edits
-    applied in Overview.
+    Use docs-updater (interactive/hook path). Step 1 output from `scripts/detect_changes.sh`
+    is in context.detect — parse that JSON only; do not run detect_changes.sh or invent
+    paths. With skip=false, triage affected_docs for the renamed workflow path. Survey only
+    — do not edit files. Return the interactive report per common-output-format.md with ##
+    Overview, ## Summary, and ### Candidates listing docs/guide.md and mkdocs.yml. Do not
+    emit ### Changes or ## Verification. State no edits applied in Overview.
   context:
     scope: staged
-    skip: false
-    renamed_files:
-      - from: .github/workflows/ci-build.yaml
-        to: .github/workflows/ci-build-deploy.yaml
-    affected_docs:
-      - docs/guide/overview.md
-      - mkdocs.yml
+    detect:
+      status: ok
+      scope: staged
+      since: ""
+      commit_range: "--cached"
+      skip: false
+      changed_files:
+        - .github/workflows/ci-build-deploy.yaml
+      deleted_files: []
+      renamed_files:
+        - .github/workflows/ci-build.yaml->.github/workflows/ci-build-deploy.yaml
+      affected_docs:
+        - docs/guide.md
+        - mkdocs.yml
 expected:
   output_contains:
     - "## Overview"
+    - "## Summary"
     - "### Candidates"
-    - ci-build-deploy
     - no edits applied
+    - docs/guide.md
+    - mkdocs.yml
+    - ci-build-deploy.yaml
   outcomes:
     - type: task_completed
