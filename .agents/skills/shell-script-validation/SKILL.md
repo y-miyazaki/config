@@ -14,7 +14,7 @@ metadata:
 
 - Shell script path or directory (optional; defaults to workspace root)
 - Validation script: `scripts/validate.sh` (required)
-- Canonical flags: `-v -f --check-function-docs` (always pass all three unless opted out below)
+- Canonical flags: `-v -f -d` (always pass all three unless opted out below)
 - Opt-out: omit `--check-function-docs` only when the target scripts intentionally skip Google function header sections
 
 ## Output Specification
@@ -62,7 +62,7 @@ Structured results for bash -n and shellcheck (syntax and lint only). With `--ch
 ## Workflow
 
 1. When `scripts/lib/` changed, sync to skill copies: `bash scripts/self/ai/sync_skill_lib.sh` then `apm install --update`.
-2. Run `bash scripts/validate.sh -v -f --check-function-docs` with an optional target path (for example `scripts/deploy.sh`, `scripts/lib/`, or `.github/actions/`).
+2. Run `bash scripts/validate.sh -v -f -d` with an optional target path (for example `scripts/deploy.sh`, `scripts/lib/`, or `.github/actions/`).
 3. When function doc sections are out of order, run `bash scripts/fix_function_doc_order.sh` on the target path or directory before re-validating.
 4. Review auto-fix diffs from `-f` before continuing.
 5. If checks fail, fix reported issues and rerun the same command.
@@ -85,14 +85,14 @@ Structured results for bash -n and shellcheck (syntax and lint only). With `--ch
 
 ```bash
 # Canonical (workspace-wide)
-bash scripts/validate.sh -v -f --check-function-docs
+bash scripts/validate.sh -v -f -d
 
 # Canonical (single script)
-bash scripts/validate.sh -v -f --check-function-docs ./scripts/deploy.sh
+bash scripts/validate.sh -v -f -d ./scripts/deploy.sh
 
 # Common directories
-bash scripts/validate.sh -v -f --check-function-docs ./scripts/lib/
-bash scripts/validate.sh -v -f --check-function-docs ./.github/actions/
+bash scripts/validate.sh -v -f -d ./scripts/lib/
+bash scripts/validate.sh -v -f -d ./.github/actions/
 
 # Reorder function doc sections (Globals → Arguments → Outputs → Returns)
 bash scripts/fix_function_doc_order.sh ./scripts/lib/
