@@ -80,7 +80,8 @@ function build_comment_body {
     local marker branch to_branch workflow_name workflow_run_id workflow_url
     local loop_run_url commit_url short_sha verdict_display fix_context agent_summary
     local agent_report_overview agent_report_summary has_agent_narrative
-    local changed_files diff_stat fix_summary reject_display timestamp bot_fix_pr next_step
+    local changed_files diff_stat fix_summary reject_display reason_display
+    local timestamp bot_fix_pr next_step show_fix_context
 
     marker="<!-- loop-notify-pr:v1:${LOOP_NAME} -->"
     timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
@@ -139,12 +140,22 @@ function build_comment_body {
     fix_summary="$(truncate_text "$(redact_sensitive_text "${fix_summary}")" 2000)"
     agent_summary="$(truncate_text "$(redact_sensitive_text "${agent_summary}")" 2000)"
     reject_display="$(truncate_text "$(redact_sensitive_text "${REJECT_REASON}")" 2000)"
+    # Keep Reason on one table row (newlines / pipes break markdown tables).
+    reject_display="${reject_display//$'\n'/ }"
+    reject_display="${reject_display//|/\\|}"
+    if [[ -n ${reject_display} ]]; then
+        reason_display="${reject_display}"
+    else
+        reason_display="—"
+    fi
 
     has_agent_narrative=false
     if [[ -n ${agent_report_overview}${agent_report_summary} ]]; then
         has_agent_narrative=true
     fi
 
+    show_fix_context=false
+    fix_context=""
     if [[ ${has_agent_narrative} != true ]]; then
         if [[ -n ${changed_files} || -n ${diff_stat} ]]; then
             fix_context="**${fix_summary}**"
@@ -154,12 +165,10 @@ function build_comment_body {
             if [[ -n ${diff_stat} ]]; then
                 fix_context="${fix_context}"$'\n\n'"\`${diff_stat}\`"
             fi
+            show_fix_context=true
         elif [[ ${OUTCOME} == "watch" ]]; then
             fix_context="No file changes; classified as **watch**."
-        elif [[ -n ${reject_display} ]]; then
-            fix_context="${reject_display}"
-        else
-            fix_context="No mechanical fix context available."
+            show_fix_context=true
         fi
     fi
 
@@ -187,6 +196,7 @@ ${marker}
 | Outcome | \`${OUTCOME}\` |
 | Bot fix PR | ${bot_fix_pr} |
 | Verdict | ${verdict_display} |
+| Reason | ${reason_display} |
 | Actor | \`${actor}\` |
 | Commit | [\`${short_sha}\`](${commit_url}) |
 | Branch | \`${to_branch}\` |
@@ -236,7 +246,7 @@ EOF
 No file changes; classified as **watch**.
 EOF
         fi
-    else
+    elif [[ ${show_fix_context} == true ]]; then
         cat << EOF
 
 ### Fix context
@@ -444,6 +454,34 @@ function validate_required_inputs {
 }
 
 #######################################
+# resolve_actor: Resolve bot login for comment Actor field
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Actor login to stdout (fallback: github-actions)
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function resolve_actor {
+    local login
+    # Do not use `|| echo` inside the same command substitution: on API failure
+    # gh may write error JSON to stdout, and the fallback would concatenate.
+    if login="$(gh api user --jq '.login' 2> /dev/null)" \
+        && [[ -n ${login} && ${login} != "null" ]]; then
+        printf '%s' "${login}"
+        return 0
+    fi
+    printf '%s' "github-actions"
+}
+
+#######################################
 # main: Post or update loop-notify-pr marker comment
 #
 # Globals:
@@ -488,7 +526,7 @@ function main {
     validate_required_inputs
 
     export GH_TOKEN="${TOKEN}"
-    actor="$(gh api user --jq '.login' 2> /dev/null || echo "github-actions")"
+    actor="$(resolve_actor)"
     marker="<!-- loop-notify-pr:v1:${LOOP_NAME} -->"
     body_file="$(mktemp)"
     # shellcheck disable=SC2064

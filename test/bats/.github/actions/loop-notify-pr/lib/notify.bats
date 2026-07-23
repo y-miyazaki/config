@@ -10,8 +10,12 @@
 # - build_comment_body includes marker and outcome
 # - build_comment_body includes L2 next step when bot fix PR created
 # - build_comment_body includes L3 auto-merge note when enabled
+# - build_comment_body shows Reason row for reject reason
+# - build_comment_body shows Reason even when changed files exist
 # - build_comment_body redacts secrets in reject reason
 # - build_comment_body uses watch message when outcome is watch
+# - resolve_actor uses login when gh api user succeeds
+# - resolve_actor falls back when gh api user fails with error JSON on stdout
 # - redact_sensitive_text redacts bearer tokens
 # - truncate_text truncates to max
 # - validate_required_inputs fails when LOOP_NAME is empty
@@ -117,8 +121,36 @@ teardown() {
     REJECT_REASON="failed with Bearer super-secret-token-value"
     run build_comment_body "loop-bot"
     [ "$status" -eq 0 ]
+    [[ $output == *"| Reason |"* ]]
     [[ $output == *"Bearer [REDACTED]"* ]]
     [[ $output != *"super-secret-token-value"* ]]
+}
+
+@test "build_comment_body shows Reason even when changed files exist" {
+    OUTCOME="rejected"
+    VERDICT="REJECT"
+    FIX_PR_NUMBER=""
+    FIX_PR_URL=""
+    REJECT_REASON="Diff addresses coverage threshold; deferred by verifier criteria"
+    run build_comment_body "loop-bot"
+    [ "$status" -eq 0 ]
+    [[ $output == *"| Reason | Diff addresses coverage threshold; deferred by verifier criteria |"* ]]
+    [[ $output == *"### Fix context"* ]]
+    [[ $output == *"Address CI failure in lint (ci-test)"* ]]
+}
+
+@test "build_comment_body shows Reason row for reject reason" {
+    OUTCOME="rejected"
+    VERDICT="REJECT"
+    FIX_PR_NUMBER=""
+    FIX_PR_URL=""
+    NOTIFY_CONTEXT_JSON='{"changed_files":[],"diff_stat":"","fix_summary":"","agent_summary":"","baseline_ref":""}'
+    REJECT_REASON="No file changes produced"
+    run build_comment_body "loop-bot"
+    [ "$status" -eq 0 ]
+    [[ $output == *"| Verdict | REJECT |"* ]]
+    [[ $output == *"| Reason | No file changes produced |"* ]]
+    [[ $output != *"### Fix context"* ]]
 }
 
 @test "build_comment_body uses watch message when outcome is watch" {
@@ -133,6 +165,45 @@ teardown() {
     run redact_sensitive_text "Authorization: Bearer abc.def.ghi"
     [ "$status" -eq 0 ]
     [[ $output == *"Authorization: [REDACTED]"* ]] || [[ $output == *"Bearer [REDACTED]"* ]]
+}
+
+@test "resolve_actor falls back when gh api user fails with error JSON on stdout" {
+    local mock_bin
+    mock_bin="$(mktemp -d)"
+    cat > "${mock_bin}/gh" << 'EOF'
+#!/usr/bin/env bash
+if [[ $1 == api && $2 == user ]]; then
+    printf '%s' '{"message":"Resource not accessible by integration","documentation_url":"https://docs.github.com/rest/users/users#get-the-authenticated-user","status":"403"}'
+    exit 1
+fi
+exit 1
+EOF
+    chmod +x "${mock_bin}/gh"
+    PATH="${mock_bin}:${PATH}"
+    run resolve_actor
+    rm -rf "${mock_bin}"
+    [ "$status" -eq 0 ]
+    [ "$output" = "github-actions" ]
+    [[ $output != *"Resource not accessible"* ]]
+}
+
+@test "resolve_actor uses login when gh api user succeeds" {
+    local mock_bin
+    mock_bin="$(mktemp -d)"
+    cat > "${mock_bin}/gh" << 'EOF'
+#!/usr/bin/env bash
+if [[ $1 == api && $2 == user ]]; then
+    echo "loop-bot[bot]"
+    exit 0
+fi
+exit 1
+EOF
+    chmod +x "${mock_bin}/gh"
+    PATH="${mock_bin}:${PATH}"
+    run resolve_actor
+    rm -rf "${mock_bin}"
+    [ "$status" -eq 0 ]
+    [ "$output" = "loop-bot[bot]" ]
 }
 
 @test "truncate_text truncates to max" {

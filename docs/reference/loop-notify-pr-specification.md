@@ -78,9 +78,10 @@ Invocation: **sibling step** in `ci-loop-agent.yaml` immediately after `loop-fin
 | Field           | Source                                                                                |
 | --------------- | ------------------------------------------------------------------------------------- |
 | Loop name       | `loop_name` input                                                                     |
-| Actor           | GitHub App / bot login from token                                                     |
+| Actor           | GitHub App / bot login from token (`GET /user`); fallback `github-actions` on failure |
 | Outcome         | finalize outcome enum                                                                 |
 | Verdict         | `APPROVE` / `REJECT` / empty                                                          |
+| Reason          | execute `reason` (verifier reject reason or no-changes reason); `—` when empty        |
 | Bot fix PR      | URL/number from finalize when `open_pr` succeeded                                     |
 | Branch          | `target_json.to.branch` (PR head)                                                     |
 | Human PR number | `target_json.to.pr_number`                                                            |
@@ -97,6 +98,10 @@ Invocation: **sibling step** in `ci-loop-agent.yaml` immediately after `loop-fin
 | `changed_files` | `git diff --name-only` vs verifier baseline ref                                    |
 | `diff_stat`     | `git diff --stat` (truncated)                                                      |
 | `fix_summary`   | Template: `"Address CI failure in <job_name> (<workflow_name>)"` from detect facts |
+
+Reject / no-changes explanations belong in the Layer 1 **Reason** row, not under Fix context.
+
+Omit `### Fix context` when there is no mechanical diff and outcome is not `watch`.
 
 L2 success messaging must include **merge or close the bot fix PR** guidance.
 
@@ -121,6 +126,9 @@ Marker: `<!-- loop-notify-pr:v1:{loop_name} -->`
 | ---------- | -------------------------------------- |
 | Outcome    | `{outcome}`                            |
 | Bot fix PR | [#{fix_pr}]({fix_pr_url}) or —         |
+| Verdict    | `{verdict}` or —                       |
+| Reason     | `{reason}` or —                        |
+| Actor      | `{actor_login}`                        |
 | Branch     | `{to.branch}`                          |
 | Failed run | [{workflow_name} #{run_id}]({run_url}) |
 | Loop run   | [actions run]({loop_run_url})          |
