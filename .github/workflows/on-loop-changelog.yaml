@@ -71,7 +71,7 @@ jobs:
       max_targets_per_schedule: 3
       no_changes_verdict: REJECT
       pr_body: ""
-      pr_title: "chore(changelog): update CHANGELOG.md"
+      pr_title: "chore(changelog): update CHANGELOG.md (loop-changelog)"
       prompt_instructions: |
         Update the target changelog file using Keep a Changelog section names.
         Map each provided commit to a single bullet under `## [Unreleased]`.

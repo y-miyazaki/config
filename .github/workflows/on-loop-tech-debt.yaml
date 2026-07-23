@@ -67,7 +67,7 @@ jobs:
       no_changes_verdict: REJECT
       pr_body: ""
       pr_enabled: false
-      pr_title: "docs(report): technical debt report"
+      pr_title: "docs(tech-debt): technical debt report (loop-tech-debt)"
       prompt_instructions: |
         Classify mechanical debt signals per the skill taxonomy.
         Write the dated report to `report_file` at L2 within the allowlist.

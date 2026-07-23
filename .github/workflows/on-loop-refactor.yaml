@@ -72,7 +72,7 @@ jobs:
       max_targets_per_schedule: 1
       no_changes_verdict: REJECT
       pr_body: ""
-      pr_title: "refactor(loop): structural improvement"
+      pr_title: "chore(refactor): structural improvement (loop-refactor)"
       prompt_instructions: |
         Run the refactor skill in apply mode for every mechanical hint (duplication_block or oversized_unit) in the detection result.
         Phase A: survey all hints[] entries and emit ### Candidates with apply or watch disposition.

@@ -129,7 +129,7 @@ jobs:
       pr_body: |
         ## Summary
         ...
-      pr_title: "chore(changelog): update CHANGELOG.md"
+      pr_title: "chore(changelog): update CHANGELOG.md (loop-changelog)"
       prompt_instructions: |
         Update the target changelog file under `## [Unreleased]` ...
       pull_requests: false
