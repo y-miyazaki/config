@@ -1,6 +1,6 @@
 # CI Sweeper Workflow Design
 
-Workflow and domain design for the `loop-ci-sweeper` (`ci-sweeper`) loop.
+Workflow and domain design for the `ci-sweeper` loop.
 
 | Layer        | Document                                                           |
 | ------------ | ------------------------------------------------------------------ |
@@ -8,7 +8,7 @@ Workflow and domain design for the `loop-ci-sweeper` (`ci-sweeper`) loop.
 | Caller shell | [Loop Caller Workflows Design](../loop-caller-workflows-design.md) |
 | Invariants   | [Loop Engineering Design](../loop-engineering-design.md)           |
 
-**Artifacts:** `on-loop-ci-sweeper.yaml` · skill `loop-ci-sweeper` · `scripts/detect_ci_failures.sh` · `scripts/update_run_ledger.sh`
+**Artifacts:** `on-loop-ci-sweeper.yaml` · skill `ci-sweeper` · `ci-sweeper/scripts/detect_ci_failures.sh` · `ci-sweeper/scripts/update_run_ledger.sh`
 
 Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md).
 
@@ -40,16 +40,16 @@ Entry skill design intent for failure kinds deferred via [Failure kind defer (B)
 - **Dependency-breakage repair** — defer (B); bot PR heads excluded in dogfood (`pr_include_bots: ""`)
 - Per-PR opt-in labels (`pr_require`) — removed; use `pr_exclude` only
 
-Skill execution boundaries: `loop-ci-sweeper` SKILL.md (`USE FOR` / `DO NOT USE FOR`).
+Skill execution boundaries: `ci-sweeper` SKILL.md (`USE FOR` / `DO NOT USE FOR`).
 
 ### Execute — responsibility split (A' / B)
 
-Distributable `loop-ci-sweeper` skill stays repository-neutral. **Do not** hardcode consumer skill names in skill `references/`. Named dispatch belongs in caller `prompt_instructions` (dogfood: `on-loop-ci-sweeper.yaml`).
+Distributable `ci-sweeper` skill stays repository-neutral. **Do not** hardcode consumer skill names in skill `references/`. Named dispatch belongs in caller `prompt_instructions` (dogfood: `on-loop-ci-sweeper.yaml`).
 
 | Layer         | Input                       | Role                                                                                            |
 | ------------- | --------------------------- | ----------------------------------------------------------------------------------------------- |
 | Detect        | `detect_ci_failures.sh`     | `failures[]`, `failure_type` hint; optional future `stack_hint`                                 |
-| Entry skill   | `loop-ci-sweeper`           | Generic orchestration: classify, follow `## Instructions` for skill dispatch, fix one, validate |
+| Entry skill   | `ci-sweeper`                | Generic orchestration: classify, follow `## Instructions` for skill dispatch, fix one, validate |
 | Caller        | `prompt_instructions`       | **Stack routing (A')** — workflow/stack → named domain skills for this repo                     |
 | Caller        | `agent_verifier_criteria`   | Failure kind defer (B): appendix REJECT rules                                                   |
 | Domain skills | Consumer `.agents/skills/*` | Invoked per caller routing table                                                                |
@@ -270,7 +270,7 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 
 ### Platform (all loops)
 
-- [x] `loop-ci-sweeper/scripts/detect_ci_failures.sh` (facts output)
+- [x] `ci-sweeper/scripts/detect_ci_failures.sh` (facts output)
 - [x] `on-loop-ci-sweeper.yaml` dogfood caller via `ci-loop-caller-full-github`
 - [x] `branch_match` + per-branch `targets["integration:<branch>"]`
 - [x] State migration: flat `last_sha` removed (`targets` map only)
@@ -303,11 +303,11 @@ Dogfood `on-loop-ci-sweeper.yaml` enables `workflow_run`. Keep these gates when 
 
 ## Dependency update (caller filter + domain skill)
 
-Tier 3 **dependency-update** behavior is a domain skill plus caller PR filters (`pr_include_bots`, `pr_exclude`) under **`loop-ci-sweeper`** — not a separate loop package. Defer via [Failure kind defer (B)](../loop-engineering-design.md#failure-kind-defer-b) until the skill exists.
+Tier 3 **dependency-update** behavior is a domain skill plus caller PR filters (`pr_include_bots`, `pr_exclude`) under **`ci-sweeper`** — not a separate loop package. Defer via [Failure kind defer (B)](../loop-engineering-design.md#failure-kind-defer-b) until the skill exists.
 
 ## Cross-Loop Note
 
-CI failure on `integration:main` is serialized with `loop-docs-triage` and `loop-changelog` via [workflow concurrency](../multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency). Limit recursion with `workflow_run.workflows` (caller allowlist), run ledger (`workflow_run_id`), and daily budget — not workflow-name exclude lists in detect.
+CI failure on `integration:main` is serialized with `docs-triage` and `changelog` via [workflow concurrency](../multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency). Limit recursion with `workflow_run.workflows` (caller allowlist), run ledger (`workflow_run_id`), and daily budget — not workflow-name exclude lists in detect.
 
 `workflow_dispatch` (no event run ID) uses `gh run list` on the watch branch (`SCAN_BRANCH_RUN_LIMIT`, default 100), then ledger and `since` range filters. Skill classifies infra/env/flake failures as Watch.
 

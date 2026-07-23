@@ -8,7 +8,7 @@ Workflow and domain design for the docs-triage loop (`on-loop-docs-triage.yaml`)
 | Caller shell | [Loop Caller Workflows Design](../loop-caller-workflows-design.md) |
 | Invariants   | [Loop Engineering Design](../loop-engineering-design.md)           |
 
-**Artifacts:** `on-loop-docs-triage.yaml` · skill `docs-updater` (loop path) · `scripts/detect_changes.sh`
+**Artifacts:** `on-loop-docs-triage.yaml` · skill `docs-updater` · `docs-updater/scripts/detect_changes.sh`
 
 Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md).
 

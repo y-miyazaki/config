@@ -1,6 +1,6 @@
 # Report Tech Debt Workflow Design
 
-Workflow and domain design for the `loop-tech-debt` (`tech-debt`) loop.
+Workflow and domain design for the `tech-debt` loop.
 
 | Layer        | Document                                                           |
 | ------------ | ------------------------------------------------------------------ |
@@ -8,7 +8,7 @@ Workflow and domain design for the `loop-tech-debt` (`tech-debt`) loop.
 | Caller shell | [Loop Caller Workflows Design](../loop-caller-workflows-design.md) |
 | Invariants   | [Loop Engineering Design](../loop-engineering-design.md)           |
 
-**Artifacts:** `on-loop-tech-debt.yaml` · skill `loop-tech-debt` · `scripts/detect_tech_debt.sh`
+**Artifacts:** `on-loop-tech-debt.yaml` · skill `tech-debt` · `tech-debt/scripts/detect_tech_debt.sh`
 
 Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md).
 
@@ -34,20 +34,20 @@ Run a full-repository mechanical technical-debt scan, classify findings via the 
 
 ### Report loop family
 
-Report loops use the **`loop-report-<domain>`** naming prefix (e.g. `loop-tech-debt`, future `loop-report-errors`). They emit structured artifacts under `docs/report/<domain>/` via merge-gated PRs.
+Report loops emit structured artifacts under `docs/report/<domain>/` via merge-gated PRs (dogfood: `loop_name: tech-debt`, skill `tech-debt`).
 
-**Action loops** (`loop-docs-triage`, `loop-ci-sweeper`, `loop-refactor`) modify application or documentation source to fix drift or failures. Report loops classify mechanical signals and publish reports only — they do not edit source outside the report allowlist.
+**Action loops** (`docs-triage`, `ci-sweeper`, `refactor`) modify application or documentation source to fix drift or failures. Report loops classify mechanical signals and publish reports only — they do not edit source outside the report allowlist.
 
-| Package            | Role                                              | Trigger                    |
-| ------------------ | ------------------------------------------------- | -------------------------- |
-| `loop-tech-debt`   | Cron loop: detect signals + skill classify/report | `on-loop-tech-debt.yaml`   |
-| `loop-docs-triage` | Action loop: doc drift detect + fix PR            | `on-loop-docs-triage.yaml` |
-| `loop-ci-sweeper`  | Action loop: CI failure detect + fix PR           | `on-loop-ci-sweeper.yaml`  |
-| `loop-refactor`    | Action loop: H1 structural refactor fix PR        | `on-loop-refactor.yaml`    |
+| Loop               | Skill          | Role                                              | Trigger                    |
+| ------------------ | -------------- | ------------------------------------------------- | -------------------------- |
+| `tech-debt`        | `tech-debt`    | Cron loop: detect signals + skill classify/report | `on-loop-tech-debt.yaml`   |
+| `docs-triage`      | `docs-updater` | Action loop: doc drift detect + fix PR            | `on-loop-docs-triage.yaml` |
+| `ci-sweeper`       | `ci-sweeper`   | Action loop: CI failure detect + fix PR           | `on-loop-ci-sweeper.yaml`  |
+| `refactor`         | `refactor`     | Action loop: H1 structural refactor fix PR        | `on-loop-refactor.yaml`    |
 
-Detect script path: **`loop-tech-debt/scripts/detect_tech_debt.sh`**.
+Detect script path: **`tech-debt/scripts/detect_tech_debt.sh`** (under `common` package).
 
-Skill execution boundaries: `loop-tech-debt` SKILL.md (`USE FOR` / `DO NOT USE FOR`).
+Skill execution boundaries: `tech-debt` SKILL.md (`USE FOR` / `DO NOT USE FOR`).
 
 ### Modes
 
@@ -115,7 +115,7 @@ Detect script outputs **mechanical signals** (not semantic findings):
 
 **Default scope:** full repository (sensors read source for evidence; `docs/report/**` excluded from sensors per skill references).
 
-**Skill** (`loop-tech-debt`) classifies signals into prioritized findings and writes `report_file` at L2.
+**Skill** (`tech-debt`) classifies signals into prioritized findings and writes `report_file` at L2.
 
 `loop-detect` emits per-branch `target_json`:
 
@@ -185,7 +185,7 @@ Persistence: `state-tech-debt.json` on `branch_state` via [finalize inside ci-lo
 
 ## Related action loops
 
-`loop-refactor` is an **action loop** that applies O1/O2 structural refactors via fix PRs — not a member of the `loop-report-*` family. It may consume report findings as input context but belongs alongside `loop-docs-triage` and `loop-ci-sweeper`, not `loop-tech-debt`. See [Refactor Workflow Design](loop-refactor-workflow-design.md).
+`refactor` is an **action loop** that applies O1/O2 structural refactors via fix PRs — not a report-only loop. It may consume report findings as input context but belongs alongside docs-triage and ci-sweeper, not tech-debt. See [Refactor Workflow Design](loop-refactor-workflow-design.md).
 
 ## Implementation Checklist
 
@@ -193,7 +193,7 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 
 ### Platform (all loops)
 
-- [x] `loop-tech-debt/scripts/detect_tech_debt.sh` (facts output)
+- [x] `tech-debt/scripts/detect_tech_debt.sh` (facts output)
 - [x] `on-loop-tech-debt.yaml` dogfood caller via `ci-loop-caller`
 - [x] `branch_match` + per-branch `targets["integration:<branch>"]`
 - [x] State migration: flat `last_sha` removed (`targets` map only)
@@ -204,7 +204,7 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 
 ### Loop-specific
 
-- [x] APM package rename: `loop-tech-debt` → `loop-tech-debt`
+- [x] Skill consolidated into `common`: `tech-debt` (was `loop-tech-debt` / `loop-report-tech-debt`)
 - [x] `.loop/loop-budget.json` entry for `tech-debt`
 
 ## References
