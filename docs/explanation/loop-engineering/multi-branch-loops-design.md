@@ -19,16 +19,16 @@ Two **independent**, caller-configurable capabilities:
 
 | Capability               | Example                                                                | Typical loops                         |
 | ------------------------ | ---------------------------------------------------------------------- | ------------------------------------- |
-| **Integration branches** | Drift or CI on `main`, `develop`, `release/*` → fix **to** that branch | `loop-docs-triage`, `loop-ci-sweeper` |
+| **Integration branches** | Drift or CI on `main`, `develop`, `release/*` → fix **to** that branch | `docs-triage`, `ci-sweeper` |
 | **Pull request heads**   | CI fails on open PR → fix **on PR branch**                             | `ci-sweeper`                          |
 
 ## Design Goal
 
-| Loop                 | Integration branches | Pull requests        |
-| -------------------- | -------------------- | -------------------- |
-| **loop-docs-triage** | Default on           | Default off          |
-| **loop-ci-sweeper**  | Configurable         | Configurable         |
-| **Future loops**     | Same target contract | Same target contract |
+| Loop             | Integration branches | Pull requests        |
+| ---------------- | -------------------- | -------------------- |
+| **docs-triage**  | Default on           | Default off          |
+| **ci-sweeper**   | Configurable         | Configurable         |
+| **Future loops** | Same target contract | Same target contract |
 
 ## Caller Configuration (canonical)
 
@@ -76,7 +76,7 @@ Defined here only. Other docs link to this section.
 
 `workflow_run` scoping is enforced in `loop-detect` via `LOOP_SCOPED_HEAD_BRANCH` (explicit) or, for ci-sweeper dogfood, `CI_SWEEPER_WORKFLOW_RUN_ID` + `CI_SWEEPER_EVENT_HEAD_BRANCH` (stable event head — not the per-scan rewritten `CI_SWEEPER_HEAD_BRANCH`). Domain detect scripts still apply branch-mismatch guards as defense in depth.
 
-`workflow_run` is enabled for dogfood `loop-ci-sweeper` after the [ops checklist](workflows/loop-ci-sweeper-workflow-design.md#workflow_run-operational-checklist). Other loops stay schedule / `workflow_dispatch` until their checklist passes.
+`workflow_run` is enabled for dogfood `ci-sweeper` after the [ops checklist](workflows/loop-ci-sweeper-workflow-design.md#workflow_run-operational-checklist). Other loops stay schedule / `workflow_dispatch` until their checklist passes.
 
 ## `loop-detect` orchestration
 
@@ -203,9 +203,9 @@ L2 `open_pr` loops use **merge-gated `pending`**: fix PRs carry domain files onl
 
 | Loop               | State delivery                                    |
 | ------------------ | ------------------------------------------------- |
-| `loop-changelog`   | Merge-gated `pending` via `on-loop-state-promote` |
-| `loop-docs-triage` | Merge-gated `pending` (same as changelog)         |
-| `loop-ci-sweeper`  | Merge-gated `pending`; run ledger for dedupe      |
+| `changelog`   | Merge-gated `pending` via `on-loop-state-promote` |
+| `docs-triage` | Merge-gated `pending` (same as changelog)         |
+| `ci-sweeper`  | Merge-gated `pending`; run ledger for dedupe      |
 
 ### State delivery philosophy
 
@@ -285,11 +285,11 @@ Caller/workflow steps: [Loop Caller Workflows Design](loop-caller-workflows-desi
 
 | Loop                 | Document                                                                        | Caller workflow            |
 | -------------------- | ------------------------------------------------------------------------------- | -------------------------- |
-| **loop-changelog**   | [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md)        | `on-loop-changelog.yaml`   |
-| **loop-ci-sweeper**  | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md)      | `on-loop-ci-sweeper.yaml`  |
-| **loop-docs-triage** | [Docs Triage Workflow Design](workflows/loop-docs-triage-workflow-design.md)    | `on-loop-docs-triage.yaml` |
-| **loop-tech-debt**   | [Report Tech Debt Workflow Design](workflows/loop-tech-debt-workflow-design.md) | `on-loop-tech-debt.yaml`   |
-| **loop-refactor**    | [Refactor Workflow Design](workflows/loop-refactor-workflow-design.md)          | `on-loop-refactor.yaml`    |
+| **changelog**   | [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md)        | `on-loop-changelog.yaml`   |
+| **ci-sweeper**  | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md)      | `on-loop-ci-sweeper.yaml`  |
+| **docs-triage** | [Docs Triage Workflow Design](workflows/loop-docs-triage-workflow-design.md)    | `on-loop-docs-triage.yaml` |
+| **tech-debt**   | [Report Tech Debt Workflow Design](workflows/loop-tech-debt-workflow-design.md) | `on-loop-tech-debt.yaml`   |
+| **refactor**    | [Refactor Workflow Design](workflows/loop-refactor-workflow-design.md)          | `on-loop-refactor.yaml`    |
 
 Add new loops as `docs/explanation/loop-engineering/workflows/<name>-workflow-design.md` without growing this file.
 

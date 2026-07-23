@@ -288,9 +288,9 @@ graph LR
 
     %% Skills
     subgraph skills["Skills"]
-        SK1[loop-changelog]
-        SK2[loop-docs-triage]
-        SK3[loop-ci-sweeper]
+        SK1[changelog]
+        SK2[docs-updater]
+        SK3[ci-sweeper]
     end
 
     %% State
@@ -343,9 +343,9 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 
 ```text
 .loop/
-  state-docs-triage.json    ← owned by loop-docs-triage
-  state-ci-sweeper.json     ← owned by loop-ci-sweeper
-  state-changelog.json      ← owned by loop-changelog
+  state-docs-triage.json    ← owned by docs-triage
+  state-ci-sweeper.json     ← owned by ci-sweeper
+  state-changelog.json      ← owned by changelog
   loop-budget.json          ← per-loop daily run/token caps (read by loop-detect)
   loop-run-log.md           ← shared JSONL run history (append via loop-run-log; 30-day prune)
   .gitkeep
@@ -665,7 +665,7 @@ stateDiagram-v2
 | Skill Watch (no code edit)                 | Finalize records `watch`; ledger/state cursor advances; no `consecutive_failures` increment                               | `outcome: watch`      |
 | Agent produces no changes (non-actionable) | Finalize records `no-op`. Cursor advances                                                                                 | `outcome: no-op`      |
 | Verifier REJECT                            | Finalize deletes branch, records rejection. SHA advances. The rejected diff is not retried — only new commits are scanned | `outcome: rejected`   |
-| Verifier APPROVE → PR CI fails             | PR remains open (blocked by Required Status Checks). SHA advances. loop-ci-sweeper handles cleanup                        | `outcome: pr-created` |
+| Verifier APPROVE → PR CI fails             | PR remains open (blocked by Required Status Checks). SHA advances. ci-sweeper handles cleanup                        | `outcome: pr-created` |
 | Agent job cancelled (user/concurrency)     | Finalize does not run. No state update. Next cron retries from same SHA                                                   | No change             |
 
 **Design rationale**: SHA always advances on successful detect (even if later phases fail). This prevents infinite retry of the same failing diff. If the underlying issue persists, new commits touching the same area will trigger a fresh detection.

@@ -177,7 +177,7 @@ Inputs/outputs unchanged from P1 except:
 | **P0** | Spec + design docs (this document)                                                      |
 | **P1** | `loop-notify-pr`, `notify_context_json`, `pr_exclude` filters                           |
 | **P2** | Dogfood ci-sweeper: `open_pr` to PR head + notify with fix PR link; remove `pr_require` |
-| **P3** | Optional `agent_summary` appendix in `loop-ci-sweeper` skill reference                  |
+| **P3** | Optional `agent_summary` appendix in `ci-sweeper` skill reference                  |
 
 ## Resolved decisions
 

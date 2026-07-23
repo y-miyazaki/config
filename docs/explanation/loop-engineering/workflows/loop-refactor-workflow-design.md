@@ -170,12 +170,12 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 
 ### Loop-specific
 
-- [x] `loop-refactor` skill + references
+- [x] `refactor` skill + references
 - [x] Bats suite for detect script (TEST-00)
 
 ## Cross-Loop Note
 
-`loop-refactor` is orthogonal to `loop-ci-sweeper` and `loop-tech-debt`. It does not consume tech-debt reports. If CI fails during a refactor PR, `loop-ci-sweeper` owns repair.
+`refactor` is orthogonal to `ci-sweeper` and `tech-debt`. It does not consume tech-debt reports. If CI fails during a refactor PR, `ci-sweeper` owns repair.
 
 ## References
 
