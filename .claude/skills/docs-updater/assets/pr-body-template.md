@@ -1,5 +1,5 @@
 <!--
-Canonical PR-facing template for loop-docs-triage.
+PR-facing template for docs-updater automation (may_edit: true).
 
 Load ONLY at synthesis time, after triage and file edits complete.
 loop-finalize extracts ## Overview, ## Summary, and ## Verification for the PR body.
@@ -19,7 +19,7 @@ Rules:
   Trigger → Problem → Action in 1-2 sentences.
 
   GOOD: Docs drift scan found Skills inventory missing loop-refactor rows; this run updated specification.md and left three docs without matching tables unchanged.
-  BAD:  Documentation triage loop completed at L2.
+  BAD:  Documentation triage loop completed in apply mode.
 -->
 
 <one or two sentences: trigger, problem, action — plain language for a reviewer>

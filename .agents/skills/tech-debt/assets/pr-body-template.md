@@ -1,10 +1,11 @@
 <!--
-Apply PR template for loop-tech-debt (L2/L3) and interactive apply mode.
+Apply PR template for tech-debt automation (may_edit: true).
 
-Load at synthesis time after classification and edits complete.
+Load ONLY at synthesis time, after classification and edits complete.
 
 Rules:
-- Summary contains ### Changes and optional ### Deferred only.
+- Keep top-level ## Overview, ## Summary, and ## Verification headings exactly as written.
+- Use ### Deferred (not Skipped) for items not fixed in this run.
 - Do NOT emit ### Candidates, ### Watch, Outcome, or Suggested next action.
 - Overview must name what was recorded/fixed — not counts alone.
 -->

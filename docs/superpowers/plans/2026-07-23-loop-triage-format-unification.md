@@ -1,5 +1,7 @@
 # Loop Triage Format Unification — Implementation Plan
 
+**Superseded (2026-07):** Shared `common-loop-*.md` skill mirrors and `sync_loop_contract.sh` were removed. Each loop skill now owns `category-automation-envelope.md` + `common-output-format.md`. See [common-loop-triage-format.md](../../explanation/loop-engineering/common-loop-triage-format.md).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans.
 
 **Goal:** Unify loop triage skills on survey/apply output shapes with substance-rich Overview text.

@@ -1,12 +1,12 @@
 # Refactor Result Format
 
-Use this structure for every interactive run. **Survey-only** and **apply** modes use **different** Summary shapes — do not mix them.
+Use this structure for every interactive run. **Survey** (`may_edit: false`) and **apply** (`may_edit: true`) use **different** Summary shapes — do not mix them.
 
 Internal depth tiers (`O1`/`O2`), intent labels, and Fowler technique names are for agent workflow only ([category-operations.md](category-operations.md), [category-techniques.md](category-techniques.md)). **Do not put them in user-facing output.**
 
-Loop PR bodies: [common-output-format-loop.md](common-output-format-loop.md). Platform contract: [common-loop-pr-body-contract.md](common-loop-pr-body-contract.md).
+Automation path PR bodies and Session Metrics: [category-automation-envelope.md](category-automation-envelope.md) and [common-output-format-loop.md](common-output-format-loop.md).
 
-## Survey-only result (`mode: survey`, loop `L1`, architecture Phase A)
+## Survey result (`may_edit: false`)
 
 No file edits. **Do not emit `### Changes`, `### Deferred`, or a Verification table.**
 
@@ -50,7 +50,7 @@ No file edits. **Do not emit `### Changes`, `### Deferred`, or a Verification ta
 
 **Candidates columns:** **Suggested approach** = plain-language fix direction (not internal technique names). **Priority** = `high` \| `medium` \| `low` for human triage.
 
-## Apply result (`mode: apply`, loop `L2`/`L3`)
+## Apply result (`may_edit: true`)
 
 Survey runs internally first; final output uses the **apply** shape. **Do not emit `### Candidates`** in the final report — reconcile into Changes and Deferred.
 
@@ -122,9 +122,13 @@ Before emitting the result, run `git diff --name-only` and reconcile **Changes**
 - Survey no-op: omit Verification (same as survey-only).
 - Apply no-op after survey: Verification may be `None` when no edits were attempted.
 
+## Session metrics (automation)
+
+On the automation path, append `## Session Metrics` per [category-automation-envelope.md](category-automation-envelope.md).
+
 ## Rules (both modes)
 
 - Always emit `## Overview` and `## Summary`.
-- Do not emit Outcome lines, Suggested next action, Session Metrics, or internal tier labels.
+- Do not emit Outcome lines, Suggested next action, or internal tier labels in interactive output.
 - Do not claim verification passed when commands failed or were not run.
 - Pick **one** result shape per run — survey-only **or** apply — never combine both shapes in one report.

@@ -1,8 +1,6 @@
 # CI Sweeper Triage Report Format
 
-Follow survey/apply shapes in [common-loop-triage-format.md](common-loop-triage-format.md).
-
-## Survey-only result (loop `L1`)
+## Survey result (`may_edit: false`)
 
 No file edits. **Do not emit `### Changes`, `### Deferred`, or `## Verification`.**
 
@@ -28,7 +26,12 @@ No file edits. **Do not emit `### Changes`, `### Deferred`, or `## Verification`
 | `<workflow>` / `<job>` | <reason> | flake \| infra \| human |
 ```
 
-## Apply result (loop `L2`/`L3`)
+### Survey rules
+
+- **MUST NOT** include `### Changes`, `### Deferred`, or `## Verification`
+- Zero candidates — Overview explains no-op; omit empty `### Candidates`
+
+## Apply result (`may_edit: true`)
 
 ```markdown
 # CI Sweeper Result
@@ -58,29 +61,16 @@ No file edits. **Do not emit `### Changes`, `### Deferred`, or `## Verification`
 | <command run> | <pass \| fail \| skip \| blocked> |
 ```
 
-## Loop session metrics (verifier / logs)
+### Apply rules
 
-```markdown
-## Session Metrics
+- **MUST NOT** include `### Candidates` or `### Watch` in final output
+- Reconcile `### Changes` and `### Deferred` with `git diff --name-only` before synthesis
 
-| Field | Value |
-| Level | <L1\|L2\|L3> |
-| Mode | <survey\|apply> |
-| Failures assessed | <count> |
-| Fixes applied | <count> |
-| Validation | <commands run and pass/fail, or "Not run"> |
-| Outcome | <one-line result> |
-```
+## Session metrics (automation)
 
-## PR body contract (human-facing)
+On the automation path, append `## Session Metrics` per [category-automation-envelope.md](category-automation-envelope.md).
 
-At synthesis time, load `assets/pr-body-template-survey.md` (L1) or `assets/pr-body-template.md` (L2/L3).
-
-`loop-finalize` adds `## Failure context` from detect and `## Run Metadata`.
-
-See [common-loop-pr-body-contract.md](common-loop-pr-body-contract.md).
-
-### Overview (skill-specific)
+## Overview (skill-specific)
 
 | Element   | ci-sweeper content                                                       |
 | --------- | ------------------------------------------------------------------------ |
@@ -88,17 +78,15 @@ See [common-loop-pr-body-contract.md](common-loop-pr-body-contract.md).
 | Substance | Root cause in plain language — name the lint rule, file, or failure type |
 | Action    | What was fixed or deferred                                               |
 
-**Good:** `CI failed on markdownlint MD001 in docs/foo.md; fixed heading style in one file.`
+**Good (survey):** `CI failed on markdownlint MD001 in docs/foo.md; one regression candidate identified; no edits applied.`
+
+**Good (apply):** `CI failed on markdownlint MD001 in docs/foo.md; fixed heading style in one file.`
 
 **Bad:** `CI sweeper addressed actionable failures.`
-
-## Fixes / Deferred consistency
-
-Reconcile with `git diff --name-only` before synthesis. See [common-loop-triage-format.md](common-loop-triage-format.md).
 
 ## Rules
 
 - Pick one shape per run — survey or apply.
-- At `L1`, survey shape only — list candidates but do not edit files.
-- At `L2`/`L3`, apply shape; edit source files only for `regression` failures within allowlist.
+- When `may_edit` is `false`, survey shape only — list candidates but do not edit files.
+- When `may_edit` is `true`, apply shape; edit source files only for `regression` failures within allowlist.
 - Do not claim validation passed when commands failed or were not run.

@@ -2,26 +2,28 @@
 name: ci-sweeper
 description: >-
   Triage failing CI on integration branches and/or PR heads, classify failures,
-  apply minimal fixes when actionable. Use when loop automation detects failed
-  workflow runs or when explicitly invoked with detection JSON. Preferred entry
-  via on-loop-ci-sweeper.yaml.
+  apply minimal fixes when actionable. Use when the user asks to triage or fix
+  CI failures, when loop automation detects failed workflow runs, or when
+  automation supplies detection JSON. Default is survey only; edit files only when
+  the user explicitly requests a fix or automation sets may_edit in Constraints.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
-  version: "1.5.0"
+  version: "1.6.0"
 ---
+
+**UTILITY SKILL** — CI failure triage and minimal fix, not merge or release.
 
 ## Input
 
-Injected JSON from loop-prompt-generate — see [category-input-schema.md](references/category-input-schema.md).
+- **Interactive:** natural-language request; run `bash scripts/detect_ci_failures.sh` unless detect JSON is already in context — parse per [category-input-schema.md](references/category-input-schema.md)
+- **Automation:** detect JSON in prompt; read `may_edit` from `## Constraints` per [category-automation-envelope.md](references/category-automation-envelope.md)
 
-## Operating levels
-
-`level` arrives in injected JSON — see [category-input-schema.md](references/category-input-schema.md#operating-levels).
+Path allowlist, when present, arrives in `## Constraints`.
 
 ## Output Specification
 
-Triage report per [common-output-format.md](references/common-output-format.md). Survey at `L1`; apply at `L2`/`L3` within [category-scope.md](references/category-scope.md). See [common-loop-triage-format.md](references/common-loop-triage-format.md).
+Triage report per [common-output-format.md](references/common-output-format.md). Survey shape when files are not edited; apply shape when edited — within [category-scope.md](references/category-scope.md).
 
 ## Execution Scope
 
@@ -44,38 +46,36 @@ Triage report per [common-output-format.md](references/common-output-format.md).
 - [category-input-schema.md](references/category-input-schema.md) (always read)
 - [category-run-ledger.md](references/category-run-ledger.md) (always read)
 - [category-validation-commands.md](references/category-validation-commands.md) (always read)
-- [common-loop-triage-format.md](references/common-loop-triage-format.md) (always read)
-- [common-loop-pr-body-contract.md](references/common-loop-pr-body-contract.md) (always read)
-- `assets/pr-body-template-survey.md` (always read — loop L1 survey path)
-- `assets/pr-body-template.md` (always read — loop L2/L3 apply path)
+- [category-automation-envelope.md](references/category-automation-envelope.md) (always read — automation path)
+- [common-troubleshooting.md](references/common-troubleshooting.md) (read on failure)
 
 ## Workflow
 
-Every run has **Phase A — Survey** (classify failures). **Phase B — Apply** runs only when mode is `apply` and level allows edits.
+Resolve **may_edit** before classifying failures:
 
-### Mode resolution
+| Source                                                      | `may_edit`                                                                                                               |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Interactive — default                                       | `false` — survey only; do not edit files                                                                                 |
+| Interactive — fix language in the same request              | `true` — examples: fix, apply, 直して                                                                                    |
+| Interactive — follow-up after a prior survey in the session | `true` when the user asks to fix or apply                                                                                |
+| Automation — `## Constraints`                               | `may_edit: true` or `may_edit: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
 
-| Source           | Default mode | Survey-only triggers                           |
-| ---------------- | ------------ | ---------------------------------------------- |
-| Interactive      | `apply`      | User asks to survey, list, or triage only      |
-| Loop `L1`        | `survey`     | Always — no file edits                         |
-| Loop `L2` / `L3` | `apply`      | `skip: true` or no actionable failures → no-op |
-
-Explicit JSON `mode`: `survey` \| `apply` overrides defaults. See [category-input-schema.md](references/category-input-schema.md).
-
-1. Parse [category-input-schema.md](references/category-input-schema.md). If `skip` or no actionable `failures`, emit survey no-op; stop.
-2. Classify every item in `failures[]` per [common-checklist.md](references/common-checklist.md). Note `ignored[]` in Overview when non-empty.
-3. At `L1`, emit survey shape with Candidates; load `assets/pr-body-template-survey.md` at synthesis; stop — no file edits.
-4. At `L2`/`L3`, fix the first `regression` only when more than three failures are present; defer the rest within [category-scope.md](references/category-scope.md).
-5. When infra/env/flake or >5 files are required, classify as Watch with no edits.
-6. Run validation per [category-validation-commands.md](references/category-validation-commands.md); record outcome in Session Metrics.
-7. Emit apply shape per [common-output-format.md](references/common-output-format.md); reconcile Changes / Deferred with `git diff --name-only`; load `assets/pr-body-template.md` at synthesis.
+1. Run `scripts/detect_ci_failures.sh` (interactive) or parse detect JSON per [category-input-schema.md](references/category-input-schema.md).
+2. On the automation path, read [category-automation-envelope.md](references/category-automation-envelope.md) for Constraints, PR templates, and Session Metrics.
+3. If `skip` or no actionable `failures`, emit survey no-op; on automation path append `## Session Metrics` per [category-automation-envelope.md](references/category-automation-envelope.md); stop.
+4. Classify every item in `failures[]` per [common-checklist.md](references/common-checklist.md). Note `ignored[]` in Overview when non-empty.
+5. When `may_edit` is `false`, emit survey shape with `### Candidates`; on automation path load `assets/pr-body-template-survey.md` at synthesis and append `## Session Metrics` per [category-automation-envelope.md](references/category-automation-envelope.md); stop — do not edit files.
+6. When `may_edit` is `true`, fix the first `regression` only when more than three failures are present; defer the rest within [category-scope.md](references/category-scope.md).
+7. When infra/env/flake or >5 files are required, classify as Watch with no edits.
+8. Run validation per [category-validation-commands.md](references/category-validation-commands.md); record outcome in Session Metrics on the automation path.
+9. When `may_edit` is `true`, emit apply shape per [common-output-format.md](references/common-output-format.md); reconcile **Changes** / **Deferred** with `git diff --name-only`; on automation path load `assets/pr-body-template.md` at synthesis and append `## Session Metrics` per [category-automation-envelope.md](references/category-automation-envelope.md).
 
 ### Error Handling
 
-| Condition                            | Severity    | Action                                                |
-| ------------------------------------ | ----------- | ----------------------------------------------------- |
-| `skip` or no actionable `failures`   | Info        | Outcome `no actionable failures`; stop                |
-| Infra/env/flake or >5 files required | Recoverable | Classify Watch; no edits                              |
-| Validation tooling missing           | Recoverable | Defer Watch unless fixing one line from `log_excerpt` |
-| Path outside allowlist               | Recoverable | Watch or defer; do not edit                           |
+| Condition                               | Severity    | Action                                                                           |
+| --------------------------------------- | ----------- | -------------------------------------------------------------------------------- |
+| `skip` or no actionable `failures`      | Info        | Outcome `no actionable failures`; stop                                           |
+| Fix requested but `may_edit` is `false` | Info        | Survey only; note that edits require an explicit fix request or `may_edit: true` |
+| Infra/env/flake or >5 files required    | Recoverable | Classify Watch; no edits                                                         |
+| Validation tooling missing              | Recoverable | Defer Watch unless fixing one line from `log_excerpt`                            |
+| Path outside allowlist                  | Recoverable | Watch or defer; do not edit                                                      |

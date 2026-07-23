@@ -18,6 +18,12 @@
 #######################################
 LOOP_DETECT_RESULT_MARKER='__LOOP_DETECT_RESULT_JSON__'
 
+_MATRIX_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if ! declare -f emit_loop_constraints > /dev/null 2>&1; then
+    # shellcheck disable=SC1091
+    source "${_MATRIX_LIB_DIR}/../../loop-prompt-generate/lib/build_constraints.sh"
+fi
+
 #######################################
 # build_prompt_text: Assemble implementer prompt for one candidate
 #
@@ -78,18 +84,7 @@ function build_prompt_text {
         fi
         if [[ -n ${level} || -n ${allowlist} ]]; then
             echo ""
-            echo "## Constraints"
-            if [[ -n ${level} ]]; then
-                echo "You are operating at ${level} level."
-                if [[ ${level} == "L2" || ${level} == "L3" ]]; then
-                    echo "You MUST persist edits to disk in the worktree; a report alone is not sufficient at L2+."
-                fi
-            fi
-            echo "Do not claim files were modified unless git would show real changes."
-            if [[ -n ${allowlist} ]]; then
-                echo "Allowed paths: ${allowlist}."
-                echo "Do NOT modify any other files."
-            fi
+            emit_loop_constraints "${level}" "${allowlist}"
         fi
     }
 }

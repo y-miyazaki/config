@@ -1,17 +1,18 @@
-# loop-changelog Checklist
+# Changelog Checklist
 
 ## Type → Section Mapping (Keep a Changelog)
 
-| Commit type (`commits[].type`) | Unreleased subsection |
-| `feat` | Added |
-| `fix` | Fixed |
-| `docs` | Changed |
-| `refactor`, `perf`, `style` | Changed |
-| `build`, `ci`, `chore`, `test`, `revert` | Changed |
-| `renovate`, `dependabot` | Changed (Dependencies) |
-| `chore` with `scope=deps` | Changed (Dependencies) |
-| Other explicit prefixed types | Changed |
-| Breaking (`!` or `BREAKING CHANGE`) | note under subsection |
+| Commit type (`commits[].type`)           | Unreleased subsection  |
+| ---------------------------------------- | ---------------------- |
+| `feat`                                   | Added                  |
+| `fix`                                    | Fixed                  |
+| `docs`                                   | Changed                |
+| `refactor`, `perf`, `style`              | Changed                |
+| `build`, `ci`, `chore`, `test`, `revert` | Changed                |
+| `renovate`, `dependabot`                 | Changed (Dependencies) |
+| `chore` with `scope=deps`                | Changed (Dependencies) |
+| Other explicit prefixed types            | Changed                |
+| Breaking (`!` or `BREAKING CHANGE`)      | note under subsection  |
 
 ## Bullet links
 
@@ -34,23 +35,22 @@ When detect JSON includes `releases[]`:
 - Place new release sections immediately below `## [Unreleased]` (newest undocumented release closest to Unreleased)
 - Move bullets from `## [Unreleased]` into the release section when their commit `sha` is in `releases[].commit_shas`
 - Preserve subsection names (`### Added`, `### Changed`, etc.) when moving bullets
+- Do not remove or rewrite released version sections except to promote listed commits out of `## [Unreleased]`
 - Footer compare links: `[version]: {repository_url}/compare/{previous_tag_or_version}...{tag_sha}` when `repository_url` is present
 - Do not invent versions, tags, or dates outside detect `releases[]`
 
-## Scope Guards
+## Scope
 
-- Edit only `changelog_file` from input per `category-scope.md` (loop: must match caller `LOOP_ALLOWLIST`)
-- Do not remove or rewrite released version sections except to promote listed commits out of `## [Unreleased]`
-- Loop state (`.loop/state-*.json`) is committed by finalize — do not edit state files
+Edit only `changelog_file` from input — see [category-scope.md](category-scope.md).
 
 ## Output
 
 - Emit survey or apply shape per [common-output-format.md](common-output-format.md)
-- At `L1`, list intended entries under `### Candidates`; do not edit `CHANGELOG.md`
-- At `L2`/`L3`, apply shape with `### Changes` for bullets added
+- Survey — list intended entries under `### Candidates`; do not edit `CHANGELOG.md`
+- Apply — `### Changes` for bullets added; include `## Verification`
 
 ## Error Handling
 
 - `skip` true or empty `commits` and `releases` → survey no-op Overview; stop without editing `CHANGELOG.md`
-- `changelog_exists` false → create Keep a Changelog template, then add bullets
+- `changelog_exists` false and edits allowed → create Keep a Changelog template, then add bullets
 - Malformed existing changelog → preserve released sections; append/fix only `## [Unreleased]` and new detect `releases[]` sections

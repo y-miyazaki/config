@@ -1,7 +1,7 @@
 <!--
-Survey-only PR template for loop-ci-sweeper (L1).
+Survey-only PR template for ci-sweeper automation (may_edit: false).
 
-Load at synthesis time when level is L1.
+Load at synthesis time after survey output is complete.
 loop-finalize extracts ## Overview and ## Summary only (no ## Verification).
 -->
 
@@ -9,7 +9,7 @@ loop-finalize extracts ## Overview and ## Summary only (no ## Verification).
 
 <!--
   GOOD: CI failed on markdownlint MD001 in docs/foo.md; one regression candidate identified; no edits applied.
-  BAD:  CI sweeper completed at L1.
+  BAD:  CI sweeper completed survey only.
 -->
 
 <one or two sentences: which failure, root cause by name, no edits applied>

@@ -1,10 +1,10 @@
 ## Input Schema
 
-Provided via prompt context by the calling workflow (loop-prompt-generate action). Detect (`detect_tech_debt.sh`) scans the **full repository** by default (`scope=all`); `scope` and `since` are loop-detect CLI parity only and do not narrow sensors.
+From `scripts/detect_tech_debt.sh` or caller-supplied JSON. Detect scans the **full repository** by default (`scope=all`); `scope` and `since` are loop-detect CLI parity only and do not narrow sensors.
 
 ```json
 {
-  "level": "L2",
+  "commit_range": "abc1234..def5678",
   "report_file": "docs/report/tech-debt/2026-07-19.md",
   "previous_report": "docs/report/tech-debt/2026-07-12.md",
   "skip": false,
@@ -32,7 +32,7 @@ Provided via prompt context by the calling workflow (loop-prompt-generate action
 
 | Field               | Type    | Description                                                                                                          |
 | ------------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
-| `level`             | enum    | Operating level: `L1` (survey report), `L2` (apply + PR), `L3` (apply + auto-merge)                                  |
+| `commit_range`      | string  | SHA range that triggered detection (may be empty)                                                                    |
 | `report_file`       | string  | Repository-relative path for the persisted report (`docs/report/tech-debt/YYYY-MM-DD.md`)                            |
 | `previous_report`   | string  | Optional path to the prior dated report (empty when none)                                                            |
 | `skip`              | boolean | When true, no debt signals or hotspots detected                                                                      |
@@ -68,16 +68,6 @@ Detect emits only these kinds. Unexpected kinds → classify as Watch or Noise.
 
 **Marker kinds** (`todo_comment`, `fixme`, `hack`, `xxx`) are secondary enrichment — default toward Watch unless systemic. Core sensors cover dependency manifests, docs links/staleness, and churn hotspots.
 
-`signals` and `hotspots` may be empty arrays. `level` defaults to `L2` when omitted by the workflow.
+`signals` and `hotspots` may be empty arrays.
 
-### Operating levels
-
-| Level | Agent behavior for loop-tech-debt                                                          |
-| ----- | ------------------------------------------------------------------------------------------ |
-| `L1`  | Phase A survey only — emit Candidates/Watch; do not write `report_file`                    |
-| `L2`  | Phase A survey; Phase B write `report_file` and closed-set fixes within allowlist; open PR |
-| `L3`  | Same as `L2`; caller may auto-merge the PR                                                 |
-
-Optional interactive/loop JSON field `mode`: `survey` | `apply`. Loop `L1` → `survey`; `L2`/`L3` → `apply`.
-
-Path allowlist and denylist are not JSON fields. They are injected in the implementer prompt `## Constraints` section from the caller (`LOOP_ALLOWLIST`, `LOOP_DENYLIST`). See [category-scope.md](category-scope.md).
+`may_edit` is not a JSON field. On the automation path it arrives in `## Constraints` — see [category-automation-envelope.md](category-automation-envelope.md). Path allowlist is also injected in `## Constraints` from the caller (`LOOP_ALLOWLIST`). See [category-scope.md](category-scope.md).

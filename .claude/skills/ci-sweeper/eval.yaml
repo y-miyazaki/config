@@ -1,9 +1,10 @@
 name: ci-sweeper-eval
 description: >-
   Evaluation suite for ci-sweeper.
-  Verifies triage classification, defer policy, no-action exits, and trigger-negative.
+  Verifies triage classification, may_edit behavior, defer policy, no-action exits,
+  and trigger-negative.
 skill: ci-sweeper
-version: "1.2"
+version: "1.3"
 config:
   trials_per_task: 5
   timeout_seconds: 180
@@ -21,10 +22,9 @@ graders:
     weight: 1.0
     config:
       assertions:
-        - "'Overview' in output"
-        - "'Summary' in output"
-        - "'Session Metrics' in output"
-        - "'Candidates' in output or 'Watch' in output or 'no actionable' in output or 'no edits applied' in output"
+        - "'## Overview' in output or 'Overview' in output"
+        - "'## Summary' in output or 'Summary' in output or '### Candidates' in output or '### Changes' in output or '### Watch' in output or '### Deferred' in output"
+        - "'Candidates' in output or 'Watch' in output or 'Changes' in output or 'no actionable' in output or 'no edits applied' in output"
   - type: text
     name: triage_sections
     weight: 0.5

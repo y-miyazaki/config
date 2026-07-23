@@ -17,15 +17,15 @@
     },
     {
       "id": 1,
-      "prompt": "Use docs-updater (loop path). Context JSON: level=L1, skip=false, findings=[{ \"file\": \"docs/guide.md\", \"reason\": \"stale workflow path\", \"source_commit\": \"abc1234\" }]. Do not edit files. Emit Documentation Triage Report per common-output-format-loop.md with High-Priority Items (Fixed), Watch Items (Deferred), Session Metrics Level L1, plus ## Overview and ## Summary for PR composition.",
-      "expected_output": "Loop triage report with all session sections and PR Overview/Summary",
+      "prompt": "Use docs-updater (automation path). ## Constraints may_edit: false. Context JSON: skip=false, findings=[{ \"file\": \"docs/guide.md\", \"reason\": \"stale workflow path\", \"source_commit\": \"abc1234\" }]. Do not edit files. Emit survey shape per common-output-format-loop.md with ### Candidates, Session Metrics with may_edit false, plus ## Overview and ## Summary for PR composition.",
+      "expected_output": "Automation triage report with survey shape and PR Overview/Summary",
       "files": [],
       "expectations": [
-        "Output contains Documentation Triage Report heading",
-        "Output contains High-Priority Items (Fixed) section",
-        "Output contains Watch Items (Deferred) section",
-        "Output contains Session Metrics with Level L1",
-        "Output contains ## Overview and ## Summary PR sections"
+        "Output contains docs-updater Result heading or ## Overview",
+        "Output contains ### Candidates section",
+        "Output contains Session Metrics with may_edit",
+        "Output contains ## Overview and ## Summary PR sections",
+        "Output does not contain ### Changes or ## Verification"
       ]
     },
     {

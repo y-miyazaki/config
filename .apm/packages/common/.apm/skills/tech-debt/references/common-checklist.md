@@ -1,4 +1,4 @@
-# loop-tech-debt Checklist
+# Tech-Debt Checklist
 
 ## Classification
 
@@ -18,7 +18,7 @@ Report EOL/deprecation facts; do not recommend new-technology or tool migration 
 
 ## Scope Guards
 
-- On loop path, respect caller `allowlist` / `denylist` per `category-scope.md` (allowlist in `## Constraints`; denylist enforced by verifier)
+- On the automation path, respect caller `allowlist` / `denylist` per [category-scope.md](category-scope.md) (allowlist in `## Constraints`; denylist enforced by verifier)
 - Read source outside the allowlist for evidence only — never edit it
 - Cap Critical + High-Priority persisted findings at 25; retain all Critical first, then High-Priority until the cap; defer overflow to Watch with a truncation note
 - Do not invent APIs, paths, metrics, ownership, or CVEs
@@ -49,10 +49,10 @@ Do not mark Resolved when only `line` shifted but `path` + `kind` + snippet stil
 
 ## Output
 
-- Emit survey or apply shape per `common-output-format.md` (not both in one run)
+- Emit survey or apply shape per [common-output-format.md](common-output-format.md)
 - Include `Category` (and `Nature` when set) on every candidate/finding row
-- At `L1` or `mode: survey`, emit survey shape + Session Metrics — do not write `report_file`
-- At `L2`/`L3` or `mode: apply`, write allowlisted `report_file` and apply closed-set fixes per [category-scope.md](category-scope.md)
+- When `may_edit` is `false`, emit survey shape — do not write `report_file`
+- When `may_edit` is `true`, write allowlisted `report_file` and apply closed-set fixes per [category-scope.md](category-scope.md)
 
 ## Error Handling
 

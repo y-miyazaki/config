@@ -1,8 +1,20 @@
 # Documentation Triage Report Format
 
-Follow survey/apply shapes in [common-loop-triage-format.md](common-loop-triage-format.md). Interactive/hook runs use [common-output-format.md](common-output-format.md).
+Automation-path report shapes. Interactive/hook runs use [common-output-format.md](common-output-format.md).
 
-## Survey-only result (loop `L1`)
+## Overview contract
+
+Every run emits `## Overview` first. Write 1–2 plain-language sentences (~280 characters max).
+
+| Element   | Include                                                                   |
+| --------- | ------------------------------------------------------------------------- |
+| Trigger   | Scan scope, workflow/job, or commit range                                 |
+| Substance | Dominant categories, named files, or failure types — **not counts alone** |
+| Action    | Recorded, fixed, deferred, or no edits                                    |
+
+Omit level, commit SHAs, run URLs, and boilerplate.
+
+## Survey-only result (`may_edit: false`)
 
 No file edits.
 
@@ -27,7 +39,18 @@ No file edits.
 | ------ | -------- | ----------- |
 ```
 
-## Apply result (loop `L2`/`L3`)
+### Survey rules
+
+| Rule              | Requirement                                          |
+| ----------------- | ---------------------------------------------------- |
+| `### Candidates`  | Required when any apply-worthy row exists            |
+| `### Watch`       | Optional                                             |
+| `### Changes`     | **MUST NOT** appear                                  |
+| `### Deferred`    | **MUST NOT** appear                                  |
+| `## Verification` | **MUST NOT** appear                                  |
+| Zero candidates   | Overview explains no-op; omit empty `### Candidates` |
+
+## Apply result (`may_edit: true`)
 
 ```markdown
 # docs-updater Result
@@ -56,14 +79,26 @@ No file edits.
 | <markdown-validation or link check> | <pass \| fail \| skip> |
 ```
 
-## Loop session metrics (verifier / logs)
+### Apply rules
+
+| Rule              | Requirement                                            |
+| ----------------- | ------------------------------------------------------ |
+| `### Changes`     | Required when `git diff` is non-empty                  |
+| `### Deferred`    | Watch/skip rows plus apply failures; omit when empty   |
+| `### Candidates`  | **MUST NOT** appear in final output                    |
+| `### Watch`       | **MUST NOT** appear — fold into **Deferred**           |
+| `## Verification` | Required when apply phase ran                          |
+| Git alignment     | Reconcile with `git diff --name-only` before synthesis |
+
+## Session metrics (verifier / logs)
+
+Separate from PR body. Emit after survey or apply work per [category-automation-envelope.md](category-automation-envelope.md):
 
 ```markdown
 ## Session Metrics
 
 | Field | Value |
-| Level | <L1\|L2\|L3> |
-| Mode | <survey\|apply> |
+| may_edit | <true\|false> |
 | Commit range | <commit_range> |
 | Findings assessed | <count> |
 | Files modified | <count> |
@@ -72,20 +107,13 @@ No file edits.
 
 ## PR body templates
 
-| Mode   | Level     | Template                            |
-| ------ | --------- | ----------------------------------- |
-| Survey | `L1`      | `assets/pr-body-template-survey.md` |
-| Apply  | `L2`/`L3` | `assets/pr-body-template.md`        |
+| `may_edit` | Template                            |
+| ---------- | ----------------------------------- |
+| `false`    | `assets/pr-body-template-survey.md` |
+| `true`     | `assets/pr-body-template.md`        |
 
-At synthesis, load the template for the resolved mode. Emit **exactly** `## Overview`, `## Summary`, and `## Verification` (apply only).
-
-See [common-loop-pr-body-contract.md](common-loop-pr-body-contract.md).
+At synthesis, load the template for the resolved `may_edit`. Emit **exactly** `## Overview`, `## Summary`, and `## Verification` (apply only).
 
 ## Fixes / Deferred consistency
 
-Reconcile with `git diff --name-only` before synthesis.
-
-## Rules
-
-- At `L1`, survey shape only — do not modify files.
-- At `L2`/`L3`, apply shape; edit only within prompt `## Constraints` allowlist.
+**Deferred** means no fix remains in the working tree for that path. Reconcile with `git diff --name-only` before synthesis.

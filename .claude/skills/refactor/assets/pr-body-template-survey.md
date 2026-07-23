@@ -1,21 +1,14 @@
 <!--
-Survey-only PR template for loop-refactor (L1) and interactive survey mode.
+Survey-only PR template for refactor automation (may_edit: false).
 
-Load at synthesis time when mode is survey or level is L1.
-loop-finalize extracts ## Overview and ## Summary only (no ## Verification).
-
-Rules:
-- Summary contains ### Candidates and optional ### Watch only.
-- Do NOT emit ### Changes, ### Deferred, or ## Verification.
-- Table when 2+ rows; bullet list when one simple item.
-- Omit empty ### subsections.
+Load at synthesis time after survey output is complete.
 -->
 
 ## Overview
 
 <!--
   GOOD: Surveyed sync scripts under scripts/ and found duplication in sync_skill_lib.sh and an oversized detect_tech_debt.sh; no edits applied.
-  BAD:  Refactor loop completed at L1.
+  BAD:  Refactor run finished.
 -->
 
 <one or two sentences: scope surveyed, dominant candidates by name, no edits applied>

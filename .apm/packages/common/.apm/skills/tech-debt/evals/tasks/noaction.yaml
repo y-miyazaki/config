@@ -7,12 +7,12 @@ tags:
   - edge-case
 inputs:
   prompt: >-
-    Use tech-debt. Context has skip=true and empty signals/hotspots.
-    Emit survey no-op with ## Overview indicating no technical debt signals
-    detected. Do not create report_file. Do not emit ### Changes or ##
-    Verification.
+    Use tech-debt. Context has skip=true and empty signals/hotspots. may_edit is false. Emit
+    survey no-op with ## Overview indicating no technical debt signals detected. Do not
+    create report_file. Do not emit ### Changes or ## Verification. Include ## Summary per
+    common-output-format.md. State no edits applied in Overview.
   context:
-    level: L2
+    commit_range: eval0001..eval0002
     report_file: docs/report/tech-debt/2026-07-19.md
     skip: true
     signals: []

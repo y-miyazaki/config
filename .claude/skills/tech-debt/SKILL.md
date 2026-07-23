@@ -4,29 +4,27 @@ description: >-
   Discover and classify technical debt from mechanical signals, apply closed-set
   fixes when requested, and publish structured reports under docs/report/tech-debt/.
   Use for scheduled loop scans, ad-hoc surveys from detection JSON, or when the user
-  asks to fix safe documentation/dependency debt. Delegate structural work to refactor.
-  Preferred via on-loop-tech-debt.yaml.
+  asks to fix safe documentation/dependency debt. Default is survey only; write
+  report_file and apply fixes only when the user explicitly requests apply or
+  automation sets may_edit in Constraints. Delegate structural work to refactor.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
-  version: "2.0.0"
+  version: "2.1.0"
 ---
+
+**UTILITY SKILL** — technical debt survey and closed-set apply, not structural refactor.
 
 ## Input
 
-Injected JSON from loop-prompt-generate — see [category-input-schema.md](references/category-input-schema.md). Path allowlist and denylist arrive in the prompt `## Constraints` section (caller `LOOP_ALLOWLIST`, `LOOP_DENYLIST`).
+- **Interactive:** natural-language request; run `bash scripts/detect_tech_debt.sh` unless detect JSON is already in context — parse per [category-input-schema.md](references/category-input-schema.md)
+- **Automation:** detect JSON in prompt; read `may_edit` from `## Constraints` per [category-automation-envelope.md](references/category-automation-envelope.md)
 
-Interactive runs may pass `mode: survey | apply` or use natural language (洗い出し → survey; 直して → apply).
-
-## Operating levels
-
-`level` arrives in injected JSON — see [category-input-schema.md#operating-levels](references/category-input-schema.md#operating-levels).
+Path allowlist, when present, arrives in `## Constraints`.
 
 ## Output Specification
 
-Survey and apply use **different** Summary shapes — do not mix. See [common-output-format.md](references/common-output-format.md) and [common-loop-triage-format.md](references/common-loop-triage-format.md).
-
-Loop: survey loads `assets/pr-body-template-survey.md`; apply loads `assets/pr-body-template.md`.
+Tech-debt report per [common-output-format.md](references/common-output-format.md). Survey shape when `report_file` is not written; apply shape when written — within [category-scope.md](references/category-scope.md).
 
 ## Execution Scope
 
@@ -34,7 +32,7 @@ Loop: survey loads `assets/pr-body-template-survey.md`; apply loads `assets/pr-b
 
 - Classify mechanical `signals[]` and `hotspots[]` into prioritized debt findings
 - Survey: emit Candidates with Delegate hints (`refactor`, `docs-updater`, `self`, `human`)
-- Apply: write `report_file` at L2/L3; apply closed-set fixes (`broken_doc_ref`, `stale_doc`, simple `pin_drift`) within allowlist
+- Apply: write `report_file`; apply closed-set fixes (`broken_doc_ref`, `stale_doc`, simple `pin_drift`) within allowlist
 
 ### DO NOT USE FOR:
 
@@ -50,45 +48,34 @@ Loop: survey loads `assets/pr-body-template-survey.md`; apply loads `assets/pr-b
 - [common-output-format.md](references/common-output-format.md) (always read)
 - [category-scope.md](references/category-scope.md) (always read)
 - [category-input-schema.md](references/category-input-schema.md) (always read)
-- [common-loop-triage-format.md](references/common-loop-triage-format.md) (always read)
-- [common-loop-pr-body-contract.md](references/common-loop-pr-body-contract.md) (always read)
-- `assets/pr-body-template-survey.md` (always read — loop L1 survey path)
-- `assets/pr-body-template.md` (always read — loop L2/L3 apply path)
+- [category-automation-envelope.md](references/category-automation-envelope.md) (always read — automation path)
+- [common-troubleshooting.md](references/common-troubleshooting.md) (read on failure)
 - Previous report at `previous_report` (always read when path exists)
 
 ## Workflow
 
-Every run has **Phase A — Survey** (classify all signals). **Phase B — Apply** runs only when mode is `apply` and level allows edits.
+Resolve **may_edit** before classifying signals:
 
-### Mode resolution
+| Source                                                      | `may_edit`                                                                                                               |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Interactive — default                                       | `false` — survey only; do not write `report_file`                                                                        |
+| Interactive — apply language in the same request            | `true` — examples: 直して, apply fixes, write the report, update docs/report/tech-debt                                   |
+| Interactive — follow-up after a prior survey in the session | `true` when the user asks to fix, apply, or write the report                                                             |
+| Automation — `## Constraints`                               | `may_edit: true` or `may_edit: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
 
-| Source         | Default mode | Survey-only triggers                           |
-| -------------- | ------------ | ---------------------------------------------- |
-| Interactive    | `survey`     | Default unless user asks to fix/apply/直して   |
-| Loop `L1`      | `survey`     | Always — no file edits                         |
-| Loop `L2`/`L3` | `apply`      | `skip: true` or empty signals/hotspots → no-op |
-
-Explicit JSON `mode`: `survey` | `apply` overrides defaults.
-
-### Phase A — Survey (always)
-
-1. Parse [category-input-schema.md](references/category-input-schema.md). Read `## Constraints` for allowlist. If `skip` or both `signals` and `hotspots` are empty, emit survey no-op; stop.
-2. Read `previous_report` when set. Compare per [common-checklist.md](references/common-checklist.md#previous-report-comparison).
-3. For each signal/hotspot, read ±30 lines. Classify per [category-debt-taxonomy.md](references/category-debt-taxonomy.md). Assign Delegate per row.
-4. At `L1` or `mode: survey`, emit **survey** shape per [common-output-format.md](references/common-output-format.md); load `assets/pr-body-template-survey.md` at synthesis; stop — no file edits.
-
-### Phase B — Apply (`mode: apply`, L2/L3)
-
-1. Write `report_file` within allowlist with full persisted structure (Critical / High-Priority / Watch sections per taxonomy).
-2. Apply closed-set fixes only per [category-scope.md](references/category-scope.md).
-3. Emit one **apply** shape only: `### Changes`, `### Deferred`; omit `### Candidates` / `### Watch`. Reconcile with `git diff --name-only`.
-4. Load `assets/pr-body-template.md` at synthesis.
+1. Run `scripts/detect_tech_debt.sh` (interactive) or parse detect JSON per [category-input-schema.md](references/category-input-schema.md).
+2. On the automation path, read [category-automation-envelope.md](references/category-automation-envelope.md) for Constraints, PR templates, and Session Metrics.
+3. Read `previous_report` when set. Compare per [common-checklist.md](references/common-checklist.md#previous-report-comparison). If `skip` or both `signals` and `hotspots` are empty, emit survey no-op; on automation path append `## Session Metrics` per [category-automation-envelope.md](references/category-automation-envelope.md); stop.
+4. For each signal/hotspot, read ±30 lines. Classify per [category-debt-taxonomy.md](references/category-debt-taxonomy.md). Assign Delegate per taxonomy row.
+5. When `may_edit` is `false`, emit survey shape with `### Candidates` and optional `### Watch`; on automation path load `assets/pr-body-template-survey.md` at synthesis and append `## Session Metrics` per [category-automation-envelope.md](references/category-automation-envelope.md); stop — do not write `report_file`.
+6. When `may_edit` is `true`, write `report_file` within allowlist with full persisted structure; apply closed-set fixes per [category-scope.md](references/category-scope.md); emit apply shape with `### Changes`, optional `### Deferred`, and `## Verification`; on automation path load `assets/pr-body-template.md` at synthesis and append `## Session Metrics` per [category-automation-envelope.md](references/category-automation-envelope.md).
 
 ### Error Handling
 
-| Condition                                 | Severity    | Action                                                          |
-| ----------------------------------------- | ----------- | --------------------------------------------------------------- |
-| `skip` or empty signals/hotspots          | Info        | Survey no-op; stop                                              |
-| Path outside allowlist/denylist           | Recoverable | Classify Watch; do not edit                                     |
-| `previous_report` path missing            | Recoverable | Skip comparison; note in Overview                               |
-| Cap exceeded (>25 Critical+High-Priority) | Recoverable | Retain Critical first; defer overflow to Watch; note truncation |
+| Condition                                 | Severity    | Action                                                                             |
+| ----------------------------------------- | ----------- | ---------------------------------------------------------------------------------- |
+| `skip` or empty signals/hotspots          | Info        | Report skip outcome; stop                                                          |
+| Path outside allowlist/denylist           | Recoverable | Classify Watch; do not edit                                                        |
+| `previous_report` path missing            | Recoverable | Skip comparison; note in Overview                                                  |
+| Apply requested but `may_edit` is `false` | Info        | Survey only; note that edits require an explicit apply request or `may_edit: true` |
+| Cap exceeded (>25 Critical+High-Priority) | Recoverable | Retain Critical first; defer overflow to Watch; note truncation                    |

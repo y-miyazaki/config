@@ -4,12 +4,11 @@
 #
 # Usage: ./sync_apm_artifacts.sh [--check] [component...]
 #   --check       Dry-run for bash-based sync scripts (pass-through)
-#   component     skill-lib | validate-mirror | loop-contract | guidelines | all (default)
+#   component     skill-lib | validate-mirror | guidelines | all (default)
 #
 # Source-of-truth map (edit canonical files, then run this script):
 #   skill-lib         → scripts/lib/
 #   validate-mirror   → scripts/{shell-script,go,terraform}/
-#   loop-contract     → docs/explanation/loop-engineering/portable/
 #   guidelines        → category-*.md under *-review skills (via Perl sync)
 #
 # After any component sync when .apm/packages/ changed:
@@ -31,7 +30,6 @@ declare -a COMPONENTS=()
 declare -a ALL_COMPONENTS=(
     skill-lib
     validate-mirror
-    loop-contract
     guidelines
 )
 
@@ -48,16 +46,15 @@ Description:
 Components:
     skill-lib         scripts/lib/ → skill scripts/lib/ copies
     validate-mirror   scripts/<domain>/ → validation skill scripts/
-    loop-contract     docs/.../portable/ → loop skill references/
     guidelines        category-*.md → instructions and common-checklist.md
     all               all of the above (default)
 
 Options:
-    --check    Dry-run where supported (skill-lib, validate-mirror, loop-contract)
+    --check    Dry-run where supported (skill-lib, validate-mirror)
 
 Examples:
     ./sync_apm_artifacts.sh
-    ./sync_apm_artifacts.sh --check loop-contract
+    ./sync_apm_artifacts.sh --check validate-mirror
     ./sync_apm_artifacts.sh guidelines skill-lib
 EOF
     exit 0
@@ -76,7 +73,7 @@ function parse_arguments {
                 CHECK_MODE="true"
                 shift
                 ;;
-            skill-lib | validate-mirror | loop-contract | guidelines | all)
+            skill-lib | validate-mirror | guidelines | all)
                 COMPONENTS+=("$1")
                 shift
                 ;;
@@ -135,15 +132,6 @@ function sync_validate_mirror_component {
 }
 
 #######################################
-# sync_loop_contract_component: Sync portable loop contract files
-#######################################
-function sync_loop_contract_component {
-    echo "==> loop-contract"
-    # shellcheck disable=SC2046
-    bash "${SCRIPT_DIR}/sync_loop_contract.sh" $(run_check_flag)
-}
-
-#######################################
 # sync_guidelines_component: Regenerate instructions from category files
 #######################################
 function sync_guidelines_component {
@@ -170,7 +158,6 @@ function main {
         case "${component}" in
             skill-lib) sync_skill_lib_component ;;
             validate-mirror) sync_validate_mirror_component ;;
-            loop-contract) sync_loop_contract_component ;;
             guidelines) sync_guidelines_component ;;
             *)
                 echo "ERROR: Unhandled component: ${component}" >&2

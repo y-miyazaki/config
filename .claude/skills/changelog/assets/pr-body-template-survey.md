@@ -1,14 +1,14 @@
 <!--
-Survey-only PR template for loop-changelog (L1).
+Survey-only PR template for changelog automation (may_edit: false).
 
-Load at synthesis time when level is L1.
+Load at synthesis time after survey output is complete.
 -->
 
 ## Overview
 
 <!--
-  GOOD: Since abc1234, 4 conventional commits (2 feat, 2 fix) would add Unreleased bullets under Added and Fixed; no CHANGELOG edits at L1.
-  BAD:  Changelog loop run finished.
+  GOOD: Since abc1234, 4 conventional commits (2 feat, 2 fix) would add Unreleased bullets under Added and Fixed; no CHANGELOG edits applied.
+  BAD:  Changelog run finished.
 -->
 
 <one or two sentences: which commits/releases would be recorded and under which sections>

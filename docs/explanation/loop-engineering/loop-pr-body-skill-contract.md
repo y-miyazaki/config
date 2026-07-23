@@ -2,12 +2,13 @@
 
 Platform design for human-readable loop PR bodies. Skill-owned narrative; finalize-owned mechanical sections.
 
-| Layer                       | Document                                                                                                         |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Readable PR body spec       | [Loop PR Body Readable Design](../../superpowers/specs/2026-07-21-loop-pr-body-readable-design.md)               |
-| Survey/apply triage shapes  | [`portable/common-loop-triage-format.md`](portable/common-loop-triage-format.md) (synced to skill `references/`) |
-| Hybrid composition (legacy) | [Loop PR Body Hybrid Design](../../superpowers/specs/2026-07-17-loop-pr-body-hybrid-design.md)                   |
-| Notify on human PR          | [loop-notify-pr Specification](../../reference/loop-notify-pr-specification.md)                                  |
+| Layer                       | Document                                                                                           |
+| --------------------------- | -------------------------------------------------------------------------------------------------- |
+| Readable PR body spec       | [Loop PR Body Readable Design](../../superpowers/specs/2026-07-21-loop-pr-body-readable-design.md) |
+| Automation PR rules         | Per-skill `references/category-automation-envelope.md` (load on automation path only)              |
+| Report shapes               | Per-skill `references/common-output-format.md` (+ `common-output-format-loop.md` where split)      |
+| Hybrid composition (legacy) | [Loop PR Body Hybrid Design](../../superpowers/specs/2026-07-17-loop-pr-body-hybrid-design.md)     |
+| Notify on human PR          | [loop-notify-pr Specification](../../reference/loop-notify-pr-specification.md)                    |
 
 ## Reference: APM Triage Panel
 
@@ -48,7 +49,7 @@ Load `assets/pr-body-template.md` **at synthesis time only** (after triage/fix w
 
 **Fails** when Overview is automation boilerplate, metadata only, or defers all substance to Summary.
 
-Per-skill required elements and examples live in each skill's `references/common-output-format.md` and `assets/pr-body-template.md`.
+Per-skill required elements and examples live in each skill's `references/common-output-format.md`, `references/category-automation-envelope.md` (automation path), and `assets/pr-body-template.md`.
 
 ### What the platform owns
 
@@ -122,13 +123,15 @@ Do **not** put these in **Summary** — they duplicate **Changes** / **Deferred*
 
 ## Skill checklist
 
-Every `loop-*` skill MUST:
+Every loop automation skill MUST:
 
-1. Define session report + PR body sections in `references/common-output-format.md`.
-2. Ship `assets/pr-body-template.md` with fixed top-level `## Overview` and `## Summary` headings and per-skill Overview examples (good/bad).
-3. Instruct the agent to load the template at synthesis time and emit exactly those sections for PR composition.
-4. Keep `## Session Metrics` separate from PR-facing `## Summary` (no duplicate headings).
-5. Overview MUST satisfy the [Overview contract](#overview-contract) — trigger, problem, action in plain language.
+1. Define survey/apply report shapes in `references/common-output-format.md` (and `common-output-format-loop.md` when split).
+2. Ship `references/category-automation-envelope.md` with `may_edit` Constraints, PR body rules, and Session Metrics (automation path only).
+3. Ship `assets/pr-body-template.md` and `assets/pr-body-template-survey.md` with fixed top-level headings and per-skill Overview examples (good/bad).
+4. Branch on `may_edit` from `## Constraints` only — do not branch agent behavior on caller `level`.
+5. Instruct the agent to load the PR template at synthesis time when `may_edit` is set in Constraints.
+6. Keep `## Session Metrics` separate from PR-facing `## Summary` (no duplicate headings).
+7. Overview MUST satisfy the [Overview contract](#overview-contract) — trigger, problem, action in plain language.
 
 ## Fixes / Deferred consistency
 

@@ -34,7 +34,7 @@ jobs:
 
         ALL of the following must be true:
         1. The implementer surveyed every detect hint in the detection result before applying fixes
-        2. Applied changes address all actionable candidates marked apply in the survey (O1/O2 only)
+        2. Applied changes address all actionable candidates marked apply in the survey (local or same-package structural edits only)
         3. No files outside the allowlist were modified
         4. No denylist paths were touched
         5. No cross-package redesign, GoF patterns, or public API semantics changes
@@ -47,7 +47,7 @@ jobs:
         ANY of the following triggers REJECT:
         - Only the first hint was addressed while other actionable hints were ignored
         - Cross-package moves, new design patterns, or deep-module redesign
-        - Architecture-improvement or O3-style proposal-only output with no safe O1/O2 apply
+        - Architecture-improvement or proposal-only output with no safe local or same-package structural apply
         - Lint-primary diffs (rename/quote/gofmt-only) not tied to a surveyed candidate
         - Feature, behavior-changing, or dependency upgrade changes
         - Modifications outside the allowlist
@@ -76,8 +76,8 @@ jobs:
       prompt_instructions: |
         Run the refactor skill in apply mode for every mechanical hint (duplication_block or oversized_unit) in the detection result.
         Phase A: survey all hints[] entries and emit ### Candidates with apply or watch disposition.
-        Phase B: apply every candidate marked apply — O2 cap; structural intent only; no architecture-improvement / O3 proposal path.
-        One technique per candidate; minimal O1/O2 diff per fix; revert and defer any candidate that fails its gate.
+        Phase B: apply every candidate marked apply — same-package scope cap; structural intent only; no architecture-improvement proposal path.
+        One technique per candidate; minimal structural diff within local or same-package scope per fix; revert and defer any candidate that fails its gate.
         Re-run stack validation on all touched packages before finalize.
         Stack validation (A'): shell-script-validation, go-validation, github-actions-validation, markdown-validation as applicable via ## Instructions.
         Invoke named validation skills for touched stacks before finalize.

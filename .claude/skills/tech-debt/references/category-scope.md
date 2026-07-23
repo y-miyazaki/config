@@ -2,15 +2,15 @@
 
 ### How scope is resolved
 
-| Mode                                                    | Allowlist                                                                                                             | Denylist                                                                                                                      |
-| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **Interactive** — no path constraints in prompt or JSON | **Unrestricted** within [Skill-specific limits](#skill-specific-limits) and [ignore conventions](#ignore-conventions) | **None from skill** — follow repository security instructions                                                                 |
-| **Interactive** — user `allowlist` / `denylist`         | User allowlist globs only (within skill-specific limits)                                                              | User denylist globs                                                                                                           |
-| **Loop**                                                | Caller `allowlist` — repeated in prompt `## Constraints` as `Allowed paths: …`                                        | Caller `denylist` — enforced by loop-execute verifier (may be empty; not inlined in prompt unless caller criteria mention it) |
+| Context                                         | Allowlist                                                                                                             | Denylist                                                             |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **Interactive** — no path constraints in prompt | **Unrestricted** within [skill-specific limits](#skill-specific-limits) and [ignore conventions](#ignore-conventions) | **None from skill** — follow repository security instructions        |
+| **Interactive** — user `allowlist` / `denylist` | User allowlist globs only (within skill-specific limits)                                                              | User denylist globs                                                  |
+| **Automation** — `## Constraints`               | `Allowed paths: …` when the caller supplies an allowlist                                                              | Caller denylist — enforced by the automation verifier (may be empty) |
 
-Skills do **not** ship a repository-wide default denylist. Per-repo deny rules belong in caller workflows, repository instructions (`AGENTS.md`), or explicit user constraints — not in skill references.
+Skills do **not** ship a repository-wide default denylist. Per-repo deny rules belong in caller configuration, repository instructions (`AGENTS.md`), or explicit user constraints — not in skill references.
 
-Do **not** treat [Loop caller examples](#loop-caller-examples-this-repository) as interactive scope. Those configure `on-loop-*.yaml` only.
+Do **not** treat automation-only allowlist examples as interactive scope. See [category-automation-envelope.md](category-automation-envelope.md) on the automation path.
 
 ### Ignore conventions
 
@@ -20,14 +20,16 @@ Do not edit paths that appear to hold secrets (environment files, credential sto
 
 ### Skill-specific limits
 
-This skill writes technical debt reports and may apply **closed-set** fixes when mode is `apply` and paths are on the loop allowlist:
+This skill writes technical debt reports and may apply **closed-set** fixes when `may_edit` is `true` and paths are on the resolved allowlist:
 
 - `broken_doc_ref`, `stale_doc` — documentation paths only
 - simple `pin_drift` — manifest files only (`package.json`, `go.mod`, etc.)
 
-Read source files outside allowlist for evidence; do not modify paths outside allowlist. Structural or security debt remains report-only — delegate to `refactor` or human.
+When `may_edit` is `false`, do not edit any file — survey output only.
 
-### Loop caller examples (this repository)
+When `may_edit` is `true`, write only `report_file` and closed-set fix targets within the resolved allowlist. Read source files outside allowlist for evidence; do not modify paths outside allowlist. Structural or security debt remains report-only — delegate to `refactor` or human.
+
+### Automation caller examples (this repository)
 
 | Key         | Example                                                                                                            |
 | ----------- | ------------------------------------------------------------------------------------------------------------------ |

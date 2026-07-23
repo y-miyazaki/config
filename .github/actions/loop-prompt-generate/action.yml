@@ -41,6 +41,8 @@ runs:
         SKILL_NAME: ${{ inputs.skill_name }}
       run: |
         set -euo pipefail
+        # shellcheck disable=SC1091
+        source "${{ github.action_path }}/lib/build_constraints.sh"
         DELIM="PROMPT_DELIM_$(openssl rand -hex 8)"
         {
           echo "prompt<<${DELIM}"
@@ -57,18 +59,7 @@ runs:
           fi
           if [[ -n "${LEVEL}" || -n "${ALLOWLIST}" ]]; then
             echo ""
-            echo "## Constraints"
-            if [[ -n "${LEVEL}" ]]; then
-              echo "You are operating at ${LEVEL} level."
-              if [[ "${LEVEL}" == "L2" || "${LEVEL}" == "L3" ]]; then
-                echo "You MUST persist edits to disk in the worktree; a report alone is not sufficient at L2+."
-              fi
-            fi
-            echo "Do not claim files were modified unless git would show real changes."
-            if [[ -n "${ALLOWLIST}" ]]; then
-              echo "Allowed paths: ${ALLOWLIST}."
-              echo "Do NOT modify any other files."
-            fi
+            emit_loop_constraints "${LEVEL}" "${ALLOWLIST}"
           fi
           echo "${DELIM}"
         } >> "$GITHUB_OUTPUT"

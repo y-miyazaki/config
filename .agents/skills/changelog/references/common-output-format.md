@@ -1,10 +1,8 @@
-# Changelog Loop Report Format
+# Changelog Report Format
 
-Follow survey/apply shapes in [common-loop-triage-format.md](common-loop-triage-format.md). Deferred subsection stays `### Skipped` for this skill.
+Deferred subsection name for this skill: `### Skipped` (not `### Deferred`).
 
-## Survey-only result (loop `L1`)
-
-No file edits.
+## Survey result (no file edits)
 
 ```markdown
 # Changelog Result
@@ -27,7 +25,12 @@ No file edits.
 | ------ | ----------- |
 ```
 
-## Apply result (loop `L2`/`L3`)
+### Survey rules
+
+- **MUST NOT** include `### Changes` or `## Verification`
+- Zero candidates — Overview explains no-op; omit empty `### Candidates`
+
+## Apply result (`changelog_file` edited)
 
 ```markdown
 # Changelog Result
@@ -56,34 +59,19 @@ No file edits.
 | `CHANGELOG.md` structure | <pass \| fail> |
 ```
 
-## Loop session metrics (verifier / logs)
+### Apply rules
 
-```markdown
-## Session Metrics
+- **MUST NOT** include `### Candidates` in final output
+- Reconcile `### Changes` with `git diff --name-only` before synthesis
 
-| Field | Value |
-| Level | <L1\|L2\|L3> |
-| Mode | <survey\|apply> |
-| Commit range | <commit_range> |
-| Commits assessed | <count> |
-| File modified | <changelog_file or "None"> |
-| Outcome | <one-line result> |
-```
+## Session metrics (automation)
 
-## PR body templates
+On the automation path, append `## Session Metrics` per [category-automation-envelope.md](category-automation-envelope.md).
 
-| Mode   | Level     | Template                            |
-| ------ | --------- | ----------------------------------- |
-| Survey | `L1`      | `assets/pr-body-template-survey.md` |
-| Apply  | `L2`/`L3` | `assets/pr-body-template.md`        |
+## Overview (skill-specific)
 
-### Overview (skill-specific)
+**Good (survey):** `Processed 4 conventional commits since abc..def; would add 3 Unreleased bullets under Changed; no file edits applied.`
 
-**Good:** `Processed 4 conventional commits since last changelog SHA; would add 3 Unreleased bullets under Changed; no file edits at L1.`
+**Good (apply):** `Added 3 Unreleased bullets under Changed and promoted v1.8.16 from detect releases[].`
 
-**Bad:** `Changelog loop run finished.`
-
-## Rules
-
-- At `L1`, survey shape — list intended entries under Candidates; do not edit `CHANGELOG.md`.
-- At `L2`/`L3`, apply shape; update only `CHANGELOG.md` under `## [Unreleased]`.
+**Bad:** `Changelog run finished.`

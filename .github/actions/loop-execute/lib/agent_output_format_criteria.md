@@ -4,7 +4,9 @@ Applies when the implementer ran a loop fix skill (`docs-updater`, `refactor`, `
 
 Canonical shapes: repository `docs/explanation/loop-engineering/common-loop-triage-format.md`.
 
-### Survey mode (L1)
+Resolve mode from **`may_edit`** in `## Constraints` (automation) or from the skill's interactive `may_edit` resolution — not from caller `level` metadata alone.
+
+### Survey mode (`may_edit: false`)
 
 When branch diff is empty and output has no `### Changes`, `### Deferred`, or `### Skipped`:
 
@@ -13,7 +15,7 @@ When branch diff is empty and output has no `### Changes`, `### Deferred`, or `#
 3. **MUST NOT** include `### Changes`, `### Deferred`, `### Skipped`, or `## Verification`
 4. Overview names dominant categories, files, or failure types — not counts alone
 
-### Apply mode (L2/L3)
+### Apply mode (`may_edit: true`)
 
 When branch diff is non-empty or output includes `### Changes`, `### Deferred`, or `### Skipped`:
 

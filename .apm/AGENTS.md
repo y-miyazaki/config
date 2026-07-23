@@ -11,14 +11,15 @@ Maintainer routing for `.apm/packages/**` work in this repository.
 
 ## Canonical references
 
-| Topic                                           | Where                                                                                                                                                            |
-| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Edit targets, sync, post-change workflow        | [CLAUDE.md § Edit Targets](../CLAUDE.md#edit-targets)                                                                                                            |
-| Configuration philosophy (MCP / hooks / skills) | [architecture.md](../docs/explanation/architecture.md#configuration-philosophy), [specification.md](../docs/reference/specification.md#configuration-philosophy) |
-| Repository-neutral distributable content        | companion rules (stem `instructions`, `agent-skills`) — DIST-01 / DIST-02                                                                                        |
-| Instruction file structure and category sync    | [instructions-sync-workflow.md](../docs/explanation/instructions-sync-workflow.md)                                                                               |
-| SKILL authoring and eval packaging              | companion rules (stem `agent-skills`) and `agent-skills-review` skill                                                                                            |
-| Test pairing                                    | companion domain rules (stem `shell-script`, `go`, `bats`) — TEST-00                                                                                             |
+| Topic                                              | Where                                                                                                                                                            |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Edit targets, sync, post-change workflow           | [CLAUDE.md § Edit Targets](../CLAUDE.md#edit-targets)                                                                                                            |
+| Configuration philosophy (MCP / hooks / skills)    | [architecture.md](../docs/explanation/architecture.md#configuration-philosophy), [specification.md](../docs/reference/specification.md#configuration-philosophy) |
+| Repository-neutral distributable content           | companion rules (stem `instructions`, `agent-skills`) — DIST-01 / DIST-02                                                                                        |
+| Instruction file structure and category sync       | [instructions-sync-workflow.md](../docs/explanation/instructions-sync-workflow.md)                                                                               |
+| SKILL authoring and eval packaging                 | companion rules (stem `agent-skills`) and `agent-skills-review` skill                                                                                            |
+| Loop skill edit gating (`may_edit` in Constraints) | `category-automation-envelope.md` per skill; caller maps `L1`→`false`, `L2`/`L3`→`true` — skills branch on `may_edit` only                                       |
+| Test pairing                                       | companion domain rules (stem `shell-script`, `go`, `bats`) — TEST-00                                                                                             |
 
 ## Maintainer-only (not in distributable rules)
 

@@ -1,5 +1,5 @@
 <!--
-Canonical PR-facing template for loop-ci-sweeper.
+PR-facing template for ci-sweeper automation (may_edit: true).
 
 Load ONLY at synthesis time, after triage and file edits complete.
 loop-finalize adds ## Failure context from detect; this template covers Overview + Summary + Verification.

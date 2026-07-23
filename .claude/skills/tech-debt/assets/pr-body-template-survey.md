@@ -1,7 +1,7 @@
 <!--
-Survey-only PR template for loop-tech-debt (L1) and interactive survey mode.
+Survey-only PR template for tech-debt automation (may_edit: false).
 
-Load at synthesis time when mode is survey or level is L1.
+Load at synthesis time after survey output is complete.
 loop-finalize extracts ## Overview and ## Summary only (no ## Verification).
 
 Rules:

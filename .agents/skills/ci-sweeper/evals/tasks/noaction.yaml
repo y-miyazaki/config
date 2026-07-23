@@ -6,9 +6,9 @@ tags:
   - negative
 inputs:
   prompt: >-
-    Use ci-sweeper. Context JSON has skip=true and failures=[]. Emit survey
-    no-op with ## Overview and ## Summary explaining no actionable failures.
-    Emit Session Metrics. Do not emit ### Changes or ## Verification.
+    Use ci-sweeper. Context JSON has skip=true and failures=[]. Emit survey no-op with ##
+    Overview and ## Summary explaining no actionable failures. Do not emit ### Changes or ##
+    Verification. State no edits applied in Overview.
   context:
     skip: true
     failures: []

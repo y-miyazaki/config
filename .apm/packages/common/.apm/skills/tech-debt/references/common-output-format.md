@@ -1,10 +1,10 @@
 # Technical Debt Result Format
 
-Follow survey/apply shapes in [common-loop-triage-format.md](common-loop-triage-format.md). Category and severity rules: [category-debt-taxonomy.md](category-debt-taxonomy.md).
+Deferred subsection name for this skill: `### Deferred` (not `### Skipped`).
 
-Loop PR bodies: load survey or apply template at synthesis. Platform contract: [common-loop-pr-body-contract.md](common-loop-pr-body-contract.md).
+Category and severity rules: [category-debt-taxonomy.md](category-debt-taxonomy.md).
 
-## Survey-only result (`mode: survey`, loop `L1`)
+## Survey result (`may_edit: false`)
 
 No file edits. **Do not write `report_file`.** **Do not emit `### Changes`, `### Deferred`, or `## Verification`.**
 
@@ -29,21 +29,15 @@ No file edits. **Do not write `report_file`.** **Do not emit `### Changes`, `###
 | ------ | -------- | ----------- |
 ```
 
-### Survey — section rules
+### Survey rules
 
-| Section           | Rule                                                                 |
-| ----------------- | -------------------------------------------------------------------- |
-| Overview          | Name dominant debt categories or files; state **no edits** when true |
-| `### Candidates`  | **Required** when Critical/High apply-worthy rows exist              |
-| `### Watch`       | Optional; lower urgency or delegate-only items                       |
-| `### Changes`     | **MUST NOT** appear in survey-only output                            |
-| `## Verification` | **MUST NOT** appear                                                  |
+- **MUST NOT** include `### Changes`, `### Deferred`, or `## Verification`
+- Zero candidates — Overview explains no-op; omit empty `### Candidates`
+- **Delegate:** `self` = closed-set apply candidate; `refactor` = structural; `docs-updater` = doc drift; `human` = security or judgment; `—` = report-only
 
-**Delegate:** `self` = closed-set apply candidate; `refactor` = structural; `docs-updater` = doc drift; `human` = security or judgment; `—` = report-only.
+## Apply result (`may_edit: true`)
 
-## Apply result (`mode: apply`, loop `L2`/`L3`)
-
-Survey runs internally first; final output uses apply shape. Write `report_file` at L2/L3 within allowlist.
+Survey runs internally first; final output uses apply shape. Write `report_file` within allowlist.
 
 ```markdown
 # Technical Debt Result
@@ -73,33 +67,17 @@ Survey runs internally first; final output uses apply shape. Write `report_file`
 | Detect sensors | <pass \| fail \| skip> |
 ```
 
-### Apply — section rules
+### Apply rules
 
-| Section          | Rule                                                                 |
-| ---------------- | -------------------------------------------------------------------- |
-| Overview         | State what was **recorded** and **fixed** by name (categories/files) |
-| `### Changes`    | **Required** when `git diff` non-empty; include `report_file` row    |
-| `### Deferred`   | Fold Watch + non-applied candidates; omit when empty                 |
-| `### Candidates` | **MUST NOT** appear in final apply output                            |
+- **MUST NOT** include `### Candidates` in final output
+- Fold Watch + non-applied candidates into `### Deferred`; omit when empty
+- Reconcile `### Changes` with `git diff --name-only` before synthesis
 
-Reconcile with `git diff --name-only` before synthesis.
+## Session metrics (automation)
 
-## Loop session metrics (verifier / logs)
+On the automation path, append `## Session Metrics` per [category-automation-envelope.md](category-automation-envelope.md).
 
-```markdown
-## Session Metrics
-
-| Field | Value |
-| Level | <L1\|L2\|L3> |
-| Mode | <survey\|apply> |
-| Commit range | <commit_range> |
-| Signals assessed | <count> |
-| Hotspots assessed | <count> |
-| Report file | <report_file or "None"> |
-| Outcome | <one-line result> |
-```
-
-## Persisted report file (L2/L3 only)
+## Persisted report file (`may_edit: true` only)
 
 Write `report_file` (`docs/report/tech-debt/YYYY-MM-DD.md`) with extended tables (Resolved Since Previous, Report Outcome). PR Summary uses apply/survey shape only — not a copy of the full persisted file.
 
@@ -143,5 +121,11 @@ Write `report_file` (`docs/report/tech-debt/YYYY-MM-DD.md`) with extended tables
 - Pick **one** result shape per run — survey-only **or** apply.
 - Cap Critical + High-Priority at 25 combined; defer overflow to Watch with truncation note.
 - Every finding row must include `Category` from the taxonomy.
-- At `L1`, emit survey shape + Session Metrics — do not write `report_file`.
-- At `L2`/`L3`, emit apply shape, write `report_file`, apply closed-set fixes only per [category-scope.md](category-scope.md).
+
+## Overview (skill-specific)
+
+**Good (survey):** `Debt scan over abc..def found broken links in docs/guide and pin drift in package.json; 12 TODO markers logged as Watch; no edits applied.`
+
+**Good (apply):** `Recorded 2 High documentation findings in docs/report/tech-debt/2026-07-23.md and fixed a broken link in docs/guide/overview.md; deferred one architecture hotspot to refactor.`
+
+**Bad:** `Technical debt run finished.`
