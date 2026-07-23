@@ -1,15 +1,15 @@
 id: tech-debt-l2-write-001
 name: tech-debt L2 writes persisted report file
-description: Validate L2 emits session summary and writes report_file path in Summary.
+description: Validate L2 emits apply shape and writes report_file path in Changes.
 tags:
   - quality
   - level
 inputs:
   prompt: >-
     Use tech-debt at L2. Classify the injected eol_hint as dependency_version
-    under High-Priority. Emit full session summary and write report_file
-    docs/report/tech-debt/2026-07-19.md per allowlist. State report_file path in
-    Summary. Emit PR ## Overview and ## Summary plus Session Metrics table with Critical, High-Priority, Watch, and Noise / Ignore sections including Category fields.
+    under High-Priority in persisted report. Emit apply PR shape with ###
+    Changes listing report_file docs/report/tech-debt/2026-07-19.md and ##
+    Verification. Include Session Metrics with L2.
   context:
     level: L2
     report_file: docs/report/tech-debt/2026-07-19.md
@@ -25,9 +25,9 @@ inputs:
 expected:
   output_contains:
     - dependency_version
-    - High-Priority
     - docs/report/tech-debt/2026-07-19.md
+    - Changes
     - L2
-    - Summary
+    - Verification
   outcomes:
     - type: task_completed

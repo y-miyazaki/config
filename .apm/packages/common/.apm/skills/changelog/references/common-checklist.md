@@ -45,12 +45,12 @@ When detect JSON includes `releases[]`:
 
 ## Output
 
-- Emit all report sections per `common-output-format.md`
-- List every commit SHA processed in Summary
-- List every release version promoted in Summary
+- Emit survey or apply shape per [common-output-format.md](common-output-format.md)
+- At `L1`, list intended entries under `### Candidates`; do not edit `CHANGELOG.md`
+- At `L2`/`L3`, apply shape with `### Changes` for bullets added
 
 ## Error Handling
 
-- `skip` true or empty `commits` and `releases` → report with Summary `No unreleased changelog commits`; stop
+- `skip` true or empty `commits` and `releases` → survey no-op Overview; stop without editing `CHANGELOG.md`
 - `changelog_exists` false → create Keep a Changelog template, then add bullets
 - Malformed existing changelog → preserve released sections; append/fix only `## [Unreleased]` and new detect `releases[]` sections

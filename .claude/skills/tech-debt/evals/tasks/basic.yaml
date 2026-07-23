@@ -1,16 +1,16 @@
 id: tech-debt-contract-001
 name: tech-debt classifies injected todo marker
 description: >-
-  Validate tech-debt classifies an injected todo_comment as code_quality
-  with full session-summary sections.
+  Validate tech-debt classifies an injected todo_comment in apply shape.
 tags:
   - quality
   - output-contract
 inputs:
   prompt: >-
     Use tech-debt at L2. Classify the injected todo_comment with Category
-    code_quality under High-Priority. Emit Critical, High-Priority, Watch,
-    Noise / Ignore, and Summary with Category fields. Emit PR ## Overview and ## Summary plus Session Metrics table with Critical, High-Priority, Watch, and Noise / Ignore sections including Category fields.
+    code_quality under High-Priority in persisted report. Emit apply PR shape
+    with ### Changes (report_file path), Category on rows where applicable, and
+    ## Verification. Include Session Metrics.
   context:
     level: L2
     report_file: docs/report/tech-debt/2026-07-19.md
@@ -25,8 +25,8 @@ inputs:
 expected:
   output_contains:
     - code_quality
-    - High-Priority
     - Category
-    - Summary
+    - Changes
+    - Verification
   outcomes:
     - type: task_completed

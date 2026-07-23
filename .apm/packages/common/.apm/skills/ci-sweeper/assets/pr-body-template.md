@@ -15,11 +15,11 @@ Rules:
 ## Overview
 
 <!--
-  GOOD: CI failed on markdownlint MD001 in docs/foo.md; fixed heading style in one file.
+  GOOD: CI failed on markdownlint MD001 in docs/foo.md; fixed heading style in docs/foo.md; deferred flaky integration test job.
   BAD:  CI sweeper addressed actionable failures.
 -->
 
-<one or two sentences: which CI failure was addressed, root cause, and fix strategy>
+<one or two sentences: which failure, what was fixed, what was deferred — name workflow/job and cause>
 
 ## Summary
 

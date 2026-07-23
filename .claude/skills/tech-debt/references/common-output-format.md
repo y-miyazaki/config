@@ -1,79 +1,107 @@
-# Technical Debt Loop Report Format
+# Technical Debt Result Format
 
-Emit a session summary on every run, including no-action exits.
-At `L2`/`L3`, also write the persisted report file described below.
-Category and severity rules: [category-debt-taxonomy.md](category-debt-taxonomy.md).
+Follow survey/apply shapes in [common-loop-triage-format.md](common-loop-triage-format.md). Category and severity rules: [category-debt-taxonomy.md](category-debt-taxonomy.md).
 
-## Session report (verifier / logs)
+Loop PR bodies: load survey or apply template at synthesis. Platform contract: [common-loop-pr-body-contract.md](common-loop-pr-body-contract.md).
+
+## Survey-only result (`mode: survey`, loop `L1`)
+
+No file edits. **Do not write `report_file`.** **Do not emit `### Changes`, `### Deferred`, or `## Verification`.**
 
 ```markdown
-# Technical Debt Loop Report
+# Technical Debt Result
 
-## Critical
+## Overview
 
-- **Path:** <path>:<line or "n/a">
-- **Category:** <code_quality|test_gap|architecture|dependency_version|documentation|security|operational>
-- **Nature:** <prudent-deliberate|reckless-deliberate|reckless-inadvertent|prudent-inadvertent|omitted>
-- **Kind:** <signal kind or hotspot metric>
-- **Reason:** <severity severity rationale; cite taxonomy axis>
-- **Recommendation:** <actionable next step, or "None">
+<scan scope → dominant categories/files found → no edits applied; name substance, not counts only>
 
-## High-Priority
+## Summary
 
-- **Path:** <path>:<line or "n/a">
-- **Category:** <...>
-- **Nature:** <... or omitted>
-- **Kind:** <signal kind or hotspot metric>
-- **Reason:** <why this is debt>
-- **Recommendation:** <actionable next step, or "None">
+### Candidates
 
-## Watch
+| Target      | Category   | Evidence            | Suggested approach         | Delegate                                       | Priority              |
+| ----------- | ---------- | ------------------- | -------------------------- | ---------------------------------------------- | --------------------- |
+| `path:line` | <category> | <snippet or metric> | <plain-language direction> | self \| refactor \| docs-updater \| human \| — | high \| medium \| low |
 
-- **Path:** <path>
-- **Category:** <...>
-- **Reason:** <why deferred>
+### Watch
 
-## Noise / Ignore
-
-- <duplicate, out-of-scope, or empty evidence items, or "None">
-
-## Session Metrics
-
-| Field             | Value                                                        |
-| ----------------- | ------------------------------------------------------------ |
-| Level             | <L1\|L2\|L3>                                                 |
-| Commit range      | <commit_range>                                               |
-| Signals assessed  | <count>                                                      |
-| Hotspots assessed | <count>                                                      |
-| Report file       | <report_file or "None">                                      |
-| Outcome           | <one-line result, e.g. "No technical debt signals detected"> |
+| Target | Evidence | Why not now |
+| ------ | -------- | ----------- |
 ```
 
-## PR body contract (human-facing)
+### Survey — section rules
 
-At synthesis time, load `assets/pr-body-template.md` and emit `## Overview`, `## Summary`, and `## Verification`.
+| Section           | Rule                                                                 |
+| ----------------- | -------------------------------------------------------------------- |
+| Overview          | Name dominant debt categories or files; state **no edits** when true |
+| `### Candidates`  | **Required** when Critical/High apply-worthy rows exist              |
+| `### Watch`       | Optional; lower urgency or delegate-only items                       |
+| `### Changes`     | **MUST NOT** appear in survey-only output                            |
+| `## Verification` | **MUST NOT** appear                                                  |
 
-The persisted report file (`docs/report/tech-debt/YYYY-MM-DD.md`) may contain fuller tables; the PR body template is the concise human-facing summary.
+**Delegate:** `self` = closed-set apply candidate; `refactor` = structural; `docs-updater` = doc drift; `human` = security or judgment; `—` = report-only.
 
-See repository `docs/explanation/loop-engineering/loop-pr-body-skill-contract.md`.
+## Apply result (`mode: apply`, loop `L2`/`L3`)
 
-### Overview (skill-specific)
+Survey runs internally first; final output uses apply shape. Write `report_file` at L2/L3 within allowlist.
 
-Emit one paragraph under `## Overview` that answers:
+```markdown
+# Technical Debt Result
 
-| Element | tech-debt content                                                    |
-| ------- | -------------------------------------------------------------------- |
-| Trigger | Debt scan scope (`<commit_range>` or hotspot/signal scan)            |
-| Problem | Whether Critical/High debt exists; dominant categories if any        |
-| Action  | Report file path; this skill reports, does not edit application code |
+## Overview
 
-**Good:** `Debt scan over abc..def found no Critical/High items; 21 Watch signals recorded in docs/report/tech-debt/2026-07-21.md.`
+<scope → what was recorded/fixed by category or file → deferrals; name substance>
 
-**Bad:** `Technical debt loop completed.` / listing every signal in Overview
+## Summary
 
-## Persisted Report File
+### Changes
 
-At `L2`/`L3`, write `report_file` (`docs/report/tech-debt/YYYY-MM-DD.md`) with this structure:
+| Target                                | What was wrong | What changed                    |
+| ------------------------------------- | -------------- | ------------------------------- |
+| `docs/report/tech-debt/YYYY-MM-DD.md` | <finding gap>  | <report recorded>               |
+| `path/to/file`                        | <debt fact>    | <minimal closed-set fix if any> |
+
+### Deferred
+
+| Target | Why deferred |
+| ------ | ------------ |
+
+## Verification
+
+| Check          | Result                 |
+| -------------- | ---------------------- |
+| Detect sensors | <pass \| fail \| skip> |
+```
+
+### Apply — section rules
+
+| Section          | Rule                                                                 |
+| ---------------- | -------------------------------------------------------------------- |
+| Overview         | State what was **recorded** and **fixed** by name (categories/files) |
+| `### Changes`    | **Required** when `git diff` non-empty; include `report_file` row    |
+| `### Deferred`   | Fold Watch + non-applied candidates; omit when empty                 |
+| `### Candidates` | **MUST NOT** appear in final apply output                            |
+
+Reconcile with `git diff --name-only` before synthesis.
+
+## Loop session metrics (verifier / logs)
+
+```markdown
+## Session Metrics
+
+| Field | Value |
+| Level | <L1\|L2\|L3> |
+| Mode | <survey\|apply> |
+| Commit range | <commit_range> |
+| Signals assessed | <count> |
+| Hotspots assessed | <count> |
+| Report file | <report_file or "None"> |
+| Outcome | <one-line result> |
+```
+
+## Persisted report file (L2/L3 only)
+
+Write `report_file` (`docs/report/tech-debt/YYYY-MM-DD.md`) with extended tables (Resolved Since Previous, Report Outcome). PR Summary uses apply/survey shape only — not a copy of the full persisted file.
 
 ```markdown
 # Technical Debt Report — YYYY-MM-DD
@@ -84,44 +112,36 @@ At `L2`/`L3`, write `report_file` (`docs/report/tech-debt/YYYY-MM-DD.md`) with t
 - **Previous report:** <previous_report or "None">
 - **Signals:** <count>
 - **Hotspots:** <count>
-- **Taxonomy:** Fowler quadrant · Google eng-practices · Sonar software qualities · SemVer · Diátaxis
 
 ## Critical
 
-| Path        | Category   | Nature        | Kind   | Evidence            | Recommendation |
-| ----------- | ---------- | ------------- | ------ | ------------------- | -------------- |
-| <path:line> | <category> | <nature or —> | <kind> | <snippet or metric> | <next step>    |
+| Path | Category | Nature | Kind | Evidence | Recommendation |
+| ---- | -------- | ------ | ---- | -------- | -------------- |
 
 ## High-Priority
 
-| Path        | Category   | Nature        | Kind   | Evidence            | Recommendation |
-| ----------- | ---------- | ------------- | ------ | ------------------- | -------------- |
-| <path:line> | <category> | <nature or —> | <kind> | <snippet or metric> | <next step>    |
+| Path | Category | Nature | Kind | Evidence | Recommendation |
 
 ## Watch
 
-| Path   | Category   | Reason         |
-| ------ | ---------- | -------------- |
-| <path> | <category> | <why deferred> |
+| Path | Category | Reason |
 
 ## Resolved Since Previous
 
-- <item from previous_report no longer present, or "None">
+- <item or "None">
 
 ## Report Outcome
 
 - **Findings (Critical + High):** <count>
 - **Watch:** <count>
 - **Truncated:** <yes/no>
-- **Outcome:** <one-line result>
+- **Outcome:** <one-line>
 ```
 
 ## Rules
 
-- Always emit all five session `##` sections plus PR `## Overview`, `## Summary`, and `## Verification`.
-- `## Session Metrics` MUST use a Field \| Value table (not bullet list).
-- At `L1`, emit the session summary only — do not write `report_file`.
-- At `L2`/`L3`, write only `report_file` within the prompt `## Constraints` allowlist (see `category-scope.md`).
-- Cap Critical + High-Priority rows at 25 combined: retain **all Critical** first, then **High-Priority** until the cap; move remaining High-Priority rows to Watch and set Truncated to `yes`.
-- Every Critical / High-Priority / Watch row must include `Category` from the taxonomy.
-- Verifier expects the persisted report to cite detect facts without invented paths or metrics.
+- Pick **one** result shape per run — survey-only **or** apply.
+- Cap Critical + High-Priority at 25 combined; defer overflow to Watch with truncation note.
+- Every finding row must include `Category` from the taxonomy.
+- At `L1`, emit survey shape + Session Metrics — do not write `report_file`.
+- At `L2`/`L3`, emit apply shape, write `report_file`, apply closed-set fixes only per [category-scope.md](category-scope.md).

@@ -7,8 +7,9 @@ tags:
 inputs:
   prompt: >-
     Use tech-debt at L2. Read previous_report evals/files/previous-report.sample.md.
-    The noise.go.txt TODO is absent from current signals — mark Resolved. The new
-    eol_hint is New. Emit Resolved Since Previous and Summary sections. Emit PR ## Overview and ## Summary plus Session Metrics table with Critical, High-Priority, Watch, and Noise / Ignore sections including Category fields.
+    The noise.go.txt TODO is absent from current signals — mark Resolved in
+    persisted report. The new eol_hint is New. Emit apply PR shape with ###
+    Changes (report_file) and ## Verification. Mention Resolved in Overview.
   context:
     level: L2
     report_file: docs/report/tech-debt/2026-07-19.md
@@ -26,7 +27,7 @@ expected:
   output_contains:
     - Resolved
     - dependency_version
-    - High-Priority
-    - Summary
+    - Changes
+    - Overview
   outcomes:
     - type: task_completed

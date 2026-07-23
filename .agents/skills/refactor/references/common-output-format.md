@@ -4,7 +4,7 @@ Use this structure for every interactive run. **Survey-only** and **apply** mode
 
 Internal depth tiers (`O1`/`O2`), intent labels, and Fowler technique names are for agent workflow only ([category-operations.md](category-operations.md), [category-techniques.md](category-techniques.md)). **Do not put them in user-facing output.**
 
-Loop PR bodies: [common-output-format-loop.md](common-output-format-loop.md). Platform contract: repository `docs/explanation/loop-engineering/loop-pr-body-skill-contract.md`.
+Loop PR bodies: [common-output-format-loop.md](common-output-format-loop.md). Platform contract: [common-loop-pr-body-contract.md](common-loop-pr-body-contract.md).
 
 ## Survey-only result (`mode: survey`, loop `L1`, architecture Phase A)
 
@@ -38,15 +38,15 @@ No file edits. **Do not emit `### Changes`, `### Deferred`, or a Verification ta
 
 ### Survey — section rules
 
-| Section           | Rule                                                                       |
-| ----------------- | -------------------------------------------------------------------------- |
-| Overview          | State scope, candidate count, and that **no edits** were applied           |
-| `### Candidates`  | **Required** when any apply-worthy candidate exists; one row per candidate |
-| `### Watch`       | Optional; out-of-scope, lint-only, cross-boundary, or weak-gate items      |
-| `### Changes`     | **MUST NOT** appear in survey-only output                                  |
-| `### Deferred`    | **MUST NOT** appear in survey-only output                                  |
-| `## Verification` | **MUST NOT** appear — no apply-phase checks ran                            |
-| Zero candidates   | Overview explains no-op; omit empty `### Candidates`                       |
+| Section           | Rule                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------ |
+| Overview          | State scope, candidate count, dominant targets by name, and that **no edits** were applied |
+| `### Candidates`  | **Required** when any apply-worthy candidate exists; one row per candidate                 |
+| `### Watch`       | Optional; out-of-scope, lint-only, cross-boundary, or weak-gate items                      |
+| `### Changes`     | **MUST NOT** appear in survey-only output                                                  |
+| `### Deferred`    | **MUST NOT** appear in survey-only output                                                  |
+| `## Verification` | **MUST NOT** appear — no apply-phase checks ran                                            |
+| Zero candidates   | Overview explains no-op; omit empty `### Candidates`                                       |
 
 **Candidates columns:** **Suggested approach** = plain-language fix direction (not internal technique names). **Priority** = `high` \| `medium` \| `low` for human triage.
 

@@ -8,7 +8,7 @@ description: >-
 license: Apache-2.0
 metadata:
   author: y-miyazaki
-  version: "1.3.4"
+  version: "1.4.0"
 ---
 
 ## Input
@@ -21,8 +21,7 @@ Injected JSON from loop-prompt-generate — see [category-input-schema.md](refer
 
 ## Output Specification
 
-Changelog report per [common-output-format.md](references/common-output-format.md).
-At `L2`/`L3`, edit `CHANGELOG.md` within [category-scope.md](references/category-scope.md).
+Changelog report per [common-output-format.md](references/common-output-format.md). Survey at `L1`; apply at `L2`/`L3` within [category-scope.md](references/category-scope.md).
 
 ## Execution Scope
 
@@ -45,13 +44,17 @@ At `L2`/`L3`, edit `CHANGELOG.md` within [category-scope.md](references/category
 - [common-output-format.md](references/common-output-format.md) (always read)
 - [category-scope.md](references/category-scope.md) (always read)
 - [category-input-schema.md](references/category-input-schema.md) (always read)
+- [common-loop-triage-format.md](references/common-loop-triage-format.md) (always read)
+- [common-loop-pr-body-contract.md](references/common-loop-pr-body-contract.md) (always read)
+- `assets/pr-body-template-survey.md` (always read — loop L1 survey path)
+- `assets/pr-body-template.md` (always read — loop L2/L3 apply path)
 
 ## Workflow
 
-1. Parse [category-input-schema.md](references/category-input-schema.md). If `skip` or both `commits` and `releases` are empty, emit report with Session Metrics Outcome `No unreleased changelog commits`; stop.
+1. Parse [category-input-schema.md](references/category-input-schema.md). If `skip` or both `commits` and `releases` are empty, emit survey no-op; stop.
 2. Map commits and promote releases per [common-checklist.md](references/common-checklist.md).
-3. At `L2`/`L3`, edit only `changelog_file` per [category-scope.md](references/category-scope.md).
-4. Output session report per [common-output-format.md](references/common-output-format.md); at synthesis time load `assets/pr-body-template.md` and emit `## Overview` (commits processed, CHANGELOG sections updated) + `## Summary` for PR composition.
+3. At `L1`, emit survey shape with Candidates; load `assets/pr-body-template-survey.md` at synthesis; stop — do not edit `changelog_file`.
+4. At `L2`/`L3`, edit only `changelog_file` per [category-scope.md](references/category-scope.md); emit apply shape; load `assets/pr-body-template.md` at synthesis.
 
 ### Error Handling
 

@@ -1,13 +1,14 @@
 id: changelog-l1-001
-name: changelog L1 emits report without editing changelog
-description: Validate L1 processes commits in report only without file edits.
+name: changelog L1 emits survey without editing changelog
+description: Validate L1 lists commit Candidates in survey shape without file edits.
 tags:
   - quality
   - level
 inputs:
   prompt: >-
-    Use changelog at L1. Process the injected feat commit in the report
-    with Commits Processed and Summary sections. Do not edit CHANGELOG.md. Emit PR ## Overview and ## Summary plus Session Metrics table with Commits Processed and Skipped Commits sections.
+    Use changelog at L1. List the injected feat commit under ###
+    Candidates in survey shape. Do not edit CHANGELOG.md. Do not emit ##
+    Verification or ### Changes.
   context:
     changelog_file: CHANGELOG.md
     changelog_exists: true
@@ -22,8 +23,8 @@ inputs:
         subject: add changelog workflow
 expected:
   output_contains:
-    - Commits Processed
-    - Summary
+    - Candidates
+    - Overview
     - L1
   outcomes:
     - type: task_completed

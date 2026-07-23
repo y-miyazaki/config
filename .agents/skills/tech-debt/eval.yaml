@@ -25,14 +25,14 @@ graders:
         - "'Overview' in output"
         - "'Summary' in output"
         - "'Session Metrics' in output"
-        - "'Category' in output or 'No technical debt signals detected' in output"
-        - "'High-Priority' in output or 'Watch' in output or 'Critical' in output or 'No technical debt signals detected' in output"
+        - "'Category' in output or 'no technical debt signals' in output.lower() or 'no edits applied' in output"
+        - "'Candidates' in output or 'Changes' in output or 'Watch' in output or 'no technical debt signals' in output.lower()"
   - type: text
     name: report_sections
     weight: 0.5
     config:
       regex_match:
-        - (High-Priority|Watch)
+        - (### Candidates|### Changes|### Watch|### Deferred)
   - type: behavior
     name: bounded_runtime
     weight: 0.5

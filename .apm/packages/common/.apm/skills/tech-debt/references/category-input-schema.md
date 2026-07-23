@@ -32,7 +32,7 @@ Provided via prompt context by the calling workflow (loop-prompt-generate action
 
 | Field               | Type    | Description                                                                                                          |
 | ------------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
-| `level`             | enum    | Operating level: `L1` (report only), `L2` (write report + PR), `L3` (edit + auto-merge)                              |
+| `level`             | enum    | Operating level: `L1` (survey report), `L2` (apply + PR), `L3` (apply + auto-merge)                                  |
 | `report_file`       | string  | Repository-relative path for the persisted report (`docs/report/tech-debt/YYYY-MM-DD.md`)                            |
 | `previous_report`   | string  | Optional path to the prior dated report (empty when none)                                                            |
 | `skip`              | boolean | When true, no debt signals or hotspots detected                                                                      |
@@ -72,10 +72,12 @@ Detect emits only these kinds. Unexpected kinds → classify as Watch or Noise.
 
 ### Operating levels
 
-| Level | Agent behavior for loop-tech-debt                                                                 |
-| ----- | ------------------------------------------------------------------------------------------------- |
-| `L1`  | Classify signals; emit session summary only — do not write `report_file`                          |
-| `L2`  | Classify signals; emit session summary and write `report_file` within allowlist                   |
-| `L3`  | Same file writes as `L2`; caller may auto-merge the report PR — still no application source edits |
+| Level | Agent behavior for loop-tech-debt                                                          |
+| ----- | ------------------------------------------------------------------------------------------ |
+| `L1`  | Phase A survey only — emit Candidates/Watch; do not write `report_file`                    |
+| `L2`  | Phase A survey; Phase B write `report_file` and closed-set fixes within allowlist; open PR |
+| `L3`  | Same as `L2`; caller may auto-merge the PR                                                 |
+
+Optional interactive/loop JSON field `mode`: `survey` | `apply`. Loop `L1` → `survey`; `L2`/`L3` → `apply`.
 
 Path allowlist and denylist are not JSON fields. They are injected in the implementer prompt `## Constraints` section from the caller (`LOOP_ALLOWLIST`, `LOOP_DENYLIST`). See [category-scope.md](category-scope.md).

@@ -7,32 +7,20 @@
 #   --from-skill  Sync skill copy → scripts/<domain>/ (default: scripts → skill)
 #   --domain      Limit to one domain: shell-script, go, or terraform
 #
-# Output:
-# - Per-domain sync or drift status
-# - Exit 0 if all in sync, exit 1 if drift detected (--check mode)
-#
 # Design Rules:
 # - Source of truth for behavior: keep both sides aligned via this script
 # - Default direction: scripts/<domain>/validate.sh → skill scripts/validate.sh
 # - Path layout differences only (see .apm/AGENTS.md § Validation Scripts Mirror)
-#
-# Dependencies:
-# - bash
-# - diff
-# - sed
-# - mktemp
 #######################################
 
-# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
 
-# Secure defaults
 umask 027
 export LC_ALL=C.UTF-8
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # SYNC_VALIDATE_MIRROR_ROOT overrides workspace root for fixture-isolated tests.
-WORKSPACE_ROOT="${SYNC_VALIDATE_MIRROR_ROOT:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
+WORKSPACE_ROOT="${SYNC_VALIDATE_MIRROR_ROOT:-$(cd "${SCRIPT_DIR}/../../.." && pwd)}"
 
 CHECK_MODE="false"
 FROM_SKILL="false"
@@ -73,18 +61,6 @@ SYNC_COUNT=0
 
 #######################################
 # show_usage: Display usage information
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   Usage text to stdout
-#
-# Returns:
-#   Exits with code 0
 #######################################
 function show_usage {
     cat << 'EOF'
@@ -108,18 +84,6 @@ EOF
 
 #######################################
 # parse_arguments: Parse command line arguments
-#
-# Globals:
-#   CHECK_MODE, FROM_SKILL, DOMAIN_FILTER
-#
-# Arguments:
-#   $@ - Command line arguments
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   Exits 1 on unknown argument or invalid domain
 #######################################
 function parse_arguments {
     while [[ $# -gt 0 ]]; do
@@ -163,19 +127,6 @@ function parse_arguments {
 
 #######################################
 # check_domain: Compare repo and skill validate.sh after normalization
-#
-# Globals:
-#   DOMAIN_MIRROR_FILES - Per-domain mirrored basenames
-#   DRIFT_COUNT - Incremented on drift
-#
-# Arguments:
-#   $1 - Domain name
-#
-# Outputs:
-#   Drift details to stdout when files differ
-#
-# Returns:
-#   None
 #######################################
 function check_domain {
     local domain="$1"
@@ -188,19 +139,6 @@ function check_domain {
 
 #######################################
 # check_mirror_file: Compare one mirrored file after normalization
-#
-# Globals:
-#   DRIFT_COUNT
-#
-# Arguments:
-#   $1 - Domain name
-#   $2 - Mirror file basename
-#
-# Outputs:
-#   Drift details to stdout when files differ
-#
-# Returns:
-#   None
 #######################################
 function check_mirror_file {
     local domain="$1"
@@ -233,18 +171,6 @@ function check_mirror_file {
 
 #######################################
 # domain_selected: Return whether a domain should run
-#
-# Globals:
-#   DOMAIN_FILTER
-#
-# Arguments:
-#   $1 - Domain name
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   0 when selected, 1 otherwise
 #######################################
 function domain_selected {
     local domain="$1"
@@ -253,20 +179,6 @@ function domain_selected {
 
 #######################################
 # sync_domain: Copy validate.sh with path layout transforms
-#
-# Globals:
-#   DOMAIN_MIRROR_FILES - Per-domain mirrored basenames
-#   FROM_SKILL - Sync direction flag
-#   SYNC_COUNT - Incremented on sync
-#
-# Arguments:
-#   $1 - Domain name
-#
-# Outputs:
-#   Sync status to stdout
-#
-# Returns:
-#   None
 #######################################
 function sync_domain {
     local domain="$1"
@@ -279,19 +191,6 @@ function sync_domain {
 
 #######################################
 # sync_mirror_file: Copy one mirrored file with path layout transforms
-#
-# Globals:
-#   FROM_SKILL, SYNC_COUNT
-#
-# Arguments:
-#   $1 - Domain name
-#   $2 - Mirror file basename
-#
-# Outputs:
-#   Sync status to stdout
-#
-# Returns:
-#   Exits 1 when source file is missing
 #######################################
 function sync_mirror_file {
     local domain="$1"
@@ -330,21 +229,6 @@ function sync_mirror_file {
 
 #######################################
 # transform_repo_to_skill: Apply path layout transforms for skill copy
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   $1 - Domain name
-#   $2 - Mirror file basename
-#   $3 - Input file path
-#   $4 - Output file path
-#
-# Outputs:
-#   Writes transformed content to output file
-#
-# Returns:
-#   None
 #######################################
 function transform_repo_to_skill {
     local domain="$1"
@@ -352,7 +236,7 @@ function transform_repo_to_skill {
     local input_file="$3"
     local output_file="$4"
 
-    # shellcheck disable=SC2016  # sed patterns; ${SCRIPT_DIR} is literal text to match in validate.sh
+    # shellcheck disable=SC2016
     sed \
         -e 's|# shellcheck source=\.\./lib/all\.sh|# shellcheck source=./lib/all.sh|g' \
         -e 's|\${SCRIPT_DIR}/\.\./lib/all\.sh|\${SCRIPT_DIR}/lib/all.sh|g' \
@@ -367,21 +251,6 @@ function transform_repo_to_skill {
 
 #######################################
 # transform_skill_to_repo: Apply path layout transforms for repo copy
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   $1 - Domain name
-#   $2 - Mirror file basename
-#   $3 - Input file path
-#   $4 - Output file path
-#
-# Outputs:
-#   Writes transformed content to output file
-#
-# Returns:
-#   None
 #######################################
 function transform_skill_to_repo {
     local domain="$1"
@@ -389,7 +258,7 @@ function transform_skill_to_repo {
     local input_file="$3"
     local output_file="$4"
 
-    # shellcheck disable=SC2016  # sed patterns; ${SCRIPT_DIR} is literal text to match in validate.sh
+    # shellcheck disable=SC2016
     sed \
         -e 's|# shellcheck source=\./lib/all\.sh|# shellcheck source=../lib/all.sh|g' \
         -e 's|\${SCRIPT_DIR}/lib/all\.sh|\${SCRIPT_DIR}/../lib/all.sh|g' \
@@ -404,18 +273,6 @@ function transform_skill_to_repo {
 
 #######################################
 # main: Check or sync all configured domains
-#
-# Globals:
-#   CHECK_MODE, DOMAINS
-#
-# Arguments:
-#   $@ - Command line arguments
-#
-# Outputs:
-#   Summary to stdout
-#
-# Returns:
-#   0 if all in sync or sync succeeded, 1 if drift in check mode
 #######################################
 function main {
     local domain
@@ -431,7 +288,7 @@ function main {
         done
         echo ""
         if [[ ${DRIFT_COUNT} -gt 0 ]]; then
-            echo "FAIL: ${DRIFT_COUNT} mirrored file(s) have drifted. Run: bash scripts/self/ai/sync_validate_mirror.sh"
+            echo "FAIL: ${DRIFT_COUNT} mirrored file(s) have drifted. Run: bash scripts/self/apm/sync_validate_mirror.sh"
             exit 1
         fi
         echo "OK: All validation mirrors are in sync."

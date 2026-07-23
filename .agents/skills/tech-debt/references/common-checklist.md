@@ -5,7 +5,7 @@
 Read [category-debt-taxonomy.md](category-debt-taxonomy.md) first. For each signal/hotspot:
 
 1. Assign one primary `category` using the decision order in the taxonomy
-2. Assign severity → report section (Critical / High-Priority / Watch / Noise)
+2. Assign severity → persisted report section (Critical / High-Priority / Watch / Noise) and PR row placement (`### Candidates` / `### Watch` for survey; `### Changes` / `### Deferred` for apply)
 3. Add `nature` only when narrative evidence is clear (snippet, ADR, trade-off note) — omit for metrics-only signals (churn, `eol_hint`, `pin_drift`)
 
 ## Detect vs lint
@@ -49,20 +49,20 @@ Do not mark Resolved when only `line` shifted but `path` + `kind` + snippet stil
 
 ## Output
 
-- Emit the session summary sections per `common-output-format.md`
-- Include `Category` (and `Nature` when set) on every Critical / High-Priority / Watch item
-- At `L1`, emit session summary only — do not write `report_file`
-- At `L2`/`L3`, write only allowlisted `report_file` per [category-scope.md](category-scope.md)
+- Emit survey or apply shape per `common-output-format.md` (not both in one run)
+- Include `Category` (and `Nature` when set) on every candidate/finding row
+- At `L1` or `mode: survey`, emit survey shape + Session Metrics — do not write `report_file`
+- At `L2`/`L3` or `mode: apply`, write allowlisted `report_file` and apply closed-set fixes per [category-scope.md](category-scope.md)
 
 ## Error Handling
 
-| Condition                                                    | Severity    | Action                                                                                                     |
-| ------------------------------------------------------------ | ----------- | ---------------------------------------------------------------------------------------------------------- |
-| `skip` true, or both `signals` and `hotspots` empty          | recoverable | Emit full session summary; Outcome `No technical debt signals detected`; do not create `report_file`; stop |
-| Evidence `path` missing or unreadable                        | recoverable | Classify as Watch with reason; continue other items                                                        |
-| `previous_report` set but file missing                       | recoverable | Proceed without resolved/regression notes; note absence in Summary                                         |
-| `report_file` outside allowlist or on denylist               | blocking    | Do not write any report file; note in Summary; still emit session summary                                  |
-| Finding would require invented APIs, paths, metrics, or CVEs | fatal       | Omit the finding (or Noise / Ignore); never fabricate evidence                                             |
+| Condition                                                    | Severity    | Action                                                                    |
+| ------------------------------------------------------------ | ----------- | ------------------------------------------------------------------------- |
+| `skip` true, or both `signals` and `hotspots` empty          | recoverable | Emit survey no-op; stop without `report_file`                             |
+| Evidence `path` missing or unreadable                        | recoverable | Classify as Watch with reason; continue other items                       |
+| `previous_report` set but file missing                       | recoverable | Proceed without resolved/regression notes; note absence in Summary        |
+| `report_file` outside allowlist or on denylist               | blocking    | Do not write any report file; note in Summary; still emit session summary |
+| Finding would require invented APIs, paths, metrics, or CVEs | fatal       | Omit the finding (or Noise / Ignore); never fabricate evidence            |
 
 ## Examples
 

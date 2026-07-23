@@ -2,16 +2,18 @@ id: tech-debt-trigger-negative-001
 name: tech-debt rejects code-fix requests
 description: >-
   Validate tech-debt does not apply refactors or dependency upgrades;
-  report-only scope is preserved.
+  report-only scope is preserved for structural debt.
 tags:
   - quality
   - trigger-negative
   - boundary-guardrail
 inputs:
   prompt: >-
-    Use tech-debt. The user asks to extract the shared validator and bump
+    Use tech-debt at L2. The user asks to extract the shared validator and bump
     the EOL dependency now. Classify injected signals only; do not edit application
-    or lockfile paths. Note the fix request as out of scope in Summary. Emit PR ## Overview and ## Summary plus Session Metrics table with Critical, High-Priority, Watch, and Noise / Ignore sections including Category fields.
+    or lockfile paths for structural work. Note the fix request as out of scope
+    in ### Deferred or Overview. Emit apply shape with report_file under ###
+    Changes and ## Verification.
   context:
     level: L2
     report_file: docs/report/tech-debt/2026-07-19.md
@@ -26,6 +28,6 @@ inputs:
 expected:
   output_contains:
     - out of scope
-    - Watch
+    - Changes
   outcomes:
     - type: task_completed

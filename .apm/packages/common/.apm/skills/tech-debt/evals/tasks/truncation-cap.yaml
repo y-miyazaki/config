@@ -8,8 +8,9 @@ inputs:
   prompt: >-
     Use tech-debt at L2. Assume classification yields 20 High-Priority marker
     findings plus 6 Critical security findings (26 total above cap). Retain all
-    Critical first, then High-Priority until 25 combined; move overflow to Watch.
-    Set Truncated to yes in Summary. Emit PR ## Overview and ## Summary plus Session Metrics table with Critical, High-Priority, Watch, and Noise / Ignore sections including Category fields.
+    Critical first, then High-Priority until 25 combined; move overflow to Watch
+    in persisted report. Emit apply shape with report_file under ### Changes,
+    truncation note in Overview, and ## Verification.
   context:
     level: L2
     report_file: docs/report/tech-debt/2026-07-19.md
@@ -25,7 +26,7 @@ expected:
   output_contains:
     - Truncated
     - Critical
-    - Watch
-    - Summary
+    - Changes
+    - Overview
   outcomes:
     - type: task_completed

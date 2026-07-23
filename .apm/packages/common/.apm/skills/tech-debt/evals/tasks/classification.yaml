@@ -1,17 +1,17 @@
 id: tech-debt-classification-001
 name: tech-debt classifies mixed signals by taxonomy
 description: >-
-  Validate code_quality, dependency_version, and documentation land under
-  High-Priority, and vague TODOs land under Noise / Ignore.
+  Validate taxonomy classification in apply shape and persisted report sections.
 tags:
   - quality
   - classification
 inputs:
   prompt: >-
-    Use tech-debt at L2. Classify the injected signals with Category from
-    category-debt-taxonomy.md. Put actionable code_quality, dependency_version,
-    and documentation items under High-Priority. Put vague TODO noise under
-    Noise / Ignore. Cite taxonomy rationale. Do not edit application source. Emit PR ## Overview and ## Summary plus Session Metrics table with Critical, High-Priority, Watch, and Noise / Ignore sections including Category fields.
+    Use tech-debt at L2. Classify injected signals with Category from
+    category-debt-taxonomy.md. Write report_file with Critical/High-Priority/Watch
+    sections. Emit apply PR shape with ### Changes (report_file path) and ##
+    Verification. Put vague TODO noise in persisted Noise section only — not in
+    PR Candidates. Do not edit application source.
   context:
     level: L2
     report_file: docs/report/tech-debt/2026-07-19.md
@@ -43,7 +43,7 @@ expected:
     - code_quality
     - dependency_version
     - documentation
-    - High-Priority
-    - Noise
+    - Changes
+    - Category
   outcomes:
     - type: task_completed

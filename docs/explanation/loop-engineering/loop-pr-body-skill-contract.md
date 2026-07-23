@@ -2,11 +2,12 @@
 
 Platform design for human-readable loop PR bodies. Skill-owned narrative; finalize-owned mechanical sections.
 
-| Layer                       | Document                                                                                           |
-| --------------------------- | -------------------------------------------------------------------------------------------------- |
-| Readable PR body spec       | [Loop PR Body Readable Design](../../superpowers/specs/2026-07-21-loop-pr-body-readable-design.md) |
-| Hybrid composition (legacy) | [Loop PR Body Hybrid Design](../../superpowers/specs/2026-07-17-loop-pr-body-hybrid-design.md)     |
-| Notify on human PR          | [loop-notify-pr Specification](../../reference/loop-notify-pr-specification.md)                    |
+| Layer                       | Document                                                                                                         |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Readable PR body spec       | [Loop PR Body Readable Design](../../superpowers/specs/2026-07-21-loop-pr-body-readable-design.md)               |
+| Survey/apply triage shapes  | [`portable/common-loop-triage-format.md`](portable/common-loop-triage-format.md) (synced to skill `references/`) |
+| Hybrid composition (legacy) | [Loop PR Body Hybrid Design](../../superpowers/specs/2026-07-17-loop-pr-body-hybrid-design.md)                   |
+| Notify on human PR          | [loop-notify-pr Specification](../../reference/loop-notify-pr-specification.md)                                  |
 
 ## Reference: APM Triage Panel
 
@@ -36,9 +37,10 @@ Load `assets/pr-body-template.md` **at synthesis time only** (after triage/fix w
 | Rule        | Requirement                                                                  |
 | ----------- | ---------------------------------------------------------------------------- |
 | Length      | 1–2 sentences (max ~280 characters)                                          |
-| Structure   | **Trigger** → **Problem** → **Action** in plain language                     |
+| Structure   | **Trigger** → **Substance** → **Action** in plain language                   |
 | Audience    | Reviewer who has not read detect JSON, logs, or session report               |
-| Specificity | Name workflows/files/failure types when ≤3 items; otherwise count + category |
+| Substance   | Name dominant categories, files, or failure types — **not counts alone**     |
+| Specificity | Name workflows/files/failure types when ≤3 items; otherwise category + scope |
 | Omit        | Level, Target, commit SHAs, run URLs, boilerplate, "see Summary below"       |
 | Tone        | Factual, past tense for completed work; no emoji; ASCII in code spans        |
 

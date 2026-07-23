@@ -2,30 +2,43 @@
 
 Applies when the implementer ran a loop fix skill (`docs-updater`, `refactor`, `ci-sweeper`, `changelog`, `tech-debt`).
 
-### Criteria for APPROVE (report sections)
+Canonical shapes: repository `docs/explanation/loop-engineering/common-loop-triage-format.md`.
 
-ALL of the following must be true in the implementer's final `agent-output.txt`:
+### Survey mode (L1)
 
-1. Contains `## Overview`, `## Summary`, and `## Verification` headings
-2. `## Summary` includes the skill's primary fix subsection:
-   - `docs-updater`, `refactor`, `ci-sweeper`: `### Changes`
-   - `changelog`: `### Changes`
-   - `tech-debt`: `### Report`
+When branch diff is empty and output has no `### Changes`, `### Deferred`, or `### Skipped`:
+
+1. Contains `## Overview` and `## Summary`
+2. `## Summary` includes `### Candidates` when actionable rows exist
+3. **MUST NOT** include `### Changes`, `### Deferred`, `### Skipped`, or `## Verification`
+4. Overview names dominant categories, files, or failure types — not counts alone
+
+### Apply mode (L2/L3)
+
+When branch diff is non-empty or output includes `### Changes`, `### Deferred`, or `### Skipped`:
+
+ALL of the following must be true:
+
+1. Contains `## Overview`, `## Summary`, and `## Verification`
+2. `## Summary` includes `### Changes` when files were modified
 3. Deferred-style subsection when items were not fixed:
-   - `docs-updater`, `refactor`, `ci-sweeper`: `### Deferred` (omit when empty)
+   - `docs-updater`, `refactor`, `ci-sweeper`, `tech-debt`: `### Deferred` (omit when empty)
    - `changelog`: `### Skipped` (omit when empty)
-   - `tech-debt`: `### Watch` (omit when empty)
-4. **Changes / Deferred consistency:** every path in the branch diff appears under `### Changes` (or `### Report` for tech-debt) and **no** deferred/skipped/watch path appears in the branch diff
-5. Overview is 1–2 sentences of plain language (trigger → problem → action), not automation boilerplate
-6. Verification lists checks the agent ran with pass/fail/skip/blocked — not instructions for the human to run later
+4. **Changes / Deferred consistency:** every path in the branch diff appears under `### Changes` and **no** deferred/skipped path appears in the branch diff
+5. Overview names what was fixed or recorded — not counts alone
+6. Verification lists checks the agent ran with pass/fail/skip/blocked
+7. Branch diff MUST be empty for survey mode; non-empty diff requires apply mode
 
-### Criteria for REJECT (report sections)
+### Criteria for REJECT
 
 ANY of the following triggers REJECT:
 
-- Missing `## Overview`, `## Summary`, or `## Verification`
-- Missing required `### Changes` / `### Report` when files were modified
-- Legacy or redundant sections: `### Fixes Applied`, `**Outcome:**`, `### Suggested next action`, top-level `## Changes` in agent output
-- A path listed under Deferred/Skipped/Watch still appears in the branch diff
-- A path in the branch diff is missing from the Changes/Report table
-- Internal-only jargon in user-facing tables: bare `O1`/`O2`, `duplication_block` without plain-language explanation
+- Missing required headings for the resolved mode (survey vs apply)
+- Survey output with non-empty branch diff, `## Verification`, `### Changes`, `### Deferred`, or `### Skipped`
+- Apply output with `### Candidates` in final report
+- Missing `### Changes` when files were modified
+- Legacy sections: `### Fixes Applied`, `**Outcome:**`, `### Suggested next action`, top-level `## Changes`
+- A path listed under Deferred/Skipped still appears in the branch diff
+- A path in the branch diff is missing from the Changes table
+- Internal-only jargon: bare `O1`/`O2`, `duplication_block` without plain-language explanation
+- Overview is automation boilerplate or counts-only without naming substance

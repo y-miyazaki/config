@@ -14,11 +14,11 @@ Rules:
 ## Overview
 
 <!--
-  GOOD: Surveyed sync scripts under scripts/ and found two duplication blocks worth fixing next and one oversized file to defer.
+  GOOD: Surveyed sync scripts under scripts/ and found duplication in sync_skill_lib.sh and an oversized detect_tech_debt.sh; no edits applied.
   BAD:  Refactor loop completed at L1.
 -->
 
-<one or two sentences: scope surveyed, candidate count, no edits applied>
+<one or two sentences: scope surveyed, dominant candidates by name, no edits applied>
 
 ## Summary
 

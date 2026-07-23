@@ -1,16 +1,16 @@
 id: ci-sweeper-contract-001
 name: ci-sweeper triages injected regression failure
 description: >-
-  Validate ci-sweeper classifies an injected regression failure into
-  Actionable Fixes with full report sections.
+  Validate ci-sweeper classifies an injected regression failure into Candidates
+  at L1 or Changes at L2.
 tags:
   - quality
   - output-contract
 inputs:
   prompt: >-
     Use ci-sweeper at L2. Classify the injected shellcheck regression from
-    failures[]. Emit the full triage report with Actionable Fixes, Watch Items,
-    Ignored, and Summary. Do not edit files in this mock eval. Emit PR ## Overview and ## Summary plus Session Metrics table with Actionable Fixes, Watch Items, and Ignored sections.
+    failures[]. Emit apply shape with ## Overview, ### Changes, and ##
+    Verification. Do not edit files in this mock eval.
   context:
     level: L2
     skip: false
@@ -27,9 +27,8 @@ inputs:
         reason: shellcheck SC2086 in scripts/deploy.sh
 expected:
   output_contains:
-    - Actionable Fixes
-    - Watch Items
-    - Summary
+    - Changes
+    - Overview
     - regression
   outcomes:
     - type: task_completed

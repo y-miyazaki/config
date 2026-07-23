@@ -10,7 +10,7 @@
 # - Exit 0 if all in sync, exit 1 if drift detected (--check mode)
 #
 # Design Rules:
-# - Source of truth: /workspace/scripts/lib/
+# - Source of truth: scripts/lib/ at repository root
 # - Targets: all .apm/packages/*/.apm/skills/*/scripts/lib/ directories
 # - Recursively discovers skills with scripts/ directory
 # - Creates scripts/lib/ if scripts/ exists but lib/ does not
@@ -22,47 +22,30 @@
 # - diff (for --check mode)
 #######################################
 
-# Error handling: exit on error, unset variable, or failed pipeline
 set -euo pipefail
 
-# Secure defaults
 umask 027
 export LC_ALL=C.UTF-8
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WORKSPACE_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 
 # Load all-in-one library
-# shellcheck source=../../lib/all.sh
+# shellcheck source=../../../lib/all.sh
 # shellcheck disable=SC1091
-source "${SCRIPT_DIR}/../../lib/all.sh"
+source "${WORKSPACE_ROOT}/scripts/lib/all.sh"
 
 #######################################
 # Global variables
 #######################################
 CHECK_MODE="false"
-SOURCE_LIB="${SCRIPT_DIR}/../lib"
-PACKAGES_DIR="${SCRIPT_DIR}/../../.apm/packages"
+SOURCE_LIB="${WORKSPACE_ROOT}/scripts/lib"
+PACKAGES_DIR="${WORKSPACE_ROOT}/.apm/packages"
 DRIFT_COUNT=0
 SYNC_COUNT=0
 
 #######################################
 # show_usage: Display usage information
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   Exits with code 0
-#
-# Usage:
-#   show_usage
-#
 #######################################
 function show_usage {
     cat << 'EOF'
@@ -83,22 +66,6 @@ EOF
 
 #######################################
 # parse_arguments: Parse command line arguments
-#
-# Globals:
-#   CHECK_MODE - Whether to run in check-only mode
-#
-# Arguments:
-#   $@ - Command line arguments
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   None
-#
-# Usage:
-#   parse_arguments "$@"
-#
 #######################################
 function parse_arguments {
     while [[ $# -gt 0 ]]; do
@@ -120,25 +87,6 @@ function parse_arguments {
 
 #######################################
 # sync_one_skill: Sync lib to a single skill's scripts/lib/
-#
-# Globals:
-#   SOURCE_LIB - Source lib directory
-#   CHECK_MODE - Check-only flag
-#   DRIFT_COUNT - Incremented on drift
-#   SYNC_COUNT - Incremented on sync
-#
-# Arguments:
-#   $1 - Path to skill's scripts/ directory
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   None
-#
-# Usage:
-#   sync_one_skill "/path/to/skill/scripts"
-#
 #######################################
 function sync_one_skill {
     local target_scripts="$1"
@@ -170,22 +118,6 @@ function sync_one_skill {
 
 #######################################
 # main: Find all skills with scripts/ and sync lib
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   $@ - Command line arguments
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   0 if all in sync, 1 if drift detected in check mode
-#
-# Usage:
-#   main "$@"
-#
 #######################################
 function main {
     parse_arguments "$@"
@@ -214,16 +146,14 @@ function main {
     echo ""
     if [[ ${CHECK_MODE} == "true" ]]; then
         if [[ ${DRIFT_COUNT} -gt 0 ]]; then
-            echo "FAIL: ${DRIFT_COUNT} skill(s) have drifted lib/. Run: bash scripts/sync_skill_lib.sh"
+            echo "FAIL: ${DRIFT_COUNT} skill(s) have drifted lib/. Run: bash scripts/self/apm/sync_skill_lib.sh"
             exit 1
-        else
-            echo "OK: All skill lib/ directories are in sync."
-            exit 0
         fi
-    else
-        echo "Done: ${SYNC_COUNT} skill(s) synced."
+        echo "OK: All skill lib/ directories are in sync."
         exit 0
     fi
+    echo "Done: ${SYNC_COUNT} skill(s) synced."
+    exit 0
 }
 
 if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then

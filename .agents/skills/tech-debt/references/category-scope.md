@@ -20,11 +20,16 @@ Do not edit paths that appear to hold secrets (environment files, credential sto
 
 ### Skill-specific limits
 
-This skill writes technical debt reports only. Read source files outside the report paths for evidence; do not modify them.
+This skill writes technical debt reports and may apply **closed-set** fixes when mode is `apply` and paths are on the loop allowlist:
+
+- `broken_doc_ref`, `stale_doc` — documentation paths only
+- simple `pin_drift` — manifest files only (`package.json`, `go.mod`, etc.)
+
+Read source files outside allowlist for evidence; do not modify paths outside allowlist. Structural or security debt remains report-only — delegate to `refactor` or human.
 
 ### Loop caller examples (this repository)
 
-| Key         | Example                                                                                                           |
-| ----------- | ----------------------------------------------------------------------------------------------------------------- |
-| `allowlist` | `docs/report/tech-debt/**/*.md`                                                                                   |
-| `denylist`  | `**/.env`, `**/credentials*`, `**/secrets*`, `**/migration/*.sql`, `**/infrastructure/**`, `src/**`, `.github/**` |
+| Key         | Example                                                                                                            |
+| ----------- | ------------------------------------------------------------------------------------------------------------------ |
+| `allowlist` | `docs/report/tech-debt/**/*.md`, `docs/**/*.md`, `package.json`, `go.mod` (report + closed-set doc/manifest fixes) |
+| `denylist`  | `**/.env`, `**/credentials*`, `**/secrets*`, `**/migration/*.sql`, `**/infrastructure/**`, `src/**`, `.github/**`  |

@@ -8,7 +8,7 @@ description: >-
 license: Apache-2.0
 metadata:
   author: y-miyazaki
-  version: "1.4.4"
+  version: "1.5.0"
 ---
 
 ## Input
@@ -21,8 +21,7 @@ Injected JSON from loop-prompt-generate — see [category-input-schema.md](refer
 
 ## Output Specification
 
-Triage report per [common-output-format.md](references/common-output-format.md).
-At `L2`/`L3`, edit actionable `regression` failures within [category-scope.md](references/category-scope.md).
+Triage report per [common-output-format.md](references/common-output-format.md). Survey at `L1`; apply at `L2`/`L3` within [category-scope.md](references/category-scope.md). See [common-loop-triage-format.md](references/common-loop-triage-format.md).
 
 ## Execution Scope
 
@@ -45,15 +44,32 @@ At `L2`/`L3`, edit actionable `regression` failures within [category-scope.md](r
 - [category-input-schema.md](references/category-input-schema.md) (always read)
 - [category-run-ledger.md](references/category-run-ledger.md) (always read)
 - [category-validation-commands.md](references/category-validation-commands.md) (always read)
+- [common-loop-triage-format.md](references/common-loop-triage-format.md) (always read)
+- [common-loop-pr-body-contract.md](references/common-loop-pr-body-contract.md) (always read)
+- `assets/pr-body-template-survey.md` (always read — loop L1 survey path)
+- `assets/pr-body-template.md` (always read — loop L2/L3 apply path)
 
 ## Workflow
 
-1. Parse [category-input-schema.md](references/category-input-schema.md). If `skip` or no actionable `failures`, emit all session report sections; set Session Metrics **Outcome** to `no actionable failures`; stop.
-2. Classify every item in `failures[]` per [common-checklist.md](references/common-checklist.md). Use detect `failure_type` as a hint only — reclassify when `log_excerpt` contradicts it. List `ignored[]` entries under `## Ignored`.
-3. For `regression` at `L2`/`L3`, fix the first regression only when more than three failures are present; defer the rest as Watch. Edit only within [category-scope.md](references/category-scope.md) allowlist.
-4. When infra/env/flake or >5 files are required, classify as Watch with no edits. Set Session Metrics **Outcome** to `watch` (or `deferred`) so finalize records `outcome: watch`.
-5. Run validation per [category-validation-commands.md](references/category-validation-commands.md) and caller `## Instructions` stack routing; record outcome in Session Metrics. If validation tooling is missing, defer as Watch unless fixing a single reported line from `log_excerpt`.
-6. Output session report per [common-output-format.md](references/common-output-format.md); reconcile Changes / Deferred with `git diff --name-only`; at synthesis load `assets/pr-body-template.md` and emit `## Overview`, `## Summary`, and `## Verification`.
+Every run has **Phase A — Survey** (classify failures). **Phase B — Apply** runs only when mode is `apply` and level allows edits.
+
+### Mode resolution
+
+| Source           | Default mode | Survey-only triggers                           |
+| ---------------- | ------------ | ---------------------------------------------- |
+| Interactive      | `apply`      | User asks to survey, list, or triage only      |
+| Loop `L1`        | `survey`     | Always — no file edits                         |
+| Loop `L2` / `L3` | `apply`      | `skip: true` or no actionable failures → no-op |
+
+Explicit JSON `mode`: `survey` \| `apply` overrides defaults. See [category-input-schema.md](references/category-input-schema.md).
+
+1. Parse [category-input-schema.md](references/category-input-schema.md). If `skip` or no actionable `failures`, emit survey no-op; stop.
+2. Classify every item in `failures[]` per [common-checklist.md](references/common-checklist.md). Note `ignored[]` in Overview when non-empty.
+3. At `L1`, emit survey shape with Candidates; load `assets/pr-body-template-survey.md` at synthesis; stop — no file edits.
+4. At `L2`/`L3`, fix the first `regression` only when more than three failures are present; defer the rest within [category-scope.md](references/category-scope.md).
+5. When infra/env/flake or >5 files are required, classify as Watch with no edits.
+6. Run validation per [category-validation-commands.md](references/category-validation-commands.md); record outcome in Session Metrics.
+7. Emit apply shape per [common-output-format.md](references/common-output-format.md); reconcile Changes / Deferred with `git diff --name-only`; load `assets/pr-body-template.md` at synthesis.
 
 ### Error Handling
 

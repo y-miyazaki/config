@@ -9,7 +9,7 @@ description: >-
 license: Apache-2.0
 metadata:
   author: y-miyazaki
-  version: "3.1.0"
+  version: "3.2.0"
 ---
 
 **UTILITY SKILL** — automated diff-sync and drift repair, not content authoring.
@@ -26,7 +26,7 @@ metadata:
 ## Output Specification
 
 Interactive / hook: report per [common-output-format.md](references/common-output-format.md).
-Loop (`findings[]` present): [common-output-format-loop.md](references/common-output-format-loop.md). At `L2`/`L3`, edit High-Priority items within [category-scope.md](references/category-scope.md).
+Loop (`findings[]` present): [common-output-format-loop.md](references/common-output-format-loop.md). Survey at `L1`; apply at `L2`/`L3` within [category-scope.md](references/category-scope.md).
 
 ## Execution Scope
 
@@ -52,8 +52,12 @@ Target: root `*.md`, `docs/**/*.md`, nested `**/README.md` (excluding generated 
 - [common-impact-map.md](references/common-impact-map.md) (always read — interactive path)
 - [common-checklist-loop.md](references/common-checklist-loop.md) (always read — loop path)
 - [common-output-format-loop.md](references/common-output-format-loop.md) (always read — loop path)
+- [common-loop-triage-format.md](references/common-loop-triage-format.md) (always read — loop path)
+- [common-loop-pr-body-contract.md](references/common-loop-pr-body-contract.md) (always read — loop path)
 - [category-loop-input-schema.md](references/category-loop-input-schema.md) (always read — loop path)
 - [category-scope.md](references/category-scope.md) (always read — loop path)
+- `assets/pr-body-template-survey.md` (always read — loop survey path)
+- `assets/pr-body-template.md` (always read — loop apply path)
 - [common-troubleshooting.md](references/common-troubleshooting.md) (read on failure)
 
 ## Workflow
@@ -61,9 +65,10 @@ Target: root `*.md`, `docs/**/*.md`, nested `**/README.md` (excluding generated 
 ### Loop path (`findings[]` in loop-prompt-generate JSON)
 
 1. Parse [category-loop-input-schema.md](references/category-loop-input-schema.md). Read `## Constraints` when present.
-2. If input `skip` is true or no actionable `findings[]` → emit loop report with Outcome `No documentation impact detected`; stop.
-3. Classify per [common-checklist-loop.md](references/common-checklist-loop.md); fix High-Priority at L2/L3 within [category-scope.md](references/category-scope.md).
-4. Emit report per [common-output-format-loop.md](references/common-output-format-loop.md); reconcile Fixes Applied / Deferred with `git diff --name-only`; at synthesis load `assets/pr-body-template.md` for `## Overview` + `## Summary`.
+2. If input `skip` is true or no actionable `findings[]` → emit survey no-op; stop.
+3. Classify per [common-checklist-loop.md](references/common-checklist-loop.md).
+4. At `L1`, emit survey shape; load `assets/pr-body-template-survey.md` at synthesis; stop — no file edits.
+5. At `L2`/`L3`, fix High-Priority items within [category-scope.md](references/category-scope.md); emit apply shape; load `assets/pr-body-template.md` at synthesis.
 
 ### Interactive / hook path
 

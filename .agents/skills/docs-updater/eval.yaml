@@ -22,18 +22,18 @@ graders:
     weight: 1.0
     config:
       assertions:
-        - "'Documentation Triage Report' in output or '## Summary' in output"
+        - "'## Overview' in output or '## Summary' in output"
         - "'Session Metrics' in output or 'Outcome' in output or 'Status:' in output"
         - >-
-          'High-Priority Items' in output or 'No documentation impact detected' in output
-          or 'No documentation update required' in output or 'exceeded-scope' in output
-          or '## Changes' in output or '## Skipped Items' in output
+          '### Candidates' in output or '### Changes' in output or '### Deferred' in output
+          or 'no documentation impact' in output.lower() or 'no documentation update required' in output.lower()
+          or 'exceeded-scope' in output or 'no edits applied' in output
   - type: text
     name: report_sections
     weight: 0.5
     config:
       regex_match:
-        - (Documentation Triage Report|High-Priority Items|Session Metrics|## Summary|## Changes|## Skipped Items)
+        - (### Candidates|### Changes|### Deferred|Session Metrics|## Overview|## Summary)
   - type: behavior
     name: bounded_runtime
     weight: 0.5

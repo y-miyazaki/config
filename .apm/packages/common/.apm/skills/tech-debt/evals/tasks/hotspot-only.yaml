@@ -7,8 +7,9 @@ tags:
 inputs:
   prompt: >-
     Use tech-debt at L2. Only a churn hotspot is injected with no marker
-    signals. Classify as Watch under code_quality or architecture. Omit nature.
-    Do not invent CVEs or paths beyond the hotspot. Emit PR ## Overview and ## Summary plus Session Metrics table with Critical, High-Priority, Watch, and Noise / Ignore sections including Category fields.
+    signals. Classify as Watch in persisted report. Emit apply shape with
+    report_file path under ### Changes and ## Verification. Do not invent CVEs
+    or paths beyond the hotspot.
   context:
     level: L2
     report_file: docs/report/tech-debt/2026-07-19.md
@@ -24,6 +25,6 @@ expected:
     - Watch
     - churn
     - deploy.sh
-    - Summary
+    - Changes
   outcomes:
     - type: task_completed

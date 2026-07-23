@@ -54,9 +54,38 @@ function agent_report_skill_requires_format_check {
 #######################################
 function agent_report_primary_subsection {
     case "${1:-}" in
-        tech-debt) printf '%s' "Report" ;;
         *) printf '%s' "Changes" ;;
     esac
+}
+
+#######################################
+# agent_report_is_survey_output: Return whether output is survey-shaped
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Agent output file path
+#   $2 - Changed files (newline-separated, repository-relative)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 when survey-shaped; 1 when apply-shaped
+#
+#######################################
+function agent_report_is_survey_output {
+    local output_file="$1"
+    local changed_files="$2"
+
+    if [[ -n ${changed_files} ]]; then
+        return 1
+    fi
+    if grep -qE '^### Changes[[:space:]]*$' "${output_file}"; then
+        return 1
+    fi
+    return 0
 }
 
 #######################################
@@ -78,7 +107,6 @@ function agent_report_primary_subsection {
 function agent_report_deferred_subsection {
     case "${1:-}" in
         changelog) printf '%s' "Skipped" ;;
-        tech-debt) printf '%s' "Watch" ;;
         *) printf '%s' "Deferred" ;;
     esac
 }
@@ -166,7 +194,7 @@ function validate_agent_report {
     local output_file="$1"
     local changed_files="$2"
     local skill_name="$3"
-    local primary deferred
+    local primary deferred survey=false
     local -a violations=()
     local path norm changed_path
     local -a change_paths=() deferred_paths=()
@@ -179,11 +207,47 @@ function validate_agent_report {
         return 1
     fi
 
-    for heading in Overview Summary Verification; do
+    if [[ -n ${changed_files} ]] && ! grep -qE '^### Changes[[:space:]]*$' "${output_file}"; then
+        violations+=("Survey output must not accompany a non-empty branch diff")
+    fi
+
+    if agent_report_is_survey_output "${output_file}" "${changed_files}"; then
+        survey=true
+    fi
+
+    for heading in Overview Summary; do
         if ! grep -qE "^## ${heading}[[:space:]]*$" "${output_file}"; then
             violations+=("Missing ## ${heading} in agent output")
         fi
     done
+
+    if [[ ${survey} == true ]]; then
+        if grep -qE '^### Changes[[:space:]]*$' "${output_file}"; then
+            violations+=("Survey output must not include ### Changes")
+        fi
+        if grep -qE '^### Deferred[[:space:]]*$' "${output_file}"; then
+            violations+=("Survey output must not include ### Deferred; use ### Watch")
+        fi
+        if grep -qE '^### Skipped[[:space:]]*$' "${output_file}"; then
+            violations+=("Survey output must not include ### Skipped")
+        fi
+        if grep -qE '^## Verification[[:space:]]*$' "${output_file}"; then
+            violations+=("Survey output must not include ## Verification")
+        fi
+        if [[ -n ${changed_files} ]]; then
+            violations+=("Survey output must not accompany a non-empty branch diff")
+        fi
+    else
+        if ! grep -qE '^## Verification[[:space:]]*$' "${output_file}"; then
+            violations+=("Missing ## Verification in agent output")
+        fi
+        if grep -qE '^### Candidates[[:space:]]*$' "${output_file}"; then
+            violations+=("Apply output must not include ### Candidates")
+        fi
+        if grep -qE '^### Watch[[:space:]]*$' "${output_file}"; then
+            violations+=("Apply output must not include ### Watch; fold into ### Deferred")
+        fi
+    fi
 
     if grep -qE '^### Fixes Applied[[:space:]]*$' "${output_file}"; then
         violations+=("Legacy ### Fixes Applied subsection present; use ### Changes")
@@ -199,6 +263,14 @@ function validate_agent_report {
     fi
     if grep -qE '\bO[123]\b' "${output_file}"; then
         violations+=("Internal depth tier label (O1/O2/O3) found in user-facing output")
+    fi
+
+    if [[ ${survey} == true ]]; then
+        if [[ ${#violations[@]} -gt 0 ]]; then
+            printf '%s\n' "${violations[@]}"
+            return 1
+        fi
+        return 0
     fi
 
     primary="$(agent_report_primary_subsection "${skill_name}")"

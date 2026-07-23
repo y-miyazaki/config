@@ -215,7 +215,7 @@ Hooks exit 0 when tools are missing so agent sessions continue. This is intentio
 
 Skills run through `scripts/validate.sh` when an agent invokes them. Missing tools produce `SKIP` in structured output rather than silent pass.
 
-Authoring rules: [AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md). Design context: [Config Repository Architecture](../explanation/architecture.md#configuration-philosophy).
+Authoring rules: companion rules (stem `agent-skills`, `instructions`). Maintainer routing: [AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md). Design context: [Config Repository Architecture](../explanation/architecture.md#configuration-philosophy).
 
 ### MCP Servers
 

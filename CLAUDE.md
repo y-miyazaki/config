@@ -8,26 +8,24 @@
 
 Shared configuration distribution source — no application code. Deliverables: APM packages, reusable GitHub Actions workflows, Renovate policy presets.
 
-### APM Packages
+### Edit Targets
 
-- Edit instructions, skills, hooks, and MCP config under `.apm/packages/` only.
-- Do not edit generated directories (`.agents/`, `.claude/`, `.codex/`, `.cursor/`, `.kiro/`, `.vscode/`, `apm_modules/`) — `apm install` overwrites them.
-- After package changes: run `scripts/self/apm/sync_guidelines_from_categories.pl` when `category-*.md` or sync-mapped instructions change → `apm install --update` → `apm audit --ci`.
-- Package authoring detail: [.apm/AGENTS.md](.apm/AGENTS.md).
+Single reference when a change may touch package sources, `scripts/`, docs, or generated install output — including work that spans multiple directories.
 
-### Scripts and Skill Mirrors
+| Edit here (source of truth)                                                                                          | Do not edit                                                                         | Post-change                                                                                                                 |
+| -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `.apm/packages/<pkg>/` (instructions, skills, hooks, MCP config)                                                     | `.agents/`, `.claude/`, `.codex/`, `.cursor/`, `.kiro/`, `.vscode/`, `apm_modules/` | Sync mirrored artifacts per rows below → `apm install --update` → `apm audit --ci`                                          |
+| `scripts/lib/`                                                                                                       | `.apm/packages/*/.apm/skills/*/scripts/lib/`                                        | `bash scripts/self/apm/sync_apm_artifacts.sh skill-lib` → `apm install --update`                                            |
+| `scripts/{shell-script,go,terraform}/validate.sh`, `scripts/shell-script/fix_function_doc_order.sh`                  | Paired skill `scripts/` copy                                                        | `bash scripts/self/apm/sync_apm_artifacts.sh validate-mirror` (`--from-skill` when editing skill copy; `--domain` to limit) |
+| `docs/explanation/loop-engineering/portable/common-loop-*.md`                                                        | Loop skill reference copies under `.apm/packages/`                                  | `bash scripts/self/apm/sync_apm_artifacts.sh loop-contract` → `apm install --update`                                        |
+| `.apm/packages/<pkg>/.apm/skills/<skill>-review/references/category-*.md`                                            | Generated `## Guidelines` in instructions (unless accepting overwrite on next sync) | `bash scripts/self/apm/sync_apm_artifacts.sh guidelines` → `apm install --update`                                           |
+| Repo-only paths (for example `scripts/terraform/module_updater.sh`, `.github/actions/**/lib/`, `.github/workflows/`) | —                                                                                   | Update matching Bats under `test/bats/` in the same change                                                                  |
 
-Cross-cutting rules when editing `scripts/` or paired skill copies. **Apply these even when not touching `.apm/`** — nested `.apm/AGENTS.md` is not loaded for `scripts/` work.
-
-| You changed                                                                                                                 | Also do                                                                                                                                                                                                                        |
-| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `scripts/lib/` (shared libraries)                                                                                           | Edit here — skill `scripts/lib/` copies are regenerated, not hand-edited → `bash scripts/self/ai/sync_skill_lib.sh` → `apm install --update`                                                                                   |
-| `scripts/{shell-script,go,terraform}/validate.sh`, `scripts/shell-script/fix_function_doc_order.sh`, or paired skill copies | Edit one side → `bash scripts/self/ai/sync_validate_mirror.sh` (default: repo → skill; `--from-skill` when editing the skill copy; `--domain <shell-script\|go\|terraform>` to limit scope). Do not hand-edit the paired file. |
-| Repo-only script (for example `scripts/terraform/module_updater.sh`, `.github/actions/**/lib/`)                             | Update matching Bats under `test/bats/` in the same change                                                                                                                                                                     |
-
-- Drift check: `bash scripts/self/ai/sync_skill_lib.sh --check` and `bash scripts/self/ai/sync_validate_mirror.sh --check`.
+- **Canonical sync entry point:** `bash scripts/self/apm/sync_apm_artifacts.sh` — use `--check` for drift-only CI.
+- Cross-cutting rules for `scripts/` apply even when not touching `.apm/` — nested `.apm/AGENTS.md` is not loaded for `scripts/` work alone.
 - Shell style and Bats: stem `shell-script` and `bats` instructions (distributed under `.cursor/rules/` after `apm install`).
 - `validate.sh` path-layout differences (skill vs repo): [.apm/AGENTS.md § Validation Scripts Mirror](.apm/AGENTS.md#validation-scripts-mirror-scripts--skill).
+- Package authoring (distributable rules, maintainer routing): [.apm/AGENTS.md](.apm/AGENTS.md).
 
 ### Workflow Conventions
 
@@ -39,7 +37,7 @@ Cross-cutting rules when editing `scripts/` or paired skill copies. **Apply thes
 
 Run on demand when troubleshooting CI or when explicitly requested:
 
-- Mirror drift: `sync_skill_lib.sh --check`, `sync_validate_mirror.sh --check`
+- Mirror drift: `bash scripts/self/apm/sync_apm_artifacts.sh --check`
 - APM integrity: `apm install --update`, `apm audit --ci`
 - Workflow lint: `actionlint`, `ghalint run`, `zizmor .github/workflows/` (see `github-actions-validation` skill)
 

@@ -7,9 +7,8 @@ tags:
 inputs:
   prompt: >-
     Use changelog. Context has skip=true and empty commits/releases.
-    Emit the full changelog report with Commits Processed, Skipped Commits, and
-    Summary. Outcome must be No unreleased changelog commits. Do not edit
-    CHANGELOG.md. Emit PR ## Overview and ## Summary plus Session Metrics table with Commits Processed and Skipped Commits sections.
+    Emit survey no-op with ## Overview explaining no unreleased changelog commits.
+    Do not edit CHANGELOG.md. Do not emit ### Changes or ## Verification.
   context:
     changelog_file: CHANGELOG.md
     changelog_exists: true
@@ -20,7 +19,7 @@ inputs:
     releases: []
 expected:
   output_contains:
-    - No unreleased changelog commits
-    - Summary
+    - no unreleased
+    - Overview
   outcomes:
     - type: task_completed

@@ -7,8 +7,9 @@ tags:
 inputs:
   prompt: >-
     Use ci-sweeper at L2. Context has four regression failures. Fix only
-    the first regression; defer the other three as Watch Items. Emit Actionable
-    Fixes, Watch Items, Ignored, and Summary noting deferral. Emit PR ## Overview and ## Summary plus Session Metrics table with Actionable Fixes, Watch Items, and Ignored sections.
+    the first regression in mock output; defer the other three under ###
+    Deferred. Emit apply shape with ## Overview, ### Changes, ### Deferred, and
+    ## Verification. Note deferral in Overview.
   context:
     level: L2
     skip: false
@@ -35,9 +36,9 @@ inputs:
         reason: regression d
 expected:
   output_contains:
-    - Watch
-    - Actionable Fixes
+    - Deferred
+    - Changes
     - defer
-    - Summary
+    - Overview
   outcomes:
     - type: task_completed

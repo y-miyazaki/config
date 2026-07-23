@@ -1,7 +1,7 @@
 id: tech-debt-l1-001
-name: tech-debt L1 emits summary without report file
+name: tech-debt L1 emits survey without report file
 description: >-
-  Validate L1 classifies with Category labels but does not write report_file.
+  Validate L1 classifies with Category labels in Candidates but does not write report_file.
 tags:
   - quality
   - level
@@ -9,9 +9,9 @@ tags:
 inputs:
   prompt: >-
     Use tech-debt at L1. Classify the injected signal with Category
-    code_quality under High-Priority (or Watch if evidence is weak). Emit the
-    full session summary including Critical, High-Priority, Watch, Noise / Ignore,
-    and Summary. Do not write report_file. Emit PR ## Overview and ## Summary plus Session Metrics table with Critical, High-Priority, Watch, and Noise / Ignore sections including Category fields.
+    code_quality as a Candidate. Emit survey shape with ## Overview, ###
+    Candidates, and optional ### Watch. Do not write report_file. Do not emit
+    ## Verification or ### Changes.
   context:
     level: L1
     report_file: docs/report/tech-debt/2026-07-19.md
@@ -26,8 +26,8 @@ inputs:
 expected:
   output_contains:
     - code_quality
-    - High-Priority
+    - Candidates
+    - Overview
     - L1
-    - Summary
   outcomes:
     - type: task_completed

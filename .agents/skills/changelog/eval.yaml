@@ -25,7 +25,7 @@ graders:
         - "'Overview' in output"
         - "'Summary' in output"
         - "'Session Metrics' in output"
-        - "'Commits Processed' in output or 'No unreleased changelog commits' in output"
+        - "'Candidates' in output or 'Changes' in output or 'Skipped' in output or 'no unreleased' in output.lower() or 'no edits applied' in output"
   - type: behavior
     name: bounded_runtime
     weight: 0.5

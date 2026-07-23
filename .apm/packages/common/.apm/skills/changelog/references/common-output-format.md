@@ -1,57 +1,89 @@
 # Changelog Loop Report Format
 
-Use this structure for every run, including no-action exits.
+Follow survey/apply shapes in [common-loop-triage-format.md](common-loop-triage-format.md). Deferred subsection stays `### Skipped` for this skill.
 
-## Session report (verifier / logs)
+## Survey-only result (loop `L1`)
+
+No file edits.
 
 ```markdown
-# Changelog Loop Report
+# Changelog Result
 
-## Commits Processed
+## Overview
 
-- **SHA:** <sha>
-- **Type:** <type>
-- **Subject:** <subject>
+<commit range → which conventional commits/releases would be recorded → no edits applied>
 
-## Skipped Commits
+## Summary
 
-- <already listed in CHANGELOG or non-conventional, or "None">
+### Candidates
 
-## Session Metrics
+| Target        | Type   | Evidence  | Suggested approach  | Priority              |
+| ------------- | ------ | --------- | ------------------- | --------------------- |
+| `<short sha>` | <type> | <subject> | <Unreleased bullet> | high \| medium \| low |
 
-| Field            | Value                      |
-| ---------------- | -------------------------- |
-| Level            | <L1\|L2\|L3>               |
-| Commit range     | <commit_range>             |
-| Commits assessed | <count>                    |
-| File modified    | <changelog_file or "None"> |
-| Outcome          | <one-line result>          |
+### Skipped
+
+| Commit | Why skipped |
+| ------ | ----------- |
 ```
 
-## PR body contract (human-facing)
+## Apply result (loop `L2`/`L3`)
 
-At synthesis time, load `assets/pr-body-template.md` and emit `## Overview`, `## Summary`, and `## Verification`.
+```markdown
+# Changelog Result
 
-See repository `docs/explanation/loop-engineering/loop-pr-body-skill-contract.md`.
+## Overview
+
+<which commits/releases were added to CHANGELOG — name types and sections>
+
+## Summary
+
+### Changes
+
+| Commit      | Type   | Entry                                |
+| ----------- | ------ | ------------------------------------ |
+| <short sha> | <type> | <Unreleased bullet added or updated> |
+
+### Skipped
+
+| Commit | Why skipped |
+| ------ | ----------- |
+
+## Verification
+
+| Check                    | Result         |
+| ------------------------ | -------------- |
+| `CHANGELOG.md` structure | <pass \| fail> |
+```
+
+## Loop session metrics (verifier / logs)
+
+```markdown
+## Session Metrics
+
+| Field | Value |
+| Level | <L1\|L2\|L3> |
+| Mode | <survey\|apply> |
+| Commit range | <commit_range> |
+| Commits assessed | <count> |
+| File modified | <changelog_file or "None"> |
+| Outcome | <one-line result> |
+```
+
+## PR body templates
+
+| Mode   | Level     | Template                            |
+| ------ | --------- | ----------------------------------- |
+| Survey | `L1`      | `assets/pr-body-template-survey.md` |
+| Apply  | `L2`/`L3` | `assets/pr-body-template.md`        |
 
 ### Overview (skill-specific)
 
-Emit one paragraph under `## Overview` that answers:
+**Good:** `Processed 4 conventional commits since last changelog SHA; would add 3 Unreleased bullets under Changed; no file edits at L1.`
 
-| Element | changelog content                                                           |
-| ------- | --------------------------------------------------------------------------- |
-| Trigger | Commits/releases since last processed SHA                                   |
-| Problem | What was missing from `CHANGELOG.md` (Unreleased bullets, version sections) |
-| Action  | Entries added, releases promoted, or "no changes needed"                    |
-
-**Good:** `Processed 4 conventional commits since last changelog SHA; added 3 Unreleased bullets under Changed.`
-
-**Bad:** `Changelog loop run finished.` / listing every commit SHA in Overview
+**Bad:** `Changelog loop run finished.`
 
 ## Rules
 
-- Always emit all session `##` sections; use `None` or `0` when empty.
-- `## Session Metrics` MUST use a Field \| Value table (not bullet list).
-- Always emit PR `## Overview` and `## Summary` after session report.
-- At `L1`, list intended entries under Commits Processed but do not edit files.
-- At `L2`/`L3`, update only `CHANGELOG.md` under `## [Unreleased]`.
+- At `L1`, survey shape — list intended entries under Candidates; do not edit `CHANGELOG.md`.
+- At `L2`/`L3`, apply shape; update only `CHANGELOG.md` under `## [Unreleased]`.

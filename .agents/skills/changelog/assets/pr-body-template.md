@@ -12,11 +12,11 @@ Rules:
 ## Overview
 
 <!--
-  GOOD: Processed 4 conventional commits since last changelog SHA; added 3 Unreleased bullets under Changed.
+  GOOD: Processed 4 conventional commits since abc1234; added 3 Unreleased bullets under Changed and promoted v1.8.16.
   BAD:  Changelog loop run finished.
 -->
 
-<one or two sentences: which commits were processed and what CHANGELOG section was updated>
+<one or two sentences: which commits/releases were recorded and under which CHANGELOG sections>
 
 ## Summary
 

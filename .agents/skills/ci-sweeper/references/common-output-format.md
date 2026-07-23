@@ -1,84 +1,104 @@
 # CI Sweeper Triage Report Format
 
-Use this structure for every run, including no-action exits.
+Follow survey/apply shapes in [common-loop-triage-format.md](common-loop-triage-format.md).
 
-## Session report (verifier / logs)
+## Survey-only result (loop `L1`)
+
+No file edits. **Do not emit `### Changes`, `### Deferred`, or `## Verification`.**
 
 ```markdown
-# CI Sweeper Triage Report
+# CI Sweeper Result
 
-## Actionable Fixes
+## Overview
 
-- **Workflow:** <workflow_name> / **Job:** <job_name>
-- **Root cause:** <from log_excerpt>
-- **Fix applied:** <minimal change summary, or "None">
+<which workflow/job failed → root cause by name → no edits applied>
 
-## Watch Items
+## Summary
 
-- **Workflow:** <workflow_name> / **Job:** <job_name>
-- **Type:** <flake|infra|env|needs-human>
-- **Reason:** <why deferred>
+### Candidates
 
-## Ignored
+| Target                 | Evidence           | Suggested approach       | Priority              |
+| ---------------------- | ------------------ | ------------------------ | --------------------- |
+| `<workflow>` / `<job>` | <from log_excerpt> | <plain-language fix dir> | high \| medium \| low |
 
-- <duplicate, excluded, or ledger-skipped failures, or "None">
+### Watch
 
+| Target                 | Evidence | Why not now             |
+| ---------------------- | -------- | ----------------------- |
+| `<workflow>` / `<job>` | <reason> | flake \| infra \| human |
+```
+
+## Apply result (loop `L2`/`L3`)
+
+```markdown
+# CI Sweeper Result
+
+## Overview
+
+<which failures were fixed vs deferred — name workflow/job and cause>
+
+## Summary
+
+### Changes
+
+| Target                 | What was wrong | What changed          |
+| ---------------------- | -------------- | --------------------- |
+| `<workflow>` / `<job>` | <root cause>   | <minimal fix summary> |
+
+### Deferred
+
+| Target                 | Why deferred            |
+| ---------------------- | ----------------------- |
+| `<workflow>` / `<job>` | <plain-language reason> |
+
+## Verification
+
+| Check         | Result                            |
+| ------------- | --------------------------------- |
+| <command run> | <pass \| fail \| skip \| blocked> |
+```
+
+## Loop session metrics (verifier / logs)
+
+```markdown
 ## Session Metrics
 
-| Field             | Value                                                       |
-| ----------------- | ----------------------------------------------------------- |
-| Level             | <L1\|L2\|L3>                                                |
-| Failures assessed | <count>                                                     |
-| Fixes applied     | <count>                                                     |
-| Validation        | <commands run and pass/fail, or "Not run">                  |
-| Outcome           | <one-line result, e.g. "CI green / no actionable failures"> |
+| Field | Value |
+| Level | <L1\|L2\|L3> |
+| Mode | <survey\|apply> |
+| Failures assessed | <count> |
+| Fixes applied | <count> |
+| Validation | <commands run and pass/fail, or "Not run"> |
+| Outcome | <one-line result> |
 ```
 
 ## PR body contract (human-facing)
 
-At synthesis time, load `assets/pr-body-template.md` and emit `## Overview`, `## Summary`, and `## Verification`.
+At synthesis time, load `assets/pr-body-template-survey.md` (L1) or `assets/pr-body-template.md` (L2/L3).
 
-`loop-finalize` adds `## Failure context` from detect and `## Run Metadata`. Mechanical `## Changes` is omitted when Summary contains `### Changes`.
+`loop-finalize` adds `## Failure context` from detect and `## Run Metadata`.
 
-See repository `docs/explanation/loop-engineering/loop-pr-body-skill-contract.md`.
-
-| Section                                          | Owner                                  |
-| ------------------------------------------------ | -------------------------------------- |
-| `## Failure context`                             | `loop-finalize` (detect JSON)          |
-| `## Overview` / `## Summary` / `## Verification` | Agent via `assets/pr-body-template.md` |
-| `## Run Metadata`                                | `loop-finalize`                        |
+See [common-loop-pr-body-contract.md](common-loop-pr-body-contract.md).
 
 ### Overview (skill-specific)
 
-Emit one paragraph under `## Overview` that answers:
-
-| Element | ci-sweeper content                                                           |
-| ------- | ---------------------------------------------------------------------------- |
-| Trigger | Which workflow/job failed (name, not URL — URLs are in `## Failure context`) |
-| Problem | Root cause in plain language from `log_excerpt`                              |
-| Action  | What was fixed or deferred                                                   |
+| Element   | ci-sweeper content                                                       |
+| --------- | ------------------------------------------------------------------------ |
+| Trigger   | Which workflow/job failed (name, not URL)                                |
+| Substance | Root cause in plain language — name the lint rule, file, or failure type |
+| Action    | What was fixed or deferred                                               |
 
 **Good:** `CI failed on markdownlint MD001 in docs/foo.md; fixed heading style in one file.`
 
-**Bad:** `CI sweeper addressed actionable failures.` / repeating run URL / raw log paste
+**Bad:** `CI sweeper addressed actionable failures.`
 
 ## Fixes / Deferred consistency
 
-**Deferred** means no fix remains in the working tree for that failure.
-
-| Rule               | Requirement                                                    |
-| ------------------ | -------------------------------------------------------------- |
-| Mutual exclusion   | A failure MUST NOT appear in both **Changes** and **Deferred** |
-| Git alignment      | Every path in `git diff` MUST map to a **Changes** row         |
-| Deferred = no edit | Revert edits for deferred failures before synthesis            |
-
-Before PR synthesis, run `git diff --name-only` and reconcile session **Actionable Fixes** with PR **Changes** / **Deferred**.
+Reconcile with `git diff --name-only` before synthesis. See [common-loop-triage-format.md](common-loop-triage-format.md).
 
 ## Rules
 
-- Always emit all session `##` sections; use `None` or `0` when a section has no items.
-- `## Session Metrics` MUST use a Field \| Value table (not bullet list).
-- Always emit PR `## Overview` and `## Summary` after session report.
-- At `L1`, list fixes in Actionable Fixes but do not edit files.
-- At `L2`/`L3`, edit source files only for `regression` failures within the allowlist.
+- Pick one shape per run — survey or apply.
+- At `L1`, survey shape only — list candidates but do not edit files.
+- At `L2`/`L3`, apply shape; edit source files only for `regression` failures within allowlist.
 - Do not claim validation passed when commands failed or were not run.

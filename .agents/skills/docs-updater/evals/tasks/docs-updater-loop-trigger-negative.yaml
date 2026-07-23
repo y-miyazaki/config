@@ -8,11 +8,10 @@ tags:
   - boundary-guardrail
 inputs:
   prompt: >-
-    Use docs-updater (loop path). The user asks to fix a bug in src/handler.go. This is
-    not documentation triage. Note the request as out of scope. Emit High-Priority,
-    Watch, Noise / Ignore, and Summary without editing src paths. Emit PR ## Overview
-    and ## Summary plus Session Metrics table with High-Priority Items, Watch Items,
-    and Noise / Ignore sections.
+    Use docs-updater (loop path) at L2. The user asks to fix a bug in src/handler.go.
+    This is not documentation triage. Note the request as out of scope in Overview
+    or ### Deferred. Fix only the allowlisted doc finding under ### Changes. Emit
+    apply shape with ## Verification and Session Metrics.
   context:
     level: L2
     skip: false
@@ -23,8 +22,7 @@ inputs:
 expected:
   output_contains:
     - out of scope
-    - High-Priority
-    - "## Overview"
-    - "## Summary"
+    - Changes
+    - Overview
   outcomes:
     - type: task_completed

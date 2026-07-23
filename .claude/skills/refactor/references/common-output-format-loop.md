@@ -39,7 +39,7 @@ At synthesis time, load the template for the resolved mode and emit **exactly**:
 
 `loop-finalize` extracts Overview, Summary, and Verification (when present). It adds `## Run Metadata` and omits mechanical `## Changes` when Summary contains `### Changes`.
 
-See repository `docs/explanation/loop-engineering/loop-pr-body-skill-contract.md`.
+See [common-loop-pr-body-contract.md](common-loop-pr-body-contract.md).
 
 ## Survey PR body (`L1` / `mode: survey`)
 

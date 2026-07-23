@@ -46,6 +46,8 @@ Interactive: [common-output-format.md](references/common-output-format.md) — *
 - [category-verification.md](references/category-verification.md) (always read)
 - [category-input-schema.md](references/category-input-schema.md) (always read — loop path)
 - [common-output-format-loop.md](references/common-output-format-loop.md) (always read — loop path)
+- [common-loop-triage-format.md](references/common-loop-triage-format.md) (always read — loop path)
+- [common-loop-pr-body-contract.md](references/common-loop-pr-body-contract.md) (always read — loop path)
 - `assets/pr-body-template.md` (always read — loop apply path)
 - `assets/pr-body-template-survey.md` (always read — loop survey path)
 

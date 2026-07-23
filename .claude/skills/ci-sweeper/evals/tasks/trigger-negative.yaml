@@ -8,10 +8,8 @@ inputs:
   prompt: >-
     Use ci-sweeper. The user asks you to manually debug a flaky test on
     their laptop without injected failure JSON — that is out of scope for this
-    skill. Explain the request is out of scope. Emit triage report sections
-    with Summary Outcome indicating no actionable failures when failures is empty.
-    Emit PR ## Overview and ## Summary plus Session Metrics table with Actionable
-    Fixes, Watch Items, and Ignored sections.
+    skill. Explain the request is out of scope. Emit survey no-op with ##
+    Overview when failures is empty. Do not emit ### Changes or ## Verification.
   context:
     level: L2
     skip: true
@@ -20,6 +18,6 @@ expected:
   output_contains:
     - out of scope
     - no actionable
-    - Summary
+    - Overview
   outcomes:
     - type: task_completed

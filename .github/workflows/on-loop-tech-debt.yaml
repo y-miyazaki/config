@@ -33,11 +33,12 @@ jobs:
         ## Criteria for APPROVE
 
         ALL of the following must be true:
-        1. Changes are limited to files under `docs/report/tech-debt/**/*.md`
+        1. Changes are limited to files under the allowlist (`docs/report/tech-debt/**/*.md`, `docs/**/*.md`, `package.json`, `go.mod`)
         2. Report content matches the provided detect signals and hotspots
         3. File paths cited in the report exist in the repository
         4. Critical + High findings count is at most 25
         5. No denylist paths were modified
+        6. Closed-set fixes (`broken_doc_ref`, `stale_doc`, simple `pin_drift`) only on allowlisted documentation or manifest paths
 
         ## Criteria for REJECT
 
@@ -46,9 +47,10 @@ jobs:
         - Invented or non-existent file paths in the report
         - Changes outside the allowlist or modifications to denylist paths
         - Semantic claims unsupported by cited evidence
+        - Structural or security debt edited instead of reported
       agent_verifier_max_turns: 3
       agent_verifier_model: composer-2.5
-      allowlist: docs/report/tech-debt/**/*.md
+      allowlist: docs/report/tech-debt/**/*.md,docs/**/*.md,package.json,go.mod
       branch_match: main
       branch_state: main
       budget_max_runs_per_day: 2

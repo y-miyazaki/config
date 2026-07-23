@@ -24,13 +24,13 @@ graders:
         - "'Overview' in output"
         - "'Summary' in output"
         - "'Session Metrics' in output"
-        - "'Actionable Fixes' in output or 'Watch Items' in output or 'no actionable' in output"
+        - "'Candidates' in output or 'Watch' in output or 'no actionable' in output or 'no edits applied' in output"
   - type: text
     name: triage_sections
     weight: 0.5
     config:
       regex_match:
-        - (Actionable Fixes|Watch Items)
+        - (### Candidates|### Watch|### Changes|### Deferred)
   - type: behavior
     name: bounded_runtime
     weight: 0.5
