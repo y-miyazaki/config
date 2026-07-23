@@ -4,7 +4,7 @@
 
 This document explains how instruction files stay aligned with review-skill `category-*.md` references, which files the sync script manages, and how to validate changes before release.
 
-For distributable-package authoring rules (repository-neutral content, edit targets, test pairing), see companion rules (stem `instructions`, `agent-skills`) and [Edit Targets](../../CLAUDE.md#edit-targets).
+For distributable-package authoring rules (repository-neutral content, edit targets, test pairing), see companion rules (stem `instructions`, `agent-skills`) and [Edit Targets](https://github.com/y-miyazaki/config/blob/main/CLAUDE.md#edit-targets).
 
 ## Scope
 
