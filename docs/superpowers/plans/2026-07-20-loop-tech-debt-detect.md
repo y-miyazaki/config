@@ -234,7 +234,7 @@ git add .apm/packages/common/.apm/skills/tech-debt/scripts \
   test/bats/.apm/packages/common/tech-debt/detect_tech_debt.bats \
   test/bats/support/common.bash
 git commit -m "$(cat <<'EOF'
-feat(loop-tech-debt): scaffold detect_tech_debt CLI and JSON contract
+feat(tech-debt): scaffold detect_tech_debt CLI and JSON contract
 
 EOF
 )"
@@ -292,7 +292,7 @@ Wire into `main` after parse.
 
 ```bash
 git commit -m "$(cat <<'EOF'
-feat(loop-tech-debt): detect TODO/FIXME/HACK/XXX marker signals
+feat(tech-debt): detect TODO/FIXME/HACK/XXX marker signals
 
 EOF
 )"
@@ -558,7 +558,7 @@ Expected: all PASS
 
 ```bash
 git commit -m "$(cat <<'EOF'
-feat(loop-tech-debt): full-repo detect sensors and closed signal kinds
+feat(tech-debt): full-repo detect sensors and closed signal kinds
 
 EOF
 )"
@@ -589,7 +589,7 @@ None intentional. Go `pin_drift` may be skipped in Task 3 with explicit note —
 ## Type / name consistency
 
 - Script: `detect_tech_debt.sh`
-- Package/skill: `loop-tech-debt`
+- Package: `.apm/packages/common`; skill: `tech-debt`
 - Assert helpers: `assert_detect_tech_debt_ok_json` / `assert_detect_tech_debt_error_json`
 - Env prefix: `TECH_DEBT_*`
 - MLC pin: `3.14.2`
