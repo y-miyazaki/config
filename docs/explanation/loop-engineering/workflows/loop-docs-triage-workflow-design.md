@@ -31,10 +31,10 @@ Detect documentation drift from code changes on integration branches and open fi
 
 ### docs-updater dual paths
 
-| Path               | Trigger                    | Input                                    |
-| ------------------ | -------------------------- | ---------------------------------------- |
-| Interactive / hook | Pre-commit, user-invoked   | `scripts/detect_changes.sh` JSON         |
-| Loop               | `on-loop-docs-triage.yaml` | `findings[]` from `loop-prompt-generate` |
+| Path               | Trigger                    | Input                                  |
+| ------------------ | -------------------------- | -------------------------------------- |
+| Interactive / hook | Pre-commit, user-invoked   | `scripts/detect_changes.sh` JSON       |
+| Loop               | `on-loop-docs-triage.yaml` | `findings[]` from detect script output |
 
 Both paths share `docs-updater/scripts/detect_changes.sh` for mechanical facts. The loop caller maps detect output into semantic `findings[]` before invoking the skill.
 

@@ -78,6 +78,10 @@ inputs:
   loop_name:
     description: "Loop name for budget lookup (e.g. docs-triage)"
     required: true
+  loop_pr_enabled:
+    default: "false"
+    description: "Whether to enumerate open pull request heads (pr_enabled)"
+    required: false
   loop_pr_exclude:
     default: "fork,draft,label:no-loop"
     description: "PR exclusion tokens (fork,draft,label:<name>,wip_title)"
@@ -85,10 +89,6 @@ inputs:
   loop_pr_include_bots:
     default: ""
     description: "Bot logins to include when scanning PRs (empty = exclude all bots)"
-    required: false
-  loop_pr_enabled:
-    default: "false"
-    description: "Whether to enumerate open pull request heads (pr_enabled)"
     required: false
   loop_priority:
     default: "integration,pull_request"
@@ -116,7 +116,7 @@ inputs:
     required: false
   prompt_instructions:
     default: ""
-    description: "Domain-specific implementer instructions passed to loop-prompt-generate"
+    description: "Domain-specific implementer instructions appended during loop-detect prompt assembly"
     required: false
   run_log_file:
     default: ".loop/loop-run-log.md"
@@ -130,8 +130,8 @@ inputs:
     description: "Path to loop state JSON file (default: .loop/state-<loop_name>.json)"
     required: false
   token:
-    description: "GitHub token for PR enumeration (defaults to github.token in caller)"
     default: ""
+    description: "GitHub token for PR enumeration (defaults to github.token in caller)"
     required: false
   write_target:
     default: ""
@@ -175,6 +175,9 @@ outputs:
   engine:
     description: "AI engine"
     value: ${{ steps.config.outputs.engine }}
+  handoff_artifact_name:
+    description: "Uploaded artifact name for loop-handoff bundle (empty when should_run=false)"
+    value: ${{ steps.handoff.outputs.artifact_name }}
   infer_files_pattern:
     description: "Infer files pattern for execute"
     value: ${{ inputs.infer_files_pattern }}
@@ -211,9 +214,6 @@ outputs:
   state_file:
     description: "Resolved loop state JSON path"
     value: ${{ steps.paths.outputs.state_file }}
-  handoff_artifact_name:
-    description: "Uploaded artifact name for loop-handoff bundle (empty when should_run=false)"
-    value: ${{ steps.handoff.outputs.artifact_name }}
   target_matrix:
     description: "JSON array of candidates for matrix fan-out"
     value: ${{ steps.detect.outputs.target_matrix }}
@@ -261,11 +261,9 @@ runs:
         STATE_FILE_INPUT: ${{ inputs.state_file }}
       run: |
         set -euo pipefail
-        if [[ -n "${STATE_FILE_INPUT}" ]]; then
-          echo "state_file=${STATE_FILE_INPUT}" >> "$GITHUB_OUTPUT"
-        else
-          echo "state_file=.loop/state-${LOOP_NAME}.json" >> "$GITHUB_OUTPUT"
-        fi
+        # shellcheck disable=SC1091
+        source "${{ github.action_path }}/../lib/loop/resolve_state_file.sh"
+        resolve_state_file
 
     - name: Detect Targets
       id: detect
@@ -286,10 +284,10 @@ runs:
         LOOP_INTEGRATION_BRANCHES: ${{ inputs.loop_integration_branches }}
         LOOP_MAX_TARGETS_PER_SCHEDULE: ${{ inputs.loop_max_targets_per_schedule }}
         LOOP_NAME: ${{ inputs.loop_name }}
+        LOOP_PRIORITY: ${{ inputs.loop_priority }}
+        LOOP_PR_ENABLED: ${{ inputs.loop_pr_enabled }}
         LOOP_PR_EXCLUDE: ${{ inputs.loop_pr_exclude }}
         LOOP_PR_INCLUDE_BOTS: ${{ inputs.loop_pr_include_bots }}
-        LOOP_PR_ENABLED: ${{ inputs.loop_pr_enabled }}
-        LOOP_PRIORITY: ${{ inputs.loop_priority }}
         LOOP_STATE_PUSH_BRANCH: ${{ inputs.loop_state_push_branch }}
         MAY_EDIT: ${{ inputs.may_edit }}
         PROMPT_INSTRUCTIONS: ${{ inputs.prompt_instructions }}

@@ -226,8 +226,8 @@ jobs:
       agent_verifier_model: ${{ steps.detect.outputs.agent_verifier_model }}
       allowlist: ${{ steps.detect.outputs.allowlist }}
       branch_state: ${{ inputs.branch_state }}
-      denylist: ${{ inputs.denylist }}
       delivery: ${{ steps.detect.outputs.delivery }}
+      denylist: ${{ inputs.denylist }}
       domain_persistence_script: ${{ inputs.domain_persistence_script }}
       engine: ${{ steps.detect.outputs.engine }}
       handoff_artifact_name: ${{ steps.detect.outputs.handoff_artifact_name }}
@@ -307,9 +307,9 @@ jobs:
           loop_integration_branches: ${{ inputs.branch_match }}
           loop_max_targets_per_schedule: ${{ format('{0}', inputs.max_targets_per_schedule) }}
           loop_name: ${{ inputs.loop_name }}
+          loop_pr_enabled: ${{ inputs.pr_enabled && 'true' || 'false' }}
           loop_pr_exclude: ${{ inputs.pr_exclude }}
           loop_pr_include_bots: ${{ inputs.pr_include_bots }}
-          loop_pr_enabled: ${{ inputs.pr_enabled && 'true' || 'false' }}
           loop_priority: ${{ inputs.priority }}
           loop_state_push_branch: ${{ inputs.branch_state }}
           may_edit: ${{ inputs.may_edit == true && 'true' || inputs.may_edit == false && 'false' || '' }}
@@ -363,6 +363,7 @@ jobs:
       pr_body: ${{ needs.detect.outputs.pr_body }}
       pr_title: ${{ needs.detect.outputs.pr_title }}
       prompt_text: ${{ matrix.target.prompt }}
+      run_log_file: ${{ inputs.run_log_file }}
       run_started_at: ${{ needs.detect.outputs.run_started_at }}
       skill_name: ${{ needs.detect.outputs.skill_name }}
       skip_reason: ${{ needs.detect.outputs.skip_reason }}
@@ -395,33 +396,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Generate App Bot Token
-        continue-on-error: true
-        id: app_token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          client-id: ${{ secrets.BOT_APP_CLIENT_ID }}
-          permission-contents: write
-          permission-pull-requests: write
-          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-
       - name: Resolve Push Token
         id: push_token
-        shell: bash
-        env:
-          APP_TOKEN: ${{ steps.app_token.outputs.token }}
-          GH_TOKEN_PUSH: ${{ secrets.GH_TOKEN_PUSH }}
-        run: |
-          set -euo pipefail
-          if [[ -n "${APP_TOKEN}" ]]; then
-            token="${APP_TOKEN}"
-          elif [[ -n "${GH_TOKEN_PUSH}" ]]; then
-            token="${GH_TOKEN_PUSH}"
-          else
-            token="${GITHUB_TOKEN}"
-          fi
-          echo "::add-mask::${token}"
-          echo "token=${token}" >> "${GITHUB_OUTPUT}"
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@03b6b039391eee6384df67c7b37ca5ac82dfefa6
+        with:
+          bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
+          bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+          gh_token_push: ${{ secrets.GH_TOKEN_PUSH }}
 
       - name: Append Skip Run Log
         uses: y-miyazaki/config/.github/actions/loop-run-log@59dd8fabd9d9396711cb913ccc707da47634d164 # v1.8.54

@@ -33,8 +33,9 @@ source "${LIB_DIR}/state.sh"
 source "${LIB_DIR}/prs.sh"
 # shellcheck disable=SC1091
 source "${LIB_DIR}/matrix.sh"
-# shellcheck disable=SC1091
-source "${LIB_DIR}/handoff.sh"
+_loop_action_lib="$(cd "${LIB_DIR}/../../lib/loop" && pwd)"
+# shellcheck source=../../lib/loop/handoff.sh disable=SC1091
+source "${_loop_action_lib}/handoff.sh"
 
 LOOP_BRANCH_MATCH="${LOOP_BRANCH_MATCH:-glob}"
 LOOP_MAX_TARGETS_PER_SCHEDULE="${LOOP_MAX_TARGETS_PER_SCHEDULE:-3}"

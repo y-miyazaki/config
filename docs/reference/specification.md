@@ -346,7 +346,7 @@ The repository must provide reusable workflows.
 
 ### Composite action composition
 
-Loop **composite actions** must not nest other repository composite actions via `uses: <owner>/<repo>/.github/actions/...`. Parent composites invoke shared bash under sibling `lib/` paths instead (for example `${GITHUB_ACTION_PATH}/../loop-install-cli/lib/install.sh`). This keeps a single action SHA self-contained at release time without transitive pin drift.
+Loop **composite actions** must not nest other repository composite actions via `uses: <owner>/<repo>/.github/actions/...`. Parent composites invoke shared bash under `.github/actions/lib/<domain>/` for cross-action libraries (for example `${GITHUB_ACTION_PATH}/../lib/loop/handoff.sh`) or sibling action `lib/` for action-specific orchestration (for example `${GITHUB_ACTION_PATH}/../loop-install-cli/lib/install.sh`). This keeps a single action SHA self-contained at release time without transitive pin drift.
 
 **Workflows** (including `on-loop-state-promote.yaml`) must call leaf actions via `uses:` — never `${GITHUB_WORKSPACE}/.github/actions/.../lib/run.sh`. Consumer repositories pin `y-miyazaki/config/.github/actions/<name>@<ref>`; this repository dogfoods with `./.github/actions/<name>`.
 
@@ -374,21 +374,17 @@ Loop domain skills live under `.apm/packages/common/.apm/skills/` — there are 
 
 ### Loop Engineering Actions
 
-| Action                 | Purpose                                                                                                                                                                                                                                                             |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `loop-agent-once`      | Single read-only agent session (L1); accepts `node_version` / `uv_version` and enables workspace MCP via `lib/mcp.sh`                                                                                                                                               |
-| `loop-config-pack`     | Pack caller agent config into standardized outputs for detect/execute handoff (standalone; `loop-detect` inlines the same pack step)                                                                                                                                |
-| `loop-detect`          | Read `LOOP_*`, enumerate branches/PRs, checkout per context, invoke `detect_script` per context, assemble candidates, write **loop-handoff** artifact, output slim `target_matrix`; guards (`budget`, circuit breaker). **No caller re-run of detect script**       |
-| `loop-execute`         | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`, `node_version`, `uv_version`; enables workspace MCP via `lib/mcp.sh`; worktree from `from.ref` @ `from.branch`                                                                 |
-| `loop-finalize`        | Finalize per `target.finalize`, branch cleanup, per-target state, run-log, optional `domain_persistence_script`; `.loop/*` to `LOOP_STATE_PUSH_BRANCH`                                                                                                              |
-| `loop-notify-pr`       | Post or update marker PR comment after finalize on `pull_request` targets (sibling step in `ci-loop-agent`, not nested in `loop-finalize`). Platform-owned Layers 1–2; optional skill appendix. See [loop-notify-pr Specification](loop-notify-pr-specification.md) |
-| `loop-install-cli`     | Install and cache the selected engine CLI; accepts `node_version` / `uv_version` so MCP servers can resolve via `npx` / `uvx`                                                                                                                                       |
-| `loop-prompt-generate` | Assemble implementer prompt: skill invocation, caller context/instructions, generic loop constraints                                                                                                                                                                |
-| `loop-run-log`         | Append one JSONL entry to `.loop/loop-run-log.md`, prune entries older than 30 days                                                                                                                                                                                 |
-| `loop-state-promote`   | Promote or clear `pending` loop state after a fix PR closes (`pull_request` `closed` handler). Prefer direct push; auto-merge state PR when push is blocked (`skip_state_pr` opts out).                                                                             |
-| `loop-state-read`      | Read `targets` map; per-target cursors                                                                                                                                                                                                                              |
-| `loop-state-write`     | Write per-target entry in `targets` map; commit to `LOOP_STATE_PUSH_BRANCH`. Prefer direct push; auto-merge state PR when push is blocked (`skip_state_pr` opts out). Refuses PR fallback for `advance` + `pr-created` (use `pending` for L2 `open_pr`).            |
-| `loop-worktree-setup`  | Isolated worktree at `base_ref` on `base_branch` + agent branch (L2/L3)                                                                                                                                                                                             |
+| Action                | Purpose                                                                                                                                                                                                                                                                                                                                                         |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `loop-agent-once`     | Single read-only agent session (L1); accepts `node_version` / `uv_version` and enables workspace MCP via `lib/mcp.sh`                                                                                                                                                                                                                                           |
+| `loop-detect`         | Read `LOOP_*`, enumerate branches/PRs, checkout per context, read per-target state (`lib/state.sh`), invoke `detect_script` per context, assemble candidates and implementer prompts (`lib/loop/build_constraints.sh`), write **loop-handoff** artifact, output slim `target_matrix`; guards (`budget`, circuit breaker). **No caller re-run of detect script** |
+| `loop-execute`        | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`, `node_version`, `uv_version`; enables workspace MCP via `lib/mcp.sh`; worktree from `from.ref` @ `from.branch`                                                                                                                                                             |
+| `loop-finalize`       | Finalize per `target.finalize`, branch cleanup, per-target state write (`lib/write_state.sh`, `lib/prune_targets.sh`), optional `domain_persistence_script`; `.loop/*` to `LOOP_STATE_PUSH_BRANCH`                                                                                                                                                              |
+| `loop-notify-pr`      | Post or update marker PR comment after finalize on `pull_request` targets (sibling step in `ci-loop-agent`, not nested in `loop-finalize`). Platform-owned Layers 1–2; optional skill appendix. See [loop-notify-pr Specification](loop-notify-pr-specification.md)                                                                                             |
+| `loop-install-cli`    | Install and cache the selected engine CLI; accepts `node_version` / `uv_version` so MCP servers can resolve via `npx` / `uvx`                                                                                                                                                                                                                                   |
+| `loop-run-log`        | Append one JSONL entry to `.loop/loop-run-log.md`, prune entries older than 30 days (sibling step in `ci-loop-agent` after `loop-finalize`, or `record-skip` in callers)                                                                                                                                                                                        |
+| `loop-state-promote`  | Promote or clear `pending` loop state after a fix PR closes (`pull_request` `closed` handler). Prefer direct push; auto-merge state PR when push is blocked (`skip_state_pr` opts out).                                                                                                                                                                         |
+| `loop-worktree-setup` | Isolated worktree at `base_ref` on `base_branch` + agent branch (L2/L3)                                                                                                                                                                                                                                                                                         |
 
 ### Loop agent MCP enablement
 
@@ -437,7 +433,7 @@ Full candidate payloads remain in the artifact until execute/finalize read them.
 
 **Legacy outputs:** `loop-detect` also writes backward-compatible single-target outputs (`prompt`, `last_sha`, etc.) from the **full** candidate matrix (including inlined `result`). Legacy consumers may hit the 1MB job-output cap when payloads are large; prefer artifact + slim `target_matrix`.
 
-Library: `.github/actions/loop-detect/lib/handoff.sh` (`LOOP_HANDOFF_VERSION=1`).
+Library: `.github/actions/lib/loop/handoff.sh` (`LOOP_HANDOFF_VERSION=1`).
 
 ### `target_json` contract
 
@@ -481,7 +477,7 @@ Execute/finalize input. Schema: [Multi-Branch Loops Design](../explanation/loop-
 | `domain_persistence_script` | no       | Optional bash script (ledger). Standard env: `TARGET_JSON`, `OUTCOME`, `VERDICT`, `LOOP_NAME`, `STATE_FILE`, `EXECUTE_BRANCH` |
 | `state_push_branch`         | no       | Default: repository default branch                                                                                            |
 
-`loop-notify-pr` is invoked by `ci-loop-agent` as a sibling step after `loop-finalize` when `target_json.to.pr_number` is set. It reads `notify_context_json` from `loop-execute` outputs (not via `loop-finalize` inputs).
+`loop-notify-pr` is invoked by `ci-loop-agent` as a sibling step after `loop-finalize` when `target_json.to.pr_number` is set. `loop-run-log` is invoked as a sibling step after `loop-finalize` when `loop_name` is set. Both read outputs from prior steps (not via nested composite `uses:`).
 
 ### State `targets` map
 

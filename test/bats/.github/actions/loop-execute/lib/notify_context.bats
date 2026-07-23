@@ -248,7 +248,7 @@ EOF
     notify_context_git_setup
     handoff_dir="${BATS_TEST_TMPDIR}/loop-handoff-notify"
     candidate='{"target_json":{"key":"integration:main"},"prompt":"p","verifier_context":"","result":{"failures":[{"job_name":"lint","workflow_name":"on-ci-push"}]}}'
-    bats_source_rel ".github/actions/loop-detect/lib/handoff.sh"
+    bats_source_rel ".github/actions/lib/loop/handoff.sh"
     loop_handoff_write_bundle "${handoff_dir}" "${candidate}"
 
     GITHUB_OUTPUT="$(mktemp)"
@@ -332,4 +332,19 @@ EOF
     run truncate_text "abcdefghij" 4
     [ "$status" -eq 0 ]
     [ "$output" = "abcd" ]
+}
+
+@test "main fails when detect result json is invalid" {
+    notify_context_git_setup
+    GITHUB_OUTPUT="$(mktemp)"
+    run env \
+        HAS_CHANGES=false \
+        WORKTREE_PATH="${GIT_TEST_REPO}" \
+        BASE_BRANCH=main \
+        DETECT_RESULT_JSON="not-json" \
+        GITHUB_OUTPUT="${GITHUB_OUTPUT}" \
+        STATUS_DIR= \
+        bash "${NOTIFY_CONTEXT_SCRIPT}"
+    [ "$status" -eq 1 ]
+    [[ $output == *"detect result JSON is invalid"* ]]
 }

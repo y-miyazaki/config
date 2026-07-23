@@ -17,10 +17,10 @@ Phase 0 loops assume **one branch per run**: detect polls `main` only; execute/f
 
 Two **independent**, caller-configurable capabilities:
 
-| Capability               | Example                                                                | Typical loops                         |
-| ------------------------ | ---------------------------------------------------------------------- | ------------------------------------- |
+| Capability               | Example                                                                | Typical loops               |
+| ------------------------ | ---------------------------------------------------------------------- | --------------------------- |
 | **Integration branches** | Drift or CI on `main`, `develop`, `release/*` → fix **to** that branch | `docs-triage`, `ci-sweeper` |
-| **Pull request heads**   | CI fails on open PR → fix **on PR branch**                             | `ci-sweeper`                          |
+| **Pull request heads**   | CI fails on open PR → fix **on PR branch**                             | `ci-sweeper`                |
 
 ## Design Goal
 
@@ -201,8 +201,8 @@ L2 `open_pr` loops use **merge-gated `pending`**: fix PRs carry domain files onl
 
 #### Loop defaults (dogfood)
 
-| Loop               | State delivery                                    |
-| ------------------ | ------------------------------------------------- |
+| Loop          | State delivery                                    |
+| ------------- | ------------------------------------------------- |
 | `changelog`   | Merge-gated `pending` via `on-loop-state-promote` |
 | `docs-triage` | Merge-gated `pending` (same as changelog)         |
 | `ci-sweeper`  | Merge-gated `pending`; run ledger for dedupe      |
@@ -239,7 +239,7 @@ So “state should be pushed, not PR’d” is right for **delivery mechanism**.
 
 On first Phase 1+ read, if legacy flat `last_sha` exists and `targets` is absent:
 
-1. `loop-state-read` copies `last_sha` (and related fields) into `targets["integration:<default_branch>"]`
+1. `loop-detect` (`lib/state.sh` `migrate_state_targets`) copies `last_sha` (and related fields) into `targets["integration:<default_branch>"]`
 2. Subsequent writes **omit** flat `last_sha` — `targets` only
 
 ### Circuit breaker (per `target.key`)
@@ -284,8 +284,8 @@ Caller/workflow steps: [Loop Caller Workflows Design](loop-caller-workflows-desi
 
 ## Workflow Design Documents
 
-| Loop                 | Document                                                                        | Caller workflow            |
-| -------------------- | ------------------------------------------------------------------------------- | -------------------------- |
+| Loop            | Document                                                                        | Caller workflow            |
+| --------------- | ------------------------------------------------------------------------------- | -------------------------- |
 | **changelog**   | [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md)        | `on-loop-changelog.yaml`   |
 | **ci-sweeper**  | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md)      | `on-loop-ci-sweeper.yaml`  |
 | **docs-triage** | [Docs Triage Workflow Design](workflows/loop-docs-triage-workflow-design.md)    | `on-loop-docs-triage.yaml` |

@@ -13,7 +13,7 @@
 
 ## Edit gate
 
-Automation runs branch on **`may_edit`** from `## Constraints` (injected by `loop-prompt-generate`):
+Automation runs branch on **`may_edit`** from `## Constraints` (injected by `loop-detect` during prompt assembly):
 
 | `may_edit` | Behavior                                                                          |
 | ---------- | --------------------------------------------------------------------------------- |

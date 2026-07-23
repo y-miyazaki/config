@@ -1,13 +1,23 @@
-#!/usr/bin/env bash
+#!/bin/bash
+#######################################
 # Description:
 #   Validate may_edit × write_target × delivery × level combinations for loop callers.
 #
 # Usage:
-#   source .../validate_loop_write_contract.sh
+#   source "${LOOP_ACTION_LIB_DIR}/validate_loop_write_contract.sh"
 #   validate_loop_write_contract "<may_edit>" "<write_target>" "<delivery>" "<level>"
+#
+# Design Rules:
+#   - may_edit false forbids delivery open_pr
+#   - may_edit true requires write_target and allows only open_pr or none delivery
+#
+# Output:
+#   Error annotations on stderr when invalid
+#######################################
 
 #######################################
-# Validate loop write/delivery contract.
+# validate_loop_write_contract: Validate loop write/delivery contract
+#
 # Globals:
 #   None
 #
@@ -17,10 +27,14 @@
 #   $3 - delivery (log | issue | notion | open_pr | none)
 #   $4 - level (L1 | L2 | L3 | empty)
 #
+# Outputs:
+#   None
+#
 # Returns:
 #   0 when valid; 1 when invalid
+#
 #######################################
-validate_loop_write_contract() {
+function validate_loop_write_contract {
     local may_edit="${1:-}"
     local write_target="${2:-}"
     local delivery="${3:-}"

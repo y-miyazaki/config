@@ -1,14 +1,14 @@
 name: loop-finalize
-description: "Finalize a loop run per target_json: strategy, state, run-log, optional domain persistence."
+description: "Finalize a loop run per target_json: strategy, state, optional domain persistence."
 
 inputs:
+  additional_commit_paths:
+    default: ""
+    description: "Comma-separated paths to commit with state after domain persistence"
+    required: false
   agent_result:
     default: "success"
     description: "Result of the agent job (success/failure/cancelled/skipped)"
-    required: false
-  attempts:
-    default: ""
-    description: "Number of Agent→Verify attempts (empty when execute did not run)"
     required: false
   auto_merge:
     default: "false"
@@ -33,17 +33,9 @@ inputs:
     default: ""
     description: "Optional bash script for domain ledger persistence"
     required: false
-  additional_commit_paths:
-    default: ""
-    description: "Comma-separated paths to commit with state after domain persistence"
-    required: false
   execute_branch:
     default: ""
     description: "Agent branch name for domain_persistence_script env"
-    required: false
-  has_changes:
-    default: "false"
-    description: "Whether agent produced changes"
     required: false
   handoff_dir:
     default: ""
@@ -52,6 +44,10 @@ inputs:
   handoff_key:
     default: ""
     description: "Target handoff key for artifact payload lookup"
+    required: false
+  has_changes:
+    default: "false"
+    description: "Whether agent produced changes"
     required: false
   labels:
     default: "loop-automation"
@@ -63,7 +59,7 @@ inputs:
     required: false
   loop_name:
     default: ""
-    description: "Loop name / pattern for run log (e.g. docs-triage)"
+    description: "Loop name / pattern (e.g. docs-triage)"
     required: false
   notify_context_json:
     default: "{}"
@@ -89,21 +85,14 @@ inputs:
     default: ""
     description: "Verifier rejection reason (recorded in state on REJECT)"
     required: false
-  run_log_file:
-    default: ".loop/loop-run-log.md"
-    description: "Path to JSONL run log markdown file"
-    required: false
-  run_started_at:
-    default: ""
-    description: "Workflow run start timestamp (ISO 8601) for run log duration"
-    required: false
   skip_reason:
     default: "none"
-    description: "Detect skip reason recorded in run log"
+    description: "Detect skip reason for PR failure context"
     required: false
   state_file:
-    description: "Path to state JSON file"
-    required: true
+    default: ""
+    description: "Explicit state JSON path (defaults to .loop/state-<loop_name>.json when loop_name is set)"
+    required: false
   state_push_branch:
     default: ""
     description: "Branch for .loop/* commits (empty = base_branch)"
@@ -115,23 +104,10 @@ inputs:
   token:
     description: "GitHub token for PR creation and state push"
     required: true
-  tokens_estimate:
-    default: "52000"
-    description: "Estimated token spend when measured usage is unavailable"
-    required: false
-  usage_json:
-    default: ""
-    description: "Measured token usage JSON from loop-execute (empty when unavailable)"
-    required: false
   verdict:
     default: ""
     description: "Verifier verdict (APPROVE or REJECT, empty if no verification)"
     required: false
-  workflow_run:
-    default: ${{ github.run_id }}
-    description: "GitHub Actions workflow run ID for run log"
-    required: false
-
 outputs:
   commit_sha:
     description: "Commit SHA on target branch after push_head (empty when not pushed)"
@@ -139,13 +115,13 @@ outputs:
   outcome:
     description: "Final outcome written to state"
     value: ${{ steps.outcome.outputs.value }}
-  pr_url:
-    description: "URL of created PR (empty if not created)"
-    value: ${{ steps.pr.outputs.url }}
   pr_number:
     description: "Number of created PR (empty if not created)"
     value: ${{ steps.pr.outputs.number }}
 
+  pr_url:
+    description: "URL of created PR (empty if not created)"
+    value: ${{ steps.pr.outputs.url }}
 runs:
   using: composite
   steps:
@@ -168,6 +144,18 @@ runs:
           echo "pr_base_branch=${BASE_BRANCH}" >> "$GITHUB_OUTPUT"
           echo "to_branch=${BASE_BRANCH}" >> "$GITHUB_OUTPUT"
         fi
+
+    - name: Resolve State File
+      id: state_path
+      shell: bash
+      env:
+        LOOP_NAME: ${{ inputs.loop_name }}
+        STATE_FILE_INPUT: ${{ inputs.state_file }}
+      run: |
+        set -euo pipefail
+        # shellcheck disable=SC1091
+        source "${{ github.action_path }}/../lib/loop/resolve_state_file.sh"
+        resolve_state_file
 
     - name: Determine Outcome
       id: outcome
@@ -233,7 +221,7 @@ runs:
         EXECUTE_BRANCH: ${{ inputs.execute_branch != '' && inputs.execute_branch || inputs.branch }}
         LOOP_NAME: ${{ inputs.loop_name }}
         OUTCOME: ${{ steps.outcome.outputs.value }}
-        STATE_FILE: ${{ inputs.state_file }}
+        STATE_FILE: ${{ steps.state_path.outputs.state_file }}
         TARGET_JSON: ${{ inputs.target_json }}
         VERDICT: ${{ inputs.verdict }}
       run: |
@@ -305,7 +293,7 @@ runs:
         fi
 
     - name: Write State
-      if: inputs.current_sha != ''
+      if: inputs.current_sha != '' && steps.state_path.outputs.state_file != ''
       shell: bash
       env:
         ADDITIONAL_COMMIT_PATHS: ${{ inputs.additional_commit_paths }}
@@ -318,12 +306,12 @@ runs:
         PENDING_PR_URL: ${{ steps.pr.outputs.url || '' }}
         REJECT_REASON: ${{ inputs.reject_reason }}
         SHA: ${{ inputs.current_sha }}
-        STATE_FILE: ${{ inputs.state_file }}
+        STATE_FILE: ${{ steps.state_path.outputs.state_file }}
         STATE_PUSH_BRANCH: ${{ inputs.state_push_branch }}
         STATE_WRITE_MODE: ${{ steps.state_mode.outputs.mode }}
         TARGET_KEY: ${{ steps.target.outputs.target_key }}
         WRITE_TARGET_STATE: "true"
-      run: bash "${GITHUB_ACTION_PATH}/../loop-state-write/lib/run.sh"
+      run: bash "${GITHUB_ACTION_PATH}/lib/write_state.sh"
 
     - name: Delete Branch on Rejection
       if: inputs.verdict == 'REJECT' && inputs.branch != ''
@@ -338,22 +326,3 @@ runs:
           exit 1
         fi
         gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${BRANCH}" 2>/dev/null || true
-
-    - name: Append Run Log
-      if: inputs.loop_name != ''
-      shell: bash
-      env:
-        ATTEMPTS: ${{ inputs.attempts }}
-        BASE_BRANCH: ${{ inputs.state_push_branch != '' && inputs.state_push_branch || inputs.base_branch }}
-        HAS_CHANGES: ${{ inputs.has_changes }}
-        LOOP_NAME: ${{ inputs.loop_name }}
-        OUTCOME: ${{ steps.outcome.outputs.value }}
-        RUN_LOG_FILE: ${{ inputs.run_log_file }}
-        RUN_STARTED_AT: ${{ inputs.run_started_at }}
-        SKIP_REASON: ${{ inputs.skip_reason }}
-        TOKEN: ${{ inputs.token }}
-        TOKENS_ESTIMATE: ${{ inputs.tokens_estimate }}
-        USAGE_JSON: ${{ inputs.usage_json }}
-        VERDICT: ${{ inputs.verdict }}
-        WORKFLOW_RUN: ${{ inputs.workflow_run }}
-      run: bash "${GITHUB_ACTION_PATH}/../loop-run-log/lib/run.sh"

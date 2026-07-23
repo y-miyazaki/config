@@ -116,14 +116,19 @@ function normalize_no_changes_verdict {
 #
 #######################################
 function materialize_matrix_handoff_context {
-    local detect_json loop_detect_lib
+    local detect_json loop_action_lib
     local inline="${DETECT_RESULT_JSON:-"{}"}"
     local artifact_required=false
 
-    loop_detect_lib="$(cd "${_LOOP_EXECUTE_LIB_DIR}/../../loop-detect/lib" && pwd)"
-    # shellcheck source=../../loop-detect/lib/handoff.sh
+    loop_action_lib="$(cd "${_LOOP_EXECUTE_LIB_DIR}/../../lib/loop" && pwd)"
+    # shellcheck source=../../lib/loop/handoff.sh
     # shellcheck disable=SC1091
-    source "${loop_detect_lib}/handoff.sh"
+    source "${loop_action_lib}/handoff.sh"
+
+    if [[ -n ${inline} && ${inline} != "{}" ]] && ! jq -e . <<< "${inline}" > /dev/null 2>&1; then
+        echo "::error::loop-execute: inline DETECT_RESULT_JSON is invalid" >&2
+        return 1
+    fi
 
     if [[ -n ${LOOP_HANDOFF_DIR:-} && -n ${HANDOFF_KEY:-} ]]; then
         if [[ -z ${inline} || ${inline} == "{}" ]]; then
@@ -150,7 +155,8 @@ function materialize_matrix_handoff_context {
         return 0
     fi
     if ! jq -e . <<< "${detect_json}" > /dev/null 2>&1; then
-        return 0
+        echo "::error::loop-execute: inline DETECT_RESULT_JSON is invalid" >&2
+        return 1
     fi
 
     if [[ ${PROMPT_TEXT} == *'__LOOP_DETECT_RESULT_JSON__'* ]]; then
@@ -165,9 +171,9 @@ function materialize_matrix_handoff_context {
             VERIFIER_CONTEXT="$(loop_handoff_read_verifier_context "${LOOP_HANDOFF_DIR}" "${HANDOFF_KEY}" || true)"
         fi
         if [[ -z ${VERIFIER_CONTEXT:-} ]]; then
-            # shellcheck source=../../loop-detect/lib/matrix.sh
-            # shellcheck disable=SC1091
-            source "${loop_detect_lib}/matrix.sh"
+            _loop_action_lib="$(cd "${_LOOP_EXECUTE_LIB_DIR}/../../lib/loop" && pwd)"
+            # shellcheck source=../../lib/loop/verifier_context.sh disable=SC1091
+            source "${_loop_action_lib}/verifier_context.sh"
             VERIFIER_CONTEXT="$(build_verifier_context_from_result "${detect_json}")"
         fi
     fi

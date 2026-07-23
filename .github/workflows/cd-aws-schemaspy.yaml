@@ -203,256 +203,43 @@ jobs:
 
       - name: Setup Parameters
         id: setup-parameters
-        shell: bash
-        run: | # pragma: allowlist secret
-          # shellcheck disable=SC2086,SC2129,SC2002
-          set -euo pipefail
-
-          # Validate credential source configuration
-          CRED_SOURCE_COUNT=0
-          if [ "${USE_SSM}" == "true" ]; then
-            CRED_SOURCE_COUNT=$((CRED_SOURCE_COUNT + 1))
-          fi
-          if [ "${USE_SECRETS_MANAGER}" == "true" ]; then
-            CRED_SOURCE_COUNT=$((CRED_SOURCE_COUNT + 1))
-          fi
-          if [ "${USE_SSM}" == "false" ] && [ "${USE_SECRETS_MANAGER}" == "false" ]; then
-            CRED_SOURCE_COUNT=$((CRED_SOURCE_COUNT + 1))
-          fi
-
-          if [ ${CRED_SOURCE_COUNT} -gt 1 ]; then
-            echo "Error: Only one credential source can be enabled at a time"
-            echo "- use_ssm: ${USE_SSM}"
-            echo "- use_secrets_manager: ${USE_SECRETS_MANAGER}"
-            exit 1
-          fi
-
-          # Fetch credentials based on source
-          if [ "${USE_SECRETS_MANAGER}" == "true" ]; then
-            if [ -z "${SECRETS_MANAGER_SECRET_ID}" ]; then
-              echo "Error: secrets_manager_secret_id is required when use_secrets_manager=true"
-              exit 1
-            fi
-            SECRET_JSON=$(aws secretsmanager get-secret-value \
-              --secret-id "${SECRETS_MANAGER_SECRET_ID}" \
-              --query SecretString \
-              --output text)
-
-            # Extract individual values using jq
-            DB_HOST=$(echo "$SECRET_JSON" | jq -r ".${JSON_KEY_HOST}")
-            DB_PORT=$(echo "$SECRET_JSON" | jq -r ".${JSON_KEY_PORT}")
-            DB_NAME_FROM_JSON=$(echo "$SECRET_JSON" | jq -r ".${JSON_KEY_DATABASE_NAME}")
-            DB_USER=$(echo "$SECRET_JSON" | jq -r ".${JSON_KEY_USERNAME}")
-            DB_PASSWORD=$(echo "$SECRET_JSON" | jq -r ".${JSON_KEY_PASSWORD}")
-
-            # Use db_name input if provided, otherwise use JSON value
-            if [ -n "${DB_NAME_INPUT}" ]; then
-              DB_NAME="${DB_NAME_INPUT}"
-            elif [ "${DB_NAME_FROM_JSON}" != "null" ] && [ -n "${DB_NAME_FROM_JSON}" ]; then
-              DB_NAME="${DB_NAME_FROM_JSON}"
-            else
-              echo "Error: Database name not found in JSON and db_name input not provided"
-              exit 1
-            fi
-
-          elif [ "${USE_SSM}" == "true" ]; then
-            if [ -z "${PARAMETER_STORE_NAME}" ]; then
-              echo "Error: parameter_store_name is required when use_ssm=true"
-              exit 1
-            fi
-            DB_JSON=$(aws ssm get-parameter --name "${PARAMETER_STORE_NAME}" --with-decryption --query "Parameter.Value" --output text)
-
-            # Extract individual values using jq
-            DB_HOST=$(echo "$DB_JSON" | jq -r ".${JSON_KEY_HOST}")
-            DB_PORT=$(echo "$DB_JSON" | jq -r ".${JSON_KEY_PORT}")
-            DB_NAME_FROM_JSON=$(echo "$DB_JSON" | jq -r ".${JSON_KEY_DATABASE_NAME}")
-            DB_USER=$(echo "$DB_JSON" | jq -r ".${JSON_KEY_USERNAME}")
-            DB_PASSWORD=$(echo "$DB_JSON" | jq -r ".${JSON_KEY_PASSWORD}")
-
-            # Use db_name input if provided, otherwise use JSON value
-            if [ -n "${DB_NAME_INPUT}" ]; then
-              DB_NAME="${DB_NAME_INPUT}"
-            elif [ "${DB_NAME_FROM_JSON}" != "null" ] && [ -n "${DB_NAME_FROM_JSON}" ]; then
-              DB_NAME="${DB_NAME_FROM_JSON}"
-            else
-              echo "Error: Database name not found in JSON and db_name input not provided"
-              exit 1
-            fi
-
-          else
-            # Validate required parameters for direct connection
-            if [ -z "${DB_HOST_INPUT}" ] || [ -z "${DB_PORT_INPUT}" ] || [ -z "${DB_NAME_INPUT}" ] || [ -z "${DB_USERNAME_INPUT}" ] || [ -z "${DB_PASSWORD_INPUT}" ]; then
-              echo "Error: When use_ssm=false and use_secrets_manager=false, DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD secrets and db_name input must be provided" # pragma: allowlist secret
-              exit 1
-            fi
-            DB_HOST="${DB_HOST_INPUT}"
-            DB_PORT="${DB_PORT_INPUT}"
-            DB_NAME="${DB_NAME_INPUT}"
-            DB_USER="${DB_USERNAME_INPUT}"
-            DB_PASSWORD="${DB_PASSWORD_INPUT}"
-          fi
-
-          # Set environment variables for DB connection (used by subsequent steps)
-          # Group writes to $GITHUB_ENV to avoid multiple redirects
-          {
-            echo "DB_HOST=${DB_HOST}"
-            echo "DB_PORT=${DB_PORT}"
-            echo "DB_NAME=${DB_NAME}"
-            echo "DB_USER=${DB_USER}"
-            echo "DB_PASSWORD=${DB_PASSWORD}"
-          } >> "$GITHUB_ENV"
-          # Mask the password separately
-          echo "::add-mask::${DB_PASSWORD}"
-
-          # Define common output and artifact naming variables here so downstream steps reuse them
-          ARTIFACT_BASE="schemaspy-${DB_TYPE}-${DB_NAME}-${ENVIRONMENT}"
-          ARTIFACT_NAME="${ARTIFACT_BASE}.zip"
-          OUTDIR="output"
-          TITLE="SchemaSpy(${ENVIRONMENT})"
-
-          # Write environment variables to the GitHub environment file in one grouped redirect
-          {
-            echo "ARTIFACT_BASE=${ARTIFACT_BASE}"
-            echo "ARTIFACT_NAME=${ARTIFACT_NAME}"
-            echo "OUTDIR=${OUTDIR}"
-            echo "TITLE=${TITLE}"
-          } >> "$GITHUB_ENV"
-
-          # Write outputs to the GitHub output file in one grouped redirect
-          {
-            echo "artifact_base=${ARTIFACT_BASE}"
-            echo "artifact_name=${ARTIFACT_NAME}"
-            echo "outdir=${OUTDIR}"
-            echo "title=${TITLE}"
-          } >> "$GITHUB_OUTPUT"
+        uses: y-miyazaki/config/.github/actions/schemaspy-setup-parameters@59dd8fabd9d9396711cb913ccc707da47634d164 # v1.8.54
+        with:
+          db_host_input: ${{ secrets.DB_HOST }}
+          db_name_input: ${{ inputs.db_name }}
+          db_password_input: ${{ secrets.DB_PASSWORD }}
+          db_port_input: ${{ secrets.DB_PORT }}
+          db_type: ${{ inputs.db_type }}
+          db_username_input: ${{ secrets.DB_USERNAME }}
+          environment: ${{ inputs.environment }}
+          json_key_database_name: ${{ inputs.json_key_database_name }}
+          json_key_host: ${{ inputs.json_key_host }}
+          json_key_password: ${{ inputs.json_key_password }}
+          json_key_port: ${{ inputs.json_key_port }}
+          json_key_username: ${{ inputs.json_key_username }}
+          parameter_store_name: ${{ inputs.parameter_store_name }}
+          secrets_manager_secret_id: ${{ inputs.secrets_manager_secret_id }}
+          use_secrets_manager: ${{ inputs.use_secrets_manager }}
+          use_ssm: ${{ inputs.use_ssm }}
 
       - name: Setup Bastion Connection
         if: ${{ env.USE_BASTION == 'true' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "Setting up EC2 Bastion connection via AWS Systems Manager Session Manager"
-
-          # Install Session Manager plugin
-          echo "Installing AWS Session Manager plugin..."
-          curl -fsSL "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o session-manager-plugin.deb
-          sudo dpkg -i session-manager-plugin.deb
-          rm session-manager-plugin.deb
-
-          # Determine Bastion instance ID
-          if [ -n "${BASTION_INSTANCE_ID}" ]; then
-            BASTION_ID="${BASTION_INSTANCE_ID}"
-            echo "Using specified Bastion instance ID: ${BASTION_ID}"
-          else
-            echo "Auto-detecting Bastion instance with tag Name=${BASTION_TAG_NAME}..."
-            BASTION_ID=$(aws ec2 describe-instances \
-              --filters "Name=tag:Name,Values=${BASTION_TAG_NAME}" "Name=instance-state-name,Values=running" \
-              --query 'Reservations[*].Instances[*].[InstanceId]' \
-              --output text | head -n 1)
-
-            if [ -z "${BASTION_ID}" ]; then
-              echo "Error: No running Bastion instance found with tag Name=${BASTION_TAG_NAME}"
-              echo "Please specify bastion_instance_id explicitly or check the bastion_tag_name filter"
-              exit 1
-            fi
-
-            echo "Auto-detected Bastion instance ID: ${BASTION_ID}"
-          fi
-
-          echo "BASTION_ID=${BASTION_ID}" >> "$GITHUB_ENV"
-          echo "bastion_id=${BASTION_ID}" >> "$GITHUB_OUTPUT"
-
-          # Verify Session Manager connectivity
-          echo "Verifying Session Manager connectivity to ${BASTION_ID}..."
-          aws ssm describe-instance-information --filters "Key=InstanceIds,Values=${BASTION_ID}" --query 'InstanceInformationList[*].[InstanceId,PingStatus]' --output table
-
-          echo "Bastion setup completed successfully"
+        id: bastion-connect
+        uses: y-miyazaki/config/.github/actions/schemaspy-bastion-connect@59dd8fabd9d9396711cb913ccc707da47634d164 # v1.8.54
+        with:
+          bastion_instance_id: ${{ inputs.bastion_instance_id }}
+          bastion_tag_name: ${{ inputs.bastion_tag_name }}
 
       - name: Setup SSM Port Forwarding
         if: ${{ env.USE_BASTION == 'true' }}
         id: start-port-forward
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "Starting AWS Systems Manager Session Manager port forwarding"
-
-          # Determine local port based on database type
-          if [ -n "${BASTION_LOCAL_PORT}" ]; then
-            LOCAL_PORT="${BASTION_LOCAL_PORT}"
-          else
-            case "${DB_TYPE}" in
-              mysql)
-                LOCAL_PORT="13306"
-                ;;
-              pgsql|pgsql11)
-                LOCAL_PORT="15432"
-                ;;
-              redshift)
-                LOCAL_PORT="15439"
-                ;;
-              *)
-                LOCAL_PORT="13306"
-                ;;
-            esac
-          fi
-
-          echo "LOCAL_PORT=${LOCAL_PORT}" >> "$GITHUB_ENV"
-          echo "local_port=${LOCAL_PORT}" >> "$GITHUB_OUTPUT"
-
-          echo "Starting port forwarding: localhost:${LOCAL_PORT} -> ${BASTION_ID} -> ${DB_HOST}:${DB_PORT}"
-
-          # Start SSM port forwarding in background (MUST be background to allow other commands)
-          aws ssm start-session \
-            --target "${BASTION_ID}" \
-            --document-name AWS-StartPortForwardingSessionToRemoteHost \
-            --parameters "{\"host\":[\"${DB_HOST}\"],\"portNumber\":[\"${DB_PORT}\"],\"localPortNumber\":[\"${LOCAL_PORT}\"]}" \
-            > /tmp/ssm-session.log 2>&1 &
-
-          SSM_PID=$!
-          echo "SSM_PID=${SSM_PID}" >> "$GITHUB_ENV"
-          echo "ssm_pid=${SSM_PID}" >> "$GITHUB_OUTPUT"
-          echo "SSM Session started with PID: ${SSM_PID}"
-
-          # Wait for port forwarding to be established by monitoring SSM log
-          echo "Waiting for port forwarding to be ready..."
-          MAX_WAIT=60
-          ELAPSED=0
-
-          while [ ${ELAPSED} -lt ${MAX_WAIT} ]; do
-            # Check if SSM process is still running
-            if ! ps -p ${SSM_PID} > /dev/null 2>&1; then
-              echo "❌ SSM session process died unexpectedly"
-              echo "SSM Session log:"
-              cat /tmp/ssm-session.log
-              exit 1
-            fi
-
-            # Check log for successful port opening
-            if grep -q "Port ${LOCAL_PORT} opened" /tmp/ssm-session.log 2>/dev/null && \
-               grep -q "Waiting for connections" /tmp/ssm-session.log 2>/dev/null; then
-              echo "✅ Port forwarding is ready on localhost:${LOCAL_PORT} (confirmed by SSM log)"
-              # Give additional 2 seconds for port to be fully ready
-              sleep 2
-              break
-            fi
-
-            sleep 1
-            ELAPSED=$((ELAPSED + 1))
-
-            if [ ${ELAPSED} -eq ${MAX_WAIT} ]; then
-              echo "❌ Port forwarding failed to start within ${MAX_WAIT} seconds"
-              echo "SSM Session log:"
-              cat /tmp/ssm-session.log
-              exit 1
-            fi
-
-            # Show progress every 10 seconds
-            if [ $((ELAPSED % 10)) -eq 0 ] && [ ${ELAPSED} -gt 0 ]; then
-              echo "  ${ELAPSED}/${MAX_WAIT} seconds: Still waiting for port forwarding..."
-            fi
-          done
-
-          echo "Port forwarding established successfully"
+        uses: y-miyazaki/config/.github/actions/schemaspy-ssm-port-forward@59dd8fabd9d9396711cb913ccc707da47634d164 # v1.8.54
+        with:
+          bastion_id: ${{ steps.bastion-connect.outputs.bastion_id }}
+          bastion_local_port: ${{ inputs.bastion_local_port }}
+          db_host: ${{ env.DB_HOST }}
+          db_port: ${{ env.DB_PORT }}
+          db_type: ${{ inputs.db_type }}
 
       - name: Setup Java
         uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
@@ -593,37 +380,9 @@ jobs:
 
       - name: Cleanup SSM Port Forwarding
         if: ${{ always() && env.USE_BASTION == 'true' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          # shellcheck disable=SC2034
-          echo "Cleaning up SSM port forwarding session"
-
-          if [ -n "${SSM_PID:-}" ] && ps -p "${SSM_PID}" > /dev/null 2>&1; then
-            echo "Terminating SSM session (PID: ${SSM_PID})"
-            kill "${SSM_PID}" 2>/dev/null || true
-
-            # Wait for process to terminate
-            for i in {1..5}; do
-              # reference loop counter to avoid SC2034 false-positive
-              : "${i}"
-              if ! ps -p "${SSM_PID}" > /dev/null 2>&1; then
-                echo "✅ SSM session terminated successfully"
-                break
-              fi
-              sleep 1
-            done
-
-            # Force kill if still running
-            if ps -p "${SSM_PID}" > /dev/null 2>&1; then
-              echo "Force killing SSM session..."
-              kill -9 "${SSM_PID}" 2>/dev/null || true
-            fi
-          else
-            echo "No active SSM session to clean up"
-          fi
-
-          echo "SSM port forwarding cleanup completed"
+        uses: y-miyazaki/config/.github/actions/schemaspy-ssm-cleanup@59dd8fabd9d9396711cb913ccc707da47634d164 # v1.8.54
+        with:
+          ssm_pid: ${{ steps.start-port-forward.outputs.ssm_pid }}
 
       - name: Prepare artifact structure
         id: prepare-artifact-structure

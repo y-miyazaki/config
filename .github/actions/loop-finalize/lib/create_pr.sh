@@ -79,7 +79,7 @@ TARGET_JSON="${TARGET_JSON:-}"
 #
 #######################################
 function main {
-    local script_dir loop_detect_lib work_dir
+    local script_dir loop_action_lib work_dir
     local detect_json_path notify_json_path body_path
     local -a body_args gh_args
     local composed url number
@@ -91,10 +91,10 @@ function main {
     : "${PR_TITLE:?PR_TITLE is required}"
 
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    loop_detect_lib="$(cd "${script_dir}/../../loop-detect/lib" && pwd)"
-    # shellcheck source=../../loop-detect/lib/handoff.sh
+    loop_action_lib="$(cd "${script_dir}/../../lib/loop" && pwd)"
+    # shellcheck source=../../lib/loop/handoff.sh
     # shellcheck disable=SC1091
-    source "${loop_detect_lib}/handoff.sh"
+    source "${loop_action_lib}/handoff.sh"
 
     work_dir="$(mktemp -d)"
     # Capture path at trap-set time; local work_dir is out of scope on EXIT.

@@ -232,7 +232,7 @@ function apply_scoped_head_filter {
         "integration=${#INTEGRATION_BRANCHES[@]} pull_request=${#OPEN_PRS_JSON[@]}"
 }
 
-############################################
+#######################################
 # build_integration_target_json: Build target JSON for integration mode
 #
 # Globals:
@@ -402,11 +402,14 @@ function append_detect_candidate {
     target_json="$(enrich_target_json_with_detect_fields "${target_json}" "${detect_result}")"
 
     local report_file
+    local may_edit="${MAY_EDIT:-}"
+    local write_target="${WRITE_TARGET:-}"
+
     report_file="$(jq -r '.report_file // ""' <<< "${detect_result}" 2> /dev/null || echo "")"
     prompt_text="$(build_prompt_text \
         "${SKILL_NAME}" "${LEVEL}" "${ALLOWLIST}" "${PROMPT_INSTRUCTIONS}" \
         "${last_sha}" "${current_sha}" "${detect_result}" "${open_prompt}" "${consecutive}" \
-        "${MAY_EDIT}" "${WRITE_TARGET}" "${report_file}")"
+        "${may_edit}" "${write_target}" "${report_file}")"
 
     candidate="$(build_loop_candidate_json \
         "${target_key}" "${target_json}" "${prompt_text}" "${verifier_context}" "${detect_result}")" \
@@ -444,7 +447,7 @@ function append_integration_candidate {
         "integration:${branch}" \
         "${branch}" \
         "" \
-        "${GIT_FINALIZE_INTEGRATION}" \
+        "${GIT_FINALIZE_INTEGRATION:-open_pr}" \
         "" \
         build_integration_target_json \
         "${branch}"
@@ -479,7 +482,7 @@ function append_pull_request_candidate {
         "pull_request:${pr_number}" \
         "${head_branch}" \
         "${head_ref}" \
-        "${GIT_FINALIZE_PULL_REQUEST}" \
+        "${GIT_FINALIZE_PULL_REQUEST:-open_pr}" \
         "head=${head_branch}" \
         build_pull_request_target_json \
         "${pr_number}" \
@@ -675,7 +678,7 @@ function detect_result_skip {
     local skip_val
     if ! jq -e . <<< "${result}" > /dev/null 2>&1; then
         log_detect_json_invalid "detect_result_skip" "detect_script_output" "${result}"
-        return 0
+        return 1
     fi
     skip_val=$(jq -r 'if (.skip | type) == "boolean" then (.skip | tostring) else "true" end' <<< "${result}")
     [[ ${skip_val} == "true" ]]
@@ -866,8 +869,9 @@ function resolve_loop_write_contract {
     fi
 
     if ! declare -f validate_loop_write_contract > /dev/null 2>&1; then
-        # shellcheck disable=SC1091
-        source "${SCRIPT_DIR}/../../loop-prompt-generate/lib/validate_loop_write_contract.sh"
+        _loop_action_lib="$(cd "${SCRIPT_DIR}/../../lib/loop" && pwd)"
+        # shellcheck source=../../lib/loop/validate_loop_write_contract.sh disable=SC1091
+        source "${_loop_action_lib}/validate_loop_write_contract.sh"
     fi
 
     if ! validate_loop_write_contract "${MAY_EDIT}" "${WRITE_TARGET}" "${DELIVERY}" "${LEVEL}"; then

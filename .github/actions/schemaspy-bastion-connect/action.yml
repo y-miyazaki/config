@@ -1,0 +1,28 @@
+name: schemaspy-bastion-connect
+description: "Install Session Manager plugin and resolve EC2 bastion instance for SchemaSpy port forwarding."
+
+inputs:
+  bastion_instance_id:
+    default: ""
+    description: "Explicit bastion instance ID"
+    required: false
+  bastion_tag_name:
+    default: "*bastion*"
+    description: "EC2 Name tag filter for auto-detection"
+    required: false
+
+outputs:
+  bastion_id:
+    description: "Resolved bastion instance ID"
+    value: ${{ steps.connect.outputs.bastion_id }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Bastion Connection
+      id: connect
+      shell: bash
+      env:
+        BASTION_INSTANCE_ID: ${{ inputs.bastion_instance_id }}
+        BASTION_TAG_NAME: ${{ inputs.bastion_tag_name }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/connect.sh"

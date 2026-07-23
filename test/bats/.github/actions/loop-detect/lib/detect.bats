@@ -74,6 +74,8 @@ EOF
     LEVEL="L2"
     ALLOWLIST="*"
     PROMPT_INSTRUCTIONS=""
+    MAY_EDIT="true"
+    WRITE_TARGET="fix"
     LOOP_FINALIZE_INTEGRATION="open_pr"
     PENDING_PR_BLOCKED=0
     CIRCUIT_BREAKER_BLOCKED=0
@@ -364,4 +366,10 @@ EOF
     run validate_branch_match
     [ "$status" -eq 1 ]
     [[ $output == *"Invalid LOOP_BRANCH_MATCH"* ]]
+}
+
+@test "detect_result_skip returns non-skip on invalid json" {
+    run detect_result_skip "not-json"
+    [ "$status" -eq 1 ]
+    [[ $output == *"detect_result_skip"* ]]
 }

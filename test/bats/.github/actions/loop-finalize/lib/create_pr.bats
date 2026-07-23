@@ -36,7 +36,7 @@ EOF
     chmod +x "${MOCK_BIN}/gh"
     export PATH="${MOCK_BIN}:${PATH}"
 
-    bats_source_rel ".github/actions/loop-detect/lib/handoff.sh"
+    bats_source_rel ".github/actions/lib/loop/handoff.sh"
     candidate='{"target_json":{"key":"integration:main"},"prompt":"p","verifier_context":"","result":{"failures":[]}}'
     loop_handoff_write_bundle "${HANDOFF_DIR}" "${candidate}"
 }

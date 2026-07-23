@@ -153,50 +153,18 @@ jobs:
       contents: read
     outputs:
       action_validated: ${{ steps.validate-inputs.outputs.action }}
-      target_queues: ${{ steps.validate-inputs.outputs.target_queues }}
+      target_queues: ${{ steps.validate-inputs.outputs.targets }}
     steps:
       - name: Validate inputs
         id: validate-inputs
-        shell: bash
-        env:
-          DISCOVERED_B64: ${{ needs.discover-job-queues.outputs.discovered_queues_b64 }}
-        run: |
-          set -euo pipefail
-          if [[ "$ACTION" != "start" && "$ACTION" != "stop" ]]; then
-            echo "❌ Error: action must be 'start' or 'stop', got '$ACTION'"
-            exit 1
-          fi
-          echo "action=$ACTION" >> "$GITHUB_OUTPUT"
-          echo "✅ Action validated: $ACTION"
-
-          if [[ "$AUTO_DISCOVER" == "true" ]]; then
-            if [[ -n "${DISCOVERED_B64:-}" ]]; then
-              TARGET_QUEUES=$(printf '%s' "$DISCOVERED_B64" | base64 --decode)
-            else
-              TARGET_QUEUES='[]'
-            fi
-            echo "Using auto-discovered job queues"
-          else
-            TARGET_QUEUES="$JOB_QUEUES"
-            echo "Using manually specified job queues"
-          fi
-
-          if ! printf '%s' "$TARGET_QUEUES" | jq empty 2>/dev/null; then
-            echo "❌ Error: job_queues is not valid JSON"
-            exit 1
-          fi
-
-          QUEUE_COUNT=$(printf '%s' "$TARGET_QUEUES" | jq '. | length')
-          if [[ "$QUEUE_COUNT" -eq 0 ]]; then
-            echo "⚠️  Warning: No Batch job queues found (skipping control)"
-            echo "target_queues=[]" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          SANITIZED_QUEUES=$(printf '%s' "$TARGET_QUEUES" | jq -c '.')
-          echo "target_queues=$SANITIZED_QUEUES" >> "$GITHUB_OUTPUT"
-          echo "✅ Target job queues count: $QUEUE_COUNT"
-          printf '%s' "$SANITIZED_QUEUES" | jq .
+        uses: y-miyazaki/config/.github/actions/aws-service-control-validate@59dd8fabd9d9396711cb913ccc707da47634d164 # v1.8.54
+        with:
+          action: ${{ env.ACTION }}
+          auto_discover: ${{ env.AUTO_DISCOVER }}
+          discovered_b64: ${{ needs.discover-job-queues.outputs.discovered_queues_b64 }}
+          input_field_name: job_queues
+          manual_targets_json: ${{ env.JOB_QUEUES }}
+          resource_label: Batch job queues
 
   control-job-queues:
     needs: validate

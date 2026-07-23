@@ -39,10 +39,10 @@ When a Composite Action calls another Composite Action, use **remote reference**
 
 ```yaml
 # ✅ Correct
-uses: y-miyazaki/config/.github/actions/loop-state-write@<sha> # v1.x.x
+uses: y-miyazaki/config/.github/actions/loop-finalize@<sha> # v1.x.x
 
 # ❌ Fails in consumer repositories
-uses: ./.github/actions/loop-state-write
+uses: ./.github/actions/loop-finalize
 ```
 
 ### Versioning
@@ -113,7 +113,7 @@ Use `http.extraheader` for git push authentication (same pattern as `actions/che
 
 ```bash
 git config http.https://github.com/.extraheader \
-  "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${TOKEN}" | base64 -w0)"
+  "AUTHORIZATION: basic [REDACTED:Authorization header] 'x-access-token:[REDACTED:API key param]' "${TOKEN}" | base64 -w0)"
 ```
 
 **Prohibited**: `url.insteadOf` pattern (token persists in plaintext in `.git/config`)

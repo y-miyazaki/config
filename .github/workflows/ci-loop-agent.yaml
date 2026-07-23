@@ -8,6 +8,11 @@ name: ci-loop-agent
 on:
   workflow_call:
     inputs:
+      additional_commit_paths:
+        default: ""
+        description: "Comma-separated paths to commit with state after domain persistence"
+        required: false
+        type: string
       agent_implementer_max_turns:
         default: "5"
         description: "Maximum implementer agent turns per loop attempt"
@@ -38,19 +43,14 @@ on:
         description: "Verifier model override (L2/L3)"
         required: false
         type: string
-      auto_merge:
-        default: "false"
-        description: "Enable auto-merge on created PR (finalize job; L3 + open_pr only)"
-        required: false
-        type: string
-      additional_commit_paths:
-        default: ""
-        description: "Comma-separated paths to commit with state after domain persistence"
-        required: false
-        type: string
       allowlist:
         default: ""
         description: "Comma-separated glob allowlist for verifier (L2/L3)"
+        required: false
+        type: string
+      auto_merge:
+        default: "false"
+        description: "Enable auto-merge on created PR (finalize job; L3 + open_pr only)"
         required: false
         type: string
       base_branch:
@@ -122,14 +122,14 @@ on:
         description: "Optional extended-regex to infer file paths from verifier text (L2/L3)"
         required: false
         type: string
-      level:
-        default: "L1"
-        description: "Loop level: L1 (read-only), L2 (edits with branch), or L3 (edits with auto-merge)"
-        required: false
-        type: string
       labels:
         default: "loop-automation"
         description: "Comma-separated labels for created PR (finalize job)"
+        required: false
+        type: string
+      level:
+        default: "L1"
+        description: "Loop level: L1 (read-only), L2 (edits with branch), or L3 (edits with auto-merge)"
         required: false
         type: string
       loop_name:
@@ -197,6 +197,11 @@ on:
         description: "Verifier task section before criteria (L2/L3)"
         required: false
         type: string
+      run_log_file:
+        default: .loop/loop-run-log.md
+        description: "JSONL run log path for budget aggregation (finalize job)"
+        required: false
+        type: string
       run_started_at:
         default: ""
         description: "Workflow run start timestamp for run log (finalize job)"
@@ -207,6 +212,11 @@ on:
         description: "Skill name (used for L2 branch naming)"
         required: false
         type: string
+      skip_reason:
+        default: "none"
+        description: "Detect skip reason recorded in run log (finalize job)"
+        required: false
+        type: string
       state_file:
         default: ""
         description: "Loop state file path (L2/L3)"
@@ -215,11 +225,6 @@ on:
       state_push_branch:
         default: ""
         description: "Branch for .loop/* state commits (L2/L3)"
-        required: false
-        type: string
-      skip_reason:
-        default: "none"
-        description: "Detect skip reason recorded in run log (finalize job)"
         required: false
         type: string
       target_json:
@@ -334,33 +339,13 @@ jobs:
           name: ${{ inputs.handoff_artifact_name }}
           path: ${{ runner.temp }}/loop-handoff
 
-      - name: Generate App Bot Token
-        continue-on-error: true
-        id: app_token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          client-id: ${{ secrets.BOT_APP_CLIENT_ID }}
-          permission-contents: write
-          permission-pull-requests: write
-          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-
       - name: Resolve Push Token
         id: push_token
-        shell: bash
-        env:
-          APP_TOKEN: ${{ steps.app_token.outputs.token }}
-          GH_TOKEN_PUSH: ${{ secrets.GH_TOKEN_PUSH }}
-        run: |
-          set -euo pipefail
-          if [[ -n "${APP_TOKEN}" ]]; then
-            token="${APP_TOKEN}"
-          elif [[ -n "${GH_TOKEN_PUSH}" ]]; then
-            token="${GH_TOKEN_PUSH}"
-          else
-            token="${GITHUB_TOKEN}"
-          fi
-          echo "::add-mask::${token}"
-          echo "token=${token}" >> "${GITHUB_OUTPUT}"
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@03b6b039391eee6384df67c7b37ca5ac82dfefa6
+        with:
+          bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
+          bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+          gh_token_push: ${{ secrets.GH_TOKEN_PUSH }}
 
       - name: Parse Target
         id: target
@@ -384,22 +369,6 @@ jobs:
               echo "verify_base_branch=${BASE_BRANCH}"
               echo "target_key=integration:${BASE_BRANCH}"
             } >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Resolve State File
-        id: state_path
-        shell: bash
-        env:
-          LOOP_NAME: ${{ inputs.loop_name }}
-          STATE_FILE_INPUT: ${{ inputs.state_file }}
-        run: |
-          set -euo pipefail
-          if [[ -n "${STATE_FILE_INPUT}" ]]; then
-            echo "state_file=${STATE_FILE_INPUT}" >> "$GITHUB_OUTPUT"
-          elif [[ -n "${LOOP_NAME}" ]]; then
-            echo "state_file=.loop/state-${LOOP_NAME}.json" >> "$GITHUB_OUTPUT"
-          else
-            echo "state_file=" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Setup Worktree
@@ -428,8 +397,8 @@ jobs:
           branch: ${{ steps.worktree.outputs.branch }}
           cli_version: ${{ inputs.cli_version }}
           commit_message: ${{ inputs.commit_message }}
-          detect_result_json: ${{ inputs.detect_result_json }}
           denylist: ${{ inputs.denylist }}
+          detect_result_json: ${{ inputs.detect_result_json }}
           engine: ${{ inputs.engine }}
           handoff_dir: ${{ runner.temp }}/loop-handoff
           handoff_key: ${{ inputs.handoff_key != '' && inputs.handoff_key || steps.target.outputs.target_key }}
@@ -474,49 +443,13 @@ jobs:
           name: ${{ inputs.handoff_artifact_name }}
           path: ${{ runner.temp }}/loop-handoff
 
-      - name: Generate App Bot Token
-        continue-on-error: true
-        id: app_token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          client-id: ${{ secrets.BOT_APP_CLIENT_ID }}
-          permission-contents: write
-          permission-pull-requests: write
-          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-
       - name: Resolve Push Token
         id: push_token
-        shell: bash
-        env:
-          APP_TOKEN: ${{ steps.app_token.outputs.token }}
-          GH_TOKEN_PUSH: ${{ secrets.GH_TOKEN_PUSH }}
-        run: |
-          set -euo pipefail
-          if [[ -n "${APP_TOKEN}" ]]; then
-            token="${APP_TOKEN}"
-          elif [[ -n "${GH_TOKEN_PUSH}" ]]; then
-            token="${GH_TOKEN_PUSH}"
-          else
-            token="${GITHUB_TOKEN}"
-          fi
-          echo "::add-mask::${token}"
-          echo "token=${token}" >> "${GITHUB_OUTPUT}"
-
-      - name: Resolve State File
-        id: state_path
-        shell: bash
-        env:
-          LOOP_NAME: ${{ inputs.loop_name }}
-          STATE_FILE_INPUT: ${{ inputs.state_file }}
-        run: |
-          set -euo pipefail
-          if [[ -n "${STATE_FILE_INPUT}" ]]; then
-            echo "state_file=${STATE_FILE_INPUT}" >> "$GITHUB_OUTPUT"
-          elif [[ -n "${LOOP_NAME}" ]]; then
-            echo "state_file=.loop/state-${LOOP_NAME}.json" >> "$GITHUB_OUTPUT"
-          else
-            echo "state_file=" >> "$GITHUB_OUTPUT"
-          fi
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@03b6b039391eee6384df67c7b37ca5ac82dfefa6
+        with:
+          bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
+          bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+          gh_token_push: ${{ secrets.GH_TOKEN_PUSH }}
 
       - name: Parse Notify Target
         id: notify_target
@@ -537,7 +470,6 @@ jobs:
         with:
           additional_commit_paths: ${{ inputs.additional_commit_paths }}
           agent_result: ${{ needs.agent-l2.result }}
-          attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
           auto_merge: ${{ inputs.auto_merge }}
           base_branch: ${{ inputs.base_branch }}
           branch: ${{ needs.agent-l2.outputs.branch }}
@@ -557,11 +489,25 @@ jobs:
           pr_body: ${{ inputs.pr_body }}
           pr_title: ${{ inputs.pr_title }}
           reject_reason: ${{ needs.agent-l2.outputs.reason }}
-          run_started_at: ${{ inputs.run_started_at }}
           skip_reason: ${{ inputs.skip_reason }}
-          state_file: ${{ steps.state_path.outputs.state_file }}
+          state_file: ${{ inputs.state_file }}
           state_push_branch: ${{ inputs.state_push_branch }}
           target_json: ${{ inputs.target_json }}
+          token: ${{ steps.push_token.outputs.token }}
+          verdict: ${{ needs.agent-l2.outputs.verdict }}
+
+      - name: Append Run Log
+        if: inputs.loop_name != ''
+        uses: y-miyazaki/config/.github/actions/loop-run-log@59dd8fabd9d9396711cb913ccc707da47634d164 # v1.8.54
+        with:
+          attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
+          base_branch: ${{ inputs.state_push_branch != '' && inputs.state_push_branch || inputs.base_branch }}
+          has_changes: ${{ needs.agent-l2.outputs.has_changes }}
+          loop_name: ${{ inputs.loop_name }}
+          outcome: ${{ steps.finalize.outputs.outcome }}
+          run_log_file: ${{ inputs.run_log_file }}
+          run_started_at: ${{ inputs.run_started_at }}
+          skip_reason: ${{ inputs.skip_reason }}
           token: ${{ steps.push_token.outputs.token }}
           usage_json: ${{ needs.agent-l2.outputs.usage_json || '' }}
           verdict: ${{ needs.agent-l2.outputs.verdict }}

@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2154
 
-# Tests for .github/actions/loop-prompt-generate/lib/build_constraints.sh
+# Tests for .github/actions/lib/loop/build_constraints.sh
 #
 # Use cases:
 # - explicit may_edit and write_target emission
@@ -17,7 +17,7 @@ done
 # shellcheck disable=SC1091
 source "${_bats_support}/support/common.bash"
 
-BUILD_CONSTRAINTS="$(bats_workspace_root)/.github/actions/loop-prompt-generate/lib/build_constraints.sh"
+BUILD_CONSTRAINTS="$(bats_workspace_root)/.github/actions/lib/loop/build_constraints.sh"
 
 @test "emit_loop_constraints emits deprecation warning for legacy level shim" {
     # shellcheck disable=SC1090

@@ -2,10 +2,10 @@
 #######################################
 # Description:
 #   Write loop state JSON and commit/push to LOOP_STATE_PUSH_BRANCH.
-#   Environment variables mirror loop-state-write composite action inputs.
+#   Environment variables mirror loop-finalize Write State step env vars.
 #
 # Usage:
-#   GH_TOKEN=... STATE_FILE=... TARGET_KEY=... bash lib/run.sh
+#   GH_TOKEN=<token> STATE_FILE=... TARGET_KEY=... bash lib/write_state.sh
 #
 # Design Rules:
 #   - state_write_mode controls whether last_sha, pending, or metadata is updated
@@ -54,6 +54,40 @@ PUSH_BRANCH=""
 STATE_TMP=""
 
 #######################################
+# validate_additional_commit_path: Reject unsafe additional commit paths
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Repo-relative path candidate
+#
+# Outputs:
+#   Error annotation on stderr when invalid
+#
+# Returns:
+#   0 when valid, 1 otherwise
+#
+#######################################
+function validate_additional_commit_path {
+    local path="$1"
+
+    if [[ ${path} == *".."* ]]; then
+        echo "::error::additional_commit_paths must not contain '..': ${path}" >&2
+        return 1
+    fi
+    if [[ ${path} == /* ]]; then
+        echo "::error::additional_commit_paths must be repo-relative: ${path}" >&2
+        return 1
+    fi
+    if [[ ${path} =~ [[:space:]] ]]; then
+        echo "::error::additional_commit_paths must not contain whitespace: ${path}" >&2
+        return 1
+    fi
+    return 0
+}
+
+#######################################
 # commit_and_push_state: Commit state paths and push or open fallback PR
 #
 # Globals:
@@ -91,6 +125,9 @@ function commit_and_push_state {
             item="${item#"${item%%[![:space:]]*}"}"
             item="${item%"${item##*[![:space:]]}"}"
             [[ -z ${item} ]] && continue
+            if ! validate_additional_commit_path "${item}"; then
+                return 1
+            fi
             paths_to_add+=("${item}")
         done
     fi
@@ -339,7 +376,7 @@ function validate_branches {
 #######################################
 function validate_required_inputs {
     if [[ -z ${TARGET_KEY} ]]; then
-        echo "::error::target_key is required for loop-state-write"
+        echo "::error::target_key is required for loop-finalize state write"
         exit 1
     fi
 
@@ -507,7 +544,7 @@ function write_state_clear_pending {
     if ! jq -e --arg key "${TARGET_KEY}" --argjson pr "${PENDING_PR_NUMBER}" \
         '.targets[$key].pending.pr == $pr' "${STATE_TMP}" > /dev/null 2>&1; then
         echo "No matching pending entry for ${TARGET_KEY} PR #${PENDING_PR_NUMBER}; skipping clear."
-        exit 0
+        return 0
     fi
     apply_state_patch "${now}" "${consecutive}" "clear_pending"
 }
@@ -586,11 +623,12 @@ function write_state_promote {
     if ! jq -e --arg key "${TARGET_KEY}" --argjson pr "${PENDING_PR_NUMBER}" \
         '.targets[$key].pending.pr == $pr' "${STATE_TMP}" > /dev/null 2>&1; then
         echo "No matching pending entry for ${TARGET_KEY} PR #${PENDING_PR_NUMBER}; skipping promote."
-        exit 0
+        return 0
     fi
     apply_state_patch "${now}" "${consecutive}" "promote"
 }
 
+#######################################
 # write_target_state: Dispatch state write by state_write_mode
 #
 # Globals:
@@ -635,6 +673,34 @@ function write_target_state {
 }
 
 #######################################
+# validate_state_file_path: Reject unsafe state file paths
+#
+# Globals:
+#   STATE_FILE - State file path to validate
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Error annotation on stderr when invalid
+#
+# Returns:
+#   0 when valid, 1 otherwise
+#
+#######################################
+function validate_state_file_path {
+    if [[ ${STATE_FILE} == *".."* ]]; then
+        echo "::error::state_file must not contain '..'" >&2
+        return 1
+    fi
+    if ! [[ ${STATE_FILE} =~ ^\.loop/state[-a-zA-Z0-9_.]+\.json$ ]]; then
+        echo "::error::state_file must match .loop/state-<name>.json" >&2
+        return 1
+    fi
+    return 0
+}
+
+#######################################
 # main: Write loop state and push to branch_state
 #
 # Globals:
@@ -654,6 +720,8 @@ function main {
     local now consecutive
 
     : "${STATE_FILE:?}"
+
+    validate_state_file_path || exit 1
 
     configure_git_auth
 

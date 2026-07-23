@@ -204,50 +204,18 @@ jobs:
       contents: read
     outputs:
       action_validated: ${{ steps.validate-inputs.outputs.action }}
-      target_tasks: ${{ steps.validate-inputs.outputs.target_tasks }}
+      target_tasks: ${{ steps.validate-inputs.outputs.targets }}
     steps:
       - name: Validate inputs
         id: validate-inputs
-        shell: bash
-        env:
-          DISCOVERED_B64: ${{ needs.discover-scheduled-tasks.outputs.discovered_tasks_b64 }}
-        run: |
-          set -euo pipefail
-          if [[ "$ACTION" != "start" && "$ACTION" != "stop" ]]; then
-            echo "❌ Error: action must be 'start' or 'stop', got '$ACTION'"
-            exit 1
-          fi
-          echo "action=$ACTION" >> "$GITHUB_OUTPUT"
-          echo "✅ Action validated: $ACTION"
-
-          if [[ "$AUTO_DISCOVER" == "true" ]]; then
-            if [[ -n "${DISCOVERED_B64:-}" ]]; then
-              TARGET_TASKS=$(printf '%s' "$DISCOVERED_B64" | base64 --decode)
-            else
-              TARGET_TASKS='[]'
-            fi
-            echo "Using auto-discovered scheduled tasks"
-          else
-            TARGET_TASKS="$SCHEDULED_TASKS"
-            echo "Using manually specified scheduled tasks"
-          fi
-
-          if ! printf '%s' "$TARGET_TASKS" | jq empty 2>/dev/null; then
-            echo "❌ Error: scheduled_tasks is not valid JSON"
-            exit 1
-          fi
-
-          TASK_COUNT=$(printf '%s' "$TARGET_TASKS" | jq '. | length')
-          if [[ "$TASK_COUNT" -eq 0 ]]; then
-            echo "⚠️  Warning: No ECS scheduled tasks found (skipping control)"
-            echo "target_tasks=[]" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          SANITIZED_TASKS=$(printf '%s' "$TARGET_TASKS" | jq -c '.')
-          echo "target_tasks=$SANITIZED_TASKS" >> "$GITHUB_OUTPUT"
-          echo "✅ Target scheduled tasks count: $TASK_COUNT"
-          printf '%s' "$SANITIZED_TASKS" | jq .
+        uses: y-miyazaki/config/.github/actions/aws-service-control-validate@59dd8fabd9d9396711cb913ccc707da47634d164 # v1.8.54
+        with:
+          action: ${{ env.ACTION }}
+          auto_discover: ${{ env.AUTO_DISCOVER }}
+          discovered_b64: ${{ needs.discover-scheduled-tasks.outputs.discovered_tasks_b64 }}
+          input_field_name: scheduled_tasks
+          manual_targets_json: ${{ env.SCHEDULED_TASKS }}
+          resource_label: ECS scheduled tasks
 
   control-schedules:
     needs: validate

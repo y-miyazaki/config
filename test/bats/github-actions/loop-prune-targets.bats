@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
-# Tests for .github/actions/loop-state-write/lib/prune_targets.sh
+# Tests for .github/actions/loop-finalize/lib/prune_targets.sh
 
 # Use cases:
 # - integration old rejected: keep key, clear reject fields, reset consecutive_failures
@@ -20,7 +20,7 @@ done
 source "${_bats_support}/support/common.bash"
 
 setup() {
-    bats_source_rel ".github/actions/loop-state-write/lib/prune_targets.sh"
+    bats_source_rel ".github/actions/loop-finalize/lib/prune_targets.sh"
 }
 
 @test "prune_targets_json clears aged reject fields on integration key" {

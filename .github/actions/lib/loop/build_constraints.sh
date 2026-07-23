@@ -1,18 +1,24 @@
-#!/usr/bin/env bash
+#!/bin/bash
+#######################################
 # Description:
 #   Emit the ## Constraints block for loop implementer prompts.
 #
 # Usage:
-#   source .../build_constraints.sh
+#   source "${LOOP_ACTION_LIB_DIR}/build_constraints.sh"
 #   emit_loop_constraints "<may_edit>" "<write_target>" "<allowlist>" "<report_file>"
 #   emit_loop_constraints_from_level "<level>" "<allowlist>"  # deprecated
 #
 # Design Rules:
 #   - Skills branch on may_edit and write_target — not on level or delivery
 #   - Always emit may_edit when ## Constraints is present
+#
+# Output:
+#   Constraints markdown on stdout
+#######################################
 
 #######################################
-# Emit ## Constraints for loop implementer prompts.
+# emit_loop_constraints: Emit ## Constraints for loop implementer prompts
+#
 # Globals:
 #   None
 #
@@ -27,8 +33,9 @@
 #
 # Returns:
 #   0 on success; 1 on invalid input
+#
 #######################################
-emit_loop_constraints() {
+function emit_loop_constraints {
     if [[ $# -eq 2 ]]; then
         if [[ ${1:-} =~ ^L[123]$ ]]; then
             emit_loop_constraints_from_level "$1" "$2"
@@ -92,7 +99,8 @@ emit_loop_constraints() {
 }
 
 #######################################
-# Deprecated: derive may_edit from level and default write_target to fix.
+# emit_loop_constraints_from_level: Deprecated level-based constraints shim
+#
 # Globals:
 #   None
 #
@@ -105,8 +113,9 @@ emit_loop_constraints() {
 #
 # Returns:
 #   0 on success; 1 when level is non-empty and not L1/L2/L3
+#
 #######################################
-emit_loop_constraints_from_level() {
+function emit_loop_constraints_from_level {
     local level="${1:-}"
     local allowlist="${2:-}"
     local may_edit="false"
@@ -135,7 +144,22 @@ emit_loop_constraints_from_level() {
     fi
 }
 
-# Backward-compatible alias: two-arg calls from legacy callers.
-emit_loop_constraints_legacy() {
+#######################################
+# emit_loop_constraints_legacy: Backward-compatible alias for level shim
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $@ - Passed to emit_loop_constraints_from_level
+#
+# Outputs:
+#   Constraints markdown on stdout
+#
+# Returns:
+#   Exit status from emit_loop_constraints_from_level
+#
+#######################################
+function emit_loop_constraints_legacy {
     emit_loop_constraints_from_level "$@"
 }

@@ -51,16 +51,21 @@ Loop **composite actions must not** call other composite actions from this repos
 
 ```yaml
 # ❌ Nested composite (fails or causes transitive pin drift in consumers)
-uses: ./.github/actions/loop-state-write
-uses: y-miyazaki/config/.github/actions/loop-state-write@<sha>
+uses: ./.github/actions/loop-run-log
+uses: y-miyazaki/config/.github/actions/loop-run-log@<sha>
 ```
 
-Parent composites invoke shared bash under sibling `lib/` paths instead:
+Parent composites invoke shared bash under `.github/actions/lib/` or sibling action `lib/` paths:
 
 ```yaml
-# ✅ Inside a composite action
-run: bash "${GITHUB_ACTION_PATH}/../loop-state-write/lib/run.sh"
+# ✅ Shared loop library (preferred for cross-action logic)
+run: bash -c 'source "${GITHUB_ACTION_PATH}/../lib/loop/handoff.sh"'
+
+# ✅ Action-specific orchestration script inside the same composite
+run: bash "${GITHUB_ACTION_PATH}/lib/write_state.sh"
 ```
+
+Cross-action **library** code belongs under `.github/actions/lib/<domain>/` (for example `lib/loop/handoff.sh`). Do not source another composite's `lib/` for shared contracts — that couples actions by name.
 
 Rationale: a single action SHA stays self-contained at release time without hidden transitive dependencies.
 
@@ -94,7 +99,7 @@ run: bash "${GITHUB_ACTION_PATH}/../loop-install-cli/lib/install.sh"
 | `uses: ./.github/actions/...` in a **workflow** step      | Relative to `GITHUB_WORKSPACE` (caller repo only)                             |
 | `uses: ./.github/actions/...` inside a **composite** step | Relative to caller workspace — **broken for distributed actions**; do not use |
 
-The sibling `lib/` pattern works because one SHA pin carries the whole `.github/actions/*` tree for that commit. It does **not** work in `uses:` (contexts are not expanded there); use `run:` + `GITHUB_ACTION_PATH` instead.
+The shared `lib/` and sibling action patterns work because one SHA pin carries the whole `.github/actions/*` tree for that commit. It does **not** work in `uses:` (contexts are not expanded there); use `run:` + `GITHUB_ACTION_PATH` instead.
 
 **Workflows are different:** job steps call leaf composite actions via `uses:` — never invoke `lib/run.sh` directly from a workflow.
 

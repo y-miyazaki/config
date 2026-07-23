@@ -166,55 +166,18 @@ jobs:
       contents: read
     outputs:
       action_validated: ${{ steps.validate-inputs.outputs.action }}
-      target_instances: ${{ steps.validate-inputs.outputs.target_instances }}
+      target_instances: ${{ steps.validate-inputs.outputs.targets }}
     steps:
       - name: Validate inputs
         id: validate-inputs
-        shell: bash
-        env:
-          DISCOVERED_B64: ${{ needs.discover-instances.outputs.discovered_instances_b64 }}
-        run: |
-          set -euo pipefail
-          # Validate action
-          if [[ "$ACTION" != "start" && "$ACTION" != "stop" ]]; then
-            echo "❌ Error: action must be 'start' or 'stop', got '$ACTION'"
-            exit 1
-          fi
-          echo "action=$ACTION" >> "$GITHUB_OUTPUT"
-          echo "✅ Action validated: $ACTION"
-
-          # Determine target instances (use base64-decoded discovered data to avoid unsafe template expansion)
-          if [[ "$AUTO_DISCOVER" == "true" ]]; then
-            if [[ -n "${DISCOVERED_B64:-}" ]]; then
-              TARGET_INSTANCES=$(printf '%s' "$DISCOVERED_B64" | base64 --decode)
-            else
-              TARGET_INSTANCES='[]'
-            fi
-            echo "Using auto-discovered instances"
-          else
-            TARGET_INSTANCES="$INSTANCES"
-            echo "Using manually specified instances"
-          fi
-
-          # Validate instances JSON format
-          if ! printf '%s' "$TARGET_INSTANCES" | jq empty 2>/dev/null; then
-            echo "❌ Error: instances is not valid JSON"
-            exit 1
-          fi
-
-          # Validate at least one instance is selected
-          INSTANCE_COUNT=$(printf '%s' "$TARGET_INSTANCES" | jq '. | length')
-          if [[ "$INSTANCE_COUNT" -eq 0 ]]; then
-            echo "⚠️  Warning: No EC2 instances found (skipping control)"
-            echo "target_instances=[]" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # Emit sanitized output (compact JSON)
-          SANITIZED_INSTANCES=$(printf '%s' "$TARGET_INSTANCES" | jq -c '.')
-          echo "target_instances=$SANITIZED_INSTANCES" >> "$GITHUB_OUTPUT"
-          echo "✅ Target instances count: $INSTANCE_COUNT"
-          printf '%s' "$SANITIZED_INSTANCES" | jq .
+        uses: y-miyazaki/config/.github/actions/aws-service-control-validate@59dd8fabd9d9396711cb913ccc707da47634d164 # v1.8.54
+        with:
+          action: ${{ env.ACTION }}
+          auto_discover: ${{ env.AUTO_DISCOVER }}
+          discovered_b64: ${{ needs.discover-instances.outputs.discovered_instances_b64 }}
+          input_field_name: instances
+          manual_targets_json: ${{ env.INSTANCES }}
+          resource_label: EC2 instances
 
   control-instances:
     needs: validate

@@ -1,0 +1,105 @@
+name: schemaspy-setup-parameters
+description: "Resolve SchemaSpy DB credentials from Secrets Manager, SSM, or direct inputs and set artifact naming outputs."
+
+inputs:
+  db_host_input:
+    default: ""
+    description: "Direct database host"
+    required: false
+  db_name_input:
+    default: ""
+    description: "Database name input override"
+    required: false
+  db_password_input:
+    default: ""
+    description: "Direct database password"
+    required: false
+  db_port_input:
+    default: ""
+    description: "Direct database port"
+    required: false
+  db_type:
+    description: "Database type"
+    required: true
+  db_username_input:
+    default: ""
+    description: "Direct database username"
+    required: false
+  environment:
+    description: "Target environment name"
+    required: true
+  json_key_database_name:
+    default: "dbname"
+    description: "JSON key for database name"
+    required: false
+  json_key_host:
+    default: "host"
+    description: "JSON key for host"
+    required: false
+  json_key_password:
+    default: "password"
+    description: "JSON key for password"
+    required: false
+  json_key_port:
+    default: "port"
+    description: "JSON key for port"
+    required: false
+  json_key_username:
+    default: "username"
+    description: "JSON key for username"
+    required: false
+  parameter_store_name:
+    default: ""
+    description: "SSM parameter store name"
+    required: false
+  secrets_manager_secret_id:
+    default: ""
+    description: "Secrets Manager secret ID"
+    required: false
+  use_secrets_manager:
+    default: "true"
+    description: "Whether to use Secrets Manager"
+    required: false
+  use_ssm:
+    default: "false"
+    description: "Whether to use SSM Parameter Store"
+    required: false
+
+outputs:
+  artifact_base:
+    description: "Artifact base name"
+    value: ${{ steps.setup.outputs.artifact_base }}
+  artifact_name:
+    description: "Artifact zip file name"
+    value: ${{ steps.setup.outputs.artifact_name }}
+  outdir:
+    description: "SchemaSpy output directory"
+    value: ${{ steps.setup.outputs.outdir }}
+  title:
+    description: "Summary title"
+    value: ${{ steps.setup.outputs.title }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Parameters
+      id: setup
+      shell: bash
+      env:
+        DB_HOST_INPUT: ${{ inputs.db_host_input }}
+        DB_NAME_INPUT: ${{ inputs.db_name_input }}
+        DB_PASSWORD_INPUT: ${{ inputs.db_password_input }}
+        DB_PORT_INPUT: ${{ inputs.db_port_input }}
+        DB_TYPE: ${{ inputs.db_type }}
+        DB_USERNAME_INPUT: ${{ inputs.db_username_input }}
+        ENVIRONMENT: ${{ inputs.environment }}
+        JSON_KEY_DATABASE_NAME: ${{ inputs.json_key_database_name }}
+        JSON_KEY_HOST: ${{ inputs.json_key_host }}
+        JSON_KEY_PASSWORD: ${{ inputs.json_key_password }}
+        JSON_KEY_PORT: ${{ inputs.json_key_port }}
+        JSON_KEY_USERNAME: ${{ inputs.json_key_username }}
+        PARAMETER_STORE_NAME: ${{ inputs.parameter_store_name }}
+        SECRETS_MANAGER_SECRET_ID: ${{ inputs.secrets_manager_secret_id }}
+        USE_SECRETS_MANAGER: ${{ inputs.use_secrets_manager }}
+        USE_SSM: ${{ inputs.use_ssm }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/setup-parameters.sh"

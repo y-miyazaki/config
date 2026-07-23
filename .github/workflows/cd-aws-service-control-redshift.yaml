@@ -161,54 +161,18 @@ jobs:
       contents: read
     outputs:
       action_validated: ${{ steps.validate-inputs.outputs.action }}
-      target_clusters: ${{ steps.validate-inputs.outputs.target_clusters }}
+      target_clusters: ${{ steps.validate-inputs.outputs.targets }}
     steps:
       - name: Validate inputs
         id: validate-inputs
-        shell: bash
-        env:
-          DISCOVERED_B64: ${{ needs.discover-clusters.outputs.discovered_clusters_b64 }}
-        run: |
-          set -euo pipefail
-          # Validate action
-          if [[ "$ACTION" != "start" && "$ACTION" != "stop" ]]; then
-            echo "❌ Error: action must be 'start' or 'stop', got '$ACTION'"
-            exit 1
-          fi
-          echo "action=$ACTION" >> "$GITHUB_OUTPUT"
-          echo "✅ Action validated: $ACTION"
-
-          # Determine target clusters (use base64-decoded discovered data to avoid unsafe template expansion)
-          if [[ "$AUTO_DISCOVER" == "true" ]]; then
-            if [[ -n "${DISCOVERED_B64:-}" ]]; then
-              TARGET_CLUSTERS=$(printf '%s' "$DISCOVERED_B64" | base64 --decode)
-            else
-              TARGET_CLUSTERS='[]'
-            fi
-            echo "Using auto-discovered clusters"
-          else
-            TARGET_CLUSTERS="$CLUSTERS"
-            echo "Using manually specified clusters"
-          fi
-
-          # Validate clusters JSON format
-          if ! printf '%s' "$TARGET_CLUSTERS" | jq empty 2>/dev/null; then
-            echo "❌ Error: clusters is not valid JSON"
-            exit 1
-          fi
-
-          # Validate at least one cluster is selected
-          CLUSTER_COUNT=$(printf '%s' "$TARGET_CLUSTERS" | jq '. | length')
-          if [[ "$CLUSTER_COUNT" -eq 0 ]]; then
-            echo "⚠️  Warning: No Redshift clusters found (skipping control)"
-            echo "target_clusters=[]" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          SANITIZED_CLUSTERS=$(printf '%s' "$TARGET_CLUSTERS" | jq -c '.')
-          echo "target_clusters=$SANITIZED_CLUSTERS" >> "$GITHUB_OUTPUT"
-          echo "✅ Target clusters count: $CLUSTER_COUNT"
-          printf '%s' "$SANITIZED_CLUSTERS" | jq .
+        uses: y-miyazaki/config/.github/actions/aws-service-control-validate@59dd8fabd9d9396711cb913ccc707da47634d164 # v1.8.54
+        with:
+          action: ${{ env.ACTION }}
+          auto_discover: ${{ env.AUTO_DISCOVER }}
+          discovered_b64: ${{ needs.discover-clusters.outputs.discovered_clusters_b64 }}
+          input_field_name: clusters
+          manual_targets_json: ${{ env.CLUSTERS }}
+          resource_label: Redshift clusters
 
   control-clusters:
     needs: validate

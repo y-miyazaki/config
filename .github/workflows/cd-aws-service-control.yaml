@@ -194,6 +194,8 @@ permissions:
   id-token: write
 
 jobs:
+  # Each child job repeats secrets/permissions because GitHub Actions requires a static
+  # reusable-workflow reference per job (no dynamic uses: or shared job templates).
   control-ec2-instances:
     if: ${{ inputs.control_ec2 }}
     uses: ./.github/workflows/cd-aws-service-control-ec2.yaml

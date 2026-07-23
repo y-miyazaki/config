@@ -2,7 +2,7 @@
 #######################################
 # Description: Artifact-oriented job handoff for loop detect → execute
 #
-# Usage: source "${LIB_DIR}/handoff.sh"
+# Usage: source "${LOOP_ACTION_LIB_DIR}/handoff.sh"
 #
 # Output:
 # - None (library file; writes bundle files under a handoff directory)
@@ -36,6 +36,19 @@ LOOP_HANDOFF_VERSION=1
 #######################################
 function loop_handoff_init_bundle {
     local handoff_dir="$1"
+
+    if [[ -z ${handoff_dir} ]]; then
+        echo "::error::loop-handoff: handoff_dir is required" >&2
+        return 1
+    fi
+    if [[ ${handoff_dir} != /* ]]; then
+        echo "::error::loop-handoff: handoff_dir must be an absolute path" >&2
+        return 1
+    fi
+    if [[ ${handoff_dir} == "/" ]]; then
+        echo "::error::loop-handoff: handoff_dir must not be filesystem root" >&2
+        return 1
+    fi
 
     rm -rf "${handoff_dir}"
     mkdir -p "${handoff_dir}/payloads"
@@ -200,7 +213,7 @@ function loop_handoff_resolve_detect_result_json {
 #######################################
 function loop_handoff_sanitize_key {
     local target_key="$1"
-    printf '%s' "${target_key}" | tr ':/' '__'
+    printf '%s' "${target_key}" | base64 -w0 | tr '+/' '-_' | tr -d '='
 }
 
 #######################################

@@ -29,7 +29,7 @@ Referencing the design philosophy of GitHub Agentic Workflows ([official blog](h
 | **ci-sweeper**                   | GitHub API: failed runs (integration + optional PR) | Auto-fix; PR or push per mode     | L2 default; L3 opt-in — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md) |
 | **changelog**                    | git log: parse conventional commits                 | Auto-generate/update CHANGELOG.md | L2 — see [Changelog Workflow](workflows/loop-changelog-workflow-design.md)                      |
 | **refactor**                     | repo scan: duplication_block / oversized_unit hints | O1/O2 structural fix; open PR     | L2 — see [Refactor Workflow](workflows/loop-refactor-workflow-design.md)                        |
-| **tech-debt**                    | full-repo mechanical debt sensors                   | Classify + write dated report PR  | L2 — see [Report Tech Debt Workflow](workflows/loop-tech-debt-workflow-design.md)              |
+| **tech-debt**                    | full-repo mechanical debt sensors                   | Classify + write dated report PR  | L2 — see [Report Tech Debt Workflow](workflows/loop-tech-debt-workflow-design.md)               |
 
 #### CI failure repair — one package, layered responsibilities
 
@@ -156,8 +156,8 @@ Hook/manual and loop skills live under `.apm/packages/common/.apm/skills/` — s
 
 ## Naming Conventions
 
-| Identifier type | Naming pattern             | Example                                  |
-| --------------- | -------------------------- | ---------------------------------------- |
+| Identifier type | Naming pattern             | Example                                               |
+| --------------- | -------------------------- | ----------------------------------------------------- |
 | Workflow file   | `on-loop-<loop_name>.yaml` | `on-loop-docs-triage.yaml`                            |
 | `loop_name`     | kebab-case (state key)     | `docs-triage`, `ci-sweeper`, `changelog`, `tech-debt` |
 | Skill directory | kebab-case (no `loop-`)    | `docs-updater`, `ci-sweeper`, `refactor`, `tech-debt` |
@@ -291,10 +291,6 @@ graph LR
         CA1[loop-agent-once<br/>L1]
         CA2[loop-execute<br/>L2/L3 Agent→Verify]
         CA3[loop-finalize]
-        CA4[loop-config-pack]
-        CA5[loop-prompt-generate]
-        CA6[loop-state-read]
-        CA7[loop-state-write]
         CA8[loop-worktree-setup]
         CA9[loop-install-cli]
         CA10[loop-run-log]
@@ -326,9 +322,9 @@ graph LR
     CW1 --> CA3
     CW2 --> CA3
     CW3 --> CA3
-    CA0 --> CA4
-    CA0 --> CA5
-    CA0 --> CA6
+    CA0 --> ST1
+    CA0 --> ST2
+    CA0 --> ST3
     CA0 --> ST4
     CA0 --> ST5
     RW1 --> E1
@@ -340,14 +336,10 @@ graph LR
     RW1 --> SK1
     RW1 --> SK2
     RW1 --> SK3
-    CA3 --> CA7
     CA3 --> CA10
-    CA6 --> ST1
-    CA6 --> ST2
-    CA6 --> ST3
-    CA7 --> ST1
-    CA7 --> ST2
-    CA7 --> ST3
+    CA3 --> ST1
+    CA3 --> ST2
+    CA3 --> ST3
     CA10 --> ST4
 ```
 
@@ -367,11 +359,11 @@ State and observability files under `.loop/` (multi-loop coordination principle)
   .gitkeep
 ```
 
-- State read/write is handled by `loop-state-read` / `loop-state-write` actions
-- `loop-finalize` invokes `loop-run-log` to append outcome, attempts, verdict, and token usage
+- State read is performed inline by `loop-detect` (`lib/state.sh`); writes are performed inline by `loop-finalize` (`lib/write_state.sh`)
+- `loop-run-log` is invoked as a sibling step in `ci-loop-agent` after `loop-finalize` (or `record-skip` in callers) to append outcome, attempts, verdict, and token usage
 - `loop-detect` aggregates today's entries from `loop-run-log.md` against `loop-budget.json` (or `budget_max_*` inputs) and may set `skip_reason=budget`
 - `.gitattributes` is configured with `merge=ours` to prevent merge conflicts
-- On first run, `loop-state-read` returns a default value (HEAD~10) even if the state file does not exist
+- On first run, `loop-detect` resolves `last_sha` with a default (`HEAD~10`) when the state file or target entry is absent (`lib/state.sh`)
 
 ## L2 Promotion Requirements
 
@@ -401,14 +393,14 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 
 `loop-*` composite actions and reusable workflows must remain domain-agnostic. When adding loops such as `ci-sweeper`, `code-review`, or tech-debt remediation, domain logic must not leak into shared actions — otherwise every new loop requires editing the action layer.
 
-| Layer                | Domain-specific (caller / skill)                                | Generic (action / reusable workflow)                                        |
-| -------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| Detection criteria   | `detect_script` path, script output (`result` facts)            | `loop-detect` enumeration, checkout, guards, `target_matrix`                |
-| Implementer prompt   | `prompt_instructions`, `AGENT_VERIFIER_CRITERIA`, PR title/body | `loop-prompt-generate` constraints (level, allowlist, worktree persistence) |
-| Verifier context     | Detect fact summary or CI log excerpt per target                | Always wire `verifier_context` to `loop-execute` (may be empty)             |
-| Path scope           | `LOOP_ALLOWLIST`, Skill allowed paths                           | denylist defaults in `loop-execute`, allowlist enforcement                  |
-| Verifier quality bar | Criteria markdown in caller `env`                               | Verifier prompt templates, JSON output contract in `loop-execute`           |
-| Domain persistence   | `domain_persistence_script` path (optional)                     | `loop-finalize` invokes script with standard env; no domain logic in action |
+| Layer                | Domain-specific (caller / skill)                                | Generic (action / reusable workflow)                                                                  |
+| -------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Detection criteria   | `detect_script` path, script output (`result` facts)            | `loop-detect` enumeration, checkout, guards, `target_matrix`                                          |
+| Implementer prompt   | `prompt_instructions`, `AGENT_VERIFIER_CRITERIA`, PR title/body | `loop-detect` prompt assembly via `lib/loop/build_constraints.sh` (may_edit, allowlist, write_target) |
+| Verifier context     | Detect fact summary or CI log excerpt per target                | Always wire `verifier_context` to `loop-execute` (may be empty)                                       |
+| Path scope           | `LOOP_ALLOWLIST`, Skill allowed paths                           | denylist defaults in `loop-execute`, allowlist enforcement                                            |
+| Verifier quality bar | Criteria markdown in caller `env`                               | Verifier prompt templates, JSON output contract in `loop-execute`                                     |
+| Domain persistence   | `domain_persistence_script` path (optional)                     | `loop-finalize` invokes script with standard env; no domain logic in action                           |
 
 **Caller input pattern** for a new `on-loop-*.yaml` (after [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md)):
 
@@ -437,7 +429,7 @@ Copy `on-loop-changelog.yaml` as a thin caller template (`with:` on `ci-loop-cal
 - Hardcoded file paths or glob patterns for a single loop
 - Domain-specific default commit messages or PR templates inside actions
 
-`loop-prompt-generate` is the boundary for prompt assembly: caller supplies `instructions` (domain task); the action injects generic `Constraints` (level, allowlist, L2+ worktree persistence).
+`loop-detect` is the boundary for prompt assembly: caller supplies `prompt_instructions` (domain task); detect injects generic `## Constraints` via `lib/loop/build_constraints.sh` (may_edit, allowlist, write_target).
 
 ### Maker-Checker Separation (Most Important Principle)
 
@@ -681,7 +673,7 @@ stateDiagram-v2
 | Skill Watch (no code edit)                 | Finalize records `watch`; ledger/state cursor advances; no `consecutive_failures` increment                               | `outcome: watch`      |
 | Agent produces no changes (non-actionable) | Finalize records `no-op`. Cursor advances                                                                                 | `outcome: no-op`      |
 | Verifier REJECT                            | Finalize deletes branch, records rejection. SHA advances. The rejected diff is not retried — only new commits are scanned | `outcome: rejected`   |
-| Verifier APPROVE → PR CI fails             | PR remains open (blocked by Required Status Checks). SHA advances. ci-sweeper handles cleanup                        | `outcome: pr-created` |
+| Verifier APPROVE → PR CI fails             | PR remains open (blocked by Required Status Checks). SHA advances. ci-sweeper handles cleanup                             | `outcome: pr-created` |
 | Agent job cancelled (user/concurrency)     | Finalize does not run. No state update. Next cron retries from same SHA                                                   | No change             |
 
 **Design rationale**: SHA always advances on successful detect (even if later phases fail). This prevents infinite retry of the same failing diff. If the underlying issue persists, new commits touching the same area will trigger a fresh detection.
@@ -696,7 +688,7 @@ stateDiagram-v2
 
 **Implementation**: `loop-finalize` increments `consecutive_failures` per `target.key` on `outcome: rejected`. `loop-detect` reads per-target counter and sets `skip_reason=circuit_breaker` when threshold is exceeded.
 
-**State / ledger retention (30 days):** On each `loop-state-write`, prune terminal `pull_request:*` keys older than 30 days (`rejected` / `pr-closed`, no `pending`). Watch keys (`integration:*`, …) are never deleted; aged reject metadata is cleared and `consecutive_failures` reset (cooldown). Keep `last_sha` / `pending`. CI sweeper run ledger (`update_run_ledger.sh`) drops `runs` entries with `updated_at` older than 30 days. Same window as `loop-run-log`. See [Loop State Targets Retention Design](../../superpowers/specs/2026-07-17-loop-state-targets-retention-design.md).
+**State / ledger retention (30 days):** On each `loop-finalize` state write (`lib/write_state.sh`), prune terminal `pull_request:*` keys older than 30 days (`rejected` / `pr-closed`, no `pending`). Watch keys (`integration:*`, …) are never deleted; aged reject metadata is cleared and `consecutive_failures` reset (cooldown). Keep `last_sha` / `pending`. CI sweeper run ledger (`update_run_ledger.sh`) drops `runs` entries with `updated_at` older than 30 days. Same window as `loop-run-log`. See [Loop State Targets Retention Design](../../superpowers/specs/2026-07-17-loop-state-targets-retention-design.md).
 
 **Reject reason recording**: On REJECT, Finalize writes the verifier's `reason` field to state. This enables future feedback loops where reject reasons are analyzed to improve prompts or detect systematic issues.
 
@@ -736,7 +728,7 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 | **Output**          | `should_run`, `skip_reason`, `target_matrix` (candidates with `target_json`, `prompt`, `verifier_context`, `result`), config passthrough |
 | **May modify**      | Nothing. Read-only phase                                                                                                                 |
 | **Caller-specific** | Detection script path, `prompt_instructions`, verifier criteria, allowlist, PR metadata                                                  |
-| **Generic**         | `loop-detect` (state read, guards including budget, detect invocation), `loop-prompt-generate` (constraints + caller context)            |
+| **Generic**         | `loop-detect` (state read, guards including budget, detect invocation, prompt assembly via `lib/loop/build_constraints.sh`)              |
 
 #### Agent (Execute)
 

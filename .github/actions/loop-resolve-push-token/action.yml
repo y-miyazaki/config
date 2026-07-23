@@ -1,0 +1,41 @@
+name: loop-resolve-push-token
+description: "Generate GitHub App token when configured, then resolve push token (app → GH_TOKEN_PUSH → GITHUB_TOKEN)."
+
+inputs:
+  bot_app_client_id:
+    description: "GitHub App client ID for ruleset-bypass pushes"
+    required: false
+  bot_app_private_key:
+    description: "GitHub App private key for ruleset-bypass pushes"
+    required: false
+  gh_token_push:
+    description: "Optional GitHub token with push permission"
+    required: false
+
+outputs:
+  token:
+    description: "Resolved push token"
+    value: ${{ steps.push_token.outputs.token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Generate App Bot Token
+      continue-on-error: true
+      if: inputs.bot_app_client_id != '' && inputs.bot_app_private_key != ''
+      id: app_token
+      uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      with:
+        client-id: ${{ inputs.bot_app_client_id }}
+        permission-contents: write
+        permission-pull-requests: write
+        private-key: ${{ inputs.bot_app_private_key }}
+
+    - name: Resolve Push Token
+      id: push_token
+      shell: bash
+      env:
+        APP_TOKEN: ${{ steps.app_token.outputs.token }}
+        BOT_APP_CONFIGURED: ${{ inputs.bot_app_client_id != '' && inputs.bot_app_private_key != '' && 'true' || 'false' }}
+        GH_TOKEN_PUSH: ${{ inputs.gh_token_push }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/resolve.sh"

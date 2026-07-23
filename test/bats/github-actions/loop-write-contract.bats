@@ -1,6 +1,6 @@
 #!/usr/bin/env bats
 
-# Tests for .github/actions/loop-prompt-generate/lib/validate_loop_write_contract.sh
+# Tests for .github/actions/lib/loop/validate_loop_write_contract.sh
 #
 # Use cases:
 # - normative may_edit × write_target × delivery × level combinations
@@ -14,7 +14,7 @@ done
 # shellcheck disable=SC1091
 source "${_bats_support}/support/common.bash"
 
-VALIDATE_LIB="$(bats_workspace_root)/.github/actions/loop-prompt-generate/lib/validate_loop_write_contract.sh"
+VALIDATE_LIB="$(bats_workspace_root)/.github/actions/lib/loop/validate_loop_write_contract.sh"
 
 setup() {
     # shellcheck disable=SC1090

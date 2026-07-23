@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
-# Tests for .github/actions/loop-detect/lib/handoff.sh
+# Tests for .github/actions/lib/loop/handoff.sh
 #
 # Use cases:
 # - loop_handoff_write_bundle writes manifest and per-target payload files
@@ -23,8 +23,27 @@ done
 source "${_bats_support}/support/common.bash"
 
 setup() {
-    bats_source_rel ".github/actions/loop-detect/lib/handoff.sh"
+    bats_source_rel ".github/actions/lib/loop/handoff.sh"
     HANDOFF_DIR="${BATS_TEST_TMPDIR}/loop-handoff"
+}
+
+@test "loop_handoff_init_bundle rejects empty handoff_dir" {
+    run loop_handoff_init_bundle ""
+    [ "$status" -eq 1 ]
+    [[ $output == *"handoff_dir is required"* ]]
+}
+
+@test "loop_handoff_sanitize_key encodes separators without collision" {
+    local stem_a stem_b
+    stem_a="$(loop_handoff_sanitize_key "integration:main")"
+    stem_b="$(loop_handoff_sanitize_key "integration__main")"
+    [ "${stem_a}" != "${stem_b}" ]
+}
+
+@test "loop_handoff_init_bundle rejects relative handoff_dir" {
+    run loop_handoff_init_bundle "relative/handoff"
+    [ "$status" -eq 1 ]
+    [[ $output == *"must be an absolute path"* ]]
 }
 
 @test "loop_handoff_read_detect_result loads payload by key" {
@@ -118,7 +137,7 @@ setup() {
     run bash -c '
         set -euo pipefail
         # shellcheck disable=SC1091
-        source "'"${repo_root}"'/.github/actions/loop-detect/lib/handoff.sh"
+        source "'"${repo_root}"'/.github/actions/lib/loop/handoff.sh"
         loop_handoff_write_candidate_payload() { return 1; }
         loop_handoff_write_bundle "'"${handoff_dir}"'" "${HANDOFF_FAIL_CANDIDATE}"
     '
@@ -138,10 +157,10 @@ setup() {
     [ -f "${HANDOFF_DIR}/manifest.json" ]
     run jq -e '.version == 1 and (.keys | length) == 2' "${HANDOFF_DIR}/manifest.json"
     [ "$status" -eq 0 ]
-    [ -f "${HANDOFF_DIR}/payloads/integration_main.json" ]
-    [ -f "${HANDOFF_DIR}/payloads/pull_request_42.json" ]
+    [ -f "$(loop_handoff_payload_path "${HANDOFF_DIR}" "integration:main")" ]
+    [ -f "$(loop_handoff_payload_path "${HANDOFF_DIR}" "pull_request:42")" ]
     run jq -e '.result.skip == false and .verifier_context == "vc1"' \
-        "${HANDOFF_DIR}/payloads/integration_main.json"
+        "$(loop_handoff_payload_path "${HANDOFF_DIR}" "integration:main")"
     [ "$status" -eq 0 ]
 }
 
@@ -151,8 +170,10 @@ setup() {
 }
 
 @test "loop_handoff_read_payload returns error when payload is invalid JSON" {
+    local payload_file
     mkdir -p "${HANDOFF_DIR}/payloads"
-    printf 'not-json' > "${HANDOFF_DIR}/payloads/integration_main.json"
+    payload_file="$(loop_handoff_payload_path "${HANDOFF_DIR}" "integration:main")"
+    printf 'not-json' > "${payload_file}"
     run loop_handoff_read_payload "${HANDOFF_DIR}" "integration:main"
     [ "$status" -eq 1 ]
 }

@@ -164,7 +164,7 @@ setup() {
     local detect_result prompt
 
     detect_result='{"status":"ok","commits":[{"sha":"abc","type":"feat","scope":"","breaking":false,"subject":"big"}]}'
-    prompt="$(build_prompt_text "loop-changelog" "L2" "CHANGELOG.md" "do work" "since" "head" "${detect_result}" "" "0")"
+    prompt="$(build_prompt_text "loop-changelog" "L2" "CHANGELOG.md" "do work" "since" "head" "${detect_result}" "" "0" "true" "fix")"
 
     [[ ${prompt} == *"__LOOP_DETECT_RESULT_JSON__"* ]]
     [[ ${prompt} != *'"commits"'* ]]

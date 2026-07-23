@@ -22,7 +22,7 @@ done
 source "${_bats_support}/support/common.bash"
 
 setup() {
-    bats_source_rel ".github/actions/loop-detect/lib/handoff.sh"
+    bats_source_rel ".github/actions/lib/loop/handoff.sh"
     bats_source_rel ".github/actions/loop-execute/lib/common.sh"
 }
 
@@ -146,4 +146,17 @@ EOF
     run materialize_matrix_handoff_context
     [ "$status" -eq 1 ]
     [[ $output == *"handoff payload missing"* ]]
+}
+
+@test "materialize_matrix_handoff_context fails on invalid inline detect json" {
+    PROMPT_TEXT="Run skill"
+    DETECT_RESULT_JSON="not-json"
+    unset LOOP_HANDOFF_DIR HANDOFF_KEY
+    VERIFIER_CONTEXT=""
+    STATUS_DIR="${BATS_TEST_TMPDIR}/loop-status-invalid-inline"
+    mkdir -p "${STATUS_DIR}"
+
+    run materialize_matrix_handoff_context
+    [ "$status" -eq 1 ]
+    [[ $output == *"inline DETECT_RESULT_JSON is invalid"* ]]
 }

@@ -205,7 +205,7 @@ Each matrix cell = one `max_runs_per_day` consumption. Cap enumeration in `loop-
 
 `on-loop-state-promote` needs `contents: write` and a token with `pull-requests: write` when `loop-state-promote` opens a state PR fallback (dogfood: maintenance bot app token).
 
-`ci-loop-agent` `agent-l2` needs `pull-requests: write` when `loop-run-log` or `loop-state-write` opens a PR fallback on protected branches.
+`ci-loop-agent` `agent-l2` needs `pull-requests: write` when `loop-run-log` or `loop-finalize` state-write PR fallback opens on protected branches.
 
 ## Caller input conventions
 
