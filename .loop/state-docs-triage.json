@@ -1,11 +1,63 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-07-23T11:21:11Z",
-      "outcome": "pr-closed",
-      "consecutive_failures": 0,
-      "open_rejections": [],
-      "last_reject_reason": "Prior loop-* path and report-format rejections are resolved; all eight docs match the consolidated common/.apm/skills layout with verified script paths.",
+      "last_run": "2026-07-23T11:36:01Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
+      "open_rejections": [
+        {
+          "attempt": 1,
+          "files": [
+            "docs/explanation/loop-engineering/workflows/loop-changelog-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-docs-triage-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-refactor-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-tech-debt-workflow-design.md",
+            "docs/reference/specification.md"
+          ],
+          "issue": "Partial skill-consolidation sync: loop-refactor-workflow-design.md still references removed loop-* skill names (loop-refactor, loop-ci-sweeper, loop-tech-debt) in checklist and Cross-Loop Note after updating other sections to refactor; loop-engineering-design.md mermaid skill nodes and state ownership comments still use obsolete loop-* names instead of consolidated skill/loop_name values.",
+          "fix": "In loop-refactor-workflow-design.md, replace remaining loop-refactor/loop-ci-sweeper/loop-tech-debt references with refactor/ci-sweeper/tech-debt. In loop-engineering-design.md, update mermaid SK1–SK3 labels to changelog/docs-updater/ci-sweeper and fix state-file ownership comments to use loop_name values (changelog, docs-triage, ci-sweeper). Continue syncing other affected_docs that still cite loop-* APM packages or skills."
+        },
+        {
+          "attempt": 2,
+          "files": [
+            "docs/explanation/loop-engineering/loop-caller-reusable-design.md",
+            "docs/explanation/loop-engineering/loop-engineering-design.md",
+            "docs/explanation/loop-engineering/multi-branch-loops-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md",
+            "docs/explanation/loop-engineering/workflows/loop-changelog-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-docs-triage-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-refactor-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-tech-debt-workflow-design.md",
+            "docs/reference/loop-engineering-checklist.md",
+            "docs/reference/loop-notify-pr-specification.md",
+            "docs/reference/specification.md"
+          ],
+          "issue": "Agent report output format or Changes/Deferred consistency failed",
+          "fix": "Emit ## Overview, ## Summary (### Changes + ### Deferred), and ## Verification per loop PR body skill contract; reconcile with git diff before synthesis"
+        },
+        {
+          "attempt": 3,
+          "files": [
+            "docs/explanation/loop-engineering/loop-caller-reusable-design.md",
+            "docs/explanation/loop-engineering/loop-engineering-design.md",
+            "docs/explanation/loop-engineering/multi-branch-loops-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md",
+            "docs/explanation/loop-engineering/workflows/loop-changelog-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-docs-triage-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-refactor-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-tech-debt-workflow-design.md",
+            "docs/reference/loop-engineering-checklist.md",
+            "docs/reference/loop-notify-pr-specification.md",
+            "docs/reference/specification.md"
+          ],
+          "issue": "Agent report output format or Changes/Deferred consistency failed",
+          "fix": "Emit ## Overview, ## Summary (### Changes + ### Deferred), and ## Verification per loop PR body skill contract; reconcile with git diff before synthesis"
+        }
+      ],
+      "last_reject_reason": "Branch diff includes docs/explanation/loop-engineering/loop-caller-reusable-design.md but ### Changes table omits it\nBranch diff includes docs/explanation/loop-engineering/workflows/loop-changelog-workflow-design.md but ### Changes table omits it\nBranch diff includes docs/explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md but ### Changes table omits it\nBranch diff includes docs/explanation/loop-engineering/workflows/loop-docs-triage-workflow-design.md but ### Changes table omits it\nBranch diff includes docs/explanation/loop-engineering/workflows/loop-refactor-workflow-design.md but ### Changes table omits it\nBranch diff includes docs/explanation/loop-engineering/workflows/loop-tech-debt-workflow-design.md but ### Changes table omits it\nBranch diff includes docs/reference/loop-engineering-checklist.md but ### Changes table omits it\nBranch diff includes docs/reference/loop-notify-pr-specification.md but ### Changes table omits it\nBranch diff includes docs/reference/specification.md but ### Changes table omits it",
       "last_sha": "f899b729c39776d99ad27f9fed7851e6629a6f24"
     }
   }
