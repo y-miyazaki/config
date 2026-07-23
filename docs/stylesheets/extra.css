@@ -3,7 +3,7 @@
  * Material limits the entire row (nav + content + TOC) to 61rem via .md-grid.
  */
 @media screen and (min-width: 76.25em) {
-  .md-main__inner.md-grid {
-    max-width: initial;
-  }
+    .md-main__inner.md-grid {
+        max-width: initial;
+    }
 }

@@ -31,7 +31,7 @@
 #######################################
 function agent_report_skill_requires_format_check {
     case "${1:-}" in
-        changelog | ci-sweeper | docs-updater | refactor | report-tech-debt) return 0 ;;
+        changelog | ci-sweeper | docs-updater | refactor | tech-debt) return 0 ;;
         *) return 1 ;;
     esac
 }
@@ -54,7 +54,7 @@ function agent_report_skill_requires_format_check {
 #######################################
 function agent_report_primary_subsection {
     case "${1:-}" in
-        report-tech-debt) printf '%s' "Report" ;;
+        tech-debt) printf '%s' "Report" ;;
         *) printf '%s' "Changes" ;;
     esac
 }
@@ -78,7 +78,7 @@ function agent_report_primary_subsection {
 function agent_report_deferred_subsection {
     case "${1:-}" in
         changelog) printf '%s' "Skipped" ;;
-        report-tech-debt) printf '%s' "Watch" ;;
+        tech-debt) printf '%s' "Watch" ;;
         *) printf '%s' "Deferred" ;;
     esac
 }

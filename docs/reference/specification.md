@@ -65,7 +65,7 @@ The repository structure is function-oriented.
   - `loop-docs-triage/`: Documentation update loop (self-contained skill package)
   - `loop-ci-sweeper/`: CI failure sweeper loop (self-contained skill package)
   - `loop-changelog/`: Changelog maintenance loop (self-contained skill package)
-  - `loop-report-tech-debt/`: Technical debt report loop (self-contained skill package)
+  - `loop-tech-debt/`: Technical debt report loop (self-contained skill package)
   - `loop-refactor/`: Structural refactor action loop (self-contained skill package)
   - `refactor/`: Behavior-preserving refactor skill (interactive; used by loop-refactor)
 - `apm.yml`: APM package metadata and dependency entry point
@@ -140,11 +140,11 @@ The repository uses a multi-package structure under `.apm/packages/`. Each packa
 │   └── .apm/skills/loop-changelog/
 │       ├── SKILL.md
 │       └── scripts/detect_changelog_commits.sh
-├── loop-report-tech-debt/  # Technical debt report loop (self-contained)
+├── loop-tech-debt/  # Technical debt report loop (self-contained)
 │   ├── apm.yml
-│   └── .apm/skills/loop-report-tech-debt/
+│   └── .apm/skills/loop-tech-debt/
 │       ├── SKILL.md
-│       └── scripts/detect_report_tech_debt.sh
+│       └── scripts/detect_tech_debt.sh
 ├── loop-refactor/       # Structural refactor action loop (self-contained)
 │   ├── apm.yml
 │   └── .apm/skills/loop-refactor/
@@ -290,28 +290,28 @@ Skills provide **on-demand validation** when an agent invokes them through `scri
 
 Skills are defined under each package's `.apm/skills/` directory. Each skill contains a `SKILL.md`, references, scripts, and eval definitions.
 
-| Package               | Skill                     |
-| --------------------- | ------------------------- |
-| common                | agent-skills-review       |
-| common                | docs-creator              |
-| common                | docs-updater              |
-| common                | github-actions-review     |
-| common                | github-actions-validation |
-| common                | github-pr-body            |
-| common                | instructions-review       |
-| common                | markdown-validation       |
-| go                    | go-review                 |
-| go                    | go-validation             |
-| terraform             | terraform-review          |
-| terraform             | terraform-validation      |
-| shell-script          | shell-script-review       |
-| shell-script          | shell-script-validation   |
-| loop-docs-triage      | loop-docs-triage          |
-| loop-ci-sweeper       | loop-ci-sweeper           |
-| loop-changelog        | loop-changelog            |
-| loop-report-tech-debt | loop-report-tech-debt     |
-| loop-refactor         | loop-refactor             |
-| refactor              | refactor                  |
+| Package          | Skill                     |
+| ---------------- | ------------------------- |
+| common           | agent-skills-review       |
+| common           | docs-creator              |
+| common           | docs-updater              |
+| common           | github-actions-review     |
+| common           | github-actions-validation |
+| common           | github-pr-body            |
+| common           | instructions-review       |
+| common           | markdown-validation       |
+| go               | go-review                 |
+| go               | go-validation             |
+| terraform        | terraform-review          |
+| terraform        | terraform-validation      |
+| shell-script     | shell-script-review       |
+| shell-script     | shell-script-validation   |
+| loop-docs-triage | loop-docs-triage          |
+| loop-ci-sweeper  | loop-ci-sweeper           |
+| loop-changelog   | loop-changelog            |
+| loop-tech-debt   | loop-tech-debt            |
+| loop-refactor    | loop-refactor             |
+| refactor         | refactor                  |
 
 ### Instructions
 
@@ -390,15 +390,15 @@ Loop **composite actions** must not nest other repository composite actions via 
 
 ### Loop Engineering Workflows
 
-| Workflow                        | Type     | Purpose                                                                                                                                                |
-| ------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ci-loop-agent.yaml`            | Reusable | Engine-agnostic agent invocation (Claude / Copilot / Codex / Cursor). L1: `loop-agent-once`; L2/L3: worktree + bounded Agent→Verify via `loop-execute` |
-| `on-loop-changelog.yaml`        | Caller   | Cron-driven CHANGELOG.md maintenance (detect → execute → finalize)                                                                                     |
-| `on-loop-ci-sweeper.yaml`       | Caller   | Schedule-driven CI failure repair (detect → execute → finalize)                                                                                        |
-| `on-loop-docs-triage.yaml`      | Caller   | Cron-driven documentation triage (detect → execute → finalize)                                                                                         |
-| `on-loop-refactor.yaml`         | Caller   | Cron-driven structural refactor (detect → execute → finalize)                                                                                          |
-| `on-loop-report-tech-debt.yaml` | Caller   | Weekly technical debt report (detect → execute → finalize)                                                                                             |
-| `on-loop-state-promote.yaml`    | Platform | Merge-gated `pending` → `last_sha` promotion when a `loop-automation` fix PR closes                                                                    |
+| Workflow                     | Type     | Purpose                                                                                                                                                |
+| ---------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ci-loop-agent.yaml`         | Reusable | Engine-agnostic agent invocation (Claude / Copilot / Codex / Cursor). L1: `loop-agent-once`; L2/L3: worktree + bounded Agent→Verify via `loop-execute` |
+| `on-loop-changelog.yaml`     | Caller   | Cron-driven CHANGELOG.md maintenance (detect → execute → finalize)                                                                                     |
+| `on-loop-ci-sweeper.yaml`    | Caller   | Schedule-driven CI failure repair (detect → execute → finalize)                                                                                        |
+| `on-loop-docs-triage.yaml`   | Caller   | Cron-driven documentation triage (detect → execute → finalize)                                                                                         |
+| `on-loop-refactor.yaml`      | Caller   | Cron-driven structural refactor (detect → execute → finalize)                                                                                          |
+| `on-loop-tech-debt.yaml`     | Caller   | Weekly technical debt report (detect → execute → finalize)                                                                                             |
+| `on-loop-state-promote.yaml` | Platform | Merge-gated `pending` → `last_sha` promotion when a `loop-automation` fix PR closes                                                                    |
 
 ### Loop Skill Package Pattern
 
@@ -414,13 +414,13 @@ Each `loop-*` APM package is self-contained. Domain detection and agent behavior
 
 | Action                 | Purpose                                                                                                                                                                                                                                                             |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `loop-agent-once`      | Single read-only agent session (L1); accepts `node_version` / `uv_version` and enables workspace MCP via `lib/mcp.sh`                                                                                                                                                |
+| `loop-agent-once`      | Single read-only agent session (L1); accepts `node_version` / `uv_version` and enables workspace MCP via `lib/mcp.sh`                                                                                                                                               |
 | `loop-config-pack`     | Pack caller agent config into standardized outputs for detect/execute handoff (standalone; `loop-detect` inlines the same pack step)                                                                                                                                |
 | `loop-detect`          | Read `LOOP_*`, enumerate branches/PRs, checkout per context, invoke `detect_script` per context, assemble candidates, write **loop-handoff** artifact, output slim `target_matrix`; guards (`budget`, circuit breaker). **No caller re-run of detect script**       |
-| `loop-execute`         | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`, `node_version`, `uv_version`; enables workspace MCP via `lib/mcp.sh`; worktree from `from.ref` @ `from.branch`                                                                  |
+| `loop-execute`         | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`, `node_version`, `uv_version`; enables workspace MCP via `lib/mcp.sh`; worktree from `from.ref` @ `from.branch`                                                                 |
 | `loop-finalize`        | Finalize per `target.finalize`, branch cleanup, per-target state, run-log, optional `domain_persistence_script`; `.loop/*` to `LOOP_STATE_PUSH_BRANCH`                                                                                                              |
 | `loop-notify-pr`       | Post or update marker PR comment after finalize on `pull_request` targets (sibling step in `ci-loop-agent`, not nested in `loop-finalize`). Platform-owned Layers 1–2; optional skill appendix. See [loop-notify-pr Specification](loop-notify-pr-specification.md) |
-| `loop-install-cli`     | Install and cache the selected engine CLI; accepts `node_version` / `uv_version` so MCP servers can resolve via `npx` / `uvx`                                                                                                                                        |
+| `loop-install-cli`     | Install and cache the selected engine CLI; accepts `node_version` / `uv_version` so MCP servers can resolve via `npx` / `uvx`                                                                                                                                       |
 | `loop-prompt-generate` | Assemble implementer prompt: skill invocation, caller context/instructions, generic loop constraints                                                                                                                                                                |
 | `loop-run-log`         | Append one JSONL entry to `.loop/loop-run-log.md`, prune entries older than 30 days                                                                                                                                                                                 |
 | `loop-state-promote`   | Promote or clear `pending` loop state after a fix PR closes (`pull_request` `closed` handler). Prefer direct push; auto-merge state PR when push is blocked (`skip_state_pr` opts out).                                                                             |

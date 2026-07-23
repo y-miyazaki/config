@@ -4,14 +4,14 @@
 **Date:** 2026-07-21  
 **Primary package (Phase 1):** `.apm/packages/refactor` → skill `refactor`  
 **Future package (Phase 2):** `.apm/packages/loop-refactor` → skill `loop-refactor` + `detect_refactor.sh`  
-**Related:** [Loop Engineering Design](../../explanation/loop-engineering/loop-engineering-design.md) (action loop family; future `loop-refactor-*`), [Report Tech Debt Workflow Design](../../explanation/loop-engineering/workflows/loop-report-tech-debt-workflow-design.md) (report-only; not an input to Apply)
+**Related:** [Loop Engineering Design](../../explanation/loop-engineering/loop-engineering-design.md) (action loop family; future `loop-refactor-*`), [Report Tech Debt Workflow Design](../../explanation/loop-engineering/workflows/loop-tech-debt-workflow-design.md) (report-only; not an input to Apply)
 
 ## Problem
 
-Repositories need **behavior-preserving structural improvement** (duplication, clearer expression, shallow boundary moves) that lint and `loop-report-tech-debt` do not cover.
+Repositories need **behavior-preserving structural improvement** (duplication, clearer expression, shallow boundary moves) that lint and `loop-tech-debt` do not cover.
 
 - Lint / SAST already own style, unused, naming, and complexity metrics.
-- `loop-report-tech-debt` detects mechanical debt signals (markers, deps, docs links, churn) and **publishes reports only**. It does not emit refactor opportunities, and Apply must not live under a `report-*` name.
+- `loop-tech-debt` detects mechanical debt signals (markers, deps, docs links, churn) and **publishes reports only**. It does not emit refactor opportunities, and Apply must not live under a `report-*` name.
 - Famous refactor skills often center on code smells that duplicate lint, or on architecture / GoF work too broad for L2 automation.
 
 The gap is a **shared skill contract** usable interactively and later as a loop entry skill, with stack-specific verification and optional characterization tests when a safety net is missing.
@@ -22,11 +22,11 @@ The gap is a **shared skill contract** usable interactively and later as a loop 
 - Keep the skill **repository-neutral**; named validation / language skills arrive via caller or user `## Instructions` (stack routing A'), matching loop-ci-sweeper.
 - Reuse existing `*-validation` skills where they already gate the stack; add language-specific refactor domain material only when test-addition or O2 steps are missing.
 - Define Phase 2 **`loop-refactor`** as an action loop: mechanical H1 hints + path allowlist → same `refactor` contract (or thin `loop-refactor` wrapper that invokes it).
-- Document an explicit boundary vs `loop-report-tech-debt` (no Apply, no R1 feed in v1).
+- Document an explicit boundary vs `loop-tech-debt` (no Apply, no R1 feed in v1).
 
 ## Non-Goals
 
-- Putting Apply into `loop-report-tech-debt` or renaming that loop to absorb refactor.
+- Putting Apply into `loop-tech-debt` or renaming that loop to absorb refactor.
 - Using tech-debt report findings as the primary detect input in Phase 1–2 (R1 deferred indefinitely unless a later ADR reopens it).
 - L2 automation of deep-module redesign, GoF introduction, or schema / architecture migration (O3 — loop L2 forbidden; interactive proposal path only).
 - Detect or skill criteria centered on lint/SAST smells (long method, naming, unused, complexity scores).
@@ -121,7 +121,7 @@ Entry skill remains **repository-neutral**. Consumer caller supplies `prompt_ins
 
 | Package                  | Role                                 | Coupling to refactor                   |
 | ------------------------ | ------------------------------------ | -------------------------------------- |
-| `loop-report-tech-debt`  | Report mechanical debt               | None in v1 (no feed, no Apply)         |
+| `loop-tech-debt`         | Report mechanical debt               | None in v1 (no feed, no Apply)         |
 | `loop-ci-sweeper`        | Fix CI failures                      | Orthogonal; may call validation skills |
 | `loop-docs-triage`       | Fix doc drift                        | Orthogonal                             |
 | `loop-refactor` (future) | Structural improvement from H1 hints | Owns observation trigger for refactor  |
@@ -165,7 +165,7 @@ Full text lives in SKILL.md + references; this section is normative for implemen
 - One-shot cross-boundary apply or GoF introduction (architecture path is propose → approve → slice)
 - O3 apply under loop L2 automation
 - Detect script ownership or loop state management (Phase 2 entry may wrap; detect stays in `scripts/`)
-- Consuming `docs/report/report-tech-debt/**` as required input
+- Consuming `docs/report/tech-debt/**` as required input
 
 ### Workflow outline
 

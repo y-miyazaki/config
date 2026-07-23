@@ -54,4 +54,3 @@ When detect JSON includes `releases[]`:
 - `skip` true or empty `commits` and `releases` → report with Summary `No unreleased changelog commits`; stop
 - `changelog_exists` false → create Keep a Changelog template, then add bullets
 - Malformed existing changelog → preserve released sections; append/fix only `## [Unreleased]` and new detect `releases[]` sections
-

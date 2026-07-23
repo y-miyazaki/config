@@ -123,4 +123,3 @@ See [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loo
 - [ ] [cobusgreyling Pre-Flight Safety](https://github.com/cobusgreyling/loop-engineering/blob/main/docs/safety.md#pre-flight-safety-check) complete
 - [ ] L3 enables GitHub auto-merge on bot fix PRs (`finalize=open_pr`); never default `DEFAULT_LEVEL=L3` for new adopters
 - [ ] Stop conditions and escalation path defined
-

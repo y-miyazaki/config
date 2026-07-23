@@ -24,12 +24,12 @@ Rules:
 
 ### Candidates
 
-| Target | Evidence | Suggested approach | Priority |
-| ------ | -------- | ------------------ | -------- |
+| Target            | Evidence                  | Suggested approach             | Priority              |
+| ----------------- | ------------------------- | ------------------------------ | --------------------- |
 | `path` `symbol()` | <plain-language evidence> | <plain-language fix direction> | high \| medium \| low |
 
 ### Watch
 
-| Target | Evidence | Why not now |
-| ------ | -------- | ----------- |
+| Target | Evidence                  | Why not now             |
+| ------ | ------------------------- | ----------------------- |
 | `path` | <plain-language evidence> | <plain-language reason> |

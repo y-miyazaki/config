@@ -353,4 +353,3 @@ New domain env keys go into `detect_domain_env_json` without editing reusable jo
 - [GitHub Workflows Design](../github-workflows-design.md) — `on-*` / `ci-*` naming and caller conventions
 - [Multi-Branch Loops Design](multi-branch-loops-design.md) — platform `LOOP_*` semantics
 - [Loop Engineering Design](loop-engineering-design.md) — L1/L2/L3 and finalize behavior
-

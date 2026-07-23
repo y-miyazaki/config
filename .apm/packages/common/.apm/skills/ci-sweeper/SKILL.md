@@ -57,9 +57,9 @@ At `L2`/`L3`, edit actionable `regression` failures within [category-scope.md](r
 
 ### Error Handling
 
-| Condition                              | Severity    | Action                                                |
-| -------------------------------------- | ----------- | ----------------------------------------------------- |
-| `skip` or no actionable `failures`     | Info        | Outcome `no actionable failures`; stop                |
-| Infra/env/flake or >5 files required   | Recoverable | Classify Watch; no edits                              |
+| Condition                            | Severity    | Action                                                |
+| ------------------------------------ | ----------- | ----------------------------------------------------- |
+| `skip` or no actionable `failures`   | Info        | Outcome `no actionable failures`; stop                |
+| Infra/env/flake or >5 files required | Recoverable | Classify Watch; no edits                              |
 | Validation tooling missing           | Recoverable | Defer Watch unless fixing one line from `log_excerpt` |
-| Path outside allowlist                 | Recoverable | Watch or defer; do not edit                           |
+| Path outside allowlist               | Recoverable | Watch or defer; do not edit                           |

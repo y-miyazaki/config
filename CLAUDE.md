@@ -19,11 +19,11 @@ Shared configuration distribution source — no application code. Deliverables: 
 
 Cross-cutting rules when editing `scripts/` or paired skill copies. **Apply these even when not touching `.apm/`** — nested `.apm/AGENTS.md` is not loaded for `scripts/` work.
 
-| You changed | Also do |
-| ----------- | ------- |
-| `scripts/lib/` (shared libraries) | Edit here — skill `scripts/lib/` copies are regenerated, not hand-edited → `bash scripts/self/ai/sync_skill_lib.sh` → `apm install --update` |
+| You changed                                                                                                                 | Also do                                                                                                                                                                                                                        |
+| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `scripts/lib/` (shared libraries)                                                                                           | Edit here — skill `scripts/lib/` copies are regenerated, not hand-edited → `bash scripts/self/ai/sync_skill_lib.sh` → `apm install --update`                                                                                   |
 | `scripts/{shell-script,go,terraform}/validate.sh`, `scripts/shell-script/fix_function_doc_order.sh`, or paired skill copies | Edit one side → `bash scripts/self/ai/sync_validate_mirror.sh` (default: repo → skill; `--from-skill` when editing the skill copy; `--domain <shell-script\|go\|terraform>` to limit scope). Do not hand-edit the paired file. |
-| Repo-only script (for example `scripts/terraform/module_updater.sh`, `.github/actions/**/lib/`) | Update matching Bats under `test/bats/` in the same change |
+| Repo-only script (for example `scripts/terraform/module_updater.sh`, `.github/actions/**/lib/`)                             | Update matching Bats under `test/bats/` in the same change                                                                                                                                                                     |
 
 - Drift check: `bash scripts/self/ai/sync_skill_lib.sh --check` and `bash scripts/self/ai/sync_validate_mirror.sh --check`.
 - Shell style and Bats: stem `shell-script` and `bats` instructions (distributed under `.cursor/rules/` after `apm install`).

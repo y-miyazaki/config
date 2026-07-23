@@ -12,19 +12,19 @@ Closed set for apply: O1/O2 only. O3 is proposal-first, then O2 slices after use
 
 ## Execution phases
 
-| Phase | Name   | When                         | Edits |
-| ----- | ------ | ---------------------------- | ----- |
-| A     | Survey | Every run                    | No    |
+| Phase | Name   | When                           | Edits |
+| ----- | ------ | ------------------------------ | ----- |
+| A     | Survey | Every run                      | No    |
 | B     | Apply  | `mode: apply` and level allows | Yes   |
 
 Survey discovers **all** candidates in scope. Apply fixes **every** candidate marked apply in survey order. Do not stop after the first candidate.
 
 ## Execution modes
 
-| Mode    | Phase A | Phase B | Typical trigger                                      |
-| ------- | ------- | ------- | ---------------------------------------------------- |
-| `survey`| Yes     | No      | 洗い出し, list candidates, inventory; loop `L1`        |
-| `apply` | Yes     | Yes     | リファクタリング実施, `/refactor`; loop `L2`/`L3` default |
+| Mode     | Phase A | Phase B | Typical trigger                                           |
+| -------- | ------- | ------- | --------------------------------------------------------- |
+| `survey` | Yes     | No      | 洗い出し, list candidates, inventory; loop `L1`           |
+| `apply`  | Yes     | Yes     | リファクタリング実施, `/refactor`; loop `L2`/`L3` default |
 
 ## Intent classification (before edits)
 

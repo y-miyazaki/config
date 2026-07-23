@@ -30,4 +30,3 @@
 - Q-07 (SHOULD): Progressive Disclosure (Soft Guard)
 - Q-08 (SHOULD): Resource Separation
 - S-03 (MUST): Reference Files Header Level Consistency
-

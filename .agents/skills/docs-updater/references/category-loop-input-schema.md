@@ -44,5 +44,3 @@ Provided via prompt context by the calling workflow (loop-prompt-generate action
 | `L3`  | Same edits as `L2`; caller may auto-merge the docs PR     |
 
 Path allowlist is repeated in the implementer prompt `## Constraints` section from the caller (`LOOP_ALLOWLIST`). Denylist is a caller `denylist` input enforced by loop-execute verifier. When `LOOP_ALLOWLIST` is absent, no allowlist restriction within skill-specific limits — see [category-scope.md](category-scope.md).
-
-

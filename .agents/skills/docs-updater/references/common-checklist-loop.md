@@ -30,6 +30,3 @@
 - Stale workflow reference in a docs table row → High-Priority fix (update the reference)
 - Slightly outdated version number → Watch item (low priority)
 - Test-only change with no doc impact → Noise / Ignore
-
-
-

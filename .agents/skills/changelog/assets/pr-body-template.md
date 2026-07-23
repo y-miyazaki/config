@@ -22,18 +22,18 @@ Rules:
 
 ### Changes
 
-| Commit      | Type   | Entry |
-| ----------- | ------ | ----- |
+| Commit      | Type   | Entry                                |
+| ----------- | ------ | ------------------------------------ |
 | <short sha> | <type> | <Unreleased bullet added or updated> |
 
 ### Skipped
 
-| Commit | Why skipped |
-| ------ | ----------- |
+| Commit | Why skipped                         |
+| ------ | ----------------------------------- |
 | <sha>  | <already listed / non-conventional> |
 
 ## Verification
 
-| Check | Result |
-| ----- | ------ |
+| Check                    | Result         |
+| ------------------------ | -------------- |
 | `CHANGELOG.md` structure | <pass \| fail> |

@@ -29,7 +29,7 @@ Detect mechanical structure hints on integration branches and open fix PRs after
 - PR head healing (`pull_requests` default off)
 - Interactive or architecture-improvement intent (O3 proposal path) — use skill `refactor` manually
 - Lint/SAST smell scores as primary detect or repair mission
-- `loop-report-tech-debt` report input or Apply under `report-*` names
+- `loop-tech-debt` report input or Apply under `report-*` names
 - Sonar CPD default-on (future caller opt-in for duplication only)
 
 | `refactor` (in `common`) | Interactive / loop structural O1/O2 apply | User or `on-loop-refactor.yaml` |
@@ -53,35 +53,35 @@ Keys are passed in `on-loop-refactor.yaml` via `with:` on `ci-loop-caller.yaml` 
 
 Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md). Platform branch/finalize caps: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
 
-| Input / JSON key                                           | Description                                                                          | Dogfood value                                             |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------- |
-| `agent_implementer_max_turns`                              | Max implementer agent turns per loop attempt (one Agent→Verify cycle).               | `5`                                                       |
-| `agent_implementer_model`                                  | Implementer model ID. Cursor: `agent --list-models`.                                 | `cursor-grok-4.5-low`                                     |
-| `agent_loop_max_attempts`                                  | Max Agent→Verify retry cycles before finalize records failure.                       | `3`                                                       |
-| `agent_verifier_criteria`                                  | Verifier APPROVE/REJECT rubric. O1/O2 only; no architecture/GoF/cross-package diffs. | Inline in caller workflow                                 |
-| `agent_verifier_max_turns`                                 | Max verifier agent turns per verification.                                           | `3`                                                       |
-| `agent_verifier_model`                                     | Verifier model ID. Cursor: `agent --list-models`.                                    | `composer-2.5`                                            |
-| `allowlist`                                                | Comma-separated globs the implementer may modify. Tight dogfood scope.               | `.apm/packages/**,scripts/**`                             |
-| `branch_match`                                             | Comma-separated integration branch patterns to watch.                                | `main`                                                    |
-| `branch_state`                                             | Branch for `.loop/*` persistence, state migration, and watch fallback.               | `main`                                                    |
-| `budget_max_runs_per_day`                                  | Daily run cap keyed by `loop_name`.                                                  | `1`                                                       |
-| `budget_max_tokens_per_day`                                | Daily aggregated token cap across loops.                                             | `500000`                                                  |
-| `detect_domain_env_json` → `REFACTOR_DUP_MIN_LINES`        | Minimum consecutive non-empty lines for `duplication_block` hints.                   | `8`                                                       |
-| `detect_domain_env_json` → `REFACTOR_OVERSIZED_FILE_LINES` | File line count threshold for `oversized_unit` hints (size only).                    | `400`                                                     |
-| `detect_domain_env_json` → `REFACTOR_SCAN_GLOBS`           | Comma-separated globs for scan roots.                                                | `.apm/packages/**,scripts/**`                             |
-| `detect_script`                                            | Domain detect script path.                                                           | `.agents/skills/refactor/scripts/detect_refactor.sh` |
-| `engine`                                                   | AI engine (`claude`, `copilot`, `codex`, `cursor`).                                  | `cursor`                                                  |
-| `finalize_integration`                                     | Finalize strategy for integration targets: `open_pr` or `push` (L3).                 | `open_pr`                                                 |
-| `infer_files_pattern`                                      | Extended regex to infer file paths from verifier text.                               | See caller workflow                                       |
-| `level`                                                    | Autonomy level (`L1`, `L2`, `L3`). L2 opens review PR.                               | `L2`                                                      |
-| `loop_name`                                                | Loop identifier; state file `.loop/state-refactor.json`.                             | `refactor`                                                |
-| `max_targets_per_schedule`                                 | Max hints processed per cron tick.                                                   | `1`                                                       |
-| `no_changes_verdict`                                       | `APPROVE` or `REJECT` when implementer produces no file diff.                        | `REJECT`                                                  |
-| `pr_body`                                                  | Optional static prefix (dogfood: `""`).                                              | `""`                                                      |
-| `pr_title`                                                 | PR title when finalize strategy is `open_pr`.                                        | `refactor(loop): structural improvement`                  |
-| `prompt_instructions`                                      | Domain instructions: invoke `refactor` survey-then-apply-all path; stack validation via A'. | Inline in caller workflow                                 |
-| `pull_requests`                                            | Enumerate open PR heads. Refactor loop uses integration branches only.               | `false`                                                   |
-| `skill_name`                                               | Skill package to invoke.                                                             | `refactor`                                           |
+| Input / JSON key                                           | Description                                                                                 | Dogfood value                                        |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `agent_implementer_max_turns`                              | Max implementer agent turns per loop attempt (one Agent→Verify cycle).                      | `5`                                                  |
+| `agent_implementer_model`                                  | Implementer model ID. Cursor: `agent --list-models`.                                        | `cursor-grok-4.5-low`                                |
+| `agent_loop_max_attempts`                                  | Max Agent→Verify retry cycles before finalize records failure.                              | `3`                                                  |
+| `agent_verifier_criteria`                                  | Verifier APPROVE/REJECT rubric. O1/O2 only; no architecture/GoF/cross-package diffs.        | Inline in caller workflow                            |
+| `agent_verifier_max_turns`                                 | Max verifier agent turns per verification.                                                  | `3`                                                  |
+| `agent_verifier_model`                                     | Verifier model ID. Cursor: `agent --list-models`.                                           | `composer-2.5`                                       |
+| `allowlist`                                                | Comma-separated globs the implementer may modify. Tight dogfood scope.                      | `.apm/packages/**,scripts/**`                        |
+| `branch_match`                                             | Comma-separated integration branch patterns to watch.                                       | `main`                                               |
+| `branch_state`                                             | Branch for `.loop/*` persistence, state migration, and watch fallback.                      | `main`                                               |
+| `budget_max_runs_per_day`                                  | Daily run cap keyed by `loop_name`.                                                         | `1`                                                  |
+| `budget_max_tokens_per_day`                                | Daily aggregated token cap across loops.                                                    | `500000`                                             |
+| `detect_domain_env_json` → `REFACTOR_DUP_MIN_LINES`        | Minimum consecutive non-empty lines for `duplication_block` hints.                          | `8`                                                  |
+| `detect_domain_env_json` → `REFACTOR_OVERSIZED_FILE_LINES` | File line count threshold for `oversized_unit` hints (size only).                           | `400`                                                |
+| `detect_domain_env_json` → `REFACTOR_SCAN_GLOBS`           | Comma-separated globs for scan roots.                                                       | `.apm/packages/**,scripts/**`                        |
+| `detect_script`                                            | Domain detect script path.                                                                  | `.agents/skills/refactor/scripts/detect_refactor.sh` |
+| `engine`                                                   | AI engine (`claude`, `copilot`, `codex`, `cursor`).                                         | `cursor`                                             |
+| `finalize_integration`                                     | Finalize strategy for integration targets: `open_pr` or `push` (L3).                        | `open_pr`                                            |
+| `infer_files_pattern`                                      | Extended regex to infer file paths from verifier text.                                      | See caller workflow                                  |
+| `level`                                                    | Autonomy level (`L1`, `L2`, `L3`). L2 opens review PR.                                      | `L2`                                                 |
+| `loop_name`                                                | Loop identifier; state file `.loop/state-refactor.json`.                                    | `refactor`                                           |
+| `max_targets_per_schedule`                                 | Max hints processed per cron tick.                                                          | `1`                                                  |
+| `no_changes_verdict`                                       | `APPROVE` or `REJECT` when implementer produces no file diff.                               | `REJECT`                                             |
+| `pr_body`                                                  | Optional static prefix (dogfood: `""`).                                                     | `""`                                                 |
+| `pr_title`                                                 | PR title when finalize strategy is `open_pr`.                                               | `refactor(loop): structural improvement`             |
+| `prompt_instructions`                                      | Domain instructions: invoke `refactor` survey-then-apply-all path; stack validation via A'. | Inline in caller workflow                            |
+| `pull_requests`                                            | Enumerate open PR heads. Refactor loop uses integration branches only.                      | `false`                                              |
+| `skill_name`                                               | Skill package to invoke.                                                                    | `refactor`                                           |
 
 ## Detect
 
@@ -173,7 +173,7 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 
 ## Cross-Loop Note
 
-`loop-refactor` is orthogonal to `loop-ci-sweeper` and `loop-report-tech-debt`. It does not consume tech-debt reports. If CI fails during a refactor PR, `loop-ci-sweeper` owns repair.
+`loop-refactor` is orthogonal to `loop-ci-sweeper` and `loop-tech-debt`. It does not consume tech-debt reports. If CI fails during a refactor PR, `loop-ci-sweeper` owns repair.
 
 ## References
 
@@ -181,5 +181,3 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 - [Loop Caller Workflows Design](../loop-caller-workflows-design.md)
 - [Refactor skill & loop design](../../../superpowers/specs/2026-07-21-refactor-skill-and-loop-design.md)
 - [Specification](../../../reference/specification.md)
-
-

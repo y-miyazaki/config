@@ -48,9 +48,8 @@ Provided via prompt context by the calling workflow (loop-prompt-generate action
 
 ### Operating levels
 
-| Level | Agent behavior for ci-sweeper                          |
+| Level | Agent behavior for ci-sweeper                        |
 | ----- | ---------------------------------------------------- |
 | `L1`  | Emit triage report only — do not edit files          |
 | `L2`  | Emit report and apply minimal fixes within allowlist |
 | `L3`  | Same edits as `L2`; caller may auto-merge the fix PR |
-

@@ -55,11 +55,11 @@ Every run has **Phase A — Survey** (discover candidates). **Phase B — Apply*
 
 ### Mode resolution
 
-| Source | Default mode | Survey-only triggers |
-| ------ | ------------ | -------------------- |
-| Interactive | `apply` | User asks to survey, list, inventory, or 洗い出し only |
-| Loop `L1` | `survey` | Always — no file edits |
-| Loop `L2` / `L3` | `apply` | `skip: true` or empty `hints[]` → no-op |
+| Source           | Default mode | Survey-only triggers                                   |
+| ---------------- | ------------ | ------------------------------------------------------ |
+| Interactive      | `apply`      | User asks to survey, list, inventory, or 洗い出し only |
+| Loop `L1`        | `survey`     | Always — no file edits                                 |
+| Loop `L2` / `L3` | `apply`      | `skip: true` or empty `hints[]` → no-op                |
 
 Explicit JSON `mode`: `survey` \| `apply` overrides defaults. See [category-input-schema.md](references/category-input-schema.md).
 
@@ -97,11 +97,11 @@ Explicit JSON `mode`: `survey` \| `apply` overrides defaults. See [category-inpu
 
 ### Error Handling
 
-| Condition                              | Severity    | Action                                      |
-| -------------------------------------- | ----------- | ------------------------------------------- |
-| Loop: empty/`skip`                     | Info        | No-op report; stop                          |
-| Survey: zero candidates                | Info        | No-op report; stop                          |
-| Architecture request without slice     | Recoverable | Architecture proposal only; stop            |
-| Lint-primary or feature/API candidate  | Recoverable | Watch on candidate; skip apply              |
-| Weak or failed gate for one candidate  | Recoverable | Revert that candidate; Deferred; continue   |
-| Cross-boundary or out-of-scope target  | Recoverable | Watch on candidate; skip apply              |
+| Condition                             | Severity    | Action                                    |
+| ------------------------------------- | ----------- | ----------------------------------------- |
+| Loop: empty/`skip`                    | Info        | No-op report; stop                        |
+| Survey: zero candidates               | Info        | No-op report; stop                        |
+| Architecture request without slice    | Recoverable | Architecture proposal only; stop          |
+| Lint-primary or feature/API candidate | Recoverable | Watch on candidate; skip apply            |
+| Weak or failed gate for one candidate | Recoverable | Revert that candidate; Deferred; continue |
+| Cross-boundary or out-of-scope target | Recoverable | Watch on candidate; skip apply            |

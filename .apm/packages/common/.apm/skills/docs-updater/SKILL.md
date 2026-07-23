@@ -76,10 +76,10 @@ Target: root `*.md`, `docs/**/*.md`, nested `**/README.md` (excluding generated 
 
 ### Error Handling
 
-| Condition                   | Severity    | Action                                  |
-| --------------------------- | ----------- | --------------------------------------- |
-| No git repository           | Fatal       | Stop                                    |
-| Empty diff / no findings    | Info        | Report skip, exit                       |
-| Affected doc file missing   | Recoverable | Skip file; note in report               |
-| Exceeds scope (>3 H2, etc.) | Recoverable | Stop for file; recommend docs-creator   |
-| mkdocs.yml missing          | Recoverable | Skip nav update                         |
+| Condition                   | Severity    | Action                                |
+| --------------------------- | ----------- | ------------------------------------- |
+| No git repository           | Fatal       | Stop                                  |
+| Empty diff / no findings    | Info        | Report skip, exit                     |
+| Affected doc file missing   | Recoverable | Skip file; note in report             |
+| Exceeds scope (>3 H2, etc.) | Recoverable | Stop for file; recommend docs-creator |
+| mkdocs.yml missing          | Recoverable | Skip nav update                       |

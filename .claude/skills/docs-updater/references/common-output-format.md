@@ -13,18 +13,18 @@ Interactive and hook runs use this structure. Loop runs add session metrics and 
 
 ### Changes
 
-| File | What was wrong | What changed |
-| ---- | -------------- | ------------ |
+| File             | What was wrong            | What changed            |
+| ---------------- | ------------------------- | ----------------------- |
 | `path/to/doc.md` | <stale/missing reference> | <minimal patch summary> |
 
 ### Skipped
 
-- <count> files: <shared reason>   <!-- or table when enumerating specific paths -->
+- <count> files: <shared reason> <!-- or table when enumerating specific paths -->
 
 ## Verification
 
-| Check | Result |
-| ----- | ------ |
+| Check                               | Result                 |
+| ----------------------------------- | ---------------------- |
 | <markdown-validation or link check> | <pass \| fail \| skip> |
 ```
 

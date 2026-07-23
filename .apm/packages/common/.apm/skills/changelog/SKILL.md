@@ -55,8 +55,8 @@ At `L2`/`L3`, edit `CHANGELOG.md` within [category-scope.md](references/category
 
 ### Error Handling
 
-| Condition                         | Severity    | Action                                      |
-| --------------------------------- | ----------- | ------------------------------------------- |
-| `skip` or empty commits/releases  | Info        | Report skip outcome; stop                     |
-| `changelog_file` outside scope  | Recoverable | Defer; note in report                       |
-| Edit requested at `L1`            | Info        | Report only; do not edit `CHANGELOG.md`     |
+| Condition                        | Severity    | Action                                  |
+| -------------------------------- | ----------- | --------------------------------------- |
+| `skip` or empty commits/releases | Info        | Report skip outcome; stop               |
+| `changelog_file` outside scope   | Recoverable | Defer; note in report                   |
+| Edit requested at `L1`           | Info        | Report only; do not edit `CHANGELOG.md` |

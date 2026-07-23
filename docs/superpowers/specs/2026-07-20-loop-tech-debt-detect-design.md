@@ -11,7 +11,7 @@
 
 ## Goals
 
-- Add `detect_report_tech_debt.sh` that emits facts-only JSON matching `.apm/packages/loop-report-tech-debt/.apm/skills/loop-report-tech-debt/references/category-input-schema.md` (closed `kind` set + optional `warnings[]`).
+- Add `detect_tech_debt.sh` that emits facts-only JSON matching `.apm/packages/loop-tech-debt/.apm/skills/loop-tech-debt/references/category-input-schema.md` (closed `kind` set + optional `warnings[]`).
 - Default scan: **full repository** (`scope=all`). Git range is optional debug only; not the debt observation model.
 - Sensors: **core** deps + docs (via self-contained `markdown-link-check`) + churn; **secondary** TODO/FIXME/HACK/XXX for report enrichment.
 - Exclude lint/SAST territory (complexity, style, unused, naming).

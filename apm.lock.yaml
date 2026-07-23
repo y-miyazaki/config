@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-07-22T07:40:02.763241+00:00'
+generated_at: '2026-07-23T03:06:58.593903+00:00'
 apm_version: 0.26.0
 dependencies:
 - repo_url: _local/common
@@ -285,40 +285,40 @@ dependencies:
   - .agents/skills/refactor/scripts/lib/repo_paths.sh
   - .agents/skills/refactor/scripts/lib/terraform.sh
   - .agents/skills/refactor/scripts/lib/validation.sh
-  - .agents/skills/report-tech-debt
-  - .agents/skills/report-tech-debt/SKILL.md
-  - .agents/skills/report-tech-debt/assets/pr-body-template.md
-  - .agents/skills/report-tech-debt/eval.yaml
-  - .agents/skills/report-tech-debt/evals/files/README.md
-  - .agents/skills/report-tech-debt/evals/files/go.mod.txt
-  - .agents/skills/report-tech-debt/evals/files/noise.go.txt
-  - .agents/skills/report-tech-debt/evals/files/previous-report.sample.md
-  - .agents/skills/report-tech-debt/evals/files/sample_service.go.txt
-  - .agents/skills/report-tech-debt/evals/tasks/basic.yaml
-  - .agents/skills/report-tech-debt/evals/tasks/classification.yaml
-  - .agents/skills/report-tech-debt/evals/tasks/hotspot-only.yaml
-  - .agents/skills/report-tech-debt/evals/tasks/l1-report-only.yaml
-  - .agents/skills/report-tech-debt/evals/tasks/l2-report-write.yaml
-  - .agents/skills/report-tech-debt/evals/tasks/noaction.yaml
-  - .agents/skills/report-tech-debt/evals/tasks/previous-report.yaml
-  - .agents/skills/report-tech-debt/evals/tasks/trigger-negative.yaml
-  - .agents/skills/report-tech-debt/evals/tasks/truncation-cap.yaml
-  - .agents/skills/report-tech-debt/references/category-debt-taxonomy.md
-  - .agents/skills/report-tech-debt/references/category-input-schema.md
-  - .agents/skills/report-tech-debt/references/category-scope.md
-  - .agents/skills/report-tech-debt/references/common-checklist.md
-  - .agents/skills/report-tech-debt/references/common-output-format.md
-  - .agents/skills/report-tech-debt/references/common-troubleshooting.md
-  - .agents/skills/report-tech-debt/scripts/detect_report_tech_debt.sh
-  - .agents/skills/report-tech-debt/scripts/detect_report_tech_debt_sensors.sh
-  - .agents/skills/report-tech-debt/scripts/lib/all.sh
-  - .agents/skills/report-tech-debt/scripts/lib/aws.sh
-  - .agents/skills/report-tech-debt/scripts/lib/common.sh
-  - .agents/skills/report-tech-debt/scripts/lib/csv.sh
-  - .agents/skills/report-tech-debt/scripts/lib/json.sh
-  - .agents/skills/report-tech-debt/scripts/lib/repo_paths.sh
-  - .agents/skills/report-tech-debt/scripts/lib/terraform.sh
-  - .agents/skills/report-tech-debt/scripts/lib/validation.sh
+  - .agents/skills/tech-debt
+  - .agents/skills/tech-debt/SKILL.md
+  - .agents/skills/tech-debt/assets/pr-body-template.md
+  - .agents/skills/tech-debt/eval.yaml
+  - .agents/skills/tech-debt/evals/files/README.md
+  - .agents/skills/tech-debt/evals/files/go.mod.txt
+  - .agents/skills/tech-debt/evals/files/noise.go.txt
+  - .agents/skills/tech-debt/evals/files/previous-report.sample.md
+  - .agents/skills/tech-debt/evals/files/sample_service.go.txt
+  - .agents/skills/tech-debt/evals/tasks/basic.yaml
+  - .agents/skills/tech-debt/evals/tasks/classification.yaml
+  - .agents/skills/tech-debt/evals/tasks/hotspot-only.yaml
+  - .agents/skills/tech-debt/evals/tasks/l1-report-only.yaml
+  - .agents/skills/tech-debt/evals/tasks/l2-report-write.yaml
+  - .agents/skills/tech-debt/evals/tasks/noaction.yaml
+  - .agents/skills/tech-debt/evals/tasks/previous-report.yaml
+  - .agents/skills/tech-debt/evals/tasks/trigger-negative.yaml
+  - .agents/skills/tech-debt/evals/tasks/truncation-cap.yaml
+  - .agents/skills/tech-debt/references/category-debt-taxonomy.md
+  - .agents/skills/tech-debt/references/category-input-schema.md
+  - .agents/skills/tech-debt/references/category-scope.md
+  - .agents/skills/tech-debt/references/common-checklist.md
+  - .agents/skills/tech-debt/references/common-output-format.md
+  - .agents/skills/tech-debt/references/common-troubleshooting.md
+  - .agents/skills/tech-debt/scripts/detect_tech_debt.sh
+  - .agents/skills/tech-debt/scripts/detect_tech_debt_sensors.sh
+  - .agents/skills/tech-debt/scripts/lib/all.sh
+  - .agents/skills/tech-debt/scripts/lib/aws.sh
+  - .agents/skills/tech-debt/scripts/lib/common.sh
+  - .agents/skills/tech-debt/scripts/lib/csv.sh
+  - .agents/skills/tech-debt/scripts/lib/json.sh
+  - .agents/skills/tech-debt/scripts/lib/repo_paths.sh
+  - .agents/skills/tech-debt/scripts/lib/terraform.sh
+  - .agents/skills/tech-debt/scripts/lib/validation.sh
   - .claude/agents/test-engineer.md
   - .claude/rules/agent-skills.md
   - .claude/rules/github-actions-workflow.md
@@ -602,40 +602,6 @@ dependencies:
   - .claude/skills/refactor/scripts/lib/repo_paths.sh
   - .claude/skills/refactor/scripts/lib/terraform.sh
   - .claude/skills/refactor/scripts/lib/validation.sh
-  - .claude/skills/report-tech-debt
-  - .claude/skills/report-tech-debt/SKILL.md
-  - .claude/skills/report-tech-debt/assets/pr-body-template.md
-  - .claude/skills/report-tech-debt/eval.yaml
-  - .claude/skills/report-tech-debt/evals/files/README.md
-  - .claude/skills/report-tech-debt/evals/files/go.mod.txt
-  - .claude/skills/report-tech-debt/evals/files/noise.go.txt
-  - .claude/skills/report-tech-debt/evals/files/previous-report.sample.md
-  - .claude/skills/report-tech-debt/evals/files/sample_service.go.txt
-  - .claude/skills/report-tech-debt/evals/tasks/basic.yaml
-  - .claude/skills/report-tech-debt/evals/tasks/classification.yaml
-  - .claude/skills/report-tech-debt/evals/tasks/hotspot-only.yaml
-  - .claude/skills/report-tech-debt/evals/tasks/l1-report-only.yaml
-  - .claude/skills/report-tech-debt/evals/tasks/l2-report-write.yaml
-  - .claude/skills/report-tech-debt/evals/tasks/noaction.yaml
-  - .claude/skills/report-tech-debt/evals/tasks/previous-report.yaml
-  - .claude/skills/report-tech-debt/evals/tasks/trigger-negative.yaml
-  - .claude/skills/report-tech-debt/evals/tasks/truncation-cap.yaml
-  - .claude/skills/report-tech-debt/references/category-debt-taxonomy.md
-  - .claude/skills/report-tech-debt/references/category-input-schema.md
-  - .claude/skills/report-tech-debt/references/category-scope.md
-  - .claude/skills/report-tech-debt/references/common-checklist.md
-  - .claude/skills/report-tech-debt/references/common-output-format.md
-  - .claude/skills/report-tech-debt/references/common-troubleshooting.md
-  - .claude/skills/report-tech-debt/scripts/detect_report_tech_debt.sh
-  - .claude/skills/report-tech-debt/scripts/detect_report_tech_debt_sensors.sh
-  - .claude/skills/report-tech-debt/scripts/lib/all.sh
-  - .claude/skills/report-tech-debt/scripts/lib/aws.sh
-  - .claude/skills/report-tech-debt/scripts/lib/common.sh
-  - .claude/skills/report-tech-debt/scripts/lib/csv.sh
-  - .claude/skills/report-tech-debt/scripts/lib/json.sh
-  - .claude/skills/report-tech-debt/scripts/lib/repo_paths.sh
-  - .claude/skills/report-tech-debt/scripts/lib/terraform.sh
-  - .claude/skills/report-tech-debt/scripts/lib/validation.sh
   - .cursor/agents/test-engineer.md
   - .cursor/rules/agent-skills.mdc
   - .cursor/rules/github-actions-workflow.mdc
@@ -668,7 +634,7 @@ dependencies:
     .agents/skills/agent-skills-review/scripts/validate_waza.sh: sha256:ba503378523d596771a58385802044d50de9ce6a8853841a32a1d4107bbbf6f7
     .agents/skills/changelog/SKILL.md: sha256:56ee40d87a22f22fb7aa7c06d2984ff5af8ad795e1865f295ebc292dcc7284c0
     .agents/skills/changelog/assets/pr-body-template.md: sha256:0c1f40777ae201484010a04f9d07ff0bc1e86b8384f145c452791422182a9aa4
-    .agents/skills/changelog/eval.yaml: sha256:78251bf8f65542e170b33b9adbf0d1bb928f09881c546cf3a273f098b3ab89ba
+    .agents/skills/changelog/eval.yaml: sha256:a4e4cab4f74d7043daa2333e11f8336a3bcfa92980d070ef713cba211eb5c6e7
     .agents/skills/changelog/evals/files/CHANGELOG.sample.md: sha256:ed3e7f0d4977a16dccbcaafca70c99ee9293176db405171a30693ad231bbcc64
     .agents/skills/changelog/evals/tasks/basic.yaml: sha256:d7aff2209a5a53dd2b2c963b47ed799f877549ebeec23660511cff57b3f93eab
     .agents/skills/changelog/evals/tasks/create-template.yaml: sha256:0d6823a745a2e5de8b5f4217869d1145225b654eb53bcac441c6010288a32a17
@@ -692,12 +658,12 @@ dependencies:
     .agents/skills/changelog/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
     .agents/skills/ci-sweeper/SKILL.md: sha256:4af2659b0fd7d4823d79544b4cac3fe98a4385bfb63a17e61aa244f0ac212599
     .agents/skills/ci-sweeper/assets/pr-body-template.md: sha256:9d52464e759ccc7d93d7842035f155117bc2d35b063c5411ee55b387a09de436
-    .agents/skills/ci-sweeper/eval.yaml: sha256:e3e8798510993f990002b1c9bc3c2e7dfb52ee6482834d848113252de3ebc13b
+    .agents/skills/ci-sweeper/eval.yaml: sha256:f1155aeabb2c6d539205420b52c26cd919687854fd71a0d5b56ed59a2bd4fc02
     .agents/skills/ci-sweeper/evals/tasks/basic.yaml: sha256:d9aee872c1aecedf9f922b29600eb6156ee553e8ccf6f9644855c5c548cd868b
     .agents/skills/ci-sweeper/evals/tasks/classification.yaml: sha256:0daaa35b651a7271ff2b1b3e0bba4b84c46806fb79d5e5af07263e6618650154
     .agents/skills/ci-sweeper/evals/tasks/noaction.yaml: sha256:f127dd6e8792a1493dca5b03cf4ca97c7a1cf87083dedd5b32b3506026678e07
     .agents/skills/ci-sweeper/evals/tasks/regression-defer.yaml: sha256:968b7c3ea3830804a3dd4c0b6fade0bd209ab4e64f25ba19242b889e1156030f
-    .agents/skills/ci-sweeper/evals/tasks/trigger-negative.yaml: sha256:daf8ae46de718bb2d001c198d2d3eaf416d9ba42284922adec4c17164e7ca1c6
+    .agents/skills/ci-sweeper/evals/tasks/trigger-negative.yaml: sha256:7db2d843e7bad32a77d191226bfcc89630d071a1633d40fc987f8cc873aa5f25
     .agents/skills/ci-sweeper/references/category-input-schema.md: sha256:b78a280e3e8479d6753466304e3a1ba55db905d328e6bd00d64ceea64aa9e383
     .agents/skills/ci-sweeper/references/category-run-ledger.md: sha256:055c9c821ffaa06f56fbc8cf991e1182cfa1f6a0a9f5b5c7e13411f26231e976
     .agents/skills/ci-sweeper/references/category-scope.md: sha256:98b6df68e418b9eb4d48ddeee93692013106049b36cea03526e5a4cad0667272
@@ -727,7 +693,7 @@ dependencies:
     .agents/skills/docs-creator/references/common-output-format.md: sha256:e51da622747d4be617a6655dc3a7199af17e0d4fd8927296109ccc8b8507dec0
     .agents/skills/docs-updater/SKILL.md: sha256:50faa968a379596eee694da0e82869ecddcec034bdd5fb7203f5b145275d3a23
     .agents/skills/docs-updater/assets/pr-body-template.md: sha256:f7242d8ccd81cd4d356722840dfdde5be56bb5b0a7f8cb5c632d693259447b38
-    .agents/skills/docs-updater/eval.yaml: sha256:a0b540b0b74a2e0e670de96cd72df0a5e54d6c997a568d78b1350dfa7a6ac614
+    .agents/skills/docs-updater/eval.yaml: sha256:1ccc39e8e6a0e1438436607df6c6b8a5c55cca530d51be7e95bc8321a84fd43e
     .agents/skills/docs-updater/evals/evals.json: sha256:204332fbff070e61e64901a0e4a70555555436bcbb41512b5d4bc21316f6432f
     .agents/skills/docs-updater/evals/files/README.stale.md: sha256:9776631e8f9c4fd404feecb53c6eb0b59362d970150277c65136242e06efcb64
     .agents/skills/docs-updater/evals/files/detect-hook-staged.json: sha256:2f41d67e6c36d7be4d459190cc351a33685c3786fde9c9d82b59234f834fc573
@@ -744,7 +710,7 @@ dependencies:
     .agents/skills/docs-updater/evals/tasks/docs-updater-loop-trigger-negative.yaml: sha256:bc3b209be82a5c62c27facd08ea3c1e3ed7c6ed2eb83fa99e3d9f6692bbebd37
     .agents/skills/docs-updater/evals/tasks/docs-updater-rename-detection.yaml: sha256:e5b49f3952b018231bb33af4c8ea768c1ac07960f726f284593e75e33a26d059
     .agents/skills/docs-updater/evals/tasks/docs-updater-skip.yaml: sha256:f46f6ddb627a2f33df56caa396a65c1704a98a2112b1d486e05a57e6112376d8
-    .agents/skills/docs-updater/evals/tasks/docs-updater-trigger-negative.yaml: sha256:83cd95e759610918337bd57a6303e957e5fce99d4045e1edebc6adeb781eb4ca
+    .agents/skills/docs-updater/evals/tasks/docs-updater-trigger-negative.yaml: sha256:4b18ad1af16d9e2756b2264fbc550889fa4fa8df88bf1ad1b4cd1ecffdb1e1b0
     .agents/skills/docs-updater/references/category-loop-input-schema.md: sha256:aead5319c05b4ce388c3db9b8ca601cef9fa54f84926b96d75fc621a702aefcf
     .agents/skills/docs-updater/references/category-scope.md: sha256:3bf335c7b193d4261b3ba732026f08e2780899dce2e317c9df8015e31a002f83
     .agents/skills/docs-updater/references/common-checklist-loop.md: sha256:f1e67afc876fcb37cbeef4bd99b0fafef555fab304f479c3bd1b92f084c5c714
@@ -897,7 +863,7 @@ dependencies:
     .agents/skills/refactor/references/category-scope.md: sha256:c49485cab9542f06ca0d6df0771b2c2c1cf36b519f3d3f42853b3df108527b72
     .agents/skills/refactor/references/category-techniques.md: sha256:dddfe0a26112b1182b1045c0cce0f24b70a1d43eb552c6ce876a437ab0b8fcbc
     .agents/skills/refactor/references/category-verification.md: sha256:7189347a7174b65eb4699f5895b7d784ceb269e99adfb59a44e1d7ecbae20572
-    .agents/skills/refactor/references/common-checklist.md: sha256:3b1623eed0dd20407ebf4df52025110689cf8b383dee3ad3288f1abfada5b608
+    .agents/skills/refactor/references/common-checklist.md: sha256:6f7422086205850b44c4e152aa86216d92231423e217b5995db901e2693da598
     .agents/skills/refactor/references/common-output-format-loop.md: sha256:ab4311e6d7d8315ed031b439edb3814c5457450e66ba6f7ff94388e1ba188dd5
     .agents/skills/refactor/references/common-output-format.md: sha256:70f42088a39ed1c2363ce49364912ea02da1c52c73f1cbe6d76f9ce7cc2fc48a
     .agents/skills/refactor/scripts/detect_refactor.sh: sha256:401d01438014229efedc709f6fb4ede36cbc2f7b7f10d922dfd1bbb15dc9627e
@@ -909,39 +875,39 @@ dependencies:
     .agents/skills/refactor/scripts/lib/repo_paths.sh: sha256:eba82b537aeaefd4b76de13d2a64b73a74817c0a36a3a0bd47195a122d461a98
     .agents/skills/refactor/scripts/lib/terraform.sh: sha256:02e0fa54a1d73191dfd78c7f5aba848027c6f75b92fc38f4e62d10869d5ee15d
     .agents/skills/refactor/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
-    .agents/skills/report-tech-debt/SKILL.md: sha256:ae96a42e6570cb3f054f26b6dba26c85da352e1aaea70cb8ff16c41712299660
-    .agents/skills/report-tech-debt/assets/pr-body-template.md: sha256:2e2cb9ef5c0eed7954c3e8f8497c3ed00253aba0cd7b77878dd9a33e006d5121
-    .agents/skills/report-tech-debt/eval.yaml: sha256:95cc9e677eeb06598041936b44dc188793dea84ca3f669e8c7dc356bf5152bdb
-    .agents/skills/report-tech-debt/evals/files/README.md: sha256:72115b1eeabe18a192e21dc65b707f07d2ddb699e2f4c90c7dff2b438028961f
-    .agents/skills/report-tech-debt/evals/files/go.mod.txt: sha256:6337da5cc0454697de17006a91847d56e62dd5cd9fd3a245f2e873ecc1246395
-    .agents/skills/report-tech-debt/evals/files/noise.go.txt: sha256:095a192120fd822a7a7e2034ae84fbc6fdfdf7e4dbee7160266295e9e372c154
-    .agents/skills/report-tech-debt/evals/files/previous-report.sample.md: sha256:98c283fffe6da93c1c3b783e8173c47c27be518ceec0d0fe0021f10056579e21
-    .agents/skills/report-tech-debt/evals/files/sample_service.go.txt: sha256:5a4aeb7c5caf81a5f86e46e54e135d39634103f012fdf90afcf1bbc942325bb3
-    .agents/skills/report-tech-debt/evals/tasks/basic.yaml: sha256:0d5b607fef2ef5cbfca3d704e1c89092f748207133ae72928162249e443e4a8c
-    .agents/skills/report-tech-debt/evals/tasks/classification.yaml: sha256:74429e44bbca1bbf4e64a30a7ff85b208017cd84df1fbbc4998160ac43f8f959
-    .agents/skills/report-tech-debt/evals/tasks/hotspot-only.yaml: sha256:8e205b6fc8cbf0bd4a26c23e4605742769a16e1e3128c7b61278739096dd9044
-    .agents/skills/report-tech-debt/evals/tasks/l1-report-only.yaml: sha256:3a5ce128b779ef9f43ccf6f85de19f39764b9fb02fc6906349d1867780fd0448
-    .agents/skills/report-tech-debt/evals/tasks/l2-report-write.yaml: sha256:1950377bc013354d03e7a4780672b7a8e3a8a0c324e9c46c6ee98604bb586e1c
-    .agents/skills/report-tech-debt/evals/tasks/noaction.yaml: sha256:740831b400e05d3219e2f192681e2ed2e91f0cd0c52088806f9ec7d317773982
-    .agents/skills/report-tech-debt/evals/tasks/previous-report.yaml: sha256:ab096381d4668acc74a38b3b52cd179e5503bbb54ef4ed712530b21f66784ccd
-    .agents/skills/report-tech-debt/evals/tasks/trigger-negative.yaml: sha256:2f427c3b346d6a643848af0f938ea9ba826b628d6d5864b8dac219f06fe1fdaf
-    .agents/skills/report-tech-debt/evals/tasks/truncation-cap.yaml: sha256:692b03ead9d181a36f8bc10d16386f047059c02092a7aec801a5bff08876364f
-    .agents/skills/report-tech-debt/references/category-debt-taxonomy.md: sha256:4268125d2b7c263d7e1c7ba1d0d79fb8ed49de04de07531f5e944fc3d9c6a498
-    .agents/skills/report-tech-debt/references/category-input-schema.md: sha256:bbc1229fb30fd480ac50646d91221be0fa37fbf0d1c94c3df50e95891cc4ea3b
-    .agents/skills/report-tech-debt/references/category-scope.md: sha256:58fd3b6f844b7a2f4647663f7d84aa272d33fb3752453b7b4ade54e125e0fbf9
-    .agents/skills/report-tech-debt/references/common-checklist.md: sha256:6137eeb4b4a003289fa46b86cff95cc6c84bc8675aad4aeb81df7f6406482eb8
-    .agents/skills/report-tech-debt/references/common-output-format.md: sha256:e31dac9417c9a5b894fc8a3df07927710ba5d98a77c5ab2afab1c98116cdd127
-    .agents/skills/report-tech-debt/references/common-troubleshooting.md: sha256:28e9a9acf32642f50167c5a6e25a0de9410cc33cf4ec1a23a06deb92f21b9e1b
-    .agents/skills/report-tech-debt/scripts/detect_report_tech_debt.sh: sha256:212073bab9746de19d07097610046d0edbb05e896ab02b22ef5cc5b0f34060db
-    .agents/skills/report-tech-debt/scripts/detect_report_tech_debt_sensors.sh: sha256:1407da9d6531e59d02ed05e716c773714ddd8e9f4cc708f4909798dbc606f718
-    .agents/skills/report-tech-debt/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
-    .agents/skills/report-tech-debt/scripts/lib/aws.sh: sha256:b28a0fb90828668de0957268dd8e6fca78f6cb84b29f3698ae590e8e9ebf92da
-    .agents/skills/report-tech-debt/scripts/lib/common.sh: sha256:5ae0e869e6c8e35300ad414f86b1075fdd00d4b818885ab6fff071d7d6c69a08
-    .agents/skills/report-tech-debt/scripts/lib/csv.sh: sha256:f9cddbbcba29d3b3baebbe45ad9cd1c9b015ff8342c01f55a4361f3154a0cf49
-    .agents/skills/report-tech-debt/scripts/lib/json.sh: sha256:aa005391b993211fb86b323937de61d76b0008c7e6faec813ae1c0708e730ef8
-    .agents/skills/report-tech-debt/scripts/lib/repo_paths.sh: sha256:eba82b537aeaefd4b76de13d2a64b73a74817c0a36a3a0bd47195a122d461a98
-    .agents/skills/report-tech-debt/scripts/lib/terraform.sh: sha256:02e0fa54a1d73191dfd78c7f5aba848027c6f75b92fc38f4e62d10869d5ee15d
-    .agents/skills/report-tech-debt/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
+    .agents/skills/tech-debt/SKILL.md: sha256:290b684c922bf6d29b269bf143b1996f4e9a443c7728b3dea1ae7c5bb73ea24a
+    .agents/skills/tech-debt/assets/pr-body-template.md: sha256:680b2a88efc08897a1f641b39dfaf883c63cf6b1dfe1b1aa54cd92db75f6cf52
+    .agents/skills/tech-debt/eval.yaml: sha256:63cec6d2b7a9d3d4bcc1b13e327d39d0ff554944edd547c0364b712fdd4765a3
+    .agents/skills/tech-debt/evals/files/README.md: sha256:72115b1eeabe18a192e21dc65b707f07d2ddb699e2f4c90c7dff2b438028961f
+    .agents/skills/tech-debt/evals/files/go.mod.txt: sha256:6337da5cc0454697de17006a91847d56e62dd5cd9fd3a245f2e873ecc1246395
+    .agents/skills/tech-debt/evals/files/noise.go.txt: sha256:095a192120fd822a7a7e2034ae84fbc6fdfdf7e4dbee7160266295e9e372c154
+    .agents/skills/tech-debt/evals/files/previous-report.sample.md: sha256:98c283fffe6da93c1c3b783e8173c47c27be518ceec0d0fe0021f10056579e21
+    .agents/skills/tech-debt/evals/files/sample_service.go.txt: sha256:5a4aeb7c5caf81a5f86e46e54e135d39634103f012fdf90afcf1bbc942325bb3
+    .agents/skills/tech-debt/evals/tasks/basic.yaml: sha256:ac1d4cdb3c4c3c72eedf9f01755fd5b91a5d227c5eff1f5aea0855bd5a54796a
+    .agents/skills/tech-debt/evals/tasks/classification.yaml: sha256:380d53e17b9f98b0aefcff5b15cc7c2073e7af32260e5b12de18251262bcd8cd
+    .agents/skills/tech-debt/evals/tasks/hotspot-only.yaml: sha256:495c88c65873df18accecc0ddbaecd4ddb1b0949174bcdd27681d1cf23ffc8b3
+    .agents/skills/tech-debt/evals/tasks/l1-report-only.yaml: sha256:2b0ab0450f75224cf09d18743494ccac64f1903df9c75a13c17f89e22e3fe7fe
+    .agents/skills/tech-debt/evals/tasks/l2-report-write.yaml: sha256:474165d9fc04b69ec5a4547a6bbf2872bca4c41784628e60621ab06e377d14e7
+    .agents/skills/tech-debt/evals/tasks/noaction.yaml: sha256:65c45628591af37edc0fd3ca86a173406e0594e856df7e33ea957d675c4ce6a8
+    .agents/skills/tech-debt/evals/tasks/previous-report.yaml: sha256:5dc97a45f49cbe3383e45eb42975b3d76dac879fe6cbba0f52d544eb1179dd3d
+    .agents/skills/tech-debt/evals/tasks/trigger-negative.yaml: sha256:86c55232a27c89a88164fe985bced915312b54908f80c99c7739cf9c452fb457
+    .agents/skills/tech-debt/evals/tasks/truncation-cap.yaml: sha256:95238d9059fee046be0566ae087aa66df971d326f931f2636a2b6322dca74c36
+    .agents/skills/tech-debt/references/category-debt-taxonomy.md: sha256:4268125d2b7c263d7e1c7ba1d0d79fb8ed49de04de07531f5e944fc3d9c6a498
+    .agents/skills/tech-debt/references/category-input-schema.md: sha256:fa94fd9fffdc721de7a8dd421293c3524b44747f5cc402545fada1ddddafcbe5
+    .agents/skills/tech-debt/references/category-scope.md: sha256:606c2cb40385cfd33bdb673d72b74e9990cf2a450408ba65456517c13488e4fc
+    .agents/skills/tech-debt/references/common-checklist.md: sha256:1f801268693e513652824b70a41cffa91623974873bb89daa936cc6615638f6a
+    .agents/skills/tech-debt/references/common-output-format.md: sha256:7bb9ac3e29814f2ca5ebf4915d90ef1c8fa71bffb3f9b68d8afcb8ed0c59f632
+    .agents/skills/tech-debt/references/common-troubleshooting.md: sha256:28e9a9acf32642f50167c5a6e25a0de9410cc33cf4ec1a23a06deb92f21b9e1b
+    .agents/skills/tech-debt/scripts/detect_tech_debt.sh: sha256:0b51af40fd4e7b6e1ddf0cbaeb7627e1184612943b9f0b4b1fdf81c91a58f94d
+    .agents/skills/tech-debt/scripts/detect_tech_debt_sensors.sh: sha256:9055195cf672822319f89fe11b61b5c9d83396127787740be79036030226ff51
+    .agents/skills/tech-debt/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
+    .agents/skills/tech-debt/scripts/lib/aws.sh: sha256:b28a0fb90828668de0957268dd8e6fca78f6cb84b29f3698ae590e8e9ebf92da
+    .agents/skills/tech-debt/scripts/lib/common.sh: sha256:5ae0e869e6c8e35300ad414f86b1075fdd00d4b818885ab6fff071d7d6c69a08
+    .agents/skills/tech-debt/scripts/lib/csv.sh: sha256:f9cddbbcba29d3b3baebbe45ad9cd1c9b015ff8342c01f55a4361f3154a0cf49
+    .agents/skills/tech-debt/scripts/lib/json.sh: sha256:aa005391b993211fb86b323937de61d76b0008c7e6faec813ae1c0708e730ef8
+    .agents/skills/tech-debt/scripts/lib/repo_paths.sh: sha256:eba82b537aeaefd4b76de13d2a64b73a74817c0a36a3a0bd47195a122d461a98
+    .agents/skills/tech-debt/scripts/lib/terraform.sh: sha256:02e0fa54a1d73191dfd78c7f5aba848027c6f75b92fc38f4e62d10869d5ee15d
+    .agents/skills/tech-debt/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
     .claude/agents/test-engineer.md: sha256:8dfd917e4b2652f8eedc6355660732645a18a85ee803cc8e82a83884d9e5c390
     .claude/rules/agent-skills.md: sha256:8a517505e73e90203f9d14e3ea6c6a53ad00f32492d323dbda67d6e86b149991
     .claude/rules/github-actions-workflow.md: sha256:a7bdb1ddae7062cb2361322d8b43c91c16f0787ad41f7fde3445a53375383526
@@ -973,7 +939,7 @@ dependencies:
     .claude/skills/agent-skills-review/scripts/validate_waza.sh: sha256:ba503378523d596771a58385802044d50de9ce6a8853841a32a1d4107bbbf6f7
     .claude/skills/changelog/SKILL.md: sha256:56ee40d87a22f22fb7aa7c06d2984ff5af8ad795e1865f295ebc292dcc7284c0
     .claude/skills/changelog/assets/pr-body-template.md: sha256:0c1f40777ae201484010a04f9d07ff0bc1e86b8384f145c452791422182a9aa4
-    .claude/skills/changelog/eval.yaml: sha256:78251bf8f65542e170b33b9adbf0d1bb928f09881c546cf3a273f098b3ab89ba
+    .claude/skills/changelog/eval.yaml: sha256:a4e4cab4f74d7043daa2333e11f8336a3bcfa92980d070ef713cba211eb5c6e7
     .claude/skills/changelog/evals/files/CHANGELOG.sample.md: sha256:ed3e7f0d4977a16dccbcaafca70c99ee9293176db405171a30693ad231bbcc64
     .claude/skills/changelog/evals/tasks/basic.yaml: sha256:d7aff2209a5a53dd2b2c963b47ed799f877549ebeec23660511cff57b3f93eab
     .claude/skills/changelog/evals/tasks/create-template.yaml: sha256:0d6823a745a2e5de8b5f4217869d1145225b654eb53bcac441c6010288a32a17
@@ -997,12 +963,12 @@ dependencies:
     .claude/skills/changelog/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
     .claude/skills/ci-sweeper/SKILL.md: sha256:4af2659b0fd7d4823d79544b4cac3fe98a4385bfb63a17e61aa244f0ac212599
     .claude/skills/ci-sweeper/assets/pr-body-template.md: sha256:9d52464e759ccc7d93d7842035f155117bc2d35b063c5411ee55b387a09de436
-    .claude/skills/ci-sweeper/eval.yaml: sha256:e3e8798510993f990002b1c9bc3c2e7dfb52ee6482834d848113252de3ebc13b
+    .claude/skills/ci-sweeper/eval.yaml: sha256:f1155aeabb2c6d539205420b52c26cd919687854fd71a0d5b56ed59a2bd4fc02
     .claude/skills/ci-sweeper/evals/tasks/basic.yaml: sha256:d9aee872c1aecedf9f922b29600eb6156ee553e8ccf6f9644855c5c548cd868b
     .claude/skills/ci-sweeper/evals/tasks/classification.yaml: sha256:0daaa35b651a7271ff2b1b3e0bba4b84c46806fb79d5e5af07263e6618650154
     .claude/skills/ci-sweeper/evals/tasks/noaction.yaml: sha256:f127dd6e8792a1493dca5b03cf4ca97c7a1cf87083dedd5b32b3506026678e07
     .claude/skills/ci-sweeper/evals/tasks/regression-defer.yaml: sha256:968b7c3ea3830804a3dd4c0b6fade0bd209ab4e64f25ba19242b889e1156030f
-    .claude/skills/ci-sweeper/evals/tasks/trigger-negative.yaml: sha256:daf8ae46de718bb2d001c198d2d3eaf416d9ba42284922adec4c17164e7ca1c6
+    .claude/skills/ci-sweeper/evals/tasks/trigger-negative.yaml: sha256:7db2d843e7bad32a77d191226bfcc89630d071a1633d40fc987f8cc873aa5f25
     .claude/skills/ci-sweeper/references/category-input-schema.md: sha256:b78a280e3e8479d6753466304e3a1ba55db905d328e6bd00d64ceea64aa9e383
     .claude/skills/ci-sweeper/references/category-run-ledger.md: sha256:055c9c821ffaa06f56fbc8cf991e1182cfa1f6a0a9f5b5c7e13411f26231e976
     .claude/skills/ci-sweeper/references/category-scope.md: sha256:98b6df68e418b9eb4d48ddeee93692013106049b36cea03526e5a4cad0667272
@@ -1032,7 +998,7 @@ dependencies:
     .claude/skills/docs-creator/references/common-output-format.md: sha256:e51da622747d4be617a6655dc3a7199af17e0d4fd8927296109ccc8b8507dec0
     .claude/skills/docs-updater/SKILL.md: sha256:50faa968a379596eee694da0e82869ecddcec034bdd5fb7203f5b145275d3a23
     .claude/skills/docs-updater/assets/pr-body-template.md: sha256:f7242d8ccd81cd4d356722840dfdde5be56bb5b0a7f8cb5c632d693259447b38
-    .claude/skills/docs-updater/eval.yaml: sha256:a0b540b0b74a2e0e670de96cd72df0a5e54d6c997a568d78b1350dfa7a6ac614
+    .claude/skills/docs-updater/eval.yaml: sha256:1ccc39e8e6a0e1438436607df6c6b8a5c55cca530d51be7e95bc8321a84fd43e
     .claude/skills/docs-updater/evals/evals.json: sha256:204332fbff070e61e64901a0e4a70555555436bcbb41512b5d4bc21316f6432f
     .claude/skills/docs-updater/evals/files/README.stale.md: sha256:9776631e8f9c4fd404feecb53c6eb0b59362d970150277c65136242e06efcb64
     .claude/skills/docs-updater/evals/files/detect-hook-staged.json: sha256:2f41d67e6c36d7be4d459190cc351a33685c3786fde9c9d82b59234f834fc573
@@ -1049,7 +1015,7 @@ dependencies:
     .claude/skills/docs-updater/evals/tasks/docs-updater-loop-trigger-negative.yaml: sha256:bc3b209be82a5c62c27facd08ea3c1e3ed7c6ed2eb83fa99e3d9f6692bbebd37
     .claude/skills/docs-updater/evals/tasks/docs-updater-rename-detection.yaml: sha256:e5b49f3952b018231bb33af4c8ea768c1ac07960f726f284593e75e33a26d059
     .claude/skills/docs-updater/evals/tasks/docs-updater-skip.yaml: sha256:f46f6ddb627a2f33df56caa396a65c1704a98a2112b1d486e05a57e6112376d8
-    .claude/skills/docs-updater/evals/tasks/docs-updater-trigger-negative.yaml: sha256:83cd95e759610918337bd57a6303e957e5fce99d4045e1edebc6adeb781eb4ca
+    .claude/skills/docs-updater/evals/tasks/docs-updater-trigger-negative.yaml: sha256:4b18ad1af16d9e2756b2264fbc550889fa4fa8df88bf1ad1b4cd1ecffdb1e1b0
     .claude/skills/docs-updater/references/category-loop-input-schema.md: sha256:aead5319c05b4ce388c3db9b8ca601cef9fa54f84926b96d75fc621a702aefcf
     .claude/skills/docs-updater/references/category-scope.md: sha256:3bf335c7b193d4261b3ba732026f08e2780899dce2e317c9df8015e31a002f83
     .claude/skills/docs-updater/references/common-checklist-loop.md: sha256:f1e67afc876fcb37cbeef4bd99b0fafef555fab304f479c3bd1b92f084c5c714
@@ -1202,7 +1168,7 @@ dependencies:
     .claude/skills/refactor/references/category-scope.md: sha256:c49485cab9542f06ca0d6df0771b2c2c1cf36b519f3d3f42853b3df108527b72
     .claude/skills/refactor/references/category-techniques.md: sha256:dddfe0a26112b1182b1045c0cce0f24b70a1d43eb552c6ce876a437ab0b8fcbc
     .claude/skills/refactor/references/category-verification.md: sha256:7189347a7174b65eb4699f5895b7d784ceb269e99adfb59a44e1d7ecbae20572
-    .claude/skills/refactor/references/common-checklist.md: sha256:3b1623eed0dd20407ebf4df52025110689cf8b383dee3ad3288f1abfada5b608
+    .claude/skills/refactor/references/common-checklist.md: sha256:6f7422086205850b44c4e152aa86216d92231423e217b5995db901e2693da598
     .claude/skills/refactor/references/common-output-format-loop.md: sha256:ab4311e6d7d8315ed031b439edb3814c5457450e66ba6f7ff94388e1ba188dd5
     .claude/skills/refactor/references/common-output-format.md: sha256:70f42088a39ed1c2363ce49364912ea02da1c52c73f1cbe6d76f9ce7cc2fc48a
     .claude/skills/refactor/scripts/detect_refactor.sh: sha256:401d01438014229efedc709f6fb4ede36cbc2f7b7f10d922dfd1bbb15dc9627e
@@ -1214,39 +1180,6 @@ dependencies:
     .claude/skills/refactor/scripts/lib/repo_paths.sh: sha256:eba82b537aeaefd4b76de13d2a64b73a74817c0a36a3a0bd47195a122d461a98
     .claude/skills/refactor/scripts/lib/terraform.sh: sha256:02e0fa54a1d73191dfd78c7f5aba848027c6f75b92fc38f4e62d10869d5ee15d
     .claude/skills/refactor/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
-    .claude/skills/report-tech-debt/SKILL.md: sha256:ae96a42e6570cb3f054f26b6dba26c85da352e1aaea70cb8ff16c41712299660
-    .claude/skills/report-tech-debt/assets/pr-body-template.md: sha256:2e2cb9ef5c0eed7954c3e8f8497c3ed00253aba0cd7b77878dd9a33e006d5121
-    .claude/skills/report-tech-debt/eval.yaml: sha256:95cc9e677eeb06598041936b44dc188793dea84ca3f669e8c7dc356bf5152bdb
-    .claude/skills/report-tech-debt/evals/files/README.md: sha256:72115b1eeabe18a192e21dc65b707f07d2ddb699e2f4c90c7dff2b438028961f
-    .claude/skills/report-tech-debt/evals/files/go.mod.txt: sha256:6337da5cc0454697de17006a91847d56e62dd5cd9fd3a245f2e873ecc1246395
-    .claude/skills/report-tech-debt/evals/files/noise.go.txt: sha256:095a192120fd822a7a7e2034ae84fbc6fdfdf7e4dbee7160266295e9e372c154
-    .claude/skills/report-tech-debt/evals/files/previous-report.sample.md: sha256:98c283fffe6da93c1c3b783e8173c47c27be518ceec0d0fe0021f10056579e21
-    .claude/skills/report-tech-debt/evals/files/sample_service.go.txt: sha256:5a4aeb7c5caf81a5f86e46e54e135d39634103f012fdf90afcf1bbc942325bb3
-    .claude/skills/report-tech-debt/evals/tasks/basic.yaml: sha256:0d5b607fef2ef5cbfca3d704e1c89092f748207133ae72928162249e443e4a8c
-    .claude/skills/report-tech-debt/evals/tasks/classification.yaml: sha256:74429e44bbca1bbf4e64a30a7ff85b208017cd84df1fbbc4998160ac43f8f959
-    .claude/skills/report-tech-debt/evals/tasks/hotspot-only.yaml: sha256:8e205b6fc8cbf0bd4a26c23e4605742769a16e1e3128c7b61278739096dd9044
-    .claude/skills/report-tech-debt/evals/tasks/l1-report-only.yaml: sha256:3a5ce128b779ef9f43ccf6f85de19f39764b9fb02fc6906349d1867780fd0448
-    .claude/skills/report-tech-debt/evals/tasks/l2-report-write.yaml: sha256:1950377bc013354d03e7a4780672b7a8e3a8a0c324e9c46c6ee98604bb586e1c
-    .claude/skills/report-tech-debt/evals/tasks/noaction.yaml: sha256:740831b400e05d3219e2f192681e2ed2e91f0cd0c52088806f9ec7d317773982
-    .claude/skills/report-tech-debt/evals/tasks/previous-report.yaml: sha256:ab096381d4668acc74a38b3b52cd179e5503bbb54ef4ed712530b21f66784ccd
-    .claude/skills/report-tech-debt/evals/tasks/trigger-negative.yaml: sha256:2f427c3b346d6a643848af0f938ea9ba826b628d6d5864b8dac219f06fe1fdaf
-    .claude/skills/report-tech-debt/evals/tasks/truncation-cap.yaml: sha256:692b03ead9d181a36f8bc10d16386f047059c02092a7aec801a5bff08876364f
-    .claude/skills/report-tech-debt/references/category-debt-taxonomy.md: sha256:4268125d2b7c263d7e1c7ba1d0d79fb8ed49de04de07531f5e944fc3d9c6a498
-    .claude/skills/report-tech-debt/references/category-input-schema.md: sha256:bbc1229fb30fd480ac50646d91221be0fa37fbf0d1c94c3df50e95891cc4ea3b
-    .claude/skills/report-tech-debt/references/category-scope.md: sha256:58fd3b6f844b7a2f4647663f7d84aa272d33fb3752453b7b4ade54e125e0fbf9
-    .claude/skills/report-tech-debt/references/common-checklist.md: sha256:6137eeb4b4a003289fa46b86cff95cc6c84bc8675aad4aeb81df7f6406482eb8
-    .claude/skills/report-tech-debt/references/common-output-format.md: sha256:e31dac9417c9a5b894fc8a3df07927710ba5d98a77c5ab2afab1c98116cdd127
-    .claude/skills/report-tech-debt/references/common-troubleshooting.md: sha256:28e9a9acf32642f50167c5a6e25a0de9410cc33cf4ec1a23a06deb92f21b9e1b
-    .claude/skills/report-tech-debt/scripts/detect_report_tech_debt.sh: sha256:212073bab9746de19d07097610046d0edbb05e896ab02b22ef5cc5b0f34060db
-    .claude/skills/report-tech-debt/scripts/detect_report_tech_debt_sensors.sh: sha256:1407da9d6531e59d02ed05e716c773714ddd8e9f4cc708f4909798dbc606f718
-    .claude/skills/report-tech-debt/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
-    .claude/skills/report-tech-debt/scripts/lib/aws.sh: sha256:b28a0fb90828668de0957268dd8e6fca78f6cb84b29f3698ae590e8e9ebf92da
-    .claude/skills/report-tech-debt/scripts/lib/common.sh: sha256:5ae0e869e6c8e35300ad414f86b1075fdd00d4b818885ab6fff071d7d6c69a08
-    .claude/skills/report-tech-debt/scripts/lib/csv.sh: sha256:f9cddbbcba29d3b3baebbe45ad9cd1c9b015ff8342c01f55a4361f3154a0cf49
-    .claude/skills/report-tech-debt/scripts/lib/json.sh: sha256:aa005391b993211fb86b323937de61d76b0008c7e6faec813ae1c0708e730ef8
-    .claude/skills/report-tech-debt/scripts/lib/repo_paths.sh: sha256:eba82b537aeaefd4b76de13d2a64b73a74817c0a36a3a0bd47195a122d461a98
-    .claude/skills/report-tech-debt/scripts/lib/terraform.sh: sha256:02e0fa54a1d73191dfd78c7f5aba848027c6f75b92fc38f4e62d10869d5ee15d
-    .claude/skills/report-tech-debt/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
     .cursor/agents/test-engineer.md: sha256:8dfd917e4b2652f8eedc6355660732645a18a85ee803cc8e82a83884d9e5c390
     .cursor/rules/agent-skills.mdc: sha256:849eb8ccdf5a29d2550cf2fc17f4dd7d3a104752b5820f46a9f4a68cb858833d
     .cursor/rules/github-actions-workflow.mdc: sha256:db7b654240b111aa018ff6dfd0ffdb8f1d94dcc782e8ff53c96d2ea00ecb582c
@@ -1736,13 +1669,13 @@ dependencies:
     .agents/skills/shell-script-validation/eval.yaml: sha256:6f2518a30fe2dbd04da7b10693bd4eb8cc076d9983646c98f0591e9712ffcfd8
     .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-basic.yaml: sha256:d2df5946a3fcf3765e52405d29b0bb478e6a64dc4d05310a76a1ce6ee763d005
     .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-boundary-guardrail.yaml: sha256:1238638e16effa3f2f1c58c5e12768624d65b5821b4c8b7b20d40878eeca8104
-    .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-canonical-flags.yaml: sha256:2dbe712568bd59877c3bf302add162419f48eeb2ada9a8f0a7bf6182cae462bf
+    .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-canonical-flags.yaml: sha256:2df2d187c797cfee445fa3f7ca605579727becae32e234661fbe839ca2ffe1ec
     .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-opt-out-function-docs.yaml: sha256:66c597c064179efa1d7c2a509b031597e0daff8f8b16316766ac5128512518a4
     .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-partial-failure.yaml: sha256:cefa351a9b14a7712f6d2abcd9f85f44ae6ff1f1cae504d5fba296839316802c
     .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-structured-output.yaml: sha256:e97179c5f3391b47515b033632809862677d721a642084d2639999c6c12eedf6
-    .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-target-path.yaml: sha256:310bdefb404abb06577b624be6fffc0d089d134fffbcbee4be9ab54bf25e642e
+    .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-target-path.yaml: sha256:f650e1106fe4618485d0fd580c20b6618d0ea5beab3a752ca22da5ff0316f42e
     .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-trigger-negative.yaml: sha256:cb7f413048123c3c4dab9f3d8651b89a29ebce907f8d108c092ece58c8080c19
-    .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-trigger-positive.yaml: sha256:159706eade99b6bedf0874bf0d1e854cef056d0c13b05ad783fed43b662ef86c
+    .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-trigger-positive.yaml: sha256:54adf62dc0ffe48a7140d1f4e980400fb1a970f9c11a85cd111cae5a6c2acbc0
     .agents/skills/shell-script-validation/references/category-standards.md: sha256:85f6587e4cc5dac3f70b70409fe8517e91e6625b6d24f8f9fc06a294d80f3384
     .agents/skills/shell-script-validation/references/common-checklist.md: sha256:0807e4a39213c87a6a230c3cb8b3be0cd8c5ae503ef5f92f7e9305f28eb7bdb3
     .agents/skills/shell-script-validation/references/common-individual-commands.md: sha256:4630375e0015c89f53e85ab1aab5cdbbd69e0d68dc626ea02a794822ca73ad40
@@ -1794,13 +1727,13 @@ dependencies:
     .claude/skills/shell-script-validation/eval.yaml: sha256:6f2518a30fe2dbd04da7b10693bd4eb8cc076d9983646c98f0591e9712ffcfd8
     .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-basic.yaml: sha256:d2df5946a3fcf3765e52405d29b0bb478e6a64dc4d05310a76a1ce6ee763d005
     .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-boundary-guardrail.yaml: sha256:1238638e16effa3f2f1c58c5e12768624d65b5821b4c8b7b20d40878eeca8104
-    .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-canonical-flags.yaml: sha256:2dbe712568bd59877c3bf302add162419f48eeb2ada9a8f0a7bf6182cae462bf
+    .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-canonical-flags.yaml: sha256:2df2d187c797cfee445fa3f7ca605579727becae32e234661fbe839ca2ffe1ec
     .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-opt-out-function-docs.yaml: sha256:66c597c064179efa1d7c2a509b031597e0daff8f8b16316766ac5128512518a4
     .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-partial-failure.yaml: sha256:cefa351a9b14a7712f6d2abcd9f85f44ae6ff1f1cae504d5fba296839316802c
     .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-structured-output.yaml: sha256:e97179c5f3391b47515b033632809862677d721a642084d2639999c6c12eedf6
-    .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-target-path.yaml: sha256:310bdefb404abb06577b624be6fffc0d089d134fffbcbee4be9ab54bf25e642e
+    .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-target-path.yaml: sha256:f650e1106fe4618485d0fd580c20b6618d0ea5beab3a752ca22da5ff0316f42e
     .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-trigger-negative.yaml: sha256:cb7f413048123c3c4dab9f3d8651b89a29ebce907f8d108c092ece58c8080c19
-    .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-trigger-positive.yaml: sha256:159706eade99b6bedf0874bf0d1e854cef056d0c13b05ad783fed43b662ef86c
+    .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-trigger-positive.yaml: sha256:54adf62dc0ffe48a7140d1f4e980400fb1a970f9c11a85cd111cae5a6c2acbc0
     .claude/skills/shell-script-validation/references/category-standards.md: sha256:85f6587e4cc5dac3f70b70409fe8517e91e6625b6d24f8f9fc06a294d80f3384
     .claude/skills/shell-script-validation/references/common-checklist.md: sha256:0807e4a39213c87a6a230c3cb8b3be0cd8c5ae503ef5f92f7e9305f28eb7bdb3
     .claude/skills/shell-script-validation/references/common-individual-commands.md: sha256:4630375e0015c89f53e85ab1aab5cdbbd69e0d68dc626ea02a794822ca73ad40
@@ -2350,7 +2283,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:78251bf8f65542e170b33b9adbf0d1bb928f09881c546cf3a273f098b3ab89ba
+  content_hash: sha256:a4e4cab4f74d7043daa2333e11f8336a3bcfa92980d070ef713cba211eb5c6e7
 - kind: project-relative
   target: claude
   value: .claude/skills/changelog/evals/files/CHANGELOG.sample.md
@@ -2575,7 +2508,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:e3e8798510993f990002b1c9bc3c2e7dfb52ee6482834d848113252de3ebc13b
+  content_hash: sha256:f1155aeabb2c6d539205420b52c26cd919687854fd71a0d5b56ed59a2bd4fc02
 - kind: project-relative
   target: claude
   value: .claude/skills/ci-sweeper/evals/tasks/basic.yaml
@@ -2620,7 +2553,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:daf8ae46de718bb2d001c198d2d3eaf416d9ba42284922adec4c17164e7ca1c6
+  content_hash: sha256:7db2d843e7bad32a77d191226bfcc89630d071a1633d40fc987f8cc873aa5f25
 - kind: project-relative
   target: claude
   value: .claude/skills/ci-sweeper/references/category-input-schema.md
@@ -2908,7 +2841,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:a0b540b0b74a2e0e670de96cd72df0a5e54d6c997a568d78b1350dfa7a6ac614
+  content_hash: sha256:1ccc39e8e6a0e1438436607df6c6b8a5c55cca530d51be7e95bc8321a84fd43e
 - kind: project-relative
   target: claude
   value: .claude/skills/docs-updater/evals/evals.json
@@ -3061,7 +2994,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:83cd95e759610918337bd57a6303e957e5fce99d4045e1edebc6adeb781eb4ca
+  content_hash: sha256:4b18ad1af16d9e2756b2264fbc550889fa4fa8df88bf1ad1b4cd1ecffdb1e1b0
 - kind: project-relative
   target: claude
   value: .claude/skills/docs-updater/references/category-loop-input-schema.md
@@ -4987,7 +4920,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:3b1623eed0dd20407ebf4df52025110689cf8b383dee3ad3288f1abfada5b608
+  content_hash: sha256:6f7422086205850b44c4e152aa86216d92231423e217b5995db901e2693da598
 - kind: project-relative
   target: claude
   value: .claude/skills/refactor/references/common-output-format-loop.md
@@ -5081,312 +5014,6 @@ deployments:
 - kind: project-relative
   target: claude
   value: .claude/skills/refactor/scripts/lib/validation.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: null
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/SKILL.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:ae96a42e6570cb3f054f26b6dba26c85da352e1aaea70cb8ff16c41712299660
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/assets/pr-body-template.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:2e2cb9ef5c0eed7954c3e8f8497c3ed00253aba0cd7b77878dd9a33e006d5121
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/eval.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:95cc9e677eeb06598041936b44dc188793dea84ca3f669e8c7dc356bf5152bdb
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/evals/files/README.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:72115b1eeabe18a192e21dc65b707f07d2ddb699e2f4c90c7dff2b438028961f
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/evals/files/go.mod.txt
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:6337da5cc0454697de17006a91847d56e62dd5cd9fd3a245f2e873ecc1246395
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/evals/files/noise.go.txt
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:095a192120fd822a7a7e2034ae84fbc6fdfdf7e4dbee7160266295e9e372c154
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/evals/files/previous-report.sample.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:98c283fffe6da93c1c3b783e8173c47c27be518ceec0d0fe0021f10056579e21
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/evals/files/sample_service.go.txt
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:5a4aeb7c5caf81a5f86e46e54e135d39634103f012fdf90afcf1bbc942325bb3
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/evals/tasks/basic.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:0d5b607fef2ef5cbfca3d704e1c89092f748207133ae72928162249e443e4a8c
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/evals/tasks/classification.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:74429e44bbca1bbf4e64a30a7ff85b208017cd84df1fbbc4998160ac43f8f959
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/evals/tasks/hotspot-only.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:8e205b6fc8cbf0bd4a26c23e4605742769a16e1e3128c7b61278739096dd9044
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/evals/tasks/l1-report-only.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:3a5ce128b779ef9f43ccf6f85de19f39764b9fb02fc6906349d1867780fd0448
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/evals/tasks/l2-report-write.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:1950377bc013354d03e7a4780672b7a8e3a8a0c324e9c46c6ee98604bb586e1c
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/evals/tasks/noaction.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:740831b400e05d3219e2f192681e2ed2e91f0cd0c52088806f9ec7d317773982
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/evals/tasks/previous-report.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:ab096381d4668acc74a38b3b52cd179e5503bbb54ef4ed712530b21f66784ccd
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/evals/tasks/trigger-negative.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:2f427c3b346d6a643848af0f938ea9ba826b628d6d5864b8dac219f06fe1fdaf
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/evals/tasks/truncation-cap.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:692b03ead9d181a36f8bc10d16386f047059c02092a7aec801a5bff08876364f
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/references/category-debt-taxonomy.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:4268125d2b7c263d7e1c7ba1d0d79fb8ed49de04de07531f5e944fc3d9c6a498
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/references/category-input-schema.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:bbc1229fb30fd480ac50646d91221be0fa37fbf0d1c94c3df50e95891cc4ea3b
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/references/category-scope.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:58fd3b6f844b7a2f4647663f7d84aa272d33fb3752453b7b4ade54e125e0fbf9
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/references/common-checklist.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:6137eeb4b4a003289fa46b86cff95cc6c84bc8675aad4aeb81df7f6406482eb8
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/references/common-output-format.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:e31dac9417c9a5b894fc8a3df07927710ba5d98a77c5ab2afab1c98116cdd127
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/references/common-troubleshooting.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:28e9a9acf32642f50167c5a6e25a0de9410cc33cf4ec1a23a06deb92f21b9e1b
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/scripts/detect_report_tech_debt.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:212073bab9746de19d07097610046d0edbb05e896ab02b22ef5cc5b0f34060db
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/scripts/detect_report_tech_debt_sensors.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:1407da9d6531e59d02ed05e716c773714ddd8e9f4cc708f4909798dbc606f718
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/scripts/lib/all.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/scripts/lib/aws.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:b28a0fb90828668de0957268dd8e6fca78f6cb84b29f3698ae590e8e9ebf92da
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/scripts/lib/common.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:5ae0e869e6c8e35300ad414f86b1075fdd00d4b818885ab6fff071d7d6c69a08
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/scripts/lib/csv.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:f9cddbbcba29d3b3baebbe45ad9cd1c9b015ff8342c01f55a4361f3154a0cf49
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/scripts/lib/json.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:aa005391b993211fb86b323937de61d76b0008c7e6faec813ae1c0708e730ef8
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/scripts/lib/repo_paths.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:eba82b537aeaefd4b76de13d2a64b73a74817c0a36a3a0bd47195a122d461a98
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/scripts/lib/terraform.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:02e0fa54a1d73191dfd78c7f5aba848027c6f75b92fc38f4e62d10869d5ee15d
-- kind: project-relative
-  target: claude
-  value: .claude/skills/report-tech-debt/scripts/lib/validation.sh
   runtime: null
   scope: project
   owners:
@@ -5725,7 +5352,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:2dbe712568bd59877c3bf302add162419f48eeb2ada9a8f0a7bf6182cae462bf
+  content_hash: sha256:2df2d187c797cfee445fa3f7ca605579727becae32e234661fbe839ca2ffe1ec
 - kind: project-relative
   target: claude
   value: .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-opt-out-function-docs.yaml
@@ -5761,7 +5388,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:310bdefb404abb06577b624be6fffc0d089d134fffbcbee4be9ab54bf25e642e
+  content_hash: sha256:f650e1106fe4618485d0fd580c20b6618d0ea5beab3a752ca22da5ff0316f42e
 - kind: project-relative
   target: claude
   value: .claude/skills/shell-script-validation/evals/tasks/shell-script-validation-trigger-negative.yaml
@@ -5779,7 +5406,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:159706eade99b6bedf0874bf0d1e854cef056d0c13b05ad783fed43b662ef86c
+  content_hash: sha256:54adf62dc0ffe48a7140d1f4e980400fb1a970f9c11a85cd111cae5a6c2acbc0
 - kind: project-relative
   target: claude
   value: .claude/skills/shell-script-validation/references/category-standards.md
@@ -6175,7 +5802,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:78251bf8f65542e170b33b9adbf0d1bb928f09881c546cf3a273f098b3ab89ba
+  content_hash: sha256:a4e4cab4f74d7043daa2333e11f8336a3bcfa92980d070ef713cba211eb5c6e7
 - kind: project-relative
   target: cursor
   value: .agents/skills/changelog/evals/files/CHANGELOG.sample.md
@@ -6400,7 +6027,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:e3e8798510993f990002b1c9bc3c2e7dfb52ee6482834d848113252de3ebc13b
+  content_hash: sha256:f1155aeabb2c6d539205420b52c26cd919687854fd71a0d5b56ed59a2bd4fc02
 - kind: project-relative
   target: cursor
   value: .agents/skills/ci-sweeper/evals/tasks/basic.yaml
@@ -6445,7 +6072,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:daf8ae46de718bb2d001c198d2d3eaf416d9ba42284922adec4c17164e7ca1c6
+  content_hash: sha256:7db2d843e7bad32a77d191226bfcc89630d071a1633d40fc987f8cc873aa5f25
 - kind: project-relative
   target: cursor
   value: .agents/skills/ci-sweeper/references/category-input-schema.md
@@ -6733,7 +6360,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:a0b540b0b74a2e0e670de96cd72df0a5e54d6c997a568d78b1350dfa7a6ac614
+  content_hash: sha256:1ccc39e8e6a0e1438436607df6c6b8a5c55cca530d51be7e95bc8321a84fd43e
 - kind: project-relative
   target: cursor
   value: .agents/skills/docs-updater/evals/evals.json
@@ -6886,7 +6513,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:83cd95e759610918337bd57a6303e957e5fce99d4045e1edebc6adeb781eb4ca
+  content_hash: sha256:4b18ad1af16d9e2756b2264fbc550889fa4fa8df88bf1ad1b4cd1ecffdb1e1b0
 - kind: project-relative
   target: cursor
   value: .agents/skills/docs-updater/references/category-loop-input-schema.md
@@ -8812,7 +8439,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:3b1623eed0dd20407ebf4df52025110689cf8b383dee3ad3288f1abfada5b608
+  content_hash: sha256:6f7422086205850b44c4e152aa86216d92231423e217b5995db901e2693da598
 - kind: project-relative
   target: cursor
   value: .agents/skills/refactor/references/common-output-format-loop.md
@@ -8906,312 +8533,6 @@ deployments:
 - kind: project-relative
   target: cursor
   value: .agents/skills/refactor/scripts/lib/validation.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: null
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/SKILL.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:ae96a42e6570cb3f054f26b6dba26c85da352e1aaea70cb8ff16c41712299660
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/assets/pr-body-template.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:2e2cb9ef5c0eed7954c3e8f8497c3ed00253aba0cd7b77878dd9a33e006d5121
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/eval.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:95cc9e677eeb06598041936b44dc188793dea84ca3f669e8c7dc356bf5152bdb
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/evals/files/README.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:72115b1eeabe18a192e21dc65b707f07d2ddb699e2f4c90c7dff2b438028961f
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/evals/files/go.mod.txt
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:6337da5cc0454697de17006a91847d56e62dd5cd9fd3a245f2e873ecc1246395
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/evals/files/noise.go.txt
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:095a192120fd822a7a7e2034ae84fbc6fdfdf7e4dbee7160266295e9e372c154
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/evals/files/previous-report.sample.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:98c283fffe6da93c1c3b783e8173c47c27be518ceec0d0fe0021f10056579e21
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/evals/files/sample_service.go.txt
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:5a4aeb7c5caf81a5f86e46e54e135d39634103f012fdf90afcf1bbc942325bb3
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/evals/tasks/basic.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:0d5b607fef2ef5cbfca3d704e1c89092f748207133ae72928162249e443e4a8c
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/evals/tasks/classification.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:74429e44bbca1bbf4e64a30a7ff85b208017cd84df1fbbc4998160ac43f8f959
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/evals/tasks/hotspot-only.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:8e205b6fc8cbf0bd4a26c23e4605742769a16e1e3128c7b61278739096dd9044
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/evals/tasks/l1-report-only.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:3a5ce128b779ef9f43ccf6f85de19f39764b9fb02fc6906349d1867780fd0448
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/evals/tasks/l2-report-write.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:1950377bc013354d03e7a4780672b7a8e3a8a0c324e9c46c6ee98604bb586e1c
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/evals/tasks/noaction.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:740831b400e05d3219e2f192681e2ed2e91f0cd0c52088806f9ec7d317773982
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/evals/tasks/previous-report.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:ab096381d4668acc74a38b3b52cd179e5503bbb54ef4ed712530b21f66784ccd
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/evals/tasks/trigger-negative.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:2f427c3b346d6a643848af0f938ea9ba826b628d6d5864b8dac219f06fe1fdaf
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/evals/tasks/truncation-cap.yaml
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:692b03ead9d181a36f8bc10d16386f047059c02092a7aec801a5bff08876364f
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/references/category-debt-taxonomy.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:4268125d2b7c263d7e1c7ba1d0d79fb8ed49de04de07531f5e944fc3d9c6a498
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/references/category-input-schema.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:bbc1229fb30fd480ac50646d91221be0fa37fbf0d1c94c3df50e95891cc4ea3b
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/references/category-scope.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:58fd3b6f844b7a2f4647663f7d84aa272d33fb3752453b7b4ade54e125e0fbf9
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/references/common-checklist.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:6137eeb4b4a003289fa46b86cff95cc6c84bc8675aad4aeb81df7f6406482eb8
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/references/common-output-format.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:e31dac9417c9a5b894fc8a3df07927710ba5d98a77c5ab2afab1c98116cdd127
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/references/common-troubleshooting.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:28e9a9acf32642f50167c5a6e25a0de9410cc33cf4ec1a23a06deb92f21b9e1b
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/scripts/detect_report_tech_debt.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:212073bab9746de19d07097610046d0edbb05e896ab02b22ef5cc5b0f34060db
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/scripts/detect_report_tech_debt_sensors.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:1407da9d6531e59d02ed05e716c773714ddd8e9f4cc708f4909798dbc606f718
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/scripts/lib/all.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/scripts/lib/aws.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:b28a0fb90828668de0957268dd8e6fca78f6cb84b29f3698ae590e8e9ebf92da
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/scripts/lib/common.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:5ae0e869e6c8e35300ad414f86b1075fdd00d4b818885ab6fff071d7d6c69a08
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/scripts/lib/csv.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:f9cddbbcba29d3b3baebbe45ad9cd1c9b015ff8342c01f55a4361f3154a0cf49
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/scripts/lib/json.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:aa005391b993211fb86b323937de61d76b0008c7e6faec813ae1c0708e730ef8
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/scripts/lib/repo_paths.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:eba82b537aeaefd4b76de13d2a64b73a74817c0a36a3a0bd47195a122d461a98
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/scripts/lib/terraform.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:02e0fa54a1d73191dfd78c7f5aba848027c6f75b92fc38f4e62d10869d5ee15d
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/report-tech-debt/scripts/lib/validation.sh
   runtime: null
   scope: project
   owners:
@@ -9550,7 +8871,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:2dbe712568bd59877c3bf302add162419f48eeb2ada9a8f0a7bf6182cae462bf
+  content_hash: sha256:2df2d187c797cfee445fa3f7ca605579727becae32e234661fbe839ca2ffe1ec
 - kind: project-relative
   target: cursor
   value: .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-opt-out-function-docs.yaml
@@ -9586,7 +8907,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:310bdefb404abb06577b624be6fffc0d089d134fffbcbee4be9ab54bf25e642e
+  content_hash: sha256:f650e1106fe4618485d0fd580c20b6618d0ea5beab3a752ca22da5ff0316f42e
 - kind: project-relative
   target: cursor
   value: .agents/skills/shell-script-validation/evals/tasks/shell-script-validation-trigger-negative.yaml
@@ -9604,7 +8925,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
-  content_hash: sha256:159706eade99b6bedf0874bf0d1e854cef056d0c13b05ad783fed43b662ef86c
+  content_hash: sha256:54adf62dc0ffe48a7140d1f4e980400fb1a970f9c11a85cd111cae5a6c2acbc0
 - kind: project-relative
   target: cursor
   value: .agents/skills/shell-script-validation/references/category-standards.md
@@ -9740,6 +9061,312 @@ deployments:
   - ./.apm/packages/shell-script
   active_owner: ./.apm/packages/shell-script
   content_hash: sha256:b27fe7588901f5eda2a91ee7e40c12c983feeb7dc2e527db7b082d882a5391a4
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: null
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/SKILL.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:290b684c922bf6d29b269bf143b1996f4e9a443c7728b3dea1ae7c5bb73ea24a
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/assets/pr-body-template.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:680b2a88efc08897a1f641b39dfaf883c63cf6b1dfe1b1aa54cd92db75f6cf52
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/eval.yaml
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:63cec6d2b7a9d3d4bcc1b13e327d39d0ff554944edd547c0364b712fdd4765a3
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/evals/files/README.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:72115b1eeabe18a192e21dc65b707f07d2ddb699e2f4c90c7dff2b438028961f
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/evals/files/go.mod.txt
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:6337da5cc0454697de17006a91847d56e62dd5cd9fd3a245f2e873ecc1246395
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/evals/files/noise.go.txt
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:095a192120fd822a7a7e2034ae84fbc6fdfdf7e4dbee7160266295e9e372c154
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/evals/files/previous-report.sample.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:98c283fffe6da93c1c3b783e8173c47c27be518ceec0d0fe0021f10056579e21
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/evals/files/sample_service.go.txt
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:5a4aeb7c5caf81a5f86e46e54e135d39634103f012fdf90afcf1bbc942325bb3
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/evals/tasks/basic.yaml
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:ac1d4cdb3c4c3c72eedf9f01755fd5b91a5d227c5eff1f5aea0855bd5a54796a
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/evals/tasks/classification.yaml
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:380d53e17b9f98b0aefcff5b15cc7c2073e7af32260e5b12de18251262bcd8cd
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/evals/tasks/hotspot-only.yaml
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:495c88c65873df18accecc0ddbaecd4ddb1b0949174bcdd27681d1cf23ffc8b3
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/evals/tasks/l1-report-only.yaml
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:2b0ab0450f75224cf09d18743494ccac64f1903df9c75a13c17f89e22e3fe7fe
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/evals/tasks/l2-report-write.yaml
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:474165d9fc04b69ec5a4547a6bbf2872bca4c41784628e60621ab06e377d14e7
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/evals/tasks/noaction.yaml
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:65c45628591af37edc0fd3ca86a173406e0594e856df7e33ea957d675c4ce6a8
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/evals/tasks/previous-report.yaml
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:5dc97a45f49cbe3383e45eb42975b3d76dac879fe6cbba0f52d544eb1179dd3d
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/evals/tasks/trigger-negative.yaml
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:86c55232a27c89a88164fe985bced915312b54908f80c99c7739cf9c452fb457
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/evals/tasks/truncation-cap.yaml
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:95238d9059fee046be0566ae087aa66df971d326f931f2636a2b6322dca74c36
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/references/category-debt-taxonomy.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:4268125d2b7c263d7e1c7ba1d0d79fb8ed49de04de07531f5e944fc3d9c6a498
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/references/category-input-schema.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:fa94fd9fffdc721de7a8dd421293c3524b44747f5cc402545fada1ddddafcbe5
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/references/category-scope.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:606c2cb40385cfd33bdb673d72b74e9990cf2a450408ba65456517c13488e4fc
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/references/common-checklist.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:1f801268693e513652824b70a41cffa91623974873bb89daa936cc6615638f6a
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/references/common-output-format.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:7bb9ac3e29814f2ca5ebf4915d90ef1c8fa71bffb3f9b68d8afcb8ed0c59f632
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/references/common-troubleshooting.md
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:28e9a9acf32642f50167c5a6e25a0de9410cc33cf4ec1a23a06deb92f21b9e1b
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/scripts/detect_tech_debt.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:0b51af40fd4e7b6e1ddf0cbaeb7627e1184612943b9f0b4b1fdf81c91a58f94d
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/scripts/detect_tech_debt_sensors.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:9055195cf672822319f89fe11b61b5c9d83396127787740be79036030226ff51
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/scripts/lib/all.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/scripts/lib/aws.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:b28a0fb90828668de0957268dd8e6fca78f6cb84b29f3698ae590e8e9ebf92da
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/scripts/lib/common.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:5ae0e869e6c8e35300ad414f86b1075fdd00d4b818885ab6fff071d7d6c69a08
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/scripts/lib/csv.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:f9cddbbcba29d3b3baebbe45ad9cd1c9b015ff8342c01f55a4361f3154a0cf49
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/scripts/lib/json.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:aa005391b993211fb86b323937de61d76b0008c7e6faec813ae1c0708e730ef8
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/scripts/lib/repo_paths.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:eba82b537aeaefd4b76de13d2a64b73a74817c0a36a3a0bd47195a122d461a98
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/scripts/lib/terraform.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:02e0fa54a1d73191dfd78c7f5aba848027c6f75b92fc38f4e62d10869d5ee15d
+- kind: project-relative
+  target: cursor
+  value: .agents/skills/tech-debt/scripts/lib/validation.sh
+  runtime: null
+  scope: project
+  owners:
+  - ./.apm/packages/common
+  active_owner: ./.apm/packages/common
+  content_hash: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
 - kind: project-relative
   target: cursor
   value: .cursor/agents/test-engineer.md

@@ -55,4 +55,3 @@ Emit one paragraph under `## Overview` that answers:
 - Always emit PR `## Overview` and `## Summary` after session report.
 - At `L1`, list intended entries under Commits Processed but do not edit files.
 - At `L2`/`L3`, update only `CHANGELOG.md` under `## [Unreleased]`.
-

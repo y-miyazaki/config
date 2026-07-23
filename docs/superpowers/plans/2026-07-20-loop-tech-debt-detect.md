@@ -1,10 +1,10 @@
 # loop-tech-debt Detect Layer Implementation Plan
 
-> **Superseded:** Package and skill were renamed to `loop-report-tech-debt` (`detect_report_tech_debt.sh`). See [loop-report-tech-debt plan](2026-07-20-loop-report-tech-debt.md). Retained for historical task context only.
+> **Superseded:** Package and skill were renamed to `loop-tech-debt` (`detect_tech_debt.sh`). See [loop-tech-debt plan](2026-07-20-loop-tech-debt.md). Retained for historical task context only.
 >
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add facts-only `detect_report_tech_debt.sh` (full-repo default) with markers/deps/docs/churn sensors, closed `kind` schema updates, and matching Bats — no workflow caller yet.
+**Goal:** Add facts-only `detect_tech_debt.sh` (full-repo default) with markers/deps/docs/churn sensors, closed `kind` schema updates, and matching Bats — no workflow caller yet.
 
 **Architecture:** Single entry script under the APM skill `scripts/`, sourcing synced `lib/all.sh`. Sensors are functions in a-z order; always exit 0 with JSON. Docs links use self-contained pinned `markdown-link-check@3.14.2` install; failure → `warnings[]` + skip that sensor only. LLM skill remains classify-only.
 

@@ -13,23 +13,23 @@ Always emit for loop runs:
 
 ## Session Metrics
 
-| Field          | Value |
-| -------------- | ----- |
-| Level          | <L1\|L2\|L3> |
-| Mode           | <survey\|apply> |
-| Commit range   | <commit_range or "n/a"> |
-| Hints assessed | <count> |
-| Candidates     | <count> |
-| Applied        | <count or "0"> |
+| Field          | Value                      |
+| -------------- | -------------------------- |
+| Level          | <L1\|L2\|L3>               |
+| Mode           | <survey\|apply>            |
+| Commit range   | <commit_range or "n/a">    |
+| Hints assessed | <count>                    |
+| Candidates     | <count>                    |
+| Applied        | <count or "0">             |
 | Outcome        | <one-line verifier result> |
 ```
 
 ## PR body templates
 
-| Mode | Level | Template asset | Summary subsections |
-| ---- | ----- | -------------- | ------------------- |
-| Survey | `L1` | `assets/pr-body-template-survey.md` | `### Candidates`, optional `### Watch` |
-| Apply | `L2`/`L3` | `assets/pr-body-template.md` | `### Changes`, optional `### Deferred` |
+| Mode   | Level     | Template asset                      | Summary subsections                    |
+| ------ | --------- | ----------------------------------- | -------------------------------------- |
+| Survey | `L1`      | `assets/pr-body-template-survey.md` | `### Candidates`, optional `### Watch` |
+| Apply  | `L2`/`L3` | `assets/pr-body-template.md`        | `### Changes`, optional `### Deferred` |
 
 At synthesis time, load the template for the resolved mode and emit **exactly**:
 
@@ -58,11 +58,11 @@ See repository `docs/explanation/loop-engineering/loop-pr-body-skill-contract.md
 
 **Deferred** means no fix remains in the working tree for that path.
 
-| Rule | Requirement |
-| ---- | ----------- |
-| Mutual exclusion | A path MUST NOT appear in both **Changes** and **Deferred** |
-| Git alignment | Every path in `git diff` MUST have a **Changes** row |
-| Deferred = no edit | Revert edits to deferred paths before synthesis |
+| Rule               | Requirement                                                 |
+| ------------------ | ----------------------------------------------------------- |
+| Mutual exclusion   | A path MUST NOT appear in both **Changes** and **Deferred** |
+| Git alignment      | Every path in `git diff` MUST have a **Changes** row        |
+| Deferred = no edit | Revert edits to deferred paths before synthesis             |
 
 Before PR synthesis, run `git diff --name-only` and reconcile **Changes** and **Deferred**.
 

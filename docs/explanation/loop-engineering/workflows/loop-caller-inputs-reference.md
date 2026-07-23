@@ -151,16 +151,16 @@ Optional platform overrides (dogfood omit): `finalize_integration`, `finalize_pu
 
 ## Agent and engine
 
-| Input                         | Type   | Description                                                                | Default (dogfood)       |
-| ----------------------------- | ------ | -------------------------------------------------------------------------- | ----------------------- |
-| `agent_implementer_max_turns` | number | Max implementer agent turns per loop attempt                               | `5`–`8` (loop-specific) |
-| `agent_implementer_model`     | string | Implementer model ID. Empty = engine default                               | `cursor-grok-4.5-low`   |
-| `agent_loop_max_attempts`     | number | Max Agent→Verify retry cycles before finalize records failure              | `3`                     |
-| `agent_verifier_criteria`     | string | Caller-owned markdown rubric (`## Criteria for APPROVE` / `REJECT`)        | Domain-specific         |
-| `agent_verifier_max_turns`    | number | Max verifier agent turns per verification                                  | `3`                     |
-| `agent_verifier_model`        | string | Verifier model ID                                                          | `composer-2.5`          |
-| `engine`                      | string | AI engine: `claude` \| `copilot` \| `codex` \| `cursor`                    | `cursor`                |
-| `level`                       | string | Autonomy: `L1` \| `L2` \| `L3`                                             | `L2`                    |
+| Input                         | Type   | Description                                                           | Default (dogfood)       |
+| ----------------------------- | ------ | --------------------------------------------------------------------- | ----------------------- |
+| `agent_implementer_max_turns` | number | Max implementer agent turns per loop attempt                          | `5`–`8` (loop-specific) |
+| `agent_implementer_model`     | string | Implementer model ID. Empty = engine default                          | `cursor-grok-4.5-low`   |
+| `agent_loop_max_attempts`     | number | Max Agent→Verify retry cycles before finalize records failure         | `3`                     |
+| `agent_verifier_criteria`     | string | Caller-owned markdown rubric (`## Criteria for APPROVE` / `REJECT`)   | Domain-specific         |
+| `agent_verifier_max_turns`    | number | Max verifier agent turns per verification                             | `3`                     |
+| `agent_verifier_model`        | string | Verifier model ID                                                     | `composer-2.5`          |
+| `engine`                      | string | AI engine: `claude` \| `copilot` \| `codex` \| `cursor`               | `cursor`                |
+| `level`                       | string | Autonomy: `L1` \| `L2` \| `L3`                                        | `L2`                    |
 | `skill_name`                  | string | Skill package (e.g. `changelog`). Must match `.agents/skills/<name>/` | Per loop                |
 
 ## Platform inputs
@@ -176,7 +176,7 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `budget_max_runs_per_day`   | number  | Daily run cap keyed by `loop_name` (each matrix cell counts). `.loop/loop-budget.json` overrides when present (ci-sweeper dogfood: `50`)                                                                                                                                                                                    | `1`–`5` (caller; budget file may be higher) |
 | `budget_max_tokens_per_day` | number  | Daily aggregated token cap                                                                                                                                                                                                                                                                                                  | `500000`–`1000000`                          |
 | `denylist`                  | string  | Comma-separated globs the implementer must not touch                                                                                                                                                                                                                                                                        | ci-sweeper only                             |
-| `detect_script`             | string  | Path to domain `detect_*.sh` under the skill package (e.g. `.agents/skills/docs-updater/scripts/detect_changes.sh`)                                                                                                                                                                                                                                                                       | Per loop                                    |
+| `detect_script`             | string  | Path to domain `detect_*.sh` under the skill package (e.g. `.agents/skills/docs-updater/scripts/detect_changes.sh`)                                                                                                                                                                                                         | Per loop                                    |
 | `finalize_integration`      | string  | **Optional override.** Default `open_pr`. Exception: `push` (direct write; not dogfood).                                                                                                                                                                                                                                    | Omit (platform default)                     |
 | `finalize_pull_request`     | string  | **Optional override.** Default `open_pr`. Exception: `push_head` (not dogfood).                                                                                                                                                                                                                                             | Omit (platform default)                     |
 | `infer_files_pattern`       | string  | Extended regex to infer file paths from verifier text                                                                                                                                                                                                                                                                       | Per loop                                    |
@@ -319,24 +319,24 @@ detect_domain_env_json: ${{ format('{{"CI_SWEEPER_EVENT_HEAD_BRANCH":"{0}","CI_S
 
 When `DOCS_TRIAGE_DOC_GLOBS` is unset, detect falls back to a repository-wide `*.md` find with standard `repo_paths` pruning (excludes `.agents/`, generated trees, etc.). Production callers should set globs explicitly; the fallback is mainly for local runs and tests.
 
-### Report tech debt (`loop-report-tech-debt`)
+### Report tech debt (`loop-tech-debt`)
 
 Domain paths and filenames are **environment variables** (via `detect_domain_env_json` or manual invocation). Detect CLI stays `--scope` / `--since` only so `loop-detect` can invoke every domain script uniformly.
 
-| JSON key / env var                    | Description                                                | Dogfood value                  |
-| ------------------------------------- | ---------------------------------------------------------- | ------------------------------ |
-| `REPORT_TECH_DEBT_DIR`                | Report output directory                                    | `docs/report/report-tech-debt` |
-| `REPORT_TECH_DEBT_LEGACY_SEARCH_DIRS` | Comma-separated prior-report search roots                  | `docs/report/tech-debt`        |
-| `REPORT_TECH_DEBT_DATE_FORMAT`        | UTC `strftime` for report basename                         | `%Y-%m-%d`                     |
-| `REPORT_TECH_DEBT_FILE_EXTENSION`     | Report filename extension (include dot)                    | `.md`                          |
-| `REPORT_TECH_DEBT_PREVIOUS_GLOB`      | Glob for prior reports under search dirs                   | `????-??-??.md`                |
-| `REPO_PATHS_EXTRA_PRUNES`             | Optional extra detect prune roots (default: report parent) | unset                          |
+| JSON key / env var             | Description                                                | Dogfood value           |
+| ------------------------------ | ---------------------------------------------------------- | ----------------------- |
+| `TECH_DEBT_DIR`                | Report output directory                                    | `docs/report/tech-debt` |
+| `TECH_DEBT_LEGACY_SEARCH_DIRS` | Comma-separated prior-report search roots                  | `docs/report/tech-debt` |
+| `TECH_DEBT_DATE_FORMAT`        | UTC `strftime` for report basename                         | `%Y-%m-%d`              |
+| `TECH_DEBT_FILE_EXTENSION`     | Report filename extension (include dot)                    | `.md`                   |
+| `TECH_DEBT_PREVIOUS_GLOB`      | Glob for prior reports under search dirs                   | `????-??-??.md`         |
+| `REPO_PATHS_EXTRA_PRUNES`      | Optional extra detect prune roots (default: report parent) | unset                   |
 
-Example caller override (align `allowlist` / `infer_files_pattern` when changing `REPORT_TECH_DEBT_DIR`):
+Example caller override (align `allowlist` / `infer_files_pattern` when changing `TECH_DEBT_DIR`):
 
 ```yaml
 detect_domain_env_json: >-
-  {"REPORT_TECH_DEBT_DIR":"docs/report/report-tech-debt"}
+  {"TECH_DEBT_DIR":"docs/report/tech-debt"}
 ```
 
 ### Docs updater (hook / manual)
@@ -373,16 +373,15 @@ Not a loop caller; configure via environment when invoking `detect_changes.sh` o
 
 ## Per-loop design docs
 
-| Loop             | Design doc                                                                   | Caller workflow                 |
-| ---------------- | ---------------------------------------------------------------------------- | ------------------------------- |
-| changelog        | [Changelog Workflow Design](loop-changelog-workflow-design.md)               | `on-loop-changelog.yaml`        |
-| ci-sweeper       | [CI Sweeper Workflow Design](loop-ci-sweeper-workflow-design.md)             | `on-loop-ci-sweeper.yaml`       |
-| docs-triage      | [Docs Triage Workflow Design](loop-docs-triage-workflow-design.md)           | `on-loop-docs-triage.yaml`      |
-| report-tech-debt | [Report Tech Debt Workflow Design](loop-report-tech-debt-workflow-design.md) | `on-loop-report-tech-debt.yaml` |
+| Loop        | Design doc                                                            | Caller workflow            |
+| ----------- | --------------------------------------------------------------------- | -------------------------- |
+| changelog   | [Changelog Workflow Design](loop-changelog-workflow-design.md)        | `on-loop-changelog.yaml`   |
+| ci-sweeper  | [CI Sweeper Workflow Design](loop-ci-sweeper-workflow-design.md)      | `on-loop-ci-sweeper.yaml`  |
+| docs-triage | [Docs Triage Workflow Design](loop-docs-triage-workflow-design.md)    | `on-loop-docs-triage.yaml` |
+| tech-debt   | [Report Tech Debt Workflow Design](loop-tech-debt-workflow-design.md) | `on-loop-tech-debt.yaml`   |
 
 ## References
 
 - [Loop Caller Reusable Workflow Design](../loop-caller-reusable-design.md)
 - [Loop Caller Workflows Design](../loop-caller-workflows-design.md)
 - [Specification](../../../reference/specification.md)
-

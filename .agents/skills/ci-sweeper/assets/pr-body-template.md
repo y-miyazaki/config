@@ -25,18 +25,18 @@ Rules:
 
 ### Changes
 
-| Workflow / Job     | What was wrong | What changed |
-| ------------------ | -------------- | ------------ |
+| Workflow / Job     | What was wrong | What changed          |
+| ------------------ | -------------- | --------------------- |
 | <workflow> / <job> | <root cause>   | <minimal fix summary> |
 
 ### Deferred
 
-| Workflow / Job     | Why deferred |
-| ------------------ | ------------ |
+| Workflow / Job     | Why deferred            |
+| ------------------ | ----------------------- |
 | <workflow> / <job> | <plain-language reason> |
 
 ## Verification
 
-| Check | Result |
-| ----- | ------ |
+| Check         | Result                            |
+| ------------- | --------------------------------- |
 | <command run> | <pass \| fail \| skip \| blocked> |

@@ -67,4 +67,3 @@ _Avoid_: Detect gate (for defer policy alone); named skills in entry skill refer
 **GitHub API Action (Execute)**:
 Issue labels, comments, or PR comments applied during **Execute** by the entry skill (via `gh` / API) — not Finalize. Caller supplies permissions; verifier confirms API outcome fit. Finalize records state cursor and run-log.
 _Avoid_: Finalize (for label/comment delivery)
-

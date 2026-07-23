@@ -23,4 +23,3 @@ expected:
     - Summary
   outcomes:
     - type: task_completed
-

@@ -17,7 +17,7 @@
 - Emit `### Candidates` with one row per candidate (see [common-output-format.md](common-output-format.md))
 - Mark each row **apply** or **watch**; lint/style-only, feature/API, comment-only, or cross-boundary → **watch**
 - Zero candidates → Outcome `no-op`; stop
-- Do not require or read `docs/report/report-tech-debt/**`
+- Do not require or read `docs/report/tech-debt/**`
 
 ## Apply (Phase B)
 

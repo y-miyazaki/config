@@ -149,4 +149,3 @@ On-demand validation: see agent-skills-review skill SKILL.md.
 - Do not include raw secret values or credentials in SKILL.md or references.
 - Validate inputs in `scripts/` code and prevent arbitrary path operations.
 - Sanitize arguments when invoking external tools to prevent command injection.
-

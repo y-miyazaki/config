@@ -10,7 +10,7 @@ execute_baseline:
 profiles:
   default:
     caller_workflow: ci-loop-caller.yaml
-    description: Git-based detect only (changelog, docs-triage, report-tech-debt)
+    description: Git-based detect only (changelog, docs-triage, tech-debt)
     implemented: true
     job: detect
     job_permissions:

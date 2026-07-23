@@ -139,4 +139,3 @@ References: [bats-core writing tests](https://bats-core.readthedocs.io/en/stable
 - Do not embed real API keys, tokens, or credentials in `@test` fixtures — use obvious placeholders and verify sanitization/redaction where applicable.
 - Write temporary artifacts only under `BATS_TEST_TMPDIR`, `mktemp`, or ignored paths; remove them in `teardown()`.
 - Do not make destructive host paths the default in examples (avoid `rm -rf /` patterns); scope file operations to test fixtures.
-

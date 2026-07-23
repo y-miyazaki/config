@@ -50,12 +50,12 @@ Per-skill required elements and examples live in each skill's `references/common
 
 ### What the platform owns
 
-| Section               | Source                                       |
-| --------------------- | -------------------------------------------- |
-| `## Failure context`  | `detect_result_json.failures[]` (ci-sweeper) |
+| Section               | Source                                                                                        |
+| --------------------- | --------------------------------------------------------------------------------------------- |
+| `## Failure context`  | `detect_result_json.failures[]` (ci-sweeper)                                                  |
 | `## Changes`          | git diff paths — **omitted** when agent Summary contains `### Changes` or `### Fixes Applied` |
-| `## Run Metadata`     | Level, Target, Skip reason table             |
-| Automation disclaimer | `render_automation_disclaimer()`             |
+| `## Run Metadata`     | Level, Target, Skip reason table                                                              |
+| Automation disclaimer | `render_automation_disclaimer()`                                                              |
 
 Finalize **passthrough** agent `## Overview`, `## Summary`, and `## Verification` with redact/truncate only — no table regeneration.
 
@@ -93,11 +93,11 @@ Architecture Proposal / Skipped / Watch / …
 
 ### List vs table
 
-| Case | Format |
-| ---- | ------ |
-| One item, one fact (e.g. single file path, one check) | Bullet list |
-| Two or more rows, or multiple columns (path + reason + change) | Markdown table |
-| Empty subsection | Omit the `###` heading entirely (do not emit `_None_` rows) |
+| Case                                                           | Format                                                      |
+| -------------------------------------------------------------- | ----------------------------------------------------------- |
+| One item, one fact (e.g. single file path, one check)          | Bullet list                                                 |
+| Two or more rows, or multiple columns (path + reason + change) | Markdown table                                              |
+| Empty subsection                                               | Omit the `###` heading entirely (do not emit `_None_` rows) |
 
 ### Summary content to omit
 
@@ -132,13 +132,13 @@ Every `loop-*` skill MUST:
 
 **Deferred** means the agent did **not** leave a fix in the final working tree for that path. Platform `## Changes` is mechanical (`git diff` paths from `loop-finalize`) — agent narrative MUST match git truth.
 
-| Rule | Requirement |
-| ---- | ----------- |
-| Mutual exclusion | A path MUST NOT appear in both **Changes** and **Deferred** |
-| Git alignment | Every path in `git diff` MUST appear in **Changes** (or **Report** for tech-debt) |
-| Deferred = no edit | Do not leave modifications for deferred paths — revert stray edits before the final report |
+| Rule                  | Requirement                                                                                           |
+| --------------------- | ----------------------------------------------------------------------------------------------------- |
+| Mutual exclusion      | A path MUST NOT appear in both **Changes** and **Deferred**                                           |
+| Git alignment         | Every path in `git diff` MUST appear in **Changes** (or **Report** for tech-debt)                     |
+| Deferred = no edit    | Do not leave modifications for deferred paths — revert stray edits before the final report            |
 | Multi-attempt cleanup | If an earlier attempt edited a file later classified as deferred, revert those edits before synthesis |
-| Platform **Changes** | Omitted when Summary has `### Changes`; otherwise finalize adds git-diff path list |
+| Platform **Changes**  | Omitted when Summary has `### Changes`; otherwise finalize adds git-diff path list                    |
 
 **Passes** when Deferred paths are absent from platform `## Changes` and every changed file has a Fixes Applied row with reason and change summary.
 
@@ -148,7 +148,7 @@ Before emitting PR `## Summary`, run `git diff --name-only` (or `git diff --cach
 
 ## Mechanical validation (loop-execute)
 
-For fix skills (`docs-updater`, `refactor`, `ci-sweeper`, `changelog`, `report-tech-debt`), `loop-execute` runs `validate_agent_report.sh` before the LLM verifier. Failures produce structured REJECT (no APPROVE until fixed).
+For fix skills (`docs-updater`, `refactor`, `ci-sweeper`, `changelog`, `tech-debt`), `loop-execute` runs `validate_agent_report.sh` before the LLM verifier. Failures produce structured REJECT (no APPROVE until fixed).
 
 Checks include: required `## Overview` / `## Summary` / `## Verification`; `### Changes` when diff is non-empty; forbidden legacy sections (`Fixes Applied`, `Outcome`, top-level `## Changes`); **Deferred vs git diff** consistency (catches [PR #454](https://github.com/y-miyazaki/config/pull/454)-class bugs).
 
@@ -165,4 +165,3 @@ A PR body passes when a reviewer can answer without opening the diff:
 - What should the human do next?
 
 This matches the information density of [APM #2321 Triage Panel verdict](https://github.com/microsoft/apm/issues/2321#issuecomment-5022508143).
-

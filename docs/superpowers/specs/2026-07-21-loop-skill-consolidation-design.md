@@ -5,7 +5,7 @@
 
 ## Problem
 
-`loop-*` APM packages duplicate domain skills (`loop-refactor` / `refactor`, `loop-docs-triage` / `docs-updater`) or isolate small skills (`loop-ci-sweeper`, `loop-changelog`, `loop-report-tech-debt`) that fit naturally in `common`. Check criteria drift; `detect_changes.sh` exists in two divergent forks.
+`loop-*` APM packages duplicate domain skills (`loop-refactor` / `refactor`, `loop-docs-triage` / `docs-updater`) or isolate small skills (`loop-ci-sweeper`, `loop-changelog`, `loop-tech-debt`) that fit naturally in `common`. Check criteria drift; `detect_changes.sh` exists in two divergent forks.
 
 ## Goals
 
@@ -16,13 +16,13 @@
 
 ## Grill decisions (locked)
 
-| Topic | Decision |
-| ----- | -------- |
-| `refactor` home | `common/.apm/skills/refactor/`; abolish `refactor` APM package |
+| Topic               | Decision                                                           |
+| ------------------- | ------------------------------------------------------------------ |
+| `refactor` home     | `common/.apm/skills/refactor/`; abolish `refactor` APM package     |
 | `detect_changes.sh` | `loop-docs-triage` canonical; merge useful `docs-updater` behavior |
-| Workflow filenames | Keep `on-loop-*.yaml`; only references change |
-| Delivery | Single effort on `main` |
-| Docs | Update all docs that reference old skill/package paths |
+| Workflow filenames  | Keep `on-loop-*.yaml`; only references change                      |
+| Delivery            | Single effort on `main`                                            |
+| Docs                | Update all docs that reference old skill/package paths             |
 
 ## Target layout
 
@@ -32,20 +32,20 @@
   docs-updater/          # hook/manual + loop findings; scripts/detect_changes.sh (unified)
   ci-sweeper/            # was loop-ci-sweeper
   changelog/             # was loop-changelog
-  report-tech-debt/      # was loop-report-tech-debt
+  tech-debt/      # was loop-tech-debt
 ```
 
-Delete packages: `loop-refactor`, `loop-docs-triage`, `loop-ci-sweeper`, `loop-changelog`, `loop-report-tech-debt`, `refactor`.
+Delete packages: `loop-refactor`, `loop-docs-triage`, `loop-ci-sweeper`, `loop-changelog`, `loop-tech-debt`, `refactor`.
 
 ## Skill naming
 
-| Old skill | New skill |
-| --------- | --------- |
-| `loop-refactor` | (merged into `refactor`) |
+| Old skill          | New skill                    |
+| ------------------ | ---------------------------- |
+| `loop-refactor`    | (merged into `refactor`)     |
 | `loop-docs-triage` | (merged into `docs-updater`) |
-| `loop-ci-sweeper` | `ci-sweeper` |
-| `loop-changelog` | `changelog` |
-| `loop-report-tech-debt` | `report-tech-debt` |
+| `loop-ci-sweeper`  | `ci-sweeper`                 |
+| `loop-changelog`   | `changelog`                  |
+| `loop-tech-debt`   | `tech-debt`                  |
 
 ## Non-goals
 
@@ -55,8 +55,8 @@ Delete packages: `loop-refactor`, `loop-docs-triage`, `loop-ci-sweeper`, `loop-c
 
 ## Risks
 
-| Risk | Mitigation |
-| ---- | ---------- |
-| `detect_changes.sh` regression | Keep bats; run after merge |
-| Broken `detect_script` paths in workflows | Update all five `on-loop-*.yaml` in step 3 |
-| External docs cite `loop-*` skill paths | Update architecture + loop-engineering docs |
+| Risk                                      | Mitigation                                  |
+| ----------------------------------------- | ------------------------------------------- |
+| `detect_changes.sh` regression            | Keep bats; run after merge                  |
+| Broken `detect_script` paths in workflows | Update all five `on-loop-*.yaml` in step 3  |
+| External docs cite `loop-*` skill paths   | Update architecture + loop-engineering docs |

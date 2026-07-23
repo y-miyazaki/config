@@ -42,11 +42,11 @@ At synthesis time, load `assets/pr-body-template.md` and emit `## Overview`, `##
 
 See repository `docs/explanation/loop-engineering/loop-pr-body-skill-contract.md`.
 
-| Section               | Owner                                  |
-| --------------------- | -------------------------------------- |
-| `## Failure context`  | `loop-finalize` (detect JSON)          |
+| Section                                          | Owner                                  |
+| ------------------------------------------------ | -------------------------------------- |
+| `## Failure context`                             | `loop-finalize` (detect JSON)          |
 | `## Overview` / `## Summary` / `## Verification` | Agent via `assets/pr-body-template.md` |
-| `## Run Metadata`     | `loop-finalize`                        |
+| `## Run Metadata`                                | `loop-finalize`                        |
 
 ### Overview (skill-specific)
 
@@ -66,11 +66,11 @@ Emit one paragraph under `## Overview` that answers:
 
 **Deferred** means no fix remains in the working tree for that failure.
 
-| Rule | Requirement |
-| ---- | ----------- |
-| Mutual exclusion | A failure MUST NOT appear in both **Changes** and **Deferred** |
-| Git alignment | Every path in `git diff` MUST map to a **Changes** row |
-| Deferred = no edit | Revert edits for deferred failures before synthesis |
+| Rule               | Requirement                                                    |
+| ------------------ | -------------------------------------------------------------- |
+| Mutual exclusion   | A failure MUST NOT appear in both **Changes** and **Deferred** |
+| Git alignment      | Every path in `git diff` MUST map to a **Changes** row         |
+| Deferred = no edit | Revert edits for deferred failures before synthesis            |
 
 Before PR synthesis, run `git diff --name-only` and reconcile session **Actionable Fixes** with PR **Changes** / **Deferred**.
 
@@ -82,4 +82,3 @@ Before PR synthesis, run `git diff --name-only` and reconcile session **Actionab
 - At `L1`, list fixes in Actionable Fixes but do not edit files.
 - At `L2`/`L3`, edit source files only for `regression` failures within the allowlist.
 - Do not claim validation passed when commands failed or were not run.
-

@@ -251,12 +251,12 @@ EOF
 @test "build_integration_target_json emits integration mode payload" {
     local json
 
-    run build_integration_target_json "integration:main" "main" "abc123def456" "open_pr"
+    run build_integration_target_json "integration:main" "main" "abcdefghijklmn" "open_pr"
     [ "$status" -eq 0 ]
     json="${output}"
     run jq -e \
         --arg key "integration:main" \
-        --arg ref "abc123def456" \
+        --arg ref "abcdefghijklmn" \
         '.mode == "integration"
          and .key == $key
          and .from.branch == "main"
@@ -269,7 +269,7 @@ EOF
 @test "build_pull_request_target_json emits pull_request mode payload with pr metadata" {
     local json
 
-    run build_pull_request_target_json "pull_request:42" "feature/auth" "abc123def456" "open_pr" 42 "main"
+    run build_pull_request_target_json "pull_request:42" "feature/auth" "abcdefghijklmn" "open_pr" 42 "main"
     [ "$status" -eq 0 ]
     json="${output}"
     run jq -e \

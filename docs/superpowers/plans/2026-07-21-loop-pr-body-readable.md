@@ -44,7 +44,7 @@
 
 - Modify: `.apm/packages/loop-docs-triage/.apm/skills/loop-docs-triage/references/common-output-format.md`
 - Modify: `.apm/packages/loop-ci-sweeper/.apm/skills/loop-ci-sweeper/references/common-output-format.md`
-- Modify: `.apm/packages/loop-report-tech-debt/.apm/skills/loop-report-tech-debt/references/common-output-format.md`
+- Modify: `.apm/packages/loop-tech-debt/.apm/skills/loop-tech-debt/references/common-output-format.md`
 - Modify: `.apm/packages/loop-changelog/.apm/skills/loop-changelog/references/common-output-format.md`
 
 - [x] Rename session `## Summary` → `## Session Metrics` (Field \| Value table)
@@ -72,4 +72,4 @@
 - [x] bats: 46/46 (render_pr_body, create_pr_body, notify_context, notify)
 - [x] markdown-validation: `docs/explanation/loop-engineering`, `docs/superpowers`, `loop-notify-pr-specification.md`
 - [x] github-actions-validation: `.github/workflows`
-- [x] waza eval: loop-docs-triage, loop-ci-sweeper, loop-changelog, loop-report-tech-debt (100% each; eval.yaml v1.2 + task prompt contract suffix)
+- [x] waza eval: loop-docs-triage, loop-ci-sweeper, loop-changelog, loop-tech-debt (100% each; eval.yaml v1.2 + task prompt contract suffix)

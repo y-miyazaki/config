@@ -28,18 +28,18 @@ Rules:
 
 ### Changes
 
-| File   | What was wrong | What changed |
-| ------ | -------------- | ------------ |
+| File   | What was wrong  | What changed             |
+| ------ | --------------- | ------------------------ |
 | <path> | <from findings> | <minimal change summary> |
 
 ### Deferred
 
-| File   | Why deferred |
-| ------ | ------------ |
+| File   | Why deferred            |
+| ------ | ----------------------- |
 | <path> | <plain-language reason> |
 
 ## Verification
 
-| Check | Result |
-| ----- | ------ |
+| Check              | Result                            |
+| ------------------ | --------------------------------- |
 | <command or skill> | <pass \| fail \| skip \| blocked> |

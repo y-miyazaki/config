@@ -307,8 +307,8 @@ function assert_detect_ci_failures_error_json {
     ' <<< "${json}"
 }
 
-# assert_detect_report_tech_debt_ok_json: Validate detect_report_tech_debt.sh success JSON
-function assert_detect_report_tech_debt_ok_json {
+# assert_detect_tech_debt_ok_json: Validate detect_tech_debt.sh success JSON
+function assert_detect_tech_debt_ok_json {
     local json="$1"
     local expected_scope="${2:-all}"
     local expected_since="${3:-}"
@@ -346,8 +346,8 @@ function assert_detect_report_tech_debt_ok_json {
     ' <<< "${json}"
 }
 
-# assert_detect_report_tech_debt_error_json: Validate detect_report_tech_debt.sh error JSON
-function assert_detect_report_tech_debt_error_json {
+# assert_detect_tech_debt_error_json: Validate detect_tech_debt.sh error JSON
+function assert_detect_tech_debt_error_json {
     local json="$1"
     local expected_message="${2:-}"
 
@@ -440,6 +440,6 @@ export -f bats_resolve_since_ref
 export -f assert_detect_changelog_ok_json assert_detect_changelog_error_json
 export -f assert_detect_changes_ok_json assert_detect_changes_error_json
 export -f assert_detect_ci_failures_ok_json assert_detect_ci_failures_error_json
-export -f assert_detect_report_tech_debt_ok_json assert_detect_report_tech_debt_error_json
+export -f assert_detect_tech_debt_ok_json assert_detect_tech_debt_error_json
 export -f assert_detect_refactor_ok_json assert_detect_refactor_error_json
 export -f assert_loop_run_log_entry_json

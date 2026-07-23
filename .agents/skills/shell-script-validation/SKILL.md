@@ -70,16 +70,16 @@ Structured results for bash -n and shellcheck (syntax and lint only). With `--ch
 
 ### Error Handling
 
-| Condition                                      | Severity    | Action                                                              |
-| ---------------------------------------------- | ----------- | ------------------------------------------------------------------- |
-| `scripts/validate.sh` missing                  | Fatal       | Stop; report missing script                                         |
-| No shell scripts under target path               | Info        | Report no reviewable scripts; stop                                  |
-| bash -n or shellcheck missing                  | Recoverable | Defer checks for that tool; note in deferred table                  |
-| Single tool fails, other succeeds              | Recoverable | Report passing tool; defer failed tool with exit status           |
-| All tools fail                                 | Fatal       | Return `status: failed` with per-tool stderr summaries              |
-| Function docs intentionally skipped            | Info        | Omit `--check-function-docs`; document opt-out in Summary           |
-| `common-checklist.md` unavailable              | Fatal       | Stop; report missing dependency                                     |
-| `common-output-format.md` unavailable          | Recoverable | Use inline output contract                                          |
+| Condition                             | Severity    | Action                                                    |
+| ------------------------------------- | ----------- | --------------------------------------------------------- |
+| `scripts/validate.sh` missing         | Fatal       | Stop; report missing script                               |
+| No shell scripts under target path    | Info        | Report no reviewable scripts; stop                        |
+| bash -n or shellcheck missing         | Recoverable | Defer checks for that tool; note in deferred table        |
+| Single tool fails, other succeeds     | Recoverable | Report passing tool; defer failed tool with exit status   |
+| All tools fail                        | Fatal       | Return `status: failed` with per-tool stderr summaries    |
+| Function docs intentionally skipped   | Info        | Omit `--check-function-docs`; document opt-out in Summary |
+| `common-checklist.md` unavailable     | Fatal       | Stop; report missing dependency                           |
+| `common-output-format.md` unavailable | Recoverable | Use inline output contract                                |
 
 ### Examples
 

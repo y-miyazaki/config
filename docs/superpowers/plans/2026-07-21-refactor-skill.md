@@ -87,7 +87,7 @@ In repo-root `apm.yml`, under `dependencies.apm` (local path list), add after th
 - ./.apm/packages/refactor
 ```
 
-Place it near other local packages (e.g. after `loop-report-tech-debt` or in alpha order among `./.apm/packages/*`).
+Place it near other local packages (e.g. after `loop-tech-debt` or in alpha order among `./.apm/packages/*`).
 
 - [ ] **Step 4: Sanity check paths**
 
@@ -156,7 +156,7 @@ Session report per [common-output-format.md](references/common-output-format.md)
 - Lint/SAST-driven cleanup as the primary mission
 - O3 architecture / GoF / deep-module redesign under automation
 - Detect ownership or loop state (Phase 2)
-- Consuming `docs/report/report-tech-debt/**` as required input
+- Consuming `docs/report/tech-debt/**` as required input
 
 ## Reference Files Guide
 
@@ -208,7 +208,7 @@ Confirm YAML frontmatter has `name`, `description`, `license`, `metadata.author`
 
 - Exactly **one** target (path or symbol) per run
 - Prefer structure-driven evidence (duplication, oversized unit, user-named symbol) — not lint/SAST smell scores
-- Do not require or read `docs/report/report-tech-debt/**`
+- Do not require or read `docs/report/tech-debt/**`
 
 ## Operations
 
@@ -558,11 +558,11 @@ If scripts are missing: run `agent-skills-review` skill workflow manually and re
 
 Confirm by search in `.apm/packages/refactor/`:
 
-- No requirement to read `docs/report/report-tech-debt`
+- No requirement to read `docs/report/tech-debt`
 - DO NOT USE FOR / checklist exclude lint-primary mission
 - No `detect_refactor`, `loop-refactor`, or SubAgent product definitions
 
-Run: `rg -n 'report-tech-debt|detect_refactor|loop-refactor|SubAgent' .apm/packages/refactor/`
+Run: `rg -n 'tech-debt|detect_refactor|loop-refactor|SubAgent' .apm/packages/refactor/`
 
 Expected: no matches that couple Phase 1 to those (mentions of “Phase 2” deferral in SKILL DO NOT USE FOR are OK; do not add detect/loop files).
 
@@ -583,7 +583,7 @@ Expected: no matches that couple Phase 1 to those (mentions of “Phase 2” def
 
 - [ ] **Step 1: Add topic index row**
 
-In `docs/explanation/loop-engineering/index.md` topic index table, add a row (after report-tech-debt or in a sensible place):
+In `docs/explanation/loop-engineering/index.md` topic index table, add a row (after tech-debt or in a sensible place):
 
 ```markdown
 | **refactor** skill (Phase 1); future **loop-refactor** (action loop) | [Refactor skill & loop design](../../superpowers/specs/2026-07-21-refactor-skill-and-loop-design.md) |
@@ -642,7 +642,7 @@ Use **requesting-code-review** (or repo equivalent) on the Phase 1 diff before c
 - `detect_refactor.sh` / bats for detect
 - `.github/workflows/on-loop-refactor.yaml` or example callers
 - Sonar / CPD integration
-- Putting Apply into `loop-report-tech-debt`
+- Putting Apply into `loop-tech-debt`
 - O3 automation, GoF catalogs as L2 ops
 - Hardcoding named validation skills inside `references/` (breaks A')
 

@@ -31,10 +31,10 @@ Detect documentation drift from code changes on integration branches and open fi
 
 ### docs-updater dual paths
 
-| Path | Trigger | Input |
-| ---- | ------- | ----- |
-| Interactive / hook | Pre-commit, user-invoked | `scripts/detect_changes.sh` JSON |
-| Loop | `on-loop-docs-triage.yaml` | `findings[]` from `loop-prompt-generate` |
+| Path               | Trigger                    | Input                                    |
+| ------------------ | -------------------------- | ---------------------------------------- |
+| Interactive / hook | Pre-commit, user-invoked   | `scripts/detect_changes.sh` JSON         |
+| Loop               | `on-loop-docs-triage.yaml` | `findings[]` from `loop-prompt-generate` |
 
 Both paths share `docs-updater/scripts/detect_changes.sh` for mechanical facts. The loop caller maps detect output into semantic `findings[]` before invoking the skill.
 
@@ -65,7 +65,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `budget_max_tokens_per_day`                          | Daily aggregated token cap across loops.                                                                                                                                                                                  | `500000`                                                 |
 | `detect_domain_env_json` → `DOCS_TRIAGE_DOC_GLOBS`   | Comma-separated globs for documentation files in git-diff analysis.                                                                                                                                                       | `docs/**/*.md,README.md`                                 |
 | `detect_domain_env_json` → `DOCS_TRIAGE_EXTRA_FILES` | Additional non-glob paths (site config) included in doc impact scan.                                                                                                                                                      | `mkdocs.yml`                                             |
-| `detect_script`                                      | Domain detect script path (shared with docs-updater hook path).                                                                                                                                                            | `.agents/skills/docs-updater/scripts/detect_changes.sh`  |
+| `detect_script`                                      | Domain detect script path (shared with docs-updater hook path).                                                                                                                                                           | `.agents/skills/docs-updater/scripts/detect_changes.sh`  |
 | `engine`                                             | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                                                                                                                                     | `cursor`                                                 |
 | `finalize_integration`                               | Finalize strategy for integration targets: `open_pr` or `push` (L3).                                                                                                                                                      | `open_pr`                                                |
 | `infer_files_pattern`                                | Extended regex to infer file paths from verifier text.                                                                                                                                                                    | See caller workflow                                      |

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.42] - 2026-07-18
 
 ### Changed
+
 - Align pins to v1.8.42 (4a0df8b) ([a8506d6](https://github.com/y-miyazaki/config/commit/a8506d6d80b7a549a0e3c275448a33c7523cf343))
 - Finalize all pins v1.8.42 (d03b884) ([4a0df8b](https://github.com/y-miyazaki/config/commit/4a0df8bd929df6eeddc8f1286bdda0ad129d11d7))
 - Pin all to release v1.8.42 (429abd3) ([d03b884](https://github.com/y-miyazaki/config/commit/d03b884b2ba00d8e91a84aef0200ac00496ed381))
@@ -23,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.41] - 2026-07-18
 
 ### Changed
+
 - Align pins to v1.8.41 (14ad6ed) ([fc3d096](https://github.com/y-miyazaki/config/commit/fc3d0965e4baba252989f166dc227190134e1f1f))
 - Finalize all pins v1.8.41 (0bc0175) ([14ad6ed](https://github.com/y-miyazaki/config/commit/14ad6edf009a0a68817066c32fd7f95e79616ccf))
 - Pin all to release v1.8.41 (9aef81c) ([0bc0175](https://github.com/y-miyazaki/config/commit/0bc01759c30fbf8087d4f38bcbb16133cf862371))
@@ -33,9 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.40] - 2026-07-18
 
 ### Added
+
 - Enhance loop-detect and loop-execute workflows with improved error handling and output descriptions ([4d66c69](https://github.com/y-miyazaki/config/commit/4d66c694bfb699f50ca40e2cff614a3c8f1c2e0f))
 
 ### Changed
+
 - Align pins to v1.8.40 (2c8c9ce) ([2b657e3](https://github.com/y-miyazaki/config/commit/2b657e364e67e28ee5e1313a51e4d20ab923782a))
 - Finalize all pins v1.8.40 (5b3d244) ([2c8c9ce](https://github.com/y-miyazaki/config/commit/2c8c9ce50a31e97aeec3f32b06763bc1e2b23637))
 - Pin all to release v1.8.40 (898575a) ([5b3d244](https://github.com/y-miyazaki/config/commit/5b3d2443c521bd09d34206c45f43730aad11787e))
@@ -44,9 +48,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.39] - 2026-07-18
 
 ### Added
+
 - Implement loop-handoff artifact handling in loop-detect and loop-execute workflows ([eff0313](https://github.com/y-miyazaki/config/commit/eff03137fb3ada00f27b8db5d9a013db683b2411))
 
 ### Changed
+
 - Align pins to v1.8.39 (9ba61b9) ([129fc9b](https://github.com/y-miyazaki/config/commit/129fc9b79f30515fcd4664c62cbe1f93f38e91cd))
 - Finalize all pins v1.8.39 (636a084) ([9ba61b9](https://github.com/y-miyazaki/config/commit/9ba61b96a0ba594c92eb957fed74482547a96fe7))
 - Pin all to release v1.8.39 (3dd22ac) ([636a084](https://github.com/y-miyazaki/config/commit/636a084035a840f04a6993daa42cb2666a4f338b))
@@ -55,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.38] - 2026-07-18
 
 ### Changed
+
 - Align pins to v1.8.38 (7e0adb3) ([99d9bd1](https://github.com/y-miyazaki/config/commit/99d9bd12fb971d644fea1fb88783a398aedcec8f))
 - Finalize all pins v1.8.38 (da75e13) ([7e0adb3](https://github.com/y-miyazaki/config/commit/7e0adb3e57ad6674028134e05e8cf33aef4e4fd5))
 - Pin all to release v1.8.38 (a468234) ([da75e13](https://github.com/y-miyazaki/config/commit/da75e133fa9dd70754c3f0122e8e9f02f60d77ed))
@@ -71,9 +78,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.37] - 2026-07-17
 
 ### Fixed
+
 - Restore heading level for CI Sweeper Test to ensure lint compliance (docs) ([6d01b6c](https://github.com/y-miyazaki/config/commit/6d01b6c115473c5447f77fb3410ff74affb7713f))
 
 ### Changed
+
 - Align pins to v1.8.37 (1f0b8eb) ([79bec97](https://github.com/y-miyazaki/config/commit/79bec97381f7b5d64448900f72487dac22457964))
 - Finalize all pins v1.8.37 (041e469) ([1f0b8eb](https://github.com/y-miyazaki/config/commit/1f0b8eb1e74a8e0b12bb6c2cfc71b92071084e48))
 - Pin all to release v1.8.37 (ad318c5) ([041e469](https://github.com/y-miyazaki/config/commit/041e46905396e645ac7557174249c6814bc54e5d))
@@ -96,6 +105,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.36] - 2026-07-17
 
 ### Changed
+
 - Align pins to v1.8.36 (e9f7e78) ([a6fd278](https://github.com/y-miyazaki/config/commit/a6fd278ea6ba23f4eb7f59c86ed3514d08699189))
 - Finalize all pins v1.8.36 (de4f533) ([e9f7e78](https://github.com/y-miyazaki/config/commit/e9f7e78c864e2bcdc0ed724ea718573f9ff4df55))
 - Pin all to release v1.8.36 (663a0fa) ([de4f533](https://github.com/y-miyazaki/config/commit/de4f5337e3a5e1ca8f940b2e8af0e8c06d3c2d92))
@@ -109,6 +119,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.35] - 2026-07-17
 
 ### Changed
+
 - Align pins to v1.8.35 (3373cba) ([d06d196](https://github.com/y-miyazaki/config/commit/d06d19646570abb849987552c0df528c5ca41f68))
 - Finalize all pins v1.8.35 (a25657c) ([3373cba](https://github.com/y-miyazaki/config/commit/3373cba072024c0883ccc3ebe38da46c481118f2))
 - Pin all to release v1.8.35 (27db91b) ([a25657c](https://github.com/y-miyazaki/config/commit/a25657c15359fd518a5bf24f433a999d98f161cc))
@@ -133,6 +144,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.34] - 2026-07-17
 
 ### Changed
+
 - Align pins to v1.8.34 (9387019) ([c3c6770](https://github.com/y-miyazaki/config/commit/c3c6770d88a5cf5031f34fb352ebb63154237483))
 - Finalize all pins v1.8.34 (52504b6) ([9387019](https://github.com/y-miyazaki/config/commit/938701916a57f5f1f482bc2ddab9da3b2e5e91b3))
 - Pin all to release v1.8.34 (7f0a619) ([52504b6](https://github.com/y-miyazaki/config/commit/52504b6a518baf7e7773d04f7cbe719d60c399c1))
@@ -148,6 +160,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.33] - 2026-07-17
 
 ### Changed
+
 - Append run log [skip ci] (loop) ([eea103d](https://github.com/y-miyazaki/config/commit/eea103d45241265498bea0027bdd0357b49cdfdb))
 - Clear_pending state for PR #416 [skip ci] (loop) ([f3c0355](https://github.com/y-miyazaki/config/commit/f3c03559f1178ddeca1e764e5d1d644150fde2e5))
 - Append run log [skip ci] (loop) ([e471320](https://github.com/y-miyazaki/config/commit/e471320e895faccea194fdc3e89bb134483ed8d7))
@@ -164,10 +177,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.32] - 2026-07-17
 
 ### Added
+
 - Enhance detection logic with scoped head branch support (loop-detect) ([5e5d12f](https://github.com/y-miyazaki/config/commit/5e5d12faf4b3885c24149c2232793612164dc8b6))
 - Add markdown link check configuration and update checksums in lockfile ([9d32136](https://github.com/y-miyazaki/config/commit/9d321360ff992f27fe855bbdac63ef4a42c251bd))
 
 ### Changed
+
 - Align pins to v1.8.32 (7a51271) ([cc768d3](https://github.com/y-miyazaki/config/commit/cc768d3ffd34d21a1e6f17f42c5fce01af9412eb))
 - Finalize all pins v1.8.32 (365a11e) ([7a51271](https://github.com/y-miyazaki/config/commit/7a51271120c6ab965a606d86d3cc4dbad8922477))
 - Pin all to release v1.8.32 (11168cd) ([365a11e](https://github.com/y-miyazaki/config/commit/365a11ee0b4e4ecce364d84279c48cfc1a3be777))
@@ -190,6 +205,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.31] - 2026-07-17
 
 ### Changed
+
 - Align pins to v1.8.31 (73d74ce) ([4e116d9](https://github.com/y-miyazaki/config/commit/4e116d994437398ce74580f4de6f779d2662da36))
 - Finalize all pins v1.8.31 (4f3ef86) ([73d74ce](https://github.com/y-miyazaki/config/commit/73d74ce12720bcad2e95b56c30cf475d2a7e751a))
 - Pin all to release v1.8.31 (cf5428b) ([4f3ef86](https://github.com/y-miyazaki/config/commit/4f3ef86bd5699872523e0e3a80985320db4a46bd))
@@ -212,16 +228,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.30] - 2026-07-16
 
 ### Changed
+
 - Update dependencies to version 1.8.29 across various workflows and configuration files, including changes to AWS MCP command execution method and documentation updates for OAuth integration. This ensures consistency and reflects the latest improvements in the project. ([0098282](https://github.com/y-miyazaki/config/commit/0098282039f73bf3aba3a67a02568c0dec11c2a5))
 
 ## [1.8.29] - 2026-07-16
 
 ### Changed
+
 - Update AWS MCP configuration to use bash for command execution and remove deprecated awslabs-aws-api-mcp-server. Adjust documentation to reflect these changes and clarify the adoption of AWS MCP as the primary API operation tool. ([45afa9c](https://github.com/y-miyazaki/config/commit/45afa9c0f1dd5b8227bfd9efc86345fd45b0e65c))
 
 ## [1.8.28] - 2026-07-16
 
 ### Changed
+
 - Align pins to v1.8.28 (7b0e855) ([23aab56](https://github.com/y-miyazaki/config/commit/23aab5619704545acaed28993f57424c9d8871d7))
 - Finalize all pins v1.8.28 (918e16a) ([7b0e855](https://github.com/y-miyazaki/config/commit/7b0e8557d0544acef512cb7e5e81f96abf19bd44))
 - Pin all to release v1.8.28 (c805e7f) ([918e16a](https://github.com/y-miyazaki/config/commit/918e16aeda601e99b06c7d119ad6fe8a834c9b26))
@@ -241,6 +260,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.27] - 2026-07-16
 
 ### Changed
+
 - Align pins to v1.8.27 (918db24) ([35953d5](https://github.com/y-miyazaki/config/commit/35953d539383a4f5503772f47a73c5c7c6853481))
 - Finalize all pins v1.8.27 (33508f1) ([918db24](https://github.com/y-miyazaki/config/commit/918db24bc160b02462748456a742eba08c78cbf0))
 - Pin all to release v1.8.27 (e043354) ([33508f1](https://github.com/y-miyazaki/config/commit/33508f1dc107530fb90b4401e0a033e6efa3079f))
@@ -249,11 +269,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.26] - 2026-07-16
 
 ### Fixed
+
 - Set git identity on push_head finalize and fix notify trap (#404) (loop) ([86080c9](https://github.com/y-miyazaki/config/commit/86080c96bb7a03745719a81205b693bff6906e4c))
 - Scope concurrency group per workflow_run id (#403) (ci-sweeper) ([fb54ce0](https://github.com/y-miyazaki/config/commit/fb54ce0bbe13f3c8cfdd48f9f44115f5bb1ef123))
 - Escape JSON braces in detect_domain_env_json format() (#402) (ci-sweeper) ([dcbfd3d](https://github.com/y-miyazaki/config/commit/dcbfd3d37726b1daaca55a83fe3025e0bedbed08))
 
 ### Changed
+
 - Align pins to v1.8.26 (f2c4021) ([47f3fb5](https://github.com/y-miyazaki/config/commit/47f3fb54aa5eda88b51ec09e003608a82fa51278))
 - Finalize all pins v1.8.26 (179c4a3) ([f2c4021](https://github.com/y-miyazaki/config/commit/f2c4021e7dbe45f824eaf46d86641a3ff6624979))
 - Pin all to release v1.8.26 (ce70870) ([179c4a3](https://github.com/y-miyazaki/config/commit/179c4a3d75aff08f72f6083131dfbb98803243e6))
@@ -288,6 +310,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.25] - 2026-07-15
 
 ### Changed
+
 - Align pins to v1.8.25 (175b15b) ([72f4607](https://github.com/y-miyazaki/config/commit/72f4607806a44f3dec515526da1012271c14379d))
 - Finalize all pins v1.8.25 (3de8f8a) ([175b15b](https://github.com/y-miyazaki/config/commit/175b15b5ccc689524c9370247597666446007cc8))
 - Pin all to release v1.8.25 (097c069) ([3de8f8a](https://github.com/y-miyazaki/config/commit/3de8f8a241ead56612f2436297d90cc114df7014))
@@ -304,6 +327,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.24] - 2026-07-15
 
 ### Changed
+
 - Align pins to v1.8.24 (b69a441) ([9cad779](https://github.com/y-miyazaki/config/commit/9cad7792fa027690541612ba5dd8e194e0832357))
 - Finalize all pins v1.8.24 (ef50439) ([b69a441](https://github.com/y-miyazaki/config/commit/b69a441bbf15cf3d7a02f5fb7377f9ec81f14e45))
 - Pin all to release v1.8.24 (eff5232) ([ef50439](https://github.com/y-miyazaki/config/commit/ef50439e351489dfb4503a47fb7cbef5a72e76d3))
@@ -318,6 +342,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.23] - 2026-07-15
 
 ### Changed
+
 - Align pins to v1.8.23 (8f636c5) ([c07d006](https://github.com/y-miyazaki/config/commit/c07d006edcf1860ce5ba85cbeb999bd319d40692))
 - Finalize all pins v1.8.23 (e89bafc) ([8f636c5](https://github.com/y-miyazaki/config/commit/8f636c5439196590a9de61b5ec4710bcbdd7cca5))
 - Pin all to release v1.8.23 (479d3b1) ([e89bafc](https://github.com/y-miyazaki/config/commit/e89bafc00a46b0a808394f11a87cad3f4b461363))
@@ -337,6 +362,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.22] - 2026-07-14
 
 ### Changed
+
 - Align pins to v1.8.22 (4885292) ([3283b34](https://github.com/y-miyazaki/config/commit/3283b34bd5d549ecceaba0fbf0916e910f8f21c9))
 - Finalize all pins v1.8.22 (a6478a1) ([4885292](https://github.com/y-miyazaki/config/commit/4885292fd83f1a0db7d8bbdee476486ee566d4b6))
 - Pin all to release v1.8.22 (6f6613e) ([a6478a1](https://github.com/y-miyazaki/config/commit/a6478a1fc17618904de851702a499a78b0766fcb))
@@ -362,6 +388,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.21] - 2026-07-14
 
 ### Changed
+
 - Align pins to v1.8.21 (98020d8) ([d4b44ec](https://github.com/y-miyazaki/config/commit/d4b44ecf01aa52a08aed550da99a735009af531b))
 - Finalize all pins v1.8.21 (2361d1b) ([98020d8](https://github.com/y-miyazaki/config/commit/98020d80e7a86fa253748b23b19443ff57f97e1b))
 - Pin all to release v1.8.21 (34074c9) ([2361d1b](https://github.com/y-miyazaki/config/commit/2361d1b8a03c043bb568581362af340e82c7d363))
@@ -381,9 +408,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.20] - 2026-07-13
 
 ### Added
+
 - Add run_agent_capture function to preserve USAGE_* globals and update agent calls (loop) ([02fb2c7](https://github.com/y-miyazaki/config/commit/02fb2c73f242d1544de2ae0561b25b37de9787c3))
 
 ### Changed
+
 - Align pins to v1.8.20 (fd6e4af) ([18bb7a9](https://github.com/y-miyazaki/config/commit/18bb7a935d5c91d056fba9120e513d90b8c968c9))
 - Finalize all pins v1.8.20 (c4ca066) ([fd6e4af](https://github.com/y-miyazaki/config/commit/fd6e4af7771901f16cd1780fa777f9f2c7539753))
 - Pin all to release v1.8.20 (ffc0f95) ([c4ca066](https://github.com/y-miyazaki/config/commit/c4ca0661925756794dfe888a4c91f6c880558f3e))
@@ -406,6 +435,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.19] - 2026-07-13
 
 ### Changed
+
 - Align pins to v1.8.19 (dba789f) ([134c3b0](https://github.com/y-miyazaki/config/commit/134c3b03d624a0d4884c8285197427e7f4e07cd9))
 - Finalize all pins v1.8.19 (4828344) ([dba789f](https://github.com/y-miyazaki/config/commit/dba789ff1d2fe4146e28b9128d61476c9c5576bd))
 - Pin all to release v1.8.19 (aa83d9a) ([4828344](https://github.com/y-miyazaki/config/commit/4828344317149e19cb697d7dcb2a0cf1044cb167))
@@ -415,6 +445,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.18] - 2026-07-13
 
 ### Changed
+
 - Align pins to v1.8.18 (a4f597f) ([a3c85ba](https://github.com/y-miyazaki/config/commit/a3c85ba40048840ae454b720c4f845b45fae7b09))
 - Finalize all pins v1.8.18 (4d93be4) ([a4f597f](https://github.com/y-miyazaki/config/commit/a4f597fa5f88923d8d0d012d356d5bc11409265f))
 - Pin all to release v1.8.18 (873701a) ([4d93be4](https://github.com/y-miyazaki/config/commit/4d93be4adee01e60c48fb3deaee0ab7930e22fa6))
@@ -424,6 +455,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.17] - 2026-07-13
 
 ### Changed
+
 - Align pins to v1.8.17 (6f1947b) ([a8c7575](https://github.com/y-miyazaki/config/commit/a8c75754f830ffd4aa201a1cf1340ede8296cf8a))
 - Finalize all pins v1.8.17 (0ed0898) ([6f1947b](https://github.com/y-miyazaki/config/commit/6f1947b75d02265f87cd97888193497add65ac7f))
 - Pin all to release v1.8.17 (5d8dbb5) ([0ed0898](https://github.com/y-miyazaki/config/commit/0ed08987892ba7b169a46a4c4d58aafba0d52256))
@@ -437,9 +469,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.16] - 2026-07-13
 
 ### Added
+
 - Enhance failure detection and logging for startup failures (loop-ci-sweeper) ([4ec2afa](https://github.com/y-miyazaki/config/commit/4ec2afac47573cef117edf82166360498647299e))
 
 ### Changed
+
 - Align pins to v1.8.16 (79d74d1) ([732e63a](https://github.com/y-miyazaki/config/commit/732e63a2937d807787b5316c684650b7667080db))
 - Finalize all pins v1.8.16 (8171ef0) ([79d74d1](https://github.com/y-miyazaki/config/commit/79d74d1dadea776a3a99178c3e082e7fe5d7db65))
 - Pin all to release v1.8.16 (5159954) ([8171ef0](https://github.com/y-miyazaki/config/commit/8171ef0fb582e1d650e87c3851c7d4136901740f))
@@ -448,9 +482,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.15] - 2026-07-13
 
 ### Fixed
+
 - Restore workflow pins broken in finalize commit ([43fadab](https://github.com/y-miyazaki/config/commit/43fadab51578769b295a0a2a2a64ccd56941bbbf))
 
 ### Changed
+
 - Align pins to v1.8.15 (905185e) ([78a7272](https://github.com/y-miyazaki/config/commit/78a7272b209511b559d75f5ef45e6f564c9b16a5))
 - Finalize all pins v1.8.15 (b6b0f25) ([905185e](https://github.com/y-miyazaki/config/commit/905185e56867e4ba406ba7d77d34395ac969530e))
 - Pin all to release v1.8.15 (96eb1d0) ([b6b0f25](https://github.com/y-miyazaki/config/commit/b6b0f2535131f1b189af9ca5f8abca81c476d372))
@@ -465,6 +501,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.14] - 2026-07-13
 
 ### Changed
+
 - Finalize workflow pins v1.8.14 (c36da55) ([27acb41](https://github.com/y-miyazaki/config/commit/27acb41d6df94e81b05adce9a30d00241680dec9))
 - Pin workflows to release v1.8.14 (6c2e00a) ([c36da55](https://github.com/y-miyazaki/config/commit/c36da5529289217d73a2c98d1493b688400a2a7c))
 - Pin workflows to v1.8.14 (703a60d) ([6c2e00a](https://github.com/y-miyazaki/config/commit/6c2e00ac48b6424902da6f5eb0b5cb9795f94ed7))
@@ -483,11 +520,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.13] - 2026-07-13
 
 ### Changed
+
 - Update GitHub Actions to use version 1.8.12 for loop actions ([138fed8](https://github.com/y-miyazaki/config/commit/138fed890fd0a20e0ac1cfceb8d2c1752d177cce))
 
 ## [1.8.12] - 2026-07-13
 
 ### Changed
+
 - Enhance JSON escaping function across multiple scripts ([ac1e7be](https://github.com/y-miyazaki/config/commit/ac1e7be20e48cdff0216362ecfca66e8459bceb6))
 - Update documentation and references in AWS service comparison reports ([7c72d01](https://github.com/y-miyazaki/config/commit/7c72d017b76f50719135801f190964eb4010b2e4))
 - Update GitHub Actions to use version 1.8.11 for loop actions ([576036c](https://github.com/y-miyazaki/config/commit/576036c0c9779b4c775003994fcd11c743af85f9))
@@ -495,25 +534,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.11] - 2026-07-13
 
 ### Changed
+
 - Update GitHub Actions to use version 1.8.10 for loop actions ([80b985d](https://github.com/y-miyazaki/config/commit/80b985dd67f10ac3604817999902c893fba578db))
 
 ## [1.8.10] - 2026-07-13
 
 ### Changed
+
 - Update checklist documentation and generated files ([2764111](https://github.com/y-miyazaki/config/commit/276411164d29b6f174f4e64b6b25ea5fb2cc73a4))
 
 ## [1.8.9] - 2026-07-12
 
 ### Changed
+
 - Update GitHub Actions to use version 1.8.8 for loop actions ([5a54080](https://github.com/y-miyazaki/config/commit/5a5408053a1d6bf357808590ae74f5ccb8eb31f4))
 - Update GitHub Actions to use loop-install-cli and other actions version 1.8.8 ([0f703f2](https://github.com/y-miyazaki/config/commit/0f703f2b8c74ec8ce7bfa017431e69739c0cc7b6))
 
 ## [1.8.8] - 2026-07-12
 
 ### Fixed
+
 - Change file permissions for update_run_ledger.sh and update devcontainer.json ([6aa8c76](https://github.com/y-miyazaki/config/commit/6aa8c76c4f1a720cd9b5d2ed25b234c4c095ac38))
 
 ### Changed
+
 - Enhance loop workflows and documentation ([f8209c2](https://github.com/y-miyazaki/config/commit/f8209c294e79f51f618531ced4022e5a50c239a9))
 - Enhance loop workflows and documentation ([8b68659](https://github.com/y-miyazaki/config/commit/8b686591fdbc2e3e670c8e6c5d2d9e431ed3380f))
 - Update loop-changelog skill and related scripts ([f9396d5](https://github.com/y-miyazaki/config/commit/f9396d59b113cb8dd0dda1ceebc266a7a086e9d7))
@@ -527,11 +571,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.8.7] - 2026-07-12
 
 ### Changed
+
 - Update GitHub Actions to use loop-install-cli and other actions version 1.8.6 ([7600459](https://github.com/y-miyazaki/config/commit/7600459ef9155b734fb641e68bc556f097bcfaeb))
 
 ## [1.8.6] - 2026-07-12
 
 ### Changed
+
 - Enhance tool comparison matrix for AI agent hooks ([841a196](https://github.com/y-miyazaki/config/commit/841a1962c1ecbd79867cccc2cbf22a6c201afccf))
 - Add loop-changelog skill and update related configurations ([d9a6a9b](https://github.com/y-miyazaki/config/commit/d9a6a9b51af78c6879a21baf4dc2b33d939a5407))
 - Update documentation and scripts for loop-docs-triage skill ([edba084](https://github.com/y-miyazaki/config/commit/edba0848bb34ff183d759230e091a397168c86f6))

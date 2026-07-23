@@ -40,4 +40,3 @@ graders:
       max_duration_ms: 180000
 tasks:
   - evals/tasks/*.yaml
-

@@ -118,8 +118,8 @@ setup() {
     local detect_result
     detect_result="$(jq -nc '
         {
-            report_file: "docs/report/report-tech-debt/2026-07-21.md",
-            previous_report: "docs/report/report-tech-debt/2026-07-14.md",
+            report_file: "docs/report/tech-debt/2026-07-21.md",
+            previous_report: "docs/report/tech-debt/2026-07-14.md",
             signals: [
                 {
                     kind: "todo_comment",

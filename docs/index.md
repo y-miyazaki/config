@@ -42,7 +42,7 @@ _Understanding-oriented discussion of concepts and decisions._
 - [Changelog Workflow Design](explanation/loop-engineering/workflows/loop-changelog-workflow-design.md)
 - [Docs Triage Workflow Design](explanation/loop-engineering/workflows/loop-docs-triage-workflow-design.md)
 - [Refactor Workflow Design](explanation/loop-engineering/workflows/loop-refactor-workflow-design.md)
-- [Report Tech Debt Workflow Design](explanation/loop-engineering/workflows/loop-report-tech-debt-workflow-design.md)
+- [Report Tech Debt Workflow Design](explanation/loop-engineering/workflows/loop-tech-debt-workflow-design.md)
 
 ## Report
 

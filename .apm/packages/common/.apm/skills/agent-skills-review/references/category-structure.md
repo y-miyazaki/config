@@ -119,4 +119,3 @@ Examples:
 - ✅ `category-security.md` first line: `## Security Checks` → PASS
 - ❌ `common-checklist.md` first line: `## Checklist` → FAIL (should be H1)
 - ❌ `category-security.md` first line: `# Security Checks` → FAIL (should be H2)
-

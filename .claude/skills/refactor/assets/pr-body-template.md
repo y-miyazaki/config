@@ -25,18 +25,18 @@ Rules:
 
 ### Changes
 
-| Target | What was wrong | What changed |
-| ------ | -------------- | ------------ |
+| Target            | What was wrong            | What changed             |
+| ----------------- | ------------------------- | ------------------------ |
 | `path` `symbol()` | <plain-language evidence> | <minimal change summary> |
 
 ### Deferred
 
-| Target | Why deferred |
-| ------ | ------------ |
+| Target | Why deferred            |
+| ------ | ----------------------- |
 | `path` | <plain-language reason> |
 
 ## Verification
 
-| Check | Result |
-| ----- | ------ |
+| Check              | Result                            |
+| ------------------ | --------------------------------- |
 | <command or skill> | <pass \| fail \| skip \| blocked> |
