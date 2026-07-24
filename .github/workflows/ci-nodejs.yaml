@@ -1,0 +1,628 @@
+# Reusable workflow: Node.js CI (test, security)
+# Discovers workspace directories, then runs install/test/audit for each package.json found recursively within each workspace.
+name: ci-nodejs
+
+on:
+  workflow_call:
+    inputs:
+      audit_level:
+        default: "high"
+        description: "Minimum severity level for dependency audit failures (none, low, moderate, high, critical)"
+        required: false
+        type: string
+      node_version:
+        default: "24.18.0"
+        description: "Node.js version to use for setup-node"
+        required: false
+        type: string
+      package_manager:
+        default: "auto"
+        description: "Package manager to use: auto, npm, or pnpm. auto selects from lockfiles per project"
+        required: false
+        type: string
+      pnpm_version:
+        default: ""
+        description: "pnpm version for corepack when package_manager is pnpm or auto-detected pnpm. Empty uses package.json packageManager or 9.15.0"
+        required: false
+        type: string
+      search_paths:
+        default: "nodejs"
+        description: "Comma-separated root directories whose immediate child directories become matrix workspaces"
+        required: false
+        type: string
+      trivy_version:
+        default: "v0.72.0"
+        description: "Trivy version to use"
+        required: false
+        type: string
+      workspace_glob:
+        default: ""
+        description: "Comma-separated directory globs used as matrix workspaces (e.g. nodejs/*). If empty, workspaces are auto-discovered from search_paths"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+env:
+  AUDIT_LEVEL: ${{ inputs.audit_level }}
+  NODE_VERSION: ${{ inputs.node_version }}
+  PACKAGE_MANAGER: ${{ inputs.package_manager }}
+  PNPM_VERSION: ${{ inputs.pnpm_version }}
+  SEARCH_PATHS: ${{ inputs.search_paths }}
+  TRIVY_VERSION: ${{ inputs.trivy_version }}
+  WORKSPACE_GLOB: ${{ inputs.workspace_glob }}
+
+jobs:
+  discover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      has_workspaces: ${{ steps.set-matrix.outputs.has_workspaces }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      workspace_count: ${{ steps.set-matrix.outputs.workspace_count }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Discover Node.js workspaces
+        id: set-matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          declare -A seen_workspaces=()
+          entries=()
+
+          has_package_json_below() {
+            local dir="$1"
+            find "$dir" -name package.json -type f \
+              ! -path '*/node_modules/*' \
+              ! -path '*/node_modules.bak/*' \
+              ! -path '*/dist/*' \
+              ! -path '*/build/*' \
+              ! -path '*/.git/*' \
+              -print -quit | grep -q .
+          }
+
+          add_workspace() {
+            local workspace_path="$1"
+            workspace_path=${workspace_path#./}
+            workspace_path=${workspace_path%/}
+
+            if [[ -z "$workspace_path" ]] || [[ -n "${seen_workspaces[$workspace_path]:-}" ]]; then
+              return 0
+            fi
+            if ! has_package_json_below "$workspace_path"; then
+              return 0
+            fi
+
+            seen_workspaces["$workspace_path"]=1
+            local component
+            component=$(printf '%s' "$workspace_path" | tr '/' '-')
+            entries+=("{\"component\":\"${component}\",\"workspace_path\":\"${workspace_path}\"}")
+          }
+
+          if [ -n "$WORKSPACE_GLOB" ]; then
+            IFS=',' read -ra patterns <<< "$WORKSPACE_GLOB"
+            shopt -s globstar nullglob
+            for pattern in "${patterns[@]}"; do
+              pattern=$(echo "$pattern" | xargs)
+              [ -n "$pattern" ] || continue
+              for workspace_path in $pattern; do
+                [ -d "$workspace_path" ] || continue
+                add_workspace "$workspace_path"
+              done
+            done
+            shopt -u globstar nullglob
+          else
+            IFS=',' read -ra roots <<< "$SEARCH_PATHS"
+            for root in "${roots[@]}"; do
+              root=$(echo "$root" | xargs)
+              [ -n "$root" ] || continue
+              if [ ! -d "$root" ]; then
+                echo "Search path not found (skipped): $root"
+                continue
+              fi
+
+              if [ -f "$root/package.json" ]; then
+                add_workspace "$root"
+              fi
+
+              shopt -s nullglob
+              for child in "$root"/*/; do
+                [ -d "$child" ] || continue
+                add_workspace "${child%/}"
+              done
+              shopt -u nullglob
+            done
+          fi
+
+          workspace_count=${#entries[@]}
+          echo "Discovered ${workspace_count} Node.js workspace(s)"
+
+          if [ "$workspace_count" -eq 0 ]; then
+            {
+              echo "has_workspaces=false"
+              echo "workspace_count=0"
+              echo 'matrix={"include":[]}'
+            } >> "$GITHUB_OUTPUT"
+          else
+            joined=$(IFS=,; echo "${entries[*]}")
+            {
+              echo "has_workspaces=true"
+              echo "workspace_count=${workspace_count}"
+              echo "matrix={\"include\":[${joined}]}"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+  precheck:
+    needs: discover
+    if: needs.discover.outputs.has_workspaces == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.discover.outputs.matrix) }}
+    env:
+      COMPONENT: ${{ matrix.component }}
+      WORKSPACE_PATH: ${{ matrix.workspace_path }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable Corepack
+        shell: bash
+        run: corepack enable
+
+      - name: Exec workspace precheck
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          resolve_package_manager() {
+            local project_dir="$1"
+            local requested="${PACKAGE_MANAGER:-auto}"
+
+            if [ "$requested" != "auto" ]; then
+              printf '%s' "$requested"
+              return 0
+            fi
+            if [ -f "${project_dir}/pnpm-lock.yaml" ]; then
+              printf 'pnpm'
+            elif [ -f "${project_dir}/package-lock.json" ]; then
+              printf 'npm'
+            elif grep -q '"packageManager"[[:space:]]*:[[:space:]]*"pnpm@' "${project_dir}/package.json"; then
+              printf 'pnpm'
+            else
+              printf 'npm'
+            fi
+          }
+
+          resolve_pnpm_version() {
+            local project_dir="$1"
+            if [ -n "${PNPM_VERSION}" ]; then
+              printf '%s' "${PNPM_VERSION}"
+              return 0
+            fi
+            local from_package
+            from_package=$(node -e "const pm=require('${project_dir}/package.json').packageManager||''; const m=pm.match(/^pnpm@(.+)$/); process.stdout.write(m?m[1]:'');" || true)
+            if [ -n "$from_package" ]; then
+              printf '%s' "$from_package"
+            else
+              printf '9.15.0'
+            fi
+          }
+
+          prepare_pnpm() {
+            local project_dir="$1"
+            local pnpm_version
+            pnpm_version=$(resolve_pnpm_version "$project_dir")
+            corepack prepare "pnpm@${pnpm_version}" --activate
+          }
+
+          install_dependencies() {
+            local project_dir="$1"
+            local pm="$2"
+            if [ "$pm" = "pnpm" ]; then
+              prepare_pnpm "$project_dir"
+              pnpm install --frozen-lockfile
+            else
+              npm ci
+            fi
+          }
+
+          verify_lockfile_sync() {
+            local project_dir="$1"
+            local pm="$2"
+            if [ "$pm" = "pnpm" ]; then
+              if [ ! -f pnpm-lock.yaml ]; then
+                echo "pnpm-lock.yaml not found in ${project_dir}"
+                exit 1
+              fi
+              pnpm install --lockfile-only
+              if ! git diff --exit-code -- pnpm-lock.yaml; then
+                echo "pnpm-lock.yaml is out of sync in ${project_dir}. Run 'pnpm install' locally and commit the changes."
+                exit 1
+              fi
+            else
+              if [ ! -f package-lock.json ]; then
+                echo "package-lock.json not found in ${project_dir}"
+                exit 1
+              fi
+              npm install --package-lock-only
+              if ! git diff --exit-code -- package-lock.json; then
+                echo "package-lock.json is out of sync in ${project_dir}. Run 'npm install' locally and commit the changes."
+                exit 1
+              fi
+            fi
+          }
+
+          project_count=0
+          while IFS= read -r pkg_json; do
+            project_dir=$(dirname "$pkg_json")
+            project_dir=${project_dir#./}
+            project_count=$((project_count + 1))
+
+            pm=$(resolve_package_manager "$project_dir")
+            echo "Precheck project ${project_count}: ${project_dir} (${pm})"
+
+            (
+              cd "${project_dir}"
+              install_dependencies "$project_dir" "$pm"
+              verify_lockfile_sync "$project_dir" "$pm"
+            )
+          done < <(
+            find "${WORKSPACE_PATH}" -name package.json -type f \
+              ! -path '*/node_modules/*' \
+              ! -path '*/node_modules.bak/*' \
+              ! -path '*/dist/*' \
+              ! -path '*/build/*' \
+              ! -path '*/.git/*'
+          )
+
+          if [ "$project_count" -eq 0 ]; then
+            echo "No package.json found under workspace: ${WORKSPACE_PATH}"
+            exit 1
+          fi
+
+          echo "Precheck completed for ${project_count} project(s) in ${WORKSPACE_PATH}"
+
+  test:
+    needs:
+      - discover
+      - precheck
+    if: needs.discover.outputs.has_workspaces == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.discover.outputs.matrix) }}
+    env:
+      COMPONENT: ${{ matrix.component }}
+      WORKSPACE_PATH: ${{ matrix.workspace_path }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable Corepack
+        shell: bash
+        run: corepack enable
+
+      - name: Exec workspace tests
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          resolve_package_manager() {
+            local project_dir="$1"
+            local requested="${PACKAGE_MANAGER:-auto}"
+
+            if [ "$requested" != "auto" ]; then
+              printf '%s' "$requested"
+              return 0
+            fi
+            if [ -f "${project_dir}/pnpm-lock.yaml" ]; then
+              printf 'pnpm'
+            elif [ -f "${project_dir}/package-lock.json" ]; then
+              printf 'npm'
+            elif grep -q '"packageManager"[[:space:]]*:[[:space:]]*"pnpm@' "${project_dir}/package.json"; then
+              printf 'pnpm'
+            else
+              printf 'npm'
+            fi
+          }
+
+          resolve_pnpm_version() {
+            local project_dir="$1"
+            if [ -n "${PNPM_VERSION}" ]; then
+              printf '%s' "${PNPM_VERSION}"
+              return 0
+            fi
+            local from_package
+            from_package=$(node -e "const pm=require('${project_dir}/package.json').packageManager||''; const m=pm.match(/^pnpm@(.+)$/); process.stdout.write(m?m[1]:'');" || true)
+            if [ -n "$from_package" ]; then
+              printf '%s' "$from_package"
+            else
+              printf '9.15.0'
+            fi
+          }
+
+          prepare_pnpm() {
+            local project_dir="$1"
+            local pnpm_version
+            pnpm_version=$(resolve_pnpm_version "$project_dir")
+            corepack prepare "pnpm@${pnpm_version}" --activate
+          }
+
+          install_dependencies() {
+            local project_dir="$1"
+            local pm="$2"
+            if [ "$pm" = "pnpm" ]; then
+              prepare_pnpm "$project_dir"
+              pnpm install --frozen-lockfile
+            else
+              npm ci
+            fi
+          }
+
+          project_count=0
+          while IFS= read -r pkg_json; do
+            project_dir=$(dirname "$pkg_json")
+            project_dir=${project_dir#./}
+            project_count=$((project_count + 1))
+
+            pm=$(resolve_package_manager "$project_dir")
+            echo "Testing project ${project_count}: ${project_dir} (${pm})"
+
+            (
+              cd "${project_dir}"
+              install_dependencies "$project_dir" "$pm"
+              if [ "$pm" = "pnpm" ]; then
+                pnpm test
+              else
+                npm test
+              fi
+            )
+          done < <(
+            find "${WORKSPACE_PATH}" -name package.json -type f \
+              ! -path '*/node_modules/*' \
+              ! -path '*/node_modules.bak/*' \
+              ! -path '*/dist/*' \
+              ! -path '*/build/*' \
+              ! -path '*/.git/*'
+          )
+
+          if [ "$project_count" -eq 0 ]; then
+            echo "No package.json found under workspace: ${WORKSPACE_PATH}"
+            exit 1
+          fi
+
+          echo "Tests completed for ${project_count} project(s) in ${WORKSPACE_PATH}"
+
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@5a725c44406bb5a7d7e32cdc69ddf3fe20d4afd3 # v1.8.55
+        with:
+          artifacts: |
+            (none)
+          outputs: |
+            (none)
+          params: |
+            component: ${{ env.COMPONENT }}
+            package_manager: ${{ env.PACKAGE_MANAGER }}
+            workspaces: ${{ needs.discover.outputs.workspace_count }}
+            task: test
+          status: "${{ job.status }}"
+          title: "${{ format('Node.js CI: {0} ({1})', env.COMPONENT, 'test') }}"
+
+  security:
+    needs:
+      - discover
+      - precheck
+    if: needs.discover.outputs.has_workspaces == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      COMPONENT: ${{ matrix.component }}
+      WORKSPACE_PATH: ${{ matrix.workspace_path }}
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.discover.outputs.matrix) }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable Corepack
+        shell: bash
+        run: corepack enable
+
+      - name: Exec workspace dependency audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${WORKSPACE_PATH}/security"
+
+          resolve_package_manager() {
+            local project_dir="$1"
+            local requested="${PACKAGE_MANAGER:-auto}"
+
+            if [ "$requested" != "auto" ]; then
+              printf '%s' "$requested"
+              return 0
+            fi
+            if [ -f "${project_dir}/pnpm-lock.yaml" ]; then
+              printf 'pnpm'
+            elif [ -f "${project_dir}/package-lock.json" ]; then
+              printf 'npm'
+            elif grep -q '"packageManager"[[:space:]]*:[[:space:]]*"pnpm@' "${project_dir}/package.json"; then
+              printf 'pnpm'
+            else
+              printf 'npm'
+            fi
+          }
+
+          resolve_pnpm_version() {
+            local project_dir="$1"
+            if [ -n "${PNPM_VERSION}" ]; then
+              printf '%s' "${PNPM_VERSION}"
+              return 0
+            fi
+            local from_package
+            from_package=$(node -e "const pm=require('${project_dir}/package.json').packageManager||''; const m=pm.match(/^pnpm@(.+)$/); process.stdout.write(m?m[1]:'');" || true)
+            if [ -n "$from_package" ]; then
+              printf '%s' "$from_package"
+            else
+              printf '9.15.0'
+            fi
+          }
+
+          prepare_pnpm() {
+            local project_dir="$1"
+            local pnpm_version
+            pnpm_version=$(resolve_pnpm_version "$project_dir")
+            corepack prepare "pnpm@${pnpm_version}" --activate
+          }
+
+          install_dependencies() {
+            local project_dir="$1"
+            local pm="$2"
+            if [ "$pm" = "pnpm" ]; then
+              prepare_pnpm "$project_dir"
+              pnpm install --frozen-lockfile
+            else
+              npm ci
+            fi
+          }
+
+          project_count=0
+          while IFS= read -r pkg_json; do
+            project_dir=$(dirname "$pkg_json")
+            project_dir=${project_dir#./}
+            project_count=$((project_count + 1))
+            audit_name=$(printf '%s' "$project_dir" | tr '/' '-')
+
+            pm=$(resolve_package_manager "$project_dir")
+            echo "Auditing project ${project_count}: ${project_dir} (${pm})"
+
+            (
+              cd "${project_dir}"
+              install_dependencies "$project_dir" "$pm"
+              if [ "$pm" = "pnpm" ]; then
+                pnpm audit --audit-level "${AUDIT_LEVEL}" > "${GITHUB_WORKSPACE}/${WORKSPACE_PATH}/security/pkg-audit-${audit_name}.txt"
+                pnpm audit --audit-level "${AUDIT_LEVEL}" --json > "${GITHUB_WORKSPACE}/${WORKSPACE_PATH}/security/pkg-audit-${audit_name}.json"
+              else
+                npm audit --audit-level="${AUDIT_LEVEL}" > "${GITHUB_WORKSPACE}/${WORKSPACE_PATH}/security/pkg-audit-${audit_name}.txt"
+                npm audit --audit-level="${AUDIT_LEVEL}" --json > "${GITHUB_WORKSPACE}/${WORKSPACE_PATH}/security/pkg-audit-${audit_name}.json"
+              fi
+            )
+          done < <(
+            find "${WORKSPACE_PATH}" -name package.json -type f \
+              ! -path '*/node_modules/*' \
+              ! -path '*/node_modules.bak/*' \
+              ! -path '*/dist/*' \
+              ! -path '*/build/*' \
+              ! -path '*/.git/*'
+          )
+
+          if [ "$project_count" -eq 0 ]; then
+            echo "No package.json found under workspace: ${WORKSPACE_PATH}"
+            exit 1
+          fi
+
+      - name: Upload dependency audit Artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pkg-audit-${{ env.COMPONENT }}
+          path: ${{ env.WORKSPACE_PATH }}/security
+          retention-days: 30
+
+      # https://github.com/aquasecurity/trivy-action/?tab=readme-ov-file#inputs
+      - name: Exec Trivy Vulnerability Scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          exit-code: 1
+          format: table
+          scan-ref: ${{ env.WORKSPACE_PATH }}
+          scan-type: "fs"
+          scanners: license,misconfig,secret,vuln
+          severity: HIGH,CRITICAL
+          trivy-config: trivy.yaml
+          version: ${{ env.TRIVY_VERSION }}
+
+      # https://github.com/aquasecurity/trivy-action/?tab=readme-ov-file#inputs
+      - name: Exec Trivy Generate SBOM (CycloneDX)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          exit-code: 0
+          format: cyclonedx
+          output: ${{ env.WORKSPACE_PATH }}/sbom-${{ env.COMPONENT }}.json
+          scan-ref: ${{ env.WORKSPACE_PATH }}
+          scan-type: "fs"
+          version: ${{ env.TRIVY_VERSION }}
+
+      - name: Upload SBOM Artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sbom-${{ env.COMPONENT }}
+          path: ${{ env.WORKSPACE_PATH }}/sbom-${{ env.COMPONENT }}.json
+          retention-days: 30
+
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@5a725c44406bb5a7d7e32cdc69ddf3fe20d4afd3 # v1.8.55
+        with:
+          artifacts: |
+            pkg-audit-${{ env.COMPONENT }}
+            sbom-${{ env.COMPONENT }}
+          outputs: |
+            (none)
+          params: |
+            component: ${{ env.COMPONENT }}
+            package_manager: ${{ env.PACKAGE_MANAGER }}
+            workspaces: ${{ needs.discover.outputs.workspace_count }}
+            task: security
+          status: "${{ job.status }}"
+          title: "${{ format('Node.js CI: {0} ({1})', env.COMPONENT, 'security') }}"
