@@ -1,19 +1,12 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-07-24T10:05:35Z",
-      "outcome": "pr-created",
+      "last_run": "2026-07-24T16:43:55Z",
+      "outcome": "merged",
       "consecutive_failures": 0,
       "open_rejections": [],
       "last_reject_reason": "Verifier rubric outline now matches expanded allowlist and closed-set fix criteria from on-loop-tech-debt.yaml; prior internal contradiction resolved.",
-      "last_sha": "f899b729c39776d99ad27f9fed7851e6629a6f24",
-      "pending": {
-        "sha": "85c3ac8aca92734c49cd4882a4f3be7054781529",
-        "pr": 491,
-        "pr_url": "https://github.com/y-miyazaki/config/pull/491",
-        "loop_name": "docs-triage",
-        "created_at": "2026-07-24T10:05:35Z"
-      }
+      "last_sha": "85c3ac8aca92734c49cd4882a4f3be7054781529"
     }
   }
 }
