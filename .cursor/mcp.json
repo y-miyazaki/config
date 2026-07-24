@@ -6,12 +6,17 @@
       "type": "stdio"
     },
     "context7": {
-      "args": ["-y", "@upstash/context7-mcp@3.2.3"],
+      "type": "stdio",
       "command": "npx",
-      "type": "stdio"
+      "args": [
+        "-y",
+        "@upstash/context7-mcp@3.2.4"
+      ]
     },
     "fetch": {
-      "args": ["mcp-server-fetch==2026.7.10"],
+      "args": [
+        "mcp-server-fetch==2026.7.10"
+      ],
       "command": "uvx",
       "type": "stdio"
     },
@@ -26,7 +31,10 @@
     "lean-ctx": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "lean-ctx-bin@3.9.12"]
+      "args": [
+        "-y",
+        "lean-ctx-bin@3.9.12"
+      ]
     }
   }
 }
