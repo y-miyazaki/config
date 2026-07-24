@@ -7,7 +7,7 @@ on:
     inputs:
       codeql_languages:
         default: '["actions","go"]'
-        description: 'JSON array of CodeQL languages (e.g. ["go","actions","javascript-typescript"])'
+        description: 'JSON array of CodeQL languages (e.g. ["actions","go","javascript-typescript"])'
         required: false
         type: string
       python_version:
