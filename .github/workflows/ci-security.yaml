@@ -83,7 +83,7 @@ jobs:
         uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
         with:
           cache: true
-          version: ${{ env.TRIVY_VERSION }}
+          version: ${{ env.TRIVY_VERSION }} # zizmor: ignore[unpinned-tools] pinned via input default v0.72.0
 
       - name: Exec Trivy scans
         run: |
