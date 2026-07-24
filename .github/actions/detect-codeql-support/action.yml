@@ -1,0 +1,23 @@
+name: detect-codeql-support
+description: Detect whether workflow CodeQL should run for the repository.
+
+inputs:
+  token:
+    default: ${{ github.token }}
+    description: GitHub token for API access
+    required: false
+
+outputs:
+  skip:
+    description: true when workflow CodeQL should be skipped
+    value: ${{ steps.detect.outputs.skip }}
+
+runs:
+  using: composite
+  steps:
+    - name: Detect CodeQL Support
+      id: detect
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/detect.sh"

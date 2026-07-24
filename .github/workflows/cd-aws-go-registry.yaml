@@ -177,19 +177,32 @@ jobs:
             --severity "HIGH,CRITICAL" \
             "${IMAGE_REF}"
 
+      - name: Detect SARIF Upload Support
+        id: detect
+        if: env.TRIVY_IMAGE_SCAN == 'true'
+        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@8b07b501759bbe4716c759dfdbd914d4d5ebbdc3 # v1.8.59
+
       - name: Upload Trivy image SARIF to GitHub Security
-        if: always() && env.TRIVY_IMAGE_SCAN == 'true' && hashFiles('security/trivy-image.sarif') != ''
+        if: always() && env.TRIVY_IMAGE_SCAN == 'true' && steps.detect.outputs.supported == 'true' && hashFiles('security/trivy-image.sarif') != ''
         uses: github/codeql-action/upload-sarif@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
         with:
           category: trivy-image
           sarif_file: security/trivy-image.sarif
+
+      - name: Upload Trivy image scan artifact
+        if: always() && env.TRIVY_IMAGE_SCAN == 'true' && hashFiles('security/trivy-image.sarif') != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: trivy-image-${{ env.COMPONENT }}
+          path: security/trivy-image.sarif
+          retention-days: 30
 
       - name: Summary
         if: always()
         uses: y-miyazaki/config/.github/actions/summary@8b07b501759bbe4716c759dfdbd914d4d5ebbdc3 # v1.8.59
         with:
           artifacts: |
-            (none)
+            trivy-image-${{ env.COMPONENT }}
           outputs: |
             image: ${{ steps.meta.outputs.registry }}/${{ steps.meta.outputs.repository }}:${{ steps.meta.outputs.image_tag }}
           params: |

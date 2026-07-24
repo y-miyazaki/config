@@ -1,0 +1,23 @@
+name: detect-sarif-upload-support
+description: Detect whether SARIF upload to GitHub Security is supported for the repository.
+
+inputs:
+  token:
+    default: ${{ github.token }}
+    description: GitHub token for API access
+    required: false
+
+outputs:
+  supported:
+    description: true when SARIF upload is supported
+    value: ${{ steps.detect.outputs.supported }}
+
+runs:
+  using: composite
+  steps:
+    - name: Detect SARIF Upload Support
+      id: detect
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/detect.sh"

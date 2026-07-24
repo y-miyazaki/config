@@ -56,20 +56,9 @@ jobs:
       matrix:
         language: ${{ fromJSON(inputs.codeql_languages) }}
     steps:
-      - name: Detect CodeQL Default Setup
+      - name: Detect CodeQL Support
         id: detect
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          state="$(gh api "repos/${GITHUB_REPOSITORY}/code-scanning/default-setup" --jq '.state // empty' 2>/dev/null || true)"
-          if [ "${state}" = "configured" ]; then
-            echo "skip=true" >> "${GITHUB_OUTPUT}"
-            echo "::notice title=CodeQL skipped::CodeQL default setup is enabled on ${GITHUB_REPOSITORY}. Skipping workflow CodeQL to avoid SARIF upload rejection."
-          else
-            echo "skip=false" >> "${GITHUB_OUTPUT}"
-            echo "CodeQL default setup is not configured; workflow CodeQL will run."
-          fi
+        uses: y-miyazaki/config/.github/actions/detect-codeql-support@8b07b501759bbe4716c759dfdbd914d4d5ebbdc3 # v1.8.59
 
       - name: Checkout Code
         if: steps.detect.outputs.skip != 'true'
@@ -100,6 +89,10 @@ jobs:
       contents: read
       security-events: write
     steps:
+      - name: Detect SARIF Upload Support
+        id: detect
+        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@8b07b501759bbe4716c759dfdbd914d4d5ebbdc3 # v1.8.59
+
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -182,7 +175,7 @@ jobs:
           } >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Upload Semgrep SARIF to GitHub Security
-        if: always() && hashFiles('security/semgrep.sarif') != ''
+        if: always() && steps.detect.outputs.supported == 'true' && hashFiles('security/semgrep.sarif') != ''
         uses: github/codeql-action/upload-sarif@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
         with:
           category: semgrep
