@@ -69,7 +69,7 @@ Schedule: **`0 8 * * 1`** (Monday 08:00 UTC, weekly).
 | `agent_implementer_max_turns`  | Max implementer agent turns per loop attempt (one Agent→Verify cycle).                                                                                                                                                    | `5`                                                                                             |
 | `agent_implementer_model`      | Implementer model ID. Cursor: `agent --list-models`.                                                                                                                                                                      | `cursor-grok-4.5-low`                                                                           |
 | `agent_loop_max_attempts`      | Max Agent→Verify retry cycles before finalize records failure.                                                                                                                                                            | `3`                                                                                             |
-| `agent_verifier_criteria`      | Verifier APPROVE/REJECT rubric. Report-only edits; no invented paths; cap Critical+High at 25.                                                                                                                            | Inline in caller workflow                                                                       |
+| `agent_verifier_criteria`      | Verifier APPROVE/REJECT rubric. Allowlisted paths only; closed-set fixes (`broken_doc_ref`, `stale_doc`, `pin_drift`) on docs/manifests; no invented paths; cap Critical+High at 25.                                      | Inline in caller workflow                                                                       |
 | `agent_verifier_max_turns`     | Max verifier agent turns per verification.                                                                                                                                                                                | `3`                                                                                             |
 | `agent_verifier_model`         | Verifier model ID. Cursor: `agent --list-models`.                                                                                                                                                                         | `composer-2.5`                                                                                  |
 | `allowlist`                    | Comma-separated globs the implementer may modify. Report path plus optional secondary closed-set fix paths (`docs/**/*.md`, `package.json`, `go.mod`).                                                                                                                                      | `docs/report/tech-debt/**/*.md,docs/**/*.md,package.json,go.mod`                                |
@@ -170,10 +170,16 @@ No `domain_persistence_script`.
 
 ## Verifier rubric outline
 
-Inline in caller `agent_verifier_criteria`:
+Inline in caller `agent_verifier_criteria` (must match `on-loop-tech-debt.yaml`):
 
-- **APPROVE** when diff touches only `docs/report/tech-debt/**/*.md`, report content matches detect signals, paths cited in report exist in the repository, Critical+High count ≤ 25, and no denylist paths modified
-- **REJECT** when no report file written despite non-empty signals, invented file paths, allowlist/denylist violations, or semantic claims unsupported by cited evidence
+- **APPROVE** when all of the following hold:
+  1. Changes stay under the allowlist (`docs/report/tech-debt/**/*.md`, `docs/**/*.md`, `package.json`, `go.mod`)
+  2. Report content matches the provided detect signals and hotspots
+  3. File paths cited in the report exist in the repository
+  4. Critical + High findings count is at most 25
+  5. No denylist paths were modified
+  6. Closed-set fixes (`broken_doc_ref`, `stale_doc`, simple `pin_drift`) only on allowlisted documentation or manifest paths
+- **REJECT** when any of the following hold: no report file written despite non-empty signals; invented or non-existent paths in the report; changes outside the allowlist or denylist modifications; semantic claims unsupported by cited evidence; structural or security debt edited instead of reported
 
 ## State delivery
 
