@@ -71,6 +71,8 @@ jobs:
   semgrep:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    env:
+      SEMGREP_SEND_METRICS: "off"
     permissions:
       contents: read
       security-events: write
@@ -88,16 +90,50 @@ jobs:
       - name: Install Semgrep
         run: pip install "semgrep==${SEMGREP_VERSION}"
 
+      - name: Prepare security output directory
+        run: mkdir -p security
+
       - name: Exec Semgrep scan
         run: |
           set -euo pipefail
-          mkdir -p security
           semgrep scan \
             --config "${SEMGREP_CONFIG}" \
             --error \
-            --sarif \
+            --json-output=security/semgrep.json \
             --sarif-output=security/semgrep.sarif \
+            --text \
+            --text-output=security/semgrep.txt \
             .
+
+      - name: Write Semgrep findings summary
+        if: always()
+        run: |
+          set -euo pipefail
+          {
+            echo "## Semgrep Findings"
+            echo ""
+            if [ ! -s security/semgrep.json ]; then
+              echo "_No Semgrep JSON report was generated._"
+              exit 0
+            fi
+            count="$(jq '.results | length' security/semgrep.json)"
+            echo "**Total:** ${count}"
+            echo ""
+            if [ "${count}" -eq 0 ]; then
+              echo "No findings."
+              exit 0
+            fi
+            echo "| Severity | Rule | Location | Message |"
+            echo "| --- | --- | --- | --- |"
+            jq -r '
+              .results[]
+              | "| \(.extra.severity // "UNKNOWN")"
+                + " | `\(.check_id)`"
+                + " | `\(.path):\(.start.line)`"
+                + " | \(.extra.message | gsub("[|]"; "\\|") | gsub("\n"; " "))"
+                + " |"
+            ' security/semgrep.json
+          } >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Upload Semgrep SARIF to GitHub Security
         if: always() && hashFiles('security/semgrep.sarif') != ''
@@ -106,16 +142,30 @@ jobs:
           category: semgrep
           sarif_file: security/semgrep.sarif
 
+      - name: Upload Semgrep Report Artifact
+        if: always() && hashFiles('security/semgrep.json') != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: semgrep-report
+          path: |
+            security/semgrep.json
+            security/semgrep.sarif
+            security/semgrep.txt
+          retention-days: 30
+
       - name: Summary
         if: always()
         uses: y-miyazaki/config/.github/actions/summary@01a42fc43c278cf8a38616de8de24fe7b6285f04 # v1.8.56
         with:
           artifacts: |
-            (none)
+            semgrep-report
           outputs: |
-            (none)
+            semgrep_json: security/semgrep.json
+            semgrep_sarif: security/semgrep.sarif
+            semgrep_txt: security/semgrep.txt
           params: |
             semgrep_config: ${{ env.SEMGREP_CONFIG }}
+            semgrep_version: ${{ env.SEMGREP_VERSION }}
             task: sast-semgrep
           status: "${{ job.status }}"
           title: "SAST CI: semgrep"
