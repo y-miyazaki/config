@@ -4,7 +4,7 @@ Automation-path report shapes. Interactive/hook runs use [common-output-format.m
 
 ## Overview contract
 
-Every run emits `## Overview` first. Write 1–2 plain-language sentences (~280 characters max).
+Every run emits `## Overview` first. Write a complete plain-language summary — prefer useful detail over brevity.
 
 | Element   | Include                                                                   |
 | --------- | ------------------------------------------------------------------------- |

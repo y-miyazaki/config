@@ -17,7 +17,7 @@ Rules:
   BAD:  Debt scan found 18 Watch signals; no edits applied.
 -->
 
-<one or two sentences: scan scope, dominant findings by name, no edits applied>
+<summary: scan scope, dominant findings by name, no edits applied>
 
 ## Summary
 

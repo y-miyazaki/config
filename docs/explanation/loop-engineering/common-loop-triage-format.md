@@ -4,12 +4,13 @@
 
 ## Where rules live now
 
-| Concern                                | Location                                                                           | When loaded                                             |
-| -------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Survey/apply report shapes             | `references/common-output-format.md` (+ `common-output-format-loop.md` when split) | Every run                                               |
-| Automation constraints + PR body rules | `references/category-automation-envelope.md`                                       | Automation path only (`## Constraints` with `may_edit`) |
-| PR synthesis templates                 | `assets/pr-body-template-survey.md`, `assets/pr-body-template.md`                  | Automation synthesis                                    |
-| Platform PR composition                | [loop-pr-body-skill-contract.md](loop-pr-body-skill-contract.md)                   | Workflow / maintainers                                  |
+| Concern                                | Location                                                                                             | When loaded                                             |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Survey/apply report shapes             | `references/common-output-format.md` (+ `common-output-format-loop.md` when split)                   | Every run                                               |
+| Automation constraints + PR body rules | `references/category-automation-envelope.md`                                                         | Automation path only (`## Constraints` with `may_edit`) |
+| PR synthesis templates                 | `assets/pr-body-template-survey.md`, `assets/pr-body-template.md`                                    | Automation synthesis                                    |
+| Loop PR body drift checks              | `bash scripts/self/apm/sync_apm_artifacts.sh loop-contract` (default `all` includes install + audit) | After editing loop skill templates/envelopes            |
+| Platform PR composition                | [loop-pr-body-skill-contract.md](loop-pr-body-skill-contract.md)                                     | Workflow / maintainers                                  |
 
 ## Edit gate
 
@@ -54,13 +55,14 @@ When `may_edit: true`:
 
 ## Overview contract
 
-Every run emits `## Overview` first. Write 1–2 plain-language sentences (~280 characters max).
+Every run emits `## Overview` first. Write a complete plain-language summary — prefer useful detail over brevity.
 
-| Element   | Include                                                                   |
-| --------- | ------------------------------------------------------------------------- |
-| Trigger   | Scan scope, workflow/job, or commit range                                 |
-| Substance | Dominant categories, named files, or failure types — **not counts alone** |
-| Action    | Recorded, fixed, deferred, or no edits                                    |
+| Element   | Include                                                                  |
+| --------- | ------------------------------------------------------------------------ |
+| Trigger   | Scan scope, workflow/job, or commit range                                |
+| Substance | Dominant categories, named files, or failure types; add scope when many  |
+| Action    | Recorded, fixed, deferred, or no edits                                   |
+| Links     | Link URLs from detect JSON when they aid navigation (per skill template) |
 
 Per-skill examples live in each skill's `common-output-format.md` and `assets/pr-body-template*.md`.
 

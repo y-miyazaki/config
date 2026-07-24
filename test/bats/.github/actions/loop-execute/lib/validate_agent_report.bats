@@ -9,7 +9,9 @@
 # - validate_agent_report accepts survey output with Candidates and Watch
 # - validate_agent_report accepts survey no-op without Candidates
 # - validate_agent_report accepts watch-only survey without Candidates
-# - validate_agent_report rejects apply/survey shape violations and legacy sections
+# - reconcile_agent_report_with_branch_diff appends missing branch-diff rows after table body
+# - reconcile_agent_report_with_branch_diff skips commit-based changelog Changes tables
+# - validate_agent_report accepts changelog apply output without path rows in Changes
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -267,6 +269,80 @@ EOF
     run validate_agent_report "${out}" $'docs/a.md\ndocs/b.md\n' "docs-updater"
     [ "$status" -eq 0 ]
     grep -q 'docs/b.md' "${out}"
+    # Placeholder row must follow existing data rows, not sit between header and separator.
+    awk '
+        /\| File \| What was wrong \| What changed \|/ { after_header = 1; next }
+        after_header && /^\|[-: ]+\|/ { after_sep = 1; next }
+        after_sep && /docs\/b\.md/ { found = 1 }
+        END { exit !found }
+    ' "${out}"
+}
+
+@test "reconcile_agent_report_with_branch_diff skips changelog commit-based Changes table" {
+    local out="${TEST_TMP}/reconcile-changelog.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Added changelog entries.
+
+## Summary
+
+### Changes
+
+| Commit | Type | Entry |
+| ------ | ---- | ----- |
+| ee4621c | chore | Unreleased / Changed — example |
+
+### Skipped
+
+| Commit | Why skipped |
+| ------ | ----------- |
+| — | None |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| CHANGELOG.md structure | pass |
+EOF
+    reconcile_agent_report_with_branch_diff "${out}" $'CHANGELOG.md\n' "changelog"
+    run validate_agent_report "${out}" $'CHANGELOG.md\n' "changelog"
+    [ "$status" -eq 0 ]
+    run grep -q 'Updated in an earlier loop attempt' "${out}"
+    [ "$status" -eq 1 ]
+}
+
+@test "validate_agent_report accepts changelog apply output with commit rows only" {
+    local out="${TEST_TMP}/changelog-apply.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Processed commits since abc..def; added Unreleased bullets and promoted releases.
+
+## Summary
+
+### Changes
+
+| Commit | Type | Entry |
+| ------ | ---- | ----- |
+| ee4621c | chore | Unreleased / Changed — example |
+| (230 SHAs) | chore/feat | Promoted into 1.8.43–1.8.58 |
+
+### Skipped
+
+| Commit | Why skipped |
+| ------ | ----------- |
+| — | None |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| CHANGELOG.md structure | pass |
+EOF
+    run validate_agent_report "${out}" $'CHANGELOG.md\n' "changelog"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
 }
 
 @test "validate_agent_report rejects legacy Fixes Applied and Outcome sections" {

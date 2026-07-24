@@ -35,15 +35,16 @@ Load `assets/pr-body-template.md` **at synthesis time only** (after triage/fix w
 
 `## Overview` is the first thing a human reads. Finalize passthrough only — the skill MUST emit review-ready prose.
 
-| Rule        | Requirement                                                                  |
-| ----------- | ---------------------------------------------------------------------------- |
-| Length      | 1–2 sentences (max ~280 characters)                                          |
-| Structure   | **Trigger** → **Substance** → **Action** in plain language                   |
-| Audience    | Reviewer who has not read detect JSON, logs, or session report               |
-| Substance   | Name dominant categories, files, or failure types — **not counts alone**     |
-| Specificity | Name workflows/files/failure types when ≤3 items; otherwise category + scope |
-| Omit        | Level, Target, commit SHAs, run URLs, boilerplate, "see Summary below"       |
-| Tone        | Factual, past tense for completed work; no emoji; ASCII in code spans        |
+| Rule        | Requirement                                                                                   |
+| ----------- | --------------------------------------------------------------------------------------------- |
+| Length      | As long as needed for a useful summary — prefer completeness over brevity                     |
+| Structure   | **Trigger** → **Substance** → **Action** in plain language                                    |
+| Audience    | Reviewer who has not read detect JSON, logs, or session report                                |
+| Substance   | Name dominant categories, files, or failure types — add scope when many items                 |
+| Links       | Link commit ranges and SHAs to compare or commit URLs when detect JSON supplies `compare_url` |
+| Specificity | Name workflows/files/failure types when ≤3 items; otherwise category + scope                  |
+| Omit        | Level, Target, run URLs, boilerplate, "see Summary below"                                     |
+| Tone        | Factual, past tense for completed work; no emoji; ASCII in code spans                         |
 
 **Passes** when the reviewer can state _why this PR exists_ without opening the diff.
 
@@ -69,7 +70,7 @@ Interactive runs and loop PR bodies share the same reader-facing sections (Run M
 ```markdown
 ## Overview
 
-<trigger → problem → action; 1–2 sentences>
+<trigger → problem → action; plain-language summary for a reviewer>
 
 ## Summary
 

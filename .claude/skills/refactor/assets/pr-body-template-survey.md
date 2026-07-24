@@ -11,7 +11,7 @@ Load at synthesis time after survey output is complete.
   BAD:  Refactor run finished.
 -->
 
-<one or two sentences: scope surveyed, dominant candidates by name, no edits applied>
+<summary: scope surveyed, dominant candidates by name, no edits applied>
 
 ## Summary
 

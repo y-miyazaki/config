@@ -50,7 +50,7 @@ PR body rules:
 
 - Top-level `## Overview`, `## Summary`, and `## Verification` (apply only) — match the apply/survey templates in `assets/`
 - Under Summary use `### Candidates` or `### Changes`; use `### Deferred` for this skill (not `### Skipped`)
-- **Overview contract:** 1–2 sentences (max ~280 characters) — trigger → substance → action; name signal kinds and report sections; omit level, SHAs, run URLs, and boilerplate
+- **Overview contract:** trigger → substance → action; write enough detail for a reviewer without opening the diff; name signal kinds and report sections; omit level, Target, and boilerplate
 - **List vs table:** one item → bullet list; two or more rows or multiple columns → markdown table; omit empty `###` headings
 - **Summary content to omit:** `**Outcome:**` one-liners, `### Suggested next action`, top-level `## Changes`, `### Validation` inside Summary (use `## Verification`)
 - Reconcile `### Changes` and `### Deferred` with `git diff --name-only` before synthesis — a path MUST NOT appear in both; every path in `git diff` MUST appear in **Changes**; revert edits to deferred paths before synthesis

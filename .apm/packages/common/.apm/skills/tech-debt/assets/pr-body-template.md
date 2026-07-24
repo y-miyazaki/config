@@ -7,7 +7,7 @@ Rules:
 - Keep top-level ## Overview, ## Summary, and ## Verification headings exactly as written.
 - Use ### Deferred (not Skipped) for items not fixed in this run.
 - Do NOT emit ### Candidates, ### Watch, Outcome, or Suggested next action.
-- Overview must name what was recorded/fixed — not counts alone.
+- Overview must name what was recorded/fixed — include scope when many items.
 -->
 
 ## Overview
@@ -17,7 +17,7 @@ Rules:
   BAD:  Technical debt loop completed with 2 fixes.
 -->
 
-<one or two sentences: what was recorded, what was fixed, what was deferred — name files/categories>
+<summary: what was recorded, what was fixed, what was deferred — name files/categories>
 
 ## Summary
 

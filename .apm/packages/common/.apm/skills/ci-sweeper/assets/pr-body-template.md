@@ -19,7 +19,7 @@ Rules:
   BAD:  CI sweeper addressed actionable failures.
 -->
 
-<one or two sentences: which failure, what was fixed, what was deferred — name workflow/job and cause>
+<summary: which failure, what was fixed, what was deferred — name workflow/job and cause; do not duplicate failure URLs (finalize adds ## Failure context)>
 
 ## Summary
 

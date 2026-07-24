@@ -12,7 +12,7 @@ loop-finalize extracts ## Overview and ## Summary only (no ## Verification).
   BAD:  CI sweeper completed survey only.
 -->
 
-<one or two sentences: which failure, root cause by name, no edits applied>
+<summary: which failure, root cause by name, no edits applied>
 
 ## Summary
 

@@ -112,6 +112,29 @@ function agent_report_deferred_subsection {
 }
 
 #######################################
+# agent_report_uses_path_changes_table: Return whether Changes table rows are file paths
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Skill name
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 when ### Changes first column is repository paths; 1 for commit-based tables
+#
+#######################################
+function agent_report_uses_path_changes_table {
+    case "${1:-}" in
+        changelog) return 1 ;;
+        *) return 0 ;;
+    esac
+}
+
+#######################################
 # extract_subsection_table_col1: Extract first column values from a ### subsection table
 #
 # Globals:
@@ -211,6 +234,9 @@ function reconcile_agent_report_with_branch_diff {
     if agent_report_is_survey_output "${output_file}" "${changed_files}"; then
         return 0
     fi
+    if ! agent_report_uses_path_changes_table "${skill_name}"; then
+        return 0
+    fi
 
     primary="$(agent_report_primary_subsection "${skill_name}")"
     mapfile -t change_paths < <(extract_subsection_table_col1 "${output_file}" "${primary}")
@@ -269,31 +295,51 @@ lines = text.splitlines()
 out = []
 in_section = False
 inserted = False
+table_buf = []
 section_re = section_header
-for idx, line in enumerate(lines):
+
+
+def flush_table():
+    global inserted
+    if not table_buf:
+        return
+    out.extend(table_buf)
+    if not inserted:
+        out.extend(rows)
+        inserted = True
+    table_buf.clear()
+
+
+for line in lines:
     if line.strip() == section_re:
+        flush_table()
         in_section = True
         out.append(line)
         continue
     if in_section and (line.startswith("### ") or line.startswith("## ")):
+        flush_table()
         if not inserted:
             out.extend(rows)
             inserted = True
         in_section = False
-    if in_section and line.startswith("|") and "---" not in line:
         out.append(line)
-        if idx + 1 >= len(lines) or not (
-            lines[idx + 1].startswith("|") and "---" not in lines[idx + 1]
-        ):
-            if not inserted:
-                out.extend(rows)
-                inserted = True
-                in_section = False
         continue
+    if in_section and line.startswith("|"):
+        table_buf.append(line)
+        continue
+    if in_section and line.strip() == "":
+        out.append(line)
+        continue
+    if in_section:
+        flush_table()
+        in_section = False
     out.append(line)
 
-if in_section and not inserted:
-    out.extend(rows)
+if in_section:
+    flush_table()
+    if not inserted:
+        out.extend(rows)
+        inserted = True
 
 output_path.write_text("\n".join(out) + ("\n" if text.endswith("\n") else ""), encoding="utf-8")
 PY
@@ -423,33 +469,35 @@ function validate_agent_report {
         done
     done
 
-    while IFS= read -r changed_path; do
-        [[ -z ${changed_path} ]] && continue
-        changed_path="${changed_path#./}"
-        local found=false
-        for path in "${change_paths[@]}"; do
-            [[ -z ${path} ]] && continue
-            if [[ $(normalize_report_path "${path}") == "${changed_path}" ]]; then
-                found=true
-                break
-            fi
-        done
-        if [[ ${found} == false ]]; then
-            violations+=("Branch diff includes ${changed_path} but ### ${primary} table omits it")
-        fi
-    done <<< "${changed_files}"
-
-    for dep in "${deferred_paths[@]}"; do
-        [[ -z ${dep} ]] && continue
-        norm="$(normalize_report_path "${dep}")"
+    if agent_report_uses_path_changes_table "${skill_name}"; then
         while IFS= read -r changed_path; do
             [[ -z ${changed_path} ]] && continue
             changed_path="${changed_path#./}"
-            if [[ ${changed_path} == "${norm}" ]]; then
-                violations+=("### ${deferred} lists ${norm} but branch diff still modifies it (revert or move to ### ${primary})")
+            local found=false
+            for path in "${change_paths[@]}"; do
+                [[ -z ${path} ]] && continue
+                if [[ $(normalize_report_path "${path}") == "${changed_path}" ]]; then
+                    found=true
+                    break
+                fi
+            done
+            if [[ ${found} == false ]]; then
+                violations+=("Branch diff includes ${changed_path} but ### ${primary} table omits it")
             fi
         done <<< "${changed_files}"
-    done
+
+        for dep in "${deferred_paths[@]}"; do
+            [[ -z ${dep} ]] && continue
+            norm="$(normalize_report_path "${dep}")"
+            while IFS= read -r changed_path; do
+                [[ -z ${changed_path} ]] && continue
+                changed_path="${changed_path#./}"
+                if [[ ${changed_path} == "${norm}" ]]; then
+                    violations+=("### ${deferred} lists ${norm} but branch diff still modifies it (revert or move to ### ${primary})")
+                fi
+            done <<< "${changed_files}"
+        done
+    fi
 
     if [[ ${#violations[@]} -gt 0 ]]; then
         printf '%s\n' "${violations[@]}"

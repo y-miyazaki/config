@@ -11,7 +11,7 @@ Load at synthesis time after survey output is complete.
   BAD:  Documentation loop completed in survey mode.
 -->
 
-<one or two sentences: dominant drift by file/type, no edits applied>
+<summary: dominant drift by file/type, no edits applied>
 
 ## Summary
 
