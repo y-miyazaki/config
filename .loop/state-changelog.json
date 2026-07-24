@@ -1,12 +1,19 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-07-18T09:30:49Z",
-      "outcome": "merged",
+      "last_run": "2026-07-24T10:48:19Z",
+      "outcome": "pr-created",
       "consecutive_failures": 0,
       "open_rejections": [],
-      "last_reject_reason": "Attempt 2 fixed empty 1.8.29/1.8.30 sections with tag-anchor bullets, removed stale 3508727 from Unreleased, and c2e43ed is not in 1.8.33 commit_shas so no bullet is required.",
-      "last_sha": "a8506d6d80b7a549a0e3c275448a33c7523cf343"
+      "last_reject_reason": "CHANGELOG.md-only diff correctly documents 235 commits with linked bullets, one Full diff line, and 16 new tagged release sections (1.8.43–1.8.58) while preserving existing releases.",
+      "last_sha": "a8506d6d80b7a549a0e3c275448a33c7523cf343",
+      "pending": {
+        "sha": "aedf254a07200a1d8f2149e9eb7f6c794dec578f",
+        "pr": 492,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/492",
+        "loop_name": "changelog",
+        "created_at": "2026-07-24T10:48:19Z"
+      }
     }
   }
 }
