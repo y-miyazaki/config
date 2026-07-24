@@ -167,6 +167,7 @@
     "sarif",
     "schemaspy",
     "scopelint",
+    "semgrep",
     "shellcheck",
     "shfmt",
     "sirupsen",
