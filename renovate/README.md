@@ -48,7 +48,7 @@ This section defines the intended update policy first, independent from implemen
 - Python: `python`
 - Terraform: `terraform`
 - tflint plugins: `tflint`
-- Cross-file grouped tools: `ecspresso`, `ecschedule`, `golangci-lint`, `goreleaser`, `lean-ctx`, `mise`, `terraform`, `tflint`, `trivy`, `zizmor`
+- Cross-file grouped tools: `ecspresso`, `ecschedule`, `golangci-lint`, `goreleaser`, `lean-ctx`, `mise`, `semgrep`, `terraform`, `tflint`, `trivy`, `zizmor`
 - Automerged updates: `automerge`
 - Baseline for dependency PRs: `dependencies`
 
@@ -166,6 +166,7 @@ Tools that appear in GitHub Actions workflow inputs (`github-actions-tool-versio
 | goreleaser    | `goreleaser/goreleaser`                      | `aqua:goreleaser/goreleaser`    | —                              |
 | lean-ctx      | `lean-ctx-bin` (apm.yml MCP)                 | `npm:lean-ctx-bin` (mise)       | —                              |
 | mise          | `jdx/mise` (workflow input + Dockerfile ARG) | —                               | —                              |
+| semgrep       | `semgrep` (pypi)                             | `pipx:semgrep`                  | `semgrep/pre-commit`           |
 | terraform     | `hashicorp/terraform`                        | `aqua:hashicorp/terraform`      | —                              |
 | tflint        | `terraform-linters/tflint`                   | `aqua:terraform-linters/tflint` | —                              |
 | trivy         | `aquasecurity/trivy`                         | `aqua:aquasecurity/trivy`       | —                              |
@@ -215,6 +216,7 @@ Enabled managers include:
 - `goreleaser/goreleaser`
 - `koalaman/shellcheck`
 - `schemaspy/schemaspy`
+- `semgrep`
 
 Disabled managers (checksum-coupled updates) include:
 
@@ -279,6 +281,7 @@ mise installs `npm:lean-ctx-bin` with `allow_builds = ["lean-ctx-bin"]` so the p
 - `pre-commit/pre-commit-hooks`
 - `Yelp/detect-secrets`
 - `gitleaks/gitleaks`
+- `semgrep/pre-commit`
 - `zizmorcore/zizmor-pre-commit`
 - `DavidAnson/markdownlint-cli2`
 - `tcort/markdown-link-check`

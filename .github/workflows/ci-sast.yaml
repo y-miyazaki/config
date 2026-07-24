@@ -25,6 +25,11 @@ on:
         description: "Semgrep Python package version"
         required: false
         type: string
+      uv_version:
+        default: "0.11.29"
+        description: "uv version for Semgrep install; keep aligned with loop composite actions"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -35,6 +40,7 @@ env:
   PYTHON_VERSION: ${{ inputs.python_version }}
   SEMGREP_CONFIG: ${{ inputs.semgrep_config }}
   SEMGREP_VERSION: ${{ inputs.semgrep_version }}
+  UV_VERSION: ${{ inputs.uv_version }}
 
 jobs:
   codeql:
@@ -71,8 +77,6 @@ jobs:
   semgrep:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    env:
-      SEMGREP_SEND_METRICS: "off"
     permissions:
       contents: read
       security-events: write
@@ -82,28 +86,51 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup Python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+      - name: Setup uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
+          enable-cache: true
           python-version: ${{ env.PYTHON_VERSION }}
+          version: ${{ env.UV_VERSION }}
 
       - name: Install Semgrep
-        run: pip install "semgrep==${SEMGREP_VERSION}"
+        run: uv tool install "semgrep==${SEMGREP_VERSION}"
 
       - name: Prepare security output directory
         run: mkdir -p security
 
-      - name: Exec Semgrep scan
+      - name: Exec Semgrep scans
         run: |
           set -euo pipefail
           semgrep scan \
             --config "${SEMGREP_CONFIG}" \
-            --error \
             --json-output=security/semgrep.json \
             --sarif-output=security/semgrep.sarif \
-            --text \
             --text-output=security/semgrep.txt \
             .
+          semgrep scan \
+            --config "${SEMGREP_CONFIG}" \
+            --error \
+            --text \
+            .
+
+      - name: Print Semgrep findings
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ ! -s security/semgrep.json ]; then
+            echo "No Semgrep JSON report was generated."
+            exit 0
+          fi
+          count="$(jq '.results | length' security/semgrep.json)"
+          echo "Semgrep findings: ${count}"
+          if [ "${count}" -eq 0 ]; then
+            exit 0
+          fi
+          jq -r '
+            .results[]
+            | "[\(.extra.severity // "UNKNOWN")] \(.check_id) \(.path):\(.start.line) - \(.extra.message)"
+          ' security/semgrep.json
 
       - name: Write Semgrep findings summary
         if: always()

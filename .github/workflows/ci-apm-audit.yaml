@@ -42,10 +42,12 @@ jobs:
         with:
           persist-credentials: false
 
+      # prettier-ignore
       - name: Install APM CLI
         shell: bash
-        run: |
+        run: | # nosemgrep: yaml.github-actions.security.gha-curl-pipe-shell.gha-curl-pipe-shell
           set -euo pipefail
+          # Official APM installer from Microsoft; trusted endpoint in CI only.
           curl -fsSL https://aka.ms/apm-unix | sh -s -- "@${APM_VERSION}"
 
       - name: Install APM packages

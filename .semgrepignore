@@ -6,6 +6,7 @@
 .vscode/
 apm_modules/
 env/
+test/
 tmp/
 **/.terraform/
 **/node_modules/

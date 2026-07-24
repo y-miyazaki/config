@@ -32,6 +32,16 @@
       "datasourceTemplate": "github-releases"
     },
     {
+      "description": "CustomManager: Update semgrep/pre-commit rev",
+      "customType": "regex",
+      "fileMatch": ["^\\.pre-commit-config\\.yaml$"],
+      "matchStrings": [
+        "repo:\\s*https://github\\.com/semgrep/pre-commit\\s*\\n\\s*rev:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
+      "depNameTemplate": "semgrep/pre-commit",
+      "datasourceTemplate": "github-releases"
+    },
+    {
       "description": "CustomManager: Update zizmorcore/zizmor-pre-commit rev",
       "customType": "regex",
       "fileMatch": ["^\\.pre-commit-config\\.yaml$"],

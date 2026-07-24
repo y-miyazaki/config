@@ -147,14 +147,10 @@ env:
   BASTION_INSTANCE_ID: ${{ inputs.bastion_instance_id }}
   BASTION_LOCAL_PORT: ${{ inputs.bastion_local_port }}
   BASTION_TAG_NAME: ${{ inputs.bastion_tag_name }}
-  DB_HOST_INPUT: ${{ secrets.DB_HOST }}
   DB_NAME_INPUT: ${{ inputs.db_name }}
-  DB_PASSWORD_INPUT: ${{ secrets.DB_PASSWORD }}
-  DB_PORT_INPUT: ${{ secrets.DB_PORT }}
   DB_SSL_MODE: ${{ inputs.db_ssl_mode }}
   DB_THREADS: ${{ inputs.db_threads }}
   DB_TYPE: ${{ inputs.db_type }}
-  DB_USERNAME_INPUT: ${{ secrets.DB_USERNAME }}
   ENVIRONMENT: ${{ inputs.environment }}
   JDBC_VERSION_MYSQL: "9.1.0"
   JDBC_VERSION_POSTGRESQL: "42.7.5"

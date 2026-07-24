@@ -1779,6 +1779,10 @@ backend = "pipx:mkdocs"
 version = "4.6.0"
 backend = "pipx:pre-commit"
 
+[[tools."pipx:semgrep"]]
+version = "1.171.0"
+backend = "pipx:semgrep"
+
 [[tools.pnpm]]
 version = "11.13.1"
 backend = "aqua:pnpm/pnpm"

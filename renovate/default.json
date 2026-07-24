@@ -268,6 +268,13 @@
       "addLabels": ["mise"]
     },
     {
+      "description": "Rules: Group semgrep updates across GitHub Actions workflow inputs and mise",
+      "groupName": "semgrep",
+      "matchPackageNames": ["semgrep", "pipx:semgrep", "semgrep/pre-commit"],
+      "commitMessagePrefix": "renovate(semgrep):",
+      "addLabels": ["semgrep"]
+    },
+    {
       "description": "Rules: Group terraform CLI updates across GitHub Actions workflow inputs and mise (exclude Terraform provider)",
       "addLabels": ["terraform"],
       "commitMessagePrefix": "renovate(terraform):",

@@ -195,6 +195,16 @@
       "datasourceTemplate": "github-releases"
     },
     {
+      "description": "CustomManager: Update semgrep version in workflow inputs",
+      "customType": "regex",
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
+      "matchStrings": [
+        "semgrep_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
+      ],
+      "depNameTemplate": "semgrep",
+      "datasourceTemplate": "pypi"
+    },
+    {
       "description": "CustomManager: Update trivy version in workflow inputs",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
@@ -215,9 +225,12 @@
       "datasourceTemplate": "node-version"
     },
     {
-      "description": "CustomManager: Update uv version in loop composite action inputs",
+      "description": "CustomManager: Update uv version in GitHub Actions workflow and composite action inputs",
       "customType": "regex",
-      "fileMatch": ["\\.github/actions/.*action\\.ya?ml$"],
+      "fileMatch": [
+        "\\.github/workflows/.*\\.ya?ml$",
+        "\\.github/actions/.*action\\.ya?ml$"
+      ],
       "matchStrings": [
         "uv_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
       ],

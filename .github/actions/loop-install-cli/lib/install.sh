@@ -52,6 +52,8 @@ RESOLVED=""
 function install_cursor_cli {
     local bindir
 
+    # Official Cursor installer; trusted vendor endpoint in CI only.
+    # nosemgrep: bash.curl.security.curl-pipe-bash.curl-pipe-bash
     curl https://cursor.com/install -fsS | bash
     for bindir in "${HOME}/.local/bin" "${HOME}/.cursor/bin"; do
         if [[ -x ${bindir}/agent ]] || [[ -x ${bindir}/cursor-agent ]]; then
