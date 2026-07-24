@@ -4,5 +4,14 @@
     "github>y-miyazaki/config//renovate/apm-mcp-version",
     "github>y-miyazaki/config//renovate/github-actions-tool-version",
     "github>y-miyazaki/config//renovate/pre-commit-config-tool-version"
+  ],
+  "packageRules": [
+    {
+      "description": "Rules: Self-repo pins are managed by pin_config_actions.sh, not Renovate",
+      "enabled": false,
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["y-miyazaki/config"],
+      "minimumReleaseAge": false
+    }
   ]
 }
