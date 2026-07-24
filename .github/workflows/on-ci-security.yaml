@@ -1,5 +1,16 @@
 # CI workflow: repository security (Trivy + SBOM + SAST) on schedule and security-relevant changes
+# Copy to .github/workflows/on-ci-security.yaml in your repository.
 # Design doc: docs/superpowers/specs/2026-07-24-ci-security-workflow-design.md
+#
+# Monorepo: add security jobs with different scan_ref / artifact_prefix, for example:
+#   with:
+#     artifact_prefix: api
+#     scan_ref: services/api
+#
+# CodeQL languages (codeql_languages):
+#   Go:         '["go","actions"]'
+#   Node.js:    '["javascript-typescript","actions"]'
+#   Terraform/IaC-only (no app source): '["actions"]'
 name: on-ci-security
 
 on:
@@ -85,9 +96,9 @@ jobs:
   sast:
     uses: ./.github/workflows/ci-sast.yaml
     with:
-      # Go repos:       codeql_languages: '["go","actions"]'
-      # Node.js repos:  codeql_languages: '["javascript-typescript","actions"]'
-      # Terraform/IaC-only (no app source): codeql_languages: '["actions"]'
+      # Go:         codeql_languages: '["go","actions"]'
+      # Node.js:    codeql_languages: '["javascript-typescript","actions"]'
+      # Terraform/IaC-only: codeql_languages: '["actions"]'
       codeql_languages: '["actions"]'
     permissions:
       actions: read
