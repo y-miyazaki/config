@@ -91,7 +91,7 @@ claude = "2.1.211"                               # Claude Code CLI
 "npm:markdown-link-check" = { version = "3.14.2", depends = [
   "node",
 ], install_env = { NPM_CONFIG_IGNORE_SCRIPTS = "true" } } # Markdown link checker
-"npm:markdownlint-cli2" = { version = "0.23.0", depends = [
+"npm:markdownlint-cli2" = { version = "0.23.1", depends = [
   "node",
 ], install_env = { NPM_CONFIG_IGNORE_SCRIPTS = "true" } } # Markdown linter
 "npm:prettier" = { version = "3.9.5", depends = [
