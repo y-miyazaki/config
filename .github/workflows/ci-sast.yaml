@@ -56,20 +56,39 @@ jobs:
       matrix:
         language: ${{ fromJSON(inputs.codeql_languages) }}
     steps:
+      - name: Detect CodeQL Default Setup
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          state="$(gh api "repos/${GITHUB_REPOSITORY}/code-scanning/default-setup" --jq '.state // empty' 2>/dev/null || true)"
+          if [ "${state}" = "configured" ]; then
+            echo "skip=true" >> "${GITHUB_OUTPUT}"
+            echo "::notice title=CodeQL skipped::CodeQL default setup is enabled on ${GITHUB_REPOSITORY}. Skipping workflow CodeQL to avoid SARIF upload rejection."
+          else
+            echo "skip=false" >> "${GITHUB_OUTPUT}"
+            echo "CodeQL default setup is not configured; workflow CodeQL will run."
+          fi
+
       - name: Checkout Code
+        if: steps.detect.outputs.skip != 'true'
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
 
       - name: Initialize CodeQL
+        if: steps.detect.outputs.skip != 'true'
         uses: github/codeql-action/init@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
         with:
           languages: ${{ matrix.language }}
 
       - name: Autobuild
+        if: steps.detect.outputs.skip != 'true'
         uses: github/codeql-action/autobuild@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
 
       - name: Perform CodeQL Analysis
+        if: steps.detect.outputs.skip != 'true'
         uses: github/codeql-action/analyze@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
         with:
           category: codeql-${{ matrix.language }}
