@@ -8,6 +8,8 @@
 #
 # Design Rules:
 #   - Skip when CodeQL default setup is enabled (workflow SARIF would be rejected)
+#   - Detect default setup via Actions workflows list (path dynamic/github-code-scanning/codeql);
+#     the code-scanning/default-setup API requires Administration:read, which GITHUB_TOKEN cannot grant
 #   - Skip private repositories without GitHub Code Security or Advanced Security
 #
 # Output:
@@ -39,12 +41,26 @@ export LC_ALL=C.UTF-8
 #
 #######################################
 function detect_codeql_support {
+    local api_err=""
     local code_security=""
+    local default_setup=""
     local private=""
-    local state=""
 
-    state="$(gh api "repos/${GITHUB_REPOSITORY}/code-scanning/default-setup" --jq '.state // empty' 2> /dev/null || true)"
-    if [[ ${state} == "configured" ]]; then
+    # Prefer Actions workflows listing: GITHUB_TOKEN with actions:read can see the
+    # managed default-setup workflow. GET code-scanning/default-setup needs
+    # Administration:read, which GITHUB_TOKEN cannot grant.
+    api_err="$(mktemp)"
+    if ! default_setup="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows" --jq '
+      [.workflows[]
+        | select(.path == "dynamic/github-code-scanning/codeql" and .state == "active")
+        | .path
+      ] | if length > 0 then "configured" else empty end
+    ' 2> "${api_err}")"; then
+        echo "::warning title=CodeQL default-setup check failed::$(tr '\n' ' ' < "${api_err}"). Grant actions: read on the job running detect-codeql-support."
+        default_setup=""
+    fi
+    rm -f "${api_err}"
+    if [[ ${default_setup} == "configured" ]]; then
         echo "skip=true" >> "${GITHUB_OUTPUT:?GITHUB_OUTPUT is required}"
         echo "::notice title=CodeQL skipped::CodeQL default setup is enabled on ${GITHUB_REPOSITORY}. Skipping workflow CodeQL to avoid SARIF upload rejection."
         return 0
