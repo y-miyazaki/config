@@ -11,7 +11,7 @@
       "enabled": false,
       "matchManagers": ["github-actions"],
       "matchPackageNames": ["y-miyazaki/config"],
-      "minimumReleaseAge": false
+      "minimumReleaseAge": "7 days"
     }
   ]
 }
