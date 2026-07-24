@@ -157,7 +157,7 @@ jobs:
         steps:
             - name: Validate inputs
               id: validate-inputs
-              uses: y-miyazaki/config/.github/actions/aws-service-control-validate@c818d6c404ca672512bd1d7231974dac1fe75454 # v1.8.58
+              uses: y-miyazaki/config/.github/actions/aws-service-control-validate@00d6e7a9346341b5fc6318893ff71b80b670fd62 # v1.8.58
               with:
                   action: ${{ env.ACTION }}
                   auto_discover: ${{ env.AUTO_DISCOVER }}
