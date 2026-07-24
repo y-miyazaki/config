@@ -1,0 +1,115 @@
+# Reusable workflow: static application security testing (SAST)
+# Runs CodeQL and Semgrep. Language-specific; keep govulncheck in ci-go.
+name: ci-sast
+
+on:
+  workflow_call:
+    inputs:
+      codeql_languages:
+        default: '["actions","go"]'
+        description: "JSON array of CodeQL languages (e.g. [\"go\",\"actions\",\"javascript-typescript\"])"
+        required: false
+        type: string
+      semgrep_config:
+        default: auto
+        description: "Semgrep config (auto, p/ci, or ruleset path)"
+        required: false
+        type: string
+      semgrep_version:
+        default: 1.130.0
+        description: "Semgrep Python package version"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  security-events: write
+
+env:
+  CODEQL_LANGUAGES: ${{ inputs.codeql_languages }}
+  SEMGREP_CONFIG: ${{ inputs.semgrep_config }}
+  SEMGREP_VERSION: ${{ inputs.semgrep_version }}
+
+jobs:
+  codeql:
+    if: ${{ inputs.codeql_languages != '[]' && inputs.codeql_languages != '' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ${{ fromJSON(inputs.codeql_languages) }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        with:
+          category: codeql-${{ matrix.language }}
+
+  semgrep:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@83679a5e33b9d195691ccc17fe3eb1613e560bd0 # v6.2.0
+        with:
+          python-version: "3.14"
+
+      - name: Install Semgrep
+        run: pip install "semgrep==${SEMGREP_VERSION}"
+
+      - name: Exec Semgrep scan
+        run: |
+          set -euo pipefail
+          mkdir -p security
+          semgrep scan \
+            --config "${SEMGREP_CONFIG}" \
+            --error \
+            --sarif \
+            --sarif-output=security/semgrep.sarif \
+            .
+
+      - name: Upload Semgrep SARIF to GitHub Security
+        if: always() && hashFiles('security/semgrep.sarif') != ''
+        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        with:
+          category: semgrep
+          sarif_file: security/semgrep.sarif
+
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@5a725c44406bb5a7d7e32cdc69ddf3fe20d4afd3 # v1.8.55
+        with:
+          artifacts: |
+            (none)
+          outputs: |
+            (none)
+          params: |
+            semgrep_config: ${{ env.SEMGREP_CONFIG }}
+            task: sast-semgrep
+          status: "${{ job.status }}"
+          title: "SAST CI: semgrep"

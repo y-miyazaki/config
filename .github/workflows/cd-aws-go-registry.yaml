@@ -43,6 +43,16 @@ on:
         description: "Docker build platform(s) (e.g. linux/arm64 or linux/amd64,linux/arm64)"
         required: false
         type: string
+      trivy_image_scan:
+        default: true
+        description: "Run Trivy container image scan after push (blocks on HIGH/CRITICAL fixable CVEs)"
+        required: false
+        type: boolean
+      trivy_version:
+        default: v0.72.0
+        description: "Trivy version for image scanning"
+        required: false
+        type: string
     secrets:
       AWS_IAM_ROLE_ARN:
         required: true
@@ -67,6 +77,8 @@ env:
   GO_PROJECT_PATH: ${{ inputs.go_project_path }}
   IMAGE_TAG: ${{ inputs.image_tag }}
   PLATFORM: ${{ inputs.platform }}
+  TRIVY_IMAGE_SCAN: ${{ inputs.trivy_image_scan }}
+  TRIVY_VERSION: ${{ inputs.trivy_version }}
 
 jobs:
   deploy:
@@ -77,6 +89,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      security-events: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -134,6 +147,43 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.registry }}/${{ steps.meta.outputs.repository }}:${{ steps.meta.outputs.image_tag }}
 
+      - name: Setup Trivy
+        if: env.TRIVY_IMAGE_SCAN == 'true'
+        uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
+        with:
+          cache: true
+          version: ${{ env.TRIVY_VERSION }}
+
+      - name: Exec Trivy image scans
+        if: env.TRIVY_IMAGE_SCAN == 'true'
+        env:
+          IMAGE_REF: ${{ steps.meta.outputs.registry }}/${{ steps.meta.outputs.repository }}:${{ steps.meta.outputs.image_tag }}
+        run: |
+          set -euo pipefail
+          mkdir -p security
+          trivy image \
+            --exit-code 0 \
+            --format sarif \
+            --ignore-unfixed \
+            --output security/trivy-image.sarif \
+            --scanners vuln \
+            --severity "HIGH,CRITICAL" \
+            "${IMAGE_REF}"
+          trivy image \
+            --exit-code 1 \
+            --format table \
+            --ignore-unfixed \
+            --scanners vuln \
+            --severity "HIGH,CRITICAL" \
+            "${IMAGE_REF}"
+
+      - name: Upload Trivy image SARIF to GitHub Security
+        if: always() && env.TRIVY_IMAGE_SCAN == 'true' && hashFiles('security/trivy-image.sarif') != ''
+        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        with:
+          category: trivy-image
+          sarif_file: security/trivy-image.sarif
+
       - name: Summary
         if: always()
         uses: y-miyazaki/config/.github/actions/summary@5a725c44406bb5a7d7e32cdc69ddf3fe20d4afd3 # v1.8.55
@@ -148,3 +198,4 @@ jobs:
             image_tag: ${{ env.IMAGE_TAG }}
           status: "${{ job.status }}"
           title: "${{ format('Docker Image: {0}/{1}:{2}', steps.meta.outputs.registry, steps.meta.outputs.repository, steps.meta.outputs.image_tag) }}"
+

@@ -339,6 +339,16 @@ The repository must provide reusable workflows.
 - caller workflows can reference reusable workflows within this repository
 - external repositories can consume reusable workflows via `uses: <owner>/<repo>/.github/workflows/<workflow>.yaml@<ref>`
 
+### Security CI Workflows
+
+| Workflow              | Type     | Purpose                                                                                      |
+| --------------------- | -------- | -------------------------------------------------------------------------------------------- |
+| `ci-security.yaml`    | Reusable | Trivy fs scan + SARIF + CycloneDX SBOM + PR `dependency-review`                             |
+| `ci-sast.yaml`        | Reusable | CodeQL + Semgrep (language-agnostic SAST; keep `govulncheck` in `ci-go`)                     |
+| `on-ci-security.yaml` | Caller   | Daily cron + path-filtered push/PR for repository-wide security and SAST                     |
+
+Language CI workflows (`ci-go`, `ci-nodejs`, `ci-aws-terraform`) retain language-specific checks (`govulncheck`, `npm audit`). Trivy/SBOM/dependency-review/SAST are centralized in `ci-security` and `ci-sast`. Container image scanning runs in `cd-aws-go-registry` after ECR push (`trivy_image_scan`, default true). See [CI Security Workflow Design](../superpowers/specs/2026-07-24-ci-security-workflow-design.md).
+
 ### Scope
 
 - `.github/workflows/`: reusable workflows and caller workflows

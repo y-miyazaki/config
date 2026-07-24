@@ -164,6 +164,7 @@
     "reviewdog",
     "rowserrcheck",
     "safif",
+    "sarif",
     "schemaspy",
     "scopelint",
     "shellcheck",
@@ -243,8 +244,6 @@
     "go.sum",
     "**/package-lock.json"
   ],
-  "ignoreRegExpList": [
-    "[\uff10-\uff19\uff21-\uff3a\uff41-\uff5a\u3041-\u3093\u30a1-\u30f6\u4e9c-\u7199\u7e8a-\u9ed1]+"
-  ],
+  "ignoreRegExpList": ["[０-９Ａ-Ｚａ-ｚぁ-んァ-ヶ亜-熙纊-黑]+"],
   "enabled": true
 }

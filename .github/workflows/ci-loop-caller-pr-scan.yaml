@@ -398,7 +398,7 @@ jobs:
 
       - name: Resolve Push Token
         id: push_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@03b6b039391eee6384df67c7b37ca5ac82dfefa6
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@5a725c44406bb5a7d7e32cdc69ddf3fe20d4afd3 # v1.8.55
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}

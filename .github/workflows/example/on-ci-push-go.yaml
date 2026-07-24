@@ -16,7 +16,6 @@ on:
       - "go.mod"
       - "go.sum"
       - ".golangci.yaml"
-      - "trivy.yaml"
   pull_request:
     branches:
       - "main"
@@ -31,7 +30,6 @@ on:
       - "go.mod"
       - "go.sum"
       - ".golangci.yaml"
-      - "trivy.yaml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -73,3 +71,4 @@ jobs:
       contents: read
       id-token: write
       pull-requests: write
+

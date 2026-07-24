@@ -1,5 +1,5 @@
 # Reusable workflow: Go CI (test, lint, security)
-# Runs Go tests, golangci-lint, govulncheck, and trivy scanning.
+# Runs Go tests, golangci-lint, and govulncheck. Trivy/SBOM: use ci-security.
 name: ci-go
 
 on:
@@ -32,11 +32,6 @@ on:
         description: "govulncheck version to use"
         required: false
         type: string
-      trivy_version:
-        default: "v0.72.0"
-        description: "Trivy version to use"
-        required: false
-        type: string
 
 permissions:
   contents: read
@@ -49,7 +44,6 @@ env:
   GOVULNCHECK_VERSION: ${{ inputs.govulncheck_version }}
   GO_PROJECT_PATH: ${{ inputs.go_project_path }}
   GO_VERSION: ${{ inputs.go_version }}
-  TRIVY_VERSION: ${{ inputs.trivy_version }}
 
 jobs:
   precheck:
@@ -312,7 +306,6 @@ jobs:
             const artifacts = [
               `coverage-${process.env.COMPONENT}`,
               `govulncheck-${process.env.COMPONENT}`,
-              `sbom-${process.env.COMPONENT}`,
             ].join('\n- ');
             const body = `❌ Go CI failed for component: ${process.env.COMPONENT}\n\n`+
               `Run page (artifacts available): ${runUrl}\n\n`+
@@ -414,44 +407,12 @@ jobs:
           path: ${{ env.GO_PROJECT_PATH }}/security
           retention-days: 30
 
-      # https://github.com/aquasecurity/trivy-action/?tab=readme-ov-file#inputs
-      - name: Exec Trivy Vulnerability Scan
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          exit-code: 1
-          format: table
-          scan-ref: .
-          scan-type: "fs"
-          scanners: license,misconfig,secret,vuln
-          severity: HIGH,CRITICAL
-          trivy-config: trivy.yaml
-          version: ${{ env.TRIVY_VERSION }}
-
-      # https://github.com/aquasecurity/trivy-action/?tab=readme-ov-file#inputs
-      - name: Exec Trivy Generate SBOM (CycloneDX)
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          exit-code: 0
-          format: cyclonedx
-          output: ${{ env.GO_PROJECT_PATH }}/sbom-${{ env.COMPONENT }}.json
-          scan-ref: .
-          scan-type: "fs"
-          version: ${{ env.TRIVY_VERSION }}
-
-      - name: Upload SBOM Artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: sbom-${{ env.COMPONENT }}
-          path: ${{ env.GO_PROJECT_PATH }}/sbom-${{ env.COMPONENT }}.json
-          retention-days: 30
-
       - name: Summary
         if: always()
         uses: y-miyazaki/config/.github/actions/summary@5a725c44406bb5a7d7e32cdc69ddf3fe20d4afd3 # v1.8.55
         with:
           artifacts: |
             govulncheck-${{ env.COMPONENT }}
-            sbom-${{ env.COMPONENT }}
           outputs: |
             (none)
           params: |
@@ -459,3 +420,4 @@ jobs:
             task: security
           status: "${{ job.status }}"
           title: "${{ format('Go CI: {0} ({1})', env.COMPONENT, 'security') }}"
+
