@@ -180,7 +180,7 @@ jobs:
       - name: Detect SARIF Upload Support
         id: detect
         if: env.TRIVY_IMAGE_SCAN == 'true'
-        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@d619c8d5011bb998283d1a2a70e3068bf7171864 # v1.8.60
+        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@7becc832a6f0daf7ea4317fc4946580c0e18bead # v1.8.60
 
       - name: Upload Trivy image SARIF to GitHub Security
         if: always() && env.TRIVY_IMAGE_SCAN == 'true' && steps.detect.outputs.supported == 'true' && hashFiles('security/trivy-image.sarif') != ''
@@ -199,7 +199,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@d619c8d5011bb998283d1a2a70e3068bf7171864 # v1.8.60
+        uses: y-miyazaki/config/.github/actions/summary@7becc832a6f0daf7ea4317fc4946580c0e18bead # v1.8.60
         with:
           artifacts: |
             trivy-image-${{ env.COMPONENT }}
