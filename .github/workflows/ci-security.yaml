@@ -51,13 +51,30 @@ jobs:
       contents: read
       pull-requests: write
     steps:
+      - name: Detect Dependency Review Support
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          status="$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.security_and_analysis.dependency_graph.status // empty' 2>/dev/null || true)"
+          if [ "${status}" = "enabled" ]; then
+            echo "supported=true" >> "${GITHUB_OUTPUT}"
+            echo "Dependency graph is enabled; dependency review will run."
+          else
+            echo "supported=false" >> "${GITHUB_OUTPUT}"
+            echo "::notice title=Dependency review skipped::Dependency graph is not enabled on ${GITHUB_REPOSITORY}. Enable it under Settings > Code security and analysis (public repos: free; private repos require GitHub Advanced Security)."
+          fi
+
       - name: Checkout Code
+        if: steps.detect.outputs.supported == 'true'
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
           persist-credentials: false
 
       - name: Exec Dependency Review
+        if: steps.detect.outputs.supported == 'true'
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           comment-summary-in-pr: always
