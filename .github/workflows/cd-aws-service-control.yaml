@@ -198,7 +198,7 @@ jobs:
   # reusable-workflow reference per job (no dynamic uses: or shared job templates).
   control-ec2-instances:
     if: ${{ inputs.control_ec2 }}
-    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-ec2.yaml@77f2b9727e7593499da829e05512547f8966150a # v1.8.58
+    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-ec2.yaml@ec816cc734f6e25bfe7a1d3339a9b8d181448339 # v1.8.58
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_ec2 }}
@@ -216,7 +216,7 @@ jobs:
 
   control-ecs-services:
     if: ${{ inputs.control_ecs_service }}
-    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-ecs-service.yaml@77f2b9727e7593499da829e05512547f8966150a # v1.8.58
+    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-ecs-service.yaml@ec816cc734f6e25bfe7a1d3339a9b8d181448339 # v1.8.58
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_ecs }}
@@ -237,7 +237,7 @@ jobs:
 
   control-batch-job-queues:
     if: ${{ inputs.control_batch }}
-    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-batch.yaml@77f2b9727e7593499da829e05512547f8966150a # v1.8.58
+    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-batch.yaml@ec816cc734f6e25bfe7a1d3339a9b8d181448339 # v1.8.58
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_batch }}
@@ -255,7 +255,7 @@ jobs:
 
   control-ecs-scheduled-tasks:
     if: ${{ inputs.control_ecs_scheduled_task }}
-    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-ecs-scheduled-task.yaml@77f2b9727e7593499da829e05512547f8966150a # v1.8.58
+    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-ecs-scheduled-task.yaml@ec816cc734f6e25bfe7a1d3339a9b8d181448339 # v1.8.58
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_ecs_scheduled_task }}
@@ -273,7 +273,7 @@ jobs:
 
   control-rds-clusters:
     if: ${{ inputs.control_rds }}
-    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-rds-cluster.yaml@77f2b9727e7593499da829e05512547f8966150a # v1.8.58
+    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-rds-cluster.yaml@ec816cc734f6e25bfe7a1d3339a9b8d181448339 # v1.8.58
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_rds }}
@@ -291,7 +291,7 @@ jobs:
 
   control-redshift-clusters:
     if: ${{ inputs.control_redshift }}
-    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-redshift.yaml@77f2b9727e7593499da829e05512547f8966150a # v1.8.58
+    uses: y-miyazaki/config/.github/workflows/cd-aws-service-control-redshift.yaml@ec816cc734f6e25bfe7a1d3339a9b8d181448339 # v1.8.58
     with:
       action: ${{ inputs.action }}
       auto_discover: ${{ inputs.auto_discover_redshift }}
@@ -363,7 +363,7 @@ jobs:
           echo "overall_status=$OVERALL_STATUS" >> "$GITHUB_OUTPUT"
 
       - name: Summary
-        uses: y-miyazaki/config/.github/actions/summary@77f2b9727e7593499da829e05512547f8966150a # v1.8.58
+        uses: y-miyazaki/config/.github/actions/summary@ec816cc734f6e25bfe7a1d3339a9b8d181448339 # v1.8.58
         with:
           outputs: |
             action: ${{ inputs.action }}
