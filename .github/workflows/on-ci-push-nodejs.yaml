@@ -1,0 +1,101 @@
+# CI workflow: Node.js CI on push/PR
+name: on-ci-push-nodejs
+
+on:
+  push:
+    branches:
+      - "main"
+      - "master"
+      - "hotfix/**"
+      - "release/**"
+      - "develop"
+      - "feature/**"
+    paths:
+      - "nodejs/**"
+      - ".github/workflows/ci-nodejs.yaml"
+      - ".github/workflows/on-ci-push-nodejs.yaml"
+  pull_request:
+    branches:
+      - "main"
+      - "master"
+      - "hotfix/**"
+      - "release/**"
+      - "develop"
+      - "feature/**"
+    paths:
+      - "nodejs/**"
+      - ".github/workflows/ci-nodejs.yaml"
+      - ".github/workflows/on-ci-push-nodejs.yaml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+jobs:
+  discover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      has_projects: ${{ steps.set-matrix.outputs.has_projects }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Discover Node.js projects
+        id: set-matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          base_dir="nodejs"
+          if [ ! -d "$base_dir" ]; then
+            {
+              echo "has_projects=false"
+              echo 'matrix={"include":[]}'
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          entries=()
+          while IFS= read -r pkg_json; do
+            project_dir=$(dirname "$pkg_json")
+            component=$(basename "$project_dir")
+            entries+=("{\"component\":\"${component}\",\"node_project_path\":\"${project_dir}\"}")
+          done < <(find "$base_dir" -maxdepth 2 -name package.json -type f ! -path '*/node_modules/*')
+
+          if [ ${#entries[@]} -eq 0 ]; then
+            {
+              echo "has_projects=false"
+              echo 'matrix={"include":[]}'
+            } >> "$GITHUB_OUTPUT"
+          else
+            joined=$(IFS=,; echo "${entries[*]}")
+            {
+              echo "has_projects=true"
+              echo "matrix={\"include\":[${joined}]}"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+  nodejs-ci:
+    needs: discover
+    if: needs.discover.outputs.has_projects == 'true'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.discover.outputs.matrix) }}
+    uses: y-miyazaki/config/.github/workflows/ci-nodejs.yaml@main
+    with:
+      component: ${{ matrix.component }}
+      node_project_path: ${{ matrix.node_project_path }}
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write

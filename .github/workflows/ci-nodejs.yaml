@@ -1,0 +1,228 @@
+# Reusable workflow: Node.js CI (test, security)
+# Runs npm ci, npm test, npm audit, and trivy scanning.
+name: ci-nodejs
+
+on:
+  workflow_call:
+    inputs:
+      audit_level:
+        default: "high"
+        description: "Minimum severity level for npm audit failures (none, low, moderate, high, critical)"
+        required: false
+        type: string
+      component:
+        description: "Logical component name (e.g. s3-notification)"
+        required: true
+        type: string
+      node_project_path:
+        description: "Path (relative) to the Node.js project root (directory containing package.json)"
+        required: true
+        type: string
+      node_version:
+        default: "24.18.0"
+        description: "Node.js version to use for setup-node"
+        required: false
+        type: string
+      trivy_version:
+        default: "v0.72.0"
+        description: "Trivy version to use"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+env:
+  AUDIT_LEVEL: ${{ inputs.audit_level }}
+  COMPONENT: ${{ inputs.component }}
+  NODE_PROJECT_PATH: ${{ inputs.node_project_path }}
+  NODE_VERSION: ${{ inputs.node_version }}
+  TRIVY_VERSION: ${{ inputs.trivy_version }}
+
+jobs:
+  precheck:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          cache: npm
+          cache-dependency-path: ${{ env.NODE_PROJECT_PATH }}/package-lock.json
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Verify package manifest files
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f "${NODE_PROJECT_PATH}/package.json" ]; then
+            echo "package.json not found in ${NODE_PROJECT_PATH}"
+            exit 1
+          fi
+          if [ ! -f "${NODE_PROJECT_PATH}/package-lock.json" ]; then
+            echo "package-lock.json not found in ${NODE_PROJECT_PATH}"
+            exit 1
+          fi
+
+      - name: Exec npm ci
+        shell: bash
+        working-directory: ${{ env.NODE_PROJECT_PATH }}
+        run: npm ci
+
+      - name: Exec package-lock.json sync check
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "${NODE_PROJECT_PATH}"
+          npm install --package-lock-only
+          if ! git diff --exit-code -- package-lock.json; then
+            echo "package-lock.json is out of sync. Run 'npm install' locally and commit the changes."
+            exit 1
+          fi
+
+  test:
+    needs: precheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          cache: npm
+          cache-dependency-path: ${{ env.NODE_PROJECT_PATH }}/package-lock.json
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Exec npm ci
+        shell: bash
+        working-directory: ${{ env.NODE_PROJECT_PATH }}
+        run: npm ci
+
+      - name: Exec npm test
+        shell: bash
+        working-directory: ${{ env.NODE_PROJECT_PATH }}
+        run: npm test
+
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@5a725c44406bb5a7d7e32cdc69ddf3fe20d4afd3 # v1.8.55
+        with:
+          artifacts: |
+            (none)
+          outputs: |
+            (none)
+          params: |
+            component: ${{ env.COMPONENT }}
+            task: test
+          status: "${{ job.status }}"
+          title: "${{ format('Node.js CI: {0} ({1})', env.COMPONENT, 'test') }}"
+
+  security:
+    needs: precheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          cache: npm
+          cache-dependency-path: ${{ env.NODE_PROJECT_PATH }}/package-lock.json
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Exec npm ci
+        shell: bash
+        working-directory: ${{ env.NODE_PROJECT_PATH }}
+        run: npm ci
+
+      - name: Exec npm audit
+        shell: bash
+        working-directory: ${{ env.NODE_PROJECT_PATH }}
+        run: |
+          set -euo pipefail
+          mkdir -p security
+          npm audit --audit-level="${AUDIT_LEVEL}" > "security/npm-audit-${COMPONENT}.txt"
+          npm audit --audit-level="${AUDIT_LEVEL}" --json > "security/npm-audit-${COMPONENT}.json"
+
+      - name: Upload npm audit Artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: npm-audit-${{ env.COMPONENT }}
+          path: ${{ env.NODE_PROJECT_PATH }}/security
+          retention-days: 30
+
+      # https://github.com/aquasecurity/trivy-action/?tab=readme-ov-file#inputs
+      - name: Exec Trivy Vulnerability Scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          exit-code: 1
+          format: table
+          scan-ref: ${{ env.NODE_PROJECT_PATH }}
+          scan-type: "fs"
+          scanners: license,misconfig,secret,vuln
+          severity: HIGH,CRITICAL
+          trivy-config: trivy.yaml
+          version: ${{ env.TRIVY_VERSION }}
+
+      # https://github.com/aquasecurity/trivy-action/?tab=readme-ov-file#inputs
+      - name: Exec Trivy Generate SBOM (CycloneDX)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          exit-code: 0
+          format: cyclonedx
+          output: ${{ env.NODE_PROJECT_PATH }}/sbom-${{ env.COMPONENT }}.json
+          scan-ref: ${{ env.NODE_PROJECT_PATH }}
+          scan-type: "fs"
+          version: ${{ env.TRIVY_VERSION }}
+
+      - name: Upload SBOM Artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sbom-${{ env.COMPONENT }}
+          path: ${{ env.NODE_PROJECT_PATH }}/sbom-${{ env.COMPONENT }}.json
+          retention-days: 30
+
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@5a725c44406bb5a7d7e32cdc69ddf3fe20d4afd3 # v1.8.55
+        with:
+          artifacts: |
+            npm-audit-${{ env.COMPONENT }}
+            sbom-${{ env.COMPONENT }}
+          outputs: |
+            (none)
+          params: |
+            component: ${{ env.COMPONENT }}
+            task: security
+          status: "${{ job.status }}"
+          title: "${{ format('Node.js CI: {0} ({1})', env.COMPONENT, 'security') }}"
