@@ -68,7 +68,7 @@ claude = "2.1.212"                               # Claude Code CLI
 
 # Go related tools
 "aqua:air-verse/air" = "1.65.3"                                           # live reload
-"aqua:bufbuild/buf" = "1.71.0"                                            # protobuf linter and formatter
+"aqua:bufbuild/buf" = "1.72.0"                                            # protobuf linter and formatter
 "aqua:go-delve/delve" = "1.27.0"                                          # debugger
 "aqua:mvdan/gofumpt" = "0.10.0"                                           # code formatter
 "aqua:golangci/golangci-lint" = "2.12.2"                                  # linter
