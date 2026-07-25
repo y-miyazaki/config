@@ -8,12 +8,19 @@
       "last_reject_reason": "No file changes produced"
     },
     "integration:main": {
-      "last_run": "2026-07-25T03:51:07Z",
-      "outcome": "merged",
+      "last_run": "2026-07-25T08:54:12Z",
+      "outcome": "pr-created",
       "consecutive_failures": 0,
       "open_rejections": [],
-      "last_reject_reason": "Attempt 2 fixed the open rejection: apply-shape report with both changed paths and recorded mkdocs/markdown-validation outcomes; link fixes remain minimal and address the MkDocs failure.",
-      "last_sha": "ce4674433b261bd27e6c799f982ca9012fd983ac"
+      "last_reject_reason": "Single-line mkdocs strict-link fix in allowlisted doc; implementer reproduced failure, verified mkdocs build pass, and report matches diff.",
+      "last_sha": "ce4674433b261bd27e6c799f982ca9012fd983ac",
+      "pending": {
+        "sha": "ad6c0c802acaffd7b79bce7f333d50ae181d1bea",
+        "pr": 502,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/502",
+        "loop_name": "ci-sweeper",
+        "created_at": "2026-07-25T08:54:12Z"
+      }
     },
     "pull_request:401": {
       "last_run": "2026-07-16T07:45:36Z",
