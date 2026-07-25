@@ -60,7 +60,7 @@ Resolve **may_edit** before mapping commits:
 | Interactive — follow-up after a prior survey in the session | `true` when the user asks to fix, apply, or update the changelog                                                         |
 | Automation — `## Constraints`                               | `may_edit: true` or `may_edit: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
 
-When `may_edit` is `true`, resolve `write_target`: on the **interactive** path use `fix` (this skill); on the **automation** path read `write_target` from `## Constraints`. Do not branch on `level` or `delivery`.
+When `may_edit` is `true`, resolve `write_target`: on the **interactive** path use `fix` (this skill); on the **automation** path read `write_target` from `## Constraints`. Do not branch on other caller metadata outside `## Constraints`.
 
 1. Run `scripts/detect_changelog_commits.sh` (interactive) or parse detect JSON per [category-input-schema.md](references/category-input-schema.md).
 2. On the automation path, read [category-automation-envelope.md](references/category-automation-envelope.md) for Constraints, PR templates, and Session Metrics.

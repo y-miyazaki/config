@@ -7,7 +7,7 @@
 #              staged: git diff --cached only
 #              all: git diff HEAD + untracked files
 #              range: git diff <ref>..HEAD (requires --since)
-#   --since    Git ref for range scope (commit SHA from loop state)
+#   --since    Git ref for range scope (commit SHA from state cursor (when supplied))
 #
 # Output:
 # - JSON object with changed_files, deleted_files, renamed_files, affected_docs, commit_range, skip
@@ -29,8 +29,8 @@
 # Optional environment:
 #   DOCS_UPDATER_DOCS_ROOT     Documentation tree root (default: docs; hook/manual path)
 #   DOCS_UPDATER_SITE_CONFIG   Site navigation config path (default: mkdocs.yml; hook/manual path)
-#   DOCS_TRIAGE_DOC_GLOBS      Comma-separated glob patterns for candidate doc discovery (loop path)
-#   DOCS_TRIAGE_EXTRA_FILES    Comma-separated non-markdown documentation config paths (loop path)
+#   DOCS_TRIAGE_DOC_GLOBS      Comma-separated glob patterns for candidate doc discovery (automation path)
+#   DOCS_TRIAGE_EXTRA_FILES    Comma-separated non-markdown documentation config paths (automation path)
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -90,7 +90,7 @@ Options:
                staged: git diff --cached only
                all: git diff HEAD + untracked files
                range: git diff <ref>..HEAD (requires --since)
-    --since    Git ref for range scope (commit SHA from loop state)
+    --since    Git ref for range scope (commit SHA from state cursor (when supplied))
 
 Examples:
     ./detect_changes.sh
@@ -369,7 +369,7 @@ function append_docs_for_hook_path {
 # collect_affected_docs: Collect candidate documentation files
 #
 # When non-markdown changes or markdown deletes/renames exist, populate
-# AFFECTED_DOCS from loop globs, generic markdown scan, or hook defaults.
+# AFFECTED_DOCS from automation globs, generic markdown scan, or hook defaults.
 #
 # Globals:
 #   CHANGED_FILES - Source of change detection

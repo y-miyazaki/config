@@ -1,13 +1,13 @@
 #!/bin/bash
 #######################################
-# Description: Detect technical debt signals and hotspots for loop-tech-debt
+# Description: Detect technical debt signals and hotspots for tech-debt automation
 #
 # Usage: ./detect_tech_debt.sh [--scope staged|all|range] [--since <ref>]
 #   --scope    Detection scope (default: all)
-#              staged: not used for debt sensors (accepted for loop-detect parity)
+#              staged: not used for debt sensors (accepted for detect CLI parity)
 #              all: scan the full repository tree (default)
-#              range: accepted for loop-detect parity (requires --since)
-#   --since    Git ref for range scope (commit SHA from loop state)
+#              range: accepted for detect CLI parity (requires --since)
+#   --since    Git ref for range scope (commit SHA from state cursor (when supplied))
 #
 # Output:
 # - JSON object with signals[], hotspots[], warnings[], skip boolean,
@@ -92,14 +92,14 @@ function show_usage {
 Usage: detect_tech_debt.sh [--scope staged|all|range] [--since <ref>]
 
 Description:
-    Detect technical debt signals and hotspots for the loop-tech-debt skill.
+    Detect technical debt signals and hotspots for the tech-debt skill.
 
 Options:
     --scope    Detection scope (default: all)
-               staged: accepted for loop-detect parity (not used by sensors)
+               staged: accepted for detect CLI parity (not used by sensors)
                all: scan the full repository tree (default)
-               range: accepted for loop-detect parity (requires --since)
-    --since    Git ref for range scope (commit SHA from loop state)
+               range: accepted for detect CLI parity (requires --since)
+    --since    Git ref for range scope (commit SHA from state cursor (when supplied))
 
 Examples:
     ./detect_tech_debt.sh

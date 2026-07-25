@@ -38,19 +38,19 @@ on-loop-changelog.yaml          on-loop-ci-sweeper.yaml
   concurrency / permissions         concurrency / permissions
   jobs:                             jobs:
     loop:                             loop:
-      uses: ci-loop-caller.yaml         uses: ci-loop-caller.yaml
+      uses: ci-loop-caller.yaml         uses: ci-loop-caller-full-github.yaml
       with: { loop-specific }           with: { loop-specific }
-      explicit secrets: map                  explicit secrets: map
+      secrets: { … }                     secrets: { … }
                     \                   /
                      v                 v
-              ci-loop-caller.yaml  (NEW, workflow_call)
+         ci-loop-caller.yaml | ci-loop-caller-pr-scan.yaml | ci-loop-caller-full-github.yaml
                 detect   → loop-detect
                 execute  → ci-loop-agent.yaml  (matrix)
                 record-skip → loop-run-log
                               |
                               v
-                        ci-loop-agent.yaml  (unchanged)
-                          agent-l1 | agent-l2 + finalize
+                        ci-loop-agent.yaml
+                          agent-l2 + finalize (inside same reusable)
 ```
 
 ### File Responsibilities
@@ -129,17 +129,19 @@ jobs:
       loop_name: changelog
       max_targets_per_schedule: 3
       no_changes_verdict: REJECT
-      pr_body: |
-        ## Summary
-        ...
+      pr_body: ""
       pr_title: "chore(changelog): update CHANGELOG.md (loop-changelog)"
       prompt_instructions: |
         Update the target changelog file under `## [Unreleased]` ...
-      pull_requests: false
+      pr_enabled: false
       skill_name: changelog
+    secrets:
+      AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+      BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
+      BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
 ```
 
-**No workflow-level `env:` block.** Callers pass `agent_token` (and optional bot credentials) via `with:`.
+**No workflow-level `env:` block.** Credentials use `secrets:` on the `loop` job (see [Loop Caller Inputs Reference — Credentials](workflows/loop-caller-inputs-reference.md#credentials-via-secrets)).
 
 Cron and `workflow_dispatch` runs have no `github.event.inputs` — fixed literals in `with:` are correct (same as `on-cd-mkdocs.yaml` `pip_packages`).
 
@@ -193,7 +195,7 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 | `detect_script`             | string  | yes      | —                          | `loop-detect`                                           |
 | `delivery`                  | string  | no       | `open_pr`                  | `loop-detect`                                           |
 | `may_edit`                  | boolean | yes      | —                          | `loop-detect` → `## Constraints`                        |
-| `write_target`              | string  | no       | `fix`                      | `loop-detect` → `## Constraints`                        |
+| `write_target`              | string  | yes      | —                          | `loop-detect` → `## Constraints`                        |
 | `infer_files_pattern`       | string  | no       | `""`                       | detect → execute                                        |
 | `loop_name`                 | string  | yes      | —                          | detect, execute, record-skip, concurrency group         |
 | `max_targets_per_schedule`  | number  | no       | `3`                        | `loop-detect`                                           |
@@ -203,7 +205,7 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 | `pr_include_bots`           | string  | no       | `""`                       | `loop-detect`                                           |
 | `pr_title`                  | string  | no       | `""`                       | detect → execute                                        |
 | `prompt_instructions`       | string  | no       | `""`                       | `loop-detect`                                           |
-| `pull_requests`             | boolean | no       | `false`                    | `loop-detect` (`pr_enabled` target name)                |
+| `pr_enabled`                | boolean | no       | `false`                    | `loop-detect` (`loop_pr_enabled`)                       |
 | `state_file`                | string  | no       | `""`                       | `loop-detect`                                           |
 | `token`                     | string  | no       | `""`                       | `loop-detect` (`github.token` when empty)               |
 
@@ -251,26 +253,38 @@ Full mapping table: [Loop Caller Inputs Reference — `loop-detect` mapping](wor
 
 Detect job permissions are **profile-based** and declared per reusable workflow file. GitHub Actions validates every job in a called reusable workflow at parse time (even when `if:` skips them), so profiles that need `actions: read` live in `ci-loop-caller-full-github.yaml` instead of sharing `ci-loop-caller.yaml` with the default profile. The profile registry (`.github/actions/validate-loop-caller-permissions/detect-permissions-profiles.yaml`) is the single source of truth for job permissions, caller workflow file, and caller workflow additions.
 
-| Profile       | Reusable workflow                 | Detect job | Job permissions                                           | Callers                |
-| ------------- | --------------------------------- | ---------- | --------------------------------------------------------- | ---------------------- |
-| `default`     | `ci-loop-caller.yaml`             | `detect`   | `actions: write`, `contents: read`                        | changelog, docs-triage |
-| `pr-scan`     | `ci-loop-caller-pr-scan.yaml`     | `detect`   | `actions: write`, `contents: read`, `pull-requests: read` | PR-watch loops         |
-| `full-github` | `ci-loop-caller-full-github.yaml` | `detect`   | `actions: write`, `contents: read`, `pull-requests: read` | ci-sweeper             |
+| Profile       | Reusable workflow                 | Detect job | Job permissions                                           | Dogfood callers                                                      |
+| ------------- | --------------------------------- | ---------- | --------------------------------------------------------- | -------------------------------------------------------------------- |
+| `default`     | `ci-loop-caller.yaml`             | `detect`   | `actions: write`, `contents: read`                        | changelog, docs-triage, refactor, tech-debt                          |
+| `pr-scan`     | `ci-loop-caller-pr-scan.yaml`     | `detect`   | `actions: write`, `contents: read`, `pull-requests: read` | none yet — see [pr-scan profile](#pr-scan-profile-no-dogfood-caller) |
+| `full-github` | `ci-loop-caller-full-github.yaml` | `detect`   | `actions: write`, `contents: read`, `pull-requests: read` | ci-sweeper                                                           |
 
-Caller workflow `permissions` = **execute baseline** (`actions: read`, `contents: write`, `pull-requests: write`, `copilot-requests: write`) + **profile `caller_adds`** (`actions: write` for default, pr-scan, and full-github). Reusable workflows cannot escalate beyond the caller grant. Thin callers select the profile by which reusable workflow they `uses:` (`ci-loop-caller.yaml` for integration-only; `ci-loop-caller-pr-scan.yaml` for `pr_enabled` without Actions API scan; `ci-loop-caller-full-github.yaml` for ci-sweeper).
+Caller workflow `permissions` = **execute baseline** (`actions: read`, `contents: write`, `pull-requests: write`, `copilot-requests: write`) + **profile `caller_adds`** (`actions: write` for default, pr-scan, and full-github). Reusable workflows cannot escalate beyond the caller grant.
+
+#### Why three reusable workflow files
+
+GitHub Actions validates **every job** in a called reusable workflow at parse time, even when `if:` skips them. A single `ci-loop-caller.yaml` cannot host both `actions: write` detect (git-based loops) and `actions: read` detect (future CI-monitor job) without granting the caller excessive workflow-level `actions: write`. Splitting profiles into separate reusable files keeps **least-privilege detect permissions** without passing broad permissions to integration-only loops.
+
+Job-level permission splits inside one file do not help: the caller workflow's top-level `permissions` grant still applies to all jobs. Three near-duplicate YAML files are an intentional trade-off; keep them in sync via review and `validate_loop_caller_permissions.sh`.
+
+#### pr-scan profile (no dogfood caller)
+
+Use `ci-loop-caller-pr-scan.yaml` when a loop needs **`pr_enabled: true`** (open PR head enumeration) but detect is **git-based only** — no `gh run list` / Actions API CI scan. Dogfood **ci-sweeper** requires `full-github` because `detect_ci_failures.sh` lists failed workflow runs.
+
+Template: [example/on-loop-pr-scan-skeleton.yaml](../../../.github/workflows/example/on-loop-pr-scan-skeleton.yaml) (copy for new PR-watch loops; not scheduled in this repo).
 
 CI validation: `validate-loop-caller-permissions` composite action (run in `ci-github-actions-workflow`; local wrapper: `scripts/self/ci/validate_loop_caller_permissions.sh`).
 
-### Credentials (via `with:`)
+### Credentials (via `secrets:`)
 
-| Input                 | Required | Role                                                                          |
+| Secret (callee)       | Required | Role                                                                          |
 | --------------------- | -------- | ----------------------------------------------------------------------------- |
-| `agent_token`         | yes      | Engine API key. Mapped internally per `engine` input.                         |
-| `gh_token_push`       | no       | Git push / PR creation for finalize. Defaults to `github.token` when omitted. |
-| `bot_app_client_id`   | no       | GitHub App client ID for ruleset-bypass `.loop/*` pushes.                     |
-| `bot_app_private_key` | no       | GitHub App private key for maintenance bot token.                             |
+| `AGENT_TOKEN`         | yes      | Engine API key. Mapped internally per `engine` input.                         |
+| `GH_TOKEN_PUSH`       | no       | Git push / PR creation for finalize. Defaults to `github.token` when omitted. |
+| `BOT_APP_CLIENT_ID`   | no       | GitHub App client ID for ruleset-bypass `.loop/*` pushes.                     |
+| `BOT_APP_PRIVATE_KEY` | no       | GitHub App private key for maintenance bot token.                             |
 
-Caller maps repository secrets via explicit `secrets:` (e.g. `BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}`). `GH_TOKEN_PUSH` defaults to `github.token` inside the reusable when omitted.
+Caller maps repository secrets via explicit `secrets:` (e.g. `BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}`). See [Loop Caller Inputs Reference — Credentials](workflows/loop-caller-inputs-reference.md#credentials-via-secrets).
 
 ### Nesting
 

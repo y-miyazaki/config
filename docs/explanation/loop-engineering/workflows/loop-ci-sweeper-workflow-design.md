@@ -109,7 +109,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 delivery: open_pr
 level: L2
 may_edit: true
-pr_enabled: true # target name; wire name today: pull_requests
+pr_enabled: true
 pr_exclude: fork,draft,label:no-loop
 write_target: fix
 ```
@@ -143,7 +143,7 @@ Git landing (`open_pr` / `push` / `push_head`) is derived from `delivery` inside
 | `max_targets_per_schedule`                                  | Max targets per cron tick after priority filters.                                                                                                                                                                         | `3`                                                                                                      |
 | `no_changes_verdict`                                        | `APPROVE` or `REJECT` when implementer produces no file diff on actionable CI failure.                                                                                                                                    | `REJECT`                                                                                                 |
 | `pr_body`                                                   | Optional static prefix (dogfood: `""`). `loop-finalize` composes agent Overview/Summary + mechanical sections. See [Loop PR Body Readable Design](../../../superpowers/specs/2026-07-21-loop-pr-body-readable-design.md). | `""`                                                                                                     |
-| `pr_enabled`                                                | Watch open PR heads for failed CI. **Wire name today:** `pull_requests`.                                                                                                                                                  | `true`                                                                                                   |
+| `pr_enabled`                                                | Watch open PR heads for failed CI.                                                                                                                                                                                        | `true`                                                                                                   |
 | `pr_exclude`                                                | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`.                                                                                                                                                        | `fork,draft,label:no-loop`                                                                               |
 | `pr_include_bots`                                           | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots.                                                                                                                                        | `""`                                                                                                     |
 | `pr_title`                                                  | PR title when finalize strategy is `open_pr`.                                                                                                                                                                             | `chore(ci-sweeper): automated CI repair (loop-ci-sweeper)`                                               |
@@ -193,7 +193,7 @@ Per watch branch, `loop-detect` sets context; script uses `gh run list --branch 
 
 ### Pull request mode
 
-Requires `pr_enabled: true` (wire: `pull_requests`).
+Requires `pr_enabled: true`.
 
 - Failed runs where `head_branch` matches an eligible open PR
 - Emit `pr_number`, `base.branch` in `target_json.to`
@@ -207,6 +207,18 @@ Requires `pr_enabled: true` (wire: `pull_requests`).
 | pull_request | `workflow_run_id` + ledger | `head_ref` per PR in state                |
 
 **Rule:** Do not rely on `last_sha` alone to skip a still-failing workflow run. Ledger outcome `pr-created` or `watch` blocks re-processing same run ID under `block` policy.
+
+### Run ledger and REJECT retry policy (caller / detect)
+
+Owned by the **caller** and detect scripts — not by skill triage. Configure via `detect_domain_env_json`:
+
+| Variable                         | Default (portable detect default) | Dogfood                                  | Description                                                                                                                        |
+| -------------------------------- | --------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `CI_SWEEPER_LEDGER_FILE`         | `ci-sweeper-run-ledger.json`      | `.loop/state-ci-sweeper-run-ledger.json` | Repo-relative ledger keyed by `workflow_run_id`                                                                                    |
+| `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`                           | `block`                                  | `block`: skip any ledgered run. `retry`: skip only `pr-created`. `limited`: skip `rejected` after max retries. Aliases `a`/`b`/`c` |
+| `CI_SWEEPER_REJECT_MAX_RETRIES`  | `3`                               | `3`                                      | Used when policy is `limited`                                                                                                      |
+
+`update_run_ledger.sh` (via `domain_persistence_script`) prunes `runs` older than **30 days**. Detect places skipped runs in `ignored[]`; the skill only notes them in Overview.
 
 ### `no_changes_verdict: REJECT`
 
@@ -282,7 +294,7 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 ### Loop-specific
 
 - [x] Single detect path via `loop-detect` (no caller re-run)
-- [x] `pr_enabled` (`pull_requests` wire)
+- [x] `pr_enabled`
 - [x] Ledger via `domain_persistence_script` in `loop-finalize`
 - [x] `outcome: watch` for Skill Watch classification
 - [x] `loop-notify-pr` on human PR for `pull_request` mode

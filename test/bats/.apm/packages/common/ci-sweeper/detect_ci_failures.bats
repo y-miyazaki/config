@@ -16,6 +16,8 @@
 # - collect_failures_for_run includes startup_failure as workflow-level failure
 # - collect_failures_for_run includes infra failures in failures array
 # - classify_failure_type treats http status in test output as regression
+# - detect_ci_failures rejects ledger path traversal outside repository root
+# - detect_ci_failures accepts ledger path outside .loop when under repository root
 # - … and 18 more scenarios covered by @test names
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -475,7 +477,7 @@ EOF
 }
 
 @test "sanitize_log_excerpt redacts bearer tokens" {
-    run sanitize_log_excerpt "Authorization: Bearer [REDACTED:Authorization header] token]"
+    run sanitize_log_excerpt "Authorization: Bearer [REDACTED:Authorization header] header] token]"
     [ "$status" -eq 0 ]
     [[ $output == *"[REDACTED]"* ]]
     [[ $output != *"eyJhbGci"* ]]
@@ -509,10 +511,38 @@ EOF
     [ "$status" -eq 0 ]
 }
 
-@test "detect_ci_failures rejects ledger path traversal outside dot loop" {
-    run env CI_SWEEPER_LEDGER_FILE=".loop/../outside.json" bash "${DETECT_SCRIPT}" --scope all
+@test "detect_ci_failures rejects ledger path traversal outside repository root" {
+    run env CI_SWEEPER_LEDGER_FILE="../outside.json" bash "${DETECT_SCRIPT}" --scope all
     [ "$status" -eq 0 ]
-    assert_detect_ci_failures_error_json "${output}" "stay under .loop/"
+    assert_detect_ci_failures_error_json "${output}" "stay under the repository root"
+}
+
+@test "detect_ci_failures accepts ledger path outside .loop when under repository root" {
+    local workspace ledger_file mock_bin since_ref
+
+    workspace="$(bats_workspace_root)"
+    if ! since_ref="$(bats_resolve_since_ref "${workspace}")"; then
+        skip "not enough git history for relative since ref"
+    fi
+
+    mock_bin="${BATS_TEST_TMPDIR}/bin"
+    ledger_file="ci-sweeper-run-ledger-bats-${BATS_TEST_NUMBER}.json"
+    mkdir -p "${mock_bin}"
+    cat > "${mock_bin}/gh" << 'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "run" && "$2" == "list" ]]; then
+    printf '[]'
+    exit 0
+fi
+exit 1
+EOF
+    chmod +x "${mock_bin}/gh"
+
+    run bash -c "cd '${workspace}' && PATH='${mock_bin}:'\$PATH CI_SWEEPER_LEDGER_FILE='${ledger_file}' GITHUB_TOKEN='test-token' env -u GITHUB_ACTIONS -u CI_SWEEPER_DEBUG_LOG bash '${DETECT_SCRIPT}' --scope range --since '${since_ref}'"
+    [ "$status" -eq 0 ]
+    run jq -e '.status == "ok"' <<< "${output}"
+    [ "$status" -eq 0 ]
+    rm -f "${workspace}/${ledger_file}"
 }
 
 @test "detect_ci_failures script validates ok response format with mocked gh" {

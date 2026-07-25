@@ -35,7 +35,7 @@ The architecture separates:
 - `.apm/packages/shell-script/`: shell-focused instructions and skills (2 instructions, 2 skills)
 - `.apm/packages/shell-script-hooks-*`: target-specific shell script hooks (2 hooks per target: Claude, Copilot, Cursor)
 
-Loop callers (`on-loop-*.yaml`) invoke skills under `common` (`refactor`, `docs-updater`, `ci-sweeper`, `changelog`, `tech-debt`) via `skill_name`; detect scripts live beside each skill under `.apm/skills/<name>/scripts/`.
+Loop callers in this repository invoke skills under `common` via `skill_name`; platform design is [Loop Engineering](loop-engineering/index.md). Skill packaging rules are [APM Package Design Principles](apm-package-design.md).
 
 Each package can be consumed independently through APM path-based dependencies.
 
@@ -99,7 +99,7 @@ This repository dogfoods the recommended tier for CI and local validation. Consu
 - Missing tools produce `SKIP` entries in structured output — visible to the agent, not silent success.
 - Skills complement hooks; neither replaces CI or pre-commit in consumer repositories.
 
-Package authoring: companion rules (stem `agent-skills`, `instructions`) and [AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md) (maintainer routing). Behavioral contracts: [Config Repository Functional Specification](../reference/specification.md#configuration-philosophy).
+Package authoring: [APM Package Design Principles](apm-package-design.md), companion rules (stem `agent-skills`, `instructions`), and [AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md) (maintainer routing). Behavioral contracts: [Config Repository Functional Specification](../reference/specification.md#configuration-philosophy).
 
 ## Validation Model
 

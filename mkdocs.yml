@@ -64,6 +64,7 @@ nav:
       - loop-notify-pr Specification: reference/loop-notify-pr-specification.md
       - Loop Engineering Checklist: reference/loop-engineering-checklist.md
   - Explanation:
+      - APM Package Design: explanation/apm-package-design.md
       - Architecture: explanation/architecture.md
       - GitHub Workflows Design: explanation/github-workflows-design.md
       - Instructions Sync Workflow: explanation/instructions-sync-workflow.md
@@ -71,6 +72,7 @@ nav:
           - explanation/loop-engineering/index.md
           - Loop Engineering Design: explanation/loop-engineering/loop-engineering-design.md
           - Ubiquitous Language: explanation/loop-engineering/CONTEXT.md
+          - Documentation Maintenance: explanation/loop-engineering/documentation-maintenance.md
           - Multi-Branch Loops Design: explanation/loop-engineering/multi-branch-loops-design.md
           - Loop Caller Workflows Design: explanation/loop-engineering/loop-caller-workflows-design.md
           - Loop Caller Reusable Workflow Design: explanation/loop-engineering/loop-caller-reusable-design.md

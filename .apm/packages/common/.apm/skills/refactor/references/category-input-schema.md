@@ -11,7 +11,7 @@ Interactive runs may pass free-form path/symbol in the user prompt. When structu
     "path": "scripts/example.sh",
     "detail": "optional locator"
   },
-  "allowlist": [".apm/packages/**", "scripts/**"],
+  "allowlist": ["src/**", "scripts/**"],
   "denylist": ["docs/report/**"],
   "intent": "structural",
   "approved_slice": "optional — one slice from Phase A proposal for architecture Phase B",
@@ -56,12 +56,11 @@ Interactive runs may pass free-form path/symbol in the user prompt. When structu
 
 ## Automation envelope (caller JSON)
 
-When `hints[]` is present (from `loop-prompt-generate` / `detect_refactor.sh`):
+When `hints[]` is present (from caller-supplied detect JSON / `detect_refactor.sh`):
 
 ```json
 {
   "commit_range": "abc1234..def5678",
-  "level": "L2",
   "skip": false,
   "hints": [
     {
@@ -74,16 +73,15 @@ When `hints[]` is present (from `loop-prompt-generate` / `detect_refactor.sh`):
 }
 ```
 
-| Field            | Type    | Description                                                                                                                               |
-| ---------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `commit_range`   | string  | SHA range when detect scope is `range`                                                                                                    |
-| `level`          | enum    | Caller metadata only — map to `may_edit` via [category-automation-envelope.md](category-automation-envelope.md); do not branch on `level` |
-| `skip`           | boolean | When true, no actionable hints                                                                                                            |
-| `hints`          | array   | Mechanical H1 hints from detect — survey **all** entries                                                                                  |
-| `hints[].kind`   | enum    | `duplication_block` or `oversized_unit` only                                                                                              |
-| `hints[].path`   | string  | Primary file path for the hint                                                                                                            |
-| `hints[].detail` | string  | Locator (line range, peer path, line count)                                                                                               |
-| `hints[].lines`  | number  | Optional size metric                                                                                                                      |
+| Field            | Type    | Description                                              |
+| ---------------- | ------- | -------------------------------------------------------- |
+| `commit_range`   | string  | SHA range when detect scope is `range`                   |
+| `skip`           | boolean | When true, no actionable hints                           |
+| `hints`          | array   | Mechanical H1 hints from detect — survey **all** entries |
+| `hints[].kind`   | enum    | `duplication_block` or `oversized_unit` only             |
+| `hints[].path`   | string  | Primary file path for the hint                           |
+| `hints[].detail` | string  | Locator (line range, peer path, line count)              |
+| `hints[].lines`  | number  | Optional size metric                                     |
 
 `may_edit` is not a JSON field. It arrives in `## Constraints` — see [category-automation-envelope.md](category-automation-envelope.md).
 
@@ -91,5 +89,5 @@ When `hints[]` is present (from `loop-prompt-generate` / `detect_refactor.sh`):
 
 - Survey **every** `hints[]` entry; apply every candidate marked apply within allowlist when `may_edit` is `true`
 - Force `intent: structural`; `constraints.max_tier: O2`
-- Allowlist/denylist: caller `allowlist` / `denylist` inputs (`LOOP_ALLOWLIST` / `LOOP_DENYLIST`). Allowlist is repeated in prompt `## Constraints`; denylist is enforced by loop-execute verifier — see [category-scope.md](category-scope.md).
-- Session report per [common-output-format-loop.md](common-output-format-loop.md).
+- Allowlist/denylist from caller configuration. Allowlist is repeated in prompt `## Constraints`; denylist is enforced by the automation verifier — see [category-scope.md](category-scope.md).
+- Session report per [common-output-format-automation.md](common-output-format-automation.md).

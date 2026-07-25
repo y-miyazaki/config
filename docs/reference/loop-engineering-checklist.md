@@ -99,7 +99,7 @@ See [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loo
 
 ### Retry Policy
 
-- [ ] **State cursor (general):** L2 `open_pr` → merge-gated `pending`; API-only / no file diff → cursor on verifier APPROVE in same finalize run; L3 push → cursor in same finalize run
+- [ ] **State cursor (general):** L2 `open_pr` → merge-gated `pending` (`last_sha` on fix PR merge); REJECT / no-op → `metadata` only (`last_sha` unchanged; circuit breaker at 3+); L3 push → cursor in same finalize run
 - [ ] `consecutive_failures` + `attempt_fingerprint` on `target.key`
 - [ ] Pause at 3+ consecutive failures (`circuit_breaker`)
 

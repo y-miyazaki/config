@@ -179,7 +179,7 @@ Hooks exit 0 when tools are missing so agent sessions continue. This is intentio
 
 Skills run through `scripts/validate.sh` when an agent invokes them. Missing tools produce `SKIP` in structured output rather than silent pass.
 
-Authoring rules: companion rules (stem `agent-skills`, `instructions`). Maintainer routing: [AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md). Design context: [Config Repository Architecture](../explanation/architecture.md#configuration-philosophy).
+Authoring rules: companion rules (stem `agent-skills`, `instructions`) — portability and structure only; see [APM Package Design Principles](../explanation/apm-package-design.md). Maintainer routing: [AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md). Design context: [Config Repository Architecture](../explanation/architecture.md#configuration-philosophy).
 
 ### MCP Servers
 
@@ -341,11 +341,11 @@ The repository must provide reusable workflows.
 
 ### Security CI Workflows
 
-| Workflow              | Type     | Purpose                                                                                      |
-| --------------------- | -------- | -------------------------------------------------------------------------------------------- |
-| `ci-security.yaml`    | Reusable | Trivy fs scan + SARIF + CycloneDX SBOM + PR `dependency-review`                             |
-| `ci-sast.yaml`        | Reusable | CodeQL + Semgrep (language-agnostic SAST; keep `govulncheck` in `ci-go`)                     |
-| `on-ci-security.yaml` | Caller   | Daily cron + path-filtered push/PR for repository-wide security and SAST                     |
+| Workflow              | Type     | Purpose                                                                  |
+| --------------------- | -------- | ------------------------------------------------------------------------ |
+| `ci-security.yaml`    | Reusable | Trivy fs scan + SARIF + CycloneDX SBOM + PR `dependency-review`          |
+| `ci-sast.yaml`        | Reusable | CodeQL + Semgrep (language-agnostic SAST; keep `govulncheck` in `ci-go`) |
+| `on-ci-security.yaml` | Caller   | Daily cron + path-filtered push/PR for repository-wide security and SAST |
 
 Language CI workflows (`ci-go`, `ci-nodejs`, `ci-aws-terraform`) retain language-specific checks (`govulncheck`, `npm audit`). Trivy/SBOM/dependency-review/SAST are centralized in `ci-security` and `ci-sast`. Container image scanning runs in `cd-aws-go-registry` after ECR push (`trivy_image_scan`, default true). See [CI Security Workflow Design](../superpowers/specs/2026-07-24-ci-security-workflow-design.md).
 

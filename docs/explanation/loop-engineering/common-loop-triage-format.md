@@ -6,10 +6,11 @@
 
 | Concern                                | Location                                                                                             | When loaded                                             |
 | -------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Survey/apply report shapes             | `references/common-output-format.md` (+ `common-output-format-loop.md` when split)                   | Every run                                               |
+| Survey/apply report shapes             | `references/common-output-format.md` (+ `common-output-format-automation.md` when split)             | Every run                                               |
 | Automation constraints + PR body rules | `references/category-automation-envelope.md`                                                         | Automation path only (`## Constraints` with `may_edit`) |
 | PR synthesis templates                 | `assets/pr-body-template-survey.md`, `assets/pr-body-template.md`                                    | Automation synthesis                                    |
 | Loop PR body drift checks              | `bash scripts/self/apm/sync_apm_artifacts.sh loop-contract` (default `all` includes install + audit) | After editing loop skill templates/envelopes            |
+| Loop engineering doc placement         | [documentation-maintenance.md](documentation-maintenance.md) (repo canonical map)                    | When editing loop workflows/actions                     |
 | Platform PR composition                | [loop-pr-body-skill-contract.md](loop-pr-body-skill-contract.md)                                     | Workflow / maintainers                                  |
 
 ## Edit gate

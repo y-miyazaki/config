@@ -13,8 +13,8 @@ Rules:
 ## Overview
 
 <!--
-  GOOD: Recorded 2 High documentation findings in docs/report/tech-debt/2026-07-23.md and fixed a broken link in docs/guide/overview.md; deferred one architecture hotspot to refactor.
-  BAD:  Technical debt loop completed with 2 fixes.
+  GOOD: Recorded 2 High documentation findings in reports/tech-debt/2026-07-23.md and fixed a broken link in docs/guide/overview.md; deferred one architecture hotspot to refactor.
+  BAD:  Technical debt automation completed with 2 fixes.
 -->
 
 <summary: what was recorded, what was fixed, what was deferred — name files/categories>
@@ -23,10 +23,10 @@ Rules:
 
 ### Changes
 
-| Target                                | What was wrong | What changed                |
-| ------------------------------------- | -------------- | --------------------------- |
-| `docs/report/tech-debt/YYYY-MM-DD.md` | <finding gap>  | <report recorded>           |
-| `path/to/file`                        | <debt fact>    | <closed-set fix if applied> |
+| Target          | What was wrong | What changed                |
+| --------------- | -------------- | --------------------------- |
+| `<report_file>` | <finding gap>  | <report recorded>           |
+| `path/to/file`  | <debt fact>    | <closed-set fix if applied> |
 
 ### Deferred
 

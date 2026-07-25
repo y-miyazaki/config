@@ -3,7 +3,7 @@ name: ci-sweeper
 description: >-
   Triage failing CI on integration branches and/or PR heads, classify failures,
   apply minimal fixes when actionable. Use when the user asks to triage or fix
-  CI failures, when loop automation detects failed workflow runs, or when
+  CI failures, when automation detects failed workflow runs, or when
   automation supplies detection JSON. Default is survey only; edit files only when
   the user explicitly requests a fix or automation sets may_edit in Constraints.
 license: Apache-2.0
@@ -44,7 +44,7 @@ Triage report per [common-output-format.md](references/common-output-format.md).
 - [common-output-format.md](references/common-output-format.md) (always read)
 - [category-scope.md](references/category-scope.md) (always read)
 - [category-input-schema.md](references/category-input-schema.md) (always read)
-- [category-run-ledger.md](references/category-run-ledger.md) (always read)
+- [category-run-ledger.md](references/category-run-ledger.md) (always read — `ignored[]` only; policy is caller/detect)
 - [category-validation-commands.md](references/category-validation-commands.md) (always read)
 - [category-automation-envelope.md](references/category-automation-envelope.md) (always read — automation path)
 - [common-troubleshooting.md](references/common-troubleshooting.md) (read on failure)
@@ -60,7 +60,7 @@ Resolve **may_edit** before classifying failures:
 | Interactive — follow-up after a prior survey in the session | `true` when the user asks to fix or apply                                                                                |
 | Automation — `## Constraints`                               | `may_edit: true` or `may_edit: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
 
-When `may_edit` is `true`, resolve `write_target`: on the **interactive** path use `fix` (this skill); on the **automation** path read `write_target` from `## Constraints`. Do not branch on `level` or `delivery`.
+When `may_edit` is `true`, resolve `write_target`: on the **interactive** path use `fix` (this skill); on the **automation** path read `write_target` from `## Constraints`. Do not branch on other caller metadata outside `## Constraints`.
 
 1. Run `scripts/detect_ci_failures.sh` (interactive) or parse detect JSON per [category-input-schema.md](references/category-input-schema.md).
 2. On the automation path, read [category-automation-envelope.md](references/category-automation-envelope.md) for Constraints, PR templates, and Session Metrics.

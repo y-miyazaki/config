@@ -5,7 +5,7 @@ Understanding-oriented design docs for autonomous CI and documentation loops in 
 ## Reading order
 
 1. [Loop Engineering Design](loop-engineering-design.md) — invariants, L1/L2/L3, phase contract
-2. [Multi-Branch Loops Design](multi-branch-loops-design.md) — platform targets, `LOOP_*`, state
+2. [Multi-Branch Loops Design](multi-branch-loops-design.md) — platform targets, caller inputs, state
 3. [Loop Caller Workflows Design](loop-caller-workflows-design.md) — shared `on-loop-*.yaml` shell
 4. [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md) — `ci-loop-caller.yaml` refactor
 5. [Loop Engineering Checklist](../../reference/loop-engineering-checklist.md) — new loop author checklist
@@ -15,7 +15,7 @@ Understanding-oriented design docs for autonomous CI and documentation loops in 
 
 | Topic                                                | Document                                                                                                       |
 | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Platform (targets, `LOOP_*`, state)                  | [Multi-Branch Loops Design](multi-branch-loops-design.md)                                                      |
+| Platform (targets, caller inputs, state)             | [Multi-Branch Loops Design](multi-branch-loops-design.md)                                                      |
 | Shared `on-loop-*.yaml` layout                       | [Loop Caller Workflows Design](loop-caller-workflows-design.md)                                                |
 | **docs-triage** loop (`docs-updater` skill)          | [Docs Triage Workflow Design](workflows/loop-docs-triage-workflow-design.md)                                   |
 | **ci-sweeper** loop + detect + CI env                | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md)                                     |
@@ -26,6 +26,7 @@ Understanding-oriented design docs for autonomous CI and documentation loops in 
 | Write target + delivery (fix vs report, four planes) | [Loop write target & delivery design](../../superpowers/specs/2026-07-23-loop-write-target-delivery-design.md) |
 | Loop invariants + L3 gates                           | [Loop Engineering Design](loop-engineering-design.md)                                                          |
 | Ubiquitous language (detect, A'/B, findings)         | [Ubiquitous Language](CONTEXT.md)                                                                              |
+| Doc maintenance (canonical map, triggers)            | [Documentation Maintenance](documentation-maintenance.md)                                                      |
 
 ## Reference (outside this section)
 
@@ -35,7 +36,7 @@ Understanding-oriented design docs for autonomous CI and documentation loops in 
 
 ## CI healing summary
 
-- One **ci-sweeper** engine handles integration branches and PR heads (`LOOP_INTEGRATION_BRANCHES`, `LOOP_PULL_REQUESTS`).
+- One **ci-sweeper** engine handles integration branches and PR heads (`branch_match`, `pr_enabled` on the caller).
 - No separate `loop-pr-ci-healer` package.
-- Default **`DEFAULT_LEVEL=L2`**; L3 paths opt-in after promotion gate.
-- Bot PRs excluded by default (`LOOP_PR_INCLUDE_BOTS` to opt in).
+- Default **`level=L2`**; L3 paths opt-in after promotion gate.
+- Bot PRs excluded by default (`pr_include_bots` empty to opt in).

@@ -29,6 +29,7 @@ _Information-oriented technical descriptions._
 
 _Understanding-oriented discussion of concepts and decisions._
 
+- [APM Package Design Principles](explanation/apm-package-design.md)
 - [Config Repository Architecture](explanation/architecture.md)
 - [GitHub Workflows Design](explanation/github-workflows-design.md)
 - [Instructions Sync Workflow](explanation/instructions-sync-workflow.md)

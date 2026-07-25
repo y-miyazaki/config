@@ -922,7 +922,7 @@ function ensure_markdown_link_check {
         return 1
     fi
 
-    cache_dir="${TMPDIR:-/tmp}/loop-tech-debt-mlc/${MLC_VERSION}"
+    cache_dir="${TMPDIR:-/tmp}/tech-debt-mlc/${MLC_VERSION}"
     candidate_cli="${cache_dir}/node_modules/.bin/markdown-link-check"
 
     if [[ ! -x ${candidate_cli} ]]; then

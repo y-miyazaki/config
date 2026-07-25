@@ -11,15 +11,17 @@ Maintainer routing for `.apm/packages/**` work in this repository.
 
 ## Canonical references
 
-| Topic                                              | Where                                                                                                                                                            |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Edit targets, sync, post-change workflow           | [CLAUDE.md § Edit Targets](../CLAUDE.md#edit-targets)                                                                                                            |
-| Configuration philosophy (MCP / hooks / skills)    | [architecture.md](../docs/explanation/architecture.md#configuration-philosophy), [specification.md](../docs/reference/specification.md#configuration-philosophy) |
-| Repository-neutral distributable content           | companion rules (stem `instructions`, `agent-skills`) — DIST-01 / DIST-02                                                                                        |
-| Instruction file structure and category sync       | [instructions-sync-workflow.md](../docs/explanation/instructions-sync-workflow.md)                                                                               |
-| SKILL authoring and eval packaging                 | companion rules (stem `agent-skills`) and `agent-skills-review` skill                                                                                            |
-| Loop skill edit gating (`may_edit` in Constraints) | `category-automation-envelope.md` per skill; caller maps `L1`→`false`, `L2`/`L3`→`true` — skills branch on `may_edit` only                                       |
-| Test pairing                                       | companion domain rules (stem `shell-script`, `go`, `bats`) — TEST-00                                                                                             |
+| Topic                                            | Where                                                                                                                                                                                                         |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Package design principles** (skill vs product) | [apm-package-design.md](../docs/explanation/apm-package-design.md)                                                                                                                                            |
+| Edit targets, sync, post-change workflow         | [CLAUDE.md § Edit Targets](../CLAUDE.md#edit-targets)                                                                                                                                                         |
+| Configuration philosophy (MCP / hooks / skills)  | [architecture.md](../docs/explanation/architecture.md#configuration-philosophy), [specification.md](../docs/reference/specification.md#configuration-philosophy)                                              |
+| Repository-neutral distributable content         | companion rules (stem `instructions`, `agent-skills`) — DIST-01 / DIST-02                                                                                                                                     |
+| Instruction file structure and category sync     | [instructions-sync-workflow.md](../docs/explanation/instructions-sync-workflow.md)                                                                                                                            |
+| SKILL authoring and eval packaging               | companion rules (stem `agent-skills`) and `agent-skills-review` skill — **portability only**; see [apm-package-design.md](../docs/explanation/apm-package-design.md)                                          |
+| Automation edit gate (`may_edit` in Constraints) | per-skill `category-automation-envelope.md`; skills branch on `may_edit` and `write_target` only — see [apm-package-design.md](../docs/explanation/apm-package-design.md#skill-authoring-contract-vs-product) |
+| Loop platform (this consumer)                    | [Loop Engineering](../docs/explanation/loop-engineering/index.md), [loop-pr-body-skill-contract.md](../docs/explanation/loop-engineering/loop-pr-body-skill-contract.md)                                      |
+| Test pairing                                     | companion domain rules (stem `shell-script`, `go`, `bats`) — TEST-00                                                                                                                                          |
 
 ## Maintainer-only (not in distributable rules)
 

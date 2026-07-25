@@ -1,13 +1,13 @@
 #!/bin/bash
 #######################################
 # Description:
-#   Detect unreleased changelog-worthy commits for loop-changelog.
+#   Detect unreleased changelog-worthy commits for changelog automation.
 #
 # Usage: ./detect_changelog_commits.sh [--scope all|range] [--since <ref>]
-#   --scope    Change detection scope (default: range for loop-detect)
+#   --scope    Change detection scope (default: range for detect CLI)
 #              all: last CHANGELOG_MAX_COMMITS commits on HEAD (local debugging)
 #              range: git log <ref>..HEAD (requires --since; production path)
-#   --since    Git ref for range scope (commit SHA from loop state)
+#   --since    Git ref for range scope (commit SHA from state cursor (when supplied))
 #
 # Output:
 # - JSON object with changelog_file, changelog_exists, commit_range, commits[], repository, repository_url, compare_url, skip
@@ -86,13 +86,13 @@ function show_usage {
 Usage: detect_changelog_commits.sh [--scope all|range] [--since <ref>]
 
 Description:
-    Detect unreleased changelog-worthy commits for loop-changelog.
+    Detect unreleased changelog-worthy commits for changelog automation.
 
 Options:
     --scope    Change detection scope (default: range)
                all: last CHANGELOG_MAX_COMMITS commits on HEAD (debugging)
                range: git log <ref>..HEAD (requires --since)
-    --since    Git ref for range scope (commit SHA from loop state)
+    --since    Git ref for range scope (commit SHA from state cursor (when supplied))
 
 Examples:
     ./detect_changelog_commits.sh --scope range --since abc1234
@@ -470,10 +470,10 @@ function is_conventional_type {
 }
 
 #######################################
-# is_loop_maintenance_commit: Return 0 for loop-changelog automation commits
+# is_loop_maintenance_commit: Return 0 for changelog automation commits
 #
 # Description:
-#   Skip commits produced by this loop so they are not re-ingested on the next scan.
+#   Skip commits produced by this automation so they are not re-ingested on the next scan.
 #
 # Globals:
 #   None

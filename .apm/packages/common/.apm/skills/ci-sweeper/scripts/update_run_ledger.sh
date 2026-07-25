@@ -1,6 +1,6 @@
 #!/bin/bash
 #######################################
-# Description: Update ci-sweeper run ledger after a loop execution
+# Description: Update ci-sweeper run ledger after an automation execution
 #
 # Usage: ./update_run_ledger.sh --run-id <id> --workflow <name> --head-sha <sha> --outcome <outcome> [--loop-run-id <id>]
 #
@@ -11,7 +11,7 @@
 # Design Rules:
 # - Exit 0 always; log errors to stderr
 # - Merge into existing ledger without dropping unrelated run entries
-# - Prune entries older than 30 days (aligned with loop-run-log / state retention)
+# - Prune entries older than 30 days (aligned with caller run-log / state retention)
 # - Source shared helpers from scripts/lib/all.sh (synced via scripts/self/ai/sync_skill_lib.sh)
 #
 # Dependencies:
@@ -19,10 +19,10 @@
 # - jq
 #
 # Optional environment:
-#   CI_SWEEPER_LEDGER_FILE  Ledger path (default: .loop/state-ci-sweeper-run-ledger.json)
-#   GITHUB_RUN_ID           Default loop run id when --loop-run-id is omitted
-#   TARGET_JSON             target_json from loop-finalize (when CLI args omitted)
-#   OUTCOME                 Loop outcome from loop-finalize (when --outcome omitted)
+#   CI_SWEEPER_LEDGER_FILE  Ledger path (default: ci-sweeper-run-ledger.json; repo-relative)
+#   GITHUB_RUN_ID           Default automation run id when --loop-run-id is omitted
+#   TARGET_JSON             target_json from caller finalize output (when CLI args omitted)
+#   OUTCOME                 Outcome from caller finalize output (when --outcome omitted)
 #   VERDICT                 Verifier verdict (maps to ledger outcome when OUTCOME unset)
 #######################################
 
@@ -43,7 +43,7 @@ source "${SCRIPT_DIR}/lib/all.sh"
 #######################################
 # Global variables
 #######################################
-LEDGER_FILE="${CI_SWEEPER_LEDGER_FILE:-.loop/state-ci-sweeper-run-ledger.json}"
+LEDGER_FILE="${CI_SWEEPER_LEDGER_FILE:-ci-sweeper-run-ledger.json}"
 RUN_ID=""
 WORKFLOW_NAME=""
 HEAD_SHA=""
@@ -71,14 +71,14 @@ function show_usage {
 Usage: update_run_ledger.sh --run-id <id> --workflow <name> --head-sha <sha> --outcome <outcome> [--loop-run-id <id>]
 
 Description:
-    Update the ci-sweeper run ledger after a loop execution.
+    Update the ci-sweeper run ledger after an automation execution.
 
 Options:
     --run-id         Workflow run ID to record
     --workflow       Workflow display name
     --head-sha       Commit SHA for the failed run
-    --outcome        Loop outcome (for example: pr-created, rejected, no-action)
-    --loop-run-id    GitHub Actions run ID for the loop execution (optional)
+    --outcome        Run outcome (for example: pr-created, rejected, no-action)
+    --loop-run-id    GitHub Actions run ID for the automation execution (optional)
 
 Examples:
     ./update_run_ledger.sh --run-id 123456789 --workflow ci-markdown --head-sha abc1234 --outcome pr-created
@@ -223,24 +223,36 @@ function should_skip_ledger_update {
 }
 
 #######################################
-# validate_ledger_file: Ensure ledger path stays under .loop/
+# validate_ledger_file: Ensure ledger path stays inside the repository
+#
 # Globals:
 #   None
 #
 # Arguments:
-#   None
+#   $1 - Ledger file path (repository-relative)
 #
 # Outputs:
-#   None
+#   Warns to stderr when invalid
 #
 # Returns:
-#   None
+#   Exits 0 when invalid (soft-fail)
 #
 #######################################
 function validate_ledger_file {
     local path="$1"
-    if [[ ${path} != .loop/* ]]; then
-        log "WARN" "CI_SWEEPER_LEDGER_FILE must be under .loop/ (got: ${path})"
+    local repo_root resolved
+    if [[ -z ${path} ]]; then
+        log "WARN" "CI_SWEEPER_LEDGER_FILE must not be empty"
+        exit 0
+    fi
+    if [[ ${path} == /* ]]; then
+        log "WARN" "CI_SWEEPER_LEDGER_FILE must be a repository-relative path (got: ${path})"
+        exit 0
+    fi
+    repo_root="$(git rev-parse --show-toplevel 2> /dev/null || pwd)"
+    resolved="$(realpath -m "${repo_root}/${path}")"
+    if [[ ${resolved} != "${repo_root}" && ${resolved} != "${repo_root}"/* ]]; then
+        log "WARN" "CI_SWEEPER_LEDGER_FILE must stay under the repository root (got: ${path})"
         exit 0
     fi
 }

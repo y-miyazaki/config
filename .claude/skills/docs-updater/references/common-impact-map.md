@@ -33,12 +33,13 @@ If none of the above apply to a candidate document, skip it.
 
 ## Match Patterns
 
-| Change type      | What to search for in docs                                   |
-| ---------------- | ------------------------------------------------------------ |
-| Deleted file     | Path or basename appearing in links, tables, lists           |
-| Renamed file     | Old path/name that needs replacing with new                  |
-| Added file       | Whether it belongs in an existing catalog (table, list, nav) |
-| Added docs/ file | mkdocs.yml nav entry + docs/index.md regeneration            |
+| Change type               | What to search for in docs                                                                                                                                                  |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Deleted file              | Path or basename appearing in links, tables, lists                                                                                                                          |
+| Renamed file              | Old path/name that needs replacing with new                                                                                                                                 |
+| Added file                | Whether it belongs in an existing catalog (table, list, nav)                                                                                                                |
+| Added docs/ file          | mkdocs.yml nav entry + docs/index.md regeneration                                                                                                                           |
+| Config / interface change | Apply canonical-source rule per [category-documentation-maintenance.md](category-documentation-maintenance.md); check consumer maintainer guides under `docs/` when present |
 
 ## Skip Conditions
 

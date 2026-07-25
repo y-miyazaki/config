@@ -2,7 +2,7 @@
 Survey-only PR template for tech-debt automation (may_edit: false).
 
 Load at synthesis time after survey output is complete.
-loop-finalize extracts ## Overview and ## Summary only (no ## Verification).
+The caller extracts ## Overview and ## Summary only (no ## Verification).
 
 Rules:
 - Summary contains ### Candidates and optional ### Watch only.

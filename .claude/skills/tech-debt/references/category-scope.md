@@ -28,10 +28,3 @@ This skill writes technical debt reports and may apply **closed-set** fixes when
 When `may_edit` is `false`, do not edit any file — survey output only.
 
 When `may_edit` is `true`, write only `report_file` and closed-set fix targets within the resolved allowlist. Read source files outside allowlist for evidence; do not modify paths outside allowlist. Structural or security debt remains report-only — delegate to `refactor` or human.
-
-### Automation caller examples (this repository)
-
-| Key         | Example                                                                                                            |
-| ----------- | ------------------------------------------------------------------------------------------------------------------ |
-| `allowlist` | `docs/report/tech-debt/**/*.md`, `docs/**/*.md`, `package.json`, `go.mod` (report + closed-set doc/manifest fixes) |
-| `denylist`  | `**/.env`, `**/credentials*`, `**/secrets*`, `**/migration/*.sql`, `**/infrastructure/**`, `src/**`, `.github/**`  |

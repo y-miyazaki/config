@@ -2,13 +2,13 @@
 
 Platform design for human-readable loop PR bodies. Skill-owned narrative; finalize-owned mechanical sections.
 
-| Layer                       | Document                                                                                           |
-| --------------------------- | -------------------------------------------------------------------------------------------------- |
-| Readable PR body spec       | [Loop PR Body Readable Design](../../superpowers/specs/2026-07-21-loop-pr-body-readable-design.md) |
-| Automation PR rules         | Per-skill `references/category-automation-envelope.md` (load on automation path only)              |
-| Report shapes               | Per-skill `references/common-output-format.md` (+ `common-output-format-loop.md` where split)      |
-| Hybrid composition (legacy) | [Loop PR Body Hybrid Design](../../superpowers/specs/2026-07-17-loop-pr-body-hybrid-design.md)     |
-| Notify on human PR          | [loop-notify-pr Specification](../../reference/loop-notify-pr-specification.md)                    |
+| Layer                       | Document                                                                                            |
+| --------------------------- | --------------------------------------------------------------------------------------------------- |
+| Readable PR body spec       | [Loop PR Body Readable Design](../../superpowers/specs/2026-07-21-loop-pr-body-readable-design.md)  |
+| Automation PR rules         | Per-skill `references/category-automation-envelope.md` (load on automation path only)               |
+| Report shapes               | Per-skill `references/common-output-format.md` (+ `common-output-format-automation.md` where split) |
+| Hybrid composition (legacy) | [Loop PR Body Hybrid Design](../../superpowers/specs/2026-07-17-loop-pr-body-hybrid-design.md)      |
+| Notify on human PR          | [loop-notify-pr Specification](../../reference/loop-notify-pr-specification.md)                     |
 
 ## Reference: APM Triage Panel
 
@@ -126,7 +126,7 @@ Do **not** put these in **Summary** — they duplicate **Changes** / **Deferred*
 
 Every loop automation skill MUST:
 
-1. Define survey/apply report shapes in `references/common-output-format.md` (and `common-output-format-loop.md` when split).
+1. Define survey/apply report shapes in `references/common-output-format.md` (and `common-output-format-automation.md` when split).
 2. Ship `references/category-automation-envelope.md` with `may_edit` Constraints, PR body rules, and Session Metrics (automation path only).
 3. Ship `assets/pr-body-template.md` and `assets/pr-body-template-survey.md` with fixed top-level headings and per-skill Overview examples (good/bad).
 4. Branch on `may_edit` from `## Constraints` only — do not branch agent behavior on caller `level`.
@@ -154,7 +154,16 @@ Before emitting PR `## Summary`, run `git diff --name-only` (or `git diff --cach
 
 ## Mechanical validation (loop-execute)
 
-For fix skills (`docs-updater`, `refactor`, `ci-sweeper`, `changelog`, `tech-debt`), `loop-execute` runs `validate_agent_report.sh` before the LLM verifier. Failures produce structured REJECT (no APPROVE until fixed).
+Loop automation skills listed in `validate_agent_report.sh` (`changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`) run mechanical format checks before the LLM verifier. Failures produce structured REJECT (no APPROVE until fixed).
+
+### Four-plane vs validation matrix
+
+| Plane     | Caller input                  | Skill reads? | `validate_agent_report.sh`                                                                    |
+| --------- | ----------------------------- | ------------ | --------------------------------------------------------------------------------------------- |
+| Autonomy  | `level`                       | No           | No                                                                                            |
+| Edit gate | `may_edit`                    | Yes          | Survey vs apply shape                                                                         |
+| Artifact  | `write_target`, `report_file` | Yes          | All listed skills use `### Changes` in apply shape (tech-debt lists `report_file` path there) |
+| Delivery  | `delivery`                    | No           | No                                                                                            |
 
 Checks include: required `## Overview` / `## Summary` / `## Verification`; `### Changes` when diff is non-empty; forbidden legacy sections (`Fixes Applied`, `Outcome`, top-level `## Changes`); **Deferred vs git diff** consistency (catches [PR #454](https://github.com/y-miyazaki/config/pull/454)-class bugs).
 

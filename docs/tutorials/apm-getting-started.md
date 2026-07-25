@@ -15,7 +15,7 @@ Install shared AI agent configuration packages (MCP servers, hooks, instructions
 
 **Recommended dev setup** — install linters on `PATH` (for example via [mise](https://mise.jdx.dev/)) so hooks and skills run checks instead of skipping. Hooks are optional enforcement, not a quality guarantee.
 
-See [Config Repository Architecture](../explanation/architecture.md#configuration-philosophy) for layer-by-layer rules (MCP / hooks / skills).
+See [Config Repository Architecture](../explanation/architecture.md#configuration-philosophy) for layer-by-layer rules (MCP / hooks / skills). Package authoring boundaries: [APM Package Design Principles](../explanation/apm-package-design.md).
 
 ## Goal
 

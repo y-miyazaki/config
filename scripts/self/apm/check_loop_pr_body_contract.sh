@@ -37,6 +37,13 @@ declare -a REQUIRED_FILES=(
     assets/pr-body-template.md
     assets/pr-body-template-survey.md
     references/category-automation-envelope.md
+    references/common-output-format.md
+)
+
+# Skills that ship a separate automation-path output contract file.
+declare -a LOOP_SPLIT_OUTPUT_SKILLS=(
+    docs-updater
+    refactor
 )
 
 declare -a FORBIDDEN_PATTERNS=(
@@ -284,6 +291,7 @@ function check_automation_envelope {
 #
 # Globals:
 #   REQUIRED_FILES
+#   LOOP_SPLIT_OUTPUT_SKILLS
 #
 # Arguments:
 #   $1 - Skill name
@@ -307,6 +315,14 @@ function check_loop_skill {
     for rel_path in "${REQUIRED_FILES[@]}"; do
         check_required_file "${skill}" "${rel_path}"
         check_forbidden_patterns "${skill}" "${rel_path}"
+    done
+
+    local split_skill
+    for split_skill in "${LOOP_SPLIT_OUTPUT_SKILLS[@]}"; do
+        if [[ ${skill} == "${split_skill}" ]]; then
+            check_required_file "${skill}" "references/common-output-format-automation.md"
+            check_forbidden_patterns "${skill}" "references/common-output-format-automation.md"
+        fi
     done
 
     check_apply_template "${skill}"

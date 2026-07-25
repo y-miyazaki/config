@@ -1,4 +1,4 @@
-# loop-ci-sweeper Checklist
+# CI Sweeper Checklist
 
 ## Classification
 

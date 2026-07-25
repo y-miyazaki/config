@@ -76,8 +76,6 @@ When `branch_match` is **empty**, detect scans **`branch_state` only** (single-b
 
 `pr_enabled: true` adds a second watch path: open PR **head** branches (see [Fix direction](#fix-direction-integration-vs-pull_request) below). Does not change where state is stored.
 
-**Wire name today:** `pull_requests` on `ci-loop-caller.yaml` (rename to `pr_enabled` planned).
-
 ### State: `branch_state` + `state_file`
 
 | Input          | Role                                                                                                                                                                                                                                                                                                                                |
@@ -140,7 +138,7 @@ pull_request mode (ci-sweeper, pr_enabled: true)
 | `branch_state`      | string  | `.loop/*` persistence, state migration, empty `branch_match` fallback | (required)                            | `base_branch`, `loop_state_push_branch` |
 | `level`             | string  | `L2` human merge on bot fix PR; `L3` GitHub auto-merge on bot fix PR  | `L2`                                  | `level`                                 |
 | `priority`          | string  | Order when both integration and PR candidates exist                   | `integration,pull_request`            | `loop_priority`                         |
-| `pr_enabled`        | boolean | Watch open PR heads (`pull_requests` wire name today)                 | `false`                               | `loop_pull_requests`                    |
+| `pr_enabled`        | boolean | Watch open PR heads                                                   | `false`                               | `loop_pr_enabled`                       |
 | `state_file`        | string  | Override state JSON path                                              | `""` (`.loop/state-<loop_name>.json`) | `state_file`                            |
 
 Related but not branch-scoped: `max_targets_per_schedule` (fan-out cap after watch), `pr_exclude` / `pr_include_bots` (PR watch filters).
@@ -184,9 +182,9 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `pr_include_bots`           | string  | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots                                                                                                                                                                                                                                           | `""`                                        |
 | `pr_title`                  | string  | PR title when finalize strategy is `open_pr`                                                                                                                                                                                                                                                                                | Per loop                                    |
 | `prompt_instructions`       | string  | Domain-specific implementer instructions appended during `loop-detect` prompt assembly                                                                                                                                                                                                                                      | Per loop                                    |
-| `pr_enabled`                | boolean | Watch open PR heads for detect. **Wire name today:** `pull_requests`                                                                                                                                                                                                                                                        | `false` except ci-sweeper                   |
+| `pr_enabled`                | boolean | Watch open PR heads for detect                                                                                                                                                                                                                                                                                              | `false` except ci-sweeper                   |
 | `state_file`                | string  | Override state JSON path                                                                                                                                                                                                                                                                                                    | `.loop/state-<loop_name>.json`              |
-| `write_target`              | string  | Agent artifact when `may_edit` is `true`: `fix` \| `report` (injected into `## Constraints`)                                                                                                                                                                                                                                | Per loop (`fix` except tech-debt `report`)  |
+| `write_target`              | string  | Agent artifact when `may_edit` is `true`: `fix` \| `report` (required; injected into `## Constraints`)                                                                                                                                                                                                                      | Per loop (`fix` except tech-debt `report`)  |
 
 **Four-plane contract:** See [Loop write target & delivery design](../../../superpowers/specs/2026-07-23-loop-write-target-delivery-design.md). `level` controls autonomy only; `may_edit` + `write_target` + `report_file` control agent edits; `delivery` controls platform finalize (skills do not see `delivery`).
 
@@ -205,43 +203,43 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 
 `ci-loop-caller` inputs map to `loop-detect` action `with:` as follows. Names without a `loop_` prefix on the caller side expand when passed to the action.
 
-| `ci-loop-caller` input         | `loop-detect` input                     |
-| ------------------------------ | --------------------------------------- |
-| `agent_implementer_max_turns`  | `agent_implementer_max_turns`           |
-| `agent_implementer_model`      | `agent_implementer_model`               |
-| `agent_loop_max_attempts`      | `agent_loop_max_attempts`               |
-| `agent_verifier_criteria`      | `agent_verifier_criteria`               |
-| `agent_verifier_max_turns`     | `agent_verifier_max_turns`              |
-| `agent_verifier_model`         | `agent_verifier_model`                  |
-| `allowlist`                    | `allowlist`                             |
-| `branch_match`                 | `loop_integration_branches`             |
-| `branch_match_mode`            | `loop_branch_match`                     |
-| `branch_state`                 | `base_branch`, `loop_state_push_branch` |
-| `budget_file`                  | `budget_file`                           |
-| `budget_max_runs_per_day`      | `budget_max_runs_per_day`               |
-| `budget_max_tokens_per_day`    | `budget_max_tokens_per_day`             |
-| `delivery`                     | `delivery`                              |
-| `detect_script`                | `detect_script`                         |
-| `engine`                       | `engine`                                |
-| `git_landing_integration`      | `git_landing_integration`               |
-| `git_landing_pull_request`     | `git_landing_pull_request`              |
-| `infer_files_pattern`          | `infer_files_pattern`                   |
-| `level`                        | `level`                                 |
-| `loop_name`                    | `loop_name`                             |
-| `max_targets_per_schedule`     | `loop_max_targets_per_schedule`         |
-| `may_edit`                     | `may_edit`                              |
-| `no_changes_verdict`           | `no_changes_verdict`                    |
-| `pr_body`                      | `pr_body`                               |
-| `pr_exclude`                   | `loop_pr_exclude`                       |
-| `pr_include_bots`              | `loop_pr_include_bots`                  |
-| `priority`                     | `loop_priority`                         |
-| `prompt_instructions`          | `prompt_instructions`                   |
-| `pr_enabled` / `pull_requests` | `loop_pull_requests`                    |
-| `run_log_file`                 | `run_log_file`                          |
-| `skill_name`                   | `skill_name`                            |
-| `state_file`                   | `state_file`                            |
-| `token`                        | `token`                                 |
-| `write_target`                 | `write_target`                          |
+| `ci-loop-caller` input        | `loop-detect` input                     |
+| ----------------------------- | --------------------------------------- |
+| `agent_implementer_max_turns` | `agent_implementer_max_turns`           |
+| `agent_implementer_model`     | `agent_implementer_model`               |
+| `agent_loop_max_attempts`     | `agent_loop_max_attempts`               |
+| `agent_verifier_criteria`     | `agent_verifier_criteria`               |
+| `agent_verifier_max_turns`    | `agent_verifier_max_turns`              |
+| `agent_verifier_model`        | `agent_verifier_model`                  |
+| `allowlist`                   | `allowlist`                             |
+| `branch_match`                | `loop_integration_branches`             |
+| `branch_match_mode`           | `loop_branch_match`                     |
+| `branch_state`                | `base_branch`, `loop_state_push_branch` |
+| `budget_file`                 | `budget_file`                           |
+| `budget_max_runs_per_day`     | `budget_max_runs_per_day`               |
+| `budget_max_tokens_per_day`   | `budget_max_tokens_per_day`             |
+| `delivery`                    | `delivery`                              |
+| `detect_script`               | `detect_script`                         |
+| `engine`                      | `engine`                                |
+| `git_landing_integration`     | `git_landing_integration`               |
+| `git_landing_pull_request`    | `git_landing_pull_request`              |
+| `infer_files_pattern`         | `infer_files_pattern`                   |
+| `level`                       | `level`                                 |
+| `loop_name`                   | `loop_name`                             |
+| `max_targets_per_schedule`    | `loop_max_targets_per_schedule`         |
+| `may_edit`                    | `may_edit`                              |
+| `no_changes_verdict`          | `no_changes_verdict`                    |
+| `pr_body`                     | `pr_body`                               |
+| `pr_exclude`                  | `loop_pr_exclude`                       |
+| `pr_include_bots`             | `loop_pr_include_bots`                  |
+| `priority`                    | `loop_priority`                         |
+| `prompt_instructions`         | `prompt_instructions`                   |
+| `pr_enabled`                  | `loop_pr_enabled`                       |
+| `run_log_file`                | `run_log_file`                          |
+| `skill_name`                  | `skill_name`                            |
+| `state_file`                  | `state_file`                            |
+| `token`                       | `token`                                 |
+| `write_target`                | `write_target`                          |
 
 Domain-specific detect script variables use `detect_domain_env_json` keys (not `loop-detect` inputs).
 
@@ -352,24 +350,24 @@ Not a loop caller; configure via environment when invoking `detect_changes.sh` o
 
 ## Legacy `env` name mapping
 
-| Legacy caller `env`                                           | `ci-loop-caller` input                                        |
-| ------------------------------------------------------------- | ------------------------------------------------------------- |
-| `AGENT_*`, `DEFAULT_ENGINE`, `DEFAULT_LEVEL`, `SKILL_NAME`    | Same name (lowercase `engine`, `level` for engine/level)      |
-| `DEFAULT_BASE_BRANCH`, `LOOP_STATE_PUSH_BRANCH`               | `branch_state`                                                |
-| `LOOP_ALLOWLIST`                                              | `allowlist`                                                   |
-| `LOOP_BUDGET_MAX_RUNS_PER_DAY`                                | `budget_max_runs_per_day`                                     |
-| `LOOP_BUDGET_MAX_TOKENS_PER_DAY`                              | `budget_max_tokens_per_day`                                   |
-| `LOOP_DENYLIST`                                               | `denylist`                                                    |
-| `LOOP_DETECT_SCRIPT`                                          | `detect_script`                                               |
-| `LOOP_INFER_FILES_PATTERN`                                    | `infer_files_pattern`                                         |
-| `LOOP_INTEGRATION_BRANCHES`                                   | `branch_match`                                                |
-| `LOOP_BRANCH_MATCH`                                           | `branch_match_mode`                                           |
-| `LOOP_MAX_TARGETS_PER_SCHEDULE`                               | `max_targets_per_schedule`                                    |
-| `LOOP_NAME`                                                   | `loop_name`                                                   |
-| `LOOP_NO_CHANGES_VERDICT`                                     | `no_changes_verdict`                                          |
-| `LOOP_PR_*`, `LOOP_PROMPT_INSTRUCTIONS`, `LOOP_PULL_REQUESTS` | `pr_*`, `prompt_instructions`, `pr_enabled` / `pull_requests` |
-| `CHANGELOG_*`, `CI_SWEEPER_*`, `DOCS_TRIAGE_*`                | `detect_domain_env_json` keys                                 |
-| `DOMAIN_PERSISTENCE_SCRIPT`                                   | `domain_persistence_script`                                   |
+| Legacy caller `env`                                           | `ci-loop-caller` input                                   |
+| ------------------------------------------------------------- | -------------------------------------------------------- |
+| `AGENT_*`, `DEFAULT_ENGINE`, `DEFAULT_LEVEL`, `SKILL_NAME`    | Same name (lowercase `engine`, `level` for engine/level) |
+| `DEFAULT_BASE_BRANCH`, `LOOP_STATE_PUSH_BRANCH`               | `branch_state`                                           |
+| `LOOP_ALLOWLIST`                                              | `allowlist`                                              |
+| `LOOP_BUDGET_MAX_RUNS_PER_DAY`                                | `budget_max_runs_per_day`                                |
+| `LOOP_BUDGET_MAX_TOKENS_PER_DAY`                              | `budget_max_tokens_per_day`                              |
+| `LOOP_DENYLIST`                                               | `denylist`                                               |
+| `LOOP_DETECT_SCRIPT`                                          | `detect_script`                                          |
+| `LOOP_INFER_FILES_PATTERN`                                    | `infer_files_pattern`                                    |
+| `LOOP_INTEGRATION_BRANCHES`                                   | `branch_match`                                           |
+| `LOOP_BRANCH_MATCH`                                           | `branch_match_mode`                                      |
+| `LOOP_MAX_TARGETS_PER_SCHEDULE`                               | `max_targets_per_schedule`                               |
+| `LOOP_NAME`                                                   | `loop_name`                                              |
+| `LOOP_NO_CHANGES_VERDICT`                                     | `no_changes_verdict`                                     |
+| `LOOP_PR_*`, `LOOP_PROMPT_INSTRUCTIONS`, `LOOP_PULL_REQUESTS` | `pr_*`, `prompt_instructions`, `pr_enabled`              |
+| `CHANGELOG_*`, `CI_SWEEPER_*`, `DOCS_TRIAGE_*`                | `detect_domain_env_json` keys                            |
+| `DOMAIN_PERSISTENCE_SCRIPT`                                   | `domain_persistence_script`                              |
 
 ## Per-loop design docs
 

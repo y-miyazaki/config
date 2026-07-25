@@ -5,17 +5,17 @@ For concrete specifications (Actions/Workflows list, interfaces), see [Specifica
 
 ## Implementation Status
 
-| Loop (`loop_name`)  | Skill (`common`) | Status                                 | Level         |
-| ------------------- | ---------------- | -------------------------------------- | ------------- |
-| `docs-triage`       | `docs-updater`   | Phase 0 done; multi-branch in progress | L2 (Assisted) |
-| `ci-sweeper`        | `ci-sweeper`     | Phase 0 done; multi-branch in progress | L2 (Assisted) |
-| `changelog`         | `changelog`      | Phase 0 done; workflow design complete | L2 (Assisted) |
-| `refactor`          | `refactor`       | Phase 0 done; workflow design complete | L2 (Assisted) |
-| `tech-debt`         | `tech-debt`      | Phase 0 done; workflow design complete | L2 (Assisted) |
-| `loop-issue-triage` | —                | Not started                            | -             |
-| `loop-stale-pr`     | —                | Not started                            | -             |
+| Loop (`loop_name`)  | Skill (`common`) | Status                             | Level         |
+| ------------------- | ---------------- | ---------------------------------- | ------------- |
+| `docs-triage`       | `docs-updater`   | Dogfood L2; multi-branch on `main` | L2 (Assisted) |
+| `ci-sweeper`        | `ci-sweeper`     | Dogfood L2; integration + PR heads | L2 (Assisted) |
+| `changelog`         | `changelog`      | Dogfood L2; weekly schedule        | L2 (Assisted) |
+| `refactor`          | `refactor`       | Dogfood L2; weekly schedule        | L2 (Assisted) |
+| `tech-debt`         | `tech-debt`      | Dogfood L2; weekly report PR       | L2 (Assisted) |
+| `loop-issue-triage` | —                | Not started                        | -             |
+| `loop-stale-pr`     | —                | Not started                        | -             |
 
-Platform actions (`loop-detect` `target_matrix`, `domain_persistence_script`) are in progress — see [Multi-Branch Loops Design](multi-branch-loops-design.md).
+Platform actions (`loop-detect` `target_matrix`, handoff artifact, `domain_persistence_script`, merge-gated `pending`) are implemented — see [Multi-Branch Loops Design](multi-branch-loops-design.md).
 
 ## Loop Candidate Roadmap
 
@@ -178,7 +178,7 @@ Hook/manual and loop skills live under `.apm/packages/common/.apm/skills/` — s
 | `.apm/packages/common/.apm/skills/ci-sweeper/scripts/detect_ci_failures.sh` | Failed run detection (stable filters only)                |
 | `.apm/packages/common/.apm/skills/ci-sweeper/scripts/update_run_ledger.sh`  | `domain_persistence_script` target for finalize           |
 
-For workflow env and behavior, see [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md).
+For caller inputs and behavior, see [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md).
 
 ## changelog (Changelog Maintenance)
 
@@ -188,7 +188,7 @@ For workflow env and behavior, see [CI Sweeper Workflow Design](workflows/loop-c
 | `.apm/packages/common/.apm/skills/changelog/scripts/detect_changelog_commits.sh` | Per-branch conventional commit facts (`commits[]`)      |
 | `eval.yaml` + `evals/tasks/`                                                     | waza evaluation suite                                   |
 
-For workflow env and behavior, see [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md).
+For caller inputs and behavior, see [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md).
 
 ## refactor (Structural Refactor)
 
@@ -197,7 +197,7 @@ For workflow env and behavior, see [Changelog Workflow Design](workflows/loop-ch
 | `.apm/packages/common/.apm/skills/refactor/SKILL.md`                   | Interactive + loop structural O1/O2 apply                |
 | `.apm/packages/common/.apm/skills/refactor/scripts/detect_refactor.sh` | Mechanical hints (`duplication_block`, `oversized_unit`) |
 
-For workflow env and behavior, see [Refactor Workflow Design](workflows/loop-refactor-workflow-design.md).
+For caller inputs and behavior, see [Refactor Workflow Design](workflows/loop-refactor-workflow-design.md).
 
 ## tech-debt (Technical Debt Report)
 
@@ -207,60 +207,62 @@ For workflow env and behavior, see [Refactor Workflow Design](workflows/loop-ref
 | `.apm/packages/common/.apm/skills/tech-debt/scripts/detect_tech_debt.sh` | Full-repo sensors (`signals[]`, `hotspots[]`)                        |
 | `eval.yaml` + `evals/tasks/`                                             | waza evaluation suite                                                |
 
-For workflow env and behavior, see [Report Tech Debt Workflow Design](workflows/loop-tech-debt-workflow-design.md).
+For caller inputs and behavior, see [Report Tech Debt Workflow Design](workflows/loop-tech-debt-workflow-design.md).
 
 ## Execution Flow
 
 ```text
-cron → on-loop-<name>.yaml
-  detect job:
-    → loop-detect action                  # LOOP_* enumeration, checkout per context, detect_script per context
-      → target_matrix output              # candidates for matrix fan-out
-  execute job (matrix per target):
-    → ci-loop-agent.yaml                  # worktree from target.from; verifier_context always wired
-  finalize job (matrix per target):
-    → loop-finalize                       # target.finalize + state + run-log + domain_persistence_script
+trigger → on-loop-<name>.yaml (thin caller: with: + secrets:)
+  loop job → ci-loop-caller*.yaml
+    detect job:
+      → loop-detect                    # branch/PR enumeration, checkout per context, detect_script
+      → outputs: target_matrix (slim), handoff_artifact_name, should_run, skip_reason
+    execute job (matrix per target):
+      → ci-loop-agent.yaml             # worktree from target.from; verifier_context always wired
+        → loop-execute (Agent→Verify)
+        → loop-finalize (when finalize_enabled)   # NOT a separate caller matrix job
+        → loop-run-log / loop-notify-pr (siblings)
+    record-skip job (when budget | circuit_breaker):
+      → loop-run-log
 ```
+
+Job graph detail: [Loop Caller Workflows Design](loop-caller-workflows-design.md). Reusable caller profiles: [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md#detect-permissions-profile).
 
 ### Workflow Architecture Diagram
 
 ```mermaid
 flowchart TD
-    %% Trigger
-    trigger([cron / workflow_dispatch]) --> detect
+    trigger([schedule / workflow_run / workflow_dispatch]) --> caller
 
-    %% Detect Job
-    subgraph detect["detect job"]
+    subgraph caller["on-loop-*.yaml"]
         direction TB
-        D1[loop-detect action] --> D2{should_run?}
-        D2 -->|false| D_END([no-op])
-        D2 -->|true| D3[prompt output]
+        C1[loop job → ci-loop-caller*]
     end
 
-    %% Execute Job (ci-loop-agent L2/L3)
+    C1 --> detect
+
+    subgraph detect["detect job (ci-loop-caller)"]
+        direction TB
+        D1[loop-detect] --> D2{should_run?}
+        D2 -->|false| D_SKIP[record-skip optional]
+        D2 -->|true| D3[target_matrix + handoff artifact]
+    end
+
     D3 --> execute
-    subgraph execute["execute job (ci-loop-agent L2/L3)"]
+    subgraph execute["execute job matrix → ci-loop-agent"]
         direction TB
-        A1[loop-worktree-setup] --> A2[loop-execute<br/>Agent→Verify bounded loop]
+        A1[loop-worktree-setup] --> A2[loop-execute Agent→Verify]
         A2 --> A3{verdict / has_changes}
+        A3 --> F1[loop-finalize + loop-run-log]
     end
 
-    %% Finalize Job
-    A3 -->|APPROVE + changes| finalize_approve
-    A3 -->|REJECT| finalize_reject
-    A3 -->|no changes + APPROVE| finalize_no
-
-    subgraph finalize["finalize job"]
+    subgraph finalize_inside["loop-finalize (inside ci-loop-agent)"]
         direction TB
-        finalize_approve[loop-finalize<br/>per target.finalize] --> F_STRAT{finalize strategy}
-        F_STRAT -->|open_pr| F_PR[create PR]
-        F_STRAT -->|push / push_head| F_PUSH[push to to.branch]
-        F_PR --> F_AUTO{L3 + open_pr?}
-        F_AUTO -->|yes| F_MERGE[enable auto-merge] --> F_STATE[state + run-log]
-        F_AUTO -->|no| F_STATE
-        F_PUSH --> F_STATE
-        finalize_reject[loop-finalize<br/>delete branch + state: rejected]
-        finalize_no[loop-finalize<br/>state: no-changes]
+        F1 --> F_STRAT{finalize strategy}
+        F_STRAT -->|open_pr L2| F_PENDING[pending cursor + fix PR]
+        F_STRAT -->|push / push_head L3| F_PUSH[push + advance last_sha]
+        F_STRAT -->|REJECT / metadata| F_META[outcome metadata only]
+        F_PENDING --> F_PROMOTE[on-loop-state-promote on merge]
     end
 ```
 
@@ -268,79 +270,42 @@ flowchart TD
 
 ```mermaid
 graph LR
-    %% Caller Workflows
     subgraph callers["Caller Workflows"]
-        CW1[on-loop-changelog.yaml]
-        CW2[on-loop-docs-triage.yaml]
-        CW3[on-loop-ci-sweeper.yaml]
+        CW1[on-loop-changelog]
+        CW2[on-loop-docs-triage]
+        CW3[on-loop-ci-sweeper]
+        CW4[on-loop-refactor]
+        CW5[on-loop-tech-debt]
     end
 
-    %% Reusable Workflows
-    subgraph reusable["Reusable Workflows"]
-        RW1[ci-loop-agent.yaml<br/>L1 / L2 / L3]
+    subgraph caller_reusable["Reusable Caller"]
+        RC1[ci-loop-caller.yaml]
+        RC2[ci-loop-caller-full-github.yaml]
     end
 
-    %% Engine Strategies
-    subgraph engines["Engine Types"]
-        E1[CLI engines<br/>claude / copilot / codex / cursor]
+    subgraph agent_reusable["Agent Reusable"]
+        RW1[ci-loop-agent.yaml]
     end
 
-    %% Composite Actions
     subgraph actions["Composite Actions"]
-        CA0[loop-detect<br/>detect phase]
-        CA1[loop-agent-once<br/>L1]
-        CA2[loop-execute<br/>L2/L3 Agent→Verify]
+        CA0[loop-detect]
+        CA2[loop-execute]
         CA3[loop-finalize]
-        CA8[loop-worktree-setup]
-        CA9[loop-install-cli]
         CA10[loop-run-log]
     end
 
-    %% Skills
-    subgraph skills["Skills"]
-        SK1[changelog]
-        SK2[docs-updater]
-        SK3[ci-sweeper]
-    end
-
-    %% State
-    subgraph state["State"]
-        ST1[.loop/state-changelog.json]
-        ST2[.loop/state-docs-triage.json]
-        ST3[.loop/state-ci-sweeper.json]
-        ST4[.loop/loop-run-log.md]
-        ST5[.loop/loop-budget.json]
-    end
-
-    %% Relationships
-    CW1 --> RW1
-    CW2 --> RW1
-    CW3 --> RW1
-    CW1 --> CA0
-    CW2 --> CA0
-    CW3 --> CA0
-    CW1 --> CA3
-    CW2 --> CA3
-    CW3 --> CA3
-    CA0 --> ST1
-    CA0 --> ST2
-    CA0 --> ST3
-    CA0 --> ST4
-    CA0 --> ST5
-    RW1 --> E1
-    RW1 --> CA1
+    CW1 --> RC1
+    CW2 --> RC1
+    CW4 --> RC1
+    CW5 --> RC1
+    CW3 --> RC2
+    RC1 --> CA0
+    RC2 --> CA0
+    RC1 --> RW1
+    RC2 --> RW1
     RW1 --> CA2
-    RW1 --> CA8
-    CA2 --> CA9
-    CA1 --> CA9
-    RW1 --> SK1
-    RW1 --> SK2
-    RW1 --> SK3
-    CA3 --> CA10
-    CA3 --> ST1
-    CA3 --> ST2
-    CA3 --> ST3
-    CA10 --> ST4
+    RW1 --> CA3
+    RW1 --> CA10
 ```
 
 ## STATE Files
@@ -577,13 +542,13 @@ Per-tier permissions:
 
 5 principles when multiple loops operate on the same repository:
 
-1. **Exclusive branch ownership**: Only one loop may operate on a branch at a time
-2. **State file separation**: Each loop has its own dedicated state file (`state-triage.md` / `state-pr-watcher.md`)
-3. **Role separation**: Triage loops are L1 report-only. Action loops execute independently
-4. **Unified denylist**: All loops share the same path denylist
-5. **Aggregated budget management**: Token consumption across all loops is aggregated against a daily budget cap
+1. **Shared workflow concurrency**: All `on-loop-*.yaml` callers and `on-loop-state-promote.yaml` share `loop-state-<branch_state>` so detect sees fresh state before execute
+2. **State file separation**: Each loop has its own JSON state file (`.loop/state-<loop_name>.json`); metadata commits land on `branch_state`, not fix-PR heads
+3. **Role separation**: Loops share platform actions but use distinct `loop_name`, budgets, and detect scripts — autonomy level (`L1`–`L3`) is per caller, not per loop category
+4. **Unified denylist**: All loops share the same path denylist defaults
+5. **Aggregated budget management**: Token consumption across loops is aggregated in `.loop/loop-run-log.md` against `.loop/loop-budget.json`
 
-**Evolution:** Loops act on integration branches and PR heads via `target_matrix` and `LOOP_*` in caller `env`. See [Multi-Branch Loops Design](multi-branch-loops-design.md) and [Loop Caller Workflows Design](loop-caller-workflows-design.md).
+**Evolution:** Loops act on integration branches and PR heads via `target_matrix` and caller `with:` inputs (`branch_match`, `pr_enabled`, `level`). See [Multi-Branch Loops Design](multi-branch-loops-design.md) and [Loop Caller Workflows Design](loop-caller-workflows-design.md).
 
 Cross-loop serialization uses shared workflow concurrency (`loop-state-<branch_state>`) on `on-loop-*.yaml` callers so detect runs on fresh state before execute. See [Multi-Branch Loops Design](multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency).
 
@@ -628,7 +593,7 @@ Key indicators for evaluating loop health. Measurement infrastructure is not req
 
 ### Retry Policy
 
-Defines how a loop behaves when an execution fails or is rejected.
+Defines how a loop behaves when an execution fails or is rejected. This section covers **detect cursor** (`targets[key].last_sha`) and **outcome metadata** — not the merge-gated `pending` block written at L2 fix-PR creation (see [State cursor (general rule)](#state-cursor-general-rule) under Finalize).
 
 **Retry scope**: Retry occurs across cron executions, not within a single Workflow run. A single run either succeeds or fails — it does not self-retry.
 
@@ -654,29 +619,32 @@ stateDiagram-v2
     Verifying --> Approved : verdict=APPROVE
     Verifying --> Rejected : verdict=REJECT
 
-    Approved --> PRCreated : finalize creates PR
-    Rejected --> BranchDeleted : finalize deletes branch
+    Approved --> PRCreated : finalize creates fix PR\n(pending; last_sha unchanged)
+    Rejected --> BranchDeleted : finalize deletes branch\n(metadata; last_sha unchanged)
 
-    NoChanges --> Idle : state: no-op\nSHA advances
-    PRCreated --> Idle : state: pr-created\nSHA advances
-    BranchDeleted --> Idle : state: rejected\nSHA advances
+    NoChanges --> Idle : state: no-op or rejected\n(metadata)
+    PRCreated --> Idle : on-loop-state-promote\npending → last_sha on merge
+    BranchDeleted --> Idle : same commits re-eligible\nuntil circuit_breaker
 ```
 
-**Key invariant**: SHA advances whenever Finalize runs successfully. Only detect-phase failures or cancellations leave SHA unchanged, causing the next cron to retry from the same point.
+**Key invariant (multi-branch L2 `open_pr`):** `last_sha` advances when the **fix is accepted** (fix PR merged via `on-loop-state-promote`, or L3 `push` / `push_head` in the same finalize run) — not merely because Finalize ran. On REJECT, `state_write_mode=metadata`: outcome and `consecutive_failures` update, but **`last_sha` does not advance** so the same commit range stays eligible until humans land a fix or the circuit breaker pauses the loop.
+
+**Why not advance `last_sha` on REJECT?** Advancing would skip the failing range permanently — the loop would never revisit commits that still need repair. That is worse for doc-drift and changelog loops where the underlying issue remains until someone merges a correct fix. Cost: the same range may be re-detected until `consecutive_failures` triggers `skip_reason=circuit_breaker` (default threshold 3). **ci-sweeper** adds run-ledger dedupe by `workflow_run_id` for CI-failure triggers.
 
 **Policy by failure type:**
 
-| Failure Type                               | Behavior                                                                                                                  | State Record          |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| Detect failure (script error)              | Workflow fails. No state update. Next cron retries from same SHA                                                          | No change             |
-| Agent produces no changes (actionable)     | Finalize records `rejected` when `LOOP_NO_CHANGES_VERDICT=REJECT`                                                         | `outcome: rejected`   |
-| Skill Watch (no code edit)                 | Finalize records `watch`; ledger/state cursor advances; no `consecutive_failures` increment                               | `outcome: watch`      |
-| Agent produces no changes (non-actionable) | Finalize records `no-op`. Cursor advances                                                                                 | `outcome: no-op`      |
-| Verifier REJECT                            | Finalize deletes branch, records rejection. SHA advances. The rejected diff is not retried — only new commits are scanned | `outcome: rejected`   |
-| Verifier APPROVE → PR CI fails             | PR remains open (blocked by Required Status Checks). SHA advances. ci-sweeper handles cleanup                             | `outcome: pr-created` |
-| Agent job cancelled (user/concurrency)     | Finalize does not run. No state update. Next cron retries from same SHA                                                   | No change             |
+| Failure Type                               | Behavior                                                                                     | `last_sha`                         | State Record          |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------- |
+| Detect failure (script error)              | Workflow fails. No state update. Next cron retries from same SHA                             | No change                          | No change             |
+| Agent produces no changes (actionable)     | Finalize records `rejected` when `no_changes_verdict=REJECT`                                 | No change (`metadata`)             | `outcome: rejected`   |
+| Skill Watch (no code edit)                 | Finalize records `watch`; ci-sweeper ledger may advance; no `consecutive_failures` increment | Loop-specific (ledger vs metadata) | `outcome: watch`      |
+| Agent produces no changes (non-actionable) | Finalize records `no-op`                                                                     | No change (`metadata`)             | `outcome: no-op`      |
+| Verifier REJECT                            | Finalize deletes branch, records rejection. Same commits re-eligible until circuit breaker   | No change (`metadata`)             | `outcome: rejected`   |
+| Verifier APPROVE → L2 `open_pr`            | Fix PR created; `pending` written; `last_sha` advances on merge via `on-loop-state-promote`  | Unchanged until merge              | `outcome: pr-created` |
+| Verifier APPROVE → L3 `push` / `push_head` | Push in same finalize run                                                                    | Advances in same run               | `outcome: pr-created` |
+| Agent job cancelled (user/concurrency)     | Finalize does not run. No state update. Next cron retries from same SHA                      | No change                          | No change             |
 
-**Design rationale**: SHA always advances on successful detect (even if later phases fail). This prevents infinite retry of the same failing diff. If the underlying issue persists, new commits touching the same area will trigger a fresh detection.
+**Design rationale**: Separating **detect cursor** (`last_sha`) from **outcome metadata** prevents silent skip of unfixed work while merge-gated `pending` prevents cursor races ahead of human review on L2 fix PRs. See [State delivery philosophy](multi-branch-loops-design.md#state-delivery-philosophy).
 
 **Consecutive failure handling:**
 
@@ -781,14 +749,15 @@ When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as
 
 **GitHub API deliverables (issue-triage, stale-pr):** Label, comment, and close **actions run in Execute** via the entry skill (e.g. `gh` / GitHub API) — not in Finalize. Finalize persists loop state and run-log only. Platform work for Tier 2 loops is **caller permissions** (`issues: write`, `pull-requests: write` as needed) plus verifier rubric for API outcome fit.
 
-**State cursor (general rule):**
+#### State cursor (general rule)
 
-| Loop shape                          | When `last_sha` / entity cursor advances                                                                    |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| L2 `open_pr` (worktree + review PR) | On fix PR **merge** via `on-loop-state-promote` (`pending` → `last_sha`)                                    |
-| L3 `push` / `push_head`             | Same finalize run as successful push                                                                        |
-| API-only / `has_changes=false`      | Same finalize run on verifier **APPROVE** (entity cursor e.g. `last_issue_number` in `targets[key]`)        |
-| L1 report-only                      | Run-log always; cursor advance optional per workflow design — default **APPROVE → finalize updates cursor** |
+| Loop shape                           | When `last_sha` / entity cursor advances                                                                       |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| L2 `open_pr` (worktree + review PR)  | On fix PR **merge** via `on-loop-state-promote` (`pending` → `last_sha`)                                       |
+| L3 `push` / `push_head`              | Same finalize run as successful push                                                                           |
+| Verifier REJECT / no-op / no-changes | **Does not advance** `last_sha` (`metadata` mode); same range re-eligible until circuit breaker or new commits |
+| API-only / `has_changes=false`       | Same finalize run on verifier **APPROVE** (entity cursor e.g. `last_issue_number` in `targets[key]`)           |
+| L1 report-only                       | Run-log always; cursor advance optional per workflow design — default **APPROVE → finalize updates cursor**    |
 
 No separate finalize strategy enum for comments/labels.
 

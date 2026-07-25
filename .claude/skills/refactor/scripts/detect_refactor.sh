@@ -1,11 +1,11 @@
 #!/bin/bash
 #######################################
-# Description: Detect mechanical structure hints for loop-refactor (H1 only)
+# Description: Detect mechanical structure hints for refactor automation (H1 only)
 #
 # Usage: ./detect_refactor.sh [--scope staged|all|range] [--since <ref>]
 #   --scope    Change detection scope (default: all for integration scan)
 #              range: limit scan to files changed in <since>..HEAD
-#   --since    Git ref for range scope (commit SHA from loop state)
+#   --since    Git ref for range scope (commit SHA from state cursor (when supplied))
 #
 # Output:
 # - JSON object with hints[], commit_range, skip
@@ -78,14 +78,14 @@ function show_usage {
 Usage: detect_refactor.sh [--scope staged|all|range] [--since <ref>]
 
 Description:
-    Detect mechanical structure hints (duplication_block, oversized_unit) for loop-refactor.
+    Detect mechanical structure hints (duplication_block, oversized_unit) for refactor automation.
 
 Options:
     --scope    Detection scope (default: all)
                all: scan tracked files matching REFACTOR_SCAN_GLOBS
                range: scan only files changed in <since>..HEAD matching globs
                staged: git diff --cached only (parity with sibling detects)
-    --since    Git ref for range scope (commit SHA from loop state)
+    --since    Git ref for range scope (commit SHA from state cursor (when supplied))
 
 Examples:
     ./detect_refactor.sh --scope all

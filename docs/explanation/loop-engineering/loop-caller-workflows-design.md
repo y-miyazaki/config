@@ -50,16 +50,14 @@ Each slim matrix cell carries: `target_json`, `prompt`, `handoff_key`. Full `res
 
 ### Anti-pattern: double detect
 
-**Forbidden:** invoking the detect script again in a caller `run:` step after `loop-detect`.
-
-Remove Phase 0 debt: `on-loop-ci-sweeper.yaml` `Export Target Failure Context`.
+**Forbidden:** invoking the detect script again in a caller `run:` step after `loop-detect`. Resolved in dogfood — detect facts and `verifier_context` are emitted once per `loop-detect` invocation.
 
 ### Target selection (inside `loop-detect`)
 
-1. Read [caller `env`](multi-branch-loops-design.md#caller-configuration-canonical).
+1. Read [caller inputs](workflows/loop-caller-inputs-reference.md) (`branch_match`, `pr_enabled`, `level`, …).
 2. Enumerate integration branches / PRs; checkout per context; run `detect_script` per context.
 3. Apply [trigger-aware priority](multi-branch-loops-design.md#trigger-aware-priority).
-4. Cap at `LOOP_MAX_TARGETS_PER_SCHEDULE`; excess → `target_budget` on next cron.
+4. Cap at `max_targets_per_schedule`; excess → `target_budget` on next cron.
 
 ## Execute Job (matrix)
 
@@ -90,7 +88,7 @@ execute:
 **`DEFAULT_LEVEL` vs finalize:**
 
 ```yaml
-auto_merge: ${{ needs.detect.outputs.level == 'L3' && matrix.target.target_json.finalize == 'open_pr' }}
+auto_merge: ${{ needs.detect.outputs.delivery == 'open_pr' && needs.detect.outputs.level == 'L3' && matrix.target.target_json.finalize == 'open_pr' }}
 ```
 
 ## Finalize (inside ci-loop-agent)
@@ -107,15 +105,13 @@ All `.loop/*` writes in **finalize step** via `loop-finalize` — not separate c
 | --------------------------- | ------------------------------------------------------ |
 | `target_json`               | Matrix cell                                            |
 | `domain_persistence_script` | ci-sweeper: `update_run_ledger.sh`; docs-triage: empty |
-| `state_push_branch`         | `LOOP_STATE_PUSH_BRANCH` or default branch             |
+| `state_push_branch`         | `branch_state` input or default branch                 |
 
-Push branch: `LOOP_STATE_PUSH_BRANCH`, **not** `target.to.branch`.
+Push branch: `branch_state`, **not** `target.to.branch`.
 
 **Merge-gated state (L2 `open_pr`):** `loop-finalize` writes `pending` to `branch_state` after creating the domain-only PR. `on-loop-state-promote.yaml` (`pull_request_target` `closed`) promotes `pending` → `last_sha` on merge (direct push preferred; auto-merge state PR when push is blocked). L3 `push` / `push_head` advances `last_sha` in the same finalize run.
 
 **Invariant:** Finalize does not edit application/doc **source under repair**.
-
-Remove Phase 0 debt: `on-loop-ci-sweeper.yaml` `Update CI Sweeper Run Ledger` caller push.
 
 ## Triggers
 
@@ -135,10 +131,10 @@ on:
 ```
 
 ```yaml
-# Example: schedule polling (changelog / docs-triage / tech-debt)
+# Example: schedule polling (docs-triage — dogfood cron)
 on:
   schedule:
-    - cron: "*/15 * * * 1-5" # docs-triage (weekdays)
+    - cron: "0 9 * * 1-5"
   workflow_dispatch: {}
 ```
 
@@ -211,8 +207,7 @@ Each matrix cell = one `max_runs_per_day` consumption. Cap enumeration in `loop-
 
 - Keys **alphabetically ordered** (repository workflow convention).
 - Shared caller keys: [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md).
-- `LOOP_*` branch/finalize caps: [Multi-Branch canonical table](multi-branch-loops-design.md#caller-configuration-canonical).
-- Domain vars (`CI_SWEEPER_*`, `CHANGELOG_*`, `DOCS_TRIAGE_*`, `LOOP_DETECT_SCRIPT`) in each [workflow design doc](multi-branch-loops-design.md#workflow-design-documents).
+- Branch/finalize caps: [Multi-Branch canonical table](multi-branch-loops-design.md#caller-configuration-canonical) (maps `LOOP_*` env names to `ci-loop-caller` inputs).
 
 ## Adding a New Loop Caller
 
@@ -232,7 +227,7 @@ Historical debt from early caller implementations. **All items below are resolve
 | ------------------------------------------------ | -------------------------------------------- | ------------------------------------------------------------------ |
 | Double detect script                             | `on-loop-ci-sweeper` re-ran detect in `run:` | `loop-detect` outputs `verifier_context` per matrix cell           |
 | Caller ledger `git push`                         | ci-sweeper pushed ledger from caller         | `domain_persistence_script` in `loop-finalize` via `ci-loop-agent` |
-| `auto_merge: level == L3` without finalize check | all L2+ callers                              | `finalize == 'open_pr'` guard on `auto_merge`                      |
+| `auto_merge: level == L3` without finalize check | all L2+ callers                              | `delivery == 'open_pr' && level == L3 && finalize == 'open_pr'`    |
 | Single `DEFAULT_BASE_BRANCH` only                | all                                          | `LOOP_INTEGRATION_BRANCHES`                                        |
 | `docs-updater` detect path                       | `on-loop-docs-triage`                        | `docs-updater/scripts/detect_changes.sh`                           |
 
