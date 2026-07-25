@@ -300,31 +300,37 @@ section_re = section_header
 
 
 def flush_table():
-    global inserted
     if not table_buf:
         return
     out.extend(table_buf)
-    if not inserted:
-        out.extend(rows)
+    table_buf.clear()
+
+
+def finish_changes_section():
+    global inserted
+    if not table_buf:
+        if not inserted and rows:
+            out.extend(rows)
+            inserted = True
+        return
+    if not inserted and rows:
+        table_buf.extend(rows)
         inserted = True
+    out.extend(table_buf)
     table_buf.clear()
 
 
 for line in lines:
     if line.strip() == section_re:
-        flush_table()
         in_section = True
         out.append(line)
         continue
     if in_section and (line.startswith("### ") or line.startswith("## ")):
-        flush_table()
-        if not inserted:
-            out.extend(rows)
-            inserted = True
+        finish_changes_section()
         in_section = False
         out.append(line)
         continue
-    if in_section and line.startswith("|"):
+    if in_section and line.lstrip().startswith("|"):
         table_buf.append(line)
         continue
     if in_section and line.strip() == "":
@@ -332,14 +338,12 @@ for line in lines:
         continue
     if in_section:
         flush_table()
-        in_section = False
+        out.append(line)
+        continue
     out.append(line)
 
 if in_section:
-    flush_table()
-    if not inserted:
-        out.extend(rows)
-        inserted = True
+    finish_changes_section()
 
 output_path.write_text("\n".join(out) + ("\n" if text.endswith("\n") else ""), encoding="utf-8")
 PY

@@ -244,6 +244,64 @@ EOF
     [[ $output == *"docs/b.md"* ]]
 }
 
+@test "reconcile_agent_report_with_branch_diff tolerates indented separator rows" {
+    local out="${TEST_TMP}/reconcile-indented-sep.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Fixed mkdocs strict link failure.
+
+## Summary
+
+### Changes
+
+| Target | What was wrong | What changed |
+ | ------ | -------------- | ------------ |
+| `on-cd-mkdocs` / `build / build` | Strict MkDocs aborted | Pointed link at GitHub URL |
+
+### Deferred
+
+| Target | Why deferred |
+| ------ | ------------ |
+| — | None |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| mkdocs build --strict | pass |
+EOF
+    reconcile_agent_report_with_branch_diff "${out}" $'docs/explanation/apm-package-design.md\n' "ci-sweeper"
+    run validate_agent_report "${out}" $'docs/explanation/apm-package-design.md\n' "ci-sweeper"
+    [ "$status" -eq 0 ]
+    # Placeholder row must follow existing data rows, not sit between header and separator.
+    python3 - "${out}" << 'PY'
+import re
+import sys
+from pathlib import Path
+
+text = Path(sys.argv[1]).read_text(encoding="utf-8")
+match = re.search(r"### Changes\n(.*?)\n### Deferred", text, re.S)
+if not match:
+    raise SystemExit("missing ### Changes section")
+lines = match.group(1).splitlines()
+header = sep = workflow = missing = None
+for index, line in enumerate(lines):
+    if "| Target | What was wrong |" in line:
+        header = index
+    elif header is not None and re.match(r"^\s*\|[-: ]+\|", line):
+        sep = index
+    elif "on-cd-mkdocs" in line:
+        workflow = index
+    elif "apm-package-design.md" in line:
+        missing = index
+if None in (header, sep, workflow, missing):
+    raise SystemExit("expected header, separator, workflow row, and missing path row")
+if not (header < sep < workflow < missing):
+    raise SystemExit("Changes table row order is invalid")
+PY
+}
+
 @test "reconcile_agent_report_with_branch_diff appends missing branch-diff rows" {
     local out="${TEST_TMP}/reconcile.txt"
     cat > "${out}" << 'EOF'
