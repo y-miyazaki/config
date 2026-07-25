@@ -39,7 +39,7 @@ Do not embed **this repository's** or **single-consumer** specifics in instructi
 
 | Topic                                       | Where                                                                                                                                     |
 | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Edit targets, sync, post-change workflow    | [CLAUDE.md § Edit Targets](../../CLAUDE.md#edit-targets), [.apm/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md) |
+| Edit targets, sync, post-change workflow    | [CLAUDE.md § Edit Targets](https://github.com/y-miyazaki/config/blob/main/CLAUDE.md#edit-targets), [.apm/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md) |
 | Loop Engineering, documentation path maps   | `docs/explanation/loop-engineering/**`, consumer `docs/` overlays                                                                         |
 | Repo-specific denylist / path policy        | Root `AGENTS.md`, `docs/`, caller `## Constraints` — not skill `references/` defaults                                                     |
 | Local-only domain skills in a consumer repo | That repository's `AGENTS.md` or `docs/`                                                                                                  |
