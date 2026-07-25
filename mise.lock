@@ -312,49 +312,49 @@ url = "https://github.com/aws/aws-sam-cli/releases/download/v1.163.0/aws-sam-cli
 url_api = "https://api.github.com/repos/aws/aws-sam-cli/releases/assets/463845662"
 
 [[tools."aqua:bufbuild/buf"]]
-version = "1.71.0"
+version = "1.72.0"
 backend = "aqua:bufbuild/buf"
 
 [tools."aqua:bufbuild/buf"."platforms.linux-arm64"]
-checksum = "sha256:b34722f849d14c7f4551d293e2d9608952d05340e98f7f3709ad50d61771340e"
-url = "https://github.com/bufbuild/buf/releases/download/v1.71.0/buf-Linux-aarch64.tar.gz"
-url_api = "https://api.github.com/repos/bufbuild/buf/releases/assets/449427972"
+checksum = "sha256:7641bd7e06a37a54cbb8c789f53465899def96196ab5c08057432f781a15d517"
+url = "https://github.com/bufbuild/buf/releases/download/v1.72.0/buf-Linux-aarch64.tar.gz"
+url_api = "https://api.github.com/repos/bufbuild/buf/releases/assets/480772526"
 provenance = "minisign"
 
 [tools."aqua:bufbuild/buf"."platforms.linux-arm64-musl"]
-checksum = "sha256:b34722f849d14c7f4551d293e2d9608952d05340e98f7f3709ad50d61771340e"
-url = "https://github.com/bufbuild/buf/releases/download/v1.71.0/buf-Linux-aarch64.tar.gz"
-url_api = "https://api.github.com/repos/bufbuild/buf/releases/assets/449427972"
+checksum = "sha256:7641bd7e06a37a54cbb8c789f53465899def96196ab5c08057432f781a15d517"
+url = "https://github.com/bufbuild/buf/releases/download/v1.72.0/buf-Linux-aarch64.tar.gz"
+url_api = "https://api.github.com/repos/bufbuild/buf/releases/assets/480772526"
 provenance = "minisign"
 
 [tools."aqua:bufbuild/buf"."platforms.linux-x64"]
-checksum = "sha256:1b941e33c62614944c35396bf0e7a197ec6e94e09ac1ce719667dd1bbb372ff5"
-url = "https://github.com/bufbuild/buf/releases/download/v1.71.0/buf-Linux-x86_64.tar.gz"
-url_api = "https://api.github.com/repos/bufbuild/buf/releases/assets/449428034"
+checksum = "sha256:a9c6186cf6fcf062b247345e1b7b12c26f580c1b2a4bbf4d3fe080abf85ceee8"
+url = "https://github.com/bufbuild/buf/releases/download/v1.72.0/buf-Linux-x86_64.tar.gz"
+url_api = "https://api.github.com/repos/bufbuild/buf/releases/assets/480772583"
 provenance = "minisign"
 
 [tools."aqua:bufbuild/buf"."platforms.linux-x64-musl"]
-checksum = "sha256:1b941e33c62614944c35396bf0e7a197ec6e94e09ac1ce719667dd1bbb372ff5"
-url = "https://github.com/bufbuild/buf/releases/download/v1.71.0/buf-Linux-x86_64.tar.gz"
-url_api = "https://api.github.com/repos/bufbuild/buf/releases/assets/449428034"
+checksum = "sha256:a9c6186cf6fcf062b247345e1b7b12c26f580c1b2a4bbf4d3fe080abf85ceee8"
+url = "https://github.com/bufbuild/buf/releases/download/v1.72.0/buf-Linux-x86_64.tar.gz"
+url_api = "https://api.github.com/repos/bufbuild/buf/releases/assets/480772583"
 provenance = "minisign"
 
 [tools."aqua:bufbuild/buf"."platforms.macos-arm64"]
-checksum = "sha256:96151a0d44343d05930976069cc5d4bec7736cc920304816a2745906e822170d"
-url = "https://github.com/bufbuild/buf/releases/download/v1.71.0/buf-Darwin-arm64.tar.gz"
-url_api = "https://api.github.com/repos/bufbuild/buf/releases/assets/449427942"
+checksum = "sha256:be040ae0ca381103dfda68a36738695c4db3e48de8e91412acdc3d991f39b91e"
+url = "https://github.com/bufbuild/buf/releases/download/v1.72.0/buf-Darwin-arm64.tar.gz"
+url_api = "https://api.github.com/repos/bufbuild/buf/releases/assets/480772487"
 provenance = "minisign"
 
 [tools."aqua:bufbuild/buf"."platforms.macos-x64"]
-checksum = "sha256:217f4963af6e90e04dfc767adc5e9ccb4fe876ba1100abdecfc4302bc37ed419"
-url = "https://github.com/bufbuild/buf/releases/download/v1.71.0/buf-Darwin-x86_64.tar.gz"
-url_api = "https://api.github.com/repos/bufbuild/buf/releases/assets/449427950"
+checksum = "sha256:8b87e66786b46b20e7f7e328c9e15f64f636041acfdbf93374873d9014a62d30"
+url = "https://github.com/bufbuild/buf/releases/download/v1.72.0/buf-Darwin-x86_64.tar.gz"
+url_api = "https://api.github.com/repos/bufbuild/buf/releases/assets/480772489"
 provenance = "minisign"
 
 [tools."aqua:bufbuild/buf"."platforms.windows-x64"]
-checksum = "sha256:f51dd473b9f5ce549877ac4ca13ff8a3b4678d13db5ae69ab0ae2b11b55d2fba"
-url = "https://github.com/bufbuild/buf/releases/download/v1.71.0/buf-Windows-x86_64.zip"
-url_api = "https://api.github.com/repos/bufbuild/buf/releases/assets/449428076"
+checksum = "sha256:0332d8d1bf062c95a0418081b7e574551032ee72064af05e304e3a1454f8cf11"
+url = "https://github.com/bufbuild/buf/releases/download/v1.72.0/buf-Windows-x86_64.zip"
+url_api = "https://api.github.com/repos/bufbuild/buf/releases/assets/480772631"
 provenance = "minisign"
 
 [[tools."aqua:cli/cli"]]
