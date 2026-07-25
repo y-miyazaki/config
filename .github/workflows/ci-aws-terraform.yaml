@@ -393,7 +393,7 @@ jobs:
 
       - name: Setup tfcmt
         if: ${{ github.event_name == 'pull_request' }}
-        uses: y-miyazaki/config/.github/actions/install-github-release@10f7147e1b7e3f4349d655f7ef6e3f20c314846c # v1.8.61
+        uses: y-miyazaki/config/.github/actions/install-github-release@9fc64fc1a0068480793697deb140cdd2c8b40e57 # v1.8.62
         with:
           asset_pattern: "{binary}_linux_amd64.tar.gz"
           binary: tfcmt
@@ -432,7 +432,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@10f7147e1b7e3f4349d655f7ef6e3f20c314846c # v1.8.61
+        uses: y-miyazaki/config/.github/actions/summary@9fc64fc1a0068480793697deb140cdd2c8b40e57 # v1.8.62
         with:
           artifacts: |
             (none)
