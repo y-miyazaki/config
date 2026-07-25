@@ -271,7 +271,7 @@ Job-level permission splits inside one file do not help: the caller workflow's t
 
 Use `ci-loop-caller-pr-scan.yaml` when a loop needs **`pr_enabled: true`** (open PR head enumeration) but detect is **git-based only** — no `gh run list` / Actions API CI scan. Dogfood **ci-sweeper** requires `full-github` because `detect_ci_failures.sh` lists failed workflow runs.
 
-Template: [example/on-loop-pr-scan-skeleton.yaml](../../../.github/workflows/example/on-loop-pr-scan-skeleton.yaml) (copy for new PR-watch loops; not scheduled in this repo).
+Template: [example/on-loop-pr-scan-skeleton.yaml](https://github.com/y-miyazaki/config/blob/main/.github/workflows/example/on-loop-pr-scan-skeleton.yaml) (copy for new PR-watch loops; not scheduled in this repo).
 
 CI validation: `validate-loop-caller-permissions` composite action (run in `ci-github-actions-workflow`; local wrapper: `scripts/self/ci/validate_loop_caller_permissions.sh`).
 

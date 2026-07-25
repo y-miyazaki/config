@@ -8,7 +8,7 @@ Design principles for authoring content under `.apm/packages/**` that ships via 
 
 - Sources under `.apm/packages/` are **distribution artifacts**; `apm install` materializes them into consumer trees (for example `.agents/`, `.claude/`, `.cursor/`).
 - Packages must be usable without this repository's `docs/`, workflows, or `.loop/` layout.
-- Maintainer workflows for **this** repository live in [.apm/AGENTS.md](../../.apm/AGENTS.md) and `docs/` — not inside distributable skill references.
+- Maintainer workflows for **this** repository live in [.apm/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md) and `docs/` — not inside distributable skill references.
 
 ## Layer responsibilities
 
@@ -94,6 +94,6 @@ Normative portability rules live in companion instructions; product contracts li
 | MCP / hooks / skills runtime model   | [Architecture — Configuration Philosophy](architecture.md#configuration-philosophy)                |
 | Functional specification             | [Specification — Configuration Philosophy](../reference/specification.md#configuration-philosophy) |
 | Instruction neutrality & sync        | [Instructions Sync Workflow](instructions-sync-workflow.md)                                        |
-| Maintainer routing (this repo)       | [.apm/AGENTS.md](../../.apm/AGENTS.md)                                                             |
+| Maintainer routing (this repo)       | [.apm/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md) |
 | Loop platform (this consumer)        | [Loop Engineering](loop-engineering/index.md)                                                      |
 | Automation PR body platform contract | [Loop PR Body Skill Contract](loop-engineering/loop-pr-body-skill-contract.md)                     |
