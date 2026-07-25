@@ -1690,7 +1690,7 @@ url = "https://github.com/microsoft/waza/releases/download/v0.38.3/waza-windows-
 url_api = "https://api.github.com/repos/microsoft/waza/releases/assets/480556227"
 
 [[tools."go:github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen"]]
-version = "2.7.2"
+version = "2.8.0"
 backend = "go:github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen"
 
 [[tools."go:golang.org/x/tools/gopls"]]
