@@ -644,6 +644,8 @@ stateDiagram-v2
 | Verifier APPROVE → L3 `push` / `push_head` | Push in same finalize run                                                                    | Advances in same run               | `outcome: pr-created` |
 | Agent job cancelled (user/concurrency)     | Finalize does not run. No state update. Next cron retries from same SHA                      | No change                          | No change             |
 
+**Detect-script boundary (loop-detect ↔ skill):** loop-detect couples only on the **success-path interface** — exit 0, parseable JSON, `skip`, and fields used for matrix/prompt assembly. On **non-zero exit**, it echoes detect stdout verbatim and fails; it does **not** interpret skill error payloads (`status`, `message`, per-skill schema). Error shape is a skill/detect-script concern; the loop engine only observes the exit code.
+
 **Design rationale**: Separating **detect cursor** (`last_sha`) from **outcome metadata** prevents silent skip of unfixed work while merge-gated `pending` prevents cursor races ahead of human review on L2 fix PRs. See [State delivery philosophy](multi-branch-loops-design.md#state-delivery-philosophy).
 
 **Consecutive failure handling:**

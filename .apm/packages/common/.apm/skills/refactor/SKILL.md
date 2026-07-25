@@ -99,13 +99,14 @@ Every run has **Phase A — Survey** (discover candidates). **Phase B — Apply*
 
 ### Error Handling
 
-| Condition                                     | Severity    | Action                                                                          |
-| --------------------------------------------- | ----------- | ------------------------------------------------------------------------------- |
-| Automation: empty/`skip`                      | Info        | No-op report; stop                                                              |
-| Survey: zero candidates                       | Info        | No-op report; stop                                                              |
-| Architecture request without slice            | Recoverable | Architecture proposal only; stop                                                |
-| Lint-primary or feature/API candidate         | Recoverable | Watch on candidate; skip apply                                                  |
-| Weak or failed gate for one candidate         | Recoverable | Revert that candidate; Deferred; continue                                       |
-| Cross-boundary or out-of-scope target         | Recoverable | Watch on candidate; skip apply                                                  |
-| Apply requested but `may_edit` is `false`     | Info        | Survey only; note that edits require explicit apply request or `may_edit: true` |
-| `may_edit` true with `write_target` not `fix` | Recoverable | Survey only; note expected `write_target: fix`                                  |
+| Condition                                        | Severity    | Action                                                                          |
+| ------------------------------------------------ | ----------- | ------------------------------------------------------------------------------- |
+| Detect script non-zero exit or `status: "error"` | Fatal       | Read stdout; stop — do not treat as success-path detect JSON                    |
+| Automation: empty/`skip`                         | Info        | No-op report; stop                                                              |
+| Survey: zero candidates                          | Info        | No-op report; stop                                                              |
+| Architecture request without slice               | Recoverable | Architecture proposal only; stop                                                |
+| Lint-primary or feature/API candidate            | Recoverable | Watch on candidate; skip apply                                                  |
+| Weak or failed gate for one candidate            | Recoverable | Revert that candidate; Deferred; continue                                       |
+| Cross-boundary or out-of-scope target            | Recoverable | Watch on candidate; skip apply                                                  |
+| Apply requested but `may_edit` is `false`        | Info        | Survey only; note that edits require explicit apply request or `may_edit: true` |
+| `may_edit` true with `write_target` not `fix`    | Recoverable | Survey only; note expected `write_target: fix`                                  |

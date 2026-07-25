@@ -237,8 +237,9 @@ function assert_detect_changes_error_json {
 
     jq -e --arg expected_message "${expected_message}" '
         type == "object"
-        and (keys | sort) == ["message", "status"]
+        and (keys | sort) == ["affected_docs", "changed_files", "commit_range", "deleted_files", "message", "renamed_files", "scope", "since", "skip", "status"]
         and .status == "error"
+        and .skip == true
         and (.message | type == "string" and length > 0)
         and ($expected_message == "" or (.message | contains($expected_message)))
     ' <<< "${json}"
@@ -329,10 +330,11 @@ function assert_detect_tech_debt_ok_json {
             and (.value | type == "number")
             and (.window | type == "string" and length > 0);
         type == "object"
-        and (keys | sort) == ["hotspots", "previous_report", "report_file", "scope", "signals", "since", "skip", "status", "warnings"]
+        and (keys | sort) == ["commit_range", "hotspots", "previous_report", "report_file", "scope", "signals", "since", "skip", "status", "warnings"]
         and (.status == "ok")
         and .scope == $expected_scope
         and (.since | type == "string")
+        and (.commit_range | type == "string")
         and ($expected_since == "" or .since == $expected_since)
         and (.report_file | type == "string" and length > 0)
         and (.previous_report | type == "string")
@@ -353,10 +355,11 @@ function assert_detect_tech_debt_error_json {
 
     jq -e --arg expected_message "${expected_message}" '
         type == "object"
-        and (keys | sort) == ["hotspots", "message", "previous_report", "report_file", "scope", "signals", "since", "skip", "status", "warnings"]
+        and (keys | sort) == ["commit_range", "hotspots", "message", "previous_report", "report_file", "scope", "signals", "since", "skip", "status", "warnings"]
         and .status == "error"
         and (.scope | type == "string")
         and (.since | type == "string")
+        and (.commit_range | type == "string")
         and (.report_file | type == "string")
         and (.previous_report | type == "string")
         and .skip == true

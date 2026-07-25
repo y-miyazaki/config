@@ -1,3 +1,12 @@
+## Exit Codes and Error Envelope
+
+| Exit code | Meaning                                                                                                                       |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 0         | Success — parse stdout JSON per schema below                                                                                  |
+| 1         | Fatal error — parse stdout JSON with `status: "error"`, `message`, and `skip: true`; do not treat as success-path detect JSON |
+
+Missing dependencies emit the same error envelope via `emit_error_json` before exit 1.
+
 ## Input Schema
 
 Interactive runs may pass free-form path/symbol in the user prompt. When structured JSON is present (interactive helper or automation envelope), parse:

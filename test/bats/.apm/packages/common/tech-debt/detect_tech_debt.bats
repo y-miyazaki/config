@@ -6,9 +6,10 @@
 # Use cases:
 # - detect_tech_debt defaults to scope all and skips on empty fixture repo
 # - detect_tech_debt rejects unknown --scope
-# - detect_tech_debt range without --since returns error JSON exit 0
+# - detect_tech_debt range without --since returns error JSON exit 1
 # - detect_tech_debt emits marker and dependency signals
 # - detect_tech_debt emits broken_doc_ref via markdown-link-check (node+network on first run)
+# - detect_tech_debt emits error JSON when jq is missing
 # - detect_tech_debt emits stale_doc when TECH_DEBT_STALE_DAYS is zero
 # - detect_tech_debt emits churn hotspots for frequently edited files
 # - detect_tech_debt warns and continues when TECH_DEBT_SKIP_MLC=true
@@ -47,7 +48,7 @@ DETECT_SCRIPT="$(apm_skill_script_path tech-debt detect_tech_debt.sh)"
     git_test_repo_run "bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     assert_detect_tech_debt_ok_json "${output}" "all" ""
-    [[ $output == *'"skip": true'* ]]
+    jq -e '.skip == true' <<< "${output}"
 }
 
 @test "detect_tech_debt excludes marker signals under report parent directory" {
@@ -74,8 +75,12 @@ DETECT_SCRIPT="$(apm_skill_script_path tech-debt detect_tech_debt.sh)"
     git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
     git_test_repo_run "bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
-    assert_detect_tech_debt_ok_json "${output}" "all" ""
-    [[ $output == *'"broken_doc_ref"'* ]] || [[ $output == *'docs link sensor skipped'* ]]
+    if [[ $output == *'"broken_doc_ref"'* ]]; then
+        assert_detect_tech_debt_ok_json "${output}" "all" ""
+    else
+        [[ $output == *'docs link sensor skipped'* ]]
+        jq -e '.status == "ok" and (.warnings | type == "array") and (.warnings | length) > 0' <<< "${output}"
+    fi
 }
 
 @test "detect_tech_debt emits churn hotspot for frequently edited file" {
@@ -111,6 +116,29 @@ EOF
     [[ $output == *'"eol_hint"'* ]]
 }
 
+@test "detect_tech_debt emits error JSON when jq is missing" {
+    local fakebin exe base dir
+
+    fakebin="${BATS_TEST_TMPDIR}/fakebin"
+    mkdir -p "${fakebin}"
+    for dir in /usr/bin /bin; do
+        for exe in "${dir}"/*; do
+            base="$(basename "${exe}")"
+            [[ ${base} == "jq" ]] && continue
+            [[ -e "${fakebin}/${base}" ]] && continue
+            ln -sf "${exe}" "${fakebin}/${base}"
+        done
+    done
+
+    git_test_repo_setup
+    touch "${GIT_TEST_REPO}/file.txt"
+    git_test_repo_commit "chore: init"
+    run env PATH="${fakebin}" bash "${DETECT_SCRIPT}" --scope all
+    [ "$status" -eq 1 ]
+    run jq -e '.status == "error" and (.message | contains("Missing required tools"))' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
 @test "detect_tech_debt emits stale_doc when TECH_DEBT_STALE_DAYS is zero" {
     git_test_repo_setup
     mkdir -p "${GIT_TEST_REPO}/docs"
@@ -132,7 +160,7 @@ EOF
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope all"
     [ "$status" -eq 0 ]
     assert_detect_tech_debt_ok_json "${output}" "all" ""
-    [[ $output == *'"skip": false'* ]]
+    jq -e '.skip == false' <<< "${output}"
     [[ $output == *'"todo_comment"'* ]]
     [[ $output == *'"fixme"'* ]]
 }
@@ -255,13 +283,13 @@ EOF
         || [[ $output == *'"previous_report":"docs/report/tech-debt/2021-06-15.md"'* ]]
 }
 
-@test "detect_tech_debt range without --since returns error JSON exit 0" {
+@test "detect_tech_debt range without --since returns error JSON exit 1" {
     git_test_repo_setup
     touch "${GIT_TEST_REPO}/file.txt"
     git -C "${GIT_TEST_REPO}" add file.txt
     git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range"
-    [ "$status" -eq 0 ]
+    [ "$status" -eq 1 ]
     assert_detect_tech_debt_error_json "${output}" "requires --since"
 }
 
@@ -271,7 +299,7 @@ EOF
     git -C "${GIT_TEST_REPO}" add file.txt
     git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope weird"
-    [ "$status" -eq 0 ]
+    [ "$status" -eq 1 ]
     assert_detect_tech_debt_error_json "${output}" "scope"
 }
 
@@ -293,7 +321,7 @@ EOF
     local no_git_dir="${BATS_TEST_TMPDIR}/no-git"
     mkdir -p "${no_git_dir}"
     run bash -c "cd '${no_git_dir}' && bash '${DETECT_SCRIPT}'"
-    [ "$status" -eq 0 ]
+    [ "$status" -eq 1 ]
     assert_detect_tech_debt_error_json "${output}" "Not a git repository"
 }
 

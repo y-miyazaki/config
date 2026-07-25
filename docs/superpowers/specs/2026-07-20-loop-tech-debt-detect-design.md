@@ -87,11 +87,11 @@ Match **sibling loop detects** (`detect_changes.sh`, `detect_ci_failures.sh`) an
 
 - Every function: separator + one-line summary + **Arguments** / **Global Variables** / **Returns** (use `None` when N/A) + **Usage** when helpful — same density as `detect_ci_failures.sh`, not stripped stubs.
 - Comments in **English** (DOC-06).
-- Header Design Rules must state: facts only; exit 0 always; JSON via `lib/json.sh`; per-sensor recoverable failures → `warnings[]`.
+- Header Design Rules must state: facts only; fatal errors exit 1 with `status=error` JSON; JSON via `lib/json.sh`; per-sensor recoverable failures → `warnings[]`.
 
 ### CLI / JSON contract
 
-- Always **exit 0**; errors → `status=error`, `message`, empty arrays, `skip=true` as appropriate.
+- Exit 0 on success; fatal errors → `status=error`, `message`, empty arrays, `skip=true` as appropriate, then **exit 1**.
 - `status=ok` with partial sensors: include `warnings[]` (string array).
 - `skip=true` iff both `signals` and `hotspots` are empty.
 - `show_usage` documents options/examples and exits 0.

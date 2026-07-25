@@ -12,6 +12,7 @@
 # - detect_changes range scope records scannable path renames in renamed_files
 # - detect_changes range scope excludes agent directory renames from renamed_files
 # - detect_changes range scope excludes env paths from changed_files
+# - detect_changes emits error JSON when jq is missing
 # - detect_changes honors DOCS_UPDATER_DOCS_ROOT and DOCS_UPDATER_SITE_CONFIG
 # - detect_changes range scope includes affected docs when markdown is renamed
 # - detect_changes range scope records cross-zone renames between agent and scannable paths
@@ -50,8 +51,10 @@ setup() {
     git -C "${GIT_TEST_REPO}" commit -q -m "skill: update foo"
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
     [ "$status" -eq 0 ]
-    [[ $output == *'"status": "ok"'* ]]
-    [[ $output == *'.apm/packages/common/.apm/skills/foo/SKILL.md'* ]]
+    local result="${output}"
+    run jq -e '.status == "ok"' <<< "${result}"
+    [ "$status" -eq 0 ]
+    [[ ${result} == *'.apm/packages/common/.apm/skills/foo/SKILL.md'* ]]
 }
 
 @test "detect_changes range scope lists changed_files for github workflow edits" {
@@ -68,8 +71,10 @@ setup() {
     git -C "${GIT_TEST_REPO}" commit -q -m "ci: update workflow"
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
     [ "$status" -eq 0 ]
-    [[ $output == *'"status": "ok"'* ]]
-    [[ $output == *'.github/workflows/ci.yaml'* ]]
+    local result="${output}"
+    run jq -e '.status == "ok"' <<< "${result}"
+    [ "$status" -eq 0 ]
+    [[ ${result} == *'.github/workflows/ci.yaml'* ]]
 }
 
 @test "detect_changes range scope asserts exact changed_files for github workflow edits" {
@@ -252,6 +257,29 @@ setup() {
     [ "$status" -eq 0 ]
 }
 
+@test "detect_changes emits error JSON when jq is missing" {
+    local fakebin exe base dir
+
+    fakebin="${BATS_TEST_TMPDIR}/fakebin"
+    mkdir -p "${fakebin}"
+    for dir in /usr/bin /bin; do
+        for exe in "${dir}"/*; do
+            base="$(basename "${exe}")"
+            [[ ${base} == "jq" ]] && continue
+            [[ -e "${fakebin}/${base}" ]] && continue
+            ln -sf "${exe}" "${fakebin}/${base}"
+        done
+    done
+
+    git_test_repo_setup
+    touch "${GIT_TEST_REPO}/file.txt"
+    git_test_repo_commit "chore: init"
+    run env PATH="${fakebin}" bash "${DETECT_SCRIPT}" --scope all
+    [ "$status" -eq 1 ]
+    run jq -e '.status == "error" and (.message | contains("Missing required tools"))' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
 @test "detect_changes honors DOCS_UPDATER_DOCS_ROOT and DOCS_UPDATER_SITE_CONFIG" {
     git_test_repo_setup
     mkdir -p "${GIT_TEST_REPO}/guides" "${GIT_TEST_REPO}/src"
@@ -290,8 +318,8 @@ setup() {
     git -C "${GIT_TEST_REPO}" commit -q -m "docs: expand index"
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
     [ "$status" -eq 0 ]
-    [[ $output == *'"skip": true'* ]]
-    [[ $output == *'"affected_docs": []'* ]]
+    run jq -e '.skip == true and .affected_docs == []' <<< "${output}"
+    [ "$status" -eq 0 ]
 }
 
 @test "detect_changes defaults to staged scope when invoked without arguments" {
@@ -343,10 +371,12 @@ setup() {
     git -C "${GIT_TEST_REPO}" commit -q -m "docs: remove legacy page"
     git_test_repo_run "env DOCS_TRIAGE_DOC_GLOBS='docs/**/*.md' bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
     [ "$status" -eq 0 ]
-    [[ $output == *'"skip": false'* ]]
-    [[ $output == *"docs/index.md"* ]]
-    [[ $output == *'"deleted_files":'* ]]
-    [[ $output == *"docs/legacy.md"* ]]
+    local result="${output}"
+    run jq -e '.skip == false' <<< "${result}"
+    [ "$status" -eq 0 ]
+    [[ ${result} == *"docs/index.md"* ]]
+    [[ ${result} == *'"deleted_files":'* ]] || [[ ${result} == *'"deleted_files":'* ]]
+    [[ ${result} == *"docs/legacy.md"* ]]
 }
 
 @test "detect_changes rejects range scope without since ref" {
@@ -355,7 +385,7 @@ setup() {
     git -C "${GIT_TEST_REPO}" add file.txt
     git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range"
-    [ "$status" -eq 0 ]
+    [ "$status" -eq 1 ]
     assert_detect_changes_error_json "${output}" "requires --since"
 }
 

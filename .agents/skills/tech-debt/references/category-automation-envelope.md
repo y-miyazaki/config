@@ -35,7 +35,7 @@ report_file: reports/tech-debt/2026-07-23.md
 Allowed paths: reports/tech-debt/**/*.md, docs/**/*.md
 ```
 
-Use consumer-specific report directories in real callers. Detect default `TECH_DEBT_DIR` is `docs/report/tech-debt` when unset.
+Use consumer-specific report directories in real callers. Resolve `report_file` via `TECH_DEBT_DIR` (detect) and/or `report_file` in `## Constraints`.
 
 ### PR body synthesis
 

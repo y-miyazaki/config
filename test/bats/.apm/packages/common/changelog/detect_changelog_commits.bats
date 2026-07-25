@@ -92,8 +92,8 @@ setup() {
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
     [ "$status" -eq 0 ]
     assert_detect_changelog_ok_json "${output}" "range" "${base}"
-    [[ $output == *'"type": "feat"'* ]]
-    [[ $output == *"add endpoint"* ]]
+    run jq -e '.commits[0].type == "feat" and (.commits[0].subject | contains("add endpoint"))' <<< "${output}"
+    [ "$status" -eq 0 ]
 }
 
 @test "detect_changelog_commits skips loop maintenance commit in range" {
@@ -106,8 +106,8 @@ setup() {
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
     [ "$status" -eq 0 ]
     assert_detect_changelog_ok_json "${output}" "range" "${base}"
-    [[ $output == *'"skip": true'* ]]
-    [[ $output == *'"commits": []'* ]]
+    run jq -e '.skip == true and .commits == []' <<< "${output}"
+    [ "$status" -eq 0 ]
 }
 
 @test "detect_changelog_commits reports changelog_exists false when missing" {
@@ -119,7 +119,8 @@ setup() {
     git_test_repo_commit "fix: repair parser"
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
     [ "$status" -eq 0 ]
-    [[ $output == *'"changelog_exists": false'* ]]
+    run jq -e '.changelog_exists == false' <<< "${output}"
+    [ "$status" -eq 0 ]
 }
 
 @test "detect_changelog_commits reports changelog_exists true when present" {
@@ -133,7 +134,8 @@ setup() {
     git_test_repo_commit "fix: repair parser"
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
     [ "$status" -eq 0 ]
-    [[ $output == *'"changelog_exists": true'* ]]
+    run jq -e '.changelog_exists == true' <<< "${output}"
+    [ "$status" -eq 0 ]
 }
 
 @test "detect_changelog_commits all scope is bounded by CHANGELOG_MAX_COMMITS" {
@@ -146,7 +148,8 @@ setup() {
     git_test_repo_run "env CHANGELOG_MAX_COMMITS=2 bash '${DETECT_SCRIPT}' --scope all"
     [ "$status" -eq 0 ]
     assert_detect_changelog_ok_json "${output}" "all"
-    [[ $output == *'"commit_range": "HEAD~2..HEAD"'* ]]
+    run jq -e '.commit_range == "HEAD~2..HEAD"' <<< "${output}"
+    [ "$status" -eq 0 ]
 }
 
 @test "detect_changelog_commits includes repository_url from GitHub Actions env" {
@@ -159,9 +162,12 @@ setup() {
     git_test_repo_run "env GITHUB_SERVER_URL='https://github.com' GITHUB_REPOSITORY='octocat/hello' bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
     [ "$status" -eq 0 ]
     assert_detect_changelog_ok_json "${output}" "range" "${base}"
-    [[ $output == *'"repository": "octocat/hello"'* ]]
-    [[ $output == *'"repository_url": "https://github.com/octocat/hello"'* ]]
-    [[ $output == *'"compare_url": "https://github.com/octocat/hello/compare/'* ]]
+    run jq -e \
+        '.repository == "octocat/hello"
+         and .repository_url == "https://github.com/octocat/hello"
+         and (.compare_url | startswith("https://github.com/octocat/hello/compare/"))' \
+        <<< "${output}"
+    [ "$status" -eq 0 ]
 }
 
 @test "detect_changelog_commits rejects staged scope" {
@@ -169,15 +175,35 @@ setup() {
     touch "${GIT_TEST_REPO}/file.txt"
     git_test_repo_commit "chore: init"
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope staged"
-    [ "$status" -eq 0 ]
+    [ "$status" -eq 1 ]
     assert_detect_changelog_error_json "${output}" "must be all or range"
+}
+
+@test "detect_changelog_commits emits error JSON when jq is missing" {
+    local fakebin exe base dir
+
+    fakebin="${BATS_TEST_TMPDIR}/fakebin"
+    mkdir -p "${fakebin}"
+    for dir in /usr/bin /bin; do
+        for exe in "${dir}"/*; do
+            base="$(basename "${exe}")"
+            [[ ${base} == "jq" ]] && continue
+            [[ -e "${fakebin}/${base}" ]] && continue
+            ln -sf "${exe}" "${fakebin}/${base}"
+        done
+    done
+
+    run env PATH="${fakebin}" bash "${DETECT_SCRIPT}" --scope all
+    [ "$status" -eq 1 ]
+    run jq -e '.status == "error" and (.message | contains("Missing required tools"))' <<< "${output}"
+    [ "$status" -eq 0 ]
 }
 
 @test "detect_changelog_commits honors CHANGELOG_FILE for changelog_file path" {
     git_test_repo_setup
     touch "${GIT_TEST_REPO}/file.txt"
     git_test_repo_commit "chore: init"
-    git_test_repo_run "env CHANGELOG_FILE='notes/CHANGES.md' bash '${DETECT_SCRIPT}' --scope staged"
+    git_test_repo_run "env CHANGELOG_FILE='notes/CHANGES.md' bash '${DETECT_SCRIPT}' --scope all"
     [ "$status" -eq 0 ]
     [[ $output == *'"changelog_file": "notes/CHANGES.md"'* ]] \
         || [[ $output == *'"changelog_file":"notes/CHANGES.md"'* ]]
@@ -194,8 +220,8 @@ setup() {
     git_test_repo_commit "chore: pin all to v1.8.16"
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
     [ "$status" -eq 0 ]
-    [[ $output == *'"releases"'* ]]
-    [[ $output == *'"version": "1.8.16"'* ]]
+    run jq -e '(.releases | length) > 0 and (.releases[0].version == "1.8.16")' <<< "${output}"
+    [ "$status" -eq 0 ]
 }
 
 @test "detect_changelog_commits skips documented release version" {

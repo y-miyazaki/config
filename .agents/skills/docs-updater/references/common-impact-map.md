@@ -4,7 +4,7 @@ How to identify which documentation files are affected by code changes.
 
 ## Discovery Strategy
 
-The `detect_changes.sh` script collects changed files and returns all candidate documentation files. The AI agent reads each candidate and the relevant diffs to determine what needs updating.
+The skill's detect script collects changed files and returns all candidate documentation files. The AI agent reads each candidate and the relevant diffs to determine what needs updating.
 
 ## Script Output
 
@@ -28,7 +28,7 @@ If none of the above apply to a candidate document, skip it.
 
 - Root `*.md`
 - `docs/**/*.md`
-- Nested `**/README.md` (excluding `.agents/`, `.cursor/`, `.claude/`, `.kiro/`, `.vscode/`, `apm_modules/`)
+- Nested `**/README.md` (excluding install-generated agent roots such as `.agents/`, `.cursor/`, `.claude/`, `.kiro/`, `.vscode/` when present)
 - `mkdocs.yml` (nav section)
 
 ## Match Patterns

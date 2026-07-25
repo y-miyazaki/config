@@ -1,11 +1,21 @@
-## Input Schema
+## Exit Codes and Error Envelope
 
-Provided via prompt context by the calling workflow or interactive detect script.
+| Exit code | Meaning                                                                      |
+| --------- | ---------------------------------------------------------------------------- |
+| 0         | Success — stdout is detect script JSON. Parse per schema below and continue. |
+| 1         | Fatal — stdout is detect script error JSON. Read stdout, then **stop**.      |
+
+Detect scripts list `jq` as a required dependency. When `jq` is unavailable at fatal-error emission, stdout may be only `{status, skip, message}` (bootstrap JSON) instead of the full skill-specific field set below.
+
+## Detect script stdout (exit 0 only)
+
+Field set emitted by this skill's detect script or an equivalent caller-supplied JSON object.
 
 ```json
 {
-  "since": "abc1234",
+  "status": "ok",
   "scope": "range",
+  "since": "abc1234",
   "skip": false,
   "failures": [
     {
@@ -26,8 +36,9 @@ Provided via prompt context by the calling workflow or interactive detect script
 
 | Field                        | Type    | Description                                                                                     |
 | ---------------------------- | ------- | ----------------------------------------------------------------------------------------------- |
-| `since`                      | string  | Last processed SHA from caller state cursor (when supplied)                                     |
+| `status`                     | string  | `ok` on success path                                                                            |
 | `scope`                      | string  | Detect scope (for example `range`)                                                              |
+| `since`                      | string  | Last processed SHA from caller state cursor (when supplied)                                     |
 | `skip`                       | boolean | When true, no actionable work (detect script found no failures)                                 |
 | `failures`                   | array   | Actionable CI failures to assess (may be empty)                                                 |
 | `ignored`                    | array   | Skipped runs (ledger, filters, non-actionable types) for SKILL Ignored section                  |

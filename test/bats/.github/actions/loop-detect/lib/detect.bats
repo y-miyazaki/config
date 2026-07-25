@@ -1,6 +1,8 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154,SC2317
 
+bats_require_minimum_version 1.5.0
+
 # Tests for .github/actions/loop-detect/lib/detect.sh (guard helpers and config gates)
 
 # Use cases:
@@ -15,6 +17,8 @@
 # - checkout_context fails closed when fetch is exhausted
 # - empty candidates emit checkout_failed when CHECKOUT_FAILED > 0
 # - checkout_context increments CHECKOUT_FAILED when checkout fails
+# - append_detect_candidate exits the detect phase when the detect script fails
+# - multi-target scan fails fast without appending later candidates after detect failure
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -372,4 +376,128 @@ EOF
     run detect_result_skip "not-json"
     [ "$status" -eq 1 ]
     [[ $output == *"detect_result_skip"* ]]
+}
+
+@test "invoke_detect_script exits with detect output when script fails" {
+    DETECT_SCRIPT="${DETECT_TMP}/detect-error.sh"
+    cat > "${DETECT_SCRIPT}" << 'EOF'
+#!/usr/bin/env bash
+printf '%s\n' '{"status":"error","message":"missing jq"}'
+exit 1
+EOF
+    chmod +x "${DETECT_SCRIPT}"
+
+    run --separate-stderr invoke_detect_script "deadbeef" "integration:main"
+    [ "$status" -eq 1 ]
+    [[ ${stderr} == *"missing jq"* ]]
+    [[ ${stderr} == *"loop-detect:"* ]]
+    [[ ${stderr} == *"integration:main"* ]]
+}
+
+@test "append_detect_candidate exits the detect phase when the detect script fails" {
+    local detect_lib repo_root state_file
+
+    detect_lib="$(bats_workspace_root)/.github/actions/loop-detect/lib"
+    repo_root="${DETECT_TMP}/repo-fail"
+    mkdir -p "${repo_root}/.loop"
+    git init -q "${repo_root}"
+    git -C "${repo_root}" config user.email "test@example.com"
+    git -C "${repo_root}" config user.name "Test User"
+    git -C "${repo_root}" commit -q --allow-empty -m "init"
+    state_file="${repo_root}/.loop/state-ci-sweeper.json"
+    printf '%s\n' \
+        '{"targets":{"integration:main":{"last_sha":"deadbeef","consecutive_failures":0,"open_rejections":[]}}}' \
+        > "${state_file}"
+
+    DETECT_SCRIPT="${DETECT_TMP}/detect-fail.sh"
+    cat > "${DETECT_SCRIPT}" << 'EOF'
+#!/usr/bin/env bash
+printf '%s\n' '{"status":"error","message":"detect failed"}'
+exit 1
+EOF
+    chmod +x "${DETECT_SCRIPT}"
+
+    run --separate-stderr bash -c "
+        set -euo pipefail
+        # shellcheck disable=SC1091
+        source '${detect_lib}/detect.sh'
+        DETECT_SCRIPT='${DETECT_SCRIPT}'
+        STATE_FILE='${state_file}'
+        BASE_BRANCH='main'
+        SKILL_NAME='loop-ci-sweeper'
+        LEVEL='L2'
+        ALLOWLIST='*'
+        PROMPT_INSTRUCTIONS=''
+        LOOP_FINALIZE_INTEGRATION='open_pr'
+        CANDIDATES_JSON=()
+        checkout_context() { cd '${repo_root}' || return 1; }
+        append_integration_candidate 'main'
+    "
+    [ "$status" -eq 1 ]
+    [[ ${stderr} == *"detect failed"* ]]
+    [[ ${stderr} == *"loop-detect:"* ]]
+}
+
+@test "multi-target detect scan fails fast without appending later candidates" {
+    local detect_lib repo_root state_file call_file
+
+    detect_lib="$(bats_workspace_root)/.github/actions/loop-detect/lib"
+    repo_root="${DETECT_TMP}/repo-multi"
+    call_file="${DETECT_TMP}/detect_calls"
+    mkdir -p "${repo_root}/.loop"
+    git init -q "${repo_root}"
+    git -C "${repo_root}" config user.email "test@example.com"
+    git -C "${repo_root}" config user.name "Test User"
+    git -C "${repo_root}" commit -q --allow-empty -m "init"
+    state_file="${repo_root}/.loop/state-ci-sweeper.json"
+    printf '%s\n' \
+        '{"targets":{"integration:main":{"last_sha":"deadbeef","consecutive_failures":0,"open_rejections":[]},"integration:develop":{"last_sha":"deadbeef","consecutive_failures":0,"open_rejections":[]}}}' \
+        > "${state_file}"
+
+    DETECT_SCRIPT="${DETECT_TMP}/detect-multi.sh"
+    cat > "${DETECT_SCRIPT}" << EOF
+#!/usr/bin/env bash
+calls='${call_file}'
+if [[ ! -f "\${calls}" ]]; then
+  : > "\${calls}"
+fi
+count=\$(wc -l < "\${calls}" 2>/dev/null || echo 0)
+echo called >> "\${calls}"
+if [[ \${count} -eq 0 ]]; then
+  printf '%s\\n' '{"status":"ok","skip":false,"failures":[{"job_name":"ci","workflow_name":"wf","failure_type":"test","reason":"x"}]}'
+  exit 0
+fi
+printf '%s\\n' '{"status":"error","message":"second target failed"}'
+exit 1
+EOF
+    chmod +x "${DETECT_SCRIPT}"
+    : > "${call_file}"
+
+    run --separate-stderr bash -c "
+        set -euo pipefail
+        # shellcheck disable=SC1091
+        source '${detect_lib}/detect.sh'
+        DETECT_SCRIPT='${DETECT_SCRIPT}'
+        STATE_FILE='${state_file}'
+        BASE_BRANCH='main'
+        SKILL_NAME='loop-ci-sweeper'
+        LEVEL='L2'
+        ALLOWLIST='*'
+        PROMPT_INSTRUCTIONS=''
+        LOOP_FINALIZE_INTEGRATION='open_pr'
+        CANDIDATES_JSON=()
+        checkout_context() { cd '${repo_root}' || return 1; }
+        append_integration_candidate 'main' || exit 1
+        echo \"after_first=\${#CANDIDATES_JSON[@]}\"
+        set +e
+        append_integration_candidate 'develop'
+        set -e
+        echo \"after_second=\${#CANDIDATES_JSON[@]}\"
+        exit 1
+    "
+    [ "$status" -eq 1 ]
+    [[ ${stderr} == *"second target failed"* || ${stderr} == *"integration:develop"* ]]
+    [ "$(wc -l < "${call_file}")" -eq 2 ]
+    [[ $output == *"after_first=1"* ]]
+    [[ $output == *"after_second=1"* ]]
 }

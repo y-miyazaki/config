@@ -9,7 +9,8 @@
 # - Warnings on stderr when prerequisites are missing
 #
 # Design Rules:
-# - Exit 0 always; log errors to stderr
+# - Exit 0 on intentional skip paths (empty run id, should_skip, ledger update failure after warn)
+# - Exit 1 when jq is missing (required dependency)
 # - Merge into existing ledger without dropping unrelated run entries
 # - Prune entries older than 30 days (aligned with caller run-log / state retention)
 # - Source shared helpers from scripts/lib/all.sh (synced via scripts/self/ai/sync_skill_lib.sh)
@@ -337,8 +338,8 @@ function main {
     fi
 
     if ! command -v jq > /dev/null 2>&1; then
-        log "WARN" "jq is required for ledger update."
-        exit 0
+        log "ERROR" "Missing required tools: jq. Please install them and ensure they are in PATH."
+        exit 1
     fi
 
     mkdir -p "$(dirname "${LEDGER_FILE}")"

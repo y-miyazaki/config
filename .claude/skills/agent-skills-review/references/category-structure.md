@@ -96,7 +96,7 @@ Examples:
 **S-07 (MUST): Portable Reference Paths**
 
 Check: Do SKILL.md and `references/` link only to files inside the same skill directory (`references/`, `assets/`, `scripts/`) or to absolute `https://` URLs?
-Why: APM packages ship per skill. Paths to repository `docs/`, `../other-skill/`, or `repository \`docs/...\``prose break consumers that install skills via`apm` into unrelated repositories.
+Why: Skills are often installed or copied per skill directory. Paths to repository `docs/`, `../other-skill/`, or `repository \`docs/...\`` prose break consumers that use the skill in a different repository layout.
 Examples:
 
 - ✅ `[category-automation-envelope.md](references/category-automation-envelope.md)`

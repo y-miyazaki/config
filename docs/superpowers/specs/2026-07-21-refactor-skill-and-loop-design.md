@@ -188,7 +188,7 @@ Closed `hints[].kind`:
 | `duplication_block` | Repeated token/AST-approximate blocks above threshold                 | Style/naming/complexity from linters       |
 | `oversized_unit`    | File or function over line/byte threshold (size only, not complexity) | Cognitive complexity / maintainability idx |
 
-`skip=true` when no hints after allowlist filter. Always exit 0; errors → `status=error` + `warnings[]` pattern consistent with sibling detects.
+`skip=true` when no hints after allowlist filter. Exit 0 on success; fatal errors → `status=error` + `warnings[]` then exit 1.
 
 Prune paths: align with other loop detects (`.git`, agent roots, `node_modules`, `docs/report/**`, build dirs).
 

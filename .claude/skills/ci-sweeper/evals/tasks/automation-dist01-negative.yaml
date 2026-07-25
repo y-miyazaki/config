@@ -39,6 +39,6 @@ expected:
     - Candidates
     - Overview
     - ignored
-    - out of scope
+    - caller
   outcomes:
     - type: task_completed

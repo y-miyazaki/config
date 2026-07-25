@@ -1,6 +1,8 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
+bats_require_minimum_version 1.5.0
+
 # Tests for scripts/lib/common.sh
 
 # Use cases:
@@ -9,6 +11,8 @@
 # - is_dry_run returns non-zero when DRY_RUN is false/unset
 # - is_dry_run returns success when DRY_RUN=true
 # - log prints ERROR messages regardless of VERBOSE
+# - validate_dependencies reports missing tools on stdout
+# - require_dependencies exits 1 when tools are missing
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -56,4 +60,16 @@ setup() {
     run log ERROR "fatal"
     [ "$status" -eq 0 ]
     [[ $output == *"[ERROR] fatal"* ]]
+}
+
+@test "validate_dependencies reports missing tools on stdout" {
+    run validate_dependencies bash __missing_tool_xyz__
+    [ "$status" -eq 1 ]
+    [[ $output == "__missing_tool_xyz__" ]]
+}
+
+@test "require_dependencies exits 1 when tools are missing" {
+    run --separate-stderr require_dependencies bash __missing_tool_xyz__
+    [ "$status" -eq 1 ]
+    [[ ${stderr} == *"Missing required tools"*__missing_tool_xyz__* ]]
 }

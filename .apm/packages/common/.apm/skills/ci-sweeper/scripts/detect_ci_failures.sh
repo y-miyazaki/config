@@ -13,7 +13,7 @@
 # Design Rules:
 # - Collect failures via gh API (run list/view) filtered by since ref and ledger
 # - Return structured JSON via shared lib/json.sh
-# - Exit 0 always (errors reported in JSON status field)
+# - Exit 0 on success; fatal errors emit status=error JSON and exit 1
 # - Skip runs per CI_SWEEPER_REJECT_RETRY_POLICY and ledger state
 # - workflow_run event path: match run head branch to detect scan branch
 # - Source shared helpers from scripts/lib/all.sh (synced via scripts/self/ai/sync_skill_lib.sh)
@@ -172,7 +172,7 @@ function parse_arguments {
 #   None
 #
 # Returns:
-#   Exits with code 0
+#   Exits with code 1 after emitting error JSON
 #
 # Usage:
 #   output_error "gh CLI is required"
@@ -180,16 +180,55 @@ function parse_arguments {
 #######################################
 function output_error {
     local message="$1"
-    json_object_start
-    json_field_string "status" "error" ","
-    json_field_string "scope" "${SCOPE}" ","
-    json_field_string "since" "${SINCE_REF}" ","
-    json_field_bool "skip" "true" ","
-    json_field_array "failures" "[]" ","
-    json_field_array "ignored" "[]" ","
-    json_field_string "message" "${message}" ""
-    json_object_end
-    exit 0
+
+    if ! command -v jq &> /dev/null; then
+        json_emit_minimal_error "${message}"
+        exit 1
+    fi
+
+    json_object \
+        status "error" \
+        scope "${SCOPE}" \
+        since "${SINCE_REF}" \
+        skip "true" \
+        failures "[]" \
+        ignored "[]" \
+        message "${message}"
+    exit 1
+}
+
+#######################################
+# ensure_dependencies: Fail with detect error JSON when tools are missing
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $@ - Required tools/commands
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None (calls output_error on missing dependencies)
+#
+# Usage:
+#   ensure_dependencies bash git gh jq
+#
+#######################################
+function ensure_dependencies {
+    local -a missing_tools=()
+    local tool
+
+    while IFS= read -r tool; do
+        if [[ -n ${tool} ]]; then
+            missing_tools+=("${tool}")
+        fi
+    done < <(validate_dependencies "$@" || true)
+
+    if [[ ${#missing_tools[@]} -gt 0 ]]; then
+        output_error "Missing required tools: ${missing_tools[*]}. Please install them and ensure they are in PATH."
+    fi
 }
 
 #######################################
@@ -769,20 +808,17 @@ function failure_object_json {
     local log_excerpt="$8"
     local reason="CI failure in job ${job_name} (${failure_type})"
 
-    cat << EOF
-{
-  "workflow_name": "$(json_escape "${workflow_name}")",
-  "workflow_run_id": "$(json_escape "${run_id}")",
-  "head_sha": "$(json_escape "${head_sha}")",
-  "head_branch": "$(json_escape "${head_branch}")",
-  "job_name": "$(json_escape "${job_name}")",
-  "failure_type": "$(json_escape "${failure_type}")",
-  "log_excerpt": "$(json_escape "${log_excerpt}")",
-  "run_url": "$(json_escape "${run_url}")",
-  "source_commit": "$(json_escape "${head_sha}")",
-  "reason": "$(json_escape "${reason}")"
-}
-EOF
+    json_object \
+        workflow_name "${workflow_name}" \
+        workflow_run_id "${run_id}" \
+        head_sha "${head_sha}" \
+        head_branch "${head_branch}" \
+        job_name "${job_name}" \
+        failure_type "${failure_type}" \
+        log_excerpt "${log_excerpt}" \
+        run_url "${run_url}" \
+        source_commit "${head_sha}" \
+        reason "${reason}"
 }
 
 #######################################
@@ -835,23 +871,13 @@ function append_failure {
 #
 #######################################
 function ignored_object_json {
-    local workflow_name="$1"
-    local run_id="$2"
-    local head_branch="$3"
-    local job_name="$4"
-    local failure_type="$5"
-    local reason="$6"
-
-    cat << EOF
-{
-  "workflow_name": "$(json_escape "${workflow_name}")",
-  "workflow_run_id": "$(json_escape "${run_id}")",
-  "head_branch": "$(json_escape "${head_branch}")",
-  "job_name": "$(json_escape "${job_name}")",
-  "failure_type": "$(json_escape "${failure_type}")",
-  "reason": "$(json_escape "${reason}")"
-}
-EOF
+    json_object \
+        workflow_name "$1" \
+        workflow_run_id "$2" \
+        head_branch "$3" \
+        job_name "$4" \
+        failure_type "$5" \
+        reason "$6"
 }
 
 #######################################
@@ -1062,73 +1088,6 @@ function collect_recent_failures {
 }
 
 #######################################
-# failures_array_json: Join failure objects into a JSON array string
-#
-# Globals:
-#   FAILURES_JSON - Source failure objects
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   JSON array string to stdout
-#
-# Returns:
-#   0 on success
-#
-# Usage:
-#   failures_array="$(failures_array_json)"
-#
-#######################################
-function failures_array_json {
-    local joined=""
-    local failure
-    if [[ ${#FAILURES_JSON[@]} -eq 0 ]]; then
-        printf '%s' "[]"
-        return
-    fi
-    for failure in "${FAILURES_JSON[@]}"; do
-        if [[ -n ${joined} ]]; then
-            joined+=","
-        fi
-        joined+="${failure}"
-    done
-    printf '[%s]' "${joined}"
-}
-
-#######################################
-# ignored_array_json: Join ignored objects into a JSON array string
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   None
-#
-#######################################
-function ignored_array_json {
-    local joined=""
-    local ignored
-    if [[ ${#IGNORED_JSON[@]} -eq 0 ]]; then
-        printf '%s' "[]"
-        return
-    fi
-    for ignored in "${IGNORED_JSON[@]}"; do
-        if [[ -n ${joined} ]]; then
-            joined+=","
-        fi
-        joined+="${ignored}"
-    done
-    printf '[%s]' "${joined}"
-}
-
-#######################################
 # output_json: Print structured JSON result using lib/json.sh helpers
 #
 # Globals:
@@ -1149,23 +1108,18 @@ function ignored_array_json {
 #######################################
 function output_json {
     local skip="false"
-    local failures_array ignored_array
 
     if [[ ${#FAILURES_JSON[@]} -eq 0 ]]; then
         skip="true"
     fi
 
-    failures_array="$(failures_array_json)"
-    ignored_array="$(ignored_array_json)"
-
-    json_object_start
-    json_field_string "status" "ok" ","
-    json_field_string "scope" "${SCOPE}" ","
-    json_field_string "since" "${SINCE_REF}" ","
-    json_field_bool "skip" "${skip}" ","
-    json_field_array "failures" "${failures_array}" ","
-    json_field_array "ignored" "${ignored_array}" ""
-    json_object_end
+    json_object \
+        status "ok" \
+        scope "${SCOPE}" \
+        since "${SINCE_REF}" \
+        skip "${skip}" \
+        failures "$(json_array "${FAILURES_JSON[@]}")" \
+        ignored "$(json_array "${IGNORED_JSON[@]}")"
 }
 
 #######################################
@@ -1220,13 +1174,10 @@ function configure_detect_environment {
 #
 #######################################
 function main {
+    ensure_dependencies bash git gh jq
     configure_detect_environment
     parse_arguments "$@"
     validate_ledger_file "${LEDGER_FILE}"
-
-    if ! gh_available; then
-        output_error "gh CLI and jq are required but not installed"
-    fi
 
     if [[ -z ${GH_TOKEN:-} && -z ${GITHUB_TOKEN:-} ]]; then
         output_error "GH_TOKEN or GITHUB_TOKEN is required"

@@ -18,7 +18,7 @@ metadata:
 
 ## Input
 
-- **Interactive / hook:** `scope` (`staged`, `all`, `range` with `--since`) — run `scripts/detect_changes.sh` — triage per [common-impact-map.md](references/common-impact-map.md); validate patches per [common-checklist.md](references/common-checklist.md)
+- **Interactive / hook:** `scope` (`staged`, `all`, `range` with `--since`) — run this skill's detect script — triage per [common-impact-map.md](references/common-impact-map.md); validate patches per [common-checklist.md](references/common-checklist.md)
 - **Automation:** caller-assembled prompt with detect JSON and optional `## Constraints` — load [category-input-schema.md](references/category-input-schema.md) and [category-automation-envelope.md](references/category-automation-envelope.md) on that path only
 
 ## Output Specification
@@ -67,7 +67,7 @@ Resolve whether to edit documentation files before patching:
 
 ### Interactive / hook path
 
-1. Run `bash scripts/detect_changes.sh --scope <scope>`. Parse JSON.
+1. Run this skill's detect script with `--scope <scope>`. On non-zero exit, read stdout and stop. On exit 0, parse success JSON.
 2. If `skip` is `true`, report skip and exit.
 3. Triage `affected_docs` per [common-impact-map.md](references/common-impact-map.md); grep before full read.
 4. When edits are not requested, emit survey shape per [common-output-format.md](references/common-output-format.md); stop — do not edit documentation files or run `git add`.
@@ -79,12 +79,13 @@ When detect JSON and `## Constraints` are present: follow [category-automation-e
 
 ### Error Handling
 
-| Condition                            | Severity    | Action                                                                                        |
-| ------------------------------------ | ----------- | --------------------------------------------------------------------------------------------- |
-| No git repository                    | Fatal       | Stop                                                                                          |
-| Empty diff / no documentation impact | Info        | Report skip, exit                                                                             |
-| Affected doc file missing            | Recoverable | Skip file; note in report                                                                     |
-| Exceeds scope (>3 H2, etc.)          | Recoverable | Stop for file; recommend docs-creator                                                         |
-| `mkdocs.yml` missing                 | Recoverable | Skip nav update                                                                               |
-| Fix requested but edits not allowed  | Info        | Survey only; note that edits require an explicit fix request or caller permission             |
-| Automation `write_target` mismatch   | Recoverable | Survey only per [category-automation-envelope.md](references/category-automation-envelope.md) |
+| Condition                                        | Severity    | Action                                                                                        |
+| ------------------------------------------------ | ----------- | --------------------------------------------------------------------------------------------- |
+| Detect script non-zero exit or `status: "error"` | Fatal       | Read stdout; stop — do not treat as success-path detect JSON                                  |
+| No git repository                                | Fatal       | Stop                                                                                          |
+| Empty diff / no documentation impact             | Info        | Report skip, exit                                                                             |
+| Affected doc file missing                        | Recoverable | Skip file; note in report                                                                     |
+| Exceeds scope (>3 H2, etc.)                      | Recoverable | Stop for file; recommend docs-creator                                                         |
+| `mkdocs.yml` missing                             | Recoverable | Skip nav update                                                                               |
+| Fix requested but edits not allowed              | Info        | Survey only; note that edits require an explicit fix request or caller permission             |
+| Automation `write_target` mismatch               | Recoverable | Survey only per [category-automation-envelope.md](references/category-automation-envelope.md) |

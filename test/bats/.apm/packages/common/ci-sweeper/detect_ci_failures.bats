@@ -140,8 +140,10 @@ EOF
     collect_failures_for_run "on-loop-changelog" "12345" "abc123" "main" "https://example.com/run/1" "startup_failure"
     [ "${#FAILURES_JSON[@]}" -eq 1 ]
     [ "${#IGNORED_JSON[@]}" -eq 0 ]
-    [[ ${FAILURES_JSON[0]} == *'"job_name": "workflow"'* ]]
-    [[ ${FAILURES_JSON[0]} == *"startup_failure"* ]]
+    run jq -e '.job_name == "workflow" and (.log_excerpt | contains("startup_failure"))' <<< "${FAILURES_JSON[0]}"
+    [ "$status" -eq 0 ]
+    run jq -e '.workflow_run_id | type == "string"' <<< "${FAILURES_JSON[0]}"
+    [ "$status" -eq 0 ]
 }
 
 @test "collect_failures_for_run includes infra failures in failures array" {
@@ -169,7 +171,8 @@ EOF
     collect_failures_for_run "ci-markdown" "12345" "abc123" "main" "https://example.com/run/1"
     [ "${#FAILURES_JSON[@]}" -eq 1 ]
     [ "${#IGNORED_JSON[@]}" -eq 0 ]
-    [[ ${FAILURES_JSON[0]} == *'"failure_type": "infra"'* ]]
+    run jq -e '.failure_type == "infra"' <<< "${FAILURES_JSON[0]}"
+    [ "$status" -eq 0 ]
 }
 
 @test "classify_failure_type treats http status in test output as regression" {
@@ -332,8 +335,8 @@ EOF
     collect_from_workflow_run_event
     [ "${#FAILURES_JSON[@]}" -eq 1 ]
     [ "${#IGNORED_JSON[@]}" -eq 0 ]
-    [[ ${FAILURES_JSON[0]} == *'"failure_type": "regression"'* ]]
-    [[ ${FAILURES_JSON[0]} == *"MD038"* ]]
+    run jq -e '.failure_type == "regression" and (.log_excerpt | contains("MD038"))' <<< "${FAILURES_JSON[0]}"
+    [ "$status" -eq 0 ]
 }
 
 @test "collect_from_workflow_run_event falls back to EVENT_HEAD_BRANCH when api head empty" {
@@ -473,7 +476,8 @@ EOF
     collect_failures_for_run "ci-markdown" "99999" "abc123" "main" "https://example.com/run/2"
     [ "${#FAILURES_JSON[@]}" -eq 1 ]
     [ "${#IGNORED_JSON[@]}" -eq 0 ]
-    [[ ${FAILURES_JSON[0]} == *'"failure_type": "env"'* ]]
+    run jq -e '.failure_type == "env"' <<< "${FAILURES_JSON[0]}"
+    [ "$status" -eq 0 ]
 }
 
 @test "sanitize_log_excerpt redacts bearer tokens" {
@@ -511,9 +515,29 @@ EOF
     [ "$status" -eq 0 ]
 }
 
+@test "detect_ci_failures emits error JSON when jq is missing" {
+    local fakebin exe base dir
+
+    fakebin="${BATS_TEST_TMPDIR}/fakebin"
+    mkdir -p "${fakebin}"
+    for dir in /usr/bin /bin; do
+        for exe in "${dir}"/*; do
+            base="$(basename "${exe}")"
+            [[ ${base} == "jq" ]] && continue
+            [[ -e "${fakebin}/${base}" ]] && continue
+            ln -sf "${exe}" "${fakebin}/${base}"
+        done
+    done
+
+    run env PATH="${fakebin}" bash "${DETECT_SCRIPT}" --scope all
+    [ "$status" -eq 1 ]
+    run jq -e '.status == "error" and (.message | contains("Missing required tools"))' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
 @test "detect_ci_failures rejects ledger path traversal outside repository root" {
     run env CI_SWEEPER_LEDGER_FILE="../outside.json" bash "${DETECT_SCRIPT}" --scope all
-    [ "$status" -eq 0 ]
+    [ "$status" -eq 1 ]
     assert_detect_ci_failures_error_json "${output}" "stay under the repository root"
 }
 
@@ -583,6 +607,6 @@ EOF
     mkdir -p "${workspace}/.loop"
 
     run bash -c "cd '${workspace}' && env -u GH_TOKEN -u GITHUB_TOKEN -u GITHUB_ACTIONS -u CI_SWEEPER_DEBUG_LOG CI_SWEEPER_LEDGER_FILE='${ledger_file}' bash '${DETECT_SCRIPT}' --scope all"
-    [ "$status" -eq 0 ]
+    [ "$status" -eq 1 ]
     assert_detect_ci_failures_error_json "${output}" "GH_TOKEN or GITHUB_TOKEN is required"
 }

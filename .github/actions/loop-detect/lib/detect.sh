@@ -13,6 +13,10 @@
 # - Scopes watch lists when LOOP_SCOPED_HEAD_BRANCH or workflow_run event head is set
 # - Invokes detect_script once per scan context (caller never re-runs)
 # - Assembles target_matrix with prompt and verifier_context per cell
+# - Detect-script boundary: coupled only on the success-path interface (exit 0, valid JSON,
+#   skip flag, fields consumed for matrix/prompt). On non-zero exit, echo stdout verbatim and
+#   fail — do not interpret skill error JSON (status, message, schema). Multi-target scans
+#   fail fast: a later-target detect failure exits before write_detect_outputs.
 #
 # Dependencies:
 # - bash, git, jq, openssl
@@ -346,7 +350,7 @@ function build_pull_request_target_json {
 #   Warning/notice annotations via helper loggers
 #
 # Returns:
-#   None (returns early on checkout/circuit/pending/skip failures)
+#   None (returns early on checkout/circuit/pending/skip failures; exits detect phase on detect-script failure)
 #
 #######################################
 function append_detect_candidate {
@@ -386,7 +390,7 @@ function append_detect_candidate {
     current_sha="$(git rev-parse HEAD)"
     export CI_SWEEPER_HEAD_BRANCH="${head_branch}"
     export DEFAULT_BASE_BRANCH="${BASE_BRANCH}"
-    detect_result="$(bash "${DETECT_SCRIPT}" --scope range --since "${last_sha}")"
+    detect_result="$(invoke_detect_script "${last_sha}" "${target_key}")"
 
     if detect_result_skip "${detect_result}"; then
         log_detect_notice "skip" "${target_key}" \
@@ -792,6 +796,47 @@ function enrich_target_json_with_detect_fields {
     fi
 
     jq -c --arg rf "${report_file}" '. + {report_file: $rf}' <<< "${target_json}"
+}
+
+#######################################
+# invoke_detect_script: Run DETECT_SCRIPT; fatal failures exit the detect phase
+#
+# Globals:
+#   DETECT_SCRIPT - Detect script path
+#
+# Arguments:
+#   $1 - since ref for --scope range
+#   $2 - target key for error context (optional)
+#
+# Outputs:
+#   Detect JSON on stdout when successful; on failure, detect stdout echoed to stderr then exit
+#
+# Returns:
+#   0 on success; on failure logs context, echoes detect stdout to stderr, then exit (never continues)
+#
+#######################################
+function invoke_detect_script {
+    local last_sha="$1"
+    local target_key="${2:-}"
+    local detect_status=0
+    local detect_result
+
+    detect_result="$(bash "${DETECT_SCRIPT}" --scope range --since "${last_sha}")" || detect_status=$?
+    # set -e: without ||, a non-zero detect exit aborts before we can log context or echo stdout to stderr.
+
+    if [[ ${detect_status} -ne 0 ]]; then
+        if [[ -n ${target_key} ]]; then
+            log_detect_error "detect script failed target=${target_key} script=${DETECT_SCRIPT} since=${last_sha}"
+        else
+            log_detect_error "detect script failed script=${DETECT_SCRIPT} since=${last_sha}"
+        fi
+        if [[ -n ${detect_result} ]]; then
+            printf '%s\n' "${detect_result}" >&2
+        fi
+        exit "${detect_status}"
+    fi
+
+    printf '%s' "${detect_result}"
 }
 
 #######################################

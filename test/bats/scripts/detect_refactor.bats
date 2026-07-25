@@ -4,6 +4,7 @@
 # Tests for .apm/packages/common/.apm/skills/refactor/scripts/detect_refactor.sh
 #
 # Use cases:
+# - detect_refactor.sh emits error JSON when jq is missing
 # - detect_refactor.sh emits valid ok JSON with skip when no scan targets match
 # - detect_refactor.sh ignores comment-only duplicate blocks (function doc templates)
 # - detect_refactor.sh reports duplication_block for repeated line blocks in one file
@@ -24,6 +25,27 @@ source "${_bats_support}/support/common.bash"
 setup() {
     TARGET_SCRIPT="$(apm_skill_script_path refactor detect_refactor.sh)"
     git_test_repo_setup
+}
+
+@test "detect_refactor.sh emits error JSON when jq is missing" {
+    local fakebin exe base dir
+
+    fakebin="${BATS_TEST_TMPDIR}/fakebin"
+    mkdir -p "${fakebin}"
+    for dir in /usr/bin /bin; do
+        for exe in "${dir}"/*; do
+            base="$(basename "${exe}")"
+            [[ ${base} == "jq" ]] && continue
+            [[ -e "${fakebin}/${base}" ]] && continue
+            ln -sf "${exe}" "${fakebin}/${base}"
+        done
+    done
+
+    git_test_repo_commit "init"
+    run env PATH="${fakebin}" bash "${TARGET_SCRIPT}" --scope all
+    [ "$status" -eq 1 ]
+    run jq -e '.status == "error" and (.message | contains("Missing required tools"))' <<< "${output}"
+    [ "$status" -eq 0 ]
 }
 
 @test "detect_refactor.sh emits valid ok JSON with skip when no scan targets match" {
@@ -311,6 +333,6 @@ EOF
     git_test_repo_commit "init"
 
     git_test_repo_run "bash '${TARGET_SCRIPT}' --scope range"
-    [ "$status" -eq 0 ]
+    [ "$status" -eq 1 ]
     assert_detect_refactor_error_json "${output}" "range scope requires --since"
 }
