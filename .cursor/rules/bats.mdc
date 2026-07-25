@@ -22,7 +22,7 @@ globs:
 | Component        | Rule                                                                 | Example                                      |
 | ---------------- | -------------------------------------------------------------------- | -------------------------------------------- |
 | Suite file       | snake_case; when the repo mirrors paths, match the source under test | `lib/common.bats` mirroring `lib/common.sh`  |
-| Support helper   | snake_case `.bash` under the repository bats support dir when used | `common.bash`, `mock_cli.bash` in `support/` |
+| Support helper   | snake_case `.bash` under the repository bats support dir when used   | `common.bash`, `mock_cli.bash` in `support/` |
 | `@test` name     | Descriptive sentence (lowercase)                                     | `parse_args accepts --verbose flag`          |
 | Package constant | UPPER_SNAKE_CASE                                                     | `TARGET_SCRIPT`, `FIXTURE_DIR`               |
 
