@@ -4,17 +4,17 @@ This file contains review checks specific to the Standards chapter of instructio
 
 ## Standards Chapter (STD)
 
-**STD-01 (MUST): Naming Conventions**
+**STD-01 (SHOULD): Naming Conventions**
 
-Check: Naming conventions are documented per component
-Why: Missing conventions cause code inconsistency and unclear review criteria
-Fix: Add per-component naming table (functions, variables, files, etc.)
+Check: Are non-obvious naming rules documented when they exist? Omit `### Naming Conventions` when the only rules are language or ecosystem defaults the agent already knows.
+Why: Restating snake_case / kebab-case / UPPER_SNAKE wastes tokens (token efficiency). Missing project-specific naming still causes inconsistency.
+Fix: Document only non-obvious or distribution-specific naming; delete tables that only restate language defaults
 
 **STD-02 (SHOULD): Tool Standards**
 
 Check: Tool conventions are documented
 Why: Missing tool standards prevent automation and cause implementation inconsistencies
-Fix: Add standard conventions for relevant tools (formatters, linters, etc.)
+Fix: Add standard conventions for relevant tools (formatters, linters, and validators, etc.)
 
 **STD-03 (MUST): Consistency**
 
@@ -26,4 +26,4 @@ Fix: Unify documentation level, verify against reference files
 
 Check: When instructions are distributed to agent rule paths, does Naming Conventions document source stem → Cursor `.mdc` / Claude `.md` / Kiro steering mapping?
 Why: Agents cannot resolve companion rules if only the package source filename is documented
-Fix: Add rows for package source, Cursor, Claude, and Kiro paths using the shared stem
+Fix: Add rows for package source, Cursor, Claude, and Kiro paths using the shared stem — required in the meta instructions authoring file; domain instruction files need not repeat the mapping

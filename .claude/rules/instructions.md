@@ -10,14 +10,7 @@ paths:
 
 ## Scope
 
-- Scope covers creating and updating instruction/rule files: package sources (`**/instructions/*.instructions.md`) and distributed targets (`.cursor/rules/*.mdc`, `.kiro/steering/*.md`, `.claude/rules/*.md`).
-- G-03 (MUST): Keep `applyTo` globs precise to those rule paths — do not use broad trees such as `.claude/**/*.md` that also match skills and unrelated markdown.
-- G-04 (MUST): In agent-facing cross-links, use stem-based wording such as companion X rules (stem `x`) — never bare `*.instructions.md` filenames that are not present after distribution to agent rule paths.
-- G-05 (MUST): When a companion instruction must guide production-file edits (for example tests paired with source), include those production globs in `applyTo` so the rules inject at edit time.
-- **DIST-01 (MUST)**: Keep distributable instruction content repository-neutral — any consumer project must be able to follow the rules without this config repository's layout.
-  - Do not embed: consumer-project-specific paths, internal CI or workflow names, single canonical file references ("use `path/to/foo` as the reference"), or project-local test support APIs.
-  - Prefer: generic path patterns (for example `lib/*.sh`, `scripts/lib/*.sh`), stem-based companion cross-links, stable external references.
-  - Domain-specific layout jargon is allowed only when expressed as a generic pattern, not a named consumer tree.
+- Scope covers creating and updating instruction and rule files for agent consumption.
 
 ## Standards
 
@@ -34,10 +27,10 @@ paths:
 
 ### Standards Content
 
-- **STD-01 (MUST)**: A Naming Conventions table exists - without it, component naming becomes inconsistent.
+- **STD-01 (SHOULD)**: Document non-obvious naming only — omit `### Naming Conventions` when rules are language or ecosystem defaults the agent already knows.
 - **STD-02 (SHOULD)**: Tool-specific standards are documented when applicable.
 - **STD-03 (MUST)**: The documentation level matches other instruction files - inconsistent granularity makes cross-file comparison difficult.
-- **STD-04 (MUST)**: When instructions are distributed to agent rule paths, Naming Conventions document the source stem → Cursor / Claude / Kiro path mapping so agents can resolve companions at runtime.
+- **STD-04 (MUST)**: When instructions are distributed to agent rule paths, Naming Conventions document the source stem → Cursor / Claude / Kiro path mapping so agents can resolve companions at runtime (meta authoring file; domain files need not repeat the mapping).
 
 ### Structure
 
@@ -49,7 +42,7 @@ paths:
 - **STRUCT-01 (MUST)**: Keep the five-chapter structure (Scope -> Standards -> Guidelines -> Testing and Validation -> Security Guidelines) - missing chapters create information gaps.
 - **STRUCT-02 (MUST)**: Keep chapter order strict - inconsistent ordering makes file-to-file comparison harder.
 - **STRUCT-03 (MUST)**: Use H2 for chapters and H3 for subsections; minimize H4 and deeper levels - deep hierarchies degrade AI structural recognition.
-- **STRUCT-04 (MUST)**: Start the Standards chapter with `### Naming Conventions` - this is the unified starting point across files.
+- **STRUCT-04 (SHOULD)**: When `### Naming Conventions` is present, place it first under Standards; omit the subsection when STD-01 allows (no non-obvious naming).
 - **STRUCT-05 (MUST)**: Order Guidelines as domain rules -> Anti-Patterns -> Code Modification Guidelines - this keeps priority order clear.
 - **STRUCT-06 (MUST)**: In the Guidelines chapter, use H3 heading format `### Name (LEVEL)` for rule sections or `### Name` for declaration/process sections - do not include ID ranges in headings.
 - **STRUCT-07 (MUST)**: Keep `## Testing and Validation` concise: optional on-demand skill pointer and notes for checks not covered by automation; omit always-run command recipes and omit "hooks/pre-commit handle X so do not run Y" explanations; keep detailed review criteria (`TEST-*`, `SEC-*`) in Guidelines - duplicate definitions hurt maintainability and consistency.
@@ -78,8 +71,8 @@ paths:
   - Check: Chapters follow Scope → Standards → Guidelines → Testing and Validation → Security Guidelines order
 - STRUCT-03 (MUST): Heading Levels Appropriate
   - Check: Heading hierarchy properly uses H2 (chapters) → H3 (subsections)
-- STRUCT-04 (MUST): Standards Chapter Subsections
-  - Check: Does the Standards chapter have Naming Conventions subsection first, followed by tool-specific standards?
+- STRUCT-04 (SHOULD): Standards Chapter Subsections
+  - Check: When `### Naming Conventions` is present, is it the first Standards subsection? Omission is allowed when STD-01 says no non-obvious naming rules exist.
 - STRUCT-05 (MUST): Guidelines Chapter Subsections
   - Check: Does the Guidelines chapter have domain rules first, followed by Anti-Patterns, then Code Modification Guidelines?
 - STRUCT-06 (MUST): H3 Heading Format
@@ -138,8 +131,8 @@ paths:
 
 ### Standards Chapter (STD)
 
-- STD-01 (MUST): Naming Conventions
-  - Check: Naming conventions are documented per component
+- STD-01 (SHOULD): Naming Conventions
+  - Check: Are non-obvious naming rules documented when they exist? Omit `### Naming Conventions` when the only rules are language or ecosystem defaults the agent already knows.
 - STD-02 (SHOULD): Tool Standards
   - Check: Tool conventions are documented
 - STD-03 (MUST): Consistency

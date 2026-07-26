@@ -7,17 +7,16 @@ paths:
 
 ## Scope
 
-- Scope is limited to implementing, testing, and validating Go source code (`*.go`).
+- Scope covers implementing, testing, and validating Go source code.
 
 ## Standards
 
 ### Naming Conventions
 
-| Component                 | Rule       | Example          |
-| ------------------------- | ---------- | ---------------- |
-| Interface (single-method) | -er suffix | Reader, Closer   |
-| Interface (multi-method)  | role name  | UserRepository   |
-| File name                 | snake_case | event_handler.go |
+| Component                 | Rule       | Example        |
+| ------------------------- | ---------- | -------------- |
+| Interface (single-method) | -er suffix | Reader, Closer |
+| Interface (multi-method)  | role name  | UserRepository |
 
 ### Core Go Conventions
 

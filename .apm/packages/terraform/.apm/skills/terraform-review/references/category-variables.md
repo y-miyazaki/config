@@ -20,7 +20,7 @@ Fix: Write `description`, explicitly mark (Required)/(Optional), add examples
 
 **V-04 (SHOULD): Validation Pattern Restrictions**
 
-Check: Are validation rules reasonable and necessary?
+Check: Are validation rules aligned with business constraints and necessary?
 Why: Inappropriate validations and excessive constraints (e.g., length > 0) cause rejection of valid values, errors, and operational difficulties
 Fix: Use appropriate condition expressions, implement business logic validation
 

@@ -1,7 +1,7 @@
 id: agent-skills-review-dist01-negative-001
 name: agent-skills-review flags non-portable product paths
 description: >-
-  Validate DIST-01 / S-07 failure when a SKILL embeds consumer product paths
+  Validate S-07 failure when a SKILL embeds consumer product paths
   (.loop/, on-loop-*, autonomy planes) that break APM portability.
 tags:
   - quality
@@ -13,7 +13,7 @@ inputs:
     Use agent-skills-review. Review the injected SKILL.md excerpt in context.
     It hard-requires `.loop/state.json`, references `on-loop-ci-sweeper.yaml`,
     and branches on `level: L2`. Report structural/portability failures with
-    ItemIDs (S-07 and/or DIST). Return ## Checks Summary, ## Checks
+    ItemIDs (S-07). Return ## Checks Summary, ## Checks
     (Failed/Deferred Only), and ## Issues. Do not approve the skill as portable.
   context:
     target: SKILL.md

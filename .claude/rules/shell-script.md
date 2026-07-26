@@ -7,20 +7,11 @@ paths:
 
 ## Scope
 
-- Scope covers implementing and validating Shell scripts (`*.sh`), including pairing Bats suites (`*.bats`) in the same change.
+- Scope covers implementing and validating shell scripts, including pairing Bats suites in the same change when required.
 - TEST-00 (MUST): When adding or materially changing a shell script or sourced library, add or update the matching Bats suite in the same change — do not defer tests. Follow the repository's established bats layout per companion Bats rules (stem `bats`).
-- Suite layout and helpers: companion Bats rules (stem `bats`). At runtime that stem is `.cursor/rules/bats.mdc` (Cursor), `.claude/rules/bats.md` (Claude), or `.kiro/steering/bats.md` (Kiro) — not the package source name `bats.instructions.md`.
+- Suite layout and helpers: companion Bats rules (stem `bats`).
 
 ## Standards
-
-### Naming Conventions
-
-| Component | Rule             | Example                  |
-| --------- | ---------------- | ------------------------ |
-| File      | snake_case       | deploy_terraform.sh      |
-| Function  | snake_case       | show_usage, log_message  |
-| Variable  | snake_case       | script_name, error_count |
-| Constant  | UPPER_SNAKE_CASE | DEFAULT_TIMEOUT          |
 
 ### Script Structure
 
@@ -63,6 +54,7 @@ Applies to `source`d modules (for example `lib/*.sh`, `scripts/lib/*.sh`):
 
 ```bash
 #!/bin/bash
+#######################################
 # Description:
 #   What this script does (one paragraph).
 #
@@ -75,6 +67,7 @@ Applies to `source`d modules (for example `lib/*.sh`, `scripts/lib/*.sh`):
 # Output:
 #   Description of output (include when script generates artifacts).
 #
+#######################################
 ```
 
 ### Function Documentation
@@ -245,7 +238,7 @@ function my_function() {
 - SEC-04 (SHOULD): Temporary File Cleanup
   - Check: Are temporary files created with mktemp and cleaned up with trap?
 - SEC-05 (SHOULD): Permission Checks
-  - Check: Are required permissions (root, etc.) validated before execution?
+  - Check: Are required permissions (root, sudo, etc.) validated before execution?
 - SEC-06 (SHOULD): Sensitive Data Masking in Logs
   - Check: Are passwords and tokens masked before logging?
 - SEC-07 (SHOULD): External Command Validation
@@ -278,6 +271,6 @@ On-demand validation: see shell-script-validation skill SKILL.md. Suite layout: 
 
 ## Security Guidelines
 
-- Keep `set -euo pipefail` and safe defaults (`umask`, etc.) enabled; do not disable them.
+- Keep `set -euo pipefail` and safe defaults (`umask 027`, `LC_ALL=C.UTF-8`) enabled; do not disable them.
 - Handle sensitive information through environment variables or secret management, and never print it to stdout/logs.
 - Add target confirmation and guard conditions before destructive commands to prevent accidental execution.

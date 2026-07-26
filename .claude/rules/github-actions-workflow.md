@@ -9,21 +9,9 @@ paths:
 
 ## Scope
 
-- Scope is limited to designing, updating, and validating `.github/workflows/*.yml|yaml` and `.github/actions/*/action.yml` files.
+- Scope covers designing, updating, and validating GitHub Actions workflows and composite action definitions.
 
 ## Standards
-
-### Naming Conventions
-
-| Component     | Rule             | Example              |
-| ------------- | ---------------- | -------------------- |
-| Workflow file | kebab-case       | ci-build-deploy.yaml |
-| Job ID        | kebab-case       | build-and-test       |
-| Step ID       | kebab-case       | setup-node           |
-| Environment   | lowercase        | production, staging  |
-| Secret        | UPPER_SNAKE_CASE | DEPLOY_TOKEN         |
-| Variable      | UPPER_SNAKE_CASE | APP_VERSION          |
-| Artifact name | kebab-case       | build-output-linux   |
 
 ### Key Ordering
 

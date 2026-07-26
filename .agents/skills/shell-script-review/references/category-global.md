@@ -22,7 +22,7 @@ Fix: Place show_usage→parse_arguments→other functions in a-z order→main la
 
 Check: Are there no commented code, unused functions, or unreachable code?
 Why: Dead code hinders maintenance, causes confusion, increases unnecessary lines
-Fix: Use git history, remove dead code, manage TODO comments appropriately
+Fix: Use git history, remove dead code, resolve TODO comments with tickets or remove stale entries
 
 **G-05 (SHOULD): Script Idempotency**
 

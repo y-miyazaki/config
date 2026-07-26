@@ -16,7 +16,7 @@ Required sections:
 Sections removed by design (redundant with frontmatter description or self-evident to Claude):
 
 - Purpose (duplicates description field)
-- When to Use This Skill (duplicates description "Use when..." trigger)
+- When to Use This Skill (duplicates description activation trigger)
 - Constraints (self-evident prerequisites)
 - Failure Behavior (standard tool behavior) — use `### Error Handling` under Workflow instead (Q-10 SHOULD)
 - Best Practices (merge into Workflow or Execution Scope)
@@ -44,34 +44,37 @@ Examples:
 
 **BP-01 (SHOULD): Description Quality**
 
-Check: Does the description field follow best practices for skill discovery (third person, "Use when..." trigger, no implementation instructions)?
-Why: The description is the primary signal for skill activation. Poor descriptions cause incorrect skill selection or missed activation. Claude's official best practice: "Always write in third person" and "include specific keywords that help agents identify relevant tasks."
+Check: Does the description field follow best practices for skill discovery (third person, includes when-to-activate trigger content, no implementation instructions)?
+Why: The description is the primary signal for skill activation. Poor descriptions cause incorrect skill selection or missed activation. Official guidance: write in third person and include specific keywords that help agents identify relevant tasks. A clear activation trigger is required; the exact phrase `Use when...` is recommended but not mandatory.
 Examples:
 
-- ✅ "Reviews Go source code for correctness and security. Use when reviewing Go pull requests or assessing security." (third person + trigger)
+- ✅ "Reviews Go source code for correctness and security. Use when reviewing Go pull requests or assessing security." (third person + recommended trigger phrasing)
+- ✅ "Reviews Go source code for correctness and security during pull-request review and security assessment." (third person + trigger content without `Use when`)
 - ❌ "Use for manual review of Go code" (imperative, not third person)
 - ❌ "Always use validate.sh script. For troubleshooting, see references/." (implementation instructions in description)
-- ❌ "Helps with Go code" (too vague, no trigger keywords)
+- ❌ "Helps with Go code" (too vague, no activation trigger)
 
 ---
 
 **BP-02 (SHOULD): Reference Trigger Conditions**
 
-Check: Does Reference Files Guide use explicit load contracts on every line — `(always read)`, path-qualified variants, or `(read on failure)` — per package sibling-consistency policy for skills?
-Why: Vague `Read when…` triggers duplicate workflow conditions and diverge across sibling skills. Fixed phrases make load timing deterministic.
+Check: Does every Reference Files Guide line use exactly one parenthetical load trigger from the allowlist — `(always read)`, `(read on failure)`, `(read on debugging)`, `(read on automation path)`, `(read on interactive path)`, `(read when <condition>)`? Flag any other trigger wording.
+Allowlist detail: `<condition>` in `(read when <condition>)` must be a single concrete predicate.
+Why: One allowlisted trigger keeps load timing unambiguous. Triggers outside the list are easy to misread.
 Examples:
 
 - ✅ `[common-checklist.md](references/common-checklist.md) (always read)`
-- ✅ `[category-input-schema.md](references/category-input-schema.md) (always read — automation path)`
+- ✅ `[category-automation-envelope.md](references/category-automation-envelope.md) (read on automation path)`
 - ✅ `[common-troubleshooting.md](references/common-troubleshooting.md) (read on failure)`
-- ❌ `Read when parsing context` without `(always read …)`
-- ❌ `— apply` / `— automation` shorthand without `(always read …)`
+- ✅ `[common-impact-map.md](references/common-impact-map.md) (read on interactive path)`
+- ❌ Parenthetical trigger not on the allowlist
+- ❌ No parenthetical trigger on a Reference Files Guide line
 
 ---
 
 **Q-07 (SHOULD): Progressive Disclosure (Soft Guard)**
 
-Check: Is SKILL.md depth aligned with sibling skills in the same package? Is word count reasonable for that family?
+Check: Is SKILL.md depth aligned with sibling skills in the same package? Is word count aligned with sibling depth for that family?
 Why: Token/word limits are advisory. Isolated compression below sibling depth causes execution drift; prefer package-wide alignment over a single-skill token gate.
 Examples:
 

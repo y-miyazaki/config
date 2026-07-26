@@ -7,20 +7,9 @@ description: "AI Assistant Instructions for Terraform"
 
 ## Scope
 
-- Scope is limited to designing, updating, and validating Terraform definitions (`*.tf`, `*.tfvars`, `*.hcl`).
+- Scope covers designing, updating, and validating Terraform definitions.
 
 ## Standards
-
-### Naming Conventions
-
-| Component | Rule       | Example        |
-| --------- | ---------- | -------------- |
-| Resource  | snake_case | aws_s3_bucket  |
-| Variable  | snake_case | vpc_cidr_block |
-| Output    | snake_case | instance_id    |
-| Local     | snake_case | common_tags    |
-| Module    | snake_case | vpc_module     |
-| File name | snake_case | main_vpc.tf    |
 
 ### Versioning
 
@@ -32,7 +21,7 @@ description: "AI Assistant Instructions for Terraform"
 - **G-05 (MUST)**: Ensure `for_each`/`count` keys are known at plan time — post-apply values cause `terraform plan` failures.
 - **G-06 (MUST)**: Prefer `for_each` over `count` — count index shifts cause unintended resource recreation on removal.
 - **TAG-01 (MUST)**: Use `merge(local.tags, { Name = "..." })` pattern for tags — this ensures consistent tagging across all resources.
-- **COMP-04 (MUST)**: Write IAM policies with `jsonencode()` or `aws_iam_policy_document` — never use inline heredoc JSON strings.
+- **COMP-02 (MUST)**: Write IAM policies with `jsonencode()` or `aws_iam_policy_document` — never use inline heredoc JSON strings.
 - **G-02 (MUST)**: Never hardcode secrets in `.tf` or `.tfvars` files — use SSM Parameter Store or Secrets Manager references.
 
 ### Key Ordering
@@ -50,9 +39,9 @@ description: "AI Assistant Instructions for Terraform"
 
 ### Compliance & Policy (COMP)
 
-- COMP-03 (MUST): No Default VPC/Open SG/Public S3
+- COMP-01 (MUST): No Default VPC/Open SG/Public S3
   - Check: Is there no use of default VPC, are security groups restrictive, and are S3 buckets private by default?
-- COMP-04 (MUST): IAM Policy with jsonencode or aws_iam_policy_document
+- COMP-02 (MUST): IAM Policy with jsonencode or aws_iam_policy_document
   - Check: Do IAM policies use jsonencode() or aws_iam_policy_document data source?
 
 ### Cost Optimization (COST)
@@ -217,7 +206,7 @@ description: "AI Assistant Instructions for Terraform"
 - V-03 (SHOULD): Description Comments + (Required)/(Optional)
   - Check: Do all variables have descriptions with required/optional markers?
 - V-04 (SHOULD): Validation Pattern Restrictions
-  - Check: Are validation rules reasonable and necessary?
+  - Check: Are validation rules aligned with business constraints and necessary?
 - V-05 (SHOULD): No Unused Variables
   - Check: Are all variables referenced?
 

@@ -7,8 +7,8 @@
 
 ## Compliance & Policy (COMP)
 
-- COMP-03 (MUST): No Default VPC/Open SG/Public S3
-- COMP-04 (MUST): IAM Policy with jsonencode or aws_iam_policy_document
+- COMP-01 (MUST): No Default VPC/Open SG/Public S3
+- COMP-02 (MUST): IAM Policy with jsonencode or aws_iam_policy_document
 
 ## Cost Optimization (COST)
 

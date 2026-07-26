@@ -26,7 +26,7 @@ Fix: Use `mktemp -d`, clean up with trap, use secure paths
 
 **SEC-05 (SHOULD): Permission Checks**
 
-Check: Are required permissions (root, etc.) validated before execution?
+Check: Are required permissions (root, sudo, etc.) validated before execution?
 Why: Missing permission checks cause execution failures, partial success, security risks
 Fix: Use `[[ $EUID -eq 0 ]]` checks with appropriate error messages
 

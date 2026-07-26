@@ -88,7 +88,7 @@ Arguments:
 Validation Checks:
     - Structural Completeness: 5 required sections exist
   - YAML Frontmatter Fields: name, description, license fields present
-  - Description Quality: third person, Use when trigger, no implementation instructions
+  - Description Quality: third person, no implementation instructions (activation trigger wording is advisory)
   - Metadata Fields: author and version present
     - Progressive Disclosure (soft guard): word count monitoring for readability
     - Resource Separation: references/ is recommended (SHOULD); scripts/ is optional
@@ -518,10 +518,8 @@ function check_description_quality {
         issues+=("not third person")
     fi
 
-    # Check "Use when" trigger exists
-    if ! echo "$desc" | grep -qi 'Use when'; then
-        issues+=("missing Use when trigger")
-    fi
+    # Activation trigger content (WHEN) is BP-01 review judgment.
+    # Do not require the literal phrase "Use when" — recommended, not mandatory.
 
     # Check no implementation instructions
     if echo "$desc" | grep -qiP 'Always use|For troubleshooting|Individual commands'; then
@@ -616,21 +614,23 @@ function check_reference_triggers {
     fi
 
     local issues=()
+    local allowlist='\(always read\)|\(read on failure\)|\(read on debugging\)|\(read on automation path\)|\(read on interactive path\)|\(read when [^)]+\)'
+    local ref_line trigger
 
-    # Check for "(always read)" or "Always read" annotation (case-insensitive)
-    if ! echo "$ref_section" | grep -qi 'always read'; then
+    # Require at least one (always read)
+    if ! echo "$ref_section" | grep -qE '\(always read\)'; then
         issues+=("missing (always read) annotation")
     fi
 
-    # Check for "Read when" or "Always read" triggers in category entries
-    local category_lines
-    category_lines=$(echo "$ref_section" | grep -c 'category-' || true)
-    local trigger_lines
-    trigger_lines=$(echo "$ref_section" | grep -ciE 'Read when|Always read' || true)
-
-    if [[ $category_lines -gt 0 ]] && [[ $trigger_lines -eq 0 ]]; then
-        issues+=("category files missing Read when triggers")
-    fi
+    # Each reference line with a parenthetical trigger must match the allowlist
+    while IFS= read -r ref_line; do
+        [[ $ref_line =~ ^-[[:space:]] ]] || continue
+        echo "$ref_line" | grep -qE '\([^)]+\)' || continue
+        trigger=$(echo "$ref_line" | grep -oE '\([^)]+\)' | tail -n 1)
+        if ! echo "$trigger" | grep -qE "^(${allowlist})$"; then
+            issues+=("non-allowlist trigger ${trigger}")
+        fi
+    done <<< "$(echo "$ref_section" | grep '^-[[:space:]]')"
 
     if [[ ${#issues[@]} -eq 0 ]]; then
         echo "✓ Reference trigger conditions present"

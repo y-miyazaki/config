@@ -72,6 +72,10 @@ _Research and comparison reports._
 - [Linter and Review Boundary Policy](report/governance/linter-review-boundary.md)
 - [Loop Engineering](report/governance/loop-engineering.md)
 
+### Agent Skills
+
+- [Agent Skills Evaluation (2026-07-26)](report/agent-skills/2026-07-26-evaluation.md)
+
 ### Tool Comparison
 
 - [Tool Comparison Evaluation Rules](report/tool-comparison/tool-comparison-evaluation-rules.md)

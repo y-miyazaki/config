@@ -2,7 +2,8 @@
 name: code-reviewer
 description: >-
   Reject-oriented code review for this config repository. Applies domain review
-  skills inline; optionally dispatches Bugbot or Security Review on request.
+  skills inline in this agent only — never dispatches nested review-skill subagents.
+  Optionally dispatches Bugbot or Security Review on explicit request.
   Use before merge when the user requests code review, PR review, or /review.
 ---
 
@@ -111,9 +112,19 @@ Gather bullets from `git diff HEAD -- <paths>` for theme groups or individual fi
 
 If the file list is empty after normalization, report that and stop.
 
-### 2. Apply domain skills inline
+### 2. Apply domain skills inline (no subagents)
 
-For each triggered skill below, **read** `SKILL.md` and references per its Workflow, then review only the matching paths from the packet. Do **not** dispatch subagents for domain skills.
+For each triggered skill below, **read** `SKILL.md` and references per its Workflow, then review only the matching paths from the packet.
+
+**NEVER dispatch subagents for review work.** The code-reviewer agent is the sole executor — apply every domain skill and checklist in this session by reading `SKILL.md` directly.
+
+**Forbidden Task dispatches (non-exhaustive):**
+
+| Forbidden                                                                                                                     | Reason                                                                   |
+| ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `shell-script-review`, `agent-skills-review`, `github-actions-review`, `go-review`, `terraform-review`, `instructions-review` | Domain review skills — apply inline only                                 |
+| Any `subagent_type` whose job is running a review skill, checklist, or `/review` workflow                                     | Nested review subagents duplicate scope and drift from the review packet |
+| `test-engineer`                                                                                                               | Separate user invocation only — not part of `/review`                    |
 
 Package skill sources: `.apm/packages/<pkg>/.apm/skills/<skill-name>/SKILL.md`. After `apm install` in a consumer: `<agent-root>/skills/<skill-name>/SKILL.md`.
 
@@ -138,7 +149,7 @@ Skip skills with no matching paths in the normalized packet.
 
 Dispatch **only** when the user explicitly requests Bugbot or Security Review, or when changes touch security-sensitive areas (auth, secrets, credentials, CI permissions, external input handling, dependency supply chain).
 
-Do **not** dispatch platform reviewers on every `/review` by default.
+Do **not** dispatch platform reviewers on every `/review` by default. Do **not** dispatch platform reviewers to compensate for missing diff metadata — fix the review packet instead.
 
 When dispatching, use the Task tool with the **same model as the parent session** (omit `model`). Launch applicable reviewers in parallel (`run_in_background: false` unless the user asked for background):
 
@@ -147,7 +158,9 @@ When dispatching, use the Task tool with the **same model as the parent session*
 | Bugbot          | `bugbot`          | `Bugbot`          | `review-bugbot`   |
 | Security Review | `security-review` | `Security Review` | `review-security` |
 
-Pass the review packet from step 1 as **Change Description** (Bugbot: `Diff: natural language`; Security: `Diff: branch changes` or `uncommitted changes` per packet). Include **Custom Instructions**:
+**Always pass the review packet from step 1 as scope** — use `Diff: natural language` for **both** Bugbot and Security Review, with the full packet as **Change Description**. Do not use `Diff: branch changes` when the packet already normalizes scope; branch-only diffs omit staged-only changes and cause "no diff" / scope-mismatch failures on retry.
+
+Include **Custom Instructions**:
 
 ```text
 Reject-first review. Prioritize rule violations (AGENTS.md, CLAUDE.md, instruction stems), unnecessary generality in distributable packages, redundant code/docs, and incomplete test coverage for changed behavior.
@@ -156,6 +169,8 @@ Exclude from review: .agents/, .claude/, .cursor/, .codex/, .kiro/, .vscode/ (ap
 Do not flag GitHub Actions action SHA or version pins.
 Require evidence for every finding (file:line). Missing tests for expected use cases are Important or Critical.
 ```
+
+If a platform reviewer fails before producing findings, retry **once** with the same `Diff: natural language` + Change Description shape. Do not widen scope or spawn domain-review subagents on retry.
 
 Merge platform reviewer findings into the final report (deduplicate only when the same file:line + identical finding text appears).
 
@@ -233,10 +248,11 @@ Combine inline skill findings and any optional platform reviewer findings:
 2. Never review generated agent-root mirrors when package sources exist.
 3. Never review skill `scripts/lib/` mirrors — only `scripts/lib/` for shared libraries.
 4. Never apply a domain skill when its file trigger did not match on the normalized packet.
-5. Never dispatch domain-skill subagents — apply skills inline in this agent.
+5. **Never dispatch subagents for domain review skills or nested `/review` workflows** — read `SKILL.md` and apply checklists inline in this agent only.
 6. Never approve with open Critical or Important findings unless the user explicitly waives them.
 7. Do not fix code or rerun review unless the user asks — review and report.
 8. Dispatch Bugbot or Security Review only when step 3 conditions are met — not by default.
+9. When dispatching platform reviewers, always use `Diff: natural language` + the step-1 review packet as Change Description — never rely on branch diff alone when the packet is the scope contract.
 
 ## Composition
 
