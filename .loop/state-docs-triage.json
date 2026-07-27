@@ -1,12 +1,19 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-07-24T16:43:55Z",
-      "outcome": "merged",
+      "last_run": "2026-07-27T10:32:24Z",
+      "outcome": "pr-created",
       "consecutive_failures": 0,
       "open_rejections": [],
-      "last_reject_reason": "Verifier rubric outline now matches expanded allowlist and closed-set fix criteria from on-loop-tech-debt.yaml; prior internal contradiction resolved.",
-      "last_sha": "85c3ac8aca92734c49cd4882a4f3be7054781529"
+      "last_reject_reason": "Doc-only changes are factually consistent with automation-path rename and current skill layout; nav/index gaps addressed without scope violations.",
+      "last_sha": "85c3ac8aca92734c49cd4882a4f3be7054781529",
+      "pending": {
+        "sha": "b7504ca7d7c4eb13b59def018faed095d1aeed2b",
+        "pr": 516,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/516",
+        "loop_name": "docs-triage",
+        "created_at": "2026-07-27T10:32:24Z"
+      }
     }
   }
 }
