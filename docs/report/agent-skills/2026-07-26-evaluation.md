@@ -100,7 +100,7 @@ validation 系は概ね健全（~1k tok）。review / PR body / loop 系が突�
 
 | 項目                         | 扱い                                                                                                                                                                          |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **DIST（再配布ポリシー）**   | **review ItemID にしない** — [.apm/AGENTS.md § Redistribution policy (DIST)](../../../.apm/AGENTS.md#redistribution-policy-dist--this-repository-only) の maintainer ポリシー |
+| **DIST（再配布ポリシー）**   | **review ItemID にしない** — [.apm/AGENTS.md § Redistribution policy (DIST)](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md#redistribution-policy-dist--this-repository-only) の maintainer ポリシー |
 | **S-05（Output SoT）**       | **対応済** — Standards から削除。review の **P-02** に一本化                                                                                                                  |
 | **S-04（Clarity over DRY）** | Standards に残す。単独 review ItemID は不要（メタ原則）                                                                                                                       |
 | **S-06（`<agent-root>`）**   | Standards + `validate.sh` でカバー。review は S-07 と併用                                                                                                                     |

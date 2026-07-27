@@ -51,7 +51,7 @@ When reviewing package PRs, treat any domain-specific path or maintainer workflo
 | Layer        | Ships                                            | Portability                                                                                                                                                |
 | ------------ | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Skills       | `SKILL.md`, `references/`, `assets/`, `scripts/` | **Required** — generic contract + domain logic only                                                                                                        |
-| Instructions | `*.instructions.md`                              | **Required** — repository-neutral; redistribution policy in [.apm/AGENTS.md § DIST](../../.apm/AGENTS.md#redistribution-policy-dist--this-repository-only) |
+| Instructions | `*.instructions.md`                              | **Required** — repository-neutral; redistribution policy in [.apm/AGENTS.md § DIST](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md#redistribution-policy-dist--this-repository-only) |
 | Hooks        | portable scripts; JSON per target                | Scripts portable across agents                                                                                                                             |
 | Repo `docs/` | design indexes, maintainer maps                  | Consumer overlay — OK                                                                                                                                      |
 
@@ -109,7 +109,7 @@ Skills link to generic principles (for example documentation deduplication) and 
 
 Forbidden in distributable skills: `../` escapes, `docs/...` repository paths, or prose like `repository \`docs/...\``.
 
-Enforced in review via `agent-skills-review` (**S-07**). Redistribution maintainer policy for package authors in this repository: [.apm/AGENTS.md § Redistribution policy (DIST)](../../.apm/AGENTS.md#redistribution-policy-dist--this-repository-only).
+Enforced in review via `agent-skills-review` (**S-07**). Redistribution maintainer policy for package authors in this repository: [.apm/AGENTS.md § Redistribution policy (DIST)](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md#redistribution-policy-dist--this-repository-only).
 
 ## Review skill scope (S-07)
 
