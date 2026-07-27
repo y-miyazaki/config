@@ -1,9 +1,9 @@
 ---
 applyTo: "**/*.tf,**/*.tfvars,**/*.hcl"
-description: "AI Assistant Instructions for Terraform"
+description: "Terraform Instructions"
 ---
 
-# AI Assistant Instructions for Terraform
+# Terraform Instructions
 
 ## Scope
 

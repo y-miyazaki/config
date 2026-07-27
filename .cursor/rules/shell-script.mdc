@@ -1,9 +1,9 @@
 ---
-description: AI Assistant Instructions for Shell Script
+description: Shell Script Instructions
 globs: "**/*.sh"
 ---
 
-# AI Assistant Instructions for Shell Script
+# Shell Script Instructions
 
 ## Scope
 

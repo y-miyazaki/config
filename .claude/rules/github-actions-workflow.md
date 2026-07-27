@@ -5,7 +5,7 @@ paths:
   - ".github/actions/**/action.yml"
 ---
 
-# AI Assistant Instructions for GitHub Actions Workflows
+# GitHub Actions Workflows Instructions
 
 ## Scope
 

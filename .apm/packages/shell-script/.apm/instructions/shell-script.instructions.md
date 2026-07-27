@@ -1,9 +1,9 @@
 ---
 applyTo: "**/*.sh"
-description: "AI Assistant Instructions for Shell Script"
+description: "Shell Script Instructions"
 ---
 
-# AI Assistant Instructions for Shell Script
+# Shell Script Instructions
 
 ## Scope
 

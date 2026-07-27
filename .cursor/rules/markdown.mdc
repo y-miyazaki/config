@@ -1,5 +1,5 @@
 ---
-description: AI Assistant Instructions for Markdown Documentation
+description: Markdown Documentation Instructions
 globs:
   - "README.md"
   - "CONTRIBUTING.md"
@@ -7,7 +7,7 @@ globs:
   - "mkdocs.yml"
 ---
 
-# AI Assistant Instructions for Markdown
+# Markdown Instructions
 
 ## Scope
 

@@ -1,9 +1,9 @@
 ---
 applyTo: "**/instructions/*.instructions.md,**/.cursor/rules/*.mdc,**/.kiro/steering/*.md,**/.claude/rules/*.md"
-description: "AI Assistant Instructions for Writing Instruction Files"
+description: "Writing Instruction Files Instructions"
 ---
 
-# AI Assistant Instructions for Instruction Files
+# Instruction Files Instructions
 
 ## Scope
 
@@ -21,7 +21,7 @@ Document **non-obvious, project- or distribution-specific** rules only. Omit lan
 | Cursor (distributed)    | `.cursor/rules/<stem>.mdc`                        | `go.mdc`, `bats.mdc`                         |
 | Claude (distributed)    | `.claude/rules/<stem>.md`                         | `go.md`, `bats.md`                           |
 | Kiro (distributed)      | `.kiro/steering/<stem>.md`                        | `go.md`                                      |
-| Title                   | `# AI Assistant Instructions for <target>`        | `# AI Assistant Instructions for Go`         |
+| Title                   | `# <target> Instructions`                         | `# Go Instructions`                          |
 | Agent-facing cross-link | Companion wording with stem — not source filename | companion Bats rules (stem `bats`)           |
 
 ### Standards Content

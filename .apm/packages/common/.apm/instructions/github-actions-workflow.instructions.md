@@ -1,9 +1,9 @@
 ---
 applyTo: ".github/workflows/**/*.yaml,.github/workflows/**/*.yml,.github/actions/**/action.yml"
-description: "AI Assistant Instructions for GitHub Actions Workflows"
+description: "GitHub Actions Workflows Instructions"
 ---
 
-# AI Assistant Instructions for GitHub Actions Workflows
+# GitHub Actions Workflows Instructions
 
 ## Scope
 

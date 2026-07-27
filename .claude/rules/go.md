@@ -3,7 +3,7 @@ paths:
   - "**/*.go"
 ---
 
-# AI Assistant Instructions for Go Development
+# Go Development Instructions
 
 ## Scope
 

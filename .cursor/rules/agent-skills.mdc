@@ -1,11 +1,11 @@
 ---
-description: AI Assistant Instructions for Agent Skills Development
+description: Agent Skills Development Instructions
 globs:
   - "**/skills/**/SKILL.md"
   - "**/skills/**/references/*.md"
 ---
 
-# AI Assistant Instructions for Agent Skills
+# Agent Skills Instructions
 
 ## Scope
 

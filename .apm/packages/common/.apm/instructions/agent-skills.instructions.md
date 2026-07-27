@@ -1,9 +1,9 @@
 ---
 applyTo: "**/skills/**/SKILL.md,**/skills/**/references/*.md"
-description: "AI Assistant Instructions for Agent Skills Development"
+description: "Agent Skills Development Instructions"
 ---
 
-# AI Assistant Instructions for Agent Skills
+# Agent Skills Instructions
 
 ## Scope
 

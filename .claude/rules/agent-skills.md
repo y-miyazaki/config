@@ -4,7 +4,7 @@ paths:
   - "**/skills/**/references/*.md"
 ---
 
-# AI Assistant Instructions for Agent Skills
+# Agent Skills Instructions
 
 ## Scope
 

@@ -20,23 +20,23 @@ ci-nodejs / ci-aws-terraform  language checks only; Trivy removed
 
 ## Files
 
-| File | Type | Role |
-| ---- | ---- | ---- |
-| `ci-security.yaml` | Reusable (`workflow_call`) | Trivy vulnerability gate + SBOM artifact |
-| `on-ci-security.yaml` | Caller (dogfood) | Triggers security CI in this repository |
-| `example/on-ci-security.yaml` | Consumer template | Copy into consumer repositories |
+| File                          | Type                       | Role                                     |
+| ----------------------------- | -------------------------- | ---------------------------------------- |
+| `ci-security.yaml`            | Reusable (`workflow_call`) | Trivy vulnerability gate + SBOM artifact |
+| `on-ci-security.yaml`         | Caller (dogfood)           | Triggers security CI in this repository  |
+| `example/on-ci-security.yaml` | Consumer template          | Copy into consumer repositories          |
 
 ## `ci-security.yaml` contract
 
 ### Inputs (alphabetical)
 
-| Input | Default | Description |
-| ----- | ------- | ----------- |
-| `artifact_prefix` | `repo` | Prefix for SBOM artifact name (`sbom-{prefix}`) |
-| `dependency_review_fail_on_severity` | `high` | `dependency-review` fail-on-severity (`low`, `moderate`, `high`, `critical`) |
-| `scan_ref` | `.` | Trivy `scan-ref` (repository root or monorepo subdirectory) |
-| `trivy_config` | `trivy.yaml` | Path to Trivy config file (vuln scan, gate, and SBOM) |
-| `trivy_version` | `v0.72.0` | Trivy version |
+| Input                                | Default      | Description                                                                  |
+| ------------------------------------ | ------------ | ---------------------------------------------------------------------------- |
+| `artifact_prefix`                    | `repo`       | Prefix for SBOM artifact name (`sbom-{prefix}`)                              |
+| `dependency_review_fail_on_severity` | `high`       | `dependency-review` fail-on-severity (`low`, `moderate`, `high`, `critical`) |
+| `scan_ref`                           | `.`          | Trivy `scan-ref` (repository root or monorepo subdirectory)                  |
+| `trivy_config`                       | `trivy.yaml` | Path to Trivy config file (vuln scan, gate, and SBOM)                        |
+| `trivy_version`                      | `v0.72.0`    | Trivy version                                                                |
 
 ### Behavior
 
@@ -56,11 +56,11 @@ Language-specific security remains in language workflows:
 
 ## `on-ci-security.yaml` triggers
 
-| Trigger | Purpose |
-| ------- | ------- |
-| `schedule` (`0 6 * * *`) | Daily CVE drift detection on unchanged lockfiles |
-| `push` / `pull_request` (path filters) | Gate new vulnerabilities before merge |
-| `workflow_dispatch` | Manual rerun |
+| Trigger                                | Purpose                                          |
+| -------------------------------------- | ------------------------------------------------ |
+| `schedule` (`0 6 * * *`)               | Daily CVE drift detection on unchanged lockfiles |
+| `push` / `pull_request` (path filters) | Gate new vulnerabilities before merge            |
+| `workflow_dispatch`                    | Manual rerun                                     |
 
 ### Path filters
 
@@ -134,12 +134,12 @@ jobs:
 
 ## Extensions (2026-07-24)
 
-| Capability | Location | Gate |
-| ---------- | -------- | ---- |
-| `dependency-review` | `ci-security` (`dependency-review` job, PR only) | Blocks on `fail-on-severity: high` |
-| Trivy SARIF | `ci-security` (`trivy` job) | Security tab + separate gate step (`ignore-unfixed: false`; blocks on HIGH/CRITICAL including unfixed) |
-| CodeQL + Semgrep | `ci-sast` | Semgrep `--error`; CodeQL via GitHub defaults |
-| Trivy image scan | `cd-aws-go-registry` after ECR push | Blocks on HIGH/CRITICAL fixable CVEs only (`ignore-unfixed: true`; base-image CVEs without a vendor fix do not block deploy) |
+| Capability          | Location                                         | Gate                                                                                                                         |
+| ------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `dependency-review` | `ci-security` (`dependency-review` job, PR only) | Blocks on `fail-on-severity: high`                                                                                           |
+| Trivy SARIF         | `ci-security` (`trivy` job)                      | Security tab + separate gate step (`ignore-unfixed: false`; blocks on HIGH/CRITICAL including unfixed)                       |
+| CodeQL + Semgrep    | `ci-sast`                                        | Semgrep `--error`; CodeQL via GitHub defaults                                                                                |
+| Trivy image scan    | `cd-aws-go-registry` after ECR push              | Blocks on HIGH/CRITICAL fixable CVEs only (`ignore-unfixed: true`; base-image CVEs without a vendor fix do not block deploy) |
 
 **Note:** Image scan runs after push to ECR; the job fails before downstream deploy callers proceed, but the image tag already exists in the registry. Use `trivy_image_scan: false` to disable for bootstrap repos.
 

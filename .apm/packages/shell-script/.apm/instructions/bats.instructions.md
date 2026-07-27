@@ -1,9 +1,9 @@
 ---
 applyTo: "**/*.sh,**/*.bats"
-description: "AI Assistant Instructions for Bats Test Suites"
+description: "Bats Test Suites Instructions"
 ---
 
-# AI Assistant Instructions for Bats
+# Bats Instructions
 
 ## Scope
 

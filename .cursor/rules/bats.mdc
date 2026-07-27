@@ -1,11 +1,11 @@
 ---
-description: AI Assistant Instructions for Bats Test Suites
+description: Bats Test Suites Instructions
 globs:
   - "**/*.sh"
   - "**/*.bats"
 ---
 
-# AI Assistant Instructions for Bats
+# Bats Instructions
 
 ## Scope
 

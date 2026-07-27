@@ -1,9 +1,9 @@
 ---
 applyTo: "**/*.go"
-description: "AI Assistant Instructions for Go Development"
+description: "Go Development Instructions"
 ---
 
-# AI Assistant Instructions for Go Development
+# Go Development Instructions
 
 ## Scope
 

@@ -4,7 +4,7 @@ paths:
   - "**/*.bats"
 ---
 
-# AI Assistant Instructions for Bats
+# Bats Instructions
 
 ## Scope
 

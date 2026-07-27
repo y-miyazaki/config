@@ -1,9 +1,9 @@
 ---
 applyTo: "README.md,CONTRIBUTING.md,docs/**/*.md,mkdocs.yml"
-description: "AI Assistant Instructions for Markdown Documentation"
+description: "Markdown Documentation Instructions"
 ---
 
-# AI Assistant Instructions for Markdown
+# Markdown Instructions
 
 ## Scope
 

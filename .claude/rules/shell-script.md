@@ -3,7 +3,7 @@ paths:
   - "**/*.sh"
 ---
 
-# AI Assistant Instructions for Shell Script
+# Shell Script Instructions
 
 ## Scope
 

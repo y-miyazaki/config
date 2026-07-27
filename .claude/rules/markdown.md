@@ -6,7 +6,7 @@ paths:
   - "mkdocs.yml"
 ---
 
-# AI Assistant Instructions for Markdown
+# Markdown Instructions
 
 ## Scope
 
