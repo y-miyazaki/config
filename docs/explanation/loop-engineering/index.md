@@ -25,6 +25,8 @@ Understanding-oriented design docs for autonomous CI and documentation loops in 
 | Refactor skill spec (interactive + loop envelope)    | [Refactor skill & loop design](../../superpowers/specs/2026-07-21-refactor-skill-and-loop-design.md)           |
 | Write target + delivery (fix vs report, four planes) | [Loop write target & delivery design](../../superpowers/specs/2026-07-23-loop-write-target-delivery-design.md) |
 | Loop invariants + L3 gates                           | [Loop Engineering Design](loop-engineering-design.md)                                                          |
+| PR body contract (templates, links, validate)        | [Loop PR Body Skill Contract](loop-pr-body-skill-contract.md)                                                  |
+| Automation report format (survey/apply shapes)       | [Loop Automation Report Format](common-loop-triage-format.md)                                                  |
 | Ubiquitous language (detect, A'/B, findings)         | [Ubiquitous Language](CONTEXT.md)                                                                              |
 | Doc maintenance (canonical map, triggers)            | [Documentation Maintenance](documentation-maintenance.md)                                                      |
 

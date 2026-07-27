@@ -69,6 +69,7 @@ Skills are **utility modules**. They carry the automation **contract** and domai
 | Edit gate (`may_edit`, `write_target`, `report_file`)        | `category-automation-envelope.md`                                                              |
 | Path scope (interactive vs automation allowlist)             | `category-scope.md`                                                                            |
 | Survey / apply report shapes, PR synthesis rules             | `common-output-format.md`, `common-output-format-automation.md`, `assets/pr-body-template*.md` |
+| PR body link rules (per-skill synthesis)                     | `category-pr-body-links.md`                                                                    |
 | Domain classification, checklists, troubleshooting           | `category-*.md`, `common-checklist.md`                                                         |
 
 ### Do not write in the skill (product / platform)

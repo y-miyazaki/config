@@ -77,6 +77,7 @@ nav:
           - Loop Caller Workflows Design: explanation/loop-engineering/loop-caller-workflows-design.md
           - Loop Caller Reusable Workflow Design: explanation/loop-engineering/loop-caller-reusable-design.md
           - Loop PR Body Skill Contract: explanation/loop-engineering/loop-pr-body-skill-contract.md
+          - Loop Automation Report Format: explanation/loop-engineering/common-loop-triage-format.md
           - Loop Workflows:
               - Caller Inputs Reference: explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
               - Changelog: explanation/loop-engineering/workflows/loop-changelog-workflow-design.md
@@ -102,6 +103,8 @@ nav:
           - Harness Engineering - Terraform: report/governance/harness-engineering-terraform.md
           - Linter Review Boundary: report/governance/linter-review-boundary.md
           - Loop Engineering: report/governance/loop-engineering.md
+      - Agent Skills:
+          - Evaluation (2026-07-26): report/agent-skills/2026-07-26-evaluation.md
       - Tool Comparison:
           - Evaluation Rules: report/tool-comparison/tool-comparison-evaluation-rules.md
           - AI Agent: report/tool-comparison/tool-comparison-matrix-ai-agent.md

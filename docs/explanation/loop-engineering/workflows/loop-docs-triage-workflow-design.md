@@ -83,7 +83,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `no_changes_verdict`                                 | `APPROVE` or `REJECT` when implementer produces no file diff.                                                                                                                                                             | `REJECT`                                                                |
 | `pr_body`                                            | Optional static prefix (dogfood: `""`). `loop-finalize` composes agent Overview/Summary + mechanical sections. See [Loop PR Body Readable Design](../../../superpowers/specs/2026-07-21-loop-pr-body-readable-design.md). | `""`                                                                    |
 | `pr_title`                                           | PR title when finalize strategy is `open_pr`.                                                                                                                                                                             | `chore(docs-triage): automated documentation update (loop-docs-triage)` |
-| `prompt_instructions`                                | Domain instructions: run docs-updater loop path; address triage findings.                                                                                                                                                 | Inline in caller workflow                                               |
+| `prompt_instructions`                                | Domain instructions: run docs-updater automation path; address triage findings.                                                                                                                                           | Inline in caller workflow                                               |
 | `pr_enabled`                                         | Enumerate open PR heads. Docs-triage uses integration branches only.                                                                                                                                                      | `false`                                                                 |
 | `skill_name`                                         | Skill package to invoke.                                                                                                                                                                                                  | `docs-updater`                                                          |
 | `write_target`                                       | Agent artifact when `may_edit` is true (`fix` for dogfood).                                                                                                                                                               | `fix`                                                                   |
@@ -103,7 +103,7 @@ Detect script outputs **facts** (not semantic findings):
 | `commit_range`                                    | Passed through prompt context        |
 | `skip`                                            | `true` when no doc-impacting change  |
 
-**Skill** (`docs-updater` loop path) builds `findings[]` with semantic `reason` from these facts.
+**Skill** (`docs-updater` automation path) builds `findings[]` with semantic `reason` from these facts.
 
 `loop-detect` emits per-branch `target_json`:
 
@@ -172,7 +172,7 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 
 ### Loop-specific
 
-- [x] `docs-updater` skill loop path + references
+- [x] `docs-updater` skill automation path + references
 - [x] Bats suite for detect script (TEST-00)
 
 ## Cross-Loop Note
