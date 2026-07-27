@@ -140,7 +140,7 @@ uses: y-miyazaki/config/.github/actions/loop-state-promote@<full-sha> # vX.Y.Z
 
 ### Workflow conventions
 
-- Keys in `inputs`, `env`, `permissions`, and `with` are **alphabetically ordered** (A→Z).
+- Map key ordering: companion github-actions-workflow rules (ORD-01).
 - File names: `ci-*` (CI), `cd-*` (CD), `on-*` (event-triggered callers).
 - Reusable workflows use `workflow_call`; callers pass configuration via `with:` (avoid caller-level `env:` blocks for loop callers).
 

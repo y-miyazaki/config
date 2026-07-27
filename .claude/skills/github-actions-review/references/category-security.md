@@ -3,7 +3,7 @@
 **SEC-01 (SHOULD): Safe Secret References**
 
 Check: Are secrets referenced only via `${{ secrets.NAME }}` and not directly output?
-Why: Improper secret handling (direct output, etc.) causes leaks via logs/artifacts
+Why: Improper secret handling (direct `${{ secrets.* }}` output, log echo, etc.) causes leaks via logs/artifacts
 Fix: Use only `${{ secrets.NAME }}`, prohibit log output, mask when necessary
 
 **SEC-02 (SHOULD): Careful Use of pull_request_target**

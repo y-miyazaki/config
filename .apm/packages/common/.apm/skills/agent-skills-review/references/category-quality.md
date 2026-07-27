@@ -35,13 +35,14 @@ Examples:
 
 **Q-04 (SHOULD): Input/Output Specificity**
 
-Check: Are Input/Output formats explicitly defined with schema/structure + concrete examples (no vague "appropriately", "as needed", "etc." expressions)?
-Why: Vague format specifications make integration impossible, create ambiguity, and prevent tool automation. AI/humans cannot implement against vague specs.
+Check: Are Input/Output formats explicitly defined with schema/structure + concrete examples (no vague "appropriately", "as needed", or "depending on context" expressions)?
+Why: Vague format specifications make integration impossible, create ambiguity, and prevent tool automation. Representative lists followed by `etc.` are acceptable when full enumeration is impractical.
 Examples:
 
 - ✅ "Input: JSON {name, status}. Output: Markdown sections ## Overview and ## Changes"
 - ✅ "Input: PR number. Output contract summarized in Output Specification and detailed in references/common-output-format.md"
-- ❌ "Input as needed", "Output: comprehensive report", "etc."
+- ✅ "Classify by Terraform, Go, workflow, docs, etc." (representative examples + `etc.`)
+- ❌ "Input as needed", "Output: comprehensive report" (no structure)
 
 ---
 
@@ -89,7 +90,7 @@ Why: Every token competes for context window attention. Redundant content dilute
 Examples:
 
 - ✅ No Purpose section (duplicates description field)
-- ✅ No When to Use section (duplicates description "Use when..." trigger)
+- ✅ No When to Use section (duplicates description activation trigger)
 - ✅ No self-evident Constraints section
 - ✅ No general Failure Behavior section (standard tool behavior)
 - ✅ No Available Review Categories section (duplicates Reference Files Guide)
@@ -105,7 +106,7 @@ Check: If token reduction is applied, are behavior-defining instructions preserv
 Why: Over-aggressive trimming can make a skill unreadable to the agent, reducing activation quality and causing execution errors even when token limits pass.
 Examples:
 
-- ✅ Trigger blocks still explicit (`Use when...`, `USE FOR`, `DO NOT USE FOR`)
+- ✅ Trigger blocks still explicit (description activation trigger, `USE FOR`, `DO NOT USE FOR`)
 - ✅ Output contract still structured and consistent (`Output Specification` + `common-output-format.md`)
 - ✅ Workflow still deterministic with numbered steps or explicit IF/THEN branches
 - ✅ At least one concrete example remains

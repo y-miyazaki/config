@@ -420,4 +420,3 @@ jobs:
             task: security
           status: "${{ job.status }}"
           title: "${{ format('Go CI: {0} ({1})', env.COMPONENT, 'security') }}"
-

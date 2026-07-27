@@ -18,26 +18,7 @@ metadata:
 
 ## Output Specification
 
-Return structured Markdown in accordance with [references/common-output-format.md](references/common-output-format.md).
-
-Minimal inline contract (fallback only — use `common-output-format.md` when available):
-
-```markdown
-## Checks Summary
-
-- Total: <n>, Passed: <n>, Failed: <n>, Deferred: <n>
-
-## Checks (Failed/Deferred Only)
-
-| ItemID | Status | Evidence | Fix |
-
-## Issues
-
-1. <ItemID>: <title>
-   - File: <path>#L<line>
-   - Problem: <specific>
-   - Recommendation: <fix>
-```
+Return structured Markdown in accordance with [references/common-output-format.md](references/common-output-format.md). That file is the source of truth for the output contract.
 
 Always include target file list and deferred reason summary.
 
@@ -101,18 +82,17 @@ Key evaluation criteria (inline summary of common-checklist):
 
 ### Error Handling
 
-| Condition                                            | Severity    | Action                                                            |
-| ---------------------------------------------------- | ----------- | ----------------------------------------------------------------- |
-| `common-checklist.md` unavailable                    | Fatal       | Stop, report missing dependency                                   |
-| `common-output-format.md` unavailable                | Recoverable | Use inline output contract                                        |
-| Category reference file missing                      | Recoverable | Defer checks from that category, note missing file in report      |
-| All category files missing                           | Fatal       | Stop, report "no evaluation criteria available"                   |
-| Target instruction/rule file does not exist          | Recoverable | Report `status: failed` for that file, continue remaining targets |
-| All target files missing                             | Fatal       | Stop, report "no reviewable instruction files found"              |
-| Validation artifacts missing after one rerun request | Recoverable | Defer artifact-dependent checks with explicit reason              |
+| Condition                                            | Severity    | Action                                                                                                |
+| ---------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------- |
+| `common-checklist.md` unavailable                    | Fatal       | Stop, report missing dependency                                                                       |
+| `common-output-format.md` unavailable                | Recoverable | Note missing file; emit `## Checks Summary`, `## Checks (Failed/Deferred Only)`, and `## Issues` only |
+| Category reference file missing                      | Recoverable | Defer checks from that category, note missing file in report                                          |
+| All category files missing                           | Fatal       | Stop, report "no evaluation criteria available"                                                       |
+| Target instruction/rule file does not exist          | Recoverable | Report `status: failed` for that file, continue remaining targets                                     |
+| All target files missing                             | Fatal       | Stop, report "no reviewable instruction files found"                                                  |
+| Validation artifacts missing after one rerun request | Recoverable | Defer artifact-dependent checks with explicit reason                                                  |
 
 ### Examples
 
-- Prompt: `Review instructions files and report issues`
-- Prompt: `Review .cursor/rules/*.mdc applyTo and cross-references`
-- Result: Structured report with per-file Checks Summary, failed/deferred items with severity and fix suggestions.
+- Prompt: `Review instruction and rule files for structure and portable cross-references`
+- Result: Structured report per [references/common-output-format.md](references/common-output-format.md) (per-file failed/deferred ItemIDs).

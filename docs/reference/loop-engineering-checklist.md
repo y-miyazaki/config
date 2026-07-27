@@ -93,7 +93,7 @@ See [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loo
 
 - [ ] Follows [Loop Caller Workflows Design](../explanation/loop-engineering/loop-caller-workflows-design.md)
 - [ ] `timeout-minutes` on all jobs; least-privilege permissions per job
-- [ ] env keys alphabetically ordered
+- [ ] Map keys alphabetically ordered per companion github-actions-workflow rules ORD-01 (`env`, `permissions`, `with`, `secrets`, `workflow_call` inputs/secrets, action `inputs`/`outputs`)
 - [ ] Unique state file (`.loop/state-<loop>.json`)
 - [ ] Denylist includes standard paths
 

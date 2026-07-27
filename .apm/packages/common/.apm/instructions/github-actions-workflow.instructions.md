@@ -1,31 +1,24 @@
 ---
 applyTo: ".github/workflows/**/*.yaml,.github/workflows/**/*.yml,.github/actions/**/action.yml"
-description: "AI Assistant Instructions for GitHub Actions Workflows"
+description: "GitHub Actions Workflows Instructions"
 ---
 
-# AI Assistant Instructions for GitHub Actions Workflows
+# GitHub Actions Workflows Instructions
 
 ## Scope
 
-- Scope is limited to designing, updating, and validating `.github/workflows/*.yml|yaml` and `.github/actions/*/action.yml` files.
+- Scope covers designing, updating, and validating GitHub Actions workflows and composite action definitions.
 
 ## Standards
 
-### Naming Conventions
-
-| Component     | Rule             | Example              |
-| ------------- | ---------------- | -------------------- |
-| Workflow file | kebab-case       | ci-build-deploy.yaml |
-| Job ID        | kebab-case       | build-and-test       |
-| Step ID       | kebab-case       | setup-node           |
-| Environment   | lowercase        | production, staging  |
-| Secret        | UPPER_SNAKE_CASE | DEPLOY_TOKEN         |
-| Variable      | UPPER_SNAKE_CASE | APP_VERSION          |
-| Artifact name | kebab-case       | build-output-linux   |
-
 ### Key Ordering
 
-- **G-05 (MUST)**: Keep keys in `inputs`, `env`, `permissions`, and `with` in alphabetical order (A-Z) - inconsistent ordering adds diff noise and makes change detection harder.
+- **ORD-01 (MUST)**: Keep map keys in alphabetical order (A-Z) within each block:
+  - Workflow and job: `env`, `permissions`, `with`, `secrets`
+  - Reusable workflow declaration: `on.workflow_call.inputs`, `on.workflow_call.secrets`
+  - Composite `action.yml`: `inputs`, `outputs`; per-step `with`, `env`
+- Not enforced by `github-actions-validation` (actionlint, ghalint, zizmor); apply during edits via this file.
+- **Out of scope for ORD-01**: `jobs` map keys and `on` trigger keys — keep semantic order (pipeline stage, event priority). `steps` are ordered lists, not key maps.
 
 ## Guidelines
 
@@ -65,8 +58,11 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
   - Check: Does each step have a `name` and logical order?
 - G-04 (SHOULD): Explicit Environment and Approval Flow
   - Check: Do production jobs have `environment` configuration and approval?
-- G-05 (MUST): Alphabetical Key Ordering
-  - Check: Are keys in `inputs`, `env`, `permissions`, and `with` sorted alphabetically (A-Z)?
+
+### Ordering (ORD)
+
+- ORD-01 (MUST): Alphabetical Key Ordering
+  - Check: Are map keys sorted alphabetically (A-Z) within each ORD-01 block: workflow and job `env`, `permissions`, `with`, and `secrets`; `on.workflow_call.inputs` and `on.workflow_call.secrets`; composite `action.yml` `inputs` and `outputs`; per-step `with` and `env`? <!-- pragma: allowlist secret -->
 
 ### Performance (PERF)
 
@@ -105,7 +101,7 @@ description: "AI Assistant Instructions for GitHub Actions Workflows"
 
 ### Code Modification Guidelines
 
-- Keep `inputs`, `env`, `permissions`, and `with` keys alphabetically ordered (G-05).
+- Keep map keys alphabetically ordered per ORD-01 in companion github-actions-workflow rules (stem `github-actions-workflow`).
 
 ## Testing and Validation
 

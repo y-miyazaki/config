@@ -37,23 +37,23 @@ Do not embed **this repository's** or **single-consumer** specifics in instructi
 
 ### Maintainer-only locations
 
-| Topic                                       | Where                                                                                                                                     |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Topic                                       | Where                                                                                                                                                                              |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Edit targets, sync, post-change workflow    | [CLAUDE.md § Edit Targets](https://github.com/y-miyazaki/config/blob/main/CLAUDE.md#edit-targets), [.apm/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md) |
-| Loop Engineering, documentation path maps   | `docs/explanation/loop-engineering/**`, consumer `docs/` overlays                                                                         |
-| Repo-specific denylist / path policy        | Root `AGENTS.md`, `docs/`, caller `## Constraints` — not skill `references/` defaults                                                     |
-| Local-only domain skills in a consumer repo | That repository's `AGENTS.md` or `docs/`                                                                                                  |
+| Loop Engineering, documentation path maps   | `docs/explanation/loop-engineering/**`, consumer `docs/` overlays                                                                                                                  |
+| Repo-specific denylist / path policy        | Root `AGENTS.md`, `docs/`, caller `## Constraints` — not skill `references/` defaults                                                                                              |
+| Local-only domain skills in a consumer repo | That repository's `AGENTS.md` or `docs/`                                                                                                                                           |
 
 When reviewing package PRs, treat any domain-specific path or maintainer workflow inside `.apm/packages/**` as a **blocking portability defect** unless it is clearly generalized (pattern + override env var, optional caller field, etc.).
 
 ## Layer responsibilities
 
-| Layer        | Ships                                            | Portability                                         |
-| ------------ | ------------------------------------------------ | --------------------------------------------------- |
-| Skills       | `SKILL.md`, `references/`, `assets/`, `scripts/` | **Required** — generic contract + domain logic only |
-| Instructions | `*.instructions.md`                              | **Required** — repository-neutral (DIST-01)         |
-| Hooks        | portable scripts; JSON per target                | Scripts portable across agents                      |
-| Repo `docs/` | design indexes, maintainer maps                  | Consumer overlay — OK                               |
+| Layer        | Ships                                            | Portability                                                                                                                                                |
+| ------------ | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Skills       | `SKILL.md`, `references/`, `assets/`, `scripts/` | **Required** — generic contract + domain logic only                                                                                                        |
+| Instructions | `*.instructions.md`                              | **Required** — repository-neutral; redistribution policy in [.apm/AGENTS.md § DIST](../../.apm/AGENTS.md#redistribution-policy-dist--this-repository-only) |
+| Hooks        | portable scripts; JSON per target                | Scripts portable across agents                                                                                                                             |
+| Repo `docs/` | design indexes, maintainer maps                  | Consumer overlay — OK                                                                                                                                      |
 
 Runtime layering (MCP / hooks / skills) is described in [Configuration Philosophy](architecture.md#configuration-philosophy).
 
@@ -109,19 +109,18 @@ Skills link to generic principles (for example documentation deduplication) and 
 
 Forbidden in distributable skills: `../` escapes, `docs/...` repository paths, or prose like `repository \`docs/...\``.
 
-Enforced in review via `agent-skills-review` (S-07) and companion instructions (DIST-01) — portability for **distributable** targets, not product specifications.
+Enforced in review via `agent-skills-review` (**S-07**). Redistribution maintainer policy for package authors in this repository: [.apm/AGENTS.md § Redistribution policy (DIST)](../../.apm/AGENTS.md#redistribution-policy-dist--this-repository-only).
 
-## Review skill scope (DIST-01, S-07)
+## Review skill scope (S-07)
 
-Review skills ship inside packages and may run in arbitrary consumer repositories. **Portability is not a universal rejection rule for every skill tree.**
+Review skills ship inside packages and may run in arbitrary consumer repositories. **S-07** (portable in-skill reference paths) applies to any SKILL.md target. **Redistribution policy (DIST)** is maintainer-only — not an `agent-skills-review` ItemID.
 
-| Review target                                                                                | DIST-01 / S-07                                                                    |
-| -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Package skill sources intended for reuse (this repo's `.apm/packages/**` tree or equivalent) | **Apply** — distribution artifact                                                 |
-| Local-only skill under `<agent-root>/skills/` not redistributed                              | **Defer** S-07; document repo-specific wording in consumer `AGENTS.md` or `docs/` |
-| Installed mirror when reviewing overlay-only skills                                          | **Defer** unless the change also touches reuse-intended package sources           |
+| Review check                                      | Where enforced                                 |
+| ------------------------------------------------- | ---------------------------------------------- |
+| S-07 — links stay inside skill tree or `https://` | `agent-skills-review` checklist                |
+| DIST — package authoring for `apm install`        | `.apm/AGENTS.md` (this repository maintainers) |
 
-Structural and quality checks (S-01, Q-_, P-_) apply to any SKILL.md target. Checklist neutrality in distributable `references/` is **DIST-01 Scope** in companion agent-skills instructions when authoring reuse-intended skills.
+Structural and quality checks (S-01, Q-_, P-_, BP-_) apply to any SKILL.md target.
 
 ## Companion rules boundary
 

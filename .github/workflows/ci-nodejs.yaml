@@ -588,4 +588,3 @@ jobs:
             task: security
           status: "${{ job.status }}"
           title: "${{ format('Node.js CI: {0} ({1})', env.COMPONENT, 'security') }}"
-

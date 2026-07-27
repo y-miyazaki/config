@@ -4,37 +4,15 @@ paths:
   - "**/skills/**/references/*.md"
 ---
 
-# AI Assistant Instructions for Agent Skills
+# Agent Skills Instructions
 
 ## Scope
 
-- Scope is limited to designing and updating `skills/**/SKILL.md` and `references/*.md`.
-- This file defines SKILL authoring standards and is treated as an exception to the common template (five-chapter structure with Naming Conventions first in Standards is overridden by domain-specific Required Sections ordering).
-- **DIST-01 (MUST)**: Keep skills and `references/` portable when the skill is meant for reuse outside the authoring repository (see also S-07). Do not embed project-specific paths, internal automation names, or repository-local test helpers in SKILL.md or in `references/` that ship with the skill. In checklist and category items, encode portable contracts — schema fields, dependency declarations, exit semantics — not authoring-repository symbols such as private `validate_*` helpers, test-suite `assert_*` APIs, or internal library paths.
-- **DIST-01b (SHOULD)**: A repository may host **local-only skills** under `<agent-root>/skills/` that are not redistributed. Repo-specific checklist wording, test helpers, and internal paths for those skills belong in that repository's `AGENTS.md` or `docs/` — not in `references/` for skills intended for reuse.
-- **DIST-02 (SHOULD)**: Skills intended for multiple repositories or products stay consumer-neutral in `references/`. Skills scoped to one product or deployment layout may document product-specific paths only inside Execution Scope when the skill's purpose is explicitly single-target.
+- Scope covers designing and updating agent skill documents (`SKILL.md`) and bundled reference files.
+- This file defines SKILL authoring standards and is treated as an exception to the common instruction template (Required Sections ordering for skills overrides the default Standards layout).
+- Structural, quality, and pattern rules (S-_, Q-_, P-_, BP-_) live in Guidelines (synced from `agent-skills-review`).
 
 ## Standards
-
-### Required Sections
-
-- **S-01 (MUST)**: Define the following five sections as H2 headings in this exact order - missing sections break execution determinism:
-  1. Input
-  2. Output Specification
-  3. Execution Scope
-  4. Reference Files Guide
-  5. Workflow
-
-`## Workflow` is mandatory (S-01). Error handling belongs **under** Workflow as `### Error Handling` (Q-10 SHOULD) — a severity/action table, not a sixth top-level H2. Align presence and format with sibling skills in the same package.
-
-- **S-02 (MUST)**: Include `name`, `description`, `license`, `metadata.author`, and `metadata.version` - missing fields prevent the plugin system from recognizing the skill.
-
-### Reference Header Levels
-
-- **S-03 (MUST)**: Keep header levels consistent - inconsistent levels break section recognition for AI agents:
-  - `common-checklist.md` / `common-output-format.md`: H1（`#`）
-  - `common-troubleshooting.md` / `common-individual-commands.md`: H2（`##`）
-  - `category-*.md`: H2（`##`）
 
 ### Naming Conventions
 
@@ -56,40 +34,19 @@ paths:
 
 ### Reference Files Matrix
 
-| File Name                       | Required | Purpose                                 | Load Trigger |
-| ------------------------------- | -------- | --------------------------------------- | ------------ |
-| `common-checklist.md`           | Yes      | Canonical checklist with fixed Item IDs | Always       |
-| `common-output-format.md`       | Yes      | Canonical output contract               | Always       |
-| `common-troubleshooting.md`     | No       | Failure diagnostics and rerun procedure | On failure   |
-| `common-individual-commands.md` | No       | Debug-only command catalog              | On debugging |
-| `category-*.md`                 | No       | Domain-specific review criteria         | Per category |
+| File Name                       | Required | Purpose                                 | Load Trigger              |
+| ------------------------------- | -------- | --------------------------------------- | ------------------------- |
+| `common-checklist.md`           | Yes      | Canonical checklist with fixed Item IDs | `(always read)`           |
+| `common-output-format.md`       | Yes      | Canonical output contract               | `(always read)`           |
+| `common-troubleshooting.md`     | No       | Failure diagnostics and rerun procedure | `(read on failure)`       |
+| `common-individual-commands.md` | No       | Debug-only command catalog              | `(read on debugging)`     |
+| `category-*.md`                 | No       | Domain-specific review criteria         | `(read when <condition>)` |
+
+**Load trigger vocabulary (MUST):** each Reference Files Guide line uses exactly one parenthetical trigger from this allowlist: `(always read)`, `(read on failure)`, `(read on debugging)`, `(read on automation path)`, `(read on interactive path)`, `(read when <condition>)`. Flag any other trigger wording.
 
 ### Priority Principle
 
 - **S-04 (MUST)**: Prioritize Clarity over DRY - when deduplication introduces ambiguity, keep the clearer wording.
-
-### Output Contract Source of Truth
-
-- **S-05 (MUST)**: Treat `references/common-output-format.md` as the source of truth for output contracts - keep `Output Specification` as a summary and avoid duplicate definitions.
-
-### Writing Style
-
-- **Q-06 (MUST)**: Use imperative/infinitive phrasing - "You should" lowers execution precision for AI agents:
-  - ❌ `You should do X` / `You need to check Y`
-  - ✅ `Do X` / `Check Y` / `To accomplish X, do Y`
-
-### Forbidden Expressions
-
-- **Q-04a (MUST)**: Prohibit vague expressions that cannot be translated into concrete actions by AI:
-  - EN: appropriately, as needed, if possible, preferably, etc., and so on
-  - JP equivalents: "appropriately", "as needed", "where possible", "depending on context", "etc."
-
-### Eval Packaging
-
-- **E-01 (SHOULD)**: Ship a thin contract eval harness in each skill: `eval.yaml` plus `evals/tasks/*.yaml` with at least output-contract coverage, one happy path, and one boundary or trigger-negative case where applicable.
-- **E-02 (SHOULD)**: Prefer inline JSON or context in eval task prompts over `evals/files/` when the mock can echo prompts — avoid large binary fixtures in distributable packages.
-- **E-03 (MUST)**: Do not bundle large regression corpora or datasets in redistributable skill packages; consumers use skills for execution instructions, not regression archives.
-- **E-04 (CAN)**: `evals/evals.json` (skill-creator format) is optional maintainer metadata for description tuning or benchmarks — not required in every skill.
 
 ## Guidelines
 
@@ -111,7 +68,7 @@ paths:
 - Q-03 (SHOULD): Execution Determinism
   - Check: Is execution path single/canonical OR are conditional branches explicitly defined (IF condition → path A, ELSE → path B)?
 - Q-04 (SHOULD): Input/Output Specificity
-  - Check: Are Input/Output formats explicitly defined with schema/structure + concrete examples (no vague "appropriately", "as needed", "etc." expressions)?
+  - Check: Are Input/Output formats explicitly defined with schema/structure + concrete examples (no vague "appropriately", "as needed", or "depending on context" expressions)?
 - Q-05 (SHOULD): Constraints Clarity
   - Check: Are project-specific, non-obvious constraints documented while self-evident constraints are omitted?
 - Q-06 (MUST): No Implicit Inference
@@ -136,11 +93,11 @@ paths:
 - S-02 (MUST): YAML Frontmatter Fields
   - Check: Does SKILL.md YAML frontmatter have all required fields (name, description, license) and recommended metadata (author, version)?
 - BP-01 (SHOULD): Description Quality
-  - Check: Does the description field follow best practices for skill discovery (third person, "Use when..." trigger, no implementation instructions)?
+  - Check: Does the description field follow best practices for skill discovery (third person, includes when-to-activate trigger content, no implementation instructions)?
 - BP-02 (SHOULD): Reference Trigger Conditions
-  - Check: Does Reference Files Guide use explicit load contracts on every line — `(always read)`, path-qualified variants, or `(read on failure)` — per package sibling-consistency policy for skills?
+  - Check: Does every Reference Files Guide line use exactly one parenthetical load trigger from the allowlist — `(always read)`, `(read on failure)`, `(read on debugging)`, `(read on automation path)`, `(read on interactive path)`, `(read when <condition>)`? Flag any other trigger wording.
 - Q-07 (SHOULD): Progressive Disclosure (Soft Guard)
-  - Check: Is SKILL.md depth aligned with sibling skills in the same package? Is word count reasonable for that family?
+  - Check: Is SKILL.md depth aligned with sibling skills in the same package? Is word count aligned with sibling depth for that family?
 - Q-08 (SHOULD): Resource Separation
   - Check: Does skill directory contain `references/` and the mandatory common reference files? `scripts/` is optional but required when executable logic is provided.
 - S-07 (MUST): Portable Reference Paths

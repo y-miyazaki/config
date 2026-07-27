@@ -7,8 +7,8 @@
 
 ## Compliance & Policy (COMP)
 
-- COMP-03 (MUST): No Default VPC/Open SG/Public S3
-- COMP-04 (MUST): IAM Policy with jsonencode or aws_iam_policy_document
+- COMP-01 (MUST): No Default VPC/Open SG/Public S3
+- COMP-02 (MUST): IAM Policy with jsonencode or aws_iam_policy_document
 
 ## Cost Optimization (COST)
 
@@ -64,6 +64,10 @@
 - N-01 (SHOULD): English Comments
 - N-02 (SHOULD): Module Header (Purpose/Overview)
 - N-03 (SHOULD): Important Resource Explanation Comments
+
+## Ordering (ORD)
+
+- ORD-01 (MUST): Alphabetical Argument Key Ordering
 
 ## outputs.tf (O)
 

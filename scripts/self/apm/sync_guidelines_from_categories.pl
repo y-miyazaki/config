@@ -23,7 +23,7 @@ my %code_mod_guidelines = (
     '- Automate deterministic checks (existence, quantitative, file presence) in skill `scripts/`; keep judgment-based checks in the review skill workflow.',
   ],
   'github-actions-review' => [
-    '- Keep `inputs`, `env`, `permissions`, and `with` keys alphabetically ordered (G-05).',
+    '- Keep map keys alphabetically ordered per ORD-01 in companion github-actions-workflow rules (stem `github-actions-workflow`).',
   ],
   'go-review' => [
     '- When adding or changing behavior, add or update *_test.go files in the same change.',
@@ -37,7 +37,7 @@ my %code_mod_guidelines = (
     '- When adding or changing shell scripts or sourced libraries, add or update matching Bats suites under test/bats/ (mirror the script path) in the same change; follow companion Bats rules (stem `bats`) for suite layout.',
   ],
   'terraform-review' => [
-    '- Keep argument keys inside resource/module/data blocks alphabetically ordered (ORD-01).',
+    '- Keep argument keys inside resource/module/data/local blocks alphabetically ordered (ORD-01).',
   ],
 );
 

@@ -34,6 +34,7 @@ Additional rules:
 - Individual rule bullets retain `(MUST)`, `(SHOULD)`, or `(CAN)` (for example, `- ARCH-01 (SHOULD): ...`).
 - Do not emit empty H3 sections in generated Guidelines.
 - In `instructions.instructions.md`, avoid duplicating TEST/SEC review criteria outside `## Guidelines`.
+- **Standards vs Guidelines:** For instruction files in the sync map, rule IDs and `Check:` criteria live in `## Guidelines` (synced from `*-review` categories). `## Standards` holds only non-duplicative authoring detail — naming/distribution tables, path maps, templates, and detail not captured by checklist items (STD-05). Do not repeat synced rule IDs in Standards.
 
 ## Source of Truth and Sync Direction
 
@@ -98,14 +99,14 @@ Operational bullets under `### Code Modification Guidelines` live in `scripts/se
 
 Current defaults (domain-only):
 
-| Skill                   | Extra guideline bullet                                                                                                     |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `agent-skills-review`   | Deterministic checks in skill `scripts/`; judgment in the review skill workflow                                            |
-| `github-actions-review` | Keep `inputs` / `env` / `permissions` / `with` keys alphabetically ordered (G-05)                                          |
-| `shell-script-review`   | Add or update matching Bats suites under `test/bats/` when shell scripts change; follow companion Bats rules (stem `bats`) |
-| `go-review`             | Add or update `*_test.go` files when behavior changes                                                                      |
-| `instructions-review`   | Precise `applyTo`, stem-based cross-links; no always-run lint recipes or hook-skip explanations                            |
-| `terraform-review`      | Keep resource/module/data argument keys alphabetically ordered (ORD-01)                                                    |
+| Skill                   | Extra guideline bullet                                                                                                      |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `agent-skills-review`   | Deterministic checks in skill `scripts/`; judgment in the review skill workflow                                             |
+| `github-actions-review` | Keep map keys alphabetically ordered per ORD-01 in companion github-actions-workflow rules (stem `github-actions-workflow`) |
+| `shell-script-review`   | Add or update matching Bats suites under `test/bats/` when shell scripts change; follow companion Bats rules (stem `bats`)  |
+| `go-review`             | Add or update `*_test.go` files when behavior changes                                                                       |
+| `instructions-review`   | Precise `applyTo`, stem-based cross-links; no always-run lint recipes or hook-skip explanations                             |
+| `terraform-review`      | Keep resource/module/data/local argument keys alphabetically ordered (ORD-01)                                               |
 
 Corresponding review criteria belong in `category-testing.md` as `TEST-00 (MUST)` (or equivalent) so Guidelines and checklist stay aligned.
 

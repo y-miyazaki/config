@@ -163,7 +163,7 @@ Session report per [common-output-format.md](references/common-output-format.md)
 - [common-checklist.md](references/common-checklist.md) (always read)
 - [common-output-format.md](references/common-output-format.md) (always read)
 - [category-scope.md](references/category-scope.md) (always read)
-- [category-operations.md](references/category-operations.md) (always read before edits)
+- [category-operations.md](references/category-operations.md) (always read)
 - [category-verification.md](references/category-verification.md) - Read before apply and after edits.
 - [category-input-schema.md](references/category-input-schema.md) - Read when parsing structured input or future loop envelope.
 
