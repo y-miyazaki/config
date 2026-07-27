@@ -4,7 +4,7 @@
 #   Validate loop automation skills under .apm/packages for PR body contract drift.
 #
 # Usage:
-#   bash check_loop_pr_body_contract.sh [--check]
+#   bash check_loop_pr_body_contract.sh
 #
 # Design Rules:
 #   - Source of truth: .apm/packages/common/.apm/skills/<skill>/
@@ -40,6 +40,15 @@ declare -a REQUIRED_FILES=(
     references/common-output-format.md
 )
 
+# Skills that ship category-pr-body-links.md (per-skill link rules).
+declare -a LOOP_PR_BODY_LINKS_SKILLS=(
+    changelog
+    ci-sweeper
+    docs-updater
+    refactor
+    tech-debt
+)
+
 # Skills that ship a separate automation-path output contract file.
 declare -a LOOP_SPLIT_OUTPUT_SKILLS=(
     docs-updater
@@ -51,9 +60,45 @@ declare -a FORBIDDEN_PATTERNS=(
     'one or two sentences'
     '1–2 sentences (max'
     '1-2 sentences (max'
+    '](https://github.com/org/repo'
+)
+
+declare -a LOOP_LINK_CHECK_PATHS=(
+    assets/pr-body-template.md
+    assets/pr-body-template-survey.md
+    references/common-output-format.md
+    references/common-output-format-automation.md
 )
 
 declare -a VIOLATIONS=()
+
+#######################################
+# loop_skill_uses_pr_body_links: Return whether a loop skill ships link rules
+#
+# Globals:
+#   LOOP_PR_BODY_LINKS_SKILLS
+#
+# Arguments:
+#   $1 - Skill name
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 when the skill ships category-pr-body-links.md; 1 otherwise
+#
+#######################################
+function loop_skill_uses_pr_body_links {
+    local skill="${1:-}"
+    local links_skill
+
+    for links_skill in "${LOOP_PR_BODY_LINKS_SKILLS[@]}"; do
+        if [[ ${skill} == "${links_skill}" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
 
 #######################################
 # loop_skill_deferred_subsection: Return deferred subsection name for a loop skill
@@ -76,6 +121,36 @@ function loop_skill_deferred_subsection {
         changelog) printf '%s' "Skipped" ;;
         *) printf '%s' "Deferred" ;;
     esac
+}
+
+#######################################
+# check_template_link_placeholders: Forbid example org/repo markdown links in templates
+#
+# Globals:
+#   SKILLS_ROOT
+#   LOOP_LINK_CHECK_PATHS
+#
+# Arguments:
+#   $1 - Skill name
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function check_template_link_placeholders {
+    local skill="$1"
+    local rel_path full_path
+
+    for rel_path in "${LOOP_LINK_CHECK_PATHS[@]}"; do
+        full_path="${SKILLS_ROOT}/${skill}/${rel_path}"
+        [[ -f ${full_path} ]] || continue
+        if grep -qF '](https://github.com/org/repo' "${full_path}"; then
+            record_violation "Example org/repo markdown link in ${skill}/${rel_path} — use backtick placeholders (see category-pr-body-links.md)"
+        fi
+    done
 }
 
 #######################################
@@ -277,6 +352,16 @@ function check_automation_envelope {
         record_violation "Envelope for ${skill} missing pr-body-template.md reference"
     fi
 
+    if loop_skill_uses_pr_body_links "${skill}"; then
+        if ! grep -qF 'category-pr-body-links.md' "${envelope}"; then
+            record_violation "Envelope for ${skill} missing category-pr-body-links.md reference"
+        fi
+
+        if ! grep -qF -- '- **Links:** At synthesis, read [category-pr-body-links.md](category-pr-body-links.md).' "${envelope}"; then
+            record_violation "Envelope for ${skill} must use canonical Links line pointing to category-pr-body-links.md"
+        fi
+    fi
+
     if [[ ${skill} == changelog ]]; then
         if ! grep -qF '### Skipped' "${envelope}"; then
             record_violation "Envelope for changelog missing ### Skipped guidance"
@@ -317,6 +402,11 @@ function check_loop_skill {
         check_forbidden_patterns "${skill}" "${rel_path}"
     done
 
+    if loop_skill_uses_pr_body_links "${skill}"; then
+        check_required_file "${skill}" "references/category-pr-body-links.md"
+        check_forbidden_patterns "${skill}" "references/category-pr-body-links.md"
+    fi
+
     local split_skill
     for split_skill in "${LOOP_SPLIT_OUTPUT_SKILLS[@]}"; do
         if [[ ${skill} == "${split_skill}" ]]; then
@@ -328,6 +418,7 @@ function check_loop_skill {
     check_apply_template "${skill}"
     check_survey_template "${skill}"
     check_automation_envelope "${skill}"
+    check_template_link_placeholders "${skill}"
 }
 
 #######################################

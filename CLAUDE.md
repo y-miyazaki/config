@@ -23,7 +23,6 @@ Single reference when a change may touch package sources, `scripts/`, docs, or g
 | `scripts/lib/`                                                                                                       | `.apm/packages/*/.apm/skills/*/scripts/lib/`                                        |
 | `scripts/{shell-script,go,terraform}/validate.sh`, `scripts/shell-script/fix_function_doc_order.sh`                  | Paired skill `scripts/` copy                                                        |
 | `.apm/packages/<pkg>/.apm/skills/<skill>-review/references/category-*.md`                                            | Generated `## Guidelines` in instructions (unless accepting overwrite on next sync) |
-| Loop skill PR body templates/envelopes (changelog, ci-sweeper, docs-updater, refactor, tech-debt)                    | `.agents/`, `.claude/`, … skill mirrors                                             |
 | Repo-only paths (for example `scripts/terraform/module_updater.sh`, `.github/actions/**/lib/`, `.github/workflows/`) | —                                                                                   |
 
 **Post-change:** Agent `stop` hooks run `scripts/self/apm/sync_apm_artifacts.sh` for mirrored rows above (sync, `apm install --update`, drift check, `apm audit --ci`). Do not run sync manually unless hooks are unavailable or you need validation-only (`--check`). Repo-only rows: update matching Bats under `test/bats/` in the same change. Skill-copy edits to `validate.sh`: `sync_validate_mirror.sh --from-skill`.

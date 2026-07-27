@@ -217,6 +217,17 @@ function create_pr_body {
     AGENT_REPORT_VERIFICATION="$(jq -r '.agent_report_verification // empty' <<< "${notify_json}")"
     TARGET_KEY="$(jq -r '.key // empty' <<< "${target_json}" 2> /dev/null || true)"
 
+    export GITHUB_SERVER_URL="${GITHUB_SERVER_URL:-https://github.com}"
+    export GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-}"
+    BLOB_REF="${BRANCH:-}"
+    if [[ -z ${BLOB_REF} ]]; then
+        BLOB_REF="$(jq -r '.from.branch // .to.branch // empty' <<< "${target_json}" 2> /dev/null || true)"
+    fi
+    if [[ -z ${BLOB_REF} ]]; then
+        BLOB_REF="$(jq -r '.failures[0].head_branch // empty' <<< "${detect_json}" 2> /dev/null || true)"
+    fi
+    export BLOB_REF
+
     export PR_BODY_PREFIX="${PR_BODY}"
     export DETECT_RESULT_JSON="${detect_json}"
     export CHANGED_FILES_JSON

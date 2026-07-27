@@ -15,6 +15,7 @@
 # - should_skip_processed_run limited policy skips rejected at max retries
 # - collect_failures_for_run includes startup_failure as workflow-level failure
 # - collect_failures_for_run includes infra failures in failures array
+# - collect_failures_for_run emits workflow_path job_url and job_id metadata
 # - classify_failure_type treats http status in test output as regression
 # - detect_ci_failures rejects ledger path traversal outside repository root
 # - detect_ci_failures accepts ledger path outside .loop when under repository root
@@ -172,6 +173,43 @@ EOF
     [ "${#FAILURES_JSON[@]}" -eq 1 ]
     [ "${#IGNORED_JSON[@]}" -eq 0 ]
     run jq -e '.failure_type == "infra"' <<< "${FAILURES_JSON[0]}"
+    [ "$status" -eq 0 ]
+}
+
+@test "collect_failures_for_run emits workflow_path job_url and job_id metadata" {
+    MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${MOCK_BIN}"
+    cat > "${MOCK_BIN}/gh" << 'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "api" ]]; then
+    printf '%s\n' '.github/workflows/ci-markdown.yaml'
+    exit 0
+fi
+if [[ "$1" == "run" && "$2" == "view" ]]; then
+    if [[ "$*" == *"--json jobs"* ]]; then
+        printf '%s\n' '{"name":"lint","conclusion":"failure","url":"https://example.com/run/1/job/9","job_id":9}'
+        exit 0
+    fi
+    if [[ "$*" == *"--log-failed"* ]]; then
+        printf '%s\n' "SC2086: Double quote to prevent globbing"
+        exit 0
+    fi
+fi
+exit 1
+EOF
+    chmod +x "${MOCK_BIN}/gh"
+    PATH="${MOCK_BIN}:${PATH}"
+    export GITHUB_REPOSITORY='org/repo'
+
+    FAILURES_JSON=()
+    IGNORED_JSON=()
+    collect_failures_for_run "ci-markdown" "12345" "abc123" "main" "https://example.com/run/1"
+    [ "${#FAILURES_JSON[@]}" -eq 1 ]
+    run jq -e '.workflow_path == ".github/workflows/ci-markdown.yaml"' <<< "${FAILURES_JSON[0]}"
+    [ "$status" -eq 0 ]
+    run jq -e '.job_url == "https://example.com/run/1/job/9"' <<< "${FAILURES_JSON[0]}"
+    [ "$status" -eq 0 ]
+    run jq -e '.job_id == "9"' <<< "${FAILURES_JSON[0]}"
     [ "$status" -eq 0 ]
 }
 
@@ -481,7 +519,7 @@ EOF
 }
 
 @test "sanitize_log_excerpt redacts bearer tokens" {
-    run sanitize_log_excerpt "Authorization: Bearer [REDACTED:Authorization header] header] token]"
+    run sanitize_log_excerpt "Authorization: Bearer [REDACTED:Authorization header] header] header] token]"
     [ "$status" -eq 0 ]
     [[ $output == *"[REDACTED]"* ]]
     [[ $output != *"eyJhbGci"* ]]

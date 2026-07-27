@@ -113,7 +113,7 @@ function main {
         --notify-json-file "${notify_json_path}"
     )
 
-    export PR_BODY LEVEL SKIP_REASON TARGET_JSON
+    export BRANCH PR_BODY LEVEL SKIP_REASON TARGET_JSON
     composed="$(bash "${script_dir}/create_pr_body.sh" "${body_args[@]}")"
 
     gh_args=(

@@ -21,7 +21,8 @@
 # - render_pr_body skips mechanical Changes when summary has ### Changes
 # - render_pr_body orders overview failure summary verification changes metadata
 # - render_agent_verification_section wraps heading
-# - agent_summary_has_detailed_changes detects Changes subsection
+# - render_changes_section links files when repository and ref are set
+# - render_failure_context renders markdown links when metadata present
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -36,10 +37,10 @@ setup() {
 
 @test "redact_sensitive_text redacts github tokens" {
     # Dummy token shape only — not a real credential (ghp_ + 36 alnum).
-    run redact_sensitive_text 'token ghp_abcdefghijklmnopqrstuvwxyz0123456789' # pragma: allowlist secret
+    run redact_sensitive_text 'token ghp_FAKE_TOKEN_FOR_UNIT_TEST_ONLY_0000' # pragma: allowlist secret
     [ "$status" -eq 0 ]
     [[ $output == *"[REDACTED]"* ]]
-    [[ $output != *"ghp_abcdefghijklmnopqrstuvwxyz0123456789"* ]] # pragma: allowlist secret
+    [[ $output != *"ghp_FAKE_TOKEN_FOR_UNIT_TEST_ONLY_0000"* ]] # pragma: allowlist secret
 }
 
 @test "render_agent_overview_section omitted when empty" {
@@ -139,11 +140,11 @@ setup() {
 }
 
 @test "render_failure_context redacts secret-like reason" {
-    local json='{"failures":[{"workflow_name":"wf","run_url":"https://example/r","job_name":"job","failure_type":"regression","reason":"token ghp_abcdefghijklmnopqrstuvwxyz0123456789"}]}' # pragma: allowlist secret
+    local json='{"failures":[{"workflow_name":"wf","run_url":"https://example/r","job_name":"job","failure_type":"regression","reason":"token ghp_FAKE_TOKEN_FOR_UNIT_TEST_ONLY_0000"}]}' # pragma: allowlist secret
     run render_failure_context "${json}"
     [ "$status" -eq 0 ]
     [[ $output == *"[REDACTED]"* ]]
-    [[ $output != *"ghp_abcdefghijklmnopqrstuvwxyz0123456789"* ]] # pragma: allowlist secret
+    [[ $output != *"ghp_FAKE_TOKEN_FOR_UNIT_TEST_ONLY_0000"* ]] # pragma: allowlist secret
 }
 
 @test "render_run_metadata escapes pipe in skip reason" {
@@ -177,6 +178,25 @@ setup() {
     [ "$status" -eq 0 ]
     [[ $output == *"## Verification"* ]]
     [[ $output == *"shellcheck"* ]]
+}
+
+@test "render_failure_context renders markdown links when metadata present" {
+    GITHUB_REPOSITORY='org/repo' \
+        GITHUB_SERVER_URL='https://github.com' \
+        run render_failure_context '{"failures":[{"workflow_name":"on-ci","workflow_run_id":"99","workflow_path":".github/workflows/on-ci.yaml","run_url":"https://github.com/org/repo/actions/runs/99","job_name":"lint","job_url":"https://github.com/org/repo/actions/runs/99/job/123","failure_type":"regression","reason":"fail"}]}'
+    [ "$status" -eq 0 ]
+    [[ $output == *"[on-ci](https://github.com/org/repo/actions/workflows/on-ci.yaml)"* ]]
+    [[ $output == *"[#99](https://github.com/org/repo/actions/runs/99)"* ]]
+    [[ $output == *"[lint](https://github.com/org/repo/actions/runs/99/job/123)"* ]]
+}
+
+@test "render_changes_section links files when repository and ref are set" {
+    GITHUB_REPOSITORY='org/repo' \
+        GITHUB_SERVER_URL='https://github.com' \
+        BLOB_REF='loop/ci-sweeper' \
+        run render_changes_section '["docs/a.md"]'
+    [ "$status" -eq 0 ]
+    [[ $output == *"[docs/a.md](https://github.com/org/repo/blob/loop/ci-sweeper/docs/a.md)"* ]]
 }
 
 @test "agent_summary_has_detailed_changes detects Changes subsection" {

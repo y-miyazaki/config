@@ -50,16 +50,16 @@ Load `assets/pr-body-template.md` **at synthesis time only** (after triage/fix w
 
 **Fails** when Overview is automation boilerplate, metadata only, or defers all substance to Summary.
 
-Per-skill required elements and examples live in each skill's `references/common-output-format.md`, `references/category-automation-envelope.md` (automation path), and `assets/pr-body-template.md`.
+Per-skill required elements and examples live in each skill's `references/common-output-format.md`, `references/category-automation-envelope.md` (automation path), `references/category-pr-body-links.md`, and `assets/pr-body-template.md`. **Same filename under each loop skill does not mean same content** — templates, envelopes, and link rules are per-skill.
 
 ### What the platform owns
 
-| Section               | Source                                                                                        |
-| --------------------- | --------------------------------------------------------------------------------------------- |
-| `## Failure context`  | `detect_result_json.failures[]` (ci-sweeper)                                                  |
-| `## Changes`          | git diff paths — **omitted** when agent Summary contains `### Changes` or `### Fixes Applied` |
-| `## Run Metadata`     | Level, Target, Skip reason table                                                              |
-| Automation disclaimer | `render_automation_disclaimer()`                                                              |
+| Section               | Source                                                                                                                                                            |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `## Failure context`  | `detect_result_json.failures[]` (ci-sweeper) — Workflow/Job/Run as Markdown links when URLs are present                                                           |
+| `## Changes`          | git diff paths — **omitted** when agent Summary contains `### Changes` or `### Fixes Applied`; paths link to `blob/{branch}` when repository and branch are known |
+| `## Run Metadata`     | Level, Target, Skip reason table                                                                                                                                  |
+| Automation disclaimer | `render_automation_disclaimer()`                                                                                                                                  |
 
 Finalize **passthrough** agent `## Overview`, `## Summary`, and `## Verification` with redact/truncate only — no table regeneration.
 
@@ -133,6 +133,21 @@ Every loop automation skill MUST:
 5. Instruct the agent to load the PR template at synthesis time when `may_edit` is set in Constraints.
 6. Keep `## Session Metrics` separate from PR-facing `## Summary` (no duplicate headings).
 7. Overview MUST satisfy the [Overview contract](#overview-contract) — trigger, problem, action in plain language.
+8. Ship `references/category-pr-body-links.md` with per-skill link rules — see each skill's file; enforced for presence and placeholder patterns by `check_loop_pr_body_contract.sh`.
+
+## Source of truth
+
+`check_loop_pr_body_contract.sh` checks **structure** (required files, headings, forbidden patterns) for all loop skills.
+
+| Artifact                                                                            | Source of truth                                                  | Cross-skill content sync?                                                      |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `assets/pr-body-template.md`, `assets/pr-body-template-survey.md`                   | per skill under `.apm/packages/common/.apm/skills/<loop-skill>/` | **No** — per-skill tables/examples                                             |
+| `references/category-automation-envelope.md`, `references/common-output-format*.md` | per skill                                                        | **No**                                                                         |
+| `references/category-pr-body-links.md`                                              | per skill                                                        | **No** — shared file-path rules may overlap; ci-sweeper adds workflow/job rows |
+| `scripts/self/apm/check_loop_pr_body_contract.sh`                                   | `scripts/self/apm/`                                              | one script                                                                     |
+| `.github/actions/loop-finalize/lib/render_pr_body.sh`                               | `.github/actions/`                                               | one composer                                                                   |
+
+Edit link rules in the affected skill's `references/category-pr-body-links.md` directly. Templates use backtick placeholders only — not `https://github.com/org/repo/...` example links (markdown-link-check 404).
 
 ## Fixes / Deferred consistency
 

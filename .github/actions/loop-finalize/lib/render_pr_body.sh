@@ -36,7 +36,10 @@ AGENT_REPORT_SUMMARY="${AGENT_REPORT_SUMMARY:-}"
 AGENT_REPORT_VERIFICATION="${AGENT_REPORT_VERIFICATION:-}"
 CHANGED_FILES_JSON="${CHANGED_FILES_JSON:-"[]"}"
 DETECT_RESULT_JSON="${DETECT_RESULT_JSON:-"{}"}"
+BLOB_REF="${BLOB_REF:-}"
 FAILURES_MAX="${FAILURES_MAX:-5}"
+GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-}"
+GITHUB_SERVER_URL="${GITHUB_SERVER_URL:-https://github.com}"
 LEVEL="${LEVEL:-}"
 OVERVIEW_MAX_CHARS="${OVERVIEW_MAX_CHARS:-2000}"
 PR_BODY_PREFIX="${PR_BODY_PREFIX:-}"
@@ -214,6 +217,109 @@ function agent_summary_has_detailed_changes {
 }
 
 #######################################
+# github_repo_web_base: Return https://host/owner/repo when repository is set
+#
+# Globals:
+#   GITHUB_REPOSITORY - owner/repo (optional)
+#   GITHUB_SERVER_URL - GitHub host (default https://github.com)
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Web base URL to stdout
+#
+# Returns:
+#   0 when repository is set; 1 otherwise
+#
+#######################################
+function github_repo_web_base {
+    if [[ -z ${GITHUB_REPOSITORY} ]]; then
+        return 1
+    fi
+    printf '%s/%s' "${GITHUB_SERVER_URL%/}" "${GITHUB_REPOSITORY}"
+}
+
+#######################################
+# blob_file_url: Build a blob URL for a repository path
+#
+# Globals:
+#   BLOB_REF - Git ref for blob links (optional)
+#
+# Arguments:
+#   $1 - Repository-relative file path
+#
+# Outputs:
+#   Blob URL to stdout
+#
+# Returns:
+#   0 when base and ref are set; 1 otherwise
+#
+#######################################
+function blob_file_url {
+    local path="$1"
+    local base
+
+    [[ -n ${BLOB_REF} ]] || return 1
+    base="$(github_repo_web_base)" || return 1
+    printf '%s/blob/%s/%s' "${base}" "${BLOB_REF}" "${path}"
+}
+
+#######################################
+# workflow_actions_url: Build workflow definition URL from workflow path
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Workflow file path (e.g. .github/workflows/ci.yaml)
+#
+# Outputs:
+#   Workflow URL to stdout
+#
+# Returns:
+#   0 when base and path are set; 1 otherwise
+#
+#######################################
+function workflow_actions_url {
+    local workflow_path="$1"
+    local base workflow_file
+
+    [[ -n ${workflow_path} ]] || return 1
+    base="$(github_repo_web_base)" || return 1
+    workflow_file="$(basename "${workflow_path}")"
+    printf '%s/actions/workflows/%s' "${base}" "${workflow_file}"
+}
+
+#######################################
+# render_markdown_link: Render markdown link or plain text fallback
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Link text
+#   $2 - URL (optional)
+#
+# Outputs:
+#   Markdown link or plain text to stdout
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function render_markdown_link {
+    local text="$1"
+    local url="${2:-}"
+
+    if [[ -n ${url} ]]; then
+        printf '[%s](%s)' "${text}" "${url}"
+    else
+        printf '%s' "${text}"
+    fi
+}
+
+#######################################
 # render_changes_section: Render ## Changes section
 #
 # Description:
@@ -237,7 +343,7 @@ function agent_summary_has_detailed_changes {
 function render_changes_section {
     local files_json="${1:-[]}"
     local paths_json note=""
-    local path shown=0
+    local path shown=0 blob_url
     local n
 
     if ! jq -e 'type == "array" and length > 0' <<< "${files_json}" > /dev/null 2>&1; then
@@ -257,7 +363,12 @@ function render_changes_section {
     while IFS= read -r path; do
         [[ -z ${path} ]] && continue
         if [[ ${shown} -lt 20 ]]; then
-            printf '%s\n' "- \`${path}\`"
+            blob_url="$(blob_file_url "${path}" 2> /dev/null || true)"
+            if [[ -n ${blob_url} ]]; then
+                printf '%s\n' "- $(render_markdown_link "${path}" "${blob_url}")"
+            else
+                printf '%s\n' "- \`${path}\`"
+            fi
             shown=$((shown + 1))
         fi
     done < <(jq -r '.[]' <<< "${paths_json}")
@@ -294,6 +405,7 @@ function render_failure_context {
     local detect_json="${1:-}"
     local count i max shown
     local workflow_name run_url job_name failure_type reason
+    local workflow_run_id workflow_path job_url job_id run_label workflow_url
 
     if [[ -z ${detect_json} ]] || ! jq -e '(.failures | type) == "array" and (.failures | length) > 0' <<< "${detect_json}" > /dev/null 2>&1; then
         return 0
@@ -310,14 +422,47 @@ function render_failure_context {
             break
         fi
         workflow_name="$(jq -r --argjson i "${i}" '.failures[$i].workflow_name // empty' <<< "${detect_json}")"
+        workflow_run_id="$(jq -r --argjson i "${i}" '.failures[$i].workflow_run_id // empty' <<< "${detect_json}")"
+        workflow_path="$(jq -r --argjson i "${i}" '.failures[$i].workflow_path // empty' <<< "${detect_json}")"
         run_url="$(jq -r --argjson i "${i}" '.failures[$i].run_url // empty' <<< "${detect_json}")"
         job_name="$(jq -r --argjson i "${i}" '.failures[$i].job_name // empty' <<< "${detect_json}")"
+        job_url="$(jq -r --argjson i "${i}" '.failures[$i].job_url // empty' <<< "${detect_json}")"
         failure_type="$(jq -r --argjson i "${i}" '.failures[$i].failure_type // empty' <<< "${detect_json}")"
         reason="$(jq -r --argjson i "${i}" '.failures[$i].reason // empty' <<< "${detect_json}")"
         reason="$(truncate_text "$(redact_sensitive_text "${reason}")" 500)"
-        [[ -n ${workflow_name} ]] && printf '%s\n' "- Workflow: \`${workflow_name}\`"
-        [[ -n ${run_url} ]] && printf '%s\n' "- Run: ${run_url}"
-        [[ -n ${job_name} ]] && printf '%s\n' "- Job: \`${job_name}\`"
+        workflow_url="$(workflow_actions_url "${workflow_path}" 2> /dev/null || true)"
+        if [[ -z ${job_url} && -n ${run_url} ]]; then
+            job_id="$(jq -r --argjson i "${i}" '.failures[$i].job_id // empty' <<< "${detect_json}")"
+            if [[ -n ${job_id} ]]; then
+                job_url="${run_url}/job/${job_id}"
+            fi
+        fi
+        if [[ -n ${workflow_name} ]]; then
+            if [[ -n ${workflow_url} ]]; then
+                printf '%s\n' "- Workflow: $(render_markdown_link "${workflow_name}" "${workflow_url}")"
+            elif [[ -n ${run_url} ]]; then
+                printf '%s\n' "- Workflow: $(render_markdown_link "${workflow_name}" "${run_url}")"
+            else
+                printf '%s\n' "- Workflow: \`${workflow_name}\`"
+            fi
+        fi
+        if [[ -n ${run_url} ]]; then
+            if [[ -n ${workflow_run_id} ]]; then
+                run_label="#${workflow_run_id}"
+            else
+                run_label="run"
+            fi
+            printf '%s\n' "- Run: $(render_markdown_link "${run_label}" "${run_url}")"
+        fi
+        if [[ -n ${job_name} ]]; then
+            if [[ -n ${job_url} ]]; then
+                printf '%s\n' "- Job: $(render_markdown_link "${job_name}" "${job_url}")"
+            elif [[ -n ${run_url} ]]; then
+                printf '%s\n' "- Job: $(render_markdown_link "${job_name}" "${run_url}")"
+            else
+                printf '%s\n' "- Job: \`${job_name}\`"
+            fi
+        fi
         [[ -n ${failure_type} ]] && printf '%s\n' "- Type: \`${failure_type}\`"
         [[ -n ${reason} ]] && printf '%s\n' "- Reason: ${reason}"
         printf '\n'
