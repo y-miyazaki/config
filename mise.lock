@@ -125,43 +125,43 @@ url = "https://github.com/Songmu/ecschedule/releases/download/v0.20.0/ecschedule
 url_api = "https://api.github.com/repos/Songmu/ecschedule/releases/assets/476998002"
 
 [[tools."aqua:air-verse/air"]]
-version = "1.66.0"
+version = "1.67.1"
 backend = "aqua:air-verse/air"
 
 [tools."aqua:air-verse/air"."platforms.linux-arm64"]
-checksum = "sha256:91f5e55e28dc322a9f9a2f7bcfe1fe85aaf78309aa3ca023efac3da4cf901621"
-url = "https://github.com/air-verse/air/releases/download/v1.66.0/air_1.66.0_linux_arm64.tar.gz"
-url_api = "https://api.github.com/repos/air-verse/air/releases/assets/481144419"
+checksum = "sha256:6d1b6eeb024b02f5d28efe56af2f82a01bc89c3c06abf090b34b85b45394e698"
+url = "https://github.com/air-verse/air/releases/download/v1.67.1/air_1.67.1_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/air-verse/air/releases/assets/483518547"
 
 [tools."aqua:air-verse/air"."platforms.linux-arm64-musl"]
-checksum = "sha256:91f5e55e28dc322a9f9a2f7bcfe1fe85aaf78309aa3ca023efac3da4cf901621"
-url = "https://github.com/air-verse/air/releases/download/v1.66.0/air_1.66.0_linux_arm64.tar.gz"
-url_api = "https://api.github.com/repos/air-verse/air/releases/assets/481144419"
+checksum = "sha256:6d1b6eeb024b02f5d28efe56af2f82a01bc89c3c06abf090b34b85b45394e698"
+url = "https://github.com/air-verse/air/releases/download/v1.67.1/air_1.67.1_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/air-verse/air/releases/assets/483518547"
 
 [tools."aqua:air-verse/air"."platforms.linux-x64"]
-checksum = "sha256:a170ae4eb2504d9770cd9b9ab207680129f3b761591de6c106c5d9dbc22e7f34"
-url = "https://github.com/air-verse/air/releases/download/v1.66.0/air_1.66.0_linux_amd64.tar.gz"
-url_api = "https://api.github.com/repos/air-verse/air/releases/assets/481144358"
+checksum = "sha256:b9c1856a3fb3a7eedb8f632508957ee0800e16040f7829e0f610d4adba59a4d8"
+url = "https://github.com/air-verse/air/releases/download/v1.67.1/air_1.67.1_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/air-verse/air/releases/assets/483518546"
 
 [tools."aqua:air-verse/air"."platforms.linux-x64-musl"]
-checksum = "sha256:a170ae4eb2504d9770cd9b9ab207680129f3b761591de6c106c5d9dbc22e7f34"
-url = "https://github.com/air-verse/air/releases/download/v1.66.0/air_1.66.0_linux_amd64.tar.gz"
-url_api = "https://api.github.com/repos/air-verse/air/releases/assets/481144358"
+checksum = "sha256:b9c1856a3fb3a7eedb8f632508957ee0800e16040f7829e0f610d4adba59a4d8"
+url = "https://github.com/air-verse/air/releases/download/v1.67.1/air_1.67.1_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/air-verse/air/releases/assets/483518546"
 
 [tools."aqua:air-verse/air"."platforms.macos-arm64"]
-checksum = "sha256:77f10aa867f88a6e56595985f48d287b62376ac1fccf128ebfb3603c3d960c3a"
-url = "https://github.com/air-verse/air/releases/download/v1.66.0/air_1.66.0_darwin_arm64.tar.gz"
-url_api = "https://api.github.com/repos/air-verse/air/releases/assets/481144352"
+checksum = "sha256:0b5621b6ed0382805872c69c6a2a46301c5ff543a84d837ed912a661bee462c4"
+url = "https://github.com/air-verse/air/releases/download/v1.67.1/air_1.67.1_darwin_arm64.tar.gz"
+url_api = "https://api.github.com/repos/air-verse/air/releases/assets/483518664"
 
 [tools."aqua:air-verse/air"."platforms.macos-x64"]
-checksum = "sha256:3db92dc0ebe4b645337f1aae5d766062cf70d223e92f4559e9319c833b1d6eb7"
-url = "https://github.com/air-verse/air/releases/download/v1.66.0/air_1.66.0_darwin_amd64.tar.gz"
-url_api = "https://api.github.com/repos/air-verse/air/releases/assets/481144356"
+checksum = "sha256:86d2c7acb48de5b68f55c41addba69005fbe0b17b113d8cf7c1af0801abb445f"
+url = "https://github.com/air-verse/air/releases/download/v1.67.1/air_1.67.1_darwin_amd64.tar.gz"
+url_api = "https://api.github.com/repos/air-verse/air/releases/assets/483518544"
 
 [tools."aqua:air-verse/air"."platforms.windows-x64"]
-checksum = "sha256:391d7b7b95fb0afd0cbdbe2f0c8a6bad95a59332ba127dbbffff2e00e6628016"
-url = "https://github.com/air-verse/air/releases/download/v1.66.0/air_1.66.0_windows_amd64.tar.gz"
-url_api = "https://api.github.com/repos/air-verse/air/releases/assets/481144378"
+checksum = "sha256:f3b9069bdafb066460cbcc14bd0cf309f2c3bb8230fbaba094fce753c174db81"
+url = "https://github.com/air-verse/air/releases/download/v1.67.1/air_1.67.1_windows_amd64.tar.gz"
+url_api = "https://api.github.com/repos/air-verse/air/releases/assets/483518566"
 
 [[tools."aqua:aquasecurity/trivy"]]
 version = "0.72.0"
