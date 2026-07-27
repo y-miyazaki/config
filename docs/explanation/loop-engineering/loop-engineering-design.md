@@ -164,11 +164,11 @@ Hook/manual and loop skills live under `.apm/packages/common/.apm/skills/` — s
 
 ## docs-triage (Docs Update Loop)
 
-| Component                                                                 | Description                                                   |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `.apm/packages/common/.apm/skills/docs-updater/SKILL.md`                  | Hook/manual + loop triage; loop path uses `findings[]`        |
-| `.apm/packages/common/.apm/skills/docs-updater/scripts/detect_changes.sh` | Per-branch doc drift facts (`changed_files`, `affected_docs`) |
-| `eval.yaml` + `evals/tasks/`                                              | waza evaluation suite (interactive + loop paths)              |
+| Component                                                                 | Description                                                            |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `.apm/packages/common/.apm/skills/docs-updater/SKILL.md`                  | Hook/manual + automation triage; automation path uses `findings[]`     |
+| `.apm/packages/common/.apm/skills/docs-updater/scripts/detect_changes.sh` | Per-branch doc drift facts (`changed_files`, `affected_docs`)          |
+| `eval.yaml` + `evals/tasks/`                                              | waza evaluation suite (interactive + automation paths)                 |
 
 ## ci-sweeper (CI Sweeper)
 
