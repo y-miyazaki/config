@@ -28,13 +28,14 @@ Every `*.instructions.md` file uses the same five H2 chapters in this order:
 
 Additional rules:
 
-- Keep `Check:` lines inside `## Guidelines` (do not move them to another chapter).
+- Synced `## Guidelines` are **thin**: ItemID + `(LEVEL)` + title only. Do **not** expect `Check:` / Why / Fix child bullets in always-on instructions.
+- Keep full `Check:` / Why / Fix criteria in `*-review` `category-*.md` (review skills load those on demand).
 - Keep `### Code Modification Guidelines` at the end of `## Guidelines`.
 - Use H3 headings without numeric prefixes or trailing level markers (for example, `### Architecture (ARCH)`, not `### 6. Architecture (ARCH) (MUST)`).
 - Individual rule bullets retain `(MUST)`, `(SHOULD)`, or `(CAN)` (for example, `- ARCH-01 (SHOULD): ...`).
 - Do not emit empty H3 sections in generated Guidelines.
 - In `instructions.instructions.md`, avoid duplicating TEST/SEC review criteria outside `## Guidelines`.
-- **Standards vs Guidelines:** For instruction files in the sync map, rule IDs and `Check:` criteria live in `## Guidelines` (synced from `*-review` categories). `## Standards` holds only non-duplicative authoring detail — naming/distribution tables, path maps, templates, and detail not captured by checklist items (STD-05). Do not repeat synced rule IDs in Standards.
+- **Standards vs Guidelines:** For instruction files in the sync map, checklist ItemID titles live in `## Guidelines` (synced from `*-review` categories). `## Standards` holds only non-duplicative authoring detail — naming/distribution tables, path maps, templates, and detail not captured by those ItemIDs (STD-05). Do not repeat synced rule IDs in Standards.
 
 ## Source of Truth and Sync Direction
 
@@ -88,10 +89,11 @@ Main behavior:
 3. Regenerates `common-checklist.md` entries from category sections.
 4. Regenerates `## Guidelines` with:
    - H3 section headers that keep category IDs but drop heading-level markers
-   - Rule bullets with `(LEVEL)` preserved
-   - `Check:` child bullets from each category rule
+   - Rule bullets with `(LEVEL)` and titles only (no `Check:` children — keeps always-on instructions thin)
 5. Appends `### Code Modification Guidelines` from `%code_mod_guidelines` in the script.
 6. Skips empty sections during generation.
+
+`Check:` / Why / Fix remain in `category-*.md` for review skills; they are not copied into instructions.
 
 ### Code Modification Guidelines Defaults
 
@@ -144,6 +146,11 @@ grep -nE '^### [0-9]+\.' .apm/packages/*/.apm/instructions/*.instructions.md || 
 for f in .apm/packages/*/.apm/instructions/*.instructions.md; do
   grep -q '^### Code Modification Guidelines' "$f" || echo "Missing: $f"
 done
+
+# 4) Ensure synced Guidelines stay thin (no Check: children under ## Guidelines)
+for f in .apm/packages/*/.apm/instructions/*.instructions.md; do
+  awk '/^## Guidelines$/{g=1;next} /^## /{g=0} g && /^Check:/{print FILENAME":"$0}' "$f"
+done
 ```
 
 After package instruction changes in this repository, also run:
@@ -155,7 +162,7 @@ apm audit --ci
 
 ## Decisions Captured
 
-1. Keep `Check` content in `## Guidelines`.
+1. Keep always-on `## Guidelines` thin (ItemID + title); keep `Check:` / Why / Fix in `category-*.md` for review skills.
 2. Keep operational content in `## Testing and Validation` and `## Security Guidelines`, but keep Testing concise (skill pointer + non-automated notes only).
 3. In `instructions.instructions.md`, avoid duplicating TEST/SEC review criteria outside `## Guidelines`.
 4. Pair production changes with tests in the same change (`TEST-00 (MUST)` in `go-review` and `shell-script-review`; Bats details in companion Bats rules, stem `bats`).

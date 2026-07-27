@@ -1,12 +1,12 @@
 ---
 name: go-review
 description: >-
-  Review Go code for security, correctness, performance, and maintainability.
+  Review Go code for security, correctness, and maintainability.
   Use when reviewing Go PRs requiring judgment beyond automated checks.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
-  version: "1.1.2"
+  version: "1.2.0"
 ---
 
 ## Input
@@ -53,7 +53,6 @@ Return structured Markdown in accordance with [references/common-output-format.m
 - [category-dependencies.md](references/category-dependencies.md) (always read)
 - [category-documentation.md](references/category-documentation.md) (always read)
 - [category-function-design.md](references/category-function-design.md) (always read)
-- [category-performance.md](references/category-performance.md) (always read)
 - [category-testing.md](references/category-testing.md) (always read)
 
 ## Workflow

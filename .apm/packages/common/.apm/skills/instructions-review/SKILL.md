@@ -76,7 +76,7 @@ Always include target file list and deferred reason summary.
 Key evaluation criteria (inline summary of common-checklist):
 
 - **Structure**: 5 H2 chapters in correct order (Scope → Standards → Guidelines → Testing and Validation → Security Guidelines)
-- **Guidelines format**: H3 headings with category IDs, rule bullets with `(LEVEL)`, `Check:` child bullets
+- **Guidelines format**: H3 headings with category IDs; rule bullets are ItemID + `(LEVEL)` + title only (synced instructions are thin — do **not** require `Check:` child bullets in `## Guidelines`; full Check/Why/Fix live in `*-review` `category-*.md`)
 - **Code Modification Guidelines**: must exist in every file
 - **No empty sections**: every H3 must have content
 

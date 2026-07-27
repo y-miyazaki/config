@@ -30,6 +30,6 @@ Fix: Add rows for package source, Cursor, Claude, and Kiro paths using the share
 
 **STD-05 (MUST): No Guidelines Checklist Duplication in Standards**
 
-Check: Does Standards avoid repeating rule IDs and normative bullets that already appear in Guidelines (synced checklist)? Standards should hold only tables, distribution maps, and authoring detail not captured by `Check:` lines.
+Check: Does Standards avoid repeating rule IDs and normative bullets that already appear in Guidelines (synced checklist ItemID titles)? Standards should hold only tables, distribution maps, and authoring detail not captured by those ItemIDs. Full Check/Why/Fix remain in `*-review` `category-*.md`, not in always-on Guidelines.
 Why: Duplicate rule IDs in Standards and Guidelines waste tokens, drift on sync, and contradict STRUCT-07
 Fix: Move review criteria to Guidelines only; keep Standards minimal (naming tables, path maps, extra authoring detail)

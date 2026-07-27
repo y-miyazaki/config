@@ -7,7 +7,7 @@ description: >-
 license: Apache-2.0
 metadata:
   author: y-miyazaki
-  version: "1.0.7"
+  version: "1.0.8"
 ---
 
 ## Input
@@ -43,16 +43,17 @@ Return structured Markdown in accordance with [references/common-output-format.m
 
 - [common-checklist.md](references/common-checklist.md) (always read)
 - [common-output-format.md](references/common-output-format.md) (always read)
-- [category-structure.md](references/category-structure.md) (always read)
-- [category-quality.md](references/category-quality.md) (always read)
+- [category-best-practices.md](references/category-best-practices.md) (always read)
 - [category-patterns.md](references/category-patterns.md) (always read)
+- [category-quality.md](references/category-quality.md) (always read)
+- [category-structure.md](references/category-structure.md) (always read)
 - [common-troubleshooting.md](references/common-troubleshooting.md) (read on failure)
 
 ## Workflow
 
 1. Run `bash scripts/validate_waza.sh <skill-name>` and `bash scripts/validate.sh <SKILL.md>` (CWD: `<agent-root>/skills/agent-skills-review/`).
 2. Record token budget from `waza check` when present; if count > 500, add Q-09 advisory to `## Issues` (do not Fail Q-09 on count alone).
-3. Apply checks in order: `S-*` (structure), `Q-*` (quality language), `P-*` (workflow/policy), `BP-*` (best-practice rules).
+3. Apply checks in order: `BP-*` (best practices), `P-*` (workflow/policy), `Q-*` (quality language), `S-*` (structure).
 4. Report failed/deferred items with ItemIDs.
 5. If target `SKILL.md` does not exist, return `status: failed` and stop without running other checks.
 6. If one validation script fails and the other succeeds, report successful checks normally and mark unresolved checks as deferred with script name and exit status.

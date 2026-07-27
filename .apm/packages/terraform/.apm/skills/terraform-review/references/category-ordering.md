@@ -1,6 +1,6 @@
 ## Ordering (ORD)
 
-**ORD-01 (MUST): Alphabetical Argument Key Ordering**
+**ORD-01 (MUST): Alphabetize argument keys inside resource/module/data/local blocks**
 
 Check: Are argument keys inside each resource, module, data, and local block sorted alphabetically (A-Z)?
 Why: Inconsistent ordering adds diff noise and makes change detection harder

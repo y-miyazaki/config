@@ -156,7 +156,7 @@ function parse_arguments {
 
     # Validate path matches expected pattern (SEC-01)
     if [[ ! $SKILL_FILE =~ /(\.github|\.agents|\.claude|\.codex|\.cursor|cursor|\.kiro|kiro)/skills/.*/SKILL\.md$ ]]; then
-        error_exit "Error: File must match <agent-root>/skills/*/SKILL.md where agent-root is one of .github,.agents,.claude,.codex,.cursor,cursor,.kiro,kiro (see agent-skills.instructions.md S-06): $SKILL_FILE"
+        error_exit "Error: File must match <agent-root>/skills/*/SKILL.md where agent-root is one of .github,.agents,.claude,.codex,.cursor,cursor,.kiro,kiro: $SKILL_FILE"
     fi
 }
 
@@ -652,10 +652,10 @@ function check_reference_triggers {
 }
 
 #######################################
-# check_path_conventions: Enforce path conventions and decoupling rules
+# check_path_conventions: Enforce path conventions and S-05 agent-root portability
 #
 # Globals:
-#   None
+#   SKILL_FILE
 #
 # Arguments:
 #   None
@@ -669,13 +669,30 @@ function check_reference_triggers {
 #######################################
 function check_path_conventions {
     local issues=()
+    local skill_dir file rel_path line
 
-    # Rule 3: If <agent-root> is used, path form must be explicit and portable
+    # If <agent-root> is used, path form must be explicit and portable
     if grep -q '<agent-root>' "$SKILL_FILE"; then
         if ! grep -qE '<agent-root>/(skills|instructions)/' "$SKILL_FILE"; then
             issues+=("invalid <agent-root> path form")
         fi
     fi
+
+    # S-05: do not hardcode a single agent-root install path (judgment examples in ❌ / Why: / Check: skipped)
+    skill_dir="$(dirname "${SKILL_FILE}")"
+    while IFS= read -r -d '' file; do
+        rel_path="${file#"${skill_dir}/"}"
+        while IFS= read -r line || [[ -n ${line} ]]; do
+            [[ ${line} == *"❌"* ]] && continue
+            [[ ${line} =~ ^[[:space:]]*Why: ]] && continue
+            [[ ${line} =~ ^[[:space:]]*Check: ]] && continue
+            [[ ${line} =~ ^\*\*S-05 ]] && continue
+            if [[ ${line} =~ (^|[^[:alnum:]_-])(\.github|\.agents|\.claude|\.codex|\.cursor|cursor|\.kiro|kiro)/skills/ ]]; then
+                issues+=("hardcoded agent-root install path in ${rel_path} (S-05)")
+                break
+            fi
+        done < "${file}"
+    done < <(find "${skill_dir}" -maxdepth 2 \( -name 'SKILL.md' -o -path "${skill_dir}/references/*.md" \) -print0 2> /dev/null)
 
     if [[ ${#issues[@]} -eq 0 ]]; then
         echo "✓ Path conventions valid"
@@ -691,7 +708,7 @@ function check_path_conventions {
 }
 
 #######################################
-# check_portable_reference_paths: Enforce S-07 portable reference paths
+# check_portable_reference_paths: Enforce S-04 portable reference paths
 #
 # Globals:
 #   SKILL_FILE
@@ -717,7 +734,7 @@ function check_portable_reference_paths {
         while IFS= read -r line || [[ -n ${line} ]]; do
             [[ ${line} == *"❌"* ]] && continue
             [[ ${line} =~ ^[[:space:]]*Why: ]] && continue
-            # Flag only actual markdown links with non-portable targets (S-07)
+            # Flag only actual markdown links with non-portable targets (S-04)
             if [[ ${line} =~ \]\(\.\./ ]] || [[ ${line} =~ \]\(docs/ ]]; then
                 issues+=("non-portable reference in ${rel_path}")
             fi

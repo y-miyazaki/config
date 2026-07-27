@@ -48,12 +48,12 @@ When reviewing package PRs, treat any domain-specific path or maintainer workflo
 
 ## Layer responsibilities
 
-| Layer        | Ships                                            | Portability                                                                                                                                                |
-| ------------ | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Skills       | `SKILL.md`, `references/`, `assets/`, `scripts/` | **Required** — generic contract + domain logic only                                                                                                        |
+| Layer        | Ships                                            | Portability                                                                                                                                                                                         |
+| ------------ | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Skills       | `SKILL.md`, `references/`, `assets/`, `scripts/` | **Required** — generic contract + domain logic only                                                                                                                                                 |
 | Instructions | `*.instructions.md`                              | **Required** — repository-neutral; redistribution policy in [.apm/AGENTS.md § DIST](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md#redistribution-policy-dist--this-repository-only) |
-| Hooks        | portable scripts; JSON per target                | Scripts portable across agents                                                                                                                             |
-| Repo `docs/` | design indexes, maintainer maps                  | Consumer overlay — OK                                                                                                                                      |
+| Hooks        | portable scripts; JSON per target                | Scripts portable across agents                                                                                                                                                                      |
+| Repo `docs/` | design indexes, maintainer maps                  | Consumer overlay — OK                                                                                                                                                                               |
 
 Runtime layering (MCP / hooks / skills) is described in [Configuration Philosophy](architecture.md#configuration-philosophy).
 
@@ -110,15 +110,15 @@ Skills link to generic principles (for example documentation deduplication) and 
 
 Forbidden in distributable skills: `../` escapes, `docs/...` repository paths, or prose like `repository \`docs/...\``.
 
-Enforced in review via `agent-skills-review` (**S-07**). Redistribution maintainer policy for package authors in this repository: [.apm/AGENTS.md § Redistribution policy (DIST)](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md#redistribution-policy-dist--this-repository-only).
+Enforced in review via `agent-skills-review` (**S-04**). Redistribution maintainer policy for package authors in this repository: [.apm/AGENTS.md § Redistribution policy (DIST)](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md#redistribution-policy-dist--this-repository-only).
 
-## Review skill scope (S-07)
+## Review skill scope (S-04)
 
-Review skills ship inside packages and may run in arbitrary consumer repositories. **S-07** (portable in-skill reference paths) applies to any SKILL.md target. **Redistribution policy (DIST)** is maintainer-only — not an `agent-skills-review` ItemID.
+Review skills ship inside packages and may run in arbitrary consumer repositories. **S-04** (portable in-skill reference paths) applies to any SKILL.md target. **Redistribution policy (DIST)** is maintainer-only — not an `agent-skills-review` ItemID.
 
 | Review check                                      | Where enforced                                 |
 | ------------------------------------------------- | ---------------------------------------------- |
-| S-07 — links stay inside skill tree or `https://` | `agent-skills-review` checklist                |
+| S-04 — links stay inside skill tree or `https://` | `agent-skills-review` checklist                |
 | DIST — package authoring for `apm install`        | `.apm/AGENTS.md` (this repository maintainers) |
 
 Structural and quality checks (S-01, Q-_, P-_, BP-_) apply to any SKILL.md target.

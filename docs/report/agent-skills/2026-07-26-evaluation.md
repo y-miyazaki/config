@@ -98,14 +98,14 @@ validation 系は概ね健全（~1k tok）。review / PR body / loop 系が突�
 
 **方針確定（2026-07-26）:** review checklist と instructions Standards の住み分け。
 
-| 項目                         | 扱い                                                                                                                                                                          |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **DIST（再配布ポリシー）**   | **review ItemID にしない** — [.apm/AGENTS.md § Redistribution policy (DIST)](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md#redistribution-policy-dist--this-repository-only) の maintainer ポリシー |
-| **S-05（Output SoT）**       | **対応済** — Standards から削除。review の **P-02** に一本化                                                                                                                  |
-| **S-04（Clarity over DRY）** | Standards に残す。単独 review ItemID は不要（メタ原則）                                                                                                                       |
-| **S-06（`<agent-root>`）**   | Standards + `validate.sh` でカバー。review は S-07 と併用                                                                                                                     |
-| **E-01 / E-03（eval）**      | **review ItemID にしない** — AGENTS.md release bar で SHOULD（maintainer 判断）。ツール差（waza / skill-creator）のため強制困難                                               |
-| **E-02 / E-04**              | checklist 対象外                                                                                                                                                              |
+| 項目                       | 扱い                                                                                                                                                                                                                |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **DIST（再配布ポリシー）** | **review ItemID にしない** — [.apm/AGENTS.md § Redistribution policy (DIST)](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md#redistribution-policy-dist--this-repository-only) の maintainer ポリシー |
+| **旧 S-05（Output SoT）**  | **対応済** — Standards から削除。review の **P-02** に一本化                                                                                                                                                        |
+| **S-05（`<agent-root>`）** | review checklist **S-05** + Standards の正準一覧表。`validate.sh` も同リストを参照                                                                                                                                  |
+| **Clarity over DRY**       | Standards から削除。Q-06（No Implicit Inference）でカバー                                                                                                                                                           |
+| **E-01 / E-03（eval）**    | **review ItemID にしない** — AGENTS.md release bar で SHOULD（maintainer 判断）。ツール差（waza / skill-creator）のため強制困難                                                                                     |
+| **E-02 / E-04**            | checklist 対象外                                                                                                                                                                                                    |
 
 Guidelines（P/Q/S/BP）は `category-*.md` から sync 生成。実務レビューは現行 checklist で足りる。
 

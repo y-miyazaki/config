@@ -8,7 +8,7 @@ description: >-
 license: Apache-2.0
 metadata:
   author: y-miyazaki
-  version: "1.1.2"
+  version: "1.2.0"
 ---
 
 ## Input
@@ -56,7 +56,6 @@ Return structured Markdown in accordance with [references/common-output-format.m
 - [category-documentation.md](references/category-documentation.md) (always read)
 - [category-function-design.md](references/category-function-design.md) (always read)
 - [category-logging.md](references/category-logging.md) (always read)
-- [category-performance.md](references/category-performance.md) (always read)
 - [category-testing.md](references/category-testing.md) (always read)
 
 ## Workflow

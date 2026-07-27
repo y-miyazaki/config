@@ -199,7 +199,8 @@ for my $skill (sort keys %map) {
   write_all($checklist, join("\n", @normalized));
 
   # 3) replace Guidelines in instruction
-  #    Include both rule bullets and Check lines from category files.
+  #    Emit ItemID + title only (no Check: children) to keep always-on instructions thin.
+  #    Full Check/Why/Fix stay in category-*.md for review skills.
   my @guideline_lines;
   for my $sections_ref (@parsed_categories) {
     for my $section (@{$sections_ref}) {
@@ -208,9 +209,6 @@ for my $skill (sort keys %map) {
       push @guideline_lines, "### " . normalize_section_header($section->{header});
       for my $entry (@{$section->{rules}}) {
         push @guideline_lines, "- " . $entry->{rule};
-        for my $check (@{$entry->{checks}}) {
-          push @guideline_lines, "  - Check: " . $check;
-        }
       }
     }
   }

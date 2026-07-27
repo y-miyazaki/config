@@ -9,6 +9,9 @@
 # - check_description_quality fails on implementation instructions
 # - check_portable_reference_paths passes Why lines with repository docs prose
 # - check_portable_reference_paths fails on parent escape links
+# - check_path_conventions fails on hardcoded .github/skills install paths (S-05)
+# - check_path_conventions passes <agent-root> install paths and ❌ examples
+# - parse_arguments rejects non-skill paths without citing S-05
 # - check_reference_triggers passes allowlist triggers
 # - check_reference_triggers fails on non-allowlist triggers
 # - check_reference_triggers fails on missing trigger annotation
@@ -127,7 +130,7 @@ EOF
     reset_checks
     write_fixture_skill "Validates portable reference paths."
     cat > "${FIXTURE_ROOT}/references/category-structure.md" << 'EOF'
-**S-07 (MUST): Portable Reference Paths**
+**S-04 (MUST): Links stay in-skill or https:// (no ../docs escapes)**
 
 Check: Do SKILL.md and references/ link only to portable paths?
 Why: Paths to repository `docs/`, `../other-skill/`, or `repository `docs/...`` prose break consumers.
@@ -137,6 +140,47 @@ EOF
 
     check_portable_reference_paths > /dev/null
     [ "${check_statuses[0]}" = "PASS" ]
+}
+
+@test "check_path_conventions fails on hardcoded github skills install paths" {
+    reset_checks
+    write_fixture_skill "Validates agent-root portability when skills document install paths."
+    cat >> "${FIXTURE_ROOT}/SKILL.md" << 'EOF'
+
+Install the skill at `.github/skills/test-fixture/SKILL.md` only.
+EOF
+
+    check_path_conventions > /dev/null
+    [ "${check_statuses[0]}" = "FAIL" ]
+    [[ ${check_details_json[0]} == *"hardcoded agent-root install path"* ]]
+    [[ ${check_details_json[0]} == *"S-05"* ]]
+}
+
+@test "check_path_conventions passes agent-root paths and negative examples" {
+    reset_checks
+    write_fixture_skill "Validates agent-root portability when skills document install paths under <agent-root>/skills/."
+    cat > "${FIXTURE_ROOT}/references/category-structure.md" << 'EOF'
+**S-05 (MUST): Use <agent-root> for install paths; do not hardcode .github/skills**
+
+Check: When SKILL.md or references/ mention skill install paths, do they use <agent-root>?
+Why: Hardcoding `.github/skills` breaks other agent roots.
+Examples:
+- ✅ `<agent-root>/skills/go-review/SKILL.md`
+- ❌ `.github/skills/go-review/SKILL.md` as the only documented install path
+EOF
+
+    check_path_conventions > /dev/null
+    [ "${check_statuses[0]}" = "PASS" ]
+}
+
+@test "parse_arguments rejects non-skill paths without citing S-05" {
+    local stray_md="${BATS_TEST_TMPDIR}/stray-skill.md"
+    printf '# stray\n' > "${stray_md}"
+
+    run parse_arguments "${stray_md}"
+    [ "$status" -ne 0 ]
+    [[ ${output} != *"S-05"* ]]
+    [[ ${output} == *"<agent-root>/skills"* ]]
 }
 
 @test "check_reference_triggers passes allowlist triggers" {
