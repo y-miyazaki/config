@@ -21,7 +21,6 @@ checksum = "sha256:6f0312fb61a05001ac8c09b7029edc18185e943549760c3fe334977dd76da
 url = "https://github.com/aquaproj/aqua/releases/download/v2.62.0/aqua_linux_amd64.tar.gz"
 url_api = "https://api.github.com/repos/aquaproj/aqua/releases/assets/479163768"
 provenance = "github-attestations"
-provenance_verified = true
 
 [tools.aqua."platforms.linux-x64-musl"]
 checksum = "sha256:6f0312fb61a05001ac8c09b7029edc18185e943549760c3fe334977dd76da8dc"
@@ -1587,7 +1586,6 @@ checksum = "sha256:e2832a8d207c26beaa30efa6222ed4a37cb3f526ca4bee060bfbf336ed6fc
 url = "https://github.com/DeusData/codebase-memory-mcp/releases/download/v0.9.0/codebase-memory-mcp-linux-amd64.tar.gz"
 url_api = "https://api.github.com/repos/DeusData/codebase-memory-mcp/releases/assets/470188787"
 provenance = "github-attestations"
-provenance_verified = true
 
 [tools."github:DeusData/codebase-memory-mcp"."platforms.linux-x64-musl"]
 checksum = "sha256:e2832a8d207c26beaa30efa6222ed4a37cb3f526ca4bee060bfbf336ed6fc679"
