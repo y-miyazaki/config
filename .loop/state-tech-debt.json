@@ -1,31 +1,19 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-07-20T10:06:02Z",
-      "outcome": "rejected",
-      "consecutive_failures": 1,
-      "open_rejections": [
-        {
-          "attempt": 1,
-          "files": ["docs/report/tech-debt/2026-07-20.md"],
-          "issue": "Verifier output missing or unclear",
-          "fix": "Verifier output missing or unclear"
-        },
-        {
-          "attempt": 2,
-          "files": ["docs/report/tech-debt/2026-07-20.md"],
-          "issue": "Verifier output missing or unclear",
-          "fix": "Verifier output missing or unclear"
-        },
-        {
-          "attempt": 3,
-          "files": ["docs/report/tech-debt/2026-07-20.md"],
-          "issue": "Verifier output missing or unclear",
-          "fix": "Verifier output missing or unclear"
-        }
-      ],
-      "last_reject_reason": "Verifier output missing or unclear",
-      "last_sha": "f62642e2ae2becc53dd10e1d5f4b54d7b278e653"
+      "last_run": "2026-07-27T09:16:37Z",
+      "outcome": "pr-created",
+      "consecutive_failures": 0,
+      "open_rejections": [],
+      "last_reject_reason": "Allowlisted report-only change; 25 signals/20 hotspots match detect JSON; all cited paths exist; 0 Critical/High findings; no scope violations.",
+      "last_sha": "f62642e2ae2becc53dd10e1d5f4b54d7b278e653",
+      "pending": {
+        "sha": "55ff870545b430ecc0f0349c32336bd6477fa31b",
+        "pr": 514,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/514",
+        "loop_name": "tech-debt",
+        "created_at": "2026-07-27T09:16:37Z"
+      }
     }
   }
 }
