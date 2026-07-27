@@ -52,10 +52,11 @@
 
 ## Standards Chapter (STD)
 
-- STD-01 (SHOULD): Naming Conventions
+- STD-01 (MUST): Standards Chapter Non-Obvious Content
 - STD-02 (SHOULD): Tool Standards
 - STD-03 (MUST): Consistency
 - STD-04 (MUST): Distribution Naming Documented
+- STD-05 (MUST): No Guidelines Checklist Duplication in Standards
 
 ## Testing and Validation Chapter (TEST)
 

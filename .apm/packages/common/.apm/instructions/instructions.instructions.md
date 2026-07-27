@@ -11,6 +11,8 @@ description: "AI Assistant Instructions for Writing Instruction Files"
 
 ## Standards
 
+Document **non-obvious, project- or distribution-specific** rules only. Omit language or ecosystem defaults, generic style guides, and other practices models already know.
+
 ### Naming Conventions
 
 | Component               | Rule                                              | Example                                      |
@@ -24,26 +26,11 @@ description: "AI Assistant Instructions for Writing Instruction Files"
 
 ### Standards Content
 
-- **STD-01 (SHOULD)**: Document non-obvious naming only — omit `### Naming Conventions` when rules are language or ecosystem defaults the agent already knows.
-- **STD-02 (SHOULD)**: Tool-specific standards are documented when applicable.
+- **STD-01 (MUST)**: Standards chapter content is **non-obvious and project- or distribution-specific** only — do not restate language or ecosystem defaults, generic style guides, or general best practices models already know. Omit Standards subsections (including `### Naming Conventions`) when they would only duplicate such defaults.
+- **STD-02 (SHOULD)**: Tool-specific standards are documented when applicable and non-obvious for this project or distribution layout.
 - **STD-03 (MUST)**: The documentation level matches other instruction files - inconsistent granularity makes cross-file comparison difficult.
 - **STD-04 (MUST)**: When instructions are distributed to agent rule paths, Naming Conventions document the source stem → Cursor / Claude / Kiro path mapping so agents can resolve companions at runtime (meta authoring file; domain files need not repeat the mapping).
-
-### Structure
-
-- **G-01 (MUST)**: Include `applyTo` and `description` in Front Matter - missing fields prevent automatic application.
-- **G-02 (MUST)**: Use H1 title format `# AI Assistant Instructions for <target>` - this preserves discoverability and consistency.
-- **G-03 (MUST)**: Keep `applyTo` globs precise to intended instruction/rule paths after distribution (for example `.claude/rules/*.md`, not `.claude/**/*.md`).
-- **G-04 (MUST)**: Use stem-based portable cross-references in agent-facing text; do not cite bare `*.instructions.md` filenames as runtime paths.
-- **G-05 (MUST)**: Companion instructions that must apply during production-file edits include those production globs in `applyTo`.
-- **STRUCT-01 (MUST)**: Keep the five-chapter structure (Scope -> Standards -> Guidelines -> Testing and Validation -> Security Guidelines) - missing chapters create information gaps.
-- **STRUCT-02 (MUST)**: Keep chapter order strict - inconsistent ordering makes file-to-file comparison harder.
-- **STRUCT-03 (MUST)**: Use H2 for chapters and H3 for subsections; minimize H4 and deeper levels - deep hierarchies degrade AI structural recognition.
-- **STRUCT-04 (SHOULD)**: When `### Naming Conventions` is present, place it first under Standards; omit the subsection when STD-01 allows (no non-obvious naming).
-- **STRUCT-05 (MUST)**: Order Guidelines as domain rules -> Anti-Patterns -> Code Modification Guidelines - this keeps priority order clear.
-- **STRUCT-06 (MUST)**: In the Guidelines chapter, use H3 heading format `### Name (LEVEL)` for rule sections or `### Name` for declaration/process sections - do not include ID ranges in headings.
-- **STRUCT-07 (MUST)**: Keep `## Testing and Validation` concise: optional on-demand skill pointer and notes for checks not covered by automation; omit always-run command recipes and omit "hooks/pre-commit handle X so do not run Y" explanations; keep detailed review criteria (`TEST-*`, `SEC-*`) in Guidelines - duplicate definitions hurt maintainability and consistency.
-- **STRUCT-08 (SHOULD)**: When Guidelines are large, reinforce critical MUST obligations (for example test pairing) with a short Scope bullet so they are not buried.
+- **STD-05 (MUST)**: Do not duplicate Guidelines checklist rule IDs in Standards — Standards holds tables, distribution maps, and authoring detail not captured by synced `Check:` lines; rule IDs and review criteria live in Guidelines (synced from `*-review` categories).
 
 ## Guidelines
 
@@ -69,7 +56,7 @@ description: "AI Assistant Instructions for Writing Instruction Files"
 - STRUCT-03 (MUST): Heading Levels Appropriate
   - Check: Heading hierarchy properly uses H2 (chapters) → H3 (subsections)
 - STRUCT-04 (SHOULD): Standards Chapter Subsections
-  - Check: When `### Naming Conventions` is present, is it the first Standards subsection? Omission is allowed when STD-01 says no non-obvious naming rules exist.
+  - Check: When `### Naming Conventions` is present, is it the first Standards subsection? Omission is allowed when STD-01 says no non-obvious standards content exists.
 - STRUCT-05 (MUST): Guidelines Chapter Subsections
   - Check: Does the Guidelines chapter have domain rules first, followed by Anti-Patterns, then Code Modification Guidelines?
 - STRUCT-06 (MUST): H3 Heading Format
@@ -128,14 +115,16 @@ description: "AI Assistant Instructions for Writing Instruction Files"
 
 ### Standards Chapter (STD)
 
-- STD-01 (SHOULD): Naming Conventions
-  - Check: Are non-obvious naming rules documented when they exist? Omit `### Naming Conventions` when the only rules are language or ecosystem defaults the agent already knows.
+- STD-01 (MUST): Standards Chapter Non-Obvious Content
+  - Check: Does Standards omit language/ecosystem defaults and general practices models already know? Are only non-obvious, project- or distribution-specific rules present? Omit `### Naming Conventions` when it would only restate defaults.
 - STD-02 (SHOULD): Tool Standards
-  - Check: Tool conventions are documented
+  - Check: Are non-obvious tool conventions documented when this project or distribution layout requires them?
 - STD-03 (MUST): Consistency
   - Check: Documentation level matches other instructions files
 - STD-04 (MUST): Distribution Naming Documented
   - Check: When instructions are distributed to agent rule paths, does Naming Conventions document source stem → Cursor `.mdc` / Claude `.md` / Kiro steering mapping?
+- STD-05 (MUST): No Guidelines Checklist Duplication in Standards
+  - Check: Does Standards avoid repeating rule IDs and normative bullets that already appear in Guidelines (synced checklist)? Standards should hold only tables, distribution maps, and authoring detail not captured by `Check:` lines.
 
 ### Testing and Validation Chapter (TEST)
 

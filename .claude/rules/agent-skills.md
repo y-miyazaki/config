@@ -10,28 +10,9 @@ paths:
 
 - Scope covers designing and updating agent skill documents (`SKILL.md`) and bundled reference files.
 - This file defines SKILL authoring standards and is treated as an exception to the common instruction template (Required Sections ordering for skills overrides the default Standards layout).
+- Structural, quality, and pattern rules (S-_, Q-_, P-_, BP-_) live in Guidelines (synced from `agent-skills-review`).
 
 ## Standards
-
-### Required Sections
-
-- **S-01 (MUST)**: Define the following five sections as H2 headings in this exact order - missing sections break execution determinism:
-  1. Input
-  2. Output Specification
-  3. Execution Scope
-  4. Reference Files Guide
-  5. Workflow
-
-`## Workflow` is mandatory (S-01). Error handling belongs **under** Workflow as `### Error Handling` (Q-10 SHOULD) — a severity/action table, not a sixth top-level H2. Align presence and format with sibling skills in the same package.
-
-- **S-02 (MUST)**: Include `name`, `description`, `license`, `metadata.author`, and `metadata.version` - missing fields prevent the plugin system from recognizing the skill.
-
-### Reference Header Levels
-
-- **S-03 (MUST)**: Keep header levels consistent - inconsistent levels break section recognition for AI agents:
-  - `common-checklist.md` / `common-output-format.md`: H1（`#`）
-  - `common-troubleshooting.md` / `common-individual-commands.md`: H2（`##`）
-  - `category-*.md`: H2（`##`）
 
 ### Naming Conventions
 
@@ -66,19 +47,6 @@ paths:
 ### Priority Principle
 
 - **S-04 (MUST)**: Prioritize Clarity over DRY - when deduplication introduces ambiguity, keep the clearer wording.
-
-### Writing Style
-
-- **Q-06 (MUST)**: Use imperative/infinitive phrasing - "You should" lowers execution precision for AI agents:
-  - ❌ `You should do X` / `You need to check Y`
-  - ✅ `Do X` / `Check Y` / `To accomplish X, do Y`
-
-### Forbidden Expressions
-
-- **Q-04a (MUST)**: Prohibit vague expressions that hide required behavior or concrete conditions:
-  - Forbidden: appropriately, as needed, if possible, preferably, depending on context, reasonable (when they substitute for an explicit rule the agent must follow)
-  - `etc.` after representative examples is allowed when the set is intentionally non-exhaustive — boundary cases may rely on agent judgment
-  - JP equivalents for forbidden terms: "appropriately", "as needed", "where possible", "depending on context", "reasonable" (when it substitutes for an explicit rule)
 
 ## Guidelines
 

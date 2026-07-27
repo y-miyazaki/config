@@ -37,7 +37,7 @@ Single reference when a change may touch package sources, `scripts/`, docs, or g
 
 - Reusable workflows use `workflow_call` trigger.
 - File names: `ci-*` (CI), `cd-*` (CD), `on-*` (event-triggered callers).
-- Keys in `inputs`, `env`, `permissions`, `with` MUST be alphabetically ordered.
+- Workflow/action key ordering: companion github-actions-workflow rules (stem `github-actions-workflow`), ORD-01.
 
 ### Temporary Artifacts
 

@@ -65,6 +65,10 @@
 - N-02 (SHOULD): Module Header (Purpose/Overview)
 - N-03 (SHOULD): Important Resource Explanation Comments
 
+## Ordering (ORD)
+
+- ORD-01 (MUST): Alphabetical Argument Key Ordering
+
 ## outputs.tf (O)
 
 - O-01 (SHOULD): All Outputs Require description

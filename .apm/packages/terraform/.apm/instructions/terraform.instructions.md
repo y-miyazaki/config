@@ -11,23 +11,6 @@ description: "AI Assistant Instructions for Terraform"
 
 ## Standards
 
-### Versioning
-
-- **VERS-01 (MUST)**: Align `required_version` with project standards - version mismatch can risk state corruption.
-- **VERS-02 (MUST)**: Use provider version ranges (`>= lower, < upper`) - unconstrained versions can introduce unexpected plan diffs from breaking changes.
-
-### Key Coding Rules
-
-- **G-05 (MUST)**: Ensure `for_each`/`count` keys are known at plan time — post-apply values cause `terraform plan` failures.
-- **G-06 (MUST)**: Prefer `for_each` over `count` — count index shifts cause unintended resource recreation on removal.
-- **TAG-01 (MUST)**: Use `merge(local.tags, { Name = "..." })` pattern for tags — this ensures consistent tagging across all resources.
-- **COMP-02 (MUST)**: Write IAM policies with `jsonencode()` or `aws_iam_policy_document` — never use inline heredoc JSON strings.
-- **G-02 (MUST)**: Never hardcode secrets in `.tf` or `.tfvars` files — use SSM Parameter Store or Secrets Manager references.
-
-### Key Ordering
-
-- **ORD-01 (MUST)**: Within each resource/module/data block, keep argument keys in alphabetical order (A-Z) — inconsistent ordering adds diff noise and makes change detection harder.
-
 ## Guidelines
 
 ### CI & Lint (CI)
@@ -130,6 +113,11 @@ description: "AI Assistant Instructions for Terraform"
 - N-03 (SHOULD): Important Resource Explanation Comments
   - Check: Are complex configurations well-commented?
 
+### Ordering (ORD)
+
+- ORD-01 (MUST): Alphabetical Argument Key Ordering
+  - Check: Are argument keys inside each resource, module, data, and local block sorted alphabetically (A-Z)?
+
 ### outputs.tf (O)
 
 - O-01 (SHOULD): All Outputs Require description
@@ -221,7 +209,7 @@ description: "AI Assistant Instructions for Terraform"
 
 ### Code Modification Guidelines
 
-- Keep argument keys inside resource/module/data blocks alphabetically ordered (ORD-01).
+- Keep argument keys inside resource/module/data/local blocks alphabetically ordered (ORD-01).
 
 ## Testing and Validation
 

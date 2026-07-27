@@ -41,6 +41,7 @@ Return structured Markdown in accordance with [references/common-output-format.m
 - [common-checklist.md](references/common-checklist.md) (always read)
 - [common-output-format.md](references/common-output-format.md) (always read)
 - [category-global.md](references/category-global.md) (always read)
+- [category-ordering.md](references/category-ordering.md) (always read)
 - [category-security.md](references/category-security.md) (always read)
 - [category-best-practices.md](references/category-best-practices.md) (always read)
 - [category-error-handling.md](references/category-error-handling.md) (always read)

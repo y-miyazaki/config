@@ -70,8 +70,8 @@ validation 系は概ね健全（~1k tok）。review / PR body / loop 系が突�
 
 ### 1.3 モデル既知知識・冗長説明（BP-03）
 
-- go-validation の failure 用 category が
-- loop 系の `category-automation-envelope.md` はスキルごとに ~440–500 語で内容が近似。共通契約を 1 ファイルに寄せられるならパッケージ横断の複製コストを削減できる（DIST-01 とトレードオフ。配布単位がスキルな各 ~1500 語 — 失敗時のみでも、ツール出力の読み方以上に一般論が厚い場合は圧縮候補。ら現状維持も妥当）。
+- go-validation の failure 用 category（`category-security.md` / `category-testing.md`、各 ~1500 語）は失敗時のみ読込だが、汎用 Go 知識が厚く圧縮候補（validate.sh 出力の読み方に留めるならさらに薄くできる）。
+- loop 系の `category-automation-envelope.md` はスキルごとに ~440–500 語で内容が近似。共通契約を 1 ファイルに寄せられるならパッケージ横断の複製コストを削減できる（DIST-01 とトレードオフ。配布単位がスキルな各 ~1500 語 — 失敗時のみでも、ツール出力の読み方以上に一般論が厚い場合は圧縮候補。なら現状維持も妥当）。
 
 ### 1.4 ロード契約の曖昧さによる過剰読込
 

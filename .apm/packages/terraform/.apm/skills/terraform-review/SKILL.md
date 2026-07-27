@@ -58,6 +58,7 @@ Each issue must include file path, risk summary, and remediation guidance.
 - [category-events.md](references/category-events.md) (always read)
 - [category-migration.md](references/category-migration.md) (always read)
 - [category-naming.md](references/category-naming.md) (always read)
+- [category-ordering.md](references/category-ordering.md) (always read)
 - [category-outputs.md](references/category-outputs.md) (always read)
 - [category-patterns.md](references/category-patterns.md) (always read)
 - [category-performance.md](references/category-performance.md) (always read)

@@ -615,20 +615,26 @@ function check_reference_triggers {
 
     local issues=()
     local allowlist='\(always read\)|\(read on failure\)|\(read on debugging\)|\(read on automation path\)|\(read on interactive path\)|\(read when [^)]+\)'
-    local ref_line trigger
+    local ref_line trigger trigger_lower
 
-    # Require at least one (always read)
-    if ! echo "$ref_section" | grep -qE '\(always read\)'; then
+    # Require at least one (always read) — case-insensitive for migration compatibility
+    if ! echo "$ref_section" | grep -qiE '\(always read\)'; then
         issues+=("missing (always read) annotation")
     fi
 
-    # Each reference line with a parenthetical trigger must match the allowlist
+    # Each reference line with a link must have an allowlisted parenthetical trigger (BP-02)
     while IFS= read -r ref_line; do
         [[ $ref_line =~ ^-[[:space:]] ]] || continue
-        echo "$ref_line" | grep -qE '\([^)]+\)' || continue
-        trigger=$(echo "$ref_line" | grep -oE '\([^)]+\)' | tail -n 1)
-        if ! echo "$trigger" | grep -qE "^(${allowlist})$"; then
-            issues+=("non-allowlist trigger ${trigger}")
+        echo "$ref_line" | grep -qE '\[[^]]+\]\([^)]+\)' || continue
+        remainder=$(echo "$ref_line" | sed -E 's/\[[^]]+\]\([^)]+\)//g')
+        if echo "$remainder" | grep -qE '\([^)]+\)'; then
+            trigger=$(echo "$remainder" | grep -oE '\([^)]+\)' | tail -n 1)
+            trigger_lower=$(echo "$trigger" | tr '[:upper:]' '[:lower:]')
+            if ! echo "$trigger_lower" | grep -qE "^(${allowlist})$"; then
+                issues+=("non-allowlist trigger ${trigger}")
+            fi
+        else
+            issues+=("missing trigger annotation on reference line")
         fi
     done <<< "$(echo "$ref_section" | grep '^-[[:space:]]')"
 
@@ -710,7 +716,9 @@ function check_portable_reference_paths {
         rel_path="${file#"${skill_dir}/"}"
         while IFS= read -r line || [[ -n ${line} ]]; do
             [[ ${line} == *"❌"* ]] && continue
-            if [[ ${line} =~ \]\(\.\./ ]] || [[ ${line} =~ \]\(docs/ ]] || [[ ${line} =~ repository[[:space:]\`]*docs/ ]]; then
+            [[ ${line} =~ ^[[:space:]]*Why: ]] && continue
+            # Flag only actual markdown links with non-portable targets (S-07)
+            if [[ ${line} =~ \]\(\.\./ ]] || [[ ${line} =~ \]\(docs/ ]]; then
                 issues+=("non-portable reference in ${rel_path}")
             fi
         done < "${file}"

@@ -69,7 +69,7 @@ When `may_edit` is `true`, resolve `write_target`: on the **interactive** path u
 7. ELSE IF `may_edit` is `true` AND `write_target` is `fix` AND (infra/env/flake OR >5 files required) → classify as Watch with no edits; emit survey shape with `### Watch` per [common-output-format.md](references/common-output-format.md); on automation path append `## Session Metrics` per [category-automation-envelope.md](references/category-automation-envelope.md); stop — do not emit apply shape.
 8. ELSE IF `may_edit` is `true` AND `write_target` is `fix` → fix the first `regression` only when more than three failures are present; defer the rest within [category-scope.md](references/category-scope.md).
 9. When validation was run (interactive fix path or caller CI), record commands and outcomes in Session Metrics on the automation path.
-10. IF `may_edit` is `true` AND `write_target` is `fix` → emit apply shape per [common-output-format.md](references/common-output-format.md); reconcile **Changes** / **Deferred** with `git diff --name-only`; on automation path load `assets/pr-body-template.md` at synthesis and append `## Session Metrics` per [category-automation-envelope.md](references/category-automation-envelope.md).
+10. IF `may_edit` is `true` AND `write_target` is `fix` AND NOT (infra/env/flake OR >5 files required) → emit apply shape per [common-output-format.md](references/common-output-format.md); reconcile **Changes** / **Deferred** with `git diff --name-only`; on automation path load `assets/pr-body-template.md` at synthesis and append `## Session Metrics` per [category-automation-envelope.md](references/category-automation-envelope.md).
 
 ### Error Handling
 
