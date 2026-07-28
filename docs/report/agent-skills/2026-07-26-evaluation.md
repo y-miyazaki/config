@@ -18,14 +18,14 @@
 | go-review                 | 13                | 3176        | 580        | 3756     | ~4883    |
 | github-pr-body            | 2                 | 452         | 631        | 1083     | ~1408    |
 | refactor                  | 9                 | 4573        | 942        | 5515     | ~7169    |
-| terraform-review          | 21                | 3769        | 714        | 4483     | ~5827    |
+| terraform-review          | 22                | 3049        | 649        | 3698     | ~4807    |
 | tech-debt                 | 6                 | 3458        | 799        | 4257     | ~5534    |
 | shell-script-review       | 12                | 2460        | 463        | 2923     | ~3800    |
 | agent-skills-review       | 6                 | 3413        | 545        | 3958     | ~5145    |
 | instructions-review       | 8                 | 2439        | 731        | 3170     | ~4121    |
 | ci-sweeper                | 6                 | 1816        | 722        | 2538     | ~3299    |
 | changelog                 | 5                 | 1815        | 701        | 2516     | ~3270    |
-| github-actions-review     | 8                 | 1968        | 443        | 2411     | ~3134    |
+| github-actions-review     | 9                 | 1867        | 411        | 2278     | ~2961    |
 | docs-updater              | 4                 | 1300        | 662        | 1962     | ~2550    |
 | github-actions-validation | 3                 | 683         | 390        | 1073     | ~1394    |
 | shell-script-validation   | 2                 | 491         | 562        | 1053     | ~1368    |
@@ -48,10 +48,10 @@ validation 系は概ね健全（~1k tok）。review / PR body / loop 系が突�
 
 | スキル                    | always category 数 | always 語数（category 部） | 状態                                                                       |
 | ------------------------- | ------------------ | -------------------------- | -------------------------------------------------------------------------- |
-| **terraform-review**      | 20                 | ~2700                      | **意図的** — 全 category always。Workflow 矛盾は解消済                     |
+| **terraform-review**      | 20                 | ~2000                      | **意図的** — 全 category always。Workflow 矛盾は解消済                     |
 | **go-review**             | 11                 | ~2200                      | **意図的** — 同上（`category-performance` 削除済）。大規模 PR（>50 ファイル）は step 6 で出力優先度のみ調整 |
 | **shell-script-review**   | 10                 | ~1600                      | **意図的** — 同上（`category-performance` 削除済）                         |
-| **github-actions-review** | 7                  | ~1400                      | **意図的** — 同上                                                          |
+| **github-actions-review** | 7                  | ~1100                      | **意図的** — 同上                                                          |
 
 **まだ検討余地があるもの（review 系以外）:**
 
