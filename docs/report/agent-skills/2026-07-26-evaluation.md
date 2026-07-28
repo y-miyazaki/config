@@ -3,7 +3,7 @@
 - **調査日:** 2026-07-26
 - **対象:** `.apm/packages/*/.apm/skills/*/SKILL.md`（18 スキル）
 - **評価基準:** `agent-skills-review` の S/Q/P/BP チェック、および `agent-skills.instructions.md`
-- **本レポートの位置づけ:** 初回調査 + 2026-07-26 追記（方針確定・一部改修反映）
+- **本レポートの位置づけ:** 初回調査 + 2026-07-26 追記（方針確定・一部改修反映）+ 2026-07-28 追記（performance category 削除・Guidelines 薄型化・ItemID 再編の件数反映）
 
 ## 要約
 
@@ -15,13 +15,13 @@
 
 | スキル                    | always ファイル数 | always 語数 | SKILL 語数 | 合計語数 | 概算 tok |
 | ------------------------- | ----------------- | ----------- | ---------- | -------- | -------- |
-| go-review                 | 14                | 5423        | 638        | 6061     | ~7879    |
+| go-review                 | 13                | 3176        | 580        | 3756     | ~4883    |
 | github-pr-body            | 2                 | 452         | 631        | 1083     | ~1408    |
 | refactor                  | 9                 | 4573        | 942        | 5515     | ~7169    |
 | terraform-review          | 21                | 3769        | 714        | 4483     | ~5827    |
 | tech-debt                 | 6                 | 3458        | 799        | 4257     | ~5534    |
-| shell-script-review       | 13                | 3365        | 511        | 3876     | ~5038    |
-| agent-skills-review       | 5                 | 2970        | 693        | 3663     | ~4761    |
+| shell-script-review       | 12                | 2460        | 463        | 2923     | ~3800    |
+| agent-skills-review       | 6                 | 3413        | 545        | 3958     | ~5145    |
 | instructions-review       | 8                 | 2439        | 731        | 3170     | ~4121    |
 | ci-sweeper                | 6                 | 1816        | 722        | 2538     | ~3299    |
 | changelog                 | 5                 | 1815        | 701        | 2516     | ~3270    |
@@ -48,10 +48,10 @@ validation 系は概ね健全（~1k tok）。review / PR body / loop 系が突�
 
 | スキル                    | always category 数 | always 語数（category 部） | 状態                                                                       |
 | ------------------------- | ------------------ | -------------------------- | -------------------------------------------------------------------------- |
-| **terraform-review**      | 19                 | ~2700                      | **意図的** — 全 category always。Workflow 矛盾は解消済                     |
-| **go-review**             | 12                 | ~4200                      | **意図的** — 同上。大規模 PR（>50 ファイル）は step 6 で出力優先度のみ調整 |
-| **shell-script-review**   | 11                 | ~2400                      | **意図的** — 同上                                                          |
-| **github-actions-review** | 6                  | ~1400                      | **意図的** — 同上                                                          |
+| **terraform-review**      | 20                 | ~2700                      | **意図的** — 全 category always。Workflow 矛盾は解消済                     |
+| **go-review**             | 11                 | ~2200                      | **意図的** — 同上（`category-performance` 削除済）。大規模 PR（>50 ファイル）は step 6 で出力優先度のみ調整 |
+| **shell-script-review**   | 10                 | ~1600                      | **意図的** — 同上（`category-performance` 削除済）                         |
+| **github-actions-review** | 7                  | ~1400                      | **意図的** — 同上                                                          |
 
 **まだ検討余地があるもの（review 系以外）:**
 
@@ -103,7 +103,7 @@ validation 系は概ね健全（~1k tok）。review / PR body / loop 系が突�
 | **DIST（再配布ポリシー）** | **review ItemID にしない** — [.apm/AGENTS.md § Redistribution policy (DIST)](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md#redistribution-policy-dist--this-repository-only) の maintainer ポリシー |
 | **旧 S-05（Output SoT）**  | **対応済** — Standards から削除。review の **P-02** に一本化                                                                                                                                                        |
 | **S-05（`<agent-root>`）** | review checklist **S-05** + Standards の正準一覧表。`validate.sh` も同リストを参照                                                                                                                                  |
-| **Clarity over DRY**       | Standards から削除。Q-06（No Implicit Inference）でカバー                                                                                                                                                           |
+| **Clarity over DRY**       | Standards から削除。Q-06（Instructions are imperative; no vague hedges）でカバー                                                                                                                                    |
 | **E-01 / E-03（eval）**    | **review ItemID にしない** — AGENTS.md release bar で SHOULD（maintainer 判断）。ツール差（waza / skill-creator）のため強制困難                                                                                     |
 | **E-02 / E-04**            | checklist 対象外                                                                                                                                                                                                    |
 
@@ -126,13 +126,13 @@ Guidelines（P/Q/S/BP）は `category-*.md` から sync 生成。実務レビュ
 
 | スキル                | checklist Item 数（概数） | コメント                                                                                                              |
 | --------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| go-review             | ~100                      | 網羅的。全 category always-read は意図的（トークンコストは許容）。大規模 PR は security/correctness 優先の defer のみ |
-| shell-script-review   | ~65                       | 同上                                                                                                                  |
-| terraform-review      | ~66                       | カテゴリ分割は良い。全 category always は意図的                                                                       |
-| github-actions-review | ~28                       | 妥当                                                                                                                  |
+| go-review             | 44                        | 薄型化後も網羅的。全 category always-read は意図的（トークンコストは許容）。大規模 PR は security/correctness 優先の defer のみ |
+| shell-script-review   | 33                        | 同上（`category-performance` 削除・Checklist タイトルのみ化で削減）                                                   |
+| terraform-review      | 44                        | カテゴリ分割は良い。全 category always は意図的。Guidelines は ItemID + title のみ同期                                 |
+| github-actions-review | 21                        | 妥当                                                                                                                  |
 | markdown-validation   | ~11                       | 妥当                                                                                                                  |
 
-「項目不足」だけでなく、**go-review は項目数が多く always-read 参照も大きい**点はトークン負荷として記録するが、review の網羅性のため現状維持とする。
+「項目不足」だけでなく、**go-review は always-read 参照が他 review より大きい**点はトークン負荷として記録するが、review の網羅性のため現状維持とする。
 
 ---
 
@@ -156,7 +156,7 @@ Guidelines（P/Q/S/BP）は `category-*.md` から sync 生成。実務レビュ
 | **曖昧語（Q-04a）**                      | `appropriately` 等の行動隠蔽語                               | **対応済:** `appropriately`/`as needed`/`depending on context` 等は具体化。`etc.` は代表例の後なら可（列挙不能・LLM 判断レイヤ）                                                                                                         |
 | **インライン出力骨格**                   | review 系 SKILL の ```markdown                               | **対応済:** Output Spec / Examples から削除。Result は `common-output-format.md` 参照                                                                                                                                                    |
 | **Examples の形式強制**                  | Prompt/Command/Result 固定や骨格禁止をルール化               | **対応済:** review ItemID も Writing Style 制約も削除。出力重複は P-02/BP-03 の範囲で判断                                                                                                                                                |
-| **DIST / E / S-05 の二重掲載**           | instructions Standards と review の乖離                      | **対応済:** DIST/E は maintainer 文書（`.apm/AGENTS.md`）のみ。配布 instructions からはリンク削除。S-05 削除 → P-02                                                                                                                      |
+| **DIST / E / 旧 S-05 の二重掲載**        | instructions Standards と review の乖離                      | **対応済:** DIST/E は maintainer 文書（`.apm/AGENTS.md`）のみ。配布 instructions からはリンク削除。旧 S-05（Output SoT）削除 → P-02。現行 **S-05** は `<agent-root>` 正準一覧                                                                 |
 | **Scope のパス列挙**                     | `*.go` / `.github/workflows/…` 等を Scope に重複             | **対応済:** 意図一文に変更（`applyTo` がパスを担う）                                                                                                                                                                                     |
 | **Input の型・必須**                     | 表記のばらつき（`(required)` の有無など）                    | **低優先:** 全スキル既に箇条書き。ループ系は各 `SKILL.md` と [Loop Engineering](../../explanation/loop-engineering/index.md) / [apm-package-design.md](../../explanation/apm-package-design.md) を参照（配布 instructions には載せない） |
 | **Workflow と Ref Guide の矛盾**         | review 系の「該当 category のみ」記述                        | **対応済:** 4 review スキルで削除。全 category `(always read)` + フルチェックリスト適用に統一                                                                                                                                            |
@@ -230,7 +230,7 @@ Guidelines（P/Q/S/BP）は `category-*.md` から sync 生成。実務レビュ
 | A        | review 系の Workflow / Ref Guide 整合（全 category always + フルチェックリスト） | 契約矛盾の解消                 | **対応済（2026-07-26）**                                   |
 | B        | github-pr-body / loop の参照トリガー正規化                                       | 対話パスの無駄読み削減         | pr-body 対応済（2026-07-26）。loop automation 分岐は対応済 |
 | C        | loop checklist に ItemID                                                         | レポート比較・自動化検証が容易 | 未                                                         |
-| D        | instructions / review の DIST・E・S-05 住み分け                                  | maintainer vs checklist の整理 | **対応済（2026-07-26）**                                   |
+| D        | instructions / review の DIST・E・旧 S-05 住み分け                               | maintainer vs checklist の整理 | **対応済（2026-07-26）**（現行 S-05 は `<agent-root>`）    |
 | E        | 表記統一（起動トリガー・曖昧語・骨格削除）                                       | 発見性・実行精度の底上げ       | 大部分対応済                                               |
 
 ---
