@@ -1,12 +1,19 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-07-27T16:25:06Z",
-      "outcome": "merged",
+      "last_run": "2026-07-28T10:08:49Z",
+      "outcome": "pr-created",
       "consecutive_failures": 0,
       "open_rejections": [],
-      "last_reject_reason": "Doc-only changes are factually consistent with automation-path rename and current skill layout; nav/index gaps addressed without scope violations.",
-      "last_sha": "b7504ca7d7c4eb13b59def018faed095d1aeed2b"
+      "last_reject_reason": "Prior rejection fixed: terraform-review and github-actions-review counts in the summary table and section 1.1 now match codebase (22/3049/649 and 9/1867/411).",
+      "last_sha": "b7504ca7d7c4eb13b59def018faed095d1aeed2b",
+      "pending": {
+        "sha": "2c645c95ff19fd19fb9fc73e957fd9eb09db22bf",
+        "pr": 527,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/527",
+        "loop_name": "docs-triage",
+        "created_at": "2026-07-28T10:08:49Z"
+      }
     }
   }
 }
