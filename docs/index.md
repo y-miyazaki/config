@@ -45,7 +45,7 @@ _Understanding-oriented discussion of concepts and decisions._
 - [Caller Inputs Reference](explanation/loop-engineering/workflows/loop-caller-inputs-reference.md)
 - [CI Sweeper Workflow Design](explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md)
 - [Changelog Workflow Design](explanation/loop-engineering/workflows/loop-changelog-workflow-design.md)
-- [Docs Triage Workflow Design](explanation/loop-engineering/workflows/loop-docs-triage-workflow-design.md)
+- [Docs Updater Workflow Design](explanation/loop-engineering/workflows/loop-docs-updater-workflow-design.md)
 - [Refactor Workflow Design](explanation/loop-engineering/workflows/loop-refactor-workflow-design.md)
 - [Report Tech Debt Workflow Design](explanation/loop-engineering/workflows/loop-tech-debt-workflow-design.md)
 

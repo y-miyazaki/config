@@ -59,7 +59,7 @@ inputs:
     required: false
   loop_name:
     default: ""
-    description: "Loop name / pattern (e.g. docs-triage)"
+    description: "Loop name / pattern (e.g. docs-updater)"
     required: false
   notify_context_json:
     default: "{}"

@@ -505,7 +505,7 @@ Run: `shellcheck .github/actions/loop-prompt-generate/lib/*.sh .github/actions/l
 
 - Modify: `.github/workflows/on-loop-changelog.yaml`
 - Modify: `.github/workflows/on-loop-ci-sweeper.yaml`
-- Modify: `.github/workflows/on-loop-docs-triage.yaml`
+- Modify: `.github/workflows/on-loop-docs-updater.yaml`
 - Modify: `.github/workflows/on-loop-refactor.yaml`
 - Modify: `.github/workflows/on-loop-tech-debt.yaml`
 
@@ -515,7 +515,7 @@ Run: `shellcheck .github/actions/loop-prompt-generate/lib/*.sh .github/actions/l
 | ----------- | ---------- | ---------- | -------------- |
 | changelog   | `open_pr`  | `true`     | `fix`          |
 | ci-sweeper  | `open_pr`  | `true`     | `fix`          |
-| docs-triage | `open_pr`  | `true`     | `fix`          |
+| docs-updater | `open_pr`  | `true`     | `fix`          |
 | refactor    | `open_pr`  | `true`     | `fix`          |
 | tech-debt   | `open_pr`  | `true`     | `report`       |
 

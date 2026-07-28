@@ -149,7 +149,7 @@ No `domain_persistence_script`.
 
 See [State delivery philosophy](../multi-branch-loops-design.md#state-delivery-philosophy) for platform rules.
 
-**Target (dogfood):** merge-gated `pending` + `on-loop-state-promote` — same as docs-triage.
+**Target (dogfood):** merge-gated `pending` + `on-loop-state-promote` — same as docs-updater.
 
 Persistence: `state-refactor.json` on `branch_state` via [finalize inside ci-loop-agent](../loop-caller-workflows-design.md#finalize-inside-ci-loop-agent).
 

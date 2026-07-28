@@ -123,7 +123,7 @@ Entry skill remains **repository-neutral**. Consumer caller supplies `prompt_ins
 | ------------------------ | ------------------------------------ | -------------------------------------- |
 | `loop-tech-debt`         | Report mechanical debt               | None in v1 (no feed, no Apply)         |
 | `loop-ci-sweeper`        | Fix CI failures                      | Orthogonal; may call validation skills |
-| `loop-docs-triage`       | Fix doc drift                        | Orthogonal                             |
+| `docs-updater`       | Fix doc drift                        | Orthogonal                             |
 | `loop-refactor` (future) | Structural improvement from H1 hints | Owns observation trigger for refactor  |
 
 ## Package layout (Phase 1)

@@ -20,7 +20,7 @@ Enumeration strategy differs by detect type:
 
 | Type         | Work-set source                   | Example            |
 | ------------ | --------------------------------- | ------------------ |
-| Delta-driven | `git diff` (+ optional expansion) | `loop-docs-triage` |
+| Delta-driven | `git diff` (+ optional expansion) | `docs-updater` |
 | Full-scan    | `**/*` patterns / tracked tree    | `loop-tech-debt`   |
 | Event-driven | External events                   | `loop-ci-sweeper`  |
 
@@ -81,7 +81,7 @@ Callers that need domain-specific exclusions set `REPO_PATHS_EXTRA_PRUNES` (or p
 | Script                               | `REPO_PATHS_EXTRA_PRUNES`            | Notes                    |
 | ------------------------------------ | ------------------------------------ | ------------------------ |
 | `detect_tech_debt.sh`                | Parent of `TECH_DEBT_DIR` when unset | Full-scan sensors        |
-| `loop-docs-triage/detect_changes.sh` | none (lib default)                   | Delta + doc expansion    |
+| `docs-updater/detect_changes.sh` | none (lib default)                   | Delta + doc expansion    |
 | `docs-updater/detect_changes.sh`     | none                                 | Hook-triggered doc drift |
 
 ## Out of scope

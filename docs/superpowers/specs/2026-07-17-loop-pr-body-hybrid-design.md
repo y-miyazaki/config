@@ -11,7 +11,7 @@
 ## Goals
 
 - Human-readable PR body: which failure(s), what changed, agent narrative when present.
-- Generic across all loops (changelog, docs-triage, ci-sweeper, future loops).
+- Generic across all loops (changelog, docs-updater, ci-sweeper, future loops).
 - Deterministic ground truth for failure context and file list; optional LLM `## Summary` for narrative only.
 - Unit-testable pure function under `loop-finalize/lib/`.
 
@@ -84,7 +84,7 @@ Composition order (top → bottom):
 - One failure → one bullet group.
 - Multiple failures → list **all** entries (human must see every workflow/job in scope).
 - More than 5 → first 5 + line `… and N more`.
-- Missing `failures[]` (changelog / docs-triage) → omit entire section.
+- Missing `failures[]` (changelog / docs-updater) → omit entire section.
 
 ### Changes rules
 
@@ -160,7 +160,7 @@ Note: two `## Summary` headings can appear (caller prefix title vs agent report)
 ## Documentation updates (implementation phase)
 
 - `docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md` — `pr_body` is static prefix; finalize composes final body.
-- Per-loop workflow design docs (`loop-ci-sweeper`, `loop-changelog`, `loop-docs-triage`) — one-line note on hybrid PR body.
+- Per-loop workflow design docs (`loop-ci-sweeper`, `loop-changelog`, `docs-updater`) — one-line note on hybrid PR body.
 - Clarify vs notify: `loop-notify-pr` keeps its own context JSON; PR body composition is finalize-owned.
 
 ## Risks

@@ -280,7 +280,7 @@ EOF
 
 Logic:
 
-- `git grep -nI -E '//\s*TODO\b|#\s*TODO\b|/\*\s*TODO\b|\bTODO:'` (and parallel patterns for FIXME/HACK/XXX) with standard prune via `git grep` pathspecs excluding generated dirs, **or** `git grep` then filter paths with a `path_is_pruned` helper matching docs-triage prune list + `docs/report/`
+- `git grep -nI -E '//\s*TODO\b|#\s*TODO\b|/\*\s*TODO\b|\bTODO:'` (and parallel patterns for FIXME/HACK/XXX) with standard prune via `git grep` pathspecs excluding generated dirs, **or** `git grep` then filter paths with a `path_is_pruned` helper matching docs-updater prune list + `docs/report/`
 - Map match → kind; build signal JSON via `append_signal`
 - Enforce caps; push warning `"marker signals truncated"` when hit
 

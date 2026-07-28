@@ -179,7 +179,7 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 
 ## Cross-Loop Note
 
-Changelog runs are doc-metadata only (`CHANGELOG.md`). Coordinate with `docs-triage` via workflow `concurrency` when both target `integration:main`.
+Changelog runs are doc-metadata only (`CHANGELOG.md`). Coordinate with `docs-updater` via workflow `concurrency` when both target `integration:main`.
 
 ## References
 

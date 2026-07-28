@@ -67,7 +67,7 @@ detect_tech_debt.sh
 loop-prompt-generate → loop-tech-debt skill (LLM classifies; hint optional)
 ```
 
-**Prune paths** (align with docs-triage find prune): `.git`, hidden dirs, `.agents`/`.cursor`/`.claude`/`.codex`/`.kiro`/`.vscode`, `apm_modules`, `node_modules`, `dist`/`build`/`bin`, `docs/report/**` (avoid self-noise).
+**Prune paths** (align with docs-updater find prune): `.git`, hidden dirs, `.agents`/`.cursor`/`.claude`/`.codex`/`.kiro`/`.vscode`, `apm_modules`, `node_modules`, `dist`/`build`/`bin`, `docs/report/**` (avoid self-noise).
 
 ## Script authoring contract (normative)
 
@@ -76,7 +76,7 @@ Match **sibling loop detects** (`detect_changes.sh`, `detect_ci_failures.sh`) an
 ### File structure (executable entry)
 
 1. `#!/bin/bash`
-2. Header block wrapped in `#######################################` with: **Description**, **Usage**, **Output**, **Design Rules**, **Dependencies**, **Optional environment** (same sections/order as ci-sweeper/docs-triage detects).
+2. Header block wrapped in `#######################################` with: **Description**, **Usage**, **Output**, **Design Rules**, **Dependencies**, **Optional environment** (same sections/order as ci-sweeper/docs-updater detects).
 3. `set -euo pipefail` + `umask 027` + `export LC_ALL=C.UTF-8`
 4. `SCRIPT_DIR=...` then `source "${SCRIPT_DIR}/lib/all.sh"` (copy via `scripts/self/ai/sync_skill_lib.sh`; do not hand-edit skill `scripts/lib/`).
 5. `# Global variables` block with purpose comments where non-obvious (DOC-05).

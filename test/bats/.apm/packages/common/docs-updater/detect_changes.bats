@@ -19,7 +19,7 @@
 # - trim_whitespace and append_unique_doc helpers behave for loop discovery
 # - detect_changes loop globs include affected docs when markdown is deleted
 # - detect_changes rejects range scope without since ref
-# - detect_changes includes DOCS_TRIAGE_EXTRA_FILES in affected_docs
+# - detect_changes includes DOCS_UPDATER_EXTRA_FILES in affected_docs
 # - detect_changes loop range without globs discovers scannable markdown excluding agents
 # - detect_changes validates ok response format on workspace repo with loop globs
 # - detect_changes defaults to staged scope when invoked without arguments
@@ -369,7 +369,7 @@ setup() {
     base="$(git -C "${GIT_TEST_REPO}" rev-parse HEAD)"
     git -C "${GIT_TEST_REPO}" rm docs/legacy.md
     git -C "${GIT_TEST_REPO}" commit -q -m "docs: remove legacy page"
-    git_test_repo_run "env DOCS_TRIAGE_DOC_GLOBS='docs/**/*.md' bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
+    git_test_repo_run "env DOCS_UPDATER_DOC_GLOBS='docs/**/*.md' bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
     [ "$status" -eq 0 ]
     local result="${output}"
     run jq -e '.skip == false' <<< "${result}"
@@ -389,7 +389,7 @@ setup() {
     assert_detect_changes_error_json "${output}" "requires --since"
 }
 
-@test "detect_changes includes DOCS_TRIAGE_EXTRA_FILES in affected_docs" {
+@test "detect_changes includes DOCS_UPDATER_EXTRA_FILES in affected_docs" {
     git_test_repo_setup
     mkdir -p "${GIT_TEST_REPO}/docs"
     printf '# Docs\n' > "${GIT_TEST_REPO}/docs/index.md"
@@ -402,7 +402,7 @@ setup() {
     printf '\n' >> "${GIT_TEST_REPO}/file.txt"
     git -C "${GIT_TEST_REPO}" add file.txt
     git -C "${GIT_TEST_REPO}" commit -q -m "chore: touch file"
-    git_test_repo_run "env DOCS_TRIAGE_DOC_GLOBS='docs/**/*.md' DOCS_TRIAGE_EXTRA_FILES='mkdocs.yml' bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
+    git_test_repo_run "env DOCS_UPDATER_DOC_GLOBS='docs/**/*.md' DOCS_UPDATER_EXTRA_FILES='mkdocs.yml' bash '${DETECT_SCRIPT}' --scope range --since '${base}'"
     [ "$status" -eq 0 ]
     run jq -e '
         .status == "ok"
@@ -452,7 +452,7 @@ EOF
         skip "not enough git history for relative since ref"
     fi
 
-    run bash -c "cd '${workspace}' && env DOCS_TRIAGE_DOC_GLOBS='docs/**/*.md,README.md' bash '${DETECT_SCRIPT}' --scope range --since '${since_ref}'"
+    run bash -c "cd '${workspace}' && env DOCS_UPDATER_DOC_GLOBS='docs/**/*.md,README.md' bash '${DETECT_SCRIPT}' --scope range --since '${since_ref}'"
     [ "$status" -eq 0 ]
     json="${output}"
     assert_detect_changes_ok_json "${json}" "range" "${since_ref}"

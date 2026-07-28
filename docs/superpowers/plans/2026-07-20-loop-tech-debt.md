@@ -22,7 +22,7 @@
 - No GitHub Issue creation (log + state + report PR only).
 - Detect enrich fields (`report_file`, `previous_report`) live in `detect_tech_debt.sh`; sensors live in `detect_tech_debt_sensors.sh`.
 - Refactoring loops (`loop-refactor-*`) are **action loops**, not report loops — mention only as future work in design doc.
-- Workflow keys alphabetically ordered; follow `loop-docs-triage-workflow-design.md` structure.
+- Workflow keys alphabetically ordered; follow `loop-docs-updater-workflow-design.md` structure.
 - Do not edit generated dirs (`.agents/`, `.cursor/`, etc.) — edit `.apm/packages/` then `apm install --update`.
 
 ---
@@ -43,10 +43,10 @@
 
 - [ ] **Step 1: Write design doc**
 
-Create `loop-tech-debt-workflow-design.md` following `loop-docs-triage-workflow-design.md` structure. Include:
+Create `loop-tech-debt-workflow-design.md` following `loop-docs-updater-workflow-design.md` structure. Include:
 
 1. **Purpose** — full-repo mechanical debt scan → classify → L2 report PR.
-2. **Report loop family** — `loop-report-<domain>` convention; contrast with action loops (docs-triage, ci-sweeper, future refactor).
+2. **Report loop family** — `loop-report-<domain>` convention; contrast with action loops (docs-updater, ci-sweeper, future refactor).
 3. **Out of scope** — code fixes, Issue creation, L1 log-only phase (skipped), CVE DB, lint duplication.
 4. **Caller inputs table** with dogfood values:
 

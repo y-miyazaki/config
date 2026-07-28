@@ -367,7 +367,7 @@ Loop **composite actions** must not nest other repository composite actions via 
 | `ci-loop-agent.yaml`         | Reusable | Engine-agnostic agent invocation (Claude / Copilot / Codex / Cursor). L1: `loop-agent-once`; L2/L3: worktree + bounded Agent→Verify via `loop-execute` |
 | `on-loop-changelog.yaml`     | Caller   | Cron-driven CHANGELOG.md maintenance (detect → execute → finalize)                                                                                     |
 | `on-loop-ci-sweeper.yaml`    | Caller   | Schedule-driven CI failure repair (detect → execute → finalize)                                                                                        |
-| `on-loop-docs-triage.yaml`   | Caller   | Cron-driven documentation triage (detect → execute → finalize)                                                                                         |
+| `on-loop-docs-updater.yaml`   | Caller   | Cron-driven documentation update (detect → execute → finalize)                                                                                         |
 | `on-loop-refactor.yaml`      | Caller   | Cron-driven structural refactor (detect → execute → finalize)                                                                                          |
 | `on-loop-tech-debt.yaml`     | Caller   | Weekly technical debt report (detect → execute → finalize)                                                                                             |
 | `on-loop-state-promote.yaml` | Platform | Merge-gated `pending` → `last_sha` promotion when a `loop-automation` fix PR closes                                                                    |

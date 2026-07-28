@@ -76,7 +76,7 @@ inputs:
     description: "Maximum targets per detect run (fan-out cap)"
     required: false
   loop_name:
-    description: "Loop name for budget lookup (e.g. docs-triage)"
+    description: "Loop name for budget lookup (e.g. docs-updater)"
     required: true
   loop_pr_enabled:
     default: "false"
@@ -123,7 +123,7 @@ inputs:
     description: "Path to JSONL run log for budget aggregation"
     required: false
   skill_name:
-    description: "Skill name to invoke (e.g. loop-docs-triage)"
+    description: "Skill name to invoke (e.g. docs-updater)"
     required: true
   state_file:
     default: ""

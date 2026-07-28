@@ -8,7 +8,7 @@ rules:
       - ci-loop-agent.yaml
       - on-loop-changelog.yaml
       - on-loop-ci-sweeper.yaml
-      - on-loop-docs-triage.yaml
+      - on-loop-docs-updater.yaml
 
   # Ignore github-env warning in install-github-release composite action
   # This is intentional for setting up PATH
@@ -27,3 +27,4 @@ rules:
   cache-poisoning:
     ignore:
       - cd-go-releaser.yaml
+

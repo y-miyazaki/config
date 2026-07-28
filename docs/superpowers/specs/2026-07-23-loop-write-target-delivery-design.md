@@ -177,9 +177,9 @@ Replace today's unconditional line _"a report alone is not sufficient when may_e
 | :--------: | :------------: | :--------: | -------------------------------------------- | :---------: |
 |  `false`   |       —        |   `log`    | L1 observe                                   |     Yes     |
 |  `false`   |       —        |  `issue`   | Issue triage                                 |     Yes     |
-|  `false`   |       —        |  `notion`  | External doc triage                          |     Yes     |
+|  `false`   |       —        |  `notion`  | External docs-updater                          |     Yes     |
 |  `false`   |       —        | `open_pr`  | —                                            |   **No**    |
-|   `true`   |     `fix`      | `open_pr`  | ci-sweeper, refactor, docs-triage, changelog |     Yes     |
+|   `true`   |     `fix`      | `open_pr`  | ci-sweeper, refactor, docs-updater, changelog |     Yes     |
 |   `true`   |    `report`    | `open_pr`  | tech-debt                                    |     Yes     |
 |   `true`   |    `report`    |  `issue`   | Duplicate channels                           | **No** (v1) |
 |   `true`   |     `fix`      |   `none`   | Local experiment                             | Yes (rare)  |
@@ -217,7 +217,7 @@ Skills **must not** reference GitHub Issue, Notion, Backlog APIs, or `delivery`.
 | --------------------- | :--------: | :------------: | :--------: |
 | `on-loop-changelog`   |   `true`   |     `fix`      | `open_pr`  |
 | `on-loop-ci-sweeper`  |   `true`   |     `fix`      | `open_pr`  |
-| `on-loop-docs-triage` |   `true`   |     `fix`      | `open_pr`  |
+| `on-loop-docs-updater` |   `true`   |     `fix`      | `open_pr`  |
 | `on-loop-refactor`    |   `true`   |     `fix`      | `open_pr`  |
 | `on-loop-tech-debt`   |   `true`   |    `report`    | `open_pr`  |
 

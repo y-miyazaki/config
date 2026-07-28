@@ -255,7 +255,7 @@ Detect job permissions are **profile-based** and declared per reusable workflow 
 
 | Profile       | Reusable workflow                 | Detect job | Job permissions                                           | Dogfood callers                                                      |
 | ------------- | --------------------------------- | ---------- | --------------------------------------------------------- | -------------------------------------------------------------------- |
-| `default`     | `ci-loop-caller.yaml`             | `detect`   | `actions: write`, `contents: read`                        | changelog, docs-triage, refactor, tech-debt                          |
+| `default`     | `ci-loop-caller.yaml`             | `detect`   | `actions: write`, `contents: read`                        | changelog, docs-updater, refactor, tech-debt                          |
 | `pr-scan`     | `ci-loop-caller-pr-scan.yaml`     | `detect`   | `actions: write`, `contents: read`, `pull-requests: read` | none yet — see [pr-scan profile](#pr-scan-profile-no-dogfood-caller) |
 | `full-github` | `ci-loop-caller-full-github.yaml` | `detect`   | `actions: write`, `contents: read`, `pull-requests: read` | ci-sweeper                                                           |
 
@@ -328,7 +328,7 @@ New domain env keys go into `detect_domain_env_json` without editing reusable jo
 ### 2. Thin existing callers
 
 - [x] Refactor `on-loop-changelog.yaml` to single `loop` job + `with:`.
-- [x] Refactor `on-loop-docs-triage.yaml`.
+- [x] Refactor `on-loop-docs-updater.yaml`.
 - [x] Refactor `on-loop-ci-sweeper.yaml` (include `detect_permissions_profile`, execute-only inputs).
 - [x] Update `.github/workflows/example/on-loop-*.yaml` mirrors.
 - [x] Remove workflow-level `env:` from all loop callers.

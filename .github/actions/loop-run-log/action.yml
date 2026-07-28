@@ -19,7 +19,7 @@ inputs:
     description: "Whether agent produced changes (true/false, empty when execute did not run)"
     required: false
   loop_name:
-    description: "Loop name / pattern (e.g. docs-triage)"
+    description: "Loop name / pattern (e.g. docs-updater)"
     required: true
   outcome:
     description: "Run outcome (pr-created | no-changes | rejected | error | skipped)"

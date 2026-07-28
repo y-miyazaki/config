@@ -17,7 +17,7 @@ Understanding-oriented design docs for autonomous CI and documentation loops in 
 | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | Platform (targets, caller inputs, state)             | [Multi-Branch Loops Design](multi-branch-loops-design.md)                                                      |
 | Shared `on-loop-*.yaml` layout                       | [Loop Caller Workflows Design](loop-caller-workflows-design.md)                                                |
-| **docs-triage** loop (`docs-updater` skill)          | [Docs Triage Workflow Design](workflows/loop-docs-triage-workflow-design.md)                                   |
+| **docs-updater** loop (`docs-updater` skill)          | [Docs Updater Workflow Design](workflows/loop-docs-updater-workflow-design.md)                                   |
 | **ci-sweeper** loop + detect + CI env                | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md)                                     |
 | **changelog** loop + conventional commits            | [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md)                                       |
 | **tech-debt** loop + debt report                     | [Report Tech Debt Workflow Design](workflows/loop-tech-debt-workflow-design.md)                                |

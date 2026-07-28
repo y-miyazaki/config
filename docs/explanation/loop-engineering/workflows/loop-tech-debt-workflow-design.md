@@ -36,12 +36,12 @@ Run a full-repository mechanical technical-debt scan, classify findings via the 
 
 Report loops emit structured artifacts under `docs/report/<domain>/` via merge-gated PRs (dogfood: `loop_name: tech-debt`, skill `tech-debt`).
 
-**Action loops** (`docs-triage`, `ci-sweeper`, `refactor`) modify application or documentation source to fix drift or failures. Report loops classify mechanical signals and publish reports only — they do not edit source outside the report allowlist.
+**Action loops** (`docs-updater`, `ci-sweeper`, `refactor`) modify application or documentation source to fix drift or failures. Report loops classify mechanical signals and publish reports only — they do not edit source outside the report allowlist.
 
 | Loop          | Skill          | Role                                              | Trigger                    |
 | ------------- | -------------- | ------------------------------------------------- | -------------------------- |
 | `tech-debt`   | `tech-debt`    | Cron loop: detect signals + skill classify/report | `on-loop-tech-debt.yaml`   |
-| `docs-triage` | `docs-updater` | Action loop: doc drift detect + fix PR            | `on-loop-docs-triage.yaml` |
+| `docs-updater` | `docs-updater` | Action loop: doc drift detect + fix PR            | `on-loop-docs-updater.yaml` |
 | `ci-sweeper`  | `ci-sweeper`   | Action loop: CI failure detect + fix PR           | `on-loop-ci-sweeper.yaml`  |
 | `refactor`    | `refactor`     | Action loop: H1 structural refactor fix PR        | `on-loop-refactor.yaml`    |
 
@@ -185,13 +185,13 @@ Inline in caller `agent_verifier_criteria` (must match `on-loop-tech-debt.yaml`)
 
 See [State delivery philosophy](../multi-branch-loops-design.md#state-delivery-philosophy) for platform rules.
 
-**Target (dogfood):** merge-gated `pending` + `on-loop-state-promote` — same as changelog and docs-triage.
+**Target (dogfood):** merge-gated `pending` + `on-loop-state-promote` — same as changelog and docs-updater.
 
 Persistence: `state-tech-debt.json` on `branch_state` via [finalize inside ci-loop-agent](../loop-caller-workflows-design.md#finalize-inside-ci-loop-agent).
 
 ## Related action loops
 
-`refactor` is an **action loop** that applies O1/O2 structural refactors via fix PRs — not a report-only loop. It may consume report findings as input context but belongs alongside docs-triage and ci-sweeper, not tech-debt. See [Refactor Workflow Design](loop-refactor-workflow-design.md).
+`refactor` is an **action loop** that applies O1/O2 structural refactors via fix PRs — not a report-only loop. It may consume report findings as input context but belongs alongside docs-updater and ci-sweeper, not tech-debt. See [Refactor Workflow Design](loop-refactor-workflow-design.md).
 
 ## Implementation Checklist
 

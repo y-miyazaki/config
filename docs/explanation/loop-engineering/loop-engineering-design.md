@@ -7,7 +7,7 @@ For concrete specifications (Actions/Workflows list, interfaces), see [Specifica
 
 | Loop (`loop_name`)  | Skill (`common`) | Status                             | Level         |
 | ------------------- | ---------------- | ---------------------------------- | ------------- |
-| `docs-triage`       | `docs-updater`   | Dogfood L2; multi-branch on `main` | L2 (Assisted) |
+| `docs-updater`       | `docs-updater`   | Dogfood L2; multi-branch on `main` | L2 (Assisted) |
 | `ci-sweeper`        | `ci-sweeper`     | Dogfood L2; integration + PR heads | L2 (Assisted) |
 | `changelog`         | `changelog`      | Dogfood L2; weekly schedule        | L2 (Assisted) |
 | `refactor`          | `refactor`       | Dogfood L2; weekly schedule        | L2 (Assisted) |
@@ -25,7 +25,7 @@ Referencing the design philosophy of GitHub Agentic Workflows ([official blog](h
 
 | Loop                             | Detection Method                                    | Agent Behavior                    | Expected Level                                                                                  |
 | -------------------------------- | --------------------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------- |
-| **docs-triage** (`docs-updater`) | git diff: doc drift facts on integration branches   | Triage stale docs; open fix PR    | L2 — see [Docs Triage Workflow](workflows/loop-docs-triage-workflow-design.md)                  |
+| **docs-updater** | git diff: doc drift facts on integration branches   | Triage stale docs; open fix PR    | L2 — see [Docs Updater Workflow](workflows/loop-docs-updater-workflow-design.md)                  |
 | **ci-sweeper**                   | GitHub API: failed runs (integration + optional PR) | Auto-fix; PR or push per mode     | L2 default; L3 opt-in — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md) |
 | **changelog**                    | git log: parse conventional commits                 | Auto-generate/update CHANGELOG.md | L2 — see [Changelog Workflow](workflows/loop-changelog-workflow-design.md)                      |
 | **refactor**                     | repo scan: duplication_block / oversized_unit hints | O1/O2 structural fix; open PR     | L2 — see [Refactor Workflow](workflows/loop-refactor-workflow-design.md)                        |
@@ -52,7 +52,7 @@ The `result` body is **observation-trigger-specific** — not one shared schema:
 | Trigger family | Loop (`loop_name`) | Skill (`common`) | Example `result` fields                                  |
 | -------------- | ------------------ | ---------------- | -------------------------------------------------------- |
 | CI failure     | `ci-sweeper`       | `ci-sweeper`     | `failures[]`, `failure_type` hint, (future) `stack_hint` |
-| Doc drift      | `docs-triage`      | `docs-updater`   | `changed_files`, `affected_docs`, …                      |
+| Doc drift      | `docs-updater`      | `docs-updater`   | `changed_files`, `affected_docs`, …                      |
 | Changelog      | `changelog`        | `changelog`      | `commits[]`, …                                           |
 | Refactor hints | `refactor`         | `refactor`       | `hints[]` (`duplication_block`, `oversized_unit`)        |
 | Tech debt      | `tech-debt`        | `tech-debt`      | `signals[]`, `hotspots[]`, `previous_report`             |
@@ -158,11 +158,11 @@ Hook/manual and loop skills live under `.apm/packages/common/.apm/skills/` — s
 
 | Identifier type | Naming pattern             | Example                                               |
 | --------------- | -------------------------- | ----------------------------------------------------- |
-| Workflow file   | `on-loop-<loop_name>.yaml` | `on-loop-docs-triage.yaml`                            |
-| `loop_name`     | kebab-case (state key)     | `docs-triage`, `ci-sweeper`, `changelog`, `tech-debt` |
+| Workflow file   | `on-loop-<loop_name>.yaml` | `on-loop-docs-updater.yaml`                            |
+| `loop_name`     | kebab-case (state key)     | `docs-updater`, `ci-sweeper`, `changelog`, `tech-debt` |
 | Skill directory | kebab-case (no `loop-`)    | `docs-updater`, `ci-sweeper`, `refactor`, `tech-debt` |
 
-## docs-triage (Docs Update Loop)
+## docs-updater (Docs Update Loop)
 
 | Component                                                                 | Description                                                            |
 | ------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
@@ -272,7 +272,7 @@ flowchart TD
 graph LR
     subgraph callers["Caller Workflows"]
         CW1[on-loop-changelog]
-        CW2[on-loop-docs-triage]
+        CW2[on-loop-docs-updater]
         CW3[on-loop-ci-sweeper]
         CW4[on-loop-refactor]
         CW5[on-loop-tech-debt]
@@ -314,7 +314,7 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 
 ```text
 .loop/
-  state-docs-triage.json    ← owned by docs-triage
+  state-docs-updater.json    ← owned by docs-updater
   state-ci-sweeper.json     ← owned by ci-sweeper
   state-changelog.json      ← owned by changelog
   state-refactor.json       ← owned by refactor
@@ -467,7 +467,7 @@ Example policy entry (matches dogfood `.loop/loop-budget.json`). `loop-detect` c
       "max_runs_per_day": 50,
       "max_tokens_per_day": 1000000
     },
-    "docs-triage": {
+    "docs-updater": {
       "max_attempts_per_run": 3,
       "max_runs_per_day": 5,
       "max_tokens_per_day": 500000
@@ -747,7 +747,7 @@ When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as
 
 **Do not** map `L3` → auto-merge alone. `push` and `push_head` never enable auto-merge.
 
-**Merge-gated cursor (all L2 `open_pr` loops):** Fix PRs carry domain files only. `loop-finalize` writes `targets[key].pending` to `branch_state` without advancing `last_sha`. `on-loop-state-promote.yaml` (`pull_request_target` `closed`, label `loop-automation`) promotes `pending.sha` → `last_sha` on merge or clears `pending` when closed without merge. Writes land only on `branch_state` / repository default (never on fix-PR heads). **Required for every loop that opens review PRs** — dogfood target: unified across `changelog`, `docs-triage`, and `ci-sweeper`. See [State delivery philosophy](multi-branch-loops-design.md#state-delivery-philosophy).
+**Merge-gated cursor (all L2 `open_pr` loops):** Fix PRs carry domain files only. `loop-finalize` writes `targets[key].pending` to `branch_state` without advancing `last_sha`. `on-loop-state-promote.yaml` (`pull_request_target` `closed`, label `loop-automation`) promotes `pending.sha` → `last_sha` on merge or clears `pending` when closed without merge. Writes land only on `branch_state` / repository default (never on fix-PR heads). **Required for every loop that opens review PRs** — dogfood target: unified across `changelog`, `docs-updater`, and `ci-sweeper`. See [State delivery philosophy](multi-branch-loops-design.md#state-delivery-philosophy).
 
 **GitHub API deliverables (issue-triage, stale-pr):** Label, comment, and close **actions run in Execute** via the entry skill (e.g. `gh` / GitHub API) — not in Finalize. Finalize persists loop state and run-log only. Platform work for Tier 2 loops is **caller permissions** (`issues: write`, `pull-requests: write` as needed) plus verifier rubric for API outcome fit.
 

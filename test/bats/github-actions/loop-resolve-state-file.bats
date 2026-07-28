@@ -33,9 +33,9 @@ setup() {
 @test "resolve_state_file derives path from loop_name" {
     # shellcheck disable=SC1090
     source "${RESOLVE_STATE_LIB}"
-    run bash -c 'source "'"${RESOLVE_STATE_LIB}"'"; LOOP_NAME=docs-triage STATE_FILE_INPUT= GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_state_file'
+    run bash -c 'source "'"${RESOLVE_STATE_LIB}"'"; LOOP_NAME=docs-updater STATE_FILE_INPUT= GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_state_file'
     [ "$status" -eq 0 ]
-    grep -q '^state_file=.loop/state-docs-triage.json$' "${GITHUB_OUTPUT}"
+    grep -q '^state_file=.loop/state-docs-updater.json$' "${GITHUB_OUTPUT}"
 }
 
 @test "resolve_state_file emits empty path when inputs missing" {

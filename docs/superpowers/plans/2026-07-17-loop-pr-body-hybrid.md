@@ -601,7 +601,7 @@ EOF
 - Modify: `docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md`
 - Modify: `docs/explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md`
 - Modify: `docs/explanation/loop-engineering/workflows/loop-changelog-workflow-design.md`
-- Modify: `docs/explanation/loop-engineering/workflows/loop-docs-triage-workflow-design.md`
+- Modify: `docs/explanation/loop-engineering/workflows/loop-docs-updater-workflow-design.md`
 - Optional one-liner in: `docs/reference/loop-notify-pr-specification.md` (PR body vs notify ownership)
 
 - [ ] **Step 1: Update inputs reference**
@@ -630,7 +630,7 @@ In the hybrid design spec “Risks” or this plan handoff comment: live dogfood
 git add docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md \
   docs/explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md \
   docs/explanation/loop-engineering/workflows/loop-changelog-workflow-design.md \
-  docs/explanation/loop-engineering/workflows/loop-docs-triage-workflow-design.md \
+  docs/explanation/loop-engineering/workflows/loop-docs-updater-workflow-design.md \
   docs/reference/loop-notify-pr-specification.md
 git commit -m "$(cat <<'EOF'
 docs(loop): document hybrid PR body composition

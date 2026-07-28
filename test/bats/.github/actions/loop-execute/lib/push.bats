@@ -35,7 +35,7 @@ teardown() {
 }
 
 @test "main writes has_changes=false when loop produced no commits" {
-    BRANCH='loop/docs-triage-abc'
+    BRANCH='loop/docs-updater-abc'
     GH_TOKEN='test-token'
     LOOP_HAS_CHANGES='false'
     WORKTREE_PATH='/tmp/worktree'
@@ -45,7 +45,7 @@ teardown() {
 }
 
 @test "main accepts valid branch name characters" {
-    BRANCH='loop/docs-triage_1.2'
+    BRANCH='loop/docs-updater_1.2'
     GH_TOKEN='test-token'
     LOOP_HAS_CHANGES='false'
     WORKTREE_PATH='/tmp/worktree'

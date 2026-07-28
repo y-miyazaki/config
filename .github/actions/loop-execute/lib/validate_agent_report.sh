@@ -192,7 +192,68 @@ function normalize_report_path {
     local raw="$1"
     raw="${raw%% *}"
     raw="${raw#./}"
+    raw="${raw//\`/}"
+    if [[ ${raw} =~ ^\[(.*)\]\(.+\)$ ]]; then
+        raw="${BASH_REMATCH[1]}"
+    fi
     printf '%s' "${raw}"
+}
+
+#######################################
+# report_blob_url_for_path: Build a blob URL for a repository path
+#
+# Globals:
+#   BRANCH - Fix branch name (optional)
+#   GITHUB_REPOSITORY - owner/repo (optional)
+#   GITHUB_SERVER_URL - GitHub host (default https://github.com)
+#   RECONCILE_BLOB_REF - Blob ref override (optional)
+#
+# Arguments:
+#   $1 - Repository-relative file path
+#
+# Outputs:
+#   Blob URL to stdout
+#
+# Returns:
+#   0 when base and ref are set; 1 otherwise
+#
+#######################################
+function report_blob_url_for_path {
+    local path="$1"
+    local ref="${RECONCILE_BLOB_REF:-${BRANCH:-}}"
+    local base repo="${GITHUB_REPOSITORY:-}"
+
+    [[ -n ${ref} && -n ${repo} ]] || return 1
+    base="${GITHUB_SERVER_URL:-https://github.com}"
+    base="${base%/}/${repo}"
+    printf '%s/blob/%s/%s' "${base}" "${ref}" "${path}"
+}
+
+#######################################
+# format_reconcile_changes_row: Render a reconcile placeholder Changes row
+#
+# Globals:
+#   None (delegates to report_blob_url_for_path)
+#
+# Arguments:
+#   $1 - Repository-relative file path
+#
+# Outputs:
+#   Markdown table row to stdout
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function format_reconcile_changes_row {
+    local path="$1"
+    local url
+
+    if url="$(report_blob_url_for_path "${path}" 2> /dev/null)"; then
+        printf '| [%s](%s) | Updated in an earlier loop attempt | See branch diff |' "${path}" "${url}"
+    else
+        printf '| %s | Updated in an earlier loop attempt | See branch diff |' "\`${path}\`"
+    fi
 }
 
 #######################################
@@ -261,18 +322,20 @@ function reconcile_agent_report_with_branch_diff {
         return 0
     fi
 
-    python3 - "${output_file}" "${primary}" "${missing_paths[@]}" << 'PY'
+    local -a reconcile_rows=()
+    local missing_path
+    for missing_path in "${missing_paths[@]}"; do
+        reconcile_rows+=("$(format_reconcile_changes_row "${missing_path}")")
+    done
+
+    python3 - "${output_file}" "${primary}" "${reconcile_rows[@]}" << 'PY'
 import sys
 from pathlib import Path
 
 output_path = Path(sys.argv[1])
 primary = sys.argv[2]
-missing = sys.argv[3:]
+rows = sys.argv[3:]
 text = output_path.read_text(encoding="utf-8")
-rows = [
-    f"| `{path}` | Updated in an earlier loop attempt | See branch diff |"
-    for path in missing
-]
 section_header = f"### {primary}"
 if section_header not in text:
     insert_at = text.find("## Verification")

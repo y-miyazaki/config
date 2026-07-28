@@ -1,6 +1,8 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
+bats_require_minimum_version 1.5.0
+
 # Tests for .github/actions/loop-execute/lib/validate_agent_report.sh
 
 # Use cases:
@@ -334,6 +336,39 @@ EOF
         after_sep && /docs\/b\.md/ { found = 1 }
         END { exit !found }
     ' "${out}"
+}
+
+@test "reconcile_agent_report_with_branch_diff recognizes markdown link paths" {
+    local out="${TEST_TMP}/reconcile-linked.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Updated evaluation report.
+
+## Summary
+
+### Changes
+
+| Target | What was wrong | What changed |
+| ------ | -------------- | ------------ |
+| [docs/report/agent-skills/2026-07-26-evaluation.md](https://github.com/example/config/blob/loop/docs-updater/docs/report/agent-skills/2026-07-26-evaluation.md) | stale counts | fixed |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| markdownlint | pass |
+EOF
+    reconcile_agent_report_with_branch_diff "${out}" $'docs/report/agent-skills/2026-07-26-evaluation.md\n' "docs-updater"
+    run validate_agent_report "${out}" $'docs/report/agent-skills/2026-07-26-evaluation.md\n' "docs-updater"
+    [ "$status" -eq 0 ]
+    run ! grep -q 'Updated in an earlier loop attempt' "${out}"
+}
+
+@test "normalize_report_path strips markdown link syntax" {
+    run normalize_report_path '[docs/a.md](https://github.com/org/repo/blob/main/docs/a.md)'
+    [ "$status" -eq 0 ]
+    [ "$output" = "docs/a.md" ]
 }
 
 @test "reconcile_agent_report_with_branch_diff skips changelog commit-based Changes table" {

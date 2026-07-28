@@ -259,7 +259,7 @@ CI sweeper criteria require the fix to address the **logged failure** (semantic 
 
 PR body is composed by `loop-finalize` from agent `## Overview` / `## Summary` (skill-owned) plus mechanical sections. Dogfood sets `pr_body: ""`. See [Loop PR Body Skill Contract](../loop-pr-body-skill-contract.md).
 
-Platform rule for dogfood loops (changelog, docs-triage, ci-sweeper): **`target.finalize` is always `open_pr`**. **`level`** controls review vs auto-merge on the **bot fix PR**.
+Platform rule for dogfood loops (changelog, docs-updater, ci-sweeper): **`target.finalize` is always `open_pr`**. **`level`** controls review vs auto-merge on the **bot fix PR**.
 
 | Mode           | L2                                        | L3                                                        |
 | -------------- | ----------------------------------------- | --------------------------------------------------------- |
@@ -319,7 +319,7 @@ Tier 3 **dependency-update** behavior is a domain skill plus caller PR filters (
 
 ## Cross-Loop Note
 
-CI failure on `integration:main` is serialized with `docs-triage` and `changelog` via [workflow concurrency](../multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency). Limit recursion with `workflow_run.workflows` (caller allowlist), run ledger (`workflow_run_id`), and daily budget — not workflow-name exclude lists in detect.
+CI failure on `integration:main` is serialized with `docs-updater` and `changelog` via [workflow concurrency](../multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency). Limit recursion with `workflow_run.workflows` (caller allowlist), run ledger (`workflow_run_id`), and daily budget — not workflow-name exclude lists in detect.
 
 `workflow_dispatch` (no event run ID) uses `gh run list` on the watch branch (`SCAN_BRANCH_RUN_LIMIT`, default 100), then ledger and `since` range filters. Skill classifies infra/env/flake failures as Watch.
 

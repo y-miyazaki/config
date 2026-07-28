@@ -5,7 +5,7 @@
 
 ## Problem
 
-`loop-*` APM packages duplicate domain skills (`loop-refactor` / `refactor`, `loop-docs-triage` / `docs-updater`) or isolate small skills (`loop-ci-sweeper`, `loop-changelog`, `loop-tech-debt`) that fit naturally in `common`. Check criteria drift; `detect_changes.sh` exists in two divergent forks.
+`loop-*` APM packages duplicate domain skills (`loop-refactor` / `refactor`, `docs-updater` / `docs-updater`) or isolate small skills (`loop-ci-sweeper`, `loop-changelog`, `loop-tech-debt`) that fit naturally in `common`. Check criteria drift; `detect_changes.sh` exists in two divergent forks.
 
 ## Goals
 
@@ -19,7 +19,7 @@
 | Topic               | Decision                                                           |
 | ------------------- | ------------------------------------------------------------------ |
 | `refactor` home     | `common/.apm/skills/refactor/`; abolish `refactor` APM package     |
-| `detect_changes.sh` | `loop-docs-triage` canonical; merge useful `docs-updater` behavior |
+| `detect_changes.sh` | `docs-updater` canonical; merge useful `docs-updater` behavior |
 | Workflow filenames  | Keep `on-loop-*.yaml`; only references change                      |
 | Delivery            | Single effort on `main`                                            |
 | Docs                | Update all docs that reference old skill/package paths             |
@@ -35,14 +35,14 @@
   tech-debt/      # was loop-tech-debt
 ```
 
-Delete packages: `loop-refactor`, `loop-docs-triage`, `loop-ci-sweeper`, `loop-changelog`, `loop-tech-debt`, `refactor`.
+Delete packages: `loop-refactor`, `docs-updater`, `loop-ci-sweeper`, `loop-changelog`, `loop-tech-debt`, `refactor`.
 
 ## Skill naming
 
 | Old skill          | New skill                    |
 | ------------------ | ---------------------------- |
 | `loop-refactor`    | (merged into `refactor`)     |
-| `loop-docs-triage` | (merged into `docs-updater`) |
+| `docs-updater` | (merged into `docs-updater`) |
 | `loop-ci-sweeper`  | `ci-sweeper`                 |
 | `loop-changelog`   | `changelog`                  |
 | `loop-tech-debt`   | `tech-debt`                  |

@@ -104,7 +104,7 @@ All `.loop/*` writes in **finalize step** via `loop-finalize` — not separate c
 | Input                       | Example                                                |
 | --------------------------- | ------------------------------------------------------ |
 | `target_json`               | Matrix cell                                            |
-| `domain_persistence_script` | ci-sweeper: `update_run_ledger.sh`; docs-triage: empty |
+| `domain_persistence_script` | ci-sweeper: `update_run_ledger.sh`; docs-updater: empty |
 | `state_push_branch`         | `branch_state` input or default branch                 |
 
 Push branch: `branch_state`, **not** `target.to.branch`.
@@ -117,7 +117,7 @@ Push branch: `branch_state`, **not** `target.to.branch`.
 
 Document applicable triggers in every caller. Prefer one primary poll/event path plus `workflow_dispatch`.
 
-Dogfood `on-loop-ci-sweeper.yaml` uses `workflow_run` (repair-target `workflows:` list) + `workflow_dispatch` — no `schedule`. Changelog, docs-triage, and tech-debt callers keep `schedule` + `workflow_dispatch`.
+Dogfood `on-loop-ci-sweeper.yaml` uses `workflow_run` (repair-target `workflows:` list) + `workflow_dispatch` — no `schedule`. Changelog, docs-updater, and tech-debt callers keep `schedule` + `workflow_dispatch`.
 
 ```yaml
 # Example: event-driven CI sweeper (dogfood)
@@ -131,7 +131,7 @@ on:
 ```
 
 ```yaml
-# Example: schedule polling (docs-triage — dogfood cron)
+# Example: schedule polling (docs-updater — dogfood cron)
 on:
   schedule:
     - cron: "0 9 * * 1-5"
@@ -148,7 +148,7 @@ on:
 
 | Trigger             | Typical use                                                    |
 | ------------------- | -------------------------------------------------------------- |
-| `schedule`          | Integration branch polling (changelog, docs-triage, tech-debt) |
+| `schedule`          | Integration branch polling (changelog, docs-updater, tech-debt) |
 | `workflow_run`      | Low-latency CI failure (ci-sweeper; ops checklist)             |
 | `workflow_dispatch` | Manual debug / `gh run list` scan without an event run ID      |
 
@@ -213,7 +213,7 @@ Each matrix cell = one `max_runs_per_day` consumption. Cap enumeration in `loop-
 
 Copy a thin `on-loop-*.yaml` (triggers + `with:` only). See [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md).
 
-1. Copy `on-loop-changelog.yaml`, `on-loop-docs-triage.yaml`, or `on-loop-ci-sweeper.yaml` skeleton.
+1. Copy `on-loop-changelog.yaml`, `on-loop-docs-updater.yaml`, or `on-loop-ci-sweeper.yaml` skeleton.
 2. Add `docs/explanation/loop-engineering/workflows/loop-<name>-workflow-design.md`.
 3. Link from [Multi-Branch workflow index](multi-branch-loops-design.md#workflow-design-documents).
 4. Register in `mkdocs.yml` under **Explanation → Loop Engineering → Loop Workflows**.
@@ -229,7 +229,7 @@ Historical debt from early caller implementations. **All items below are resolve
 | Caller ledger `git push`                         | ci-sweeper pushed ledger from caller         | `domain_persistence_script` in `loop-finalize` via `ci-loop-agent` |
 | `auto_merge: level == L3` without finalize check | all L2+ callers                              | `delivery == 'open_pr' && level == L3 && finalize == 'open_pr'`    |
 | Single `DEFAULT_BASE_BRANCH` only                | all                                          | `LOOP_INTEGRATION_BRANCHES`                                        |
-| `docs-updater` detect path                       | `on-loop-docs-triage`                        | `docs-updater/scripts/detect_changes.sh`                           |
+| `docs-updater` detect path                       | `on-loop-docs-updater`                        | `docs-updater/scripts/detect_changes.sh`                           |
 
 Structural baseline: [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md) (`ci-loop-caller.yaml`).
 
@@ -240,5 +240,5 @@ Structural baseline: [Loop Caller Reusable Workflow Design](loop-caller-reusable
 - [Specification](../../reference/specification.md)
 - [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md)
 - [Changelog Workflow](workflows/loop-changelog-workflow-design.md)
-- [Docs Triage Workflow](workflows/loop-docs-triage-workflow-design.md)
+- [Docs Updater Workflow](workflows/loop-docs-updater-workflow-design.md)
 - [Report Tech Debt Workflow](workflows/loop-tech-debt-workflow-design.md)

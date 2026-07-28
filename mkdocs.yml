@@ -82,7 +82,7 @@ nav:
               - Caller Inputs Reference: explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
               - Changelog: explanation/loop-engineering/workflows/loop-changelog-workflow-design.md
               - CI Sweeper: explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md
-              - Docs Triage: explanation/loop-engineering/workflows/loop-docs-triage-workflow-design.md
+              - Docs Updater: explanation/loop-engineering/workflows/loop-docs-updater-workflow-design.md
               - Refactor: explanation/loop-engineering/workflows/loop-refactor-workflow-design.md
               - Report Tech Debt: explanation/loop-engineering/workflows/loop-tech-debt-workflow-design.md
   - Report:

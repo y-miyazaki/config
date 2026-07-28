@@ -103,7 +103,7 @@ Platform exception paths (`push`, `push_head`) are advanced `git_landing_*` over
 Detect builds one `target_json` per watch context. **Execute** checks out `from.branch` / `from.ref`. **Finalize** opens a bot fix PR targeting `to.branch` (watched integration branch or PR head), not `branch_state`.
 
 ```text
-integration mode (changelog, docs-triage, ci-sweeper on main)
+integration mode (changelog, docs-updater, ci-sweeper on main)
   watch:  branch_match → checkout main (or develop, release/*, …)
   worktree: from.branch == watched integration branch
   finalize: open_pr → bot fix PR to to.branch
@@ -310,14 +310,14 @@ detect_domain_env_json: ${{ format('{{"CI_SWEEPER_EVENT_HEAD_BRANCH":"{0}","CI_S
 | `CI_SWEEPER_WORKFLOW_NAME`     | Failed workflow display name                                                                                     |
 | `CI_SWEEPER_RUN_URL`           | HTML URL of failed run                                                                                           |
 
-### Docs triage (`docs-triage`)
+### Docs updater (`docs-updater`)
 
 | JSON key                  | Description                                          | Dogfood value            |
 | ------------------------- | ---------------------------------------------------- | ------------------------ |
-| `DOCS_TRIAGE_DOC_GLOBS`   | Comma-separated doc file globs for git-diff analysis | `docs/**/*.md,README.md` |
-| `DOCS_TRIAGE_EXTRA_FILES` | Additional non-glob paths                            | `mkdocs.yml`             |
+| `DOCS_UPDATER_DOC_GLOBS`   | Comma-separated doc file globs for git-diff analysis | `docs/**/*.md,README.md` |
+| `DOCS_UPDATER_EXTRA_FILES` | Additional non-glob paths                            | `mkdocs.yml`             |
 
-When `DOCS_TRIAGE_DOC_GLOBS` is unset, detect falls back to a repository-wide `*.md` find with standard `repo_paths` pruning (excludes `.agents/`, generated trees, etc.). Production callers should set globs explicitly; the fallback is mainly for local runs and tests.
+When `DOCS_UPDATER_DOC_GLOBS` is unset, detect falls back to a repository-wide `*.md` find with standard `repo_paths` pruning (excludes `.agents/`, generated trees, etc.). Production callers should set globs explicitly; the fallback is mainly for local runs and tests.
 
 ### Report tech debt (`tech-debt`)
 
@@ -366,7 +366,7 @@ Not a loop caller; configure via environment when invoking `detect_changes.sh` o
 | `LOOP_NAME`                                                   | `loop_name`                                              |
 | `LOOP_NO_CHANGES_VERDICT`                                     | `no_changes_verdict`                                     |
 | `LOOP_PR_*`, `LOOP_PROMPT_INSTRUCTIONS`, `LOOP_PULL_REQUESTS` | `pr_*`, `prompt_instructions`, `pr_enabled`              |
-| `CHANGELOG_*`, `CI_SWEEPER_*`, `DOCS_TRIAGE_*`                | `detect_domain_env_json` keys                            |
+| `CHANGELOG_*`, `CI_SWEEPER_*`, `DOCS_UPDATER_*`                | `detect_domain_env_json` keys                            |
 | `DOMAIN_PERSISTENCE_SCRIPT`                                   | `domain_persistence_script`                              |
 
 ## Per-loop design docs
@@ -375,7 +375,7 @@ Not a loop caller; configure via environment when invoking `detect_changes.sh` o
 | ----------- | --------------------------------------------------------------------- | -------------------------- |
 | changelog   | [Changelog Workflow Design](loop-changelog-workflow-design.md)        | `on-loop-changelog.yaml`   |
 | ci-sweeper  | [CI Sweeper Workflow Design](loop-ci-sweeper-workflow-design.md)      | `on-loop-ci-sweeper.yaml`  |
-| docs-triage | [Docs Triage Workflow Design](loop-docs-triage-workflow-design.md)    | `on-loop-docs-triage.yaml` |
+| docs-updater | [Docs Updater Workflow Design](loop-docs-updater-workflow-design.md)    | `on-loop-docs-updater.yaml` |
 | refactor    | [Refactor Workflow Design](loop-refactor-workflow-design.md)          | `on-loop-refactor.yaml`    |
 | tech-debt   | [Report Tech Debt Workflow Design](loop-tech-debt-workflow-design.md) | `on-loop-tech-debt.yaml`   |
 

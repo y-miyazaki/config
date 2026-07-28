@@ -1,6 +1,6 @@
-# Docs Triage Workflow Design
+# Docs Updater Workflow Design
 
-Workflow and domain design for the docs-triage loop (`on-loop-docs-triage.yaml`).
+Workflow and domain design for the docs-updater loop (`on-loop-docs-updater.yaml`).
 
 | Layer        | Document                                                           |
 | ------------ | ------------------------------------------------------------------ |
@@ -8,18 +8,18 @@ Workflow and domain design for the docs-triage loop (`on-loop-docs-triage.yaml`)
 | Caller shell | [Loop Caller Workflows Design](../loop-caller-workflows-design.md) |
 | Invariants   | [Loop Engineering Design](../loop-engineering-design.md)           |
 
-**Artifacts:** `on-loop-docs-triage.yaml` · skill `docs-updater` · `docs-updater/scripts/detect_changes.sh`
+**Artifacts:** `on-loop-docs-updater.yaml` · skill `docs-updater` · `docs-updater/scripts/detect_changes.sh`
 
 Shared caller keys: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md).
 
 ## Purpose
 
-Detect documentation drift from code changes on integration branches and open fix PRs after Skill triage.
+Detect documentation drift from code changes on integration branches and open fix PRs after the docs-updater skill runs.
 
 ### Supported use cases
 
 - Cron scan of integration branches for git-diff facts (`changed_files`, `affected_docs`, …)
-- Semantic triage and fix of High-Priority stale references or missing doc content
+- Semantic review and fix of high-priority stale references or missing doc content
 - Open an L2 review PR to the watch integration branch
 - Coordinate with peer loops via [workflow concurrency](../multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency) when multiple loops target the same branch
 
@@ -34,9 +34,9 @@ Detect documentation drift from code changes on integration branches and open fi
 | Path               | Trigger                    | Input                                                                    |
 | ------------------ | -------------------------- | ------------------------------------------------------------------------ |
 | Interactive / hook | Pre-commit, user-invoked   | `scripts/detect_changes.sh` JSON (mechanical facts)                      |
-| Loop               | `on-loop-docs-triage.yaml` | Same detect script facts in prompt; skill builds `findings[]` in Execute |
+| Loop               | `on-loop-docs-updater.yaml` | Same detect script facts in prompt; skill builds `findings[]` in Execute |
 
-Both paths share `docs-updater/scripts/detect_changes.sh` for mechanical facts only. The **entry skill** (Execute) builds semantic `findings[]` — detect and the caller do not emit triage classifications.
+Both paths share `docs-updater/scripts/detect_changes.sh` for mechanical facts only. The **entry skill** (Execute) builds semantic `findings[]` — detect and the caller do not emit semantic classifications.
 
 #### Detect → findings pipeline (loop domain)
 
@@ -53,7 +53,7 @@ Both paths share `docs-updater/scripts/detect_changes.sh` for mechanical facts o
 
 ## Caller inputs
 
-Keys are passed in `on-loop-docs-triage.yaml` via `with:` on `ci-loop-caller.yaml` (alphabetically ordered). Multiline values (`agent_verifier_criteria`, `prompt_instructions`) are defined inline in the caller workflow.
+Keys are passed in `on-loop-docs-updater.yaml` via `with:` on `ci-loop-caller.yaml` (alphabetically ordered). Multiline values (`agent_verifier_criteria`, `prompt_instructions`) are defined inline in the caller workflow.
 
 Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md). Platform branch/finalize caps: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
 
@@ -65,26 +65,26 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `agent_verifier_criteria`                            | Verifier APPROVE/REJECT rubric. Doc-only edits; factual consistency; no sensitive data.                                                                                                                                   | Inline in caller workflow                                               |
 | `agent_verifier_max_turns`                           | Max verifier agent turns per verification.                                                                                                                                                                                | `3`                                                                     |
 | `agent_verifier_model`                               | Verifier model ID. Cursor: `agent --list-models`.                                                                                                                                                                         | `composer-2.5`                                                          |
-| `allowlist`                                          | Comma-separated globs the implementer may modify. Must align with triage scope.                                                                                                                                           | `docs/**/*.md,README.md,mkdocs.yml`                                     |
+| `allowlist`                                          | Comma-separated globs the implementer may modify. Must align with docs-updater scope.                                                                                                                                           | `docs/**/*.md,README.md,mkdocs.yml`                                     |
 | `branch_match`                                       | Comma-separated integration branch patterns to watch for doc drift.                                                                                                                                                       | `main`                                                                  |
 | `branch_state`                                       | Branch for `.loop/*` persistence, state migration, and watch fallback.                                                                                                                                                    | `main`                                                                  |
 | `budget_max_runs_per_day`                            | Daily run cap keyed by `loop_name`. Caller input; `.loop/loop-budget.json` overrides when present.                                                                                                                        | `1` (caller); effective `5` via `.loop/loop-budget.json`                |
 | `budget_max_tokens_per_day`                          | Daily aggregated token cap across loops.                                                                                                                                                                                  | `500000`                                                                |
-| `detect_domain_env_json` → `DOCS_TRIAGE_DOC_GLOBS`   | Comma-separated globs for documentation files in git-diff analysis.                                                                                                                                                       | `docs/**/*.md,README.md`                                                |
-| `detect_domain_env_json` → `DOCS_TRIAGE_EXTRA_FILES` | Additional non-glob paths (site config) included in doc impact scan.                                                                                                                                                      | `mkdocs.yml`                                                            |
+| `detect_domain_env_json` → `DOCS_UPDATER_DOC_GLOBS`   | Comma-separated globs for documentation files in git-diff analysis.                                                                                                                                                       | `docs/**/*.md,README.md`                                                |
+| `detect_domain_env_json` → `DOCS_UPDATER_EXTRA_FILES` | Additional non-glob paths (site config) included in doc impact scan.                                                                                                                                                      | `mkdocs.yml`                                                            |
 | `detect_script`                                      | Domain detect script path (shared with docs-updater hook path).                                                                                                                                                           | `.agents/skills/docs-updater/scripts/detect_changes.sh`                 |
 | `engine`                                             | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                                                                                                                                     | `cursor`                                                                |
 | `delivery`                                           | Platform delivery after APPROVE (`open_pr` for dogfood).                                                                                                                                                                  | `open_pr`                                                               |
 | `infer_files_pattern`                                | Extended regex to infer file paths from verifier text.                                                                                                                                                                    | See caller workflow                                                     |
 | `level`                                              | Autonomy level (`L1`, `L2`, `L3`). L2 opens review PR.                                                                                                                                                                    | `L2`                                                                    |
-| `loop_name`                                          | Loop identifier; state file `.loop/state-docs-triage.json`.                                                                                                                                                               | `docs-triage`                                                           |
+| `loop_name`                                          | Loop identifier; state file `.loop/state-docs-updater.json`.                                                                                                                                                               | `docs-updater`                                                           |
 | `max_targets_per_schedule`                           | Max targets per cron tick after priority filters.                                                                                                                                                                         | `3`                                                                     |
 | `may_edit`                                           | Agent worktree edit gate (`true` for dogfood).                                                                                                                                                                            | `true`                                                                  |
 | `no_changes_verdict`                                 | `APPROVE` or `REJECT` when implementer produces no file diff.                                                                                                                                                             | `REJECT`                                                                |
 | `pr_body`                                            | Optional static prefix (dogfood: `""`). `loop-finalize` composes agent Overview/Summary + mechanical sections. See [Loop PR Body Readable Design](../../../superpowers/specs/2026-07-21-loop-pr-body-readable-design.md). | `""`                                                                    |
-| `pr_title`                                           | PR title when finalize strategy is `open_pr`.                                                                                                                                                                             | `chore(docs-triage): automated documentation update (loop-docs-triage)` |
-| `prompt_instructions`                                | Domain instructions: run docs-updater automation path; address triage findings.                                                                                                                                           | Inline in caller workflow                                               |
-| `pr_enabled`                                         | Enumerate open PR heads. Docs-triage uses integration branches only.                                                                                                                                                      | `false`                                                                 |
+| `pr_title`                                           | PR title when finalize strategy is `open_pr`.                                                                                                                                                                             | `chore(docs-updater): automated documentation update (docs-updater)` |
+| `prompt_instructions`                                | Domain instructions: run docs-updater automation path; address documented findings.                                                                                                                                           | Inline in caller workflow                                               |
+| `pr_enabled`                                         | Enumerate open PR heads. docs-updater uses integration branches only.                                                                                                                                                      | `false`                                                                 |
 | `skill_name`                                         | Skill package to invoke.                                                                                                                                                                                                  | `docs-updater`                                                          |
 | `write_target`                                       | Agent artifact when `may_edit` is true (`fix` for dogfood).                                                                                                                                                               | `fix`                                                                   |
 
@@ -141,7 +141,7 @@ No `workflow_run_id` / ci ledger.
 
 PR body is composed by `loop-finalize` from agent `## Overview` / `## Summary` (skill-owned) plus mechanical sections. Dogfood sets `pr_body: ""`. See [Loop PR Body Skill Contract](../loop-pr-body-skill-contract.md).
 
-Always `open_pr` to `to.branch` at L2. L3 `push` rarely appropriate for docs-triage; if enabled, requires explicit promotion review.
+Always `open_pr` to `to.branch` at L2. L3 `push` rarely appropriate for docs-updater; if enabled, requires explicit promotion review.
 
 No `domain_persistence_script`.
 
@@ -153,7 +153,7 @@ See [State delivery philosophy](../multi-branch-loops-design.md#state-delivery-p
 
 **Target (dogfood):** merge-gated `pending` + `on-loop-state-promote` — same as changelog.
 
-Persistence: `state-docs-triage.json` on `branch_state` via [finalize inside ci-loop-agent](../loop-caller-workflows-design.md#finalize-inside-ci-loop-agent).
+Persistence: `state-docs-updater.json` on `branch_state` via [finalize inside ci-loop-agent](../loop-caller-workflows-design.md#finalize-inside-ci-loop-agent).
 
 ## Implementation Checklist
 
@@ -162,7 +162,7 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 ### Platform (all loops)
 
 - [x] `docs-updater/scripts/detect_changes.sh` (facts output)
-- [x] `on-loop-docs-triage.yaml` dogfood caller via `ci-loop-caller`
+- [x] `on-loop-docs-updater.yaml` dogfood caller via `ci-loop-caller`
 - [x] `branch_match` + per-branch `targets["integration:<branch>"]`
 - [x] State migration: flat `last_sha` removed (`targets` map only)
 - [x] `target_matrix` through detect → matrix execute/finalize
@@ -177,10 +177,11 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 
 ## Cross-Loop Note
 
-If `ci-sweeper` and docs-triage both target `integration:main`, [workflow concurrency](../multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency) and separate concurrency groups apply. CI failure on `main` is ci-sweeper priority; doc-only drift is docs-triage.
+If `ci-sweeper` and docs-updater both target `integration:main`, [workflow concurrency](../multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency) and separate concurrency groups apply. CI failure on `main` is ci-sweeper priority; doc-only drift is docs-updater.
 
 ## References
 
 - [Multi-Branch Loops Design](../multi-branch-loops-design.md)
 - [Loop Caller Workflows Design](../loop-caller-workflows-design.md)
 - [Specification](../../../reference/specification.md)
+

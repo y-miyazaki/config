@@ -56,7 +56,7 @@ setup() {
 @test "run.sh appends entry, commits, and writes entry_json output" {
     run_log_run \
         TOKEN='test-token' \
-        LOOP_NAME='docs-triage' \
+        LOOP_NAME='docs-updater' \
         OUTCOME='skipped' \
         SKIP_REASON='budget' \
         RUN_LOG_FILE='.loop/loop-run-log.md' \
@@ -71,7 +71,7 @@ setup() {
     run tail -n 1 "${RUN_LOG_WORK}/.loop/loop-run-log.md"
     [ "$status" -eq 0 ]
     assert_loop_run_log_entry_json "${output}"
-    [ "$(jq -r '.pattern' <<< "${output}")" = "docs-triage" ]
+    [ "$(jq -r '.pattern' <<< "${output}")" = "docs-updater" ]
     [ "$(jq -r '.outcome' <<< "${output}")" = "skipped" ]
     [ "$(jq -r '.skip_reason' <<< "${output}")" = "budget" ]
     [ "$(jq -r '.workflow_run' <<< "${output}")" = "42" ]
@@ -90,7 +90,7 @@ setup() {
 
     run_log_run \
         TOKEN='test-token' \
-        LOOP_NAME='docs-triage' \
+        LOOP_NAME='docs-updater' \
         OUTCOME='no-changes' \
         SKIP_REASON='none' \
         RUN_LOG_FILE='.loop/loop-run-log.md' \

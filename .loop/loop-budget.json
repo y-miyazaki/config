@@ -10,7 +10,7 @@
       "max_runs_per_day": 50,
       "max_tokens_per_day": 1000000
     },
-    "docs-triage": {
+    "docs-updater": {
       "max_attempts_per_run": 3,
       "max_runs_per_day": 5,
       "max_tokens_per_day": 500000
@@ -22,3 +22,4 @@
     }
   }
 }
+
