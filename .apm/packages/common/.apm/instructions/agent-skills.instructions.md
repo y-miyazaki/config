@@ -39,7 +39,7 @@ Preferred path forms in markdown examples:
 
 | File Name                       | Required | Purpose                                 | Load Trigger              |
 | ------------------------------- | -------- | --------------------------------------- | ------------------------- |
-| `common-checklist.md`           | Yes      | Canonical checklist with fixed Item IDs | `(always read)`           |
+| `common-checklist.md`           | Yes      | Canonical checklist (ItemIDs when gates/findings are cited; see Checklist item layout) | `(always read)`           |
 | `common-output-format.md`       | Yes      | Canonical output contract               | `(always read)`           |
 | `common-troubleshooting.md`     | No       | Failure diagnostics and rerun procedure | `(read on failure)`       |
 | `common-individual-commands.md` | No       | Debug-only command catalog              | `(read on debugging)`     |
@@ -54,6 +54,17 @@ Allowlisted Reference Files Guide triggers:
 - `(read on interactive path)`
 - `(read when <condition>)` — `<condition>` is a single concrete predicate
 
+### Checklist item layout
+
+When `common-checklist.md` uses ItemIDs (`PREFIX-nn`), use **exactly one** layout per file (BP-05). Recipe checklists without ItemIDs may keep plain procedural H2s.
+
+| Layout | H2 | Items | Typical family |
+| ------ | -- | ----- | -------------- |
+| **Index** | `## Title (PREFIX)` | `- PREFIX-nn (LEVEL): title` (Check/Why/Fix in `category-*.md` when present) | `*-review`, `*-validation`, step checklists |
+| **Gate** | `## Title` (no `(PREFIX)` on H2) | `### PREFIX-nn: Title` (+ optional checkbox / **PASS**) | docs-\*, utility gates |
+
+Plain H2 sections **without** ItemIDs (for example `## Execution Order`, `## Pass Criteria`) may sit beside index or gate sections in the same file. Do not mix index H2 short-names with gate H3 ItemID headings. Do not require ItemIDs on every skill (loop recipe checklists may stay ID-less).
+
 ## Guidelines
 
 ### Best Practice Checks (BP)
@@ -61,6 +72,7 @@ Allowlisted Reference Files Guide triggers:
 - BP-02 (SHOULD): Reference Files Guide states when each reference is read
 - BP-03 (SHOULD): SKILL.md avoids redundant prose already in references
 - BP-04 (SHOULD): Do not over-compress below sibling skill depth
+- BP-05 (SHOULD): Checklist ItemID layout is one style per file
 
 ### Pattern Checks (P)
 - P-01 (SHOULD): Workflow matches the skill family pattern (not ad-hoc steps)

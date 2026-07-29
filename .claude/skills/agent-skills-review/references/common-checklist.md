@@ -5,6 +5,7 @@
 - BP-02 (SHOULD): Reference Files Guide states when each reference is read
 - BP-03 (SHOULD): SKILL.md avoids redundant prose already in references
 - BP-04 (SHOULD): Do not over-compress below sibling skill depth
+- BP-05 (SHOULD): Checklist ItemID layout is one style per file
 
 ## Pattern Checks (P)
 - P-01 (SHOULD): Workflow matches the skill family pattern (not ad-hoc steps)

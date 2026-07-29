@@ -4,6 +4,7 @@
 - **対象:** `.apm/packages/*/.apm/skills/*/SKILL.md`（18 スキル）
 - **評価基準:** `agent-skills-review` の S/Q/P/BP チェック、および `agent-skills.instructions.md`
 - **本レポートの位置づけ:** 初回調査 + 2026-07-26 追記（方針確定・一部改修反映）
+- **現行所見:** [Agent Skills / Instructions Evaluation (2026-07-29)](2026-07-29-evaluation.md)（Skills + Instructions 再監査。ItemID Phase C の位置づけを訂正）
 
 ## 要約
 
@@ -206,7 +207,7 @@ Guidelines（P/Q/S/BP）は `category-*.md` から sync 生成。実務レビュ
 
 ### 優先度 Medium（チェック・契約）
 
-1. **changelog / ci-sweeper / refactor / tech-debt** — 安定 ItemID 導入
+1. **changelog / ci-sweeper / refactor / tech-debt** — 安定 ItemID 導入 → **[2026-07-29 報 §6.1 で gate 型対応済。必須ロードマップ外に訂正](2026-07-29-evaluation.md#61-対応済現状維持作業不要)**
 2. **terraform-review** — COMP 欠番（対応済）
 
 ### 優先度 Low（表記統一）
@@ -247,3 +248,4 @@ Guidelines（P/Q/S/BP）は `category-*.md` から sync 生成。実務レビュ
 - 評価スキル: `.apm/packages/common/.apm/skills/agent-skills-review/`
 - オーサリング規則: `.apm/packages/common/.apm/instructions/agent-skills.instructions.md`
 - Waza 関連レポート: [docs/report/waza/](../waza/waza-capabilities.md)
+
