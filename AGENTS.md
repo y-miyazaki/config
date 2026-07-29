@@ -11,7 +11,7 @@ Behavioral rules for AI agents.
 If instructions conflict, follow this precedence:
 
 1. Explicit user instructions
-2. Repository-specific instructions
+2. Repository-specific instructions — including [CLAUDE.md](CLAUDE.md) (precedence, edit routing, [instruction authoring](CLAUDE.md#instruction-authoring)), domain [AGENTS.md](.apm/AGENTS.md) files, and [.github/workflows/AGENTS.md](.github/workflows/AGENTS.md) for their scoped paths
 3. Existing codebase conventions
 4. General best practices
 

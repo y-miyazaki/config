@@ -424,16 +424,19 @@ function assert_loop_run_log_entry_json {
     jq -e '
         type == "object"
         and (.run_id | type == "string" and length > 0)
-        and (.pattern | type == "string" and length > 0)
+        and (.loop_name | type == "string" and length > 0)
         and (.duration_s | type == "number")
         and (.outcome | type == "string" and length > 0)
         and (.skip_reason | type == "string")
-        and (.tokens_estimate | type == "number")
+        and (.tokens_total | type == "number")
         and (.workflow_run | type == "string" and length > 0)
         and (if has("attempts") then .attempts | type == "number" else true end)
         and (if has("has_changes") then .has_changes | type == "boolean" else true end)
         and (if has("verdict") then .verdict | type == "string" else true end)
         and (if has("usage") then .usage | type == "object" else true end)
+        and (if has("agent_result") then .agent_result | type == "string" else true end)
+        and (if has("failure_stage") then .failure_stage | type == "string" else true end)
+        and (if has("failure_message") then .failure_message | type == "string" else true end)
     ' <<< "${json}"
 }
 

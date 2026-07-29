@@ -1,121 +1,69 @@
 # AGENTS.md
 
-Maintainer routing for `.apm/packages/**` work in this repository.
+Rules for authoring under `.apm/packages/**`. Package sources are **distribution artifacts** — `apm install` copies them into this repository and into consumer repositories.
+
+**Precedence:** Overrides `.cursor/rules/` and distributable package wording when editing `.apm/packages/**`. Does not override [CLAUDE.md § Edit routing](../CLAUDE.md#edit-routing-must). Design depth: [apm-package-design.md](../docs/explanation/apm-package-design.md).
 
 ---
 
-## Scope
+## Distributable vs maintainer-only (MUST)
 
-- Applies when creating or updating files under `.apm/packages/**`.
-- Package sources are **distribution artifacts**: `apm install` materializes them into this repository and into consumer repositories.
+| Write in `.apm/packages/**` | Write in maintainer docs instead (`CLAUDE.md`, this file, `docs/`) |
+| --------------------------- | ------------------------------------------------------------------- |
+| Portable contracts any consumer can follow | This repository's paths, CI, sync scripts, Loop caller/action names |
+| In-skill relative paths (`scripts/`, `references/`, `assets/`) | `apm install` / `sync_*` as normative user steps |
+| Stem-based companion cross-links | Repo-specific `validate_*`, Bats `assert_*`, `scripts/lib/` paths in redistributable `references/` |
+| Behavior that does not assume this layout | Fixed universal directory mandates (`test/bats/` only, `docs/report/…` required) |
+| | `may_edit` / automation envelope **for this consumer** — see [loop-pr-body-skill-contract](../docs/explanation/loop-engineering/loop-pr-body-skill-contract.md) |
 
-## Project-specific vs distributable (MUST)
+If a sentence applies only in this repository, it does **not** belong in a package source.
 
-**This repository only** — write APM-related maintainer rules, workflows, Loop platform behavior, sync/edit targets, and any wording that assumes this layout or CI here:
+---
 
-- [.apm/AGENTS.md](AGENTS.md) — package authoring routing and maintainer-only policy
-- [CLAUDE.md § Repository Rules](../CLAUDE.md#repository-rules) — edit targets and repo conventions agents load with every task
-- `docs/` — deeper design (Loop Engineering, package design, and similar)
+## Redistribution (DIST) — maintainer judgment
 
-**Distributable** — `.apm/packages/**` ships to **other repositories** via `apm install`. Every sentence in package sources (`*.instructions.md`, `SKILL.md`, `references/`, hooks, MCP config) MUST be **generalized**: portable paths, consumer-neutral contracts, and behavior any adopter can follow without this repository's scripts, Loop callers, or directory layout. If a rule applies only here, do not put it in a package — put it in `.apm/AGENTS.md` or `CLAUDE.md` instead.
+Enforce via PR review and this file. **Not** an `agent-skills-review` or `instructions-review` ItemID — those skills run in external repos and must stay generalized.
 
-## Canonical references
+| In package sources | Judgment |
+| ------------------ | -------- |
+| **MUST NOT** embed | Config-repo paths/trees, internal automation names, maintainer CLI as required steps, Loop platform names for this consumer, single canonical paths for all consumers, large eval corpora in the skill tree |
+| **SHOULD** use | Portable checklist contracts, in-skill paths, stem cross-links, stable `https://` references |
+| Local-only skills in a consumer repo | Repo-specific rules live in that repo's `AGENTS.md` / `docs/` — not in redistributable package sources |
 
-| Topic                                                                                   | Where                                                                                                                                                                                                                       |
-| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Package design principles** (skill vs product)                                        | [apm-package-design.md](../docs/explanation/apm-package-design.md)                                                                                                                                                          |
-| **Distributable vs maintainer-only** (no domain-specific content in `.apm/packages/**`) | [.apm/AGENTS.md § Distributable content policy](#distributable-content-policy-must), [apm-package-design.md § Distributable vs maintainer-only](../docs/explanation/apm-package-design.md#distributable-vs-maintainer-only) |
-| Edit targets (source of truth)                                                          | [CLAUDE.md § Edit Targets](../CLAUDE.md#edit-targets)                                                                                                                                                                       |
-| Configuration philosophy (MCP / hooks / skills)                                         | [architecture.md](../docs/explanation/architecture.md#configuration-philosophy), [specification.md](../docs/reference/specification.md#configuration-philosophy)                                                            |
-| Repository-neutral distributable content                                                | [.apm/AGENTS.md § Redistribution policy (DIST)](#redistribution-policy-dist--this-repository-only)                                                                                                                          |
-| Instruction file structure and category sync                                            | [instructions-sync-workflow.md](../docs/explanation/instructions-sync-workflow.md)                                                                                                                                          |
-| SKILL authoring and eval packaging                                                      | companion rules (stem `agent-skills`) and `agent-skills-review` skill; eval release bar below                                                                                                                               |
-| Automation edit gate (`may_edit` in Constraints)                                        | per-skill `category-automation-envelope.md`; skills branch on `may_edit` and `write_target` only — see [apm-package-design.md](../docs/explanation/apm-package-design.md#skill-authoring-contract-vs-product)               |
-| Loop platform (this consumer)                                                           | [Loop Engineering](../docs/explanation/loop-engineering/index.md), [loop-pr-body-skill-contract.md](../docs/explanation/loop-engineering/loop-pr-body-skill-contract.md)                                                    |
-| Test pairing                                                                            | companion domain rules (stem `shell-script`, `go`, `bats`) — TEST-00                                                                                                                                                        |
+Review skills (`agent-skills-review`, `instructions-review`) **MUST** encode generalized checks only.
 
-## Distributable content policy (MUST)
+---
 
-Everything under `.apm/packages/**` is a **distribution artifact**. After package sync it lands in consumer trees (`<agent-root>/skills/`, `.cursor/rules/`, hooks, agents, …) in repositories that may not use this layout, CI, or Loop platform. **Non-portable or this-repo-only wording in package sources breaks other consumers** — keep those rules in [.apm/AGENTS.md](AGENTS.md) or [CLAUDE.md](../CLAUDE.md) per [§ Project-specific vs distributable](#project-specific-vs-distributable-must).
+## Release bar (this repository only)
 
-**Write in `.apm/packages/**` only:**
+| Rule | Requirement |
+| ---- | ----------- |
+| Mock eval | Verifies contract structure — not production behavior. |
+| Behavior | **MUST** be covered by `test/bats/`, `scripts/*/validate.sh`, and/or real executor / `waza run --baseline` in this repo. |
+| Ship decision | **Mock eval green + repo CI green** before releasing skills from this repository. |
+| Eval packaging | **SHOULD** keep a thin harness (`eval.yaml`, task YAMLs); avoid large corpora inside distributable skill trees (E-01 / E-03 — maintainer judgment, not review ItemIDs). |
 
-- Generalized rules and contracts any consumer can follow (portable skill schemas, domain behavior that does not assume this repository).
-- In-skill paths (`scripts/`, `references/`, `assets/` inside the same skill directory).
-- Stem-based companion cross-links — not package-tooling commands as normative user steps.
+---
 
-**Do not write in `.apm/packages/**` (put in maintainer docs instead):**
+## Validation scripts mirror (MUST)
 
-- This repository's paths, scripts, or sync workflows — for example `scripts/self/`, `sync_*`, `apm_modules/`, default `docs/report/…` as a required layout → [CLAUDE.md § Edit Targets](../CLAUDE.md#edit-targets), this file
-- Package-manager commands as portability rules — for example `apm install`, `.apm/packages/**` in consumer-facing normative steps → this file, [apm-package-design.md](../docs/explanation/apm-package-design.md)
-- Loop caller, workflow, or action names for this consumer → [Loop Engineering](../docs/explanation/loop-engineering/index.md)
-- Repo-specific checklist APIs in skill `references/` — for example private `validate_*` helpers, test-suite `assert_*` APIs, internal `scripts/lib/` paths, hook names → consumer `AGENTS.md` / `docs/` for local-only skills; [§ Redistribution policy (DIST)](#redistribution-policy-dist--this-repository-only) for package sources
-- Fixed test-directory mandates as universal rules — for example `test/bats/` only → companion bats rules document repository-established layout
-- Review rules that Fail consumer-local domain skills for portability → `agent-skills-review` uses generalized checks only; consumer policy lives in that repository's `AGENTS.md` / `docs/`
+Edit repo `scripts/<domain>/` only — do not hand-edit skill copies. Transforms: `sync_validate_mirror.sh`.
 
-**Review skills** (`agent-skills-review`, `instructions-review`) ship inside packages and may run in external repositories. They must encode **generalized** checks only — not this repository's redistribution maintainer policy (DIST).
+| Domain | Mirrored files |
+| ------ | -------------- |
+| `shell-script` | `validate.sh`, `fix_function_doc_order.sh` |
+| `go`, `terraform` | `validate.sh` |
 
-Full design: [apm-package-design.md § Distributable vs maintainer-only](../docs/explanation/apm-package-design.md#distributable-vs-maintainer-only).
+Path layout differs only in library import lines and `WORKSPACE_ROOT` depth for `shell-script` `validate.sh` — see `sync_validate_mirror.sh` and [CLAUDE.md § Edit routing](../CLAUDE.md#edit-routing-must).
 
-### Redistribution policy (DIST) — this repository only
+---
 
-Applies when authoring under `.apm/packages/**` for redistribution via `apm install`. **Not** an `agent-skills-review` or `instructions-review` checklist ItemID — maintainers enforce via this section and PR judgment.
+## Pointers (not rules)
 
-**Intent**
-
-- Package sources are distribution artifacts; consumers may not share this repository's layout, CI, hooks, or Loop platform.
-- Distributable skills and instructions stay **generalized**; do not use package text to restrict how other projects structure local-only skills or paths.
-
-**Do not embed in `.apm/packages/**` (skills, instructions, `references/`)**
-
-- This config repository's paths, directory trees, or sync workflows (`scripts/self/`, `sync_*`, `apm_modules/`, `.apm/packages/**` as a consumer norm)
-- Internal automation or CI names tied to this repository only
-- Maintainer tooling commands as required user steps (`apm install`, package sync scripts)
-- Loop platform caller, workflow, or action names for this consumer
-- Authoring-repository symbols in redistributable `references/` — private `validate_*` helpers, Bats `assert_*` APIs, internal `scripts/lib/` paths, hook names
-- Single canonical file paths presented as the only valid layout ("always use `path/to/foo` in every consumer")
-- Large regression corpora or datasets in skill packages (eval archives belong in the authoring repository, not the distributable skill tree)
-
-**Prefer in distributable package sources**
-
-- Portable contracts in checklist/category items — schema fields, dependency declarations, exit semantics
-- In-skill relative paths (`scripts/`, `references/`, `assets/`)
-- Stem-based companion cross-links and stable `https://` references
-- Product- or deployment-specific paths only inside Execution Scope when the skill's purpose is explicitly single-target
-
-**Local-only skills** (under `<agent-root>/skills/` in a consumer repo, not redistributed)
-
-- Repo-specific checklist wording, test helpers, and internal paths belong in that repository's `AGENTS.md` or `docs/` — not in package sources intended for reuse.
-
-## Maintainer-only (not in distributable rules)
-
-### Repository CI and eval release bar
-
-- Mock eval passing verifies **contract structure**, not production behavior.
-- Full behavior verification lives in this repository: `test/bats/`, `scripts/*/validate.sh`, `waza run --baseline` / real executor.
-- Treat **mock eval green + repo CI green** as the release bar for skills shipped from this repository.
-- **E-01 / E-03 (SHOULD, maintainer judgment):** prefer a thin eval harness (`eval.yaml`, task YAMLs) and avoid large eval corpora in distributable skill trees — testing tooling varies (`waza`, skill-creator, etc.); not enforced as review ItemIDs.
-
-### Validation Scripts Mirror (`scripts/` ↔ skill)
-
-Path-layout transforms applied by `sync_validate_mirror.sh` (edit repo `scripts/<domain>/` only — do not hand-edit skill copies). See [CLAUDE.md § Edit Targets](../CLAUDE.md#edit-targets).
-
-| Domain         | Mirrored files (repo `scripts/<domain>/` → skill `scripts/`) |
-| -------------- | ------------------------------------------------------------ |
-| `shell-script` | `validate.sh`, `fix_function_doc_order.sh`                   |
-| `go`           | `validate.sh`                                                |
-| `terraform`    | `validate.sh`                                                |
-
-**Path layout (applied only by `sync_validate_mirror.sh`):**
-
-| Setting          | Skill copy (`…/skills/*/scripts/`)      | `scripts/<domain>/` copy               |
-| ---------------- | --------------------------------------- | -------------------------------------- |
-| Library import   | `source "${SCRIPT_DIR}/lib/all.sh"`     | `source "${SCRIPT_DIR}/../lib/all.sh"` |
-| `shellcheck`     | `# shellcheck source=./lib/all.sh`      | `# shellcheck source=../lib/all.sh`    |
-| `WORKSPACE_ROOT` | `$(cd "${SCRIPT_DIR}/../../.." && pwd)` | `$(cd "${SCRIPT_DIR}/../.." && pwd)`   |
-
-`WORKSPACE_ROOT` differs only for `shell-script` `validate.sh` (skill tree is deeper). `go` and `terraform` differ only in the library import lines. `fix_function_doc_order.sh` differs only in library import lines.
-
-## Security Guidelines
-
-General repository security: [AGENTS.md § Safety](../AGENTS.md#safety) and [AGENTS.md](../AGENTS.md). Package-source specifics are in companion rules (stem `agent-skills`, `instructions`) — Security chapters.
+| Topic | Document |
+| ----- | -------- |
+| Skill vs product, automation envelope | [apm-package-design.md](../docs/explanation/apm-package-design.md) |
+| Instruction sync | [instructions-sync-workflow.md](../docs/explanation/instructions-sync-workflow.md) |
+| Loop platform (this consumer) | [Loop Engineering](../docs/explanation/loop-engineering/index.md) |
+| SKILL authoring stems | companion `agent-skills` rules; `agent-skills-review` skill |
+| Security (general) | [AGENTS.md § Safety](../AGENTS.md#safety) |

@@ -5,6 +5,7 @@
 #
 # Use cases:
 # - create_pr exits cleanly after PR creation (EXIT trap must not reference local scope)
+# - create_pr records redacted failure when gh pr create fails
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -23,6 +24,10 @@ setup() {
     cat > "${MOCK_BIN}/gh" << 'EOF'
 #!/bin/bash
 if [[ "$1" == "pr" && "$2" == "create" ]]; then
+    if [[ "${GH_PR_CREATE_FAIL:-}" == "1" ]]; then
+        echo "error: x-access-token:ghp_abcdefghijklmnopqrstuvwxyz denied" >&2
+        exit 1
+    fi
     echo "https://github.com/example/repo/pull/42"
     exit 0
 fi
@@ -61,4 +66,32 @@ EOF
     run bash "${script}"
     [ "$status" -eq 0 ]
     [[ $output == *"https://github.com/example/repo/pull/42"* ]]
+}
+
+@test "create_pr records redacted failure when gh pr create fails" {
+    local script failure_file
+
+    script="$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr.sh"
+    failure_file="${BATS_TEST_TMPDIR}/failure.json"
+    export BRANCH="loop/test-branch"
+    export DETECT_RESULT_JSON="{}"
+    export GH_PR_CREATE_FAIL="1"
+    export GH_TOKEN="test-token"
+    export GITHUB_REPOSITORY="example/repo"
+    export HANDOFF_KEY="integration:main"
+    export LOOP_FAILURE_FILE="${failure_file}"
+    export LOOP_HANDOFF_DIR="${HANDOFF_DIR}"
+    export NOTIFY_CONTEXT_JSON='{"changed_files":[],"agent_report_summary":"done"}'
+    export PR_BASE_BRANCH="main"
+    export PR_BODY="Automated update"
+    export PR_TITLE="chore: test"
+    export SKIP_REASON="none"
+    export TARGET_JSON='{"key":"integration:main"}'
+
+    run bash "${script}"
+    [ "$status" -eq 1 ]
+    [ -f "${failure_file}" ]
+    [ "$(jq -r '.failure_stage' "${failure_file}")" = "finalize_pr" ]
+    [[ "$(jq -r '.failure_message' "${failure_file}")" == *"[REDACTED]"* ]]
+    [[ "$(jq -r '.failure_message' "${failure_file}")" != *"ghp_"* ]]
 }

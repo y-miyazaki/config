@@ -51,16 +51,18 @@ function budget_exceeded {
         while IFS= read -r line; do
             [[ -z ${line} ]] && continue
             [[ ${line} != \{* ]] && continue
-            local log_date log_pattern entry_tokens
+            local log_date log_key entry_tokens
             log_date=$(jq -r '.run_id // ""' <<< "${line}" 2> /dev/null | cut -c1-10)
-            log_pattern=$(jq -r '.pattern // ""' <<< "${line}" 2> /dev/null)
+            log_key=$(jq -r '.loop_name // .pattern // ""' <<< "${line}" 2> /dev/null)
             [[ ${log_date} != "${today}" ]] && continue
-            [[ ${log_pattern} != "${loop_name}" ]] && continue
+            [[ ${log_key} != "${loop_name}" ]] && continue
             runs_today=$((runs_today + 1))
             entry_tokens=$(jq -r '
                 if .usage then
                     ((.usage.total_input_tokens // .usage.input_tokens // .usage.inputTokens // 0)
                      + (.usage.total_output_tokens // .usage.output_tokens // .usage.outputTokens // 0))
+                elif .tokens_total then
+                    .tokens_total
                 elif .tokens_estimate then
                     .tokens_estimate
                 else

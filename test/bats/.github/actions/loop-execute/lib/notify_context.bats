@@ -14,6 +14,7 @@
 # - main parses agent_summary from status dir
 # - main writes notify_context_json without changes
 # - main resolves fix_summary from loop-handoff artifact when inline detect JSON is empty
+# - main records notify_context failure when inline detect JSON is invalid
 # - parse_agent_summary extracts block after marker
 # - parse_agent_summary returns empty when file missing
 # - redact_sensitive_text redacts github tokens
@@ -267,6 +268,29 @@ EOF
     json="$(awk '/^notify_context_json<</{found=1;next} found{if($0 ~ /^NOTIFY_CONTEXT_/) exit; print}' "${GITHUB_OUTPUT}")"
     run jq -e '.fix_summary == "Address CI failure in lint (on-ci-push)"' <<< "${json}"
     [ "$status" -eq 0 ]
+}
+
+@test "main records notify_context failure when inline detect JSON is invalid" {
+    local status_dir
+
+    notify_context_git_setup
+    status_dir="${BATS_TEST_TMPDIR}/status"
+    mkdir -p "${status_dir}"
+    GITHUB_OUTPUT="$(mktemp)"
+
+    run env \
+        HAS_CHANGES=false \
+        WORKTREE_PATH="${GIT_TEST_REPO}" \
+        BASE_BRANCH=main \
+        DETECT_RESULT_JSON="not-json" \
+        LOOP_HANDOFF_DIR="" \
+        HANDOFF_KEY="" \
+        GITHUB_OUTPUT="${GITHUB_OUTPUT}" \
+        STATUS_DIR="${status_dir}" \
+        bash "${NOTIFY_CONTEXT_SCRIPT}"
+    [ "$status" -eq 1 ]
+    [ -f "${status_dir}/failure.json" ]
+    [ "$(jq -r '.failure_stage' "${status_dir}/failure.json")" = "notify_context" ]
 }
 
 @test "main writes notify_context_json without changes" {

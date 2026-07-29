@@ -25,6 +25,8 @@ set -euo pipefail
 umask 027
 export LC_ALL=C.UTF-8
 
+_LOOP_PUSH_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
+
 #######################################
 # main: Push branch when loop produced changes
 #
@@ -42,6 +44,8 @@ export LC_ALL=C.UTF-8
 #
 #######################################
 function main {
+    local push_err
+
     : "${BRANCH:?}"
     : "${GH_TOKEN:?}"
     : "${LOOP_HAS_CHANGES:?}"
@@ -57,7 +61,16 @@ function main {
     fi
     cd "${WORKTREE_PATH}" || exit 1
     git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 -w0)"
-    git push -u origin "${BRANCH}"
+    if ! push_err="$(git push -u origin "${BRANCH}" 2>&1)"; then
+        if [[ -n ${STATUS_DIR:-} ]]; then
+            # shellcheck source=../../lib/loop/failure_record.sh
+            # shellcheck disable=SC1091
+            source "${_LOOP_PUSH_LIB_DIR}/failure_record.sh"
+            loop_failure_record "push" "${push_err}" "${STATUS_DIR}/failure.json"
+        fi
+        printf '%s\n' "${push_err}" >&2
+        exit 1
+    fi
     echo "has_changes=true" >> "${GITHUB_OUTPUT}"
 }
 

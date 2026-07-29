@@ -190,34 +190,11 @@ function parse_agent_summary {
 }
 
 #######################################
-# redact_sensitive_text: Redact common secret patterns
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   $1 - Input text
-#
-# Outputs:
-#   Redacted text to stdout
-#
-# Returns:
-#   0 on success
-#
+# redact_sensitive_text: Provided by ../../lib/loop/redact.sh
 #######################################
-function redact_sensitive_text {
-    local text="$1"
-    # Keep patterns aligned with loop-ci-sweeper sanitize_log_excerpt.
-    text=$(sed -E 's/gh[pousr]_[A-Za-z0-9_]{20,}/[REDACTED]/g' <<< "${text}")
-    text=$(sed -E 's/AKIA[0-9A-Z]{16}/[REDACTED]/g' <<< "${text}")
-    text=$(sed -E 's/(password|secret|token|api[_-]?key)[[:space:]]*[:=][[:space:]]*[^[:space:]\"]+/\1=[REDACTED]/gi' <<< "${text}")
-    text=$(sed -E 's/x-access-token:[A-Za-z0-9._-]+/x-access-token:[REDACTED]/g' <<< "${text}")
-    text=$(sed -E 's/Bearer[[:space:]]+[A-Za-z0-9._-]+/Bearer [REDACTED]/g' <<< "${text}")
-    text=$(sed -E 's/Authorization:[[:space:]]*[^[:space:]\"]+/Authorization: [REDACTED]/gi' <<< "${text}")
-    text=$(sed -E 's/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/[REDACTED-JWT]/g' <<< "${text}")
-    text=$(sed -E 's/-----BEGIN [A-Z ]+-----[^-]*-----END [A-Z ]+-----/[REDACTED-PEM]/g' <<< "${text}")
-    printf '%s' "${text}"
-}
+_LOOP_NOTIFY_REDACT_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
+# shellcheck source=../../lib/loop/redact.sh disable=SC1091
+source "${_LOOP_NOTIFY_REDACT_LIB}/redact.sh"
 
 #######################################
 # truncate_text: Truncate text to max length
@@ -336,6 +313,12 @@ function main {
     source "${loop_action_lib}/handoff.sh"
 
     if [[ -n ${inline} && ${inline} != "{}" ]] && ! jq -e . <<< "${inline}" > /dev/null 2>&1; then
+        if [[ -n ${STATUS_DIR:-} ]]; then
+            # shellcheck source=../../lib/loop/failure_record.sh
+            # shellcheck disable=SC1091
+            source "${loop_action_lib}/failure_record.sh"
+            loop_failure_record "notify_context" "detect result JSON is invalid (inline)" "${STATUS_DIR}/failure.json"
+        fi
         echo "::error::loop-execute: detect result JSON is invalid" >&2
         exit 1
     fi
@@ -346,6 +329,12 @@ function main {
 
     if [[ -n ${detect_json} && ${detect_json} != "{}" ]] \
         && ! jq -e . <<< "${detect_json}" > /dev/null 2>&1; then
+        if [[ -n ${STATUS_DIR:-} ]]; then
+            # shellcheck source=../../lib/loop/failure_record.sh
+            # shellcheck disable=SC1091
+            source "${loop_action_lib}/failure_record.sh"
+            loop_failure_record "notify_context" "detect result JSON is invalid (handoff)" "${STATUS_DIR}/failure.json"
+        fi
         echo "::error::loop-execute: detect result JSON is invalid" >&2
         exit 1
     fi

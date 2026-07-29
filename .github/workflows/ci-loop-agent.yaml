@@ -313,6 +313,8 @@ jobs:
     outputs:
       attempts: ${{ steps.execute.outputs.attempts }}
       branch: ${{ steps.worktree.outputs.branch }}
+      failure_message: ${{ steps.execute.outputs.failure_message }}
+      failure_stage: ${{ steps.execute.outputs.failure_stage }}
       has_changes: ${{ steps.execute.outputs.has_changes }}
       notify_context_json: ${{ steps.execute.outputs.notify_context_json }}
       open_rejections: ${{ steps.execute.outputs.open_rejections }}
@@ -465,6 +467,7 @@ jobs:
           fi
 
       - name: Finalize
+        continue-on-error: true
         id: finalize
         uses: y-miyazaki/config/.github/actions/loop-finalize@21ec79cfb0eb6e5a462a83ff2296c1df6f6c9caa # v1.8.67
         with:
@@ -496,15 +499,55 @@ jobs:
           token: ${{ steps.push_token.outputs.token }}
           verdict: ${{ needs.agent-l2.outputs.verdict }}
 
+      - name: Resolve Run Log Metadata
+        id: run_log_meta
+        if: always()
+        shell: bash
+        env:
+          AGENT_RESULT: ${{ needs.agent-l2.result }}
+          EXEC_FAILURE_MESSAGE: ${{ needs.agent-l2.outputs.failure_message }}
+          EXEC_FAILURE_STAGE: ${{ needs.agent-l2.outputs.failure_stage }}
+          FINALIZE_FAILURE_MESSAGE: ${{ steps.finalize.outputs.failure_message }}
+          FINALIZE_FAILURE_STAGE: ${{ steps.finalize.outputs.failure_stage }}
+          FINALIZE_STEP_RESULT: ${{ steps.finalize.outcome }}
+        run: |
+          set -euo pipefail
+          stage="${EXEC_FAILURE_STAGE:-}"
+          msg="${EXEC_FAILURE_MESSAGE:-}"
+          if [[ -z "${stage}" && "${AGENT_RESULT}" != "success" && "${AGENT_RESULT}" != "skipped" ]]; then
+            stage="agent_execute"
+          fi
+          if [[ "${FINALIZE_STEP_RESULT}" == "failure" ]]; then
+            if [[ -n "${FINALIZE_FAILURE_STAGE}" || -n "${FINALIZE_FAILURE_MESSAGE}" ]]; then
+              stage="${FINALIZE_FAILURE_STAGE:-finalize}"
+              msg="${FINALIZE_FAILURE_MESSAGE}"
+            elif [[ -z "${stage}" ]]; then
+              stage="finalize"
+            fi
+          fi
+          {
+            echo "agent_result=${AGENT_RESULT}"
+            if [[ -n "${stage}" ]]; then
+              echo "failure_stage=${stage}"
+              delim="RUN_LOG_FAILURE_MSG_$(openssl rand -hex 8)"
+              echo "failure_message<<${delim}"
+              printf '%s' "${msg}"
+              echo "${delim}"
+            fi
+          } >> "${GITHUB_OUTPUT}"
+
       - name: Append Run Log
-        if: inputs.loop_name != ''
+        if: always() && inputs.loop_name != ''
         uses: y-miyazaki/config/.github/actions/loop-run-log@21ec79cfb0eb6e5a462a83ff2296c1df6f6c9caa # v1.8.67
         with:
+          agent_result: ${{ steps.run_log_meta.outputs.agent_result }}
           attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
           base_branch: ${{ inputs.state_push_branch != '' && inputs.state_push_branch || inputs.base_branch }}
+          failure_message: ${{ steps.run_log_meta.outputs.failure_message }}
+          failure_stage: ${{ steps.run_log_meta.outputs.failure_stage }}
           has_changes: ${{ needs.agent-l2.outputs.has_changes }}
           loop_name: ${{ inputs.loop_name }}
-          outcome: ${{ steps.finalize.outputs.outcome }}
+          outcome: ${{ steps.finalize.outcome == 'failure' && 'error' || steps.finalize.outputs.outcome || (needs.agent-l2.result != 'success' && needs.agent-l2.result != 'skipped' && 'error') || 'skipped' }}
           run_log_file: ${{ inputs.run_log_file }}
           run_started_at: ${{ inputs.run_started_at }}
           skip_reason: ${{ inputs.skip_reason }}

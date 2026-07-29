@@ -4,14 +4,14 @@
 # Tests for .github/actions/loop-run-log/lib/append.sh
 
 # Use cases:
-# - loop_run_log_build_entry includes tokens_estimate by default
-# - loop_run_log_build_entry merges measured usage_json
+# - loop_run_log_build_entry includes tokens_total zero by default
+# - loop_run_log_build_entry sets tokens_total from measured usage_json
 # - loop_run_log_append_entry writes JSONL entry with expected format
 # - loop_run_log_compute_duration returns zero for empty start
 # - loop_run_log_compute_duration returns elapsed seconds
 # - loop_run_log_prune_cutoff_date returns YYYY-MM-DD
 # - loop_run_log_append_entry prunes entries older than 30 days
-# - budget token selection prefers measured usage over tokens_estimate
+# - budget token selection prefers measured usage over tokens_total
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -29,17 +29,17 @@ teardown() {
     rm -rf "${TEST_DIR}"
 }
 
-@test "loop_run_log_build_entry includes tokens_estimate by default" {
-    result="$(loop_run_log_build_entry "" 12 "" "docs-updater" "skipped" "budget" 52000 "" "12345" "")"
-    [ "$(jq -r '.pattern' <<< "${result}")" = "docs-updater" ]
-    [ "$(jq -r '.tokens_estimate' <<< "${result}")" = "52000" ]
+@test "loop_run_log_build_entry includes tokens_total zero by default" {
+    result="$(loop_run_log_build_entry "" 12 "" "docs-updater" "skipped" "budget" "" "12345" "")"
+    [ "$(jq -r '.loop_name' <<< "${result}")" = "docs-updater" ]
+    [ "$(jq -r '.tokens_total' <<< "${result}")" = "0" ]
     [ "$(jq -r '.usage // empty' <<< "${result}")" = "" ]
 }
 
-@test "loop_run_log_build_entry merges measured usage_json" {
+@test "loop_run_log_build_entry sets tokens_total from usage_json" {
     local usage='{"total_input_tokens":1842,"total_output_tokens":17,"model":"composer-2.5"}'
-    result="$(loop_run_log_build_entry "2" 45 "true" "docs-updater" "pr-created" "none" 52000 "APPROVE" "999" "${usage}")"
-    [ "$(jq -r '.tokens_estimate' <<< "${result}")" = "52000" ]
+    result="$(loop_run_log_build_entry "2" 45 "true" "docs-updater" "pr-created" "none" "APPROVE" "999" "${usage}")"
+    [ "$(jq -r '.tokens_total' <<< "${result}")" = "1859" ]
     [ "$(jq -r '.usage.total_input_tokens' <<< "${result}")" = "1842" ]
     [ "$(jq -r '.usage.total_output_tokens' <<< "${result}")" = "17" ]
     [ "$(jq -r '.usage.model' <<< "${result}")" = "composer-2.5" ]
@@ -48,11 +48,18 @@ teardown() {
     [ "$(jq -r '.verdict' <<< "${result}")" = "APPROVE" ]
 }
 
+@test "loop_run_log_build_entry includes failure diagnostics when provided" {
+    result="$(loop_run_log_build_entry "" 12 "" "ci-sweeper" "error" "none" "APPROVE" "12345" "" "failure" "push" "remote rejected")"
+    [ "$(jq -r '.agent_result' <<< "${result}")" = "failure" ]
+    [ "$(jq -r '.failure_stage' <<< "${result}")" = "push" ]
+    [ "$(jq -r '.failure_message' <<< "${result}")" = "remote rejected" ]
+}
+
 @test "loop_run_log_append_entry writes JSONL entry with expected format" {
     local log_file="${TEST_DIR}/loop-run-log.md"
     local entry
 
-    entry="$(loop_run_log_build_entry "" 3 "" "docs-updater" "skipped" "budget" 52000 "" "42" "")"
+    entry="$(loop_run_log_build_entry "" 3 "" "docs-updater" "skipped" "budget" "" "42" "")"
     assert_loop_run_log_entry_json "${entry}"
     loop_run_log_append_entry "${log_file}" "${entry}"
 
@@ -87,13 +94,13 @@ teardown() {
     cutoff="$(loop_run_log_prune_cutoff_date)"
     old_date="$(date -u -d "${cutoff} - 1 day" +%Y-%m-%dT%H:%M:%SZ)"
     recent_date="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-    new_entry='{"run_id":"'"${recent_date}"'","pattern":"docs-updater","duration_s":1,"outcome":"skipped","skip_reason":"budget","tokens_estimate":52000,"workflow_run":"1"}'
+    new_entry='{"run_id":"'"${recent_date}"'","loop_name":"docs-updater","duration_s":1,"outcome":"skipped","skip_reason":"budget","tokens_total":0,"workflow_run":"1"}'
 
     mkdir -p "$(dirname "${log_file}")"
     {
         printf '%s' "${RUN_LOG_HEADER}"
-        printf '{"run_id":"%s","pattern":"docs-updater","duration_s":1,"outcome":"skipped","skip_reason":"budget","tokens_estimate":52000,"workflow_run":"0"}\n' "${old_date}"
-        printf '{"run_id":"%s","pattern":"docs-updater","duration_s":1,"outcome":"skipped","skip_reason":"none","tokens_estimate":52000,"workflow_run":"2"}\n' "${recent_date}"
+        printf '{"run_id":"%s","loop_name":"docs-updater","duration_s":1,"outcome":"skipped","skip_reason":"budget","tokens_total":0,"workflow_run":"0"}\n' "${old_date}"
+        printf '{"run_id":"%s","loop_name":"docs-updater","duration_s":1,"outcome":"skipped","skip_reason":"none","tokens_total":0,"workflow_run":"2"}\n' "${recent_date}"
     } > "${log_file}"
 
     loop_run_log_append_entry "${log_file}" "${new_entry}"
@@ -106,31 +113,44 @@ teardown() {
     [ "$status" -eq 0 ]
 }
 
-@test "budget token selection prefers measured usage over tokens_estimate" {
-    local line measured_only estimate_only
-    line='{"tokens_estimate":52000,"usage":{"total_input_tokens":100,"total_output_tokens":50}}'
+@test "budget token selection prefers measured usage over tokens_total" {
+    local line measured_only tokens_only
+    line='{"tokens_total":0,"usage":{"total_input_tokens":100,"total_output_tokens":50}}'
     measured_only="$(jq -r '
       if .usage then
         ((.usage.total_input_tokens // .usage.input_tokens // .usage.inputTokens // 0)
          + (.usage.total_output_tokens // .usage.output_tokens // .usage.outputTokens // 0))
-      elif .tokens_estimate then
-        .tokens_estimate
+      elif .tokens_total then
+        .tokens_total
       else
         0
       end
     ' <<< "${line}")"
     [ "${measured_only}" = "150" ]
 
-    line='{"tokens_estimate":52000}'
-    estimate_only="$(jq -r '
+    line='{"tokens_total":42}'
+    tokens_only="$(jq -r '
       if .usage then
         ((.usage.total_input_tokens // .usage.input_tokens // .usage.inputTokens // 0)
          + (.usage.total_output_tokens // .usage.output_tokens // .usage.outputTokens // 0))
-      elif .tokens_estimate then
-        .tokens_estimate
+      elif .tokens_total then
+        .tokens_total
       else
         0
       end
     ' <<< "${line}")"
-    [ "${estimate_only}" = "52000" ]
+    [ "${tokens_only}" = "42" ]
+
+    line='{}'
+    tokens_only="$(jq -r '
+      if .usage then
+        ((.usage.total_input_tokens // .usage.input_tokens // .usage.inputTokens // 0)
+         + (.usage.total_output_tokens // .usage.output_tokens // .usage.outputTokens // 0))
+      elif .tokens_total then
+        .tokens_total
+      else
+        0
+      end
+    ' <<< "${line}")"
+    [ "${tokens_only}" = "0" ]
 }

@@ -35,15 +35,15 @@ Reusable Workflows and Composite Actions **must not**:
 
 ### Cross-Action References
 
-When a Composite Action calls another Composite Action, use **remote reference** (full SHA). Local references (`uses: ./`) cannot be resolved in consumer repositories.
+Loop composites **must not** nest `uses:` between config actions. Shared logic belongs in `.github/actions/lib/`; see [.github/workflows/AGENTS.md](../../.github/workflows/AGENTS.md) (Composition, Path resolution).
+
+Workflows call leaf composites via remote SHA pin:
 
 ```yaml
-# ✅ Correct
 uses: y-miyazaki/config/.github/actions/loop-finalize@<sha> # v1.x.x
-
-# ❌ Fails in consumer repositories
-uses: ./.github/actions/loop-finalize
 ```
+
+`uses: ./.github/actions/...` inside a composite step does not resolve in consumer repositories.
 
 ### Versioning
 

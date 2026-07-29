@@ -9,8 +9,8 @@
 #
 # Design Rules:
 # - Prune entries older than 30 days on each append
-# - tokens_estimate is always recorded; usage object is optional measured data
-# - Budget checks prefer measured usage over tokens_estimate when present
+# - tokens_total is measured usage sum or 0 when execute did not run
+# - Budget aggregation reads tokens_total from run log entries
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -86,11 +86,40 @@ function loop_run_log_append_entry {
 }
 
 #######################################
+# loop_run_log_resolve_tokens_total: Sum measured usage tokens or return zero
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Measured usage JSON (optional)
+#
+# Outputs:
+#   Token count to stdout
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function loop_run_log_resolve_tokens_total {
+    local usage_json="${1:-}"
+
+    if [[ -n ${usage_json} ]] && jq -e . > /dev/null 2>&1 <<< "${usage_json}"; then
+        jq -r '
+            ((.total_input_tokens // .input_tokens // .inputTokens // 0)
+             + (.total_output_tokens // .output_tokens // .outputTokens // 0))
+        ' <<< "${usage_json}"
+        return 0
+    fi
+    printf '0'
+}
+
+#######################################
 # loop_run_log_build_entry: Build one run log JSON object
 #
 # Description:
-#   Assembles the JSONL entry for a single loop run. Always includes
-#   tokens_estimate; merges usage_json when measured usage is available.
+#   Assembles the JSONL entry for a single loop run. tokens_total is measured usage
+#   or zero when execute did not run.
 #
 # Globals:
 #   None
@@ -99,13 +128,15 @@ function loop_run_log_append_entry {
 #   $1  - Attempt count (empty when execute did not run)
 #   $2  - Duration in seconds
 #   $3  - has_changes flag (true/false, empty when execute did not run)
-#   $4  - Loop name / pattern
+#   $4  - Loop name (loop_name)
 #   $5  - Outcome
 #   $6  - Skip reason
-#   $7  - tokens_estimate fallback value
-#   $8  - Verifier verdict (optional)
-#   $9  - Workflow run id
-#   $10 - Measured usage JSON (optional)
+#   $7  - Verifier verdict (optional)
+#   $8  - Workflow run id
+#   $9  - Measured usage JSON (optional)
+#   $10 - agent_result (optional)
+#   $11 - failure_stage (optional)
+#   $12 - failure_message (optional)
 #
 # Outputs:
 #   JSON object to stdout
@@ -121,39 +152,48 @@ function loop_run_log_build_entry {
     local loop_name="${4:?loop_name required}"
     local outcome="${5:?outcome required}"
     local skip_reason="${6:?skip_reason required}"
-    local tokens_estimate="${7:?tokens_estimate required}"
-    local verdict="${8:-}"
-    local workflow_run="${9:?workflow_run required}"
-    local usage_json="${10:-}"
-    local run_id
+    local verdict="${7:-}"
+    local workflow_run="${8:?workflow_run required}"
+    local usage_json="${9:-}"
+    local agent_result="${10:-}"
+    local failure_stage="${11:-}"
+    local failure_message="${12:-}"
+    local run_id resolved_tokens
 
     run_id="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    resolved_tokens="$(loop_run_log_resolve_tokens_total "${usage_json}")"
 
     jq -nc \
         --arg run_id "${run_id}" \
-        --arg pattern "${loop_name}" \
+        --arg loop_name "${loop_name}" \
         --argjson duration_s "${duration_s}" \
         --arg outcome "${outcome}" \
         --arg skip_reason "${skip_reason}" \
-        --argjson tokens_estimate "${tokens_estimate}" \
+        --argjson tokens_total "${resolved_tokens}" \
         --arg workflow_run "${workflow_run}" \
         --arg attempts "${attempts}" \
         --arg has_changes "${has_changes}" \
         --arg verdict "${verdict}" \
         --arg usage_json "${usage_json}" \
+        --arg agent_result "${agent_result}" \
+        --arg failure_stage "${failure_stage}" \
+        --arg failure_message "${failure_message}" \
         '{
       run_id: $run_id,
-      pattern: $pattern,
+      loop_name: $loop_name,
       duration_s: $duration_s,
       outcome: $outcome,
       skip_reason: $skip_reason,
-      tokens_estimate: $tokens_estimate,
+      tokens_total: $tokens_total,
       workflow_run: $workflow_run
     }
     + (if ($attempts | length) > 0 then {attempts: ($attempts | tonumber)} else {} end)
     + (if ($has_changes | length) > 0 then {has_changes: ($has_changes == "true")} else {} end)
     + (if ($verdict | length) > 0 then {verdict: $verdict} else {} end)
-    + (if ($usage_json | length) > 0 then {usage: ($usage_json | fromjson)} else {} end)'
+    + (if ($usage_json | length) > 0 then {usage: ($usage_json | fromjson)} else {} end)
+    + (if ($agent_result | length) > 0 then {agent_result: $agent_result} else {} end)
+    + (if ($failure_stage | length) > 0 then {failure_stage: $failure_stage} else {} end)
+    + (if ($failure_message | length) > 0 then {failure_message: $failure_message} else {} end)'
 }
 
 #######################################

@@ -9,7 +9,7 @@
 #
 # Design Rules:
 #   - Sources append.sh for JSONL build, prune, and push helpers
-#   - tokens_estimate is always recorded; usage object is optional measured data
+#   - tokens_total is measured usage sum or 0; optional diagnostics fields when set
 #
 # Output:
 #   Appends one JSONL line to RUN_LOG_FILE; optional entry_json on GITHUB_OUTPUT
@@ -35,8 +35,11 @@ source "${SCRIPT_DIR}/append.sh"
 # Global variables
 #######################################
 ATTEMPTS="${ATTEMPTS:-}"
+AGENT_RESULT="${AGENT_RESULT:-}"
 BASE_BRANCH="${BASE_BRANCH:-}"
 DURATION_S_INPUT="${DURATION_S_INPUT:-}"
+FAILURE_MESSAGE="${FAILURE_MESSAGE:-}"
+FAILURE_STAGE="${FAILURE_STAGE:-}"
 HAS_CHANGES="${HAS_CHANGES:-}"
 LOOP_NAME="${LOOP_NAME:-}"
 OUTCOME="${OUTCOME:-}"
@@ -44,7 +47,6 @@ RUN_LOG_FILE="${RUN_LOG_FILE:-.loop/loop-run-log.md}"
 RUN_STARTED_AT="${RUN_STARTED_AT:-}"
 SKIP_REASON="${SKIP_REASON:-none}"
 TOKEN="${TOKEN:-}"
-TOKENS_ESTIMATE="${TOKENS_ESTIMATE:-52000}"
 USAGE_JSON="${USAGE_JSON:-}"
 VERDICT="${VERDICT:-}"
 WORKFLOW_RUN="${WORKFLOW_RUN:-}"
@@ -54,8 +56,8 @@ WORKFLOW_RUN="${WORKFLOW_RUN:-}"
 #
 # Globals:
 #   RUN_LOG_FILE - Target run log path
-#   ATTEMPTS, HAS_CHANGES, LOOP_NAME, OUTCOME, SKIP_REASON, TOKENS_ESTIMATE
-#   VERDICT, WORKFLOW_RUN, USAGE_JSON - Entry fields
+#   ATTEMPTS, HAS_CHANGES, LOOP_NAME, OUTCOME, SKIP_REASON, AGENT_RESULT
+#   FAILURE_STAGE, FAILURE_MESSAGE, VERDICT, WORKFLOW_RUN, USAGE_JSON - Entry fields
 #
 # Arguments:
 #   $1 - Duration in seconds
@@ -78,10 +80,12 @@ function append_run_log_entry {
         "${LOOP_NAME}" \
         "${OUTCOME}" \
         "${SKIP_REASON}" \
-        "${TOKENS_ESTIMATE}" \
         "${VERDICT}" \
         "${WORKFLOW_RUN}" \
-        "${USAGE_JSON}")"
+        "${USAGE_JSON}" \
+        "${AGENT_RESULT}" \
+        "${FAILURE_STAGE}" \
+        "${FAILURE_MESSAGE}")"
     loop_run_log_append_entry "${RUN_LOG_FILE}" "${entry_json}"
     printf '%s' "${entry_json}"
 }

@@ -1,194 +1,103 @@
 # AGENTS.md
 
-Behavioral rules for editing `.github/workflows/**` and `.github/actions/**` in this repository. Self-contained for workflow authors and agents.
+Behavioral rules for `.github/workflows/**` and `.github/actions/**`. This repository is a **distribution source** — consumers pin workflows and composites by commit SHA.
+
+**Precedence:** These rules override `.cursor/rules/` and other agent instructions when editing paths under `.github/workflows/` or `.github/actions/`. Design background: [GitHub Workflows Design](../../docs/explanation/github-workflows-design.md). Contracts: [Specification](../../docs/reference/specification.md).
 
 ---
 
-## Scope
+## Pins
 
-- Applies when creating or updating workflow YAML (`.github/workflows/`) and composite actions (`.github/actions/`).
-- This repository is a **distribution source**: reusable workflows and composite actions are consumed remotely from other repositories.
-- Deeper design context: [GitHub Workflows Design](../../docs/explanation/github-workflows-design.md). Functional contracts: [Specification](../../docs/reference/specification.md).
+| Rule | Requirement |
+| ---- | ----------- |
+| Config components | **MUST** use a full commit SHA (`uses: org/repo/.github/...@<sha> # vX.Y.Z`). Tags and branches are forbidden. |
+| Third-party actions | **MUST** pin by full SHA; annotate upstream version in a comment when known. |
+| Consumer copies (`example/`, external repos) | **MUST** use remote SHA pins only. |
+| Dogfood (`on-*` workflow steps) | **MAY** use `./.github/workflows/...` or `./.github/actions/...` while iterating unreleased graph changes. |
+| Composite internals | **MUST NOT** use `uses: ./.github/actions/...` — unresolvable in consumer repositories. |
+| Release | **MUST** bump SHA pins in `ci-*`, `cd-*`, and `example/` in the same change set as new action/workflow releases (or per release checklist). |
 
-## Pin Policy
+---
 
-### MUST: full commit SHA
+## Composition
 
-Reference **this repository's** reusable workflows and composite actions with a **full commit SHA**, not a branch or tag ref:
+| Rule | Requirement |
+| ---- | ----------- |
+| Composite → composite | **MUST NOT** call another config composite via `uses:` (local or remote). One action pin must stay self-contained. |
+| Workflow → composite | **MUST** call leaf composites via `uses:` only. |
+| Workflow → `lib/run.sh` | **MUST NOT** invoke action `lib/run.sh` from workflow YAML — bypasses the pin boundary. |
+| Cross-action shared logic | **MUST** live under `.github/actions/lib/<domain>/` (for example `lib/loop/`). |
+| Action-specific orchestration | **MUST** stay in that composite's own `lib/`. |
+| Sibling action scripts | **MAY** call `${GITHUB_ACTION_PATH}/../<sibling-action>/lib/...` only for that sibling's owned behavior (for example CLI install). **MUST NOT** treat another composite's `lib/` as a shared contract library. |
+| Portability | **MUST NOT** hardcode consumer paths (`scripts/`, `.agents/`, skill trees, APM install targets) inside reusables or composites. |
 
-```yaml
-# ✅ Consumer and ci-*/cd-* reusable workflows
-uses: y-miyazaki/config/.github/workflows/ci-loop-caller.yaml@79d74d1dadea776a3a99178c3e082e7fe5d7db65 # v1.8.16
-uses: y-miyazaki/config/.github/actions/loop-detect@79d74d1dadea776a3a99178c3e082e7fe5d7db65 # v1.8.16
+Invoke shared or sibling scripts with `run:` + `bash`/`source`. Contexts are not expanded in `uses:`.
 
-# ❌ Unpinned or tag-only refs
-uses: y-miyazaki/config/.github/actions/loop-detect@main
-uses: y-miyazaki/config/.github/actions/loop-detect@v1.8.16
-```
+---
 
-Add a `# vX.Y.Z` comment on the same line as the SHA so reviewers can map pins to releases.
+## Path resolution
 
-### Third-party actions
+`${GITHUB_ACTION_PATH}` (same as `${{ github.action_path }}` in composite `run:` steps) points to the **pinned action directory** in the runner's `_actions/` cache — not the caller's `GITHUB_WORKSPACE`.
 
-Pin third-party actions (for example `actions/checkout`) with a **full commit SHA** as well. Annotate the upstream version in a comment when known.
+| Caller | Resolve shared lib as |
+| ------ | --------------------- |
+| Composite `action.yml` `run:` step | `${GITHUB_ACTION_PATH}/../lib/<domain>/...` |
+| Script under `<action>/lib/*.sh` | `$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/<domain>" && pwd)/...` |
+| Prefer | `source` `.github/actions/lib/loop/_resolve.sh` and use `LOOP_ACTION_LIB_DIR` when multiple paths are needed |
 
-### Where pins apply
+**MUST NOT** use `${GITHUB_WORKSPACE}/.github/actions/...` in paths meant to work when the action is consumed remotely.
 
-| Caller context                                 | Reusable workflow                                                             | Composite action                                                            |
-| ---------------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| `example/` (consumer template)                 | Remote SHA pin                                                                | Remote SHA pin                                                              |
-| `ci-*`, `cd-*` reusable workflows in this repo | Remote SHA pin when calling other reusables                                   | Remote SHA pin                                                              |
-| `on-*` callers in this repo (dogfood)          | `./.github/workflows/...` allowed while iterating on unreleased graph changes | `./.github/actions/...` allowed while iterating on unreleased action source |
-| Consumer repositories                          | Remote SHA pin only                                                           | Remote SHA pin only                                                         |
+---
 
-**Rule of thumb:** anything another repository copies must use a remote SHA pin. Local `./.github/...` paths are for **this repository only** during development; they must not appear in `example/` or in composite action internals.
+## Reusable workflows and secrets
 
-After releasing new actions or reusable workflows, bump SHA pins in `ci-*`, `cd-*`, and `example/` in the same change set (or follow the release checklist).
+| Surface | Non-secrets | Credentials |
+| ------- | ----------- | ----------- |
+| Reusable (`workflow_call`) | `with:` → `inputs.*` | `secrets:` only — declare under `on.workflow_call.secrets` |
+| Composite action | `with:` → `inputs.*` | `with:` string inputs (no `secrets:` pass-through) |
 
-## Composite Actions: No Nesting
+Reusable workflow rules:
 
-Loop **composite actions must not** call other composite actions from this repository via `uses:` — neither local nor remote:
+1. **MUST** declare stable callee secret names (`AGENT_TOKEN`, `BOT_APP_*`, `GH_TOKEN_PUSH`, …).
+2. **MUST** require callers to pass an explicit `secrets:` map (enables name remapping).
+3. **MUST NOT** use `secrets: inherit`.
+4. **MUST NOT** pass tokens via `with:` on reusable workflows.
+5. When a reusable job sets `environment:`, environment-scoped secrets override caller-passed secrets with the same name — callers relying on remapped repo secrets should leave `environment` empty unless the environment defines those names.
 
-```yaml
-# ❌ Nested composite (fails or causes transitive pin drift in consumers)
-uses: ./.github/actions/loop-run-log
-uses: y-miyazaki/config/.github/actions/loop-run-log@<sha>
-```
+Loop callers pass configuration via `with:` on the reusable; avoid caller-level `env:` blocks for loop caller workflows.
 
-Parent composites invoke shared bash under `.github/actions/lib/` or sibling action `lib/` paths:
+File prefixes: `ci-*` / `cd-*` (reusable), `on-*` (event caller), `example/` (consumer template). Map key ordering: ORD-01 in companion `github-actions-workflow` rules.
 
-```yaml
-# ✅ Shared loop library (preferred for cross-action logic)
-run: bash -c 'source "${GITHUB_ACTION_PATH}/../lib/loop/handoff.sh"'
+---
 
-# ✅ Action-specific orchestration script inside the same composite
-run: bash "${GITHUB_ACTION_PATH}/lib/write_state.sh"
-```
+## Failure diagnostics
 
-Cross-action **library** code belongs under `.github/actions/lib/<domain>/` (for example `lib/loop/handoff.sh`). Do not source another composite's `lib/` for shared contracts — that couples actions by name.
+When a loop step records failure metadata for run logs or action outputs:
 
-Rationale: a single action SHA stays self-contained at release time without hidden transitive dependencies.
+1. **MUST** redact sensitive text before persistence (shared `lib/loop/redact.sh` — do not duplicate patterns).
+2. **MUST** record via shared `lib/loop/failure_record.sh` (`loop_failure_record`).
+3. **MUST** export to `GITHUB_OUTPUT` via shared `lib/loop/export_failure_diag.sh` — do not add per-action export duplicates.
+4. **MUST NOT** write raw `git push`, `gh`, or CLI stderr to committed logs without redaction.
 
-### `GITHUB_ACTION_PATH` vs caller workspace
+---
 
-`${GITHUB_ACTION_PATH}` (same as `${{ github.action_path }}`) is **not** the consumer repository's `GITHUB_WORKSPACE/.github/actions/`.
+## Anti-patterns
 
-When a workflow pins a remote action:
+| Anti-pattern | Why |
+| ------------ | --- |
+| `uses: ...@main` or `@v1.x` for config components | Unreproducible; policy violation |
+| `uses: ./.github/actions/...` inside a composite step | Broken in consumer repos |
+| Nested `uses:` between config composites | Transitive pin drift |
+| `${GITHUB_WORKSPACE}/.github/actions/.../lib/run.sh` in workflows | Consumers lack that path |
+| `${GITHUB_ACTION_PATH}/../../lib/...` from action `run:` steps | Wrong depth — use `../lib/...` from action root |
+| Shared logic in a composite's `lib/` instead of `actions/lib/` | Couples actions; blocks reuse |
+| Consumer-specific paths in reusables/actions | Breaks portability |
+| `secrets: inherit` on reusable callers | Blocks secret name remapping |
+| Credentials via `with:` on reusable workflows | Wrong channel |
 
-```yaml
-uses: y-miyazaki/config/.github/actions/loop-agent-once@<full-sha>
-```
-
-GitHub downloads the **config repository snapshot at that SHA** into the runner's `_actions/` cache. `GITHUB_ACTION_PATH` points to the downloaded action directory inside that snapshot, for example:
-
-```text
-.../_actions/y-miyazaki/config/<sha>/.github/actions/loop-agent-once   ← GITHUB_ACTION_PATH
-.../_actions/y-miyazaki/config/<sha>/.github/actions/loop-install-cli   ← ../loop-install-cli
-```
-
-So this pattern inside a composite `run:` step resolves against the **pinned config repo tree**, not the caller's checkout:
-
-```yaml
-run: bash "${GITHUB_ACTION_PATH}/../loop-install-cli/lib/install.sh"
-```
-
-| Variable / path                                           | Resolves to                                                                   |
-| --------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `GITHUB_WORKSPACE`                                        | Consumer repo checkout (caller workflow's repository)                         |
-| `GITHUB_ACTION_PATH`                                      | Downloaded action directory for the **currently executing** composite action  |
-| `uses: ./.github/actions/...` in a **workflow** step      | Relative to `GITHUB_WORKSPACE` (caller repo only)                             |
-| `uses: ./.github/actions/...` inside a **composite** step | Relative to caller workspace — **broken for distributed actions**; do not use |
-
-The shared `lib/` and sibling action patterns work because one SHA pin carries the whole `.github/actions/*` tree for that commit. It does **not** work in `uses:` (contexts are not expanded there); use `run:` + `GITHUB_ACTION_PATH` instead.
-
-**Workflows are different:** job steps call leaf composite actions via `uses:` — never invoke `lib/run.sh` directly from a workflow.
-
-```yaml
-# ✅ Workflow step
-uses: ./.github/actions/loop-state-promote
-with:
-  merged: ${{ github.event.pull_request.merged && 'true' || 'false' }}
-  pr_number: ${{ github.event.pull_request.number }}
-  state_push_branch: ""
-  token: ${{ secrets.GH_TOKEN_PUSH || github.token }}
-
-# ❌ Workflow bypasses the action interface (breaks consumer copies)
-run: bash "${GITHUB_WORKSPACE}/.github/actions/loop-state-promote/lib/run.sh"
-```
-
-Consumer workflows pin the action:
-
-```yaml
-uses: y-miyazaki/config/.github/actions/loop-state-promote@<full-sha> # vX.Y.Z
-```
-
-## Calling Reusables and Actions
-
-### Default pattern
-
-1. **Reusable workflow** — `jobs.<id>.uses` with remote SHA pin (or `./.github/workflows/...` only for same-repo dogfood callers).
-2. **Composite action** — step `uses` with remote SHA pin (or `./.github/actions/...` only for same-repo dogfood steps).
-3. **Never** call `lib/run.sh` from workflow YAML.
-
-### File roles
-
-| Prefix         | Role                       | Typical `uses` target                                               |
-| -------------- | -------------------------- | ------------------------------------------------------------------- |
-| `ci-*`, `cd-*` | Reusable (`workflow_call`) | Pin remote actions/workflows at release SHA                         |
-| `on-*`         | Event caller               | Pin remote reusable, or `./.github/workflows/ci-*.yaml` for dogfood |
-| `example/`     | Consumer copy template     | Always remote SHA pin                                               |
-
-### Workflow conventions
-
-- Map key ordering: companion github-actions-workflow rules (ORD-01).
-- File names: `ci-*` (CI), `cd-*` (CD), `on-*` (event-triggered callers).
-- Reusable workflows use `workflow_call`; callers pass configuration via `with:` (avoid caller-level `env:` blocks for loop callers).
-
-### Secrets and credentials (GitHub Actions constraints)
-
-Official docs: [Reuse workflows — inputs and secrets](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows#using-inputs-and-secrets-in-a-reusable-workflow).
-
-| Mechanism          | Reusable workflow (`workflow_call`)                                                                                                         | Composite action                                                          |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Non-secret config  | `with:` → `inputs.*`                                                                                                                        | `with:` → `inputs.*`                                                      |
-| Credentials        | **`secrets:` only** → `secrets.*` (declare under `on.workflow_call.secrets`)                                                                | `with:` (actions have no `secrets:` pass-through; treat as string inputs) |
-| `secrets: inherit` | **Do not use** — forces callee secret _names_ to match the caller repo/org names; blocks remapping (e.g. `MAINTENANCE_BOT_*` → `BOT_APP_*`) | N/A                                                                       |
-
-**Reusable workflows — required pattern:**
-
-1. Declare credentials under `on.workflow_call.secrets` with **stable callee names** (e.g. `BOT_APP_CLIENT_ID`, `BOT_APP_PRIVATE_KEY`, `AGENT_TOKEN`, `GH_TOKEN_PUSH`).
-2. Callers pass **explicit** `secrets:` maps so local names can differ:
-
-   ```yaml
-   secrets:
-     AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
-     BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
-     BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
-   ```
-
-3. Optional `with: environment:` — jobs inside the reusable that need environment-scoped secrets set `environment: ${{ inputs.environment }}`. Callers **cannot** set `environment:` on a job that `uses:` a reusable (platform restriction). Environment secrets are resolved **inside** the reusable job, not by the caller.
-4. Do **not** pass tokens/app keys as `with:` string inputs on reusable workflows — that bypasses the `secrets` channel and is not the supported contract.
-5. Do **not** use `secrets: inherit`.
-
-**Composite actions:** pass tokens via `with:` (e.g. `token: ${{ secrets.BOT_APP_PRIVATE_KEY }}` from a job that already resolved secrets).
-
-**Environment-secret caveat (docs):** if a reusable job sets `environment:`, environment secrets with the same names take precedence over secrets passed from the caller. Callers that rely on remapped repository secrets should leave `environment` empty unless the environment defines the expected names.
-
-## Anti-Patterns
-
-| Anti-pattern                                                                            | Why                                                  |
-| --------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `uses: ...@main` or `uses: ...@v1.x` for config components                              | Unreproducible; ghalint policy violation             |
-| `uses: ./.github/actions/...` inside a composite action                                 | Unresolvable in consumer repositories                |
-| Nested `uses:` between config composite actions                                         | Transitive pin drift; use `lib/run.sh` sibling paths |
-| `bash "${GITHUB_WORKSPACE}/.github/actions/.../lib/run.sh"` in workflows                | Consumers lack that path; bypasses pin boundary      |
-| Hardcoded consumer paths (`scripts/`, `.agents/`, skill paths) inside reusables/actions | Breaks portability rule                              |
-| `secrets: inherit` on reusable callers                                                  | Locks callee secret names; prevents remapping        |
-| Passing credentials via `with:` on reusable workflows                                   | Unsupported channel; use `secrets:`                  |
+---
 
 ## Verification
-
-After workflow or action changes:
 
 ```bash
 bash .agents/skills/github-actions-validation/scripts/validate.sh .github/workflows/ .github/actions/
@@ -200,8 +109,13 @@ When loop caller permissions change:
 bash scripts/self/ci/validate_loop_caller_permissions.sh
 ```
 
+Paired Bats under `test/bats/.github/` when behavior changes (TEST-00).
+
+---
+
 ## Security
 
 - Reference secrets only via `${{ secrets.NAME }}` or `${{ github.token }}`; never echo tokens.
-- Keep `permissions` at least privilege; document `zizmor: ignore[...]` only with justification.
+- Keep `permissions` least-privilege; document `zizmor: ignore[...]` only with justification.
 - Do not place real tokens in workflow examples or comments.
+- Mask or redact sensitive values in failure messages and logs before persistence.

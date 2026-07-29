@@ -62,7 +62,6 @@ setup() {
         RUN_LOG_FILE='.loop/loop-run-log.md' \
         BASE_BRANCH='main' \
         WORKFLOW_RUN='42' \
-        TOKENS_ESTIMATE='52000' \
         DURATION_S_INPUT='7' \
         GITHUB_OUTPUT="${GITHUB_OUTPUT}"
     [ "$status" -eq 0 ]
@@ -71,7 +70,7 @@ setup() {
     run tail -n 1 "${RUN_LOG_WORK}/.loop/loop-run-log.md"
     [ "$status" -eq 0 ]
     assert_loop_run_log_entry_json "${output}"
-    [ "$(jq -r '.pattern' <<< "${output}")" = "docs-updater" ]
+    [ "$(jq -r '.loop_name' <<< "${output}")" = "docs-updater" ]
     [ "$(jq -r '.outcome' <<< "${output}")" = "skipped" ]
     [ "$(jq -r '.skip_reason' <<< "${output}")" = "budget" ]
     [ "$(jq -r '.workflow_run' <<< "${output}")" = "42" ]

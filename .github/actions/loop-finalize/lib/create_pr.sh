@@ -82,7 +82,7 @@ function main {
     local script_dir loop_action_lib work_dir
     local detect_json_path notify_json_path body_path
     local -a body_args gh_args
-    local composed url number
+    local composed url number pr_err
 
     : "${BRANCH:?BRANCH is required}"
     : "${GH_TOKEN:?GH_TOKEN is required}"
@@ -130,7 +130,17 @@ function main {
         gh_args+=(--label "${LABELS}")
     fi
 
-    url="$(gh pr create "${gh_args[@]}")"
+    if ! pr_err="$(gh pr create "${gh_args[@]}" 2>&1)"; then
+        if [[ -n ${LOOP_FAILURE_FILE:-} ]]; then
+            # shellcheck source=../../lib/loop/failure_record.sh
+            # shellcheck disable=SC1091
+            source "${loop_action_lib}/failure_record.sh"
+            loop_failure_record "finalize_pr" "${pr_err}" "${LOOP_FAILURE_FILE}"
+        fi
+        printf '%s\n' "${pr_err}" >&2
+        exit 1
+    fi
+    url="${pr_err}"
     number="$(gh pr view "${url}" --json number --jq '.number')"
     printf '%s\n' "${url}"
 

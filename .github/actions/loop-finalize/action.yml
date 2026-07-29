@@ -112,13 +112,18 @@ outputs:
   commit_sha:
     description: "Commit SHA on target branch after push_head (empty when not pushed)"
     value: ${{ steps.push_target.outputs.commit_sha }}
+  failure_message:
+    description: "Truncated finalize failure message for run log"
+    value: ${{ steps.failure_diag.outputs.failure_message }}
+  failure_stage:
+    description: "Finalize failure stage when a step fails (empty on success)"
+    value: ${{ steps.failure_diag.outputs.failure_stage }}
   outcome:
     description: "Final outcome written to state"
     value: ${{ steps.outcome.outputs.value }}
   pr_number:
     description: "Number of created PR (empty if not created)"
     value: ${{ steps.pr.outputs.number }}
-
   pr_url:
     description: "URL of created PR (empty if not created)"
     value: ${{ steps.pr.outputs.url }}
@@ -273,6 +278,7 @@ runs:
         PR_TITLE: ${{ inputs.pr_title }}
         SKIP_REASON: ${{ inputs.skip_reason }}
         TARGET_JSON: ${{ inputs.target_json }}
+        LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json
       run: bash "${GITHUB_ACTION_PATH}/lib/create_pr.sh"
 
     - name: Enable Auto-Merge
@@ -326,3 +332,12 @@ runs:
           exit 1
         fi
         gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${BRANCH}" 2>/dev/null || true
+
+    - name: Export Failure Diagnostics
+      if: always()
+      id: failure_diag
+      shell: bash
+      env:
+        LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json
+      run: bash "${GITHUB_ACTION_PATH}/../lib/loop/export_failure_diag.sh"
+

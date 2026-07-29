@@ -2,6 +2,10 @@ name: loop-run-log
 description: "Append one JSONL entry to .loop/loop-run-log.md, prune entries older than 30 days, and commit to the base branch."
 
 inputs:
+  agent_result:
+    default: ""
+    description: "agent-l2 job result (success | failure | cancelled | skipped)"
+    required: false
   attempts:
     default: ""
     description: "Number of Agent→Verify attempts (empty when execute did not run)"
@@ -14,12 +18,20 @@ inputs:
     default: ""
     description: "Run duration in seconds (computed from run_started_at when empty)"
     required: false
+  failure_message:
+    default: ""
+    description: "Truncated platform failure message for diagnostics"
+    required: false
+  failure_stage:
+    default: ""
+    description: "Platform failure stage (push | notify_context | finalize_pr | agent_execute | …)"
+    required: false
   has_changes:
     default: ""
     description: "Whether agent produced changes (true/false, empty when execute did not run)"
     required: false
   loop_name:
-    description: "Loop name / pattern (e.g. docs-updater)"
+    description: "Loop name recorded as loop_name in run log JSON (e.g. docs-updater)"
     required: true
   outcome:
     description: "Run outcome (pr-created | no-changes | rejected | error | skipped)"
@@ -39,10 +51,6 @@ inputs:
   token:
     description: "GitHub token for commit and push"
     required: true
-  tokens_estimate:
-    default: "52000"
-    description: "Estimated token spend when measured usage is unavailable (Phase 0b fallback)"
-    required: false
   usage_json:
     default: ""
     description: "Measured token usage JSON from loop-execute (empty when unavailable)"
@@ -68,9 +76,12 @@ runs:
       id: append
       shell: bash
       env:
+        AGENT_RESULT: ${{ inputs.agent_result }}
         ATTEMPTS: ${{ inputs.attempts }}
         BASE_BRANCH: ${{ inputs.base_branch }}
         DURATION_S_INPUT: ${{ inputs.duration_s }}
+        FAILURE_MESSAGE: ${{ inputs.failure_message }}
+        FAILURE_STAGE: ${{ inputs.failure_stage }}
         HAS_CHANGES: ${{ inputs.has_changes }}
         LOOP_NAME: ${{ inputs.loop_name }}
         OUTCOME: ${{ inputs.outcome }}
@@ -78,8 +89,8 @@ runs:
         RUN_STARTED_AT: ${{ inputs.run_started_at }}
         SKIP_REASON: ${{ inputs.skip_reason }}
         TOKEN: ${{ inputs.token }}
-        TOKENS_ESTIMATE: ${{ inputs.tokens_estimate }}
         USAGE_JSON: ${{ inputs.usage_json }}
         VERDICT: ${{ inputs.verdict }}
         WORKFLOW_RUN: ${{ inputs.workflow_run }}
       run: bash "${GITHUB_ACTION_PATH}/lib/run.sh"
+

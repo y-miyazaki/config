@@ -128,6 +128,12 @@ outputs:
   attempts:
     description: "Number of Agent→Verify attempts executed"
     value: ${{ steps.loop.outputs.attempts }}
+  failure_message:
+    description: "Truncated failure message for run log diagnostics"
+    value: ${{ steps.failure_diag.outputs.failure_message }}
+  failure_stage:
+    description: "Failure stage when execute push/notify fails (empty on success)"
+    value: ${{ steps.failure_diag.outputs.failure_stage }}
   has_changes:
     description: "Whether any files were committed and pushed"
     value: ${{ steps.push.outputs.has_changes }}
@@ -215,6 +221,7 @@ runs:
         BRANCH: ${{ inputs.branch }}
         GH_TOKEN: ${{ inputs.token }}
         LOOP_HAS_CHANGES: ${{ steps.loop.outputs.has_changes }}
+        STATUS_DIR: ${{ runner.temp }}/loop-execute-status
         WORKTREE_PATH: ${{ inputs.worktree_path }}
       run: bash "${GITHUB_ACTION_PATH}/lib/push.sh"
 
@@ -237,3 +244,11 @@ runs:
       env:
         WORKTREE_PATH: ${{ inputs.worktree_path }}
       run: bash "${GITHUB_ACTION_PATH}/lib/cleanup.sh"
+
+    - name: Export Failure Diagnostics
+      if: always()
+      id: failure_diag
+      shell: bash
+      env:
+        STATUS_DIR: ${{ runner.temp }}/loop-execute-status
+      run: bash "${GITHUB_ACTION_PATH}/../lib/loop/export_failure_diag.sh"
