@@ -1,12 +1,19 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-07-28T16:30:18Z",
-      "outcome": "pr-closed",
+      "last_run": "2026-07-29T10:04:41Z",
+      "outcome": "pr-created",
       "consecutive_failures": 0,
       "open_rejections": [],
-      "last_reject_reason": "Prior rejection fixed: terraform-review and github-actions-review counts in the summary table and section 1.1 now match codebase (22/3049/649 and 9/1867/411).",
-      "last_sha": "b7504ca7d7c4eb13b59def018faed095d1aeed2b"
+      "last_reject_reason": "Single pr_title dogfood value fix matches on-loop-docs-updater.yaml; doc-only, factually correct, scoped change.",
+      "last_sha": "b7504ca7d7c4eb13b59def018faed095d1aeed2b",
+      "pending": {
+        "sha": "1be8ef34dbc1cc1866a78ed7129c70712bfc65db",
+        "pr": 542,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/542",
+        "loop_name": "docs-updater",
+        "created_at": "2026-07-29T10:04:41Z"
+      }
     }
   }
 }
