@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Behavioral rules for AI agents. Self-contained — no external file is required.
+Behavioral rules for AI agents.
 
 ---
 
