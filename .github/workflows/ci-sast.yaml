@@ -68,17 +68,17 @@ jobs:
 
       - name: Initialize CodeQL
         if: steps.detect.outputs.skip != 'true'
-        uses: github/codeql-action/init@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
+        uses: github/codeql-action/init@e0647621c2984b5ed2f768cb892365bf2a616ad1 # v4.37.2
         with:
           languages: ${{ matrix.language }}
 
       - name: Autobuild
         if: steps.detect.outputs.skip != 'true'
-        uses: github/codeql-action/autobuild@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
+        uses: github/codeql-action/autobuild@e0647621c2984b5ed2f768cb892365bf2a616ad1 # v4.37.2
 
       - name: Perform CodeQL Analysis
         if: steps.detect.outputs.skip != 'true'
-        uses: github/codeql-action/analyze@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
+        uses: github/codeql-action/analyze@e0647621c2984b5ed2f768cb892365bf2a616ad1 # v4.37.2
         with:
           category: codeql-${{ matrix.language }}
 
@@ -176,7 +176,7 @@ jobs:
 
       - name: Upload Semgrep SARIF to GitHub Security
         if: always() && steps.detect.outputs.supported == 'true' && hashFiles('security/semgrep.sarif') != ''
-        uses: github/codeql-action/upload-sarif@7188fc363630916deb702c7fdcf4e481b751f97a # v4.37.1
+        uses: github/codeql-action/upload-sarif@e0647621c2984b5ed2f768cb892365bf2a616ad1 # v4.37.2
         with:
           category: semgrep
           sarif_file: security/semgrep.sarif
