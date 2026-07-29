@@ -541,10 +541,6 @@ checksum = "sha256:d29144deff3a68aa93ced33dddf84b7fdc26070add4aa0f4513094c8332af
 url = "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_windows_x64.zip"
 url_api = "https://api.github.com/repos/gitleaks/gitleaks/releases/assets/378333178"
 
-[[tools."aqua:go-delve/delve"]]
-version = "1.27.0"
-backend = "aqua:go-delve/delve"
-
 [[tools."aqua:go-swagger/go-swagger"]]
 version = "0.35.3"
 backend = "aqua:go-swagger/go-swagger"
