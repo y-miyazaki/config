@@ -8,11 +8,11 @@
       "last_reject_reason": "No file changes produced"
     },
     "integration:main": {
-      "last_run": "2026-07-27T10:01:20Z",
-      "outcome": "merged",
+      "last_run": "2026-07-30T09:22:38Z",
+      "outcome": "error",
       "consecutive_failures": 0,
       "open_rejections": [],
-      "last_reject_reason": "No file changes produced",
+      "last_reject_reason": "No meaningful changes outside .loop/",
       "last_sha": "0134b3f10c9c1e03e86add1186f615f7f98468e2"
     },
     "pull_request:401": {
