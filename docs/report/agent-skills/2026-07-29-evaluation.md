@@ -7,7 +7,7 @@
 
 ## 要約
 
-2026-07-26 以降の改修（Workflow/Ref Guide 整合、ロードトリガー allowlist、Output 骨格削除、DIST/E 住み分けなど）は維持されている。Phase F（refactor always 削減）後の再計測では **最大負荷は agent-skills-review → go-review 系**。refactor は always 4 ファイル・約 2000 語・合計 ~4.2k tok に低下（旧: always 7・~6k tok）。
+2026-07-26 以降の改修（Workflow/Ref Guide 整合、ロードトリガー allowlist、Output 骨格削除、DIST/E 住み分けなど）は維持されている。Phase F（refactor always 削減）後の再計測では **最大負荷は agent-skills-review → go-review 系**。refactor は always（checklist/output/scope/contract/verification）に再編し負荷低下（旧: always 7・~6k tok；`category-operations.md` 削除）。
 
 **訂正（前報 Phase C）:** loop checklist への安定 ItemID は、運用ランの Candidates/Deferred 追跡や自動化検証の必須条件ではない。loop の主キーは path / failure / commit / `path+kind+snippet` であり、ItemID はオーサリング監査・ゲート引用向けの SHOULD。
 
@@ -58,7 +58,7 @@
 
 | 問題 | 証拠 | 推奨 |
 | ---- | ---- | ---- |
-| **refactor always 削減** | 旧: always 7・~3692 語で最大負荷 | **対応済:** survey always 4（checklist/output/scope/operations）・合計 ~3236 語。最大負荷は agent-skills-review に移行。techniques・verification は `may_edit`、input-schema は structured/automation JSON 時 |
+| **refactor always 削減** | 旧: always 7・~3692 語で最大負荷 | **対応済:** survey always は checklist/output/scope/contract（+ verification always）。`category-operations.md` は `category-contract.md` / `category-techniques.md` に再編。techniques は `may_edit`、input-schema は structured/automation JSON 時。最大負荷は agent-skills-review に移行 |
 | **tech-debt taxonomy always** | taxonomy ~801 語を always | **意図的維持**（分類品質）。input-schema は detect 時のみ。ゲート ItemID（CLASS/EVID/EDIT 等）追加済 |
 | **agent-skills-review / instructions-review** | category 全文 always（メタレビュー） | 意図的。フルチェックリスト方針と一致 |
 | **review 系** | 全 category always を維持（意図的） | 現状維持。大規模 PR は出力優先度のみ調整 |

@@ -95,8 +95,9 @@ This repository dogfoods the recommended tier for CI and local validation. Consu
 
 ### Skills — Explicit Validation
 
-- Skills run only when an agent invokes them through `scripts/validate.sh`.
+- **Validation** skills (`*-validation`, plus `agent-skills-review`) run only when an agent invokes them through `scripts/validate.sh`.
 - Missing tools produce `SKIP` entries in structured output — visible to the agent, not silent success.
+- Judgment **review** skills apply checklist `references/` only (no in-skill `validate.sh`).
 - Skills complement hooks; neither replaces CI or pre-commit in consumer repositories.
 
 Package authoring: [APM Package Design Principles](apm-package-design.md), companion rules (stem `agent-skills`, `instructions`), and [AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md) (maintainer routing). Behavioral contracts: [Config Repository Functional Specification](../reference/specification.md#configuration-philosophy).

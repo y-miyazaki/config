@@ -30,7 +30,8 @@
 | `.../references/common-output-format.md`               | Session report sections + metrics table                                 |
 | `.../references/category-scope.md`                     | Allow/deny path defaults; one-target rule                               |
 | `.../references/category-input-schema.md`              | Interactive + future loop envelope fields                               |
-| `.../references/category-operations.md`                | Closed O1/O2 ops; O3 forbidden on L2                                    |
+| `.../references/category-contract.md`                  | Intent, O1/O2/O3 depth tiers, phases/modes                              |
+| `.../references/category-techniques.md`                | Closed O1/O2 techniques (read when may_edit)                            |
 | `.../references/category-verification.md`              | V4 stack gates + characterization test-addition; lint exclusion         |
 | `.../eval.yaml`                                        | Minimal eval suite stub (sibling pattern)                               |
 | `apm.yml` (repo root)                                  | Wire local dep `./.apm/packages/refactor`                               |
@@ -140,7 +141,7 @@ Session report per [common-output-format.md](references/common-output-format.md)
 ## Execution Scope
 
 - Select **one** target per run; stay within [category-scope.md](references/category-scope.md).
-- Apply only [category-operations.md](references/category-operations.md) O1/O2; downgrade per V4 when gates are weak.
+- Apply only [category-techniques.md](references/category-techniques.md) O1/O2; downgrade per V4 when gates are weak.
 - Invoke validation skills/commands from `## Instructions` and [category-verification.md](references/category-verification.md).
 - Do not invent a dedicated SubAgent product; reuse platform Implementer/Verifier and existing skills.
 
@@ -163,7 +164,8 @@ Session report per [common-output-format.md](references/common-output-format.md)
 - [common-checklist.md](references/common-checklist.md) (always read)
 - [common-output-format.md](references/common-output-format.md) (always read)
 - [category-scope.md](references/category-scope.md) (always read)
-- [category-operations.md](references/category-operations.md) (always read)
+- [category-contract.md](references/category-contract.md) (always read)
+- [category-techniques.md](references/category-techniques.md) (read when may_edit is true)
 - [category-verification.md](references/category-verification.md) - Read before apply and after edits.
 - [category-input-schema.md](references/category-input-schema.md) - Read when parsing structured input or future loop envelope.
 
@@ -212,7 +214,7 @@ Confirm YAML frontmatter has `name`, `description`, `license`, `metadata.author`
 
 ## Operations
 
-- Stay in O1/O2 closed set (`category-operations.md`)
+- Stay in O1/O2 closed set (`category-techniques.md`)
 - No public API semantics changes; no feature behavior changes
 - O3 (deep redesign, GoF, large boundary splits) → Watch / stop — do not apply under this skill's automation path
 
@@ -322,7 +324,8 @@ Allowlist and denylist may be supplied by the user, caller Instructions, or (fut
 **Files:**
 
 - Create: `.apm/packages/refactor/.apm/skills/refactor/references/category-input-schema.md`
-- Create: `.apm/packages/refactor/.apm/skills/refactor/references/category-operations.md`
+- Create: `.apm/packages/refactor/.apm/skills/refactor/references/category-contract.md`
+- Create: `.apm/packages/refactor/.apm/skills/refactor/references/category-techniques.md`
 - Create: `.apm/packages/refactor/.apm/skills/refactor/references/category-verification.md`
 
 **Interfaces:**
@@ -372,7 +375,7 @@ Interactive runs may pass free-form path/symbol in the user prompt. When structu
 - Stack skill names are **not** schema fields — they arrive under `## Instructions` (A')
 ````
 
-- [ ] **Step 2: Write `category-operations.md`**
+- [ ] **Step 2: Write `category-contract.md` and `category-techniques.md`**
 
 ```markdown
 ## Allowed Operations (O1 / O2)
@@ -652,7 +655,7 @@ Use **requesting-code-review** (or repo equivalent) on the Phase 1 diff before c
 | ------------------------------------ | --------------------------------- |
 | Package layout Phase 1               | 1–5                               |
 | Skill contract USE/DO NOT / workflow | 2–4                               |
-| O1/O2 normative                      | 4 (`category-operations.md`)      |
+| O1/O2 normative                      | 4 (`category-contract.md` / `category-techniques.md`) |
 | V4 + characterization                | 4 (`category-verification.md`)    |
 | S2 + A' Instructions                 | 2, 4                              |
 | No lint-primary / no tech-debt feed  | 2–4, 6 spot-check                 |

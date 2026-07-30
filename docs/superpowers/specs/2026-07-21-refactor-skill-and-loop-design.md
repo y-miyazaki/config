@@ -138,7 +138,8 @@ Entry skill remains **repository-neutral**. Consumer caller supplies `prompt_ins
       common-output-format.md
       category-scope.md
       category-input-schema.md          # interactive + future loop envelope
-      category-operations.md            # O1/O2 closed ops; O3 architecture intent (interactive)
+      category-contract.md              # intent, O1/O2/O3 depth tiers, phases/modes
+      category-techniques.md            # O1/O2 closed techniques (read when may_edit)
       category-verification.md          # V4 + test-addition rules; lint exclusion
     scripts/                            # optional helpers; prefer validation skills
 ```
@@ -170,8 +171,8 @@ Full text lives in SKILL.md + references; this section is normative for implemen
 ### Workflow outline
 
 1. Parse input (paths, optional hint, constraints). If nothing actionable → report No-op; stop.
-2. Load checklist + operations + verification references.
-3. Classify intent: **structural** (default) or **architecture-improvement** (`category-operations.md` triggers). Record in session report.
+2. Load checklist + contract + verification references (techniques when `may_edit`).
+3. Classify intent: **structural** (default) or **architecture-improvement** (`category-contract.md` triggers). Record in session report.
 4. Select **one** target. Prefer H1-like evidence when present; otherwise user-specified symbol/path.
 5. **Architecture intent, no approved slice:** Phase A — emit proposal (problem, candidates, phased plan, risks). Outcome `proposal`; stop.
 6. **Structural intent, or architecture Phase B with one approved slice:** establish verification foundation (add characterization tests/checks if required and language supported).
