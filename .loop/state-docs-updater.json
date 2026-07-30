@@ -1,19 +1,12 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-07-30T10:09:59Z",
-      "outcome": "pr-created",
+      "last_run": "2026-07-30T18:11:33Z",
+      "outcome": "merged",
       "consecutive_failures": 0,
       "open_rejections": [],
       "last_reject_reason": "Prior report-format rejection fixed (full branch diff reconciled in Changes; validate_agent_report pass); nine doc patches are factually consistent with codebase.",
-      "last_sha": "1be8ef34dbc1cc1866a78ed7129c70712bfc65db",
-      "pending": {
-        "sha": "baff0a9b3d0c0b66341e20ee65d8bb48f353ff12",
-        "pr": 554,
-        "pr_url": "https://github.com/y-miyazaki/config/pull/554",
-        "loop_name": "docs-updater",
-        "created_at": "2026-07-30T10:09:59Z"
-      }
+      "last_sha": "baff0a9b3d0c0b66341e20ee65d8bb48f353ff12"
     }
   }
 }
