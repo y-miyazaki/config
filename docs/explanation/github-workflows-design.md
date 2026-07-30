@@ -130,7 +130,7 @@ When loop composite steps record failure metadata for run logs or action outputs
 | `failure_record.sh`      | Record latest `failure_stage` / `failure_message` (`loop_failure_record`) |
 | `export_failure_diag.sh` | Export recorded diagnostics to `GITHUB_OUTPUT`                            |
 
-`loop-execute` and `loop-finalize` expose `failure_stage` / `failure_message`; `ci-loop-agent` passes them into `loop-run-log` JSONL entries. Do not duplicate redaction patterns or per-action export helpers.
+`loop-execute` and `loop-finalize` expose `failure_stage` / `failure_message`; `ci-loop-agent` passes them into `loop-run-log` JSONL entries. Do not duplicate redaction patterns or per-action export helpers. Do not write raw `git push`, `gh`, or CLI stderr into committed logs without redaction.
 
 ### jq Parse Errors
 
