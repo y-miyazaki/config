@@ -8,7 +8,7 @@ name: on-loop-docs-updater
 
 on:
   schedule:
-    - cron: "0 9 * * 1-5"
+    - cron: "0 9 * * 1"
   workflow_dispatch: {}
 
 permissions:
