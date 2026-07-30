@@ -118,7 +118,7 @@ jobs:
           echo "✅ Version format is valid: $VERSION"
 
       - name: Configure git auth
-        uses: y-miyazaki/config/.github/actions/git-auth@641b6fd43c2e86a06f68aebb2b3882a68f9a0772 # v1.8.69
+        uses: y-miyazaki/config/.github/actions/git-auth@bd470e36adc4935cba33b1fdef81802d5b11dcf7 # v1.8.69
         with:
           operation: configure
           token: ${{ github.token }}
@@ -147,7 +147,7 @@ jobs:
 
       - name: Clear git auth
         if: always()
-        uses: y-miyazaki/config/.github/actions/git-auth@641b6fd43c2e86a06f68aebb2b3882a68f9a0772 # v1.8.69
+        uses: y-miyazaki/config/.github/actions/git-auth@bd470e36adc4935cba33b1fdef81802d5b11dcf7 # v1.8.69
         with:
           operation: clear
           token: ${{ github.token }}
@@ -245,7 +245,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@641b6fd43c2e86a06f68aebb2b3882a68f9a0772 # v1.8.69
+        uses: y-miyazaki/config/.github/actions/summary@bd470e36adc4935cba33b1fdef81802d5b11dcf7 # v1.8.69
         with:
           artifacts: |
             goreleaser-dist-${{ env.COMPONENT }}-${{ steps.check-tag.outputs.version }}
