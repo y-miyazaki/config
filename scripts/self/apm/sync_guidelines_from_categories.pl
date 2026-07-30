@@ -130,7 +130,7 @@ for my $skill (sort keys %map) {
     while (my $line = <$pin>) {
       chomp $line;
 
-      if ($line =~ /^##\s+(.*)$/) {
+      if ($line =~ /^#{1,2}\s+(.*)$/) {
         if (defined $current) {
           push @sections, $current;
         }

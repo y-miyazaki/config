@@ -28,7 +28,7 @@ setup() {
     mkdir -p "${REF_DIR}" "$(dirname "${INSTR}")"
 
     cat > "${REF_DIR}/category-structure.md" << 'EOF'
-## Structural Checks (S)
+# Structural Checks (S)
 
 **S-01 (MUST): SKILL.md has the five required ## sections**
 
@@ -78,6 +78,13 @@ On-demand validation: see agent-skills-review skill SKILL.md.
 
 - Do not embed secrets.
 EOF
+}
+
+@test "sync_guidelines parses H1 category section headers" {
+    run bash -c "cd '${FIXTURE_ROOT}' && perl '${SYNC_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    grep -q 'S-01 (MUST): SKILL.md has the five required ## sections' "${REF_DIR}/common-checklist.md"
+    grep -q '## Structural Checks (S)' "${REF_DIR}/common-checklist.md"
 }
 
 @test "sync_guidelines emits ItemID titles without Check children" {

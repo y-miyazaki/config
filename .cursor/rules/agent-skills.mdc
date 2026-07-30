@@ -98,7 +98,7 @@ Plain H2 sections **without** ItemIDs (for example `## Execution Order`, `## Pas
 ### Structural Checks (S)
 - S-01 (MUST): SKILL.md has the five required ## sections
 - S-02 (MUST): Frontmatter has name, description, license (+ version metadata)
-- S-03 (MUST): References/ headers use required H1/H2 levels
+- S-03 (MUST): References/ start with H1 and use consistent heading hierarchy
 - S-04 (MUST): Links stay in-skill or https:// (no ../docs escapes)
 - S-05 (MUST): Use <agent-root> for install paths; do not hardcode .github/skills
 
