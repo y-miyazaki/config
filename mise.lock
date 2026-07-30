@@ -1461,43 +1461,43 @@ url_api = "https://api.github.com/repos/terraform-linters/tflint/releases/assets
 provenance = "github-attestations"
 
 [[tools."aqua:vektra/mockery"]]
-version = "3.7.1"
+version = "3.7.2"
 backend = "aqua:vektra/mockery"
 
 [tools."aqua:vektra/mockery"."platforms.linux-arm64"]
-checksum = "sha256:27bcb1d78a4e78488aaa9f90864f6281456f12a92548d5deb0e0af719478f418"
-url = "https://github.com/vektra/mockery/releases/download/v3.7.1/mockery_3.7.1_Linux_arm64.tar.gz"
-url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/445750704"
+checksum = "sha256:27141b83d8bccc29d66ed91093da69604b320d417bd562d819c8b0372f1444ad"
+url = "https://github.com/vektra/mockery/releases/download/v3.7.2/mockery_3.7.2_Linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/487546649"
 
 [tools."aqua:vektra/mockery"."platforms.linux-arm64-musl"]
-checksum = "sha256:27bcb1d78a4e78488aaa9f90864f6281456f12a92548d5deb0e0af719478f418"
-url = "https://github.com/vektra/mockery/releases/download/v3.7.1/mockery_3.7.1_Linux_arm64.tar.gz"
-url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/445750704"
+checksum = "sha256:27141b83d8bccc29d66ed91093da69604b320d417bd562d819c8b0372f1444ad"
+url = "https://github.com/vektra/mockery/releases/download/v3.7.2/mockery_3.7.2_Linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/487546649"
 
 [tools."aqua:vektra/mockery"."platforms.linux-x64"]
-checksum = "sha256:79e6a7374d444f7e47aab79a30993ec403d0a573212c2c707c4bffede5f1780f"
-url = "https://github.com/vektra/mockery/releases/download/v3.7.1/mockery_3.7.1_Linux_x86_64.tar.gz"
-url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/445750702"
+checksum = "sha256:db819b897de126634cefeb3773a3b76eea7769c718f0e5e62e968ab00add12c6"
+url = "https://github.com/vektra/mockery/releases/download/v3.7.2/mockery_3.7.2_Linux_x86_64.tar.gz"
+url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/487546650"
 
 [tools."aqua:vektra/mockery"."platforms.linux-x64-musl"]
-checksum = "sha256:79e6a7374d444f7e47aab79a30993ec403d0a573212c2c707c4bffede5f1780f"
-url = "https://github.com/vektra/mockery/releases/download/v3.7.1/mockery_3.7.1_Linux_x86_64.tar.gz"
-url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/445750702"
+checksum = "sha256:db819b897de126634cefeb3773a3b76eea7769c718f0e5e62e968ab00add12c6"
+url = "https://github.com/vektra/mockery/releases/download/v3.7.2/mockery_3.7.2_Linux_x86_64.tar.gz"
+url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/487546650"
 
 [tools."aqua:vektra/mockery"."platforms.macos-arm64"]
-checksum = "sha256:ec94a61c80e55bcfa868c59b51a662dcb47e451ef041f3f274630b58a2647fb1"
-url = "https://github.com/vektra/mockery/releases/download/v3.7.1/mockery_3.7.1_Darwin_arm64.tar.gz"
-url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/445750703"
+checksum = "sha256:f30c556a7c34df2002062aa6b0a014076b37f4f45429c70407804ee39aae71cf"
+url = "https://github.com/vektra/mockery/releases/download/v3.7.2/mockery_3.7.2_Darwin_arm64.tar.gz"
+url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/487546634"
 
 [tools."aqua:vektra/mockery"."platforms.macos-x64"]
-checksum = "sha256:ccd4aed104cf886e4049b4ba5fafdf340a839c48b9d1b093927513051cc4df57"
-url = "https://github.com/vektra/mockery/releases/download/v3.7.1/mockery_3.7.1_Darwin_x86_64.tar.gz"
-url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/445750705"
+checksum = "sha256:fddf50e1b43c97e7ae150784c922a73772d6304346294a90ce5cd24b0090b0cc"
+url = "https://github.com/vektra/mockery/releases/download/v3.7.2/mockery_3.7.2_Darwin_x86_64.tar.gz"
+url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/487546633"
 
 [tools."aqua:vektra/mockery"."platforms.windows-x64"]
-checksum = "sha256:995bb7144ffdf4b71c8a351db88583da7ae3d090367119646ed3580d1b1d2a4b"
-url = "https://github.com/vektra/mockery/releases/download/v3.7.1/mockery_3.7.1_Windows_x86_64.tar.gz"
-url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/445750718"
+checksum = "sha256:77952b0381bbdc5b490011e8fa602633e5b8bbf29368568046b6641ed297e9b2"
+url = "https://github.com/vektra/mockery/releases/download/v3.7.2/mockery_3.7.2_Windows_x86_64.tar.gz"
+url_api = "https://api.github.com/repos/vektra/mockery/releases/assets/487546636"
 
 [[tools."aqua:zizmorcore/zizmor"]]
 version = "1.27.0"
