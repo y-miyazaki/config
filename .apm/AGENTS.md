@@ -20,6 +20,23 @@ If a sentence applies only in this repository, it does **not** belong in a packa
 
 ---
 
+## Skill design (MUST)
+
+Normative rules for **all** skills under `.apm/packages/**`. Design depth: [apm-package-design.md § Skill authoring](../docs/explanation/apm-package-design.md#skill-authoring-contract-vs-product).
+
+| Rule                            | Requirement                                                                                                                                                                                   |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Self-contained interactive path | **MUST** run from user prompt + in-skill `references/` without requiring sibling skills, loop callers, or detect scripts                                                                      |
+| Optional automation assets      | Detect scripts and `hints[]` JSON are **optional** caller inputs — document them as hints, not prerequisites                                                                                  |
+| Consumer context wins           | Repository norms (testing, lint, paths, security) live in consumer `AGENTS.md`, steering rules, and user prompt — **MUST NOT** embed repo-specific principles in package `references/`        |
+| No other skill prerequisites    | **MUST NOT** treat any other skill as a required prerequisite for interactive execution; optional routing via session `## Instructions` or consumer context does not create a hard dependency |
+| Portable scope only             | Path scope in skills: user allowlist/denylist, automation `## Constraints`, and portable skill limits — **MUST NOT** document ambient tool behavior (ignore files, default VCS exclusions)    |
+| Portable verification           | Describe gate **procedure** (run what the repo already uses) — **MUST NOT** embed language/stack command tables in distributable `references/`                                                |
+
+Violations are **blocking portability defects** on package PRs — same severity as DIST table rows below.
+
+---
+
 ## Redistribution (DIST) — maintainer judgment
 
 Enforce via PR review and this file. **Not** an `agent-skills-review` or `instructions-review` ItemID — those skills run in external repos and must stay generalized.
@@ -62,6 +79,7 @@ Path layout differs only in library import lines and `WORKSPACE_ROOT` depth for 
 
 | Topic                                 | Document                                                                           |
 | ------------------------------------- | ---------------------------------------------------------------------------------- |
+| Skill self-containment (all skills)   | This file — [§ Skill design (MUST)](#skill-design-must)                            |
 | Skill vs product, automation envelope | [apm-package-design.md](../docs/explanation/apm-package-design.md)                 |
 | Instruction sync                      | [instructions-sync-workflow.md](../docs/explanation/instructions-sync-workflow.md) |
 | Loop platform (this consumer)         | [Loop Engineering](../docs/explanation/loop-engineering/index.md)                  |

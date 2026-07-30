@@ -1,5 +1,6 @@
 # Lock / generated files
 apm.lock.yaml
+aqua-checksums.json
 mise.lock
 
 # JSON excluded from formatting (matches pre-commit hook excludes)
