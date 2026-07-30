@@ -90,3 +90,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-07-29T18:05:13Z","pattern":"ci-sweeper","duration_s":18,"outcome":"skipped","skip_reason":"budget","tokens_estimate":52000,"workflow_run":"30478278590"}
 {"run_id":"2026-07-29T18:05:47Z","pattern":"ci-sweeper","duration_s":13,"outcome":"skipped","skip_reason":"budget","tokens_estimate":52000,"workflow_run":"30478327219"}
 {"run_id":"2026-07-29T18:08:11Z","pattern":"ci-sweeper","duration_s":13,"outcome":"skipped","skip_reason":"budget","tokens_estimate":52000,"workflow_run":"30478470807"}
+{"run_id":"2026-07-30T09:22:40Z","loop_name":"ci-sweeper","duration_s":239,"outcome":"error","skip_reason":"none","tokens_total":238917,"workflow_run":"30530162554","attempts":1,"verdict":"APPROVE","usage":{"total_input_tokens":232645,"total_output_tokens":6272,"model":"Cursor Grok 4.5 Low"},"agent_result":"failure","failure_stage":"push"}
