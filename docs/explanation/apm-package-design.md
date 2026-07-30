@@ -114,7 +114,7 @@ Enforced in review via `agent-skills-review` (**S-04**). Redistribution maintain
 
 ## Review skill scope (S-04)
 
-Review skills ship inside packages and may run in arbitrary consumer repositories. **S-04** (portable in-skill reference paths) applies to any SKILL.md target. **Redistribution policy (DIST)** is maintainer-only — not an `agent-skills-review` ItemID.
+Review skills ship inside packages and may run in arbitrary consumer repositories. **S-04** (portable in-skill reference paths) applies to any SKILL.md target. **Redistribution (DIST)** is maintainer-only — not an `agent-skills-review` ItemID.
 
 | Review check                                      | Where enforced                                 |
 | ------------------------------------------------- | ---------------------------------------------- |

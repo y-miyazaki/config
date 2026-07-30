@@ -41,7 +41,7 @@ See [CONTEXT — Semantic Findings](../explanation/loop-engineering/CONTEXT.md#l
 
 #### Agent (Execute)
 
-- [ ] L2/L3 outputs `branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections`, `usage_json`, `notify_context_json`
+- [ ] L2/L3 outputs `branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections`, `usage_json`, `notify_context_json`, `failure_stage`, `failure_message`
 - [ ] Worktree from `target.from` (Phase 1+)
 - [ ] Respects Skill allowed paths and denylist
 - [ ] Uses `ci-loop-agent.yaml`
@@ -114,6 +114,7 @@ See [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loo
 - [ ] Denylist includes auth, payments, secrets, infrastructure
 - [ ] Daily token cap configured
 - [ ] `.loop/loop-run-log.md` in use
+- [ ] Run-log JSONL may include redacted `failure_stage` / `failure_message` from execute/finalize
 
 ---
 

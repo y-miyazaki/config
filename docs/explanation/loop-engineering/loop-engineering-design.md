@@ -325,7 +325,7 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 ```
 
 - State read is performed inline by `loop-detect` (`lib/state.sh`); writes are performed inline by `loop-finalize` (`lib/write_state.sh`)
-- `loop-run-log` is invoked as a sibling step in `ci-loop-agent` after `loop-finalize` (or `record-skip` in callers) to append outcome, attempts, verdict, and token usage
+- `loop-run-log` is invoked as a sibling step in `ci-loop-agent` after `loop-finalize` (or `record-skip` in callers) to append outcome, attempts, verdict, token usage, and optional `failure_stage` / `failure_message` (redacted via `lib/loop/redact.sh` / `failure_record.sh`)
 - `loop-detect` aggregates today's entries from `loop-run-log.md` against `loop-budget.json` (or `budget_max_*` inputs) and may set `skip_reason=budget`
 - `.gitattributes` is configured with `merge=ours` to prevent merge conflicts
 - On first run, `loop-detect` resolves `last_sha` with a default (`HEAD~10`) when the state file or target entry is absent (`lib/state.sh`)
@@ -450,6 +450,7 @@ Token costs tend to increase quadratically as conversation accumulates.
 | Attempt cap       | Caller `agent_loop_max_attempts` → `AGENT_LOOP_MAX_ATTEMPTS`        | Bounds Agent→Verify retries in `loop-execute`; not read from `loop-budget.json` |
 | Daily aggregation | `loop-detect` reads `.loop/loop-run-log.md`                         | Skips execute when today's runs or tokens exceed the cap (`skip_reason=budget`) |
 | Measured usage    | `loop-execute` output `usage_json`                                  | Passed through finalize into `loop-run-log` for the next detect cycle           |
+| Failure diagnostics | `failure_stage` / `failure_message` from execute/finalize            | Shared `lib/loop/{redact,failure_record,export_failure_diag}.sh` → run-log          |
 | Retention         | `loop-run-log`                                                      | Prunes JSONL entries older than 30 days                                         |
 
 Example policy entry (matches dogfood `.loop/loop-budget.json`). `loop-detect` consumes only `max_runs_per_day` and `max_tokens_per_day`; `max_attempts_per_run` in the file is unused — set attempt limits via `agent_loop_max_attempts` on the caller:
@@ -503,7 +504,7 @@ For L2 and above where auto-fixes are performed, branch isolation is mandatory. 
 | L1    | `loop-agent-once`                                                  | Read-only on the checked-out workspace (no worktree branch) |
 | L2/L3 | `loop-worktree-setup` → `loop-execute` (push and cleanup internal) | Isolated worktree path and agent branch                     |
 
-**Unified contract**: `ci-loop-agent.yaml` L2/L3 outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections, usage_json, notify_context_json }`. Verification runs inside `loop-execute` (separate verifier session); finalize and `loop-notify-pr` consume those outputs for all engines.
+**Unified contract**: `ci-loop-agent.yaml` L2/L3 outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections, usage_json, notify_context_json, failure_stage, failure_message }`. Verification runs inside `loop-execute` (separate verifier session); finalize and `loop-notify-pr` consume those outputs for all engines. `failure_stage` / `failure_message` are empty on success and feed `loop-run-log`.
 
 **Worktree principles:**
 
@@ -707,10 +708,10 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 | **Responsibility**  | Produce code/content changes based on the prompt. Operate within the constraints defined by the Skill                                                       |
 | **Input**           | Prompt text, skill name, engine, model, level, `target_json` (Phase 1+)                                                                                     |
 | **Output (L1)**     | Read-only session result (no branch / verdict contract)                                                                                                     |
-| **Output (L2/L3)**  | Via `loop-execute` inside `ci-loop-agent`: `branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections`, `usage_json`, `notify_context_json` |
+| **Output (L2/L3)**  | Via `loop-execute` inside `ci-loop-agent`: `branch`, `has_changes`, `verdict`, `reason`, `attempts`, `open_rejections`, `usage_json`, `notify_context_json`, `failure_stage`, `failure_message` |
 | **May modify**      | Files within the Skill's allowed paths, on an isolated branch only (L2/L3)                                                                                  |
 | **Must not modify** | Files on denylist. Files outside allowed paths. Default branch directly                                                                                     |
-| **Contract**        | L2/L3 always outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections, usage_json, notify_context_json }` regardless of engine strategy   |
+| **Contract**        | L2/L3 always outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections, usage_json, notify_context_json, failure_stage, failure_message }` regardless of engine strategy   |
 
 #### Verify
 

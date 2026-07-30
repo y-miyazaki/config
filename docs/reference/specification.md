@@ -177,7 +177,7 @@ Hooks exit 0 when tools are missing so agent sessions continue. This is intentio
 
 #### Skills — Explicit Validation
 
-Skills run through `scripts/validate.sh` when an agent invokes them. Missing tools produce `SKIP` in structured output rather than silent pass.
+**Validation** skills (`*-validation`, plus `agent-skills-review`) run through `scripts/validate.sh` when an agent invokes them. Missing tools produce `SKIP` in structured output rather than silent pass. Judgment **review** skills (`*-review` other than `agent-skills-review`) have no `scripts/validate.sh` — they apply checklist references only.
 
 Authoring rules: companion rules (stem `agent-skills`, `instructions`) — portability and structure only; see [APM Package Design Principles](../explanation/apm-package-design.md). Maintainer routing: [AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md). Design context: [Config Repository Architecture](../explanation/architecture.md#configuration-philosophy).
 
@@ -250,9 +250,9 @@ Hooks JSON format is incompatible across AI agents and cannot be auto-converted 
 
 ### Skills
 
-Skills provide **on-demand validation** when an agent invokes them through `scripts/validate.sh`. Missing native binaries produce `SKIP` in structured output — not silent pass. Skills are agent-triggered; they do not replace CI, pre-commit, or hooks. See [Configuration Philosophy](#configuration-philosophy).
+**Validation** skills (`*-validation`, plus `agent-skills-review`) provide **on-demand validation** when an agent invokes them through `scripts/validate.sh`. Missing native binaries produce `SKIP` in structured output — not silent pass. Judgment **review** skills load checklist `references/` only (no in-skill `validate.sh`). Skills are agent-triggered; they do not replace CI, pre-commit, or hooks. See [Configuration Philosophy](#configuration-philosophy).
 
-Skills are defined under each package's `.apm/skills/` directory. Each skill contains a `SKILL.md`, references, scripts, and eval definitions.
+Skills are defined under each package's `.apm/skills/` directory. Each skill contains a `SKILL.md` and references; validation skills also ship `scripts/validate.sh` (and related helpers).
 
 | Package      | Skill                     |
 | ------------ | ------------------------- |
@@ -356,7 +356,7 @@ Language CI workflows (`ci-go`, `ci-nodejs`, `ci-aws-terraform`) retain language
 
 ### Composite action composition
 
-Loop **composite actions** must not nest other repository composite actions via `uses: <owner>/<repo>/.github/actions/...`. Parent composites invoke shared bash under `.github/actions/lib/<domain>/` for cross-action libraries (for example `${GITHUB_ACTION_PATH}/../lib/loop/handoff.sh`) or sibling action `lib/` for action-specific orchestration (for example `${GITHUB_ACTION_PATH}/../loop-install-cli/lib/install.sh`). This keeps a single action SHA self-contained at release time without transitive pin drift.
+Loop **composite actions** must not nest other repository composite actions via `uses: <owner>/<repo>/.github/actions/...`. Parent composites invoke shared bash under `.github/actions/lib/<domain>/` for cross-action libraries (for example `${GITHUB_ACTION_PATH}/../lib/loop/handoff.sh`, `redact.sh`, `failure_record.sh`, `export_failure_diag.sh`) or sibling action `lib/` for action-specific orchestration (for example `${GITHUB_ACTION_PATH}/../loop-install-cli/lib/install.sh`). This keeps a single action SHA self-contained at release time without transitive pin drift. Failure diagnostics must redact before persistence — see [.github/workflows/AGENTS.md](../../.github/workflows/AGENTS.md) (Failure diagnostics).
 
 **Workflows** (including `on-loop-state-promote.yaml`) must call leaf actions via `uses:` — never `${GITHUB_WORKSPACE}/.github/actions/.../lib/run.sh`. Consumer repositories pin `y-miyazaki/config/.github/actions/<name>@<ref>`; this repository dogfoods with `./.github/actions/<name>`.
 
@@ -388,11 +388,11 @@ Loop domain skills live under `.apm/packages/common/.apm/skills/` — there are 
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `loop-agent-once`     | Single read-only agent session (L1); accepts `node_version` / `uv_version` and enables workspace MCP via `lib/mcp.sh`                                                                                                                                                                                                                                           |
 | `loop-detect`         | Read `LOOP_*`, enumerate branches/PRs, checkout per context, read per-target state (`lib/state.sh`), invoke `detect_script` per context, assemble candidates and implementer prompts (`lib/loop/build_constraints.sh`), write **loop-handoff** artifact, output slim `target_matrix`; guards (`budget`, circuit breaker). **No caller re-run of detect script** |
-| `loop-execute`        | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`, `node_version`, `uv_version`; enables workspace MCP via `lib/mcp.sh`; worktree from `from.ref` @ `from.branch`                                                                                                                                                             |
-| `loop-finalize`       | Finalize per `target.finalize`, branch cleanup, per-target state write (`lib/write_state.sh`, `lib/prune_targets.sh`), optional `domain_persistence_script`; `.loop/*` to `LOOP_STATE_PUSH_BRANCH`                                                                                                                                                              |
+| `loop-execute`        | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`, `node_version`, `uv_version`; enables workspace MCP via `lib/mcp.sh`; worktree from `from.ref` @ `from.branch`; outputs include `failure_stage` / `failure_message` on push/notify failures                                                                                                                                                |
+| `loop-finalize`       | Finalize per `target.finalize`, branch cleanup, per-target state write (`lib/write_state.sh`, `lib/prune_targets.sh`), optional `domain_persistence_script`; `.loop/*` to `LOOP_STATE_PUSH_BRANCH`; outputs include `failure_stage` / `failure_message` when finalize PR steps fail                                                                                                                                          |
 | `loop-notify-pr`      | Post or update marker PR comment after finalize on `pull_request` targets (sibling step in `ci-loop-agent`, not nested in `loop-finalize`). Platform-owned Layers 1–2; optional skill appendix. See [loop-notify-pr Specification](loop-notify-pr-specification.md)                                                                                             |
 | `loop-install-cli`    | Install and cache the selected engine CLI; accepts `node_version` / `uv_version` so MCP servers can resolve via `npx` / `uvx`                                                                                                                                                                                                                                   |
-| `loop-run-log`        | Append one JSONL entry to `.loop/loop-run-log.md`, prune entries older than 30 days (sibling step in `ci-loop-agent` after `loop-finalize`, or `record-skip` in callers)                                                                                                                                                                                        |
+| `loop-run-log`        | Append one JSONL entry to `.loop/loop-run-log.md` (optional `failure_stage` / `failure_message`), prune entries older than 30 days (sibling step in `ci-loop-agent` after `loop-finalize`, or `record-skip` in callers)                                                                                                                                         |
 | `loop-state-promote`  | Promote or clear `pending` loop state after a fix PR closes (`pull_request` `closed` handler). Prefer direct push; auto-merge state PR when push is blocked (`skip_state_pr` opts out).                                                                                                                                                                         |
 | `loop-worktree-setup` | Isolated worktree at `base_ref` on `base_branch` + agent branch (L2/L3)                                                                                                                                                                                                                                                                                         |
 
@@ -478,6 +478,10 @@ Execute/finalize input. Schema: [Multi-Branch Loops Design](../explanation/loop-
 | Output                | Required | Description                                                                                                   |
 | --------------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
 | `notify_context_json` | yes      | Machine fix context for `loop-notify-pr`. See [loop-notify-pr Specification](loop-notify-pr-specification.md) |
+| `failure_stage`       | no       | Platform failure stage when push/notify fails (empty on success); shared via `lib/loop/failure_record.sh`     |
+| `failure_message`     | no       | Redacted/truncated failure text for run-log diagnostics (empty on success)                                  |
+
+`loop-finalize` likewise outputs `failure_stage` / `failure_message` when finalize PR steps fail. `ci-loop-agent` merges execute and finalize diagnostics into `loop-run-log` inputs.
 
 ### `loop-finalize` inputs (additions)
 

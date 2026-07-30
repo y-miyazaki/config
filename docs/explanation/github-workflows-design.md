@@ -120,6 +120,18 @@ git config http.https://github.com/.extraheader \
 
 ## Error Handling
 
+### Failure diagnostics (loop actions)
+
+When loop composite steps record failure metadata for run logs or action outputs, use the shared libraries under `.github/actions/lib/loop/` — see [.github/workflows/AGENTS.md](../../.github/workflows/AGENTS.md) (Failure diagnostics):
+
+| Library                  | Role                                                                      |
+| ------------------------ | ------------------------------------------------------------------------- |
+| `redact.sh`              | Redact secrets/tokens before persistence                                  |
+| `failure_record.sh`      | Record latest `failure_stage` / `failure_message` (`loop_failure_record`) |
+| `export_failure_diag.sh` | Export recorded diagnostics to `GITHUB_OUTPUT`                            |
+
+`loop-execute` and `loop-finalize` expose `failure_stage` / `failure_message`; `ci-loop-agent` passes them into `loop-run-log` JSONL entries. Do not duplicate redaction patterns or per-action export helpers.
+
 ### jq Parse Errors
 
 When parsing external input (state files, detection script output) with `jq`, fall back on error:
