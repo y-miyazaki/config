@@ -35,7 +35,7 @@ Refactor report per [common-output-format.md](references/common-output-format.md
 
 ### DO NOT USE FOR:
 
-- Lint/style-only; features/API/behavior fixes; cross-boundary apply; platform-wide architecture refactors; tech-debt input
+- Lint/style-only; features/API/behavior fixes; cross-boundary apply; platform-wide architecture refactors; external debt-survey apply input
 
 ## Reference Files Guide
 

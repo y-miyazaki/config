@@ -37,23 +37,23 @@ Do not embed **this repository's** or **single-consumer** specifics in instructi
 
 ### Maintainer-only locations
 
-| Topic                                       | Where                                                                                                                                                                              |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Edit targets, sync, post-change workflow    | [CLAUDE.md § Edit Targets](https://github.com/y-miyazaki/config/blob/main/CLAUDE.md#edit-targets), [.apm/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md) |
-| Loop Engineering, documentation path maps   | `docs/explanation/loop-engineering/**`, consumer `docs/` overlays                                                                                                                  |
-| Repo-specific denylist / path policy        | Root `AGENTS.md`, `docs/`, caller `## Constraints` — not skill `references/` defaults                                                                                              |
-| Local-only domain skills in a consumer repo | That repository's `AGENTS.md` or `docs/`                                                                                                                                           |
+| Topic                                       | Where                                                                                                                                                                                   |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Edit targets, sync, post-change workflow    | [CLAUDE.md § Edit routing](https://github.com/y-miyazaki/config/blob/main/CLAUDE.md#edit-routing-must), [.apm/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md) |
+| Loop Engineering, documentation path maps   | `docs/explanation/loop-engineering/**`, consumer `docs/` overlays                                                                                                                       |
+| Repo-specific denylist / path policy        | Root `AGENTS.md`, `docs/`, caller `## Constraints` — not skill `references/` defaults                                                                                                   |
+| Local-only domain skills in a consumer repo | That repository's `AGENTS.md` or `docs/`                                                                                                                                                |
 
 When reviewing package PRs, treat any domain-specific path or maintainer workflow inside `.apm/packages/**` as a **blocking portability defect** unless it is clearly generalized (pattern + override env var, optional caller field, etc.).
 
 ## Layer responsibilities
 
-| Layer        | Ships                                            | Portability                                                                                                                                                                                         |
-| ------------ | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Skills       | `SKILL.md`, `references/`, `assets/`, `scripts/` | **Required** — generic contract + domain logic only                                                                                                                                                 |
-| Instructions | `*.instructions.md`                              | **Required** — repository-neutral; redistribution policy in [.apm/AGENTS.md § DIST](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md#redistribution-policy-dist--this-repository-only) |
-| Hooks        | portable scripts; JSON per target                | Scripts portable across agents                                                                                                                                                                      |
-| Repo `docs/` | design indexes, maintainer maps                  | Consumer overlay — OK                                                                                                                                                                               |
+| Layer        | Ships                                            | Portability                                                                                                                                                                                |
+| ------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Skills       | `SKILL.md`, `references/`, `assets/`, `scripts/` | **Required** — generic contract + domain logic only                                                                                                                                        |
+| Instructions | `*.instructions.md`                              | **Required** — repository-neutral; redistribution policy in [.apm/AGENTS.md § DIST](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md#redistribution-dist-maintainer-judgment) |
+| Hooks        | portable scripts; JSON per target                | Scripts portable across agents                                                                                                                                                             |
+| Repo `docs/` | design indexes, maintainer maps                  | Consumer overlay — OK                                                                                                                                                                      |
 
 Runtime layering (MCP / hooks / skills) is described in [Configuration Philosophy](architecture.md#configuration-philosophy).
 
@@ -110,7 +110,7 @@ Skills link to generic principles (for example documentation deduplication) and 
 
 Forbidden in distributable skills: `../` escapes, `docs/...` repository paths, or prose like `repository \`docs/...\``.
 
-Enforced in review via `agent-skills-review` (**S-04**). Redistribution maintainer policy for package authors in this repository: [.apm/AGENTS.md § Redistribution policy (DIST)](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md#redistribution-policy-dist--this-repository-only).
+Enforced in review via `agent-skills-review` (**S-04**). Redistribution maintainer policy for package authors in this repository: [.apm/AGENTS.md § Redistribution (DIST)](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md#redistribution-dist-maintainer-judgment).
 
 ## Review skill scope (S-04)
 

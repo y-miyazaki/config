@@ -33,5 +33,14 @@ setup() {
     run bash "${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh" --check apm-install apm-audit
     [ "$status" -eq 0 ]
     [[ $output != *"==> apm-install"* ]]
+    [[ $output != *"==> apm-postinstall"* ]]
     [[ $output != *"==> apm-audit"* ]]
+}
+
+@test "sync_apm_artifacts.sh --skip-install skips install and postinstall" {
+    run bash "${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh" --skip-install --skip-audit loop-contract
+    [ "$status" -eq 0 ]
+    [[ $output == *"==> loop-contract"* ]]
+    [[ $output != *"==> apm-install"* ]]
+    [[ $output != *"==> apm-postinstall"* ]]
 }

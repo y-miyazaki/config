@@ -7,7 +7,8 @@ description: >-
   Use for scheduled automation scans, ad-hoc surveys from detection JSON, or when the user
   asks to fix safe documentation/dependency debt. Default is survey only; write
   report_file and apply fixes only when the user explicitly requests apply or
-  automation sets may_edit in Constraints. Delegate structural work to refactor.
+  automation sets may_edit in Constraints. Do not apply structural refactors;
+  record Delegate hints in Candidates instead.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
@@ -32,13 +33,13 @@ Tech-debt report per [common-output-format.md](references/common-output-format.m
 ### USE FOR:
 
 - Classify mechanical `signals[]` and `hotspots[]` into prioritized debt findings
-- Survey: emit Candidates with Delegate hints (`refactor`, `docs-updater`, `self`, `human`)
+- Survey: emit Candidates with Delegate hints per taxonomy
 - Apply: write `report_file`; apply closed-set fixes (`broken_doc_ref`, `stale_doc`, simple `pin_drift`) within allowlist
 
 ### DO NOT USE FOR:
 
-- Structural refactors or architecture changes (use refactor)
-- CI repair (use ci-sweeper)
+- Structural refactors or architecture changes
+- CI repair
 - Security remediation beyond reporting
 - Edit caller state files (owned by the caller after verification)
 

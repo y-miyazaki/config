@@ -6,8 +6,8 @@ description: >-
   and nav entries accurate. Use when syncing docs after code changes, before PRs, on doc
   sync requests, or when automation reports documentation drift. Default is survey
   only; edit documentation files only when the user explicitly requests a fix or
-  caller constraints allow edits. Not for new document
-  creation (use docs-creator) or markdown linting (use markdown-validation).
+  caller constraints allow edits. Not for new document creation, content
+  authoring, or markdown linting.
 license: Apache-2.0
 metadata:
   author: y-miyazaki
@@ -39,9 +39,9 @@ Target: root `*.md`, `docs/**/*.md`, nested `**/README.md` (excluding generated 
 
 ### DO NOT USE FOR:
 
-- New document creation or content improvement (use docs-creator)
+- New document creation or content improvement
 - Non-documentation file edits
-- Markdown linting (use markdown-validation)
+- Markdown linting
 - Run detection scripts for other skills or manage caller state
 
 ## Reference Files Guide
@@ -87,7 +87,7 @@ When detect JSON and `## Constraints` are present: follow [category-automation-e
 | No git repository                                               | Fatal       | Stop                                                                                          |
 | Empty diff / no documentation impact                            | Info        | Report skip, exit                                                                             |
 | Affected doc file missing                                       | Recoverable | Skip file; note in report                                                                     |
-| Exceeds scope (>3 H2, new top-level document, etc.)             | Recoverable | Stop for file; recommend docs-creator                                                         |
+| Exceeds scope (>3 H2, new top-level document, etc.)             | Recoverable | Stop for file; note out of scope for new top-level authoring                                  |
 | `mkdocs.yml` missing                                            | Recoverable | Skip nav update                                                                               |
 | Fix requested but edits not allowed                             | Info        | Survey only; note that edits require an explicit fix request or caller permission             |
 | Automation `write_target` mismatch                              | Recoverable | Survey only per [category-automation-envelope.md](references/category-automation-envelope.md) |
