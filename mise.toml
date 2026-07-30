@@ -107,7 +107,7 @@ claude = "2.1.218"                               # Claude Code CLI
 "aqua:aquasecurity/trivy" = "0.72.0" # vulnerability scanner
 
 # Terraform related tools
-"aqua:getsops/sops" = "3.13.2"                  # encryption tool
+"aqua:getsops/sops" = "3.13.3"                  # encryption tool
 "aqua:hashicorp/terraform" = "1.15.8"           # infrastructure as code
 "aqua:terraform-docs/terraform-docs" = "0.24.0" # documentation generator
 "aqua:terraform-linters/tflint" = "0.64.0"      # linter
