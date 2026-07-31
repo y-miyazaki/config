@@ -2,7 +2,7 @@
 
 Rules for authoring under `.apm/packages/**`. Package sources are **distribution artifacts** — `apm install` copies them into this repository and into consumer repositories.
 
-**Precedence:** Overrides `.cursor/rules/` and distributable package wording when editing `.apm/packages/**`. Does not override [CLAUDE.md § Edit routing](../CLAUDE.md#edit-routing-must). Design depth: [apm-package-design.md](../docs/explanation/apm-package-design.md).
+Edit targets and sync: [CLAUDE.md § Edit routing](../CLAUDE.md#edit-routing-must). Design depth: [apm-package-design.md](../docs/explanation/apm-package-design.md).
 
 ---
 

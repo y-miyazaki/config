@@ -2,34 +2,34 @@
 
 Behavioral rules for `.github/workflows/**` and `.github/actions/**`. This repository is a **distribution source** — consumers pin workflows and composites by commit SHA.
 
-**Precedence:** These rules override `.cursor/rules/` and other agent instructions when editing paths under `.github/workflows/` or `.github/actions/`. Design background: [GitHub Workflows Design](../../docs/explanation/github-workflows-design.md). Contracts: [Specification](../../docs/reference/specification.md).
+Design background: [GitHub Workflows Design](../../docs/explanation/github-workflows-design.md). Contracts: [Specification](../../docs/reference/specification.md).
 
 ---
 
 ## Pins
 
-| Rule | Requirement |
-| ---- | ----------- |
-| Config components | **MUST** use a full commit SHA (`uses: org/repo/.github/...@<sha> # vX.Y.Z`). Tags and branches are forbidden. |
-| Third-party actions | **MUST** pin by full SHA; annotate upstream version in a comment when known. |
-| Consumer copies (`example/`, external repos) | **MUST** use remote SHA pins only. |
-| Dogfood (`on-*` workflow steps) | **MAY** use `./.github/workflows/...` or `./.github/actions/...` while iterating unreleased graph changes. |
-| Composite internals | **MUST NOT** use `uses: ./.github/actions/...` — unresolvable in consumer repositories. |
-| Release | **MUST** bump SHA pins in `ci-*`, `cd-*`, and `example/` in the same change set as new action/workflow releases (or per release checklist). |
+| Rule                                         | Requirement                                                                                                                                 |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Config components                            | **MUST** use a full commit SHA (`uses: org/repo/.github/...@<sha> # vX.Y.Z`). Tags and branches are forbidden.                              |
+| Third-party actions                          | **MUST** pin by full SHA; annotate upstream version in a comment when known.                                                                |
+| Consumer copies (`example/`, external repos) | **MUST** use remote SHA pins only.                                                                                                          |
+| Dogfood (`on-*` workflow steps)              | **MAY** use `./.github/workflows/...` or `./.github/actions/...` while iterating unreleased graph changes.                                  |
+| Composite internals                          | **MUST NOT** use `uses: ./.github/actions/...` — unresolvable in consumer repositories.                                                     |
+| Release                                      | **MUST** bump SHA pins in `ci-*`, `cd-*`, and `example/` in the same change set as new action/workflow releases (or per release checklist). |
 
 ---
 
 ## Composition
 
-| Rule | Requirement |
-| ---- | ----------- |
-| Composite → composite | **MUST NOT** call another config composite via `uses:` (local or remote). One action pin must stay self-contained. |
-| Workflow → composite | **MUST** call leaf composites via `uses:` only. |
-| Workflow → `lib/run.sh` | **MUST NOT** invoke action `lib/run.sh` from workflow YAML — bypasses the pin boundary. |
-| Cross-action shared logic | **MUST** live under `.github/actions/lib/<domain>/` (for example `lib/loop/`). |
-| Action-specific orchestration | **MUST** stay in that composite's own `lib/`. |
-| Sibling action scripts | **MAY** call `${GITHUB_ACTION_PATH}/../<sibling-action>/lib/...` only for that sibling's owned behavior (for example CLI install). **MUST NOT** treat another composite's `lib/` as a shared contract library. |
-| Portability | **MUST NOT** hardcode consumer paths (`scripts/`, `.agents/`, skill trees, APM install targets) inside reusables or composites. |
+| Rule                          | Requirement                                                                                                                                                                                                    |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Composite → composite         | **MUST NOT** call another config composite via `uses:` (local or remote). One action pin must stay self-contained.                                                                                             |
+| Workflow → composite          | **MUST** call leaf composites via `uses:` only.                                                                                                                                                                |
+| Workflow → `lib/run.sh`       | **MUST NOT** invoke action `lib/run.sh` from workflow YAML — bypasses the pin boundary.                                                                                                                        |
+| Cross-action shared logic     | **MUST** live under `.github/actions/lib/<domain>/` (for example `lib/loop/`).                                                                                                                                 |
+| Action-specific orchestration | **MUST** stay in that composite's own `lib/`.                                                                                                                                                                  |
+| Sibling action scripts        | **MAY** call `${GITHUB_ACTION_PATH}/../<sibling-action>/lib/...` only for that sibling's owned behavior (for example CLI install). **MUST NOT** treat another composite's `lib/` as a shared contract library. |
+| Portability                   | **MUST NOT** hardcode consumer paths (`scripts/`, `.agents/`, skill trees, APM install targets) inside reusables or composites.                                                                                |
 
 Invoke shared or sibling scripts with `run:` + `bash`/`source`. Contexts are not expanded in `uses:`.
 
@@ -39,11 +39,11 @@ Invoke shared or sibling scripts with `run:` + `bash`/`source`. Contexts are not
 
 `${GITHUB_ACTION_PATH}` (same as `${{ github.action_path }}` in composite `run:` steps) points to the **pinned action directory** in the runner's `_actions/` cache — not the caller's `GITHUB_WORKSPACE`.
 
-| Caller | Resolve shared lib as |
-| ------ | --------------------- |
-| Composite `action.yml` `run:` step | `${GITHUB_ACTION_PATH}/../lib/<domain>/...` |
-| Script under `<action>/lib/*.sh` | `$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/<domain>" && pwd)/...` |
-| Prefer | `source` `.github/actions/lib/loop/_resolve.sh` and use `LOOP_ACTION_LIB_DIR` when multiple paths are needed |
+| Caller                             | Resolve shared lib as                                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Composite `action.yml` `run:` step | `${GITHUB_ACTION_PATH}/../lib/<domain>/...`                                                                  |
+| Script under `<action>/lib/*.sh`   | `$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/<domain>" && pwd)/...`                                       |
+| Prefer                             | `source` `.github/actions/lib/loop/_resolve.sh` and use `LOOP_ACTION_LIB_DIR` when multiple paths are needed |
 
 **MUST NOT** use `${GITHUB_WORKSPACE}/.github/actions/...` in paths meant to work when the action is consumed remotely.
 
@@ -51,10 +51,10 @@ Invoke shared or sibling scripts with `run:` + `bash`/`source`. Contexts are not
 
 ## Reusable workflows and secrets
 
-| Surface | Non-secrets | Credentials |
-| ------- | ----------- | ----------- |
+| Surface                    | Non-secrets          | Credentials                                                |
+| -------------------------- | -------------------- | ---------------------------------------------------------- |
 | Reusable (`workflow_call`) | `with:` → `inputs.*` | `secrets:` only — declare under `on.workflow_call.secrets` |
-| Composite action | `with:` → `inputs.*` | `with:` string inputs (no `secrets:` pass-through) |
+| Composite action           | `with:` → `inputs.*` | `with:` string inputs (no `secrets:` pass-through)         |
 
 Reusable workflow rules:
 
@@ -83,17 +83,17 @@ When a loop step records failure metadata for run logs or action outputs:
 
 ## Anti-patterns
 
-| Anti-pattern | Why |
-| ------------ | --- |
-| `uses: ...@main` or `@v1.x` for config components | Unreproducible; policy violation |
-| `uses: ./.github/actions/...` inside a composite step | Broken in consumer repos |
-| Nested `uses:` between config composites | Transitive pin drift |
-| `${GITHUB_WORKSPACE}/.github/actions/.../lib/run.sh` in workflows | Consumers lack that path |
-| `${GITHUB_ACTION_PATH}/../../lib/...` from action `run:` steps | Wrong depth — use `../lib/...` from action root |
-| Shared logic in a composite's `lib/` instead of `actions/lib/` | Couples actions; blocks reuse |
-| Consumer-specific paths in reusables/actions | Breaks portability |
-| `secrets: inherit` on reusable callers | Blocks secret name remapping |
-| Credentials via `with:` on reusable workflows | Wrong channel |
+| Anti-pattern                                                      | Why                                             |
+| ----------------------------------------------------------------- | ----------------------------------------------- |
+| `uses: ...@main` or `@v1.x` for config components                 | Unreproducible; policy violation                |
+| `uses: ./.github/actions/...` inside a composite step             | Broken in consumer repos                        |
+| Nested `uses:` between config composites                          | Transitive pin drift                            |
+| `${GITHUB_WORKSPACE}/.github/actions/.../lib/run.sh` in workflows | Consumers lack that path                        |
+| `${GITHUB_ACTION_PATH}/../../lib/...` from action `run:` steps    | Wrong depth — use `../lib/...` from action root |
+| Shared logic in a composite's `lib/` instead of `actions/lib/`    | Couples actions; blocks reuse                   |
+| Consumer-specific paths in reusables/actions                      | Breaks portability                              |
+| `secrets: inherit` on reusable callers                            | Blocks secret name remapping                    |
+| Credentials via `with:` on reusable workflows                     | Wrong channel                                   |
 
 ---
 

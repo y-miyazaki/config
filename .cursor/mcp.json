@@ -11,9 +11,9 @@
       "args": ["-y", "@upstash/context7-mcp@3.2.4"]
     },
     "fetch": {
-      "args": ["mcp-server-fetch==2026.7.10"],
+      "type": "stdio",
       "command": "uvx",
-      "type": "stdio"
+      "args": ["--with", "mcp>=1.28,<2", "mcp-server-fetch==2026.7.10"]
     },
     "github": {
       "type": "stdio",
