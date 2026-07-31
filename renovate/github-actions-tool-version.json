@@ -25,6 +25,16 @@
       "enabled": false
     },
     {
+      "description": "CustomManager: Update APM CLI version in workflow inputs",
+      "customType": "regex",
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
+      "matchStrings": [
+        "apm_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>v[\\d.]+)[\"']?"
+      ],
+      "depNameTemplate": "microsoft/apm",
+      "datasourceTemplate": "github-releases"
+    },
+    {
       "description": "CustomManager: Update arc version in workflow inputs (disabled: requires checksum update)",
       "customType": "regex",
       "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],

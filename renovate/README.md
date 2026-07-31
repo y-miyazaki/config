@@ -48,7 +48,7 @@ This section defines the intended update policy first, independent from implemen
 - Python: `python`
 - Terraform: `terraform`
 - tflint plugins: `tflint`
-- Cross-file grouped tools: `ecspresso`, `ecschedule`, `golangci-lint`, `goreleaser`, `lean-ctx`, `mise`, `semgrep`, `terraform`, `tflint`, `trivy`, `zizmor`
+- Cross-file grouped tools: `apm`, `ecspresso`, `ecschedule`, `golangci-lint`, `goreleaser`, `lean-ctx`, `mise`, `semgrep`, `terraform`, `tflint`, `trivy`, `zizmor`
 - Automerged updates: `automerge`
 - Baseline for dependency PRs: `dependencies`
 
@@ -160,6 +160,7 @@ Tools that appear in GitHub Actions workflow inputs (`github-actions-tool-versio
 
 | Group         | GitHub Actions input package                 | mise package                    | pre-commit package             |
 | ------------- | -------------------------------------------- | ------------------------------- | ------------------------------ |
+| apm           | `microsoft/apm` (`apm_version`)              | `github:microsoft/apm`          | —                              |
 | ecspresso     | `kayac/ecspresso`                            | `aqua:kayac/ecspresso`          | —                              |
 | ecschedule    | `Songmu/ecschedule`                          | `aqua:Songmu/ecschedule`        | —                              |
 | golangci-lint | `golangci/golangci-lint`                     | `aqua:golangci/golangci-lint`   | —                              |
@@ -204,6 +205,7 @@ Each group rule sets:
 
 Enabled managers include:
 
+- `microsoft/apm` (`apm_version` workflow input; grouped with mise `github:microsoft/apm`)
 - `jdx/mise` (workflow input + Dockerfile ARG)
 - `kayac/ecspresso`
 - `Songmu/ecschedule`

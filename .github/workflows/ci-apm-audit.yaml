@@ -6,7 +6,7 @@ on:
   workflow_call:
     inputs:
       apm_version:
-        default: "v0.14.0"
+        default: "v0.26.0"
         description: "APM CLI version to use"
         required: false
         type: string

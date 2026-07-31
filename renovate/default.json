@@ -311,6 +311,13 @@
       "addLabels": ["zizmor"]
     },
     {
+      "description": "Rules: Group APM CLI updates across GitHub Actions workflow inputs and mise",
+      "groupName": "apm",
+      "matchPackageNames": ["microsoft/apm", "github:microsoft/apm"],
+      "commitMessagePrefix": "renovate(apm):",
+      "addLabels": ["apm"]
+    },
+    {
       "description": "Rules: Group lean-ctx updates across mise and apm MCP",
       "groupName": "lean-ctx",
       "matchPackageNames": ["lean-ctx-bin", "npm:lean-ctx-bin"],
