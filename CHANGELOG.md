@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-[Full diff](https://github.com/y-miyazaki/config/compare/a8506d6d80b7a549a0e3c275448a33c7523cf343...aedf254a07200a1d8f2149e9eb7f6c794dec578f)
+[Full diff](https://github.com/y-miyazaki/config/compare/aedf254a07200a1d8f2149e9eb7f6c794dec578f...4f8b6d95ee4762134729fd058ae8ae4fa049f8d8)
 
 ### Changed
 
@@ -19,6 +19,274 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Dependencies
 
 - Update dependency @upstash/context7-mcp to v3.2.4 (#490) (apm-mcp) ([b91471e](https://github.com/y-miyazaki/config/commit/b91471e00eec73d37f5dc5c3806de18bafaccfa0))
+
+## [1.8.70] - 2026-07-31
+
+### Changed
+
+- Align pins to v1.8.70 (303df93) ([0efe29e](https://github.com/y-miyazaki/config/commit/0efe29e32111eef33581f20429dad2c535e5226a))
+- Finalize all pins v1.8.70 (04507fc) ([303df93](https://github.com/y-miyazaki/config/commit/303df93309a3b2f1df07096ca23d83bcdb0a472b))
+- Pin all to release v1.8.70 (8ae35cb) ([04507fc](https://github.com/y-miyazaki/config/commit/04507fce0ea8186052bc4b51522ee0ba569acc8e))
+- Pin all to v1.8.70 (a12ad75) ([8ae35cb](https://github.com/y-miyazaki/config/commit/8ae35cbed43494288f741204cda4702d948eea87))
+- Update MCP configuration and documentation ([a12ad75](https://github.com/y-miyazaki/config/commit/a12ad757efde9cbf16f2a8381b2855aab93f5efb))
+- Update cron schedule to run weekly on Mondays (docs-updater) ([15b5f8c](https://github.com/y-miyazaki/config/commit/15b5f8c2c3621e83456945d050bd4ec471b71c04))
+- Append run log [skip ci] (loop) ([d791992](https://github.com/y-miyazaki/config/commit/d7919923dcdb9a7781112ce7d7106fed6608d0e1))
+- Update state [skip ci] (loop) ([df0803b](https://github.com/y-miyazaki/config/commit/df0803bb001760d6ad962039809f8a0e40d90090))
+- Promote state for PR #554 [skip ci] (loop) ([6c120fa](https://github.com/y-miyazaki/config/commit/6c120fac0bf39e8ab8de2be3b10a9dc01ee50102))
+- Automated documentation update (loop-docs-updater) (#554) (docs-updater) ([a6f237b](https://github.com/y-miyazaki/config/commit/a6f237b3bfc214f70c3aa61e39fa2717cfdf4d90))
+- Update apm.lock.yaml and improve documentation references ([f50999a](https://github.com/y-miyazaki/config/commit/f50999af9c4e9e96f11eb39003371d9edc3bb5f9))
+- Append run log [skip ci] (loop) ([71213d9](https://github.com/y-miyazaki/config/commit/71213d96a3752f17911e1a314fec9a20c926558f))
+- Update state [skip ci] (loop) ([1a0fa7e](https://github.com/y-miyazaki/config/commit/1a0fa7ee24db4821a5dd4f90383e78f22117fec9))
+- Append run log [skip ci] (loop) ([24e4915](https://github.com/y-miyazaki/config/commit/24e4915a68570cd0e9e1d5901ffec6502d64310c))
+- Update state [skip ci] (loop) ([e9d5bf6](https://github.com/y-miyazaki/config/commit/e9d5bf69ff8cb6fc2b36ab0f2b64bea59bb9ab18))
+
+#### Dependencies
+
+- Update dependency aqua:github/copilot-cli to v1.0.74 (#563) (mise) ([e63046a](https://github.com/y-miyazaki/config/commit/e63046afe93804d88277a95f4c6af01dfd7b3bf9))
+- Update dependency astral-sh/uv to v0.11.32 (#561) (github-actions-tool-version) ([fa02dd4](https://github.com/y-miyazaki/config/commit/fa02dd4f52e2315450ca2bece95706b6cde8c38a))
+- Update dependency aqua:vektra/mockery to v3.7.2 (#560) (mise) ([8191f79](https://github.com/y-miyazaki/config/commit/8191f79cafce20afa50101a13c1297c94c117dd2))
+- Update dependency aqua:astral-sh/uv to v0.11.32 (#562) (mise) ([d6abef7](https://github.com/y-miyazaki/config/commit/d6abef76c374a15777ffeb98464ee0aa7b0a2d11))
+- Update dependency aqua:aws/aws-cli to v2.36.7 (#557) (mise) ([149c3b5](https://github.com/y-miyazaki/config/commit/149c3b5d0a5b2d91affb9bd5b4651e25775722fa))
+- Update dependency pnpm to v11.17.0 (#556) (mise) ([f0c1701](https://github.com/y-miyazaki/config/commit/f0c1701ab3f8a1cd3a6fd92c6ab13c9a68be4929))
+- Update dependency aqua:aws/aws-sam-cli to v1.164.0 (#552) (mise) ([baff0a9](https://github.com/y-miyazaki/config/commit/baff0a9b3d0c0b66341e20ee65d8bb48f353ff12))
+
+## [1.8.69] - 2026-07-30
+
+### Changed
+
+- Align pins to v1.8.69 (bd470e3) ([51950c7](https://github.com/y-miyazaki/config/commit/51950c792619ebba231694b6b528ec96ba7f8318))
+- Finalize all pins v1.8.69 (641b6fd) ([bd470e3](https://github.com/y-miyazaki/config/commit/bd470e36adc4935cba33b1fdef81802d5b11dcf7))
+- Pin all to release v1.8.69 (fd884a8) ([641b6fd](https://github.com/y-miyazaki/config/commit/641b6fd43c2e86a06f68aebb2b3882a68f9a0772))
+- Pin all to v1.8.69 (4fb123c) ([fd884a8](https://github.com/y-miyazaki/config/commit/fd884a830d77961a6acf12977d9590982b152894))
+- Update apm.lock.yaml and SKILL.md files ([4fb123c](https://github.com/y-miyazaki/config/commit/4fb123c1993d4c5c71c897dc8d2cd5af2ecfdd22))
+- Update lockfiles and documentation references ([b25edfd](https://github.com/y-miyazaki/config/commit/b25edfd61de97e8a8d09cc82afdb797067676e7b))
+- Remove redundant security reference from AGENTS.md ([c649cbf](https://github.com/y-miyazaki/config/commit/c649cbf59316e428a2c7fda0b91a16e22a662cb1))
+
+#### Dependencies
+
+- Update dependency aqua:getsops/sops to v3.13.3 (#553) (mise) ([a71ac87](https://github.com/y-miyazaki/config/commit/a71ac87ca316b177bd94379fd3e624d31ed6aba9))
+- Update mise to v2026.7.12 (#551) (github-actions-tool-version) ([0f176ee](https://github.com/y-miyazaki/config/commit/0f176eef0cb0c1ef0446e7671cb2b5530b316383))
+- Update dependency pnpm to v11.16.0 (#549) (mise) ([5b8addc](https://github.com/y-miyazaki/config/commit/5b8addcafeaee14cd8c88bf14c5866e1d8c4dfa0))
+- Update aws-actions/configure-aws-credentials action to v6.2.3 (#548) (github-actions) ([914609a](https://github.com/y-miyazaki/config/commit/914609a447b1c14ae114562991d3ae3286343d86))
+- Update dependency claude to v2.1.218 (#550) (mise) ([a65c541](https://github.com/y-miyazaki/config/commit/a65c54146adea06183aaf088e3d2b290404cbd93))
+
+## [1.8.68] - 2026-07-29
+
+### Fixed
+
+- Remove unnecessary note about external file requirement (AGENTS) ([e0c0411](https://github.com/y-miyazaki/config/commit/e0c0411bdeb323efb3a5b9b8a189041603435ed4))
+
+### Changed
+
+- Align pins to v1.8.68 (7e230ae) ([53f57d7](https://github.com/y-miyazaki/config/commit/53f57d73b95ba741c14e805c08054c6c95ef570b))
+- Finalize all pins v1.8.68 (8540281) ([7e230ae](https://github.com/y-miyazaki/config/commit/7e230aecc3007d1c7e8263e41bf3b7eb79d265bd))
+- Pin all to release v1.8.68 (41b57f3) ([8540281](https://github.com/y-miyazaki/config/commit/85402819f6c324a49898fd655e82866d1cd914c0))
+- Pin all to v1.8.68 (7bc1ab1) ([41b57f3](https://github.com/y-miyazaki/config/commit/41b57f3a4457938c174053b3e02275e1a25c4ca1))
+- Streamline AGENTS.md for clarity and operational focus ([7bc1ab1](https://github.com/y-miyazaki/config/commit/7bc1ab1b386c5ee8b8af480e449bf6fe87fc0a9b))
+- Append run log [skip ci] (loop) ([d4c20b9](https://github.com/y-miyazaki/config/commit/d4c20b909c60484041a6d56e4b216051a7373a1a))
+- Update mise lockfile (ci) ([0e6b118](https://github.com/y-miyazaki/config/commit/0e6b11887b6ea6be0215edc379f79569d3958985))
+- Append run log [skip ci] (loop) ([4b0876d](https://github.com/y-miyazaki/config/commit/4b0876d45bdddb7b4985a335107c2ffb374e5225))
+- Append run log [skip ci] (loop) ([9c46b1f](https://github.com/y-miyazaki/config/commit/9c46b1ff8293d7b27c54feb389d93b06f6e505d6))
+- Enhance failure diagnostics and logging in loop actions ([98a56ea](https://github.com/y-miyazaki/config/commit/98a56ea75d4b3ccfe0d4335abe4ecec7532b8de4))
+- Append run log [skip ci] (loop) ([f480016](https://github.com/y-miyazaki/config/commit/f480016bd8d2aea52bcd4b5066b7b63e21285003))
+- Append run log [skip ci] (loop) ([cc774ea](https://github.com/y-miyazaki/config/commit/cc774ea304f23045c696258895c9ee9d3a1761ed))
+- Promote state for PR #542 [skip ci] (loop) ([9f4f95e](https://github.com/y-miyazaki/config/commit/9f4f95e01201936d6e13b776b82d4a95ae4e723d))
+- Loop-automated update (attempt 1) (#542) ([0c09491](https://github.com/y-miyazaki/config/commit/0c09491a0b628d5931b5ddcbe4a44a9f174dcba6))
+- Append run log [skip ci] (loop) ([ee577fc](https://github.com/y-miyazaki/config/commit/ee577fc50e39f576abd18cb868531aa5319b9101))
+- Update state [skip ci] (loop) ([b72a439](https://github.com/y-miyazaki/config/commit/b72a43928b741c947951ebd906f78fa49ea351c5))
+- Append run log [skip ci] (loop) ([bb5c8c8](https://github.com/y-miyazaki/config/commit/bb5c8c8e0b8d35e3031d67e9a12e4d8d9924bf8c))
+- Update state [skip ci] (loop) ([062440c](https://github.com/y-miyazaki/config/commit/062440c7b8d8a07706c53fe2572e32b23e2bc415))
+- Append run log [skip ci] (loop) ([1be8ef3](https://github.com/y-miyazaki/config/commit/1be8ef34dbc1cc1866a78ed7129c70712bfc65db))
+- Update state [skip ci] (loop) ([fe572c0](https://github.com/y-miyazaki/config/commit/fe572c0d0e20ffd3a0edaff1ff4d247e61a1515f))
+- Append run log [skip ci] (loop) ([ed1e0e2](https://github.com/y-miyazaki/config/commit/ed1e0e29a11542a5cdb81f33840554c429c04b05))
+- Update state [skip ci] (loop) ([07ee89f](https://github.com/y-miyazaki/config/commit/07ee89f77933fe4d3db54c2b04dc1be4b4604d11))
+- Append run log [skip ci] (loop) ([4c8dd51](https://github.com/y-miyazaki/config/commit/4c8dd51d7c874b25ccb42fdb3c6b36f6986189a1))
+- Update state [skip ci] (loop) ([68ae266](https://github.com/y-miyazaki/config/commit/68ae266714f85d3a6b9bcb90bfb6a43a4de5d904))
+
+#### Dependencies
+
+- Update dependency aqua:aws/aws-cli to v2.36.6 (#545) (mise) ([02f4ddb](https://github.com/y-miyazaki/config/commit/02f4ddbb3edd808c939de6f0203733685be83392))
+- Update dependency awslabs.aws-documentation-mcp-server to v1.1.27 (#544) (apm-mcp) ([a7dc171](https://github.com/y-miyazaki/config/commit/a7dc17170e3f0eb4f9a3b1d8e61ecbd76eb224eb))
+- Update dependency aqua:air-verse/air to v1.67.2 (#543) (mise) ([6442ebb](https://github.com/y-miyazaki/config/commit/6442ebb7d9089d66152917da7fa2ec30b7942a23))
+- Update github/codeql-action action to v4.37.3 (#540) (github-actions) ([2a9b2bf](https://github.com/y-miyazaki/config/commit/2a9b2bfa5f10321a7c9b20dfa0d184f60625d705))
+- Update dependency aqua:go-swagger/go-swagger to v0.35.3 (#541) (mise) ([2ec3020](https://github.com/y-miyazaki/config/commit/2ec302085ffd762c60d26df83c11a5167711bef1))
+
+## [1.8.67] - 2026-07-29
+
+### Changed
+
+- Align pins to v1.8.67 (21ec79c) ([f22c135](https://github.com/y-miyazaki/config/commit/f22c135bc8b0bb577de24e41384771909be679b4))
+- Finalize all pins v1.8.67 (bf57b81) ([21ec79c](https://github.com/y-miyazaki/config/commit/21ec79cfb0eb6e5a462a83ff2296c1df6f6c9caa))
+- Pin all to release v1.8.67 (01cb8dd) ([bf57b81](https://github.com/y-miyazaki/config/commit/bf57b8188549426d8d881b242bb2a6d00887fec3))
+- Pin all to v1.8.67 (a30eea1) ([01cb8dd](https://github.com/y-miyazaki/config/commit/01cb8ddbe595a5f012cf06e965be3d443875b81c))
+- Append run log [skip ci] (loop) ([a30eea1](https://github.com/y-miyazaki/config/commit/a30eea1620d851f9d1b37b9b0e58ef9efc38ea3c))
+- Update state [skip ci] (loop) ([913ff9c](https://github.com/y-miyazaki/config/commit/913ff9c5aee06011f4f154c7e494122917b26415))
+- Append run log [skip ci] (loop) ([506eae4](https://github.com/y-miyazaki/config/commit/506eae4cdde59bea8e6afc7f1d1f6a99d513a229))
+- Update state [skip ci] (loop) ([b28a2a7](https://github.com/y-miyazaki/config/commit/b28a2a740eeba6d0355d1def065710ecd9d9f09d))
+- Update mise lockfile (ci) ([2385dd8](https://github.com/y-miyazaki/config/commit/2385dd8c0edf9f15ceb94b361f3215ff37bc54ec))
+- Update mise lockfile (ci) ([636e008](https://github.com/y-miyazaki/config/commit/636e008192e4cd1a40d26626d692f7f80732c302))
+- Clear_pending state for PR #527 [skip ci] (loop) ([6140578](https://github.com/y-miyazaki/config/commit/6140578d7b976f1b2107f310280b95badbd7f70d))
+
+#### Dependencies
+
+- Update astral-sh/setup-uv action to v9 (#539) (github-actions) ([378d717](https://github.com/y-miyazaki/config/commit/378d717ae80b7fff0a1ee39709a817f1305c05b6))
+- Update dependency npm:prettier to v3.9.6 (#536) (mise) ([ed7560d](https://github.com/y-miyazaki/config/commit/ed7560d6d961b8ead81d40e3338944ad1d597ab1))
+- Update github/codeql-action action to v4.37.2 (#530) (github-actions) ([25ae455](https://github.com/y-miyazaki/config/commit/25ae455c11bc192902668b0f784cea0441432265))
+- Update dependency pipx:pre-commit to v4.6.1 (#537) (mise) ([2fe002f](https://github.com/y-miyazaki/config/commit/2fe002f6e4523e0cb1a5db5f5c72a8c365f28889))
+- Update dependency aqua:astral-sh/uv to v0.11.31 (#535) (mise) ([ba14749](https://github.com/y-miyazaki/config/commit/ba14749916829d7872297acc728367fe9accb05c))
+- Update dependency astral-sh/uv to v0.11.31 (#534) (github-actions-tool-version) ([c334560](https://github.com/y-miyazaki/config/commit/c33456035d5d4fe6f5bf1cc58b1390107c2f4382))
+- Update dependency claude to v2.1.217 (#533) (mise) ([60ebda4](https://github.com/y-miyazaki/config/commit/60ebda4ae5b4039f5bd76656d4be6ff965a3edba))
+- Update dependency aqua:aws/aws-cli to v2.36.5 (#532) (mise) ([3030300](https://github.com/y-miyazaki/config/commit/3030300aff47f8f5dd1c47bf665c7052a3a5f3de))
+- Update dependency aqua to v2.62.1 (#531) (mise) ([6a1402f](https://github.com/y-miyazaki/config/commit/6a1402f439216938279c805b9483c2557ae1677b))
+- Update dependency aqua:go-swagger/go-swagger to v0.35.2 (#528) (mise) ([4816d86](https://github.com/y-miyazaki/config/commit/4816d865e6fd87f6864c05a99b1c8ad7194f3ad1))
+
+## [1.8.66] - 2026-07-28
+
+### Changed
+
+- Align pins to v1.8.66 (2120153) ([959eaf7](https://github.com/y-miyazaki/config/commit/959eaf7c4203a2a4a71dcdd553155f7876c3b93f))
+- Finalize all pins v1.8.66 (0af2cdf) ([2120153](https://github.com/y-miyazaki/config/commit/21201537b6f1f7cfd6b784e7c8192bf9052ea40c))
+- Pin all to release v1.8.66 (c5c0909) ([0af2cdf](https://github.com/y-miyazaki/config/commit/0af2cdff430a0a27ce90b2c52a1f3deb3731cd1e))
+- Pin all to v1.8.66 (9f2501c) ([c5c0909](https://github.com/y-miyazaki/config/commit/c5c0909d2960773f810b3d12f158abe383f230fc))
+- Append run log [skip ci] (loop) ([5893d8a](https://github.com/y-miyazaki/config/commit/5893d8ae3b6aa507eb02e2404a9cafc19fe6fe74))
+- Update state [skip ci] (loop) ([b949b56](https://github.com/y-miyazaki/config/commit/b949b56bec09b86be7beb6b939709fa07618c6a1))
+
+#### Dependencies
+
+- Update dependency aqua:jdx/usage to v3.5.6 (#529) (mise) ([8b324df](https://github.com/y-miyazaki/config/commit/8b324df7c007442709311e727eed89d27855bad8))
+- Update dependency claude to v2.1.216 (#526) (mise) ([2c645c9](https://github.com/y-miyazaki/config/commit/2c645c95ff19fd19fb9fc73e957fd9eb09db22bf))
+- Update dependency aqua:github/copilot-cli to v1.0.73 (#525) (mise) ([f566309](https://github.com/y-miyazaki/config/commit/f566309bf512e40c9626b12b6a5c3c48b4fab1ed))
+- Update dependency aqua:aws/aws-cli to v2.36.4 (#524) (mise) ([af2590a](https://github.com/y-miyazaki/config/commit/af2590aaad75e1327e10ed72aff62dabfb773977))
+- Update mise to v2026.7.11 (#523) (github-actions-tool-version) ([da7b8ec](https://github.com/y-miyazaki/config/commit/da7b8ece20ad2ac6a98cb3b813c5cc79f3ea6f34))
+- Update dependency aqua:astral-sh/uv to v0.11.30 (#522) (mise) ([aff975a](https://github.com/y-miyazaki/config/commit/aff975a47d1d89f439f2abeb413ad6228cef2ea7))
+- Update dependency astral-sh/uv to v0.11.30 (#521) (github-actions-tool-version) ([221677e](https://github.com/y-miyazaki/config/commit/221677e128f69255da64af3347ef65f5a92bb891))
+- Update dependency aqua:github/copilot-cli to v1.0.72 (#520) (mise) ([a0cd844](https://github.com/y-miyazaki/config/commit/a0cd84442075b5b46cb51444a99f0ea48369b0a9))
+- Update dependency aqua:aws/aws-cli to v2.36.3 (#519) (mise) ([48fd8ac](https://github.com/y-miyazaki/config/commit/48fd8ac66417d2e08fbb95fc218e5c6c414c17e3))
+
+## [1.8.65] - 2026-07-27
+
+### Changed
+
+- Align pins to v1.8.65 (8a1a0fd) ([f657040](https://github.com/y-miyazaki/config/commit/f657040d0394bb5bc20bab8afc2614a40f4f7581))
+- Finalize all pins v1.8.65 (0654f52) ([8a1a0fd](https://github.com/y-miyazaki/config/commit/8a1a0fde176521e2b992ba4f3ea0aa119333b648))
+- Pin all to release v1.8.65 (8be1aaf) ([0654f52](https://github.com/y-miyazaki/config/commit/0654f52311753a3f1ab0ca83bd3ae52ee14639a6))
+- Pin all to v1.8.65 (4df3366) ([8be1aaf](https://github.com/y-miyazaki/config/commit/8be1aafd8e263fb1bf84d3886dadd5ebb33de9d5))
+- Update skill metadata and references, add new evaluation task ([4df3366](https://github.com/y-miyazaki/config/commit/4df3366edc9a566057aa5f0f42547af575bcf2fa))
+
+## [1.8.64] - 2026-07-27
+
+### Changed
+
+- Align pins to v1.8.64 (faab08e) ([9769219](https://github.com/y-miyazaki/config/commit/976921963baecd15914afd31c39b13d3b6dd3bc5))
+- Finalize all pins v1.8.64 (a07fe1b) ([faab08e](https://github.com/y-miyazaki/config/commit/faab08e963cabefc61b34524a3edff97cfcac544))
+- Pin all to release v1.8.64 (e8e7b4c) ([a07fe1b](https://github.com/y-miyazaki/config/commit/a07fe1bc074682ced1a1ecfc320d2f94fbb68291))
+- Pin all to v1.8.64 (ffd730b) ([e8e7b4c](https://github.com/y-miyazaki/config/commit/e8e7b4c4a5b67c33331236d77a3fb4dfa6c7706f))
+- Align pins to v1.8.64 (c119437) ([ffd730b](https://github.com/y-miyazaki/config/commit/ffd730b781800ac40a42e818d42abb82ae471edb))
+- Finalize all pins v1.8.64 (381c992) ([30a214b](https://github.com/y-miyazaki/config/commit/30a214b2703899aeb5698727396d188f3902a436))
+- Pin all to release v1.8.64 (eda12c9) ([594b8bc](https://github.com/y-miyazaki/config/commit/594b8bc26e9842877a8ec0c37ce45a720d0aea2e))
+- Pin all to v1.8.64 (e5fcd6b) ([68b416f](https://github.com/y-miyazaki/config/commit/68b416fdf84a8b3388e0a0c46323947a5390b921))
+- Promote state for PR #516 [skip ci] (loop) ([30d50c7](https://github.com/y-miyazaki/config/commit/30d50c7c0fbb3c0f96e6270a2d74d8853f45dc95))
+- Loop-automated update (attempt 1) (#516) ([bc96a34](https://github.com/y-miyazaki/config/commit/bc96a34a2207724651aee2d8085006f697f26174))
+- Append run log [skip ci] (loop) ([259aa08](https://github.com/y-miyazaki/config/commit/259aa084ba0108f6366a59d9622c460922dad73b))
+- Update state [skip ci] (loop) ([31ba88a](https://github.com/y-miyazaki/config/commit/31ba88a583afabec647d024240f98c9c73fa6f8a))
+- Promote state for PR #513 [skip ci] (loop) ([b7504ca](https://github.com/y-miyazaki/config/commit/b7504ca7d7c4eb13b59def018faed095d1aeed2b))
+- Append run log [skip ci] (loop) ([7938f7b](https://github.com/y-miyazaki/config/commit/7938f7b57815558aba38d32f6ba3e695491e4fbc))
+- Update state [skip ci] (loop) ([a40febc](https://github.com/y-miyazaki/config/commit/a40febc8c51204108f592ab687d40744b7adaf82))
+- Loop-automated update (attempt 1) (#513) ([c25489a](https://github.com/y-miyazaki/config/commit/c25489a2a3cc3fc4e740c03792caff82749f62a0))
+- Promote state for PR #514 [skip ci] (loop) ([97f65df](https://github.com/y-miyazaki/config/commit/97f65dfe76f247724da0fd53d3720712bdd7049c))
+- Loop-automated update (attempt 1) (#514) ([6531c1f](https://github.com/y-miyazaki/config/commit/6531c1f4a9f02fb5c5abc8f965cde029fca4ef15))
+- Update lockfile and add new references for PR body links (apm) ([f52c135](https://github.com/y-miyazaki/config/commit/f52c1350a1a3339299349e3b28d3a7a07f136be3))
+- Append run log [skip ci] (loop) ([988f660](https://github.com/y-miyazaki/config/commit/988f660dde9c5f9a7933eee2f58ad5ef69fcee84))
+- Update state [skip ci] (loop) ([dcfa1b4](https://github.com/y-miyazaki/config/commit/dcfa1b421a506738dceaabd6e48ba519dc3213e3))
+- Append run log [skip ci] (loop) ([55ff870](https://github.com/y-miyazaki/config/commit/55ff870545b430ecc0f0349c32336bd6477fa31b))
+- Update state [skip ci] (loop) ([f87dd26](https://github.com/y-miyazaki/config/commit/f87dd2690757e27ede28b1cdf3c2157a340ae13f))
+- Update mise lockfile (ci) ([14f9abb](https://github.com/y-miyazaki/config/commit/14f9abb5cd120f455d41f55fc7ef91bdc425d03e))
+- Update description and workflow for clarity and precision (code-reviewer) ([a05db10](https://github.com/y-miyazaki/config/commit/a05db106c129e5eea66993ee1ace8b71837e5238))
+- Promote state for PR #502 [skip ci] (loop) ([6e8a05a](https://github.com/y-miyazaki/config/commit/6e8a05a95fc0910b5b23984270508e27218d61c6))
+- Loop-automated update (attempt 1) (#502) ([18cfe92](https://github.com/y-miyazaki/config/commit/18cfe920d43330af56211697d9bc257040d0d1ee))
+
+#### Dependencies
+
+- Update dependency aqua:air-verse/air to v1.67.1 (#518) (mise) ([7cb42f1](https://github.com/y-miyazaki/config/commit/7cb42f11e9fecbceb071a5d30a936f7742354e2a))
+- Update actions/checkout action to v7.0.1 (#517) (github-actions-official) ([e5fcd6b](https://github.com/y-miyazaki/config/commit/e5fcd6b95f7c7287c8c83415b02c8a3e9e4b8d38))
+- Update dependency aqua:go-swagger/go-swagger to v0.35.1 (#515) (mise) ([2204b9d](https://github.com/y-miyazaki/config/commit/2204b9dff2a45ab32ef1fc8f9a9b06574445661f))
+- Bump actions/setup-python (#509) (github-actions) ([f5f6ad3](https://github.com/y-miyazaki/config/commit/f5f6ad3e00736b54c79e2bcb2b2d4dc09b6bc318))
+- Bump actions/checkout (#510) (github-actions) ([f67d55f](https://github.com/y-miyazaki/config/commit/f67d55fd1e6d6c8e69b4e2369da09fd054ef3e91))
+- Update actions/setup-python action to v7 (#511) (github-actions) ([e4be73c](https://github.com/y-miyazaki/config/commit/e4be73cbbc9b4da47e6fa464ba7ad1e8289f56ee))
+- Update dependency pnpm to v11.15.1 (#508) (mise) ([bb6fa29](https://github.com/y-miyazaki/config/commit/bb6fa298db145289259e339ffc01a9638975715d))
+- Lock file maintenance (#507) (mise) ([9a58803](https://github.com/y-miyazaki/config/commit/9a58803c00371872dd0ad52334a046bfea53452b))
+- Update dependency pipx:headroom-ai to v0.32.1 (#506) (mise) ([c5a79e9](https://github.com/y-miyazaki/config/commit/c5a79e92593ae02dc397d43c1bb3759c12a218d6))
+- Update dependency claude to v2.1.215 (#505) (mise) ([5c5f1f1](https://github.com/y-miyazaki/config/commit/5c5f1f180ce20f2ca75deb8ef17594d451b1385d))
+- Update dependency aqua:air-verse/air to v1.66.0 (#501) (mise) ([8632730](https://github.com/y-miyazaki/config/commit/8632730f4fdf66be402ab6faaf80b6b47c2b0d23))
+- Update dependency pnpm to v11.15.0 (#503) (mise) ([ea38456](https://github.com/y-miyazaki/config/commit/ea38456639ff9c3f5fc0165e1122782854c939b7))
+- Update DavidAnson/markdownlint-cli2-action action to v24.1.0 (#504) (github-actions) ([acc829d](https://github.com/y-miyazaki/config/commit/acc829defd1dc3ea859f77609c4835e9720d8c73))
+
+## [1.8.63] - 2026-07-25
+
+### Changed
+
+- Align pins to v1.8.63 (4453112) ([68ea738](https://github.com/y-miyazaki/config/commit/68ea73851a676a9f2a19b68acd8de7df857eba06))
+- Finalize all pins v1.8.63 (2299be4) ([4453112](https://github.com/y-miyazaki/config/commit/44531129e584e57731c8c8d0dcb0154cb4bae0d0))
+- Pin all to release v1.8.63 (a824566) ([2299be4](https://github.com/y-miyazaki/config/commit/2299be4bb5b481c1d589e838e50a6414b3b2927e))
+- Pin all to v1.8.63 (cf5c960) ([a824566](https://github.com/y-miyazaki/config/commit/a8245662359ab1c9a8d2252aaf38b5b2c682b854))
+
+## [1.8.62] - 2026-07-25
+
+### Changed
+
+- Align pins to v1.8.62 (dfa0b39) ([650d5fe](https://github.com/y-miyazaki/config/commit/650d5fe372f1001ea65edf8bd5b37e8586c5c1f8))
+- Finalize all pins v1.8.62 (a15b4d4) ([dfa0b39](https://github.com/y-miyazaki/config/commit/dfa0b39309eb5ef075d543255f05e4d04c85e643))
+- Pin all to release v1.8.62 (a46d7f6) ([a15b4d4](https://github.com/y-miyazaki/config/commit/a15b4d40932cb71ce5a0cc863c800285f5b7782c))
+- Pin all to v1.8.62 (9fc64fc) ([a46d7f6](https://github.com/y-miyazaki/config/commit/a46d7f616ec8413e0e5cd33fb0e6eac7dd93ac65))
+- Append run log [skip ci] (loop) ([cb0a88e](https://github.com/y-miyazaki/config/commit/cb0a88e0815fedd6a54e4189580d8d5f9a78f27e))
+- Update state [skip ci] (loop) ([26d46a9](https://github.com/y-miyazaki/config/commit/26d46a9c4065e1ed41bc00c3b5dee038f6757c03))
+- Promote state for PR #500 [skip ci] (loop) ([a550aa9](https://github.com/y-miyazaki/config/commit/a550aa9ab65d211540d2be525709d695ada0f69a))
+- Loop-automated update (attempt 1) (#500) ([f2fd9f3](https://github.com/y-miyazaki/config/commit/f2fd9f31d5865fcbb414c37e0c1e5231d7fab4da))
+- Append run log [skip ci] (loop) ([8d43534](https://github.com/y-miyazaki/config/commit/8d435349f3bc9017daf5ce5935c86ce928b07950))
+- Update state [skip ci] (loop) ([d674d9e](https://github.com/y-miyazaki/config/commit/d674d9ece9e9f34b1a266ab7d80ea1855f5e9f7a))
+- Promote state for PR #491 [skip ci] (loop) ([938cb9b](https://github.com/y-miyazaki/config/commit/938cb9bf9b55b171319105c185626b272b086102))
+- Automated documentation update (loop-docs-triage) (#491) (docs-triage) ([869ca1e](https://github.com/y-miyazaki/config/commit/869ca1e092e894e8ee0ad42492d451cba7bd1ae8))
+- Promote state for PR #492 [skip ci] (loop) ([52894f4](https://github.com/y-miyazaki/config/commit/52894f4f8e362fbf77c780224b2b9a63f7a377fb))
+- Loop-automated update (attempt 1) (#492) ([1c805be](https://github.com/y-miyazaki/config/commit/1c805be082ec7f2d429f760d259f126fbe463d33))
+
+#### Dependencies
+
+- Update module go:github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen to v2.8.0 (#494) (mise) ([2fde3c9](https://github.com/y-miyazaki/config/commit/2fde3c9f9b30ac172799ba1a69e15eb89075bdf3))
+- Update dependency aqua:bufbuild/buf to v1.72.0 (#496) (mise) ([7ee78bf](https://github.com/y-miyazaki/config/commit/7ee78bff600b63287704771cf2e58a7b2bb429bf))
+- Update dependency pnpm to v11.14.0 (#498) (mise) ([f767b8a](https://github.com/y-miyazaki/config/commit/f767b8afe6427d995ad9d3141e57da17c241f62b))
+- Update tflint to v0.64.0 (#499) (tflint) ([b008173](https://github.com/y-miyazaki/config/commit/b00817343dacf4ae2b8bababff52126825d9a3a2))
+- Update dependency claude to v2.1.214 (#497) (mise) ([18cd0fa](https://github.com/y-miyazaki/config/commit/18cd0fa954657ceedc68d893de3f4e980d68401c))
+- Update dependency aqua:aws/aws-cli to v2.36.2 (#495) (mise) ([7a80a19](https://github.com/y-miyazaki/config/commit/7a80a19cbc2fa9543db6c3b0ad07ddf6d45ea27d))
+- Update dependency github:microsoft/waza to v0.38.3 (#493) (mise) ([1d8d51f](https://github.com/y-miyazaki/config/commit/1d8d51f1b3892bd7fbd58771b2bb15b2f50d79c2))
+
+## [1.8.61] - 2026-07-24
+
+### Changed
+
+- Align pins to v1.8.61 (10f7147) ([6d375a6](https://github.com/y-miyazaki/config/commit/6d375a6c6262ee59469f39f39c71ddb6b393f494))
+- Finalize all pins v1.8.61 (0a112b8) ([10f7147](https://github.com/y-miyazaki/config/commit/10f7147e1b7e3f4349d655f7ef6e3f20c314846c))
+- Pin all to release v1.8.61 (526321c) ([0a112b8](https://github.com/y-miyazaki/config/commit/0a112b80cbf78595afc2919cec7e266bb0762658))
+- Pin all to v1.8.61 (b572ad2) ([526321c](https://github.com/y-miyazaki/config/commit/526321cd855a64402dc5ee1cd90f824bc05a8ef2))
+
+## [1.8.60] - 2026-07-24
+
+### Changed
+
+- Align pins to v1.8.60 (d23ac04) ([3dbe7c7](https://github.com/y-miyazaki/config/commit/3dbe7c7d97e189c013b004ab69e6e7a4a2615b1d))
+- Finalize all pins v1.8.60 (c9b2e15) ([d23ac04](https://github.com/y-miyazaki/config/commit/d23ac04b070af6e1df85cfe175479a9511e6018b))
+- Pin all to release v1.8.60 (7becc83) ([c9b2e15](https://github.com/y-miyazaki/config/commit/c9b2e15dbed1f83b45e884008f32b2abbf47b120))
+- Pin all to v1.8.60 (d619c8d) ([7becc83](https://github.com/y-miyazaki/config/commit/7becc832a6f0daf7ea4317fc4946580c0e18bead))
+
+## [1.8.59] - 2026-07-24
+
+### Changed
+
+- Align pins to v1.8.59 (8b07b50) ([242d49c](https://github.com/y-miyazaki/config/commit/242d49c8dc0d965db1ba6826dc3a2c81a46ebde4))
+- Finalize all pins v1.8.59 (183bc01) ([8b07b50](https://github.com/y-miyazaki/config/commit/8b07b501759bbe4716c759dfdbd914d4d5ebbdc3))
+- Pin all to release v1.8.59 (7e4b1f1) ([183bc01](https://github.com/y-miyazaki/config/commit/183bc019f0bee2dfdcb6c808cd7330933ed4aff1))
+- Pin all to v1.8.59 (8757cce) ([7e4b1f1](https://github.com/y-miyazaki/config/commit/7e4b1f1ea061d3b6a4c3bb5b11371afcd38f392f))
+- Append run log [skip ci] (loop) ([7d2db27](https://github.com/y-miyazaki/config/commit/7d2db27d7e02db02cd518d0c88426249e95fc547))
+- Update state [skip ci] (loop) ([a7b1f26](https://github.com/y-miyazaki/config/commit/a7b1f260b37ebf148815c179d754bd0064f79ce5))
 
 ## [1.8.58] - 2026-07-24
 
@@ -967,6 +1235,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update GitHub Actions to use loop-install-cli and other actions version 1.8.4 ([2c56aa0](https://github.com/y-miyazaki/config/commit/2c56aa01ad05ff9a45d6dd0dfb3f65b39a03766c))
 
+[1.8.70]: https://github.com/y-miyazaki/config/compare/v1.8.69...303df93309a3b2f1df07096ca23d83bcdb0a472b
+[1.8.69]: https://github.com/y-miyazaki/config/compare/v1.8.68...bd470e36adc4935cba33b1fdef81802d5b11dcf7
+[1.8.68]: https://github.com/y-miyazaki/config/compare/v1.8.67...7e230aecc3007d1c7e8263e41bf3b7eb79d265bd
+[1.8.67]: https://github.com/y-miyazaki/config/compare/v1.8.66...21ec79cfb0eb6e5a462a83ff2296c1df6f6c9caa
+[1.8.66]: https://github.com/y-miyazaki/config/compare/v1.8.65...21201537b6f1f7cfd6b784e7c8192bf9052ea40c
+[1.8.65]: https://github.com/y-miyazaki/config/compare/v1.8.64...8a1a0fde176521e2b992ba4f3ea0aa119333b648
+[1.8.64]: https://github.com/y-miyazaki/config/compare/v1.8.63...faab08e963cabefc61b34524a3edff97cfcac544
+[1.8.63]: https://github.com/y-miyazaki/config/compare/v1.8.62...44531129e584e57731c8c8d0dcb0154cb4bae0d0
+[1.8.62]: https://github.com/y-miyazaki/config/compare/v1.8.61...dfa0b39309eb5ef075d543255f05e4d04c85e643
+[1.8.61]: https://github.com/y-miyazaki/config/compare/v1.8.60...10f7147e1b7e3f4349d655f7ef6e3f20c314846c
+[1.8.60]: https://github.com/y-miyazaki/config/compare/v1.8.59...d23ac04b070af6e1df85cfe175479a9511e6018b
+[1.8.59]: https://github.com/y-miyazaki/config/compare/v1.8.58...8b07b501759bbe4716c759dfdbd914d4d5ebbdc3
 [1.8.58]: https://github.com/y-miyazaki/config/compare/v1.8.57...00d6e7a9346341b5fc6318893ff71b80b670fd62
 [1.8.57]: https://github.com/y-miyazaki/config/compare/v1.8.56...71c34979da6e9fc36c18431859f68c2680a5bb9f
 [1.8.56]: https://github.com/y-miyazaki/config/compare/v1.8.55...01a42fc43c278cf8a38616de8de24fe7b6285f04
