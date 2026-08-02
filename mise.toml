@@ -67,7 +67,7 @@ claude = "2.1.220"                               # Claude Code CLI
 "aqua:zizmorcore/zizmor" = "1.27.0"                                   # GitHub Actions security auditor
 
 # Go related tools
-"aqua:air-verse/air" = "1.67.2"                                           # live reload
+"aqua:air-verse/air" = "1.67.3"                                           # live reload
 "aqua:bufbuild/buf" = "1.72.0"                                            # protobuf linter and formatter
 "go:github.com/go-delve/delve/cmd/dlv" = "v1.27.0"                                          # debugger
 "aqua:mvdan/gofumpt" = "0.10.0"                                           # code formatter
