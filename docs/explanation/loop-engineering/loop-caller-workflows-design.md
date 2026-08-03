@@ -134,7 +134,7 @@ on:
 # Example: schedule polling (docs-updater — dogfood cron)
 on:
   schedule:
-    - cron: "0 9 * * 1-5"
+    - cron: "0 9 * * 1" # Monday 09:00 UTC
   workflow_dispatch: {}
 ```
 
