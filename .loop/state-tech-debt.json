@@ -1,12 +1,19 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-07-27T09:55:08Z",
-      "outcome": "merged",
+      "last_run": "2026-08-03T09:22:51Z",
+      "outcome": "pr-created",
       "consecutive_failures": 0,
       "open_rejections": [],
-      "last_reject_reason": "Allowlisted report-only change; 25 signals/20 hotspots match detect JSON; all cited paths exist; 0 Critical/High findings; no scope violations.",
-      "last_sha": "55ff870545b430ecc0f0349c32336bd6477fa31b"
+      "last_reject_reason": "Report-only change within allowlist; 25 signals and 20 hotspots accurately classified with valid paths and zero Critical/High findings",
+      "last_sha": "55ff870545b430ecc0f0349c32336bd6477fa31b",
+      "pending": {
+        "sha": "43086a245178b58e238aa1de9edf58ca4ec9b9ea",
+        "pr": 578,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/578",
+        "loop_name": "tech-debt",
+        "created_at": "2026-08-03T09:22:51Z"
+      }
     }
   }
 }
