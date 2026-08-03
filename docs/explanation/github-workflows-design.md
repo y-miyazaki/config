@@ -35,7 +35,7 @@ Reusable Workflows and Composite Actions **must not**:
 
 ### Cross-Action References
 
-Loop composites **must not** nest `uses:` between config actions. Shared logic belongs in `.github/actions/lib/`; see [.github/workflows/AGENTS.md](../../.github/workflows/AGENTS.md) (Composition, Path resolution).
+Loop composites **must not** nest `uses:` between config actions. Shared logic belongs in `.github/actions/lib/`; see [.github/workflows/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.github/workflows/AGENTS.md#composition) (Composition, Path resolution).
 
 Workflows call leaf composites via remote SHA pin:
 
@@ -122,7 +122,7 @@ git config http.https://github.com/.extraheader \
 
 ### Failure diagnostics (loop actions)
 
-When loop composite steps record failure metadata for run logs or action outputs, use the shared libraries under `.github/actions/lib/loop/` — see [.github/workflows/AGENTS.md](../../.github/workflows/AGENTS.md) (Failure diagnostics):
+When loop composite steps record failure metadata for run logs or action outputs, use the shared libraries under `.github/actions/lib/loop/` — see [.github/workflows/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.github/workflows/AGENTS.md#failure-diagnostics) (Failure diagnostics):
 
 | Library                  | Role                                                                      |
 | ------------------------ | ------------------------------------------------------------------------- |
