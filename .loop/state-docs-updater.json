@@ -1,19 +1,12 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-08-03T10:21:55Z",
-      "outcome": "pr-created",
+      "last_run": "2026-08-03T14:47:11Z",
+      "outcome": "merged",
       "consecutive_failures": 0,
       "open_rejections": [],
       "last_reject_reason": "Single allowlisted doc fix correctly syncs docs-updater dogfood cron example with on-loop-docs-updater.yaml; factual, scoped, and report-compliant.",
-      "last_sha": "baff0a9b3d0c0b66341e20ee65d8bb48f353ff12",
-      "pending": {
-        "sha": "89f290a7080bbae55c32e78a44008afd5ed2c700",
-        "pr": 579,
-        "pr_url": "https://github.com/y-miyazaki/config/pull/579",
-        "loop_name": "docs-updater",
-        "created_at": "2026-08-03T10:21:55Z"
-      }
+      "last_sha": "89f290a7080bbae55c32e78a44008afd5ed2c700"
     }
   }
 }
