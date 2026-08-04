@@ -90,7 +90,7 @@ permissions:
 
 jobs:
   sast:
-    uses: y-miyazaki/config/.github/workflows/ci-sast.yaml@2a450f8c52d9d9365521238cfe6b7fbfef96ad4e # v1.8.71
+    uses: y-miyazaki/config/.github/workflows/ci-sast.yaml@91d35766537aab5d2440ff71c491e5c8fb8c6656 # v1.8.71
     with:
       # Go:         codeql_languages: '["actions","go"]'
       # Node.js:    codeql_languages: '["javascript-typescript","actions"]'
@@ -102,7 +102,7 @@ jobs:
       security-events: write
 
   security:
-    uses: y-miyazaki/config/.github/workflows/ci-security.yaml@2a450f8c52d9d9365521238cfe6b7fbfef96ad4e # v1.8.71
+    uses: y-miyazaki/config/.github/workflows/ci-security.yaml@91d35766537aab5d2440ff71c491e5c8fb8c6656 # v1.8.71
     permissions:
       contents: read
       pull-requests: write
