@@ -50,7 +50,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 
 ## hooks.json 設定方法
 
-各ツールで hooks を登録する設定ファイルの形式を示す。イベント名・キー名・構造がツールごとに異なるため、同一パッケージから複数ツール向けに配布する場合はターゲット別に定義ファイルを分離する必要がある。
+各ツールで hooks を登録する設定ファイルの形式を示す。イベント名・キー名・構造がツールごとに異なるため、同一パッケージから複数ツール向けに配布する場合はターゲット別に定義ファイルを分離する必要がある。以下の `preToolUse` 例の `lean-ctx-bin … hook rewrite` は **形式サンプル**（lean-ctx 本体の hook 統合）であり、APM の `common-hooks-*` は lean-ctx hooks を配布しない。
 
 ### Copilot CLI
 
@@ -69,7 +69,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
     "preToolUse": [
       {
         "type": "command",
-        "bash": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook rewrite",
+        "bash": "npx -y lean-ctx-bin@3.9.12 hook rewrite",
         "timeoutSec": 15
       }
     ]
@@ -102,7 +102,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
     ],
     "preToolUse": [
       {
-        "command": "command -v lean-ctx >/dev/null 2>&1 || exit 0; lean-ctx hook rewrite",
+        "command": "npx -y lean-ctx-bin@3.9.12 hook rewrite",
         "timeoutSec": 15
       }
     ]
@@ -146,7 +146,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
         "hooks": [
           {
             "type": "command",
-            "command": "lean-ctx hook rewrite",
+            "command": "npx -y lean-ctx-bin@3.9.12 hook rewrite",
             "timeout": 15
           }
         ]
@@ -191,7 +191,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
         "hooks": [
           {
             "type": "command",
-            "command": "lean-ctx hook rewrite",
+            "command": "npx -y lean-ctx-bin@3.9.12 hook rewrite",
             "timeout": 15
           }
         ]
@@ -228,7 +228,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
     "preToolUse": [
       {
         "type": "command",
-        "command": "lean-ctx hook rewrite",
+        "command": "npx -y lean-ctx-bin@3.9.12 hook rewrite",
         "timeout": 15
       }
     ]
@@ -261,7 +261,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
     "PreToolUse": [
       {
         "type": "command",
-        "bash": "lean-ctx hook rewrite",
+        "bash": "npx -y lean-ctx-bin@3.9.12 hook rewrite",
         "timeoutSec": 15
       }
     ]
@@ -309,7 +309,7 @@ Agent Hooks の概要比較は [tool-comparison-matrix-ai-agent.md](tool-compari
 - **やってはいけない**: 1 つの hooks パッケージに `Stop` キーだけで全ターゲット向けに配布し、マージ時のリネームに任せる（Cursor ではヒットしない）
 - **正しい**: `*-hooks-claude` / `*-hooks-cursor` / `*-hooks-copilot` のようにターゲット別パッケージを分け、各パッケージの `.apm/hooks/*.json` にそのターゲットのネイティブイベント名を直接記述する。hook **スクリプト**（`scripts/*.sh`）は共通化可能
 - コンシューマの `dependencies.apm` で `targets:` を指定し、インストール先 harness を限定する（APM 公式推奨）
-- Cursor は `version: 1` がないとエラーになる。生成物に `version` が欠ける場合はポストインストールで注入する
+- Cursor は `version: 1` がないとエラーになる。APM 0.27+ の install が生成物に `version` を付与する前提とし、リポジトリ固有の postinstall strip には依存しない
 
 ## res Matrix (Stop / agentStop)
 

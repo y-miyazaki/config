@@ -173,7 +173,7 @@ Hooks invoke native binaries when present on `PATH`. Most hook tools are not ava
 command -v actionlint > /dev/null 2>&1 || exit 0
 ```
 
-Hooks exit 0 when tools are missing so agent sessions continue. This is intentional — hooks are not a substitute for CI or pre-commit.
+Hooks exit 0 when optional native tools are missing so agent sessions continue. This is intentional — hooks are not a substitute for CI or pre-commit. lean-ctx agent hooks and shell integration are left to lean-ctx itself (not distributed via `common-hooks-*`).
 
 #### Skills — Explicit Validation
 
@@ -205,19 +205,18 @@ Hooks provide **optional, best-effort** lint and format when native binaries are
 
 Hooks are defined as JSON files under each hooks package's `.apm/hooks/` directory.
 
-| Hooks Package         | Hook                      | Trigger                | Description                                                       |
-| --------------------- | ------------------------- | ---------------------- | ----------------------------------------------------------------- |
-| common-hooks-\*       | lean-ctx                  | PreToolUse/PostToolUse | Context observation and rewrite/redirect                          |
-| common-hooks-\*       | markdownlint-cli2         | Stop                   | Auto-fix Markdown files with markdownlint                         |
-| common-hooks-\*       | markdown-link-check       | Stop                   | Check Markdown links                                              |
-| common-hooks-\*       | github-actions-actionlint | Stop                   | Lint GitHub Actions workflows with actionlint                     |
-| common-hooks-\*       | github-actions-ghalint    | Stop                   | Lint GitHub Actions workflows with ghalint                        |
-| common-hooks-\*       | github-actions-zizmor     | Stop                   | Security scan `.github` with zizmor when workflows/actions change |
-| go-hooks-\*           | golangci-lint             | Stop                   | Auto-fix Go files with golangci-lint                              |
-| terraform-hooks-\*    | terraform-fmt             | PostToolUse            | Run terraform fmt on changed files                                |
-| terraform-hooks-\*    | tflint                    | Stop                   | Run tflint on changed files                                       |
-| shell-script-hooks-\* | shellcheck                | Stop                   | Run shellcheck on changed shell scripts                           |
-| shell-script-hooks-\* | shfmt                     | Stop                   | Auto-format shell scripts with shfmt                              |
+| Hooks Package         | Hook                      | Trigger     | Description                                                       |
+| --------------------- | ------------------------- | ----------- | ----------------------------------------------------------------- |
+| common-hooks-\*       | markdownlint-cli2         | Stop        | Auto-fix Markdown files with markdownlint                         |
+| common-hooks-\*       | markdown-link-check       | Stop        | Check Markdown links                                              |
+| common-hooks-\*       | github-actions-actionlint | Stop        | Lint GitHub Actions workflows with actionlint                     |
+| common-hooks-\*       | github-actions-ghalint    | Stop        | Lint GitHub Actions workflows with ghalint                        |
+| common-hooks-\*       | github-actions-zizmor     | Stop        | Security scan `.github` with zizmor when workflows/actions change |
+| go-hooks-\*           | golangci-lint             | Stop        | Auto-fix Go files with golangci-lint                              |
+| terraform-hooks-\*    | terraform-fmt             | PostToolUse | Run terraform fmt on changed files                                |
+| terraform-hooks-\*    | tflint                    | Stop        | Run tflint on changed files                                       |
+| shell-script-hooks-\* | shellcheck                | Stop        | Run shellcheck on changed shell scripts                           |
+| shell-script-hooks-\* | shfmt                     | Stop        | Auto-format shell scripts with shfmt                              |
 
 > **Note:** `*` represents target suffix (`claude`, `copilot`, or `cursor`). Each target has identical hook scripts with different JSON formats.
 
@@ -245,7 +244,6 @@ Hooks JSON format is incompatible across AI agents and cannot be auto-converted 
 - Each agent uses a different JSON structure (event names, command keys, timeout keys, nesting depth)
 - Copilot CLI uses camelCase (`agentStop`), Claude Code/VS Code use PascalCase (`Stop`), Cursor uses lowercase (`stop`)
 - Claude Code uses 2-level nesting (`{ matcher, hooks: [...] }`) with tool name regex filtering (`matcher`)
-- Cursor requires top-level `version: 1` (APM does not inject this automatically; use a `postinstall` script)
 - The hook scripts themselves are multi-agent aware and portable; only the hook JSON definitions need per-target packaging
 
 ### Skills
@@ -367,7 +365,7 @@ Loop **composite actions** must not nest other repository composite actions via 
 | `ci-loop-agent.yaml`         | Reusable | Engine-agnostic agent invocation (Claude / Copilot / Codex / Cursor). L1: `loop-agent-once`; L2/L3: worktree + bounded Agent→Verify via `loop-execute` |
 | `on-loop-changelog.yaml`     | Caller   | Cron-driven CHANGELOG.md maintenance (detect → execute → finalize)                                                                                     |
 | `on-loop-ci-sweeper.yaml`    | Caller   | Schedule-driven CI failure repair (detect → execute → finalize)                                                                                        |
-| `on-loop-docs-updater.yaml`   | Caller   | Cron-driven documentation update (detect → execute → finalize)                                                                                         |
+| `on-loop-docs-updater.yaml`  | Caller   | Cron-driven documentation update (detect → execute → finalize)                                                                                         |
 | `on-loop-refactor.yaml`      | Caller   | Cron-driven structural refactor (detect → execute → finalize)                                                                                          |
 | `on-loop-tech-debt.yaml`     | Caller   | Weekly technical debt report (detect → execute → finalize)                                                                                             |
 | `on-loop-state-promote.yaml` | Platform | Merge-gated `pending` → `last_sha` promotion when a `loop-automation` fix PR closes                                                                    |
@@ -388,8 +386,8 @@ Loop domain skills live under `.apm/packages/common/.apm/skills/` — there are 
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `loop-agent-once`     | Single read-only agent session (L1); accepts `node_version` / `uv_version` and enables workspace MCP via `lib/mcp.sh`                                                                                                                                                                                                                                           |
 | `loop-detect`         | Read `LOOP_*`, enumerate branches/PRs, checkout per context, read per-target state (`lib/state.sh`), invoke `detect_script` per context, assemble candidates and implementer prompts (`lib/loop/build_constraints.sh`), write **loop-handoff** artifact, output slim `target_matrix`; guards (`budget`, circuit breaker). **No caller re-run of detect script** |
-| `loop-execute`        | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`, `node_version`, `uv_version`; enables workspace MCP via `lib/mcp.sh`; worktree from `from.ref` @ `from.branch`; outputs include `failure_stage` / `failure_message` on push/notify failures                                                                                                                                                |
-| `loop-finalize`       | Finalize per `target.finalize`, branch cleanup, per-target state write (`lib/write_state.sh`, `lib/prune_targets.sh`), optional `domain_persistence_script`; `.loop/*` to `LOOP_STATE_PUSH_BRANCH`; outputs include `failure_stage` / `failure_message` when finalize PR steps fail                                                                                                                                          |
+| `loop-execute`        | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`, `node_version`, `uv_version`; enables workspace MCP via `lib/mcp.sh`; worktree from `from.ref` @ `from.branch`; outputs include `failure_stage` / `failure_message` on push/notify failures                                                                                |
+| `loop-finalize`       | Finalize per `target.finalize`, branch cleanup, per-target state write (`lib/write_state.sh`, `lib/prune_targets.sh`), optional `domain_persistence_script`; `.loop/*` to `LOOP_STATE_PUSH_BRANCH`; outputs include `failure_stage` / `failure_message` when finalize PR steps fail                                                                             |
 | `loop-notify-pr`      | Post or update marker PR comment after finalize on `pull_request` targets (sibling step in `ci-loop-agent`, not nested in `loop-finalize`). Platform-owned Layers 1–2; optional skill appendix. See [loop-notify-pr Specification](loop-notify-pr-specification.md)                                                                                             |
 | `loop-install-cli`    | Install and cache the selected engine CLI; accepts `node_version` / `uv_version` so MCP servers can resolve via `npx` / `uvx`                                                                                                                                                                                                                                   |
 | `loop-run-log`        | Append one JSONL entry to `.loop/loop-run-log.md` (optional `failure_stage` / `failure_message`), prune entries older than 30 days (sibling step in `ci-loop-agent` after `loop-finalize`, or `record-skip` in callers)                                                                                                                                         |
@@ -479,7 +477,7 @@ Execute/finalize input. Schema: [Multi-Branch Loops Design](../explanation/loop-
 | --------------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
 | `notify_context_json` | yes      | Machine fix context for `loop-notify-pr`. See [loop-notify-pr Specification](loop-notify-pr-specification.md) |
 | `failure_stage`       | no       | Platform failure stage when push/notify fails (empty on success); shared via `lib/loop/failure_record.sh`     |
-| `failure_message`     | no       | Redacted/truncated failure text for run-log diagnostics (empty on success)                                  |
+| `failure_message`     | no       | Redacted/truncated failure text for run-log diagnostics (empty on success)                                    |
 
 `loop-finalize` likewise outputs `failure_stage` / `failure_message` when finalize PR steps fail. `ci-loop-agent` merges execute and finalize diagnostics into `loop-run-log` inputs.
 

@@ -8,7 +8,7 @@
     "context7": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp@3.2.4"]
+      "args": ["-y", "@upstash/context7-mcp@3.2.5"]
     },
     "fetch": {
       "type": "stdio",

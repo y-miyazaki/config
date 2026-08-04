@@ -10,9 +10,12 @@
       "datasourceTemplate": "npm"
     },
     {
-      "description": "CustomManager: Update lean-ctx-bin in apm.yml",
+      "description": "CustomManager: Update lean-ctx-bin in apm.yml and init.sh",
       "customType": "regex",
-      "fileMatch": ["^\\.apm/packages/.*/apm\\.yml$"],
+      "fileMatch": [
+        "^\\.apm/packages/.*/apm\\.yml$",
+        "^env/common/scripts/init\\.sh$"
+      ],
       "matchStrings": ["lean-ctx-bin@(?<currentValue>[\\d.]+)"],
       "depNameTemplate": "lean-ctx-bin",
       "datasourceTemplate": "npm"
@@ -84,14 +87,20 @@
     {
       "description": "Rules: Update MCP package versions in apm.yml",
       "matchManagers": ["custom.regex"],
-      "matchFileNames": [".apm/packages/**/apm.yml"],
+      "matchFileNames": [
+        ".apm/packages/**/apm.yml",
+        "env/common/scripts/init.sh"
+      ],
       "commitMessagePrefix": "renovate(apm-mcp):",
       "addLabels": ["apm-mcp"]
     },
     {
       "description": "Rules: Automerge patch updates for apm.yml MCP packages",
       "matchManagers": ["custom.regex"],
-      "matchFileNames": [".apm/packages/**/apm.yml"],
+      "matchFileNames": [
+        ".apm/packages/**/apm.yml",
+        "env/common/scripts/init.sh"
+      ],
       "matchUpdateTypes": ["patch"],
       "addLabels": ["automerge"],
       "automerge": true,

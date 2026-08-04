@@ -6,6 +6,8 @@
 # Use cases:
 # - sync_apm_artifacts.sh --check loop-contract runs contract validation only
 # - sync_apm_artifacts.sh --check skips apm install and audit components
+# - sync_apm_artifacts.sh --skip-install skips apm install
+# - sync path never runs a separate apm-postinstall step
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -37,10 +39,16 @@ setup() {
     [[ $output != *"==> apm-audit"* ]]
 }
 
-@test "sync_apm_artifacts.sh --skip-install skips install and postinstall" {
+@test "sync_apm_artifacts.sh --skip-install skips apm install" {
     run bash "${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh" --skip-install --skip-audit loop-contract
     [ "$status" -eq 0 ]
     [[ $output == *"==> loop-contract"* ]]
     [[ $output != *"==> apm-install"* ]]
     [[ $output != *"==> apm-postinstall"* ]]
+}
+
+@test "sync_apm_artifacts.sh source has no postinstall step" {
+    run grep -E 'apm run postinstall|apm-postinstall|run_apm_postinstall' \
+        "${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh"
+    [ "$status" -eq 1 ]
 }

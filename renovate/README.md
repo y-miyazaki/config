@@ -165,7 +165,7 @@ Tools that appear in GitHub Actions workflow inputs (`github-actions-tool-versio
 | ecschedule    | `Songmu/ecschedule`                          | `aqua:Songmu/ecschedule`        | —                              |
 | golangci-lint | `golangci/golangci-lint`                     | `aqua:golangci/golangci-lint`   | —                              |
 | goreleaser    | `goreleaser/goreleaser`                      | `aqua:goreleaser/goreleaser`    | —                              |
-| lean-ctx      | `lean-ctx-bin` (apm.yml MCP)                 | `npm:lean-ctx-bin` (mise)       | —                              |
+| lean-ctx      | `lean-ctx-bin` (apm.yml MCP + init.sh)       | `npm:lean-ctx-bin` (mise)       | —                              |
 | mise          | `jdx/mise` (workflow input + Dockerfile ARG) | —                               | —                              |
 | semgrep       | `semgrep` (pypi)                             | `pipx:semgrep`                  | `semgrep/pre-commit`           |
 | terraform     | `hashicorp/terraform`                        | `aqua:hashicorp/terraform`      | —                              |
@@ -234,7 +234,7 @@ Disabled managers (checksum-coupled updates) include:
 ### Scope
 
 - Uses `custom.regex` managers
-- Targets `.apm/packages/**/apm.yml`
+- Targets `.apm/packages/**/apm.yml` and `env/common/scripts/init.sh` for `lean-ctx-bin@` pins
 - Detects pinned MCP package versions in `npx` (`package@X.Y.Z`) and `uvx` (`package==X.Y.Z`) args
 
 ### Labels and Automerge

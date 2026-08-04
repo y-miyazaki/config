@@ -15,11 +15,10 @@
 #   guidelines        → category-*.md under *-review skills (via Perl sync)
 #   loop-contract     → loop PR body templates/envelopes under .apm/packages/
 #   apm-install       → apm install --update (.apm/packages → agent install dirs)
-#                     → then apm run postinstall (strip Cursor PascalCase hook keys)
 #   apm-skill-drift   → loop skill sources vs installed mirrors (post-install check)
 #   apm-audit         → apm audit --ci
 #
-# Default (no args): run all sync + install + postinstall + drift check + audit.
+# Default (no args): run all sync + install + drift check + audit.
 #
 # See CLAUDE.md § Edit Targets and .apm/AGENTS.md § Validation Scripts Mirror.
 #######################################
@@ -57,7 +56,7 @@ Components:
     validate-mirror   scripts/<domain>/ → validation skill scripts/
     guidelines        category-*.md → instructions and common-checklist.md
     loop-contract     loop PR body templates/envelopes consistency checks
-    apm-install       apm install --update + postinstall (skipped with --check or --skip-install)
+    apm-install       apm install --update (skipped with --check or --skip-install)
     apm-skill-drift   loop skill sources vs installed .claude/.agents mirrors
     apm-audit         apm audit --ci (skipped with --check or --skip-audit)
     all               all of the above (default)
@@ -275,31 +274,6 @@ function run_apm_install_component {
 }
 
 #######################################
-# run_apm_postinstall_component: Run apm.yml scripts.postinstall after install
-#
-# Globals:
-#   SCRIPT_DIR
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   Progress line to stdout; postinstall script output
-#
-# Returns:
-#   0 on success; non-zero when postinstall fails
-#
-#######################################
-function run_apm_postinstall_component {
-    echo "==> apm-postinstall"
-    if command -v apm > /dev/null 2>&1; then
-        apm run postinstall
-        return $?
-    fi
-    bash "${SCRIPT_DIR}/strip_cursor_unsupported_hook_events.sh"
-}
-
-#######################################
 # run_apm_audit_component: Run APM integrity audit for CI
 #######################################
 function run_apm_audit_component {
@@ -335,7 +309,6 @@ function main {
 
     if should_run_apm_install; then
         run_apm_install_component
-        run_apm_postinstall_component
     fi
 
     if component_selected "apm-skill-drift"; then

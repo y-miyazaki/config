@@ -122,14 +122,14 @@ MCP Server の選定・比較の判断材料。
 
 > **用語整理:** **rtk** ([rtk-ai/rtk](https://github.com/rtk-ai/rtk)) は PreToolUse Hook で Bash コマンドを透過的に書き換え、シェル出力を圧縮する CLI プロキシ。**mcp-rtk** ([ThomasTartrau/mcp-rtk](https://github.com/ThomasTartrau/mcp-rtk)) は MCP レスポンス JSON を圧縮するプロキシで、製品・レイヤーともに別物。
 
-本リポジトリは `common-hooks-*` で lean-ctx の `hook rewrite` / `hook redirect` / `hook observe` を既に配布している。rtk の `rtk init -g --agent cursor` も同じ Hook 型・同じ Bash 出力圧縮の思想だが、**同一 PreToolUse 層への併用は非推奨**（後述 Guidelines 参照）。
+本リポジトリは lean-ctx を MCP（`common`）として配布する。agent hooks / shell 統合は lean-ctx 本体に任せる（`common-hooks-*` では配布しない）。rtk の `rtk init -g --agent cursor` も同じ Hook 型・同じ Bash 出力圧縮の思想だが、**同一 PreToolUse 層への併用は非推奨**（後述 Guidelines 参照）。
 
 | 比較項目            | lean-ctx (採用)                              | rtk (rtk-ai/rtk)                        |
 | ------------------- | -------------------------------------------- | --------------------------------------- |
 | 提供元              | yvgude                                       | rtk-ai                                  |
 | リポジトリ          | [GitHub](https://github.com/yvgude/lean-ctx) | [GitHub](https://github.com/rtk-ai/rtk) |
 | 適用レイヤー        | Shell Hook + MCP Server                      | Shell Hook のみ                         |
-| Cursor 統合         | `lean-ctx hook rewrite` 等 (APM)             | `rtk init -g --agent cursor`            |
+| Cursor 統合         | lean-ctx wrap / setup（APM hooks なし）      | `rtk init -g --agent cursor`            |
 | 削減方針            | 情報保全優先 (passthrough rules)             | 積極的圧縮 (60-90%)                     |
 | `git diff` 巨大出力 | 素通し (設計意図)                            | 高削減 (実測 99% 級)                    |
 | 再読込キャッシュ    | ✅ (~13 tokens/再読み込み)                   | ❌                                      |
@@ -143,11 +143,11 @@ MCP Server の選定・比較の判断材料。
 
 **→ lean-ctx + mcp-compressor を採用する。** Shell Hook と MCP によるコンテキスト最適化に加え、ツール数の多い MCP サーバーの JSON Schema 要約を mcp-compressor で行う。
 
-| レイヤー                           | ツール         | 役割                                                                                                                          |
-| ---------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Shell Hook (出力圧縮 + キャッシュ) | lean-ctx       | コマンド出力・ファイル読み込みの正規表現圧縮、セッションメモリ (CCP)。`common-hooks-*` で rewrite / redirect / observe を配布 |
-| Proxy (ツール定義圧縮)             | mcp-compressor | ツール数の多い MCP サーバー (GitHub MCP 90+ ツール等) の JSON Schema 要約                                                     |
-| Proxy (レスポンス JSON 圧縮)       | mcp-rtk        | **現時点では未採用。** MCP レスポンス JSON のフィールドフィルタ。成熟度 (GitHub Stars 等) が不足のため保留                    |
+| レイヤー                           | ツール         | 役割                                                                                                                                                      |
+| ---------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Shell Hook (出力圧縮 + キャッシュ) | lean-ctx       | コマンド出力・ファイル読み込みの正規表現圧縮、セッションメモリ (CCP)。agent hooks / shell 統合は lean-ctx 本体に任せる（`common-hooks-*` では配布しない） |
+| Proxy (ツール定義圧縮)             | mcp-compressor | ツール数の多い MCP サーバー (GitHub MCP 90+ ツール等) の JSON Schema 要約                                                                                 |
+| Proxy (レスポンス JSON 圧縮)       | mcp-rtk        | **現時点では未採用。** MCP レスポンス JSON のフィールドフィルタ。成熟度 (GitHub Stars 等) が不足のため保留                                                |
 
 **導入形態による効果発動条件の違い:**
 
@@ -160,7 +160,7 @@ MCP Server の選定・比較の判断材料。
 Proxy/Hook 型は Agent の能力に依存せず確実に効果を発揮する。MCP Server 型は Agent がツールを呼ぶ保証がないため、導入効果の確実性が低い。
 
 - **rtk (rtk-ai/rtk) Hook と lean-ctx Hook の併用は非推奨。** 両者とも PreToolUse で Bash コマンドを透過的に書き換える同一レイヤーのツール。本リポジトリは `lean-ctx hook rewrite` / `hook redirect` / `hook observe` で既に同思想を実装済み。rtk を追加すると (1) Hook 実行順により `rtk lean-ctx git diff` のような二重ラップが起きうる、(2) lean-ctx の passthrough（情報保全）と rtk の積極圧縮がコマンドごとに競合し、**何が削られ何が残ったか監査できない**、(3) 失敗時の原本保存 (tee) の責任境界が曖昧になる。圧縮方針を一本化するため lean-ctx に集約する。
-- **rtk 単体採用は lean-ctx 未導入環境向け。** 手軽な導入 (`rtk init -g`) と広いシェルコマンドカバレッジが強み。MCP・キャッシュ・redirect が不要な個人環境では rtk から始めてもよい。本リポジトリは APM で lean-ctx (MCP + hooks) を配布するため rtk は不要。
+- **rtk 単体採用は lean-ctx 未導入環境向け。** 手軽な導入 (`rtk init -g`) と広いシェルコマンドカバレッジが強み。MCP・キャッシュ・redirect が不要な個人環境では rtk から始めてもよい。本リポジトリは APM で lean-ctx を MCP（`common`）として配布し、hooks は lean-ctx 本体に任せるため rtk は不要。
 - **mcp-rtk は理論上 lean-ctx と補完関係だが、現時点では未採用。** lean-ctx は Shell 出力・ファイル読み込み、mcp-rtk は MCP レスポンス JSON を圧縮する別レイヤー。ただし GitHub Stars が極めて少なく（2026-06 時点で Star 1）、プリセットの充実度・運用実績が不足。GitHub MCP は mcp-compressor でラップ済みのため、当面は mcp-rtk の導入優先度は低い。成熟度が上がった段階で再評価する。
 - **制約: mcp-compressor は同時に複数の MCP サーバーをラップできない。** プロキシとして公開するツール名が同一（`call_tool` 等）になるため、1 セッションにつき 1 サーバーのみラップ可能。
 - **Headroom の利用形態による違い:** Headroom は Library / Proxy / MCP Server の 3 形態がある。Library（アプリケーション組み込み）や Proxy（LLM API の前段に配置）では透過的に効果を発揮するが、MCP Server 形態では Agent が `compress_text` 等を明示的に呼び出す必要がある。Proxy をサポートしない環境では MCP 形態でしか利用できず、効果が限定的となる。アプリケーション組み込みや LLM Proxy 構成が可能な場合に追加を検討。headroom はシェル層に rtk または lean-ctx のどちらか一方を内部利用する設計であり、Hook 層での rtk + lean-ctx 併用とは別問題。

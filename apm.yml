@@ -6,10 +6,6 @@ targets:
   - claude
   - cursor
 includes: auto
-# Cursor rejects PascalCase hook events (Stop/PreToolUse/PostToolUse) that APM may
-# merge from Claude-format packages. Strip them after install (also used by init.sh).
-scripts:
-  postinstall: bash scripts/self/apm/strip_cursor_unsupported_hook_events.sh
 dependencies:
   apm:
     # - github.com/y-miyazaki/config/.apm/packages/common#v1.8.70

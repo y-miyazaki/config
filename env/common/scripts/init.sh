@@ -109,19 +109,18 @@ if command -v apm > /dev/null 2>&1; then
         (
             cd "$repo_root"
             apm install --frozen || echo "[warn] apm install failed" >&2
-            apm run postinstall || echo "[warn] apm run failed" >&2
         )
     fi
 fi
 
 #######################################
-# lean-ctx MCP scope (workspace via APM is canonical)
+# lean-ctx (APM owns workspace MCP; shell/hooks left to lean-ctx)
+# Same pin as .apm/packages/common MCP (npx lean-ctx-bin@…)
 #######################################
-if command -v lean-ctx > /dev/null 2>&1; then
-    mkdir -p "${HOME}/.config/lean-ctx"
-    lean-ctx config set setup.auto_update_mcp false > /dev/null 2>&1 \
+if command -v npx > /dev/null 2>&1; then
+    npx -y lean-ctx-bin@3.9.12 config set setup.auto_update_mcp false > /dev/null 2>&1 \
         || echo "[warn] lean-ctx config set (auto_update_mcp) failed" >&2
-    lean-ctx trust || echo "[warn] lean trust failed" >&2
+    npx -y lean-ctx-bin@3.9.12 trust || echo "[warn] lean-ctx trust failed" >&2
 fi
 
 #######################################
