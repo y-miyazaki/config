@@ -10,7 +10,7 @@ inputs:
     description: "AI engine (claude | copilot | codex | cursor)"
     required: true
   node_version:
-    default: "24.18.0"
+    default: "24.18.1"
     description: "Node.js version for MCP servers (npx); keep aligned with mise.toml node"
     required: false
   uv_version:
