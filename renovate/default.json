@@ -300,6 +300,13 @@
       "addLabels": ["trivy"]
     },
     {
+      "description": "Rules: Group uv updates across GitHub Actions workflow inputs and mise",
+      "groupName": "uv",
+      "matchPackageNames": ["astral-sh/uv", "aqua:astral-sh/uv"],
+      "commitMessagePrefix": "renovate(uv):",
+      "addLabels": ["uv"]
+    },
+    {
       "description": "Rules: Group zizmor updates across GitHub Actions workflow inputs, mise, and pre-commit",
       "groupName": "zizmor",
       "matchPackageNames": [
