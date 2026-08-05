@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-08-05T07:27:43.336528+00:00'
+generated_at: '2026-08-05T08:23:43.539073+00:00'
 apm_version: 0.27.0
 dependencies:
 - repo_url: _local/common
@@ -9954,6 +9954,15 @@ deployments:
   content_hash: sha256:9f8efdfcf7f4670731400e16e4a66de644a7bebd74455c99a82766fbc424b729
 - kind: uri
   target: mcp
+  value: lean-ctx
+  runtime: claude
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: null
+- kind: uri
+  target: mcp
   value: codebase-memory-mcp
   runtime: cursor
   scope: project
@@ -10041,10 +10050,12 @@ mcp_configs:
     transport: stdio
     args:
     - -y
-    - lean-ctx-bin@3.9.12
+    - lean-ctx-bin@3.9.13
     registry: false
     command: npx
 mcp_target_servers:
+  claude:
+  - lean-ctx
   cursor:
   - codebase-memory-mcp
   - context7
