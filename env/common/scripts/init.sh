@@ -118,9 +118,9 @@ fi
 # Same pin as .apm/packages/common MCP (npx lean-ctx-bin@…)
 #######################################
 if command -v npx > /dev/null 2>&1; then
-    npx -y lean-ctx-bin@3.9.12 config set setup.auto_update_mcp false > /dev/null 2>&1 \
+    npx -y lean-ctx-bin@3.9.13 config set setup.auto_update_mcp false > /dev/null 2>&1 \
         || echo "[warn] lean-ctx config set (auto_update_mcp) failed" >&2
-    npx -y lean-ctx-bin@3.9.12 trust || echo "[warn] lean-ctx trust failed" >&2
+    npx -y lean-ctx-bin@3.9.13 trust || echo "[warn] lean-ctx trust failed" >&2
 fi
 
 #######################################
