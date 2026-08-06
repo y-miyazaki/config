@@ -21,7 +21,7 @@ on:
         required: false
         type: string
       semgrep_version:
-        default: 1.171.0
+        default: 1.172.0
         description: "Semgrep Python package version"
         required: false
         type: string
