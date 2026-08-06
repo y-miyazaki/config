@@ -2,6 +2,9 @@
 apm.lock.yaml
 aqua-checksums.json
 mise.lock
+package-lock.json
+package.json
+pnpm-lock.yaml
 
 # JSON excluded from formatting (matches pre-commit hook excludes)
 **/.devcontainer/devcontainer-lock.json
@@ -9,9 +12,46 @@ mise.lock
 **/settings-example.json
 **/settings.json
 
-# Dependencies / build output
+# Generated README (matches pre-commit prettier exclude)
+modules/**/README.md
+terraform/**/README.md
+
+# AI tool local paths (matches .gitignore)
+.claude/memory/
+.claude/settings.local.json
+.claude/tmp/
+.serena
+
+# Dependencies / build output (matches .gitignore)
 apm_modules/
+bin/
+builds/
+coverage/
+coverage.html
+dist/
 node_modules/
+output
 output/
+outputs/
 site/
 tmp/
+vendor/
+
+# Frontend / meta-framework build output (matches .gitignore)
+.astro/
+.next/
+.nuxt/
+.serverless/
+.svelte-kit/
+.yarn/
+
+# Terraform provider cache (matches .gitignore)
+**/.terraform/
+**/.terraform.d/
+
+# Terraform state (matches .gitignore)
+*.tfstate
+*.tfstate.*
+
+# Project temp (matches .gitignore)
+env/common/tmp/
