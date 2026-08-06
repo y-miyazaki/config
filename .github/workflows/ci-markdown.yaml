@@ -1,19 +1,33 @@
 # Reusable workflow: Markdown lint
-# Runs markdownlint-cli2 to check Markdown files quality and formatting.
+# Runs markdownlint-cli2 and markdown-link-check for Markdown quality and links.
 name: ci-markdown
 
 on:
   workflow_call:
     inputs:
+      markdown_link_check_version:
+        default: "3.15.0"
+        description: "markdown-link-check npm package version"
+        required: false
+        type: string
       markdownlint_flags:
         default: "README*.md docs/**/*.md"
         description: "Glob patterns to pass to markdownlint-cli2 (space-separated)"
+        required: false
+        type: string
+      node_version:
+        default: "24.18.1"
+        description: "Node.js version for markdown-link-check install"
         required: false
         type: string
 
 permissions:
   contents: read
   pull-requests: write
+
+env:
+  MARKDOWN_LINK_CHECK_VERSION: ${{ inputs.markdown_link_check_version }}
+  NODE_VERSION: ${{ inputs.node_version }}
 
 jobs:
   lint:
@@ -35,13 +49,69 @@ jobs:
           fix: false
           globs: "${{ inputs.markdownlint_flags }}"
 
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install markdown-link-check
+        run: npm install -g "markdown-link-check@${MARKDOWN_LINK_CHECK_VERSION}" # zizmor: ignore[adhoc-packages]
+
+      - name: Exec markdown-link-check
+        shell: bash
+        env:
+          MARKDOWN_FLAGS: ${{ inputs.markdownlint_flags }}
+        run: |
+          set -euo pipefail
+          shopt -s globstar nullglob
+
+          config_args=()
+          if [[ -f .markdown-link-check.json ]]; then
+            config_args=(-c .markdown-link-check.json)
+          fi
+
+          declare -A seen=()
+          declare -a files=()
+          for pattern in ${MARKDOWN_FLAGS}; do
+            for path in ${pattern}; do
+              [[ -e "${path}" ]] || continue
+              if [[ -f "${path}" ]]; then
+                if [[ -z ${seen["${path}"]+x} ]]; then
+                  seen["${path}"]=1
+                  files+=("${path}")
+                fi
+              elif [[ -d "${path}" ]]; then
+                while IFS= read -r -d '' file; do
+                  if [[ -z ${seen["${file}"]+x} ]]; then
+                    seen["${file}"]=1
+                    files+=("${file}")
+                  fi
+                done < <(find "${path}" -type f -name '*.md' -print0)
+              fi
+            done
+          done
+
+          if [[ ${#files[@]} -eq 0 ]]; then
+            echo "No markdown files matched markdownlint_flags"
+            exit 0
+          fi
+
+          failed=0
+          for file in "${files[@]}"; do
+            echo "Checking links in ${file}"
+            if ! markdown-link-check "${config_args[@]}" -q "${file}"; then
+              failed=1
+            fi
+          done
+          exit "${failed}"
+
       - name: Post PR failure comment
         if: failure() && github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const body = `❌ markdownlint-cli2 failed.\n\n`+
+            const body = `❌ Markdown CI failed (markdownlint-cli2 or markdown-link-check).\n\n`+
               `Run page: ${runUrl}\n\n`+
               `Re-run guidance:\n- Fix markdown issues locally\n- Commit & push to trigger CI again.`;
             github.rest.issues.createComment({
@@ -60,6 +130,8 @@ jobs:
           outputs: |
             (none)
           params: |
+            markdown_link_check_version: ${{ env.MARKDOWN_LINK_CHECK_VERSION }}
             markdownlint_flags: "${{ inputs.markdownlint_flags }}"
+            node_version: ${{ env.NODE_VERSION }}
           status: "${{ job.status }}"
-          title: "Markdownlint"
+          title: "Markdown CI"
