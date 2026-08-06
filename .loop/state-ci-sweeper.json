@@ -8,12 +8,19 @@
       "last_reject_reason": "No file changes produced"
     },
     "integration:main": {
-      "last_run": "2026-08-03T05:10:56Z",
-      "outcome": "merged",
+      "last_run": "2026-08-06T14:42:42Z",
+      "outcome": "pr-created",
       "consecutive_failures": 0,
       "open_rejections": [],
-      "last_reject_reason": "No meaningful changes outside .loop/",
-      "last_sha": "6c120fac0bf39e8ab8de2be3b10a9dc01ee50102"
+      "last_reject_reason": "Minimal allowlisted fix removes the Substack 403 dead link; markdown-link-check passes; report format and validation are adequate.",
+      "last_sha": "6c120fac0bf39e8ab8de2be3b10a9dc01ee50102",
+      "pending": {
+        "sha": "9e6e18fd96fa5ecdd887a55a664fac87f81bee3c",
+        "pr": 608,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/608",
+        "loop_name": "ci-sweeper",
+        "created_at": "2026-08-06T14:42:42Z"
+      }
     },
     "pull_request:401": {
       "last_run": "2026-07-16T07:45:36Z",
