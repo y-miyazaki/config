@@ -131,6 +131,16 @@
       "extractVersionTemplate": "^govulncheck/v(?<version>.*)$"
     },
     {
+      "description": "CustomManager: Update markdown-link-check version in workflow inputs",
+      "customType": "regex",
+      "fileMatch": ["\\.github/workflows/.*\\.ya?ml$"],
+      "matchStrings": [
+        "markdown_link_check_version:\\s*\\n\\s*default:\\s*[\"']?(?<currentValue>[\\d.]+)[\"']?"
+      ],
+      "depNameTemplate": "markdown-link-check",
+      "datasourceTemplate": "npm"
+    },
+    {
       "description": "CustomManager: Update mise version in Dockerfile ARG",
       "customType": "regex",
       "fileMatch": ["env/common/Dockerfile$"],

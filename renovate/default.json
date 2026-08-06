@@ -261,6 +261,17 @@
       "addLabels": ["goreleaser"]
     },
     {
+      "description": "Rules: Group markdown-link-check updates across GitHub Actions workflow inputs, mise, and pre-commit",
+      "groupName": "markdown-link-check",
+      "matchPackageNames": [
+        "markdown-link-check",
+        "npm:markdown-link-check",
+        "tcort/markdown-link-check"
+      ],
+      "commitMessagePrefix": "renovate(markdown-link-check):",
+      "addLabels": ["markdown-link-check"]
+    },
+    {
       "description": "Rules: Group mise updates across GitHub Actions workflow inputs, Dockerfile, and mise.toml",
       "groupName": "mise",
       "matchPackageNames": ["jdx/mise"],
