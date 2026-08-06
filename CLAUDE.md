@@ -14,16 +14,6 @@
 
 **Distributable vs maintainer-only:** `.apm/packages/**` ships to other repositories — portable wording only. This-repo rules → [.apm/AGENTS.md](.apm/AGENTS.md) or this file, never package sources.
 
-## Post-change (MUST)
-
-| Change touches                                | Action                                                                                                                                                                                             |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mirrored rows in the table above              | Agent `stop` hooks run `scripts/self/apm/sync_apm_artifacts.sh` (sync, `apm install --update`, drift check, `apm audit --ci`). Do not run manually unless hooks are unavailable or `--check` only. |
-| Repo-only paths (`.github/`, `test/bats/`, …) | Update paired Bats in the same change (TEST-00).                                                                                                                                                   |
-| `scripts/*/validate.sh` from skill direction  | `sync_validate_mirror.sh --from-skill`                                                                                                                                                             |
-
-Cross-cutting `scripts/` rules apply even when not touching `.apm/` — `.apm/AGENTS.md` is not loaded for `scripts/` work alone.
-
 ## Conventions
 
 | Topic           | Rule             |

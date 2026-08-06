@@ -99,16 +99,6 @@ When a loop step records failure metadata for run logs or action outputs:
 
 ## Verification
 
-```bash
-bash .agents/skills/github-actions-validation/scripts/validate.sh .github/workflows/ .github/actions/
-```
-
-When loop caller permissions change:
-
-```bash
-bash scripts/self/ci/validate_loop_caller_permissions.sh
-```
-
 Paired Bats under `test/bats/.github/` when behavior changes (TEST-00).
 
 ---
