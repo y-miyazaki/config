@@ -15,11 +15,16 @@ done
 source "${_bats_support}/support/common.bash"
 
 RESOLVE_LIB="$(bats_workspace_root)/.github/actions/loop-resolve-push-token/lib/resolve.sh"
+ACTION_YML="$(bats_workspace_root)/.github/actions/loop-resolve-push-token/action.yml"
 
 setup() {
     export GITHUB_OUTPUT="${BATS_TEST_TMPDIR}/github_output"
     : > "${GITHUB_OUTPUT}"
     export GITHUB_TOKEN="actions-default-token"
+}
+
+@test "action.yml requests workflows permission for workflow file pushes" {
+    grep -q 'permission-workflows: write' "${ACTION_YML}"
 }
 
 @test "resolve_push_token emits warning when app token generation failed" {

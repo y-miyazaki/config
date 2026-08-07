@@ -29,6 +29,7 @@ runs:
         client-id: ${{ inputs.bot_app_client_id }}
         permission-contents: write
         permission-pull-requests: write
+        permission-workflows: write
         private-key: ${{ inputs.bot_app_private_key }}
 
     - name: Resolve Push Token
