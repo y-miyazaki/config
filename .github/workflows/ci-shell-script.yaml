@@ -26,7 +26,7 @@ on:
         required: false
         type: string
       shell_test_exclude_globs:
-        default: ".git,node_modules,.terraform,apm_modules,vendor"
+        default: ".git,node_modules,.terraform,apm_modules,vendor,.agents,.claude,.codex,.cursor,.kiro"
         description: "Comma-separated directory names excluded while discovering Bats/ShellSpec tests (matched as path segments)."
         required: false
         type: string
@@ -81,11 +81,19 @@ jobs:
         run: |
           set -euo pipefail
           prune_expr=()
+          # Top-level package/agent trees ship mirrored bats; do not prune test/bats/.apm.
+          for top in .apm .agents .claude .codex .cursor .kiro; do
+            prune_expr+=(-path "./${top}" -o -path "./${top}/*" -o)
+          done
           IFS=',' read -ra excludes <<< "${SHELL_TEST_EXCLUDE_GLOBS}"
           for name in "${excludes[@]}"; do
             name="${name#"${name%%[![:space:]]*}"}"
             name="${name%"${name##*[![:space:]]}"}"
             [[ -z "${name}" ]] && continue
+            # Skip names already covered by top-level path prunes above.
+            case "${name}" in
+              .apm|.agents|.claude|.codex|.cursor|.kiro) continue ;;
+            esac
             prune_expr+=(-name "${name}" -o)
           done
           if [[ ${#prune_expr[@]} -gt 0 ]]; then
@@ -131,11 +139,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if ! command -v bats >/dev/null 2>&1; then
+          need_apt=()
+          command -v bats >/dev/null 2>&1 || need_apt+=(bats)
+          command -v shellcheck >/dev/null 2>&1 || need_apt+=(shellcheck)
+          if [[ ${#need_apt[@]} -gt 0 ]]; then
             sudo apt-get update -qq
-            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y bats
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${need_apt[@]}"
+          fi
+          if ! command -v shfmt >/dev/null 2>&1; then
+            shfmt_version="3.10.0"
+            curl -sSLo /tmp/shfmt "https://github.com/mvdan/sh/releases/download/v${shfmt_version}/shfmt_v${shfmt_version}_linux_amd64"
+            sudo install -m 755 /tmp/shfmt /usr/local/bin/shfmt
           fi
           bats --version
+          shellcheck --version
+          shfmt --version
 
       - name: Exec Bats tests
         if: steps.discover.outputs.has_bats == 'true'
