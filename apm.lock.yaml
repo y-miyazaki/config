@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-08-07T06:45:12.588009+00:00'
+generated_at: '2026-08-07T09:14:07.735098+00:00'
 apm_version: 0.27.0
 dependencies:
 - repo_url: _local/common
@@ -1834,8 +1834,8 @@ dependencies:
 - repo_url: y-miyazaki/config
   name: common-hooks-cursor
   host: github.com
-  resolved_commit: f6417a973be4e65076f589738f1c7776e8fe9926
-  resolved_ref: v1.8.72
+  resolved_commit: c0501cf11737a931ff309d4079cebfaf796e7890
+  resolved_ref: v1.8.76
   version: 2.0.0
   virtual_path: .apm/packages/common-hooks-cursor
   is_virtual: true
@@ -1859,8 +1859,8 @@ dependencies:
 - repo_url: y-miyazaki/config
   name: shell-script-hooks-cursor
   host: github.com
-  resolved_commit: f6417a973be4e65076f589738f1c7776e8fe9926
-  resolved_ref: v1.8.72
+  resolved_commit: c0501cf11737a931ff309d4079cebfaf796e7890
+  resolved_ref: v1.8.76
   version: 1.0.0
   virtual_path: .apm/packages/shell-script-hooks-cursor
   is_virtual: true
