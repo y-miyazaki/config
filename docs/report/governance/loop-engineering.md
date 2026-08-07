@@ -86,7 +86,6 @@ Schedule/Automation
 
 - [Addy Osmani — Loop Engineering](https://addyosmani.com/blog/loop-engineering/)
 - [cobusgreyling/loop-engineering (GitHub)](https://github.com/cobusgreyling/loop-engineering)
-- [Cobus Greyling — Loop Engineering (Substack)](https://cobusgreyling.substack.com/p/loop-engineering)
 - [suwash — Loop Engineering 方法論整理 (Zenn)](https://zenn.dev/suwash/articles/loop-engineering_20260610)
 
 ---
