@@ -62,7 +62,7 @@ jobs:
 
       # GitHub Actions workflow linter
       - name: Setup actionlint
-        uses: y-miyazaki/config/.github/actions/install-github-release@f6417a973be4e65076f589738f1c7776e8fe9926 # v1.8.72
+        uses: y-miyazaki/config/.github/actions/install-github-release@5b360874032e4e43e2c3e153766eba097147c080 # v1.8.73
         with:
           binary: actionlint
           checksum: ${{ env.ACTIONLINT_CHECKSUM }}
@@ -71,7 +71,7 @@ jobs:
 
       # Security and settings validation (persist-credentials, timeout-minutes, etc.)
       - name: Setup ghalint
-        uses: y-miyazaki/config/.github/actions/install-github-release@f6417a973be4e65076f589738f1c7776e8fe9926 # v1.8.72
+        uses: y-miyazaki/config/.github/actions/install-github-release@5b360874032e4e43e2c3e153766eba097147c080 # v1.8.73
         with:
           binary: ghalint
           checksum: ${{ env.GHALINT_CHECKSUM }}
@@ -92,12 +92,6 @@ jobs:
         if: inputs.ghalint_soft_fail && steps.ghalint.outcome == 'failure'
         shell: bash
         run: echo "::warning::ghalint reported policy violations (ghalint_soft_fail=true; job continues)"
-
-      - name: Validate Loop Caller Permissions
-        uses: y-miyazaki/config/.github/actions/validate-loop-caller-permissions@f6417a973be4e65076f589738f1c7776e8fe9926 # v1.8.72
-        with:
-          verbose: "true"
-
       # Static analysis tool for GitHub Actions security
       - name: Exec zizmor
         uses: zizmorcore/zizmor-action@6fc4b006235f201fdab3722e17240ab420d580e5 # v0.6.1
@@ -108,7 +102,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@f6417a973be4e65076f589738f1c7776e8fe9926 # v1.8.72
+        uses: y-miyazaki/config/.github/actions/summary@5b360874032e4e43e2c3e153766eba097147c080 # v1.8.73
         with:
           artifacts: |
             (none)

@@ -345,7 +345,15 @@ The repository must provide reusable workflows.
 | `ci-sast.yaml`        | Reusable | CodeQL + Semgrep (language-agnostic SAST; keep `govulncheck` in `ci-go`) |
 | `on-ci-security.yaml` | Caller   | Daily cron + path-filtered push/PR for repository-wide security and SAST |
 
-Language CI workflows (`ci-go`, `ci-nodejs`, `ci-aws-terraform`) retain language-specific checks (`govulncheck`, `npm audit`). Trivy/SBOM/dependency-review/SAST are centralized in `ci-security` and `ci-sast`. Container image scanning runs in `cd-aws-go-registry` after ECR push (`trivy_image_scan`, default true). See [CI Security Workflow Design](../superpowers/specs/2026-07-24-ci-security-workflow-design.md).
+Language CI workflows (`ci-go`, `ci-nodejs`, `ci-aws-terraform`, `ci-terraform`) retain language-specific checks (`govulncheck`, `npm audit`, Terraform fmt/validate/tflint). `ci-terraform` runs without AWS credentials; `ci-aws-terraform` adds remote state init/plan/apply. Trivy/SBOM/dependency-review/SAST are centralized in `ci-security` and `ci-sast`. Container image scanning runs in `cd-aws-go-registry` after ECR push (`trivy_image_scan`, default true). See [CI Security Workflow Design](../superpowers/specs/2026-07-24-ci-security-workflow-design.md).
+
+### APM and shell CI workflows
+
+| Workflow                   | Type     | Purpose                                                                 |
+| -------------------------- | -------- | ----------------------------------------------------------------------- |
+| `ci-apm-audit.yaml`        | Reusable | `apm install` + `apm audit --ci` with optional `check_drift` input      |
+| `on-ci-push-apm-audit.yaml`| Caller   | Path-filtered push/PR for APM package changes (dogfood: `check_drift: false`) |
+| `ci-shell-script.yaml`     | Reusable | shellcheck/shfmt + optional Bats/ShellSpec discovery (`run_shell_tests`) |
 
 ### Scope
 
@@ -547,7 +555,7 @@ Use repository validation workflows and scripts for changed assets:
 ## Validation and Safety Checks
 
 - `apm install --frozen`: verify deterministic package resolution
-- `ci-apm-audit` workflow: install APM packages and run `apm audit --ci` with optional policy checks
+- `ci-apm-audit` workflow: install APM packages and run `apm audit --ci` with optional `check_drift` and policy checks
 - Markdown lint CI workflow: validate documentation formatting
 - GitHub Actions workflow validation: check reusable workflow syntax
 - Renovate config validation: verify shared policy JSON schema compliance

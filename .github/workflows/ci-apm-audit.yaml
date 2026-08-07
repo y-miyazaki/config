@@ -10,6 +10,11 @@ on:
         description: "APM CLI version to use"
         required: false
         type: string
+      check_drift:
+        default: false
+        description: "When true, apm audit includes drift detection (omit --no-drift). When false, drift from APM-managed vs installed trees is ignored."
+        required: false
+        type: boolean
       policy_org:
         default: false
         description: "Run organization policy check (apm audit --policy org)"
@@ -26,6 +31,7 @@ permissions:
 
 env:
   APM_VERSION: ${{ inputs.apm_version }}
+  CHECK_DRIFT: ${{ inputs.check_drift }}
   POLICY_ORG: ${{ inputs.policy_org }}
   POLICY_PATH: ${{ inputs.policy_path }}
 
@@ -60,14 +66,22 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          apm audit --ci --no-drift --no-cache
+          drift_args=()
+          if [[ "${CHECK_DRIFT}" != "true" ]]; then
+            drift_args+=(--no-drift)
+          fi
+          apm audit --ci "${drift_args[@]}" --no-cache
 
       - name: Policy checks(org)
         if: ${{ inputs.policy_org && inputs.policy_path == '' }}
         shell: bash
         run: |
           set -euo pipefail
-          apm audit --ci --no-drift --no-cache --policy org
+          drift_args=()
+          if [[ "${CHECK_DRIFT}" != "true" ]]; then
+            drift_args+=(--no-drift)
+          fi
+          apm audit --ci "${drift_args[@]}" --no-cache --policy org
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
@@ -76,18 +90,23 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          apm audit --ci --no-cache --policy "${POLICY_PATH}"
+          drift_args=()
+          if [[ "${CHECK_DRIFT}" != "true" ]]; then
+            drift_args+=(--no-drift)
+          fi
+          apm audit --ci "${drift_args[@]}" --no-cache --policy "${POLICY_PATH}"
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@f6417a973be4e65076f589738f1c7776e8fe9926 # v1.8.72
+        uses: y-miyazaki/config/.github/actions/summary@5b360874032e4e43e2c3e153766eba097147c080 # v1.8.73
         with:
           artifacts: |
             (none)
           params: |
             apm_version: ${{ env.APM_VERSION }}
+            check_drift: ${{ env.CHECK_DRIFT }}
             policy_org: ${{ env.POLICY_ORG }}
             policy_path: ${{ env.POLICY_PATH }}
           status: "${{ job.status }}"

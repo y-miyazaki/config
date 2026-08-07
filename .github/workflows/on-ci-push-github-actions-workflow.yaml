@@ -15,7 +15,6 @@ on:
       - ".github/workflows/**/*.yaml"
       - ".github/actions/**/*.yml"
       - ".github/actions/**/*.yaml"
-      - "scripts/ci/**"
       - "**/action.yml"
       - "**/action.yaml"
   pull_request:
@@ -31,7 +30,6 @@ on:
       - ".github/workflows/**/*.yaml"
       - ".github/actions/**/*.yml"
       - ".github/actions/**/*.yaml"
-      - "scripts/ci/**"
       - "**/action.yml"
       - "**/action.yaml"
 

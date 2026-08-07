@@ -26,8 +26,8 @@ on:
       - "**/*.bats"
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
 
 permissions:
   checks: write
@@ -38,6 +38,7 @@ jobs:
   shell-script-ci:
     uses: ./.github/workflows/ci-shell-script.yaml
     with:
+      run_shell_tests: true
       script_path: "**/*.sh,**/*.bats"
     permissions:
       checks: write

@@ -13,7 +13,10 @@ on:
     paths:
       - ".apm/**"
       - ".agents/**"
-      - ".github/**"
+      - ".claude/**"
+      - ".codex/**"
+      - ".cursor/**"
+      - ".kiro/**"
       - "apm.lock.yaml"
       - "apm.yml"
   pull_request:
@@ -27,7 +30,10 @@ on:
     paths:
       - ".apm/**"
       - ".agents/**"
-      - ".github/**"
+      - ".claude/**"
+      - ".codex/**"
+      - ".cursor/**"
+      - ".kiro/**"
       - "apm.lock.yaml"
       - "apm.yml"
 
@@ -40,9 +46,9 @@ permissions:
 
 jobs:
   apm-audit:
-    uses: y-miyazaki/config/.github/workflows/ci-apm-audit.yaml@5b360874032e4e43e2c3e153766eba097147c080 # v1.8.73
+    uses: ./.github/workflows/ci-apm-audit.yaml
     with:
-      # Set true only when installed trees must match APM sources exactly.
+      # Default false: this repo adds hooks/skills outside strict APM drift parity.
       check_drift: false
     permissions:
       contents: read

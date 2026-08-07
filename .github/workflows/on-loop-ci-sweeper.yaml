@@ -13,10 +13,12 @@ on:
       - completed
     workflows:
       - on-cd-mkdocs
+      - on-ci-push-apm-audit
       - on-ci-push-github-actions-workflow
       - on-ci-push-markdown
       - on-ci-push-mise-update-lock
       - on-ci-push-shell-script
+      - on-ci-security
 
 permissions:
   actions: write
@@ -106,10 +108,12 @@ jobs:
 
         | Failed workflow (hint)              | Domain skill to invoke                          |
         | ----------------------------------- | ----------------------------------------------- |
+        | on-ci-push-apm-audit              | (apm install/audit; run affected CI checks)     |
         | on-ci-push-github-actions-workflow  | github-actions-validation                       |
         | on-ci-push-shell-script             | shell-script-validation                         |
         | on-ci-push-markdown, on-cd-mkdocs    | markdown-validation                             |
         | on-ci-push-mise-update-lock         | (minimal lockfile edit; run affected CI checks) |
+        | on-ci-security                      | (security/SAST; classify Watch unless clear fix)|
 
         Read each skill's SKILL.md under `.agents/skills/` or `.claude/skills/` before invoking.
         Coverage-threshold and dependency-breakage failures: classify Watch — do not edit until caller verifier allows.

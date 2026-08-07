@@ -1,5 +1,5 @@
 # Reusable workflow: Shell script lint and validation
-# Uses shellcheck, shfmt, bash syntax checks, and shebang verification.
+# Uses shellcheck, shfmt, bash syntax checks, shebang verification, and optional Bats/ShellSpec discovery.
 name: ci-shell-script
 
 on:
@@ -15,9 +15,30 @@ on:
         description: "When true, treat warnings as failures for selected steps (boolean)."
         required: false
         type: boolean
+      run_shell_tests:
+        default: true
+        description: "When true, discover and run Bats (*.bats) and ShellSpec (.shellspec) tests when present."
+        required: false
+        type: boolean
       script_path:
         default: ""
         description: "Comma-separated glob(s) of script files to check. If empty, all **/*.sh and **/*.bats are checked"
+        required: false
+        type: string
+      shell_test_exclude_globs:
+        default: ".git,node_modules,.terraform,apm_modules,vendor"
+        description: "Comma-separated directory names excluded while discovering Bats/ShellSpec tests (matched as path segments)."
+        required: false
+        type: string
+      shellspec_checksum:
+        default: "350d3de04ba61505c54eda31a3c2ee912700f1758b1a80a284bc08fd8b6c5992" # pragma: allowlist secret
+        # To get checksum: curl -sL "https://github.com/shellspec/shellspec/releases/download/0.28.1/shellspec-dist.tar.gz" | sha256sum | awk '{print $1}'
+        description: "SHA256 checksum for shellspec-dist.tar.gz"
+        required: false
+        type: string
+      shellspec_version:
+        default: "0.28.1"
+        description: "ShellSpec release tag to install when .shellspec tests are discovered"
         required: false
         type: string
       shfmt_flags:
@@ -34,10 +55,146 @@ permissions:
 env:
   FAIL_LEVEL: ${{ inputs.fail_level }}
   FAIL_ON_WARNINGS: ${{ inputs.fail_on_warnings }}
+  RUN_SHELL_TESTS: ${{ inputs.run_shell_tests }}
   SCRIPT_PATH: ${{ inputs.script_path }}
+  SHELL_TEST_EXCLUDE_GLOBS: ${{ inputs.shell_test_exclude_globs }}
+  SHELLSPEC_CHECKSUM: ${{ inputs.shellspec_checksum }}
+  SHELLSPEC_VERSION: ${{ inputs.shellspec_version }}
   SHFMT_FLAGS: ${{ inputs.shfmt_flags }}
 
 jobs:
+  shell-tests:
+    if: ${{ inputs.run_shell_tests }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Discover shell test targets
+        id: discover
+        shell: bash
+        run: |
+          set -euo pipefail
+          prune_expr=()
+          IFS=',' read -ra excludes <<< "${SHELL_TEST_EXCLUDE_GLOBS}"
+          for name in "${excludes[@]}"; do
+            name="${name#"${name%%[![:space:]]*}"}"
+            name="${name%"${name##*[![:space:]]}"}"
+            [[ -z "${name}" ]] && continue
+            prune_expr+=(-name "${name}" -o)
+          done
+          if [[ ${#prune_expr[@]} -gt 0 ]]; then
+            unset 'prune_expr[${#prune_expr[@]}-1]'
+            find_prune=(\( "${prune_expr[@]}" \) -prune -o)
+          else
+            find_prune=()
+          fi
+
+          mapfile -d '' bats_files < <(
+            find . "${find_prune[@]}" -type f -name '*.bats' -print0 2>/dev/null | sort -z
+          )
+
+          shellspec_roots=()
+          while IFS= read -r marker; do
+            [[ -z "${marker}" ]] && continue
+            shellspec_roots+=("$(dirname "${marker#./}")")
+          done < <(find . "${find_prune[@]}" -type f -name '.shellspec' -print 2>/dev/null | sort -u)
+
+          echo "bats_count=${#bats_files[@]}" >> "${GITHUB_OUTPUT}"
+          echo "shellspec_count=${#shellspec_roots[@]}" >> "${GITHUB_OUTPUT}"
+
+          if [[ ${#bats_files[@]} -gt 0 ]]; then
+            printf '%s\n' "${bats_files[@]}" > /tmp/bats_files.txt
+            echo "has_bats=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "has_bats=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+          if [[ ${#shellspec_roots[@]} -gt 0 ]]; then
+            printf '%s\n' "${shellspec_roots[@]}" > /tmp/shellspec_roots.txt
+            echo "has_shellspec=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "has_shellspec=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+          if [[ ${#bats_files[@]} -eq 0 && ${#shellspec_roots[@]} -eq 0 ]]; then
+            echo "No Bats or ShellSpec tests discovered; skipping shell test execution."
+          fi
+
+      - name: Setup Bats
+        if: steps.discover.outputs.has_bats == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v bats >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y bats
+          fi
+          bats --version
+
+      - name: Exec Bats tests
+        if: steps.discover.outputs.has_bats == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t bats_files < /tmp/bats_files.txt
+          bats "${bats_files[@]}"
+
+      - name: Setup ShellSpec
+        if: steps.discover.outputs.has_shellspec == 'true'
+        shell: bash
+        env:
+          SHELLSPEC_CHECKSUM: ${{ env.SHELLSPEC_CHECKSUM }}
+          SHELLSPEC_VERSION: ${{ env.SHELLSPEC_VERSION }}
+        run: |
+          set -euo pipefail
+          if command -v shellspec >/dev/null 2>&1; then
+            shellspec --version
+            exit 0
+          fi
+          asset="shellspec-dist.tar.gz"
+          url="https://github.com/shellspec/shellspec/releases/download/${SHELLSPEC_VERSION}/${asset}"
+          curl -sSLo "/tmp/${asset}" "${url}"
+          echo "${SHELLSPEC_CHECKSUM}  /tmp/${asset}" | sha256sum -c -
+          mkdir -p "${HOME}/.local/lib" "${HOME}/.local/bin"
+          tar -xzf "/tmp/${asset}" -C "${HOME}/.local/lib"
+          ln -sfn "${HOME}/.local/lib/shellspec/shellspec" "${HOME}/.local/bin/shellspec"
+          echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+          export PATH="${HOME}/.local/bin:${PATH}"
+          shellspec --version
+
+      - name: Exec ShellSpec tests
+        if: steps.discover.outputs.has_shellspec == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r root; do
+            [[ -z "${root}" ]] && continue
+            echo "Running shellspec in ${root}"
+            (
+              cd "${root}"
+              shellspec
+            )
+          done < /tmp/shellspec_roots.txt
+
+      - name: Summary
+        if: always()
+        uses: y-miyazaki/config/.github/actions/summary@5b360874032e4e43e2c3e153766eba097147c080 # v1.8.73
+        with:
+          artifacts: |
+            (none)
+          params: |
+            bats_count: ${{ steps.discover.outputs.bats_count }}
+            run_shell_tests: ${{ env.RUN_SHELL_TESTS }}
+            shellspec_count: ${{ steps.discover.outputs.shellspec_count }}
+          status: "${{ job.status }}"
+          title: "Shell Script Tests"
+
   lint:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -54,7 +211,7 @@ jobs:
 
       - name: Configure git auth
         if: github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@f6417a973be4e65076f589738f1c7776e8fe9926 # v1.8.72
+        uses: y-miyazaki/config/.github/actions/git-auth@5b360874032e4e43e2c3e153766eba097147c080 # v1.8.73
         with:
           operation: configure
           token: ${{ github.token }}
@@ -201,14 +358,14 @@ jobs:
 
       - name: Clear git auth
         if: always() && github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@f6417a973be4e65076f589738f1c7776e8fe9926 # v1.8.72
+        uses: y-miyazaki/config/.github/actions/git-auth@5b360874032e4e43e2c3e153766eba097147c080 # v1.8.73
         with:
           operation: clear
           token: ${{ github.token }}
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@f6417a973be4e65076f589738f1c7776e8fe9926 # v1.8.72
+        uses: y-miyazaki/config/.github/actions/summary@5b360874032e4e43e2c3e153766eba097147c080 # v1.8.73
         with:
           artifacts: |
             (none)

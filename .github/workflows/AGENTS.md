@@ -99,7 +99,7 @@ When a loop step records failure metadata for run logs or action outputs:
 
 ## Verification
 
-Paired Bats under `test/bats/.github/` when behavior changes (TEST-00).
+Paired Bats under `test/bats/github-actions/` when behavior changes (TEST-00).
 
 ---
 
