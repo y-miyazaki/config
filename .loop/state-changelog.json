@@ -1,12 +1,19 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-08-03T05:10:07Z",
-      "outcome": "merged",
+      "last_run": "2026-08-07T10:34:53Z",
+      "outcome": "pr-created",
       "consecutive_failures": 0,
       "open_rejections": [],
-      "last_reject_reason": "CHANGELOG.md-only diff correctly documents 184 detect commits across releases 1.8.59–1.8.70 with links, footers, and preserved unreleased/history.",
-      "last_sha": "4f8b6d95ee4762134729fd058ae8ae4fa049f8d8"
+      "last_reject_reason": "Prior rejection fixed: hallucinated ## [4.1.1] removed, bullets under 1.8.73, footer [1.8.73] now compares v1.8.72...f08036e",
+      "last_sha": "4f8b6d95ee4762134729fd058ae8ae4fa049f8d8",
+      "pending": {
+        "sha": "bec7eec11b11071adbe75098432c9d6283368d85",
+        "pr": 616,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/616",
+        "loop_name": "changelog",
+        "created_at": "2026-08-07T10:34:53Z"
+      }
     }
   }
 }
