@@ -32,14 +32,11 @@ state_write_git_setup() {
     STATE_WRITE_BARE="${BATS_TEST_TMPDIR}/origin.git"
     STATE_WRITE_WORK="${BATS_TEST_TMPDIR}/work"
     rm -rf "${STATE_WRITE_BARE}" "${STATE_WRITE_WORK}"
-    git init -q "${STATE_WRITE_WORK}"
-    git -C "${STATE_WRITE_WORK}" config user.email "test@example.com"
-    git -C "${STATE_WRITE_WORK}" config user.name "Test User"
-    git -C "${STATE_WRITE_WORK}" checkout -q -b main
     mkdir -p "${STATE_WRITE_WORK}/.loop"
+    bats_git_init_in_place "${STATE_WRITE_WORK}"
+    git -C "${STATE_WRITE_WORK}" checkout -q -b main
     printf '%s\n' '{"targets":{}}' > "${STATE_WRITE_WORK}/.loop/state-test.json"
-    git -C "${STATE_WRITE_WORK}" add .loop/state-test.json
-    git -C "${STATE_WRITE_WORK}" commit -q -m "chore: init state"
+    bats_git_commit "${STATE_WRITE_WORK}" "chore: init state" .loop/state-test.json
     git init -q --bare "${STATE_WRITE_BARE}"
     git -C "${STATE_WRITE_WORK}" remote add origin "${STATE_WRITE_BARE}"
     git -C "${STATE_WRITE_WORK}" push -q -u origin main

@@ -6,6 +6,8 @@
 # - Load this file via the walk-up preamble placed after the header in each suite.
 # - setup(): source targets with bats_source_rel / bats_source_apm_skill; export temp state.
 # - teardown(): remove artifacts created in setup when applicable.
+# - git_test_mock.bash: repo-local git identity for portable commits (sourced from common.bash).
+# - shell_tool_mock.bash: optional PATH mocks for shellcheck/shfmt (source per suite).
 # - Suites assume cwd is the repository root (see scripts/shell-script/validate.sh).
 
 # bats_workspace_root: Print absolute repository root
@@ -79,6 +81,9 @@ function bats_source_apm_skill {
     source "$(apm_skill_script_path "${package}" "${script}")"
 }
 
+# shellcheck disable=SC1091
+source "$(bats_support_dir)/git_test_mock.bash"
+
 # git_test_repo_setup: Create an isolated git repository for integration tests
 #
 # Global Variables:
@@ -86,11 +91,7 @@ function bats_source_apm_skill {
 #
 function git_test_repo_setup {
     GIT_TEST_REPO="${BATS_TEST_TMPDIR}/repo"
-    rm -rf "${GIT_TEST_REPO}"
-    mkdir -p "${GIT_TEST_REPO}"
-    git -C "${GIT_TEST_REPO}" init -q
-    git -C "${GIT_TEST_REPO}" config user.email "test@example.com"
-    git -C "${GIT_TEST_REPO}" config user.name "Test User"
+    bats_git_fresh_repo "${GIT_TEST_REPO}"
 }
 
 # git_test_repo_commit: Create a tracked change and commit in GIT_TEST_REPO
@@ -101,8 +102,7 @@ function git_test_repo_setup {
 function git_test_repo_commit {
     local message="$1"
     echo "change-${RANDOM}" >> "${GIT_TEST_REPO}/file.txt"
-    git -C "${GIT_TEST_REPO}" add -A
-    git -C "${GIT_TEST_REPO}" commit -q -m "${message}"
+    bats_git_commit "${GIT_TEST_REPO}" "${message}"
 }
 
 # git_test_repo_run: Run a command with cwd set to GIT_TEST_REPO via bats run

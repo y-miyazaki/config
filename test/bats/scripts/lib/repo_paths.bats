@@ -38,9 +38,8 @@ setup() {
     printf 'ignored\n' > "${REPO_FIXTURE}/tmp/ignored.txt"
     printf 'agent\n' > "${REPO_FIXTURE}/.agents/skills/SKILL.md"
     printf 'tmp/\n' > "${REPO_FIXTURE}/.gitignore"
-    git -C "${REPO_FIXTURE}" init -q
-    git -C "${REPO_FIXTURE}" add docs/readme.md .gitignore
-    git -C "${REPO_FIXTURE}" commit -q -m "init"
+    bats_git_init_in_place "${REPO_FIXTURE}"
+    bats_git_commit "${REPO_FIXTURE}" "init" docs/readme.md .gitignore
 }
 
 @test "repo_path_should_skip allows github workflows and root config dotfiles" {
