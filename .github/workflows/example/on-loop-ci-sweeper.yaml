@@ -37,7 +37,7 @@ jobs:
       github.event_name != 'workflow_run' ||
       github.event.workflow_run.conclusion == 'failure' ||
       github.event.workflow_run.conclusion == 'startup_failure'
-    uses: y-miyazaki/config/.github/workflows/ci-loop-caller-full-github.yaml@b2e71e5b0feb7ddb913ff8d2e82224b5dcdbfeae # v1.8.75
+    uses: y-miyazaki/config/.github/workflows/ci-loop-caller-full-github.yaml@2575691ac6f396990e2f89fab578ca1cabb323ff # v1.8.75
     with:
       additional_commit_paths: .loop/state-ci-sweeper-run-ledger.json
       agent_implementer_max_turns: 8
