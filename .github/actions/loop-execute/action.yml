@@ -113,7 +113,7 @@ inputs:
     description: "GitHub token for push (must match worktree-setup)"
     required: true
   uv_version:
-    default: "0.12.0"
+    default: "0.12.1"
     description: "uv version for MCP servers (uvx); keep aligned with mise.toml aqua:astral-sh/uv"
     required: false
   verifier_context:
