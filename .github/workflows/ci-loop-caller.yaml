@@ -282,7 +282,7 @@ jobs:
 
       - name: Detect Loop Work
         id: detect
-        uses: y-miyazaki/config/.github/actions/loop-detect@1ad5d9f7b781973719050e6706e1f8404a1dba1a # v1.8.74
+        uses: y-miyazaki/config/.github/actions/loop-detect@23e5cf3067e2caa53307b6f49d88545bd74af7f5 # v1.8.74
         with:
           agent_implementer_max_turns: ${{ format('{0}', inputs.agent_implementer_max_turns) }}
           agent_implementer_model: ${{ inputs.agent_implementer_model }}
@@ -334,7 +334,7 @@ jobs:
       fail-fast: false
       matrix:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
-    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@1ad5d9f7b781973719050e6706e1f8404a1dba1a # v1.8.74
+    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@23e5cf3067e2caa53307b6f49d88545bd74af7f5 # v1.8.74
     with:
       additional_commit_paths: ${{ needs.detect.outputs.additional_commit_paths }}
       agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
@@ -404,7 +404,7 @@ jobs:
           gh_token_push: ${{ secrets.GH_TOKEN_PUSH }}
 
       - name: Append Skip Run Log
-        uses: y-miyazaki/config/.github/actions/loop-run-log@1ad5d9f7b781973719050e6706e1f8404a1dba1a # v1.8.74
+        uses: y-miyazaki/config/.github/actions/loop-run-log@23e5cf3067e2caa53307b6f49d88545bd74af7f5 # v1.8.74
         with:
           base_branch: ${{ needs.detect.outputs.branch_state }}
           loop_name: ${{ needs.detect.outputs.loop_name }}
