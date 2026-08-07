@@ -80,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Loop-automated update (attempt 1) (#608) ([a89b4dd](https://github.com/y-miyazaki/config/commit/a89b4dd365f73c495723d277a08454d3e4dc815e))
 - Append run log [skip ci] (loop) ([1061566](https://github.com/y-miyazaki/config/commit/1061566db3e13922db87574d58dee4dd292ae6ef))
 - Update state [skip ci] (loop) ([449a4e6](https://github.com/y-miyazaki/config/commit/449a4e6904996fc5b42b82c646da721013c02c8c))
+- Update mise lockfile (ci) ([274f1a2](https://github.com/y-miyazaki/config/commit/274f1a282f728dac886790df763e46b2a81032dd))
 
 #### Dependencies
 
@@ -93,15 +94,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update mise to v2026.7.18 (#611) (github-actions-tool-version) ([bd65f2d](https://github.com/y-miyazaki/config/commit/bd65f2df840623f1450753a5a2844e4df1b498a8))
 - Update dependency aqua:aws/aws-cli to v2.36.12 (#609) (mise) ([785c69a](https://github.com/y-miyazaki/config/commit/785c69aec9a3c656da86e49dc7e01bcd9da4de84))
 - Add rules for grouping markdown-link-check updates and custom manager for version updates in workflows (markdown-link-check) ([e3e4fdf](https://github.com/y-miyazaki/config/commit/e3e4fdf2dd62c225a563ec0410e56da325c2448a))
-
-## [4.1.1] - 2026-08-06
-
-### Changed
-
-- Update mise lockfile (ci) ([274f1a2](https://github.com/y-miyazaki/config/commit/274f1a282f728dac886790df763e46b2a81032dd))
-
-#### Dependencies
-
 - Update dependency aqua:suzuki-shunsuke/pinact to v4.1.1 (#603) (mise) ([71297ac](https://github.com/y-miyazaki/config/commit/71297ac14a3825bc7072034aec187d8deffda131))
 - Update dependency aqua:github/copilot-cli to v1.0.76 (#602) (mise) ([31869f6](https://github.com/y-miyazaki/config/commit/31869f6f7862e0f8792fde6de09f7b0cc9c5cebd))
 - Update semgrep to v1.172.0 (#598) (semgrep) ([61995eb](https://github.com/y-miyazaki/config/commit/61995ebfe749448d5a454a77454f8e6c891220f6))
@@ -1400,8 +1392,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [1.8.76]: https://github.com/y-miyazaki/config/compare/v1.8.75...c0501cf11737a931ff309d4079cebfaf796e7890
 [1.8.75]: https://github.com/y-miyazaki/config/compare/v1.8.74...0017d3d0180d8daca8dc7842c32bd9213587360a
 [1.8.74]: https://github.com/y-miyazaki/config/compare/v1.8.73...23e5cf3067e2caa53307b6f49d88545bd74af7f5
-[1.8.73]: https://github.com/y-miyazaki/config/compare/v4.1.1...f08036eec97fcf6d488b7f0a522b0feae0fc37be
-[4.1.1]: https://github.com/y-miyazaki/config/compare/v1.8.72...71297ac14a3825bc7072034aec187d8deffda131
+[1.8.73]: https://github.com/y-miyazaki/config/compare/v1.8.72...f08036eec97fcf6d488b7f0a522b0feae0fc37be
 [1.8.72]: https://github.com/y-miyazaki/config/compare/v1.8.71...f6417a973be4e65076f589738f1c7776e8fe9926
 [1.8.71]: https://github.com/y-miyazaki/config/compare/v1.8.70...8612741d8f077d90272d8ce341d070b49fbe4a62
 [1.8.70]: https://github.com/y-miyazaki/config/compare/v1.8.69...303df93309a3b2f1df07096ca23d83bcdb0a472b
