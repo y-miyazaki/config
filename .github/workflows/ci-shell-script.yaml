@@ -26,8 +26,13 @@ on:
         required: false
         type: string
       shell_test_exclude_globs:
-        default: ".git,node_modules,.terraform,apm_modules,vendor,.agents,.claude,.codex,.cursor,.kiro"
-        description: "Comma-separated directory names excluded while discovering Bats/ShellSpec tests (matched as path segments)."
+        default: ""
+        description: "Optional comma-separated directory names to exclude while discovering Bats/ShellSpec tests (matched as path segments). Leave empty to discover all checked-out paths."
+        required: false
+        type: string
+      shell_test_exclude_top_level_paths:
+        default: ""
+        description: "Comma-separated repository-root paths excluded from discovery (for example .apm). Does not prune nested directories with the same final segment name."
         required: false
         type: string
       shellspec_checksum:
@@ -58,6 +63,7 @@ env:
   RUN_SHELL_TESTS: ${{ inputs.run_shell_tests }}
   SCRIPT_PATH: ${{ inputs.script_path }}
   SHELL_TEST_EXCLUDE_GLOBS: ${{ inputs.shell_test_exclude_globs }}
+  SHELL_TEST_EXCLUDE_TOP_LEVEL_PATHS: ${{ inputs.shell_test_exclude_top_level_paths }}
   SHELLSPEC_CHECKSUM: ${{ inputs.shellspec_checksum }}
   SHELLSPEC_VERSION: ${{ inputs.shellspec_version }}
   SHFMT_FLAGS: ${{ inputs.shfmt_flags }}
@@ -81,8 +87,12 @@ jobs:
         run: |
           set -euo pipefail
           prune_expr=()
-          # Top-level package/agent trees ship mirrored bats; do not prune test/bats/.apm.
-          for top in .apm .agents .claude .codex .cursor .kiro; do
+          IFS=',' read -ra top_excludes <<< "${SHELL_TEST_EXCLUDE_TOP_LEVEL_PATHS}"
+          for top in "${top_excludes[@]}"; do
+            top="${top#"${top%%[![:space:]]*}"}"
+            top="${top%"${top##*[![:space:]]}"}"
+            [[ -z "${top}" ]] && continue
+            top="${top#./}"
             prune_expr+=(-path "./${top}" -o -path "./${top}/*" -o)
           done
           IFS=',' read -ra excludes <<< "${SHELL_TEST_EXCLUDE_GLOBS}"
@@ -90,10 +100,6 @@ jobs:
             name="${name#"${name%%[![:space:]]*}"}"
             name="${name%"${name##*[![:space:]]}"}"
             [[ -z "${name}" ]] && continue
-            # Skip names already covered by top-level path prunes above.
-            case "${name}" in
-              .apm|.agents|.claude|.codex|.cursor|.kiro) continue ;;
-            esac
             prune_expr+=(-name "${name}" -o)
           done
           if [[ ${#prune_expr[@]} -gt 0 ]]; then
@@ -139,21 +145,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          need_apt=()
-          command -v bats >/dev/null 2>&1 || need_apt+=(bats)
-          command -v shellcheck >/dev/null 2>&1 || need_apt+=(shellcheck)
-          if [[ ${#need_apt[@]} -gt 0 ]]; then
+          if ! command -v bats >/dev/null 2>&1; then
             sudo apt-get update -qq
-            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${need_apt[@]}"
-          fi
-          if ! command -v shfmt >/dev/null 2>&1; then
-            shfmt_version="3.10.0"
-            curl -sSLo /tmp/shfmt "https://github.com/mvdan/sh/releases/download/v${shfmt_version}/shfmt_v${shfmt_version}_linux_amd64"
-            sudo install -m 755 /tmp/shfmt /usr/local/bin/shfmt
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y bats
           fi
           bats --version
-          shellcheck --version
-          shfmt --version
 
       - name: Exec Bats tests
         if: steps.discover.outputs.has_bats == 'true'

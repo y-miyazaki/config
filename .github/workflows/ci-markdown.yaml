@@ -11,7 +11,7 @@ on:
         required: false
         type: string
       markdownlint_flags:
-        default: "README*.md docs/**/*.md"
+        default: "README.md docs/**/*.md"
         description: "Glob patterns to pass to markdownlint-cli2 (space-separated)"
         required: false
         type: string

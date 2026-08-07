@@ -6,8 +6,8 @@ on:
   workflow_call:
     inputs:
       codeql_languages:
-        default: '["actions","go"]'
-        description: 'JSON array of CodeQL languages (e.g. ["actions","go","javascript-typescript"])'
+        default: '["actions"]'
+        description: 'JSON array of CodeQL languages (e.g. ["actions"], ["actions","go"], ["javascript-typescript","actions"])'
         required: false
         type: string
       python_version:

@@ -28,8 +28,11 @@ while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
 done
 # shellcheck disable=SC1091
 source "${_bats_support}/support/common.bash"
+# shellcheck disable=SC1091
+source "${_bats_support}/support/shell_tool_mock.bash"
 
 setup() {
+    mock_shell_tool_setup
     WORKSPACE_ROOT="$(bats_workspace_root)"
     export WORKSPACE_ROOT
     export VERBOSE=false
@@ -49,6 +52,10 @@ setup() {
     bats_source_rel "scripts/shell-script/validate.sh"
     FIXTURE_DIR="${BATS_TEST_TMPDIR}/shell-script-validate"
     mkdir -p "${FIXTURE_DIR}"
+}
+
+teardown() {
+    mock_shell_tool_teardown
 }
 
 @test "print_summary_overall_result prints failure when scripts failed" {

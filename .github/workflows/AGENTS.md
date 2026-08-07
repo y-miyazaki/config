@@ -66,6 +66,21 @@ Reusable workflow rules:
 
 Loop callers pass configuration via `with:` on the reusable; avoid caller-level `env:` blocks for loop caller workflows.
 
+### Input defaults and discovery (reusable portability)
+
+Reusable workflows (`ci-*`, `cd-*`) are **distribution artifacts**. Their `inputs.*.default` values and embedded step logic **MUST** stay portable — do not bake in this repository's layout, agent install trees, or gitignore habits.
+
+| Rule                     | Requirement                                                                                                                                                                                                            |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Path/glob/exclude inputs | **MUST** default to empty (`""`) or equivalent “no filter”. Callers (`on-*`, `example/`) pass repo-specific values via `with:`.                                                                                        |
+| Consumer layout          | **MUST NOT** hardcode or default agent roots (`.agents/`, `.claude/`, `.codex/`, `.cursor/`, `.kiro/`), APM paths (`.apm/`, `apm_modules/`), `scripts/`, skill trees, or other consumer-only directories in reusables. |
+| Gitignore assumptions    | **MUST NOT** default excludes for paths that are normally absent from checkout (`node_modules`, `vendor`, `.terraform`, …). If a caller checks them out, it configures exclusions explicitly.                          |
+| Discovery/prune logic    | **MUST NOT** embed consumer-specific `find`/prune branches in reusable steps. Expose filters as inputs; keep step scripts generic.                                                                                     |
+| Examples                 | **MAY** cite repo-specific examples in `description:` text only. **MUST NOT** encode those examples in `default:`.                                                                                                     |
+| Allowed defaults         | Tool version pins, checksums, severity/level enums, and other **tool-contract** defaults that do not assume consumer directory layout.                                                                                 |
+
+When reviewing or authoring a reusable workflow, ask: _“Would this default or branch surprise a consumer with a different repo layout?”_ If yes, move it to the caller.
+
 File prefixes: `ci-*` / `cd-*` (reusable), `on-*` (event caller), `example/` (consumer template). Map key ordering: ORD-01 in companion `github-actions-workflow` rules.
 
 ---
@@ -92,6 +107,8 @@ When a loop step records failure metadata for run logs or action outputs:
 | `${GITHUB_ACTION_PATH}/../../lib/...` from action `run:` steps    | Wrong depth — use `../lib/...` from action root |
 | Shared logic in a composite's `lib/` instead of `actions/lib/`    | Couples actions; blocks reuse                   |
 | Consumer-specific paths in reusables/actions                      | Breaks portability                              |
+| Consumer-tuned `inputs.*.default` paths/globs/excludes in `ci-*`  | Couples distribution to one repo layout         |
+| Hardcoded discovery/prune lists in reusable `run:` steps          | Callers cannot override without forking         |
 | `secrets: inherit` on reusable callers                            | Blocks secret name remapping                    |
 | Credentials via `with:` on reusable workflows                     | Wrong channel                                   |
 

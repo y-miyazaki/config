@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-08-06T14:00:31.323765+00:00'
+generated_at: '2026-08-07T06:45:12.588009+00:00'
 apm_version: 0.27.0
 dependencies:
 - repo_url: _local/common
@@ -909,7 +909,7 @@ dependencies:
     .agents/skills/github-pr-body/scripts/pr_body.sh: sha256:18b5be9e2cca465754f8eb75a8cebf0f96786a64513ad7b22485f5888e9cf89f
     .agents/skills/github-pr-body/scripts/pr_comment.sh: sha256:a66e26f4d86744eed083cfcc992405d70bdf190ce88c24c6c3d72bf31d7efe77
     .agents/skills/github-pr-body/scripts/pr_fetch.sh: sha256:1531010df0334afa99fb2e1b25f6f1ec61ca062a581ad38a590d910ee02ac0a7
-    .agents/skills/github-pr-body/test/bats/github_pr_body.bats: sha256:0f9541aad36442ce2b67cff3730085c50493c7b27e37210134e04f3617aaabcc
+    .agents/skills/github-pr-body/test/bats/github_pr_body.bats: sha256:db497b1533a0d53812ec6ba36be02c3da194770bed5ba8e3187eaf809af32d33
     .agents/skills/instructions-review/SKILL.md: sha256:f38ffc72e82f928f7971021b76d4bb67d7789cf87ac35917140c35d7cdca04c1
     .agents/skills/instructions-review/eval.yaml: sha256:26567cb47eaa7f360d360a21d05a19e1996154b40d69cba994cc91d87d8f0efb
     .agents/skills/instructions-review/evals/tasks/instructions-review-basic.yaml: sha256:4e762894aebb3a76616fbc0c1897b29cc4918633ae990b080974c1cfd05cfa2d
@@ -1242,7 +1242,7 @@ dependencies:
     .claude/skills/github-pr-body/scripts/pr_body.sh: sha256:18b5be9e2cca465754f8eb75a8cebf0f96786a64513ad7b22485f5888e9cf89f
     .claude/skills/github-pr-body/scripts/pr_comment.sh: sha256:a66e26f4d86744eed083cfcc992405d70bdf190ce88c24c6c3d72bf31d7efe77
     .claude/skills/github-pr-body/scripts/pr_fetch.sh: sha256:1531010df0334afa99fb2e1b25f6f1ec61ca062a581ad38a590d910ee02ac0a7
-    .claude/skills/github-pr-body/test/bats/github_pr_body.bats: sha256:0f9541aad36442ce2b67cff3730085c50493c7b27e37210134e04f3617aaabcc
+    .claude/skills/github-pr-body/test/bats/github_pr_body.bats: sha256:db497b1533a0d53812ec6ba36be02c3da194770bed5ba8e3187eaf809af32d33
     .claude/skills/instructions-review/SKILL.md: sha256:f38ffc72e82f928f7971021b76d4bb67d7789cf87ac35917140c35d7cdca04c1
     .claude/skills/instructions-review/eval.yaml: sha256:26567cb47eaa7f360d360a21d05a19e1996154b40d69cba994cc91d87d8f0efb
     .claude/skills/instructions-review/evals/tasks/instructions-review-basic.yaml: sha256:4e762894aebb3a76616fbc0c1897b29cc4918633ae990b080974c1cfd05cfa2d
@@ -4006,7 +4006,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:0f9541aad36442ce2b67cff3730085c50493c7b27e37210134e04f3617aaabcc
+  content_hash: sha256:db497b1533a0d53812ec6ba36be02c3da194770bed5ba8e3187eaf809af32d33
 - kind: project-relative
   target: claude
   value: .claude/skills/go-review
@@ -7903,7 +7903,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:0f9541aad36442ce2b67cff3730085c50493c7b27e37210134e04f3617aaabcc
+  content_hash: sha256:db497b1533a0d53812ec6ba36be02c3da194770bed5ba8e3187eaf809af32d33
 - kind: project-relative
   target: cursor
   value: .agents/skills/go-review
