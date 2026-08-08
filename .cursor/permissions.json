@@ -19,6 +19,7 @@
     "env",
     "file",
     "find",
+    "gh run view",
     "git add",
     "git blame",
     "git branch",

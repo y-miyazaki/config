@@ -19,6 +19,7 @@
       "Shell(env)",
       "Shell(file)",
       "Shell(find)",
+      "Shell(gh run view)",
       "Shell(git add)",
       "Shell(git blame)",
       "Shell(git branch)",

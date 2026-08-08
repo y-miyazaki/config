@@ -5,9 +5,9 @@
 # === AI tool configs (low value as context) ===
 .copilot/
 .cursor/hooks/
-.cursor/permissions.json
+# .cursor/permissions.json
 .cursor/hooks.json
-.cursor/cli.json
+# .cursor/cli.json
 .kiro/
 .serena/
 apm_modules/

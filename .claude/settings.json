@@ -20,6 +20,7 @@
       "Bash(env *)",
       "Bash(file *)",
       "Bash(find *)",
+      "Bash(gh run view)",
       "Bash(git add *)",
       "Bash(git blame *)",
       "Bash(git branch *)",
