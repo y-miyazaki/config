@@ -38,7 +38,6 @@ jobs:
   shell-script-ci:
     uses: ./.github/workflows/ci-shell-script.yaml
     with:
-      run_shell_tests: true
       script_path: "**/*.sh,**/*.bats"
       shell_test_exclude_globs: ".agents,.claude,.codex,.cursor,.kiro"
       shell_test_exclude_top_level_paths: ".apm"

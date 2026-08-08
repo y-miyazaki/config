@@ -1,5 +1,5 @@
 # Reusable workflow: Shell script lint and validation
-# Uses shellcheck, shfmt, bash syntax checks, shebang verification, and optional Bats/ShellSpec discovery.
+# Uses shellcheck, shfmt, bash syntax checks, shebang verification, and Bats/ShellSpec discovery when present.
 name: ci-shell-script
 
 on:
@@ -13,11 +13,6 @@ on:
       fail_on_warnings:
         default: false
         description: "When true, treat warnings as failures for selected steps (boolean)."
-        required: false
-        type: boolean
-      run_shell_tests:
-        default: true
-        description: "When true, discover and run Bats (*.bats) and ShellSpec (.shellspec) tests when present."
         required: false
         type: boolean
       script_path:
@@ -46,16 +41,10 @@ on:
         description: "ShellSpec release tag to install when .shellspec tests are discovered"
         required: false
         type: string
-      shfmt_checksum_amd64:
+      shfmt_checksum:
         default: "1f57a384d59542f8fac5f503da1f3ea44242f46dff969569e80b524d64b71dbc" # pragma: allowlist secret
         # To get checksum: curl -sL "https://github.com/mvdan/sh/releases/download/v3.10.0/shfmt_v3.10.0_linux_amd64" | sha256sum | awk '{print $1}'
         description: "SHA256 checksum for shfmt linux amd64 binary"
-        required: false
-        type: string
-      shfmt_checksum_arm64:
-        default: "9d23013d56640e228732fd2a04a9ede0ab46bc2d764bf22a4a35fb1b14d707a8" # pragma: allowlist secret
-        # To get checksum: curl -sL "https://github.com/mvdan/sh/releases/download/v3.10.0/shfmt_v3.10.0_linux_arm64" | sha256sum | awk '{print $1}'
-        description: "SHA256 checksum for shfmt linux arm64 binary"
         required: false
         type: string
       shfmt_flags:
@@ -77,20 +66,17 @@ permissions:
 env:
   FAIL_LEVEL: ${{ inputs.fail_level }}
   FAIL_ON_WARNINGS: ${{ inputs.fail_on_warnings }}
-  RUN_SHELL_TESTS: ${{ inputs.run_shell_tests }}
   SCRIPT_PATH: ${{ inputs.script_path }}
   SHELL_TEST_EXCLUDE_GLOBS: ${{ inputs.shell_test_exclude_globs }}
   SHELL_TEST_EXCLUDE_TOP_LEVEL_PATHS: ${{ inputs.shell_test_exclude_top_level_paths }}
   SHELLSPEC_CHECKSUM: ${{ inputs.shellspec_checksum }}
   SHELLSPEC_VERSION: ${{ inputs.shellspec_version }}
-  SHFMT_CHECKSUM_AMD64: ${{ inputs.shfmt_checksum_amd64 }}
-  SHFMT_CHECKSUM_ARM64: ${{ inputs.shfmt_checksum_arm64 }}
+  SHFMT_CHECKSUM: ${{ inputs.shfmt_checksum }}
   SHFMT_FLAGS: ${{ inputs.shfmt_flags }}
   SHFMT_VERSION: ${{ inputs.shfmt_version }}
 
 jobs:
   shell-tests:
-    if: ${{ inputs.run_shell_tests }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
@@ -224,7 +210,6 @@ jobs:
             (none)
           params: |
             bats_count: ${{ steps.discover.outputs.bats_count }}
-            run_shell_tests: ${{ env.RUN_SHELL_TESTS }}
             shellspec_count: ${{ steps.discover.outputs.shellspec_count }}
           status: "${{ job.status }}"
           title: "Shell Script Tests"
@@ -287,28 +272,13 @@ jobs:
 
       - name: Install shfmt
         if: steps.file-list.outputs.no_files == 'false'
-        shell: bash
-        env:
-          SHFMT_CHECKSUM_AMD64: ${{ env.SHFMT_CHECKSUM_AMD64 }}
-          SHFMT_CHECKSUM_ARM64: ${{ env.SHFMT_CHECKSUM_ARM64 }}
-          SHFMT_VERSION: ${{ env.SHFMT_VERSION }}
-        run: |
-          set -euo pipefail
-          arch="$(uname -m)"
-          case "${arch}" in
-            x86_64|amd64) goarch=amd64; checksum="${SHFMT_CHECKSUM_AMD64}" ;;
-            aarch64|arm64) goarch=arm64; checksum="${SHFMT_CHECKSUM_ARM64}" ;;
-            *)
-              echo "Unsupported architecture for shfmt: ${arch}" >&2
-              exit 1
-              ;;
-          esac
-          asset="shfmt_v${SHFMT_VERSION}_linux_${goarch}"
-          url="https://github.com/mvdan/sh/releases/download/v${SHFMT_VERSION}/${asset}"
-          curl -sSLo /tmp/shfmt "${url}"
-          echo "${checksum}  /tmp/shfmt" | sha256sum -c -
-          chmod +x /tmp/shfmt
-          /tmp/shfmt -version
+        uses: y-miyazaki/config/.github/actions/install-github-release@c0501cf11737a931ff309d4079cebfaf796e7890 # v1.8.76
+        with:
+          asset_pattern: "shfmt_v{version}_linux_amd64"
+          binary: shfmt
+          checksum: ${{ env.SHFMT_CHECKSUM }}
+          repo: mvdan/sh
+          version: ${{ env.SHFMT_VERSION }}
 
       - name: Apply shfmt to script_path files
         if: steps.file-list.outputs.no_files == 'false'
@@ -318,7 +288,7 @@ jobs:
           # shellcheck disable=SC2086
           while IFS= read -r f; do
             [[ -z "${f}" ]] && continue
-            /tmp/shfmt ${SHFMT_FLAGS} -w "${f}"
+            shfmt ${SHFMT_FLAGS} -w "${f}"
           done < /tmp/scripts_to_check.txt
 
       - name: Exec shfmt + reviewdog (PR comments)
