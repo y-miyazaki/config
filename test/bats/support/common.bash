@@ -105,7 +105,6 @@ function git_test_repo_commit {
     bats_git_commit "${GIT_TEST_REPO}" "${message}"
 }
 
-
 # git_test_repo_git: Run git in GIT_TEST_REPO without inherited GIT_* variables
 #
 # Arguments:
