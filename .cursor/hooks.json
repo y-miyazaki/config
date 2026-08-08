@@ -4,8 +4,7 @@
       {
         "command": "/workspace/scripts/self/apm/sync_apm_artifacts.sh",
         "timeoutSec": 60
-
-      }
+      },
       {
         "command": ".cursor/hooks/common-hooks-cursor/scripts/actionlint.sh",
         "timeoutSec": 60
