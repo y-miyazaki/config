@@ -8,11 +8,11 @@
       "last_reject_reason": "No file changes produced"
     },
     "integration:main": {
-      "last_run": "2026-08-07T06:40:32Z",
-      "outcome": "merged",
-      "consecutive_failures": 0,
+      "last_run": "2026-08-08T07:48:04Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
       "open_rejections": [],
-      "last_reject_reason": "Three allowlisted, minimal fixes address reproduced shell-tests regression (gawk stderr, discovery scope, missing tools) with documented bats validation.",
+      "last_reject_reason": "No file changes produced",
       "last_sha": "bfa7f165d3beef425920c4a0ec3c4b3daeb363ea"
     },
     "pull_request:401": {
