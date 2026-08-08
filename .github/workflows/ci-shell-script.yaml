@@ -46,9 +46,26 @@ on:
         description: "ShellSpec release tag to install when .shellspec tests are discovered"
         required: false
         type: string
+      shfmt_checksum_amd64:
+        default: "1f57a384d59542f8fac5f503da1f3ea44242f46dff969569e80b524d64b71dbc" # pragma: allowlist secret
+        # To get checksum: curl -sL "https://github.com/mvdan/sh/releases/download/v3.10.0/shfmt_v3.10.0_linux_amd64" | sha256sum | awk '{print $1}'
+        description: "SHA256 checksum for shfmt linux amd64 binary"
+        required: false
+        type: string
+      shfmt_checksum_arm64:
+        default: "9d23013d56640e228732fd2a04a9ede0ab46bc2d764bf22a4a35fb1b14d707a8" # pragma: allowlist secret
+        # To get checksum: curl -sL "https://github.com/mvdan/sh/releases/download/v3.10.0/shfmt_v3.10.0_linux_arm64" | sha256sum | awk '{print $1}'
+        description: "SHA256 checksum for shfmt linux arm64 binary"
+        required: false
+        type: string
       shfmt_flags:
         default: "-l -s -i 4 -ci -bn -sr"
-        description: "Flags passed to shfmt via reviewdog/action-shfmt."
+        description: "Flags passed to shfmt when formatting script_path files (reviewdog/action-suggester reports the diff)."
+        required: false
+        type: string
+      shfmt_version:
+        default: "3.10.0"
+        description: "shfmt release version to install when formatting script_path files"
         required: false
         type: string
 
@@ -66,7 +83,10 @@ env:
   SHELL_TEST_EXCLUDE_TOP_LEVEL_PATHS: ${{ inputs.shell_test_exclude_top_level_paths }}
   SHELLSPEC_CHECKSUM: ${{ inputs.shellspec_checksum }}
   SHELLSPEC_VERSION: ${{ inputs.shellspec_version }}
+  SHFMT_CHECKSUM_AMD64: ${{ inputs.shfmt_checksum_amd64 }}
+  SHFMT_CHECKSUM_ARM64: ${{ inputs.shfmt_checksum_arm64 }}
   SHFMT_FLAGS: ${{ inputs.shfmt_flags }}
+  SHFMT_VERSION: ${{ inputs.shfmt_version }}
 
 jobs:
   shell-tests:
@@ -265,27 +285,63 @@ jobs:
             } >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Install shfmt
+        if: steps.file-list.outputs.no_files == 'false'
+        shell: bash
+        env:
+          SHFMT_CHECKSUM_AMD64: ${{ env.SHFMT_CHECKSUM_AMD64 }}
+          SHFMT_CHECKSUM_ARM64: ${{ env.SHFMT_CHECKSUM_ARM64 }}
+          SHFMT_VERSION: ${{ env.SHFMT_VERSION }}
+        run: |
+          set -euo pipefail
+          arch="$(uname -m)"
+          case "${arch}" in
+            x86_64|amd64) goarch=amd64; checksum="${SHFMT_CHECKSUM_AMD64}" ;;
+            aarch64|arm64) goarch=arm64; checksum="${SHFMT_CHECKSUM_ARM64}" ;;
+            *)
+              echo "Unsupported architecture for shfmt: ${arch}" >&2
+              exit 1
+              ;;
+          esac
+          asset="shfmt_v${SHFMT_VERSION}_linux_${goarch}"
+          url="https://github.com/mvdan/sh/releases/download/v${SHFMT_VERSION}/${asset}"
+          curl -sSLo /tmp/shfmt "${url}"
+          echo "${checksum}  /tmp/shfmt" | sha256sum -c -
+          chmod +x /tmp/shfmt
+          /tmp/shfmt -version
+
+      - name: Apply shfmt to script_path files
+        if: steps.file-list.outputs.no_files == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC2086
+          while IFS= read -r f; do
+            [[ -z "${f}" ]] && continue
+            /tmp/shfmt ${SHFMT_FLAGS} -w "${f}"
+          done < /tmp/scripts_to_check.txt
+
       - name: Exec shfmt + reviewdog (PR comments)
         if: steps.file-list.outputs.no_files == 'false' && github.event_name == 'pull_request'
-        uses: reviewdog/action-shfmt@c5e3ba7497c338866921924691aef4fa18bc1fe0 # v1.1.0
+        uses: reviewdog/action-suggester@2558ba17e65a9039e73764a73009fc05fef28a46 # v1.24.3
         with:
+          fail_level: ${{ env.FAIL_LEVEL }}
           filter_mode: file
           github_token: ${{ github.token }}
           level: error
-          reviewdog_flags: "-fail-level=${{ env.FAIL_LEVEL }} -reporter=github-pr-review"
-          shfmt_flags: ${{ env.SHFMT_FLAGS }}
-          workdir: "."
+          reviewdog_flags: "-reporter=github-pr-review"
+          tool_name: shfmt
 
       - name: Exec shfmt + reviewdog (push/check)
         if: steps.file-list.outputs.no_files == 'false' && github.event_name != 'pull_request'
-        uses: reviewdog/action-shfmt@c5e3ba7497c338866921924691aef4fa18bc1fe0 # v1.1.0
+        uses: reviewdog/action-suggester@2558ba17e65a9039e73764a73009fc05fef28a46 # v1.24.3
         with:
+          fail_level: ${{ env.FAIL_LEVEL }}
           filter_mode: file
           github_token: ${{ github.token }}
           level: error
-          reviewdog_flags: "-fail-level=${{ env.FAIL_LEVEL }} -reporter=github-check"
-          shfmt_flags: ${{ env.SHFMT_FLAGS }}
-          workdir: "."
+          reviewdog_flags: "-reporter=github-check"
+          tool_name: shfmt
 
       - name: Exec ShellCheck + reviewdog (PR comments)
         if: steps.file-list.outputs.no_files == 'false' && github.event_name == 'pull_request'
