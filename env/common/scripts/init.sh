@@ -54,7 +54,7 @@ if command -v claude > /dev/null 2>&1; then
 fi
 
 #######################################
-# Cursor CLI statusline (optional; config lives in ~/.cursor/cli-config.json)
+# Cursor CLI statusline (~/.config/cursor/cli-config.json — agent reads this path)
 #######################################
 if [ -f "${repo_root}/.cursor/statusline.sh" ]; then
     mkdir -p ~/.cursor
@@ -63,15 +63,17 @@ if [ -f "${repo_root}/.cursor/statusline.sh" ]; then
 
     if command -v jq > /dev/null 2>&1; then
         statusline_json="{\"command\":\"${HOME}/.cursor/statusline.sh\",\"padding\":2,\"timeoutMs\":5000,\"type\":\"command\",\"updateIntervalMs\":500}"
-        cli_config="${HOME}/.cursor/cli-config.json"
-        if [ -f "${cli_config}" ]; then
-            jq --argjson sl "${statusline_json}" '.statusLine = $sl | .version = (.version // 1)' "${cli_config}" > "${cli_config}.tmp" \
-                && mv "${cli_config}.tmp" "${cli_config}"
-        else
-            jq -n --argjson sl "${statusline_json}" \
-                '{version: 1, editor: {vimMode: false}, permissions: {allow: ["Shell(ls)"], deny: []}, statusLine: $sl}' \
-                > "${cli_config}"
-        fi
+        for cli_config in "${HOME}/.config/cursor/cli-config.json" "${HOME}/.cursor/cli-config.json"; do
+            mkdir -p "$(dirname "${cli_config}")"
+            if [ -f "${cli_config}" ]; then
+                jq --argjson sl "${statusline_json}" '.statusLine = $sl | .version = (.version // 1)' "${cli_config}" > "${cli_config}.tmp" \
+                    && mv "${cli_config}.tmp" "${cli_config}"
+            else
+                jq -n --argjson sl "${statusline_json}" \
+                    '{version: 1, editor: {vimMode: false}, permissions: {allow: ["Shell(ls)"], deny: []}, statusLine: $sl}' \
+                    > "${cli_config}"
+            fi
+        done
     fi
 fi
 
