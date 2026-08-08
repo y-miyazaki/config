@@ -105,13 +105,24 @@ function git_test_repo_commit {
     bats_git_commit "${GIT_TEST_REPO}" "${message}"
 }
 
+
+# git_test_repo_git: Run git in GIT_TEST_REPO without inherited GIT_* variables
+#
+# Arguments:
+#   $@ - Arguments passed to git
+function git_test_repo_git {
+    bats_git_cmd -C "${GIT_TEST_REPO}" "$@"
+}
+
 # git_test_repo_run: Run a command with cwd set to GIT_TEST_REPO via bats run
 #
 # Arguments:
 #   $@ - Shell command string passed to bash -c
 #
 function git_test_repo_run {
-    run bash -c "cd '${GIT_TEST_REPO}' && $*"
+    run env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE \
+        -u GIT_OBJECT_DIRECTORY -u GIT_ALTERNATE_OBJECT_DIRECTORIES \
+        bash -c "cd '${GIT_TEST_REPO}' && $*"
 }
 
 # bats_resolve_since_ref: Pick a relative git ref with enough workspace history
@@ -441,7 +452,7 @@ function assert_loop_run_log_entry_json {
 }
 
 export -f bats_workspace_root bats_support_dir bats_source_rel apm_skill_script_path
-export -f bats_source_apm_skill git_test_repo_setup git_test_repo_commit git_test_repo_run
+export -f bats_source_apm_skill git_test_repo_setup git_test_repo_commit git_test_repo_git git_test_repo_run
 export -f bats_resolve_since_ref
 export -f assert_detect_changelog_ok_json assert_detect_changelog_error_json
 export -f assert_detect_changes_ok_json assert_detect_changes_error_json

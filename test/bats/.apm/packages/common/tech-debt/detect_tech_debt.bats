@@ -33,8 +33,8 @@ DETECT_SCRIPT="$(apm_skill_script_path tech-debt detect_tech_debt.sh)"
     git_test_repo_setup
     mkdir -p "${GIT_TEST_REPO}/src"
     printf 'package main\n// TODO: staged scope\nfunc main() {}\n' > "${GIT_TEST_REPO}/src/app.go"
-    git -C "${GIT_TEST_REPO}" add .
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope staged"
     [ "$status" -eq 0 ]
     assert_detect_tech_debt_ok_json "${output}" "staged" ""
@@ -43,8 +43,8 @@ DETECT_SCRIPT="$(apm_skill_script_path tech-debt detect_tech_debt.sh)"
 @test "detect_tech_debt defaults to scope all and skips on empty fixture repo" {
     git_test_repo_setup
     printf 'ok\n' > "${GIT_TEST_REPO}/README.md"
-    git -C "${GIT_TEST_REPO}" add README.md
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add README.md
+    git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     assert_detect_tech_debt_ok_json "${output}" "all" ""
@@ -58,8 +58,8 @@ DETECT_SCRIPT="$(apm_skill_script_path tech-debt detect_tech_debt.sh)"
         > "${GIT_TEST_REPO}/docs/report/tech-debt/noise.go"
     printf 'package main\n// TODO: app debt\nfunc main() {}\n' \
         > "${GIT_TEST_REPO}/src/app.go"
-    git -C "${GIT_TEST_REPO}" add .
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "env TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     [[ $output == *'"todo_comment"'* ]]
@@ -71,8 +71,8 @@ DETECT_SCRIPT="$(apm_skill_script_path tech-debt detect_tech_debt.sh)"
     git_test_repo_setup
     mkdir -p "${GIT_TEST_REPO}/docs"
     printf '# Doc\n\nSee [missing](./nope.md)\n' > "${GIT_TEST_REPO}/docs/index.md"
-    git -C "${GIT_TEST_REPO}" add .
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     if [[ $output == *'"broken_doc_ref"'* ]]; then
@@ -86,13 +86,13 @@ DETECT_SCRIPT="$(apm_skill_script_path tech-debt detect_tech_debt.sh)"
 @test "detect_tech_debt emits churn hotspot for frequently edited file" {
     git_test_repo_setup
     printf 'v1\n' > "${GIT_TEST_REPO}/hot.txt"
-    git -C "${GIT_TEST_REPO}" add hot.txt
-    git -C "${GIT_TEST_REPO}" commit -q -m "c1"
+    git_test_repo_git add hot.txt
+    git_test_repo_git commit -q -m "c1"
     local i
     for i in 2 3 4 5 6; do
         echo "v${i}" >> "${GIT_TEST_REPO}/hot.txt"
-        git -C "${GIT_TEST_REPO}" add hot.txt
-        git -C "${GIT_TEST_REPO}" commit -q -m "c${i}"
+        git_test_repo_git add hot.txt
+        git_test_repo_git commit -q -m "c${i}"
     done
     git_test_repo_run "env TECH_DEBT_CHURN_MIN=5 TECH_DEBT_CHURN_WINDOW=365d TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
@@ -109,8 +109,8 @@ go 1.22
 
 require github.com/old/lib v1.2.3
 EOF
-    git -C "${GIT_TEST_REPO}/" add go.mod
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add go.mod
+    git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "env TECH_DEBT_EOL_MODULES='github.com/old/lib' bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     [[ $output == *'"eol_hint"'* ]]
@@ -143,8 +143,8 @@ EOF
     git_test_repo_setup
     mkdir -p "${GIT_TEST_REPO}/docs"
     printf '# Old\n' > "${GIT_TEST_REPO}/docs/old.md"
-    git -C "${GIT_TEST_REPO}" add .
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "env TECH_DEBT_STALE_DAYS=0 TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     [[ $output == *'"stale_doc"'* ]]
@@ -155,8 +155,8 @@ EOF
     mkdir -p "${GIT_TEST_REPO}/src"
     printf 'package main\n// TODO: extract helper\n// FIXME: handle nil\nfunc main() {}\n' \
         > "${GIT_TEST_REPO}/src/main.go"
-    git -C "${GIT_TEST_REPO}" add .
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope all"
     [ "$status" -eq 0 ]
     assert_detect_tech_debt_ok_json "${output}" "all" ""
@@ -169,8 +169,8 @@ EOF
     git_test_repo_setup
     printf '%s\n' '{"name":"x","dependencies":{"leftpad":"^1.0.0"}}' \
         > "${GIT_TEST_REPO}/package.json"
-    git -C "${GIT_TEST_REPO}" add package.json
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add package.json
+    git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     [[ $output == *'"version_range"'* ]]
@@ -196,8 +196,8 @@ go 1.22
 
 require github.com/old/lib v1.2.3
 EOF
-    git -C "${GIT_TEST_REPO}" add .
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "env TECH_DEBT_EOL_MODULES='github.com/old/lib' bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     [[ $output == *'"marker signals truncated"'* ]]
@@ -207,8 +207,8 @@ EOF
 @test "detect_tech_debt previous_report empty on fresh repo" {
     git_test_repo_setup
     printf 'ok\n' > "${GIT_TEST_REPO}/README.md"
-    git -C "${GIT_TEST_REPO}" add README.md
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add README.md
+    git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     assert_detect_tech_debt_ok_json "${output}" "all" ""
@@ -221,8 +221,8 @@ EOF
     today_date="$(date -u +%Y-%m-%d)"
     mkdir -p "${GIT_TEST_REPO}/reports/custom-debt" "${GIT_TEST_REPO}/src"
     printf 'package main\n// TODO: debt\nfunc main() {}\n' > "${GIT_TEST_REPO}/src/app.go"
-    git -C "${GIT_TEST_REPO}" add .
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "env TECH_DEBT_DIR='reports/custom-debt' TECH_DEBT_LEGACY_SEARCH_DIRS='' TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     [[ $output == *"\"report_file\": \"reports/custom-debt/${today_date}.md\""* ]] \
@@ -238,8 +238,8 @@ EOF
     printf '# today\n' > "${GIT_TEST_REPO}/docs/report/tech-debt/${today_date}.md"
     printf '# older\n' > "${GIT_TEST_REPO}/${older_report}"
     printf 'ok\n' > "${GIT_TEST_REPO}/README.md"
-    git -C "${GIT_TEST_REPO}" add .
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     assert_detect_tech_debt_ok_json "${output}" "all" ""
@@ -257,8 +257,8 @@ EOF
     mkdir -p "${GIT_TEST_REPO}/docs/report/tech-debt"
     printf '# legacy\n' > "${GIT_TEST_REPO}/${legacy_report}"
     printf 'ok\n' > "${GIT_TEST_REPO}/README.md"
-    git -C "${GIT_TEST_REPO}" add .
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     assert_detect_tech_debt_ok_json "${output}" "all" ""
@@ -274,8 +274,8 @@ EOF
     printf '# older\n' > "${GIT_TEST_REPO}/docs/report/tech-debt/2020-01-01.md"
     printf '# newer\n' > "${GIT_TEST_REPO}/docs/report/tech-debt/2021-06-15.md"
     printf 'ok\n' > "${GIT_TEST_REPO}/README.md"
-    git -C "${GIT_TEST_REPO}" add .
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     assert_detect_tech_debt_ok_json "${output}" "all" ""
@@ -286,8 +286,8 @@ EOF
 @test "detect_tech_debt range without --since returns error JSON exit 1" {
     git_test_repo_setup
     touch "${GIT_TEST_REPO}/file.txt"
-    git -C "${GIT_TEST_REPO}" add file.txt
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add file.txt
+    git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope range"
     [ "$status" -eq 1 ]
     assert_detect_tech_debt_error_json "${output}" "requires --since"
@@ -296,8 +296,8 @@ EOF
 @test "detect_tech_debt rejects unknown --scope" {
     git_test_repo_setup
     touch "${GIT_TEST_REPO}/file.txt"
-    git -C "${GIT_TEST_REPO}" add file.txt
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add file.txt
+    git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope weird"
     [ "$status" -eq 1 ]
     assert_detect_tech_debt_error_json "${output}" "scope"
@@ -306,8 +306,8 @@ EOF
 @test "detect_tech_debt report_file matches UTC date pattern" {
     git_test_repo_setup
     printf 'ok\n' > "${GIT_TEST_REPO}/README.md"
-    git -C "${GIT_TEST_REPO}" add README.md
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add README.md
+    git_test_repo_git commit -q -m "chore: init"
     local expected_date
     expected_date="$(date -u +%Y-%m-%d)"
     git_test_repo_run "bash '${DETECT_SCRIPT}'"
@@ -329,8 +329,8 @@ EOF
     git_test_repo_setup
     mkdir -p "${GIT_TEST_REPO}/docs"
     printf '# Old\n' > "${GIT_TEST_REPO}/docs/old.md"
-    git -C "${GIT_TEST_REPO}" add .
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
     touch -d "2 years ago" "${GIT_TEST_REPO}/docs/old.md"
     git_test_repo_run "env TECH_DEBT_STALE_DAYS=30 TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
@@ -354,8 +354,8 @@ EOF
         done
         printf '  }\n}\n'
     } > "${GIT_TEST_REPO}/package.json"
-    git -C "${GIT_TEST_REPO}" add package.json
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add package.json
+    git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "env TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     [[ $output == *'"dependency signals truncated"'* ]]
@@ -365,8 +365,8 @@ EOF
 @test "detect_tech_debt warns and continues when TECH_DEBT_SKIP_MLC=true" {
     git_test_repo_setup
     printf '# x\n' > "${GIT_TEST_REPO}/README.md"
-    git -C "${GIT_TEST_REPO}" add .
-    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "env TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     [[ $output == *'"warnings"'* ]]

@@ -6,14 +6,24 @@
 readonly BATS_GIT_TEST_USER_EMAIL="test@example.com"
 readonly BATS_GIT_TEST_USER_NAME="Test User"
 
+# bats_git_cmd: Run git without inherited GIT_* from parent runners or workspaces
+#
+# Arguments:
+#   $@ - Arguments passed to git
+function bats_git_cmd {
+    env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE \
+        -u GIT_OBJECT_DIRECTORY -u GIT_ALTERNATE_OBJECT_DIRECTORIES \
+        git "$@"
+}
+
 # bats_git_local_identity: Set repo-local user.name/email for commits
 #
 # Arguments:
 #   $1 - Repository path
 function bats_git_local_identity {
     local repo="$1"
-    git -C "${repo}" config user.email "${BATS_GIT_TEST_USER_EMAIL}"
-    git -C "${repo}" config user.name "${BATS_GIT_TEST_USER_NAME}"
+    bats_git_cmd -C "${repo}" config user.email "${BATS_GIT_TEST_USER_EMAIL}"
+    bats_git_cmd -C "${repo}" config user.name "${BATS_GIT_TEST_USER_NAME}"
 }
 
 # bats_git_init_in_place: git init + local identity in an existing directory tree
@@ -22,7 +32,7 @@ function bats_git_local_identity {
 #   $1 - Repository path
 function bats_git_init_in_place {
     local repo="$1"
-    git -C "${repo}" init -q
+    bats_git_cmd -C "${repo}" init -q
     bats_git_local_identity "${repo}"
 }
 
@@ -49,11 +59,11 @@ function bats_git_commit {
     shift 2
 
     if [[ $# -eq 0 ]]; then
-        git -C "${repo}" add -A
+        bats_git_cmd -C "${repo}" add -A
     else
-        git -C "${repo}" add "$@"
+        bats_git_cmd -C "${repo}" add "$@"
     fi
-    git -C "${repo}" commit -q -m "${message}"
+    bats_git_cmd -C "${repo}" commit -q -m "${message}"
 }
 
-export -f bats_git_local_identity bats_git_init_in_place bats_git_fresh_repo bats_git_commit
+export -f bats_git_cmd bats_git_local_identity bats_git_init_in_place bats_git_fresh_repo bats_git_commit
