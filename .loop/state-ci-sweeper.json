@@ -49,6 +49,20 @@
       "consecutive_failures": 0,
       "open_rejections": [],
       "last_reject_reason": "Prior allowlist rejection fixed; zizmor-action v0.6.1 pin addresses Unknown version 1.28.0 CI failure within allowlisted paths only."
+    },
+    "pull_request:629": {
+      "pending": {
+        "sha": "bed927ac8d40e130bf69690d4c0a30b7b138f94b",
+        "pr": 630,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/630",
+        "loop_name": "ci-sweeper",
+        "created_at": "2026-08-09T00:49:08Z"
+      },
+      "last_run": "2026-08-09T00:49:08Z",
+      "outcome": "pr-created",
+      "consecutive_failures": 0,
+      "open_rejections": [],
+      "last_reject_reason": "Prior mise.lock allowlist rejection fixed; zizmor-action v0.6.2 pin resolves Unknown version 1.29.0 within allowlisted paths."
     }
   }
 }
