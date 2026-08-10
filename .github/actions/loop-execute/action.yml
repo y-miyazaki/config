@@ -76,7 +76,7 @@ inputs:
     description: "Verdict when the implementer produces no file changes (APPROVE or REJECT)"
     required: false
   node_version:
-    default: "24.18.1"
+    default: "24.19.0"
     description: "Node.js version for MCP servers (npx); keep aligned with mise.toml node"
     required: false
   prompt_implementer_feedback:
