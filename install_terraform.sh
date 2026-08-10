@@ -33,6 +33,7 @@ readonly FILE_PAIRS=(
     ".commitlintrc.yaml:.commitlintrc.yaml"
     ".editorconfig:.editorconfig"
     ".gitleaks.toml:.gitleaks.toml"
+    ".markdown-link-check.json:.markdown-link-check.json"
     ".markdownlint-cli2.yaml:.markdownlint-cli2.yaml"
     ".pre-commit-config.yaml:.pre-commit-config-terraform.yaml"
     ".tflint.hcl:.tflint.hcl"

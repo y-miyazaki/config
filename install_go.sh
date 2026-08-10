@@ -34,6 +34,7 @@ readonly FILE_PAIRS=(
     ".editorconfig:.editorconfig"
     ".gitleaks.toml:.gitleaks.toml"
     ".golangci.yaml:.golangci.yaml"
+    ".markdown-link-check.json:.markdown-link-check.json"
     ".markdownlint-cli2.yaml:.markdownlint-cli2.yaml"
     ".pre-commit-config.yaml:.pre-commit-config-go.yaml"
     "trivy.yaml:trivy.yaml"
