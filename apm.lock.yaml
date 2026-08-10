@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-08-08T14:25:11.746464+00:00'
+generated_at: '2026-08-10T03:24:02.667903+00:00'
 apm_version: 0.27.0
 dependencies:
 - repo_url: _local/common
@@ -976,7 +976,7 @@ dependencies:
     .agents/skills/refactor/references/common-output-format-automation.md: sha256:c38c9e2219260729854c1f56d4467d111e6080f7fadd1096246c7b1ccd272dbc
     .agents/skills/refactor/references/common-output-format.md: sha256:3192054f6555ab88235f4ef26007c43d74f719df63f71cad9281e287689c01ff
     .agents/skills/refactor/references/common-troubleshooting.md: sha256:acf849d4435b590470ff7790fecec2b4680e2d73ad77e0017270327461feb09b
-    .agents/skills/refactor/scripts/detect_refactor.sh: sha256:fa12a73a7468b9747f371997339f1bb864b69bf8b0bc9be29c601673706611df
+    .agents/skills/refactor/scripts/detect_refactor.sh: sha256:8aee37d6d321c6dbe02eca1225331d5538c499b0dcf77c2efa00d8000a7dd870
     .agents/skills/refactor/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/refactor/scripts/lib/aws.sh: sha256:8040932c1176ff8f6f011586844cee9a07fa725b90de6c5b007d5cecf7f2d67a
     .agents/skills/refactor/scripts/lib/common.sh: sha256:26dded5e470bfa13c48f3816b58def268413042de385a468ee851f6f578bceda
@@ -1309,7 +1309,7 @@ dependencies:
     .claude/skills/refactor/references/common-output-format-automation.md: sha256:c38c9e2219260729854c1f56d4467d111e6080f7fadd1096246c7b1ccd272dbc
     .claude/skills/refactor/references/common-output-format.md: sha256:3192054f6555ab88235f4ef26007c43d74f719df63f71cad9281e287689c01ff
     .claude/skills/refactor/references/common-troubleshooting.md: sha256:acf849d4435b590470ff7790fecec2b4680e2d73ad77e0017270327461feb09b
-    .claude/skills/refactor/scripts/detect_refactor.sh: sha256:fa12a73a7468b9747f371997339f1bb864b69bf8b0bc9be29c601673706611df
+    .claude/skills/refactor/scripts/detect_refactor.sh: sha256:8aee37d6d321c6dbe02eca1225331d5538c499b0dcf77c2efa00d8000a7dd870
     .claude/skills/refactor/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/refactor/scripts/lib/aws.sh: sha256:8040932c1176ff8f6f011586844cee9a07fa725b90de6c5b007d5cecf7f2d67a
     .claude/skills/refactor/scripts/lib/common.sh: sha256:26dded5e470bfa13c48f3816b58def268413042de385a468ee851f6f578bceda
@@ -5019,7 +5019,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:fa12a73a7468b9747f371997339f1bb864b69bf8b0bc9be29c601673706611df
+  content_hash: sha256:8aee37d6d321c6dbe02eca1225331d5538c499b0dcf77c2efa00d8000a7dd870
 - kind: project-relative
   target: claude
   value: .claude/skills/refactor/scripts/lib/all.sh
@@ -8916,7 +8916,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:fa12a73a7468b9747f371997339f1bb864b69bf8b0bc9be29c601673706611df
+  content_hash: sha256:8aee37d6d321c6dbe02eca1225331d5538c499b0dcf77c2efa00d8000a7dd870
 - kind: project-relative
   target: cursor
   value: .agents/skills/refactor/scripts/lib/all.sh

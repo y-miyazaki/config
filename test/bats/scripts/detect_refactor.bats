@@ -13,6 +13,7 @@
 # - detect_refactor.sh prioritizes duplication_block hints before oversized_unit cap
 # - detect_refactor.sh reports oversized_unit when file exceeds line threshold
 # - detect_refactor.sh scans changed files for range scope with --since
+# - detect_refactor.sh reports per-file line numbers for cross-file duplication
 # - detect_refactor.sh returns error JSON for invalid range scope
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -329,10 +330,48 @@ EOF
     [ "$status" -eq 0 ]
 }
 
+# - detect_refactor.sh reports per-file line numbers for cross-file duplication
 @test "detect_refactor.sh returns error JSON for invalid range scope" {
     git_test_repo_commit "init"
 
     git_test_repo_run "bash '${TARGET_SCRIPT}' --scope range"
     [ "$status" -eq 1 ]
     assert_detect_refactor_error_json "${output}" "range scope requires --since"
+}
+
+@test "detect_refactor.sh reports per-file line numbers for cross-file duplication" {
+    local i
+    mkdir -p "${GIT_TEST_REPO}/scripts"
+    {
+        echo '#!/bin/bash'
+        for i in $(seq 1 40); do
+            printf 'echo filler_%02d\n' "${i}"
+        done
+        cat << 'INNER'
+echo dup_a
+echo dup_b
+echo dup_c
+echo dup_d
+INNER
+    } > "${GIT_TEST_REPO}/scripts/a.sh"
+    cat > "${GIT_TEST_REPO}/scripts/b.sh" << 'EOF'
+#!/bin/bash
+echo dup_a
+echo dup_b
+echo dup_c
+echo dup_d
+EOF
+    git -C "${GIT_TEST_REPO}" add -A
+    git -C "${GIT_TEST_REPO}" commit -q -m "add cross-file duplicate with line offset"
+
+    git_test_repo_run "REFACTOR_SCAN_GLOBS='scripts/**' REFACTOR_DUP_MIN_LINES='4' bash '${TARGET_SCRIPT}' --scope all"
+    [ "$status" -eq 0 ]
+    assert_detect_refactor_ok_json "${output}" "all"
+    run jq -e '
+        .skip == false
+        and ([.hints[] | select(.kind == "duplication_block" and (.detail | contains("scripts/b.sh")))] | length) >= 1
+        and ([.hints[] | select(.detail | test("scripts/b.sh:[0-9]+-[0-9]+")) | .detail]
+             | all(test("scripts/b.sh:([1-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|50)-")))
+    ' <<< "${output}"
+    [ "$status" -eq 0 ]
 }

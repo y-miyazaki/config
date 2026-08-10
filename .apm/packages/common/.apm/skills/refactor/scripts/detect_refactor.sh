@@ -463,7 +463,7 @@ function find_duplication_blocks {
             }
             buf_count++
             buf[buf_count] = line
-            phys_line[buf_count] = NR
+            phys_line[buf_count] = FNR
             if (buf_count < min_lines) {
                 next
             }
