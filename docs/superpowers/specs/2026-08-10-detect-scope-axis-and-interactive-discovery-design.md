@@ -3,7 +3,7 @@
 **Status:** Approved (grill-me session 2026-08-10)  
 **Date:** 2026-08-10  
 **Primary consumers:** utility skills with detect scripts — `changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`  
-**Related:** [Refactor skill & loop design](2026-07-21-refactor-skill-and-loop-design.md), [Loop skill consolidation](2026-07-21-loop-skill-consolidation-design.md), [APM package design](../../explanation/apm-package-design.md), [.apm/AGENTS.md](../../../.apm/AGENTS.md) (portable skill design)
+**Related:** [Refactor skill & loop design](2026-07-21-refactor-skill-and-loop-design.md), [Loop skill consolidation](2026-07-21-loop-skill-consolidation-design.md), [APM package design](../../explanation/apm-package-design.md), [.apm/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md) (portable skill design)
 
 ## Problem
 
