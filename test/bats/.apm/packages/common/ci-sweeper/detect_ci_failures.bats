@@ -19,6 +19,8 @@
 # - classify_failure_type treats http status in test output as regression
 # - detect_ci_failures rejects ledger path traversal outside repository root
 # - detect_ci_failures accepts ledger path outside .loop when under repository root
+# - detect_ci_failures staged scope is noop without gh or token
+# - detect_ci_failures rejects range scope without since ref
 # - … and 18 more scenarios covered by @test names
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -647,4 +649,25 @@ EOF
     run bash -c "cd '${workspace}' && env -u GH_TOKEN -u GITHUB_TOKEN -u GITHUB_ACTIONS -u CI_SWEEPER_DEBUG_LOG CI_SWEEPER_LEDGER_FILE='${ledger_file}' bash '${DETECT_SCRIPT}' --scope all"
     [ "$status" -eq 1 ]
     assert_detect_ci_failures_error_json "${output}" "GH_TOKEN or GITHUB_TOKEN is required"
+}
+
+@test "detect_ci_failures staged scope is noop without gh or token" {
+    local workspace ledger_file
+
+    workspace="$(bats_workspace_root)"
+    ledger_file=".loop/bats-detect-ci-staged-${BATS_TEST_NUMBER}.json"
+    mkdir -p "${workspace}/.loop"
+
+    run bash -c "cd '${workspace}' && CI_SWEEPER_LEDGER_FILE='${ledger_file}' env -u GH_TOKEN -u GITHUB_TOKEN -u GITHUB_ACTIONS -u CI_SWEEPER_DEBUG_LOG bash '${DETECT_SCRIPT}' --scope staged"
+    [ "$status" -eq 0 ]
+    assert_detect_ci_failures_ok_json "${output}" "staged" ""
+    run jq -e '.skip == true and (.failures | length) == 0 and (.ignored | length) == 0' <<< "${output}"
+    [ "$status" -eq 0 ]
+    rm -f "${workspace}/${ledger_file}"
+}
+
+@test "detect_ci_failures rejects range scope without since ref" {
+    run bash "${DETECT_SCRIPT}" --scope range
+    [ "$status" -eq 1 ]
+    assert_detect_ci_failures_error_json "${output}" "requires --since"
 }

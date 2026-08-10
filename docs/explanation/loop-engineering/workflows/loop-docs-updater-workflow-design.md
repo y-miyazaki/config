@@ -38,6 +38,19 @@ Detect documentation drift from code changes on integration branches and open fi
 
 Both paths share `docs-updater/scripts/detect_changes.sh` for mechanical facts only. The **entry skill** (Execute) builds semantic `findings[]` — detect and the caller do not emit semantic classifications.
 
+
+### Detect scope axis (normative)
+
+Normative cross-skill definition: [Detect scope axis and interactive discovery](../../../superpowers/specs/2026-08-10-detect-scope-axis-and-interactive-discovery-design.md).
+
+| Path | `--scope` | Notes |
+| ---- | --------- | ----- |
+| Loop (state cursor) | `range --since <sha>` | Unchanged — detect limits to `<since>..HEAD` changes |
+| git hook / pre-commit | `staged` | Index diff only; untracked files are not visible until added |
+| Interactive free-form | `all` | **Breaking (2026-08-10):** full candidate-doc enumeration — not `git diff HEAD` + untracked |
+
+Loop callers must not rely on `--scope all` for worktree sync; use `staged` (hook) or `range` (automation).
+
 #### Detect → findings pipeline (loop domain)
 
 1. **Detect script** emits mechanical facts: `changed_files`, `deleted_files`, `renamed_files`, `affected_docs`, `commit_range`, `skip`.

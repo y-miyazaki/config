@@ -13,6 +13,8 @@
 # - detect_refactor.sh prioritizes duplication_block hints before oversized_unit cap
 # - detect_refactor.sh reports oversized_unit when file exceeds line threshold
 # - detect_refactor.sh scans changed files for range scope with --since
+# - detect_refactor.sh scans staged files only for staged scope
+# - detect_refactor.sh reports oversized_unit for staged file in staged scope
 # - detect_refactor.sh reports per-file line numbers for cross-file duplication
 # - detect_refactor.sh returns error JSON for invalid range scope
 
@@ -337,6 +339,67 @@ EOF
     git_test_repo_run "bash '${TARGET_SCRIPT}' --scope range"
     [ "$status" -eq 1 ]
     assert_detect_refactor_error_json "${output}" "range scope requires --since"
+}
+
+@test "detect_refactor.sh scans staged files only for staged scope" {
+    mkdir -p "${GIT_TEST_REPO}/scripts"
+    {
+        echo '#!/bin/bash'
+        for i in $(seq 1 20); do
+            echo "echo committed_${i}"
+        done
+    } > "${GIT_TEST_REPO}/scripts/committed_big.sh"
+    git -C "${GIT_TEST_REPO}" add -A
+    git -C "${GIT_TEST_REPO}" commit -q -m "add committed big script"
+
+    cat > "${GIT_TEST_REPO}/scripts/staged_only.sh" << 'EOF'
+#!/bin/bash
+echo staged_only_line
+EOF
+    git -C "${GIT_TEST_REPO}" add scripts/staged_only.sh
+
+    git_test_repo_run "REFACTOR_SCAN_GLOBS='scripts/**' REFACTOR_OVERSIZED_FILE_LINES='10' REFACTOR_DUP_MIN_LINES='50' bash '${TARGET_SCRIPT}' --scope staged"
+    [ "$status" -eq 0 ]
+    assert_detect_refactor_ok_json "${output}" "staged"
+    run jq -e '
+        .commit_range == "staged"
+        and .skip == true
+        and ([.hints[] | select(.path == "scripts/committed_big.sh")] | length) == 0
+    ' <<< "${output}"
+    [ "$status" -eq 0 ]
+
+    git_test_repo_run "REFACTOR_SCAN_GLOBS='scripts/**' REFACTOR_OVERSIZED_FILE_LINES='10' REFACTOR_DUP_MIN_LINES='50' bash '${TARGET_SCRIPT}' --scope all"
+    [ "$status" -eq 0 ]
+    run jq -e '
+        .skip == false
+        and ([.hints[] | select(.path == "scripts/committed_big.sh" and .kind == "oversized_unit")] | length) >= 1
+    ' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_refactor.sh reports oversized_unit for staged file in staged scope" {
+    mkdir -p "${GIT_TEST_REPO}/scripts"
+    touch "${GIT_TEST_REPO}/README"
+    git -C "${GIT_TEST_REPO}" add README
+    git -C "${GIT_TEST_REPO}" commit -q -m "init"
+
+    {
+        echo '#!/bin/bash'
+        for i in $(seq 1 20); do
+            echo "echo staged_big_${i}"
+        done
+    } > "${GIT_TEST_REPO}/scripts/staged_big.sh"
+    git -C "${GIT_TEST_REPO}" add scripts/staged_big.sh
+
+    git_test_repo_run "REFACTOR_SCAN_GLOBS='scripts/**' REFACTOR_OVERSIZED_FILE_LINES='10' REFACTOR_DUP_MIN_LINES='50' bash '${TARGET_SCRIPT}' --scope staged"
+    [ "$status" -eq 0 ]
+    assert_detect_refactor_ok_json "${output}" "staged"
+    run jq -e '
+        .commit_range == "staged"
+        and .skip == false
+        and ([.hints[] | select(.path == "scripts/staged_big.sh" and .kind == "oversized_unit")] | length) == 1
+    ' <<< "${output}"
+    [ "$status" -eq 0 ]
 }
 
 @test "detect_refactor.sh reports per-file line numbers for cross-file duplication" {

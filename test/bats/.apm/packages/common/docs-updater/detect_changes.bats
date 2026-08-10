@@ -22,6 +22,9 @@
 # - detect_changes includes DOCS_UPDATER_EXTRA_FILES in affected_docs
 # - detect_changes loop range without globs discovers scannable markdown excluding agents
 # - detect_changes validates ok response format on workspace repo with loop globs
+# - detect_changes all scope enumerates candidate docs without code changes
+# - detect_changes all scope honors DOCS_UPDATER_DOC_GLOBS filter
+# - detect_changes staged scope still skips when only markdown changes
 # - detect_changes defaults to staged scope when invoked without arguments
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -457,5 +460,60 @@ EOF
     json="${output}"
     assert_detect_changes_ok_json "${json}" "range" "${since_ref}"
     run jq -e --arg since_ref "${since_ref}" '.commit_range == ($since_ref + "..HEAD")' <<< "${json}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_changes all scope enumerates candidate docs without code changes" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/docs" "${GIT_TEST_REPO}/src"
+    printf '# Docs\n' > "${GIT_TEST_REPO}/docs/index.md"
+    printf '# More\n' > "${GIT_TEST_REPO}/docs/guide.md"
+    printf 'package main\n' > "${GIT_TEST_REPO}/src/main.go"
+    git -C "${GIT_TEST_REPO}" add .
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_run "bash '${DETECT_SCRIPT}' --scope all"
+    [ "$status" -eq 0 ]
+    run jq -e '
+        .status == "ok"
+        and .scope == "all"
+        and .commit_range == "all"
+        and .skip == false
+        and (.changed_files | length) == 0
+        and (.deleted_files | length) == 0
+        and (.renamed_files | length) == 0
+        and (.affected_docs | index("docs/index.md") != null)
+        and (.affected_docs | index("docs/guide.md") != null)
+    ' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_changes all scope honors DOCS_UPDATER_DOC_GLOBS filter" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/docs" "${GIT_TEST_REPO}/notes"
+    printf '# Docs\n' > "${GIT_TEST_REPO}/docs/index.md"
+    printf '# Notes\n' > "${GIT_TEST_REPO}/notes/only.md"
+    git -C "${GIT_TEST_REPO}" add .
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    git_test_repo_run "DOCS_UPDATER_DOC_GLOBS='docs/**' bash '${DETECT_SCRIPT}' --scope all"
+    [ "$status" -eq 0 ]
+    run jq -e '
+        .status == "ok"
+        and (.affected_docs | index("docs/index.md") != null)
+        and (.affected_docs | index("notes/only.md") == null)
+    ' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_changes staged scope still skips when only markdown changes" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/docs"
+    printf '# Docs\n' > "${GIT_TEST_REPO}/docs/index.md"
+    git -C "${GIT_TEST_REPO}" add .
+    git -C "${GIT_TEST_REPO}" commit -q -m "chore: init"
+    printf '\npara\n' >> "${GIT_TEST_REPO}/docs/index.md"
+    git -C "${GIT_TEST_REPO}" add docs/index.md
+    git_test_repo_run "bash '${DETECT_SCRIPT}' --scope staged"
+    [ "$status" -eq 0 ]
+    run jq -e '.status == "ok" and .skip == true' <<< "${output}"
     [ "$status" -eq 0 ]
 }

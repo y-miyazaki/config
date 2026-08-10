@@ -18,6 +18,7 @@
 # - detect_tech_debt honors TECH_DEBT_DIR for report_file path
 # - detect_tech_debt previous_report falls back to legacy tech-debt directory
 # - detect_tech_debt accepts --scope staged for loop-detect parity
+# - detect_tech_debt staged scope is noop without running sensors
 # - detect_tech_debt truncates dependency signals when dep cap is reached
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -29,7 +30,7 @@ source "${_bats_support}/support/common.bash"
 
 DETECT_SCRIPT="$(apm_skill_script_path tech-debt detect_tech_debt.sh)"
 
-@test "detect_tech_debt accepts --scope staged and returns ok JSON" {
+@test "detect_tech_debt accepts --scope staged and returns noop JSON" {
     git_test_repo_setup
     mkdir -p "${GIT_TEST_REPO}/src"
     printf 'package main\n// TODO: staged scope\nfunc main() {}\n' > "${GIT_TEST_REPO}/src/app.go"
@@ -38,6 +39,25 @@ DETECT_SCRIPT="$(apm_skill_script_path tech-debt detect_tech_debt.sh)"
     git_test_repo_run "bash '${DETECT_SCRIPT}' --scope staged"
     [ "$status" -eq 0 ]
     assert_detect_tech_debt_ok_json "${output}" "staged" ""
+    run jq -e '.skip == true and (.signals | length) == 0 and (.hotspots | length) == 0' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_tech_debt staged scope is noop without running sensors" {
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/src"
+    printf 'package main\nfunc main() {}\n' > "${GIT_TEST_REPO}/src/tracked.go"
+    git_test_repo_git add .
+    git_test_repo_git commit -q -m "chore: init"
+    printf 'package main\n// TODO: unstaged working tree\nfunc main() {}\n' > "${GIT_TEST_REPO}/src/tracked.go"
+    git_test_repo_git add src/tracked.go
+
+    git_test_repo_run "env TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}' --scope staged"
+    [ "$status" -eq 0 ]
+    assert_detect_tech_debt_ok_json "${output}" "staged" ""
+    run jq -e '.skip == true and (.signals | length) == 0' <<< "${output}"
+    [ "$status" -eq 0 ]
+    [[ $output != *'unstaged working tree'* ]]
 }
 
 @test "detect_tech_debt defaults to scope all and skips on empty fixture repo" {
