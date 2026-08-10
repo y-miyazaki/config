@@ -6,7 +6,6 @@ Append one entry per run. Prune entries older than 30 days.
 
 <!-- Loop appends below this line -->
 
-{"run_id":"2026-07-10T06:04:52Z","pattern":"docs-triage","duration_s":440,"outcome":"pr-created","skip_reason":"none","tokens_estimate":52000,"workflow_run":"29072590009","attempts":2,"has_changes":true,"verdict":"APPROVE"}
 {"run_id":"2026-07-13T14:16:27Z","pattern":"changelog","duration_s":35,"outcome":"rejected","skip_reason":"none","tokens_estimate":52000,"workflow_run":"29253924550","attempts":1,"has_changes":false,"verdict":"REJECT"}
 {"run_id":"2026-07-13T14:19:35Z","pattern":"ci-sweeper","duration_s":47,"outcome":"rejected","skip_reason":"none","tokens_estimate":52000,"workflow_run":"29257400839","attempts":1,"has_changes":false,"verdict":"REJECT"}
 {"run_id":"2026-07-13T14:38:22Z","pattern":"changelog","duration_s":12,"outcome":"skipped","skip_reason":"budget","tokens_estimate":52000,"workflow_run":"29258789708"}
@@ -110,3 +109,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-08-08T07:48:06Z","loop_name":"ci-sweeper","duration_s":1125,"outcome":"rejected","skip_reason":"none","tokens_total":125730,"workflow_run":"31246271545","attempts":1,"has_changes":false,"verdict":"REJECT","usage":{"total_input_tokens":104927,"total_output_tokens":20803,"model":"Cursor Grok 4.5 Low"},"agent_result":"success"}
 {"run_id":"2026-08-08T16:09:41Z","loop_name":"ci-sweeper","duration_s":430,"outcome":"pr-created","skip_reason":"none","tokens_total":108577,"workflow_run":"31265974294","attempts":1,"has_changes":true,"verdict":"APPROVE","usage":{"total_input_tokens":84784,"total_output_tokens":23793,"model":"Cursor Grok 4.5 Low"},"agent_result":"success"}
 {"run_id":"2026-08-09T00:49:10Z","loop_name":"ci-sweeper","duration_s":328,"outcome":"pr-created","skip_reason":"none","tokens_total":253616,"workflow_run":"31286790600","attempts":2,"has_changes":true,"verdict":"APPROVE","usage":{"total_input_tokens":227399,"total_output_tokens":26217,"model":"Cursor Grok 4.5 Low"},"agent_result":"success"}
+{"run_id":"2026-08-10T05:20:28Z","loop_name":"ci-sweeper","duration_s":311,"outcome":"pr-created","skip_reason":"none","tokens_total":102747,"workflow_run":"31357995093","attempts":1,"has_changes":true,"verdict":"APPROVE","usage":{"total_input_tokens":90753,"total_output_tokens":11994,"model":"Cursor Grok 4.5 Low"},"agent_result":"success"}
