@@ -1,4 +1,6 @@
 {
+  // terminalAllowlist uses prefix match only (no path globs). npx cache binaries
+  // are covered in .cursor/cli.json via Shell(**/lean-ctx-bin/bin/lean-ctx).
   "mcpAllowlist": ["*:*"],
   "terminalAllowlist": [
     "awk",
@@ -43,6 +45,8 @@
     "hostname",
     "id",
     "jq",
+    "lean-ctx",
+    "npx:lean-ctx*",
     "less",
     "ls",
     "more",

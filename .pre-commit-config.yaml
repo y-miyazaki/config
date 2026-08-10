@@ -134,7 +134,7 @@ repos:
     rev: v3.15.0
     hooks:
       - id: markdown-link-check
-        args: [--quiet]
+        args: [--quiet, -c, .markdown-link-check.json]
   # --------------------------------------------------------------
   # For Prettier
   # --------------------------------------------------------------

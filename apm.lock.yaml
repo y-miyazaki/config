@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-08-10T05:10:06.886163+00:00'
+generated_at: '2026-08-10T06:31:49.541+00:00'
 apm_version: 0.27.0
 dependencies:
 - repo_url: _local/common
@@ -229,7 +229,6 @@ dependencies:
   - .agents/skills/github-pr-body/scripts/pr_body.sh
   - .agents/skills/github-pr-body/scripts/pr_comment.sh
   - .agents/skills/github-pr-body/scripts/pr_fetch.sh
-  - .agents/skills/github-pr-body/test/bats/github_pr_body.bats
   - .agents/skills/instructions-review
   - .agents/skills/instructions-review/SKILL.md
   - .agents/skills/instructions-review/eval.yaml
@@ -579,7 +578,6 @@ dependencies:
   - .claude/skills/github-pr-body/scripts/pr_body.sh
   - .claude/skills/github-pr-body/scripts/pr_comment.sh
   - .claude/skills/github-pr-body/scripts/pr_fetch.sh
-  - .claude/skills/github-pr-body/test/bats/github_pr_body.bats
   - .claude/skills/instructions-review
   - .claude/skills/instructions-review/SKILL.md
   - .claude/skills/instructions-review/eval.yaml
@@ -919,10 +917,9 @@ dependencies:
     .agents/skills/github-pr-body/scripts/lib/repo_paths.sh: sha256:4175492cd08671457c500eb2fa5880cb170a5e285379f3cec3219be935d6b3b7
     .agents/skills/github-pr-body/scripts/lib/terraform.sh: sha256:19d9b56a4346d68a4656ccfe61c64b8638c86ffdc02b830a7cdd84be7449551d
     .agents/skills/github-pr-body/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
-    .agents/skills/github-pr-body/scripts/pr_body.sh: sha256:18b5be9e2cca465754f8eb75a8cebf0f96786a64513ad7b22485f5888e9cf89f
+    .agents/skills/github-pr-body/scripts/pr_body.sh: sha256:f0d7a125e527fa642102167d922d1ce8234dc8a659a897668d9434ff23943177
     .agents/skills/github-pr-body/scripts/pr_comment.sh: sha256:a66e26f4d86744eed083cfcc992405d70bdf190ce88c24c6c3d72bf31d7efe77
     .agents/skills/github-pr-body/scripts/pr_fetch.sh: sha256:1531010df0334afa99fb2e1b25f6f1ec61ca062a581ad38a590d910ee02ac0a7
-    .agents/skills/github-pr-body/test/bats/github_pr_body.bats: sha256:db497b1533a0d53812ec6ba36be02c3da194770bed5ba8e3187eaf809af32d33
     .agents/skills/instructions-review/SKILL.md: sha256:f38ffc72e82f928f7971021b76d4bb67d7789cf87ac35917140c35d7cdca04c1
     .agents/skills/instructions-review/eval.yaml: sha256:26567cb47eaa7f360d360a21d05a19e1996154b40d69cba994cc91d87d8f0efb
     .agents/skills/instructions-review/evals/tasks/instructions-review-basic.yaml: sha256:4e762894aebb3a76616fbc0c1897b29cc4918633ae990b080974c1cfd05cfa2d
@@ -958,7 +955,7 @@ dependencies:
     .agents/skills/markdown-validation/scripts/lib/repo_paths.sh: sha256:4175492cd08671457c500eb2fa5880cb170a5e285379f3cec3219be935d6b3b7
     .agents/skills/markdown-validation/scripts/lib/terraform.sh: sha256:19d9b56a4346d68a4656ccfe61c64b8638c86ffdc02b830a7cdd84be7449551d
     .agents/skills/markdown-validation/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
-    .agents/skills/markdown-validation/scripts/validate.sh: sha256:edde4875be0d22f25ab235b14a41408282f5078c75fc5fb502260c35a0aa5ee1
+    .agents/skills/markdown-validation/scripts/validate.sh: sha256:e3539d49e2c14344c3a36960a0af773871233964f163b9e4044ed5cefdfc9efa
     .agents/skills/refactor/SKILL.md: sha256:106c0b7ccfd0073964b7aa155b06dd5acf61ba35107640ae0c73b71874e24177
     .agents/skills/refactor/assets/pr-body-template-survey.md: sha256:003181f5c72a7aad6bd266d950c038163ede347509443681690e26d45f936daa
     .agents/skills/refactor/assets/pr-body-template.md: sha256:69dafe1e5ecd944d74f8ad1ba428cb1adc14ef37595a9419f9e38122984123ee
@@ -1257,10 +1254,9 @@ dependencies:
     .claude/skills/github-pr-body/scripts/lib/repo_paths.sh: sha256:4175492cd08671457c500eb2fa5880cb170a5e285379f3cec3219be935d6b3b7
     .claude/skills/github-pr-body/scripts/lib/terraform.sh: sha256:19d9b56a4346d68a4656ccfe61c64b8638c86ffdc02b830a7cdd84be7449551d
     .claude/skills/github-pr-body/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
-    .claude/skills/github-pr-body/scripts/pr_body.sh: sha256:18b5be9e2cca465754f8eb75a8cebf0f96786a64513ad7b22485f5888e9cf89f
+    .claude/skills/github-pr-body/scripts/pr_body.sh: sha256:f0d7a125e527fa642102167d922d1ce8234dc8a659a897668d9434ff23943177
     .claude/skills/github-pr-body/scripts/pr_comment.sh: sha256:a66e26f4d86744eed083cfcc992405d70bdf190ce88c24c6c3d72bf31d7efe77
     .claude/skills/github-pr-body/scripts/pr_fetch.sh: sha256:1531010df0334afa99fb2e1b25f6f1ec61ca062a581ad38a590d910ee02ac0a7
-    .claude/skills/github-pr-body/test/bats/github_pr_body.bats: sha256:db497b1533a0d53812ec6ba36be02c3da194770bed5ba8e3187eaf809af32d33
     .claude/skills/instructions-review/SKILL.md: sha256:f38ffc72e82f928f7971021b76d4bb67d7789cf87ac35917140c35d7cdca04c1
     .claude/skills/instructions-review/eval.yaml: sha256:26567cb47eaa7f360d360a21d05a19e1996154b40d69cba994cc91d87d8f0efb
     .claude/skills/instructions-review/evals/tasks/instructions-review-basic.yaml: sha256:4e762894aebb3a76616fbc0c1897b29cc4918633ae990b080974c1cfd05cfa2d
@@ -1296,7 +1292,7 @@ dependencies:
     .claude/skills/markdown-validation/scripts/lib/repo_paths.sh: sha256:4175492cd08671457c500eb2fa5880cb170a5e285379f3cec3219be935d6b3b7
     .claude/skills/markdown-validation/scripts/lib/terraform.sh: sha256:19d9b56a4346d68a4656ccfe61c64b8638c86ffdc02b830a7cdd84be7449551d
     .claude/skills/markdown-validation/scripts/lib/validation.sh: sha256:ec9bd6f765f43bb03ebb43771d262e0a9768d0bb92e855249c3f87b653b3cdb1
-    .claude/skills/markdown-validation/scripts/validate.sh: sha256:edde4875be0d22f25ab235b14a41408282f5078c75fc5fb502260c35a0aa5ee1
+    .claude/skills/markdown-validation/scripts/validate.sh: sha256:e3539d49e2c14344c3a36960a0af773871233964f163b9e4044ed5cefdfc9efa
     .claude/skills/refactor/SKILL.md: sha256:106c0b7ccfd0073964b7aa155b06dd5acf61ba35107640ae0c73b71874e24177
     .claude/skills/refactor/assets/pr-body-template-survey.md: sha256:003181f5c72a7aad6bd266d950c038163ede347509443681690e26d45f936daa
     .claude/skills/refactor/assets/pr-body-template.md: sha256:69dafe1e5ecd944d74f8ad1ba428cb1adc14ef37595a9419f9e38122984123ee
@@ -1402,7 +1398,7 @@ dependencies:
     .claude/hooks/common-hooks-claude/scripts/actionlint.sh: sha256:5a381f744f2d7895c3458240026a5de495a84ceab9d25536d6d1c544f141158e
     .claude/hooks/common-hooks-claude/scripts/ghalint.sh: sha256:644c0c86799e80972e139e7ddd5c935789d90dde31713301a23b19febed40a42
     .claude/hooks/common-hooks-claude/scripts/gitleaks.sh: sha256:3b323d16af65f68a2bd8d645a9ac180987764ff1c521511c92c6df3ed026e592
-    .claude/hooks/common-hooks-claude/scripts/markdown_link_check.sh: sha256:2ae6a0fd25a08af394fde0f1b35ca3dc5271d261e9bd02351ded87207a96b743
+    .claude/hooks/common-hooks-claude/scripts/markdown_link_check.sh: sha256:5b7e4faa4141e01df7a69b1e6ce17db5fbbc47c79bc3e5a40e3c6d0e44b7de02
     .claude/hooks/common-hooks-claude/scripts/markdownlint_cli2.sh: sha256:d229a83c68f734251b3355b65287bd8e0faa85556e58808a40b25c4e0e511723
     .claude/hooks/common-hooks-claude/scripts/zizmor.sh: sha256:28f45ca1d6733c9b8d1a0a13d0ddfdbcb9c3a515636b3e7972eb45bc351ab044
   source: local
@@ -1423,7 +1419,7 @@ dependencies:
     .cursor/hooks/common-hooks-cursor/scripts/actionlint.sh: sha256:5a381f744f2d7895c3458240026a5de495a84ceab9d25536d6d1c544f141158e
     .cursor/hooks/common-hooks-cursor/scripts/ghalint.sh: sha256:644c0c86799e80972e139e7ddd5c935789d90dde31713301a23b19febed40a42
     .cursor/hooks/common-hooks-cursor/scripts/gitleaks.sh: sha256:3b323d16af65f68a2bd8d645a9ac180987764ff1c521511c92c6df3ed026e592
-    .cursor/hooks/common-hooks-cursor/scripts/markdown_link_check.sh: sha256:2ae6a0fd25a08af394fde0f1b35ca3dc5271d261e9bd02351ded87207a96b743
+    .cursor/hooks/common-hooks-cursor/scripts/markdown_link_check.sh: sha256:5b7e4faa4141e01df7a69b1e6ce17db5fbbc47c79bc3e5a40e3c6d0e44b7de02
     .cursor/hooks/common-hooks-cursor/scripts/markdownlint_cli2.sh: sha256:d229a83c68f734251b3355b65287bd8e0faa85556e58808a40b25c4e0e511723
     .cursor/hooks/common-hooks-cursor/scripts/zizmor.sh: sha256:28f45ca1d6733c9b8d1a0a13d0ddfdbcb9c3a515636b3e7972eb45bc351ab044
   source: local
@@ -1916,7 +1912,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-claude
   active_owner: ./.apm/packages/common-hooks-claude
-  content_hash: sha256:2ae6a0fd25a08af394fde0f1b35ca3dc5271d261e9bd02351ded87207a96b743
+  content_hash: sha256:5b7e4faa4141e01df7a69b1e6ce17db5fbbc47c79bc3e5a40e3c6d0e44b7de02
 - kind: project-relative
   target: claude
   value: .claude/hooks/common-hooks-claude/scripts/markdownlint_cli2.sh
@@ -4004,7 +4000,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:18b5be9e2cca465754f8eb75a8cebf0f96786a64513ad7b22485f5888e9cf89f
+  content_hash: sha256:f0d7a125e527fa642102167d922d1ce8234dc8a659a897668d9434ff23943177
 - kind: project-relative
   target: claude
   value: .claude/skills/github-pr-body/scripts/pr_comment.sh
@@ -4023,15 +4019,6 @@ deployments:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
   content_hash: sha256:1531010df0334afa99fb2e1b25f6f1ec61ca062a581ad38a590d910ee02ac0a7
-- kind: project-relative
-  target: claude
-  value: .claude/skills/github-pr-body/test/bats/github_pr_body.bats
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:db497b1533a0d53812ec6ba36be02c3da194770bed5ba8e3187eaf809af32d33
 - kind: project-relative
   target: claude
   value: .claude/skills/go-review
@@ -4778,7 +4765,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:edde4875be0d22f25ab235b14a41408282f5078c75fc5fb502260c35a0aa5ee1
+  content_hash: sha256:e3539d49e2c14344c3a36960a0af773871233964f163b9e4044ed5cefdfc9efa
 - kind: project-relative
   target: claude
   value: .claude/skills/refactor
@@ -7946,7 +7933,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:18b5be9e2cca465754f8eb75a8cebf0f96786a64513ad7b22485f5888e9cf89f
+  content_hash: sha256:f0d7a125e527fa642102167d922d1ce8234dc8a659a897668d9434ff23943177
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-pr-body/scripts/pr_comment.sh
@@ -7965,15 +7952,6 @@ deployments:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
   content_hash: sha256:1531010df0334afa99fb2e1b25f6f1ec61ca062a581ad38a590d910ee02ac0a7
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/github-pr-body/test/bats/github_pr_body.bats
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/common
-  active_owner: ./.apm/packages/common
-  content_hash: sha256:db497b1533a0d53812ec6ba36be02c3da194770bed5ba8e3187eaf809af32d33
 - kind: project-relative
   target: cursor
   value: .agents/skills/go-review
@@ -8720,7 +8698,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:edde4875be0d22f25ab235b14a41408282f5078c75fc5fb502260c35a0aa5ee1
+  content_hash: sha256:e3539d49e2c14344c3a36960a0af773871233964f163b9e4044ed5cefdfc9efa
 - kind: project-relative
   target: cursor
   value: .agents/skills/refactor
@@ -9953,7 +9931,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-cursor
   active_owner: ./.apm/packages/common-hooks-cursor
-  content_hash: sha256:2ae6a0fd25a08af394fde0f1b35ca3dc5271d261e9bd02351ded87207a96b743
+  content_hash: sha256:5b7e4faa4141e01df7a69b1e6ce17db5fbbc47c79bc3e5a40e3c6d0e44b7de02
 - kind: project-relative
   target: cursor
   value: .cursor/hooks/common-hooks-cursor/scripts/markdownlint_cli2.sh
