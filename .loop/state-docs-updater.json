@@ -1,12 +1,19 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-08-03T14:47:11Z",
-      "outcome": "merged",
+      "last_run": "2026-08-10T09:38:36Z",
+      "outcome": "pr-created",
       "consecutive_failures": 0,
       "open_rejections": [],
-      "last_reject_reason": "Single allowlisted doc fix correctly syncs docs-updater dogfood cron example with on-loop-docs-updater.yaml; factual, scoped, and report-compliant.",
-      "last_sha": "89f290a7080bbae55c32e78a44008afd5ed2c700"
+      "last_reject_reason": "Docs-only diff; three minimal, factually accurate syncs (gitleaks hook table, ci-sweeper profile wording, detect-scope topic index) with no scope violations or inaccuracies",
+      "last_sha": "89f290a7080bbae55c32e78a44008afd5ed2c700",
+      "pending": {
+        "sha": "78059eb7115e1a120f49035719be9a9ca694c63a",
+        "pr": 638,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/638",
+        "loop_name": "docs-updater",
+        "created_at": "2026-08-10T09:38:36Z"
+      }
     }
   }
 }
