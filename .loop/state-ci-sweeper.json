@@ -8,11 +8,11 @@
       "last_reject_reason": "No file changes produced"
     },
     "integration:main": {
-      "last_run": "2026-08-10T05:28:34Z",
-      "outcome": "merged",
-      "consecutive_failures": 0,
+      "last_run": "2026-08-10T05:33:47Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
       "open_rejections": [],
-      "last_reject_reason": "Minimal allowlisted link fix directly resolves on-cd-mkdocs strict MkDocs failure; validation reproduced locally.",
+      "last_reject_reason": "No file changes produced",
       "last_sha": "11aa1780d084805e3bfd9a7d2e733488e22db133"
     },
     "pull_request:401": {
