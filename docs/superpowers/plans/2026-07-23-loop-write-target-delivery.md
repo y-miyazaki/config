@@ -511,13 +511,13 @@ Run: `shellcheck .github/actions/loop-prompt-generate/lib/*.sh .github/actions/l
 
 **Interfaces:**
 
-| Caller      | `delivery` | `may_edit` | `write_target` |
-| ----------- | ---------- | ---------- | -------------- |
-| changelog   | `open_pr`  | `true`     | `fix`          |
-| ci-sweeper  | `open_pr`  | `true`     | `fix`          |
+| Caller       | `delivery` | `may_edit` | `write_target` |
+| ------------ | ---------- | ---------- | -------------- |
+| changelog    | `open_pr`  | `true`     | `fix`          |
+| ci-sweeper   | `open_pr`  | `true`     | `fix`          |
 | docs-updater | `open_pr`  | `true`     | `fix`          |
-| refactor    | `open_pr`  | `true`     | `fix`          |
-| tech-debt   | `open_pr`  | `true`     | `report`       |
+| refactor     | `open_pr`  | `true`     | `fix`          |
+| tech-debt    | `open_pr`  | `true`     | `report`       |
 
 - [ ] **Step 1: Add three keys to each caller `with:` (alphabetical)**
 

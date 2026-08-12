@@ -6,12 +6,12 @@ For automation-path runs. Load on the automation path — see SKILL.md Reference
 
 The caller injects `## Constraints` after detect JSON in the assembled prompt. The agent reads:
 
-| Field           | Type    | Description                                                                                       |
-| --------------- | ------- | ------------------------------------------------------------------------------------------------- |
-| `may_edit`      | boolean | `false` — survey shape only; do not edit files. `true` — apply fix and emit apply shape           |
-| `write_target`  | string  | `fix` when `may_edit: true` for this skill                                                         |
-| `report_file`   | string  | Not used for this skill                                                                           |
-| `Allowed paths` | string  | Optional allowlist globs from the caller                                                          |
+| Field           | Type    | Description                                                                             |
+| --------------- | ------- | --------------------------------------------------------------------------------------- |
+| `may_edit`      | boolean | `false` — survey shape only; do not edit files. `true` — apply fix and emit apply shape |
+| `write_target`  | string  | `fix` when `may_edit: true` for this skill                                              |
+| `report_file`   | string  | Not used for this skill                                                                 |
+| `Allowed paths` | string  | Optional allowlist globs from the caller                                                |
 
 Callers supply `may_edit`, `write_target` (`fix` | `report`), and optional `report_file` in `## Constraints`. The skill branches on `may_edit` and `write_target` only — do not branch on `delivery` or fire `repository_dispatch`.
 

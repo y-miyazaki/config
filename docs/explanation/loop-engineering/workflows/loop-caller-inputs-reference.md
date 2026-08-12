@@ -27,12 +27,12 @@ on-loop-*.yaml (with:)
 
 Per [GitHub reusable workflow docs](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows#using-inputs-and-secrets-in-a-reusable-workflow), credentials use the **`secrets:`** keyword — not `with:`. Do **not** use `secrets: inherit` (locks callee secret names to the caller's names).
 
-| Secret (callee)       | Required | Role                                                                                          |
-| --------------------- | -------- | --------------------------------------------------------------------------------------------- |
-| `AGENT_TOKEN`         | yes      | Engine API key. Mapped internally per `engine` input.                                         |
-| `BOT_APP_CLIENT_ID`   | no       | GitHub App client ID for ruleset-bypass / elevated API (preferred when configured).           |
-| `BOT_APP_PRIVATE_KEY` | no       | GitHub App private key paired with `BOT_APP_CLIENT_ID`.                                       |
-| `GH_TOKEN`            | no       | Optional explicit token override. Empty → job `GITHUB_TOKEN` after App attempt.               |
+| Secret (callee)       | Required | Role                                                                                |
+| --------------------- | -------- | ----------------------------------------------------------------------------------- |
+| `AGENT_TOKEN`         | yes      | Engine API key. Mapped internally per `engine` input.                               |
+| `BOT_APP_CLIENT_ID`   | no       | GitHub App client ID for ruleset-bypass / elevated API (preferred when configured). |
+| `BOT_APP_PRIVATE_KEY` | no       | GitHub App private key paired with `BOT_APP_CLIENT_ID`.                             |
+| `GH_TOKEN`            | no       | Optional explicit token override. Empty → job `GITHUB_TOKEN` after App attempt.     |
 
 Token minting is **per job** via `loop-resolve-push-token` (same-job step output only). Do not pass resolved tokens across jobs via `needs.*.outputs`. Design rationale: [GitHub token resolution](../loop-caller-reusable-design.md#github-token-resolution). Do not declare `workflow_call` secret `GITHUB_TOKEN` / `github_token` (reserved names).
 
@@ -194,53 +194,53 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 
 ### Optional platform inputs (supported by `loop-detect`)
 
-| Input          | Description                                        | Default                               |
-| -------------- | -------------------------------------------------- | ------------------------------------- |
-| `budget_file`  | Path to loop budget JSON                           | `.loop/loop-budget.json`              |
-| `priority`     | Target mode priority order (comma-separated)       | `integration,pull_request`            |
-| `run_log_file` | JSONL run log path for budget aggregation          | `.loop/loop-run-log.md`               |
+| Input          | Description                                  | Default                    |
+| -------------- | -------------------------------------------- | -------------------------- |
+| `budget_file`  | Path to loop budget JSON                     | `.loop/loop-budget.json`   |
+| `priority`     | Target mode priority order (comma-separated) | `integration,pull_request` |
+| `run_log_file` | JSONL run log path for budget aggregation    | `.loop/loop-run-log.md`    |
 
 ## `loop-detect` input mapping
 
 `ci-loop-caller` inputs map to `loop-detect` action `with:` as follows. Names without a `loop_` prefix on the caller side expand when passed to the action.
 
-| `ci-loop-caller` input        | `loop-detect` input                     |
-| ----------------------------- | --------------------------------------- |
-| `agent_implementer_max_turns` | `agent_implementer_max_turns`           |
-| `agent_implementer_model`     | `agent_implementer_model`               |
-| `agent_loop_max_attempts`     | `agent_loop_max_attempts`               |
-| `agent_verifier_criteria`     | `agent_verifier_criteria`               |
-| `agent_verifier_max_turns`    | `agent_verifier_max_turns`              |
-| `agent_verifier_model`        | `agent_verifier_model`                  |
-| `allowlist`                   | `allowlist`                             |
-| `branch_match`                | `loop_integration_branches`             |
-| `branch_match_mode`           | `loop_branch_match`                     |
-| `branch_state`                | `base_branch`, `loop_state_push_branch` |
-| `budget_file`                 | `budget_file`                           |
-| `budget_max_runs_per_day`     | `budget_max_runs_per_day`               |
-| `budget_max_tokens_per_day`   | `budget_max_tokens_per_day`             |
-| `delivery`                    | `delivery`                              |
-| `detect_script`               | `detect_script`                         |
-| `engine`                      | `engine`                                |
-| `git_landing_integration`     | `git_landing_integration`               |
-| `git_landing_pull_request`    | `git_landing_pull_request`              |
-| `infer_files_pattern`         | `infer_files_pattern`                   |
-| `level`                       | `level`                                 |
-| `loop_name`                   | `loop_name`                             |
-| `max_targets_per_schedule`    | `loop_max_targets_per_schedule`         |
-| `may_edit`                    | `may_edit`                              |
-| `no_changes_verdict`          | `no_changes_verdict`                    |
-| `pr_body`                     | `pr_body`                               |
-| `pr_exclude`                  | `loop_pr_exclude`                       |
-| `pr_include_bots`             | `loop_pr_include_bots`                  |
-| `priority`                    | `loop_priority`                         |
-| `prompt_instructions`         | `prompt_instructions`                   |
-| `pr_enabled`                  | `loop_pr_enabled`                       |
-| `run_log_file`                | `run_log_file`                          |
-| `skill_name`                  | `skill_name`                            |
-| `state_file`                  | `state_file`                            |
-| *(via `secrets.GH_TOKEN` + resolve)* | `github_token` (action; resolved in-job) |
-| `write_target`                | `write_target`                          |
+| `ci-loop-caller` input               | `loop-detect` input                      |
+| ------------------------------------ | ---------------------------------------- |
+| `agent_implementer_max_turns`        | `agent_implementer_max_turns`            |
+| `agent_implementer_model`            | `agent_implementer_model`                |
+| `agent_loop_max_attempts`            | `agent_loop_max_attempts`                |
+| `agent_verifier_criteria`            | `agent_verifier_criteria`                |
+| `agent_verifier_max_turns`           | `agent_verifier_max_turns`               |
+| `agent_verifier_model`               | `agent_verifier_model`                   |
+| `allowlist`                          | `allowlist`                              |
+| `branch_match`                       | `loop_integration_branches`              |
+| `branch_match_mode`                  | `loop_branch_match`                      |
+| `branch_state`                       | `base_branch`, `loop_state_push_branch`  |
+| `budget_file`                        | `budget_file`                            |
+| `budget_max_runs_per_day`            | `budget_max_runs_per_day`                |
+| `budget_max_tokens_per_day`          | `budget_max_tokens_per_day`              |
+| `delivery`                           | `delivery`                               |
+| `detect_script`                      | `detect_script`                          |
+| `engine`                             | `engine`                                 |
+| `git_landing_integration`            | `git_landing_integration`                |
+| `git_landing_pull_request`           | `git_landing_pull_request`               |
+| `infer_files_pattern`                | `infer_files_pattern`                    |
+| `level`                              | `level`                                  |
+| `loop_name`                          | `loop_name`                              |
+| `max_targets_per_schedule`           | `loop_max_targets_per_schedule`          |
+| `may_edit`                           | `may_edit`                               |
+| `no_changes_verdict`                 | `no_changes_verdict`                     |
+| `pr_body`                            | `pr_body`                                |
+| `pr_exclude`                         | `loop_pr_exclude`                        |
+| `pr_include_bots`                    | `loop_pr_include_bots`                   |
+| `priority`                           | `loop_priority`                          |
+| `prompt_instructions`                | `prompt_instructions`                    |
+| `pr_enabled`                         | `loop_pr_enabled`                        |
+| `run_log_file`                       | `run_log_file`                           |
+| `skill_name`                         | `skill_name`                             |
+| `state_file`                         | `state_file`                             |
+| _(via `secrets.GH_TOKEN` + resolve)_ | `github_token` (action; resolved in-job) |
+| `write_target`                       | `write_target`                           |
 
 Domain-specific detect script variables use `detect_domain_env_json` keys (not `loop-detect` inputs).
 
@@ -257,10 +257,10 @@ Passed through `ci-loop-caller` to `ci-loop-agent.yaml` when non-empty.
 
 See [Loop Caller Reusable Workflow Design — Detect permissions](../loop-caller-reusable-design.md#detect-permissions). All branch/PR thin callers `uses:` **`ci-loop-caller.yaml`**.
 
-| Job / scope | Permissions |
-| ----------- | ----------- |
-| Reusable `detect` | `actions: write`, `contents: read`, `pull-requests: read` |
-| Thin caller workflow | execute baseline + `actions: write` |
+| Job / scope          | Permissions                                               |
+| -------------------- | --------------------------------------------------------- |
+| Reusable `detect`    | `actions: write`, `contents: read`, `pull-requests: read` |
+| Thin caller workflow | execute baseline + `actions: write`                       |
 
 Loop behavior (git-only vs `pr_enabled` vs `gh run list`) is selected by caller `with:` (`detect_script`, `pr_enabled`, `detect_domain_env_json`) — not by choosing a different reusable workflow file.
 
@@ -310,8 +310,8 @@ detect_domain_env_json: ${{ format('{{"CI_SWEEPER_EVENT_HEAD_BRANCH":"{0}","CI_S
 
 ### Docs updater (`docs-updater`)
 
-| JSON key                  | Description                                          | Dogfood value            |
-| ------------------------- | ---------------------------------------------------- | ------------------------ |
+| JSON key                   | Description                                          | Dogfood value            |
+| -------------------------- | ---------------------------------------------------- | ------------------------ |
 | `DOCS_UPDATER_DOC_GLOBS`   | Comma-separated doc file globs for git-diff analysis | `docs/**/*.md,README.md` |
 | `DOCS_UPDATER_EXTRA_FILES` | Additional non-glob paths                            | `mkdocs.yml`             |
 
@@ -364,18 +364,18 @@ Not a loop caller; configure via environment when invoking `detect_changes.sh` o
 | `LOOP_NAME`                                                   | `loop_name`                                              |
 | `LOOP_NO_CHANGES_VERDICT`                                     | `no_changes_verdict`                                     |
 | `LOOP_PR_*`, `LOOP_PROMPT_INSTRUCTIONS`, `LOOP_PULL_REQUESTS` | `pr_*`, `prompt_instructions`, `pr_enabled`              |
-| `CHANGELOG_*`, `CI_SWEEPER_*`, `DOCS_UPDATER_*`                | `detect_domain_env_json` keys                            |
+| `CHANGELOG_*`, `CI_SWEEPER_*`, `DOCS_UPDATER_*`               | `detect_domain_env_json` keys                            |
 | `DOMAIN_PERSISTENCE_SCRIPT`                                   | `domain_persistence_script`                              |
 
 ## Per-loop design docs
 
-| Loop        | Design doc                                                            | Caller workflow            |
-| ----------- | --------------------------------------------------------------------- | -------------------------- |
-| changelog   | [Changelog Workflow Design](loop-changelog-workflow-design.md)        | `on-loop-changelog.yaml`   |
-| ci-sweeper  | [CI Sweeper Workflow Design](loop-ci-sweeper-workflow-design.md)      | `on-loop-ci-sweeper.yaml`  |
-| docs-updater | [Docs Updater Workflow Design](loop-docs-updater-workflow-design.md)    | `on-loop-docs-updater.yaml` |
-| refactor    | [Refactor Workflow Design](loop-refactor-workflow-design.md)          | `on-loop-refactor.yaml`    |
-| tech-debt   | [Report Tech Debt Workflow Design](loop-tech-debt-workflow-design.md) | `on-loop-tech-debt.yaml`   |
+| Loop         | Design doc                                                            | Caller workflow             |
+| ------------ | --------------------------------------------------------------------- | --------------------------- |
+| changelog    | [Changelog Workflow Design](loop-changelog-workflow-design.md)        | `on-loop-changelog.yaml`    |
+| ci-sweeper   | [CI Sweeper Workflow Design](loop-ci-sweeper-workflow-design.md)      | `on-loop-ci-sweeper.yaml`   |
+| docs-updater | [Docs Updater Workflow Design](loop-docs-updater-workflow-design.md)  | `on-loop-docs-updater.yaml` |
+| refactor     | [Refactor Workflow Design](loop-refactor-workflow-design.md)          | `on-loop-refactor.yaml`     |
+| tech-debt    | [Report Tech Debt Workflow Design](loop-tech-debt-workflow-design.md) | `on-loop-tech-debt.yaml`    |
 
 ## References
 

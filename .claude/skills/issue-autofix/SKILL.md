@@ -48,11 +48,11 @@ Report per [common-output-format.md](references/common-output-format.md). On the
 
 Resolve **may_edit** before implementing:
 
-| Source | `may_edit` |
-| --- | --- |
-| Interactive — default | `false` — survey only; do not edit files |
-| Interactive — explicit fix language | `true` — user asks to implement/fix the Issue in the same request |
-| Automation — `## Constraints` | `may_edit: true` or `may_edit: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
+| Source                              | `may_edit`                                                                                                               |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Interactive — default               | `false` — survey only; do not edit files                                                                                 |
+| Interactive — explicit fix language | `true` — user asks to implement/fix the Issue in the same request                                                        |
+| Automation — `## Constraints`       | `may_edit: true` or `may_edit: false` from [category-automation-envelope.md](references/category-automation-envelope.md) |
 
 When `may_edit` is `true`, resolve `write_target`: on the **interactive** path use `fix` (this skill); on the **automation** path read `write_target` from `## Constraints`. Do not branch on other caller metadata outside `## Constraints`.
 
@@ -66,10 +66,10 @@ When `may_edit` is `true`, resolve `write_target`: on the **interactive** path u
 
 ### Error Handling
 
-| Condition | Severity | Action |
-| --- | --- | --- |
-| Detect `status: error` | Fatal | Stop; do not mutate repository files |
-| Detect `skip: true` | Info | Report skip reason; do not open a PR |
-| `may_edit: false` | Info | Survey only; do not edit files |
-| `write_target` not `fix` when edits expected | Recoverable | Survey only; note mismatch in Overview |
-| Validation tooling missing after edits | Recoverable | Defer in report; do not claim passing checks |
+| Condition                                    | Severity    | Action                                       |
+| -------------------------------------------- | ----------- | -------------------------------------------- |
+| Detect `status: error`                       | Fatal       | Stop; do not mutate repository files         |
+| Detect `skip: true`                          | Info        | Report skip reason; do not open a PR         |
+| `may_edit: false`                            | Info        | Survey only; do not edit files               |
+| `write_target` not `fix` when edits expected | Recoverable | Survey only; note mismatch in Overview       |
+| Validation tooling missing after edits       | Recoverable | Defer in report; do not claim passing checks |

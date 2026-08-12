@@ -208,7 +208,7 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 | `prompt_instructions`       | string  | no       | `""`                       | `loop-detect`                                           |
 | `pr_enabled`                | boolean | no       | `false`                    | `loop-detect` (`loop_pr_enabled`)                       |
 | `state_file`                | string  | no       | `""`                       | `loop-detect`                                           |
-| *(token via secrets)*        | —       | —        | —                          | Resolve in-job: App → `GH_TOKEN` → job `GITHUB_TOKEN`   |
+| _(token via secrets)_       | —       | —        | —                          | Resolve in-job: App → `GH_TOKEN` → job `GITHUB_TOKEN`   |
 
 #### Domain detect environment (`detect_domain_env_json`)
 
@@ -254,11 +254,11 @@ Full mapping table: [Loop Caller Inputs Reference — `loop-detect` mapping](wor
 
 All branch/PR loops use **`ci-loop-caller.yaml`**. The reusable `detect` job declares:
 
-| Job     | Permissions                                                |
-| ------- | ---------------------------------------------------------- |
-| `detect` | `actions: write`, `contents: read`, `pull-requests: read` |
-| `execute` | execute baseline (`actions: read`, `contents: write`, `pull-requests: write`, …) |
-| `record-skip` | `contents: write`, `pull-requests: write`              |
+| Job           | Permissions                                                                      |
+| ------------- | -------------------------------------------------------------------------------- |
+| `detect`      | `actions: write`, `contents: read`, `pull-requests: read`                        |
+| `execute`     | execute baseline (`actions: read`, `contents: write`, `pull-requests: write`, …) |
+| `record-skip` | `contents: write`, `pull-requests: write`                                        |
 
 Thin caller workflow `permissions` = **execute baseline** plus **`actions: write`** so the reusable `detect` job can upload handoff artifacts. Reusable workflows cannot escalate beyond the caller grant.
 
@@ -295,11 +295,11 @@ Each job that talks to GitHub (detect, record-skip, agent-l1/l2, finalize) runs 
 
 **Why not a shared `prepare` job that fans out a resolved token**
 
-| Constraint | Implication |
-| ---------- | ----------- |
+| Constraint                                                     | Implication                                                                                     |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | Masked / secret values cannot cross jobs via `needs.*.outputs` | After `::add-mask::` (or App-token mint masking), job outputs are redacted/empty for dependents |
-| App tokens are masked at mint time | A one-shot prepare → `outputs.github_token` → later jobs cannot receive the real value |
-| Official cross-job secret pattern | External secret store + handle — not used here |
+| App tokens are masked at mint time                             | A one-shot prepare → `outputs.github_token` → later jobs cannot receive the real value          |
+| Official cross-job secret pattern                              | External secret store + handle — not used here                                                  |
 
 So **credentials** (`BOT_APP_*`, optional `GH_TOKEN`) are what we share across jobs/workflows; the **resolved token string** is minted per job. Commonization is the resolve **action**, not a single minted value.
 
@@ -309,22 +309,22 @@ So **credentials** (`BOT_APP_*`, optional `GH_TOKEN`) are what we share across j
 
 For the automatic job `GITHUB_TOKEN`, effective scopes **are** that job's `permissions:` (intersected with repository/org workflow defaults). It is not a separate full-power token that the job then “limits.”
 
-| Job | Typical fallback need | Job `permissions` (minimum for fallback) |
-| --- | --------------------- | ---------------------------------------- |
-| `detect` | PR / issue / Actions reads | read scopes (`contents` / `pull-requests` or `issues` as profile requires) |
-| `record-skip` | push run-log / state PR | `contents: write`, `pull-requests: write` |
-| `agent-l2` / `finalize` | push, PR create/comment | `contents: write`, `pull-requests: write` |
-| `agent-l1` | issue side effects | `issues: write` (+ `contents: read`) |
+| Job                     | Typical fallback need      | Job `permissions` (minimum for fallback)                                   |
+| ----------------------- | -------------------------- | -------------------------------------------------------------------------- |
+| `detect`                | PR / issue / Actions reads | read scopes (`contents` / `pull-requests` or `issues` as profile requires) |
+| `record-skip`           | push run-log / state PR    | `contents: write`, `pull-requests: write`                                  |
+| `agent-l2` / `finalize` | push, PR create/comment    | `contents: write`, `pull-requests: write`                                  |
+| `agent-l1`              | issue side effects         | `issues: write` (+ `contents: read`)                                       |
 
 App tokens and explicit PATs carry **their own** scopes; receiving-job `permissions:` do not reduce those passed tokens.
 
 **Naming**
 
-| Layer | Name | Notes |
-| ----- | ---- | ----- |
-| `workflow_call` secret | `GH_TOKEN` | Avoid reserved `GITHUB_TOKEN` / `github_token` |
-| Composite action I/O | `github_token` | `loop-*` actions |
-| Shell / `gh` CLI env | `GITHUB_TOKEN` | `gh` accepts `GITHUB_TOKEN` (and `GH_TOKEN`) |
+| Layer                  | Name           | Notes                                          |
+| ---------------------- | -------------- | ---------------------------------------------- |
+| `workflow_call` secret | `GH_TOKEN`     | Avoid reserved `GITHUB_TOKEN` / `github_token` |
+| Composite action I/O   | `github_token` | `loop-*` actions                               |
+| Shell / `gh` CLI env   | `GITHUB_TOKEN` | `gh` accepts `GITHUB_TOKEN` (and `GH_TOKEN`)   |
 
 ### Nesting
 
@@ -347,15 +347,15 @@ New domain env keys go into `detect_domain_env_json` without editing reusable jo
 
 ## Rejected Alternatives
 
-| Alternative                             | Why rejected                                                                                   |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Merge all loops into one `on-loop.yaml` | Cannot have per-loop cron, workflow identity, or isolated concurrency/budget                   |
-| Caller workflow-level `env:`            | Unnecessary after reusable extraction; inconsistent with other `on-*` callers                  |
-| Composite action for full caller graph  | Cannot call `ci-loop-agent` reusable or define matrix over reusable workflows                  |
-| Separate finalize job in caller         | Matrix output pairing breaks across reusable workflow cells                                    |
-| Config file only (no `with:`)           | Hides tunables from workflow YAML; harder to review in PRs; optional later as additive pattern |
-| Shared `prepare` job minting one token  | Masked App/secret tokens cannot fan out via job outputs; resolve per job instead               |
-| `workflow_call` secret named `GITHUB_TOKEN` | Reserved name; reusable workflow fails to load                                              |
+| Alternative                                 | Why rejected                                                                                   |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Merge all loops into one `on-loop.yaml`     | Cannot have per-loop cron, workflow identity, or isolated concurrency/budget                   |
+| Caller workflow-level `env:`                | Unnecessary after reusable extraction; inconsistent with other `on-*` callers                  |
+| Composite action for full caller graph      | Cannot call `ci-loop-agent` reusable or define matrix over reusable workflows                  |
+| Separate finalize job in caller             | Matrix output pairing breaks across reusable workflow cells                                    |
+| Config file only (no `with:`)               | Hides tunables from workflow YAML; harder to review in PRs; optional later as additive pattern |
+| Shared `prepare` job minting one token      | Masked App/secret tokens cannot fan out via job outputs; resolve per job instead               |
+| `workflow_call` secret named `GITHUB_TOKEN` | Reserved name; reusable workflow fails to load                                                 |
 
 ## Implementation Checklist
 

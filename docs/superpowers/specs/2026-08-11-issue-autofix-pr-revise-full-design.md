@@ -7,7 +7,7 @@
 
 ## Problem
 
-*(Resolved.)* Previously `issue-autofix` and `pr-revise` were skip-always stubs. Triage could label and comment, but humans could not drive Issue→PR or PR feedback→push through Loop Engineering without leaving the four-plane model.
+_(Resolved.)_ Previously `issue-autofix` and `pr-revise` were skip-always stubs. Triage could label and comment, but humans could not drive Issue→PR or PR feedback→push through Loop Engineering without leaving the four-plane model.
 
 ## Goals
 
@@ -28,17 +28,17 @@
 
 ## Decisions
 
-| Topic | Choice |
-| --- | --- |
-| Implementer | LE Agent via `ci-loop-agent` (not Copilot). |
-| Autofix intake | `labeled(autofix)` **or** `repository_dispatch` (`loop-issue-autofix`) **or** `workflow_dispatch`. |
-| Autofix PR state | Caller input `pr_draft` (boolean). **Default false → open PR.** |
-| Autofix double-start | Concurrency per issue number + detect **skip** when an open/draft PR already references `Fixes #<N>`. |
-| Triage→autofix dispatch | When Issue has **`triage:ready` and `autofix`**, detect emits dispatch flags; trusted skill hook performs `repository_dispatch`. Category (bug/feature/…) does **not** gate dispatch. |
-| PR revise trigger | Human conversation or review comment containing default **`@loop`** (caller `inputs.mention` overrides). Bots skipped. Also explicit dispatch / `workflow_dispatch`. |
-| PR revise landing | Default **`git_landing_pull_request=push_head`**. Stacked PR via `open_pr`. |
-| PR body | Same as other loops: skill `assets/pr-body-template.md`. Repo `PULL_REQUEST_TEMPLATE.md` used when present (`github-pr-body`); if absent, baseline / skill template only — no free-form section invention. Autofix body **must** include `Fixes #<N>`. |
-| Caller profile | Autofix and revise stay on **`ci-loop-caller`**. Entity caller remains triage / observe. |
+| Topic                   | Choice                                                                                                                                                                                                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Implementer             | LE Agent via `ci-loop-agent` (not Copilot).                                                                                                                                                                                                            |
+| Autofix intake          | `labeled(autofix)` **or** `repository_dispatch` (`loop-issue-autofix`) **or** `workflow_dispatch`.                                                                                                                                                     |
+| Autofix PR state        | Caller input `pr_draft` (boolean). **Default false → open PR.**                                                                                                                                                                                        |
+| Autofix double-start    | Concurrency per issue number + detect **skip** when an open/draft PR already references `Fixes #<N>`.                                                                                                                                                  |
+| Triage→autofix dispatch | When Issue has **`triage:ready` and `autofix`**, detect emits dispatch flags; trusted skill hook performs `repository_dispatch`. Category (bug/feature/…) does **not** gate dispatch.                                                                  |
+| PR revise trigger       | Human conversation or review comment containing default **`@loop`** (caller `inputs.mention` overrides). Bots skipped. Also explicit dispatch / `workflow_dispatch`.                                                                                   |
+| PR revise landing       | Default **`git_landing_pull_request=push_head`**. Stacked PR via `open_pr`.                                                                                                                                                                            |
+| PR body                 | Same as other loops: skill `assets/pr-body-template.md`. Repo `PULL_REQUEST_TEMPLATE.md` used when present (`github-pr-body`); if absent, baseline / skill template only — no free-form section invention. Autofix body **must** include `Fixes #<N>`. |
+| Caller profile          | Autofix and revise stay on **`ci-loop-caller`**. Entity caller remains triage / observe.                                                                                                                                                               |
 
 ## Architecture
 
@@ -65,11 +65,11 @@ on-loop-pr-revise (branch / PR-head caller)
 
 ### Four-plane mapping
 
-| Loop | level | may_edit | write_target | delivery | Landing |
-| --- | --- | --- | --- | --- | --- |
-| issue-triage | L1 | false | — | none | entity (unchanged) |
-| issue-autofix | L2 | true | fix | open_pr | `git_landing_integration=open_pr` |
-| pr-revise | L2 | true | fix | open_pr | default `git_landing_pull_request=push_head`; stacked → `open_pr` |
+| Loop          | level | may_edit | write_target | delivery | Landing                                                           |
+| ------------- | ----- | -------- | ------------ | -------- | ----------------------------------------------------------------- |
+| issue-triage  | L1    | false    | —            | none     | entity (unchanged)                                                |
+| issue-autofix | L2    | true     | fix          | open_pr  | `git_landing_integration=open_pr`                                 |
+| pr-revise     | L2    | true     | fix          | open_pr  | default `git_landing_pull_request=push_head`; stacked → `open_pr` |
 
 Skills branch only on `may_edit` / `write_target`. They do not read `delivery` or invent finalize behavior.
 
@@ -111,13 +111,13 @@ Skills branch only on `may_edit` / `write_target`. They do not read `delivery` o
 
 ## Error handling and re-entry
 
-| Case | Behavior |
-| --- | --- |
-| Triage hard failure | Apply `triage:failed`; detect skips until human clears it. |
+| Case                     | Behavior                                                                           |
+| ------------------------ | ---------------------------------------------------------------------------------- |
+| Triage hard failure      | Apply `triage:failed`; detect skips until human clears it.                         |
 | Autofix / revise failure | Record via existing run-log / failure helpers; concurrency + budget limit repeats. |
-| Dispatch hook failure | Non-zero exit → workflow failure (visible). Agent does not retry dispatch. |
-| Autofix re-entry | Relabel / dispatch again; still skip if `Fixes #N` PR exists. |
-| Revise re-entry | New `@loop` (or configured mention) comment, or explicit dispatch. |
+| Dispatch hook failure    | Non-zero exit → workflow failure (visible). Agent does not retry dispatch.         |
+| Autofix re-entry         | Relabel / dispatch again; still skip if `Fixes #N` PR exists.                      |
+| Revise re-entry          | New `@loop` (or configured mention) comment, or explicit dispatch.                 |
 
 ## Security
 

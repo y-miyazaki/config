@@ -93,4 +93,3 @@ runs:
         VERDICT: ${{ inputs.verdict }}
         WORKFLOW_RUN: ${{ inputs.workflow_run }}
       run: bash "${GITHUB_ACTION_PATH}/lib/run.sh"
-

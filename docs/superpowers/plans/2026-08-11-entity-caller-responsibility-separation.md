@@ -19,32 +19,34 @@
 
 ## File map
 
-| Path | Responsibility |
-| --- | --- |
-| `scripts/lib/loop_entity_target.sh` | Build single-target matrix from detect JSON using opaque `result.handoff_key` |
-| `test/bats/scripts/lib/loop_entity_target.bats` | S1 contract tests |
-| `.apm/packages/common/.apm/skills/issue-triage/scripts/detect_issue.sh` | Event hydrate + `handoff_key` + `triage:failed` skip + existing bot skip |
-| `.apm/packages/common/.apm/skills/issue-triage/scripts/labels.json` | Add `triage:failed` |
-| `.apm/packages/common/.apm/skills/issue-triage/references/category-fsm.md` | Document failed stop + R2 |
-| `.apm/packages/common/.apm/skills/issue-triage/SKILL.md` | Apply `triage:failed` on unsafe partial failure; no repository_dispatch |
-| `test/bats/.apm/packages/common/issue-triage/detect_issue.bats` | handoff_key / failed / event_path tests |
-| `.github/workflows/on-loop-issue-triage.yaml` | Thin caller: remove `prepare`; optional dispatch-only `detect_domain_env_json` |
-| `.github/workflows/on-loop-issue-autofix.yaml` | H2-1 intake → `ci-loop-caller.yaml` (stub detect still skips) |
-| `.github/workflows/on-loop-pr-revise.yaml` | R-A intake → `ci-loop-caller.yaml` (stub skip) |
-| `.apm/packages/common/.apm/skills/issue-autofix/scripts/detect_autofix.sh` | Keep skip; accept ISSUE_NUMBER / event hydrate for future D4 |
-| `docs/explanation/loop-engineering/loop-caller-reusable-design.md` | Entity section = E1–E18 |
-| `docs/explanation/loop-engineering/workflows/loop-issue-triage-workflow-design.md` | Remove prepare; note event_path detect |
-| `.apm/packages/common/.apm/skills/issue-autofix/scripts/hooks/README.md` (or short comment in SKILL) | Y3 path convention only |
+| Path                                                                                                 | Responsibility                                                                 |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `scripts/lib/loop_entity_target.sh`                                                                  | Build single-target matrix from detect JSON using opaque `result.handoff_key`  |
+| `test/bats/scripts/lib/loop_entity_target.bats`                                                      | S1 contract tests                                                              |
+| `.apm/packages/common/.apm/skills/issue-triage/scripts/detect_issue.sh`                              | Event hydrate + `handoff_key` + `triage:failed` skip + existing bot skip       |
+| `.apm/packages/common/.apm/skills/issue-triage/scripts/labels.json`                                  | Add `triage:failed`                                                            |
+| `.apm/packages/common/.apm/skills/issue-triage/references/category-fsm.md`                           | Document failed stop + R2                                                      |
+| `.apm/packages/common/.apm/skills/issue-triage/SKILL.md`                                             | Apply `triage:failed` on unsafe partial failure; no repository_dispatch        |
+| `test/bats/.apm/packages/common/issue-triage/detect_issue.bats`                                      | handoff_key / failed / event_path tests                                        |
+| `.github/workflows/on-loop-issue-triage.yaml`                                                        | Thin caller: remove `prepare`; optional dispatch-only `detect_domain_env_json` |
+| `.github/workflows/on-loop-issue-autofix.yaml`                                                       | H2-1 intake → `ci-loop-caller.yaml` (stub detect still skips)                  |
+| `.github/workflows/on-loop-pr-revise.yaml`                                                           | R-A intake → `ci-loop-caller.yaml` (stub skip)                                 |
+| `.apm/packages/common/.apm/skills/issue-autofix/scripts/detect_autofix.sh`                           | Keep skip; accept ISSUE_NUMBER / event hydrate for future D4                   |
+| `docs/explanation/loop-engineering/loop-caller-reusable-design.md`                                   | Entity section = E1–E18                                                        |
+| `docs/explanation/loop-engineering/workflows/loop-issue-triage-workflow-design.md`                   | Remove prepare; note event_path detect                                         |
+| `.apm/packages/common/.apm/skills/issue-autofix/scripts/hooks/README.md` (or short comment in SKILL) | Y3 path convention only                                                        |
 
 ---
 
 ### Task 1: S1 `handoff_key` in `loop_entity_target.sh`
 
 **Files:**
+
 - Modify: `scripts/lib/loop_entity_target.sh`
 - Test: `test/bats/scripts/lib/loop_entity_target.bats`
 
 **Interfaces:**
+
 - Consumes: detect JSON with `skip`, optional `result.handoff_key`, opaque `result`, `verifier_context`
 - Produces: `build_entity_target_matrix` → `[]` when skip; one element with `.handoff_key` copied from detect when skip=false; exit 1 if skip=false and `handoff_key` empty
 
@@ -114,6 +116,7 @@ git status
 ### Task 2: `triage:failed` catalog + detect skip + `handoff_key` emission
 
 **Files:**
+
 - Modify: `.apm/packages/common/.apm/skills/issue-triage/scripts/labels.json`
 - Modify: `.apm/packages/common/.apm/skills/issue-triage/scripts/detect_issue.sh`
 - Modify: `.apm/packages/common/.apm/skills/issue-triage/references/category-fsm.md`
@@ -121,6 +124,7 @@ git status
 - Test: `test/bats/.apm/packages/common/issue-triage/detect_issue.bats`
 
 **Interfaces:**
+
 - Consumes: `ISSUE_*` env and/or `GITHUB_EVENT_PATH` + `GITHUB_EVENT_NAME` (Task 3 may add hydrate; this task can emit `handoff_key` from `ISSUE_NUMBER` first)
 - Produces: `result.handoff_key` = `entity:issue:${ISSUE_NUMBER}`; skip when labels contain `triage:failed`
 
@@ -193,11 +197,13 @@ git add .apm/packages/common/.apm/skills/issue-triage/ \
 ### Task 3: Hydrate detect from `GITHUB_EVENT_PATH` (remove caller mapping)
 
 **Files:**
+
 - Modify: `.apm/packages/common/.apm/skills/issue-triage/scripts/detect_issue.sh`
 - Test: `test/bats/.apm/packages/common/issue-triage/detect_issue.bats`
 - Modify: `.github/workflows/on-loop-issue-triage.yaml`
 
 **Interfaces:**
+
 - Consumes: If `ISSUE_NUMBER` unset and `GITHUB_EVENT_PATH` is a file, parse issue/comment/sender into the same env fields; for `workflow_dispatch`, require `ISSUE_NUMBER` (from `detect_domain_env_json`) and optionally `gh api` fill of title/body/labels when those env vars empty
 - Produces: same detect JSON as Task 2
 
@@ -271,6 +277,7 @@ Expected: PASS / no errors.
 ### Task 4: Axis 2/3 intake → branch caller (H2-1 / R-A stubs)
 
 **Files:**
+
 - Modify: `.github/workflows/on-loop-issue-autofix.yaml`
 - Modify: `.github/workflows/on-loop-pr-revise.yaml`
 - Modify: `.apm/packages/common/.apm/skills/issue-autofix/scripts/detect_autofix.sh` (comment + optional ISSUE_NUMBER accept; still `skip: true`)
@@ -278,6 +285,7 @@ Expected: PASS / no errors.
 - Test: existing stub bats must still pass
 
 **Interfaces:**
+
 - Autofix caller uses `ci-loop-caller.yaml` with stub detect, `may_edit: false` or true with empty allowlist — **keep stub skip** so execute does not run meaningfully
 - Triggers: `issues: [labeled]`, `repository_dispatch` types include `loop-issue-autofix`, `workflow_dispatch`
 - Concurrency: prefer `loop-autofix-${{ github.event.issue.number || github.event.client_payload.issue_number || inputs.issue_number || github.run_id }}` under group prefix documented in workflow comments (D4 partial; full Fixes #N skip deferred until autofix detect is real)
@@ -323,12 +331,14 @@ actionlint .github/workflows/on-loop-issue-autofix.yaml .github/workflows/on-loo
 ### Task 5: Y3 hook convention + docs sync
 
 **Files:**
+
 - Create: `.apm/packages/common/.apm/skills/issue-autofix/scripts/hooks/README.md` (convention only; no live dispatcher required)
 - Modify: `docs/explanation/loop-engineering/loop-caller-reusable-design.md` (entity section)
 - Modify: `docs/explanation/loop-engineering/workflows/loop-issue-triage-workflow-design.md`
 - Modify: `docs/superpowers/specs/2026-08-11-issue-triage-entity-loops-design.md` — short pointer to responsibility-separation spec at top
 
 **Interfaces:**
+
 - Document hook path: `scripts/hooks/on_detect_dispatch.sh` (name locked here) invoked later by platform when `result.dispatch_requested == true`; **this task does not wire platform invoke yet** unless a 5-line optional no-op call is trivial — prefer document-only to avoid scope creep
 - Docs must state: profile split = enumeration; branch = anchor; S1 handoff_key; no prepare; axis 2/3 = branch callers
 
@@ -394,10 +404,10 @@ git status -sb
 
 - [ ] **Step 4: Summarize residual risks**
 
-- Live Actions dogfood still needs secrets  
-- Y3 platform invoke not wired  
-- D4 Fixes #N skip not in stub detect  
-- Distributed `.agents/` copies may lag until sync  
+- Live Actions dogfood still needs secrets
+- Y3 platform invoke not wired
+- D4 Fixes #N skip not in stub detect
+- Distributed `.agents/` copies may lag until sync
 
 ---
 
@@ -413,7 +423,7 @@ Plan saved to `docs/superpowers/plans/2026-08-11-entity-caller-responsibility-se
 
 **Two execution options:**
 
-1. **Subagent-Driven (recommended)** — fresh subagent per task, review between tasks  
-2. **Inline Execution** — this session, executing-plans style, checkpoints between tasks  
+1. **Subagent-Driven (recommended)** — fresh subagent per task, review between tasks
+2. **Inline Execution** — this session, executing-plans style, checkpoints between tasks
 
 **Which approach?** (Reminder: stay on `main`, no worktree, no commits unless you ask.)

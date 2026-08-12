@@ -651,18 +651,18 @@ Use **requesting-code-review** (or repo equivalent) on the Phase 1 diff before c
 
 ## Spec coverage (self-review)
 
-| Spec item                            | Task                              |
-| ------------------------------------ | --------------------------------- |
-| Package layout Phase 1               | 1–5                               |
-| Skill contract USE/DO NOT / workflow | 2–4                               |
+| Spec item                            | Task                                                  |
+| ------------------------------------ | ----------------------------------------------------- |
+| Package layout Phase 1               | 1–5                                                   |
+| Skill contract USE/DO NOT / workflow | 2–4                                                   |
 | O1/O2 normative                      | 4 (`category-contract.md` / `category-techniques.md`) |
-| V4 + characterization                | 4 (`category-verification.md`)    |
-| S2 + A' Instructions                 | 2, 4                              |
-| No lint-primary / no tech-debt feed  | 2–4, 6 spot-check                 |
-| No SubAgent product                  | 2 Execution Scope                 |
-| eval/waza readiness                  | 5–6                               |
-| Docs future pointer                  | 7                                 |
-| Phase 2 deferred                     | Global Constraints + Out of scope |
+| V4 + characterization                | 4 (`category-verification.md`)                        |
+| S2 + A' Instructions                 | 2, 4                                                  |
+| No lint-primary / no tech-debt feed  | 2–4, 6 spot-check                                     |
+| No SubAgent product                  | 2 Execution Scope                                     |
+| eval/waza readiness                  | 5–6                                                   |
+| Docs future pointer                  | 7                                                     |
+| Phase 2 deferred                     | Global Constraints + Out of scope                     |
 
 ## Placeholder scan
 

@@ -20,22 +20,23 @@
 
 ## File map
 
-| Path | Responsibility |
-| ---- | -------------- |
-| `.apm/packages/common/.apm/skills/{changelog,ci-sweeper,docs-updater,refactor,tech-debt}/references/category-detect-scope.md` | Thin cursor axis + per-skill mapping + Interactive discovery rules |
-| `.apm/packages/common/.apm/skills/*/SKILL.md` | Reference Files Guide + Interactive workflow: detect-when-absent + complement |
-| `.apm/packages/common/.apm/skills/refactor/references/common-checklist.md` | SURVEY-01 Interactive wording |
-| `.apm/packages/common/.apm/skills/docs-updater/scripts/detect_changes.sh` | `--scope all` = full candidate-doc enumeration |
-| `.apm/packages/common/.apm/skills/{changelog,ci-sweeper,refactor,tech-debt}/scripts/detect_*.sh` | Usage headers: axis language; noop/deprecated `staged` where applicable |
-| `.apm/packages/common/.apm/skills/*/references/category-input-schema.md` | Cross-link scope axis; docs-updater `scope: all` description |
-| `test/bats/.apm/packages/common/docs-updater/detect_changes.bats` | Failing-then-passing tests for new `all` |
-| `docs/explanation/loop-engineering/workflows/loop-docs-updater-workflow-design.md` (if it documents old `all`) | Maintainer note: Loop stays `range`; old `all` meaning retired |
+| Path                                                                                                                          | Responsibility                                                                |
+| ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `.apm/packages/common/.apm/skills/{changelog,ci-sweeper,docs-updater,refactor,tech-debt}/references/category-detect-scope.md` | Thin cursor axis + per-skill mapping + Interactive discovery rules            |
+| `.apm/packages/common/.apm/skills/*/SKILL.md`                                                                                 | Reference Files Guide + Interactive workflow: detect-when-absent + complement |
+| `.apm/packages/common/.apm/skills/refactor/references/common-checklist.md`                                                    | SURVEY-01 Interactive wording                                                 |
+| `.apm/packages/common/.apm/skills/docs-updater/scripts/detect_changes.sh`                                                     | `--scope all` = full candidate-doc enumeration                                |
+| `.apm/packages/common/.apm/skills/{changelog,ci-sweeper,refactor,tech-debt}/scripts/detect_*.sh`                              | Usage headers: axis language; noop/deprecated `staged` where applicable       |
+| `.apm/packages/common/.apm/skills/*/references/category-input-schema.md`                                                      | Cross-link scope axis; docs-updater `scope: all` description                  |
+| `test/bats/.apm/packages/common/docs-updater/detect_changes.bats`                                                             | Failing-then-passing tests for new `all`                                      |
+| `docs/explanation/loop-engineering/workflows/loop-docs-updater-workflow-design.md` (if it documents old `all`)                | Maintainer note: Loop stays `range`; old `all` meaning retired                |
 
 ---
 
 ### Task 1: Add `category-detect-scope.md` to all five skills
 
 **Files:**
+
 - Create: `.apm/packages/common/.apm/skills/changelog/references/category-detect-scope.md`
 - Create: `.apm/packages/common/.apm/skills/ci-sweeper/references/category-detect-scope.md`
 - Create: `.apm/packages/common/.apm/skills/docs-updater/references/category-detect-scope.md`
@@ -44,6 +45,7 @@
 - Modify: each skill’s `SKILL.md` Reference Files Guide (add load trigger)
 
 **Interfaces:**
+
 - Consumes: Spec §§ Cursor axis, Domain mapping, Interactive discovery
 - Produces: Portable reference Agents load on interactive path / when running detect
 
@@ -56,11 +58,11 @@ Write `.apm/packages/common/.apm/skills/refactor/references/category-detect-scop
 
 `--scope` is a **cursor axis**, not a universal “whole repo files” switch.
 
-| Value | Cursor | Meaning |
-| ----- | ------ | ------- |
-| `range` | Commit (`--since` required) | Universe members related to `<since>..HEAD` |
-| `all` | None | Full enumeration of this skill’s domain universe, then caps/filters |
-| `staged` | Index | Universe members in the git index — file-oriented skills only |
+| Value    | Cursor                      | Meaning                                                             |
+| -------- | --------------------------- | ------------------------------------------------------------------- |
+| `range`  | Commit (`--since` required) | Universe members related to `<since>..HEAD`                         |
+| `all`    | None                        | Full enumeration of this skill’s domain universe, then caps/filters |
+| `staged` | Index                       | Universe members in the git index — file-oriented skills only       |
 
 `all` is not unbounded: skill caps still apply (hint limits, commit limits, run limits).
 
@@ -78,13 +80,13 @@ When natural units are files: enumerate eligible paths, then apply this skill’
 
 ## This skill (`refactor`)
 
-| Field | Value |
-| ----- | ----- |
-| Universe | Enumerate tracked paths, then `REFACTOR_SCAN_GLOBS` when set (default `.apm/packages/**,scripts/**`) |
-| `all` | Full enumerated∩filter scan → `hints[]` |
-| `range` | Changed paths in `<since>..HEAD` ∩ filter |
-| `staged` | Cached paths ∩ filter |
-| Detect script | `scripts/detect_refactor.sh` |
+| Field         | Value                                                                                                |
+| ------------- | ---------------------------------------------------------------------------------------------------- |
+| Universe      | Enumerate tracked paths, then `REFACTOR_SCAN_GLOBS` when set (default `.apm/packages/**,scripts/**`) |
+| `all`         | Full enumerated∩filter scan → `hints[]`                                                              |
+| `range`       | Changed paths in `<since>..HEAD` ∩ filter                                                            |
+| `staged`      | Cached paths ∩ filter                                                                                |
+| Detect script | `scripts/detect_refactor.sh`                                                                         |
 ```
 
 - [ ] **Step 2: Copy to the other four skills; replace only the `## This skill` section**
@@ -94,13 +96,13 @@ When natural units are files: enumerate eligible paths, then apply this skill’
 ```markdown
 ## This skill (`changelog`)
 
-| Field | Value |
-| ----- | ----- |
-| Universe | Commit set capped by `CHANGELOG_MAX_COMMITS` (or successor) |
-| `all` | Cap-bounded commits without since-cursor |
-| `range` | `<since>..HEAD` commits |
-| `staged` | Not used — if accepted for CLI parity, treat as noop / deprecated |
-| Detect script | `scripts/detect_changelog_commits.sh` |
+| Field         | Value                                                             |
+| ------------- | ----------------------------------------------------------------- |
+| Universe      | Commit set capped by `CHANGELOG_MAX_COMMITS` (or successor)       |
+| `all`         | Cap-bounded commits without since-cursor                          |
+| `range`       | `<since>..HEAD` commits                                           |
+| `staged`      | Not used — if accepted for CLI parity, treat as noop / deprecated |
+| Detect script | `scripts/detect_changelog_commits.sh`                             |
 ```
 
 **ci-sweeper:**
@@ -108,13 +110,13 @@ When natural units are files: enumerate eligible paths, then apply this skill’
 ```markdown
 ## This skill (`ci-sweeper`)
 
-| Field | Value |
-| ----- | ----- |
-| Universe | Failed workflow runs on the relevant branch (scan limit applies) |
-| `all` | Limit-bounded failure enumeration |
-| `range` | Failures related to the `--since` window |
-| `staged` | noop / deprecated (index cursor does not apply to CI runs) |
-| Detect script | `scripts/detect_ci_failures.sh` |
+| Field            | Value                                                                                                                                                                                     |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Universe         | Failed workflow runs on the relevant branch (scan limit applies)                                                                                                                          |
+| `all`            | Limit-bounded failure enumeration                                                                                                                                                         |
+| `range`          | Failures related to the `--since` window                                                                                                                                                  |
+| `staged`         | noop / deprecated (index cursor does not apply to CI runs)                                                                                                                                |
+| Detect script    | `scripts/detect_ci_failures.sh`                                                                                                                                                           |
 | Interactive note | Prefer user-supplied run URL / job / log as primary evidence; still run detect when JSON is absent and tools allow; if `gh`/auth missing, fall back to user context — do not silent no-op |
 ```
 
@@ -123,14 +125,14 @@ When natural units are files: enumerate eligible paths, then apply this skill’
 ```markdown
 ## This skill (`docs-updater`)
 
-| Field | Value |
-| ----- | ----- |
-| Universe | Candidate docs (`DOCS_UPDATER_DOC_GLOBS` or default markdown discovery) |
-| `all` | Full candidate-doc enumeration (not working-tree diff) |
-| `range` | Impact from `<since>..HEAD` changes |
-| `staged` | Impact from cached diff (git hook / pre-commit) |
-| Detect script | `scripts/detect_changes.sh` |
-| Path roles | Interactive free-form → `all`; git hook → `staged`; automation with cursor → `range` |
+| Field         | Value                                                                                |
+| ------------- | ------------------------------------------------------------------------------------ |
+| Universe      | Candidate docs (`DOCS_UPDATER_DOC_GLOBS` or default markdown discovery)              |
+| `all`         | Full candidate-doc enumeration (not working-tree diff)                               |
+| `range`       | Impact from `<since>..HEAD` changes                                                  |
+| `staged`      | Impact from cached diff (git hook / pre-commit)                                      |
+| Detect script | `scripts/detect_changes.sh`                                                          |
+| Path roles    | Interactive free-form → `all`; git hook → `staged`; automation with cursor → `range` |
 ```
 
 **tech-debt:**
@@ -138,13 +140,13 @@ When natural units are files: enumerate eligible paths, then apply this skill’
 ```markdown
 ## This skill (`tech-debt`)
 
-| Field | Value |
-| ----- | ----- |
-| Universe | Repository sensor universe (full tree walk when unfiltered) |
-| `all` | Full sensor pass |
-| `range` | Accepted for CLI parity — document actual sensor behavior in detect usage; do not silently redefine without tests |
-| `staged` | noop / deprecated |
-| Detect script | `scripts/detect_tech_debt.sh` |
+| Field         | Value                                                                                                             |
+| ------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Universe      | Repository sensor universe (full tree walk when unfiltered)                                                       |
+| `all`         | Full sensor pass                                                                                                  |
+| `range`       | Accepted for CLI parity — document actual sensor behavior in detect usage; do not silently redefine without tests |
+| `staged`      | noop / deprecated                                                                                                 |
+| Detect script | `scripts/detect_tech_debt.sh`                                                                                     |
 ```
 
 - [ ] **Step 3: Wire Reference Files Guide in each `SKILL.md`**
@@ -174,6 +176,7 @@ Expected: one hit per skill.
 ### Task 2: Rewrite Interactive Workflow steps (detect-when-absent + complement)
 
 **Files:**
+
 - Modify: `.apm/packages/common/.apm/skills/changelog/SKILL.md`
 - Modify: `.apm/packages/common/.apm/skills/ci-sweeper/SKILL.md`
 - Modify: `.apm/packages/common/.apm/skills/docs-updater/SKILL.md`
@@ -182,6 +185,7 @@ Expected: one hit per skill.
 - Modify: `.apm/packages/common/.apm/skills/refactor/references/common-checklist.md` (SURVEY-01)
 
 **Interfaces:**
+
 - Consumes: Task 1 references
 - Produces: Agent-visible Interactive contract matching the spec
 
@@ -220,6 +224,7 @@ Replace `### Interactive path` body with:
 - [ ] **Step 3: Update docs-updater Input / USE FOR for Interactive `all`**
 
 In `docs-updater` `SKILL.md`:
+
 - Input Interactive line: note free-form survey uses `--scope all` (full candidate docs); hooks use `staged`; automation uses `range` when a cursor exists.
 - USE FOR: add that Interactive free-form may survey candidate docs for drift/sync opportunities, not only git diff sync.
 
@@ -244,12 +249,14 @@ Expected: no matches in those skill trees.
 ### Task 3: docs-updater `--scope all` behavior (TDD)
 
 **Files:**
+
 - Test: `test/bats/.apm/packages/common/docs-updater/detect_changes.bats`
 - Modify: `.apm/packages/common/.apm/skills/docs-updater/scripts/detect_changes.sh`
 - Modify: `.apm/packages/common/.apm/skills/docs-updater/references/category-input-schema.md` (describe `scope: all`)
 - Modify: header comments / `show_usage` in `detect_changes.sh`
 
 **Interfaces:**
+
 - Consumes: Spec D4/D5 — `all` = full candidate-doc enumeration
 - Produces: `affected_docs` populated without requiring a non-markdown git change when `--scope all`
 
@@ -390,6 +397,7 @@ Document:
 ### Task 4: Align other detect script usage headers (no behavior change unless proven)
 
 **Files:**
+
 - Modify: `.apm/packages/common/.apm/skills/refactor/scripts/detect_refactor.sh` (header/`show_usage` only unless tests require more)
 - Modify: `.apm/packages/common/.apm/skills/tech-debt/scripts/detect_tech_debt.sh`
 - Modify: `.apm/packages/common/.apm/skills/changelog/scripts/detect_changelog_commits.sh`
@@ -397,6 +405,7 @@ Document:
 - Modify: matching `category-input-schema.md` scope blurbs where they contradict the axis
 
 **Interfaces:**
+
 - Consumes: Spec domain mapping
 - Produces: Usage text Agents/humans read; behavior remains current except documented noops
 
@@ -444,10 +453,12 @@ Expected: PASS (usage-only changes).
 ### Task 5: Maintainer docs for docs-updater breaking `all`
 
 **Files:**
+
 - Modify if they mention old `all`: `docs/explanation/loop-engineering/workflows/loop-docs-updater-workflow-design.md`
 - Modify if needed: any hook example under `docs/` that says docs-updater `--scope all` for worktree sync
 
 **Interfaces:**
+
 - Consumes: Spec migration table
 - Produces: Maintainer-facing Breaking note
 
@@ -458,6 +469,7 @@ Run: `rg -n 'detect_changes|--scope all|scope all' docs/explanation/loop-enginee
 - [ ] **Step 2: Patch call sites**
 
 For each hit that means “HEAD + untracked”:
+
 - Loop path: document `range --since` (unchanged ownership).
 - Hook/manual worktree sync: document `staged`.
 - Add one Breaking sentence: Interactive/`--scope all` now enumerates candidate docs.
@@ -471,6 +483,7 @@ Do **not** put `on-loop-docs-updater` names into package skill sources.
 ### Task 6: Sync distributed skill copies and audit
 
 **Files:**
+
 - Generated/synced: `.agents/skills/*`, `.claude/skills/*` via sync only
 - Possibly: `apm.lock.yaml`
 
@@ -503,20 +516,20 @@ Expected: PASS.
 
 ## Spec coverage checklist
 
-| Spec item | Task |
-| --------- | ---- |
-| Cursor axis normative table | Task 1 |
-| File enumerate → glob filter | Task 1 + Task 3 (`DOCS_UPDATER_DOC_GLOBS`) |
-| Domain mapping rows | Task 1 |
-| Interactive detect-when-absent + complement | Task 2 |
-| ci-sweeper Interactive keep detect + URL primary | Task 1 (ci-sweeper section) + Task 2 |
-| docs-updater `all` meaning change | Task 3 |
-| No new `workdir` scope | Task 3 (hook=`staged`) |
-| Usage/noop clarity on other detects | Task 4 |
-| Thin portable references + spec as normative | Task 1; spec already landed |
-| Maintainer migration notes | Task 5 |
-| Sync agent copies | Task 6 |
-| tech-debt `range` not silently redefined | Task 4 (document only) |
+| Spec item                                        | Task                                       |
+| ------------------------------------------------ | ------------------------------------------ |
+| Cursor axis normative table                      | Task 1                                     |
+| File enumerate → glob filter                     | Task 1 + Task 3 (`DOCS_UPDATER_DOC_GLOBS`) |
+| Domain mapping rows                              | Task 1                                     |
+| Interactive detect-when-absent + complement      | Task 2                                     |
+| ci-sweeper Interactive keep detect + URL primary | Task 1 (ci-sweeper section) + Task 2       |
+| docs-updater `all` meaning change                | Task 3                                     |
+| No new `workdir` scope                           | Task 3 (hook=`staged`)                     |
+| Usage/noop clarity on other detects              | Task 4                                     |
+| Thin portable references + spec as normative     | Task 1; spec already landed                |
+| Maintainer migration notes                       | Task 5                                     |
+| Sync agent copies                                | Task 6                                     |
+| tech-debt `range` not silently redefined         | Task 4 (document only)                     |
 
 ## Out of scope (per spec)
 

@@ -350,11 +350,11 @@ Language CI workflows (`ci-go`, `ci-nodejs`, `ci-aws-terraform`, `ci-terraform`)
 
 ### APM and shell CI workflows
 
-| Workflow                   | Type     | Purpose                                                                 |
-| -------------------------- | -------- | ----------------------------------------------------------------------- |
-| `ci-apm-audit.yaml`        | Reusable | `apm install` + `apm audit --ci` with optional `check_drift` input      |
-| `on-ci-push-apm-audit.yaml`| Caller   | Path-filtered push/PR for APM package changes (dogfood: `check_drift: false`) |
-| `ci-shell-script.yaml`     | Reusable | shellcheck/shfmt + Bats/ShellSpec discovery when present |
+| Workflow                    | Type     | Purpose                                                                       |
+| --------------------------- | -------- | ----------------------------------------------------------------------------- |
+| `ci-apm-audit.yaml`         | Reusable | `apm install` + `apm audit --ci` with optional `check_drift` input            |
+| `on-ci-push-apm-audit.yaml` | Caller   | Path-filtered push/PR for APM package changes (dogfood: `check_drift: false`) |
+| `ci-shell-script.yaml`      | Reusable | shellcheck/shfmt + Bats/ShellSpec discovery when present                      |
 
 ### Scope
 

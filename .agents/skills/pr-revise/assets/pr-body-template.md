@@ -16,9 +16,9 @@ Load ONLY at synthesis time after applying review feedback.
 
 ### Changes
 
-| Area        | Feedback addressed | What changed                               |
-| ----------- | ------------------ | ------------------------------------------ |
-| `<package>` | <review point>     | ``path/to/file.go``: <minimal fix summary> |
+| Area        | Feedback addressed | What changed                             |
+| ----------- | ------------------ | ---------------------------------------- |
+| `<package>` | <review point>     | `path/to/file.go`: <minimal fix summary> |
 
 ### Deferred
 

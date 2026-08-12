@@ -17,16 +17,16 @@ Phase 0 loops assume **one branch per run**: detect polls `main` only; execute/f
 
 Two **independent**, caller-configurable capabilities:
 
-| Capability               | Example                                                                | Typical loops               |
-| ------------------------ | ---------------------------------------------------------------------- | --------------------------- |
+| Capability               | Example                                                                | Typical loops                |
+| ------------------------ | ---------------------------------------------------------------------- | ---------------------------- |
 | **Integration branches** | Drift or CI on `main`, `develop`, `release/*` → fix **to** that branch | `docs-updater`, `ci-sweeper` |
-| **Pull request heads**   | CI fails on open PR → fix **on PR branch**                             | `ci-sweeper`                |
+| **Pull request heads**   | CI fails on open PR → fix **on PR branch**                             | `ci-sweeper`                 |
 
 ## Design Goal
 
 | Loop             | Integration branches | Pull requests        |
 | ---------------- | -------------------- | -------------------- |
-| **docs-updater**  | Default on           | Default off          |
+| **docs-updater** | Default on           | Default off          |
 | **ci-sweeper**   | Configurable         | Configurable         |
 | **Future loops** | Same target contract | Same target contract |
 
@@ -190,11 +190,11 @@ L2 `open_pr` loops use **merge-gated `pending`**: fix PRs carry domain files onl
 
 #### Loop defaults (dogfood)
 
-| Loop          | State delivery                                    |
-| ------------- | ------------------------------------------------- |
-| `changelog`   | Merge-gated `pending` via `on-loop-state-promote` |
+| Loop           | State delivery                                    |
+| -------------- | ------------------------------------------------- |
+| `changelog`    | Merge-gated `pending` via `on-loop-state-promote` |
 | `docs-updater` | Merge-gated `pending` (same as changelog)         |
-| `ci-sweeper`  | Merge-gated `pending`; run ledger for dedupe      |
+| `ci-sweeper`   | Merge-gated `pending`; run ledger for dedupe      |
 
 ### State delivery philosophy
 
@@ -247,7 +247,7 @@ Loop callers (`on-loop-*.yaml`) and `on-loop-state-promote.yaml` share a workflo
 | Workflow                | `concurrency.group` | Notes                                              |
 | ----------------------- | ------------------- | -------------------------------------------------- |
 | `on-loop-changelog`     | `loop-state-main`   | Serializes with other loops on same `branch_state` |
-| `on-loop-docs-updater`   | `loop-state-main`   | Same                                               |
+| `on-loop-docs-updater`  | `loop-state-main`   | Same                                               |
 | `on-loop-ci-sweeper`    | `loop-state-main`   | Same (replaces per-`workflow_run` group)           |
 | `on-loop-refactor`      | `loop-state-main`   | Same                                               |
 | `on-loop-tech-debt`     | `loop-state-main`   | Same                                               |
@@ -273,16 +273,16 @@ Caller/workflow steps: [Loop Caller Workflows Design](loop-caller-workflows-desi
 
 ## Workflow Design Documents
 
-| Loop            | Document                                                                        | Caller workflow            |
-| --------------- | ------------------------------------------------------------------------------- | -------------------------- |
-| **changelog**   | [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md)        | `on-loop-changelog.yaml`   |
-| **ci-sweeper**  | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md)      | `on-loop-ci-sweeper.yaml`  |
-| **docs-updater** | [Docs Updater Workflow Design](workflows/loop-docs-updater-workflow-design.md)    | `on-loop-docs-updater.yaml` |
-| **tech-debt**   | [Report Tech Debt Workflow Design](workflows/loop-tech-debt-workflow-design.md) | `on-loop-tech-debt.yaml`   |
-| **refactor**    | [Refactor Workflow Design](workflows/loop-refactor-workflow-design.md)          | `on-loop-refactor.yaml`    |
-| **issue-triage** | [Issue Triage Workflow Design](workflows/loop-issue-triage-workflow-design.md) | `on-loop-issue-triage.yaml` |
+| Loop              | Document                                                                         | Caller workflow              |
+| ----------------- | -------------------------------------------------------------------------------- | ---------------------------- |
+| **changelog**     | [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md)         | `on-loop-changelog.yaml`     |
+| **ci-sweeper**    | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md)       | `on-loop-ci-sweeper.yaml`    |
+| **docs-updater**  | [Docs Updater Workflow Design](workflows/loop-docs-updater-workflow-design.md)   | `on-loop-docs-updater.yaml`  |
+| **tech-debt**     | [Report Tech Debt Workflow Design](workflows/loop-tech-debt-workflow-design.md)  | `on-loop-tech-debt.yaml`     |
+| **refactor**      | [Refactor Workflow Design](workflows/loop-refactor-workflow-design.md)           | `on-loop-refactor.yaml`      |
+| **issue-triage**  | [Issue Triage Workflow Design](workflows/loop-issue-triage-workflow-design.md)   | `on-loop-issue-triage.yaml`  |
 | **issue-autofix** | [Issue Autofix Workflow Design](workflows/loop-issue-autofix-workflow-design.md) | `on-loop-issue-autofix.yaml` |
-| **pr-revise**   | [PR Revise Workflow Design](workflows/loop-pr-revise-workflow-design.md) | `on-loop-pr-revise.yaml` |
+| **pr-revise**     | [PR Revise Workflow Design](workflows/loop-pr-revise-workflow-design.md)         | `on-loop-pr-revise.yaml`     |
 
 Add new loops as `docs/explanation/loop-engineering/workflows/<name>-workflow-design.md` without growing this file.
 

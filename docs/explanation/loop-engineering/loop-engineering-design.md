@@ -5,17 +5,17 @@ For concrete specifications (Actions/Workflows list, interfaces), see [Specifica
 
 ## Implementation Status
 
-| Loop (`loop_name`)  | Skill (`common`) | Status                             | Level         |
-| ------------------- | ---------------- | ---------------------------------- | ------------- |
-| `docs-updater`       | `docs-updater`   | Dogfood L2; multi-branch on `main` | L2 (Assisted) |
-| `ci-sweeper`        | `ci-sweeper`     | Dogfood L2; integration + PR heads | L2 (Assisted) |
-| `changelog`         | `changelog`      | Dogfood L2; weekly schedule        | L2 (Assisted) |
-| `refactor`          | `refactor`       | Dogfood L2; weekly schedule        | L2 (Assisted) |
-| `tech-debt`         | `tech-debt`      | Dogfood L2; weekly report PR       | L2 (Assisted) |
-| `issue-triage`      | `issue-triage`   | Dogfood L1 / in progress           | L1 (Observe)  |
-| `issue-autofix`     | `issue-autofix`  | Dogfood L2 / in progress           | L2 (Assisted) |
-| `pr-revise`         | `pr-revise`      | Dogfood L2 / in progress           | L2 (Assisted) |
-| `loop-stale-pr`     | —                | Not started                        | -             |
+| Loop (`loop_name`) | Skill (`common`) | Status                             | Level         |
+| ------------------ | ---------------- | ---------------------------------- | ------------- |
+| `docs-updater`     | `docs-updater`   | Dogfood L2; multi-branch on `main` | L2 (Assisted) |
+| `ci-sweeper`       | `ci-sweeper`     | Dogfood L2; integration + PR heads | L2 (Assisted) |
+| `changelog`        | `changelog`      | Dogfood L2; weekly schedule        | L2 (Assisted) |
+| `refactor`         | `refactor`       | Dogfood L2; weekly schedule        | L2 (Assisted) |
+| `tech-debt`        | `tech-debt`      | Dogfood L2; weekly report PR       | L2 (Assisted) |
+| `issue-triage`     | `issue-triage`   | Dogfood L1 / in progress           | L1 (Observe)  |
+| `issue-autofix`    | `issue-autofix`  | Dogfood L2 / in progress           | L2 (Assisted) |
+| `pr-revise`        | `pr-revise`      | Dogfood L2 / in progress           | L2 (Assisted) |
+| `loop-stale-pr`    | —                | Not started                        | -             |
 
 Platform actions (`loop-detect` `target_matrix`, handoff artifact, `domain_persistence_script`, merge-gated `pending`) are implemented — see [Multi-Branch Loops Design](multi-branch-loops-design.md).
 
@@ -25,13 +25,13 @@ Referencing the design philosophy of GitHub Agentic Workflows ([official blog](h
 
 ### Tier 1 (High Priority — Implementable with Existing Infrastructure)
 
-| Loop                             | Detection Method                                    | Agent Behavior                    | Expected Level                                                                                  |
-| -------------------------------- | --------------------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------- |
-| **docs-updater** | git diff: doc drift facts on integration branches   | Triage stale docs; open fix PR    | L2 — see [Docs Updater Workflow](workflows/loop-docs-updater-workflow-design.md)                  |
-| **ci-sweeper**                   | GitHub API: failed runs (integration + optional PR) | Auto-fix; PR or push per mode     | L2 default; L3 opt-in — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md) |
-| **changelog**                    | git log: parse conventional commits                 | Auto-generate/update CHANGELOG.md | L2 — see [Changelog Workflow](workflows/loop-changelog-workflow-design.md)                      |
-| **refactor**                     | repo scan: duplication_block / oversized_unit hints | O1/O2 structural fix; open PR     | L2 — see [Refactor Workflow](workflows/loop-refactor-workflow-design.md)                        |
-| **tech-debt**                    | full-repo mechanical debt sensors                   | Classify + write dated report PR  | L2 — see [Report Tech Debt Workflow](workflows/loop-tech-debt-workflow-design.md)               |
+| Loop             | Detection Method                                    | Agent Behavior                    | Expected Level                                                                                  |
+| ---------------- | --------------------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **docs-updater** | git diff: doc drift facts on integration branches   | Triage stale docs; open fix PR    | L2 — see [Docs Updater Workflow](workflows/loop-docs-updater-workflow-design.md)                |
+| **ci-sweeper**   | GitHub API: failed runs (integration + optional PR) | Auto-fix; PR or push per mode     | L2 default; L3 opt-in — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md) |
+| **changelog**    | git log: parse conventional commits                 | Auto-generate/update CHANGELOG.md | L2 — see [Changelog Workflow](workflows/loop-changelog-workflow-design.md)                      |
+| **refactor**     | repo scan: duplication_block / oversized_unit hints | O1/O2 structural fix; open PR     | L2 — see [Refactor Workflow](workflows/loop-refactor-workflow-design.md)                        |
+| **tech-debt**    | full-repo mechanical debt sensors                   | Classify + write dated report PR  | L2 — see [Report Tech Debt Workflow](workflows/loop-tech-debt-workflow-design.md)               |
 
 #### CI failure repair — one package, layered responsibilities
 
@@ -54,7 +54,7 @@ The `result` body is **observation-trigger-specific** — not one shared schema:
 | Trigger family | Loop (`loop_name`) | Skill (`common`) | Example `result` fields                                  |
 | -------------- | ------------------ | ---------------- | -------------------------------------------------------- |
 | CI failure     | `ci-sweeper`       | `ci-sweeper`     | `failures[]`, `failure_type` hint, (future) `stack_hint` |
-| Doc drift      | `docs-updater`      | `docs-updater`   | `changed_files`, `affected_docs`, …                      |
+| Doc drift      | `docs-updater`     | `docs-updater`   | `changed_files`, `affected_docs`, …                      |
 | Changelog      | `changelog`        | `changelog`      | `commits[]`, …                                           |
 | Refactor hints | `refactor`         | `refactor`       | `hints[]` (`duplication_block`, `oversized_unit`)        |
 | Tech debt      | `tech-debt`        | `tech-debt`      | `signals[]`, `hotspots[]`, `previous_report`             |
@@ -158,19 +158,19 @@ Hook/manual and loop skills live under `.apm/packages/common/.apm/skills/` — s
 
 ## Naming Conventions
 
-| Identifier type | Naming pattern             | Example                                               |
-| --------------- | -------------------------- | ----------------------------------------------------- |
+| Identifier type | Naming pattern             | Example                                                |
+| --------------- | -------------------------- | ------------------------------------------------------ |
 | Workflow file   | `on-loop-<loop_name>.yaml` | `on-loop-docs-updater.yaml`                            |
 | `loop_name`     | kebab-case (state key)     | `docs-updater`, `ci-sweeper`, `changelog`, `tech-debt` |
-| Skill directory | kebab-case (no `loop-`)    | `docs-updater`, `ci-sweeper`, `refactor`, `tech-debt` |
+| Skill directory | kebab-case (no `loop-`)    | `docs-updater`, `ci-sweeper`, `refactor`, `tech-debt`  |
 
 ## docs-updater (Docs Update Loop)
 
-| Component                                                                 | Description                                                            |
-| ------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `.apm/packages/common/.apm/skills/docs-updater/SKILL.md`                  | Hook/manual + automation triage; automation path uses `findings[]`     |
-| `.apm/packages/common/.apm/skills/docs-updater/scripts/detect_changes.sh` | Per-branch doc drift facts (`changed_files`, `affected_docs`)          |
-| `eval.yaml` + `evals/tasks/`                                              | waza evaluation suite (interactive + automation paths)                 |
+| Component                                                                 | Description                                                        |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `.apm/packages/common/.apm/skills/docs-updater/SKILL.md`                  | Hook/manual + automation triage; automation path uses `findings[]` |
+| `.apm/packages/common/.apm/skills/docs-updater/scripts/detect_changes.sh` | Per-branch doc drift facts (`changed_files`, `affected_docs`)      |
+| `eval.yaml` + `evals/tasks/`                                              | waza evaluation suite (interactive + automation paths)             |
 
 ## ci-sweeper (CI Sweeper)
 

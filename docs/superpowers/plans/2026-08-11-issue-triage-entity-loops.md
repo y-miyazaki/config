@@ -20,41 +20,43 @@
 
 ## File Structure
 
-| Path | Responsibility |
-| --- | --- |
-| `.apm/packages/common/.apm/skills/issue-triage/scripts/lib/label_fsm.sh` | Allowlist catalog, ensure-label, transition helpers (pure Bash + `gh`/`jq` seams) |
-| `.apm/packages/common/.apm/skills/issue-triage/scripts/detect_issue.sh` | Entity detect: env → skip/facts JSON |
-| `.apm/packages/common/.apm/skills/issue-triage/scripts/labels.json` | Allowlisted labels + color/description |
-| `.apm/packages/common/.apm/skills/issue-triage/SKILL.md` | L1 triage workflow + prompt rules (no self-censorship; low-confidence → needs-triage) |
-| `.apm/packages/common/.apm/skills/issue-triage/references/*` | Portable checklist / FSM / output notes |
-| `.apm/packages/common/.apm/skills/issue-autofix/scripts/detect_autofix.sh` | Stub → always `skip: true` |
-| `.apm/packages/common/.apm/skills/issue-autofix/SKILL.md` | Stub skill (DO NOT implement fixes yet) |
-| `.apm/packages/common/.apm/skills/pr-revise/scripts/detect_pr_revise.sh` | Stub → always `skip: true` |
-| `.apm/packages/common/.apm/skills/pr-revise/SKILL.md` | Stub skill |
-| `scripts/lib/loop_entity_target.sh` (or action-local lib) | Build single-element `target_matrix` + prompt from detect JSON + caller inputs |
-| `.github/actions/loop-entity-detect/action.yaml` | Composite: run detect_script once, budget check light-touch, emit `should_run` / `target_matrix` / handoff |
-| `.github/workflows/ci-loop-caller-entity.yaml` | Reusable entity caller → entity-detect → `ci-loop-agent` matrix |
-| `.github/workflows/on-loop-issue-triage.yaml` | Issue/comment events → entity caller |
-| `.github/workflows/on-loop-issue-autofix.yaml` | `autofix` label / `workflow_dispatch` → stub |
-| `.github/workflows/on-loop-pr-revise.yaml` | `workflow_dispatch` only skeleton |
-| `test/bats/.apm/packages/common/issue-triage/*.bats` | FSM + detect tests |
-| `test/bats/.apm/packages/common/issue-autofix/*.bats` | Stub detect |
-| `test/bats/.apm/packages/common/pr-revise/*.bats` | Stub detect |
-| `test/bats/scripts/lib/loop_entity_target.bats` | Matrix builder tests |
-| `docs/explanation/loop-engineering/workflows/loop-issue-triage-workflow-design.md` | Workflow design |
-| `docs/explanation/loop-engineering/loop-engineering-design.md` | Status row update |
-| `docs/explanation/loop-engineering/loop-caller-reusable-design.md` | Document entity profile |
+| Path                                                                               | Responsibility                                                                                             |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `.apm/packages/common/.apm/skills/issue-triage/scripts/lib/label_fsm.sh`           | Allowlist catalog, ensure-label, transition helpers (pure Bash + `gh`/`jq` seams)                          |
+| `.apm/packages/common/.apm/skills/issue-triage/scripts/detect_issue.sh`            | Entity detect: env → skip/facts JSON                                                                       |
+| `.apm/packages/common/.apm/skills/issue-triage/scripts/labels.json`                | Allowlisted labels + color/description                                                                     |
+| `.apm/packages/common/.apm/skills/issue-triage/SKILL.md`                           | L1 triage workflow + prompt rules (no self-censorship; low-confidence → needs-triage)                      |
+| `.apm/packages/common/.apm/skills/issue-triage/references/*`                       | Portable checklist / FSM / output notes                                                                    |
+| `.apm/packages/common/.apm/skills/issue-autofix/scripts/detect_autofix.sh`         | Stub → always `skip: true`                                                                                 |
+| `.apm/packages/common/.apm/skills/issue-autofix/SKILL.md`                          | Stub skill (DO NOT implement fixes yet)                                                                    |
+| `.apm/packages/common/.apm/skills/pr-revise/scripts/detect_pr_revise.sh`           | Stub → always `skip: true`                                                                                 |
+| `.apm/packages/common/.apm/skills/pr-revise/SKILL.md`                              | Stub skill                                                                                                 |
+| `scripts/lib/loop_entity_target.sh` (or action-local lib)                          | Build single-element `target_matrix` + prompt from detect JSON + caller inputs                             |
+| `.github/actions/loop-entity-detect/action.yaml`                                   | Composite: run detect_script once, budget check light-touch, emit `should_run` / `target_matrix` / handoff |
+| `.github/workflows/ci-loop-caller-entity.yaml`                                     | Reusable entity caller → entity-detect → `ci-loop-agent` matrix                                            |
+| `.github/workflows/on-loop-issue-triage.yaml`                                      | Issue/comment events → entity caller                                                                       |
+| `.github/workflows/on-loop-issue-autofix.yaml`                                     | `autofix` label / `workflow_dispatch` → stub                                                               |
+| `.github/workflows/on-loop-pr-revise.yaml`                                         | `workflow_dispatch` only skeleton                                                                          |
+| `test/bats/.apm/packages/common/issue-triage/*.bats`                               | FSM + detect tests                                                                                         |
+| `test/bats/.apm/packages/common/issue-autofix/*.bats`                              | Stub detect                                                                                                |
+| `test/bats/.apm/packages/common/pr-revise/*.bats`                                  | Stub detect                                                                                                |
+| `test/bats/scripts/lib/loop_entity_target.bats`                                    | Matrix builder tests                                                                                       |
+| `docs/explanation/loop-engineering/workflows/loop-issue-triage-workflow-design.md` | Workflow design                                                                                            |
+| `docs/explanation/loop-engineering/loop-engineering-design.md`                     | Status row update                                                                                          |
+| `docs/explanation/loop-engineering/loop-caller-reusable-design.md`                 | Document entity profile                                                                                    |
 
 ---
 
 ### Task 1: Label catalog + FSM helpers (TDD)
 
 **Files:**
+
 - Create: `.apm/packages/common/.apm/skills/issue-triage/scripts/labels.json`
 - Create: `.apm/packages/common/.apm/skills/issue-triage/scripts/lib/label_fsm.sh`
 - Test: `test/bats/.apm/packages/common/issue-triage/label_fsm.bats`
 
 **Interfaces:**
+
 - Consumes: none
 - Produces:
   - `label_fsm_load_catalog <path>` → sets associative data via jq queries
@@ -115,13 +117,16 @@ Expected: PASS
 ### Task 2: `detect_issue.sh` (TDD)
 
 **Files:**
+
 - Create: `.apm/packages/common/.apm/skills/issue-triage/scripts/detect_issue.sh`
 - Sync lib: ensure `scripts/lib` mirror via existing skill lib sync if required by package conventions
 - Test: `test/bats/.apm/packages/common/issue-triage/detect_issue.bats`
 
 **Interfaces:**
+
 - Consumes: env `ISSUE_NUMBER`, `ISSUE_TITLE`, `ISSUE_BODY`, `ISSUE_LABELS_JSON`, `ISSUE_EVENT_NAME`, `ISSUE_EVENT_ACTION`, `ISSUE_COMMENT_ID` (optional), `ISSUE_ACTOR`, `ISSUE_ACTOR_TYPE`, `ISSUE_COMMENT_USER_TYPE` (optional)
 - Produces stdout JSON:
+
   ```json
   {
     "status": "ok",
@@ -193,11 +198,13 @@ Follow changelog/ci-sweeper header conventions; `set -euo pipefail`; source skil
 ### Task 3: Entity target matrix builder (TDD)
 
 **Files:**
+
 - Create: `scripts/lib/loop_entity_target.sh`
 - Test: `test/bats/scripts/lib/loop_entity_target.bats`
 - Wire export from `scripts/lib/all.sh` only if required by action runtime (prefer action copies skill-synced lib OR source this file explicitly in the composite action)
 
 **Interfaces:**
+
 - Consumes: detect JSON path, `loop_name`, `skill_name`, `prompt_instructions`, `level`, `delivery`
 - Produces: slim `target_matrix` JSON array with one element:
   - `handoff_key`: `entity:issue:<number>`
@@ -236,16 +243,19 @@ Follow changelog/ci-sweeper header conventions; `set -euo pipefail`; source skil
 ### Task 4: `loop-entity-detect` composite + `ci-loop-caller-entity`
 
 **Files:**
+
 - Create: `.github/actions/loop-entity-detect/action.yaml`
 - Create: `.github/workflows/ci-loop-caller-entity.yaml`
 - Modify: `docs/explanation/loop-engineering/loop-caller-reusable-design.md` (entity profile section)
 - Test: prefer contract assertions via Bats on builder (Task 3); validate YAML with `actionlint` when available locally (`mise` / existing validate path) — **do not** require live Actions run
 
 **Interfaces:**
+
 - Caller inputs (subset): mirror needed agent/*, `detect_script`, `loop_name`, `skill_name`, `prompt_instructions`, `level=L1`, `delivery=none`, `may_edit=false`, `write_target=report`, `allowlist` unused but required for agent parity (use `""` or `.loop/**` only if platform demands non-empty — match L1 patterns in docs), `engine`, `branch_state`, budget inputs, `detect_domain_env_json`
-- Secrets: `AGENT_TOKEN`, bot app optional for run-log push
+- Secrets: `AGENT_TOKEN`, bot app optional for run-log push # pragma: allowlist secret
 
 **Behavior:**
+
 1. Checkout
 2. Export `detect_domain_env_json` into env (copy pattern from `ci-loop-caller.yaml`)
 3. Run `detect_script` → `tmp/detect.json`
@@ -269,6 +279,7 @@ Expected: no errors
 ### Task 5: `issue-triage` skill + dogfood caller
 
 **Files:**
+
 - Create: `.apm/packages/common/.apm/skills/issue-triage/SKILL.md`
 - Create: references (`category-fsm.md`, `category-prompt-rules.md`, `common-output-format` thin pointers)
 - Create: `.github/workflows/on-loop-issue-triage.yaml`
@@ -276,6 +287,7 @@ Expected: no errors
 - Modify: `docs/explanation/loop-engineering/loop-engineering-design.md` status for `issue-triage`
 
 **Skill must encode:**
+
 - Auto-classify when confident; else `needs-triage` only
 - Questions via Issue comments; no AskUserQuestion reliance
 - Forbid question self-censorship
@@ -312,6 +324,7 @@ Map `github.event` → `detect_domain_env_json` fields in a prelude job or inlin
 ### Task 6: Axis 2 & 3 stubs (TDD)
 
 **Files:**
+
 - Create stub skills + detect scripts as in File Structure
 - Create `on-loop-issue-autofix.yaml` (`on: issues types: [labeled]` filtered in detect to `autofix` only + `workflow_dispatch`)
 - Create `on-loop-pr-revise.yaml` (`workflow_dispatch` only)
@@ -359,16 +372,16 @@ Expected: all PASS
 
 ## Self-Review (plan vs spec)
 
-| Spec item | Task |
-| --- | --- |
-| D6 three skeletons + axis1 body | Tasks 4–6 |
-| D7 label FSM | Task 1 + skill Task 5 |
-| D8/D9 labels vs `.loop/` | Tasks 1, 4, 5 |
-| D10–D12 triggers / write / no mention | Task 5–6 callers |
-| D13–D16 labels + events + bot skip | Tasks 1–2, 5 |
-| D17–D20 autofix/revise stubs + draft future | Task 6 + docs |
-| D21–D25 prompt rules | Task 5 skill |
-| D26–D27 LE-native + entity caller | Task 4 |
+| Spec item                                   | Task                  |
+| ------------------------------------------- | --------------------- |
+| D6 three skeletons + axis1 body             | Tasks 4–6             |
+| D7 label FSM                                | Task 1 + skill Task 5 |
+| D8/D9 labels vs `.loop/`                    | Tasks 1, 4, 5         |
+| D10–D12 triggers / write / no mention       | Task 5–6 callers      |
+| D13–D16 labels + events + bot skip          | Tasks 1–2, 5          |
+| D17–D20 autofix/revise stubs + draft future | Task 6 + docs         |
+| D21–D25 prompt rules                        | Task 5 skill          |
+| D26–D27 LE-native + entity caller           | Task 4                |
 
 Placeholders avoided; stub comment vs skip resolved to **silent skip**.
 
@@ -378,8 +391,8 @@ Plan saved to `docs/superpowers/plans/2026-08-11-issue-triage-entity-loops.md`.
 
 **Two execution options:**
 
-1. **Subagent-Driven (recommended)** — fresh subagent per task, review between tasks  
-2. **Inline Execution** — this session with executing-plans checkpoints  
+1. **Subagent-Driven (recommended)** — fresh subagent per task, review between tasks
+2. **Inline Execution** — this session with executing-plans checkpoints
 
 Which approach?
 

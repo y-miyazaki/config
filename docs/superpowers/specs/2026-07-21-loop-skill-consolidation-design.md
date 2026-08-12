@@ -16,13 +16,13 @@
 
 ## Grill decisions (locked)
 
-| Topic               | Decision                                                           |
-| ------------------- | ------------------------------------------------------------------ |
-| `refactor` home     | `common/.apm/skills/refactor/`; abolish `refactor` APM package     |
+| Topic               | Decision                                                       |
+| ------------------- | -------------------------------------------------------------- |
+| `refactor` home     | `common/.apm/skills/refactor/`; abolish `refactor` APM package |
 | `detect_changes.sh` | `docs-updater` canonical; merge useful `docs-updater` behavior |
-| Workflow filenames  | Keep `on-loop-*.yaml`; only references change                      |
-| Delivery            | Single effort on `main`                                            |
-| Docs                | Update all docs that reference old skill/package paths             |
+| Workflow filenames  | Keep `on-loop-*.yaml`; only references change                  |
+| Delivery            | Single effort on `main`                                        |
+| Docs                | Update all docs that reference old skill/package paths         |
 
 ## Target layout
 
@@ -39,13 +39,13 @@ Delete packages: `loop-refactor`, `docs-updater`, `loop-ci-sweeper`, `loop-chang
 
 ## Skill naming
 
-| Old skill          | New skill                    |
-| ------------------ | ---------------------------- |
-| `loop-refactor`    | (merged into `refactor`)     |
-| `docs-updater` | (merged into `docs-updater`) |
-| `loop-ci-sweeper`  | `ci-sweeper`                 |
-| `loop-changelog`   | `changelog`                  |
-| `loop-tech-debt`   | `tech-debt`                  |
+| Old skill         | New skill                    |
+| ----------------- | ---------------------------- |
+| `loop-refactor`   | (merged into `refactor`)     |
+| `docs-updater`    | (merged into `docs-updater`) |
+| `loop-ci-sweeper` | `ci-sweeper`                 |
+| `loop-changelog`  | `changelog`                  |
+| `loop-tech-debt`  | `tech-debt`                  |
 
 ## Non-goals
 

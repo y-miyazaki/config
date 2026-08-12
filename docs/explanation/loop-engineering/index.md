@@ -13,25 +13,25 @@ Understanding-oriented design docs for autonomous CI and documentation loops in 
 
 ## Topic index
 
-| Topic                                                | Document                                                                                                       |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Platform (targets, caller inputs, state)             | [Multi-Branch Loops Design](multi-branch-loops-design.md)                                                      |
-| Shared `on-loop-*.yaml` layout                       | [Loop Caller Workflows Design](loop-caller-workflows-design.md)                                                |
-| **docs-updater** loop (`docs-updater` skill)          | [Docs Updater Workflow Design](workflows/loop-docs-updater-workflow-design.md)                                   |
-| **ci-sweeper** loop + detect + CI env                | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md)                                     |
-| **changelog** loop + conventional commits            | [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md)                                       |
-| **tech-debt** loop + debt report                     | [Report Tech Debt Workflow Design](workflows/loop-tech-debt-workflow-design.md)                                |
-| **refactor** loop + H1 detect (interactive + loop)   | [Refactor Workflow Design](workflows/loop-refactor-workflow-design.md)                                         |
-| **issue-triage** loop (entity L1)                    | [Issue Triage Workflow Design](workflows/loop-issue-triage-workflow-design.md)                                 |
-| **issue-autofix** loop                    | [Issue Autofix Workflow Design](workflows/loop-issue-autofix-workflow-design.md)                               |
-| **pr-revise** loop                        | [PR Revise Workflow Design](workflows/loop-pr-revise-workflow-design.md)                                       |
-| Refactor skill spec (interactive + loop envelope)    | [Refactor skill & loop design](../../superpowers/specs/2026-07-21-refactor-skill-and-loop-design.md)           |
-| Write target + delivery (fix vs report, four planes) | [Loop write target & delivery design](../../superpowers/specs/2026-07-23-loop-write-target-delivery-design.md) |
-| Loop invariants + L3 gates                           | [Loop Engineering Design](loop-engineering-design.md)                                                          |
-| PR body contract (templates, links, validate)        | [Loop PR Body Skill Contract](loop-pr-body-skill-contract.md)                                                  |
-| Automation report format (survey/apply shapes)       | [Loop Automation Report Format](common-loop-triage-format.md)                                                  |
-| Ubiquitous language (detect, A'/B, findings)         | [Ubiquitous Language](CONTEXT.md)                                                                              |
-| Doc maintenance (canonical map, triggers)            | [Documentation Maintenance](documentation-maintenance.md)                                                      |
+| Topic                                                | Document                                                                                                                                       |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Platform (targets, caller inputs, state)             | [Multi-Branch Loops Design](multi-branch-loops-design.md)                                                                                      |
+| Shared `on-loop-*.yaml` layout                       | [Loop Caller Workflows Design](loop-caller-workflows-design.md)                                                                                |
+| **docs-updater** loop (`docs-updater` skill)         | [Docs Updater Workflow Design](workflows/loop-docs-updater-workflow-design.md)                                                                 |
+| **ci-sweeper** loop + detect + CI env                | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md)                                                                     |
+| **changelog** loop + conventional commits            | [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md)                                                                       |
+| **tech-debt** loop + debt report                     | [Report Tech Debt Workflow Design](workflows/loop-tech-debt-workflow-design.md)                                                                |
+| **refactor** loop + H1 detect (interactive + loop)   | [Refactor Workflow Design](workflows/loop-refactor-workflow-design.md)                                                                         |
+| **issue-triage** loop (entity L1)                    | [Issue Triage Workflow Design](workflows/loop-issue-triage-workflow-design.md)                                                                 |
+| **issue-autofix** loop                               | [Issue Autofix Workflow Design](workflows/loop-issue-autofix-workflow-design.md)                                                               |
+| **pr-revise** loop                                   | [PR Revise Workflow Design](workflows/loop-pr-revise-workflow-design.md)                                                                       |
+| Refactor skill spec (interactive + loop envelope)    | [Refactor skill & loop design](../../superpowers/specs/2026-07-21-refactor-skill-and-loop-design.md)                                           |
+| Write target + delivery (fix vs report, four planes) | [Loop write target & delivery design](../../superpowers/specs/2026-07-23-loop-write-target-delivery-design.md)                                 |
+| Loop invariants + L3 gates                           | [Loop Engineering Design](loop-engineering-design.md)                                                                                          |
+| PR body contract (templates, links, validate)        | [Loop PR Body Skill Contract](loop-pr-body-skill-contract.md)                                                                                  |
+| Automation report format (survey/apply shapes)       | [Loop Automation Report Format](common-loop-triage-format.md)                                                                                  |
+| Ubiquitous language (detect, A'/B, findings)         | [Ubiquitous Language](CONTEXT.md)                                                                                                              |
+| Doc maintenance (canonical map, triggers)            | [Documentation Maintenance](documentation-maintenance.md)                                                                                      |
 | Detect `--scope` axis + Interactive discovery        | [Detect Scope Axis and Interactive Discovery Design](../../superpowers/specs/2026-08-10-detect-scope-axis-and-interactive-discovery-design.md) |
 
 ## Reference (outside this section)

@@ -38,12 +38,12 @@ Report loops emit structured artifacts under `docs/report/<domain>/` via merge-g
 
 **Action loops** (`docs-updater`, `ci-sweeper`, `refactor`) modify application or documentation source to fix drift or failures. Report loops classify mechanical signals and publish reports only — they do not edit source outside the report allowlist.
 
-| Loop          | Skill          | Role                                              | Trigger                    |
-| ------------- | -------------- | ------------------------------------------------- | -------------------------- |
-| `tech-debt`   | `tech-debt`    | Cron loop: detect signals + skill classify/report | `on-loop-tech-debt.yaml`   |
+| Loop           | Skill          | Role                                              | Trigger                     |
+| -------------- | -------------- | ------------------------------------------------- | --------------------------- |
+| `tech-debt`    | `tech-debt`    | Cron loop: detect signals + skill classify/report | `on-loop-tech-debt.yaml`    |
 | `docs-updater` | `docs-updater` | Action loop: doc drift detect + fix PR            | `on-loop-docs-updater.yaml` |
-| `ci-sweeper`  | `ci-sweeper`   | Action loop: CI failure detect + fix PR           | `on-loop-ci-sweeper.yaml`  |
-| `refactor`    | `refactor`     | Action loop: H1 structural refactor fix PR        | `on-loop-refactor.yaml`    |
+| `ci-sweeper`   | `ci-sweeper`   | Action loop: CI failure detect + fix PR           | `on-loop-ci-sweeper.yaml`   |
+| `refactor`     | `refactor`     | Action loop: H1 structural refactor fix PR        | `on-loop-refactor.yaml`     |
 
 Detect script path: **`tech-debt/scripts/detect_tech_debt.sh`** (under `common` package).
 

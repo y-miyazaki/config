@@ -1,12 +1,12 @@
 # Issue Autofix Workflow Design
 
-| Layer        | Document                                                                 |
-| ------------ | ------------------------------------------------------------------------ |
-| Platform     | [Multi-Branch Loops Design](../multi-branch-loops-design.md)             |
-| Caller shell | [Loop Caller Reusable Design](../loop-caller-reusable-design.md) (branch)|
-| Spec         | [Issue Autofix and PR Revise Full Design](../../../superpowers/specs/2026-08-11-issue-autofix-pr-revise-full-design.md) |
+| Layer        | Document                                                                                                                           |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Platform     | [Multi-Branch Loops Design](../multi-branch-loops-design.md)                                                                       |
+| Caller shell | [Loop Caller Reusable Design](../loop-caller-reusable-design.md) (branch)                                                          |
+| Spec         | [Issue Autofix and PR Revise Full Design](../../../superpowers/specs/2026-08-11-issue-autofix-pr-revise-full-design.md)            |
 | Boundaries   | [Entity Caller Responsibility Separation](../../../superpowers/specs/2026-08-11-entity-caller-responsibility-separation-design.md) |
-| Invariants   | [Loop Engineering Design](../loop-engineering-design.md)                 |
+| Invariants   | [Loop Engineering Design](../loop-engineering-design.md)                                                                           |
 
 **Artifacts:** `on-loop-issue-autofix.yaml` · skill `issue-autofix` · `detect_autofix.sh` · `ci-loop-caller.yaml`
 

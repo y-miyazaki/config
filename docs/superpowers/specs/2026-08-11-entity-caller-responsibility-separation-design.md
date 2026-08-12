@@ -31,26 +31,26 @@
 
 ## Decisions (grill-me)
 
-| ID | Topic | Choice |
-| --- | --- | --- |
-| E1 | Profile split axis | **Enumeration model only**: fan-out (`ci-loop-caller*`) vs single-target (`ci-loop-caller-entity`). Not by domain (Issue/Backlog/Notion). |
-| E2 | Branch role | **Integration anchor** always: `branch_state` for `.loop/*`, read-only checkout for L1 analysis, worktree/PR for L2+. Entity ≠ “no branch”. |
-| E3 | Domain knowledge | **detect + SKILL + verifier rubric** only. Workflows pass opaque `detect_domain_env_json` and orchestrate. |
-| E4 | Progress SoT | **3a — external labels/status only** (Astro/GAW pattern). Comments are audit/history. |
-| E5 | Ops | `.loop/` **budget + run-log** only initially. No entity cursor required for triage. |
-| E6 | Re-run gate | **R2** — run when progress labels allow (e.g. `needs-triage` / `triage:needs-info`) and on human comments while needs-info; skip bots. |
-| E7 | Failure stop | **T2** — allowlisted `triage:failed`; detect skips until a human removes it. Retry counters deferred. |
-| E8 | N entities / tick | User-visible “many” = **matrix fan-out** (1 Agent context / 1 entity). Not one Agent holding many issues. |
-| E9 | Axis 2 parent | **P3** — eligibility/guidance on entity or human gate; **code loop on branch caller**. |
-| E10 | Intake | **H2-1** — single `on-loop-issue-autofix` with `labeled(autofix)` + `repository_dispatch` + `workflow_dispatch` → **branch caller only**. |
-| E11 | Double-start | **D4** — concurrency `loop-autofix-issue-${n}` + detect skip if open/draft PR already references `Fixes #N`. |
-| E12 | Who dispatches | **X4** — detect emits machine flag; **Agent does not** HTTP-dispatch. |
-| E13 | Dispatch placement | **Y3** — allowlisted **skill hook script** runs after detect (trusted path). Platform only invokes the hook when present. |
-| E14 | Platform generalization | **G1** — remove Issue-fixed assumptions from platform now so Backlog/Notion can plug in later without new profiles. |
-| E15 | Detect → matrix key | **S1** — detect emits `handoff_key`; platform treats it as opaque. Business dedup stays in detect. |
-| E16 | Axis 3 | **R-A** — same shape as axis 2: single intake → PR-head/branch caller (not entity for code revise). |
-| E17 | Event mapping | Move GitHub `event_path` / dispatch fetch **into skill detect scripts** (or skill-local helpers). Delete caller `prepare` jobs. |
-| E18 | External systems | Future Backlog/Notion = new skill + thin `on-loop-*` + same `ci-loop-caller-entity`. No `ci-loop-caller-backlog`. |
+| ID  | Topic                   | Choice                                                                                                                                      |
+| --- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| E1  | Profile split axis      | **Enumeration model only**: fan-out (`ci-loop-caller*`) vs single-target (`ci-loop-caller-entity`). Not by domain (Issue/Backlog/Notion).   |
+| E2  | Branch role             | **Integration anchor** always: `branch_state` for `.loop/*`, read-only checkout for L1 analysis, worktree/PR for L2+. Entity ≠ “no branch”. |
+| E3  | Domain knowledge        | **detect + SKILL + verifier rubric** only. Workflows pass opaque `detect_domain_env_json` and orchestrate.                                  |
+| E4  | Progress SoT            | **3a — external labels/status only** (Astro/GAW pattern). Comments are audit/history.                                                       |
+| E5  | Ops                     | `.loop/` **budget + run-log** only initially. No entity cursor required for triage.                                                         |
+| E6  | Re-run gate             | **R2** — run when progress labels allow (e.g. `needs-triage` / `triage:needs-info`) and on human comments while needs-info; skip bots.      |
+| E7  | Failure stop            | **T2** — allowlisted `triage:failed`; detect skips until a human removes it. Retry counters deferred.                                       |
+| E8  | N entities / tick       | User-visible “many” = **matrix fan-out** (1 Agent context / 1 entity). Not one Agent holding many issues.                                   |
+| E9  | Axis 2 parent           | **P3** — eligibility/guidance on entity or human gate; **code loop on branch caller**.                                                      |
+| E10 | Intake                  | **H2-1** — single `on-loop-issue-autofix` with `labeled(autofix)` + `repository_dispatch` + `workflow_dispatch` → **branch caller only**.   |
+| E11 | Double-start            | **D4** — concurrency `loop-autofix-issue-${n}` + detect skip if open/draft PR already references `Fixes #N`.                                |
+| E12 | Who dispatches          | **X4** — detect emits machine flag; **Agent does not** HTTP-dispatch.                                                                       |
+| E13 | Dispatch placement      | **Y3** — allowlisted **skill hook script** runs after detect (trusted path). Platform only invokes the hook when present.                   |
+| E14 | Platform generalization | **G1** — remove Issue-fixed assumptions from platform now so Backlog/Notion can plug in later without new profiles.                         |
+| E15 | Detect → matrix key     | **S1** — detect emits `handoff_key`; platform treats it as opaque. Business dedup stays in detect.                                          |
+| E16 | Axis 3                  | **R-A** — same shape as axis 2: single intake → PR-head/branch caller (not entity for code revise).                                         |
+| E17 | Event mapping           | Move GitHub `event_path` / dispatch fetch **into skill detect scripts** (or skill-local helpers). Delete caller `prepare` jobs.             |
+| E18 | External systems        | Future Backlog/Notion = new skill + thin `on-loop-*` + same `ci-loop-caller-entity`. No `ci-loop-caller-backlog`.                           |
 
 ## Architecture
 
@@ -69,15 +69,15 @@ Thin on-loop-* (triggers, concurrency, secrets, with:)
 
 ### Layer responsibilities
 
-| Layer | Knows | Must not know |
-| --- | --- | --- |
-| `on-loop-*` | triggers, concurrency, secrets, loop tunables | Issue/Backlog field mapping jq |
-| `ci-loop-caller-entity` | budget, single matrix, handoff, agent wiring, optional hook invoke | `issue_number`, label FSM, Notion API |
-| `loop_entity_target` / `loop-entity-detect` | `skip`, `handoff_key`, opaque `result`, prompt assembly | GitHub-specific result keys |
-| skill `detect_*.sh` | payload → facts, skip, `handoff_key`, dispatch flags, business dedup | workflow YAML structure |
-| skill `SKILL.md` + Agent | classify, labels/comments/external API, guidance | firing `repository_dispatch` (X4) |
-| skill hook script (Y3) | trusted dispatch / similar side effects from detect flags | LLM reasoning |
-| branch caller + finalize | worktree, PR, `.loop/*` promote | triage FSM |
+| Layer                                       | Knows                                                                | Must not know                         |
+| ------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------- |
+| `on-loop-*`                                 | triggers, concurrency, secrets, loop tunables                        | Issue/Backlog field mapping jq        |
+| `ci-loop-caller-entity`                     | budget, single matrix, handoff, agent wiring, optional hook invoke   | `issue_number`, label FSM, Notion API |
+| `loop_entity_target` / `loop-entity-detect` | `skip`, `handoff_key`, opaque `result`, prompt assembly              | GitHub-specific result keys           |
+| skill `detect_*.sh`                         | payload → facts, skip, `handoff_key`, dispatch flags, business dedup | workflow YAML structure               |
+| skill `SKILL.md` + Agent                    | classify, labels/comments/external API, guidance                     | firing `repository_dispatch` (X4)     |
+| skill hook script (Y3)                      | trusted dispatch / similar side effects from detect flags            | LLM reasoning                         |
+| branch caller + finalize                    | worktree, PR, `.loop/*` promote                                      | triage FSM                            |
 
 ### Detect envelope (entity, normative)
 
@@ -113,21 +113,21 @@ Single-element (or empty) array. Each element:
 
 ### Axis wiring (final form)
 
-| Axis | Intake workflow | Reusable caller | Notes |
-| --- | --- | --- | --- |
-| 1 issue-triage | `on-loop-issue-triage` | `ci-loop-caller-entity` | L1; labels + comments; `triage:failed` (E7) |
-| 2 issue-autofix | `on-loop-issue-autofix` (H2-1) | **branch** `ci-loop-caller*` | Not entity for code; D4 dedup in detect |
-| 3 pr-revise | `on-loop-pr-revise` | **PR-head / branch** caller | R-A; entity only if a future L1-only gate is added |
+| Axis            | Intake workflow                | Reusable caller              | Notes                                              |
+| --------------- | ------------------------------ | ---------------------------- | -------------------------------------------------- |
+| 1 issue-triage  | `on-loop-issue-triage`         | `ci-loop-caller-entity`      | L1; labels + comments; `triage:failed` (E7)        |
+| 2 issue-autofix | `on-loop-issue-autofix` (H2-1) | **branch** `ci-loop-caller*` | Not entity for code; D4 dedup in detect            |
+| 3 pr-revise     | `on-loop-pr-revise`            | **PR-head / branch** caller  | R-A; entity only if a future L1-only gate is added |
 
 Human remains the default autofix trigger (`autofix` label / dispatch). Automatic Y3 dispatch from triage is optional later; intake shape is ready (E10/E12/E13).
 
 ## Comparison to external practice
 
-| Source | Progress SoT | Dedup / stop | Relevance |
-| --- | --- | --- | --- |
-| Astro / Cloudflare triagebot | Labels FSM; no private DB; comments as history | Re-triageable labels; `failed` + caps; skip labels | Validates E4/E6/E7 |
-| GitHub Agentic Workflows triage | Unlabeled → label; safe-outputs | Skip if labeled; max ops; hide-older-comments | Validates thin progress SoT + trusted side effects (X4) |
-| rust-lang triagebot | Labels + **Postgres** for queues | Capacity / assignment | Only if LE later needs queue capacity — out of scope |
+| Source                          | Progress SoT                                   | Dedup / stop                                       | Relevance                                               |
+| ------------------------------- | ---------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------- |
+| Astro / Cloudflare triagebot    | Labels FSM; no private DB; comments as history | Re-triageable labels; `failed` + caps; skip labels | Validates E4/E6/E7                                      |
+| GitHub Agentic Workflows triage | Unlabeled → label; safe-outputs                | Skip if labeled; max ops; hide-older-comments      | Validates thin progress SoT + trusted side effects (X4) |
+| rust-lang triagebot             | Labels + **Postgres** for queues               | Capacity / assignment                              | Only if LE later needs queue capacity — out of scope    |
 
 ## Migration from current dogfood
 
@@ -144,23 +144,23 @@ Edit routing: package SoT under `.apm/packages/common/`; `scripts/lib/` for shar
 
 ## Error handling
 
-| Case | Behavior |
-| --- | --- |
-| Missing `handoff_key` when `skip=false` | detect contract error — fail detect step |
-| `triage:failed` present | detect `skip` until human removes label |
-| Dispatch flag set but no hook script | no-op + log; do not fail triage Agent path unless caller marks hook required |
-| Open `Fixes #N` PR on autofix intake | detect skip (E11) |
-| Budget exceeded | platform skip + run-log (unchanged) |
-| Agent failure mid-triage | prefer apply `triage:failed` when partial success is unsafe; avoid label smash |
+| Case                                    | Behavior                                                                       |
+| --------------------------------------- | ------------------------------------------------------------------------------ |
+| Missing `handoff_key` when `skip=false` | detect contract error — fail detect step                                       |
+| `triage:failed` present                 | detect `skip` until human removes label                                        |
+| Dispatch flag set but no hook script    | no-op + log; do not fail triage Agent path unless caller marks hook required   |
+| Open `Fixes #N` PR on autofix intake    | detect skip (E11)                                                              |
+| Budget exceeded                         | platform skip + run-log (unchanged)                                            |
+| Agent failure mid-triage                | prefer apply `triage:failed` when partial success is unsafe; avoid label smash |
 
 ## Testing
 
-| Layer | What |
-| --- | --- |
-| `loop_entity_target` | Uses `handoff_key`; empty on skip; rejects skip=false without key |
-| `detect_issue` | Emits `handoff_key`; maps event without caller prepare; skips bots / `triage:failed` |
-| Autofix detect (when implemented) | Skips when `Fixes #N` PR exists; respects concurrency inputs documented for caller |
-| Workflows | No `prepare` job; actionlint / ghalint / zizmor clean |
+| Layer                             | What                                                                                 |
+| --------------------------------- | ------------------------------------------------------------------------------------ |
+| `loop_entity_target`              | Uses `handoff_key`; empty on skip; rejects skip=false without key                    |
+| `detect_issue`                    | Emits `handoff_key`; maps event without caller prepare; skips bots / `triage:failed` |
+| Autofix detect (when implemented) | Skips when `Fixes #N` PR exists; respects concurrency inputs documented for caller   |
+| Workflows                         | No `prepare` job; actionlint / ghalint / zizmor clean                                |
 
 ## Open implementation details
 

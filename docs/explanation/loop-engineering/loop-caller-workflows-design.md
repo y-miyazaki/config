@@ -101,11 +101,11 @@ When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as
 
 All `.loop/*` writes in **finalize step** via `loop-finalize` — not separate caller `git push` steps.
 
-| Input                       | Example                                                |
-| --------------------------- | ------------------------------------------------------ |
-| `target_json`               | Matrix cell                                            |
+| Input                       | Example                                                 |
+| --------------------------- | ------------------------------------------------------- |
+| `target_json`               | Matrix cell                                             |
 | `domain_persistence_script` | ci-sweeper: `update_run_ledger.sh`; docs-updater: empty |
-| `state_push_branch`         | `branch_state` input or default branch                 |
+| `state_push_branch`         | `branch_state` input or default branch                  |
 
 Push branch: `branch_state`, **not** `target.to.branch`.
 
@@ -146,11 +146,11 @@ on:
   workflow_dispatch: {}
 ```
 
-| Trigger             | Typical use                                                    |
-| ------------------- | -------------------------------------------------------------- |
+| Trigger             | Typical use                                                     |
+| ------------------- | --------------------------------------------------------------- |
 | `schedule`          | Integration branch polling (changelog, docs-updater, tech-debt) |
-| `workflow_run`      | Low-latency CI failure (ci-sweeper; ops checklist)             |
-| `workflow_dispatch` | Manual debug / `gh run list` scan without an event run ID      |
+| `workflow_run`      | Low-latency CI failure (ci-sweeper; ops checklist)              |
+| `workflow_dispatch` | Manual debug / `gh run list` scan without an event run ID       |
 
 ## Concurrency
 
@@ -229,7 +229,7 @@ Historical debt from early caller implementations. **All items below are resolve
 | Caller ledger `git push`                         | ci-sweeper pushed ledger from caller         | `domain_persistence_script` in `loop-finalize` via `ci-loop-agent` |
 | `auto_merge: level == L3` without finalize check | all L2+ callers                              | `delivery == 'open_pr' && level == L3 && finalize == 'open_pr'`    |
 | Single `DEFAULT_BASE_BRANCH` only                | all                                          | `LOOP_INTEGRATION_BRANCHES`                                        |
-| `docs-updater` detect path                       | `on-loop-docs-updater`                        | `docs-updater/scripts/detect_changes.sh`                           |
+| `docs-updater` detect path                       | `on-loop-docs-updater`                       | `docs-updater/scripts/detect_changes.sh`                           |
 
 Structural baseline: [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md) (`ci-loop-caller.yaml`).
 

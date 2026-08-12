@@ -18,11 +18,11 @@ Filtering was duplicated as `find -prune` blocks and per-sensor `path_is_pruned`
 
 Enumeration strategy differs by detect type:
 
-| Type         | Work-set source                   | Example            |
-| ------------ | --------------------------------- | ------------------ |
-| Delta-driven | `git diff` (+ optional expansion) | `docs-updater` |
-| Full-scan    | `**/*` patterns / tracked tree    | `loop-tech-debt`   |
-| Event-driven | External events                   | `loop-ci-sweeper`  |
+| Type         | Work-set source                   | Example           |
+| ------------ | --------------------------------- | ----------------- |
+| Delta-driven | `git diff` (+ optional expansion) | `docs-updater`    |
+| Full-scan    | `**/*` patterns / tracked tree    | `loop-tech-debt`  |
+| Event-driven | External events                   | `loop-ci-sweeper` |
 
 **Filtering is identical** across types: every enumerated path passes through `repo_path_should_skip()`.
 
@@ -78,11 +78,11 @@ Callers that need domain-specific exclusions set `REPO_PATHS_EXTRA_PRUNES` (or p
 
 ## Consumers
 
-| Script                               | `REPO_PATHS_EXTRA_PRUNES`            | Notes                    |
-| ------------------------------------ | ------------------------------------ | ------------------------ |
-| `detect_tech_debt.sh`                | Parent of `TECH_DEBT_DIR` when unset | Full-scan sensors        |
+| Script                           | `REPO_PATHS_EXTRA_PRUNES`            | Notes                    |
+| -------------------------------- | ------------------------------------ | ------------------------ |
+| `detect_tech_debt.sh`            | Parent of `TECH_DEBT_DIR` when unset | Full-scan sensors        |
 | `docs-updater/detect_changes.sh` | none (lib default)                   | Delta + doc expansion    |
-| `docs-updater/detect_changes.sh`     | none                                 | Hook-triggered doc drift |
+| `docs-updater/detect_changes.sh` | none                                 | Hook-triggered doc drift |
 
 ## Out of scope
 

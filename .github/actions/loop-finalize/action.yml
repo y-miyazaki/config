@@ -345,4 +345,3 @@ runs:
       env:
         LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json
       run: bash "${GITHUB_ACTION_PATH}/../lib/loop/export_failure_diag.sh"
-

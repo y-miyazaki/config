@@ -173,16 +173,16 @@ Replace today's unconditional line _"a report alone is not sufficient when may_e
 
 ## Valid Combinations (normative)
 
-| `may_edit` | `write_target` | `delivery` | Example loop                                 |    Valid    |
-| :--------: | :------------: | :--------: | -------------------------------------------- | :---------: |
-|  `false`   |       —        |   `log`    | L1 observe                                   |     Yes     |
-|  `false`   |       —        |  `issue`   | Issue triage                                 |     Yes     |
-|  `false`   |       —        |  `notion`  | External docs-updater                          |     Yes     |
-|  `false`   |       —        | `open_pr`  | —                                            |   **No**    |
+| `may_edit` | `write_target` | `delivery` | Example loop                                  |    Valid    |
+| :--------: | :------------: | :--------: | --------------------------------------------- | :---------: |
+|  `false`   |       —        |   `log`    | L1 observe                                    |     Yes     |
+|  `false`   |       —        |  `issue`   | Issue triage                                  |     Yes     |
+|  `false`   |       —        |  `notion`  | External docs-updater                         |     Yes     |
+|  `false`   |       —        | `open_pr`  | —                                             |   **No**    |
 |   `true`   |     `fix`      | `open_pr`  | ci-sweeper, refactor, docs-updater, changelog |     Yes     |
-|   `true`   |    `report`    | `open_pr`  | tech-debt                                    |     Yes     |
-|   `true`   |    `report`    |  `issue`   | Duplicate channels                           | **No** (v1) |
-|   `true`   |     `fix`      |   `none`   | Local experiment                             | Yes (rare)  |
+|   `true`   |    `report`    | `open_pr`  | tech-debt                                     |     Yes     |
+|   `true`   |    `report`    |  `issue`   | Duplicate channels                            | **No** (v1) |
+|   `true`   |     `fix`      |   `none`   | Local experiment                              | Yes (rare)  |
 
 `loop-detect` or caller validation should reject invalid rows before execute.
 
@@ -213,13 +213,13 @@ Skills **must not** reference GitHub Issue, Notion, Backlog APIs, or `delivery`.
 
 ### Phase 2 — Migrate dogfood callers
 
-| Caller                | `may_edit` | `write_target` | `delivery` |
-| --------------------- | :--------: | :------------: | :--------: |
-| `on-loop-changelog`   |   `true`   |     `fix`      | `open_pr`  |
-| `on-loop-ci-sweeper`  |   `true`   |     `fix`      | `open_pr`  |
+| Caller                 | `may_edit` | `write_target` | `delivery` |
+| ---------------------- | :--------: | :------------: | :--------: |
+| `on-loop-changelog`    |   `true`   |     `fix`      | `open_pr`  |
+| `on-loop-ci-sweeper`   |   `true`   |     `fix`      | `open_pr`  |
 | `on-loop-docs-updater` |   `true`   |     `fix`      | `open_pr`  |
-| `on-loop-refactor`    |   `true`   |     `fix`      | `open_pr`  |
-| `on-loop-tech-debt`   |   `true`   |    `report`    | `open_pr`  |
+| `on-loop-refactor`     |   `true`   |     `fix`      | `open_pr`  |
+| `on-loop-tech-debt`    |   `true`   |    `report`    | `open_pr`  |
 
 ### Phase 3 — Skills
 

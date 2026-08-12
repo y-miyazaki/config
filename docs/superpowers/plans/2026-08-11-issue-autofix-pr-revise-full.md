@@ -21,32 +21,33 @@
 
 ## File map
 
-| Path | Responsibility |
-| --- | --- |
-| `.github/actions/loop-finalize/lib/create_pr.sh` | Honor `PR_DRAFT=true` → `gh pr create --draft` |
-| `.github/actions/loop-finalize/action.yml` | New input `pr_draft`; pass `PR_DRAFT` env into create step |
-| `.github/workflows/ci-loop-agent.yaml` | Thread `pr_draft` into finalize |
-| `.github/workflows/ci-loop-caller.yaml` | New input `pr_draft` (default `false`) → agent |
-| `test/bats/.github/actions/loop-finalize/lib/create_pr.bats` | Assert `--draft` when `PR_DRAFT=true` |
-| `.github/actions/loop-entity-detect/lib/detect.sh` | After successful detect write, invoke optional dispatch hook |
-| `.github/actions/loop-entity-detect/action.yml` | Inputs: hook path / token for dispatch (trusted) |
-| `.apm/packages/common/.apm/skills/issue-triage/scripts/detect_issue.sh` | Emit dispatch flags when `triage:ready` ∧ `autofix` |
-| `.apm/packages/common/.apm/skills/issue-triage/scripts/hooks/on_detect_dispatch.sh` | Live `repository_dispatch` (migrate from autofix stub) |
-| `.apm/packages/common/.apm/skills/issue-autofix/scripts/hooks/*` | Remove stub or leave README pointing at triage hook |
-| `.apm/packages/common/.apm/skills/issue-autofix/scripts/detect_autofix.sh` | Real detect + Fixes/#N skip |
-| `.apm/packages/common/.apm/skills/issue-autofix/SKILL.md` + `assets/` + references | L2 fix loop + PR body templates |
-| `.apm/packages/common/.apm/skills/pr-revise/scripts/detect_pr_revise.sh` | Mention gate + PR number hydrate |
-| `.apm/packages/common/.apm/skills/pr-revise/SKILL.md` + `assets/` + references | L2 revise loop + PR body templates |
-| `.github/workflows/on-loop-issue-autofix.yaml` | L2 planes, `pr_draft`, real skill wiring |
-| `.github/workflows/on-loop-pr-revise.yaml` | Comment triggers + mention input + `git_landing_pull_request` |
-| `.github/workflows/on-loop-issue-triage.yaml` | Pass dispatch hook path + token into entity detect |
-| Docs under `docs/explanation/loop-engineering/` | Replace skeleton wording; status table |
+| Path                                                                                | Responsibility                                                |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `.github/actions/loop-finalize/lib/create_pr.sh`                                    | Honor `PR_DRAFT=true` → `gh pr create --draft`                |
+| `.github/actions/loop-finalize/action.yml`                                          | New input `pr_draft`; pass `PR_DRAFT` env into create step    |
+| `.github/workflows/ci-loop-agent.yaml`                                              | Thread `pr_draft` into finalize                               |
+| `.github/workflows/ci-loop-caller.yaml`                                             | New input `pr_draft` (default `false`) → agent                |
+| `test/bats/.github/actions/loop-finalize/lib/create_pr.bats`                        | Assert `--draft` when `PR_DRAFT=true`                         |
+| `.github/actions/loop-entity-detect/lib/detect.sh`                                  | After successful detect write, invoke optional dispatch hook  |
+| `.github/actions/loop-entity-detect/action.yml`                                     | Inputs: hook path / token for dispatch (trusted)              |
+| `.apm/packages/common/.apm/skills/issue-triage/scripts/detect_issue.sh`             | Emit dispatch flags when `triage:ready` ∧ `autofix`           |
+| `.apm/packages/common/.apm/skills/issue-triage/scripts/hooks/on_detect_dispatch.sh` | Live `repository_dispatch` (migrate from autofix stub)        |
+| `.apm/packages/common/.apm/skills/issue-autofix/scripts/hooks/*`                    | Remove stub or leave README pointing at triage hook           |
+| `.apm/packages/common/.apm/skills/issue-autofix/scripts/detect_autofix.sh`          | Real detect + Fixes/#N skip                                   |
+| `.apm/packages/common/.apm/skills/issue-autofix/SKILL.md` + `assets/` + references  | L2 fix loop + PR body templates                               |
+| `.apm/packages/common/.apm/skills/pr-revise/scripts/detect_pr_revise.sh`            | Mention gate + PR number hydrate                              |
+| `.apm/packages/common/.apm/skills/pr-revise/SKILL.md` + `assets/` + references      | L2 revise loop + PR body templates                            |
+| `.github/workflows/on-loop-issue-autofix.yaml`                                      | L2 planes, `pr_draft`, real skill wiring                      |
+| `.github/workflows/on-loop-pr-revise.yaml`                                          | Comment triggers + mention input + `git_landing_pull_request` |
+| `.github/workflows/on-loop-issue-triage.yaml`                                       | Pass dispatch hook path + token into entity detect            |
+| Docs under `docs/explanation/loop-engineering/`                                     | Replace skeleton wording; status table                        |
 
 ---
 
 ### Task 1: `pr_draft` on finalize (`create_pr.sh`)
 
 **Files:**
+
 - Modify: `.github/actions/loop-finalize/lib/create_pr.sh`
 - Modify: `.github/actions/loop-finalize/action.yml`
 - Modify: `test/bats/.github/actions/loop-finalize/lib/create_pr.bats`
@@ -54,6 +55,7 @@
 - Modify: `.github/workflows/ci-loop-caller.yaml`
 
 **Interfaces:**
+
 - Consumes: existing `gh pr create` arg assembly in `create_pr.sh`
 - Produces: env `PR_DRAFT` (`true`/`false`); when `true`, `gh_args` includes `--draft`. Caller input `pr_draft` boolean default `false`
 
@@ -109,14 +111,17 @@ fi
 - [ ] **Step 4: Wire action + caller + agent**
 
 `loop-finalize/action.yml`:
+
 - Add input `pr_draft` (string/boolean, default `'false'`)
 - On create_pr step env: `PR_DRAFT: ${{ inputs.pr_draft }}`
 
 `ci-loop-agent.yaml`:
+
 - Add workflow input `pr_draft` default `false`
 - Pass `pr_draft: ${{ inputs.pr_draft }}` into `loop-finalize`
 
 `ci-loop-caller.yaml`:
+
 - Add input `pr_draft` default `false`
 - Pass through to `ci-loop-agent`
 
@@ -132,12 +137,14 @@ Expected: PASS
 ### Task 2: Entity detect invokes trusted dispatch hook
 
 **Files:**
+
 - Modify: `.github/actions/loop-entity-detect/lib/detect.sh`
 - Modify: `.github/actions/loop-entity-detect/action.yml`
 - Modify: `.github/actions/loop-entity-detect/lib/_init.sh` (if new env vars documented there)
 - Create: `test/bats/.github/actions/loop-entity-detect/lib/detect_dispatch_hook.bats` (or extend existing entity-detect bats if present)
 
 **Interfaces:**
+
 - Consumes: detect JSON at `DETECT_OUT` with optional `result.dispatch_requested`
 - Produces: when hook path set and `dispatch_requested==true`, runs  
   `DISPATCH_HOOK_TOKEN=... bash "$DISPATCH_HOOK_SCRIPT" "$DETECT_OUT"`  
@@ -148,7 +155,7 @@ Expected: PASS
 Stub a detect script that prints:
 
 ```json
-{"status":"ok","skip":false,"result":{"handoff_key":"entity:issue:1","dispatch_requested":true,"dispatch_event_type":"loop-issue-autofix","dispatch_client_payload":{"issue_number":"1"}}}
+{ "status": "ok", "skip": false, "result": { "handoff_key": "entity:issue:1", "dispatch_requested": true, "dispatch_event_type": "loop-issue-autofix", "dispatch_client_payload": { "issue_number": "1" } } }
 ```
 
 Stub hook that writes `invoked` to a temp file and exits 0. Assert file exists after `detect.sh` with `DISPATCH_HOOK_SCRIPT` set.
@@ -179,6 +186,7 @@ fi
 Only invoke when skip is false **or** always when flag set? Spec: triage may still skip agent work but still want dispatch — prefer: invoke whenever `dispatch_requested==true` regardless of `skip`, as long as detect `status==ok`. Document that in hook README.
 
 Add action inputs:
+
 - `dispatch_hook_script` (optional path)
 - `dispatch_hook_token` (optional secret passthrough via env)
 
@@ -189,6 +197,7 @@ Add action inputs:
 ### Task 3: Triage emits dispatch flags + live hook
 
 **Files:**
+
 - Modify: `.apm/packages/common/.apm/skills/issue-triage/scripts/detect_issue.sh`
 - Create: `.apm/packages/common/.apm/skills/issue-triage/scripts/hooks/on_detect_dispatch.sh`
 - Create: `.apm/packages/common/.apm/skills/issue-triage/scripts/hooks/README.md`
@@ -199,6 +208,7 @@ Add action inputs:
 - Modify: `.apm/packages/common/.apm/skills/issue-triage/SKILL.md` (Agent must not dispatch)
 
 **Interfaces:**
+
 - Produces in detect `result` when labels contain both `triage:ready` and `autofix`:
   - `dispatch_requested: true`
   - `dispatch_event_type: "loop-issue-autofix"`
@@ -248,10 +258,12 @@ Pass into `ci-loop-caller-entity` / `loop-entity-detect`:
 ### Task 4: Real `detect_autofix.sh`
 
 **Files:**
+
 - Modify: `.apm/packages/common/.apm/skills/issue-autofix/scripts/detect_autofix.sh`
 - Modify: `test/bats/.apm/packages/common/issue-autofix/detect_autofix.bats`
 
 **Interfaces:**
+
 - Env: `ISSUE_NUMBER` (required for non-skip), optional `GITHUB_EVENT_PATH`, `GH_TOKEN`, `GITHUB_REPOSITORY`
 - Output when proceed: `status=ok`, `skip=false`, `result.issue_number`, `result.handoff_key` unused on branch caller but may include issue facts for prompt
 - Skip when: empty issue number; or `gh` search/list finds open/draft PR with body/title matching  
@@ -259,9 +271,9 @@ Pass into `ci-loop-caller-entity` / `loop-entity-detect`:
 
 - [ ] **Step 1: Replace “always skips” Bats with:**
 
-1. No `ISSUE_NUMBER` → skip true  
-2. Mock `gh` returning a PR with `Fixes #12` → skip true when `ISSUE_NUMBER=12`  
-3. Mock `gh` returning empty → skip false, status ok, result includes issue_number  
+1. No `ISSUE_NUMBER` → skip true
+2. Mock `gh` returning a PR with `Fixes #12` → skip true when `ISSUE_NUMBER=12`
+3. Mock `gh` returning empty → skip false, status ok, result includes issue_number
 
 - [ ] **Step 2: RED**
 
@@ -276,12 +288,14 @@ Hydrate `ISSUE_NUMBER` from env or `GITHUB_EVENT_PATH` (`issue.number` / `client
 ### Task 5: `issue-autofix` skill body (L2) + caller
 
 **Files:**
+
 - Modify: `.apm/packages/common/.apm/skills/issue-autofix/SKILL.md`
 - Create: `assets/pr-body-template.md`, `assets/pr-body-template-survey.md`
 - Create: `references/` as required by `check_loop_pr_body_contract.sh` (copy structure from `docs-updater` / `ci-sweeper` — required headings only, autofix-specific Overview examples)
 - Modify: `.github/workflows/on-loop-issue-autofix.yaml`
 
 **Interfaces:**
+
 - Caller planes: `level: L2`, `may_edit: true`, `write_target: fix`, `delivery: open_pr`, `finalize` via caller defaults, `pr_draft: ${{ inputs.pr_draft || false }}`, `git_landing_integration: open_pr`
 - Skill: implement fix for Issue; PR body from assets; must include `Fixes #<N>`; do not call `repository_dispatch`
 
@@ -308,20 +322,22 @@ Run: `bash scripts/self/apm/check_loop_pr_body_contract.sh` (or repo’s documen
 ### Task 6: Real `detect_pr_revise.sh`
 
 **Files:**
+
 - Modify: `.apm/packages/common/.apm/skills/pr-revise/scripts/detect_pr_revise.sh`
 - Modify: `test/bats/.apm/packages/common/pr-revise/detect_pr_revise.bats`
 
 **Interfaces:**
+
 - Env: `PR_NUMBER`, `PR_MENTION` (default `@loop`), `PR_COMMENT_BODY`, `PR_ACTOR_TYPE`, `GITHUB_EVENT_PATH`
 - Skip when: bot actor; missing PR number; comment body does not contain mention token
 - Proceed: `skip=false`, result includes `pr_number`, `mention`, comment excerpt facts for prompt
 
 - [ ] **Step 1: Bats cases**
 
-1. Bot actor → skip  
-2. Human without `@loop` → skip  
-3. Human with `@loop` and `PR_NUMBER=5` → skip false  
-4. Custom `PR_MENTION=@waza` matches `@waza` only  
+1. Bot actor → skip
+2. Human without `@loop` → skip
+3. Human with `@loop` and `PR_NUMBER=5` → skip false
+4. Custom `PR_MENTION=@waza` matches `@waza` only
 
 - [ ] **Step 2: RED → implement hydrate from `GITHUB_EVENT_PATH` for `issue_comment` / `pull_request_review_comment` → GREEN**
 
@@ -330,11 +346,13 @@ Run: `bash scripts/self/apm/check_loop_pr_body_contract.sh` (or repo’s documen
 ### Task 7: `pr-revise` skill + caller
 
 **Files:**
+
 - Modify: `.apm/packages/common/.apm/skills/pr-revise/SKILL.md`
 - Create: assets + references for PR body contract
 - Modify: `.github/workflows/on-loop-pr-revise.yaml`
 
 **Interfaces:**
+
 - Triggers: `issue_comment` (types that apply to PRs), `pull_request_review_comment`, `repository_dispatch` (`loop-pr-revise`), `workflow_dispatch`
 - Inputs: `mention` default `@loop`; `git_landing` choice or hard-default `push_head` with optional input for stacked `open_pr`
 - Planes: L2, `may_edit: true`, `write_target: fix`, `delivery: open_pr`, `git_landing_pull_request: push_head` (default)
@@ -372,6 +390,7 @@ Pass mention into `detect_domain_env_json` via safe env+jq pattern (no template 
 ### Task 8: Docs and status
 
 **Files:**
+
 - Modify: `docs/explanation/loop-engineering/workflows/loop-issue-autofix-workflow-design.md`
 - Modify: `docs/explanation/loop-engineering/workflows/loop-pr-revise-workflow-design.md`
 - Modify: `docs/explanation/loop-engineering/loop-engineering-design.md` (status table)
@@ -430,19 +449,19 @@ Expected: no matches (or only historical comments in docs)
 
 ## Spec coverage (self-review)
 
-| Spec requirement | Task |
-| --- | --- |
-| LE Agent implementer, branch caller | 5, 7 |
-| `pr_draft` default open | 1 |
-| Autofix intake label/dispatch/manual | 4, 5 |
-| Fixes/#N open/draft skip | 4 |
-| Triage ready∧autofix → dispatch via trusted hook | 2, 3 |
-| Agent never dispatches | 3, 5 SKILL |
-| pr-revise @loop mention + human comments | 6, 7 |
-| Default push_head / optional stacked | 7 |
-| PR body skill templates | 5, 7 |
-| Docs / completion criteria | 8, 9 |
-| No half-stub publish | Global + 9 |
+| Spec requirement                                 | Task       |
+| ------------------------------------------------ | ---------- |
+| LE Agent implementer, branch caller              | 5, 7       |
+| `pr_draft` default open                          | 1          |
+| Autofix intake label/dispatch/manual             | 4, 5       |
+| Fixes/#N open/draft skip                         | 4          |
+| Triage ready∧autofix → dispatch via trusted hook | 2, 3       |
+| Agent never dispatches                           | 3, 5 SKILL |
+| pr-revise @loop mention + human comments         | 6, 7       |
+| Default push_head / optional stacked             | 7          |
+| PR body skill templates                          | 5, 7       |
+| Docs / completion criteria                       | 8, 9       |
+| No half-stub publish                             | Global + 9 |
 
 **Placeholder scan:** none intentional.  
 **Type consistency:** `dispatch_requested` / `dispatch_event_type` / `dispatch_client_payload` / `PR_DRAFT` / `PR_MENTION` names stable across tasks.

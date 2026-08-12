@@ -17,9 +17,9 @@ Must include Fixes #<N> for the source Issue.
 
 ### Changes
 
-| Area        | What was wrong | What changed                                      |
-| ----------- | -------------- | ------------------------------------------------- |
-| `<package>` | <root cause>   | ``path/to/file.go``: <minimal fix summary>        |
+| Area        | What was wrong | What changed                             |
+| ----------- | -------------- | ---------------------------------------- |
+| `<package>` | <root cause>   | `path/to/file.go`: <minimal fix summary> |
 
 ### Deferred
 

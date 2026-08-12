@@ -2,13 +2,13 @@
 
 Workflow and domain design for the `issue-triage` entity loop.
 
-| Layer        | Document                                                                 |
-| ------------ | ------------------------------------------------------------------------ |
-| Platform     | [Multi-Branch Loops Design](../multi-branch-loops-design.md)             |
-| Caller shell | [Loop Caller Reusable Design](../loop-caller-reusable-design.md) (entity)|
-| Spec         | [Issue Triage Entity Loops](../../../superpowers/specs/2026-08-11-issue-triage-entity-loops-design.md) |
+| Layer        | Document                                                                                                                           |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Platform     | [Multi-Branch Loops Design](../multi-branch-loops-design.md)                                                                       |
+| Caller shell | [Loop Caller Reusable Design](../loop-caller-reusable-design.md) (entity)                                                          |
+| Spec         | [Issue Triage Entity Loops](../../../superpowers/specs/2026-08-11-issue-triage-entity-loops-design.md)                             |
 | Boundaries   | [Entity Caller Responsibility Separation](../../../superpowers/specs/2026-08-11-entity-caller-responsibility-separation-design.md) |
-| Invariants   | [Loop Engineering Design](../loop-engineering-design.md)                 |
+| Invariants   | [Loop Engineering Design](../loop-engineering-design.md)                                                                           |
 
 **Artifacts:** `on-loop-issue-triage.yaml` · skill `issue-triage` · `detect_issue.sh` · `ci-loop-caller-entity.yaml`
 
