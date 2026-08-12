@@ -232,8 +232,8 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: y-miyazaki/config/.github/actions/git-auth@6268b2323ae57994b488f2262a41302b273ff50e # v1.8.79
         with:
+          github_token: ${{ github.token }}
           operation: configure
-          token: ${{ github.token }}
 
       - name: Setup Expand file list
         id: file-list
@@ -400,8 +400,8 @@ jobs:
         if: always() && github.event_name == 'pull_request'
         uses: y-miyazaki/config/.github/actions/git-auth@6268b2323ae57994b488f2262a41302b273ff50e # v1.8.79
         with:
+          github_token: ${{ github.token }}
           operation: clear
-          token: ${{ github.token }}
 
       - name: Summary
         if: always()

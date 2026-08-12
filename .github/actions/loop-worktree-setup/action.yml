@@ -18,11 +18,11 @@ inputs:
     default: "loop"
     description: "Branch name prefix (result: <prefix>/<skill>/<date>)"
     required: false
+  github_token:
+    description: "GitHub token for push"
+    required: true
   skill_name:
     description: "Skill name used in branch naming"
-    required: true
-  token:
-    description: "GitHub token for push"
     required: true
 
 outputs:
@@ -44,14 +44,14 @@ runs:
         BASE_REF: ${{ inputs.base_ref }}
         BRANCH: ${{ inputs.branch }}
         BRANCH_PREFIX: ${{ inputs.branch_prefix }}
-        GH_TOKEN: ${{ inputs.token }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
         SKILL_NAME: ${{ inputs.skill_name }}
       run: |
         set -euo pipefail
 
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 -w0)"
+        git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
 
         WORKTREE_PATH="${RUNNER_TEMP}/worktree-${SKILL_NAME}"
         CHECKOUT_REF=""

@@ -12,6 +12,9 @@ inputs:
   engine:
     description: "AI engine (claude or copilot or codex or cursor)"
     required: true
+  github_token:
+    description: "Resolved GitHub token for gh CLI and GitHub API side effects"
+    required: true
   max_turns:
     default: "5"
     description: "Maximum agent conversation turns"
@@ -40,6 +43,7 @@ inputs:
     description: "Working directory for agent execution"
     required: false
 
+
 runs:
   using: composite
   steps:
@@ -67,6 +71,7 @@ runs:
       env:
         AGENT_TOKEN: ${{ inputs.agent_token }}
         ENGINE: ${{ inputs.engine }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
         MAX_TURNS: ${{ inputs.max_turns }}
         MODEL: ${{ inputs.model }}
         OUTPUT_FILE: ${{ inputs.output_file }}

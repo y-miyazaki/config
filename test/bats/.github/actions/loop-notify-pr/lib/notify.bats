@@ -37,7 +37,7 @@ setup() {
     OUTCOME="pr-created"
     PR_NUMBER="42"
     REPOSITORY="owner/repo"
-    TOKEN="test-token"
+    GITHUB_TOKEN="test-token"
     ATTEMPTS="1"
     MAX_ATTEMPTS="3"
     COMMIT_SHA="abcdefghijk"

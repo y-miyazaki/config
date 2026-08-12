@@ -50,10 +50,13 @@ inputs:
     required: false
   dispatch_hook_token:
     default: ""
-    description: Token for dispatch hook (falls back to token input / github.token)
+    description: Token for dispatch hook (falls back to github_token input)
     required: false
   engine:
     description: AI engine
+    required: true
+  github_token:
+    description: Resolved GitHub token for detect scripts and API calls
     required: true
   infer_files_pattern:
     default: ""
@@ -96,10 +99,6 @@ inputs:
   state_file:
     default: ""
     description: Optional state file path override
-    required: false
-  token:
-    default: ""
-    description: GitHub token for detect scripts (defaults to github.token in caller)
     required: false
   write_target:
     default: report
@@ -224,13 +223,13 @@ runs:
         DELIVERY: ${{ inputs.delivery }}
         DETECT_SCRIPT: ${{ inputs.detect_script }}
         DISPATCH_HOOK_SCRIPT: ${{ inputs.dispatch_hook_script }}
-        DISPATCH_HOOK_TOKEN: ${{ inputs.dispatch_hook_token != '' && inputs.dispatch_hook_token || (inputs.token != '' && inputs.token || github.token) }}
+        DISPATCH_HOOK_TOKEN: ${{ inputs.dispatch_hook_token != '' && inputs.dispatch_hook_token || inputs.github_token }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
         LEVEL: ${{ inputs.level }}
         LOOP_NAME: ${{ inputs.loop_name }}
         PROMPT_INSTRUCTIONS: ${{ inputs.prompt_instructions }}
         RUN_LOG_FILE: ${{ inputs.run_log_file }}
         SKILL_NAME: ${{ inputs.skill_name }}
-        GH_TOKEN: ${{ inputs.token != '' && inputs.token || github.token }}
       run: bash "${GITHUB_ACTION_PATH}/lib/detect.sh"
 
     - name: Record Handoff Artifact Name

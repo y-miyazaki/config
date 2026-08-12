@@ -5,7 +5,7 @@
 #   Environment variables mirror loop-run-log composite action inputs.
 #
 # Usage:
-#   LOOP_NAME=... OUTCOME=... TOKEN=... bash lib/run.sh
+#   LOOP_NAME=... OUTCOME=... GITHUB_TOKEN=... bash lib/run.sh
 #
 # Design Rules:
 #   - Sources append.sh for JSONL build, prune, and push helpers
@@ -46,7 +46,7 @@ OUTCOME="${OUTCOME:-}"
 RUN_LOG_FILE="${RUN_LOG_FILE:-.loop/loop-run-log.md}"
 RUN_STARTED_AT="${RUN_STARTED_AT:-}"
 SKIP_REASON="${SKIP_REASON:-none}"
-TOKEN="${TOKEN:-}"
+GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 USAGE_JSON="${USAGE_JSON:-}"
 VERDICT="${VERDICT:-}"
 WORKFLOW_RUN="${WORKFLOW_RUN:-}"
@@ -121,7 +121,7 @@ function resolve_duration_s {
 # Globals:
 #   LOOP_NAME - Required loop identifier
 #   OUTCOME - Required run outcome
-#   TOKEN - Required GitHub token for push
+#   GITHUB_TOKEN - Required GitHub token for push
 #
 # Arguments:
 #   None
@@ -136,7 +136,7 @@ function resolve_duration_s {
 function validate_required_inputs {
     : "${LOOP_NAME:?}"
     : "${OUTCOME:?}"
-    : "${TOKEN:?}"
+    : "${GITHUB_TOKEN:?}"
 }
 
 #######################################
@@ -193,7 +193,7 @@ function main {
     validate_required_inputs
     duration_s="$(resolve_duration_s)"
     entry_json="$(append_run_log_entry "${duration_s}")"
-    loop_run_log_commit_and_push "${BASE_BRANCH}" "${RUN_LOG_FILE}" "${TOKEN}"
+    loop_run_log_commit_and_push "${BASE_BRANCH}" "${RUN_LOG_FILE}" "${GITHUB_TOKEN}"
     write_entry_json_output "${entry_json}"
 }
 

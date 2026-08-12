@@ -139,6 +139,7 @@ jobs:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
       BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
+      # GH_TOKEN: ${{ secrets.SOME_PAT }}   # optional override; omit to use App → job GITHUB_TOKEN
 ```
 
 **No workflow-level `env:` block.** Credentials use `secrets:` on the `loop` job (see [Loop Caller Inputs Reference — Credentials](workflows/loop-caller-inputs-reference.md#credentials-via-secrets)).
@@ -207,7 +208,7 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 | `prompt_instructions`       | string  | no       | `""`                       | `loop-detect`                                           |
 | `pr_enabled`                | boolean | no       | `false`                    | `loop-detect` (`loop_pr_enabled`)                       |
 | `state_file`                | string  | no       | `""`                       | `loop-detect`                                           |
-| `token`                     | string  | no       | `""`                       | `loop-detect` (`github.token` when empty)               |
+| *(token via secrets)*        | —       | —        | —                          | Resolve in-job: App → `GH_TOKEN` → job `GITHUB_TOKEN`   |
 
 #### Domain detect environment (`detect_domain_env_json`)
 
@@ -271,14 +272,59 @@ Reserved for a future loop that needs **`actions: read` only** on detect (no `ac
 
 ### Credentials (via `secrets:`)
 
-| Secret (callee)       | Required | Role                                                                          |
-| --------------------- | -------- | ----------------------------------------------------------------------------- |
-| `AGENT_TOKEN`         | yes      | Engine API key. Mapped internally per `engine` input.                         |
-| `GH_TOKEN_PUSH`       | no       | Git push / PR creation for finalize. Defaults to `github.token` when omitted. |
-| `BOT_APP_CLIENT_ID`   | no       | GitHub App client ID for ruleset-bypass `.loop/*` pushes.                     |
-| `BOT_APP_PRIVATE_KEY` | no       | GitHub App private key for maintenance bot token.                             |
+| Secret (callee)       | Required | Role                                                                                          |
+| --------------------- | -------- | --------------------------------------------------------------------------------------------- |
+| `AGENT_TOKEN`         | yes      | Engine API key. Mapped internally per `engine` input.                                         |
+| `BOT_APP_CLIENT_ID`   | no       | GitHub App client ID for ruleset-bypass / elevated API (preferred when configured).           |
+| `BOT_APP_PRIVATE_KEY` | no       | GitHub App private key paired with `BOT_APP_CLIENT_ID`.                                       |
+| `GH_TOKEN`            | no       | Optional explicit token override for resolution. Empty → job `GITHUB_TOKEN` (`github.token`). |
 
 Caller maps repository secrets via explicit `secrets:` (e.g. `BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}`). See [Loop Caller Inputs Reference — Credentials](workflows/loop-caller-inputs-reference.md#credentials-via-secrets).
+
+Do **not** name a `workflow_call` secret `GITHUB_TOKEN` or `github_token` — those collide with system-reserved secret names and prevent the reusable workflow from loading.
+
+### GitHub token resolution
+
+Each job that talks to GitHub (detect, record-skip, agent-l1/l2, finalize) runs `loop-resolve-push-token` **inside that job** and uses only the same-job step output.
+
+**Precedence** (see `.github/actions/loop-resolve-push-token`):
+
+1. GitHub App installation token (when `BOT_APP_*` are set and mint succeeds)
+2. Optional `secrets.GH_TOKEN`
+3. Job automatic `GITHUB_TOKEN` / `github.token`
+
+**Why not a shared `prepare` job that fans out a resolved token**
+
+| Constraint | Implication |
+| ---------- | ----------- |
+| Masked / secret values cannot cross jobs via `needs.*.outputs` | After `::add-mask::` (or App-token mint masking), job outputs are redacted/empty for dependents |
+| App tokens are masked at mint time | A one-shot prepare → `outputs.github_token` → later jobs cannot receive the real value |
+| Official cross-job secret pattern | External secret store + handle — not used here |
+
+So **credentials** (`BOT_APP_*`, optional `GH_TOKEN`) are what we share across jobs/workflows; the **resolved token string** is minted per job. Commonization is the resolve **action**, not a single minted value.
+
+`ci-loop-caller` / `ci-loop-caller-entity` pass `BOT_APP_*` + `GH_TOKEN` into `ci-loop-agent`; the agent resolves again in `agent-l1` / `agent-l2` / `finalize`.
+
+**Fallback and `permissions:`**
+
+For the automatic job `GITHUB_TOKEN`, effective scopes **are** that job's `permissions:` (intersected with repository/org workflow defaults). It is not a separate full-power token that the job then “limits.”
+
+| Job | Typical fallback need | Job `permissions` (minimum for fallback) |
+| --- | --------------------- | ---------------------------------------- |
+| `detect` | PR / issue / Actions reads | read scopes (`contents` / `pull-requests` or `issues` as profile requires) |
+| `record-skip` | push run-log / state PR | `contents: write`, `pull-requests: write` |
+| `agent-l2` / `finalize` | push, PR create/comment | `contents: write`, `pull-requests: write` |
+| `agent-l1` | issue side effects | `issues: write` (+ `contents: read`) |
+
+App tokens and explicit PATs carry **their own** scopes; receiving-job `permissions:` do not reduce those passed tokens.
+
+**Naming**
+
+| Layer | Name | Notes |
+| ----- | ---- | ----- |
+| `workflow_call` secret | `GH_TOKEN` | Avoid reserved `GITHUB_TOKEN` / `github_token` |
+| Composite action I/O | `github_token` | `loop-*` actions |
+| Shell / `gh` CLI env | `GITHUB_TOKEN` | `gh` accepts `GITHUB_TOKEN` (and `GH_TOKEN`) |
 
 ### Nesting
 
@@ -308,6 +354,8 @@ New domain env keys go into `detect_domain_env_json` without editing reusable jo
 | Composite action for full caller graph  | Cannot call `ci-loop-agent` reusable or define matrix over reusable workflows                  |
 | Separate finalize job in caller         | Matrix output pairing breaks across reusable workflow cells                                    |
 | Config file only (no `with:`)           | Hides tunables from workflow YAML; harder to review in PRs; optional later as additive pattern |
+| Shared `prepare` job minting one token  | Masked App/secret tokens cannot fan out via job outputs; resolve per job instead               |
+| `workflow_call` secret named `GITHUB_TOKEN` | Reserved name; reusable workflow fails to load                                              |
 
 ## Implementation Checklist
 

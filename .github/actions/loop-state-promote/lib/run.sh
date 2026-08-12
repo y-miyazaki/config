@@ -6,7 +6,7 @@
 #   STATE_PUSH_BRANCH, or the repository default branch when unset).
 #
 # Usage:
-#   GH_TOKEN=... PR_NUMBER=... MERGED=true|false bash lib/run.sh
+#   GITHUB_TOKEN=... PR_NUMBER=... MERGED=true|false bash lib/run.sh
 #
 # Design Rules:
 #   - Merged PRs promote pending.sha to last_sha
@@ -158,7 +158,7 @@ function commit_changed_state_files {
 # Globals:
 #   PR_NUMBER - Closed pull request number
 #   WRITE_MODE - promote|clear_pending
-#   GH_TOKEN - GitHub token
+#   GITHUB_TOKEN - GitHub token
 #
 # Arguments:
 #   $1 - Base branch for the state PR
@@ -200,7 +200,7 @@ function open_state_pr_fallback {
 # configure_git_auth: Configure git identity and GitHub auth header
 #
 # Globals:
-#   GH_TOKEN - GitHub token
+#   GITHUB_TOKEN - GitHub token
 #
 # Arguments:
 #   None
@@ -213,11 +213,11 @@ function open_state_pr_fallback {
 #
 #######################################
 function configure_git_auth {
-    : "${GH_TOKEN:?}"
+    : "${GITHUB_TOKEN:?}"
 
     git config user.name "github-actions[bot]"
     git config user.email "github-actions[bot]@users.noreply.github.com"
-    git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 -w0)"
+    git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
 }
 
 #######################################

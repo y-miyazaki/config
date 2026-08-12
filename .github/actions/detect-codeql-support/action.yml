@@ -2,7 +2,7 @@ name: detect-codeql-support
 description: Detect whether workflow CodeQL should run for the repository.
 
 inputs:
-  token:
+  github_token:
     default: ${{ github.token }}
     description: GitHub token for API access
     required: false
@@ -19,5 +19,5 @@ runs:
       id: detect
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.token }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
       run: bash "${GITHUB_ACTION_PATH}/lib/detect.sh"

@@ -26,6 +26,9 @@ inputs:
     default: ""
     description: "Platform failure stage (push | notify_context | finalize_pr | agent_execute | …)"
     required: false
+  github_token:
+    description: "GitHub token for commit and push"
+    required: true
   has_changes:
     default: ""
     description: "Whether agent produced changes (true/false, empty when execute did not run)"
@@ -48,9 +51,6 @@ inputs:
     default: "none"
     description: "Why execution was skipped (none | no_changes | circuit_breaker | budget)"
     required: false
-  token:
-    description: "GitHub token for commit and push"
-    required: true
   usage_json:
     default: ""
     description: "Measured token usage JSON from loop-execute (empty when unavailable)"
@@ -82,13 +82,13 @@ runs:
         DURATION_S_INPUT: ${{ inputs.duration_s }}
         FAILURE_MESSAGE: ${{ inputs.failure_message }}
         FAILURE_STAGE: ${{ inputs.failure_stage }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
         HAS_CHANGES: ${{ inputs.has_changes }}
         LOOP_NAME: ${{ inputs.loop_name }}
         OUTCOME: ${{ inputs.outcome }}
         RUN_LOG_FILE: ${{ inputs.run_log_file }}
         RUN_STARTED_AT: ${{ inputs.run_started_at }}
         SKIP_REASON: ${{ inputs.skip_reason }}
-        TOKEN: ${{ inputs.token }}
         USAGE_JSON: ${{ inputs.usage_json }}
         VERDICT: ${{ inputs.verdict }}
         WORKFLOW_RUN: ${{ inputs.workflow_run }}

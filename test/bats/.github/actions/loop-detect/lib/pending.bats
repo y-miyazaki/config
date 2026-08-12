@@ -71,7 +71,7 @@ setup() {
     PENDING_PR_BLOCKED=0
     CIRCUIT_BREAKER_BLOCKED=0
     CANDIDATES_JSON=()
-    export GH_TOKEN='test-token'
+    export GITHUB_TOKEN='test-token'
     export DETECT_SCRIPT STATE_FILE BASE_BRANCH
 }
 

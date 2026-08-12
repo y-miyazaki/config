@@ -156,7 +156,7 @@ function target_last_sha {
 # target_pending_blocks_detect: Return 0 when an open pending fix PR blocks detect
 #
 # Globals:
-#   GH_TOKEN / GITHUB_TOKEN - Used for live PR state lookup when pending.pr is set
+#   GITHUB_TOKEN - Used for live PR state lookup when pending.pr is set
 #
 # Arguments:
 #   $1 - Target state JSON
@@ -171,20 +171,20 @@ function target_last_sha {
 #######################################
 function target_pending_blocks_detect {
     local target_state="$1"
-    local pending_pr pr_state gh_token
+    local pending_pr pr_state github_token
 
     if ! jq -e '(.pending.pr | type) == "number"' <<< "${target_state}" > /dev/null 2>&1; then
         return 1
     fi
 
     pending_pr="$(jq -r '.pending.pr' <<< "${target_state}")"
-    gh_token="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
-    if [[ -z ${gh_token} ]] || ! command -v gh > /dev/null 2>&1; then
+    github_token="${GITHUB_TOKEN:-}"
+    if [[ -z ${github_token} ]] || ! command -v gh > /dev/null 2>&1; then
         echo "::warning::Pending PR #${pending_pr} present but gh/token unavailable; blocking detect"
         return 0
     fi
 
-    export GH_TOKEN="${gh_token}"
+    export GITHUB_TOKEN="${github_token}"
     pr_state="$(gh pr view "${pending_pr}" --json state --jq '.state' 2> /dev/null || true)"
     case "${pr_state}" in
         OPEN)

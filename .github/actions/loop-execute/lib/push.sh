@@ -6,7 +6,7 @@
 #
 # Environment:
 #   BRANCH - Branch name to push
-#   GH_TOKEN - GitHub token for push authentication
+#   GITHUB_TOKEN - GitHub token for push authentication
 #   LOOP_HAS_CHANGES - true when loop step produced commits
 #   WORKTREE_PATH - Absolute path to the worktree
 #
@@ -47,7 +47,7 @@ function main {
     local push_err
 
     : "${BRANCH:?}"
-    : "${GH_TOKEN:?}"
+    : "${GITHUB_TOKEN:?}"
     : "${LOOP_HAS_CHANGES:?}"
     : "${WORKTREE_PATH:?}"
     : "${GITHUB_OUTPUT:?}"
@@ -60,7 +60,7 @@ function main {
         return 0
     fi
     cd "${WORKTREE_PATH}" || exit 1
-    git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 -w0)"
+    git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
     if ! push_err="$(git push -u origin "${BRANCH}" 2>&1)"; then
         if [[ -n ${STATUS_DIR:-} ]]; then
             # shellcheck source=../../lib/loop/failure_record.sh

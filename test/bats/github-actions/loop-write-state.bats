@@ -121,7 +121,7 @@ setup() {
     state_write_seed
 
     state_write_run \
-        GH_TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
         BASE_BRANCH='main' \
         TARGET_KEY='integration:main' \
@@ -147,7 +147,7 @@ setup() {
     state_write_seed
 
     state_write_run \
-        GH_TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
         BASE_BRANCH='main' \
         TARGET_KEY='integration:main' \
@@ -169,7 +169,7 @@ setup() {
 }
 @test "run.sh exits cleanly when state file has no changes" {
     state_write_run \
-        GH_TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
         BASE_BRANCH='main' \
         TARGET_KEY='integration:main' \
@@ -186,7 +186,7 @@ setup() {
     state_write_seed
 
     state_write_run \
-        GH_TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
         BASE_BRANCH='main' \
         TARGET_KEY='integration:main' \
@@ -212,7 +212,7 @@ setup() {
     state_write_seed
 
     state_write_run \
-        GH_TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
         BASE_BRANCH='main' \
         TARGET_KEY='integration:main' \
@@ -238,7 +238,7 @@ setup() {
     state_write_seed
 
     state_write_run \
-        GH_TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
         BASE_BRANCH='main' \
         TARGET_KEY='integration:main' \
@@ -267,7 +267,7 @@ setup() {
     state_write_seed
 
     state_write_run \
-        GH_TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
         BASE_BRANCH='main' \
         TARGET_KEY='integration:main' \
@@ -291,7 +291,7 @@ setup() {
     state_write_block_push
 
     state_write_run \
-        GH_TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
         BASE_BRANCH='main' \
         TARGET_KEY='integration:main' \
@@ -309,7 +309,7 @@ setup() {
 }
 @test "run.sh rejects invalid state push branch" {
     state_write_run \
-        GH_TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
         BASE_BRANCH='main' \
         STATE_PUSH_BRANCH='bad branch' \
@@ -323,7 +323,7 @@ setup() {
 }
 @test "run.sh rejects missing target_key" {
     state_write_run \
-        GH_TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
         BASE_BRANCH='main' \
         TARGET_KEY='' \
@@ -338,7 +338,7 @@ setup() {
     state_write_block_push
 
     state_write_run \
-        GH_TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
         BASE_BRANCH='main' \
         TARGET_KEY='integration:main' \
@@ -355,7 +355,7 @@ setup() {
 }
 @test "run.sh writes target state and resets consecutive_failures on pr-created" {
     state_write_run \
-        GH_TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
         BASE_BRANCH='main' \
         TARGET_KEY='integration:main' \

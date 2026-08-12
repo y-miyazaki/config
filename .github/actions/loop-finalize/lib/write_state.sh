@@ -5,7 +5,7 @@
 #   Environment variables mirror loop-finalize Write State step env vars.
 #
 # Usage:
-#   GH_TOKEN=<token> STATE_FILE=... TARGET_KEY=... bash lib/write_state.sh
+#   GITHUB_TOKEN=<token> STATE_FILE=... TARGET_KEY=... bash lib/write_state.sh
 #
 # Design Rules:
 #   - state_write_mode controls whether last_sha, pending, or metadata is updated
@@ -175,7 +175,7 @@ function commit_and_push_state {
 #   READ_BRANCH - PR base branch
 #   SHA - Cursor SHA for PR body
 #   OUTCOME - Outcome for PR body
-#   GH_TOKEN - GitHub token
+#   GITHUB_TOKEN - GitHub token
 #
 # Arguments:
 #   None
@@ -216,7 +216,7 @@ function open_state_pr_fallback {
 # configure_git_auth: Configure git identity and GitHub auth header
 #
 # Globals:
-#   GH_TOKEN - GitHub token for push and gh CLI
+#   GITHUB_TOKEN - GitHub token for push and gh CLI
 #
 # Arguments:
 #   None
@@ -229,11 +229,11 @@ function open_state_pr_fallback {
 #
 #######################################
 function configure_git_auth {
-    : "${GH_TOKEN:?}"
+    : "${GITHUB_TOKEN:?}"
 
     git config user.name "github-actions[bot]"
     git config user.email "github-actions[bot]@users.noreply.github.com"
-    git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 -w0)"
+    git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
 }
 
 #######################################

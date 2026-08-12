@@ -49,7 +49,7 @@ GHEOF
     export PATH="${MOCK_BIN}:${PATH}"
     export GH_ARGV_FILE="${BATS_TEST_TMPDIR}/gh-argv"
     export GITHUB_REPOSITORY="owner/repo"
-    export GH_TOKEN="unit-test-token"
+    export GITHUB_TOKEN="unit-test-token"
     unset DISPATCH_DRY_RUN || true
     run bash "${HOOK_SCRIPT}" "${BATS_TEST_TMPDIR}/d.json"
     [ "$status" -eq 0 ]

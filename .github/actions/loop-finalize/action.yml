@@ -37,6 +37,9 @@ inputs:
     default: ""
     description: "Agent branch name for domain_persistence_script env"
     required: false
+  github_token:
+    description: "GitHub token for PR creation and state push"
+    required: true
   handoff_dir:
     default: ""
     description: "Downloaded loop-handoff artifact directory"
@@ -105,9 +108,6 @@ inputs:
     default: ""
     description: "Target descriptor JSON from loop-detect matrix cell"
     required: false
-  token:
-    description: "GitHub token for PR creation and state push"
-    required: true
   verdict:
     default: ""
     description: "Verifier verdict (APPROVE or REJECT, empty if no verification)"
@@ -247,7 +247,7 @@ runs:
       shell: bash
       env:
         AGENT_BRANCH: ${{ inputs.branch }}
-        GH_TOKEN: ${{ inputs.token }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
         TO_BRANCH: ${{ steps.target.outputs.to_branch }}
       run: |
         set -euo pipefail
@@ -271,10 +271,11 @@ runs:
       env:
         BRANCH: ${{ inputs.branch }}
         DETECT_RESULT_JSON: ${{ inputs.detect_result_json }}
-        GH_TOKEN: ${{ inputs.token }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
         HANDOFF_KEY: ${{ inputs.handoff_key }}
         LABELS: ${{ inputs.labels }}
         LEVEL: ${{ inputs.level }}
+        LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json
         LOOP_HANDOFF_DIR: ${{ inputs.handoff_dir }}
         NOTIFY_CONTEXT_JSON: ${{ inputs.notify_context_json }}
         PR_BASE_BRANCH: ${{ steps.target.outputs.pr_base_branch }}
@@ -283,7 +284,6 @@ runs:
         PR_TITLE: ${{ inputs.pr_title }}
         SKIP_REASON: ${{ inputs.skip_reason }}
         TARGET_JSON: ${{ inputs.target_json }}
-        LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json
       run: bash "${GITHUB_ACTION_PATH}/lib/create_pr.sh"
 
     - name: Enable Auto-Merge
@@ -295,7 +295,7 @@ runs:
         inputs.auto_merge == 'true'
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.token }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
         PR_URL: ${{ steps.pr.outputs.url }}
       run: |
         set -euo pipefail
@@ -309,7 +309,7 @@ runs:
       env:
         ADDITIONAL_COMMIT_PATHS: ${{ inputs.additional_commit_paths }}
         BASE_BRANCH: ${{ inputs.base_branch }}
-        GH_TOKEN: ${{ inputs.token }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
         LOOP_NAME: ${{ inputs.loop_name }}
         OPEN_REJECTIONS: ${{ inputs.open_rejections }}
         OUTCOME: ${{ steps.outcome.outputs.value }}
@@ -329,7 +329,7 @@ runs:
       shell: bash
       env:
         BRANCH: ${{ inputs.branch }}
-        GH_TOKEN: ${{ inputs.token }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
         set -euo pipefail
         if ! [[ "${BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then

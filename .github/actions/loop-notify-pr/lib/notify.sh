@@ -5,7 +5,7 @@
 #   Environment variables mirror loop-notify-pr composite action inputs.
 #
 # Usage:
-#   LOOP_NAME=ci-sweeper OUTCOME=pr-created PR_NUMBER=42 TOKEN=... bash lib/notify.sh
+#   LOOP_NAME=ci-sweeper OUTCOME=pr-created PR_NUMBER=42 GITHUB_TOKEN=... bash lib/notify.sh
 #
 # Design Rules:
 #   - One marker comment per PR per loop name (idempotent upsert)
@@ -46,7 +46,7 @@ PR_NUMBER="${PR_NUMBER:-}"
 REJECT_REASON="${REJECT_REASON:-}"
 REPOSITORY="${REPOSITORY:-}"
 TARGET_JSON="${TARGET_JSON:-"{}"}"
-TOKEN="${TOKEN:-}"
+GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 VERDICT="${VERDICT:-}"
 
 #######################################
@@ -432,7 +432,7 @@ function upsert_comment {
 #   OUTCOME - Finalize outcome enum
 #   PR_NUMBER - Target pull request number
 #   REPOSITORY - Repository owner/name
-#   TOKEN - GitHub token with pull-requests: write
+#   GITHUB_TOKEN - GitHub token with pull-requests: write
 #
 # Arguments:
 #   None
@@ -450,7 +450,7 @@ function validate_required_inputs {
     : "${OUTCOME:?}"
     : "${PR_NUMBER:?}"
     : "${REPOSITORY:?}"
-    : "${TOKEN:?}"
+    : "${GITHUB_TOKEN:?}"
 }
 
 #######################################
@@ -498,7 +498,7 @@ function resolve_actor {
 #   REJECT_REASON - Verifier rejection reason
 #   REPOSITORY - Repository owner/name
 #   TARGET_JSON - Target descriptor JSON
-#   TOKEN - GitHub token (exported as GH_TOKEN for gh CLI)
+#   GITHUB_TOKEN - GitHub token for gh CLI
 #   VERDICT - Verifier verdict when present
 #
 # Arguments:
@@ -525,7 +525,6 @@ function main {
 
     validate_required_inputs
 
-    export GH_TOKEN="${TOKEN}"
     actor="$(resolve_actor)"
     marker="<!-- loop-notify-pr:v1:${LOOP_NAME} -->"
     body_file="$(mktemp)"

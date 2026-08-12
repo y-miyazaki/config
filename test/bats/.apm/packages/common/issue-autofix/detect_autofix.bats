@@ -31,7 +31,7 @@ exit 1
 EOF
     chmod +x "${MOCK_BIN}/gh"
     PATH="${MOCK_BIN}:${PATH}"
-    export PATH ISSUE_NUMBER=12 GITHUB_REPOSITORY=owner/repo GH_TOKEN=unit-test-token
+    export PATH ISSUE_NUMBER=12 GITHUB_REPOSITORY=owner/repo GITHUB_TOKEN=unit-test-token
     run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
     run jq -e '.skip == true and .status == "ok"' <<< "${output}"
@@ -58,7 +58,7 @@ exit 1
 EOF
     chmod +x "${MOCK_BIN}/gh"
     PATH="${MOCK_BIN}:${PATH}"
-    export PATH ISSUE_NUMBER=12 GITHUB_REPOSITORY=owner/repo GH_TOKEN=unit-test-token
+    export PATH ISSUE_NUMBER=12 GITHUB_REPOSITORY=owner/repo GITHUB_TOKEN=unit-test-token
     run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 1 ]
     run jq -e '.status == "error" and .skip == true' <<< "${output}"
@@ -66,7 +66,7 @@ EOF
 }
 
 @test "detect_autofix errors when ISSUE_NUMBER is not numeric" {
-    run env ISSUE_NUMBER='12abc' GITHUB_REPOSITORY=owner/repo GH_TOKEN=unit-test-token bash "${DETECT_SCRIPT}"
+    run env ISSUE_NUMBER='12abc' GITHUB_REPOSITORY=owner/repo GITHUB_TOKEN=unit-test-token bash "${DETECT_SCRIPT}"
     [ "$status" -eq 1 ]
     run jq -e '.status == "error" and .skip == true' <<< "${output}"
     [ "$status" -eq 0 ]
@@ -86,7 +86,7 @@ exit 1
 EOF
     chmod +x "${MOCK_BIN}/gh"
     PATH="${MOCK_BIN}:${PATH}"
-    export PATH ISSUE_NUMBER=12 GITHUB_REPOSITORY=owner/repo GH_TOKEN=unit-test-token
+    export PATH ISSUE_NUMBER=12 GITHUB_REPOSITORY=owner/repo GITHUB_TOKEN=unit-test-token
     run bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
     run jq -e '.skip == false and .status == "ok" and .result.issue_number == "12"' <<< "${output}"

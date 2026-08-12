@@ -2,13 +2,13 @@ name: git-auth
 description: "Configure and clear ephemeral git authentication using http.extraheader (same pattern as actions/checkout)."
 author: "GitHub Copilot"
 inputs:
+  github_token:
+    description: "Authentication token to use (pass github.token from workflow)"
+    required: true
   operation:
     default: "configure"
     description: "Operation to perform: configure or clear"
     required: false
-  token:
-    description: "Authentication token to use (pass github.token from workflow)"
-    required: true
 runs:
   using: composite
   steps:
@@ -25,10 +25,10 @@ runs:
       if: inputs.operation == 'configure'
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.token }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
         set -euo pipefail
-        BASIC_CRED=$(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 -w0)
+        BASIC_CRED=$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)
         git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ${BASIC_CRED}"
 
     - name: Clear git auth (http.extraheader)

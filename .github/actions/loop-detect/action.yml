@@ -56,6 +56,9 @@ inputs:
     default: "open_pr"
     description: "Advanced git landing when delivery is open_pr: open_pr | push_head (pull_request targets)"
     required: false
+  github_token:
+    description: "Resolved GitHub token for PR enumeration and API calls"
+    required: true
   infer_files_pattern:
     default: ""
     description: "Optional extended-regex to infer file paths from verifier text"
@@ -128,10 +131,6 @@ inputs:
   state_file:
     default: ""
     description: "Path to loop state JSON file (default: .loop/state-<loop_name>.json)"
-    required: false
-  token:
-    default: ""
-    description: "GitHub token for PR enumeration (defaults to github.token in caller)"
     required: false
   write_target:
     default: ""
@@ -276,18 +275,18 @@ runs:
         BUDGET_MAX_TOKENS_PER_DAY: ${{ inputs.budget_max_tokens_per_day }}
         DELIVERY: ${{ inputs.delivery }}
         DETECT_SCRIPT: ${{ inputs.detect_script }}
-        GH_TOKEN: ${{ inputs.token != '' && inputs.token || github.token }}
         GIT_LANDING_INTEGRATION: ${{ inputs.git_landing_integration }}
         GIT_LANDING_PULL_REQUEST: ${{ inputs.git_landing_pull_request }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
         LEVEL: ${{ inputs.level }}
         LOOP_BRANCH_MATCH: ${{ inputs.loop_branch_match }}
         LOOP_INTEGRATION_BRANCHES: ${{ inputs.loop_integration_branches }}
         LOOP_MAX_TARGETS_PER_SCHEDULE: ${{ inputs.loop_max_targets_per_schedule }}
         LOOP_NAME: ${{ inputs.loop_name }}
-        LOOP_PRIORITY: ${{ inputs.loop_priority }}
         LOOP_PR_ENABLED: ${{ inputs.loop_pr_enabled }}
         LOOP_PR_EXCLUDE: ${{ inputs.loop_pr_exclude }}
         LOOP_PR_INCLUDE_BOTS: ${{ inputs.loop_pr_include_bots }}
+        LOOP_PRIORITY: ${{ inputs.loop_priority }}
         LOOP_STATE_PUSH_BRANCH: ${{ inputs.loop_state_push_branch }}
         MAY_EDIT: ${{ inputs.may_edit }}
         PROMPT_INSTRUCTIONS: ${{ inputs.prompt_instructions }}

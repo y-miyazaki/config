@@ -264,8 +264,8 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: y-miyazaki/config/.github/actions/git-auth@6268b2323ae57994b488f2262a41302b273ff50e # v1.8.79
         with:
+          github_token: ${{ github.token }}
           operation: configure
-          token: ${{ github.token }}
 
       - name: Exec GolangCI-Lint via reviewdog (PR inline comments)
         if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
@@ -294,8 +294,8 @@ jobs:
         if: always() && github.event_name == 'pull_request'
         uses: y-miyazaki/config/.github/actions/git-auth@6268b2323ae57994b488f2262a41302b273ff50e # v1.8.79
         with:
+          github_token: ${{ github.token }}
           operation: clear
-          token: ${{ github.token }}
 
       - name: Post PR failure comment
         if: failure() && github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'

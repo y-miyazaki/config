@@ -224,10 +224,10 @@ function loop_run_log_commit_and_push {
     local token="${3:?token required}"
     local log_branch pr_url
 
-    export GH_TOKEN="${token}"
+    export GITHUB_TOKEN="${token}"
     git config user.name "github-actions[bot]"
     git config user.email "github-actions[bot]@users.noreply.github.com"
-    git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 -w0)"
+    git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
 
     if git diff --quiet "${run_log_file}" 2> /dev/null && [[ -z "$(git status --porcelain "${run_log_file}")" ]]; then
         echo "No run log changes to commit."

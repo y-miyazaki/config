@@ -3,6 +3,9 @@
 # L2/L3: worktree + bounded Agent→Verify loop (loop-execute)
 # Optional finalize job pairs execute outputs per matrix cell (caller sets finalize_enabled).
 # Contract (L2/L3): outputs { branch, has_changes, verdict, reason, attempts }
+# Token resolution: resolve inside each job (agent-l1 / agent-l2 / finalize); pass BOT_APP_* + optional GH_TOKEN.
+# Do not accept a pre-resolved token via workflow_call secrets named GITHUB_TOKEN (reserved).
+#   docs/explanation/loop-engineering/loop-caller-reusable-design.md#github-token-resolution
 name: ci-loop-agent
 
 on:
@@ -277,8 +280,8 @@ on:
       BOT_APP_PRIVATE_KEY:
         description: "GitHub App private key for ruleset-bypass .loop/* pushes"
         required: false
-      GH_TOKEN_PUSH:
-        description: "GitHub token with push permission (defaults to github.token when empty)"
+      GH_TOKEN:
+        description: "Optional explicit GitHub token (App → GH_TOKEN → job GITHUB_TOKEN)"
         required: false
 
 permissions:
@@ -293,6 +296,7 @@ jobs:
     permissions:
       contents: read
       copilot-requests: write # zizmor: ignore[excessive-permissions]
+      issues: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -300,12 +304,21 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Resolve GitHub Token
+        id: resolve_github_token
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@6268b2323ae57994b488f2262a41302b273ff50e # v1.8.79
+        with:
+          bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
+          bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+          github_token: ${{ secrets.GH_TOKEN }}
+
       - name: Run Agent Once
         uses: y-miyazaki/config/.github/actions/loop-agent-once@6268b2323ae57994b488f2262a41302b273ff50e # v1.8.79
         with:
           agent_token: ${{ secrets.AGENT_TOKEN }}
           cli_version: ${{ inputs.cli_version }}
           engine: ${{ inputs.engine }}
+          github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           max_turns: ${{ inputs.agent_implementer_max_turns }}
           model: ${{ inputs.agent_implementer_model }}
           prompt_text: ${{ inputs.prompt_file != '' && format('/skill {0}', inputs.prompt_file) || inputs.prompt_text }}
@@ -346,13 +359,13 @@ jobs:
           name: ${{ inputs.handoff_artifact_name }}
           path: ${{ runner.temp }}/loop-handoff
 
-      - name: Resolve Push Token
-        id: push_token
+      - name: Resolve GitHub Token
+        id: resolve_github_token
         uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@6268b2323ae57994b488f2262a41302b273ff50e # v1.8.79
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-          gh_token_push: ${{ secrets.GH_TOKEN_PUSH }}
+          github_token: ${{ secrets.GH_TOKEN }}
 
       - name: Parse Target
         id: target
@@ -385,8 +398,8 @@ jobs:
           base_branch: ${{ steps.target.outputs.worktree_branch }}
           base_ref: ${{ steps.target.outputs.worktree_ref }}
           branch_prefix: ${{ inputs.branch_prefix }}
+          github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           skill_name: ${{ inputs.skill_name }}
-          token: ${{ steps.push_token.outputs.token }}
 
       - name: Execute Bounded Loop
         id: execute
@@ -407,6 +420,7 @@ jobs:
           denylist: ${{ inputs.denylist }}
           detect_result_json: ${{ inputs.detect_result_json }}
           engine: ${{ inputs.engine }}
+          github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           handoff_dir: ${{ runner.temp }}/loop-handoff
           handoff_key: ${{ inputs.handoff_key != '' && inputs.handoff_key || steps.target.outputs.target_key }}
           infer_files_pattern: ${{ inputs.infer_files_pattern }}
@@ -419,7 +433,6 @@ jobs:
           prompt_verifier_regression: ${{ inputs.prompt_verifier_regression }}
           prompt_verifier_task: ${{ inputs.prompt_verifier_task }}
           skill_name: ${{ inputs.skill_name }}
-          token: ${{ steps.push_token.outputs.token }}
           verifier_context: ${{ inputs.verifier_context }}
           worktree_path: ${{ steps.worktree.outputs.worktree_path }}
 
@@ -450,14 +463,6 @@ jobs:
           name: ${{ inputs.handoff_artifact_name }}
           path: ${{ runner.temp }}/loop-handoff
 
-      - name: Resolve Push Token
-        id: push_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@6268b2323ae57994b488f2262a41302b273ff50e # v1.8.79
-        with:
-          bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
-          bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
-          gh_token_push: ${{ secrets.GH_TOKEN_PUSH }}
-
       - name: Parse Notify Target
         id: notify_target
         shell: bash
@@ -470,6 +475,14 @@ jobs:
           else
             echo "pr_number=" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Resolve GitHub Token
+        id: resolve_github_token
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@6268b2323ae57994b488f2262a41302b273ff50e # v1.8.79
+        with:
+          bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
+          bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+          github_token: ${{ secrets.GH_TOKEN }}
 
       - name: Finalize
         continue-on-error: true
@@ -485,6 +498,7 @@ jobs:
           detect_result_json: ${{ inputs.detect_result_json }}
           domain_persistence_script: ${{ inputs.domain_persistence_script }}
           execute_branch: ${{ needs.agent-l2.outputs.branch }}
+          github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           handoff_dir: ${{ runner.temp }}/loop-handoff
           handoff_key: ${{ inputs.handoff_key }}
           has_changes: ${{ needs.agent-l2.outputs.has_changes }}
@@ -502,7 +516,6 @@ jobs:
           state_file: ${{ inputs.state_file }}
           state_push_branch: ${{ inputs.state_push_branch }}
           target_json: ${{ inputs.target_json }}
-          token: ${{ steps.push_token.outputs.token }}
           verdict: ${{ needs.agent-l2.outputs.verdict }}
 
       - name: Resolve Run Log Metadata
@@ -551,13 +564,13 @@ jobs:
           base_branch: ${{ inputs.state_push_branch != '' && inputs.state_push_branch || inputs.base_branch }}
           failure_message: ${{ steps.run_log_meta.outputs.failure_message }}
           failure_stage: ${{ steps.run_log_meta.outputs.failure_stage }}
+          github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           has_changes: ${{ needs.agent-l2.outputs.has_changes }}
           loop_name: ${{ inputs.loop_name }}
           outcome: ${{ steps.finalize.outcome == 'failure' && 'error' || steps.finalize.outputs.outcome || (needs.agent-l2.result != 'success' && needs.agent-l2.result != 'skipped' && 'error') || 'skipped' }}
           run_log_file: ${{ inputs.run_log_file }}
           run_started_at: ${{ inputs.run_started_at }}
           skip_reason: ${{ inputs.skip_reason }}
-          token: ${{ steps.push_token.outputs.token }}
           usage_json: ${{ needs.agent-l2.outputs.usage_json || '' }}
           verdict: ${{ needs.agent-l2.outputs.verdict }}
 
@@ -573,6 +586,7 @@ jobs:
           commit_sha: ${{ steps.finalize.outputs.commit_sha || '' }}
           fix_pr_number: ${{ steps.finalize.outputs.pr_number || '' }}
           fix_pr_url: ${{ steps.finalize.outputs.pr_url || '' }}
+          github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           level: ${{ inputs.level }}
           loop_name: ${{ inputs.loop_name }}
           loop_run_id: ${{ github.run_id }}
@@ -583,5 +597,4 @@ jobs:
           reject_reason: ${{ needs.agent-l2.outputs.reason }}
           repository: ${{ github.repository }}
           target_json: ${{ inputs.target_json }}
-          token: ${{ steps.push_token.outputs.token }}
           verdict: ${{ needs.agent-l2.outputs.verdict }}

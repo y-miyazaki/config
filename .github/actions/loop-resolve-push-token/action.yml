@@ -1,5 +1,5 @@
 name: loop-resolve-push-token
-description: "Generate GitHub App token when configured, then resolve push token (app → GH_TOKEN_PUSH → GITHUB_TOKEN)."
+description: "Resolve GitHub API token: App bot → github_token input → GITHUB_TOKEN."
 
 inputs:
   bot_app_client_id:
@@ -8,14 +8,15 @@ inputs:
   bot_app_private_key:
     description: "GitHub App private key for ruleset-bypass pushes"
     required: false
-  gh_token_push:
-    description: "Optional GitHub token with push permission"
+  github_token:
+    default: ""
+    description: "Optional explicit GitHub token (PAT or override); defaults to GITHUB_TOKEN when empty"
     required: false
 
 outputs:
-  token:
-    description: "Resolved push token"
-    value: ${{ steps.push_token.outputs.token }}
+  github_token:
+    description: "Resolved GitHub token (App → github_token → GITHUB_TOKEN)"
+    value: ${{ steps.resolve_github_token.outputs.github_token }}
 
 runs:
   using: composite
@@ -28,15 +29,16 @@ runs:
       with:
         client-id: ${{ inputs.bot_app_client_id }}
         permission-contents: write
+        permission-issues: write
         permission-pull-requests: write
         permission-workflows: write
         private-key: ${{ inputs.bot_app_private_key }}
 
-    - name: Resolve Push Token
-      id: push_token
+    - name: Resolve GitHub Token
+      id: resolve_github_token
       shell: bash
       env:
         APP_TOKEN: ${{ steps.app_token.outputs.token }}
         BOT_APP_CONFIGURED: ${{ inputs.bot_app_client_id != '' && inputs.bot_app_private_key != '' && 'true' || 'false' }}
-        GH_TOKEN_PUSH: ${{ inputs.gh_token_push }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
       run: bash "${GITHUB_ACTION_PATH}/lib/resolve.sh"

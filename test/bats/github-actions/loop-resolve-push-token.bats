@@ -3,8 +3,8 @@
 # Tests for .github/actions/loop-resolve-push-token/lib/resolve.sh
 #
 # Use cases:
-# - prefers App token over GH_TOKEN_PUSH and GITHUB_TOKEN
-# - falls back to GH_TOKEN_PUSH when App token is empty
+# - prefers App token over INPUT_GITHUB_TOKEN and GITHUB_TOKEN
+# - falls back to INPUT_GITHUB_TOKEN when App token is empty
 # - falls back to GITHUB_TOKEN when both optional tokens are empty
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -27,35 +27,35 @@ setup() {
     grep -q 'permission-workflows: write' "${ACTION_YML}"
 }
 
-@test "resolve_push_token emits warning when app token generation failed" {
+@test "resolve_github_token emits warning when app token generation failed" {
     # shellcheck disable=SC1090
     source "${RESOLVE_LIB}"
-    run bash -c 'source "'"${RESOLVE_LIB}"'"; BOT_APP_CONFIGURED=true APP_TOKEN= GH_TOKEN_PUSH=push-token GITHUB_TOKEN=default-token GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_push_token'
+    run bash -c 'source "'"${RESOLVE_LIB}"'"; BOT_APP_CONFIGURED=true APP_TOKEN= INPUT_GITHUB_TOKEN=override-token GITHUB_TOKEN=default-token GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_github_token'
     [ "$status" -eq 0 ]
-    grep -q '^token=push-token$' "${GITHUB_OUTPUT}"
+    grep -q '^github_token=override-token$' "${GITHUB_OUTPUT}"
     [[ $output == *"GitHub App token generation failed"* ]]
 }
 
-@test "resolve_push_token prefers app token" {
+@test "resolve_github_token prefers app token" {
     # shellcheck disable=SC1090
     source "${RESOLVE_LIB}"
-    run bash -c 'source "'"${RESOLVE_LIB}"'"; APP_TOKEN=app-token GH_TOKEN_PUSH=push-token GITHUB_TOKEN=default-token GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_push_token'
+    run bash -c 'source "'"${RESOLVE_LIB}"'"; APP_TOKEN=app-token INPUT_GITHUB_TOKEN=override-token GITHUB_TOKEN=default-token GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_github_token'
     [ "$status" -eq 0 ]
-    grep -q '^token=app-token$' "${GITHUB_OUTPUT}"
+    grep -q '^github_token=app-token$' "${GITHUB_OUTPUT}"
 }
 
-@test "resolve_push_token falls back to gh token push" {
+@test "resolve_github_token falls back to explicit github_token input" {
     # shellcheck disable=SC1090
     source "${RESOLVE_LIB}"
-    run bash -c 'source "'"${RESOLVE_LIB}"'"; APP_TOKEN= GH_TOKEN_PUSH=push-token GITHUB_TOKEN=default-token GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_push_token'
+    run bash -c 'source "'"${RESOLVE_LIB}"'"; APP_TOKEN= INPUT_GITHUB_TOKEN=override-token GITHUB_TOKEN=default-token GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_github_token'
     [ "$status" -eq 0 ]
-    grep -q '^token=push-token$' "${GITHUB_OUTPUT}"
+    grep -q '^github_token=override-token$' "${GITHUB_OUTPUT}"
 }
 
-@test "resolve_push_token falls back to github token" {
+@test "resolve_github_token falls back to GITHUB_TOKEN" {
     # shellcheck disable=SC1090
     source "${RESOLVE_LIB}"
-    run bash -c 'source "'"${RESOLVE_LIB}"'"; APP_TOKEN= GH_TOKEN_PUSH= GITHUB_TOKEN=default-token GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_push_token'
+    run bash -c 'source "'"${RESOLVE_LIB}"'"; APP_TOKEN= INPUT_GITHUB_TOKEN= GITHUB_TOKEN=default-token GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_github_token'
     [ "$status" -eq 0 ]
-    grep -q '^token=default-token$' "${GITHUB_OUTPUT}"
+    grep -q '^github_token=default-token$' "${GITHUB_OUTPUT}"
 }

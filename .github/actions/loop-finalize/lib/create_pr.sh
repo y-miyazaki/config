@@ -6,7 +6,7 @@
 #   and invokes gh pr create without passing oversized payloads on argv.
 #
 # Usage:
-#   BRANCH=... GH_TOKEN=... GITHUB_REPOSITORY=... PR_BASE_BRANCH=... PR_TITLE=... \
+#   BRANCH=... GITHUB_TOKEN=... GITHUB_REPOSITORY=... PR_BASE_BRANCH=... PR_TITLE=... \
 #   NOTIFY_CONTEXT_JSON=... [LOOP_HANDOFF_DIR=... HANDOFF_KEY=... DETECT_RESULT_JSON=...] \
 #   bash lib/create_pr.sh
 #
@@ -34,7 +34,7 @@ export LC_ALL=C.UTF-8
 #######################################
 BRANCH="${BRANCH:-}"
 DETECT_RESULT_JSON="${DETECT_RESULT_JSON:-}"
-GH_TOKEN="${GH_TOKEN:-}"
+GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 GITHUB_OUTPUT="${GITHUB_OUTPUT:-}"
 GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-}"
 HANDOFF_KEY="${HANDOFF_KEY:-}"
@@ -55,7 +55,7 @@ TARGET_JSON="${TARGET_JSON:-}"
 # Globals:
 #   BRANCH - Head branch for the new PR
 #   DETECT_RESULT_JSON - Inline detect JSON (optional)
-#   GH_TOKEN - GitHub token for gh
+#   GITHUB_TOKEN - GitHub token for gh
 #   GITHUB_OUTPUT - GITHUB_OUTPUT file path (optional)
 #   GITHUB_REPOSITORY - owner/repo
 #   HANDOFF_KEY - Handoff key for detect JSON (optional)
@@ -86,7 +86,7 @@ function main {
     local composed url number pr_err
 
     : "${BRANCH:?BRANCH is required}"
-    : "${GH_TOKEN:?GH_TOKEN is required}"
+    : "${GITHUB_TOKEN:?GITHUB_TOKEN is required}"
     : "${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is required}"
     : "${PR_BASE_BRANCH:?PR_BASE_BRANCH is required}"
     : "${PR_TITLE:?PR_TITLE is required}"

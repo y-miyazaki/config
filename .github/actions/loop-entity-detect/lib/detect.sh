@@ -219,7 +219,7 @@ function main {
             if ! hook_script="$(resolve_dispatch_hook_script "${DISPATCH_HOOK_SCRIPT}")"; then
                 exit 1
             fi
-            GH_TOKEN="${DISPATCH_HOOK_TOKEN:-${GH_TOKEN:-}}" \
+            GITHUB_TOKEN="${DISPATCH_HOOK_TOKEN:-${GITHUB_TOKEN:-}}" \
                 bash "${hook_script}" "${DETECT_OUT}"
         fi
     fi

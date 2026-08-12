@@ -5,7 +5,7 @@
 #   current repository.
 #
 # Usage:
-#   GITHUB_REPOSITORY=owner/repo GH_TOKEN=... bash lib/detect.sh
+#   GITHUB_REPOSITORY=owner/repo GITHUB_TOKEN=... bash lib/detect.sh
 #
 # Design Rules:
 #   - Public repositories always support SARIF upload

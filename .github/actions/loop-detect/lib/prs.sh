@@ -34,7 +34,7 @@
 function list_open_prs {
     local exclude_csv="$1"
     local include_bots_csv="$2"
-    local gh_token="$3"
+    local github_token="$3"
     local prs_json pr_line
 
     OPEN_PRS_JSON=()
@@ -47,7 +47,7 @@ function list_open_prs {
         return 1
     fi
 
-    export GH_TOKEN="${gh_token}"
+    export GITHUB_TOKEN="${github_token}"
     prs_json="$(gh pr list --state open --limit 50 --json \
         number,title,headRefName,headRefOid,baseRefName,isDraft,author,labels,maintainerCanModify,headRepository 2> /dev/null || echo '[]')"
 

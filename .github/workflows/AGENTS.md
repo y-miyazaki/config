@@ -58,7 +58,7 @@ Invoke shared or sibling scripts with `run:` + `bash`/`source`. Contexts are not
 
 Reusable workflow rules:
 
-1. **MUST** declare stable callee secret names (`AGENT_TOKEN`, `BOT_APP_*`, `GH_TOKEN_PUSH`, …).
+1. **MUST** declare stable callee secret names (`AGENT_TOKEN`, `BOT_APP_*`, `GITHUB_TOKEN`, …).
 2. **MUST** require callers to pass an explicit `secrets:` map (enables name remapping).
 3. **MUST NOT** use `secrets: inherit`.
 4. **MUST NOT** pass tokens via `with:` on reusable workflows.

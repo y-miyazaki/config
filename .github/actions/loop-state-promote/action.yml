@@ -2,6 +2,9 @@ name: loop-state-promote
 description: "Promote or clear pending loop state after a fix PR closes."
 
 inputs:
+  github_token:
+    description: "GitHub token with contents write (and pull-requests write when state PR fallback may run)"
+    required: true
   merged:
     default: "false"
     description: "Whether the pull request was merged"
@@ -17,9 +20,6 @@ inputs:
     default: ""
     description: "Branch hosting .loop/* state files (empty = repository default branch)"
     required: false
-  token:
-    description: "GitHub token with contents write (and pull-requests write when state PR fallback may run)"
-    required: true
 
 runs:
   using: composite
@@ -27,7 +27,7 @@ runs:
     - name: Promote Pending State
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.token }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
         MERGED: ${{ inputs.merged }}
         PR_NUMBER: ${{ inputs.pr_number }}
         SKIP_STATE_PR: ${{ inputs.skip_state_pr }}

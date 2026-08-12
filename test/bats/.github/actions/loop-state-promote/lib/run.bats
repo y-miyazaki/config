@@ -79,7 +79,7 @@ setup() {
 
 @test "run.sh clears pending when PR closed without merge" {
     state_promote_run \
-        GH_TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         MERGED='false' \
         PR_NUMBER='42' \
         STATE_PUSH_BRANCH='main' \
@@ -101,7 +101,7 @@ setup() {
     state_promote_block_push
 
     state_promote_run \
-        GH_TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         MERGED='true' \
         PR_NUMBER='42' \
         SKIP_STATE_PR='false' \
@@ -116,7 +116,7 @@ setup() {
 
 @test "run.sh promotes pending.sha to last_sha when merged" {
     state_promote_run \
-        GH_TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         MERGED='true' \
         PR_NUMBER='42' \
         STATE_PUSH_BRANCH='main' \
@@ -138,7 +138,7 @@ setup() {
     state_promote_block_push
 
     state_promote_run \
-        GH_TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         MERGED='true' \
         PR_NUMBER='42' \
         SKIP_STATE_PR='true' \

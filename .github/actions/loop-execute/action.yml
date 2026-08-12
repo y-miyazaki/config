@@ -48,16 +48,19 @@ inputs:
     default: "chore: loop-automated update"
     description: "Commit message prefix for loop attempts"
     required: false
-  detect_result_json:
-    default: "{}"
-    description: "Detect script JSON result for notify_context_json fix_summary"
-    required: false
   denylist:
     default: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
     description: "Comma-separated path denylist"
     required: false
+  detect_result_json:
+    default: "{}"
+    description: "Detect script JSON result for notify_context_json fix_summary"
+    required: false
   engine:
     description: "AI engine (claude | copilot | codex | cursor)"
+    required: true
+  github_token:
+    description: "Resolved GitHub token for gh CLI, push, and API calls"
     required: true
   handoff_dir:
     default: ""
@@ -108,9 +111,6 @@ inputs:
     required: false
   skill_name:
     description: "Skill name for verifier context"
-    required: true
-  token:
-    description: "GitHub token for push (must match worktree-setup)"
     required: true
   uv_version:
     default: "0.12.1"
@@ -197,6 +197,7 @@ runs:
         DENYLIST: ${{ inputs.denylist }}
         DETECT_RESULT_JSON: ${{ inputs.detect_result_json }}
         ENGINE: ${{ inputs.engine }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
         HANDOFF_KEY: ${{ inputs.handoff_key }}
         INFER_FILES_PATTERN: ${{ inputs.infer_files_pattern }}
         LOOP_HANDOFF_DIR: ${{ inputs.handoff_dir }}
@@ -209,8 +210,8 @@ runs:
         PROMPT_VERIFIER_REGRESSION: ${{ inputs.prompt_verifier_regression }}
         PROMPT_VERIFIER_TASK: ${{ inputs.prompt_verifier_task }}
         SKILL_NAME: ${{ inputs.skill_name }}
-        VERIFIER_CONTEXT: ${{ inputs.verifier_context }}
         STATUS_DIR: ${{ runner.temp }}/loop-execute-status
+        VERIFIER_CONTEXT: ${{ inputs.verifier_context }}
         WORKTREE_PATH: ${{ inputs.worktree_path }}
       run: bash "${GITHUB_ACTION_PATH}/lib/loop.sh"
 
@@ -219,7 +220,7 @@ runs:
       shell: bash
       env:
         BRANCH: ${{ inputs.branch }}
-        GH_TOKEN: ${{ inputs.token }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
         LOOP_HAS_CHANGES: ${{ steps.loop.outputs.has_changes }}
         STATUS_DIR: ${{ runner.temp }}/loop-execute-status
         WORKTREE_PATH: ${{ inputs.worktree_path }}

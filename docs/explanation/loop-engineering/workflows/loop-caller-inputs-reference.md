@@ -27,12 +27,14 @@ on-loop-*.yaml (with:)
 
 Per [GitHub reusable workflow docs](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows#using-inputs-and-secrets-in-a-reusable-workflow), credentials use the **`secrets:`** keyword — not `with:`. Do **not** use `secrets: inherit` (locks callee secret names to the caller's names).
 
-| Secret (callee)       | Required | Role                                                                          |
-| --------------------- | -------- | ----------------------------------------------------------------------------- |
-| `AGENT_TOKEN`         | yes      | Engine API key. Mapped internally per `engine` input.                         |
-| `GH_TOKEN_PUSH`       | no       | Git push / PR creation for finalize. Defaults to `github.token` when omitted. |
-| `BOT_APP_CLIENT_ID`   | no       | GitHub App client ID for ruleset-bypass `.loop/*` pushes.                     |
-| `BOT_APP_PRIVATE_KEY` | no       | GitHub App private key for maintenance bot token.                             |
+| Secret (callee)       | Required | Role                                                                                          |
+| --------------------- | -------- | --------------------------------------------------------------------------------------------- |
+| `AGENT_TOKEN`         | yes      | Engine API key. Mapped internally per `engine` input.                                         |
+| `BOT_APP_CLIENT_ID`   | no       | GitHub App client ID for ruleset-bypass / elevated API (preferred when configured).           |
+| `BOT_APP_PRIVATE_KEY` | no       | GitHub App private key paired with `BOT_APP_CLIENT_ID`.                                       |
+| `GH_TOKEN`            | no       | Optional explicit token override. Empty → job `GITHUB_TOKEN` after App attempt.               |
+
+Token minting is **per job** via `loop-resolve-push-token` (same-job step output only). Do not pass resolved tokens across jobs via `needs.*.outputs`. Design rationale: [GitHub token resolution](../loop-caller-reusable-design.md#github-token-resolution). Do not declare `workflow_call` secret `GITHUB_TOKEN` / `github_token` (reserved names).
 
 Callers remap local names explicitly. Optional `with: environment:` lets reusable jobs bind an environment for environment-scoped secrets named like the callee expects (`BOT_APP_*`). Callers cannot set `environment:` on a job that `uses:` a reusable.
 
@@ -197,7 +199,6 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `budget_file`  | Path to loop budget JSON                           | `.loop/loop-budget.json`              |
 | `priority`     | Target mode priority order (comma-separated)       | `integration,pull_request`            |
 | `run_log_file` | JSONL run log path for budget aggregation          | `.loop/loop-run-log.md`               |
-| `token`        | GitHub token for PR enumeration and detect scripts | `""` (`github.token` inside reusable) |
 
 ## `loop-detect` input mapping
 
@@ -238,7 +239,7 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `run_log_file`                | `run_log_file`                          |
 | `skill_name`                  | `skill_name`                            |
 | `state_file`                  | `state_file`                            |
-| `token`                       | `token`                                 |
+| *(via `secrets.GH_TOKEN` + resolve)* | `github_token` (action; resolved in-job) |
 | `write_target`                | `write_target`                          |
 
 Domain-specific detect script variables use `detect_domain_env_json` keys (not `loop-detect` inputs).
@@ -290,7 +291,7 @@ detect_domain_env_json: >-
 | `CI_SWEEPER_REJECT_MAX_RETRIES`  | Max retries per run ID when policy is `limited` | `"3"`                                    |
 | `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`, `retry`, or `limited`                  | `block`                                  |
 
-`GH_TOKEN` is **not** passed via `detect_domain_env_json` — use the `token` input on `ci-loop-caller` (maps to `loop-detect`). Reusable defaults to `github.token` when empty.
+`GH_TOKEN` is **not** passed via `detect_domain_env_json` — pass optional `secrets.GH_TOKEN` on the reusable; each job resolves App → `GH_TOKEN` → job `GITHUB_TOKEN` via `loop-resolve-push-token`.
 
 Event keys (embed in `detect_domain_env_json` when `workflow_run` trigger is enabled on the caller):
 

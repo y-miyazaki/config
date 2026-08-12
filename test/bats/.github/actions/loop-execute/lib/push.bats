@@ -27,7 +27,7 @@ teardown() {
 
 @test "main rejects invalid branch names" {
     BRANCH='loop/bad branch'
-    GH_TOKEN='test-token'
+    GITHUB_TOKEN='test-token'
     LOOP_HAS_CHANGES='true'
     WORKTREE_PATH='/tmp/worktree'
     run main
@@ -37,7 +37,7 @@ teardown() {
 
 @test "main writes has_changes=false when loop produced no commits" {
     BRANCH='loop/docs-updater-abc'
-    GH_TOKEN='test-token'
+    GITHUB_TOKEN='test-token'
     LOOP_HAS_CHANGES='false'
     WORKTREE_PATH='/tmp/worktree'
     run main
@@ -47,7 +47,7 @@ teardown() {
 
 @test "main accepts valid branch name characters" {
     BRANCH='loop/docs-updater_1.2'
-    GH_TOKEN='test-token'
+    GITHUB_TOKEN='test-token'
     LOOP_HAS_CHANGES='false'
     WORKTREE_PATH='/tmp/worktree'
     run main
@@ -78,7 +78,7 @@ EOF
     export PATH="${mock_bin}:${PATH}"
 
     BRANCH='loop/docs-updater-abc'
-    GH_TOKEN='test-token'
+    GITHUB_TOKEN='test-token'
     LOOP_HAS_CHANGES='true'
     WORKTREE_PATH="${worktree}"
     STATUS_DIR="${status_dir}"

@@ -120,8 +120,8 @@ jobs:
       - name: Configure git auth
         uses: y-miyazaki/config/.github/actions/git-auth@6268b2323ae57994b488f2262a41302b273ff50e # v1.8.79
         with:
+          github_token: ${{ github.token }}
           operation: configure
-          token: ${{ github.token }}
 
       - name: Create tag
         if: steps.check-tag.outputs.tag_exists == 'false' && env.CREATE_TAG == 'true'
@@ -149,8 +149,8 @@ jobs:
         if: always()
         uses: y-miyazaki/config/.github/actions/git-auth@6268b2323ae57994b488f2262a41302b273ff50e # v1.8.79
         with:
+          github_token: ${{ github.token }}
           operation: clear
-          token: ${{ github.token }}
 
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0

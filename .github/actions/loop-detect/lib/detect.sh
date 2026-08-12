@@ -30,7 +30,7 @@
 #   LOOP_PR_EXCLUDE, LOOP_PR_INCLUDE_BOTS, LOOP_PR_ENABLED, PROMPT_INSTRUCTIONS, BUDGET_FILE, RUN_LOG_FILE
 #   LOOP_SCOPED_HEAD_BRANCH - when set, only scan this integration branch / PR head
 #   CI_SWEEPER_WORKFLOW_RUN_ID + CI_SWEEPER_EVENT_HEAD_BRANCH - workflow_run scope fallback
-#   GH_TOKEN / GITHUB_TOKEN
+#   GITHUB_TOKEN
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -1143,7 +1143,7 @@ function main {
     local should_run="false"
     local skip_reason="none"
     local target_matrix_json="[]"
-    local branch pr_json gh_token="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+    local branch pr_json github_token="${GITHUB_TOKEN:-}"
     local pre_cap_count
     local scoped_head
     CHECKOUT_FAILED=0
@@ -1172,7 +1172,7 @@ function main {
     fi
 
     resolve_integration_branches "${LOOP_INTEGRATION_BRANCHES}" "${BASE_BRANCH}"
-    list_open_prs "${LOOP_PR_EXCLUDE}" "${LOOP_PR_INCLUDE_BOTS}" "${gh_token}" || {
+    list_open_prs "${LOOP_PR_EXCLUDE}" "${LOOP_PR_INCLUDE_BOTS}" "${github_token}" || {
         write_detect_outputs "false" "config_error" "[]"
         write_legacy_outputs "[]"
         return 0

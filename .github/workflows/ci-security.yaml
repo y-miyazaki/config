@@ -54,7 +54,7 @@ jobs:
       - name: Detect Dependency Review Support
         id: detect
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           status="$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.security_and_analysis.dependency_graph.status // empty' 2>/dev/null || true)"

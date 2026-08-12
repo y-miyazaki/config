@@ -62,7 +62,7 @@ setup() {
 @test "target_pending_blocks_detect returns true when pending PR is OPEN" {
     local target_state='{"pending":{"pr":42,"sha":"abc123"}}'
     install_gh_pr_state_mock "OPEN"
-    export GH_TOKEN='test-token'
+    export GITHUB_TOKEN='test-token'
     run target_pending_blocks_detect "${target_state}"
     [ "$status" -eq 0 ]
 }
@@ -70,7 +70,7 @@ setup() {
 @test "target_pending_blocks_detect returns false when pending PR is CLOSED" {
     local target_state='{"pending":{"pr":42,"sha":"abc123"}}'
     install_gh_pr_state_mock "CLOSED"
-    export GH_TOKEN='test-token'
+    export GITHUB_TOKEN='test-token'
     run target_pending_blocks_detect "${target_state}"
     [ "$status" -eq 1 ]
     [[ ${output} == *"stale"* ]]
@@ -79,7 +79,7 @@ setup() {
 @test "target_pending_blocks_detect returns false when pending PR is MERGED" {
     local target_state='{"pending":{"pr":42,"sha":"abc123"}}'
     install_gh_pr_state_mock "MERGED"
-    export GH_TOKEN='test-token'
+    export GITHUB_TOKEN='test-token'
     run target_pending_blocks_detect "${target_state}"
     [ "$status" -eq 1 ]
     [[ ${output} == *"stale"* ]]
@@ -88,7 +88,7 @@ setup() {
 @test "target_pending_blocks_detect returns true when gh cannot resolve PR state" {
     local target_state='{"pending":{"pr":42,"sha":"abc123"}}'
     install_gh_failing_mock
-    export GH_TOKEN='test-token'
+    export GITHUB_TOKEN='test-token'
     run target_pending_blocks_detect "${target_state}"
     [ "$status" -eq 0 ]
     [[ ${output} == *"unresolved"* ]]
@@ -96,7 +96,7 @@ setup() {
 
 @test "target_pending_blocks_detect returns true when token missing" {
     local target_state='{"pending":{"pr":42,"sha":"abc123"}}'
-    unset GH_TOKEN GITHUB_TOKEN || true
+    unset GITHUB_TOKEN || true
     run target_pending_blocks_detect "${target_state}"
     [ "$status" -eq 0 ]
     [[ ${output} == *"unavailable"* ]]

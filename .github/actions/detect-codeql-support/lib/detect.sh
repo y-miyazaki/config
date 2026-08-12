@@ -4,7 +4,7 @@
 #   Detect whether workflow CodeQL should run for the current repository.
 #
 # Usage:
-#   GITHUB_REPOSITORY=owner/repo GH_TOKEN=... bash lib/detect.sh
+#   GITHUB_REPOSITORY=owner/repo GITHUB_TOKEN=... bash lib/detect.sh
 #
 # Design Rules:
 #   - Skip when CodeQL default setup is enabled (workflow SARIF would be rejected)

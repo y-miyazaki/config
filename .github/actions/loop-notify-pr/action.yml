@@ -22,6 +22,9 @@ inputs:
     default: ""
     description: "Bot fix PR URL from loop-finalize (open_pr)"
     required: false
+  github_token:
+    description: "GitHub token with pull-requests: write"
+    required: true
   level:
     default: L2
     description: "Autonomy level (L2 | L3) for next-step guidance"
@@ -59,9 +62,6 @@ inputs:
     default: "{}"
     description: "Target descriptor JSON from loop-detect"
     required: false
-  token:
-    description: "GitHub token with pull-requests: write"
-    required: true
   verdict:
     default: ""
     description: "Verifier verdict (APPROVE or REJECT)"
@@ -88,6 +88,7 @@ runs:
         FIX_PR_NUMBER: ${{ inputs.fix_pr_number }}
         FIX_PR_URL: ${{ inputs.fix_pr_url }}
         GITHUB_SERVER_URL: ${{ github.server_url }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
         LEVEL: ${{ inputs.level }}
         LOOP_NAME: ${{ inputs.loop_name }}
         LOOP_RUN_ID: ${{ inputs.loop_run_id }}
@@ -98,6 +99,5 @@ runs:
         REJECT_REASON: ${{ inputs.reject_reason }}
         REPOSITORY: ${{ inputs.repository }}
         TARGET_JSON: ${{ inputs.target_json }}
-        TOKEN: ${{ inputs.token }}
         VERDICT: ${{ inputs.verdict }}
       run: bash "${GITHUB_ACTION_PATH}/lib/notify.sh"

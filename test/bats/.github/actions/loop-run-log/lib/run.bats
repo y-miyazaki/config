@@ -46,7 +46,7 @@ setup() {
 
 @test "run.sh rejects missing loop_name" {
     run_log_run \
-        TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         OUTCOME='skipped' \
         WORKFLOW_RUN='42' \
         GITHUB_OUTPUT="${GITHUB_OUTPUT}"
@@ -55,7 +55,7 @@ setup() {
 
 @test "run.sh appends entry, commits, and writes entry_json output" {
     run_log_run \
-        TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         LOOP_NAME='docs-updater' \
         OUTCOME='skipped' \
         SKIP_REASON='budget' \
@@ -88,7 +88,7 @@ setup() {
     started="$(date -u -d '5 seconds ago' +%Y-%m-%dT%H:%M:%SZ)"
 
     run_log_run \
-        TOKEN='test-token' \
+        GITHUB_TOKEN='test-token' \
         LOOP_NAME='docs-updater' \
         OUTCOME='no-changes' \
         SKIP_REASON='none' \

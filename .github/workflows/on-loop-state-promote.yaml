@@ -51,7 +51,7 @@ jobs:
       - name: Promote Pending State
         uses: ./.github/actions/loop-state-promote
         with:
+          github_token: ${{ steps.app_token.outputs.token }}
           merged: ${{ github.event.pull_request.merged && 'true' || 'false' }}
           pr_number: ${{ github.event.pull_request.number }}
           state_push_branch: ""
-          token: ${{ steps.app_token.outputs.token }}
