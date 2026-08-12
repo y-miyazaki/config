@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-08-12T04:52:46.969597+00:00'
+generated_at: '2026-08-12T09:32:07.883574+00:00'
 apm_version: 0.27.0
 dependencies:
 - repo_url: _local/common
@@ -1157,7 +1157,7 @@ dependencies:
     .agents/skills/pr-revise/references/category-pr-body-links.md: sha256:0676f44801c6f1d9e1d71c2105399c81b786b23fdcd920eda1b037e2edc6c7e7
     .agents/skills/pr-revise/references/common-checklist.md: sha256:dc1c1d1fbdbce358a8ac18371794ebefbd6aa03f3c7c84020584c6ab88614a45
     .agents/skills/pr-revise/references/common-output-format.md: sha256:cea76fcf5e610c7f39dfd0cfe6c706f517177093966df2353d79e980a1767afa
-    .agents/skills/pr-revise/scripts/detect_pr_revise.sh: sha256:5e21c8cd3d029e97fbe20c938c6266cd5050100ffb6419cde938ba6d7d6922b8
+    .agents/skills/pr-revise/scripts/detect_pr_revise.sh: sha256:80ed00c50ff0a1552eed48b8574df487d94de946e131236de85adbff9090499c
     .agents/skills/pr-revise/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/pr-revise/scripts/lib/aws.sh: sha256:8040932c1176ff8f6f011586844cee9a07fa725b90de6c5b007d5cecf7f2d67a
     .agents/skills/pr-revise/scripts/lib/common.sh: sha256:26dded5e470bfa13c48f3816b58def268413042de385a468ee851f6f578bceda
@@ -1562,7 +1562,7 @@ dependencies:
     .claude/skills/pr-revise/references/category-pr-body-links.md: sha256:0676f44801c6f1d9e1d71c2105399c81b786b23fdcd920eda1b037e2edc6c7e7
     .claude/skills/pr-revise/references/common-checklist.md: sha256:dc1c1d1fbdbce358a8ac18371794ebefbd6aa03f3c7c84020584c6ab88614a45
     .claude/skills/pr-revise/references/common-output-format.md: sha256:cea76fcf5e610c7f39dfd0cfe6c706f517177093966df2353d79e980a1767afa
-    .claude/skills/pr-revise/scripts/detect_pr_revise.sh: sha256:5e21c8cd3d029e97fbe20c938c6266cd5050100ffb6419cde938ba6d7d6922b8
+    .claude/skills/pr-revise/scripts/detect_pr_revise.sh: sha256:80ed00c50ff0a1552eed48b8574df487d94de946e131236de85adbff9090499c
     .claude/skills/pr-revise/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/pr-revise/scripts/lib/aws.sh: sha256:8040932c1176ff8f6f011586844cee9a07fa725b90de6c5b007d5cecf7f2d67a
     .claude/skills/pr-revise/scripts/lib/common.sh: sha256:26dded5e470bfa13c48f3816b58def268413042de385a468ee851f6f578bceda
@@ -1673,12 +1673,12 @@ dependencies:
   - .claude/hooks/common-hooks-claude/scripts/markdownlint_cli2.sh
   - .claude/hooks/common-hooks-claude/scripts/zizmor.sh
   deployed_file_hashes:
-    .claude/hooks/common-hooks-claude/scripts/actionlint.sh: sha256:84214888c779f92a6444e71ed6a453398930288e8a6d74a04eb85e1c48052fad
-    .claude/hooks/common-hooks-claude/scripts/ghalint.sh: sha256:f534564f5d0d1634fd6fa339ac8909b88aa564c7a123abdf9d24100e0ea40f52
-    .claude/hooks/common-hooks-claude/scripts/gitleaks.sh: sha256:dcab7bbe9c17d9efddfd483e04bc9854c5e15fc81073d55626068440ca676d77
-    .claude/hooks/common-hooks-claude/scripts/markdown_link_check.sh: sha256:4bbbef6c18b8783764adafda40cde8083593ee9b3747564b11c90a81df0ba994
-    .claude/hooks/common-hooks-claude/scripts/markdownlint_cli2.sh: sha256:ca91371acc28cbf99e4a5f2d6d37c012b47c8abbf8a9e9dc0e1d1e6b9591be1a
-    .claude/hooks/common-hooks-claude/scripts/zizmor.sh: sha256:444ec95ba0bec820f243f0cdd5c0ada278e9db5156c1d1ccf0809099889686e2
+    .claude/hooks/common-hooks-claude/scripts/actionlint.sh: sha256:3927acfad6ceaea9f1483a64c64fc77d30dead3ff5d95d9c7a8e58f1dcc5a4b1
+    .claude/hooks/common-hooks-claude/scripts/ghalint.sh: sha256:d30cd6cabcc632e23b5f7b5f2d76f1046f9d1d3c629e9c0fdfda2ace8ad3d59a
+    .claude/hooks/common-hooks-claude/scripts/gitleaks.sh: sha256:90cea9350f4b0f1ec66cd8c7025955b973291d4186d48b4ca5826c62c2acabd1
+    .claude/hooks/common-hooks-claude/scripts/markdown_link_check.sh: sha256:d98896487ac9fe4e3189e06cd2f861a66b89ce2e5a9c5714d85e654e2c937548
+    .claude/hooks/common-hooks-claude/scripts/markdownlint_cli2.sh: sha256:24111fe6fafdcd8b19a391a922488509f4eb4df1068daa36c5f4c69698991e88
+    .claude/hooks/common-hooks-claude/scripts/zizmor.sh: sha256:9dc27438135f1eff1a02429f1efc85bc71e700a083245e5af1e2767b0ece320b
   source: local
   local_path: ./.apm/packages/common-hooks-claude
   declared_license: Apache-2.0
@@ -1694,12 +1694,12 @@ dependencies:
   - .cursor/hooks/common-hooks-cursor/scripts/markdownlint_cli2.sh
   - .cursor/hooks/common-hooks-cursor/scripts/zizmor.sh
   deployed_file_hashes:
-    .cursor/hooks/common-hooks-cursor/scripts/actionlint.sh: sha256:84214888c779f92a6444e71ed6a453398930288e8a6d74a04eb85e1c48052fad
-    .cursor/hooks/common-hooks-cursor/scripts/ghalint.sh: sha256:f534564f5d0d1634fd6fa339ac8909b88aa564c7a123abdf9d24100e0ea40f52
-    .cursor/hooks/common-hooks-cursor/scripts/gitleaks.sh: sha256:dcab7bbe9c17d9efddfd483e04bc9854c5e15fc81073d55626068440ca676d77
-    .cursor/hooks/common-hooks-cursor/scripts/markdown_link_check.sh: sha256:4bbbef6c18b8783764adafda40cde8083593ee9b3747564b11c90a81df0ba994
-    .cursor/hooks/common-hooks-cursor/scripts/markdownlint_cli2.sh: sha256:ca91371acc28cbf99e4a5f2d6d37c012b47c8abbf8a9e9dc0e1d1e6b9591be1a
-    .cursor/hooks/common-hooks-cursor/scripts/zizmor.sh: sha256:444ec95ba0bec820f243f0cdd5c0ada278e9db5156c1d1ccf0809099889686e2
+    .cursor/hooks/common-hooks-cursor/scripts/actionlint.sh: sha256:3927acfad6ceaea9f1483a64c64fc77d30dead3ff5d95d9c7a8e58f1dcc5a4b1
+    .cursor/hooks/common-hooks-cursor/scripts/ghalint.sh: sha256:d30cd6cabcc632e23b5f7b5f2d76f1046f9d1d3c629e9c0fdfda2ace8ad3d59a
+    .cursor/hooks/common-hooks-cursor/scripts/gitleaks.sh: sha256:90cea9350f4b0f1ec66cd8c7025955b973291d4186d48b4ca5826c62c2acabd1
+    .cursor/hooks/common-hooks-cursor/scripts/markdown_link_check.sh: sha256:a1915528049fecdb51b96aba56b90d67f2bd7e571900b226a3e8ecc1916e682f
+    .cursor/hooks/common-hooks-cursor/scripts/markdownlint_cli2.sh: sha256:24111fe6fafdcd8b19a391a922488509f4eb4df1068daa36c5f4c69698991e88
+    .cursor/hooks/common-hooks-cursor/scripts/zizmor.sh: sha256:9dc27438135f1eff1a02429f1efc85bc71e700a083245e5af1e2767b0ece320b
   source: local
   local_path: ./.apm/packages/common-hooks-cursor
   declared_license: Apache-2.0
@@ -1899,7 +1899,7 @@ dependencies:
   deployed_files:
   - .claude/hooks/go-hooks-claude/scripts/golangci_lint.sh
   deployed_file_hashes:
-    .claude/hooks/go-hooks-claude/scripts/golangci_lint.sh: sha256:3db2f1374197c00ca3e09b5be040f2b931aa9b97a14d80487a8879b2b7d3bf98
+    .claude/hooks/go-hooks-claude/scripts/golangci_lint.sh: sha256:37f7d1d83cdf3435d32763a8cbf3318ed2d57361e9ff25c77fe918c19b17b8c4
   source: local
   local_path: ./.apm/packages/go-hooks-claude
   declared_license: Apache-2.0
@@ -1910,7 +1910,7 @@ dependencies:
   deployed_files:
   - .cursor/hooks/go-hooks-cursor/scripts/golangci_lint.sh
   deployed_file_hashes:
-    .cursor/hooks/go-hooks-cursor/scripts/golangci_lint.sh: sha256:3db2f1374197c00ca3e09b5be040f2b931aa9b97a14d80487a8879b2b7d3bf98
+    .cursor/hooks/go-hooks-cursor/scripts/golangci_lint.sh: sha256:37f7d1d83cdf3435d32763a8cbf3318ed2d57361e9ff25c77fe918c19b17b8c4
   source: local
   local_path: ./.apm/packages/go-hooks-cursor
   declared_license: Apache-2.0
@@ -2127,8 +2127,8 @@ dependencies:
   - .claude/hooks/shell-script-hooks-claude/scripts/shellcheck.sh
   - .claude/hooks/shell-script-hooks-claude/scripts/shfmt.sh
   deployed_file_hashes:
-    .claude/hooks/shell-script-hooks-claude/scripts/shellcheck.sh: sha256:72ddb0338b3bf1743ffb03a95904e9dff79fa21c76073f51c1ce13e8ae1dd9f4
-    .claude/hooks/shell-script-hooks-claude/scripts/shfmt.sh: sha256:59ac69e69a935b908bab652a8680783d2b61818a1f6ae7ff41394b9b83f62e7b
+    .claude/hooks/shell-script-hooks-claude/scripts/shellcheck.sh: sha256:d77a2c66cf9f6775ae8f72294410a16f0493f59ed73a54919503e830f052f5a5
+    .claude/hooks/shell-script-hooks-claude/scripts/shfmt.sh: sha256:e57ba2d9229d5e47e1cecacb3451884fb17380c44c85e01c6a7d421ef8c80e6c
   source: local
   local_path: ./.apm/packages/shell-script-hooks-claude
   declared_license: Apache-2.0
@@ -2140,8 +2140,8 @@ dependencies:
   - .cursor/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh
   - .cursor/hooks/shell-script-hooks-cursor/scripts/shfmt.sh
   deployed_file_hashes:
-    .cursor/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh: sha256:72ddb0338b3bf1743ffb03a95904e9dff79fa21c76073f51c1ce13e8ae1dd9f4
-    .cursor/hooks/shell-script-hooks-cursor/scripts/shfmt.sh: sha256:1f1144494c51f52663e907f8ead2d8ea614d237d9a7bcaeb5378de8f86ff309d
+    .cursor/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh: sha256:d77a2c66cf9f6775ae8f72294410a16f0493f59ed73a54919503e830f052f5a5
+    .cursor/hooks/shell-script-hooks-cursor/scripts/shfmt.sh: sha256:1ee58b42a134c92845a1b9ea81a91e6c4218e0c446dda35ed261a2a0bfd8e74f
   source: local
   local_path: ./.apm/packages/shell-script-hooks-cursor
   declared_license: Apache-2.0
@@ -2163,7 +2163,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-claude
   active_owner: ./.apm/packages/common-hooks-claude
-  content_hash: sha256:84214888c779f92a6444e71ed6a453398930288e8a6d74a04eb85e1c48052fad
+  content_hash: sha256:3927acfad6ceaea9f1483a64c64fc77d30dead3ff5d95d9c7a8e58f1dcc5a4b1
 - kind: project-relative
   target: claude
   value: .claude/hooks/common-hooks-claude/scripts/ghalint.sh
@@ -2172,7 +2172,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-claude
   active_owner: ./.apm/packages/common-hooks-claude
-  content_hash: sha256:f534564f5d0d1634fd6fa339ac8909b88aa564c7a123abdf9d24100e0ea40f52
+  content_hash: sha256:d30cd6cabcc632e23b5f7b5f2d76f1046f9d1d3c629e9c0fdfda2ace8ad3d59a
 - kind: project-relative
   target: claude
   value: .claude/hooks/common-hooks-claude/scripts/gitleaks.sh
@@ -2181,7 +2181,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-claude
   active_owner: ./.apm/packages/common-hooks-claude
-  content_hash: sha256:dcab7bbe9c17d9efddfd483e04bc9854c5e15fc81073d55626068440ca676d77
+  content_hash: sha256:90cea9350f4b0f1ec66cd8c7025955b973291d4186d48b4ca5826c62c2acabd1
 - kind: project-relative
   target: claude
   value: .claude/hooks/common-hooks-claude/scripts/markdown_link_check.sh
@@ -2190,7 +2190,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-claude
   active_owner: ./.apm/packages/common-hooks-claude
-  content_hash: sha256:4bbbef6c18b8783764adafda40cde8083593ee9b3747564b11c90a81df0ba994
+  content_hash: sha256:d98896487ac9fe4e3189e06cd2f861a66b89ce2e5a9c5714d85e654e2c937548
 - kind: project-relative
   target: claude
   value: .claude/hooks/common-hooks-claude/scripts/markdownlint_cli2.sh
@@ -2199,7 +2199,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-claude
   active_owner: ./.apm/packages/common-hooks-claude
-  content_hash: sha256:ca91371acc28cbf99e4a5f2d6d37c012b47c8abbf8a9e9dc0e1d1e6b9591be1a
+  content_hash: sha256:24111fe6fafdcd8b19a391a922488509f4eb4df1068daa36c5f4c69698991e88
 - kind: project-relative
   target: claude
   value: .claude/hooks/common-hooks-claude/scripts/zizmor.sh
@@ -2208,7 +2208,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-claude
   active_owner: ./.apm/packages/common-hooks-claude
-  content_hash: sha256:444ec95ba0bec820f243f0cdd5c0ada278e9db5156c1d1ccf0809099889686e2
+  content_hash: sha256:9dc27438135f1eff1a02429f1efc85bc71e700a083245e5af1e2767b0ece320b
 - kind: project-relative
   target: claude
   value: .claude/hooks/go-hooks-claude/scripts/golangci_lint.sh
@@ -2217,7 +2217,7 @@ deployments:
   owners:
   - ./.apm/packages/go-hooks-claude
   active_owner: ./.apm/packages/go-hooks-claude
-  content_hash: sha256:3db2f1374197c00ca3e09b5be040f2b931aa9b97a14d80487a8879b2b7d3bf98
+  content_hash: sha256:37f7d1d83cdf3435d32763a8cbf3318ed2d57361e9ff25c77fe918c19b17b8c4
 - kind: project-relative
   target: claude
   value: .claude/hooks/shell-script-hooks-claude/scripts/shellcheck.sh
@@ -2226,7 +2226,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script-hooks-claude
   active_owner: ./.apm/packages/shell-script-hooks-claude
-  content_hash: sha256:72ddb0338b3bf1743ffb03a95904e9dff79fa21c76073f51c1ce13e8ae1dd9f4
+  content_hash: sha256:d77a2c66cf9f6775ae8f72294410a16f0493f59ed73a54919503e830f052f5a5
 - kind: project-relative
   target: claude
   value: .claude/hooks/shell-script-hooks-claude/scripts/shfmt.sh
@@ -2235,7 +2235,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script-hooks-claude
   active_owner: ./.apm/packages/shell-script-hooks-claude
-  content_hash: sha256:59ac69e69a935b908bab652a8680783d2b61818a1f6ae7ff41394b9b83f62e7b
+  content_hash: sha256:e57ba2d9229d5e47e1cecacb3451884fb17380c44c85e01c6a7d421ef8c80e6c
 - kind: project-relative
   target: claude
   value: .claude/rules/agent-skills.md
@@ -5610,7 +5610,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:5e21c8cd3d029e97fbe20c938c6266cd5050100ffb6419cde938ba6d7d6922b8
+  content_hash: sha256:80ed00c50ff0a1552eed48b8574df487d94de946e131236de85adbff9090499c
 - kind: project-relative
   target: claude
   value: .claude/skills/pr-revise/scripts/lib/all.sh
@@ -10182,7 +10182,7 @@ deployments:
   owners:
   - ./.apm/packages/common
   active_owner: ./.apm/packages/common
-  content_hash: sha256:5e21c8cd3d029e97fbe20c938c6266cd5050100ffb6419cde938ba6d7d6922b8
+  content_hash: sha256:80ed00c50ff0a1552eed48b8574df487d94de946e131236de85adbff9090499c
 - kind: project-relative
   target: cursor
   value: .agents/skills/pr-revise/scripts/lib/all.sh
@@ -11460,7 +11460,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-cursor
   active_owner: ./.apm/packages/common-hooks-cursor
-  content_hash: sha256:84214888c779f92a6444e71ed6a453398930288e8a6d74a04eb85e1c48052fad
+  content_hash: sha256:3927acfad6ceaea9f1483a64c64fc77d30dead3ff5d95d9c7a8e58f1dcc5a4b1
 - kind: project-relative
   target: cursor
   value: .cursor/hooks/common-hooks-cursor/scripts/ghalint.sh
@@ -11469,7 +11469,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-cursor
   active_owner: ./.apm/packages/common-hooks-cursor
-  content_hash: sha256:f534564f5d0d1634fd6fa339ac8909b88aa564c7a123abdf9d24100e0ea40f52
+  content_hash: sha256:d30cd6cabcc632e23b5f7b5f2d76f1046f9d1d3c629e9c0fdfda2ace8ad3d59a
 - kind: project-relative
   target: cursor
   value: .cursor/hooks/common-hooks-cursor/scripts/gitleaks.sh
@@ -11478,7 +11478,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-cursor
   active_owner: ./.apm/packages/common-hooks-cursor
-  content_hash: sha256:dcab7bbe9c17d9efddfd483e04bc9854c5e15fc81073d55626068440ca676d77
+  content_hash: sha256:90cea9350f4b0f1ec66cd8c7025955b973291d4186d48b4ca5826c62c2acabd1
 - kind: project-relative
   target: cursor
   value: .cursor/hooks/common-hooks-cursor/scripts/markdown_link_check.sh
@@ -11487,7 +11487,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-cursor
   active_owner: ./.apm/packages/common-hooks-cursor
-  content_hash: sha256:4bbbef6c18b8783764adafda40cde8083593ee9b3747564b11c90a81df0ba994
+  content_hash: sha256:a1915528049fecdb51b96aba56b90d67f2bd7e571900b226a3e8ecc1916e682f
 - kind: project-relative
   target: cursor
   value: .cursor/hooks/common-hooks-cursor/scripts/markdownlint_cli2.sh
@@ -11496,7 +11496,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-cursor
   active_owner: ./.apm/packages/common-hooks-cursor
-  content_hash: sha256:ca91371acc28cbf99e4a5f2d6d37c012b47c8abbf8a9e9dc0e1d1e6b9591be1a
+  content_hash: sha256:24111fe6fafdcd8b19a391a922488509f4eb4df1068daa36c5f4c69698991e88
 - kind: project-relative
   target: cursor
   value: .cursor/hooks/common-hooks-cursor/scripts/zizmor.sh
@@ -11505,7 +11505,7 @@ deployments:
   owners:
   - ./.apm/packages/common-hooks-cursor
   active_owner: ./.apm/packages/common-hooks-cursor
-  content_hash: sha256:444ec95ba0bec820f243f0cdd5c0ada278e9db5156c1d1ccf0809099889686e2
+  content_hash: sha256:9dc27438135f1eff1a02429f1efc85bc71e700a083245e5af1e2767b0ece320b
 - kind: project-relative
   target: cursor
   value: .cursor/hooks/go-hooks-cursor/scripts/golangci_lint.sh
@@ -11514,7 +11514,7 @@ deployments:
   owners:
   - ./.apm/packages/go-hooks-cursor
   active_owner: ./.apm/packages/go-hooks-cursor
-  content_hash: sha256:3db2f1374197c00ca3e09b5be040f2b931aa9b97a14d80487a8879b2b7d3bf98
+  content_hash: sha256:37f7d1d83cdf3435d32763a8cbf3318ed2d57361e9ff25c77fe918c19b17b8c4
 - kind: project-relative
   target: cursor
   value: .cursor/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh
@@ -11523,7 +11523,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script-hooks-cursor
   active_owner: ./.apm/packages/shell-script-hooks-cursor
-  content_hash: sha256:72ddb0338b3bf1743ffb03a95904e9dff79fa21c76073f51c1ce13e8ae1dd9f4
+  content_hash: sha256:d77a2c66cf9f6775ae8f72294410a16f0493f59ed73a54919503e830f052f5a5
 - kind: project-relative
   target: cursor
   value: .cursor/hooks/shell-script-hooks-cursor/scripts/shfmt.sh
@@ -11532,7 +11532,7 @@ deployments:
   owners:
   - ./.apm/packages/shell-script-hooks-cursor
   active_owner: ./.apm/packages/shell-script-hooks-cursor
-  content_hash: sha256:1f1144494c51f52663e907f8ead2d8ea614d237d9a7bcaeb5378de8f86ff309d
+  content_hash: sha256:1ee58b42a134c92845a1b9ea81a91e6c4218e0c446dda35ed261a2a0bfd8e74f
 - kind: project-relative
   target: cursor
   value: .cursor/rules/agent-skills.mdc
@@ -11694,7 +11694,7 @@ mcp_configs:
     transport: stdio
     args:
     - -y
-    - lean-ctx-bin@3.9.13
+    - lean-ctx-bin@3.9.17
     registry: false
     command: npx
 mcp_target_servers:

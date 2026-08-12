@@ -35,7 +35,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "lean-ctx-bin@3.9.13"
+        "lean-ctx-bin@3.9.17"
       ]
     }
   }

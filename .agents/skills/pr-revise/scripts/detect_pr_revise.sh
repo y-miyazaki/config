@@ -10,7 +10,8 @@
 # Design Rules:
 # - Consume PR comment facts from environment variables
 # - Hydrate PR_* from GITHUB_EVENT_PATH when unset
-# - Skip bot actors; require @mention on comment webhooks only
+# - Skip bot actors; require maintainer association on all intake paths when known
+# - Require @mention on comment webhooks only
 # - repository_dispatch / workflow_dispatch bypass mention (explicit trusted intake)
 # - Output structured JSON via shared lib/json.sh
 # - Exit 0 on success; fatal errors emit status=error JSON and exit 1
@@ -26,6 +27,7 @@
 #   PR_COMMENT_BODY   Comment body to match against PR_MENTION
 #   PR_ACTOR          Comment or event actor login
 #   PR_ACTOR_TYPE     Comment or event actor type (User, Bot, ...)
+#   PR_ACTOR_ASSOCIATION Comment or sender author_association when present
 #   GITHUB_EVENT_PATH Path to GitHub webhook event JSON (hydrates PR_* when PR_NUMBER unset)
 #   GITHUB_EVENT_NAME GitHub event name (mention gate applies only to comment webhooks)
 #######################################
@@ -121,6 +123,7 @@ function ensure_dependencies {
 #   PR_COMMENT_BODY (set)
 #   PR_ACTOR (set)
 #   PR_ACTOR_TYPE (set)
+#   PR_ACTOR_ASSOCIATION (set)
 #
 # Arguments:
 #   None
@@ -137,7 +140,7 @@ function ensure_dependencies {
 #######################################
 function hydrate_pr_env_from_event {
     local event_path="${GITHUB_EVENT_PATH:-}"
-    local pr_number comment_body actor_type actor
+    local pr_number comment_body actor_type actor actor_association
 
     if [[ -z ${event_path} || ! -f ${event_path} ]]; then
         return 0
@@ -158,6 +161,7 @@ function hydrate_pr_env_from_event {
     fi
     actor_type="$(jq -r '.comment.user.type // .sender.type // empty' "${event_path}")"
     actor="$(jq -r '.comment.user.login // .sender.login // empty' "${event_path}")"
+    actor_association="$(jq -r '.comment.author_association // .sender.author_association // empty' "${event_path}")"
 
     if [[ -z ${PR_NUMBER:-} && -n ${pr_number} ]]; then
         PR_NUMBER="${pr_number}"
@@ -170,6 +174,9 @@ function hydrate_pr_env_from_event {
     fi
     if [[ -z ${PR_ACTOR:-} && -n ${actor} ]]; then
         PR_ACTOR="${actor}"
+    fi
+    if [[ -z ${PR_ACTOR_ASSOCIATION:-} && -n ${actor_association} ]]; then
+        PR_ACTOR_ASSOCIATION="${actor_association}"
     fi
 }
 
@@ -275,11 +282,28 @@ function mention_gate_applies {
     esac
 }
 
+function actor_association_allowed {
+    local assoc="${PR_ACTOR_ASSOCIATION:-}"
+
+    if [[ -z ${assoc} ]]; then
+        return 0
+    fi
+
+    case "${assoc}" in
+        MEMBER | OWNER | COLLABORATOR) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 function should_skip_pr_revise {
     local mention="${PR_MENTION:-@loop}"
     local body="${PR_COMMENT_BODY:-}"
 
     if [[ ${PR_ACTOR_TYPE:-} == "Bot" ]]; then
+        return 0
+    fi
+
+    if ! actor_association_allowed; then
         return 0
     fi
 
@@ -327,6 +351,11 @@ function build_skip_message {
 
     if [[ ${PR_ACTOR_TYPE:-} == "Bot" ]]; then
         printf '%s' "pr-revise: bot actor skipped"
+        return 0
+    fi
+
+    if ! actor_association_allowed; then
+        printf '%s' "pr-revise: maintainer association required"
         return 0
     fi
 

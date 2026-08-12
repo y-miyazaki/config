@@ -91,6 +91,26 @@ function truncate_reason_text {
         printf '%s' "$text"
     fi
 }
+#######################################
+# collapse_reason_for_cursor_display: Flatten multiline hook reasons for Cursor stop UI
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - reason text
+#
+# Outputs:
+#   Single-line reason on stdout
+#
+# Returns:
+#   None
+#
+#######################################
+function collapse_reason_for_cursor_display {
+    local text="$1"
+    printf '%s' "$text" | tr '\n' ' ' | sed 's/[[:space:]]\+/ /g;s/^[[:space:]]*//;s/[[:space:]]*$//'
+}
 
 #######################################
 # emit_json_with_reason: Build hook JSON via stdin (avoids ARG_MAX)
@@ -208,6 +228,10 @@ function report_failure {
     fi
 
     # Step 2: Build response per agent spec (A-Z order)
+    if [[ $agent == "cursor" && $hook_event == "stop" ]]; then
+        reason=$(collapse_reason_for_cursor_display "$reason")
+    fi
+
     case "$agent" in
         antigravity)
             emit_json_with_reason "$reason" '{decision: "continue", reason: .}'
@@ -334,7 +358,10 @@ function main {
 
     if [[ $fails -gt 0 ]]; then
         local clean_output
-        clean_output=$(echo "$output" | sed 's/\x1b\[[0-9;]*m//g' | grep -E '✖' || true)
+        clean_output=$(echo "$output" | sed 's/\x1b\[[0-9;]*m//g' | grep -E '✖|dead link|ERROR:' || true)
+        if [[ -z ${clean_output} ]]; then
+            clean_output=$(echo "$output" | sed 's/\x1b\[[0-9;]*m//g' | sed '/^[[:space:]]*$/d' | tail -20)
+        fi
         report_failure "markdown-link-check found broken links. Fix or remove these dead links:
 ${clean_output}"
     fi

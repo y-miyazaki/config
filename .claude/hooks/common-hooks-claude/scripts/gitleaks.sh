@@ -85,6 +85,26 @@ function truncate_reason_text {
         printf '%s' "$text"
     fi
 }
+#######################################
+# collapse_reason_for_cursor_display: Flatten multiline hook reasons for Cursor stop UI
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - reason text
+#
+# Outputs:
+#   Single-line reason on stdout
+#
+# Returns:
+#   None
+#
+#######################################
+function collapse_reason_for_cursor_display {
+    local text="$1"
+    printf '%s' "$text" | tr '\n' ' ' | sed 's/[[:space:]]\+/ /g;s/^[[:space:]]*//;s/[[:space:]]*$//'
+}
 
 #######################################
 # emit_json_with_reason: Build hook JSON via stdin (avoids ARG_MAX)
@@ -167,6 +187,10 @@ function report_failure {
 
     if [[ -z $agent && -n ${GITHUB_COPILOT_API_TOKEN:-} ]]; then
         agent="copilot"
+    fi
+
+    if [[ $agent == "cursor" && $hook_event == "stop" ]]; then
+        reason=$(collapse_reason_for_cursor_display "$reason")
     fi
 
     case "$agent" in
