@@ -245,7 +245,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@437e1f07aa63bc3cc947f21fc9ef9089711123ec # v1.8.82
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@ba2d1d634fac33a01bb5598f56f2490707236629 # v1.8.82
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
@@ -253,7 +253,7 @@ jobs:
 
       - name: Detect Entity Loop Work
         id: detect
-        uses: y-miyazaki/config/.github/actions/loop-entity-detect@437e1f07aa63bc3cc947f21fc9ef9089711123ec # v1.8.82
+        uses: y-miyazaki/config/.github/actions/loop-entity-detect@ba2d1d634fac33a01bb5598f56f2490707236629 # v1.8.82
         with:
           agent_implementer_max_turns: ${{ format('{0}', inputs.agent_implementer_max_turns) }}
           agent_implementer_model: ${{ inputs.agent_implementer_model }}
@@ -297,7 +297,7 @@ jobs:
       fail-fast: false
       matrix:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
-    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@437e1f07aa63bc3cc947f21fc9ef9089711123ec # v1.8.82
+    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@ba2d1d634fac33a01bb5598f56f2490707236629 # v1.8.82
     with:
       agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
       agent_implementer_model: ${{ needs.detect.outputs.agent_implementer_model }}
@@ -357,14 +357,14 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@437e1f07aa63bc3cc947f21fc9ef9089711123ec # v1.8.82
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@ba2d1d634fac33a01bb5598f56f2490707236629 # v1.8.82
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           github_token: ${{ secrets.GH_TOKEN }}
 
       - name: Append Skip Run Log
-        uses: y-miyazaki/config/.github/actions/loop-run-log@437e1f07aa63bc3cc947f21fc9ef9089711123ec # v1.8.82
+        uses: y-miyazaki/config/.github/actions/loop-run-log@ba2d1d634fac33a01bb5598f56f2490707236629 # v1.8.82
         with:
           base_branch: ${{ needs.detect.outputs.branch_state }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
