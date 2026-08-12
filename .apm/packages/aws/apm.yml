@@ -33,4 +33,4 @@ dependencies:
       registry: false
       transport: stdio
       command: uvx
-      args: ["awslabs.aws-pricing-mcp-server==1.0.32"]
+      args: ["awslabs.aws-pricing-mcp-server==1.0.33"]
