@@ -136,6 +136,14 @@ repos:
       - id: markdown-link-check
         args: [--quiet, -c, .markdown-link-check.json]
   # --------------------------------------------------------------
+  # For mkdocs
+  # --------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: mkdocs
+        entry: mkdocs serve --strict
+        files: docs/**/*.md
+  # --------------------------------------------------------------
   # For Prettier
   # --------------------------------------------------------------
   - repo: local

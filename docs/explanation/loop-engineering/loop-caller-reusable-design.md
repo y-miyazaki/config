@@ -263,7 +263,7 @@ Thin caller workflow `permissions` = **execute baseline** plus **`actions: write
 
 PR enumeration (`gh pr list`), open PR heads (`pr_enabled`), and Actions API scans (`gh run list` in ci-sweeper) all use the same detect token scope today. Split reusable profiles (`ci-loop-caller-pr-scan`, `ci-loop-caller-full-github`) were removed as duplicate YAML.
 
-Template for PR-watch loops: [example/on-loop-pr-scan.yaml](../../../.github/workflows/example/on-loop-pr-scan.yaml) (copy only; not scheduled in this repo).
+Template for PR-watch loops: [`example/on-loop-pr-scan.yaml`](https://github.com/y-miyazaki/config/blob/main/.github/workflows/example/on-loop-pr-scan.yaml) (copy only; not scheduled in this repo).
 
 #### ci-monitor profile (not implemented)
 
