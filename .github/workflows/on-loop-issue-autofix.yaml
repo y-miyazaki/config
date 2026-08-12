@@ -35,12 +35,6 @@ concurrency:
 jobs:
   loop:
     if: github.event_name != 'issues' || github.event.label.name == 'autofix'
-    permissions:
-      actions: write
-      contents: write
-      copilot-requests: write # zizmor: ignore[excessive-permissions]
-      issues: write
-      pull-requests: write
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
       agent_implementer_max_turns: "8"

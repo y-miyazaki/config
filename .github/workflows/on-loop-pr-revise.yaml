@@ -64,11 +64,6 @@ jobs:
           contains(fromJSON('["MEMBER","OWNER","COLLABORATOR"]'), github.event.comment.author_association)
         )
       )
-    permissions:
-      actions: write
-      contents: write
-      copilot-requests: write # zizmor: ignore[excessive-permissions]
-      pull-requests: write
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
       agent_implementer_max_turns: "8"
