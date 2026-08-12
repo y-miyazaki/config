@@ -32,6 +32,7 @@ Understanding-oriented design docs for autonomous CI and documentation loops in 
 | Automation report format (survey/apply shapes)       | [Loop Automation Report Format](common-loop-triage-format.md)                                                  |
 | Ubiquitous language (detect, A'/B, findings)         | [Ubiquitous Language](CONTEXT.md)                                                                              |
 | Doc maintenance (canonical map, triggers)            | [Documentation Maintenance](documentation-maintenance.md)                                                      |
+| Detect `--scope` axis + Interactive discovery        | [Detect Scope Axis and Interactive Discovery Design](../../superpowers/specs/2026-08-10-detect-scope-axis-and-interactive-discovery-design.md) |
 
 ## Reference (outside this section)
 

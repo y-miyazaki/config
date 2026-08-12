@@ -323,7 +323,7 @@ New domain env keys go into `detect_domain_env_json` without editing reusable jo
 
 - [x] Refactor `on-loop-changelog.yaml` to single `loop` job + `with:`.
 - [x] Refactor `on-loop-docs-updater.yaml`.
-- [x] Refactor `on-loop-ci-sweeper.yaml` (include `detect_permissions_profile`, execute-only inputs).
+- [x] Refactor `on-loop-ci-sweeper.yaml` (`ci-loop-caller-full-github.yaml` profile, execute-only inputs).
 - [x] Update `.github/workflows/example/on-loop-*.yaml` mirrors.
 - [x] Remove workflow-level `env:` from all loop callers.
 

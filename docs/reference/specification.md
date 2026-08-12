@@ -212,6 +212,7 @@ Hooks are defined as JSON files under each hooks package's `.apm/hooks/` directo
 | common-hooks-\*       | github-actions-actionlint | Stop        | Lint GitHub Actions workflows with actionlint                     |
 | common-hooks-\*       | github-actions-ghalint    | Stop        | Lint GitHub Actions workflows with ghalint                        |
 | common-hooks-\*       | github-actions-zizmor     | Stop        | Security scan `.github` with zizmor when workflows/actions change |
+| common-hooks-\*       | gitleaks                  | Stop        | Scan changed files for secrets with gitleaks                      |
 | go-hooks-\*           | golangci-lint             | Stop        | Auto-fix Go files with golangci-lint                              |
 | terraform-hooks-\*    | terraform-fmt             | PostToolUse | Run terraform fmt on changed files                                |
 | terraform-hooks-\*    | tflint                    | Stop        | Run tflint on changed files                                       |
