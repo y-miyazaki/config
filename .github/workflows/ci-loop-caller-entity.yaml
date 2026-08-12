@@ -245,7 +245,7 @@ jobs:
 
       - name: Detect Entity Loop Work
         id: detect
-        uses: y-miyazaki/config/.github/actions/loop-entity-detect@165d928b85a6f3ad4f527a2d76e761b688f4c66b # v1.8.79
+        uses: y-miyazaki/config/.github/actions/loop-entity-detect@78673db4cf14603332f325f0b22128908f4a4b19 # v1.8.79
         with:
           agent_implementer_max_turns: ${{ format('{0}', inputs.agent_implementer_max_turns) }}
           agent_implementer_model: ${{ inputs.agent_implementer_model }}
@@ -289,7 +289,7 @@ jobs:
       fail-fast: false
       matrix:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
-    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@165d928b85a6f3ad4f527a2d76e761b688f4c66b # v1.8.79
+    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@78673db4cf14603332f325f0b22128908f4a4b19 # v1.8.79
     with:
       agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
       agent_implementer_model: ${{ needs.detect.outputs.agent_implementer_model }}
@@ -349,14 +349,14 @@ jobs:
 
       - name: Resolve Push Token
         id: push_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@165d928b85a6f3ad4f527a2d76e761b688f4c66b # v1.8.79
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@78673db4cf14603332f325f0b22128908f4a4b19 # v1.8.79
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           gh_token_push: ${{ secrets.GH_TOKEN_PUSH }}
 
       - name: Append Skip Run Log
-        uses: y-miyazaki/config/.github/actions/loop-run-log@165d928b85a6f3ad4f527a2d76e761b688f4c66b # v1.8.79
+        uses: y-miyazaki/config/.github/actions/loop-run-log@78673db4cf14603332f325f0b22128908f4a4b19 # v1.8.79
         with:
           base_branch: ${{ needs.detect.outputs.branch_state }}
           loop_name: ${{ needs.detect.outputs.loop_name }}
