@@ -44,6 +44,7 @@ LOOP_HANDOFF_DIR="${LOOP_HANDOFF_DIR:-}"
 NOTIFY_CONTEXT_JSON="${NOTIFY_CONTEXT_JSON:-}"
 PR_BASE_BRANCH="${PR_BASE_BRANCH:-}"
 PR_BODY="${PR_BODY:-}"
+PR_DRAFT="${PR_DRAFT:-false}"
 PR_TITLE="${PR_TITLE:-}"
 SKIP_REASON="${SKIP_REASON:-}"
 TARGET_JSON="${TARGET_JSON:-}"
@@ -128,6 +129,9 @@ function main {
     fi
     if [[ -n ${LABELS} ]]; then
         gh_args+=(--label "${LABELS}")
+    fi
+    if [[ ${PR_DRAFT} == "true" ]]; then
+        gh_args+=(--draft)
     fi
 
     if ! pr_err="$(gh pr create "${gh_args[@]}" 2>&1)"; then

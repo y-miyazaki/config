@@ -53,12 +53,19 @@ fi
 #######################################
 function get_changed_files {
     local -a shell_ext_globs=('*.sh' '*.bats' '*.bash')
+    local path
 
-    {
-        git diff --name-only --diff-filter=ACMR -- "${shell_ext_globs[@]}" 2> /dev/null || true
-        git diff --cached --name-only --diff-filter=ACMR -- "${shell_ext_globs[@]}" 2> /dev/null || true
-        git ls-files --others --exclude-standard -- "${shell_ext_globs[@]}" 2> /dev/null || true
-    } | awk 'NF' | sort -u
+    while IFS= read -r path; do
+        [[ -z ${path} ]] && continue
+        [[ -f ${path} ]] || continue
+        printf '%s\n' "${path}"
+    done < <(
+        {
+            git diff --name-only --diff-filter=ACMR -- "${shell_ext_globs[@]}" 2> /dev/null || true
+            git diff --cached --name-only --diff-filter=ACMR -- "${shell_ext_globs[@]}" 2> /dev/null || true
+            git ls-files --others --exclude-standard -- "${shell_ext_globs[@]}" 2> /dev/null || true
+        } | awk 'NF' | sort -u
+    )
 }
 
 #######################################

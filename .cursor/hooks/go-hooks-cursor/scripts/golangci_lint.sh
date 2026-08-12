@@ -52,11 +52,19 @@ fi
 #
 #######################################
 function get_changed_dirs {
-    {
-        git diff --name-only --diff-filter=ACMR -- '*.go' 2> /dev/null || true
-        git diff --cached --name-only --diff-filter=ACMR -- '*.go' 2> /dev/null || true
-        git ls-files --others --exclude-standard -- '*.go' 2> /dev/null || true
-    } | awk 'NF' | xargs -I{} dirname {} | sort -u
+    local path
+
+    while IFS= read -r path; do
+        [[ -z ${path} ]] && continue
+        [[ -f ${path} ]] || continue
+        dirname "${path}"
+    done < <(
+        {
+            git diff --name-only --diff-filter=ACMR -- '*.go' 2> /dev/null || true
+            git diff --cached --name-only --diff-filter=ACMR -- '*.go' 2> /dev/null || true
+            git ls-files --others --exclude-standard -- '*.go' 2> /dev/null || true
+        } | awk 'NF' | sort -u
+    ) | sort -u
 }
 
 #######################################

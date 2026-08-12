@@ -29,6 +29,8 @@ declare -a LOOP_SKILLS=(
     changelog
     ci-sweeper
     docs-updater
+    issue-autofix
+    pr-revise
     refactor
     tech-debt
 )
@@ -45,6 +47,8 @@ declare -a LOOP_PR_BODY_LINKS_SKILLS=(
     changelog
     ci-sweeper
     docs-updater
+    issue-autofix
+    pr-revise
     refactor
     tech-debt
 )

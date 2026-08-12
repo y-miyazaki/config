@@ -38,12 +38,12 @@ on-loop-changelog.yaml          on-loop-ci-sweeper.yaml
   concurrency / permissions         concurrency / permissions
   jobs:                             jobs:
     loop:                             loop:
-      uses: ci-loop-caller.yaml         uses: ci-loop-caller-full-github.yaml
+      uses: ci-loop-caller.yaml         uses: ci-loop-caller.yaml
       with: { loop-specific }           with: { loop-specific }
       secrets: { … }                     secrets: { … }
                     \                   /
                      v                 v
-         ci-loop-caller.yaml | ci-loop-caller-pr-scan.yaml | ci-loop-caller-full-github.yaml
+                         ci-loop-caller.yaml
                 detect   → loop-detect
                 execute  → ci-loop-agent.yaml  (matrix)
                 record-skip → loop-run-log
@@ -249,38 +249,25 @@ Full mapping table: [Loop Caller Inputs Reference — `loop-detect` mapping](wor
 | `additional_commit_paths`   | no       | `""`    | `ci-loop-agent` finalize (ci-sweeper ledger) |
 | `domain_persistence_script` | no       | `""`    | `ci-loop-agent` finalize                     |
 
-#### Detect permissions profile
+#### Detect permissions
 
-Detect job permissions are **profile-based** and declared per reusable workflow file. GitHub Actions validates every job in a called reusable workflow at parse time (even when `if:` skips them), so profiles that need `actions: read` would live in a separate reusable file instead of sharing `ci-loop-caller.yaml` with the default profile. The tables below are the source of truth for job permissions, caller workflow file, and caller workflow additions.
+All branch/PR loops use **`ci-loop-caller.yaml`**. The reusable `detect` job declares:
 
-| Profile       | Reusable workflow                 | Detect job | Job permissions                                           | Dogfood callers                                                      |
-| ------------- | --------------------------------- | ---------- | --------------------------------------------------------- | -------------------------------------------------------------------- |
-| `default`     | `ci-loop-caller.yaml`             | `detect`   | `actions: write`, `contents: read`                        | changelog, docs-updater, refactor, tech-debt                         |
-| `pr-scan`     | `ci-loop-caller-pr-scan.yaml`     | `detect`   | `actions: write`, `contents: read`, `pull-requests: read` | none yet — see [pr-scan profile](#pr-scan-profile-no-dogfood-caller) |
-| `full-github` | `ci-loop-caller-full-github.yaml` | `detect`   | `actions: write`, `contents: read`, `pull-requests: read` | ci-sweeper                                                           |
-| `ci-monitor`  | *(not implemented)*               | `detect-ci-monitor` | `actions: read`, `contents: read`              | — (future; see below)                                                |
+| Job     | Permissions                                                |
+| ------- | ---------------------------------------------------------- |
+| `detect` | `actions: write`, `contents: read`, `pull-requests: read` |
+| `execute` | execute baseline (`actions: read`, `contents: write`, `pull-requests: write`, …) |
+| `record-skip` | `contents: write`, `pull-requests: write`              |
 
-Caller workflow `permissions` = **execute baseline** (`actions: read`, `contents: write`, `pull-requests: write`, `copilot-requests: write`) + **profile `caller_adds`** (`actions: write` for default, pr-scan, and full-github). Reusable workflows cannot escalate beyond the caller grant.
+Thin caller workflow `permissions` = **execute baseline** plus **`actions: write`** so the reusable `detect` job can upload handoff artifacts. Reusable workflows cannot escalate beyond the caller grant.
 
-#### Why three reusable workflow files
+PR enumeration (`gh pr list`), open PR heads (`pr_enabled`), and Actions API scans (`gh run list` in ci-sweeper) all use the same detect token scope today. Split reusable profiles (`ci-loop-caller-pr-scan`, `ci-loop-caller-full-github`) were removed as duplicate YAML.
 
-GitHub Actions validates **every job** in a called reusable workflow at parse time, even when `if:` skips them. A single `ci-loop-caller.yaml` cannot host both `actions: write` detect (git-based loops) and `actions: read` detect (future CI-monitor job) without granting the caller excessive workflow-level `actions: write`. Splitting profiles into separate reusable files keeps **least-privilege detect permissions** without passing broad permissions to integration-only loops.
-
-Job-level permission splits inside one file do not help: the caller workflow's top-level `permissions` grant still applies to all jobs. Three near-duplicate YAML files are an intentional trade-off; keep them in sync via review when adding profiles.
+Template for PR-watch loops: [example/on-loop-pr-scan.yaml](../../../.github/workflows/example/on-loop-pr-scan.yaml) (copy only; not scheduled in this repo).
 
 #### ci-monitor profile (not implemented)
 
-Reserved for loops that **only** scan failed workflow runs via the Actions API (`gh run list`) and do **not** need `pr_enabled` PR-head enumeration or git-heavy detect side effects. Caller would grant `actions: read` (not `write`). Would require a fourth reusable file (for example `ci-loop-caller-ci-monitor.yaml`) hosting a `detect-ci-monitor` job.
-
-Dogfood **ci-sweeper** uses `full-github` instead because `detect_ci_failures.sh` combines failed-run listing with PR context and needs `actions: write` + `pull-requests: read` today.
-
-#### pr-scan profile (no dogfood caller)
-
-Use `ci-loop-caller-pr-scan.yaml` when a loop needs **`pr_enabled: true`** (open PR head enumeration) but detect is **git-based only** — no `gh run list` / Actions API CI scan. Dogfood **ci-sweeper** requires `full-github` because `detect_ci_failures.sh` lists failed workflow runs.
-
-Template: [example/on-loop-pr-scan-skeleton.yaml](https://github.com/y-miyazaki/config/blob/main/.github/workflows/example/on-loop-pr-scan-skeleton.yaml) (copy for new PR-watch loops; not scheduled in this repo).
-
-Caller `permissions` are validated at first workflow run (GitHub Actions logs). No automated CI check is distributed for this contract.
+Reserved for a future loop that needs **`actions: read` only** on detect (no `actions: write`). Would require a separate reusable workflow if that least-privilege split becomes necessary.
 
 ### Credentials (via `secrets:`)
 

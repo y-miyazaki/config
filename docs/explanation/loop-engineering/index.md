@@ -22,6 +22,9 @@ Understanding-oriented design docs for autonomous CI and documentation loops in 
 | **changelog** loop + conventional commits            | [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md)                                       |
 | **tech-debt** loop + debt report                     | [Report Tech Debt Workflow Design](workflows/loop-tech-debt-workflow-design.md)                                |
 | **refactor** loop + H1 detect (interactive + loop)   | [Refactor Workflow Design](workflows/loop-refactor-workflow-design.md)                                         |
+| **issue-triage** loop (entity L1)                    | [Issue Triage Workflow Design](workflows/loop-issue-triage-workflow-design.md)                                 |
+| **issue-autofix** loop                    | [Issue Autofix Workflow Design](workflows/loop-issue-autofix-workflow-design.md)                               |
+| **pr-revise** loop                        | [PR Revise Workflow Design](workflows/loop-pr-revise-workflow-design.md)                                       |
 | Refactor skill spec (interactive + loop envelope)    | [Refactor skill & loop design](../../superpowers/specs/2026-07-21-refactor-skill-and-loop-design.md)           |
 | Write target + delivery (fix vs report, four planes) | [Loop write target & delivery design](../../superpowers/specs/2026-07-23-loop-write-target-delivery-design.md) |
 | Loop invariants + L3 gates                           | [Loop Engineering Design](loop-engineering-design.md)                                                          |

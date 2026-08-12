@@ -1,0 +1,117 @@
+# Loop workflow: PR revise (L2)
+# Intake: issue_comment / pull_request_review_comment with mention | repository_dispatch | workflow_dispatch
+# → branch / PR-head caller (ci-loop-caller). Default landing push_head.
+name: on-loop-pr-revise
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  repository_dispatch:
+    types: [loop-pr-revise]
+  workflow_dispatch:
+    inputs:
+      feedback:
+        description: Human revision instructions (required for manual dispatch)
+        required: true
+        type: string
+      git_landing_pull_request:
+        description: push_head | open_pr
+        required: false
+        type: string
+        default: push_head
+      mention:
+        description: Mention token required in comment body
+        required: false
+        type: string
+        default: "@loop"
+      pr_number:
+        description: Pull request number
+        required: true
+        type: string
+
+permissions:
+  actions: write
+  contents: write
+  copilot-requests: write # zizmor: ignore[excessive-permissions]
+  pull-requests: write
+
+concurrency:
+  cancel-in-progress: false
+  group: loop-pr-revise-${{ github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || github.run_id }}
+  queue: max
+
+jobs:
+  loop:
+    if: >-
+      (
+        github.event_name != 'issue_comment' ||
+        github.event.issue.pull_request != null
+      ) &&
+      (
+        github.event.repository.private == true ||
+        (
+          (github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch') &&
+          contains(fromJSON('["MEMBER","OWNER","COLLABORATOR"]'), github.event.sender.author_association)
+        ) ||
+        (
+          github.event_name == 'pull_request_review_comment' &&
+          contains(fromJSON('["MEMBER","OWNER","COLLABORATOR"]'), github.event.comment.author_association)
+        ) ||
+        (
+          github.event_name == 'issue_comment' &&
+          contains(fromJSON('["MEMBER","OWNER","COLLABORATOR"]'), github.event.comment.author_association)
+        )
+      )
+    permissions:
+      actions: write
+      contents: write
+      copilot-requests: write # zizmor: ignore[excessive-permissions]
+      pull-requests: write
+    uses: ./.github/workflows/ci-loop-caller.yaml
+    with:
+      agent_implementer_max_turns: "8"
+      agent_implementer_model: cursor-grok-4.5-low
+      agent_loop_max_attempts: "2"
+      agent_verifier_criteria: |
+        ## Criteria for APPROVE
+
+        ALL of the following must be true:
+        1. Feedback from the human mention comment was addressed (or explicitly deferred)
+        2. Changes land on the PR head unless stacked open_pr was requested
+        3. Bot comments were not acted on
+
+        ## Criteria for REJECT
+
+        ANY of the following triggers REJECT:
+        - Acting without mention / on bot author
+        - Unrelated drive-by refactors
+      agent_verifier_max_turns: "2"
+      agent_verifier_model: composer-2.5
+      allowlist: ""
+      branch_match: main
+      branch_state: main
+      budget_max_runs_per_day: 10
+      budget_max_tokens_per_day: 500000
+      delivery: open_pr
+      detect_domain_env_json: ${{ format('{{"PR_NUMBER":"{0}","PR_MENTION":"{1}"}}', github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || '', inputs.mention || '@loop') }}
+      detect_script: .agents/skills/pr-revise/scripts/detect_pr_revise.sh
+      engine: cursor
+      environment: default
+      git_landing_pull_request: ${{ inputs.git_landing_pull_request || 'push_head' }}
+      level: L2
+      loop_name: pr-revise
+      may_edit: true
+      no_changes_verdict: REJECT
+      pr_enabled: false
+      prompt_instructions: |
+        Apply the human's feedback to the PR head.
+        Comment webhooks require the configured @mention; explicit dispatch paths do not.
+        Do not invent mention-less triggers on comment webhooks.
+      skill_name: pr-revise
+      write_target: fix
+    secrets:
+      AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
+      BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
+      BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}

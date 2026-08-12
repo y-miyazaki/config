@@ -254,18 +254,14 @@ Passed through `ci-loop-caller` to `ci-loop-agent.yaml` when non-empty.
 
 ## Detect permissions
 
-See [Loop Caller Reusable Workflow Design — Detect permissions profile](../loop-caller-reusable-design.md#detect-permissions-profile). Caller workflow `permissions` must include the execute baseline plus profile `caller_adds`. Select the profile by which reusable workflow the thin caller `uses:` (`ci-loop-caller.yaml` for default; `ci-loop-caller-pr-scan.yaml` for PR watch; `ci-loop-caller-full-github.yaml` for ci-sweeper).
+See [Loop Caller Reusable Workflow Design — Detect permissions](../loop-caller-reusable-design.md#detect-permissions). All branch/PR thin callers `uses:` **`ci-loop-caller.yaml`**.
 
-### Profile summary
+| Job / scope | Permissions |
+| ----------- | ----------- |
+| Reusable `detect` | `actions: write`, `contents: read`, `pull-requests: read` |
+| Thin caller workflow | execute baseline + `actions: write` |
 
-| Profile       | Reusable workflow                 | Detect job | Caller additions beyond execute baseline |
-| ------------- | --------------------------------- | ---------- | ---------------------------------------- |
-| `default`     | `ci-loop-caller.yaml`             | `detect`   | `actions: write`                         |
-| `pr-scan`     | `ci-loop-caller-pr-scan.yaml`     | `detect`   | `actions: write`                         |
-| `full-github` | `ci-loop-caller-full-github.yaml` | `detect`   | `actions: write`                         |
-| `ci-monitor`  | *(not implemented)*               | `detect-ci-monitor` | `actions: read` (future)        |
-
-Select the profile by which reusable workflow the thin caller `uses:` — not by a separate `detect_permissions_profile` input. Use `ci-loop-caller-pr-scan.yaml` when `pr_enabled=true` and the domain detect script does not call the Actions API (`gh run list`). Use `ci-loop-caller-full-github.yaml` when detect may scan failed workflow runs (ci-sweeper). Use `ci-loop-caller.yaml` when watching integration branches only.
+Loop behavior (git-only vs `pr_enabled` vs `gh run list`) is selected by caller `with:` (`detect_script`, `pr_enabled`, `detect_domain_env_json`) — not by choosing a different reusable workflow file.
 
 ## Domain detect environment (`detect_domain_env_json`)
 

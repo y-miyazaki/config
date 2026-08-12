@@ -163,6 +163,8 @@
       "Shell(curl)",
       "Shell(ghalint)",
       "Shell(git branch -D)",
+      "Shell(git commit)",
+      "Shell(git push)",
       "Shell(go get)",
       "Shell(go mod download)",
       "Shell(golangci-lint)",

@@ -1,0 +1,248 @@
+name: loop-entity-detect
+description: >-
+  Run one entity detect_script, apply light budget check, build single-target
+  matrix and upload loop-handoff artifact for ci-loop-agent.
+inputs:
+  agent_implementer_max_turns:
+    description: Maximum implementer agent turns per loop attempt
+    required: true
+  agent_implementer_model:
+    description: Implementer model ID
+    required: true
+  agent_loop_max_attempts:
+    description: Maximum Agent→Verify retry cycles
+    required: true
+  agent_verifier_criteria:
+    description: Domain-specific APPROVE/REJECT rubric
+    required: true
+  agent_verifier_max_turns:
+    description: Maximum verifier agent turns per verification
+    required: true
+  agent_verifier_model:
+    description: Verifier model ID
+    required: true
+  allowlist:
+    default: ""
+    description: Comma-separated globs (may be empty for L1 API-only loops)
+    required: false
+  budget_file:
+    default: .loop/loop-budget.json
+    description: Path to loop budget JSON
+    required: false
+  budget_max_runs_per_day:
+    default: ""
+    description: Daily run cap keyed by loop_name
+    required: false
+  budget_max_tokens_per_day:
+    default: ""
+    description: Daily aggregated token cap
+    required: false
+  delivery:
+    default: none
+    description: Platform delivery after APPROVE
+    required: false
+  detect_script:
+    description: Path to domain detect_*.sh script
+    required: true
+  dispatch_hook_script:
+    default: ""
+    description: Optional trusted post-detect hook (e.g. repository_dispatch)
+    required: false
+  dispatch_hook_token:
+    default: ""
+    description: Token for dispatch hook (falls back to token input / github.token)
+    required: false
+  engine:
+    description: AI engine
+    required: true
+  infer_files_pattern:
+    default: ""
+    description: Extended regex to infer file paths from verifier text
+    required: false
+  level:
+    default: L1
+    description: Autonomy level
+    required: false
+  loop_name:
+    description: Loop name for budget/state/run-log
+    required: true
+  may_edit:
+    default: "false"
+    description: Whether implementer may edit repository files
+    required: false
+  no_changes_verdict:
+    default: APPROVE
+    description: Verdict when agent makes no file changes
+    required: false
+  pr_body:
+    default: ""
+    description: PR body template (unused when delivery=none)
+    required: false
+  pr_title:
+    default: ""
+    description: PR title template (unused when delivery=none)
+    required: false
+  prompt_instructions:
+    default: ""
+    description: Extra instructions appended to implementer prompt
+    required: false
+  run_log_file:
+    default: .loop/loop-run-log.md
+    description: Path to loop run log
+    required: false
+  skill_name:
+    description: Skill directory name under common package
+    required: true
+  state_file:
+    default: ""
+    description: Optional state file path override
+    required: false
+  token:
+    default: ""
+    description: GitHub token for detect scripts (defaults to github.token in caller)
+    required: false
+  write_target:
+    default: report
+    description: Agent artifact when may_edit is true
+    required: false
+outputs:
+  agent_implementer_max_turns:
+    description: Implementer max turns
+    value: ${{ steps.config.outputs.agent_implementer_max_turns }}
+  agent_implementer_model:
+    description: Implementer model
+    value: ${{ steps.config.outputs.agent_implementer_model }}
+  agent_loop_max_attempts:
+    description: Loop max attempts
+    value: ${{ steps.config.outputs.agent_loop_max_attempts }}
+  agent_verifier_criteria:
+    description: Verifier criteria
+    value: ${{ steps.config.outputs.agent_verifier_criteria }}
+  agent_verifier_max_turns:
+    description: Verifier max turns
+    value: ${{ steps.config.outputs.agent_verifier_max_turns }}
+  agent_verifier_model:
+    description: Verifier model
+    value: ${{ steps.config.outputs.agent_verifier_model }}
+  allowlist:
+    description: Allowlist for execute job
+    value: ${{ inputs.allowlist }}
+  delivery:
+    description: Resolved platform delivery channel
+    value: ${{ steps.detect.outputs.delivery }}
+  engine:
+    description: AI engine
+    value: ${{ steps.config.outputs.engine }}
+  handoff_artifact_name:
+    description: Uploaded artifact name for loop-handoff bundle
+    value: ${{ steps.handoff.outputs.artifact_name }}
+  infer_files_pattern:
+    description: Infer files pattern for execute
+    value: ${{ inputs.infer_files_pattern }}
+  level:
+    description: Autonomy level
+    value: ${{ steps.config.outputs.level }}
+  loop_name:
+    description: Loop name for budget lookup and run log pattern
+    value: ${{ inputs.loop_name }}
+  no_changes_verdict:
+    description: Verdict when implementer produces no file changes
+    value: ${{ inputs.no_changes_verdict }}
+  pr_body:
+    description: PR body static section for finalize
+    value: ${{ inputs.pr_body }}
+  pr_title:
+    description: PR title for finalize
+    value: ${{ inputs.pr_title }}
+  should_run:
+    description: Whether the execute job should run
+    value: ${{ steps.detect.outputs.should_run }}
+  skill_name:
+    description: Skill name
+    value: ${{ steps.config.outputs.skill_name }}
+  skip_reason:
+    description: Why execution was skipped (budget | detect_skip)
+    value: ${{ steps.detect.outputs.skip_reason }}
+  state_file:
+    description: Resolved loop state JSON path
+    value: ${{ steps.paths.outputs.state_file }}
+  target_matrix:
+    description: Slim single-element (or empty) target matrix JSON
+    value: ${{ steps.detect.outputs.target_matrix }}
+runs:
+  using: composite
+  steps:
+    - name: Pack Config
+      id: config
+      shell: bash
+      env:
+        AGENT_IMPLEMENTER_MAX_TURNS: ${{ inputs.agent_implementer_max_turns }}
+        AGENT_IMPLEMENTER_MODEL: ${{ inputs.agent_implementer_model }}
+        AGENT_LOOP_MAX_ATTEMPTS: ${{ inputs.agent_loop_max_attempts }}
+        AGENT_VERIFIER_CRITERIA: ${{ inputs.agent_verifier_criteria }}
+        AGENT_VERIFIER_MAX_TURNS: ${{ inputs.agent_verifier_max_turns }}
+        AGENT_VERIFIER_MODEL: ${{ inputs.agent_verifier_model }}
+        ENGINE: ${{ inputs.engine }}
+        LEVEL: ${{ inputs.level }}
+        SKILL_NAME: ${{ inputs.skill_name }}
+      run: |
+        set -euo pipefail
+        CRITERIA_DELIM="CRITERIA_$(openssl rand -hex 8)"
+        {
+          echo "agent_implementer_max_turns=${AGENT_IMPLEMENTER_MAX_TURNS}"
+          echo "agent_implementer_model=${AGENT_IMPLEMENTER_MODEL}"
+          echo "agent_loop_max_attempts=${AGENT_LOOP_MAX_ATTEMPTS}"
+          echo "agent_verifier_criteria<<${CRITERIA_DELIM}"
+          echo "${AGENT_VERIFIER_CRITERIA}"
+          echo "${CRITERIA_DELIM}"
+          echo "agent_verifier_max_turns=${AGENT_VERIFIER_MAX_TURNS}"
+          echo "agent_verifier_model=${AGENT_VERIFIER_MODEL}"
+          echo "engine=${ENGINE}"
+          echo "level=${LEVEL}"
+          echo "skill_name=${SKILL_NAME}"
+        } >> "${GITHUB_OUTPUT}"
+
+    - name: Resolve State File
+      id: paths
+      shell: bash
+      env:
+        LOOP_NAME: ${{ inputs.loop_name }}
+        STATE_FILE_INPUT: ${{ inputs.state_file }}
+      run: |
+        set -euo pipefail
+        # shellcheck disable=SC1091
+        source "${{ github.action_path }}/../lib/loop/resolve_state_file.sh"
+        resolve_state_file
+
+    - name: Detect Entity Target
+      id: detect
+      shell: bash
+      env:
+        BUDGET_FILE: ${{ inputs.budget_file }}
+        BUDGET_MAX_RUNS_PER_DAY: ${{ inputs.budget_max_runs_per_day }}
+        BUDGET_MAX_TOKENS_PER_DAY: ${{ inputs.budget_max_tokens_per_day }}
+        DELIVERY: ${{ inputs.delivery }}
+        DETECT_SCRIPT: ${{ inputs.detect_script }}
+        DISPATCH_HOOK_SCRIPT: ${{ inputs.dispatch_hook_script }}
+        DISPATCH_HOOK_TOKEN: ${{ inputs.dispatch_hook_token != '' && inputs.dispatch_hook_token || (inputs.token != '' && inputs.token || github.token) }}
+        LEVEL: ${{ inputs.level }}
+        LOOP_NAME: ${{ inputs.loop_name }}
+        PROMPT_INSTRUCTIONS: ${{ inputs.prompt_instructions }}
+        RUN_LOG_FILE: ${{ inputs.run_log_file }}
+        SKILL_NAME: ${{ inputs.skill_name }}
+        GH_TOKEN: ${{ inputs.token != '' && inputs.token || github.token }}
+      run: bash "${GITHUB_ACTION_PATH}/lib/detect.sh"
+
+    - name: Record Handoff Artifact Name
+      id: handoff
+      if: steps.detect.outputs.should_run == 'true'
+      shell: bash
+      run: echo "artifact_name=loop-handoff-${GITHUB_RUN_ID}" >> "${GITHUB_OUTPUT}"
+
+    - name: Upload Loop Handoff Artifact
+      if: steps.detect.outputs.should_run == 'true'
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: loop-handoff-${{ github.run_id }}
+        path: ${{ runner.temp }}/loop-handoff
+        retention-days: 1

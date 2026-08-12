@@ -52,13 +52,20 @@ fi
 #
 #######################################
 function has_changed_workflows {
-    local files
-    files=$({
-        git diff --name-only --diff-filter=ACMR -- .github/workflows/*.yml .github/workflows/*.yaml 2> /dev/null || true
-        git diff --cached --name-only --diff-filter=ACMR -- .github/workflows/*.yml .github/workflows/*.yaml 2> /dev/null || true
-        git ls-files --others --exclude-standard -- .github/workflows/*.yml .github/workflows/*.yaml 2> /dev/null || true
-    } | awk 'NF' | head -1)
-    [[ -n $files ]]
+    local path
+
+    while IFS= read -r path; do
+        [[ -z ${path} ]] && continue
+        [[ -f ${path} ]] || continue
+        return 0
+    done < <(
+        {
+            git diff --name-only --diff-filter=ACMR -- .github/workflows/*.yml .github/workflows/*.yaml 2> /dev/null || true
+            git diff --cached --name-only --diff-filter=ACMR -- .github/workflows/*.yml .github/workflows/*.yaml 2> /dev/null || true
+            git ls-files --others --exclude-standard -- .github/workflows/*.yml .github/workflows/*.yaml 2> /dev/null || true
+        } | awk 'NF' | sort -u
+    )
+    return 1
 }
 
 #######################################

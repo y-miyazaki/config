@@ -52,11 +52,19 @@ fi
 #
 #######################################
 function get_changed_files {
-    {
-        git diff --name-only --diff-filter=ACMR -- '*.md' 2> /dev/null || true
-        git diff --cached --name-only --diff-filter=ACMR -- '*.md' 2> /dev/null || true
-        git ls-files --others --exclude-standard -- '*.md' 2> /dev/null || true
-    } | awk 'NF' | sort -u
+    local path
+
+    while IFS= read -r path; do
+        [[ -z ${path} ]] && continue
+        [[ -f ${path} ]] || continue
+        printf '%s\n' "${path}"
+    done < <(
+        {
+            git diff --name-only --diff-filter=ACMR -- '*.md' 2> /dev/null || true
+            git diff --cached --name-only --diff-filter=ACMR -- '*.md' 2> /dev/null || true
+            git ls-files --others --exclude-standard -- '*.md' 2> /dev/null || true
+        } | awk 'NF' | sort -u
+    )
 }
 
 #######################################

@@ -143,6 +143,11 @@ on:
         description: "Static markdown prefix for finalize PR body"
         required: false
         type: string
+      pr_draft:
+        default: false
+        description: "Create open_pr finalize PR as draft when true"
+        required: false
+        type: boolean
       pr_enabled:
         default: false
         description: "Watch open PR heads for detect (pr_enabled)"
@@ -215,6 +220,7 @@ jobs:
     permissions:
       actions: write
       contents: read
+      pull-requests: read
     outputs:
       additional_commit_paths: ${{ inputs.additional_commit_paths }}
       agent_implementer_max_turns: ${{ steps.detect.outputs.agent_implementer_max_turns }}
@@ -265,6 +271,11 @@ jobs:
               echo "detect_domain_env_json must be a JSON object" >&2
               exit 1
             fi
+            if ! echo "${DETECT_DOMAIN_ENV_JSON}" | jq -e               'to_entries | map(.key) | all(test("^[A-Z_][A-Z0-9_]*$"))'               >/dev/null; then
+              bad_key="$(echo "${DETECT_DOMAIN_ENV_JSON}" | jq -r                 'to_entries[] | select(.key | test("^[A-Z_][A-Z0-9_]*$") | not) | .key'                 | head -1)"
+              echo "detect_domain_env_json keys must match ^[A-Z_][A-Z0-9_]*$ (invalid: ${bad_key})" >&2
+              exit 1
+            fi
             if ! echo "${DETECT_DOMAIN_ENV_JSON}" | jq -e \
               '[to_entries[] | select(.value != "" and ((.value | tostring) | test("[\r\n]")))] | length == 0' \
               >/dev/null; then
@@ -282,7 +293,7 @@ jobs:
 
       - name: Detect Loop Work
         id: detect
-        uses: y-miyazaki/config/.github/actions/loop-detect@93f29ddb86b09e8c81f9e5e82b4c87446ffc17c6 # v1.8.78
+        uses: y-miyazaki/config/.github/actions/loop-detect@f658281df06b9c1619bb08be7a2591bcc1646a47 # v1.8.79
         with:
           agent_implementer_max_turns: ${{ format('{0}', inputs.agent_implementer_max_turns) }}
           agent_implementer_model: ${{ inputs.agent_implementer_model }}
@@ -334,7 +345,7 @@ jobs:
       fail-fast: false
       matrix:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
-    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@93f29ddb86b09e8c81f9e5e82b4c87446ffc17c6 # v1.8.78
+    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@f658281df06b9c1619bb08be7a2591bcc1646a47 # v1.8.79
     with:
       additional_commit_paths: ${{ needs.detect.outputs.additional_commit_paths }}
       agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
@@ -360,6 +371,7 @@ jobs:
       loop_name: ${{ needs.detect.outputs.loop_name }}
       no_changes_verdict: ${{ needs.detect.outputs.no_changes_verdict }}
       pr_body: ${{ needs.detect.outputs.pr_body }}
+      pr_draft: ${{ inputs.pr_draft }}
       pr_title: ${{ needs.detect.outputs.pr_title }}
       prompt_text: ${{ matrix.target.prompt }}
       run_log_file: ${{ inputs.run_log_file }}
@@ -397,14 +409,14 @@ jobs:
 
       - name: Resolve Push Token
         id: push_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@03b6b039391eee6384df67c7b37ca5ac82dfefa6
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@f658281df06b9c1619bb08be7a2591bcc1646a47 # v1.8.79
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           gh_token_push: ${{ secrets.GH_TOKEN_PUSH }}
 
       - name: Append Skip Run Log
-        uses: y-miyazaki/config/.github/actions/loop-run-log@93f29ddb86b09e8c81f9e5e82b4c87446ffc17c6 # v1.8.78
+        uses: y-miyazaki/config/.github/actions/loop-run-log@f658281df06b9c1619bb08be7a2591bcc1646a47 # v1.8.79
         with:
           base_branch: ${{ needs.detect.outputs.branch_state }}
           loop_name: ${{ needs.detect.outputs.loop_name }}

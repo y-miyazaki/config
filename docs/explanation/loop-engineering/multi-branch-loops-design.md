@@ -280,6 +280,9 @@ Caller/workflow steps: [Loop Caller Workflows Design](loop-caller-workflows-desi
 | **docs-updater** | [Docs Updater Workflow Design](workflows/loop-docs-updater-workflow-design.md)    | `on-loop-docs-updater.yaml` |
 | **tech-debt**   | [Report Tech Debt Workflow Design](workflows/loop-tech-debt-workflow-design.md) | `on-loop-tech-debt.yaml`   |
 | **refactor**    | [Refactor Workflow Design](workflows/loop-refactor-workflow-design.md)          | `on-loop-refactor.yaml`    |
+| **issue-triage** | [Issue Triage Workflow Design](workflows/loop-issue-triage-workflow-design.md) | `on-loop-issue-triage.yaml` |
+| **issue-autofix** | [Issue Autofix Workflow Design](workflows/loop-issue-autofix-workflow-design.md) | `on-loop-issue-autofix.yaml` |
+| **pr-revise**   | [PR Revise Workflow Design](workflows/loop-pr-revise-workflow-design.md) | `on-loop-pr-revise.yaml` |
 
 Add new loops as `docs/explanation/loop-engineering/workflows/<name>-workflow-design.md` without growing this file.
 

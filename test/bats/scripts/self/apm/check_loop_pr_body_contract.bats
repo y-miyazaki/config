@@ -70,7 +70,7 @@ setup() {
 @test "check_loop_pr_body_contract does not require automation format for non-split skills" {
     local skills_root skill
     skills_root="${TEST_TMP}/skills"
-    for skill in changelog ci-sweeper docs-updater refactor tech-debt; do
+    for skill in changelog ci-sweeper docs-updater issue-autofix pr-revise refactor tech-debt; do
         mkdir -p "${skills_root}/${skill}"
         cp -R "${REPO_ROOT}/.apm/packages/common/.apm/skills/${skill}/." "${skills_root}/${skill}/"
     done

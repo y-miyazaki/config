@@ -77,3 +77,4 @@ modules/**/.terraform.lock.hcl
 !.vscode/cspell-project.txt
 !.vscode/mcp.json
 !.vscode/settings-example.json
+.worktrees/

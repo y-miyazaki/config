@@ -99,7 +99,7 @@ The human PR is **never** auto-merged by the loop. L3 auto-merge applies only to
 
 ## Caller inputs
 
-Keys are passed in `on-loop-ci-sweeper.yaml` via `with:` on `ci-loop-caller-full-github.yaml` (alphabetically ordered). Multiline values (`agent_verifier_criteria`, `prompt_instructions`) are defined inline in the caller workflow.
+Keys are passed in `on-loop-ci-sweeper.yaml` via `with:` on `ci-loop-caller.yaml` (alphabetically ordered). Multiline values (`agent_verifier_criteria`, `prompt_instructions`) are defined inline in the caller workflow.
 
 Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md). Platform branch/finalize caps: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
 
@@ -134,7 +134,7 @@ Git landing (`open_pr` / `push` / `push_head`) is derived from `delivery` inside
 | `detect_domain_env_json` → `CI_SWEEPER_LEDGER_FILE`         | JSON ledger path for `workflow_run_id` dedupe.                                                                                                                                                                            | `.loop/state-ci-sweeper-run-ledger.json`                                                                 |
 | `detect_domain_env_json` → `CI_SWEEPER_REJECT_MAX_RETRIES`  | Max re-attempts per run ID when policy is `limited`.                                                                                                                                                                      | `3`                                                                                                      |
 | `detect_domain_env_json` → `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`, `retry`, or `limited` — ledger policy for prior `rejected` entries.                                                                                                                                              | `block`                                                                                                  |
-| Reusable workflow (`uses:`)                                 | `ci-loop-caller-full-github.yaml` — detect job requires `actions: read` and `pull-requests: read`; caller `permissions` must include `actions: read`.                                                                     | `./.github/workflows/ci-loop-caller-full-github.yaml`                                                    |
+| Reusable workflow (`uses:`)                                 | `ci-loop-caller.yaml` — detect job requires `actions: write`, `contents: read`, and `pull-requests: read`; caller `permissions` must include `actions: write`.                                                          | `./.github/workflows/ci-loop-caller.yaml`                                                                |
 | `detect_script`                                             | Domain detect script path. Uses `gh run list` per watch branch / PR head.                                                                                                                                                 | `.agents/skills/ci-sweeper/scripts/detect_ci_failures.sh`                                                |
 | `domain_persistence_script`                                 | Bash script for `loop-finalize` domain persistence (run ledger updates).                                                                                                                                                  | `.agents/skills/ci-sweeper/scripts/update_run_ledger.sh`                                                 |
 | `engine`                                                    | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                                                                                                                                     | `cursor`                                                                                                 |
@@ -283,7 +283,7 @@ Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loo
 ### Platform (all loops)
 
 - [x] `ci-sweeper/scripts/detect_ci_failures.sh` (facts output)
-- [x] `on-loop-ci-sweeper.yaml` dogfood caller via `ci-loop-caller-full-github`
+- [x] `on-loop-ci-sweeper.yaml` dogfood caller via `ci-loop-caller`
 - [x] `branch_match` + per-branch `targets["integration:<branch>"]`
 - [x] State migration: flat `last_sha` removed (`targets` map only)
 - [x] `target_matrix` through detect → matrix execute/finalize

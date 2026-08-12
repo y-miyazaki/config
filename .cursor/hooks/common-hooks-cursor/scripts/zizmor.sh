@@ -54,11 +54,20 @@ fi
 #
 #######################################
 function get_changed_files {
-    {
-        git diff --name-only --diff-filter=ACMR -- .github/workflows/ .github/actions/ .github/dependabot.yml .github/dependabot.yaml 2> /dev/null || true
-        git diff --cached --name-only --diff-filter=ACMR -- .github/workflows/ .github/actions/ .github/dependabot.yml .github/dependabot.yaml 2> /dev/null || true
-        git ls-files --others --exclude-standard -- .github/workflows/ .github/actions/ .github/dependabot.yml .github/dependabot.yaml 2> /dev/null || true
-    } | awk 'NF && /\.(yml|yaml)$/' | sort -u
+    local path
+
+    while IFS= read -r path; do
+        [[ -z ${path} ]] && continue
+        [[ -f ${path} ]] || continue
+        [[ ${path} =~ \.(yml|yaml)$ ]] || continue
+        printf '%s\n' "${path}"
+    done < <(
+        {
+            git diff --name-only --diff-filter=ACMR -- .github/workflows/ .github/actions/ .github/dependabot.yml .github/dependabot.yaml 2> /dev/null || true
+            git diff --cached --name-only --diff-filter=ACMR -- .github/workflows/ .github/actions/ .github/dependabot.yml .github/dependabot.yaml 2> /dev/null || true
+            git ls-files --others --exclude-standard -- .github/workflows/ .github/actions/ .github/dependabot.yml .github/dependabot.yaml 2> /dev/null || true
+        } | awk 'NF && /\.(yml|yaml)$/' | sort -u
+    )
 }
 
 #######################################

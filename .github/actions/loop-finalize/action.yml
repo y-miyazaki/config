@@ -77,6 +77,10 @@ inputs:
     default: ""
     description: "Static markdown prefix (finalize composes final body)"
     required: false
+  pr_draft:
+    default: "false"
+    description: "Create PR as draft when true (open_pr strategy)"
+    required: false
   pr_title:
     default: "chore: automated update (loop)"
     description: "PR title"
@@ -275,6 +279,7 @@ runs:
         NOTIFY_CONTEXT_JSON: ${{ inputs.notify_context_json }}
         PR_BASE_BRANCH: ${{ steps.target.outputs.pr_base_branch }}
         PR_BODY: ${{ inputs.pr_body }}
+        PR_DRAFT: ${{ inputs.pr_draft }}
         PR_TITLE: ${{ inputs.pr_title }}
         SKIP_REASON: ${{ inputs.skip_reason }}
         TARGET_JSON: ${{ inputs.target_json }}

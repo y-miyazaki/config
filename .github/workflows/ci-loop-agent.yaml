@@ -152,6 +152,11 @@ on:
         description: "PR body text for finalize job"
         required: false
         type: string
+      pr_draft:
+        default: false
+        description: "Create finalize PR as draft when true"
+        required: false
+        type: boolean
       pr_title:
         default: ""
         description: "PR title for finalize job"
@@ -296,7 +301,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Agent Once
-        uses: y-miyazaki/config/.github/actions/loop-agent-once@93f29ddb86b09e8c81f9e5e82b4c87446ffc17c6 # v1.8.78
+        uses: y-miyazaki/config/.github/actions/loop-agent-once@f658281df06b9c1619bb08be7a2591bcc1646a47 # v1.8.79
         with:
           agent_token: ${{ secrets.AGENT_TOKEN }}
           cli_version: ${{ inputs.cli_version }}
@@ -343,7 +348,7 @@ jobs:
 
       - name: Resolve Push Token
         id: push_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@93f29ddb86b09e8c81f9e5e82b4c87446ffc17c6 # v1.8.78
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@f658281df06b9c1619bb08be7a2591bcc1646a47 # v1.8.79
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
@@ -375,7 +380,7 @@ jobs:
 
       - name: Setup Worktree
         id: worktree
-        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@93f29ddb86b09e8c81f9e5e82b4c87446ffc17c6 # v1.8.78
+        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@f658281df06b9c1619bb08be7a2591bcc1646a47 # v1.8.79
         with:
           base_branch: ${{ steps.target.outputs.worktree_branch }}
           base_ref: ${{ steps.target.outputs.worktree_ref }}
@@ -385,7 +390,7 @@ jobs:
 
       - name: Execute Bounded Loop
         id: execute
-        uses: y-miyazaki/config/.github/actions/loop-execute@93f29ddb86b09e8c81f9e5e82b4c87446ffc17c6 # v1.8.78
+        uses: y-miyazaki/config/.github/actions/loop-execute@f658281df06b9c1619bb08be7a2591bcc1646a47 # v1.8.79
         with:
           agent_implementer_max_turns: ${{ inputs.agent_implementer_max_turns }}
           agent_implementer_model: ${{ inputs.agent_implementer_model }}
@@ -447,7 +452,7 @@ jobs:
 
       - name: Resolve Push Token
         id: push_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@93f29ddb86b09e8c81f9e5e82b4c87446ffc17c6 # v1.8.78
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@f658281df06b9c1619bb08be7a2591bcc1646a47 # v1.8.79
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
@@ -469,7 +474,7 @@ jobs:
       - name: Finalize
         continue-on-error: true
         id: finalize
-        uses: y-miyazaki/config/.github/actions/loop-finalize@93f29ddb86b09e8c81f9e5e82b4c87446ffc17c6 # v1.8.78
+        uses: y-miyazaki/config/.github/actions/loop-finalize@f658281df06b9c1619bb08be7a2591bcc1646a47 # v1.8.79
         with:
           additional_commit_paths: ${{ inputs.additional_commit_paths }}
           agent_result: ${{ needs.agent-l2.result }}
@@ -490,6 +495,7 @@ jobs:
           open_rejections: ${{ needs.agent-l2.outputs.open_rejections }}
           outcome_override: ${{ inputs.outcome_override != '' && inputs.outcome_override || needs.agent-l2.outputs.outcome_override }}
           pr_body: ${{ inputs.pr_body }}
+          pr_draft: ${{ inputs.pr_draft == true && 'true' || 'false' }}
           pr_title: ${{ inputs.pr_title }}
           reject_reason: ${{ needs.agent-l2.outputs.reason }}
           skip_reason: ${{ inputs.skip_reason }}
@@ -538,7 +544,7 @@ jobs:
 
       - name: Append Run Log
         if: always() && inputs.loop_name != ''
-        uses: y-miyazaki/config/.github/actions/loop-run-log@93f29ddb86b09e8c81f9e5e82b4c87446ffc17c6 # v1.8.78
+        uses: y-miyazaki/config/.github/actions/loop-run-log@f658281df06b9c1619bb08be7a2591bcc1646a47 # v1.8.79
         with:
           agent_result: ${{ steps.run_log_meta.outputs.agent_result }}
           attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
@@ -560,7 +566,7 @@ jobs:
         if: >-
           always() &&
           steps.notify_target.outputs.pr_number != ''
-        uses: y-miyazaki/config/.github/actions/loop-notify-pr@93f29ddb86b09e8c81f9e5e82b4c87446ffc17c6 # v1.8.78
+        uses: y-miyazaki/config/.github/actions/loop-notify-pr@f658281df06b9c1619bb08be7a2591bcc1646a47 # v1.8.79
         with:
           attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
           auto_merge: ${{ inputs.auto_merge }}

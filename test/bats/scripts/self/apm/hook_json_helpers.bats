@@ -56,6 +56,32 @@ main.go:1:1: undefined: foo"
     declare -F emit_json_with_reason > /dev/null
 }
 
+@test "get_changed_files skips staged shell paths deleted from working tree" {
+    local repo="${BATS_TEST_TMPDIR}/git-filter-repo"
+    local runner="${BATS_TEST_TMPDIR}/run_get_changed_files.sh"
+    mkdir -p "${repo}"
+    git -C "${repo}" init -q
+    git -C "${repo}" config user.email "test@example.com"
+    git -C "${repo}" config user.name "test"
+    printf '#!/bin/bash\necho hi\n' > "${repo}/staged.sh"
+    git -C "${repo}" add staged.sh
+    rm "${repo}/staged.sh"
+
+    cat > "${runner}" << EOF
+#!/bin/bash
+set -euo pipefail
+# shellcheck disable=SC1091
+source "${SHELL_HOOK}"
+cd "${repo}"
+get_changed_files
+EOF
+    chmod +x "${runner}"
+
+    run "${runner}"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
 @test "tflint hook defines JSON helper functions" {
     # shellcheck disable=SC1090
     source "${TERRAFORM_HOOK}"
@@ -69,4 +95,21 @@ main.go:1:1: undefined: foo"
     run truncate_reason_text "0123456789abcdef"
     [ "$status" -eq 0 ]
     [ "$output" = $'0123456789\n...[truncated]' ]
+}
+
+@test "collapse_reason_for_cursor_display flattens multiline text" {
+    setup_common_hook
+    run collapse_reason_for_cursor_display $'header line\ndetail line'
+    [ "$status" -eq 0 ]
+    [ "$output" = "header line detail line" ]
+}
+
+@test "report_failure collapses multiline cursor stop reasons to one line" {
+    setup_go_hook
+    run report_failure "golangci-lint found issues in Go code:
+main.go:1:1: undefined: foo"
+    [ "$status" -eq 0 ]
+    [[ ${output} == *'"followup_message"'* ]]
+    [[ ${output} == *'found issues in Go code: main.go:1:1: undefined: foo'* ]]
+    [[ ${output} != *$'found issues in Go code:\nmain.go'* ]]
 }

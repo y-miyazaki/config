@@ -1,9 +1,9 @@
 # Issue Triage and Entity Loops Design
 
-**Status:** Draft (grill-me + brainstorming 2026-08-11)  
+**Status:** Draft (grill-me + brainstorming 2026-08-11) — **partially superseded** for entity profile scope, axis 2/3 caller choice, and normative `handoff_key` by [Entity Caller Responsibility Separation](2026-08-11-entity-caller-responsibility-separation-design.md)  
 **Date:** 2026-08-11  
 **Primary consumers:** Loop Engineering platform, `issue-triage` / `issue-autofix` / `pr-revise` loops  
-**Related:** [Loop Engineering Design](../../explanation/loop-engineering/loop-engineering-design.md), [Loop Caller Reusable Design](../../explanation/loop-engineering/loop-caller-reusable-design.md), [Detect scope axis](2026-08-10-detect-scope-axis-and-interactive-discovery-design.md)
+**Related:** [Loop Engineering Design](../../explanation/loop-engineering/loop-engineering-design.md), [Loop Caller Reusable Design](../../explanation/loop-engineering/loop-caller-reusable-design.md), [Detect scope axis](2026-08-10-detect-scope-axis-and-interactive-discovery-design.md), [Responsibility Separation](2026-08-11-entity-caller-responsibility-separation-design.md)
 
 ## Problem
 
