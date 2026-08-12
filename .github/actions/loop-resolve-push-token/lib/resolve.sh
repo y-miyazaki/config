@@ -52,7 +52,11 @@ function resolve_github_token {
     elif [[ -n ${INPUT_GITHUB_TOKEN:-} ]]; then
         token="${INPUT_GITHUB_TOKEN}"
     else
-        token="${GITHUB_TOKEN}"
+        token="${GITHUB_TOKEN:-}"
+        if [[ -z ${token} ]]; then
+            echo "::error::No GitHub token available (App token, github_token input, and GITHUB_TOKEN are all empty)" >&2
+            return 1
+        fi
     fi
 
     echo "::add-mask::${token}"

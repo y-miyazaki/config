@@ -27,6 +27,12 @@ setup() {
     grep -q 'permission-workflows: write' "${ACTION_YML}"
 }
 
+@test "action.yml passes github.token as GITHUB_TOKEN for composite step fallback" {
+    local line
+    line="$(grep '^[[:space:]]*GITHUB_TOKEN:' "${ACTION_YML}")"
+    [[ ${line} == *'github.token'* ]]
+}
+
 @test "resolve_github_token emits warning when app token generation failed" {
     # shellcheck disable=SC1090
     source "${RESOLVE_LIB}"

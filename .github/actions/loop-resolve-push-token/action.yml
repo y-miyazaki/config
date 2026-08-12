@@ -40,5 +40,6 @@ runs:
       env:
         APP_TOKEN: ${{ steps.app_token.outputs.token }}
         BOT_APP_CONFIGURED: ${{ inputs.bot_app_client_id != '' && inputs.bot_app_private_key != '' && 'true' || 'false' }}
+        GITHUB_TOKEN: ${{ github.token }}
         INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
       run: bash "${GITHUB_ACTION_PATH}/lib/resolve.sh"
