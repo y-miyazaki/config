@@ -40,7 +40,7 @@ permissions:
 
 jobs:
   apm-audit:
-    uses: y-miyazaki/config/.github/workflows/ci-apm-audit.yaml@2c977ee7be152bed9fce0c702114e34e3fbdfb4b # v1.8.81
+    uses: y-miyazaki/config/.github/workflows/ci-apm-audit.yaml@2d05296f5663859bb60b8528bc2a729b540b6887 # v1.8.81
     with:
       # Set true only when installed trees must match APM sources exactly.
       check_drift: false
