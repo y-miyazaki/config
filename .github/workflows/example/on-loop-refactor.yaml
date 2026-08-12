@@ -13,6 +13,7 @@ permissions:
   actions: write
   contents: write
   copilot-requests: write # zizmor: ignore[excessive-permissions]
+  issues: write
   pull-requests: write
 
 concurrency:
