@@ -36,7 +36,20 @@ jobs:
         github.event_name == 'issues' &&
         (
           github.event.repository.private == true ||
-          contains(fromJSON('["MEMBER","OWNER","COLLABORATOR"]'), github.event.sender.author_association)
+          (
+            contains(fromJSON('["opened","reopened"]'), github.event.action) &&
+            contains(fromJSON('["MEMBER","OWNER","COLLABORATOR"]'), github.event.issue.author_association)
+          ) ||
+          (
+            contains(fromJSON('["labeled","unlabeled"]'), github.event.action) &&
+            (
+              github.event.sender.login == github.repository_owner ||
+              (
+                github.event.sender.login == github.event.issue.user.login &&
+                contains(fromJSON('["MEMBER","OWNER","COLLABORATOR"]'), github.event.issue.author_association)
+              )
+            )
+          )
         ) &&
         (
           contains(fromJSON('["opened","reopened"]'), github.event.action) ||
@@ -93,6 +106,7 @@ jobs:
       budget_max_tokens_per_day: 500000
       delivery: none
       detect_domain_env_json: ${{ github.event_name == 'workflow_dispatch' && format('{{"ISSUE_NUMBER":{0}}}', toJSON(inputs.issue_number)) || '{}' }}
+
       detect_script: .agents/skills/issue-triage/scripts/detect_issue.sh
       dispatch_hook_script: .agents/skills/issue-triage/scripts/hooks/on_detect_dispatch.sh
       engine: cursor
