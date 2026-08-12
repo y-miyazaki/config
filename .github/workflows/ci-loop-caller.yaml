@@ -348,6 +348,7 @@ jobs:
       actions: read
       contents: write
       copilot-requests: write # zizmor: ignore[excessive-permissions]
+      issues: write
       pull-requests: write
     strategy:
       fail-fast: false
