@@ -8,9 +8,9 @@
       "last_reject_reason": "No file changes produced"
     },
     "integration:main": {
-      "last_run": "2026-08-10T05:33:47Z",
+      "last_run": "2026-08-12T21:13:31Z",
       "outcome": "rejected",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "open_rejections": [],
       "last_reject_reason": "No file changes produced",
       "last_sha": "11aa1780d084805e3bfd9a7d2e733488e22db133"
