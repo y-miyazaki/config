@@ -204,7 +204,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@b063d066d6fddc9c278513d0b5a2dbe380f45ef8 # v1.8.80
+        uses: y-miyazaki/config/.github/actions/summary@93c233a898836f6c8b4bd6818f0bc2a41f8268ad # v1.8.80
         with:
           artifacts: |
             (none)
@@ -230,7 +230,7 @@ jobs:
 
       - name: Configure git auth
         if: github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@b063d066d6fddc9c278513d0b5a2dbe380f45ef8 # v1.8.80
+        uses: y-miyazaki/config/.github/actions/git-auth@93c233a898836f6c8b4bd6818f0bc2a41f8268ad # v1.8.80
         with:
           github_token: ${{ github.token }}
           operation: configure
@@ -272,7 +272,7 @@ jobs:
 
       - name: Install shfmt
         if: steps.file-list.outputs.no_files == 'false'
-        uses: y-miyazaki/config/.github/actions/install-github-release@b063d066d6fddc9c278513d0b5a2dbe380f45ef8 # v1.8.80
+        uses: y-miyazaki/config/.github/actions/install-github-release@93c233a898836f6c8b4bd6818f0bc2a41f8268ad # v1.8.80
         with:
           asset_pattern: "shfmt_v{version}_linux_amd64"
           binary: shfmt
@@ -398,14 +398,14 @@ jobs:
 
       - name: Clear git auth
         if: always() && github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@b063d066d6fddc9c278513d0b5a2dbe380f45ef8 # v1.8.80
+        uses: y-miyazaki/config/.github/actions/git-auth@93c233a898836f6c8b4bd6818f0bc2a41f8268ad # v1.8.80
         with:
           github_token: ${{ github.token }}
           operation: clear
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@b063d066d6fddc9c278513d0b5a2dbe380f45ef8 # v1.8.80
+        uses: y-miyazaki/config/.github/actions/summary@93c233a898836f6c8b4bd6818f0bc2a41f8268ad # v1.8.80
         with:
           artifacts: |
             (none)
