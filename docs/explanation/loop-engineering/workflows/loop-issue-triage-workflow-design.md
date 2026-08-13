@@ -44,8 +44,12 @@ on-loop-issue-triage.yaml
                        (detect_issue.sh reads GITHUB_EVENT_PATH;
                         workflow_dispatch may pass ISSUE_NUMBER via detect_domain_env_json)
            execute → ci-loop-agent (issues: write; finalize_enabled=false)
-           record-skip → budget only
+           record-l1-run → append .loop/loop-run-log.md after L1 execute
+                           (usage_json when agent exports it; run-count always)
+           record-skip → budget skips only
 ```
+
+Budget catalog: `.loop/loop-budget.json` includes an `issue-triage` entry (caller `budget_max_*` still apply as overrides/complements).
 
 No caller `prepare` job — event mapping lives in the skill detect script (E17).
 

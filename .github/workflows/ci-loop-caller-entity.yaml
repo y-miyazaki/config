@@ -338,6 +338,51 @@ jobs:
       BOT_APP_PRIVATE_KEY: ${{ secrets.BOT_APP_PRIVATE_KEY }}
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
+  record-l1-run:
+    if: >-
+      always() &&
+      needs.detect.result == 'success' &&
+      needs.detect.outputs.should_run == 'true' &&
+      needs.detect.outputs.level == 'L1' &&
+      needs.execute.result != 'cancelled' &&
+      needs.execute.result != 'skipped'
+    needs:
+      - detect
+      - execute
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Resolve GitHub Token
+        id: resolve_github_token
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@88107626b8696f174d7bee35c70f377657bfaa1e # v1.8.83
+        with:
+          bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
+          bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+          github_token: ${{ secrets.GH_TOKEN }}
+
+      - name: Append L1 Run Log
+        uses: y-miyazaki/config/.github/actions/loop-run-log@88107626b8696f174d7bee35c70f377657bfaa1e # v1.8.83
+        with:
+          agent_result: ${{ needs.execute.result }}
+          base_branch: ${{ needs.detect.outputs.branch_state }}
+          github_token: ${{ steps.resolve_github_token.outputs.github_token }}
+          has_changes: "false"
+          loop_name: ${{ needs.detect.outputs.loop_name }}
+          outcome: ${{ needs.execute.result == 'success' && 'no-changes' || 'error' }}
+          run_log_file: ${{ inputs.run_log_file }}
+          run_started_at: ${{ needs.detect.outputs.run_started_at }}
+          skip_reason: none
+          usage_json: ${{ needs.execute.outputs.usage_json || '' }}
+
   record-skip:
     if: >-
       needs.detect.result == 'success' &&
