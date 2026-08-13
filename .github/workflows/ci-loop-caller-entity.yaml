@@ -298,7 +298,7 @@ jobs:
       fail-fast: false
       matrix:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
-    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@ed713920cbe2f851ccf4dd2976143d5ca08b64a8 # ed71392
+    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@dba0e8be9a435000ab7fcaf7f138716a1a1369a7 # dba0e8b
     with:
       agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
       agent_implementer_model: ${{ needs.detect.outputs.agent_implementer_model }}
