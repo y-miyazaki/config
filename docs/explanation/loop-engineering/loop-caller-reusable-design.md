@@ -117,7 +117,7 @@ jobs:
       branch_match: main
       branch_state: main
       budget_max_runs_per_day: 1
-      budget_max_tokens_per_day: 500000
+      budget_max_tokens_per_day: 1000000
       detect_domain_env_json: >-
         {"CHANGELOG_FILE":"CHANGELOG.md","CHANGELOG_MERGE_COMMITS":"false"}
       detect_script: .agents/skills/changelog/scripts/detect_changelog_commits.sh

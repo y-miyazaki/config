@@ -61,7 +61,7 @@ jobs:
       branch_match: main
       branch_state: main
       budget_max_runs_per_day: 1
-      budget_max_tokens_per_day: 500000
+      budget_max_tokens_per_day: 1000000
       delivery: open_pr
       detect_domain_env_json: >-
         {"REFACTOR_DUP_MIN_LINES":"8","REFACTOR_OVERSIZED_FILE_LINES":"400","REFACTOR_SCAN_GLOBS":".apm/packages/**,scripts/**"}

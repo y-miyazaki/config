@@ -462,7 +462,7 @@ Example policy entry (matches dogfood `.loop/loop-budget.json`). `loop-detect` c
     "changelog": {
       "max_attempts_per_run": 3,
       "max_runs_per_day": 5,
-      "max_tokens_per_day": 500000
+      "max_tokens_per_day": 1000000
     },
     "ci-sweeper": {
       "max_attempts_per_run": 3,
@@ -472,7 +472,7 @@ Example policy entry (matches dogfood `.loop/loop-budget.json`). `loop-detect` c
     "docs-updater": {
       "max_attempts_per_run": 3,
       "max_runs_per_day": 5,
-      "max_tokens_per_day": 500000
+      "max_tokens_per_day": 1000000
     }
   }
 }

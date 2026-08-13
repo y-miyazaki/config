@@ -18,7 +18,7 @@
 - Level: **L2 from start** (skip L1 observation phase).
 - `no_changes_verdict`: `REJECT` when signals present but no report file written.
 - Cron: Monday 08:00 UTC, weekly.
-- Budget (caller default): `budget_max_runs_per_day: 2`, `budget_max_tokens_per_day: 750000`.
+- Budget (caller default): `budget_max_runs_per_day: 2`, `budget_max_tokens_per_day: 1000000`.
 - No GitHub Issue creation (log + state + report PR only).
 - Detect enrich fields (`report_file`, `previous_report`) live in `detect_tech_debt.sh`; sensors live in `detect_tech_debt_sensors.sh`.
 - Refactoring loops (`loop-refactor-*`) are **action loops**, not report loops — mention only as future work in design doc.
@@ -62,7 +62,7 @@ Create `loop-tech-debt-workflow-design.md` following `loop-docs-updater-workflow
 | `pr_enabled`                    | `false`                                                                                         |
 | `branch_match` / `branch_state` | `main`                                                                                          |
 | `budget_max_runs_per_day`       | `2`                                                                                             |
-| `budget_max_tokens_per_day`     | `750000`                                                                                        |
+| `budget_max_tokens_per_day`     | `1000000`                                                                                        |
 | `max_targets_per_schedule`      | `1`                                                                                             |
 | `agent_implementer_max_turns`   | `5`                                                                                             |
 | `agent_loop_max_attempts`       | `3`                                                                                             |
