@@ -135,7 +135,7 @@ outputs:
     description: "Failure stage when execute push/notify fails (empty on success)"
     value: ${{ steps.failure_diag.outputs.failure_stage }}
   has_changes:
-    description: "Whether any files were committed and pushed"
+    description: "Whether HEAD differs from base (product files) or this run committed files"
     value: ${{ steps.push.outputs.has_changes }}
   notify_context_json:
     description: "Machine context for loop-notify-pr"

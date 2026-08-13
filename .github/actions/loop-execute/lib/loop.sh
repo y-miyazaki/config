@@ -98,7 +98,7 @@ function parse_outcome_override_from_agent_output {
 # Globals:
 #   ATTEMPT - Final attempt count (read)
 #   GITHUB_OUTPUT - GitHub Actions output file path (read)
-#   HAS_CHANGES - Whether commits were produced (read)
+#   HAS_CHANGES - Whether this run or HEAD vs base has product changes (read)
 #   OPEN_REJECTIONS_JSON - Open rejection array JSON (read)
 #   OUTCOME_OVERRIDE - Skill watch override when set (read)
 #   REASON - Final verdict reason (read)
@@ -152,7 +152,7 @@ function write_loop_outputs {
 #
 # Globals:
 #   ATTEMPT - Current attempt counter (read/write)
-#   HAS_CHANGES - Whether commits were produced (read/write)
+#   HAS_CHANGES - Whether this run or HEAD vs base has product changes (read/write)
 #   OPEN_REJECTIONS_JSON - Open rejection array JSON (read/write)
 #   OUTCOME_OVERRIDE - Skill watch override when set (write)
 #   REASON - Verdict reason for current attempt (read/write)
@@ -170,7 +170,7 @@ function write_loop_outputs {
 #
 #######################################
 function run_bounded_loop {
-    local attempt_dir agent_prompt attempt_committed
+    local attempt_dir agent_prompt attempt_committed branch_ahead_files
 
     while [[ ${ATTEMPT} -lt ${AGENT_LOOP_MAX_ATTEMPTS} ]]; do
         ATTEMPT=$((ATTEMPT + 1))
@@ -184,11 +184,7 @@ function run_bounded_loop {
         if agent_report_skill_requires_format_check "${SKILL_NAME}" \
             && { [[ ${HAS_CHANGES} == "true" ]] || [[ ${ATTEMPT} -gt 1 ]]; }; then
             local pre_branch_files
-            pre_branch_files="$(
-                cd "${WORKTREE_PATH}" || exit 1
-                git fetch origin "${BASE_BRANCH}" --depth=1 2> /dev/null || true
-                git diff --name-only "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/' || true
-            )"
+            pre_branch_files="$(list_non_loop_branch_files "${WORKTREE_PATH}" "${BASE_BRANCH}")"
             if [[ -n ${pre_branch_files} ]]; then
                 synthesis_block="$(build_branch_diff_synthesis_block "${pre_branch_files}")"
             fi
@@ -218,10 +214,7 @@ function run_bounded_loop {
             attempt_committed="true"
         elif [[ ${ATTEMPT} -gt 1 && -n ${REJECT_FEEDBACK} ]]; then
             local branch_changed_files branch_violations
-            branch_changed_files="$(
-                cd "${WORKTREE_PATH}" || exit 1
-                git diff --name-only "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/' || true
-            )"
+            branch_changed_files="$(list_non_loop_branch_files "${WORKTREE_PATH}" "${BASE_BRANCH}")"
             branch_violations="$(collect_denylist_violations "${branch_changed_files}")"
             if [[ -z ${branch_violations} ]]; then
                 branch_violations="$(collect_allowlist_violations "${branch_changed_files}")"
@@ -241,6 +234,14 @@ function run_bounded_loop {
             echo "::warning::Attempt ${ATTEMPT} produced no new commit; branch diff passes path guards — running verifier"
         elif [[ ${ATTEMPT} -gt 1 ]]; then
             echo "::warning::Attempt ${ATTEMPT} produced no file changes; verifier will review the same diff as the previous attempt"
+        fi
+
+        if [[ ${HAS_CHANGES} != "true" ]]; then
+            branch_ahead_files="$(list_non_loop_branch_files "${WORKTREE_PATH}" "${BASE_BRANCH}")"
+            if [[ -n ${branch_ahead_files} ]]; then
+                HAS_CHANGES="true"
+                echo "Worktree is clean; ${BASE_BRANCH}...HEAD still has product files — running verifier"
+            fi
         fi
 
         if [[ ${HAS_CHANGES} != "true" ]]; then

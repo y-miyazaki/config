@@ -50,7 +50,7 @@ inputs:
     required: false
   has_changes:
     default: "false"
-    description: "Whether agent produced changes"
+    description: "Whether HEAD differs from base in product files (or this run committed)"
     required: false
   labels:
     default: "loop-automation"
@@ -330,8 +330,16 @@ runs:
       env:
         BRANCH: ${{ inputs.branch }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
+        HAS_CHANGES: ${{ inputs.has_changes }}
+        VERDICT: ${{ inputs.verdict }}
       run: |
         set -euo pipefail
+        # shellcheck source=lib/should_delete_rejected_branch.sh
+        source "${GITHUB_ACTION_PATH}/lib/should_delete_rejected_branch.sh"
+        if ! should_delete_rejected_branch "${VERDICT}" "${HAS_CHANGES}"; then
+          echo "Skipping branch delete: has_changes=${HAS_CHANGES} (keep branch that still differs from base)"
+          exit 0
+        fi
         if ! [[ "${BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
           echo "::error::Invalid branch name: ${BRANCH}"
           exit 1

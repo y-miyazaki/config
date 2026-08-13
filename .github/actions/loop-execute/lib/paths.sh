@@ -254,3 +254,40 @@ function path_matches_glob {
     ere="$(glob_to_ere "${trimmed}")"
     [[ ${file} =~ ${ere} ]]
 }
+
+#######################################
+# list_non_loop_branch_files: List files that differ from the base branch
+#
+# Description:
+#   Uses origin/<base> when that ref exists (after a best-effort fetch),
+#   otherwise <base>. Ignores .loop/ so state-only commits are not treated
+#   as product changes.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Worktree path
+#   $2 - Base branch name
+#
+# Outputs:
+#   Newline-separated repo-relative paths to stdout, or nothing
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function list_non_loop_branch_files {
+    local worktree="${1:?}"
+    local base_branch="${2:?}"
+    local base_ref
+    (
+        cd "${worktree}" || exit 1
+        git fetch origin "${base_branch}" --depth=1 > /dev/null 2>&1 || true
+        base_ref="origin/${base_branch}"
+        if ! git rev-parse --verify "${base_ref}" > /dev/null 2>&1; then
+            base_ref="${base_branch}"
+        fi
+        git diff --name-only "${base_ref}...HEAD" -- . ':!.loop/' || true
+    )
+}

@@ -1,5 +1,5 @@
 name: loop-resolve-push-token
-description: "Resolve GitHub API token: App bot → github_token input → GITHUB_TOKEN."
+description: "Resolve GitHub API token: App bot → github_token input → GITHUB_TOKEN (fail closed if App configured but mint fails)."
 
 inputs:
   bot_app_client_id:
