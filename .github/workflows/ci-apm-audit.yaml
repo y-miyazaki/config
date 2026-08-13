@@ -100,7 +100,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@1be7e4e00be7ff3e8cf7934408b01a55f1dfe180 # v1.8.83
+        uses: y-miyazaki/config/.github/actions/summary@8fcba40c8820cfb2d463dc1c55bfb0ccd1cd9a79 # v1.8.83
         with:
           artifacts: |
             (none)
