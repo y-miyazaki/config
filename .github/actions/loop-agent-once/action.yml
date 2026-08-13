@@ -43,6 +43,11 @@ inputs:
     description: "Working directory for agent execution"
     required: false
 
+outputs:
+  usage_json:
+    description: "Measured token usage JSON (empty when CLI usage is unavailable)"
+    value: ${{ steps.run.outputs.usage_json }}
+
 runs:
   using: composite
   steps:
@@ -66,6 +71,7 @@ runs:
       run: bash "${GITHUB_ACTION_PATH}/../loop-install-cli/lib/install.sh"
 
     - name: Run CLI Agent
+      id: run
       shell: bash
       env:
         AGENT_TOKEN: ${{ inputs.agent_token }}
@@ -77,61 +83,4 @@ runs:
         PROMPT: ${{ inputs.prompt_text }}
         WORKING_DIRECTORY: ${{ inputs.working_directory }}
       working-directory: ${{ inputs.working_directory }}
-      run: |
-        set -euo pipefail
-        # shellcheck disable=SC1091
-        source "${GITHUB_ACTION_PATH}/../loop-execute/lib/mcp.sh"
-        run_agent() {
-          prepare_agent_mcps "${ENGINE}" "${WORKING_DIRECTORY:-.}"
-          case "${ENGINE}" in
-            claude)
-              export ANTHROPIC_API_KEY="${AGENT_TOKEN}"
-              ARGS=(-p "${PROMPT}" --bare)
-              append_agent_mcp_args ARGS "${ENGINE}"
-              if [[ -n "${MAX_TURNS}" ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
-              if [[ -n "${MODEL}" ]]; then ARGS+=(--model "${MODEL}"); fi
-              npx claude "${ARGS[@]}"
-              ;;
-            copilot)
-              export COPILOT_GITHUB_TOKEN="${AGENT_TOKEN}"
-              ARGS=(-p "${PROMPT}" --no-ask-user)
-              append_agent_mcp_args ARGS "${ENGINE}"
-              if [[ -n "${MAX_TURNS}" ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
-              if [[ -n "${MODEL}" ]]; then ARGS+=(--model "${MODEL}"); fi
-              npx copilot "${ARGS[@]}"
-              ;;
-            codex)
-              export OPENAI_API_KEY="${AGENT_TOKEN}"
-              ARGS=(--prompt "${PROMPT}" --auto-approve)
-              append_agent_mcp_args ARGS "${ENGINE}"
-              if [[ -n "${MODEL}" ]]; then ARGS+=(--model "${MODEL}"); fi
-              npx codex "${ARGS[@]}"
-              ;;
-            cursor)
-              export CURSOR_API_KEY="${AGENT_TOKEN}"
-              ARGS=(-p "${PROMPT}" --trust)
-              append_agent_mcp_args ARGS "${ENGINE}"
-              if [[ "${WORKING_DIRECTORY}" != "." ]]; then
-                ARGS+=(--force)
-              fi
-              if [[ -n "${MODEL}" ]]; then ARGS+=(--model "${MODEL}"); fi
-              if command -v agent >/dev/null 2>&1; then
-                agent "${ARGS[@]}"
-              elif command -v cursor-agent >/dev/null 2>&1; then
-                cursor-agent "${ARGS[@]}"
-              else
-                echo "::error::Cursor CLI (agent) not found in PATH"
-                exit 1
-              fi
-              ;;
-            *)
-              echo "::error::Unsupported engine: ${ENGINE}"
-              exit 1
-              ;;
-          esac
-        }
-        if [[ -n "${OUTPUT_FILE}" ]]; then
-          run_agent 2>&1 | tee "${OUTPUT_FILE}"
-        else
-          run_agent
-        fi
+      run: bash "${GITHUB_ACTION_PATH}/lib/run.sh"

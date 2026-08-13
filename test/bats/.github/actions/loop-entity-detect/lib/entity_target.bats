@@ -38,3 +38,21 @@ setup() {
     run build_entity_target_matrix "${BATS_TEST_TMPDIR}/d.json" "issue-triage" "issue-triage" "x" "L1" "none"
     [ "$status" -ne 0 ]
 }
+
+@test "build_entity_target_matrix sets finalize none when delivery is none" {
+    printf '%s' '{"status":"ok","skip":false,"result":{"handoff_key":"entity:issue:7"}}' \
+        > "${BATS_TEST_TMPDIR}/d.json"
+    run build_entity_target_matrix "${BATS_TEST_TMPDIR}/d.json" "issue-triage" "issue-triage" "x" "L1" "none"
+    [ "$status" -eq 0 ]
+    run jq -e '.[0].target_json.finalize == "none"' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "build_entity_target_matrix sets finalize open_pr when delivery is open_pr" {
+    printf '%s' '{"status":"ok","skip":false,"result":{"handoff_key":"entity:issue:7"}}' \
+        > "${BATS_TEST_TMPDIR}/d.json"
+    run build_entity_target_matrix "${BATS_TEST_TMPDIR}/d.json" "issue-autofix" "issue-autofix" "x" "L3" "open_pr"
+    [ "$status" -eq 0 ]
+    run jq -e '.[0].target_json.finalize == "open_pr"' <<< "${output}"
+    [ "$status" -eq 0 ]
+}

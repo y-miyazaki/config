@@ -221,9 +221,9 @@ trigger → on-loop-<name>.yaml (thin caller: with: + secrets:)
       → outputs: target_matrix (slim), handoff_artifact_name, should_run, skip_reason
     execute job (matrix per target):
       → ci-loop-agent.yaml             # worktree from target.from; verifier_context always wired
-        → loop-execute (Agent→Verify)
-        → loop-finalize (when finalize_enabled)   # NOT a separate caller matrix job
-        → loop-run-log / loop-notify-pr (siblings)
+        → agent-l1 → finalize-l1 (run-log)
+        → agent-l2 → finalize-l2 (run-log; loop-finalize when finalize_enabled)
+        → loop-notify-pr (finalize-l2 sibling step when PR number present)
     record-skip job (when budget | circuit_breaker):
       → loop-run-log
 ```
@@ -253,9 +253,11 @@ flowchart TD
     D3 --> execute
     subgraph execute["execute job matrix → ci-loop-agent"]
         direction TB
-        A1[loop-worktree-setup] --> A2[loop-execute Agent→Verify]
-        A2 --> A3{verdict / has_changes}
-        A3 --> F1[loop-finalize + loop-run-log]
+        A1[agent-l1 or worktree + loop-execute]
+        A1 --> F1[finalize-l1 or finalize-l2]
+        F1 --> F_LOG[loop-run-log]
+        F1 --> F_LAND{finalize_enabled?}
+        F_LAND -->|yes L2/L3| F_FIN[loop-finalize]
     end
 
     subgraph finalize_inside["loop-finalize (inside ci-loop-agent)"]

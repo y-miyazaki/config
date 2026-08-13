@@ -25,7 +25,7 @@ detect (single job)
   → uploads loop-handoff artifact (full result + verifier_context per target)
 
 execute (matrix: target_matrix)
-  → ci-loop-agent.yaml per cell (optional finalize job when finalize_enabled=true)
+  → ci-loop-agent.yaml per cell (finalize-l1 or finalize-l2 always after agent; loop-finalize step when finalize_enabled)
   → downloads loop-handoff artifact; resolves payloads by handoff_key
   → inputs: target_json, prompt, handoff_key, finalize config, …
 
@@ -61,7 +61,7 @@ Each slim matrix cell carries: `target_json`, `prompt`, `handoff_key`. Full `res
 
 ## Execute Job (matrix)
 
-Reusable workflow matrix cells cannot pair `needs.execute.outputs.*` with a separate finalize matrix job — GitHub Actions collapses reusable-workflow outputs across cells. **Finalize runs inside `ci-loop-agent.yaml`** when the caller sets `finalize_enabled: true`.
+Reusable workflow matrix cells cannot pair `needs.execute.outputs.*` with a separate finalize matrix job — GitHub Actions collapses reusable-workflow outputs across cells. **Finalize runs inside `ci-loop-agent.yaml`** (`finalize-l1` after `agent-l1`, `finalize-l2` after `agent-l2`). `finalize_enabled` only gates the `loop-finalize` git-landing step on `finalize-l2`.
 
 ```yaml
 execute:
@@ -93,7 +93,7 @@ auto_merge: ${{ needs.detect.outputs.delivery == 'open_pr' && needs.detect.outpu
 
 ## Finalize (inside ci-loop-agent)
 
-When `finalize_enabled=true`, `ci-loop-agent` runs `loop-finalize` after `agent-l2` in the **same workflow instance**, preserving execute output pairing per matrix cell.
+`finalize-l2` always runs after `agent-l2` (unless skipped/cancelled) so run-log is written even when `delivery` is `none`. When `finalize_enabled=true`, the same job runs `loop-finalize` in the **same workflow instance**, preserving execute output pairing per matrix cell. `finalize-l1` always runs after `agent-l1` and currently persists run-log only.
 
 When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as a **sibling step** immediately after `loop-finalize` (not nested inside the composite — see [composite action composition](../../reference/specification.md#composite-action-composition)). See [loop-notify-pr Specification](../../reference/loop-notify-pr-specification.md).
 

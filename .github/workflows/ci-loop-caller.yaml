@@ -1,4 +1,4 @@
-# Reusable workflow: Loop caller orchestration
+# Reusable workflow: Loop caller orchestration (branch/PR)
 # Shared detect → execute (matrix) → record-skip job graph for on-loop-*.yaml callers.
 # Design doc: docs/explanation/loop-engineering/loop-caller-reusable-design.md
 # Inputs reference: docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
@@ -133,7 +133,7 @@ on:
         required: false
         type: number
       may_edit:
-        description: "Agent worktree edit gate: true | false (required)"
+        description: "Agent worktree edit gate: true | false"
         required: true
         type: boolean
       no_changes_verdict:
@@ -196,7 +196,7 @@ on:
         required: false
         type: string
       write_target:
-        description: "Agent artifact when may_edit is true: fix | report (required)"
+        description: "Agent artifact when may_edit is true: fix | report"
         required: true
         type: string
     secrets:
@@ -355,7 +355,7 @@ jobs:
       fail-fast: false
       matrix:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
-    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@88107626b8696f174d7bee35c70f377657bfaa1e # v1.8.83
+    uses: ./.github/workflows/ci-loop-agent.yaml
     with:
       additional_commit_paths: ${{ needs.detect.outputs.additional_commit_paths }}
       agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}

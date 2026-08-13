@@ -105,13 +105,17 @@ All loop skills **may** receive `report_file` in detect JSON; only report-mode l
 
 Not injected into skill `## Constraints`.
 
-| Value     | When used                | Input to finalize                               |
-| --------- | ------------------------ | ----------------------------------------------- |
-| `open_pr` | L2/L3 worktree loops     | `git diff` + agent `## Overview` / `## Summary` |
-| `issue`   | Triage without git edits | Agent session report (structured markdown)      |
-| `notion`  | External doc systems     | Same as `issue`                                 |
-| `log`     | L1 observation           | Run-log / state only                            |
-| `none`    | Dry-run / local          | No external action                              |
+| Value     | When used              | Input to finalize                               |
+| --------- | ---------------------- | ----------------------------------------------- |
+| `open_pr` | L2/L3 worktree loops   | `git diff` + agent `## Overview` / `## Summary` |
+| `issue`   | Finalize Issue adapter | Agent report → specified Issue or newly created |
+| `notion`  | External doc systems   | Same as `issue`                                 |
+| `log`     | L1 observation         | Run-log / state only                            |
+| `none`    | Dry-run / local        | No external action                              |
+
+**`delivery: issue` destination (finalize only):** if `target_json` already names an Issue number, comment on that Issue; otherwise create a new Issue from the Agent report. The implementer Agent must not call Issue APIs for this plane.
+
+Entity L1 skills that mutate the **triggering** Issue during the session (e.g. issue-triage labels/comments) use `delivery: none`. That is not `delivery: issue` and does not implement this adapter. See [Loop Agent Finalize Levels](2026-08-13-loop-agent-finalize-levels-design.md#delivery-issue-not-implied-by-entity-l1).
 
 Existing `loop-notify-pr` (comment on human PR) remains a **platform** concern triggered by `pull_request` mode + finalize, not a skill field.
 
@@ -141,14 +145,17 @@ detect_domain_env_json: '{"TECH_DEBT_DIR":"docs/report/tech-debt"}'
 # report_file: supplied by detect in target_json / detect result
 ```
 
-### Observation / Issue-only
+### Observation / Issue-only (finalize adapter)
 
 ```yaml
 delivery: issue
 level: L1
 may_edit: false
 # write_target and report_file omitted
+# target_json.issue_number set → comment; unset → create Issue
 ```
+
+This is **not** the issue-triage dogfood shape (`delivery: none` + in-session Issue mutations).
 
 ## `## Constraints` Injection (skill-visible)
 

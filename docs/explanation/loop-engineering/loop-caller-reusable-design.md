@@ -50,7 +50,7 @@ on-loop-changelog.yaml          on-loop-ci-sweeper.yaml
                               |
                               v
                         ci-loop-agent.yaml
-                          agent-l2 + finalize (inside same reusable)
+                          agent-l* + finalize-l* (inside same reusable)
 ```
 
 ### File Responsibilities

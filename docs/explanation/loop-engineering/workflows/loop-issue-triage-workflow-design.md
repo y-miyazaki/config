@@ -43,8 +43,8 @@ on-loop-issue-triage.yaml
            detect  → loop-entity-detect
                        (detect_issue.sh reads GITHUB_EVENT_PATH;
                         workflow_dispatch may pass ISSUE_NUMBER via detect_domain_env_json)
-           execute → ci-loop-agent (issues: write; finalize_enabled=false)
-           record-skip → budget only
+           execute → ci-loop-agent (issues: write; finalize-l1 run-log; finalize_enabled=false so no PR)
+           record-skip → budget | circuit_breaker
 ```
 
 No caller `prepare` job — event mapping lives in the skill detect script (E17).

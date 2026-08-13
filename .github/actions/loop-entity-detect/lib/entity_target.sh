@@ -137,6 +137,7 @@ function build_entity_target_matrix {
             --arg from_ref "${default_ref}" \
             --arg to_branch "${default_branch}" \
             --arg loop_name "${loop_name}" \
+            --arg delivery "${delivery}" \
             --argjson result_entity "$(jq -c '.result.entity // {}' <<< "${detect_json}")" \
             '
             {
@@ -154,7 +155,7 @@ function build_entity_target_matrix {
               ),
               from: {ref: $from_ref},
               to: {branch: $to_branch},
-              finalize: "none",
+              finalize: (if $delivery == "open_pr" then "open_pr" else "none" end),
               loop_name: $loop_name
             }
             '

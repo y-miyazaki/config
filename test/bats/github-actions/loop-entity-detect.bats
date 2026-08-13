@@ -78,11 +78,13 @@ setup() {
 
 @test "main skips when daily run budget is exceeded" {
     entity_detect_write_mock_script "${BATS_TEST_TMPDIR}/detect.sh" '{"status":"ok","skip":false,"result":{"handoff_key":"entity:issue:1"}}'
+    printf '%s\n' '{}' > "${BATS_TEST_TMPDIR}/budget.json"
     printf '%s\n' "{\"loop_name\":\"issue-triage\",\"run_id\":\"$(date -u +%Y-%m-%d)T12:00:00Z\"}" > "${BATS_TEST_TMPDIR}/run-log.md"
     run env \
         DETECT_SCRIPT="${BATS_TEST_TMPDIR}/detect.sh" \
         LOOP_NAME="issue-triage" \
         SKILL_NAME="issue-triage" \
+        BUDGET_FILE="${BATS_TEST_TMPDIR}/budget.json" \
         BUDGET_MAX_RUNS_PER_DAY="1" \
         RUN_LOG_FILE="${BATS_TEST_TMPDIR}/run-log.md" \
         bash "${ENTITY_DETECT_LIB}"

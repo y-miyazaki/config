@@ -1,9 +1,9 @@
 # Reusable workflow: Loop agent execution
-# L1: single read-only agent session (loop-agent-once)
-# L2/L3: worktree + bounded Agent→Verify loop (loop-execute)
-# Optional finalize job pairs execute outputs per matrix cell (caller sets finalize_enabled).
+# L1: agent-l1 (loop-agent-once) → finalize-l1 (run-log; future L1 delivery)
+# L2/L3: agent-l2 (loop-execute) → finalize-l2 (run-log always; loop-finalize when finalize_enabled)
+# finalize_enabled gates git landing / PR inside finalize-l2, not whether finalize runs.
 # Contract (L2/L3): outputs { branch, has_changes, verdict, reason, attempts }
-# Token resolution: resolve inside each job (agent-l1 / agent-l2 / finalize); pass BOT_APP_* + optional GH_TOKEN.
+# Token resolution: resolve inside each job (agent-l1 / agent-l2 / finalize-l1 / finalize-l2); pass BOT_APP_* + optional GH_TOKEN.
 # Do not accept a pre-resolved token via workflow_call secrets named GITHUB_TOKEN (reserved).
 #   docs/explanation/loop-engineering/loop-caller-reusable-design.md#github-token-resolution
 name: ci-loop-agent
@@ -107,7 +107,7 @@ on:
         type: string
       finalize_enabled:
         default: false
-        description: "Run loop-finalize after agent-l2 in this workflow instance"
+        description: "Run loop-finalize git landing/PR inside finalize-l2 (not whether finalize-l2 runs)"
         required: false
         type: boolean
       handoff_artifact_name:
@@ -265,8 +265,8 @@ on:
         description: "Final verifier reason (L2/L3)"
         value: ${{ jobs.agent-l2.outputs.reason || '' }}
       usage_json:
-        description: "Measured token usage JSON (L2/L3)"
-        value: ${{ jobs.agent-l2.outputs.usage_json || '' }}
+        description: "Measured token usage JSON (L1 from agent-l1, L2/L3 from agent-l2)"
+        value: ${{ jobs.agent-l1.outputs.usage_json || jobs.agent-l2.outputs.usage_json || '' }}
       verdict:
         description: "Final verifier verdict APPROVE/REJECT (L2/L3)"
         value: ${{ jobs.agent-l2.outputs.verdict || '' }}
@@ -294,6 +294,8 @@ jobs:
     environment: ${{ inputs.environment }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    outputs:
+      usage_json: ${{ steps.agent.outputs.usage_json }}
     permissions:
       contents: read
       copilot-requests: write # zizmor: ignore[excessive-permissions]
@@ -314,7 +316,8 @@ jobs:
           github_token: ${{ secrets.GH_TOKEN }}
 
       - name: Run Agent Once
-        uses: y-miyazaki/config/.github/actions/loop-agent-once@88107626b8696f174d7bee35c70f377657bfaa1e # v1.8.83
+        id: agent
+        uses: ./.github/actions/loop-agent-once
         with:
           agent_token: ${{ secrets.AGENT_TOKEN }}
           cli_version: ${{ inputs.cli_version }}
@@ -323,6 +326,48 @@ jobs:
           max_turns: ${{ inputs.agent_implementer_max_turns }}
           model: ${{ inputs.agent_implementer_model }}
           prompt_text: ${{ inputs.prompt_file != '' && format('/skill {0}', inputs.prompt_file) || inputs.prompt_text }}
+
+  finalize-l1:
+    if: >-
+      always() &&
+      inputs.level == 'L1' &&
+      inputs.loop_name != '' &&
+      needs.agent-l1.result != 'cancelled' &&
+      needs.agent-l1.result != 'skipped'
+    needs: agent-l1
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Resolve GitHub Token
+        id: resolve_github_token
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@88107626b8696f174d7bee35c70f377657bfaa1e # v1.8.83
+        with:
+          bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
+          bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+          github_token: ${{ secrets.GH_TOKEN }}
+
+      - name: Append Run Log
+        uses: y-miyazaki/config/.github/actions/loop-run-log@88107626b8696f174d7bee35c70f377657bfaa1e # v1.8.83
+        with:
+          agent_result: ${{ needs.agent-l1.result }}
+          base_branch: ${{ inputs.state_push_branch != '' && inputs.state_push_branch || inputs.base_branch }}
+          github_token: ${{ steps.resolve_github_token.outputs.github_token }}
+          has_changes: "false"
+          loop_name: ${{ inputs.loop_name }}
+          outcome: ${{ needs.agent-l1.result == 'success' && 'no-changes' || 'error' }}
+          run_log_file: ${{ inputs.run_log_file }}
+          run_started_at: ${{ inputs.run_started_at }}
+          skip_reason: ${{ inputs.skip_reason }}
+          usage_json: ${{ needs.agent-l1.outputs.usage_json || '' }}
 
   agent-l2:
     if: inputs.level == 'L2' || inputs.level == 'L3'
@@ -437,12 +482,12 @@ jobs:
           verifier_context: ${{ inputs.verifier_context }}
           worktree_path: ${{ steps.worktree.outputs.worktree_path }}
 
-  finalize:
+  finalize-l2:
     if: >-
       always() &&
-      inputs.finalize_enabled &&
       (inputs.level == 'L2' || inputs.level == 'L3') &&
-      needs.agent-l2.result != 'cancelled'
+      needs.agent-l2.result != 'cancelled' &&
+      needs.agent-l2.result != 'skipped'
     needs: agent-l2
     environment: ${{ inputs.environment }}
     permissions:
@@ -486,6 +531,7 @@ jobs:
           github_token: ${{ secrets.GH_TOKEN }}
 
       - name: Finalize
+        if: inputs.finalize_enabled
         continue-on-error: true
         id: finalize
         uses: y-miyazaki/config/.github/actions/loop-finalize@88107626b8696f174d7bee35c70f377657bfaa1e # v1.8.83
@@ -568,7 +614,7 @@ jobs:
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           has_changes: ${{ needs.agent-l2.outputs.has_changes }}
           loop_name: ${{ inputs.loop_name }}
-          outcome: ${{ steps.finalize.outcome == 'failure' && 'error' || steps.finalize.outputs.outcome || (needs.agent-l2.result != 'success' && needs.agent-l2.result != 'skipped' && 'error') || 'skipped' }}
+          outcome: ${{ steps.finalize.outcome == 'failure' && 'error' || steps.finalize.outputs.outcome || (needs.agent-l2.result != 'success' && needs.agent-l2.result != 'skipped' && 'error') || (needs.agent-l2.outputs.verdict == 'REJECT' && 'rejected') || 'no-changes' }}
           run_log_file: ${{ inputs.run_log_file }}
           run_started_at: ${{ inputs.run_started_at }}
           skip_reason: ${{ inputs.skip_reason }}
