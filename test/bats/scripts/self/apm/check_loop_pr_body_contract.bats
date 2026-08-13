@@ -103,3 +103,14 @@ setup() {
     [ "$status" -eq 1 ]
     [[ $output == *"Example org/repo markdown link"* ]]
 }
+
+@test "check_loop_pr_body_contract requires Survey and Apply sections in common-output-format.md" {
+    local skill_root="${TEST_TMP}/skills/issue-autofix"
+    mkdir -p "${skill_root}/assets" "${skill_root}/references"
+    cp -R "${REPO_ROOT}/.apm/packages/common/.apm/skills/issue-autofix/." "${skill_root}/"
+    sed -i '/^## Survey result/d' "${skill_root}/references/common-output-format.md"
+
+    run env SKILLS_ROOT="${TEST_TMP}/skills" bash "${REPO_ROOT}/scripts/self/apm/check_loop_pr_body_contract.sh"
+    [ "$status" -eq 1 ]
+    [[ $output == *"missing ## Survey result section"* ]]
+}

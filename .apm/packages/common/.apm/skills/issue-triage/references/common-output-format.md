@@ -2,7 +2,7 @@
 
 ## Overview
 
-Issue number, classification decision, confidence, labels added/removed, comments posted.
+Issue number, classification decision, confidence, labels added/removed, comments created vs updated.
 
 ## Changes
 

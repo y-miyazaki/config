@@ -20,6 +20,15 @@ Gate IDs are for agent self-check and Deferred reasons. Issue identity in report
 - [ ] On unsafe partial failure, apply `triage:failed` when catalog allows
 - **PASS** if FSM state matches event and allowlist
 
+## Comments
+
+### COMM-01: Thread history
+
+- [ ] Create a new Issue comment via `scripts/issue_comment.sh create` on each FSM transition and on re-triage after a human reply
+- [ ] Use `scripts/issue_comment.sh correct` only for minor corrections to the latest marked bot comment in the same FSM state
+- [ ] Do not overwrite prior triage analysis or edit human comments
+- **PASS** if the thread would retain prior bot analysis as separate comments
+
 ## Scope
 
 ### SCOPE-01: API-only side effects

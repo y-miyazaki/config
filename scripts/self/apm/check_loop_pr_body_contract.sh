@@ -280,6 +280,37 @@ function check_apply_template {
 }
 
 #######################################
+#######################################
+# check_output_format_survey: Require Survey and Apply sections in common-output-format.md
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Skill name
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function check_output_format_survey {
+    local skill="$1"
+    local format_file="${SKILLS_ROOT}/${skill}/references/common-output-format.md"
+
+    [[ -f ${format_file} ]] || return 0
+
+    if ! grep -qE '^## Survey result' "${format_file}"; then
+        record_violation "common-output-format.md for ${skill} missing ## Survey result section"
+    fi
+
+    if ! grep -qE '^## Apply result' "${format_file}"; then
+        record_violation "common-output-format.md for ${skill} missing ## Apply result section"
+    fi
+}
+
 # check_survey_template: Validate survey PR body template headings
 #
 # Globals:
@@ -421,6 +452,7 @@ function check_loop_skill {
 
     check_apply_template "${skill}"
     check_survey_template "${skill}"
+    check_output_format_survey "${skill}"
     check_automation_envelope "${skill}"
     check_template_link_placeholders "${skill}"
 }

@@ -1,8 +1,9 @@
 name: issue-triage-eval
 description: >-
   Evaluation suite for issue-triage.
-  Verifies classification, label FSM behavior, may_edit guardrails, skip exits,
-  trigger-negative guardrails, and structured session report output.
+  Verifies classification, label FSM behavior, comment history (new vs update),
+  may_edit guardrails, skip exits, trigger-negative guardrails, and structured
+  session report output.
 skill: issue-triage
 version: "1.0"
 config:

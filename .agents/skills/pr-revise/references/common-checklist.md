@@ -16,7 +16,7 @@ Gate IDs are for agent self-check and Deferred reasons. PR identity in reports r
 ### OUT-01: Report shape
 
 - [ ] Emit report per [common-output-format.md](common-output-format.md)
-- [ ] Load PR templates at synthesis per [category-automation-envelope.md](category-automation-envelope.md)
+- [ ] Survey shape when `may_edit: false`; apply shape when `may_edit: true` and `write_target: fix`
 - **PASS** if report matches automation envelope for the resolved `may_edit` / `write_target`
 
 ## Error handling

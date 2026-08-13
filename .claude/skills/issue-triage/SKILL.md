@@ -9,7 +9,7 @@ description: >-
 license: Apache-2.0
 metadata:
   author: y-miyazaki
-  version: "0.1.0"
+  version: "0.1.2"
 ---
 
 **UTILITY SKILL** — Issue triage (labels + comments), not autofix or PR creation.
@@ -54,7 +54,7 @@ Session report per [common-output-format.md](references/common-output-format.md)
 3. Load allowlist from `scripts/labels.json`. Ensure missing allowlisted labels exist before apply (`gh label create` only for catalog entries).
 4. Classify when confident; if low confidence → keep/apply `needs-triage` only and ask clarifying questions on the Issue (**no question self-censorship** — see [category-prompt-rules.md](references/category-prompt-rules.md)).
 5. Apply FSM transitions via `gh issue edit` / `gh api` using [category-fsm.md](references/category-fsm.md) events (`opened`, `mark_needs_info`, `mark_ready`, `human_retriage`).
-6. Post one analysis comment (and questions when needed). Prefer updating prior triage comments over spam.
+6. Post Issue comments via `scripts/issue_comment.sh` per [category-prompt-rules.md](references/category-prompt-rules.md): `create` on each FSM transition or re-triage; `correct` only for minor edits to the latest marked bot comment.
 7. When marking `triage:ready`, comment that a human may add `autofix` (or future assign-command) to request a draft PR — do not invoke autofix.
 8. Emit session report; do not modify repository files when `may_edit: false`.
 
