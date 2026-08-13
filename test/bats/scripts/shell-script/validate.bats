@@ -21,6 +21,7 @@
 # - print_summary_bats_results reports incomplete bats runs
 # - print_summary_overall_result reports mixed script and bats failures
 # - print_summary_overall_result reports incomplete bats when no failures recorded
+# - analyze_functions and check_complexity tolerate scripts without function definitions when VERBOSE is true
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -324,4 +325,38 @@ TAP
     run print_summary_overall_result
     [ "$status" -eq 0 ]
     [[ $output == *"incomplete bats run (exit 3)"* ]]
+}
+
+@test "analyze_functions succeeds in verbose mode for loop-detect _init.sh" {
+    VERBOSE=true
+    local script
+    script="$(bats_workspace_root)/.github/actions/loop-detect/lib/_init.sh"
+    [[ -f "${script}" ]]
+
+    run analyze_functions "${script}"
+    [ "$status" -eq 0 ]
+    [[ $output == *"No functions found in: _init.sh"* ]]
+}
+
+@test "check_complexity succeeds in verbose mode for loop-detect _init.sh" {
+    VERBOSE=true
+    local script
+    script="$(bats_workspace_root)/.github/actions/loop-detect/lib/_init.sh"
+    [[ -f "${script}" ]]
+
+    run check_complexity "${script}"
+    [ "$status" -eq 0 ]
+    [[ $output == *"Functions: 0"* ]]
+}
+
+@test "run_script_validation_steps succeeds in verbose mode for loop-detect _init.sh" {
+    VERBOSE=true
+    CHECK_FUNCTION_DOCS=false
+    local script validation_passed=true shellcheck_passed=true
+    script="$(bats_workspace_root)/.github/actions/loop-detect/lib/_init.sh"
+    [[ -f "${script}" ]]
+
+    run_script_validation_steps "${script}" validation_passed shellcheck_passed
+    [ "${validation_passed}" = "true" ]
+    [ "${shellcheck_passed}" = "true" ]
 }

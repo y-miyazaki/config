@@ -21,8 +21,9 @@ inputs:
     description: "Verifier model override"
     required: true
   allowlist:
-    description: "Comma-separated glob allowlist passed to execute"
-    required: true
+    default: ""
+    description: "Comma-separated glob allowlist passed to execute (empty = unrestricted)"
+    required: false
   base_branch:
     description: "Default branch for state migration and fallback integration scan"
     required: true

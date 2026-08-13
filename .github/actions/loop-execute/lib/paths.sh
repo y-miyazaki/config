@@ -34,7 +34,7 @@ function collect_allowlist_violations {
     if [[ -z ${ALLOWLIST:-} ]]; then
         return 0
     fi
-    IFS=',' read -ra PATTERNS <<< "${ALLOWLIST}"
+    IFS=',' read -ra PATTERNS <<< "${ALLOWLIST:-}"
     while IFS= read -r file; do
         [[ -z ${file} ]] && continue
         matched="false"
@@ -75,7 +75,7 @@ function collect_denylist_violations {
     if [[ -z ${DENYLIST:-} ]]; then
         return 0
     fi
-    IFS=',' read -ra PATTERNS <<< "${DENYLIST}"
+    IFS=',' read -ra PATTERNS <<< "${DENYLIST:-}"
     for pattern in "${PATTERNS[@]}"; do
         while IFS= read -r file; do
             [[ -z ${file} ]] && continue

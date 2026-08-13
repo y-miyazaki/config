@@ -6,14 +6,6 @@
         "timeoutSec": 60
       },
       {
-        "command": ".cursor/hooks/go-hooks-cursor/scripts/golangci_lint.sh",
-        "timeoutSec": 120
-      },
-      {
-        "command": ".cursor/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh",
-        "timeoutSec": 120
-      },
-      {
         "command": ".cursor/hooks/common-hooks-cursor/scripts/actionlint.sh",
         "timeoutSec": 60
       },
@@ -35,6 +27,14 @@
       },
       {
         "command": ".cursor/hooks/common-hooks-cursor/scripts/markdownlint_cli2.sh",
+        "timeoutSec": 120
+      },
+      {
+        "command": ".cursor/hooks/go-hooks-cursor/scripts/golangci_lint.sh",
+        "timeoutSec": 120
+      },
+      {
+        "command": ".cursor/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh",
         "timeoutSec": 120
       }
     ],

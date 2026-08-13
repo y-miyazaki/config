@@ -1,16 +1,6 @@
 {
   "stop": [
     {
-      "command": ".cursor/hooks/go-hooks-cursor/scripts/golangci_lint.sh",
-      "timeoutSec": 120,
-      "_apm_source": "_local/go-hooks-cursor"
-    },
-    {
-      "command": ".cursor/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh",
-      "timeoutSec": 120,
-      "_apm_source": "_local/shell-script-hooks-cursor"
-    },
-    {
       "command": ".cursor/hooks/common-hooks-cursor/scripts/actionlint.sh",
       "timeoutSec": 60,
       "_apm_source": "_local/common-hooks-cursor"
@@ -39,6 +29,16 @@
       "command": ".cursor/hooks/common-hooks-cursor/scripts/markdownlint_cli2.sh",
       "timeoutSec": 120,
       "_apm_source": "_local/common-hooks-cursor"
+    },
+    {
+      "command": ".cursor/hooks/go-hooks-cursor/scripts/golangci_lint.sh",
+      "timeoutSec": 120,
+      "_apm_source": "_local/go-hooks-cursor"
+    },
+    {
+      "command": ".cursor/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh",
+      "timeoutSec": 120,
+      "_apm_source": "_local/shell-script-hooks-cursor"
     }
   ],
   "afterFileEdit": [

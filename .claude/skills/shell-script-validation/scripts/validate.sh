@@ -243,7 +243,7 @@ function analyze_functions {
     custom_log "DEBUG" "Analyzing functions in: $script_name"
 
     local functions
-    functions=$(grep -n "^function\|^[a-zA-Z_][a-zA-Z0-9_]*\s*()" "$script" 2> /dev/null | head -10)
+    functions=$(grep -n "^function\|^[a-zA-Z_][a-zA-Z0-9_]*\s*()" "$script" 2> /dev/null | head -10 || true)
 
     if [[ -n $functions ]]; then
         custom_log "INFO" "Functions found in $script_name:"
@@ -446,7 +446,8 @@ function check_complexity {
     line_count=$(wc -l < "$script" 2> /dev/null)
 
     local function_count
-    function_count=$(grep -c "^function\|^[a-zA-Z_][a-zA-Z0-9_]*\s*()" "$script" 2> /dev/null)
+    function_count=$(grep -c "^function\|^[a-zA-Z_][a-zA-Z0-9_]*\s*()" "$script" 2> /dev/null || true)
+    function_count="${function_count:-0}"
 
     local complexity_score=0
 

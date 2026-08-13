@@ -148,3 +148,27 @@ EOF
     [ "$status" -eq 0 ]
     run ! grep -q -- '--draft' "${GH_ARGV_FILE}"
 }
+
+@test "create_pr defaults empty PR_TITLE to action fallback" {
+    local script argv_file
+
+    script="$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr.sh"
+    argv_file="${BATS_TEST_TMPDIR}/gh_argv"
+    export GH_ARGV_FILE="${argv_file}"
+    export BRANCH="loop/test-branch"
+    export DETECT_RESULT_JSON="{}"
+    export GITHUB_TOKEN="test-token"
+    export GITHUB_REPOSITORY="example/repo"
+    export HANDOFF_KEY="integration:main"
+    export LOOP_HANDOFF_DIR="${HANDOFF_DIR}"
+    export NOTIFY_CONTEXT_JSON='{"changed_files":[],"agent_report_summary":"done"}'
+    export PR_BASE_BRANCH="main"
+    export PR_BODY="Automated update"
+    unset PR_TITLE
+    export SKIP_REASON="none"
+    export TARGET_JSON='{"key":"integration:main"}'
+
+    run bash "${script}"
+    [ "$status" -eq 0 ]
+    grep -q -- '--title chore: automated update (loop)' "${argv_file}" || grep -q -- 'chore: automated update (loop)' "${argv_file}"
+}

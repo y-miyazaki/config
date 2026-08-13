@@ -19,6 +19,8 @@ bats_require_minimum_version 1.5.0
 # - checkout_context increments CHECKOUT_FAILED when checkout fails
 # - append_detect_candidate exits the detect phase when the detect script fails
 # - multi-target scan fails fast without appending later candidates after detect failure
+# - main treats unset or empty ALLOWLIST as unrestricted (GHA omits empty env)
+# - append_detect_candidate accepts unset ALLOWLIST and PROMPT_INSTRUCTIONS
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -500,4 +502,87 @@ EOF
     [ "$(wc -l < "${call_file}")" -eq 2 ]
     [[ $output == *"after_first=1"* ]]
     [[ $output == *"after_second=1"* ]]
+}
+
+@test "main treats unset ALLOWLIST as empty (workflow empty glob is unrestricted)" {
+    GITHUB_OUTPUT="${DETECT_TMP}/github_output"
+    : > "${GITHUB_OUTPUT}"
+    DETECT_SCRIPT="${DETECT_TMP}/detect.sh"
+    : > "${DETECT_SCRIPT}"
+    STATE_FILE="${DETECT_TMP}/state.json"
+    LOOP_NAME="issue-autofix"
+    BASE_BRANCH="main"
+    SKILL_NAME="issue-autofix"
+    LEVEL="L2"
+    unset ALLOWLIST
+    unset MAY_EDIT
+
+    run main
+    [ "$status" -eq 0 ]
+    [[ $output != *"ALLOWLIST: parameter null or not set"* ]]
+    grep -q '^should_run=false$' "${GITHUB_OUTPUT}"
+    grep -q '^skip_reason=config_error$' "${GITHUB_OUTPUT}"
+}
+
+@test "main treats empty ALLOWLIST as unrestricted" {
+    GITHUB_OUTPUT="${DETECT_TMP}/github_output"
+    : > "${GITHUB_OUTPUT}"
+    DETECT_SCRIPT="${DETECT_TMP}/detect.sh"
+    : > "${DETECT_SCRIPT}"
+    STATE_FILE="${DETECT_TMP}/state.json"
+    LOOP_NAME="issue-autofix"
+    BASE_BRANCH="main"
+    SKILL_NAME="issue-autofix"
+    LEVEL="L2"
+    ALLOWLIST=""
+    unset MAY_EDIT
+
+    run main
+    [ "$status" -eq 0 ]
+    [[ $output != *"ALLOWLIST: parameter null or not set"* ]]
+    grep -q '^skip_reason=config_error$' "${GITHUB_OUTPUT}"
+}
+
+@test "append_detect_candidate accepts unset ALLOWLIST and PROMPT_INSTRUCTIONS" {
+    local repo_root state_file
+
+    repo_root="${DETECT_TMP}/repo-empty-allowlist"
+    mkdir -p "${repo_root}/.loop"
+    git init -q "${repo_root}"
+    git -C "${repo_root}" config user.email "test@example.com"
+    git -C "${repo_root}" config user.name "Test User"
+    git -C "${repo_root}" commit -q --allow-empty -m "init"
+    state_file="${repo_root}/.loop/state-issue-autofix.json"
+    printf '%s\n' \
+        '{"targets":{"integration:main":{"last_sha":"deadbeef","consecutive_failures":0,"open_rejections":[]}}}' \
+        > "${state_file}"
+
+    DETECT_SCRIPT="${DETECT_TMP}/detect-empty-allowlist.sh"
+    cat > "${DETECT_SCRIPT}" << 'EOF'
+#!/usr/bin/env bash
+printf '%s\n' '{"status":"ok","skip":false,"failures":[{"job_name":"ci","workflow_name":"wf","failure_type":"test","reason":"x"}]}'
+EOF
+    chmod +x "${DETECT_SCRIPT}"
+
+    STATE_FILE="${state_file}"
+    BASE_BRANCH="main"
+    SKILL_NAME="issue-autofix"
+    LEVEL="L2"
+    unset ALLOWLIST
+    unset PROMPT_INSTRUCTIONS
+    MAY_EDIT="true"
+    WRITE_TARGET="fix"
+    LOOP_FINALIZE_INTEGRATION="open_pr"
+    PENDING_PR_BLOCKED=0
+    CIRCUIT_BREAKER_BLOCKED=0
+    CANDIDATES_JSON=()
+
+    checkout_context() {
+        cd "${repo_root}" || return 1
+        return 0
+    }
+
+    append_integration_candidate "main"
+
+    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
 }

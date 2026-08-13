@@ -23,7 +23,8 @@
 # - gh (when LOOP_PR_ENABLED=true)
 #
 # Optional environment:
-#   DETECT_SCRIPT, STATE_FILE, LOOP_NAME, BASE_BRANCH, SKILL_NAME, LEVEL, ALLOWLIST
+#   DETECT_SCRIPT, STATE_FILE, LOOP_NAME, BASE_BRANCH, SKILL_NAME, LEVEL
+#   ALLOWLIST, PROMPT_INSTRUCTIONS (empty/unset = unrestricted / no extra instructions)
 #   LOOP_INTEGRATION_BRANCHES, LOOP_PR_ENABLED, LOOP_BRANCH_MATCH, LOOP_PRIORITY
 #   DELIVERY, GIT_FINALIZE_INTEGRATION, GIT_FINALIZE_PULL_REQUEST, GIT_LANDING_INTEGRATION, GIT_LANDING_PULL_REQUEST
 #   LOOP_MAX_TARGETS_PER_SCHEDULE
@@ -411,7 +412,7 @@ function append_detect_candidate {
 
     report_file="$(jq -r '.report_file // ""' <<< "${detect_result}" 2> /dev/null || echo "")"
     prompt_text="$(build_prompt_text \
-        "${SKILL_NAME}" "${LEVEL}" "${ALLOWLIST}" "${PROMPT_INSTRUCTIONS}" \
+        "${SKILL_NAME}" "${LEVEL}" "${ALLOWLIST:-}" "${PROMPT_INSTRUCTIONS:-}" \
         "${last_sha}" "${current_sha}" "${detect_result}" "${open_prompt}" "${consecutive}" \
         "${may_edit}" "${write_target}" "${report_file}")"
 
@@ -1132,7 +1133,8 @@ function main {
     : "${BASE_BRANCH:?}"
     : "${SKILL_NAME:?}"
     : "${LEVEL:?}"
-    : "${ALLOWLIST:?}"
+    ALLOWLIST="${ALLOWLIST:-}"
+    PROMPT_INSTRUCTIONS="${PROMPT_INSTRUCTIONS:-}"
 
     if ! resolve_loop_write_contract; then
         write_detect_outputs "false" "config_error" "[]"
@@ -1164,14 +1166,14 @@ function main {
         return 0
     fi
 
-    if budget_exceeded "${LOOP_NAME}" "${BUDGET_FILE}" "${RUN_LOG_FILE}" \
-        "${BUDGET_MAX_RUNS_PER_DAY}" "${BUDGET_MAX_TOKENS_PER_DAY}"; then
+    if budget_exceeded "${LOOP_NAME}" "${BUDGET_FILE:-.loop/loop-budget.json}" "${RUN_LOG_FILE:-.loop/loop-run-log.md}" \
+        "${BUDGET_MAX_RUNS_PER_DAY:-}" "${BUDGET_MAX_TOKENS_PER_DAY:-}"; then
         write_detect_outputs "false" "budget" "[]"
         write_legacy_outputs "[]"
         return 0
     fi
 
-    resolve_integration_branches "${LOOP_INTEGRATION_BRANCHES}" "${BASE_BRANCH}"
+    resolve_integration_branches "${LOOP_INTEGRATION_BRANCHES:-}" "${BASE_BRANCH}"
     list_open_prs "${LOOP_PR_EXCLUDE}" "${LOOP_PR_INCLUDE_BOTS}" "${github_token}" || {
         write_detect_outputs "false" "config_error" "[]"
         write_legacy_outputs "[]"
