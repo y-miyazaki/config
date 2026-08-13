@@ -4,8 +4,9 @@
 #
 # Use cases:
 # - prefers App token over INPUT_GITHUB_TOKEN and GITHUB_TOKEN
-# - falls back to INPUT_GITHUB_TOKEN when App token is empty
-# - falls back to GITHUB_TOKEN when both optional tokens are empty
+# - falls back to INPUT_GITHUB_TOKEN when App token is empty and App is not configured
+# - falls back to GITHUB_TOKEN when both optional tokens are empty and App is not configured
+# - when App credentials are configured but mint fails: allow explicit INPUT_GITHUB_TOKEN, else fail closed
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -33,13 +34,23 @@ setup() {
     [[ ${line} == *'github.token'* ]]
 }
 
-@test "resolve_github_token emits warning when app token generation failed" {
+@test "resolve_github_token allows explicit github_token when app mint failed" {
     # shellcheck disable=SC1090
     source "${RESOLVE_LIB}"
     run bash -c 'source "'"${RESOLVE_LIB}"'"; BOT_APP_CONFIGURED=true APP_TOKEN= INPUT_GITHUB_TOKEN=override-token GITHUB_TOKEN=default-token GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_github_token'
     [ "$status" -eq 0 ]
     grep -q '^github_token=override-token$' "${GITHUB_OUTPUT}"
     [[ $output == *"GitHub App token generation failed"* ]]
+}
+
+@test "resolve_github_token fails closed when app mint failed without explicit token" {
+    # shellcheck disable=SC1090
+    source "${RESOLVE_LIB}"
+    run bash -c 'source "'"${RESOLVE_LIB}"'"; BOT_APP_CONFIGURED=true APP_TOKEN= INPUT_GITHUB_TOKEN= GITHUB_TOKEN=default-token GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" resolve_github_token'
+    [ "$status" -ne 0 ]
+    [[ $output == *"GitHub App token generation failed"* ]]
+    [[ $output == *"refusing to fall back to GITHUB_TOKEN"* ]]
+    ! grep -q '^github_token=' "${GITHUB_OUTPUT}"
 }
 
 @test "resolve_github_token prefers app token" {

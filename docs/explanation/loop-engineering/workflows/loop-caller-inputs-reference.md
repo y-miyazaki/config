@@ -38,6 +38,8 @@ Token minting is **per job** via `loop-resolve-push-token` (same-job step output
 
 Callers remap local names explicitly. Optional `with: environment:` lets reusable jobs bind an environment for environment-scoped secrets named like the callee expects (`BOT_APP_*`). Callers cannot set `environment:` on a job that `uses:` a reusable.
 
+When App credentials live only in that environment, every job that mints a token (`detect`, `agent-l1`, `agent-l2`, `finalize`, `record-skip`) must set `environment:` so `BOT_APP_*` resolve. Without it, mint is skipped and attribution falls back to `github-actions[bot]`. Remapping `MAINTENANCE_BOT_*` from the caller job cannot read environment-scoped values.
+
 Example caller mapping:
 
 ```yaml

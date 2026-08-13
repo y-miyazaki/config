@@ -169,6 +169,7 @@ on:
 
 jobs:
   detect:
+    environment: ${{ inputs.environment }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -245,7 +246,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@929e3cabb4cb1422c0b4b6f3939f9077afe3bd6b # v1.8.83
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@9dcc3855e0c3a4e9c6af10013f9b7be802a6b9c6 # 9dcc385
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
@@ -297,7 +298,7 @@ jobs:
       fail-fast: false
       matrix:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
-    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@929e3cabb4cb1422c0b4b6f3939f9077afe3bd6b # v1.8.83
+    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@0a96fd4591bd36c6c5cabc65ec4baf1a67746166 # 0a96fd4
     with:
       agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
       agent_implementer_model: ${{ needs.detect.outputs.agent_implementer_model }}
@@ -357,7 +358,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@929e3cabb4cb1422c0b4b6f3939f9077afe3bd6b # v1.8.83
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@9dcc3855e0c3a4e9c6af10013f9b7be802a6b9c6 # 9dcc385
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}

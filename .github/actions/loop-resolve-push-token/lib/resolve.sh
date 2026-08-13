@@ -8,6 +8,7 @@
 #
 # Design Rules:
 #   - Prefer App token when present, then explicit github_token input, then GITHUB_TOKEN
+#   - When App credentials are configured but mint fails: allow explicit github_token only (fail closed vs GITHUB_TOKEN)
 #   - Mask resolved token before writing to GITHUB_OUTPUT
 #
 # Output:
@@ -26,6 +27,7 @@ export LC_ALL=C.UTF-8
 #
 # Globals:
 #   APP_TOKEN - Optional GitHub App installation token
+#   BOT_APP_CONFIGURED - true when App client id and private key inputs are set
 #   INPUT_GITHUB_TOKEN - Optional explicit github_token input
 #   GITHUB_TOKEN - Default Actions token
 #   GITHUB_OUTPUT - GitHub Actions output file
@@ -37,14 +39,19 @@ export LC_ALL=C.UTF-8
 #   Writes masked token to GITHUB_OUTPUT
 #
 # Returns:
-#   None
+#   0 on success; 1 when App mint failed without explicit token, or no token available
 #
 #######################################
 function resolve_github_token {
     local token=""
 
     if [[ ${BOT_APP_CONFIGURED:-false} == "true" && -z ${APP_TOKEN:-} ]]; then
-        echo "::warning::GitHub App token generation failed; falling back to INPUT_GITHUB_TOKEN or GITHUB_TOKEN" >&2
+        if [[ -n ${INPUT_GITHUB_TOKEN:-} ]]; then
+            echo "::warning::GitHub App token generation failed; using explicit github_token input" >&2
+        else
+            echo "::error::GitHub App token generation failed; refusing to fall back to GITHUB_TOKEN while App credentials are configured" >&2
+            return 1
+        fi
     fi
 
     if [[ -n ${APP_TOKEN:-} ]]; then
