@@ -331,7 +331,7 @@ TAP
     VERBOSE=true
     local script
     script="$(bats_workspace_root)/.github/actions/loop-detect/lib/_init.sh"
-    [[ -f "${script}" ]]
+    [[ -f ${script} ]]
 
     run analyze_functions "${script}"
     [ "$status" -eq 0 ]
@@ -342,7 +342,7 @@ TAP
     VERBOSE=true
     local script
     script="$(bats_workspace_root)/.github/actions/loop-detect/lib/_init.sh"
-    [[ -f "${script}" ]]
+    [[ -f ${script} ]]
 
     run check_complexity "${script}"
     [ "$status" -eq 0 ]
@@ -354,7 +354,7 @@ TAP
     CHECK_FUNCTION_DOCS=false
     local script validation_passed=true shellcheck_passed=true
     script="$(bats_workspace_root)/.github/actions/loop-detect/lib/_init.sh"
-    [[ -f "${script}" ]]
+    [[ -f ${script} ]]
 
     run_script_validation_steps "${script}" validation_passed shellcheck_passed
     [ "${validation_passed}" = "true" ]
