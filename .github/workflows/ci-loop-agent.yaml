@@ -307,7 +307,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@9dcc3855e0c3a4e9c6af10013f9b7be802a6b9c6 # 9dcc385
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@ed713920cbe2f851ccf4dd2976143d5ca08b64a8 # ed71392
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
@@ -362,7 +362,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@9dcc3855e0c3a4e9c6af10013f9b7be802a6b9c6 # 9dcc385
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@ed713920cbe2f851ccf4dd2976143d5ca08b64a8 # ed71392
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
@@ -479,7 +479,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@9dcc3855e0c3a4e9c6af10013f9b7be802a6b9c6 # 9dcc385
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@ed713920cbe2f851ccf4dd2976143d5ca08b64a8 # ed71392
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
