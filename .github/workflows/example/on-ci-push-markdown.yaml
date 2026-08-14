@@ -39,7 +39,7 @@ permissions:
 
 jobs:
   markdown-ci:
-    uses: y-miyazaki/config/.github/workflows/ci-markdown.yaml@a5c658aac81562809f2314a99f8928412140c682 # v1.8.84
+    uses: y-miyazaki/config/.github/workflows/ci-markdown.yaml@f841df10c98abbb1fd1c970016ca9dcd78f79df8 # v1.8.85
     permissions:
       contents: read
       pull-requests: write

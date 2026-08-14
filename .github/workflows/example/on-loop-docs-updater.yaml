@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
     loop:
-        uses: y-miyazaki/config/.github/workflows/ci-loop-caller.yaml@a5c658aac81562809f2314a99f8928412140c682 # v1.8.84
+        uses: y-miyazaki/config/.github/workflows/ci-loop-caller.yaml@f841df10c98abbb1fd1c970016ca9dcd78f79df8 # v1.8.85
         with:
             agent_implementer_max_turns: 5
             agent_implementer_model: cursor-grok-4.5-low
