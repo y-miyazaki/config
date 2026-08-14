@@ -1,0 +1,11 @@
+name: config-loop
+version: 1.0.0
+description: Generic loop agent skills (maker/checker). Not domain skills and not GitHub forge APIs.
+author: y-miyazaki
+license: Apache-2.0
+target: all
+includes: auto
+
+dependencies:
+  apm: []
+  mcp: []

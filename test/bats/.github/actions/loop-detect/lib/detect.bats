@@ -510,7 +510,7 @@ EOF
     DETECT_SCRIPT="${DETECT_TMP}/detect.sh"
     : > "${DETECT_SCRIPT}"
     STATE_FILE="${DETECT_TMP}/state.json"
-    LOOP_NAME="issue-autofix"
+    LOOP_NAME="github-issue-autofix"
     BASE_BRANCH="main"
     SKILL_NAME="issue-autofix"
     LEVEL="L2"
@@ -530,7 +530,7 @@ EOF
     DETECT_SCRIPT="${DETECT_TMP}/detect.sh"
     : > "${DETECT_SCRIPT}"
     STATE_FILE="${DETECT_TMP}/state.json"
-    LOOP_NAME="issue-autofix"
+    LOOP_NAME="github-issue-autofix"
     BASE_BRANCH="main"
     SKILL_NAME="issue-autofix"
     LEVEL="L2"
@@ -552,7 +552,7 @@ EOF
     git -C "${repo_root}" config user.email "test@example.com"
     git -C "${repo_root}" config user.name "Test User"
     git -C "${repo_root}" commit -q --allow-empty -m "init"
-    state_file="${repo_root}/.loop/state-issue-autofix.json"
+    state_file="${repo_root}/.loop/state-github-issue-autofix.json"
     printf '%s\n' \
         '{"targets":{"integration:main":{"last_sha":"deadbeef","consecutive_failures":0,"open_rejections":[]}}}' \
         > "${state_file}"

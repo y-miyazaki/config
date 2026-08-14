@@ -19,7 +19,7 @@ setup() {
     mkdir -p "${RUNNER_TEMP}"
     : > "${GITHUB_OUTPUT}"
 
-    export LOOP_NAME="issue-triage"
+    export LOOP_NAME="github-issue-triage"
     export SKILL_NAME="issue-triage"
     export LEVEL="L1"
     export DELIVERY="none"
@@ -41,7 +41,7 @@ setup() {
 @test "detect.sh invokes hook when dispatch_requested is true" {
     cat > "${DETECT_SCRIPT}" << 'EOF'
 #!/bin/bash
-printf '%s\n' '{"status":"ok","skip":false,"result":{"handoff_key":"entity:issue:1","dispatch_requested":true,"dispatch_event_type":"loop-issue-autofix","dispatch_client_payload":{"issue_number":"1"}}}'
+printf '%s\n' '{"status":"ok","skip":false,"result":{"handoff_key":"entity:issue:1","dispatch_requested":true,"dispatch_event_type":"loop-github-issue-autofix","dispatch_client_payload":{"issue_number":"1"}}}'
 EOF
     chmod +x "${DETECT_SCRIPT}"
 
@@ -97,7 +97,7 @@ EOF
     cat > "${DETECT_SCRIPT}" << 'EOF'
 #!/bin/bash
 printf '%s
-' '{"status":"ok","skip":false,"result":{"handoff_key":"entity:issue:1","dispatch_requested":true,"dispatch_event_type":"loop-issue-autofix","dispatch_client_payload":{"issue_number":"1"}}}'
+' '{"status":"ok","skip":false,"result":{"handoff_key":"entity:issue:1","dispatch_requested":true,"dispatch_event_type":"loop-github-issue-autofix","dispatch_client_payload":{"issue_number":"1"}}}'
 EOF
     chmod +x "${DETECT_SCRIPT}"
 

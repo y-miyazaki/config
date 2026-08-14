@@ -1,0 +1,11 @@
+name: config-github-actions
+version: 1.0.0
+description: GitHub Actions workflow review, validation, and instructions.
+author: y-miyazaki
+license: Apache-2.0
+target: all
+includes: auto
+
+dependencies:
+  apm: []
+  mcp: []

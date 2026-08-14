@@ -5,17 +5,17 @@ For concrete specifications (Actions/Workflows list, interfaces), see [Specifica
 
 ## Implementation Status
 
-| Loop (`loop_name`) | Skill (`common`) | Status                             | Level         |
-| ------------------ | ---------------- | ---------------------------------- | ------------- |
-| `docs-updater`     | `docs-updater`   | Dogfood L2; multi-branch on `main` | L2 (Assisted) |
-| `ci-sweeper`       | `ci-sweeper`     | Dogfood L2; integration + PR heads | L2 (Assisted) |
-| `changelog`        | `changelog`      | Dogfood L2; weekly schedule        | L2 (Assisted) |
-| `refactor`         | `refactor`       | Dogfood L2; weekly schedule        | L2 (Assisted) |
-| `tech-debt`        | `tech-debt`      | Dogfood L2; weekly report PR       | L2 (Assisted) |
-| `issue-triage`     | `issue-triage`   | Dogfood L1 / in progress           | L1 (Observe)  |
-| `issue-autofix`    | `issue-autofix`  | Dogfood L2 / in progress           | L2 (Assisted) |
-| `pr-revise`        | `pr-revise`      | Dogfood L2 / in progress           | L2 (Assisted) |
-| `loop-stale-pr`    | —                | Not started                        | -             |
+| Loop (`loop_name`)     | Skill (`common`)       | Status                             | Level         |
+| ---------------------- | ---------------------- | ---------------------------------- | ------------- |
+| `docs-updater`         | `docs-updater`         | Dogfood L2; multi-branch on `main` | L2 (Assisted) |
+| `ci-sweeper`           | `ci-sweeper`           | Dogfood L2; integration + PR heads | L2 (Assisted) |
+| `changelog`            | `changelog`            | Dogfood L2; weekly schedule        | L2 (Assisted) |
+| `refactor`             | `refactor`             | Dogfood L2; weekly schedule        | L2 (Assisted) |
+| `tech-debt`            | `tech-debt`            | Dogfood L2; weekly report PR       | L2 (Assisted) |
+| `github-issue-triage`  | `github-issue-triage`  | Dogfood L1 / in progress           | L1 (Observe)  |
+| `github-issue-autofix` | `github-issue-autofix` | Dogfood L2 / in progress           | L2 (Assisted) |
+| `github-pr-revise`     | `github-pr-revise`     | Dogfood L2 / in progress           | L2 (Assisted) |
+| `loop-stale-pr`        | —                      | Not started                        | -             |
 
 Platform actions (`loop-detect` `target_matrix`, handoff artifact, `domain_persistence_script`, merge-gated `pending`) are implemented — see [Multi-Branch Loops Design](multi-branch-loops-design.md).
 
@@ -97,10 +97,10 @@ CI failure kinds outside minimal repair (coverage threshold, dependency breakage
 
 ### Tier 2 (Medium Priority — new observation triggers)
 
-| Loop             | Observation trigger          | Agent Behavior                                 | Expected Level |
-| ---------------- | ---------------------------- | ---------------------------------------------- | -------------- |
-| **issue-triage** | GitHub API: unlabeled issues | Codebase analysis → label assignment + comment | L1 → L2        |
-| **stale-pr**     | GitHub API: stale PRs        | Review comment or close suggestion             | L1             |
+| Loop                    | Observation trigger          | Agent Behavior                                 | Expected Level |
+| ----------------------- | ---------------------------- | ---------------------------------------------- | -------------- |
+| **github-issue-triage** | GitHub API: unlabeled issues | Codebase analysis → label assignment + comment | L1 → L2        |
+| **stale-pr**            | GitHub API: stale PRs        | Review comment or close suggestion             | L1             |
 
 ### Tier 3 (Low Priority — Complex Safety Measures)
 
@@ -130,31 +130,18 @@ Priority assessment when adding new loops:
 
 ## Package Structure
 
-Maintenance loop skills ship under `.apm/packages/common/.apm/skills/` (**Skill + detect script** per domain; optional ledger script). Shared actions stay domain-agnostic.
+Loop **entry** skills are domain skills (no `loop-` name prefix) split by forge. Shared actions stay domain-agnostic. Family map: [Loop-Capable Skills](loop-capable-skills.md). Consolidation of duplicate `loop-*` _skill names_ remains [Loop Skill Consolidation Design](../../superpowers/specs/2026-07-21-loop-skill-consolidation-design.md); packages later split on forge in [APM package forge split](../../superpowers/specs/2026-08-14-apm-package-forge-split-design.md).
 
 ```text
-.apm/packages/common/.apm/skills/
-  docs-updater/
-    SKILL.md
-    scripts/detect_changes.sh
-  ci-sweeper/
-    SKILL.md
-    scripts/detect_ci_failures.sh
-    scripts/update_run_ledger.sh
-  changelog/
-    SKILL.md
-    scripts/detect_changelog_commits.sh
-  refactor/
-    SKILL.md
-    scripts/detect_refactor.sh
-  tech-debt/
-    SKILL.md
-    scripts/detect_tech_debt.sh
+.apm/packages/repo-maintenance/.apm/skills/
+  docs-updater/   changelog/   ci-sweeper/   refactor/   tech-debt/
+.apm/packages/github/.apm/skills/
+  github-issue-triage/   github-issue-autofix/   github-pr-revise/
+.apm/packages/loop/.apm/skills/
+  loop-verifier/          # generic checker; domain rubric stays on the caller
 ```
 
 Callers reference installed paths (e.g. `.agents/skills/<skill-name>/scripts/...`). Workflow filenames remain `on-loop-<loop_name>.yaml`.
-
-Hook/manual and loop skills live under `.apm/packages/common/.apm/skills/` — see [Loop Skill Consolidation Design](../../superpowers/specs/2026-07-21-loop-skill-consolidation-design.md).
 
 ## Naming Conventions
 
@@ -166,48 +153,48 @@ Hook/manual and loop skills live under `.apm/packages/common/.apm/skills/` — s
 
 ## docs-updater (Docs Update Loop)
 
-| Component                                                                 | Description                                                        |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `.apm/packages/common/.apm/skills/docs-updater/SKILL.md`                  | Hook/manual + automation triage; automation path uses `findings[]` |
-| `.apm/packages/common/.apm/skills/docs-updater/scripts/detect_changes.sh` | Per-branch doc drift facts (`changed_files`, `affected_docs`)      |
-| `eval.yaml` + `evals/tasks/`                                              | waza evaluation suite (interactive + automation paths)             |
+| Component                                                                           | Description                                                        |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `.apm/packages/repo-maintenance/.apm/skills/docs-updater/SKILL.md`                  | Hook/manual + automation triage; automation path uses `findings[]` |
+| `.apm/packages/repo-maintenance/.apm/skills/docs-updater/scripts/detect_changes.sh` | Per-branch doc drift facts (`changed_files`, `affected_docs`)      |
+| `eval.yaml` + `evals/tasks/`                                                        | waza evaluation suite (interactive + automation paths)             |
 
 ## ci-sweeper (CI Sweeper)
 
-| Component                                                                   | Description                                               |
-| --------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `.apm/packages/common/.apm/skills/ci-sweeper/SKILL.md`                      | Fix / Watch / Escalate classification + minimal CI repair |
-| `.apm/packages/common/.apm/skills/ci-sweeper/scripts/detect_ci_failures.sh` | Failed run detection (stable filters only)                |
-| `.apm/packages/common/.apm/skills/ci-sweeper/scripts/update_run_ledger.sh`  | `domain_persistence_script` target for finalize           |
+| Component                                                                             | Description                                               |
+| ------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/SKILL.md`                      | Fix / Watch / Escalate classification + minimal CI repair |
+| `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/scripts/detect_ci_failures.sh` | Failed run detection (stable filters only)                |
+| `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/scripts/update_run_ledger.sh`  | `domain_persistence_script` target for finalize           |
 
 For caller inputs and behavior, see [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md).
 
 ## changelog (Changelog Maintenance)
 
-| Component                                                                        | Description                                             |
-| -------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| `.apm/packages/common/.apm/skills/changelog/SKILL.md`                            | Keep a Changelog editing from conventional commit facts |
-| `.apm/packages/common/.apm/skills/changelog/scripts/detect_changelog_commits.sh` | Per-branch conventional commit facts (`commits[]`)      |
-| `eval.yaml` + `evals/tasks/`                                                     | waza evaluation suite                                   |
+| Component                                                                                  | Description                                             |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| `.apm/packages/repo-maintenance/.apm/skills/changelog/SKILL.md`                            | Keep a Changelog editing from conventional commit facts |
+| `.apm/packages/repo-maintenance/.apm/skills/changelog/scripts/detect_changelog_commits.sh` | Per-branch conventional commit facts (`commits[]`)      |
+| `eval.yaml` + `evals/tasks/`                                                               | waza evaluation suite                                   |
 
 For caller inputs and behavior, see [Changelog Workflow Design](workflows/loop-changelog-workflow-design.md).
 
 ## refactor (Structural Refactor)
 
-| Component                                                              | Description                                              |
-| ---------------------------------------------------------------------- | -------------------------------------------------------- |
-| `.apm/packages/common/.apm/skills/refactor/SKILL.md`                   | Interactive + loop structural O1/O2 apply                |
-| `.apm/packages/common/.apm/skills/refactor/scripts/detect_refactor.sh` | Mechanical hints (`duplication_block`, `oversized_unit`) |
+| Component                                                                        | Description                                              |
+| -------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `.apm/packages/repo-maintenance/.apm/skills/refactor/SKILL.md`                   | Interactive + loop structural O1/O2 apply                |
+| `.apm/packages/repo-maintenance/.apm/skills/refactor/scripts/detect_refactor.sh` | Mechanical hints (`duplication_block`, `oversized_unit`) |
 
 For caller inputs and behavior, see [Refactor Workflow Design](workflows/loop-refactor-workflow-design.md).
 
 ## tech-debt (Technical Debt Report)
 
-| Component                                                                | Description                                                          |
-| ------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| `.apm/packages/common/.apm/skills/tech-debt/SKILL.md`                    | Classify mechanical debt signals; write dated report under allowlist |
-| `.apm/packages/common/.apm/skills/tech-debt/scripts/detect_tech_debt.sh` | Full-repo sensors (`signals[]`, `hotspots[]`)                        |
-| `eval.yaml` + `evals/tasks/`                                             | waza evaluation suite                                                |
+| Component                                                                          | Description                                                          |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `.apm/packages/repo-maintenance/.apm/skills/tech-debt/SKILL.md`                    | Classify mechanical debt signals; write dated report under allowlist |
+| `.apm/packages/repo-maintenance/.apm/skills/tech-debt/scripts/detect_tech_debt.sh` | Full-repo sensors (`signals[]`, `hotspots[]`)                        |
+| `eval.yaml` + `evals/tasks/`                                                       | waza evaluation suite                                                |
 
 For caller inputs and behavior, see [Report Tech Debt Workflow Design](workflows/loop-tech-debt-workflow-design.md).
 
@@ -334,13 +321,13 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 
 ## L2 Promotion Requirements
 
-| Requirement              | Approach                                                                                    | Status         |
-| ------------------------ | ------------------------------------------------------------------------------------------- | -------------- |
-| Daily budget enforcement | `.loop/loop-budget.json` + `loop-detect` guards; usage from `loop-execute` → `loop-run-log` | ✅ Implemented |
-| loop-verifier skill      | Download from npm/GitHub Release with caching (repository-independent)                      | Future         |
-| Maker-Checker separation | Implemented in `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3)               | ✅ Implemented |
-| Worktree isolation       | `loop-worktree-setup` + push/cleanup inside `loop-execute` via `ci-loop-agent` L2/L3        | ✅ Implemented |
-| Denylist / Allowlist     | Defined in SKILL.md, checked by verifier                                                    | ✅ Implemented |
+| Requirement              | Approach                                                                                    | Status                               |
+| ------------------------ | ------------------------------------------------------------------------------------------- | ------------------------------------ |
+| Daily budget enforcement | `.loop/loop-budget.json` + `loop-detect` guards; usage from `loop-execute` → `loop-run-log` | ✅ Implemented                       |
+| loop-verifier skill      | Caller `verifier_skill_name` (default `loop-verifier`); execute slash-loads skill; domain rubric in `agent_verifier_criteria` | ✅ Implemented                       |
+| Maker-Checker separation | Implemented in `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3)               | ✅ Implemented                       |
+| Worktree isolation       | `loop-worktree-setup` + push/cleanup inside `loop-execute` via `ci-loop-agent` L2/L3        | ✅ Implemented                       |
+| Denylist / Allowlist     | Defined in SKILL.md, checked by verifier                                                    | ✅ Implemented                       |
 
 ## Design Principles
 
@@ -366,7 +353,8 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 | Implementer prompt   | `prompt_instructions`, `AGENT_VERIFIER_CRITERIA`, PR title/body | `loop-detect` prompt assembly via `lib/loop/build_constraints.sh` (may_edit, allowlist, write_target) |
 | Verifier context     | Detect fact summary or CI log excerpt per target                | Always wire `verifier_context` to `loop-execute` (may be empty)                                       |
 | Path scope           | `LOOP_ALLOWLIST`, Skill allowed paths                           | denylist defaults in `loop-execute`, allowlist enforcement                                            |
-| Verifier quality bar | Criteria markdown in caller `env`                               | Verifier prompt templates, JSON output contract in `loop-execute`                                     |
+| Verifier checker     | `verifier_skill_name` (e.g. `loop-verifier` from `loop` package) | Slash-load `/skill <SKILL.md>`; path guards; INITIAL/REGRESSION orchestration in `loop-execute`        |
+| Verifier domain bar  | `agent_verifier_criteria` in caller `env`                       | Appended to verifier prompt `## Task`; embedded fallbacks only when skill files are missing           |
 | Domain persistence   | `domain_persistence_script` path (optional)                     | `loop-finalize` invokes script with standard env; no domain logic in action                           |
 
 **Caller input pattern** for a new `on-loop-*.yaml` (after [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md)):
@@ -377,6 +365,8 @@ jobs:
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
       loop_name: ci-sweeper
+      skill_name: ci-sweeper
+      verifier_skill_name: loop-verifier
       detect_script: .agents/skills/ci-sweeper/scripts/detect_ci_failures.sh
       allowlist: "src/**,tests/**"
       prompt_instructions: |
@@ -404,6 +394,7 @@ The implementation agent (Maker/Implementer) and the verification agent (Checker
 
 Verifier design principles:
 
+- Generic checker behavior comes from the caller-supplied checker skill (`verifier_skill_name`; default `loop-verifier`). Domain APPROVE/REJECT rules stay in caller `agent_verifier_criteria` — not in the checker skill.
 - Default stance is "reject" (look for reasons to reject, not to approve)
 - Prompt must include CI test output and lint results as mandatory inputs
 - Use a model that is more powerful than, or from a different family than, the implementation agent
@@ -719,7 +710,7 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 | Aspect             | Definition                                                                                                                                                                                                                                                                                    |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Responsibility** | Independently evaluate whether Agent output meets quality criteria. Default stance is reject                                                                                                                                                                                                  |
-| **Input**          | Agent branch, base branch (from `target_json`), verifier criteria, denylist, allowlist, `verifier_context` (always wired; may be empty)                                                                                                                                                       |
+| **Input**          | Agent branch, base branch (from `target_json`), `verifier_skill_name`, `agent_verifier_criteria`, denylist, allowlist, `verifier_context` (always wired; may be empty)                                                                                                                                                       |
 | **Output**         | `verdict` (APPROVE / REJECT), `reason` (string); on REJECT, structured `files` / `issue` / `fix` when possible (surfaced as `open_rejections`)                                                                                                                                                |
 | **May modify**     | Nothing. Read-only phase                                                                                                                                                                                                                                                                      |
 | **Must be**        | A separate agent session from the implementer, run inside `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3) — not a separate workflow such as a removed `ci-loop-verifier.yaml`                                                                                                  |
@@ -751,7 +742,7 @@ When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as
 
 **Merge-gated cursor (all L2 `open_pr` loops):** Fix PRs carry domain files only. `loop-finalize` writes `targets[key].pending` to `branch_state` without advancing `last_sha`. `on-loop-state-promote.yaml` (`pull_request_target` `closed`, label `loop-automation`) promotes `pending.sha` → `last_sha` on merge or clears `pending` when closed without merge. Writes land only on `branch_state` / repository default (never on fix-PR heads). **Required for every loop that opens review PRs** — dogfood target: unified across `changelog`, `docs-updater`, and `ci-sweeper`. See [State delivery philosophy](multi-branch-loops-design.md#state-delivery-philosophy).
 
-**GitHub API deliverables (issue-triage, stale-pr):** Label, comment, and close **actions run in Execute** via the entry skill (e.g. `gh` / GitHub API) — not in Finalize. Finalize persists loop state and run-log only. Platform work for Tier 2 loops is **caller permissions** (`issues: write`, `pull-requests: write` as needed) plus verifier rubric for API outcome fit.
+**GitHub API deliverables (github-issue-triage, stale-pr):** Label, comment, and close **actions run in Execute** via the entry skill (e.g. `gh` / GitHub API) — not in Finalize. Finalize persists loop state and run-log only. Platform work for Tier 2 loops is **caller permissions** (`issues: write`, `pull-requests: write` as needed) plus verifier rubric for API outcome fit.
 
 #### State cursor (general rule)
 

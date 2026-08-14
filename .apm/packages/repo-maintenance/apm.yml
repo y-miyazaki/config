@@ -1,0 +1,11 @@
+name: config-repo-maintenance
+version: 1.0.0
+description: Repository file maintenance skills (changelog, docs, CI repair, refactor, tech-debt). Forge-neutral apply path.
+author: y-miyazaki
+license: Apache-2.0
+target: all
+includes: auto
+
+dependencies:
+  apm: []
+  mcp: []

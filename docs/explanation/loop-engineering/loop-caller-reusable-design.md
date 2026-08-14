@@ -181,6 +181,7 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 | `engine`                      | string | yes      | —       | `loop-detect` / `ci-loop-agent`    |
 | `level`                       | string | no       | `L2`    | `loop-detect`                      |
 | `skill_name`                  | string | yes      | —       | `loop-detect`                      |
+| `verifier_skill_name`         | string | no       | `loop-verifier` | `ci-loop-agent` → `loop-execute` checker skill |
 
 #### Platform (branch, budget, finalize)
 

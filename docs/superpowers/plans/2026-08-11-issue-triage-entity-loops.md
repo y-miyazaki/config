@@ -22,15 +22,15 @@
 
 | Path                                                                               | Responsibility                                                                                             |
 | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `.apm/packages/common/.apm/skills/issue-triage/scripts/lib/label_fsm.sh`           | Allowlist catalog, ensure-label, transition helpers (pure Bash + `gh`/`jq` seams)                          |
-| `.apm/packages/common/.apm/skills/issue-triage/scripts/detect_issue.sh`            | Entity detect: env → skip/facts JSON                                                                       |
-| `.apm/packages/common/.apm/skills/issue-triage/scripts/labels.json`                | Allowlisted labels + color/description                                                                     |
-| `.apm/packages/common/.apm/skills/issue-triage/SKILL.md`                           | L1 triage workflow + prompt rules (no self-censorship; low-confidence → needs-triage)                      |
-| `.apm/packages/common/.apm/skills/issue-triage/references/*`                       | Portable checklist / FSM / output notes                                                                    |
-| `.apm/packages/common/.apm/skills/issue-autofix/scripts/detect_autofix.sh`         | Stub → always `skip: true`                                                                                 |
-| `.apm/packages/common/.apm/skills/issue-autofix/SKILL.md`                          | Stub skill (DO NOT implement fixes yet)                                                                    |
-| `.apm/packages/common/.apm/skills/pr-revise/scripts/detect_pr_revise.sh`           | Stub → always `skip: true`                                                                                 |
-| `.apm/packages/common/.apm/skills/pr-revise/SKILL.md`                              | Stub skill                                                                                                 |
+| `.apm/packages/github/.apm/skills/issue-triage/scripts/lib/label_fsm.sh`           | Allowlist catalog, ensure-label, transition helpers (pure Bash + `gh`/`jq` seams)                          |
+| `.apm/packages/github/.apm/skills/issue-triage/scripts/detect_issue.sh`            | Entity detect: env → skip/facts JSON                                                                       |
+| `.apm/packages/github/.apm/skills/issue-triage/scripts/labels.json`                | Allowlisted labels + color/description                                                                     |
+| `.apm/packages/github/.apm/skills/issue-triage/SKILL.md`                           | L1 triage workflow + prompt rules (no self-censorship; low-confidence → needs-triage)                      |
+| `.apm/packages/github/.apm/skills/issue-triage/references/*`                       | Portable checklist / FSM / output notes                                                                    |
+| `.apm/packages/github/.apm/skills/issue-autofix/scripts/detect_autofix.sh`         | Stub → always `skip: true`                                                                                 |
+| `.apm/packages/github/.apm/skills/issue-autofix/SKILL.md`                          | Stub skill (DO NOT implement fixes yet)                                                                    |
+| `.apm/packages/github/.apm/skills/pr-revise/scripts/detect_pr_revise.sh`           | Stub → always `skip: true`                                                                                 |
+| `.apm/packages/github/.apm/skills/pr-revise/SKILL.md`                              | Stub skill                                                                                                 |
 | `scripts/lib/loop_entity_target.sh` (or action-local lib)                          | Build single-element `target_matrix` + prompt from detect JSON + caller inputs                             |
 | `.github/actions/loop-entity-detect/action.yaml`                                   | Composite: run detect_script once, budget check light-touch, emit `should_run` / `target_matrix` / handoff |
 | `.github/workflows/ci-loop-caller-entity.yaml`                                     | Reusable entity caller → entity-detect → `ci-loop-agent` matrix                                            |
@@ -51,8 +51,8 @@
 
 **Files:**
 
-- Create: `.apm/packages/common/.apm/skills/issue-triage/scripts/labels.json`
-- Create: `.apm/packages/common/.apm/skills/issue-triage/scripts/lib/label_fsm.sh`
+- Create: `.apm/packages/github/.apm/skills/issue-triage/scripts/labels.json`
+- Create: `.apm/packages/github/.apm/skills/issue-triage/scripts/lib/label_fsm.sh`
 - Test: `test/bats/.apm/packages/common/issue-triage/label_fsm.bats`
 
 **Interfaces:**
@@ -118,7 +118,7 @@ Expected: PASS
 
 **Files:**
 
-- Create: `.apm/packages/common/.apm/skills/issue-triage/scripts/detect_issue.sh`
+- Create: `.apm/packages/github/.apm/skills/issue-triage/scripts/detect_issue.sh`
 - Sync lib: ensure `scripts/lib` mirror via existing skill lib sync if required by package conventions
 - Test: `test/bats/.apm/packages/common/issue-triage/detect_issue.bats`
 
@@ -280,7 +280,7 @@ Expected: no errors
 
 **Files:**
 
-- Create: `.apm/packages/common/.apm/skills/issue-triage/SKILL.md`
+- Create: `.apm/packages/github/.apm/skills/issue-triage/SKILL.md`
 - Create: references (`category-fsm.md`, `category-prompt-rules.md`, `common-output-format` thin pointers)
 - Create: `.github/workflows/on-loop-issue-triage.yaml`
 - Create: `docs/explanation/loop-engineering/workflows/loop-issue-triage-workflow-design.md`

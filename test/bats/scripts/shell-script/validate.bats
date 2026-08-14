@@ -49,6 +49,11 @@ setup() {
     BATS_FAILED_TESTS=()
     BATS_EXIT_CODE=0
     BATS_SUMMARY=""
+    IS_SCOPED=false
+    SEARCH_PATHS=()
+    TEST_PATHS=()
+    SKIP_SCRIPTS=false
+    SKIP_TESTS=false
 
     bats_source_rel "scripts/shell-script/validate.sh"
     FIXTURE_DIR="${BATS_TEST_TMPDIR}/shell-script-validate"
@@ -359,4 +364,54 @@ TAP
     run_script_validation_steps "${script}" validation_passed shellcheck_passed
     [ "${validation_passed}" = "true" ]
     [ "${shellcheck_passed}" = "true" ]
+}
+@test "find_bats_tests returns all tests when unscoped and no --tests paths" {
+    IS_SCOPED=false
+    TEST_PATHS=()
+
+    run find_bats_tests
+    [ "$status" -eq 0 ]
+    local count
+    count=$(printf '%s
+' "$output" | sed '/^$/d' | wc -l)
+    [ "$count" -gt 200 ]
+}
+
+@test "find_bats_tests returns all tests when script scope is limited and --tests omitted" {
+    IS_SCOPED=true
+    TEST_PATHS=()
+
+    run find_bats_tests
+    [ "$status" -eq 0 ]
+    local count
+    count=$(printf '%s
+' "$output" | sed '/^$/d' | wc -l)
+    [ "$count" -gt 200 ]
+}
+
+@test "find_bats_tests limits to --tests directory" {
+    TEST_PATHS=("test/bats/scripts/lib")
+
+    run find_bats_tests
+    [ "$status" -eq 0 ]
+    [[ $output == *"test/bats/scripts/lib/common.bats"* ]]
+    [[ $output != *"test/bats/scripts/shell-script/validate.bats"* ]]
+}
+
+@test "find_bats_tests accepts a single --tests file" {
+    TEST_PATHS=("test/bats/scripts/shell-script/validate.bats")
+
+    run find_bats_tests
+    [ "$status" -eq 0 ]
+    [[ $output == *"test/bats/scripts/shell-script/validate.bats"* ]]
+    [[ $(printf '%s
+' "$output" | sed '/^$/d' | wc -l) -eq 1 ]]
+}
+
+@test "find_bats_tests honors --skip-tests" {
+    SKIP_TESTS=true
+
+    run find_bats_tests
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
 }

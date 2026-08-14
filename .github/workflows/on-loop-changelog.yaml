@@ -86,6 +86,7 @@ jobs:
         Preserve existing released sections; do not invent versions outside detect `releases[]`.
       pr_enabled: false
       skill_name: changelog
+      verifier_skill_name: loop-verifier
       write_target: fix
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}

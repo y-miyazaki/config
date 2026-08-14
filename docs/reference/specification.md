@@ -381,7 +381,7 @@ Loop **composite actions** must not nest other repository composite actions via 
 
 ### Loop Skill Package Pattern
 
-Loop domain skills live under `.apm/packages/common/.apm/skills/` — there are no separate `loop-*` APM packages. Callers set `skill_name` and `detect_script` to the distributed skill paths (for example `.agents/skills/<name>/...` after `apm install`). Current loop skills: `docs-updater`, `ci-sweeper`, `changelog`, `tech-debt`, `refactor`.
+Loop **entry** skills are domain skills (no `loop-` name prefix) split by forge: `repo-maintenance` (`docs-updater`, `ci-sweeper`, `changelog`, `tech-debt`, `refactor`) and `github` (`github-issue-triage`, `github-issue-autofix`, `github-pr-revise`). Generic checker: `loop` / `loop-verifier`. Callers set `skill_name` (implementer), `verifier_skill_name` (checker; default `loop-verifier`), and `detect_script` to installed paths (`.agents/skills/<name>/...` after `apm install`). Family map: [Loop-Capable Skills](../explanation/loop-engineering/loop-capable-skills.md).
 
 | Artifact                      | Location                                 | Role                                                          |
 | ----------------------------- | ---------------------------------------- | ------------------------------------------------------------- |

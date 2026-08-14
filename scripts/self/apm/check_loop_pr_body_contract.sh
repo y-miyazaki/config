@@ -7,7 +7,7 @@
 #   bash check_loop_pr_body_contract.sh
 #
 # Design Rules:
-#   - Source of truth: .apm/packages/common/.apm/skills/<skill>/
+#   - Source of truth: .apm/packages/<pkg>/.apm/skills/<skill>/ (unique skill names)
 #   - Contract spec: docs/explanation/loop-engineering/loop-pr-body-skill-contract.md
 #   - Exit 0 when valid; exit 1 when violations are reported
 #
@@ -22,15 +22,46 @@ export LC_ALL=C.UTF-8
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+export WORKSPACE_ROOT
 
-SKILLS_ROOT="${SKILLS_ROOT:-${WORKSPACE_ROOT}/.apm/packages/common/.apm/skills}"
+# Tests may set SKILLS_ROOT to a flat skills directory. Production resolves per package.
+SKILLS_ROOT="${SKILLS_ROOT:-}"
+
+# shellcheck source=./apm_skill_root.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/apm_skill_root.sh"
+
+#######################################
+# loop_skill_dir: Resolve one loop skill directory
+#
+# Globals:
+#   SKILLS_ROOT, WORKSPACE_ROOT
+#
+# Arguments:
+#   $1 - Skill name
+#
+# Outputs:
+#   Absolute skill directory on stdout
+#
+# Returns:
+#   0 on success; 1 when missing
+#
+#######################################
+function loop_skill_dir {
+    local skill="$1"
+    if [[ -n ${SKILLS_ROOT} ]]; then
+        printf '%s/%s\n' "${SKILLS_ROOT}" "${skill}"
+        return 0
+    fi
+    apm_skill_root "${skill}"
+}
 
 declare -a LOOP_SKILLS=(
     changelog
     ci-sweeper
     docs-updater
-    issue-autofix
-    pr-revise
+    github-issue-autofix
+    github-pr-revise
     refactor
     tech-debt
 )
@@ -47,8 +78,8 @@ declare -a LOOP_PR_BODY_LINKS_SKILLS=(
     changelog
     ci-sweeper
     docs-updater
-    issue-autofix
-    pr-revise
+    github-issue-autofix
+    github-pr-revise
     refactor
     tech-debt
 )
@@ -149,7 +180,7 @@ function check_template_link_placeholders {
     local rel_path full_path
 
     for rel_path in "${LOOP_LINK_CHECK_PATHS[@]}"; do
-        full_path="${SKILLS_ROOT}/${skill}/${rel_path}"
+        full_path="$(loop_skill_dir "${skill}")/${rel_path}"
         [[ -f ${full_path} ]] || continue
         if grep -qF '](https://github.com/org/repo' "${full_path}"; then
             record_violation "Example org/repo markdown link in ${skill}/${rel_path} — use backtick placeholders (see category-pr-body-links.md)"
@@ -197,7 +228,8 @@ function record_violation {
 function check_required_file {
     local skill="$1"
     local rel_path="$2"
-    local full_path="${SKILLS_ROOT}/${skill}/${rel_path}"
+    local full_path
+    full_path="$(loop_skill_dir "${skill}")/${rel_path}"
 
     if [[ ! -f ${full_path} ]]; then
         record_violation "Missing ${rel_path} for skill ${skill}"
@@ -224,7 +256,8 @@ function check_required_file {
 function check_forbidden_patterns {
     local skill="$1"
     local rel_path="$2"
-    local full_path="${SKILLS_ROOT}/${skill}/${rel_path}"
+    local full_path
+    full_path="$(loop_skill_dir "${skill}")/${rel_path}"
     local pattern
 
     [[ -f ${full_path} ]] || return 0
@@ -254,7 +287,8 @@ function check_forbidden_patterns {
 #######################################
 function check_apply_template {
     local skill="$1"
-    local template="${SKILLS_ROOT}/${skill}/assets/pr-body-template.md"
+    local template
+    template="$(loop_skill_dir "${skill}")/assets/pr-body-template.md"
     local deferred
     deferred="$(loop_skill_deferred_subsection "${skill}")"
 
@@ -298,7 +332,8 @@ function check_apply_template {
 #######################################
 function check_output_format_survey {
     local skill="$1"
-    local format_file="${SKILLS_ROOT}/${skill}/references/common-output-format.md"
+    local format_file
+    format_file="$(loop_skill_dir "${skill}")/references/common-output-format.md"
 
     [[ -f ${format_file} ]] || return 0
 
@@ -328,7 +363,8 @@ function check_output_format_survey {
 #######################################
 function check_survey_template {
     local skill="$1"
-    local template="${SKILLS_ROOT}/${skill}/assets/pr-body-template-survey.md"
+    local template
+    template="$(loop_skill_dir "${skill}")/assets/pr-body-template-survey.md"
 
     [[ -f ${template} ]] || return 0
 
@@ -369,7 +405,8 @@ function check_survey_template {
 #######################################
 function check_automation_envelope {
     local skill="$1"
-    local envelope="${SKILLS_ROOT}/${skill}/references/category-automation-envelope.md"
+    local envelope
+    envelope="$(loop_skill_dir "${skill}")/references/category-automation-envelope.md"
     local deferred
     deferred="$(loop_skill_deferred_subsection "${skill}")"
 
@@ -427,8 +464,8 @@ function check_loop_skill {
     local skill="$1"
     local rel_path
 
-    if [[ ! -d ${SKILLS_ROOT}/${skill} ]]; then
-        record_violation "Missing skill directory ${skill} under ${SKILLS_ROOT}"
+    if [[ ! -d "$(loop_skill_dir "${skill}")" ]]; then
+        record_violation "Missing skill directory ${skill} (SKILLS_ROOT=${SKILLS_ROOT:-unset}; resolved via apm_skill_root when unset)"
         return 0
     fi
 
@@ -477,7 +514,7 @@ function check_loop_skill {
 function main {
     local skill
 
-    if [[ ! -d ${SKILLS_ROOT} ]]; then
+    if [[ -n ${SKILLS_ROOT} && ! -d ${SKILLS_ROOT} ]]; then
         echo "ERROR: Skills root not found: ${SKILLS_ROOT}" >&2
         return 1
     fi

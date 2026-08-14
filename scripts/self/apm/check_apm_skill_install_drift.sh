@@ -7,7 +7,7 @@
 #   bash check_apm_skill_install_drift.sh [--check]
 #
 # Design Rules:
-#   - Source of truth: .apm/packages/common/.apm/skills/<skill>/
+#   - Source of truth: .apm/packages/<pkg>/.apm/skills/<skill>/
 #   - Install targets: .claude/skills/, .agents/skills/ (when present)
 #   - Exit 0 when in sync; exit 1 when drift is detected
 #
@@ -22,13 +22,19 @@ export LC_ALL=C.UTF-8
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+export WORKSPACE_ROOT
 
-SOURCE_ROOT="${WORKSPACE_ROOT}/.apm/packages/common/.apm/skills"
+# shellcheck source=./apm_skill_root.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/apm_skill_root.sh"
 
 declare -a LOOP_SKILLS=(
     changelog
     ci-sweeper
     docs-updater
+    github-issue-autofix
+    github-issue-triage
+    github-pr-revise
     refactor
     tech-debt
 )
@@ -67,7 +73,6 @@ function record_drift {
 # check_skill_target_drift: Compare one skill directory against an install target
 #
 # Globals:
-#   SOURCE_ROOT
 #   WORKSPACE_ROOT
 #
 # Arguments:
@@ -84,8 +89,12 @@ function record_drift {
 function check_skill_target_drift {
     local skill="$1"
     local target_rel="$2"
-    local source_dir="${SOURCE_ROOT}/${skill}"
-    local target_dir="${WORKSPACE_ROOT}/${target_rel}/${skill}"
+    local source_dir target_dir
+    if ! source_dir="$(apm_skill_root "${skill}")"; then
+        record_drift "Missing APM source for skill: ${skill}"
+        return 0
+    fi
+    target_dir="${WORKSPACE_ROOT}/${target_rel}/${skill}"
     local diff_output=""
 
     if [[ ! -d ${target_dir} ]]; then
@@ -94,7 +103,7 @@ function check_skill_target_drift {
     fi
 
     if [[ ! -d ${source_dir} ]]; then
-        record_drift "Missing APM source: .apm/packages/common/.apm/skills/${skill}"
+        record_drift "Missing APM source for skill: ${skill}"
         return 0
     fi
 
@@ -128,11 +137,6 @@ function check_skill_target_drift {
 #######################################
 function main {
     local skill target
-
-    if [[ ! -d ${SOURCE_ROOT} ]]; then
-        echo "ERROR: APM skills root not found: ${SOURCE_ROOT}" >&2
-        return 1
-    fi
 
     for skill in "${LOOP_SKILLS[@]}"; do
         for target in "${INSTALL_TARGETS[@]}"; do

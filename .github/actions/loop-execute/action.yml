@@ -110,7 +110,7 @@ inputs:
     description: "Verifier task section inserted before criteria"
     required: false
   skill_name:
-    description: "Skill name for verifier context"
+    description: "Implementer skill name (context only for the verifier)"
     required: true
   uv_version:
     default: "0.12.2"
@@ -119,6 +119,10 @@ inputs:
   verifier_context:
     default: ""
     description: "Additional markdown context appended to the verifier prompt (e.g. CI logs, lint output)"
+    required: false
+  verifier_skill_name:
+    default: ""
+    description: "Checker skill name (caller-supplied). Empty skips skill bind. Slash-load via /skill <SKILL.md> when resolved."
     required: false
   worktree_path:
     description: "Absolute path to the worktree"
@@ -212,6 +216,7 @@ runs:
         SKILL_NAME: ${{ inputs.skill_name }}
         STATUS_DIR: ${{ runner.temp }}/loop-execute-status
         VERIFIER_CONTEXT: ${{ inputs.verifier_context }}
+        VERIFIER_SKILL_NAME: ${{ inputs.verifier_skill_name }}
         WORKTREE_PATH: ${{ inputs.worktree_path }}
       run: bash "${GITHUB_ACTION_PATH}/lib/loop.sh"
 

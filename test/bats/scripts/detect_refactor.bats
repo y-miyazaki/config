@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
-# Tests for .apm/packages/common/.apm/skills/refactor/scripts/detect_refactor.sh
+# Tests for .apm/packages/repo-maintenance/.apm/skills/refactor/scripts/detect_refactor.sh
 #
 # Use cases:
 # - detect_refactor.sh emits error JSON when jq is missing

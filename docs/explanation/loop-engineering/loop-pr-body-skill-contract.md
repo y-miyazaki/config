@@ -139,13 +139,13 @@ Every loop automation skill MUST:
 
 `check_loop_pr_body_contract.sh` checks **structure** (required files, headings, forbidden patterns) for all loop skills.
 
-| Artifact                                                                            | Source of truth                                                  | Cross-skill content sync?                                                      |
-| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `assets/pr-body-template.md`, `assets/pr-body-template-survey.md`                   | per skill under `.apm/packages/common/.apm/skills/<loop-skill>/` | **No** — per-skill tables/examples                                             |
-| `references/category-automation-envelope.md`, `references/common-output-format*.md` | per skill                                                        | **No**                                                                         |
-| `references/category-pr-body-links.md`                                              | per skill                                                        | **No** — shared file-path rules may overlap; ci-sweeper adds workflow/job rows |
-| `scripts/self/apm/check_loop_pr_body_contract.sh`                                   | `scripts/self/apm/`                                              | one script                                                                     |
-| `.github/actions/loop-finalize/lib/render_pr_body.sh`                               | `.github/actions/`                                               | one composer                                                                   |
+| Artifact                                                                            | Source of truth                                                 | Cross-skill content sync?                                                      |
+| ----------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `assets/pr-body-template.md`, `assets/pr-body-template-survey.md`                   | per skill under `.apm/packages/<pkg>/.apm/skills/<loop-skill>/` | **No** — per-skill tables/examples                                             |
+| `references/category-automation-envelope.md`, `references/common-output-format*.md` | per skill                                                       | **No**                                                                         |
+| `references/category-pr-body-links.md`                                              | per skill                                                       | **No** — shared file-path rules may overlap; ci-sweeper adds workflow/job rows |
+| `scripts/self/apm/check_loop_pr_body_contract.sh`                                   | `scripts/self/apm/`                                             | one script                                                                     |
+| `.github/actions/loop-finalize/lib/render_pr_body.sh`                               | `.github/actions/`                                              | one composer                                                                   |
 
 Edit link rules in the affected skill's `references/category-pr-body-links.md` directly. Templates use backtick placeholders only — not `https://github.com/org/repo/...` example links (markdown-link-check 404).
 

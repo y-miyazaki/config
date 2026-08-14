@@ -10,6 +10,21 @@ Design principles for authoring content under `.apm/packages/**` that ships via 
 - Packages must be usable without this repository's `docs/`, workflows, or `.loop/` layout.
 - Maintainer workflows for **this** repository live in [.apm/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md) and `docs/` — not inside distributable skill references.
 
+## Package catalog (forge axis)
+
+Do not group skills by “loop vs interactive.” Loop is a caller. Split by what the consumer must already run:
+
+| Package                                  | Consumer needs                  | Example skills                                                    |
+| ---------------------------------------- | ------------------------------- | ----------------------------------------------------------------- |
+| `common`                                 | Forge-neutral review/docs       | `agent-skills-review`, `docs-creator`                             |
+| `repo-maintenance`                       | Git + in-repo files (GitLab OK) | `changelog`, `ci-sweeper`, `docs-updater`                         |
+| `github`                                 | GitHub Issue/PR (`gh`)          | `github-issue-triage`, `github-issue-autofix`, `github-pr-revise` |
+| `github-actions`                         | GHA workflow YAML               | `github-actions-review`, `github-actions-validation`              |
+| `loop`                                   | Generic maker/checker           | `loop-verifier` (caller `verifier_skill_name`; not an entry skill) |
+| `go`, `shell-script`, `terraform`, `aws` | Language/cloud stack            | `go-review`, …                                                    |
+
+Canonical loop-entry list and cross-cutting edit rules: [Loop-Capable Skills](loop-engineering/loop-capable-skills.md) (maintainer doc, not a package source). Checker skill binding: caller `verifier_skill_name` → `loop-execute` slash-load; domain rubric stays in `agent_verifier_criteria`.
+
 ## Distributable vs maintainer-only
 
 Package sources under `.apm/packages/**` are **distribution artifacts**. Treat every edit there as content that may appear in an unrelated consumer repository after package sync — not as internal notes for this config repo.

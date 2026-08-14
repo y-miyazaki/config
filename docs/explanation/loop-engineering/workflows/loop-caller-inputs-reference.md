@@ -159,7 +159,8 @@ Related but not branch-scoped: `max_targets_per_schedule` (fan-out cap after wat
 | `agent_verifier_model`        | string | Verifier model ID                                                     | `composer-2.5`          |
 | `engine`                      | string | AI engine: `claude` \| `copilot` \| `codex` \| `cursor`               | `cursor`                |
 | `level`                       | string | Autonomy: `L1` \| `L2` \| `L3`                                        | `L2`                    |
-| `skill_name`                  | string | Skill package (e.g. `changelog`). Must match `.agents/skills/<name>/` | Per loop                |
+| `skill_name`                  | string | Implementer skill (e.g. `changelog`). Must match `.agents/skills/<name>/` | Per loop                |
+| `verifier_skill_name`         | string | Checker skill slash-loaded by `loop-execute` (not the implementer)    | `loop-verifier`         |
 
 ## Platform inputs
 
@@ -240,6 +241,7 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `pr_enabled`                         | `loop_pr_enabled`                        |
 | `run_log_file`                       | `run_log_file`                           |
 | `skill_name`                         | `skill_name`                             |
+| `verifier_skill_name`                | `verifier_skill_name` (execute only)     |
 | `state_file`                         | `state_file`                             |
 | _(via `secrets.GH_TOKEN` + resolve)_ | `github_token` (action; resolved in-job) |
 | `write_target`                       | `write_target`                           |

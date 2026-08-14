@@ -35,6 +35,23 @@ Normative rules for **all** skills under `.apm/packages/**`. Design depth: [apm-
 
 Violations are **blocking portability defects** on package PRs — same severity as DIST table rows below.
 
+## Package placement (MUST)
+
+Place new skills by **forge/runtime**, never by “this is a loop skill”:
+
+| If the skill requires                        | Package                             |
+| -------------------------------------------- | ----------------------------------- |
+| No forge API; in-repo files                  | `repo-maintenance`                  |
+| GitHub Issue/PR / `gh`                       | `github`                            |
+| GitHub Actions YAML only                     | `github-actions`                    |
+| Generic loop checker (not a domain)          | `loop`                              |
+| Review/markdown/docs authoring with no forge | `common`                            |
+| Language stack                               | `go` / `shell-script` / `terraform` |
+
+Loop-capable skills (Interactive + Automation) are a **family**. Cross-cutting envelope, report shape, description triggers, and detect JSON changes MUST follow [Loop-Capable Skills](../docs/explanation/loop-engineering/loop-capable-skills.md) — do not patch a single loop entry skill’s shared contract in isolation.
+
+YAML `description` on those skills MUST mention conversation use first or equally with automation; MUST NOT read as workflow-only.
+
 ---
 
 ## Redistribution (DIST) — maintainer judgment

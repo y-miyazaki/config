@@ -562,11 +562,11 @@ Run: `actionlint .github/workflows/on-loop-*.yaml` (if available) or `yamllint` 
 
 **Files:**
 
-- Modify: `.apm/packages/common/.apm/skills/changelog/references/category-automation-envelope.md`
-- Modify: `.apm/packages/common/.apm/skills/ci-sweeper/references/category-automation-envelope.md`
-- Modify: `.apm/packages/common/.apm/skills/docs-updater/references/category-automation-envelope.md`
-- Modify: `.apm/packages/common/.apm/skills/refactor/references/category-automation-envelope.md`
-- Modify: `.apm/packages/common/.apm/skills/tech-debt/references/category-automation-envelope.md`
+- Modify: `.apm/packages/repo-maintenance/.apm/skills/changelog/references/category-automation-envelope.md`
+- Modify: `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/references/category-automation-envelope.md`
+- Modify: `.apm/packages/repo-maintenance/.apm/skills/docs-updater/references/category-automation-envelope.md`
+- Modify: `.apm/packages/repo-maintenance/.apm/skills/refactor/references/category-automation-envelope.md`
+- Modify: `.apm/packages/repo-maintenance/.apm/skills/tech-debt/references/category-automation-envelope.md`
 - Modify: corresponding `SKILL.md` Workflow tables (branch on `write_target` when `may_edit: true`)
 
 **Interfaces:**

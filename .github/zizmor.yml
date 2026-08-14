@@ -9,9 +9,9 @@ rules:
       - on-loop-changelog.yaml
       - on-loop-ci-sweeper.yaml
       - on-loop-docs-updater.yaml
-      - on-loop-issue-autofix.yaml
-      - on-loop-issue-triage.yaml
-      - on-loop-pr-revise.yaml
+      - on-loop-github-issue-autofix.yaml
+      - on-loop-github-issue-triage.yaml
+      - on-loop-github-pr-revise.yaml
 
   # Ignore github-env warning in install-github-release composite action
   # This is intentional for setting up PATH

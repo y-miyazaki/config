@@ -28,6 +28,7 @@ See [CONTEXT — Semantic Findings](../explanation/loop-engineering/CONTEXT.md#l
 - [ ] Detect does **not** emit semantic `findings[]`, triage prose, or repair decisions
 - [ ] Entry skill builds semantic output (`findings[]`, Fix/Watch/Escalate) in Execute from detect facts
 - [ ] `verifier_context` carries fact summary or log excerpt for verify — not skill triage report
+- [ ] `verifier_skill_name` set on caller (default `loop-verifier`); domain rubric only in `agent_verifier_criteria`
 
 ### Phase Contract Compliance
 

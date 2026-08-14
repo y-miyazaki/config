@@ -30,13 +30,13 @@
 | `test/bats/.github/actions/loop-finalize/lib/create_pr.bats`                        | Assert `--draft` when `PR_DRAFT=true`                         |
 | `.github/actions/loop-entity-detect/lib/detect.sh`                                  | After successful detect write, invoke optional dispatch hook  |
 | `.github/actions/loop-entity-detect/action.yml`                                     | Inputs: hook path / token for dispatch (trusted)              |
-| `.apm/packages/common/.apm/skills/issue-triage/scripts/detect_issue.sh`             | Emit dispatch flags when `triage:ready` ∧ `autofix`           |
-| `.apm/packages/common/.apm/skills/issue-triage/scripts/hooks/on_detect_dispatch.sh` | Live `repository_dispatch` (migrate from autofix stub)        |
-| `.apm/packages/common/.apm/skills/issue-autofix/scripts/hooks/*`                    | Remove stub or leave README pointing at triage hook           |
-| `.apm/packages/common/.apm/skills/issue-autofix/scripts/detect_autofix.sh`          | Real detect + Fixes/#N skip                                   |
-| `.apm/packages/common/.apm/skills/issue-autofix/SKILL.md` + `assets/` + references  | L2 fix loop + PR body templates                               |
-| `.apm/packages/common/.apm/skills/pr-revise/scripts/detect_pr_revise.sh`            | Mention gate + PR number hydrate                              |
-| `.apm/packages/common/.apm/skills/pr-revise/SKILL.md` + `assets/` + references      | L2 revise loop + PR body templates                            |
+| `.apm/packages/github/.apm/skills/issue-triage/scripts/detect_issue.sh`             | Emit dispatch flags when `triage:ready` ∧ `autofix`           |
+| `.apm/packages/github/.apm/skills/issue-triage/scripts/hooks/on_detect_dispatch.sh` | Live `repository_dispatch` (migrate from autofix stub)        |
+| `.apm/packages/github/.apm/skills/issue-autofix/scripts/hooks/*`                    | Remove stub or leave README pointing at triage hook           |
+| `.apm/packages/github/.apm/skills/issue-autofix/scripts/detect_autofix.sh`          | Real detect + Fixes/#N skip                                   |
+| `.apm/packages/github/.apm/skills/issue-autofix/SKILL.md` + `assets/` + references  | L2 fix loop + PR body templates                               |
+| `.apm/packages/github/.apm/skills/pr-revise/scripts/detect_pr_revise.sh`            | Mention gate + PR number hydrate                              |
+| `.apm/packages/github/.apm/skills/pr-revise/SKILL.md` + `assets/` + references      | L2 revise loop + PR body templates                            |
 | `.github/workflows/on-loop-issue-autofix.yaml`                                      | L2 planes, `pr_draft`, real skill wiring                      |
 | `.github/workflows/on-loop-pr-revise.yaml`                                          | Comment triggers + mention input + `git_landing_pull_request` |
 | `.github/workflows/on-loop-issue-triage.yaml`                                       | Pass dispatch hook path + token into entity detect            |
@@ -198,14 +198,14 @@ Add action inputs:
 
 **Files:**
 
-- Modify: `.apm/packages/common/.apm/skills/issue-triage/scripts/detect_issue.sh`
-- Create: `.apm/packages/common/.apm/skills/issue-triage/scripts/hooks/on_detect_dispatch.sh`
-- Create: `.apm/packages/common/.apm/skills/issue-triage/scripts/hooks/README.md`
+- Modify: `.apm/packages/github/.apm/skills/issue-triage/scripts/detect_issue.sh`
+- Create: `.apm/packages/github/.apm/skills/issue-triage/scripts/hooks/on_detect_dispatch.sh`
+- Create: `.apm/packages/github/.apm/skills/issue-triage/scripts/hooks/README.md`
 - Modify: `test/bats/.apm/packages/common/issue-triage/detect_issue.bats`
 - Create: `test/bats/.apm/packages/common/issue-triage/on_detect_dispatch.bats`
-- Delete or rewrite stub under `.apm/packages/common/.apm/skills/issue-autofix/scripts/hooks/` (point README to triage)
+- Delete or rewrite stub under `.apm/packages/github/.apm/skills/issue-autofix/scripts/hooks/` (point README to triage)
 - Modify: `.github/workflows/on-loop-issue-triage.yaml` to pass hook path + bot token into entity detect
-- Modify: `.apm/packages/common/.apm/skills/issue-triage/SKILL.md` (Agent must not dispatch)
+- Modify: `.apm/packages/github/.apm/skills/issue-triage/SKILL.md` (Agent must not dispatch)
 
 **Interfaces:**
 
@@ -259,7 +259,7 @@ Pass into `ci-loop-caller-entity` / `loop-entity-detect`:
 
 **Files:**
 
-- Modify: `.apm/packages/common/.apm/skills/issue-autofix/scripts/detect_autofix.sh`
+- Modify: `.apm/packages/github/.apm/skills/issue-autofix/scripts/detect_autofix.sh`
 - Modify: `test/bats/.apm/packages/common/issue-autofix/detect_autofix.bats`
 
 **Interfaces:**
@@ -289,7 +289,7 @@ Hydrate `ISSUE_NUMBER` from env or `GITHUB_EVENT_PATH` (`issue.number` / `client
 
 **Files:**
 
-- Modify: `.apm/packages/common/.apm/skills/issue-autofix/SKILL.md`
+- Modify: `.apm/packages/github/.apm/skills/issue-autofix/SKILL.md`
 - Create: `assets/pr-body-template.md`, `assets/pr-body-template-survey.md`
 - Create: `references/` as required by `check_loop_pr_body_contract.sh` (copy structure from `docs-updater` / `ci-sweeper` — required headings only, autofix-specific Overview examples)
 - Modify: `.github/workflows/on-loop-issue-autofix.yaml`
@@ -323,7 +323,7 @@ Run: `bash scripts/self/apm/check_loop_pr_body_contract.sh` (or repo’s documen
 
 **Files:**
 
-- Modify: `.apm/packages/common/.apm/skills/pr-revise/scripts/detect_pr_revise.sh`
+- Modify: `.apm/packages/github/.apm/skills/pr-revise/scripts/detect_pr_revise.sh`
 - Modify: `test/bats/.apm/packages/common/pr-revise/detect_pr_revise.bats`
 
 **Interfaces:**
@@ -347,7 +347,7 @@ Run: `bash scripts/self/apm/check_loop_pr_body_contract.sh` (or repo’s documen
 
 **Files:**
 
-- Modify: `.apm/packages/common/.apm/skills/pr-revise/SKILL.md`
+- Modify: `.apm/packages/github/.apm/skills/pr-revise/SKILL.md`
 - Create: assets + references for PR body contract
 - Modify: `.github/workflows/on-loop-pr-revise.yaml`
 
@@ -439,8 +439,8 @@ Expected: no new policy errors (zizmor ignores remain consistent with sibling `o
 
 ```bash
 rg -n "stub: not implemented|always skip" \
-  .apm/packages/common/.apm/skills/issue-autofix \
-  .apm/packages/common/.apm/skills/pr-revise
+  .apm/packages/github/.apm/skills/issue-autofix \
+  .apm/packages/github/.apm/skills/pr-revise
 ```
 
 Expected: no matches (or only historical comments in docs)

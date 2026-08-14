@@ -34,6 +34,7 @@ _Understanding-oriented discussion of concepts and decisions._
 - [GitHub Workflows Design](explanation/github-workflows-design.md)
 - [Instructions Sync Workflow](explanation/instructions-sync-workflow.md)
 - [Loop Engineering](explanation/loop-engineering/index.md)
+- [Loop-Capable Skills](explanation/loop-engineering/loop-capable-skills.md)
 - [Loop Engineering Design](explanation/loop-engineering/loop-engineering-design.md)
 - [Ubiquitous Language](explanation/loop-engineering/CONTEXT.md)
 - [Documentation Maintenance](explanation/loop-engineering/documentation-maintenance.md)

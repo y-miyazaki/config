@@ -15,17 +15,17 @@
       "max_runs_per_day": 1,
       "max_tokens_per_day": 1000000
     },
-    "issue-autofix": {
+    "github-issue-autofix": {
       "max_attempts_per_run": 2,
       "max_runs_per_day": 10,
       "max_tokens_per_day": 1000000
     },
-    "issue-triage": {
+    "github-issue-triage": {
       "max_attempts_per_run": 2,
       "max_runs_per_day": 20,
       "max_tokens_per_day": 1000000
     },
-    "pr-revise": {
+    "github-pr-revise": {
       "max_attempts_per_run": 2,
       "max_runs_per_day": 10,
       "max_tokens_per_day": 1000000

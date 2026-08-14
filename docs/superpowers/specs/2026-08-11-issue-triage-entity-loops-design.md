@@ -165,9 +165,9 @@ Exact field names lock in the implementation plan with tests; `finalize: none` (
 | `.github/workflows/on-loop-issue-triage.yaml`                                      | Axis 1 dogfood caller                                           |
 | `.github/workflows/on-loop-issue-autofix.yaml`                                     | Axis 2 skeleton                                                 |
 | `.github/workflows/on-loop-pr-revise.yaml`                                         | Axis 3 skeleton                                                 |
-| `.apm/packages/common/.apm/skills/issue-triage/`                                   | Skill + `scripts/detect_issue.sh` + label catalog + FSM helpers |
-| `.apm/packages/common/.apm/skills/issue-autofix/`                                  | Stub skill + detect                                             |
-| `.apm/packages/common/.apm/skills/pr-revise/`                                      | Stub skill + detect                                             |
+| `.apm/packages/github/.apm/skills/issue-triage/`                                   | Skill + `scripts/detect_issue.sh` + label catalog + FSM helpers |
+| `.apm/packages/github/.apm/skills/issue-autofix/`                                  | Stub skill + detect                                             |
+| `.apm/packages/github/.apm/skills/pr-revise/`                                      | Stub skill + detect                                             |
 | `docs/explanation/loop-engineering/workflows/loop-issue-triage-workflow-design.md` | Workflow design (docs-updater style)                            |
 | Short design notes for autofix / pr-revise skeletons                               | Pointers + non-goals                                            |
 | Bats under `test/bats/` (or skill-local per TEST-00)                               | detect, FSM, stubs, entity contract                             |

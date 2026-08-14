@@ -1,0 +1,25 @@
+id: loop-verifier-contract-001
+name: loop-verifier emits REJECT with JSON verdict
+description: >-
+  Validate loop-verifier defaults to REJECT when evidence is weak and ends with
+  fenced JSON containing verdict REJECT or APPROVE per common-output-format.md.
+tags:
+  - quality
+  - output-contract
+inputs:
+  prompt: >-
+    Use loop-verifier as the checker. The implementer claims a fix but the diff only
+    changes a comment in README.md while the stated target was a failing unit test in
+    pkg/auth. Apply the generic checklist. Emit ## Overview and ## Evidence per
+    common-output-format.md. End with a fenced JSON object containing verdict REJECT
+    and a reason. Do not implement fixes or edit product files.
+  context:
+    stated_target: "Fix failing TestAuth in pkg/auth_test.go"
+    diff_summary: "README.md comment-only change"
+expected:
+  output_contains:
+    - Overview
+    - REJECT
+    - verdict
+  outcomes:
+    - type: task_completed

@@ -178,7 +178,13 @@ function parse_verifier_output {
 #
 #######################################
 function write_verifier_output_contract {
-    printf '%s\n' "${PROMPT_VERIFIER_OUTPUT_CONTRACT}"
+    if [[ -n ${PROMPT_VERIFIER_OUTPUT_CONTRACT:-} ]]; then
+        printf '%s\n' "${PROMPT_VERIFIER_OUTPUT_CONTRACT}"
+        return 0
+    fi
+    if [[ -n ${VERIFIER_SKILL_ROOT:-} && -f ${VERIFIER_SKILL_ROOT}/references/common-output-format.md ]]; then
+        echo "Emit the machine-readable JSON verdict per ${VERIFIER_SKILL_ROOT}/references/common-output-format.md."
+    fi
 }
 
 #######################################
@@ -270,7 +276,7 @@ function run_verify {
     fi
 
     criteria="${AGENT_VERIFIER_CRITERIA}"
-    if [[ -z ${criteria} ]]; then
+    if [[ -z ${criteria} && -z ${VERIFIER_SKILL_ROOT:-} ]]; then
         criteria="${PROMPT_VERIFIER_DEFAULT_CRITERIA}"
     fi
     if agent_report_skill_requires_format_check "${SKILL_NAME}"; then
@@ -282,6 +288,8 @@ function run_verify {
 
     prompt_file="${attempt_dir}/verifier-prompt.txt"
     {
+        write_verifier_skill_slash
+        printf '\n'
         if [[ ${attempt_num} -gt 1 && "$(jq 'length' <<< "${OPEN_REJECTIONS_JSON}")" -gt 0 ]]; then
             open_rejections_text="$(format_open_rejections_for_prompt)"
             render_template "${PROMPT_VERIFIER_REGRESSION}" \
@@ -295,13 +303,17 @@ function run_verify {
         fi
         echo "## Task"
         echo ""
-        printf '%s\n' "${PROMPT_VERIFIER_TASK}"
-        echo ""
+        if [[ -n ${PROMPT_VERIFIER_TASK:-} ]]; then
+            printf '%s\n' "${PROMPT_VERIFIER_TASK}"
+            echo ""
+        fi
         echo "${criteria}"
         echo ""
         echo "## Input"
         echo ""
-        echo "Skill: ${SKILL_NAME}"
+        write_verifier_skill_input
+        echo ""
+        echo "Implementer skill: ${SKILL_NAME}"
         echo ""
         echo "### Branch Diff Stat"
         echo '```'

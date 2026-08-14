@@ -24,8 +24,8 @@
 | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | `.apm/packages/common/.apm/skills/{changelog,ci-sweeper,docs-updater,refactor,tech-debt}/references/category-detect-scope.md` | Thin cursor axis + per-skill mapping + Interactive discovery rules            |
 | `.apm/packages/common/.apm/skills/*/SKILL.md`                                                                                 | Reference Files Guide + Interactive workflow: detect-when-absent + complement |
-| `.apm/packages/common/.apm/skills/refactor/references/common-checklist.md`                                                    | SURVEY-01 Interactive wording                                                 |
-| `.apm/packages/common/.apm/skills/docs-updater/scripts/detect_changes.sh`                                                     | `--scope all` = full candidate-doc enumeration                                |
+| `.apm/packages/repo-maintenance/.apm/skills/refactor/references/common-checklist.md`                                          | SURVEY-01 Interactive wording                                                 |
+| `.apm/packages/repo-maintenance/.apm/skills/docs-updater/scripts/detect_changes.sh`                                           | `--scope all` = full candidate-doc enumeration                                |
 | `.apm/packages/common/.apm/skills/{changelog,ci-sweeper,refactor,tech-debt}/scripts/detect_*.sh`                              | Usage headers: axis language; noop/deprecated `staged` where applicable       |
 | `.apm/packages/common/.apm/skills/*/references/category-input-schema.md`                                                      | Cross-link scope axis; docs-updater `scope: all` description                  |
 | `test/bats/.apm/packages/common/docs-updater/detect_changes.bats`                                                             | Failing-then-passing tests for new `all`                                      |
@@ -37,11 +37,11 @@
 
 **Files:**
 
-- Create: `.apm/packages/common/.apm/skills/changelog/references/category-detect-scope.md`
-- Create: `.apm/packages/common/.apm/skills/ci-sweeper/references/category-detect-scope.md`
-- Create: `.apm/packages/common/.apm/skills/docs-updater/references/category-detect-scope.md`
-- Create: `.apm/packages/common/.apm/skills/refactor/references/category-detect-scope.md`
-- Create: `.apm/packages/common/.apm/skills/tech-debt/references/category-detect-scope.md`
+- Create: `.apm/packages/repo-maintenance/.apm/skills/changelog/references/category-detect-scope.md`
+- Create: `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/references/category-detect-scope.md`
+- Create: `.apm/packages/repo-maintenance/.apm/skills/docs-updater/references/category-detect-scope.md`
+- Create: `.apm/packages/repo-maintenance/.apm/skills/refactor/references/category-detect-scope.md`
+- Create: `.apm/packages/repo-maintenance/.apm/skills/tech-debt/references/category-detect-scope.md`
 - Modify: each skill’s `SKILL.md` Reference Files Guide (add load trigger)
 
 **Interfaces:**
@@ -51,7 +51,7 @@
 
 - [ ] **Step 1: Create the shared front matter + skill-specific body for `refactor`**
 
-Write `.apm/packages/common/.apm/skills/refactor/references/category-detect-scope.md` with this content (adjust only the **This skill** section per skill in later steps):
+Write `.apm/packages/repo-maintenance/.apm/skills/refactor/references/category-detect-scope.md` with this content (adjust only the **This skill** section per skill in later steps):
 
 ```markdown
 # Detect Scope Axis
@@ -177,12 +177,12 @@ Expected: one hit per skill.
 
 **Files:**
 
-- Modify: `.apm/packages/common/.apm/skills/changelog/SKILL.md`
-- Modify: `.apm/packages/common/.apm/skills/ci-sweeper/SKILL.md`
-- Modify: `.apm/packages/common/.apm/skills/docs-updater/SKILL.md`
-- Modify: `.apm/packages/common/.apm/skills/refactor/SKILL.md`
-- Modify: `.apm/packages/common/.apm/skills/tech-debt/SKILL.md`
-- Modify: `.apm/packages/common/.apm/skills/refactor/references/common-checklist.md` (SURVEY-01)
+- Modify: `.apm/packages/repo-maintenance/.apm/skills/changelog/SKILL.md`
+- Modify: `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/SKILL.md`
+- Modify: `.apm/packages/repo-maintenance/.apm/skills/docs-updater/SKILL.md`
+- Modify: `.apm/packages/repo-maintenance/.apm/skills/refactor/SKILL.md`
+- Modify: `.apm/packages/repo-maintenance/.apm/skills/tech-debt/SKILL.md`
+- Modify: `.apm/packages/repo-maintenance/.apm/skills/refactor/references/common-checklist.md` (SURVEY-01)
 
 **Interfaces:**
 
@@ -251,8 +251,8 @@ Expected: no matches in those skill trees.
 **Files:**
 
 - Test: `test/bats/.apm/packages/common/docs-updater/detect_changes.bats`
-- Modify: `.apm/packages/common/.apm/skills/docs-updater/scripts/detect_changes.sh`
-- Modify: `.apm/packages/common/.apm/skills/docs-updater/references/category-input-schema.md` (describe `scope: all`)
+- Modify: `.apm/packages/repo-maintenance/.apm/skills/docs-updater/scripts/detect_changes.sh`
+- Modify: `.apm/packages/repo-maintenance/.apm/skills/docs-updater/references/category-input-schema.md` (describe `scope: all`)
 - Modify: header comments / `show_usage` in `detect_changes.sh`
 
 **Interfaces:**
@@ -398,10 +398,10 @@ Document:
 
 **Files:**
 
-- Modify: `.apm/packages/common/.apm/skills/refactor/scripts/detect_refactor.sh` (header/`show_usage` only unless tests require more)
-- Modify: `.apm/packages/common/.apm/skills/tech-debt/scripts/detect_tech_debt.sh`
-- Modify: `.apm/packages/common/.apm/skills/changelog/scripts/detect_changelog_commits.sh`
-- Modify: `.apm/packages/common/.apm/skills/ci-sweeper/scripts/detect_ci_failures.sh`
+- Modify: `.apm/packages/repo-maintenance/.apm/skills/refactor/scripts/detect_refactor.sh` (header/`show_usage` only unless tests require more)
+- Modify: `.apm/packages/repo-maintenance/.apm/skills/tech-debt/scripts/detect_tech_debt.sh`
+- Modify: `.apm/packages/repo-maintenance/.apm/skills/changelog/scripts/detect_changelog_commits.sh`
+- Modify: `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/scripts/detect_ci_failures.sh`
 - Modify: matching `category-input-schema.md` scope blurbs where they contradict the axis
 
 **Interfaces:**

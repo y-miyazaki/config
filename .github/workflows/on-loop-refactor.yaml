@@ -85,6 +85,7 @@ jobs:
         Invoke named validation skills for touched stacks before finalize.
       pr_enabled: false
       skill_name: refactor
+      verifier_skill_name: loop-verifier
       write_target: fix
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}

@@ -153,6 +153,11 @@ on:
         description: "Override state JSON path (default .loop/state-<loop_name>.json)"
         required: false
         type: string
+      verifier_skill_name:
+        default: loop-verifier
+        description: "Checker skill name for loop-execute (not the implementer skill_name)"
+        required: false
+        type: string
       write_target:
         default: report
         description: "Agent artifact when may_edit is true: fix | report"
@@ -251,7 +256,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@88107626b8696f174d7bee35c70f377657bfaa1e # v1.8.83
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@748b456fac6e632e60c0cf28772fe2c06bef8384 # v1.8.84
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
@@ -259,7 +264,7 @@ jobs:
 
       - name: Detect Loop Work
         id: detect
-        uses: y-miyazaki/config/.github/actions/loop-entity-detect@88107626b8696f174d7bee35c70f377657bfaa1e # v1.8.83
+        uses: y-miyazaki/config/.github/actions/loop-entity-detect@748b456fac6e632e60c0cf28772fe2c06bef8384 # v1.8.84
         with:
           agent_implementer_max_turns: ${{ format('{0}', inputs.agent_implementer_max_turns) }}
           agent_implementer_model: ${{ inputs.agent_implementer_model }}
@@ -338,6 +343,7 @@ jobs:
       state_push_branch: ${{ needs.detect.outputs.state_push_branch }}
       target_json: ${{ toJson(matrix.target.target_json) }}
       verifier_context: ${{ matrix.target.verifier_context }}
+      verifier_skill_name: ${{ inputs.verifier_skill_name }}
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.BOT_APP_CLIENT_ID }}
@@ -365,14 +371,14 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@88107626b8696f174d7bee35c70f377657bfaa1e # v1.8.83
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@748b456fac6e632e60c0cf28772fe2c06bef8384 # v1.8.84
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           github_token: ${{ secrets.GH_TOKEN }}
 
       - name: Append Skip Run Log
-        uses: y-miyazaki/config/.github/actions/loop-run-log@88107626b8696f174d7bee35c70f377657bfaa1e # v1.8.83
+        uses: y-miyazaki/config/.github/actions/loop-run-log@748b456fac6e632e60c0cf28772fe2c06bef8384 # v1.8.84
         with:
           base_branch: ${{ needs.detect.outputs.branch_state }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}

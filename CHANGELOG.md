@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-[Full diff](https://github.com/y-miyazaki/config/compare/4f8b6d95ee4762134729fd058ae8ae4fa049f8d8...bec7eec11b11071adbe75098432c9d6283368d85)
-
 ### Changed
 
+- **APM package split (breaking):** Skills moved from monolithic `config-common` into forge packages (`config-github`, `config-loop`, `config-repo-maintenance`, `config-github-actions`). Consumers that only installed `common` must add the new packages they need; GitHub MCP moved from `config-common` to `config-github`.
+- **repository_dispatch renames (breaking):** Loop GitHub workflows now listen for `loop-github-issue-autofix`, `loop-github-issue-triage`, and `loop-github-pr-revise` instead of `loop-issue-autofix`, `loop-issue-triage`, and `loop-pr-revise`. Update external dispatch callers before upgrading.
+- **Guidelines sync:** `sync_guidelines_from_categories.pl` maps `github-actions-review` to `.apm/packages/github-actions/.apm/instructions/github-actions-workflow.instructions.md`.
 - Append run log [skip ci] (loop) ([ee4621c](https://github.com/y-miyazaki/config/commit/ee4621c2ac098926e527ee906961c696e74cea4d))
 - Update state [skip ci] (loop) ([0422afb](https://github.com/y-miyazaki/config/commit/0422afbbf1b3bd50145053dac06268c49ea03fd1))
 - Update minimumReleaseAge in renovate configuration to 7 days ([86bb02f](https://github.com/y-miyazaki/config/commit/86bb02f9a5d34ffc8f298a944e7d8ff9a951951b))

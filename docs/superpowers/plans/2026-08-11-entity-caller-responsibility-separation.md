@@ -23,18 +23,18 @@
 | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | `scripts/lib/loop_entity_target.sh`                                                                  | Build single-target matrix from detect JSON using opaque `result.handoff_key`  |
 | `test/bats/scripts/lib/loop_entity_target.bats`                                                      | S1 contract tests                                                              |
-| `.apm/packages/common/.apm/skills/issue-triage/scripts/detect_issue.sh`                              | Event hydrate + `handoff_key` + `triage:failed` skip + existing bot skip       |
-| `.apm/packages/common/.apm/skills/issue-triage/scripts/labels.json`                                  | Add `triage:failed`                                                            |
-| `.apm/packages/common/.apm/skills/issue-triage/references/category-fsm.md`                           | Document failed stop + R2                                                      |
-| `.apm/packages/common/.apm/skills/issue-triage/SKILL.md`                                             | Apply `triage:failed` on unsafe partial failure; no repository_dispatch        |
+| `.apm/packages/github/.apm/skills/issue-triage/scripts/detect_issue.sh`                              | Event hydrate + `handoff_key` + `triage:failed` skip + existing bot skip       |
+| `.apm/packages/github/.apm/skills/issue-triage/scripts/labels.json`                                  | Add `triage:failed`                                                            |
+| `.apm/packages/github/.apm/skills/issue-triage/references/category-fsm.md`                           | Document failed stop + R2                                                      |
+| `.apm/packages/github/.apm/skills/issue-triage/SKILL.md`                                             | Apply `triage:failed` on unsafe partial failure; no repository_dispatch        |
 | `test/bats/.apm/packages/common/issue-triage/detect_issue.bats`                                      | handoff_key / failed / event_path tests                                        |
 | `.github/workflows/on-loop-issue-triage.yaml`                                                        | Thin caller: remove `prepare`; optional dispatch-only `detect_domain_env_json` |
 | `.github/workflows/on-loop-issue-autofix.yaml`                                                       | H2-1 intake → `ci-loop-caller.yaml` (stub detect still skips)                  |
 | `.github/workflows/on-loop-pr-revise.yaml`                                                           | R-A intake → `ci-loop-caller.yaml` (stub skip)                                 |
-| `.apm/packages/common/.apm/skills/issue-autofix/scripts/detect_autofix.sh`                           | Keep skip; accept ISSUE_NUMBER / event hydrate for future D4                   |
+| `.apm/packages/github/.apm/skills/issue-autofix/scripts/detect_autofix.sh`                           | Keep skip; accept ISSUE_NUMBER / event hydrate for future D4                   |
 | `docs/explanation/loop-engineering/loop-caller-reusable-design.md`                                   | Entity section = E1–E18                                                        |
 | `docs/explanation/loop-engineering/workflows/loop-issue-triage-workflow-design.md`                   | Remove prepare; note event_path detect                                         |
-| `.apm/packages/common/.apm/skills/issue-autofix/scripts/hooks/README.md` (or short comment in SKILL) | Y3 path convention only                                                        |
+| `.apm/packages/github/.apm/skills/issue-autofix/scripts/hooks/README.md` (or short comment in SKILL) | Y3 path convention only                                                        |
 
 ---
 
@@ -117,10 +117,10 @@ git status
 
 **Files:**
 
-- Modify: `.apm/packages/common/.apm/skills/issue-triage/scripts/labels.json`
-- Modify: `.apm/packages/common/.apm/skills/issue-triage/scripts/detect_issue.sh`
-- Modify: `.apm/packages/common/.apm/skills/issue-triage/references/category-fsm.md`
-- Modify: `.apm/packages/common/.apm/skills/issue-triage/SKILL.md`
+- Modify: `.apm/packages/github/.apm/skills/issue-triage/scripts/labels.json`
+- Modify: `.apm/packages/github/.apm/skills/issue-triage/scripts/detect_issue.sh`
+- Modify: `.apm/packages/github/.apm/skills/issue-triage/references/category-fsm.md`
+- Modify: `.apm/packages/github/.apm/skills/issue-triage/SKILL.md`
 - Test: `test/bats/.apm/packages/common/issue-triage/detect_issue.bats`
 
 **Interfaces:**
@@ -188,7 +188,7 @@ Run: `bats test/bats/.apm/packages/common/issue-triage/detect_issue.bats test/ba
 - [ ] **Step 5: Stage only (no commit)**
 
 ```bash
-git add .apm/packages/common/.apm/skills/issue-triage/ \
+git add .apm/packages/github/.apm/skills/issue-triage/ \
   test/bats/.apm/packages/common/issue-triage/
 ```
 
@@ -198,7 +198,7 @@ git add .apm/packages/common/.apm/skills/issue-triage/ \
 
 **Files:**
 
-- Modify: `.apm/packages/common/.apm/skills/issue-triage/scripts/detect_issue.sh`
+- Modify: `.apm/packages/github/.apm/skills/issue-triage/scripts/detect_issue.sh`
 - Test: `test/bats/.apm/packages/common/issue-triage/detect_issue.bats`
 - Modify: `.github/workflows/on-loop-issue-triage.yaml`
 
@@ -280,8 +280,8 @@ Expected: PASS / no errors.
 
 - Modify: `.github/workflows/on-loop-issue-autofix.yaml`
 - Modify: `.github/workflows/on-loop-pr-revise.yaml`
-- Modify: `.apm/packages/common/.apm/skills/issue-autofix/scripts/detect_autofix.sh` (comment + optional ISSUE_NUMBER accept; still `skip: true`)
-- Modify: `.apm/packages/common/.apm/skills/pr-revise/SKILL.md` (note R-A)
+- Modify: `.apm/packages/github/.apm/skills/issue-autofix/scripts/detect_autofix.sh` (comment + optional ISSUE_NUMBER accept; still `skip: true`)
+- Modify: `.apm/packages/github/.apm/skills/pr-revise/SKILL.md` (note R-A)
 - Test: existing stub bats must still pass
 
 **Interfaces:**
@@ -332,7 +332,7 @@ actionlint .github/workflows/on-loop-issue-autofix.yaml .github/workflows/on-loo
 
 **Files:**
 
-- Create: `.apm/packages/common/.apm/skills/issue-autofix/scripts/hooks/README.md` (convention only; no live dispatcher required)
+- Create: `.apm/packages/github/.apm/skills/issue-autofix/scripts/hooks/README.md` (convention only; no live dispatcher required)
 - Modify: `docs/explanation/loop-engineering/loop-caller-reusable-design.md` (entity section)
 - Modify: `docs/explanation/loop-engineering/workflows/loop-issue-triage-workflow-design.md`
 - Modify: `docs/superpowers/specs/2026-08-11-issue-triage-entity-loops-design.md` — short pointer to responsibility-separation spec at top

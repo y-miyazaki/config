@@ -52,7 +52,25 @@ function bats_source_rel {
     source "${rel}"
 }
 
-# apm_skill_script_path: Resolve an APM skill script under common package
+# apm_skill_dir: Resolve an APM skill source directory across packages
+#
+# Arguments:
+#   $1 - Skill name (for example refactor, changelog)
+#
+# Returns:
+#   Absolute skill directory on stdout
+#
+function apm_skill_dir {
+    local skill="$1"
+    local root
+    root="$(bats_workspace_root)"
+    WORKSPACE_ROOT="${root}"
+    # shellcheck disable=SC1091
+    source "${root}/scripts/self/apm/apm_skill_root.sh"
+    apm_skill_root "${skill}"
+}
+
+# apm_skill_script_path: Resolve an APM skill script under its package
 #
 # Arguments:
 #   $1 - Skill name (for example refactor, changelog)
@@ -64,8 +82,7 @@ function bats_source_rel {
 function apm_skill_script_path {
     local skill="$1"
     local script="$2"
-    printf '%s/.apm/packages/common/.apm/skills/%s/scripts/%s' \
-        "$(bats_workspace_root)" "${skill}" "${script}"
+    printf '%s/scripts/%s' "$(apm_skill_dir "${skill}")" "${script}"
 }
 
 # bats_source_apm_skill: Source an APM loop skill script

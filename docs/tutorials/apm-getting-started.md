@@ -57,7 +57,7 @@ dependencies:
     - github.com/y-miyazaki/config/.apm/packages/go-hooks-copilot
 ```
 
-Available domain packages: `go`, `terraform`, `terraform-aws`, `shell-script`, `aws`.
+Available packages beyond `common`: `repo-maintenance`, `github`, `github-actions`, `loop`, `go`, `terraform`, `terraform-aws`, `shell-script`, `aws`. Install `github` only if the repo uses GitHub Issues/PRs; install `github-actions` only if it has GHA workflows. See [Loop-Capable Skills](../explanation/loop-engineering/loop-capable-skills.md).
 
 ## Step 3: Install Packages
 

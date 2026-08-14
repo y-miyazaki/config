@@ -44,6 +44,6 @@ permissions:
 
 jobs:
   github-actions-workflow-ci:
-    uses: y-miyazaki/config/.github/workflows/ci-github-actions-workflow.yaml@88107626b8696f174d7bee35c70f377657bfaa1e # v1.8.83
+    uses: y-miyazaki/config/.github/workflows/ci-github-actions-workflow.yaml@748b456fac6e632e60c0cf28772fe2c06bef8384 # v1.8.84
     permissions:
       contents: read

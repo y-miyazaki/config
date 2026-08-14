@@ -119,6 +119,7 @@ jobs:
         Read each skill's SKILL.md under `.agents/skills/` or `.claude/skills/` before invoking.
         Coverage-threshold and dependency-breakage failures: classify Watch — do not edit until caller verifier allows.
       skill_name: ci-sweeper
+      verifier_skill_name: loop-verifier
       write_target: fix
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
