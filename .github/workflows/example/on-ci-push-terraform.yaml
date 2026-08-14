@@ -39,7 +39,7 @@ permissions:
 
 jobs:
   terraform-ci:
-    uses: y-miyazaki/config/.github/workflows/ci-terraform.yaml@47a4003b6c0ee7410245514bf3b1d15210b173eb # v1.8.84
+    uses: y-miyazaki/config/.github/workflows/ci-terraform.yaml@4655109ba72887b79fe88cbae95abe093c1c481e # v1.8.84
     with:
       modules_path: modules
       recursive: true
