@@ -100,7 +100,7 @@ claude = "2.1.222"                               # Claude Code CLI
 
 # Security related tools
 "aqua:gitleaks/gitleaks" = "8.30.1"  # secret scanner
-"pipx:pre-commit" = { version = "4.6.1", depends = [
+"pipx:pre-commit" = { version = "4.6.2", depends = [
   "python",
 ] } # pre-commit framework
 "pipx:semgrep" = { version = "1.172.0", depends = ["python"] } # SAST scanner (uvx-backed pipx)
