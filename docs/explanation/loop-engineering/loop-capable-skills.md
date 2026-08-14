@@ -51,19 +51,19 @@ Automation-only detect details (`repository_dispatch`, `@loop` mention) belong i
 
 When changing **any** row in the family below, apply the same class of edit to **every loop entry skill** that shares that artifact (or record an explicit exception in the PR).
 
-| Change class                                   | Touch                                                                                                                                |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Survey/apply report headings                   | each skill `references/common-output-format.md` (+ `-automation.md` when split)                                                      |
-| `may_edit` / `write_target` / `## Constraints` | `references/category-automation-envelope.md`                                                                                         |
-| PR body templates                              | `assets/pr-body-template.md`, `assets/pr-body-template-survey.md`                                                                    |
-| PR body link rules                             | `references/category-pr-body-links.md` + `scripts/self/apm/check_loop_pr_body_contract.sh`                                           |
-| Detect JSON envelope                           | each `scripts/detect_*.sh` + `references/category-input-schema.md`                                                                   |
-| Description triggers                           | each `SKILL.md` frontmatter (this file’s contract)                                                                                   |
-| Verifier domain rubric                         | matching `on-loop-*.yaml` `agent_verifier_criteria` — **not** `loop-verifier`                                                        |
-| New loop caller verifier wiring                | each `on-loop-*.yaml`: `skill_name` + `verifier_skill_name: loop-verifier` + domain `agent_verifier_criteria`                       |
+| Change class                                   | Touch                                                                                                                                                                                                                     |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Survey/apply report headings                   | each skill `references/common-output-format.md` (+ `-automation.md` when split)                                                                                                                                           |
+| `may_edit` / `write_target` / `## Constraints` | `references/category-automation-envelope.md`                                                                                                                                                                              |
+| PR body templates                              | `assets/pr-body-template.md`, `assets/pr-body-template-survey.md`                                                                                                                                                         |
+| PR body link rules                             | `references/category-pr-body-links.md` + `scripts/self/apm/check_loop_pr_body_contract.sh`                                                                                                                                |
+| Detect JSON envelope                           | each `scripts/detect_*.sh` + `references/category-input-schema.md`                                                                                                                                                        |
+| Description triggers                           | each `SKILL.md` frontmatter (this file’s contract)                                                                                                                                                                        |
+| Verifier domain rubric                         | matching `on-loop-*.yaml` `agent_verifier_criteria` — **not** `loop-verifier`                                                                                                                                             |
+| New loop caller verifier wiring                | each `on-loop-*.yaml`: `skill_name` + `verifier_skill_name: loop-verifier` + domain `agent_verifier_criteria`                                                                                                             |
 | Generic checker prompt                         | Caller passes `verifier_skill_name` into `loop-execute`. Execute slash-loads `/skill <SKILL.md>` (same pattern as implementer `prompt_file`) and lists the path as Input. Do not hardcode `loop-verifier` inside execute. |
-| Install drift list                             | `scripts/self/apm/check_apm_skill_install_drift.sh` `LOOP_SKILLS`                                                                    |
-| Package move                                   | this table, [architecture.md](../architecture.md), [specification.md](../../reference/specification.md), consumer `apm.yml` examples |
+| Install drift list                             | `scripts/self/apm/check_apm_skill_install_drift.sh` `LOOP_SKILLS`                                                                                                                                                         |
+| Package move                                   | this table, [architecture.md](../architecture.md), [specification.md](../../reference/specification.md), consumer `apm.yml` examples                                                                                      |
 
 Do **not** “fix only ci-sweeper” for envelope wording that all loop entry skills share.
 

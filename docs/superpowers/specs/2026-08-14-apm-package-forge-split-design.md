@@ -97,14 +97,14 @@ No GitHub Issue/PR API required. Consumer with GHA files can install this withou
 
 ## `loop-verifier` placement (detail)
 
-| Layer                                                 | Owner                                                  | Location after this design                                                                                                                                                                         |
-| ----------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Generic checker behavior                              | `loop-verifier` skill                                  | `.apm/packages/loop/.apm/skills/loop-verifier/` (`SKILL.md`, `references/common-checklist.md`, `references/common-output-format.md`)                                                               |
-| Checker skill binding                                 | Caller + execute                                       | `verifier_skill_name` on `on-loop-*.yaml` / `ci-loop-caller` → `loop-execute`; execute slash-loads `/skill <SKILL.md>` (does not inline skill body)                                                |
-| Domain APPROVE/REJECT appendix                        | Caller                                                 | `on-loop-*.yaml` `agent_verifier_criteria` — **stays**                                                                                                                                             |
-| INITIAL / REGRESSION mode intros                      | Platform                                               | `load_default_prompts` in `loop-execute/lib/common.sh` — attempt orchestration, not checker skill content                                                                                          |
-| Path guards, retry loop, report-format machine checks | Platform                                               | `loop-execute` / `verifier.sh` — **stays**                                                                                                                                                         |
-| Embedded verifier fallbacks                           | Platform                                               | `common.sh` when checker skill files are missing (warning + legacy strings)                                                                                                                        |
+| Layer                                                 | Owner                 | Location after this design                                                                                                                          |
+| ----------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Generic checker behavior                              | `loop-verifier` skill | `.apm/packages/loop/.apm/skills/loop-verifier/` (`SKILL.md`, `references/common-checklist.md`, `references/common-output-format.md`)                |
+| Checker skill binding                                 | Caller + execute      | `verifier_skill_name` on `on-loop-*.yaml` / `ci-loop-caller` → `loop-execute`; execute slash-loads `/skill <SKILL.md>` (does not inline skill body) |
+| Domain APPROVE/REJECT appendix                        | Caller                | `on-loop-*.yaml` `agent_verifier_criteria` — **stays**                                                                                              |
+| INITIAL / REGRESSION mode intros                      | Platform              | `load_default_prompts` in `loop-execute/lib/common.sh` — attempt orchestration, not checker skill content                                           |
+| Path guards, retry loop, report-format machine checks | Platform              | `loop-execute` / `verifier.sh` — **stays**                                                                                                          |
+| Embedded verifier fallbacks                           | Platform              | `common.sh` when checker skill files are missing (warning + legacy strings)                                                                         |
 
 **Implemented (post package-split):** `loop-execute` resolves `verifier_skill_name`, slash-loads the checker skill, and appends caller `agent_verifier_criteria` as domain rubric. Do not put domain REJECT rules in `loop-verifier`.
 
@@ -161,13 +161,13 @@ dependencies:
 
 ## Risks
 
-| Risk                                                                                     | Mitigation                                                                                                                                    |
-| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Bats and `check_apm_skill_install_drift.sh` hardcode `.apm/packages/common/.apm/skills/` | Update path lists in the same implementation PR; keep install dest `.agents/skills/<name>`.                                                   |
-| Docs still say “all loop skills live in common”                                          | Update `architecture.md`, `specification.md`, getting-started, loop-engineering index.                                                        |
-| `ci-sweeper` detect is GHA-shaped while the package is `repo-maintenance`                | Document in skill Execution Scope: detect script is optional/caller-replaceable; interactive path must work from logs without GitHub.         |
+| Risk                                                                                     | Mitigation                                                                                                                                               |
+| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bats and `check_apm_skill_install_drift.sh` hardcode `.apm/packages/common/.apm/skills/` | Update path lists in the same implementation PR; keep install dest `.agents/skills/<name>`.                                                              |
+| Docs still say “all loop skills live in common”                                          | Update `architecture.md`, `specification.md`, getting-started, loop-engineering index.                                                                   |
+| `ci-sweeper` detect is GHA-shaped while the package is `repo-maintenance`                | Document in skill Execution Scope: detect script is optional/caller-replaceable; interactive path must work from logs without GitHub.                    |
 | Two sources of truth for verifier prompts                                                | Checker skill is canonical for generic behavior; `common.sh` keeps INITIAL/REGRESSION orchestration and embedded fallbacks when skill files are missing. |
-| Consumer who still depends on `common` alone loses Issue skills                          | Changelog / breaking note: GitHub skills moved; add `github` package to `apm.yml`.                                                            |
+| Consumer who still depends on `common` alone loses Issue skills                          | Changelog / breaking note: GitHub skills moved; add `github` package to `apm.yml`.                                                                       |
 
 ## Implementation order (after approval)
 

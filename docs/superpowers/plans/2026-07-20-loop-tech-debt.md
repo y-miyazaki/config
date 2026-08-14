@@ -62,7 +62,7 @@ Create `loop-tech-debt-workflow-design.md` following `loop-docs-updater-workflow
 | `pr_enabled`                    | `false`                                                                                         |
 | `branch_match` / `branch_state` | `main`                                                                                          |
 | `budget_max_runs_per_day`       | `2`                                                                                             |
-| `budget_max_tokens_per_day`     | `1000000`                                                                                        |
+| `budget_max_tokens_per_day`     | `1000000`                                                                                       |
 | `max_targets_per_schedule`      | `1`                                                                                             |
 | `agent_implementer_max_turns`   | `5`                                                                                             |
 | `agent_loop_max_attempts`       | `3`                                                                                             |

@@ -149,18 +149,18 @@ Related but not branch-scoped: `max_targets_per_schedule` (fan-out cap after wat
 
 ## Agent and engine
 
-| Input                         | Type   | Description                                                           | Default (dogfood)       |
-| ----------------------------- | ------ | --------------------------------------------------------------------- | ----------------------- |
-| `agent_implementer_max_turns` | number | Max implementer agent turns per loop attempt                          | `5`–`8` (loop-specific) |
-| `agent_implementer_model`     | string | Implementer model ID. Empty = engine default                          | `cursor-grok-4.5-low`   |
-| `agent_loop_max_attempts`     | number | Max Agent→Verify retry cycles before finalize records failure         | `3`                     |
-| `agent_verifier_criteria`     | string | Caller-owned markdown rubric (`## Criteria for APPROVE` / `REJECT`)   | Domain-specific         |
-| `agent_verifier_max_turns`    | number | Max verifier agent turns per verification                             | `3`                     |
-| `agent_verifier_model`        | string | Verifier model ID                                                     | `composer-2.5`          |
-| `engine`                      | string | AI engine: `claude` \| `copilot` \| `codex` \| `cursor`               | `cursor`                |
-| `level`                       | string | Autonomy: `L1` \| `L2` \| `L3`                                        | `L2`                    |
+| Input                         | Type   | Description                                                               | Default (dogfood)       |
+| ----------------------------- | ------ | ------------------------------------------------------------------------- | ----------------------- |
+| `agent_implementer_max_turns` | number | Max implementer agent turns per loop attempt                              | `5`–`8` (loop-specific) |
+| `agent_implementer_model`     | string | Implementer model ID. Empty = engine default                              | `cursor-grok-4.5-low`   |
+| `agent_loop_max_attempts`     | number | Max Agent→Verify retry cycles before finalize records failure             | `3`                     |
+| `agent_verifier_criteria`     | string | Caller-owned markdown rubric (`## Criteria for APPROVE` / `REJECT`)       | Domain-specific         |
+| `agent_verifier_max_turns`    | number | Max verifier agent turns per verification                                 | `3`                     |
+| `agent_verifier_model`        | string | Verifier model ID                                                         | `composer-2.5`          |
+| `engine`                      | string | AI engine: `claude` \| `copilot` \| `codex` \| `cursor`                   | `cursor`                |
+| `level`                       | string | Autonomy: `L1` \| `L2` \| `L3`                                            | `L2`                    |
 | `skill_name`                  | string | Implementer skill (e.g. `changelog`). Must match `.agents/skills/<name>/` | Per loop                |
-| `verifier_skill_name`         | string | Checker skill slash-loaded by `loop-execute` (not the implementer)    | `loop-verifier`         |
+| `verifier_skill_name`         | string | Checker skill slash-loaded by `loop-execute` (not the implementer)        | `loop-verifier`         |
 
 ## Platform inputs
 

@@ -321,13 +321,13 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 
 ## L2 Promotion Requirements
 
-| Requirement              | Approach                                                                                    | Status                               |
-| ------------------------ | ------------------------------------------------------------------------------------------- | ------------------------------------ |
-| Daily budget enforcement | `.loop/loop-budget.json` + `loop-detect` guards; usage from `loop-execute` → `loop-run-log` | ✅ Implemented                       |
-| loop-verifier skill      | Caller `verifier_skill_name` (default `loop-verifier`); execute slash-loads skill; domain rubric in `agent_verifier_criteria` | ✅ Implemented                       |
-| Maker-Checker separation | Implemented in `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3)               | ✅ Implemented                       |
-| Worktree isolation       | `loop-worktree-setup` + push/cleanup inside `loop-execute` via `ci-loop-agent` L2/L3        | ✅ Implemented                       |
-| Denylist / Allowlist     | Defined in SKILL.md, checked by verifier                                                    | ✅ Implemented                       |
+| Requirement              | Approach                                                                                                                      | Status         |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| Daily budget enforcement | `.loop/loop-budget.json` + `loop-detect` guards; usage from `loop-execute` → `loop-run-log`                                   | ✅ Implemented |
+| loop-verifier skill      | Caller `verifier_skill_name` (default `loop-verifier`); execute slash-loads skill; domain rubric in `agent_verifier_criteria` | ✅ Implemented |
+| Maker-Checker separation | Implemented in `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3)                                                 | ✅ Implemented |
+| Worktree isolation       | `loop-worktree-setup` + push/cleanup inside `loop-execute` via `ci-loop-agent` L2/L3                                          | ✅ Implemented |
+| Denylist / Allowlist     | Defined in SKILL.md, checked by verifier                                                                                      | ✅ Implemented |
 
 ## Design Principles
 
@@ -347,15 +347,15 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 
 `loop-*` composite actions and reusable workflows must remain domain-agnostic. When adding loops such as `ci-sweeper`, `code-review`, or tech-debt remediation, domain logic must not leak into shared actions — otherwise every new loop requires editing the action layer.
 
-| Layer                | Domain-specific (caller / skill)                                | Generic (action / reusable workflow)                                                                  |
-| -------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Detection criteria   | `detect_script` path, script output (`result` facts)            | `loop-detect` enumeration, checkout, guards, `target_matrix`                                          |
-| Implementer prompt   | `prompt_instructions`, `AGENT_VERIFIER_CRITERIA`, PR title/body | `loop-detect` prompt assembly via `lib/loop/build_constraints.sh` (may_edit, allowlist, write_target) |
-| Verifier context     | Detect fact summary or CI log excerpt per target                | Always wire `verifier_context` to `loop-execute` (may be empty)                                       |
-| Path scope           | `LOOP_ALLOWLIST`, Skill allowed paths                           | denylist defaults in `loop-execute`, allowlist enforcement                                            |
-| Verifier checker     | `verifier_skill_name` (e.g. `loop-verifier` from `loop` package) | Slash-load `/skill <SKILL.md>`; path guards; INITIAL/REGRESSION orchestration in `loop-execute`        |
-| Verifier domain bar  | `agent_verifier_criteria` in caller `env`                       | Appended to verifier prompt `## Task`; embedded fallbacks only when skill files are missing           |
-| Domain persistence   | `domain_persistence_script` path (optional)                     | `loop-finalize` invokes script with standard env; no domain logic in action                           |
+| Layer               | Domain-specific (caller / skill)                                 | Generic (action / reusable workflow)                                                                  |
+| ------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Detection criteria  | `detect_script` path, script output (`result` facts)             | `loop-detect` enumeration, checkout, guards, `target_matrix`                                          |
+| Implementer prompt  | `prompt_instructions`, `AGENT_VERIFIER_CRITERIA`, PR title/body  | `loop-detect` prompt assembly via `lib/loop/build_constraints.sh` (may_edit, allowlist, write_target) |
+| Verifier context    | Detect fact summary or CI log excerpt per target                 | Always wire `verifier_context` to `loop-execute` (may be empty)                                       |
+| Path scope          | `LOOP_ALLOWLIST`, Skill allowed paths                            | denylist defaults in `loop-execute`, allowlist enforcement                                            |
+| Verifier checker    | `verifier_skill_name` (e.g. `loop-verifier` from `loop` package) | Slash-load `/skill <SKILL.md>`; path guards; INITIAL/REGRESSION orchestration in `loop-execute`       |
+| Verifier domain bar | `agent_verifier_criteria` in caller `env`                        | Appended to verifier prompt `## Task`; embedded fallbacks only when skill files are missing           |
+| Domain persistence  | `domain_persistence_script` path (optional)                      | `loop-finalize` invokes script with standard env; no domain logic in action                           |
 
 **Caller input pattern** for a new `on-loop-*.yaml` (after [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md)):
 
@@ -710,7 +710,7 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 | Aspect             | Definition                                                                                                                                                                                                                                                                                    |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Responsibility** | Independently evaluate whether Agent output meets quality criteria. Default stance is reject                                                                                                                                                                                                  |
-| **Input**          | Agent branch, base branch (from `target_json`), `verifier_skill_name`, `agent_verifier_criteria`, denylist, allowlist, `verifier_context` (always wired; may be empty)                                                                                                                                                       |
+| **Input**          | Agent branch, base branch (from `target_json`), `verifier_skill_name`, `agent_verifier_criteria`, denylist, allowlist, `verifier_context` (always wired; may be empty)                                                                                                                        |
 | **Output**         | `verdict` (APPROVE / REJECT), `reason` (string); on REJECT, structured `files` / `issue` / `fix` when possible (surfaced as `open_rejections`)                                                                                                                                                |
 | **May modify**     | Nothing. Read-only phase                                                                                                                                                                                                                                                                      |
 | **Must be**        | A separate agent session from the implementer, run inside `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3) — not a separate workflow such as a removed `ci-loop-verifier.yaml`                                                                                                  |

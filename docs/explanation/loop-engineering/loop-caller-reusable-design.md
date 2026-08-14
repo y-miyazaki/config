@@ -170,17 +170,17 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 
 #### Agent and engine
 
-| Input                         | Type   | Required | Default | Maps to                            |
-| ----------------------------- | ------ | -------- | ------- | ---------------------------------- |
-| `agent_implementer_max_turns` | number | yes      | —       | `loop-detect`                      |
-| `agent_implementer_model`     | string | yes      | —       | `loop-detect`                      |
-| `agent_loop_max_attempts`     | number | yes      | —       | `loop-detect`                      |
-| `agent_verifier_criteria`     | string | yes      | —       | `loop-detect` (multiline markdown) |
-| `agent_verifier_max_turns`    | number | yes      | —       | `loop-detect`                      |
-| `agent_verifier_model`        | string | yes      | —       | `loop-detect`                      |
-| `engine`                      | string | yes      | —       | `loop-detect` / `ci-loop-agent`    |
-| `level`                       | string | no       | `L2`    | `loop-detect`                      |
-| `skill_name`                  | string | yes      | —       | `loop-detect`                      |
+| Input                         | Type   | Required | Default         | Maps to                                        |
+| ----------------------------- | ------ | -------- | --------------- | ---------------------------------------------- |
+| `agent_implementer_max_turns` | number | yes      | —               | `loop-detect`                                  |
+| `agent_implementer_model`     | string | yes      | —               | `loop-detect`                                  |
+| `agent_loop_max_attempts`     | number | yes      | —               | `loop-detect`                                  |
+| `agent_verifier_criteria`     | string | yes      | —               | `loop-detect` (multiline markdown)             |
+| `agent_verifier_max_turns`    | number | yes      | —               | `loop-detect`                                  |
+| `agent_verifier_model`        | string | yes      | —               | `loop-detect`                                  |
+| `engine`                      | string | yes      | —               | `loop-detect` / `ci-loop-agent`                |
+| `level`                       | string | no       | `L2`            | `loop-detect`                                  |
+| `skill_name`                  | string | yes      | —               | `loop-detect`                                  |
 | `verifier_skill_name`         | string | no       | `loop-verifier` | `ci-loop-agent` → `loop-execute` checker skill |
 
 #### Platform (branch, budget, finalize)
