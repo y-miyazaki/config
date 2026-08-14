@@ -36,7 +36,7 @@ permissions:
 
 jobs:
   shell-script-ci:
-    uses: y-miyazaki/config/.github/workflows/ci-shell-script.yaml@f841df10c98abbb1fd1c970016ca9dcd78f79df8 # v1.8.85
+    uses: y-miyazaki/config/.github/workflows/ci-shell-script.yaml@97194f8c4775e427cfb9c9fc185cb6dac1bef3fa # v1.8.85
     with:
       script_path: "**/*.sh,**/*.bats"
     permissions:
