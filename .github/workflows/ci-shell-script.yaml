@@ -315,7 +315,7 @@ jobs:
 
       - name: Exec ShellCheck + reviewdog (PR comments)
         if: steps.file-list.outputs.no_files == 'false' && github.event_name == 'pull_request'
-        uses: reviewdog/action-shellcheck@4c07458293ac342d477251099501a718ae5ef86e # v1.32.0
+        uses: reviewdog/action-shellcheck@0722bbdb0d47f04c1b53b8734d2422ac63a45ec6 # v1.32.1
         with:
           fail_level: ${{ env.FAIL_LEVEL }}
           filter_mode: file
@@ -327,7 +327,7 @@ jobs:
 
       - name: Exec ShellCheck + reviewdog (push/check)
         if: steps.file-list.outputs.no_files == 'false' && github.event_name != 'pull_request'
-        uses: reviewdog/action-shellcheck@4c07458293ac342d477251099501a718ae5ef86e # v1.32.0
+        uses: reviewdog/action-shellcheck@0722bbdb0d47f04c1b53b8734d2422ac63a45ec6 # v1.32.1
         with:
           fail_level: ${{ env.FAIL_LEVEL }}
           filter_mode: file
