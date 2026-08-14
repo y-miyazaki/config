@@ -6,8 +6,6 @@ Append one entry per run. Prune entries older than 30 days.
 
 <!-- Loop appends below this line -->
 
-{"run_id":"2026-07-14T06:57:55Z","pattern":"ci-sweeper","duration_s":142,"outcome":"pr-created","skip_reason":"none","tokens_estimate":52000,"workflow_run":"29312854611","attempts":1,"has_changes":true,"verdict":"APPROVE","usage":{"total_input_tokens":53475,"total_output_tokens":3923,"model":"Cursor Grok 4.5 High Fast"}}
-{"run_id":"2026-07-14T09:42:40Z","pattern":"docs-triage","duration_s":179,"outcome":"pr-created","skip_reason":"none","tokens_estimate":52000,"workflow_run":"29322526697","attempts":1,"has_changes":true,"verdict":"APPROVE","usage":{"total_input_tokens":58979,"total_output_tokens":10235,"model":"Cursor Grok 4.5 High Fast"}}
 {"run_id":"2026-07-15T06:57:54Z","pattern":"docs-triage","duration_s":181,"outcome":"pr-created","skip_reason":"none","tokens_estimate":52000,"workflow_run":"29395625350","attempts":1,"has_changes":true,"verdict":"APPROVE","usage":{"total_input_tokens":90229,"total_output_tokens":13433,"model":"Cursor Grok 4.5 High Fast"}}
 {"run_id":"2026-07-15T09:42:15Z","pattern":"docs-triage","duration_s":15,"outcome":"skipped","skip_reason":"budget","tokens_estimate":52000,"workflow_run":"29405457246"}
 {"run_id":"2026-07-16T07:45:38Z","pattern":"ci-sweeper","duration_s":64,"outcome":"rejected","skip_reason":"none","tokens_estimate":52000,"workflow_run":"29480952630","attempts":1,"has_changes":false,"verdict":"REJECT"}
@@ -113,3 +111,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-08-13T04:20:54Z","loop_name":"github-issue-autofix","duration_s":591,"outcome":"rejected","skip_reason":"none","tokens_total":320555,"workflow_run":"31666205961","attempts":1,"has_changes":false,"verdict":"REJECT","usage":{"total_input_tokens":282406,"total_output_tokens":38149,"model":"Cursor Grok 4.5 Low"},"agent_result":"success"}
 {"run_id":"2026-08-13T05:00:04Z","loop_name":"ci-sweeper","duration_s":17,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"31668780022"}
 {"run_id":"2026-08-13T06:29:05Z","loop_name":"github-issue-autofix","duration_s":442,"outcome":"pr-created","skip_reason":"none","tokens_total":182255,"workflow_run":"31673537787","attempts":1,"has_changes":true,"verdict":"APPROVE","usage":{"total_input_tokens":151405,"total_output_tokens":30850,"model":"Cursor Grok 4.5 Low"},"agent_result":"success"}
+{"run_id":"2026-08-14T08:38:38Z","loop_name":"ci-sweeper","duration_s":21,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"31784716539"}
