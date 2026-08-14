@@ -360,7 +360,7 @@ jobs:
       fail-fast: false
       matrix:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
-    uses: ./.github/workflows/ci-loop-agent.yaml
+    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@a5c658aac81562809f2314a99f8928412140c682 # v1.8.84
     with:
       additional_commit_paths: ${{ needs.detect.outputs.additional_commit_paths }}
       agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
