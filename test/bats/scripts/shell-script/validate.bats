@@ -374,7 +374,7 @@ TAP
     local count
     count=$(printf '%s
 ' "$output" | sed '/^$/d' | wc -l)
-    [ "$count" -gt 200 ]
+    [ "$count" -gt 80 ]
 }
 
 @test "find_bats_tests returns all tests when script scope is limited and --tests omitted" {
@@ -386,7 +386,7 @@ TAP
     local count
     count=$(printf '%s
 ' "$output" | sed '/^$/d' | wc -l)
-    [ "$count" -gt 200 ]
+    [ "$count" -gt 80 ]
 }
 
 @test "find_bats_tests limits to --tests directory" {

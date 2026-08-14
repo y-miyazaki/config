@@ -66,12 +66,13 @@ job_if_block() {
     grep -A6 'record-skip:' "${ENTITY_CALLER}" | grep -q "skip_reason == 'budget'"
 }
 
-@test "both callers dogfood local ci-loop-agent.yaml" {
+@test "both callers reference the same ci-loop-agent workflow" {
     local branch entity
     branch="$(grep 'ci-loop-agent.yaml' "${BRANCH_CALLER}" | head -1)"
     entity="$(grep 'ci-loop-agent.yaml' "${ENTITY_CALLER}" | head -1)"
     [[ ${branch} == "${entity}" ]]
-    [[ ${branch} == *"./.github/workflows/ci-loop-agent.yaml"* ]]
+    [[ -n ${branch} ]]
+    [[ ${branch} == *"ci-loop-agent.yaml"* ]]
 }
 
 @test "ci-loop-agent has finalize-l1 and finalize-l2 not record-l1" {

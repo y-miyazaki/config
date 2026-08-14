@@ -27,6 +27,32 @@ setup() {
     bats_source_rel "scripts/lib/validation.sh"
 }
 
+@test "require_valid_pr_number rejects zero and non-numeric values" {
+    run require_valid_pr_number 0
+    [ "$status" -ne 0 ]
+    [[ $output == *"Invalid argument: 0"* ]]
+
+    run require_valid_pr_number abc
+    [ "$status" -ne 0 ]
+    [[ $output == *"Invalid argument: abc"* ]]
+}
+
+@test "require_valid_pr_number accepts positive integers" {
+    run require_valid_pr_number 123
+    [ "$status" -eq 0 ]
+}
+
+@test "require_valid_repository_slug rejects invalid slugs" {
+    run require_valid_repository_slug 'not-a-valid-slug'
+    [ "$status" -ne 0 ]
+    [[ $output == *"Invalid repository slug"* ]]
+}
+
+@test "require_valid_repository_slug accepts owner/repo format" {
+    run require_valid_repository_slug 'octocat/Hello-World'
+    [ "$status" -eq 0 ]
+}
+
 @test "validate_directory_exists fails for missing dir" {
     missing="/tmp/nonexistentdir.$RANDOM"
     run validate_directory_exists "$missing" "TestDir"
@@ -142,3 +168,4 @@ EOF
     [ "$status" -eq 0 ]
     rm -rf "$tmpd"
 }
+
