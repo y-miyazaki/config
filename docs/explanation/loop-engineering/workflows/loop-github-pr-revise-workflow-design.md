@@ -70,10 +70,12 @@ Same-PR revise runs **serialize**; earlier product fixes must remain on the PR h
 | `event_name` | `GITHUB_EVENT_NAME` | When set on webhook path |
 | `path` | Trigger `comment.path` | Set for `pull_request_review_comment`; empty for `issue_comment` |
 | `line` | Trigger `comment.line` or `comment.original_line` | JSON number when present |
+| `start_line` | Trigger `comment.start_line` or `comment.original_start_line` | JSON number when present (multi-line comments) |
+| `subject_type` | Trigger `comment.subject_type` | `line` / `file` when present |
 | `side` | Trigger `comment.side` | `LEFT` / `RIGHT` when present |
 | `diff_hunk` | Trigger `comment.diff_hunk` | Inline hunk text when present |
 | `in_reply_to_id` | Trigger `comment.in_reply_to_id` | JSON number when present |
-| `comments` | Gathered open human `@mention` comments | Array of `{comment_id, body, path, line, side, diff_hunk, in_reply_to_id, source, actor}` |
+| `comments` | Gathered open human `@mention` comments | Array of `{comment_id, body, path, line, start_line, side, diff_hunk, in_reply_to_id, source, actor, subject_type}` |
 | `actor` | comment user or sender login | Informational |
 
 ### Comment batching

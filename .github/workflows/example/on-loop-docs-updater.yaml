@@ -64,6 +64,7 @@ jobs:
       environment: default
       delivery: open_pr
       infer_files_pattern: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|yml|yaml)'
+      level: L2
       loop_name: docs-updater
       max_targets_per_schedule: 3
       may_edit: true

@@ -95,6 +95,18 @@ job_if_block() {
     fi
 }
 
+@test "branch execute waits for ack-trigger success or skip" {
+    grep -A6 '^  execute:' "${BRANCH_CALLER}" | grep -q 'needs.ack-trigger.result'
+    grep -A8 '^  execute:' "${BRANCH_CALLER}" | grep -q 'ack-trigger'
+}
+
+@test "github-pr-revise caller watches a scoped PR head" {
+    local wf="${ROOT}/.github/workflows/on-loop-github-pr-revise.yaml"
+    grep -q 'pr_enabled: true' "${wf}"
+    grep -q 'scoped_pr_number:' "${wf}"
+    grep -q 'pr_exclude: fork,label:no-loop' "${wf}"
+}
+
 @test "loop-finalize step is gated on finalize_enabled" {
     grep -B5 'id: finalize' "${AGENT}" | grep -q 'if: inputs.finalize_enabled'
 }
@@ -109,3 +121,11 @@ job_if_block() {
     grep -A25 '^  agent-l1:' "${AGENT}" | grep -q 'usage_json:'
     grep -A45 '^  finalize-l1:' "${AGENT}" | grep -q "needs.agent-l1.outputs.usage_json"
 }
+
+@test "ci-loop-agent requires loop_name and does not guard run-log on emptiness" {
+    grep -A3 '^      loop_name:' "${AGENT}" | grep -q 'required: true'
+    if grep -q "inputs.loop_name != ''" "${AGENT}"; then
+        return 1
+    fi
+}
+

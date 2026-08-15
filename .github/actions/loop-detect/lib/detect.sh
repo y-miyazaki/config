@@ -10,7 +10,7 @@
 # Design Rules:
 # - Enumerates integration branches and optional PR heads
 # - Pins DETECT_SCRIPT to an absolute path before any target checkout
-# - Scopes watch lists when LOOP_SCOPED_HEAD_BRANCH or workflow_run event head is set
+# - Scopes watch lists when LOOP_SCOPED_HEAD_BRANCH, LOOP_SCOPED_PR_NUMBER, or workflow_run event head is set
 # - Invokes detect_script once per scan context (caller never re-runs)
 # - Assembles target_matrix with prompt and verifier_context per cell
 # - Detect-script boundary: coupled only on the success-path interface (exit 0, valid JSON,
@@ -234,6 +234,51 @@ function apply_scoped_head_filter {
     fi
 
     log_detect_notice "scoped-head" "${scoped_head}" \
+        "integration=${#INTEGRATION_BRANCHES[@]} pull_request=${#OPEN_PRS_JSON[@]}"
+}
+
+#######################################
+# apply_scoped_pr_number_filter: Keep only the named PR; drop integration watch
+#
+# Human comment loops (github-pr-revise) must not fan out to main or other PRs.
+# Empty number is a no-op so schedule loops are unchanged.
+#
+# Globals:
+#   INTEGRATION_BRANCHES, OPEN_PRS_JSON - Filtered in place
+#
+# Arguments:
+#   $1 - Pull request number (empty = no-op)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
+#######################################
+function apply_scoped_pr_number_filter {
+    local scoped_pr="$1"
+    local -a kept_prs=()
+    local pr_json number
+
+    if [[ -z ${scoped_pr} ]]; then
+        return 0
+    fi
+
+    INTEGRATION_BRANCHES=()
+
+    for pr_json in "${OPEN_PRS_JSON[@]+"${OPEN_PRS_JSON[@]}"}"; do
+        number="$(jq -r '.number // empty' <<< "${pr_json}")"
+        if [[ ${number} == "${scoped_pr}" ]]; then
+            kept_prs+=("${pr_json}")
+        fi
+    done
+    OPEN_PRS_JSON=()
+    if [[ ${#kept_prs[@]} -gt 0 ]]; then
+        OPEN_PRS_JSON=("${kept_prs[@]}")
+    fi
+
+    log_detect_notice "scoped-pr" "${scoped_pr}" \
         "integration=${#INTEGRATION_BRANCHES[@]} pull_request=${#OPEN_PRS_JSON[@]}"
 }
 
@@ -1187,6 +1232,7 @@ function main {
         return 0
     fi
     apply_scoped_head_filter "${scoped_head}"
+    apply_scoped_pr_number_filter "${LOOP_SCOPED_PR_NUMBER:-}"
 
     if [[ ${#INTEGRATION_BRANCHES[@]} -eq 0 && ${#OPEN_PRS_JSON[@]} -eq 0 ]]; then
         write_detect_outputs "false" "no_changes" "[]"

@@ -40,6 +40,7 @@ Defined here only. Other docs link to this section.
 | ------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------- |
 | `LOOP_INTEGRATION_BRANCHES`     | `branch_match`              | Comma-separated branch patterns. Empty = watch `branch_state` only.                                                            | `""`                       |
 | `LOOP_PULL_REQUESTS`            | `pr_enabled`                | `true` / `false`. Watch open PR heads.                                                                                         | `false`                    |
+| `LOOP_SCOPED_PR_NUMBER`         | `scoped_pr_number`          | When set, fetch that open PR only and skip integration watch (comment loops).                                                  | `""`                       |
 | `LOOP_BRANCH_MATCH`             | `branch_match_mode`         | `list` \| `glob` \| `regex`.                                                                                                   | `glob`                     |
 | `LOOP_PRIORITY`                 | `priority`                  | Cron mode order. Overridden by [trigger-aware priority](#trigger-aware-priority).                                              | `integration,pull_request` |
 | `LOOP_SCOPED_HEAD_BRANCH`       | (env / future input)        | When set, detect enumerates only this integration branch or PR head. `workflow_run` dogfood derives from event head.           | `""` (scan all)            |
@@ -88,7 +89,7 @@ loop-detect
   2. Pin DETECT_SCRIPT to an absolute path (branch_state / job checkout) BEFORE any target checkout
   3. Resolve integration branch list (glob/regex)
   4. Optionally enumerate open PRs (LOOP_PULL_REQUESTS)
-  5. Apply trigger scope (LOOP_SCOPED_HEAD_BRANCH / workflow_run event head) → drop non-matching targets
+  5. Apply trigger scope (LOOP_SCOPED_HEAD_BRANCH / LOOP_SCOPED_PR_NUMBER / workflow_run event head) → drop non-matching targets
   6. For each remaining scan context:
        a. fetch/checkout target ref (for last_sha / current_sha only)
        b. invoke pinned detect_script (never the copy from the target worktree)

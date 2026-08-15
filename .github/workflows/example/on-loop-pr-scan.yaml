@@ -44,6 +44,7 @@ jobs:
       detect_script: .agents/skills/docs-updater/scripts/detect_changes.sh
       engine: cursor
       environment: default
+      level: L2
       loop_name: pr-scan-example
       max_targets_per_schedule: 3
       may_edit: true

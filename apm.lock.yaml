@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-08-15T05:59:20.766301+00:00'
+generated_at: '2026-08-15T15:12:43.140560+00:00'
 apm_version: 0.28.0
 dependencies:
 - repo_url: _local/common
@@ -648,7 +648,7 @@ dependencies:
     .agents/skills/github-pr-body/scripts/pr_body.sh: sha256:f0d7a125e527fa642102167d922d1ce8234dc8a659a897668d9434ff23943177
     .agents/skills/github-pr-body/scripts/pr_comment.sh: sha256:22ffc9d892719fbaf89c80755f54fcb2f94d0eb7d7f8db75d2c26600144b9fa9
     .agents/skills/github-pr-body/scripts/pr_fetch.sh: sha256:28aac33206586f30c9e7014ba0c0aafef77dc3cf83c8e6a2b2a214f792378337
-    .agents/skills/github-pr-revise/SKILL.md: sha256:280393aebe84f6c3831152d660c984c34baa0018e68316d8c01f6635e6cfab86
+    .agents/skills/github-pr-revise/SKILL.md: sha256:612875682561882ebaef54b23764c4ba72ddbbb87c011a14d817080a054d954e
     .agents/skills/github-pr-revise/assets/pr-body-template-survey.md: sha256:c8a0dc67dd1b1d9287dfafd310a73738da3d0a700729275aa234ed8e1a8b5095
     .agents/skills/github-pr-revise/assets/pr-body-template.md: sha256:fb137057ba469b4b993335c4cdc951837d64f4ad8d96b722c8567898eab0eb40
     .agents/skills/github-pr-revise/eval.yaml: sha256:deb30ac14712f52df038eeec5a09b527ca86e1da373587b6398ca57ec812ad75
@@ -659,9 +659,9 @@ dependencies:
     .agents/skills/github-pr-revise/evals/tasks/trigger-negative.yaml: sha256:5abe6131acdfbba3e38c670e82aa46bd4acc2889913b34711375aff116ecf48b
     .agents/skills/github-pr-revise/references/category-automation-envelope.md: sha256:e51b058c13267cd8296c08d7ec9aa56f11e8aeb6be0662b28a9bea595ec3dd5a
     .agents/skills/github-pr-revise/references/category-pr-body-links.md: sha256:6b0cb256cf631727fbf67a7b23442544c7be2aaf38a678f15b238d83955139df
-    .agents/skills/github-pr-revise/references/common-checklist.md: sha256:517552b22fb719e2ca355e0f1d8870e4dd9e5072a17545f9de09ebe9f2f77dc5
+    .agents/skills/github-pr-revise/references/common-checklist.md: sha256:40322f31c49d82b08bb44257f72708bfc941708d13836252c6ada742abd8c177
     .agents/skills/github-pr-revise/references/common-output-format.md: sha256:4e2f81f373c5671d75ace4eacd338f6f935fcd1e7659db10a8d2c8876f082821
-    .agents/skills/github-pr-revise/scripts/detect_pr_revise.sh: sha256:994a8d0fb3ef4dcfac5f5f501f153558155a89839c9775752f01c899b7c2eb15
+    .agents/skills/github-pr-revise/scripts/detect_pr_revise.sh: sha256:4b8d57839dc10810b927a631ca8fdcd3fa3351ad9c291207d4992df3fd8e4cf1
     .agents/skills/github-pr-revise/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/github-pr-revise/scripts/lib/aws.sh: sha256:8040932c1176ff8f6f011586844cee9a07fa725b90de6c5b007d5cecf7f2d67a
     .agents/skills/github-pr-revise/scripts/lib/common.sh: sha256:26dded5e470bfa13c48f3816b58def268413042de385a468ee851f6f578bceda
@@ -745,7 +745,7 @@ dependencies:
     .claude/skills/github-pr-body/scripts/pr_body.sh: sha256:f0d7a125e527fa642102167d922d1ce8234dc8a659a897668d9434ff23943177
     .claude/skills/github-pr-body/scripts/pr_comment.sh: sha256:22ffc9d892719fbaf89c80755f54fcb2f94d0eb7d7f8db75d2c26600144b9fa9
     .claude/skills/github-pr-body/scripts/pr_fetch.sh: sha256:28aac33206586f30c9e7014ba0c0aafef77dc3cf83c8e6a2b2a214f792378337
-    .claude/skills/github-pr-revise/SKILL.md: sha256:280393aebe84f6c3831152d660c984c34baa0018e68316d8c01f6635e6cfab86
+    .claude/skills/github-pr-revise/SKILL.md: sha256:612875682561882ebaef54b23764c4ba72ddbbb87c011a14d817080a054d954e
     .claude/skills/github-pr-revise/assets/pr-body-template-survey.md: sha256:c8a0dc67dd1b1d9287dfafd310a73738da3d0a700729275aa234ed8e1a8b5095
     .claude/skills/github-pr-revise/assets/pr-body-template.md: sha256:fb137057ba469b4b993335c4cdc951837d64f4ad8d96b722c8567898eab0eb40
     .claude/skills/github-pr-revise/eval.yaml: sha256:deb30ac14712f52df038eeec5a09b527ca86e1da373587b6398ca57ec812ad75
@@ -756,9 +756,9 @@ dependencies:
     .claude/skills/github-pr-revise/evals/tasks/trigger-negative.yaml: sha256:5abe6131acdfbba3e38c670e82aa46bd4acc2889913b34711375aff116ecf48b
     .claude/skills/github-pr-revise/references/category-automation-envelope.md: sha256:e51b058c13267cd8296c08d7ec9aa56f11e8aeb6be0662b28a9bea595ec3dd5a
     .claude/skills/github-pr-revise/references/category-pr-body-links.md: sha256:6b0cb256cf631727fbf67a7b23442544c7be2aaf38a678f15b238d83955139df
-    .claude/skills/github-pr-revise/references/common-checklist.md: sha256:517552b22fb719e2ca355e0f1d8870e4dd9e5072a17545f9de09ebe9f2f77dc5
+    .claude/skills/github-pr-revise/references/common-checklist.md: sha256:40322f31c49d82b08bb44257f72708bfc941708d13836252c6ada742abd8c177
     .claude/skills/github-pr-revise/references/common-output-format.md: sha256:4e2f81f373c5671d75ace4eacd338f6f935fcd1e7659db10a8d2c8876f082821
-    .claude/skills/github-pr-revise/scripts/detect_pr_revise.sh: sha256:994a8d0fb3ef4dcfac5f5f501f153558155a89839c9775752f01c899b7c2eb15
+    .claude/skills/github-pr-revise/scripts/detect_pr_revise.sh: sha256:4b8d57839dc10810b927a631ca8fdcd3fa3351ad9c291207d4992df3fd8e4cf1
     .claude/skills/github-pr-revise/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/github-pr-revise/scripts/lib/aws.sh: sha256:8040932c1176ff8f6f011586844cee9a07fa725b90de6c5b007d5cecf7f2d67a
     .claude/skills/github-pr-revise/scripts/lib/common.sh: sha256:26dded5e470bfa13c48f3816b58def268413042de385a468ee851f6f578bceda
@@ -1757,7 +1757,7 @@ dependencies:
     .agents/skills/tech-debt/evals/tasks/automation-production-constraints.yaml: sha256:a59b081c15aa5fdb5b95facd2a2fb0c224ec03651e8acee4d9e309a8622af808
     .agents/skills/tech-debt/evals/tasks/basic.yaml: sha256:f3c831f018fb39c422c75fd0da74ed6e2263be39106039f7e96075384e1b6a0a
     .agents/skills/tech-debt/evals/tasks/classification.yaml: sha256:b5b6f400a5a615af41f86a54b850a010e524e84d73a69d4d4993261dd937c316
-    .agents/skills/tech-debt/evals/tasks/hotspot-only.yaml: sha256:3e72fa67ccfd5dcf15832dcab3ab90116e564fa9f9c9f094d93147c8d5acc4c4
+    .agents/skills/tech-debt/evals/tasks/hotspot-only.yaml: sha256:071bbad7401cc71cccb03bba15f57c036cc3925d97206331a0e461f038c366c5
     .agents/skills/tech-debt/evals/tasks/interactive-fix-follow-up.yaml: sha256:89a998ab59dc935d3fc8be5d8c6a93703a4aca1adf25e1c0499095215a0b2b2a
     .agents/skills/tech-debt/evals/tasks/interactive-fix-same-turn.yaml: sha256:16340ce93657e898ee662c339c7e413da160494c6baa835ffe4b99b0cf626cb9
     .agents/skills/tech-debt/evals/tasks/interactive-survey-default.yaml: sha256:9e07d49f1dab87bb41f5f18f1f9428ee813fc3c4709761ef72b619a52c78da36
@@ -1770,14 +1770,14 @@ dependencies:
     .agents/skills/tech-debt/references/category-automation-envelope.md: sha256:8e064fcff50215081d0f7e066d1e9128579ef899c9f9a9395a49d778af3925aa
     .agents/skills/tech-debt/references/category-debt-taxonomy.md: sha256:db4dc96026508ed77fecaca817991e80a80c4ea202871c13e10860dc90e701f4
     .agents/skills/tech-debt/references/category-detect-scope.md: sha256:44ecf3c43bcaa2e12c876c268d3dcc91ce7f1015716b7fa05a503f9f8bd1274a
-    .agents/skills/tech-debt/references/category-input-schema.md: sha256:ad1817bb32bb4bcb1c770f6c598cd9b2cc609b0bd29543568c4820a3d3cf0f5e
+    .agents/skills/tech-debt/references/category-input-schema.md: sha256:67bc6ea579bbf08c7a83a6665a13be076b761f2e796293ae6575cf6cd9f55351
     .agents/skills/tech-debt/references/category-pr-body-links.md: sha256:dbc9b6983846132a29060f718db46d2618d8fb61d5f71375762d9fac5bcd83bf
     .agents/skills/tech-debt/references/category-scope.md: sha256:e2aca4146e8e0e8e33e4719fd8f56d00adc947395763f94c7a300d7408fb65a3
     .agents/skills/tech-debt/references/common-checklist.md: sha256:821619ad3a877913b4aae56cdc2e6154d442282a27452a49ac4e75a53ae78dce
     .agents/skills/tech-debt/references/common-output-format.md: sha256:d84288c46a2d8bcb9e48f03d52131b3bdea3439551c7ea81df975da3bbba587b
     .agents/skills/tech-debt/references/common-troubleshooting.md: sha256:25a1205ce942dc84947dbf1a008c262412bbb803367753125a7c1db9779e88fa
-    .agents/skills/tech-debt/scripts/detect_tech_debt.sh: sha256:4ae8f9a136efac2b1792ce9f4d975c93a15db085cc629986f5ce1cf2dc2c0093
-    .agents/skills/tech-debt/scripts/detect_tech_debt_sensors.sh: sha256:5e941e8057d85645437e6ff447c1cec8079583f5f9081e597363e184ebd9a5ee
+    .agents/skills/tech-debt/scripts/detect_tech_debt.sh: sha256:b3e0d0708819d38d34a2bad2cb1979084964868f08ee8f7bd20e77842dc4e0a4
+    .agents/skills/tech-debt/scripts/detect_tech_debt_sensors.sh: sha256:d33fa8fc112c7eee8ad737ab489be34d2d2d28bed5820964f63711f64ec9c93b
     .agents/skills/tech-debt/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/tech-debt/scripts/lib/aws.sh: sha256:8040932c1176ff8f6f011586844cee9a07fa725b90de6c5b007d5cecf7f2d67a
     .agents/skills/tech-debt/scripts/lib/common.sh: sha256:26dded5e470bfa13c48f3816b58def268413042de385a468ee851f6f578bceda
@@ -1952,7 +1952,7 @@ dependencies:
     .claude/skills/tech-debt/evals/tasks/automation-production-constraints.yaml: sha256:a59b081c15aa5fdb5b95facd2a2fb0c224ec03651e8acee4d9e309a8622af808
     .claude/skills/tech-debt/evals/tasks/basic.yaml: sha256:f3c831f018fb39c422c75fd0da74ed6e2263be39106039f7e96075384e1b6a0a
     .claude/skills/tech-debt/evals/tasks/classification.yaml: sha256:b5b6f400a5a615af41f86a54b850a010e524e84d73a69d4d4993261dd937c316
-    .claude/skills/tech-debt/evals/tasks/hotspot-only.yaml: sha256:3e72fa67ccfd5dcf15832dcab3ab90116e564fa9f9c9f094d93147c8d5acc4c4
+    .claude/skills/tech-debt/evals/tasks/hotspot-only.yaml: sha256:071bbad7401cc71cccb03bba15f57c036cc3925d97206331a0e461f038c366c5
     .claude/skills/tech-debt/evals/tasks/interactive-fix-follow-up.yaml: sha256:89a998ab59dc935d3fc8be5d8c6a93703a4aca1adf25e1c0499095215a0b2b2a
     .claude/skills/tech-debt/evals/tasks/interactive-fix-same-turn.yaml: sha256:16340ce93657e898ee662c339c7e413da160494c6baa835ffe4b99b0cf626cb9
     .claude/skills/tech-debt/evals/tasks/interactive-survey-default.yaml: sha256:9e07d49f1dab87bb41f5f18f1f9428ee813fc3c4709761ef72b619a52c78da36
@@ -1965,14 +1965,14 @@ dependencies:
     .claude/skills/tech-debt/references/category-automation-envelope.md: sha256:8e064fcff50215081d0f7e066d1e9128579ef899c9f9a9395a49d778af3925aa
     .claude/skills/tech-debt/references/category-debt-taxonomy.md: sha256:db4dc96026508ed77fecaca817991e80a80c4ea202871c13e10860dc90e701f4
     .claude/skills/tech-debt/references/category-detect-scope.md: sha256:44ecf3c43bcaa2e12c876c268d3dcc91ce7f1015716b7fa05a503f9f8bd1274a
-    .claude/skills/tech-debt/references/category-input-schema.md: sha256:ad1817bb32bb4bcb1c770f6c598cd9b2cc609b0bd29543568c4820a3d3cf0f5e
+    .claude/skills/tech-debt/references/category-input-schema.md: sha256:67bc6ea579bbf08c7a83a6665a13be076b761f2e796293ae6575cf6cd9f55351
     .claude/skills/tech-debt/references/category-pr-body-links.md: sha256:dbc9b6983846132a29060f718db46d2618d8fb61d5f71375762d9fac5bcd83bf
     .claude/skills/tech-debt/references/category-scope.md: sha256:e2aca4146e8e0e8e33e4719fd8f56d00adc947395763f94c7a300d7408fb65a3
     .claude/skills/tech-debt/references/common-checklist.md: sha256:821619ad3a877913b4aae56cdc2e6154d442282a27452a49ac4e75a53ae78dce
     .claude/skills/tech-debt/references/common-output-format.md: sha256:d84288c46a2d8bcb9e48f03d52131b3bdea3439551c7ea81df975da3bbba587b
     .claude/skills/tech-debt/references/common-troubleshooting.md: sha256:25a1205ce942dc84947dbf1a008c262412bbb803367753125a7c1db9779e88fa
-    .claude/skills/tech-debt/scripts/detect_tech_debt.sh: sha256:4ae8f9a136efac2b1792ce9f4d975c93a15db085cc629986f5ce1cf2dc2c0093
-    .claude/skills/tech-debt/scripts/detect_tech_debt_sensors.sh: sha256:5e941e8057d85645437e6ff447c1cec8079583f5f9081e597363e184ebd9a5ee
+    .claude/skills/tech-debt/scripts/detect_tech_debt.sh: sha256:b3e0d0708819d38d34a2bad2cb1979084964868f08ee8f7bd20e77842dc4e0a4
+    .claude/skills/tech-debt/scripts/detect_tech_debt_sensors.sh: sha256:d33fa8fc112c7eee8ad737ab489be34d2d2d28bed5820964f63711f64ec9c93b
     .claude/skills/tech-debt/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/tech-debt/scripts/lib/aws.sh: sha256:8040932c1176ff8f6f011586844cee9a07fa725b90de6c5b007d5cecf7f2d67a
     .claude/skills/tech-debt/scripts/lib/common.sh: sha256:26dded5e470bfa13c48f3816b58def268413042de385a468ee851f6f578bceda
@@ -4834,7 +4834,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:280393aebe84f6c3831152d660c984c34baa0018e68316d8c01f6635e6cfab86
+  content_hash: sha256:612875682561882ebaef54b23764c4ba72ddbbb87c011a14d817080a054d954e
 - kind: project-relative
   target: claude
   value: .claude/skills/github-pr-revise/assets/pr-body-template-survey.md
@@ -4933,7 +4933,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:517552b22fb719e2ca355e0f1d8870e4dd9e5072a17545f9de09ebe9f2f77dc5
+  content_hash: sha256:40322f31c49d82b08bb44257f72708bfc941708d13836252c6ada742abd8c177
 - kind: project-relative
   target: claude
   value: .claude/skills/github-pr-revise/references/common-output-format.md
@@ -4951,7 +4951,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:994a8d0fb3ef4dcfac5f5f501f153558155a89839c9775752f01c899b7c2eb15
+  content_hash: sha256:4b8d57839dc10810b927a631ca8fdcd3fa3351ad9c291207d4992df3fd8e4cf1
 - kind: project-relative
   target: claude
   value: .claude/skills/github-pr-revise/scripts/lib/all.sh
@@ -6769,7 +6769,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:3e72fa67ccfd5dcf15832dcab3ab90116e564fa9f9c9f094d93147c8d5acc4c4
+  content_hash: sha256:071bbad7401cc71cccb03bba15f57c036cc3925d97206331a0e461f038c366c5
 - kind: project-relative
   target: claude
   value: .claude/skills/tech-debt/evals/tasks/interactive-fix-follow-up.yaml
@@ -6886,7 +6886,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:ad1817bb32bb4bcb1c770f6c598cd9b2cc609b0bd29543568c4820a3d3cf0f5e
+  content_hash: sha256:67bc6ea579bbf08c7a83a6665a13be076b761f2e796293ae6575cf6cd9f55351
 - kind: project-relative
   target: claude
   value: .claude/skills/tech-debt/references/category-pr-body-links.md
@@ -6940,7 +6940,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:4ae8f9a136efac2b1792ce9f4d975c93a15db085cc629986f5ce1cf2dc2c0093
+  content_hash: sha256:b3e0d0708819d38d34a2bad2cb1979084964868f08ee8f7bd20e77842dc4e0a4
 - kind: project-relative
   target: claude
   value: .claude/skills/tech-debt/scripts/detect_tech_debt_sensors.sh
@@ -6949,7 +6949,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:5e941e8057d85645437e6ff447c1cec8079583f5f9081e597363e184ebd9a5ee
+  content_hash: sha256:d33fa8fc112c7eee8ad737ab489be34d2d2d28bed5820964f63711f64ec9c93b
 - kind: project-relative
   target: claude
   value: .claude/skills/tech-debt/scripts/lib/all.sh
@@ -9487,7 +9487,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:280393aebe84f6c3831152d660c984c34baa0018e68316d8c01f6635e6cfab86
+  content_hash: sha256:612875682561882ebaef54b23764c4ba72ddbbb87c011a14d817080a054d954e
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-pr-revise/assets/pr-body-template-survey.md
@@ -9586,7 +9586,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:517552b22fb719e2ca355e0f1d8870e4dd9e5072a17545f9de09ebe9f2f77dc5
+  content_hash: sha256:40322f31c49d82b08bb44257f72708bfc941708d13836252c6ada742abd8c177
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-pr-revise/references/common-output-format.md
@@ -9604,7 +9604,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:994a8d0fb3ef4dcfac5f5f501f153558155a89839c9775752f01c899b7c2eb15
+  content_hash: sha256:4b8d57839dc10810b927a631ca8fdcd3fa3351ad9c291207d4992df3fd8e4cf1
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-pr-revise/scripts/lib/all.sh
@@ -11422,7 +11422,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:3e72fa67ccfd5dcf15832dcab3ab90116e564fa9f9c9f094d93147c8d5acc4c4
+  content_hash: sha256:071bbad7401cc71cccb03bba15f57c036cc3925d97206331a0e461f038c366c5
 - kind: project-relative
   target: cursor
   value: .agents/skills/tech-debt/evals/tasks/interactive-fix-follow-up.yaml
@@ -11539,7 +11539,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:ad1817bb32bb4bcb1c770f6c598cd9b2cc609b0bd29543568c4820a3d3cf0f5e
+  content_hash: sha256:67bc6ea579bbf08c7a83a6665a13be076b761f2e796293ae6575cf6cd9f55351
 - kind: project-relative
   target: cursor
   value: .agents/skills/tech-debt/references/category-pr-body-links.md
@@ -11593,7 +11593,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:4ae8f9a136efac2b1792ce9f4d975c93a15db085cc629986f5ce1cf2dc2c0093
+  content_hash: sha256:b3e0d0708819d38d34a2bad2cb1979084964868f08ee8f7bd20e77842dc4e0a4
 - kind: project-relative
   target: cursor
   value: .agents/skills/tech-debt/scripts/detect_tech_debt_sensors.sh
@@ -11602,7 +11602,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:5e941e8057d85645437e6ff447c1cec8079583f5f9081e597363e184ebd9a5ee
+  content_hash: sha256:d33fa8fc112c7eee8ad737ab489be34d2d2d28bed5820964f63711f64ec9c93b
 - kind: project-relative
   target: cursor
   value: .agents/skills/tech-debt/scripts/lib/all.sh

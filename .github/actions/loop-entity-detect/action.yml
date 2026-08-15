@@ -227,9 +227,11 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         LEVEL: ${{ inputs.level }}
         LOOP_NAME: ${{ inputs.loop_name }}
+        MAY_EDIT: ${{ inputs.may_edit }}
         PROMPT_INSTRUCTIONS: ${{ inputs.prompt_instructions }}
         RUN_LOG_FILE: ${{ inputs.run_log_file }}
         SKILL_NAME: ${{ inputs.skill_name }}
+        WRITE_TARGET: ${{ inputs.write_target }}
       run: bash "${GITHUB_ACTION_PATH}/lib/detect.sh"
 
     - name: Record Handoff Artifact Name

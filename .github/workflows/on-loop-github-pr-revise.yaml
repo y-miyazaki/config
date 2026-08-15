@@ -104,12 +104,14 @@ jobs:
       loop_name: github-pr-revise
       may_edit: true
       no_changes_verdict: REJECT
-      pr_enabled: false
+      pr_enabled: true
+      pr_exclude: fork,label:no-loop
       prompt_instructions: |
         Apply the human's feedback to the PR head.
         When detect result.comments has multiple entries, address the full array in one session (not only result.comment_body).
         Comment webhooks require the configured @mention; explicit dispatch paths do not.
         Do not invent mention-less triggers on comment webhooks.
+      scoped_pr_number: ${{ github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || '' }}
       skill_name: github-pr-revise
       verifier_skill_name: loop-verifier
       write_target: fix

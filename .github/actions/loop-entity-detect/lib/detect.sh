@@ -45,6 +45,8 @@ SKILL_NAME="${SKILL_NAME-}"
 PROMPT_INSTRUCTIONS="${PROMPT_INSTRUCTIONS:-}"
 LEVEL="${LEVEL:-L1}"
 DELIVERY="${DELIVERY:-none}"
+MAY_EDIT="${MAY_EDIT:-}"
+WRITE_TARGET="${WRITE_TARGET:-}"
 DISPATCH_HOOK_SCRIPT="${DISPATCH_HOOK_SCRIPT:-}"
 DISPATCH_HOOK_TOKEN="${DISPATCH_HOOK_TOKEN:-}"
 HANDOFF_DIR="${RUNNER_TEMP:-/tmp}/loop-handoff"
@@ -191,6 +193,19 @@ function main {
 
     if [[ -z ${LOOP_NAME} || -z ${SKILL_NAME} ]]; then
         echo "::error::LOOP_NAME and SKILL_NAME are required" >&2
+        exit 1
+    fi
+
+    if [[ -z ${MAY_EDIT} ]]; then
+        echo "::error::may_edit is required; set may_edit on the caller" >&2
+        exit 1
+    fi
+
+    local loop_action_lib
+    loop_action_lib="$(cd "${SCRIPT_DIR}/../../lib/loop" && pwd)"
+    # shellcheck source=../../lib/loop/validate_loop_write_contract.sh disable=SC1091
+    source "${loop_action_lib}/validate_loop_write_contract.sh"
+    if ! validate_loop_write_contract "${MAY_EDIT}" "${WRITE_TARGET}" "${DELIVERY}" "${LEVEL}"; then
         exit 1
     fi
 

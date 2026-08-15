@@ -82,10 +82,22 @@ setup() {
     [[ $output == *"L1 with may_edit true"* ]]
 }
 
+@test "validate rejects L2 may_edit false delivery none" {
+    run validate_loop_write_contract "false" "" "none" "L2"
+    [ "$status" -eq 1 ]
+    [[ $output == *"L2/L3 require may_edit true"* ]]
+}
+
+@test "validate rejects L3 may_edit false delivery log" {
+    run validate_loop_write_contract "false" "" "log" "L3"
+    [ "$status" -eq 1 ]
+    [[ $output == *"L2/L3 require may_edit true"* ]]
+}
+
 @test "validate rejects may_edit false delivery open_pr" {
     run validate_loop_write_contract "false" "" "open_pr" "L2"
     [ "$status" -eq 1 ]
-    [[ $output == *"may_edit false"* ]]
+    [[ $output == *"L2/L3 require may_edit true"* ]]
 }
 
 @test "validate rejects may_edit true without write_target" {

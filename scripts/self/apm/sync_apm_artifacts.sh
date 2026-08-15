@@ -291,6 +291,9 @@ function run_apm_audit_component {
 function main {
     local component
 
+    echo "==> chmod +rwx -R /workspace/apm_modules/_local"
+    chmod +rwx -R /workspace/apm_modules/_local
+
     parse_arguments "$@"
 
     for component in "${SYNC_COMPONENTS[@]}"; do

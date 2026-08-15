@@ -66,6 +66,10 @@ Branch-related caller inputs fall into **three roles**. Mixing them up is the mo
 
 Platform semantics (target model, verifier baseline): [Multi-Branch Loops Design](../multi-branch-loops-design.md#branch-roles-and-fix-direction).
 
+### Scope: `scoped_pr_number`
+
+Optional. When set, `loop-detect` fetches that open PR via `gh pr view` (does not list up to 50 PRs), drops integration watch targets, and keeps only that PR. Used by `github-pr-revise` so comment webhooks do not run on `main`. Empty = no-op.
+
 ### Watch: `branch_match` + `branch_match_mode`
 
 `loop-detect` resolves `branch_match` into concrete branch names using `branch_match_mode`:
@@ -239,6 +243,7 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `priority`                           | `loop_priority`                          |
 | `prompt_instructions`                | `prompt_instructions`                    |
 | `pr_enabled`                         | `loop_pr_enabled`                        |
+| `scoped_pr_number`                   | `loop_scoped_pr_number`                  |
 | `run_log_file`                       | `run_log_file`                           |
 | `skill_name`                         | `skill_name`                             |
 | `verifier_skill_name`                | `verifier_skill_name` (execute only)     |

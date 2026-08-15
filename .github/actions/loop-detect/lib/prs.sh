@@ -18,6 +18,7 @@
 # Globals:
 #   OPEN_PRS_JSON - Output array
 #   LOOP_PR_ENABLED - Enable flag (read)
+#   LOOP_SCOPED_PR_NUMBER - When set, fetch that PR only via gh pr view
 #
 # Arguments:
 #   $1 - LOOP_PR_EXCLUDE csv
@@ -35,10 +36,10 @@ function list_open_prs {
     local exclude_csv="$1"
     local include_bots_csv="$2"
     local github_token="$3"
-    local prs_json pr_line
+    local prs_json pr_line pr_state
 
     OPEN_PRS_JSON=()
-    if [[ ${LOOP_PR_ENABLED} != "true" ]]; then
+    if [[ ${LOOP_PR_ENABLED} != "true" && -z ${LOOP_SCOPED_PR_NUMBER:-} ]]; then
         return 0
     fi
 
@@ -48,6 +49,29 @@ function list_open_prs {
     fi
 
     export GITHUB_TOKEN="${github_token}"
+
+    if [[ -n ${LOOP_SCOPED_PR_NUMBER:-} ]]; then
+        if [[ ! ${LOOP_SCOPED_PR_NUMBER} =~ ^[1-9][0-9]*$ ]]; then
+            echo "::error::LOOP_SCOPED_PR_NUMBER must be a positive integer"
+            return 1
+        fi
+        pr_line="$(gh pr view "${LOOP_SCOPED_PR_NUMBER}" --json \
+            number,title,headRefName,headRefOid,baseRefName,isDraft,author,labels,maintainerCanModify,headRepository,state \
+            2> /dev/null || true)"
+        if [[ -z ${pr_line} ]]; then
+            return 0
+        fi
+        pr_state="$(jq -r '.state // empty' <<< "${pr_line}")"
+        if [[ ${pr_state} != "OPEN" ]]; then
+            return 0
+        fi
+        if pr_excluded "${pr_line}" "${exclude_csv}" "${include_bots_csv}"; then
+            return 0
+        fi
+        OPEN_PRS_JSON+=("${pr_line}")
+        return 0
+    fi
+
     prs_json="$(gh pr list --state open --limit 50 --json \
         number,title,headRefName,headRefOid,baseRefName,isDraft,author,labels,maintainerCanModify,headRepository 2> /dev/null || echo '[]')"
 

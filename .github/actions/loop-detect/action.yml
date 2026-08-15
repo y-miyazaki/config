@@ -98,6 +98,10 @@ inputs:
     default: "integration,pull_request"
     description: "Target mode priority order (comma-separated)"
     required: false
+  loop_scoped_pr_number:
+    default: ""
+    description: "When set, watch only this open PR number and skip integration fan-out"
+    required: false
   loop_state_push_branch:
     default: ""
     description: "Branch for .loop/* persistence (empty = repository default branch)"
@@ -288,6 +292,7 @@ runs:
         LOOP_PR_EXCLUDE: ${{ inputs.loop_pr_exclude }}
         LOOP_PR_INCLUDE_BOTS: ${{ inputs.loop_pr_include_bots }}
         LOOP_PRIORITY: ${{ inputs.loop_priority }}
+        LOOP_SCOPED_PR_NUMBER: ${{ inputs.loop_scoped_pr_number }}
         LOOP_STATE_PUSH_BRANCH: ${{ inputs.loop_state_push_branch }}
         MAY_EDIT: ${{ inputs.may_edit }}
         PROMPT_INSTRUCTIONS: ${{ inputs.prompt_instructions }}

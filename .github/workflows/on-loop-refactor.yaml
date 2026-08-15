@@ -69,6 +69,7 @@ jobs:
       engine: cursor
       environment: default
       infer_files_pattern: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|ya?ml|sh|go|toml|json)'
+      level: L2
       loop_name: refactor
       max_targets_per_schedule: 1
       may_edit: true

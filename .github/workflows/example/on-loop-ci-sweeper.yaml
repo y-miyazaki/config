@@ -90,6 +90,7 @@ jobs:
       engine: cursor
       environment: default
       infer_files_pattern: '[[:alnum:]_.-]+/[^[:space:],)]+\.(md|ya?ml|sh|go|toml|json)'
+      level: L2
       loop_name: ci-sweeper
       max_targets_per_schedule: 3
       no_changes_verdict: REJECT

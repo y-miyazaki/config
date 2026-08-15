@@ -84,6 +84,7 @@ setup() {
         DETECT_SCRIPT="${BATS_TEST_TMPDIR}/detect.sh" \
         LOOP_NAME="github-issue-triage" \
         SKILL_NAME="github-issue-triage" \
+        MAY_EDIT="false" \
         BUDGET_FILE="${BATS_TEST_TMPDIR}/budget.json" \
         BUDGET_MAX_RUNS_PER_DAY="1" \
         RUN_LOG_FILE="${BATS_TEST_TMPDIR}/run-log.md" \
@@ -103,6 +104,7 @@ setup() {
         PROMPT_INSTRUCTIONS="triage pls" \
         LEVEL="L1" \
         DELIVERY="none" \
+        MAY_EDIT="false" \
         bash "${ENTITY_DETECT_LIB}"
     [ "$status" -eq 0 ]
     grep -q '^should_run=true$' "${GITHUB_OUTPUT}"
@@ -110,4 +112,18 @@ setup() {
     run find "${RUNNER_TEMP}/loop-handoff" -type f
     [ "$status" -eq 0 ]
     [ "$(wc -l <<< "${output}")" -ge 1 ]
+}
+
+@test "main rejects L2 may_edit false contract" {
+    entity_detect_write_mock_script "${BATS_TEST_TMPDIR}/detect.sh" '{"status":"ok","skip":false,"result":{"handoff_key":"entity:issue:1"}}'
+    run env \
+        DETECT_SCRIPT="${BATS_TEST_TMPDIR}/detect.sh" \
+        LOOP_NAME="github-issue-triage" \
+        SKILL_NAME="github-issue-triage" \
+        LEVEL="L2" \
+        DELIVERY="none" \
+        MAY_EDIT="false" \
+        bash "${ENTITY_DETECT_LIB}"
+    [ "$status" -eq 1 ]
+    [[ $output == *"L2/L3 require may_edit true"* ]]
 }

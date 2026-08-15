@@ -68,6 +68,7 @@ jobs:
       environment: default
       delivery: open_pr
       infer_files_pattern: 'CHANGELOG\.md'
+      level: L2
       loop_name: changelog
       max_targets_per_schedule: 3
       may_edit: true

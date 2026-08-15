@@ -8,6 +8,7 @@
 #   validate_loop_write_contract "<may_edit>" "<write_target>" "<delivery>" "<level>"
 #
 # Design Rules:
+#   - L2/L3 require may_edit true (read-only loops use L1)
 #   - may_edit false forbids delivery open_pr
 #   - may_edit true requires write_target and allows only open_pr or none delivery
 #
@@ -72,6 +73,14 @@ function validate_loop_write_contract {
     fi
 
     if [[ ${may_edit} == "false" ]]; then
+        if [[ -n ${level} ]]; then
+            case "${level}" in
+                L2 | L3)
+                    echo "::error::invalid: L2/L3 require may_edit true (use L1 for read-only loops)" >&2
+                    return 1
+                    ;;
+            esac
+        fi
         if [[ -n ${write_target} ]]; then
             echo "::warning::write_target ignored when may_edit is false" >&2
         fi

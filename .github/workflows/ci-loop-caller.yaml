@@ -191,6 +191,11 @@ on:
         description: "JSONL run log path for budget aggregation"
         required: false
         type: string
+      scoped_pr_number:
+        default: ""
+        description: "When set, detect watches only this open PR number (skip integration fan-out)"
+        required: false
+        type: string
       skill_name:
         description: "Skill package name"
         required: true
@@ -341,6 +346,7 @@ jobs:
           loop_pr_exclude: ${{ inputs.pr_exclude }}
           loop_pr_include_bots: ${{ inputs.pr_include_bots }}
           loop_priority: ${{ inputs.priority }}
+          loop_scoped_pr_number: ${{ inputs.scoped_pr_number }}
           loop_state_push_branch: ${{ inputs.branch_state }}
           may_edit: ${{ inputs.may_edit == true && 'true' || inputs.may_edit == false && 'false' || '' }}
           no_changes_verdict: ${{ inputs.no_changes_verdict }}
@@ -442,8 +448,15 @@ jobs:
           fi
 
   execute:
-    if: needs.detect.outputs.should_run == 'true'
-    needs: detect
+    if: >-
+      always() &&
+      needs.detect.result == 'success' &&
+      needs.detect.outputs.should_run == 'true' &&
+      (needs.ack-trigger.result == 'success' ||
+      needs.ack-trigger.result == 'skipped')
+    needs:
+      - ack-trigger
+      - detect
     permissions:
       actions: read
       contents: write

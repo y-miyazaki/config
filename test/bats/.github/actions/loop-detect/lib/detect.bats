@@ -9,6 +9,7 @@ bats_require_minimum_version 1.5.0
 # - validate_branch_match rejects invalid LOOP_BRANCH_MATCH
 # - resolve_detect_script_path fails on empty or missing DETECT_SCRIPT
 # - require_scoped_head_for_workflow_run fails when workflow_run lacks scoped head
+# - apply_scoped_pr_number_filter drops integration and keeps matching PR only
 # - apply_target_cap truncates candidates to fan-out cap
 # - target_circuit_breaker_open blocks append_integration_candidate before detect
 # - build_integration_target_json emits integration mode payload
@@ -291,6 +292,27 @@ EOF
         <<< "${json}"
     [ "$status" -eq 0 ]
 }
+@test "apply_scoped_pr_number_filter drops integration and keeps matching PR only" {
+    INTEGRATION_BRANCHES=("main" "develop")
+    OPEN_PRS_JSON=(
+        '{"number":11,"headRefName":"a"}'
+        '{"number":42,"headRefName":"feature/x"}'
+    )
+    apply_scoped_pr_number_filter "42"
+    [ "${#INTEGRATION_BRANCHES[@]}" -eq 0 ]
+    [ "${#OPEN_PRS_JSON[@]}" -eq 1 ]
+    run jq -e '.number == 42' <<< "${OPEN_PRS_JSON[0]}"
+    [ "$status" -eq 0 ]
+}
+
+@test "apply_scoped_pr_number_filter is a no-op when number is empty" {
+    INTEGRATION_BRANCHES=("main")
+    OPEN_PRS_JSON=('{"number":11}')
+    apply_scoped_pr_number_filter ""
+    [ "${#INTEGRATION_BRANCHES[@]}" -eq 1 ]
+    [ "${#OPEN_PRS_JSON[@]}" -eq 1 ]
+}
+
 @test "require_scoped_head_for_workflow_run fails when workflow_run lacks scoped head" {
     CI_SWEEPER_WORKFLOW_RUN_ID="12345"
     unset CI_SWEEPER_EVENT_HEAD_BRANCH LOOP_SCOPED_HEAD_BRANCH

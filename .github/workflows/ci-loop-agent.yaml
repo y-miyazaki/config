@@ -136,9 +136,8 @@ on:
         required: false
         type: string
       loop_name:
-        default: ""
-        description: "Loop name for state and budget (L2/L3)"
-        required: false
+        description: "Loop identifier for state, budget, and run-log"
+        required: true
         type: string
       no_changes_verdict:
         default: "APPROVE"
@@ -336,7 +335,6 @@ jobs:
     if: >-
       always() &&
       inputs.level == 'L1' &&
-      inputs.loop_name != '' &&
       needs.agent-l1.result != 'cancelled' &&
       needs.agent-l1.result != 'skipped'
     needs: agent-l1
@@ -612,7 +610,7 @@ jobs:
           } >> "${GITHUB_OUTPUT}"
 
       - name: Append Run Log
-        if: always() && inputs.loop_name != ''
+        if: always()
         uses: y-miyazaki/config/.github/actions/loop-run-log@85b694da37ac5e2e225409d46776ab668cfbda17 # v1.8.87
         with:
           agent_result: ${{ steps.run_log_meta.outputs.agent_result }}

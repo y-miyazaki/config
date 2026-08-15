@@ -356,17 +356,18 @@ jobs:
   loop:
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
-      loop_name: ci-sweeper
-      skill_name: ci-sweeper
-      verifier_skill_name: loop-verifier
-      detect_script: .agents/skills/ci-sweeper/scripts/detect_ci_failures.sh
-      allowlist: "src/**,tests/**"
-      prompt_instructions: |
-        Fix the failing CI checks identified in the detection result.
-        Do not change unrelated files.
       agent_verifier_criteria: |
         ## Criteria for APPROVE
         ...
+      allowlist: "src/**,tests/**"
+      detect_script: .agents/skills/ci-sweeper/scripts/detect_ci_failures.sh
+      level: L2
+      loop_name: ci-sweeper
+      prompt_instructions: |
+        Fix the failing CI checks identified in the detection result.
+        Do not change unrelated files.
+      skill_name: ci-sweeper
+      verifier_skill_name: loop-verifier
     explicit secrets: map
 ```
 

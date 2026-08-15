@@ -498,7 +498,7 @@ Execute/finalize input. Schema: [Multi-Branch Loops Design](../explanation/loop-
 | `domain_persistence_script` | no       | Optional bash script (ledger). Standard env: `TARGET_JSON`, `OUTCOME`, `VERDICT`, `LOOP_NAME`, `STATE_FILE`, `EXECUTE_BRANCH` |
 | `state_push_branch`         | no       | Default: repository default branch                                                                                            |
 
-`loop-notify-pr` is invoked by `ci-loop-agent` as a sibling step after `loop-finalize` when `target_json.to.pr_number` is set. `loop-run-log` is invoked as a sibling step after `loop-finalize` when `loop_name` is set. Both read outputs from prior steps (not via nested composite `uses:`).
+`loop-notify-pr` is invoked by `ci-loop-agent` as a sibling step after `loop-finalize` when `target_json.to.pr_number` is set. `loop-run-log` is invoked as a sibling step after `loop-finalize` in the same finalize job (`loop_name` is required on `ci-loop-agent`). Both read outputs from prior steps (not via nested composite `uses:`).
 
 ### State `targets` map
 

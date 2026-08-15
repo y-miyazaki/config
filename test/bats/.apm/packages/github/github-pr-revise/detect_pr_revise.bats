@@ -257,7 +257,7 @@ EOF
   }
 }
 EOF
-    run env GITHUB_EVENT_NAME=issue_comment         GITHUB_EVENT_PATH="${BATS_TEST_TMPDIR}/event.json"         PR_ACTOR_TYPE=User bash "${DETECT_SCRIPT}"
+    run env GITHUB_EVENT_NAME=issue_comment GITHUB_EVENT_PATH="${BATS_TEST_TMPDIR}/event.json" PR_ACTOR_TYPE=User bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
     run jq -e '.skip == false and .result.comment_id == 4242 and .result.event_name == "issue_comment"' <<< "${output}"
     [ "$status" -eq 0 ]
@@ -277,7 +277,7 @@ EOF
   }
 }
 EOF
-    run env GITHUB_EVENT_NAME=pull_request_review_comment         GITHUB_EVENT_PATH="${BATS_TEST_TMPDIR}/event.json"         PR_ACTOR_TYPE=User bash "${DETECT_SCRIPT}"
+    run env GITHUB_EVENT_NAME=pull_request_review_comment GITHUB_EVENT_PATH="${BATS_TEST_TMPDIR}/event.json" PR_ACTOR_TYPE=User bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
     run jq -e '.skip == false and .result.comment_id == 9090 and .result.event_name == "pull_request_review_comment" and .result.pr_number == "8"' <<< "${output}"
     [ "$status" -eq 0 ]
@@ -320,7 +320,7 @@ if [[ "$1" == "api" && "$*" == *"issues/77/comments"* ]]; then
     exit 0
 fi
 if [[ "$1" == "api" && "$*" == *"pulls/77/comments"* ]]; then
-    printf '%s\n' '[{"id":202,"body":"@loop inline","path":"pkg/foo.go","line":9,"side":"RIGHT","diff_hunk":"@@ -1 +1 @@","in_reply_to_id":null,"user":{"login":"maintainer","type":"User"},"author_association":"OWNER","reactions":{"eyes":0}},{"id":203,"body":"@loop claimed","path":"pkg/bar.go","line":3,"side":"RIGHT","user":{"login":"maintainer","type":"User"},"author_association":"OWNER","reactions":{"eyes":1}},{"id":204,"body":"no mention","path":"pkg/baz.go","line":1,"side":"RIGHT","user":{"login":"maintainer","type":"User"},"author_association":"OWNER","reactions":{"eyes":0}}]'
+    printf '%s\n' '[{"id":202,"body":"@loop inline","path":"pkg/foo.go","line":9,"start_line":7,"subject_type":"line","side":"RIGHT","diff_hunk":"@@ -1 +1 @@","in_reply_to_id":null,"user":{"login":"maintainer","type":"User"},"author_association":"OWNER","reactions":{"eyes":0}},{"id":203,"body":"@loop claimed","path":"pkg/bar.go","line":3,"side":"RIGHT","user":{"login":"maintainer","type":"User"},"author_association":"OWNER","reactions":{"eyes":1}},{"id":204,"body":"no mention","path":"pkg/baz.go","line":1,"side":"RIGHT","user":{"login":"maintainer","type":"User"},"author_association":"OWNER","reactions":{"eyes":0}}]'
     exit 0
 fi
 printf 'unexpected gh: %s\n' "$*" >&2
@@ -331,13 +331,15 @@ EOF
     export PATH
     run env PR_NUMBER=77 PR_MENTION='@loop' PR_COMMENT_BODY='@loop inline' \
         PR_ACTOR_TYPE=User GITHUB_EVENT_NAME=pull_request_review_comment \
-        GITHUB_REPOSITORY=owner/repo GITHUB_TOKEN=unit-test-token \
+        GITHUB_REPOSITORY=owner/repo GITHUB_TOKEN=token \
         bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
     run jq -e '
         .skip == false
         and ([.result.comments[].comment_id] | sort) == [101,202]
         and (.result.comments | map(select(.comment_id == 202)) | .[0].path) == "pkg/foo.go"
+        and (.result.comments | map(select(.comment_id == 202)) | .[0].start_line) == 7
+        and (.result.comments | map(select(.comment_id == 202)) | .[0].subject_type) == "line"
         and (.result.comments | map(select(.comment_id == 101)) | .[0].source) == "issue_comment"
     ' <<< "${output}"
     [ "$status" -eq 0 ]
@@ -369,6 +371,67 @@ EOF
         .skip == false
         and .result.in_reply_to_id == 699
         and .result.comments[0].in_reply_to_id == 699
+    ' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_pr_revise hydrates start_line and subject_type from review comment event" {
+    cat > "${BATS_TEST_TMPDIR}/event.json" << 'EOF'
+{
+  "action": "created",
+  "pull_request": { "number": 11 },
+  "comment": {
+    "id": 800,
+    "body": "@loop fix this range",
+    "path": "x.go",
+    "line": 12,
+    "start_line": 8,
+    "side": "RIGHT",
+    "subject_type": "line",
+    "diff_hunk": "@@",
+    "user": { "login": "maintainer", "type": "User" },
+    "author_association": "MEMBER"
+  }
+}
+EOF
+    run env GITHUB_EVENT_NAME=pull_request_review_comment \
+        GITHUB_EVENT_PATH="${BATS_TEST_TMPDIR}/event.json" \
+        bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '
+        .skip == false
+        and .result.start_line == 8
+        and .result.subject_type == "line"
+        and .result.comments[0].start_line == 8
+        and .result.comments[0].subject_type == "line"
+    ' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_pr_revise hydrates file-level subject_type without line" {
+    cat > "${BATS_TEST_TMPDIR}/event.json" << 'EOF'
+{
+  "action": "created",
+  "pull_request": { "number": 11 },
+  "comment": {
+    "id": 801,
+    "body": "@loop rename this file",
+    "path": "x.go",
+    "subject_type": "file",
+    "user": { "login": "maintainer", "type": "User" },
+    "author_association": "MEMBER"
+  }
+}
+EOF
+    run env GITHUB_EVENT_NAME=pull_request_review_comment \
+        GITHUB_EVENT_PATH="${BATS_TEST_TMPDIR}/event.json" \
+        bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '
+        .skip == false
+        and .result.subject_type == "file"
+        and .result.path == "x.go"
+        and .result.comments[0].subject_type == "file"
     ' <<< "${output}"
     [ "$status" -eq 0 ]
 }

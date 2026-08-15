@@ -116,6 +116,7 @@ jobs:
       may_edit: true
       write_target: fix
       infer_files_pattern: 'CHANGELOG\.md'
+      level: L2
       loop_name: changelog
       max_targets_per_schedule: 3
       no_changes_verdict: REJECT
@@ -150,10 +151,10 @@ Enable `workflow_run` on the caller only; reusable workflow stays trigger-agnost
 | ------------- | -------- | -------------------------------------------------------------------- | ----------------------------- |
 | `detect`      | —        | always                                                               | `loop-detect`                 |
 | `ack-trigger` | `detect` | `ack_trigger_comment` + `should_run` + comment webhook event         | Start ACK (see below)         |
-| `execute`     | `detect` | `needs.detect.outputs.should_run == 'true'`                          | `ci-loop-agent.yaml` (matrix) |
+| `execute`     | `detect`, `ack-trigger` | `should_run` and ack `success` or `skipped`            | `ci-loop-agent.yaml` (matrix) |
 | `record-skip` | `detect` | success + `should_run == false` + skip reason budget/circuit_breaker | `loop-run-log`                |
 
-`ack-trigger` and `execute` both depend on `detect` only; they may run in parallel after detect succeeds.
+`ack-trigger` depends on `detect` only. `execute` depends on `detect` and `ack-trigger` so start ACK finishes before the agent runs (skipped `ack-trigger` is treated as success for loops that leave `ack_trigger_comment` false).
 
 #### `ack-trigger` (optional start ACK)
 
@@ -259,6 +260,7 @@ Full mapping table: [Loop Caller Inputs Reference — `loop-detect` mapping](wor
 | Input                 | Required | Default | Used by                                      |
 | --------------------- | -------- | ------- | -------------------------------------------- |
 | `ack_trigger_comment` | no       | `false` | `ack-trigger` job (`if` + reaction ACK only) |
+| `scoped_pr_number`    | no       | `""`    | `loop-detect` (`LOOP_SCOPED_PR_NUMBER`)      |
 
 #### Execute-only (optional)
 

@@ -102,3 +102,63 @@ pr_json_with_labels() {
     [ "$status" -eq 1 ]
     [[ $output == *"gh CLI is required"* ]]
 }
+
+@test "list_open_prs with LOOP_SCOPED_PR_NUMBER fetches that PR via gh pr view" {
+    local mock_bin
+    mock_bin="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${mock_bin}"
+    cat > "${mock_bin}/gh" << 'EOF'
+#!/bin/bash
+if [[ "$1" == "pr" && "$2" == "view" && "$3" == "42" ]]; then
+    printf '%s\n' '{"number":42,"title":"fix","headRefName":"feature/x","headRefOid":"abc","baseRefName":"main","isDraft":false,"author":{"login":"alice"},"labels":[],"maintainerCanModify":true,"headRepository":{"isFork":false},"state":"OPEN"}'
+    exit 0
+fi
+printf 'unexpected gh: %s\n' "$*" >&2
+exit 1
+EOF
+    chmod +x "${mock_bin}/gh"
+    LOOP_PR_ENABLED="true"
+    LOOP_SCOPED_PR_NUMBER="42"
+    PATH="${mock_bin}:${PATH}"
+    list_open_prs "fork,label:no-loop" "" "token"
+    [ "${#OPEN_PRS_JSON[@]}" -eq 1 ]
+    run jq -e '.number == 42 and .headRefName == "feature/x"' <<< "${OPEN_PRS_JSON[0]}"
+    [ "$status" -eq 0 ]
+}
+
+@test "list_open_prs with LOOP_SCOPED_PR_NUMBER fetches when pr_enabled is false" {
+    local mock_bin
+    mock_bin="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${mock_bin}"
+    cat > "${mock_bin}/gh" << 'EOF'
+#!/bin/bash
+if [[ "$1" == "pr" && "$2" == "view" && "$3" == "7" ]]; then
+    printf '%s\n' '{"number":7,"title":"draft ok","headRefName":"feat","headRefOid":"def","baseRefName":"main","isDraft":true,"author":{"login":"alice"},"labels":[],"maintainerCanModify":true,"headRepository":{"isFork":false},"state":"OPEN"}'
+    exit 0
+fi
+exit 1
+EOF
+    chmod +x "${mock_bin}/gh"
+    LOOP_PR_ENABLED="false"
+    LOOP_SCOPED_PR_NUMBER="7"
+    PATH="${mock_bin}:${PATH}"
+    list_open_prs "fork,label:no-loop" "" "token"
+    [ "${#OPEN_PRS_JSON[@]}" -eq 1 ]
+}
+
+@test "list_open_prs with LOOP_SCOPED_PR_NUMBER omits closed PRs" {
+    local mock_bin
+    mock_bin="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${mock_bin}"
+    cat > "${mock_bin}/gh" << 'EOF'
+#!/bin/bash
+printf '%s\n' '{"number":9,"title":"done","headRefName":"feat","headRefOid":"ghi","baseRefName":"main","isDraft":false,"author":{"login":"alice"},"labels":[],"headRepository":{"isFork":false},"state":"MERGED"}'
+exit 0
+EOF
+    chmod +x "${mock_bin}/gh"
+    LOOP_PR_ENABLED="true"
+    LOOP_SCOPED_PR_NUMBER="9"
+    PATH="${mock_bin}:${PATH}"
+    list_open_prs "fork" "" "token"
+    [ "${#OPEN_PRS_JSON[@]}" -eq 0 ]
+}
