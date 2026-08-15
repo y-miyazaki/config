@@ -129,7 +129,7 @@ setup() {
                 }
             ],
             hotspots: [
-                {path: "src/app.go", metric: "churn", value: 12, window: "90d"}
+                {path: "src/app.go", metric: "churn", value: 12, window: "90.days"}
             ],
             warnings: ["sensor skipped"]
         }

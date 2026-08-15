@@ -114,7 +114,8 @@ DETECT_SCRIPT="$(apm_skill_script_path tech-debt detect_tech_debt.sh)"
         git_test_repo_git add hot.txt
         git_test_repo_git commit -q -m "c${i}"
     done
-    git_test_repo_run "env TECH_DEBT_CHURN_MIN=5 TECH_DEBT_CHURN_WINDOW=365d TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
+    # Prefer N.days — bare Nd is not reliable git --since approxidate (flaky empty log).
+    git_test_repo_run "env TECH_DEBT_CHURN_MIN=5 TECH_DEBT_CHURN_WINDOW=365.days TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     [[ $output == *'"metric": "churn"'* ]] || [[ $output == *'"metric":"churn"'* ]]
     [[ $output == *'hot.txt'* ]]
