@@ -56,3 +56,21 @@ setup() {
     [ "$status" -eq 0 ]
     [ "$output" = "Created By composer-2.5 In/Out: 2K/17" ]
 }
+
+@test "render_created_by_line keeps engine only when usage_json is invalid" {
+    run render_created_by_line cursor 'not-json'
+    [ "$status" -eq 0 ]
+    [ "$output" = "Created By cursor" ]
+}
+
+@test "render_created_by_line uses em dash for missing In or Out side" {
+    run render_created_by_line cursor '{"total_output_tokens":100}'
+    [ "$status" -eq 0 ]
+    [ "$output" = "Created By cursor In/Out: —/100" ]
+}
+
+@test "render_created_by_line emits In/Out without model when engine empty" {
+    run render_created_by_line '' '{"total_input_tokens":100,"total_output_tokens":50}'
+    [ "$status" -eq 0 ]
+    [ "$output" = "Created By In/Out: 100/50" ]
+}
