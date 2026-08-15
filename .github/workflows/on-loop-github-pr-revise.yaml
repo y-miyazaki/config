@@ -67,6 +67,7 @@ jobs:
       )
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
+      ack_trigger_comment: true
       agent_implementer_max_turns: "8"
       agent_implementer_model: cursor-grok-4.5-low
       agent_loop_max_attempts: 3

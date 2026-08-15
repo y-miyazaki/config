@@ -10,6 +10,11 @@ name: ci-loop-caller
 on:
   workflow_call:
     inputs:
+      ack_trigger_comment:
+        default: false
+        description: "After detect proceeds, ACK the triggering comment with an eyes reaction (pr-revise)"
+        required: false
+        type: boolean
       additional_commit_paths:
         default: ""
         description: "Extra paths included in finalize commit (e.g. ledger file)"
@@ -223,11 +228,7 @@ jobs:
     environment: ${{ inputs.environment }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    permissions:
-      actions: write
-      contents: read
-      issues: write
-      pull-requests: write
+    permissions: ${{ inputs.ack_trigger_comment && fromJSON('{"actions":"write","contents":"read","issues":"write","pull-requests":"write"}') || fromJSON('{"actions":"write","contents":"read","pull-requests":"read"}') }}
     outputs:
       additional_commit_paths: ${{ inputs.additional_commit_paths }}
       agent_implementer_max_turns: ${{ steps.detect.outputs.agent_implementer_max_turns }}
@@ -350,6 +351,7 @@ jobs:
 
       - name: Ack Trigger Comment
         if: >-
+          inputs.ack_trigger_comment &&
           steps.detect.outputs.should_run == 'true' &&
           (github.event_name == 'issue_comment' ||
           github.event_name == 'pull_request_review_comment')
