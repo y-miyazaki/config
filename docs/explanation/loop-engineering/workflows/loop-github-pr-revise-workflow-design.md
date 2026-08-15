@@ -27,3 +27,17 @@ on-loop-github-pr-revise.yaml
 ```
 
 `issue_comment` jobs run only when `github.event.issue.pull_request` is set.
+
+## Trigger UX (ACK + thread reply)
+
+After detect proceeds on a comment webhook:
+
+| Stage | Behavior |
+| ----- | -------- |
+| Start ACK | `eyes` reaction on `comment.id` (`ci-loop-caller`) |
+| Done reply | Inline review: threaded REST reply; conversation comment: follow-up PR comment (`loop-notify-pr`) |
+| Marker | Run-level `loop-notify-pr` marker comment unchanged |
+| Resolve | Human only — no auto-resolve |
+
+Detect JSON includes `result.comment_id` and `result.event_name` when hydrated from the webhook.
+

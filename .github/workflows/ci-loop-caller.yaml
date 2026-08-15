@@ -226,7 +226,8 @@ jobs:
     permissions:
       actions: write
       contents: read
-      pull-requests: read
+      issues: write
+      pull-requests: write
     outputs:
       additional_commit_paths: ${{ inputs.additional_commit_paths }}
       agent_implementer_max_turns: ${{ steps.detect.outputs.agent_implementer_max_turns }}
@@ -346,6 +347,39 @@ jobs:
           skill_name: ${{ inputs.skill_name }}
           state_file: ${{ inputs.state_file }}
           write_target: ${{ inputs.write_target }}
+
+      - name: Ack Trigger Comment
+        if: >-
+          steps.detect.outputs.should_run == 'true' &&
+          (github.event_name == 'issue_comment' ||
+          github.event_name == 'pull_request_review_comment')
+        continue-on-error: true
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_TOKEN: ${{ steps.resolve_github_token.outputs.github_token }}
+          REPOSITORY: ${{ github.repository }}
+          TRIGGER_COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${TRIGGER_COMMENT_ID}" || -z "${REPOSITORY}" ]]; then
+            exit 0
+          fi
+          case "${GITHUB_EVENT_NAME}" in
+            issue_comment)
+              endpoint="repos/${REPOSITORY}/issues/comments/${TRIGGER_COMMENT_ID}/reactions"
+              ;;
+            pull_request_review_comment)
+              endpoint="repos/${REPOSITORY}/pulls/comments/${TRIGGER_COMMENT_ID}/reactions"
+              ;;
+            *)
+              exit 0
+              ;;
+          esac
+          if gh api --method POST "${endpoint}" -f content='eyes' >/dev/null; then
+            echo "::notice title=trigger-ack::Added eyes reaction on comment ${TRIGGER_COMMENT_ID}"
+          else
+            echo "::warning::Failed to ACK trigger comment ${TRIGGER_COMMENT_ID}"
+          fi
 
   execute:
     if: needs.detect.outputs.should_run == 'true'

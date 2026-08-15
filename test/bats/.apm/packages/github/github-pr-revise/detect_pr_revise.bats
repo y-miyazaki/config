@@ -148,3 +148,48 @@ EOF
     run jq -e '.skip == true and (.message | test("maintainer association"))' <<< "${output}"
     [ "$status" -eq 0 ]
 }
+
+@test "detect_pr_revise emits comment_id and event_name from event" {
+    cat > "${BATS_TEST_TMPDIR}/event.json" << 'EOF'
+{
+  "comment": {
+    "id": 4242,
+    "body": "@loop please fix",
+    "user": {"login": "maintainer", "type": "User"},
+    "author_association": "MEMBER"
+  },
+  "issue": {
+    "number": 5,
+    "pull_request": {}
+  }
+}
+EOF
+    run env GITHUB_EVENT_NAME=issue_comment \
+        GITHUB_EVENT_PATH="${BATS_TEST_TMPDIR}/event.json" \
+        PR_ACTOR_TYPE=User bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '.skip == false and .result.comment_id == "4242" and .result.event_name == "issue_comment"' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_pr_revise emits comment_id for review comment event" {
+    cat > "${BATS_TEST_TMPDIR}/event.json" << 'EOF'
+{
+  "comment": {
+    "id": 9090,
+    "body": "@loop apply this",
+    "user": {"login": "maintainer", "type": "User"},
+    "author_association": "OWNER"
+  },
+  "pull_request": {
+    "number": 8
+  }
+}
+EOF
+    run env GITHUB_EVENT_NAME=pull_request_review_comment \
+        GITHUB_EVENT_PATH="${BATS_TEST_TMPDIR}/event.json" \
+        PR_ACTOR_TYPE=User bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '.skip == false and .result.comment_id == "9090" and .result.event_name == "pull_request_review_comment" and .result.pr_number == "8"' <<< "${output}"
+    [ "$status" -eq 0 ]
+}

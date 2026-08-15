@@ -25,6 +25,7 @@
 #   PR_NUMBER         Pull request number (required unless GITHUB_EVENT_PATH hydrates it)
 #   PR_MENTION        Mention token required in comment body (default: @loop)
 #   PR_COMMENT_BODY   Comment body to match against PR_MENTION
+#   PR_COMMENT_ID     Triggering comment id (hydrated from GITHUB_EVENT_PATH when unset)
 #   PR_ACTOR          Comment or event actor login
 #   PR_ACTOR_TYPE     Comment or event actor type (User, Bot, ...)
 #   PR_ACTOR_ASSOCIATION Comment or sender author_association when present
@@ -121,6 +122,7 @@ function ensure_dependencies {
 #   GITHUB_EVENT_PATH
 #   PR_NUMBER (set)
 #   PR_COMMENT_BODY (set)
+#   PR_COMMENT_ID (set)
 #   PR_ACTOR (set)
 #   PR_ACTOR_TYPE (set)
 #   PR_ACTOR_ASSOCIATION (set)
@@ -140,7 +142,7 @@ function ensure_dependencies {
 #######################################
 function hydrate_pr_env_from_event {
     local event_path="${GITHUB_EVENT_PATH:-}"
-    local pr_number comment_body actor_type actor actor_association
+    local pr_number comment_body comment_id actor_type actor actor_association
 
     if [[ -z ${event_path} || ! -f ${event_path} ]]; then
         return 0
@@ -159,6 +161,7 @@ function hydrate_pr_env_from_event {
     if [[ -z ${comment_body} ]]; then
         comment_body="$(jq -r '.inputs.feedback // empty' "${event_path}")"
     fi
+    comment_id="$(jq -r '.comment.id // empty' "${event_path}")"
     actor_type="$(jq -r '.comment.user.type // .sender.type // empty' "${event_path}")"
     actor="$(jq -r '.comment.user.login // .sender.login // empty' "${event_path}")"
     actor_association="$(jq -r '.comment.author_association // .sender.author_association // empty' "${event_path}")"
@@ -168,6 +171,9 @@ function hydrate_pr_env_from_event {
     fi
     if [[ -z ${PR_COMMENT_BODY:-} && -n ${comment_body} ]]; then
         PR_COMMENT_BODY="${comment_body}"
+    fi
+    if [[ -z ${PR_COMMENT_ID:-} && -n ${comment_id} ]]; then
+        PR_COMMENT_ID="${comment_id}"
     fi
     if [[ -z ${PR_ACTOR_TYPE:-} && -n ${actor_type} ]]; then
         PR_ACTOR_TYPE="${actor_type}"
@@ -439,12 +445,23 @@ function build_skip_message {
 function build_result_json {
     local mention="${PR_MENTION:-@loop}"
     local body="${PR_COMMENT_BODY:-}"
-
-    json_object \
-        pr_number "${PR_NUMBER}" \
-        mention "${mention}" \
-        comment_body "${body}" \
+    local event_name="${GITHUB_EVENT_NAME:-}"
+    local comment_id="${PR_COMMENT_ID:-}"
+    local -a fields=(
+        pr_number "${PR_NUMBER}"
+        mention "${mention}"
+        comment_body "${body}"
         actor "${PR_ACTOR:-}"
+    )
+
+    if [[ -n ${event_name} ]]; then
+        fields+=(event_name "${event_name}")
+    fi
+    if [[ -n ${comment_id} ]]; then
+        fields+=(comment_id "${comment_id}")
+    fi
+
+    json_object "${fields[@]}"
 }
 
 #######################################
@@ -533,6 +550,7 @@ function main {
 
     PR_NUMBER="${PR_NUMBER:-}"
     PR_COMMENT_BODY="${PR_COMMENT_BODY:-}"
+    PR_COMMENT_ID="${PR_COMMENT_ID:-}"
     PR_ACTOR_TYPE="${PR_ACTOR_TYPE:-}"
     PR_ACTOR="${PR_ACTOR:-}"
     PR_MENTION="${PR_MENTION:-@loop}"
