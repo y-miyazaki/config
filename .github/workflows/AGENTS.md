@@ -111,24 +111,28 @@ When a loop step records failure metadata for run logs or action outputs:
 | Hardcoded discovery/prune lists in reusable `run:` steps          | Callers cannot override without forking         |
 | `secrets: inherit` on reusable callers                            | Blocks secret name remapping                    |
 | Credentials via `with:` on reusable workflows                     | Wrong channel                                   |
-
----
-
+| Force-push over `to.branch` on `push` / `push_head`               | Drops commits from earlier serialized runs (#684) |
+| `cancel-in-progress: true` on pr-revise concurrency               | Kills in-flight work; use queue + merge landing   |
 
 ---
 
 ## push_head and PR-revise concurrency
+
+Design background: [PR Revise Workflow Design](../../docs/explanation/loop-engineering/workflows/loop-github-pr-revise-workflow-design.md#concurrency-and-push_head-landing).
 
 | Rule | Requirement |
 | ---- | ----------- |
 | Same-PR serialize | `on-loop-github-pr-revise.yaml` **MUST** keep `concurrency.group` keyed by PR number with `cancel-in-progress: false` and `queue: max` |
 | No last-run-only | **MUST NOT** cancel in-flight revise runs or force-push agent tips over `to.branch` to keep only the newest run |
 | `push_head` merge | `loop-finalize` **MUST** land via merge of the agent branch into the latest `to.branch` (`lib/push_target.sh`); conflicts and non-fast-forward pushes **MUST** fail closed |
+| Full clone | Jobs that finalize with `push` / `push_head` **MUST** checkout with `fetch-depth: 0` so merge can reach the latest `origin/to.branch` (shallow finalize checkout was a #677 loss vector) |
+| Pin release | Changing `loop-finalize` `push` / `push_head` behavior **MUST** ship with a SHA pin bump in `ci-loop-agent.yaml` (or temporary dogfood `./.github/actions/...` per Pins); merged action code alone does not change dogfood execution |
+| Landing contract | `push_target.sh` checks out `origin/to.branch`, merges `origin/agent` with `--no-ff`, pushes without force — same merge shape as legacy inline finalize, with explicit auth, agent≠to guard, extracted tests, and fail-closed errors |
 | `open_pr` untouched | Changes to `push` / `push_head` landing **MUST NOT** alter the `open_pr` create-PR path |
 
 ## Verification
 
-Paired Bats under `test/bats/github-actions/` when behavior changes (TEST-00).
+Paired Bats under `test/bats/github-actions/` when behavior changes (TEST-00). `push` / `push_head` landing changes **MUST** include `test/bats/.github/actions/loop-finalize/lib/push_target.bats`.
 
 ---
 
