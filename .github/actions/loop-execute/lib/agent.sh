@@ -110,6 +110,82 @@ function commit_worktree_if_needed {
 }
 
 #######################################
+# harvest_workspace_into_worktree: Copy GITHUB_WORKSPACE dirt into WORKTREE_PATH
+#
+# Description:
+#   Cursor and other engines may write the default checkout instead of the
+#   isolated worktree. Copy porcelain paths into WORKTREE_PATH so
+#   commit_worktree_if_needed can include them. No-op when paths match.
+#
+# Globals:
+#   GITHUB_WORKSPACE - Default checkout (optional)
+#   WORKTREE_PATH - Isolated git worktree (required)
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Warning when harvest copies or deletes at least one path
+#
+# Returns:
+#   0 on success or no-op; 1 when a path cannot be copied
+#
+#######################################
+function harvest_workspace_into_worktree {
+    local workspace worktree line xy path dest src harvested=0
+
+    : "${WORKTREE_PATH:?}"
+    if [[ -z ${GITHUB_WORKSPACE:-} || ! -d ${GITHUB_WORKSPACE} ]]; then
+        return 0
+    fi
+    workspace="$(cd "${GITHUB_WORKSPACE}" && pwd)" || return 0
+    worktree="$(cd "${WORKTREE_PATH}" && pwd)" || return 1
+    if [[ ${workspace} == "${worktree}" ]]; then
+        return 0
+    fi
+    if ! git -C "${workspace}" rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+        return 0
+    fi
+
+    while IFS= read -r line; do
+        [[ -z ${line} ]] && continue
+        xy="${line:0:2}"
+        path="${line:3}"
+        if [[ ${path} == \"* ]]; then
+            path="${path#\"}"
+            path="${path%\"}"
+            path="${path//\\\"/\"}"
+        fi
+        [[ -z ${path} || ${path} == .git/* ]] && continue
+        dest="${worktree}/${path}"
+        src="${workspace}/${path}"
+        if [[ ${xy} == *D* && ! -e ${src} ]]; then
+            rm -rf "${dest}"
+            harvested=1
+            continue
+        fi
+        if [[ -d ${src} ]]; then
+            mkdir -p "${dest}"
+            continue
+        fi
+        if [[ ! -e ${src} ]]; then
+            echo "::error::Failed to harvest ${path} from GITHUB_WORKSPACE into worktree"
+            return 1
+        fi
+        mkdir -p "$(dirname "${dest}")"
+        if ! cp -a "${src}" "${dest}"; then
+            echo "::error::Failed to harvest ${path} from GITHUB_WORKSPACE into worktree"
+            return 1
+        fi
+        harvested=1
+    done < <(git -C "${workspace}" status --porcelain)
+
+    if [[ ${harvested} -eq 1 ]]; then
+        echo "::warning::Harvested implementer edits from GITHUB_WORKSPACE into worktree"
+    fi
+    return 0
+}
+
 # run_agent_capture: Run agent and capture output without a pipe subshell
 #
 # Description:
