@@ -257,16 +257,7 @@ runs:
         AGENT_BRANCH: ${{ inputs.branch }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         TO_BRANCH: ${{ steps.target.outputs.to_branch }}
-      run: |
-        set -euo pipefail
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git fetch origin "${AGENT_BRANCH}" "${TO_BRANCH}" --prune
-        git checkout -B "${TO_BRANCH}" "origin/${TO_BRANCH}"
-        git merge --no-ff "origin/${AGENT_BRANCH}" -m "chore(loop): automated fix [skip ci]"
-        git push origin HEAD:"${TO_BRANCH}"
-        echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-        echo "pushed=true" >> "$GITHUB_OUTPUT"
+      run: bash "${GITHUB_ACTION_PATH}/lib/push_target.sh"
 
     - name: Create PR
       id: pr

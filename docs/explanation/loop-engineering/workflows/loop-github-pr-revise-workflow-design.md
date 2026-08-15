@@ -42,6 +42,21 @@ After detect proceeds on a comment webhook:
 
 Detect JSON includes `result.comment_id`, `result.event_name`, inline review fields, and `result.comments` (batched open `@mention` feedback). See [Detect result](#detect-result).
 
+## Concurrency and push_head landing
+
+Same-PR revise runs **serialize**; earlier product fixes must remain on the PR head.
+
+| Rule | Behavior |
+| ---- | -------- |
+| Concurrency group | `loop-github-pr-revise-<pr_number>` on `on-loop-github-pr-revise.yaml` |
+| `cancel-in-progress` | `false` — do not kill in-flight revise work |
+| `queue` | `max` — queued mentions wait; one worker per PR at a time |
+| `push_head` landing | `loop-finalize` `push_target.sh` checks out latest `to.branch`, merges the agent branch with `--no-ff`, pushes without force |
+| Conflict | Merge or non-fast-forward push fails the finalize step (fail closed; no tip overwrite) |
+| Out of scope | Comment gather / one-session batching (`#683`); last-run-only discard of earlier fixes |
+
+`open_pr` finalize is unchanged. Prefer keeping lost-commit prevention on the shared `push` / `push_head` path rather than force-push or cancel-newest policies.
+
 ## Detect result
 
 `detect_pr_revise.sh` emits `result` facts consumed via file-backed detect JSON / loop-detect prompt:

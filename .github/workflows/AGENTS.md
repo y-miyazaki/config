@@ -114,6 +114,18 @@ When a loop step records failure metadata for run logs or action outputs:
 
 ---
 
+
+---
+
+## push_head and PR-revise concurrency
+
+| Rule | Requirement |
+| ---- | ----------- |
+| Same-PR serialize | `on-loop-github-pr-revise.yaml` **MUST** keep `concurrency.group` keyed by PR number with `cancel-in-progress: false` and `queue: max` |
+| No last-run-only | **MUST NOT** cancel in-flight revise runs or force-push agent tips over `to.branch` to keep only the newest run |
+| `push_head` merge | `loop-finalize` **MUST** land via merge of the agent branch into the latest `to.branch` (`lib/push_target.sh`); conflicts and non-fast-forward pushes **MUST** fail closed |
+| `open_pr` untouched | Changes to `push` / `push_head` landing **MUST NOT** alter the `open_pr` create-PR path |
+
 ## Verification
 
 Paired Bats under `test/bats/github-actions/` when behavior changes (TEST-00).
