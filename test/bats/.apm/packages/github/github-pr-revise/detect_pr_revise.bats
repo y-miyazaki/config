@@ -8,6 +8,9 @@
 # - Proceed for mention-gated comment and trusted dispatch feedback
 # - Hydrate inline review path/line/side/diff_hunk/comment_id into result
 # - Keep path/line empty for issue_comment (compat)
+# - Emit result.comments array (trigger fallback and PR_COMMENTS_JSON gather)
+# - Skip when gathered comments array is empty
+# - Gather via mocked gh filters eyes/bot/mention and batches review+issue comments
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -124,7 +127,12 @@ EOF
     run env PR_NUMBER=5 PR_MENTION='@loop' PR_COMMENT_BODY='@loop please fix tests' \
         PR_ACTOR_TYPE=User bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
-    run jq -e '.skip == false and .result.pr_number == "5"' <<< "${output}"
+    run jq -e '
+        .skip == false
+        and .result.pr_number == "5"
+        and (.result.comments | length) == 1
+        and (.result.comments[0].body | test("@loop"))
+    ' <<< "${output}"
     [ "$status" -eq 0 ]
 }
 
@@ -275,3 +283,92 @@ EOF
     [ "$status" -eq 0 ]
 }
 
+@test "detect_pr_revise emits comments from PR_COMMENTS_JSON override" {
+    comments='[{"comment_id":1,"body":"@loop one","path":"a.go","line":10,"side":"RIGHT","diff_hunk":"@@","in_reply_to_id":null,"source":"pull_request_review_comment","actor":"maintainer"},{"comment_id":2,"body":"@loop two","path":"","line":null,"side":"","diff_hunk":"","in_reply_to_id":null,"source":"issue_comment","actor":"maintainer"}]'
+    run env PR_NUMBER=5 PR_MENTION='@loop' PR_COMMENT_BODY='@loop one' \
+        PR_ACTOR_TYPE=User PR_COMMENTS_JSON="${comments}" bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '
+        .skip == false
+        and (.result.comments | length) == 2
+        and .result.comments[0].comment_id == 1
+        and .result.comments[1].comment_id == 2
+        and (.verifier_context | test("PR Revise Comments"))
+    ' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_pr_revise skips when gathered comments array is empty" {
+    run env PR_NUMBER=5 PR_MENTION='@loop' PR_COMMENT_BODY='@loop please fix' \
+        PR_ACTOR_TYPE=User PR_COMMENTS_JSON='[]' bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '
+        .skip == true
+        and .status == "ok"
+        and (.message | test("no open"))
+    ' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_pr_revise gathers open comments via mocked gh api" {
+    MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${MOCK_BIN}"
+    cat > "${MOCK_BIN}/gh" << 'EOF'
+#!/bin/bash
+if [[ "$1" == "api" && "$*" == *"issues/77/comments"* ]]; then
+    printf '%s\n' '[{"id":101,"body":"@loop convo","user":{"login":"maintainer","type":"User"},"author_association":"MEMBER","reactions":{"eyes":0}}]'
+    exit 0
+fi
+if [[ "$1" == "api" && "$*" == *"pulls/77/comments"* ]]; then
+    printf '%s\n' '[{"id":202,"body":"@loop inline","path":"pkg/foo.go","line":9,"side":"RIGHT","diff_hunk":"@@ -1 +1 @@","in_reply_to_id":null,"user":{"login":"maintainer","type":"User"},"author_association":"OWNER","reactions":{"eyes":0}},{"id":203,"body":"@loop claimed","path":"pkg/bar.go","line":3,"side":"RIGHT","user":{"login":"maintainer","type":"User"},"author_association":"OWNER","reactions":{"eyes":1}},{"id":204,"body":"no mention","path":"pkg/baz.go","line":1,"side":"RIGHT","user":{"login":"maintainer","type":"User"},"author_association":"OWNER","reactions":{"eyes":0}}]'
+    exit 0
+fi
+printf 'unexpected gh: %s\n' "$*" >&2
+exit 1
+EOF
+    chmod +x "${MOCK_BIN}/gh"
+    PATH="${MOCK_BIN}:${PATH}"
+    export PATH
+    run env PR_NUMBER=77 PR_MENTION='@loop' PR_COMMENT_BODY='@loop inline' \
+        PR_ACTOR_TYPE=User GITHUB_EVENT_NAME=pull_request_review_comment \
+        GITHUB_REPOSITORY=owner/repo GITHUB_TOKEN=unit-test-token \
+        bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '
+        .skip == false
+        and ([.result.comments[].comment_id] | sort) == [101,202]
+        and (.result.comments | map(select(.comment_id == 202)) | .[0].path) == "pkg/foo.go"
+        and (.result.comments | map(select(.comment_id == 101)) | .[0].source) == "issue_comment"
+    ' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_pr_revise hydrates in_reply_to_id from review comment event" {
+    cat > "${BATS_TEST_TMPDIR}/event.json" << 'EOF'
+{
+  "action": "created",
+  "pull_request": { "number": 11 },
+  "comment": {
+    "id": 700,
+    "body": "@loop follow up",
+    "path": "x.go",
+    "line": 5,
+    "side": "RIGHT",
+    "diff_hunk": "@@",
+    "in_reply_to_id": 699,
+    "user": { "login": "maintainer", "type": "User" },
+    "author_association": "MEMBER"
+  }
+}
+EOF
+    run env GITHUB_EVENT_NAME=pull_request_review_comment \
+        GITHUB_EVENT_PATH="${BATS_TEST_TMPDIR}/event.json" \
+        bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '
+        .skip == false
+        and .result.in_reply_to_id == 699
+        and .result.comments[0].in_reply_to_id == 699
+    ' <<< "${output}"
+    [ "$status" -eq 0 ]
+}

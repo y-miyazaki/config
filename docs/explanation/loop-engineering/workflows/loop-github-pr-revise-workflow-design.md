@@ -35,12 +35,12 @@ After detect proceeds on a comment webhook:
 
 | Stage | Behavior |
 | ----- | -------- |
-| Start ACK | `eyes` reaction on `comment.id` (`ci-loop-caller` `ack-trigger` job when `ack_trigger_comment`) |
+| Start ACK | `eyes` reaction on each gathered `result.comments[].comment_id` (fallback: trigger `comment.id`) via `ack-trigger` when `ack_trigger_comment` |
 | Done reply | Inline review: threaded REST reply; conversation comment: follow-up PR comment (`loop-notify-pr`) |
 | Marker | Run-level `loop-notify-pr` marker comment unchanged |
 | Resolve | Human only — no auto-resolve |
 
-Detect JSON includes `result.comment_id`, `result.event_name`, and inline review fields (`path`, `line`, `side`, `diff_hunk`) when hydrated from the webhook. See [Detect result](#detect-result).
+Detect JSON includes `result.comment_id`, `result.event_name`, inline review fields, and `result.comments` (batched open `@mention` feedback). See [Detect result](#detect-result).
 
 ## Detect result
 
@@ -50,13 +50,19 @@ Detect JSON includes `result.comment_id`, `result.event_name`, and inline review
 | ----- | ------ | ----- |
 | `pr_number` | PR / issue / dispatch payload | Required to proceed |
 | `mention` | `PR_MENTION` (default `@loop`) | Mention gate on comment webhooks |
-| `comment_body` | `comment.body` or dispatch feedback | Mention matched against this |
-| `comment_id` | `comment.id` | JSON number when present |
+| `comment_body` | Trigger `comment.body` or dispatch feedback | Backward-compatible scalar for the webhook that started the run |
+| `comment_id` | Trigger `comment.id` | JSON number when present |
 | `event_name` | `GITHUB_EVENT_NAME` | When set on webhook path |
-| `path` | `comment.path` | Set for `pull_request_review_comment`; empty for `issue_comment` |
-| `line` | `comment.line` or `comment.original_line` | JSON number when present |
-| `side` | `comment.side` | `LEFT` / `RIGHT` when present |
-| `diff_hunk` | `comment.diff_hunk` | Inline hunk text when present |
+| `path` | Trigger `comment.path` | Set for `pull_request_review_comment`; empty for `issue_comment` |
+| `line` | Trigger `comment.line` or `comment.original_line` | JSON number when present |
+| `side` | Trigger `comment.side` | `LEFT` / `RIGHT` when present |
+| `diff_hunk` | Trigger `comment.diff_hunk` | Inline hunk text when present |
+| `in_reply_to_id` | Trigger `comment.in_reply_to_id` | JSON number when present |
+| `comments` | Gathered open human `@mention` comments | Array of `{comment_id, body, path, line, side, diff_hunk, in_reply_to_id, source, actor}` |
 | `actor` | comment user or sender login | Informational |
 
-Hydration reads these from `GITHUB_EVENT_PATH` when the corresponding `PR_*` env vars are unset.
+### Comment batching
+
+On `issue_comment` / `pull_request_review_comment` when `GITHUB_REPOSITORY` and a token are available, detect lists PR conversation and review comments, keeps human maintainer comments that contain the mention token, and drops comments that already have an `eyes` reaction (claimed by a prior run). The implementer and verifier must address the full `comments` array. When gather runs and the array is empty, detect skips so queued follow-up runs do not push a false success. Without gather prerequisites, detect falls back to a one-element `comments` array from the trigger fields. Dispatch paths keep a single synthetic entry from explicit feedback.
+
+Hydration reads trigger fields from `GITHUB_EVENT_PATH` when the corresponding `PR_*` env vars are unset. `PR_COMMENTS_JSON` may pre-supply the array (tests / callers).

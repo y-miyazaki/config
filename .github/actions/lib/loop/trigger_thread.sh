@@ -7,6 +7,7 @@
 # Usage:
 #   source trigger_thread.sh
 #   ack_trigger_comment
+#   ack_gathered_comments
 #   reply_trigger_comment "$(build_done_reply_body ...)"
 #
 # Design Rules:
@@ -72,6 +73,94 @@ function ack_trigger_comment {
         return 0
     fi
     echo "::notice title=trigger-ack::Added eyes reaction on comment ${comment_id}"
+    return 0
+}
+
+#######################################
+# ack_gathered_comments: Add eyes reactions for each gathered comment
+#
+# Globals:
+#   ACK_COMMENTS_JSON - JSON array of {comment_id, source}
+#   REPOSITORY - owner/name
+#   GITHUB_TOKEN / GH_TOKEN - Token for gh
+#   GITHUB_EVENT_NAME - Fallback source when entry omits source
+#   TRIGGER_COMMENT_ID - Fallback when ACK_COMMENTS_JSON is empty
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Warning annotations on failure
+#
+# Returns:
+#   0 always (warnings only)
+#
+# Usage:
+#   ACK_COMMENTS_JSON='[{"comment_id":1,"source":"issue_comment"}]' ack_gathered_comments
+#
+#######################################
+function ack_gathered_comments {
+    local repository="${REPOSITORY:-}"
+    local specs="${ACK_COMMENTS_JSON:-}"
+    local item comment_id source endpoint
+    local -a ids=()
+
+    if [[ -z ${repository} ]]; then
+        return 0
+    fi
+    if ! command -v gh > /dev/null 2>&1; then
+        echo "::warning::gh CLI is required for trigger ACK"
+        return 0
+    fi
+    if ! command -v jq > /dev/null 2>&1; then
+        echo "::warning::jq is required for gathered comment ACK"
+        return 0
+    fi
+
+    if [[ -z ${specs} || ${specs} == "[]" ]]; then
+        ack_trigger_comment
+        return 0
+    fi
+
+    if ! jq -e 'type == "array"' > /dev/null 2>&1 <<< "${specs}"; then
+        echo "::warning::ACK_COMMENTS_JSON must be a JSON array"
+        ack_trigger_comment
+        return 0
+    fi
+
+    while IFS= read -r item; do
+        [[ -z ${item} || ${item} == "null" ]] && continue
+        comment_id="$(jq -r 'if .comment_id then (.comment_id | tostring) else empty end' <<< "${item}")"
+        source="$(jq -r '.source // empty' <<< "${item}")"
+        if [[ -z ${comment_id} ]]; then
+            continue
+        fi
+        if [[ -z ${source} ]]; then
+            source="${GITHUB_EVENT_NAME:-}"
+        fi
+        case "${source}" in
+            issue_comment)
+                endpoint="repos/${repository}/issues/comments/${comment_id}/reactions"
+                ;;
+            pull_request_review_comment)
+                endpoint="repos/${repository}/pulls/comments/${comment_id}/reactions"
+                ;;
+            *)
+                echo "::warning::Skipping ACK for comment ${comment_id} (unknown source: ${source})"
+                continue
+                ;;
+        esac
+        if gh api --method POST "${endpoint}" -f content='eyes' > /dev/null 2>&1; then
+            echo "::notice title=trigger-ack::Added eyes reaction on comment ${comment_id}"
+            ids+=("${comment_id}")
+        else
+            echo "::warning::Failed to ACK comment ${comment_id} (${source})"
+        fi
+    done < <(jq -c '.[]?' <<< "${specs}")
+
+    if [[ ${#ids[@]} -eq 0 ]]; then
+        ack_trigger_comment
+    fi
     return 0
 }
 
