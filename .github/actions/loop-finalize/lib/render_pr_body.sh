@@ -55,8 +55,8 @@ VERIFICATION_MAX_CHARS="${VERIFICATION_MAX_CHARS:-2000}"
 #######################################
 _LOOP_CREATED_BY_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
 # shellcheck source=../../lib/loop/created_by.sh
+# shellcheck disable=SC1091
 source "${_LOOP_CREATED_BY_LIB}/created_by.sh"
-
 
 #######################################
 # redact_sensitive_text: Redact common secret patterns
@@ -628,8 +628,7 @@ function render_pr_body {
     render_automation_disclaimer
     section="$(render_created_by_line "${ENGINE}" "${USAGE_JSON}")"
     if [[ -n ${section} ]]; then
-        printf '%s
-' "${section}"
+        printf '%s\n' "${section}"
     fi
 }
 

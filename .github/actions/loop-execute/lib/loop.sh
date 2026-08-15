@@ -93,6 +93,51 @@ function parse_outcome_override_from_agent_output {
 }
 
 #######################################
+# promote_has_changes_after_attempt: Set HAS_CHANGES from this attempt only
+#
+# Description:
+#   Attempt 1 must not treat an already-ahead PR branch as new work.
+#   Attempt 2+ keeps branch-ahead promotion so verifier retries work.
+#
+# Globals:
+#   BASE_BRANCH - Integration branch name (read)
+#   HAS_CHANGES - Product-change flag (write)
+#   WORKTREE_PATH - Isolated git worktree (read)
+#
+# Arguments:
+#   $1 - Attempt number (1-based)
+#   $2 - HEAD SHA recorded before the implementer
+#   $3 - true when commit_worktree_if_needed created a commit
+#
+# Outputs:
+#   Warning when attempt 2+ promotes from branch-ahead files
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function promote_has_changes_after_attempt {
+    local attempt="$1"
+    local pre_head="$2"
+    local attempt_committed="$3"
+    local post_head branch_ahead_files
+
+    post_head="$(git -C "${WORKTREE_PATH}" rev-parse HEAD)"
+    if [[ ${attempt_committed} == "true" || ${post_head} != "${pre_head}" ]]; then
+        HAS_CHANGES="true"
+        return 0
+    fi
+    if [[ ${attempt} -gt 1 ]]; then
+        branch_ahead_files="$(list_non_loop_branch_files "${WORKTREE_PATH}" "${BASE_BRANCH}")"
+        if [[ -n ${branch_ahead_files} ]]; then
+            HAS_CHANGES="true"
+            echo "Worktree is clean; ${BASE_BRANCH}...HEAD still has product files — running verifier"
+        fi
+    fi
+    return 0
+}
+
+#######################################
 # write_loop_outputs: Write step outputs to GITHUB_OUTPUT
 #
 # Globals:
@@ -170,7 +215,7 @@ function write_loop_outputs {
 #
 #######################################
 function run_bounded_loop {
-    local attempt_dir agent_prompt attempt_committed branch_ahead_files
+    local attempt_dir agent_prompt attempt_committed branch_ahead_files pre_head
 
     while [[ ${ATTEMPT} -lt ${AGENT_LOOP_MAX_ATTEMPTS} ]]; do
         ATTEMPT=$((ATTEMPT + 1))
@@ -205,8 +250,18 @@ function run_bounded_loop {
         export PROMPT MAX_TURNS MODEL WORKING_DIRECTORY
 
         echo "Running implementer agent (fresh session)..."
+        pre_head="$(git -C "${WORKTREE_PATH}" rev-parse HEAD)"
         if ! run_agent_capture "${attempt_dir}/agent-output.txt" "true"; then
             echo "::warning::Implementer agent exited non-zero on attempt ${ATTEMPT}"
+        fi
+
+        if ! harvest_workspace_into_worktree; then
+            echo "::error::Failed to harvest implementer edits from GITHUB_WORKSPACE into worktree"
+            VERDICT="REJECT"
+            REASON="Failed to harvest implementer edits from GITHUB_WORKSPACE into worktree"
+            echo "Verdict: ${VERDICT} — ${REASON}"
+            echo "::endgroup::"
+            continue
         fi
 
         if commit_worktree_if_needed "${COMMIT_MESSAGE} (attempt ${ATTEMPT})"; then
@@ -236,13 +291,7 @@ function run_bounded_loop {
             echo "::warning::Attempt ${ATTEMPT} produced no file changes; verifier will review the same diff as the previous attempt"
         fi
 
-        if [[ ${HAS_CHANGES} != "true" ]]; then
-            branch_ahead_files="$(list_non_loop_branch_files "${WORKTREE_PATH}" "${BASE_BRANCH}")"
-            if [[ -n ${branch_ahead_files} ]]; then
-                HAS_CHANGES="true"
-                echo "Worktree is clean; ${BASE_BRANCH}...HEAD still has product files — running verifier"
-            fi
-        fi
+        promote_has_changes_after_attempt "${ATTEMPT}" "${pre_head}" "${attempt_committed}"
 
         if [[ ${HAS_CHANGES} != "true" ]]; then
             if [[ -f ${attempt_dir}/agent-output.txt ]] \
