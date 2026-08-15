@@ -491,7 +491,7 @@ function build_result_json {
         comment_line_json="$(json_number "${comment_line}")"
     fi
 
-    json_object --skip-empty \
+    json_object \
         pr_number "${PR_NUMBER}" \
         mention "${mention}" \
         comment_body "${body}" \

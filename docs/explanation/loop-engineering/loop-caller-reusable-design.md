@@ -1,20 +1,37 @@
-loop-caller-reusable-design.md 415L
 # Loop Caller Reusable Workflow Design
+
 Extract shared `detect` → `execute` → `record-skip` job graph from `on-loop-*.yaml` into a single reusable workflow (`ci-loop-caller.yaml`). Thin callers pass loop-specific configuration via `with:` — the same pattern as `on-ci-push-*.yaml` and `on-cd-*.yaml`.
-... [lean-ctx: omitted 2 lines]
+
+**Status:** Implemented  
+**Scope:** GitHub Actions workflow structure for loop callers. Domain detect logic and platform target model are unchanged.  
 **Supersedes (partially):** caller-level `env:` blocks (see [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md)).
+
 ## Problem
+
 Each `on-loop-<name>.yaml` previously duplicated ~150 lines of identical job wiring (resolved by `ci-loop-caller.yaml`; see [Implementation checklist](#implementation-checklist)).
-... [lean-ctx: omitted 5 lines]
+
+| Job         | Actions / reusable called                          |
+| ----------- | -------------------------------------------------- |
+| detect      | `loop-detect`                                      |
+| execute     | `ci-loop-agent.yaml` (matrix over `target_matrix`) |
+| record-skip | `loop-run-log`                                     |
+
 Loop-specific values (budget, allowlist, verifier rubric, detect script path) differ per file. Because `workflow_call` does not accept a shared job graph without duplication, configuration was placed in workflow-level `env:` and mapped into action `with:` inside each caller.
+
 That `env:` pattern was a **workaround for copied jobs**, not a platform requirement. Other callers in this repository (`on-ci-push-markdown.yaml`, `on-ci-push-shell-script.yaml`, `on-cd-mkdocs.yaml`) already use **thin `on-*` + `with:` on a reusable workflow** with no `env:` block.
+
 ## Goal
+
 | Objective           | Detail                                                                                |
-... [lean-ctx: omitted 3 lines]
+| ------------------- | ------------------------------------------------------------------------------------- |
+| Single job graph    | One `ci-loop-caller.yaml` owns `detect`, `execute`, `record-skip`                     |
+| Thin callers        | Each `on-loop-<name>.yaml`: `on:`, `concurrency`, `permissions`, one job with `with:` |
 | No caller `env:`    | Configuration via `ci-loop-caller` `inputs` and caller `with:` literals               |
 | Preserve invariants | Matrix fan-out, finalize inside `ci-loop-agent`, budget, shared workflow concurrency  |
 | Extensibility       | New loops add caller `with:` + optional inputs; reusable jobs stay stable             |
+
 ## Target Architecture
+
 ```text
 on-loop-changelog.yaml          on-loop-ci-sweeper.yaml
   on: schedule                     on: workflow_run (+ workflow_dispatch)
@@ -35,26 +52,36 @@ on-loop-changelog.yaml          on-loop-ci-sweeper.yaml
                         ci-loop-agent.yaml
                           agent-l* + finalize-l* (inside same reusable)
 ```
+
 ### File Responsibilities
+
 | File                     | Role                                                                                |
-... [lean-ctx: omitted 1 lines]
+| ------------------------ | ----------------------------------------------------------------------------------- |
 | `on-loop-<name>.yaml`    | Triggers, workflow identity, concurrency group, permissions, loop config in `with:` |
-... [lean-ctx: omitted 1 lines]
+| `ci-loop-caller.yaml`    | Shared detect / matrix execute / record-skip orchestration                          |
 | `ci-loop-agent.yaml`     | L1/L2/L3 agent execution + finalize (unchanged)                                     |
 | `.github/actions/loop-*` | Phase implementations (unchanged)                                                   |
+
 ## Design Invariants (Must Not Break)
+
 These constraints come from [Loop Caller Workflows Design](loop-caller-workflows-design.md) and [Multi-Branch Loops Design](multi-branch-loops-design.md). The refactor must preserve them.
-... [lean-ctx: omitted 2 lines]
+
+| Invariant                           | Rationale                                                                                                                                                                                                                    |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Separate `on-loop-*` per loop**   | Independent cron, workflow name, concurrency; CI sweeper `workflow_run.workflows` lists repair targets only                                                                                                                  |
 | **Finalize inside `ci-loop-agent`** | Reusable-workflow matrix collapses outputs across cells; finalize must pair with execute in the same workflow instance                                                                                                       |
-... [lean-ctx: omitted 1 lines]
+| **Single detect per run**           | Domain `detect_script` invoked only by `loop-detect`; no second `run:` detect in caller                                                                                                                                      |
 | **`target_matrix` handoff**         | `detect` outputs slim JSON array + `handoff_artifact_name`; large `result` / `verifier_context` in loop-handoff artifact; `execute` matrix uses `fromJson(needs.detect.outputs.target_matrix)` and resolves by `handoff_key` |
-... [lean-ctx: omitted 2 lines]
+| **Shared workflow concurrency**     | `on-loop-*.yaml` use `loop-state-<branch_state>` with `cancel-in-progress: false` and `queue: max` so detect runs on fresh state before execute                                                                              |
+| **Budget / circuit breaker**        | `record-skip` when `should_run == false` and `skip_reason` is `budget` or `circuit_breaker`                                                                                                                                  |
 | **`target_budget` deferral**        | When fan-out cap defers targets, `should_run` stays `true` and execute runs; `skip_reason=target_budget` is informational only — not recorded by `record-skip` (by design)                                                   |
 | **State push branch**               | `.loop/*` run-log/budget persistence uses `branch_state`. L2 `open_pr` loops use merge-gated `pending` on `branch_state` and `on-loop-state-promote`.                                                                        |
-... [lean-ctx: omitted 1 lines]
+| **Alphabetical keys**               | `inputs`, `with`, `env` (inside reusable jobs), `permissions` keys sorted A→Z                                                                                                                                                |
+
 ## Thin Caller Pattern
+
 Follow `on-ci-push-shell-script.yaml`:
+
 ```yaml
 name: on-loop-changelog
 
@@ -114,135 +141,276 @@ jobs:
       BOT_APP_PRIVATE_KEY: ${{ secrets.MAINTENANCE_BOT_APP_PRIVATE_KEY }}
       # GH_TOKEN: ${{ secrets.SOME_PAT }}   # optional override; omit to use App → job GITHUB_TOKEN
 ```
-... [lean-ctx: omitted 2 lines]
+
+**No workflow-level `env:` block.** Credentials use `secrets:` on the `loop` job (see [Loop Caller Inputs Reference — Credentials](workflows/loop-caller-inputs-reference.md#credentials-via-secrets)).
+
+Cron and `workflow_dispatch` runs have no `github.event.inputs` — fixed literals in `with:` are correct (same as `on-cd-mkdocs.yaml` `pip_packages`).
+
 ### `workflow_run` trigger (ci-sweeper)
+
 Canonical example: [Loop Caller Inputs Reference — Event keys](workflows/loop-caller-inputs-reference.md#ci-sweeper-ci-sweeper) (`detect_domain_env_json` with `CI_SWEEPER_*` uppercase keys).
+
 Enable `workflow_run` on the caller only; reusable workflow stays trigger-agnostic.
+
 ## `ci-loop-caller.yaml` Specification
+
 ### Jobs
+
 | Job           | `needs`  | `if`                                                                 | Calls                         |
-... [lean-ctx: omitted 2 lines]
+| ------------- | -------- | -------------------------------------------------------------------- | ----------------------------- |
+| `detect`      | —        | always                                                               | `loop-detect`                 |
 | `execute`     | `detect` | `needs.detect.outputs.should_run == 'true'`                          | `ci-loop-agent.yaml` (matrix) |
 | `record-skip` | `detect` | success + `should_run == false` + skip reason budget/circuit_breaker | `loop-run-log`                |
+
 Caller workflows set workflow-level concurrency (`loop-state-main`); `ci-loop-caller` does not add job-level concurrency on `execute`.
+
 ### Input Groups
+
 Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped on inputs where the name is already scoped to `ci-loop-caller` (e.g. `loop_name` not `LOOP_NAME`).
+
 #### Agent and engine
+
 | Input                         | Type   | Required | Default         | Maps to                                        |
 | ----------------------------- | ------ | -------- | --------------- | ---------------------------------------------- |
 | `agent_implementer_max_turns` | number | yes      | —               | `loop-detect`                                  |
 | `agent_implementer_model`     | string | yes      | —               | `loop-detect`                                  |
-... [lean-ctx: omitted 1 lines]
+| `agent_loop_max_attempts`     | number | yes      | —               | `loop-detect`                                  |
 | `agent_verifier_criteria`     | string | yes      | —               | `loop-detect` (multiline markdown)             |
-... [lean-ctx: omitted 5 lines]
+| `agent_verifier_max_turns`    | number | yes      | —               | `loop-detect`                                  |
+| `agent_verifier_model`        | string | yes      | —               | `loop-detect`                                  |
+| `engine`                      | string | yes      | —               | `loop-detect` / `ci-loop-agent`                |
+| `level`                       | string | no       | `L2`            | `loop-detect`                                  |
+| `skill_name`                  | string | yes      | —               | `loop-detect`                                  |
 | `verifier_skill_name`         | string | no       | `loop-verifier` | `ci-loop-agent` → `loop-execute` checker skill |
+
 #### Platform (branch, budget, finalize)
+
 | Input                       | Type    | Required | Default                    | Maps to                                                 |
 | --------------------------- | ------- | -------- | -------------------------- | ------------------------------------------------------- |
-... [lean-ctx: omitted 2 lines]
+| `allowlist`                 | string  | yes      | —                          | `loop-detect` → execute                                 |
+| `branch_match`              | string  | no       | `""`                       | `loop-detect` (`loop_integration_branches`)             |
 | `branch_match_mode`         | string  | no       | `glob`                     | `loop-detect` (`loop_branch_match`)                     |
 | `branch_state`              | string  | yes      | —                          | `loop-detect` (`base_branch`, `loop_state_push_branch`) |
-... [lean-ctx: omitted 4 lines]
+| `budget_max_runs_per_day`   | number  | no       | omitted                    | `loop-detect`                                           |
+| `budget_max_tokens_per_day` | number  | no       | omitted                    | `loop-detect`                                           |
+| `denylist`                  | string  | no       | `""`                       | `ci-loop-agent` execute only                            |
+| `detect_script`             | string  | yes      | —                          | `loop-detect`                                           |
 | `delivery`                  | string  | no       | `open_pr`                  | `loop-detect`                                           |
 | `may_edit`                  | boolean | yes      | —                          | `loop-detect` → `## Constraints`                        |
 | `write_target`              | string  | yes      | —                          | `loop-detect` → `## Constraints`                        |
-... [lean-ctx: omitted 5 lines]
+| `infer_files_pattern`       | string  | no       | `""`                       | detect → execute                                        |
+| `loop_name`                 | string  | yes      | —                          | detect, execute, record-skip, concurrency group         |
+| `max_targets_per_schedule`  | number  | no       | `3`                        | `loop-detect`                                           |
+| `no_changes_verdict`        | string  | no       | `REJECT`                   | detect → execute                                        |
+| `pr_body`                   | string  | no       | `""`                       | detect → execute finalize                               |
 | `pr_exclude`                | string  | no       | `fork,draft,label:no-loop` | `loop-detect`                                           |
-... [lean-ctx: omitted 3 lines]
+| `pr_include_bots`           | string  | no       | `""`                       | `loop-detect`                                           |
+| `pr_title`                  | string  | no       | `""`                       | detect → execute                                        |
+| `prompt_instructions`       | string  | no       | `""`                       | `loop-detect`                                           |
 | `pr_enabled`                | boolean | no       | `false`                    | `loop-detect` (`loop_pr_enabled`)                       |
-... [lean-ctx: omitted 1 lines]
+| `state_file`                | string  | no       | `""`                       | `loop-detect`                                           |
 | _(token via secrets)_       | —       | —        | —                          | Resolve in-job: App → `GH_TOKEN` → job `GITHUB_TOKEN`   |
+
 #### Domain detect environment (`detect_domain_env_json`)
+
 | Input                    | Required | Default | Maps to                                                  |
-... [lean-ctx: omitted 2 lines]
+| ------------------------ | -------- | ------- | -------------------------------------------------------- |
+| `detect_domain_env_json` | no       | `{}`    | Detect job step `env` (export step before `loop-detect`) |
+
 **Decision:** `detect_domain_env_json` only — no per-domain top-level inputs (e.g. `changelog_file`). Document JSON keys in [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md).
-... [lean-ctx: omitted 1 lines]
+
+Detect scripts read domain variables from the step environment. Caller passes:
+
 ```yaml
 detect_domain_env_json: >-
   {"CHANGELOG_FILE":"CHANGELOG.md","CHANGELOG_MERGE_COMMITS":"false"}
 ```
+
 Reusable `detect` job runs an export step before `loop-detect` (validates JSON object type, rejects newline values, then appends to `GITHUB_ENV`). See `.github/workflows/ci-loop-caller.yaml` — step `Export Detect Domain Env`.
-... [lean-ctx: omitted 1 lines]
+
+Empty object `{}` is valid for loops with no domain env.
+
 Export step must reject values containing newlines; prefer `jq` with `--arg` per key when values may contain `=` or special characters (see Risk Register).
+
 #### Optional `loop-detect` passthrough
+
 | Input          | Required | Default                    | Maps to `loop-detect` input |
-... [lean-ctx: omitted 2 lines]
+| -------------- | -------- | -------------------------- | --------------------------- |
+| `branch_match` | no       | `glob`                     | `loop_branch_match`         |
 | `budget_file`  | no       | `.loop/loop-budget.json`   | `budget_file`               |
 | `priority`     | no       | `integration,pull_request` | `loop_priority`             |
-... [lean-ctx: omitted 2 lines]
+| `run_log_file` | no       | `.loop/loop-run-log.md`    | `run_log_file`              |
+| `state_file`   | no       | `""`                       | `state_file`                |
+
 Full mapping table: [Loop Caller Inputs Reference — `loop-detect` mapping](workflows/loop-caller-inputs-reference.md#loop-detect-input-mapping).
+
 #### Execute-only (optional)
+
 | Input                       | Required | Default | Used by                                      |
-... [lean-ctx: omitted 1 lines]
+| --------------------------- | -------- | ------- | -------------------------------------------- |
 | `additional_commit_paths`   | no       | `""`    | `ci-loop-agent` finalize (ci-sweeper ledger) |
 | `domain_persistence_script` | no       | `""`    | `ci-loop-agent` finalize                     |
+
 #### Detect permissions
+
 All branch/PR loops use **`ci-loop-caller.yaml`**. The reusable `detect` job declares:
-... [lean-ctx: omitted 2 lines]
-| `detect`      | `actions: write`, `contents: read`, `pull-requests: read` |
+
+| Job           | Permissions                                                                      |
+| ------------- | -------------------------------------------------------------------------------- |
+| `detect`      | `actions: write`, `contents: read`, `pull-requests: read`                        |
 | `ack-trigger` | `issues: write`, `pull-requests: write` when `ack_trigger_comment` (pr-revise only) |
-... [lean-ctx: omitted 2 lines]
+| `execute`     | execute baseline (`actions: read`, `contents: write`, `pull-requests: write`, …) |
+| `record-skip` | `contents: write`, `pull-requests: write`                                        |
+
 Thin caller workflow `permissions` = **execute baseline** plus **`actions: write`** so the reusable `detect` job can upload handoff artifacts. Reusable workflows cannot escalate beyond the caller grant.
+
 PR enumeration (`gh pr list`), open PR heads (`pr_enabled`), and Actions API scans (`gh run list` in ci-sweeper) all use the same detect token scope today. Split reusable profiles (`ci-loop-caller-pr-scan`, `ci-loop-caller-full-github`) were removed as duplicate YAML.
+
 Template for PR-watch loops: [`example/on-loop-pr-scan.yaml`](https://github.com/y-miyazaki/config/blob/main/.github/workflows/example/on-loop-pr-scan.yaml) (copy only; not scheduled in this repo).
+
 #### ci-monitor profile (not implemented)
+
 Reserved for a future loop that needs **`actions: read` only** on detect (no `actions: write`). Would require a separate reusable workflow if that least-privilege split becomes necessary.
+
 ### Credentials (via `secrets:`)
+
 | Secret (callee)       | Required | Role                                                                                          |
-... [lean-ctx: omitted 2 lines]
+| --------------------- | -------- | --------------------------------------------------------------------------------------------- |
+| `AGENT_TOKEN`         | yes      | Engine API key. Mapped internally per `engine` input.                                         |
 | `BOT_APP_CLIENT_ID`   | no       | GitHub App client ID for ruleset-bypass / elevated API (preferred when configured).           |
-... [lean-ctx: omitted 1 lines]
+| `BOT_APP_PRIVATE_KEY` | no       | GitHub App private key paired with `BOT_APP_CLIENT_ID`.                                       |
 | `GH_TOKEN`            | no       | Optional explicit token override for resolution. Empty → job `GITHUB_TOKEN` (`github.token`). |
+
 Caller maps repository secrets via explicit `secrets:` (e.g. `BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}`). See [Loop Caller Inputs Reference — Credentials](workflows/loop-caller-inputs-reference.md#credentials-via-secrets).
-... [lean-ctx: omitted 1 lines]
+
+Do **not** name a `workflow_call` secret `GITHUB_TOKEN` or `github_token` — those collide with system-reserved secret names and prevent the reusable workflow from loading.
+
 ### GitHub token resolution
+
 Each job that talks to GitHub (detect, record-skip, agent-l1/l2, finalize) runs `loop-resolve-push-token` **inside that job** and uses only the same-job step output.
-... [lean-ctx: omitted 1 lines]
+
+**Precedence** (see `.github/actions/loop-resolve-push-token`):
+
 1. GitHub App installation token (when `BOT_APP_*` are set and mint succeeds)
-... [lean-ctx: omitted 5 lines]
+2. Optional `secrets.GH_TOKEN`
+3. Job automatic `GITHUB_TOKEN` / `github.token`
+
+**Why not a shared `prepare` job that fans out a resolved token**
+
+| Constraint                                                     | Implication                                                                                     |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | Masked / secret values cannot cross jobs via `needs.*.outputs` | After `::add-mask::` (or App-token mint masking), job outputs are redacted/empty for dependents |
-... [lean-ctx: omitted 2 lines]
+| App tokens are masked at mint time                             | A one-shot prepare → `outputs.github_token` → later jobs cannot receive the real value          |
+| Official cross-job secret pattern                              | External secret store + handle — not used here                                                  |
+
 So **credentials** (`BOT_APP_*`, optional `GH_TOKEN`) are what we share across jobs/workflows; the **resolved token string** is minted per job. Commonization is the resolve **action**, not a single minted value.
+
 `ci-loop-caller` / `ci-loop-caller-entity` pass `BOT_APP_*` + `GH_TOKEN` into `ci-loop-agent`; the agent resolves again in `agent-l1` / `agent-l2` / `finalize`.
-... [lean-ctx: omitted 1 lines]
+
+**Fallback and `permissions:`**
+
 For the automatic job `GITHUB_TOKEN`, effective scopes **are** that job's `permissions:` (intersected with repository/org workflow defaults). It is not a separate full-power token that the job then “limits.”
-... [lean-ctx: omitted 3 lines]
+
+| Job                     | Typical fallback need      | Job `permissions` (minimum for fallback)                                   |
+| ----------------------- | -------------------------- | -------------------------------------------------------------------------- |
+| `detect`                | PR / issue / Actions reads | read scopes (`contents` / `pull-requests` or `issues` as profile requires) |
 | `record-skip`           | push run-log / state PR    | `contents: write`, `pull-requests: write`                                  |
 | `agent-l2` / `finalize` | push, PR create/comment    | `contents: write`, `pull-requests: write`                                  |
-... [lean-ctx: omitted 5 lines]
+| `agent-l1`              | issue side effects         | `issues: write` (+ `contents: read`)                                       |
+
+App tokens and explicit PATs carry **their own** scopes; receiving-job `permissions:` do not reduce those passed tokens.
+
+**Naming**
+
+| Layer                  | Name           | Notes                                          |
+| ---------------------- | -------------- | ---------------------------------------------- |
 | `workflow_call` secret | `GH_TOKEN`     | Avoid reserved `GITHUB_TOKEN` / `github_token` |
 | Composite action I/O   | `github_token` | `loop-*` actions                               |
-... [lean-ctx: omitted 1 lines]
+| Shell / `gh` CLI env   | `GITHUB_TOKEN` | `gh` accepts `GITHUB_TOKEN` (and `GH_TOKEN`)   |
+
 ### Nesting
+
 ```text
 on-loop-*  →  ci-loop-caller  →  ci-loop-agent
 ```
-... [lean-ctx: omitted 1 lines]
+
+Two levels of reusable workflows — well within GitHub Actions nesting limits.
+
 ## Extensibility: Adding a New Loop
+
 1. Add `.apm/packages/<domain>/<name>/` (skill + `scripts/detect_*.sh`).
-... [lean-ctx: omitted 2 lines]
+2. Add `docs/explanation/loop-engineering/workflows/loop-<name>-workflow-design.md`.
+3. Copy thin caller from `on-loop-changelog.yaml`; set `on:`, `with:`, workflow `name:`.
 4. For CI sweeper callers: list only repair-target workflows under `workflow_run.workflows` (omit `on-loop-*` / `ci-loop-*`).
-... [lean-ctx: omitted 2 lines]
+5. Add mkdocs nav entry under **Loop Workflows**.
+6. **Do not** copy `detect` / `execute` / `record-skip` jobs — only `with:` values change.
+
 New domain env keys go into `detect_domain_env_json` without editing reusable job steps (when using approach B).
+
 ## Rejected Alternatives
+
 | Alternative                                 | Why rejected                                                                                   |
-... [lean-ctx: omitted 1 lines]
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | Merge all loops into one `on-loop.yaml`     | Cannot have per-loop cron, workflow identity, or isolated concurrency/budget                   |
 | Caller workflow-level `env:`                | Unnecessary after reusable extraction; inconsistent with other `on-*` callers                  |
-... [lean-ctx: omitted 2 lines]
+| Composite action for full caller graph      | Cannot call `ci-loop-agent` reusable or define matrix over reusable workflows                  |
+| Separate finalize job in caller             | Matrix output pairing breaks across reusable workflow cells                                    |
 | Config file only (no `with:`)               | Hides tunables from workflow YAML; harder to review in PRs; optional later as additive pattern |
-... [lean-ctx: omitted 1 lines]
+| Shared `prepare` job minting one token      | Masked App/secret tokens cannot fan out via job outputs; resolve per job instead               |
 | `workflow_call` secret named `GITHUB_TOKEN` | Reserved name; reusable workflow fails to load                                                 |
+
 ## Implementation Checklist
+
 ### 1. Create reusable workflow
+
 - [x] Add `.github/workflows/ci-loop-caller.yaml` with `workflow_call` inputs (alphabetical).
-... [lean-ctx: omitted 2 lines]
+- [x] Implement `detect`, `execute` (matrix → `ci-loop-agent`), `record-skip` jobs.
+- [x] Add `detect_domain_env_json` export step (or explicit domain inputs).
 - [x] Mirror execute `with:` passthrough from current callers (including `auto_merge` guard).
-... [lean-ctx: omitted 1 lines]
+- [x] Add `example/on-loop-*.yaml` mirrors.
+
 ### 2. Thin existing callers
+
 - [x] Refactor `on-loop-changelog.yaml` to single `loop` job + `with:`.
 - [x] Refactor `on-loop-docs-updater.yaml`.
 - [x] Refactor `on-loop-ci-sweeper.yaml` (`ci-loop-caller-full-github.yaml` profile, execute-only inputs).
-... [lean-ctx: omitted 2 lines]
+- [x] Update `.github/workflows/example/on-loop-*.yaml` mirrors.
+- [x] Remove workflow-level `env:` from all loop callers.
+
 ### 3. Documentation
-[… truncated at ~4149 of 4701 tokens — use ctx_read with lines= parameter to see specific sections]
+
+- [x] Add [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md) (specification; implementation pending).
+- [x] Update [Loop Caller Workflows Design](loop-caller-workflows-design.md) (planned refactor note, Phase 0 status).
+- [x] Remove legacy Loop Caller `env` Reference doc; link to inputs reference instead.
+- [x] Update per-loop workflow design docs (`Environment variables` → `Caller inputs`).
+- [x] Update [GitHub Workflows Design](../github-workflows-design.md) loop exception note.
+- [x] Register nav in `mkdocs.yml`.
+
+### 4. Validation
+
+- [x] `actionlint .github/workflows/ci-loop-caller.yaml .github/workflows/on-loop-*.yaml`
+- [x] `ghalint run`
+- [x] `zizmor .github/workflows/`
+
+### 5. Release maintainer (manual)
+
+- [ ] Bump remote pins in `ci-loop-caller.yaml` / `ci-loop-agent.yaml` to release SHA containing merge-gated `pending`, `pending_pr` detect blocking, and `loop-state-promote`
+- [ ] `workflow_dispatch` smoke per loop (optional)
+
+## Risk Register
+
+| Risk                                                   | Mitigation                                                                                                                                                              |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Long `with:` blocks in callers                         | Acceptable trade-off vs triple job duplication; per-loop design doc lists all keys                                                                                      |
+| `detect_domain_env_json` typos                         | Document keys per loop; detect script fails fast on missing required env; validate JSON in export step                                                                  |
+| Input drift between `loop-detect` and `ci-loop-caller` | Maintain mapping table in inputs reference; reusable maps `branch_match` → `loop_integration_branches`, `branch_state` → `base_branch` / `loop_state_push_branch`, etc. |
+| Reusable change affects all loops                      | CI workflow lint on every PR; thin callers keep blast radius visible in review                                                                                          |
+| Multiline `agent_verifier_criteria` in `with:`         | Supported by `workflow_call` string inputs; keep rubric in caller for readability                                                                                       |
+
+## References
+
+- [Loop Caller Workflows Design](loop-caller-workflows-design.md) — current job graph and invariants
+- [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md) — caller `with:` keys
+- [GitHub Workflows Design](../github-workflows-design.md) — `on-*` / `ci-*` naming and caller conventions
+- [Multi-Branch Loops Design](multi-branch-loops-design.md) — platform `LOOP_*` semantics
+- [Loop Engineering Design](loop-engineering-design.md) — L1/L2/L3 and finalize behavior
