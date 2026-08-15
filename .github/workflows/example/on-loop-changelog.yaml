@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   loop:
-    uses: y-miyazaki/config/.github/workflows/ci-loop-caller.yaml@283010e34a83aa9114df894a1773839474ebb152 # v1.8.88
+    uses: y-miyazaki/config/.github/workflows/ci-loop-caller.yaml@2ef95eb70a59f08b399e30bf7e5333dae83faabf # v1.8.88
     with:
       agent_implementer_instructions: |
         Update the target changelog file using Keep a Changelog section names.
