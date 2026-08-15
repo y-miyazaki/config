@@ -434,7 +434,6 @@ function validate_port_availability {
     return 1
 }
 
-
 #######################################
 # validate_script_executable: Validate script executable permissions
 #

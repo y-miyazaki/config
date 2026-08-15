@@ -59,8 +59,8 @@ Per-skill required elements and examples live in each skill's `references/common
 | `## Failure context`  | `detect_result_json.failures[]` (ci-sweeper) — Workflow/Job/Run as Markdown links when URLs are present                                                           |
 | `## Changes`          | git diff paths — **omitted** when agent Summary contains `### Changes` or `### Fixes Applied`; paths link to `blob/{branch}` when repository and branch are known |
 | `## Run Metadata`     | Level, Target, Skip reason table                                                                                                                                  |
-| Created By footer     | One-line `Created By {engine} {model} In/Out: {in}/{out}` from engine + `usage_json` (omit when unavailable)                                                       |
 | Automation disclaimer | `render_automation_disclaimer()`                                                                                                                                  |
+| Created By footer     | One-line `Created By {engine} {model} In/Out: {in}/{out}` from engine + `usage_json` (omit when unavailable)                                                       |
 
 Finalize **passthrough** agent `## Overview`, `## Summary`, and `## Verification` with redact/truncate only — no table regeneration.
 
@@ -93,7 +93,11 @@ Architecture Proposal / Skipped / Watch / …
 
 ## Run Metadata
 
-<loop PR only — finalize-owned>
+<loop PR only — finalize-owned Level / Target / Skip reason table>
+
+---
+
+*This PR was created by a loop automation. Review before merging.*
 
 Created By <engine> <model> In/Out: <in>/<out>
 ```

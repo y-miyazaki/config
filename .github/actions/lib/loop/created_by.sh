@@ -12,7 +12,9 @@
 #
 # Design Rules:
 #   - Omit the line entirely when engine, model, and tokens are all absent
-#   - Compact token counts (K/M) match statusline format_compact_tokens
+#   - Numeric K/M compaction matches statusline format_compact_tokens; statusline
+#     prints em dash for empty/null input while this helper returns exit 1 (callers
+#     substitute em dash only in In/Out slots)
 #   - usage_json may be empty or invalid; treat as no measured usage
 #######################################
 
