@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-08-15T18:40:19.024555+00:00'
+generated_at: '2026-08-15T18:57:41.421353+00:00'
 apm_version: 0.28.0
 dependencies:
 - repo_url: _local/common
@@ -12243,7 +12243,7 @@ mcp_configs:
     transport: stdio
     args:
     - -y
-    - lean-ctx-bin@3.9.17
+    - lean-ctx-bin@3.9.18
     registry: false
     command: npx
 mcp_target_servers:

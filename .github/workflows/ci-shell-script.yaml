@@ -157,6 +157,34 @@ jobs:
           fi
           bats --version
 
+      - name: Setup actionlint
+        if: steps.discover.outputs.has_bats == 'true'
+        uses: y-miyazaki/config/.github/actions/install-github-release@29b6b39fd05b90f7f1fda33f467679725235310e # v1.8.88
+        with:
+          binary: actionlint
+          checksum: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8 # pragma: allowlist secret
+          repo: rhysd/actionlint
+          version: "1.7.12"
+
+      - name: Setup ghalint
+        if: steps.discover.outputs.has_bats == 'true'
+        uses: y-miyazaki/config/.github/actions/install-github-release@29b6b39fd05b90f7f1fda33f467679725235310e # v1.8.88
+        with:
+          binary: ghalint
+          checksum: 98ee0e3330de7286f470d1e89c03ff7ce70d7a5998ba0f15969c400447be579c # pragma: allowlist secret
+          repo: suzuki-shunsuke/ghalint
+          version: "1.5.6"
+
+      - name: Setup zizmor
+        if: steps.discover.outputs.has_bats == 'true'
+        uses: y-miyazaki/config/.github/actions/install-github-release@29b6b39fd05b90f7f1fda33f467679725235310e # v1.8.88
+        with:
+          asset_pattern: zizmor-x86_64-unknown-linux-gnu.tar.gz
+          binary: zizmor
+          checksum: dd96df044a6e8538d5f423790f453bdd03d49e5b2bcc38214acc41a2f1297839 # pragma: allowlist secret
+          repo: zizmorcore/zizmor
+          version: "1.29.0"
+
       - name: Exec Bats tests
         if: steps.discover.outputs.has_bats == 'true'
         shell: bash

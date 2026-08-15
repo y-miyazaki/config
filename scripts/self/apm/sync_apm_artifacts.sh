@@ -286,13 +286,44 @@ function run_apm_audit_component {
 }
 
 #######################################
+# resolve_repo_root: Return the git repository root directory
+#######################################
+function resolve_repo_root {
+    local root
+
+    root="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel 2> /dev/null || true)"
+    if [[ -n "${root}" ]]; then
+        printf '%s' "${root}"
+        return 0
+    fi
+
+    cd "${SCRIPT_DIR}/../../.." && pwd
+}
+
+#######################################
+# ensure_apm_modules_local_permissions: Fix permissions on local APM modules when present
+#######################################
+function ensure_apm_modules_local_permissions {
+    local repo_root apm_modules_local
+
+    repo_root="$(resolve_repo_root)"
+    apm_modules_local="${repo_root}/apm_modules/_local"
+
+    if [[ ! -d "${apm_modules_local}" ]]; then
+        return 0
+    fi
+
+    echo "==> chmod +rwx -R ${apm_modules_local}"
+    chmod +rwx -R "${apm_modules_local}"
+}
+
+#######################################
 # main: Run selected sync components in dependency order
 #######################################
 function main {
     local component
 
-    echo "==> chmod +rwx -R /workspace/apm_modules/_local"
-    chmod +rwx -R /workspace/apm_modules/_local
+    ensure_apm_modules_local_permissions
 
     parse_arguments "$@"
 

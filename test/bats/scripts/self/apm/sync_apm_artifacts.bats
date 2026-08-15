@@ -52,3 +52,8 @@ setup() {
         "${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh"
     [ "$status" -eq 1 ]
 }
+
+@test "sync_apm_artifacts.sh does not hardcode /workspace" {
+    run grep -E '/workspace/apm_modules' "${REPO_ROOT}/scripts/self/apm/sync_apm_artifacts.sh"
+    [ "$status" -eq 1 ]
+}
