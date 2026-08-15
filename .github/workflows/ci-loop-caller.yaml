@@ -376,33 +376,69 @@ jobs:
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           github_token: ${{ secrets.GH_TOKEN }}
 
-      - name: Ack Trigger Comment
+      - name: Download Loop Handoff
+        if: needs.detect.outputs.handoff_artifact_name != ''
+        continue-on-error: true
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ needs.detect.outputs.handoff_artifact_name }}
+          path: ${{ runner.temp }}/loop-handoff
+
+      - name: Ack Gathered Comments
         continue-on-error: true
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           GITHUB_TOKEN: ${{ steps.resolve_github_token.outputs.github_token }}
+          HANDOFF_DIR: ${{ runner.temp }}/loop-handoff
           REPOSITORY: ${{ github.repository }}
           TRIGGER_COMMENT_ID: ${{ github.event.comment.id }}
         run: |
           set -euo pipefail
-          if [[ -z "${TRIGGER_COMMENT_ID}" || -z "${REPOSITORY}" ]]; then
-            exit 0
+          ack_one() {
+            local comment_id="$1"
+            local source="$2"
+            local endpoint
+            case "${source}" in
+              issue_comment)
+                endpoint="repos/${REPOSITORY}/issues/comments/${comment_id}/reactions"
+                ;;
+              pull_request_review_comment)
+                endpoint="repos/${REPOSITORY}/pulls/comments/${comment_id}/reactions"
+                ;;
+              *)
+                echo "::warning::Skipping ACK for comment ${comment_id} (unknown source: ${source})"
+                return 0
+                ;;
+            esac
+            if gh api --method POST "${endpoint}" -f content='eyes' >/dev/null; then
+              echo "::notice title=trigger-ack::Added eyes reaction on comment ${comment_id}"
+            else
+              echo "::warning::Failed to ACK comment ${comment_id} (${source})"
+            fi
+          }
+          acked=0
+          if [[ -d "${HANDOFF_DIR}/payloads" ]] && compgen -G "${HANDOFF_DIR}/payloads/*.json" >/dev/null; then
+            while IFS= read -r item; do
+              [[ -z "${item}" || "${item}" == "null" ]] && continue
+              cid="$(jq -r 'if .comment_id then (.comment_id | tostring) else empty end' <<< "${item}")"
+              src="$(jq -r '.source // empty' <<< "${item}")"
+              if [[ -z "${cid}" ]]; then
+                continue
+              fi
+              if [[ -z "${src}" ]]; then
+                src="${GITHUB_EVENT_NAME}"
+              fi
+              ack_one "${cid}" "${src}"
+              acked=$((acked + 1))
+            done < <(jq -sc '
+              [.[].result.result.comments // [] | .[]]
+              | map({comment_id, source})
+              | unique_by(.comment_id)
+              | .[]
+            ' "${HANDOFF_DIR}"/payloads/*.json)
           fi
-          case "${GITHUB_EVENT_NAME}" in
-            issue_comment)
-              endpoint="repos/${REPOSITORY}/issues/comments/${TRIGGER_COMMENT_ID}/reactions"
-              ;;
-            pull_request_review_comment)
-              endpoint="repos/${REPOSITORY}/pulls/comments/${TRIGGER_COMMENT_ID}/reactions"
-              ;;
-            *)
-              exit 0
-              ;;
-          esac
-          if gh api --method POST "${endpoint}" -f content='eyes' >/dev/null; then
-            echo "::notice title=trigger-ack::Added eyes reaction on comment ${TRIGGER_COMMENT_ID}"
-          else
-            echo "::warning::Failed to ACK trigger comment ${TRIGGER_COMMENT_ID}"
+          if [[ "${acked}" -eq 0 && -n "${TRIGGER_COMMENT_ID}" && -n "${REPOSITORY}" ]]; then
+            ack_one "${TRIGGER_COMMENT_ID}" "${GITHUB_EVENT_NAME}"
           fi
 
   execute:

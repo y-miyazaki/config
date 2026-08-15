@@ -75,14 +75,16 @@ jobs:
         ## Criteria for APPROVE
 
         ALL of the following must be true:
-        1. Feedback from the human mention comment was addressed (or explicitly deferred)
+        1. Every item in detect result.comments was addressed (or explicitly deferred); cite comment_id(s)
         2. Changes land on the PR head unless stacked open_pr was requested
         3. Bot comments were not acted on
+        4. The implementer did not ignore the comments array in favor of only result.comment_body when comments length > 1
 
         ## Criteria for REJECT
 
         ANY of the following triggers REJECT:
         - Acting without mention / on bot author
+        - Addressing only the webhook trigger while leaving other result.comments items unhandled
         - Unrelated drive-by refactors
       agent_verifier_max_turns: 3
       agent_verifier_model: composer-2.5
@@ -104,6 +106,7 @@ jobs:
       pr_enabled: false
       prompt_instructions: |
         Apply the human's feedback to the PR head.
+        When detect result.comments has multiple entries, address the full array in one session (not only result.comment_body).
         Comment webhooks require the configured @mention; explicit dispatch paths do not.
         Do not invent mention-less triggers on comment webhooks.
       skill_name: github-pr-revise

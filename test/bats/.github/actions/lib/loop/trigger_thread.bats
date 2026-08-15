@@ -10,6 +10,8 @@
 # - ack_trigger_comment posts eyes on issue_comment
 # - ack_trigger_comment posts eyes on pull_request_review_comment
 # - ack_trigger_comment skips dispatch events
+# - ack_gathered_comments ACKs each comment by source
+# - ack_gathered_comments falls back to trigger when empty
 # - reply_trigger_comment posts review comment replies
 # - reply_trigger_comment posts issue comment follow-up
 
@@ -124,3 +126,23 @@ MOCK
     [ "$status" -eq 0 ]
     grep -q "issues/42/comments" "${MOCK_BIN}/gh.log"
 }
+
+@test "ack_gathered_comments ACKs each comment by source" {
+    install_gh_mock 0
+    ACK_COMMENTS_JSON='[{"comment_id":11,"source":"issue_comment"},{"comment_id":22,"source":"pull_request_review_comment"}]'
+    run ack_gathered_comments
+    [ "$status" -eq 0 ]
+    grep -q "issues/comments/11/reactions" "${MOCK_BIN}/gh.log"
+    grep -q "pulls/comments/22/reactions" "${MOCK_BIN}/gh.log"
+}
+
+@test "ack_gathered_comments falls back to trigger when empty" {
+    install_gh_mock 0
+    ACK_COMMENTS_JSON='[]'
+    GITHUB_EVENT_NAME="issue_comment"
+    TRIGGER_COMMENT_ID="99"
+    run ack_gathered_comments
+    [ "$status" -eq 0 ]
+    grep -q "issues/comments/99/reactions" "${MOCK_BIN}/gh.log"
+}
+
