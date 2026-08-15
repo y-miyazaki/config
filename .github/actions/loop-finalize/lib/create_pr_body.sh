@@ -7,7 +7,7 @@
 #
 # Usage:
 #   PR_BODY=... DETECT_RESULT_JSON=... NOTIFY_CONTEXT_JSON=... \
-#   LEVEL=... SKIP_REASON=... TARGET_JSON=... \
+#   ENGINE=... LEVEL=... SKIP_REASON=... TARGET_JSON=... USAGE_JSON=... \
 #   bash lib/create_pr_body.sh
 #
 #   Large payloads: pass file paths as CLI arguments (avoids ARG_MAX / MAX_ARG_STRLEN):
@@ -37,11 +37,13 @@ export LC_ALL=C.UTF-8
 # Global variables
 #######################################
 DETECT_RESULT_JSON="${DETECT_RESULT_JSON:-}"
+ENGINE="${ENGINE:-}"
 LEVEL="${LEVEL:-}"
 NOTIFY_CONTEXT_JSON="${NOTIFY_CONTEXT_JSON:-}"
 PR_BODY="${PR_BODY:-}"
 SKIP_REASON="${SKIP_REASON:-}"
 TARGET_JSON="${TARGET_JSON:-}"
+USAGE_JSON="${USAGE_JSON:-}"
 
 _JSON_FILE_DETECT=""
 _JSON_FILE_NOTIFY=""
@@ -186,11 +188,13 @@ function slim_detect_json_for_pr_body {
 #
 # Globals:
 #   DETECT_RESULT_JSON - Detect JSON (optional)
+#   ENGINE - AI engine slug for Created By footer
 #   LEVEL - Footer level
 #   NOTIFY_CONTEXT_JSON - Notify context JSON (optional)
 #   PR_BODY - Caller static prefix
 #   SKIP_REASON - Footer skip reason
 #   TARGET_JSON - Target JSON with .key (optional)
+#   USAGE_JSON - Measured usage JSON for Created By footer
 #
 # Arguments:
 #   None
@@ -234,9 +238,11 @@ function create_pr_body {
     export AGENT_REPORT_OVERVIEW
     export AGENT_REPORT_SUMMARY
     export AGENT_REPORT_VERIFICATION
+    export ENGINE
     export LEVEL
     export TARGET_KEY
     export SKIP_REASON
+    export USAGE_JSON
 
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     bash "${script_dir}/render_pr_body.sh"

@@ -7,6 +7,7 @@
 # - create_pr_body renders prefix and footer from inline JSON
 # - create_pr_body reads large detect JSON from file and ignores commits[] bulk
 # - create_pr_body prefers BRANCH over target integration branch for blob links
+# - create_pr_body appends Created By from ENGINE and USAGE_JSON
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -19,6 +20,21 @@ setup() {
     bats_source_rel ".github/actions/loop-finalize/lib/create_pr_body.sh"
     PR_BODY_TMP="${BATS_TEST_TMPDIR}/create-pr-body"
     mkdir -p "${PR_BODY_TMP}"
+}
+
+@test "create_pr_body appends Created By from ENGINE and USAGE_JSON" {
+    PR_BODY=""
+    NOTIFY_CONTEXT_JSON='{"changed_files":[],"agent_report_overview":"","agent_report_summary":""}'
+    DETECT_RESULT_JSON='{"failures":[]}'
+    TARGET_JSON='{"key":"integration:main"}'
+    LEVEL="L2"
+    SKIP_REASON="none"
+    ENGINE="cursor"
+    USAGE_JSON='{"total_input_tokens":100000,"total_output_tokens":100000,"model":"Composer-2.5"}'
+
+    run create_pr_body
+    [ "$status" -eq 0 ]
+    [[ $output == *"Created By cursor Composer-2.5 In/Out: 100K/100K"* ]]
 }
 
 @test "create_pr_body renders prefix and footer from inline JSON" {

@@ -14,6 +14,7 @@
 # - build_comment_body shows Reason even when changed files exist
 # - build_comment_body redacts secrets in reject reason
 # - build_comment_body uses watch message when outcome is watch
+# - build_comment_body appends Created By when engine and usage set
 # - resolve_actor uses login when gh api user succeeds
 # - resolve_actor falls back when gh api user fails with error JSON on stdout
 # - redact_sensitive_text redacts bearer tokens
@@ -53,6 +54,14 @@ setup() {
 
 teardown() {
     rm -f "${GITHUB_OUTPUT:-}"
+}
+
+@test "build_comment_body appends Created By when engine and usage set" {
+    ENGINE="cursor"
+    USAGE_JSON='{"total_input_tokens":100000,"total_output_tokens":6000,"model":"Composer-2.5"}'
+    run build_comment_body "loop-bot"
+    [ "$status" -eq 0 ]
+    [[ $output == *"Created By cursor Composer-2.5 In/Out: 100K/6K"* ]]
 }
 
 @test "build_comment_body includes agent overview and summary from notify json" {

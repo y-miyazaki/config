@@ -34,9 +34,10 @@ export LC_ALL=C.UTF-8
 AGENT_REPORT_OVERVIEW="${AGENT_REPORT_OVERVIEW:-}"
 AGENT_REPORT_SUMMARY="${AGENT_REPORT_SUMMARY:-}"
 AGENT_REPORT_VERIFICATION="${AGENT_REPORT_VERIFICATION:-}"
+BLOB_REF="${BLOB_REF:-}"
 CHANGED_FILES_JSON="${CHANGED_FILES_JSON:-"[]"}"
 DETECT_RESULT_JSON="${DETECT_RESULT_JSON:-"{}"}"
-BLOB_REF="${BLOB_REF:-}"
+ENGINE="${ENGINE:-}"
 FAILURES_MAX="${FAILURES_MAX:-5}"
 GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-}"
 GITHUB_SERVER_URL="${GITHUB_SERVER_URL:-https://github.com}"
@@ -46,7 +47,16 @@ PR_BODY_PREFIX="${PR_BODY_PREFIX:-}"
 SKIP_REASON="${SKIP_REASON:-}"
 SUMMARY_MAX_CHARS="${SUMMARY_MAX_CHARS:-4000}"
 TARGET_KEY="${TARGET_KEY:-}"
+USAGE_JSON="${USAGE_JSON:-}"
 VERIFICATION_MAX_CHARS="${VERIFICATION_MAX_CHARS:-2000}"
+
+#######################################
+# Shared Created By footer (lib/loop/created_by.sh)
+#######################################
+_LOOP_CREATED_BY_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
+# shellcheck source=../../lib/loop/created_by.sh
+source "${_LOOP_CREATED_BY_LIB}/created_by.sh"
+
 
 #######################################
 # redact_sensitive_text: Redact common secret patterns
@@ -562,7 +572,7 @@ function render_automation_disclaimer {
 #
 # Description:
 #   Assemble prefix, Overview, Failure context, Summary, Changes, Run
-#   Metadata, and disclaimer in that order. Missing optional sections are skipped.
+#   Metadata, disclaimer, and optional Created By line in that order. Missing optional sections are skipped.
 #
 # Globals:
 #   AGENT_REPORT_OVERVIEW - Agent overview body text
@@ -570,10 +580,12 @@ function render_automation_disclaimer {
 #   AGENT_REPORT_VERIFICATION - Agent verification body text
 #   CHANGED_FILES_JSON - JSON string array of changed paths
 #   DETECT_RESULT_JSON - Detect JSON with failures array
+#   ENGINE - AI engine slug for Created By footer
 #   LEVEL - Run metadata level
 #   PR_BODY_PREFIX - Caller static prefix
 #   SKIP_REASON - Run metadata skip reason
 #   TARGET_KEY - Run metadata target key
+#   USAGE_JSON - Measured usage JSON for Created By footer
 #
 # Arguments:
 #   None
@@ -614,6 +626,11 @@ function render_pr_body {
 
     render_run_metadata "${LEVEL}" "${TARGET_KEY}" "${SKIP_REASON}"
     render_automation_disclaimer
+    section="$(render_created_by_line "${ENGINE}" "${USAGE_JSON}")"
+    if [[ -n ${section} ]]; then
+        printf '%s
+' "${section}"
+    fi
 }
 
 #######################################

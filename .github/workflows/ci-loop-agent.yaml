@@ -551,6 +551,7 @@ jobs:
           detect_result_json: ${{ inputs.detect_result_json }}
           domain_persistence_script: ${{ inputs.domain_persistence_script }}
           execute_branch: ${{ needs.agent-l2.outputs.branch }}
+          engine: ${{ inputs.engine }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           handoff_dir: ${{ runner.temp }}/loop-handoff
           handoff_key: ${{ inputs.handoff_key }}
@@ -569,6 +570,7 @@ jobs:
           state_file: ${{ inputs.state_file }}
           state_push_branch: ${{ inputs.state_push_branch }}
           target_json: ${{ inputs.target_json }}
+          usage_json: ${{ needs.agent-l2.outputs.usage_json || '' }}
           verdict: ${{ needs.agent-l2.outputs.verdict }}
 
       - name: Resolve Run Log Metadata
@@ -637,6 +639,7 @@ jobs:
           attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
           auto_merge: ${{ inputs.auto_merge }}
           commit_sha: ${{ steps.finalize.outputs.commit_sha || '' }}
+          engine: ${{ inputs.engine }}
           fix_pr_number: ${{ steps.finalize.outputs.pr_number || '' }}
           fix_pr_url: ${{ steps.finalize.outputs.pr_url || '' }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
@@ -650,4 +653,5 @@ jobs:
           reject_reason: ${{ needs.agent-l2.outputs.reason }}
           repository: ${{ github.repository }}
           target_json: ${{ inputs.target_json }}
+          usage_json: ${{ needs.agent-l2.outputs.usage_json || '' }}
           verdict: ${{ needs.agent-l2.outputs.verdict }}
