@@ -204,15 +204,18 @@ For caller inputs and behavior, see [Report Tech Debt Workflow Design](workflows
 trigger → on-loop-<name>.yaml (thin caller: with: + secrets:)
   loop job → ci-loop-caller*.yaml
     detect job:
-      → loop-detect                    # branch/PR enumeration, checkout per context, detect_script
+      → loop-detect action             # branch/PR enumeration, checkout per context, detect_script
       → outputs: target_matrix (slim), handoff_artifact_name, should_run, skip_reason
+    ack-trigger job (optional):
+      → eyes reaction on gathered @mention comments
     execute job (matrix per target):
-      → ci-loop-agent.yaml             # worktree from target.from; verifier_context always wired
-        → agent-l1 → finalize-l1 (run-log)
-        → agent-l2 → finalize-l2 (run-log; loop-finalize when finalize_enabled)
-        → loop-notify-pr (finalize-l2 sibling step when PR number present)
+      → ci-loop-agent.yaml reusable    # one matrix cell; level gates jobs inside
+        L1: agent-l1 job → finalize-l1 job (loop-run-log step)
+        L2/L3: agent-l2 job → finalize-l2 job (loop-run-log step;
+               loop-finalize step when finalize_enabled;
+               loop-notify-pr step when PR number present)
     record-skip job (when budget | circuit_breaker):
-      → loop-run-log
+      → loop-run-log action
 ```
 
 Job graph detail: [Loop Caller Workflows Design](loop-caller-workflows-design.md). Reusable caller profiles: [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md#detect-permissions).
@@ -232,26 +235,33 @@ flowchart TD
 
     subgraph detect["detect job (ci-loop-caller)"]
         direction TB
-        D1[loop-detect] --> D2{should_run?}
-        D2 -->|false| D_SKIP[record-skip optional]
+        D1[loop-detect action] --> D2{should_run?}
+        D2 -->|false| D_SKIP[record-skip job optional]
         D2 -->|true| D3[target_matrix + handoff artifact]
     end
 
-    D3 --> execute
-    subgraph execute["execute job matrix → ci-loop-agent"]
+    D2 -->|true| ACK[ack-trigger job optional]
+    D3 --> EXEC_RW
+
+    subgraph EXEC_RW["execute job (matrix) → ci-loop-agent.yaml"]
         direction TB
-        A1[agent-l1 or worktree + loop-execute]
-        A1 --> F1[finalize-l1 or finalize-l2]
-        F1 --> F_LOG[loop-run-log]
-        F1 --> F_LAND{finalize_enabled?}
-        F_LAND -->|yes L2/L3| F_FIN[loop-finalize]
+        LEVEL{level?}
+        LEVEL -->|L1| A_L1[agent-l1 job]
+        A_L1 --> F_L1[finalize-l1 job]
+        LEVEL -->|L2/L3| A_L2[agent-l2 job]
+        A_L2 --> F_L2[finalize-l2 job]
+        F_L1 --> F_LOG[loop-run-log step]
+        F_L2 --> F_LOG
+        F_L2 --> F_LAND{finalize_enabled?}
+        F_LAND -->|yes| F_FIN[loop-finalize step]
+        F_L2 --> F_NOTIFY[loop-notify-pr step optional]
     end
 
-    subgraph finalize_inside["loop-finalize (inside ci-loop-agent)"]
+    subgraph finalize_inside["loop-finalize step detail"]
         direction TB
-        F1 --> F_STRAT{finalize strategy}
+        F_FIN --> F_STRAT{finalize strategy}
         F_STRAT -->|open_pr L2| F_PENDING[pending cursor + fix PR]
-        F_STRAT -->|push / push_head L3| F_PUSH[push + advance last_sha]
+        F_STRAT -->|push / push_head| F_PUSH[push_target merge + push]
         F_STRAT -->|REJECT / metadata| F_META[outcome metadata only]
         F_PENDING --> F_PROMOTE[on-loop-state-promote on merge]
     end

@@ -55,16 +55,15 @@ on-loop-changelog.yaml              on-loop-github-pr-revise.yaml
               ┌─────────────────────────────┬──────────────────────────────────────────┐
               │ L1 (`level == L1`)          │ L2 / L3 (`level == L2` or `L3`)          │
               ├─────────────────────────────┼──────────────────────────────────────────┤
-              │ agent-l1                    │ agent-l2                                 │
-              │   loop-agent-once           │   loop-worktree-setup + loop-execute     │
-              │ finalize-l1                 │ finalize-l2                              │
-              │   loop-run-log only         │   loop-run-log always                    │
-              │                             │   loop-finalize when finalize_enabled    │
-              │                             │   loop-notify-pr (pr-revise, when wired) │
+              │ agent-l1 job                │ agent-l2 job                             │
+              │ finalize-l1 job             │ finalize-l2 job                          │
+              │   loop-run-log step         │   loop-run-log step                      │
+              │                             │   loop-finalize step (finalize_enabled)  │
+              │                             │   loop-notify-pr step (when wired)       │
               └─────────────────────────────┴──────────────────────────────────────────┘
 ```
 
-`finalize_enabled` gates git landing / PR creation inside `finalize-l2`, not whether `finalize-l2` runs. L1 has no bounded implementer→verifier loop or worktree push path today.
+`finalize_enabled` gates the `loop-finalize` **step** inside `finalize-l2`, not whether the `finalize-l2` **job** runs. L1 has no `agent-l2` / worktree path. Job internals: `agent-l1` → `loop-agent-once`; `agent-l2` → `loop-worktree-setup` + `loop-execute`.
 
 ### File Responsibilities
 
