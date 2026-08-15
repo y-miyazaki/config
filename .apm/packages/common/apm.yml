@@ -28,4 +28,4 @@ dependencies:
       registry: false
       transport: stdio
       command: npx
-      args: ["-y", "lean-ctx-bin@3.9.17"]
+      args: ["-y", "lean-ctx-bin@3.9.18"]
