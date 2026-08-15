@@ -27,3 +27,21 @@ on-loop-github-pr-revise.yaml
 ```
 
 `issue_comment` jobs run only when `github.event.issue.pull_request` is set.
+
+## Detect result
+
+`detect_pr_revise.sh` emits `result` facts consumed via file-backed detect JSON / loop-detect prompt:
+
+| Field | Source | Notes |
+| ----- | ------ | ----- |
+| `pr_number` | PR / issue / dispatch payload | Required to proceed |
+| `mention` | `PR_MENTION` (default `@loop`) | Mention gate on comment webhooks |
+| `comment_body` | `comment.body` or dispatch feedback | Mention matched against this |
+| `comment_id` | `comment.id` | JSON number when present; empty string otherwise |
+| `path` | `comment.path` | Set for `pull_request_review_comment`; empty for `issue_comment` |
+| `line` | `comment.line` or `comment.original_line` | JSON number when present; empty for `issue_comment` |
+| `side` | `comment.side` | `LEFT` / `RIGHT` when present; empty for `issue_comment` |
+| `diff_hunk` | `comment.diff_hunk` | Inline hunk text when present; empty for `issue_comment` |
+| `actor` | comment user or sender login | Informational |
+
+Hydration reads these from `GITHUB_EVENT_PATH` when the corresponding `PR_*` env vars are unset.
