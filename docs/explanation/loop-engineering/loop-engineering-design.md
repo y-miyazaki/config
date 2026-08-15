@@ -200,25 +200,7 @@ For caller inputs and behavior, see [Report Tech Debt Workflow Design](workflows
 
 ## Execution Flow
 
-```text
-trigger → on-loop-<name>.yaml (thin caller: with: + secrets:)
-  loop job → ci-loop-caller*.yaml
-    detect job:
-      → loop-detect action             # branch/PR enumeration, checkout per context, detect_script
-      → outputs: target_matrix (slim), handoff_artifact_name, should_run, skip_reason
-    ack-trigger job (optional):
-      → eyes reaction on gathered @mention comments
-    execute job (matrix per target):
-      → ci-loop-agent.yaml reusable    # one matrix cell; level gates jobs inside
-        L1: agent-l1 job → finalize-l1 job (loop-run-log step)
-        L2/L3: agent-l2 job → finalize-l2 job (loop-run-log step;
-               loop-finalize step when finalize_enabled;
-               loop-notify-pr step when PR number present)
-    record-skip job (when budget | circuit_breaker):
-      → loop-run-log action
-```
-
-Job graph detail: [Loop Caller Workflows Design](loop-caller-workflows-design.md). Reusable caller profiles: [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md#detect-permissions).
+Canonical nest diagram is the mermaid below (draw once). Handoff / double-detect rules: [Loop Caller Workflows Design](loop-caller-workflows-design.md). Job specs and optional `ack-trigger`: [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md).
 
 ### Workflow Architecture Diagram
 

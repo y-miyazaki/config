@@ -23,56 +23,34 @@ That `env:` pattern was a **workaround for copied jobs**, not a platform require
 
 ## Goal
 
-| Objective           | Detail                                                                                |
-| ------------------- | ------------------------------------------------------------------------------------- |
+| Objective           | Detail                                                                                    |
+| ------------------- | ----------------------------------------------------------------------------------------- |
 | Single job graph    | One `ci-loop-caller.yaml` owns `detect`, optional `ack-trigger`, `execute`, `record-skip` |
-| Thin callers        | Each `on-loop-<name>.yaml`: `on:`, `concurrency`, `permissions`, one job with `with:` |
-| No caller `env:`    | Configuration via `ci-loop-caller` `inputs` and caller `with:` literals               |
-| Preserve invariants | Matrix fan-out, finalize inside `ci-loop-agent`, budget, shared workflow concurrency  |
-| Extensibility       | New loops add caller `with:` + optional inputs; reusable jobs stay stable             |
+| Thin callers        | Each `on-loop-<name>.yaml`: `on:`, `concurrency`, `permissions`, one job with `with:`     |
+| No caller `env:`    | Configuration via `ci-loop-caller` `inputs` and caller `with:` literals                   |
+| Preserve invariants | Matrix fan-out, finalize inside `ci-loop-agent`, budget, shared workflow concurrency      |
+| Extensibility       | New loops add caller `with:` + optional inputs; reusable jobs stay stable                 |
 
 ## Target Architecture
 
-```text
-on-loop-changelog.yaml              on-loop-github-pr-revise.yaml
-  on: schedule                         on: issue_comment / pull_request_review_comment
-  concurrency / permissions             concurrency / permissions
-  jobs:                                 jobs:
-    loop:                               loop:
-      uses: ci-loop-caller.yaml           uses: ci-loop-caller.yaml
-      with: { loop-specific }             with: { loop-specific, ack_trigger_comment: true }
-      secrets: { … }                        secrets: { … }
-                    \                       /
-                     v                     v
-                         ci-loop-caller.yaml
-                detect      → loop-detect (+ loop-handoff artifact)
-                ack-trigger → eyes reaction on open @mention comments (optional)
-                execute     → ci-loop-agent.yaml (matrix per target)
-                record-skip → loop-run-log
+Full nest (detect / optional ack-trigger / execute / L1 vs L2 jobs): [Loop Engineering Design — Workflow Architecture Diagram](loop-engineering-design.md#workflow-architecture-diagram).
 
-                         ci-loop-agent.yaml  (one reusable per matrix cell; `level` gates jobs)
+Thin-caller delta only:
 
-              ┌─────────────────────────────┬──────────────────────────────────────────┐
-              │ L1 (`level == L1`)          │ L2 / L3 (`level == L2` or `L3`)          │
-              ├─────────────────────────────┼──────────────────────────────────────────┤
-              │ agent-l1 job                │ agent-l2 job                             │
-              │ finalize-l1 job             │ finalize-l2 job                          │
-              │   loop-run-log step         │   loop-run-log step                      │
-              │                             │   loop-finalize step (finalize_enabled)  │
-              │                             │   loop-notify-pr step (when wired)       │
-              └─────────────────────────────┴──────────────────────────────────────────┘
-```
+| Caller                          | Extra `with:` vs schedule loops                                                                           |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `on-loop-github-pr-revise.yaml` | `ack_trigger_comment: true` (start `eyes` reaction; see [`ack-trigger`](#ack-trigger-optional-start-ack)) |
 
 `finalize_enabled` gates the `loop-finalize` **step** inside `finalize-l2`, not whether the `finalize-l2` **job** runs. L1 has no `agent-l2` / worktree path. Job internals: `agent-l1` → `loop-agent-once`; `agent-l2` → `loop-worktree-setup` + `loop-execute`.
 
 ### File Responsibilities
 
-| File                     | Role                                                                                |
-| ------------------------ | ----------------------------------------------------------------------------------- |
-| `on-loop-<name>.yaml`    | Triggers, workflow identity, concurrency group, permissions, loop config in `with:` |
-| `ci-loop-caller.yaml`    | Shared detect / optional ack-trigger / matrix execute / record-skip orchestration |
+| File                     | Role                                                                                     |
+| ------------------------ | ---------------------------------------------------------------------------------------- |
+| `on-loop-<name>.yaml`    | Triggers, workflow identity, concurrency group, permissions, loop config in `with:`      |
+| `ci-loop-caller.yaml`    | Shared detect / optional ack-trigger / matrix execute / record-skip orchestration        |
 | `ci-loop-agent.yaml`     | Level-gated agent + finalize jobs (`agent-l1`/`finalize-l1` vs `agent-l2`/`finalize-l2`) |
-| `.github/actions/loop-*` | Phase implementations (unchanged)                                                   |
+| `.github/actions/loop-*` | Phase implementations (unchanged)                                                        |
 
 ## Design Invariants (Must Not Break)
 
@@ -171,7 +149,7 @@ Enable `workflow_run` on the caller only; reusable workflow stays trigger-agnost
 | Job           | `needs`  | `if`                                                                 | Calls / behavior              |
 | ------------- | -------- | -------------------------------------------------------------------- | ----------------------------- |
 | `detect`      | —        | always                                                               | `loop-detect`                 |
-| `ack-trigger` | `detect` | `ack_trigger_comment` + `should_run` + comment webhook event       | Start ACK (see below)         |
+| `ack-trigger` | `detect` | `ack_trigger_comment` + `should_run` + comment webhook event         | Start ACK (see below)         |
 | `execute`     | `detect` | `needs.detect.outputs.should_run == 'true'`                          | `ci-loop-agent.yaml` (matrix) |
 | `record-skip` | `detect` | success + `should_run == false` + skip reason budget/circuit_breaker | `loop-run-log`                |
 
@@ -181,14 +159,14 @@ Enable `workflow_run` on the caller only; reusable workflow stays trigger-agnost
 
 Human-triggered loops (today: `on-loop-github-pr-revise`) pass `ack_trigger_comment: true` so reviewers see that work started before the agent finishes.
 
-| Stage | Behavior |
-| ----- | -------- |
-| When | `inputs.ack_trigger_comment` is true, detect emitted `should_run=true`, and the caller webhook is `issue_comment` or `pull_request_review_comment` |
-| Input | `github.event.comment.id` as fallback; primary set from detect handoff `result.comments[]` (batched open `@mention` feedback) |
-| Action | Download loop-handoff payloads when present; for each gathered `comment_id`, POST `eyes` reaction via `gh api` on the matching REST reactions endpoint (`issues/comments` vs `pulls/comments`) |
-| Fallback | If gather produced no comment ids, ACK only the webhook trigger `comment.id` |
-| Failure | `continue-on-error: true` — warnings only; never fails the workflow |
-| Out of scope | Done-thread reply (`loop-notify-pr` in `finalize-l2`), auto-resolve, canceling other runs |
+| Stage        | Behavior                                                                                                                                                                                       |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| When         | `inputs.ack_trigger_comment` is true, detect emitted `should_run=true`, and the caller webhook is `issue_comment` or `pull_request_review_comment`                                             |
+| Input        | `github.event.comment.id` as fallback; primary set from detect handoff `result.comments[]` (batched open `@mention` feedback)                                                                  |
+| Action       | Download loop-handoff payloads when present; for each gathered `comment_id`, POST `eyes` reaction via `gh api` on the matching REST reactions endpoint (`issues/comments` vs `pulls/comments`) |
+| Fallback     | If gather produced no comment ids, ACK only the webhook trigger `comment.id`                                                                                                                   |
+| Failure      | `continue-on-error: true` — warnings only; never fails the workflow                                                                                                                            |
+| Out of scope | Done-thread reply (`loop-notify-pr` in `finalize-l2`), auto-resolve, canceling other runs                                                                                                      |
 
 Permissions for reactions are isolated in `ack-trigger` (`issues: write`, `pull-requests: write`) so the `detect` job can keep `pull-requests: read` for enumeration without granting write to every loop.
 
@@ -293,12 +271,12 @@ Full mapping table: [Loop Caller Inputs Reference — `loop-detect` mapping](wor
 
 All branch/PR loops use **`ci-loop-caller.yaml`**. The reusable `detect` job declares:
 
-| Job           | Permissions                                                                      |
-| ------------- | -------------------------------------------------------------------------------- |
-| `detect`      | `actions: write`, `contents: read`, `pull-requests: read`                        |
+| Job           | Permissions                                                                         |
+| ------------- | ----------------------------------------------------------------------------------- |
+| `detect`      | `actions: write`, `contents: read`, `pull-requests: read`                           |
 | `ack-trigger` | `issues: write`, `pull-requests: write` when `ack_trigger_comment` (pr-revise only) |
-| `execute`     | execute baseline (`actions: read`, `contents: write`, `pull-requests: write`, …) |
-| `record-skip` | `contents: write`, `pull-requests: write`                                        |
+| `execute`     | execute baseline (`actions: read`, `contents: write`, `pull-requests: write`, …)    |
+| `record-skip` | `contents: write`, `pull-requests: write`                                           |
 
 Thin caller workflow `permissions` = **execute baseline** plus **`actions: write`** so the reusable `detect` job can upload handoff artifacts. Reusable workflows cannot escalate beyond the caller grant.
 

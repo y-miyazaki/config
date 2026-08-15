@@ -33,22 +33,7 @@ _Understanding-oriented discussion of concepts and decisions._
 - [Config Repository Architecture](explanation/architecture.md)
 - [GitHub Workflows Design](explanation/github-workflows-design.md)
 - [Instructions Sync Workflow](explanation/instructions-sync-workflow.md)
-- [Loop Engineering](explanation/loop-engineering/index.md)
-- [Loop-Capable Skills](explanation/loop-engineering/loop-capable-skills.md)
-- [Loop Engineering Design](explanation/loop-engineering/loop-engineering-design.md)
-- [Ubiquitous Language](explanation/loop-engineering/CONTEXT.md)
-- [Documentation Maintenance](explanation/loop-engineering/documentation-maintenance.md)
-- [Multi-Branch Loops Design](explanation/loop-engineering/multi-branch-loops-design.md)
-- [Loop Caller Workflows Design](explanation/loop-engineering/loop-caller-workflows-design.md)
-- [Loop Caller Reusable Workflow Design](explanation/loop-engineering/loop-caller-reusable-design.md)
-- [Loop PR Body Skill Contract](explanation/loop-engineering/loop-pr-body-skill-contract.md)
-- [Loop Automation Report Format](explanation/loop-engineering/common-loop-triage-format.md)
-- [Caller Inputs Reference](explanation/loop-engineering/workflows/loop-caller-inputs-reference.md)
-- [CI Sweeper Workflow Design](explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md)
-- [Changelog Workflow Design](explanation/loop-engineering/workflows/loop-changelog-workflow-design.md)
-- [Docs Updater Workflow Design](explanation/loop-engineering/workflows/loop-docs-updater-workflow-design.md)
-- [Refactor Workflow Design](explanation/loop-engineering/workflows/loop-refactor-workflow-design.md)
-- [Report Tech Debt Workflow Design](explanation/loop-engineering/workflows/loop-tech-debt-workflow-design.md)
+- [Loop Engineering](explanation/loop-engineering/index.md) — categorized map (nesting / per-loop / contracts); do not treat sibling files as an unordered list
 
 ## Report
 

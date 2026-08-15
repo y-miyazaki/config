@@ -159,21 +159,13 @@ No `domain_persistence_script`.
 
 ## Implementation Checklist
 
-Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loops-design.md#implementation-phases).
-
-### Platform (all loops)
-
-- [x] `changelog/scripts/detect_changelog_commits.sh` (facts output)
-- [x] `on-loop-changelog.yaml` dogfood caller via `ci-loop-caller`
-- [x] `branch_match` + per-branch `targets["integration:<branch>"]`
-- [x] State migration: flat `last_sha` removed (`targets` map only)
-- [x] `target_matrix` through detect → matrix execute/finalize
-- [x] `verifier_context` on execute path (`build_verifier_context_from_result` `.commits` branch)
-- [x] Merge-gated state via `on-loop-state-promote.yaml` (`pending` → `last_sha`)
-- [x] Readable PR body: agent Overview/Summary + finalize Run Metadata (`render_pr_body.sh`, `loop-notify-pr`)
+Shared platform: [Multi-Branch — Shared platform checklist](../multi-branch-loops-design.md#shared-platform-checklist-all-loops).
 
 ### Loop-specific
 
+- [x] `changelog/scripts/detect_changelog_commits.sh` (facts output)
+- [x] `on-loop-changelog.yaml` dogfood caller via `ci-loop-caller`
+- [x] `verifier_context` on execute path (`build_verifier_context_from_result` `.commits` branch)
 - [x] `detect_changelog_commits.sh` emits `releases[]` for tag-scoped entries
 - [x] Dogfood action pins @ v1.8.47
 

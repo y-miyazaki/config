@@ -18,21 +18,13 @@ Shared GitHub Actions layout for `on-loop-*.yaml` caller workflows.
 
 ## Job Graph
 
-```text
-detect (single job)
-  → loop-detect
-  → outputs: target_matrix (slim), handoff_artifact_name, should_run, skip_reason
-  → uploads loop-handoff artifact (full result + verifier_context per target)
+Canonical diagram: [Loop Engineering Design — Workflow Architecture Diagram](loop-engineering-design.md#workflow-architecture-diagram). Job names and optional `ack-trigger`: [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md#jobs).
 
-execute (matrix: target_matrix)
-  → ci-loop-agent.yaml per cell (finalize-l1 or finalize-l2 always after agent; loop-finalize step when finalize_enabled)
-  → downloads loop-handoff artifact; resolves payloads by handoff_key
-  → inputs: target_json, prompt, handoff_key, finalize config, …
+Handoff-only (not in that diagram):
 
-record-skip (optional)
-  → loop-run-log when should_run=false and skip_reason=budget|circuit_breaker
-  → not used for target_budget (execute still runs; deferral is informational)
-```
+- `loop-detect` uploads **loop-handoff**; slim `target_matrix` cells carry `target_json`, `prompt`, `handoff_key`.
+- Execute downloads the artifact and resolves `result` / `verifier_context` by `handoff_key`.
+- `record-skip` runs `loop-run-log` when `should_run=false` and `skip_reason` is `budget` or `circuit_breaker`. Not used for `target_budget` (execute still runs; deferral is informational).
 
 ## Detect Job
 

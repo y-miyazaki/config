@@ -2,6 +2,8 @@
 
 Repository maintainer guide for loop platform and caller documentation. The distributable **docs-updater** skill carries generic deduplication rules in `category-documentation-maintenance.md`; this page is the Loop Engineering canonical map and trigger table for **this repo only**.
 
+Reader map (nesting vs per-loop vs contracts): [index.md](index.md). Do not add a fourth uncategorized design page at this folder root; put per-loop pages under `workflows/` and cross-cutting contracts in Layer C.
+
 ## Canonical sources (edit here only)
 
 | Topic                             | Canonical path                                                                                                                   |
@@ -30,7 +32,7 @@ Update affected canonical docs in the **same change** when modifying:
 
 ## Reject (do not leave in docs)
 
-- Duplicate job graphs — link to [loop-caller-workflows-design.md](loop-caller-workflows-design.md) instead
+- Duplicate job graphs — link to [loop-engineering-design.md — Workflow Architecture Diagram](loop-engineering-design.md#workflow-architecture-diagram) instead
 - Stale `env:` / `LOOP_*` caller config without mapping to `ci-loop-caller` `with:` inputs
 - `pull_requests` input name — canonical is `pr_enabled`
 - Semantic `findings[]` attributed to detect scripts — detect emits mechanical facts only ([CONTEXT.md](CONTEXT.md))
@@ -39,4 +41,4 @@ Update affected canonical docs in the **same change** when modifying:
 
 ## Architecture diagram rule
 
-Draw the full stack once in [loop-engineering-design.md](loop-engineering-design.md). Other docs link to that section instead of redrawing full mermaid graphs.
+Draw the full stack once in [loop-engineering-design.md — Workflow Architecture Diagram](loop-engineering-design.md#workflow-architecture-diagram). Other docs link to that section instead of redrawing ASCII or mermaid graphs. Shared platform checklist lives in [multi-branch-loops-design.md](multi-branch-loops-design.md#shared-platform-checklist-all-loops).

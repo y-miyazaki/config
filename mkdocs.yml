@@ -70,22 +70,27 @@ nav:
       - Instructions Sync Workflow: explanation/instructions-sync-workflow.md
       - Loop Engineering:
           - explanation/loop-engineering/index.md
-          - Loop-Capable Skills: explanation/loop-engineering/loop-capable-skills.md
-          - Loop Engineering Design: explanation/loop-engineering/loop-engineering-design.md
-          - Ubiquitous Language: explanation/loop-engineering/CONTEXT.md
-          - Documentation Maintenance: explanation/loop-engineering/documentation-maintenance.md
-          - Multi-Branch Loops Design: explanation/loop-engineering/multi-branch-loops-design.md
-          - Loop Caller Workflows Design: explanation/loop-engineering/loop-caller-workflows-design.md
-          - Loop Caller Reusable Workflow Design: explanation/loop-engineering/loop-caller-reusable-design.md
-          - Loop PR Body Skill Contract: explanation/loop-engineering/loop-pr-body-skill-contract.md
-          - Loop Automation Report Format: explanation/loop-engineering/common-loop-triage-format.md
-          - Loop Workflows:
+          - Nesting (shared platform):
+              - Loop Engineering Design: explanation/loop-engineering/loop-engineering-design.md
+              - Ubiquitous Language: explanation/loop-engineering/CONTEXT.md
+              - Loop Caller Workflows Design: explanation/loop-engineering/loop-caller-workflows-design.md
+              - Loop Caller Reusable Workflow Design: explanation/loop-engineering/loop-caller-reusable-design.md
+              - Multi-Branch Loops Design: explanation/loop-engineering/multi-branch-loops-design.md
+              - Loop-Capable Skills: explanation/loop-engineering/loop-capable-skills.md
+          - Per-loop workflows:
               - Caller Inputs Reference: explanation/loop-engineering/workflows/loop-caller-inputs-reference.md
               - Changelog: explanation/loop-engineering/workflows/loop-changelog-workflow-design.md
               - CI Sweeper: explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md
               - Docs Updater: explanation/loop-engineering/workflows/loop-docs-updater-workflow-design.md
               - Refactor: explanation/loop-engineering/workflows/loop-refactor-workflow-design.md
               - Report Tech Debt: explanation/loop-engineering/workflows/loop-tech-debt-workflow-design.md
+              - Issue Triage: explanation/loop-engineering/workflows/loop-github-issue-triage-workflow-design.md
+              - Issue Autofix: explanation/loop-engineering/workflows/loop-github-issue-autofix-workflow-design.md
+              - PR Revise: explanation/loop-engineering/workflows/loop-github-pr-revise-workflow-design.md
+          - Cross-cutting contracts:
+              - Loop PR Body Skill Contract: explanation/loop-engineering/loop-pr-body-skill-contract.md
+              - Loop Automation Report Format: explanation/loop-engineering/common-loop-triage-format.md
+              - Documentation Maintenance: explanation/loop-engineering/documentation-maintenance.md
   - Report:
       - AWS Service Comparison:
           - Index: report/aws/service-comparison/index.md

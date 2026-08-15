@@ -155,21 +155,13 @@ Persistence: `state-refactor.json` on `branch_state` via [finalize inside ci-loo
 
 ## Implementation Checklist
 
-Shared platform contract — see [Multi-Branch Loops Design](../multi-branch-loops-design.md#implementation-phases).
-
-### Platform (all loops)
-
-- [x] `refactor/scripts/detect_refactor.sh` (H1 facts output)
-- [x] `on-loop-refactor.yaml` dogfood caller via `ci-loop-caller`
-- [x] `branch_match` + per-branch `targets["integration:<branch>"]`
-- [x] State migration: flat `last_sha` removed (`targets` map only)
-- [x] `target_matrix` through detect → matrix execute/finalize
-- [x] `verifier_context` on execute path (`build_verifier_context_from_result` `.hints` branch)
-- [x] Merge-gated state via `on-loop-state-promote.yaml` (`pending` → `last_sha`)
-- [x] Readable PR body: agent Overview/Summary + finalize Run Metadata (`render_pr_body.sh`, `loop-notify-pr`)
+Shared platform: [Multi-Branch — Shared platform checklist](../multi-branch-loops-design.md#shared-platform-checklist-all-loops).
 
 ### Loop-specific
 
+- [x] `refactor/scripts/detect_refactor.sh` (H1 facts output)
+- [x] `on-loop-refactor.yaml` dogfood caller via `ci-loop-caller`
+- [x] `verifier_context` on execute path (`build_verifier_context_from_result` `.hints` branch)
 - [x] `refactor` skill + references
 - [x] Bats suite for detect script (TEST-00)
 

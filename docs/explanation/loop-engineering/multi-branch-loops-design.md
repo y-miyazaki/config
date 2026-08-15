@@ -271,6 +271,17 @@ See [Loop Caller Workflows — Concurrency](loop-caller-workflows-design.md#conc
 
 Caller/workflow steps: [Loop Caller Workflows Design](loop-caller-workflows-design.md).
 
+### Shared platform checklist (all loops)
+
+Do not copy this list into per-loop workflow designs.
+
+- [x] `branch_match` + per-branch `targets["integration:<branch>"]`
+- [x] State: `targets` map only (no flat `last_sha`)
+- [x] `target_matrix` through detect → matrix execute/finalize
+- [x] Merge-gated state via `on-loop-state-promote.yaml` (`pending` → `last_sha`)
+- [x] Readable PR body: agent Overview/Summary + finalize Run Metadata (`render_pr_body.sh`, `loop-notify-pr`)
+- [x] Thin `on-loop-*.yaml` via `ci-loop-caller`
+
 ## Workflow Design Documents
 
 | Loop                     | Document                                                                                | Caller workflow                     |
