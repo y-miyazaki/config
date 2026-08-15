@@ -59,6 +59,7 @@ Per-skill required elements and examples live in each skill's `references/common
 | `## Failure context`  | `detect_result_json.failures[]` (ci-sweeper) — Workflow/Job/Run as Markdown links when URLs are present                                                           |
 | `## Changes`          | git diff paths — **omitted** when agent Summary contains `### Changes` or `### Fixes Applied`; paths link to `blob/{branch}` when repository and branch are known |
 | `## Run Metadata`     | Level, Target, Skip reason table                                                                                                                                  |
+| Created By footer     | One-line `Created By {engine} {model} In/Out: {in}/{out}` from engine + `usage_json` (omit when unavailable)                                                       |
 | Automation disclaimer | `render_automation_disclaimer()`                                                                                                                                  |
 
 Finalize **passthrough** agent `## Overview`, `## Summary`, and `## Verification` with redact/truncate only — no table regeneration.
@@ -93,6 +94,8 @@ Architecture Proposal / Skipped / Watch / …
 ## Run Metadata
 
 <loop PR only — finalize-owned>
+
+Created By <engine> <model> In/Out: <in>/<out>
 ```
 
 ### List vs table
@@ -121,6 +124,7 @@ Do **not** put these in **Summary** — they duplicate **Changes** / **Deferred*
 5. `## Changes` (finalize — only when Summary lacks `### Changes` / `### Fixes Applied`)
 6. `## Run Metadata` (finalize)
 7. Automation disclaimer (finalize)
+8. Created By footer (finalize — engine/model/tokens when available)
 
 ## Skill checklist
 

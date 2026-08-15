@@ -37,6 +37,10 @@ inputs:
     default: ""
     description: "Agent branch name for domain_persistence_script env"
     required: false
+  engine:
+    default: ""
+    description: "AI engine slug for Created By footer (e.g. cursor)"
+    required: false
   github_token:
     description: "GitHub token for PR creation and state push"
     required: true
@@ -107,6 +111,10 @@ inputs:
   target_json:
     default: ""
     description: "Target descriptor JSON from loop-detect matrix cell"
+    required: false
+  usage_json:
+    default: ""
+    description: "Measured usage JSON (total_input_tokens, total_output_tokens, model) for Created By footer"
     required: false
   verdict:
     default: ""
@@ -271,6 +279,7 @@ runs:
       env:
         BRANCH: ${{ inputs.branch }}
         DETECT_RESULT_JSON: ${{ inputs.detect_result_json }}
+        ENGINE: ${{ inputs.engine }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         HANDOFF_KEY: ${{ inputs.handoff_key }}
         LABELS: ${{ inputs.labels }}
@@ -284,6 +293,7 @@ runs:
         PR_TITLE: ${{ inputs.pr_title }}
         SKIP_REASON: ${{ inputs.skip_reason }}
         TARGET_JSON: ${{ inputs.target_json }}
+        USAGE_JSON: ${{ inputs.usage_json }}
       run: bash "${GITHUB_ACTION_PATH}/lib/create_pr.sh"
 
     - name: Enable Auto-Merge

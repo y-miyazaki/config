@@ -23,6 +23,8 @@
 # - render_agent_verification_section wraps heading
 # - render_changes_section links files when repository and ref are set
 # - render_failure_context renders markdown links when metadata present
+# - render_pr_body appends Created By after disclaimer when engine/usage set
+# - render_pr_body omits Created By when engine and usage empty
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -155,6 +157,27 @@ setup() {
     [[ $output != *"| foo | bar |"* ]]
 }
 
+
+@test "render_pr_body appends Created By after disclaimer when engine usage set" {
+    export PR_BODY_PREFIX=''
+    export AGENT_REPORT_OVERVIEW=''
+    export DETECT_RESULT_JSON='{}'
+    export CHANGED_FILES_JSON='[]'
+    export AGENT_REPORT_SUMMARY=''
+    export LEVEL=L2
+    export TARGET_KEY=integration:main
+    export SKIP_REASON=none
+    export ENGINE=cursor
+    export USAGE_JSON='{"total_input_tokens":100000,"total_output_tokens":6000,"model":"Composer-2.5"}'
+    run render_pr_body
+    [ "$status" -eq 0 ]
+    [[ $output == *"Created By cursor Composer-2.5 In/Out: 100K/6K"* ]]
+    local disc_i created_i
+    disc_i="$(printf '%s\n' "${output}" | grep -n 'loop automation' | head -1 | cut -d: -f1)"
+    created_i="$(printf '%s\n' "${output}" | grep -n 'Created By' | head -1 | cut -d: -f1)"
+    [ "${disc_i}" -lt "${created_i}" ]
+}
+
 @test "render_pr_body empty prefix shows mechanical sections" {
     export PR_BODY_PREFIX=''
     export AGENT_REPORT_OVERVIEW=''
@@ -171,6 +194,22 @@ setup() {
     [[ $output == *"| Level | L2 |"* ]]
     [[ $output != *"## Summary"* ]]
     [[ $output != *"- Level:"* ]]
+}
+
+@test "render_pr_body omits Created By when engine and usage empty" {
+    export PR_BODY_PREFIX=''
+    export AGENT_REPORT_OVERVIEW=''
+    export DETECT_RESULT_JSON='{}'
+    export CHANGED_FILES_JSON='[]'
+    export AGENT_REPORT_SUMMARY=''
+    export LEVEL=L2
+    export TARGET_KEY=integration:main
+    export SKIP_REASON=none
+    export ENGINE=''
+    export USAGE_JSON=''
+    run render_pr_body
+    [ "$status" -eq 0 ]
+    [[ $output != *"Created By"* ]]
 }
 
 @test "render_agent_verification_section wraps heading" {
