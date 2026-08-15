@@ -228,7 +228,10 @@ jobs:
     environment: ${{ inputs.environment }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    permissions: ${{ inputs.ack_trigger_comment && fromJSON('{"actions":"write","contents":"read","issues":"write","pull-requests":"write"}') || fromJSON('{"actions":"write","contents":"read","pull-requests":"read"}') }}
+    permissions:
+      actions: write
+      contents: read
+      pull-requests: read
     outputs:
       additional_commit_paths: ${{ inputs.additional_commit_paths }}
       agent_implementer_max_turns: ${{ steps.detect.outputs.agent_implementer_max_turns }}
@@ -349,12 +352,31 @@ jobs:
           state_file: ${{ inputs.state_file }}
           write_target: ${{ inputs.write_target }}
 
+  ack-trigger:
+    if: >-
+      inputs.ack_trigger_comment &&
+      needs.detect.outputs.should_run == 'true' &&
+      (github.event_name == 'issue_comment' ||
+      github.event_name == 'pull_request_review_comment')
+    needs: detect
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Resolve GitHub Token
+        id: resolve_github_token
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@de782bdea32cf4aa332bc3b11f04daf5bbf9b14c # v1.8.85
+        with:
+          bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
+          bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+          github_token: ${{ secrets.GH_TOKEN }}
+
       - name: Ack Trigger Comment
-        if: >-
-          inputs.ack_trigger_comment &&
-          steps.detect.outputs.should_run == 'true' &&
-          (github.event_name == 'issue_comment' ||
-          github.event_name == 'pull_request_review_comment')
         continue-on-error: true
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}

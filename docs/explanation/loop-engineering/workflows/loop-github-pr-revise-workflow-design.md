@@ -22,6 +22,7 @@ Detect skips bots and comments without the mention token. Default landing: `git_
 on-loop-github-pr-revise.yaml
   loop → uses ci-loop-caller.yaml
            detect  → detect_pr_revise.sh
+           ack-trigger (optional) → eyes reaction on trigger comment
            execute → ci-loop-agent (may_edit=true)
            finalize → push_head (default) or open_pr
 ```
@@ -34,7 +35,7 @@ After detect proceeds on a comment webhook:
 
 | Stage | Behavior |
 | ----- | -------- |
-| Start ACK | `eyes` reaction on `comment.id` (`ci-loop-caller`) |
+| Start ACK | `eyes` reaction on `comment.id` (`ci-loop-caller` `ack-trigger` job when `ack_trigger_comment`) |
 | Done reply | Inline review: threaded REST reply; conversation comment: follow-up PR comment (`loop-notify-pr`) |
 | Marker | Run-level `loop-notify-pr` marker comment unchanged |
 | Resolve | Human only — no auto-resolve |
@@ -58,60 +59,4 @@ Detect JSON includes `result.comment_id`, `result.event_name`, and inline review
 | `diff_hunk` | `comment.diff_hunk` | Inline hunk text when present |
 | `actor` | comment user or sender login | Informational |
 
-
-
---- Rules in scope for this file ---
-[From: /workspace/tmp/wt-690/CLAUDE.md]
-@AGENTS.md
-
-# Project Instructions
-
-## Edit routing (MUST)
-
-| Edit here (source of truth)                                                                                          | Do not edit                                                                         |
-| -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `.apm/packages/<pkg>/` (instructions, skills, hooks, MCP config)                                                     | `.agents/`, `.claude/`, `.codex/`, `.cursor/`, `.kiro/`, `.vscode/`, `apm_modules/` |
-| `scripts/lib/`                                                                                                       | `.apm/packages/*/.apm/skills/*/scripts/lib/`                                        |
-| `scripts/{shell-script,go,terraform}/validate.sh`, `scripts/shell-script/fix_function_doc_order.sh`                  | Paired skill `scripts/` copy                                                        |
-| `.apm/packages/<pkg>/.apm/skills/<skill>-review/references/category-*.md`                                            | Generated `## Guidelines` in instructions (unless accepting overwrite on next sync) |
-| Repo-only paths (for example `scripts/terraform/module_updater.sh`, `.github/actions/**/lib/`, `.github/workflows/`) | —                                                                                   |
-
-**Distributable vs maintainer-only:** `.apm/packages/**` ships to other repositories — portable wording only. This-repo rules → [.apm/AGENTS.md](.apm/AGENTS.md) or this file, never package sources.
-
-## Conventions
-
-| Topic           | Rule             |
-| --------------- | ---------------- |
-| Temporary files | Write to `tmp/`. |
-
-[From: /workspace/tmp/wt-690/AGENTS.md]
-# AGENTS.md
-
-Operational constitution for AI-assisted development agents. Self-contained — no external file is required.
-
----
-
-## Execution
-
-- Minimal surgical diffs; no unrelated refactor, cleanup, modernization, or optimization unless approved.
-- Stay within requested scope; label off-scope suggestions explicitly.
-- Never fabricate APIs, commands, paths, or behavior; state "unknown" when uncertain.
-- Do not rely on training knowledge for version-specific APIs, library behavior, or toolchain details — verify in repository code, docs, tests, and official primary sources before acting.
-- Read existing code before modifying; search related implementations and shared interfaces.
-- Stop and Ask before: destructive operations, conflicting requirements, unclear specifications, irreversible architectural decisions, security-sensitive ambiguity, or disproportionate cost.
-- Do not expose secrets, credentials, or sensitive tokens in outputs, logs, or commits.
-- After two failed attempts on the same approach: diagnose root cause and switch strategy; do not patch incrementally.
-- No placeholder implementations unless explicitly requested.
-- Test-first for code changes: write or update tests with sufficient cases before or alongside implementation; code modifications MUST include corresponding test additions or updates.
-- Prefer behavior and tests over re-running mechanical lint/format; state what was not verified and why.
-- MUST NOT weaken, remove, or bypass tests or validations solely to make checks pass.
-
-## Completion (MUST state in final response)
-
-1. **Implementation:** Overview of changes made.
-2. **Verification:** What was verified (behavior/tests), deferred, or unavailable — lint/format re-runs are not required proof.
-3. **Risks:** Assumptions made and residual risks.
-
-[… 2 more rule(s) omitted — use auto_inject_rules=false to disable]
-
---- tip: run 'lean-ctx setup' to configure agent rules for optimal AI integration ---
+Hydration reads these from `GITHUB_EVENT_PATH` when the corresponding `PR_*` env vars are unset.
