@@ -1,11 +1,11 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-08-15T08:43:47Z",
-      "outcome": "merged",
+      "last_run": "2026-08-15T09:18:36Z",
+      "outcome": "error",
       "consecutive_failures": 0,
       "open_rejections": [],
-      "last_reject_reason": "No meaningful changes outside .loop/",
+      "last_reject_reason": "Issue #683 pr-revise comment batching implemented with Fixes #683 on PR #691; scope aligned; no repository_dispatch; tests added for gather/skip/ACK",
       "last_sha": "3b566b4d4e02bd4721e964dacd7f5a4adefa9768"
     }
   }
