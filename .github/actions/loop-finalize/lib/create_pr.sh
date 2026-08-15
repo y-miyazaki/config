@@ -34,6 +34,7 @@ export LC_ALL=C.UTF-8
 #######################################
 BRANCH="${BRANCH:-}"
 DETECT_RESULT_JSON="${DETECT_RESULT_JSON:-}"
+ENGINE="${ENGINE:-}"
 GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 GITHUB_OUTPUT="${GITHUB_OUTPUT:-}"
 GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-}"
@@ -48,6 +49,7 @@ PR_DRAFT="${PR_DRAFT:-false}"
 PR_TITLE="${PR_TITLE:-chore: automated update (loop)}"
 SKIP_REASON="${SKIP_REASON:-}"
 TARGET_JSON="${TARGET_JSON:-}"
+USAGE_JSON="${USAGE_JSON:-}"
 
 #######################################
 # main: Resolve payloads, compose body, create PR
@@ -114,7 +116,7 @@ function main {
         --notify-json-file "${notify_json_path}"
     )
 
-    export BRANCH PR_BODY LEVEL SKIP_REASON TARGET_JSON
+    export BRANCH PR_BODY ENGINE LEVEL SKIP_REASON TARGET_JSON USAGE_JSON
     composed="$(bash "${script_dir}/create_pr_body.sh" "${body_args[@]}")"
 
     gh_args=(

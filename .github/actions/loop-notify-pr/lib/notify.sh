@@ -32,6 +32,7 @@ export LC_ALL=C.UTF-8
 ATTEMPTS="${ATTEMPTS:-}"
 AUTO_MERGE="${AUTO_MERGE:-false}"
 COMMIT_SHA="${COMMIT_SHA:-}"
+ENGINE="${ENGINE:-}"
 FIX_PR_NUMBER="${FIX_PR_NUMBER:-}"
 FIX_PR_URL="${FIX_PR_URL:-}"
 GITHUB_OUTPUT="${GITHUB_OUTPUT:-}"
@@ -46,8 +47,17 @@ PR_NUMBER="${PR_NUMBER:-}"
 REJECT_REASON="${REJECT_REASON:-}"
 REPOSITORY="${REPOSITORY:-}"
 TARGET_JSON="${TARGET_JSON:-"{}"}"
+USAGE_JSON="${USAGE_JSON:-}"
 GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 VERDICT="${VERDICT:-}"
+
+#######################################
+# Shared Created By footer (lib/loop/created_by.sh)
+#######################################
+_LOOP_CREATED_BY_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
+# shellcheck source=../../lib/loop/created_by.sh
+source "${_LOOP_CREATED_BY_LIB}/created_by.sh"
+
 
 #######################################
 # build_comment_body: Render marker comment markdown
@@ -55,6 +65,7 @@ VERDICT="${VERDICT:-}"
 # Globals:
 #   ATTEMPTS - Attempt count for display
 #   COMMIT_SHA - Pushed commit SHA when present
+#   ENGINE - AI engine slug for Created By footer
 #   GITHUB_SERVER_URL - GitHub server URL prefix
 #   LOOP_NAME - Loop name for marker scoping
 #   LOOP_RUN_ID - Current workflow run id
@@ -63,6 +74,7 @@ VERDICT="${VERDICT:-}"
 #   OUTCOME - Finalize outcome enum
 #   REJECT_REASON - Verifier rejection reason
 #   TARGET_JSON - Target descriptor JSON
+#   USAGE_JSON - Measured usage JSON for Created By footer
 #   VERDICT - Verifier verdict when present
 #
 # Arguments:
@@ -269,6 +281,11 @@ EOF
 
 ${agent_summary}
 EOF
+    fi
+
+    created_by="$(render_created_by_line "${ENGINE}" "${USAGE_JSON}")"
+    if [[ -n ${created_by} ]]; then
+        printf '\n%s\n' "${created_by}"
     fi
 }
 

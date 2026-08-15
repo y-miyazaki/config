@@ -14,6 +14,10 @@ inputs:
     default: ""
     description: "Commit SHA after successful push_head (empty for open_pr)"
     required: false
+  engine:
+    default: ""
+    description: "AI engine slug for Created By footer (e.g. cursor)"
+    required: false
   fix_pr_number:
     default: ""
     description: "Bot fix PR number from loop-finalize (open_pr)"
@@ -62,6 +66,10 @@ inputs:
     default: "{}"
     description: "Target descriptor JSON from loop-detect"
     required: false
+  usage_json:
+    default: ""
+    description: "Measured usage JSON for Created By footer"
+    required: false
   verdict:
     default: ""
     description: "Verifier verdict (APPROVE or REJECT)"
@@ -85,6 +93,7 @@ runs:
         ATTEMPTS: ${{ inputs.attempts }}
         AUTO_MERGE: ${{ inputs.auto_merge }}
         COMMIT_SHA: ${{ inputs.commit_sha }}
+        ENGINE: ${{ inputs.engine }}
         FIX_PR_NUMBER: ${{ inputs.fix_pr_number }}
         FIX_PR_URL: ${{ inputs.fix_pr_url }}
         GITHUB_SERVER_URL: ${{ github.server_url }}
@@ -99,5 +108,6 @@ runs:
         REJECT_REASON: ${{ inputs.reject_reason }}
         REPOSITORY: ${{ inputs.repository }}
         TARGET_JSON: ${{ inputs.target_json }}
+        USAGE_JSON: ${{ inputs.usage_json }}
         VERDICT: ${{ inputs.verdict }}
       run: bash "${GITHUB_ACTION_PATH}/lib/notify.sh"
