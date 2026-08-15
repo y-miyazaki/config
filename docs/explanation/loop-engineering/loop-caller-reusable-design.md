@@ -258,6 +258,7 @@ All branch/PR loops use **`ci-loop-caller.yaml`**. The reusable `detect` job dec
 | Job           | Permissions                                                                      |
 | ------------- | -------------------------------------------------------------------------------- |
 | `detect`      | `actions: write`, `contents: read`, `pull-requests: read`                        |
+| `ack-trigger` | `issues: write`, `pull-requests: write` when `ack_trigger_comment` (pr-revise only) |
 | `execute`     | execute baseline (`actions: read`, `contents: write`, `pull-requests: write`, …) |
 | `record-skip` | `contents: write`, `pull-requests: write`                                        |
 

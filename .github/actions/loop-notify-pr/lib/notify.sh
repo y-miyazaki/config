@@ -50,6 +50,8 @@ TARGET_JSON="${TARGET_JSON:-"{}"}"
 USAGE_JSON="${USAGE_JSON:-}"
 GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 VERDICT="${VERDICT:-}"
+TRIGGER_COMMENT_ID="${TRIGGER_COMMENT_ID:-}"
+GITHUB_EVENT_NAME="${GITHUB_EVENT_NAME:-}"
 
 #######################################
 # Shared Created By footer (lib/loop/created_by.sh)
@@ -58,6 +60,9 @@ _LOOP_CREATED_BY_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pw
 # shellcheck source=../../lib/loop/created_by.sh
 # shellcheck disable=SC1091
 source "${_LOOP_CREATED_BY_LIB}/created_by.sh"
+# shellcheck source=../../lib/loop/trigger_thread.sh
+# shellcheck disable=SC1091
+source "${_LOOP_CREATED_BY_LIB}/trigger_thread.sh"
 
 #######################################
 # build_comment_body: Render marker comment markdown
@@ -316,6 +321,58 @@ function find_existing_comment {
 }
 
 #######################################
+# post_trigger_done_reply: Reply on the triggering comment thread when present
+#
+# Globals:
+#   COMMIT_SHA - Pushed commit SHA when present
+#   GITHUB_EVENT_NAME - Triggering webhook event name
+#   GITHUB_SERVER_URL - GitHub server URL prefix
+#   LOOP_RUN_ID - Current workflow run id
+#   NOTIFY_CONTEXT_JSON - Machine context from loop-execute
+#   OUTCOME - Finalize outcome enum
+#   PR_NUMBER - Target pull request number
+#   REJECT_REASON - Verifier rejection reason
+#   REPOSITORY - Repository owner/name
+#   TRIGGER_COMMENT_ID - Triggering comment id
+#   VERDICT - Verifier verdict when present
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Warning/notice annotations via reply_trigger_comment
+#
+# Returns:
+#   0 always
+#
+#######################################
+function post_trigger_done_reply {
+    local commit_url loop_run_url summary body overview
+
+    if [[ -z ${TRIGGER_COMMENT_ID:-} ]]; then
+        return 0
+    fi
+
+    if [[ -n ${COMMIT_SHA} ]]; then
+        commit_url="${GITHUB_SERVER_URL}/${REPOSITORY}/commit/${COMMIT_SHA}"
+    else
+        commit_url=""
+    fi
+    loop_run_url="${GITHUB_SERVER_URL}/${REPOSITORY}/actions/runs/${LOOP_RUN_ID}"
+
+    overview=""
+    if [[ -n ${NOTIFY_CONTEXT_JSON} ]] && jq -e . <<< "${NOTIFY_CONTEXT_JSON}" > /dev/null 2>&1; then
+        overview=$(jq -r '.agent_report_overview // empty' <<< "${NOTIFY_CONTEXT_JSON}")
+    fi
+    overview="$(truncate_text "$(redact_sensitive_text "${overview}")" 500)"
+    summary="${overview}"
+
+    body="$(build_done_reply_body         "${OUTCOME}"         "${VERDICT}"         "$(redact_sensitive_text "${REJECT_REASON}")"         "${COMMIT_SHA}"         "${commit_url}"         "${loop_run_url}"         "${summary}")"
+
+    reply_trigger_comment "${body}"
+}
+
+#######################################
 # redact_sensitive_text: Redact common secret patterns
 #
 # Globals:
@@ -498,6 +555,7 @@ function resolve_actor {
     printf '%s' "github-actions"
 }
 
+
 #######################################
 # main: Post or update loop-notify-pr marker comment
 #
@@ -563,6 +621,8 @@ function main {
         echo "::warning::loop-notify-pr failed to post comment on PR #${PR_NUMBER}"
         return 0
     fi
+
+    post_trigger_done_reply
 
     echo "::notice title=loop-notify-pr::Posted notification on PR #${PR_NUMBER}"
 }

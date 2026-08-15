@@ -25,6 +25,11 @@
 #   PR_NUMBER         Pull request number (required unless GITHUB_EVENT_PATH hydrates it)
 #   PR_MENTION        Mention token required in comment body (default: @loop)
 #   PR_COMMENT_BODY   Comment body to match against PR_MENTION
+#   PR_COMMENT_ID     Review/issue comment id (hydrated from event when unset)
+#   PR_COMMENT_PATH   Inline review file path (empty for issue_comment)
+#   PR_COMMENT_LINE   Inline review line (line or original_line; empty for issue_comment)
+#   PR_COMMENT_SIDE   Inline review side (LEFT/RIGHT; empty for issue_comment)
+#   PR_COMMENT_DIFF_HUNK Inline review diff hunk (empty for issue_comment)
 #   PR_ACTOR          Comment or event actor login
 #   PR_ACTOR_TYPE     Comment or event actor type (User, Bot, ...)
 #   PR_ACTOR_ASSOCIATION Comment or sender author_association when present
@@ -121,6 +126,11 @@ function ensure_dependencies {
 #   GITHUB_EVENT_PATH
 #   PR_NUMBER (set)
 #   PR_COMMENT_BODY (set)
+#   PR_COMMENT_ID (set)
+#   PR_COMMENT_PATH (set)
+#   PR_COMMENT_LINE (set)
+#   PR_COMMENT_SIDE (set)
+#   PR_COMMENT_DIFF_HUNK (set)
 #   PR_ACTOR (set)
 #   PR_ACTOR_TYPE (set)
 #   PR_ACTOR_ASSOCIATION (set)
@@ -140,7 +150,8 @@ function ensure_dependencies {
 #######################################
 function hydrate_pr_env_from_event {
     local event_path="${GITHUB_EVENT_PATH:-}"
-    local pr_number comment_body actor_type actor actor_association
+    local pr_number comment_body comment_id comment_path comment_line comment_side comment_diff_hunk
+    local actor_type actor actor_association
 
     if [[ -z ${event_path} || ! -f ${event_path} ]]; then
         return 0
@@ -159,6 +170,15 @@ function hydrate_pr_env_from_event {
     if [[ -z ${comment_body} ]]; then
         comment_body="$(jq -r '.inputs.feedback // empty' "${event_path}")"
     fi
+    comment_id="$(jq -r 'if .comment.id then (.comment.id | tostring) else empty end' "${event_path}")"
+    comment_path="$(jq -r '.comment.path // empty' "${event_path}")"
+    comment_line="$(jq -r '
+        if (.comment.line | type) == "number" then (.comment.line | tostring)
+        elif (.comment.original_line | type) == "number" then (.comment.original_line | tostring)
+        else empty end
+    ' "${event_path}")"
+    comment_side="$(jq -r '.comment.side // empty' "${event_path}")"
+    comment_diff_hunk="$(jq -r '.comment.diff_hunk // empty' "${event_path}")"
     actor_type="$(jq -r '.comment.user.type // .sender.type // empty' "${event_path}")"
     actor="$(jq -r '.comment.user.login // .sender.login // empty' "${event_path}")"
     actor_association="$(jq -r '.comment.author_association // .sender.author_association // empty' "${event_path}")"
@@ -168,6 +188,21 @@ function hydrate_pr_env_from_event {
     fi
     if [[ -z ${PR_COMMENT_BODY:-} && -n ${comment_body} ]]; then
         PR_COMMENT_BODY="${comment_body}"
+    fi
+    if [[ -z ${PR_COMMENT_ID:-} && -n ${comment_id} ]]; then
+        PR_COMMENT_ID="${comment_id}"
+    fi
+    if [[ -z ${PR_COMMENT_PATH:-} && -n ${comment_path} ]]; then
+        PR_COMMENT_PATH="${comment_path}"
+    fi
+    if [[ -z ${PR_COMMENT_LINE:-} && -n ${comment_line} ]]; then
+        PR_COMMENT_LINE="${comment_line}"
+    fi
+    if [[ -z ${PR_COMMENT_SIDE:-} && -n ${comment_side} ]]; then
+        PR_COMMENT_SIDE="${comment_side}"
+    fi
+    if [[ -z ${PR_COMMENT_DIFF_HUNK:-} && -n ${comment_diff_hunk} ]]; then
+        PR_COMMENT_DIFF_HUNK="${comment_diff_hunk}"
     fi
     if [[ -z ${PR_ACTOR_TYPE:-} && -n ${actor_type} ]]; then
         PR_ACTOR_TYPE="${actor_type}"
@@ -421,6 +456,11 @@ function build_skip_message {
 #   PR_NUMBER
 #   PR_MENTION
 #   PR_COMMENT_BODY
+#   PR_COMMENT_ID
+#   PR_COMMENT_PATH
+#   PR_COMMENT_LINE
+#   PR_COMMENT_SIDE
+#   PR_COMMENT_DIFF_HUNK
 #   PR_ACTOR
 #
 # Arguments:
@@ -439,12 +479,29 @@ function build_skip_message {
 function build_result_json {
     local mention="${PR_MENTION:-@loop}"
     local body="${PR_COMMENT_BODY:-}"
+    local comment_id="${PR_COMMENT_ID:-}"
+    local comment_line="${PR_COMMENT_LINE:-}"
+    local comment_id_json=""
+    local comment_line_json=""
+
+    if [[ -n ${comment_id} ]]; then
+        comment_id_json="$(json_number "${comment_id}")"
+    fi
+    if [[ -n ${comment_line} ]]; then
+        comment_line_json="$(json_number "${comment_line}")"
+    fi
 
     json_object \
         pr_number "${PR_NUMBER}" \
         mention "${mention}" \
         comment_body "${body}" \
-        actor "${PR_ACTOR:-}"
+        comment_id "${comment_id_json}" \
+        path "${PR_COMMENT_PATH:-}" \
+        line "${comment_line_json}" \
+        side "${PR_COMMENT_SIDE:-}" \
+        diff_hunk "${PR_COMMENT_DIFF_HUNK:-}" \
+        actor "${PR_ACTOR:-}" \
+        event_name "${GITHUB_EVENT_NAME:-}"
 }
 
 #######################################
@@ -533,6 +590,11 @@ function main {
 
     PR_NUMBER="${PR_NUMBER:-}"
     PR_COMMENT_BODY="${PR_COMMENT_BODY:-}"
+    PR_COMMENT_ID="${PR_COMMENT_ID:-}"
+    PR_COMMENT_PATH="${PR_COMMENT_PATH:-}"
+    PR_COMMENT_LINE="${PR_COMMENT_LINE:-}"
+    PR_COMMENT_SIDE="${PR_COMMENT_SIDE:-}"
+    PR_COMMENT_DIFF_HUNK="${PR_COMMENT_DIFF_HUNK:-}"
     PR_ACTOR_TYPE="${PR_ACTOR_TYPE:-}"
     PR_ACTOR="${PR_ACTOR:-}"
     PR_MENTION="${PR_MENTION:-@loop}"

@@ -188,6 +188,20 @@ Inputs/outputs unchanged from P1 except:
 | Delivery           | `open_pr` to PR head branch; not direct `push_head`  |
 | Marker scope       | `<!-- loop-notify-pr:v1:{loop_name} -->`             |
 
+
+## Trigger thread UX (pr-revise)
+
+When the workflow event carries `github.event.comment.id` (comment webhooks):
+
+1. **Start ACK** — `ci-loop-caller` adds an `eyes` reaction on the triggering comment after detect `should_run=true` (issue_comment and pull_request_review_comment only).
+2. **Done reply** — `loop-notify-pr` posts a short result reply after the marker upsert:
+   - `pull_request_review_comment` → REST thread reply (`.../comments/{id}/replies`)
+   - `issue_comment` → follow-up PR conversation comment (REST has no issue-comment thread)
+3. **Marker comment** remains the run-level summary (`<!-- loop-notify-pr:v1:{loop_name} -->`).
+4. Auto-resolve of review threads stays out of scope.
+
+Shared helpers: `.github/actions/lib/loop/trigger_thread.sh`.
+
 ## References
 
 - [cobusgreyling ci-sweeper — comment on existing PR](https://github.com/cobusgreyling/loop-engineering/blob/main/patterns/ci-sweeper.md)

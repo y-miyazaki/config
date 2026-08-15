@@ -10,6 +10,11 @@ name: ci-loop-caller
 on:
   workflow_call:
     inputs:
+      ack_trigger_comment:
+        default: false
+        description: "After detect proceeds, ACK the triggering comment with an eyes reaction (pr-revise)"
+        required: false
+        type: boolean
       additional_commit_paths:
         default: ""
         description: "Extra paths included in finalize commit (e.g. ledger file)"
@@ -346,6 +351,59 @@ jobs:
           skill_name: ${{ inputs.skill_name }}
           state_file: ${{ inputs.state_file }}
           write_target: ${{ inputs.write_target }}
+
+  ack-trigger:
+    if: >-
+      inputs.ack_trigger_comment &&
+      needs.detect.outputs.should_run == 'true' &&
+      (github.event_name == 'issue_comment' ||
+      github.event_name == 'pull_request_review_comment')
+    needs: detect
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Resolve GitHub Token
+        id: resolve_github_token
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@de782bdea32cf4aa332bc3b11f04daf5bbf9b14c # v1.8.85
+        with:
+          bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
+          bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+          github_token: ${{ secrets.GH_TOKEN }}
+
+      - name: Ack Trigger Comment
+        continue-on-error: true
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_TOKEN: ${{ steps.resolve_github_token.outputs.github_token }}
+          REPOSITORY: ${{ github.repository }}
+          TRIGGER_COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${TRIGGER_COMMENT_ID}" || -z "${REPOSITORY}" ]]; then
+            exit 0
+          fi
+          case "${GITHUB_EVENT_NAME}" in
+            issue_comment)
+              endpoint="repos/${REPOSITORY}/issues/comments/${TRIGGER_COMMENT_ID}/reactions"
+              ;;
+            pull_request_review_comment)
+              endpoint="repos/${REPOSITORY}/pulls/comments/${TRIGGER_COMMENT_ID}/reactions"
+              ;;
+            *)
+              exit 0
+              ;;
+          esac
+          if gh api --method POST "${endpoint}" -f content='eyes' >/dev/null; then
+            echo "::notice title=trigger-ack::Added eyes reaction on comment ${TRIGGER_COMMENT_ID}"
+          else
+            echo "::warning::Failed to ACK trigger comment ${TRIGGER_COMMENT_ID}"
+          fi
 
   execute:
     if: needs.detect.outputs.should_run == 'true'
