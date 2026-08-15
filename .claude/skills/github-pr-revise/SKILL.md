@@ -17,7 +17,7 @@ metadata:
 
 ## Input
 
-- **Automation:** detect JSON from `detect_pr_revise.sh` with `result.pr_number` and comment facts. Read `may_edit` / `write_target` from `## Constraints`.
+- **Automation:** detect JSON from `detect_pr_revise.sh` with `result.pr_number`, comment body, and inline review fields (`comment_id`, `path`, `line`, `side`, `diff_hunk` when present; empty for `issue_comment`). Read `may_edit` / `write_target` from `## Constraints`.
 - **Interactive:** PR URL or number plus the human feedback to apply; same Constraints defaults as automation survey unless the user explicitly requests apply.
 
 ## Output Specification
