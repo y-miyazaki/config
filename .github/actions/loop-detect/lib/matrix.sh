@@ -57,10 +57,10 @@ fi
 #
 #######################################
 function build_prompt_text {
-    local skill_name="$1"
+    local agent_implementer_skill_name="$1"
     local level="$2"
     local allowlist="$3"
-    local prompt_instructions="$4"
+    local agent_implementer_instructions="$4"
     local last_sha="$5"
     local current_sha="$6"
     local detect_result="$7"
@@ -75,7 +75,7 @@ function build_prompt_text {
     fi
 
     {
-        echo "Run the ${skill_name} skill."
+        echo "Run the ${agent_implementer_skill_name} skill."
         echo ""
         echo "## Context"
         echo "Last SHA: ${last_sha}"
@@ -92,10 +92,10 @@ function build_prompt_text {
             echo ""
             echo "${open_rejections_prompt}"
         fi
-        if [[ -n ${prompt_instructions} ]]; then
+        if [[ -n ${agent_implementer_instructions} ]]; then
             echo ""
             echo "## Instructions"
-            echo "${prompt_instructions}"
+            echo "${agent_implementer_instructions}"
         fi
         if [[ -n ${level} || -n ${allowlist} ]]; then
             echo ""

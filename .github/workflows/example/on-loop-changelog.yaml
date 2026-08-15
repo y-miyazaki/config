@@ -27,10 +27,21 @@ jobs:
   loop:
     uses: y-miyazaki/config/.github/workflows/ci-loop-caller.yaml@85b694da37ac5e2e225409d46776ab668cfbda17 # v1.8.87
     with:
+      agent_implementer_instructions: |
+        Update the target changelog file using Keep a Changelog section names.
+        Map each provided commit to a single bullet under `## [Unreleased]`.
+        When `repository_url` is present, append a markdown commit link using the full `sha`.
+        When `compare_url` is present, add `[Full diff](compare_url)` once under `## [Unreleased]` if not already there.
+        For each entry in detect `releases[]` that is not yet documented:
+        - Insert `## [version] - date` immediately below `## [Unreleased]` (newest release first among new sections)
+        - Move bullets for that release's `commit_shas` from `## [Unreleased]` into the matching subsections
+        - Add or update footer compare links `[version]: repository_url/compare/previous_tag...tag_sha` when `repository_url` is present
+        Preserve existing released sections; do not invent versions outside detect `releases[]`.
       agent_implementer_max_turns: 5
       agent_implementer_model: cursor-grok-4.5-low
+      agent_implementer_skill_name: loop-changelog
       agent_loop_max_attempts: 3
-      agent_verifier_criteria: |
+      agent_verifier_instructions: |
         ## Criteria for APPROVE
 
         ALL of the following must be true:
@@ -61,12 +72,12 @@ jobs:
       branch_state: main
       budget_max_runs_per_day: 1
       budget_max_tokens_per_day: 1000000
+      delivery: open_pr
       detect_domain_env_json: >-
         {"CHANGELOG_FILE":"CHANGELOG.md","CHANGELOG_MERGE_COMMITS":"false"}
       detect_script: .agents/skills/loop-changelog/scripts/detect_changelog_commits.sh
       engine: cursor
       environment: default
-      delivery: open_pr
       infer_files_pattern: 'CHANGELOG\.md'
       level: L2
       loop_name: changelog
@@ -74,19 +85,8 @@ jobs:
       may_edit: true
       no_changes_verdict: REJECT
       pr_body: ""
-      pr_title: "chore(changelog): update CHANGELOG.md (loop-changelog)"
-      prompt_instructions: |
-        Update the target changelog file using Keep a Changelog section names.
-        Map each provided commit to a single bullet under `## [Unreleased]`.
-        When `repository_url` is present, append a markdown commit link using the full `sha`.
-        When `compare_url` is present, add `[Full diff](compare_url)` once under `## [Unreleased]` if not already there.
-        For each entry in detect `releases[]` that is not yet documented:
-        - Insert `## [version] - date` immediately below `## [Unreleased]` (newest release first among new sections)
-        - Move bullets for that release's `commit_shas` from `## [Unreleased]` into the matching subsections
-        - Add or update footer compare links `[version]: repository_url/compare/previous_tag...tag_sha` when `repository_url` is present
-        Preserve existing released sections; do not invent versions outside detect `releases[]`.
       pr_enabled: false
-      skill_name: loop-changelog
+      pr_title: "chore(changelog): update CHANGELOG.md (loop-changelog)"
       write_target: fix
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}

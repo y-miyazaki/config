@@ -24,10 +24,13 @@ jobs:
   loop:
     uses: y-miyazaki/config/.github/workflows/ci-loop-caller.yaml@85b694da37ac5e2e225409d46776ab668cfbda17 # v1.8.87
     with:
+      agent_implementer_instructions: |
+        Triage documentation drift on the PR head branch from detect facts.
       agent_implementer_max_turns: 5
       agent_implementer_model: cursor-grok-4.5-low
+      agent_implementer_skill_name: docs-updater
       agent_loop_max_attempts: 3
-      agent_verifier_criteria: |
+      agent_verifier_instructions: |
         ## Criteria for APPROVE
         1. Changes are within allowlist and match detect facts
         ## Criteria for REJECT
@@ -50,11 +53,8 @@ jobs:
       may_edit: true
       no_changes_verdict: REJECT
       pr_body: ""
-      pr_title: "chore(loop): example PR-head watch"
-      prompt_instructions: |
-        Triage documentation drift on the PR head branch from detect facts.
       pr_enabled: true
-      skill_name: docs-updater
+      pr_title: "chore(loop): example PR-head watch"
       write_target: fix
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}

@@ -27,10 +27,16 @@ jobs:
   loop:
     uses: y-miyazaki/config/.github/workflows/ci-loop-caller.yaml@85b694da37ac5e2e225409d46776ab668cfbda17 # v1.8.87
     with:
+      agent_implementer_instructions: |
+        Classify mechanical debt signals per the skill taxonomy.
+        Write the dated report to `report_file` at L2 within the allowlist.
+        Compare against `previous_report` for resolved, recurring, and regression items.
+        Do not create GitHub Issues.
       agent_implementer_max_turns: 5
       agent_implementer_model: cursor-grok-4.5-low
+      agent_implementer_skill_name: loop-tech-debt
       agent_loop_max_attempts: 3
-      agent_verifier_criteria: |
+      agent_verifier_instructions: |
         ## Criteria for APPROVE
 
         ALL of the following must be true:
@@ -67,12 +73,6 @@ jobs:
       pr_body: ""
       pr_enabled: false
       pr_title: "chore(tech-debt): technical debt report (loop-tech-debt)"
-      prompt_instructions: |
-        Classify mechanical debt signals per the skill taxonomy.
-        Write the dated report to `report_file` at L2 within the allowlist.
-        Compare against `previous_report` for resolved, recurring, and regression items.
-        Do not create GitHub Issues.
-      skill_name: loop-tech-debt
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}

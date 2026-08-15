@@ -3,16 +3,23 @@ description: >-
   Run one entity detect_script, apply light budget check, build single-target
   matrix and upload loop-handoff artifact for ci-loop-agent.
 inputs:
+  agent_implementer_instructions:
+    default: ""
+    description: Extra instructions appended to implementer prompt
+    required: false
   agent_implementer_max_turns:
     description: Maximum implementer agent turns per loop attempt
     required: true
   agent_implementer_model:
     description: Implementer model ID
     required: true
+  agent_implementer_skill_name:
+    description: Skill directory name under common package
+    required: true
   agent_loop_max_attempts:
     description: Maximum Agent→Verify retry cycles
     required: true
-  agent_verifier_criteria:
+  agent_verifier_instructions:
     description: Domain-specific APPROVE/REJECT rubric
     required: true
   agent_verifier_max_turns:
@@ -85,17 +92,10 @@ inputs:
     default: ""
     description: PR title template (unused when delivery=none)
     required: false
-  prompt_instructions:
-    default: ""
-    description: Extra instructions appended to implementer prompt
-    required: false
   run_log_file:
     default: .loop/loop-run-log.md
     description: Path to loop run log
     required: false
-  skill_name:
-    description: Skill directory name under common package
-    required: true
   state_file:
     default: ""
     description: Optional state file path override
@@ -111,12 +111,15 @@ outputs:
   agent_implementer_model:
     description: Implementer model
     value: ${{ steps.config.outputs.agent_implementer_model }}
+  agent_implementer_skill_name:
+    description: Skill name
+    value: ${{ steps.config.outputs.agent_implementer_skill_name }}
   agent_loop_max_attempts:
     description: Loop max attempts
     value: ${{ steps.config.outputs.agent_loop_max_attempts }}
-  agent_verifier_criteria:
+  agent_verifier_instructions:
     description: Verifier criteria
-    value: ${{ steps.config.outputs.agent_verifier_criteria }}
+    value: ${{ steps.config.outputs.agent_verifier_instructions }}
   agent_verifier_max_turns:
     description: Verifier max turns
     value: ${{ steps.config.outputs.agent_verifier_max_turns }}
@@ -156,9 +159,6 @@ outputs:
   should_run:
     description: Whether the execute job should run
     value: ${{ steps.detect.outputs.should_run }}
-  skill_name:
-    description: Skill name
-    value: ${{ steps.config.outputs.skill_name }}
   skip_reason:
     description: Why execution was skipped (budget | detect_skip)
     value: ${{ steps.detect.outputs.skip_reason }}
@@ -177,28 +177,28 @@ runs:
       env:
         AGENT_IMPLEMENTER_MAX_TURNS: ${{ inputs.agent_implementer_max_turns }}
         AGENT_IMPLEMENTER_MODEL: ${{ inputs.agent_implementer_model }}
+        AGENT_IMPLEMENTER_SKILL_NAME: ${{ inputs.agent_implementer_skill_name }}
         AGENT_LOOP_MAX_ATTEMPTS: ${{ inputs.agent_loop_max_attempts }}
-        AGENT_VERIFIER_CRITERIA: ${{ inputs.agent_verifier_criteria }}
+        AGENT_VERIFIER_INSTRUCTIONS: ${{ inputs.agent_verifier_instructions }}
         AGENT_VERIFIER_MAX_TURNS: ${{ inputs.agent_verifier_max_turns }}
         AGENT_VERIFIER_MODEL: ${{ inputs.agent_verifier_model }}
         ENGINE: ${{ inputs.engine }}
         LEVEL: ${{ inputs.level }}
-        SKILL_NAME: ${{ inputs.skill_name }}
       run: |
         set -euo pipefail
-        CRITERIA_DELIM="CRITERIA_$(openssl rand -hex 8)"
+        AGENT_VERIFIER_INSTRUCTIONS_DELIM="CRITERIA_$(openssl rand -hex 8)"
         {
           echo "agent_implementer_max_turns=${AGENT_IMPLEMENTER_MAX_TURNS}"
           echo "agent_implementer_model=${AGENT_IMPLEMENTER_MODEL}"
           echo "agent_loop_max_attempts=${AGENT_LOOP_MAX_ATTEMPTS}"
-          echo "agent_verifier_criteria<<${CRITERIA_DELIM}"
-          echo "${AGENT_VERIFIER_CRITERIA}"
-          echo "${CRITERIA_DELIM}"
+          echo "agent_verifier_instructions<<${AGENT_VERIFIER_INSTRUCTIONS_DELIM}"
+          echo "${AGENT_VERIFIER_INSTRUCTIONS}"
+          echo "${AGENT_VERIFIER_INSTRUCTIONS_DELIM}"
           echo "agent_verifier_max_turns=${AGENT_VERIFIER_MAX_TURNS}"
           echo "agent_verifier_model=${AGENT_VERIFIER_MODEL}"
           echo "engine=${ENGINE}"
           echo "level=${LEVEL}"
-          echo "skill_name=${SKILL_NAME}"
+          echo "agent_implementer_skill_name=${AGENT_IMPLEMENTER_SKILL_NAME}"
         } >> "${GITHUB_OUTPUT}"
 
     - name: Resolve State File
@@ -217,6 +217,8 @@ runs:
       id: detect
       shell: bash
       env:
+        AGENT_IMPLEMENTER_INSTRUCTIONS: ${{ inputs.agent_implementer_instructions }}
+        AGENT_IMPLEMENTER_SKILL_NAME: ${{ inputs.agent_implementer_skill_name }}
         BUDGET_FILE: ${{ inputs.budget_file }}
         BUDGET_MAX_RUNS_PER_DAY: ${{ inputs.budget_max_runs_per_day }}
         BUDGET_MAX_TOKENS_PER_DAY: ${{ inputs.budget_max_tokens_per_day }}
@@ -228,9 +230,7 @@ runs:
         LEVEL: ${{ inputs.level }}
         LOOP_NAME: ${{ inputs.loop_name }}
         MAY_EDIT: ${{ inputs.may_edit }}
-        PROMPT_INSTRUCTIONS: ${{ inputs.prompt_instructions }}
         RUN_LOG_FILE: ${{ inputs.run_log_file }}
-        SKILL_NAME: ${{ inputs.skill_name }}
         WRITE_TARGET: ${{ inputs.write_target }}
       run: bash "${GITHUB_ACTION_PATH}/lib/detect.sh"
 

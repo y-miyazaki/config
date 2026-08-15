@@ -110,12 +110,12 @@ on-loop-refactor.yaml (caller)
   → loop-detect + detect_refactor.sh
        → hints[]: duplication_block | oversized_unit (facts only)
        → skip if empty or outside allowlist
-  → Execute: skill_name=loop-refactor (or refactor with loop envelope)
+  → Execute: agent_implementer_skill_name=loop-refactor (or refactor with loop envelope)
        → same contract as Phase 1; one hint → one target per run
   → Verify → Finalize open_pr
 ```
 
-Entry skill remains **repository-neutral**. Consumer caller supplies `prompt_instructions` (A') and `agent_verifier_criteria` (defer / REJECT rules).
+Entry skill remains **repository-neutral**. Consumer caller supplies `agent_implementer_instructions` (A') and `agent_verifier_instructions` (defer / REJECT rules).
 
 ### Relationship to other loops
 

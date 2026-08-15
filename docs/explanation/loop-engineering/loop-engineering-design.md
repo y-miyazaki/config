@@ -69,16 +69,16 @@ Distributable entry skills stay **repository-neutral**. Named domain skills (e.g
 | -------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | Detect                           | Mechanical facts                                    | `failures[]`, optional `stack_hint` from `workflow_name`                                 |
 | Entry skill                      | Generic orchestration                               | Classify, read caller `## Instructions` for dispatch, fix one regression, report outcome |
-| Caller `prompt_instructions`     | **Stack routing (A')** — named skills for this repo | `on-loop-ci-sweeper.yaml`: workflow → skill map                                          |
-| Caller `agent_verifier_criteria` | Failure kind defer (B) appendix                     | REJECT coverage/deps fixes until domain skill exists                                     |
+| Caller `agent_implementer_instructions`     | **Stack routing (A')** — named skills for this repo | `on-loop-ci-sweeper.yaml`: workflow → skill map                                          |
+| Caller `agent_verifier_instructions` | Failure kind defer (B) appendix                     | REJECT coverage/deps fixes until domain skill exists                                     |
 
 Platform prompt shape (`loop-detect` → `build_prompt_text`):
 
 ```text
-Run the {skill_name} skill.
+Run the {agent_implementer_skill_name} skill.
 ## Change Detection Result
 {detect JSON}
-## Instructions          ← caller prompt_instructions (routing + repo overlay)
+## Instructions          ← caller agent_implementer_instructions (routing + repo overlay)
 ## Constraints           ← level, allowlist
 ```
 
@@ -91,9 +91,9 @@ For failure kinds outside minimal CI repair (coverage threshold, dependency brea
 | Layer                            | Responsibility                                                                           |
 | -------------------------------- | ---------------------------------------------------------------------------------------- |
 | Entry skill                      | Generic `DO NOT USE FOR`, checklist — classify Watch, no edit (no named consumer skills) |
-| Caller `agent_verifier_criteria` | Appendix — REJECT diffs that address deferred kinds; may name expected domain skills     |
+| Caller `agent_verifier_instructions` | Appendix — REJECT diffs that address deferred kinds; may name expected domain skills     |
 
-CI failure kinds outside minimal repair (coverage threshold, dependency breakage) stay in **`ci-sweeper`** — defer via [Failure kind defer (B)](#failure-kind-defer-b), optional domain skills in caller `prompt_instructions` / verifier appendix. No separate `loop-test-coverage` package.
+CI failure kinds outside minimal repair (coverage threshold, dependency breakage) stay in **`ci-sweeper`** — defer via [Failure kind defer (B)](#failure-kind-defer-b), optional domain skills in caller `agent_implementer_instructions` / verifier appendix. No separate `loop-test-coverage` package.
 
 ### Tier 2 (Medium Priority — new observation triggers)
 
@@ -316,7 +316,7 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 | Requirement              | Approach                                                                                                                      | Status         |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | -------------- |
 | Daily budget enforcement | `.loop/loop-budget.json` + `loop-detect` guards; usage from `loop-execute` → `loop-run-log`                                   | ✅ Implemented |
-| loop-verifier skill      | Caller `verifier_skill_name` (default `loop-verifier`); execute slash-loads skill; domain rubric in `agent_verifier_criteria` | ✅ Implemented |
+| loop-verifier skill      | Caller `agent_verifier_skill_name` (default `loop-verifier`); execute slash-loads skill; domain rubric in `agent_verifier_instructions` | ✅ Implemented |
 | Maker-Checker separation | Implemented in `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3)                                                 | ✅ Implemented |
 | Worktree isolation       | `loop-worktree-setup` + push/cleanup inside `loop-execute` via `ci-loop-agent` L2/L3                                          | ✅ Implemented |
 | Denylist / Allowlist     | Defined in SKILL.md, checked by verifier                                                                                      | ✅ Implemented |
@@ -329,9 +329,9 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 | ----------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | Reusable Workflow | `.github/workflows/ci-loop-*.yaml`           | Generic logic only. Domain-specific criteria are passed from the caller via inputs                                                     |
 | Composite Action  | `.github/actions/loop-*`                     | Aggregation of generic steps. Must not depend on specific scripts, repository-specific paths, or domain vocabulary                     |
-| Caller Workflow   | `.github/workflows/on-loop-*.yaml`           | Domain-specific logic: detection script path, verifier criteria, allowlist, `prompt_instructions`, PR metadata                         |
+| Caller Workflow   | `.github/workflows/on-loop-*.yaml`           | Domain-specific logic: detection script path, verifier criteria, allowlist, `agent_implementer_instructions`, PR metadata                         |
 | APM Package       | `.apm/packages/<domain>/<name>/`             | Distributes Agent Skills only. Does not distribute Workflows or Actions                                                                |
-| Skill             | `.apm/packages/<domain>/<name>/.apm/skills/` | Generic orchestration + boundaries. Named consumer domain skills live in caller `prompt_instructions`, not distributable `references/` |
+| Skill             | `.apm/packages/<domain>/<name>/.apm/skills/` | Generic orchestration + boundaries. Named consumer domain skills live in caller `agent_implementer_instructions`, not distributable `references/` |
 
 **Decision criterion**: If the answer to "Can another repository use this via remote reference?" is YES, it belongs in an action/workflow. If NO (depends on specific paths or scripts), write it inline in the caller.
 
@@ -342,11 +342,11 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 | Layer               | Domain-specific (caller / skill)                                 | Generic (action / reusable workflow)                                                                  |
 | ------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | Detection criteria  | `detect_script` path, script output (`result` facts)             | `loop-detect` enumeration, checkout, guards, `target_matrix`                                          |
-| Implementer prompt  | `prompt_instructions`, `AGENT_VERIFIER_CRITERIA`, PR title/body  | `loop-detect` prompt assembly via `lib/loop/build_constraints.sh` (may_edit, allowlist, write_target) |
+| Implementer prompt  | `agent_implementer_instructions`, `agent_verifier_instructions`, PR title/body  | `loop-detect` prompt assembly via `lib/loop/build_constraints.sh` (may_edit, allowlist, write_target) |
 | Verifier context    | Detect fact summary or CI log excerpt per target                 | Always wire `verifier_context` to `loop-execute` (may be empty)                                       |
 | Path scope          | `LOOP_ALLOWLIST`, Skill allowed paths                            | denylist defaults in `loop-execute`, allowlist enforcement                                            |
-| Verifier checker    | `verifier_skill_name` (e.g. `loop-verifier` from `loop` package) | Slash-load `/skill <SKILL.md>`; path guards; INITIAL/REGRESSION orchestration in `loop-execute`       |
-| Verifier domain bar | `agent_verifier_criteria` in caller `env`                        | Appended to verifier prompt `## Task`; embedded fallbacks only when skill files are missing           |
+| Verifier checker    | `agent_verifier_skill_name` (e.g. `loop-verifier` from `loop` package) | Slash-load `/skill <SKILL.md>`; path guards; INITIAL/REGRESSION orchestration in `loop-execute`       |
+| Verifier domain bar | `agent_verifier_instructions` in caller `env`                        | Appended to verifier prompt `## Task`; embedded fallbacks only when skill files are missing           |
 | Domain persistence  | `domain_persistence_script` path (optional)                      | `loop-finalize` invokes script with standard env; no domain logic in action                           |
 
 **Caller input pattern** for a new `on-loop-*.yaml` (after [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md)):
@@ -356,18 +356,18 @@ jobs:
   loop:
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
-      agent_verifier_criteria: |
+      agent_verifier_instructions: |
         ## Criteria for APPROVE
         ...
       allowlist: "src/**,tests/**"
       detect_script: .agents/skills/ci-sweeper/scripts/detect_ci_failures.sh
       level: L2
       loop_name: ci-sweeper
-      prompt_instructions: |
+      agent_implementer_instructions: |
         Fix the failing CI checks identified in the detection result.
         Do not change unrelated files.
-      skill_name: ci-sweeper
-      verifier_skill_name: loop-verifier
+      agent_implementer_skill_name: ci-sweeper
+      agent_verifier_skill_name: loop-verifier
     explicit secrets: map
 ```
 
@@ -379,7 +379,7 @@ Copy `on-loop-changelog.yaml` as a thin caller template (`with:` on `ci-loop-cal
 - Hardcoded file paths or glob patterns for a single loop
 - Domain-specific default commit messages or PR templates inside actions
 
-`loop-detect` is the boundary for prompt assembly: caller supplies `prompt_instructions` (domain task); detect injects generic `## Constraints` via `lib/loop/build_constraints.sh` (may_edit, allowlist, write_target).
+`loop-detect` is the boundary for prompt assembly: caller supplies `agent_implementer_instructions` (domain task); detect injects generic `## Constraints` via `lib/loop/build_constraints.sh` (may_edit, allowlist, write_target).
 
 ### Maker-Checker Separation (Most Important Principle)
 
@@ -387,7 +387,7 @@ The implementation agent (Maker/Implementer) and the verification agent (Checker
 
 Verifier design principles:
 
-- Generic checker behavior comes from the caller-supplied checker skill (`verifier_skill_name`; default `loop-verifier`). Domain APPROVE/REJECT rules stay in caller `agent_verifier_criteria` — not in the checker skill.
+- Generic checker behavior comes from the caller-supplied checker skill (`agent_verifier_skill_name`; default `loop-verifier`). Domain APPROVE/REJECT rules stay in caller `agent_verifier_instructions` — not in the checker skill.
 - Default stance is "reject" (look for reasons to reject, not to approve)
 - Prompt must include CI test output and lint results as mandatory inputs
 - Use a model that is more powerful than, or from a different family than, the implementation agent
@@ -683,7 +683,7 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 | **Input**           | Previous state (last_sha), repository contents                                                                                           |
 | **Output**          | `should_run`, `skip_reason`, `target_matrix` (candidates with `target_json`, `prompt`, `verifier_context`, `result`), config passthrough |
 | **May modify**      | Nothing. Read-only phase                                                                                                                 |
-| **Caller-specific** | Detection script path, `prompt_instructions`, verifier criteria, allowlist, PR metadata                                                  |
+| **Caller-specific** | Detection script path, `agent_implementer_instructions`, verifier criteria, allowlist, PR metadata                                                  |
 | **Generic**         | `loop-detect` (state read, guards including budget, detect invocation, prompt assembly via `lib/loop/build_constraints.sh`)              |
 
 #### Agent (Execute)
@@ -703,7 +703,7 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 | Aspect             | Definition                                                                                                                                                                                                                                                                                    |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Responsibility** | Independently evaluate whether Agent output meets quality criteria. Default stance is reject                                                                                                                                                                                                  |
-| **Input**          | Agent branch, base branch (from `target_json`), `verifier_skill_name`, `agent_verifier_criteria`, denylist, allowlist, `verifier_context` (always wired; may be empty)                                                                                                                        |
+| **Input**          | Agent branch, base branch (from `target_json`), `agent_verifier_skill_name`, `agent_verifier_instructions`, denylist, allowlist, `verifier_context` (always wired; may be empty)                                                                                                                        |
 | **Output**         | `verdict` (APPROVE / REJECT), `reason` (string); on REJECT, structured `files` / `issue` / `fix` when possible (surfaced as `open_rejections`)                                                                                                                                                |
 | **May modify**     | Nothing. Read-only phase                                                                                                                                                                                                                                                                      |
 | **Must be**        | A separate agent session from the implementer, run inside `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3) — not a separate workflow such as a removed `ci-loop-verifier.yaml`                                                                                                  |
@@ -759,7 +759,7 @@ See [Loop Caller Workflows — Finalize (inside ci-loop-agent)](loop-caller-work
 | **Composition**        | Prompt template + allowed paths + behavioral rules + tool constraints                                                                                                                                                                                                                                                   |
 | **Guarantees**         | Agent operating under a Skill will not modify files outside the allowed paths (enforced by Verifier + denylist). Agent will follow the approach defined in the Skill                                                                                                                                                    |
 | **Does not guarantee** | Correctness of output (that is the Verifier's job). CI passing (that is CI's job)                                                                                                                                                                                                                                       |
-| **Repository-neutral** | Distributable entry skills describe generic orchestration only. **Do not** hardcode consumer domain skill names or paths in skill `references/`. Stack routing (A') and named defer skills belong in caller `prompt_instructions` / `agent_verifier_criteria` — see [CONTEXT — Stack Routing (A')](CONTEXT.md#language) |
+| **Repository-neutral** | Distributable entry skills describe generic orchestration only. **Do not** hardcode consumer domain skill names or paths in skill `references/`. Stack routing (A') and named defer skills belong in caller `agent_implementer_instructions` / `agent_verifier_instructions` — see [CONTEXT — Stack Routing (A')](CONTEXT.md#language) |
 
 #### Phase Boundary Rules
 

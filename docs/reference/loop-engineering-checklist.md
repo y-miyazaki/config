@@ -28,7 +28,7 @@ See [CONTEXT — Semantic Findings](../explanation/loop-engineering/CONTEXT.md#l
 - [ ] Detect does **not** emit semantic `findings[]`, triage prose, or repair decisions
 - [ ] Entry skill builds semantic output (`findings[]`, Fix/Watch/Escalate) in Execute from detect facts
 - [ ] `verifier_context` carries fact summary or log excerpt for verify — not skill triage report
-- [ ] `verifier_skill_name` set on caller (default `loop-verifier`); domain rubric only in `agent_verifier_criteria`
+- [ ] `agent_verifier_skill_name` set on caller (default `loop-verifier`); domain rubric only in `agent_verifier_instructions`
 
 ### Phase Contract Compliance
 
@@ -70,13 +70,13 @@ See [CONTEXT — Semantic Findings](../explanation/loop-engineering/CONTEXT.md#l
 #### Skill
 
 - [ ] SKILL.md: allowed paths, behavioral rules, generic orchestration
-- [ ] **No named consumer domain skills** in distributable skill `references/` (caller `prompt_instructions` owns stack routing A')
-- [ ] CI failure loops: caller `agent_verifier_criteria` appendix for failure-kind defer (B) where needed
+- [ ] **No named consumer domain skills** in distributable skill `references/` (caller `agent_implementer_instructions` owns stack routing A')
+- [ ] CI failure loops: caller `agent_verifier_instructions` appendix for failure-kind defer (B) where needed
 
 #### Caller (`on-loop-*.yaml`)
 
-- [ ] `prompt_instructions` includes repo-specific overlay (stack routing table for `ci-sweeper`-type loops)
-- [ ] `agent_verifier_criteria` matches observation trigger (CI log fit, doc factual accuracy, changelog version rules, …)
+- [ ] `agent_implementer_instructions` includes repo-specific overlay (stack routing table for `ci-sweeper`-type loops)
+- [ ] `agent_verifier_instructions` matches observation trigger (CI log fit, doc factual accuracy, changelog version rules, …)
 - [ ] Fix PRs labeled `loop-automation` for `on-loop-state-promote` matching
 
 ### Multi-Branch Targets (Phase 1+)

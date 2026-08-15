@@ -58,7 +58,7 @@ Skill execution boundaries: `tech-debt` SKILL.md (`USE FOR` / `DO NOT USE FOR`).
 
 ## Caller inputs
 
-Keys are passed in `on-loop-tech-debt.yaml` via `with:` on `ci-loop-caller.yaml` (alphabetically ordered). Multiline values (`agent_verifier_criteria`, `prompt_instructions`) are defined inline in the caller workflow.
+Keys are passed in `on-loop-tech-debt.yaml` via `with:` on `ci-loop-caller.yaml` (alphabetically ordered). Multiline values (`agent_verifier_instructions`, `agent_implementer_instructions`) are defined inline in the caller workflow.
 
 Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md). Platform branch/finalize caps: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
 
@@ -69,7 +69,7 @@ Schedule: **`0 8 * * 1`** (Monday 08:00 UTC, weekly).
 | `agent_implementer_max_turns` | Max implementer agent turns per loop attempt (one Agent→Verify cycle).                                                                                                                                                    | `5`                                                                                             |
 | `agent_implementer_model`     | Implementer model ID. Cursor: `agent --list-models`.                                                                                                                                                                      | `cursor-grok-4.5-low`                                                                           |
 | `agent_loop_max_attempts`     | Max Agent→Verify retry cycles before finalize records failure.                                                                                                                                                            | `3`                                                                                             |
-| `agent_verifier_criteria`     | Verifier APPROVE/REJECT rubric. Allowlisted paths only; closed-set fixes (`broken_doc_ref`, `stale_doc`, `pin_drift`) on docs/manifests; no invented paths; cap Critical+High at 25.                                      | Inline in caller workflow                                                                       |
+| `agent_verifier_instructions`     | Verifier APPROVE/REJECT rubric. Allowlisted paths only; closed-set fixes (`broken_doc_ref`, `stale_doc`, `pin_drift`) on docs/manifests; no invented paths; cap Critical+High at 25.                                      | Inline in caller workflow                                                                       |
 | `agent_verifier_max_turns`    | Max verifier agent turns per verification.                                                                                                                                                                                | `3`                                                                                             |
 | `agent_verifier_model`        | Verifier model ID. Cursor: `agent --list-models`.                                                                                                                                                                         | `composer-2.5`                                                                                  |
 | `allowlist`                   | Comma-separated globs the implementer may modify. Report path plus optional secondary closed-set fix paths (`docs/**/*.md`, `package.json`, `go.mod`).                                                                    | `docs/report/tech-debt/**/*.md,docs/**/*.md,package.json,go.mod`                                |
@@ -92,8 +92,8 @@ Schedule: **`0 8 * * 1`** (Monday 08:00 UTC, weekly).
 | `pr_body`                     | Optional static prefix (dogfood: `""`). `loop-finalize` composes agent Overview/Summary + mechanical sections. See [Loop PR Body Readable Design](../../../superpowers/specs/2026-07-21-loop-pr-body-readable-design.md). | `""`                                                                                            |
 | `pr_enabled`                  | Enumerate open PR heads. tech-debt uses integration branches only.                                                                                                                                                        | `false`                                                                                         |
 | `pr_title`                    | PR title when finalize strategy is `open_pr`.                                                                                                                                                                             | `docs(tech-debt): technical debt report (loop-tech-debt)`                                       |
-| `prompt_instructions`         | Domain instructions: classify signals; write dated report; compare previous report.                                                                                                                                       | Inline in caller workflow                                                                       |
-| `skill_name`                  | Skill package to invoke.                                                                                                                                                                                                  | `tech-debt`                                                                                     |
+| `agent_implementer_instructions`         | Domain instructions: classify signals; write dated report; compare previous report.                                                                                                                                       | Inline in caller workflow                                                                       |
+| `agent_implementer_skill_name`                  | Skill package to invoke.                                                                                                                                                                                                  | `tech-debt`                                                                                     |
 | `write_target`                | Agent artifact when `may_edit` is true (`report` for this loop).                                                                                                                                                          | `report`                                                                                        |
 
 ## Detect
@@ -170,7 +170,7 @@ No `domain_persistence_script`.
 
 ## Verifier rubric outline
 
-Inline in caller `agent_verifier_criteria` (must match `on-loop-tech-debt.yaml`):
+Inline in caller `agent_verifier_instructions` (must match `on-loop-tech-debt.yaml`):
 
 - **APPROVE** when all of the following hold:
   1. Changes stay under the allowlist (`docs/report/tech-debt/**/*.md`, `docs/**/*.md`, `package.json`, `go.mod`)

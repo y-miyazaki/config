@@ -205,7 +205,7 @@ Follow changelog/ci-sweeper header conventions; `set -euo pipefail`; source skil
 
 **Interfaces:**
 
-- Consumes: detect JSON path, `loop_name`, `skill_name`, `prompt_instructions`, `level`, `delivery`
+- Consumes: detect JSON path, `loop_name`, `agent_implementer_skill_name`, `agent_implementer_instructions`, `level`, `delivery`
 - Produces: slim `target_matrix` JSON array with one element:
   - `handoff_key`: `entity:issue:<number>`
   - `prompt`: `Run the {skill} skill.` + `## Change Detection Result` + detect JSON + `## Instructions` + `## Constraints`
@@ -251,7 +251,7 @@ Follow changelog/ci-sweeper header conventions; `set -euo pipefail`; source skil
 
 **Interfaces:**
 
-- Caller inputs (subset): mirror needed agent/*, `detect_script`, `loop_name`, `skill_name`, `prompt_instructions`, `level=L1`, `delivery=none`, `may_edit=false`, `write_target=report`, `allowlist` unused but required for agent parity (use `""` or `.loop/**` only if platform demands non-empty — match L1 patterns in docs), `engine`, `branch_state`, budget inputs, `detect_domain_env_json`
+- Caller inputs (subset): mirror needed agent/*, `detect_script`, `loop_name`, `agent_implementer_skill_name`, `agent_implementer_instructions`, `level=L1`, `delivery=none`, `may_edit=false`, `write_target=report`, `allowlist` unused but required for agent parity (use `""` or `.loop/**` only if platform demands non-empty — match L1 patterns in docs), `engine`, `branch_state`, budget inputs, `detect_domain_env_json`
 - Secrets: `AGENT_TOKEN`, bot app optional for run-log push # pragma: allowlist secret
 
 **Behavior:**

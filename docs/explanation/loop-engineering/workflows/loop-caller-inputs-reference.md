@@ -158,13 +158,13 @@ Related but not branch-scoped: `max_targets_per_schedule` (fan-out cap after wat
 | `agent_implementer_max_turns` | number | Max implementer agent turns per loop attempt                              | `5`–`8` (loop-specific) |
 | `agent_implementer_model`     | string | Implementer model ID. Empty = engine default                              | `cursor-grok-4.5-low`   |
 | `agent_loop_max_attempts`     | number | Max Agent→Verify retry cycles before finalize records failure             | `3`                     |
-| `agent_verifier_criteria`     | string | Caller-owned markdown rubric (`## Criteria for APPROVE` / `REJECT`)       | Domain-specific         |
+| `agent_verifier_instructions`     | string | Caller-owned markdown rubric (`## Criteria for APPROVE` / `REJECT`)       | Domain-specific         |
 | `agent_verifier_max_turns`    | number | Max verifier agent turns per verification                                 | `3`                     |
 | `agent_verifier_model`        | string | Verifier model ID                                                         | `composer-2.5`          |
 | `engine`                      | string | AI engine: `claude` \| `copilot` \| `codex` \| `cursor`                   | `cursor`                |
 | `level`                       | string | Autonomy: `L1` \| `L2` \| `L3`                                            | `L2`                    |
-| `skill_name`                  | string | Implementer skill (e.g. `changelog`). Must match `.agents/skills/<name>/` | Per loop                |
-| `verifier_skill_name`         | string | Checker skill slash-loaded by `loop-execute` (not the implementer)        | `loop-verifier`         |
+| `agent_implementer_skill_name`                  | string | Implementer skill (e.g. `changelog`). Must match `.agents/skills/<name>/` | Per loop                |
+| `agent_verifier_skill_name`         | string | Checker skill slash-loaded by `loop-execute` (not the implementer)        | `loop-verifier`         |
 
 ## Platform inputs
 
@@ -190,7 +190,7 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `pr_exclude`                | string  | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`                                                                                                                                                                                                                                                           | ci-sweeper                                  |
 | `pr_include_bots`           | string  | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots                                                                                                                                                                                                                                           | `""`                                        |
 | `pr_title`                  | string  | PR title when finalize strategy is `open_pr`                                                                                                                                                                                                                                                                                | Per loop                                    |
-| `prompt_instructions`       | string  | Domain-specific implementer instructions appended during `loop-detect` prompt assembly                                                                                                                                                                                                                                      | Per loop                                    |
+| `agent_implementer_instructions`       | string  | Domain-specific implementer instructions appended during `loop-detect` prompt assembly                                                                                                                                                                                                                                      | Per loop                                    |
 | `pr_enabled`                | boolean | Watch open PR heads for detect                                                                                                                                                                                                                                                                                              | `false` except ci-sweeper                   |
 | `state_file`                | string  | Override state JSON path                                                                                                                                                                                                                                                                                                    | `.loop/state-<loop_name>.json`              |
 | `write_target`              | string  | Agent artifact when `may_edit` is `true`: `fix` \| `report` (required; injected into `## Constraints`)                                                                                                                                                                                                                      | Per loop (`fix` except tech-debt `report`)  |
@@ -216,7 +216,7 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `agent_implementer_max_turns`        | `agent_implementer_max_turns`            |
 | `agent_implementer_model`            | `agent_implementer_model`                |
 | `agent_loop_max_attempts`            | `agent_loop_max_attempts`                |
-| `agent_verifier_criteria`            | `agent_verifier_criteria`                |
+| `agent_verifier_instructions`            | `agent_verifier_instructions`                |
 | `agent_verifier_max_turns`           | `agent_verifier_max_turns`               |
 | `agent_verifier_model`               | `agent_verifier_model`                   |
 | `allowlist`                          | `allowlist`                              |
@@ -241,17 +241,30 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `pr_exclude`                         | `loop_pr_exclude`                        |
 | `pr_include_bots`                    | `loop_pr_include_bots`                   |
 | `priority`                           | `loop_priority`                          |
-| `prompt_instructions`                | `prompt_instructions`                    |
+| `agent_implementer_instructions`                | `agent_implementer_instructions`                    |
 | `pr_enabled`                         | `loop_pr_enabled`                        |
 | `scoped_pr_number`                   | `loop_scoped_pr_number`                  |
 | `run_log_file`                       | `run_log_file`                           |
-| `skill_name`                         | `skill_name`                             |
-| `verifier_skill_name`                | `verifier_skill_name` (execute only)     |
+| `agent_implementer_skill_name`                         | `agent_implementer_skill_name`                             |
+| `agent_verifier_skill_name`                | `agent_verifier_skill_name` (execute only)     |
 | `state_file`                         | `state_file`                             |
 | _(via `secrets.GH_TOKEN` + resolve)_ | `github_token` (action; resolved in-job) |
 | `write_target`                       | `write_target`                           |
 
 Domain-specific detect script variables use `detect_domain_env_json` keys (not `loop-detect` inputs).
+
+## Prompt inputs (caller-facing)
+
+Thin `on-loop-*.yaml` callers configure prompts with **two multiline strings** on `ci-loop-caller.yaml`:
+
+| Input | Role | Assembled by |
+| ----- | ---- | ------------ |
+| `agent_implementer_instructions` | Domain implementer task | `loop-detect` → `build_prompt_text` → `matrix.target.prompt` → `ci-loop-agent` `prompt_text` |
+| `agent_verifier_instructions` | Domain APPROVE/REJECT rubric | Passed through to `loop-execute` `## Task` section |
+| `agent_verifier_skill_name` | Generic checker skill (default `loop-verifier`) | `loop-execute` slash-loads skill; INITIAL/REGRESSION scaffolding is **not** caller-configurable |
+
+Do **not** configure `prompt_verifier_*`, `prompt_implementer_feedback`, or `prompt_file` on callers — those are `loop-execute` internals (not exposed on `ci-loop-agent`).
+
 
 ## Execute-only inputs
 
@@ -359,7 +372,7 @@ Not a loop caller; configure via environment when invoking `detect_changes.sh` o
 
 | Legacy caller `env`                                           | `ci-loop-caller` input                                   |
 | ------------------------------------------------------------- | -------------------------------------------------------- |
-| `AGENT_*`, `DEFAULT_ENGINE`, `DEFAULT_LEVEL`, `SKILL_NAME`    | Same name (lowercase `engine`, `level` for engine/level) |
+| `AGENT_*`, `DEFAULT_ENGINE`, `DEFAULT_LEVEL`, `AGENT_IMPLEMENTER_SKILL_NAME`    | Same name (lowercase `engine`, `level` for engine/level) |
 | `DEFAULT_BASE_BRANCH`, `LOOP_STATE_PUSH_BRANCH`               | `branch_state`                                           |
 | `LOOP_ALLOWLIST`                                              | `allowlist`                                              |
 | `LOOP_BUDGET_MAX_RUNS_PER_DAY`                                | `budget_max_runs_per_day`                                |
@@ -372,7 +385,10 @@ Not a loop caller; configure via environment when invoking `detect_changes.sh` o
 | `LOOP_MAX_TARGETS_PER_SCHEDULE`                               | `max_targets_per_schedule`                               |
 | `LOOP_NAME`                                                   | `loop_name`                                              |
 | `LOOP_NO_CHANGES_VERDICT`                                     | `no_changes_verdict`                                     |
-| `LOOP_PR_*`, `LOOP_PROMPT_INSTRUCTIONS`, `LOOP_PULL_REQUESTS` | `pr_*`, `prompt_instructions`, `pr_enabled`              |
+| `LOOP_PR_*`, `LOOP_PROMPT_INSTRUCTIONS`, `LOOP_IMPLEMENTER_INSTRUCTIONS`, `LOOP_PULL_REQUESTS` | `pr_*`, `agent_implementer_instructions`, `pr_enabled`              |
+| `prompt_instructions` (deprecated workflow input)             | `agent_implementer_instructions`                         |
+| `skill_name` (deprecated workflow input)                      | `agent_implementer_skill_name`                             |
+| `verifier_skill_name` (deprecated workflow input)             | `agent_verifier_skill_name`                                |
 | `CHANGELOG_*`, `CI_SWEEPER_*`, `DOCS_UPDATER_*`               | `detect_domain_env_json` keys                            |
 | `DOMAIN_PERSISTENCE_SCRIPT`                                   | `domain_persistence_script`                              |
 

@@ -129,3 +129,114 @@ job_if_block() {
     fi
 }
 
+@test "ci-loop-agent does not expose loop-execute internal prompt inputs" {
+    if grep -qE '^      prompt_(verifier_|implementer_feedback|file):' "${AGENT}"; then
+        return 1
+    fi
+    if grep -q 'prompt_verifier_' "${AGENT}"; then
+        return 1
+    fi
+    if grep -q 'prompt_implementer_feedback' "${AGENT}"; then
+        return 1
+    fi
+}
+
+@test "ci-loop-agent coalesces empty denylist to platform default for loop-execute" {
+    grep -q "inputs.denylist != '' && inputs.denylist ||" "${AGENT}"
+}
+
+@test "loop workflows do not use deprecated skill_name or verifier_skill_name inputs" {
+    local f
+    for f in "${ROOT}"/.github/workflows/on-loop-*.yaml \
+        "${ROOT}"/.github/workflows/example/on-loop-*.yaml \
+        "${BRANCH_CALLER}" "${ENTITY_CALLER}" \
+        "${ROOT}"/.github/actions/loop-detect/action.yml \
+        "${ROOT}"/.github/actions/loop-entity-detect/action.yml \
+        "${ROOT}"/.github/actions/loop-execute/action.yml \
+        "${AGENT}"; do
+        if grep -qE '^[[:space:]]+(skill_name|verifier_skill_name):' "${f}"; then
+            echo "deprecated skill input in ${f}" >&2
+            return 1
+        fi
+    done
+}
+
+@test "callers use symmetric agent_implementer_skill_name and agent_verifier_skill_name inputs" {
+    grep -q "^      agent_implementer_skill_name:" "${BRANCH_CALLER}"
+    grep -q "^      agent_verifier_skill_name:" "${BRANCH_CALLER}"
+    grep -q "^      agent_implementer_skill_name:" "${ENTITY_CALLER}"
+    grep -q "^      agent_verifier_skill_name:" "${ENTITY_CALLER}"
+}
+
+@test "loop workflows do not use deprecated prompt_instructions input" {
+    local f
+    for f in "${ROOT}"/.github/workflows/on-loop-*.yaml \
+        "${ROOT}"/.github/workflows/example/on-loop-*.yaml \
+        "${BRANCH_CALLER}" "${ENTITY_CALLER}" \
+        "${ROOT}"/.github/actions/loop-detect/action.yml \
+        "${ROOT}"/.github/actions/loop-entity-detect/action.yml; do
+        if grep -qE '^[[:space:]]+prompt_instructions:' "${f}"; then
+            echo "deprecated prompt_instructions in ${f}" >&2
+            return 1
+        fi
+    done
+}
+
+@test "callers use symmetric agent_implementer_instructions and agent_verifier_instructions inputs" {
+    grep -q "^      agent_implementer_instructions:" "${BRANCH_CALLER}"
+    grep -q "^      agent_verifier_instructions:" "${BRANCH_CALLER}"
+    grep -q "^      agent_implementer_instructions:" "${ENTITY_CALLER}"
+    grep -q "^      agent_verifier_instructions:" "${ENTITY_CALLER}"
+    if grep -qE "^      (prompt_instructions|verifier_criteria|implementer_instructions|verifier_instructions):" "${BRANCH_CALLER}"; then
+        return 1
+    fi
+}
+
+@test "callers use agent_ prefix for agent config inputs" {
+    grep -q "^      agent_implementer_max_turns:" "${BRANCH_CALLER}"
+    grep -q "^      agent_implementer_model:" "${BRANCH_CALLER}"
+    grep -q "^      agent_verifier_max_turns:" "${BRANCH_CALLER}"
+    grep -q "^      agent_verifier_model:" "${BRANCH_CALLER}"
+    grep -q "^      agent_loop_max_attempts:" "${BRANCH_CALLER}"
+    if grep -qE "^      (implementer_max_turns|implementer_model|verifier_max_turns|verifier_model|loop_max_attempts):" "${BRANCH_CALLER}"; then
+        return 1
+    fi
+}
+
+@test "ci-loop-caller workflow_call inputs are alphabetically ordered" {
+    mapfile -t keys < <(awk '
+        /^    inputs:/ { in_inputs=1; next }
+        in_inputs && /^    secrets:/ { exit }
+        in_inputs && /^      [a-zA-Z0-9_]+:/ {
+            sub(/^      /, "")
+            sub(/:.*/, "")
+            print
+        }
+    ' "${BRANCH_CALLER}")
+    mapfile -t sorted < <(printf '%s\n' "${keys[@]}" | LC_ALL=C sort)
+    [[ ${keys[*]} == "${sorted[*]}" ]]
+}
+
+@test "ci-loop-caller detect with block keys are alphabetically ordered" {
+    mapfile -t keys < <(awk '
+        /id: detect/ { after_detect=1 }
+        after_detect && /^        with:/ { in_with=1; next }
+        in_with && /^      - name:/ { exit }
+        in_with && /^          [a-zA-Z0-9_]+:/ {
+            sub(/^          /, "")
+            sub(/:.*/, "")
+            print
+        }
+    ' "${BRANCH_CALLER}")
+    mapfile -t sorted < <(printf '%s\n' "${keys[@]}" | LC_ALL=C sort)
+    [[ ${keys[*]} == "${sorted[*]}" ]]
+}
+
+@test "loop action env blocks are alphabetically ordered" {
+    local checker
+    checker="${ROOT}/scripts/lib/yaml_map_order.py"
+    python3 "${checker}" check \
+        "${ROOT}/.github/actions/loop-detect/action.yml" \
+        "${ROOT}/.github/actions/loop-entity-detect/action.yml" \
+        "${ROOT}/.github/actions/loop-execute/action.yml"
+}

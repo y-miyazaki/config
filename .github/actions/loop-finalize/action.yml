@@ -33,13 +33,13 @@ inputs:
     default: ""
     description: "Optional bash script for domain ledger persistence"
     required: false
-  execute_branch:
-    default: ""
-    description: "Agent branch name for domain_persistence_script env"
-    required: false
   engine:
     default: ""
     description: "AI engine slug for Created By footer (e.g. cursor)"
+    required: false
+  execute_branch:
+    default: ""
+    description: "Agent branch name for domain_persistence_script env"
     required: false
   github_token:
     description: "GitHub token for PR creation and state push"

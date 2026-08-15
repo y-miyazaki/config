@@ -41,10 +41,29 @@ jobs:
     uses: y-miyazaki/config/.github/workflows/ci-loop-caller.yaml@85b694da37ac5e2e225409d46776ab668cfbda17 # v1.8.87
     with:
       additional_commit_paths: .loop/state-ci-sweeper-run-ledger.json
+      agent_implementer_instructions: |
+        Fix the failing CI checks identified in the detection result.
+        Classify flakes and infra/env failures as Watch — do not edit code for those.
+        Apply the smallest change that resolves the logged failure.
+
+        ## Stack routing (validation / repair skills)
+
+        | Failed workflow (hint)              | Domain skill to invoke                          |
+        | ----------------------------------- | ----------------------------------------------- |
+        | on-ci-push-apm-audit              | (apm install/audit; run affected CI checks)     |
+        | on-ci-push-github-actions-workflow  | github-actions-validation                       |
+        | on-ci-push-shell-script             | shell-script-validation                         |
+        | on-ci-push-markdown, on-cd-mkdocs    | markdown-validation                             |
+        | on-ci-push-mise-update-lock         | (minimal lockfile edit; run affected CI checks) |
+        | on-ci-security                      | (security/SAST; classify Watch unless clear fix)|
+
+        Read each skill's SKILL.md under `.agents/skills/` or `.claude/skills/` before invoking.
+        Coverage-threshold and dependency-breakage failures: classify Watch — do not edit until caller verifier allows.
       agent_implementer_max_turns: 8
       agent_implementer_model: cursor-grok-4.5-low
+      agent_implementer_skill_name: loop-ci-sweeper
       agent_loop_max_attempts: 3
-      agent_verifier_criteria: |
+      agent_verifier_instructions: |
         ## Criteria for APPROVE
 
         ALL of the following must be true:
@@ -99,25 +118,6 @@ jobs:
       pr_exclude: fork,draft,label:no-loop
       pr_include_bots: ""
       pr_title: "chore(ci-sweeper): automated CI repair (loop-ci-sweeper)"
-      prompt_instructions: |
-        Fix the failing CI checks identified in the detection result.
-        Classify flakes and infra/env failures as Watch — do not edit code for those.
-        Apply the smallest change that resolves the logged failure.
-
-        ## Stack routing (validation / repair skills)
-
-        | Failed workflow (hint)              | Domain skill to invoke                          |
-        | ----------------------------------- | ----------------------------------------------- |
-        | on-ci-push-apm-audit              | (apm install/audit; run affected CI checks)     |
-        | on-ci-push-github-actions-workflow  | github-actions-validation                       |
-        | on-ci-push-shell-script             | shell-script-validation                         |
-        | on-ci-push-markdown, on-cd-mkdocs    | markdown-validation                             |
-        | on-ci-push-mise-update-lock         | (minimal lockfile edit; run affected CI checks) |
-        | on-ci-security                      | (security/SAST; classify Watch unless clear fix)|
-
-        Read each skill's SKILL.md under `.agents/skills/` or `.claude/skills/` before invoking.
-        Coverage-threshold and dependency-breakage failures: classify Watch — do not edit until caller verifier allows.
-      skill_name: loop-ci-sweeper
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}

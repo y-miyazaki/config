@@ -2,16 +2,23 @@ name: loop-detect
 description: "Detect loop work: enumerate branches/PRs, run detect script per context, build target_matrix."
 
 inputs:
+  agent_implementer_instructions:
+    default: ""
+    description: "Domain-specific implementer instructions appended during loop-detect prompt assembly"
+    required: false
   agent_implementer_max_turns:
     description: "Maximum implementer agent turns per loop attempt"
     required: true
   agent_implementer_model:
     description: "Implementer model override"
     required: true
+  agent_implementer_skill_name:
+    description: "Skill name to invoke (e.g. docs-updater)"
+    required: true
   agent_loop_max_attempts:
     description: "Maximum Agent→Verify loop attempts"
     required: true
-  agent_verifier_criteria:
+  agent_verifier_instructions:
     description: "Domain-specific APPROVE/REJECT criteria (markdown)"
     required: true
   agent_verifier_max_turns:
@@ -122,17 +129,10 @@ inputs:
     default: ""
     description: "PR title for finalize"
     required: false
-  prompt_instructions:
-    default: ""
-    description: "Domain-specific implementer instructions appended during loop-detect prompt assembly"
-    required: false
   run_log_file:
     default: ".loop/loop-run-log.md"
     description: "Path to JSONL run log for budget aggregation"
     required: false
-  skill_name:
-    description: "Skill name to invoke (e.g. docs-updater)"
-    required: true
   state_file:
     default: ""
     description: "Path to loop state JSON file (default: .loop/state-<loop_name>.json)"
@@ -149,12 +149,15 @@ outputs:
   agent_implementer_model:
     description: "Implementer model"
     value: ${{ steps.config.outputs.agent_implementer_model }}
+  agent_implementer_skill_name:
+    description: "Skill name"
+    value: ${{ steps.config.outputs.agent_implementer_skill_name }}
   agent_loop_max_attempts:
     description: "Loop max attempts"
     value: ${{ steps.config.outputs.agent_loop_max_attempts }}
-  agent_verifier_criteria:
+  agent_verifier_instructions:
     description: "Verifier criteria"
-    value: ${{ steps.config.outputs.agent_verifier_criteria }}
+    value: ${{ steps.config.outputs.agent_verifier_instructions }}
   agent_verifier_max_turns:
     description: "Verifier max turns"
     value: ${{ steps.config.outputs.agent_verifier_max_turns }}
@@ -209,9 +212,6 @@ outputs:
   should_run:
     description: "Whether the execute job should run"
     value: ${{ steps.detect.outputs.should_run }}
-  skill_name:
-    description: "Skill name"
-    value: ${{ steps.config.outputs.skill_name }}
   skip_reason:
     description: "Why execution was skipped (none | no_changes | circuit_breaker | budget | target_budget | checkout_failed | config_error | pending_pr). Non-zero detect-script exit fails the step without skip_reason outputs."
     value: ${{ steps.detect.outputs.skip_reason }}
@@ -231,30 +231,30 @@ runs:
       env:
         AGENT_IMPLEMENTER_MAX_TURNS: ${{ inputs.agent_implementer_max_turns }}
         AGENT_IMPLEMENTER_MODEL: ${{ inputs.agent_implementer_model }}
+        AGENT_IMPLEMENTER_SKILL_NAME: ${{ inputs.agent_implementer_skill_name }}
         AGENT_LOOP_MAX_ATTEMPTS: ${{ inputs.agent_loop_max_attempts }}
-        AGENT_VERIFIER_CRITERIA: ${{ inputs.agent_verifier_criteria }}
+        AGENT_VERIFIER_INSTRUCTIONS: ${{ inputs.agent_verifier_instructions }}
         AGENT_VERIFIER_MAX_TURNS: ${{ inputs.agent_verifier_max_turns }}
         AGENT_VERIFIER_MODEL: ${{ inputs.agent_verifier_model }}
         BASE_BRANCH: ${{ inputs.base_branch }}
         ENGINE: ${{ inputs.engine }}
         LEVEL: ${{ inputs.level }}
-        SKILL_NAME: ${{ inputs.skill_name }}
       run: |
         set -euo pipefail
-        CRITERIA_DELIM="CRITERIA_$(openssl rand -hex 8)"
+        AGENT_VERIFIER_INSTRUCTIONS_DELIM="CRITERIA_$(openssl rand -hex 8)"
         {
           echo "agent_implementer_max_turns=${AGENT_IMPLEMENTER_MAX_TURNS}"
           echo "agent_implementer_model=${AGENT_IMPLEMENTER_MODEL}"
           echo "agent_loop_max_attempts=${AGENT_LOOP_MAX_ATTEMPTS}"
-          echo "agent_verifier_criteria<<${CRITERIA_DELIM}"
-          echo "${AGENT_VERIFIER_CRITERIA}"
-          echo "${CRITERIA_DELIM}"
+          echo "agent_verifier_instructions<<${AGENT_VERIFIER_INSTRUCTIONS_DELIM}"
+          echo "${AGENT_VERIFIER_INSTRUCTIONS}"
+          echo "${AGENT_VERIFIER_INSTRUCTIONS_DELIM}"
           echo "agent_verifier_max_turns=${AGENT_VERIFIER_MAX_TURNS}"
           echo "agent_verifier_model=${AGENT_VERIFIER_MODEL}"
           echo "base_branch=${BASE_BRANCH}"
           echo "engine=${ENGINE}"
           echo "level=${LEVEL}"
-          echo "skill_name=${SKILL_NAME}"
+          echo "agent_implementer_skill_name=${AGENT_IMPLEMENTER_SKILL_NAME}"
         } >> "$GITHUB_OUTPUT"
 
     - name: Resolve State File
@@ -273,6 +273,8 @@ runs:
       id: detect
       shell: bash
       env:
+        AGENT_IMPLEMENTER_INSTRUCTIONS: ${{ inputs.agent_implementer_instructions }}
+        AGENT_IMPLEMENTER_SKILL_NAME: ${{ inputs.agent_implementer_skill_name }}
         ALLOWLIST: ${{ inputs.allowlist }}
         BASE_BRANCH: ${{ inputs.base_branch }}
         BUDGET_FILE: ${{ inputs.budget_file }}
@@ -280,24 +282,22 @@ runs:
         BUDGET_MAX_TOKENS_PER_DAY: ${{ inputs.budget_max_tokens_per_day }}
         DELIVERY: ${{ inputs.delivery }}
         DETECT_SCRIPT: ${{ inputs.detect_script }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
         GIT_LANDING_INTEGRATION: ${{ inputs.git_landing_integration }}
         GIT_LANDING_PULL_REQUEST: ${{ inputs.git_landing_pull_request }}
-        GITHUB_TOKEN: ${{ inputs.github_token }}
         LEVEL: ${{ inputs.level }}
         LOOP_BRANCH_MATCH: ${{ inputs.loop_branch_match }}
         LOOP_INTEGRATION_BRANCHES: ${{ inputs.loop_integration_branches }}
         LOOP_MAX_TARGETS_PER_SCHEDULE: ${{ inputs.loop_max_targets_per_schedule }}
         LOOP_NAME: ${{ inputs.loop_name }}
+        LOOP_PRIORITY: ${{ inputs.loop_priority }}
         LOOP_PR_ENABLED: ${{ inputs.loop_pr_enabled }}
         LOOP_PR_EXCLUDE: ${{ inputs.loop_pr_exclude }}
         LOOP_PR_INCLUDE_BOTS: ${{ inputs.loop_pr_include_bots }}
-        LOOP_PRIORITY: ${{ inputs.loop_priority }}
         LOOP_SCOPED_PR_NUMBER: ${{ inputs.loop_scoped_pr_number }}
         LOOP_STATE_PUSH_BRANCH: ${{ inputs.loop_state_push_branch }}
         MAY_EDIT: ${{ inputs.may_edit }}
-        PROMPT_INSTRUCTIONS: ${{ inputs.prompt_instructions }}
         RUN_LOG_FILE: ${{ inputs.run_log_file }}
-        SKILL_NAME: ${{ inputs.skill_name }}
         STATE_FILE: ${{ steps.paths.outputs.state_file }}
         WRITE_TARGET: ${{ inputs.write_target }}
       run: bash "${GITHUB_ACTION_PATH}/lib/detect.sh"

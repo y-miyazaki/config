@@ -2,17 +2,17 @@ name: setup-terraform-with-cache
 description: "Setup Terraform with plugin cache and init cache restore."
 author: "GitHub Copilot"
 inputs:
-  terraform_version:
-    description: "Terraform version to install"
+  init_cache_key:
+    description: "Cache key for Terraform init cache"
     required: true
   plugin_cache_key:
     description: "Cache key for Terraform plugin cache"
     required: true
-  init_cache_key:
-    description: "Cache key for Terraform init cache"
-    required: true
   terraform_path:
     description: "Path to terraform configuration"
+    required: true
+  terraform_version:
+    description: "Terraform version to install"
     required: true
 outputs:
   init-cache-hit:

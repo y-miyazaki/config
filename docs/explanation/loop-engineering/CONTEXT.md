@@ -21,7 +21,7 @@ Platform step after APPROVE — open PR, push, ledger/state updates.
 _Avoid_: Execute, detect
 
 **Entry Skill**:
-The skill named in the loop prompt (`skill_name` input). May orchestrate other skills or perform repair directly.
+The skill named in the loop prompt (`agent_implementer_skill_name` input). May orchestrate other skills or perform repair directly.
 _Avoid_: Loop package, domain skill (when meaning the same thing)
 
 **Domain Skill**:
@@ -53,15 +53,15 @@ How the agent fixes a target (which domain skills, minimal diff scope, Watch/def
 _Avoid_: Detect, routing (when implying mechanical routers)
 
 **Caller Instructions**:
-Repo-specific text in `prompt_instructions`, appended to the implementer prompt under `## Instructions`. Includes **stack routing (A')** — which domain skills to invoke for this repository (workflow names, stacks, skill paths). This is the coupling point between caller and consumer skill catalog.
+Repo-specific text in `agent_implementer_instructions`, appended to the implementer prompt under `## Instructions`. Includes **stack routing (A')** — which domain skills to invoke for this repository (workflow names, stacks, skill paths). This is the coupling point between caller and consumer skill catalog.
 _Avoid_: Entry skill (for named skill paths)
 
 **Stack Routing (A')**:
-Mapping from CI failure context (workflow name, log tool, optional detect `stack_hint`) to domain validation/repair skills. **Primary source: caller `prompt_instructions`** (e.g. `on-loop-ci-sweeper.yaml`). Entry skill describes generic orchestration only — read `## Instructions` for dispatch; do not hardcode consumer skill names in distributable skill `references/`.
+Mapping from CI failure context (workflow name, log tool, optional detect `stack_hint`) to domain validation/repair skills. **Primary source: caller `agent_implementer_instructions`** (e.g. `on-loop-ci-sweeper.yaml`). Entry skill describes generic orchestration only — read `## Instructions` for dispatch; do not hardcode consumer skill names in distributable skill `references/`.
 _Avoid_: Entry skill references (for named skill coupling)
 
 **Failure Kind Defer (B)**:
-Rules that defer certain failure kinds (coverage threshold, dependency breakage) to Watch or future domain skills. **Generic defer rules** in entry skill (`DO NOT USE FOR`, checklist). **Named skills and REJECT criteria** in caller `agent_verifier_criteria` appendix.
+Rules that defer certain failure kinds (coverage threshold, dependency breakage) to Watch or future domain skills. **Generic defer rules** in entry skill (`DO NOT USE FOR`, checklist). **Named skills and REJECT criteria** in caller `agent_verifier_instructions` appendix.
 _Avoid_: Detect gate (for defer policy alone); named skills in entry skill references
 
 **GitHub API Action (Execute)**:

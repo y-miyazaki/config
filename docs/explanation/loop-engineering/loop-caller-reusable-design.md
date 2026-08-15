@@ -98,7 +98,7 @@ jobs:
       agent_implementer_max_turns: 5
       agent_implementer_model: cursor-grok-4.5-low
       agent_loop_max_attempts: 3
-      agent_verifier_criteria: |
+      agent_verifier_instructions: |
         ## Criteria for APPROVE
         ...
       agent_verifier_max_turns: 3
@@ -122,10 +122,10 @@ jobs:
       no_changes_verdict: REJECT
       pr_body: ""
       pr_title: "chore(changelog): update CHANGELOG.md (loop-changelog)"
-      prompt_instructions: |
+      agent_implementer_instructions: |
         Update the target changelog file under `## [Unreleased]` ...
       pr_enabled: false
-      skill_name: changelog
+      agent_implementer_skill_name: changelog
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
@@ -186,13 +186,13 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 | `agent_implementer_max_turns` | number | yes      | —               | `loop-detect`                                  |
 | `agent_implementer_model`     | string | yes      | —               | `loop-detect`                                  |
 | `agent_loop_max_attempts`     | number | yes      | —               | `loop-detect`                                  |
-| `agent_verifier_criteria`     | string | yes      | —               | `loop-detect` (multiline markdown)             |
+| `agent_verifier_instructions`     | string | yes      | —               | `loop-detect` (multiline markdown)             |
 | `agent_verifier_max_turns`    | number | yes      | —               | `loop-detect`                                  |
 | `agent_verifier_model`        | string | yes      | —               | `loop-detect`                                  |
 | `engine`                      | string | yes      | —               | `loop-detect` / `ci-loop-agent`                |
 | `level`                       | string | no       | `L2`            | `loop-detect`                                  |
-| `skill_name`                  | string | yes      | —               | `loop-detect`                                  |
-| `verifier_skill_name`         | string | no       | `loop-verifier` | `ci-loop-agent` → `loop-execute` checker skill |
+| `agent_implementer_skill_name`                  | string | yes      | —               | `loop-detect`                                  |
+| `agent_verifier_skill_name`         | string | no       | `loop-verifier` | `ci-loop-agent` → `loop-execute` checker skill |
 
 #### Platform (branch, budget, finalize)
 
@@ -204,7 +204,7 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 | `branch_state`              | string  | yes      | —                          | `loop-detect` (`base_branch`, `loop_state_push_branch`) |
 | `budget_max_runs_per_day`   | number  | no       | omitted                    | `loop-detect`                                           |
 | `budget_max_tokens_per_day` | number  | no       | omitted                    | `loop-detect`                                           |
-| `denylist`                  | string  | no       | `""`                       | `ci-loop-agent` execute only                            |
+| `denylist`                  | string  | no       | `""` (platform default in `loop-execute` when empty) | `ci-loop-agent` execute only                            |
 | `detect_script`             | string  | yes      | —                          | `loop-detect`                                           |
 | `delivery`                  | string  | no       | `open_pr`                  | `loop-detect`                                           |
 | `may_edit`                  | boolean | yes      | —                          | `loop-detect` → `## Constraints`                        |
@@ -217,7 +217,7 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 | `pr_exclude`                | string  | no       | `fork,draft,label:no-loop` | `loop-detect`                                           |
 | `pr_include_bots`           | string  | no       | `""`                       | `loop-detect`                                           |
 | `pr_title`                  | string  | no       | `""`                       | detect → execute                                        |
-| `prompt_instructions`       | string  | no       | `""`                       | `loop-detect`                                           |
+| `agent_implementer_instructions`       | string  | no       | `""`                       | `loop-detect`                                           |
 | `pr_enabled`                | boolean | no       | `false`                    | `loop-detect` (`loop_pr_enabled`)                       |
 | `state_file`                | string  | no       | `""`                       | `loop-detect`                                           |
 | _(token via secrets)_       | —       | —        | —                          | Resolve in-job: App → `GH_TOKEN` → job `GITHUB_TOKEN`   |
@@ -424,7 +424,7 @@ New domain env keys go into `detect_domain_env_json` without editing reusable jo
 | `detect_domain_env_json` typos                         | Document keys per loop; detect script fails fast on missing required env; validate JSON in export step                                                                  |
 | Input drift between `loop-detect` and `ci-loop-caller` | Maintain mapping table in inputs reference; reusable maps `branch_match` → `loop_integration_branches`, `branch_state` → `base_branch` / `loop_state_push_branch`, etc. |
 | Reusable change affects all loops                      | CI workflow lint on every PR; thin callers keep blast radius visible in review                                                                                          |
-| Multiline `agent_verifier_criteria` in `with:`         | Supported by `workflow_call` string inputs; keep rubric in caller for readability                                                                                       |
+| Multiline `agent_verifier_instructions` in `with:`         | Supported by `workflow_call` string inputs; keep rubric in caller for readability                                                                                       |
 
 ## References
 

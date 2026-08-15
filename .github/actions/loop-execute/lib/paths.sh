@@ -10,7 +10,32 @@
 # Design Rules:
 # - Allowlist and denylist checks run before the LLM verifier
 # - Glob patterns follow gitwildmatch-style path rules (** crosses /)
+# - Empty DENYLIST is coerced to the platform default at loop start
 #######################################
+
+DEFAULT_EXECUTE_DENYLIST='**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**'
+
+#######################################
+# apply_platform_denylist_default: Use platform denylist when caller omits one
+#
+# Globals:
+#   DENYLIST - Comma-separated glob denylist (read/write)
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
+#######################################
+function apply_platform_denylist_default {
+    if [[ -z ${DENYLIST:-} ]]; then
+        DENYLIST="${DEFAULT_EXECUTE_DENYLIST}"
+    fi
+}
 
 #######################################
 # collect_allowlist_violations: Find changed files outside the allowlist

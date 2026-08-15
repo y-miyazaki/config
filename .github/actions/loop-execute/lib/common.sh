@@ -65,19 +65,19 @@ function load_default_prompts {
 
     if [[ -z ${PROMPT_VERIFIER_TASK:-} ]]; then
         PROMPT_VERIFIER_TASK=$'Review the changes produced by the loop implementer agent and determine whether they should be merged.'
-        if [[ -n ${VERIFIER_SKILL_NAME:-} ]]; then
+        if [[ -n ${AGENT_VERIFIER_SKILL_NAME:-} ]]; then
             echo "::warning::verifier skill SKILL.md unavailable; using embedded task fallback" >&2
         fi
     fi
     if [[ -z ${PROMPT_VERIFIER_OUTPUT_CONTRACT:-} ]]; then
         PROMPT_VERIFIER_OUTPUT_CONTRACT=$'## Output (machine-readable — required)\n\nEnd your response with a single fenced JSON block (no prose after it):\n\n```json\n{\n  "verdict": "APPROVE",\n  "reason": "one-line summary"\n}\n```\n\nor on REJECT:\n\n```json\n{\n  "verdict": "REJECT",\n  "files": ["path/to/file"],\n  "issue": "what is factually wrong",\n  "fix": "specific change the implementer must make",\n  "reason": "one-line summary for logs"\n}\n```\n\nRules:\n- "verdict" must be "APPROVE" or "REJECT"\n- On REJECT, "files" (array), "issue", "fix", and "reason" are required\n- Use repo-relative paths in files'
-        if [[ -n ${VERIFIER_SKILL_NAME:-} ]]; then
+        if [[ -n ${AGENT_VERIFIER_SKILL_NAME:-} ]]; then
             echo "::warning::verifier skill output contract unavailable; using embedded fallback" >&2
         fi
     fi
     if [[ -z ${PROMPT_VERIFIER_DEFAULT_CRITERIA:-} ]]; then
         PROMPT_VERIFIER_DEFAULT_CRITERIA=$'## Criteria for APPROVE\n\nALL of the following must be true:\n1. Changes are consistent with the codebase\n2. No sensitive information is exposed\n3. No files outside the expected scope are modified\n4. Changes are coherent and non-destructive\n\n## Criteria for REJECT\n\nANY of the following triggers REJECT:\n- Changes outside expected scope\n- Factual inaccuracies or hallucinated content\n- Sensitive data exposure\n- Gratuitous or unrelated changes'
-        if [[ -n ${VERIFIER_SKILL_NAME:-} ]]; then
+        if [[ -n ${AGENT_VERIFIER_SKILL_NAME:-} ]]; then
             echo "::warning::verifier skill checklist unavailable; using embedded fallback" >&2
         fi
     fi

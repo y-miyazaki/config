@@ -2,14 +2,14 @@ name: setup-go-with-cache
 description: "Setup Go with module and build cache. Returns cache paths and hit status."
 author: "GitHub Copilot"
 inputs:
+  cache_prefix:
+    description: "Cache key prefix (e.g. environment-component)"
+    required: true
   go_project_path:
     description: "Path to the Go project root (directory containing go.mod)"
     required: true
   go_version:
     description: "Go version to install"
-    required: true
-  cache_prefix:
-    description: "Cache key prefix (e.g. environment-component)"
     required: true
 outputs:
   cache-hit:

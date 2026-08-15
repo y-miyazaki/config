@@ -25,10 +25,19 @@ jobs:
   loop:
     uses: y-miyazaki/config/.github/workflows/ci-loop-caller.yaml@85b694da37ac5e2e225409d46776ab668cfbda17 # v1.8.87
     with:
+      agent_implementer_instructions: |
+        Run the refactor skill in apply mode for every mechanical hint (duplication_block or oversized_unit) in the detection result.
+        Phase A: survey all hints[] entries and emit ### Candidates with apply or watch disposition.
+        Phase B: apply every candidate marked apply — same-package scope cap; structural intent only; no architecture-improvement proposal path.
+        One technique per candidate; minimal structural diff within local or same-package scope per fix; revert and defer any candidate that fails its gate.
+        Re-run stack validation on all touched packages before finalize.
+        Stack validation (A'): shell-script-validation, go-validation, github-actions-validation, markdown-validation as applicable via ## Instructions.
+        Invoke named validation skills for touched stacks before finalize.
       agent_implementer_max_turns: 5
       agent_implementer_model: cursor-grok-4.5-low
+      agent_implementer_skill_name: refactor
       agent_loop_max_attempts: 3
-      agent_verifier_criteria: |
+      agent_verifier_instructions: |
         ## Criteria for APPROVE
 
         ALL of the following must be true:
@@ -73,17 +82,8 @@ jobs:
       may_edit: true
       no_changes_verdict: REJECT
       pr_body: ""
-      pr_title: "chore(refactor): structural improvement (loop-refactor)"
-      prompt_instructions: |
-        Run the refactor skill in apply mode for every mechanical hint (duplication_block or oversized_unit) in the detection result.
-        Phase A: survey all hints[] entries and emit ### Candidates with apply or watch disposition.
-        Phase B: apply every candidate marked apply — same-package scope cap; structural intent only; no architecture-improvement proposal path.
-        One technique per candidate; minimal structural diff within local or same-package scope per fix; revert and defer any candidate that fails its gate.
-        Re-run stack validation on all touched packages before finalize.
-        Stack validation (A'): shell-script-validation, go-validation, github-actions-validation, markdown-validation as applicable via ## Instructions.
-        Invoke named validation skills for touched stacks before finalize.
       pr_enabled: false
-      skill_name: refactor
+      pr_title: "chore(refactor): structural improvement (loop-refactor)"
       write_target: fix
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}

@@ -20,6 +20,11 @@ on:
         description: "Extra paths included in finalize commit (e.g. ledger file)"
         required: false
         type: string
+      agent_implementer_instructions:
+        default: ""
+        description: "Domain-specific implementer instructions"
+        required: false
+        type: string
       agent_implementer_max_turns:
         description: "Maximum implementer agent turns per loop attempt"
         required: true
@@ -28,11 +33,15 @@ on:
         description: "Implementer model ID"
         required: true
         type: string
+      agent_implementer_skill_name:
+        description: "Skill package name"
+        required: true
+        type: string
       agent_loop_max_attempts:
         description: "Maximum Agent→Verify retry cycles"
         required: true
         type: string
-      agent_verifier_criteria:
+      agent_verifier_instructions:
         description: "Domain-specific APPROVE/REJECT rubric"
         required: true
         type: string
@@ -43,6 +52,11 @@ on:
       agent_verifier_model:
         description: "Verifier model ID"
         required: true
+        type: string
+      agent_verifier_skill_name:
+        default: loop-verifier
+        description: "Checker skill slash-loaded by loop-execute (distinct from agent_implementer_skill_name)"
+        required: false
         type: string
       allowlist:
         description: "Comma-separated globs the implementer may modify"
@@ -181,11 +195,6 @@ on:
         description: "Target mode priority order (comma-separated)"
         required: false
         type: string
-      prompt_instructions:
-        default: ""
-        description: "Domain-specific implementer instructions"
-        required: false
-        type: string
       run_log_file:
         default: .loop/loop-run-log.md
         description: "JSONL run log path for budget aggregation"
@@ -196,18 +205,9 @@ on:
         description: "When set, detect watches only this open PR number (skip integration fan-out)"
         required: false
         type: string
-      skill_name:
-        description: "Skill package name"
-        required: true
-        type: string
       state_file:
         default: ""
         description: "Override state JSON path (default .loop/state-<loop_name>.json)"
-        required: false
-        type: string
-      verifier_skill_name:
-        default: loop-verifier
-        description: "Checker skill name for loop-execute (not the implementer skill_name)"
         required: false
         type: string
       write_target:
@@ -241,8 +241,9 @@ jobs:
       additional_commit_paths: ${{ inputs.additional_commit_paths }}
       agent_implementer_max_turns: ${{ steps.detect.outputs.agent_implementer_max_turns }}
       agent_implementer_model: ${{ steps.detect.outputs.agent_implementer_model }}
+      agent_implementer_skill_name: ${{ steps.detect.outputs.agent_implementer_skill_name }}
       agent_loop_max_attempts: ${{ steps.detect.outputs.agent_loop_max_attempts }}
-      agent_verifier_criteria: ${{ steps.detect.outputs.agent_verifier_criteria }}
+      agent_verifier_instructions: ${{ steps.detect.outputs.agent_verifier_instructions }}
       agent_verifier_max_turns: ${{ steps.detect.outputs.agent_verifier_max_turns }}
       agent_verifier_model: ${{ steps.detect.outputs.agent_verifier_model }}
       allowlist: ${{ steps.detect.outputs.allowlist }}
@@ -260,7 +261,6 @@ jobs:
       pr_title: ${{ steps.detect.outputs.pr_title }}
       run_started_at: ${{ steps.timing.outputs.started_at }}
       should_run: ${{ steps.detect.outputs.should_run }}
-      skill_name: ${{ steps.detect.outputs.skill_name }}
       skip_reason: ${{ steps.detect.outputs.skip_reason }}
       state_file: ${{ steps.detect.outputs.state_file }}
       state_push_branch: ${{ inputs.branch_state }}
@@ -319,10 +319,12 @@ jobs:
         id: detect
         uses: y-miyazaki/config/.github/actions/loop-detect@85b694da37ac5e2e225409d46776ab668cfbda17 # v1.8.87
         with:
+          agent_implementer_instructions: ${{ inputs.agent_implementer_instructions }}
           agent_implementer_max_turns: ${{ format('{0}', inputs.agent_implementer_max_turns) }}
           agent_implementer_model: ${{ inputs.agent_implementer_model }}
+          agent_implementer_skill_name: ${{ inputs.agent_implementer_skill_name }}
           agent_loop_max_attempts: ${{ format('{0}', inputs.agent_loop_max_attempts) }}
-          agent_verifier_criteria: ${{ inputs.agent_verifier_criteria }}
+          agent_verifier_instructions: ${{ inputs.agent_verifier_instructions }}
           agent_verifier_max_turns: ${{ format('{0}', inputs.agent_verifier_max_turns) }}
           agent_verifier_model: ${{ inputs.agent_verifier_model }}
           allowlist: ${{ inputs.allowlist }}
@@ -352,9 +354,7 @@ jobs:
           no_changes_verdict: ${{ inputs.no_changes_verdict }}
           pr_body: ${{ inputs.pr_body }}
           pr_title: ${{ inputs.pr_title }}
-          prompt_instructions: ${{ inputs.prompt_instructions }}
           run_log_file: ${{ inputs.run_log_file }}
-          skill_name: ${{ inputs.skill_name }}
           state_file: ${{ inputs.state_file }}
           write_target: ${{ inputs.write_target }}
 
@@ -472,10 +472,12 @@ jobs:
       additional_commit_paths: ${{ needs.detect.outputs.additional_commit_paths }}
       agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
       agent_implementer_model: ${{ needs.detect.outputs.agent_implementer_model }}
+      agent_implementer_skill_name: ${{ needs.detect.outputs.agent_implementer_skill_name }}
       agent_loop_max_attempts: ${{ needs.detect.outputs.agent_loop_max_attempts }}
-      agent_verifier_criteria: ${{ needs.detect.outputs.agent_verifier_criteria }}
+      agent_verifier_instructions: ${{ needs.detect.outputs.agent_verifier_instructions }}
       agent_verifier_max_turns: ${{ needs.detect.outputs.agent_verifier_max_turns }}
       agent_verifier_model: ${{ needs.detect.outputs.agent_verifier_model }}
+      agent_verifier_skill_name: ${{ inputs.agent_verifier_skill_name }}
       allowlist: ${{ needs.detect.outputs.allowlist }}
       auto_merge: ${{ (needs.detect.outputs.delivery == 'open_pr' && needs.detect.outputs.level == 'L3' && matrix.target.target_json.finalize == 'open_pr') && 'true' || 'false' }}
       base_branch: ${{ matrix.target.target_json.mode == 'pull_request' && matrix.target.target_json.base.branch || matrix.target.target_json.to.branch }}
@@ -498,13 +500,11 @@ jobs:
       prompt_text: ${{ matrix.target.prompt }}
       run_log_file: ${{ inputs.run_log_file }}
       run_started_at: ${{ needs.detect.outputs.run_started_at }}
-      skill_name: ${{ needs.detect.outputs.skill_name }}
       skip_reason: ${{ needs.detect.outputs.skip_reason }}
       state_file: ${{ needs.detect.outputs.state_file }}
       state_push_branch: ${{ needs.detect.outputs.state_push_branch }}
       target_json: ${{ toJson(matrix.target.target_json) }}
       verifier_context: ${{ matrix.target.verifier_context }}
-      verifier_skill_name: ${{ inputs.verifier_skill_name }}
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.BOT_APP_CLIENT_ID }}

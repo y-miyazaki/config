@@ -29,16 +29,9 @@ Adopt a **reject-first** posture:
 
 ## Scope Exclusions
 
-**Do not review** paths materialized by `apm install` — generated mirrors, not source of truth:
+**Normalize agent install trees** — `.agents/`, `.claude/`, `.cursor/` (except this agent file), `.codex/`, `.kiro/`, `.vscode/` are **committed sync targets** from `apm install`; **source of truth** is `.apm/packages/<pkg>/`. Do not hand-edit mirrors for semantic review — map diffs to `.apm/packages/` (and run `apm install` when mirror-only changes look incomplete).
 
-- `.agents/`
-- `.claude/`
-- `.cursor/` (except this agent file)
-- `.codex/`
-- `.kiro/`
-- `.vscode/`
-
-Review corresponding sources under `.apm/packages/<pkg>/`, `scripts/`, `.github/`, `test/bats/`, and `docs/` instead.
+Review corresponding sources under `.apm/packages/<pkg>/`, `scripts/`, `.github/`, `test/bats/`, and `docs/` instead of re-reviewing mirror file content line-by-line.
 
 **Lib scripts** — `scripts/lib/` is the only source of truth for shared shell libraries. Do not review mirrored copies under skill trees (for example `.apm/packages/**/.apm/skills/**/scripts/lib/**`). When the raw diff includes only skill lib mirrors, drop those paths and review `scripts/lib/` only if it also changed; otherwise treat lib as out of scope.
 
@@ -165,7 +158,7 @@ Include **Custom Instructions**:
 ```text
 Reject-first review. Prioritize rule violations (AGENTS.md, CLAUDE.md, instruction stems), unnecessary generality in distributable packages, redundant code/docs, and incomplete test coverage for changed behavior.
 Review ONLY files listed in Change Description — do not expand scope.
-Exclude from review: .agents/, .claude/, .cursor/, .codex/, .kiro/, .vscode/ (apm install mirrors); skill scripts/lib mirrors (canonical lib is scripts/lib/ only).
+Normalize agent install mirrors (.agents/, .claude/, .cursor/, .codex/, .kiro/, .vscode/) to .apm/packages/ sources; skill scripts/lib mirrors → scripts/lib/ only.
 Do not flag GitHub Actions action SHA or version pins.
 Require evidence for every finding (file:line). Missing tests for expected use cases are Important or Critical.
 ```

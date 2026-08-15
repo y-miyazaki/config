@@ -49,7 +49,7 @@ Entry skill (`refactor`) handles interactive and loop paths: loop runs use **str
 
 ## Caller inputs
 
-Keys are passed in `on-loop-refactor.yaml` via `with:` on `ci-loop-caller.yaml` (alphabetically ordered). Multiline values (`agent_verifier_criteria`, `prompt_instructions`) are defined inline in the caller workflow.
+Keys are passed in `on-loop-refactor.yaml` via `with:` on `ci-loop-caller.yaml` (alphabetically ordered). Multiline values (`agent_verifier_instructions`, `agent_implementer_instructions`) are defined inline in the caller workflow.
 
 Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md). Platform branch/finalize caps: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
 
@@ -58,7 +58,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `agent_implementer_max_turns`                              | Max implementer agent turns per loop attempt (one Agent→Verify cycle).                                             | `5`                                                       |
 | `agent_implementer_model`                                  | Implementer model ID. Cursor: `agent --list-models`.                                                               | `cursor-grok-4.5-low`                                     |
 | `agent_loop_max_attempts`                                  | Max Agent→Verify retry cycles before finalize records failure.                                                     | `3`                                                       |
-| `agent_verifier_criteria`                                  | Verifier APPROVE/REJECT rubric. Local/same-package structural edits only; no architecture/GoF/cross-package diffs. | Inline in caller workflow                                 |
+| `agent_verifier_instructions`                                  | Verifier APPROVE/REJECT rubric. Local/same-package structural edits only; no architecture/GoF/cross-package diffs. | Inline in caller workflow                                 |
 | `agent_verifier_max_turns`                                 | Max verifier agent turns per verification.                                                                         | `3`                                                       |
 | `agent_verifier_model`                                     | Verifier model ID. Cursor: `agent --list-models`.                                                                  | `composer-2.5`                                            |
 | `allowlist`                                                | Comma-separated globs the implementer may modify. Tight dogfood scope.                                             | `.apm/packages/**,scripts/**`                             |
@@ -80,9 +80,9 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `no_changes_verdict`                                       | `APPROVE` or `REJECT` when implementer produces no file diff.                                                      | `REJECT`                                                  |
 | `pr_body`                                                  | Optional static prefix (dogfood: `""`).                                                                            | `""`                                                      |
 | `pr_title`                                                 | PR title when finalize strategy is `open_pr`.                                                                      | `chore(refactor): structural improvement (loop-refactor)` |
-| `prompt_instructions`                                      | Domain instructions: invoke `refactor` survey-then-apply-all path; stack validation via A'.                        | Inline in caller workflow                                 |
+| `agent_implementer_instructions`                                      | Domain instructions: invoke `refactor` survey-then-apply-all path; stack validation via A'.                        | Inline in caller workflow                                 |
 | `pr_enabled`                                               | Enumerate open PR heads. Refactor loop uses integration branches only.                                             | `false`                                                   |
-| `skill_name`                                               | Skill package to invoke.                                                                                           | `refactor`                                                |
+| `agent_implementer_skill_name`                                               | Skill package to invoke.                                                                                           | `refactor`                                                |
 | `write_target`                                             | Agent artifact when `may_edit` is true (`fix` for dogfood).                                                        | `fix`                                                     |
 
 ## Detect
@@ -133,7 +133,7 @@ No infra/env classification — not applicable.
 - Verifier diff baseline: `to.branch`
 - `verifier_context`: detect hint summary (kind, path, detail)
 - **Intent:** always `structural` — O2 cap; no architecture Phase A/B
-- Survey all hints; apply every apply candidate; follow `refactor` skill contract via caller `prompt_instructions` (A')
+- Survey all hints; apply every apply candidate; follow `refactor` skill contract via caller `agent_implementer_instructions` (A')
 
 ## Finalize
 

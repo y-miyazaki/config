@@ -192,8 +192,8 @@ function write_verifier_output_contract {
 #
 # Globals:
 #   BASE_BRANCH, DENYLIST, ALLOWLIST, WORKTREE_PATH
-#   AGENT_VERIFIER_CRITERIA, AGENT_VERIFIER_MAX_TURNS, AGENT_VERIFIER_MODEL
-#   LIB_DIR, OPEN_REJECTIONS_JSON, SKILL_NAME, VERIFIER_CONTEXT
+#   AGENT_VERIFIER_INSTRUCTIONS, AGENT_VERIFIER_MAX_TURNS, AGENT_VERIFIER_MODEL
+#   LIB_DIR, OPEN_REJECTIONS_JSON, AGENT_IMPLEMENTER_SKILL_NAME, VERIFIER_CONTEXT
 #   PROMPT_VERIFIER_* prompt env vars
 #
 # Arguments:
@@ -254,9 +254,9 @@ function run_verify {
     local agent_output_file="${attempt_dir}/agent-output.txt"
     local format_violations=""
     if [[ -f ${agent_output_file} ]] \
-        && agent_report_skill_requires_format_check "${SKILL_NAME}"; then
-        reconcile_agent_report_with_branch_diff "${agent_output_file}" "${changed_files}" "${SKILL_NAME}"
-        format_violations="$(validate_agent_report "${agent_output_file}" "${changed_files}" "${SKILL_NAME}" || true)"
+        && agent_report_skill_requires_format_check "${AGENT_IMPLEMENTER_SKILL_NAME}"; then
+        reconcile_agent_report_with_branch_diff "${agent_output_file}" "${changed_files}" "${AGENT_IMPLEMENTER_SKILL_NAME}"
+        format_violations="$(validate_agent_report "${agent_output_file}" "${changed_files}" "${AGENT_IMPLEMENTER_SKILL_NAME}" || true)"
         if [[ -n ${format_violations} ]]; then
             record_structured_reject "${attempt_dir}" "${attempt_num}" "${changed_files//$'\n'/,}" \
                 "Agent report output format or Changes/Deferred consistency failed" \
@@ -275,11 +275,11 @@ function run_verify {
         attempt_diff_stat="(no new commit in this attempt)"
     fi
 
-    criteria="${AGENT_VERIFIER_CRITERIA}"
+    criteria="${AGENT_VERIFIER_INSTRUCTIONS}"
     if [[ -z ${criteria} && -z ${VERIFIER_SKILL_ROOT:-} ]]; then
         criteria="${PROMPT_VERIFIER_DEFAULT_CRITERIA}"
     fi
-    if agent_report_skill_requires_format_check "${SKILL_NAME}"; then
+    if agent_report_skill_requires_format_check "${AGENT_IMPLEMENTER_SKILL_NAME}"; then
         local format_criteria_file="${LIB_DIR}/agent_output_format_criteria.md"
         if [[ -f ${format_criteria_file} ]]; then
             criteria="${criteria}"$'\n\n'"$(cat "${format_criteria_file}")"
@@ -313,7 +313,7 @@ function run_verify {
         echo ""
         write_verifier_skill_input
         echo ""
-        echo "Implementer skill: ${SKILL_NAME}"
+        echo "Implementer skill: ${AGENT_IMPLEMENTER_SKILL_NAME}"
         echo ""
         echo "### Branch Diff Stat"
         echo '```'

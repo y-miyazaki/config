@@ -67,10 +67,10 @@ env:
   FAIL_LEVEL: ${{ inputs.fail_level }}
   FAIL_ON_WARNINGS: ${{ inputs.fail_on_warnings }}
   SCRIPT_PATH: ${{ inputs.script_path }}
-  SHELL_TEST_EXCLUDE_GLOBS: ${{ inputs.shell_test_exclude_globs }}
-  SHELL_TEST_EXCLUDE_TOP_LEVEL_PATHS: ${{ inputs.shell_test_exclude_top_level_paths }}
   SHELLSPEC_CHECKSUM: ${{ inputs.shellspec_checksum }}
   SHELLSPEC_VERSION: ${{ inputs.shellspec_version }}
+  SHELL_TEST_EXCLUDE_GLOBS: ${{ inputs.shell_test_exclude_globs }}
+  SHELL_TEST_EXCLUDE_TOP_LEVEL_PATHS: ${{ inputs.shell_test_exclude_top_level_paths }}
   SHFMT_CHECKSUM: ${{ inputs.shfmt_checksum }}
   SHFMT_FLAGS: ${{ inputs.shfmt_flags }}
   SHFMT_VERSION: ${{ inputs.shfmt_version }}

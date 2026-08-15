@@ -311,7 +311,7 @@ Run: `bash scripts/self/apm/check_loop_pr_body_contract.sh` (or repo’s documen
 
 - Add `workflow_dispatch` input `pr_draft` boolean default `false`
 - Set L2 planes as above
-- `prompt_instructions` / verifier criteria for real autofix (APPROVE when fix+PR path correct; REJECT on dispatch attempts or missing Fixes link)
+- `agent_implementer_instructions` / verifier criteria for real autofix (APPROVE when fix+PR path correct; REJECT on dispatch attempts or missing Fixes link)
 - Keep concurrency per issue number
 - `detect_script` path consistent with other loops
 

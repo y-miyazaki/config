@@ -44,14 +44,14 @@ Skill execution boundaries: `ci-sweeper` SKILL.md (`USE FOR` / `DO NOT USE FOR`)
 
 ### Execute — responsibility split (A' / B)
 
-Distributable `ci-sweeper` skill stays repository-neutral. **Do not** hardcode consumer skill names in skill `references/`. Named dispatch belongs in caller `prompt_instructions` (dogfood: `on-loop-ci-sweeper.yaml`).
+Distributable `ci-sweeper` skill stays repository-neutral. **Do not** hardcode consumer skill names in skill `references/`. Named dispatch belongs in caller `agent_implementer_instructions` (dogfood: `on-loop-ci-sweeper.yaml`).
 
 | Layer         | Input                       | Role                                                                                            |
 | ------------- | --------------------------- | ----------------------------------------------------------------------------------------------- |
 | Detect        | `detect_ci_failures.sh`     | `failures[]`, `failure_type` hint; optional future `stack_hint`                                 |
 | Entry skill   | `ci-sweeper`                | Generic orchestration: classify, follow `## Instructions` for skill dispatch, fix one, validate |
-| Caller        | `prompt_instructions`       | **Stack routing (A')** — workflow/stack → named domain skills for this repo                     |
-| Caller        | `agent_verifier_criteria`   | Failure kind defer (B): appendix REJECT rules                                                   |
+| Caller        | `agent_implementer_instructions`       | **Stack routing (A')** — workflow/stack → named domain skills for this repo                     |
+| Caller        | `agent_verifier_instructions`   | Failure kind defer (B): appendix REJECT rules                                                   |
 | Domain skills | Consumer `.agents/skills/*` | Invoked per caller routing table                                                                |
 
 See [CI failure repair — layered responsibilities](../loop-engineering-design.md#ci-failure-repair--one-package-layered-responsibilities).
@@ -99,7 +99,7 @@ The human PR is **never** auto-merged by the loop. L3 auto-merge applies only to
 
 ## Caller inputs
 
-Keys are passed in `on-loop-ci-sweeper.yaml` via `with:` on `ci-loop-caller.yaml` (alphabetically ordered). Multiline values (`agent_verifier_criteria`, `prompt_instructions`) are defined inline in the caller workflow.
+Keys are passed in `on-loop-ci-sweeper.yaml` via `with:` on `ci-loop-caller.yaml` (alphabetically ordered). Multiline values (`agent_verifier_instructions`, `agent_implementer_instructions`) are defined inline in the caller workflow.
 
 Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md). Platform branch/finalize caps: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
 
@@ -122,7 +122,7 @@ Git landing (`open_pr` / `push` / `push_head`) is derived from `delivery` inside
 | `agent_implementer_max_turns`                               | Max implementer agent turns per loop attempt (one Agent→Verify cycle).                                                                                                                                                    | `8`                                                                                                      |
 | `agent_implementer_model`                                   | Implementer model ID. Cursor: `agent --list-models`.                                                                                                                                                                      | `cursor-grok-4.5-low`                                                                                    |
 | `agent_loop_max_attempts`                                   | Max Agent→Verify retry cycles before finalize records failure.                                                                                                                                                            | `3`                                                                                                      |
-| `agent_verifier_criteria`                                   | Verifier APPROVE/REJECT rubric. Requires fix addresses logged CI failure; minimal diff; allowlist/denylist respected.                                                                                                     | Inline in caller workflow                                                                                |
+| `agent_verifier_instructions`                                   | Verifier APPROVE/REJECT rubric. Requires fix addresses logged CI failure; minimal diff; allowlist/denylist respected.                                                                                                     | Inline in caller workflow                                                                                |
 | `agent_verifier_max_turns`                                  | Max verifier agent turns per verification.                                                                                                                                                                                | `3`                                                                                                      |
 | `agent_verifier_model`                                      | Verifier model ID. Cursor: `agent --list-models`.                                                                                                                                                                         | `composer-2.5`                                                                                           |
 | `allowlist`                                                 | Comma-separated globs the implementer may modify.                                                                                                                                                                         | `.github/**,.apm/packages/**,scripts/**,apm.yml,mise.toml,renovate/**,docs/**/*.md,README.md,mkdocs.yml` |
@@ -147,8 +147,8 @@ Git landing (`open_pr` / `push` / `push_head`) is derived from `delivery` inside
 | `pr_exclude`                                                | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`.                                                                                                                                                        | `fork,draft,label:no-loop`                                                                               |
 | `pr_include_bots`                                           | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots.                                                                                                                                        | `""`                                                                                                     |
 | `pr_title`                                                  | PR title when finalize strategy is `open_pr`.                                                                                                                                                                             | `chore(ci-sweeper): automated CI repair (loop-ci-sweeper)`                                               |
-| `prompt_instructions`                                       | Domain instructions: classify Watch vs Fix; minimal diff; run validation skills.                                                                                                                                          | Inline in caller workflow                                                                                |
-| `skill_name`                                                | Skill package to invoke.                                                                                                                                                                                                  | `ci-sweeper`                                                                                             |
+| `agent_implementer_instructions`                                       | Domain instructions: classify Watch vs Fix; minimal diff; run validation skills.                                                                                                                                          | Inline in caller workflow                                                                                |
+| `agent_implementer_skill_name`                                                | Skill package to invoke.                                                                                                                                                                                                  | `ci-sweeper`                                                                                             |
 
 **Removed from dogfood (do not set):** `pr_require`, `finalize_integration`, `finalize_pull_request` (replaced by `delivery`).
 

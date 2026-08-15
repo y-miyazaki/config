@@ -12,7 +12,7 @@
 - One skill per domain; loop callers pass JSON envelope + `## Constraints` — no duplicate loop entry skills.
 - Move all maintenance skills into `.apm/packages/common/.apm/skills/`.
 - Drop `loop-` prefix from **skill names**; keep Loop Engineering platform (`ci-loop-caller`, `on-loop-*.yaml` filenames, `loop-detect` / `loop-finalize`).
-- Update callers (`skill_name`, `detect_script`, `prompt_instructions`) and necessary docs.
+- Update callers (`agent_implementer_skill_name`, `detect_script`, `agent_implementer_instructions`) and necessary docs.
 
 ## Grill decisions (locked)
 

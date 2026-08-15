@@ -2,6 +2,10 @@ name: loop-worktree-setup
 description: "Create an isolated git worktree at base_ref on base_branch for loop agent modifications."
 
 inputs:
+  agent_implementer_skill_name:
+    description: "Skill name used in branch naming"
+    required: true
+
   base_branch:
     default: ""
     description: "Base branch to fetch (from target.from.branch). Empty = current branch."
@@ -21,10 +25,6 @@ inputs:
   github_token:
     description: "GitHub token for push"
     required: true
-  skill_name:
-    description: "Skill name used in branch naming"
-    required: true
-
 outputs:
   branch:
     description: "Created branch name"
@@ -40,12 +40,12 @@ runs:
       id: setup
       shell: bash
       env:
+        AGENT_IMPLEMENTER_SKILL_NAME: ${{ inputs.agent_implementer_skill_name }}
         BASE_BRANCH: ${{ inputs.base_branch }}
         BASE_REF: ${{ inputs.base_ref }}
         BRANCH: ${{ inputs.branch }}
         BRANCH_PREFIX: ${{ inputs.branch_prefix }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
-        SKILL_NAME: ${{ inputs.skill_name }}
       run: |
         set -euo pipefail
 
@@ -53,7 +53,7 @@ runs:
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
 
-        WORKTREE_PATH="${RUNNER_TEMP}/worktree-${SKILL_NAME}"
+        WORKTREE_PATH="${RUNNER_TEMP}/worktree-${AGENT_IMPLEMENTER_SKILL_NAME}"
         CHECKOUT_REF=""
         FETCH_BRANCH="${BASE_BRANCH}"
 
@@ -76,7 +76,7 @@ runs:
           git worktree add "${WORKTREE_PATH}" "origin/${BRANCH}"
         else
           DATE=$(date -u +%Y%m%d-%H%M%S)
-          BRANCH="${BRANCH_PREFIX}/${SKILL_NAME}/${DATE}"
+          BRANCH="${BRANCH_PREFIX}/${AGENT_IMPLEMENTER_SKILL_NAME}/${DATE}"
 
           if ! [[ "${BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
             echo "::error::Invalid branch name: ${BRANCH}"

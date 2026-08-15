@@ -2,6 +2,8 @@
 # L1: agent-l1 (loop-agent-once) → finalize-l1 (run-log; future L1 delivery)
 # L2/L3: agent-l2 (loop-execute) → finalize-l2 (run-log always; loop-finalize when finalize_enabled)
 # finalize_enabled gates git landing / PR inside finalize-l2, not whether finalize runs.
+# Caller-facing prompts: loop-detect assembles implementer text (prompt_text); domain verifier rubric is agent_verifier_instructions.
+# Verifier prompt scaffolding (INITIAL/REGRESSION, output contract) is owned by loop-execute — not workflow_call inputs here.
 # Contract (L2/L3): outputs { branch, has_changes, verdict, reason, attempts }
 # Token resolution: resolve inside each job (agent-l1 / agent-l2 / finalize-l1 / finalize-l2); pass BOT_APP_* + optional GH_TOKEN.
 # Do not accept a pre-resolved token via workflow_call secrets named GITHUB_TOKEN (reserved).
@@ -26,12 +28,17 @@ on:
         description: "Implementer model override"
         required: false
         type: string
+      agent_implementer_skill_name:
+        default: ""
+        description: "Skill name (used for L2 branch naming)"
+        required: false
+        type: string
       agent_loop_max_attempts:
         default: "3"
         description: "Maximum Agent→Verify loop attempts (L2/L3)"
         required: false
         type: string
-      agent_verifier_criteria:
+      agent_verifier_instructions:
         default: ""
         description: "Domain-specific APPROVE/REJECT criteria (L2/L3)"
         required: false
@@ -44,6 +51,11 @@ on:
       agent_verifier_model:
         default: ""
         description: "Verifier model override (L2/L3)"
+        required: false
+        type: string
+      agent_verifier_skill_name:
+        default: ""
+        description: "Checker skill name passed to loop-execute"
         required: false
         type: string
       allowlist:
@@ -164,44 +176,9 @@ on:
         description: "PR title for finalize job"
         required: false
         type: string
-      prompt_file:
-        default: ""
-        description: "Path to prompt file (alternative to prompt_text)"
-        required: false
-        type: string
-      prompt_implementer_feedback:
-        default: ""
-        description: "Implementer retry prompt template (L2/L3). Placeholders: {{base_prompt}}, {{feedback}}"
-        required: false
-        type: string
       prompt_text:
         default: ""
-        description: "Inline prompt text (used if prompt_file is empty)"
-        required: false
-        type: string
-      prompt_verifier_default_criteria:
-        default: ""
-        description: "Default verifier criteria when agent_verifier_criteria is empty (L2/L3)"
-        required: false
-        type: string
-      prompt_verifier_initial:
-        default: ""
-        description: "Verifier INITIAL mode intro (L2/L3). Placeholder: {{attempt}}"
-        required: false
-        type: string
-      prompt_verifier_output_contract:
-        default: ""
-        description: "Verifier JSON output contract (L2/L3)"
-        required: false
-        type: string
-      prompt_verifier_regression:
-        default: ""
-        description: "Verifier REGRESSION mode body (L2/L3). Placeholders: {{attempt}}, {{open_rejections}}, {{attempt_delta}}"
-        required: false
-        type: string
-      prompt_verifier_task:
-        default: ""
-        description: "Verifier task section before criteria (L2/L3)"
+        description: "Implementer prompt from loop-detect (matrix.target.prompt) or direct L1 invocation"
         required: false
         type: string
       run_log_file:
@@ -212,11 +189,6 @@ on:
       run_started_at:
         default: ""
         description: "Workflow run start timestamp for run log (finalize job)"
-        required: false
-        type: string
-      skill_name:
-        default: ""
-        description: "Skill name (used for L2 branch naming)"
         required: false
         type: string
       skip_reason:
@@ -232,11 +204,6 @@ on:
       state_push_branch:
         default: ""
         description: "Branch for .loop/* state commits (L2/L3)"
-        required: false
-        type: string
-      verifier_skill_name:
-        default: ""
-        description: "Checker skill name passed to loop-execute"
         required: false
         type: string
       target_json:
@@ -329,7 +296,7 @@ jobs:
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           max_turns: ${{ inputs.agent_implementer_max_turns }}
           model: ${{ inputs.agent_implementer_model }}
-          prompt_text: ${{ inputs.prompt_file != '' && format('/skill {0}', inputs.prompt_file) || inputs.prompt_text }}
+          prompt_text: ${{ inputs.prompt_text }}
 
   finalize-l1:
     if: >-
@@ -444,29 +411,31 @@ jobs:
         id: worktree
         uses: y-miyazaki/config/.github/actions/loop-worktree-setup@85b694da37ac5e2e225409d46776ab668cfbda17 # v1.8.87
         with:
+          agent_implementer_skill_name: ${{ inputs.agent_implementer_skill_name }}
+
           base_branch: ${{ steps.target.outputs.worktree_branch }}
           base_ref: ${{ steps.target.outputs.worktree_ref }}
           branch_prefix: ${{ inputs.branch_prefix }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
-          skill_name: ${{ inputs.skill_name }}
-
       - name: Execute Bounded Loop
         id: execute
         uses: y-miyazaki/config/.github/actions/loop-execute@85b694da37ac5e2e225409d46776ab668cfbda17 # v1.8.87
         with:
           agent_implementer_max_turns: ${{ inputs.agent_implementer_max_turns }}
           agent_implementer_model: ${{ inputs.agent_implementer_model }}
+          agent_implementer_skill_name: ${{ inputs.agent_implementer_skill_name }}
           agent_loop_max_attempts: ${{ inputs.agent_loop_max_attempts }}
           agent_token: ${{ secrets.AGENT_TOKEN }}
-          agent_verifier_criteria: ${{ inputs.agent_verifier_criteria }}
+          agent_verifier_instructions: ${{ inputs.agent_verifier_instructions }}
           agent_verifier_max_turns: ${{ inputs.agent_verifier_max_turns }}
           agent_verifier_model: ${{ inputs.agent_verifier_model }}
+          agent_verifier_skill_name: ${{ inputs.agent_verifier_skill_name }}
           allowlist: ${{ inputs.allowlist }}
           base_branch: ${{ steps.target.outputs.verify_base_branch }}
           branch: ${{ steps.worktree.outputs.branch }}
           cli_version: ${{ inputs.cli_version }}
           commit_message: ${{ inputs.commit_message }}
-          denylist: ${{ inputs.denylist }}
+          denylist: ${{ inputs.denylist != '' && inputs.denylist || '**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**' }}
           detect_result_json: ${{ inputs.detect_result_json }}
           engine: ${{ inputs.engine }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
@@ -474,16 +443,8 @@ jobs:
           handoff_key: ${{ inputs.handoff_key != '' && inputs.handoff_key || steps.target.outputs.target_key }}
           infer_files_pattern: ${{ inputs.infer_files_pattern }}
           no_changes_verdict: ${{ inputs.no_changes_verdict }}
-          prompt_implementer_feedback: ${{ inputs.prompt_implementer_feedback }}
-          prompt_text: ${{ inputs.prompt_file != '' && format('/skill {0}', inputs.prompt_file) || inputs.prompt_text }}
-          prompt_verifier_default_criteria: ${{ inputs.prompt_verifier_default_criteria }}
-          prompt_verifier_initial: ${{ inputs.prompt_verifier_initial }}
-          prompt_verifier_output_contract: ${{ inputs.prompt_verifier_output_contract }}
-          prompt_verifier_regression: ${{ inputs.prompt_verifier_regression }}
-          prompt_verifier_task: ${{ inputs.prompt_verifier_task }}
-          skill_name: ${{ inputs.skill_name }}
+          prompt_text: ${{ inputs.prompt_text }}
           verifier_context: ${{ inputs.verifier_context }}
-          verifier_skill_name: ${{ inputs.verifier_skill_name }}
           worktree_path: ${{ steps.worktree.outputs.worktree_path }}
 
   finalize-l2:
@@ -549,8 +510,8 @@ jobs:
           current_sha: ${{ inputs.current_sha }}
           detect_result_json: ${{ inputs.detect_result_json }}
           domain_persistence_script: ${{ inputs.domain_persistence_script }}
-          execute_branch: ${{ needs.agent-l2.outputs.branch }}
           engine: ${{ inputs.engine }}
+          execute_branch: ${{ needs.agent-l2.outputs.branch }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           handoff_dir: ${{ runner.temp }}/loop-handoff
           handoff_key: ${{ inputs.handoff_key }}

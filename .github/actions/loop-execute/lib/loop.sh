@@ -61,6 +61,7 @@ function initialize_loop_state {
     normalize_no_changes_verdict
     materialize_matrix_handoff_context
     load_default_prompts
+    apply_platform_denylist_default
     reset_usage_totals
 }
 
@@ -226,7 +227,7 @@ function run_bounded_loop {
         sync_reject_feedback
 
         synthesis_block=""
-        if agent_report_skill_requires_format_check "${SKILL_NAME}" \
+        if agent_report_skill_requires_format_check "${AGENT_IMPLEMENTER_SKILL_NAME}" \
             && { [[ ${HAS_CHANGES} == "true" ]] || [[ ${ATTEMPT} -gt 1 ]]; }; then
             local pre_branch_files
             pre_branch_files="$(list_non_loop_branch_files "${WORKTREE_PATH}" "${BASE_BRANCH}")"

@@ -14,7 +14,7 @@ A second confusion is grouping by **loop vs interactive**. Loop is a caller chan
 - Package boundaries match **what a consumer must already run** (git + files vs GitHub API vs GHA files vs loop checker).
 - GitLab (or other forge) consumers can install maintenance skills without GitHub Issue/PR skills or GitHub MCP.
 - Skill **names** stay domain names (`ci-sweeper`, not `loop-ci-sweeper`).
-- `apm install` still flattens to `.agents/skills/<name>/` so loop callers (`skill_name`, `detect_script`) do not change paths solely because of package moves.
+- `apm install` still flattens to `.agents/skills/<name>/` so loop callers (`agent_implementer_skill_name`, `detect_script`) do not change paths solely because of package moves.
 
 ## Independent decisions (locked if this spec is approved)
 
@@ -91,7 +91,7 @@ No GitHub Issue/PR API required. Consumer with GHA files can install this withou
 
 | Skill           | Note                                                                                                                                                             |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `loop-verifier` | Generic maker/checker: default REJECT, INITIAL/REGRESSION modes, JSON verdict contract, scope/secrets/hallucination. **Not** per-loop `agent_verifier_criteria`. |
+| `loop-verifier` | Generic maker/checker: default REJECT, INITIAL/REGRESSION modes, JSON verdict contract, scope/secrets/hallucination. **Not** per-loop `agent_verifier_instructions`. |
 
 `loop` does **not** contain `ci-sweeper`, `github-issue-triage`, or other domain skills.
 
@@ -100,13 +100,13 @@ No GitHub Issue/PR API required. Consumer with GHA files can install this withou
 | Layer                                                 | Owner                 | Location after this design                                                                                                                          |
 | ----------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Generic checker behavior                              | `loop-verifier` skill | `.apm/packages/loop/.apm/skills/loop-verifier/` (`SKILL.md`, `references/common-checklist.md`, `references/common-output-format.md`)                |
-| Checker skill binding                                 | Caller + execute      | `verifier_skill_name` on `on-loop-*.yaml` / `ci-loop-caller` → `loop-execute`; execute slash-loads `/skill <SKILL.md>` (does not inline skill body) |
-| Domain APPROVE/REJECT appendix                        | Caller                | `on-loop-*.yaml` `agent_verifier_criteria` — **stays**                                                                                              |
+| Checker skill binding                                 | Caller + execute      | `agent_verifier_skill_name` on `on-loop-*.yaml` / `ci-loop-caller` → `loop-execute`; execute slash-loads `/skill <SKILL.md>` (does not inline skill body) |
+| Domain APPROVE/REJECT appendix                        | Caller                | `on-loop-*.yaml` `agent_verifier_instructions` — **stays**                                                                                              |
 | INITIAL / REGRESSION mode intros                      | Platform              | `load_default_prompts` in `loop-execute/lib/common.sh` — attempt orchestration, not checker skill content                                           |
 | Path guards, retry loop, report-format machine checks | Platform              | `loop-execute` / `verifier.sh` — **stays**                                                                                                          |
 | Embedded verifier fallbacks                           | Platform              | `common.sh` when checker skill files are missing (warning + legacy strings)                                                                         |
 
-**Implemented (post package-split):** `loop-execute` resolves `verifier_skill_name`, slash-loads the checker skill, and appends caller `agent_verifier_criteria` as domain rubric. Do not put domain REJECT rules in `loop-verifier`.
+**Implemented (post package-split):** `loop-execute` resolves `agent_verifier_skill_name`, slash-loads the checker skill, and appends caller `agent_verifier_instructions` as domain rubric. Do not put domain REJECT rules in `loop-verifier`.
 
 `loop-verifier` is not GitHub-specific (no `gh`, no GHA). It must not live in `github`. It is not repo file maintenance. It must not live in `repo-maintenance`. Putting it in `common` would again mix “any repo” with “loop execute contract.”
 
@@ -154,7 +154,7 @@ dependencies:
 ## Non-goals
 
 - Extracting `loop-budget` / `loop-constraints` from Actions into skills.
-- Domain-complete commonization of `agent_verifier_criteria`.
+- Domain-complete commonization of `agent_verifier_instructions`.
 - Renaming skill stems (`ci-sweeper` stays `ci-sweeper`).
 - Moving `go` / `shell-script` / `terraform` skills.
 - Splitting `common-hooks-*`.
@@ -175,4 +175,4 @@ dependencies:
 2. Git-move skills and the GHA instruction; move GitHub MCP into `github`.
 3. Point this repo’s `apm.yml` at the new packages; refresh install + drift checks.
 4. Docs: architecture, getting-started, specification loop-skills sentence, this-repo CLAUDE/AGENTS only where they name package paths.
-5. **Done:** author `loop-verifier` SKILL.md and wire `loop-execute` via caller `verifier_skill_name` (slash-load; domain rubric stays on caller).
+5. **Done:** author `loop-verifier` SKILL.md and wire `loop-execute` via caller `agent_verifier_skill_name` (slash-load; domain rubric stays on caller).

@@ -21,7 +21,7 @@ bats_require_minimum_version 1.5.0
 # - append_detect_candidate exits the detect phase when the detect script fails
 # - multi-target scan fails fast without appending later candidates after detect failure
 # - main treats unset or empty ALLOWLIST as unrestricted (GHA omits empty env)
-# - append_detect_candidate accepts unset ALLOWLIST and PROMPT_INSTRUCTIONS
+# - append_detect_candidate accepts unset ALLOWLIST and AGENT_IMPLEMENTER_INSTRUCTIONS
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -77,10 +77,10 @@ EOF
 
     STATE_FILE="${state_file}"
     BASE_BRANCH="main"
-    SKILL_NAME="loop-ci-sweeper"
+    export AGENT_IMPLEMENTER_SKILL_NAME="loop-ci-sweeper"
     LEVEL="L2"
     ALLOWLIST="*"
-    PROMPT_INSTRUCTIONS=""
+    AGENT_IMPLEMENTER_INSTRUCTIONS=""
     MAY_EDIT="true"
     WRITE_TARGET="fix"
     LOOP_FINALIZE_INTEGRATION="open_pr"
@@ -122,10 +122,10 @@ EOF
 
     STATE_FILE="${state_file}"
     BASE_BRANCH="main"
-    SKILL_NAME="loop-ci-sweeper"
+    export AGENT_IMPLEMENTER_SKILL_NAME="loop-ci-sweeper"
     LEVEL="L2"
     ALLOWLIST="*"
-    PROMPT_INSTRUCTIONS=""
+    AGENT_IMPLEMENTER_INSTRUCTIONS=""
     LOOP_FINALIZE_INTEGRATION="open_pr"
     PENDING_PR_BLOCKED=0
     CIRCUIT_BREAKER_BLOCKED=0
@@ -222,10 +222,10 @@ EOF
 
     STATE_FILE="${state_file}"
     BASE_BRANCH="main"
-    SKILL_NAME="loop-ci-sweeper"
+    export AGENT_IMPLEMENTER_SKILL_NAME="loop-ci-sweeper"
     LEVEL="L2"
     ALLOWLIST="*"
-    PROMPT_INSTRUCTIONS=""
+    AGENT_IMPLEMENTER_INSTRUCTIONS=""
     LOOP_FINALIZE_INTEGRATION="open_pr"
     PENDING_PR_BLOCKED=0
     CIRCUIT_BREAKER_BLOCKED=0
@@ -448,10 +448,10 @@ EOF
         DETECT_SCRIPT='${DETECT_SCRIPT}'
         STATE_FILE='${state_file}'
         BASE_BRANCH='main'
-        SKILL_NAME='loop-ci-sweeper'
+        export AGENT_IMPLEMENTER_SKILL_NAME='loop-ci-sweeper'
         LEVEL='L2'
         ALLOWLIST='*'
-        PROMPT_INSTRUCTIONS=''
+        AGENT_IMPLEMENTER_INSTRUCTIONS=''
         LOOP_FINALIZE_INTEGRATION='open_pr'
         CANDIDATES_JSON=()
         checkout_context() { cd '${repo_root}' || return 1; }
@@ -504,10 +504,10 @@ EOF
         DETECT_SCRIPT='${DETECT_SCRIPT}'
         STATE_FILE='${state_file}'
         BASE_BRANCH='main'
-        SKILL_NAME='loop-ci-sweeper'
+        export AGENT_IMPLEMENTER_SKILL_NAME='loop-ci-sweeper'
         LEVEL='L2'
         ALLOWLIST='*'
-        PROMPT_INSTRUCTIONS=''
+        AGENT_IMPLEMENTER_INSTRUCTIONS=''
         LOOP_FINALIZE_INTEGRATION='open_pr'
         CANDIDATES_JSON=()
         checkout_context() { cd '${repo_root}' || return 1; }
@@ -534,7 +534,7 @@ EOF
     STATE_FILE="${DETECT_TMP}/state.json"
     LOOP_NAME="github-issue-autofix"
     BASE_BRANCH="main"
-    SKILL_NAME="issue-autofix"
+    export AGENT_IMPLEMENTER_SKILL_NAME="issue-autofix"
     LEVEL="L2"
     unset ALLOWLIST
     unset MAY_EDIT
@@ -554,7 +554,7 @@ EOF
     STATE_FILE="${DETECT_TMP}/state.json"
     LOOP_NAME="github-issue-autofix"
     BASE_BRANCH="main"
-    SKILL_NAME="issue-autofix"
+    export AGENT_IMPLEMENTER_SKILL_NAME="issue-autofix"
     LEVEL="L2"
     ALLOWLIST=""
     unset MAY_EDIT
@@ -565,7 +565,7 @@ EOF
     grep -q '^skip_reason=config_error$' "${GITHUB_OUTPUT}"
 }
 
-@test "append_detect_candidate accepts unset ALLOWLIST and PROMPT_INSTRUCTIONS" {
+@test "append_detect_candidate accepts unset ALLOWLIST and AGENT_IMPLEMENTER_INSTRUCTIONS" {
     local repo_root state_file
 
     repo_root="${DETECT_TMP}/repo-empty-allowlist"
@@ -588,10 +588,10 @@ EOF
 
     STATE_FILE="${state_file}"
     BASE_BRANCH="main"
-    SKILL_NAME="issue-autofix"
+    export AGENT_IMPLEMENTER_SKILL_NAME="issue-autofix"
     LEVEL="L2"
     unset ALLOWLIST
-    unset PROMPT_INSTRUCTIONS
+    unset AGENT_IMPLEMENTER_INSTRUCTIONS
     MAY_EDIT="true"
     WRITE_TARGET="fix"
     LOOP_FINALIZE_INTEGRATION="open_pr"

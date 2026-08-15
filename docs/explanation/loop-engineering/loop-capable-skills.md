@@ -16,13 +16,13 @@ Forge and runtime — not “loop vs chat”:
 | `github-actions`   | `.github/workflows` review/validation        | `github-actions-review`, `github-actions-validation`                                |
 | `loop`             | Loop execute checker (generic)               | `loop-verifier`                                                                     |
 
-`github-pr-body` is GitHub-forge and Interactive; it is **not** a loop entry skill. `loop-verifier` is loop-generic and **not** a domain entry skill. `agent_verifier_criteria` stays on each `on-loop-*.yaml`.
+`github-pr-body` is GitHub-forge and Interactive; it is **not** a loop entry skill. `loop-verifier` is loop-generic and **not** a domain entry skill. `agent_verifier_instructions` stays on each `on-loop-*.yaml`.
 
 After `apm install`, callers still use `.agents/skills/<name>/` regardless of package.
 
 ## Loop entry skills (canonical list)
 
-Update this table in the **same change** as adding or renaming a loop caller `skill_name`.
+Update this table in the **same change** as adding or renaming a loop caller `agent_implementer_skill_name`.
 
 | Skill                  | Package            | Caller (this repo)                  | Interactive trigger (chat)          | Automation trigger                   |
 | ---------------------- | ------------------ | ----------------------------------- | ----------------------------------- | ------------------------------------ |
@@ -59,9 +59,9 @@ When changing **any** row in the family below, apply the same class of edit to *
 | PR body link rules                             | `references/category-pr-body-links.md` + `scripts/self/apm/check_loop_pr_body_contract.sh`                                                                                                                                |
 | Detect JSON envelope                           | each `scripts/detect_*.sh` + `references/category-input-schema.md`                                                                                                                                                        |
 | Description triggers                           | each `SKILL.md` frontmatter (this file’s contract)                                                                                                                                                                        |
-| Verifier domain rubric                         | matching `on-loop-*.yaml` `agent_verifier_criteria` — **not** `loop-verifier`                                                                                                                                             |
-| New loop caller verifier wiring                | each `on-loop-*.yaml`: `skill_name` + `verifier_skill_name: loop-verifier` + domain `agent_verifier_criteria`                                                                                                             |
-| Generic checker prompt                         | Caller passes `verifier_skill_name` into `loop-execute`. Execute slash-loads `/skill <SKILL.md>` (same pattern as implementer `prompt_file`) and lists the path as Input. Do not hardcode `loop-verifier` inside execute. |
+| Verifier domain rubric                         | matching `on-loop-*.yaml` `agent_verifier_instructions` — **not** `loop-verifier`                                                                                                                                             |
+| New loop caller verifier wiring                | each `on-loop-*.yaml`: `agent_implementer_skill_name` + `agent_verifier_skill_name: loop-verifier` + domain `agent_verifier_instructions`                                                                                                             |
+| Generic checker prompt                         | Caller passes `agent_verifier_skill_name` into `loop-execute`. Execute slash-loads `/skill <SKILL.md>` (same pattern as detect-assembled `prompt_text`) and lists the path as Input. Do not hardcode `loop-verifier` inside execute. |
 | Install drift list                             | `scripts/self/apm/check_apm_skill_install_drift.sh` `LOOP_SKILLS`                                                                                                                                                         |
 | Package move                                   | this table, [architecture.md](../architecture.md), [specification.md](../../reference/specification.md), consumer `apm.yml` examples                                                                                      |
 

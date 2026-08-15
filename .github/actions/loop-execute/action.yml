@@ -10,6 +10,9 @@ inputs:
     default: ""
     description: "Implementer model override"
     required: false
+  agent_implementer_skill_name:
+    description: "Implementer skill name (context only for the verifier)"
+    required: true
   agent_loop_max_attempts:
     default: "3"
     description: "Maximum Agent→Verify loop attempts"
@@ -17,7 +20,7 @@ inputs:
   agent_token:
     description: "Authentication token for the selected engine"
     required: true
-  agent_verifier_criteria:
+  agent_verifier_instructions:
     default: ""
     description: "Domain-specific APPROVE/REJECT criteria (markdown)"
     required: false
@@ -28,6 +31,10 @@ inputs:
   agent_verifier_model:
     default: ""
     description: "Verifier model override"
+    required: false
+  agent_verifier_skill_name:
+    default: ""
+    description: "Checker skill name (caller-supplied). Empty skips skill bind. Slash-load via /skill <SKILL.md> when resolved."
     required: false
   allowlist:
     default: ""
@@ -91,7 +98,7 @@ inputs:
     required: true
   prompt_verifier_default_criteria:
     default: ""
-    description: "Default verifier APPROVE/REJECT criteria when agent_verifier_criteria is empty"
+    description: "Default verifier APPROVE/REJECT criteria when agent_verifier_instructions is empty"
     required: false
   prompt_verifier_initial:
     default: ""
@@ -109,9 +116,6 @@ inputs:
     default: ""
     description: "Verifier task section inserted before criteria"
     required: false
-  skill_name:
-    description: "Implementer skill name (context only for the verifier)"
-    required: true
   uv_version:
     default: "0.12.3"
     description: "uv version for MCP servers (uvx); keep aligned with mise.toml aqua:astral-sh/uv"
@@ -119,10 +123,6 @@ inputs:
   verifier_context:
     default: ""
     description: "Additional markdown context appended to the verifier prompt (e.g. CI logs, lint output)"
-    required: false
-  verifier_skill_name:
-    default: ""
-    description: "Checker skill name (caller-supplied). Empty skips skill bind. Slash-load via /skill <SKILL.md> when resolved."
     required: false
   worktree_path:
     description: "Absolute path to the worktree"
@@ -189,11 +189,13 @@ runs:
       env:
         AGENT_IMPLEMENTER_MAX_TURNS: ${{ inputs.agent_implementer_max_turns }}
         AGENT_IMPLEMENTER_MODEL: ${{ inputs.agent_implementer_model }}
+        AGENT_IMPLEMENTER_SKILL_NAME: ${{ inputs.agent_implementer_skill_name }}
         AGENT_LOOP_MAX_ATTEMPTS: ${{ inputs.agent_loop_max_attempts }}
         AGENT_TOKEN: ${{ inputs.agent_token }}
-        AGENT_VERIFIER_CRITERIA: ${{ inputs.agent_verifier_criteria }}
+        AGENT_VERIFIER_INSTRUCTIONS: ${{ inputs.agent_verifier_instructions }}
         AGENT_VERIFIER_MAX_TURNS: ${{ inputs.agent_verifier_max_turns }}
         AGENT_VERIFIER_MODEL: ${{ inputs.agent_verifier_model }}
+        AGENT_VERIFIER_SKILL_NAME: ${{ inputs.agent_verifier_skill_name }}
         ALLOWLIST: ${{ inputs.allowlist }}
         BASE_BRANCH: ${{ inputs.base_branch }}
         BRANCH: ${{ inputs.branch }}
@@ -213,10 +215,8 @@ runs:
         PROMPT_VERIFIER_OUTPUT_CONTRACT: ${{ inputs.prompt_verifier_output_contract }}
         PROMPT_VERIFIER_REGRESSION: ${{ inputs.prompt_verifier_regression }}
         PROMPT_VERIFIER_TASK: ${{ inputs.prompt_verifier_task }}
-        SKILL_NAME: ${{ inputs.skill_name }}
         STATUS_DIR: ${{ runner.temp }}/loop-execute-status
         VERIFIER_CONTEXT: ${{ inputs.verifier_context }}
-        VERIFIER_SKILL_NAME: ${{ inputs.verifier_skill_name }}
         WORKTREE_PATH: ${{ inputs.worktree_path }}
       run: bash "${GITHUB_ACTION_PATH}/lib/loop.sh"
 

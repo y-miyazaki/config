@@ -84,7 +84,7 @@ issue-triage  issue-autofix  pr-revise
 | Item         | Value                                                                            |
 | ------------ | -------------------------------------------------------------------------------- |
 | `loop_name`  | `issue-triage`                                                                   |
-| `skill_name` | `issue-triage`                                                                   |
+| `agent_implementer_skill_name` | `issue-triage`                                                                   |
 | Triggers     | `issues`: opened, reopened, labeled, unlabeled; `issue_comment`: created         |
 | Level        | L1 (no worktree file edits required)                                             |
 | Detect       | Mechanical Issue facts only                                                      |

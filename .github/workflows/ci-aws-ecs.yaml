@@ -73,9 +73,9 @@ jobs:
     permissions:
       contents: read
     outputs:
-      service_matrix: ${{ steps.generate_matrix.outputs.service_matrix }}
       has_scheduled_tasks: ${{ steps.generate_matrix.outputs.has_scheduled_tasks }}
       scheduled_task_matrix: ${{ steps.generate_matrix.outputs.scheduled_task_matrix }}
+      service_matrix: ${{ steps.generate_matrix.outputs.service_matrix }}
     steps:
       - name: Checkout Code
         timeout-minutes: 5

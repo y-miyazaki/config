@@ -78,10 +78,15 @@ jobs:
       pull-requests: write
     uses: ./.github/workflows/ci-loop-caller-entity.yaml
     with:
+      agent_implementer_instructions: |
+        Triage the Issue per the github-issue-triage skill.
+        Apply allowlisted labels and post analysis/questions as Issue comments.
+        Do not open PRs or call repository_dispatch (platform hook handles ready+autofix).
       agent_implementer_max_turns: 5
       agent_implementer_model: cursor-grok-4.5-low
+      agent_implementer_skill_name: github-issue-triage
       agent_loop_max_attempts: 3
-      agent_verifier_criteria: |
+      agent_verifier_instructions: |
         ## Criteria for APPROVE
 
         ALL of the following must be true:
@@ -100,11 +105,13 @@ jobs:
         - Question self-censorship (needed questions omitted with no needs-info path)
       agent_verifier_max_turns: 3
       agent_verifier_model: composer-2.5
+      agent_verifier_skill_name: loop-verifier
       allowlist: ""
       branch_state: main
       budget_max_runs_per_day: 20
       budget_max_tokens_per_day: 1000000
       delivery: none
+      denylist: ""
       detect_domain_env_json: ${{ github.event_name == 'workflow_dispatch' && format('{{"ISSUE_NUMBER":{0}}}', toJSON(inputs.issue_number)) || '{}' }}
 
       detect_script: .agents/skills/github-issue-triage/scripts/detect_issue.sh
@@ -115,12 +122,6 @@ jobs:
       loop_name: github-issue-triage
       may_edit: false
       no_changes_verdict: APPROVE
-      prompt_instructions: |
-        Triage the Issue per the github-issue-triage skill.
-        Apply allowlisted labels and post analysis/questions as Issue comments.
-        Do not open PRs or call repository_dispatch (platform hook handles ready+autofix).
-      skill_name: github-issue-triage
-      verifier_skill_name: loop-verifier
       write_target: report
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}

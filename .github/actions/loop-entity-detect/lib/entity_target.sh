@@ -34,21 +34,21 @@
 #
 #######################################
 function build_entity_target_prompt {
-    local skill_name="$1"
-    local prompt_instructions="$2"
+    local agent_implementer_skill_name="$1"
+    local agent_implementer_instructions="$2"
     local level="$3"
     local delivery="$4"
     local detect_result="$5"
 
     {
-        echo "Run the ${skill_name} skill."
+        echo "Run the ${agent_implementer_skill_name} skill."
         echo ""
         echo "## Change Detection Result"
         echo "${detect_result}"
-        if [[ -n ${prompt_instructions} ]]; then
+        if [[ -n ${agent_implementer_instructions} ]]; then
             echo ""
             echo "## Instructions"
-            echo "${prompt_instructions}"
+            echo "${agent_implementer_instructions}"
         fi
         echo ""
         echo "## Constraints"
@@ -68,8 +68,8 @@ function build_entity_target_prompt {
 # Arguments:
 #   $1 - Path to detect JSON file
 #   $2 - loop_name
-#   $3 - skill_name
-#   $4 - prompt_instructions
+#   $3 - agent_implementer_skill_name
+#   $4 - agent_implementer_instructions
 #   $5 - level
 #   $6 - delivery
 #
@@ -83,8 +83,8 @@ function build_entity_target_prompt {
 function build_entity_target_matrix {
     local detect_path="$1"
     local loop_name="$2"
-    local skill_name="$3"
-    local prompt_instructions="$4"
+    local agent_implementer_skill_name="$3"
+    local agent_implementer_instructions="$4"
     local level="$5"
     local delivery="$6"
 
@@ -121,8 +121,8 @@ function build_entity_target_matrix {
     default_ref="${GITHUB_SHA:-}"
 
     prompt_text="$(build_entity_target_prompt \
-        "${skill_name}" \
-        "${prompt_instructions}" \
+        "${agent_implementer_skill_name}" \
+        "${agent_implementer_instructions}" \
         "${level}" \
         "${delivery}" \
         "${detect_json}")"

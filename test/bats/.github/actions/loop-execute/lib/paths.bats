@@ -77,6 +77,18 @@ setup() {
     [[ ${output} == *".env"* ]]
 }
 
+@test "apply_platform_denylist_default fills empty DENYLIST" {
+    unset DENYLIST
+    apply_platform_denylist_default
+    [[ ${DENYLIST} == *".env"* ]]
+}
+
+@test "apply_platform_denylist_default preserves caller denylist" {
+    DENYLIST="custom/**"
+    apply_platform_denylist_default
+    [[ ${DENYLIST} == "custom/**" ]]
+}
+
 @test "collect_denylist_violations returns nothing when denylist unset" {
     unset DENYLIST
     run collect_denylist_violations $'docs/a.md\n.env'

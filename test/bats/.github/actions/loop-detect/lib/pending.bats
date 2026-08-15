@@ -63,10 +63,10 @@ setup() {
     pending_detect_repo_setup
     STATE_FILE="${PENDING_REPO}/.loop/state-ci-sweeper.json"
     BASE_BRANCH="main"
-    SKILL_NAME="loop-ci-sweeper"
+    export AGENT_IMPLEMENTER_SKILL_NAME="loop-ci-sweeper"
     LEVEL="L2"
     ALLOWLIST="*"
-    PROMPT_INSTRUCTIONS=""
+    AGENT_IMPLEMENTER_INSTRUCTIONS=""
     LOOP_FINALIZE_INTEGRATION="open_pr"
     PENDING_PR_BLOCKED=0
     CIRCUIT_BREAKER_BLOCKED=0

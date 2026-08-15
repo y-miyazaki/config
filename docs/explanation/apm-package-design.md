@@ -20,10 +20,10 @@ Do not group skills by “loop vs interactive.” Loop is a caller. Split by wha
 | `repo-maintenance`                       | Git + in-repo files (GitLab OK) | `changelog`, `ci-sweeper`, `docs-updater`                          |
 | `github`                                 | GitHub Issue/PR (`gh`)          | `github-issue-triage`, `github-issue-autofix`, `github-pr-revise`  |
 | `github-actions`                         | GHA workflow YAML               | `github-actions-review`, `github-actions-validation`               |
-| `loop`                                   | Generic maker/checker           | `loop-verifier` (caller `verifier_skill_name`; not an entry skill) |
+| `loop`                                   | Generic maker/checker           | `loop-verifier` (caller `agent_verifier_skill_name`; not an entry skill) |
 | `go`, `shell-script`, `terraform`, `aws` | Language/cloud stack            | `go-review`, …                                                     |
 
-Canonical loop-entry list and cross-cutting edit rules: [Loop-Capable Skills](loop-engineering/loop-capable-skills.md) (maintainer doc, not a package source). Checker skill binding: caller `verifier_skill_name` → `loop-execute` slash-load; domain rubric stays in `agent_verifier_criteria`.
+Canonical loop-entry list and cross-cutting edit rules: [Loop-Capable Skills](loop-engineering/loop-capable-skills.md) (maintainer doc, not a package source). Checker skill binding: caller `agent_verifier_skill_name` → `loop-execute` slash-load; domain rubric stays in `agent_verifier_instructions`.
 
 ## Distributable vs maintainer-only
 
@@ -111,7 +111,7 @@ Detect scripts emit **mechanical facts** only. Semantic triage (`findings[]` rea
 Consumers (including this repo) may publish:
 
 - Maintainer guides under `docs/explanation/**`
-- Stack routing in caller `prompt_instructions` / `## Instructions` (A′ plane)
+- Stack routing in caller `agent_implementer_instructions` / `## Instructions` (A′ plane)
 - Checklist appendices keyed to local paths
 
 Skills link to generic principles (for example documentation deduplication) and point maintainers to **consumer `docs/`** for domain maps — they do not embed those maps.
