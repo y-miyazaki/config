@@ -4,6 +4,8 @@
 # Requires repository secret: AGENT_TOKEN (engine API key).
 name: on-loop-github-issue-triage
 
+run-name: "${{ github.workflow }} #${{ github.event.issue.number || inputs.issue_number }}"
+
 on:
   issues:
     types: [opened, reopened, labeled, unlabeled]
@@ -14,7 +16,7 @@ on:
       issue_number:
         description: Issue number to triage
         required: true
-        type: string
+        type: number
 
 permissions:
   actions: write
@@ -70,12 +72,6 @@ jobs:
           contains(fromJSON('["MEMBER","OWNER","COLLABORATOR"]'), github.event.comment.author_association)
         )
       )
-    permissions:
-      actions: write
-      contents: write
-      copilot-requests: write # zizmor: ignore[excessive-permissions]
-      issues: write
-      pull-requests: write
     uses: ./.github/workflows/ci-loop-caller-entity.yaml
     with:
       agent_implementer_instructions: |

@@ -2,6 +2,8 @@
 # Copy to .github/workflows/on-ci-push-terraform.yaml in your repository.
 name: on-ci-push-terraform
 
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
 on:
   push:
     branches:

@@ -1,6 +1,8 @@
 # CI workflow: Shell script lint on push/PR
 name: on-ci-push-shell-script
 
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
 on:
   push:
     branches:

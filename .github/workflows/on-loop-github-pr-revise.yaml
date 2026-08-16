@@ -3,6 +3,8 @@
 # → branch / PR-head caller (ci-loop-caller). Default landing push_head.
 name: on-loop-github-pr-revise
 
+run-name: "${{ github.workflow }} PR #${{ github.event.pull_request.number || github.event.issue.number || inputs.pr_number }}"
+
 on:
   issue_comment:
     types: [created]
@@ -29,7 +31,7 @@ on:
       pr_number:
         description: Pull request number
         required: true
-        type: string
+        type: number
 
 permissions:
   actions: write
@@ -114,7 +116,7 @@ jobs:
       no_changes_verdict: REJECT
       pr_enabled: true
       pr_exclude: fork,label:no-loop
-      scoped_pr_number: ${{ github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || '' }}
+      scoped_pr_number: ${{ github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || 0 }}
       write_target: fix
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}

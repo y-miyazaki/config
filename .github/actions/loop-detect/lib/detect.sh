@@ -261,7 +261,7 @@ function apply_scoped_pr_number_filter {
     local -a kept_prs=()
     local pr_json number
 
-    if [[ -z ${scoped_pr} ]]; then
+    if [[ -z ${scoped_pr} ]] || [[ ${scoped_pr} == "0" ]]; then
         return 0
     fi
 

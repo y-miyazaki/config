@@ -1,6 +1,8 @@
 # CI workflow: Markdown lint on push/PR
 name: on-ci-push-markdown
 
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
 on:
   push:
     branches:

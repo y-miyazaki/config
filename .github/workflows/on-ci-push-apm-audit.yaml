@@ -1,6 +1,8 @@
 # CI workflow: APM install and audit on push/PR
 name: on-ci-push-apm-audit
 
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
 on:
   push:
     branches:

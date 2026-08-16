@@ -1,6 +1,8 @@
 # CI workflow: Go CI on push/PR
 name: on-ci-push-go
 
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
 on:
   push:
     branches:

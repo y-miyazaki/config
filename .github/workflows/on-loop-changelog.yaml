@@ -6,9 +6,12 @@
 # Pass credentials via secrets: (callee BOT_APP_* / AGENT_TOKEN; remap MAINTENANCE_BOT_*). Optional with.environment for env-scoped secrets inside the reusable.
 name: on-loop-changelog
 
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
 on:
   schedule:
     - cron: "0 10 * * 5"
+      timezone: Etc/UTC
   workflow_dispatch: {}
 
 permissions:

@@ -1,6 +1,8 @@
 # CI workflow: GitHub Actions workflow lint on push/PR
 name: on-ci-push-github-actions-workflow
 
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
 on:
   push:
     branches:

@@ -19,10 +19,10 @@ on:
         required: false
         type: string
       agent_implementer_max_turns:
-        default: "5"
+        default: 5
         description: "Maximum implementer agent turns per loop attempt"
         required: false
-        type: string
+        type: number
       agent_implementer_model:
         default: ""
         description: "Implementer model override"
@@ -34,20 +34,20 @@ on:
         required: false
         type: string
       agent_loop_max_attempts:
-        default: "3"
+        default: 3
         description: "Maximum Agent→Verify loop attempts (L2/L3)"
         required: false
-        type: string
+        type: number
       agent_verifier_instructions:
         default: ""
         description: "Domain-specific APPROVE/REJECT criteria (L2/L3)"
         required: false
         type: string
       agent_verifier_max_turns:
-        default: "3"
+        default: 3
         description: "Maximum verifier agent turns (L2/L3)"
         required: false
-        type: string
+        type: number
       agent_verifier_model:
         default: ""
         description: "Verifier model override (L2/L3)"
@@ -259,6 +259,10 @@ permissions:
   contents: read
   copilot-requests: write # zizmor: ignore[excessive-permissions]
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   agent-l1:
     if: inputs.level == 'L1'
@@ -294,7 +298,7 @@ jobs:
           cli_version: ${{ inputs.cli_version }}
           engine: ${{ inputs.engine }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
-          max_turns: ${{ inputs.agent_implementer_max_turns }}
+          max_turns: ${{ format('{0}', inputs.agent_implementer_max_turns) }}
           model: ${{ inputs.agent_implementer_model }}
           prompt_text: ${{ inputs.prompt_text }}
 
@@ -385,7 +389,6 @@ jobs:
 
       - name: Parse Target
         id: target
-        shell: bash
         env:
           BASE_BRANCH: ${{ inputs.base_branch }}
           TARGET_JSON: ${{ inputs.target_json }}
@@ -421,13 +424,13 @@ jobs:
         id: execute
         uses: y-miyazaki/config/.github/actions/loop-execute@29b6b39fd05b90f7f1fda33f467679725235310e # v1.8.88
         with:
-          agent_implementer_max_turns: ${{ inputs.agent_implementer_max_turns }}
+          agent_implementer_max_turns: ${{ format('{0}', inputs.agent_implementer_max_turns) }}
           agent_implementer_model: ${{ inputs.agent_implementer_model }}
           agent_implementer_skill_name: ${{ inputs.agent_implementer_skill_name }}
-          agent_loop_max_attempts: ${{ inputs.agent_loop_max_attempts }}
+          agent_loop_max_attempts: ${{ format('{0}', inputs.agent_loop_max_attempts) }}
           agent_token: ${{ secrets.AGENT_TOKEN }}
           agent_verifier_instructions: ${{ inputs.agent_verifier_instructions }}
-          agent_verifier_max_turns: ${{ inputs.agent_verifier_max_turns }}
+          agent_verifier_max_turns: ${{ format('{0}', inputs.agent_verifier_max_turns) }}
           agent_verifier_model: ${{ inputs.agent_verifier_model }}
           agent_verifier_skill_name: ${{ inputs.agent_verifier_skill_name }}
           allowlist: ${{ inputs.allowlist }}
@@ -477,7 +480,6 @@ jobs:
 
       - name: Parse Notify Target
         id: notify_target
-        shell: bash
         env:
           TARGET_JSON: ${{ inputs.target_json }}
         run: |
@@ -536,7 +538,6 @@ jobs:
       - name: Resolve Run Log Metadata
         id: run_log_meta
         if: always()
-        shell: bash
         env:
           AGENT_RESULT: ${{ needs.agent-l2.result }}
           EXEC_FAILURE_MESSAGE: ${{ needs.agent-l2.outputs.failure_message }}
@@ -606,7 +607,7 @@ jobs:
           level: ${{ inputs.level }}
           loop_name: ${{ inputs.loop_name }}
           loop_run_id: ${{ github.run_id }}
-          max_attempts: ${{ inputs.agent_loop_max_attempts }}
+          max_attempts: ${{ format('{0}', inputs.agent_loop_max_attempts) }}
           notify_context_json: ${{ needs.agent-l2.outputs.notify_context_json || '{}' }}
           outcome: ${{ steps.finalize.outputs.outcome || 'error' }}
           pr_number: ${{ steps.notify_target.outputs.pr_number }}

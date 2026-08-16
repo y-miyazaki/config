@@ -1,6 +1,8 @@
 # Manual workflow: ECS deployment (application, dev)
 name: on-cd-wd-application-ecs-dev
 
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
 on:
   workflow_dispatch: # Manual deployment workflow
 

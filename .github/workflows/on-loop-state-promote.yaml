@@ -11,6 +11,8 @@
 # - Job gated on loop-automation label.
 name: on-loop-state-promote
 
+run-name: "${{ github.workflow }} PR #${{ github.event.pull_request.number }} (${{ github.event.pull_request.merged && 'merged' || 'closed' }})"
+
 on:
   pull_request_target: # zizmor: ignore[dangerous-triggers]
     types: [closed]

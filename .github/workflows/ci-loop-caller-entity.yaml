@@ -19,7 +19,7 @@ on:
       agent_implementer_max_turns:
         description: "Maximum implementer agent turns per loop attempt"
         required: true
-        type: string
+        type: number
       agent_implementer_model:
         description: "Implementer model ID"
         required: true
@@ -31,7 +31,7 @@ on:
       agent_loop_max_attempts:
         description: "Maximum Agent→Verify retry cycles"
         required: true
-        type: string
+        type: number
       agent_verifier_instructions:
         description: "Domain-specific APPROVE/REJECT rubric"
         required: true
@@ -39,7 +39,7 @@ on:
       agent_verifier_max_turns:
         description: "Maximum verifier agent turns per verification"
         required: true
-        type: string
+        type: number
       agent_verifier_model:
         description: "Verifier model ID"
         required: true
@@ -177,6 +177,10 @@ on:
         description: "Optional explicit GitHub token for resolution (defaults to job GITHUB_TOKEN when empty)"
         required: false
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   detect:
     environment: ${{ inputs.environment }}
@@ -224,7 +228,6 @@ jobs:
           persist-credentials: false
 
       - name: Export Detect Domain Env
-        shell: bash
         env:
           DETECT_DOMAIN_ENV_JSON: ${{ inputs.detect_domain_env_json }}
         run: |
@@ -310,12 +313,12 @@ jobs:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
     uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@29b6b39fd05b90f7f1fda33f467679725235310e # v1.8.88
     with:
-      agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
+      agent_implementer_max_turns: ${{ fromJSON(needs.detect.outputs.agent_implementer_max_turns) }}
       agent_implementer_model: ${{ needs.detect.outputs.agent_implementer_model }}
       agent_implementer_skill_name: ${{ needs.detect.outputs.agent_implementer_skill_name }}
-      agent_loop_max_attempts: ${{ needs.detect.outputs.agent_loop_max_attempts }}
+      agent_loop_max_attempts: ${{ fromJSON(needs.detect.outputs.agent_loop_max_attempts) }}
       agent_verifier_instructions: ${{ needs.detect.outputs.agent_verifier_instructions }}
-      agent_verifier_max_turns: ${{ needs.detect.outputs.agent_verifier_max_turns }}
+      agent_verifier_max_turns: ${{ fromJSON(needs.detect.outputs.agent_verifier_max_turns) }}
       agent_verifier_model: ${{ needs.detect.outputs.agent_verifier_model }}
       agent_verifier_skill_name: ${{ inputs.agent_verifier_skill_name }}
       allowlist: ${{ needs.detect.outputs.allowlist }}

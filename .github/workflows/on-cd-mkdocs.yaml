@@ -1,6 +1,8 @@
 # CD workflow: Build and deploy MkDocs to GitHub Pages
 name: on-cd-mkdocs
 
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
 on:
   push:
     branches:

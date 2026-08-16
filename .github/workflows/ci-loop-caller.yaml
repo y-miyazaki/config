@@ -28,7 +28,7 @@ on:
       agent_implementer_max_turns:
         description: "Maximum implementer agent turns per loop attempt"
         required: true
-        type: string
+        type: number
       agent_implementer_model:
         description: "Implementer model ID"
         required: true
@@ -40,7 +40,7 @@ on:
       agent_loop_max_attempts:
         description: "Maximum Agent→Verify retry cycles"
         required: true
-        type: string
+        type: number
       agent_verifier_instructions:
         description: "Domain-specific APPROVE/REJECT rubric"
         required: true
@@ -48,7 +48,7 @@ on:
       agent_verifier_max_turns:
         description: "Maximum verifier agent turns per verification"
         required: true
-        type: string
+        type: number
       agent_verifier_model:
         description: "Verifier model ID"
         required: true
@@ -201,10 +201,9 @@ on:
         required: false
         type: string
       scoped_pr_number:
-        default: ""
-        description: "When set, detect watches only this open PR number (skip integration fan-out)"
+        description: "When set, detect watches only this open PR number (skip integration fan-out); 0 = unset"
         required: false
-        type: string
+        type: number
       state_file:
         default: ""
         description: "Override state JSON path (default .loop/state-<loop_name>.json)"
@@ -227,6 +226,10 @@ on:
       GH_TOKEN:
         description: "Optional explicit GitHub token for resolution (defaults to job GITHUB_TOKEN when empty)"
         required: false
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   detect:
@@ -277,7 +280,6 @@ jobs:
           persist-credentials: false
 
       - name: Export Detect Domain Env
-        shell: bash
         env:
           DETECT_DOMAIN_ENV_JSON: ${{ inputs.detect_domain_env_json }}
         run: |
@@ -348,7 +350,7 @@ jobs:
           loop_pr_exclude: ${{ inputs.pr_exclude }}
           loop_pr_include_bots: ${{ inputs.pr_include_bots }}
           loop_priority: ${{ inputs.priority }}
-          loop_scoped_pr_number: ${{ inputs.scoped_pr_number }}
+          loop_scoped_pr_number: ${{ inputs.scoped_pr_number != 0 && format('{0}', inputs.scoped_pr_number) || '' }}
           loop_state_push_branch: ${{ inputs.branch_state }}
           may_edit: ${{ inputs.may_edit == true && 'true' || inputs.may_edit == false && 'false' || '' }}
           no_changes_verdict: ${{ inputs.no_changes_verdict }}
@@ -470,12 +472,12 @@ jobs:
     uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@29b6b39fd05b90f7f1fda33f467679725235310e # v1.8.88
     with:
       additional_commit_paths: ${{ needs.detect.outputs.additional_commit_paths }}
-      agent_implementer_max_turns: ${{ needs.detect.outputs.agent_implementer_max_turns }}
+      agent_implementer_max_turns: ${{ fromJSON(needs.detect.outputs.agent_implementer_max_turns) }}
       agent_implementer_model: ${{ needs.detect.outputs.agent_implementer_model }}
       agent_implementer_skill_name: ${{ needs.detect.outputs.agent_implementer_skill_name }}
-      agent_loop_max_attempts: ${{ needs.detect.outputs.agent_loop_max_attempts }}
+      agent_loop_max_attempts: ${{ fromJSON(needs.detect.outputs.agent_loop_max_attempts) }}
       agent_verifier_instructions: ${{ needs.detect.outputs.agent_verifier_instructions }}
-      agent_verifier_max_turns: ${{ needs.detect.outputs.agent_verifier_max_turns }}
+      agent_verifier_max_turns: ${{ fromJSON(needs.detect.outputs.agent_verifier_max_turns) }}
       agent_verifier_model: ${{ needs.detect.outputs.agent_verifier_model }}
       agent_verifier_skill_name: ${{ inputs.agent_verifier_skill_name }}
       allowlist: ${{ needs.detect.outputs.allowlist }}

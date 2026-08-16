@@ -3,6 +3,8 @@
 # → branch caller (ci-loop-caller). Detect skips when open/draft Fixes #N PR exists.
 name: on-loop-github-issue-autofix
 
+run-name: "${{ github.workflow }} #${{ github.event.issue.number || github.event.client_payload.issue_number || inputs.issue_number }}"
+
 on:
   issues:
     types: [labeled]
@@ -13,7 +15,7 @@ on:
       issue_number:
         description: Issue number to autofix
         required: true
-        type: string
+        type: number
       pr_draft:
         description: Create PR as draft when true (default open)
         required: false

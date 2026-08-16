@@ -13,6 +13,8 @@
 #   Terraform/IaC-only (no app source): '["actions"]'
 name: on-ci-security
 
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
 on:
   pull_request:
     branches:

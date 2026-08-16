@@ -13,6 +13,8 @@
 #   Terraform/IaC-only (no app source): '["actions"]'
 name: on-ci-security
 
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
 on:
   pull_request:
     branches:
@@ -82,6 +84,7 @@ on:
       - "trivy-secrets.yaml"
   schedule:
     - cron: "0 6 * * *"
+      timezone: Etc/UTC
   workflow_dispatch: {}
 
 concurrency:

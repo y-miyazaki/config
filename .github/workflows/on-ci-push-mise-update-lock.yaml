@@ -5,6 +5,8 @@
 # 3. Pass BOT_APP_* via secrets: (remap MAINTENANCE_BOT_* as needed).
 name: on-ci-push-mise-update-lock
 
+run-name: "${{ github.workflow }} (${{ github.event_name }})"
+
 on:
   push:
     paths:
