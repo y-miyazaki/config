@@ -21,6 +21,7 @@ checksum = "sha256:3631bfb239a96eb5f70852308fd97ffcefa0247efd82327a422bca8cb98ad
 url = "https://github.com/aquaproj/aqua/releases/download/v2.62.2/aqua_linux_amd64.tar.gz"
 url_api = "https://api.github.com/repos/aquaproj/aqua/releases/assets/494685213"
 provenance = "github-attestations"
+provenance_verified = true
 
 [tools.aqua."platforms.linux-x64-musl"]
 checksum = "sha256:3631bfb239a96eb5f70852308fd97ffcefa0247efd82327a422bca8cb98ad560"
@@ -1544,26 +1545,39 @@ version = "2.1.222"
 backend = "aqua:anthropics/claude-code"
 
 [tools.claude."platforms.linux-arm64"]
-url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.222/linux-arm64/claude"
+checksum = "sha256:68c8d31e3cf81d4e0f608900c866b8bb2f0e2645e89d0917ce8a23f2ec277587"
+url = "https://github.com/anthropics/claude-code/releases/download/v2.1.222/claude-linux-arm64.tar.gz"
+url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/501790583"
 
 [tools.claude."platforms.linux-arm64-musl"]
-url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.222/linux-arm64-musl/claude"
+checksum = "sha256:d752bf1d010b375ac110103fda39f6482e3f829bb53c1d34b03deb11de5f48a4"
+url = "https://github.com/anthropics/claude-code/releases/download/v2.1.222/claude-linux-arm64-musl.tar.gz"
+url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/501790582"
 
 [tools.claude."platforms.linux-x64"]
-url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.222/linux-x64/claude"
+checksum = "sha256:40d531b4c125f3e70aa3cc6da489e7138d63866758be06cc5797d1b5d78f50f3"
+url = "https://github.com/anthropics/claude-code/releases/download/v2.1.222/claude-linux-x64.tar.gz"
+url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/501790625"
 
 [tools.claude."platforms.linux-x64-musl"]
-url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.222/linux-x64-musl/claude"
+checksum = "sha256:9c0cd29db8c216df4c6b48180455797652c6b466e401c57600a5861e223babb6"
+url = "https://github.com/anthropics/claude-code/releases/download/v2.1.222/claude-linux-x64-musl.tar.gz"
+url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/501790584"
 
 [tools.claude."platforms.macos-arm64"]
-url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.222/darwin-arm64/claude"
+checksum = "sha256:e934dad3d95d914664764107885e45a37e4c95be65fd452b00d3191b0f63d427"
+url = "https://github.com/anthropics/claude-code/releases/download/v2.1.222/claude-darwin-arm64.tar.gz"
+url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/501790586"
 
 [tools.claude."platforms.macos-x64"]
-url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.222/darwin-x64/claude"
+checksum = "sha256:19dbebebb225df69659d6d2d2337e58457a8b3dd817fc80c26dec60a9123d4c3"
+url = "https://github.com/anthropics/claude-code/releases/download/v2.1.222/claude-darwin-x64.tar.gz"
+url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/501790585"
 
 [tools.claude."platforms.windows-x64"]
-checksum = "sha256:e934dad3d95d914664764107885e45a37e4c95be65fd452b00d3191b0f63d427"
-url = ".zip"
+checksum = "sha256:69328bcb98c1ff55871a89636f93e8e3a28124c1bf7cdbcd218200ea7b3c0e6d"
+url = "https://github.com/anthropics/claude-code/releases/download/v2.1.222/claude-win32-x64.zip"
+url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/501790626"
 
 [[tools."github:DeusData/codebase-memory-mcp"]]
 version = "0.9.0"
@@ -1586,6 +1600,7 @@ checksum = "sha256:e2832a8d207c26beaa30efa6222ed4a37cb3f526ca4bee060bfbf336ed6fc
 url = "https://github.com/DeusData/codebase-memory-mcp/releases/download/v0.9.0/codebase-memory-mcp-linux-amd64.tar.gz"
 url_api = "https://api.github.com/repos/DeusData/codebase-memory-mcp/releases/assets/470188787"
 provenance = "github-attestations"
+provenance_verified = true
 
 [tools."github:DeusData/codebase-memory-mcp"."platforms.linux-x64-musl"]
 checksum = "sha256:e2832a8d207c26beaa30efa6222ed4a37cb3f526ca4bee060bfbf336ed6fc679"
