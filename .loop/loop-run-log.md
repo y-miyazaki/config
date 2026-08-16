@@ -6,9 +6,6 @@ Append one entry per run. Prune entries older than 30 days.
 
 <!-- Loop appends below this line -->
 
-{"run_id":"2026-07-16T07:45:38Z","pattern":"ci-sweeper","duration_s":64,"outcome":"rejected","skip_reason":"none","tokens_estimate":52000,"workflow_run":"29480952630","attempts":1,"has_changes":false,"verdict":"REJECT"}
-{"run_id":"2026-07-16T07:52:21Z","pattern":"ci-sweeper","duration_s":172,"outcome":"pr-created","skip_reason":"none","tokens_estimate":52000,"workflow_run":"29481216284","attempts":1,"has_changes":true,"verdict":"APPROVE","usage":{"total_input_tokens":51467,"total_output_tokens":6254,"model":"Cursor Grok 4.5 High Fast"}}
-{"run_id":"2026-07-16T09:50:42Z","pattern":"docs-triage","duration_s":213,"outcome":"pr-created","skip_reason":"none","tokens_estimate":52000,"workflow_run":"29488418782","attempts":1,"has_changes":true,"verdict":"APPROVE","usage":{"total_input_tokens":98752,"total_output_tokens":21115,"model":"Cursor Grok 4.5 High Fast"}}
 {"run_id":"2026-07-17T04:14:48Z","pattern":"ci-sweeper","duration_s":105,"outcome":"rejected","skip_reason":"none","tokens_estimate":52000,"workflow_run":"29554299183","attempts":1,"has_changes":false,"verdict":"REJECT","usage":{"total_input_tokens":37471,"total_output_tokens":4828,"model":"Cursor Grok 4.5 High Fast"}}
 {"run_id":"2026-07-17T05:30:06Z","pattern":"ci-sweeper","duration_s":71,"outcome":"pr-created","skip_reason":"none","tokens_estimate":52000,"workflow_run":"29557419323","attempts":1,"has_changes":true,"verdict":"APPROVE","usage":{"total_input_tokens":26271,"total_output_tokens":1646,"model":"Cursor Grok 4.5 High Fast"}}
 {"run_id":"2026-07-17T05:30:26Z","pattern":"ci-sweeper","duration_s":91,"outcome":"error","skip_reason":"none","tokens_estimate":52000,"workflow_run":"29557419323","attempts":1,"verdict":"APPROVE","usage":{"total_input_tokens":38001,"total_output_tokens":5112,"model":"Cursor Grok 4.5 High Fast"}}
@@ -130,3 +127,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-08-15T18:47:45Z","loop_name":"ci-sweeper","duration_s":15,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"31902094549"}
 {"run_id":"2026-08-15T18:52:02Z","loop_name":"ci-sweeper","duration_s":17,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"31902290362"}
 {"run_id":"2026-08-15T19:04:08Z","loop_name":"ci-sweeper","duration_s":20,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"31902850628"}
+{"run_id":"2026-08-16T03:59:54Z","loop_name":"ci-sweeper","duration_s":15,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"31925550190"}
