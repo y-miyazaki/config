@@ -292,7 +292,7 @@ function resolve_repo_root {
     local root
 
     root="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel 2> /dev/null || true)"
-    if [[ -n "${root}" ]]; then
+    if [[ -n ${root} ]]; then
         printf '%s' "${root}"
         return 0
     fi
@@ -309,7 +309,7 @@ function ensure_apm_modules_local_permissions {
     repo_root="$(resolve_repo_root)"
     apm_modules_local="${repo_root}/apm_modules/_local"
 
-    if [[ ! -d "${apm_modules_local}" ]]; then
+    if [[ ! -d ${apm_modules_local} ]]; then
         return 0
     fi
 

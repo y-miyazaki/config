@@ -367,7 +367,7 @@ function post_trigger_done_reply {
     overview="$(truncate_text "$(redact_sensitive_text "${overview}")" 500)"
     summary="${overview}"
 
-    body="$(build_done_reply_body         "${OUTCOME}"         "${VERDICT}"         "$(redact_sensitive_text "${REJECT_REASON}")"         "${COMMIT_SHA}"         "${commit_url}"         "${loop_run_url}"         "${summary}")"
+    body="$(build_done_reply_body "${OUTCOME}" "${VERDICT}" "$(redact_sensitive_text "${REJECT_REASON}")" "${COMMIT_SHA}" "${commit_url}" "${loop_run_url}" "${summary}")"
 
     reply_trigger_comment "${body}"
 }
@@ -554,7 +554,6 @@ function resolve_actor {
     fi
     printf '%s' "github-actions"
 }
-
 
 #######################################
 # main: Post or update loop-notify-pr marker comment

@@ -157,7 +157,6 @@ setup() {
     [[ $output != *"| foo | bar |"* ]]
 }
 
-
 @test "render_pr_body appends Created By after disclaimer when engine usage set" {
     export PR_BODY_PREFIX=''
     export AGENT_REPORT_OVERVIEW=''

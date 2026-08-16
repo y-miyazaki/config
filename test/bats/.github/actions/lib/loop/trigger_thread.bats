@@ -145,4 +145,3 @@ MOCK
     [ "$status" -eq 0 ]
     grep -q "issues/comments/99/reactions" "${MOCK_BIN}/gh.log"
 }
-
