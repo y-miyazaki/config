@@ -27,7 +27,7 @@ Factory Model（ソフトウェアを作るシステム全体）
 | Worktrees            | 並列実行の隔離                             | ビルトイン worktree        | `git worktree`, `--worktree`, `isolation: worktree` |
 | Skills               | プロジェクト知識の永続化                   | Agent Skills (`SKILL.md`)  | Agent Skills (`SKILL.md`)                           |
 | Plugins / Connectors | 外部ツールとの接続（MCP）                  | Connectors (MCP) + plugins | MCP servers + plugins                               |
-| Sub-agents           | 実装者と検証者の分離（Maker / Checker） | `.codex/agents/` (TOML)    | `.claude/agents/`, agent teams                      |
+| Sub-agents           | 実装者と検証者の分離（Maker / Checker）    | `.codex/agents/` (TOML)    | `.claude/agents/`, agent teams                      |
 | Memory / State       | 会話外に存在する永続的な状態管理           | Markdown, Linear           | Markdown (`AGENTS.md`), Linear (MCP)                |
 
 ## ループの構造（フロー）
@@ -102,29 +102,29 @@ Schedule/Automation
 
 本リポジトリは Loop Engineering の構成要素を、外部カタログの `STATE.md` / `.claude/agents/` ではなく **GHA ループ基盤** で実装している。
 
-| Loop 要素            | 本リポジトリの現状                                                                                                                         | 充足度     |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
-| Automations          | `on-loop-*.yaml` callers、`ci-loop-caller` / `ci-loop-caller-entity`、Renovate、既存 `ci-*.yaml`                                            | ◎ 実現済み |
-| Worktrees            | `loop-worktree-setup` + `loop-execute`（L2/L3）                                                                                            | ◎ 実現済み |
-| Skills               | APM パッケージ経由の entry / review / validation / `loop-verifier`（`.claude/skills/` は同期成果物）                                        | ◎ 充実     |
-| Plugins / Connectors | APM パッケージの MCP（GitHub / AWS / Terraform など）。ルート `apm.yml` の空配列ではない                                                   | ◎ 導入済み |
-| Sub-agents           | Maker / Checker は `loop-execute` の 2 セッション（`agent_maker_*` / `agent_checker_*`）。`.claude/agents/` は使わない                      | ◎ 実現済み |
-| Memory / State       | `.loop/state-<loop_name>.json`、sidecar ledger、`loop-run-log.md`、`loop-budget.json`。静的知識は `AGENTS.md` / steering                     | ◎ 実現済み |
+| Loop 要素            | 本リポジトリの現状                                                                                                       | 充足度     |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| Automations          | `on-loop-*.yaml` callers、`ci-loop-caller` / `ci-loop-caller-entity`、Renovate、既存 `ci-*.yaml`                         | ◎ 実現済み |
+| Worktrees            | `loop-worktree-setup` + `loop-execute`（L2/L3）                                                                          | ◎ 実現済み |
+| Skills               | APM パッケージ経由の entry / review / validation / `loop-verifier`（`.claude/skills/` は同期成果物）                     | ◎ 充実     |
+| Plugins / Connectors | APM パッケージの MCP（GitHub / AWS / Terraform など）。ルート `apm.yml` の空配列ではない                                 | ◎ 導入済み |
+| Sub-agents           | Maker / Checker は `loop-execute` の 2 セッション（`agent_maker_*` / `agent_checker_*`）。`.claude/agents/` は使わない   | ◎ 実現済み |
+| Memory / State       | `.loop/state-<loop_name>.json`、sidecar ledger、`loop-run-log.md`、`loop-budget.json`。静的知識は `AGENTS.md` / steering | ◎ 実現済み |
 
 ### 実装済みループ（`loop_name` = 状態ファイル）
 
 状態パスは常に `.loop/state-<loop_name>.json`。別名ファイルは置かない。ドメイン ledger だけ sidecar を足す（例: `state-ci-sweeper-run-ledger.json`）。
 
-| `loop_name`              | 状態ファイル                              | レベル        |
-| ------------------------ | ----------------------------------------- | ------------- |
-| `docs-updater`           | `.loop/state-docs-updater.json`           | L2            |
-| `ci-sweeper`             | `.loop/state-ci-sweeper.json`             | L2            |
-| `changelog`              | `.loop/state-changelog.json`              | L2            |
-| `refactor`               | `.loop/state-refactor.json`               | L2            |
-| `tech-debt`              | `.loop/state-tech-debt.json`              | L2            |
-| `github-issue-triage`    | `.loop/state-github-issue-triage.json`    | L1 (Report)   |
-| `github-issue-autofix`   | `.loop/state-github-issue-autofix.json`   | L2            |
-| `github-pr-revise`       | `.loop/state-github-pr-revise.json`       | L2            |
+| `loop_name`            | 状態ファイル                            | レベル      |
+| ---------------------- | --------------------------------------- | ----------- |
+| `docs-updater`         | `.loop/state-docs-updater.json`         | L2          |
+| `ci-sweeper`           | `.loop/state-ci-sweeper.json`           | L2          |
+| `changelog`            | `.loop/state-changelog.json`            | L2          |
+| `refactor`             | `.loop/state-refactor.json`             | L2          |
+| `tech-debt`            | `.loop/state-tech-debt.json`            | L2          |
+| `github-issue-triage`  | `.loop/state-github-issue-triage.json`  | L1 (Report) |
+| `github-issue-autofix` | `.loop/state-github-issue-autofix.json` | L2          |
+| `github-pr-revise`     | `.loop/state-github-pr-revise.json`     | L2          |
 
 外部パターン名との対応: CI Sweeper / Changelog Drafter / Issue Triage / PR 改訂は上表で dogfood 済み。`loop-stale-pr` は未着手。
 
@@ -160,14 +160,13 @@ Schedule/Automation
 
 ### 残作業（基盤）
 
-| 項目                    | 内容                                                                                          |
-| ----------------------- | --------------------------------------------------------------------------------------------- |
-| `loop-audit` Readiness  | 外部スコアをそのまま使わず、四平面（`level` / `may_edit` / `write_target` / `delivery`）で定義するか未決 |
-| L3 Unattended           | Human Gate 条件を明文化したうえで許可リスト内のみ拡大                                         |
+| 項目                   | 内容                                                                                                     |
+| ---------------------- | -------------------------------------------------------------------------------------------------------- |
+| `loop-audit` Readiness | 外部スコアをそのまま使わず、四平面（`level` / `may_edit` / `write_target` / `delivery`）で定義するか未決 |
+| L3 Unattended          | Human Gate 条件を明文化したうえで許可リスト内のみ拡大                                                    |
 
 ### 推奨アプローチ
 
 **済（dogfood）**: Detect → Execute（Maker）→ Verify（Checker）→ Finalize。状態は `.loop/state-<loop_name>.json`。L2 の `open_pr` は merge-gated `pending`。
 
 **次**: Daily Triage と Post-Merge Cleanup（エージェント不要または L1）。その後 Dependency Sweeper。L3 はゲート明文化後。
-

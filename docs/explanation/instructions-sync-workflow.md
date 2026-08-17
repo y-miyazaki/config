@@ -58,14 +58,14 @@ The sync direction is:
 
 The sync script updates only these pairs:
 
-| Review skill            | Instruction file                                                                 |
-| ----------------------- | -------------------------------------------------------------------------------- |
-| `agent-skills-review`   | `.apm/packages/common/.apm/instructions/agent-skills.instructions.md`            |
+| Review skill            | Instruction file                                                                         |
+| ----------------------- | ---------------------------------------------------------------------------------------- |
+| `agent-skills-review`   | `.apm/packages/common/.apm/instructions/agent-skills.instructions.md`                    |
 | `github-actions-review` | `.apm/packages/github-actions/.apm/instructions/github-actions-workflow.instructions.md` |
-| `instructions-review`   | `.apm/packages/common/.apm/instructions/instructions.instructions.md`            |
-| `go-review`             | `.apm/packages/go/.apm/instructions/go.instructions.md`                          |
-| `shell-script-review`   | `.apm/packages/shell-script/.apm/instructions/shell-script.instructions.md`      |
-| `terraform-review`      | `.apm/packages/terraform/.apm/instructions/terraform.instructions.md`            |
+| `instructions-review`   | `.apm/packages/common/.apm/instructions/instructions.instructions.md`                    |
+| `go-review`             | `.apm/packages/go/.apm/instructions/go.instructions.md`                                  |
+| `shell-script-review`   | `.apm/packages/shell-script/.apm/instructions/shell-script.instructions.md`              |
+| `terraform-review`      | `.apm/packages/terraform/.apm/instructions/terraform.instructions.md`                    |
 
 ### Files Outside Sync
 

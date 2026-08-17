@@ -53,33 +53,33 @@ Keys are passed in `on-loop-refactor.yaml` via `with:` on `ci-loop-caller.yaml` 
 
 Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md). Platform branch/finalize caps: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
 
-| Input / JSON key                 | Description                                                                                                        | Dogfood value                                             |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
-| `agent_maker_max_turns`    | Max maker agent turns per loop attempt (one Agent→Verify cycle).                                             | `5`                                                       |
-| `agent_maker_model`        | Maker model ID. Cursor: `agent --list-models`.                                                               | `cursor-grok-4.5-low`                                     |
-| `agent_loop_max_attempts`        | Max Agent→Verify retry cycles before finalize records failure.                                                     | `3`                                                       |
-| `agent_checker_instructions`    | Checker APPROVE/REJECT rubric. Local/same-package structural edits only; no architecture/GoF/cross-package diffs. | Inline in caller workflow                                 |
-| `agent_checker_max_turns`       | Max checker agent turns per verification.                                                                         | `3`                                                       |
-| `agent_checker_model`           | Checker model ID. Cursor: `agent --list-models`.                                                                  | `composer-2.5`                                            |
-| `allowlist`                      | Comma-separated globs the maker may modify. Tight dogfood scope.                                             | `.apm/packages/**,scripts/**`                             |
-| `branch_match`                   | Comma-separated integration branch patterns to watch.                                                              | `main`                                                    |
-| `branch_state`                   | Branch for `.loop/*` persistence, state migration, and watch fallback.                                             | `main`                                                    |
-| `budget_max_runs_per_day`        | Daily run cap keyed by `loop_name`.                                                                                | `1`                                                       |
-| `budget_max_tokens_per_day`      | Daily aggregated token cap across loops.                                                                           | `1000000`                                                 |
-| `detect_script`                  | Domain detect script path.                                                                                         | `.agents/skills/refactor/scripts/detect_refactor.sh`      |
-| `engine`                         | AI engine (`claude`, `copilot`, `codex`, `cursor`).                                                                | `cursor`                                                  |
-| `delivery`                       | Platform delivery after APPROVE (`open_pr` for dogfood).                                                           | `open_pr`                                                 |
-| `infer_files_pattern`            | Extended regex to infer file paths from checker text.                                                             | See caller workflow                                       |
-| `level`                          | Autonomy level (`L1`, `L2`, `L3`). L2 opens review PR.                                                             | `L2`                                                      |
-| `loop_name`                      | Loop identifier; state file `.loop/state-refactor.json`.                                                           | `refactor`                                                |
-| `max_targets_per_schedule`       | Max hints processed per cron tick.                                                                                 | `1`                                                       |
-| `may_edit`                       | Agent worktree edit gate (`true` for dogfood).                                                                     | `true`                                                    |
-| `no_changes_verdict`             | `APPROVE` or `REJECT` when maker produces no file diff.                                                      | `REJECT`                                                  |
-| `pr_body`                        | Optional static prefix (dogfood: `""`).                                                                            | `""`                                                      |
-| `pr_title`                       | PR title when finalize strategy is `open_pr`.                                                                      | `chore(refactor): structural improvement (loop-refactor)` |
-| `agent_maker_instructions` | Domain instructions: invoke `refactor` survey-then-apply-all path; stack validation via A'.                        | Inline in caller workflow                                 |
-| `pr_enabled`                     | Enumerate open PR heads. Refactor loop uses integration branches only.                                             | `false`                                                   |
-| `agent_maker_skill_name`   | Skill package to invoke.                                                                                           | `refactor`                                                |
+| Input / JSON key             | Description                                                                                                       | Dogfood value                                             |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `agent_maker_max_turns`      | Max maker agent turns per loop attempt (one Agent→Verify cycle).                                                  | `5`                                                       |
+| `agent_maker_model`          | Maker model ID. Cursor: `agent --list-models`.                                                                    | `cursor-grok-4.5-low`                                     |
+| `agent_loop_max_attempts`    | Max Agent→Verify retry cycles before finalize records failure.                                                    | `3`                                                       |
+| `agent_checker_instructions` | Checker APPROVE/REJECT rubric. Local/same-package structural edits only; no architecture/GoF/cross-package diffs. | Inline in caller workflow                                 |
+| `agent_checker_max_turns`    | Max checker agent turns per verification.                                                                         | `3`                                                       |
+| `agent_checker_model`        | Checker model ID. Cursor: `agent --list-models`.                                                                  | `composer-2.5`                                            |
+| `allowlist`                  | Comma-separated globs the maker may modify. Tight dogfood scope.                                                  | `.apm/packages/**,scripts/**`                             |
+| `branch_match`               | Comma-separated integration branch patterns to watch.                                                             | `main`                                                    |
+| `branch_state`               | Branch for `.loop/*` persistence, state migration, and watch fallback.                                            | `main`                                                    |
+| `budget_max_runs_per_day`    | Daily run cap keyed by `loop_name`.                                                                               | `1`                                                       |
+| `budget_max_tokens_per_day`  | Daily aggregated token cap across loops.                                                                          | `1000000`                                                 |
+| `detect_script`              | Domain detect script path.                                                                                        | `.agents/skills/refactor/scripts/detect_refactor.sh`      |
+| `engine`                     | AI engine (`claude`, `copilot`, `codex`, `cursor`).                                                               | `cursor`                                                  |
+| `delivery`                   | Platform delivery after APPROVE (`open_pr` for dogfood).                                                          | `open_pr`                                                 |
+| `infer_files_pattern`        | Extended regex to infer file paths from checker text.                                                             | See caller workflow                                       |
+| `level`                      | Autonomy level (`L1`, `L2`, `L3`). L2 opens review PR.                                                            | `L2`                                                      |
+| `loop_name`                  | Loop identifier; state file `.loop/state-refactor.json`.                                                          | `refactor`                                                |
+| `max_targets_per_schedule`   | Max hints processed per cron tick.                                                                                | `1`                                                       |
+| `may_edit`                   | Agent worktree edit gate (`true` for dogfood).                                                                    | `true`                                                    |
+| `no_changes_verdict`         | `APPROVE` or `REJECT` when maker produces no file diff.                                                           | `REJECT`                                                  |
+| `pr_body`                    | Optional static prefix (dogfood: `""`).                                                                           | `""`                                                      |
+| `pr_title`                   | PR title when finalize strategy is `open_pr`.                                                                     | `chore(refactor): structural improvement (loop-refactor)` |
+| `agent_maker_instructions`   | Domain instructions: invoke `refactor` survey-then-apply-all path; stack validation via A'.                       | Inline in caller workflow                                 |
+| `pr_enabled`                 | Enumerate open PR heads. Refactor loop uses integration branches only.                                            | `false`                                                   |
+| `agent_maker_skill_name`     | Skill package to invoke.                                                                                          | `refactor`                                                |
 
 ### Domain detect environment (`detect_domain_env_json`)
 

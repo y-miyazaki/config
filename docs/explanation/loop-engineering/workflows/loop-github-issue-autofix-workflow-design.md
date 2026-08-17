@@ -38,34 +38,34 @@ Skill execution boundaries: `github-issue-autofix` SKILL.md (`USE FOR` / `DO NOT
 
 Keys are passed in `on-loop-github-issue-autofix.yaml` via `with:` on `ci-loop-caller.yaml`. Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md).
 
-| Input / JSON key                 | Description                                           | Dogfood value                                                   |
-| -------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------- |
-| `agent_maker_instructions` | Minimal fix from detect JSON; PR body with `Fixes #N` | Inline in caller workflow                                       |
-| `agent_maker_max_turns`    | Max maker turns per attempt                     | `8`                                                             |
-| `agent_maker_model`        | Maker model ID                                  | `cursor-grok-4.5-low`                                           |
-| `agent_maker_skill_name`   | Skill package                                         | `github-issue-autofix`                                          |
-| `agent_loop_max_attempts`        | Max Agent→Verify cycles                               | `3`                                                             |
-| `agent_checker_instructions`    | APPROVE/REJECT rubric                                 | Inline in caller workflow                                       |
-| `agent_checker_max_turns`       | Max checker turns                                    | `3`                                                             |
-| `agent_checker_model`           | Checker model ID                                     | `composer-2.5`                                                  |
-| `agent_checker_skill_name`      | Checker skill                                         | `loop-verifier`                                                 |
-| `allowlist`                      | File edit allowlist (empty = skill default)           | `""`                                                            |
-| `branch_match`                   | Integration branch to fix against                     | `main`                                                          |
-| `branch_state`                   | `.loop/*` persistence branch                          | `main`                                                          |
-| `budget_max_runs_per_day`        | Daily run cap                                         | `10`                                                            |
-| `budget_max_tokens_per_day`      | Daily token cap                                       | `1000000`                                                       |
-| `delivery`                       | Platform delivery after APPROVE                       | `open_pr`                                                       |
-| `denylist`                       | Denylist globs                                        | `""`                                                            |
-| `detect_script`                  | Domain detect script                                  | `.agents/skills/github-issue-autofix/scripts/detect_autofix.sh` |
-| `engine`                         | AI engine                                             | `cursor`                                                        |
-| `environment`                    | GitHub Environment for env-scoped secrets             | `default`                                                       |
-| `git_landing_integration`        | Advanced git landing override                         | `open_pr`                                                       |
-| `level`                          | Autonomy (`L2` — review PR)                           | `L2`                                                            |
-| `loop_name`                      | Loop identifier                                       | `github-issue-autofix`                                          |
-| `may_edit`                       | Agent worktree edit gate                              | `true`                                                          |
-| `no_changes_verdict`             | Verdict when no file diff                             | `REJECT`                                                        |
-| `pr_draft`                       | Create fix PR as draft when true                      | `false` (default open)                                          |
-| `write_target`                   | Agent artifact type                                   | `fix`                                                           |
+| Input / JSON key             | Description                                           | Dogfood value                                                   |
+| ---------------------------- | ----------------------------------------------------- | --------------------------------------------------------------- |
+| `agent_maker_instructions`   | Minimal fix from detect JSON; PR body with `Fixes #N` | Inline in caller workflow                                       |
+| `agent_maker_max_turns`      | Max maker turns per attempt                           | `8`                                                             |
+| `agent_maker_model`          | Maker model ID                                        | `cursor-grok-4.5-low`                                           |
+| `agent_maker_skill_name`     | Skill package                                         | `github-issue-autofix`                                          |
+| `agent_loop_max_attempts`    | Max Agent→Verify cycles                               | `3`                                                             |
+| `agent_checker_instructions` | APPROVE/REJECT rubric                                 | Inline in caller workflow                                       |
+| `agent_checker_max_turns`    | Max checker turns                                     | `3`                                                             |
+| `agent_checker_model`        | Checker model ID                                      | `composer-2.5`                                                  |
+| `agent_checker_skill_name`   | Checker skill                                         | `loop-verifier`                                                 |
+| `allowlist`                  | File edit allowlist (empty = skill default)           | `""`                                                            |
+| `branch_match`               | Integration branch to fix against                     | `main`                                                          |
+| `branch_state`               | `.loop/*` persistence branch                          | `main`                                                          |
+| `budget_max_runs_per_day`    | Daily run cap                                         | `10`                                                            |
+| `budget_max_tokens_per_day`  | Daily token cap                                       | `1000000`                                                       |
+| `delivery`                   | Platform delivery after APPROVE                       | `open_pr`                                                       |
+| `denylist`                   | Denylist globs                                        | `""`                                                            |
+| `detect_script`              | Domain detect script                                  | `.agents/skills/github-issue-autofix/scripts/detect_autofix.sh` |
+| `engine`                     | AI engine                                             | `cursor`                                                        |
+| `environment`                | GitHub Environment for env-scoped secrets             | `default`                                                       |
+| `git_landing_integration`    | Advanced git landing override                         | `open_pr`                                                       |
+| `level`                      | Autonomy (`L2` — review PR)                           | `L2`                                                            |
+| `loop_name`                  | Loop identifier                                       | `github-issue-autofix`                                          |
+| `may_edit`                   | Agent worktree edit gate                              | `true`                                                          |
+| `no_changes_verdict`         | Verdict when no file diff                             | `REJECT`                                                        |
+| `pr_draft`                   | Create fix PR as draft when true                      | `false` (default open)                                          |
+| `write_target`               | Agent artifact type                                   | `fix`                                                           |
 
 ### Domain detect environment (`detect_domain_env_json`)
 

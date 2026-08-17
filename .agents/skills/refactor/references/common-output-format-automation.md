@@ -8,13 +8,13 @@ Branch on `may_edit` from `## Constraints` — see [category-automation-envelope
 
 Always emit for automation runs. Append `## Session Metrics` per [category-automation-envelope.md](category-automation-envelope.md):
 
-| Field          | Value                      |
-| -------------- | -------------------------- |
-| may_edit       | <true\|false>              |
-| Commit range   | <commit_range or "n/a">    |
-| Hints assessed | <count>                    |
-| Candidates     | <count>                    |
-| Applied        | <count or "0">             |
+| Field          | Value                     |
+| -------------- | ------------------------- |
+| may_edit       | <true\|false>             |
+| Commit range   | <commit_range or "n/a">   |
+| Hints assessed | <count>                   |
+| Candidates     | <count>                   |
+| Applied        | <count or "0">            |
 | Outcome        | <one-line checker result> |
 
 ## PR body templates

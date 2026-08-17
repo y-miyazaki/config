@@ -14,14 +14,14 @@ Design principles for authoring content under `.apm/packages/**` that ships via 
 
 Do not group skills by “loop vs interactive.” Loop is a caller. Split by what the consumer must already run:
 
-| Package                                  | Consumer needs                  | Example skills                                                           |
-| ---------------------------------------- | ------------------------------- | ------------------------------------------------------------------------ |
-| `common`                                 | Forge-neutral review/docs       | `agent-skills-review`, `docs-creator`                                    |
-| `repo-maintenance`                       | Git + in-repo files (GitLab OK) | `changelog`, `ci-sweeper`, `docs-updater`                                |
-| `github`                                 | GitHub Issue/PR (`gh`)          | `github-issue-triage`, `github-issue-autofix`, `github-pr-revise`        |
-| `github-actions`                         | GHA workflow YAML               | `github-actions-review`, `github-actions-validation`                     |
+| Package                                  | Consumer needs                  | Example skills                                                          |
+| ---------------------------------------- | ------------------------------- | ----------------------------------------------------------------------- |
+| `common`                                 | Forge-neutral review/docs       | `agent-skills-review`, `docs-creator`                                   |
+| `repo-maintenance`                       | Git + in-repo files (GitLab OK) | `changelog`, `ci-sweeper`, `docs-updater`                               |
+| `github`                                 | GitHub Issue/PR (`gh`)          | `github-issue-triage`, `github-issue-autofix`, `github-pr-revise`       |
+| `github-actions`                         | GHA workflow YAML               | `github-actions-review`, `github-actions-validation`                    |
 | `loop`                                   | Generic maker/checker           | `loop-verifier` (caller `agent_checker_skill_name`; not an entry skill) |
-| `go`, `shell-script`, `terraform`, `aws` | Language/cloud stack            | `go-review`, …                                                           |
+| `go`, `shell-script`, `terraform`, `aws` | Language/cloud stack            | `go-review`, …                                                          |
 
 Canonical loop-entry list and cross-cutting edit rules: [Loop-Capable Skills](loop-engineering/loop-capable-skills.md) (maintainer doc, not a package source). Checker skill binding: caller `agent_checker_skill_name` → `loop-execute` slash-load; domain rubric stays in `agent_checker_instructions`.
 

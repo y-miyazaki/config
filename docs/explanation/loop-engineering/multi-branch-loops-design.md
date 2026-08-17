@@ -130,7 +130,7 @@ Detect scripts scan **only the current context** (branch/ref `loop-detect` check
 | ---------------------- | --------------------------------------------------------------- |
 | `mode`                 | `integration` \| `pull_request`                                 |
 | `key`                  | State key: `integration:<branch>` or `pull_request:<pr_number>` |
-| `from` / `to` / `base` | Detect, finalize, checker diff baseline                        |
+| `from` / `to` / `base` | Detect, finalize, checker diff baseline                         |
 | `finalize`             | Default `open_pr` (dogfood). Exceptions: `push`, `push_head`    |
 
 ## Branch roles and fix direction
@@ -156,9 +156,9 @@ Recorded in [Specification](../../reference/specification.md).
 ## Execute and Checker (platform)
 
 | Mode         | Worktree                   | Checker diff baseline |
-| ------------ | -------------------------- | ---------------------- |
-| integration  | `from.ref` @ `from.branch` | `to.branch`            |
-| pull_request | `from.ref` @ `from.branch` | `base.branch`          |
+| ------------ | -------------------------- | --------------------- |
+| integration  | `from.ref` @ `from.branch` | `to.branch`           |
+| pull_request | `from.ref` @ `from.branch` | `base.branch`         |
 
 `verifier_context`: platform always passes to `loop-execute`. Content is domain-specific (CI logs, detect fact summary). See [Specification](../../reference/specification.md).
 

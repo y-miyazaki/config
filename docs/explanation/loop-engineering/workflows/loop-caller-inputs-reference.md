@@ -153,47 +153,47 @@ Related but not branch-scoped: `max_targets_per_schedule` (fan-out cap after wat
 
 ## Agent and engine
 
-| Input                          | Type   | Description                                                               | Default (dogfood)       |
-| ------------------------------ | ------ | ------------------------------------------------------------------------- | ----------------------- |
-| `agent_maker_max_turns`  | number | Max maker agent turns per loop attempt                              | `5`–`8` (loop-specific) |
-| `agent_maker_model`      | string | Maker model ID. Empty = engine default                              | `cursor-grok-4.5-low`   |
-| `agent_loop_max_attempts`      | number | Max Agent→Verify retry cycles before finalize records failure             | `3`                     |
-| `agent_checker_instructions`  | string | Caller-owned markdown rubric (`## Criteria for APPROVE` / `REJECT`)       | Domain-specific         |
-| `agent_checker_max_turns`     | number | Max checker agent turns per verification                                 | `3`                     |
-| `agent_checker_model`         | string | Checker model ID                                                         | `composer-2.5`          |
-| `engine`                       | string | AI engine: `claude` \| `copilot` \| `codex` \| `cursor`                   | `cursor`                |
-| `level`                        | string | Autonomy: `L1` \| `L2` \| `L3`                                            | `L2`                    |
-| `agent_maker_skill_name` | string | Maker skill (e.g. `changelog`). Must match `.agents/skills/<name>/` | Per loop                |
-| `agent_checker_skill_name`    | string | Checker skill slash-loaded by `loop-execute` (not the maker)        | `loop-verifier`         |
+| Input                        | Type   | Description                                                         | Default (dogfood)       |
+| ---------------------------- | ------ | ------------------------------------------------------------------- | ----------------------- |
+| `agent_maker_max_turns`      | number | Max maker agent turns per loop attempt                              | `5`–`8` (loop-specific) |
+| `agent_maker_model`          | string | Maker model ID. Empty = engine default                              | `cursor-grok-4.5-low`   |
+| `agent_loop_max_attempts`    | number | Max Agent→Verify retry cycles before finalize records failure       | `3`                     |
+| `agent_checker_instructions` | string | Caller-owned markdown rubric (`## Criteria for APPROVE` / `REJECT`) | Domain-specific         |
+| `agent_checker_max_turns`    | number | Max checker agent turns per verification                            | `3`                     |
+| `agent_checker_model`        | string | Checker model ID                                                    | `composer-2.5`          |
+| `engine`                     | string | AI engine: `claude` \| `copilot` \| `codex` \| `cursor`             | `cursor`                |
+| `level`                      | string | Autonomy: `L1` \| `L2` \| `L3`                                      | `L2`                    |
+| `agent_maker_skill_name`     | string | Maker skill (e.g. `changelog`). Must match `.agents/skills/<name>/` | Per loop                |
+| `agent_checker_skill_name`   | string | Checker skill slash-loaded by `loop-execute` (not the maker)        | `loop-verifier`         |
 
 ## Platform inputs
 
 Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
 
-| Input                            | Type    | Description                                                                                                                                                                                                                                                                                                                 | Default (dogfood)                           |
-| -------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| `allowlist`                      | string  | Comma-separated globs the maker may modify                                                                                                                                                                                                                                                                            | Per loop                                    |
-| `branch_match`                   | string  | Comma-separated branch patterns to watch                                                                                                                                                                                                                                                                                    | `main`                                      |
-| `branch_match_mode`              | string  | How to interpret `branch_match`: `list`, `glob`, or `regex`                                                                                                                                                                                                                                                                 | `glob`                                      |
-| `branch_state`                   | string  | Branch for `.loop/*` persistence, state migration, and watch fallback                                                                                                                                                                                                                                                       | `main`                                      |
-| `budget_max_runs_per_day`        | number  | Daily run cap keyed by `loop_name` (each matrix cell counts). `.loop/loop-budget.json` overrides when present (ci-sweeper dogfood: `50`)                                                                                                                                                                                    | `1`–`5` (caller; budget file may be higher) |
-| `budget_max_tokens_per_day`      | number  | Daily aggregated token cap                                                                                                                                                                                                                                                                                                  | `500000`–`1000000`                          |
-| `denylist`                       | string  | Comma-separated globs the maker must not touch                                                                                                                                                                                                                                                                        | ci-sweeper only                             |
-| `delivery`                       | string  | Platform delivery after APPROVE: `log` \| `issue` \| `notion` \| `open_pr` \| `none` (not passed to skills). Drives `target.finalize` inside `loop-detect`.                                                                                                                                                                 | `open_pr`                                   |
-| `detect_script`                  | string  | Path to domain `detect_*.sh` under the skill package (e.g. `.agents/skills/docs-updater/scripts/detect_changes.sh`)                                                                                                                                                                                                         | Per loop                                    |
-| `infer_files_pattern`            | string  | Extended regex to infer file paths from checker text                                                                                                                                                                                                                                                                       | Per loop                                    |
-| `loop_name`                      | string  | Loop identifier: `.loop/state-<loop_name>.json`, budget key, run-log tag. Align caller filename: `on-loop-<loop_name>.yaml`                                                                                                                                                                                                 | Per loop                                    |
-| `max_targets_per_schedule`       | number  | Max targets per cron tick after priority filters                                                                                                                                                                                                                                                                            | `3`                                         |
-| `may_edit`                       | boolean | Agent worktree edit gate: `true` \| `false` (required; injected into `## Constraints`)                                                                                                                                                                                                                                      | Per loop (explicit in dogfood callers)      |
-| `no_changes_verdict`             | string  | `APPROVE` \| `REJECT` when maker produces no file diff                                                                                                                                                                                                                                                                | `REJECT`                                    |
-| `pr_body`                        | string  | Optional static prefix (dogfood: `""`). `loop-finalize` composes the PR body: agent `## Overview` + `## Summary`, mechanical `## Failure context` / `## Changes` / `## Run Metadata`, and automation disclaimer. See [Loop PR Body Readable Design](../../../superpowers/specs/2026-07-21-loop-pr-body-readable-design.md). | `""`                                        |
-| `pr_exclude`                     | string  | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`                                                                                                                                                                                                                                                           | ci-sweeper                                  |
-| `pr_include_bots`                | string  | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots                                                                                                                                                                                                                                           | `""`                                        |
-| `pr_title`                       | string  | PR title when finalize strategy is `open_pr`                                                                                                                                                                                                                                                                                | Per loop                                    |
-| `agent_maker_instructions` | string  | Domain-specific maker instructions appended during `loop-detect` prompt assembly                                                                                                                                                                                                                                      | Per loop                                    |
-| `pr_enabled`                     | boolean | Watch open PR heads for detect                                                                                                                                                                                                                                                                                              | `false` except ci-sweeper                   |
-| `state_file`                     | string  | Override state JSON path                                                                                                                                                                                                                                                                                                    | `.loop/state-<loop_name>.json`              |
-| `write_target`                   | string  | Agent artifact when `may_edit` is `true`: `fix` \| `report` (required; injected into `## Constraints`)                                                                                                                                                                                                                      | Per loop (`fix` except tech-debt `report`)  |
+| Input                       | Type    | Description                                                                                                                                                                                                                                                                                                                 | Default (dogfood)                           |
+| --------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `allowlist`                 | string  | Comma-separated globs the maker may modify                                                                                                                                                                                                                                                                                  | Per loop                                    |
+| `branch_match`              | string  | Comma-separated branch patterns to watch                                                                                                                                                                                                                                                                                    | `main`                                      |
+| `branch_match_mode`         | string  | How to interpret `branch_match`: `list`, `glob`, or `regex`                                                                                                                                                                                                                                                                 | `glob`                                      |
+| `branch_state`              | string  | Branch for `.loop/*` persistence, state migration, and watch fallback                                                                                                                                                                                                                                                       | `main`                                      |
+| `budget_max_runs_per_day`   | number  | Daily run cap keyed by `loop_name` (each matrix cell counts). `.loop/loop-budget.json` overrides when present (ci-sweeper dogfood: `50`)                                                                                                                                                                                    | `1`–`5` (caller; budget file may be higher) |
+| `budget_max_tokens_per_day` | number  | Daily aggregated token cap                                                                                                                                                                                                                                                                                                  | `500000`–`1000000`                          |
+| `denylist`                  | string  | Comma-separated globs the maker must not touch                                                                                                                                                                                                                                                                              | ci-sweeper only                             |
+| `delivery`                  | string  | Platform delivery after APPROVE: `log` \| `issue` \| `notion` \| `open_pr` \| `none` (not passed to skills). Drives `target.finalize` inside `loop-detect`.                                                                                                                                                                 | `open_pr`                                   |
+| `detect_script`             | string  | Path to domain `detect_*.sh` under the skill package (e.g. `.agents/skills/docs-updater/scripts/detect_changes.sh`)                                                                                                                                                                                                         | Per loop                                    |
+| `infer_files_pattern`       | string  | Extended regex to infer file paths from checker text                                                                                                                                                                                                                                                                        | Per loop                                    |
+| `loop_name`                 | string  | Loop identifier: `.loop/state-<loop_name>.json`, budget key, run-log tag. Align caller filename: `on-loop-<loop_name>.yaml`                                                                                                                                                                                                 | Per loop                                    |
+| `max_targets_per_schedule`  | number  | Max targets per cron tick after priority filters                                                                                                                                                                                                                                                                            | `3`                                         |
+| `may_edit`                  | boolean | Agent worktree edit gate: `true` \| `false` (required; injected into `## Constraints`)                                                                                                                                                                                                                                      | Per loop (explicit in dogfood callers)      |
+| `no_changes_verdict`        | string  | `APPROVE` \| `REJECT` when maker produces no file diff                                                                                                                                                                                                                                                                      | `REJECT`                                    |
+| `pr_body`                   | string  | Optional static prefix (dogfood: `""`). `loop-finalize` composes the PR body: agent `## Overview` + `## Summary`, mechanical `## Failure context` / `## Changes` / `## Run Metadata`, and automation disclaimer. See [Loop PR Body Readable Design](../../../superpowers/specs/2026-07-21-loop-pr-body-readable-design.md). | `""`                                        |
+| `pr_exclude`                | string  | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`                                                                                                                                                                                                                                                           | ci-sweeper                                  |
+| `pr_include_bots`           | string  | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots                                                                                                                                                                                                                                           | `""`                                        |
+| `pr_title`                  | string  | PR title when finalize strategy is `open_pr`                                                                                                                                                                                                                                                                                | Per loop                                    |
+| `agent_maker_instructions`  | string  | Domain-specific maker instructions appended during `loop-detect` prompt assembly                                                                                                                                                                                                                                            | Per loop                                    |
+| `pr_enabled`                | boolean | Watch open PR heads for detect                                                                                                                                                                                                                                                                                              | `false` except ci-sweeper                   |
+| `state_file`                | string  | Override state JSON path                                                                                                                                                                                                                                                                                                    | `.loop/state-<loop_name>.json`              |
+| `write_target`              | string  | Agent artifact when `may_edit` is `true`: `fix` \| `report` (required; injected into `## Constraints`)                                                                                                                                                                                                                      | Per loop (`fix` except tech-debt `report`)  |
 
 **Four-plane contract:** See [Loop write target & delivery design](../../../superpowers/specs/2026-07-23-loop-write-target-delivery-design.md). `level` controls autonomy only; `may_edit` + `write_target` + `report_file` control agent edits; `delivery` controls platform finalize (skills do not see `delivery`).
 
@@ -211,45 +211,45 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 
 `ci-loop-caller` inputs map to `loop-detect` action `with:` as follows. Names without a `loop_` prefix on the caller side expand when passed to the action.
 
-| `ci-loop-caller` input               | `loop-detect` input                        |
-| ------------------------------------ | ------------------------------------------ |
-| `agent_maker_max_turns`        | `agent_maker_max_turns`              |
-| `agent_maker_model`            | `agent_maker_model`                  |
-| `agent_loop_max_attempts`            | `agent_loop_max_attempts`                  |
-| `agent_checker_instructions`        | `agent_checker_instructions`              |
-| `agent_checker_max_turns`           | `agent_checker_max_turns`                 |
-| `agent_checker_model`               | `agent_checker_model`                     |
-| `allowlist`                          | `allowlist`                                |
-| `branch_match`                       | `loop_integration_branches`                |
-| `branch_match_mode`                  | `loop_branch_match`                        |
-| `branch_state`                       | `base_branch`, `loop_state_push_branch`    |
-| `budget_file`                        | `budget_file`                              |
-| `budget_max_runs_per_day`            | `budget_max_runs_per_day`                  |
-| `budget_max_tokens_per_day`          | `budget_max_tokens_per_day`                |
-| `delivery`                           | `delivery`                                 |
-| `detect_script`                      | `detect_script`                            |
-| `engine`                             | `engine`                                   |
-| `git_landing_integration`            | `git_landing_integration`                  |
-| `git_landing_pull_request`           | `git_landing_pull_request`                 |
-| `infer_files_pattern`                | `infer_files_pattern`                      |
-| `level`                              | `level`                                    |
-| `loop_name`                          | `loop_name`                                |
-| `max_targets_per_schedule`           | `loop_max_targets_per_schedule`            |
-| `may_edit`                           | `may_edit`                                 |
-| `no_changes_verdict`                 | `no_changes_verdict`                       |
-| `pr_body`                            | `pr_body`                                  |
-| `pr_exclude`                         | `loop_pr_exclude`                          |
-| `pr_include_bots`                    | `loop_pr_include_bots`                     |
-| `priority`                           | `loop_priority`                            |
-| `agent_maker_instructions`     | `agent_maker_instructions`           |
-| `pr_enabled`                         | `loop_pr_enabled`                          |
-| `scoped_pr_number`                   | `loop_scoped_pr_number`                    |
-| `run_log_file`                       | `run_log_file`                             |
-| `agent_maker_skill_name`       | `agent_maker_skill_name`             |
-| `agent_checker_skill_name`          | `agent_checker_skill_name` (execute only) |
-| `state_file`                         | `state_file`                               |
-| _(via `secrets.GH_TOKEN` + resolve)_ | `github_token` (action; resolved in-job)   |
-| `write_target`                       | `write_target`                             |
+| `ci-loop-caller` input               | `loop-detect` input                       |
+| ------------------------------------ | ----------------------------------------- |
+| `agent_maker_max_turns`              | `agent_maker_max_turns`                   |
+| `agent_maker_model`                  | `agent_maker_model`                       |
+| `agent_loop_max_attempts`            | `agent_loop_max_attempts`                 |
+| `agent_checker_instructions`         | `agent_checker_instructions`              |
+| `agent_checker_max_turns`            | `agent_checker_max_turns`                 |
+| `agent_checker_model`                | `agent_checker_model`                     |
+| `allowlist`                          | `allowlist`                               |
+| `branch_match`                       | `loop_integration_branches`               |
+| `branch_match_mode`                  | `loop_branch_match`                       |
+| `branch_state`                       | `base_branch`, `loop_state_push_branch`   |
+| `budget_file`                        | `budget_file`                             |
+| `budget_max_runs_per_day`            | `budget_max_runs_per_day`                 |
+| `budget_max_tokens_per_day`          | `budget_max_tokens_per_day`               |
+| `delivery`                           | `delivery`                                |
+| `detect_script`                      | `detect_script`                           |
+| `engine`                             | `engine`                                  |
+| `git_landing_integration`            | `git_landing_integration`                 |
+| `git_landing_pull_request`           | `git_landing_pull_request`                |
+| `infer_files_pattern`                | `infer_files_pattern`                     |
+| `level`                              | `level`                                   |
+| `loop_name`                          | `loop_name`                               |
+| `max_targets_per_schedule`           | `loop_max_targets_per_schedule`           |
+| `may_edit`                           | `may_edit`                                |
+| `no_changes_verdict`                 | `no_changes_verdict`                      |
+| `pr_body`                            | `pr_body`                                 |
+| `pr_exclude`                         | `loop_pr_exclude`                         |
+| `pr_include_bots`                    | `loop_pr_include_bots`                    |
+| `priority`                           | `loop_priority`                           |
+| `agent_maker_instructions`           | `agent_maker_instructions`                |
+| `pr_enabled`                         | `loop_pr_enabled`                         |
+| `scoped_pr_number`                   | `loop_scoped_pr_number`                   |
+| `run_log_file`                       | `run_log_file`                            |
+| `agent_maker_skill_name`             | `agent_maker_skill_name`                  |
+| `agent_checker_skill_name`           | `agent_checker_skill_name` (execute only) |
+| `state_file`                         | `state_file`                              |
+| _(via `secrets.GH_TOKEN` + resolve)_ | `github_token` (action; resolved in-job)  |
+| `write_target`                       | `write_target`                            |
 
 Domain-specific detect script variables use `detect_domain_env_json` keys (not `loop-detect` inputs).
 
@@ -257,11 +257,11 @@ Domain-specific detect script variables use `detect_domain_env_json` keys (not `
 
 Thin `on-loop-*.yaml` callers configure prompts with **two multiline strings** on `ci-loop-caller.yaml`:
 
-| Input                            | Role                                            | Assembled by                                                                                    |
-| -------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `agent_maker_instructions` | Domain maker task                         | `loop-detect` → `build_prompt_text` → `matrix.target.prompt` → `ci-loop-agent` `prompt_text`    |
-| `agent_checker_instructions`    | Domain APPROVE/REJECT rubric                    | Passed through to `loop-execute` `## Task` section                                              |
-| `agent_checker_skill_name`      | Generic checker skill (default `loop-verifier`) | `loop-execute` slash-loads skill; INITIAL/REGRESSION scaffolding is **not** caller-configurable |
+| Input                        | Role                                            | Assembled by                                                                                    |
+| ---------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `agent_maker_instructions`   | Domain maker task                               | `loop-detect` → `build_prompt_text` → `matrix.target.prompt` → `ci-loop-agent` `prompt_text`    |
+| `agent_checker_instructions` | Domain APPROVE/REJECT rubric                    | Passed through to `loop-execute` `## Task` section                                              |
+| `agent_checker_skill_name`   | Generic checker skill (default `loop-verifier`) | `loop-execute` slash-loads skill; INITIAL/REGRESSION scaffolding is **not** caller-configurable |
 
 Do **not** configure `prompt_verifier_*`, `prompt_implementer_feedback`, or `prompt_file` on callers — those are `loop-execute` internals (not exposed on `ci-loop-agent`).
 
@@ -310,7 +310,7 @@ Each detect script normalizes these keys at startup via `configure_detect_enviro
 
 | Legacy caller `env`                                                                             | `ci-loop-caller` input                                                  |
 | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `AGENT_*`, `DEFAULT_ENGINE`, `DEFAULT_LEVEL`, `AGENT_MAKER_SKILL_NAME`                    | Same name (lowercase `engine`, `level` for engine/level)                |
+| `AGENT_*`, `DEFAULT_ENGINE`, `DEFAULT_LEVEL`, `AGENT_MAKER_SKILL_NAME`                          | Same name (lowercase `engine`, `level` for engine/level)                |
 | `DEFAULT_BASE_BRANCH`, `LOOP_STATE_PUSH_BRANCH`                                                 | `branch_state`                                                          |
 | `LOOP_ALLOWLIST`                                                                                | `allowlist`                                                             |
 | `LOOP_BUDGET_MAX_RUNS_PER_DAY`                                                                  | `budget_max_runs_per_day`                                               |
@@ -323,10 +323,10 @@ Each detect script normalizes these keys at startup via `configure_detect_enviro
 | `LOOP_MAX_TARGETS_PER_SCHEDULE`                                                                 | `max_targets_per_schedule`                                              |
 | `LOOP_NAME`                                                                                     | `loop_name`                                                             |
 | `LOOP_NO_CHANGES_VERDICT`                                                                       | `no_changes_verdict`                                                    |
-| `LOOP_PR_*`, `LOOP_PROMPT_INSTRUCTIONS`, `LOOP_IMPLEMENTER_INSTRUCTIONS`, `LOOP_PULL_REQUESTS`  | `pr_*`, `agent_maker_instructions`, `pr_enabled`                  |
-| `prompt_instructions` (deprecated workflow input)                                               | `agent_maker_instructions`                                        |
-| `skill_name` (deprecated workflow input)                                                        | `agent_maker_skill_name`                                          |
-| `verifier_skill_name` (deprecated workflow input)                                               | `agent_checker_skill_name`                                             |
+| `LOOP_PR_*`, `LOOP_PROMPT_INSTRUCTIONS`, `LOOP_IMPLEMENTER_INSTRUCTIONS`, `LOOP_PULL_REQUESTS`  | `pr_*`, `agent_maker_instructions`, `pr_enabled`                        |
+| `prompt_instructions` (deprecated workflow input)                                               | `agent_maker_instructions`                                              |
+| `skill_name` (deprecated workflow input)                                                        | `agent_maker_skill_name`                                                |
+| `verifier_skill_name` (deprecated workflow input)                                               | `agent_checker_skill_name`                                              |
 | `CHANGELOG_*`, `CI_SWEEPER_*`, `DOCS_UPDATER_*`, `TECH_DEBT_*`, `REFACTOR_*`, `PR_*`, `ISSUE_*` | `detect_domain_env_json` keys (per-loop tables in workflow design docs) |
 | `DOMAIN_PERSISTENCE_SCRIPT`                                                                     | `domain_persistence_script`                                             |
 

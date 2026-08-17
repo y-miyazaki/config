@@ -82,17 +82,17 @@ _Avoid_: Observe (do not use for L1)
 
 Three layers. Do not collapse them.
 
-| Layer | Names | What it is |
-| ----- | ----- | ---------- |
-| **Phase** (job boundary) | Detect, Execute, Verify, Finalize | Pipeline steps. **Verify** stays a phase name even though the agent is the Checker |
-| **Role** (who acts) | Maker, Checker | LE primitive. Maker ≈ old Implementer. Checker ≈ old Verifier |
-| **Artifact / skill** | `verifier_context`, `loop-verifier` | Payload and skill id. Not renamed with the roles |
+| Layer                    | Names                               | What it is                                                                         |
+| ------------------------ | ----------------------------------- | ---------------------------------------------------------------------------------- |
+| **Phase** (job boundary) | Detect, Execute, Verify, Finalize   | Pipeline steps. **Verify** stays a phase name even though the agent is the Checker |
+| **Role** (who acts)      | Maker, Checker                      | LE primitive. Maker ≈ old Implementer. Checker ≈ old Verifier                      |
+| **Artifact / skill**     | `verifier_context`, `loop-verifier` | Payload and skill id. Not renamed with the roles                                   |
 
-| Retired identifier | Current |
-| ------------------- | ------- |
-| `agent_implementer_*` | `agent_maker_*` |
+| Retired identifier                                                      | Current           |
+| ----------------------------------------------------------------------- | ----------------- |
+| `agent_implementer_*`                                                   | `agent_maker_*`   |
 | `agent_verifier_instructions` / `_model` / `_max_turns` / `_skill_name` | `agent_checker_*` |
-| Implementer / Verifier (prose for the agent) | Maker / Checker |
+| Implementer / Verifier (prose for the agent)                            | Maker / Checker   |
 
 Keep as-is: Verify phase, `verifier_context`, `VERIFIER_CONTEXT`, `loop-verifier`, validation inside Execute (`validate_agent_report.sh`).
 
@@ -100,14 +100,14 @@ Keep as-is: Verify phase, `verifier_context`, `VERIFIER_CONTEXT`, `loop-verifier
 
 Catalog ([loop-engineering](https://github.com/cobusgreyling/loop-engineering)) vs this repository. Roles are Maker/Checker here; phases stay Detect / Execute / Verify / Finalize.
 
-| Catalog | This repository |
-| ------- | --------------- |
-| Pattern (`patterns/registry.yaml`) | Loop (`loop_name`, `on-loop-<loop_name>.yaml`). Names need not match |
-| Triage skill | Detect (facts) + Execute entry skill (semantic findings) |
-| Implementer / Maker sub-agent | Execute **Maker** session (`agent_maker_*`) |
-| Verifier / Checker sub-agent | Verify **Checker** session (`agent_checker_*`; skill `loop-verifier`) |
-| `STATE.md` / `LOOP.md` | `.loop/state-*.json`, `loop-run-log.md`, `loop-budget.json`; design docs under this folder |
-| Loop Ready Score (`loop-audit`) | [Loop Engineering Checklist](../../reference/loop-engineering-checklist.md) |
-| L1 Report / L2 Assisted / L3 Unattended | Same labels. L1 is **Report**, never Observe |
-| Human gate | L2 merge of the fix PR, L3 allowlist auto-merge, or escalate — not a fifth pipeline job |
-| `/loop` scheduler | GitHub Actions `on-loop-*` |
+| Catalog                                 | This repository                                                                            |
+| --------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Pattern (`patterns/registry.yaml`)      | Loop (`loop_name`, `on-loop-<loop_name>.yaml`). Names need not match                       |
+| Triage skill                            | Detect (facts) + Execute entry skill (semantic findings)                                   |
+| Implementer / Maker sub-agent           | Execute **Maker** session (`agent_maker_*`)                                                |
+| Verifier / Checker sub-agent            | Verify **Checker** session (`agent_checker_*`; skill `loop-verifier`)                      |
+| `STATE.md` / `LOOP.md`                  | `.loop/state-*.json`, `loop-run-log.md`, `loop-budget.json`; design docs under this folder |
+| Loop Ready Score (`loop-audit`)         | [Loop Engineering Checklist](../../reference/loop-engineering-checklist.md)                |
+| L1 Report / L2 Assisted / L3 Unattended | Same labels. L1 is **Report**, never Observe                                               |
+| Human gate                              | L2 merge of the fix PR, L3 allowlist auto-merge, or escalate — not a fifth pipeline job    |
+| `/loop` scheduler                       | GitHub Actions `on-loop-*`                                                                 |
