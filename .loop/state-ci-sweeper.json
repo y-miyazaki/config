@@ -1,33 +1,19 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-08-13T04:13:36Z",
-      "outcome": "rejected",
+      "last_run": "2026-08-17T06:15:29Z",
+      "outcome": "pr-created",
       "consecutive_failures": 0,
       "open_rejections": [],
-      "last_reject_reason": "No file changes produced",
-      "last_sha": "11aa1780d084805e3bfd9a7d2e733488e22db133"
-    },
-    "pull_request:401": {
-      "last_run": "2026-07-16T07:45:36Z",
-      "outcome": "rejected",
-      "consecutive_failures": 1,
-      "open_rejections": [],
-      "last_reject_reason": "No file changes produced"
-    },
-    "pull_request:409": {
-      "last_run": "2026-07-17T04:14:46Z",
-      "outcome": "rejected",
-      "consecutive_failures": 1,
-      "open_rejections": [],
-      "last_reject_reason": "No file changes produced"
-    },
-    "pull_request:265": {
-      "last_run": "2026-07-17T06:04:23Z",
-      "outcome": "pr-closed",
-      "consecutive_failures": 0,
-      "open_rejections": [],
-      "last_reject_reason": "No meaningful changes outside .loop/"
+      "last_reject_reason": "Minimal allowlisted doc link fix directly resolves the logged mkdocs strict-mode broken-link failure; report and validation evidence are complete.",
+      "last_sha": "11aa1780d084805e3bfd9a7d2e733488e22db133",
+      "pending": {
+        "sha": "b874a1e0baf564a4c56770f19b5baabc319c7b13",
+        "pr": 700,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/700",
+        "loop_name": "ci-sweeper",
+        "created_at": "2026-08-17T06:15:29Z"
+      }
     },
     "pull_request:452": {
       "last_run": "2026-07-22T04:53:09Z",
