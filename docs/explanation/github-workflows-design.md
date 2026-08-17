@@ -50,7 +50,7 @@ uses: y-miyazaki/config/.github/actions/loop-finalize@<sha> # v1.x.x
 - Consumers reference via **full commit SHA** (ghalint policy compliance)
 - Tags (`v1.4.6`) annotated in comments for readability
 - Bump major version on breaking changes
-- `ci-*` / `cd-*` reusables **must not** use `uses: ./.github/actions/...` — only `on-*` dogfood may temporarily; release ships remote SHA bumps in the same changeset (see [.github/workflows/AGENTS.md](../../.github/workflows/AGENTS.md#pins))
+- `ci-*` / `cd-*` reusables **must not** use `uses: ./.github/actions/...` — only `on-*` dogfood may temporarily; release ships remote SHA bumps in the same changeset (see [.github/workflows/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.github/workflows/AGENTS.md#pins))
 
 ## Secrets Design
 
