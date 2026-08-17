@@ -54,7 +54,7 @@ Create `loop-tech-debt-workflow-design.md` following `loop-docs-updater-workflow
 | ------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `level`                         | `L2`                                                                                            |
 | `loop_name`                     | `tech-debt`                                                                                     |
-| `agent_implementer_skill_name`                    | `loop-tech-debt`                                                                                |
+| `agent_implementer_skill_name`  | `loop-tech-debt`                                                                                |
 | `detect_script`                 | `.agents/skills/loop-tech-debt/scripts/detect_tech_debt.sh`                                     |
 | `allowlist`                     | `docs/report/tech-debt/**/*.md`                                                                 |
 | `denylist`                      | `**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**,src/**,.github/**` |

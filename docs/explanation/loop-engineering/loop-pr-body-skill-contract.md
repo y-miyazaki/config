@@ -60,7 +60,7 @@ Per-skill required elements and examples live in each skill's `references/common
 | `## Changes`          | git diff paths — **omitted** when agent Summary contains `### Changes` or `### Fixes Applied`; paths link to `blob/{branch}` when repository and branch are known |
 | `## Run Metadata`     | Level, Target, Skip reason table                                                                                                                                  |
 | Automation disclaimer | `render_automation_disclaimer()`                                                                                                                                  |
-| Created By footer     | One-line `Created By {engine} {model} In/Out: {in}/{out}` from engine + `usage_json` (omit when unavailable)                                                       |
+| Created By footer     | One-line `Created By {engine} {model} In/Out: {in}/{out}` from engine + `usage_json` (omit when unavailable)                                                      |
 
 Finalize **passthrough** agent `## Overview`, `## Summary`, and `## Verification` with redact/truncate only — no table regeneration.
 
@@ -97,7 +97,7 @@ Architecture Proposal / Skipped / Watch / …
 
 ---
 
-*This PR was created by a loop automation. Review before merging.*
+_This PR was created by a loop automation. Review before merging._
 
 Created By <engine> <model> In/Out: <in>/<out>
 ```

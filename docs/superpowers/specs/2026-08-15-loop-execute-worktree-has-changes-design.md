@@ -32,16 +32,16 @@ Two platform defects caused that:
 
 ## Decisions
 
-| Topic | Choice |
-| ----- | ------ |
-| Scope | `loop-execute` only (`agent.sh`, `loop.sh`, paired Bats). No skill package edits. |
-| Lost edits | **Harvest** dirty paths from `GITHUB_WORKSPACE` into `WORKTREE_PATH` when those directories differ, then existing `commit_worktree_if_needed`. Log `::warning::`. Do not silently drop workspace dirt. |
-| Harvest failure | If harvest cannot copy a path, fail the attempt with a structured error (do not set `HAS_CHANGES` from branch-ahead as a substitute). |
-| `HAS_CHANGES` attempt 1 | True only when this attempt created a commit (`commit_worktree_if_needed` succeeded) **or** `HEAD` in the worktree moved vs the SHA recorded before the implementer. |
-| `HAS_CHANGES` attempt 2+ | Keep today’s branch-ahead promotion so a REJECT retry can re-run the verifier without a new commit. |
+| Topic                     | Choice                                                                                                                                                                                                                         |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Scope                     | `loop-execute` only (`agent.sh`, `loop.sh`, paired Bats). No skill package edits.                                                                                                                                              |
+| Lost edits                | **Harvest** dirty paths from `GITHUB_WORKSPACE` into `WORKTREE_PATH` when those directories differ, then existing `commit_worktree_if_needed`. Log `::warning::`. Do not silently drop workspace dirt.                         |
+| Harvest failure           | If harvest cannot copy a path, fail the attempt with a structured error (do not set `HAS_CHANGES` from branch-ahead as a substitute).                                                                                          |
+| `HAS_CHANGES` attempt 1   | True only when this attempt created a commit (`commit_worktree_if_needed` succeeded) **or** `HEAD` in the worktree moved vs the SHA recorded before the implementer.                                                           |
+| `HAS_CHANGES` attempt 2+  | Keep today’s branch-ahead promotion so a REJECT retry can re-run the verifier without a new commit.                                                                                                                            |
 | Branch-ahead on attempt 1 | **Remove.** This is the pr-revise false-success. Other loops that re-enter execute with an already-ahead branch and a no-op implementer correctly become `no_changes` (detect should have skipped if there was nothing to do). |
-| `push.sh` | Unchanged. Still pushes when `LOOP_HAS_CHANGES=true`. Semantics of that flag become honest. |
-| Cursor `--workspace` | Out of scope unless harvest + cwd prove insufficient; do not add engine-specific flags in this slice. |
+| `push.sh`                 | Unchanged. Still pushes when `LOOP_HAS_CHANGES=true`. Semantics of that flag become honest.                                                                                                                                    |
+| Cursor `--workspace`      | Out of scope unless harvest + cwd prove insufficient; do not add engine-specific flags in this slice.                                                                                                                          |
 
 ## Architecture
 
@@ -81,12 +81,12 @@ Attempt 2+ keeps the current `Worktree is clean; BASE...HEAD still has product f
 
 ## Impact on other CI
 
-| Loop | Attempt 1, agent no-op, branch already ahead | After this change |
-| ---- | -------------------------------------------- | ----------------- |
-| github-pr-revise | False success (bug) | `no_changes` / REJECT (`no_changes_verdict`) — intended |
-| changelog / ci-sweeper / docs-updater new branch | Usually not ahead until a commit | Unchanged |
-| Same loops, re-run execute on existing loop branch with no new edit | Verifier + push of old commits | `no_changes` — intended; detect should skip idle targets |
-| Attempt 2+ after REJECT, no extra commit | Verifier on same diff | Unchanged |
+| Loop                                                                | Attempt 1, agent no-op, branch already ahead | After this change                                        |
+| ------------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------- |
+| github-pr-revise                                                    | False success (bug)                          | `no_changes` / REJECT (`no_changes_verdict`) — intended  |
+| changelog / ci-sweeper / docs-updater new branch                    | Usually not ahead until a commit             | Unchanged                                                |
+| Same loops, re-run execute on existing loop branch with no new edit | Verifier + push of old commits               | `no_changes` — intended; detect should skip idle targets |
+| Attempt 2+ after REJECT, no extra commit                            | Verifier on same diff                        | Unchanged                                                |
 
 No change to allowlist/denylist, verifier criteria, or finalize PR creation.
 

@@ -89,22 +89,22 @@ No GitHub Issue/PR API required. Consumer with GHA files can install this withou
 
 ### `loop`
 
-| Skill           | Note                                                                                                                                                             |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Skill           | Note                                                                                                                                                                 |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `loop-verifier` | Generic maker/checker: default REJECT, INITIAL/REGRESSION modes, JSON verdict contract, scope/secrets/hallucination. **Not** per-loop `agent_verifier_instructions`. |
 
 `loop` does **not** contain `ci-sweeper`, `github-issue-triage`, or other domain skills.
 
 ## `loop-verifier` placement (detail)
 
-| Layer                                                 | Owner                 | Location after this design                                                                                                                          |
-| ----------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Generic checker behavior                              | `loop-verifier` skill | `.apm/packages/loop/.apm/skills/loop-verifier/` (`SKILL.md`, `references/common-checklist.md`, `references/common-output-format.md`)                |
+| Layer                                                 | Owner                 | Location after this design                                                                                                                                |
+| ----------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Generic checker behavior                              | `loop-verifier` skill | `.apm/packages/loop/.apm/skills/loop-verifier/` (`SKILL.md`, `references/common-checklist.md`, `references/common-output-format.md`)                      |
 | Checker skill binding                                 | Caller + execute      | `agent_verifier_skill_name` on `on-loop-*.yaml` / `ci-loop-caller` → `loop-execute`; execute slash-loads `/skill <SKILL.md>` (does not inline skill body) |
-| Domain APPROVE/REJECT appendix                        | Caller                | `on-loop-*.yaml` `agent_verifier_instructions` — **stays**                                                                                              |
-| INITIAL / REGRESSION mode intros                      | Platform              | `load_default_prompts` in `loop-execute/lib/common.sh` — attempt orchestration, not checker skill content                                           |
-| Path guards, retry loop, report-format machine checks | Platform              | `loop-execute` / `verifier.sh` — **stays**                                                                                                          |
-| Embedded verifier fallbacks                           | Platform              | `common.sh` when checker skill files are missing (warning + legacy strings)                                                                         |
+| Domain APPROVE/REJECT appendix                        | Caller                | `on-loop-*.yaml` `agent_verifier_instructions` — **stays**                                                                                                |
+| INITIAL / REGRESSION mode intros                      | Platform              | `load_default_prompts` in `loop-execute/lib/common.sh` — attempt orchestration, not checker skill content                                                 |
+| Path guards, retry loop, report-format machine checks | Platform              | `loop-execute` / `verifier.sh` — **stays**                                                                                                                |
+| Embedded verifier fallbacks                           | Platform              | `common.sh` when checker skill files are missing (warning + legacy strings)                                                                               |
 
 **Implemented (post package-split):** `loop-execute` resolves `agent_verifier_skill_name`, slash-loads the checker skill, and appends caller `agent_verifier_instructions` as domain rubric. Do not put domain REJECT rules in `loop-verifier`.
 

@@ -35,37 +35,36 @@ On Issue / issue_comment events, classify the Issue when confident, apply allowl
 
 Live `workflow_dispatch` dry-run requires repository secrets (`AGENT_TOKEN`, optional bot app). Treat end-to-end Actions dogfood as deferred until secrets are available; local verification is Bats + `actionlint`.
 
-
 ## Caller inputs
 
 Keys are passed in `on-loop-github-issue-triage.yaml` via `with:` on `ci-loop-caller-entity.yaml`. Entity subset of [Loop Caller Inputs Reference](loop-caller-inputs-reference.md).
 
-| Input / JSON key | Description | Dogfood value |
-| ---------------- | ----------- | ------------- |
-| `agent_implementer_instructions` | Domain implementer task (triage skill) | Inline in caller workflow |
-| `agent_implementer_max_turns` | Max implementer turns per attempt | `5` |
-| `agent_implementer_model` | Implementer model ID | `cursor-grok-4.5-low` |
-| `agent_implementer_skill_name` | Skill package | `github-issue-triage` |
-| `agent_loop_max_attempts` | Max Agent→Verify cycles | `3` |
-| `agent_verifier_instructions` | APPROVE/REJECT rubric (allowlisted labels only) | Inline in caller workflow |
-| `agent_verifier_max_turns` | Max verifier turns | `3` |
-| `agent_verifier_model` | Verifier model ID | `composer-2.5` |
-| `agent_verifier_skill_name` | Checker skill | `loop-verifier` |
-| `allowlist` | File edit allowlist (empty = no file edits) | `""` |
-| `branch_state` | `.loop/*` persistence branch | `main` |
-| `budget_max_runs_per_day` | Daily run cap | `20` |
-| `budget_max_tokens_per_day` | Daily token cap | `1000000` |
-| `delivery` | Platform delivery (`none` — L1 comments/labels only) | `none` |
-| `denylist` | Denylist globs | `""` |
-| `detect_script` | Domain detect script | `.agents/skills/github-issue-triage/scripts/detect_issue.sh` |
-| `dispatch_hook_script` | Trusted post-detect hook (autofix dispatch) | `.agents/skills/github-issue-triage/scripts/hooks/on_detect_dispatch.sh` |
-| `engine` | AI engine | `cursor` |
-| `environment` | GitHub Environment for env-scoped secrets | `default` |
-| `level` | Autonomy (`L1` — no PR) | `L1` |
-| `loop_name` | Loop identifier | `github-issue-triage` |
-| `may_edit` | Agent worktree edit gate | `false` |
-| `no_changes_verdict` | Verdict when no file diff | `APPROVE` |
-| `write_target` | Agent artifact type | `report` |
+| Input / JSON key                 | Description                                          | Dogfood value                                                            |
+| -------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------ |
+| `agent_implementer_instructions` | Domain implementer task (triage skill)               | Inline in caller workflow                                                |
+| `agent_implementer_max_turns`    | Max implementer turns per attempt                    | `5`                                                                      |
+| `agent_implementer_model`        | Implementer model ID                                 | `cursor-grok-4.5-low`                                                    |
+| `agent_implementer_skill_name`   | Skill package                                        | `github-issue-triage`                                                    |
+| `agent_loop_max_attempts`        | Max Agent→Verify cycles                              | `3`                                                                      |
+| `agent_verifier_instructions`    | APPROVE/REJECT rubric (allowlisted labels only)      | Inline in caller workflow                                                |
+| `agent_verifier_max_turns`       | Max verifier turns                                   | `3`                                                                      |
+| `agent_verifier_model`           | Verifier model ID                                    | `composer-2.5`                                                           |
+| `agent_verifier_skill_name`      | Checker skill                                        | `loop-verifier`                                                          |
+| `allowlist`                      | File edit allowlist (empty = no file edits)          | `""`                                                                     |
+| `branch_state`                   | `.loop/*` persistence branch                         | `main`                                                                   |
+| `budget_max_runs_per_day`        | Daily run cap                                        | `20`                                                                     |
+| `budget_max_tokens_per_day`      | Daily token cap                                      | `1000000`                                                                |
+| `delivery`                       | Platform delivery (`none` — L1 comments/labels only) | `none`                                                                   |
+| `denylist`                       | Denylist globs                                       | `""`                                                                     |
+| `detect_script`                  | Domain detect script                                 | `.agents/skills/github-issue-triage/scripts/detect_issue.sh`             |
+| `dispatch_hook_script`           | Trusted post-detect hook (autofix dispatch)          | `.agents/skills/github-issue-triage/scripts/hooks/on_detect_dispatch.sh` |
+| `engine`                         | AI engine                                            | `cursor`                                                                 |
+| `environment`                    | GitHub Environment for env-scoped secrets            | `default`                                                                |
+| `level`                          | Autonomy (`L1` — no PR)                              | `L1`                                                                     |
+| `loop_name`                      | Loop identifier                                      | `github-issue-triage`                                                    |
+| `may_edit`                       | Agent worktree edit gate                             | `false`                                                                  |
+| `no_changes_verdict`             | Verdict when no file diff                            | `APPROVE`                                                                |
+| `write_target`                   | Agent artifact type                                  | `report`                                                                 |
 
 ### Domain detect environment (`detect_domain_env_json`)
 

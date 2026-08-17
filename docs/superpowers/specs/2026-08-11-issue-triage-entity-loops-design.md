@@ -81,15 +81,15 @@ issue-triage  issue-autofix  pr-revise
 
 ### Axis 1 — `issue-triage` (implement)
 
-| Item         | Value                                                                            |
-| ------------ | -------------------------------------------------------------------------------- |
-| `loop_name`  | `issue-triage`                                                                   |
+| Item                           | Value                                                                            |
+| ------------------------------ | -------------------------------------------------------------------------------- |
+| `loop_name`                    | `issue-triage`                                                                   |
 | `agent_implementer_skill_name` | `issue-triage`                                                                   |
-| Triggers     | `issues`: opened, reopened, labeled, unlabeled; `issue_comment`: created         |
-| Level        | L1 (no worktree file edits required)                                             |
-| Detect       | Mechanical Issue facts only                                                      |
-| Execute      | Classify, ensure allowlisted labels, post analysis/questions, FSM transitions    |
-| Delivery     | Labels + comments in Execute; finalize = run-log / optional state (no `open_pr`) |
+| Triggers                       | `issues`: opened, reopened, labeled, unlabeled; `issue_comment`: created         |
+| Level                          | L1 (no worktree file edits required)                                             |
+| Detect                         | Mechanical Issue facts only                                                      |
+| Execute                        | Classify, ensure allowlisted labels, post analysis/questions, FSM transitions    |
+| Delivery                       | Labels + comments in Execute; finalize = run-log / optional state (no `open_pr`) |
 
 **Label FSM (SoT)**
 

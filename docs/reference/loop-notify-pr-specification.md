@@ -188,7 +188,6 @@ Inputs/outputs unchanged from P1 except:
 | Delivery           | `open_pr` to PR head branch; not direct `push_head`  |
 | Marker scope       | `<!-- loop-notify-pr:v1:{loop_name} -->`             |
 
-
 ## Trigger thread UX (pr-revise)
 
 When the workflow event carries `github.event.comment.id` (comment webhooks):

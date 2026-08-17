@@ -21,10 +21,12 @@
 ### Task 1: Harvest workspace dirt into worktree
 
 **Files:**
+
 - Modify: `.github/actions/loop-execute/lib/agent.sh`
 - Test: `test/bats/.github/actions/loop-execute/lib/agent.bats`
 
 **Interfaces:**
+
 - Produces: `harvest_workspace_into_worktree` — uses `GITHUB_WORKSPACE`, `WORKTREE_PATH`; returns 0 on success/no-op, 1 on copy failure.
 
 - [ ] Write failing Bats for copy, delete, and same-path no-op
@@ -34,10 +36,12 @@
 ### Task 2: Attempt-scoped HAS_CHANGES promotion
 
 **Files:**
+
 - Modify: `.github/actions/loop-execute/lib/loop.sh`
 - Test: `test/bats/.github/actions/loop-execute/lib/loop.bats`
 
 **Interfaces:**
+
 - Consumes: `harvest_workspace_into_worktree`, `commit_worktree_if_needed`
 - Produces: `promote_has_changes_after_attempt ATTEMPT PRE_HEAD ATTEMPT_COMMITTED` mutating `HAS_CHANGES`
 
