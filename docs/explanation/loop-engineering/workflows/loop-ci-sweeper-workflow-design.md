@@ -33,7 +33,7 @@ Entry skill design intent for failure kinds deferred via [Failure kind defer (B)
 - Infra outages, secrets, runner capacity, or persistent flakes (Watch — no code edit when Skill recognizes them)
 - Large refactors (>5 files), auth/payment/credential paths
 - Auto-merging the **human's** open PR (only the **bot fix PR** is auto-merged at L3)
-- Re-running CI in the verifier (semantic fit against log excerpt only)
+- Re-running CI in the checker (semantic fit against log excerpt only)
 - Manual interactive debugging as a substitute for the loop
 - Separate `loop-pr-ci-healer` package
 - **Coverage-threshold and test-gap repair** — defer (B) until a domain skill exists
@@ -44,14 +44,14 @@ Skill execution boundaries: `ci-sweeper` SKILL.md (`USE FOR` / `DO NOT USE FOR`)
 
 ### Execute — responsibility split (A' / B)
 
-Distributable `ci-sweeper` skill stays repository-neutral. **Do not** hardcode consumer skill names in skill `references/`. Named dispatch belongs in caller `agent_implementer_instructions` (dogfood: `on-loop-ci-sweeper.yaml`).
+Distributable `ci-sweeper` skill stays repository-neutral. **Do not** hardcode consumer skill names in skill `references/`. Named dispatch belongs in caller `agent_maker_instructions` (dogfood: `on-loop-ci-sweeper.yaml`).
 
 | Layer         | Input                            | Role                                                                                            |
 | ------------- | -------------------------------- | ----------------------------------------------------------------------------------------------- |
 | Detect        | `detect_ci_failures.sh`          | `failures[]`, `failure_type` hint; optional future `stack_hint`                                 |
 | Entry skill   | `ci-sweeper`                     | Generic orchestration: classify, follow `## Instructions` for skill dispatch, fix one, validate |
-| Caller        | `agent_implementer_instructions` | **Stack routing (A')** — workflow/stack → named domain skills for this repo                     |
-| Caller        | `agent_verifier_instructions`    | Failure kind defer (B): appendix REJECT rules                                                   |
+| Caller        | `agent_maker_instructions` | **Stack routing (A')** — workflow/stack → named domain skills for this repo                     |
+| Caller        | `agent_checker_instructions`    | Failure kind defer (B): appendix REJECT rules                                                   |
 | Domain skills | Consumer `.agents/skills/*`      | Invoked per caller routing table                                                                |
 
 See [CI failure repair — layered responsibilities](../loop-engineering-design.md#ci-failure-repair--one-package-layered-responsibilities).
@@ -99,7 +99,7 @@ The human PR is **never** auto-merged by the loop. L3 auto-merge applies only to
 
 ## Caller inputs
 
-Keys are passed in `on-loop-ci-sweeper.yaml` via `with:` on `ci-loop-caller.yaml` (alphabetically ordered). Multiline values (`agent_verifier_instructions`, `agent_implementer_instructions`) are defined inline in the caller workflow.
+Keys are passed in `on-loop-ci-sweeper.yaml` via `with:` on `ci-loop-caller.yaml` (alphabetically ordered). Multiline values (`agent_checker_instructions`, `agent_maker_instructions`) are defined inline in the caller workflow.
 
 Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md). Platform branch/finalize caps: [canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).
 
@@ -119,18 +119,18 @@ Git landing (`open_pr` / `push` / `push_head`) is derived from `delivery` inside
 | Input / JSON key                 | Description                                                                                                                                                                                                               | Dogfood value                                                                                            |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `additional_commit_paths`        | Extra paths included in finalize commit (ledger file).                                                                                                                                                                    | `.loop/state-ci-sweeper-run-ledger.json`                                                                 |
-| `agent_implementer_max_turns`    | Max implementer agent turns per loop attempt (one Agent→Verify cycle).                                                                                                                                                    | `8`                                                                                                      |
-| `agent_implementer_model`        | Implementer model ID. Cursor: `agent --list-models`.                                                                                                                                                                      | `cursor-grok-4.5-low`                                                                                    |
+| `agent_maker_max_turns`    | Max maker agent turns per loop attempt (one Agent→Verify cycle).                                                                                                                                                    | `8`                                                                                                      |
+| `agent_maker_model`        | Maker model ID. Cursor: `agent --list-models`.                                                                                                                                                                      | `cursor-grok-4.5-low`                                                                                    |
 | `agent_loop_max_attempts`        | Max Agent→Verify retry cycles before finalize records failure.                                                                                                                                                            | `3`                                                                                                      |
-| `agent_verifier_instructions`    | Verifier APPROVE/REJECT rubric. Requires fix addresses logged CI failure; minimal diff; allowlist/denylist respected.                                                                                                     | Inline in caller workflow                                                                                |
-| `agent_verifier_max_turns`       | Max verifier agent turns per verification.                                                                                                                                                                                | `3`                                                                                                      |
-| `agent_verifier_model`           | Verifier model ID. Cursor: `agent --list-models`.                                                                                                                                                                         | `composer-2.5`                                                                                           |
-| `allowlist`                      | Comma-separated globs the implementer may modify.                                                                                                                                                                         | `.github/**,.apm/packages/**,scripts/**,apm.yml,mise.toml,renovate/**,docs/**/*.md,README.md,mkdocs.yml` |
+| `agent_checker_instructions`    | Checker APPROVE/REJECT rubric. Requires fix addresses logged CI failure; minimal diff; allowlist/denylist respected.                                                                                                     | Inline in caller workflow                                                                                |
+| `agent_checker_max_turns`       | Max checker agent turns per verification.                                                                                                                                                                                | `3`                                                                                                      |
+| `agent_checker_model`           | Checker model ID. Cursor: `agent --list-models`.                                                                                                                                                                         | `composer-2.5`                                                                                           |
+| `allowlist`                      | Comma-separated globs the maker may modify.                                                                                                                                                                         | `.github/**,.apm/packages/**,scripts/**,apm.yml,mise.toml,renovate/**,docs/**/*.md,README.md,mkdocs.yml` |
 | `branch_match`                   | Comma-separated integration branch patterns to poll for failed CI.                                                                                                                                                        | `main`                                                                                                   |
 | `branch_state`                   | Branch for `.loop/*` persistence, state migration, and watch fallback.                                                                                                                                                    | `main`                                                                                                   |
 | `budget_max_runs_per_day`        | Daily run cap keyed by `loop_name`. Caller input; `.loop/loop-budget.json` overrides when present.                                                                                                                        | `5` (caller); effective `50` via `.loop/loop-budget.json`                                                |
 | `budget_max_tokens_per_day`      | Daily aggregated token cap across loops.                                                                                                                                                                                  | `1000000`                                                                                                |
-| `denylist`                       | Comma-separated globs the implementer must never modify (credentials, infra, migrations).                                                                                                                                 | `**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**`                            |
+| `denylist`                       | Comma-separated globs the maker must never modify (credentials, infra, migrations).                                                                                                                                 | `**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**`                            |
 | Reusable workflow (`uses:`)      | `ci-loop-caller.yaml` — detect job requires `actions: write`, `contents: read`, and `pull-requests: read`; caller `permissions` must include `actions: write`.                                                            | `./.github/workflows/ci-loop-caller.yaml`                                                                |
 | `detect_script`                  | Domain detect script path. Uses `gh run list` per watch branch / PR head.                                                                                                                                                 | `.agents/skills/ci-sweeper/scripts/detect_ci_failures.sh`                                                |
 | `domain_persistence_script`      | Bash script for `loop-finalize` domain persistence (run ledger updates).                                                                                                                                                  | `.agents/skills/ci-sweeper/scripts/update_run_ledger.sh`                                                 |
@@ -138,14 +138,14 @@ Git landing (`open_pr` / `push` / `push_head`) is derived from `delivery` inside
 | `level`                          | Autonomy: `L2` (human merges bot fix PR) or `L3` (GitHub auto-merge on bot fix PR).                                                                                                                                       | `L2`                                                                                                     |
 | `loop_name`                      | Loop identifier; state file `.loop/state-ci-sweeper.json`.                                                                                                                                                                | `ci-sweeper`                                                                                             |
 | `max_targets_per_schedule`       | Max targets per cron tick after priority filters.                                                                                                                                                                         | `3`                                                                                                      |
-| `no_changes_verdict`             | `APPROVE` or `REJECT` when implementer produces no file diff on actionable CI failure.                                                                                                                                    | `REJECT`                                                                                                 |
+| `no_changes_verdict`             | `APPROVE` or `REJECT` when maker produces no file diff on actionable CI failure.                                                                                                                                    | `REJECT`                                                                                                 |
 | `pr_body`                        | Optional static prefix (dogfood: `""`). `loop-finalize` composes agent Overview/Summary + mechanical sections. See [Loop PR Body Readable Design](../../../superpowers/specs/2026-07-21-loop-pr-body-readable-design.md). | `""`                                                                                                     |
 | `pr_enabled`                     | Watch open PR heads for failed CI.                                                                                                                                                                                        | `true`                                                                                                   |
 | `pr_exclude`                     | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`.                                                                                                                                                        | `fork,draft,label:no-loop`                                                                               |
 | `pr_include_bots`                | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots.                                                                                                                                        | `""`                                                                                                     |
 | `pr_title`                       | PR title when finalize strategy is `open_pr`.                                                                                                                                                                             | `chore(ci-sweeper): automated CI repair (loop-ci-sweeper)`                                               |
-| `agent_implementer_instructions` | Domain instructions: classify Watch vs Fix; minimal diff; run validation skills.                                                                                                                                          | Inline in caller workflow                                                                                |
-| `agent_implementer_skill_name`   | Skill package to invoke.                                                                                                                                                                                                  | `ci-sweeper`                                                                                             |
+| `agent_maker_instructions` | Domain instructions: classify Watch vs Fix; minimal diff; run validation skills.                                                                                                                                          | Inline in caller workflow                                                                                |
+| `agent_maker_skill_name`   | Skill package to invoke.                                                                                                                                                                                                  | `ci-sweeper`                                                                                             |
 
 **Removed from dogfood (do not set):** `pr_require`, `finalize_integration`, `finalize_pull_request` (replaced by `delivery`).
 
@@ -238,7 +238,7 @@ Owned by the **caller** and detect scripts — not by skill triage. Configure vi
 
 ### `no_changes_verdict: REJECT`
 
-When the Skill classifies **Fix** but the implementer produces no changes → REJECT → `outcome: rejected`.
+When the Skill classifies **Fix** but the maker produces no changes → REJECT → `outcome: rejected`.
 
 When the Skill classifies **Watch** (infra/flake/env) with no code edit → `outcome: watch` (not REJECT). See [Outcome enum](../../../reference/specification.md#outcome-enum).
 
@@ -258,7 +258,7 @@ After finalize on `pull_request` targets, `loop-notify-pr` posts or updates a ma
 
 ## Execute
 
-- Worktree: `target.from` (see [platform table](../multi-branch-loops-design.md#execute-and-verifier-platform))
+- Worktree: `target.from` (see [platform table](../multi-branch-loops-design.md#execute-and-checker-platform))
 - **`verifier_context`:** failed job log excerpt from detect `result` — **always** wired (integration and pull_request)
 
 ```yaml
@@ -267,9 +267,9 @@ with:
   verifier_context: ${{ matrix.target.verifier_context }}
 ```
 
-### Verifier criteria (caller-owned)
+### Checker criteria (caller-owned)
 
-CI sweeper criteria require the fix to address the **logged failure** (semantic fit against `verifier_context`). This does not violate the generic rule “verifier does not re-run CI” — see [Loop Engineering — Verify](../loop-engineering-design.md#verify).
+CI sweeper criteria require the fix to address the **logged failure** (semantic fit against `verifier_context`). This does not violate the generic rule “checker does not re-run CI” — see [Loop Engineering — Verify](../loop-engineering-design.md#verify).
 
 ## Finalize strategy
 

@@ -12,7 +12,7 @@ Use when implementing a new `on-loop-*.yaml` workflow. Add `docs/explanation/loo
 All must be true. See [Loop Engineering Design — Design Invariants](../explanation/loop-engineering/loop-engineering-design.md#design-invariants).
 
 - [ ] Agent never writes to integration branches during Execute (isolated worktree only). L3 integration `push` in Finalize only, with promotion gate
-- [ ] Verifier never modifies the repository (read-only phase)
+- [ ] Checker never modifies the repository (read-only phase)
 - [ ] Detect never writes state; **detect script invoked once per run** (no caller re-run)
 - [ ] Finalize never changes **source under repair**; `.loop/*` persistence allowed
 - [ ] State advances only through Finalize (and merge-gated promote for L2 `open_pr` — see Finalize below)
@@ -28,7 +28,7 @@ See [CONTEXT — Semantic Findings](../explanation/loop-engineering/CONTEXT.md#l
 - [ ] Detect does **not** emit semantic `findings[]`, triage prose, or repair decisions
 - [ ] Entry skill builds semantic output (`findings[]`, Fix/Watch/Escalate) in Execute from detect facts
 - [ ] `verifier_context` carries fact summary or log excerpt for verify — not skill triage report
-- [ ] `agent_verifier_skill_name` set on caller (default `loop-verifier`); domain rubric only in `agent_verifier_instructions`
+- [ ] `agent_checker_skill_name` set on caller (default `loop-verifier`); domain rubric only in `agent_checker_instructions`
 
 ### Phase Contract Compliance
 
@@ -49,7 +49,7 @@ See [CONTEXT — Semantic Findings](../explanation/loop-engineering/CONTEXT.md#l
 
 #### Verify
 
-- [ ] Separate agent session from implementer (inside `loop-execute`)
+- [ ] Separate agent session from maker (inside `loop-execute`)
 - [ ] Read-only; outputs `verdict`, `reason`, `open_rejections`
 - [ ] Semantic quality + fit against `verifier_context` (always wired; may be empty)
 - [ ] `verifier_context` wired on every execute matrix cell
@@ -70,13 +70,13 @@ See [CONTEXT — Semantic Findings](../explanation/loop-engineering/CONTEXT.md#l
 #### Skill
 
 - [ ] SKILL.md: allowed paths, behavioral rules, generic orchestration
-- [ ] **No named consumer domain skills** in distributable skill `references/` (caller `agent_implementer_instructions` owns stack routing A')
-- [ ] CI failure loops: caller `agent_verifier_instructions` appendix for failure-kind defer (B) where needed
+- [ ] **No named consumer domain skills** in distributable skill `references/` (caller `agent_maker_instructions` owns stack routing A')
+- [ ] CI failure loops: caller `agent_checker_instructions` appendix for failure-kind defer (B) where needed
 
 #### Caller (`on-loop-*.yaml`)
 
-- [ ] `agent_implementer_instructions` includes repo-specific overlay (stack routing table for `ci-sweeper`-type loops)
-- [ ] `agent_verifier_instructions` matches observation trigger (CI log fit, doc factual accuracy, changelog version rules, …)
+- [ ] `agent_maker_instructions` includes repo-specific overlay (stack routing table for `ci-sweeper`-type loops)
+- [ ] `agent_checker_instructions` matches observation trigger (CI log fit, doc factual accuracy, changelog version rules, …)
 - [ ] Fix PRs labeled `loop-automation` for `on-loop-state-promote` matching
 
 ### Multi-Branch Targets (Phase 1+)
@@ -111,7 +111,7 @@ See [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loo
 - [ ] Loop operated at L1 for 2+ weeks
 - [ ] State schema documented in workflow design doc
 - [ ] SKILL.md includes build/test commands (or GitHub-entity deliverable rules for non-file loops)
-- [ ] Implementer and verifier separate sessions
+- [ ] Maker and checker separate sessions
 - [ ] Denylist includes auth, payments, secrets, infrastructure
 - [ ] Daily token cap configured
 - [ ] `.loop/loop-run-log.md` in use

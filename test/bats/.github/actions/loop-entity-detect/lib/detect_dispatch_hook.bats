@@ -20,11 +20,11 @@ setup() {
     : > "${GITHUB_OUTPUT}"
 
     export LOOP_NAME="github-issue-triage"
-    export AGENT_IMPLEMENTER_SKILL_NAME="issue-triage"
+    export AGENT_MAKER_SKILL_NAME="issue-triage"
     export LEVEL="L1"
     export DELIVERY="none"
     export MAY_EDIT="false"
-    export AGENT_IMPLEMENTER_INSTRUCTIONS=""
+    export AGENT_MAKER_INSTRUCTIONS=""
     export BUDGET_FILE="${BATS_TEST_TMPDIR}/budget.json"
     export RUN_LOG_FILE="${BATS_TEST_TMPDIR}/run-log.md"
     printf '%s\n' '{}' > "${BUDGET_FILE}"

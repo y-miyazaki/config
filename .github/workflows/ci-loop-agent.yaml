@@ -2,8 +2,8 @@
 # L1: agent-l1 (loop-agent-once) → finalize-l1 (run-log; future L1 delivery)
 # L2/L3: agent-l2 (loop-execute) → finalize-l2 (run-log always; loop-finalize when finalize_enabled)
 # finalize_enabled gates git landing / PR inside finalize-l2, not whether finalize runs.
-# Caller-facing prompts: loop-detect assembles implementer text (prompt_text); domain verifier rubric is agent_verifier_instructions.
-# Verifier prompt scaffolding (INITIAL/REGRESSION, output contract) is owned by loop-execute — not workflow_call inputs here.
+# Caller-facing prompts: loop-detect assembles maker text (prompt_text); domain checker rubric is agent_checker_instructions.
+# Checker prompt scaffolding (INITIAL/REGRESSION, output contract) is owned by loop-execute — not workflow_call inputs here.
 # Contract (L2/L3): outputs { branch, has_changes, verdict, reason, attempts }
 # Token resolution: resolve inside each job (agent-l1 / agent-l2 / finalize-l1 / finalize-l2); pass BOT_APP_* + optional GH_TOKEN.
 # Do not accept a pre-resolved token via workflow_call secrets named GITHUB_TOKEN (reserved).
@@ -18,19 +18,24 @@ on:
         description: "Comma-separated paths to commit with state after domain persistence"
         required: false
         type: string
-      agent_implementer_max_turns:
-        default: 5
-        description: "Maximum implementer agent turns per loop attempt"
-        required: false
-        type: number
-      agent_implementer_model:
+      agent_checker_instructions:
         default: ""
-        description: "Implementer model override"
+        description: "Domain-specific APPROVE/REJECT criteria (L2/L3)"
         required: false
         type: string
-      agent_implementer_skill_name:
+      agent_checker_max_turns:
+        default: 3
+        description: "Maximum checker agent turns (L2/L3)"
+        required: false
+        type: number
+      agent_checker_model:
         default: ""
-        description: "Skill name (used for L2 branch naming)"
+        description: "Checker model override (L2/L3)"
+        required: false
+        type: string
+      agent_checker_skill_name:
+        default: ""
+        description: "Checker skill name passed to loop-execute"
         required: false
         type: string
       agent_loop_max_attempts:
@@ -38,29 +43,24 @@ on:
         description: "Maximum Agent→Verify loop attempts (L2/L3)"
         required: false
         type: number
-      agent_verifier_instructions:
-        default: ""
-        description: "Domain-specific APPROVE/REJECT criteria (L2/L3)"
-        required: false
-        type: string
-      agent_verifier_max_turns:
-        default: 3
-        description: "Maximum verifier agent turns (L2/L3)"
+      agent_maker_max_turns:
+        default: 5
+        description: "Maximum maker agent turns per loop attempt"
         required: false
         type: number
-      agent_verifier_model:
+      agent_maker_model:
         default: ""
-        description: "Verifier model override (L2/L3)"
+        description: "Maker model override"
         required: false
         type: string
-      agent_verifier_skill_name:
+      agent_maker_skill_name:
         default: ""
-        description: "Checker skill name passed to loop-execute"
+        description: "Skill name (used for L2 branch naming)"
         required: false
         type: string
       allowlist:
         default: ""
-        description: "Comma-separated glob allowlist for verifier (L2/L3)"
+        description: "Comma-separated glob allowlist for checker (L2/L3)"
         required: false
         type: string
       auto_merge:
@@ -95,7 +95,7 @@ on:
         type: string
       denylist:
         default: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
-        description: "Comma-separated path denylist for verifier (L2/L3)"
+        description: "Comma-separated path denylist for checker (L2/L3)"
         required: false
         type: string
       detect_result_json:
@@ -134,7 +134,7 @@ on:
         type: string
       infer_files_pattern:
         default: ""
-        description: "Optional extended-regex to infer file paths from verifier text (L2/L3)"
+        description: "Optional extended-regex to infer file paths from checker text (L2/L3)"
         required: false
         type: string
       labels:
@@ -153,7 +153,7 @@ on:
         type: string
       no_changes_verdict:
         default: "APPROVE"
-        description: "Verdict when implementer produces no file changes (APPROVE or REJECT, L2/L3)"
+        description: "Verdict when maker produces no file changes (APPROVE or REJECT, L2/L3)"
         required: false
         type: string
       outcome_override:
@@ -178,7 +178,7 @@ on:
         type: string
       prompt_text:
         default: ""
-        description: "Implementer prompt from loop-detect (matrix.target.prompt) or direct L1 invocation"
+        description: "Maker prompt from loop-detect (matrix.target.prompt) or direct L1 invocation"
         required: false
         type: string
       run_log_file:
@@ -213,7 +213,7 @@ on:
         type: string
       verifier_context:
         default: ""
-        description: "Additional verifier context such as CI logs or lint output (L2/L3)"
+        description: "Additional checker context such as CI logs or lint output (L2/L3)"
         required: false
         type: string
     outputs:
@@ -233,13 +233,13 @@ on:
         description: "Optional finalize outcome from Skill deferral (e.g. watch)"
         value: ${{ jobs.agent-l2.outputs.outcome_override || '' }}
       reason:
-        description: "Final verifier reason (L2/L3)"
+        description: "Final checker reason (L2/L3)"
         value: ${{ jobs.agent-l2.outputs.reason || '' }}
       usage_json:
         description: "Measured token usage JSON (L1 from agent-l1, L2/L3 from agent-l2)"
         value: ${{ jobs.agent-l1.outputs.usage_json || jobs.agent-l2.outputs.usage_json || '' }}
       verdict:
-        description: "Final verifier verdict APPROVE/REJECT (L2/L3)"
+        description: "Final checker verdict APPROVE/REJECT (L2/L3)"
         value: ${{ jobs.agent-l2.outputs.verdict || '' }}
     secrets:
       AGENT_TOKEN:
@@ -298,8 +298,8 @@ jobs:
           cli_version: ${{ inputs.cli_version }}
           engine: ${{ inputs.engine }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
-          max_turns: ${{ format('{0}', inputs.agent_implementer_max_turns) }}
-          model: ${{ inputs.agent_implementer_model }}
+          max_turns: ${{ format('{0}', inputs.agent_maker_max_turns) }}
+          model: ${{ inputs.agent_maker_model }}
           prompt_text: ${{ inputs.prompt_text }}
 
   finalize-l1:
@@ -414,7 +414,7 @@ jobs:
         id: worktree
         uses: y-miyazaki/config/.github/actions/loop-worktree-setup@60773602c5072b4fdb6752a32dd2cc660e098169 # v1.8.90
         with:
-          agent_implementer_skill_name: ${{ inputs.agent_implementer_skill_name }}
+          agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
 
           base_branch: ${{ steps.target.outputs.worktree_branch }}
           base_ref: ${{ steps.target.outputs.worktree_ref }}
@@ -424,15 +424,15 @@ jobs:
         id: execute
         uses: y-miyazaki/config/.github/actions/loop-execute@60773602c5072b4fdb6752a32dd2cc660e098169 # v1.8.90
         with:
-          agent_implementer_max_turns: ${{ format('{0}', inputs.agent_implementer_max_turns) }}
-          agent_implementer_model: ${{ inputs.agent_implementer_model }}
-          agent_implementer_skill_name: ${{ inputs.agent_implementer_skill_name }}
+          agent_checker_instructions: ${{ inputs.agent_checker_instructions }}
+          agent_checker_max_turns: ${{ format('{0}', inputs.agent_checker_max_turns) }}
+          agent_checker_model: ${{ inputs.agent_checker_model }}
+          agent_checker_skill_name: ${{ inputs.agent_checker_skill_name }}
           agent_loop_max_attempts: ${{ format('{0}', inputs.agent_loop_max_attempts) }}
+          agent_maker_max_turns: ${{ format('{0}', inputs.agent_maker_max_turns) }}
+          agent_maker_model: ${{ inputs.agent_maker_model }}
+          agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
           agent_token: ${{ secrets.AGENT_TOKEN }}
-          agent_verifier_instructions: ${{ inputs.agent_verifier_instructions }}
-          agent_verifier_max_turns: ${{ format('{0}', inputs.agent_verifier_max_turns) }}
-          agent_verifier_model: ${{ inputs.agent_verifier_model }}
-          agent_verifier_skill_name: ${{ inputs.agent_verifier_skill_name }}
           allowlist: ${{ inputs.allowlist }}
           base_branch: ${{ steps.target.outputs.verify_base_branch }}
           branch: ${{ steps.worktree.outputs.branch }}

@@ -381,11 +381,11 @@ Loop **composite actions** must not nest other repository composite actions via 
 
 ### Loop Skill Package Pattern
 
-Loop **entry** skills are domain skills (no `loop-` name prefix) split by forge: `repo-maintenance` (`docs-updater`, `ci-sweeper`, `changelog`, `tech-debt`, `refactor`) and `github` (`github-issue-triage`, `github-issue-autofix`, `github-pr-revise`). Generic checker: `loop` / `loop-verifier`. Callers set `agent_implementer_skill_name` (implementer), `agent_verifier_skill_name` (checker; default `loop-verifier`), and `detect_script` to installed paths (`.agents/skills/<name>/...` after `apm install`). Family map: [Loop-Capable Skills](../explanation/loop-engineering/loop-capable-skills.md).
+Loop **entry** skills are domain skills (no `loop-` name prefix) split by forge: `repo-maintenance` (`docs-updater`, `ci-sweeper`, `changelog`, `tech-debt`, `refactor`) and `github` (`github-issue-triage`, `github-issue-autofix`, `github-pr-revise`). Generic checker: `loop` / `loop-verifier`. Callers set `agent_maker_skill_name` (maker), `agent_checker_skill_name` (checker; default `loop-verifier`), and `detect_script` to installed paths (`.agents/skills/<name>/...` after `apm install`). Family map: [Loop-Capable Skills](../explanation/loop-engineering/loop-capable-skills.md).
 
 | Artifact                      | Location                                 | Role                                                          |
 | ----------------------------- | ---------------------------------------- | ------------------------------------------------------------- |
-| Skill                         | `.apm/skills/<name>/SKILL.md`            | Implementer behavior, classification, allowed paths           |
+| Skill                         | `.apm/skills/<name>/SKILL.md`            | Maker behavior, classification, allowed paths           |
 | Detect script                 | `.apm/skills/<name>/scripts/detect_*.sh` | Per-target scan in branch context set by `loop-detect`        |
 | Persistence script (optional) | `.apm/skills/<name>/scripts/*_ledger.sh` | Domain ledger via `loop-finalize` `domain_persistence_script` |
 
@@ -394,7 +394,7 @@ Loop **entry** skills are domain skills (no `loop-` name prefix) split by forge:
 | Action                | Purpose                                                                                                                                                                                                                                                                                                                                                         |
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `loop-agent-once`     | Single read-only agent session (L1); accepts `node_version` / `uv_version` and enables workspace MCP via `lib/mcp.sh`                                                                                                                                                                                                                                           |
-| `loop-detect`         | Read `LOOP_*`, enumerate branches/PRs, checkout per context, read per-target state (`lib/state.sh`), invoke `detect_script` per context, assemble candidates and implementer prompts (`lib/loop/build_constraints.sh`), write **loop-handoff** artifact, output slim `target_matrix`; guards (`budget`, circuit breaker). **No caller re-run of detect script** |
+| `loop-detect`         | Read `LOOP_*`, enumerate branches/PRs, checkout per context, read per-target state (`lib/state.sh`), invoke `detect_script` per context, assemble candidates and maker prompts (`lib/loop/build_constraints.sh`), write **loop-handoff** artifact, output slim `target_matrix`; guards (`budget`, circuit breaker). **No caller re-run of detect script** |
 | `loop-execute`        | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`, `node_version`, `uv_version`; enables workspace MCP via `lib/mcp.sh`; worktree from `from.ref` @ `from.branch`; outputs include `failure_stage` / `failure_message` on push/notify failures                                                                                |
 | `loop-finalize`       | Finalize per `target.finalize`, branch cleanup, per-target state write (`lib/write_state.sh`, `lib/prune_targets.sh`), optional `domain_persistence_script`; `.loop/*` to `LOOP_STATE_PUSH_BRANCH`; outputs include `failure_stage` / `failure_message` when finalize PR steps fail                                                                             |
 | `loop-notify-pr`      | Post or update marker PR comment after finalize on `pull_request` targets (sibling step in `ci-loop-agent`, not nested in `loop-finalize`). Platform-owned Layers 1–2; optional skill appendix. See [loop-notify-pr Specification](loop-notify-pr-specification.md)                                                                                             |
@@ -421,7 +421,7 @@ Invoked by `loop-detect` per scan context (not by the caller). Scans the branch/
 | ------------------ | --------------- | -------------------------------------------------------------------- |
 | `skip`             | yes             | `true` when this context has no actionable work                      |
 | `result`           | when actionable | Domain JSON (facts). Semantic `findings[]` are produced by the Skill |
-| `verifier_context` | no              | Markdown for verifier (may be empty)                                 |
+| `verifier_context` | no              | Markdown for checker (may be empty)                                 |
 
 `loop-detect` assembles each **candidate** (`target_json`, `result`, `prompt`, `verifier_context`), applies priority/cap, uploads a **loop-handoff** artifact bundle, and outputs a slim `target_matrix` (JSON array) for matrix fan-out.
 
@@ -463,7 +463,7 @@ Execute/finalize input. Schema: [Multi-Branch Loops Design](../explanation/loop-
 | `from.branch`, `from.ref` | yes          | Worktree checkout                  |
 | `to.branch`               | yes          | Finalize destination               |
 | `to.pr_number`            | pull_request | PR to notify after `push_head`     |
-| `base.branch`             | pull_request | Verifier diff baseline             |
+| `base.branch`             | pull_request | Checker diff baseline             |
 | `finalize`                | yes          | `open_pr` \| `push` \| `push_head` |
 | `workflow_run_id`         | optional     | CI loops                           |
 
@@ -509,7 +509,7 @@ Flat top-level `last_sha` is **removed**. Migration: on first read, copy legacy 
 | Outcome      | Meaning                                         | `consecutive_failures` |
 | ------------ | ----------------------------------------------- | ---------------------- |
 | `pr-created` | Fix PR or `push_head` succeeded                 | Reset to 0             |
-| `rejected`   | Actionable; verifier REJECT or no-change REJECT | Increment              |
+| `rejected`   | Actionable; checker REJECT or no-change REJECT | Increment              |
 | `no-op`      | No actionable detect result                     | Reset to 0             |
 | `watch`      | Present; Skill Watch (no code edit)             | No increment           |
 | `error`      | Execute failed                                  | Unchanged              |

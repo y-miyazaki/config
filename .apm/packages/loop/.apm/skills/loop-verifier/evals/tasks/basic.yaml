@@ -8,7 +8,7 @@ tags:
   - output-contract
 inputs:
   prompt: >-
-    Use loop-verifier as the checker. The implementer claims a fix but the diff only
+    Use loop-verifier as the checker. The maker claims a fix but the diff only
     changes a comment in README.md while the stated target was a failing unit test in
     pkg/auth. Apply the generic checklist. Emit ## Overview and ## Evidence per
     common-output-format.md. End with a fenced JSON object containing verdict REJECT

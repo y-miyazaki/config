@@ -2,7 +2,7 @@ name: loop-worktree-setup
 description: "Create an isolated git worktree at base_ref on base_branch for loop agent modifications."
 
 inputs:
-  agent_implementer_skill_name:
+  agent_maker_skill_name:
     description: "Skill name used in branch naming"
     required: true
 
@@ -40,7 +40,7 @@ runs:
       id: setup
       shell: bash
       env:
-        AGENT_IMPLEMENTER_SKILL_NAME: ${{ inputs.agent_implementer_skill_name }}
+        AGENT_MAKER_SKILL_NAME: ${{ inputs.agent_maker_skill_name }}
         BASE_BRANCH: ${{ inputs.base_branch }}
         BASE_REF: ${{ inputs.base_ref }}
         BRANCH: ${{ inputs.branch }}
@@ -53,7 +53,7 @@ runs:
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
 
-        WORKTREE_PATH="${RUNNER_TEMP}/worktree-${AGENT_IMPLEMENTER_SKILL_NAME}"
+        WORKTREE_PATH="${RUNNER_TEMP}/worktree-${AGENT_MAKER_SKILL_NAME}"
         CHECKOUT_REF=""
         FETCH_BRANCH="${BASE_BRANCH}"
 
@@ -76,7 +76,7 @@ runs:
           git worktree add "${WORKTREE_PATH}" "origin/${BRANCH}"
         else
           DATE=$(date -u +%Y%m%d-%H%M%S)
-          BRANCH="${BRANCH_PREFIX}/${AGENT_IMPLEMENTER_SKILL_NAME}/${DATE}"
+          BRANCH="${BRANCH_PREFIX}/${AGENT_MAKER_SKILL_NAME}/${DATE}"
 
           if ! [[ "${BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
             echo "::error::Invalid branch name: ${BRANCH}"

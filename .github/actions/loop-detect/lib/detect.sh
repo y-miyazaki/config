@@ -23,12 +23,12 @@
 # - gh (when LOOP_PR_ENABLED=true)
 #
 # Optional environment:
-#   DETECT_SCRIPT, STATE_FILE, LOOP_NAME, BASE_BRANCH, AGENT_IMPLEMENTER_SKILL_NAME, LEVEL
-#   ALLOWLIST, AGENT_IMPLEMENTER_INSTRUCTIONS (empty/unset = unrestricted / no extra instructions)
+#   DETECT_SCRIPT, STATE_FILE, LOOP_NAME, BASE_BRANCH, AGENT_MAKER_SKILL_NAME, LEVEL
+#   ALLOWLIST, AGENT_MAKER_INSTRUCTIONS (empty/unset = unrestricted / no extra instructions)
 #   LOOP_INTEGRATION_BRANCHES, LOOP_PR_ENABLED, LOOP_BRANCH_MATCH, LOOP_PRIORITY
 #   DELIVERY, GIT_FINALIZE_INTEGRATION, GIT_FINALIZE_PULL_REQUEST, GIT_LANDING_INTEGRATION, GIT_LANDING_PULL_REQUEST
 #   LOOP_MAX_TARGETS_PER_SCHEDULE
-#   LOOP_PR_EXCLUDE, LOOP_PR_INCLUDE_BOTS, LOOP_PR_ENABLED, AGENT_IMPLEMENTER_INSTRUCTIONS, BUDGET_FILE, RUN_LOG_FILE
+#   LOOP_PR_EXCLUDE, LOOP_PR_INCLUDE_BOTS, LOOP_PR_ENABLED, AGENT_MAKER_INSTRUCTIONS, BUDGET_FILE, RUN_LOG_FILE
 #   LOOP_SCOPED_HEAD_BRANCH - when set, only scan this integration branch / PR head
 #   CI_SWEEPER_WORKFLOW_RUN_ID + CI_SWEEPER_EVENT_HEAD_BRANCH - workflow_run scope fallback
 #   GITHUB_TOKEN
@@ -381,7 +381,7 @@ function build_pull_request_target_json {
 #   STATE_FILE - Loop state JSON path
 #   BASE_BRANCH - Default base branch
 #   DETECT_SCRIPT - Detect script path
-#   AGENT_IMPLEMENTER_SKILL_NAME, LEVEL, ALLOWLIST, AGENT_IMPLEMENTER_INSTRUCTIONS - Prompt inputs
+#   AGENT_MAKER_SKILL_NAME, LEVEL, ALLOWLIST, AGENT_MAKER_INSTRUCTIONS - Prompt inputs
 #
 # Arguments:
 #   $1 - Target key
@@ -457,7 +457,7 @@ function append_detect_candidate {
 
     report_file="$(jq -r '.report_file // ""' <<< "${detect_result}" 2> /dev/null || echo "")"
     prompt_text="$(build_prompt_text \
-        "${AGENT_IMPLEMENTER_SKILL_NAME}" "${LEVEL}" "${ALLOWLIST:-}" "${AGENT_IMPLEMENTER_INSTRUCTIONS:-}" \
+        "${AGENT_MAKER_SKILL_NAME}" "${LEVEL}" "${ALLOWLIST:-}" "${AGENT_MAKER_INSTRUCTIONS:-}" \
         "${last_sha}" "${current_sha}" "${detect_result}" "${open_prompt}" "${consecutive}" \
         "${may_edit}" "${write_target}" "${report_file}")"
 
@@ -580,7 +580,7 @@ function apply_target_cap {
 #   $1 - Target key (for logs)
 #   $2 - target_json object string
 #   $3 - Prompt text
-#   $4 - Verifier context markdown
+#   $4 - Checker context markdown
 #   $5 - Detect script JSON result
 #
 # Outputs:
@@ -1176,10 +1176,10 @@ function main {
     : "${STATE_FILE:?}"
     : "${LOOP_NAME:?}"
     : "${BASE_BRANCH:?}"
-    : "${AGENT_IMPLEMENTER_SKILL_NAME:?}"
+    : "${AGENT_MAKER_SKILL_NAME:?}"
     : "${LEVEL:?}"
     ALLOWLIST="${ALLOWLIST:-}"
-    AGENT_IMPLEMENTER_INSTRUCTIONS="${AGENT_IMPLEMENTER_INSTRUCTIONS:-}"
+    AGENT_MAKER_INSTRUCTIONS="${AGENT_MAKER_INSTRUCTIONS:-}"
 
     if ! resolve_loop_write_contract; then
         write_detect_outputs "false" "config_error" "[]"

@@ -2,30 +2,30 @@ name: loop-detect
 description: "Detect loop work: enumerate branches/PRs, run detect script per context, build target_matrix."
 
 inputs:
-  agent_implementer_instructions:
-    default: ""
-    description: "Domain-specific implementer instructions appended during loop-detect prompt assembly"
-    required: false
-  agent_implementer_max_turns:
-    description: "Maximum implementer agent turns per loop attempt"
+  agent_checker_instructions:
+    description: "Domain-specific APPROVE/REJECT criteria (markdown)"
     required: true
-  agent_implementer_model:
-    description: "Implementer model override"
+  agent_checker_max_turns:
+    description: "Maximum checker agent turns"
     required: true
-  agent_implementer_skill_name:
-    description: "Skill name to invoke (e.g. docs-updater)"
+  agent_checker_model:
+    description: "Checker model override"
     required: true
   agent_loop_max_attempts:
     description: "Maximum Agent→Verify loop attempts"
     required: true
-  agent_verifier_instructions:
-    description: "Domain-specific APPROVE/REJECT criteria (markdown)"
+  agent_maker_instructions:
+    default: ""
+    description: "Domain-specific maker instructions appended during loop-detect prompt assembly"
+    required: false
+  agent_maker_max_turns:
+    description: "Maximum maker agent turns per loop attempt"
     required: true
-  agent_verifier_max_turns:
-    description: "Maximum verifier agent turns"
+  agent_maker_model:
+    description: "Maker model override"
     required: true
-  agent_verifier_model:
-    description: "Verifier model override"
+  agent_maker_skill_name:
+    description: "Skill name to invoke (e.g. docs-updater)"
     required: true
   allowlist:
     default: ""
@@ -69,7 +69,7 @@ inputs:
     required: true
   infer_files_pattern:
     default: ""
-    description: "Optional extended-regex to infer file paths from verifier text"
+    description: "Optional extended-regex to infer file paths from checker text"
     required: false
   level:
     description: "Autonomy level (L1 | L2 | L3)"
@@ -119,7 +119,7 @@ inputs:
     required: false
   no_changes_verdict:
     default: "APPROVE"
-    description: "Verdict when implementer produces no file changes (APPROVE or REJECT)"
+    description: "Verdict when maker produces no file changes (APPROVE or REJECT)"
     required: false
   pr_body:
     default: ""
@@ -143,27 +143,27 @@ inputs:
     required: false
 
 outputs:
-  agent_implementer_max_turns:
-    description: "Implementer max turns"
-    value: ${{ steps.config.outputs.agent_implementer_max_turns }}
-  agent_implementer_model:
-    description: "Implementer model"
-    value: ${{ steps.config.outputs.agent_implementer_model }}
-  agent_implementer_skill_name:
-    description: "Skill name"
-    value: ${{ steps.config.outputs.agent_implementer_skill_name }}
+  agent_checker_instructions:
+    description: "Checker criteria"
+    value: ${{ steps.config.outputs.agent_checker_instructions }}
+  agent_checker_max_turns:
+    description: "Checker max turns"
+    value: ${{ steps.config.outputs.agent_checker_max_turns }}
+  agent_checker_model:
+    description: "Checker model"
+    value: ${{ steps.config.outputs.agent_checker_model }}
   agent_loop_max_attempts:
     description: "Loop max attempts"
     value: ${{ steps.config.outputs.agent_loop_max_attempts }}
-  agent_verifier_instructions:
-    description: "Verifier criteria"
-    value: ${{ steps.config.outputs.agent_verifier_instructions }}
-  agent_verifier_max_turns:
-    description: "Verifier max turns"
-    value: ${{ steps.config.outputs.agent_verifier_max_turns }}
-  agent_verifier_model:
-    description: "Verifier model"
-    value: ${{ steps.config.outputs.agent_verifier_model }}
+  agent_maker_max_turns:
+    description: "Maker max turns"
+    value: ${{ steps.config.outputs.agent_maker_max_turns }}
+  agent_maker_model:
+    description: "Maker model"
+    value: ${{ steps.config.outputs.agent_maker_model }}
+  agent_maker_skill_name:
+    description: "Skill name"
+    value: ${{ steps.config.outputs.agent_maker_skill_name }}
   allowlist:
     description: "Allowlist for execute job"
     value: ${{ inputs.allowlist }}
@@ -198,7 +198,7 @@ outputs:
     description: "Loop name for budget lookup and run log pattern"
     value: ${{ inputs.loop_name }}
   no_changes_verdict:
-    description: "Verdict when implementer produces no file changes"
+    description: "Verdict when maker produces no file changes"
     value: ${{ inputs.no_changes_verdict }}
   pr_body:
     description: "PR body static section for finalize"
@@ -207,7 +207,7 @@ outputs:
     description: "PR title for finalize"
     value: ${{ inputs.pr_title }}
   prompt:
-    description: "Generated implementer prompt for first matrix cell (legacy compat)"
+    description: "Generated maker prompt for first matrix cell (legacy compat)"
     value: ${{ steps.detect.outputs.prompt }}
   should_run:
     description: "Whether the execute job should run"
@@ -229,32 +229,32 @@ runs:
       id: config
       shell: bash
       env:
-        AGENT_IMPLEMENTER_MAX_TURNS: ${{ inputs.agent_implementer_max_turns }}
-        AGENT_IMPLEMENTER_MODEL: ${{ inputs.agent_implementer_model }}
-        AGENT_IMPLEMENTER_SKILL_NAME: ${{ inputs.agent_implementer_skill_name }}
+        AGENT_CHECKER_INSTRUCTIONS: ${{ inputs.agent_checker_instructions }}
+        AGENT_CHECKER_MAX_TURNS: ${{ inputs.agent_checker_max_turns }}
+        AGENT_CHECKER_MODEL: ${{ inputs.agent_checker_model }}
         AGENT_LOOP_MAX_ATTEMPTS: ${{ inputs.agent_loop_max_attempts }}
-        AGENT_VERIFIER_INSTRUCTIONS: ${{ inputs.agent_verifier_instructions }}
-        AGENT_VERIFIER_MAX_TURNS: ${{ inputs.agent_verifier_max_turns }}
-        AGENT_VERIFIER_MODEL: ${{ inputs.agent_verifier_model }}
+        AGENT_MAKER_MAX_TURNS: ${{ inputs.agent_maker_max_turns }}
+        AGENT_MAKER_MODEL: ${{ inputs.agent_maker_model }}
+        AGENT_MAKER_SKILL_NAME: ${{ inputs.agent_maker_skill_name }}
         BASE_BRANCH: ${{ inputs.base_branch }}
         ENGINE: ${{ inputs.engine }}
         LEVEL: ${{ inputs.level }}
       run: |
         set -euo pipefail
-        AGENT_VERIFIER_INSTRUCTIONS_DELIM="CRITERIA_$(openssl rand -hex 8)"
+        AGENT_CHECKER_INSTRUCTIONS_DELIM="CRITERIA_$(openssl rand -hex 8)"
         {
-          echo "agent_implementer_max_turns=${AGENT_IMPLEMENTER_MAX_TURNS}"
-          echo "agent_implementer_model=${AGENT_IMPLEMENTER_MODEL}"
+          echo "agent_maker_max_turns=${AGENT_MAKER_MAX_TURNS}"
+          echo "agent_maker_model=${AGENT_MAKER_MODEL}"
           echo "agent_loop_max_attempts=${AGENT_LOOP_MAX_ATTEMPTS}"
-          echo "agent_verifier_instructions<<${AGENT_VERIFIER_INSTRUCTIONS_DELIM}"
-          echo "${AGENT_VERIFIER_INSTRUCTIONS}"
-          echo "${AGENT_VERIFIER_INSTRUCTIONS_DELIM}"
-          echo "agent_verifier_max_turns=${AGENT_VERIFIER_MAX_TURNS}"
-          echo "agent_verifier_model=${AGENT_VERIFIER_MODEL}"
+          echo "agent_checker_instructions<<${AGENT_CHECKER_INSTRUCTIONS_DELIM}"
+          echo "${AGENT_CHECKER_INSTRUCTIONS}"
+          echo "${AGENT_CHECKER_INSTRUCTIONS_DELIM}"
+          echo "agent_checker_max_turns=${AGENT_CHECKER_MAX_TURNS}"
+          echo "agent_checker_model=${AGENT_CHECKER_MODEL}"
           echo "base_branch=${BASE_BRANCH}"
           echo "engine=${ENGINE}"
           echo "level=${LEVEL}"
-          echo "agent_implementer_skill_name=${AGENT_IMPLEMENTER_SKILL_NAME}"
+          echo "agent_maker_skill_name=${AGENT_MAKER_SKILL_NAME}"
         } >> "$GITHUB_OUTPUT"
 
     - name: Resolve State File
@@ -273,8 +273,8 @@ runs:
       id: detect
       shell: bash
       env:
-        AGENT_IMPLEMENTER_INSTRUCTIONS: ${{ inputs.agent_implementer_instructions }}
-        AGENT_IMPLEMENTER_SKILL_NAME: ${{ inputs.agent_implementer_skill_name }}
+        AGENT_MAKER_INSTRUCTIONS: ${{ inputs.agent_maker_instructions }}
+        AGENT_MAKER_SKILL_NAME: ${{ inputs.agent_maker_skill_name }}
         ALLOWLIST: ${{ inputs.allowlist }}
         BASE_BRANCH: ${{ inputs.base_branch }}
         BUDGET_FILE: ${{ inputs.budget_file }}

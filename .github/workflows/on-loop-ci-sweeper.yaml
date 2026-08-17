@@ -43,7 +43,33 @@ jobs:
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
       additional_commit_paths: .loop/state-ci-sweeper-run-ledger.json
-      agent_implementer_instructions: |
+      agent_checker_instructions: |
+        ## Criteria for APPROVE
+
+        ALL of the following must be true:
+        1. Changes directly address the specific CI failure described in the detection result
+        2. The diff is minimal — no unrelated refactors, formatting sweeps, or drive-by edits
+        3. No files outside the allowlist were modified
+        4. No denylist paths were touched
+        5. No secrets, credentials, or sensitive values were added or exposed
+        6. The maker report lists validation commands run and their outcome
+
+        ## Criteria for REJECT
+
+        ANY of the following triggers REJECT:
+        - Symptom-only changes that do not address the logged failure
+        - Changes touching more than five files without clear necessity
+        - Modifications outside the allowlist
+        - Missing validation when the failure type is lint/syntax/test
+        - Fixes for infra/env failures that should have been deferred
+        - Hallucinated paths, commands, or APIs not present in the repository
+        - Diffs whose primary purpose is raising test coverage thresholds (coverage gate failures) — classify Watch, no edit
+        - Diffs whose primary purpose is dependency version bumps or lockfile churn from Renovate/Dependabot-class failures — classify Watch unless a named dependency-repair domain skill is in caller instructions
+      agent_checker_max_turns: 3
+      agent_checker_model: composer-2.5
+      agent_checker_skill_name: loop-verifier
+      agent_loop_max_attempts: 3
+      agent_maker_instructions: |
         Fix the failing CI checks identified in the detection result.
         Classify flakes and infra/env failures as Watch — do not edit code for those.
         Apply the smallest change that resolves the logged failure.
@@ -60,36 +86,10 @@ jobs:
         | on-ci-security                      | (security/SAST; classify Watch unless clear fix)|
 
         Read each skill's SKILL.md under `.agents/skills/` or `.claude/skills/` before invoking.
-        Coverage-threshold and dependency-breakage failures: classify Watch — do not edit until caller verifier allows.
-      agent_implementer_max_turns: 8
-      agent_implementer_model: cursor-grok-4.5-low
-      agent_implementer_skill_name: ci-sweeper
-      agent_loop_max_attempts: 3
-      agent_verifier_instructions: |
-        ## Criteria for APPROVE
-
-        ALL of the following must be true:
-        1. Changes directly address the specific CI failure described in the detection result
-        2. The diff is minimal — no unrelated refactors, formatting sweeps, or drive-by edits
-        3. No files outside the allowlist were modified
-        4. No denylist paths were touched
-        5. No secrets, credentials, or sensitive values were added or exposed
-        6. The implementer report lists validation commands run and their outcome
-
-        ## Criteria for REJECT
-
-        ANY of the following triggers REJECT:
-        - Symptom-only changes that do not address the logged failure
-        - Changes touching more than five files without clear necessity
-        - Modifications outside the allowlist
-        - Missing validation when the failure type is lint/syntax/test
-        - Fixes for infra/env failures that should have been deferred
-        - Hallucinated paths, commands, or APIs not present in the repository
-        - Diffs whose primary purpose is raising test coverage thresholds (coverage gate failures) — classify Watch, no edit
-        - Diffs whose primary purpose is dependency version bumps or lockfile churn from Renovate/Dependabot-class failures — classify Watch unless a named dependency-repair domain skill is in caller instructions
-      agent_verifier_max_turns: 3
-      agent_verifier_model: composer-2.5
-      agent_verifier_skill_name: loop-verifier
+        Coverage-threshold and dependency-breakage failures: classify Watch — do not edit until caller checker allows.
+      agent_maker_max_turns: 8
+      agent_maker_model: cursor-grok-4.5-low
+      agent_maker_skill_name: ci-sweeper
       allowlist: ".github/**,.apm/packages/**,scripts/**,apm.yml,mise.toml,renovate/**,docs/**/*.md,README.md,mkdocs.yml"
       branch_match: main
       branch_state: main

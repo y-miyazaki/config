@@ -30,7 +30,7 @@ Detect skips bots and comments without the mention token. Default landing: `git_
 - Mention-less triggers (any human comment starts revise)
 - Bot-authored comments and acting without the mention token on webhooks
 - Auto-resolving review threads (human resolve only)
-- Copilot Coding Agent as the implementer (LE Agent via `ci-loop-agent` only)
+- Copilot Coding Agent as the maker (LE Agent via `ci-loop-agent` only)
 - Comment gather / one-session batching improvements (`#683`)
 - Last-run-only discard of earlier fixes on the PR head
 - Force-push or `cancel-in-progress` to recover merge conflicts (fail closed on `push_head`)
@@ -44,15 +44,15 @@ Keys are passed in `on-loop-github-pr-revise.yaml` via `with:` on `ci-loop-calle
 | Input / JSON key                 | Description                                                           | Dogfood value                                                 |
 | -------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------- |
 | `ack_trigger_comment`            | Post `eyes` reaction on trigger comment via `ack-trigger`             | `true`                                                        |
-| `agent_implementer_instructions` | Apply human feedback; address full `result.comments` array            | Inline in caller workflow                                     |
-| `agent_implementer_max_turns`    | Max implementer turns per attempt                                     | `8`                                                           |
-| `agent_implementer_model`        | Implementer model ID                                                  | `cursor-grok-4.5-low`                                         |
-| `agent_implementer_skill_name`   | Skill package                                                         | `github-pr-revise`                                            |
+| `agent_maker_instructions` | Apply human feedback; address full `result.comments` array            | Inline in caller workflow                                     |
+| `agent_maker_max_turns`    | Max maker turns per attempt                                     | `8`                                                           |
+| `agent_maker_model`        | Maker model ID                                                  | `cursor-grok-4.5-low`                                         |
+| `agent_maker_skill_name`   | Skill package                                                         | `github-pr-revise`                                            |
 | `agent_loop_max_attempts`        | Max Agent→Verify cycles                                               | `3`                                                           |
-| `agent_verifier_instructions`    | APPROVE/REJECT rubric (mention gate, full comment batch)              | Inline in caller workflow                                     |
-| `agent_verifier_max_turns`       | Max verifier turns                                                    | `3`                                                           |
-| `agent_verifier_model`           | Verifier model ID                                                     | `composer-2.5`                                                |
-| `agent_verifier_skill_name`      | Checker skill                                                         | `loop-verifier`                                               |
+| `agent_checker_instructions`    | APPROVE/REJECT rubric (mention gate, full comment batch)              | Inline in caller workflow                                     |
+| `agent_checker_max_turns`       | Max checker turns                                                    | `3`                                                           |
+| `agent_checker_model`           | Checker model ID                                                     | `composer-2.5`                                                |
+| `agent_checker_skill_name`      | Checker skill                                                         | `loop-verifier`                                               |
 | `allowlist`                      | File edit allowlist (empty = skill default)                           | `""`                                                          |
 | `branch_match`                   | Fallback integration watch (scoped PR mode drops integration targets) | `main`                                                        |
 | `branch_state`                   | `.loop/*` persistence branch                                          | `main`                                                        |
@@ -149,6 +149,6 @@ Same-PR revise runs **serialize**; earlier product fixes must remain on the PR h
 
 ### Comment batching
 
-On `issue_comment` / `pull_request_review_comment` when `GITHUB_REPOSITORY` and a token are available, detect lists PR conversation and review comments, keeps human maintainer comments that contain the mention token, and drops comments that already have an `eyes` reaction (claimed by a prior run). The implementer and verifier must address the full `comments` array. When gather runs and the array is empty, detect skips so queued follow-up runs do not push a false success. Without gather prerequisites, detect falls back to a one-element `comments` array from the trigger fields. Dispatch paths keep a single synthetic entry from explicit feedback.
+On `issue_comment` / `pull_request_review_comment` when `GITHUB_REPOSITORY` and a token are available, detect lists PR conversation and review comments, keeps human maintainer comments that contain the mention token, and drops comments that already have an `eyes` reaction (claimed by a prior run). The maker and checker must address the full `comments` array. When gather runs and the array is empty, detect skips so queued follow-up runs do not push a false success. Without gather prerequisites, detect falls back to a one-element `comments` array from the trigger fields. Dispatch paths keep a single synthetic entry from explicit feedback.
 
 Hydration reads trigger fields from `GITHUB_EVENT_PATH` when the corresponding `PR_*` env vars are unset. `PR_COMMENTS_JSON` may pre-supply the array (tests / callers).

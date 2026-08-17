@@ -1,6 +1,6 @@
 ## Agent report output format (loop fix skills)
 
-Applies when the implementer ran a loop fix skill (`docs-updater`, `refactor`, `ci-sweeper`, `changelog`, `tech-debt`).
+Applies when the maker ran a loop fix skill (`docs-updater`, `refactor`, `ci-sweeper`, `changelog`, `tech-debt`).
 
 Canonical shapes: repository `docs/explanation/loop-engineering/common-loop-triage-format.md`.
 

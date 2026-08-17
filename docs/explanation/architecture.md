@@ -28,7 +28,7 @@ The architecture separates:
 - `.apm/packages/repo-maintenance/`: in-repo maintenance skills (`changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`)
 - `.apm/packages/github/`: GitHub Issue/PR skills and GitHub MCP (`github-issue-triage`, `github-issue-autofix`, `github-pr-revise`, `github-pr-body`)
 - `.apm/packages/github-actions/`: GitHub Actions YAML review/validation skills and GHA instructions
-- `.apm/packages/loop/`: generic loop checker skill (`loop-verifier`); callers pass `agent_verifier_skill_name` to `loop-execute` — domain entry skills are not here
+- `.apm/packages/loop/`: generic loop checker skill (`loop-verifier`); callers pass `agent_checker_skill_name` to `loop-execute` — domain entry skills are not here
 - `.apm/packages/common-hooks-*`: target-specific common hooks (6 hooks per target: Claude, Copilot, Cursor)
 - `.apm/packages/aws/`: AWS-focused MCP integrations (5 MCP servers)
 - `.apm/packages/terraform/`: Terraform-focused integrations (1 MCP server, 1 instruction, 2 skills)
@@ -39,7 +39,7 @@ The architecture separates:
 - `.apm/packages/shell-script/`: shell-focused instructions and skills (2 instructions, 2 skills)
 - `.apm/packages/shell-script-hooks-*`: target-specific shell script hooks (2 hooks per target: Claude, Copilot, Cursor)
 
-Loop callers invoke skills by `agent_implementer_skill_name` after `apm install` (`.agents/skills/<name>/`). Package membership is [Loop-Capable Skills](loop-engineering/loop-capable-skills.md). Platform design is [Loop Engineering](loop-engineering/index.md). Skill packaging rules are [APM Package Design Principles](apm-package-design.md).
+Loop callers invoke skills by `agent_maker_skill_name` after `apm install` (`.agents/skills/<name>/`). Package membership is [Loop-Capable Skills](loop-engineering/loop-capable-skills.md). Platform design is [Loop Engineering](loop-engineering/index.md). Skill packaging rules are [APM Package Design Principles](apm-package-design.md).
 
 Each package can be consumed independently through APM path-based dependencies.
 

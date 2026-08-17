@@ -27,7 +27,7 @@ Factory Model（ソフトウェアを作るシステム全体）
 | Worktrees            | 並列実行の隔離                             | ビルトイン worktree        | `git worktree`, `--worktree`, `isolation: worktree` |
 | Skills               | プロジェクト知識の永続化                   | Agent Skills (`SKILL.md`)  | Agent Skills (`SKILL.md`)                           |
 | Plugins / Connectors | 外部ツールとの接続（MCP）                  | Connectors (MCP) + plugins | MCP servers + plugins                               |
-| Sub-agents           | 実装者と検証者の分離                       | `.codex/agents/` (TOML)    | `.claude/agents/`, agent teams                      |
+| Sub-agents           | 実装者と検証者の分離（Maker / Checker） | `.codex/agents/` (TOML)    | `.claude/agents/`, agent teams                      |
 | Memory / State       | 会話外に存在する永続的な状態管理           | Markdown, Linear           | Markdown (`AGENTS.md`), Linear (MCP)                |
 
 ## ループの構造（フロー）
@@ -35,10 +35,10 @@ Factory Model（ソフトウェアを作るシステム全体）
 ```
 Schedule/Automation
   → Triage Skill（問題の検出・分類）
-    → STATE/Memory の読み書き
+    → `.loop/state-*.json` / run-log の読み書き
       → Isolated Worktree（隔離された作業ディレクトリ）
-        → Implementer Sub-agent（実装）
-          → Verifier Sub-agent（検証・テスト・ゲート）
+        → Maker Sub-agent（実装）
+          → Checker Sub-agent（検証・テスト・ゲート）
             → MCP / Git / Tickets（外部連携）
               → Human Gate?
                 ├─ safe/allowlisted → Commit / PR / Action
@@ -72,7 +72,7 @@ Schedule/Automation
 | リスク               | 説明                                                           |
 | -------------------- | -------------------------------------------------------------- |
 | トークンコストの爆発 | Sub-agent と長時間ループでコストが急増する可能性               |
-| Verification 責任    | 無人ループは無人のミスを生む。検証者 Sub-agent の信頼性が限界  |
+| Verification 責任    | 無人ループは無人のミスを生む。Checker セッションの信頼性が限界 |
 | Comprehension Debt   | ループが高速に出力するほど、人間の理解が追いつかなくなる       |
 | Cognitive Surrender  | ループに判断を委ねることで、エンジニアとしての判断力が衰退する |
 
@@ -96,124 +96,78 @@ Schedule/Automation
 
 ## 本リポジトリへの適用可能性
 
+用語・フェーズ・役割の対応は [Ubiquitous Language](../../explanation/loop-engineering/CONTEXT.md) を参照。実装状況の正は [Loop Engineering Design](../../explanation/loop-engineering/loop-engineering-design.md#implementation-status)。
+
 ### 現状の資産マッピング
 
-本リポジトリは Loop Engineering の 5 要素のうち、すでに大部分を保有している。
+本リポジトリは Loop Engineering の構成要素を、外部カタログの `STATE.md` / `.claude/agents/` ではなく **GHA ループ基盤** で実装している。
 
-| Loop 要素            | 本リポジトリの現状                                                         | 充足度             |
-| -------------------- | -------------------------------------------------------------------------- | ------------------ |
-| Automations          | Renovate（依存管理）、CI workflows（`ci-*.yaml`）、`on-*` caller workflows | ◎ 部分的に実現済み |
-| Worktrees            | 未導入（PR ベースの隔離のみ）                                              | △                  |
-| Skills               | `.claude/skills/` に 12 スキル定義済み（review, validation 系）            | ◎ 充実             |
-| Plugins / Connectors | MCP 未定義（`apm.yml` の `mcp: []`）                                       | × 未導入           |
-| Sub-agents           | 未定義（`.claude/agents/` 不在）                                           | × 未導入           |
-| Memory / State       | `AGENTS.md`、steering files が静的な知識を保持                             | △ 動的状態なし     |
+| Loop 要素            | 本リポジトリの現状                                                                                                                         | 充足度     |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| Automations          | `on-loop-*.yaml` callers、`ci-loop-caller` / `ci-loop-caller-entity`、Renovate、既存 `ci-*.yaml`                                            | ◎ 実現済み |
+| Worktrees            | `loop-worktree-setup` + `loop-execute`（L2/L3）                                                                                            | ◎ 実現済み |
+| Skills               | APM パッケージ経由の entry / review / validation / `loop-verifier`（`.claude/skills/` は同期成果物）                                        | ◎ 充実     |
+| Plugins / Connectors | APM パッケージの MCP（GitHub / AWS / Terraform など）。ルート `apm.yml` の空配列ではない                                                   | ◎ 導入済み |
+| Sub-agents           | Maker / Checker は `loop-execute` の 2 セッション（`agent_maker_*` / `agent_checker_*`）。`.claude/agents/` は使わない                      | ◎ 実現済み |
+| Memory / State       | `.loop/state-<loop_name>.json`、sidecar ledger、`loop-run-log.md`、`loop-budget.json`。静的知識は `AGENTS.md` / steering                     | ◎ 実現済み |
 
-### 導入候補パターン（優先度順）
+### 実装済みループ（`loop_name` = 状態ファイル）
+
+状態パスは常に `.loop/state-<loop_name>.json`。別名ファイルは置かない。ドメイン ledger だけ sidecar を足す（例: `state-ci-sweeper-run-ledger.json`）。
+
+| `loop_name`              | 状態ファイル                              | レベル        |
+| ------------------------ | ----------------------------------------- | ------------- |
+| `docs-updater`           | `.loop/state-docs-updater.json`           | L2            |
+| `ci-sweeper`             | `.loop/state-ci-sweeper.json`             | L2            |
+| `changelog`              | `.loop/state-changelog.json`              | L2            |
+| `refactor`               | `.loop/state-refactor.json`               | L2            |
+| `tech-debt`              | `.loop/state-tech-debt.json`              | L2            |
+| `github-issue-triage`    | `.loop/state-github-issue-triage.json`    | L1 (Report)   |
+| `github-issue-autofix`   | `.loop/state-github-issue-autofix.json`   | L2            |
+| `github-pr-revise`       | `.loop/state-github-pr-revise.json`       | L2            |
+
+外部パターン名との対応: CI Sweeper / Changelog Drafter / Issue Triage / PR 改訂は上表で dogfood 済み。`loop-stale-pr` は未着手。
+
+### 未導入パターン（優先度順）
 
 #### 1. Daily Triage — CI/Lint Drift 検出（推奨度: ★★★）
 
-**目的**: コンシューマリポジトリでの lint config drift、CI workflow 変更の影響を日次で検出
+**目的**: コンシューマリポジトリでの lint config drift、CI workflow 変更の影響を日次で検出。
 
 **実装イメージ**:
 
-- GitHub Actions cron workflow（`on-loop-daily-triage.yaml`）
-- `apm audit --ci` 結果を `STATE.md` に記録
-- 差分があれば Issue 自動作成
+- GitHub Actions cron（`on-loop-daily-triage.yaml` 相当）
+- `apm audit --ci` 結果を `.loop/state-<loop_name>.json` と run-log に記録
+- 差分があれば Issue 自動作成（L1）
 
-**既存資産の活用**:
-
-- `ci-apm-audit.yaml` がベース
-- `go-validation`, `shell-script-validation` スキルがトリアージロジック提供
-
-**トークンコスト**: Low（レポート出力のみ）
-
-**判断材料**:
-
-- メリット: config drift 問題（Harness Engineering 文書で既に課題認識済み）を自動検出
-- リスク: 低い。L1（レポートのみ）から開始するため、誤操作リスクなし
-- 前提条件: GitHub Actions のスケジュール実行のみ。エージェント不要で開始可能
+**既存資産**: `ci-apm-audit.yaml`、`go-validation` / `shell-script-validation`。CI 失敗の自動修正は `ci-sweeper` が担当し、本パターンとは分離する。
 
 #### 2. Post-Merge Cleanup — APM 同期チェック（推奨度: ★★★）
 
-**目的**: 本リポジトリへのマージ後、生成ファイルの同期状態を自動検証
+**目的**: マージ後に生成ファイルの同期を検証する。
 
-**実装イメージ**:
-
-- `on-push` トリガーで `apm install --update` → diff 検出
-- 不整合があれば PR 自動作成または Issue 起票
-
-**既存資産の活用**:
-
-- `apm install --update` コマンド
-- 既存の `on-ci-push-*` ワークフローパターン
-
-**トークンコスト**: Low（シェルスクリプトベース、エージェント不要）
-
-**判断材料**:
-
-- メリット: 生成ファイル不整合の即時検出。手動の `apm install --update` 忘れを防止
-- リスク: 極低。diff 検出のみで変更を加えない
-- 前提条件: 既存 CI 基盤で実現可能
+**実装イメージ**: `on-push` で `apm install --update` → diff。不整合なら PR または Issue。エージェント不要で開始できる。
 
 #### 3. Dependency Sweeper — Renovate + 検証ループ（推奨度: ★★☆）
 
-**目的**: Renovate PR に対し、エージェントが影響範囲を分析してレビューコメントを付与
+**目的**: Renovate PR の影響範囲を Maker/Checker でコメントする。
 
-**実装イメージ**:
+**既存資産**: `renovate/` プリセット、`go-review` / `github-actions-review`、GitHub MCP。トークンコストは更新頻度に比例する。
 
-- `pull_request` トリガー（label: `renovate`）
-- Sub-agent が変更内容を読み、breaking の可能性を判定
-- コメントで影響範囲サマリーを出力
+#### 4. Stale PR / その他カタログパターン（推奨度: ★☆☆）
 
-**既存資産の活用**:
+`loop-stale-pr` など外部カタログにあって未着手のループ。Issue 量・ROI を見てから caller を足す。
 
-- `renovate/` プリセット群
-- `go-review`, `github-actions-review` スキル
+### 残作業（基盤）
 
-**トークンコスト**: Medium
-
-**判断材料**:
-
-- メリット: Renovate automerge 以外の PR に対する判断支援
-- リスク: トークンコストが依存更新頻度に比例。誤判定時のノイズ
-- 前提条件: MCP または GitHub API 連携が必要。Sub-agent 定義が必要
-
-#### 4. Issue Triage — コンシューマリポジトリ向け（推奨度: ★☆☆）
-
-**目的**: コンシューマリポジトリから報告される config 不整合・スキル不具合のトリアージ
-
-**判断材料**:
-
-- メリット: 多数のコンシューマを持つ場合に有効
-- リスク: 現時点で Issue 量が少なければ ROI が低い
-- 前提条件: GitHub MCP connector 導入が必須
-
-### 実装に必要なステップ
-
-| ステップ | 内容                                          | 対象パターン   |
-| -------- | --------------------------------------------- | -------------- |
-| 1        | `STATE.md` を定義（ループの状態管理ファイル） | 全パターン共通 |
-| 2        | cron 付き GitHub Actions workflow 作成        | Pattern 1, 2   |
-| 3        | Sub-agent 定義（`.claude/agents/`）           | Pattern 3, 4   |
-| 4        | MCP connector 設定（GitHub API）              | Pattern 3, 4   |
-| 5        | `loop-audit` による Readiness Score 測定      | 全パターン共通 |
+| 項目                    | 内容                                                                                          |
+| ----------------------- | --------------------------------------------------------------------------------------------- |
+| `loop-audit` Readiness  | 外部スコアをそのまま使わず、四平面（`level` / `may_edit` / `write_target` / `delivery`）で定義するか未決 |
+| L3 Unattended           | Human Gate 条件を明文化したうえで許可リスト内のみ拡大                                         |
 
 ### 推奨アプローチ
 
-**Phase 1（エージェント不要・即時開始可能）**:
+**済（dogfood）**: Detect → Execute（Maker）→ Verify（Checker）→ Finalize。状態は `.loop/state-<loop_name>.json`。L2 の `open_pr` は merge-gated `pending`。
 
-- Pattern 1 (Daily Triage) と Pattern 2 (Post-Merge Cleanup) を GitHub Actions cron で実装
-- `STATE.md` に結果を記録し、手動レビュー
-- トークンコスト: ゼロ（シェルスクリプト＋既存 CI ツールのみ）
+**次**: Daily Triage と Post-Merge Cleanup（エージェント不要または L1）。その後 Dependency Sweeper。L3 はゲート明文化後。
 
-**Phase 2（エージェント導入）**:
-
-- Sub-agent 定義の追加
-- Pattern 3 (Dependency Sweeper) の実装
-- `loop-audit` による成熟度測定
-
-**Phase 3（自律化）**:
-
-- L2 (Assisted) → L3 (Unattended) への段階的移行
-- Human Gate の条件を明文化した上で自動実行範囲を拡大

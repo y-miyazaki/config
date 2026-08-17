@@ -30,29 +30,17 @@ jobs:
   loop:
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
-      agent_implementer_instructions: |
-        Run the refactor skill in apply mode for every mechanical hint (duplication_block or oversized_unit) in the detection result.
-        Phase A: survey all hints[] entries and emit ### Candidates with apply or watch disposition.
-        Phase B: apply every candidate marked apply — same-package scope cap; structural intent only; no architecture-improvement proposal path.
-        One technique per candidate; minimal structural diff within local or same-package scope per fix; revert and defer any candidate that fails its gate.
-        Re-run stack validation on all touched packages before finalize.
-        Stack validation (A'): shell-script-validation, go-validation, github-actions-validation, markdown-validation as applicable via ## Instructions.
-        Invoke named validation skills for touched stacks before finalize.
-      agent_implementer_max_turns: 5
-      agent_implementer_model: cursor-grok-4.5-low
-      agent_implementer_skill_name: refactor
-      agent_loop_max_attempts: 3
-      agent_verifier_instructions: |
+      agent_checker_instructions: |
         ## Criteria for APPROVE
 
         ALL of the following must be true:
-        1. The implementer surveyed every detect hint in the detection result before applying fixes
+        1. The maker surveyed every detect hint in the detection result before applying fixes
         2. Applied changes address all actionable candidates marked apply in the survey (local or same-package structural edits only)
         3. No files outside the allowlist were modified
         4. No denylist paths were touched
         5. No cross-package redesign, GoF patterns, or public API semantics changes
         6. No lint/style-only or architecture-improvement refactors
-        7. The implementer report lists validation commands run and their outcome
+        7. The maker report lists validation commands run and their outcome
         8. ### Changes and ### Deferred reconcile with the branch diff
 
         ## Criteria for REJECT
@@ -67,9 +55,21 @@ jobs:
         - Missing validation when the stack supports an existing gate
         - Hallucinated paths, commands, or APIs not present in the repository
         - A deferred path still appears in the branch diff, or a diff path is missing from ### Changes
-      agent_verifier_max_turns: 3
-      agent_verifier_model: composer-2.5
-      agent_verifier_skill_name: loop-verifier
+      agent_checker_max_turns: 3
+      agent_checker_model: composer-2.5
+      agent_checker_skill_name: loop-verifier
+      agent_loop_max_attempts: 3
+      agent_maker_instructions: |
+        Run the refactor skill in apply mode for every mechanical hint (duplication_block or oversized_unit) in the detection result.
+        Phase A: survey all hints[] entries and emit ### Candidates with apply or watch disposition.
+        Phase B: apply every candidate marked apply — same-package scope cap; structural intent only; no architecture-improvement proposal path.
+        One technique per candidate; minimal structural diff within local or same-package scope per fix; revert and defer any candidate that fails its gate.
+        Re-run stack validation on all touched packages before finalize.
+        Stack validation (A'): shell-script-validation, go-validation, github-actions-validation, markdown-validation as applicable via ## Instructions.
+        Invoke named validation skills for touched stacks before finalize.
+      agent_maker_max_turns: 5
+      agent_maker_model: cursor-grok-4.5-low
+      agent_maker_skill_name: refactor
       allowlist: ".apm/packages/**,scripts/**"
       branch_match: main
       branch_state: main

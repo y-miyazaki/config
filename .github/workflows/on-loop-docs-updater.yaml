@@ -30,15 +30,7 @@ jobs:
   loop:
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
-      agent_implementer_instructions: |
-        Run the docs-updater skill for loop findings.
-        Edit files directly to address the documented findings.
-        Prioritize factual consistency with the codebase and preserve existing documentation structure unless findings require restructuring.
-      agent_implementer_max_turns: 5
-      agent_implementer_model: cursor-grok-4.5-low
-      agent_implementer_skill_name: docs-updater
-      agent_loop_max_attempts: 3
-      agent_verifier_instructions: |
+      agent_checker_instructions: |
         ## Criteria for APPROVE
 
         ALL of the following must be true:
@@ -58,9 +50,17 @@ jobs:
         - Gratuitous changes not related to documented findings
         - Duplicate content that restates existing documentation
         - Unnecessary restructuring of document headings or sections
-      agent_verifier_max_turns: 3
-      agent_verifier_model: composer-2.5
-      agent_verifier_skill_name: loop-verifier
+      agent_checker_max_turns: 3
+      agent_checker_model: composer-2.5
+      agent_checker_skill_name: loop-verifier
+      agent_loop_max_attempts: 3
+      agent_maker_instructions: |
+        Run the docs-updater skill for loop findings.
+        Edit files directly to address the documented findings.
+        Prioritize factual consistency with the codebase and preserve existing documentation structure unless findings require restructuring.
+      agent_maker_max_turns: 5
+      agent_maker_model: cursor-grok-4.5-low
+      agent_maker_skill_name: docs-updater
       allowlist: "docs/**/*.md,README.md,mkdocs.yml"
       branch_match: main
       branch_state: main

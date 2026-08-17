@@ -41,15 +41,15 @@ Keys are passed in `on-loop-github-issue-triage.yaml` via `with:` on `ci-loop-ca
 
 | Input / JSON key                 | Description                                          | Dogfood value                                                            |
 | -------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------ |
-| `agent_implementer_instructions` | Domain implementer task (triage skill)               | Inline in caller workflow                                                |
-| `agent_implementer_max_turns`    | Max implementer turns per attempt                    | `5`                                                                      |
-| `agent_implementer_model`        | Implementer model ID                                 | `cursor-grok-4.5-low`                                                    |
-| `agent_implementer_skill_name`   | Skill package                                        | `github-issue-triage`                                                    |
+| `agent_maker_instructions` | Domain maker task (triage skill)               | Inline in caller workflow                                                |
+| `agent_maker_max_turns`    | Max maker turns per attempt                    | `5`                                                                      |
+| `agent_maker_model`        | Maker model ID                                 | `cursor-grok-4.5-low`                                                    |
+| `agent_maker_skill_name`   | Skill package                                        | `github-issue-triage`                                                    |
 | `agent_loop_max_attempts`        | Max Agent→Verify cycles                              | `3`                                                                      |
-| `agent_verifier_instructions`    | APPROVE/REJECT rubric (allowlisted labels only)      | Inline in caller workflow                                                |
-| `agent_verifier_max_turns`       | Max verifier turns                                   | `3`                                                                      |
-| `agent_verifier_model`           | Verifier model ID                                    | `composer-2.5`                                                           |
-| `agent_verifier_skill_name`      | Checker skill                                        | `loop-verifier`                                                          |
+| `agent_checker_instructions`    | APPROVE/REJECT rubric (allowlisted labels only)      | Inline in caller workflow                                                |
+| `agent_checker_max_turns`       | Max checker turns                                   | `3`                                                                      |
+| `agent_checker_model`           | Checker model ID                                    | `composer-2.5`                                                           |
+| `agent_checker_skill_name`      | Checker skill                                        | `loop-verifier`                                                          |
 | `allowlist`                      | File edit allowlist (empty = no file edits)          | `""`                                                                     |
 | `branch_state`                   | `.loop/*` persistence branch                         | `main`                                                                   |
 | `budget_max_runs_per_day`        | Daily run cap                                        | `20`                                                                     |

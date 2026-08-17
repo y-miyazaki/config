@@ -66,7 +66,7 @@ EOF
     unset PROMPT_VERIFIER_TASK
     unset PROMPT_VERIFIER_OUTPUT_CONTRACT
     load_default_prompts
-    [[ ${PROMPT_VERIFIER_TASK} == *"loop implementer"* ]]
+    [[ ${PROMPT_VERIFIER_TASK} == *"loop maker"* ]]
     [[ ${PROMPT_VERIFIER_OUTPUT_CONTRACT} == *'"verdict"'* ]]
 }
 

@@ -1,4 +1,4 @@
-# Loop Verifier Output
+# Loop Checker Output
 
 ## Markdown
 
@@ -14,7 +14,7 @@
 ### If REJECT
 
 - Reasons: (numbered, specific)
-- Suggested next step for implementer
+- Suggested next step for maker
 ```
 
 ## Machine-readable (required)
@@ -35,7 +35,7 @@ On REJECT:
   "verdict": "REJECT",
   "files": ["path/to/file"],
   "issue": "what is factually wrong",
-  "fix": "specific change the implementer must make",
+  "fix": "specific change the maker must make",
   "reason": "one-line summary for logs"
 }
 ```

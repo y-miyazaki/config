@@ -94,7 +94,7 @@ inputs:
     required: false
   reject_reason:
     default: ""
-    description: "Verifier rejection reason (recorded in state on REJECT)"
+    description: "Checker rejection reason (recorded in state on REJECT)"
     required: false
   skip_reason:
     default: "none"
@@ -118,7 +118,7 @@ inputs:
     required: false
   verdict:
     default: ""
-    description: "Verifier verdict (APPROVE or REJECT, empty if no verification)"
+    description: "Checker verdict (APPROVE or REJECT, empty if no verification)"
     required: false
 outputs:
   commit_sha:

@@ -17,7 +17,7 @@ Each `on-loop-<name>.yaml` previously duplicated ~150 lines of identical job wir
 | execute     | `ci-loop-agent.yaml` (matrix over `target_matrix`) |
 | record-skip | `loop-run-log`                                     |
 
-Loop-specific values (budget, allowlist, verifier rubric, detect script path) differ per file. Because `workflow_call` does not accept a shared job graph without duplication, configuration was placed in workflow-level `env:` and mapped into action `with:` inside each caller.
+Loop-specific values (budget, allowlist, checker rubric, detect script path) differ per file. Because `workflow_call` does not accept a shared job graph without duplication, configuration was placed in workflow-level `env:` and mapped into action `with:` inside each caller.
 
 That `env:` pattern was a **workaround for copied jobs**, not a platform requirement. Other callers in this repository (`on-ci-push-markdown.yaml`, `on-ci-push-shell-script.yaml`, `on-cd-mkdocs.yaml`) already use **thin `on-*` + `with:` on a reusable workflow** with no `env:` block.
 
@@ -95,14 +95,14 @@ jobs:
   loop:
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
-      agent_implementer_max_turns: 5
-      agent_implementer_model: cursor-grok-4.5-low
+      agent_maker_max_turns: 5
+      agent_maker_model: cursor-grok-4.5-low
       agent_loop_max_attempts: 3
-      agent_verifier_instructions: |
+      agent_checker_instructions: |
         ## Criteria for APPROVE
         ...
-      agent_verifier_max_turns: 3
-      agent_verifier_model: composer-2.5
+      agent_checker_max_turns: 3
+      agent_checker_model: composer-2.5
       allowlist: CHANGELOG.md
       branch_match: main
       branch_state: main
@@ -122,10 +122,10 @@ jobs:
       no_changes_verdict: REJECT
       pr_body: ""
       pr_title: "chore(changelog): update CHANGELOG.md (loop-changelog)"
-      agent_implementer_instructions: |
+      agent_maker_instructions: |
         Update the target changelog file under `## [Unreleased]` ...
       pr_enabled: false
-      agent_implementer_skill_name: changelog
+      agent_maker_skill_name: changelog
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
@@ -183,16 +183,16 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 
 | Input                          | Type   | Required | Default         | Maps to                                        |
 | ------------------------------ | ------ | -------- | --------------- | ---------------------------------------------- |
-| `agent_implementer_max_turns`  | number | yes      | —               | `loop-detect`                                  |
-| `agent_implementer_model`      | string | yes      | —               | `loop-detect`                                  |
+| `agent_maker_max_turns`  | number | yes      | —               | `loop-detect`                                  |
+| `agent_maker_model`      | string | yes      | —               | `loop-detect`                                  |
 | `agent_loop_max_attempts`      | number | yes      | —               | `loop-detect`                                  |
-| `agent_verifier_instructions`  | string | yes      | —               | `loop-detect` (multiline markdown)             |
-| `agent_verifier_max_turns`     | number | yes      | —               | `loop-detect`                                  |
-| `agent_verifier_model`         | string | yes      | —               | `loop-detect`                                  |
+| `agent_checker_instructions`  | string | yes      | —               | `loop-detect` (multiline markdown)             |
+| `agent_checker_max_turns`     | number | yes      | —               | `loop-detect`                                  |
+| `agent_checker_model`         | string | yes      | —               | `loop-detect`                                  |
 | `engine`                       | string | yes      | —               | `loop-detect` / `ci-loop-agent`                |
 | `level`                        | string | no       | `L2`            | `loop-detect`                                  |
-| `agent_implementer_skill_name` | string | yes      | —               | `loop-detect`                                  |
-| `agent_verifier_skill_name`    | string | no       | `loop-verifier` | `ci-loop-agent` → `loop-execute` checker skill |
+| `agent_maker_skill_name` | string | yes      | —               | `loop-detect`                                  |
+| `agent_checker_skill_name`    | string | no       | `loop-verifier` | `ci-loop-agent` → `loop-execute` checker skill |
 
 #### Platform (branch, budget, finalize)
 
@@ -217,7 +217,7 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 | `pr_exclude`                     | string  | no       | `fork,draft,label:no-loop`                           | `loop-detect`                                           |
 | `pr_include_bots`                | string  | no       | `""`                                                 | `loop-detect`                                           |
 | `pr_title`                       | string  | no       | `""`                                                 | detect → execute                                        |
-| `agent_implementer_instructions` | string  | no       | `""`                                                 | `loop-detect`                                           |
+| `agent_maker_instructions` | string  | no       | `""`                                                 | `loop-detect`                                           |
 | `pr_enabled`                     | boolean | no       | `false`                                              | `loop-detect` (`loop_pr_enabled`)                       |
 | `state_file`                     | string  | no       | `""`                                                 | `loop-detect`                                           |
 | _(token via secrets)_            | —       | —        | —                                                    | Resolve in-job: App → `GH_TOKEN` → job `GITHUB_TOKEN`   |
@@ -424,7 +424,7 @@ New domain env keys go into `detect_domain_env_json` without editing reusable jo
 | `detect_domain_env_json` typos                         | Document keys per loop; detect script fails fast on missing required env; validate JSON in export step                                                                  |
 | Input drift between `loop-detect` and `ci-loop-caller` | Maintain mapping table in inputs reference; reusable maps `branch_match` → `loop_integration_branches`, `branch_state` → `base_branch` / `loop_state_push_branch`, etc. |
 | Reusable change affects all loops                      | CI workflow lint on every PR; thin callers keep blast radius visible in review                                                                                          |
-| Multiline `agent_verifier_instructions` in `with:`     | Supported by `workflow_call` string inputs; keep rubric in caller for readability                                                                                       |
+| Multiline `agent_checker_instructions` in `with:`     | Supported by `workflow_call` string inputs; keep rubric in caller for readability                                                                                       |
 
 ## References
 

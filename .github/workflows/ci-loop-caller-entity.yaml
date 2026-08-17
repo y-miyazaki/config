@@ -11,47 +11,47 @@ name: ci-loop-caller-entity
 on:
   workflow_call:
     inputs:
-      agent_implementer_instructions:
-        default: ""
-        description: "Domain-specific implementer instructions"
-        required: false
+      agent_checker_instructions:
+        description: "Domain-specific APPROVE/REJECT rubric"
+        required: true
         type: string
-      agent_implementer_max_turns:
-        description: "Maximum implementer agent turns per loop attempt"
+      agent_checker_max_turns:
+        description: "Maximum checker agent turns per verification"
         required: true
         type: number
-      agent_implementer_model:
-        description: "Implementer model ID"
+      agent_checker_model:
+        description: "Checker model ID"
         required: true
         type: string
-      agent_implementer_skill_name:
-        description: "Skill package name"
-        required: true
+      agent_checker_skill_name:
+        default: loop-verifier
+        description: "Checker skill slash-loaded by loop-execute (distinct from agent_maker_skill_name)"
+        required: false
         type: string
       agent_loop_max_attempts:
         description: "Maximum Agent→Verify retry cycles"
         required: true
         type: number
-      agent_verifier_instructions:
-        description: "Domain-specific APPROVE/REJECT rubric"
-        required: true
+      agent_maker_instructions:
+        default: ""
+        description: "Domain-specific maker instructions"
+        required: false
         type: string
-      agent_verifier_max_turns:
-        description: "Maximum verifier agent turns per verification"
+      agent_maker_max_turns:
+        description: "Maximum maker agent turns per loop attempt"
         required: true
         type: number
-      agent_verifier_model:
-        description: "Verifier model ID"
+      agent_maker_model:
+        description: "Maker model ID"
         required: true
         type: string
-      agent_verifier_skill_name:
-        default: loop-verifier
-        description: "Checker skill slash-loaded by loop-execute (distinct from agent_implementer_skill_name)"
-        required: false
+      agent_maker_skill_name:
+        description: "Skill package name"
+        required: true
         type: string
       allowlist:
         default: ""
-        description: "Comma-separated globs the implementer may modify"
+        description: "Comma-separated globs the maker may modify"
         required: false
         type: string
       branch_state:
@@ -78,7 +78,7 @@ on:
         type: string
       denylist:
         default: ""
-        description: "Comma-separated globs the implementer must not touch"
+        description: "Comma-separated globs the maker must not touch"
         required: false
         type: string
       detect_domain_env_json:
@@ -111,7 +111,7 @@ on:
         type: string
       infer_files_pattern:
         default: ""
-        description: "Extended regex to infer file paths from verifier text"
+        description: "Extended regex to infer file paths from checker text"
         required: false
         type: string
       level:
@@ -130,7 +130,7 @@ on:
         type: boolean
       no_changes_verdict:
         default: APPROVE
-        description: "APPROVE | REJECT when implementer produces no file diff"
+        description: "APPROVE | REJECT when maker produces no file diff"
         required: false
         type: string
       pr_body:
@@ -191,13 +191,13 @@ jobs:
       contents: read
       issues: read
     outputs:
-      agent_implementer_max_turns: ${{ steps.detect.outputs.agent_implementer_max_turns }}
-      agent_implementer_model: ${{ steps.detect.outputs.agent_implementer_model }}
-      agent_implementer_skill_name: ${{ steps.detect.outputs.agent_implementer_skill_name }}
+      agent_checker_instructions: ${{ steps.detect.outputs.agent_checker_instructions }}
+      agent_checker_max_turns: ${{ steps.detect.outputs.agent_checker_max_turns }}
+      agent_checker_model: ${{ steps.detect.outputs.agent_checker_model }}
       agent_loop_max_attempts: ${{ steps.detect.outputs.agent_loop_max_attempts }}
-      agent_verifier_instructions: ${{ steps.detect.outputs.agent_verifier_instructions }}
-      agent_verifier_max_turns: ${{ steps.detect.outputs.agent_verifier_max_turns }}
-      agent_verifier_model: ${{ steps.detect.outputs.agent_verifier_model }}
+      agent_maker_max_turns: ${{ steps.detect.outputs.agent_maker_max_turns }}
+      agent_maker_model: ${{ steps.detect.outputs.agent_maker_model }}
+      agent_maker_skill_name: ${{ steps.detect.outputs.agent_maker_skill_name }}
       allowlist: ${{ steps.detect.outputs.allowlist }}
       branch_state: ${{ inputs.branch_state }}
       delivery: ${{ steps.detect.outputs.delivery }}
@@ -269,14 +269,14 @@ jobs:
         id: detect
         uses: y-miyazaki/config/.github/actions/loop-entity-detect@60773602c5072b4fdb6752a32dd2cc660e098169 # v1.8.90
         with:
-          agent_implementer_instructions: ${{ inputs.agent_implementer_instructions }}
-          agent_implementer_max_turns: ${{ format('{0}', inputs.agent_implementer_max_turns) }}
-          agent_implementer_model: ${{ inputs.agent_implementer_model }}
-          agent_implementer_skill_name: ${{ inputs.agent_implementer_skill_name }}
+          agent_checker_instructions: ${{ inputs.agent_checker_instructions }}
+          agent_checker_max_turns: ${{ format('{0}', inputs.agent_checker_max_turns) }}
+          agent_checker_model: ${{ inputs.agent_checker_model }}
           agent_loop_max_attempts: ${{ format('{0}', inputs.agent_loop_max_attempts) }}
-          agent_verifier_instructions: ${{ inputs.agent_verifier_instructions }}
-          agent_verifier_max_turns: ${{ format('{0}', inputs.agent_verifier_max_turns) }}
-          agent_verifier_model: ${{ inputs.agent_verifier_model }}
+          agent_maker_instructions: ${{ inputs.agent_maker_instructions }}
+          agent_maker_max_turns: ${{ format('{0}', inputs.agent_maker_max_turns) }}
+          agent_maker_model: ${{ inputs.agent_maker_model }}
+          agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
           allowlist: ${{ inputs.allowlist }}
           budget_file: ${{ inputs.budget_file }}
           budget_max_runs_per_day: ${{ inputs.budget_max_runs_per_day != null && format('{0}', inputs.budget_max_runs_per_day) || '' }}
@@ -313,14 +313,14 @@ jobs:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
     uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@60773602c5072b4fdb6752a32dd2cc660e098169 # v1.8.90
     with:
-      agent_implementer_max_turns: ${{ fromJSON(needs.detect.outputs.agent_implementer_max_turns) }}
-      agent_implementer_model: ${{ needs.detect.outputs.agent_implementer_model }}
-      agent_implementer_skill_name: ${{ needs.detect.outputs.agent_implementer_skill_name }}
+      agent_checker_instructions: ${{ needs.detect.outputs.agent_checker_instructions }}
+      agent_checker_max_turns: ${{ fromJSON(needs.detect.outputs.agent_checker_max_turns) }}
+      agent_checker_model: ${{ needs.detect.outputs.agent_checker_model }}
+      agent_checker_skill_name: ${{ inputs.agent_checker_skill_name }}
       agent_loop_max_attempts: ${{ fromJSON(needs.detect.outputs.agent_loop_max_attempts) }}
-      agent_verifier_instructions: ${{ needs.detect.outputs.agent_verifier_instructions }}
-      agent_verifier_max_turns: ${{ fromJSON(needs.detect.outputs.agent_verifier_max_turns) }}
-      agent_verifier_model: ${{ needs.detect.outputs.agent_verifier_model }}
-      agent_verifier_skill_name: ${{ inputs.agent_verifier_skill_name }}
+      agent_maker_max_turns: ${{ fromJSON(needs.detect.outputs.agent_maker_max_turns) }}
+      agent_maker_model: ${{ needs.detect.outputs.agent_maker_model }}
+      agent_maker_skill_name: ${{ needs.detect.outputs.agent_maker_skill_name }}
       allowlist: ${{ needs.detect.outputs.allowlist }}
       auto_merge: ${{ (needs.detect.outputs.delivery == 'open_pr' && needs.detect.outputs.level == 'L3' && matrix.target.target_json.finalize == 'open_pr') && 'true' || 'false' }}
       base_branch: ${{ matrix.target.target_json.to.branch }}

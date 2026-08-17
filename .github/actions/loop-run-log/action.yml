@@ -57,7 +57,7 @@ inputs:
     required: false
   verdict:
     default: ""
-    description: "Verifier verdict (APPROVE or REJECT, empty when execute did not run)"
+    description: "Checker verdict (APPROVE or REJECT, empty when execute did not run)"
     required: false
   workflow_run:
     default: ${{ github.run_id }}

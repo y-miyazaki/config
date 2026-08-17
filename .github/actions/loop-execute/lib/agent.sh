@@ -10,21 +10,21 @@
 # Design Rules:
 # - run_agent maps ENGINE to the correct CLI and token env var
 # - run_agent_capture avoids pipe subshells so USAGE_* globals persist
-# - Implementer sessions may write; verifier sessions are read-only
+# - Maker sessions may write; checker sessions are read-only
 #######################################
 
 #######################################
-# build_agent_prompt: Build implementer prompt with optional verifier feedback
+# build_agent_prompt: Build maker prompt with optional checker feedback
 #
 # Globals:
-#   PROMPT_TEXT - Base implementer prompt
+#   PROMPT_TEXT - Base maker prompt
 #   PROMPT_IMPLEMENTER_FEEDBACK - Retry prompt template
 #
 # Arguments:
-#   $1 - Verifier feedback markdown (may be empty)
+#   $1 - Checker feedback markdown (may be empty)
 #
 # Outputs:
-#   Full implementer prompt to stdout
+#   Full maker prompt to stdout
 #
 # Returns:
 #   0 on success
@@ -70,7 +70,7 @@ function build_branch_diff_synthesis_block {
 
     printf '%s\n' \
         "## Report synthesis (required before finishing)" \
-        "The mechanical verifier compares your \`### Changes\` table to the **full branch diff** (\`origin/${BASE_BRANCH}...HEAD\`), including files committed in earlier loop attempts on this branch." \
+        "The mechanical checker compares your \`### Changes\` table to the **full branch diff** (\`origin/${BASE_BRANCH}...HEAD\`), including files committed in earlier loop attempts on this branch." \
         "Run \`git diff --name-only origin/${BASE_BRANCH}...HEAD -- . ':!.loop/'\` and ensure **every** listed path has a row under \`### Changes\`." \
         "" \
         "Paths currently in the branch diff:"
@@ -181,7 +181,7 @@ function harvest_workspace_into_worktree {
     done < <(git -C "${workspace}" status --porcelain)
 
     if [[ ${harvested} -eq 1 ]]; then
-        echo "::warning::Harvested implementer edits from GITHUB_WORKSPACE into worktree"
+        echo "::warning::Harvested maker edits from GITHUB_WORKSPACE into worktree"
     fi
     return 0
 }
@@ -229,7 +229,7 @@ function run_agent_capture {
 #   WORKING_DIRECTORY - Working directory for write-capable engines
 #
 # Arguments:
-#   $1 - allow_writes flag (true|false). Verifier uses false.
+#   $1 - allow_writes flag (true|false). Checker uses false.
 #
 # Outputs:
 #   None

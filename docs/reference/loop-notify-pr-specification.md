@@ -81,7 +81,7 @@ Invocation: **sibling step** in `ci-loop-agent.yaml` immediately after `loop-fin
 | Actor           | GitHub App / bot login from token (`GET /user`); fallback `github-actions` on failure |
 | Outcome         | finalize outcome enum                                                                 |
 | Verdict         | `APPROVE` / `REJECT` / empty                                                          |
-| Reason          | execute `reason` (verifier reject reason or no-changes reason); `—` when empty        |
+| Reason          | execute `reason` (checker reject reason or no-changes reason); `—` when empty        |
 | Bot fix PR      | URL/number from finalize when `open_pr` succeeded                                     |
 | Branch          | `target_json.to.branch` (PR head)                                                     |
 | Human PR number | `target_json.to.pr_number`                                                            |
@@ -95,7 +95,7 @@ Invocation: **sibling step** in `ci-loop-agent.yaml` immediately after `loop-fin
 
 | Field           | Source                                                                             |
 | --------------- | ---------------------------------------------------------------------------------- |
-| `changed_files` | `git diff --name-only` vs verifier baseline ref                                    |
+| `changed_files` | `git diff --name-only` vs checker baseline ref                                    |
 | `diff_stat`     | `git diff --stat` (truncated)                                                      |
 | `fix_summary`   | Template: `"Address CI failure in <job_name> (<workflow_name>)"` from detect facts |
 

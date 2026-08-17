@@ -1,6 +1,6 @@
 #!/bin/bash
 #######################################
-# Description: Verifier session helpers for loop-execute
+# Description: Checker session helpers for loop-execute
 #
 # Usage: source "${SCRIPT_DIR}/lib/verifier.sh"
 #
@@ -8,8 +8,8 @@
 # - None (library file, sourced by other scripts)
 #
 # Design Rules:
-# - Deterministic denylist/allowlist checks run before the LLM verifier
-# - Verifier output prefers fenced JSON; legacy formats are fallback only
+# - Deterministic denylist/allowlist checks run before the LLM checker
+# - Checker output prefers fenced JSON; legacy formats are fallback only
 #######################################
 
 #######################################
@@ -49,7 +49,7 @@ function extract_last_json_fence {
 }
 
 #######################################
-# parse_verifier_output: Parse verifier agent output into structured fields
+# parse_verifier_output: Parse checker agent output into structured fields
 #
 # Globals:
 #   parsed - true when any format was recognized
@@ -77,7 +77,7 @@ function parse_verifier_output {
 
     parsed="false"
     verdict="REJECT"
-    reason="Verifier output missing or unclear"
+    reason="Checker output missing or unclear"
     files=""
     issue=""
     fix=""
@@ -140,7 +140,7 @@ function parse_verifier_output {
         fix="$(parse_output_field "${parse_file}" "FIX")"
         [[ -n ${reason} ]] || reason="No reason provided"
         parsed="true"
-        echo "::warning::Verifier used legacy line format; prefer JSON verdict block"
+        echo "::warning::Checker used legacy line format; prefer JSON verdict block"
         if [[ -n ${normalized_file} ]]; then
             rm -f "${normalized_file}"
         fi
@@ -153,7 +153,7 @@ function parse_verifier_output {
         verdict=$(echo "${legacy_line}" | grep -oE '^(APPROVE|REJECT)' | head -1)
         reason=$(echo "${legacy_line}" | sed -E 's/^(APPROVE|REJECT):?[[:space:]]*//')
         parsed="true"
-        echo "::warning::Verifier used legacy verdict format; prefer JSON verdict block"
+        echo "::warning::Checker used legacy verdict format; prefer JSON verdict block"
     fi
 
     if [[ -n ${normalized_file} ]]; then
@@ -162,7 +162,7 @@ function parse_verifier_output {
 }
 
 #######################################
-# write_verifier_output_contract: Print verifier JSON output contract
+# write_verifier_output_contract: Print checker JSON output contract
 #
 # Globals:
 #   PROMPT_VERIFIER_OUTPUT_CONTRACT - Contract markdown
@@ -188,12 +188,12 @@ function write_verifier_output_contract {
 }
 
 #######################################
-# run_verify: Run one verifier session for the current attempt
+# run_verify: Run one checker session for the current attempt
 #
 # Globals:
 #   BASE_BRANCH, DENYLIST, ALLOWLIST, WORKTREE_PATH
-#   AGENT_VERIFIER_INSTRUCTIONS, AGENT_VERIFIER_MAX_TURNS, AGENT_VERIFIER_MODEL
-#   LIB_DIR, OPEN_REJECTIONS_JSON, AGENT_IMPLEMENTER_SKILL_NAME, VERIFIER_CONTEXT
+#   AGENT_CHECKER_INSTRUCTIONS, AGENT_CHECKER_MAX_TURNS, AGENT_CHECKER_MODEL
+#   LIB_DIR, OPEN_REJECTIONS_JSON, AGENT_MAKER_SKILL_NAME, VERIFIER_CONTEXT
 #   PROMPT_VERIFIER_* prompt env vars
 #
 # Arguments:
@@ -254,9 +254,9 @@ function run_verify {
     local agent_output_file="${attempt_dir}/agent-output.txt"
     local format_violations=""
     if [[ -f ${agent_output_file} ]] \
-        && agent_report_skill_requires_format_check "${AGENT_IMPLEMENTER_SKILL_NAME}"; then
-        reconcile_agent_report_with_branch_diff "${agent_output_file}" "${changed_files}" "${AGENT_IMPLEMENTER_SKILL_NAME}"
-        format_violations="$(validate_agent_report "${agent_output_file}" "${changed_files}" "${AGENT_IMPLEMENTER_SKILL_NAME}" || true)"
+        && agent_report_skill_requires_format_check "${AGENT_MAKER_SKILL_NAME}"; then
+        reconcile_agent_report_with_branch_diff "${agent_output_file}" "${changed_files}" "${AGENT_MAKER_SKILL_NAME}"
+        format_violations="$(validate_agent_report "${agent_output_file}" "${changed_files}" "${AGENT_MAKER_SKILL_NAME}" || true)"
         if [[ -n ${format_violations} ]]; then
             record_structured_reject "${attempt_dir}" "${attempt_num}" "${changed_files//$'\n'/,}" \
                 "Agent report output format or Changes/Deferred consistency failed" \
@@ -275,18 +275,18 @@ function run_verify {
         attempt_diff_stat="(no new commit in this attempt)"
     fi
 
-    criteria="${AGENT_VERIFIER_INSTRUCTIONS}"
+    criteria="${AGENT_CHECKER_INSTRUCTIONS}"
     if [[ -z ${criteria} && -z ${VERIFIER_SKILL_ROOT:-} ]]; then
         criteria="${PROMPT_VERIFIER_DEFAULT_CRITERIA}"
     fi
-    if agent_report_skill_requires_format_check "${AGENT_IMPLEMENTER_SKILL_NAME}"; then
+    if agent_report_skill_requires_format_check "${AGENT_MAKER_SKILL_NAME}"; then
         local format_criteria_file="${LIB_DIR}/agent_output_format_criteria.md"
         if [[ -f ${format_criteria_file} ]]; then
             criteria="${criteria}"$'\n\n'"$(cat "${format_criteria_file}")"
         fi
     fi
 
-    prompt_file="${attempt_dir}/verifier-prompt.txt"
+    prompt_file="${attempt_dir}/checker-prompt.txt"
     {
         write_verifier_skill_slash
         printf '\n'
@@ -313,7 +313,7 @@ function run_verify {
         echo ""
         write_verifier_skill_input
         echo ""
-        echo "Implementer skill: ${AGENT_IMPLEMENTER_SKILL_NAME}"
+        echo "Maker skill: ${AGENT_MAKER_SKILL_NAME}"
         echo ""
         echo "### Branch Diff Stat"
         echo '```'
@@ -332,14 +332,14 @@ function run_verify {
         write_verifier_output_contract
     } > "${prompt_file}"
 
-    output_file="${attempt_dir}/verifier-output.txt"
+    output_file="${attempt_dir}/checker-output.txt"
     PROMPT="$(cat "${prompt_file}")"
-    MAX_TURNS="${AGENT_VERIFIER_MAX_TURNS}"
-    MODEL="${AGENT_VERIFIER_MODEL}"
+    MAX_TURNS="${AGENT_CHECKER_MAX_TURNS}"
+    MODEL="${AGENT_CHECKER_MODEL}"
     WORKING_DIRECTORY="${WORKTREE_PATH}"
     export PROMPT MAX_TURNS MODEL WORKING_DIRECTORY
     if ! run_agent_capture "${output_file}" "false"; then
-        echo "::warning::Verifier agent exited non-zero"
+        echo "::warning::Checker agent exited non-zero"
     fi
 
     parse_verifier_output "${output_file}"
@@ -347,11 +347,11 @@ function run_verify {
     if [[ -f ${output_file} ]]; then
         json_blob="$(extract_last_json_fence "${output_file}")"
         if [[ -n ${json_blob} ]]; then
-            printf '%s\n' "${json_blob}" > "${attempt_dir}/verifier-verdict.json"
+            printf '%s\n' "${json_blob}" > "${attempt_dir}/checker-verdict.json"
         fi
     fi
     if [[ ${parsed} != "true" ]]; then
-        echo "::warning::Verifier verdict parse failed; defaulting to REJECT"
+        echo "::warning::Checker verdict parse failed; defaulting to REJECT"
     fi
     if [[ ${verdict} != "APPROVE" ]]; then
         verdict="REJECT"

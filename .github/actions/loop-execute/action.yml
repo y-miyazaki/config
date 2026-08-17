@@ -1,41 +1,41 @@
 name: loop-execute
-description: "Bounded Agent→Verify loop in one job. Installs CLI once, retries with verifier feedback."
+description: "Bounded Agent→Verify loop in one job. Installs CLI once, retries with checker feedback."
 
 inputs:
-  agent_implementer_max_turns:
-    default: "5"
-    description: "Maximum implementer agent turns per loop attempt"
-    required: false
-  agent_implementer_model:
+  agent_checker_instructions:
     default: ""
-    description: "Implementer model override"
+    description: "Domain-specific APPROVE/REJECT criteria (markdown)"
     required: false
-  agent_implementer_skill_name:
-    description: "Implementer skill name (context only for the verifier)"
-    required: true
+  agent_checker_max_turns:
+    default: "3"
+    description: "Maximum checker agent turns"
+    required: false
+  agent_checker_model:
+    default: ""
+    description: "Checker model override"
+    required: false
+  agent_checker_skill_name:
+    default: ""
+    description: "Checker skill name (caller-supplied). Empty skips skill bind. Slash-load via /skill <SKILL.md> when resolved."
+    required: false
   agent_loop_max_attempts:
     default: "3"
     description: "Maximum Agent→Verify loop attempts"
     required: false
+  agent_maker_max_turns:
+    default: "5"
+    description: "Maximum maker agent turns per loop attempt"
+    required: false
+  agent_maker_model:
+    default: ""
+    description: "Maker model override"
+    required: false
+  agent_maker_skill_name:
+    description: "Maker skill name (context only for the checker)"
+    required: true
   agent_token:
     description: "Authentication token for the selected engine"
     required: true
-  agent_verifier_instructions:
-    default: ""
-    description: "Domain-specific APPROVE/REJECT criteria (markdown)"
-    required: false
-  agent_verifier_max_turns:
-    default: "3"
-    description: "Maximum verifier agent turns"
-    required: false
-  agent_verifier_model:
-    default: ""
-    description: "Verifier model override"
-    required: false
-  agent_verifier_skill_name:
-    default: ""
-    description: "Checker skill name (caller-supplied). Empty skips skill bind. Slash-load via /skill <SKILL.md> when resolved."
-    required: false
   allowlist:
     default: ""
     description: "Comma-separated glob allowlist; when set, changes outside these paths trigger REJECT"
@@ -79,11 +79,11 @@ inputs:
     required: false
   infer_files_pattern:
     default: ""
-    description: "Optional extended-regex to infer file paths from verifier text when JSON files is missing"
+    description: "Optional extended-regex to infer file paths from checker text when JSON files is missing"
     required: false
   no_changes_verdict:
     default: "APPROVE"
-    description: "Verdict when the implementer produces no file changes (APPROVE or REJECT)"
+    description: "Verdict when the maker produces no file changes (APPROVE or REJECT)"
     required: false
   node_version:
     default: "24.19.0"
@@ -91,30 +91,30 @@ inputs:
     required: false
   prompt_implementer_feedback:
     default: ""
-    description: "Implementer retry prompt template. Placeholders: {{base_prompt}}, {{feedback}}"
+    description: "Maker retry prompt template. Placeholders: {{base_prompt}}, {{feedback}}"
     required: false
   prompt_text:
-    description: "Implementer prompt text"
+    description: "Maker prompt text"
     required: true
   prompt_verifier_default_criteria:
     default: ""
-    description: "Default verifier APPROVE/REJECT criteria when agent_verifier_instructions is empty"
+    description: "Default checker APPROVE/REJECT criteria when agent_checker_instructions is empty"
     required: false
   prompt_verifier_initial:
     default: ""
-    description: "Verifier INITIAL mode intro. Placeholder: {{attempt}}"
+    description: "Checker INITIAL mode intro. Placeholder: {{attempt}}"
     required: false
   prompt_verifier_output_contract:
     default: ""
-    description: "Verifier JSON output contract appended to the verifier prompt"
+    description: "Checker JSON output contract appended to the checker prompt"
     required: false
   prompt_verifier_regression:
     default: ""
-    description: "Verifier REGRESSION mode body. Placeholders: {{attempt}}, {{open_rejections}}, {{attempt_delta}}"
+    description: "Checker REGRESSION mode body. Placeholders: {{attempt}}, {{open_rejections}}, {{attempt_delta}}"
     required: false
   prompt_verifier_task:
     default: ""
-    description: "Verifier task section inserted before criteria"
+    description: "Checker task section inserted before criteria"
     required: false
   uv_version:
     default: "0.12.3"
@@ -122,7 +122,7 @@ inputs:
     required: false
   verifier_context:
     default: ""
-    description: "Additional markdown context appended to the verifier prompt (e.g. CI logs, lint output)"
+    description: "Additional markdown context appended to the checker prompt (e.g. CI logs, lint output)"
     required: false
   worktree_path:
     description: "Absolute path to the worktree"
@@ -151,7 +151,7 @@ outputs:
     description: "Optional finalize outcome when Skill defers without edits (e.g. watch)"
     value: ${{ steps.loop.outputs.outcome_override }}
   reason:
-    description: "Final verifier reason"
+    description: "Final checker reason"
     value: ${{ steps.loop.outputs.reason }}
   usage_json:
     description: "Measured token usage JSON (empty when CLI usage is unavailable)"
@@ -187,15 +187,15 @@ runs:
       shell: bash
       working-directory: ${{ inputs.worktree_path }}
       env:
-        AGENT_IMPLEMENTER_MAX_TURNS: ${{ inputs.agent_implementer_max_turns }}
-        AGENT_IMPLEMENTER_MODEL: ${{ inputs.agent_implementer_model }}
-        AGENT_IMPLEMENTER_SKILL_NAME: ${{ inputs.agent_implementer_skill_name }}
+        AGENT_CHECKER_INSTRUCTIONS: ${{ inputs.agent_checker_instructions }}
+        AGENT_CHECKER_MAX_TURNS: ${{ inputs.agent_checker_max_turns }}
+        AGENT_CHECKER_MODEL: ${{ inputs.agent_checker_model }}
+        AGENT_CHECKER_SKILL_NAME: ${{ inputs.agent_checker_skill_name }}
         AGENT_LOOP_MAX_ATTEMPTS: ${{ inputs.agent_loop_max_attempts }}
+        AGENT_MAKER_MAX_TURNS: ${{ inputs.agent_maker_max_turns }}
+        AGENT_MAKER_MODEL: ${{ inputs.agent_maker_model }}
+        AGENT_MAKER_SKILL_NAME: ${{ inputs.agent_maker_skill_name }}
         AGENT_TOKEN: ${{ inputs.agent_token }}
-        AGENT_VERIFIER_INSTRUCTIONS: ${{ inputs.agent_verifier_instructions }}
-        AGENT_VERIFIER_MAX_TURNS: ${{ inputs.agent_verifier_max_turns }}
-        AGENT_VERIFIER_MODEL: ${{ inputs.agent_verifier_model }}
-        AGENT_VERIFIER_SKILL_NAME: ${{ inputs.agent_verifier_skill_name }}
         ALLOWLIST: ${{ inputs.allowlist }}
         BASE_BRANCH: ${{ inputs.base_branch }}
         BRANCH: ${{ inputs.branch }}

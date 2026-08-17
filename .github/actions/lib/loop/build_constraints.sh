@@ -1,7 +1,7 @@
 #!/bin/bash
 #######################################
 # Description:
-#   Emit the ## Constraints block for loop implementer prompts.
+#   Emit the ## Constraints block for loop maker prompts.
 #
 # Usage:
 #   source "${LOOP_ACTION_LIB_DIR}/build_constraints.sh"
@@ -17,7 +17,7 @@
 #######################################
 
 #######################################
-# emit_loop_constraints: Emit ## Constraints for loop implementer prompts
+# emit_loop_constraints: Emit ## Constraints for loop maker prompts
 #
 # Globals:
 #   None
@@ -82,7 +82,7 @@ function emit_loop_constraints {
                 if [[ -n ${report_file} ]]; then
                     echo "report_file: ${report_file}"
                 fi
-                echo "You MUST persist report_file within allowlist; source fixes outside allowlist are forbidden unless the caller verifier explicitly allows closed-set paths."
+                echo "You MUST persist report_file within allowlist; source fixes outside allowlist are forbidden unless the caller checker explicitly allows closed-set paths."
                 ;;
             *)
                 echo "::error::write_target must be fix or report when may_edit is true" >&2

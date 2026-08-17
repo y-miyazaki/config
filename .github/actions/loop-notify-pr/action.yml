@@ -60,7 +60,7 @@ inputs:
     required: true
   reject_reason:
     default: ""
-    description: "Verifier rejection reason"
+    description: "Checker rejection reason"
     required: false
   repository:
     default: ${{ github.repository }}
@@ -80,7 +80,7 @@ inputs:
     required: false
   verdict:
     default: ""
-    description: "Verifier verdict (APPROVE or REJECT)"
+    description: "Checker verdict (APPROVE or REJECT)"
     required: false
 
 outputs:

@@ -40,15 +40,15 @@ Keys are passed in `on-loop-github-issue-autofix.yaml` via `with:` on `ci-loop-c
 
 | Input / JSON key                 | Description                                           | Dogfood value                                                   |
 | -------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------- |
-| `agent_implementer_instructions` | Minimal fix from detect JSON; PR body with `Fixes #N` | Inline in caller workflow                                       |
-| `agent_implementer_max_turns`    | Max implementer turns per attempt                     | `8`                                                             |
-| `agent_implementer_model`        | Implementer model ID                                  | `cursor-grok-4.5-low`                                           |
-| `agent_implementer_skill_name`   | Skill package                                         | `github-issue-autofix`                                          |
+| `agent_maker_instructions` | Minimal fix from detect JSON; PR body with `Fixes #N` | Inline in caller workflow                                       |
+| `agent_maker_max_turns`    | Max maker turns per attempt                     | `8`                                                             |
+| `agent_maker_model`        | Maker model ID                                  | `cursor-grok-4.5-low`                                           |
+| `agent_maker_skill_name`   | Skill package                                         | `github-issue-autofix`                                          |
 | `agent_loop_max_attempts`        | Max Agent→Verify cycles                               | `3`                                                             |
-| `agent_verifier_instructions`    | APPROVE/REJECT rubric                                 | Inline in caller workflow                                       |
-| `agent_verifier_max_turns`       | Max verifier turns                                    | `3`                                                             |
-| `agent_verifier_model`           | Verifier model ID                                     | `composer-2.5`                                                  |
-| `agent_verifier_skill_name`      | Checker skill                                         | `loop-verifier`                                                 |
+| `agent_checker_instructions`    | APPROVE/REJECT rubric                                 | Inline in caller workflow                                       |
+| `agent_checker_max_turns`       | Max checker turns                                    | `3`                                                             |
+| `agent_checker_model`           | Checker model ID                                     | `composer-2.5`                                                  |
+| `agent_checker_skill_name`      | Checker skill                                         | `loop-verifier`                                                 |
 | `allowlist`                      | File edit allowlist (empty = skill default)           | `""`                                                            |
 | `branch_match`                   | Integration branch to fix against                     | `main`                                                          |
 | `branch_state`                   | `.loop/*` persistence branch                          | `main`                                                          |

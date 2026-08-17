@@ -1,4 +1,4 @@
-# Loop Verifier Checklist
+# Loop Checker Checklist
 
 Generic checker gates. Domain callers append extra REJECT rules; they do not remove these.
 
@@ -8,7 +8,7 @@ Generic checker gates. Domain callers append extra REJECT rules; they do not rem
 
 - **Check:** Changed files are relevant to the stated target. No denylist paths. No files outside an allowlist when one is set.
 - **Why:** Drive-by edits and secret paths are unsafe in unattended loops.
-- **Fix:** REJECT; tell the implementer which paths to revert.
+- **Fix:** REJECT; tell the maker which paths to revert.
 
 ### INTENT-01: Stated target
 

@@ -9,7 +9,7 @@
 #
 # Design Rules:
 # - OPEN_REJECTIONS_JSON is a JSON array persisted across attempts
-# - REJECT_FEEDBACK is markdown consumed by the implementer retry prompt
+# - REJECT_FEEDBACK is markdown consumed by the maker retry prompt
 #######################################
 
 #######################################
@@ -111,7 +111,7 @@ function record_structured_reject {
 # sync_reject_feedback: Refresh REJECT_FEEDBACK from OPEN_REJECTIONS_JSON
 #
 # Globals:
-#   REJECT_FEEDBACK - Markdown feedback for implementer retry prompt
+#   REJECT_FEEDBACK - Markdown feedback for maker retry prompt
 #
 # Arguments:
 #   None

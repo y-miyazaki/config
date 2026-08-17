@@ -77,10 +77,10 @@ source "${_LOOP_CREATED_BY_LIB}/trigger_thread.sh"
 #   MAX_ATTEMPTS - Maximum attempts for display
 #   NOTIFY_CONTEXT_JSON - Machine context from loop-execute
 #   OUTCOME - Finalize outcome enum
-#   REJECT_REASON - Verifier rejection reason
+#   REJECT_REASON - Checker rejection reason
 #   TARGET_JSON - Target descriptor JSON
 #   USAGE_JSON - Measured usage JSON for Created By footer
-#   VERDICT - Verifier verdict when present
+#   VERDICT - Checker verdict when present
 #
 # Arguments:
 #   $1 - Actor login
@@ -331,10 +331,10 @@ function find_existing_comment {
 #   NOTIFY_CONTEXT_JSON - Machine context from loop-execute
 #   OUTCOME - Finalize outcome enum
 #   PR_NUMBER - Target pull request number
-#   REJECT_REASON - Verifier rejection reason
+#   REJECT_REASON - Checker rejection reason
 #   REPOSITORY - Repository owner/name
 #   TRIGGER_COMMENT_ID - Triggering comment id
-#   VERDICT - Verifier verdict when present
+#   VERDICT - Checker verdict when present
 #
 # Arguments:
 #   None
@@ -569,11 +569,11 @@ function resolve_actor {
 #   NOTIFY_CONTEXT_JSON - Machine context from loop-execute
 #   OUTCOME - Finalize outcome enum
 #   PR_NUMBER - Target pull request number
-#   REJECT_REASON - Verifier rejection reason
+#   REJECT_REASON - Checker rejection reason
 #   REPOSITORY - Repository owner/name
 #   TARGET_JSON - Target descriptor JSON
 #   GITHUB_TOKEN - GitHub token for gh CLI
-#   VERDICT - Verifier verdict when present
+#   VERDICT - Checker verdict when present
 #
 # Arguments:
 #   None

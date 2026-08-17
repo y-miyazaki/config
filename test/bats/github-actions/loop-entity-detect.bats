@@ -83,7 +83,7 @@ setup() {
     run env \
         DETECT_SCRIPT="${BATS_TEST_TMPDIR}/detect.sh" \
         LOOP_NAME="github-issue-triage" \
-        AGENT_IMPLEMENTER_SKILL_NAME="github-issue-triage" \
+        AGENT_MAKER_SKILL_NAME="github-issue-triage" \
         MAY_EDIT="false" \
         BUDGET_FILE="${BATS_TEST_TMPDIR}/budget.json" \
         BUDGET_MAX_RUNS_PER_DAY="1" \
@@ -100,8 +100,8 @@ setup() {
     run env \
         DETECT_SCRIPT="${BATS_TEST_TMPDIR}/detect.sh" \
         LOOP_NAME="github-issue-triage" \
-        AGENT_IMPLEMENTER_SKILL_NAME="github-issue-triage" \
-        AGENT_IMPLEMENTER_INSTRUCTIONS="triage pls" \
+        AGENT_MAKER_SKILL_NAME="github-issue-triage" \
+        AGENT_MAKER_INSTRUCTIONS="triage pls" \
         LEVEL="L1" \
         DELIVERY="none" \
         MAY_EDIT="false" \
@@ -119,7 +119,7 @@ setup() {
     run env \
         DETECT_SCRIPT="${BATS_TEST_TMPDIR}/detect.sh" \
         LOOP_NAME="github-issue-triage" \
-        AGENT_IMPLEMENTER_SKILL_NAME="github-issue-triage" \
+        AGENT_MAKER_SKILL_NAME="github-issue-triage" \
         LEVEL="L2" \
         DELIVERY="none" \
         MAY_EDIT="false" \

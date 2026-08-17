@@ -1,11 +1,11 @@
 #!/bin/bash
 #######################################
-# Description: Resolve caller-supplied verifier skill path for Input / slash load
+# Description: Resolve caller-supplied checker skill path for Input / slash load
 #
 # Usage: source "${LIB_DIR}/verifier_skill.sh"
 #
 # Design Rules:
-#   - Skill name comes from AGENT_VERIFIER_SKILL_NAME (caller). Execute does not default it.
+#   - Skill name comes from AGENT_CHECKER_SKILL_NAME (caller). Execute does not default it.
 #   - Execute does not inline SKILL.md; it passes /skill <path> and the skill path as Input
 #   - Search .claude/skills, .agents/skills, .apm/packages, and apm_modules
 #   - VERIFIER_SKILL_ROOT overrides discovery for tests
@@ -51,10 +51,10 @@ function verifier_skill_workspace_roots {
 }
 
 #######################################
-# resolve_verifier_skill_root: Locate installed verifier skill directory
+# resolve_verifier_skill_root: Locate installed checker skill directory
 #
 # Globals:
-#   AGENT_VERIFIER_SKILL_NAME - Caller-supplied skill name (read)
+#   AGENT_CHECKER_SKILL_NAME - Caller-supplied skill name (read)
 #   VERIFIER_SKILL_ROOT - Optional absolute override (read)
 #
 # Arguments:
@@ -68,7 +68,7 @@ function verifier_skill_workspace_roots {
 #
 #######################################
 function resolve_verifier_skill_root {
-    local skill="${AGENT_VERIFIER_SKILL_NAME:-}"
+    local skill="${AGENT_CHECKER_SKILL_NAME:-}"
     local root candidate pkg_dir mod_dir
 
     if [[ -n ${VERIFIER_SKILL_ROOT:-} ]]; then
@@ -116,7 +116,7 @@ function resolve_verifier_skill_root {
         shopt -u nullglob
     done < <(verifier_skill_workspace_roots)
 
-    echo "::warning::verifier skill not found: ${skill}; using embedded verifier prompt fallbacks" >&2
+    echo "::warning::checker skill not found: ${skill}; using embedded checker prompt fallbacks" >&2
     return 1
 }
 
@@ -124,7 +124,7 @@ function resolve_verifier_skill_root {
 # bind_verifier_skill: Resolve skill dir into VERIFIER_SKILL_ROOT
 #
 # Globals:
-#   AGENT_VERIFIER_SKILL_NAME - Caller-supplied skill name (read)
+#   AGENT_CHECKER_SKILL_NAME - Caller-supplied skill name (read)
 #   VERIFIER_SKILL_ROOT - Skill directory (write when resolved)
 #
 # Arguments:
@@ -139,7 +139,7 @@ function resolve_verifier_skill_root {
 #######################################
 function bind_verifier_skill {
     local skill_root
-    if [[ -z ${AGENT_VERIFIER_SKILL_NAME:-} ]]; then
+    if [[ -z ${AGENT_CHECKER_SKILL_NAME:-} ]]; then
         return 0
     fi
     if skill_root="$(resolve_verifier_skill_root)"; then
@@ -148,10 +148,10 @@ function bind_verifier_skill {
 }
 
 #######################################
-# write_verifier_skill_slash: Print slash load line for the verifier prompt
+# write_verifier_skill_slash: Print slash load line for the checker prompt
 #
 # Globals:
-#   AGENT_VERIFIER_SKILL_NAME - Caller-supplied skill name (read)
+#   AGENT_CHECKER_SKILL_NAME - Caller-supplied skill name (read)
 #   VERIFIER_SKILL_ROOT - Bound skill directory (read)
 #
 # Arguments:
@@ -171,10 +171,10 @@ function write_verifier_skill_slash {
 }
 
 #######################################
-# write_verifier_skill_input: Print checker-skill Input for the verifier prompt
+# write_verifier_skill_input: Print checker-skill Input for the checker prompt
 #
 # Globals:
-#   AGENT_VERIFIER_SKILL_NAME - Caller-supplied skill name (read)
+#   AGENT_CHECKER_SKILL_NAME - Caller-supplied skill name (read)
 #   VERIFIER_SKILL_ROOT - Bound skill directory (read)
 #
 # Arguments:
@@ -188,7 +188,7 @@ function write_verifier_skill_slash {
 #
 #######################################
 function write_verifier_skill_input {
-    local name="${AGENT_VERIFIER_SKILL_NAME:-}"
+    local name="${AGENT_CHECKER_SKILL_NAME:-}"
     if [[ -n ${VERIFIER_SKILL_ROOT:-} && -f ${VERIFIER_SKILL_ROOT}/SKILL.md ]]; then
         echo "Checker skill: ${name}"
         echo "Follow ${VERIFIER_SKILL_ROOT}/SKILL.md and its references."

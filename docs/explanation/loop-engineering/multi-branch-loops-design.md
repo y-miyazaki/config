@@ -130,7 +130,7 @@ Detect scripts scan **only the current context** (branch/ref `loop-detect` check
 | ---------------------- | --------------------------------------------------------------- |
 | `mode`                 | `integration` \| `pull_request`                                 |
 | `key`                  | State key: `integration:<branch>` or `pull_request:<pr_number>` |
-| `from` / `to` / `base` | Detect, finalize, verifier diff baseline                        |
+| `from` / `to` / `base` | Detect, finalize, checker diff baseline                        |
 | `finalize`             | Default `open_pr` (dogfood). Exceptions: `push`, `push_head`    |
 
 ## Branch roles and fix direction
@@ -153,9 +153,9 @@ Three branch roles on callers — detailed tables in [Loop Caller Inputs Referen
 
 Recorded in [Specification](../../reference/specification.md).
 
-## Execute and Verifier (platform)
+## Execute and Checker (platform)
 
-| Mode         | Worktree                   | Verifier diff baseline |
+| Mode         | Worktree                   | Checker diff baseline |
 | ------------ | -------------------------- | ---------------------- |
 | integration  | `from.ref` @ `from.branch` | `to.branch`            |
 | pull_request | `from.ref` @ `from.branch` | `base.branch`          |

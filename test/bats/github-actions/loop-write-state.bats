@@ -194,14 +194,14 @@ setup() {
         OUTCOME='rejected' \
         SHA='def456' \
         OPEN_REJECTIONS='[{"id":"r1"}]' \
-        REJECT_REASON='verifier rejected' \
+        REJECT_REASON='checker rejected' \
         GITHUB_REPOSITORY='test/repo' \
         GITHUB_RUN_ID='2' \
         GITHUB_RUN_ATTEMPT='1'
     [ "$status" -eq 0 ]
     run jq -e \
         '.targets["integration:main"].consecutive_failures == 3
-         and .targets["integration:main"].last_reject_reason == "verifier rejected"
+         and .targets["integration:main"].last_reject_reason == "checker rejected"
          and (.targets["integration:main"].open_rejections | length) == 1' \
         "${STATE_WRITE_WORK}/.loop/state-test.json"
     [ "$status" -eq 0 ]

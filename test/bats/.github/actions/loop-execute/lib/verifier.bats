@@ -9,7 +9,7 @@
 # - parse_verifier_output parses fenced JSON REJECT with files array
 # - parse_verifier_output falls back to legacy VERDICT lines
 # - parse_verifier_output defaults to REJECT when unparsable
-# - parse_verifier_output parses cursor stream-json verifier capture
+# - parse_verifier_output parses cursor stream-json checker capture
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -108,7 +108,7 @@ EOF
     rm -f "${tmpf}"
 }
 
-@test "parse_verifier_output parses cursor stream-json verifier capture" {
+@test "parse_verifier_output parses cursor stream-json checker capture" {
     parse_verifier_output "test/fixtures/loop-execute/cursor-stream-json-verifier.ndjson"
     [ "${parsed}" = "true" ]
     [ "${verdict}" = "REJECT" ]

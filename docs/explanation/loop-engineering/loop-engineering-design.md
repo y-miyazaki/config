@@ -12,7 +12,7 @@ For concrete specifications (Actions/Workflows list, interfaces), see [Specifica
 | `changelog`            | `changelog`            | Dogfood L2; weekly schedule        | L2 (Assisted) |
 | `refactor`             | `refactor`             | Dogfood L2; weekly schedule        | L2 (Assisted) |
 | `tech-debt`            | `tech-debt`            | Dogfood L2; weekly report PR       | L2 (Assisted) |
-| `github-issue-triage`  | `github-issue-triage`  | Dogfood L1 / in progress           | L1 (Observe)  |
+| `github-issue-triage`  | `github-issue-triage`  | Dogfood L1 / in progress           | L1 (Report)   |
 | `github-issue-autofix` | `github-issue-autofix` | Dogfood L2 / in progress           | L2 (Assisted) |
 | `github-pr-revise`     | `github-pr-revise`     | Dogfood L2 / in progress           | L2 (Assisted) |
 | `loop-stale-pr`        | —                      | Not started                        | -             |
@@ -69,16 +69,16 @@ Distributable entry skills stay **repository-neutral**. Named domain skills (e.g
 | --------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | Detect                                  | Mechanical facts                                    | `failures[]`, optional `stack_hint` from `workflow_name`                                 |
 | Entry skill                             | Generic orchestration                               | Classify, read caller `## Instructions` for dispatch, fix one regression, report outcome |
-| Caller `agent_implementer_instructions` | **Stack routing (A')** — named skills for this repo | `on-loop-ci-sweeper.yaml`: workflow → skill map                                          |
-| Caller `agent_verifier_instructions`    | Failure kind defer (B) appendix                     | REJECT coverage/deps fixes until domain skill exists                                     |
+| Caller `agent_maker_instructions` | **Stack routing (A')** — named skills for this repo | `on-loop-ci-sweeper.yaml`: workflow → skill map                                          |
+| Caller `agent_checker_instructions`    | Failure kind defer (B) appendix                     | REJECT coverage/deps fixes until domain skill exists                                     |
 
 Platform prompt shape (`loop-detect` → `build_prompt_text`):
 
 ```text
-Run the {agent_implementer_skill_name} skill.
+Run the {agent_maker_skill_name} skill.
 ## Change Detection Result
 {detect JSON}
-## Instructions          ← caller agent_implementer_instructions (routing + repo overlay)
+## Instructions          ← caller agent_maker_instructions (routing + repo overlay)
 ## Constraints           ← level, allowlist
 ```
 
@@ -91,9 +91,9 @@ For failure kinds outside minimal CI repair (coverage threshold, dependency brea
 | Layer                                | Responsibility                                                                           |
 | ------------------------------------ | ---------------------------------------------------------------------------------------- |
 | Entry skill                          | Generic `DO NOT USE FOR`, checklist — classify Watch, no edit (no named consumer skills) |
-| Caller `agent_verifier_instructions` | Appendix — REJECT diffs that address deferred kinds; may name expected domain skills     |
+| Caller `agent_checker_instructions` | Appendix — REJECT diffs that address deferred kinds; may name expected domain skills     |
 
-CI failure kinds outside minimal repair (coverage threshold, dependency breakage) stay in **`ci-sweeper`** — defer via [Failure kind defer (B)](#failure-kind-defer-b), optional domain skills in caller `agent_implementer_instructions` / verifier appendix. No separate `loop-test-coverage` package.
+CI failure kinds outside minimal repair (coverage threshold, dependency breakage) stay in **`ci-sweeper`** — defer via [Failure kind defer (B)](#failure-kind-defer-b), optional domain skills in caller `agent_maker_instructions` / checker appendix. No separate `loop-test-coverage` package.
 
 ### Tier 2 (Medium Priority — new observation triggers)
 
@@ -117,7 +117,7 @@ Priority assessment when adding new loops:
 
 1. **ROI**: Manual handling frequency × time per occurrence > loop construction cost
 2. **Safety**: Is the file scope restrictable via allowlist?
-3. **Verifiability**: Are there clear criteria that a verifier can evaluate?
+3. **Verifiability**: Are there clear criteria that a checker can evaluate?
 4. **Graduated Promotion**: Promote to L2 only after 2+ weeks of stable operation at L1
 5. **Trigger separation**: New loop packages need a distinct observation trigger (git diff, git log, GitHub API entity, CI failure sensor, …). Extending an existing trigger (e.g. coverage failure under CI) uses the same loop package + caller config — not a new `loop-*` name
 
@@ -291,17 +291,21 @@ graph LR
 
 ## STATE Files
 
-State and observability files under `.loop/` (multi-loop coordination principle). Per-loop state is JSON; the shared run log is JSONL in a markdown file.
+State and observability files under `.loop/` (multi-loop coordination principle). Per-loop state is `.loop/state-<loop_name>.json`. Domain sidecars (for example `state-ci-sweeper-run-ledger.json`) are extra files, not aliases. The shared run log is JSONL in a markdown file.
 
 ```text
 .loop/
-  state-docs-updater.json    ← owned by docs-updater
-  state-ci-sweeper.json     ← owned by ci-sweeper
-  state-changelog.json      ← owned by changelog
-  state-refactor.json       ← owned by refactor
-  state-tech-debt.json      ← owned by tech-debt
-  loop-budget.json          ← per-loop daily run/token caps (read by loop-detect)
-  loop-run-log.md           ← shared JSONL run history (append via loop-run-log; 30-day prune)
+  state-docs-updater.json           ← owned by docs-updater
+  state-ci-sweeper.json             ← owned by ci-sweeper
+  state-ci-sweeper-run-ledger.json  ← ci-sweeper workflow_run_id ledger (sidecar)
+  state-changelog.json              ← owned by changelog
+  state-refactor.json               ← owned by refactor
+  state-tech-debt.json              ← owned by tech-debt
+  state-github-issue-triage.json    ← owned by github-issue-triage
+  state-github-issue-autofix.json   ← owned by github-issue-autofix
+  state-github-pr-revise.json       ← owned by github-pr-revise
+  loop-budget.json                  ← per-loop daily run/token caps (read by loop-detect)
+  loop-run-log.md                   ← shared JSONL run history (append via loop-run-log; 30-day prune)
   .gitkeep
 ```
 
@@ -316,10 +320,10 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 | Requirement              | Approach                                                                                                                                | Status         |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
 | Daily budget enforcement | `.loop/loop-budget.json` + `loop-detect` guards; usage from `loop-execute` → `loop-run-log`                                             | ✅ Implemented |
-| loop-verifier skill      | Caller `agent_verifier_skill_name` (default `loop-verifier`); execute slash-loads skill; domain rubric in `agent_verifier_instructions` | ✅ Implemented |
+| loop-verifier skill      | Caller `agent_checker_skill_name` (default `loop-verifier`); execute slash-loads skill; domain rubric in `agent_checker_instructions` | ✅ Implemented |
 | Maker-Checker separation | Implemented in `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3)                                                           | ✅ Implemented |
 | Worktree isolation       | `loop-worktree-setup` + push/cleanup inside `loop-execute` via `ci-loop-agent` L2/L3                                                    | ✅ Implemented |
-| Denylist / Allowlist     | Defined in SKILL.md, checked by verifier                                                                                                | ✅ Implemented |
+| Denylist / Allowlist     | Defined in SKILL.md, checked by checker                                                                                                | ✅ Implemented |
 
 ## Design Principles
 
@@ -329,9 +333,9 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 | ----------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Reusable Workflow | `.github/workflows/ci-loop-*.yaml`           | Generic logic only. Domain-specific criteria are passed from the caller via inputs                                                                |
 | Composite Action  | `.github/actions/loop-*`                     | Aggregation of generic steps. Must not depend on specific scripts, repository-specific paths, or domain vocabulary                                |
-| Caller Workflow   | `.github/workflows/on-loop-*.yaml`           | Domain-specific logic: detection script path, verifier criteria, allowlist, `agent_implementer_instructions`, PR metadata                         |
+| Caller Workflow   | `.github/workflows/on-loop-*.yaml`           | Domain-specific logic: detection script path, checker criteria, allowlist, `agent_maker_instructions`, PR metadata                         |
 | APM Package       | `.apm/packages/<domain>/<name>/`             | Distributes Agent Skills only. Does not distribute Workflows or Actions                                                                           |
-| Skill             | `.apm/packages/<domain>/<name>/.apm/skills/` | Generic orchestration + boundaries. Named consumer domain skills live in caller `agent_implementer_instructions`, not distributable `references/` |
+| Skill             | `.apm/packages/<domain>/<name>/.apm/skills/` | Generic orchestration + boundaries. Named consumer domain skills live in caller `agent_maker_instructions`, not distributable `references/` |
 
 **Decision criterion**: If the answer to "Can another repository use this via remote reference?" is YES, it belongs in an action/workflow. If NO (depends on specific paths or scripts), write it inline in the caller.
 
@@ -342,11 +346,11 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 | Layer               | Domain-specific (caller / skill)                                               | Generic (action / reusable workflow)                                                                  |
 | ------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
 | Detection criteria  | `detect_script` path, script output (`result` facts)                           | `loop-detect` enumeration, checkout, guards, `target_matrix`                                          |
-| Implementer prompt  | `agent_implementer_instructions`, `agent_verifier_instructions`, PR title/body | `loop-detect` prompt assembly via `lib/loop/build_constraints.sh` (may_edit, allowlist, write_target) |
-| Verifier context    | Detect fact summary or CI log excerpt per target                               | Always wire `verifier_context` to `loop-execute` (may be empty)                                       |
+| Maker prompt  | `agent_maker_instructions`, `agent_checker_instructions`, PR title/body | `loop-detect` prompt assembly via `lib/loop/build_constraints.sh` (may_edit, allowlist, write_target) |
+| Checker context    | Detect fact summary or CI log excerpt per target                               | Always wire `verifier_context` to `loop-execute` (may be empty)                                       |
 | Path scope          | `LOOP_ALLOWLIST`, Skill allowed paths                                          | denylist defaults in `loop-execute`, allowlist enforcement                                            |
-| Verifier checker    | `agent_verifier_skill_name` (e.g. `loop-verifier` from `loop` package)         | Slash-load `/skill <SKILL.md>`; path guards; INITIAL/REGRESSION orchestration in `loop-execute`       |
-| Verifier domain bar | `agent_verifier_instructions` in caller `env`                                  | Appended to verifier prompt `## Task`; embedded fallbacks only when skill files are missing           |
+| Checker checker    | `agent_checker_skill_name` (e.g. `loop-verifier` from `loop` package)         | Slash-load `/skill <SKILL.md>`; path guards; INITIAL/REGRESSION orchestration in `loop-execute`       |
+| Checker domain bar | `agent_checker_instructions` in caller `env`                                  | Appended to checker prompt `## Task`; embedded fallbacks only when skill files are missing           |
 | Domain persistence  | `domain_persistence_script` path (optional)                                    | `loop-finalize` invokes script with standard env; no domain logic in action                           |
 
 **Caller input pattern** for a new `on-loop-*.yaml` (after [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md)):
@@ -356,18 +360,18 @@ jobs:
   loop:
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
-      agent_verifier_instructions: |
+      agent_checker_instructions: |
         ## Criteria for APPROVE
         ...
       allowlist: "src/**,tests/**"
       detect_script: .agents/skills/ci-sweeper/scripts/detect_ci_failures.sh
       level: L2
       loop_name: ci-sweeper
-      agent_implementer_instructions: |
+      agent_maker_instructions: |
         Fix the failing CI checks identified in the detection result.
         Do not change unrelated files.
-      agent_implementer_skill_name: ci-sweeper
-      agent_verifier_skill_name: loop-verifier
+      agent_maker_skill_name: ci-sweeper
+      agent_checker_skill_name: loop-verifier
     explicit secrets: map
 ```
 
@@ -379,19 +383,19 @@ Copy `on-loop-changelog.yaml` as a thin caller template (`with:` on `ci-loop-cal
 - Hardcoded file paths or glob patterns for a single loop
 - Domain-specific default commit messages or PR templates inside actions
 
-`loop-detect` is the boundary for prompt assembly: caller supplies `agent_implementer_instructions` (domain task); detect injects generic `## Constraints` via `lib/loop/build_constraints.sh` (may_edit, allowlist, write_target).
+`loop-detect` is the boundary for prompt assembly: caller supplies `agent_maker_instructions` (domain task); detect injects generic `## Constraints` via `lib/loop/build_constraints.sh` (may_edit, allowlist, write_target).
 
 ### Maker-Checker Separation (Most Important Principle)
 
-The implementation agent (Maker/Implementer) and the verification agent (Checker/Verifier) must always be separate agent sessions. If the same agent verifies its own output, confirmation bias occurs and errors are overlooked.
+The implementation agent (Maker/Maker) and the verification agent (Checker/Checker) must always be separate agent sessions. If the same agent verifies its own output, confirmation bias occurs and errors are overlooked.
 
-Verifier design principles:
+Checker design principles:
 
-- Generic checker behavior comes from the caller-supplied checker skill (`agent_verifier_skill_name`; default `loop-verifier`). Domain APPROVE/REJECT rules stay in caller `agent_verifier_instructions` — not in the checker skill.
+- Generic checker behavior comes from the caller-supplied checker skill (`agent_checker_skill_name`; default `loop-verifier`). Domain APPROVE/REJECT rules stay in caller `agent_checker_instructions` — not in the checker skill.
 - Default stance is "reject" (look for reasons to reject, not to approve)
 - Prompt must include CI test output and lint results as mandatory inputs
 - Use a model that is more powerful than, or from a different family than, the implementation agent
-- `/goal` stop condition evaluation is also performed with a fresh model (not the same model as the implementer)
+- `/goal` stop condition evaluation is also performed with a fresh model (not the same model as the maker)
 
 ### Design Stop Conditions First
 
@@ -419,7 +423,7 @@ L1 → L2 migration checklist:
 
 - State file schema is documented
 - SKILL.md includes build / test commands
-- Implementer and verifier are separate sessions
+- Maker and checker are separate sessions
 - Denylist explicitly includes auth, payments, secrets, and infrastructure
 - Auto-merge eligible paths are restricted via allowlist
 - Daily token cap and maximum sub-agent count are configured
@@ -489,12 +493,12 @@ For L2 and above where auto-fixes are performed, branch isolation is mandatory. 
 | L1    | `loop-agent-once`                                                  | Read-only on the checked-out workspace (no worktree branch) |
 | L2/L3 | `loop-worktree-setup` → `loop-execute` (push and cleanup internal) | Isolated worktree path and agent branch                     |
 
-**Unified contract**: `ci-loop-agent.yaml` L2/L3 outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections, usage_json, notify_context_json }`. Verification runs inside `loop-execute` (separate verifier session); finalize and `loop-notify-pr` consume those outputs for all engines.
+**Unified contract**: `ci-loop-agent.yaml` L2/L3 outputs `{ branch, has_changes, verdict, reason, attempts, open_rejections, usage_json, notify_context_json }`. Verification runs inside `loop-execute` (separate checker session); finalize and `loop-notify-pr` consume those outputs for all engines.
 
 **Worktree principles:**
 
 - 1 item = 1 worktree
-- If verifier REJECTs, delete branch to discard all changes
+- If checker REJECTs, delete branch to discard all changes
 - Delete worktree after task completion
 
 **Procedure for adding a new engine:**
@@ -542,9 +546,9 @@ Cross-loop serialization uses shared workflow concurrency (`loop-state-<branch_s
 
 | Symptom                               | Cause                                                     | Countermeasure                                                   |
 | ------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------- |
-| Same PR auto-fixed 5+ times           | Weak verifier (Infinite Fix Loop)                         | Retry limit of 3. Replace verifier with a more powerful model    |
-| CI fails but verifier approves        | Test execution skipped (Verifier Theater)                 | "Look for reasons to reject" framing. Make test output mandatory |
-| Closed items accumulate in STATE.md   | No pruning (State Rot)                                    | Delete closed items on each execution. Separate files per loop   |
+| Same PR auto-fixed 5+ times           | Weak checker (Infinite Fix Loop)                         | Retry limit of 3. Replace checker with a more powerful model    |
+| CI fails but checker approves        | Test execution skipped (Checker Theater)                 | "Look for reasons to reject" framing. Make test output mandatory |
+| Closed items accumulate in `.loop/state-*.json` | No pruning (State Rot)                                    | 30-day prune of terminal `pull_request:*` keys; one file per `loop_name` |
 | Team cannot understand change intent  | Auto-merge expansion (Comprehension Debt Spiral)          | Mandatory weekly digest. Route medium-risk to human gate         |
 | Quality degrades due to context bloat | Unlimited conversation history accumulation (Context Rot) | Reset at phase boundaries. Trim every 10-15 calls                |
 
@@ -552,8 +556,8 @@ Cross-loop serialization uses shared workflow concurrency (`loop-state-<branch_s
 
 Absolute rules that must never be violated regardless of loop type, level, or engine. Use these as the primary checklist during design review.
 
-1. **Agent never writes to integration branches directly during Execute** — Implementer edits run in an isolated worktree. At **L2**, integration-branch changes reach `to.branch` only via a fix PR. At **L3** with `delivery: open_pr` and advanced `git_landing_integration=push` on `loop-detect`, **Finalize** may push verifier-approved commits to `to.branch` (explicit opt-in; see [Finalize strategy matrix](#finalize-strategy-matrix))
-2. **Verifier never modifies the repository** — Verify phase is strictly read-only
+1. **Agent never writes to integration branches directly during Execute** — Maker edits run in an isolated worktree. At **L2**, integration-branch changes reach `to.branch` only via a fix PR. At **L3** with `delivery: open_pr` and advanced `git_landing_integration=push` on `loop-detect`, **Finalize** may push checker-approved commits to `to.branch` (explicit opt-in; see [Finalize strategy matrix](#finalize-strategy-matrix))
+2. **Checker never modifies the repository** — Verify phase is strictly read-only
 3. **Detect never writes state** — State changes only in Finalize
 4. **Finalize never changes source under repair** — It persists outcomes (PR, push, state, `.loop/*` metadata). Application/documentation files being fixed are not edited in Finalize
 5. **State advances only through Finalize** — No other phase may commit to the state file
@@ -570,7 +574,7 @@ Key indicators for evaluating loop health. Measurement infrastructure is not req
 | Approval Rate             | APPROVE / (APPROVE + REJECT) per period                                            | > 70%                                                 |
 | Skip Rate                 | skip=true / total executions                                                       | Context-dependent (high is fine for stable repos)     |
 | Average Runtime           | Wall-clock time from trigger to finalize                                           | < 15 min                                              |
-| Token Usage               | Total tokens consumed per execution (agent + verifier), recorded in `loop-run-log` | Daily hard cap via `loop-detect` + `loop-budget.json` |
+| Token Usage               | Total tokens consumed per execution (agent + checker), recorded in `loop-run-log` | Daily hard cap via `loop-detect` + `loop-budget.json` |
 | PR Merge Rate             | Merged PRs / Created PRs                                                           | > 80%                                                 |
 | Human Override Rate       | PRs closed or edited by humans / Created PRs                                       | < 30%                                                 |
 | Consecutive Failure Count | Sequential rejected or errored runs                                                | Alert at 3+                                           |
@@ -625,9 +629,9 @@ stateDiagram-v2
 | Agent produces no changes (actionable)     | Finalize records `rejected` when `no_changes_verdict=REJECT`                                 | No change (`metadata`)             | `outcome: rejected`   |
 | Skill Watch (no code edit)                 | Finalize records `watch`; ci-sweeper ledger may advance; no `consecutive_failures` increment | Loop-specific (ledger vs metadata) | `outcome: watch`      |
 | Agent produces no changes (non-actionable) | Finalize records `no-op`                                                                     | No change (`metadata`)             | `outcome: no-op`      |
-| Verifier REJECT                            | Finalize deletes branch, records rejection. Same commits re-eligible until circuit breaker   | No change (`metadata`)             | `outcome: rejected`   |
-| Verifier APPROVE → L2 `open_pr`            | Fix PR created; `pending` written; `last_sha` advances on merge via `on-loop-state-promote`  | Unchanged until merge              | `outcome: pr-created` |
-| Verifier APPROVE → L3 `push` / `push_head` | Push in same finalize run                                                                    | Advances in same run               | `outcome: pr-created` |
+| Checker REJECT                            | Finalize deletes branch, records rejection. Same commits re-eligible until circuit breaker   | No change (`metadata`)             | `outcome: rejected`   |
+| Checker APPROVE → L2 `open_pr`            | Fix PR created; `pending` written; `last_sha` advances on merge via `on-loop-state-promote`  | Unchanged until merge              | `outcome: pr-created` |
+| Checker APPROVE → L3 `push` / `push_head` | Push in same finalize run                                                                    | Advances in same run               | `outcome: pr-created` |
 | Agent job cancelled (user/concurrency)     | Finalize does not run. No state update. Next cron retries from same SHA                      | No change                          | No change             |
 
 **Detect-script boundary (loop-detect ↔ skill):** loop-detect couples only on the **success-path interface** — exit 0, parseable JSON, `skip`, and fields used for matrix/prompt assembly. On **non-zero exit**, it echoes detect stdout verbatim and fails; it does **not** interpret skill error payloads (`status`, `message`, per-skill schema). Error shape is a skill/detect-script concern; the loop engine only observes the exit code.
@@ -646,7 +650,7 @@ stateDiagram-v2
 
 **State / ledger retention (30 days):** On each `loop-finalize` state write (`lib/write_state.sh`), prune terminal `pull_request:*` keys older than 30 days (`rejected` / `pr-closed`, no `pending`). Watch keys (`integration:*`, …) are never deleted; aged reject metadata is cleared and `consecutive_failures` reset (cooldown). Keep `last_sha` / `pending`. CI sweeper run ledger (`update_run_ledger.sh`) drops `runs` entries with `updated_at` older than 30 days. Same window as `loop-run-log`. See [Loop State Targets Retention Design](../../superpowers/specs/2026-07-17-loop-state-targets-retention-design.md).
 
-**Reject reason recording**: On REJECT, Finalize writes the verifier's `reason` field to state. This enables future feedback loops where reject reasons are analyzed to improve prompts or detect systematic issues.
+**Reject reason recording**: On REJECT, Finalize writes the checker's `reason` field to state. This enables future feedback loops where reject reasons are analyzed to improve prompts or detect systematic issues.
 
 ```json
 {
@@ -683,7 +687,7 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 | **Input**           | Previous state (last_sha), repository contents                                                                                           |
 | **Output**          | `should_run`, `skip_reason`, `target_matrix` (candidates with `target_json`, `prompt`, `verifier_context`, `result`), config passthrough |
 | **May modify**      | Nothing. Read-only phase                                                                                                                 |
-| **Caller-specific** | Detection script path, `agent_implementer_instructions`, verifier criteria, allowlist, PR metadata                                       |
+| **Caller-specific** | Detection script path, `agent_maker_instructions`, checker criteria, allowlist, PR metadata                                       |
 | **Generic**         | `loop-detect` (state read, guards including budget, detect invocation, prompt assembly via `lib/loop/build_constraints.sh`)              |
 
 #### Agent (Execute)
@@ -703,10 +707,10 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 | Aspect             | Definition                                                                                                                                                                                                                                                                                    |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Responsibility** | Independently evaluate whether Agent output meets quality criteria. Default stance is reject                                                                                                                                                                                                  |
-| **Input**          | Agent branch, base branch (from `target_json`), `agent_verifier_skill_name`, `agent_verifier_instructions`, denylist, allowlist, `verifier_context` (always wired; may be empty)                                                                                                              |
+| **Input**          | Agent branch, base branch (from `target_json`), `agent_checker_skill_name`, `agent_checker_instructions`, denylist, allowlist, `verifier_context` (always wired; may be empty)                                                                                                              |
 | **Output**         | `verdict` (APPROVE / REJECT), `reason` (string); on REJECT, structured `files` / `issue` / `fix` when possible (surfaced as `open_rejections`)                                                                                                                                                |
 | **May modify**     | Nothing. Read-only phase                                                                                                                                                                                                                                                                      |
-| **Must be**        | A separate agent session from the implementer, run inside `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3) — not a separate workflow such as a removed `ci-loop-verifier.yaml`                                                                                                  |
+| **Must be**        | A separate agent session from the maker, run inside `loop-execute` (bounded Agent→Verify in `ci-loop-agent` L2/L3) — not a separate workflow such as a removed `ci-loop-verifier.yaml`                                                                                                  |
 | **Evaluates**      | Semantic quality (factual accuracy, relevance, no hallucination). Does **not** re-run CI or linters. **May** evaluate whether the diff plausibly addresses caller-provided `verifier_context` (e.g. CI log excerpt) — required for [CI Sweeper](workflows/loop-ci-sweeper-workflow-design.md) |
 
 #### Finalize
@@ -717,7 +721,7 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 | **Input**          | `target_json`, execute outputs (`branch`, `has_changes`, `verdict`, …), `current_sha`                                                                                                                                                                                                                                      |
 | **Output**         | PR URL and/or push result, updated state, run-log entry                                                                                                                                                                                                                                                                    |
 | **May modify**     | `.loop/*` persistence on `LOOP_STATE_PUSH_BRANCH`; PR/branch operations per strategy — not source files under repair                                                                                                                                                                                                       |
-| **Must not**       | Perform ad-hoc notifications outside `loop-notify-pr`; trigger downstream workflows; apply implementer edits to application/doc source                                                                                                                                                                                     |
+| **Must not**       | Perform ad-hoc notifications outside `loop-notify-pr`; trigger downstream workflows; apply maker edits to application/doc source                                                                                                                                                                                     |
 
 When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as a **sibling step** immediately after `loop-finalize` (not nested inside the finalize action).
 
@@ -728,14 +732,14 @@ When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as
 | `target.finalize` | L2                           | L3                                                                                |
 | ----------------- | ---------------------------- | --------------------------------------------------------------------------------- |
 | `open_pr`         | Create fix PR to `to.branch` | Create PR + optional `auto_merge` (allowlist + branch protection)                 |
-| `push`            | N/A (use `open_pr` at L2)    | Push verifier-approved commits to `to.branch` (integration only; explicit opt-in) |
+| `push`            | N/A (use `open_pr` at L2)    | Push checker-approved commits to `to.branch` (integration only; explicit opt-in) |
 | `push_head`       | Push to PR head `to.branch`  | Same                                                                              |
 
 **Do not** map `L3` → auto-merge alone. `push` and `push_head` never enable auto-merge.
 
 **Merge-gated cursor (all L2 `open_pr` loops):** Fix PRs carry domain files only. `loop-finalize` writes `targets[key].pending` to `branch_state` without advancing `last_sha`. `on-loop-state-promote.yaml` (`pull_request_target` `closed`, label `loop-automation`) promotes `pending.sha` → `last_sha` on merge or clears `pending` when closed without merge. Writes land only on `branch_state` / repository default (never on fix-PR heads). **Required for every loop that opens review PRs** — dogfood target: unified across `changelog`, `docs-updater`, and `ci-sweeper`. See [State delivery philosophy](multi-branch-loops-design.md#state-delivery-philosophy).
 
-**GitHub API deliverables (github-issue-triage, stale-pr):** Label, comment, and close **actions run in Execute** via the entry skill (e.g. `gh` / GitHub API) — not in Finalize. Finalize persists loop state and run-log only. Platform work for Tier 2 loops is **caller permissions** (`issues: write`, `pull-requests: write` as needed) plus verifier rubric for API outcome fit.
+**GitHub API deliverables (github-issue-triage, stale-pr):** Label, comment, and close **actions run in Execute** via the entry skill (e.g. `gh` / GitHub API) — not in Finalize. Finalize persists loop state and run-log only. Platform work for Tier 2 loops is **caller permissions** (`issues: write`, `pull-requests: write` as needed) plus checker rubric for API outcome fit.
 
 #### State cursor (general rule)
 
@@ -743,8 +747,8 @@ When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as
 | ------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
 | L2 `open_pr` (worktree + review PR)  | On fix PR **merge** via `on-loop-state-promote` (`pending` → `last_sha`)                                       |
 | L3 `push` / `push_head`              | Same finalize run as successful push                                                                           |
-| Verifier REJECT / no-op / no-changes | **Does not advance** `last_sha` (`metadata` mode); same range re-eligible until circuit breaker or new commits |
-| API-only / `has_changes=false`       | Same finalize run on verifier **APPROVE** (entity cursor e.g. `last_issue_number` in `targets[key]`)           |
+| Checker REJECT / no-op / no-changes | **Does not advance** `last_sha` (`metadata` mode); same range re-eligible until circuit breaker or new commits |
+| API-only / `has_changes=false`       | Same finalize run on checker **APPROVE** (entity cursor e.g. `last_issue_number` in `targets[key]`)           |
 | L1 report-only                       | Run-log always; cursor advance optional per workflow design — default **APPROVE → finalize updates cursor**    |
 
 No separate finalize strategy enum for comments/labels.
@@ -757,9 +761,9 @@ See [Loop Caller Workflows — Finalize (inside ci-loop-agent)](loop-caller-work
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Responsibility**     | Define behavioral constraints for the Agent: what it can do, what it must not do, and how it should approach the task                                                                                                                                                                                                                  |
 | **Composition**        | Prompt template + allowed paths + behavioral rules + tool constraints                                                                                                                                                                                                                                                                  |
-| **Guarantees**         | Agent operating under a Skill will not modify files outside the allowed paths (enforced by Verifier + denylist). Agent will follow the approach defined in the Skill                                                                                                                                                                   |
-| **Does not guarantee** | Correctness of output (that is the Verifier's job). CI passing (that is CI's job)                                                                                                                                                                                                                                                      |
-| **Repository-neutral** | Distributable entry skills describe generic orchestration only. **Do not** hardcode consumer domain skill names or paths in skill `references/`. Stack routing (A') and named defer skills belong in caller `agent_implementer_instructions` / `agent_verifier_instructions` — see [CONTEXT — Stack Routing (A')](CONTEXT.md#language) |
+| **Guarantees**         | Agent operating under a Skill will not modify files outside the allowed paths (enforced by Checker + denylist). Agent will follow the approach defined in the Skill                                                                                                                                                                   |
+| **Does not guarantee** | Correctness of output (that is the Checker's job). CI passing (that is CI's job)                                                                                                                                                                                                                                                      |
+| **Repository-neutral** | Distributable entry skills describe generic orchestration only. **Do not** hardcode consumer domain skill names or paths in skill `references/`. Stack routing (A') and named defer skills belong in caller `agent_maker_instructions` / `agent_checker_instructions` — see [CONTEXT — Stack Routing (A')](CONTEXT.md#language) |
 
 #### Phase Boundary Rules
 

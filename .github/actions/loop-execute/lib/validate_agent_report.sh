@@ -1,15 +1,15 @@
 #!/bin/bash
 #######################################
-# Description: Mechanical validation of loop implementer agent-output.txt
+# Description: Mechanical validation of loop maker agent-output.txt
 #
 # Usage: source lib/validate_agent_report.sh
-#        validate_agent_report <output_file> <changed_files_newline> <agent_implementer_skill_name>
+#        validate_agent_report <output_file> <changed_files_newline> <agent_maker_skill_name>
 #
 # Output:
 # - Prints violation lines to stdout (empty when valid)
 #
 # Design Rules:
-# - Deterministic checks only; runs before the LLM verifier
+# - Deterministic checks only; runs before the LLM checker
 # - Applies to loop fix skills listed in agent_report_skill_requires_format_check
 #######################################
 
@@ -260,8 +260,8 @@ function format_reconcile_changes_row {
 # reconcile_agent_report_with_branch_diff: Append missing branch-diff paths to Changes table
 #
 # Description:
-#   On multi-attempt loops the implementer may document only the current attempt's
-#   edits while the verifier checks the cumulative branch diff. Add placeholder rows
+#   On multi-attempt loops the maker may document only the current attempt's
+#   edits while the checker checks the cumulative branch diff. Add placeholder rows
 #   for omitted paths so mechanical validation reflects git truth.
 #
 # Globals:
@@ -282,11 +282,11 @@ function format_reconcile_changes_row {
 function reconcile_agent_report_with_branch_diff {
     local output_file="$1"
     local changed_files="$2"
-    local agent_implementer_skill_name="$3"
+    local agent_maker_skill_name="$3"
     local primary path norm changed_path found
     local -a change_paths=() missing_paths=()
 
-    if ! agent_report_skill_requires_format_check "${agent_implementer_skill_name}"; then
+    if ! agent_report_skill_requires_format_check "${agent_maker_skill_name}"; then
         return 0
     fi
     if [[ ! -f ${output_file} || -z ${changed_files} ]]; then
@@ -295,11 +295,11 @@ function reconcile_agent_report_with_branch_diff {
     if agent_report_is_survey_output "${output_file}" "${changed_files}"; then
         return 0
     fi
-    if ! agent_report_uses_path_changes_table "${agent_implementer_skill_name}"; then
+    if ! agent_report_uses_path_changes_table "${agent_maker_skill_name}"; then
         return 0
     fi
 
-    primary="$(agent_report_primary_subsection "${agent_implementer_skill_name}")"
+    primary="$(agent_report_primary_subsection "${agent_maker_skill_name}")"
     mapfile -t change_paths < <(extract_subsection_table_col1 "${output_file}" "${primary}")
 
     while IFS= read -r changed_path; do
@@ -413,7 +413,7 @@ PY
 }
 
 #######################################
-# validate_agent_report: Validate implementer output format and diff consistency
+# validate_agent_report: Validate maker output format and diff consistency
 #
 # Globals:
 #   None
@@ -433,13 +433,13 @@ PY
 function validate_agent_report {
     local output_file="$1"
     local changed_files="$2"
-    local agent_implementer_skill_name="$3"
+    local agent_maker_skill_name="$3"
     local primary deferred survey=false
     local -a violations=()
     local path norm changed_path
     local -a change_paths=() deferred_paths=()
 
-    if ! agent_report_skill_requires_format_check "${agent_implementer_skill_name}"; then
+    if ! agent_report_skill_requires_format_check "${agent_maker_skill_name}"; then
         return 0
     fi
     if [[ ! -f ${output_file} ]]; then
@@ -513,8 +513,8 @@ function validate_agent_report {
         return 0
     fi
 
-    primary="$(agent_report_primary_subsection "${agent_implementer_skill_name}")"
-    deferred="$(agent_report_deferred_subsection "${agent_implementer_skill_name}")"
+    primary="$(agent_report_primary_subsection "${agent_maker_skill_name}")"
+    deferred="$(agent_report_deferred_subsection "${agent_maker_skill_name}")"
 
     if [[ -n ${changed_files} ]] && ! grep -qE "^### ${primary}[[:space:]]*$" "${output_file}"; then
         violations+=("Missing ### ${primary} under ## Summary while branch has file changes")
@@ -536,7 +536,7 @@ function validate_agent_report {
         done
     done
 
-    if agent_report_uses_path_changes_table "${agent_implementer_skill_name}"; then
+    if agent_report_uses_path_changes_table "${agent_maker_skill_name}"; then
         while IFS= read -r changed_path; do
             [[ -z ${changed_path} ]] && continue
             changed_path="${changed_path#./}"

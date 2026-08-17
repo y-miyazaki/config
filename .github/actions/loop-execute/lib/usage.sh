@@ -9,7 +9,7 @@
 #
 # Design Rules:
 # - Cursor stream-json: sum terminal result events; model from system init
-# - Measured usage is aggregated across implementer and verifier sessions
+# - Measured usage is aggregated across maker and checker sessions
 # - Other engines remain estimate-only until structured usage capture is added
 #######################################
 
@@ -312,7 +312,7 @@ function cursor_stream_tool_summary_line {
 #
 # Description:
 #   Emits model, tool call summaries, token usage, and the extracted assistant
-#   text so tee'd artifacts remain parseable by the verifier.
+#   text so tee'd artifacts remain parseable by the checker.
 #
 # Globals:
 #   None

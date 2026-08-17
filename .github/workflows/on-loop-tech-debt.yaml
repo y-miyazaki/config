@@ -30,16 +30,7 @@ jobs:
   loop:
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
-      agent_implementer_instructions: |
-        Classify mechanical debt signals per the skill taxonomy.
-        Write the dated report to `report_file` at L2 within the allowlist.
-        Compare against `previous_report` for resolved, recurring, and regression items.
-        Do not create GitHub Issues.
-      agent_implementer_max_turns: 5
-      agent_implementer_model: cursor-grok-4.5-low
-      agent_implementer_skill_name: tech-debt
-      agent_loop_max_attempts: 3
-      agent_verifier_instructions: |
+      agent_checker_instructions: |
         ## Criteria for APPROVE
 
         ALL of the following must be true:
@@ -58,9 +49,18 @@ jobs:
         - Changes outside the allowlist or modifications to denylist paths
         - Semantic claims unsupported by cited evidence
         - Structural or security debt edited instead of reported
-      agent_verifier_max_turns: 3
-      agent_verifier_model: composer-2.5
-      agent_verifier_skill_name: loop-verifier
+      agent_checker_max_turns: 3
+      agent_checker_model: composer-2.5
+      agent_checker_skill_name: loop-verifier
+      agent_loop_max_attempts: 3
+      agent_maker_instructions: |
+        Classify mechanical debt signals per the skill taxonomy.
+        Write the dated report to `report_file` at L2 within the allowlist.
+        Compare against `previous_report` for resolved, recurring, and regression items.
+        Do not create GitHub Issues.
+      agent_maker_max_turns: 5
+      agent_maker_model: cursor-grok-4.5-low
+      agent_maker_skill_name: tech-debt
       allowlist: docs/report/tech-debt/**/*.md,docs/**/*.md,package.json,go.mod
       branch_match: main
       branch_state: main

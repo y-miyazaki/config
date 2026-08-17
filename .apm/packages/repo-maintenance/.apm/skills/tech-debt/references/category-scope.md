@@ -6,7 +6,7 @@
 | ----------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | **Interactive** — no path constraints in prompt | **Unrestricted** within [skill-specific limits](#skill-specific-limits) | **None from skill** — follow repository security instructions        |
 | **Interactive** — user `allowlist` / `denylist` | User allowlist globs only (within skill-specific limits)                | User denylist globs                                                  |
-| **Automation** — `## Constraints`               | `Allowed paths: …` when the caller supplies an allowlist                | Caller denylist — enforced by the automation verifier (may be empty) |
+| **Automation** — `## Constraints`               | `Allowed paths: …` when the caller supplies an allowlist                | Caller denylist — enforced by the automation checker (may be empty) |
 
 Skills do **not** ship a repository-wide default denylist.
 

@@ -70,4 +70,4 @@ Per-skill examples live in each skill's `common-output-format.md` and `assets/pr
 
 ## Session metrics
 
-Automation runs append `## Session Metrics` per each skill's `category-automation-envelope.md`. Session metrics are verifier/log output — not copied into PR body.
+Automation runs append `## Session Metrics` per each skill's `category-automation-envelope.md`. Session metrics are checker/log output — not copied into PR body.

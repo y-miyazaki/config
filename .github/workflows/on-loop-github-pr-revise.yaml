@@ -71,23 +71,14 @@ jobs:
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
       ack_trigger_comment: true
-      agent_implementer_instructions: |
-        Apply the human's feedback to the PR head.
-        When detect result.comments has multiple entries, address the full array in one session (not only result.comment_body).
-        Comment webhooks require the configured @mention; explicit dispatch paths do not.
-        Do not invent mention-less triggers on comment webhooks.
-      agent_implementer_max_turns: 8
-      agent_implementer_model: cursor-grok-4.5-low
-      agent_implementer_skill_name: github-pr-revise
-      agent_loop_max_attempts: 3
-      agent_verifier_instructions: |
+      agent_checker_instructions: |
         ## Criteria for APPROVE
 
         ALL of the following must be true:
         1. Every item in detect result.comments was addressed (or explicitly deferred); cite comment_id(s)
         2. Changes land on the PR head unless stacked open_pr was requested
         3. Bot comments were not acted on
-        4. The implementer did not ignore the comments array in favor of only result.comment_body when comments length > 1
+        4. The maker did not ignore the comments array in favor of only result.comment_body when comments length > 1
 
         ## Criteria for REJECT
 
@@ -95,9 +86,18 @@ jobs:
         - Acting without mention / on bot author
         - Addressing only the webhook trigger while leaving other result.comments items unhandled
         - Unrelated drive-by refactors
-      agent_verifier_max_turns: 3
-      agent_verifier_model: composer-2.5
-      agent_verifier_skill_name: loop-verifier
+      agent_checker_max_turns: 3
+      agent_checker_model: composer-2.5
+      agent_checker_skill_name: loop-verifier
+      agent_loop_max_attempts: 3
+      agent_maker_instructions: |
+        Apply the human's feedback to the PR head.
+        When detect result.comments has multiple entries, address the full array in one session (not only result.comment_body).
+        Comment webhooks require the configured @mention; explicit dispatch paths do not.
+        Do not invent mention-less triggers on comment webhooks.
+      agent_maker_max_turns: 8
+      agent_maker_model: cursor-grok-4.5-low
+      agent_maker_skill_name: github-pr-revise
       allowlist: ""
       branch_match: main
       branch_state: main

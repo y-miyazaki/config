@@ -161,11 +161,11 @@ job_if_block() {
     done
 }
 
-@test "callers use symmetric agent_implementer_skill_name and agent_verifier_skill_name inputs" {
-    grep -q "^      agent_implementer_skill_name:" "${BRANCH_CALLER}"
-    grep -q "^      agent_verifier_skill_name:" "${BRANCH_CALLER}"
-    grep -q "^      agent_implementer_skill_name:" "${ENTITY_CALLER}"
-    grep -q "^      agent_verifier_skill_name:" "${ENTITY_CALLER}"
+@test "callers use symmetric agent_maker_skill_name and agent_checker_skill_name inputs" {
+    grep -q "^      agent_maker_skill_name:" "${BRANCH_CALLER}"
+    grep -q "^      agent_checker_skill_name:" "${BRANCH_CALLER}"
+    grep -q "^      agent_maker_skill_name:" "${ENTITY_CALLER}"
+    grep -q "^      agent_checker_skill_name:" "${ENTITY_CALLER}"
 }
 
 @test "loop workflows do not use deprecated prompt_instructions input" {
@@ -182,21 +182,21 @@ job_if_block() {
     done
 }
 
-@test "callers use symmetric agent_implementer_instructions and agent_verifier_instructions inputs" {
-    grep -q "^      agent_implementer_instructions:" "${BRANCH_CALLER}"
-    grep -q "^      agent_verifier_instructions:" "${BRANCH_CALLER}"
-    grep -q "^      agent_implementer_instructions:" "${ENTITY_CALLER}"
-    grep -q "^      agent_verifier_instructions:" "${ENTITY_CALLER}"
+@test "callers use symmetric agent_maker_instructions and agent_checker_instructions inputs" {
+    grep -q "^      agent_maker_instructions:" "${BRANCH_CALLER}"
+    grep -q "^      agent_checker_instructions:" "${BRANCH_CALLER}"
+    grep -q "^      agent_maker_instructions:" "${ENTITY_CALLER}"
+    grep -q "^      agent_checker_instructions:" "${ENTITY_CALLER}"
     if grep -qE "^      (prompt_instructions|verifier_criteria|implementer_instructions|verifier_instructions):" "${BRANCH_CALLER}"; then
         return 1
     fi
 }
 
 @test "callers use agent_ prefix for agent config inputs" {
-    grep -q "^      agent_implementer_max_turns:" "${BRANCH_CALLER}"
-    grep -q "^      agent_implementer_model:" "${BRANCH_CALLER}"
-    grep -q "^      agent_verifier_max_turns:" "${BRANCH_CALLER}"
-    grep -q "^      agent_verifier_model:" "${BRANCH_CALLER}"
+    grep -q "^      agent_maker_max_turns:" "${BRANCH_CALLER}"
+    grep -q "^      agent_maker_model:" "${BRANCH_CALLER}"
+    grep -q "^      agent_checker_max_turns:" "${BRANCH_CALLER}"
+    grep -q "^      agent_checker_model:" "${BRANCH_CALLER}"
     grep -q "^      agent_loop_max_attempts:" "${BRANCH_CALLER}"
     if grep -qE "^      (implementer_max_turns|implementer_model|verifier_max_turns|verifier_model|loop_max_attempts):" "${BRANCH_CALLER}"; then
         return 1
@@ -230,6 +230,53 @@ job_if_block() {
     ' "${BRANCH_CALLER}")
     mapfile -t sorted < <(printf '%s\n' "${keys[@]}" | LC_ALL=C sort)
     [[ ${keys[*]} == "${sorted[*]}" ]]
+}
+
+@test "on-loop callers have committed .loop/state-<loop_name>.json" {
+    local wf name path
+    for wf in "${ROOT}"/.github/workflows/on-loop-*.yaml; do
+        name="$(awk '/^      loop_name:/{print $2; exit}' "${wf}")"
+        [[ -n ${name} ]] || continue
+        path="${ROOT}/.loop/state-${name}.json"
+        if [[ ! -f ${path} ]]; then
+            echo "missing ${path} for ${wf}" >&2
+            return 1
+        fi
+    done
+}
+
+@test "committed loop state JSON matches loop_name or allowlisted sidecars" {
+    local f base name expected extra
+    extra='state-ci-sweeper-run-ledger.json'
+    for f in "${ROOT}"/.loop/state-*.json; do
+        base="$(basename "${f}")"
+        [[ ${base} == "${extra}" ]] && continue
+        name="${base#state-}"
+        name="${name%.json}"
+        expected="${ROOT}/.github/workflows/on-loop-${name}.yaml"
+        if [[ ! -f ${expected} ]]; then
+            echo "orphan ${f} (no ${expected})" >&2
+            return 1
+        fi
+        if ! awk '/^      loop_name:/{print $2; exit}' "${expected}" | grep -qx "${name}"; then
+            echo "orphan ${f} (loop_name mismatch in ${expected})" >&2
+            return 1
+        fi
+    done
+}
+
+@test ".loop JSON files are state-*, loop-budget, or allowlisted sidecars" {
+    local f base
+    for f in "${ROOT}"/.loop/*.json; do
+        base="$(basename "${f}")"
+        case "${base}" in
+            state-*.json | loop-budget.json) continue ;;
+            *)
+                echo "unexpected ${f}" >&2
+                return 1
+                ;;
+        esac
+    done
 }
 
 @test "loop action env blocks are alphabetically ordered" {

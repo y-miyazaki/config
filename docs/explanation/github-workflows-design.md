@@ -107,7 +107,7 @@ env:
   DEFAULT_BASE_BRANCH: main
   DEFAULT_ENGINE: claude
   DEFAULT_LEVEL: L2
-  AGENT_VERIFIER_MODEL: ""
+  AGENT_CHECKER_MODEL: ""
 ```
 
 ### Passing configuration to reusable workflows

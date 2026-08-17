@@ -131,7 +131,7 @@ function loop_run_log_resolve_tokens_total {
 #   $4  - Loop name (loop_name)
 #   $5  - Outcome
 #   $6  - Skip reason
-#   $7  - Verifier verdict (optional)
+#   $7  - Checker verdict (optional)
 #   $8  - Workflow run id
 #   $9  - Measured usage JSON (optional)
 #   $10 - agent_result (optional)

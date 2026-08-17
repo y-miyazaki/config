@@ -11,8 +11,8 @@
 #   Writes verdict, attempts, has_changes, reason, open_rejections to GITHUB_OUTPUT
 #
 # Design Rules:
-#   - Implementer and verifier run as separate agent sessions per attempt
-#   - Path guards run before the LLM verifier
+#   - Maker and checker run as separate agent sessions per attempt
+#   - Path guards run before the LLM checker
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -66,13 +66,13 @@ function initialize_loop_state {
 }
 
 #######################################
-# parse_outcome_override_from_agent_output: Detect Skill watch outcome from implementer text
+# parse_outcome_override_from_agent_output: Detect Skill watch outcome from maker text
 #
 # Globals:
 #   None
 #
 # Arguments:
-#   $1 - Implementer agent output text
+#   $1 - Maker agent output text
 #
 # Outputs:
 #   None
@@ -98,7 +98,7 @@ function parse_outcome_override_from_agent_output {
 #
 # Description:
 #   Attempt 1 must not treat an already-ahead PR branch as new work.
-#   Attempt 2+ keeps branch-ahead promotion so verifier retries work.
+#   Attempt 2+ keeps branch-ahead promotion so checker retries work.
 #
 # Globals:
 #   BASE_BRANCH - Integration branch name (read)
@@ -107,7 +107,7 @@ function parse_outcome_override_from_agent_output {
 #
 # Arguments:
 #   $1 - Attempt number (1-based)
-#   $2 - HEAD SHA recorded before the implementer
+#   $2 - HEAD SHA recorded before the maker
 #   $3 - true when commit_worktree_if_needed created a commit
 #
 # Outputs:
@@ -132,7 +132,7 @@ function promote_has_changes_after_attempt {
         branch_ahead_files="$(list_non_loop_branch_files "${WORKTREE_PATH}" "${BASE_BRANCH}")"
         if [[ -n ${branch_ahead_files} ]]; then
             HAS_CHANGES="true"
-            echo "Worktree is clean; ${BASE_BRANCH}...HEAD still has product files — running verifier"
+            echo "Worktree is clean; ${BASE_BRANCH}...HEAD still has product files — running checker"
         fi
     fi
     return 0
@@ -194,7 +194,7 @@ function write_loop_outputs {
 }
 
 #######################################
-# run_bounded_loop: Execute implementer→verifier attempts until APPROVE or max attempts
+# run_bounded_loop: Execute maker→checker attempts until APPROVE or max attempts
 #
 # Globals:
 #   ATTEMPT - Current attempt counter (read/write)
@@ -202,7 +202,7 @@ function write_loop_outputs {
 #   OPEN_REJECTIONS_JSON - Open rejection array JSON (read/write)
 #   OUTCOME_OVERRIDE - Skill watch override when set (write)
 #   REASON - Verdict reason for current attempt (read/write)
-#   REJECT_FEEDBACK - Verifier feedback for retry prompt (read)
+#   REJECT_FEEDBACK - Checker feedback for retry prompt (read)
 #   VERDICT - Loop verdict for current attempt (read/write)
 #
 # Arguments:
@@ -227,7 +227,7 @@ function run_bounded_loop {
         sync_reject_feedback
 
         synthesis_block=""
-        if agent_report_skill_requires_format_check "${AGENT_IMPLEMENTER_SKILL_NAME}" \
+        if agent_report_skill_requires_format_check "${AGENT_MAKER_SKILL_NAME}" \
             && { [[ ${HAS_CHANGES} == "true" ]] || [[ ${ATTEMPT} -gt 1 ]]; }; then
             local pre_branch_files
             pre_branch_files="$(list_non_loop_branch_files "${WORKTREE_PATH}" "${BASE_BRANCH}")"
@@ -239,27 +239,27 @@ function run_bounded_loop {
         agent_prompt="$(build_agent_prompt "${REJECT_FEEDBACK}" "${synthesis_block}")"
         printf '%s\n' "${agent_prompt}" > "${attempt_dir}/agent-prompt.txt"
         if [[ -n ${REJECT_FEEDBACK} ]]; then
-            echo "::group::Verifier feedback injected for attempt ${ATTEMPT}"
+            echo "::group::Checker feedback injected for attempt ${ATTEMPT}"
             printf '%s\n' "${REJECT_FEEDBACK}"
             echo "::endgroup::"
         fi
 
         PROMPT="${agent_prompt}"
-        MAX_TURNS="${AGENT_IMPLEMENTER_MAX_TURNS}"
-        MODEL="${AGENT_IMPLEMENTER_MODEL}"
+        MAX_TURNS="${AGENT_MAKER_MAX_TURNS}"
+        MODEL="${AGENT_MAKER_MODEL}"
         WORKING_DIRECTORY="${WORKTREE_PATH}"
         export PROMPT MAX_TURNS MODEL WORKING_DIRECTORY
 
-        echo "Running implementer agent (fresh session)..."
+        echo "Running maker agent (fresh session)..."
         pre_head="$(git -C "${WORKTREE_PATH}" rev-parse HEAD)"
         if ! run_agent_capture "${attempt_dir}/agent-output.txt" "true"; then
-            echo "::warning::Implementer agent exited non-zero on attempt ${ATTEMPT}"
+            echo "::warning::Maker agent exited non-zero on attempt ${ATTEMPT}"
         fi
 
         if ! harvest_workspace_into_worktree; then
-            echo "::error::Failed to harvest implementer edits from GITHUB_WORKSPACE into worktree"
+            echo "::error::Failed to harvest maker edits from GITHUB_WORKSPACE into worktree"
             VERDICT="REJECT"
-            REASON="Failed to harvest implementer edits from GITHUB_WORKSPACE into worktree"
+            REASON="Failed to harvest maker edits from GITHUB_WORKSPACE into worktree"
             echo "Verdict: ${VERDICT} — ${REASON}"
             echo "::endgroup::"
             continue
@@ -278,7 +278,7 @@ function run_bounded_loop {
             if [[ -n ${branch_violations} ]]; then
                 echo "::error::Attempt ${ATTEMPT} produced no file changes while open rejections remain"
                 record_structured_reject "${attempt_dir}" "${ATTEMPT}" "" \
-                    "Implementer produced no file changes on retry" \
+                    "Maker produced no file changes on retry" \
                     "Edit the files listed in prior open rejections and commit the fixes" \
                     "No file changes produced on retry; open rejections were not addressed"
                 VERDICT="REJECT"
@@ -287,9 +287,9 @@ function run_bounded_loop {
                 echo "::endgroup::"
                 continue
             fi
-            echo "::warning::Attempt ${ATTEMPT} produced no new commit; branch diff passes path guards — running verifier"
+            echo "::warning::Attempt ${ATTEMPT} produced no new commit; branch diff passes path guards — running checker"
         elif [[ ${ATTEMPT} -gt 1 ]]; then
-            echo "::warning::Attempt ${ATTEMPT} produced no file changes; verifier will review the same diff as the previous attempt"
+            echo "::warning::Attempt ${ATTEMPT} produced no file changes; checker will review the same diff as the previous attempt"
         fi
 
         promote_has_changes_after_attempt "${ATTEMPT}" "${pre_head}" "${attempt_committed}"
@@ -310,8 +310,8 @@ function run_bounded_loop {
 
         echo "::endgroup::"
 
-        echo "::group::Verifier attempt ${ATTEMPT}/${AGENT_LOOP_MAX_ATTEMPTS}"
-        echo "Running verifier (fresh session)..."
+        echo "::group::Checker attempt ${ATTEMPT}/${AGENT_LOOP_MAX_ATTEMPTS}"
+        echo "Running checker (fresh session)..."
         run_verify "${attempt_dir}" "${ATTEMPT}" "${attempt_committed}"
         VERDICT="$(cat "${attempt_dir}/verdict")"
         REASON="$(cat "${attempt_dir}/reason")"
@@ -337,11 +337,11 @@ function run_bounded_loop {
 # main: Entry point for bounded loop execution
 #
 # Globals:
-#   AGENT_LOOP_MAX_ATTEMPTS - Maximum implementer attempts (read)
+#   AGENT_LOOP_MAX_ATTEMPTS - Maximum maker attempts (read)
 #   AGENT_TOKEN - Authentication token for the selected engine (read)
 #   ENGINE - Agent engine name (read)
 #   GITHUB_OUTPUT - GitHub Actions output file path (read)
-#   PROMPT_TEXT - Base implementer prompt (read)
+#   PROMPT_TEXT - Base maker prompt (read)
 #   STATUS_DIR - Status directory for attempt artifacts (read)
 #   WORKTREE_PATH - Isolated git worktree path (read)
 #

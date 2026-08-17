@@ -30,21 +30,7 @@ jobs:
   loop:
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
-      agent_implementer_instructions: |
-        Update the target changelog file using Keep a Changelog section names.
-        Map each provided commit to a single bullet under `## [Unreleased]`.
-        When `repository_url` is present, append a markdown commit link using the full `sha`.
-        When `compare_url` is present, add `[Full diff](compare_url)` once under `## [Unreleased]` if not already there.
-        For each entry in detect `releases[]` that is not yet documented:
-        - Insert `## [version] - date` immediately below `## [Unreleased]` (newest release first among new sections)
-        - Move bullets for that release's `commit_shas` from `## [Unreleased]` into the matching subsections
-        - Add or update footer compare links `[version]: repository_url/compare/previous_tag...tag_sha` when `repository_url` is present
-        Preserve existing released sections; do not invent versions outside detect `releases[]`.
-      agent_implementer_max_turns: 5
-      agent_implementer_model: cursor-grok-4.5-low
-      agent_implementer_skill_name: changelog
-      agent_loop_max_attempts: 3
-      agent_verifier_instructions: |
+      agent_checker_instructions: |
         ## Criteria for APPROVE
 
         ALL of the following must be true:
@@ -68,9 +54,23 @@ jobs:
         - Missing release section for a detect `releases[]` version
         - Hallucinated release versions or dates
         - Duplicate or hallucinated entries
-      agent_verifier_max_turns: 3
-      agent_verifier_model: composer-2.5
-      agent_verifier_skill_name: loop-verifier
+      agent_checker_max_turns: 3
+      agent_checker_model: composer-2.5
+      agent_checker_skill_name: loop-verifier
+      agent_loop_max_attempts: 3
+      agent_maker_instructions: |
+        Update the target changelog file using Keep a Changelog section names.
+        Map each provided commit to a single bullet under `## [Unreleased]`.
+        When `repository_url` is present, append a markdown commit link using the full `sha`.
+        When `compare_url` is present, add `[Full diff](compare_url)` once under `## [Unreleased]` if not already there.
+        For each entry in detect `releases[]` that is not yet documented:
+        - Insert `## [version] - date` immediately below `## [Unreleased]` (newest release first among new sections)
+        - Move bullets for that release's `commit_shas` from `## [Unreleased]` into the matching subsections
+        - Add or update footer compare links `[version]: repository_url/compare/previous_tag...tag_sha` when `repository_url` is present
+        Preserve existing released sections; do not invent versions outside detect `releases[]`.
+      agent_maker_max_turns: 5
+      agent_maker_model: cursor-grok-4.5-low
+      agent_maker_skill_name: changelog
       allowlist: CHANGELOG.md
       branch_match: main
       branch_state: main

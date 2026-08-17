@@ -10,7 +10,7 @@
 # Design Rules:
 # - Large payloads (result, verifier_context) live in loop-handoff artifact files
 # - target_matrix carries handoff_key; execute resolves payloads by key
-# - Implementer prompts use LOOP_DETECT_RESULT_MARKER; detect JSON is file-backed at execute
+# - Maker prompts use LOOP_DETECT_RESULT_MARKER; detect JSON is file-backed at execute
 #######################################
 
 #######################################
@@ -30,7 +30,7 @@ if ! declare -f build_verifier_context_from_result > /dev/null 2>&1; then
 fi
 
 #######################################
-# build_prompt_text: Assemble implementer prompt for one candidate
+# build_prompt_text: Assemble maker prompt for one candidate
 #
 # Globals:
 #   None
@@ -57,10 +57,10 @@ fi
 #
 #######################################
 function build_prompt_text {
-    local agent_implementer_skill_name="$1"
+    local agent_maker_skill_name="$1"
     local level="$2"
     local allowlist="$3"
-    local agent_implementer_instructions="$4"
+    local agent_maker_instructions="$4"
     local last_sha="$5"
     local current_sha="$6"
     local detect_result="$7"
@@ -75,7 +75,7 @@ function build_prompt_text {
     fi
 
     {
-        echo "Run the ${agent_implementer_skill_name} skill."
+        echo "Run the ${agent_maker_skill_name} skill."
         echo ""
         echo "## Context"
         echo "Last SHA: ${last_sha}"
@@ -92,10 +92,10 @@ function build_prompt_text {
             echo ""
             echo "${open_rejections_prompt}"
         fi
-        if [[ -n ${agent_implementer_instructions} ]]; then
+        if [[ -n ${agent_maker_instructions} ]]; then
             echo ""
             echo "## Instructions"
-            echo "${agent_implementer_instructions}"
+            echo "${agent_maker_instructions}"
         fi
         if [[ -n ${level} || -n ${allowlist} ]]; then
             echo ""

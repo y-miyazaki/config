@@ -1,5 +1,5 @@
 id: loop-verifier-trigger-negative-001
-name: loop-verifier rejects implementer role
+name: loop-verifier rejects maker role
 description: >-
   Validate loop-verifier does not implement fixes when asked to patch product code
   instead of verifying a diff.

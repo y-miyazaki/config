@@ -27,7 +27,7 @@ Loop PR bodies follow the same separation as [microsoft/apm `triage-panel`](http
 - **Overview** — synthesized plain-language lead (trigger → problem → action). See [Overview contract](#overview-contract) below.
 - **Summary** — `### Changes`, `### Deferred` (or domain equivalent), and optional domain subsections only. No Outcome line, no Suggested next action, no duplicate file lists.
 - **Verification** — checks the agent already ran (pass/fail/skip/blocked). Interactive: agent obligation; loop PR: extracted as top-level `## Verification`.
-- **Session report** — verifier/logs only (`## Session Metrics`, domain bullets). Not copied into PR body.
+- **Session report** — checker/logs only (`## Session Metrics`, domain bullets). Not copied into PR body.
 
 Load `assets/pr-body-template.md` **at synthesis time only** (after triage/fix work), mirroring triage-panel step 7.
 
@@ -177,7 +177,7 @@ Before emitting PR `## Summary`, run `git diff --name-only` (or `git diff --cach
 
 ## Mechanical validation (loop-execute)
 
-Loop automation skills listed in `validate_agent_report.sh` (`changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`) run mechanical format checks before the LLM verifier. Failures produce structured REJECT (no APPROVE until fixed).
+Loop automation skills listed in `validate_agent_report.sh` (`changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`) run mechanical format checks before the LLM checker. Failures produce structured REJECT (no APPROVE until fixed).
 
 ### Four-plane vs validation matrix
 

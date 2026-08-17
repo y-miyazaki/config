@@ -8,7 +8,7 @@
 # - None (library file, sourced by other scripts)
 #
 # Design Rules:
-# - Allowlist and denylist checks run before the LLM verifier
+# - Allowlist and denylist checks run before the LLM checker
 # - Glob patterns follow gitwildmatch-style path rules (** crosses /)
 # - Empty DENYLIST is coerced to the platform default at loop start
 #######################################
@@ -214,13 +214,13 @@ function glob_to_ere {
 }
 
 #######################################
-# infer_files_from_text: Infer file paths from verifier text
+# infer_files_from_text: Infer file paths from checker text
 #
 # Globals:
 #   INFER_FILES_PATTERN - Optional extended-regex override
 #
 # Arguments:
-#   $1 - Verifier text to scan
+#   $1 - Checker text to scan
 #   $2 - Fallback comma-separated file paths
 #
 # Outputs:

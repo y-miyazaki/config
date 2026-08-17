@@ -140,10 +140,10 @@ teardown() {
     VERDICT="REJECT"
     FIX_PR_NUMBER=""
     FIX_PR_URL=""
-    REJECT_REASON="Diff addresses coverage threshold; deferred by verifier criteria"
+    REJECT_REASON="Diff addresses coverage threshold; deferred by checker criteria"
     run build_comment_body "loop-bot"
     [ "$status" -eq 0 ]
-    [[ $output == *"| Reason | Diff addresses coverage threshold; deferred by verifier criteria |"* ]]
+    [[ $output == *"| Reason | Diff addresses coverage threshold; deferred by checker criteria |"* ]]
     [[ $output == *"### Fix context"* ]]
     [[ $output == *"Address CI failure in lint (ci-test)"* ]]
 }

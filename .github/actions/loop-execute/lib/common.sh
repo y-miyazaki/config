@@ -27,13 +27,13 @@ source "${_LOOP_EXECUTE_LIB_DIR}/verifier_skill.sh"
 #   Fills empty PROMPT_* env vars with loop-execute defaults.
 #
 # Globals:
-#   PROMPT_IMPLEMENTER_FEEDBACK - Implementer retry template
+#   PROMPT_IMPLEMENTER_FEEDBACK - Maker retry template
 #   PROMPT_VERIFIER_INITIAL - Execute-owned INITIAL mode intro
 #   PROMPT_VERIFIER_REGRESSION - Execute-owned REGRESSION mode body
-#   PROMPT_VERIFIER_TASK - Optional task override (empty when a verifier skill is bound)
+#   PROMPT_VERIFIER_TASK - Optional task override (empty when a checker skill is bound)
 #   PROMPT_VERIFIER_OUTPUT_CONTRACT - Optional output-contract override
 #   PROMPT_VERIFIER_DEFAULT_CRITERIA - Fallback criteria when skill files are missing
-#   VERIFIER_SKILL_ROOT - Bound verifier skill directory (caller name)
+#   VERIFIER_SKILL_ROOT - Bound checker skill directory (caller name)
 #
 # Arguments:
 #   None
@@ -47,7 +47,7 @@ source "${_LOOP_EXECUTE_LIB_DIR}/verifier_skill.sh"
 #######################################
 function load_default_prompts {
     if [[ -z ${PROMPT_IMPLEMENTER_FEEDBACK:-} ]]; then
-        PROMPT_IMPLEMENTER_FEEDBACK=$'{{base_prompt}}\n\n## Verifier Feedback (must address)\n\nPrevious attempt(s) were REJECTED. Edit **only** the files listed under **Files** and apply each **Required fix**:\n\n{{feedback}}\n\nAfter editing, your changes must be written to disk. Do not make unrelated changes.'
+        PROMPT_IMPLEMENTER_FEEDBACK=$'{{base_prompt}}\n\n## Checker Feedback (must address)\n\nPrevious attempt(s) were REJECTED. Edit **only** the files listed under **Files** and apply each **Required fix**:\n\n{{feedback}}\n\nAfter editing, your changes must be written to disk. Do not make unrelated changes.'
     fi
 
     bind_verifier_skill
@@ -64,21 +64,21 @@ function load_default_prompts {
     fi
 
     if [[ -z ${PROMPT_VERIFIER_TASK:-} ]]; then
-        PROMPT_VERIFIER_TASK=$'Review the changes produced by the loop implementer agent and determine whether they should be merged.'
-        if [[ -n ${AGENT_VERIFIER_SKILL_NAME:-} ]]; then
-            echo "::warning::verifier skill SKILL.md unavailable; using embedded task fallback" >&2
+        PROMPT_VERIFIER_TASK=$'Review the changes produced by the loop maker agent and determine whether they should be merged.'
+        if [[ -n ${AGENT_CHECKER_SKILL_NAME:-} ]]; then
+            echo "::warning::checker skill SKILL.md unavailable; using embedded task fallback" >&2
         fi
     fi
     if [[ -z ${PROMPT_VERIFIER_OUTPUT_CONTRACT:-} ]]; then
-        PROMPT_VERIFIER_OUTPUT_CONTRACT=$'## Output (machine-readable — required)\n\nEnd your response with a single fenced JSON block (no prose after it):\n\n```json\n{\n  "verdict": "APPROVE",\n  "reason": "one-line summary"\n}\n```\n\nor on REJECT:\n\n```json\n{\n  "verdict": "REJECT",\n  "files": ["path/to/file"],\n  "issue": "what is factually wrong",\n  "fix": "specific change the implementer must make",\n  "reason": "one-line summary for logs"\n}\n```\n\nRules:\n- "verdict" must be "APPROVE" or "REJECT"\n- On REJECT, "files" (array), "issue", "fix", and "reason" are required\n- Use repo-relative paths in files'
-        if [[ -n ${AGENT_VERIFIER_SKILL_NAME:-} ]]; then
-            echo "::warning::verifier skill output contract unavailable; using embedded fallback" >&2
+        PROMPT_VERIFIER_OUTPUT_CONTRACT=$'## Output (machine-readable — required)\n\nEnd your response with a single fenced JSON block (no prose after it):\n\n```json\n{\n  "verdict": "APPROVE",\n  "reason": "one-line summary"\n}\n```\n\nor on REJECT:\n\n```json\n{\n  "verdict": "REJECT",\n  "files": ["path/to/file"],\n  "issue": "what is factually wrong",\n  "fix": "specific change the maker must make",\n  "reason": "one-line summary for logs"\n}\n```\n\nRules:\n- "verdict" must be "APPROVE" or "REJECT"\n- On REJECT, "files" (array), "issue", "fix", and "reason" are required\n- Use repo-relative paths in files'
+        if [[ -n ${AGENT_CHECKER_SKILL_NAME:-} ]]; then
+            echo "::warning::checker skill output contract unavailable; using embedded fallback" >&2
         fi
     fi
     if [[ -z ${PROMPT_VERIFIER_DEFAULT_CRITERIA:-} ]]; then
         PROMPT_VERIFIER_DEFAULT_CRITERIA=$'## Criteria for APPROVE\n\nALL of the following must be true:\n1. Changes are consistent with the codebase\n2. No sensitive information is exposed\n3. No files outside the expected scope are modified\n4. Changes are coherent and non-destructive\n\n## Criteria for REJECT\n\nANY of the following triggers REJECT:\n- Changes outside expected scope\n- Factual inaccuracies or hallucinated content\n- Sensitive data exposure\n- Gratuitous or unrelated changes'
-        if [[ -n ${AGENT_VERIFIER_SKILL_NAME:-} ]]; then
-            echo "::warning::verifier skill checklist unavailable; using embedded fallback" >&2
+        if [[ -n ${AGENT_CHECKER_SKILL_NAME:-} ]]; then
+            echo "::warning::checker skill checklist unavailable; using embedded fallback" >&2
         fi
     fi
 }
@@ -90,7 +90,7 @@ function load_default_prompts {
 #   Coerces NO_CHANGES_VERDICT to APPROVE or REJECT (default APPROVE).
 #
 # Globals:
-#   NO_CHANGES_VERDICT - Verdict when implementer produces no file changes
+#   NO_CHANGES_VERDICT - Verdict when maker produces no file changes
 #
 # Arguments:
 #   None
@@ -116,15 +116,15 @@ function normalize_no_changes_verdict {
 # Design Rules:
 #   loop-detect omits large detect JSON from target_matrix; resolve from inline JSON
 #   or loop-handoff artifact via LOOP_HANDOFF_DIR + HANDOFF_KEY. Write detect JSON
-#   to a runner-local file and point the implementer prompt at that path instead
+#   to a runner-local file and point the maker prompt at that path instead
 #   of inlining JSON into PROMPT_TEXT. Rebuild verifier_context from the same JSON.
 #
 # Globals:
 #   DETECT_RESULT_JSON - Detect script JSON from matrix cell (read)
-#   PROMPT_TEXT - Implementer prompt (read/write)
+#   PROMPT_TEXT - Maker prompt (read/write)
 #   STATUS_DIR - Runner-local status directory for materialized detect JSON (read)
 #   DETECT_JSON_FILE - Path to materialized detect JSON when prompt uses marker (write)
-#   VERIFIER_CONTEXT - Verifier markdown context (read/write)
+#   VERIFIER_CONTEXT - Checker markdown context (read/write)
 #
 # Arguments:
 #   None

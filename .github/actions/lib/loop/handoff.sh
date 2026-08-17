@@ -137,7 +137,7 @@ function loop_handoff_read_payload {
 }
 
 #######################################
-# loop_handoff_read_verifier_context: Read verifier markdown from a payload
+# loop_handoff_read_verifier_context: Read checker markdown from a payload
 #
 # Globals:
 #   None
@@ -147,7 +147,7 @@ function loop_handoff_read_payload {
 #   $2 - Target key
 #
 # Outputs:
-#   Verifier context markdown on stdout (may be empty)
+#   Checker context markdown on stdout (may be empty)
 #
 # Returns:
 #   0 on success

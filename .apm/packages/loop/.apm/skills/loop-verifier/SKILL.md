@@ -1,9 +1,9 @@
 ---
 name: loop-verifier
 description: >-
-  Independent checker for implementer diffs in a maker/checker split. Default
+  Independent checker for maker diffs in a maker/checker split. Default
   stance is REJECT until evidence is strong. Use when verifying loop-produced
-  changes, after a minimal-fix or implementer agent, or when asked to APPROVE
+  changes, after a minimal-fix or maker agent, or when asked to APPROVE
   or REJECT a branch diff against stated criteria. Do not implement fixes in
   this role. Caller-supplied domain rubric (when present in the prompt) is an
   additional input, not part of this skill.
@@ -17,7 +17,7 @@ metadata:
 
 ## Input
 
-- Implementer diff (branch vs base) and optional implementer summary
+- Maker diff (branch vs base) and optional maker summary
 - Optional domain rubric (caller-supplied markdown in the prompt)
 - Optional extra context (CI log excerpt, detect facts)
 - Project path allowlist / denylist when provided
@@ -30,7 +30,7 @@ Report per [common-output-format.md](references/common-output-format.md). End wi
 
 ### USE FOR:
 
-- INITIAL scrutiny of an implementer branch for factual blockers and scope violations
+- INITIAL scrutiny of a maker branch for factual blockers and scope violations
 - REGRESSION checks that prior open rejections were actually fixed
 - Confirming the diff matches the stated target (not a different problem)
 
@@ -38,7 +38,7 @@ Report per [common-output-format.md](references/common-output-format.md). End wi
 
 - Implementing or editing product files (checker does not write fixes)
 - Replacing caller-supplied domain rubric on a loop caller
-- Acting as the loop entry or implementer skill
+- Acting as the loop entry or maker skill
 - Re-running CI or linters unless the domain rubric explicitly requires it
 
 ## Reference Files Guide
@@ -66,5 +66,5 @@ Report per [common-output-format.md](references/common-output-format.md). End wi
 
 ### Examples
 
-- Prompt: `Verify the implementer branch against the CI failure in context`
+- Prompt: `Verify the maker branch against the CI failure in context`
 - Result: JSON `verdict` plus Evidence; REJECT if the diff does not address the logged failure

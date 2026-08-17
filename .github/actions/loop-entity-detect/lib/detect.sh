@@ -17,7 +17,7 @@
 # - bash, jq, openssl
 #
 # Optional environment:
-#   DETECT_SCRIPT, LOOP_NAME, AGENT_IMPLEMENTER_SKILL_NAME, AGENT_IMPLEMENTER_INSTRUCTIONS, LEVEL, DELIVERY
+#   DETECT_SCRIPT, LOOP_NAME, AGENT_MAKER_SKILL_NAME, AGENT_MAKER_INSTRUCTIONS, LEVEL, DELIVERY
 #   BUDGET_FILE, BUDGET_MAX_RUNS_PER_DAY, BUDGET_MAX_TOKENS_PER_DAY, RUN_LOG_FILE
 #   DISPATCH_HOOK_SCRIPT, DISPATCH_HOOK_TOKEN (trusted post-detect dispatch hook)
 #######################################
@@ -41,8 +41,8 @@ source "${SCRIPT_DIR}/_init.sh"
 # Environment supplied by loop-entity-detect composite action (validated in main).
 DETECT_SCRIPT="${DETECT_SCRIPT-}"
 LOOP_NAME="${LOOP_NAME-}"
-AGENT_IMPLEMENTER_SKILL_NAME="${AGENT_IMPLEMENTER_SKILL_NAME-}"
-AGENT_IMPLEMENTER_INSTRUCTIONS="${AGENT_IMPLEMENTER_INSTRUCTIONS:-}"
+AGENT_MAKER_SKILL_NAME="${AGENT_MAKER_SKILL_NAME-}"
+AGENT_MAKER_INSTRUCTIONS="${AGENT_MAKER_INSTRUCTIONS:-}"
 LEVEL="${LEVEL:-L1}"
 DELIVERY="${DELIVERY:-none}"
 MAY_EDIT="${MAY_EDIT:-}"
@@ -174,7 +174,7 @@ function resolve_dispatch_hook_script {
 # main: Run entity detect and publish matrix/handoff outputs
 #
 # Globals:
-#   DETECT_SCRIPT, LOOP_NAME, AGENT_IMPLEMENTER_SKILL_NAME, AGENT_IMPLEMENTER_INSTRUCTIONS, LEVEL, DELIVERY
+#   DETECT_SCRIPT, LOOP_NAME, AGENT_MAKER_SKILL_NAME, AGENT_MAKER_INSTRUCTIONS, LEVEL, DELIVERY
 #   BUDGET_FILE, BUDGET_MAX_RUNS_PER_DAY, BUDGET_MAX_TOKENS_PER_DAY, RUN_LOG_FILE
 #   HANDOFF_DIR, DETECT_OUT
 #
@@ -191,8 +191,8 @@ function resolve_dispatch_hook_script {
 function main {
     local full_matrix target_matrix candidate detect_status skip_reason
 
-    if [[ -z ${LOOP_NAME} || -z ${AGENT_IMPLEMENTER_SKILL_NAME} ]]; then
-        echo "::error::LOOP_NAME and AGENT_IMPLEMENTER_SKILL_NAME are required" >&2
+    if [[ -z ${LOOP_NAME} || -z ${AGENT_MAKER_SKILL_NAME} ]]; then
+        echo "::error::LOOP_NAME and AGENT_MAKER_SKILL_NAME are required" >&2
         exit 1
     fi
 
@@ -242,8 +242,8 @@ function main {
     full_matrix="$(build_entity_target_matrix \
         "${DETECT_OUT}" \
         "${LOOP_NAME}" \
-        "${AGENT_IMPLEMENTER_SKILL_NAME}" \
-        "${AGENT_IMPLEMENTER_INSTRUCTIONS}" \
+        "${AGENT_MAKER_SKILL_NAME}" \
+        "${AGENT_MAKER_INSTRUCTIONS}" \
         "${LEVEL}" \
         "${DELIVERY}")"
 
