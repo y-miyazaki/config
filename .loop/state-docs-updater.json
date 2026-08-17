@@ -1,19 +1,12 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-08-17T09:20:54Z",
-      "outcome": "pr-created",
+      "last_run": "2026-08-17T10:40:41Z",
+      "outcome": "merged",
       "consecutive_failures": 0,
       "open_rejections": [],
       "last_reject_reason": "Two minimal doc fixes are in-scope, factually correct, and align with verified APM package and workflow paths.",
-      "last_sha": "78059eb7115e1a120f49035719be9a9ca694c63a",
-      "pending": {
-        "sha": "c67cb0f560493ffd0783a55fb299ae7376f936fa",
-        "pr": 702,
-        "pr_url": "https://github.com/y-miyazaki/config/pull/702",
-        "loop_name": "docs-updater",
-        "created_at": "2026-08-17T09:20:54Z"
-      }
+      "last_sha": "c67cb0f560493ffd0783a55fb299ae7376f936fa"
     }
   }
 }
