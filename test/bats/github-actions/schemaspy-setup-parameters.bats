@@ -51,7 +51,8 @@ setup() {
     source "${SETUP_LIB}"
     run bash -c 'source "'"${SETUP_LIB}"'"; USE_SSM=false USE_SECRETS_MANAGER=false DB_HOST_INPUT=db.example DB_PORT_INPUT=5432 DB_NAME_INPUT=appdb DB_USERNAME_INPUT=dbuser DB_PASSWORD_INPUT=dbpass DB_TYPE=pgsql ENVIRONMENT=dev JSON_KEY_DATABASE_NAME=dbname JSON_KEY_HOST=host JSON_KEY_PASSWORD=password JSON_KEY_PORT=port JSON_KEY_USERNAME=username PARAMETER_STORE_NAME= SECRETS_MANAGER_SECRET_ID= GITHUB_ENV="'"${GITHUB_ENV}"'" GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" setup_schemaspy_parameters'
     [ "$status" -eq 0 ]
-    grep -q '^DB_HOST=db.example$' "${GITHUB_ENV}"
+    grep -q '^DB_USER=dbuser$' "${GITHUB_ENV}"
+    grep -q '^DB_PASSWORD=dbpass$' "${GITHUB_ENV}"
     grep -q '^artifact_name=schemaspy-pgsql-appdb-dev.zip$' "${GITHUB_OUTPUT}"
     grep -q '^db_host=db.example$' "${GITHUB_OUTPUT}"
     grep -q '^db_port=5432$' "${GITHUB_OUTPUT}"

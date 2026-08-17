@@ -289,6 +289,9 @@ jobs:
 
       - name: Exec SchemaSpy
         env:
+          DB_HOST: ${{ steps.setup-parameters.outputs.db_host }}
+          DB_PORT: ${{ steps.setup-parameters.outputs.db_port }}
+          DB_NAME: ${{ steps.setup-parameters.outputs.db_name }}
           LOCAL_PORT: ${{ steps.start-port-forward.outputs.local_port }}
         shell: bash
         run: |

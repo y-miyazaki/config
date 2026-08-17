@@ -11,7 +11,7 @@
 #   - Shared JSON extraction for Secrets Manager and SSM branches
 #
 # Output:
-#   DB_* values on GITHUB_ENV (for downstream run: steps)
+#   DB_USER, DB_PASSWORD on GITHUB_ENV (masked credentials for downstream run: steps)
 #   db_host, db_port, db_name, artifact_* on GITHUB_OUTPUT (for action wiring)
 #######################################
 
@@ -81,7 +81,7 @@ function load_db_credentials_from_json {
 #   None
 #
 # Outputs:
-#   Writes DB and artifact variables to GITHUB_ENV and GITHUB_OUTPUT
+#   Writes DB_USER and DB_PASSWORD to GITHUB_ENV; db_*, artifact_* to GITHUB_OUTPUT
 #
 # Returns:
 #   Exits non-zero on invalid credential configuration
@@ -143,12 +143,10 @@ function setup_schemaspy_parameters {
     fi
 
     {
-        echo "DB_HOST=${DB_HOST}"
-        echo "DB_PORT=${DB_PORT}"
-        echo "DB_NAME=${DB_NAME}"
         echo "DB_USER=${DB_USER}"
         echo "DB_PASSWORD=${DB_PASSWORD}"
     } >> "$GITHUB_ENV"
+    echo "::add-mask::${DB_USER}"
     echo "::add-mask::${DB_PASSWORD}"
 
     artifact_base="schemaspy-${DB_TYPE}-${DB_NAME}-${ENVIRONMENT}"
