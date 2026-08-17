@@ -11,7 +11,7 @@
 #   - Default local port by DB_TYPE when BASTION_LOCAL_PORT is empty
 #
 # Output:
-#   LOCAL_PORT and SSM_PID on GITHUB_ENV; local_port and ssm_pid on GITHUB_OUTPUT
+#   local_port and ssm_pid on GITHUB_OUTPUT
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -26,13 +26,13 @@ export LC_ALL=C.UTF-8
 #
 # Globals:
 #   BASTION_ID, BASTION_LOCAL_PORT, DB_HOST, DB_PORT, DB_TYPE
-#   GITHUB_ENV, GITHUB_OUTPUT
+#   GITHUB_OUTPUT
 #
 # Arguments:
 #   None
 #
 # Outputs:
-#   Writes LOCAL_PORT and SSM_PID to GITHUB_ENV
+#   Writes local_port and ssm_pid to GITHUB_OUTPUT
 #
 # Returns:
 #   Exits non-zero when port forwarding fails to start
@@ -82,7 +82,6 @@ function setup_ssm_port_forward {
         return 1
     fi
 
-    echo "LOCAL_PORT=${local_port}" >> "$GITHUB_ENV"
     echo "local_port=${local_port}" >> "$GITHUB_OUTPUT"
 
     echo "Starting port forwarding: localhost:${local_port} -> ${BASTION_ID} -> ${DB_HOST}:${DB_PORT}"
@@ -104,7 +103,6 @@ function setup_ssm_port_forward {
         > "${ssm_log}" 2>&1 &
 
     ssm_pid=$!
-    echo "SSM_PID=${ssm_pid}" >> "$GITHUB_ENV"
     echo "ssm_pid=${ssm_pid}" >> "$GITHUB_OUTPUT"
     echo "SSM Session started with PID: ${ssm_pid}"
 

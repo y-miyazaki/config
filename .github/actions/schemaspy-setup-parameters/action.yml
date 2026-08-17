@@ -72,6 +72,15 @@ outputs:
   artifact_name:
     description: "Artifact zip file name"
     value: ${{ steps.setup.outputs.artifact_name }}
+  db_host:
+    description: "Resolved database host"
+    value: ${{ steps.setup.outputs.db_host }}
+  db_name:
+    description: "Resolved database name"
+    value: ${{ steps.setup.outputs.db_name }}
+  db_port:
+    description: "Resolved database port"
+    value: ${{ steps.setup.outputs.db_port }}
   outdir:
     description: "SchemaSpy output directory"
     value: ${{ steps.setup.outputs.outdir }}

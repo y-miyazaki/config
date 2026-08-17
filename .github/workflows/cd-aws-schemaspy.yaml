@@ -233,8 +233,8 @@ jobs:
         with:
           bastion_id: ${{ steps.bastion-connect.outputs.bastion_id }}
           bastion_local_port: ${{ inputs.bastion_local_port }}
-          db_host: ${{ env.DB_HOST }}
-          db_port: ${{ env.DB_PORT }}
+          db_host: ${{ steps.setup-parameters.outputs.db_host }}
+          db_port: ${{ steps.setup-parameters.outputs.db_port }}
           db_type: ${{ inputs.db_type }}
 
       - name: Setup Java
@@ -288,6 +288,8 @@ jobs:
           curl -fSL -o jdbc-aws-sdk-core.jar "https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-core/${AWS_SDK_CORE_VERSION}/aws-java-sdk-core-${AWS_SDK_CORE_VERSION}.jar"
 
       - name: Exec SchemaSpy
+        env:
+          LOCAL_PORT: ${{ steps.start-port-forward.outputs.local_port }}
         shell: bash
         run: |
           set -euo pipefail
@@ -382,6 +384,9 @@ jobs:
 
       - name: Prepare artifact structure
         id: prepare-artifact-structure
+        env:
+          ARTIFACT_BASE: ${{ steps.setup-parameters.outputs.artifact_base }}
+          OUTDIR: ${{ steps.setup-parameters.outputs.outdir }}
         shell: bash
         run: |
           set -euo pipefail
@@ -400,6 +405,9 @@ jobs:
           ls -lR artifact-output/
 
       - name: Create zip archive
+        env:
+          ARTIFACT_BASE: ${{ steps.setup-parameters.outputs.artifact_base }}
+          ARTIFACT_NAME: ${{ steps.setup-parameters.outputs.artifact_name }}
         shell: bash
         run: |
           set -euo pipefail

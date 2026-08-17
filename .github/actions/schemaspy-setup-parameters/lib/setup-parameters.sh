@@ -11,7 +11,8 @@
 #   - Shared JSON extraction for Secrets Manager and SSM branches
 #
 # Output:
-#   DB_* values on GITHUB_ENV; artifact_* values on GITHUB_ENV and GITHUB_OUTPUT
+#   DB_* values on GITHUB_ENV (for downstream run: steps)
+#   db_host, db_port, db_name, artifact_* on GITHUB_OUTPUT (for action wiring)
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -155,17 +156,13 @@ function setup_schemaspy_parameters {
     title="SchemaSpy(${ENVIRONMENT})"
 
     {
-        echo "ARTIFACT_BASE=${artifact_base}"
-        echo "ARTIFACT_NAME=${artifact_name}"
-        echo "OUTDIR=${outdir}"
-        echo "TITLE=${title}"
-    } >> "$GITHUB_ENV"
-
-    {
         echo "artifact_base=${artifact_base}"
         echo "artifact_name=${artifact_name}"
         echo "outdir=${outdir}"
         echo "title=${title}"
+        echo "db_host=${DB_HOST}"
+        echo "db_port=${DB_PORT}"
+        echo "db_name=${DB_NAME}"
     } >> "$GITHUB_OUTPUT"
 }
 

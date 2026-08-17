@@ -50,6 +50,7 @@ uses: y-miyazaki/config/.github/actions/loop-finalize@<sha> # v1.x.x
 - Consumers reference via **full commit SHA** (ghalint policy compliance)
 - Tags (`v1.4.6`) annotated in comments for readability
 - Bump major version on breaking changes
+- `ci-*` / `cd-*` reusables **must not** use `uses: ./.github/actions/...` — only `on-*` dogfood may temporarily; release ships remote SHA bumps in the same changeset (see [.github/workflows/AGENTS.md](../../.github/workflows/AGENTS.md#pins))
 
 ## Secrets Design
 
@@ -77,6 +78,20 @@ secrets:
 | PR that should trigger CI | GitHub App Token / PAT | `GITHUB_TOKEN`-created PRs do not trigger other workflows    |
 
 Note: At L3, `loop-finalize` enables auto-merge (`gh pr merge --auto --squash`) after PR creation. This requires branch protection rules with required status checks configured on the target branch.
+
+### Composite action outputs vs GITHUB_ENV
+
+| Channel                                  | Use for                                                           | Do not use for                                                                   |
+| ---------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `GITHUB_OUTPUT` → `steps.<id>.outputs.*` | Wiring **between** composite actions and workflow `with:` / `if:` | Secrets (passwords, tokens) — use masked `GITHUB_ENV` for downstream `run:` only |
+| `GITHUB_ENV`                             | Shell environment for subsequent **`run:`** steps in the same job | Implicit cross-step contracts — readers cannot see which step set `env.DB_HOST`  |
+
+Rules:
+
+1. Composite actions **MUST** declare every value consumed by another action in `outputs` on `action.yml`.
+2. Workflows **MUST** pass action inputs via `steps.<id>.outputs.<name>`, not `env.<NAME>` set by a prior action.
+3. `GITHUB_ENV` **MAY** remain when a `run:` script needs shell variables (especially masked credentials).
+4. Prefer `env:` on the `run:` step sourced from `steps.*.outputs` for non-secret values instead of job-wide `GITHUB_ENV` side effects.
 
 ## Input Design
 

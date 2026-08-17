@@ -8,14 +8,15 @@ Design background: [GitHub Workflows Design](../../docs/explanation/github-workf
 
 ## Pins
 
-| Rule                                         | Requirement                                                                                                                                 |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Config components                            | **MUST** use a full commit SHA (`uses: org/repo/.github/...@<sha> # vX.Y.Z`). Tags and branches are forbidden.                              |
-| Third-party actions                          | **MUST** pin by full SHA; annotate upstream version in a comment when known.                                                                |
-| Consumer copies (`example/`, external repos) | **MUST** use remote SHA pins only.                                                                                                          |
-| Dogfood (`on-*` workflow steps)              | **MAY** use `./.github/workflows/...` or `./.github/actions/...` while iterating unreleased graph changes.                                  |
-| Composite internals                          | **MUST NOT** use `uses: ./.github/actions/...` — unresolvable in consumer repositories.                                                     |
-| Release                                      | **MUST** bump SHA pins in `ci-*`, `cd-*`, and `example/` in the same change set as new action/workflow releases (or per release checklist). |
+| Rule                                         | Requirement                                                                                                                                          |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Config components                            | **MUST** use a full commit SHA (`uses: org/repo/.github/...@<sha> # vX.Y.Z`). Tags and branches are forbidden.                                       |
+| Third-party actions                          | **MUST** pin by full SHA; annotate upstream version in a comment when known.                                                                         |
+| Consumer copies (`example/`, external repos) | **MUST** use remote SHA pins only.                                                                                                                   |
+| Reusable workflows (`ci-*`, `cd-*`)          | **MUST NOT** use `uses: ./.github/actions/...` or `uses: ./.github/workflows/...`. Consumers fetch reusables remotely; local paths are not portable. |
+| Dogfood (`on-*` workflow steps)              | **MAY** use `./.github/workflows/...` or `./.github/actions/...` while iterating unreleased graph changes — **not** in `ci-*` / `cd-*`.              |
+| Composite internals                          | **MUST NOT** use `uses: ./.github/actions/...` — unresolvable in consumer repositories.                                                              |
+| Release                                      | **MUST** bump SHA pins in `ci-*`, `cd-*`, and `example/` in the same change set as new action/workflow releases (or per release checklist).          |
 
 ---
 
@@ -98,21 +99,23 @@ When a loop step records failure metadata for run logs or action outputs:
 
 ## Anti-patterns
 
-| Anti-pattern                                                      | Why                                             |
-| ----------------------------------------------------------------- | ----------------------------------------------- |
-| `uses: ...@main` or `@v1.x` for config components                 | Unreproducible; policy violation                |
-| `uses: ./.github/actions/...` inside a composite step             | Broken in consumer repos                        |
-| Nested `uses:` between config composites                          | Transitive pin drift                            |
-| `${GITHUB_WORKSPACE}/.github/actions/.../lib/run.sh` in workflows | Consumers lack that path                        |
-| `${GITHUB_ACTION_PATH}/../../lib/...` from action `run:` steps    | Wrong depth — use `../lib/...` from action root |
-| Shared logic in a composite's `lib/` instead of `actions/lib/`    | Couples actions; blocks reuse                   |
-| Consumer-specific paths in reusables/actions                      | Breaks portability                              |
-| Consumer-tuned `inputs.*.default` paths/globs/excludes in `ci-*`  | Couples distribution to one repo layout         |
-| Hardcoded discovery/prune lists in reusable `run:` steps          | Callers cannot override without forking         |
-| `secrets: inherit` on reusable callers                            | Blocks secret name remapping                    |
-| Credentials via `with:` on reusable workflows                     | Wrong channel                                   |
-| Force-push over `to.branch` on `push` / `push_head`               | Drops commits from earlier serialized runs (#684) |
-| `cancel-in-progress: true` on pr-revise concurrency               | Kills in-flight work; use queue + merge landing   |
+| Anti-pattern                                                      | Why                                                      |
+| ----------------------------------------------------------------- | -------------------------------------------------------- |
+| `uses: ...@main` or `@v1.x` for config components                 | Unreproducible; policy violation                         |
+| `uses: ./.github/actions/...` inside a composite step             | Broken in consumer repos                                 |
+| `uses: ./.github/actions/...` in `ci-*` / `cd-*` workflows        | Distribution break — use remote SHA; bump pin on release |
+| Nested `uses:` between config composites                          | Transitive pin drift                                     |
+| `${GITHUB_WORKSPACE}/.github/actions/.../lib/run.sh` in workflows | Consumers lack that path                                 |
+| `${GITHUB_ACTION_PATH}/../../lib/...` from action `run:` steps    | Wrong depth — use `../lib/...` from action root          |
+| Shared logic in a composite's `lib/` instead of `actions/lib/`    | Couples actions; blocks reuse                            |
+| Consumer-specific paths in reusables/actions                      | Breaks portability                                       |
+| Consumer-tuned `inputs.*.default` paths/globs/excludes in `ci-*`  | Couples distribution to one repo layout                  |
+| Hardcoded discovery/prune lists in reusable `run:` steps          | Callers cannot override without forking                  |
+| `secrets: inherit` on reusable callers                            | Blocks secret name remapping                             |
+| Credentials via `with:` on reusable workflows                     | Wrong channel                                            |
+| Action → action via `env.*` from prior action `GITHUB_ENV`        | Hidden contract — use `steps.<id>.outputs.*`             |
+| Force-push over `to.branch` on `push` / `push_head`               | Drops commits from earlier serialized runs (#684)        |
+| `cancel-in-progress: true` on pr-revise concurrency               | Kills in-flight work; use queue + merge landing          |
 
 ---
 
@@ -120,15 +123,15 @@ When a loop step records failure metadata for run logs or action outputs:
 
 Design background: [PR Revise Workflow Design](../../docs/explanation/loop-engineering/workflows/loop-github-pr-revise-workflow-design.md#concurrency-and-push_head-landing).
 
-| Rule | Requirement |
-| ---- | ----------- |
-| Same-PR serialize | `on-loop-github-pr-revise.yaml` **MUST** keep `concurrency.group` keyed by PR number with `cancel-in-progress: false` and `queue: max` |
-| No last-run-only | **MUST NOT** cancel in-flight revise runs or force-push agent tips over `to.branch` to keep only the newest run |
-| `push_head` merge | `loop-finalize` **MUST** land via merge of the agent branch into the latest `to.branch` (`lib/push_target.sh`); conflicts and non-fast-forward pushes **MUST** fail closed |
-| Full clone | Jobs that finalize with `push` / `push_head` **MUST** checkout with `fetch-depth: 0` so merge can reach the latest `origin/to.branch` (shallow finalize checkout was a #677 loss vector) |
-| Pin release | Changing `loop-finalize` `push` / `push_head` behavior **MUST** ship with a SHA pin bump in `ci-loop-agent.yaml` (or temporary dogfood `./.github/actions/...` per Pins); merged action code alone does not change dogfood execution |
-| Landing contract | `push_target.sh` checks out `origin/to.branch`, merges `origin/agent` with `--no-ff`, pushes without force — same merge shape as legacy inline finalize, with explicit auth, agent≠to guard, extracted tests, and fail-closed errors |
-| `open_pr` untouched | Changes to `push` / `push_head` landing **MUST NOT** alter the `open_pr` create-PR path |
+| Rule                | Requirement                                                                                                                                                                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Same-PR serialize   | `on-loop-github-pr-revise.yaml` **MUST** keep `concurrency.group` keyed by PR number with `cancel-in-progress: false` and `queue: max`                                                                                               |
+| No last-run-only    | **MUST NOT** cancel in-flight revise runs or force-push agent tips over `to.branch` to keep only the newest run                                                                                                                      |
+| `push_head` merge   | `loop-finalize` **MUST** land via merge of the agent branch into the latest `to.branch` (`lib/push_target.sh`); conflicts and non-fast-forward pushes **MUST** fail closed                                                           |
+| Full clone          | Jobs that finalize with `push` / `push_head` **MUST** checkout with `fetch-depth: 0` so merge can reach the latest `origin/to.branch` (shallow finalize checkout was a #677 loss vector)                                             |
+| Pin release         | Changing `loop-finalize` `push` / `push_head` behavior **MUST** ship with a SHA pin bump in `ci-loop-agent.yaml` (or temporary dogfood `./.github/actions/...` per Pins); merged action code alone does not change dogfood execution |
+| Landing contract    | `push_target.sh` checks out `origin/to.branch`, merges `origin/agent` with `--no-ff`, pushes without force — same merge shape as legacy inline finalize, with explicit auth, agent≠to guard, extracted tests, and fail-closed errors |
+| `open_pr` untouched | Changes to `push` / `push_head` landing **MUST NOT** alter the `open_pr` create-PR path                                                                                                                                              |
 
 ## Verification
 

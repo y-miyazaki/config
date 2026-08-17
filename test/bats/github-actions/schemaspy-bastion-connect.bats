@@ -81,7 +81,6 @@ EOF
     source "${CONNECT_LIB}"
     run bash -c 'source "'"${CONNECT_LIB}"'"; BASTION_INSTANCE_ID=i-0123456789abcdef BASTION_TAG_NAME="*bastion*" GITHUB_ENV="'"${GITHUB_ENV}"'" GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" setup_bastion_connection'
     [ "$status" -eq 0 ]
-    grep -q '^BASTION_ID=i-0123456789abcdef$' "${GITHUB_ENV}"
     grep -q '^bastion_id=i-0123456789abcdef$' "${GITHUB_OUTPUT}"
 }
 

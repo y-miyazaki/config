@@ -53,4 +53,7 @@ setup() {
     [ "$status" -eq 0 ]
     grep -q '^DB_HOST=db.example$' "${GITHUB_ENV}"
     grep -q '^artifact_name=schemaspy-pgsql-appdb-dev.zip$' "${GITHUB_OUTPUT}"
+    grep -q '^db_host=db.example$' "${GITHUB_OUTPUT}"
+    grep -q '^db_port=5432$' "${GITHUB_OUTPUT}"
+    grep -q '^db_name=appdb$' "${GITHUB_OUTPUT}"
 }

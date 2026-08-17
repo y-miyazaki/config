@@ -11,7 +11,7 @@
 #   - Auto-detect running instance by Name tag when ID is empty
 #
 # Output:
-#   BASTION_ID on GITHUB_ENV and bastion_id on GITHUB_OUTPUT
+#   bastion_id on GITHUB_OUTPUT
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -31,7 +31,7 @@ export LC_ALL=C.UTF-8
 #   None
 #
 # Outputs:
-#   Writes BASTION_ID to GITHUB_ENV and bastion_id to GITHUB_OUTPUT
+#   Writes bastion_id to GITHUB_OUTPUT
 #
 # Returns:
 #   Exits non-zero when bastion cannot be resolved
@@ -87,7 +87,6 @@ function setup_bastion_connection {
         echo "Auto-detected Bastion instance ID: ${bastion_id}"
     fi
 
-    echo "BASTION_ID=${bastion_id}" >> "$GITHUB_ENV"
     echo "bastion_id=${bastion_id}" >> "$GITHUB_OUTPUT"
 
     echo "Verifying Session Manager connectivity to ${bastion_id}..."

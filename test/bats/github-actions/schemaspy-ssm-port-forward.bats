@@ -81,7 +81,6 @@ EOF
     source "${PORT_FORWARD_LIB}"
     run bash -c 'source "'"${PORT_FORWARD_LIB}"'"; BASTION_ID=i-0123456789abcdef BASTION_LOCAL_PORT= DB_HOST=db.example DB_PORT=5432 DB_TYPE=pgsql GITHUB_ENV="'"${GITHUB_ENV}"'" GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" setup_ssm_port_forward'
     [ "$status" -eq 0 ]
-    grep -q '^LOCAL_PORT=15432$' "${GITHUB_ENV}"
     grep -q '^local_port=15432$' "${GITHUB_OUTPUT}"
 }
 
@@ -101,7 +100,6 @@ EOF
     source "${PORT_FORWARD_LIB}"
     run bash -c 'source "'"${PORT_FORWARD_LIB}"'"; BASTION_ID=i-0123456789abcdef BASTION_LOCAL_PORT=19999 DB_HOST=db.example DB_PORT=5432 DB_TYPE=pgsql GITHUB_ENV="'"${GITHUB_ENV}"'" GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" setup_ssm_port_forward'
     [ "$status" -eq 0 ]
-    grep -q '^LOCAL_PORT=19999$' "${GITHUB_ENV}"
     grep -q '^local_port=19999$' "${GITHUB_OUTPUT}"
 }
 
