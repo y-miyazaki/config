@@ -68,7 +68,7 @@ Platform semantics (target model, verifier baseline): [Multi-Branch Loops Design
 
 ### Scope: `scoped_pr_number`
 
-Optional. When set, `loop-detect` fetches that open PR via `gh pr view` (does not list up to 50 PRs), drops integration watch targets, and keeps only that PR. Used by `github-pr-revise` so comment webhooks do not run on `main`. Empty = no-op.
+Optional. When set, `loop-detect` fetches that open PR via `gh pr view` (does not list up to 50 PRs), drops integration watch targets, and keeps only that PR. Empty = no-op. Dogfood: [PR Revise Workflow Design](loop-github-pr-revise-workflow-design.md#domain-detect-environment-detect_domain_env_json).
 
 ### Watch: `branch_match` + `branch_match_mode`
 
@@ -268,12 +268,12 @@ Do **not** configure `prompt_verifier_*`, `prompt_implementer_feedback`, or `pro
 
 ## Execute-only inputs
 
-Passed through `ci-loop-caller` to `ci-loop-agent.yaml` when non-empty.
+Passed through `ci-loop-caller` to `ci-loop-agent.yaml` when non-empty. Per-loop dogfood values: [CI Sweeper Workflow Design — Execute-only inputs](loop-ci-sweeper-workflow-design.md#execute-only-inputs).
 
-| Input                       | Description                                                | Default (dogfood)                                     |
-| --------------------------- | ---------------------------------------------------------- | ----------------------------------------------------- |
-| `additional_commit_paths`   | Extra paths included in finalize commit (e.g. ledger file) | `.loop/state-ci-sweeper-run-ledger.json` (ci-sweeper) |
-| `domain_persistence_script` | Bash script for `loop-finalize` domain persistence         | ci-sweeper ledger script                              |
+| Input                       | Description                                        |
+| --------------------------- | -------------------------------------------------- |
+| `additional_commit_paths`   | Extra paths included in finalize commit            |
+| `domain_persistence_script` | Bash script for `loop-finalize` domain persistence |
 
 ## Detect permissions
 
@@ -288,85 +288,24 @@ Loop behavior (git-only vs `pr_enabled` vs `gh run list`) is selected by caller 
 
 ## Domain detect environment (`detect_domain_env_json`)
 
-JSON object string. Exported to the detect job environment before `loop-detect` runs. Keys use **detect-script env names** (historically `CHANGELOG_*`, `CI_SWEEPER_*`, etc.). Empty object `{}` when no domain env is required.
+JSON object string exported to the detect job environment before `loop-detect` runs. Keys use **detect-script env names** (for example `CHANGELOG_*`, `CI_SWEEPER_*`). Empty object `{}` when no domain env is required.
 
-Each detect script normalizes these keys once at startup via `configure_detect_environment` (defaults, `./` stripping). Detect CLI stays `--scope` / `--since` only so `loop-detect` can invoke every domain script uniformly.
-
-```yaml
-detect_domain_env_json: >-
-  {"CHANGELOG_FILE":"CHANGELOG.md","CHANGELOG_MERGE_COMMITS":"false"}
-```
-
-### Changelog (`changelog`)
-
-| JSON key                  | Description                                                      | Dogfood value  |
-| ------------------------- | ---------------------------------------------------------------- | -------------- |
-| `CHANGELOG_FILE`          | Target changelog path                                            | `CHANGELOG.md` |
-| `CHANGELOG_MAX_COMMITS`   | Max commits for `--scope all` (local debugging)                  | `100`          |
-| `CHANGELOG_MERGE_COMMITS` | `"true"` includes merge commits; `"false"` applies `--no-merges` | `"false"`      |
-
-### CI sweeper (`ci-sweeper`)
-
-| JSON key                         | Description                                     | Dogfood value                            |
-| -------------------------------- | ----------------------------------------------- | ---------------------------------------- |
-| `CI_SWEEPER_LEDGER_FILE`         | JSON ledger for `workflow_run_id` dedupe        | `.loop/state-ci-sweeper-run-ledger.json` |
-| `CI_SWEEPER_REJECT_MAX_RETRIES`  | Max retries per run ID when policy is `limited` | `"3"`                                    |
-| `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`, `retry`, or `limited`                  | `block`                                  |
+Each detect script normalizes these keys at startup via `configure_detect_environment` (defaults, `./` stripping). Detect CLI stays `--scope` / `--since` only so `loop-detect` can invoke every domain script uniformly.
 
 `GH_TOKEN` is **not** passed via `detect_domain_env_json` — pass optional `secrets.GH_TOKEN` on the reusable; each job resolves App → `GH_TOKEN` → job `GITHUB_TOKEN` via `loop-resolve-push-token`.
 
-Event keys (embed in `detect_domain_env_json` when `workflow_run` trigger is enabled on the caller):
+**Per-loop keys and dogfood values** are documented under `### Domain detect environment` in each workflow design doc (not duplicated here).
 
-```yaml
-detect_domain_env_json: ${{ format('{{"CI_SWEEPER_EVENT_HEAD_BRANCH":"{0}","CI_SWEEPER_HEAD_BRANCH":"{0}","CI_SWEEPER_HEAD_SHA":"{1}","CI_SWEEPER_WORKFLOW_RUN_ID":"{2}"}}', github.event.workflow_run.head_branch || 'main', github.event.workflow_run.head_sha || github.sha, github.event.workflow_run.id || '') }}
-```
-
-| JSON key                       | Description                                                                                                      |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| `CI_SWEEPER_EVENT_HEAD_BRANCH` | Stable failed-run head (not rewritten per scan). With `WORKFLOW_RUN_ID`, scopes `loop-detect` to that head only. |
-| `CI_SWEEPER_HEAD_BRANCH`       | Initial head; `loop-detect` rewrites per scan context                                                            |
-| `CI_SWEEPER_HEAD_SHA`          | Failed run head SHA                                                                                              |
-| `CI_SWEEPER_WORKFLOW_RUN_ID`   | Failed run ID for ledger dedupe + trigger-aware target scoping                                                   |
-| `CI_SWEEPER_WORKFLOW_NAME`     | Failed workflow display name                                                                                     |
-| `CI_SWEEPER_RUN_URL`           | HTML URL of failed run                                                                                           |
-
-### Docs updater (`docs-updater`)
-
-| JSON key                   | Description                                          | Dogfood value            |
-| -------------------------- | ---------------------------------------------------- | ------------------------ |
-| `DOCS_UPDATER_DOC_GLOBS`   | Comma-separated doc file globs for git-diff analysis | `docs/**/*.md,README.md` |
-| `DOCS_UPDATER_EXTRA_FILES` | Additional non-glob paths                            | `mkdocs.yml`             |
-
-When `DOCS_UPDATER_DOC_GLOBS` is unset, detect falls back to a repository-wide `*.md` find with standard `repo_paths` pruning (excludes `.agents/`, generated trees, etc.). Production callers should set globs explicitly; the fallback is mainly for local runs and tests.
-
-### Report tech debt (`tech-debt`)
-
-Domain paths and filenames are **environment variables** (via `detect_domain_env_json` or manual invocation). Detect CLI stays `--scope` / `--since` only so `loop-detect` can invoke every domain script uniformly.
-
-| JSON key / env var             | Description                                                | Dogfood value           |
-| ------------------------------ | ---------------------------------------------------------- | ----------------------- |
-| `TECH_DEBT_DIR`                | Report output directory                                    | `docs/report/tech-debt` |
-| `TECH_DEBT_LEGACY_SEARCH_DIRS` | Comma-separated prior-report search roots                  | `docs/report/tech-debt` |
-| `TECH_DEBT_DATE_FORMAT`        | UTC `strftime` for report basename                         | `%Y-%m-%d`              |
-| `TECH_DEBT_FILE_EXTENSION`     | Report filename extension (include dot)                    | `.md`                   |
-| `TECH_DEBT_PREVIOUS_GLOB`      | Glob for prior reports under search dirs                   | `????-??-??.md`         |
-| `REPO_PATHS_EXTRA_PRUNES`      | Optional extra detect prune roots (default: report parent) | unset                   |
-
-Example caller override (align `allowlist` / `infer_files_pattern` when changing `TECH_DEBT_DIR`):
-
-```yaml
-detect_domain_env_json: >-
-  {"TECH_DEBT_DIR":"docs/report/tech-debt"}
-```
-
-### Docs updater (hook / manual)
-
-Not a loop caller; configure via environment when invoking `detect_changes.sh` outside defaults.
-
-| Env var                    | Description                 | Default      |
-| -------------------------- | --------------------------- | ------------ |
-| `DOCS_UPDATER_DOCS_ROOT`   | Documentation tree root     | `docs`       |
-| `DOCS_UPDATER_SITE_CONFIG` | Site navigation config path | `mkdocs.yml` |
+| Loop                 | Domain env section                                                                                                                          |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| changelog            | [Changelog — Domain detect environment](loop-changelog-workflow-design.md#domain-detect-environment-detect_domain_env_json)                   |
+| ci-sweeper           | [CI Sweeper — Domain detect environment](loop-ci-sweeper-workflow-design.md#domain-detect-environment-detect_domain_env_json)               |
+| docs-updater         | [Docs Updater — Domain detect environment](loop-docs-updater-workflow-design.md#domain-detect-environment-detect_domain_env_json)           |
+| refactor             | [Refactor — Domain detect environment](loop-refactor-workflow-design.md#domain-detect-environment-detect_domain_env_json)                 |
+| tech-debt            | [Report Tech Debt — Domain detect environment](loop-tech-debt-workflow-design.md#domain-detect-environment-detect_domain_env_json)           |
+| github-issue-triage  | [Issue Triage — Domain detect environment](loop-github-issue-triage-workflow-design.md#domain-detect-environment-detect_domain_env_json)      |
+| github-issue-autofix | [Issue Autofix — Domain detect environment](loop-github-issue-autofix-workflow-design.md#domain-detect-environment-detect_domain_env_json)  |
+| github-pr-revise     | [PR Revise — Domain detect environment](loop-github-pr-revise-workflow-design.md#domain-detect-environment-detect_domain_env_json)          |
 
 ## Legacy `env` name mapping
 
@@ -389,18 +328,21 @@ Not a loop caller; configure via environment when invoking `detect_changes.sh` o
 | `prompt_instructions` (deprecated workflow input)             | `agent_implementer_instructions`                         |
 | `skill_name` (deprecated workflow input)                      | `agent_implementer_skill_name`                             |
 | `verifier_skill_name` (deprecated workflow input)             | `agent_verifier_skill_name`                                |
-| `CHANGELOG_*`, `CI_SWEEPER_*`, `DOCS_UPDATER_*`               | `detect_domain_env_json` keys                            |
+| `CHANGELOG_*`, `CI_SWEEPER_*`, `DOCS_UPDATER_*`, `TECH_DEBT_*`, `REFACTOR_*`, `PR_*`, `ISSUE_*` | `detect_domain_env_json` keys (per-loop tables in workflow design docs) |
 | `DOMAIN_PERSISTENCE_SCRIPT`                                   | `domain_persistence_script`                              |
 
 ## Per-loop design docs
 
-| Loop         | Design doc                                                            | Caller workflow             |
-| ------------ | --------------------------------------------------------------------- | --------------------------- |
-| changelog    | [Changelog Workflow Design](loop-changelog-workflow-design.md)        | `on-loop-changelog.yaml`    |
-| ci-sweeper   | [CI Sweeper Workflow Design](loop-ci-sweeper-workflow-design.md)      | `on-loop-ci-sweeper.yaml`   |
-| docs-updater | [Docs Updater Workflow Design](loop-docs-updater-workflow-design.md)  | `on-loop-docs-updater.yaml` |
-| refactor     | [Refactor Workflow Design](loop-refactor-workflow-design.md)          | `on-loop-refactor.yaml`     |
-| tech-debt    | [Report Tech Debt Workflow Design](loop-tech-debt-workflow-design.md) | `on-loop-tech-debt.yaml`    |
+| Loop                 | Design doc                                                                                | Caller workflow                         |
+| -------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------- |
+| changelog            | [Changelog Workflow Design](loop-changelog-workflow-design.md)                            | `on-loop-changelog.yaml`                |
+| ci-sweeper           | [CI Sweeper Workflow Design](loop-ci-sweeper-workflow-design.md)                          | `on-loop-ci-sweeper.yaml`               |
+| docs-updater         | [Docs Updater Workflow Design](loop-docs-updater-workflow-design.md)                      | `on-loop-docs-updater.yaml`             |
+| refactor             | [Refactor Workflow Design](loop-refactor-workflow-design.md)                            | `on-loop-refactor.yaml`                 |
+| tech-debt            | [Report Tech Debt Workflow Design](loop-tech-debt-workflow-design.md)                     | `on-loop-tech-debt.yaml`                |
+| github-issue-triage  | [Issue Triage Workflow Design](loop-github-issue-triage-workflow-design.md)               | `on-loop-github-issue-triage.yaml`      |
+| github-issue-autofix | [Issue Autofix Workflow Design](loop-github-issue-autofix-workflow-design.md)             | `on-loop-github-issue-autofix.yaml`     |
+| github-pr-revise     | [PR Revise Workflow Design](loop-github-pr-revise-workflow-design.md)                     | `on-loop-github-pr-revise.yaml`         |
 
 ## References
 

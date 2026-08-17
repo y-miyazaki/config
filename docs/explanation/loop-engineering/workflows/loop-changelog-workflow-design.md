@@ -68,8 +68,6 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `branch_state`                                       | Branch for run-log/budget persistence and state **read** baseline.                                                                                                                                                        | `main`                                                         |
 | `budget_max_runs_per_day`                            | Daily run cap keyed by `loop_name`. Caller input; `.loop/loop-budget.json` overrides when present. Exceeded → `skip_reason=budget`.                                                                                       | `1` (caller); effective `5` via `.loop/loop-budget.json`       |
 | `budget_max_tokens_per_day`                          | Daily aggregated token cap across loops.                                                                                                                                                                                  | `1000000`                                                      |
-| `detect_domain_env_json` → `CHANGELOG_FILE`          | Target changelog path. Forwarded to `detect_changelog_commits.sh`.                                                                                                                                                        | `CHANGELOG.md`                                                 |
-| `detect_domain_env_json` → `CHANGELOG_MERGE_COMMITS` | `true` includes merge commits; `false` passes `--no-merges` to detect script.                                                                                                                                             | `false`                                                        |
 | `detect_script`                                      | Domain detect script path. Invoked once per scan context by `loop-detect`.                                                                                                                                                | `.agents/skills/changelog/scripts/detect_changelog_commits.sh` |
 | `engine`                                             | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                                                                                                                                     | `cursor`                                                       |
 | `infer_files_pattern`                                | Extended regex to infer file paths from verifier text for allowlist checks.                                                                                                                                               | `CHANGELOG\.md`                                                |
@@ -82,6 +80,20 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `agent_implementer_instructions`                                | Domain instructions appended to implementer prompt by `loop-detect`.                                                                                                                                                      | Inline in caller workflow                                      |
 | `pr_enabled`                                         | Enumerate open PR heads. Changelog uses integration branches only.                                                                                                                                                        | `false`                                                        |
 | `agent_implementer_skill_name`                                         | Skill package to invoke. Must match `.agents/skills/changelog/`.                                                                                                                                                          | `changelog`                                                    |
+
+
+### Domain detect environment (`detect_domain_env_json`)
+
+```yaml
+detect_domain_env_json: >-
+  {"CHANGELOG_FILE":"CHANGELOG.md","CHANGELOG_MERGE_COMMITS":"false"}
+```
+
+| JSON key                  | Description                                                      | Dogfood value  |
+| ------------------------- | ---------------------------------------------------------------- | -------------- |
+| `CHANGELOG_FILE`          | Target changelog path                                            | `CHANGELOG.md` |
+| `CHANGELOG_MAX_COMMITS`   | Max commits for `--scope all` (local debugging)                  | `100`          |
+| `CHANGELOG_MERGE_COMMITS` | `"true"` includes merge commits; `"false"` applies `--no-merges` | `"false"`      |
 
 Platform handler: `on-loop-state-promote.yaml` (`pull_request_target` `closed`) promotes `pending` → `last_sha` on merge.
 

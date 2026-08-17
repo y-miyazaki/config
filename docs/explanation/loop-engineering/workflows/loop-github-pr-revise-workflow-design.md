@@ -16,6 +16,77 @@ Single intake for PR revision from human feedback: conversation or review commen
 
 Detect skips bots and comments without the mention token. Default landing: `git_landing_pull_request=push_head` (stacked via `open_pr`).
 
+### Supported use cases
+
+- `issue_comment` on a PR conversation containing the configured mention (dogfood: `@loop`)
+- `pull_request_review_comment` (inline review) with the mention token
+- `repository_dispatch` (`loop-github-pr-revise`) or `workflow_dispatch` with explicit `feedback` and `pr_number`
+
+### Out of scope
+
+- Issue triage (axis 1 — see [Issue Triage Workflow Design](loop-github-issue-triage-workflow-design.md))
+- Issue→PR autofix (axis 2 — see [Issue Autofix Workflow Design](loop-github-issue-autofix-workflow-design.md))
+- L3 auto-merge on stacked fix PRs
+- Mention-less triggers (any human comment starts revise)
+- Bot-authored comments and acting without the mention token on webhooks
+- Auto-resolving review threads (human resolve only)
+- Copilot Coding Agent as the implementer (LE Agent via `ci-loop-agent` only)
+- Comment gather / one-session batching improvements (`#683`)
+- Last-run-only discard of earlier fixes on the PR head
+- Force-push or `cancel-in-progress` to recover merge conflicts (fail closed on `push_head`)
+
+Skill execution boundaries: `github-pr-revise` SKILL.md (`USE FOR` / `DO NOT USE FOR`).
+
+
+## Caller inputs
+
+Keys are passed in `on-loop-github-pr-revise.yaml` via `with:` on `ci-loop-caller.yaml`. Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md).
+
+| Input / JSON key | Description | Dogfood value |
+| ---------------- | ----------- | ------------- |
+| `ack_trigger_comment` | Post `eyes` reaction on trigger comment via `ack-trigger` | `true` |
+| `agent_implementer_instructions` | Apply human feedback; address full `result.comments` array | Inline in caller workflow |
+| `agent_implementer_max_turns` | Max implementer turns per attempt | `8` |
+| `agent_implementer_model` | Implementer model ID | `cursor-grok-4.5-low` |
+| `agent_implementer_skill_name` | Skill package | `github-pr-revise` |
+| `agent_loop_max_attempts` | Max Agent→Verify cycles | `3` |
+| `agent_verifier_instructions` | APPROVE/REJECT rubric (mention gate, full comment batch) | Inline in caller workflow |
+| `agent_verifier_max_turns` | Max verifier turns | `3` |
+| `agent_verifier_model` | Verifier model ID | `composer-2.5` |
+| `agent_verifier_skill_name` | Checker skill | `loop-verifier` |
+| `allowlist` | File edit allowlist (empty = skill default) | `""` |
+| `branch_match` | Fallback integration watch (scoped PR mode drops integration targets) | `main` |
+| `branch_state` | `.loop/*` persistence branch | `main` |
+| `budget_max_runs_per_day` | Daily run cap | `10` |
+| `budget_max_tokens_per_day` | Daily token cap | `1000000` |
+| `delivery` | Platform delivery after APPROVE | `open_pr` |
+| `denylist` | Denylist globs | `""` |
+| `detect_script` | Domain detect script | `.agents/skills/github-pr-revise/scripts/detect_pr_revise.sh` |
+| `engine` | AI engine | `cursor` |
+| `environment` | GitHub Environment for env-scoped secrets | `default` |
+| `git_landing_pull_request` | PR-head landing (`push_head` default; `open_pr` stacked) | `push_head` |
+| `level` | Autonomy (`L2`) | `L2` |
+| `loop_name` | Loop identifier | `github-pr-revise` |
+| `may_edit` | Agent worktree edit gate | `true` |
+| `no_changes_verdict` | Verdict when no file diff | `REJECT` |
+| `pr_enabled` | Watch open PR heads (required for PR revise) | `true` |
+| `pr_exclude` | PR exclusion tokens | `fork,label:no-loop` |
+| `scoped_pr_number` | Fetch only this PR; drops integration watch | From webhook / dispatch / `inputs.pr_number` |
+| `write_target` | Agent artifact type | `fix` |
+
+### Domain detect environment (`detect_domain_env_json`)
+
+```yaml
+detect_domain_env_json: ${{ format('{{"PR_NUMBER":"{0}","PR_MENTION":"{1}"}}', github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || '', inputs.mention || '@loop') }}
+```
+
+| JSON key / env var | Description | Dogfood value |
+| ------------------ | ----------- | ------------- |
+| `PR_NUMBER` | Target PR number | From event / dispatch / `workflow_dispatch` input |
+| `PR_MENTION` | Mention token required on comment webhooks | `@loop` (override via `workflow_dispatch.inputs.mention`) |
+
+`scoped_pr_number` scopes `loop-detect` to the webhook PR so comment events do not scan `main`. See [Loop Caller Inputs Reference — Scope](loop-caller-inputs-reference.md#scope-scoped_pr_number).
+
 ## Caller shape
 
 ```text
@@ -53,7 +124,6 @@ Same-PR revise runs **serialize**; earlier product fixes must remain on the PR h
 | `queue` | `max` — queued mentions wait; one worker per PR at a time |
 | `push_head` landing | `loop-finalize` `push_target.sh` checks out latest `to.branch`, merges the agent branch with `--no-ff`, pushes without force |
 | Conflict | Merge or non-fast-forward push fails the finalize step (fail closed; no tip overwrite) |
-| Out of scope | Comment gather / one-session batching (`#683`); last-run-only discard of earlier fixes |
 
 `open_pr` finalize is unchanged. Prefer keeping lost-commit prevention on the shared `push` / `push_head` path rather than force-push or cancel-newest policies.
 

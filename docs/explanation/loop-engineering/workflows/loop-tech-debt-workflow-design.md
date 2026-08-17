@@ -78,7 +78,6 @@ Schedule: **`0 8 * * 1`** (Monday 08:00 UTC, weekly).
 | `budget_max_runs_per_day`     | Daily run cap keyed by `loop_name`. Caller input; `.loop/loop-budget.json` overrides when present.                                                                                                                        | `2`                                                                                             |
 | `budget_max_tokens_per_day`   | Daily aggregated token cap across loops.                                                                                                                                                                                  | `1000000`                                                                                       |
 | `denylist`                    | Comma-separated globs the implementer must not touch.                                                                                                                                                                     | `**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**,src/**,.github/**` |
-| `detect_domain_env_json`      | JSON object forwarded to detect script env. Optional `TECH_DEBT_*` keys override report paths; defaults match dogfood layout.                                                                                             | `'{}'`                                                                                          |
 | `detect_script`               | Domain detect script path.                                                                                                                                                                                                | `.agents/skills/tech-debt/scripts/detect_tech_debt.sh`                                          |
 | `engine`                      | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                                                                                                                                     | `cursor`                                                                                        |
 | `environment`                 | GitHub Environment for env-scoped secrets inside the reusable workflow. Leave `default` when repository secrets suffice.                                                                                                  | `default`                                                                                       |
@@ -95,6 +94,24 @@ Schedule: **`0 8 * * 1`** (Monday 08:00 UTC, weekly).
 | `agent_implementer_instructions`         | Domain instructions: classify signals; write dated report; compare previous report.                                                                                                                                       | Inline in caller workflow                                                                       |
 | `agent_implementer_skill_name`                  | Skill package to invoke.                                                                                                                                                                                                  | `tech-debt`                                                                                     |
 | `write_target`                | Agent artifact when `may_edit` is true (`report` for this loop).                                                                                                                                                          | `report`                                                                                        |
+
+### Domain detect environment (`detect_domain_env_json`)
+
+Dogfood passes `{}` — defaults match the layout below. Override paths when changing report location (align `allowlist` / `infer_files_pattern`).
+
+```yaml
+detect_domain_env_json: >-
+  {"TECH_DEBT_DIR":"docs/report/tech-debt"}
+```
+
+| JSON key / env var             | Description                                                | Dogfood value           |
+| ------------------------------ | ---------------------------------------------------------- | ----------------------- |
+| `TECH_DEBT_DIR`                | Report output directory                                    | `docs/report/tech-debt` |
+| `TECH_DEBT_LEGACY_SEARCH_DIRS` | Comma-separated prior-report search roots                  | `docs/report/tech-debt` |
+| `TECH_DEBT_DATE_FORMAT`        | UTC `strftime` for report basename                         | `%Y-%m-%d`              |
+| `TECH_DEBT_FILE_EXTENSION`     | Report filename extension (include dot)                    | `.md`                   |
+| `TECH_DEBT_PREVIOUS_GLOB`      | Glob for prior reports under search dirs                   | `????-??-??.md`         |
+| `REPO_PATHS_EXTRA_PRUNES`      | Optional extra detect prune roots (default: report parent) | unset                   |
 
 ## Detect
 
@@ -122,8 +139,6 @@ Detect script outputs **mechanical signals** (not semantic findings):
 - `from.ref` = HEAD on watch branch
 - `to.branch` = watch branch
 - `finalize` = `open_pr`
-
-No `detect_domain_env_json` keys required — caller passes `{}`.
 
 ### Stable filters (detect only)
 

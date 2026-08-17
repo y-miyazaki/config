@@ -66,9 +66,6 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `branch_state`                                             | Branch for `.loop/*` persistence, state migration, and watch fallback.                                             | `main`                                                    |
 | `budget_max_runs_per_day`                                  | Daily run cap keyed by `loop_name`.                                                                                | `1`                                                       |
 | `budget_max_tokens_per_day`                                | Daily aggregated token cap across loops.                                                                           | `1000000`                                                 |
-| `detect_domain_env_json` → `REFACTOR_DUP_MIN_LINES`        | Minimum consecutive non-empty lines for `duplication_block` hints.                                                 | `8`                                                       |
-| `detect_domain_env_json` → `REFACTOR_OVERSIZED_FILE_LINES` | File line count threshold for `oversized_unit` hints (size only).                                                  | `400`                                                     |
-| `detect_domain_env_json` → `REFACTOR_SCAN_GLOBS`           | Comma-separated globs for scan roots.                                                                              | `.apm/packages/**,scripts/**`                             |
 | `detect_script`                                            | Domain detect script path.                                                                                         | `.agents/skills/refactor/scripts/detect_refactor.sh`      |
 | `engine`                                                   | AI engine (`claude`, `copilot`, `codex`, `cursor`).                                                                | `cursor`                                                  |
 | `delivery`                                                 | Platform delivery after APPROVE (`open_pr` for dogfood).                                                           | `open_pr`                                                 |
@@ -83,6 +80,15 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `agent_implementer_instructions`                                      | Domain instructions: invoke `refactor` survey-then-apply-all path; stack validation via A'.                        | Inline in caller workflow                                 |
 | `pr_enabled`                                               | Enumerate open PR heads. Refactor loop uses integration branches only.                                             | `false`                                                   |
 | `agent_implementer_skill_name`                                               | Skill package to invoke.                                                                                           | `refactor`                                                |
+
+### Domain detect environment (`detect_domain_env_json`)
+
+| JSON key / env var             | Description                                                | Dogfood value                |
+| ------------------------------ | ---------------------------------------------------------- | ---------------------------- |
+| `REFACTOR_DUP_MIN_LINES`       | Minimum consecutive non-empty lines for `duplication_block` | `8`                          |
+| `REFACTOR_OVERSIZED_FILE_LINES`| File line count threshold for `oversized_unit` (size only) | `400`                        |
+| `REFACTOR_SCAN_GLOBS`          | Comma-separated globs for scan roots                       | `.apm/packages/**,scripts/**`|
+
 | `write_target`                                             | Agent artifact when `may_edit` is true (`fix` for dogfood).                                                        | `fix`                                                     |
 
 ## Detect

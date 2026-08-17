@@ -82,8 +82,6 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `branch_state`                                        | Branch for `.loop/*` persistence, state migration, and watch fallback.                                                                                                                                                    | `main`                                                                    |
 | `budget_max_runs_per_day`                             | Daily run cap keyed by `loop_name`. Caller input; `.loop/loop-budget.json` overrides when present.                                                                                                                        | `1`                                                                       |
 | `budget_max_tokens_per_day`                           | Daily aggregated token cap across loops.                                                                                                                                                                                  | `1000000`                                                                 |
-| `detect_domain_env_json` → `DOCS_UPDATER_DOC_GLOBS`   | Comma-separated globs for documentation files in git-diff analysis.                                                                                                                                                       | `docs/**/*.md,README.md`                                                  |
-| `detect_domain_env_json` → `DOCS_UPDATER_EXTRA_FILES` | Additional non-glob paths (site config) included in doc impact scan.                                                                                                                                                      | `mkdocs.yml`                                                              |
 | `detect_script`                                       | Domain detect script path (shared with docs-updater hook path).                                                                                                                                                           | `.agents/skills/docs-updater/scripts/detect_changes.sh`                   |
 | `engine`                                              | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                                                                                                                                     | `cursor`                                                                  |
 | `delivery`                                            | Platform delivery after APPROVE (`open_pr` for dogfood).                                                                                                                                                                  | `open_pr`                                                                 |
@@ -98,6 +96,25 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `agent_implementer_instructions`                                 | Domain instructions: run docs-updater automation path; address documented findings.                                                                                                                                       | Inline in caller workflow                                                 |
 | `pr_enabled`                                          | Enumerate open PR heads. docs-updater uses integration branches only.                                                                                                                                                     | `false`                                                                   |
 | `agent_implementer_skill_name`                                          | Skill package to invoke.                                                                                                                                                                                                  | `docs-updater`                                                            |
+
+### Domain detect environment (`detect_domain_env_json`)
+
+| JSON key                   | Description                                          | Dogfood value            |
+| -------------------------- | ---------------------------------------------------- | ------------------------ |
+| `DOCS_UPDATER_DOC_GLOBS`   | Comma-separated doc file globs for git-diff analysis | `docs/**/*.md,README.md` |
+| `DOCS_UPDATER_EXTRA_FILES` | Additional non-glob paths                            | `mkdocs.yml`             |
+
+When `DOCS_UPDATER_DOC_GLOBS` is unset, detect falls back to a repository-wide `*.md` find with standard `repo_paths` pruning (excludes `.agents/`, generated trees, etc.). Production callers should set globs explicitly; the fallback is mainly for local runs and tests.
+
+#### Hook / manual (appendix)
+
+Not a loop caller; configure via environment when invoking `detect_changes.sh` outside defaults.
+
+| Env var                    | Description                 | Default      |
+| -------------------------- | --------------------------- | ------------ |
+| `DOCS_UPDATER_DOCS_ROOT`   | Documentation tree root     | `docs`       |
+| `DOCS_UPDATER_SITE_CONFIG` | Site navigation config path | `mkdocs.yml` |
+
 | `write_target`                                        | Agent artifact when `may_edit` is true (`fix` for dogfood).                                                                                                                                                               | `fix`                                                                     |
 
 ## Detect

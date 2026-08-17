@@ -228,7 +228,7 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 | ------------------------ | -------- | ------- | -------------------------------------------------------- |
 | `detect_domain_env_json` | no       | `{}`    | Detect job step `env` (export step before `loop-detect`) |
 
-**Decision:** `detect_domain_env_json` only — no per-domain top-level inputs (e.g. `changelog_file`). Document JSON keys in [Loop Caller Inputs Reference](workflows/loop-caller-inputs-reference.md).
+**Decision:** `detect_domain_env_json` only — no per-domain top-level inputs (e.g. `changelog_file`). Per-loop JSON keys: [Domain detect environment index](workflows/loop-caller-inputs-reference.md#domain-detect-environment-detect_domain_env_json) → each workflow design doc.
 
 Detect scripts read domain variables from the step environment. Caller passes:
 

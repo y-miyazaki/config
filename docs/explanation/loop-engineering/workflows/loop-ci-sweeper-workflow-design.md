@@ -131,9 +131,6 @@ Git landing (`open_pr` / `push` / `push_head`) is derived from `delivery` inside
 | `budget_max_runs_per_day`                                   | Daily run cap keyed by `loop_name`. Caller input; `.loop/loop-budget.json` overrides when present.                                                                                                                        | `5` (caller); effective `50` via `.loop/loop-budget.json`                                                |
 | `budget_max_tokens_per_day`                                 | Daily aggregated token cap across loops.                                                                                                                                                                                  | `1000000`                                                                                                |
 | `denylist`                                                  | Comma-separated globs the implementer must never modify (credentials, infra, migrations).                                                                                                                                 | `**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**`                            |
-| `detect_domain_env_json` → `CI_SWEEPER_LEDGER_FILE`         | JSON ledger path for `workflow_run_id` dedupe.                                                                                                                                                                            | `.loop/state-ci-sweeper-run-ledger.json`                                                                 |
-| `detect_domain_env_json` → `CI_SWEEPER_REJECT_MAX_RETRIES`  | Max re-attempts per run ID when policy is `limited`.                                                                                                                                                                      | `3`                                                                                                      |
-| `detect_domain_env_json` → `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`, `retry`, or `limited` — ledger policy for prior `rejected` entries.                                                                                                                                              | `block`                                                                                                  |
 | Reusable workflow (`uses:`)                                 | `ci-loop-caller.yaml` — detect job requires `actions: write`, `contents: read`, and `pull-requests: read`; caller `permissions` must include `actions: write`.                                                            | `./.github/workflows/ci-loop-caller.yaml`                                                                |
 | `detect_script`                                             | Domain detect script path. Uses `gh run list` per watch branch / PR head.                                                                                                                                                 | `.agents/skills/ci-sweeper/scripts/detect_ci_failures.sh`                                                |
 | `domain_persistence_script`                                 | Bash script for `loop-finalize` domain persistence (run ledger updates).                                                                                                                                                  | `.agents/skills/ci-sweeper/scripts/update_run_ledger.sh`                                                 |
@@ -152,16 +149,36 @@ Git landing (`open_pr` / `push` / `push_head`) is derived from `delivery` inside
 
 **Removed from dogfood (do not set):** `pr_require`, `finalize_integration`, `finalize_pull_request` (replaced by `delivery`).
 
-**Event keys** (embedded in `detect_domain_env_json` when `workflow_run` fires; dogfood caller enables this trigger):
 
-| JSON key                       | Description                                                                                      |
-| ------------------------------ | ------------------------------------------------------------------------------------------------ |
-| `CI_SWEEPER_EVENT_HEAD_BRANCH` | Stable failed-run head branch (not rewritten per scan). Drives `loop-detect` watch-list scoping. |
-| `CI_SWEEPER_HEAD_BRANCH`       | Per-scan branch context rewritten by `loop-detect` for each target.                              |
-| `CI_SWEEPER_HEAD_SHA`          | Failed workflow run head SHA.                                                                    |
-| `CI_SWEEPER_WORKFLOW_RUN_ID`   | Failed workflow run ID for ledger dedupe **and** trigger-aware target scoping.                   |
-| `CI_SWEEPER_WORKFLOW_NAME`     | Failed workflow display name.                                                                    |
-| `CI_SWEEPER_RUN_URL`           | HTML URL of the failed workflow run (verifier context).                                          |
+### Domain detect environment (`detect_domain_env_json`)
+
+| JSON key                         | Description                                     | Dogfood value                            |
+| -------------------------------- | ----------------------------------------------- | ---------------------------------------- |
+| `CI_SWEEPER_LEDGER_FILE`         | JSON ledger for `workflow_run_id` dedupe        | `.loop/state-ci-sweeper-run-ledger.json` |
+| `CI_SWEEPER_REJECT_MAX_RETRIES`  | Max retries per run ID when policy is `limited` | `"3"`                                    |
+| `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`, `retry`, or `limited`                  | `block`                                  |
+
+**Event keys** (embed when `workflow_run` trigger is enabled on the caller):
+
+```yaml
+detect_domain_env_json: ${{ format('{{"CI_SWEEPER_EVENT_HEAD_BRANCH":"{0}","CI_SWEEPER_HEAD_BRANCH":"{0}","CI_SWEEPER_HEAD_SHA":"{1}","CI_SWEEPER_WORKFLOW_RUN_ID":"{2}"}}', github.event.workflow_run.head_branch || 'main', github.event.workflow_run.head_sha || github.sha, github.event.workflow_run.id || '') }}
+```
+
+| JSON key                       | Description                                                                                                      |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `CI_SWEEPER_EVENT_HEAD_BRANCH` | Stable failed-run head (not rewritten per scan). With `WORKFLOW_RUN_ID`, scopes `loop-detect` to that head only. |
+| `CI_SWEEPER_HEAD_BRANCH`       | Initial head; `loop-detect` rewrites per scan context                                                            |
+| `CI_SWEEPER_HEAD_SHA`          | Failed run head SHA                                                                                              |
+| `CI_SWEEPER_WORKFLOW_RUN_ID`   | Failed run ID for ledger dedupe + trigger-aware target scoping                                                   |
+| `CI_SWEEPER_WORKFLOW_NAME`     | Failed workflow display name                                                                                     |
+| `CI_SWEEPER_RUN_URL`           | HTML URL of failed run                                                                                           |
+
+### Execute-only inputs
+
+| Input                       | Dogfood value                                                                 |
+| --------------------------- | ----------------------------------------------------------------------------- |
+| `additional_commit_paths`   | `.loop/state-ci-sweeper-run-ledger.json`                                      |
+| `domain_persistence_script` | `.agents/skills/ci-sweeper/scripts/update_run_ledger.sh`                      |
 
 When `CI_SWEEPER_WORKFLOW_RUN_ID` is set, `loop-detect` enumerates **only** the failed head (matching integration branch or open PR). See [Trigger-aware priority](../multi-branch-loops-design.md#trigger-aware-priority). Detect script binaries are always pinned from the job checkout (branch_state), never from a stale PR worktree.
 
