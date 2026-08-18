@@ -13,7 +13,7 @@ dependencies:
       registry: false
       transport: stdio
       command: npx
-      args: ["-y", "@upstash/context7-mcp@4.0.1"]
+      args: ["-y", "@upstash/context7-mcp@4.0.2"]
     - name: fetch
       registry: false
       transport: stdio
