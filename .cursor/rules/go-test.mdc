@@ -14,10 +14,10 @@ globs: "**/*.go"
 
 ### Rule application (`globs` / `paths`)
 
-| Pattern | Use when | Result |
-| --- | --- | --- |
+| Pattern                 | Use when                                                           | Result                                                                              |
+| ----------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
 | `**/*.go` (recommended) | Test rules must apply while editing **production** `.go` files too | TEST-00 pairing and test templates inject on source edits (G-05 companion coverage) |
-| `**/*_test.go` only | Test rules should inject **only** when a test file is open | Pairing obligation is easy to miss when changing `foo.go` |
+| `**/*_test.go` only     | Test rules should inject **only** when a test file is open         | Pairing obligation is easy to miss when changing `foo.go`                           |
 
 **Why Bats lists two globs but Go uses one:** Bats pairs `*.sh` with `*.bats` — different extensions, so both must be listed. Go tests live in `*_test.go`, which already matches `**/*.go`. Listing `**/*_test.go` in addition is optional documentation only; it does not change Cursor behavior.
 
@@ -25,24 +25,24 @@ globs: "**/*.go"
 
 ### Naming Conventions
 
-| Component | Rule | Example |
-| --- | --- | --- |
-| Test file | `<stem>_test.go` beside source | `parser.go` → `parser_test.go` |
-| Test func | `Test<TypeOrFunc>_<Behavior>` | `TestParser_NormalizesInput` |
-| Subtest name | Lowercase descriptive phrase | `empty input returns error` |
-| Sentinel error | `errTest<Name>` at package scope | `errTestNotFound` |
-| Stub type | `stub<Role>` | `stubStore`, `stubRunCollector` |
+| Component      | Rule                             | Example                         |
+| -------------- | -------------------------------- | ------------------------------- |
+| Test file      | `<stem>_test.go` beside source   | `parser.go` → `parser_test.go`  |
+| Test func      | `Test<TypeOrFunc>_<Behavior>`    | `TestParser_NormalizesInput`    |
+| Subtest name   | Lowercase descriptive phrase     | `empty input returns error`     |
+| Sentinel error | `errTest<Name>` at package scope | `errTestNotFound`               |
+| Stub type      | `stub<Role>`                     | `stubStore`, `stubRunCollector` |
 
 ### Default Test Stack
 
 Use this stack unless the **package** has already adopted optional tools (see [Optional Tools](#optional-tools-opt)):
 
-| Layer | Tool | Role |
-| --- | --- | --- |
-| Test structure | table-driven `[]struct` + `t.Run` | default for all unit tests — loop inputs/outputs in one `Test*` function |
-| Assertions (simple) | stdlib `testing` | `t.Fatalf` / `t.Errorf` with explicit `got` / `want` messages |
-| Assertions (complex) | `github.com/google/go-cmp/cmp` | struct, slice, map deep equality |
-| Test doubles | hand-written stub/fake | consumer-interface substitution |
+| Layer                | Tool                              | Role                                                                     |
+| -------------------- | --------------------------------- | ------------------------------------------------------------------------ |
+| Test structure       | table-driven `[]struct` + `t.Run` | default for all unit tests — loop inputs/outputs in one `Test*` function |
+| Assertions (simple)  | stdlib `testing`                  | `t.Fatalf` / `t.Errorf` with explicit `got` / `want` messages            |
+| Assertions (complex) | `github.com/google/go-cmp/cmp`    | struct, slice, map deep equality                                         |
+| Test doubles         | hand-written stub/fake            | consumer-interface substitution                                          |
 
 Adopting testify, mockery, or gomock is **optional** — when adopted, apply package-wide and follow the matching optional section below.
 
