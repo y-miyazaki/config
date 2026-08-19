@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-08-19T06:38:44.582869+00:00'
+generated_at: '2026-08-19T07:23:50.165006+00:00'
 apm_version: 0.28.0
 dependencies:
 - repo_url: _local/common
@@ -1133,7 +1133,7 @@ dependencies:
     .agents/skills/go-validation/scripts/lib/terraform.sh: sha256:19d9b56a4346d68a4656ccfe61c64b8638c86ffdc02b830a7cdd84be7449551d
     .agents/skills/go-validation/scripts/lib/validation.sh: sha256:a2f91f635ecbd92ea0d7cea4d0703fd8fa58af0c35021c20d7cd8e1f3bd634eb
     .agents/skills/go-validation/scripts/lib/yaml_map_order.py: sha256:b6e23fe34ecb02222d077dbd27f65b597c8417eeb707406dc76702a536647803
-    .agents/skills/go-validation/scripts/validate.sh: sha256:b382522c2854a0aa39caf7924e6b760911c8f9042a2cd6fbc9256bc44354af1f
+    .agents/skills/go-validation/scripts/validate.sh: sha256:4c78176c796d29534862fc5bf6727bcea24e4a0e78915005880e725540181df4
     .claude/rules/go-test.md: sha256:7caa7eac99b6adc6630129a2dba714603407f32e4d163dc84573bbe9ff2d3d07
     .claude/rules/go.md: sha256:9e2f43c864f2ddb650c34baab1d5465e21786a318c57f792c0bfc61b224b0774
     .claude/skills/go-review/SKILL.md: sha256:6f144d386f08501fdd11fd33ba0d9422de5bea4334c5334b876998f2f62bc49d
@@ -1180,7 +1180,7 @@ dependencies:
     .claude/skills/go-validation/scripts/lib/terraform.sh: sha256:19d9b56a4346d68a4656ccfe61c64b8638c86ffdc02b830a7cdd84be7449551d
     .claude/skills/go-validation/scripts/lib/validation.sh: sha256:a2f91f635ecbd92ea0d7cea4d0703fd8fa58af0c35021c20d7cd8e1f3bd634eb
     .claude/skills/go-validation/scripts/lib/yaml_map_order.py: sha256:b6e23fe34ecb02222d077dbd27f65b597c8417eeb707406dc76702a536647803
-    .claude/skills/go-validation/scripts/validate.sh: sha256:b382522c2854a0aa39caf7924e6b760911c8f9042a2cd6fbc9256bc44354af1f
+    .claude/skills/go-validation/scripts/validate.sh: sha256:4c78176c796d29534862fc5bf6727bcea24e4a0e78915005880e725540181df4
     .cursor/rules/go-test.mdc: sha256:7b6832167f7de68584a279f80a12e58debdc97cffb596b4edf95919fb4783106
     .cursor/rules/go.mdc: sha256:0603f5104953be70ac58e1a2a28bda1703161afb00219d8fc78a7d4d96890d35
   source: local
@@ -1193,7 +1193,7 @@ dependencies:
   deployed_files:
   - .claude/hooks/go-hooks-claude/scripts/golangci_lint.sh
   deployed_file_hashes:
-    .claude/hooks/go-hooks-claude/scripts/golangci_lint.sh: sha256:37f7d1d83cdf3435d32763a8cbf3318ed2d57361e9ff25c77fe918c19b17b8c4
+    .claude/hooks/go-hooks-claude/scripts/golangci_lint.sh: sha256:6854f1ee5c6796fea76f24e731a3d056486b99fe12aa2732d4f28e905b4a040e
   source: local
   local_path: ./.apm/packages/go-hooks-claude
   declared_license: Apache-2.0
@@ -1204,7 +1204,7 @@ dependencies:
   deployed_files:
   - .cursor/hooks/go-hooks-cursor/scripts/golangci_lint.sh
   deployed_file_hashes:
-    .cursor/hooks/go-hooks-cursor/scripts/golangci_lint.sh: sha256:37f7d1d83cdf3435d32763a8cbf3318ed2d57361e9ff25c77fe918c19b17b8c4
+    .cursor/hooks/go-hooks-cursor/scripts/golangci_lint.sh: sha256:6854f1ee5c6796fea76f24e731a3d056486b99fe12aa2732d4f28e905b4a040e
   source: local
   local_path: ./.apm/packages/go-hooks-cursor
   declared_license: Apache-2.0
@@ -2391,7 +2391,7 @@ deployments:
   owners:
   - ./.apm/packages/go-hooks-claude
   active_owner: ./.apm/packages/go-hooks-claude
-  content_hash: sha256:37f7d1d83cdf3435d32763a8cbf3318ed2d57361e9ff25c77fe918c19b17b8c4
+  content_hash: sha256:6854f1ee5c6796fea76f24e731a3d056486b99fe12aa2732d4f28e905b4a040e
 - kind: project-relative
   target: claude
   value: .claude/hooks/shell-script-hooks-claude/scripts/shellcheck.sh
@@ -5685,7 +5685,7 @@ deployments:
   owners:
   - ./.apm/packages/go
   active_owner: ./.apm/packages/go
-  content_hash: sha256:b382522c2854a0aa39caf7924e6b760911c8f9042a2cd6fbc9256bc44354af1f
+  content_hash: sha256:4c78176c796d29534862fc5bf6727bcea24e4a0e78915005880e725540181df4
 - kind: project-relative
   target: claude
   value: .claude/skills/instructions-review
@@ -10572,7 +10572,7 @@ deployments:
   owners:
   - ./.apm/packages/go
   active_owner: ./.apm/packages/go
-  content_hash: sha256:b382522c2854a0aa39caf7924e6b760911c8f9042a2cd6fbc9256bc44354af1f
+  content_hash: sha256:4c78176c796d29534862fc5bf6727bcea24e4a0e78915005880e725540181df4
 - kind: project-relative
   target: cursor
   value: .agents/skills/instructions-review
@@ -12309,7 +12309,7 @@ deployments:
   owners:
   - ./.apm/packages/go-hooks-cursor
   active_owner: ./.apm/packages/go-hooks-cursor
-  content_hash: sha256:37f7d1d83cdf3435d32763a8cbf3318ed2d57361e9ff25c77fe918c19b17b8c4
+  content_hash: sha256:6854f1ee5c6796fea76f24e731a3d056486b99fe12aa2732d4f28e905b4a040e
 - kind: project-relative
   target: cursor
   value: .cursor/hooks/shell-script-hooks-cursor/scripts/shellcheck.sh
