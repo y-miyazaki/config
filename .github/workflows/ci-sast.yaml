@@ -58,7 +58,7 @@ jobs:
     steps:
       - name: Detect CodeQL Support
         id: detect
-        uses: y-miyazaki/config/.github/actions/detect-codeql-support@5d56c8037a787c15988c1c3489919c64bcb7e7d2 # v1.8.93
+        uses: y-miyazaki/config/.github/actions/detect-codeql-support@d86043dee110fd20f95b2db568fb5b6f2919f6fa # v1.8.93
 
       - name: Checkout Code
         if: steps.detect.outputs.skip != 'true'
@@ -91,7 +91,7 @@ jobs:
     steps:
       - name: Detect SARIF Upload Support
         id: detect
-        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@5d56c8037a787c15988c1c3489919c64bcb7e7d2 # v1.8.93
+        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@d86043dee110fd20f95b2db568fb5b6f2919f6fa # v1.8.93
 
       - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -194,7 +194,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@5d56c8037a787c15988c1c3489919c64bcb7e7d2 # v1.8.93
+        uses: y-miyazaki/config/.github/actions/summary@d86043dee110fd20f95b2db568fb5b6f2919f6fa # v1.8.93
         with:
           artifacts: |
             semgrep-report
