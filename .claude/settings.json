@@ -132,6 +132,7 @@
       "Bash(curl *)",
       "Bash(ghalint *)",
       "Bash(golangci-lint *)",
+      "Bash(gofmt *)",
       "Bash(go get *)",
       "Bash(go mod download *)",
       "Bash(markdown-link-check *)",
@@ -250,7 +251,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/common-hooks-claude/scripts/actionlint.sh",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/common-hooks-claude/scripts/actionlint.sh\"",
             "timeout": 60
           }
         ]
@@ -260,7 +261,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/common-hooks-claude/scripts/ghalint.sh",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/common-hooks-claude/scripts/ghalint.sh\"",
             "timeout": 60
           }
         ]
@@ -270,7 +271,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/common-hooks-claude/scripts/zizmor.sh",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/common-hooks-claude/scripts/zizmor.sh\"",
             "timeout": 60
           }
         ]
@@ -280,7 +281,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/common-hooks-claude/scripts/gitleaks.sh",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/common-hooks-claude/scripts/gitleaks.sh\"",
             "timeout": 60
           }
         ]
@@ -290,7 +291,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/common-hooks-claude/scripts/markdown_link_check.sh",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/common-hooks-claude/scripts/markdown_link_check.sh\"",
             "timeout": 240
           }
         ]
@@ -300,7 +301,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/common-hooks-claude/scripts/markdownlint_cli2.sh",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/common-hooks-claude/scripts/markdownlint_cli2.sh\"",
             "timeout": 120
           }
         ]
@@ -310,7 +311,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/go-hooks-claude/scripts/golangci_lint.sh",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/go-hooks-claude/scripts/golangci_lint.sh\"",
             "timeout": 120
           }
         ]
@@ -320,7 +321,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/shell-script-hooks-claude/scripts/shellcheck.sh",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/shell-script-hooks-claude/scripts/shellcheck.sh\"",
             "timeout": 120
           }
         ]
@@ -332,7 +333,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/shell-script-hooks-claude/scripts/shfmt.sh",
+            "command": "\"${CLAUDE_PROJECT_DIR}/.claude/hooks/shell-script-hooks-claude/scripts/shfmt.sh\"",
             "timeout": 120
           }
         ]
