@@ -199,7 +199,7 @@ jobs:
 
       - name: Setup Parameters
         id: setup-parameters
-        uses: y-miyazaki/config/.github/actions/schemaspy-setup-parameters@5c63d4f17e325af80cb35f16c6a79240da564d9a # v1.8.94
+        uses: y-miyazaki/config/.github/actions/schemaspy-setup-parameters@b05d4f4b8a69d90e731f5f59ccc67ebfc6744599 # v1.8.95
         with:
           db_host_input: ${{ secrets.DB_HOST }}
           db_name_input: ${{ inputs.db_name }}
@@ -221,7 +221,7 @@ jobs:
       - name: Setup Bastion Connection
         if: ${{ env.USE_BASTION == 'true' }}
         id: bastion-connect
-        uses: y-miyazaki/config/.github/actions/schemaspy-bastion-connect@5c63d4f17e325af80cb35f16c6a79240da564d9a # v1.8.94
+        uses: y-miyazaki/config/.github/actions/schemaspy-bastion-connect@b05d4f4b8a69d90e731f5f59ccc67ebfc6744599 # v1.8.95
         with:
           bastion_instance_id: ${{ inputs.bastion_instance_id }}
           bastion_tag_name: ${{ inputs.bastion_tag_name }}
@@ -229,7 +229,7 @@ jobs:
       - name: Setup SSM Port Forwarding
         if: ${{ env.USE_BASTION == 'true' }}
         id: start-port-forward
-        uses: y-miyazaki/config/.github/actions/schemaspy-ssm-port-forward@5c63d4f17e325af80cb35f16c6a79240da564d9a # v1.8.94
+        uses: y-miyazaki/config/.github/actions/schemaspy-ssm-port-forward@b05d4f4b8a69d90e731f5f59ccc67ebfc6744599 # v1.8.95
         with:
           bastion_id: ${{ steps.bastion-connect.outputs.bastion_id }}
           bastion_local_port: ${{ inputs.bastion_local_port }}
@@ -381,7 +381,7 @@ jobs:
 
       - name: Cleanup SSM Port Forwarding
         if: ${{ always() && env.USE_BASTION == 'true' }}
-        uses: y-miyazaki/config/.github/actions/schemaspy-ssm-cleanup@5c63d4f17e325af80cb35f16c6a79240da564d9a # v1.8.94
+        uses: y-miyazaki/config/.github/actions/schemaspy-ssm-cleanup@b05d4f4b8a69d90e731f5f59ccc67ebfc6744599 # v1.8.95
         with:
           ssm_pid: ${{ steps.start-port-forward.outputs.ssm_pid }}
 
@@ -431,7 +431,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@5c63d4f17e325af80cb35f16c6a79240da564d9a # v1.8.94
+        uses: y-miyazaki/config/.github/actions/summary@b05d4f4b8a69d90e731f5f59ccc67ebfc6744599 # v1.8.95
         with:
           artifacts: |
             ${{ steps.setup-parameters.outputs.artifact_name }}
