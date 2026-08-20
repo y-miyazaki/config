@@ -25,13 +25,13 @@ globs: "**/*.go"
 
 ### Naming Conventions
 
-| Component      | Rule                             | Example                         |
-| -------------- | -------------------------------- | ------------------------------- |
+| Component      | Rule                                                         | Example                                                |
+| -------------- | ------------------------------------------------------------ | ------------------------------------------------------ |
 | Test file      | `<source-stem>_test.go`; splits keep `<source-stem>_` prefix | `parser.go` → `parser_test.go`, `parser_error_test.go` |
-| Test func      | `Test<TypeOrFunc>_<Behavior>`    | `TestParser_NormalizesInput`    |
-| Subtest name   | Lowercase descriptive phrase     | `empty input returns error`     |
-| Sentinel error | `errTest<Name>` at package scope | `errTestNotFound`               |
-| Stub type      | `stub<Role>`                     | `stubStore`, `stubRunCollector` |
+| Test func      | `Test<TypeOrFunc>_<Behavior>`                                | `TestParser_NormalizesInput`                           |
+| Subtest name   | Lowercase descriptive phrase                                 | `empty input returns error`                            |
+| Sentinel error | `errTest<Name>` at package scope                             | `errTestNotFound`                                      |
+| Stub type      | `stub<Role>`                                                 | `stubStore`, `stubRunCollector`                        |
 
 ### Default Test Stack
 
