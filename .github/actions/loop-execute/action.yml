@@ -117,7 +117,7 @@ inputs:
     description: "Checker task section inserted before criteria"
     required: false
   uv_version:
-    default: "0.12.3"
+    default: "0.12.4"
     description: "uv version for MCP servers (uvx); keep aligned with mise.toml aqua:astral-sh/uv"
     required: false
   verifier_context:
