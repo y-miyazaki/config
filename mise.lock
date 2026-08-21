@@ -1585,7 +1585,6 @@ checksum = "sha256:8ecb45f1680b28af30518a167dcf557ca0bb8137b2e444ac4353fc7667edd
 url = "https://github.com/DeusData/codebase-memory-mcp/releases/download/v0.10.4/codebase-memory-mcp-linux-amd64.tar.gz"
 url_api = "https://api.github.com/repos/DeusData/codebase-memory-mcp/releases/assets/514056185"
 provenance = "github-attestations"
-provenance_verified = true
 
 [tools."github:DeusData/codebase-memory-mcp"."platforms.linux-x64-musl"]
 checksum = "sha256:8ecb45f1680b28af30518a167dcf557ca0bb8137b2e444ac4353fc7667edd96d"
