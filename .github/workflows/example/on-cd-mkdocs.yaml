@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   build:
-    uses: y-miyazaki/config/.github/workflows/cd-mkdocs.yaml@2c7fc32ab491c79b9e87a296a99d68d3b7839918 # v1.8.96
+    uses: y-miyazaki/config/.github/workflows/cd-mkdocs.yaml@e7217c94dca4630f839e910fccdf577114a745e1 # v1.8.97
     with:
       artifact_name: mkdocs-site
       config_file: mkdocs.yml
@@ -29,7 +29,7 @@ jobs:
 
   deploy:
     needs: build
-    uses: y-miyazaki/config/.github/workflows/cd-github-pages.yaml@2c7fc32ab491c79b9e87a296a99d68d3b7839918 # v1.8.96
+    uses: y-miyazaki/config/.github/workflows/cd-github-pages.yaml@e7217c94dca4630f839e910fccdf577114a745e1 # v1.8.97
     with:
       artifact_name: mkdocs-site
     permissions:
