@@ -49,7 +49,7 @@ on:
         required: false
         type: boolean
       trivy_version:
-        default: v0.73.0
+        default: v0.74.0
         description: "Trivy version for image scanning"
         required: false
         type: string
