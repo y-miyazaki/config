@@ -18,6 +18,45 @@ my %map = (
   'terraform-review'      => '.apm/packages/terraform/.apm/instructions/terraform.instructions.md',
 );
 
+# Category files excluded from always-on instructions Guidelines (still in review checklist).
+# go-test.instructions.md owns TEST-01+ and TAP; pairing obligations live in Scope only (no ItemID).
+my %instructions_category_excludes = (
+  'go-review' => {
+    'category-testing.md'             => 1,
+    'category-test-anti-patterns.md' => 1,
+  },
+);
+
+# Rule IDs excluded from synced Guidelines (still in review checklist).
+# Pairing gates (TEST-00) belong in Scope prose, not numbered Guidelines bullets.
+my %instructions_rule_excludes = (
+  'shell-script-review' => {
+    'TEST-00' => 1,
+  },
+);
+
+sub rule_id_from_entry {
+  my ($rule) = @_;
+  my ($id) = $rule =~ /^([A-Z][A-Z0-9]*-[0-9]+[a-z]?)/;
+  return $id;
+}
+
+sub is_excluded_rule_from_instructions {
+  my ($skill, $rule) = @_;
+  my $id = rule_id_from_entry($rule);
+  return 0 if !defined $id;
+  my $ex = $instructions_rule_excludes{$skill};
+  return $ex && $ex->{$id};
+}
+
+sub is_excluded_from_instructions {
+  my ($skill, $path) = @_;
+  my ($base) = $path =~ m{([^/]+)$};
+  return 0 if !defined $base;
+  my $ex = $instructions_category_excludes{$skill};
+  return $ex && $ex->{$base};
+}
+
 my %code_mod_guidelines = (
   'agent-skills-review' => [
     '- Automate deterministic checks (existence, quantitative, file presence) in skill `scripts/`; keep judgment-based checks in the review skill workflow.',
@@ -26,7 +65,7 @@ my %code_mod_guidelines = (
     '- Keep map keys alphabetically ordered per ORD-01 in companion github-actions-workflow rules (stem `github-actions-workflow`).',
   ],
   'go-review' => [
-    '- When adding or changing behavior, add or update *_test.go files in the same change.',
+    '- When adding or changing behavior, add or update *_test.go files in the same change; follow companion Go Test rules (stem `go-test`) for test layout.',
   ],
   'instructions-review' => [
     '- Keep applyTo precise to distributed rule paths; use stem-based companion cross-links (G-03, G-04, G-05).',
@@ -34,7 +73,7 @@ my %code_mod_guidelines = (
     '- When instruction files are updated, re-evaluate instruction quality against this file\'s STRUCT/TEST rules.',
   ],
   'shell-script-review' => [
-    '- When adding or changing shell scripts or sourced libraries, add or update matching Bats suites under test/bats/ (mirror the script path) in the same change; follow companion Bats rules (stem `bats`) for suite layout.',
+    '- When adding or changing shell scripts or sourced libraries, add or update the paired Bats suite in the same change; follow the repository\'s established bats layout per companion Bats rules (stem `bats`).',
   ],
   'terraform-review' => [
     '- Keep argument keys inside resource/module/data/local blocks alphabetically ordered (ORD-01).',
@@ -88,6 +127,27 @@ sub normalize_section_header {
   return $header;
 }
 
+# STRUCT-05: domain rules first, Anti-Patterns last (before Code Modification Guidelines).
+# category-anti-patterns.md sorts first alphabetically; defer AP files to the end.
+sub is_anti_patterns_category_file {
+  my ($path) = @_;
+  my ($base) = $path =~ m{([^/]+)$};
+  return defined $base && $base =~ /^category-(?:test-)?anti-patterns\.md$/;
+}
+
+sub order_category_files {
+  my (@files) = @_;
+  my (@domain, @ap);
+  for my $f (@files) {
+    if (is_anti_patterns_category_file($f)) {
+      push @ap, $f;
+    } else {
+      push @domain, $f;
+    }
+  }
+  return (sort @domain), (sort @ap);
+}
+
 for my $skill (sort keys %map) {
   my $instr = $map{$skill};
   # Extract package path from instruction file path (e.g., .apm/packages/common/.apm -> .apm/packages/common)
@@ -108,8 +168,11 @@ for my $skill (sort keys %map) {
   while ($instr_txt =~ /\*\*([A-Z][A-Z0-9]*-[0-9]+[a-z]?) \((MUST|SHOULD|CAN)\)\*\*:/g) {
     $level_by_id{$1} = $2;
   }
+  while ($instr_txt =~ /^- ([A-Z][A-Z0-9]*-[0-9]+[a-z]?) \((MUST|SHOULD|CAN)\):/gm) {
+    $level_by_id{$1} = $2;
+  }
 
-  my @category_files = grep { -f $_ } sort( bsd_glob("$ref_dir/category-*.md") );
+  my @category_files = order_category_files(grep { -f $_ } bsd_glob("$ref_dir/category-*.md"));
   next if !@category_files;
 
   my @parsed_categories;
@@ -161,7 +224,7 @@ for my $skill (sort keys %map) {
     if (defined $current) {
       push @sections, $current;
     }
-    push @parsed_categories, \@sections;
+    push @parsed_categories, { file => $cf, sections => \@sections };
   }
 
   # 2) regenerate common-checklist.md
@@ -171,8 +234,8 @@ for my $skill (sort keys %map) {
   my ($title) = split /\n/, read_all($checklist);
   my @out = ($title, '');
 
-  for my $sections_ref (@parsed_categories) {
-    for my $section (@{$sections_ref}) {
+  for my $parsed (@parsed_categories) {
+    for my $section (@{$parsed->{sections}}) {
       next if !@{$section->{rules}};
       push @out, '' if @out && $out[-1] ne '';
       push @out, "## " . normalize_section_header($section->{header});
@@ -202,12 +265,14 @@ for my $skill (sort keys %map) {
   #    Emit ItemID + title only (no Check: children) to keep always-on instructions thin.
   #    Full Check/Why/Fix stay in category-*.md for review skills.
   my @guideline_lines;
-  for my $sections_ref (@parsed_categories) {
-    for my $section (@{$sections_ref}) {
+  for my $parsed (@parsed_categories) {
+    next if is_excluded_from_instructions($skill, $parsed->{file});
+    for my $section (@{$parsed->{sections}}) {
       next if !@{$section->{rules}};
       push @guideline_lines, '' if @guideline_lines && $guideline_lines[-1] ne '';
       push @guideline_lines, "### " . normalize_section_header($section->{header});
       for my $entry (@{$section->{rules}}) {
+        next if is_excluded_rule_from_instructions($skill, $entry->{rule});
         push @guideline_lines, "- " . $entry->{rule};
       }
     }
