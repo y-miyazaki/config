@@ -1650,43 +1650,43 @@ url = "https://github.com/microsoft/apm/releases/download/v0.28.0/apm-windows-x8
 url_api = "https://api.github.com/repos/microsoft/apm/releases/assets/503748775"
 
 [[tools."github:microsoft/waza"]]
-version = "0.38.5"
+version = "0.38.6"
 backend = "github:microsoft/waza"
 
 [tools."github:microsoft/waza"."platforms.linux-arm64"]
-checksum = "sha256:afea3425621c99797c315112e325303b2e2ca525ceb54b1a76be566d98545e8d"
-url = "https://github.com/microsoft/waza/releases/download/v0.38.5/waza-linux-arm64"
-url_api = "https://api.github.com/repos/microsoft/waza/releases/assets/505148447"
+checksum = "sha256:03030f0fb710e449d66af6a6fd11e7dcf1b3220eee60c5ec75c9f1912a2cf1d2"
+url = "https://github.com/microsoft/waza/releases/download/v0.38.6/waza-linux-arm64"
+url_api = "https://api.github.com/repos/microsoft/waza/releases/assets/514966098"
 
 [tools."github:microsoft/waza"."platforms.linux-arm64-musl"]
-checksum = "sha256:afea3425621c99797c315112e325303b2e2ca525ceb54b1a76be566d98545e8d"
-url = "https://github.com/microsoft/waza/releases/download/v0.38.5/waza-linux-arm64"
-url_api = "https://api.github.com/repos/microsoft/waza/releases/assets/505148447"
+checksum = "sha256:03030f0fb710e449d66af6a6fd11e7dcf1b3220eee60c5ec75c9f1912a2cf1d2"
+url = "https://github.com/microsoft/waza/releases/download/v0.38.6/waza-linux-arm64"
+url_api = "https://api.github.com/repos/microsoft/waza/releases/assets/514966098"
 
 [tools."github:microsoft/waza"."platforms.linux-x64"]
-checksum = "sha256:fbb55d5ca373e2615ec103ecacf10811a020630884bd38e3ba036252abac4301"
-url = "https://github.com/microsoft/waza/releases/download/v0.38.5/waza-linux-amd64"
-url_api = "https://api.github.com/repos/microsoft/waza/releases/assets/505148445"
+checksum = "sha256:a799587795fd462411ca7c7af5faccee7e24f08e41d152c10738d31334d1c063"
+url = "https://github.com/microsoft/waza/releases/download/v0.38.6/waza-linux-amd64"
+url_api = "https://api.github.com/repos/microsoft/waza/releases/assets/514966095"
 
 [tools."github:microsoft/waza"."platforms.linux-x64-musl"]
-checksum = "sha256:fbb55d5ca373e2615ec103ecacf10811a020630884bd38e3ba036252abac4301"
-url = "https://github.com/microsoft/waza/releases/download/v0.38.5/waza-linux-amd64"
-url_api = "https://api.github.com/repos/microsoft/waza/releases/assets/505148445"
+checksum = "sha256:a799587795fd462411ca7c7af5faccee7e24f08e41d152c10738d31334d1c063"
+url = "https://github.com/microsoft/waza/releases/download/v0.38.6/waza-linux-amd64"
+url_api = "https://api.github.com/repos/microsoft/waza/releases/assets/514966095"
 
 [tools."github:microsoft/waza"."platforms.macos-arm64"]
-checksum = "sha256:51bc2df29949f4ec3b34b38e6660dc5d63eaf6ad681a4912da05b5d0eecd9b3e"
-url = "https://github.com/microsoft/waza/releases/download/v0.38.5/waza-darwin-arm64"
-url_api = "https://api.github.com/repos/microsoft/waza/releases/assets/505148444"
+checksum = "sha256:15b156c022ff5f4213a3ae88adab34581546d57ab7d1fc60ec26a6fd57131a2f"
+url = "https://github.com/microsoft/waza/releases/download/v0.38.6/waza-darwin-arm64"
+url_api = "https://api.github.com/repos/microsoft/waza/releases/assets/514966096"
 
 [tools."github:microsoft/waza"."platforms.macos-x64"]
-checksum = "sha256:508e0bf2c33bdddedb5e23ac486ac8accb632761de946fe67c772269a93f96d6"
-url = "https://github.com/microsoft/waza/releases/download/v0.38.5/waza-darwin-amd64"
-url_api = "https://api.github.com/repos/microsoft/waza/releases/assets/505148446"
+checksum = "sha256:d7a155a4fd0b327ff0d4a0ff9fd37b44fa045c240a3cb543011ad2fb78c40a2b"
+url = "https://github.com/microsoft/waza/releases/download/v0.38.6/waza-darwin-amd64"
+url_api = "https://api.github.com/repos/microsoft/waza/releases/assets/514966099"
 
 [tools."github:microsoft/waza"."platforms.windows-x64"]
-checksum = "sha256:f5dff8d029ca368f8c51b7df4b536d9f0f9dc8e2581e66ad60dd44bb7121f51b"
-url = "https://github.com/microsoft/waza/releases/download/v0.38.5/waza-windows-amd64.exe"
-url_api = "https://api.github.com/repos/microsoft/waza/releases/assets/505148455"
+checksum = "sha256:a46dbf118c940521806a41dee1472aa2587dd1ea7258c1c64511e02e1b9def57"
+url = "https://github.com/microsoft/waza/releases/download/v0.38.6/waza-windows-amd64.exe"
+url_api = "https://api.github.com/repos/microsoft/waza/releases/assets/514966105"
 
 [[tools."go:github.com/go-delve/delve/cmd/dlv"]]
 version = "1.27.1"
