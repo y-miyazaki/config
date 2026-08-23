@@ -4,11 +4,12 @@ Node.js / フロントエンド開発に特化したツール選定の判断材�
 
 ## History
 
-| 日付       | 内容                                                                      |
-| ---------- | ------------------------------------------------------------------------- |
-| 2026-06-17 | 全般最新化: Biome v2.5.0 HTML/SVG 対応反映、Formatter 推奨を Biome に変更 |
-| 2026-05-21 | History セクション追加                                                    |
-| 2026-05-11 | 初版作成。Linter / Formatter / Package Manager を比較                     |
+| 日付       | 内容                                                                                                         |
+| ---------- | ------------------------------------------------------------------------------------------------------------ |
+| 2026-08-23 | Biome HTML/SVG Formatter が実験的である点を公式 Language support に合わせて訂正 (Lint は ✅、Format は 🟡) |
+| 2026-06-17 | 全般最新化: Biome v2.5.0 HTML/SVG 対応反映、Formatter 推奨を Biome に変更                                    |
+| 2026-05-21 | History セクション追加                                                                                       |
+| 2026-05-11 | 初版作成。Linter / Formatter / Package Manager を比較                                                        |
 
 ## Linter: Biome vs deno lint vs ESLint
 
@@ -39,16 +40,16 @@ Node.js / フロントエンド開発に特化したツール選定の判断材�
 | リポジトリ | [biomejs/biome](https://github.com/biomejs/biome) | [dprint/dprint](https://github.com/dprint/dprint) | [prettier/prettier](https://github.com/prettier/prettier) |
 | ライセンス | MIT                                               | MIT                                               | MIT                                                       |
 | 実装言語   | Rust                                              | Rust                                              | JavaScript                                                |
-| 対応言語   | JS/TS/JSON/CSS/HTML/SVG/GraphQL                   | JS/TS/JSON/MD/TOML 等                             | JS/TS/CSS/HTML/JSON/YAML/MD 等                            |
+| 対応言語   | JS/TS/JSON/CSS/GraphQL。HTML/SVG Format は実験的  | JS/TS/JSON/MD/TOML 等                             | JS/TS/CSS/HTML/JSON/YAML/MD 等                            |
 | 実行速度   | 非常に高速                                        | 非常に高速                                        | 低速                                                      |
 | Lint 統合  | ✅                                                | ❌                                                | ❌                                                        |
 
 ### Guidelines
 
-**→ Biome を採用する。** Lint + Format 統合、HTML/SVG 対応の追加 (v2.5.0) により、Prettier の大部分のユースケースをカバー。Node.js 不要で高速。
+**→ Biome を採用する。** Lint + Format 統合により JS/TS/CSS/JSON/GraphQL を高速にカバー。Node.js 不要。HTML/SVG の Lint は対応済みだが Formatter は実験的 (公式 Language support、opt-in 要)。
 
-- Biome: Lint と統合して一つのツールで完結させたい場合。HTML/CSS/GraphQL もカバー
-- Prettier: Markdown・YAML フォーマットが必要な場合 / プラグイン言語対応が必要な場合
+- Biome: Lint と統合して一つのツールで完結させたい場合。安定 Format が必要な HTML は Prettier 併用を検討
+- Prettier: Markdown・YAML・安定した HTML フォーマットが必要な場合 / プラグイン言語対応が必要な場合
 - dprint: Prettier 互換の出力で高速化したい / プラグインで対応言語を拡張したい場合
 
 ## Package Manager: npm vs pnpm vs yarn

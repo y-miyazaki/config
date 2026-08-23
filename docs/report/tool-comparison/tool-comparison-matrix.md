@@ -4,9 +4,10 @@
 
 ## History
 
-| 日付       | 内容                                                                                     |
-| ---------- | ---------------------------------------------------------------------------------------- |
-| 2026-06-17 | 全般最新化: Biome v2.5.0 HTML/SVG 対応反映、Semgrep Multimodal 情報追加                  |
+| 日付       | 内容                                                                                                                                  |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-23 | Biome HTML/SVG Formatter は実験的である点を公式 Language support に合わせて訂正。aqua Standard Registry パッケージ数を 2,200+ に更新 |
+| 2026-06-17 | 全般最新化: Biome v2.5.0 HTML/SVG 対応反映、Semgrep Multimodal 情報追加                                                               |
 | 2026-06-02 | Code Formatter セクション追加 (Prettier vs Biome vs deno fmt vs clang-format vs rustfmt) |
 | 2026-05-26 | Version Management セクション mise Lazy Install 記述修正                                 |
 | 2026-05-25 | Version Management セクションに mise 追加                                                |
@@ -73,7 +74,7 @@
 | Lazy Install       | ✅ コマンド実行時に自動インストール               | ❌ 事前に `asdf install` が必要                 | ⚠️ `mise exec`/`mise run` 経由か、`mise activate` + shims 設定が必要。`not_found_auto_install` は既に別バージョンがインストール済みのツールのみ対応 |
 | 実行速度           | 高速 (Go バイナリ)                                | 低速 (shim + shell script)                      | 高速 (Rust バイナリ、shim 不要)                                                                                                                     |
 | Renovate 対応      | ✅ datasource 指定で自動更新可能                  | ⚠️ 限定的                                       | ✅ mise manager で自動更新可能 (lockfile 対応)                                                                                                      |
-| 対応ツール数       | 2,900+ (standard registry)                        | 700+ (community plugins)                        | 900+ (registry) + asdf/aqua バックエンド経由                                                                                                        |
+| 対応ツール数       | 2,200+ (standard registry, 2026-08 時点)          | 800+ (community plugins)                        | 900+ (registry) + asdf/aqua バックエンド経由                                                                                                        |
 | Windows 対応       | ✅                                                | ❌ (WSL 経由のみ)                               | ✅ (非 asdf バックエンドのみ)                                                                                                                       |
 | セキュリティ       | 高い (checksum 必須化可能)                        | 低い (プラグイン任意実行)                       | 高い (aqua バックエンド経由で署名検証対応)                                                                                                          |
 | タスクランナー     | ❌                                                | ❌                                              | ✅ 組み込みサポート                                                                                                                                 |
@@ -291,7 +292,7 @@
 | ドキュメント          | [prettier.io](https://prettier.io/docs/en/)               | [biomejs.dev](https://biomejs.dev)                                  | [docs.deno.com](https://docs.deno.com/runtime/reference/cli/fmt/) | [clang.llvm.org](https://clang.llvm.org/docs/ClangFormat.html) | [rust-lang.github.io](https://rust-lang.github.io/rustfmt/) |
 | ライセンス            | MIT                                                       | MIT                                                                 | MIT                                                               | Apache-2.0 with LLVM Exception                                 | Apache-2.0 / MIT                                            |
 | 実装言語              | JavaScript                                                | Rust                                                                | Rust                                                              | C++                                                            | Rust                                                        |
-| 対応言語              | JS/TS/JSX/TSX/CSS/HTML/JSON/YAML/Markdown/GraphQL 等      | JS/TS/JSX/TSX/CSS/JSON/GraphQL/HTML/SVG (Vue/Svelte/Astro は実験的) | JS/TS/JSX/TSX/JSON/Markdown/YAML/CSS/HTML                         | C/C++/Objective-C/Java/C#/Proto                                | Rust                                                        |
+| 対応言語              | JS/TS/JSX/TSX/CSS/HTML/JSON/YAML/Markdown/GraphQL 等      | JS/TS/JSX/TSX/CSS/JSON/GraphQL。HTML/SVG は Lint ✅・Format 🟡。Vue/Svelte/Astro は実験的 | JS/TS/JSX/TSX/JSON/Markdown/YAML/CSS/HTML                         | C/C++/Objective-C/Java/C#/Proto                                | Rust                                                        |
 | 設定ファイル          | `.prettierrc` (JSON/YAML/TOML/JS)                         | `biome.json` / `biome.jsonc`                                        | `deno.json` (`fmt` セクション)                                    | `.clang-format` (YAML)                                         | `rustfmt.toml` / `.rustfmt.toml`                            |
 | 設定オプション数      | 少ない (Opinionated)                                      | 少ない (Opinionated)                                                | 極少 (Opinionated)                                                | 多い (100+)                                                    | 多い (60+、nightly のみのオプション含む)                    |
 | Linter 統合           | ❌ (別途 ESLint)                                          | ✅ 組み込み (ESLint 互換ルール)                                     | ✅ 組み込み (`deno lint`)                                         | ❌ (別途 clang-tidy)                                           | ❌ (別途 clippy)                                            |
@@ -311,8 +312,8 @@
 
 **→ 言語スタックに応じて使い分ける。** 単一の万能フォーマッターは存在しないため、プロジェクトの言語構成に合わせて選択する。
 
-- **Web フロントエンド (JS/TS/CSS/HTML)**: Biome を第一候補とする。Prettier 比 25-35x の高速性、Linter 統合による単一ツール化、Node.js 不要で CI が軽量化。Prettier 97% 互換のため移行コストが低い。v2.5.0 で HTML/SVG のフォーマット+Lint が本番対応 (Vue/Svelte/Astro は実験的)
-- **Prettier を選ぶ場合**: プラグインによる追加言語対応が必要な場合 (PHP, Ruby, Svelte 等)、または Biome 未対応のフォーマット (Markdown, YAML) が重要な場合。エコシステムの成熟度・プラグイン数では依然最大
+- **Web フロントエンド (JS/TS/CSS)**: Biome を第一候補とする。Prettier 比 25-35x の高速性、Linter 統合による単一ツール化、Node.js 不要で CI が軽量化。Prettier 97% 互換のため移行コストが低い。HTML/SVG は Lint が本番対応、Formatter は実験的 (opt-in 要。Vue/Svelte/Astro も実験的)。Markdown/YAML の Format は未対応 (in progress)
+- **Prettier を選ぶ場合**: プラグインによる追加言語対応が必要な場合 (PHP, Ruby, Svelte 等)、または Biome 未対応のフォーマット (Markdown, YAML) や安定した HTML フォーマットが重要な場合。エコシステムの成熟度・プラグイン数では依然最大
 - **Deno プロジェクト**: deno fmt 一択。設定不要で Deno ランタイムに統合されており、追加の依存が不要
 - **C/C++ プロジェクト**: clang-format 一択。LLVM エコシステムのデファクトスタンダード。設定項目が多いためチームで `.clang-format` を共有し BasedOnStyle を固定する
 - **Rust プロジェクト**: rustfmt 一択。`cargo fmt` として標準ツールチェーンに含まれ、追加インストール不要

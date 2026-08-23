@@ -4,10 +4,11 @@ Go 開発に特化したツール選定の判断材料。
 
 ## History
 
-| 日付       | 内容                                                                               |
-| ---------- | ---------------------------------------------------------------------------------- |
-| 2026-05-21 | History セクション追加                                                             |
-| 2026-05-12 | 初版作成。Formatter / Linter / Container Build / Release / API Doc / Mock 等を比較 |
+| 日付       | 内容                                                                                                                          |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-23 | Mock 最新バージョン更新 (gomock v0.6.0 / mockery v3.7.3 / moq v0.7.1)。kaniko アーカイブ済みを反映し BuildKit rootless へ誘導 |
+| 2026-05-21 | History セクション追加                                                                                                        |
+| 2026-05-12 | 初版作成。Formatter / Linter / Container Build / Release / API Doc / Mock 等を比較                                            |
 
 ## Formatter: gofumpt vs gofmt vs goimports
 
@@ -49,23 +50,24 @@ Go 開発に特化したツール選定の判断材料。
 
 ## Container Build: Docker vs kaniko vs ko
 
-| 比較項目        | Docker (BuildKit)                                 | kaniko                                                                        | ko                                            |
+| 比較項目        | Docker (BuildKit)                                 | kaniko (アーカイブ済み)                                                       | ko                                            |
 | --------------- | ------------------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------- |
-| 提供元          | Docker Inc                                        | Google                                                                        | Google (OSS)                                  |
+| 提供元          | Docker Inc                                        | Google (upstream 終了)                                                        | Google (OSS)                                  |
 | リポジトリ      | [moby/buildkit](https://github.com/moby/buildkit) | [GoogleContainerTools/kaniko](https://github.com/GoogleContainerTools/kaniko) | [ko-build/ko](https://github.com/ko-build/ko) |
 | ライセンス      | Apache 2.0                                        | Apache 2.0                                                                    | Apache 2.0                                    |
+| 現在の状態      | アクティブ                                        | ⚠️ 2025-06-03 にアーカイブ (read-only)。新規採用非推奨                        | アクティブ                                    |
 | 対応言語        | 任意                                              | 任意                                                                          | Go 専用                                       |
 | Dockerfile 不要 | ❌                                                | ❌                                                                            | ✅                                            |
-| ビルド速度      | 中程度                                            | 中程度                                                                        | 非常に高速                                    |
-| CI での特権不要 | ❌ (Docker daemon 必要)                           | ✅                                                                            | ✅                                            |
+| ビルド速度      | 中程度〜高速 (cache/並列依存)                     | 中程度                                                                        | 非常に高速                                    |
+| CI での特権不要 | ⚠️ rootless BuildKit なら可能                     | ✅ (ただし未メンテ)                                                           | ✅                                            |
 | イメージサイズ  | Dockerfile 依存                                   | Dockerfile 依存                                                               | 最小 (distroless ベース)                      |
 
 ### Guidelines
 
 **→ Go アプリケーションには ko を採用する。** Dockerfile 不要で高速・最小イメージ・CI で特権不要。
 
-- Go 以外の言語を含む / 複雑なビルドステップが必要な場合は Docker を使用
-- Docker daemon なしで任意の Dockerfile をビルドしたい場合は kaniko を使用
+- Go 以外の言語を含む / 複雑なビルドステップが必要な場合は Docker (BuildKit) を使用
+- 特権なしで任意の Dockerfile をビルドしたい場合は BuildKit rootless (`moby/buildkit:rootless`) を検討。kaniko upstream はアーカイブ済みのため新規採用しない
 
 ## Release Automation: GitHub Releases vs goreleaser vs semantic-release
 
@@ -166,7 +168,7 @@ Go 開発に特化したツール選定の判断材料。
 | 提供元             | Uber (golang/mock から移行)                     | vektra                                              | Mat Ryer                                      |
 | リポジトリ         | [uber-go/mock](https://github.com/uber-go/mock) | [vektra/mockery](https://github.com/vektra/mockery) | [matryer/moq](https://github.com/matryer/moq) |
 | ライセンス         | Apache 2.0                                      | BSD-3-Clause                                        | MIT                                           |
-| 最新バージョン     | v0.5.x (2025)                                   | v3 (2026-03)                                        | v0.5.3 (2025-02)                              |
+| 最新バージョン     | v0.6.0 (2025-08)                                | v3.7.3 (2026-08)                                    | v0.7.1 (2026-03)                              |
 | アプローチ         | コード生成 + DSL                                | コード生成 (testify/mock ベース)                    | コード生成 (関数フィールド)                   |
 | コード生成ツール   | `mockgen`                                       | `mockery`                                           | `moq`                                         |
 | go generate 対応   | ✅                                              | ✅                                                  | ✅                                            |
