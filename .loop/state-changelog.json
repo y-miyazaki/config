@@ -1,19 +1,12 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-08-21T10:15:14Z",
-      "outcome": "pr-created",
+      "last_run": "2026-08-23T03:51:23Z",
+      "outcome": "merged",
       "consecutive_failures": 0,
       "open_rejections": [],
       "last_reject_reason": "CHANGELOG.md-only diff correctly documents all 167 detect commits with links, one Full diff line, 13 detect releases (1.8.86–1.8.98) with footer links, and preserved prior sections.",
-      "last_sha": "f95abf9de3c9aa6416e58944c66261aba83ea861",
-      "pending": {
-        "sha": "af9ed8b2ba8e8cfaa162bd6be7e8ebb201e590b6",
-        "pr": 728,
-        "pr_url": "https://github.com/y-miyazaki/config/pull/728",
-        "loop_name": "changelog",
-        "created_at": "2026-08-21T10:15:14Z"
-      }
+      "last_sha": "af9ed8b2ba8e8cfaa162bd6be7e8ebb201e590b6"
     }
   }
 }
