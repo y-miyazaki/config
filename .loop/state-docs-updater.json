@@ -1,11 +1,11 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-08-17T10:40:41Z",
-      "outcome": "merged",
-      "consecutive_failures": 0,
+      "last_run": "2026-08-24T09:17:11Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
       "open_rejections": [],
-      "last_reject_reason": "Two minimal doc fixes are in-scope, factually correct, and align with verified APM package and workflow paths.",
+      "last_reject_reason": "No file changes produced",
       "last_sha": "c67cb0f560493ffd0783a55fb299ae7376f936fa"
     }
   }
