@@ -1,11 +1,11 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-08-17T10:37:20Z",
-      "outcome": "merged",
-      "consecutive_failures": 0,
+      "last_run": "2026-08-24T08:29:04Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
       "open_rejections": [],
-      "last_reject_reason": "Allowlisted doc fix and persisted tech-debt report match detect signals/hotspots with verified paths and valid closed-set broken_doc_ref repair.",
+      "last_reject_reason": "No file changes produced",
       "last_sha": "807465a2e2b3587f229020d3def0f9c45027057b"
     }
   }
