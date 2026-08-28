@@ -1,11 +1,11 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-08-23T03:51:23Z",
-      "outcome": "merged",
-      "consecutive_failures": 0,
+      "last_run": "2026-08-28T14:01:34Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
       "open_rejections": [],
-      "last_reject_reason": "CHANGELOG.md-only diff correctly documents all 167 detect commits with links, one Full diff line, 13 detect releases (1.8.86–1.8.98) with footer links, and preserved prior sections.",
+      "last_reject_reason": "No file changes produced",
       "last_sha": "af9ed8b2ba8e8cfaa162bd6be7e8ebb201e590b6"
     }
   }
