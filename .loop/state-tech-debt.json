@@ -1,9 +1,9 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-08-24T08:29:04Z",
+      "last_run": "2026-08-31T08:30:19Z",
       "outcome": "rejected",
-      "consecutive_failures": 1,
+      "consecutive_failures": 2,
       "open_rejections": [],
       "last_reject_reason": "No file changes produced",
       "last_sha": "807465a2e2b3587f229020d3def0f9c45027057b"
