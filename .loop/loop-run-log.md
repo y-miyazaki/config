@@ -46,3 +46,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-09-14T09:06:39Z","loop_name":"docs-updater","duration_s":12,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"34826136252"}
 {"run_id":"2026-09-14T14:33:13Z","loop_name":"ci-sweeper","duration_s":109,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"34856139096","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-09-14T14:37:39Z","loop_name":"ci-sweeper","duration_s":107,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"34856555633","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
+{"run_id":"2026-09-14T14:39:39Z","loop_name":"ci-sweeper","duration_s":107,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"34856558458","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
