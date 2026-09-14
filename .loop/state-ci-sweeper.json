@@ -22,6 +22,13 @@
       "open_rejections": [],
       "last_reject_reason": "Prior mise.lock allowlist rejection fixed; zizmor-action v0.6.2 pin resolves Unknown version 1.29.0 within allowlisted paths.",
       "last_sha": "bed927ac8d40e130bf69690d4c0a30b7b138f94b"
+    },
+    "pull_request:768": {
+      "last_run": "2026-09-14T14:37:37Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
+      "open_rejections": [],
+      "last_reject_reason": "No file changes produced"
     }
   }
 }
