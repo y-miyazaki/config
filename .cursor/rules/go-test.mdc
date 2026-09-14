@@ -14,10 +14,10 @@ globs: "**/*.go"
 
 ### Rule application (`globs` / `paths`)
 
-| Pattern                 | Use when                                                           | Result                                                                              |
-| ----------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| Pattern                 | Use when                                                           | Result                                                                            |
+| ----------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
 | `**/*.go` (recommended) | Test rules must apply while editing **production** `.go` files too | Suite pairing and test templates inject on source edits (G-05 companion coverage) |
-| `**/*_test.go` only     | Test rules should inject **only** when a test file is open         | Pairing obligation is easy to miss when changing `foo.go`                           |
+| `**/*_test.go` only     | Test rules should inject **only** when a test file is open         | Pairing obligation is easy to miss when changing `foo.go`                         |
 
 **Why Bats lists two globs but Go uses one:** Bats pairs `*.sh` with `*.bats` — different extensions, so both must be listed. Go tests live in `*_test.go`, which already matches `**/*.go`. Listing `**/*_test.go` in addition is optional documentation only; it does not change Cursor behavior.
 
@@ -37,12 +37,12 @@ globs: "**/*.go"
 
 Use this stack unless the **package** has already adopted optional tools (see Optional Tools):
 
-| Layer                | Tool                              | Role                                     |
-| -------------------- | --------------------------------- | ---------------------------------------- |
-| Test structure       | table-driven `[]struct` + `t.Run` | one `Test*` function loops rows (TBL-01) |
+| Layer                | Tool                              | Role                                        |
+| -------------------- | --------------------------------- | ------------------------------------------- |
+| Test structure       | table-driven `[]struct` + `t.Run` | one `Test*` function loops rows (TBL-01)    |
 | Assertions (simple)  | stdlib `testing`                  | `t.Fatalf` / `t.Errorf` with `got` / `want` |
-| Assertions (complex) | `github.com/google/go-cmp/cmp`    | struct, slice, map deep equality         |
-| Test doubles         | hand-written stub/fake            | consumer-interface substitution          |
+| Assertions (complex) | `github.com/google/go-cmp/cmp`    | struct, slice, map deep equality            |
+| Test doubles         | hand-written stub/fake            | consumer-interface substitution             |
 
 ### File Header
 
@@ -167,7 +167,6 @@ Apply only when the **package** has adopted the tool. Do not mix testify with th
 - BOUND-01 (MUST): Unit-test pure functions, parsers, classifiers, and cache keys without network/SDK clients
 - BOUND-02 (MUST): Do not call constructors that perform I/O against zero-value or live clients in default unit tests
 - BOUND-03 (SHOULD): Gate real I/O behind `//go:build integration` only when the repository already uses that tag
-
 
 ### Testing (TEST)
 
