@@ -40,7 +40,7 @@ claude = "2.1.222"                               # Claude Code CLI
 "github:DeusData/codebase-memory-mcp" = "v0.10.4" # codebase memory MCP server
 "aqua:github/copilot-cli" = "1.0.80"             # GitHub Copilot CLI
 "pipx:headroom-ai" = { version = "0.35.0", extras = "proxy,mcp,bedrock", depends = ["python"] }
-"npm:lean-ctx-bin" = { version = "3.9.19", depends = [
+"npm:lean-ctx-bin" = { version = "3.9.20", depends = [
   "node",
 ], allow_builds = [
   "lean-ctx-bin",
