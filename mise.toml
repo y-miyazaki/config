@@ -108,7 +108,7 @@ claude = "2.1.222"                               # Claude Code CLI
 
 # Terraform related tools
 "aqua:getsops/sops" = "3.13.3"                  # encryption tool
-"aqua:hashicorp/terraform" = "1.15.8"           # infrastructure as code
+"aqua:hashicorp/terraform" = "1.16.1"           # infrastructure as code
 "aqua:terraform-docs/terraform-docs" = "0.24.0" # documentation generator
 "aqua:terraform-linters/tflint" = "0.64.0"      # linter
 
