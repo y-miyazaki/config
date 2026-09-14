@@ -31,7 +31,7 @@ uvx = true # Install uv/uvx via pipx for better isolation and performance.
 # A Runtime tools
 aqua = "v2.62.2"
 node = "24.21.0"
-pnpm = { version = "12.3.4", depends = ["node"] }
+pnpm = { version = "11.26.0", depends = ["node"] }
 python = "3.14.6"
 
 # AI agent tools
@@ -44,7 +44,7 @@ claude = "2.1.222"                               # Claude Code CLI
   "node",
 ], allow_builds = [
   "lean-ctx-bin",
-] } # context optimizer (hooks CLI + MCP npm)
+], install_env = { PNPM_CONFIG_IGNORE_SCRIPTS = "true" } } # context optimizer (hooks CLI + MCP npm)
 "github:microsoft/waza" = "v0.38.7"               # agent skill evaluator
 
 # AWS related tools
@@ -87,16 +87,16 @@ claude = "2.1.222"                               # Claude Code CLI
 # Lint / Formatter tools
 "npm:cspell" = { version = "10.2.2", depends = [
   "node",
-], install_env = { NPM_CONFIG_IGNORE_SCRIPTS = "true" } } # spell checker
+], install_env = { PNPM_CONFIG_IGNORE_SCRIPTS = "true" } } # spell checker
 "npm:markdown-link-check" = { version = "3.15.0", depends = [
   "node",
-], install_env = { NPM_CONFIG_IGNORE_SCRIPTS = "true" } } # Markdown link checker
+], install_env = { PNPM_CONFIG_IGNORE_SCRIPTS = "true" } } # Markdown link checker
 "npm:markdownlint-cli2" = { version = "0.23.2", depends = [
   "node",
-], install_env = { NPM_CONFIG_IGNORE_SCRIPTS = "true" } } # Markdown linter
+], install_env = { PNPM_CONFIG_IGNORE_SCRIPTS = "true" } } # Markdown linter
 "npm:prettier" = { version = "3.9.6", depends = [
   "node",
-], install_env = { NPM_CONFIG_IGNORE_SCRIPTS = "true" } } # Code formatter
+], install_env = { PNPM_CONFIG_IGNORE_SCRIPTS = "true" } } # Code formatter
 
 # Security related tools
 "aqua:gitleaks/gitleaks" = "8.30.1"  # secret scanner
