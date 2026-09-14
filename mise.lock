@@ -1739,7 +1739,7 @@ version = "0.2.0"
 backend = "npm:awsp"
 
 [[tools."npm:cspell"]]
-version = "10.0.1"
+version = "10.2.2"
 backend = "npm:cspell"
 
 [[tools."npm:lean-ctx-bin"]]
