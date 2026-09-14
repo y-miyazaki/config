@@ -1743,7 +1743,7 @@ version = "10.2.2"
 backend = "npm:cspell"
 
 [[tools."npm:lean-ctx-bin"]]
-version = "3.9.20"
+version = "3.10.1"
 backend = "npm:lean-ctx-bin"
 
 [tools."npm:lean-ctx-bin".options]
