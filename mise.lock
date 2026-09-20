@@ -1687,7 +1687,7 @@ url = "https://github.com/microsoft/waza/releases/download/v0.38.7/waza-windows-
 url_api = "https://api.github.com/repos/microsoft/waza/releases/assets/520984898"
 
 [[tools."go:github.com/go-delve/delve/cmd/dlv"]]
-version = "1.27.1"
+version = "1.27.2"
 backend = "go:github.com/go-delve/delve/cmd/dlv"
 
 [[tools."go:github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen"]]
