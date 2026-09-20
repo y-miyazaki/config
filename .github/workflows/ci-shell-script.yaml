@@ -321,7 +321,7 @@ jobs:
 
       - name: Exec shfmt + reviewdog (PR comments)
         if: steps.file-list.outputs.no_files == 'false' && github.event_name == 'pull_request'
-        uses: reviewdog/action-suggester@2558ba17e65a9039e73764a73009fc05fef28a46 # v1.24.3
+        uses: reviewdog/action-suggester@4553543bea739d9d503379d786148cfd561de5fa # v1.25.0
         with:
           fail_level: ${{ env.FAIL_LEVEL }}
           filter_mode: file
@@ -332,7 +332,7 @@ jobs:
 
       - name: Exec shfmt + reviewdog (push/check)
         if: steps.file-list.outputs.no_files == 'false' && github.event_name != 'pull_request'
-        uses: reviewdog/action-suggester@2558ba17e65a9039e73764a73009fc05fef28a46 # v1.24.3
+        uses: reviewdog/action-suggester@4553543bea739d9d503379d786148cfd561de5fa # v1.25.0
         with:
           fail_level: ${{ env.FAIL_LEVEL }}
           filter_mode: file
