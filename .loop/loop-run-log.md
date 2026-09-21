@@ -6,7 +6,6 @@ Append one entry per run. Prune entries older than 30 days.
 
 <!-- Loop appends below this line -->
 
-{"run_id":"2026-08-21T10:15:15Z","loop_name":"changelog","duration_s":444,"outcome":"pr-created","skip_reason":"none","tokens_total":287961,"workflow_run":"32471184811","attempts":1,"has_changes":true,"verdict":"APPROVE","usage":{"total_input_tokens":264755,"total_output_tokens":23206,"model":"Cursor Grok 4.5 Low"},"agent_result":"success"}
 {"run_id":"2026-08-23T03:56:37Z","loop_name":"github-issue-triage","duration_s":262,"outcome":"no-changes","skip_reason":"none","tokens_total":164074,"workflow_run":"32616422464","has_changes":false,"usage":{"total_input_tokens":154967,"total_output_tokens":9107,"model":"Cursor Grok 4.5 Low"},"agent_result":"success"}
 {"run_id":"2026-08-23T04:06:36Z","loop_name":"github-issue-autofix","duration_s":477,"outcome":"error","skip_reason":"none","tokens_total":325303,"workflow_run":"32616688513","attempts":1,"has_changes":true,"verdict":"APPROVE","usage":{"total_input_tokens":303357,"total_output_tokens":21946,"model":"Cursor Grok 4.5 Low"},"agent_result":"success","failure_stage":"finalize_pr"}
 {"run_id":"2026-08-23T04:11:47Z","loop_name":"github-issue-triage","duration_s":69,"outcome":"error","skip_reason":"none","tokens_total":0,"workflow_run":"32617195858","has_changes":false,"agent_result":"failure"}
@@ -33,3 +32,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-09-14T15:55:11Z","loop_name":"ci-sweeper","duration_s":21,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"34865247980"}
 {"run_id":"2026-09-17T02:06:13Z","loop_name":"ci-sweeper","duration_s":14,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"35173088934"}
 {"run_id":"2026-09-18T10:05:21Z","loop_name":"changelog","duration_s":14,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"35332870863"}
+{"run_id":"2026-09-21T08:31:06Z","loop_name":"tech-debt","duration_s":628,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"35577392536","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
