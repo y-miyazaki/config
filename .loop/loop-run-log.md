@@ -6,10 +6,6 @@ Append one entry per run. Prune entries older than 30 days.
 
 <!-- Loop appends below this line -->
 
-{"run_id":"2026-08-23T03:56:37Z","loop_name":"github-issue-triage","duration_s":262,"outcome":"no-changes","skip_reason":"none","tokens_total":164074,"workflow_run":"32616422464","has_changes":false,"usage":{"total_input_tokens":154967,"total_output_tokens":9107,"model":"Cursor Grok 4.5 Low"},"agent_result":"success"}
-{"run_id":"2026-08-23T04:06:36Z","loop_name":"github-issue-autofix","duration_s":477,"outcome":"error","skip_reason":"none","tokens_total":325303,"workflow_run":"32616688513","attempts":1,"has_changes":true,"verdict":"APPROVE","usage":{"total_input_tokens":303357,"total_output_tokens":21946,"model":"Cursor Grok 4.5 Low"},"agent_result":"success","failure_stage":"finalize_pr"}
-{"run_id":"2026-08-23T04:11:47Z","loop_name":"github-issue-triage","duration_s":69,"outcome":"error","skip_reason":"none","tokens_total":0,"workflow_run":"32617195858","has_changes":false,"agent_result":"failure"}
-{"run_id":"2026-08-23T04:10:24Z","loop_name":"github-issue-triage","duration_s":76,"outcome":"error","skip_reason":"none","tokens_total":0,"workflow_run":"32617147321","has_changes":false,"agent_result":"failure"}
 {"run_id":"2026-08-24T08:29:07Z","loop_name":"tech-debt","duration_s":648,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"32705610877","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-08-24T09:17:15Z","loop_name":"docs-updater","duration_s":87,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"32710545377","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-08-28T14:01:37Z","loop_name":"changelog","duration_s":91,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"33177994124","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
@@ -34,3 +30,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-09-18T10:05:21Z","loop_name":"changelog","duration_s":14,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"35332870863"}
 {"run_id":"2026-09-21T08:31:06Z","loop_name":"tech-debt","duration_s":628,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"35577392536","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-09-21T09:06:26Z","loop_name":"docs-updater","duration_s":14,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"35581380993"}
+{"run_id":"2026-09-23T01:57:56Z","loop_name":"ci-sweeper","duration_s":16,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"35808428554"}
