@@ -1750,7 +1750,7 @@ version = "3.15.0"
 backend = "npm:markdown-link-check"
 
 [[tools."npm:markdownlint-cli2"]]
-version = "0.23.2"
+version = "0.23.3"
 backend = "npm:markdownlint-cli2"
 
 [[tools."npm:prettier"]]
