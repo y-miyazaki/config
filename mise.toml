@@ -94,7 +94,7 @@ claude = "2.1.270"                               # Claude Code CLI
 "npm:markdownlint-cli2" = { version = "0.23.2", depends = [
   "node",
 ], install_env = { PNPM_CONFIG_IGNORE_SCRIPTS = "true" } } # Markdown linter
-"npm:prettier" = { version = "3.9.6", depends = [
+"npm:prettier" = { version = "3.9.8", depends = [
   "node",
 ], install_env = { PNPM_CONFIG_IGNORE_SCRIPTS = "true" } } # Code formatter
 
