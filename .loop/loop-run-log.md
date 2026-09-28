@@ -6,9 +6,6 @@ Append one entry per run. Prune entries older than 30 days.
 
 <!-- Loop appends below this line -->
 
-{"run_id":"2026-08-24T08:29:07Z","loop_name":"tech-debt","duration_s":648,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"32705610877","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
-{"run_id":"2026-08-24T09:17:15Z","loop_name":"docs-updater","duration_s":87,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"32710545377","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
-{"run_id":"2026-08-28T14:01:37Z","loop_name":"changelog","duration_s":91,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"33177994124","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-08-31T08:30:22Z","loop_name":"tech-debt","duration_s":597,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"33372437983","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-08-31T09:07:52Z","loop_name":"docs-updater","duration_s":78,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"33376030244","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-09-04T10:07:21Z","loop_name":"changelog","duration_s":118,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"33861509836","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
@@ -31,3 +28,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-09-21T08:31:06Z","loop_name":"tech-debt","duration_s":628,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"35577392536","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-09-21T09:06:26Z","loop_name":"docs-updater","duration_s":14,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"35581380993"}
 {"run_id":"2026-09-23T01:57:56Z","loop_name":"ci-sweeper","duration_s":16,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"35808428554"}
+{"run_id":"2026-09-28T08:25:20Z","loop_name":"tech-debt","duration_s":13,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"36397226912"}
