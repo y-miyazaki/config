@@ -23,7 +23,7 @@ on:
         required: true
         type: string
       terraform_version:
-        default: "1.16.2"
+        default: "1.16.3"
         description: "Terraform version to use"
         required: false
         type: string
