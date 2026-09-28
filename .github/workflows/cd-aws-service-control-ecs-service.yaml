@@ -84,7 +84,7 @@ jobs:
       discovered_services_b64: ${{ steps.discover.outputs.discovered_services_b64 }}
     steps:
       - name: Setup AWS Credentials
-        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6.2.4
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           aws-region: ${{ secrets.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
@@ -292,7 +292,7 @@ jobs:
         service: ${{ fromJSON(needs.validate.outputs.target_services) }}
     steps:
       - name: Setup AWS Credentials
-        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6.2.4
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           aws-region: ${{ secrets.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
