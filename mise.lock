@@ -750,36 +750,36 @@ url = "https://github.com/grpc/grpc-go/releases/download/cmd/protoc-gen-go-grpc/
 url_api = "https://api.github.com/repos/grpc/grpc-go/releases/assets/350524028"
 
 [[tools."aqua:hashicorp/terraform"]]
-version = "1.16.3"
+version = "1.16.4"
 backend = "aqua:hashicorp/terraform"
 
 [tools."aqua:hashicorp/terraform"."platforms.linux-arm64"]
-checksum = "sha256:b6b293550af7a6a7ffd867a04900ce161db86ec9407b234a636c2adbae2ca9f0"
-url = "https://releases.hashicorp.com/terraform/1.16.3/terraform_1.16.3_linux_arm64.zip"
+checksum = "sha256:8263f301cb1a24489a4adeed147bf28504053f77237b3ea97a0ef2972659de30"
+url = "https://releases.hashicorp.com/terraform/1.16.4/terraform_1.16.4_linux_arm64.zip"
 
 [tools."aqua:hashicorp/terraform"."platforms.linux-arm64-musl"]
-checksum = "sha256:b6b293550af7a6a7ffd867a04900ce161db86ec9407b234a636c2adbae2ca9f0"
-url = "https://releases.hashicorp.com/terraform/1.16.3/terraform_1.16.3_linux_arm64.zip"
+checksum = "sha256:8263f301cb1a24489a4adeed147bf28504053f77237b3ea97a0ef2972659de30"
+url = "https://releases.hashicorp.com/terraform/1.16.4/terraform_1.16.4_linux_arm64.zip"
 
 [tools."aqua:hashicorp/terraform"."platforms.linux-x64"]
-checksum = "sha256:093b6ae9a2228af5029c41606bc96eb583553528aad1bfe7e0b4d62fc91e25d8"
-url = "https://releases.hashicorp.com/terraform/1.16.3/terraform_1.16.3_linux_amd64.zip"
+checksum = "sha256:dc94af0eef1147718ad7c8daea792ed199e3e0492eec180d0adafa2a65a879df"
+url = "https://releases.hashicorp.com/terraform/1.16.4/terraform_1.16.4_linux_amd64.zip"
 
 [tools."aqua:hashicorp/terraform"."platforms.linux-x64-musl"]
-checksum = "sha256:093b6ae9a2228af5029c41606bc96eb583553528aad1bfe7e0b4d62fc91e25d8"
-url = "https://releases.hashicorp.com/terraform/1.16.3/terraform_1.16.3_linux_amd64.zip"
+checksum = "sha256:dc94af0eef1147718ad7c8daea792ed199e3e0492eec180d0adafa2a65a879df"
+url = "https://releases.hashicorp.com/terraform/1.16.4/terraform_1.16.4_linux_amd64.zip"
 
 [tools."aqua:hashicorp/terraform"."platforms.macos-arm64"]
-checksum = "sha256:c2c45425ea4568da9803e127e589186cb3798a5944d9aff5a5bc15dd18267560"
-url = "https://releases.hashicorp.com/terraform/1.16.3/terraform_1.16.3_darwin_arm64.zip"
+checksum = "sha256:42cfdf97ad722f79085fe2279b06d4b8680172de3534b22eeddd9a0fbbe7b8f1"
+url = "https://releases.hashicorp.com/terraform/1.16.4/terraform_1.16.4_darwin_arm64.zip"
 
 [tools."aqua:hashicorp/terraform"."platforms.macos-x64"]
-checksum = "sha256:1b933c61782390531374290309ada8406cd923647893c2f52b5dd838de23803a"
-url = "https://releases.hashicorp.com/terraform/1.16.3/terraform_1.16.3_darwin_amd64.zip"
+checksum = "sha256:2ee4b62064086e4b24b0d6cf2e61718fbaf0556feba990f708a5e32557554b3b"
+url = "https://releases.hashicorp.com/terraform/1.16.4/terraform_1.16.4_darwin_amd64.zip"
 
 [tools."aqua:hashicorp/terraform"."platforms.windows-x64"]
-checksum = "sha256:6f908a90e5637afe72705290afd1cd71fc4f2877303ca77f05a8c6ead196b11c"
-url = "https://releases.hashicorp.com/terraform/1.16.3/terraform_1.16.3_windows_amd64.zip"
+checksum = "sha256:5c736ed6b0f13e98bc5029fe159574cca33634c3477466c56442c28b513a7054"
+url = "https://releases.hashicorp.com/terraform/1.16.4/terraform_1.16.4_windows_amd64.zip"
 
 [[tools."aqua:jdx/usage"]]
 version = "6.9.1"
@@ -1536,34 +1536,22 @@ version = "2.1.270"
 backend = "aqua:anthropics/claude-code"
 
 [tools.claude."platforms.linux-arm64"]
-checksum = "sha256:005d990a52bc16a5dd9ac51f2cc959f686a2c502b343b2eab92351ababf50f7f"
-url = "https://github.com/anthropics/claude-code/releases/download/v2.1.270/claude-linux-arm64.tar.gz"
-url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/559771865"
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.270/linux-arm64/claude"
 
 [tools.claude."platforms.linux-arm64-musl"]
-checksum = "sha256:5fb26398e8aa2ca2423fcdacd1ab3b6c335545b0b3feaa13e1f8fb184a1f0a76"
-url = "https://github.com/anthropics/claude-code/releases/download/v2.1.270/claude-linux-arm64-musl.tar.gz"
-url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/559771868"
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.270/linux-arm64-musl/claude"
 
 [tools.claude."platforms.linux-x64"]
-checksum = "sha256:b069b327de3ad6c8cda70886675da46fb213797ac99a367df384e2202b37e0b7"
-url = "https://github.com/anthropics/claude-code/releases/download/v2.1.270/claude-linux-x64.tar.gz"
-url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/559771973"
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.270/linux-x64/claude"
 
 [tools.claude."platforms.linux-x64-musl"]
-checksum = "sha256:6677556de94f08a350307989d28285a927b9fa9cac1f188ba587c71d1e49b13f"
-url = "https://github.com/anthropics/claude-code/releases/download/v2.1.270/claude-linux-x64-musl.tar.gz"
-url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/559771864"
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.270/linux-x64-musl/claude"
 
 [tools.claude."platforms.macos-arm64"]
-checksum = "sha256:844b574a4f66103138a0d3090e7ef6117f83790b4d637c25a798057a735e68e9"
-url = "https://github.com/anthropics/claude-code/releases/download/v2.1.270/claude-darwin-arm64.tar.gz"
-url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/559771867"
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.270/darwin-arm64/claude"
 
 [tools.claude."platforms.macos-x64"]
-checksum = "sha256:bfc4a3bb1f785e389035b7b49ac752e0fd92d908efdc6d1b4ec590e545c54730"
-url = "https://github.com/anthropics/claude-code/releases/download/v2.1.270/claude-darwin-x64.tar.gz"
-url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/559771863"
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.270/darwin-x64/claude"
 
 [tools.claude."platforms.windows-x64"]
 checksum = "sha256:bc0b26b266b0b7c1bd983ebaa68d8239d557f44f4ffdf27bb65788888ea902bf"
