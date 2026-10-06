@@ -20,7 +20,7 @@ on:
         required: false
         type: string
       ecschedule_version:
-        default: "v0.20.0"
+        default: "v0.21.0"
         description: "ecschedule version (e.g. v0.17.2)"
         required: false
         type: string
@@ -305,7 +305,7 @@ jobs:
 
       - name: Install ecschedule
         timeout-minutes: 5
-        uses: Songmu/ecschedule@725a259f0b71a4ffdcbcb5e26682ad8c2d404da3 # v0.20.0
+        uses: Songmu/ecschedule@869920105b0d9b9808b70dcecae615ed53de7d0d # v0.21.0
         with:
           version: ${{ inputs.ecschedule_version }}
 
