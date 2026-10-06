@@ -86,43 +86,43 @@ url = "https://github.com/BurntSushi/ripgrep/releases/download/15.2.0/ripgrep-15
 url_api = "https://api.github.com/repos/BurntSushi/ripgrep/releases/assets/478119643"
 
 [[tools."aqua:Songmu/ecschedule"]]
-version = "0.20.0"
+version = "0.21.0"
 backend = "aqua:Songmu/ecschedule"
 
 [tools."aqua:Songmu/ecschedule"."platforms.linux-arm64"]
-checksum = "sha256:d74a20758cf7be9f3add960b5960fe23ac5542be40c9a7b6089c450e5cffe7be"
-url = "https://github.com/Songmu/ecschedule/releases/download/v0.20.0/ecschedule_v0.20.0_linux_arm64.tar.gz"
-url_api = "https://api.github.com/repos/Songmu/ecschedule/releases/assets/476998001"
+checksum = "sha256:a66aeaf51df527188fc178c88b589936560a3895c4a4ca05940f05e6e19cfc11"
+url = "https://github.com/Songmu/ecschedule/releases/download/v0.21.0/ecschedule_v0.21.0_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/Songmu/ecschedule/releases/assets/595813122"
 
 [tools."aqua:Songmu/ecschedule"."platforms.linux-arm64-musl"]
-checksum = "sha256:d74a20758cf7be9f3add960b5960fe23ac5542be40c9a7b6089c450e5cffe7be"
-url = "https://github.com/Songmu/ecschedule/releases/download/v0.20.0/ecschedule_v0.20.0_linux_arm64.tar.gz"
-url_api = "https://api.github.com/repos/Songmu/ecschedule/releases/assets/476998001"
+checksum = "sha256:a66aeaf51df527188fc178c88b589936560a3895c4a4ca05940f05e6e19cfc11"
+url = "https://github.com/Songmu/ecschedule/releases/download/v0.21.0/ecschedule_v0.21.0_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/Songmu/ecschedule/releases/assets/595813122"
 
 [tools."aqua:Songmu/ecschedule"."platforms.linux-x64"]
-checksum = "sha256:d312d155768c8c32353ab4e1deb04c1c0c7ea404d4747f60dd48079ee1f887ad"
-url = "https://github.com/Songmu/ecschedule/releases/download/v0.20.0/ecschedule_v0.20.0_linux_amd64.tar.gz"
-url_api = "https://api.github.com/repos/Songmu/ecschedule/releases/assets/476998041"
+checksum = "sha256:e83f06377ac1c6e807e8dec03114431256ec85708a241b24a255c6e3f822de90"
+url = "https://github.com/Songmu/ecschedule/releases/download/v0.21.0/ecschedule_v0.21.0_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/Songmu/ecschedule/releases/assets/595813145"
 
 [tools."aqua:Songmu/ecschedule"."platforms.linux-x64-musl"]
-checksum = "sha256:d312d155768c8c32353ab4e1deb04c1c0c7ea404d4747f60dd48079ee1f887ad"
-url = "https://github.com/Songmu/ecschedule/releases/download/v0.20.0/ecschedule_v0.20.0_linux_amd64.tar.gz"
-url_api = "https://api.github.com/repos/Songmu/ecschedule/releases/assets/476998041"
+checksum = "sha256:e83f06377ac1c6e807e8dec03114431256ec85708a241b24a255c6e3f822de90"
+url = "https://github.com/Songmu/ecschedule/releases/download/v0.21.0/ecschedule_v0.21.0_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/Songmu/ecschedule/releases/assets/595813145"
 
 [tools."aqua:Songmu/ecschedule"."platforms.macos-arm64"]
-checksum = "sha256:7c0a1041b7548bd38345d659065b7f0cff5c5d0111f9330c5d048ffcc804988b"
-url = "https://github.com/Songmu/ecschedule/releases/download/v0.20.0/ecschedule_v0.20.0_darwin_arm64.zip"
-url_api = "https://api.github.com/repos/Songmu/ecschedule/releases/assets/476998003"
+checksum = "sha256:c1b25275c844cecae14809c128eb31e068ca6f204c22461bcde6ce27538528b6"
+url = "https://github.com/Songmu/ecschedule/releases/download/v0.21.0/ecschedule_v0.21.0_darwin_arm64.zip"
+url_api = "https://api.github.com/repos/Songmu/ecschedule/releases/assets/595813069"
 
 [tools."aqua:Songmu/ecschedule"."platforms.macos-x64"]
-checksum = "sha256:81a2b62502d5ce2874619f136516e432644420c240820a8c044ed65f3079ad5b"
-url = "https://github.com/Songmu/ecschedule/releases/download/v0.20.0/ecschedule_v0.20.0_darwin_amd64.zip"
-url_api = "https://api.github.com/repos/Songmu/ecschedule/releases/assets/476998036"
+checksum = "sha256:c6ed9088e6874443f171c0129b3f0517905336db5c10f0fc12aff82eddb5e20f"
+url = "https://github.com/Songmu/ecschedule/releases/download/v0.21.0/ecschedule_v0.21.0_darwin_amd64.zip"
+url_api = "https://api.github.com/repos/Songmu/ecschedule/releases/assets/595813072"
 
 [tools."aqua:Songmu/ecschedule"."platforms.windows-x64"]
-checksum = "sha256:fc3dc2034585b6bc3f1114780b053f9b850318af9394a78d7d49b5e1cee44be3"
-url = "https://github.com/Songmu/ecschedule/releases/download/v0.20.0/ecschedule_v0.20.0_windows_amd64.zip"
-url_api = "https://api.github.com/repos/Songmu/ecschedule/releases/assets/476998002"
+checksum = "sha256:e93987c01f4b1abbaaa06d93fc0b48bc34fe3a4fa205504ae1845747fe00a1dd"
+url = "https://github.com/Songmu/ecschedule/releases/download/v0.21.0/ecschedule_v0.21.0_windows_amd64.zip"
+url_api = "https://api.github.com/repos/Songmu/ecschedule/releases/assets/595813147"
 
 [[tools."aqua:air-verse/air"]]
 version = "1.67.4"
