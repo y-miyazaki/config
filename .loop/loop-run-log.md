@@ -38,3 +38,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-10-09T08:55:38Z","loop_name":"changelog","duration_s":80,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"37907840289","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-10-09T09:12:42Z","loop_name":"changelog","duration_s":79,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"37907840289","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
 {"run_id":"2026-10-09T09:36:33Z","loop_name":"changelog","duration_s":110,"outcome":"rejected","skip_reason":"none","tokens_total":0,"workflow_run":"37912145584","attempts":1,"has_changes":false,"verdict":"REJECT","agent_result":"success"}
+{"run_id":"2026-10-09T10:05:56Z","loop_name":"changelog","duration_s":17,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"37915437984"}
