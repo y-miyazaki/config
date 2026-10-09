@@ -14,7 +14,11 @@
 # - extract_cursor_stream_text returns assistant markdown with json fence
 # - render_cursor_stream_log_summary omits raw ndjson and includes tool summary
 # - run_cursor_agent_with_usage captures usage from live cursor stream-json
-# - accumulate_claude_usage_from_line counts cache tokens as input
+# - accumulate_claude_usage_from_line keeps cache tokens out of the token totals
+# - accumulate_cost_usd sums across sessions and ignores junk
+# - accumulate_cursor_usage_from_line records cache tokens and no cost
+# - build_usage_json reports cache and cost without folding them into totals
+# - build_usage_json omits cost when the engine reports none
 # - accumulate_claude_stream_usage reads model from system init
 # - accumulate_claude_stream_usage ignores non-json lines
 # - render_claude_stream_log_summary prints final text and hides ndjson
@@ -139,12 +143,57 @@ setup() {
     [ "$(jq -r '.total_input_tokens' <<< "${result}")" -gt 0 ]
 }
 
-@test "accumulate_claude_usage_from_line counts cache tokens as input" {
-    local line='{"type":"result","usage":{"input_tokens":4815,"output_tokens":14276,"cache_creation_input_tokens":72780,"cache_read_input_tokens":2107374},"modelUsage":{"claude-sonnet-5":{}}}'
+@test "accumulate_claude_usage_from_line keeps cache tokens out of the token totals" {
+    local line='{"type":"result","total_cost_usd":0.865485,"usage":{"input_tokens":4815,"output_tokens":14276,"cache_creation_input_tokens":72780,"cache_read_input_tokens":2107374},"modelUsage":{"claude-sonnet-5":{}}}'
     accumulate_claude_usage_from_line "${line}"
-    [ "${USAGE_INPUT_TOTAL}" -eq 2184969 ]
+    [ "${USAGE_INPUT_TOTAL}" -eq 4815 ]
     [ "${USAGE_OUTPUT_TOTAL}" -eq 14276 ]
+    [ "${USAGE_CACHE_WRITE_TOTAL}" -eq 72780 ]
+    [ "${USAGE_CACHE_READ_TOTAL}" -eq 2107374 ]
+    [ "${USAGE_COST_USD}" = "0.865485" ]
     [ "${USAGE_MODEL}" = "claude-sonnet-5" ]
+}
+
+@test "accumulate_cost_usd sums across sessions and ignores junk" {
+    accumulate_cost_usd "0.500000"
+    accumulate_cost_usd "0.250000"
+    accumulate_cost_usd "not-a-number"
+    accumulate_cost_usd ""
+    [ "${USAGE_COST_USD}" = "0.750000" ]
+}
+
+@test "accumulate_cursor_usage_from_line records cache tokens and no cost" {
+    local line='{"type":"result","usage":{"inputTokens":4841,"outputTokens":31,"cacheReadTokens":5888,"cacheWriteTokens":120},"model":"composer-2.5"}'
+    accumulate_cursor_usage_from_line "${line}"
+    [ "${USAGE_INPUT_TOTAL}" -eq 4841 ]
+    [ "${USAGE_OUTPUT_TOTAL}" -eq 31 ]
+    [ "${USAGE_CACHE_READ_TOTAL}" -eq 5888 ]
+    [ "${USAGE_CACHE_WRITE_TOTAL}" -eq 120 ]
+    [ "${USAGE_COST_USD}" = "" ]
+}
+
+@test "build_usage_json reports cache and cost without folding them into totals" {
+    local out
+    USAGE_INPUT_TOTAL=4815
+    USAGE_OUTPUT_TOTAL=14276
+    USAGE_CACHE_READ_TOTAL=2107374
+    USAGE_CACHE_WRITE_TOTAL=72780
+    USAGE_COST_USD="0.865485"
+    USAGE_MODEL="claude-sonnet-5"
+    out="$(build_usage_json)"
+    [ "$(jq -r '.total_input_tokens' <<< "${out}")" = "4815" ]
+    [ "$(jq -r '.cache_read_tokens' <<< "${out}")" = "2107374" ]
+    [ "$(jq -r '.cache_write_tokens' <<< "${out}")" = "72780" ]
+    [ "$(jq -r '.cost_usd' <<< "${out}")" = "0.865485" ]
+}
+
+@test "build_usage_json omits cost when the engine reports none" {
+    local out
+    USAGE_INPUT_TOTAL=4841
+    USAGE_OUTPUT_TOTAL=31
+    USAGE_COST_USD=""
+    out="$(build_usage_json)"
+    [ "$(jq -r 'has("cost_usd")' <<< "${out}")" = "false" ]
 }
 
 @test "accumulate_claude_stream_usage reads model from system init" {

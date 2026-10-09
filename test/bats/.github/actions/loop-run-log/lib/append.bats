@@ -154,3 +154,21 @@ teardown() {
     ' <<< "${line}")"
     [ "${tokens_only}" = "0" ]
 }
+
+@test "loop_run_log_resolve_cost_usd echoes engine cost" {
+    run loop_run_log_resolve_cost_usd '{"total_input_tokens":10,"cost_usd":0.865485}'
+    [ "$status" -eq 0 ]
+    [ "$output" = "0.865485" ]
+}
+
+@test "loop_run_log_resolve_cost_usd is empty when the engine reports none" {
+    run loop_run_log_resolve_cost_usd '{"total_input_tokens":10}'
+    [ "$status" -eq 0 ]
+    [ "$output" = "" ]
+}
+
+@test "loop_run_log_resolve_tokens_total excludes cache tokens" {
+    run loop_run_log_resolve_tokens_total '{"total_input_tokens":4815,"total_output_tokens":14276,"cache_read_tokens":2107374,"cache_write_tokens":72780}'
+    [ "$status" -eq 0 ]
+    [ "$output" = "19091" ]
+}

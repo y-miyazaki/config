@@ -152,3 +152,67 @@ teardown() {
     run budget_exceeded "ci-sweeper" "${budget_file}" "${run_log}" "100" "100"
     [ "$status" -ne 0 ]
 }
+
+@test "budget_exceeded trips when daily cost reaches max" {
+    local budget_file run_log today
+
+    budget_file="${GUARDS_TMP}/loop-budget.json"
+    run_log="${GUARDS_TMP}/loop-run-log.md"
+    today="$(date -u +%Y-%m-%d)"
+    jq -nc '{loops:{"docs-updater":{max_runs_per_day:100,max_tokens_per_day:999999999,max_cost_usd_per_day:5}}}' > "${budget_file}"
+    printf '%s\n' \
+        "{\"run_id\":\"${today}T00:00:00Z\",\"loop_name\":\"docs-updater\",\"tokens_total\":10,\"cost_usd\":3.2}" \
+        "{\"run_id\":\"${today}T01:00:00Z\",\"loop_name\":\"docs-updater\",\"tokens_total\":10,\"cost_usd\":2.1}" \
+        > "${run_log}"
+
+    run budget_exceeded "docs-updater" "${budget_file}" "${run_log}" "100" "999999999"
+    [ "$status" -eq 0 ]
+    [[ $output == *"Daily cost budget exceeded"* ]]
+}
+
+@test "budget_exceeded allows runs under the daily cost cap" {
+    local budget_file run_log today
+
+    budget_file="${GUARDS_TMP}/loop-budget.json"
+    run_log="${GUARDS_TMP}/loop-run-log.md"
+    today="$(date -u +%Y-%m-%d)"
+    jq -nc '{loops:{"docs-updater":{max_runs_per_day:100,max_tokens_per_day:999999999,max_cost_usd_per_day:5}}}' > "${budget_file}"
+    printf '%s\n' \
+        "{\"run_id\":\"${today}T00:00:00Z\",\"loop_name\":\"docs-updater\",\"tokens_total\":10,\"cost_usd\":1.5}" \
+        > "${run_log}"
+
+    run budget_exceeded "docs-updater" "${budget_file}" "${run_log}" "100" "999999999"
+    [ "$status" -ne 0 ]
+}
+
+@test "budget_exceeded falls back to tokens when the engine reports no cost" {
+    local budget_file run_log today
+
+    budget_file="${GUARDS_TMP}/loop-budget.json"
+    run_log="${GUARDS_TMP}/loop-run-log.md"
+    today="$(date -u +%Y-%m-%d)"
+    jq -nc '{loops:{"docs-updater":{max_runs_per_day:100,max_tokens_per_day:100,max_cost_usd_per_day:5}}}' > "${budget_file}"
+    printf '%s\n' \
+        "{\"run_id\":\"${today}T00:00:00Z\",\"loop_name\":\"docs-updater\",\"tokens_total\":150}" \
+        > "${run_log}"
+
+    run budget_exceeded "docs-updater" "${budget_file}" "${run_log}" "100" "100"
+    [ "$status" -eq 0 ]
+    [[ $output == *"Daily token budget exceeded"* ]]
+}
+
+@test "budget_exceeded reads cost from the nested usage object" {
+    local budget_file run_log today
+
+    budget_file="${GUARDS_TMP}/loop-budget.json"
+    run_log="${GUARDS_TMP}/loop-run-log.md"
+    today="$(date -u +%Y-%m-%d)"
+    jq -nc '{loops:{"docs-updater":{max_runs_per_day:100,max_tokens_per_day:999999999,max_cost_usd_per_day:2}}}' > "${budget_file}"
+    printf '%s\n' \
+        "{\"run_id\":\"${today}T00:00:00Z\",\"loop_name\":\"docs-updater\",\"usage\":{\"cost_usd\":2.5}}" \
+        > "${run_log}"
+
+    run budget_exceeded "docs-updater" "${budget_file}" "${run_log}" "100" "999999999"
+    [ "$status" -eq 0 ]
+    [[ $output == *"Daily cost budget exceeded"* ]]
+}

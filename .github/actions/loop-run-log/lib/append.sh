@@ -115,6 +115,37 @@ function loop_run_log_resolve_tokens_total {
 }
 
 #######################################
+# loop_run_log_resolve_cost_usd: Echo engine-reported cost or an empty string
+#
+# Description:
+#   Only engines that report their own cost produce this field. Cursor reports
+#   token counts with no cost, so its entries carry none and the budget guard
+#   falls back to tokens for that engine.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - usage_json from loop-execute, may be empty
+#
+# Outputs:
+#   Cost as a decimal string, or an empty string when unavailable
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function loop_run_log_resolve_cost_usd {
+    local usage_json="${1:-}"
+
+    if [[ -n ${usage_json} ]] && jq -e . > /dev/null 2>&1 <<< "${usage_json}"; then
+        jq -r '(.cost_usd // empty) | tostring' <<< "${usage_json}"
+        return 0
+    fi
+    printf ''
+}
+
+#######################################
 # loop_run_log_build_entry: Build one run log JSON object
 #
 # Description:
@@ -158,10 +189,11 @@ function loop_run_log_build_entry {
     local agent_result="${10:-}"
     local failure_stage="${11:-}"
     local failure_message="${12:-}"
-    local run_id resolved_tokens
+    local run_id resolved_tokens resolved_cost
 
     run_id="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
     resolved_tokens="$(loop_run_log_resolve_tokens_total "${usage_json}")"
+    resolved_cost="$(loop_run_log_resolve_cost_usd "${usage_json}")"
 
     jq -nc \
         --arg run_id "${run_id}" \
@@ -178,6 +210,7 @@ function loop_run_log_build_entry {
         --arg agent_result "${agent_result}" \
         --arg failure_stage "${failure_stage}" \
         --arg failure_message "${failure_message}" \
+        --arg cost_usd "${resolved_cost}" \
         '{
       run_id: $run_id,
       loop_name: $loop_name,
@@ -187,6 +220,7 @@ function loop_run_log_build_entry {
       tokens_total: $tokens_total,
       workflow_run: $workflow_run
     }
+    + (if ($cost_usd | length) > 0 then {cost_usd: ($cost_usd | tonumber)} else {} end)
     + (if ($attempts | length) > 0 then {attempts: ($attempts | tonumber)} else {} end)
     + (if ($has_changes | length) > 0 then {has_changes: ($has_changes == "true")} else {} end)
     + (if ($verdict | length) > 0 then {verdict: $verdict} else {} end)

@@ -19,6 +19,9 @@
 # Cumulative measured token totals across all agent sessions in one loop run
 USAGE_INPUT_TOTAL=0
 USAGE_OUTPUT_TOTAL=0
+USAGE_CACHE_READ_TOTAL=0
+USAGE_CACHE_WRITE_TOTAL=0
+USAGE_COST_USD=""
 USAGE_MODEL=""
 
 #######################################
@@ -79,7 +82,7 @@ function accumulate_cursor_stream_usage {
 #######################################
 function accumulate_cursor_usage_from_line {
     local line="${1:?line required}"
-    local event_type input output model
+    local event_type input output cache_read cache_write model
 
     [[ -z ${line} || ${line} != \{* ]] && return 0
 
@@ -99,6 +102,12 @@ function accumulate_cursor_usage_from_line {
     output="$(jq -r '
       (.usage.outputTokens // .usage.output_tokens // .usage.total_output_tokens // .usage.completion_tokens // 0)
     ' <<< "${line}" 2> /dev/null || echo "0")"
+    cache_read="$(jq -r '
+      (.usage.cacheReadTokens // .usage.cache_read_tokens // 0)
+    ' <<< "${line}" 2> /dev/null || echo "0")"
+    cache_write="$(jq -r '
+      (.usage.cacheWriteTokens // .usage.cache_write_tokens // 0)
+    ' <<< "${line}" 2> /dev/null || echo "0")"
     model="$(jq -r '.model // .usage.model // empty' <<< "${line}" 2> /dev/null || true)"
 
     if [[ ${input} =~ ^[0-9]+$ ]]; then
@@ -107,6 +116,14 @@ function accumulate_cursor_usage_from_line {
     if [[ ${output} =~ ^[0-9]+$ ]]; then
         USAGE_OUTPUT_TOTAL=$((USAGE_OUTPUT_TOTAL + output))
     fi
+    if [[ ${cache_read} =~ ^[0-9]+$ ]]; then
+        USAGE_CACHE_READ_TOTAL=$((USAGE_CACHE_READ_TOTAL + cache_read))
+    fi
+    if [[ ${cache_write} =~ ^[0-9]+$ ]]; then
+        USAGE_CACHE_WRITE_TOTAL=$((USAGE_CACHE_WRITE_TOTAL + cache_write))
+    fi
+    # Cursor reports no cost field at all, so USAGE_COST_USD stays empty and
+    # the budget guard falls back to tokens for this engine.
     if [[ -n ${model} ]]; then
         USAGE_MODEL="${model}"
     fi
@@ -139,11 +156,21 @@ function build_usage_json {
         printf ''
         return 0
     fi
+    # Cache counts are reported for visibility but deliberately left out of the
+    # token totals: a cache read is billed at a fraction of a fresh input token,
+    # and that fraction is a pricing decision that changes without notice, so
+    # folding it in with a hardcoded weight would be wrong by an unknown factor.
+    # cost_usd is the figure to budget against wherever the engine reports one.
     jq -nc \
         --argjson total_input_tokens "${USAGE_INPUT_TOTAL}" \
         --argjson total_output_tokens "${USAGE_OUTPUT_TOTAL}" \
+        --argjson cache_read_tokens "${USAGE_CACHE_READ_TOTAL}" \
+        --argjson cache_write_tokens "${USAGE_CACHE_WRITE_TOTAL}" \
+        --arg cost_usd "${USAGE_COST_USD}" \
         --arg model "${USAGE_MODEL}" \
-        '{total_input_tokens: $total_input_tokens, total_output_tokens: $total_output_tokens}
+        '{total_input_tokens: $total_input_tokens, total_output_tokens: $total_output_tokens,
+          cache_read_tokens: $cache_read_tokens, cache_write_tokens: $cache_write_tokens}
+         + (if ($cost_usd | length) > 0 then {cost_usd: ($cost_usd | tonumber)} else {} end)
          + (if ($model | length) > 0 then {model: $model} else {} end)'
 }
 
@@ -171,6 +198,9 @@ function build_usage_json {
 function reset_usage_totals {
     USAGE_INPUT_TOTAL=0
     USAGE_OUTPUT_TOTAL=0
+    USAGE_CACHE_READ_TOTAL=0
+    USAGE_CACHE_WRITE_TOTAL=0
+    USAGE_COST_USD=""
     USAGE_MODEL=""
 }
 
@@ -358,7 +388,9 @@ function render_cursor_stream_log_summary {
     assistant_text="$(extract_cursor_stream_text "${stream_file}")"
 
     echo "Agent summary: model=${model:-unknown} tools=${tool_count} duration_ms=${duration_ms}"
-    echo "Agent usage: input=${USAGE_INPUT_TOTAL} output=${USAGE_OUTPUT_TOTAL}"
+    echo "Agent usage: input=${USAGE_INPUT_TOTAL} output=${USAGE_OUTPUT_TOTAL}" \
+        "cache_read=${USAGE_CACHE_READ_TOTAL} cache_write=${USAGE_CACHE_WRITE_TOTAL}" \
+        "cost_usd=${USAGE_COST_USD:-unreported}"
     if [[ -n ${tool_summary} ]]; then
         printf '%s' "${tool_summary}"
     fi
@@ -462,7 +494,7 @@ function accumulate_claude_stream_usage {
 #######################################
 function accumulate_claude_usage_from_line {
     local line="${1:?line required}"
-    local event_type input output model
+    local event_type input output cache_write cache_read cost model
 
     [[ -z ${line} || ${line} != \{* ]] && return 0
 
@@ -476,12 +508,11 @@ function accumulate_claude_usage_from_line {
     fi
     [[ ${event_type} == "result" ]] || return 0
 
-    input="$(jq -r '
-      ((.usage.input_tokens // 0)
-       + (.usage.cache_creation_input_tokens // 0)
-       + (.usage.cache_read_input_tokens // 0))
-    ' <<< "${line}" 2> /dev/null || echo "0")"
+    input="$(jq -r '(.usage.input_tokens // 0)' <<< "${line}" 2> /dev/null || echo "0")"
     output="$(jq -r '(.usage.output_tokens // 0)' <<< "${line}" 2> /dev/null || echo "0")"
+    cache_write="$(jq -r '(.usage.cache_creation_input_tokens // 0)' <<< "${line}" 2> /dev/null || echo "0")"
+    cache_read="$(jq -r '(.usage.cache_read_input_tokens // 0)' <<< "${line}" 2> /dev/null || echo "0")"
+    cost="$(jq -r '(.total_cost_usd // empty)' <<< "${line}" 2> /dev/null || true)"
     model="$(jq -r '(.modelUsage // {} | keys | first) // empty' <<< "${line}" 2> /dev/null || true)"
 
     if [[ ${input} =~ ^[0-9]+$ ]]; then
@@ -490,9 +521,45 @@ function accumulate_claude_usage_from_line {
     if [[ ${output} =~ ^[0-9]+$ ]]; then
         USAGE_OUTPUT_TOTAL=$((USAGE_OUTPUT_TOTAL + output))
     fi
+    if [[ ${cache_write} =~ ^[0-9]+$ ]]; then
+        USAGE_CACHE_WRITE_TOTAL=$((USAGE_CACHE_WRITE_TOTAL + cache_write))
+    fi
+    if [[ ${cache_read} =~ ^[0-9]+$ ]]; then
+        USAGE_CACHE_READ_TOTAL=$((USAGE_CACHE_READ_TOTAL + cache_read))
+    fi
+    accumulate_cost_usd "${cost}"
     if [[ -n ${model} ]]; then
         USAGE_MODEL="${model}"
     fi
+}
+
+#######################################
+# accumulate_cost_usd: Add one engine-reported cost figure to the run total
+#
+# Description:
+#   Cost arrives as a decimal, so the running total is kept in awk rather than
+#   bash integer arithmetic. Engines that report no cost leave the total empty,
+#   which is what tells the budget guard to fall back to token counting.
+#
+# Globals:
+#   USAGE_COST_USD - Running cost total, empty when no engine reported one
+#
+# Arguments:
+#   $1 - Cost for this session as reported by the CLI, may be empty
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function accumulate_cost_usd {
+    local cost="${1:-}"
+
+    [[ -z ${cost} ]] && return 0
+    [[ ${cost} =~ ^[0-9]+([.][0-9]+)?$ ]] || return 0
+    USAGE_COST_USD="$(awk -v a="${USAGE_COST_USD:-0}" -v b="${cost}" 'BEGIN { printf "%.6f", a + b }')"
 }
 
 #######################################
@@ -535,7 +602,9 @@ function render_claude_stream_log_summary {
         "${stream_file}" 2> /dev/null | tail -1)"
 
     echo "Agent summary: model=${USAGE_MODEL:-unknown} tools=${tool_count:-0} turns=${num_turns:-0} duration_ms=${duration_ms:-0}"
-    echo "Agent usage: input=${USAGE_INPUT_TOTAL} output=${USAGE_OUTPUT_TOTAL}"
+    echo "Agent usage: input=${USAGE_INPUT_TOTAL} output=${USAGE_OUTPUT_TOTAL}" \
+        "cache_read=${USAGE_CACHE_READ_TOTAL} cache_write=${USAGE_CACHE_WRITE_TOTAL}" \
+        "cost_usd=${USAGE_COST_USD:-unreported}"
 
     result_text="$(jq -rR 'fromjson? | select(.type == "result") | .result // empty' \
         "${stream_file}" 2> /dev/null || true)"
