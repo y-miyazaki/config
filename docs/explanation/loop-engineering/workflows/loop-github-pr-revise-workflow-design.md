@@ -45,7 +45,7 @@ Keys are passed in `on-loop-github-pr-revise.yaml` via `with:` on `ci-loop-calle
 | ---------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------- |
 | `ack_trigger_comment`        | Post `eyes` reaction on trigger comment via `ack-trigger`                      | `true`                                                        |
 | `agent_maker_instructions`   | Apply human feedback; address full `result.comments` array                     | Inline in caller workflow                                     |
-| `agent_maker_max_turns`      | Max maker turns per attempt                                                    | `8`                                                           |
+| `agent_maker_max_turns`      | Max maker turns per attempt                                                    | `100`                                                         |
 | `agent_maker_model`          | Maker model ID                                                                 | `claude-sonnet-5`                                             |
 | `agent_maker_effort`         | Maker reasoning effort. Only engines with an effort flag (claude) consume it   | `medium`                                                      |
 | `agent_maker_skill_name`     | Skill package                                                                  | `github-pr-revise`                                            |

@@ -169,7 +169,7 @@ Related but not branch-scoped: `max_targets_per_schedule` (fan-out cap after wat
 
 | Input                        | Type   | Description                                                                    | Default (dogfood)       |
 | ---------------------------- | ------ | ------------------------------------------------------------------------------ | ----------------------- |
-| `agent_maker_max_turns`      | number | Max maker agent turns per loop attempt                                         | `5`–`8` (loop-specific) |
+| `agent_maker_max_turns`      | number | Max maker agent turns per loop attempt                                         | `100` (all loops)       |
 | `agent_maker_model`          | string | Maker model ID. Empty = engine default                                         | `claude-sonnet-5`       |
 | `agent_maker_effort`         | string | Maker reasoning effort. Only engines with an effort flag (claude) consume it   | `medium`                |
 | `agent_loop_max_attempts`    | number | Max Agent→Verify retry cycles before finalize records failure                  | `3`                     |

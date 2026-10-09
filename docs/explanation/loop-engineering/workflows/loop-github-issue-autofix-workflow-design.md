@@ -41,7 +41,7 @@ Keys are passed in `on-loop-github-issue-autofix.yaml` via `with:` on `ci-loop-c
 | Input / JSON key             | Description                                                                    | Dogfood value                                                   |
 | ---------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
 | `agent_maker_instructions`   | Minimal fix from detect JSON; PR body with `Fixes #N`                          | Inline in caller workflow                                       |
-| `agent_maker_max_turns`      | Max maker turns per attempt                                                    | `8`                                                             |
+| `agent_maker_max_turns`      | Max maker turns per attempt                                                    | `100`                                                           |
 | `agent_maker_model`          | Maker model ID                                                                 | `claude-sonnet-5`                                               |
 | `agent_maker_effort`         | Maker reasoning effort. Only engines with an effort flag (claude) consume it   | `medium`                                                        |
 | `agent_maker_skill_name`     | Skill package                                                                  | `github-issue-autofix`                                          |
