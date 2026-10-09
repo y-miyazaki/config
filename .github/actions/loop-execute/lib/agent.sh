@@ -222,6 +222,7 @@ function run_agent_capture {
 #
 # Globals:
 #   AGENT_TOKEN - Authentication token for the selected engine
+#   DETECT_JSON_FILE - Optional materialized detect JSON path granted as an extra read directory
 #   EFFORT - Optional reasoning effort level (engines with a dedicated flag only)
 #   ENGINE - Engine name (claude|copilot|codex|cursor)
 #   MAX_TURNS - Optional max turns override
@@ -253,6 +254,9 @@ function run_agent {
             append_agent_mcp_args ARGS "${ENGINE}"
             # Print mode denies permission-gated tools by default; makers need edit rights.
             if [[ ${allow_writes} == "true" ]]; then ARGS+=(--permission-mode acceptEdits); fi
+            # Detect JSON lives in STATUS_DIR, outside the worktree; without this the
+            # agent cannot read the path the prompt points at.
+            if [[ -n ${DETECT_JSON_FILE:-} ]]; then ARGS+=(--add-dir "$(dirname "${DETECT_JSON_FILE}")"); fi
             if [[ -n ${EFFORT:-} ]]; then ARGS+=(--effort "${EFFORT}"); fi
             if [[ -n ${MAX_TURNS:-} ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
             if [[ -n ${MODEL:-} ]]; then ARGS+=(--model "${MODEL}"); fi

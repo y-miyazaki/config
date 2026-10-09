@@ -2,11 +2,11 @@
   "targets": {
     "integration:main": {
       "last_run": "2026-10-09T09:36:30Z",
-      "outcome": "rejected",
-      "consecutive_failures": 3,
-      "last_sha": "af9ed8b2ba8e8cfaa162bd6be7e8ebb201e590b6",
+      "outcome": "updated",
+      "consecutive_failures": 0,
+      "last_sha": "b6566a844dba52a1b4de8431056ae49e6c427471",
       "open_rejections": [],
-      "last_reject_reason": "No file changes produced"
+      "last_reject_reason": ""
     }
   }
 }

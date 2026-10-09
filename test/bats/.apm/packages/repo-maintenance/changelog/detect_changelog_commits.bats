@@ -77,6 +77,21 @@ setup() {
     [ "$status" -eq 0 ]
 }
 
+@test "is_loop_maintenance_commit skips loop run log commits" {
+    run is_loop_maintenance_commit "chore" "loop" "append run log [skip ci]"
+    [ "$status" -eq 0 ]
+}
+
+@test "is_loop_maintenance_commit skips loop state commits" {
+    run is_loop_maintenance_commit "chore" "loop" "update state [skip ci]"
+    [ "$status" -eq 0 ]
+}
+
+@test "is_loop_maintenance_commit allows human chore loop commits" {
+    run is_loop_maintenance_commit "chore" "loop" "increase agent_maker_max_turns to 15"
+    [ "$status" -eq 1 ]
+}
+
 @test "is_loop_maintenance_commit allows regular feat commits" {
     run is_loop_maintenance_commit "feat" "api" "add endpoint"
     [ "$status" -eq 1 ]

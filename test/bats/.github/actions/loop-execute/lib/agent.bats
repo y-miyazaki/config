@@ -48,6 +48,7 @@ STUB
     MAX_TURNS="5"
     MODEL="claude-sonnet-5"
     WORKING_DIRECTORY="."
+    DETECT_JSON_FILE=""
 }
 
 @test "run_agent_capture preserves USAGE_* unlike pipe to tee" {
@@ -138,6 +139,27 @@ STUB
     grep -q -- "--permission-mode acceptEdits" "${args_file}"
     grep -q -- "--model claude-sonnet-5" "${args_file}"
     grep -q -- "--max-turns 5" "${args_file}"
+}
+
+@test "run_agent claude grants read access to the detect JSON directory" {
+    local args_file
+
+    args_file="${BATS_TEST_TMPDIR}/claude-add-dir-args.txt"
+    _stub_claude_engine "${args_file}"
+    mkdir -p "${BATS_TEST_TMPDIR}/status"
+    DETECT_JSON_FILE="${BATS_TEST_TMPDIR}/status/tmp.detect"
+    run_agent "true" > /dev/null
+    grep -q -- "--add-dir ${BATS_TEST_TMPDIR}/status" "${args_file}"
+}
+
+@test "run_agent claude omits add-dir when no detect JSON was materialized" {
+    local args_file
+
+    args_file="${BATS_TEST_TMPDIR}/claude-no-add-dir-args.txt"
+    _stub_claude_engine "${args_file}"
+    DETECT_JSON_FILE=""
+    run_agent "true" > /dev/null
+    run ! grep -q -- "--add-dir" "${args_file}"
 }
 
 @test "run_agent claude checker session stays read-only" {
