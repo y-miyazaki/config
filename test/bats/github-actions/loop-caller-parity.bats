@@ -61,9 +61,15 @@ job_if_block() {
     grep -qF 'pr_draft: ${{ inputs.pr_draft }}' "${ENTITY_CALLER}"
 }
 
-@test "entity record-skip logs circuit_breaker and budget like branch caller" {
-    grep -A6 'record-skip:' "${ENTITY_CALLER}" | grep -q 'circuit_breaker'
-    grep -A6 'record-skip:' "${ENTITY_CALLER}" | grep -q "skip_reason == 'budget'"
+@test "both callers record every non-run, not just two skip reasons" {
+    # record-skip used to enumerate circuit_breaker and budget, which silently
+    # dropped no_changes from the run log. Both callers now gate on should_run
+    # alone so a quiet tick is distinguishable from a loop that never started.
+    local caller
+    for caller in "${BRANCH_CALLER}" "${ENTITY_CALLER}"; do
+        grep -A6 'record-skip:' "${caller}" | grep -qF "needs.detect.outputs.should_run == 'false'"
+        ! grep -A6 'record-skip:' "${caller}" | grep -q "skip_reason == '"
+    done
 }
 
 @test "both callers reference the same ci-loop-agent workflow" {
