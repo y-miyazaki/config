@@ -50,7 +50,7 @@ jobs:
         - Changes outside the allowlist or modifications to denylist paths
         - Semantic claims unsupported by cited evidence
         - Structural or security debt edited instead of reported
-      agent_checker_max_turns: 3
+      agent_checker_max_turns: 100
       agent_checker_model: claude-opus-5
       agent_checker_skill_name: loop-verifier
       agent_loop_max_attempts: 3
