@@ -1,12 +1,64 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-10-09T10:50:37Z",
+      "last_run": "2026-10-09T11:08:35Z",
       "outcome": "rejected",
-      "consecutive_failures": 2,
+      "consecutive_failures": 3,
       "last_sha": "c67cb0f560493ffd0783a55fb299ae7376f936fa",
-      "open_rejections": [],
-      "last_reject_reason": "No file changes produced"
+      "open_rejections": [
+        {
+          "attempt": 1,
+          "files": [
+            "docs/explanation/loop-engineering/loop-caller-reusable-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md",
+            "docs/explanation/loop-engineering/workflows/loop-changelog-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-docs-updater-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-github-issue-autofix-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-github-issue-triage-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-github-pr-revise-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-refactor-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-tech-debt-workflow-design.md"
+          ],
+          "issue": "Agent report output format or Changes/Deferred consistency failed",
+          "fix": "Emit ## Overview, ## Summary (### Changes + ### Deferred), and ## Verification per loop PR body skill contract; reconcile with git diff before synthesis"
+        },
+        {
+          "attempt": 2,
+          "files": [
+            "docs/explanation/loop-engineering/loop-caller-reusable-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md",
+            "docs/explanation/loop-engineering/workflows/loop-changelog-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-docs-updater-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-github-issue-autofix-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-github-issue-triage-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-github-pr-revise-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-refactor-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-tech-debt-workflow-design.md"
+          ],
+          "issue": "Checker output missing or unclear",
+          "fix": "Checker output missing or unclear"
+        },
+        {
+          "attempt": 3,
+          "files": [
+            "docs/explanation/loop-engineering/loop-caller-reusable-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-caller-inputs-reference.md",
+            "docs/explanation/loop-engineering/workflows/loop-changelog-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-ci-sweeper-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-docs-updater-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-github-issue-autofix-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-github-issue-triage-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-github-pr-revise-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-refactor-workflow-design.md",
+            "docs/explanation/loop-engineering/workflows/loop-tech-debt-workflow-design.md"
+          ],
+          "issue": "Checker output missing or unclear",
+          "fix": "Checker output missing or unclear"
+        }
+      ],
+      "last_reject_reason": "Checker output missing or unclear"
     }
   }
 }
