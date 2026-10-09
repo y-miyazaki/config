@@ -14,6 +14,11 @@
 # - extract_cursor_stream_text returns assistant markdown with json fence
 # - render_cursor_stream_log_summary omits raw ndjson and includes tool summary
 # - run_cursor_agent_with_usage captures usage from live cursor stream-json
+# - accumulate_claude_usage_from_line counts cache tokens as input
+# - accumulate_claude_stream_usage reads model from system init
+# - accumulate_claude_stream_usage ignores non-json lines
+# - render_claude_stream_log_summary prints final text and hides ndjson
+# - run_claude_agent_with_usage captures usage and forwards exit code
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -132,4 +137,78 @@ setup() {
     result="$(build_usage_json)"
     [ -n "${result}" ]
     [ "$(jq -r '.total_input_tokens' <<< "${result}")" -gt 0 ]
+}
+
+@test "accumulate_claude_usage_from_line counts cache tokens as input" {
+    local line='{"type":"result","usage":{"input_tokens":4815,"output_tokens":14276,"cache_creation_input_tokens":72780,"cache_read_input_tokens":2107374},"modelUsage":{"claude-sonnet-5":{}}}'
+    accumulate_claude_usage_from_line "${line}"
+    [ "${USAGE_INPUT_TOTAL}" -eq 2184969 ]
+    [ "${USAGE_OUTPUT_TOTAL}" -eq 14276 ]
+    [ "${USAGE_MODEL}" = "claude-sonnet-5" ]
+}
+
+@test "accumulate_claude_stream_usage reads model from system init" {
+    local tmpf
+    tmpf="$(mktemp)"
+    printf '%s\n' \
+        '{"type":"system","subtype":"init","model":"claude-sonnet-5"}' \
+        '{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Read"}]}}' \
+        '{"type":"result","subtype":"success","usage":{"input_tokens":100,"output_tokens":20}}' \
+        > "${tmpf}"
+    accumulate_claude_stream_usage "${tmpf}"
+    rm -f "${tmpf}"
+    [ "${USAGE_INPUT_TOTAL}" -eq 100 ]
+    [ "${USAGE_OUTPUT_TOTAL}" -eq 20 ]
+    [ "${USAGE_MODEL}" = "claude-sonnet-5" ]
+}
+
+@test "accumulate_claude_stream_usage ignores non-json lines" {
+    local tmpf
+    tmpf="$(mktemp)"
+    printf '%s\n' \
+        'npm warn something noisy' \
+        '{"type":"result","usage":{"input_tokens":7,"output_tokens":3}}' \
+        > "${tmpf}"
+    accumulate_claude_stream_usage "${tmpf}"
+    rm -f "${tmpf}"
+    [ "${USAGE_INPUT_TOTAL}" -eq 7 ]
+    [ "${USAGE_OUTPUT_TOTAL}" -eq 3 ]
+}
+
+@test "render_claude_stream_log_summary prints final text and hides ndjson" {
+    local tmpf out
+    tmpf="$(mktemp)"
+    printf '%s\n' \
+        '{"type":"system","subtype":"init","model":"claude-sonnet-5"}' \
+        '{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Edit"}]}}' \
+        '{"type":"result","subtype":"success","num_turns":12,"duration_ms":4321,"result":"REASON: done","usage":{"input_tokens":5,"output_tokens":2}}' \
+        > "${tmpf}"
+    accumulate_claude_stream_usage "${tmpf}"
+    out="$(render_claude_stream_log_summary "${tmpf}")"
+    rm -f "${tmpf}"
+    [[ ${out} == *"turns=12"* ]]
+    [[ ${out} == *"tools=1"* ]]
+    [[ ${out} == *"REASON: done"* ]]
+    [[ ${out} != *'"type":"result"'* ]]
+}
+
+@test "run_claude_agent_with_usage captures usage and forwards exit code" {
+    local out rc=0
+
+    function claude {
+        printf '%s\n' \
+            '{"type":"system","subtype":"init","model":"claude-sonnet-5"}' \
+            '{"type":"result","subtype":"success","num_turns":3,"result":"REASON: ok","usage":{"input_tokens":11,"output_tokens":4}}'
+        return 0
+    }
+    # Redirect rather than command-substitute: a subshell would discard USAGE_*,
+    # which is why run_agent_capture writes to a file.
+    local out_file
+    out_file="${BATS_TEST_TMPDIR}/claude-usage-out.txt"
+    run_claude_agent_with_usage -p "prompt" > "${out_file}" || rc=$?
+    out="$(cat "${out_file}")"
+    [ "${rc}" -eq 0 ]
+    [ "${USAGE_INPUT_TOTAL}" -eq 11 ]
+    [ "${USAGE_OUTPUT_TOTAL}" -eq 4 ]
+    [[ ${out} == *"REASON: ok"* ]]
 }

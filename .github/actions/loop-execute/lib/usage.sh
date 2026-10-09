@@ -401,3 +401,178 @@ function run_cursor_agent_with_usage {
     rm -f "${stream_file}"
     return "${rc}"
 }
+
+#######################################
+# accumulate_claude_stream_usage: Sum usage from a claude stream-json capture file
+#
+# Description:
+#   Claude Code emits one NDJSON event per line in stream-json mode and reports
+#   token usage once, on the terminal result event. Cache creation and cache
+#   read tokens are counted as input because they are tokens the run actually
+#   pushed through the model; agentic loops spend most of their input budget
+#   there, so omitting them would under-report a run by an order of magnitude.
+#
+# Globals:
+#   USAGE_INPUT_TOTAL - Running total of input tokens
+#   USAGE_OUTPUT_TOTAL - Running total of output tokens
+#   USAGE_MODEL - Model name reported by the CLI
+#
+# Arguments:
+#   $1 - Path to the captured NDJSON stream file
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function accumulate_claude_stream_usage {
+    local stream_file="${1:?stream_file required}"
+    local line
+
+    [[ -f ${stream_file} ]] || return 0
+
+    while IFS= read -r line || [[ -n ${line} ]]; do
+        accumulate_claude_usage_from_line "${line}"
+    done < "${stream_file}"
+}
+
+#######################################
+# accumulate_claude_usage_from_line: Fold one claude stream-json line into totals
+#
+# Description:
+#   Ignores non-JSON lines. Reads the model from the system init event and the
+#   token counts from the result event.
+#
+# Globals:
+#   USAGE_INPUT_TOTAL - Incremented when result usage is present
+#   USAGE_OUTPUT_TOTAL - Incremented when result usage is present
+#   USAGE_MODEL - Set from system init or result metadata
+#
+# Arguments:
+#   $1 - Single NDJSON line from claude stream-json output
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function accumulate_claude_usage_from_line {
+    local line="${1:?line required}"
+    local event_type input output model
+
+    [[ -z ${line} || ${line} != \{* ]] && return 0
+
+    event_type="$(jq -r '.type // empty' <<< "${line}" 2> /dev/null || true)"
+    if [[ ${event_type} == "system" ]]; then
+        model="$(jq -r '.model // empty' <<< "${line}" 2> /dev/null || true)"
+        if [[ -n ${model} && -z ${USAGE_MODEL} ]]; then
+            USAGE_MODEL="${model}"
+        fi
+        return 0
+    fi
+    [[ ${event_type} == "result" ]] || return 0
+
+    input="$(jq -r '
+      ((.usage.input_tokens // 0)
+       + (.usage.cache_creation_input_tokens // 0)
+       + (.usage.cache_read_input_tokens // 0))
+    ' <<< "${line}" 2> /dev/null || echo "0")"
+    output="$(jq -r '(.usage.output_tokens // 0)' <<< "${line}" 2> /dev/null || echo "0")"
+    model="$(jq -r '(.modelUsage // {} | keys | first) // empty' <<< "${line}" 2> /dev/null || true)"
+
+    if [[ ${input} =~ ^[0-9]+$ ]]; then
+        USAGE_INPUT_TOTAL=$((USAGE_INPUT_TOTAL + input))
+    fi
+    if [[ ${output} =~ ^[0-9]+$ ]]; then
+        USAGE_OUTPUT_TOTAL=$((USAGE_OUTPUT_TOTAL + output))
+    fi
+    if [[ -n ${model} ]]; then
+        USAGE_MODEL="${model}"
+    fi
+}
+
+#######################################
+# render_claude_stream_log_summary: Print claude run summary and final text
+#
+# Description:
+#   Replaces the plain text that --bare used to put on stdout. The final result
+#   text must still reach stdout verbatim because the loop parses the agent
+#   report out of it.
+#
+# Globals:
+#   USAGE_INPUT_TOTAL - Input token total for the summary line
+#   USAGE_OUTPUT_TOTAL - Output token total for the summary line
+#   USAGE_MODEL - Model name for the summary line
+#
+# Arguments:
+#   $1 - Path to the captured NDJSON stream file
+#
+# Outputs:
+#   Summary line, usage line, then the agent's final text
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function render_claude_stream_log_summary {
+    local stream_file="${1:?stream_file required}"
+    local tool_count duration_ms num_turns result_text
+
+    [[ -f ${stream_file} ]] || return 0
+
+    # fromjson? per line, not slurp: the CLI interleaves plain warning lines and
+    # a slurped parse would abort on the first one, zeroing every field.
+    tool_count="$(jq -rR 'fromjson? | select(.type == "assistant")
+        | .message.content[]? | select(.type == "tool_use") | .name' \
+        "${stream_file}" 2> /dev/null | wc -l | tr -d ' ')"
+    duration_ms="$(jq -rR 'fromjson? | select(.type == "result") | .duration_ms // 0' \
+        "${stream_file}" 2> /dev/null | tail -1)"
+    num_turns="$(jq -rR 'fromjson? | select(.type == "result") | .num_turns // 0' \
+        "${stream_file}" 2> /dev/null | tail -1)"
+
+    echo "Agent summary: model=${USAGE_MODEL:-unknown} tools=${tool_count:-0} turns=${num_turns:-0} duration_ms=${duration_ms:-0}"
+    echo "Agent usage: input=${USAGE_INPUT_TOTAL} output=${USAGE_OUTPUT_TOTAL}"
+
+    result_text="$(jq -rR 'fromjson? | select(.type == "result") | .result // empty' \
+        "${stream_file}" 2> /dev/null || true)"
+    if [[ -n ${result_text} ]]; then
+        echo ""
+        printf '%s\n' "${result_text}"
+    fi
+}
+
+#######################################
+# run_claude_agent_with_usage: Run Claude Code CLI and capture stream-json usage
+#
+# Description:
+#   Invokes the CLI in stream-json mode, captures raw NDJSON for usage
+#   accounting, then prints the summary and the agent's final text so the
+#   downstream report parser sees the same stdout --bare used to produce.
+#
+# Globals:
+#   USAGE_INPUT_TOTAL, USAGE_OUTPUT_TOTAL, USAGE_MODEL - Updated after run
+#
+# Arguments:
+#   $@ - Arguments forwarded to the claude CLI
+#
+# Outputs:
+#   Summary, usage, and the agent's final text on stdout
+#
+# Returns:
+#   Claude CLI exit code
+#
+#######################################
+function run_claude_agent_with_usage {
+    local stream_file rc=0
+
+    stream_file="$(mktemp)"
+    claude "$@" > "${stream_file}" 2>&1 || rc=$?
+    accumulate_claude_stream_usage "${stream_file}"
+    render_claude_stream_log_summary "${stream_file}"
+    rm -f "${stream_file}"
+    return "${rc}"
+}

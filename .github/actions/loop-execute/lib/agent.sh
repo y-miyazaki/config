@@ -250,7 +250,9 @@ function run_agent {
     case "${ENGINE}" in
         claude)
             export ANTHROPIC_API_KEY="${AGENT_TOKEN}"
-            local -a ARGS=(-p "${PROMPT}" --bare)
+            # stream-json (not --bare) so usage.sh can read the usage event;
+            # the wrapper restores the final text on stdout for report parsing.
+            local -a ARGS=(-p "${PROMPT}" --output-format stream-json --verbose)
             append_agent_mcp_args ARGS "${ENGINE}"
             # Print mode denies permission-gated tools by default; makers need edit rights.
             if [[ ${allow_writes} == "true" ]]; then ARGS+=(--permission-mode acceptEdits); fi
@@ -260,7 +262,7 @@ function run_agent {
             if [[ -n ${EFFORT:-} ]]; then ARGS+=(--effort "${EFFORT}"); fi
             if [[ -n ${MAX_TURNS:-} ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
             if [[ -n ${MODEL:-} ]]; then ARGS+=(--model "${MODEL}"); fi
-            claude "${ARGS[@]}"
+            run_claude_agent_with_usage "${ARGS[@]}"
             ;;
         copilot)
             export COPILOT_GITHUB_TOKEN="${AGENT_TOKEN}"

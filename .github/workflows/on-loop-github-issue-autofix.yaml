@@ -63,7 +63,7 @@ jobs:
       agent_maker_instructions: |
         Implement a minimal fix for the Issue from detect JSON.
         Synthesize PR body with Fixes #<N>. Do not call repository_dispatch.
-      agent_maker_max_turns: 15
+      agent_maker_max_turns: 100
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: github-issue-autofix
       allowlist: ""
