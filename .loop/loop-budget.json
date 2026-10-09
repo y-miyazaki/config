@@ -3,42 +3,42 @@
     "changelog": {
       "max_attempts_per_run": 3,
       "max_runs_per_day": 5,
-      "max_tokens_per_day": 1000000
+      "max_tokens_per_day": 75000000
     },
     "ci-sweeper": {
       "max_attempts_per_run": 3,
       "max_runs_per_day": 50,
-      "max_tokens_per_day": 1000000
+      "max_tokens_per_day": 150000000
     },
     "docs-updater": {
       "max_attempts_per_run": 3,
       "max_runs_per_day": 10,
-      "max_tokens_per_day": 1000000
+      "max_tokens_per_day": 150000000
     },
     "github-issue-autofix": {
       "max_attempts_per_run": 2,
       "max_runs_per_day": 10,
-      "max_tokens_per_day": 1000000
+      "max_tokens_per_day": 100000000
     },
     "github-issue-triage": {
       "max_attempts_per_run": 2,
       "max_runs_per_day": 20,
-      "max_tokens_per_day": 1000000
+      "max_tokens_per_day": 90000000
     },
     "github-pr-revise": {
       "max_attempts_per_run": 2,
       "max_runs_per_day": 10,
-      "max_tokens_per_day": 1000000
+      "max_tokens_per_day": 100000000
     },
     "refactor": {
       "max_attempts_per_run": 3,
       "max_runs_per_day": 1,
-      "max_tokens_per_day": 1000000
+      "max_tokens_per_day": 20000000
     },
     "tech-debt": {
       "max_attempts_per_run": 3,
       "max_runs_per_day": 2,
-      "max_tokens_per_day": 1000000
+      "max_tokens_per_day": 30000000
     }
   }
 }
