@@ -289,7 +289,7 @@ jobs:
 
       - name: Setup jsonnet
         timeout-minutes: 5
-        uses: y-miyazaki/config/.github/actions/install-github-release@77681675136219cae4e262b1c6880768fea73b09 # v1.8.107
+        uses: y-miyazaki/config/.github/actions/install-github-release@83f033bcd19e9dd36983abd98be01a74c966f18f # v1.8.107
         with:
           asset_pattern: go-jsonnet_Linux_x86_64.tar.gz
           binary: jsonnet
