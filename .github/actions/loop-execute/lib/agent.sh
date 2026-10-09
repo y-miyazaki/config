@@ -256,7 +256,7 @@ function run_agent {
             if [[ -n ${EFFORT:-} ]]; then ARGS+=(--effort "${EFFORT}"); fi
             if [[ -n ${MAX_TURNS:-} ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
             if [[ -n ${MODEL:-} ]]; then ARGS+=(--model "${MODEL}"); fi
-            npx claude "${ARGS[@]}"
+            claude "${ARGS[@]}"
             ;;
         copilot)
             export COPILOT_GITHUB_TOKEN="${AGENT_TOKEN}"
@@ -264,14 +264,14 @@ function run_agent {
             append_agent_mcp_args ARGS "${ENGINE}"
             if [[ -n ${MAX_TURNS:-} ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
             if [[ -n ${MODEL:-} ]]; then ARGS+=(--model "${MODEL}"); fi
-            npx copilot "${ARGS[@]}"
+            copilot "${ARGS[@]}"
             ;;
         codex)
             export OPENAI_API_KEY="${AGENT_TOKEN}"
             local -a ARGS=(--prompt "${PROMPT}" --auto-approve)
             append_agent_mcp_args ARGS "${ENGINE}"
             if [[ -n ${MODEL:-} ]]; then ARGS+=(--model "${MODEL}"); fi
-            npx codex "${ARGS[@]}"
+            codex "${ARGS[@]}"
             ;;
         cursor)
             export CURSOR_API_KEY="${AGENT_TOKEN}"

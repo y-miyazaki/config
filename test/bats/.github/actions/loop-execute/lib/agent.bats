@@ -26,7 +26,7 @@ setup() {
     FIXTURE="$(bats_workspace_root)/test/fixtures/loop-execute/cursor-stream-json-usage.ndjson"
 }
 
-# _stub_claude_engine: Stub npx and MCP helpers so run_agent records claude CLI args
+# _stub_claude_engine: Stub the claude CLI and MCP helpers so run_agent records its args
 #
 # Arguments:
 #   $1 - File that receives the recorded argument line
@@ -34,11 +34,11 @@ _stub_claude_engine() {
     local args_file="$1"
 
     mkdir -p "${BATS_TEST_TMPDIR}/bin"
-    cat > "${BATS_TEST_TMPDIR}/bin/npx" << STUB
+    cat > "${BATS_TEST_TMPDIR}/bin/claude" << STUB
 #!/usr/bin/env bash
 printf '%s\n' "\$*" > "${args_file}"
 STUB
-    chmod +x "${BATS_TEST_TMPDIR}/bin/npx"
+    chmod +x "${BATS_TEST_TMPDIR}/bin/claude"
     PATH="${BATS_TEST_TMPDIR}/bin:${PATH}"
     function prepare_agent_mcps { :; }
     function append_agent_mcp_args { :; }

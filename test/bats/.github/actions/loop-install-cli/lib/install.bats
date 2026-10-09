@@ -8,6 +8,8 @@
 # - install.sh resolves pinned npm package version
 # - install.sh resolves latest npm package version via npm view
 # - install.sh installs cursor CLI and appends bindir to GITHUB_PATH
+# - install.sh appends the npm package bindir to GITHUB_PATH
+# - install.sh fails when the npm package provides no bindir
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -21,7 +23,8 @@ INSTALL_SCRIPT="$(bats_workspace_root)/.github/actions/loop-install-cli/lib/inst
 setup() {
     MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
     TEST_HOME="${BATS_TEST_TMPDIR}/home"
-    mkdir -p "${MOCK_BIN}" "${TEST_HOME}"
+    WORKDIR="${BATS_TEST_TMPDIR}/workdir"
+    mkdir -p "${MOCK_BIN}" "${TEST_HOME}" "${WORKDIR}"
     GITHUB_OUTPUT="${BATS_TEST_TMPDIR}/github_output"
     GITHUB_PATH="${BATS_TEST_TMPDIR}/github_path"
     : > "${GITHUB_OUTPUT}"
@@ -30,13 +33,14 @@ setup() {
 }
 
 install_run() {
-    run env \
-        PATH="${MOCK_BIN}:${PATH}" \
-        ENGINE="${ENGINE}" \
-        CLI_VERSION="${CLI_VERSION}" \
-        GITHUB_OUTPUT="${GITHUB_OUTPUT}" \
-        GITHUB_PATH="${GITHUB_PATH}" \
-        bash "${INSTALL_SCRIPT}"
+    run bash -c "cd '${WORKDIR}' && env \
+        PATH='${MOCK_BIN}:${PATH}' \
+        ENGINE='${ENGINE}' \
+        CLI_VERSION='${CLI_VERSION}' \
+        GITHUB_OUTPUT='${GITHUB_OUTPUT}' \
+        GITHUB_PATH='${GITHUB_PATH}' \
+        HOME='${TEST_HOME}' \
+        bash '${INSTALL_SCRIPT}'"
 }
 
 @test "install.sh rejects unsupported engine" {
@@ -50,6 +54,7 @@ install_run() {
     cat > "${MOCK_BIN}/npm" << 'EOF'
 #!/usr/bin/env bash
 if [[ $1 == "install" ]]; then
+    mkdir -p "$(pwd)/node_modules/.bin"
     exit 0
 fi
 echo "unexpected npm invocation: $*" >&2
@@ -73,6 +78,7 @@ case "$1" in
         echo "9.9.9"
         ;;
     install)
+        mkdir -p "$(pwd)/node_modules/.bin"
         exit 0
         ;;
     *)
@@ -112,4 +118,43 @@ EOF
     grep -Fx 'package=cursor' "${GITHUB_OUTPUT}"
     grep -Fx 'version=2.0.0' "${GITHUB_OUTPUT}"
     grep -Fx "${TEST_HOME}/.local/bin" "${GITHUB_PATH}"
+}
+
+@test "install.sh appends the npm package bindir to GITHUB_PATH" {
+    cat > "${MOCK_BIN}/npm" << 'EOF'
+#!/usr/bin/env bash
+if [[ $1 == "install" ]]; then
+    mkdir -p "$(pwd)/node_modules/.bin"
+    printf '#!/bin/sh\nexit 0\n' > "$(pwd)/node_modules/.bin/claude"
+    chmod +x "$(pwd)/node_modules/.bin/claude"
+    exit 0
+fi
+echo "unexpected npm invocation: $*" >&2
+exit 1
+EOF
+    chmod +x "${MOCK_BIN}/npm"
+
+    ENGINE="claude"
+    CLI_VERSION="1.2.3"
+    install_run
+    [ "$status" -eq 0 ]
+    grep -Fx "${WORKDIR}/node_modules/.bin" "${GITHUB_PATH}"
+}
+
+@test "install.sh fails when the npm package provides no bindir" {
+    cat > "${MOCK_BIN}/npm" << 'EOF'
+#!/usr/bin/env bash
+if [[ $1 == "install" ]]; then
+    exit 0
+fi
+echo "unexpected npm invocation: $*" >&2
+exit 1
+EOF
+    chmod +x "${MOCK_BIN}/npm"
+
+    ENGINE="claude"
+    CLI_VERSION="1.2.3"
+    install_run
+    [ "$status" -eq 1 ]
+    [[ ${output} == *"installed without"* ]]
 }

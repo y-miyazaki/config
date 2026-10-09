@@ -68,9 +68,11 @@ function install_cursor_cli {
 }
 
 #######################################
-# install_npm_package: Install resolved npm package without saving to package.json
+# install_npm_package: Install resolved npm package and register its bindir
 #
 # Globals:
+#   GITHUB_PATH - Workflow PATH file appended with the package bindir (optional)
+#   PATH - Prepended with the package bindir
 #   PKG - npm package name
 #   RESOLVED - Resolved package version
 #
@@ -85,7 +87,21 @@ function install_cursor_cli {
 #
 #######################################
 function install_npm_package {
+    local bindir
+
     npm install "${PKG}@${RESOLVED}" --no-save
+    # The loop runs the CLI from the isolated worktree, where a local
+    # node_modules is not resolvable. Register the bindir like the cursor
+    # installer does so the binary is reachable by name from any directory.
+    bindir="$(pwd)/node_modules/.bin"
+    if [[ ! -d ${bindir} ]]; then
+        echo "::error::npm package ${PKG} installed without ${bindir}"
+        exit 1
+    fi
+    if [[ -n ${GITHUB_PATH:-} ]]; then
+        echo "${bindir}" >> "${GITHUB_PATH}"
+    fi
+    export PATH="${bindir}:${PATH}"
 }
 
 #######################################
