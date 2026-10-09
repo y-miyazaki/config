@@ -23,6 +23,195 @@ USAGE_CACHE_READ_TOTAL=0
 USAGE_CACHE_WRITE_TOTAL=0
 USAGE_COST_USD=""
 USAGE_MODEL=""
+# Per-session records (role/model/token/cost breakdown) for one loop run
+USAGE_SESSIONS_JSON="[]"
+# Session scope: role/attempt plus the totals snapshot taken at session start
+USAGE_SESSION_ROLE=""
+USAGE_SESSION_ATTEMPT=""
+USAGE_SESSION_BASE_INPUT=0
+USAGE_SESSION_BASE_OUTPUT=0
+USAGE_SESSION_BASE_CACHE_READ=0
+USAGE_SESSION_BASE_CACHE_WRITE=0
+USAGE_SESSION_BASE_COST=""
+
+#######################################
+# begin_usage_session: Open a session scope for one agent invocation
+#
+# Description:
+#   Snapshots the cumulative totals so end_usage_session can derive this
+#   session's own figures by difference. The engine accumulators keep writing
+#   to the run totals unchanged; only the breakdown is new. USAGE_MODEL is
+#   cleared because it names the model of the session currently running, and a
+#   stale value would make the next session inherit the previous model.
+#
+# Globals:
+#   USAGE_SESSION_* - Written
+#   USAGE_MODEL - Cleared
+#   USAGE_*_TOTAL, USAGE_COST_USD - Read for the snapshot
+#
+# Arguments:
+#   $1 - Role for this session (maker|checker|agent)
+#   $2 - Attempt number (optional)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function begin_usage_session {
+    USAGE_SESSION_ROLE="${1:-agent}"
+    USAGE_SESSION_ATTEMPT="${2:-}"
+    USAGE_SESSION_BASE_INPUT="${USAGE_INPUT_TOTAL}"
+    USAGE_SESSION_BASE_OUTPUT="${USAGE_OUTPUT_TOTAL}"
+    USAGE_SESSION_BASE_CACHE_READ="${USAGE_CACHE_READ_TOTAL}"
+    USAGE_SESSION_BASE_CACHE_WRITE="${USAGE_CACHE_WRITE_TOTAL}"
+    USAGE_SESSION_BASE_COST="${USAGE_COST_USD}"
+    USAGE_MODEL=""
+}
+
+#######################################
+# usage_session_cost_delta: Cost spent by the open session
+#
+# Description:
+#   Subtracts the session-start cost snapshot from the run total in awk so the
+#   decimal arithmetic matches accumulate_cost_usd. Prints an empty string when
+#   the engine reports no cost at all.
+#
+# Globals:
+#   USAGE_COST_USD, USAGE_SESSION_BASE_COST - Read
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Session cost as a decimal string, or an empty string when unreported
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function usage_session_cost_delta {
+    [[ -z ${USAGE_COST_USD} ]] && return 0
+    awk -v a="${USAGE_COST_USD}" -v b="${USAGE_SESSION_BASE_COST:-0}" \
+        'BEGIN { printf "%.6f", a - b }'
+}
+
+#######################################
+# end_usage_session: Close the open session and record its breakdown
+#
+# Description:
+#   Appends one record to USAGE_SESSIONS_JSON holding the delta between the
+#   snapshot and the current totals. Sessions are what make per-model cost
+#   visible: a run mixing a sonnet maker with an opus checker reports one
+#   blended total, and only the records say which model spent what.
+#
+# Globals:
+#   USAGE_SESSIONS_JSON - Appended to
+#   USAGE_SESSION_* - Read and cleared
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function end_usage_session {
+    local cost
+
+    [[ -z ${USAGE_SESSION_ROLE} ]] && return 0
+    cost="$(usage_session_cost_delta)"
+    USAGE_SESSIONS_JSON="$(jq -c \
+        --arg role "${USAGE_SESSION_ROLE}" \
+        --arg attempt "${USAGE_SESSION_ATTEMPT}" \
+        --arg model "${USAGE_MODEL}" \
+        --arg cost_usd "${cost}" \
+        --argjson input "$((USAGE_INPUT_TOTAL - USAGE_SESSION_BASE_INPUT))" \
+        --argjson output "$((USAGE_OUTPUT_TOTAL - USAGE_SESSION_BASE_OUTPUT))" \
+        --argjson cache_read "$((USAGE_CACHE_READ_TOTAL - USAGE_SESSION_BASE_CACHE_READ))" \
+        --argjson cache_write "$((USAGE_CACHE_WRITE_TOTAL - USAGE_SESSION_BASE_CACHE_WRITE))" \
+        '. + [{role: $role, input: $input, output: $output,
+               cache_read: $cache_read, cache_write: $cache_write}
+              + (if ($attempt | length) > 0 then {attempt: ($attempt | tonumber)} else {} end)
+              + (if ($model | length) > 0 then {model: $model} else {} end)
+              + (if ($cost_usd | length) > 0 then {cost_usd: ($cost_usd | tonumber)} else {} end)]' \
+        <<< "${USAGE_SESSIONS_JSON}")"
+    USAGE_SESSION_ROLE=""
+    USAGE_SESSION_ATTEMPT=""
+}
+
+#######################################
+# usage_session_or_total: Session-scoped figure, falling back to the run total
+#
+# Description:
+#   CI log summaries print one line per agent session, so they must report what
+#   that session spent rather than the running total.
+#
+# Globals:
+#   USAGE_SESSION_ROLE - Read to detect an open session
+#
+# Arguments:
+#   $1 - Current run total
+#   $2 - Session-start snapshot of the same counter
+#
+# Outputs:
+#   Token count to stdout
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function usage_session_or_total {
+    local total="${1:-0}" base="${2:-0}"
+
+    if [[ -n ${USAGE_SESSION_ROLE} ]]; then
+        echo "$((total - base))"
+        return 0
+    fi
+    echo "${total}"
+}
+
+#######################################
+# render_agent_usage_line: Print the usage line for the session just finished
+#
+# Description:
+#   Reports this session's own tokens and cost. Before sessions existed the
+#   line printed the run totals, so a checker line silently included the maker
+#   that ran before it.
+#
+# Globals:
+#   USAGE_* - Read
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Usage line to stdout
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function render_agent_usage_line {
+    local cost="unreported"
+
+    if [[ -n ${USAGE_SESSION_ROLE} ]]; then
+        cost="$(usage_session_cost_delta)"
+    else
+        cost="${USAGE_COST_USD}"
+    fi
+    echo "Agent usage:" \
+        "input=$(usage_session_or_total "${USAGE_INPUT_TOTAL}" "${USAGE_SESSION_BASE_INPUT}")" \
+        "output=$(usage_session_or_total "${USAGE_OUTPUT_TOTAL}" "${USAGE_SESSION_BASE_OUTPUT}")" \
+        "cache_read=$(usage_session_or_total "${USAGE_CACHE_READ_TOTAL}" "${USAGE_SESSION_BASE_CACHE_READ}")" \
+        "cache_write=$(usage_session_or_total "${USAGE_CACHE_WRITE_TOTAL}" "${USAGE_SESSION_BASE_CACHE_WRITE}")" \
+        "cost_usd=${cost:-unreported}"
+}
 
 #######################################
 # accumulate_cursor_stream_usage: Sum usage from a cursor stream-json capture file
@@ -166,12 +355,33 @@ function build_usage_json {
         --argjson total_output_tokens "${USAGE_OUTPUT_TOTAL}" \
         --argjson cache_read_tokens "${USAGE_CACHE_READ_TOTAL}" \
         --argjson cache_write_tokens "${USAGE_CACHE_WRITE_TOTAL}" \
+        --argjson sessions "${USAGE_SESSIONS_JSON:-[]}" \
         --arg cost_usd "${USAGE_COST_USD}" \
         --arg model "${USAGE_MODEL}" \
-        '{total_input_tokens: $total_input_tokens, total_output_tokens: $total_output_tokens,
-          cache_read_tokens: $cache_read_tokens, cache_write_tokens: $cache_write_tokens}
+        '($sessions | map(select(.model != null))) as $modeled
+         | ($modeled | map(.model) | unique) as $models
+         | {total_input_tokens: $total_input_tokens, total_output_tokens: $total_output_tokens,
+            cache_read_tokens: $cache_read_tokens, cache_write_tokens: $cache_write_tokens}
          + (if ($cost_usd | length) > 0 then {cost_usd: ($cost_usd | tonumber)} else {} end)
-         + (if ($model | length) > 0 then {model: $model} else {} end)'
+         # model stays single-valued only when the run used exactly one model;
+         # a mixed maker/checker run would otherwise label every token with
+         # whichever model happened to run last. by_model is the real answer.
+         + (if ($models | length) == 1 then {model: $models[0]}
+            elif ($models | length) > 1 then {models: $models}
+            elif ($model | length) > 0 then {model: $model}
+            else {} end)
+         + (if ($modeled | length) > 0 then
+              {by_model: ($modeled | group_by(.model) | map({
+                 key: .[0].model,
+                 value: ({tokens: (map(.input + .output) | add),
+                          cache_read_tokens: (map(.cache_read) | add),
+                          cache_write_tokens: (map(.cache_write) | add)}
+                   + (if any(.[]; has("cost_usd"))
+                      then {cost_usd: (map(.cost_usd // 0) | add | . * 1000000 | round / 1000000)}
+                      else {} end))
+               }) | from_entries)}
+            else {} end)
+         + (if ($sessions | length) > 0 then {sessions: $sessions} else {} end)'
 }
 
 #######################################
@@ -202,6 +412,9 @@ function reset_usage_totals {
     USAGE_CACHE_WRITE_TOTAL=0
     USAGE_COST_USD=""
     USAGE_MODEL=""
+    USAGE_SESSIONS_JSON="[]"
+    USAGE_SESSION_ROLE=""
+    USAGE_SESSION_ATTEMPT=""
 }
 
 #######################################
@@ -387,10 +600,9 @@ function render_cursor_stream_log_summary {
 
     assistant_text="$(extract_cursor_stream_text "${stream_file}")"
 
-    echo "Agent summary: model=${model:-unknown} tools=${tool_count} duration_ms=${duration_ms}"
-    echo "Agent usage: input=${USAGE_INPUT_TOTAL} output=${USAGE_OUTPUT_TOTAL}" \
-        "cache_read=${USAGE_CACHE_READ_TOTAL} cache_write=${USAGE_CACHE_WRITE_TOTAL}" \
-        "cost_usd=${USAGE_COST_USD:-unreported}"
+    echo "Agent summary: role=${USAGE_SESSION_ROLE:-agent} model=${model:-unknown}" \
+        "tools=${tool_count} duration_ms=${duration_ms}"
+    render_agent_usage_line
     if [[ -n ${tool_summary} ]]; then
         printf '%s' "${tool_summary}"
     fi
@@ -601,10 +813,9 @@ function render_claude_stream_log_summary {
     num_turns="$(jq -rR 'fromjson? | select(.type == "result") | .num_turns // 0' \
         "${stream_file}" 2> /dev/null | tail -1)"
 
-    echo "Agent summary: model=${USAGE_MODEL:-unknown} tools=${tool_count:-0} turns=${num_turns:-0} duration_ms=${duration_ms:-0}"
-    echo "Agent usage: input=${USAGE_INPUT_TOTAL} output=${USAGE_OUTPUT_TOTAL}" \
-        "cache_read=${USAGE_CACHE_READ_TOTAL} cache_write=${USAGE_CACHE_WRITE_TOTAL}" \
-        "cost_usd=${USAGE_COST_USD:-unreported}"
+    echo "Agent summary: role=${USAGE_SESSION_ROLE:-agent} model=${USAGE_MODEL:-unknown}" \
+        "tools=${tool_count:-0} turns=${num_turns:-0} duration_ms=${duration_ms:-0}"
+    render_agent_usage_line
 
     result_text="$(jq -rR 'fromjson? | select(.type == "result") | .result // empty' \
         "${stream_file}" 2> /dev/null || true)"

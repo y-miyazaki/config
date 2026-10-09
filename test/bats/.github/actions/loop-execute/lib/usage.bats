@@ -23,6 +23,11 @@
 # - accumulate_claude_stream_usage ignores non-json lines
 # - render_claude_stream_log_summary prints final text and hides ndjson
 # - run_claude_agent_with_usage captures usage and forwards exit code
+# - begin_usage_session clears the model so the next session does not inherit it
+# - end_usage_session records only the session's own tokens and cost
+# - build_usage_json reports by_model and sessions for a maker/checker run
+# - build_usage_json keeps a single model field when one model ran
+# - render_agent_usage_line reports session figures, not run totals
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -260,4 +265,92 @@ setup() {
     [ "${USAGE_INPUT_TOTAL}" -eq 11 ]
     [ "${USAGE_OUTPUT_TOTAL}" -eq 4 ]
     [[ ${out} == *"REASON: ok"* ]]
+}
+
+@test "begin_usage_session clears the model so the next session does not inherit it" {
+    begin_usage_session "maker" 1
+    USAGE_MODEL="claude-sonnet-5"
+    end_usage_session
+
+    begin_usage_session "checker" 1
+    [ "${USAGE_MODEL}" = "" ]
+}
+
+@test "end_usage_session records only the session's own tokens and cost" {
+    begin_usage_session "maker" 1
+    accumulate_claude_usage_from_line '{"type":"result","total_cost_usd":0.435638,"usage":{"input_tokens":26,"output_tokens":10642,"cache_read_input_tokens":724245,"cache_creation_input_tokens":73727}}'
+    USAGE_MODEL="claude-sonnet-5"
+    end_usage_session
+
+    begin_usage_session "checker" 1
+    accumulate_claude_usage_from_line '{"type":"result","total_cost_usd":0.746415,"usage":{"input_tokens":22,"output_tokens":6410,"cache_read_input_tokens":463673,"cache_creation_input_tokens":56675}}'
+    USAGE_MODEL="claude-opus-5"
+    end_usage_session
+
+    # The checker record must not absorb the maker session that ran before it.
+    [ "$(jq -r '.[1].role' <<< "${USAGE_SESSIONS_JSON}")" = "checker" ]
+    [ "$(jq -r '.[1].model' <<< "${USAGE_SESSIONS_JSON}")" = "claude-opus-5" ]
+    [ "$(jq -r '.[1].input' <<< "${USAGE_SESSIONS_JSON}")" -eq 22 ]
+    [ "$(jq -r '.[1].output' <<< "${USAGE_SESSIONS_JSON}")" -eq 6410 ]
+    [ "$(jq -r '.[1].cost_usd' <<< "${USAGE_SESSIONS_JSON}")" = "0.746415" ]
+    [ "$(jq -r '.[0].attempt' <<< "${USAGE_SESSIONS_JSON}")" -eq 1 ]
+}
+
+@test "build_usage_json reports by_model and sessions for a maker/checker run" {
+    local out
+
+    begin_usage_session "maker" 1
+    accumulate_claude_usage_from_line '{"type":"result","total_cost_usd":0.435638,"usage":{"input_tokens":26,"output_tokens":10642}}'
+    USAGE_MODEL="claude-sonnet-5"
+    end_usage_session
+
+    begin_usage_session "checker" 1
+    accumulate_claude_usage_from_line '{"type":"result","total_cost_usd":0.746415,"usage":{"input_tokens":22,"output_tokens":6410}}'
+    USAGE_MODEL="claude-opus-5"
+    end_usage_session
+
+    out="$(build_usage_json)"
+    [ "$(jq -r '.total_input_tokens' <<< "${out}")" -eq 48 ]
+    [ "$(jq -r '.total_output_tokens' <<< "${out}")" -eq 17052 ]
+    [ "$(jq -r '.cost_usd' <<< "${out}")" = "1.182053" ]
+    # A mixed run must not claim one model for every token.
+    [ "$(jq -r 'has("model")' <<< "${out}")" = "false" ]
+    [ "$(jq -r '.models | join(",")' <<< "${out}")" = "claude-opus-5,claude-sonnet-5" ]
+    [ "$(jq -r '.by_model["claude-sonnet-5"].tokens' <<< "${out}")" -eq 10668 ]
+    [ "$(jq -r '.by_model["claude-sonnet-5"].cost_usd' <<< "${out}")" = "0.435638" ]
+    [ "$(jq -r '.by_model["claude-opus-5"].tokens' <<< "${out}")" -eq 6432 ]
+    [ "$(jq -r '.by_model["claude-opus-5"].cost_usd' <<< "${out}")" = "0.746415" ]
+    [ "$(jq -r '.sessions | length' <<< "${out}")" -eq 2 ]
+    [ "$(jq -r '.sessions[0].role' <<< "${out}")" = "maker" ]
+}
+
+@test "build_usage_json keeps a single model field when one model ran" {
+    local out
+
+    begin_usage_session "agent" ""
+    accumulate_claude_usage_from_line '{"type":"result","usage":{"input_tokens":10,"output_tokens":5}}'
+    USAGE_MODEL="claude-sonnet-5"
+    end_usage_session
+
+    out="$(build_usage_json)"
+    [ "$(jq -r '.model' <<< "${out}")" = "claude-sonnet-5" ]
+    [ "$(jq -r 'has("models")' <<< "${out}")" = "false" ]
+    [ "$(jq -r '.sessions[0] | has("attempt")' <<< "${out}")" = "false" ]
+}
+
+@test "render_agent_usage_line reports session figures, not run totals" {
+    local out
+
+    begin_usage_session "maker" 1
+    accumulate_claude_usage_from_line '{"type":"result","total_cost_usd":0.4,"usage":{"input_tokens":26,"output_tokens":10642}}'
+    end_usage_session
+
+    begin_usage_session "checker" 1
+    accumulate_claude_usage_from_line '{"type":"result","total_cost_usd":1.1,"usage":{"input_tokens":22,"output_tokens":6410}}'
+    out="$(render_agent_usage_line)"
+    end_usage_session
+
+    [[ ${out} == *"input=22"* ]]
+    [[ ${out} == *"output=6410"* ]]
+    [[ ${out} == *"cost_usd=1.100000"* ]]
 }

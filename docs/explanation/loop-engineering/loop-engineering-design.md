@@ -434,13 +434,14 @@ Token costs tend to increase quadratically as conversation accumulates.
 
 **Implemented controls** (detect + finalize path):
 
-| Mechanism         | Location                                                            | Behavior                                                                        |
-| ----------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Per-loop policy   | `.loop/loop-budget.json` (`max_runs_per_day`, `max_tokens_per_day`) | Overrides `budget_max_*` inputs on `loop-detect` when present                   |
-| Attempt cap       | Caller `agent_loop_max_attempts` → `AGENT_LOOP_MAX_ATTEMPTS`        | Bounds Agent→Verify retries in `loop-execute`; not read from `loop-budget.json` |
-| Daily aggregation | `loop-detect` reads `.loop/loop-run-log.md`                         | Skips execute when today's runs or tokens exceed the cap (`skip_reason=budget`) |
-| Measured usage    | `loop-execute` output `usage_json`                                  | Passed through finalize into `loop-run-log` for the next detect cycle           |
-| Retention         | `loop-run-log`                                                      | Prunes JSONL entries older than 30 days                                         |
+| Mechanism         | Location                                                            | Behavior                                                                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Per-loop policy   | `.loop/loop-budget.json` (`max_runs_per_day`, `max_tokens_per_day`) | Overrides `budget_max_*` inputs on `loop-detect` when present                                                                                                                  |
+| Attempt cap       | Caller `agent_loop_max_attempts` → `AGENT_LOOP_MAX_ATTEMPTS`        | Bounds Agent→Verify retries in `loop-execute`; not read from `loop-budget.json`                                                                                                |
+| Daily aggregation | `loop-detect` reads `.loop/loop-run-log.md`                         | Skips execute when today's runs or tokens exceed the cap (`skip_reason=budget`)                                                                                                |
+| Measured usage    | `loop-execute` output `usage_json`                                  | Passed through finalize into `loop-run-log` for the next detect cycle                                                                                                          |
+| Usage breakdown   | `usage_json.sessions` / `usage_json.by_model`                       | One record per agent session (`role`, `attempt`, `model`, tokens, cost) so a maker/checker run mixing models reports cost per model; flat totals stay the budget guard's input |
+| Retention         | `loop-run-log`                                                      | Prunes JSONL entries older than 30 days                                                                                                                                        |
 
 Example policy entry (matches dogfood `.loop/loop-budget.json`). `loop-detect` consumes only `max_runs_per_day` and `max_tokens_per_day`; `max_attempts_per_run` in the file is unused — set attempt limits via `agent_loop_max_attempts` on the caller:
 

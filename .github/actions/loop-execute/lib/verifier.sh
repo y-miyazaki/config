@@ -338,8 +338,9 @@ function run_verify {
     EFFORT="${AGENT_CHECKER_EFFORT:-}"
     MAX_TURNS="${AGENT_CHECKER_MAX_TURNS}"
     MODEL="${AGENT_CHECKER_MODEL}"
+    USAGE_ROLE="checker"
     WORKING_DIRECTORY="${WORKTREE_PATH}"
-    export PROMPT EFFORT MAX_TURNS MODEL WORKING_DIRECTORY
+    export PROMPT EFFORT MAX_TURNS MODEL USAGE_ROLE WORKING_DIRECTORY
     if ! run_agent_capture "${output_file}" "false"; then
         echo "::warning::Checker agent exited non-zero"
     fi

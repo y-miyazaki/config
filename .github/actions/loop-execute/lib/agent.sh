@@ -222,12 +222,14 @@ function run_agent_capture {
 #
 # Globals:
 #   AGENT_TOKEN - Authentication token for the selected engine
+#   ATTEMPT - Optional loop attempt number recorded on the usage session
 #   DETECT_JSON_FILE - Optional materialized detect JSON path granted as an extra read directory
 #   EFFORT - Optional reasoning effort level (engines with a dedicated flag only)
 #   ENGINE - Engine name (claude|copilot|codex|cursor)
 #   MAX_TURNS - Optional max turns override
 #   MODEL - Optional model override
 #   PROMPT - Prompt text
+#   USAGE_ROLE - Session role recorded in the usage breakdown (default: agent)
 #   WORKING_DIRECTORY - Working directory for write-capable engines
 #
 # Arguments:
@@ -243,9 +245,38 @@ function run_agent_capture {
 function run_agent {
     local allow_writes="${1:-true}"
     local working_root="${WORKING_DIRECTORY:-.}"
+    local rc=0
 
     prepare_agent_mcps "${ENGINE}" "${working_root}"
     warn_unsupported_effort "${ENGINE}"
+
+    # Opened here rather than in run_agent_capture: loop-agent-once calls
+    # run_agent directly when it has no output file, and that session must be
+    # measured too.
+    begin_usage_session "${USAGE_ROLE:-agent}" "${ATTEMPT:-}"
+    run_agent_engine "${allow_writes}" || rc=$?
+    end_usage_session
+    return "${rc}"
+}
+
+#######################################
+# run_agent_engine: Dispatch one session to the configured engine CLI
+#
+# Globals:
+#   Same as run_agent
+#
+# Arguments:
+#   $1 - allow_writes flag (true|false). Checker uses false.
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   Engine CLI exit code
+#
+#######################################
+function run_agent_engine {
+    local allow_writes="${1:-true}"
 
     case "${ENGINE}" in
         claude)

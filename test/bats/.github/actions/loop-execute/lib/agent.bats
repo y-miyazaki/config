@@ -11,6 +11,7 @@ bats_require_minimum_version 1.5.0
 # - harvest_workspace_into_worktree is a no-op when workspace equals worktree
 # - run_agent grants edit permission to claude maker sessions only, and forwards model/max-turns
 # - run_agent forwards EFFORT to claude and warns when the engine has no effort flag
+# - run_agent opens one usage session per invocation and tags it with USAGE_ROLE
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -210,4 +211,19 @@ STUB
     run warn_unsupported_effort "cursor"
     [[ ${status} -eq 0 ]]
     [[ ${output} == *"::warning::engine=cursor ignores effort='high'"* ]]
+}
+
+@test "run_agent records one usage session tagged with USAGE_ROLE and attempt" {
+    local args_file
+
+    args_file="${BATS_TEST_TMPDIR}/claude-role-args.txt"
+    _stub_claude_engine "${args_file}"
+    USAGE_ROLE="checker"
+    ATTEMPT=2
+    run_agent "false" > /dev/null
+
+    [ "$(jq -r 'length' <<< "${USAGE_SESSIONS_JSON}")" -eq 1 ]
+    [ "$(jq -r '.[0].role' <<< "${USAGE_SESSIONS_JSON}")" = "checker" ]
+    [ "$(jq -r '.[0].attempt' <<< "${USAGE_SESSIONS_JSON}")" -eq 2 ]
+    [ "${USAGE_SESSION_ROLE}" = "" ]
 }

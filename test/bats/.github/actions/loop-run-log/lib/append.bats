@@ -12,6 +12,7 @@
 # - loop_run_log_prune_cutoff_date returns YYYY-MM-DD
 # - loop_run_log_append_entry prunes entries older than 30 days
 # - budget token selection prefers measured usage over tokens_total
+# - loop_run_log_build_entry carries the per-model usage breakdown through unchanged
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -171,4 +172,23 @@ teardown() {
     run loop_run_log_resolve_tokens_total '{"total_input_tokens":4815,"total_output_tokens":14276,"cache_read_tokens":2107374,"cache_write_tokens":72780}'
     [ "$status" -eq 0 ]
     [ "$output" = "19091" ]
+}
+
+@test "loop_run_log_build_entry carries the per-model usage breakdown through unchanged" {
+    local usage result
+    # Shape emitted by build_usage_json for a mixed maker/checker run: no single
+    # top-level model, totals still flat so the budget guard needs no change.
+    usage='{"total_input_tokens":48,"total_output_tokens":17052,"cost_usd":1.182053,
+            "models":["claude-opus-5","claude-sonnet-5"],
+            "by_model":{"claude-sonnet-5":{"tokens":10668,"cost_usd":0.435638},
+                        "claude-opus-5":{"tokens":6432,"cost_usd":0.746415}},
+            "sessions":[{"role":"maker","attempt":1,"model":"claude-sonnet-5","input":26,"output":10642},
+                        {"role":"checker","attempt":1,"model":"claude-opus-5","input":22,"output":6410}]}'
+    result="$(loop_run_log_build_entry "1" 816 "true" "tech-debt" "pr-created" "none" "APPROVE" "37927886699" "${usage}")"
+
+    [ "$(jq -r '.tokens_total' <<< "${result}")" = "17100" ]
+    [ "$(jq -r '.cost_usd' <<< "${result}")" = "1.182053" ]
+    [ "$(jq -r '.usage.by_model["claude-opus-5"].cost_usd' <<< "${result}")" = "0.746415" ]
+    [ "$(jq -r '.usage.sessions | length' <<< "${result}")" = "2" ]
+    [ "$(jq -r '.usage.sessions[1].role' <<< "${result}")" = "checker" ]
 }
