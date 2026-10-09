@@ -42,13 +42,13 @@ Keys are passed in `on-loop-github-issue-triage.yaml` via `with:` on `ci-loop-ca
 | Input / JSON key             | Description                                                                    | Dogfood value                                                            |
 | ---------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
 | `agent_maker_instructions`   | Domain maker task (triage skill)                                               | Inline in caller workflow                                                |
-| `agent_maker_max_turns`      | Max maker turns per attempt                                                    | `5`                                                                      |
+| `agent_maker_max_turns`      | Max maker turns per attempt                                                    | `100`                                                                    |
 | `agent_maker_model`          | Maker model ID                                                                 | `claude-sonnet-5`                                                        |
 | `agent_maker_effort`         | Maker reasoning effort. Only engines with an effort flag (claude) consume it   | `medium`                                                                 |
 | `agent_maker_skill_name`     | Skill package                                                                  | `github-issue-triage`                                                    |
 | `agent_loop_max_attempts`    | Max Agent→Verify cycles                                                        | `3`                                                                      |
 | `agent_checker_instructions` | APPROVE/REJECT rubric (allowlisted labels only)                                | Inline in caller workflow                                                |
-| `agent_checker_max_turns`    | Max checker turns                                                              | `3`                                                                      |
+| `agent_checker_max_turns`    | Max checker turns                                                              | `100`                                                                    |
 | `agent_checker_model`        | Checker model ID                                                               | `claude-opus-5`                                                          |
 | `agent_checker_effort`       | Checker reasoning effort. Only engines with an effort flag (claude) consume it | `medium`                                                                 |
 | `agent_checker_skill_name`   | Checker skill                                                                  | `loop-verifier`                                                          |

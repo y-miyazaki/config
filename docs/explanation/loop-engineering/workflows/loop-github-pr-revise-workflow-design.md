@@ -45,13 +45,13 @@ Keys are passed in `on-loop-github-pr-revise.yaml` via `with:` on `ci-loop-calle
 | ---------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------- |
 | `ack_trigger_comment`        | Post `eyes` reaction on trigger comment via `ack-trigger`                      | `true`                                                        |
 | `agent_maker_instructions`   | Apply human feedback; address full `result.comments` array                     | Inline in caller workflow                                     |
-| `agent_maker_max_turns`      | Max maker turns per attempt                                                    | `8`                                                           |
+| `agent_maker_max_turns`      | Max maker turns per attempt                                                    | `100`                                                         |
 | `agent_maker_model`          | Maker model ID                                                                 | `claude-sonnet-5`                                             |
 | `agent_maker_effort`         | Maker reasoning effort. Only engines with an effort flag (claude) consume it   | `medium`                                                      |
 | `agent_maker_skill_name`     | Skill package                                                                  | `github-pr-revise`                                            |
 | `agent_loop_max_attempts`    | Max Agent→Verify cycles                                                        | `3`                                                           |
 | `agent_checker_instructions` | APPROVE/REJECT rubric (mention gate, full comment batch)                       | Inline in caller workflow                                     |
-| `agent_checker_max_turns`    | Max checker turns                                                              | `3`                                                           |
+| `agent_checker_max_turns`    | Max checker turns                                                              | `100`                                                         |
 | `agent_checker_model`        | Checker model ID                                                               | `claude-opus-5`                                               |
 | `agent_checker_effort`       | Checker reasoning effort. Only engines with an effort flag (claude) consume it | `medium`                                                      |
 | `agent_checker_skill_name`   | Checker skill                                                                  | `loop-verifier`                                               |
