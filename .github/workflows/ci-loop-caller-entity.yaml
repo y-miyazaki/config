@@ -214,7 +214,6 @@ jobs:
       should_run: ${{ steps.detect.outputs.should_run }}
       skip_reason: ${{ steps.detect.outputs.skip_reason }}
       state_file: ${{ steps.detect.outputs.state_file }}
-      state_push_branch: ${{ inputs.branch_state }}
       target_matrix: ${{ steps.detect.outputs.target_matrix }}
     steps:
       - name: Record Run Start
@@ -344,7 +343,7 @@ jobs:
       run_started_at: ${{ needs.detect.outputs.run_started_at }}
       skip_reason: ${{ needs.detect.outputs.skip_reason }}
       state_file: ${{ needs.detect.outputs.state_file }}
-      state_push_branch: ${{ needs.detect.outputs.state_push_branch }}
+      state_push_branch: ${{ needs.detect.outputs.branch_state }}
       target_json: ${{ toJson(matrix.target.target_json) }}
       verifier_context: ${{ matrix.target.verifier_context }}
     secrets:
@@ -354,11 +353,12 @@ jobs:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   record-skip:
+    # Record every non-run (circuit_breaker, budget, no_changes) so a quiet
+    # cron tick is distinguishable from a loop that never started. Skipped
+    # entries do not consume the daily budget (see loop-detect guards.sh).
     if: >-
       needs.detect.result == 'success' &&
-      needs.detect.outputs.should_run == 'false' &&
-      (needs.detect.outputs.skip_reason == 'circuit_breaker' ||
-      needs.detect.outputs.skip_reason == 'budget')
+      needs.detect.outputs.should_run == 'false'
     needs: detect
     environment: ${{ inputs.environment }}
     permissions:

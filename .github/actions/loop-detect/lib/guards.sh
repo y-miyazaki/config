@@ -37,9 +37,14 @@ function budget_exceeded {
     local run_log_file="$3"
     local default_runs="$4"
     local default_tokens="$5"
-    local max_runs max_tokens today runs_today tokens_today line
+    local limits max_runs max_tokens today runs_today tokens_today line
 
-    read -r max_runs max_tokens <<< "$(read_budget_limits "${loop_name}" "${budget_file}" "${default_runs}" "${default_tokens}")"
+    # Split on the single separator space rather than with `read`, which would
+    # collapse a leading empty field and shift max_tokens into max_runs when
+    # only a token limit is configured.
+    limits="$(read_budget_limits "${loop_name}" "${budget_file}" "${default_runs}" "${default_tokens}")"
+    max_runs="${limits%% *}"
+    max_tokens="${limits#* }"
     if [[ -z ${max_runs} && -z ${max_tokens} ]]; then
         return 1
     fi
@@ -51,11 +56,17 @@ function budget_exceeded {
         while IFS= read -r line; do
             [[ -z ${line} ]] && continue
             [[ ${line} != \{* ]] && continue
-            local log_date log_key entry_tokens
+            local log_date log_key log_outcome entry_tokens
             log_date=$(jq -r '.run_id // ""' <<< "${line}" 2> /dev/null | cut -c1-10)
             log_key=$(jq -r '.loop_name // .pattern // ""' <<< "${line}" 2> /dev/null)
+            log_outcome=$(jq -r '.outcome // ""' <<< "${line}" 2> /dev/null)
             [[ ${log_date} != "${today}" ]] && continue
             [[ ${log_key} != "${loop_name}" ]] && continue
+            # Skipped entries record that detect declined to run (budget,
+            # circuit breaker, no_changes). No agent ran and no tokens were
+            # spent, so they must not consume the daily budget — otherwise a
+            # loop that only ever skips would exhaust its own cap.
+            [[ ${log_outcome} == "skipped" ]] && continue
             runs_today=$((runs_today + 1))
             entry_tokens=$(jq -r '
                 if .usage then

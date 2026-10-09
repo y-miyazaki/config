@@ -1,6 +1,7 @@
 # === AI tool configs ===
 # Personal settings (never commit)
 .claude/memory/
+.claude/.headroom*
 .claude/settings.local.json
 .claude/tmp/
 

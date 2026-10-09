@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-10-06T07:20:32.178260+00:00'
+generated_at: '2026-10-09T04:17:27.027920+00:00'
 apm_version: 0.32.0
 dependencies:
 - repo_url: _local/common
@@ -12253,15 +12253,6 @@ deployments:
   content_hash: null
 - kind: uri
   target: mcp
-  value: lean-ctx
-  runtime: claude
-  scope: project
-  owners:
-  - .
-  active_owner: .
-  content_hash: null
-- kind: uri
-  target: mcp
   value: codebase-memory-mcp
   runtime: cursor
   scope: project
@@ -12296,21 +12287,11 @@ deployments:
   - .
   active_owner: .
   content_hash: null
-- kind: uri
-  target: mcp
-  value: lean-ctx
-  runtime: cursor
-  scope: project
-  owners:
-  - .
-  active_owner: .
-  content_hash: null
 mcp_servers:
 - codebase-memory-mcp
 - context7
 - fetch
 - github
-- lean-ctx
 mcp_configs:
   codebase-memory-mcp:
     name: codebase-memory-mcp
@@ -12344,29 +12325,18 @@ mcp_configs:
       -H "Authorization=Bearer ${TOKEN}" --auth explicit-headers
     registry: false
     command: bash
-  lean-ctx:
-    name: lean-ctx
-    transport: stdio
-    args:
-    - -y
-    - lean-ctx-bin@3.10.5
-    registry: false
-    command: npx
 mcp_target_servers:
   claude:
   - context7
   - fetch
   - github
-  - lean-ctx
   cursor:
   - codebase-memory-mcp
   - context7
   - fetch
   - github
-  - lean-ctx
 mcp_config_provenance:
   codebase-memory-mcp: config-common
   context7: config-common
   fetch: config-common
   github: config-github
-  lean-ctx: config-common

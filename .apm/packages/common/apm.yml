@@ -24,8 +24,8 @@ dependencies:
       transport: stdio
       command: codebase-memory-mcp
       args: []
-    - name: lean-ctx
-      registry: false
-      transport: stdio
-      command: npx
-      args: ["-y", "lean-ctx-bin@3.10.5"]
+    # - name: lean-ctx
+    #   registry: false
+    #   transport: stdio
+    #   command: npx
+    #   args: ["-y", "lean-ctx-bin@3.10.5"]

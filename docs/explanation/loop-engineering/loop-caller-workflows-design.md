@@ -150,7 +150,7 @@ on:
 
 ### Shared state branch (callers)
 
-All `on-loop-*.yaml` callers and `on-loop-state-promote.yaml` use the same group for a given `branch_state` (currently `loop-state-main`):
+Scheduled and `workflow_run` `on-loop-*.yaml` callers and `on-loop-state-promote.yaml` use the same group for a given `branch_state` (currently `loop-state-main`):
 
 ```yaml
 concurrency:
@@ -162,6 +162,10 @@ concurrency:
 Queued runs wait for the active run to finish (detect → execute → finalize) before starting detect, so handoff JSON is never stale relative to peer loop activity. `queue: max` allows up to 100 pending runs in FIFO order (default `queue: single` would cancel an existing pending run when a third enters the group).
 
 `ci-loop-caller` does **not** set job-level concurrency on `execute`; matrix cells within one run may still fan out in parallel.
+
+### Per-entity group (entity-event callers)
+
+`on-loop-github-issue-autofix`, `on-loop-github-issue-triage`, and `on-loop-github-pr-revise` key the group by the Issue / PR they act on (`loop-<loop_name>-<number>`) rather than by `branch_state`. See [Multi-Branch Loops — Cross-Loop Coordination](multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency) for the rationale.
 
 ## Matrix Fan-Out
 

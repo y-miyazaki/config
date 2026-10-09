@@ -243,7 +243,9 @@ On first Phase 1+ read, if legacy flat `last_sha` exists and `targets` is absent
 
 ## Cross-Loop Coordination (workflow concurrency)
 
-Loop callers (`on-loop-*.yaml`) and `on-loop-state-promote.yaml` share a workflow-level concurrency group keyed by state branch (e.g. `loop-state-main` when `branch_state: main`). Runs queue with `cancel-in-progress: false` and `queue: max` so detect always sees fresh repository state before execute.
+Scheduled and `workflow_run` loop callers (`on-loop-*.yaml`) and `on-loop-state-promote.yaml` share a workflow-level concurrency group keyed by state branch (e.g. `loop-state-main` when `branch_state: main`). Runs queue with `cancel-in-progress: false` and `queue: max` so detect always sees fresh repository state before execute.
+
+Entity-event callers (Issue / PR comment driven) instead key the group by the entity they act on. Serializing them on `loop-state-main` would queue a reviewer's `@loop` comment behind a 90-minute scheduled agent run, and an event burst would exceed the 100-run `queue: max` limit (excess runs are canceled). Per-entity groups serialize repeat events on the same Issue / PR while leaving different entities parallel. Concurrent `.loop/*` writes from these loops are absorbed by the protected-branch PR fallback in `loop-run-log` / `loop-finalize`.
 
 | Workflow                | `concurrency.group` | Notes                                              |
 | ----------------------- | ------------------- | -------------------------------------------------- |
@@ -253,6 +255,14 @@ Loop callers (`on-loop-*.yaml`) and `on-loop-state-promote.yaml` share a workflo
 | `on-loop-refactor`      | `loop-state-main`   | Same                                               |
 | `on-loop-tech-debt`     | `loop-state-main`   | Same                                               |
 | `on-loop-state-promote` | `loop-state-main`   | Avoids state PR races during loop runs             |
+
+Entity-event callers use per-entity groups (`cancel-in-progress: false`, `queue: max`):
+
+| Workflow                       | `concurrency.group`                 | Keyed by            |
+| ------------------------------ | ----------------------------------- | ------------------- |
+| `on-loop-github-issue-autofix` | `loop-github-issue-autofix-<issue>` | Issue number        |
+| `on-loop-github-issue-triage`  | `loop-github-issue-triage-<issue>`  | Issue number        |
+| `on-loop-github-pr-revise`     | `loop-github-pr-revise-<pr>`        | Pull request number |
 
 See [Loop Caller Workflows — Concurrency](loop-caller-workflows-design.md#concurrency).
 

@@ -36,10 +36,20 @@ concurrency:
 
 jobs:
   loop:
+    # Fork guard: a fork PR failure also raises workflow_run in the base
+    # repository. Detect already refuses such targets (checkout stays on base,
+    # pr_exclude excludes forks, and the domain script drops branch mismatches),
+    # but gate the job here so no runner or run-log entry is spent and the
+    # boundary stays visible in the workflow itself.
     if: >-
       github.event_name != 'workflow_run' ||
-      github.event.workflow_run.conclusion == 'failure' ||
-      github.event.workflow_run.conclusion == 'startup_failure'
+      (
+        github.event.workflow_run.head_repository.full_name == github.repository &&
+        (
+          github.event.workflow_run.conclusion == 'failure' ||
+          github.event.workflow_run.conclusion == 'startup_failure'
+        )
+      )
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
       additional_commit_paths: .loop/state-ci-sweeper-run-ledger.json

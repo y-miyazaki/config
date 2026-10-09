@@ -532,7 +532,7 @@ Per-tier permissions:
 
 5 principles when multiple loops operate on the same repository:
 
-1. **Shared workflow concurrency**: All `on-loop-*.yaml` callers and `on-loop-state-promote.yaml` share `loop-state-<branch_state>` so detect sees fresh state before execute
+1. **Shared workflow concurrency**: Scheduled and `workflow_run` `on-loop-*.yaml` callers and `on-loop-state-promote.yaml` share `loop-state-<branch_state>` so detect sees fresh state before execute; entity-event callers key the group per Issue / PR for responsiveness
 2. **State file separation**: Each loop has its own JSON state file (`.loop/state-<loop_name>.json`); metadata commits land on `branch_state`, not fix-PR heads
 3. **Role separation**: Loops share platform actions but use distinct `loop_name`, budgets, and detect scripts — autonomy level (`L1`–`L3`) is per caller, not per loop category
 4. **Unified denylist**: All loops share the same path denylist defaults
@@ -540,7 +540,7 @@ Per-tier permissions:
 
 **Evolution:** Loops act on integration branches and PR heads via `target_matrix` and caller `with:` inputs (`branch_match`, `pr_enabled`, `level`). See [Multi-Branch Loops Design](multi-branch-loops-design.md) and [Loop Caller Workflows Design](loop-caller-workflows-design.md).
 
-Cross-loop serialization uses shared workflow concurrency (`loop-state-<branch_state>`) on `on-loop-*.yaml` callers so detect runs on fresh state before execute. See [Multi-Branch Loops Design](multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency).
+Cross-loop serialization uses shared workflow concurrency (`loop-state-<branch_state>`) on scheduled and `workflow_run` `on-loop-*.yaml` callers so detect runs on fresh state before execute. See [Multi-Branch Loops Design](multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency).
 
 ### Failure Mode Countermeasures
 

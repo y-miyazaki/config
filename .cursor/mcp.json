@@ -8,19 +8,12 @@
     "context7": {
       "type": "stdio",
       "command": "npx",
-      "args": [
-        "-y",
-        "@upstash/context7-mcp@4.1.1"
-      ]
+      "args": ["-y", "@upstash/context7-mcp@4.1.1"]
     },
     "fetch": {
       "type": "stdio",
       "command": "uvx",
-      "args": [
-        "--with",
-        "mcp>=1.28,<2",
-        "mcp-server-fetch==2026.8.18"
-      ]
+      "args": ["--with", "mcp>=1.28,<2", "mcp-server-fetch==2026.8.18"]
     },
     "github": {
       "type": "stdio",
@@ -28,14 +21,6 @@
       "args": [
         "-lc",
         "TOKEN=\"${GH_TOKEN:-$GITHUB_TOKEN}\"; exec uvx mcp-compressor==0.33.0 -- https://api.githubcopilot.com/mcp/ -H \"Authorization=Bearer ${TOKEN}\" --auth explicit-headers"
-      ]
-    },
-    "lean-ctx": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "lean-ctx-bin@3.10.5"
       ]
     }
   }

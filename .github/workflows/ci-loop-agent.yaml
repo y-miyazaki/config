@@ -415,11 +415,11 @@ jobs:
         uses: y-miyazaki/config/.github/actions/loop-worktree-setup@c14e8c8666d6edcea7eec23d8c0d20f0f1610707 # v1.8.104
         with:
           agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
-
           base_branch: ${{ steps.target.outputs.worktree_branch }}
           base_ref: ${{ steps.target.outputs.worktree_ref }}
           branch_prefix: ${{ inputs.branch_prefix }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
+
       - name: Execute Bounded Loop
         id: execute
         uses: y-miyazaki/config/.github/actions/loop-execute@c14e8c8666d6edcea7eec23d8c0d20f0f1610707 # v1.8.104
@@ -498,6 +498,11 @@ jobs:
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           github_token: ${{ secrets.GH_TOKEN }}
 
+      # continue-on-error: git landing / PR creation failure must not mask the
+      # run log. The outcome is still recorded as error by Resolve Run Log
+      # Metadata + Append Run Log below, and surfaced on the human PR by
+      # Notify Pull Request, so the failure stays visible without aborting the
+      # job before those steps run.
       - name: Finalize
         if: inputs.finalize_enabled
         continue-on-error: true

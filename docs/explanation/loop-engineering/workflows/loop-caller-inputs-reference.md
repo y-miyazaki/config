@@ -1,6 +1,13 @@
 # Loop Caller Inputs Reference
 
-`workflow_call` inputs for `.github/workflows/ci-loop-caller.yaml`, passed from thin `on-loop-*.yaml` callers via `with:`.
+`workflow_call` inputs for the two loop caller reusable workflows, passed from thin `on-loop-*.yaml` callers via `with:`.
+
+| Reusable workflow            | Detect action        | Callers                                                                                                                   |
+| ---------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `ci-loop-caller.yaml`        | `loop-detect`        | Branch / PR-head loops (changelog, ci-sweeper, docs-updater, refactor, tech-debt, github-issue-autofix, github-pr-revise) |
+| `ci-loop-caller-entity.yaml` | `loop-entity-detect` | Entity-event loops bound to one Issue / PR (github-issue-triage)                                                          |
+
+Both share `ci-loop-agent.yaml` for execute and finalize. Inputs below apply to `ci-loop-caller.yaml`; the [entity caller](#entity-caller-ci-loop-caller-entityyaml) section lists how `ci-loop-caller-entity.yaml` differs.
 
 **Status:** Implemented. Callers pass configuration via `with:` on `ci-loop-caller.yaml`.
 
@@ -18,8 +25,15 @@ Keys in `ci-loop-caller.yaml` `inputs` and caller `with:` blocks are **alphabeti
 ```text
 on-loop-*.yaml (with:)
   → ci-loop-caller.yaml
-      detect   → loop-detect (+ detect_domain_env_json export)
-      execute  → ci-loop-agent.yaml (matrix)
+      detect      → loop-detect (+ detect_domain_env_json export)
+      ack-trigger → gh api reactions (only when ack_trigger_comment)
+      execute     → ci-loop-agent.yaml (matrix)
+      record-skip → loop-run-log
+
+on-loop-*.yaml (with:)            # entity-event loops
+  → ci-loop-caller-entity.yaml
+      detect      → loop-entity-detect (+ dispatch_hook_script)
+      execute     → ci-loop-agent.yaml (matrix)
       record-skip → loop-run-log
 ```
 
@@ -172,6 +186,7 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 
 | Input                       | Type    | Description                                                                                                                                                                                                                                                                                                                 | Default (dogfood)                           |
 | --------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `ack_trigger_comment`       | boolean | Run the `ack-trigger` job after detect proceeds: posts an `eyes` reaction on each gathered comment (fallback: the trigger comment). Comment webhooks only                                                                                                                                                                   | `false` (pr-revise: `true`)                 |
 | `allowlist`                 | string  | Comma-separated globs the maker may modify                                                                                                                                                                                                                                                                                  | Per loop                                    |
 | `branch_match`              | string  | Comma-separated branch patterns to watch                                                                                                                                                                                                                                                                                    | `main`                                      |
 | `branch_match_mode`         | string  | How to interpret `branch_match`: `list`, `glob`, or `regex`                                                                                                                                                                                                                                                                 | `glob`                                      |
@@ -181,12 +196,14 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `denylist`                  | string  | Comma-separated globs the maker must not touch                                                                                                                                                                                                                                                                              | ci-sweeper only                             |
 | `delivery`                  | string  | Platform delivery after APPROVE: `log` \| `issue` \| `notion` \| `open_pr` \| `none` (not passed to skills). Drives `target.finalize` inside `loop-detect`.                                                                                                                                                                 | `open_pr`                                   |
 | `detect_script`             | string  | Path to domain `detect_*.sh` under the skill package (e.g. `.agents/skills/docs-updater/scripts/detect_changes.sh`)                                                                                                                                                                                                         | Per loop                                    |
+| `environment`               | string  | GitHub environment bound by every reusable job that mints a token, so environment-scoped `BOT_APP_*` resolve (see [Credentials](#credentials-via-secrets))                                                                                                                                                                  | `default`                                   |
 | `infer_files_pattern`       | string  | Extended regex to infer file paths from checker text                                                                                                                                                                                                                                                                        | Per loop                                    |
 | `loop_name`                 | string  | Loop identifier: `.loop/state-<loop_name>.json`, budget key, run-log tag. Align caller filename: `on-loop-<loop_name>.yaml`                                                                                                                                                                                                 | Per loop                                    |
 | `max_targets_per_schedule`  | number  | Max targets per cron tick after priority filters                                                                                                                                                                                                                                                                            | `3`                                         |
 | `may_edit`                  | boolean | Agent worktree edit gate: `true` \| `false` (required; injected into `## Constraints`)                                                                                                                                                                                                                                      | Per loop (explicit in dogfood callers)      |
 | `no_changes_verdict`        | string  | `APPROVE` \| `REJECT` when maker produces no file diff                                                                                                                                                                                                                                                                      | `REJECT`                                    |
 | `pr_body`                   | string  | Optional static prefix (dogfood: `""`). `loop-finalize` composes the PR body: agent `## Overview` + `## Summary`, mechanical `## Failure context` / `## Changes` / `## Run Metadata`, and automation disclaimer. See [Loop PR Body Readable Design](../../../superpowers/specs/2026-07-21-loop-pr-body-readable-design.md). | `""`                                        |
+| `pr_draft`                  | boolean | Open the finalize PR as a draft when `delivery: open_pr`                                                                                                                                                                                                                                                                    | `false` (issue-autofix: dispatch input)     |
 | `pr_exclude`                | string  | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`                                                                                                                                                                                                                                                           | ci-sweeper                                  |
 | `pr_include_bots`           | string  | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots                                                                                                                                                                                                                                           | `""`                                        |
 | `pr_title`                  | string  | PR title when finalize strategy is `open_pr`                                                                                                                                                                                                                                                                                | Per loop                                    |
@@ -276,14 +293,47 @@ Passed through `ci-loop-caller` to `ci-loop-agent.yaml` when non-empty. Per-loop
 
 ## Detect permissions
 
-See [Loop Caller Reusable Workflow Design — Detect permissions](../loop-caller-reusable-design.md#detect-permissions). All branch/PR thin callers `uses:` **`ci-loop-caller.yaml`**.
+See [Loop Caller Reusable Workflow Design — Detect permissions](../loop-caller-reusable-design.md#detect-permissions). Branch/PR thin callers `uses:` **`ci-loop-caller.yaml`**; entity-event callers `uses:` **`ci-loop-caller-entity.yaml`**.
 
-| Job / scope          | Permissions                                               |
-| -------------------- | --------------------------------------------------------- |
-| Reusable `detect`    | `actions: write`, `contents: read`, `pull-requests: read` |
-| Thin caller workflow | execute baseline + `actions: write`                       |
+| Job / scope                      | Permissions                                               |
+| -------------------------------- | --------------------------------------------------------- |
+| `ci-loop-caller` `detect`        | `actions: write`, `contents: read`, `pull-requests: read` |
+| `ci-loop-caller-entity` `detect` | `actions: write`, `contents: read`, `issues: read`        |
+| Thin caller workflow             | execute baseline + `actions: write`                       |
 
 Loop behavior (git-only vs `pr_enabled` vs `gh run list`) is selected by caller `with:` (`detect_script`, `pr_enabled`, `detect_domain_env_json`) — not by choosing a different reusable workflow file.
+
+## Entity caller (`ci-loop-caller-entity.yaml`)
+
+Binds one GitHub entity event (Issue / PR) via `loop-entity-detect` instead of scanning branches, then reuses `ci-loop-agent.yaml` for execute and finalize. Used by `on-loop-github-issue-triage.yaml`.
+
+### Inputs it does not accept
+
+Branch-watch and PR-scan inputs have no meaning when detect is bound to a single entity:
+
+`ack_trigger_comment`, `additional_commit_paths`, `branch_match`, `branch_match_mode`, `domain_persistence_script`, `git_landing_integration`, `git_landing_pull_request`, `max_targets_per_schedule`, `pr_enabled`, `pr_exclude`, `pr_include_bots`, `priority`, `scoped_pr_number`
+
+### Inputs only it accepts
+
+| Input                  | Type   | Description                                                                                                    | Default |
+| ---------------------- | ------ | -------------------------------------------------------------------------------------------------------------- | ------- |
+| `dispatch_hook_script` | string | Trusted post-detect hook run by `loop-entity-detect` (e.g. fire `repository_dispatch` to hand off to autofix). | `""`    |
+| `dispatch_hook_token`  | string | Token for the dispatch hook. Empty falls back to the detect job's resolved token.                              | `""`    |
+
+### Defaults that differ
+
+The entity caller targets read-only L1 triage, so several inputs are optional here and default to the report-mode values:
+
+| Input                | `ci-loop-caller` | `ci-loop-caller-entity` |
+| -------------------- | ---------------- | ----------------------- |
+| `allowlist`          | required         | `""`                    |
+| `delivery`           | `open_pr`        | `none`                  |
+| `level`              | `L2`             | `L1`                    |
+| `may_edit`           | required         | `false`                 |
+| `no_changes_verdict` | `REJECT`         | `APPROVE`               |
+| `write_target`       | required         | `report`                |
+
+`no_changes_verdict` differs by design: a `write_target: fix` loop that produced no diff did not do its job (`REJECT`), while a `write_target: report` loop that edited nothing is behaving correctly (`APPROVE`).
 
 ## Domain detect environment (`detect_domain_env_json`)
 
@@ -332,16 +382,16 @@ Each detect script normalizes these keys at startup via `configure_detect_enviro
 
 ## Per-loop design docs
 
-| Loop                 | Design doc                                                                    | Caller workflow                     |
-| -------------------- | ----------------------------------------------------------------------------- | ----------------------------------- |
-| changelog            | [Changelog Workflow Design](loop-changelog-workflow-design.md)                | `on-loop-changelog.yaml`            |
-| ci-sweeper           | [CI Sweeper Workflow Design](loop-ci-sweeper-workflow-design.md)              | `on-loop-ci-sweeper.yaml`           |
-| docs-updater         | [Docs Updater Workflow Design](loop-docs-updater-workflow-design.md)          | `on-loop-docs-updater.yaml`         |
-| refactor             | [Refactor Workflow Design](loop-refactor-workflow-design.md)                  | `on-loop-refactor.yaml`             |
-| tech-debt            | [Report Tech Debt Workflow Design](loop-tech-debt-workflow-design.md)         | `on-loop-tech-debt.yaml`            |
-| github-issue-triage  | [Issue Triage Workflow Design](loop-github-issue-triage-workflow-design.md)   | `on-loop-github-issue-triage.yaml`  |
-| github-issue-autofix | [Issue Autofix Workflow Design](loop-github-issue-autofix-workflow-design.md) | `on-loop-github-issue-autofix.yaml` |
-| github-pr-revise     | [PR Revise Workflow Design](loop-github-pr-revise-workflow-design.md)         | `on-loop-github-pr-revise.yaml`     |
+| Loop                 | Design doc                                                                    | Caller workflow                                    |
+| -------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------- |
+| changelog            | [Changelog Workflow Design](loop-changelog-workflow-design.md)                | `on-loop-changelog.yaml`                           |
+| ci-sweeper           | [CI Sweeper Workflow Design](loop-ci-sweeper-workflow-design.md)              | `on-loop-ci-sweeper.yaml`                          |
+| docs-updater         | [Docs Updater Workflow Design](loop-docs-updater-workflow-design.md)          | `on-loop-docs-updater.yaml`                        |
+| refactor             | [Refactor Workflow Design](loop-refactor-workflow-design.md)                  | `on-loop-refactor.yaml`                            |
+| tech-debt            | [Report Tech Debt Workflow Design](loop-tech-debt-workflow-design.md)         | `on-loop-tech-debt.yaml`                           |
+| github-issue-triage  | [Issue Triage Workflow Design](loop-github-issue-triage-workflow-design.md)   | `on-loop-github-issue-triage.yaml` (entity caller) |
+| github-issue-autofix | [Issue Autofix Workflow Design](loop-github-issue-autofix-workflow-design.md) | `on-loop-github-issue-autofix.yaml`                |
+| github-pr-revise     | [PR Revise Workflow Design](loop-github-pr-revise-workflow-design.md)         | `on-loop-github-pr-revise.yaml`                    |
 
 ## References
 

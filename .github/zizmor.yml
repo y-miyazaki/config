@@ -2,6 +2,13 @@
 # https://docs.zizmor.sh/configuration/
 
 rules:
+  # Workflows here are distributed to other repositories, which may run on
+  # GitHub Enterprise Server or self-hosted setups that do not support the
+  # self-repository form (uses: $/...). The workspace-relative form
+  # (uses: ./...) is the only portable option, so this audit is disabled.
+  self-repository:
+    disable: true
+
   # copilot-requests is required for Cursor agent loops; valid scope not yet in zizmor's catalog
   excessive-permissions:
     ignore:
