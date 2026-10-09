@@ -1789,7 +1789,7 @@ version = "4.6.2"
 backend = "pipx:pre-commit"
 
 [[tools."pipx:semgrep"]]
-version = "1.178.0"
+version = "1.179.0"
 backend = "pipx:semgrep"
 
 [[tools.pnpm]]
