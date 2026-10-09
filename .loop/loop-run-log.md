@@ -30,3 +30,4 @@ Append one entry per run. Prune entries older than 30 days.
 {"run_id":"2026-10-05T08:27:55Z","loop_name":"tech-debt","duration_s":17,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"37283754360"}
 {"run_id":"2026-10-05T09:11:48Z","loop_name":"docs-updater","duration_s":14,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"37288398311"}
 {"run_id":"2026-10-09T08:25:17Z","loop_name":"ci-sweeper","duration_s":18,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"37904798235"}
+{"run_id":"2026-10-09T08:32:01Z","loop_name":"docs-updater","duration_s":17,"outcome":"skipped","skip_reason":"circuit_breaker","tokens_total":0,"workflow_run":"37905491661"}
