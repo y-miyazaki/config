@@ -60,7 +60,7 @@ jobs:
         Write the dated report to `report_file` at L2 within the allowlist.
         Compare against `previous_report` for resolved, recurring, and regression items.
         Do not create GitHub Issues.
-      agent_maker_max_turns: 5
+      agent_maker_max_turns: 15
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: tech-debt
       allowlist: docs/report/tech-debt/**/*.md,docs/**/*.md,package.json,go.mod

@@ -95,7 +95,7 @@ jobs:
         When detect result.comments has multiple entries, address the full array in one session (not only result.comment_body).
         Comment webhooks require the configured @mention; explicit dispatch paths do not.
         Do not invent mention-less triggers on comment webhooks.
-      agent_maker_max_turns: 8
+      agent_maker_max_turns: 15
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: github-pr-revise
       allowlist: ""

@@ -101,7 +101,7 @@ jobs:
         Triage the Issue per the github-issue-triage skill.
         Apply allowlisted labels and post analysis/questions as Issue comments.
         Do not open PRs or call repository_dispatch (platform hook handles ready+autofix).
-      agent_maker_max_turns: 5
+      agent_maker_max_turns: 15
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: github-issue-triage
       allowlist: ""

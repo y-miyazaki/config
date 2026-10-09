@@ -99,7 +99,7 @@ jobs:
 
         Read each skill's SKILL.md under `.agents/skills/` or `.claude/skills/` before invoking.
         Coverage-threshold and dependency-breakage failures: classify Watch — do not edit until caller checker allows.
-      agent_maker_max_turns: 8
+      agent_maker_max_turns: 15
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: ci-sweeper
       allowlist: ".github/**,.apm/packages/**,scripts/**,apm.yml,mise.toml,renovate/**,docs/**/*.md,README.md,mkdocs.yml"

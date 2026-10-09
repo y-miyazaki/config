@@ -69,7 +69,7 @@ jobs:
         Re-run stack validation on all touched packages before finalize.
         Stack validation (A'): shell-script-validation, go-validation, github-actions-validation, markdown-validation as applicable via ## Instructions.
         Invoke named validation skills for touched stacks before finalize.
-      agent_maker_max_turns: 5
+      agent_maker_max_turns: 15
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: refactor
       allowlist: ".apm/packages/**,scripts/**"

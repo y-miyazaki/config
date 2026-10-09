@@ -60,7 +60,7 @@ jobs:
         Run the docs-updater skill for loop findings.
         Edit files directly to address the documented findings.
         Prioritize factual consistency with the codebase and preserve existing documentation structure unless findings require restructuring.
-      agent_maker_max_turns: 5
+      agent_maker_max_turns: 15
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: docs-updater
       allowlist: "docs/**/*.md,README.md,mkdocs.yml"

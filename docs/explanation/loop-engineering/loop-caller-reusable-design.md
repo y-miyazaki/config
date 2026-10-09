@@ -95,7 +95,7 @@ jobs:
   loop:
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
-      agent_maker_max_turns: 5
+      agent_maker_max_turns: 15
       agent_maker_model: claude-sonnet-5
       agent_maker_effort: medium
       agent_loop_max_attempts: 3
