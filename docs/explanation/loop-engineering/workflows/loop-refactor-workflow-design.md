@@ -55,12 +55,12 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 
 | Input / JSON key             | Description                                                                                                       | Dogfood value                                             |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `agent_maker_max_turns`      | Max maker agent turns per loop attempt (one Agent→Verify cycle).                                                  | `5`                                                       |
+| `agent_maker_max_turns`      | Max maker agent turns per loop attempt (one Agent→Verify cycle).                                                  | `100`                                                     |
 | `agent_maker_model`          | Maker model ID. Cursor: `agent --list-models`.                                                                    | `claude-sonnet-5`                                         |
 | `agent_maker_effort`         | Maker reasoning effort. Only engines with an effort flag (claude) consume it                                      | `medium`                                                  |
 | `agent_loop_max_attempts`    | Max Agent→Verify retry cycles before finalize records failure.                                                    | `3`                                                       |
 | `agent_checker_instructions` | Checker APPROVE/REJECT rubric. Local/same-package structural edits only; no architecture/GoF/cross-package diffs. | Inline in caller workflow                                 |
-| `agent_checker_max_turns`    | Max checker agent turns per verification.                                                                         | `3`                                                       |
+| `agent_checker_max_turns`    | Max checker agent turns per verification.                                                                         | `100`                                                     |
 | `agent_checker_model`        | Checker model ID. Cursor: `agent --list-models`.                                                                  | `claude-opus-5`                                           |
 | `agent_checker_effort`       | Checker reasoning effort. Only engines with an effort flag (claude) consume it                                    | `medium`                                                  |
 | `allowlist`                  | Comma-separated globs the maker may modify. Tight dogfood scope.                                                  | `.apm/packages/**,scripts/**`                             |

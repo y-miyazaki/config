@@ -95,14 +95,14 @@ jobs:
   loop:
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
-      agent_maker_max_turns: 15
+      agent_maker_max_turns: 100
       agent_maker_model: claude-sonnet-5
       agent_maker_effort: medium
       agent_loop_max_attempts: 3
       agent_checker_instructions: |
         ## Criteria for APPROVE
         ...
-      agent_checker_max_turns: 3
+      agent_checker_max_turns: 100
       agent_checker_model: claude-opus-5
       agent_checker_effort: medium
       allowlist: CHANGELOG.md
