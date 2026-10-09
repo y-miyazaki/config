@@ -294,7 +294,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@3aedbf979f40b7e3a90188d550d93c587dff65f4 # v1.8.105
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@47c316901d42faed8e5d19de01059cf7a47f8bdb # v1.8.106
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
@@ -302,7 +302,7 @@ jobs:
 
       - name: Run Agent Once
         id: agent
-        uses: y-miyazaki/config/.github/actions/loop-agent-once@3aedbf979f40b7e3a90188d550d93c587dff65f4 # v1.8.105
+        uses: y-miyazaki/config/.github/actions/loop-agent-once@47c316901d42faed8e5d19de01059cf7a47f8bdb # v1.8.106
         with:
           agent_token: ${{ secrets.AGENT_TOKEN }}
           cli_version: ${{ inputs.cli_version }}
@@ -334,14 +334,14 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@3aedbf979f40b7e3a90188d550d93c587dff65f4 # v1.8.105
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@47c316901d42faed8e5d19de01059cf7a47f8bdb # v1.8.106
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           github_token: ${{ secrets.GH_TOKEN }}
 
       - name: Append Run Log
-        uses: y-miyazaki/config/.github/actions/loop-run-log@3aedbf979f40b7e3a90188d550d93c587dff65f4 # v1.8.105
+        uses: y-miyazaki/config/.github/actions/loop-run-log@47c316901d42faed8e5d19de01059cf7a47f8bdb # v1.8.106
         with:
           agent_result: ${{ needs.agent-l1.result }}
           base_branch: ${{ inputs.state_push_branch != '' && inputs.state_push_branch || inputs.base_branch }}
@@ -392,7 +392,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@3aedbf979f40b7e3a90188d550d93c587dff65f4 # v1.8.105
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@47c316901d42faed8e5d19de01059cf7a47f8bdb # v1.8.106
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
@@ -423,7 +423,7 @@ jobs:
 
       - name: Setup Worktree
         id: worktree
-        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@3aedbf979f40b7e3a90188d550d93c587dff65f4 # v1.8.105
+        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@47c316901d42faed8e5d19de01059cf7a47f8bdb # v1.8.106
         with:
           agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
           base_branch: ${{ steps.target.outputs.worktree_branch }}
@@ -433,7 +433,7 @@ jobs:
 
       - name: Execute Bounded Loop
         id: execute
-        uses: y-miyazaki/config/.github/actions/loop-execute@3aedbf979f40b7e3a90188d550d93c587dff65f4 # v1.8.105
+        uses: y-miyazaki/config/.github/actions/loop-execute@47c316901d42faed8e5d19de01059cf7a47f8bdb # v1.8.106
         with:
           agent_checker_effort: ${{ inputs.agent_checker_effort }}
           agent_checker_instructions: ${{ inputs.agent_checker_instructions }}
@@ -505,7 +505,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@3aedbf979f40b7e3a90188d550d93c587dff65f4 # v1.8.105
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@47c316901d42faed8e5d19de01059cf7a47f8bdb # v1.8.106
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
@@ -520,7 +520,7 @@ jobs:
         if: inputs.finalize_enabled
         continue-on-error: true
         id: finalize
-        uses: y-miyazaki/config/.github/actions/loop-finalize@3aedbf979f40b7e3a90188d550d93c587dff65f4 # v1.8.105
+        uses: y-miyazaki/config/.github/actions/loop-finalize@47c316901d42faed8e5d19de01059cf7a47f8bdb # v1.8.106
         with:
           additional_commit_paths: ${{ inputs.additional_commit_paths }}
           agent_result: ${{ needs.agent-l2.result }}
@@ -591,7 +591,7 @@ jobs:
 
       - name: Append Run Log
         if: always()
-        uses: y-miyazaki/config/.github/actions/loop-run-log@3aedbf979f40b7e3a90188d550d93c587dff65f4 # v1.8.105
+        uses: y-miyazaki/config/.github/actions/loop-run-log@47c316901d42faed8e5d19de01059cf7a47f8bdb # v1.8.106
         with:
           agent_result: ${{ steps.run_log_meta.outputs.agent_result }}
           attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
@@ -613,7 +613,7 @@ jobs:
         if: >-
           always() &&
           steps.notify_target.outputs.pr_number != ''
-        uses: y-miyazaki/config/.github/actions/loop-notify-pr@3aedbf979f40b7e3a90188d550d93c587dff65f4 # v1.8.105
+        uses: y-miyazaki/config/.github/actions/loop-notify-pr@47c316901d42faed8e5d19de01059cf7a47f8bdb # v1.8.106
         with:
           attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
           auto_merge: ${{ inputs.auto_merge }}
