@@ -3,6 +3,10 @@ description: >-
   Run one entity detect_script, apply light budget check, build single-target
   matrix and upload loop-handoff artifact for ci-loop-agent.
 inputs:
+  agent_checker_effort:
+    default: ""
+    description: "Checker reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
+    required: false
   agent_checker_instructions:
     description: Domain-specific APPROVE/REJECT rubric
     required: true
@@ -15,6 +19,10 @@ inputs:
   agent_loop_max_attempts:
     description: Maximum Agent→Verify retry cycles
     required: true
+  agent_maker_effort:
+    default: ""
+    description: "Maker reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
+    required: false
   agent_maker_instructions:
     default: ""
     description: Extra instructions appended to maker prompt
@@ -105,6 +113,9 @@ inputs:
     description: Agent artifact when may_edit is true
     required: false
 outputs:
+  agent_checker_effort:
+    description: Checker effort
+    value: ${{ steps.config.outputs.agent_checker_effort }}
   agent_checker_instructions:
     description: Checker criteria
     value: ${{ steps.config.outputs.agent_checker_instructions }}
@@ -117,6 +128,9 @@ outputs:
   agent_loop_max_attempts:
     description: Loop max attempts
     value: ${{ steps.config.outputs.agent_loop_max_attempts }}
+  agent_maker_effort:
+    description: Maker effort
+    value: ${{ steps.config.outputs.agent_maker_effort }}
   agent_maker_max_turns:
     description: Maker max turns
     value: ${{ steps.config.outputs.agent_maker_max_turns }}
@@ -175,10 +189,12 @@ runs:
       id: config
       shell: bash
       env:
+        AGENT_CHECKER_EFFORT: ${{ inputs.agent_checker_effort }}
         AGENT_CHECKER_INSTRUCTIONS: ${{ inputs.agent_checker_instructions }}
         AGENT_CHECKER_MAX_TURNS: ${{ inputs.agent_checker_max_turns }}
         AGENT_CHECKER_MODEL: ${{ inputs.agent_checker_model }}
         AGENT_LOOP_MAX_ATTEMPTS: ${{ inputs.agent_loop_max_attempts }}
+        AGENT_MAKER_EFFORT: ${{ inputs.agent_maker_effort }}
         AGENT_MAKER_MAX_TURNS: ${{ inputs.agent_maker_max_turns }}
         AGENT_MAKER_MODEL: ${{ inputs.agent_maker_model }}
         AGENT_MAKER_SKILL_NAME: ${{ inputs.agent_maker_skill_name }}
@@ -189,12 +205,14 @@ runs:
         AGENT_CHECKER_INSTRUCTIONS_DELIM="CRITERIA_$(openssl rand -hex 8)"
         {
           echo "agent_maker_max_turns=${AGENT_MAKER_MAX_TURNS}"
+          echo "agent_maker_effort=${AGENT_MAKER_EFFORT}"
           echo "agent_maker_model=${AGENT_MAKER_MODEL}"
           echo "agent_loop_max_attempts=${AGENT_LOOP_MAX_ATTEMPTS}"
           echo "agent_checker_instructions<<${AGENT_CHECKER_INSTRUCTIONS_DELIM}"
           echo "${AGENT_CHECKER_INSTRUCTIONS}"
           echo "${AGENT_CHECKER_INSTRUCTIONS_DELIM}"
           echo "agent_checker_max_turns=${AGENT_CHECKER_MAX_TURNS}"
+          echo "agent_checker_effort=${AGENT_CHECKER_EFFORT}"
           echo "agent_checker_model=${AGENT_CHECKER_MODEL}"
           echo "engine=${ENGINE}"
           echo "level=${LEVEL}"

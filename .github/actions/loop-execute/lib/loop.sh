@@ -245,10 +245,11 @@ function run_bounded_loop {
         fi
 
         PROMPT="${agent_prompt}"
+        EFFORT="${AGENT_MAKER_EFFORT:-}"
         MAX_TURNS="${AGENT_MAKER_MAX_TURNS}"
         MODEL="${AGENT_MAKER_MODEL}"
         WORKING_DIRECTORY="${WORKTREE_PATH}"
-        export PROMPT MAX_TURNS MODEL WORKING_DIRECTORY
+        export PROMPT EFFORT MAX_TURNS MODEL WORKING_DIRECTORY
 
         echo "Running maker agent (fresh session)..."
         pre_head="$(git -C "${WORKTREE_PATH}" rev-parse HEAD)"

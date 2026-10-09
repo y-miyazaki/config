@@ -18,6 +18,11 @@ on:
         description: "Comma-separated paths to commit with state after domain persistence"
         required: false
         type: string
+      agent_checker_effort:
+        default: ""
+        description: "Checker reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
+        required: false
+        type: string
       agent_checker_instructions:
         default: ""
         description: "Domain-specific APPROVE/REJECT criteria (L2/L3)"
@@ -43,6 +48,11 @@ on:
         description: "Maximum Agent→Verify loop attempts (L2/L3)"
         required: false
         type: number
+      agent_maker_effort:
+        default: ""
+        description: "Maker reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
+        required: false
+        type: string
       agent_maker_max_turns:
         default: 5
         description: "Maximum maker agent turns per loop attempt"
@@ -296,6 +306,7 @@ jobs:
         with:
           agent_token: ${{ secrets.AGENT_TOKEN }}
           cli_version: ${{ inputs.cli_version }}
+          effort: ${{ inputs.agent_maker_effort }}
           engine: ${{ inputs.engine }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           max_turns: ${{ format('{0}', inputs.agent_maker_max_turns) }}
@@ -424,11 +435,13 @@ jobs:
         id: execute
         uses: y-miyazaki/config/.github/actions/loop-execute@c14e8c8666d6edcea7eec23d8c0d20f0f1610707 # v1.8.104
         with:
+          agent_checker_effort: ${{ inputs.agent_checker_effort }}
           agent_checker_instructions: ${{ inputs.agent_checker_instructions }}
           agent_checker_max_turns: ${{ format('{0}', inputs.agent_checker_max_turns) }}
           agent_checker_model: ${{ inputs.agent_checker_model }}
           agent_checker_skill_name: ${{ inputs.agent_checker_skill_name }}
           agent_loop_max_attempts: ${{ format('{0}', inputs.agent_loop_max_attempts) }}
+          agent_maker_effort: ${{ inputs.agent_maker_effort }}
           agent_maker_max_turns: ${{ format('{0}', inputs.agent_maker_max_turns) }}
           agent_maker_model: ${{ inputs.agent_maker_model }}
           agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}

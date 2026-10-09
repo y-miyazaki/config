@@ -222,6 +222,7 @@ function run_agent_capture {
 #
 # Globals:
 #   AGENT_TOKEN - Authentication token for the selected engine
+#   EFFORT - Optional reasoning effort level (engines with a dedicated flag only)
 #   ENGINE - Engine name (claude|copilot|codex|cursor)
 #   MAX_TURNS - Optional max turns override
 #   MODEL - Optional model override
@@ -243,12 +244,16 @@ function run_agent {
     local working_root="${WORKING_DIRECTORY:-.}"
 
     prepare_agent_mcps "${ENGINE}" "${working_root}"
+    warn_unsupported_effort "${ENGINE}"
 
     case "${ENGINE}" in
         claude)
             export ANTHROPIC_API_KEY="${AGENT_TOKEN}"
             local -a ARGS=(-p "${PROMPT}" --bare)
             append_agent_mcp_args ARGS "${ENGINE}"
+            # Print mode denies permission-gated tools by default; makers need edit rights.
+            if [[ ${allow_writes} == "true" ]]; then ARGS+=(--permission-mode acceptEdits); fi
+            if [[ -n ${EFFORT:-} ]]; then ARGS+=(--effort "${EFFORT}"); fi
             if [[ -n ${MAX_TURNS:-} ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
             if [[ -n ${MODEL:-} ]]; then ARGS+=(--model "${MODEL}"); fi
             npx claude "${ARGS[@]}"
@@ -292,4 +297,38 @@ function run_agent {
             exit 1
             ;;
     esac
+}
+
+#######################################
+# warn_unsupported_effort: Report EFFORT when the engine has no effort flag
+#
+# Description:
+#   Only engines exposing a dedicated effort flag consume EFFORT. Engines that
+#   encode effort in the model ID (for example cursor's `-low` suffix) must set
+#   it there instead, so a stray EFFORT is surfaced rather than silently dropped.
+#
+# Globals:
+#   EFFORT - Optional reasoning effort level (read)
+#
+# Arguments:
+#   $1 - Engine name
+#
+# Outputs:
+#   Workflow warning when EFFORT is set for an engine that ignores it
+#
+# Returns:
+#   0 always
+#
+#######################################
+function warn_unsupported_effort {
+    local engine_name="${1:?engine name required}"
+
+    [[ -z ${EFFORT:-} ]] && return 0
+    case "${engine_name}" in
+        claude) return 0 ;;
+        *)
+            echo "::warning::engine=${engine_name} ignores effort='${EFFORT}'; encode the effort level in the model ID instead"
+            ;;
+    esac
+    return 0
 }

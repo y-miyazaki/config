@@ -20,6 +20,11 @@ on:
         description: "Extra paths included in finalize commit (e.g. ledger file)"
         required: false
         type: string
+      agent_checker_effort:
+        default: ""
+        description: "Checker reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
+        required: false
+        type: string
       agent_checker_instructions:
         description: "Domain-specific APPROVE/REJECT rubric"
         required: true
@@ -41,6 +46,11 @@ on:
         description: "Maximum Agent→Verify retry cycles"
         required: true
         type: number
+      agent_maker_effort:
+        default: ""
+        description: "Maker reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
+        required: false
+        type: string
       agent_maker_instructions:
         default: ""
         description: "Domain-specific maker instructions"
@@ -242,10 +252,12 @@ jobs:
       pull-requests: read
     outputs:
       additional_commit_paths: ${{ inputs.additional_commit_paths }}
+      agent_checker_effort: ${{ steps.detect.outputs.agent_checker_effort }}
       agent_checker_instructions: ${{ steps.detect.outputs.agent_checker_instructions }}
       agent_checker_max_turns: ${{ steps.detect.outputs.agent_checker_max_turns }}
       agent_checker_model: ${{ steps.detect.outputs.agent_checker_model }}
       agent_loop_max_attempts: ${{ steps.detect.outputs.agent_loop_max_attempts }}
+      agent_maker_effort: ${{ steps.detect.outputs.agent_maker_effort }}
       agent_maker_max_turns: ${{ steps.detect.outputs.agent_maker_max_turns }}
       agent_maker_model: ${{ steps.detect.outputs.agent_maker_model }}
       agent_maker_skill_name: ${{ steps.detect.outputs.agent_maker_skill_name }}
@@ -320,10 +332,12 @@ jobs:
         id: detect
         uses: y-miyazaki/config/.github/actions/loop-detect@c14e8c8666d6edcea7eec23d8c0d20f0f1610707 # v1.8.104
         with:
+          agent_checker_effort: ${{ inputs.agent_checker_effort }}
           agent_checker_instructions: ${{ inputs.agent_checker_instructions }}
           agent_checker_max_turns: ${{ format('{0}', inputs.agent_checker_max_turns) }}
           agent_checker_model: ${{ inputs.agent_checker_model }}
           agent_loop_max_attempts: ${{ format('{0}', inputs.agent_loop_max_attempts) }}
+          agent_maker_effort: ${{ inputs.agent_maker_effort }}
           agent_maker_instructions: ${{ inputs.agent_maker_instructions }}
           agent_maker_max_turns: ${{ format('{0}', inputs.agent_maker_max_turns) }}
           agent_maker_model: ${{ inputs.agent_maker_model }}
@@ -471,11 +485,13 @@ jobs:
     uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@c14e8c8666d6edcea7eec23d8c0d20f0f1610707 # v1.8.104
     with:
       additional_commit_paths: ${{ needs.detect.outputs.additional_commit_paths }}
+      agent_checker_effort: ${{ needs.detect.outputs.agent_checker_effort }}
       agent_checker_instructions: ${{ needs.detect.outputs.agent_checker_instructions }}
       agent_checker_max_turns: ${{ fromJSON(needs.detect.outputs.agent_checker_max_turns) }}
       agent_checker_model: ${{ needs.detect.outputs.agent_checker_model }}
       agent_checker_skill_name: ${{ inputs.agent_checker_skill_name }}
       agent_loop_max_attempts: ${{ fromJSON(needs.detect.outputs.agent_loop_max_attempts) }}
+      agent_maker_effort: ${{ needs.detect.outputs.agent_maker_effort }}
       agent_maker_max_turns: ${{ fromJSON(needs.detect.outputs.agent_maker_max_turns) }}
       agent_maker_model: ${{ needs.detect.outputs.agent_maker_model }}
       agent_maker_skill_name: ${{ needs.detect.outputs.agent_maker_skill_name }}

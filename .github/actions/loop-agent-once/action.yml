@@ -9,6 +9,10 @@ inputs:
     default: "latest"
     description: "CLI package version"
     required: false
+  effort:
+    default: ""
+    description: "Reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
+    required: false
   engine:
     description: "AI engine (claude or copilot or codex or cursor)"
     required: true
@@ -75,6 +79,7 @@ runs:
       shell: bash
       env:
         AGENT_TOKEN: ${{ inputs.agent_token }}
+        EFFORT: ${{ inputs.effort }}
         ENGINE: ${{ inputs.engine }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         MAX_TURNS: ${{ inputs.max_turns }}

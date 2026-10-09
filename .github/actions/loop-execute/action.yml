@@ -2,6 +2,10 @@ name: loop-execute
 description: "Bounded Agent→Verify loop in one job. Installs CLI once, retries with checker feedback."
 
 inputs:
+  agent_checker_effort:
+    default: ""
+    description: "Checker reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
+    required: false
   agent_checker_instructions:
     default: ""
     description: "Domain-specific APPROVE/REJECT criteria (markdown)"
@@ -21,6 +25,10 @@ inputs:
   agent_loop_max_attempts:
     default: "3"
     description: "Maximum Agent→Verify loop attempts"
+    required: false
+  agent_maker_effort:
+    default: ""
+    description: "Maker reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
     required: false
   agent_maker_max_turns:
     default: "5"
@@ -187,11 +195,13 @@ runs:
       shell: bash
       working-directory: ${{ inputs.worktree_path }}
       env:
+        AGENT_CHECKER_EFFORT: ${{ inputs.agent_checker_effort }}
         AGENT_CHECKER_INSTRUCTIONS: ${{ inputs.agent_checker_instructions }}
         AGENT_CHECKER_MAX_TURNS: ${{ inputs.agent_checker_max_turns }}
         AGENT_CHECKER_MODEL: ${{ inputs.agent_checker_model }}
         AGENT_CHECKER_SKILL_NAME: ${{ inputs.agent_checker_skill_name }}
         AGENT_LOOP_MAX_ATTEMPTS: ${{ inputs.agent_loop_max_attempts }}
+        AGENT_MAKER_EFFORT: ${{ inputs.agent_maker_effort }}
         AGENT_MAKER_MAX_TURNS: ${{ inputs.agent_maker_max_turns }}
         AGENT_MAKER_MODEL: ${{ inputs.agent_maker_model }}
         AGENT_MAKER_SKILL_NAME: ${{ inputs.agent_maker_skill_name }}

@@ -192,7 +192,8 @@ function write_verifier_output_contract {
 #
 # Globals:
 #   BASE_BRANCH, DENYLIST, ALLOWLIST, WORKTREE_PATH
-#   AGENT_CHECKER_INSTRUCTIONS, AGENT_CHECKER_MAX_TURNS, AGENT_CHECKER_MODEL
+#   AGENT_CHECKER_EFFORT, AGENT_CHECKER_INSTRUCTIONS, AGENT_CHECKER_MAX_TURNS
+#   AGENT_CHECKER_MODEL
 #   LIB_DIR, OPEN_REJECTIONS_JSON, AGENT_MAKER_SKILL_NAME, VERIFIER_CONTEXT
 #   PROMPT_VERIFIER_* prompt env vars
 #
@@ -334,10 +335,11 @@ function run_verify {
 
     output_file="${attempt_dir}/checker-output.txt"
     PROMPT="$(cat "${prompt_file}")"
+    EFFORT="${AGENT_CHECKER_EFFORT:-}"
     MAX_TURNS="${AGENT_CHECKER_MAX_TURNS}"
     MODEL="${AGENT_CHECKER_MODEL}"
     WORKING_DIRECTORY="${WORKTREE_PATH}"
-    export PROMPT MAX_TURNS MODEL WORKING_DIRECTORY
+    export PROMPT EFFORT MAX_TURNS MODEL WORKING_DIRECTORY
     if ! run_agent_capture "${output_file}" "false"; then
         echo "::warning::Checker agent exited non-zero"
     fi

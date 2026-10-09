@@ -96,13 +96,15 @@ jobs:
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
       agent_maker_max_turns: 5
-      agent_maker_model: cursor-grok-4.5-low
+      agent_maker_model: claude-sonnet-5
+      agent_maker_effort: medium
       agent_loop_max_attempts: 3
       agent_checker_instructions: |
         ## Criteria for APPROVE
         ...
       agent_checker_max_turns: 3
-      agent_checker_model: composer-2.5
+      agent_checker_model: claude-opus-5
+      agent_checker_effort: medium
       allowlist: CHANGELOG.md
       branch_match: main
       branch_state: main
@@ -111,7 +113,7 @@ jobs:
       detect_domain_env_json: >-
         {"CHANGELOG_FILE":"CHANGELOG.md","CHANGELOG_MERGE_COMMITS":"false"}
       detect_script: .agents/skills/changelog/scripts/detect_changelog_commits.sh
-      engine: cursor
+      engine: claude
       delivery: open_pr
       may_edit: true
       write_target: fix
@@ -185,10 +187,12 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 | ---------------------------- | ------ | -------- | --------------- | ---------------------------------------------- |
 | `agent_maker_max_turns`      | number | yes      | —               | `loop-detect`                                  |
 | `agent_maker_model`          | string | yes      | —               | `loop-detect`                                  |
+| `agent_maker_effort`         | string | no       | —               | `loop-detect`                                  |
 | `agent_loop_max_attempts`    | number | yes      | —               | `loop-detect`                                  |
 | `agent_checker_instructions` | string | yes      | —               | `loop-detect` (multiline markdown)             |
 | `agent_checker_max_turns`    | number | yes      | —               | `loop-detect`                                  |
 | `agent_checker_model`        | string | yes      | —               | `loop-detect`                                  |
+| `agent_checker_effort`       | string | no       | —               | `loop-detect`                                  |
 | `engine`                     | string | yes      | —               | `loop-detect` / `ci-loop-agent`                |
 | `level`                      | string | no       | `L2`            | `loop-detect`                                  |
 | `agent_maker_skill_name`     | string | yes      | —               | `loop-detect`                                  |
