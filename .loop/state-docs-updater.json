@@ -1,19 +1,12 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-10-09T11:27:14Z",
-      "outcome": "pr-created",
+      "last_run": "2026-10-09T11:54:16Z",
+      "outcome": "merged",
       "consecutive_failures": 0,
-      "last_sha": "c67cb0f560493ffd0783a55fb299ae7376f936fa",
+      "last_sha": "90ce88824a1c55a61b9941b69dcc18ef0d5e1d27",
       "open_rejections": [],
-      "last_reject_reason": "Docs-only diff correcting stale max_turns and budget values; all claims verified against on-loop-*.yaml callers and .loop/loop-budget.json; no new factual errors in regression check",
-      "pending": {
-        "sha": "90ce88824a1c55a61b9941b69dcc18ef0d5e1d27",
-        "pr": 908,
-        "pr_url": "https://github.com/y-miyazaki/config/pull/908",
-        "loop_name": "docs-updater",
-        "created_at": "2026-10-09T11:27:14Z"
-      }
+      "last_reject_reason": "Docs-only diff correcting stale max_turns and budget values; all claims verified against on-loop-*.yaml callers and .loop/loop-budget.json; no new factual errors in regression check"
     }
   }
 }
