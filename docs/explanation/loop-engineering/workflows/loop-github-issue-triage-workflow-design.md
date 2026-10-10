@@ -21,7 +21,9 @@ On Issue / issue_comment events, classify the Issue when confident, apply allowl
 ### Supported use cases
 
 - `issues` opened/reopened/labeled → entity detect + L1 agent (label removal does not re-trigger triage)
-- `issue_comment` created (human answers while awaiting info)
+  - `labeled` intake is limited to `needs-triage`, `triage:needs-info`, and `triage:ready`. Classification labels the agent applies itself stay out, and `autofix` belongs to [Autofix Design](loop-github-issue-autofix-workflow-design.md). `triage:ready` reaches detect only for the dispatch hook — the agent is still skipped for it
+  - Bot senders are refused in the job `if`, so agent-applied labels never re-enter the queue (see [Intake Gating](../loop-engineering-design.md#intake-gating-self-retrigger-prevention))
+- `issue_comment` created by a non-bot author while `triage:needs-info` is present (human answers while awaiting info)
 - `workflow_dispatch` with `issue_number` for manual re-triage
 
 ### Out of scope

@@ -32,10 +32,22 @@ concurrency:
 
 jobs:
   loop:
+    # Intake gate mirrors detect_issue.sh should_skip_issue so loop-authored
+    # side effects never re-enter the queue: the agent applies labels and posts
+    # comments with a GitHub App token, which (unlike GITHUB_TOKEN) does raise
+    # new webhooks. Bot senders and triage:failed are refused here, not in
+    # detect, so no run is queued behind the in-flight one.
+    # Label allowlist is intake-only — classification labels the agent itself
+    # applies (bug/feature/question/documentation) must stay out. triage:ready
+    # is kept for the detect-job dispatch hook (human hand-off to autofix);
+    # detect still skips the agent for it. autofix is owned by
+    # on-loop-github-issue-autofix.yaml and must not double-intake here.
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (
         github.event_name == 'issues' &&
+        github.event.sender.type != 'Bot' &&
+        !contains(github.event.issue.labels.*.name, 'triage:failed') &&
         (
           github.event.repository.private == true ||
           (
@@ -58,7 +70,7 @@ jobs:
           (
             github.event.action == 'labeled' &&
             contains(
-              fromJSON('["needs-triage","bug","feature","question","documentation","triage:needs-info","triage:ready","autofix","triage:failed"]'),
+              fromJSON('["needs-triage","triage:needs-info","triage:ready"]'),
               github.event.label.name
             )
           )
@@ -67,6 +79,10 @@ jobs:
       (
         github.event_name == 'issue_comment' &&
         github.event.issue.pull_request == null &&
+        github.event.sender.type != 'Bot' &&
+        github.event.comment.user.type != 'Bot' &&
+        contains(github.event.issue.labels.*.name, 'triage:needs-info') &&
+        !contains(github.event.issue.labels.*.name, 'triage:failed') &&
         (
           github.event.repository.private == true ||
           contains(fromJSON('["MEMBER","OWNER","COLLABORATOR"]'), github.event.comment.author_association)

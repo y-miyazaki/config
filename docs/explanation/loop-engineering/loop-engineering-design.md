@@ -543,6 +543,33 @@ Per-tier permissions:
 
 Cross-loop serialization uses shared workflow concurrency (`loop-state-<branch_state>`) on scheduled and `workflow_run` `on-loop-*.yaml` callers so detect runs on fresh state before execute. See [Multi-Branch Loops Design](multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency).
 
+### Intake Gating (Self-Retrigger Prevention)
+
+Event-driven callers mutate the very objects they listen to: triage applies labels and posts comments on Issues, revise comments on PRs. GitHub suppresses that cycle for `GITHUB_TOKEN` — events raised with it start no workflow run — but loops authenticate as the maintenance GitHub App, and an installation token **does** raise intake events. Self-retrigger prevention is therefore explicit in every caller, never inherited from the platform.
+
+Four recurring shapes, all observed in this repository:
+
+| Class             | Shape                                           | Example                                                            |
+| ----------------- | ----------------------------------------------- | ------------------------------------------------------------------ |
+| Self-retrigger    | A loop's own side effect matches its own intake | Triage applies `documentation`, re-entering `issues: labeled`      |
+| Overlapping entry | One intent expressed by two events              | `opened` plus a hand-applied `needs-triage` on the same Issue      |
+| Fan-out           | One upstream act raises N events                | One push completes 7 CI workflows, each raising `workflow_run`     |
+| Layer drift       | `on:` / `if:` admit more than detect accepts    | Nine labels admitted at `if`, four accepted by `should_skip_issue` |
+
+Layer drift is the one that hurts. Detect refusals are correct but late: workflow-level `concurrency` holds a run `pending` **before** job conditions are evaluated, so an event destined for refusal still queues ahead of real work. Refuse at the `if` layer (invariant 9) and the run is skipped without entering the queue.
+
+| Caller                         | Intake                                            | `if` gate                                                                                                                                         |
+| ------------------------------ | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `on-loop-github-issue-triage`  | `issues` opened/reopened/labeled, `issue_comment` | Non-bot sender; no `triage:failed`; labels limited to `needs-triage` / `triage:needs-info` / `triage:ready`; comments require `triage:needs-info` |
+| `on-loop-github-issue-autofix` | `issues` labeled, dispatch                        | `label.name == 'autofix'`                                                                                                                         |
+| `on-loop-github-pr-revise`     | comment webhooks, dispatch                        | Non-bot comment author; `@loop` mention; PR-attached comments only                                                                                |
+| `on-loop-ci-sweeper`           | `workflow_run` completed                          | Same-repository head; `failure` / `startup_failure` only                                                                                          |
+| `on-loop-state-promote`        | `pull_request_target` closed                      | `loop-automation` label                                                                                                                           |
+
+Classification labels a triage agent applies itself (`bug`, `feature`, `question`, `documentation`) must stay out of its own intake allowlist. `triage:ready` is the deliberate exception: the detect-job dispatch hook — which runs regardless of the detect skip verdict — turns a human's `triage:ready` into the autofix hand-off, so the event must reach detect even though the agent is skipped.
+
+Fan-out has no `if`-layer remedy: `workflow_run` raises one event per upstream workflow, and `on-loop-ci-sweeper` shares the `loop-state-main` group with five other callers, so its group cannot be re-keyed per commit without giving up cross-loop state serialization. Duplicate runs are absorbed downstream instead, by the run ledger and the daily budget. Run count is not agent-execution count for this caller.
+
 ### Failure Mode Countermeasures
 
 | Symptom                                         | Cause                                                     | Countermeasure                                                           |
@@ -565,6 +592,7 @@ Absolute rules that must never be violated regardless of loop type, level, or en
 6. **Each phase communicates only via outputs/inputs** — No implicit filesystem coupling between jobs; **no second detect script invocation in the caller**
 7. **Checkout is the caller's responsibility** — Composite Actions must not perform checkout internally
 8. **Every decision is traceable** — Each phase must produce structured output sufficient to reconstruct why a decision was made (skip reason, reject reason, outcome)
+9. **Intake refuses what detect refuses** — An event-driven caller's job `if` must reject every class its detect script rejects (bot actors, terminal labels, missing opt-in signal). Detect stays authoritative for domain judgement; the `if` exists so refused events never occupy the concurrency queue. See [Intake Gating](#intake-gating-self-retrigger-prevention)
 
 ### Metrics
 
