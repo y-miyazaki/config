@@ -8,6 +8,7 @@
 | ---------- | -------- |
 | 2026-05-28 | 初版作成 |
 | 2026-10-10 | AWS 公式ドキュメントで App Runner が新規顧客の受付を終了し、後継として Amazon ECS Express Mode への移行が案内されていることを確認。App Runner 行の最大メモリを実値 (12GB) に修正し、ECS Express Mode への移行案内を追記 (#911) |
+| 2026-10-10 | AWS 公式ドキュメントで Lambda durable functions ([AWS 公式](https://aws.amazon.com/about-aws/whats-new/2025/12/lambda-durable-multi-step-applications-ai-workflows/)) が GA 済みであることを確認。非同期実行時は最大 1 年までチェックポイント・再開が可能な長時間ワークフローを構築できる旨を Lambda 比較表に追記 (#935) |
 
 ## Container Orchestration: ECS vs EKS vs App Runner
 
@@ -44,6 +45,8 @@
 
 ## Compute Host: EC2 vs ECS on Fargate vs ECS on EC2 vs Lambda
 
+> ℹ️ **Lambda durable functions** ([AWS 公式](https://aws.amazon.com/about-aws/whats-new/2025/12/lambda-durable-multi-step-applications-ai-workflows/)) が GA 済み。関数コード内でチェックポイント・再開を伴う複数ステップのオーケストレーションを記述でき、非同期実行では最大 1 年まで実行可能 (同期実行は従来どおり最大 15 分)。AI エージェントのような長時間・多段階ワークフローで Step Functions を使わずに Lambda の開発体験のまま実装したい場合に検討する。
+
 | 比較項目            | EC2                                                                                                             | ECS on Fargate                                                                                                      | ECS on EC2                                                                                                         | Lambda                                                                                                                                         |
 | ------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | ドキュメント        | [EC2](https://docs.aws.amazon.com/ec2/)                                                                         | [Fargate](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html)                             | [ECS](https://docs.aws.amazon.com/ecs/)                                                                            | [Lambda](https://docs.aws.amazon.com/lambda/)                                                                                                  |
@@ -69,6 +72,7 @@
 - 常時高負荷で RI/SP によるコスト最適化が重要な場合は ECS on EC2 を検討
 - GPU、特殊カーネルモジュール、大容量メモリが必要な場合は ECS on EC2 または EC2 を検討
 - イベント駆動で 15 分以内に完了する処理は Lambda を検討
+- 複数ステップにまたがる長時間処理 (AI ワークフロー等) を Lambda の開発体験のまま実装したい場合は Lambda durable functions (非同期実行、最大 1 年) を検討
 - EC2 直接利用はレガシーワークロードの移行先、または特殊要件がある場合に限定する
 
 ## ECS Launch Type: Fargate vs EC2

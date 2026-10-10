@@ -8,8 +8,11 @@
 | ---------- | -------- |
 | 2026-05-28 | 初版作成 |
 | 2026-10-10 | 初版から更新なし。AWS公式ドキュメント・サービス仕様との整合を再確認する必要あり（要レビュー、#911） |
+| 2026-10-10 | AWS 公式ドキュメントで Lambda durable functions ([AWS 公式](https://aws.amazon.com/about-aws/whats-new/2025/12/lambda-durable-multi-step-applications-ai-workflows/)) が GA 済みであることを確認。非同期実行時は最大 1 年までチェックポイント・再開が可能であり、Step Functions との使い分け判断に影響するため Batch Processing 比較に追記 (#936) |
 
 ## Batch Processing: AWS Batch vs ECS Scheduled Task vs Step Functions vs Lambda
+
+> ℹ️ **Lambda durable functions** ([AWS 公式](https://aws.amazon.com/about-aws/whats-new/2025/12/lambda-durable-multi-step-applications-ai-workflows/)) が GA 済み。関数コード内でチェックポイント・再開を伴う複数ステップのオーケストレーションを記述でき、非同期実行では最大 1 年まで実行可能 (同期実行は従来どおり最大 15 分)。Step Functions を使わずに Lambda の開発体験のまま長時間・多段階ワークフローを実装したい場合に検討する。
 
 | 比較項目            | AWS Batch                                                                                                     | ECS Scheduled Task                                                                                                 | Step Functions                                                                                                                                               | Lambda                                                                                                                            |
 | ------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
@@ -41,6 +44,7 @@
 - 複数ステップの依存関係があるワークフロー → Step Functions
 - 大量並列 (数百〜数千) のバッチ処理、GPU/HPC → AWS Batch
 - 15 分以内で完了する軽量イベント駆動処理 → Lambda
+- 複数ステップにまたがる長時間処理を Lambda の開発体験のまま実装したい場合は Lambda durable functions (非同期実行、最大 1 年) を検討。AWS サービス間の直接連携や可視化された実行グラフが必要な場合は Step Functions を優先する
 - Step Functions + Lambda/ECS の組み合わせで複雑なバッチパイプラインを構築するパターンが最も汎用的
 
 ## Workflow Orchestration: Step Functions vs MWAA (Airflow) vs EventBridge Scheduler
