@@ -158,9 +158,8 @@ on:
         required: false
         type: string
       level:
-        default: "L2"
-        description: "Loop level: L1 (read-only), L2 (edits with branch), or L3 (edits with auto-merge)"
-        required: false
+        description: "Loop level: L1 (read-only), L2 (edits with branch), or L3 (edits with auto-merge). Required: this is the only gate between the read-only agent-l1 job and the write-capable agent-l2, so a caller must choose rather than inherit one"
+        required: true
         type: string
       loop_name:
         description: "Loop identifier for state, budget, and run-log"
