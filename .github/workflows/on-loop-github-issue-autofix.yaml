@@ -39,6 +39,13 @@ jobs:
     if: github.event_name != 'issues' || github.event.label.name == 'autofix'
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
+      # Autofix reads the Issue and checks for an existing PR that closes it; the
+      # branch push and PR creation are done by the workflow, not by the agent.
+      agent_allowed_tools: |
+        Bash(gh api:*)
+        Bash(gh issue view:*)
+        Bash(gh pr list:*)
+        Bash(gh pr view:*)
       agent_checker_effort: medium
       agent_checker_instructions: |
         ## Criteria for APPROVE

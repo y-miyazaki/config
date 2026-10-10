@@ -11,7 +11,56 @@
 # - run_agent maps ENGINE to the correct CLI and token env var
 # - run_agent_capture avoids pipe subshells so USAGE_* globals persist
 # - Maker sessions may write; checker sessions are read-only
+# - The action grants no tool permissions of its own: rules come from the host
+#   repository's .claude/settings.json and from the calling workflow
+# - Permission rule syntax is engine-specific; engines that cannot apply the
+#   supplied rules warn instead of silently dropping them
 #######################################
+
+#######################################
+# append_claude_permission_args: Add permission flags for a Claude print session
+#
+# Description:
+#   A print-mode session has no approver, so any permission-gated tool call is
+#   denied unless a rule already allows it. This action grants nothing on its
+#   own: the permission surface belongs to the repository running the loop and
+#   to the workflow that calls it.
+#   - --setting-sources project loads the host repository's .claude/settings.json
+#     when that file exists, and is a no-op when it does not.
+#   - AGENT_ALLOWED_TOOLS carries the rules the calling workflow declared for the
+#     skill it is running, so no repository inherits permissions it never granted.
+#   --permission-mode acceptEdits covers Edit/Write but not command execution, so
+#   a skill that shells out needs its commands declared either way.
+#
+# Globals:
+#   AGENT_ALLOWED_TOOLS - Optional newline-separated permission rules (may be unset)
+#
+# Arguments:
+#   $1 - Name of the ARGS array variable (nameref)
+#   $2 - allow_writes flag (true|false). Checker uses false.
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
+#######################################
+function append_claude_permission_args {
+    local -n args_ref=$1
+    local allow_writes="${2:-true}"
+    local -a extra_tools=()
+    local rule
+
+    args_ref+=(--setting-sources project)
+    if [[ ${allow_writes} == "true" ]]; then args_ref+=(--permission-mode acceptEdits); fi
+    if [[ -n ${AGENT_ALLOWED_TOOLS:-} ]]; then
+        while IFS= read -r rule; do
+            [[ -n ${rule} ]] && extra_tools+=("${rule}")
+        done <<< "${AGENT_ALLOWED_TOOLS}"
+    fi
+    if [[ ${#extra_tools[@]} -gt 0 ]]; then args_ref+=(--allowedTools "${extra_tools[@]}"); fi
+}
 
 #######################################
 # build_agent_prompt: Build maker prompt with optional checker feedback
@@ -221,6 +270,7 @@ function run_agent_capture {
 # run_agent: Execute the configured AI engine CLI
 #
 # Globals:
+#   AGENT_ALLOWED_TOOLS - Optional newline-separated extra tool rules (claude only)
 #   AGENT_TOKEN - Authentication token for the selected engine
 #   ATTEMPT - Optional loop attempt number recorded on the usage session
 #   DETECT_JSON_FILE - Optional materialized detect JSON path granted as an extra read directory
@@ -248,6 +298,7 @@ function run_agent {
     local rc=0
 
     prepare_agent_mcps "${ENGINE}" "${working_root}"
+    warn_unsupported_allowed_tools "${ENGINE}"
     warn_unsupported_effort "${ENGINE}"
 
     # Opened here rather than in run_agent_capture: loop-agent-once calls
@@ -285,8 +336,7 @@ function run_agent_engine {
             # the wrapper restores the final text on stdout for report parsing.
             local -a ARGS=(-p "${PROMPT}" --output-format stream-json --verbose)
             append_agent_mcp_args ARGS "${ENGINE}"
-            # Print mode denies permission-gated tools by default; makers need edit rights.
-            if [[ ${allow_writes} == "true" ]]; then ARGS+=(--permission-mode acceptEdits); fi
+            append_claude_permission_args ARGS "${allow_writes}"
             # Detect JSON lives in STATUS_DIR, outside the worktree; without this the
             # agent cannot read the path the prompt points at.
             if [[ -n ${DETECT_JSON_FILE:-} ]]; then ARGS+=(--add-dir "$(dirname "${DETECT_JSON_FILE}")"); fi
@@ -334,6 +384,44 @@ function run_agent_engine {
             exit 1
             ;;
     esac
+}
+
+#######################################
+# warn_unsupported_allowed_tools: Report rules the selected engine cannot apply
+#
+# Description:
+#   Permission rule syntax is engine-specific and does not translate: claude
+#   scopes a command to any depth, copilot's shell() stops at the first
+#   subcommand, cursor reads its own .cursor/cli.json, and codex has no per-tool
+#   allowlist at all. Rather than mistranslate, non-claude engines surface the
+#   unused rules so the caller moves them to that engine's own config.
+#
+# Globals:
+#   AGENT_ALLOWED_TOOLS - Optional newline-separated permission rules (read)
+#
+# Arguments:
+#   $1 - Engine name
+#
+# Outputs:
+#   Workflow warning when rules are set for an engine that ignores them
+#
+# Returns:
+#   0 always
+#
+#######################################
+function warn_unsupported_allowed_tools {
+    local engine_name="${1:?engine name required}"
+
+    [[ -z ${AGENT_ALLOWED_TOOLS:-} ]] && return 0
+    case "${engine_name}" in
+        claude) return 0 ;;
+        *)
+            echo "::warning::engine=${engine_name} ignores agent_allowed_tools;" \
+                "declare its permissions in the engine's own config" \
+                "(copilot: --allow-tool, cursor: .cursor/cli.json, codex: sandbox/approval policy)"
+            ;;
+    esac
+    return 0
 }
 
 #######################################

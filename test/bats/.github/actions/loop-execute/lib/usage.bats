@@ -258,7 +258,7 @@ setup() {
     accumulate_claude_stream_usage "${tmpf}"
     out="$(render_claude_stream_log_summary "${tmpf}")"
     rm -f "${tmpf}"
-    [[ ${out} == *"Agent permission_denials:"* ]]
+    [[ ${out} == *"::warning::Agent permission_denials:"* ]]
     [[ ${out} == *"gh issue edit 1"* ]]
 }
 

@@ -74,6 +74,16 @@ jobs:
       )
     uses: ./.github/workflows/ci-loop-caller-entity.yaml
     with:
+      # Triage applies FSM label transitions and posts analysis comments; it must
+      # not reach PRs or releases. Repository write access comes from the job's
+      # permissions block — these rules only unblock the print-mode approver.
+      agent_allowed_tools: |
+        Bash(gh api:*)
+        Bash(gh issue view:*)
+        Bash(gh issue edit:*)
+        Bash(gh issue comment:*)
+        Bash(gh label list:*)
+        Bash(gh label create:*)
       agent_checker_effort: medium
       agent_checker_instructions: |
         ## Criteria for APPROVE

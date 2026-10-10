@@ -2,6 +2,10 @@ name: loop-agent-once
 description: "Run a single AI agent session (claude/copilot/codex/cursor). For non-loop one-shot use."
 
 inputs:
+  agent_allowed_tools:
+    default: ""
+    description: 'Newline-separated permission rules the running skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). The action grants nothing on its own; the host repository''s .claude/settings.json is also loaded when present. Engines without a per-tool allowlist warn and ignore it.'
+    required: false
   agent_token:
     description: "Authentication token for the selected engine (ANTHROPIC_API_KEY for claude, COPILOT_GITHUB_TOKEN for copilot, CURSOR_API_KEY for cursor, OPENAI_API_KEY for codex)"
     required: true
@@ -78,6 +82,7 @@ runs:
       id: run
       shell: bash
       env:
+        AGENT_ALLOWED_TOOLS: ${{ inputs.agent_allowed_tools }}
         AGENT_TOKEN: ${{ inputs.agent_token }}
         EFFORT: ${{ inputs.effort }}
         ENGINE: ${{ inputs.engine }}

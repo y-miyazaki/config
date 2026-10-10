@@ -18,6 +18,11 @@ on:
         description: "Comma-separated paths to commit with state after domain persistence"
         required: false
         type: string
+      agent_allowed_tools:
+        default: ""
+        description: 'Newline-separated permission rules the skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). Empty grants nothing beyond the repository''s .claude/settings.json'
+        required: false
+        type: string
       agent_checker_effort:
         default: ""
         description: "Checker reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
@@ -304,6 +309,7 @@ jobs:
         id: agent
         uses: y-miyazaki/config/.github/actions/loop-agent-once@edd4ca52822f2f497c16b5289c5e9472ee00867d # v1.8.110
         with:
+          agent_allowed_tools: ${{ inputs.agent_allowed_tools }}
           agent_token: ${{ secrets.AGENT_TOKEN }}
           cli_version: ${{ inputs.cli_version }}
           effort: ${{ inputs.agent_maker_effort }}
@@ -435,6 +441,7 @@ jobs:
         id: execute
         uses: y-miyazaki/config/.github/actions/loop-execute@edd4ca52822f2f497c16b5289c5e9472ee00867d # v1.8.110
         with:
+          agent_allowed_tools: ${{ inputs.agent_allowed_tools }}
           agent_checker_effort: ${{ inputs.agent_checker_effort }}
           agent_checker_instructions: ${{ inputs.agent_checker_instructions }}
           agent_checker_max_turns: ${{ format('{0}', inputs.agent_checker_max_turns) }}

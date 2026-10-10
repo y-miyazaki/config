@@ -11,6 +11,11 @@ name: ci-loop-caller-entity
 on:
   workflow_call:
     inputs:
+      agent_allowed_tools:
+        default: ""
+        description: 'Newline-separated permission rules the skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). Caller-declared only — never derived from detect output. Empty grants nothing beyond the repository''s .claude/settings.json'
+        required: false
+        type: string
       agent_checker_effort:
         default: ""
         description: "Checker reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
@@ -326,6 +331,7 @@ jobs:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
     uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@edd4ca52822f2f497c16b5289c5e9472ee00867d # v1.8.110
     with:
+      agent_allowed_tools: ${{ inputs.agent_allowed_tools }}
       agent_checker_effort: ${{ needs.detect.outputs.agent_checker_effort }}
       agent_checker_instructions: ${{ needs.detect.outputs.agent_checker_instructions }}
       agent_checker_max_turns: ${{ fromJSON(needs.detect.outputs.agent_checker_max_turns) }}

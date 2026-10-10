@@ -791,8 +791,8 @@ function accumulate_cost_usd {
 #   $1 - Path to the captured NDJSON stream file
 #
 # Outputs:
-#   Summary line, usage line, a permission_denials line when any tool call
-#   was denied, then the agent's final text
+#   Summary line, usage line, a permission_denials warning annotation when any
+#   tool call was denied, then the agent's final text
 #
 # Returns:
 #   0 on success
@@ -819,8 +819,10 @@ function render_claude_stream_log_summary {
     echo "Agent summary: role=${USAGE_SESSION_ROLE:-agent} model=${USAGE_MODEL:-unknown}" \
         "tools=${tool_count:-0} turns=${num_turns:-0} duration_ms=${duration_ms:-0}"
     render_agent_usage_line
+    # A denial means the session silently skipped work it was asked to do, and the
+    # run still exits zero; surface it as an annotation so it is not buried in logs.
     if [[ -n ${permission_denials} && ${permission_denials} != "[]" ]]; then
-        echo "Agent permission_denials: ${permission_denials}"
+        echo "::warning::Agent permission_denials: ${permission_denials}"
     fi
 
     result_text="$(jq -rR 'fromjson? | select(.type == "result") | .result // empty' \

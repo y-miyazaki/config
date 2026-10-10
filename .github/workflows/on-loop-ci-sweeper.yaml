@@ -53,6 +53,11 @@ jobs:
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
       additional_commit_paths: .loop/state-ci-sweeper-run-ledger.json
+      # Sweeper reads failing workflow runs and job logs; it never writes to GitHub.
+      agent_allowed_tools: |
+        Bash(gh api:*)
+        Bash(gh run list:*)
+        Bash(gh run view:*)
       agent_checker_effort: medium
       agent_checker_instructions: |
         ## Criteria for APPROVE

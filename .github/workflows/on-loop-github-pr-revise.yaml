@@ -69,6 +69,13 @@ jobs:
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
       ack_trigger_comment: true
+      # Revise reads the PR and its review threads; the push is done by the
+      # workflow. No gh issue/label/release access.
+      agent_allowed_tools: |
+        Bash(gh api:*)
+        Bash(gh pr view:*)
+        Bash(gh pr diff:*)
+        Bash(gh pr comment:*)
       agent_checker_effort: medium
       agent_checker_instructions: |
         ## Criteria for APPROVE

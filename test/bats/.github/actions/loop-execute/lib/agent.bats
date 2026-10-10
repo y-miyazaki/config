@@ -12,6 +12,9 @@ bats_require_minimum_version 1.5.0
 # - run_agent grants edit permission to claude maker sessions only, and forwards model/max-turns
 # - run_agent forwards EFFORT to claude and warns when the engine has no effort flag
 # - run_agent opens one usage session per invocation and tags it with USAGE_ROLE
+# - run_agent loads the host repository's project settings for maker and checker
+# - run_agent forwards only caller-declared permission rules, never its own
+# - warn_unsupported_allowed_tools warns for engines with incompatible rule syntax
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -172,6 +175,58 @@ STUB
     run_agent "false" > /dev/null
     run ! grep -q -- "--permission-mode" "${args_file}"
     grep -q -- "--model claude-opus-5" "${args_file}"
+}
+
+@test "run_agent claude loads host project settings for both roles" {
+    local args_file
+
+    args_file="${BATS_TEST_TMPDIR}/claude-setting-sources-args.txt"
+    _stub_claude_engine "${args_file}"
+    run_agent "true" > /dev/null
+    grep -q -- "--setting-sources project" "${args_file}"
+    : > "${args_file}"
+    run_agent "false" > /dev/null
+    grep -q -- "--setting-sources project" "${args_file}"
+}
+
+@test "run_agent claude passes caller-declared rules and grants nothing on its own" {
+    local args_file
+
+    args_file="${BATS_TEST_TMPDIR}/claude-allowed-tools-args.txt"
+    _stub_claude_engine "${args_file}"
+    AGENT_ALLOWED_TOOLS="$(printf '%s\n' 'Bash(gh issue edit:*)' '' 'Bash(gh issue comment:*)')"
+    run_agent "false" > /dev/null
+    grep -q -- "--allowedTools Bash(gh issue edit:\*) Bash(gh issue comment:\*)" "${args_file}"
+    run ! grep -q -- "Bash(gh pr edit" "${args_file}"
+}
+
+@test "run_agent claude omits allowedTools when the caller declared no rules" {
+    local args_file
+
+    args_file="${BATS_TEST_TMPDIR}/claude-no-allowed-tools-args.txt"
+    _stub_claude_engine "${args_file}"
+    AGENT_ALLOWED_TOOLS=""
+    run_agent "true" > /dev/null
+    run ! grep -q -- "--allowedTools" "${args_file}"
+}
+
+@test "warn_unsupported_allowed_tools stays silent for claude and when unset" {
+    AGENT_ALLOWED_TOOLS="Bash(gh issue edit:*)"
+    run warn_unsupported_allowed_tools "claude"
+    [ "${status}" -eq 0 ]
+    [ -z "${output}" ]
+    AGENT_ALLOWED_TOOLS=""
+    run warn_unsupported_allowed_tools "copilot"
+    [ "${status}" -eq 0 ]
+    [ -z "${output}" ]
+}
+
+@test "warn_unsupported_allowed_tools warns for engines with incompatible rule syntax" {
+    AGENT_ALLOWED_TOOLS="Bash(gh issue edit:*)"
+    run warn_unsupported_allowed_tools "copilot"
+    [ "${status}" -eq 0 ]
+    [[ ${output} == *"::warning::engine=copilot ignores agent_allowed_tools"* ]]
+    [[ ${output} == *"--allow-tool"* ]]
 }
 
 @test "run_agent forwards effort to claude" {
