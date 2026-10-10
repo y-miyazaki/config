@@ -22,6 +22,7 @@
 # - accumulate_claude_stream_usage reads model from system init
 # - accumulate_claude_stream_usage ignores non-json lines
 # - render_claude_stream_log_summary prints final text and hides ndjson
+# - render_claude_stream_log_summary surfaces non-empty permission_denials
 # - run_claude_agent_with_usage captures usage and forwards exit code
 # - begin_usage_session clears the model so the next session does not inherit it
 # - end_usage_session records only the session's own tokens and cost
@@ -244,6 +245,21 @@ setup() {
     [[ ${out} == *"tools=1"* ]]
     [[ ${out} == *"REASON: done"* ]]
     [[ ${out} != *'"type":"result"'* ]]
+    [[ ${out} != *"permission_denials"* ]]
+}
+
+@test "render_claude_stream_log_summary surfaces non-empty permission_denials" {
+    local tmpf out
+    tmpf="$(mktemp)"
+    printf '%s\n' \
+        '{"type":"system","subtype":"init","model":"claude-sonnet-5"}' \
+        '{"type":"result","subtype":"success","num_turns":3,"duration_ms":100,"result":"done","permission_denials":[{"tool_name":"Bash","tool_input":{"command":"gh issue edit 1"}}],"usage":{"input_tokens":5,"output_tokens":2}}' \
+        > "${tmpf}"
+    accumulate_claude_stream_usage "${tmpf}"
+    out="$(render_claude_stream_log_summary "${tmpf}")"
+    rm -f "${tmpf}"
+    [[ ${out} == *"Agent permission_denials:"* ]]
+    [[ ${out} == *"gh issue edit 1"* ]]
 }
 
 @test "run_claude_agent_with_usage captures usage and forwards exit code" {

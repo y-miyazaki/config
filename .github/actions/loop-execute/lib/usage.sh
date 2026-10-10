@@ -791,7 +791,8 @@ function accumulate_cost_usd {
 #   $1 - Path to the captured NDJSON stream file
 #
 # Outputs:
-#   Summary line, usage line, then the agent's final text
+#   Summary line, usage line, a permission_denials line when any tool call
+#   was denied, then the agent's final text
 #
 # Returns:
 #   0 on success
@@ -799,7 +800,7 @@ function accumulate_cost_usd {
 #######################################
 function render_claude_stream_log_summary {
     local stream_file="${1:?stream_file required}"
-    local tool_count duration_ms num_turns result_text
+    local tool_count duration_ms num_turns result_text permission_denials
 
     [[ -f ${stream_file} ]] || return 0
 
@@ -812,10 +813,15 @@ function render_claude_stream_log_summary {
         "${stream_file}" 2> /dev/null | tail -1)"
     num_turns="$(jq -rR 'fromjson? | select(.type == "result") | .num_turns // 0' \
         "${stream_file}" 2> /dev/null | tail -1)"
+    permission_denials="$(jq -cR 'fromjson? | select(.type == "result") | .permission_denials // []' \
+        "${stream_file}" 2> /dev/null | tail -1)"
 
     echo "Agent summary: role=${USAGE_SESSION_ROLE:-agent} model=${USAGE_MODEL:-unknown}" \
         "tools=${tool_count:-0} turns=${num_turns:-0} duration_ms=${duration_ms:-0}"
     render_agent_usage_line
+    if [[ -n ${permission_denials} && ${permission_denials} != "[]" ]]; then
+        echo "Agent permission_denials: ${permission_denials}"
+    fi
 
     result_text="$(jq -rR 'fromjson? | select(.type == "result") | .result // empty' \
         "${stream_file}" 2> /dev/null || true)"

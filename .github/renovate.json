@@ -5,6 +5,12 @@
     "github>y-miyazaki/config//renovate/github-actions-tool-version",
     "github>y-miyazaki/config//renovate/pre-commit-config-tool-version"
   ],
+  "description": [
+    "gitIgnoredAuthors: the mise lockfile workflow (on-ci-push-mise-update-lock) commits mise.lock onto Renovate branches as github-actions[bot]. Without this, Renovate treats those branches as manually edited and stops updating them. Repo-local because consuming repositories use different bot apps."
+  ],
+  "gitIgnoredAuthors": [
+    "41898282+github-actions[bot]@users.noreply.github.com"
+  ],
   "packageRules": [
     {
       "description": "Rules: Self-repo pins are managed by pin_config_actions.sh, not Renovate",

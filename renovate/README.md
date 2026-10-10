@@ -333,6 +333,32 @@ Quick checks:
 2. Confirm workflow syntax remains valid (if installed):
    - `actionlint`
 
+### Renovate stops updating a branch after CI commits to it
+
+Symptom:
+
+- The Dependency Dashboard lists updates under `PR Edited (Blocked)`, stating they were manually edited.
+- Affected branches stop receiving new versions even though newer releases exist.
+- The tip commit of each affected branch comes from a CI bot rather than from Renovate.
+
+Typical cause:
+
+- A workflow triggered by `push` commits back onto the Renovate branch. A lockfile refresh workflow is the common case, because the Renovate commit itself changes the manifest that triggers it.
+- Renovate's branch-modified check collects both the author and the committer email of every commit between the base branch and the branch head. Any email it does not recognize marks the branch as modified, and Renovate then leaves that branch alone.
+- The commit author may still be `renovate[bot]` while the committer is the CI bot, so the block is easy to miss when reading commit logs.
+
+Recommended approach:
+
+- Set `gitIgnoredAuthors` in the consuming repository's own Renovate configuration (for example `.github/renovate.json`), listing the committer email that the CI bot uses.
+- Keep `gitIgnoredAuthors` as a top-level option; Renovate ignores it inside `packageRules`.
+- These presets do not set `gitIgnoredAuthors`, because the bot identity differs per repository.
+
+Quick checks:
+
+1. Read the committer email on an affected branch:
+   - `gh api "repos/<owner>/<repo>/commits?sha=<branch>&per_page=1" --jq '.[0].commit.committer.email'`
+2. After the configuration change merges, re-create the blocked branches from the Dependency Dashboard checkboxes. Renovate caches the modified-branch result per branch commit, so existing branches may stay blocked until they are rebuilt.
+
 ## References
 
 - [Renovate Configuration Options](https://docs.renovatebot.com/configuration-options/)
