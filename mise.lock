@@ -1795,6 +1795,8 @@ url_api = "https://api.github.com/repos/pnpm/pnpm/releases/assets/608496110"
 provenance = "github-attestations"
 
 [tools.pnpm."platforms.linux-arm64-musl"]
+checksum = "sha256:94234c25423fd1ca7d585740e8906a2c29fcfec2048627bb293ed5c18350be31"
+url = "https://github.com/pnpm/pnpm/releases/download/v11.28.4/pnpm-linux-arm64.tar.gz"
 provenance = "github-attestations"
 
 [tools.pnpm."platforms.linux-x64"]
