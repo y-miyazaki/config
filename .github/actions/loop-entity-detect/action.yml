@@ -3,43 +3,13 @@ description: >-
   Run one entity detect_script, apply light budget check, build single-target
   matrix and upload loop-handoff artifact for ci-loop-agent.
 inputs:
-  agent_checker_effort:
-    default: ""
-    description: "Checker reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
-    required: false
-  agent_checker_instructions:
-    description: Domain-specific APPROVE/REJECT rubric
-    required: true
-  agent_checker_max_turns:
-    description: Maximum checker agent turns per verification
-    required: true
-  agent_checker_model:
-    description: Checker model ID
-    required: true
-  agent_loop_max_attempts:
-    description: Maximum Agent→Verify retry cycles
-    required: true
-  agent_maker_effort:
-    default: ""
-    description: "Maker reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
-    required: false
   agent_maker_instructions:
     default: ""
     description: Extra instructions appended to maker prompt
     required: false
-  agent_maker_max_turns:
-    description: Maximum maker agent turns per loop attempt
-    required: true
-  agent_maker_model:
-    description: Maker model ID
-    required: true
   agent_maker_skill_name:
     description: Skill directory name under common package
     required: true
-  allowlist:
-    default: ""
-    description: Comma-separated globs (may be empty for L1 API-only loops)
-    required: false
   budget_file:
     default: .loop/loop-budget.json
     description: Path to loop budget JSON
@@ -67,16 +37,9 @@ inputs:
     default: ""
     description: Token for dispatch hook (falls back to github_token input)
     required: false
-  engine:
-    description: AI engine
-    required: true
   github_token:
     description: Resolved GitHub token for detect scripts and API calls
     required: true
-  infer_files_pattern:
-    default: ""
-    description: Extended regex to infer file paths from checker text
-    required: false
   level:
     default: L1
     description: Autonomy level
@@ -87,18 +50,6 @@ inputs:
   may_edit:
     default: "false"
     description: Whether maker may edit repository files
-    required: false
-  no_changes_verdict:
-    default: APPROVE
-    description: Verdict when agent makes no file changes
-    required: false
-  pr_body:
-    default: ""
-    description: PR body template (unused when delivery=none)
-    required: false
-  pr_title:
-    default: ""
-    description: PR title template (unused when delivery=none)
     required: false
   run_log_file:
     default: .loop/loop-run-log.md
@@ -113,63 +64,12 @@ inputs:
     description: Agent artifact when may_edit is true
     required: false
 outputs:
-  agent_checker_effort:
-    description: Checker effort
-    value: ${{ steps.config.outputs.agent_checker_effort }}
-  agent_checker_instructions:
-    description: Checker criteria
-    value: ${{ steps.config.outputs.agent_checker_instructions }}
-  agent_checker_max_turns:
-    description: Checker max turns
-    value: ${{ steps.config.outputs.agent_checker_max_turns }}
-  agent_checker_model:
-    description: Checker model
-    value: ${{ steps.config.outputs.agent_checker_model }}
-  agent_loop_max_attempts:
-    description: Loop max attempts
-    value: ${{ steps.config.outputs.agent_loop_max_attempts }}
-  agent_maker_effort:
-    description: Maker effort
-    value: ${{ steps.config.outputs.agent_maker_effort }}
-  agent_maker_max_turns:
-    description: Maker max turns
-    value: ${{ steps.config.outputs.agent_maker_max_turns }}
-  agent_maker_model:
-    description: Maker model
-    value: ${{ steps.config.outputs.agent_maker_model }}
-  agent_maker_skill_name:
-    description: Skill name
-    value: ${{ steps.config.outputs.agent_maker_skill_name }}
-  allowlist:
-    description: Allowlist for execute job
-    value: ${{ inputs.allowlist }}
   delivery:
     description: Resolved platform delivery channel
     value: ${{ steps.detect.outputs.delivery }}
-  engine:
-    description: AI engine
-    value: ${{ steps.config.outputs.engine }}
   handoff_artifact_name:
     description: Uploaded artifact name for loop-handoff bundle
     value: ${{ steps.handoff.outputs.artifact_name }}
-  infer_files_pattern:
-    description: Infer files pattern for execute
-    value: ${{ inputs.infer_files_pattern }}
-  level:
-    description: Autonomy level
-    value: ${{ steps.config.outputs.level }}
-  loop_name:
-    description: Loop name for budget lookup and run log pattern
-    value: ${{ inputs.loop_name }}
-  no_changes_verdict:
-    description: Verdict when maker produces no file changes
-    value: ${{ inputs.no_changes_verdict }}
-  pr_body:
-    description: PR body static section for finalize
-    value: ${{ inputs.pr_body }}
-  pr_title:
-    description: PR title for finalize
-    value: ${{ inputs.pr_title }}
   should_run:
     description: Whether the execute job should run
     value: ${{ steps.detect.outputs.should_run }}
@@ -185,40 +85,6 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Pack Config
-      id: config
-      shell: bash
-      env:
-        AGENT_CHECKER_EFFORT: ${{ inputs.agent_checker_effort }}
-        AGENT_CHECKER_INSTRUCTIONS: ${{ inputs.agent_checker_instructions }}
-        AGENT_CHECKER_MAX_TURNS: ${{ inputs.agent_checker_max_turns }}
-        AGENT_CHECKER_MODEL: ${{ inputs.agent_checker_model }}
-        AGENT_LOOP_MAX_ATTEMPTS: ${{ inputs.agent_loop_max_attempts }}
-        AGENT_MAKER_EFFORT: ${{ inputs.agent_maker_effort }}
-        AGENT_MAKER_MAX_TURNS: ${{ inputs.agent_maker_max_turns }}
-        AGENT_MAKER_MODEL: ${{ inputs.agent_maker_model }}
-        AGENT_MAKER_SKILL_NAME: ${{ inputs.agent_maker_skill_name }}
-        ENGINE: ${{ inputs.engine }}
-        LEVEL: ${{ inputs.level }}
-      run: |
-        set -euo pipefail
-        AGENT_CHECKER_INSTRUCTIONS_DELIM="CRITERIA_$(openssl rand -hex 8)"
-        {
-          echo "agent_maker_max_turns=${AGENT_MAKER_MAX_TURNS}"
-          echo "agent_maker_effort=${AGENT_MAKER_EFFORT}"
-          echo "agent_maker_model=${AGENT_MAKER_MODEL}"
-          echo "agent_loop_max_attempts=${AGENT_LOOP_MAX_ATTEMPTS}"
-          echo "agent_checker_instructions<<${AGENT_CHECKER_INSTRUCTIONS_DELIM}"
-          echo "${AGENT_CHECKER_INSTRUCTIONS}"
-          echo "${AGENT_CHECKER_INSTRUCTIONS_DELIM}"
-          echo "agent_checker_max_turns=${AGENT_CHECKER_MAX_TURNS}"
-          echo "agent_checker_effort=${AGENT_CHECKER_EFFORT}"
-          echo "agent_checker_model=${AGENT_CHECKER_MODEL}"
-          echo "engine=${ENGINE}"
-          echo "level=${LEVEL}"
-          echo "agent_maker_skill_name=${AGENT_MAKER_SKILL_NAME}"
-        } >> "${GITHUB_OUTPUT}"
-
     - name: Resolve State File
       id: paths
       shell: bash

@@ -213,14 +213,14 @@ Keys are **alphabetically ordered** in the workflow file. Prefix `loop_` dropped
 | `delivery`                  | string  | no       | `open_pr`                                            | `loop-detect`                                           |
 | `may_edit`                  | boolean | yes      | —                                                    | `loop-detect` → `## Constraints`                        |
 | `write_target`              | string  | yes      | —                                                    | `loop-detect` → `## Constraints`                        |
-| `infer_files_pattern`       | string  | no       | `""`                                                 | detect → execute                                        |
+| `infer_files_pattern`       | string  | no       | `""`                                                 | execute (direct input)                                  |
 | `loop_name`                 | string  | yes      | —                                                    | detect, execute, record-skip, concurrency group         |
 | `max_targets_per_schedule`  | number  | no       | `3`                                                  | `loop-detect`                                           |
-| `no_changes_verdict`        | string  | no       | `REJECT`                                             | detect → execute                                        |
-| `pr_body`                   | string  | no       | `""`                                                 | detect → execute finalize                               |
+| `no_changes_verdict`        | string  | no       | `REJECT`                                             | execute (direct input)                                  |
+| `pr_body`                   | string  | no       | `""`                                                 | execute finalize (direct input)                         |
 | `pr_exclude`                | string  | no       | `fork,draft,label:no-loop`                           | `loop-detect`                                           |
 | `pr_include_bots`           | string  | no       | `""`                                                 | `loop-detect`                                           |
-| `pr_title`                  | string  | no       | `""`                                                 | detect → execute                                        |
+| `pr_title`                  | string  | no       | `""`                                                 | execute (direct input)                                  |
 | `agent_maker_instructions`  | string  | no       | `""`                                                 | `loop-detect`                                           |
 | `pr_enabled`                | boolean | no       | `false`                                              | `loop-detect` (`loop_pr_enabled`)                       |
 | `state_file`                | string  | no       | `""`                                                 | `loop-detect`                                           |

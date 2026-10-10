@@ -196,6 +196,17 @@ Permission rule syntax does not translate between engines, so `loop-execute` nev
 
 `claude` is the only engine that enforces the repository's permission policy. Its `allow` rules need workspace trust, which `loop-execute` grants for `GITHUB_WORKSPACE` before the session starts; without that step Claude Code silently ignores `permissions.allow` and only `agent_allowed_tools` takes effect.
 
+### How agent configuration reaches execute
+
+Caller inputs that `loop-detect` only echoed now go straight to `ci-loop-agent`. The detect job still owns the values it computes — `delivery`, `handoff_artifact_name`, `run_started_at`, `should_run`, `skip_reason`, `state_file`, `target_matrix` — and nothing else passes through it.
+
+| Value                                                                                                                                                                                                          | Path                                                                      |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `agent_*`, `allowlist`, `denylist`, `engine`, `level`, `loop_name`, `no_changes_verdict`, `infer_files_pattern`, `pr_title`, `pr_body`, `branch_state`, `additional_commit_paths`, `domain_persistence_script` | caller input → `ci-loop-agent`                                            |
+| `delivery`, `handoff_artifact_name`, `run_started_at`, `should_run`, `skip_reason`, `state_file`, `target_matrix`                                                                                              | caller input → `loop-detect` → `needs.detect.outputs.*` → `ci-loop-agent` |
+
+A domain detect script can change only the second group. It cannot alter the model, effort, turn caps, skill names, or permission rules for the run.
+
 ## Platform inputs
 
 Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-branch-loops-design.md#caller-configuration-canonical).

@@ -34,7 +34,7 @@ on:
         required: false
         type: string
       agent_checker_max_turns:
-        default: 3
+        default: 100
         description: "Maximum checker agent turns (L2/L3)"
         required: false
         type: number
@@ -44,7 +44,7 @@ on:
         required: false
         type: string
       agent_checker_skill_name:
-        default: ""
+        default: "loop-verifier"
         description: "Checker skill name passed to loop-execute"
         required: false
         type: string
@@ -59,7 +59,7 @@ on:
         required: false
         type: string
       agent_maker_max_turns:
-        default: 5
+        default: 100
         description: "Maximum maker agent turns per loop attempt"
         required: false
         type: number
@@ -158,7 +158,7 @@ on:
         required: false
         type: string
       level:
-        default: "L1"
+        default: "L2"
         description: "Loop level: L1 (read-only), L2 (edits with branch), or L3 (edits with auto-merge)"
         required: false
         type: string

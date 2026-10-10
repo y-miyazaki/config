@@ -11,6 +11,11 @@ name: ci-loop-caller-entity
 on:
   workflow_call:
     inputs:
+      additional_commit_paths:
+        default: ""
+        description: "Comma-separated paths to commit with state after domain persistence"
+        required: false
+        type: string
       agent_allowed_tools:
         default: ""
         description: 'Newline-separated permission rules the skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). Caller-declared only — never derived from detect output. Empty grants nothing beyond the repository''s .claude/settings.json'
@@ -69,6 +74,11 @@ on:
         description: "Comma-separated globs the maker may modify"
         required: false
         type: string
+      branch_prefix:
+        default: "loop"
+        description: "Worktree branch prefix (L2/L3)"
+        required: false
+        type: string
       branch_state:
         description: "Branch for .loop/* persistence, state migration, and watch fallback when branch_match is empty"
         required: true
@@ -86,6 +96,16 @@ on:
         description: "Daily aggregated token cap"
         required: false
         type: number
+      cli_version:
+        default: "latest"
+        description: "CLI agent version"
+        required: false
+        type: string
+      commit_message:
+        default: "chore: loop-automated update"
+        description: "Commit message prefix for loop attempts (L2/L3)"
+        required: false
+        type: string
       delivery:
         default: none
         description: "Platform delivery after APPROVE: log | issue | notion | open_pr | none"
@@ -115,6 +135,11 @@ on:
         description: "Optional token for dispatch hook (empty → detect token)"
         required: false
         type: string
+      domain_persistence_script:
+        default: ""
+        description: "Optional bash script for domain ledger persistence (finalize job)"
+        required: false
+        type: string
       engine:
         description: "AI engine: claude | copilot | codex | cursor"
         required: true
@@ -127,6 +152,11 @@ on:
       infer_files_pattern:
         default: ""
         description: "Extended regex to infer file paths from checker text"
+        required: false
+        type: string
+      labels:
+        default: "loop-automation"
+        description: "Comma-separated labels for created PR (finalize job)"
         required: false
         type: string
       level:
@@ -146,6 +176,11 @@ on:
       no_changes_verdict:
         default: APPROVE
         description: "APPROVE | REJECT when maker produces no file diff"
+        required: false
+        type: string
+      outcome_override:
+        default: ""
+        description: "Optional explicit finalize outcome (e.g. watch)"
         required: false
         type: string
       pr_body:
@@ -206,27 +241,8 @@ jobs:
       contents: read
       issues: read
     outputs:
-      agent_checker_effort: ${{ steps.detect.outputs.agent_checker_effort }}
-      agent_checker_instructions: ${{ steps.detect.outputs.agent_checker_instructions }}
-      agent_checker_max_turns: ${{ steps.detect.outputs.agent_checker_max_turns }}
-      agent_checker_model: ${{ steps.detect.outputs.agent_checker_model }}
-      agent_loop_max_attempts: ${{ steps.detect.outputs.agent_loop_max_attempts }}
-      agent_maker_effort: ${{ steps.detect.outputs.agent_maker_effort }}
-      agent_maker_max_turns: ${{ steps.detect.outputs.agent_maker_max_turns }}
-      agent_maker_model: ${{ steps.detect.outputs.agent_maker_model }}
-      agent_maker_skill_name: ${{ steps.detect.outputs.agent_maker_skill_name }}
-      allowlist: ${{ steps.detect.outputs.allowlist }}
-      branch_state: ${{ inputs.branch_state }}
       delivery: ${{ steps.detect.outputs.delivery }}
-      denylist: ${{ inputs.denylist }}
-      engine: ${{ steps.detect.outputs.engine }}
       handoff_artifact_name: ${{ steps.detect.outputs.handoff_artifact_name }}
-      infer_files_pattern: ${{ steps.detect.outputs.infer_files_pattern }}
-      level: ${{ steps.detect.outputs.level }}
-      loop_name: ${{ steps.detect.outputs.loop_name }}
-      no_changes_verdict: ${{ steps.detect.outputs.no_changes_verdict }}
-      pr_body: ${{ steps.detect.outputs.pr_body }}
-      pr_title: ${{ steps.detect.outputs.pr_title }}
       run_started_at: ${{ steps.timing.outputs.started_at }}
       should_run: ${{ steps.detect.outputs.should_run }}
       skip_reason: ${{ steps.detect.outputs.skip_reason }}
@@ -285,17 +301,8 @@ jobs:
         id: detect
         uses: y-miyazaki/config/.github/actions/loop-entity-detect@12ec819647128121975b5bd7861eff76818e16d2 # v1.8.111
         with:
-          agent_checker_effort: ${{ inputs.agent_checker_effort }}
-          agent_checker_instructions: ${{ inputs.agent_checker_instructions }}
-          agent_checker_max_turns: ${{ format('{0}', inputs.agent_checker_max_turns) }}
-          agent_checker_model: ${{ inputs.agent_checker_model }}
-          agent_loop_max_attempts: ${{ format('{0}', inputs.agent_loop_max_attempts) }}
-          agent_maker_effort: ${{ inputs.agent_maker_effort }}
           agent_maker_instructions: ${{ inputs.agent_maker_instructions }}
-          agent_maker_max_turns: ${{ format('{0}', inputs.agent_maker_max_turns) }}
-          agent_maker_model: ${{ inputs.agent_maker_model }}
           agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
-          allowlist: ${{ inputs.allowlist }}
           budget_file: ${{ inputs.budget_file }}
           budget_max_runs_per_day: ${{ inputs.budget_max_runs_per_day != null && format('{0}', inputs.budget_max_runs_per_day) || '' }}
           budget_max_tokens_per_day: ${{ inputs.budget_max_tokens_per_day != null && format('{0}', inputs.budget_max_tokens_per_day) || '' }}
@@ -303,15 +310,10 @@ jobs:
           detect_script: ${{ inputs.detect_script }}
           dispatch_hook_script: ${{ inputs.dispatch_hook_script }}
           dispatch_hook_token: ${{ inputs.dispatch_hook_token }}
-          engine: ${{ inputs.engine }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
-          infer_files_pattern: ${{ inputs.infer_files_pattern }}
           level: ${{ inputs.level }}
           loop_name: ${{ inputs.loop_name }}
           may_edit: ${{ inputs.may_edit == true && 'true' || inputs.may_edit == false && 'false' || '' }}
-          no_changes_verdict: ${{ inputs.no_changes_verdict }}
-          pr_body: ${{ inputs.pr_body }}
-          pr_title: ${{ inputs.pr_title }}
           run_log_file: ${{ inputs.run_log_file }}
           state_file: ${{ inputs.state_file }}
           write_target: ${{ inputs.write_target }}
@@ -331,41 +333,48 @@ jobs:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
     uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@12ec819647128121975b5bd7861eff76818e16d2 # v1.8.111
     with:
+      additional_commit_paths: ${{ inputs.additional_commit_paths }}
       agent_allowed_tools: ${{ inputs.agent_allowed_tools }}
-      agent_checker_effort: ${{ needs.detect.outputs.agent_checker_effort }}
-      agent_checker_instructions: ${{ needs.detect.outputs.agent_checker_instructions }}
-      agent_checker_max_turns: ${{ fromJSON(needs.detect.outputs.agent_checker_max_turns) }}
-      agent_checker_model: ${{ needs.detect.outputs.agent_checker_model }}
+      agent_checker_effort: ${{ inputs.agent_checker_effort }}
+      agent_checker_instructions: ${{ inputs.agent_checker_instructions }}
+      agent_checker_max_turns: ${{ inputs.agent_checker_max_turns }}
+      agent_checker_model: ${{ inputs.agent_checker_model }}
       agent_checker_skill_name: ${{ inputs.agent_checker_skill_name }}
-      agent_loop_max_attempts: ${{ fromJSON(needs.detect.outputs.agent_loop_max_attempts) }}
-      agent_maker_effort: ${{ needs.detect.outputs.agent_maker_effort }}
-      agent_maker_max_turns: ${{ fromJSON(needs.detect.outputs.agent_maker_max_turns) }}
-      agent_maker_model: ${{ needs.detect.outputs.agent_maker_model }}
-      agent_maker_skill_name: ${{ needs.detect.outputs.agent_maker_skill_name }}
-      allowlist: ${{ needs.detect.outputs.allowlist }}
-      auto_merge: ${{ (needs.detect.outputs.delivery == 'open_pr' && needs.detect.outputs.level == 'L3' && matrix.target.target_json.finalize == 'open_pr') && 'true' || 'false' }}
+      agent_loop_max_attempts: ${{ inputs.agent_loop_max_attempts }}
+      agent_maker_effort: ${{ inputs.agent_maker_effort }}
+      agent_maker_max_turns: ${{ inputs.agent_maker_max_turns }}
+      agent_maker_model: ${{ inputs.agent_maker_model }}
+      agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
+      allowlist: ${{ inputs.allowlist }}
+      auto_merge: ${{ (needs.detect.outputs.delivery == 'open_pr' && inputs.level == 'L3' && matrix.target.target_json.finalize == 'open_pr') && 'true' || 'false' }}
       base_branch: ${{ matrix.target.target_json.to.branch }}
+      branch_prefix: ${{ inputs.branch_prefix }}
+      cli_version: ${{ inputs.cli_version }}
+      commit_message: ${{ inputs.commit_message }}
       current_sha: ${{ matrix.target.target_json.from.ref }}
-      denylist: ${{ needs.detect.outputs.denylist }}
+      denylist: ${{ inputs.denylist }}
       detect_result_json: "{}"
-      engine: ${{ needs.detect.outputs.engine }}
+      domain_persistence_script: ${{ inputs.domain_persistence_script }}
+      engine: ${{ inputs.engine }}
       environment: ${{ inputs.environment }}
       finalize_enabled: ${{ needs.detect.outputs.delivery == 'open_pr' }}
       handoff_artifact_name: ${{ needs.detect.outputs.handoff_artifact_name }}
       handoff_key: ${{ matrix.target.handoff_key }}
-      infer_files_pattern: ${{ needs.detect.outputs.infer_files_pattern }}
-      level: ${{ needs.detect.outputs.level }}
-      loop_name: ${{ needs.detect.outputs.loop_name }}
-      no_changes_verdict: ${{ needs.detect.outputs.no_changes_verdict }}
-      pr_body: ${{ needs.detect.outputs.pr_body }}
+      infer_files_pattern: ${{ inputs.infer_files_pattern }}
+      labels: ${{ inputs.labels }}
+      level: ${{ inputs.level }}
+      loop_name: ${{ inputs.loop_name }}
+      no_changes_verdict: ${{ inputs.no_changes_verdict }}
+      outcome_override: ${{ inputs.outcome_override }}
+      pr_body: ${{ inputs.pr_body }}
       pr_draft: ${{ inputs.pr_draft }}
-      pr_title: ${{ needs.detect.outputs.pr_title }}
+      pr_title: ${{ inputs.pr_title }}
       prompt_text: ${{ matrix.target.prompt }}
       run_log_file: ${{ inputs.run_log_file }}
       run_started_at: ${{ needs.detect.outputs.run_started_at }}
       skip_reason: ${{ needs.detect.outputs.skip_reason }}
       state_file: ${{ needs.detect.outputs.state_file }}
-      state_push_branch: ${{ needs.detect.outputs.branch_state }}
+      state_push_branch: ${{ inputs.branch_state }}
       target_json: ${{ toJson(matrix.target.target_json) }}
       verifier_context: ${{ matrix.target.verifier_context }}
     secrets:
@@ -405,9 +414,9 @@ jobs:
       - name: Append Skip Run Log
         uses: y-miyazaki/config/.github/actions/loop-run-log@12ec819647128121975b5bd7861eff76818e16d2 # v1.8.111
         with:
-          base_branch: ${{ needs.detect.outputs.branch_state }}
+          base_branch: ${{ inputs.branch_state }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
-          loop_name: ${{ needs.detect.outputs.loop_name }}
+          loop_name: ${{ inputs.loop_name }}
           outcome: skipped
           run_log_file: ${{ inputs.run_log_file }}
           run_started_at: ${{ needs.detect.outputs.run_started_at }}
