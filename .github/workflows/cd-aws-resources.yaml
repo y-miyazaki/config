@@ -85,7 +85,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
 
       - name: Download and install arc
-        uses: y-miyazaki/config/.github/actions/install-github-release@4502bd81743a532eff85bf18be492ce2e13f0deb # v1.8.116
+        uses: y-miyazaki/config/.github/actions/install-github-release@be495a55344a59dfb613df173c6bc622067bfc12 # v1.8.116
         with:
           asset_pattern: "arc-linux-amd64.tar.gz"
           binary: arc
@@ -175,7 +175,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@4502bd81743a532eff85bf18be492ce2e13f0deb # v1.8.116
+        uses: y-miyazaki/config/.github/actions/summary@be495a55344a59dfb613df173c6bc622067bfc12 # v1.8.116
         with:
           artifacts: |
             ${{ steps.setup-parameters.outputs.artifact_name }}
