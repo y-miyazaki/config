@@ -7,6 +7,13 @@
       "open_rejections": [],
       "last_reject_reason": "comment 3789126892 addressed: churn hotspot test/default use git --since-safe N.days format; scope limited to 6 tech-debt files; no bot/drive-by edits",
       "last_sha": "6195373cb2ed0387d24f2e1a5c1d4c0db1c7e2c0"
+    },
+    "pull_request:936": {
+      "last_run": "2026-10-10T11:23:56Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
+      "open_rejections": [],
+      "last_reject_reason": "No file changes produced"
     }
   }
 }
