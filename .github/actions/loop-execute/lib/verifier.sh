@@ -219,10 +219,29 @@ function run_verify {
 
     mkdir -p "${attempt_dir}"
     cd "${WORKTREE_PATH}" || return 1
-    git fetch origin "${BASE_BRANCH}" --depth=1 2> /dev/null || true
-    changed_files=$(git diff --name-only "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/' || true)
+    # No --depth=1: the checkout is full (fetch-depth: 0) and a shallow fetch
+    # grafts origin/<base> into a rootless commit, after which the three-dot
+    # diff fails with "no merge base". Swallowing that failure used to read as
+    # "no changes" and approve an unreviewed branch.
+    git fetch origin "${BASE_BRANCH}" 2> /dev/null || true
+    if ! changed_files="$(git diff --name-only "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/' \
+        2> "${attempt_dir}/branch-diff-error.txt")"; then
+        local diff_error
+        diff_error="$(tr '\n' ' ' < "${attempt_dir}/branch-diff-error.txt" | sed 's/ *$//')"
+        printf '%s\n' "REJECT" > "${attempt_dir}/verdict"
+        printf '%s\n' "Could not compute the branch diff: ${diff_error:-unknown git error}" \
+            > "${attempt_dir}/reason"
+        echo "::error::Branch diff failed; refusing to approve without review: ${diff_error}"
+        cd "${old_pwd}" || return 1
+        return 0
+    fi
     if [[ -z ${changed_files} ]]; then
-        printf '%s\n' "APPROVE" > "${attempt_dir}/verdict"
+        # An empty branch diff means the maker produced nothing to review, which
+        # is the same condition loop.sh resolves with NO_CHANGES_VERDICT. Honor
+        # the caller's setting here too rather than approving unconditionally:
+        # loops that deliver file changes set REJECT, while a loop whose success
+        # state is "no edit" (issue triage) sets APPROVE.
+        printf '%s\n' "${NO_CHANGES_VERDICT:-REJECT}" > "${attempt_dir}/verdict"
         printf '%s\n' "No meaningful changes outside .loop/" > "${attempt_dir}/reason"
         cd "${old_pwd}" || return 1
         return 0

@@ -10,6 +10,8 @@
 # - parse_verifier_output falls back to legacy VERDICT lines
 # - parse_verifier_output defaults to REJECT when unparsable
 # - parse_verifier_output parses cursor stream-json checker capture
+# - run_verify rejects instead of approving when the branch diff cannot be computed
+# - run_verify honors NO_CHANGES_VERDICT when the branch diff is empty
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -116,4 +118,60 @@ EOF
     [ "${issue}" = "factual mismatch in module list" ]
     [ "${fix}" = "align architecture.md with current packages" ]
     [ "${reason}" = "docs inconsistent with repo" ]
+}
+
+@test "run_verify rejects when the branch diff cannot be computed" {
+    local remote work attempt_dir
+
+    remote="${BATS_TEST_TMPDIR}/remote"
+    work="${BATS_TEST_TMPDIR}/work"
+    attempt_dir="${BATS_TEST_TMPDIR}/attempt-nomergebase"
+
+    bats_git_fresh_repo "${remote}"
+    bats_git_cmd -C "${remote}" checkout -q -b main
+    printf 'base\n' > "${remote}/base.txt"
+    bats_git_commit "${remote}" "init"
+
+    bats_git_cmd clone -q "${remote}" "${work}"
+    bats_git_local_identity "${work}"
+    # An orphan branch shares no ancestry with origin/main, which is exactly the
+    # state a shallow base fetch used to produce: git diff then exits non-zero.
+    bats_git_cmd -C "${work}" checkout -q --orphan loop/test
+    printf 'new\n' > "${work}/new.txt"
+    bats_git_commit "${work}" "orphan"
+
+    WORKTREE_PATH="${work}"
+    BASE_BRANCH="main"
+    run run_verify "${attempt_dir}" 1 "true"
+    [[ ${status} -eq 0 ]]
+    [[ "$(cat "${attempt_dir}/verdict")" == "REJECT" ]]
+    [[ "$(cat "${attempt_dir}/reason")" == *"Could not compute the branch diff"* ]]
+}
+
+@test "run_verify honors NO_CHANGES_VERDICT when the branch diff is empty" {
+    local remote work attempt_dir
+
+    remote="${BATS_TEST_TMPDIR}/remote-empty"
+    work="${BATS_TEST_TMPDIR}/work-empty"
+    attempt_dir="${BATS_TEST_TMPDIR}/attempt-empty"
+
+    bats_git_fresh_repo "${remote}"
+    bats_git_cmd -C "${remote}" checkout -q -b main
+    printf 'base\n' > "${remote}/base.txt"
+    bats_git_commit "${remote}" "init"
+
+    bats_git_cmd clone -q "${remote}" "${work}"
+    bats_git_local_identity "${work}"
+
+    WORKTREE_PATH="${work}"
+    BASE_BRANCH="main"
+
+    NO_CHANGES_VERDICT="REJECT"
+    run run_verify "${attempt_dir}" 1 "true"
+    [[ ${status} -eq 0 ]]
+    [[ "$(cat "${attempt_dir}/verdict")" == "REJECT" ]]
+
+    NO_CHANGES_VERDICT="APPROVE"
+    run run_verify "${attempt_dir}" 1 "true"
+    [[ "$(cat "${attempt_dir}/verdict")" == "APPROVE" ]]
 }

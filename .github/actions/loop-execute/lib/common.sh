@@ -87,7 +87,10 @@ function load_default_prompts {
 # normalize_no_changes_verdict: Normalize NO_CHANGES_VERDICT env var
 #
 # Description:
-#   Coerces NO_CHANGES_VERDICT to APPROVE or REJECT (default APPROVE).
+#   Coerces NO_CHANGES_VERDICT to APPROVE or REJECT (default REJECT).
+#   A maker that produced nothing has nothing to approve, so an unset or
+#   unrecognized value fails closed. A loop whose success state is "no edit",
+#   such as issue triage, opts in with an explicit APPROVE.
 #
 # Globals:
 #   NO_CHANGES_VERDICT - Verdict when maker produces no file changes
@@ -103,9 +106,9 @@ function load_default_prompts {
 #
 #######################################
 function normalize_no_changes_verdict {
-    NO_CHANGES_VERDICT=$(printf '%s' "${NO_CHANGES_VERDICT:-APPROVE}" | tr '[:lower:]' '[:upper:]')
-    if [[ ${NO_CHANGES_VERDICT} != "REJECT" ]]; then
-        NO_CHANGES_VERDICT="APPROVE"
+    NO_CHANGES_VERDICT=$(printf '%s' "${NO_CHANGES_VERDICT:-REJECT}" | tr '[:lower:]' '[:upper:]')
+    if [[ ${NO_CHANGES_VERDICT} != "APPROVE" ]]; then
+        NO_CHANGES_VERDICT="REJECT"
     fi
 }
 

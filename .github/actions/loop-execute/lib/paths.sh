@@ -312,11 +312,16 @@ function list_non_loop_branch_files {
     local base_ref
     (
         cd "${worktree}" || exit 1
-        git fetch origin "${base_branch}" --depth=1 > /dev/null 2>&1 || true
+        # No --depth=1: a shallow fetch over a full checkout grafts the base ref
+        # into a rootless commit and the three-dot diff then fails with
+        # "no merge base", which would read here as an empty change set.
+        git fetch origin "${base_branch}" > /dev/null 2>&1 || true
         base_ref="origin/${base_branch}"
         if ! git rev-parse --verify "${base_ref}" > /dev/null 2>&1; then
             base_ref="${base_branch}"
         fi
-        git diff --name-only "${base_ref}...HEAD" -- . ':!.loop/' || true
+        if ! git diff --name-only "${base_ref}...HEAD" -- . ':!.loop/'; then
+            echo "::error::Branch diff against ${base_ref} failed; path guards saw no files" >&2
+        fi
     )
 }

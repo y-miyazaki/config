@@ -5,9 +5,10 @@
 
 # Use cases:
 # - render_template replaces placeholders
-# - normalize_no_changes_verdict defaults to APPROVE
+# - normalize_no_changes_verdict defaults to REJECT
+# - normalize_no_changes_verdict keeps an explicit APPROVE
 # - normalize_no_changes_verdict coerces reject variants to REJECT
-# - normalize_no_changes_verdict coerces unknown values to APPROVE
+# - normalize_no_changes_verdict coerces unknown values to REJECT
 # - parse_output_field extracts legacy line fields
 # - materialize_matrix_handoff_context resolves detect JSON from loop-handoff artifact
 # - materialize_matrix_handoff_context writes detect file and keeps prompt compact
@@ -31,8 +32,14 @@ setup() {
     [ "${result}" = "Hello world, attempt 2" ]
 }
 
-@test "normalize_no_changes_verdict defaults to APPROVE" {
+@test "normalize_no_changes_verdict defaults to REJECT" {
     unset NO_CHANGES_VERDICT
+    normalize_no_changes_verdict
+    [ "${NO_CHANGES_VERDICT}" = "REJECT" ]
+}
+
+@test "normalize_no_changes_verdict keeps an explicit APPROVE" {
+    NO_CHANGES_VERDICT="approve"
     normalize_no_changes_verdict
     [ "${NO_CHANGES_VERDICT}" = "APPROVE" ]
 }
@@ -43,10 +50,10 @@ setup() {
     [ "${NO_CHANGES_VERDICT}" = "REJECT" ]
 }
 
-@test "normalize_no_changes_verdict coerces unknown values to APPROVE" {
+@test "normalize_no_changes_verdict coerces unknown values to REJECT" {
     NO_CHANGES_VERDICT="maybe"
     normalize_no_changes_verdict
-    [ "${NO_CHANGES_VERDICT}" = "APPROVE" ]
+    [ "${NO_CHANGES_VERDICT}" = "REJECT" ]
 }
 
 @test "parse_output_field extracts legacy line fields" {

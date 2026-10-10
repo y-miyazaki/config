@@ -94,8 +94,8 @@ inputs:
     description: "Optional extended-regex to infer file paths from checker text when JSON files is missing"
     required: false
   no_changes_verdict:
-    default: "APPROVE"
-    description: "Verdict when the maker produces no file changes (APPROVE or REJECT)"
+    default: "REJECT"
+    description: "Verdict when the maker produces no file changes (APPROVE or REJECT); REJECT unless the loop's success state is no edit"
     required: false
   node_version:
     default: "24.21.0"

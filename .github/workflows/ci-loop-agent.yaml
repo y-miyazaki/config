@@ -167,8 +167,8 @@ on:
         required: true
         type: string
       no_changes_verdict:
-        default: "APPROVE"
-        description: "Verdict when maker produces no file changes (APPROVE or REJECT, L2/L3)"
+        default: "REJECT"
+        description: "Verdict when maker produces no file changes (APPROVE or REJECT, L2/L3); REJECT unless the loop's success state is no edit"
         required: false
         type: string
       outcome_override:
