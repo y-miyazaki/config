@@ -17,7 +17,6 @@
       "Bash(dirname:*)",
       "Bash(du:*)",
       "Bash(echo:*)",
-      "Bash(env:*)",
       "Bash(file:*)",
       "Bash(find:*)",
       "Bash(gh api:*)",
@@ -72,7 +71,6 @@
       "Bash(npm run:*)",
       "Bash(npm test:*)",
       "Bash(npm view:*)",
-      "Bash(printenv:*)",
       "Bash(printf:*)",
       "Bash(pwd:*)",
       "Bash(readlink:*)",
@@ -121,6 +119,8 @@
       "Read(./test/**)",
       "Read(./tests/**)",
       "Read(Makefile)",
+      "WebFetch",
+      "WebSearch",
       "Write(**/*.go)",
       "Write(**/*.js)",
       "Write(**/*.md)",
@@ -152,6 +152,7 @@
       "Bash(cargo install:*)",
       "Bash(composer install:*)",
       "Bash(curl:*)",
+      "Bash(env:*)",
       "Bash(ghalint:*)",
       "Bash(golangci-lint:*)",
       "Bash(gofmt:*)",
@@ -164,6 +165,7 @@
       "Bash(pip install:*)",
       "Bash(pnpm install:*)",
       "Bash(poetry install:*)",
+      "Bash(printenv:*)",
       "Bash(rm -rf:*)",
       "Bash(shellcheck:*)",
       "Bash(shfmt:*)",
@@ -254,6 +256,12 @@
   "autoMemoryEnabled": true,
   "autoUpdatesChannel": "stable",
   "cleanupPeriodDays": 30,
+  "enabledMcpjsonServers": [
+    "codebase-memory-mcp",
+    "context7",
+    "fetch",
+    "github"
+  ],
   "env": {
     "API_TIMEOUT_MS": "1200000",
     "BASH_DEFAULT_TIMEOUT_MS": "300000"

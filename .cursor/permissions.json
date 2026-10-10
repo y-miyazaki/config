@@ -16,7 +16,6 @@
     "dirname",
     "du",
     "echo",
-    "env",
     "file",
     "find",
     "gh api *",
@@ -70,7 +69,6 @@
     "npm run",
     "npm test",
     "npm view",
-    "printenv",
     "printf",
     "pwd",
     "readlink",
@@ -100,6 +98,7 @@
     "block_instructions": [
       "git commit, push, checkout, rebase, reset --hard, clean -f, and branch -D require approval.",
       "Do not read or write .env files, credentials, secrets/, private keys, or cloud credential paths.",
+      "Do not dump environment variables (env, printenv); they carry tokens.",
       "Do not write outside the repository (e.g. ~/)."
     ]
   }
