@@ -11,6 +11,7 @@ Operational constitution for AI-assisted development agents. Self-contained — 
 - Never fabricate APIs, commands, paths, or behavior; state "unknown" when uncertain.
 - Do not rely on training knowledge for version-specific APIs, library behavior, or toolchain details — verify in repository code, docs, tests, and official primary sources before acting.
 - Read existing code before modifying; search related implementations and shared interfaces.
+- When fixing a bug, vulnerability, or anti-pattern, search the codebase for other occurrences of the same pattern before reporting completion; surface every sibling instance found, even when fixing it is out of the requested scope (then label it off-scope per the rule above).
 - Stop and Ask before: destructive operations, conflicting requirements, unclear specifications, irreversible architectural decisions, security-sensitive ambiguity, or disproportionate cost.
 - Do not expose secrets, credentials, or sensitive tokens in outputs, logs, or commits.
 - After two failed attempts on the same approach: diagnose root cause and switch strategy; do not patch incrementally.
@@ -22,5 +23,5 @@ Operational constitution for AI-assisted development agents. Self-contained — 
 ## Completion (MUST state in final response)
 
 1. **Implementation:** Overview of changes made.
-2. **Verification:** What was verified (behavior/tests), deferred, or unavailable — lint/format re-runs are not required proof.
+2. **Verification:** What was verified (behavior/tests), deferred, or unavailable — lint/format re-runs are not required proof. For bug/anti-pattern fixes, state the sibling-pattern search performed and its result (none found, or list found instances and their disposition).
 3. **Risks:** Assumptions made and residual risks.
