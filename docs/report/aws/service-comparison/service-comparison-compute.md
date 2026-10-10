@@ -7,9 +7,11 @@
 | 日付       | 内容     |
 | ---------- | -------- |
 | 2026-05-28 | 初版作成 |
-| 2026-10-10 | 初版から更新なし。AWS公式ドキュメント・サービス仕様との整合を再確認する必要あり（要レビュー、#911） |
+| 2026-10-10 | AWS 公式ドキュメントで App Runner が新規顧客の受付を終了し、後継として Amazon ECS Express Mode への移行が案内されていることを確認。App Runner 行の最大メモリを実値 (12GB) に修正し、ECS Express Mode への移行案内を追記 (#911) |
 
 ## Container Orchestration: ECS vs EKS vs App Runner
+
+> ⚠️ **App Runner は新規顧客の受付を終了済み** (2026 年、[AWS 公式](https://docs.aws.amazon.com/apprunner/latest/dg/apprunner-availability-change.html))。既存顧客は従来どおり利用可能だが新機能追加は予定されていない。AWS は後継として [Amazon ECS Express Mode](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/express-getting-started-console.html) への移行を案内している。ECS Express Mode は Fargate 上に ECS サービス・ALB・Auto Scaling・ネットワークを単一 API 呼び出しで自動構築し、App Runner 相当の運用簡易性を ECS の機能幅で提供する (追加課金なし、利用した AWS リソース分のみ課金)。新規構築では App Runner ではなく ECS Express Mode を検討する。
 
 | 比較項目             | ECS                                                                                                                                              | EKS                                                                                                                          | App Runner                                                                                                                            |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
@@ -19,7 +21,7 @@
 | SLA                  | 99.99%                                                                                                                                           | 99.95%                                                                                                                       | 99.95%                                                                                                                                |
 | 学習コスト           | 低い                                                                                                                                             | 高い (Kubernetes 知識必須)                                                                                                   | 非常に低い                                                                                                                            |
 | スケーリング         | Service Auto Scaling                                                                                                                             | HPA / Karpenter / Cluster Autoscaler                                                                                         | 自動 (リクエストベース)                                                                                                               |
-| 主要サービス制限     | タスク数 5000/クラスター、サービス数 5000/クラスター ([Quotas](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-quotas.html)) | Pod 数 110/ノード、ノード数 5000/クラスター ([Quotas](https://docs.aws.amazon.com/eks/latest/userguide/service-quotas.html)) | 同時実行 200、メモリ 4GB、リクエストタイムアウト 120 秒 ([Quotas](https://docs.aws.amazon.com/apprunner/latest/dg/architecture.html)) |
+| 主要サービス制限     | タスク数 5000/クラスター、サービス数 5000/クラスター ([Quotas](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-quotas.html)) | Pod 数 110/ノード、ノード数 5000/クラスター ([Quotas](https://docs.aws.amazon.com/eks/latest/userguide/service-quotas.html)) | 同時実行 200、最大 4 vCPU / 12GB メモリ、リクエストタイムアウト 120 秒 ([Pricing](https://aws.amazon.com/apprunner/pricing/)) |
 | コスト (常時高負荷)  | 安い                                                                                                                                             | 中程度 (クラスター費用加算)                                                                                                  | 高い                                                                                                                                  |
 | コスト (バースト)    | 中程度                                                                                                                                           | 中程度                                                                                                                       | 安い (アイドル時課金なし)                                                                                                             |
 | ネットワーク制御     | VPC、Security Group、Service Connect                                                                                                             | VPC、Security Group、Pod レベル制御                                                                                          | VPC Connector (制限あり)                                                                                                              |
@@ -36,7 +38,8 @@
 **→ ECS を標準採用する。** AWS ネイティブで学習コスト・運用負荷が低く、Fargate との組み合わせでインフラ管理を最小化できる。
 
 - Kubernetes エコシステム (Helm、ArgoCD、Istio 等) の活用やマルチクラウド移植性が必要な場合は EKS を検討
-- シンプルな Web API で VPC 制御やスケジュールタスクが不要な場合は App Runner を検討
+- シンプルな Web API で VPC 制御やスケジュールタスクが不要な場合は ECS Express Mode を検討 (App Runner は新規顧客受付終了のため新規採用を避ける)
+- 既存の App Runner ワークロードは ECS Express Mode への移行を計画する (AWS 公式が移行手順を提供)
 - App Runner はネットワーク制御・カスタマイズ性に制限があるため、要件が複雑化した時点で ECS へ移行する前提で採用する
 
 ## Compute Host: EC2 vs ECS on Fargate vs ECS on EC2 vs Lambda
