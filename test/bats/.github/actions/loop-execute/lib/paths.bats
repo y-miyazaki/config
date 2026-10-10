@@ -12,6 +12,8 @@
 # - collect_denylist_violations flags denylisted paths
 # - collect_denylist_violations matches ** at start of pattern
 # - collect_denylist_violations returns nothing when denylist unset
+# - apply_platform_denylist_default fills empty DENYLIST with secret globs only
+# - apply_platform_denylist_default preserves a caller denylist
 # - infer_files_from_text uses fallback when no paths found
 # - infer_files_from_text extracts repo-relative paths
 # - infer_files_from_text honors INFER_FILES_PATTERN
@@ -81,6 +83,12 @@ setup() {
     unset DENYLIST
     apply_platform_denylist_default
     [[ ${DENYLIST} == *".env"* ]]
+    [[ ${DENYLIST} == *"credentials*"* ]]
+    [[ ${DENYLIST} == *"secrets*"* ]]
+    # A reusable workflow must not assume a caller's directory layout: domain
+    # paths belong in that repository's own caller denylist.
+    [[ ${DENYLIST} != *"migration"* ]]
+    [[ ${DENYLIST} != *"infrastructure"* ]]
 }
 
 @test "apply_platform_denylist_default preserves caller denylist" {

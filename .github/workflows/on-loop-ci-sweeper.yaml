@@ -113,7 +113,7 @@ jobs:
       budget_max_runs_per_day: 5
       budget_max_tokens_per_day: 1000000
       delivery: open_pr
-      denylist: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
+      # denylist omitted: the platform default (lib/paths.sh DEFAULT_EXECUTE_DENYLIST) covers it
       # detect_domain_env_json: LEDGER/REJECT_*; workflow_run event keys (EVENT_/HEAD_*/WORKFLOW_*) when present
       # Keys must stay alphabetically ordered. Values via toJSON() so quotes/backslashes stay valid JSON.
       detect_domain_env_json: |

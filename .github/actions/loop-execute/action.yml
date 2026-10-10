@@ -68,8 +68,8 @@ inputs:
     description: "Commit message prefix for loop attempts"
     required: false
   denylist:
-    default: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
-    description: "Comma-separated path denylist"
+    default: ""
+    description: "Comma-separated path denylist; empty applies DEFAULT_EXECUTE_DENYLIST from lib/paths.sh"
     required: false
   detect_result_json:
     default: "{}"

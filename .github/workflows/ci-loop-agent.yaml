@@ -109,8 +109,8 @@ on:
         required: false
         type: string
       denylist:
-        default: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**"
-        description: "Comma-separated path denylist for checker (L2/L3)"
+        default: ""
+        description: "Comma-separated path denylist for checker (L2/L3); empty applies the loop-execute platform default"
         required: false
         type: string
       detect_result_json:
@@ -458,7 +458,7 @@ jobs:
           branch: ${{ steps.worktree.outputs.branch }}
           cli_version: ${{ inputs.cli_version }}
           commit_message: ${{ inputs.commit_message }}
-          denylist: ${{ inputs.denylist != '' && inputs.denylist || '**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**' }}
+          denylist: ${{ inputs.denylist }}
           detect_result_json: ${{ inputs.detect_result_json }}
           engine: ${{ inputs.engine }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}

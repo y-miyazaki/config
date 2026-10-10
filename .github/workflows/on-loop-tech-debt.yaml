@@ -69,7 +69,7 @@ jobs:
       budget_max_runs_per_day: 2
       budget_max_tokens_per_day: 1000000
       delivery: open_pr
-      denylist: "**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**,src/**,.github/**"
+      denylist: "**/.env,**/credentials*,**/secrets*,src/**,.github/**"
       detect_domain_env_json: "{}"
       detect_script: .agents/skills/tech-debt/scripts/detect_tech_debt.sh
       engine: claude

@@ -517,8 +517,8 @@ path_denylist:
   - "**/.env"
   - "**/credentials*"
   - "**/secrets*"
-  - "**/migration/*.sql"
-  - "**/infrastructure/**"
+# Domain paths (migrations, infrastructure, source trees) belong in each
+# repository's own caller `denylist:`, not in the shared platform default.
 ```
 
 Per-tier permissions:

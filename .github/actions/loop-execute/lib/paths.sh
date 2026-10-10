@@ -13,7 +13,11 @@
 # - Empty DENYLIST is coerced to the platform default at loop start
 #######################################
 
-DEFAULT_EXECUTE_DENYLIST='**/.env,**/credentials*,**/secrets*,**/migration/*.sql,**/infrastructure/**'
+# Single definition of the platform denylist. Keep it to patterns that are
+# unsafe in any repository: a reusable workflow must not assume a caller's
+# directory layout, so domain paths (migrations, infrastructure, source trees)
+# belong in that repository's own caller `denylist:` instead.
+DEFAULT_EXECUTE_DENYLIST='**/.env,**/credentials*,**/secrets*'
 
 #######################################
 # apply_platform_denylist_default: Use platform denylist when caller omits one
