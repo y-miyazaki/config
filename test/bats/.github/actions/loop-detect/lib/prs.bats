@@ -6,7 +6,12 @@
 # Use cases:
 # - list_open_prs returns empty when pr_enabled is false
 # - pr_excluded allows bot author listed in include_bots
+# - pr_excluded allows bot author when scoped intake selected the PR explicitly
 # - pr_excluded excludes bot authors when include_bots is empty
+# - pr_excluded excludes bot authors when scoped intake is false
+# - list_open_prs admits bot-authored PRs under LOOP_SCOPED_PR_NUMBER
+# - list_open_prs keeps fork/draft/label exclusions for scoped bot PRs
+# - list_open_prs still drops bot-authored PRs when scanning without a scoped number
 # - pr_excluded excludes draft when draft token is set
 # - pr_excluded excludes fork when fork token is set
 # - pr_excluded excludes label match
@@ -40,6 +45,13 @@ pr_json_with_labels() {
     [ "${#OPEN_PRS_JSON[@]}" -eq 0 ]
 }
 
+@test "pr_excluded allows bot author when scoped intake is true" {
+    local pr
+    pr='{"number":1,"title":"loop fix","isDraft":false,"author":{"login":"app/repo-maintenance-bot"},"labels":[],"headRepository":{"isFork":false}}'
+    run pr_excluded "${pr}" "fork" "" "true"
+    [ "$status" -eq 1 ]
+}
+
 @test "pr_excluded allows bot author listed in include_bots" {
     local pr
     pr='{"number":1,"title":"deps","isDraft":false,"author":{"login":"dependabot"},"labels":[],"headRepository":{"isFork":false}}'
@@ -51,6 +63,13 @@ pr_json_with_labels() {
     local pr
     pr='{"number":1,"title":"deps","isDraft":false,"author":{"login":"dependabot"},"labels":[],"headRepository":{"isFork":false}}'
     run pr_excluded "${pr}" "fork" ""
+    [ "$status" -eq 0 ]
+}
+
+@test "pr_excluded excludes bot authors when scoped intake is false" {
+    local pr
+    pr='{"number":1,"title":"deps","isDraft":false,"author":{"login":"dependabot"},"labels":[],"headRepository":{"isFork":false}}'
+    run pr_excluded "${pr}" "fork" "" "false"
     [ "$status" -eq 0 ]
 }
 
@@ -144,6 +163,57 @@ EOF
     PATH="${mock_bin}:${PATH}"
     list_open_prs "fork,label:no-loop" "" "token"
     [ "${#OPEN_PRS_JSON[@]}" -eq 1 ]
+}
+
+@test "list_open_prs with LOOP_SCOPED_PR_NUMBER admits bot-authored PRs" {
+    local mock_bin
+    mock_bin="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${mock_bin}"
+    cat > "${mock_bin}/gh" << 'EOF'
+#!/bin/bash
+printf '%s\n' '{"number":936,"title":"loop autofix","headRefName":"loop/github-issue-autofix/x","headRefOid":"abc","baseRefName":"main","isDraft":false,"author":{"login":"app/repo-maintenance-bot"},"labels":[{"name":"loop-automation"}],"maintainerCanModify":true,"headRepository":{"isFork":false},"state":"OPEN"}'
+exit 0
+EOF
+    chmod +x "${mock_bin}/gh"
+    LOOP_PR_ENABLED="true"
+    LOOP_SCOPED_PR_NUMBER="936"
+    PATH="${mock_bin}:${PATH}"
+    list_open_prs "fork,label:no-loop" "" "token"
+    [ "${#OPEN_PRS_JSON[@]}" -eq 1 ]
+}
+
+@test "list_open_prs with LOOP_SCOPED_PR_NUMBER keeps label exclusions for bot PRs" {
+    local mock_bin
+    mock_bin="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${mock_bin}"
+    cat > "${mock_bin}/gh" << 'EOF'
+#!/bin/bash
+printf '%s\n' '{"number":937,"title":"loop autofix","headRefName":"loop/x","headRefOid":"abc","baseRefName":"main","isDraft":false,"author":{"login":"app/repo-maintenance-bot"},"labels":[{"name":"no-loop"}],"maintainerCanModify":true,"headRepository":{"isFork":false},"state":"OPEN"}'
+exit 0
+EOF
+    chmod +x "${mock_bin}/gh"
+    LOOP_PR_ENABLED="true"
+    LOOP_SCOPED_PR_NUMBER="937"
+    PATH="${mock_bin}:${PATH}"
+    list_open_prs "fork,label:no-loop" "" "token"
+    [ "${#OPEN_PRS_JSON[@]}" -eq 0 ]
+}
+
+@test "list_open_prs without LOOP_SCOPED_PR_NUMBER still drops bot-authored PRs" {
+    local mock_bin
+    mock_bin="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${mock_bin}"
+    cat > "${mock_bin}/gh" << 'EOF'
+#!/bin/bash
+printf '%s\n' '[{"number":938,"title":"deps","headRefName":"renovate/x","headRefOid":"abc","baseRefName":"main","isDraft":false,"author":{"login":"renovate-bot"},"labels":[],"maintainerCanModify":true,"headRepository":{"isFork":false}}]'
+exit 0
+EOF
+    chmod +x "${mock_bin}/gh"
+    LOOP_PR_ENABLED="true"
+    LOOP_SCOPED_PR_NUMBER=""
+    PATH="${mock_bin}:${PATH}"
+    list_open_prs "fork" "" "token"
+    [ "${#OPEN_PRS_JSON[@]}" -eq 0 ]
 }
 
 @test "list_open_prs with LOOP_SCOPED_PR_NUMBER omits closed PRs" {

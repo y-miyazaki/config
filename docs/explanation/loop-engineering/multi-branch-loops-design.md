@@ -48,7 +48,7 @@ Defined here only. Other docs link to this section.
 | `GIT_LANDING_PULL_REQUEST`      | (`loop-detect` action only) | Advanced override when `delivery: open_pr`. Default **`open_pr`**. Exception: `push_head` (not dogfood).                       | `open_pr` (internal)       |
 | `DEFAULT_LEVEL`                 | `level`                     | `L1` \| `L2` \| `L3`. L3 + `delivery: open_pr` → GitHub auto-merge on bot fix PR. [Single level switch](#single-level-switch). | `L2`                       |
 | `LOOP_PR_EXCLUDE`               | `pr_exclude`                | PR exclusion tokens — see [CI Sweeper Workflow](workflows/loop-ci-sweeper-workflow-design.md#pr-exclusion-pr_exclude).         | `fork,draft,label:no-loop` |
-| `LOOP_PR_INCLUDE_BOTS`          | `pr_include_bots`           | Bot logins to include. Empty = all bots excluded.                                                                              | `""`                       |
+| `LOOP_PR_INCLUDE_BOTS`          | `pr_include_bots`           | Bot logins to include **while scanning**. Empty = all bots excluded. Not applied when `LOOP_SCOPED_PR_NUMBER` names the PR.    | `""`                       |
 | `LOOP_MAX_TARGETS_PER_SCHEDULE` | `max_targets_per_schedule`  | Max targets per cron tick (fan-out cap).                                                                                       | `3`                        |
 | `LOOP_STATE_PUSH_BRANCH`        | `branch_state`              | Branch for `.loop/*` persistence commits and state migration fallback.                                                         | repository default branch  |
 

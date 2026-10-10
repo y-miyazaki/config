@@ -9,7 +9,8 @@
 #
 # Design Rules:
 # - Applies LOOP_PR_EXCLUDE tokens
-# - Applies LOOP_PR_INCLUDE_BOTS opt-in
+# - Applies LOOP_PR_INCLUDE_BOTS opt-in when scanning
+# - Bypasses the bot-author heuristic when LOOP_SCOPED_PR_NUMBER names the PR
 #######################################
 
 #######################################
@@ -65,7 +66,7 @@ function list_open_prs {
         if [[ ${pr_state} != "OPEN" ]]; then
             return 0
         fi
-        if pr_excluded "${pr_line}" "${exclude_csv}" "${include_bots_csv}"; then
+        if pr_excluded "${pr_line}" "${exclude_csv}" "${include_bots_csv}" "true"; then
             return 0
         fi
         OPEN_PRS_JSON+=("${pr_line}")
@@ -77,7 +78,7 @@ function list_open_prs {
 
     while IFS= read -r pr_line; do
         [[ -z ${pr_line} ]] && continue
-        if pr_excluded "${pr_line}" "${exclude_csv}" "${include_bots_csv}"; then
+        if pr_excluded "${pr_line}" "${exclude_csv}" "${include_bots_csv}" "false"; then
             continue
         fi
         OPEN_PRS_JSON+=("${pr_line}")
@@ -94,6 +95,7 @@ function list_open_prs {
 #   $1 - PR JSON object
 #   $2 - Exclusion token csv
 #   $3 - Bot include list csv
+#   $4 - Scoped intake flag; "true" when an explicit PR number selected this PR (optional, default false)
 #
 # Outputs:
 #   None
@@ -106,6 +108,7 @@ function pr_excluded {
     local pr_json="$1"
     local exclude_csv="$2"
     local include_bots_csv="$3"
+    local scoped_intake="${4:-false}"
     local -a exclude_tokens=()
     local token author_login is_draft is_fork label_name labels_json
 
@@ -140,7 +143,12 @@ function pr_excluded {
         esac
     done
 
-    if [[ ${author_login} == *[bB][oO][tT] ]]; then
+    # Bot-author exclusion is a scanning heuristic: it keeps scheduled loops from
+    # picking up Renovate/Dependabot/loop PRs on their own. When an explicit PR
+    # number selected this target (a human mention on that PR), the human has
+    # already chosen it, so author provenance must not veto them. Token
+    # exclusions above (fork / draft / wip_title / label:*) still apply.
+    if [[ ${scoped_intake} != "true" && ${author_login} == *[bB][oO][tT] ]]; then
         local -a include_bots=()
         local bot allowed="false"
         split_csv "${include_bots_csv}" include_bots
