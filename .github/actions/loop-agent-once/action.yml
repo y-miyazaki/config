@@ -43,7 +43,7 @@ inputs:
     description: "Prompt text to pass to the agent"
     required: true
   uv_version:
-    default: "0.12.22"
+    default: "0.12.23"
     description: "uv version for MCP servers (uvx); keep aligned with mise.toml aqua:astral-sh/uv"
     required: false
   working_directory:
