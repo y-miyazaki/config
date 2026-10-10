@@ -5,6 +5,10 @@ bats_require_minimum_version 1.5.0
 # Tests for .github/actions/loop-execute/lib/agent.sh
 #
 # Use cases:
+# - grant_claude_workspace_trust marks GITHUB_WORKSPACE trusted so project allow rules apply
+# - grant_claude_workspace_trust merges into an existing ~/.claude.json instead of replacing it
+# - grant_claude_workspace_trust leaves an unparsable ~/.claude.json untouched
+# - grant_claude_workspace_trust no-ops when GITHUB_WORKSPACE is unset
 # - run_agent_capture preserves USAGE_* unlike pipe to tee
 # - harvest_workspace_into_worktree copies modified files from GITHUB_WORKSPACE
 # - harvest_workspace_into_worktree deletes paths removed in GITHUB_WORKSPACE
@@ -77,6 +81,53 @@ STUB
     run_agent "true" 2>&1 | tee "${BATS_TEST_TMPDIR}/tee-out.txt" > /dev/null || true
     [[ ${USAGE_INPUT_TOTAL} -eq 0 ]]
     [[ ${USAGE_OUTPUT_TOTAL} -eq 0 ]]
+}
+
+@test "grant_claude_workspace_trust leaves an unparsable ~/.claude.json untouched" {
+    HOME="${BATS_TEST_TMPDIR}/home-broken"
+    mkdir -p "${HOME}"
+    printf 'not json\n' > "${HOME}/.claude.json"
+    GITHUB_WORKSPACE="${BATS_TEST_TMPDIR}/ws-broken"
+
+    run grant_claude_workspace_trust
+    [[ ${status} -eq 0 ]]
+    [[ ${output} == *"not valid JSON"* ]]
+    [[ "$(cat "${HOME}/.claude.json")" == "not json" ]]
+}
+
+@test "grant_claude_workspace_trust marks GITHUB_WORKSPACE trusted so project allow rules apply" {
+    HOME="${BATS_TEST_TMPDIR}/home-new"
+    mkdir -p "${HOME}"
+    GITHUB_WORKSPACE="${BATS_TEST_TMPDIR}/ws-new"
+
+    grant_claude_workspace_trust
+    [[ "$(jq -r --arg r "${GITHUB_WORKSPACE}" \
+        '.projects[$r].hasTrustDialogAccepted' "${HOME}/.claude.json")" == "true" ]]
+}
+
+@test "grant_claude_workspace_trust merges into an existing ~/.claude.json instead of replacing it" {
+    HOME="${BATS_TEST_TMPDIR}/home-merge"
+    mkdir -p "${HOME}"
+    printf '{"oauthAccount":{"uuid":"keep-me"},"projects":{"/other":{"hasTrustDialogAccepted":true}}}\n' \
+        > "${HOME}/.claude.json"
+    GITHUB_WORKSPACE="${BATS_TEST_TMPDIR}/ws-merge"
+
+    grant_claude_workspace_trust
+    [[ "$(jq -r '.oauthAccount.uuid' "${HOME}/.claude.json")" == "keep-me" ]]
+    [[ "$(jq -r '.projects["/other"].hasTrustDialogAccepted' "${HOME}/.claude.json")" == "true" ]]
+    [[ "$(jq -r --arg r "${GITHUB_WORKSPACE}" \
+        '.projects[$r].hasTrustDialogAccepted' "${HOME}/.claude.json")" == "true" ]]
+}
+
+@test "grant_claude_workspace_trust no-ops when GITHUB_WORKSPACE is unset" {
+    HOME="${BATS_TEST_TMPDIR}/home-unset"
+    mkdir -p "${HOME}"
+    GITHUB_WORKSPACE=""
+
+    run grant_claude_workspace_trust
+    [[ ${status} -eq 0 ]]
+    [[ ${output} == *"GITHUB_WORKSPACE unset"* ]]
+    [[ ! -e "${HOME}/.claude.json" ]]
 }
 
 @test "harvest_workspace_into_worktree copies modified files from GITHUB_WORKSPACE" {

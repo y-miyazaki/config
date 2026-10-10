@@ -13,6 +13,8 @@
 # - Maker sessions may write; checker sessions are read-only
 # - The action grants no tool permissions of its own: rules come from the host
 #   repository's .claude/settings.json and from the calling workflow
+# - grant_claude_workspace_trust only unlocks the rules that repository already
+#   declares; without it Claude Code ignores its permissions.allow entirely
 # - Permission rule syntax is engine-specific; engines that cannot apply the
 #   supplied rules warn instead of silently dropping them
 #######################################
@@ -156,6 +158,68 @@ function commit_worktree_if_needed {
         git commit -m "${msg}"
         return 0
     )
+}
+
+#######################################
+# grant_claude_workspace_trust: Accept workspace trust for the host repository
+#
+# Description:
+#   Claude Code applies a project's permissions.allow rules only for a folder
+#   whose workspace trust has been accepted; deny and ask rules apply either
+#   way. A print-mode session never shows the trust dialog, so without this the
+#   host repository's .claude/settings.json allow rules are ignored and only
+#   --allowedTools rules take effect. Trust is keyed on the main checkout root,
+#   which is GITHUB_WORKSPACE even while the agent runs in a worktree.
+#   ~/.claude.json also holds the sign-in session and MCP state, and a file
+#   Claude Code cannot parse aborts a print-mode run, so merge rather than
+#   overwrite and leave an unreadable file untouched.
+#
+# Globals:
+#   GITHUB_WORKSPACE - Main checkout root; no-op when unset (read)
+#   HOME - Location of .claude.json (read)
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Warning to stdout when trust cannot be granted
+#
+# Returns:
+#   0 always; a failure warns instead of aborting the agent run
+#
+#######################################
+function grant_claude_workspace_trust {
+    local config root tmp
+    root="${GITHUB_WORKSPACE:-}"
+
+    if [[ -z ${root} ]]; then
+        echo "::warning::GITHUB_WORKSPACE unset; project allow rules stay inactive"
+        return 0
+    fi
+    if ! command -v jq > /dev/null 2>&1; then
+        echo "::warning::jq not found; project allow rules stay inactive"
+        return 0
+    fi
+
+    config="${HOME}/.claude.json"
+    if [[ -e ${config} && ! -s ${config} ]]; then rm -f "${config}"; fi
+    if [[ -e ${config} ]] && ! jq -e . "${config}" > /dev/null 2>&1; then
+        echo "::warning::${config} is not valid JSON; project allow rules stay inactive"
+        return 0
+    fi
+    if [[ ! -e ${config} ]] && ! printf '{}\n' > "${config}" 2> /dev/null; then
+        echo "::warning::Cannot create ${config}; project allow rules stay inactive"
+        return 0
+    fi
+
+    tmp="$(mktemp)" || return 0
+    if jq --arg root "${root}" \
+        '.projects[$root].hasTrustDialogAccepted = true' \
+        "${config}" > "${tmp}" 2> /dev/null && mv "${tmp}" "${config}"; then
+        return 0
+    fi
+    rm -f "${tmp}"
+    echo "::warning::Failed to grant workspace trust for ${root}"
 }
 
 #######################################
@@ -335,6 +399,7 @@ function run_agent_engine {
             # stream-json (not --bare) so usage.sh can read the usage event;
             # the wrapper restores the final text on stdout for report parsing.
             local -a ARGS=(-p "${PROMPT}" --output-format stream-json --verbose)
+            grant_claude_workspace_trust
             append_agent_mcp_args ARGS "${ENGINE}"
             append_claude_permission_args ARGS "${allow_writes}"
             # Detect JSON lives in STATUS_DIR, outside the worktree; without this the
