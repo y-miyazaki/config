@@ -9,6 +9,7 @@ bats_require_minimum_version 1.5.0
 # - grant_claude_workspace_trust merges into an existing ~/.claude.json instead of replacing it
 # - grant_claude_workspace_trust leaves an unparsable ~/.claude.json untouched
 # - grant_claude_workspace_trust no-ops when GITHUB_WORKSPACE is unset
+# - grant_claude_workspace_trust also writes beside a relocated CLAUDE_CONFIG_DIR
 # - run_agent_capture preserves USAGE_* unlike pipe to tee
 # - harvest_workspace_into_worktree copies modified files from GITHUB_WORKSPACE
 # - harvest_workspace_into_worktree deletes paths removed in GITHUB_WORKSPACE
@@ -81,6 +82,23 @@ STUB
     run_agent "true" 2>&1 | tee "${BATS_TEST_TMPDIR}/tee-out.txt" > /dev/null || true
     [[ ${USAGE_INPUT_TOTAL} -eq 0 ]]
     [[ ${USAGE_OUTPUT_TOTAL} -eq 0 ]]
+}
+
+@test "grant_claude_workspace_trust also writes beside a relocated CLAUDE_CONFIG_DIR" {
+    local cfg_home
+
+    HOME="${BATS_TEST_TMPDIR}/home-relocated"
+    cfg_home="${BATS_TEST_TMPDIR}/elsewhere"
+    mkdir -p "${HOME}" "${cfg_home}/.claude"
+    CLAUDE_CONFIG_DIR="${cfg_home}/.claude"
+    GITHUB_WORKSPACE="${BATS_TEST_TMPDIR}/ws-relocated"
+
+    grant_claude_workspace_trust
+    [[ "$(jq -r --arg r "${GITHUB_WORKSPACE}" \
+        '.projects[$r].hasTrustDialogAccepted' "${cfg_home}/.claude.json")" == "true" ]]
+    [[ "$(jq -r --arg r "${GITHUB_WORKSPACE}" \
+        '.projects[$r].hasTrustDialogAccepted' "${HOME}/.claude.json")" == "true" ]]
+    CLAUDE_CONFIG_DIR=""
 }
 
 @test "grant_claude_workspace_trust leaves an unparsable ~/.claude.json untouched" {

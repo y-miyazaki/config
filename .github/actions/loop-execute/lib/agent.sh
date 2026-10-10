@@ -173,10 +173,16 @@ function commit_worktree_if_needed {
 #   ~/.claude.json also holds the sign-in session and MCP state, and a file
 #   Claude Code cannot parse aborts a print-mode run, so merge rather than
 #   overwrite and leave an unreadable file untouched.
+#   A host repository may relocate the configuration home with
+#   CLAUDE_CONFIG_DIR, which names a .claude directory, so also write the
+#   .claude.json beside it. The documented wording leaves the relocated path
+#   ambiguous; writing both candidates costs one small file and avoids a silent
+#   no-op that would look exactly like the bug this works around.
 #
 # Globals:
+#   CLAUDE_CONFIG_DIR - Relocated .claude directory; optional (read)
 #   GITHUB_WORKSPACE - Main checkout root; no-op when unset (read)
-#   HOME - Location of .claude.json (read)
+#   HOME - Default configuration home (read)
 #
 # Arguments:
 #   None
@@ -189,7 +195,8 @@ function commit_worktree_if_needed {
 #
 #######################################
 function grant_claude_workspace_trust {
-    local config root tmp
+    local config home root tmp
+    local -a homes=()
     root="${GITHUB_WORKSPACE:-}"
 
     if [[ -z ${root} ]]; then
@@ -201,25 +208,34 @@ function grant_claude_workspace_trust {
         return 0
     fi
 
-    config="${HOME}/.claude.json"
-    if [[ -e ${config} && ! -s ${config} ]]; then rm -f "${config}"; fi
-    if [[ -e ${config} ]] && ! jq -e . "${config}" > /dev/null 2>&1; then
-        echo "::warning::${config} is not valid JSON; project allow rules stay inactive"
-        return 0
-    fi
-    if [[ ! -e ${config} ]] && ! printf '{}\n' > "${config}" 2> /dev/null; then
-        echo "::warning::Cannot create ${config}; project allow rules stay inactive"
-        return 0
+    homes=("${HOME}")
+    if [[ -n ${CLAUDE_CONFIG_DIR:-} ]]; then
+        home="$(dirname "${CLAUDE_CONFIG_DIR}")"
+        [[ ${home} != "${HOME}" ]] && homes+=("${home}")
     fi
 
-    tmp="$(mktemp)" || return 0
-    if jq --arg root "${root}" \
-        '.projects[$root].hasTrustDialogAccepted = true' \
-        "${config}" > "${tmp}" 2> /dev/null && mv "${tmp}" "${config}"; then
-        return 0
-    fi
-    rm -f "${tmp}"
-    echo "::warning::Failed to grant workspace trust for ${root}"
+    for home in "${homes[@]}"; do
+        config="${home}/.claude.json"
+        [[ -d ${home} ]] || continue
+        if [[ -e ${config} && ! -s ${config} ]]; then rm -f "${config}"; fi
+        if [[ -e ${config} ]] && ! jq -e . "${config}" > /dev/null 2>&1; then
+            echo "::warning::${config} is not valid JSON; project allow rules stay inactive"
+            continue
+        fi
+        if [[ ! -e ${config} ]] && ! printf '{}\n' > "${config}" 2> /dev/null; then
+            echo "::warning::Cannot create ${config}; project allow rules stay inactive"
+            continue
+        fi
+
+        tmp="$(mktemp)" || continue
+        if jq --arg root "${root}" \
+            '.projects[$root].hasTrustDialogAccepted = true' \
+            "${config}" > "${tmp}" 2> /dev/null && mv "${tmp}" "${config}"; then
+            continue
+        fi
+        rm -f "${tmp}"
+        echo "::warning::Failed to grant workspace trust for ${root} in ${config}"
+    done
 }
 
 #######################################
