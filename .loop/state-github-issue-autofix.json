@@ -1,12 +1,19 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-10-10T03:24:36Z",
-      "outcome": "merged",
+      "last_run": "2026-10-10T03:30:24Z",
+      "outcome": "pr-created",
       "consecutive_failures": 0,
       "open_rejections": [],
       "last_reject_reason": "No meaningful changes outside .loop/",
-      "last_sha": "7e73f5e70174c9cf429ca14756d7e51456372c27"
+      "last_sha": "7e73f5e70174c9cf429ca14756d7e51456372c27",
+      "pending": {
+        "sha": "daaa5648e98fc5ad97bdcea433b414fe033009e3",
+        "pr": 931,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/931",
+        "loop_name": "github-issue-autofix",
+        "created_at": "2026-10-10T03:30:24Z"
+      }
     }
   }
 }
