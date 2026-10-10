@@ -20,7 +20,7 @@ On Issue / issue_comment events, classify the Issue when confident, apply allowl
 
 ### Supported use cases
 
-- `issues` opened/reopened/labeled/unlabeled → entity detect + L1 agent
+- `issues` opened/reopened/labeled → entity detect + L1 agent (label removal does not re-trigger triage)
 - `issue_comment` created (human answers while awaiting info)
 - `workflow_dispatch` with `issue_number` for manual re-triage
 
