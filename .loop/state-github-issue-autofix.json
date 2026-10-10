@@ -1,19 +1,12 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-10-10T11:04:17Z",
-      "outcome": "pr-created",
+      "last_run": "2026-10-10T12:32:56Z",
+      "outcome": "merged",
       "consecutive_failures": 0,
       "open_rejections": [],
       "last_reject_reason": "Single relevant doc file; Lambda durable functions GA, URL, and async-1-year/sync-15-min claims verified against AWS primary sources; no dispatch, no cheated checks; PR body must still carry Fixes #935 and markdown lint is unverified",
-      "last_sha": "f0267d64da0d2b198b508919c6584757f0c6b550",
-      "pending": {
-        "sha": "8118994bf910df473dc396015f049042067d05ac",
-        "pr": 936,
-        "pr_url": "https://github.com/y-miyazaki/config/pull/936",
-        "loop_name": "github-issue-autofix",
-        "created_at": "2026-10-10T11:04:17Z"
-      }
+      "last_sha": "8118994bf910df473dc396015f049042067d05ac"
     }
   }
 }
