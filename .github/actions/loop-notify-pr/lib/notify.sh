@@ -60,6 +60,9 @@ _LOOP_CREATED_BY_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pw
 # shellcheck source=../../lib/loop/created_by.sh
 # shellcheck disable=SC1091
 source "${_LOOP_CREATED_BY_LIB}/created_by.sh"
+# shellcheck source=../../lib/loop/loop_meta.sh
+# shellcheck disable=SC1091
+source "${_LOOP_CREATED_BY_LIB}/loop_meta.sh"
 # shellcheck source=../../lib/loop/trigger_thread.sh
 # shellcheck disable=SC1091
 source "${_LOOP_CREATED_BY_LIB}/trigger_thread.sh"
@@ -347,7 +350,7 @@ function find_existing_comment {
 #
 #######################################
 function post_trigger_done_reply {
-    local commit_url loop_run_url summary body overview
+    local commit_url loop_run_url summary body overview changed_files diff_stat
 
     if [[ -z ${TRIGGER_COMMENT_ID:-} ]]; then
         return 0
@@ -361,13 +364,20 @@ function post_trigger_done_reply {
     loop_run_url="${GITHUB_SERVER_URL}/${REPOSITORY}/actions/runs/${LOOP_RUN_ID}"
 
     overview=""
+    changed_files=""
+    diff_stat=""
     if [[ -n ${NOTIFY_CONTEXT_JSON} ]] && jq -e . <<< "${NOTIFY_CONTEXT_JSON}" > /dev/null 2>&1; then
         overview=$(jq -r '.agent_report_overview // empty' <<< "${NOTIFY_CONTEXT_JSON}")
+        changed_files=$(jq -r '.changed_files[]? // empty' <<< "${NOTIFY_CONTEXT_JSON}" | paste -sd, - || true)
+        diff_stat=$(jq -r '.diff_stat // ""' <<< "${NOTIFY_CONTEXT_JSON}")
     fi
-    overview="$(truncate_text "$(redact_sensitive_text "${overview}")" 500)"
+    # The overview is collapsed behind <details> in the reply, so it can carry
+    # more than the old inline budget. Cut on a sentence boundary: the previous
+    # hard 500-char slice ended replies mid-word.
+    overview="$(truncate_text_at_boundary "$(redact_sensitive_text "${overview}")" 1200)"
     summary="${overview}"
 
-    body="$(build_done_reply_body "${OUTCOME}" "${VERDICT}" "$(redact_sensitive_text "${REJECT_REASON}")" "${COMMIT_SHA}" "${commit_url}" "${loop_run_url}" "${summary}")"
+    body="$(build_done_reply_body "${OUTCOME}" "${VERDICT}" "$(redact_sensitive_text "${REJECT_REASON}")" "${COMMIT_SHA}" "${commit_url}" "${loop_run_url}" "${summary}" "$(redact_sensitive_text "${changed_files}")" "$(redact_sensitive_text "${diff_stat}")" "${ENGINE}" "${USAGE_JSON}")"
 
     reply_trigger_comment "${body}"
 }
@@ -427,6 +437,52 @@ function truncate_text {
     else
         printf '%s' "${text:0:max}"
     fi
+}
+
+#######################################
+# truncate_text_at_boundary: Truncate prose without cutting mid-word
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Input text
+#   $2 - Maximum length
+#
+# Outputs:
+#   Text truncated at the last sentence end (falling back to the last word
+#   boundary) within the limit, with an ellipsis appended, on stdout
+#
+# Returns:
+#   0 on success
+#
+# Usage:
+#   overview="$(truncate_text_at_boundary "${overview}" 1200)"
+#
+#######################################
+function truncate_text_at_boundary {
+    local text="$1"
+    local max="$2"
+    local head cut
+
+    if [[ ${#text} -le ${max} ]]; then
+        printf '%s' "${text}"
+        return 0
+    fi
+
+    head="${text:0:max}"
+
+    # Prefer the last sentence end so the reader never lands mid-clause.
+    cut="$(sed -E 's/^(.*([.!?。！？]))[^.!?。！？]*$/\1/' <<< "${head}")"
+    if [[ ${cut} == "${head}" || -z ${cut} ]]; then
+        # No sentence end in range: fall back to the last word boundary.
+        cut="${head% *}"
+    fi
+    if [[ -z ${cut} ]]; then
+        cut="${head}"
+    fi
+
+    printf '%s …' "${cut}"
 }
 
 #######################################

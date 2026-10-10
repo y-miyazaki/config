@@ -19,6 +19,10 @@
 # - resolve_actor falls back when gh api user fails with error JSON on stdout
 # - redact_sensitive_text redacts bearer tokens
 # - truncate_text truncates to max
+# - truncate_text_at_boundary returns short text unchanged
+# - truncate_text_at_boundary cuts at the last sentence end before max
+# - truncate_text_at_boundary cuts at a word boundary when no sentence end fits
+# - truncate_text_at_boundary honors Japanese sentence endings
 # - validate_required_inputs fails when LOOP_NAME is empty
 # - validate_required_inputs passes when required fields are set
 
@@ -219,6 +223,31 @@ EOF
     run truncate_text "abcdefghij" 5
     [ "$status" -eq 0 ]
     [ "$output" = "abcde" ]
+}
+
+@test "truncate_text_at_boundary returns short text unchanged" {
+    run truncate_text_at_boundary "Short enough." 100
+    [ "$status" -eq 0 ]
+    [ "$output" = "Short enough." ]
+}
+
+@test "truncate_text_at_boundary cuts at the last sentence end before max" {
+    run truncate_text_at_boundary "First sentence. Second sentence. Third runs past the limit here." 35
+    [ "$status" -eq 0 ]
+    [ "$output" = "First sentence. Second sentence. …" ]
+}
+
+@test "truncate_text_at_boundary cuts at a word boundary when no sentence end fits" {
+    run truncate_text_at_boundary "alpha beta gamma delta epsilon zeta" 20
+    [ "$status" -eq 0 ]
+    [[ $output == *"…" ]]
+    [[ $output != *"delt…" ]]
+}
+
+@test "truncate_text_at_boundary honors Japanese sentence endings" {
+    run truncate_text_at_boundary "最初の文です。次の文はとても長くて上限を超えてしまいます。" 10
+    [ "$status" -eq 0 ]
+    [ "$output" = "最初の文です。 …" ]
 }
 
 @test "validate_required_inputs fails when LOOP_NAME is empty" {

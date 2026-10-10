@@ -7,7 +7,7 @@
 # - create_pr_body renders prefix and footer from inline JSON
 # - create_pr_body reads large detect JSON from file and ignores commits[] bulk
 # - create_pr_body prefers BRANCH over target integration branch for blob links
-# - create_pr_body appends Created By from ENGINE and USAGE_JSON
+# - create_pr_body carries engine, model and tokens in the loop meta block
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -22,7 +22,7 @@ setup() {
     mkdir -p "${PR_BODY_TMP}"
 }
 
-@test "create_pr_body appends Created By from ENGINE and USAGE_JSON" {
+@test "create_pr_body carries engine model and tokens in the loop meta block" {
     PR_BODY=""
     NOTIFY_CONTEXT_JSON='{"changed_files":[],"agent_report_overview":"","agent_report_summary":""}'
     DETECT_RESULT_JSON='{"failures":[]}'
@@ -34,7 +34,9 @@ setup() {
 
     run create_pr_body
     [ "$status" -eq 0 ]
-    [[ $output == *"Created By cursor Composer-2.5 In/Out: 100K/100K"* ]]
+    [[ $output == *"| Engine | \`cursor\` |"* ]]
+    [[ $output == *"| Model | \`Composer-2.5\` |"* ]]
+    [[ $output == *"| Tokens | In/Out 100K/100K |"* ]]
 }
 
 @test "create_pr_body renders prefix and footer from inline JSON" {
@@ -50,7 +52,7 @@ setup() {
     [[ $output == *"## Overview"* ]]
     [[ $output == *"Updated changelog"* ]]
     [[ $output == *"CHANGELOG.md"* ]]
-    [[ $output == *"## Run Metadata"* ]]
+    [[ $output == *"· Loop details"* ]]
     [[ $output == *"integration:main"* ]]
     [[ $output == *"## Failure context"* ]]
 }

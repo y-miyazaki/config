@@ -9,6 +9,8 @@
 # - render_created_by_line includes engine model and In/Out
 # - render_created_by_line omits In/Out when usage absent
 # - render_created_by_line uses model and tokens from usage_json alone
+# - render_created_by_line labels each role when maker and checker models differ
+# - render_created_by_line falls back to the models array when sessions are absent
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -55,6 +57,22 @@ setup() {
     run render_created_by_line '' '{"total_input_tokens":1842,"total_output_tokens":17,"model":"composer-2.5"}'
     [ "$status" -eq 0 ]
     [ "$output" = "Created By composer-2.5 In/Out: 2K/17" ]
+}
+
+@test "render_created_by_line labels each role when maker and checker models differ" {
+    local usage
+    usage='{"total_input_tokens":58,"total_output_tokens":15000,"models":["claude-opus-5","claude-sonnet-5"],"sessions":[{"role":"maker","model":"claude-sonnet-5","input":40,"output":12000},{"role":"checker","model":"claude-opus-5","input":18,"output":3000}]}'
+    run render_created_by_line "claude" "${usage}"
+    [ "$status" -eq 0 ]
+    [ "$output" = "Created By claude maker=claude-sonnet-5 checker=claude-opus-5 In/Out: 58/15K" ]
+}
+
+@test "render_created_by_line falls back to the models array when sessions are absent" {
+    local usage
+    usage='{"total_input_tokens":58,"total_output_tokens":15000,"models":["claude-opus-5","claude-sonnet-5"]}'
+    run render_created_by_line "claude" "${usage}"
+    [ "$status" -eq 0 ]
+    [ "$output" = "Created By claude claude-opus-5, claude-sonnet-5 In/Out: 58/15K" ]
 }
 
 @test "render_created_by_line keeps engine only when usage_json is invalid" {

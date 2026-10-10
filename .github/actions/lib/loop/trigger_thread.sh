@@ -165,7 +165,7 @@ function ack_gathered_comments {
 }
 
 #######################################
-# build_done_reply_body: Render short done-reply markdown for a trigger thread
+# build_done_reply_body: Render done-reply markdown for a trigger thread
 #
 # Globals:
 #   None
@@ -177,7 +177,9 @@ function ack_gathered_comments {
 #   $4 - Commit SHA (optional)
 #   $5 - Commit URL (optional)
 #   $6 - Loop run URL (optional)
-#   $7 - Summary line (optional; truncated externally)
+#   $7 - Agent report overview (optional; truncated externally)
+#   $8 - Changed files, comma separated (optional)
+#   $9 - Diff stat line (optional)
 #
 # Outputs:
 #   Reply body markdown on stdout
@@ -194,37 +196,78 @@ function build_done_reply_body {
     local commit_url="${5:-}"
     local loop_run_url="${6:-}"
     local summary="${7:-}"
-    local short_sha
+    local changed_files="${8:-}"
+    local diff_stat="${9:-}"
+    local engine="${10:-}"
+    local usage_json="${11:-}"
+    local short_sha lead detail_reason file_entry
+    local -a files=()
+    local file_count shown_count hidden_count
+    local max_files=10
+
+    # Lead with what changed. The agent report is the answer to "what did you
+    # do"; fall back to the checker reason when no report exists (a REJECT with
+    # no diff), so the comment never opens with metadata.
+    detail_reason="${reason}"
+    if [[ -n ${summary} ]]; then
+        lead="${summary}"
+    elif [[ -n ${reason} ]]; then
+        lead="${reason}"
+        detail_reason=""
+    else
+        lead="The loop finished without producing an agent report."
+    fi
+
+    loop_meta_reset
+    if [[ -n ${commit_sha} ]]; then
+        short_sha="${commit_sha:0:7}"
+        if [[ -n ${commit_url} && ${commit_url} != "#" ]]; then
+            loop_meta_row "Commit" "[\`${short_sha}\`](${commit_url})"
+        else
+            loop_meta_row "Commit" "\`${short_sha}\`"
+        fi
+    fi
+
+    if [[ -n ${changed_files} ]]; then
+        IFS=',' read -r -a files <<< "${changed_files}"
+    fi
 
     {
-        echo "### Loop done"
+        echo "${lead}"
         echo ""
-        if [[ -n ${outcome} ]]; then
-            echo "- Outcome: \`${outcome}\`"
-        fi
-        if [[ -n ${verdict} ]]; then
-            echo "- Verdict: \`${verdict}\`"
-        fi
-        if [[ -n ${reason} ]]; then
-            echo "- Reason: ${reason}"
-        fi
-        if [[ -n ${commit_sha} ]]; then
-            short_sha="${commit_sha:0:7}"
-            if [[ -n ${commit_url} && ${commit_url} != "#" ]]; then
-                echo "- Commit: [\`${short_sha}\`](${commit_url})"
-            else
-                echo "- Commit: \`${short_sha}\`"
-            fi
-        fi
-        if [[ -n ${loop_run_url} && ${loop_run_url} != "-" ]]; then
-            echo "- Run: [actions](${loop_run_url})"
-        fi
-        if [[ -n ${summary} ]]; then
+
+        if [[ ${#files[@]} -gt 0 ]]; then
+            echo "**Files changed**"
             echo ""
-            echo "${summary}"
+            file_count="${#files[@]}"
+            shown_count="${file_count}"
+            if [[ ${shown_count} -gt ${max_files} ]]; then
+                shown_count="${max_files}"
+            fi
+            for ((i = 0; i < shown_count; i++)); do
+                file_entry="${files[i]}"
+                [[ -z ${file_entry} ]] && continue
+                echo "- \`${file_entry}\`"
+            done
+            if [[ ${file_count} -gt ${shown_count} ]]; then
+                hidden_count=$((file_count - shown_count))
+                echo "- …and ${hidden_count} more"
+            fi
+            echo ""
         fi
+
+        if [[ -n ${diff_stat} ]]; then
+            echo "\`${diff_stat}\`"
+            echo ""
+        fi
+
+        # Everything below is about the loop run itself, not about the change.
+        # Shape comes from build_loop_meta_block so PR bodies, PR comments,
+        # trigger replies, and entity Issue comments all read the same.
+        build_loop_meta_block "${outcome}" "${verdict}" "${detail_reason}" \
+            "${engine}" "${usage_json}" "${loop_run_url}"
         echo ""
-        echo "_Resolve the review thread when you are satisfied (not auto-resolved)._"
+        echo "<sub>Replying to your mention. This thread is not auto-resolved — resolve it when you are satisfied.</sub>"
     }
 }
 

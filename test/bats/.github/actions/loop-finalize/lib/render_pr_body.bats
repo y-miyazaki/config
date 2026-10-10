@@ -23,8 +23,8 @@
 # - render_agent_verification_section wraps heading
 # - render_changes_section links files when repository and ref are set
 # - render_failure_context renders markdown links when metadata present
-# - render_pr_body appends Created By after disclaimer when engine/usage set
-# - render_pr_body omits Created By when engine and usage empty
+# - render_pr_body renders one collapsed loop meta block carrying engine/model/tokens
+# - render_pr_body omits the meta block when level, target, engine and usage are empty
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -150,14 +150,14 @@ setup() {
 }
 
 @test "render_run_metadata escapes pipe in skip reason" {
-    run render_run_metadata L2 'integration:main' 'foo|bar'
+    run render_run_metadata L2 'integration:main' 'foo|bar' '' ''
     [ "$status" -eq 0 ]
-    [[ $output == *"## Run Metadata"* ]]
+    [[ $output == *"· Loop details"* ]]
     [[ $output == *"foo\\|bar"* ]]
     [[ $output != *"| foo | bar |"* ]]
 }
 
-@test "render_pr_body appends Created By after disclaimer when engine usage set" {
+@test "render_pr_body renders one collapsed loop meta block carrying engine model tokens" {
     export PR_BODY_PREFIX=''
     export AGENT_REPORT_OVERVIEW=''
     export DETECT_RESULT_JSON='{}'
@@ -170,11 +170,12 @@ setup() {
     export USAGE_JSON='{"total_input_tokens":100000,"total_output_tokens":6000,"model":"Composer-2.5"}'
     run render_pr_body
     [ "$status" -eq 0 ]
-    [[ $output == *"Created By cursor Composer-2.5 In/Out: 100K/6K"* ]]
-    local disc_i created_i
-    disc_i="$(printf '%s\n' "${output}" | grep -n 'loop automation' | head -1 | cut -d: -f1)"
-    created_i="$(printf '%s\n' "${output}" | grep -n 'Created By' | head -1 | cut -d: -f1)"
-    [ "${disc_i}" -lt "${created_i}" ]
+    [[ $output == *"| Engine | \`cursor\` |"* ]]
+    [[ $output == *"| Model | \`Composer-2.5\` |"* ]]
+    [[ $output == *"| Tokens | In/Out 100K/6K |"* ]]
+    [[ $output == *"<details>"* ]]
+    # One meta block only: no stray Created By line beside the collapsed table.
+    [[ $output != *"Created By"* ]]
 }
 
 @test "render_pr_body empty prefix shows mechanical sections" {
@@ -189,13 +190,13 @@ setup() {
     run render_pr_body
     [ "$status" -eq 0 ]
     [[ $output == *"## Failure context"* ]]
-    [[ $output == *"## Run Metadata"* ]]
+    [[ $output == *"· Loop details"* ]]
     [[ $output == *"| Level | L2 |"* ]]
     [[ $output != *"## Summary"* ]]
     [[ $output != *"- Level:"* ]]
 }
 
-@test "render_pr_body omits Created By when engine and usage empty" {
+@test "render_pr_body omits the meta block when level target engine and usage are empty" {
     export PR_BODY_PREFIX=''
     export AGENT_REPORT_OVERVIEW=''
     export DETECT_RESULT_JSON='{}'
@@ -258,7 +259,7 @@ setup() {
     [ "$status" -eq 0 ]
     [[ $output == *"## Verification"* ]]
     [[ $output != *$'\n## Changes\n'* ]]
-    [[ $output == *"## Run Metadata"* ]]
+    [[ $output == *"· Loop details"* ]]
 }
 
 @test "render_pr_body orders prefix overview failure summary verification changes metadata" {
@@ -279,7 +280,7 @@ setup() {
     fail_i="$(printf '%s\n' "${output}" | grep -n '## Failure context' | head -1 | cut -d: -f1)"
     sum_i="$(printf '%s\n' "${output}" | grep -n '### Changes' | head -1 | cut -d: -f1)"
     ver_i="$(printf '%s\n' "${output}" | grep -n '## Verification' | head -1 | cut -d: -f1)"
-    meta_i="$(printf '%s\n' "${output}" | grep -n '## Run Metadata' | head -1 | cut -d: -f1)"
+    meta_i="$(printf '%s\n' "${output}" | grep -n '· Loop details' | head -1 | cut -d: -f1)"
     [ "${prefix_i}" -lt "${overview_i}" ]
     [ "${overview_i}" -lt "${fail_i}" ]
     [ "${fail_i}" -lt "${sum_i}" ]

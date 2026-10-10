@@ -57,6 +57,9 @@ _LOOP_CREATED_BY_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pw
 # shellcheck source=../../lib/loop/created_by.sh
 # shellcheck disable=SC1091
 source "${_LOOP_CREATED_BY_LIB}/created_by.sh"
+# shellcheck source=../../lib/loop/loop_meta.sh
+# shellcheck disable=SC1091
+source "${_LOOP_CREATED_BY_LIB}/loop_meta.sh"
 
 #######################################
 # redact_sensitive_text: Redact common secret patterns
@@ -531,17 +534,26 @@ function render_run_metadata {
     local level="${1:-}"
     local target_key="${2:-}"
     local skip_reason="${3:-}"
+    local engine="${4:-}"
+    local usage_json="${5:-}"
+    local block
 
-    if [[ -z ${level}${target_key}${skip_reason} ]]; then
+    if [[ -z ${level}${target_key}${skip_reason}${engine}${usage_json} ]]; then
         return 0
     fi
-    printf '%s\n' "## Run Metadata"
-    printf '%s\n' "| Field | Value |"
-    printf '%s\n' "| ----- | ----- |"
-    [[ -n ${level} ]] && printf '%s\n' "| Level | $(escape_markdown_table_cell "${level}") |"
-    [[ -n ${target_key} ]] && printf '%s\n' "| Target | \`$(escape_markdown_table_cell "${target_key}")\` |"
-    [[ -n ${skip_reason} ]] && printf '%s\n' "| Skip reason | $(escape_markdown_table_cell "${skip_reason}") |"
-    printf '\n'
+
+    # Shape comes from build_loop_meta_block so the PR body, PR comment,
+    # trigger reply, and entity Issue comment all carry the same meta block.
+    loop_meta_reset
+    [[ -n ${level} ]] && loop_meta_row "Level" "$(escape_markdown_table_cell "${level}")"
+    [[ -n ${target_key} ]] && loop_meta_row "Target" "\`$(escape_markdown_table_cell "${target_key}")\`"
+    [[ -n ${skip_reason} ]] && loop_meta_row "Skip reason" "$(escape_markdown_table_cell "${skip_reason}")"
+
+    block="$(build_loop_meta_block "${OUTCOME:-}" "" "" "${engine}" "${usage_json}" "")"
+    if [[ -z ${block} ]]; then
+        return 0
+    fi
+    printf '%s\n\n' "${block}"
 }
 
 #######################################
@@ -624,12 +636,8 @@ function render_pr_body {
         [[ -n ${section} ]] && printf '%s\n' "${section}"
     fi
 
-    render_run_metadata "${LEVEL}" "${TARGET_KEY}" "${SKIP_REASON}"
+    render_run_metadata "${LEVEL}" "${TARGET_KEY}" "${SKIP_REASON}" "${ENGINE}" "${USAGE_JSON}"
     render_automation_disclaimer
-    section="$(render_created_by_line "${ENGINE}" "${USAGE_JSON}")"
-    if [[ -n ${section} ]]; then
-        printf '%s\n' "${section}"
-    fi
 }
 
 #######################################

@@ -73,34 +73,112 @@ function format_compact_tokens {
 function render_created_by_line {
     local engine="${1:-}"
     local usage_json="${2:-}"
-    local model="" input="" output="" in_fmt="" out_fmt="" line=""
+    local model tokens line=""
 
-    if [[ -n ${usage_json} ]] && jq -e . > /dev/null 2>&1 <<< "${usage_json}"; then
-        model="$(jq -r '.model // empty' <<< "${usage_json}" 2> /dev/null || true)"
-        input="$(jq -r '.total_input_tokens // .input_tokens // empty' <<< "${usage_json}" 2> /dev/null || true)"
-        output="$(jq -r '.total_output_tokens // .output_tokens // empty' <<< "${usage_json}" 2> /dev/null || true)"
-    fi
+    model="$(usage_model_label "${usage_json}")"
+    tokens="$(usage_tokens_label "${usage_json}")"
 
-    if [[ -z ${engine}${model} ]] && [[ ! ${input} =~ ^[0-9]+$ ]] && [[ ! ${output} =~ ^[0-9]+$ ]]; then
+    if [[ -z ${engine}${model}${tokens} ]]; then
         return 0
     fi
 
     line="Created By"
     [[ -n ${engine} ]] && line+=" ${engine}"
     [[ -n ${model} ]] && line+=" ${model}"
-    if [[ ${input} =~ ^[0-9]+$ ]] || [[ ${output} =~ ^[0-9]+$ ]]; then
-        if [[ ${input} =~ ^[0-9]+$ ]]; then
-            in_fmt="$(format_compact_tokens "${input}")"
-        else
-            in_fmt="—"
-        fi
-        if [[ ${output} =~ ^[0-9]+$ ]]; then
-            out_fmt="$(format_compact_tokens "${output}")"
-        else
-            out_fmt="—"
-        fi
-        line+=" In/Out: ${in_fmt}/${out_fmt}"
-    fi
+    [[ -n ${tokens} ]] && line+=" In/Out: ${tokens}"
 
     printf '%s\n' "${line}"
+}
+
+#######################################
+# usage_model_label: Resolve a display label for the models a run used
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - usage_json string (optional)
+#
+# Outputs:
+#   Model label on stdout (single model, role=model pairs, or comma list);
+#   empty when no model is known
+#
+# Returns:
+#   0 on success
+#
+# Usage:
+#   label="$(usage_model_label "${USAGE_JSON}")"
+#
+#######################################
+function usage_model_label {
+    local usage_json="${1:-}"
+
+    if [[ -z ${usage_json} ]] || ! jq -e . > /dev/null 2>&1 <<< "${usage_json}"; then
+        return 0
+    fi
+
+    # A maker/checker run reports two models, so build_usage_json omits the
+    # single-valued .model and emits .models plus per-session roles instead.
+    # Reading only .model therefore dropped the model from the footer on
+    # every mixed run. Prefer role labels, then the models array.
+    jq -r '
+            if (.model // "") != "" then .model
+            elif ((.sessions // []) | map(select((.role // "") != "" and (.model // "") != ""))) != [] then
+              ((.sessions // [])
+               | map(select((.role // "") != "" and (.model // "") != ""))
+               | group_by(.role)
+               | map({role: .[0].role, model: .[0].model})
+               # Execution order, not alphabetical: maker runs, then checker.
+               | sort_by((if .role == "maker" then 0 elif .role == "checker" then 1 else 2 end), .role)
+               | map("\(.role)=\(.model)")
+               | join(" "))
+            elif ((.models // []) | length) > 0 then ((.models // []) | join(", "))
+            else empty end
+    ' <<< "${usage_json}" 2> /dev/null || true
+}
+
+#######################################
+# usage_tokens_label: Resolve the In/Out token label for a run
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - usage_json string (optional)
+#
+# Outputs:
+#   Compacted "{in}/{out}" label on stdout; empty when neither side is known
+#
+# Returns:
+#   0 on success
+#
+# Usage:
+#   tokens="$(usage_tokens_label "${USAGE_JSON}")"
+#
+#######################################
+function usage_tokens_label {
+    local usage_json="${1:-}"
+    local input="" output="" in_fmt="" out_fmt=""
+
+    if [[ -n ${usage_json} ]] && jq -e . > /dev/null 2>&1 <<< "${usage_json}"; then
+        input="$(jq -r '.total_input_tokens // .input_tokens // empty' <<< "${usage_json}" 2> /dev/null || true)"
+        output="$(jq -r '.total_output_tokens // .output_tokens // empty' <<< "${usage_json}" 2> /dev/null || true)"
+    fi
+
+    if [[ ! ${input} =~ ^[0-9]+$ ]] && [[ ! ${output} =~ ^[0-9]+$ ]]; then
+        return 0
+    fi
+
+    if [[ ${input} =~ ^[0-9]+$ ]]; then
+        in_fmt="$(format_compact_tokens "${input}")"
+    else
+        in_fmt="—"
+    fi
+    if [[ ${output} =~ ^[0-9]+$ ]]; then
+        out_fmt="$(format_compact_tokens "${output}")"
+    else
+        out_fmt="—"
+    fi
+
+    printf '%s/%s' "${in_fmt}" "${out_fmt}"
 }

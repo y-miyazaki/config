@@ -328,6 +328,9 @@ jobs:
     environment: ${{ inputs.environment }}
     permissions:
       contents: write
+      # issues: write lets finalize append the loop meta block to the Issue
+      # comment an entity (L1) agent posted.
+      issues: write
       pull-requests: write
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -358,6 +361,35 @@ jobs:
           run_started_at: ${{ inputs.run_started_at }}
           skip_reason: ${{ inputs.skip_reason }}
           usage_json: ${{ needs.agent-l1.outputs.usage_json || '' }}
+
+      # L1 agents post their own Issue comment through gh issue comment, so no
+      # platform footer reaches it. Finalize is the only stage that knows the
+      # usage totals, so it appends them here — collapsed, and last, so the
+      # agent's analysis stays the lead.
+      - name: Append Loop Meta To Entity Comment
+        env:
+          ENGINE: ${{ inputs.engine }}
+          GITHUB_TOKEN: ${{ steps.resolve_github_token.outputs.github_token }}
+          HANDOFF_KEY: ${{ inputs.handoff_key }}
+          LOOP_NAME: ${{ inputs.loop_name }}
+          OUTCOME: ${{ needs.agent-l1.result == 'success' && 'no-changes' || 'error' }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          USAGE_JSON: ${{ needs.agent-l1.outputs.usage_json || '' }}
+        run: |
+          set -euo pipefail
+          # shellcheck disable=SC1091
+          source .github/actions/lib/loop/created_by.sh
+          # shellcheck disable=SC1091
+          source .github/actions/lib/loop/loop_meta.sh
+          # shellcheck disable=SC1091
+          source .github/actions/lib/loop/entity_meta.sh
+          issue_number="$(entity_issue_number "${HANDOFF_KEY}")"
+          if [[ -z ${issue_number} ]]; then
+            exit 0
+          fi
+          append_entity_meta "${issue_number}" "<!-- ${LOOP_NAME}:v1 -->" \
+            "${OUTCOME}" "${ENGINE}" "${USAGE_JSON}" "${RUN_URL}"
 
   agent-l2:
     if: inputs.level == 'L2' || inputs.level == 'L3'
