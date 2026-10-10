@@ -147,8 +147,15 @@ job_if_block() {
     fi
 }
 
-@test "ci-loop-agent coalesces empty denylist to platform default for loop-execute" {
-    grep -q "inputs.denylist != '' && inputs.denylist ||" "${AGENT}"
+@test "ci-loop-agent passes denylist through unmodified for loop-execute to default" {
+    # loop-execute's lib/paths.sh::apply_platform_denylist_default coerces an
+    # empty DENYLIST to the platform default at loop start, so the reusable
+    # caller must not hardcode or coalesce a domain-specific default itself.
+    # shellcheck disable=SC2016
+    grep -qF 'denylist: ${{ inputs.denylist }}' "${AGENT}"
+    if grep -q "inputs.denylist != '' && inputs.denylist ||" "${AGENT}"; then
+        return 1
+    fi
 }
 
 @test "loop workflows do not use deprecated skill_name or verifier_skill_name inputs" {
