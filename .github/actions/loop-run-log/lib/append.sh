@@ -11,6 +11,9 @@
 # - Prune entries older than 30 days on each append
 # - tokens_total is measured usage sum or 0 when execute did not run
 # - Budget aggregation reads tokens_total from run log entries
+# - Push races are resolved by re-appending onto the refreshed base branch, never by
+#   opening a pull request: the log file is rewritten whole, so two open log PRs
+#   always conflict, and a bot cannot satisfy the review the base branch requires
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -231,67 +234,64 @@ function loop_run_log_build_entry {
 }
 
 #######################################
-# loop_run_log_commit_and_push: Commit run log changes and push or open PR
+# loop_run_log_commit_and_push: Commit the run log entry and push to the base branch
 #
 # Description:
-#   Commits the run log file when changed. Pushes directly when allowed; otherwise
-#   opens a squash-merge PR against base_branch.
+#   Commits the run log file when changed and pushes it to base_branch. A push that
+#   loses a race against a concurrent run is retried after re-fetching base_branch,
+#   restoring the run log from it, and appending the entry again, so a retry never
+#   carries a stale whole-file rewrite into the push.
 #
 # Globals:
-#   GITHUB_REPOSITORY, GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT - Used for PR metadata
-#
-# Arguments:
-#   $1 - Base branch for PR fallback
-#   $2 - Run log file path
-#   $3 - GitHub token
-#
-# Outputs:
 #   None
 #
+# Arguments:
+#   $1 - Base branch to push to
+#   $2 - Run log file path
+#   $3 - GitHub token
+#   $4 - JSON entry, re-appended on the refreshed file when a push is retried
+#
+# Outputs:
+#   Push progress on stdout; a workflow warning when every attempt fails
+#
 # Returns:
-#   0 on success or when there are no changes to commit
+#   0 on success, when there are no changes, and when the entry is given up on
 #
 #######################################
 function loop_run_log_commit_and_push {
     local base_branch="${1:?base_branch required}"
     local run_log_file="${2:?run_log_file required}"
     local token="${3:?token required}"
-    local log_branch pr_url
+    local entry_json="${4:?entry_json required}"
+    local attempt push_error=""
 
     export GITHUB_TOKEN="${token}"
     git config user.name "github-actions[bot]"
     git config user.email "github-actions[bot]@users.noreply.github.com"
     git config http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 -w0)"
 
-    if git diff --quiet "${run_log_file}" 2> /dev/null && [[ -z "$(git status --porcelain "${run_log_file}")" ]]; then
-        echo "No run log changes to commit."
-        return 0
-    fi
+    for attempt in 1 2 3; do
+        if [[ -z "$(git status --porcelain "${run_log_file}")" ]]; then
+            echo "No run log changes to commit."
+            return 0
+        fi
 
-    git add "${run_log_file}"
-    git commit -m "chore(loop): append run log [skip ci]"
-    if git push origin HEAD 2> /dev/null; then
-        echo "Run log pushed directly."
-        return 0
-    fi
+        git add "${run_log_file}"
+        git commit -m "chore(loop): append run log [skip ci]"
+        if push_error="$(git push origin "HEAD:${base_branch}" 2>&1)"; then
+            echo "Run log pushed to ${base_branch} on attempt ${attempt}."
+            return 0
+        fi
+        echo "Run log push attempt ${attempt} failed: ${push_error}"
 
-    echo "Direct push blocked; opening run log PR."
-    log_branch="loop/run-log-${GITHUB_RUN_ID:-0}-${GITHUB_RUN_ATTEMPT:-0}"
-    git checkout -B "${log_branch}"
-    git push origin "${log_branch}"
-    pr_url="$(gh pr create \
-        --repo "${GITHUB_REPOSITORY}" \
-        --base "${base_branch}" \
-        --head "${log_branch}" \
-        --title "chore(loop): append run log [skip ci]" \
-        --body "Automated loop run log append.")"
-    if gh pr merge "${pr_url}" --auto --delete-branch --squash 2> /dev/null; then
-        echo "Run log PR queued for auto-merge: ${pr_url}"
-    elif gh pr merge "${pr_url}" --delete-branch --squash 2> /dev/null; then
-        echo "Run log PR merged: ${pr_url}"
-    else
-        echo "::warning::Run log PR requires manual merge: ${pr_url}"
-    fi
+        git fetch origin "${base_branch}"
+        git reset --mixed "origin/${base_branch}"
+        git checkout "origin/${base_branch}" -- "${run_log_file}" 2> /dev/null || rm -f "${run_log_file}"
+        loop_run_log_append_entry "${run_log_file}" "${entry_json}"
+    done
+
+    echo "::warning::Run log entry dropped after 3 push attempts: ${push_error}"
+    return 0
 }
 
 #######################################

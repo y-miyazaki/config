@@ -13,6 +13,9 @@
 # - loop_run_log_append_entry prunes entries older than 30 days
 # - budget token selection prefers measured usage over tokens_total
 # - loop_run_log_build_entry carries the per-model usage breakdown through unchanged
+# - loop_run_log_commit_and_push skips committing when the run log is unchanged
+# - loop_run_log_commit_and_push pushes the entry to the base branch
+# - loop_run_log_commit_and_push keeps both entries when a concurrent run wins the push race
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -28,6 +31,47 @@ setup() {
 
 teardown() {
     rm -rf "${TEST_DIR}"
+}
+
+# Build a run log entry dated now, so the 30-day prune always keeps it.
+_run_log_entry() {
+    printf '{"run_id":"%s","loop_name":"%s","duration_s":1,"outcome":"skipped","skip_reason":"none","tokens_total":0,"workflow_run":"%s"}' \
+        "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" "$2"
+}
+
+# Create a bare origin plus a working clone, both holding an empty run log on main.
+# Echoes the clone path; the origin is always "${TEST_DIR}/origin.git".
+_make_git_sandbox() {
+    local origin="${TEST_DIR}/origin.git"
+    local work="${TEST_DIR}/work"
+
+    git init --bare -q -b main "${origin}"
+    git clone -q "${origin}" "${work}" 2> /dev/null
+    git -C "${work}" config user.email "test@example.com"
+    git -C "${work}" config user.name "test"
+    mkdir -p "${work}/.loop"
+    printf '%s' "${RUN_LOG_HEADER}" > "${work}/.loop/loop-run-log.md"
+    git -C "${work}" add .loop/loop-run-log.md
+    git -C "${work}" commit -q -m "init"
+    git -C "${work}" push -q origin HEAD:main
+    printf '%s' "${work}"
+}
+
+# Append one entry to the run log from a second clone and push it, so the clone
+# under test is left behind the base branch.
+_push_concurrent_entry() {
+    local entry="$1"
+    local other="${TEST_DIR}/other"
+
+    git clone -q "${TEST_DIR}/origin.git" "${other}"
+    git -C "${other}" config user.email "other@example.com"
+    git -C "${other}" config user.name "other"
+    (
+        cd "${other}" && loop_run_log_append_entry ".loop/loop-run-log.md" "${entry}"
+    )
+    git -C "${other}" add .loop/loop-run-log.md
+    git -C "${other}" commit -q -m "concurrent append"
+    git -C "${other}" push -q origin HEAD:main
 }
 
 @test "loop_run_log_build_entry includes tokens_total zero by default" {
@@ -172,6 +216,50 @@ teardown() {
     run loop_run_log_resolve_tokens_total '{"total_input_tokens":4815,"total_output_tokens":14276,"cache_read_tokens":2107374,"cache_write_tokens":72780}'
     [ "$status" -eq 0 ]
     [ "$output" = "19091" ]
+}
+
+@test "loop_run_log_commit_and_push keeps both entries when a concurrent run wins the push race" {
+    local work ours theirs result remote_log
+
+    work="$(_make_git_sandbox)"
+    ours="$(_run_log_entry "ours" "1")"
+    theirs="$(_run_log_entry "theirs" "2")"
+
+    (cd "${work}" && loop_run_log_append_entry ".loop/loop-run-log.md" "${ours}")
+    _push_concurrent_entry "${theirs}"
+
+    result="$(cd "${work}" && loop_run_log_commit_and_push "main" ".loop/loop-run-log.md" "token" "${ours}")"
+    [[ ${result} == *"push attempt 1 failed"* ]]
+    [[ ${result} == *"pushed to main on attempt 2"* ]]
+
+    remote_log="$(git -C "${TEST_DIR}/origin.git" show "main:.loop/loop-run-log.md")"
+    [ "$(grep -c '"loop_name":"theirs"' <<< "${remote_log}")" -eq 1 ]
+    [ "$(grep -c '"loop_name":"ours"' <<< "${remote_log}")" -eq 1 ]
+}
+
+@test "loop_run_log_commit_and_push pushes the entry to the base branch" {
+    local work ours result remote_log
+
+    work="$(_make_git_sandbox)"
+    ours="$(_run_log_entry "ours" "1")"
+
+    (cd "${work}" && loop_run_log_append_entry ".loop/loop-run-log.md" "${ours}")
+
+    result="$(cd "${work}" && loop_run_log_commit_and_push "main" ".loop/loop-run-log.md" "token" "${ours}")"
+    [[ ${result} == *"pushed to main on attempt 1"* ]]
+
+    remote_log="$(git -C "${TEST_DIR}/origin.git" show "main:.loop/loop-run-log.md")"
+    [ "$(grep -c '"loop_name":"ours"' <<< "${remote_log}")" -eq 1 ]
+}
+
+@test "loop_run_log_commit_and_push skips committing when the run log is unchanged" {
+    local work result
+
+    work="$(_make_git_sandbox)"
+
+    result="$(cd "${work}" && loop_run_log_commit_and_push "main" ".loop/loop-run-log.md" "token" "$(_run_log_entry "ours" "1")")"
+    [[ ${result} == *"No run log changes to commit."* ]]
+    [ "$(git -C "${work}" rev-list --count HEAD)" -eq 1 ]
 }
 
 @test "loop_run_log_build_entry carries the per-model usage breakdown through unchanged" {

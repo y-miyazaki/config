@@ -12,7 +12,7 @@ inputs:
     required: false
   base_branch:
     default: "main"
-    description: "Base branch for run log commit when direct push is blocked"
+    description: "Base branch the run log commit is pushed to"
     required: false
   duration_s:
     default: ""

@@ -65,7 +65,7 @@ setup() {
         DURATION_S_INPUT='7' \
         GITHUB_OUTPUT="${GITHUB_OUTPUT}"
     [ "$status" -eq 0 ]
-    [[ $output == *"Run log pushed directly."* ]]
+    [[ $output == *"Run log pushed to main on attempt 1."* ]]
 
     run tail -n 1 "${RUN_LOG_WORK}/.loop/loop-run-log.md"
     [ "$status" -eq 0 ]

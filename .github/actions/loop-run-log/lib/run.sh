@@ -15,7 +15,7 @@
 #   Appends one JSONL line to RUN_LOG_FILE; optional entry_json on GITHUB_OUTPUT
 #
 # Dependencies:
-#   - bash, git, jq, gh, openssl
+#   - bash, git, jq, openssl
 #   - append.sh in the same directory
 #######################################
 
@@ -175,7 +175,7 @@ function write_entry_json_output {
 # main: Append run log entry and push to base branch
 #
 # Globals:
-#   BASE_BRANCH - Branch for commit and PR fallback
+#   BASE_BRANCH - Branch the run log commit is pushed to
 #
 # Arguments:
 #   None
@@ -193,7 +193,7 @@ function main {
     validate_required_inputs
     duration_s="$(resolve_duration_s)"
     entry_json="$(append_run_log_entry "${duration_s}")"
-    loop_run_log_commit_and_push "${BASE_BRANCH}" "${RUN_LOG_FILE}" "${GITHUB_TOKEN}"
+    loop_run_log_commit_and_push "${BASE_BRANCH}" "${RUN_LOG_FILE}" "${GITHUB_TOKEN}" "${entry_json}"
     write_entry_json_output "${entry_json}"
 }
 
