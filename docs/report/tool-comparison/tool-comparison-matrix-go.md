@@ -6,6 +6,7 @@ Go 開発に特化したツール選定の判断材料。
 
 | 日付       | 内容                                                                                                                          |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-10 | mockery のバージョンを `mise.toml` 実値 (v3.8.0) に同期 (#911)。gomock / moq は検証手段 (外部アクセス) が未許可のため据え置き |
 | 2026-08-23 | Mock 最新バージョン更新 (gomock v0.6.0 / mockery v3.7.3 / moq v0.7.1)。kaniko アーカイブ済みを反映し BuildKit rootless へ誘導 |
 | 2026-05-21 | History セクション追加                                                                                                        |
 | 2026-05-12 | 初版作成。Formatter / Linter / Container Build / Release / API Doc / Mock 等を比較                                            |
@@ -168,7 +169,7 @@ Go 開発に特化したツール選定の判断材料。
 | 提供元             | Uber (golang/mock から移行)                     | vektra                                              | Mat Ryer                                      |
 | リポジトリ         | [uber-go/mock](https://github.com/uber-go/mock) | [vektra/mockery](https://github.com/vektra/mockery) | [matryer/moq](https://github.com/matryer/moq) |
 | ライセンス         | Apache 2.0                                      | BSD-3-Clause                                        | MIT                                           |
-| 最新バージョン     | v0.6.0 (2025-08)                                | v3.7.3 (2026-08)                                    | v0.7.1 (2026-03)                              |
+| 最新バージョン     | v0.6.0 (2025-08)                                | v3.8.0 (`mise.toml` 実値)                           | v0.7.1 (2026-03)                              |
 | アプローチ         | コード生成 + DSL                                | コード生成 (testify/mock ベース)                    | コード生成 (関数フィールド)                   |
 | コード生成ツール   | `mockgen`                                       | `mockery`                                           | `moq`                                         |
 | go generate 対応   | ✅                                              | ✅                                                  | ✅                                            |
