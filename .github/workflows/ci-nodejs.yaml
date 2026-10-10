@@ -426,7 +426,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@4c06e977a39313be51410eb8aec809df4a61c9ce # v1.8.111
+        uses: y-miyazaki/config/.github/actions/summary@54aba41bbbd5332ea3c15158c3d0ce5ba7b1c2e3 # v1.8.111
         with:
           artifacts: |
             (none)
@@ -575,7 +575,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@4c06e977a39313be51410eb8aec809df4a61c9ce # v1.8.111
+        uses: y-miyazaki/config/.github/actions/summary@54aba41bbbd5332ea3c15158c3d0ce5ba7b1c2e3 # v1.8.111
         with:
           artifacts: |
             pkg-audit-${{ env.COMPONENT }}
