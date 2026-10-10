@@ -108,6 +108,10 @@ jobs:
       agent_maker_effort: medium
       agent_maker_instructions: |
         Apply the human's feedback to the PR head.
+        Your working directory is already a git worktree checked out at the PR head commit
+        (loop-worktree-setup fetched the PR branch and checked out its head OID before you started).
+        Edit the files in place. Do not run git fetch, git checkout, git switch, or git pull —
+        the branch you need is already there, and the workflow owns the commit and push.
         When detect result.comments has multiple entries, address the full array in one session (not only result.comment_body).
         Comment webhooks require the configured @mention; explicit dispatch paths do not.
         Do not invent mention-less triggers on comment webhooks.
