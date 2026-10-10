@@ -196,7 +196,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@0a92dc32df7bc210900475e75480b77d90dc9f4f # v1.8.110
+        uses: y-miyazaki/config/.github/actions/summary@5838d4c94832e1e6c442f27e9e982dad2ce99382 # v1.8.110
         with:
           artifacts: |
             coverage-${{ env.COMPONENT }}
@@ -262,7 +262,7 @@ jobs:
 
       - name: Configure git auth
         if: github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@0a92dc32df7bc210900475e75480b77d90dc9f4f # v1.8.110
+        uses: y-miyazaki/config/.github/actions/git-auth@5838d4c94832e1e6c442f27e9e982dad2ce99382 # v1.8.110
         with:
           github_token: ${{ github.token }}
           operation: configure
@@ -292,7 +292,7 @@ jobs:
 
       - name: Clear git auth
         if: always() && github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@0a92dc32df7bc210900475e75480b77d90dc9f4f # v1.8.110
+        uses: y-miyazaki/config/.github/actions/git-auth@5838d4c94832e1e6c442f27e9e982dad2ce99382 # v1.8.110
         with:
           github_token: ${{ github.token }}
           operation: clear
@@ -321,7 +321,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@0a92dc32df7bc210900475e75480b77d90dc9f4f # v1.8.110
+        uses: y-miyazaki/config/.github/actions/summary@5838d4c94832e1e6c442f27e9e982dad2ce99382 # v1.8.110
         with:
           artifacts: |
             (none)
@@ -409,7 +409,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@0a92dc32df7bc210900475e75480b77d90dc9f4f # v1.8.110
+        uses: y-miyazaki/config/.github/actions/summary@5838d4c94832e1e6c442f27e9e982dad2ce99382 # v1.8.110
         with:
           artifacts: |
             govulncheck-${{ env.COMPONENT }}
