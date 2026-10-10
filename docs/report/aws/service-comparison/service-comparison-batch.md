@@ -7,6 +7,7 @@
 | 日付       | 内容     |
 | ---------- | -------- |
 | 2026-05-28 | 初版作成 |
+| 2026-10-10 | 初版から更新なし。AWS公式ドキュメント・サービス仕様との整合を再確認する必要あり（要レビュー、#911） |
 
 ## Batch Processing: AWS Batch vs ECS Scheduled Task vs Step Functions vs Lambda
 
