@@ -3,7 +3,8 @@
 # Description: Derive verifier_context markdown from detect script JSON
 #
 # Usage:
-#   source "${LOOP_ACTION_LIB_DIR}/verifier_context.sh"
+#   loop_action_lib="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
+#   source "${loop_action_lib}/verifier_context.sh"
 #   build_verifier_context_from_result "${detect_json}"
 #
 # Output:

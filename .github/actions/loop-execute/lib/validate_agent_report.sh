@@ -155,20 +155,27 @@ function extract_subsection_table_col1 {
     local output_file="$1"
     local subsection="$2"
 
+    # The header row is the row directly before the separator row, so it is
+    # dropped structurally; matching header words by name would either miss
+    # headers such as "Commit range" or drop real paths such as Rootfs/x.sh.
     awk -v sec="${subsection}" '
         $0 ~ "^### " sec "[[:space:]]*$" { in_sec = 1; next }
         in_sec && /^### / { exit }
         in_sec && /^## / { exit }
         in_sec && /^\|/ {
-            if ($0 ~ /^\|[[:space:]]*[-:]+/) next
+            if ($0 ~ /^\|[[:space:]]*[-:]+/) { pending = ""; next }
+            if (pending != "") print pending
+            pending = ""
             n = split($0, cells, "|")
             val = cells[2]
             gsub(/^[[:space:]]+|[[:space:]]+$/, "", val)
             gsub(/`/, "", val)
             if (val == "" || val == "—" || val == "-" || val == "_None_") next
-            if (val ~ /^(File|Target|Workflow|Commit|Path|What|Why|Root|Check)/) next
-            print val
+            pending = val
+            next
         }
+        in_sec && pending != "" { print pending; pending = "" }
+        END { if (pending != "") print pending }
     ' "${output_file}"
 }
 
@@ -445,10 +452,6 @@ function validate_agent_report {
     if [[ ! -f ${output_file} ]]; then
         printf '%s\n' "Missing agent-output.txt for format validation"
         return 1
-    fi
-
-    if [[ -n ${changed_files} ]] && ! grep -qE '^### Changes[[:space:]]*$' "${output_file}"; then
-        violations+=("Survey output must not accompany a non-empty branch diff")
     fi
 
     if agent_report_is_survey_output "${output_file}" "${changed_files}"; then

@@ -14,6 +14,8 @@ bats_require_minimum_version 1.5.0
 # - harvest_workspace_into_worktree copies modified files from GITHUB_WORKSPACE
 # - harvest_workspace_into_worktree deletes paths removed in GITHUB_WORKSPACE
 # - harvest_workspace_into_worktree is a no-op when workspace equals worktree
+# - harvest_workspace_into_worktree harvests a renamed file instead of failing
+# - harvest_workspace_into_worktree keeps the source file of a copy
 # - run_agent grants edit permission to claude maker sessions only, and forwards model/max-turns
 # - run_agent forwards EFFORT to claude and warns when the engine has no effort flag
 # - run_agent opens one usage session per invocation and tags it with USAGE_ROLE
@@ -186,6 +188,56 @@ STUB
     WORKTREE_PATH="${wt}"
     harvest_workspace_into_worktree
     [[ ! -e "${wt}/gone.txt" ]]
+}
+
+@test "harvest_workspace_into_worktree keeps the source file of a copy" {
+    local ws wt
+
+    ws="${BATS_TEST_TMPDIR}/ws-copy"
+    wt="${BATS_TEST_TMPDIR}/wt-copy"
+    bats_git_fresh_repo "${ws}"
+    bats_git_fresh_repo "${wt}"
+    printf 'line1\nline2\nline3\nline4\nline5\n' > "${ws}/src.txt"
+    printf 'line1\nline2\nline3\nline4\nline5\n' > "${wt}/src.txt"
+    bats_git_commit "${ws}" "init"
+    bats_git_commit "${wt}" "init"
+    printf 'line1\nline2\nline3\nline4\nline5\nextra\n' > "${ws}/src.txt"
+    printf 'line1\nline2\nline3\nline4\nline5\n' > "${ws}/copy.txt"
+    bats_git_cmd -C "${ws}" add src.txt copy.txt
+
+    GITHUB_WORKSPACE="${ws}"
+    WORKTREE_PATH="${wt}"
+    export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=status.renames GIT_CONFIG_VALUE_0=copies
+    run bats_git_cmd -C "${ws}" status --porcelain
+    [[ $output == *"C  src.txt -> copy.txt"* ]]
+    run harvest_workspace_into_worktree
+    [ "$status" -eq 0 ]
+    [ -e "${wt}/src.txt" ]
+    [ -e "${wt}/copy.txt" ]
+}
+
+@test "harvest_workspace_into_worktree harvests a renamed file instead of failing" {
+    # Regression guard: `git status --porcelain` renders a rename as a single
+    # "R  old -> new" line. Treating that whole string as one literal path
+    # made harvest fail outright instead of copying the rename.
+    local ws wt
+
+    ws="${BATS_TEST_TMPDIR}/ws-rename"
+    wt="${BATS_TEST_TMPDIR}/wt-rename"
+    bats_git_fresh_repo "${ws}"
+    bats_git_fresh_repo "${wt}"
+    printf 'content\n' > "${ws}/old.txt"
+    printf 'content\n' > "${wt}/old.txt"
+    bats_git_commit "${ws}" "init"
+    bats_git_commit "${wt}" "init"
+    bats_git_cmd -C "${ws}" mv old.txt new.txt
+
+    GITHUB_WORKSPACE="${ws}"
+    WORKTREE_PATH="${wt}"
+    run harvest_workspace_into_worktree
+    [ "$status" -eq 0 ]
+    [[ "$(cat "${wt}/new.txt")" == "content" ]]
+    [[ ! -e "${wt}/old.txt" ]]
 }
 
 @test "harvest_workspace_into_worktree is a no-op when workspace equals worktree" {

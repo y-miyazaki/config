@@ -21,6 +21,17 @@ runs:
           exit 1
         fi
 
+    - name: Validate operation
+      shell: bash
+      env:
+        OPERATION: ${{ inputs.operation }}
+      run: |
+        set -euo pipefail
+        if [[ "${OPERATION}" != "configure" && "${OPERATION}" != "clear" ]]; then
+          echo "::error::Invalid operation: '${OPERATION}'. Expected 'configure' or 'clear'."
+          exit 1
+        fi
+
     - name: Configure git auth (http.extraheader)
       if: inputs.operation == 'configure'
       shell: bash

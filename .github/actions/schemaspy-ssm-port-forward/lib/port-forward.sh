@@ -82,7 +82,7 @@ function setup_ssm_port_forward {
         return 1
     fi
 
-    echo "local_port=${local_port}" >> "$GITHUB_OUTPUT"
+    echo "local_port=${local_port}" >> "${GITHUB_OUTPUT:?GITHUB_OUTPUT is required}"
 
     echo "Starting port forwarding: localhost:${local_port} -> ${BASTION_ID} -> ${DB_HOST}:${DB_PORT}"
 
@@ -103,7 +103,7 @@ function setup_ssm_port_forward {
         > "${ssm_log}" 2>&1 &
 
     ssm_pid=$!
-    echo "ssm_pid=${ssm_pid}" >> "$GITHUB_OUTPUT"
+    echo "ssm_pid=${ssm_pid}" >> "${GITHUB_OUTPUT:?GITHUB_OUTPUT is required}"
     echo "SSM Session started with PID: ${ssm_pid}"
 
     echo "Waiting for port forwarding to be ready..."

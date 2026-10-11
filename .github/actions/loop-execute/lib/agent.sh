@@ -261,7 +261,7 @@ function grant_claude_workspace_trust {
 #
 #######################################
 function harvest_workspace_into_worktree {
-    local workspace worktree line xy path dest src harvested=0
+    local workspace worktree line xy path dest src old_path harvested=0
 
     : "${WORKTREE_PATH:?}"
     if [[ -z ${GITHUB_WORKSPACE:-} || ! -d ${GITHUB_WORKSPACE} ]]; then
@@ -280,6 +280,20 @@ function harvest_workspace_into_worktree {
         [[ -z ${line} ]] && continue
         xy="${line:0:2}"
         path="${line:3}"
+        if [[ ${xy} == R* || ${xy} == C* ]] && [[ ${path} == *" -> "* ]]; then
+            # Rename/copy porcelain lines are "old -> new"; only the new path
+            # is harvested, and the stale old path is dropped from the
+            # worktree so the rename isn't recreated as a duplicate add.
+            old_path="${path%% -> *}"
+            path="${path##* -> }"
+            old_path="${old_path#\"}"
+            old_path="${old_path%\"}"
+            old_path="${old_path//\\\"/\"}"
+            # A copy leaves the source in place, so only renames drop it.
+            if [[ ${xy} == R* && -n ${old_path} && ${old_path} != .git/* ]]; then
+                rm -rf "${worktree:?}/${old_path}"
+            fi
+        fi
         if [[ ${path} == \"* ]]; then
             path="${path#\"}"
             path="${path%\"}"

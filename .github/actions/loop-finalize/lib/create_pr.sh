@@ -43,6 +43,7 @@ LABELS="${LABELS:-}"
 LEVEL="${LEVEL:-}"
 LOOP_HANDOFF_DIR="${LOOP_HANDOFF_DIR:-}"
 NOTIFY_CONTEXT_JSON="${NOTIFY_CONTEXT_JSON:-}"
+OUTCOME="${OUTCOME:-}"
 PR_BASE_BRANCH="${PR_BASE_BRANCH:-}"
 PR_BODY="${PR_BODY:-}"
 PR_DRAFT="${PR_DRAFT:-false}"
@@ -65,6 +66,7 @@ USAGE_JSON="${USAGE_JSON:-}"
 #   LEVEL - Notify level for PR body (optional)
 #   LOOP_HANDOFF_DIR - Handoff directory (optional)
 #   NOTIFY_CONTEXT_JSON - Notify context JSON
+#   OUTCOME - Finalize outcome for Created By footer icon (optional)
 #   PR_BASE_BRANCH - Base branch
 #   PR_BODY - Static PR body prefix (optional)
 #   PR_TITLE - PR title
@@ -116,7 +118,7 @@ function main {
         --notify-json-file "${notify_json_path}"
     )
 
-    export AGENT_BRANCH PR_BODY ENGINE LEVEL SKIP_REASON TARGET_JSON USAGE_JSON
+    export AGENT_BRANCH PR_BODY ENGINE LEVEL OUTCOME SKIP_REASON TARGET_JSON USAGE_JSON
     composed="$(bash "${script_dir}/create_pr_body.sh" "${body_args[@]}")"
 
     gh_args=(

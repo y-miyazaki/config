@@ -89,5 +89,5 @@ function detect_codeql_support {
 }
 
 if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
-    detect_codeql_support
+    detect_codeql_support || exit $?
 fi

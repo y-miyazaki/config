@@ -7,7 +7,7 @@
 #
 # Usage:
 #   PR_BODY=... DETECT_RESULT_JSON=... NOTIFY_CONTEXT_JSON=... \
-#   ENGINE=... LEVEL=... SKIP_REASON=... TARGET_JSON=... USAGE_JSON=... \
+#   ENGINE=... LEVEL=... OUTCOME=... SKIP_REASON=... TARGET_JSON=... USAGE_JSON=... \
 #   bash lib/create_pr_body.sh
 #
 #   Large payloads: pass file paths as CLI arguments (avoids ARG_MAX / MAX_ARG_STRLEN):
@@ -40,6 +40,7 @@ DETECT_RESULT_JSON="${DETECT_RESULT_JSON:-}"
 ENGINE="${ENGINE:-}"
 LEVEL="${LEVEL:-}"
 NOTIFY_CONTEXT_JSON="${NOTIFY_CONTEXT_JSON:-}"
+OUTCOME="${OUTCOME:-}"
 PR_BODY="${PR_BODY:-}"
 SKIP_REASON="${SKIP_REASON:-}"
 TARGET_JSON="${TARGET_JSON:-}"
@@ -191,6 +192,7 @@ function slim_detect_json_for_pr_body {
 #   ENGINE - AI engine slug for Created By footer
 #   LEVEL - Footer level
 #   NOTIFY_CONTEXT_JSON - Notify context JSON (optional)
+#   OUTCOME - Finalize outcome for Created By footer icon (optional)
 #   PR_BODY - Caller static prefix
 #   SKIP_REASON - Footer skip reason
 #   TARGET_JSON - Target JSON with .key (optional)
@@ -240,6 +242,7 @@ function create_pr_body {
     export AGENT_REPORT_VERIFICATION
     export ENGINE
     export LEVEL
+    export OUTCOME
     export TARGET_KEY
     export SKIP_REASON
     export USAGE_JSON

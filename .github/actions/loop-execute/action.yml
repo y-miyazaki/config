@@ -144,6 +144,9 @@ outputs:
   attempts:
     description: "Number of Agent→Verify attempts executed"
     value: ${{ steps.loop.outputs.attempts }}
+  denylist_blocked:
+    description: "true when the final attempt's diff still matched the denylist (push is skipped)"
+    value: ${{ steps.loop.outputs.denylist_blocked }}
   failure_message:
     description: "Truncated failure message for run log diagnostics"
     value: ${{ steps.failure_diag.outputs.failure_message }}
@@ -241,6 +244,7 @@ runs:
       env:
         BRANCH: ${{ inputs.branch }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
+        LOOP_DENYLIST_BLOCKED: ${{ steps.loop.outputs.denylist_blocked }}
         LOOP_HAS_CHANGES: ${{ steps.loop.outputs.has_changes }}
         STATUS_DIR: ${{ runner.temp }}/loop-execute-status
         WORKTREE_PATH: ${{ inputs.worktree_path }}

@@ -4,7 +4,8 @@
 #   Emit the ## Constraints block for loop maker prompts.
 #
 # Usage:
-#   source "${LOOP_ACTION_LIB_DIR}/build_constraints.sh"
+#   loop_action_lib="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
+#   source "${loop_action_lib}/build_constraints.sh"
 #   emit_loop_constraints "<may_edit>" "<write_target>" "<allowlist>" "<report_file>"
 #   emit_loop_constraints_from_level "<level>" "<allowlist>"  # deprecated
 #

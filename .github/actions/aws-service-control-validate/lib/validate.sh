@@ -53,7 +53,7 @@ function validate_service_control_inputs {
         echo "❌ Error: action must be 'start' or 'stop', got '${ACTION}'" >&2
         return 1
     fi
-    echo "action=${ACTION}" >> "$GITHUB_OUTPUT"
+    echo "action=${ACTION}" >> "${GITHUB_OUTPUT:?GITHUB_OUTPUT is required}"
     echo "✅ Action validated: ${ACTION}"
 
     local target_json=""
@@ -82,7 +82,7 @@ function validate_service_control_inputs {
             echo "targets<<TARGETS_EOF"
             echo "[]"
             echo "TARGETS_EOF"
-        } >> "$GITHUB_OUTPUT"
+        } >> "${GITHUB_OUTPUT:?GITHUB_OUTPUT is required}"
         return 0
     fi
 
@@ -91,7 +91,7 @@ function validate_service_control_inputs {
         echo "targets<<TARGETS_EOF"
         printf '%s\n' "${sanitized_targets}"
         echo "TARGETS_EOF"
-    } >> "$GITHUB_OUTPUT"
+    } >> "${GITHUB_OUTPUT:?GITHUB_OUTPUT is required}"
     echo "✅ Target ${RESOURCE_LABEL} count: ${target_count}"
     printf '%s' "${sanitized_targets}" | jq .
 }

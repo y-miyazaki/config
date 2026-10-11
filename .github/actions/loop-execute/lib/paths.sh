@@ -182,6 +182,7 @@ function glob_to_ere {
     local remaining="${glob}"
     local part ere="^"
     local index part_count
+    local leading_double_star=false
 
     while [[ ${remaining} == */* ]]; do
         part="${remaining%%/*}"
@@ -196,8 +197,14 @@ function glob_to_ere {
         [[ -z ${part} ]] && continue
 
         if [[ ${part} == '**' ]]; then
-            if [[ ${index} -eq 0 ]]; then
+            if [[ ${part_count} -eq 1 ]]; then
                 ere+='.*'
+            elif [[ ${index} -eq 0 ]]; then
+                # Leading ** also matches a root-level file (gitwildmatch:
+                # **/x matches both x and sub/x), so the separator it owns
+                # must be optional rather than forced before the next part.
+                ere+='(.*/)?'
+                leading_double_star=true
             elif [[ ${index} -eq $((part_count - 1)) ]]; then
                 ere+='(/.*)?'
             else
@@ -206,9 +213,10 @@ function glob_to_ere {
             continue
         fi
 
-        if [[ ${index} -gt 0 || ${ere} == ^.* ]]; then
+        if [[ ${index} -gt 0 ]] && ! ${leading_double_star}; then
             ere+='/'
         fi
+        leading_double_star=false
 
         ere+="$(component_to_ere "${part}")"
     done

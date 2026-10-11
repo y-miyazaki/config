@@ -66,5 +66,5 @@ function detect_sarif_upload_support {
 }
 
 if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
-    detect_sarif_upload_support
+    detect_sarif_upload_support || exit $?
 fi

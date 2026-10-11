@@ -8,6 +8,7 @@ bats_require_minimum_version 1.5.0
 # Use cases:
 # - create_pr exits cleanly after PR creation (EXIT trap must not reference local scope)
 # - create_pr records redacted failure when gh pr create fails
+# - create_pr threads OUTCOME into the rendered PR body loop meta block
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -15,15 +16,16 @@ while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
 done
 # shellcheck disable=SC1091
 source "${_bats_support}/support/common.bash"
+# shellcheck disable=SC1091
+source "${_bats_support}/support/gh_mock.bash"
 
 setup() {
     local candidate
 
-    MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
+    mock_gh_setup
     HANDOFF_DIR="${BATS_TEST_TMPDIR}/loop-handoff"
-    mkdir -p "${MOCK_BIN}"
 
-    cat > "${MOCK_BIN}/gh" << 'EOF'
+    mock_gh_write << 'EOF'
 #!/bin/bash
 if [[ "$1" == "pr" && "$2" == "create" ]]; then
     if [[ -n ${GH_ARGV_FILE:-} ]]; then
@@ -52,12 +54,14 @@ fi
 printf 'unexpected gh: %s\n' "$*" >&2
 exit 1
 EOF
-    chmod +x "${MOCK_BIN}/gh"
-    export PATH="${MOCK_BIN}:${PATH}"
 
     bats_source_rel ".github/actions/lib/loop/handoff.sh"
     candidate='{"target_json":{"key":"integration:main"},"prompt":"p","verifier_context":"","result":{"failures":[]}}'
     loop_handoff_write_bundle "${HANDOFF_DIR}" "${candidate}"
+}
+
+teardown() {
+    mock_gh_teardown
 }
 
 @test "create_pr exits cleanly after successful PR creation" {

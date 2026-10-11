@@ -3,7 +3,7 @@
 # Description: Resolve loop state file path from explicit input or loop_name default
 #
 # Usage:
-#   source "${LOOP_ACTION_LIB_DIR}/resolve_state_file.sh"
+#   source "${GITHUB_ACTION_PATH}/../lib/loop/resolve_state_file.sh"
 #   LOOP_NAME=changelog STATE_FILE_INPUT= GITHUB_OUTPUT=/tmp/out resolve_state_file
 #
 # Output:

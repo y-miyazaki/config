@@ -12,6 +12,7 @@
 # - parse_verifier_output parses cursor stream-json checker capture
 # - run_verify rejects instead of approving when the branch diff cannot be computed
 # - run_verify honors NO_CHANGES_VERDICT when the branch diff is empty
+# - run_verify writes denylist_blocked when the diff matches the denylist
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -23,7 +24,10 @@ source "${_bats_support}/support/common.bash"
 setup() {
     bats_source_rel ".github/actions/loop-execute/lib/common.sh"
     bats_source_rel ".github/actions/loop-execute/lib/usage.sh"
+    bats_source_rel ".github/actions/loop-execute/lib/paths.sh"
+    bats_source_rel ".github/actions/loop-execute/lib/rejections.sh"
     bats_source_rel ".github/actions/loop-execute/lib/verifier.sh"
+    OPEN_REJECTIONS_JSON='[]'
 }
 
 @test "extract_last_json_fence returns the last json block" {
@@ -174,4 +178,32 @@ EOF
     NO_CHANGES_VERDICT="APPROVE"
     run run_verify "${attempt_dir}" 1 "true"
     [[ "$(cat "${attempt_dir}/verdict")" == "APPROVE" ]]
+}
+
+@test "run_verify writes denylist_blocked when the diff matches the denylist" {
+    local remote work attempt_dir
+
+    remote="${BATS_TEST_TMPDIR}/remote-denylist"
+    work="${BATS_TEST_TMPDIR}/work-denylist"
+    attempt_dir="${BATS_TEST_TMPDIR}/attempt-denylist"
+
+    bats_git_fresh_repo "${remote}"
+    bats_git_cmd -C "${remote}" checkout -q -b main
+    printf 'base\n' > "${remote}/base.txt"
+    bats_git_commit "${remote}" "init"
+
+    bats_git_cmd clone -q "${remote}" "${work}"
+    bats_git_local_identity "${work}"
+    printf 'hunter2\n' > "${work}/secrets.yaml" # pragma: allowlist secret
+    bats_git_commit "${work}" "add secret"
+
+    WORKTREE_PATH="${work}"
+    BASE_BRANCH="main"
+    DENYLIST="**/secrets*"
+
+    run run_verify "${attempt_dir}" 1 "true"
+    [[ ${status} -eq 0 ]]
+    [[ "$(cat "${attempt_dir}/verdict")" == "REJECT" ]]
+    [ -f "${attempt_dir}/denylist_blocked" ]
+    [[ "$(cat "${attempt_dir}/denylist_blocked")" == "true" ]]
 }

@@ -11,6 +11,7 @@
 # - promote_has_changes_after_attempt ignores branch-ahead on attempt 1
 # - promote_has_changes_after_attempt keeps branch-ahead on attempt 2+
 # - promote_has_changes_after_attempt treats HEAD movement as this-attempt changes
+# - write_loop_outputs includes denylist_blocked
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -42,6 +43,20 @@ setup() {
 @test "parse_outcome_override_from_agent_output ignores fix outcomes" {
     run parse_outcome_override_from_agent_output $'- **Outcome:** Fixed MD001 in docs/ci-sweeper-test.md\n'
     [ "$status" -ne 0 ]
+}
+
+@test "write_loop_outputs includes denylist_blocked" {
+    GITHUB_OUTPUT="${BATS_TEST_TMPDIR}/github_output"
+    : > "${GITHUB_OUTPUT}"
+    ATTEMPT=2
+    VERDICT="REJECT"
+    REASON="Denylist violation: secrets.yaml"
+    HAS_CHANGES="true"
+    DENYLIST_BLOCKED="true"
+    OPEN_REJECTIONS_JSON='[]'
+    OUTCOME_OVERRIDE=""
+    write_loop_outputs
+    grep -q '^denylist_blocked=true$' "${GITHUB_OUTPUT}"
 }
 
 @test "promote_has_changes_after_attempt leaves HAS_CHANGES false on attempt 1 when HEAD unchanged" {

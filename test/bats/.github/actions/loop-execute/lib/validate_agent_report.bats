@@ -14,6 +14,8 @@ bats_require_minimum_version 1.5.0
 # - reconcile_agent_report_with_branch_diff appends missing branch-diff rows after table body
 # - reconcile_agent_report_with_branch_diff skips commit-based changelog Changes tables
 # - validate_agent_report accepts changelog apply output without path rows in Changes
+# - validate_agent_report accepts a changed path whose basename starts with a header word
+# - validate_agent_report ignores multi-word header cells such as Commit range
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -244,6 +246,63 @@ EOF
     run validate_agent_report "${out}" $'docs/a.md\ndocs/b.md\n' "docs-updater"
     [ "$status" -eq 1 ]
     [[ $output == *"docs/b.md"* ]]
+}
+
+@test "validate_agent_report accepts a changed path whose basename starts with a header word" {
+    # Regression guard: extract_subsection_table_col1 used to prefix-match
+    # header words (File/Target/Root/Check/...), so a real path like
+    # Rootfs/entry.sh or Checker.sh was mistaken for a table header and
+    # dropped — causing a false "missing from Changes table" rejection.
+    local out="${TEST_TMP}/header-prefix-path.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Refactored the rootfs entrypoint and checker script.
+
+## Summary
+
+### Changes
+
+| Target | What was wrong | What changed |
+| ------ | -------------- | ------------ |
+| `Rootfs/entry.sh` | duplicated setup | deduplicated |
+| `Checker.sh` | unused var | removed |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| shellcheck | pass |
+EOF
+    run validate_agent_report "${out}" $'Rootfs/entry.sh\nChecker.sh\n' "refactor"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "validate_agent_report ignores multi-word header cells in the Changes table" {
+    local out="${TEST_TMP}/multiword-header.txt"
+    cat > "${out}" << 'EOF'
+## Overview
+
+Fixed a script.
+
+## Summary
+
+### Changes
+
+| Files modified | What was wrong | What changed |
+| -------------- | -------------- | ------------ |
+| `a.sh` | bug | fixed |
+
+## Verification
+
+| Check | Result |
+| ----- | ------ |
+| shellcheck | pass |
+EOF
+    run validate_agent_report "${out}" $'a.sh\n' "refactor"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
 }
 
 @test "reconcile_agent_report_with_branch_diff tolerates indented separator rows" {
@@ -562,5 +621,6 @@ Survey only.
 EOF
     run validate_agent_report "${out}" $'docs/a.md\n' "tech-debt"
     [ "$status" -eq 1 ]
-    [[ $output == *"non-empty branch diff"* ]]
+    [[ $output == *"Apply output must not include ### Candidates"* ]]
+    [[ $output == *"Missing ### Changes under ## Summary while branch has file changes"* ]]
 }

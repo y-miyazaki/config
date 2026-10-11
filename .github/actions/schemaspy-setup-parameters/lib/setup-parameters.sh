@@ -161,7 +161,7 @@ function setup_schemaspy_parameters {
         echo "db_host=${DB_HOST}"
         echo "db_port=${DB_PORT}"
         echo "db_name=${DB_NAME}"
-    } >> "$GITHUB_OUTPUT"
+    } >> "${GITHUB_OUTPUT:?GITHUB_OUTPUT is required}"
 }
 
 if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then

@@ -36,6 +36,7 @@ ATTEMPT=0
 VERDICT="REJECT"
 REASON="No attempts completed"
 HAS_CHANGES="false"
+DENYLIST_BLOCKED="false"
 OPEN_REJECTIONS_JSON='[]'
 REJECT_FEEDBACK=""
 OUTCOME_OVERRIDE=""
@@ -143,6 +144,7 @@ function promote_has_changes_after_attempt {
 #
 # Globals:
 #   ATTEMPT - Final attempt count (read)
+#   DENYLIST_BLOCKED - Whether the final attempt's diff hit the denylist (read)
 #   GITHUB_OUTPUT - GitHub Actions output file path (read)
 #   HAS_CHANGES - Whether this run or HEAD vs base has product changes (read)
 #   OPEN_REJECTIONS_JSON - Open rejection array JSON (read)
@@ -166,6 +168,7 @@ function write_loop_outputs {
     {
         echo "verdict=${VERDICT}"
         echo "attempts=${ATTEMPT}"
+        echo "denylist_blocked=${DENYLIST_BLOCKED}"
         echo "has_changes=${HAS_CHANGES}"
         delim="REASON_$(openssl rand -hex 8)"
         echo "reason<<${delim}"
@@ -198,6 +201,7 @@ function write_loop_outputs {
 #
 # Globals:
 #   ATTEMPT - Current attempt counter (read/write)
+#   DENYLIST_BLOCKED - Whether the latest checked attempt hit the denylist (write)
 #   HAS_CHANGES - Whether this run or HEAD vs base has product changes (read/write)
 #   OPEN_REJECTIONS_JSON - Open rejection array JSON (read/write)
 #   OUTCOME_OVERRIDE - Skill watch override when set (write)
@@ -317,6 +321,11 @@ function run_bounded_loop {
         run_verify "${attempt_dir}" "${ATTEMPT}" "${attempt_committed}"
         VERDICT="$(cat "${attempt_dir}/verdict")"
         REASON="$(cat "${attempt_dir}/reason")"
+        if [[ -f ${attempt_dir}/denylist_blocked ]]; then
+            DENYLIST_BLOCKED="true"
+        else
+            DENYLIST_BLOCKED="false"
+        fi
         echo "Verdict: ${VERDICT} — ${REASON}"
         if [[ ${VERDICT} == "REJECT" && -f ${attempt_dir}/reject-files ]]; then
             echo "Reject files: $(tr '\n' ',' < "${attempt_dir}/reject-files" | sed 's/,$//')"

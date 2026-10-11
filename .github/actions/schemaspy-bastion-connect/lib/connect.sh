@@ -67,7 +67,7 @@ function setup_bastion_connection {
         echo "Auto-detecting Bastion instance with tag Name=${BASTION_TAG_NAME}..."
         instance_count=$(aws ec2 describe-instances \
             --filters "Name=tag:Name,Values=${BASTION_TAG_NAME}" "Name=instance-state-name,Values=running" \
-            --query 'length(Reservations[*].Instances[*])' \
+            --query 'length(Reservations[].Instances[])' \
             --output text)
         if [[ ${instance_count} != "1" ]]; then
             echo "Error: expected exactly one running Bastion instance for tag Name=${BASTION_TAG_NAME}, found ${instance_count}" >&2
@@ -87,7 +87,7 @@ function setup_bastion_connection {
         echo "Auto-detected Bastion instance ID: ${bastion_id}"
     fi
 
-    echo "bastion_id=${bastion_id}" >> "$GITHUB_OUTPUT"
+    echo "bastion_id=${bastion_id}" >> "${GITHUB_OUTPUT:?GITHUB_OUTPUT is required}"
 
     echo "Verifying Session Manager connectivity to ${bastion_id}..."
     aws ssm describe-instance-information --filters "Key=InstanceIds,Values=${bastion_id}" --query 'InstanceInformationList[*].[InstanceId,PingStatus]' --output table

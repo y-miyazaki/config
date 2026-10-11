@@ -8,6 +8,7 @@
 # - main writes has_changes=false when loop produced no commits
 # - main accepts valid branch name characters
 # - main records redacted push failure when git push fails
+# - main skips push and warns when LOOP_DENYLIST_BLOCKED is true
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -52,6 +53,30 @@ teardown() {
     WORKTREE_PATH='/tmp/worktree'
     run main
     [ "$status" -eq 0 ]
+}
+
+@test "main skips push and warns when LOOP_DENYLIST_BLOCKED is true" {
+    local mock_bin
+
+    mock_bin="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${mock_bin}"
+    cat > "${mock_bin}/git" << 'EOF'
+#!/bin/bash
+echo "unexpected git invocation: $*" >&2
+exit 1
+EOF
+    chmod +x "${mock_bin}/git"
+    export PATH="${mock_bin}:${PATH}"
+
+    BRANCH='loop/docs-updater-abc'
+    GITHUB_TOKEN='test-token'
+    LOOP_HAS_CHANGES='true'
+    LOOP_DENYLIST_BLOCKED='true'
+    WORKTREE_PATH='/tmp/worktree'
+    run main
+    [ "$status" -eq 0 ]
+    [[ $output == *"Skipping push: final diff still matches the denylist"* ]]
+    grep -q '^has_changes=false$' "${GITHUB_OUTPUT}"
 }
 
 @test "main records redacted push failure when git push fails" {

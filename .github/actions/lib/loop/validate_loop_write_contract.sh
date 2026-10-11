@@ -4,7 +4,8 @@
 #   Validate may_edit × write_target × delivery × level combinations for loop callers.
 #
 # Usage:
-#   source "${LOOP_ACTION_LIB_DIR}/validate_loop_write_contract.sh"
+#   loop_action_lib="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
+#   source "${loop_action_lib}/validate_loop_write_contract.sh"
 #   validate_loop_write_contract "<may_edit>" "<write_target>" "<delivery>" "<level>"
 #
 # Design Rules:

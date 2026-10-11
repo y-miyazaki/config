@@ -278,6 +278,7 @@ runs:
         LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json
         LOOP_HANDOFF_DIR: ${{ inputs.handoff_dir }}
         NOTIFY_CONTEXT_JSON: ${{ inputs.notify_context_json }}
+        OUTCOME: ${{ steps.outcome.outputs.value }}
         PR_BASE_BRANCH: ${{ steps.target.outputs.pr_base_branch }}
         PR_BODY: ${{ inputs.pr_body }}
         PR_DRAFT: ${{ inputs.pr_draft }}

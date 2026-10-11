@@ -69,5 +69,5 @@ function cleanup_ssm_port_forward {
 }
 
 if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
-    cleanup_ssm_port_forward
+    cleanup_ssm_port_forward || exit $?
 fi

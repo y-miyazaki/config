@@ -190,6 +190,11 @@ function write_verifier_output_contract {
 #######################################
 # run_verify: Run one checker session for the current attempt
 #
+# Description:
+#   Writes verdict/reason/reject-* files under the attempt directory. On a
+#   denylist violation also writes denylist_blocked=true there so loop.sh can
+#   force push.sh to skip pushing the branch, even if HAS_CHANGES is true.
+#
 # Globals:
 #   BASE_BRANCH, DENYLIST, ALLOWLIST, WORKTREE_PATH
 #   AGENT_CHECKER_EFFORT, AGENT_CHECKER_INSTRUCTIONS, AGENT_CHECKER_MAX_TURNS
@@ -255,6 +260,9 @@ function run_verify {
             "Changed files match the denylist" \
             "Remove or revert denylisted paths from the branch diff" \
             "Denylist violation: ${denylist_files}"
+        # A denylist hit (secrets/credentials paths) must never reach a remote,
+        # unlike an ordinary checker REJECT — see denylist_blocked in loop.sh.
+        printf 'true\n' > "${attempt_dir}/denylist_blocked"
         cd "${old_pwd}" || return 1
         return 0
     fi

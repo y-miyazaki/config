@@ -7,6 +7,8 @@
 # Environment:
 #   BRANCH - Branch name to push
 #   GITHUB_TOKEN - GitHub token for push authentication
+#   LOOP_DENYLIST_BLOCKED - true when the final attempt's diff still matched
+#     the denylist (optional; defaults to false)
 #   LOOP_HAS_CHANGES - true when loop step produced commits
 #   WORKTREE_PATH - Absolute path to the worktree
 #
@@ -16,6 +18,9 @@
 # Design Rules:
 #   - Branch names are validated before push
 #   - Uses http.extraheader auth (same pattern as actions/checkout)
+#   - A denylist-blocked attempt never pushes, even if it produced commits:
+#     an ordinary checker REJECT may still push for human inspection, but a
+#     denylist hit (secrets/credentials paths) must never reach the remote.
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -51,9 +56,15 @@ function main {
     : "${LOOP_HAS_CHANGES:?}"
     : "${WORKTREE_PATH:?}"
     : "${GITHUB_OUTPUT:?}"
+    LOOP_DENYLIST_BLOCKED="${LOOP_DENYLIST_BLOCKED:-false}"
     if ! [[ ${BRANCH} =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
         echo "::error::Invalid branch name: ${BRANCH}"
         exit 1
+    fi
+    if [[ ${LOOP_DENYLIST_BLOCKED} == "true" ]]; then
+        echo "::warning::Skipping push: final diff still matches the denylist"
+        echo "has_changes=false" >> "${GITHUB_OUTPUT}"
+        return 0
     fi
     if [[ ${LOOP_HAS_CHANGES} != "true" ]]; then
         echo "has_changes=false" >> "${GITHUB_OUTPUT}"

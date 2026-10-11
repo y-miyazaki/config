@@ -763,7 +763,8 @@ function enrich_target_json_with_ci_context {
 
     if ! jq -e . <<< "${target_json}" > /dev/null 2>&1; then
         log_detect_json_invalid "enrich_target_json_with_ci_context" "target_json" "${target_json}"
-        return 1
+        printf '%s' "${target_json}"
+        return 0
     fi
     if ! jq -e . <<< "${detect_result}" > /dev/null 2>&1; then
         log_detect_json_invalid "enrich_target_json_with_ci_context" "detect_result" "${detect_result}"
@@ -832,7 +833,8 @@ function enrich_target_json_with_detect_fields {
 
     if ! jq -e . <<< "${target_json}" > /dev/null 2>&1; then
         log_detect_json_invalid "enrich_target_json_with_detect_fields" "target_json" "${target_json}"
-        return 1
+        printf '%s' "${target_json}"
+        return 0
     fi
 
     report_file="$(jq -r '.report_file // ""' <<< "${detect_result}" 2> /dev/null || echo "")"

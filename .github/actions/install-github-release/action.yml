@@ -91,28 +91,28 @@ runs:
         # Determine extraction method based on file extension
         if [[ "${ASSET}" == *.tar.gz || "${ASSET}" == *.tgz ]]; then
           # Download and extract tar.gz
-          curl -sSLo /tmp/${BINARY}.tar.gz "${DOWNLOAD_URL}"
+          curl -sSLo "/tmp/${BINARY}.tar.gz" "${DOWNLOAD_URL}"
           echo "Verifying checksum..."
           echo "${CHECKSUM}  /tmp/${BINARY}.tar.gz" | sha256sum -c -
           echo "Extracting tar.gz..."
-          tar -xzf /tmp/${BINARY}.tar.gz -C /tmp
-          mv /tmp/${BINARY} "${BIN_DIR}/"
+          tar -xzf "/tmp/${BINARY}.tar.gz" -C /tmp
+          mv "/tmp/${BINARY}" "${BIN_DIR}/"
         elif [[ "${ASSET}" == *.tar.xz ]]; then
           # Download and extract tar.xz
-          curl -sSLo /tmp/${BINARY}.tar.xz "${DOWNLOAD_URL}"
+          curl -sSLo "/tmp/${BINARY}.tar.xz" "${DOWNLOAD_URL}"
           echo "Verifying checksum..."
           echo "${CHECKSUM}  /tmp/${BINARY}.tar.xz" | sha256sum -c -
           echo "Extracting tar.xz..."
-          tar -xJf /tmp/${BINARY}.tar.xz -C /tmp
-          mv /tmp/${BINARY} "${BIN_DIR}/"
+          tar -xJf "/tmp/${BINARY}.tar.xz" -C /tmp
+          mv "/tmp/${BINARY}" "${BIN_DIR}/"
         elif [[ "${ASSET}" == *.zip ]]; then
           # Download and extract zip
-          curl -sSLo /tmp/${BINARY}.zip "${DOWNLOAD_URL}"
+          curl -sSLo "/tmp/${BINARY}.zip" "${DOWNLOAD_URL}"
           echo "Verifying checksum..."
           echo "${CHECKSUM}  /tmp/${BINARY}.zip" | sha256sum -c -
           echo "Extracting zip..."
-          unzip -q /tmp/${BINARY}.zip -d /tmp
-          mv /tmp/${BINARY} "${BIN_DIR}/"
+          unzip -q "/tmp/${BINARY}.zip" -d /tmp
+          mv "/tmp/${BINARY}" "${BIN_DIR}/"
         else
           # Download binary directly
           curl -sSLo "${BIN_DIR}/${BINARY}" "${DOWNLOAD_URL}"
@@ -122,7 +122,7 @@ runs:
 
         chmod +x "${BIN_DIR}/${BINARY}"
         echo "Installed ${BINARY} to ${BIN_DIR}"
-        ${BIN_DIR}/${BINARY} --version || true
+        "${BIN_DIR}/${BINARY}" --version || true
 
     - name: Verify installation
       shell: bash

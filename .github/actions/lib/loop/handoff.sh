@@ -2,7 +2,9 @@
 #######################################
 # Description: Artifact-oriented job handoff for loop detect → execute
 #
-# Usage: source "${LOOP_ACTION_LIB_DIR}/handoff.sh"
+# Usage:
+#   loop_action_lib="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
+#   source "${loop_action_lib}/handoff.sh"
 #
 # Output:
 # - None (library file; writes bundle files under a handoff directory)

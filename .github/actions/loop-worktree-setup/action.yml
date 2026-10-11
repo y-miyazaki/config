@@ -55,7 +55,6 @@ runs:
 
         WORKTREE_PATH="${RUNNER_TEMP}/worktree-${AGENT_MAKER_SKILL_NAME}"
         CHECKOUT_REF=""
-        FETCH_BRANCH="${BASE_BRANCH}"
 
         if [[ -n "${BASE_BRANCH}" ]]; then
           if ! [[ "${BASE_BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
@@ -63,7 +62,16 @@ runs:
             exit 1
           fi
           git fetch origin "${BASE_BRANCH}" --prune
-          CHECKOUT_REF="${BASE_REF:-origin/${BASE_BRANCH}}"
+        fi
+
+        if [[ -n "${BASE_REF}" ]]; then
+          if ! [[ "${BASE_REF}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+            echo "::error::Invalid base ref: ${BASE_REF}"
+            exit 1
+          fi
+          CHECKOUT_REF="${BASE_REF}"
+        elif [[ -n "${BASE_BRANCH}" ]]; then
+          CHECKOUT_REF="origin/${BASE_BRANCH}"
         fi
 
         if [[ -n "${BRANCH}" ]]; then

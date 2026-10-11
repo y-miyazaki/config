@@ -9,6 +9,8 @@
 # - collect_allowlist_violations matches docs root markdown via ** glob
 # - collect_allowlist_violations matches nested docs markdown via ** glob
 # - path_matches_glob supports trailing ** directory patterns
+# - path_matches_glob matches a root-level file against a leading ** pattern
+# - path_matches_glob treats a bare ** as matching every path
 # - collect_denylist_violations flags denylisted paths
 # - collect_denylist_violations matches ** at start of pattern
 # - collect_denylist_violations returns nothing when denylist unset
@@ -64,6 +66,22 @@ setup() {
     [ "$status" -eq 1 ]
 }
 
+@test "path_matches_glob matches a root-level file against a leading ** pattern" {
+    run path_matches_glob ".env" "**/.env"
+    [ "$status" -eq 0 ]
+    run path_matches_glob "credentials.json" "**/credentials*"
+    [ "$status" -eq 0 ]
+    run path_matches_glob "notes.txt" "**/.env"
+    [ "$status" -eq 1 ]
+}
+
+@test "path_matches_glob treats a bare ** as matching every path" {
+    run path_matches_glob "a/b/c.txt" "**"
+    [ "$status" -eq 0 ]
+    run path_matches_glob ".env" "**"
+    [ "$status" -eq 0 ]
+}
+
 @test "collect_denylist_violations flags denylisted paths" {
     DENYLIST="**/.env,**/secrets*"
     output=$(collect_denylist_violations $'docs/a.md\nnested/.env\nconfig/secrets.json')
@@ -76,7 +94,12 @@ setup() {
     DENYLIST="**/.env"
     output=$(collect_denylist_violations $'nested/.env\n.env')
     [[ ${output} == *"nested/.env"* ]]
-    [[ ${output} == *".env"* ]]
+    # Root-level ".env" must appear as its own violation line, not merely as a
+    # substring of "nested/.env" (regression guard for the leading ** glob).
+    while IFS= read -r line; do
+        [[ ${line} == ".env" ]] && found_root_env="true"
+    done <<< "${output}"
+    [[ ${found_root_env:-} == "true" ]]
 }
 
 @test "apply_platform_denylist_default fills empty DENYLIST" {

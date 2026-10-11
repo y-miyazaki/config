@@ -5,6 +5,7 @@
 # Use cases:
 # - uses explicit bastion instance ID and writes outputs
 # - fails when auto-detect finds no running instance
+# - fails on multiple instances in one reservation instead of picking one
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -106,4 +107,36 @@ EOF
     run bash -c 'source "'"${CONNECT_LIB}"'"; BASTION_INSTANCE_ID= BASTION_TAG_NAME="*bastion*" GITHUB_ENV="'"${GITHUB_ENV}"'" GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" setup_bastion_connection'
     [ "$status" -eq 1 ]
     [[ $output == *"expected exactly one running Bastion instance"* ]]
+}
+
+@test "setup_bastion_connection fails on multiple instances in one reservation instead of picking one" {
+    # Regression guard: a flattened count query (Reservations[].Instances[])
+    # must report 2 for one reservation holding two running instances. The
+    # old nested query (Reservations[*].Instances[*]) counted reservations
+    # instead and would have reported 1, silently picking just the first
+    # instance even though the tag filter is genuinely ambiguous.
+    mock_aws_write << 'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "ec2" && "$2" == "describe-instances" ]]; then
+    for arg in "$@"; do
+        if [[ "${arg}" == "length(Reservations[].Instances[])" ]]; then
+            echo "2"
+            exit 0
+        fi
+        if [[ "${arg}" == "length(Reservations[*].Instances[*])" ]]; then
+            echo "1"
+            exit 0
+        fi
+    done
+    exit 1
+fi
+exit 1
+EOF
+
+    # shellcheck disable=SC1090
+    source "${CONNECT_LIB}"
+    run bash -c 'source "'"${CONNECT_LIB}"'"; BASTION_INSTANCE_ID= BASTION_TAG_NAME="*bastion*" GITHUB_ENV="'"${GITHUB_ENV}"'" GITHUB_OUTPUT="'"${GITHUB_OUTPUT}"'" setup_bastion_connection'
+    [ "$status" -eq 1 ]
+    [[ $output == *"expected exactly one running Bastion instance"* ]]
+    [[ $output == *"found 2"* ]]
 }
