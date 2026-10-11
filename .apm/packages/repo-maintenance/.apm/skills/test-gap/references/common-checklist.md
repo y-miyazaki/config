@@ -3,7 +3,7 @@
 ## Evidence (EVID)
 
 - EVID-01: Cite the production file and the behavior each new test asserts.
-- EVID-02: When a path appears in `ledger.processed[]`, state the new reason for selecting it again.
+- EVID-02: When the target's paired test file path appears in `ledger.processed[]`, state the new reason for selecting it again (an Open Rejections item from a previous run counts as one).
 
 ## Test quality (TEST)
 
