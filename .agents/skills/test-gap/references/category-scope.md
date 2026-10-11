@@ -2,7 +2,8 @@
 
 ## Allowed
 
-- New test files and new test cases under the paths in `Allowed paths`.
+- New test files and new test cases under the paths in `Allowed paths`. In interactive mode, which has no `Allowed paths`, use the repository's existing test directories.
+- A caller may restrict the stack or test framework (for example Bats only); the caller instructions win over stack discovery.
 
 ## Not allowed
 

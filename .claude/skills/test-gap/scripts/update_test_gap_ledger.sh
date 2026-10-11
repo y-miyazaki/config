@@ -12,6 +12,9 @@
 # Design Rules:
 # - Always exit 0 so a ledger problem never blocks finalize (same policy as ci-sweeper update_run_ledger.sh)
 # - Record only files in git diff <base>...<EXECUTE_BRANCH>; the maker does not have to cooperate
+# - Base branch: TEST_GAP_BASE_BRANCH, else TARGET_JSON .to.branch (loop-finalize passes it), else main
+# - loop-finalize passes only EXECUTE_BRANCH, LOOP_NAME, OUTCOME, STATE_FILE, TARGET_JSON, VERDICT to this script;
+#   TEST_GAP_LEDGER_FILE and TEST_GAP_RETENTION_DAYS therefore stay at their defaults when run from finalize
 # - Skip no-action, error, escalated, and unknown outcomes
 # - Prune entries older than the retention window
 # - Write via mktemp + mv; keep unrelated entries intact
@@ -26,7 +29,8 @@
 #   OUTCOME                  pr-created | rejected | watch | no-action | no-changes | error | escalated
 #   VERDICT                  APPROVE | REJECT (used when OUTCOME is unset)
 #   EXECUTE_BRANCH           Agent branch holding the test changes (required to record anything)
-#   TEST_GAP_BASE_BRANCH     Base branch for the diff (default: main)
+#   TARGET_JSON              Loop target JSON; .to.branch is the base branch when TEST_GAP_BASE_BRANCH is unset
+#   TEST_GAP_BASE_BRANCH     Base branch for the diff (default: TARGET_JSON .to.branch, else main)
 #   TEST_GAP_LEDGER_FILE     Ledger path, repository-relative (default: .loop/state-test-gap-ledger.json)
 #   TEST_GAP_RETENTION_DAYS  Days an entry is kept (default: 30)
 #   GITHUB_RUN_ID            Recorded as last_loop_run_id
@@ -51,7 +55,7 @@ source "${SCRIPT_DIR}/lib/all.sh"
 #######################################
 OUTCOME="${OUTCOME-}"
 LEDGER_FILE="${TEST_GAP_LEDGER_FILE:-.loop/state-test-gap-ledger.json}"
-BASE_BRANCH="${TEST_GAP_BASE_BRANCH:-main}"
+BASE_BRANCH="${TEST_GAP_BASE_BRANCH:-}"
 RETENTION_DAYS="${TEST_GAP_RETENTION_DAYS:-30}"
 
 #######################################
@@ -84,6 +88,35 @@ function changed_files {
     fi
     git rev-parse --verify --quiet "${head}^{commit}" > /dev/null 2>&1 || return 1
     git -c core.quotepath=off diff --name-only "${base}...${head}" 2> /dev/null
+}
+
+#######################################
+# resolve_base_branch: Decide the base branch for the diff
+#
+# Globals:
+#   BASE_BRANCH - Read; set to TEST_GAP_BASE_BRANCH, else TARGET_JSON .to.branch, else main
+#   TARGET_JSON - Read
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0
+#
+#######################################
+function resolve_base_branch {
+    local from_target=""
+
+    if [[ -n ${BASE_BRANCH} ]]; then
+        return 0
+    fi
+    if [[ -n ${TARGET_JSON:-} ]]; then
+        from_target="$(jq -r '.to.branch // empty' <<< "${TARGET_JSON}" 2> /dev/null)" || from_target=""
+    fi
+    BASE_BRANCH="${from_target:-main}"
 }
 
 #######################################
@@ -164,7 +197,7 @@ function validate_ledger_file {
 # main: Entry point
 #
 # Globals:
-#   OUTCOME, LEDGER_FILE, RETENTION_DAYS - Read
+#   OUTCOME, LEDGER_FILE, RETENTION_DAYS - Read; BASE_BRANCH - Set via resolve_base_branch
 #
 # Arguments:
 #   None
@@ -193,6 +226,7 @@ function main {
     if [[ -z ${OUTCOME} ]]; then
         return 0
     fi
+    resolve_base_branch
 
     validate_ledger_file "${LEDGER_FILE}" || return 0
 

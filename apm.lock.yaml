@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-10-11T08:21:09.428619+00:00'
+generated_at: '2026-10-11T10:11:19.656136+00:00'
 apm_version: 0.33.0
 dependencies:
 - repo_url: _local/common
@@ -1895,18 +1895,18 @@ dependencies:
     .agents/skills/tech-debt/scripts/lib/terraform.sh: sha256:19d9b56a4346d68a4656ccfe61c64b8638c86ffdc02b830a7cdd84be7449551d
     .agents/skills/tech-debt/scripts/lib/validation.sh: sha256:a2f91f635ecbd92ea0d7cea4d0703fd8fa58af0c35021c20d7cd8e1f3bd634eb
     .agents/skills/tech-debt/scripts/lib/yaml_map_order.py: sha256:b6e23fe34ecb02222d077dbd27f65b597c8417eeb707406dc76702a536647803
-    .agents/skills/test-gap/SKILL.md: sha256:b77714073c71f514ea19edbbe189a2413982fc18074a9e49eaa3eebe884974d5
+    .agents/skills/test-gap/SKILL.md: sha256:82e84f24e669225d277d7380ba98337712a952650f8dc3bc5bd8d97f8a5094d7
     .agents/skills/test-gap/assets/pr-body-template-survey.md: sha256:ec62987e48827408e2a49022991ff2b4de63d88c39f120cd6a6456d4264d8318
     .agents/skills/test-gap/assets/pr-body-template.md: sha256:3f7106e7c74c434d8e77ff3260aad91e3e2527ee1c51935701ac2696efbabc54
     .agents/skills/test-gap/eval.yaml: sha256:9f74149085888e6cc3a57b05ce98ba5c0f0aa8534ed1ee81d45d71d3f68ad307
     .agents/skills/test-gap/evals/tasks/basic.yaml: sha256:87f3033b27dfab6041a998fe7ad27ca6d1568116f8e420e7c69919cfc0548a98
     .agents/skills/test-gap/references/category-automation-envelope.md: sha256:6e7cfac3fe1e27cec33958767d45818d86e381f618170ebd74ded658e8df20e7
-    .agents/skills/test-gap/references/category-input-schema.md: sha256:f7b9c5d24f44b0ef2bae72b84379393aaff234e4a3e0edf08ee5fa5f0f6c3dce
+    .agents/skills/test-gap/references/category-input-schema.md: sha256:737a351d4fae88907bf2132f47621e200d7c107a46bdee587ca40d3701646b24
     .agents/skills/test-gap/references/category-pr-body-links.md: sha256:7f571d008f8baad3cc3ed2c2d0e229f36581301afe6cf4602402760837f2b6a0
-    .agents/skills/test-gap/references/category-scope.md: sha256:dd9838282eafd201492e3501d8fc3f473be7a721d119d7c916cebd2914de3c46
-    .agents/skills/test-gap/references/common-checklist.md: sha256:f271224ddea984c307c3a4f7862d398741ab48490be200fe4a80f3915f22935a
+    .agents/skills/test-gap/references/category-scope.md: sha256:753602fc24b1e87d1d33ddf31a0fedb092a65a709352940a076c0168dfdb8d9d
+    .agents/skills/test-gap/references/common-checklist.md: sha256:00bd4c142d2acd0fbba2c7da20573da2e36e291553751bc895314887d5cc7dbf
     .agents/skills/test-gap/references/common-output-format.md: sha256:a59c4f66bdc2f8f48e3ab0e1d43abd62fcd6ce905203cc0d1f334a1ba71b0152
-    .agents/skills/test-gap/scripts/detect_test_gap.sh: sha256:08f52eb815fdc945b3f7a4df842c5bddeb348d45f9b8a3ba80e6a52bd4312828
+    .agents/skills/test-gap/scripts/detect_test_gap.sh: sha256:6bceaeb39471f8f5d794138d7b7791d966622ec2595db9c4f7b578ba3b02f5eb
     .agents/skills/test-gap/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .agents/skills/test-gap/scripts/lib/aws.sh: sha256:8040932c1176ff8f6f011586844cee9a07fa725b90de6c5b007d5cecf7f2d67a
     .agents/skills/test-gap/scripts/lib/common.sh: sha256:26dded5e470bfa13c48f3816b58def268413042de385a468ee851f6f578bceda
@@ -1916,7 +1916,7 @@ dependencies:
     .agents/skills/test-gap/scripts/lib/terraform.sh: sha256:19d9b56a4346d68a4656ccfe61c64b8638c86ffdc02b830a7cdd84be7449551d
     .agents/skills/test-gap/scripts/lib/validation.sh: sha256:a2f91f635ecbd92ea0d7cea4d0703fd8fa58af0c35021c20d7cd8e1f3bd634eb
     .agents/skills/test-gap/scripts/lib/yaml_map_order.py: sha256:b6e23fe34ecb02222d077dbd27f65b597c8417eeb707406dc76702a536647803
-    .agents/skills/test-gap/scripts/update_test_gap_ledger.sh: sha256:0dcb8ccf2fba0ad7cd8ddf01dab71050022b24b5b2c2dd2089a16bb2e5435c3a
+    .agents/skills/test-gap/scripts/update_test_gap_ledger.sh: sha256:0efc429f9e0faaf0e101fccb2e397712d9a8a4d30a148f7b8cea18fea75ff75d
     .claude/skills/changelog/SKILL.md: sha256:84bb4886520eefe8103756946334bc11bfe18fb585b5fe3ef3a53dff32ec4b62
     .claude/skills/changelog/assets/pr-body-template-survey.md: sha256:1413ac656707dcbc97973e959a01a33af477906868df13c29009074dcdc4517c
     .claude/skills/changelog/assets/pr-body-template.md: sha256:23c90eb7c89a6433852e2b6ccb8995f8c0d0c93c14cb317eec9217b76f683518
@@ -2117,18 +2117,18 @@ dependencies:
     .claude/skills/tech-debt/scripts/lib/terraform.sh: sha256:19d9b56a4346d68a4656ccfe61c64b8638c86ffdc02b830a7cdd84be7449551d
     .claude/skills/tech-debt/scripts/lib/validation.sh: sha256:a2f91f635ecbd92ea0d7cea4d0703fd8fa58af0c35021c20d7cd8e1f3bd634eb
     .claude/skills/tech-debt/scripts/lib/yaml_map_order.py: sha256:b6e23fe34ecb02222d077dbd27f65b597c8417eeb707406dc76702a536647803
-    .claude/skills/test-gap/SKILL.md: sha256:b77714073c71f514ea19edbbe189a2413982fc18074a9e49eaa3eebe884974d5
+    .claude/skills/test-gap/SKILL.md: sha256:82e84f24e669225d277d7380ba98337712a952650f8dc3bc5bd8d97f8a5094d7
     .claude/skills/test-gap/assets/pr-body-template-survey.md: sha256:ec62987e48827408e2a49022991ff2b4de63d88c39f120cd6a6456d4264d8318
     .claude/skills/test-gap/assets/pr-body-template.md: sha256:3f7106e7c74c434d8e77ff3260aad91e3e2527ee1c51935701ac2696efbabc54
     .claude/skills/test-gap/eval.yaml: sha256:9f74149085888e6cc3a57b05ce98ba5c0f0aa8534ed1ee81d45d71d3f68ad307
     .claude/skills/test-gap/evals/tasks/basic.yaml: sha256:87f3033b27dfab6041a998fe7ad27ca6d1568116f8e420e7c69919cfc0548a98
     .claude/skills/test-gap/references/category-automation-envelope.md: sha256:6e7cfac3fe1e27cec33958767d45818d86e381f618170ebd74ded658e8df20e7
-    .claude/skills/test-gap/references/category-input-schema.md: sha256:f7b9c5d24f44b0ef2bae72b84379393aaff234e4a3e0edf08ee5fa5f0f6c3dce
+    .claude/skills/test-gap/references/category-input-schema.md: sha256:737a351d4fae88907bf2132f47621e200d7c107a46bdee587ca40d3701646b24
     .claude/skills/test-gap/references/category-pr-body-links.md: sha256:7f571d008f8baad3cc3ed2c2d0e229f36581301afe6cf4602402760837f2b6a0
-    .claude/skills/test-gap/references/category-scope.md: sha256:dd9838282eafd201492e3501d8fc3f473be7a721d119d7c916cebd2914de3c46
-    .claude/skills/test-gap/references/common-checklist.md: sha256:f271224ddea984c307c3a4f7862d398741ab48490be200fe4a80f3915f22935a
+    .claude/skills/test-gap/references/category-scope.md: sha256:753602fc24b1e87d1d33ddf31a0fedb092a65a709352940a076c0168dfdb8d9d
+    .claude/skills/test-gap/references/common-checklist.md: sha256:00bd4c142d2acd0fbba2c7da20573da2e36e291553751bc895314887d5cc7dbf
     .claude/skills/test-gap/references/common-output-format.md: sha256:a59c4f66bdc2f8f48e3ab0e1d43abd62fcd6ce905203cc0d1f334a1ba71b0152
-    .claude/skills/test-gap/scripts/detect_test_gap.sh: sha256:08f52eb815fdc945b3f7a4df842c5bddeb348d45f9b8a3ba80e6a52bd4312828
+    .claude/skills/test-gap/scripts/detect_test_gap.sh: sha256:6bceaeb39471f8f5d794138d7b7791d966622ec2595db9c4f7b578ba3b02f5eb
     .claude/skills/test-gap/scripts/lib/all.sh: sha256:dc9b27d00ff0b37be6f5c986a59a8107f59a83bede4de5818e453a38ae51f216
     .claude/skills/test-gap/scripts/lib/aws.sh: sha256:8040932c1176ff8f6f011586844cee9a07fa725b90de6c5b007d5cecf7f2d67a
     .claude/skills/test-gap/scripts/lib/common.sh: sha256:26dded5e470bfa13c48f3816b58def268413042de385a468ee851f6f578bceda
@@ -2138,7 +2138,7 @@ dependencies:
     .claude/skills/test-gap/scripts/lib/terraform.sh: sha256:19d9b56a4346d68a4656ccfe61c64b8638c86ffdc02b830a7cdd84be7449551d
     .claude/skills/test-gap/scripts/lib/validation.sh: sha256:a2f91f635ecbd92ea0d7cea4d0703fd8fa58af0c35021c20d7cd8e1f3bd634eb
     .claude/skills/test-gap/scripts/lib/yaml_map_order.py: sha256:b6e23fe34ecb02222d077dbd27f65b597c8417eeb707406dc76702a536647803
-    .claude/skills/test-gap/scripts/update_test_gap_ledger.sh: sha256:0dcb8ccf2fba0ad7cd8ddf01dab71050022b24b5b2c2dd2089a16bb2e5435c3a
+    .claude/skills/test-gap/scripts/update_test_gap_ledger.sh: sha256:0efc429f9e0faaf0e101fccb2e397712d9a8a4d30a148f7b8cea18fea75ff75d
   source: local
   local_path: ./.apm/packages/repo-maintenance
   declared_license: Apache-2.0
@@ -7363,7 +7363,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:b77714073c71f514ea19edbbe189a2413982fc18074a9e49eaa3eebe884974d5
+  content_hash: sha256:82e84f24e669225d277d7380ba98337712a952650f8dc3bc5bd8d97f8a5094d7
 - kind: project-relative
   target: claude
   value: .claude/skills/test-gap/assets/pr-body-template-survey.md
@@ -7417,7 +7417,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:f7b9c5d24f44b0ef2bae72b84379393aaff234e4a3e0edf08ee5fa5f0f6c3dce
+  content_hash: sha256:737a351d4fae88907bf2132f47621e200d7c107a46bdee587ca40d3701646b24
 - kind: project-relative
   target: claude
   value: .claude/skills/test-gap/references/category-pr-body-links.md
@@ -7435,7 +7435,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:dd9838282eafd201492e3501d8fc3f473be7a721d119d7c916cebd2914de3c46
+  content_hash: sha256:753602fc24b1e87d1d33ddf31a0fedb092a65a709352940a076c0168dfdb8d9d
 - kind: project-relative
   target: claude
   value: .claude/skills/test-gap/references/common-checklist.md
@@ -7444,7 +7444,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:f271224ddea984c307c3a4f7862d398741ab48490be200fe4a80f3915f22935a
+  content_hash: sha256:00bd4c142d2acd0fbba2c7da20573da2e36e291553751bc895314887d5cc7dbf
 - kind: project-relative
   target: claude
   value: .claude/skills/test-gap/references/common-output-format.md
@@ -7462,7 +7462,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:08f52eb815fdc945b3f7a4df842c5bddeb348d45f9b8a3ba80e6a52bd4312828
+  content_hash: sha256:6bceaeb39471f8f5d794138d7b7791d966622ec2595db9c4f7b578ba3b02f5eb
 - kind: project-relative
   target: claude
   value: .claude/skills/test-gap/scripts/lib/all.sh
@@ -7552,7 +7552,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:0dcb8ccf2fba0ad7cd8ddf01dab71050022b24b5b2c2dd2089a16bb2e5435c3a
+  content_hash: sha256:0efc429f9e0faaf0e101fccb2e397712d9a8a4d30a148f7b8cea18fea75ff75d
 - kind: project-relative
   target: cursor
   value: .agents/skills/agent-skills-review
@@ -12376,7 +12376,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:b77714073c71f514ea19edbbe189a2413982fc18074a9e49eaa3eebe884974d5
+  content_hash: sha256:82e84f24e669225d277d7380ba98337712a952650f8dc3bc5bd8d97f8a5094d7
 - kind: project-relative
   target: cursor
   value: .agents/skills/test-gap/assets/pr-body-template-survey.md
@@ -12430,7 +12430,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:f7b9c5d24f44b0ef2bae72b84379393aaff234e4a3e0edf08ee5fa5f0f6c3dce
+  content_hash: sha256:737a351d4fae88907bf2132f47621e200d7c107a46bdee587ca40d3701646b24
 - kind: project-relative
   target: cursor
   value: .agents/skills/test-gap/references/category-pr-body-links.md
@@ -12448,7 +12448,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:dd9838282eafd201492e3501d8fc3f473be7a721d119d7c916cebd2914de3c46
+  content_hash: sha256:753602fc24b1e87d1d33ddf31a0fedb092a65a709352940a076c0168dfdb8d9d
 - kind: project-relative
   target: cursor
   value: .agents/skills/test-gap/references/common-checklist.md
@@ -12457,7 +12457,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:f271224ddea984c307c3a4f7862d398741ab48490be200fe4a80f3915f22935a
+  content_hash: sha256:00bd4c142d2acd0fbba2c7da20573da2e36e291553751bc895314887d5cc7dbf
 - kind: project-relative
   target: cursor
   value: .agents/skills/test-gap/references/common-output-format.md
@@ -12475,7 +12475,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:08f52eb815fdc945b3f7a4df842c5bddeb348d45f9b8a3ba80e6a52bd4312828
+  content_hash: sha256:6bceaeb39471f8f5d794138d7b7791d966622ec2595db9c4f7b578ba3b02f5eb
 - kind: project-relative
   target: cursor
   value: .agents/skills/test-gap/scripts/lib/all.sh
@@ -12565,7 +12565,7 @@ deployments:
   owners:
   - ./.apm/packages/repo-maintenance
   active_owner: ./.apm/packages/repo-maintenance
-  content_hash: sha256:0dcb8ccf2fba0ad7cd8ddf01dab71050022b24b5b2c2dd2089a16bb2e5435c3a
+  content_hash: sha256:0efc429f9e0faaf0e101fccb2e397712d9a8a4d30a148f7b8cea18fea75ff75d
 - kind: project-relative
   target: cursor
   value: .cursor/agents/test-engineer.md

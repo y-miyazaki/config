@@ -53,16 +53,16 @@ Resolve `may_edit` first:
 
 ### Target selection
 
-1. Discover the stack and test layout from the repository (existing test directories, CI config, `AGENTS.md`/`CLAUDE.md` rules). Do not assume a language.
+1. Discover the stack and test layout from the repository (existing test directories, CI config, `AGENTS.md`/`CLAUDE.md` rules). Do not assume a language. A caller may restrict the stack (for example to one test framework); when it does, the caller instructions win.
 2. Candidate sources, in order: files in `hotspots[]` (churn) without a matching test; production files with no paired test (for shell scripts, a missing Bats suite per the repository's TEST rules); public functions with no test.
-3. Exclude every path in `ledger.processed[]` unless you can state a new reason (for example the file changed since). A re-selected path needs that reason in the PR body.
+3. `ledger.processed[]` lists test file paths. Exclude a target whose paired test file path appears there; adding another new test file for that same target also counts as selecting it again. Re-select it only with a stated new reason (for example the production file changed since), written in the PR body. An item under Open Rejections from a previous run counts as a stated new reason for selecting that target again.
 4. Choose exactly one target. Prefer the file with the highest churn and the clearest observable behavior.
 
 ### Apply
 
 1. Read the target and its callers. Read the nearest existing tests and copy their layout, helpers, and naming.
 2. Write tests that assert observable behavior: return values, side effects, error paths. A test that cannot fail is not acceptable.
-3. Place files only within `Allowed paths`. Never edit production files.
+3. Place files only within `Allowed paths` (interactive: the repository's existing test directories). Never edit production files.
 4. You cannot run the tests in this environment. Do not claim you ran them. State the command CI will run and the expected result in `## Verification`.
 5. When `may_edit` is `false`, or `write_target` is not `fix`, emit the survey shape and stop.
 

@@ -31,7 +31,7 @@
 #   TEST_GAP_CHURN_WINDOW    Git log --since window for churn hotspots (default: 90.days)
 #   TEST_GAP_CHURN_MIN       Minimum commit touches per path (default: 3)
 #   TEST_GAP_CHURN_TOP       Maximum churn hotspots to emit (default: 20)
-#   TEST_GAP_RETENTION_DAYS  Days a ledger entry stays visible (default: 30)
+#   TEST_GAP_RETENTION_DAYS  Days a ledger entry stays visible (default: 30; a non-numeric value warns and falls back to 30)
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -215,6 +215,7 @@ function collect_churn_hotspots {
 #
 # Globals:
 #   LEDGER_FILE - Ledger path (repository-relative)
+#   TEST_GAP_RETENTION_DAYS - Read (validated; invalid values fall back to 30 with a warning)
 #   LEDGER_PROCESSED_JSON - Set to a JSON array of {path, attempts, outcome, processed_at}
 #   WARNINGS - Warning messages (appended)
 #
@@ -233,6 +234,10 @@ function load_ledger_summary {
     local cutoff
 
     LEDGER_PROCESSED_JSON="[]"
+    if [[ ! ${retention} =~ ^[0-9]+$ ]]; then
+        WARNINGS+=("TEST_GAP_RETENTION_DAYS must be a non-negative integer (got: ${retention}); using 30")
+        retention=30
+    fi
     [[ -f ${LEDGER_FILE} ]] || return 0
 
     if ! jq -e '.entries | type == "object"' "${LEDGER_FILE}" > /dev/null 2>&1; then
