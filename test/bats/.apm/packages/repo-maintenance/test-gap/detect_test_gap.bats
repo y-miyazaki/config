@@ -21,6 +21,7 @@
 # - detect_test_gap treats a missing ledger file as empty
 # - detect_test_gap verifier_context is returned by build_verifier_context_from_result for a ledger with entries
 # - detect_test_gap warns and continues on a corrupt ledger file
+# - detect_test_gap warns and falls back to 30 days when TEST_GAP_RETENTION_DAYS is not a non-negative integer
 # - detect_test_gap warns and returns empty hotspots when since is not a valid ref
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -219,6 +220,19 @@ make_churn_repo() {
     [ "$status" -eq 0 ]
     run jq -e '(.ledger.processed | length) == 0 and ([.warnings[] | test("ledger")] | any)' <<< "${output}"
     [ "$status" -eq 0 ]
+}
+
+@test "detect_test_gap warns and falls back to 30 days when TEST_GAP_RETENTION_DAYS is not a non-negative integer" {
+    make_churn_repo "src/a.sh" 1
+    mkdir -p "${GIT_TEST_REPO}/.loop"
+    printf '%s' '{"entries":{"test/bats/foo.bats":{"attempts":1,"last_loop_run_id":"7","outcome":"pr-created","processed_at":"2999-01-01T00:00:00Z"},"test/bats/old.bats":{"attempts":1,"last_loop_run_id":"1","outcome":"pr-created","processed_at":"2000-01-01T00:00:00Z"}}}' > "${GIT_TEST_REPO}/.loop/state-test-gap-ledger.json"
+    local bad
+    for bad in abc -5 "1 day"; do
+        git_test_repo_run "env TEST_GAP_RETENTION_DAYS='${bad}' bash '${DETECT_SCRIPT}'"
+        [ "$status" -eq 0 ]
+        run jq -e '.status == "ok" and ([.warnings[] | test("TEST_GAP_RETENTION_DAYS")] | any) and ([.ledger.processed[].path] == ["test/bats/foo.bats"])' <<< "${output}"
+        [ "$status" -eq 0 ]
+    done
 }
 
 @test "detect_test_gap warns and returns empty hotspots when since is not a valid ref" {
