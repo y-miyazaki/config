@@ -83,7 +83,7 @@ function changed_files {
         head="origin/${head}"
     fi
     git rev-parse --verify --quiet "${head}^{commit}" > /dev/null 2>&1 || return 1
-    git diff --name-only "${base}...${head}" 2> /dev/null
+    git -c core.quotepath=off diff --name-only "${base}...${head}" 2> /dev/null
 }
 
 #######################################
@@ -150,7 +150,10 @@ function validate_ledger_file {
         return 1
     fi
     repo_root="$(git rev-parse --show-toplevel 2> /dev/null || pwd)"
-    resolved="$(realpath -m "${repo_root}/${path}")"
+    if ! resolved="$(realpath -m "${repo_root}/${path}" 2> /dev/null)"; then
+        log "WARN" "cannot resolve TEST_GAP_LEDGER_FILE (got: ${path})"
+        return 1
+    fi
     if [[ ${resolved} != "${repo_root}"/* ]]; then
         log "WARN" "TEST_GAP_LEDGER_FILE must stay under the repository root (got: ${path})"
         return 1
@@ -174,11 +177,16 @@ function validate_ledger_file {
 #
 #######################################
 function main {
-    local files now cutoff tmp existing
+    local files now cutoff tmp existing ledger_dir
 
     if ! command -v jq > /dev/null 2>&1; then
         log "WARN" "jq is required; skipping ledger update"
         return 0
+    fi
+
+    if [[ ! ${RETENTION_DAYS} =~ ^[0-9]+$ ]]; then
+        log "WARN" "TEST_GAP_RETENTION_DAYS must be a non-negative integer (got: ${RETENTION_DAYS}); using 30"
+        RETENTION_DAYS=30
     fi
 
     resolve_outcome
@@ -199,16 +207,27 @@ function main {
     existing='{"entries":{}}'
     if [[ -f ${LEDGER_FILE} ]]; then
         if jq -e '.entries | type == "object"' "${LEDGER_FILE}" > /dev/null 2>&1; then
-            existing="$(cat "${LEDGER_FILE}")"
+            existing="$(cat "${LEDGER_FILE}")" || existing='{"entries":{}}'
         else
             log "WARN" "ledger file is corrupt; starting from an empty ledger: ${LEDGER_FILE}"
         fi
     fi
 
     now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-    cutoff="$(date -u -d "${RETENTION_DAYS} days ago" +%Y-%m-%dT%H:%M:%SZ)"
-    mkdir -p "$(dirname "${LEDGER_FILE}")"
-    tmp="$(mktemp)"
+    if ! cutoff="$(date -u -d "${RETENTION_DAYS} days ago" +%Y-%m-%dT%H:%M:%SZ 2> /dev/null)"; then
+        log "WARN" "cannot compute retention cutoff for ${RETENTION_DAYS} days; skipping ledger update"
+        return 0
+    fi
+    ledger_dir="$(dirname "${LEDGER_FILE}")"
+    if ! mkdir -p "${ledger_dir}" 2> /dev/null; then
+        log "WARN" "cannot create ledger directory: ${ledger_dir}"
+        return 0
+    fi
+    # Temp file lives beside the ledger so the final mv is an atomic same-filesystem rename
+    if ! tmp="$(mktemp "${ledger_dir}/.ledger.XXXXXX" 2> /dev/null)"; then
+        log "WARN" "cannot create temp file in ${ledger_dir}; skipping ledger update"
+        return 0
+    fi
     # shellcheck disable=SC2016  # jq filter; $vars are bound via --arg/--argjson below
     if ! printf '%s\n' "${files}" | jq -R -s -c \
         --argjson ledger "${existing}" \
@@ -229,7 +248,11 @@ function main {
         rm -f "${tmp}"
         return 0
     fi
-    mv "${tmp}" "${LEDGER_FILE}"
+    if ! mv "${tmp}" "${LEDGER_FILE}" 2> /dev/null; then
+        log "WARN" "cannot write ledger file: ${LEDGER_FILE}"
+        rm -f "${tmp}"
+    fi
+    return 0
 }
 
 if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
