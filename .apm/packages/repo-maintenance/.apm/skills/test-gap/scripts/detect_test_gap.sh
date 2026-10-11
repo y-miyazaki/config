@@ -11,7 +11,8 @@
 #
 # Output:
 # - JSON object: status, scope, since, commit_range, skip (always false),
-#   hotspots[] (git churn), ledger {file, processed[]}, warnings[]
+#   hotspots[] (git churn), ledger {file, processed[]}, warnings[],
+#   verifier_context (markdown listing processed ledger paths for the Checker; empty when none)
 #
 # Design Rules:
 # - Emit facts only; never decide that tests are missing (the maker agent selects targets)
@@ -274,7 +275,7 @@ function output_error {
 }
 
 #######################################
-# output_json: Print the detect result
+# output_json: Print the detect result (includes verifier_context markdown built from the ledger)
 #
 # Globals:
 #   SCOPE, SINCE_REF, COMMIT_RANGE, LEDGER_FILE, LEDGER_PROCESSED_JSON, HOTSPOTS_JSON, WARNINGS - Read
@@ -290,6 +291,16 @@ function output_error {
 #
 #######################################
 function output_json {
+    local verifier_context
+    verifier_context="$(jq -r --arg file "${LEDGER_FILE}" '
+        if length == 0 then ""
+        else
+            "## test-gap ledger (recently processed test paths)\n"
+            + "Source: " + $file + "\n"
+            + (map("- " + .path + " (attempts: " + (.attempts | tostring) + ", outcome: " + .outcome + ")") | join("\n"))
+            + "\nA target whose test path is listed above must not be selected again unless the PR body states a new reason."
+        end' <<< "${LEDGER_PROCESSED_JSON}")"
+
     json_object \
         status "ok" \
         scope "${SCOPE}" \
@@ -298,7 +309,8 @@ function output_json {
         skip "false" \
         hotspots "$(json_array "${HOTSPOTS_JSON[@]}")" \
         ledger "$(json_object file "${LEDGER_FILE}" processed "${LEDGER_PROCESSED_JSON}")" \
-        warnings "$(json_string_array "${WARNINGS[@]}")"
+        warnings "$(json_string_array "${WARNINGS[@]}")" \
+        verifier_context "${verifier_context}"
 }
 
 #######################################

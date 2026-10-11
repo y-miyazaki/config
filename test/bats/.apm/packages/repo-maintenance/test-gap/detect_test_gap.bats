@@ -8,15 +8,18 @@
 # - detect_test_gap defaults to scope all and returns skip false on an empty repo
 # - detect_test_gap emits churn hotspots for frequently edited files
 # - detect_test_gap emits error JSON outside a git repository
+# - detect_test_gap emits verifier_context listing processed ledger paths when the ledger has recent entries
 # - detect_test_gap excludes skipped paths from hotspots
 # - detect_test_gap honors TEST_GAP_CHURN_MIN and TEST_GAP_CHURN_TOP
 # - detect_test_gap never returns skip true
 # - detect_test_gap omits ledger entries older than the retention window
+# - detect_test_gap omits verifier_context when the ledger has no processed entries
 # - detect_test_gap output is accepted by loop-detect helper functions
 # - detect_test_gap range without --since returns error JSON exit 1
 # - detect_test_gap rejects unknown --scope
 # - detect_test_gap reports processed ledger entries within the retention window
 # - detect_test_gap treats a missing ledger file as empty
+# - detect_test_gap verifier_context is returned by build_verifier_context_from_result for a ledger with entries
 # - detect_test_gap warns and continues on a corrupt ledger file
 # - detect_test_gap warns and returns empty hotspots when since is not a valid ref
 
@@ -78,6 +81,21 @@ make_churn_repo() {
     [ "$status" -eq 0 ]
 }
 
+@test "detect_test_gap emits verifier_context listing processed ledger paths when the ledger has recent entries" {
+    make_churn_repo "src/a.sh" 1
+    mkdir -p "${GIT_TEST_REPO}/.loop"
+    printf '%s' '{"entries":{"test/bats/foo.bats":{"attempts":2,"last_loop_run_id":"7","outcome":"pr-created","processed_at":"2999-01-01T00:00:00Z"},"test/bats/bar baz.bats":{"attempts":1,"last_loop_run_id":"8","outcome":"no-change","processed_at":"2999-01-01T00:00:00Z"}}}' > "${GIT_TEST_REPO}/.loop/state-test-gap-ledger.json"
+    git_test_repo_run "bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    local ctx
+    ctx="$(jq -r '.verifier_context' <<< "${output}")"
+    [[ ${ctx} == *"## test-gap ledger (recently processed test paths)"* ]]
+    [[ ${ctx} == *"- test/bats/foo.bats (attempts: 2, outcome: pr-created)"* ]]
+    [[ ${ctx} == *"- test/bats/bar baz.bats (attempts: 1, outcome: no-change)"* ]]
+    [[ ${ctx} == *".loop/state-test-gap-ledger.json"* ]]
+    [[ ${ctx} == *"must not be selected again unless the PR body states a new reason"* ]]
+}
+
 @test "detect_test_gap excludes skipped paths from hotspots" {
     make_churn_repo "node_modules/pkg/index.js" 5
     git_test_repo_run "env TEST_GAP_CHURN_MIN=3 bash '${DETECT_SCRIPT}'"
@@ -117,6 +135,19 @@ make_churn_repo() {
     [ "$status" -eq 0 ]
     run jq -e '(.ledger.processed | length) == 0' <<< "${output}"
     [ "$status" -eq 0 ]
+}
+
+@test "detect_test_gap omits verifier_context when the ledger has no processed entries" {
+    make_churn_repo "src/a.sh" 1
+    git_test_repo_run "bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    local det="${output}"
+    run jq -e '(.verifier_context // "") == ""' <<< "${det}"
+    [ "$status" -eq 0 ]
+    bats_source_rel ".github/actions/loop-detect/lib/detect.sh"
+    run build_verifier_context_from_result "${det}"
+    [ "$status" -eq 0 ]
+    [ -z "${output}" ]
 }
 
 @test "detect_test_gap output is accepted by loop-detect helper functions" {
@@ -164,6 +195,20 @@ make_churn_repo() {
     [ "$status" -eq 0 ]
     run jq -e '(.ledger.processed | length) == 0' <<< "${output}"
     [ "$status" -eq 0 ]
+}
+
+@test "detect_test_gap verifier_context is returned by build_verifier_context_from_result for a ledger with entries" {
+    make_churn_repo "src/a.sh" 1
+    mkdir -p "${GIT_TEST_REPO}/.loop"
+    printf '%s' '{"entries":{"test/bats/foo.bats":{"attempts":2,"last_loop_run_id":"7","outcome":"pr-created","processed_at":"2999-01-01T00:00:00Z"}}}' > "${GIT_TEST_REPO}/.loop/state-test-gap-ledger.json"
+    git_test_repo_run "bash '${DETECT_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    local det="${output}"
+    bats_source_rel ".github/actions/loop-detect/lib/detect.sh"
+    run build_verifier_context_from_result "${det}"
+    [ "$status" -eq 0 ]
+    [[ ${output} == *"test/bats/foo.bats"* ]]
+    [[ ${output} == *"## test-gap ledger"* ]]
 }
 
 @test "detect_test_gap warns and continues on a corrupt ledger file" {

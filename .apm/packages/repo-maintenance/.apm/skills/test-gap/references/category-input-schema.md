@@ -14,7 +14,8 @@ The skill detect script (`scripts/detect_test_gap.sh`) emits:
     "file": ".loop/state-test-gap-ledger.json",
     "processed": [{ "path": "test/bats/foo.bats", "attempts": 1, "outcome": "pr-created", "processed_at": "2026-10-11T10:00:00Z" }]
   },
-  "warnings": []
+  "warnings": [],
+  "verifier_context": "## test-gap ledger (recently processed test paths)\n..."
 }
 ```
 
@@ -23,3 +24,4 @@ The skill detect script (`scripts/detect_test_gap.sh`) emits:
 - `ledger.processed[]` lists recently processed test paths. Do not select a target whose test path is listed unless you can state a new reason.
 - `warnings[]` lists recoverable sensor problems (for example an invalid `since` ref).
 - `status: "error"` is fatal: stop and report the error text.
+- `verifier_context` is a markdown string listing `ledger.processed[]` paths (with attempts and outcome) so the Checker can verify the target is not a recently processed one. It is an empty string when the ledger has no processed entries.
