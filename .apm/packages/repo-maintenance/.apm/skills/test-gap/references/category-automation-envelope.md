@@ -46,8 +46,8 @@ PR body rules:
 
 - Top-level `## Overview`, `## Summary`, and `## Verification` (apply only).
 - Under Summary use `### Candidates` (survey) or `### Changes` and `### Deferred` (apply). Use `### Deferred`, not `### Skipped`.
-- Overview: trigger → substance → action. Name the target file and the behaviors covered. Write enough for a reviewer to understand without opening the diff.
-- Links: read [category-pr-body-links.md](category-pr-body-links.md).
+- **Overview contract:** trigger → substance → action. Name the target file and the behaviors covered. Write enough for a reviewer to understand without opening the diff.
+- **Links:** At synthesis, read [category-pr-body-links.md](category-pr-body-links.md).
 - Reconcile `### Changes` and `### Deferred` with `git diff --name-only` before synthesis. A path MUST NOT appear in both. Every path in the diff MUST appear in Changes.
 
 ## Session Metrics
