@@ -74,7 +74,7 @@ Do **not** “fix only ci-sweeper” for envelope wording that all loop entry sk
 | Interactive | User prompt                               | Optional; gather from prompt if missing | Not required              |
 | Automation  | Caller prompt + detect JSON + Constraints | Caller-provided                         | Required in **this** repo |
 
-`.apm/AGENTS.md` Skill design: Interactive MUST run without loop callers.
+`.apm/CLAUDE.md` Skill design: Interactive MUST run without loop callers.
 
 ## Related
 

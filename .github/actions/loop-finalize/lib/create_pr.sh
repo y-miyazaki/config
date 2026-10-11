@@ -6,7 +6,7 @@
 #   and invokes gh pr create without passing oversized payloads on argv.
 #
 # Usage:
-#   BRANCH=... GITHUB_TOKEN=... GITHUB_REPOSITORY=... PR_BASE_BRANCH=... PR_TITLE=... \
+#   AGENT_BRANCH=... GITHUB_TOKEN=... GITHUB_REPOSITORY=... PR_BASE_BRANCH=... PR_TITLE=... \
 #   NOTIFY_CONTEXT_JSON=... [LOOP_HANDOFF_DIR=... HANDOFF_KEY=... DETECT_RESULT_JSON=...] \
 #   bash lib/create_pr.sh
 #
@@ -32,7 +32,7 @@ export LC_ALL=C.UTF-8
 #######################################
 # Global variables
 #######################################
-BRANCH="${BRANCH:-}"
+AGENT_BRANCH="${AGENT_BRANCH:-}"
 DETECT_RESULT_JSON="${DETECT_RESULT_JSON:-}"
 ENGINE="${ENGINE:-}"
 GITHUB_TOKEN="${GITHUB_TOKEN:-}"
@@ -55,7 +55,7 @@ USAGE_JSON="${USAGE_JSON:-}"
 # main: Resolve payloads, compose body, create PR
 #
 # Globals:
-#   BRANCH - Head branch for the new PR
+#   AGENT_BRANCH - Head branch for the new PR
 #   DETECT_RESULT_JSON - Inline detect JSON (optional)
 #   GITHUB_TOKEN - GitHub token for gh
 #   GITHUB_OUTPUT - GITHUB_OUTPUT file path (optional)
@@ -87,7 +87,7 @@ function main {
     local -a body_args gh_args
     local composed url number pr_err
 
-    : "${BRANCH:?BRANCH is required}"
+    : "${AGENT_BRANCH:?AGENT_BRANCH is required}"
     : "${GITHUB_TOKEN:?GITHUB_TOKEN is required}"
     : "${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is required}"
     : "${PR_BASE_BRANCH:?PR_BASE_BRANCH is required}"
@@ -116,13 +116,13 @@ function main {
         --notify-json-file "${notify_json_path}"
     )
 
-    export BRANCH PR_BODY ENGINE LEVEL SKIP_REASON TARGET_JSON USAGE_JSON
+    export AGENT_BRANCH PR_BODY ENGINE LEVEL SKIP_REASON TARGET_JSON USAGE_JSON
     composed="$(bash "${script_dir}/create_pr_body.sh" "${body_args[@]}")"
 
     gh_args=(
         --repo "${GITHUB_REPOSITORY}"
         --base "${PR_BASE_BRANCH}"
-        --head "${BRANCH}"
+        --head "${AGENT_BRANCH}"
         --title "${PR_TITLE}"
     )
     if [[ -n ${composed} ]]; then

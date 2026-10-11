@@ -1,4 +1,4 @@
-# AGENTS.md
+# CLAUDE.md
 
 Rules for authoring under `.apm/packages/**`. Package sources are **distribution artifacts** — `apm install` copies them into this repository and into consumer repositories.
 

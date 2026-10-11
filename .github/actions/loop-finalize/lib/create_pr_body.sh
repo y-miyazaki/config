@@ -223,7 +223,7 @@ function create_pr_body {
 
     export GITHUB_SERVER_URL="${GITHUB_SERVER_URL:-https://github.com}"
     export GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-}"
-    BLOB_REF="${BRANCH:-}"
+    BLOB_REF="${AGENT_BRANCH:-}"
     if [[ -z ${BLOB_REF} ]]; then
         BLOB_REF="$(jq -r '.from.branch // .to.branch // empty' <<< "${target_json}" 2> /dev/null || true)"
     fi

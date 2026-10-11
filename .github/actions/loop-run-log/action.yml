@@ -36,6 +36,10 @@ inputs:
   loop_name:
     description: "Loop name recorded as loop_name in run log JSON (e.g. docs-updater)"
     required: true
+  loop_run_id:
+    default: ${{ github.run_id }}
+    description: "GitHub Actions workflow run ID"
+    required: false
   outcome:
     description: "Run outcome (pr-created | no-changes | rejected | error | skipped)"
     required: true
@@ -59,10 +63,6 @@ inputs:
     default: ""
     description: "Checker verdict (APPROVE or REJECT, empty when execute did not run)"
     required: false
-  workflow_run:
-    default: ${{ github.run_id }}
-    description: "GitHub Actions workflow run ID"
-    required: false
 
 outputs:
   entry_json:
@@ -85,11 +85,11 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         HAS_CHANGES: ${{ inputs.has_changes }}
         LOOP_NAME: ${{ inputs.loop_name }}
+        LOOP_RUN_ID: ${{ inputs.loop_run_id }}
         OUTCOME: ${{ inputs.outcome }}
         RUN_LOG_FILE: ${{ inputs.run_log_file }}
         RUN_STARTED_AT: ${{ inputs.run_started_at }}
         SKIP_REASON: ${{ inputs.skip_reason }}
         USAGE_JSON: ${{ inputs.usage_json }}
         VERDICT: ${{ inputs.verdict }}
-        WORKFLOW_RUN: ${{ inputs.workflow_run }}
       run: bash "${GITHUB_ACTION_PATH}/lib/run.sh"

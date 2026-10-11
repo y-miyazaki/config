@@ -13,6 +13,13 @@
 # - Action-local only; not part of scripts/lib skill sync
 #######################################
 
+_ENTITY_TARGET_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_entity_loop_action_lib="$(cd "${_ENTITY_TARGET_LIB_DIR}/../../lib/loop" && pwd)"
+if ! declare -f emit_loop_constraints > /dev/null 2>&1; then
+    # shellcheck source=../../lib/loop/build_constraints.sh disable=SC1091
+    source "${_entity_loop_action_lib}/build_constraints.sh"
+fi
+
 #######################################
 # build_entity_target_prompt: Assemble maker prompt for an entity target
 #
@@ -25,6 +32,8 @@
 #   $3 - Level (e.g. L1)
 #   $4 - Delivery (e.g. none)
 #   $5 - Detect result JSON string
+#   $6 - may_edit (true | false)
+#   $7 - write_target (fix | report | empty when may_edit false)
 #
 # Outputs:
 #   Prompt text on stdout
@@ -39,6 +48,8 @@ function build_entity_target_prompt {
     local level="$3"
     local delivery="$4"
     local detect_result="$5"
+    local may_edit="$6"
+    local write_target="$7"
 
     {
         echo "Run the ${agent_maker_skill_name} skill."
@@ -51,11 +62,11 @@ function build_entity_target_prompt {
             echo "${agent_maker_instructions}"
         fi
         echo ""
-        echo "## Constraints"
-        echo "- level: ${level}"
-        echo "- delivery: ${delivery}"
-        echo "- may_edit: false"
-        echo "- Do not modify repository files unless an explicit allowlist says so."
+        echo "## Run Context"
+        echo "level: ${level}"
+        echo "delivery: ${delivery}"
+        echo ""
+        emit_loop_constraints "${may_edit}" "${write_target}" "" ""
     }
 }
 
@@ -72,6 +83,8 @@ function build_entity_target_prompt {
 #   $4 - agent_maker_instructions
 #   $5 - level
 #   $6 - delivery
+#   $7 - may_edit (true | false)
+#   $8 - write_target (fix | report | empty when may_edit false)
 #
 # Outputs:
 #   JSON array on stdout (empty when skip=true)
@@ -87,6 +100,8 @@ function build_entity_target_matrix {
     local agent_maker_instructions="$4"
     local level="$5"
     local delivery="$6"
+    local may_edit="$7"
+    local write_target="$8"
 
     local detect_json skip event_name event_action comment_id
     local handoff_key verifier_context prompt_text target_json matrix_json
@@ -125,7 +140,9 @@ function build_entity_target_matrix {
         "${agent_maker_instructions}" \
         "${level}" \
         "${delivery}" \
-        "${detect_json}")"
+        "${detect_json}" \
+        "${may_edit}" \
+        "${write_target}")"
 
     target_json="$(
         jq -nc \

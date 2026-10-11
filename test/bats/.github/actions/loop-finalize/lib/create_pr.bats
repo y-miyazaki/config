@@ -29,6 +29,15 @@ if [[ "$1" == "pr" && "$2" == "create" ]]; then
     if [[ -n ${GH_ARGV_FILE:-} ]]; then
         printf '%s\n' "$*" > "${GH_ARGV_FILE}"
     fi
+    if [[ -n ${GH_BODY_CAPTURE_FILE:-} ]]; then
+        while [[ $# -gt 0 ]]; do
+            if [[ "$1" == "--body-file" ]]; then
+                cp "$2" "${GH_BODY_CAPTURE_FILE}"
+                break
+            fi
+            shift
+        done
+    fi
     if [[ "${GH_PR_CREATE_FAIL:-}" == "1" ]]; then
         echo "error: x-access-token:ghp_[REDACTED:GitHub token] denied" >&2
         exit 1
@@ -55,7 +64,7 @@ EOF
     local script
 
     script="$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr.sh"
-    export BRANCH="loop/test-branch"
+    export AGENT_BRANCH="loop/test-branch"
     export DETECT_RESULT_JSON="{}"
     export GITHUB_TOKEN="test-token"
     export GITHUB_REPOSITORY="example/repo"
@@ -78,7 +87,7 @@ EOF
 
     script="$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr.sh"
     failure_file="${BATS_TEST_TMPDIR}/failure.json"
-    export BRANCH="loop/test-branch"
+    export AGENT_BRANCH="loop/test-branch"
     export DETECT_RESULT_JSON="{}"
     export GH_PR_CREATE_FAIL="1"
     export GITHUB_TOKEN="test-token"
@@ -106,7 +115,7 @@ EOF
 
     script="$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr.sh"
     export GH_ARGV_FILE="${BATS_TEST_TMPDIR}/gh-argv"
-    export BRANCH="loop/test-branch"
+    export AGENT_BRANCH="loop/test-branch"
     export DETECT_RESULT_JSON="{}"
     export GITHUB_TOKEN="test-token"
     export GITHUB_REPOSITORY="example/repo"
@@ -130,7 +139,7 @@ EOF
 
     script="$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr.sh"
     export GH_ARGV_FILE="${BATS_TEST_TMPDIR}/gh-argv"
-    export BRANCH="loop/test-branch"
+    export AGENT_BRANCH="loop/test-branch"
     export DETECT_RESULT_JSON="{}"
     export GITHUB_TOKEN="test-token"
     export GITHUB_REPOSITORY="example/repo"
@@ -155,7 +164,7 @@ EOF
     script="$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr.sh"
     argv_file="${BATS_TEST_TMPDIR}/gh_argv"
     export GH_ARGV_FILE="${argv_file}"
-    export BRANCH="loop/test-branch"
+    export AGENT_BRANCH="loop/test-branch"
     export DETECT_RESULT_JSON="{}"
     export GITHUB_TOKEN="test-token"
     export GITHUB_REPOSITORY="example/repo"
@@ -171,4 +180,29 @@ EOF
     run bash "${script}"
     [ "$status" -eq 0 ]
     grep -q -- '--title chore: automated update (loop)' "${argv_file}" || grep -q -- 'chore: automated update (loop)' "${argv_file}"
+}
+
+@test "create_pr composes changed-file blob links against AGENT_BRANCH" {
+    local script body_file
+
+    script="$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr.sh"
+    body_file="${BATS_TEST_TMPDIR}/gh_body"
+    export GH_BODY_CAPTURE_FILE="${body_file}"
+    export AGENT_BRANCH="loop/test-branch"
+    export DETECT_RESULT_JSON="{}"
+    export GITHUB_TOKEN="test-token"
+    export GITHUB_REPOSITORY="example/repo"
+    export HANDOFF_KEY="integration:main"
+    export LOOP_HANDOFF_DIR="${HANDOFF_DIR}"
+    export NOTIFY_CONTEXT_JSON='{"changed_files":["docs/a.md"],"agent_report_summary":"done"}'
+    export PR_BASE_BRANCH="main"
+    export PR_BODY="Automated update"
+    export PR_TITLE="chore: test"
+    export SKIP_REASON="none"
+    export TARGET_JSON='{"key":"integration:main","from":{"branch":"main"},"to":{"branch":"main"}}'
+
+    run bash "${script}"
+    [ "$status" -eq 0 ]
+    grep -q -- 'blob/loop/test-branch/docs/a.md' "${body_file}"
+    run ! grep -q -- 'blob/main/docs/a.md' "${body_file}"
 }

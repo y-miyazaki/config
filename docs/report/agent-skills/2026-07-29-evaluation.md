@@ -158,7 +158,7 @@ description の `Use when` 文言: refactor / tech-debt は欠落気味だが、
 | ----------------------------------- | --------------------------------------- | ------------------------------------------ |
 | instructions（配布 always-on）      | 薄い ItemID + 非自明 Standards          | sync 対象は概ね準拠。markdown/bats 例外    |
 | `*-review` category                 | Check / Why / Fix                       | review 起動時 always                       |
-| `.apm/AGENTS.md` / 本リポ CLAUDE.md | DIST、Loop、maintainer                  | 配布 instructions に埋め込まない方針を維持 |
+| `.apm/CLAUDE.md` / 本リポ CLAUDE.md | DIST、Loop、maintainer                  | 配布 instructions に埋め込まない方針を維持 |
 | loop 出力契約                       | Candidates/Changes/Deferred + path 照合 | ItemID 不要（§3.2）                        |
 
 ---

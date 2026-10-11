@@ -6,7 +6,7 @@ This document explains how instruction files stay aligned with review-skill `cat
 
 For distributable-package authoring rules (repository-neutral content, edit targets, test pairing), see companion rules (stem `instructions`, `agent-skills`) and [Edit routing](https://github.com/y-miyazaki/config/blob/main/CLAUDE.md#edit-routing-must).
 
-**Boundary:** `.apm/packages/**` sources are distribution artifacts — do not add this-repository-specific paths, sync workflows, or consumer layout mandates to instructions or skill `references/`. See [APM Package Design — Distributable vs maintainer-only](apm-package-design.md#distributable-vs-maintainer-only) and [.apm/AGENTS.md § Distributable vs maintainer-only](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md#distributable-vs-maintainer-only-must).
+**Boundary:** `.apm/packages/**` sources are distribution artifacts — do not add this-repository-specific paths, sync workflows, or consumer layout mandates to instructions or skill `references/`. See [APM Package Design — Distributable vs maintainer-only](apm-package-design.md#distributable-vs-maintainer-only) and [.apm/CLAUDE.md § Distributable vs maintainer-only](https://github.com/y-miyazaki/config/blob/main/.apm/CLAUDE.md#distributable-vs-maintainer-only-must).
 
 ## Scope
 

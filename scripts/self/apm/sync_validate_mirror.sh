@@ -10,7 +10,7 @@
 # Design Rules:
 # - Source of truth for behavior: keep both sides aligned via this script
 # - Default direction: scripts/<domain>/validate.sh → skill scripts/validate.sh
-# - Path layout differences only (see .apm/AGENTS.md § Validation Scripts Mirror)
+# - Path layout differences only (see .apm/CLAUDE.md § Validation Scripts Mirror)
 #######################################
 
 set -euo pipefail

@@ -20,7 +20,7 @@
 #
 # Default (no args): run all sync + install + drift check + audit.
 #
-# See CLAUDE.md § Edit Targets and .apm/AGENTS.md § Validation Scripts Mirror.
+# See CLAUDE.md § Edit Targets and .apm/CLAUDE.md § Validation Scripts Mirror.
 #######################################
 
 set -euo pipefail

@@ -8,7 +8,7 @@ Design principles for authoring content under `.apm/packages/**` that ships via 
 
 - Sources under `.apm/packages/` are **distribution artifacts**; `apm install` materializes them into consumer trees (for example `.agents/`, `.claude/`, `.cursor/`).
 - Packages must be usable without this repository's `docs/`, workflows, or `.loop/` layout.
-- Maintainer workflows for **this** repository live in [.apm/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md) and `docs/` — not inside distributable skill references.
+- Maintainer workflows for **this** repository live in [.apm/CLAUDE.md](https://github.com/y-miyazaki/config/blob/main/.apm/CLAUDE.md) and `docs/` — not inside distributable skill references.
 
 ## Package catalog (forge axis)
 
@@ -54,7 +54,7 @@ Do not embed **this repository's** or **single-consumer** specifics in instructi
 
 | Topic                                       | Where                                                                                                                                                                                   |
 | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Edit targets, sync, post-change workflow    | [CLAUDE.md § Edit routing](https://github.com/y-miyazaki/config/blob/main/CLAUDE.md#edit-routing-must), [.apm/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md) |
+| Edit targets, sync, post-change workflow    | [CLAUDE.md § Edit routing](https://github.com/y-miyazaki/config/blob/main/CLAUDE.md#edit-routing-must), [.apm/CLAUDE.md](https://github.com/y-miyazaki/config/blob/main/.apm/CLAUDE.md) |
 | Loop Engineering, documentation path maps   | `docs/explanation/loop-engineering/**`, consumer `docs/` overlays                                                                                                                       |
 | Repo-specific denylist / path policy        | Root `AGENTS.md`, `docs/`, caller `## Constraints` — not skill `references/` defaults                                                                                                   |
 | Local-only domain skills in a consumer repo | That repository's `AGENTS.md` or `docs/`                                                                                                                                                |
@@ -66,7 +66,7 @@ When reviewing package PRs, treat any domain-specific path or maintainer workflo
 | Layer        | Ships                                            | Portability                                                                                                                                                                                |
 | ------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Skills       | `SKILL.md`, `references/`, `assets/`, `scripts/` | **Required** — generic contract + domain logic only                                                                                                                                        |
-| Instructions | `*.instructions.md`                              | **Required** — repository-neutral; redistribution policy in [.apm/AGENTS.md § DIST](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md#redistribution-dist-maintainer-judgment) |
+| Instructions | `*.instructions.md`                              | **Required** — repository-neutral; redistribution policy in [.apm/CLAUDE.md § DIST](https://github.com/y-miyazaki/config/blob/main/.apm/CLAUDE.md#redistribution-dist-maintainer-judgment) |
 | Hooks        | portable scripts; JSON per target                | Scripts portable across agents                                                                                                                                                             |
 | Repo `docs/` | design indexes, maintainer maps                  | Consumer overlay — OK                                                                                                                                                                      |
 
@@ -125,7 +125,7 @@ Skills link to generic principles (for example documentation deduplication) and 
 
 Forbidden in distributable skills: `../` escapes, `docs/...` repository paths, or prose like `repository \`docs/...\``.
 
-Enforced in review via `agent-skills-review` (**S-04**). Redistribution maintainer policy for package authors in this repository: [.apm/AGENTS.md § Redistribution (DIST)](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md#redistribution-dist-maintainer-judgment).
+Enforced in review via `agent-skills-review` (**S-04**). Redistribution maintainer policy for package authors in this repository: [.apm/CLAUDE.md § Redistribution (DIST)](https://github.com/y-miyazaki/config/blob/main/.apm/CLAUDE.md#redistribution-dist-maintainer-judgment).
 
 ## Review skill scope (S-04)
 
@@ -134,7 +134,7 @@ Review skills ship inside packages and may run in arbitrary consumer repositorie
 | Review check                                      | Where enforced                                 |
 | ------------------------------------------------- | ---------------------------------------------- |
 | S-04 — links stay inside skill tree or `https://` | `agent-skills-review` checklist                |
-| DIST — package authoring for `apm install`        | `.apm/AGENTS.md` (this repository maintainers) |
+| DIST — package authoring for `apm install`        | `.apm/CLAUDE.md` (this repository maintainers) |
 
 Structural and quality checks (S-01, Q-_, P-_, BP-_) apply to any SKILL.md target.
 
@@ -156,6 +156,6 @@ Normative portability rules live in companion instructions; product contracts li
 | MCP / hooks / skills runtime model   | [Architecture — Configuration Philosophy](architecture.md#configuration-philosophy)                |
 | Functional specification             | [Specification — Configuration Philosophy](../reference/specification.md#configuration-philosophy) |
 | Instruction neutrality & sync        | [Instructions Sync Workflow](instructions-sync-workflow.md)                                        |
-| Maintainer routing (this repo)       | [.apm/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md)                    |
+| Maintainer routing (this repo)       | [.apm/CLAUDE.md](https://github.com/y-miyazaki/config/blob/main/.apm/CLAUDE.md)                    |
 | Loop platform (this consumer)        | [Loop Engineering](loop-engineering/index.md)                                                      |
 | Automation PR body platform contract | [Loop PR Body Skill Contract](loop-engineering/loop-pr-body-skill-contract.md)                     |

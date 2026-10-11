@@ -153,15 +153,15 @@ pull_request mode (ci-sweeper, pr_enabled: true)
 
 ### Branch-related inputs (complete)
 
-| Input               | Type    | Role                                                                  | Default                               | Maps to `loop-detect`                   |
-| ------------------- | ------- | --------------------------------------------------------------------- | ------------------------------------- | --------------------------------------- |
-| `branch_match`      | string  | Comma-separated patterns / names to watch                             | `""` (→ `branch_state`)               | `loop_integration_branches`             |
-| `branch_match_mode` | string  | How to interpret `branch_match` patterns                              | `glob`                                | `loop_branch_match`                     |
-| `branch_state`      | string  | `.loop/*` persistence, state migration, empty `branch_match` fallback | (required)                            | `base_branch`, `loop_state_push_branch` |
-| `level`             | string  | `L2` human merge on bot fix PR; `L3` GitHub auto-merge on bot fix PR  | `L2`                                  | `level`                                 |
-| `priority`          | string  | Order when both integration and PR candidates exist                   | `integration,pull_request`            | `loop_priority`                         |
-| `pr_enabled`        | boolean | Watch open PR heads                                                   | `false`                               | `loop_pr_enabled`                       |
-| `state_file`        | string  | Override state JSON path                                              | `""` (`.loop/state-<loop_name>.json`) | `state_file`                            |
+| Input               | Type    | Role                                                                  | Default                               | Maps to `loop-detect`       |
+| ------------------- | ------- | --------------------------------------------------------------------- | ------------------------------------- | --------------------------- |
+| `branch_match`      | string  | Comma-separated patterns / names to watch                             | `""` (→ `branch_state`)               | `loop_integration_branches` |
+| `branch_match_mode` | string  | How to interpret `branch_match` patterns                              | `glob`                                | `loop_branch_match`         |
+| `branch_state`      | string  | `.loop/*` persistence, state migration, empty `branch_match` fallback | (required)                            | `base_branch`               |
+| `level`             | string  | `L2` human merge on bot fix PR; `L3` GitHub auto-merge on bot fix PR  | `L2`                                  | `level`                     |
+| `priority`          | string  | Order when both integration and PR candidates exist                   | `integration,pull_request`            | `loop_priority`             |
+| `pr_enabled`        | boolean | Watch open PR heads                                                   | `false`                               | `loop_pr_enabled`           |
+| `state_file`        | string  | Override state JSON path                                              | `""` (`.loop/state-<loop_name>.json`) | `state_file`                |
 
 Related but not branch-scoped: `max_targets_per_schedule` (fan-out cap after watch), `pr_exclude` / `pr_include_bots` (PR watch filters).
 
@@ -266,7 +266,7 @@ Canonical branch/finalize/PR semantics: [Multi-Branch canonical table](../multi-
 | `allowlist`                          | `allowlist`                               |
 | `branch_match`                       | `loop_integration_branches`               |
 | `branch_match_mode`                  | `loop_branch_match`                       |
-| `branch_state`                       | `base_branch`, `loop_state_push_branch`   |
+| `branch_state`                       | `base_branch`                             |
 | `budget_file`                        | `budget_file`                             |
 | `budget_max_runs_per_day`            | `budget_max_runs_per_day`                 |
 | `budget_max_tokens_per_day`          | `budget_max_tokens_per_day`               |

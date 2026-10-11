@@ -175,6 +175,7 @@ function resolve_dispatch_hook_script {
 #
 # Globals:
 #   DETECT_SCRIPT, LOOP_NAME, AGENT_MAKER_SKILL_NAME, AGENT_MAKER_INSTRUCTIONS, LEVEL, DELIVERY
+#   MAY_EDIT, WRITE_TARGET, DISPATCH_HOOK_SCRIPT, DISPATCH_HOOK_TOKEN
 #   BUDGET_FILE, BUDGET_MAX_RUNS_PER_DAY, BUDGET_MAX_TOKENS_PER_DAY, RUN_LOG_FILE
 #   HANDOFF_DIR, DETECT_OUT
 #
@@ -245,7 +246,9 @@ function main {
         "${AGENT_MAKER_SKILL_NAME}" \
         "${AGENT_MAKER_INSTRUCTIONS}" \
         "${LEVEL}" \
-        "${DELIVERY}")"
+        "${DELIVERY}" \
+        "${MAY_EDIT}" \
+        "${WRITE_TARGET}")"
 
     if [[ $(jq 'length' <<< "${full_matrix}") -eq 0 ]]; then
         write_entity_skip_outputs "detect_skip"

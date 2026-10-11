@@ -48,7 +48,7 @@ setup() {
     run_log_run \
         GITHUB_TOKEN='test-token' \
         OUTCOME='skipped' \
-        WORKFLOW_RUN='42' \
+        LOOP_RUN_ID='42' \
         GITHUB_OUTPUT="${GITHUB_OUTPUT}"
     [ "$status" -eq 1 ]
 }
@@ -61,7 +61,7 @@ setup() {
         SKIP_REASON='budget' \
         RUN_LOG_FILE='.loop/loop-run-log.md' \
         BASE_BRANCH='main' \
-        WORKFLOW_RUN='42' \
+        LOOP_RUN_ID='42' \
         DURATION_S_INPUT='7' \
         GITHUB_OUTPUT="${GITHUB_OUTPUT}"
     [ "$status" -eq 0 ]
@@ -94,7 +94,7 @@ setup() {
         SKIP_REASON='none' \
         RUN_LOG_FILE='.loop/loop-run-log.md' \
         BASE_BRANCH='main' \
-        WORKFLOW_RUN='99' \
+        LOOP_RUN_ID='99' \
         RUN_STARTED_AT="${started}" \
         GITHUB_OUTPUT="${GITHUB_OUTPUT}"
     [ "$status" -eq 0 ]

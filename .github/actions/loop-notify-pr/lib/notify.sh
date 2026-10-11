@@ -72,15 +72,20 @@ source "${_LOOP_CREATED_BY_LIB}/trigger_thread.sh"
 #
 # Globals:
 #   ATTEMPTS - Attempt count for display
+#   AUTO_MERGE - Whether the bot fix PR auto-merges (gates the L3 next-step text)
 #   COMMIT_SHA - Pushed commit SHA when present
 #   ENGINE - AI engine slug for Created By footer
+#   FIX_PR_NUMBER - Bot fix PR number when present
+#   FIX_PR_URL - Bot fix PR URL when present
 #   GITHUB_SERVER_URL - GitHub server URL prefix
+#   LEVEL - Autonomy level (gates the L3 vs L2 next-step text)
 #   LOOP_NAME - Loop name for marker scoping
 #   LOOP_RUN_ID - Current workflow run id
 #   MAX_ATTEMPTS - Maximum attempts for display
 #   NOTIFY_CONTEXT_JSON - Machine context from loop-execute
 #   OUTCOME - Finalize outcome enum
 #   REJECT_REASON - Checker rejection reason
+#   REPOSITORY - owner/repo used to build workflow/commit URLs
 #   TARGET_JSON - Target descriptor JSON
 #   USAGE_JSON - Measured usage JSON for Created By footer
 #   VERDICT - Checker verdict when present
@@ -328,15 +333,15 @@ function find_existing_comment {
 #
 # Globals:
 #   COMMIT_SHA - Pushed commit SHA when present
-#   GITHUB_EVENT_NAME - Triggering webhook event name
+#   ENGINE - AI engine slug for Created By footer
 #   GITHUB_SERVER_URL - GitHub server URL prefix
 #   LOOP_RUN_ID - Current workflow run id
 #   NOTIFY_CONTEXT_JSON - Machine context from loop-execute
 #   OUTCOME - Finalize outcome enum
-#   PR_NUMBER - Target pull request number
 #   REJECT_REASON - Checker rejection reason
 #   REPOSITORY - Repository owner/name
 #   TRIGGER_COMMENT_ID - Triggering comment id
+#   USAGE_JSON - Measured usage JSON for Created By footer
 #   VERDICT - Checker verdict when present
 #
 # Arguments:

@@ -49,7 +49,7 @@ SKIP_REASON="${SKIP_REASON:-none}"
 GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 USAGE_JSON="${USAGE_JSON:-}"
 VERDICT="${VERDICT:-}"
-WORKFLOW_RUN="${WORKFLOW_RUN:-}"
+LOOP_RUN_ID="${LOOP_RUN_ID:-}"
 
 #######################################
 # append_run_log_entry: Build JSON entry and append to run log file
@@ -57,7 +57,7 @@ WORKFLOW_RUN="${WORKFLOW_RUN:-}"
 # Globals:
 #   RUN_LOG_FILE - Target run log path
 #   ATTEMPTS, HAS_CHANGES, LOOP_NAME, OUTCOME, SKIP_REASON, AGENT_RESULT
-#   FAILURE_STAGE, FAILURE_MESSAGE, VERDICT, WORKFLOW_RUN, USAGE_JSON - Entry fields
+#   FAILURE_STAGE, FAILURE_MESSAGE, VERDICT, LOOP_RUN_ID, USAGE_JSON - Entry fields
 #
 # Arguments:
 #   $1 - Duration in seconds
@@ -81,7 +81,7 @@ function append_run_log_entry {
         "${OUTCOME}" \
         "${SKIP_REASON}" \
         "${VERDICT}" \
-        "${WORKFLOW_RUN}" \
+        "${LOOP_RUN_ID}" \
         "${USAGE_JSON}" \
         "${AGENT_RESULT}" \
         "${FAILURE_STAGE}" \
@@ -176,6 +176,8 @@ function write_entry_json_output {
 #
 # Globals:
 #   BASE_BRANCH - Branch the run log commit is pushed to
+#   RUN_LOG_FILE - Path to the run log file to append and commit
+#   GITHUB_TOKEN - Token used to push the commit
 #
 # Arguments:
 #   None

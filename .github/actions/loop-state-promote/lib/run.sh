@@ -158,7 +158,9 @@ function commit_changed_state_files {
 # Globals:
 #   PR_NUMBER - Closed pull request number
 #   WRITE_MODE - promote|clear_pending
-#   GITHUB_TOKEN - GitHub token
+#   GITHUB_TOKEN - GitHub token (used implicitly by gh)
+#   GITHUB_REPOSITORY - owner/repo for gh pr create --repo
+#   GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT - Uniquely name the state promote branch
 #
 # Arguments:
 #   $1 - Base branch for the state PR
@@ -301,8 +303,7 @@ function discover_state_push_branches {
 #
 # Globals:
 #   PR_NUMBER - Closed pull request number
-#   MERGED - Whether the pull request merged
-#   OUTCOME - Set from MERGED flag
+#   OUTCOME - Finalize outcome recorded on matching pending targets
 #   WRITE_MODE - promote|clear_pending
 #
 # Arguments:

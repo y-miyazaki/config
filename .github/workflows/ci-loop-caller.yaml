@@ -363,7 +363,6 @@ jobs:
           loop_pr_include_bots: ${{ inputs.pr_include_bots }}
           loop_priority: ${{ inputs.priority }}
           loop_scoped_pr_number: ${{ inputs.scoped_pr_number != 0 && format('{0}', inputs.scoped_pr_number) || '' }}
-          loop_state_push_branch: ${{ inputs.branch_state }}
           may_edit: ${{ inputs.may_edit == true && 'true' || inputs.may_edit == false && 'false' || '' }}
           run_log_file: ${{ inputs.run_log_file }}
           state_file: ${{ inputs.state_file }}

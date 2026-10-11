@@ -63,7 +63,7 @@ function loop_handoff_init_bundle {
 #
 # Arguments:
 #   $1 - Handoff bundle directory
-#   $2 - Target key
+#   $2 - Handoff key
 #
 # Outputs:
 #   Absolute or relative payload path on stdout
@@ -74,8 +74,8 @@ function loop_handoff_init_bundle {
 #######################################
 function loop_handoff_payload_path {
     local handoff_dir="$1"
-    local target_key="$2"
-    printf '%s/payloads/%s.json' "${handoff_dir}" "$(loop_handoff_sanitize_key "${target_key}")"
+    local handoff_key="$2"
+    printf '%s/payloads/%s.json' "${handoff_dir}" "$(loop_handoff_sanitize_key "${handoff_key}")"
 }
 
 #######################################
@@ -86,7 +86,7 @@ function loop_handoff_payload_path {
 #
 # Arguments:
 #   $1 - Handoff bundle directory
-#   $2 - Target key
+#   $2 - Handoff key
 #
 # Outputs:
 #   Detect result JSON to stdout; non-zero when payload is missing
@@ -97,10 +97,10 @@ function loop_handoff_payload_path {
 #######################################
 function loop_handoff_read_detect_result {
     local handoff_dir="$1"
-    local target_key="$2"
+    local handoff_key="$2"
     local payload
 
-    payload="$(loop_handoff_read_payload "${handoff_dir}" "${target_key}")" || return 1
+    payload="$(loop_handoff_read_payload "${handoff_dir}" "${handoff_key}")" || return 1
     jq -c '.result // {}' <<< "${payload}"
 }
 
@@ -112,7 +112,7 @@ function loop_handoff_read_detect_result {
 #
 # Arguments:
 #   $1 - Handoff bundle directory
-#   $2 - Target key
+#   $2 - Handoff key
 #
 # Outputs:
 #   Payload JSON to stdout; non-zero when missing or invalid
@@ -123,10 +123,10 @@ function loop_handoff_read_detect_result {
 #######################################
 function loop_handoff_read_payload {
     local handoff_dir="$1"
-    local target_key="$2"
+    local handoff_key="$2"
     local payload_file
 
-    payload_file="$(loop_handoff_payload_path "${handoff_dir}" "${target_key}")"
+    payload_file="$(loop_handoff_payload_path "${handoff_dir}" "${handoff_key}")"
     if [[ ! -f ${payload_file} ]]; then
         return 1
     fi
@@ -144,7 +144,7 @@ function loop_handoff_read_payload {
 #
 # Arguments:
 #   $1 - Handoff bundle directory
-#   $2 - Target key
+#   $2 - Handoff key
 #
 # Outputs:
 #   Checker context markdown on stdout (may be empty)
@@ -155,10 +155,10 @@ function loop_handoff_read_payload {
 #######################################
 function loop_handoff_read_verifier_context {
     local handoff_dir="$1"
-    local target_key="$2"
+    local handoff_key="$2"
     local payload
 
-    payload="$(loop_handoff_read_payload "${handoff_dir}" "${target_key}")" || return 1
+    payload="$(loop_handoff_read_payload "${handoff_dir}" "${handoff_key}")" || return 1
     jq -r '.verifier_context // ""' <<< "${payload}"
 }
 
@@ -167,7 +167,7 @@ function loop_handoff_read_verifier_context {
 #
 # Globals:
 #   DETECT_RESULT_JSON - Inline detect JSON from workflow input (read)
-#   HANDOFF_KEY - Target key for artifact payload lookup (read)
+#   HANDOFF_KEY - Handoff key for artifact payload lookup (read)
 #   LOOP_HANDOFF_DIR - Downloaded handoff bundle directory (read)
 #
 # Arguments:
@@ -202,7 +202,7 @@ function loop_handoff_resolve_detect_result_json {
 #   None
 #
 # Arguments:
-#   $1 - Target key (e.g. integration:main)
+#   $1 - Handoff key (e.g. integration:main)
 #
 # Outputs:
 #   Sanitized stem on stdout
@@ -212,8 +212,8 @@ function loop_handoff_resolve_detect_result_json {
 #
 #######################################
 function loop_handoff_sanitize_key {
-    local target_key="$1"
-    printf '%s' "${target_key}" | base64 -w0 | tr '+/' '-_' | tr -d '='
+    local handoff_key="$1"
+    printf '%s' "${handoff_key}" | base64 -w0 | tr '+/' '-_' | tr -d '='
 }
 
 #######################################
@@ -237,20 +237,20 @@ function loop_handoff_write_bundle {
     local handoff_dir="$1"
     shift
     local -a candidates=("$@")
-    local candidate target_key
+    local candidate handoff_key
     local -a keys=()
 
     loop_handoff_init_bundle "${handoff_dir}" > /dev/null
 
     for candidate in "${candidates[@]}"; do
         [[ -z ${candidate} ]] && continue
-        target_key="$(jq -r '.target_json.key // empty' <<< "${candidate}")"
-        [[ -z ${target_key} ]] && continue
+        handoff_key="$(jq -r '.target_json.key // empty' <<< "${candidate}")"
+        [[ -z ${handoff_key} ]] && continue
         if ! loop_handoff_write_candidate_payload "${handoff_dir}" "${candidate}"; then
-            echo "::error::loop-handoff: failed to write payload for ${target_key}" >&2
+            echo "::error::loop-handoff: failed to write payload for ${handoff_key}" >&2
             return 1
         fi
-        keys+=("${target_key}")
+        keys+=("${handoff_key}")
     done
 
     printf '%s\n' "${keys[@]}" | jq -Rs --argjson version "${LOOP_HANDOFF_VERSION}" '
@@ -280,25 +280,25 @@ function loop_handoff_write_bundle {
 function loop_handoff_write_candidate_payload {
     local handoff_dir="$1"
     local candidate="$2"
-    local target_key payload_file result_file jq_stderr verifier_context
+    local handoff_key payload_file result_file jq_stderr verifier_context
 
     if ! jq -e . <<< "${candidate}" > /dev/null 2>&1; then
         return 1
     fi
 
-    target_key="$(jq -r '.target_json.key // empty' <<< "${candidate}")"
-    if [[ -z ${target_key} ]]; then
+    handoff_key="$(jq -r '.target_json.key // empty' <<< "${candidate}")"
+    if [[ -z ${handoff_key} ]]; then
         return 1
     fi
 
-    payload_file="$(loop_handoff_payload_path "${handoff_dir}" "${target_key}")"
+    payload_file="$(loop_handoff_payload_path "${handoff_dir}" "${handoff_key}")"
     result_file="$(mktemp)"
     jq_stderr="$(mktemp)"
     jq -c '.result // {}' <<< "${candidate}" > "${result_file}"
     verifier_context="$(jq -r '.verifier_context // ""' <<< "${candidate}")"
 
     jq -n \
-        --arg handoff_key "${target_key}" \
+        --arg handoff_key "${handoff_key}" \
         --arg verifier_context "${verifier_context}" \
         --slurpfile result "${result_file}" \
         '{handoff_key: $handoff_key, result: $result[0], verifier_context: $verifier_context}' \

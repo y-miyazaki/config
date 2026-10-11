@@ -84,10 +84,6 @@ inputs:
     default: ""
     description: "When set, watch only this open PR number and skip integration fan-out"
     required: false
-  loop_state_push_branch:
-    default: ""
-    description: "Branch for .loop/* persistence (empty = repository default branch)"
-    required: false
   may_edit:
     default: ""
     description: "Agent worktree edit gate: true | false (required)"
@@ -178,7 +174,6 @@ runs:
         LOOP_PR_EXCLUDE: ${{ inputs.loop_pr_exclude }}
         LOOP_PR_INCLUDE_BOTS: ${{ inputs.loop_pr_include_bots }}
         LOOP_SCOPED_PR_NUMBER: ${{ inputs.loop_scoped_pr_number }}
-        LOOP_STATE_PUSH_BRANCH: ${{ inputs.loop_state_push_branch }}
         MAY_EDIT: ${{ inputs.may_edit }}
         RUN_LOG_FILE: ${{ inputs.run_log_file }}
         STATE_FILE: ${{ steps.paths.outputs.state_file }}

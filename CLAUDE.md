@@ -12,7 +12,9 @@
 | `.apm/packages/<pkg>/.apm/skills/<skill>-review/references/category-*.md`                                            | Generated `## Guidelines` in instructions (unless accepting overwrite on next sync)                                                                                      |
 | Repo-only paths (for example `scripts/terraform/module_updater.sh`, `.github/actions/**/lib/`, `.github/workflows/`) | —                                                                                                                                                                        |
 
-**Distributable vs maintainer-only:** `.apm/packages/**` ships to other repositories — portable wording only. This-repo rules → [.apm/AGENTS.md](.apm/AGENTS.md) or this file, never package sources.
+**Distributable vs maintainer-only:** `.apm/packages/**` ships to other repositories — portable wording only. This-repo rules → [.apm/CLAUDE.md](.apm/CLAUDE.md) or this file, never package sources.
+
+**Nested CLAUDE.md files** (`.apm/CLAUDE.md`, `.github/workflows/CLAUDE.md`) are directory-scoped maintainer rules for working under that path — hand-authored, repo-owned, and distinct from the `.apm/packages/**` → `.claude/` sync row above (`apm install` never touches them). Claude Code and Cursor both read nested `CLAUDE.md` directly; if a tool that only honors `AGENTS.md` ever needs these same scoped rules, add a sibling `AGENTS.md` there rather than renaming back.
 
 ## Permission parity (MUST)
 

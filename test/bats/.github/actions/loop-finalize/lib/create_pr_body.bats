@@ -6,7 +6,7 @@
 # Use cases:
 # - create_pr_body renders prefix and footer from inline JSON
 # - create_pr_body reads large detect JSON from file and ignores commits[] bulk
-# - create_pr_body prefers BRANCH over target integration branch for blob links
+# - create_pr_body prefers AGENT_BRANCH over target integration branch for blob links
 # - create_pr_body carries engine, model and tokens in the loop meta block
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -89,8 +89,8 @@ setup() {
     [[ $output != *"## Failure context"* ]]
 }
 
-@test "create_pr_body prefers BRANCH over target integration branch for blob links" {
-    BRANCH='loop/ci-sweeper-fix'
+@test "create_pr_body prefers AGENT_BRANCH over target integration branch for blob links" {
+    AGENT_BRANCH='loop/ci-sweeper-fix'
     GITHUB_REPOSITORY='org/repo'
     GITHUB_SERVER_URL='https://github.com'
     NOTIFY_CONTEXT_JSON='{"changed_files":["docs/a.md"],"agent_report_overview":"","agent_report_summary":""}'

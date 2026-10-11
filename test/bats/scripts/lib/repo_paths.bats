@@ -57,7 +57,7 @@ setup() {
     run repo_path_should_skip ".apm/packages/common/foo.md"
     [ "$status" -eq 1 ]
 
-    run repo_path_should_skip ".apm/AGENTS.md"
+    run repo_path_should_skip ".apm/CLAUDE.md"
     [ "$status" -eq 1 ]
 }
 

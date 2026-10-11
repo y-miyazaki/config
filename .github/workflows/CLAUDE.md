@@ -1,4 +1,4 @@
-# AGENTS.md
+# CLAUDE.md
 
 Behavioral rules for `.github/workflows/**` and `.github/actions/**`. This repository is a **distribution source** — consumers pin workflows and composites by commit SHA.
 

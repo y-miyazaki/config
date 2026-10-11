@@ -1,7 +1,7 @@
 #!/bin/bash
 #######################################
 # Description:
-#   Write loop state JSON and commit/push to LOOP_STATE_PUSH_BRANCH.
+#   Write loop state JSON and commit/push to STATE_PUSH_BRANCH.
 #   Environment variables mirror loop-finalize Write State step env vars.
 #
 # Usage:

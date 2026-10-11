@@ -25,7 +25,7 @@ export LC_ALL=C.UTF-8
 # setup_bastion_connection: Resolve bastion and verify SSM connectivity
 #
 # Globals:
-#   BASTION_INSTANCE_ID, BASTION_TAG_NAME, GITHUB_ENV, GITHUB_OUTPUT
+#   BASTION_INSTANCE_ID, BASTION_TAG_NAME, GITHUB_OUTPUT
 #
 # Arguments:
 #   None

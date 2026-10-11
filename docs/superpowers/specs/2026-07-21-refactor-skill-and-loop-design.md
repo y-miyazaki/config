@@ -144,7 +144,7 @@ Entry skill remains **repository-neutral**. Consumer caller supplies `agent_impl
     scripts/                            # optional helpers; prefer validation skills
 ```
 
-Authoring must follow `.apm/AGENTS.md` and `agent-skills` instruction standards (five H2 sections, waza token budget, imperative style).
+Authoring must follow `.apm/CLAUDE.md` and `agent-skills` instruction standards (five H2 sections, waza token budget, imperative style).
 
 Phase 2 adds `.apm/packages/loop-refactor/` with detect script, bats (TEST-00), caller example under `.github/workflows/example/`, and a workflow design under `docs/explanation/loop-engineering/workflows/`.
 

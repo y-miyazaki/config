@@ -75,7 +75,7 @@ Interactive-capable. Installing this package does **not** require Loop Engineeri
 | `github-pr-body`       | PR number + `gh`; no loop envelope                              | Not a loop entry skill                                 |
 | GitHub MCP             | Used by chat and loops                                          | —                                                      |
 
-Description frontmatter of `github-issue-autofix` / `github-pr-revise` **leads with L2 automation**, which makes them look workflow-only. That is marketing/trigger copy, not the contract. `.apm/AGENTS.md` Skill design: interactive path MUST run from user prompt without loop callers or detect scripts.
+Description frontmatter of `github-issue-autofix` / `github-pr-revise` **leads with L2 automation**, which makes them look workflow-only. That is marketing/trigger copy, not the contract. `.apm/CLAUDE.md` Skill design: interactive path MUST run from user prompt without loop callers or detect scripts.
 
 ### `github-actions` (GHA YAML)
 

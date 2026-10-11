@@ -268,7 +268,7 @@ runs:
         steps.target.outputs.finalize_strategy == 'open_pr'
       shell: bash
       env:
-        BRANCH: ${{ inputs.branch }}
+        AGENT_BRANCH: ${{ inputs.branch }}
         DETECT_RESULT_JSON: ${{ inputs.detect_result_json }}
         ENGINE: ${{ inputs.engine }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
@@ -329,7 +329,7 @@ runs:
       if: inputs.verdict == 'REJECT' && inputs.branch != ''
       shell: bash
       env:
-        BRANCH: ${{ inputs.branch }}
+        AGENT_BRANCH: ${{ inputs.branch }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         HAS_CHANGES: ${{ inputs.has_changes }}
         VERDICT: ${{ inputs.verdict }}
@@ -341,11 +341,11 @@ runs:
           echo "Skipping branch delete: has_changes=${HAS_CHANGES} (keep branch that still differs from base)"
           exit 0
         fi
-        if ! [[ "${BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
-          echo "::error::Invalid branch name: ${BRANCH}"
+        if ! [[ "${AGENT_BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+          echo "::error::Invalid branch name: ${AGENT_BRANCH}"
           exit 1
         fi
-        gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${BRANCH}" 2>/dev/null || true
+        gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${AGENT_BRANCH}" 2>/dev/null || true
 
     - name: Export Failure Diagnostics
       if: always()

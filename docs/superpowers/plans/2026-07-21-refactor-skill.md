@@ -14,7 +14,7 @@
 - **Phase 1 only** — do NOT create `loop-refactor`, `detect_refactor.sh`, `on-loop-refactor.yaml`, Sonar integration, or workflow design for Phase 2.
 - Package source of truth: `.apm/packages/refactor/` only. Never edit generated `.agents/`, `.claude/`, `.cursor/`, `.kiro/`, `.vscode/`, or `apm_modules/`.
 - After skill/package edits: `apm install --update` when verifying install; `apm audit --ci` when verifying packages.
-- Authoring: `.apm/AGENTS.md` + agent-skills standards (five H2 sections, imperative style, waza token budget).
+- Authoring: `.apm/CLAUDE.md` + agent-skills standards (five H2 sections, imperative style, waza token budget).
 - Decisions locked: **S2**, **O2** (O3 out of L2), **V4**, **N1** (`refactor`), **R4+R2**, no tech-debt report coupling, lint/SAST must not be the center of selection or checklist.
 - Stack routing **A'**: do not hardcode consumer skill names in distributable `references/`; dispatch via `## Instructions`.
 - Context fetch: use **lean-ctx** for all read/search/file gather (prefer lean-ctx MCP / hooks over raw bulk reads).

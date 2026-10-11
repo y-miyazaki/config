@@ -35,7 +35,7 @@ Reusable Workflows and Composite Actions **must not**:
 
 ### Cross-Action References
 
-Loop composites **must not** nest `uses:` between config actions. Shared logic belongs in `.github/actions/lib/`; see [.github/workflows/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.github/workflows/AGENTS.md#composition) (Composition, Path resolution).
+Loop composites **must not** nest `uses:` between config actions. Shared logic belongs in `.github/actions/lib/`; see [.github/workflows/CLAUDE.md](https://github.com/y-miyazaki/config/blob/main/.github/workflows/CLAUDE.md#composition) (Composition, Path resolution).
 
 Workflows call leaf composites via remote SHA pin:
 
@@ -50,7 +50,7 @@ uses: y-miyazaki/config/.github/actions/loop-finalize@<sha> # v1.x.x
 - Consumers reference via **full commit SHA** (ghalint policy compliance)
 - Tags (`v1.4.6`) annotated in comments for readability
 - Bump major version on breaking changes
-- `ci-*` / `cd-*` reusables **must not** use `uses: ./.github/actions/...` — only `on-*` dogfood may temporarily; release ships remote SHA bumps in the same changeset (see [.github/workflows/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.github/workflows/AGENTS.md#pins))
+- `ci-*` / `cd-*` reusables **must not** use `uses: ./.github/actions/...` — only `on-*` dogfood may temporarily; release ships remote SHA bumps in the same changeset (see [.github/workflows/CLAUDE.md](https://github.com/y-miyazaki/config/blob/main/.github/workflows/CLAUDE.md#pins))
 
 ## Secrets Design
 
@@ -137,7 +137,7 @@ git config http.https://github.com/.extraheader \
 
 ### Failure diagnostics (loop actions)
 
-When loop composite steps record failure metadata for run logs or action outputs, use the shared libraries under `.github/actions/lib/loop/` — see [.github/workflows/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.github/workflows/AGENTS.md#failure-diagnostics) (Failure diagnostics):
+When loop composite steps record failure metadata for run logs or action outputs, use the shared libraries under `.github/actions/lib/loop/` — see [.github/workflows/CLAUDE.md](https://github.com/y-miyazaki/config/blob/main/.github/workflows/CLAUDE.md#failure-diagnostics) (Failure diagnostics):
 
 | Library                  | Role                                                                      |
 | ------------------------ | ------------------------------------------------------------------------- |

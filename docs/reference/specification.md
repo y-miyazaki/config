@@ -179,7 +179,7 @@ Hooks exit 0 when optional native tools are missing so agent sessions continue. 
 
 **Validation** skills (`*-validation`, plus `agent-skills-review`) run through `scripts/validate.sh` when an agent invokes them. Missing tools produce `SKIP` in structured output rather than silent pass. Judgment **review** skills (`*-review` other than `agent-skills-review`) have no `scripts/validate.sh` — they apply checklist references only.
 
-Authoring rules: companion rules (stem `agent-skills`, `instructions`) — portability and structure only; see [APM Package Design Principles](../explanation/apm-package-design.md). Maintainer routing: [AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.apm/AGENTS.md). Design context: [Config Repository Architecture](../explanation/architecture.md#configuration-philosophy).
+Authoring rules: companion rules (stem `agent-skills`, `instructions`) — portability and structure only; see [APM Package Design Principles](../explanation/apm-package-design.md). Maintainer routing: [CLAUDE.md](https://github.com/y-miyazaki/config/blob/main/.apm/CLAUDE.md). Design context: [Config Repository Architecture](../explanation/architecture.md#configuration-philosophy).
 
 ### MCP Servers
 
@@ -363,7 +363,7 @@ Language CI workflows (`ci-go`, `ci-nodejs`, `ci-aws-terraform`, `ci-terraform`)
 
 ### Composite action composition
 
-Loop **composite actions** must not nest other repository composite actions via `uses: <owner>/<repo>/.github/actions/...`. Parent composites invoke shared bash under `.github/actions/lib/<domain>/` for cross-action libraries (for example `${GITHUB_ACTION_PATH}/../lib/loop/handoff.sh`, `redact.sh`, `failure_record.sh`, `export_failure_diag.sh`) or sibling action `lib/` for action-specific orchestration (for example `${GITHUB_ACTION_PATH}/../loop-install-cli/lib/install.sh`). This keeps a single action SHA self-contained at release time without transitive pin drift. Failure diagnostics must redact before persistence — see [.github/workflows/AGENTS.md](https://github.com/y-miyazaki/config/blob/main/.github/workflows/AGENTS.md#failure-diagnostics) (Failure diagnostics).
+Loop **composite actions** must not nest other repository composite actions via `uses: <owner>/<repo>/.github/actions/...`. Parent composites invoke shared bash under `.github/actions/lib/<domain>/` for cross-action libraries (for example `${GITHUB_ACTION_PATH}/../lib/loop/handoff.sh`, `redact.sh`, `failure_record.sh`, `export_failure_diag.sh`) or sibling action `lib/` for action-specific orchestration (for example `${GITHUB_ACTION_PATH}/../loop-install-cli/lib/install.sh`). This keeps a single action SHA self-contained at release time without transitive pin drift. Failure diagnostics must redact before persistence — see [.github/workflows/CLAUDE.md](https://github.com/y-miyazaki/config/blob/main/.github/workflows/CLAUDE.md#failure-diagnostics) (Failure diagnostics).
 
 **Workflows** (including `on-loop-state-promote.yaml`) must call leaf actions via `uses:` — never `${GITHUB_WORKSPACE}/.github/actions/.../lib/run.sh`. Consumer repositories pin `y-miyazaki/config/.github/actions/<name>@<ref>`; this repository dogfoods with `./.github/actions/<name>`.
 
