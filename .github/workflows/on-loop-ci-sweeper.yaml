@@ -107,7 +107,7 @@ jobs:
       agent_maker_max_turns: 100
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: ci-sweeper
-      allowlist: ".github/**,.apm/packages/**,scripts/**,apm.yml,mise.toml,renovate/**,docs/**/*.md,README.md,mkdocs.yml"
+      allowlist: ".apm/packages/**,.github/**,docs/**/*.md,renovate/**,scripts/**,test/**,apm.yml,mise.toml,mkdocs.yml,README.md"
       branch_match: main
       branch_state: main
       budget_max_runs_per_day: 5
