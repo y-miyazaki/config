@@ -20,7 +20,7 @@ Select one under-tested target, add tests for it within the allowlist, and open 
 
 - Weekly scheduled run on `main` that adds tests for exactly one target (`max_targets_per_schedule: 1`)
 - Manual run through `workflow_dispatch`
-- Multi-language scope: the loop has no language adapters; the maker discovers the stack and test layout from the repository
+- Phase 1 scope for this repository: shell scripts with paired Bats suites under `test/bats/`. The skill itself has no language adapters and discovers the stack from the repository, but the caller instructions and the Checker rubric restrict this loop to Bats
 
 ### Out of scope
 
@@ -29,6 +29,7 @@ Select one under-tested target, add tests for it within the allowlist, and open 
 - GitHub Issue creation
 - L1 log-only observation phase (**L2 from start**)
 - Mutation testing and coverage-threshold enforcement
+- Go tests: Go needs a CI caller that runs Go tests first; this repository has none, so Go is not enabled (`infer_files_pattern` excludes `go`)
 
 ### Modes
 
@@ -49,57 +50,57 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 
 Schedule: **`0 10 * * 1`**, `timezone: Etc/UTC` (Monday 10:00 UTC, weekly), plus `workflow_dispatch`. The caller uses the shared `loop-state-main` concurrency group with `queue: max`.
 
-| Input / JSON key             | Description                                                                                                                                           | Dogfood value                                               |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `additional_commit_paths`    | Extra paths `loop-finalize` commits with the state update. Carries the ledger file.                                                                   | `.loop/state-test-gap-ledger.json`                          |
-| `agent_checker_effort`       | Checker reasoning effort. Only engines with an effort flag (claude) consume it.                                                                       | `medium`                                                    |
-| `agent_checker_instructions` | Checker APPROVE/REJECT rubric (static criteria only; see [Checker criteria](#checker-criteria)).                                                      | Inline in caller workflow                                   |
-| `agent_checker_max_turns`    | Max checker agent turns per verification.                                                                                                             | `100`                                                       |
-| `agent_checker_model`        | Checker model ID.                                                                                                                                     | `claude-opus-5`                                             |
-| `agent_checker_skill_name`   | Checker skill package.                                                                                                                                | `loop-verifier`                                             |
-| `agent_loop_max_attempts`    | Max Agent→Verify retry cycles before finalize records failure.                                                                                        | `3`                                                         |
-| `agent_maker_effort`         | Maker reasoning effort. Only engines with an effort flag (claude) consume it.                                                                         | `medium`                                                    |
-| `agent_maker_instructions`   | Domain instructions: select one target, add tests, no production edits, no claim of running the tests.                                                | Inline in caller workflow                                   |
-| `agent_maker_max_turns`      | Max maker agent turns per loop attempt (one Agent→Verify cycle).                                                                                      | `100`                                                       |
-| `agent_maker_model`          | Maker model ID.                                                                                                                                       | `claude-sonnet-5`                                           |
-| `agent_maker_skill_name`     | Skill package to invoke.                                                                                                                              | `test-gap`                                                  |
-| `allowlist`                  | Comma-separated globs the maker may modify. Tests only.                                                                                               | `test/**`                                                   |
-| `branch_match`               | Comma-separated integration branch patterns to watch.                                                                                                 | `main`                                                      |
-| `branch_state`               | Branch for `.loop/*` persistence, state migration, and watch fallback.                                                                                | `main`                                                      |
-| `budget_max_runs_per_day`    | Daily run cap keyed by `loop_name`.                                                                                                                   | `2`                                                         |
-| `budget_max_tokens_per_day`  | Daily aggregated token cap across loops.                                                                                                              | `1000000`                                                   |
-| `delivery`                   | Platform delivery after APPROVE.                                                                                                                      | `open_pr`                                                   |
-| `detect_domain_env_json`     | JSON object of `TEST_GAP_*` env vars passed to the detect script. See [Domain detect environment](#domain-detect-environment-detect_domain_env_json). | `{}`                                                        |
-| `detect_script`              | Domain detect script path.                                                                                                                            | `.agents/skills/test-gap/scripts/detect_test_gap.sh`        |
-| `domain_persistence_script`  | Script `loop-finalize` runs to update the ledger.                                                                                                     | `.agents/skills/test-gap/scripts/update_test_gap_ledger.sh` |
-| `engine`                     | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                                                                 | `claude`                                                    |
-| `environment`                | GitHub Environment for env-scoped secrets inside the reusable workflow. Leave `default` when repository secrets suffice.                              | `default`                                                   |
-| `infer_files_pattern`        | Extended regex to infer file paths from checker text.                                                                                                 | `test/[^[:space:],)]+\.(bats\|go\|sh\|json\|ya?ml)`         |
-| `level`                      | Autonomy level (`L1`, `L2`, `L3`). **L2 from start**.                                                                                                 | `L2`                                                        |
-| `loop_name`                  | Loop identifier; state file `.loop/state-test-gap.json`.                                                                                              | `test-gap`                                                  |
-| `max_targets_per_schedule`   | Max targets per cron tick after priority filters.                                                                                                     | `1`                                                         |
-| `may_edit`                   | Agent worktree edit gate.                                                                                                                             | `true`                                                      |
-| `no_changes_verdict`         | `APPROVE` or `REJECT` when the maker produces no file diff.                                                                                           | `REJECT`                                                    |
-| `pr_body`                    | Optional static prefix. `loop-finalize` composes agent Overview/Summary + mechanical sections.                                                        | `""`                                                        |
-| `pr_enabled`                 | Enumerate open PR heads. `test-gap` uses integration branches only.                                                                                   | `false`                                                     |
-| `pr_title`                   | PR title when finalize strategy is `open_pr`.                                                                                                         | `test: add missing tests (loop-test-gap)`                   |
-| `write_target`               | Agent artifact when `may_edit` is true.                                                                                                               | `fix`                                                       |
+| Input / JSON key             | Description                                                                                                                                            | Dogfood value                                               |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| `additional_commit_paths`    | Extra paths `loop-finalize` commits with the state update. Carries the ledger file.                                                                    | `.loop/state-test-gap-ledger.json`                          |
+| `agent_checker_effort`       | Checker reasoning effort. Only engines with an effort flag (claude) consume it.                                                                        | `medium`                                                    |
+| `agent_checker_instructions` | Checker APPROVE/REJECT rubric (static criteria only; see [Checker criteria](#checker-criteria)).                                                       | Inline in caller workflow                                   |
+| `agent_checker_max_turns`    | Max checker agent turns per verification.                                                                                                              | `100`                                                       |
+| `agent_checker_model`        | Checker model ID.                                                                                                                                      | `claude-opus-5`                                             |
+| `agent_checker_skill_name`   | Checker skill package.                                                                                                                                 | `loop-verifier`                                             |
+| `agent_loop_max_attempts`    | Max Agent→Verify retry cycles before finalize records failure.                                                                                         | `3`                                                         |
+| `agent_maker_effort`         | Maker reasoning effort. Only engines with an effort flag (claude) consume it.                                                                          | `medium`                                                    |
+| `agent_maker_instructions`   | Domain instructions: Phase 1 shell/Bats only, select one target, add tests, no production edits, no claim of running the tests.                        | Inline in caller workflow                                   |
+| `agent_maker_max_turns`      | Max maker agent turns per loop attempt (one Agent→Verify cycle).                                                                                       | `100`                                                       |
+| `agent_maker_model`          | Maker model ID.                                                                                                                                        | `claude-sonnet-5`                                           |
+| `agent_maker_skill_name`     | Skill package to invoke.                                                                                                                               | `test-gap`                                                  |
+| `allowlist`                  | Comma-separated globs the maker may modify. Tests only. The Checker rubric narrows this to `test/bats/**` (see [Checker criteria](#checker-criteria)). | `test/**`                                                   |
+| `branch_match`               | Comma-separated integration branch patterns to watch.                                                                                                  | `main`                                                      |
+| `branch_state`               | Branch for `.loop/*` persistence, state migration, and watch fallback.                                                                                 | `main`                                                      |
+| `budget_max_runs_per_day`    | Daily run cap keyed by `loop_name`.                                                                                                                    | `2`                                                         |
+| `budget_max_tokens_per_day`  | Daily aggregated token cap across loops.                                                                                                               | `1000000`                                                   |
+| `delivery`                   | Platform delivery after APPROVE.                                                                                                                       | `open_pr`                                                   |
+| `detect_domain_env_json`     | JSON object of `TEST_GAP_*` env vars passed to the detect script. See [Domain detect environment](#domain-detect-environment-detect_domain_env_json).  | `{}`                                                        |
+| `detect_script`              | Domain detect script path.                                                                                                                             | `.agents/skills/test-gap/scripts/detect_test_gap.sh`        |
+| `domain_persistence_script`  | Script `loop-finalize` runs to update the ledger.                                                                                                      | `.agents/skills/test-gap/scripts/update_test_gap_ledger.sh` |
+| `engine`                     | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                                                                  | `claude`                                                    |
+| `environment`                | GitHub Environment for env-scoped secrets inside the reusable workflow. Leave `default` when repository secrets suffice.                               | `default`                                                   |
+| `infer_files_pattern`        | Extended regex to infer file paths from checker text.                                                                                                  | `test/[^[:space:],)]+\.(bats\|sh\|json\|ya?ml)`             |
+| `level`                      | Autonomy level (`L1`, `L2`, `L3`). **L2 from start**.                                                                                                  | `L2`                                                        |
+| `loop_name`                  | Loop identifier; state file `.loop/state-test-gap.json`.                                                                                               | `test-gap`                                                  |
+| `max_targets_per_schedule`   | Max targets per cron tick after priority filters.                                                                                                      | `1`                                                         |
+| `may_edit`                   | Agent worktree edit gate.                                                                                                                              | `true`                                                      |
+| `no_changes_verdict`         | `APPROVE` or `REJECT` when the maker produces no file diff.                                                                                            | `REJECT`                                                    |
+| `pr_body`                    | Optional static prefix. `loop-finalize` composes agent Overview/Summary + mechanical sections.                                                         | `""`                                                        |
+| `pr_enabled`                 | Enumerate open PR heads. `test-gap` uses integration branches only.                                                                                    | `false`                                                     |
+| `pr_title`                   | PR title when finalize strategy is `open_pr`.                                                                                                          | `test: add missing tests (loop-test-gap)`                   |
+| `write_target`               | Agent artifact when `may_edit` is true.                                                                                                                | `fix`                                                       |
 
 No `denylist` is passed: the platform default (`DEFAULT_EXECUTE_DENYLIST`) applies, as in `on-loop-ci-sweeper.yaml`. Consumer repositories set `allowlist` to match their own test layout; the reusable workflows embed no consumer paths.
 
 ### Domain detect environment (`detect_domain_env_json`)
 
-Dogfood passes `{}`; the defaults below apply. The same variables are read by `update_test_gap_ledger.sh` where noted.
+Dogfood passes `{}`; the defaults below apply. `detect_domain_env_json` reaches the **detect script only**.
 
-| JSON key / env var        | Description                                                              | Default                            |
-| ------------------------- | ------------------------------------------------------------------------ | ---------------------------------- |
-| `TEST_GAP_CHURN_MIN`      | Minimum commit touches per path for a churn hotspot                      | `3`                                |
-| `TEST_GAP_CHURN_TOP`      | Maximum churn hotspots to emit                                           | `20`                               |
-| `TEST_GAP_CHURN_WINDOW`   | `git log --since` window for churn hotspots                              | `90.days`                          |
-| `TEST_GAP_LEDGER_FILE`    | Ledger path, repository-relative (detect and ledger update)              | `.loop/state-test-gap-ledger.json` |
-| `TEST_GAP_RETENTION_DAYS` | Days a ledger entry stays visible and is kept (detect and ledger update) | `30`                               |
+| JSON key / env var        | Description                                                                                                                            | Default                            |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| `TEST_GAP_CHURN_MIN`      | Minimum commit touches per path for a churn hotspot                                                                                    | `3`                                |
+| `TEST_GAP_CHURN_TOP`      | Maximum churn hotspots to emit                                                                                                         | `20`                               |
+| `TEST_GAP_CHURN_WINDOW`   | `git log --since` window for churn hotspots                                                                                            | `90.days`                          |
+| `TEST_GAP_LEDGER_FILE`    | Ledger path, repository-relative (detect only; must stay at the default, see below)                                                    | `.loop/state-test-gap-ledger.json` |
+| `TEST_GAP_RETENTION_DAYS` | Days a ledger entry stays visible (detect only; must stay at the default, see below). A non-numeric value warns and falls back to `30` | `30`                               |
 
-`TEST_GAP_BASE_BRANCH` (default `main`) is read only by `update_test_gap_ledger.sh` as the base for the diff against `EXECUTE_BRANCH`.
+**Finalize side.** `loop-finalize` passes only `EXECUTE_BRANCH`, `LOOP_NAME`, `OUTCOME`, `STATE_FILE`, `TARGET_JSON`, and `VERDICT` to `domain_persistence_script`; `detect_domain_env_json` does not reach it. `update_test_gap_ledger.sh` therefore always uses the defaults for the ledger file and the retention window, and `TEST_GAP_LEDGER_FILE` and `TEST_GAP_RETENTION_DAYS` overrides must not be set in `detect_domain_env_json`: detect would then read a different file or window than finalize writes. The base branch for the diff is resolved as `TEST_GAP_BASE_BRANCH` when set, else `.to.branch` of `TARGET_JSON` (the integration branch under watch, for example `master` or `trunk`), else `main`.
 
 ## Detect
 
@@ -123,7 +124,7 @@ The script is a thin, language-agnostic detect. It emits facts and **never decid
 
 ### Why `verifier_context` is emitted
 
-`build_verifier_context_from_result` returns the explicit `.verifier_context` from the detect result first. Without it, a detect result that has no `failures` or `commits` yields an empty context and the Checker could not see the ledger. The explicit field is what makes Checker criterion 5 (ledger re-selection) checkable. The text ends with the rule that a listed path must not be selected again unless the PR body states a new reason.
+`build_verifier_context_from_result` returns the explicit `.verifier_context` from the detect result first. Without it, a detect result that has no `failures` or `commits` yields an empty context and the Checker could not see the ledger. The explicit field is what makes Checker criterion 5 (ledger re-selection) checkable. The text ends with the rule that a target whose test path is listed must not be selected again unless a new reason is stated.
 
 ### Stable filters (platform)
 
@@ -144,7 +145,8 @@ The script is a thin, language-agnostic detect. It emits facts and **never decid
 
 The ledger is a separate file because `write_state.sh` only writes `targets[key]` fields (`last_sha`, `pending`, metadata) and has no slot for domain keys. It follows the same pattern as the `ci-sweeper` run ledger.
 
-- File: `.loop/state-test-gap-ledger.json` (override with `TEST_GAP_LEDGER_FILE`)
+- File: `.loop/state-test-gap-ledger.json` (fixed at the default on the finalize side; see [Domain detect environment](#domain-detect-environment-detect_domain_env_json))
+- Entries are keyed by **test file path**, not by the production target. The exclusion rule therefore applies to a target whose paired test file path appears in `ledger.processed[]`; adding another new test file for that same target also counts as selecting it again
 - Writer: `update_test_gap_ledger.sh`, run by `loop-finalize` as `domain_persistence_script`; `additional_commit_paths` commits the file with the state update
 - Reader: `detect_test_gap.sh` (`ledger.processed[]` and `verifier_context`)
 
@@ -165,10 +167,10 @@ Shape:
 
 Behavior of `update_test_gap_ledger.sh`:
 
-- Records the files in `git diff <base>...<EXECUTE_BRANCH>`; the maker does not have to cooperate
+- Records the files in `git diff <base>...<EXECUTE_BRANCH>`; the maker does not have to cooperate. The base is `TEST_GAP_BASE_BRANCH`, else `TARGET_JSON` `.to.branch` (verified: `build_integration_target_json` in `loop-detect` sets `to.branch`, and `loop-finalize` reads the same field as `pr_base_branch`), else `main`
 - Records only outcomes `pr-created`, `rejected`, and `watch`. When `OUTCOME` is unset, `VERDICT` maps `APPROVE` to `pr-created` and `REJECT` to `rejected`. `no-action`, `no-changes`, `error`, `escalated`, and unknown outcomes are skipped
 - Increments `attempts` for a path that is already present
-- Prunes entries older than `TEST_GAP_RETENTION_DAYS` (default 30)
+- Prunes entries older than the retention window (30 days; `TEST_GAP_RETENTION_DAYS` is not passed by finalize)
 - Always exits 0, so a ledger problem never blocks finalize; problems surface as warnings on stderr
 - Writes through `mktemp` + `mv`
 
@@ -183,24 +185,28 @@ Behavior of `update_test_gap_ledger.sh`:
 The `test-gap` skill (`SKILL.md`) reads `hotspots[]`, `ledger`, and `warnings[]` from the detect JSON. The maker:
 
 1. Discovers the stack and test layout from the repository
-2. Selects exactly one target, skipping paths in `ledger.processed[]` unless the PR body states a new reason
+2. Selects exactly one target, skipping a target whose paired test file path appears in `ledger.processed[]` (a second new test file for the same target also counts) unless a new reason is stated in the PR body or an Open Rejections item from a previous run applies
 3. Adds tests that assert observable behavior (return values, side effects, error paths)
 4. Names the target, the reason, the command CI will run, and the expected result in the PR body, without claiming the tests were run
 
-Language-specific guidance comes from the caller's `agent_maker_instructions` (for shell scripts the `shell-script-validation` skill and Bats pairing; for Go the `go-validation` skill), not from the skill, which keeps the skill portable.
+Language-specific guidance comes from the caller's `agent_maker_instructions` (Phase 1: shell scripts, the `shell-script-validation` skill, and Bats pairing), not from the skill, which keeps the skill portable. A caller may restrict the stack and the caller instructions win over the skill's stack discovery. In interactive mode there is no `Allowed paths`; the skill uses the repository's existing test directories.
 
 ## Checker criteria
 
-The Checker cannot run tests and cannot see CI, so the rubric contains **static criteria only**, judged from the diff, the PR body, and `verifier_context`. Inline in caller `agent_checker_instructions` (must match `on-loop-test-gap.yaml`):
+The Checker cannot run tests, cannot see CI, and does not receive the Maker's report or PR body. Its prompt contains the rubric, the diff stat, `verifier_context`, and the checked-out branch. The rubric therefore contains **static criteria only**, each decidable from the diff and `verifier_context`. Inline in caller `agent_checker_instructions` (must match `on-loop-test-gap.yaml`):
 
 - **APPROVE** when all of the following hold:
-  1. Changes stay under the allowlist (`test/**`) and touch no denylist path
+  1. Changes are limited to Bats test files and Bats support files under `test/bats/` and touch no denylist path
   2. No existing test is deleted, skipped, commented out, or loosened
   3. Each added test asserts observable behavior of the target; no test can pass regardless of the implementation
   4. The added tests correspond to a target that actually lacked tests (a missing unit or a missing paired suite)
-  5. The target is not in `ledger.processed[]`, or the PR body states a new reason for selecting it again
-  6. The PR body names the target, the reason, the command CI will run, and the expected result, and does not claim the tests were run
-- **REJECT** when any of the following hold: an added test does not verify the target's behavior; a production file or denylist path is modified; an existing test is removed, skipped, or weakened; a ledger-listed target is selected again without a stated new reason; the PR body claims the tests were executed or passed; no test file was written
+  5. The added or changed test files do not belong to a target whose paired test path is listed in the ledger section of the verifier context, unless the diff itself shows a new reason (for example the production file changed since)
+  6. Added test files contain no comment or string claiming the tests were run or passed
+- **REJECT** when any of the following hold: an added test does not verify the target's behavior; a production file or denylist path is modified; an existing test is removed, skipped, or weakened; a target whose paired test path is listed in the ledger is selected again with no new reason shown by the diff; an added test file claims the tests were run or passed; any added or changed file lies outside `test/bats/**` or is not a `.bats` or Bats support file (Phase 1 is shell/Bats only); no test file was written
+
+**Not enforced by the Checker.** PR-body honesty (no claim that the tests ran, the stated CI command and expected result, the new-reason statement for a re-selected target) is enforced by the Maker instructions and the skill's honesty rules (HON-01), and by human PR review, because the Checker does not receive the Maker's report.
+
+**Open item (platform follow-up, needs a ruling and a pin bump):** either add `test-gap` to `agent_report_skill_requires_format_check` in `.github/actions/loop-execute/lib/validate_agent_report.sh`, or pass the maker summary to the Checker. Until then the PR body is not machine-checked.
 
 **Limits:** "Breaking the implementation makes the test fail" (mutation check) and "coverage increases" cannot be confirmed by the Checker. Protection against tests that pass but verify nothing is therefore weaker than execution-based verification. CI confirms green status and human review covers depth.
 
@@ -209,7 +215,7 @@ The Checker cannot run tests and cannot see CI, so the rubric contains **static 
 The loop job installs no test runtime (the execute job sets up Node, uv, and the engine CLI), and the Checker runs before push, so no CI result exists at verification time. The loop therefore **does not validate the tests**.
 
 - CI runs on the test PR and is the validation path
-- A failing CI on a `test-gap` PR is handled by a human (fix or close)
+- A failing CI on a `test-gap` PR is handled by a human (fix or close). Three consecutive failures, including a human closing a failing PR (`pr-closed`), trip the circuit breaker; see [Operations and status](#operations-and-status)
 - `ci-sweeper` is deliberately **not** configured to pick up these PRs: `pr_include_bots` in `on-loop-ci-sweeper.yaml` is unchanged. Every loop PR is authored by the same GitHub App bot, so adding that login would put all loop PRs, including `ci-sweeper` fix PRs, in scope and risks recursion
 - Open question: measure the share of `test-gap` PRs whose CI fails, then decide whether to let `ci-sweeper` pick them up (a bot allowlist entry or a label filter) or to install a test runtime in the loop job. Neither is decided
 
@@ -223,14 +229,25 @@ Always `open_pr` to `to.branch` at L2, with the PR body composed by `loop-finali
 
 ## Operations and status
 
-**Status / unverified in production.** The first `workflow_dispatch` run has not happened. Until it does, the following are unverified and tracked in the spec's open questions:
+**Status / unverified in production.** The first `workflow_dispatch` run has not happened.
 
-1. Whether `EXECUTE_BRANCH` resolves through `git diff` when `domain_persistence_script` runs, that is, whether the finalize job checkout fetches the agent branch. If it does not, the ledger is not updated and a warning is logged
-2. Whether the PR is created with the GitHub App token and therefore starts CI workflows such as `on-ci-push-shell-script`
-3. Whether `loop-finalize` includes `.loop/state-test-gap-ledger.json` from `additional_commit_paths` in the state commit
+Confirmed by reading the code, still to observe on the first real run:
+
+1. Whether `EXECUTE_BRANCH` resolves through `git diff` when `domain_persistence_script` runs. The finalize checkout uses `fetch-depth: 0`, so the agent branch should be fetched; if it is not, the ledger is not updated and a warning is logged
+2. Whether `loop-finalize` includes `.loop/state-test-gap-ledger.json` from `additional_commit_paths` in the state commit. `write_state.sh` stages `additional_commit_paths`; the committed result is still to be observed
+
+Unverified and tracked in the spec's open questions:
+
+3. Whether the PR is created with the GitHub App token and therefore starts CI workflows such as `on-ci-push-shell-script`
 4. Whether the Checker rubric rejects meaningless tests in practice (Checker Theater, measured on real runs)
 
-Phase 1 targets shell scripts with Bats suites. Go support needs a CI caller that runs Go tests; this repository has none today.
+Phase 1 targets shell scripts with Bats suites only. Go support needs a CI caller that runs Go tests; this repository has none today.
+
+### Failure handling and the circuit breaker
+
+- A Maker that finds nothing to test produces no diff, which yields `rejected` (`no_changes_verdict: REJECT`)
+- Three consecutive failures (`rejected` or `pr-closed`, so a human closing a failing PR counts) trip the circuit breaker, and the schedule stops selecting the target
+- To resume, reset `targets["integration:main"].consecutive_failures` (the key is `targets[<target key>]`) to `0` in `.loop/state-test-gap.json` (state file `.loop/state-<loop_name>.json`)
 
 ## Implementation Checklist
 
@@ -241,7 +258,8 @@ Shared platform: [Multi-Branch — Shared platform checklist](../multi-branch-lo
 - [x] `test-gap/scripts/detect_test_gap.sh` (facts output, `verifier_context`)
 - [x] `test-gap/scripts/update_test_gap_ledger.sh` (`domain_persistence_script`)
 - [x] `on-loop-test-gap.yaml` dogfood caller via `ci-loop-caller`
-- [ ] First `workflow_dispatch` run and the four checks in [Operations and status](#operations-and-status)
+- [ ] First `workflow_dispatch` run and the checks in [Operations and status](#operations-and-status)
+- [ ] Platform follow-up: PR-body check for the Checker (see [Checker criteria](#checker-criteria))
 
 ## References
 
