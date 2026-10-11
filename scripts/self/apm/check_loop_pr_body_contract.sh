@@ -64,6 +64,7 @@ declare -a LOOP_SKILLS=(
     github-pr-revise
     refactor
     tech-debt
+    test-gap
 )
 
 declare -a REQUIRED_FILES=(
@@ -82,6 +83,7 @@ declare -a LOOP_PR_BODY_LINKS_SKILLS=(
     github-pr-revise
     refactor
     tech-debt
+    test-gap
 )
 
 # Skills that ship a separate automation-path output contract file.

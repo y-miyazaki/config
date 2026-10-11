@@ -37,6 +37,7 @@ declare -a LOOP_SKILLS=(
     github-pr-revise
     refactor
     tech-debt
+    test-gap
 )
 
 declare -a INSTALL_TARGETS=(
