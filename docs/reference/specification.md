@@ -377,11 +377,12 @@ Loop **composite actions** must not nest other repository composite actions via 
 | `on-loop-docs-updater.yaml`  | Caller   | Cron-driven documentation update (detect → execute → finalize)                                                                                         |
 | `on-loop-refactor.yaml`      | Caller   | Cron-driven structural refactor (detect → execute → finalize)                                                                                          |
 | `on-loop-tech-debt.yaml`     | Caller   | Weekly technical debt report (detect → execute → finalize)                                                                                             |
+| `on-loop-test-gap.yaml`      | Caller   | Weekly missing-test addition (detect → execute → finalize)                                                                                             |
 | `on-loop-state-promote.yaml` | Platform | Merge-gated `pending` → `last_sha` promotion when a `loop-automation` fix PR closes                                                                    |
 
 ### Loop Skill Package Pattern
 
-Loop **entry** skills are domain skills (no `loop-` name prefix) split by forge: `repo-maintenance` (`docs-updater`, `ci-sweeper`, `changelog`, `tech-debt`, `refactor`) and `github` (`github-issue-triage`, `github-issue-autofix`, `github-pr-revise`). Generic checker: `loop` / `loop-verifier`. Callers set `agent_maker_skill_name` (maker), `agent_checker_skill_name` (checker; default `loop-verifier`), and `detect_script` to installed paths (`.agents/skills/<name>/...` after `apm install`). Family map: [Loop-Capable Skills](../explanation/loop-engineering/loop-capable-skills.md).
+Loop **entry** skills are domain skills (no `loop-` name prefix) split by forge: `repo-maintenance` (`docs-updater`, `ci-sweeper`, `changelog`, `tech-debt`, `refactor`, `test-gap`) and `github` (`github-issue-triage`, `github-issue-autofix`, `github-pr-revise`). Generic checker: `loop` / `loop-verifier`. Callers set `agent_maker_skill_name` (maker), `agent_checker_skill_name` (checker; default `loop-verifier`), and `detect_script` to installed paths (`.agents/skills/<name>/...` after `apm install`). Family map: [Loop-Capable Skills](../explanation/loop-engineering/loop-capable-skills.md).
 
 | Artifact                      | Location                                 | Role                                                          |
 | ----------------------------- | ---------------------------------------- | ------------------------------------------------------------- |

@@ -84,6 +84,7 @@ nav:
               - Docs Updater: explanation/loop-engineering/workflows/loop-docs-updater-workflow-design.md
               - Refactor: explanation/loop-engineering/workflows/loop-refactor-workflow-design.md
               - Report Tech Debt: explanation/loop-engineering/workflows/loop-tech-debt-workflow-design.md
+              - Test Gap: explanation/loop-engineering/workflows/loop-test-gap-workflow-design.md
               - Issue Triage: explanation/loop-engineering/workflows/loop-github-issue-triage-workflow-design.md
               - Issue Autofix: explanation/loop-engineering/workflows/loop-github-issue-autofix-workflow-design.md
               - PR Revise: explanation/loop-engineering/workflows/loop-github-pr-revise-workflow-design.md

@@ -25,7 +25,7 @@ The architecture separates:
 ### Package Layer
 
 - `.apm/packages/common/`: forge-neutral instructions and skills (review, markdown, docs-creator) and shared MCP (not GitHub)
-- `.apm/packages/repo-maintenance/`: in-repo maintenance skills (`changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`)
+- `.apm/packages/repo-maintenance/`: in-repo maintenance skills (`changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`, `test-gap`)
 - `.apm/packages/github/`: GitHub Issue/PR skills and GitHub MCP (`github-issue-triage`, `github-issue-autofix`, `github-pr-revise`, `github-pr-body`)
 - `.apm/packages/github-actions/`: GitHub Actions YAML review/validation skills and GHA instructions
 - `.apm/packages/loop/`: generic loop checker skill (`loop-verifier`); callers pass `agent_checker_skill_name` to `loop-execute` — domain entry skills are not here

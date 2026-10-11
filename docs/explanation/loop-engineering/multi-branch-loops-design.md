@@ -254,6 +254,7 @@ Entity-event callers (Issue / PR comment driven) instead key the group by the en
 | `on-loop-ci-sweeper`    | `loop-state-main`   | Same (replaces per-`workflow_run` group)           |
 | `on-loop-refactor`      | `loop-state-main`   | Same                                               |
 | `on-loop-tech-debt`     | `loop-state-main`   | Same                                               |
+| `on-loop-test-gap`      | `loop-state-main`   | Same                                               |
 | `on-loop-state-promote` | `loop-state-main`   | Avoids state PR races during loop runs             |
 
 Entity-event callers use per-entity groups (`cancel-in-progress: false`, `queue: max`):
@@ -301,6 +302,7 @@ Do not copy this list into per-loop workflow designs.
 | **ci-sweeper**           | [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md)              | `on-loop-ci-sweeper.yaml`           |
 | **docs-updater**         | [Docs Updater Workflow Design](workflows/loop-docs-updater-workflow-design.md)          | `on-loop-docs-updater.yaml`         |
 | **tech-debt**            | [Report Tech Debt Workflow Design](workflows/loop-tech-debt-workflow-design.md)         | `on-loop-tech-debt.yaml`            |
+| **test-gap**             | [Test Gap Workflow Design](workflows/loop-test-gap-workflow-design.md)                  | `on-loop-test-gap.yaml`             |
 | **refactor**             | [Refactor Workflow Design](workflows/loop-refactor-workflow-design.md)                  | `on-loop-refactor.yaml`             |
 | **github-issue-triage**  | [Issue Triage Workflow Design](workflows/loop-github-issue-triage-workflow-design.md)   | `on-loop-github-issue-triage.yaml`  |
 | **github-issue-autofix** | [Issue Autofix Workflow Design](workflows/loop-github-issue-autofix-workflow-design.md) | `on-loop-github-issue-autofix.yaml` |

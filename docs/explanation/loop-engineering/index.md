@@ -38,6 +38,7 @@ Each loop is a thin `on-loop-<name>.yaml` plus a design page. Input key lookup i
 | docs-updater         | [Docs Updater](workflows/loop-docs-updater-workflow-design.md)          | `on-loop-docs-updater.yaml`         |
 | refactor             | [Refactor](workflows/loop-refactor-workflow-design.md)                  | `on-loop-refactor.yaml`             |
 | tech-debt            | [Report Tech Debt](workflows/loop-tech-debt-workflow-design.md)         | `on-loop-tech-debt.yaml`            |
+| test-gap             | [Test Gap](workflows/loop-test-gap-workflow-design.md)                  | `on-loop-test-gap.yaml`             |
 | github-issue-triage  | [Issue Triage](workflows/loop-github-issue-triage-workflow-design.md)   | `on-loop-github-issue-triage.yaml`  |
 | github-issue-autofix | [Issue Autofix](workflows/loop-github-issue-autofix-workflow-design.md) | `on-loop-github-issue-autofix.yaml` |
 | github-pr-revise     | [PR Revise](workflows/loop-github-pr-revise-workflow-design.md)         | `on-loop-github-pr-revise.yaml`     |

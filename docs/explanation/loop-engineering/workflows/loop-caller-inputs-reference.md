@@ -2,10 +2,10 @@
 
 `workflow_call` inputs for the two loop caller reusable workflows, passed from thin `on-loop-*.yaml` callers via `with:`.
 
-| Reusable workflow            | Detect action        | Callers                                                                                                                   |
-| ---------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `ci-loop-caller.yaml`        | `loop-detect`        | Branch / PR-head loops (changelog, ci-sweeper, docs-updater, refactor, tech-debt, github-issue-autofix, github-pr-revise) |
-| `ci-loop-caller-entity.yaml` | `loop-entity-detect` | Entity-event loops bound to one Issue / PR (github-issue-triage)                                                          |
+| Reusable workflow            | Detect action        | Callers                                                                                                                             |
+| ---------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `ci-loop-caller.yaml`        | `loop-detect`        | Branch / PR-head loops (changelog, ci-sweeper, docs-updater, refactor, tech-debt, test-gap, github-issue-autofix, github-pr-revise) |
+| `ci-loop-caller-entity.yaml` | `loop-entity-detect` | Entity-event loops bound to one Issue / PR (github-issue-triage)                                                                    |
 
 Both share `ci-loop-agent.yaml` for execute and finalize. Inputs below apply to `ci-loop-caller.yaml`; the [entity caller](#entity-caller-ci-loop-caller-entityyaml) section lists how `ci-loop-caller-entity.yaml` differs.
 
@@ -379,6 +379,7 @@ Each detect script normalizes these keys at startup via `configure_detect_enviro
 | docs-updater         | [Docs Updater — Domain detect environment](loop-docs-updater-workflow-design.md#domain-detect-environment-detect_domain_env_json)          |
 | refactor             | [Refactor — Domain detect environment](loop-refactor-workflow-design.md#domain-detect-environment-detect_domain_env_json)                  |
 | tech-debt            | [Report Tech Debt — Domain detect environment](loop-tech-debt-workflow-design.md#domain-detect-environment-detect_domain_env_json)         |
+| test-gap             | [Test Gap — Domain detect environment](loop-test-gap-workflow-design.md#domain-detect-environment-detect_domain_env_json)                  |
 | github-issue-triage  | [Issue Triage — Domain detect environment](loop-github-issue-triage-workflow-design.md#domain-detect-environment-detect_domain_env_json)   |
 | github-issue-autofix | [Issue Autofix — Domain detect environment](loop-github-issue-autofix-workflow-design.md#domain-detect-environment-detect_domain_env_json) |
 | github-pr-revise     | [PR Revise — Domain detect environment](loop-github-pr-revise-workflow-design.md#domain-detect-environment-detect_domain_env_json)         |
@@ -416,6 +417,7 @@ Each detect script normalizes these keys at startup via `configure_detect_enviro
 | docs-updater         | [Docs Updater Workflow Design](loop-docs-updater-workflow-design.md)          | `on-loop-docs-updater.yaml`                        |
 | refactor             | [Refactor Workflow Design](loop-refactor-workflow-design.md)                  | `on-loop-refactor.yaml`                            |
 | tech-debt            | [Report Tech Debt Workflow Design](loop-tech-debt-workflow-design.md)         | `on-loop-tech-debt.yaml`                           |
+| test-gap             | [Test Gap Workflow Design](loop-test-gap-workflow-design.md)                  | `on-loop-test-gap.yaml`                            |
 | github-issue-triage  | [Issue Triage Workflow Design](loop-github-issue-triage-workflow-design.md)   | `on-loop-github-issue-triage.yaml` (entity caller) |
 | github-issue-autofix | [Issue Autofix Workflow Design](loop-github-issue-autofix-workflow-design.md) | `on-loop-github-issue-autofix.yaml`                |
 | github-pr-revise     | [PR Revise Workflow Design](loop-github-pr-revise-workflow-design.md)         | `on-loop-github-pr-revise.yaml`                    |

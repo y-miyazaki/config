@@ -15,7 +15,7 @@ For concrete specifications (Actions/Workflows list, interfaces), see [Specifica
 | `github-issue-triage`  | `github-issue-triage`  | Dogfood L1 / in progress           | L1 (Report)   |
 | `github-issue-autofix` | `github-issue-autofix` | Dogfood L2 / in progress           | L2 (Assisted) |
 | `github-pr-revise`     | `github-pr-revise`     | Dogfood L2 / in progress           | L2 (Assisted) |
-| `test-gap`             | `test-gap`             | Spec draft (not implemented)       | L2 (Assisted) |
+| `test-gap`             | `test-gap`             | Dogfood L2; weekly schedule        | L2 (Assisted) |
 | `loop-stale-pr`        | —                      | Not started                        | -             |
 
 Platform actions (`loop-detect` `target_matrix`, handoff artifact, `domain_persistence_script`, merge-gated `pending`) are implemented — see [Multi-Branch Loops Design](multi-branch-loops-design.md).
@@ -33,6 +33,7 @@ Referencing the design philosophy of GitHub Agentic Workflows ([official blog](h
 | **changelog**    | git log: parse conventional commits                 | Auto-generate/update CHANGELOG.md | L2 — see [Changelog Workflow](workflows/loop-changelog-workflow-design.md)                      |
 | **refactor**     | repo scan: duplication_block / oversized_unit hints | O1/O2 structural fix; open PR     | L2 — see [Refactor Workflow](workflows/loop-refactor-workflow-design.md)                        |
 | **tech-debt**    | full-repo mechanical debt sensors                   | Classify + write dated report PR  | L2 — see [Report Tech Debt Workflow](workflows/loop-tech-debt-workflow-design.md)               |
+| **test-gap**     | schedule + ledger-absent targets + git churn        | Select one target; add tests; PR  | L2 — see [Test Gap Workflow Design](workflows/loop-test-gap-workflow-design.md)                 |
 
 #### CI failure repair — one package, layered responsibilities
 
@@ -59,6 +60,7 @@ The `result` body is **observation-trigger-specific** — not one shared schema:
 | Changelog      | `changelog`        | `changelog`      | `commits[]`, …                                           |
 | Refactor hints | `refactor`         | `refactor`       | `hints[]` (`duplication_block`, `oversized_unit`)        |
 | Tech debt      | `tech-debt`        | `tech-debt`      | `signals[]`, `hotspots[]`, `previous_report`             |
+| Test gap       | `test-gap`         | `test-gap`       | `hotspots[]`, `ledger`, `verifier_context`               |
 
 Semantic arrays such as `findings[]` are **Execute** output only — see [Semantic Findings](CONTEXT.md#language). Detect emits mechanical facts.
 
@@ -135,7 +137,7 @@ Loop **entry** skills are domain skills (no `loop-` name prefix) split by forge.
 
 ```text
 .apm/packages/repo-maintenance/.apm/skills/
-  docs-updater/   changelog/   ci-sweeper/   refactor/   tech-debt/
+  docs-updater/   changelog/   ci-sweeper/   refactor/   tech-debt/   test-gap/
 .apm/packages/github/.apm/skills/
   github-issue-triage/   github-issue-autofix/   github-pr-revise/
 .apm/packages/loop/.apm/skills/
@@ -198,6 +200,16 @@ For caller inputs and behavior, see [Refactor Workflow Design](workflows/loop-re
 | `eval.yaml` + `evals/tasks/`                                                       | waza evaluation suite                                                |
 
 For caller inputs and behavior, see [Report Tech Debt Workflow Design](workflows/loop-tech-debt-workflow-design.md).
+
+## test-gap (Missing Test Addition)
+
+| Component                                                                               | Description                                                          |
+| --------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `.apm/packages/repo-maintenance/.apm/skills/test-gap/SKILL.md`                          | Select one under-tested target; add tests within the allowlist       |
+| `.apm/packages/repo-maintenance/.apm/skills/test-gap/scripts/detect_test_gap.sh`        | Language-agnostic facts (`hotspots[]`, `ledger`, `verifier_context`) |
+| `.apm/packages/repo-maintenance/.apm/skills/test-gap/scripts/update_test_gap_ledger.sh` | `domain_persistence_script` target for finalize                      |
+
+For caller inputs and behavior, see [Test Gap Workflow Design](workflows/loop-test-gap-workflow-design.md).
 
 ## Execution Flow
 
@@ -302,6 +314,8 @@ State and observability files under `.loop/` (multi-loop coordination principle)
   state-changelog.json              ← owned by changelog
   state-refactor.json               ← owned by refactor
   state-tech-debt.json              ← owned by tech-debt
+  state-test-gap.json               ← owned by test-gap
+  state-test-gap-ledger.json        ← test-gap processed-target ledger (sidecar)
   state-github-issue-triage.json    ← owned by github-issue-triage
   state-github-issue-autofix.json   ← owned by github-issue-autofix
   state-github-pr-revise.json       ← owned by github-pr-revise

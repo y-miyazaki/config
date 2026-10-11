@@ -11,7 +11,7 @@ Forge and runtime — not “loop vs chat”:
 | Package            | Install when                                 | Skills                                                                              |
 | ------------------ | -------------------------------------------- | ----------------------------------------------------------------------------------- |
 | `common`           | Always (forge-neutral review/docs)           | `agent-skills-review`, `instructions-review`, `markdown-validation`, `docs-creator` |
-| `repo-maintenance` | Git + in-repo files; GitLab OK               | `changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`                  |
+| `repo-maintenance` | Git + in-repo files; GitLab OK               | `changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`, `test-gap`      |
 | `github`           | GitHub Issue/PR (`gh`); no GHA YAML required | `github-issue-triage`, `github-issue-autofix`, `github-pr-revise`, `github-pr-body` |
 | `github-actions`   | `.github/workflows` review/validation        | `github-actions-review`, `github-actions-validation`                                |
 | `loop`             | Loop execute checker (generic)               | `loop-verifier`                                                                     |
@@ -24,16 +24,17 @@ After `apm install`, callers still use `.agents/skills/<name>/` regardless of pa
 
 Update this table in the **same change** as adding or renaming a loop caller `agent_maker_skill_name`.
 
-| Skill                  | Package            | Caller (this repo)                  | Interactive trigger (chat)          | Automation trigger                   |
-| ---------------------- | ------------------ | ----------------------------------- | ----------------------------------- | ------------------------------------ |
-| `changelog`            | `repo-maintenance` | `on-loop-changelog.yaml`            | check/review/update changelog       | detect JSON + `## Constraints`       |
-| `ci-sweeper`           | `repo-maintenance` | `on-loop-ci-sweeper.yaml`           | triage/fix CI failures              | failed workflow detect JSON          |
-| `docs-updater`         | `repo-maintenance` | `on-loop-docs-updater.yaml`         | sync/update docs after code changes | range/hook/detect JSON               |
-| `refactor`             | `repo-maintenance` | `on-loop-refactor.yaml`             | survey/apply structural refactors   | `hints[]` detect JSON                |
-| `tech-debt`            | `repo-maintenance` | `on-loop-tech-debt.yaml`            | survey/fix safe debt                | scheduled detect JSON                |
-| `github-issue-triage`  | `github`           | `on-loop-github-issue-triage.yaml`  | triage this Issue (URL/number)      | Issue event detect JSON              |
-| `github-issue-autofix` | `github`           | `on-loop-github-issue-autofix.yaml` | implement/fix this Issue            | autofix label / dispatch detect JSON |
-| `github-pr-revise`     | `github`           | `on-loop-github-pr-revise.yaml`     | apply this PR feedback              | mention-gated comment detect JSON    |
+| Skill                  | Package            | Caller (this repo)                  | Interactive trigger (chat)          | Automation trigger                       |
+| ---------------------- | ------------------ | ----------------------------------- | ----------------------------------- | ---------------------------------------- |
+| `changelog`            | `repo-maintenance` | `on-loop-changelog.yaml`            | check/review/update changelog       | detect JSON + `## Constraints`           |
+| `ci-sweeper`           | `repo-maintenance` | `on-loop-ci-sweeper.yaml`           | triage/fix CI failures              | failed workflow detect JSON              |
+| `docs-updater`         | `repo-maintenance` | `on-loop-docs-updater.yaml`         | sync/update docs after code changes | range/hook/detect JSON                   |
+| `refactor`             | `repo-maintenance` | `on-loop-refactor.yaml`             | survey/apply structural refactors   | `hints[]` detect JSON                    |
+| `tech-debt`            | `repo-maintenance` | `on-loop-tech-debt.yaml`            | survey/fix safe debt                | scheduled detect JSON                    |
+| `test-gap`             | `repo-maintenance` | `on-loop-test-gap.yaml`             | find/add missing tests              | scheduled detect JSON (hotspots, ledger) |
+| `github-issue-triage`  | `github`           | `on-loop-github-issue-triage.yaml`  | triage this Issue (URL/number)      | Issue event detect JSON                  |
+| `github-issue-autofix` | `github`           | `on-loop-github-issue-autofix.yaml` | implement/fix this Issue            | autofix label / dispatch detect JSON     |
+| `github-pr-revise`     | `github`           | `on-loop-github-pr-revise.yaml`     | apply this PR feedback              | mention-gated comment detect JSON        |
 
 ## Description contract (skill triggering)
 

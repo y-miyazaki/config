@@ -138,11 +138,11 @@ on:
   workflow_dispatch: {}
 ```
 
-| Trigger             | Typical use                                                     |
-| ------------------- | --------------------------------------------------------------- |
-| `schedule`          | Integration branch polling (changelog, docs-updater, tech-debt) |
-| `workflow_run`      | Low-latency CI failure (ci-sweeper; ops checklist)              |
-| `workflow_dispatch` | Manual debug / `gh run list` scan without an event run ID       |
+| Trigger             | Typical use                                                               |
+| ------------------- | ------------------------------------------------------------------------- |
+| `schedule`          | Integration branch polling (changelog, docs-updater, tech-debt, test-gap) |
+| `workflow_run`      | Low-latency CI failure (ci-sweeper; ops checklist)                        |
+| `workflow_dispatch` | Manual debug / `gh run list` scan without an event run ID                 |
 
 ## Concurrency
 
@@ -238,3 +238,4 @@ Structural baseline: [Loop Caller Reusable Workflow Design](loop-caller-reusable
 - [Changelog Workflow](workflows/loop-changelog-workflow-design.md)
 - [Docs Updater Workflow](workflows/loop-docs-updater-workflow-design.md)
 - [Report Tech Debt Workflow](workflows/loop-tech-debt-workflow-design.md)
+- [Test Gap Workflow Design](workflows/loop-test-gap-workflow-design.md)
