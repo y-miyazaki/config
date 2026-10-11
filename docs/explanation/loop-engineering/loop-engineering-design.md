@@ -15,6 +15,7 @@ For concrete specifications (Actions/Workflows list, interfaces), see [Specifica
 | `github-issue-triage`  | `github-issue-triage`  | Dogfood L1 / in progress           | L1 (Report)   |
 | `github-issue-autofix` | `github-issue-autofix` | Dogfood L2 / in progress           | L2 (Assisted) |
 | `github-pr-revise`     | `github-pr-revise`     | Dogfood L2 / in progress           | L2 (Assisted) |
+| `test-gap`             | `test-gap`             | Spec draft (not implemented)       | L2 (Assisted) |
 | `loop-stale-pr`        | —                      | Not started                        | -             |
 
 Platform actions (`loop-detect` `target_matrix`, handoff artifact, `domain_persistence_script`, merge-gated `pending`) are implemented — see [Multi-Branch Loops Design](multi-branch-loops-design.md).
@@ -119,7 +120,7 @@ Priority assessment when adding new loops:
 2. **Safety**: Is the file scope restrictable via allowlist?
 3. **Verifiability**: Are there clear criteria that a checker can evaluate?
 4. **Graduated Promotion**: Promote to L2 only after 2+ weeks of stable operation at L1
-5. **Trigger separation**: New loop packages need a distinct observation trigger (git diff, git log, GitHub API entity, CI failure sensor, …). Extending an existing trigger (e.g. coverage failure under CI) uses the same loop package + caller config — not a new `loop-*` name
+5. **Trigger separation**: New loop packages need a distinct observation trigger (git diff, git log, GitHub API entity, CI failure sensor, …). Extending an existing trigger (e.g. coverage failure under CI) uses the same loop package + caller config — not a new `loop-*` name. A trigger may also be **state-based**: schedule + targets absent from a domain ledger + git churn (`test-gap`; see [Loop test-gap Design](../../superpowers/specs/2026-10-11-loop-test-gap-design.md)). Such a loop still needs a distinct write target and checker rubric, not only a distinct schedule
 
 ### References
 
