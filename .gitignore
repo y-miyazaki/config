@@ -1,11 +1,11 @@
 # === AI tool configs ===
 # Personal settings (never commit)
 .claude/memory/
-.claude/.headroom*
 .claude/settings.local.json
 .claude/tmp/
 
 # AI tools with no project-specific configs (directories fully excluded)
+**/.headroom*
 .serena
 apm_modules/
 
