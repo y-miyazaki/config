@@ -1,12 +1,12 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-10-09T11:54:16Z",
-      "outcome": "merged",
-      "consecutive_failures": 0,
+      "last_run": "2026-10-12T09:19:13Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
       "last_sha": "90ce88824a1c55a61b9941b69dcc18ef0d5e1d27",
       "open_rejections": [],
-      "last_reject_reason": "Docs-only diff correcting stale max_turns and budget values; all claims verified against on-loop-*.yaml callers and .loop/loop-budget.json; no new factual errors in regression check"
+      "last_reject_reason": "No file changes produced"
     }
   }
 }
