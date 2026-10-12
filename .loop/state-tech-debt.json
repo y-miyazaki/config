@@ -1,12 +1,12 @@
 {
   "targets": {
     "integration:main": {
-      "last_run": "2026-10-09T12:26:13Z",
-      "outcome": "merged",
-      "consecutive_failures": 0,
+      "last_run": "2026-10-12T08:46:14Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
       "last_sha": "b1ea71f18b3c65ed2042cd3267db583a2b5fdda1",
       "open_rejections": [],
-      "last_reject_reason": "Single allowlisted report file; all cited paths/lines and hotspot churn values verified against the repo, signal arithmetic and resolved-since-previous claims reconcile, 3 High findings under cap, link fixes correctly deferred rather than invented"
+      "last_reject_reason": "No file changes produced"
     }
   }
 }
