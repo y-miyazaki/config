@@ -56,7 +56,7 @@ The repository structure is function-oriented.
   - `common-hooks-claude/`, `common-hooks-copilot/`, `common-hooks-cursor/`: target-specific common hooks
   - `aws/`: AWS development (MCP servers only)
   - `terraform/`: Terraform development (MCP server + hook + instruction + skills)
-  - `terraform-aws/`: Terraform + AWS integration (MCP server only)
+  - `terraform-aws/`: Terraform + AWS integration (AWS-specific instructions + MCP server; use with `terraform`)
   - `terraform-hooks-claude/`, `terraform-hooks-copilot/`, `terraform-hooks-cursor/`: target-specific Terraform hooks
   - `go/`: Go development (hook + instruction + skills)
   - `go-hooks-claude/`, `go-hooks-copilot/`, `go-hooks-cursor/`: target-specific Go hooks

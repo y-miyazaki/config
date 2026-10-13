@@ -66,7 +66,7 @@ APM distributes AI agent-related configuration files as packages. Each package b
 | loop             | Generic loop checker (`loop-verifier`)                   |
 | aws              | AWS development                                          |
 | terraform        | Terraform development (cloud-agnostic)                   |
-| terraform-aws    | Terraform + AWS integration                              |
+| terraform-aws    | Terraform AWS-specific rules + MCP (use with terraform)  |
 | go               | Go development                                           |
 | shell-script     | Shell script development                                 |
 
