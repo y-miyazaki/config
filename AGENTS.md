@@ -19,6 +19,7 @@ Operational constitution for AI-assisted development agents. Self-contained — 
 - Test-first for code changes: write or update tests with sufficient cases before or alongside implementation; code modifications MUST include corresponding test additions or updates.
 - Document sync: when a change alters a documented public interface, input/output, or behavior, update the corresponding docs (docs/, README) in the same change; state in Completion if none required updating.
 - Prefer behavior and tests over re-running mechanical lint/format; state what was not verified and why.
+- Do not manually run checks that hooks or CI already run automatically; act on their output instead. Never bypass or disable hooks.
 - MUST NOT weaken, remove, or bypass tests or validations solely to make checks pass.
 
 ## Completion (MUST state in final response)
