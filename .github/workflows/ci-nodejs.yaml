@@ -426,7 +426,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@8103690c11ef708b382835505bbfb7eb5e7c1561 # v1.8.119
+        uses: y-miyazaki/config/.github/actions/summary@d2e66f04291f4548033132e15dc1a08b4b48b0cb # v1.8.120
 
         with:
           artifacts: |
@@ -576,7 +576,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@8103690c11ef708b382835505bbfb7eb5e7c1561 # v1.8.119
+        uses: y-miyazaki/config/.github/actions/summary@d2e66f04291f4548033132e15dc1a08b4b48b0cb # v1.8.120
 
         with:
           artifacts: |
