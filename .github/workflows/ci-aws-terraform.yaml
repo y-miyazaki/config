@@ -164,12 +164,20 @@ jobs:
 
       - name: Exec Terraform init
         id: init
-        if: steps.cache-terraform-init.outputs.cache-hit != 'true'
+        env:
+          INIT_CACHE_HIT: ${{ steps.cache-terraform-init.outputs.cache-hit }}
         shell: bash
         run: |
           set -euo pipefail
-          echo "Cache miss or incomplete modules - initializing Terraform for ${COMPONENT}"
-          terraform -chdir="${TERRAFORM_PATH}" init -reconfigure -backend-config="${TFBACKEND_FILE}"
+          providers_dir="${TERRAFORM_PATH}/.terraform/providers"
+          if [ "${INIT_CACHE_HIT}" = "true" ] \
+            && [ -n "$(find -L "${providers_dir}" -type f -name 'terraform-provider-*' -print -quit 2>/dev/null)" ] \
+            && [ -z "$(find "${providers_dir}" -xtype l -print -quit 2>/dev/null)" ]; then
+            echo "Cache hit - skipping Terraform init for ${COMPONENT}"
+          else
+            echo "Cache miss or incomplete providers - initializing Terraform for ${COMPONENT}"
+            terraform -chdir="${TERRAFORM_PATH}" init -reconfigure -backend-config="${TFBACKEND_FILE}"
+          fi
 
   lint:
     if: ${{ github.actor != 'dependabot[bot]' }}
@@ -253,12 +261,20 @@ jobs:
 
       - name: Exec Terraform init
         id: init
-        if: steps.restore-terraform-init.outputs.cache-hit != 'true'
+        env:
+          INIT_CACHE_HIT: ${{ steps.restore-terraform-init.outputs.cache-hit }}
         shell: bash
         run: |
           set -euo pipefail
-          echo "Cache miss or incomplete modules - initializing Terraform for ${COMPONENT}"
-          terraform -chdir="${TERRAFORM_PATH}" init -backend=false -reconfigure
+          providers_dir="${TERRAFORM_PATH}/.terraform/providers"
+          if [ "${INIT_CACHE_HIT}" = "true" ] \
+            && [ -n "$(find -L "${providers_dir}" -type f -name 'terraform-provider-*' -print -quit 2>/dev/null)" ] \
+            && [ -z "$(find "${providers_dir}" -xtype l -print -quit 2>/dev/null)" ]; then
+            echo "Cache hit - skipping Terraform init for ${COMPONENT}"
+          else
+            echo "Cache miss or incomplete providers - initializing Terraform for ${COMPONENT}"
+            terraform -chdir="${TERRAFORM_PATH}" init -backend=false -reconfigure
+          fi
 
       - name: Exec Terraform fmt check
         shell: bash
@@ -384,12 +400,20 @@ jobs:
 
       - name: Exec Terraform init
         id: init
-        if: steps.restore-terraform-init.outputs.cache-hit != 'true'
+        env:
+          INIT_CACHE_HIT: ${{ steps.restore-terraform-init.outputs.cache-hit }}
         shell: bash
         run: |
           set -euo pipefail
-          echo "Cache miss or incomplete modules - initializing Terraform for ${COMPONENT}"
-          terraform -chdir="${TERRAFORM_PATH}" init -reconfigure -backend-config="${TFBACKEND_FILE}"
+          providers_dir="${TERRAFORM_PATH}/.terraform/providers"
+          if [ "${INIT_CACHE_HIT}" = "true" ] \
+            && [ -n "$(find -L "${providers_dir}" -type f -name 'terraform-provider-*' -print -quit 2>/dev/null)" ] \
+            && [ -z "$(find "${providers_dir}" -xtype l -print -quit 2>/dev/null)" ]; then
+            echo "Cache hit - skipping Terraform init for ${COMPONENT}"
+          else
+            echo "Cache miss or incomplete providers - initializing Terraform for ${COMPONENT}"
+            terraform -chdir="${TERRAFORM_PATH}" init -reconfigure -backend-config="${TFBACKEND_FILE}"
+          fi
 
       - name: Setup tfcmt
         if: ${{ github.event_name == 'pull_request' }}
