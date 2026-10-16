@@ -190,6 +190,7 @@ function check_package_lockfile {
         log "WARN" "  ⚠️  package-lock.json not found"
         log "WARN" "      This could indicate security risk - packages may install different versions"
         LOCKFILE_FAILED=1
+        EXIT_CODE=1
         status=1
     else
         log "INFO" "  ✅ package-lock.json found"
@@ -236,6 +237,7 @@ function check_package_sync {
     else
         log "WARN" "  ⚠️  package.json and package-lock.json may be out of sync"
         SYNC_FAILED=1
+        EXIT_CODE=1
         popd > /dev/null
         return 1
     fi

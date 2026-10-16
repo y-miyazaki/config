@@ -423,7 +423,7 @@ function has_go_files {
 # run_go_mod_tidy: Run go mod tidy
 #
 # Description:
-#   Runs go mod tidy to clean up the go.mod and go.sum files
+#   Runs go mod tidy (with --fix) or go mod tidy -diff (check only) on go.mod and go.sum
 #
 # Globals:
 #   None
@@ -465,11 +465,37 @@ function run_go_mod_tidy {
         EXIT_CODE=1
         return 1
     }
-    if go mod tidy; then
-        log "INFO" "go mod tidy completed successfully (dir=$mod_dir)"
+    if [[ $FIX_MODE == "true" ]]; then
+        if go mod tidy; then
+            log "INFO" "go mod tidy completed successfully (dir=$mod_dir)"
+        else
+            log "ERROR" "go mod tidy failed (dir=$mod_dir)"
+            EXIT_CODE=1
+        fi
+    elif go help mod tidy 2>&1 | grep -q -- '-diff'; then
+        # Check only: validation must not rewrite go.mod / go.sum (-diff needs Go 1.23+)
+        if go mod tidy -diff; then
+            log "INFO" "go.mod and go.sum are tidy (dir=$mod_dir)"
+        else
+            log "ERROR" "go.mod/go.sum are not tidy (dir=$mod_dir). Run with --fix or 'go mod tidy'"
+            EXIT_CODE=1
+        fi
     else
-        log "ERROR" "go mod tidy failed (dir=$mod_dir)"
-        EXIT_CODE=1
+        # Older toolchains: tidy, compare, then always restore the original files
+        local backup_dir
+        backup_dir="$(mktemp -d)"
+        cp go.mod "$backup_dir/go.mod"
+        [[ -f go.sum ]] && cp go.sum "$backup_dir/go.sum"
+        if go mod tidy && diff -q go.mod "$backup_dir/go.mod" > /dev/null \
+            && { [[ ! -f $backup_dir/go.sum ]] || diff -q go.sum "$backup_dir/go.sum" > /dev/null; }; then
+            log "INFO" "go.mod and go.sum are tidy (dir=$mod_dir)"
+        else
+            log "ERROR" "go.mod/go.sum are not tidy (dir=$mod_dir). Run with --fix or 'go mod tidy'"
+            EXIT_CODE=1
+        fi
+        cp "$backup_dir/go.mod" go.mod
+        [[ -f $backup_dir/go.sum ]] && cp "$backup_dir/go.sum" go.sum
+        rm -rf "$backup_dir"
     fi
     popd > /dev/null || true
 }

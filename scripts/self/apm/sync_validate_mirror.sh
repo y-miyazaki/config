@@ -223,6 +223,10 @@ function sync_mirror_file {
 
     mkdir -p "$(dirname "${target_file}")"
     cp "${tmp_file}" "${target_file}"
+    # mktemp creates 0600 files; carry the executable bit over from the source
+    if [[ -x ${source_file} ]]; then
+        chmod +x "${target_file}"
+    fi
     echo "  SYNCED: ${domain}/${mirror_file} (${source_file} → ${target_file})"
     SYNC_COUNT=$((SYNC_COUNT + 1))
 }

@@ -156,6 +156,12 @@ function parse_arguments {
     if [[ ! -d $ROOT_DIR ]]; then
         error_exit "Root directory not found: $ROOT_DIR"
     fi
+
+    # Refuse roots where a recursive binary sweep would be destructive
+    ROOT_DIR="$(cd "$ROOT_DIR" && pwd -P)"
+    if [[ $ROOT_DIR == "/" || $ROOT_DIR == "${HOME:-}" ]]; then
+        error_exit "Refusing to clean unsafe root directory: $ROOT_DIR"
+    fi
 }
 
 #######################################
@@ -274,7 +280,7 @@ function remove_binary_files {
                 log "INFO" "Skipped (not binary executable): ${filepath}"
             fi
         fi
-    done < <(find "$ROOT_DIR" -type f ! -path '*/.git/*' -print0)
+    done < <(find "$ROOT_DIR" -type f ! -path '*/.git/*' ! -path '*/node_modules/*' ! -path '*/.venv/*' -print0)
 }
 
 #######################################

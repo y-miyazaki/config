@@ -24,6 +24,7 @@ export LC_ALL=C.UTF-8
 # Global variables
 #######################################
 DRY_RUN=false
+FORCE_TAG=false
 NO_PUSH=false
 REPO_ROOT=""
 TAG=""
@@ -49,13 +50,14 @@ TAG=""
 #######################################
 function show_usage {
     cat << EOF
-Usage: $0 [TAG] [--dry-run] [--no-push]
+Usage: $(basename "$0") [TAG] [--dry-run] [--force-tag] [--no-push]
 
 Pin y-miyazaki/config actions/workflows to SHA refs (no @vX.Y.Z refs).
 
 Options:
   -h, --help     Display this help message
   --dry-run      Print planned steps without committing, tagging, or pushing
+  --force-tag    Overwrite TAG on origin when it already exists (default: refuse)
   --no-push      Commit and tag locally without pushing to origin
 
 Examples:
@@ -96,6 +98,10 @@ function parse_arguments {
                 ;;
             --dry-run)
                 DRY_RUN=true
+                shift
+                ;;
+            --force-tag)
+                FORCE_TAG=true
                 shift
                 ;;
             --no-push)
@@ -202,15 +208,20 @@ function apply_pin_sha {
 function commit_yaml {
     local message="$1"
     local -a dirty=()
+    local -a targets=()
+    local f
 
     if [[ ${DRY_RUN} == true ]]; then
         echo "[dry-run] commit: ${message}" >&2
         return 0
     fi
 
+    # Stage only the files this script manages, not unrelated YAML edits in the tree
+    mapfile -t targets < <(all_yaml_files)
+    [[ ${#targets[@]} -gt 0 ]] || return 1
     while IFS= read -r f; do
         dirty+=("${f}")
-    done < <(git diff --name-only -- '*.yml' '*.yaml')
+    done < <(git diff --name-only -- "${targets[@]}")
     [[ ${#dirty[@]} -gt 0 ]] || return 1
 
     git add -- "${dirty[@]}"
@@ -320,7 +331,7 @@ function main {
     parse_arguments "$@"
 
     REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2> /dev/null || true)}"
-    if [[ ! -d ${REPO_ROOT}/.git ]]; then
+    if [[ -z ${REPO_ROOT} || ! -e ${REPO_ROOT}/.git ]]; then
         echo "Repository not found" >&2
         exit 1
     fi
@@ -362,11 +373,24 @@ function main {
     fi
 
     echo "=== tag ${TAG} @ ${release_sha:0:7} ==="
+    # Fail before pushing anything when the tag already exists on origin and overwrite was not requested
+    if [[ ${DRY_RUN} != true && ${NO_PUSH} != true && ${FORCE_TAG} != true ]] \
+        && git ls-remote --exit-code --tags origin "refs/tags/${TAG}" > /dev/null 2>&1; then
+        echo "Tag ${TAG} already exists on origin. Re-run with --force-tag to overwrite." >&2
+        exit 1
+    fi
     if [[ ${DRY_RUN} != true ]]; then
-        git tag -f "${TAG}" "${release_sha}"
+        git tag -a -f -m "${TAG}" "${TAG}" "${release_sha}"
         if [[ ${NO_PUSH} != true ]]; then
             git push origin HEAD
-            git push --force origin "${TAG}" 2> /dev/null || git push origin "${TAG}"
+            if [[ ${FORCE_TAG} == true ]]; then
+                git push --force origin "${TAG}"
+            else
+                git push origin "${TAG}" || {
+                    echo "Failed to push ${TAG} (already exists on origin?). Re-run with --force-tag to overwrite." >&2
+                    exit 1
+                }
+            fi
         fi
     fi
 

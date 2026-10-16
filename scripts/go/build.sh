@@ -81,7 +81,7 @@ Examples:
   $(basename "$0") cmd/api api
   $(basename "$0") cmd/api api arm64 --parallel --verbose
 EOF
-    exit 0
+    exit "${1:-0}"
 }
 
 #######################################
@@ -142,7 +142,7 @@ function parse_arguments {
     # Validate required arguments
     if [[ -z $DIR ]] || [[ -z $BINDIR ]]; then
         echo "Error: Missing required arguments" >&2
-        show_usage
+        show_usage 1
     fi
 
     # Validate directory exists
@@ -320,6 +320,9 @@ function prepare_build_environment {
     # Download and update dependencies
     log "INFO" "Updating Go modules..."
     go mod download || error_exit "Failed to download Go modules"
+
+    # BINDIR is joined into rm -rf paths; reject anything that could escape bin/ or outputs/
+    [[ $BINDIR =~ ^[A-Za-z0-9._-]+$ && $BINDIR != *..* ]] || error_exit "Invalid BINDIR: ${BINDIR} (allowed: letters, digits, '.', '_', '-'; no '..')"
 
     # Clean output directories
     log "INFO" "Cleaning output directories..."

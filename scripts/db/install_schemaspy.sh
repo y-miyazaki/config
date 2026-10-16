@@ -126,7 +126,7 @@ Components Installed:
 Installation Locations:
   - Java: System package manager (/usr/lib/jvm/)
   - Graphviz: System package manager (/usr/bin/)
-  - SchemaSpy: ${INSTALL_DIR}/schemaspy-{version}.jar
+  - SchemaSpy: ${INSTALL_DIR}/schemaspy-${SCHEMASPY_VERSION}.jar
   - JDBC Drivers: ${INSTALL_DIR}/{db_type}-jdbc.jar
 
 EOF
@@ -183,6 +183,7 @@ parse_arguments() {
                 shift
                 ;;
             -t | --db-type)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 DB_TYPE="$2"
                 shift 2
                 ;;
@@ -203,10 +204,12 @@ parse_arguments() {
                 shift
                 ;;
             --schemaspy-version)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 SCHEMASPY_VERSION="$2"
                 shift 2
                 ;;
             --install-dir)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 INSTALL_DIR="$2"
                 shift 2
                 ;;
@@ -440,7 +443,7 @@ download_schemaspy() {
 
     log "INFO" "Checking SchemaSpy..."
 
-    local schemaspy_jar="${INSTALL_DIR}/schemaspy.jar"
+    local schemaspy_jar="${INSTALL_DIR}/schemaspy-${SCHEMASPY_VERSION}.jar"
 
     if [ -f "${schemaspy_jar}" ] && [ "${FORCE_INSTALL}" = false ]; then
         log "INFO" "SchemaSpy is already downloaded: ${schemaspy_jar}"

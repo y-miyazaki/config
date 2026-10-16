@@ -138,6 +138,10 @@ function error_exit {
 function execute_command {
     # Execute a command safely without eval. Accepts arguments and runs them
     # Example: execute_command aws s3 cp "src" "dest"
+    if [[ $# -lt 1 ]]; then
+        error_exit "execute_command requires a command"
+    fi
+
     if is_dry_run; then
         # Always print dry-run info regardless of VERBOSE so users see planned actions
         echo "DRY-RUN: Would execute: $*" >&2
@@ -146,11 +150,7 @@ function execute_command {
 
     log "DEBUG" "Executing: $*"
 
-    # Execute the command in multi-argument style only to avoid injection risks.
-    if [[ $# -lt 2 ]]; then
-        error_exit "execute_command requires command and arguments as separate parameters"
-    fi
-
+    # Executed as an argument array (never through a shell) to avoid injection risks.
     "${@}"
 }
 

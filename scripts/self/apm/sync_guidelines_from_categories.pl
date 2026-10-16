@@ -103,7 +103,8 @@ sub normalize_category_rule_line {
   # **ID: Title** or **ID (LEVEL): Title**
   if ($line =~ /^\*\*([A-Z][A-Z0-9]*-[0-9]+[a-z]?)(?: \((MUST|SHOULD|CAN)\))?:\s*(.*?)\*\*\s*$/) {
     my ($id, $cur, $title) = ($1, $2, $3);
-    my $level = $lvl_ref->{$id} // $cur // 'SHOULD';
+    # A level written in the category file is the source of truth; the instructions level is the fallback
+    my $level = $cur // $lvl_ref->{$id} // 'SHOULD';
     return "**$id ($level): $title**\n";
   }
 

@@ -8,6 +8,8 @@ bats_require_minimum_version 1.5.0
 # Use cases:
 # - execute_command executes the command and logs when VERBOSE=true
 # - execute_command in dry-run mode only logs planned command
+# - execute_command runs a single command without arguments
+# - execute_command rejects an empty command even in dry-run mode
 # - is_dry_run returns non-zero when DRY_RUN is false/unset
 # - is_dry_run returns success when DRY_RUN=true
 # - log prints ERROR messages regardless of VERBOSE
@@ -72,4 +74,15 @@ setup() {
     run --separate-stderr require_dependencies bash __missing_tool_xyz__
     [ "$status" -eq 1 ]
     [[ ${stderr} == *"Missing required tools"*__missing_tool_xyz__* ]]
+}
+
+@test "execute_command runs a single command without arguments" {
+    run execute_command true
+    [ "$status" -eq 0 ]
+}
+
+@test "execute_command rejects an empty command even in dry-run mode" {
+    export DRY_RUN=true
+    run execute_command
+    [ "$status" -ne 0 ]
 }

@@ -216,14 +216,17 @@ function parse_arguments {
                 shift
                 ;;
             -o | --output)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 OUTPUT_FILE="$2"
                 shift 2
                 ;;
             -r | --region)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 AWS_REGION="$2"
                 shift 2
                 ;;
             -c | --categories)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 CATEGORIES="$2"
                 shift 2
                 ;;

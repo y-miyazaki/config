@@ -102,7 +102,7 @@ function sync_one_skill {
         fi
 
         local diff_output
-        if ! diff_output=$(diff -qr "${SOURCE_LIB}" "${target_lib}" 2>&1); then
+        if ! diff_output=$(diff -qr -x __pycache__ "${SOURCE_LIB}" "${target_lib}" 2>&1); then
             echo "  DRIFT: ${skill_name}"
             printf '%s\n' "${diff_output}" | sed 's/^/    /'
             DRIFT_COUNT=$((DRIFT_COUNT + 1))
@@ -111,6 +111,8 @@ function sync_one_skill {
         mkdir -p "${target_lib}"
         rm -rf "${target_lib:?}"/*
         cp -a "${SOURCE_LIB}"/. "${target_lib}/"
+        # Python bytecode caches are gitignored build noise; never mirror them into skills
+        find "${target_lib}" -type d -name __pycache__ -prune -exec rm -rf {} +
         echo "  SYNCED: ${skill_name}"
         SYNC_COUNT=$((SYNC_COUNT + 1))
     fi

@@ -262,6 +262,38 @@ function sync_guidelines_component {
 }
 
 #######################################
+# run_apm_command: Run an apm subcommand without known-benign discovery noise
+#
+# Description:
+#   - Skips org policy discovery outside CI: the policy repo (.github-private) is not
+#     published for this repository, so every run only warns "Policy repo ... not found".
+#     CI keeps discovery so real policy violations still surface.
+#   - Drops the "hook event casing mismatch" warning for afterFileEdit: it is a native
+#     Cursor event, but apm has no casing mapping for the cursor target.
+#
+# Arguments:
+#   $@ - apm subcommand and arguments
+#
+# Returns:
+#   Exit status of the apm command
+#######################################
+function run_apm_command {
+    local -a env_args=()
+
+    if [[ -z ${CI:-} ]]; then
+        env_args+=(APM_POLICY_DISABLE=1)
+    fi
+
+    # Filter via a temp file (not process substitution) so no stderr arrives after we return
+    local err_file rc=0
+    err_file="$(mktemp)"
+    env "${env_args[@]}" apm "$@" 2> "${err_file}" || rc=$?
+    grep -v 'hook event casing mismatch (no mapping): afterFileEdit' "${err_file}" >&2 || true
+    rm -f "${err_file}"
+    return "${rc}"
+}
+
+#######################################
 # run_apm_install_component: Install APM package outputs into agent directories
 #######################################
 function run_apm_install_component {
@@ -270,7 +302,7 @@ function run_apm_install_component {
         echo "ERROR: apm command not found; install APM CLI before running sync_apm_artifacts.sh" >&2
         return 1
     fi
-    apm install --update
+    run_apm_command install --update
 }
 
 #######################################
@@ -282,7 +314,7 @@ function run_apm_audit_component {
         echo "ERROR: apm command not found; install APM CLI before running sync_apm_artifacts.sh" >&2
         return 1
     fi
-    apm audit --ci
+    run_apm_command audit --ci --no-drift
 }
 
 #######################################
@@ -313,8 +345,9 @@ function ensure_apm_modules_local_permissions {
         return 0
     fi
 
-    echo "==> chmod +rwx -R ${apm_modules_local}"
-    chmod +rwx -R "${apm_modules_local}"
+    # u+rwX: owner access, execute only on directories and files that already have it
+    echo "==> chmod -R u+rwX ${apm_modules_local}"
+    chmod -R u+rwX "${apm_modules_local}"
 }
 
 #######################################
@@ -323,9 +356,12 @@ function ensure_apm_modules_local_permissions {
 function main {
     local component
 
-    ensure_apm_modules_local_permissions
-
     parse_arguments "$@"
+
+    # Mutates permissions, so skip for --check (and --help, which exits in parse_arguments)
+    if [[ ${CHECK_MODE} != "true" ]]; then
+        ensure_apm_modules_local_permissions
+    fi
 
     for component in "${SYNC_COMPONENTS[@]}"; do
         if component_selected "${component}"; then

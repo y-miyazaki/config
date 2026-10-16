@@ -100,7 +100,7 @@ Examples:
   $(basename "$0") --path ecs/ecs-scheduled-task/test-batch --env dev diff
   $(basename "$0") -p ecs/ecs-scheduled-task/test-batch -e dev run -n dev-test-batch
 EOF
-    exit 0
+    exit "${1:-0}"
 }
 
 #######################################
@@ -136,18 +136,22 @@ function parse_arguments {
                 show_usage
                 ;;
             -e | --env)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 ENV="$2"
                 shift 2
                 ;;
             -n | --rule-name)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 RULE_NAME="$2"
                 shift 2
                 ;;
             -p | --path)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 TASK_PATH="$2"
                 shift 2
                 ;;
             -r | --region)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 AWS_REGION="$2"
                 shift 2
                 ;;
@@ -167,12 +171,12 @@ function parse_arguments {
     # Validate required arguments
     if [[ -z ${TASK_PATH} ]]; then
         echo "Error: --path is required" >&2
-        show_usage
+        show_usage 1
     fi
 
     if [[ $ACTION == "run" && -z ${RULE_NAME} ]]; then
         echo "Error: --rule-name is required for the run action" >&2
-        show_usage
+        show_usage 1
     fi
 }
 
@@ -407,7 +411,9 @@ function main {
     # ecspresso supports --ext-str natively, so no pre-rendering is needed for task definitions
     local tmp_config
     tmp_config=$(mktemp /tmp/ecschedule-XXXXXX.json)
-    trap 'rm -f "${tmp_config:-}"' EXIT
+    # Expand now: tmp_config is local to main and is out of scope when the EXIT trap fires
+    # shellcheck disable=SC2064
+    trap "rm -f '${tmp_config}'" EXIT
 
     echo_section "Rendering configs: ENV=${ENV}"
     jsonnet \

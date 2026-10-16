@@ -15,7 +15,10 @@
 # - Literal true, false, and null infer JSON types; valid {…} or […] fragments embed as JSON
 #######################################
 
-readonly _JSON_NUMBER_PREFIX=$'\x1eN'
+# Guard against "readonly variable" errors when this file is sourced more than once
+if [[ -z ${_JSON_NUMBER_PREFIX+set} ]]; then
+    readonly _JSON_NUMBER_PREFIX=$'\x1eN'
+fi
 
 #######################################
 # json_escape_string: Escape a string for JSON embedding without jq

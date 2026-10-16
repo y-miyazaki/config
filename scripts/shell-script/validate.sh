@@ -2115,7 +2115,8 @@ function main {
             custom_log "INFO" "Found ${#scripts[@]} shell scripts to validate"
             custom_echo_section "Script Validation"
             for script in "${scripts[@]}"; do
-                validate_script "$script"
+                # Failures are recorded in FAILED_SCRIPTS; do not let set -e skip the summary and tests
+                validate_script "$script" || true
             done
         fi
     fi

@@ -52,28 +52,29 @@ fi
 #
 #######################################
 function terraform_apply {
-    local env_name="${1:-${ENV}}"
+    local env_name="${1:-${ENV:-}}"
     local plan_file="${2:-}"
     local auto_approve="${3:-}"
 
     echo_section "Terraform apply"
 
+    # Terraform stops parsing flags at the first positional argument, so flags must precede the plan file
+    local apply_flags=""
+    if [[ $auto_approve == "auto-approve" ]]; then
+        apply_flags=" -auto-approve"
+    fi
+
     local apply_cmd
     if [[ -n $plan_file && -f $plan_file ]]; then
         # Apply from plan file
-        apply_cmd="terraform apply $plan_file"
+        apply_cmd="terraform apply${apply_flags} $plan_file"
     else
         # Direct apply with variables
         local var_file="terraform.${env_name}.tfvars"
         if [[ ! -f $var_file ]]; then
             error_exit "Variables file not found: $var_file"
         fi
-        apply_cmd="terraform apply -var-file=$var_file"
-    fi
-
-    # Add auto-approve if specified
-    if [[ $auto_approve == "auto-approve" ]]; then
-        apply_cmd="$apply_cmd --auto-approve"
+        apply_cmd="terraform apply${apply_flags} -var-file=$var_file"
     fi
 
     if ! execute_command_string "$apply_cmd"; then
@@ -107,7 +108,7 @@ function terraform_apply {
 #
 #######################################
 function terraform_destroy {
-    local env_name="${1:-${ENV}}"
+    local env_name="${1:-${ENV:-}}"
     local auto_approve="${2:-}"
     local var_file="terraform.${env_name}.tfvars"
 
@@ -223,7 +224,7 @@ function terraform_format {
 #
 #######################################
 function terraform_init {
-    local env_name="${1:-${ENV}}"
+    local env_name="${1:-${ENV:-}}"
     local additional_options="${2:-}"
     local backend_config="terraform.${env_name}.tfbackend"
 
@@ -271,7 +272,7 @@ function terraform_init {
 #
 #######################################
 function terraform_plan {
-    local env_name="${1:-${ENV}}"
+    local env_name="${1:-${ENV:-}}"
     local plan_file="${2:-terraform.tfplan}"
     local additional_options="${3:-}"
     local var_file="terraform.${env_name}.tfvars"
@@ -444,7 +445,7 @@ function terraform_lint {
 #
 #######################################
 function terraform_workflow {
-    local env_name="${1:-${ENV}}"
+    local env_name="${1:-${ENV:-}}"
     local workflow_type="${2:-apply}"
     local auto_approve="${3:-}"
 
@@ -501,8 +502,13 @@ function terraform_workflow {
 function validate_terraform_env {
     local env_name="${1:-${ENV:-}}"
 
+    # The environment may come from the argument or ENV; do not require ENV when it is passed
+    if [[ -z ${env_name} ]]; then
+        error_exit "Environment name is required (argument or ENV)"
+    fi
+
     # Validate required environment variables
-    validate_env_vars "ENV" "TF_PLUGIN_CACHE_DIR"
+    validate_env_vars "TF_PLUGIN_CACHE_DIR"
 
     # Validate dependencies
     require_dependencies "terraform"

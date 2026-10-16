@@ -169,14 +169,17 @@ function parse_arguments {
                 shift
                 ;;
             -o | --output)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 OUTPUT_FILE="$2"
                 shift 2
                 ;;
             -r | --region)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 AWS_REGION="$2"
                 shift 2
                 ;;
             -f | --format)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 OUTPUT_FORMAT="$2"
                 export OUTPUT_FORMAT
                 shift 2
@@ -1218,7 +1221,7 @@ function update_git_repository {
         error_exit "Failed to add diagram file to git"
     }
 
-    git commit -m "Update AWS architecture diagram [auto] $(date '+%Y-%m-%d %H:%M:%S')" || {
+    git commit -m "Update AWS architecture diagram [auto] $(date '+%Y-%m-%d %H:%M:%S')" -- "$diagram_file" || {
         log "INFO" "No changes to commit (diagram unchanged)"
         return 0
     }

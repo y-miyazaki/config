@@ -125,8 +125,9 @@ function run_tests {
     local image_name="$1"
 
     log "INFO" "Running tests..."
-    if ! execute_command docker run --rm "${image_name}"; then
-        local test_exit_code=$?
+    local test_exit_code=0
+    execute_command docker run --rm "${image_name}" || test_exit_code=$?
+    if ((test_exit_code != 0)); then
         log "ERROR" "Tests failed (exit code: $test_exit_code)"
         return $test_exit_code
     fi

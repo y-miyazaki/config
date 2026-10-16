@@ -130,12 +130,13 @@ function aws_retry_exec {
 
     while true; do
         log "DEBUG" "aws_retry_exec attempt $attempt cmd: ${cmd[*]}" >&2
-        if output=$("${cmd[@]}" 2>&1); then
+        rc=0
+        output=$("${cmd[@]}" 2>&1) || rc=$?
+        if ((rc == 0)); then
             echo "$output"
             return 0
         fi
 
-        rc=$?
         # Detect common non-retryable client errors from AWS CLI output and abort retries.
         # AWS CLI often prints: "An error occurred (ErrorName) when calling the OperationName operation: message"
         # Try to extract the ErrorName via text parsing first, then fall back to JSON Error.Code.
@@ -530,6 +531,16 @@ function get_aws_account_id {
 function get_aws_region {
     local region
     local region_from_aws
+    # Environment variables take precedence over the AWS config file (same as the AWS CLI)
+    if [[ -n ${AWS_REGION:-} ]]; then
+        echo "$AWS_REGION"
+        return 0
+    fi
+    if [[ -n ${AWS_DEFAULT_REGION:-} ]]; then
+        echo "$AWS_DEFAULT_REGION"
+        return 0
+    fi
+
     # aws configure get region returns empty string (exit 0) when not set, so capture value and test
     region_from_aws=$(aws configure get region 2> /dev/null || true)
     if [[ -n $region_from_aws ]]; then
@@ -537,9 +548,13 @@ function get_aws_region {
         return 0
     fi
 
-    # Try to get from instance metadata if running on EC2
-    local region_from_meta
-    region_from_meta=$(curl -s --max-time 2 http://169.254.169.254/latest/meta-data/placement/region 2> /dev/null || true)
+    # Try to get from instance metadata if running on EC2 (IMDSv2). Off EC2 this fails fast.
+    local imds_token
+    local region_from_meta=""
+    imds_token=$(curl -s --connect-timeout 1 --max-time 2 -X PUT -H "X-aws-ec2-metadata-token-ttl-seconds: 60" http://169.254.169.254/latest/api/token 2> /dev/null || true)
+    if [[ -n $imds_token ]]; then
+        region_from_meta=$(curl -s --connect-timeout 1 --max-time 2 -H "X-aws-ec2-metadata-token: ${imds_token}" http://169.254.169.254/latest/meta-data/placement/region 2> /dev/null || true)
+    fi
     if [[ -n $region_from_meta ]]; then
         echo "$region_from_meta"
         return 0
@@ -573,7 +588,11 @@ function get_aws_region {
 #######################################
 function get_kms_name {
     local kms_identifier="$1"
-    local region="${2:-$(get_aws_region)}"
+    local region="${2:-}"
+    if [[ -z $region ]]; then
+        # Assign separately: inside "local x=$(...)" a failure (and error_exit) is masked
+        region=$(get_aws_region) || return 1
+    fi
 
     if [[ -z $kms_identifier || $kms_identifier == "N/A" ]]; then
         echo "N/A"
@@ -594,7 +613,7 @@ function get_kms_name {
 
     # Try to describe the key to verify it exists (and obtain the canonical KeyId)
     local key_meta
-    key_meta=$(aws_safe_exec "aws kms describe-key --key-id '$key_id' --region '$region' --output json" 2> /dev/null || echo '{}')
+    key_meta=$(aws_safe_exec aws kms describe-key --key-id "$key_id" --region "$region" --output json 2> /dev/null || echo '{}')
     if [[ $key_meta != "{}" ]]; then
         key_id=$(echo "$key_meta" | jq -r '.KeyMetadata.KeyId' 2> /dev/null || echo "$key_id")
     fi
@@ -646,7 +665,11 @@ function get_kms_name {
 #######################################
 function resolve_ec2_tagged_resource_name {
     local resource_id="$1"
-    local region="${2:-$(get_aws_region)}"
+    local region="${2:-}"
+    if [[ -z $region ]]; then
+        # Assign separately: inside "local x=$(...)" a failure (and error_exit) is masked
+        region=$(get_aws_region) || return 1
+    fi
     local id_pattern="$3"
     local describe_subcommand="$4"
     local id_flag="$5"
@@ -665,7 +688,7 @@ function resolve_ec2_tagged_resource_name {
 
     local cmd out resource_name jq_program
     cmd=(aws ec2 "${describe_subcommand}" "${id_flag}" "$resource_id" --region "$region" --output json)
-    if out=$(aws_safe_exec "${cmd[*]}" 2> /dev/null); then
+    if out=$(aws_safe_exec "${cmd[@]}" 2> /dev/null); then
         jq_program=$(printf '.%s[0] | (.Tags[]? | select(.Key|ascii_downcase=="name") | .Value) // .%s // ""' \
             "$jq_collection" "$jq_fallback_field")
         resource_name=$(echo "$out" | jq -r "${jq_program}" 2> /dev/null || true)
@@ -864,7 +887,11 @@ function get_waf_association {
 #######################################
 function get_waf_name {
     local waf_arn="$1"
-    local region="${2:-$(get_aws_region)}"
+    local region="${2:-}"
+    if [[ -z $region ]]; then
+        # Assign separately: inside "local x=$(...)" a failure (and error_exit) is masked
+        region=$(get_aws_region) || return 1
+    fi
 
     if [[ -z $waf_arn || $waf_arn == "N/A" ]]; then
         echo "N/A"
@@ -928,14 +955,19 @@ function get_waf_name {
 #######################################
 function is_service_available_in_region {
     local service="$1"
-    local region="${2:-$(get_aws_region)}"
 
-    # Some services are global
+    # Some services are global: no region needed
     case "$service" in
         iam | cloudfront | route53 | waf)
             return 0
             ;;
     esac
+
+    local region="${2:-}"
+    if [[ -z $region ]]; then
+        # Assign separately: inside "local x=$(...)" a failure (and error_exit) is masked
+        region=$(get_aws_region) || return 1
+    fi
 
     # Check if service is available in region by attempting to list resources
     case "$service" in

@@ -9,6 +9,7 @@
 # - normalize_csv_value preserves newlines when PRESERVE_NEWLINES=true
 # - make_csv_safe wraps with quotes when comma present
 # - csv_sort sorts rows by region/subcategory/etc
+# - csv_sort preserves backslash sequences in field data
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -59,4 +60,11 @@ setup() {
     [ "$status" -eq 0 ]
     # output should have regA row first
     [[ $output == *"regA,name1"* || $output == *"regA,name1"* ]]
+}
+
+@test "csv_sort preserves backslash sequences in field data" {
+    local input=$'a,b,c,d,regA\\nx\n'
+    run csv_sort "$input"
+    [ "$status" -eq 0 ]
+    [[ $output == *'regA\nx'* ]]
 }

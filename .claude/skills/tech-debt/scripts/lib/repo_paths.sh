@@ -18,7 +18,10 @@
 # - Agent directory exclusion aligns with agent-skills.instructions.md S-05 plus .vscode (editor-local)
 #######################################
 
-declare -A REPO_PATHS_GITIGNORE_CACHE=()
+# "${assoc+set}" tests element [0], so use declare -p to detect an existing array
+if ! declare -p REPO_PATHS_GITIGNORE_CACHE > /dev/null 2>&1; then
+    declare -gA REPO_PATHS_GITIGNORE_CACHE=()
+fi
 
 #######################################
 # repo_apply_git_rename: Classify a git rename for detect delta consumers
@@ -409,12 +412,14 @@ function repo_path_is_generated_or_agent {
 #######################################
 function repo_path_is_gitignored {
     local path="$1"
-    local cache_key="__rp_${path//\//_}"
-    cache_key="${cache_key//./_D_}"
+    # An empty path is not a valid array subscript and can never be ignored
+    [[ -n ${path} ]] || return 1
+    # Key on the path itself: any mangling (e.g. "a/b" vs "a_b") would make distinct paths collide
+    local cache_key="${path}"
     local cache_hit=0
     local cached_value=0
 
-    if [[ -z ${REPO_PATHS_GITIGNORE_CACHE+set} ]]; then
+    if ! declare -p REPO_PATHS_GITIGNORE_CACHE > /dev/null 2>&1; then
         declare -gA REPO_PATHS_GITIGNORE_CACHE=()
     fi
 
@@ -424,25 +429,19 @@ function repo_path_is_gitignored {
     if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
         return 1
     fi
-    set +u
-    if [[ ${REPO_PATHS_GITIGNORE_CACHE[${cache_key}]+set} == set ]]; then
+    if [[ ${REPO_PATHS_GITIGNORE_CACHE["${cache_key}"]+set} == set ]]; then
         cache_hit=1
-        cached_value="${REPO_PATHS_GITIGNORE_CACHE[${cache_key}]}"
+        cached_value="${REPO_PATHS_GITIGNORE_CACHE["${cache_key}"]}"
     fi
-    set -u
     if [[ ${cache_hit} -eq 1 ]]; then
         [[ ${cached_value} -eq 1 ]]
         return
     fi
     if git check-ignore -q -- "${path}" 2> /dev/null; then
-        set +u
-        REPO_PATHS_GITIGNORE_CACHE[${cache_key}]=1
-        set -u
+        REPO_PATHS_GITIGNORE_CACHE["${cache_key}"]=1
         return 0
     fi
-    set +u
-    REPO_PATHS_GITIGNORE_CACHE[${cache_key}]=0
-    set -u
+    REPO_PATHS_GITIGNORE_CACHE["${cache_key}"]=0
     return 1
 }
 

@@ -431,7 +431,8 @@ function process_file {
     output_file="$(mktemp)"
     FIX_DOC_TEMP_FILES+=("${output_file}")
     printf '%s\n' "${output_lines[@]}" > "$output_file"
-    mv "$output_file" "$script"
+    # Overwrite in place (not mv) so the script keeps its mode and ownership
+    cat "$output_file" > "$script"
     rm -f "$output_file"
     [[ $QUIET != "true" ]] && log "INFO" "Reordered function docs: $script"
     return 0

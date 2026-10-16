@@ -7,6 +7,8 @@
 # - terraform_apply uses plan file when provided (dry-run)
 # - terraform_apply without plan uses var file (dry-run)
 # - terraform_destroy uses var file (dry-run)
+# - terraform_apply places auto-approve before the plan file
+# - validate_terraform_env accepts an explicit environment when ENV is unset
 # - terraform_format check mode returns 0 in dry-run
 # - terraform_format non-check runs in dry-run mode
 # - terraform_get_workspace falls back to default when terraform not available
@@ -105,4 +107,23 @@ setup() {
     run terraform_select_workspace ""
     [ "$status" -ne 0 ]
     [[ $output == *"Workspace name is required"* ]]
+}
+
+@test "terraform_apply places auto-approve before the plan file" {
+    DRY_RUN=true
+    touch plan.out
+    run terraform_apply "testenv" "plan.out" "auto-approve"
+    rm -f plan.out
+    [ "$status" -eq 0 ]
+    [[ $output == *"terraform apply -auto-approve plan.out"* ]]
+}
+
+@test "validate_terraform_env accepts an explicit environment when ENV is unset" {
+    export TF_PLUGIN_CACHE_DIR="${BATS_TEST_TMPDIR}/plugin-cache"
+    unset ENV
+    DRY_RUN=true
+    VERBOSE=true
+    run validate_terraform_env "staging"
+    [ "$status" -eq 0 ]
+    [[ $output == *"staging"* ]]
 }

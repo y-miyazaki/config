@@ -27,6 +27,24 @@ These four files express one permission policy for different agents. They are re
 
 Change one, change all four in the same commit, at the same permission level. A command added to one allowlist is added to every allowlist; a command denied in one is denied — not merely dropped from allow — in every file that has a deny mechanism, and recorded as a `block_instructions` sentence in `.cursor/permissions.json`. A command that exists in only one agent's toolchain still gets an entry everywhere it is expressible. Translate syntax per the table rather than copying a rule verbatim between files, and keep each list in its existing sort order.
 
+## Hook-covered tools (MUST)
+
+Do not run a tool directly when a hook in `.claude/settings.json` already runs it (`Stop` / `PostToolUse`); the hook result is the source of truth. Check `hooks` in `.claude/settings.json` first. If the hooks cannot be read, treat the tools below as hook-covered.
+
+| Hook-covered tool     | Trigger               |
+| --------------------- | --------------------- |
+| `actionlint`          | `Stop`                |
+| `ghalint`             | `Stop`                |
+| `gitleaks`            | `Stop`                |
+| `golangci-lint`       | `Stop`                |
+| `markdown-link-check` | `Stop`                |
+| `markdownlint-cli2`   | `Stop`                |
+| `shellcheck`          | `Stop`                |
+| `shfmt`               | `PostToolUse` (Write) |
+| `zizmor`              | `Stop`                |
+
+`shfmt` runs only after the Write tool, not after Edit; run it directly after editing a shell script with Edit. The `Stop` hook also runs `scripts/self/apm/sync_apm_artifacts.sh` (sync, not a lint tool).
+
 ## Conventions
 
 | Topic           | Rule             |

@@ -78,6 +78,7 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
 # File paths
 SCHEMASPY_JAR=""
+SCHEMASPY_PASSWORD_FILE=""
 JDBC_DRIVER=""
 
 #######################################
@@ -202,50 +203,62 @@ parse_arguments() {
                 shift
                 ;;
             -e | --environment)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 ENVIRONMENT="$2"
                 shift 2
                 ;;
             -t | --db-type)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 DB_TYPE="$2"
                 shift 2
                 ;;
             -n | --db-name)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 DB_NAME="$2"
                 shift 2
                 ;;
             -s | --schema-name)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 SCHEMA_NAME="$2"
                 shift 2
                 ;;
             -o | --output-dir)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 OUTPUT_DIR="$2"
                 shift 2
                 ;;
             -p | --local-port)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 LOCAL_PORT="$2"
                 shift 2
                 ;;
             --secret-id)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 SECRET_ID="$2"
                 shift 2
                 ;;
             --bastion-id)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 BASTION_ID="$2"
                 shift 2
                 ;;
             --bastion-tag)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 BASTION_TAG="$2"
                 shift 2
                 ;;
             --schemaspy-version)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 SCHEMASPY_VERSION="$2"
                 shift 2
                 ;;
             --ssl-mode)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 SSL_MODE="$2"
                 shift 2
                 ;;
             --db-threads)
+                [[ $# -ge 2 ]] || error_exit "Option $1 requires a value"
                 DB_THREADS="$2"
                 shift 2
                 ;;
@@ -357,6 +370,12 @@ validate_parameters() {
 #######################################
 cleanup() {
     local exit_code=$?
+
+    # Always remove the temporary SchemaSpy config that holds the DB password
+    if [ -n "${SCHEMASPY_PASSWORD_FILE}" ]; then
+        rm -f "${SCHEMASPY_PASSWORD_FILE}"
+        SCHEMASPY_PASSWORD_FILE=""
+    fi
 
     if [ "${SKIP_CLEANUP}" = true ]; then
         log "WARN" "Cleanup skipped (--skip-cleanup specified)"
@@ -494,6 +513,12 @@ verify_bastion() {
 # Start SSM port forwarding
 #######################################
 start_port_forwarding() {
+    if [ "${DRY_RUN}" = true ]; then
+        log "INFO" "DRY RUN - Would start SSM port forwarding (localhost:${LOCAL_PORT} -> ${BASTION_ID} -> ${DB_HOST}:${DB_PORT})"
+        SSM_PID="dry-run"
+        return 0
+    fi
+
     # Clean up any existing sessions on this port first
     local existing_pids
     existing_pids=$(pgrep -f "session-manager-plugin.*${LOCAL_PORT}" 2> /dev/null || true)
@@ -512,12 +537,6 @@ start_port_forwarding() {
 
     log "INFO" "Starting SSM port forwarding..."
     log "INFO" "  Mapping: localhost:${LOCAL_PORT} -> ${BASTION_ID} -> ${DB_HOST}:${DB_PORT}"
-
-    if [ "${DRY_RUN}" = true ]; then
-        log "INFO" "DRY RUN - Would start SSM port forwarding"
-        SSM_PID="dry-run"
-        return 0
-    fi
 
     local ssm_log="/tmp/ssm-session-${TIMESTAMP}.log"
 
@@ -563,20 +582,36 @@ start_port_forwarding() {
 }
 
 #######################################
+# Download a file atomically (a partial download never leaves a corrupt cached file)
+#######################################
+download_file() {
+    local url="$1"
+    local dest="$2"
+    local part="${dest}.part"
+
+    if ! curl -fsSL "${url}" -o "${part}"; then
+        rm -f "${part}"
+        error_exit "Failed to download: ${url}"
+    fi
+    mv "${part}" "${dest}"
+}
+
+#######################################
 # Download SchemaSpy and JDBC drivers
 #######################################
 download_dependencies() {
     log "INFO" "Checking SchemaSpy and JDBC driver..."
 
     local cache_dir="${REPO_ROOT}/tmp"
-    SCHEMASPY_JAR="${cache_dir}/schemaspy.jar"
+    mkdir -p "${cache_dir}" || error_exit "Failed to create cache directory: ${cache_dir}"
+    # Version in the file name so changing --schemaspy-version triggers a fresh download
+    SCHEMASPY_JAR="${cache_dir}/schemaspy-${SCHEMASPY_VERSION}.jar"
     JDBC_DRIVER="${cache_dir}/${DB_TYPE}-jdbc.jar"
 
     # Download SchemaSpy if not cached
     if [ ! -f "${SCHEMASPY_JAR}" ]; then
         log "INFO" "Downloading SchemaSpy ${SCHEMASPY_VERSION}..."
-        curl -fsSL "https://github.com/schemaspy/schemaspy/releases/download/v${SCHEMASPY_VERSION}/schemaspy-app.jar" \
-            -o "${SCHEMASPY_JAR}"
+        download_file "https://github.com/schemaspy/schemaspy/releases/download/v${SCHEMASPY_VERSION}/schemaspy-app.jar" "${SCHEMASPY_JAR}"
         log "INFO" "SchemaSpy downloaded"
     else
         log "DEBUG" "SchemaSpy already cached"
@@ -587,16 +622,13 @@ download_dependencies() {
         log "INFO" "Downloading JDBC driver for ${DB_TYPE}..."
         case "${DB_TYPE}" in
             pgsql | pgsql11)
-                curl -fsSL "https://jdbc.postgresql.org/download/postgresql-42.7.5.jar" \
-                    -o "${JDBC_DRIVER}"
+                download_file "https://jdbc.postgresql.org/download/postgresql-42.7.5.jar" "${JDBC_DRIVER}"
                 ;;
             redshift)
-                curl -fsSL "https://s3.amazonaws.com/redshift-downloads/drivers/jdbc/2.1.0.32/redshift-jdbc42-2.1.0.32.jar" \
-                    -o "${JDBC_DRIVER}"
+                download_file "https://s3.amazonaws.com/redshift-downloads/drivers/jdbc/2.1.0.32/redshift-jdbc42-2.1.0.32.jar" "${JDBC_DRIVER}"
                 ;;
             mysql)
-                curl -fsSL "https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.33/mysql-connector-j-8.0.33.jar" \
-                    -o "${JDBC_DRIVER}"
+                download_file "https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.33/mysql-connector-j-8.0.33.jar" "${JDBC_DRIVER}"
                 ;;
             *)
                 error_exit "Unsupported database type: ${DB_TYPE}"
@@ -654,7 +686,6 @@ run_schemaspy() {
         -jar "${SCHEMASPY_JAR}"
         -t "${schemaspy_type}"
         -u "${DB_USER}"
-        -p "${DB_PASSWORD}"
     )
 
     # Add schema parameter: -s for specific schema, -all for all schemas
@@ -750,6 +781,13 @@ run_schemaspy() {
         return 0
     fi
 
+    # Pass the password via a mode-600 properties file instead of -p so it never appears in
+    # the process list (ps). Backslashes are escaped because .properties treats them specially.
+    SCHEMASPY_PASSWORD_FILE="$(mktemp "${REPO_ROOT}/tmp/schemaspy-config.XXXXXX")"
+    chmod 600 "${SCHEMASPY_PASSWORD_FILE}"
+    printf 'schemaspy.p=%s\n' "${DB_PASSWORD//\\/\\\\}" > "${SCHEMASPY_PASSWORD_FILE}"
+    java_cmd+=(-configFile "${SCHEMASPY_PASSWORD_FILE}")
+
     # Execute SchemaSpy
     "${java_cmd[@]}" 2>&1 | tee "${schemaspy_log}"
 
@@ -811,7 +849,11 @@ main() {
     require_dependencies "aws" "jq" "java" "curl"
 
     # Register cleanup function
-    trap cleanup EXIT INT TERM
+    # Signals only translate to exit so cleanup runs once via the EXIT trap and the script
+    # actually stops (a plain INT/TERM trap handler returns and the script would keep running).
+    trap cleanup EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
 
     # Execute workflow
     if [ -z "${BASTION_ID}" ]; then

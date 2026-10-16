@@ -285,11 +285,13 @@ function backup_file {
 }
 
 #######################################
-# cleanup_all_artifacts: Clean up all backup and temporary files
+# cleanup_all_artifacts: Clean up this run's backup and temporary files
 #
 # Description:
-#   Removes all backup directories, plan files, and temporary artifacts
-#   created during the module update process.
+#   Removes this run's backup directory, plan files, and temporary artifacts
+#   created during the module update process. Backup directories left by earlier
+#   runs (.terraform_backups / .terraform_module_backups) are restore points and
+#   are intentionally kept.
 #
 # Globals:
 #   BACKUP_DIR - Main backup directory path
@@ -320,25 +322,8 @@ function cleanup_all_artifacts {
         rm -rf "$BACKUP_DIR"
     fi
 
-    # Remove all per-project .terraform_backups directories under the terraform root
-    local backup_dirs
-    readarray -t backup_dirs < <(find "$TERRAFORM_DIR" -type d -name ".terraform_backups" 2> /dev/null || true)
-
-    for backup_dir in "${backup_dirs[@]}"; do
-        if [[ -d $backup_dir ]]; then
-            log "INFO" "Removing backup directory: $backup_dir"
-            rm -rf "$backup_dir"
-        fi
-    done
-
-    # Also remove legacy backup directories named .terraform_module_backups for compatibility
-    readarray -t backup_dirs < <(find "$TERRAFORM_DIR" -type d -name ".terraform_module_backups" 2> /dev/null || true)
-    for backup_dir in "${backup_dirs[@]}"; do
-        if [[ -d $backup_dir ]]; then
-            log "INFO" "Removing legacy backup directory: $backup_dir"
-            rm -rf "$backup_dir"
-        fi
-    done
+    # Backups from earlier runs (.terraform_backups / .terraform_module_backups) are
+    # restore points and are intentionally left in place; only this run's BACKUP_DIR is removed.
 
     if [[ $NO_PLAN == "true" ]]; then
         log "INFO" "--no-plan specified: Skipping plan file cleanup."

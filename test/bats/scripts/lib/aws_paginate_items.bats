@@ -13,6 +13,7 @@
 # - aws_paginate_items values can be unquoted with jq -r for primitive arrays (DynamoDB TableNames)
 # - aws_paginate_items handles S3 list-objects-v2 ContinuationToken pagination
 # - aws_retry_exec retries on failure and succeeds
+# - aws_retry_exec returns the command's non-zero exit status when it fails
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -186,4 +187,16 @@ EOF
     run aws_retry_exec aws cognito-idp list-user-pools --region us-east-1
     [ "$status" -eq 0 ]
     [[ $output == *"ok"* ]]
+}
+
+@test "aws_retry_exec returns the command's non-zero exit status when it fails" {
+    cat > "$MOCK_DIR/aws" << 'EOF'
+#!/usr/bin/env bash
+echo "An error occurred (AccessDenied) when calling the ListUserPools operation: denied" >&2
+exit 7
+EOF
+    chmod +x "$MOCK_DIR/aws"
+
+    run aws_retry_exec 1 aws cognito-idp list-user-pools --region us-east-1
+    [ "$status" -eq 7 ]
 }

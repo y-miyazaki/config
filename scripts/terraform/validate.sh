@@ -358,8 +358,27 @@ function run_attribute_order_check {
 #######################################
 function run_security_scan {
     echo_section "Running security scan with trivy"
-    if ! execute_command_string "trivy fs . --format table"; then
-        log "ERROR" "trivy found security issues"
+
+    # Scope the scan to the target directories (default: the whole tree), like tflint and fmt
+    local -a targets=(".")
+    if [[ ${#TARGET_DIRS[@]} -gt 0 ]]; then
+        targets=("${TARGET_DIRS[@]}")
+    fi
+
+    local target
+    local scan_failed=0
+    for target in "${targets[@]}"; do
+        if [[ ! -d $target ]]; then
+            log "WARN" "Skipping security scan for non-existent directory: $target"
+            continue
+        fi
+        if ! execute_command trivy fs "$target" --format table; then
+            log "ERROR" "trivy found security issues in $target"
+            scan_failed=1
+        fi
+    done
+
+    if [[ $scan_failed -ne 0 ]]; then
         SECURITY_FAILED=1
         EXIT_CODE=1
     else

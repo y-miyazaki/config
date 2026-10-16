@@ -108,7 +108,12 @@ function check_skill_target_drift {
         return 0
     fi
 
-    diff_output="$(diff -rq "${source_dir}" "${target_dir}" 2> /dev/null || true)"
+    local diff_status=0
+    diff_output="$(diff -rq -x __pycache__ "${source_dir}" "${target_dir}" 2> /dev/null)" || diff_status=$?
+    if [[ ${diff_status} -gt 1 ]]; then
+        record_drift "diff failed (exit ${diff_status}): ${source_dir} vs ${target_dir}"
+        return 0
+    fi
     if [[ -n ${diff_output} ]]; then
         while IFS= read -r line; do
             [[ -z ${line} ]] && continue

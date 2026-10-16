@@ -20,6 +20,10 @@
 # - REPO_PATHS_INCLUDE_GITIGNORED skips gitignore exclusion
 # - repo_apply_git_rename records both-scannable renames and cross-zone fallbacks
 # - repo_path_should_skip excludes cursor and kiro root agent directories
+# - repo_path_is_gitignored keeps separate cache entries for paths that differ only by separator
+# - repo_path_is_gitignored does not change the caller's nounset option
+# - repo_path_is_gitignored keeps earlier cache entries across calls
+# - repo_path_is_gitignored returns 1 for an empty path
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -296,9 +300,40 @@ setup() {
     (
         cd "${REPO_FIXTURE}" || exit 1
         repo_path_should_skip "tmp/ignored.txt" || exit 1
-        [[ ${REPO_PATHS_GITIGNORE_CACHE[__rp_tmp_ignored_D_txt]+set} == set ]]
+        [[ ${REPO_PATHS_GITIGNORE_CACHE["tmp/ignored.txt"]+set} == set ]]
 
         repo_path_should_skip "tmp/ignored.txt" || exit 1
-        [[ ${REPO_PATHS_GITIGNORE_CACHE[__rp_tmp_ignored_D_txt]} -eq 1 ]]
+        [[ ${REPO_PATHS_GITIGNORE_CACHE["tmp/ignored.txt"]} -eq 1 ]]
     )
+}
+
+@test "repo_path_is_gitignored keeps distinct cache entries for paths that differ only by separator" {
+    (
+        cd "${REPO_FIXTURE}" || exit 1
+        repo_path_should_skip "tmp/ignored.txt" || exit 1
+        ! repo_path_is_gitignored "tmp_ignored.txt"
+    )
+}
+
+@test "repo_path_is_gitignored does not change the caller's nounset option" {
+    (
+        cd "${REPO_FIXTURE}" || exit 1
+        set +u
+        repo_path_is_gitignored "tmp/ignored.txt" || true
+        [[ $- != *u* ]]
+    )
+}
+
+@test "repo_path_is_gitignored keeps earlier cache entries across calls" {
+    (
+        cd "${REPO_FIXTURE}" || exit 1
+        repo_path_should_skip "tmp/ignored.txt" || exit 1
+        repo_path_is_gitignored "tmp/other.txt" || true
+        [[ ${REPO_PATHS_GITIGNORE_CACHE["tmp/ignored.txt"]+set} == set ]]
+    )
+}
+
+@test "repo_path_is_gitignored returns 1 for an empty path" {
+    run repo_path_is_gitignored ""
+    [ "$status" -eq 1 ]
 }

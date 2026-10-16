@@ -73,7 +73,7 @@ Arguments:
 Examples:
   $(basename "$0") vpc-1234567890abcdef0
 EOF
-    exit 0
+    exit "${1:-0}"
 }
 
 #######################################
@@ -122,7 +122,7 @@ function parse_arguments {
     # Validate required arguments
     if [[ -z ${VPC_ID:-} ]]; then
         echo "Error: VPC ID is required" >&2
-        show_usage
+        show_usage 1
     fi
 }
 
