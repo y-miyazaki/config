@@ -120,6 +120,13 @@ setup() {
 
 @test "validate_terraform_env accepts an explicit environment when ENV is unset" {
     export TF_PLUGIN_CACHE_DIR="${BATS_TEST_TMPDIR}/plugin-cache"
+    mkdir -p "${BATS_TEST_TMPDIR}/bin"
+    cat > "${BATS_TEST_TMPDIR}/bin/terraform" << 'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+    chmod +x "${BATS_TEST_TMPDIR}/bin/terraform"
+    PATH="${BATS_TEST_TMPDIR}/bin:$PATH"
     unset ENV
     DRY_RUN=true
     VERBOSE=true
