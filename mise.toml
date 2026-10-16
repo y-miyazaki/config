@@ -119,7 +119,7 @@ claude = { version = "2.1.295", lazy = true, lazy_bins = ["claude"] }           
 "pipx:pre-commit" = { version = "4.6.2", depends = [
   "python",
 ], lazy = true, lazy_bins = ["pre-commit"] } # pre-commit framework
-"pipx:semgrep" = { version = "1.179.0", depends = ["python"], lazy = true, lazy_bins = ["semgrep", "pysemgrep"] } # SAST scanner (uvx-backed pipx)
+"pipx:semgrep" = { version = "1.180.0", depends = ["python"], lazy = true, lazy_bins = ["semgrep", "pysemgrep"] } # SAST scanner (uvx-backed pipx)
 "aqua:aquasecurity/trivy" = { version = "0.75.0", lazy = true, lazy_bins = ["trivy"] }                             # vulnerability scanner
 
 # Terraform related tools
