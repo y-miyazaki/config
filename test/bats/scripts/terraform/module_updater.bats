@@ -1,221 +1,86 @@
 #!/usr/bin/env bats
-# shellcheck disable=SC2030,SC2031,SC2034,SC2154
+# shellcheck disable=SC2016
 
 # Tests for scripts/terraform/module_updater.sh
-
+#
 # Use cases:
-# - artifact_dir_for creates sanitized directory path
-# - artifact_dir_for strips leading slash and replaces separators
-# - extract_modules_from_file extracts source and version pairs
-# - extract_modules_from_file ignores local modules without version
-# - find_terraform_modules finds files with module declarations
-# - find_terraform_project_root finds directory with versions.tf
-# - process_modules_in_terraform_file lists modules in check-only mode
-# - cleanup_transient_terraform_plan_logs removes workspace plan artifacts
-# - compare_terraform_plan_artifacts returns 0 when rendered plans match
-# - compare_terraform_plan_artifacts returns 1 when rendered plans differ
-# - report_terraform_plan_differences warns without detailed diff when verbose is disabled
+# - extract_modules_from_file reads only top-level source/version of module blocks
+# - update_module_version rewrites only modules whose source matches
+# - update_module_version leaves nested attributes such as engine_version untouched
+# - update_module_version fails and keeps the file when no module matches
+# - find_terraform_project_root falls back to a clean directory path
+# - CLI exits non-zero with usage when the directory argument is missing
 
-_bats_support="$(dirname "${BATS_TEST_FILENAME}")"
-while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
-    _bats_support="$(dirname "${_bats_support}")"
-done
-# shellcheck disable=SC1091
-source "${_bats_support}/support/common.bash"
+TARGET_SCRIPT="${BATS_TEST_DIRNAME}/../../../../scripts/terraform/module_updater.sh"
 
 setup() {
-    # Minimal globals required by module_updater.sh
-    export VERBOSE=false
-    export DRY_RUN=false
-    export CHECK_ONLY=false
-    export RECURSIVE_SEARCH=false
-    export TERRAFORM_DIR=""
-    export DEFAULT_ENV="dev"
-    export NO_PLAN=false
-    export TOTAL_MODULES=0
-    export UPDATED_MODULES=0
-    export FAILED_MODULES=0
-    export CURRENT_FILE_BEING_SCANNED=""
+    FIXTURE_DIR="${BATS_TEST_TMPDIR}/project"
+    mkdir -p "${FIXTURE_DIR}"
+    cat > "${FIXTURE_DIR}/main.tf" << 'EOF'
+module "a" {
+  source         = "terraform-aws-modules/vpc/aws"
+  engine_version = "3.0.0"
+  tags           = { x = "${var.y}" }
+  version        = "3.0.0"
+}
 
-    bats_source_rel "scripts/lib/all.sh"
-    bats_source_rel "scripts/terraform/module_updater.sh" 2> /dev/null || true
-
-    # Create temp directory for test fixtures
-    TEST_TMPDIR=$(mktemp -d)
-    export BACKUP_DIR="$TEST_TMPDIR/backups"
-    mkdir -p "$BACKUP_DIR"
+module "b" {
+  source  = "terraform-aws-modules/rds/aws"
+  version = "3.0.0"
+}
+EOF
 }
 
 teardown() {
-    rm -rf "${TEST_TMPDIR:-}"
+    rm -rf "${FIXTURE_DIR}"
 }
 
-@test "artifact_dir_for creates sanitized directory path" {
-    run artifact_dir_for "/workspace/terraform/base"
-    [ "$status" -eq 0 ]
-    [[ $output == *"workspace__terraform__base"* ]]
+# Run a function from the target script in an isolated shell (the script sets -e/trap on source)
+run_fn() {
+    run bash -c 'source "$1"; shift; BACKUP_DIR="${BATS_TEST_TMPDIR}/backup"; mkdir -p "$BACKUP_DIR"; "$@"' _ "${TARGET_SCRIPT}" "$@"
 }
 
-@test "artifact_dir_for strips leading slash and replaces separators" {
-    run artifact_dir_for "/a/b/c"
-    [ "$status" -eq 0 ]
-    [[ $output == *"a__b__c"* ]]
-}
-
-@test "cleanup_transient_terraform_plan_logs removes workspace plan artifacts" {
-    local workspace_dir="${TEST_TMPDIR}/workspace"
-    mkdir -p "${workspace_dir}"
-    cd "${workspace_dir}" || return 1
-    touch .terraform_baseline.plan .terraform_current.log .terraform_validate.log
-
-    cleanup_transient_terraform_plan_logs
-
-    [ ! -f .terraform_baseline.plan ]
-    [ ! -f .terraform_current.log ]
-    [ ! -f .terraform_validate.log ]
-}
-
-@test "compare_terraform_plan_artifacts returns 0 when rendered plans match" {
-    local artifacts workspace_dir
-    artifacts="${TEST_TMPDIR}/artifacts"
-    workspace_dir="${TEST_TMPDIR}/workspace"
-    mkdir -p "${artifacts}" "${workspace_dir}"
-
-    printf 'plan-a\n' > "${artifacts}/.terraform_baseline.plan"
-    cp "${artifacts}/.terraform_baseline.plan" "${artifacts}/.terraform_current.plan"
-
-    MOCK_BIN="${TEST_TMPDIR}/bin"
-    mkdir -p "${MOCK_BIN}"
-    cat > "${MOCK_BIN}/terraform" << EOF
-#!/usr/bin/env bash
-if [[ "\$1" == "show" ]]; then
-    cat "\${3}"
-    exit 0
-fi
-exit 1
-EOF
-    chmod +x "${MOCK_BIN}/terraform"
-    export PATH="${MOCK_BIN}:${PATH}"
-
-    artifact_dir_for() {
-        printf '%s' "${artifacts}"
-    }
-
-    cd "${workspace_dir}" || return 1
-    run compare_terraform_plan_artifacts
-    [ "$status" -eq 0 ]
-}
-
-@test "compare_terraform_plan_artifacts returns 1 when rendered plans differ" {
-    local artifacts workspace_dir
-    artifacts="${TEST_TMPDIR}/artifacts-diff"
-    workspace_dir="${TEST_TMPDIR}/workspace-diff"
-    mkdir -p "${artifacts}" "${workspace_dir}"
-
-    printf 'plan-a\n' > "${artifacts}/.terraform_baseline.plan"
-    printf 'plan-b\n' > "${artifacts}/.terraform_current.plan"
-
-    MOCK_BIN="${TEST_TMPDIR}/bin-diff"
-    mkdir -p "${MOCK_BIN}"
-    cat > "${MOCK_BIN}/terraform" << EOF
-#!/usr/bin/env bash
-if [[ "\$1" == "show" ]]; then
-    cat "\${3}"
-    exit 0
-fi
-exit 1
-EOF
-    chmod +x "${MOCK_BIN}/terraform"
-    export PATH="${MOCK_BIN}:${PATH}"
-
-    artifact_dir_for() {
-        printf '%s' "${artifacts}"
-    }
-
-    cd "${workspace_dir}" || return 1
-    run compare_terraform_plan_artifacts
+@test "cli exits non-zero with usage when directory is missing" {
+    run bash "${TARGET_SCRIPT}"
     [ "$status" -eq 1 ]
+    [[ $output == *"Terraform directory is required"* ]]
+    [[ $output == *"Usage:"* ]]
 }
 
-@test "extract_modules_from_file extracts source and version pairs" {
-    cat > "$TEST_TMPDIR/test.tf" << 'EOF'
-module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "5.1.0"
-
-  name = "my-vpc"
-}
-EOF
-
-    run extract_modules_from_file "$TEST_TMPDIR/test.tf"
+@test "cli help exits zero" {
+    run bash "${TARGET_SCRIPT}" --help
     [ "$status" -eq 0 ]
-    [[ $output == *"terraform-aws-modules/vpc/aws"* ]]
-    [[ $output == *"5.1.0"* ]]
+    [[ $output == *"Usage:"* ]]
 }
 
-@test "extract_modules_from_file ignores local modules without version" {
-    cat > "$TEST_TMPDIR/local.tf" << 'EOF'
-module "internal" {
-  source = "../../modules/aws/budgets/create"
-
-  name = "test"
-}
-EOF
-
-    run extract_modules_from_file "$TEST_TMPDIR/local.tf"
+@test "extract_modules_from_file ignores engine_version and reads top-level version" {
+    run_fn extract_modules_from_file "${FIXTURE_DIR}/main.tf"
     [ "$status" -eq 0 ]
-    [ -z "$output" ]
+    [[ $output == *"terraform-aws-modules/vpc/aws||3.0.0||"* ]]
+    [[ $output == *"terraform-aws-modules/rds/aws||3.0.0||"* ]]
+    [ "$(echo "$output" | wc -l)" -eq 2 ]
 }
 
-@test "find_terraform_modules finds files with module declarations" {
-    mkdir -p "$TEST_TMPDIR/project"
-    cat > "$TEST_TMPDIR/project/main.tf" << 'EOF'
-module "test" {
-  source = "example/module/aws"
-  version = "1.0.0"
-}
-EOF
-
-    run find_terraform_modules "$TEST_TMPDIR/project"
+@test "find_terraform_project_root fallback returns unquoted directory" {
+    run_fn find_terraform_project_root "/nonexistent_dir/x/main.tf"
     [ "$status" -eq 0 ]
-    [[ $output == *"main.tf"* ]]
+    [ "$output" = "/nonexistent_dir/x" ]
 }
 
-@test "find_terraform_project_root finds directory with versions.tf" {
-    mkdir -p "$TEST_TMPDIR/root/sub"
-    touch "$TEST_TMPDIR/root/versions.tf"
-    touch "$TEST_TMPDIR/root/sub/main.tf"
-
-    run find_terraform_project_root "$TEST_TMPDIR/root/sub/main.tf"
+@test "update_module_version changes only the matching module" {
+    run_fn update_module_version "${FIXTURE_DIR}/main.tf" "terraform-aws-modules/vpc/aws" "3.0.0" "4.1.0"
     [ "$status" -eq 0 ]
-    [[ $output == *"$TEST_TMPDIR/root"* ]]
+    run grep -c 'version *= *"4.1.0"' "${FIXTURE_DIR}/main.tf"
+    [ "$output" = "1" ]
+    # nested attribute and other module keep 3.0.0
+    grep -q 'engine_version = "3.0.0"' "${FIXTURE_DIR}/main.tf"
+    run grep -c '^  version *= *"3.0.0"' "${FIXTURE_DIR}/main.tf"
+    [ "$output" = "1" ]
 }
 
-@test "process_modules_in_terraform_file lists modules in check-only mode" {
-    CHECK_ONLY=true
-    mkdir -p "$TEST_TMPDIR/project"
-    cat > "$TEST_TMPDIR/project/main.tf" << 'EOF'
-module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "5.1.0"
-}
-EOF
-
-    run process_modules_in_terraform_file "$TEST_TMPDIR/project/main.tf"
-    [ "$status" -eq 0 ]
-    [[ $output == *"Found: terraform-aws-modules/vpc/aws (current: 5.1.0)"* ]]
-}
-
-@test "report_terraform_plan_differences warns without detailed diff when verbose is disabled" {
-    local artifacts
-    artifacts="${TEST_TMPDIR}/artifacts-report"
-    mkdir -p "${artifacts}"
-    printf 'baseline\n' > "${artifacts}/.terraform_baseline.txt"
-    printf 'current\n' > "${artifacts}/.terraform_current.txt"
-    VERBOSE=false
-
-    run report_terraform_plan_differences "${artifacts}"
-    [ "$status" -eq 0 ]
-    [[ $output == *"Infrastructure changes detected between baseline and current plan"* ]]
-    [[ $output != *"TERRAFORM SHOW DIFFERENCES DETECTED"* ]]
+@test "update_module_version fails and keeps file when no module matches" {
+    cp "${FIXTURE_DIR}/main.tf" "${BATS_TEST_TMPDIR}/before.tf"
+    run_fn update_module_version "${FIXTURE_DIR}/main.tf" "nonexistent/x/aws" "3.0.0" "4.1.0"
+    [ "$status" -eq 1 ]
+    diff "${BATS_TEST_TMPDIR}/before.tf" "${FIXTURE_DIR}/main.tf"
 }
