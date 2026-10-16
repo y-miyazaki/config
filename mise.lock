@@ -585,6 +585,41 @@ checksum = "sha256:37d43acfe7ac4347e47ccfb7f9788ccf5b3613388304ddbdb6681415e2763
 url = "https://github.com/github/copilot-cli/releases/download/v1.0.94/copilot-win32-x64.zip"
 url_api = "https://api.github.com/repos/github/copilot-cli/releases/assets/622923863"
 
+[[tools."aqua:github/copilot-cli"]]
+version = "1.0.94"
+backend = "aqua:github/copilot-cli"
+
+[tools."aqua:github/copilot-cli".options]
+"vars.lazy" = "true"
+
+[tools."aqua:github/copilot-cli"."platforms.linux-arm64"]
+checksum = "sha256:8d763b46fa5f30151ad03b94aefee513e9312ecfa2d485b02e356ff1a3955e61"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.94/copilot-linux-arm64.tar.gz"
+
+[tools."aqua:github/copilot-cli"."platforms.linux-arm64-musl"]
+checksum = "sha256:8d763b46fa5f30151ad03b94aefee513e9312ecfa2d485b02e356ff1a3955e61"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.94/copilot-linux-arm64.tar.gz"
+
+[tools."aqua:github/copilot-cli"."platforms.linux-x64"]
+checksum = "sha256:0acaff842900357f4734c768b8933b1c5c8ce65e1bf74f15573f5cedd650b240"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.94/copilot-linux-x64.tar.gz"
+
+[tools."aqua:github/copilot-cli"."platforms.linux-x64-musl"]
+checksum = "sha256:0acaff842900357f4734c768b8933b1c5c8ce65e1bf74f15573f5cedd650b240"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.94/copilot-linux-x64.tar.gz"
+
+[tools."aqua:github/copilot-cli"."platforms.macos-arm64"]
+checksum = "sha256:76b3d412d7fe18d6798c26e3c9a42de9d7b39c800788e9bb9352b619517cbac6"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.94/copilot-darwin-arm64.tar.gz"
+
+[tools."aqua:github/copilot-cli"."platforms.macos-x64"]
+checksum = "sha256:92df4fe029c7f8beca6fdffc03776e3dbf2c243b4179e8b1d20103e6ed4f812c"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.94/copilot-darwin-x64.tar.gz"
+
+[tools."aqua:github/copilot-cli"."platforms.windows-x64"]
+checksum = "sha256:37d43acfe7ac4347e47ccfb7f9788ccf5b3613388304ddbdb6681415e276372b"
+url = "https://github.com/github/copilot-cli/releases/download/v1.0.94/copilot-win32-x64.zip"
+
 [[tools."aqua:gitleaks/gitleaks"]]
 version = "8.30.1"
 backend = "aqua:gitleaks/gitleaks"
