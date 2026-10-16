@@ -291,7 +291,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@3d015056250b4c5192f501e2db46ff0a61debf20 # v1.8.121
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@01f7488c98e55399ecf05ee4e75066626842e38b # v1.8.121
 
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
@@ -300,7 +300,7 @@ jobs:
 
       - name: Detect Loop Work
         id: detect
-        uses: y-miyazaki/config/.github/actions/loop-entity-detect@3d015056250b4c5192f501e2db46ff0a61debf20 # v1.8.121
+        uses: y-miyazaki/config/.github/actions/loop-entity-detect@01f7488c98e55399ecf05ee4e75066626842e38b # v1.8.121
 
         with:
           agent_maker_instructions: ${{ inputs.agent_maker_instructions }}
@@ -333,7 +333,7 @@ jobs:
       fail-fast: false
       matrix:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
-    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@3d015056250b4c5192f501e2db46ff0a61debf20 # v1.8.121
+    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@01f7488c98e55399ecf05ee4e75066626842e38b # v1.8.121
 
     with:
       additional_commit_paths: ${{ inputs.additional_commit_paths }}
@@ -408,7 +408,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@3d015056250b4c5192f501e2db46ff0a61debf20 # v1.8.121
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@01f7488c98e55399ecf05ee4e75066626842e38b # v1.8.121
 
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
@@ -416,7 +416,7 @@ jobs:
           github_token: ${{ secrets.GH_TOKEN }}
 
       - name: Append Skip Run Log
-        uses: y-miyazaki/config/.github/actions/loop-run-log@3d015056250b4c5192f501e2db46ff0a61debf20 # v1.8.121
+        uses: y-miyazaki/config/.github/actions/loop-run-log@01f7488c98e55399ecf05ee4e75066626842e38b # v1.8.121
 
         with:
           base_branch: ${{ inputs.branch_state }}
