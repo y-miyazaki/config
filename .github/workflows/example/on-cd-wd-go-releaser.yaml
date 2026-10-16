@@ -58,7 +58,7 @@ jobs:
   release:
     name: Release base
     needs: detect-go-version
-    uses: y-miyazaki/config/.github/workflows/cd-go-releaser.yaml@700752d616fb90897969879bf28f69f113a63ba9 # v1.8.121
+    uses: y-miyazaki/config/.github/workflows/cd-go-releaser.yaml@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
 
     with:
       component: base
