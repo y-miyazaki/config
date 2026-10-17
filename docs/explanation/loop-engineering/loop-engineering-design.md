@@ -5,19 +5,19 @@ For concrete specifications (Actions/Workflows list, interfaces), see [Specifica
 
 ## Implementation Status
 
-| Loop (`loop_name`)     | Skill (`common`)       | Status                                                     | Level         |
-| ---------------------- | ---------------------- | ---------------------------------------------------------- | ------------- |
-| `docs-updater`         | `docs-updater`         | Dogfood L2; multi-branch on `main`                         | L2 (Assisted) |
-| `ci-sweeper`           | `ci-sweeper`           | Dogfood L2; integration + PR heads                         | L2 (Assisted) |
-| `changelog`            | `changelog`            | Dogfood L2; weekly schedule                                | L2 (Assisted) |
-| `refactor`             | `refactor`             | Dogfood L2; weekly schedule                                | L2 (Assisted) |
-| `tech-debt`            | `tech-debt`            | Dogfood L2; weekly report PR                               | L2 (Assisted) |
-| `github-issue-triage`  | `github-issue-triage`  | Dogfood L1 / in progress                                   | L1 (Report)   |
-| `github-issue-autofix` | `github-issue-autofix` | Dogfood L2 / in progress                                   | L2 (Assisted) |
-| `github-pr-revise`     | `github-pr-revise`     | Dogfood L2 / in progress                                   | L2 (Assisted) |
-| `github-pr-review`     | `github-pr-review`     | L2; `workflow_dispatch` only (see workflow design Rollout) | L2 (Assisted) |
-| `test-gap`             | `test-gap`             | Dogfood L2; weekly schedule                                | L2 (Assisted) |
-| `loop-stale-pr`        | —                      | Not started                                                | -             |
+| Loop (`loop_name`)     | Skill (`common`)       | Status                                          | Level         |
+| ---------------------- | ---------------------- | ----------------------------------------------- | ------------- |
+| `docs-updater`         | `docs-updater`         | Dogfood L2; multi-branch on `main`              | L2 (Assisted) |
+| `ci-sweeper`           | `ci-sweeper`           | Dogfood L2; integration + PR heads              | L2 (Assisted) |
+| `changelog`            | `changelog`            | Dogfood L2; weekly schedule                     | L2 (Assisted) |
+| `refactor`             | `refactor`             | Dogfood L2; weekly schedule                     | L2 (Assisted) |
+| `tech-debt`            | `tech-debt`            | Dogfood L2; weekly report PR                    | L2 (Assisted) |
+| `github-issue-triage`  | `github-issue-triage`  | Dogfood L1 / in progress                        | L1 (Report)   |
+| `github-issue-autofix` | `github-issue-autofix` | Dogfood L2 / in progress                        | L2 (Assisted) |
+| `github-pr-revise`     | `github-pr-revise`     | Dogfood L2 / in progress                        | L2 (Assisted) |
+| `github-pr-review`     | `github-pr-review`     | L2; `pull_request_target` + `workflow_dispatch` | L2 (Assisted) |
+| `test-gap`             | `test-gap`             | Dogfood L2; weekly schedule                     | L2 (Assisted) |
+| `loop-stale-pr`        | —                      | Not started                                     | -             |
 
 Platform actions (`loop-detect` `target_matrix`, handoff artifact, `domain_persistence_script`, merge-gated `pending`) are implemented — see [Multi-Branch Loops Design](multi-branch-loops-design.md).
 

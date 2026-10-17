@@ -2,9 +2,8 @@
 # Design: docs/superpowers/specs/2026-10-17-loop-pr-review-design.md
 # Requires repository secret: AGENT_TOKEN (engine API key).
 #
-# ROLLOUT WARNING: do NOT dispatch or enable this workflow until a release that
-# contains all of the platform fixes below is pinned in the ci-loop-* `uses:`
-# lines (ci-loop-caller-entity.yaml -> ci-loop-agent.yaml -> loop-* actions):
+# ROLLOUT: enabled. The ci-loop-* `uses:` lines are pinned to a release that
+# contains the platform fixes this loop depends on (do not downgrade the pins):
 # - loop-finalize honors `finalize_strategy: none` (never pushes; P1), deletes
 #   the agent branch (P2), and passes GH_TOKEN / GITHUB_REPOSITORY to
 #   domain_persistence_script (P4)
@@ -13,9 +12,6 @@
 # - the finalize-l2 PR review meta step guards its handoff key (meta guard)
 # With older pins, an APPROVE verdict can merge the agent branch (including
 # .loop-review/pr-<n>.json) into the base branch, or the review never posts.
-# - The pull_request_target trigger below stays COMMENTED OUT until then;
-#   enabling it is uncommenting it (jobs.loop.if covers both events), then
-#   re-running zizmor (it has not checked the commented block).
 # - Run workflow_dispatch from the default branch only: the base checkout,
 #   rules, and post_review.sh come from the ref the run starts on.
 name: on-loop-github-pr-review
@@ -27,8 +23,8 @@ on:
   # - The head is never checked out or executed; the loop runs from the base checkout.
   # - PR facts come from the event payload and gh API reads only.
   # - Job gated on same-repo, non-draft, non-bot PRs without no-loop / loop-automation labels.
-  # pull_request_target: # zizmor: ignore[dangerous-triggers]
-  #   types: [opened, ready_for_review]
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
+    types: [opened, ready_for_review]
   workflow_dispatch:
     inputs:
       force:

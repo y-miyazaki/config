@@ -20,7 +20,7 @@ Review a pull request once when it is opened or marked ready, and post the resul
 
 ### Supported use cases
 
-- `pull_request_target` `opened` / `ready_for_review` (see [Rollout](#rollout); the trigger is commented out in the shipped caller)
+- `pull_request_target` `opened` / `ready_for_review` (see [Rollout](#rollout))
 - `workflow_dispatch` with `pr_number` for a manual review; `force` reviews again even when a marker review already exists
 
 ### Out of scope
@@ -32,7 +32,7 @@ Review a pull request once when it is opened or marked ready, and post the resul
 
 ## Rollout
 
-The caller ships with the `pull_request_target` trigger **commented out**.
+The caller ships with the `pull_request_target` trigger enabled; the `ci-loop-*` pins already include the fixes below.
 
 Do not dispatch or enable the workflow until a release that contains all of the following platform fixes is pinned in the `ci-loop-*` `uses:` lines of the caller chain (`ci-loop-caller-entity.yaml` → `ci-loop-agent.yaml` → `loop-*` actions):
 
@@ -47,8 +47,8 @@ With older pins, an APPROVE verdict can merge the agent branch, including `.loop
 
 | Stage                 | Action                                                                                                                                                    |
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Before the pin bump   | Do not run the workflow; the `pull_request_target` trigger stays commented out                                                                            |
-| After the pin bump    | Uncomment the `pull_request_target` trigger in `on-loop-github-pr-review.yaml`, then re-run `zizmor` (it has not checked the commented block)             |
+| Before the pin bump   | Do not run the workflow with older pins; the fixes above must be in the pinned release                                                                    |
+| After the pin bump    | The trigger is enabled and `zizmor` covers it; do not downgrade the pins                                                                                  |
 | Manual dispatch       | Run `workflow_dispatch` from the default branch only; the base checkout, the rules read at base, and `post_review.sh` come from the ref the run starts on |
 | Intake gate on enable | `jobs.loop.if` already covers both events; enabling is only uncommenting the trigger                                                                      |
 
