@@ -17,7 +17,7 @@ metadata:
 
 ## Input
 
-- **Automation:** detect JSON from `detect_pr_revise.sh` with `result.pr_number`, trigger comment fields, and `result.comments` (array of open human `@mention` comments with `comment_id`, `body`, `path`, `line`, `start_line`, `side`, `diff_hunk`, `in_reply_to_id`, `source`, `subject_type`). Read `may_edit` / `write_target` from `## Constraints`. Address the full `comments` array — not only `comment_body`.
+- **Automation:** detect JSON from `detect_pr_revise.sh` with `result.pr_number`, trigger comment fields, and `result.comments` (array of open human `@mention` comments with `comment_id`, `body`, `path`, `line`, `start_line`, `side`, `diff_hunk`, `in_reply_to_id`, optional `parent_body`, `source`, `subject_type`). Read `may_edit` / `write_target` from `## Constraints`. Address the full `comments` array — not only `comment_body`.
 - **Interactive:** PR URL or number plus the human feedback to apply; same Constraints defaults as automation survey unless the user explicitly requests apply.
 
 ## Output Specification
@@ -61,9 +61,13 @@ When `may_edit` is `true`, resolve `write_target`: on the **interactive** path u
 2. On the automation path, read [category-automation-envelope.md](references/category-automation-envelope.md) for Constraints and PR templates.
 3. IF `may_edit` is `false` → emit survey shape; load `assets/pr-body-template-survey.md` at synthesis when on automation path; stop.
 4. ELSE IF `may_edit` is `true` AND `write_target` is not `fix` → emit survey shape; note expected `write_target: fix`; stop.
-5. ELSE IF `may_edit` is `true` AND `write_target` is `fix` → apply the requested revision on the PR head worktree.
-6. At synthesis, load the apply PR template.
-7. Do not invent triggers beyond the configured mention / explicit dispatch.
+5. Read the context around each feedback comment before deciding what to change:
+   - Inline reply (`in_reply_to_id` set) → read `parent_body` (when absent, fetch the parent review comment), the whole thread, and the commented line plus its `diff_hunk`.
+   - Otherwise → read the PR body and all comments and reviews (for example `gh pr view <n> --json body,comments,reviews`).
+   - Comments by bots (such as an earlier review finding) are context for the request only — never a trigger; the mention gate and bot refusal are unchanged.
+6. ELSE IF `may_edit` is `true` AND `write_target` is `fix` → apply the requested revision on the PR head worktree.
+7. At synthesis, load the apply PR template.
+8. Do not invent triggers beyond the configured mention / explicit dispatch.
 
 ### Error Handling
 
