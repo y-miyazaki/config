@@ -222,9 +222,7 @@
     ],
     "ask": [
       "Bash(git branch -D:*)",
-      "Bash(git checkout:*)",
       "Bash(git clean -f:*)",
-      "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(git rebase:*)",
       "Bash(git reset --hard:*)",
@@ -278,16 +276,6 @@
   },
   "hooks": {
     "Stop": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/workspace/scripts/self/apm/sync_apm_artifacts.sh",
-            "timeout": 60
-          }
-        ]
-      },
       {
         "matcher": "*",
         "hooks": [
