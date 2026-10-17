@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-10-17T00:59:05.480599+00:00'
+generated_at: '2026-10-17T01:09:37.159186+00:00'
 apm_version: 0.33.0
 dependencies:
 - repo_url: _local/common
@@ -12825,7 +12825,7 @@ mcp_configs:
     transport: stdio
     args:
     - -lc
-    - TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"; exec uvx mcp-compressor==0.35.0 -- https://api.githubcopilot.com/mcp/
+    - TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"; exec uvx mcp-compressor==0.36.0 -- https://api.githubcopilot.com/mcp/
       -H "Authorization=Bearer ${TOKEN}" --auth explicit-headers
     registry: false
     command: bash
