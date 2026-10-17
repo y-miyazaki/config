@@ -1,6 +1,6 @@
 # Loop workflow: PR revise (L2)
 # Intake: issue_comment / pull_request_review_comment with mention | repository_dispatch | workflow_dispatch
-# → branch / PR-head caller (ci-loop-caller). Default landing push_head.
+# → branch / PR-head caller (ci-loop-caller). Default delivery pr_push (manual dispatch may pick pr_create).
 name: on-loop-github-pr-revise
 
 run-name: "${{ github.workflow }} PR #${{ github.event.pull_request.number || github.event.issue.number || inputs.pr_number }}"
@@ -14,15 +14,18 @@ on:
     types: [loop-github-pr-revise]
   workflow_dispatch:
     inputs:
+      delivery:
+        default: pr_push
+        description: "pr_push lands on the PR head; pr_create opens a new PR from the PR head"
+        options:
+          - pr_push
+          - pr_create
+        required: false
+        type: choice
       feedback:
         description: Human revision instructions (required for manual dispatch)
         required: true
         type: string
-      git_landing_pull_request:
-        description: push_head | open_pr
-        required: false
-        type: string
-        default: push_head
       mention:
         description: Mention token required in comment body
         required: false
@@ -40,7 +43,7 @@ permissions:
   issues: write
   pull-requests: write
 
-# Serialize per PR; never cancel in-flight work. push_head merges onto latest head (see push_target.sh).
+# Serialize per PR; never cancel in-flight work. pr_push merges onto latest head (see push_target.sh).
 concurrency:
   cancel-in-progress: false
   group: loop-github-pr-revise-${{ github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || github.run_id }}
@@ -52,7 +55,7 @@ jobs:
     # @loop mention is required on comment webhooks (dispatch paths bypass it,
     # as in the detect script). Keeping both checks here — not only in detect —
     # stops loop-authored comments from queueing runs behind in-flight work.
-    # The mention literal matches the PR_MENTION default in detect_domain_env_json.
+    # The mention literal matches the PR_MENTION default in detect_env_json.
     if: >-
       (
         github.event_name != 'issue_comment' ||
@@ -77,21 +80,13 @@ jobs:
       )
     uses: ./.github/workflows/ci-loop-caller.yaml
     with:
-      ack_trigger_comment: true
-      # Revise reads the PR and its review threads; the push is done by the
-      # workflow. No gh issue/label/release access.
-      agent_allowed_tools: |
-        Bash(gh api:*)
-        Bash(gh pr view:*)
-        Bash(gh pr diff:*)
-        Bash(gh pr comment:*)
       agent_checker_effort: medium
       agent_checker_instructions: |
         ## Criteria for APPROVE
 
         ALL of the following must be true:
         1. Every item in detect result.comments was addressed (or explicitly deferred); cite comment_id(s)
-        2. Changes land on the PR head unless stacked open_pr was requested
+        2. Changes land on the PR head unless delivery pr_create (a new stacked PR) was requested
         3. Bot comments were not acted on
         4. The maker did not ignore the comments array in favor of only result.comment_body when comments length > 1
 
@@ -103,7 +98,9 @@ jobs:
         - Unrelated drive-by refactors
       agent_checker_max_turns: 100
       agent_checker_model: claude-opus-5
-      agent_checker_skill_name: loop-verifier
+      agent_edit_allowlist: "**"
+      agent_edit_target: fix
+      agent_engine: claude
       agent_loop_max_attempts: 3
       agent_maker_effort: medium
       agent_maker_instructions: |
@@ -118,26 +115,26 @@ jobs:
       agent_maker_max_turns: 100
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: github-pr-revise
-      allowlist: ""
-      branch_match: main
-      branch_state: main
+      # Revise reads the PR and its review threads; the push is done by the
+      # workflow. No gh issue/label/release access.
+      agent_tool_allowlist: |
+        Bash(gh api:*)
+        Bash(gh pr view:*)
+        Bash(gh pr diff:*)
+        Bash(gh pr comment:*)
+      agent_unchanged_verdict: REJECT
       budget_max_runs_per_day: 10
       budget_max_tokens_per_day: 1000000
-      delivery: open_pr
-      denylist: ""
-      detect_domain_env_json: ${{ format('{{"PR_NUMBER":"{0}","PR_MENTION":"{1}"}}', github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || '', inputs.mention || '@loop') }}
+      delivery: ${{ inputs.delivery || 'pr_push' }}
+      detect_env_json: ${{ format('{{"PR_NUMBER":"{0}","PR_MENTION":"{1}"}}', github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || '', inputs.mention || '@loop') }}
+      detect_pr_denylist: fork,label:no-loop
+      detect_pr_enabled: true
+      detect_pr_number: ${{ github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || 0 }}
       detect_script: .agents/skills/github-pr-revise/scripts/detect_pr_revise.sh
-      engine: claude
-      environment: default
-      git_landing_pull_request: ${{ inputs.git_landing_pull_request || 'push_head' }}
       level: L2
       loop_name: github-pr-revise
-      may_edit: true
-      no_changes_verdict: REJECT
-      pr_enabled: true
-      pr_exclude: fork,label:no-loop
-      scoped_pr_number: ${{ github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || 0 }}
-      write_target: fix
+      state_branch: main
+      trigger_comment_ack: true
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}

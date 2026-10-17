@@ -11,6 +11,10 @@
 # - Every with: key on a pinned loop action or ci-loop-agent call is a declared input of the local definition, and every required input is passed
 # - No pre-rename input or env name remains in the three reusable workflows
 # - Committed .loop state files match the on-loop callers
+# - Every dogfood on-loop caller passes only declared inputs and every required input of the local reusable it calls
+# - Dogfood callers declare delivery and level per the migration table, pass the level-dependent inputs only on L2+, and repeat no default
+# - github-pr-revise watches only its scoped PR head and offers delivery pr_push or pr_create on manual dispatch
+# - on-loop-state-promote passes state_branch main and only declared loop-state-promote inputs
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -156,6 +160,26 @@ agent_call_with_keys() {
         inwith && /^    [a-z]/ {exit}
         f && /^  [a-zA-Z0-9_-]+:$/ {exit}
     ' "$1"
+}
+
+# dogfood_reusable FILE: print the local reusable workflow path the dogfood caller FILE calls
+dogfood_reusable() {
+    awk '/^    uses: \.\/\.github\/workflows\/ci-loop-caller/ {sub(/^    uses: \.\//, ""); print; exit}' "$1"
+}
+
+# dogfood_with FILE: print the "key: value" lines of the dogfood caller's job-level with: block
+dogfood_with() {
+    awk '
+        /^    uses: \.\/\.github\/workflows\/ci-loop-caller/ {f=1; next}
+        f && /^    with:/ {inwith=1; next}
+        inwith && /^      [a-zA-Z0-9_]+:/ {sub(/^      /, ""); print; next}
+        inwith && /^    [a-z]/ {exit}
+    ' "$1"
+}
+
+# dogfood_value FILE KEY: print the single-line with: value of KEY in the dogfood caller FILE
+dogfood_value() {
+    dogfood_with "$1" | awk -v key="$2" 'index($0, key ": ") == 1 {print substr($0, length(key) + 3); exit}'
 }
 
 @test ".loop JSON files are state-*, loop-budget, or allowlisted sidecars" {
@@ -508,6 +532,112 @@ agent_call_with_keys() {
     done
 }
 
+@test "dogfood callers declare delivery and level per the migration table" {
+    local wf name expected revise count=0
+    # Literal GitHub Actions expression; do not expand.
+    # shellcheck disable=SC2016
+    revise='${{ inputs.delivery || '"'pr_push'"' }} L2'
+    for wf in "${ROOT}"/.github/workflows/on-loop-*.yaml; do
+        [[ -n "$(dogfood_reusable "${wf}")" ]] || continue
+        name="$(basename "${wf}" .yaml)"
+        name="${name#on-loop-}"
+        case "${name}" in
+            github-pr-revise) expected="${revise}" ;;
+            github-issue-triage) expected='none L1' ;;
+            github-pr-review) expected='none L2' ;;
+            changelog | ci-sweeper | docs-updater | github-issue-autofix | refactor | tech-debt | test-gap)
+                expected='pr_create L2'
+                ;;
+            *)
+                echo "unmapped dogfood caller ${wf}" >&2
+                return 1
+                ;;
+        esac
+        if [[ "$(dogfood_value "${wf}" delivery) $(dogfood_value "${wf}" level)" != "${expected}" ]]; then
+            echo "${name}: want '${expected}', got '$(dogfood_value "${wf}" delivery) $(dogfood_value "${wf}" level)'" >&2
+            return 1
+        fi
+        count=$((count + 1))
+    done
+    [ "${count}" -eq 10 ]
+}
+
+@test "dogfood callers pass only declared inputs and every required input of the local reusable" {
+    local wf reusable key count=0
+    local -a declared required passed
+    for wf in "${ROOT}"/.github/workflows/on-loop-*.yaml; do
+        reusable="$(dogfood_reusable "${wf}")"
+        [[ -n ${reusable} ]] || continue
+        mapfile -t declared < <(workflow_inputs "${ROOT}/${reusable}")
+        mapfile -t required < <(workflow_required_inputs "${ROOT}/${reusable}")
+        mapfile -t passed < <(dogfood_with "${wf}" | sed 's/:.*//')
+        [ "${#declared[@]}" -gt 30 ]
+        [ "${#required[@]}" -ge 10 ]
+        [ "${#passed[@]}" -gt 10 ]
+        for key in "${passed[@]}"; do
+            if ! printf '%s\n' "${declared[@]}" | grep -qx "${key}"; then
+                echo "$(basename "${wf}"): ${reusable} has no input ${key}" >&2
+                return 1
+            fi
+        done
+        for key in "${required[@]}"; do
+            if ! printf '%s\n' "${passed[@]}" | grep -qx "${key}"; then
+                echo "$(basename "${wf}"): required ${reusable} input ${key} not passed" >&2
+                return 1
+            fi
+        done
+        count=$((count + 1))
+    done
+    [ "${count}" -eq 10 ]
+}
+
+@test "dogfood callers pass the level-dependent inputs only on L2 and above" {
+    local wf name level key count=0
+    for wf in "${ROOT}"/.github/workflows/on-loop-*.yaml; do
+        [[ -n "$(dogfood_reusable "${wf}")" ]] || continue
+        name="$(basename "${wf}")"
+        level="$(dogfood_value "${wf}" level)"
+        for key in agent_edit_allowlist agent_edit_denylist agent_edit_target agent_unchanged_verdict; do
+            if [[ ${level} == L1 ]] && dogfood_with "${wf}" | grep -q "^${key}:"; then
+                echo "${name}: L1 caller passes ${key}" >&2
+                return 1
+            fi
+        done
+        if [[ ${level} != L1 ]]; then
+            for key in agent_edit_allowlist agent_edit_target agent_unchanged_verdict; do
+                if [[ -z "$(dogfood_value "${wf}" "${key}")" || "$(dogfood_value "${wf}" "${key}")" == '""' ]]; then
+                    echo "${name}: L2 caller lacks ${key}" >&2
+                    return 1
+                fi
+            done
+        fi
+        count=$((count + 1))
+    done
+    [ "${count}" -eq 10 ]
+}
+
+@test "dogfood callers repeat no reusable default and no removed input" {
+    local wf name line
+    for wf in "${ROOT}"/.github/workflows/on-loop-*.yaml; do
+        [[ -n "$(dogfood_reusable "${wf}")" ]] || continue
+        name="$(basename "${wf}")"
+        while IFS= read -r line; do
+            case "${line}" in
+                'agent_checker_skill_name: loop-verifier' | 'agent_edit_denylist: ""' | 'detect_env_json: "{}"' | \
+                    'detect_max_targets: 3' | 'detect_pr_bot_allowlist: ""' | 'detect_pr_denylist: fork,draft,label:no-loop' | \
+                    'detect_pr_enabled: false' | 'environment: default' | 'pr_body: ""')
+                    echo "${name}: repeats a default: ${line}" >&2
+                    return 1
+                    ;;
+                may_edit:* | git_landing_*:* | dispatch_hook_token:*)
+                    echo "${name}: removed input: ${line}" >&2
+                    return 1
+                    ;;
+            esac
+        done < <(dogfood_with "${wf}")
+    done
+}
+
 @test "finalize-l1 persists run-log after agent-l1" {
     grep -A40 '^  finalize-l1:' "${AGENT}" | grep -q 'loop-run-log'
     grep -A20 '^  finalize-l1:' "${AGENT}" | grep -q "inputs.level == 'L1'"
@@ -562,9 +692,30 @@ agent_call_with_keys() {
 
 @test "github-pr-revise caller watches a scoped PR head" {
     local wf="${ROOT}/.github/workflows/on-loop-github-pr-revise.yaml"
-    grep -q 'pr_enabled: true' "${wf}"
-    grep -q 'scoped_pr_number:' "${wf}"
-    grep -q 'pr_exclude: fork,label:no-loop' "${wf}"
+    [ "$(dogfood_value "${wf}" detect_pr_enabled)" = true ]
+    [[ "$(dogfood_value "${wf}" detect_pr_number)" == *'inputs.pr_number || 0 }}' ]]
+    [ "$(dogfood_value "${wf}" detect_pr_denylist)" = 'fork,label:no-loop' ]
+    # pr_push rejects detect_branch_match (spec 7-3).
+    if dogfood_with "${wf}" | grep -q '^detect_branch_match:'; then
+        return 1
+    fi
+}
+
+@test "github-pr-revise manual dispatch offers delivery pr_push or pr_create" {
+    local wf="${ROOT}/.github/workflows/on-loop-github-pr-revise.yaml" block
+    block="$(awk '
+        /^      delivery:/ {f=1; print; next}
+        f && /^      [a-z_]+:/ {exit}
+        f
+    ' "${wf}")"
+    grep -qxF '        type: choice' <<< "${block}"
+    grep -qxF '        default: pr_push' <<< "${block}"
+    [ "$(grep -c '^          - ' <<< "${block}")" -eq 2 ]
+    grep -qxF '          - pr_create' <<< "${block}"
+    grep -qxF '          - pr_push' <<< "${block}"
+    if grep -q 'git_landing' "${wf}"; then
+        return 1
+    fi
 }
 
 @test "loop action env blocks are alphabetically ordered" {
@@ -665,6 +816,27 @@ agent_call_with_keys() {
             return 1
         fi
     done
+}
+
+@test "on-loop-state-promote passes declared loop-state-promote inputs and state_branch main" {
+    local wf="${ROOT}/.github/workflows/on-loop-state-promote.yaml" key
+    local -a declared required passed
+    mapfile -t declared < <(action_inputs loop-state-promote)
+    mapfile -t required < <(action_required_inputs loop-state-promote)
+    mapfile -t passed < <(awk '
+        /uses: \.\/\.github\/actions\/loop-state-promote$/ {f=1; next}
+        f && /^        with:/ {inwith=1; next}
+        inwith && /^          [a-zA-Z0-9_]+:/ {k=$1; sub(/:$/, "", k); print k; next}
+        inwith {exit}
+    ' "${wf}")
+    [ "${#passed[@]}" -ge 4 ]
+    for key in "${passed[@]}"; do
+        printf '%s\n' "${declared[@]}" | grep -qx "${key}"
+    done
+    for key in "${required[@]}"; do
+        printf '%s\n' "${passed[@]}" | grep -qx "${key}"
+    done
+    grep -qxF '          state_branch: main' "${wf}"
 }
 
 @test "reusable workflows use no pre-rename input or env names" {
