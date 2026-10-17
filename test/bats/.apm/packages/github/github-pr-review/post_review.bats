@@ -6,14 +6,17 @@
 # Use cases:
 # - does nothing unless VERDICT is APPROVE
 # - reads the report from the work branch (git fetch + git show) or REPORT_FILE
-# - keeps rule/criteria findings only when the quote is an exact substring of a base file
+# - keeps rule/criteria findings only when the quote is an exact substring of the file at the
+#   trusted base commit (a real temporary git repo; working-tree-only text is not evidence)
+# - uses the PR's SHAs (gh pr view or PR_*_SHA seeds), never the report's; warns on mismatch
 # - keeps bug findings that carry a location; drops malformed findings and escaping paths
 # - checks diff membership per side and hunk (start_line in the same hunk)
 # - moves in_diff findings outside the diff (or without a diff) into the body
 # - posts a COMMENT review with marker, counts, premises, and numbered inline comments
 # - links evidence to the base SHA and locations to the head SHA
 # - reports the dropped findings count
-# - fails closed (no post, exit 0) on unparseable input; posting failure warns and exits 0
+# - fails closed (no post, exit 0) on unparseable input or unavailable trusted SHAs
+# - posting failure and unexpected errors warn and exit 0
 # - retries once without inline comments when the first post is rejected
 # - never sends an event other than COMMENT
 
@@ -26,15 +29,20 @@ source "${_bats_support}/support/common.bash"
 
 POST_SCRIPT="$(apm_skill_script_path github-pr-review post_review.sh)"
 MARKER='<!-- github-pr-review:v1 -->'
-BASE_SHA="$(printf 'b%.0s' {1..40})"
 HEAD_SHA="$(printf 'a%.0s' {1..40})"
+FORGED_SHA="$(printf 'c%.0s' {1..40})"
 RULE_QUOTE='Never fabricate APIs, commands, paths, or behavior.'
 
 setup() {
-    BASE_DIR="${BATS_TEST_TMPDIR}/base"
-    mkdir -p "${BASE_DIR}/docs"
-    printf '# Rules\n\n- %s\n- Stay within requested scope.\n' "${RULE_QUOTE}" > "${BASE_DIR}/AGENTS.md"
-    printf 'CRIT-01 (MUST): Quote exactly\n' > "${BASE_DIR}/docs/criteria.md"
+    # Base repository: the trusted base commit holds the evidence files
+    git_test_repo_setup
+    mkdir -p "${GIT_TEST_REPO}/docs"
+    printf '# Rules\n\n- %s\n- Stay within requested scope.\n' "${RULE_QUOTE}" > "${GIT_TEST_REPO}/AGENTS.md"
+    printf 'CRIT-01 (MUST): Quote exactly\n' > "${GIT_TEST_REPO}/docs/criteria.md"
+    printf '%s\n' "${RULE_QUOTE}" > "${BATS_TEST_TMPDIR}/outside.md"
+    ln -s "${BATS_TEST_TMPDIR}/outside.md" "${GIT_TEST_REPO}/link.md"
+    bats_git_commit "${GIT_TEST_REPO}" base
+    BASE_SHA="$(git_test_repo_git rev-parse HEAD)"
 
     DIFF_FILE="${BATS_TEST_TMPDIR}/pr.diff"
     cat > "${DIFF_FILE}" << 'DIFF'
@@ -84,6 +92,10 @@ if [[ $1 == "api" && " $* " == *" --method POST "* ]]; then
     echo '{}'
     exit 0
 fi
+if [[ $1 == "pr" && $2 == "view" && -n ${GH_PR_VIEW_JSON:-} ]]; then
+    printf '%s' "${GH_PR_VIEW_JSON}"
+    exit 0
+fi
 exit 1
 STUB
     chmod +x "${BIN_DIR}/gh"
@@ -95,13 +107,17 @@ STUB
 
     # shellcheck disable=SC1090
     source "${POST_SCRIPT}"
-    BASE_TREE_DIR="${BASE_DIR}"
+    REVIEW_BASE_SHA="${BASE_SHA}"
     PR_DIFF_FILE="${DIFF_FILE}"
     GITHUB_REPOSITORY=o/r
+    # Library functions read git objects from cwd (production: the base checkout)
+    cd "${GIT_TEST_REPO}" || return 1
 }
 
 teardown() {
-    rm -rf "${BASE_DIR}" "${BIN_DIR}" "${GH_CAPTURE_DIR}" "${DIFF_FILE}" "${GH_LOG}" "${REPORT}"
+    cd "${BATS_TEST_TMPDIR}" || return 1
+    rm -rf "${GIT_TEST_REPO}" "${BIN_DIR}" "${GH_CAPTURE_DIR}" "${DIFF_FILE}" "${GH_LOG}" "${REPORT}" \
+        "${BATS_TEST_TMPDIR}/outside.md" "${BATS_TEST_TMPDIR}/work"
 }
 
 # rule_finding: Print a rule finding JSON; $1 severity, $2 quote, $3 location line, $4 in_diff
@@ -125,13 +141,20 @@ write_report() {
           premises: {pr_body: "checked", linked: ["#120"]}, summary: "Adds a thing.", findings: $f}' > "${REPORT}"
 }
 
-# run_post: Run post_review.sh in a clean env; extra args are env assignments
-run_post() {
+# run_in_repo: Run post_review.sh with a clean env from repo dir $1; remaining args are env assignments
+run_in_repo() {
+    local dir="$1"
+    shift
     run env -i PATH="${BIN_DIR}:${PATH}" HOME="${HOME}" GH_TOKEN=x GITHUB_REPOSITORY=o/r \
         GH_LOG="${GH_LOG}" GH_CAPTURE_DIR="${GH_CAPTURE_DIR}" \
         VERDICT=APPROVE EXECUTE_BRANCH=loop/x TARGET_JSON='{"entity":{"handoff_key":"entity:pr:7"}}' \
-        REPORT_FILE="${REPORT}" PR_DIFF_FILE="${DIFF_FILE}" BASE_TREE_DIR="${BASE_DIR}" \
-        "$@" bash "${POST_SCRIPT}"
+        "$@" bash -c 'cd "$1" && exec bash "$2"' _ "${dir}" "${POST_SCRIPT}"
+}
+
+# run_post: Run post_review.sh in the base repo with seeded SHAs, report, and diff
+run_post() {
+    run_in_repo "${GIT_TEST_REPO}" PR_BASE_SHA="${BASE_SHA}" PR_HEAD_SHA="${HEAD_SHA}" \
+        REPORT_FILE="${REPORT}" PR_DIFF_FILE="${DIFF_FILE}" "$@"
 }
 
 # posted: Print the last posted JSON payload
@@ -179,6 +202,22 @@ posted() {
     [ "$status" -eq 0 ]
 }
 
+@test "drops a quote that exists only in the working tree, not at the base commit" {
+    printf 'Uncommitted rule text\n' >> "${GIT_TEST_REPO}/AGENTS.md"
+    printf 'NEW-01 (MUST): only on disk\n' > "${GIT_TEST_REPO}/docs/new.md"
+    run validate_finding "$(rule_finding Warning "Uncommitted rule text" 2 true)"
+    [ "$status" -eq 1 ]
+    run validate_finding "$(rule_finding Warning "NEW-01 (MUST)" 2 true | jq -c '.evidence.path = "docs/new.md"')"
+    [ "$status" -eq 1 ]
+
+    write_report "[$(rule_finding Warning "Uncommitted rule text" 2 true)]"
+    run_post
+    [ "$status" -eq 0 ]
+    run jq -e '(.comments | length) == 0' <<< "$(posted)"
+    [ "$status" -eq 0 ]
+    [[ "$(posted | jq -r '.body')" == *"Dropped: 1"* ]]
+}
+
 @test "drops a rule finding whose quote differs only by whitespace" {
     run validate_finding "$(rule_finding Warning "${RULE_QUOTE} " 2 true)"
     [ "$status" -eq 1 ]
@@ -187,8 +226,6 @@ posted() {
 }
 
 @test "drops evidence paths that escape the base tree" {
-    printf '%s\n' "${RULE_QUOTE}" > "${BATS_TEST_TMPDIR}/outside.md"
-    ln -s "${BATS_TEST_TMPDIR}/outside.md" "${BASE_DIR}/link.md"
     run validate_finding "$(rule_finding Warning "${RULE_QUOTE}" 2 true | jq -c '.evidence.path = "../outside.md"')"
     [ "$status" -eq 1 ]
     run validate_finding "$(rule_finding Warning "${RULE_QUOTE}" 2 true | jq -c '.evidence.path = "link.md"')"
@@ -210,6 +247,14 @@ posted() {
     [ "$status" -eq 1 ]
 }
 
+@test "exits 0 without posting on an unexpected failure" {
+    write_report "[$(bug_finding Critical 2 true)]"
+    run_post TMPDIR="${BATS_TEST_TMPDIR}/no-such-dir"
+    [ "$status" -eq 0 ]
+    [[ ${output} == *"::warning::post_review: unexpected failure"* ]]
+    [ "$(find "${GH_CAPTURE_DIR}" -name 'post-*.json' | wc -l)" -eq 0 ]
+}
+
 @test "fails closed without posting on unparseable input" {
     printf 'not json' > "${REPORT}"
     run_post
@@ -219,12 +264,6 @@ posted() {
 
     write_report '[]'
     jq '.pr_number = 8' "${REPORT}" > "${REPORT}.tmp" && mv "${REPORT}.tmp" "${REPORT}"
-    run_post
-    [ "$status" -eq 0 ]
-    [ ! -s "${GH_LOG}" ]
-
-    write_report '[]'
-    jq '.head_sha = "abc"' "${REPORT}" > "${REPORT}.tmp" && mv "${REPORT}.tmp" "${REPORT}"
     run_post
     [ "$status" -eq 0 ]
     [ ! -s "${GH_LOG}" ]
@@ -249,6 +288,32 @@ posted() {
     [ "$status" -eq 0 ]
     [[ ${output} == *"::warning::"* ]]
     [ ! -s "${GH_LOG}" ]
+}
+
+@test "fails closed without posting when trusted SHAs are unavailable" {
+    write_report "[$(bug_finding Critical 2 true)]"
+    # gh pr view fails (stub has no GH_PR_VIEW_JSON) and no PR_*_SHA seeds
+    run_in_repo "${GIT_TEST_REPO}" REPORT_FILE="${REPORT}" PR_DIFF_FILE="${DIFF_FILE}"
+    [ "$status" -eq 0 ]
+    [[ ${output} == *"::warning::"*"trusted base/head SHAs"* ]]
+    run grep -c -- '--method POST' "${GH_LOG}"
+    [ "$output" -eq 0 ]
+
+    # gh answers, but the base commit is unknown locally and cannot be fetched
+    : > "${GH_LOG}"
+    run_in_repo "${GIT_TEST_REPO}" REPORT_FILE="${REPORT}" PR_DIFF_FILE="${DIFF_FILE}" \
+        GH_PR_VIEW_JSON="{\"baseRefOid\":\"${FORGED_SHA}\",\"headRefOid\":\"${HEAD_SHA}\"}"
+    [ "$status" -eq 0 ]
+    [[ ${output} == *"::warning::"* ]]
+    run grep -c -- '--method POST' "${GH_LOG}"
+    [ "$output" -eq 0 ]
+
+    # gh returns malformed SHAs
+    run_in_repo "${GIT_TEST_REPO}" REPORT_FILE="${REPORT}" PR_DIFF_FILE="${DIFF_FILE}" \
+        GH_PR_VIEW_JSON='{"baseRefOid":"abc","headRefOid":"def"}'
+    [ "$status" -eq 0 ]
+    run grep -c -- '--method POST' "${GH_LOG}"
+    [ "$output" -eq 0 ]
 }
 
 @test "keeps a bug finding without evidence path" {
@@ -344,6 +409,17 @@ posted() {
     [[ "$(posted | jq -r '.body')" == *'1. **[Critical]** Bug here — inline: [`a.sh#L2-L4`]'* ]]
 }
 
+@test "posts an explicit no-findings review" {
+    write_report '[]'
+    run_post
+    [ "$status" -eq 0 ]
+    run jq -e '.event == "COMMENT" and (.comments | length) == 0' <<< "$(posted)"
+    [ "$status" -eq 0 ]
+    body="$(posted | jq -r '.body')"
+    [[ ${body} == "${MARKER}"* ]]
+    [[ ${body} == *"Findings: 0 (Critical: 0 / Warning: 0 / Suggestion: 0)"* ]]
+}
+
 @test "posts COMMENT with marker, counts, and premises" {
     write_report "[$(bug_finding Critical 2 true), $(rule_finding Warning "${RULE_QUOTE}" 10 false)]"
     run_post
@@ -362,51 +438,34 @@ posted() {
     [[ ${body} != *"Dropped:"* ]]
 }
 
-@test "posts an explicit no-findings review" {
-    write_report '[]'
-    run_post
-    [ "$status" -eq 0 ]
-    run jq -e '.event == "COMMENT" and (.comments | length) == 0' <<< "$(posted)"
-    [ "$status" -eq 0 ]
-    body="$(posted | jq -r '.body')"
-    [[ ${body} == "${MARKER}"* ]]
-    [[ ${body} == *"Findings: 0 (Critical: 0 / Warning: 0 / Suggestion: 0)"* ]]
-}
-
-@test "reads the report from the work branch via git fetch" {
-    local origin="${BATS_TEST_TMPDIR}/origin" work="${BATS_TEST_TMPDIR}/work"
-    bats_git_fresh_repo "${origin}"
-    mkdir -p "${origin}/.loop/review"
-    write_report "[$(bug_finding Critical 2 true)]"
-    cp "${REPORT}" "${origin}/.loop/review/pr-7.json"
-    bats_git_cmd -C "${origin}" checkout -q -b loop/x
-    bats_git_cmd -C "${origin}" add .loop
-    bats_git_cmd -C "${origin}" commit -q -m report
-    bats_git_cmd clone -q "${origin}" "${work}"
-    run env -i PATH="${BIN_DIR}:${PATH}" HOME="${HOME}" GH_TOKEN=x GITHUB_REPOSITORY=o/r \
-        GH_LOG="${GH_LOG}" GH_CAPTURE_DIR="${GH_CAPTURE_DIR}" \
-        VERDICT=APPROVE EXECUTE_BRANCH=loop/x TARGET_JSON='{"entity":{"handoff_key":"entity:pr:7"}}' \
-        PR_DIFF_FILE="${DIFF_FILE}" BASE_TREE_DIR="${BASE_DIR}" \
-        bash -c 'cd "$1" && bash "$2"' _ "${work}" "${POST_SCRIPT}"
-    [ "$status" -eq 0 ]
-    run jq -e '.event == "COMMENT" and (.comments | length) == 1' <<< "$(posted)"
-    [ "$status" -eq 0 ]
-
-    : > "${GH_LOG}"
-    run env -i PATH="${BIN_DIR}:${PATH}" HOME="${HOME}" GH_TOKEN=x GITHUB_REPOSITORY=o/r \
-        GH_LOG="${GH_LOG}" GH_CAPTURE_DIR="${GH_CAPTURE_DIR}" \
-        VERDICT=APPROVE EXECUTE_BRANCH='loop/../x' TARGET_JSON='{"entity":{"handoff_key":"entity:pr:7"}}' \
-        bash -c 'cd "$1" && bash "$2"' _ "${work}" "${POST_SCRIPT}"
-    [ "$status" -eq 0 ]
-    [[ ${output} == *"::warning::"* ]]
-    [ ! -s "${GH_LOG}" ]
-}
-
 @test "reads the PR number from TARGET_JSON key" {
     write_report '[]'
     run_post TARGET_JSON='{"key":"entity:pr:7"}'
     [ "$status" -eq 0 ]
     grep -q 'pulls/7/reviews' "${GH_LOG}"
+}
+
+@test "reads the report from the work branch via git fetch" {
+    # GIT_TEST_REPO acts as origin: base commit on its default branch, report on loop/x
+    local work="${BATS_TEST_TMPDIR}/work" default_branch
+    default_branch="$(git_test_repo_git rev-parse --abbrev-ref HEAD)"
+    git_test_repo_git checkout -q -b loop/x
+    mkdir -p "${GIT_TEST_REPO}/.loop/review"
+    write_report "[$(rule_finding Critical "${RULE_QUOTE}" 2 true)]"
+    cp "${REPORT}" "${GIT_TEST_REPO}/.loop/review/pr-7.json"
+    bats_git_commit "${GIT_TEST_REPO}" report .loop
+    git_test_repo_git checkout -q "${default_branch}"
+    bats_git_cmd clone -q "${GIT_TEST_REPO}" "${work}"
+    run_in_repo "${work}" PR_BASE_SHA="${BASE_SHA}" PR_HEAD_SHA="${HEAD_SHA}" PR_DIFF_FILE="${DIFF_FILE}"
+    [ "$status" -eq 0 ]
+    run jq -e '.event == "COMMENT" and (.comments | length) == 1' <<< "$(posted)"
+    [ "$status" -eq 0 ]
+
+    : > "${GH_LOG}"
+    run_in_repo "${work}" PR_BASE_SHA="${BASE_SHA}" PR_HEAD_SHA="${HEAD_SHA}" EXECUTE_BRANCH='loop/../x'
+    [ "$status" -eq 0 ]
+    [[ ${output} == *"::warning::"* ]]
+    [ ! -s "${GH_LOG}" ]
 }
 
 @test "reports dropped findings count in the body" {
@@ -427,6 +486,41 @@ posted() {
     run jq -e '.event == "COMMENT" and (.comments | length) == 0' <<< "$(posted)"
     [ "$status" -eq 0 ]
     [[ "$(posted | jq -r '.body')" == *"- Location: https://github.com/o/r/blob/${HEAD_SHA}/a.sh#L2"* ]]
+}
+
+@test "uses the PR's SHAs from gh pr view" {
+    write_report "[$(rule_finding Warning "${RULE_QUOTE}" 10 false)]"
+    run_in_repo "${GIT_TEST_REPO}" REPORT_FILE="${REPORT}" PR_DIFF_FILE="${DIFF_FILE}" \
+        GH_PR_VIEW_JSON="{\"baseRefOid\":\"${BASE_SHA}\",\"headRefOid\":\"${HEAD_SHA}\"}"
+    [ "$status" -eq 0 ]
+    grep -q -- 'pr view 7 --repo o/r --json baseRefOid,headRefOid' "${GH_LOG}"
+    run jq -e --arg h "${HEAD_SHA}" '.commit_id == $h' <<< "$(posted)"
+    [ "$status" -eq 0 ]
+    [[ "$(posted | jq -r '.body')" == *"blob/${BASE_SHA}/AGENTS.md#L3"* ]]
+}
+
+@test "uses trusted SHAs when the report SHAs are forged" {
+    write_report "[$(rule_finding Warning "${RULE_QUOTE}" 10 false), $(bug_finding Critical 2 true)]"
+    jq --arg f "${FORGED_SHA}" '.base_sha = $f | .head_sha = $f' "${REPORT}" > "${REPORT}.tmp"
+    mv "${REPORT}.tmp" "${REPORT}"
+    run_post
+    [ "$status" -eq 0 ]
+    [[ ${output} == *"::warning::"*"differ from PR #7"* ]]
+    run jq -e --arg h "${HEAD_SHA}" '.commit_id == $h and (.comments | length) == 1' <<< "$(posted)"
+    [ "$status" -eq 0 ]
+    body="$(posted | jq -r '.body')"
+    [[ ${body} == *"blob/${BASE_SHA}/AGENTS.md#L3"* ]]
+    [[ ${body} == *"blob/${HEAD_SHA}/a.sh#L10"* ]]
+    [[ ${body} != *"${FORGED_SHA}"* ]]
+    [[ "$(posted | jq -r '.comments[0].body')" != *"${FORGED_SHA}"* ]]
+
+    # Malformed report SHAs are ignored the same way (no fail-closed on report SHAs)
+    write_report '[]'
+    jq '.head_sha = "abc" | del(.base_sha)' "${REPORT}" > "${REPORT}.tmp" && mv "${REPORT}.tmp" "${REPORT}"
+    run_post
+    [ "$status" -eq 0 ]
+    run jq -e --arg h "${HEAD_SHA}" '.event == "COMMENT" and .commit_id == $h' <<< "$(posted)"
+    [ "$status" -eq 0 ]
 }
 
 @test "warns and exits 0 when posting fails" {

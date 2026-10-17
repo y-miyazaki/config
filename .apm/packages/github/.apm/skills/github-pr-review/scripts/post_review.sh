@@ -10,21 +10,26 @@
 #
 # Design Rules:
 # - Act only when VERDICT is APPROVE; any other verdict posts nothing
-# - Fail closed: unparseable TARGET_JSON, report, or SHAs post nothing, warn, and exit 0
+# - Fail closed: unparseable TARGET_JSON or report, or unavailable trusted SHAs, post nothing,
+#   warn, and exit 0
+# - Report base_sha/head_sha are never trusted: the PR's SHAs come from gh pr view and are used
+#   for evidence checks, all links, and commit_id (a mismatch is warned about and ignored)
 # - rule / criteria findings are kept only when evidence.quote is an exact substring
-#   (no normalization) of evidence.path in the base tree; other invalid findings are dropped
+#   (no normalization) of evidence.path as committed at the trusted base SHA (git cat-file,
+#   not the working tree); other invalid findings are dropped
 # - in_diff findings whose lines are not in the PR diff move to the review body
 # - The review event is always COMMENT; nothing in the report can change it
-# - Posting failures emit ::warning:: and exit 0 so finalize does not fail
+# - Posting failures and unexpected errors emit ::warning:: and exit 0 so finalize does not fail
+#   (main runs in a set -e subshell; the entry guard always exits 0)
 # - Render fixed English headings and labels from the template defs in REVIEW_JQ_LIB
 #   (mirrors assets/review-body-template.md and assets/inline-comment-template.md)
 # - Source shared helpers from scripts/lib/all.sh (synced via scripts/self/apm/sync_skill_lib.sh)
 #
 # Dependencies:
 # - bash (POSIX bash, /bin/bash)
-# - jq, awk, realpath
-# - git (when REPORT_FILE is unset)
-# - gh (posting; gh pr diff when PR_DIFF_FILE is unset)
+# - jq, awk
+# - git (base commit blobs; report fetch when REPORT_FILE is unset); cwd is the repository
+# - gh (posting; gh pr view when PR_BASE_SHA/PR_HEAD_SHA are unset; gh pr diff when PR_DIFF_FILE is unset)
 #
 # Environment:
 #   VERDICT               Checker verdict; only APPROVE posts
@@ -34,7 +39,7 @@
 #   GH_TOKEN / GITHUB_TOKEN Token for gh calls
 #   REPORT_FILE           Report path to read instead of git fetch + git show (test seam)
 #   PR_DIFF_FILE          Unified diff to read instead of gh pr diff (test seam)
-#   BASE_TREE_DIR         Base-branch working tree for evidence checks (default: current directory)
+#   PR_BASE_SHA / PR_HEAD_SHA Trusted PR SHAs instead of gh pr view (test seam; both required)
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -119,11 +124,11 @@ def review_body_template($repo; $marker):
 # annotate_report: Drop invalid findings, number the rest, and decide inline placement
 #
 # Globals:
-#   BASE_TREE_DIR
+#   REVIEW_BASE_SHA
 #   PR_DIFF_FILE
 #
 # Arguments:
-#   $1 - Report JSON (envelope already validated)
+#   $1 - Report JSON (envelope validated; SHAs replaced with trusted values)
 #
 # Outputs:
 #   Report JSON with findings[] kept (number, inline, evidence_anchor) and dropped count
@@ -179,34 +184,38 @@ function annotate_report {
 }
 
 #######################################
-# base_evidence_file: Resolve evidence.path to a regular file inside BASE_TREE_DIR
+# base_evidence_blob: Print evidence.path content as committed at the trusted base SHA
 #
 # Globals:
-#   BASE_TREE_DIR
+#   REVIEW_BASE_SHA - Trusted PR base commit (from resolve_trusted_shas)
 #
 # Arguments:
-#   $1 - Evidence path (relative)
+#   $1 - Evidence path (relative to the repository root)
 #
 # Outputs:
-#   Absolute file path to stdout
+#   Exact blob bytes to stdout (no textconv, no working-tree content)
 #
 # Returns:
-#   0 when the file exists inside the base tree (symlinks must not escape), 1 otherwise
+#   0 when the path is a regular file (mode 100644/100755) at the base commit, 1 otherwise
 #
 # Usage:
-#   file="$(base_evidence_file "AGENTS.md")"
+#   base_evidence_blob "AGENTS.md" | jq -Rs ...
 #
 #######################################
-function base_evidence_file {
+function base_evidence_blob {
     local rel="$1"
-    local root resolved
+    local sha="${REVIEW_BASE_SHA:-}"
+    local entry mode type name
 
     safe_relative_path "${rel}" || return 1
-    root="$(realpath -e -- "${BASE_TREE_DIR:-.}" 2> /dev/null)" || return 1
-    [[ -f "${root}/${rel}" ]] || return 1
-    resolved="$(realpath -e -- "${root}/${rel}" 2> /dev/null)" || return 1
-    [[ ${resolved} == "${root}/"* ]] || return 1
-    printf '%s' "${resolved}"
+    [[ ${sha} =~ ^[0-9a-f]{40}$ ]] || return 1
+    entry="$(GIT_LITERAL_PATHSPECS=1 git ls-tree --full-tree "${sha}" -- "${rel}" 2> /dev/null)" || return 1
+    [[ -n ${entry} && ${entry} != *$'\n'* ]] || return 1
+    name="${entry#*$'\t'}"
+    read -r mode type _ <<< "${entry%%$'\t'*}"
+    [[ ${name} == "${rel}" && ${type} == "blob" ]] || return 1
+    [[ ${mode} == "100644" || ${mode} == "100755" ]] || return 1
+    git cat-file blob "${sha}:${rel}" 2> /dev/null
 }
 
 #######################################
@@ -326,7 +335,7 @@ function diff_contains_line {
 # evidence_anchor: Print the base line anchor (L<s> or L<s>-L<e>) of a verified quote
 #
 # Globals:
-#   BASE_TREE_DIR
+#   REVIEW_BASE_SHA
 #
 # Arguments:
 #   $1 - Finding JSON (rule or criteria, already validated)
@@ -343,17 +352,18 @@ function diff_contains_line {
 #######################################
 function evidence_anchor {
     local finding="$1"
-    local file
+    local path
 
-    file="$(base_evidence_file "$(jq -r '.evidence.path // ""' <<< "${finding}")")" || return 0
-    jq -r --rawfile content "${file}" '
-        .evidence.quote as $q
+    path="$(jq -r '.evidence.path // ""' <<< "${finding}")" || return 0
+    base_evidence_blob "${path}" | jq -Rrs --argjson f "${finding}" '
+        . as $content
+        | $f.evidence.quote as $q
         | ($q | match("^\n*").length) as $lead
         | (($content | split($q)[0] | split("\n") | length) + $lead) as $start
         | ([($q | gsub("^\n+|\n+$"; "") | split("\n") | length), 1] | max) as $count
         | ($start + $count - 1) as $end
         | if $end > $start then "L\($start)-L\($end)" else "L\($start)" end
-    ' <<< "${finding}" 2> /dev/null || true
+    ' 2> /dev/null || true
 }
 
 #######################################
@@ -502,7 +512,49 @@ function resolve_pr_number {
 }
 
 #######################################
-# safe_relative_path: Return whether a path is relative and stays inside its root
+# resolve_trusted_shas: Set the PR's real base/head SHAs (never taken from the report)
+#
+# Globals:
+#   PR_BASE_SHA / PR_HEAD_SHA - Optional seeds (test seam; both must be set to skip gh)
+#   GITHUB_REPOSITORY, GH_TOKEN / GITHUB_TOKEN
+#   REVIEW_BASE_SHA (set), REVIEW_HEAD_SHA (set)
+#
+# Arguments:
+#   $1 - PR number
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 when both SHAs are 40-hex and the base commit is available locally
+#   (fetched from origin when missing), 1 otherwise
+#
+# Usage:
+#   resolve_trusted_shas 7 || warn "..."
+#
+#######################################
+function resolve_trusted_shas {
+    local pr_number="$1"
+    local base="${PR_BASE_SHA:-}" head="${PR_HEAD_SHA:-}" pr_json
+
+    if [[ -z ${base} || -z ${head} ]]; then
+        pr_json="$(GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}" gh pr view "${pr_number}" --repo "${GITHUB_REPOSITORY}" \
+            --json baseRefOid,headRefOid 2> /dev/null)" || return 1
+        base="$(jq -r '.baseRefOid // ""' <<< "${pr_json}" 2> /dev/null)" || return 1
+        head="$(jq -r '.headRefOid // ""' <<< "${pr_json}" 2> /dev/null)" || return 1
+    fi
+    [[ ${base} =~ ^[0-9a-f]{40}$ && ${head} =~ ^[0-9a-f]{40}$ ]] || return 1
+
+    if ! git cat-file -e "${base}^{commit}" 2> /dev/null; then
+        git fetch --no-tags --quiet origin "${base}" > /dev/null 2>&1 || return 1
+        git cat-file -e "${base}^{commit}" 2> /dev/null || return 1
+    fi
+    REVIEW_BASE_SHA="${base}"
+    REVIEW_HEAD_SHA="${head}"
+}
+
+#######################################
+# safe_relative_path:Return whether a path is relative and stays inside its root
 #
 # Globals:
 #   None
@@ -528,10 +580,10 @@ function safe_relative_path {
 }
 
 #######################################
-# validate_finding: Check a finding's shape and verify rule/criteria evidence on base
+# validate_finding: Check a finding's shape and verify rule/criteria evidence at the base commit
 #
 # Globals:
-#   BASE_TREE_DIR
+#   REVIEW_BASE_SHA - Trusted base commit; quotes must be exact substrings of the blob there
 #
 # Arguments:
 #   $1 - Finding JSON
@@ -548,7 +600,7 @@ function safe_relative_path {
 #######################################
 function validate_finding {
     local finding="$1"
-    local kind location_path evidence_path file
+    local kind location_path evidence_path
 
     jq -e '
         def pos_int: type == "number" and . >= 1 and . == floor;
@@ -578,13 +630,14 @@ function validate_finding {
     fi
 
     evidence_path="$(jq -r '.evidence.path' <<< "${finding}")"
-    file="$(base_evidence_file "${evidence_path}")" || return 1
-    jq -e --rawfile content "${file}" '.evidence.quote as $q | $content | contains($q)' \
-        <<< "${finding}" > /dev/null 2>&1
+    base_evidence_blob "${evidence_path}" \
+        | jq -Rse --argjson f "${finding}" '. as $content | $content | contains($f.evidence.quote)' \
+            > /dev/null 2>&1
 }
 
 #######################################
-# validate_report: Check the report envelope (PR number, SHAs, premises, findings array)
+# validate_report: Check the report envelope (PR number, premises, findings array)
+#   Report SHAs are not trusted; main replaces them with resolve_trusted_shas values.
 #
 # Globals:
 #   None
@@ -607,8 +660,6 @@ function validate_report {
     jq -e --argjson n "$2" '
         type == "object"
         and .pr_number == $n
-        and ((.head_sha | type) == "string" and (.head_sha | test("^[0-9a-f]{40}$")))
-        and ((.base_sha | type) == "string" and (.base_sha | test("^[0-9a-f]{40}$")))
         and (.findings | type) == "array"
         and ((.premises // {}) | type) == "object"
         and ((.summary // "") | type) == "string"
@@ -642,7 +693,7 @@ function warn {
 # main: Validate the report and post a COMMENT review when VERDICT is APPROVE
 #
 # Globals:
-#   VERDICT, TARGET_JSON, GITHUB_REPOSITORY, PR_DIFF_FILE, BASE_TREE_DIR, REVIEW_BASE_SHA (set)
+#   VERDICT, TARGET_JSON, GITHUB_REPOSITORY, PR_DIFF_FILE, REVIEW_BASE_SHA / REVIEW_HEAD_SHA (set)
 #
 # Arguments:
 #   None
@@ -681,15 +732,22 @@ function main {
         return 0
     fi
     if ! validate_report "${report}" "${pr_number}"; then
-        warn "report for PR #${pr_number} is invalid (JSON, pr_number, SHAs, premises, or findings); review not posted"
+        warn "report for PR #${pr_number} is invalid (JSON, pr_number, premises, or findings); review not posted"
         return 0
     fi
+    if ! resolve_trusted_shas "${pr_number}"; then
+        warn "trusted base/head SHAs for PR #${pr_number} unavailable (gh pr view or base commit fetch failed); review not posted"
+        return 0
+    fi
+    if [[ "$(jq -r '"\(.base_sha // "")\t\(.head_sha // "")"' <<< "${report}")" != "${REVIEW_BASE_SHA}"$'\t'"${REVIEW_HEAD_SHA}" ]]; then
+        warn "report base_sha/head_sha differ from PR #${pr_number} (${REVIEW_BASE_SHA}/${REVIEW_HEAD_SHA}); using the PR's SHAs"
+    fi
+    report="$(jq -c --arg b "${REVIEW_BASE_SHA}" --arg h "${REVIEW_HEAD_SHA}" '.base_sha = $b | .head_sha = $h' <<< "${report}")"
 
     work_dir="$(mktemp -d)"
     # shellcheck disable=SC2064
     trap "rm -rf '${work_dir}'" EXIT
 
-    BASE_TREE_DIR="${BASE_TREE_DIR:-.}"
     if [[ -z ${PR_DIFF_FILE:-} ]]; then
         PR_DIFF_FILE="${work_dir}/pr.diff"
         if ! GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}" gh pr diff "${pr_number}" --repo "${GITHUB_REPOSITORY}" \
@@ -701,7 +759,6 @@ function main {
         warn "PR #${pr_number} diff unavailable; in-diff findings move to the review body"
     fi
 
-    REVIEW_BASE_SHA="$(jq -r '.base_sha' <<< "${report}")"
     annotated="$(annotate_report "${report}")"
     kept="$(jq -r '.findings | length' <<< "${annotated}")"
     inline_count="$(jq -r '[.findings[] | select(.inline)] | length' <<< "${annotated}")"
@@ -728,5 +785,18 @@ function main {
 }
 
 if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
-    main "$@"
+    # Run main in a subshell outside any conditional context so set -e still aborts it on an
+    # unexpected failure; the parent turns that into a warning and always exits 0 (finalize
+    # must not fail). inherit_errexit keeps set -e active inside command substitutions.
+    shopt -s inherit_errexit
+    set +e
+    (
+        set -e
+        main "$@"
+    )
+    main_status=$?
+    if [[ ${main_status} -ne 0 ]]; then
+        printf '::warning::post_review: unexpected failure (exit %s); review not posted\n' "${main_status}"
+    fi
+    exit 0
 fi
