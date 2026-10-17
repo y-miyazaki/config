@@ -35,7 +35,7 @@
 #   PR_BASE_SHA           Base commit SHA
 #   PR_HEAD_SHA           Head commit SHA
 #   PR_CHANGED_FILES_JSON JSON array of changed file paths (test seam; fetched via gh pr view when unset)
-#   PR_REVIEWS_JSON       JSON array of reviews with body (test seam; fetched via gh api when unset)
+#   PR_REVIEWS_JSON       JSON array of reviews with body and user.type (test seam; fetched via gh api when unset)
 #   PR_EXCLUDE_LABELS     Comma-separated label names that skip the review
 #   GITHUB_EVENT_PATH     Path to GitHub event JSON (hydrates unset PR_*)
 #   GITHUB_EVENT_NAME     GitHub event name
@@ -327,7 +327,7 @@ function resolve_changed_files {
 }
 
 #######################################
-# has_marker_review: Return whether a review with the marker already exists
+# has_marker_review: Return whether a Bot-authored review with the marker exists
 #
 # Globals:
 #   PR_NUMBER
@@ -341,7 +341,7 @@ function resolve_changed_files {
 #   None
 #
 # Returns:
-#   0 when a marker review exists, 1 otherwise; calls output_error when the gh fetch fails
+#   0 when a Bot-authored marker review exists, 1 otherwise; calls output_error when the gh fetch fails
 #
 # Usage:
 #   if has_marker_review; then ...
@@ -357,7 +357,11 @@ function has_marker_review {
         }
     fi
 
-    jq -e --arg marker "${REVIEW_MARKER}" 'any(.[]?; (.body // "") | contains($marker))' <<< "${PR_REVIEWS_JSON}" > /dev/null 2>&1
+    # Only a Bot-authored review counts: anyone can paste the marker into a
+    # human review to suppress the review for this PR.
+    jq -e --arg marker "${REVIEW_MARKER}" \
+        'any(.[]?; (.user.type? // "") == "Bot" and ((.body // "") | contains($marker)))' \
+        <<< "${PR_REVIEWS_JSON}" > /dev/null 2>&1
 }
 
 #######################################

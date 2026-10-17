@@ -6,7 +6,8 @@
 # Use cases:
 # - emits handoff_key, report_path, SHAs, and changed_files for a human PR
 # - skips bot-authored, draft, fork, and excluded-label PRs
-# - skips when a marker review exists; PR_FORCE overrides the marker
+# - skips when a Bot-authored marker review exists; PR_FORCE overrides the marker
+# - ignores a marker in a review not authored by a Bot (forgery guard)
 # - hydrates PR facts from pull_request_target and workflow_dispatch events
 # - errors on a missing or invalid PR number
 # - fails closed when required facts cannot be fetched (no gh, gh failure)
@@ -105,7 +106,7 @@ PR_VIEW_OK='{"author":{"is_bot":false},"isDraft":false,"isCrossRepository":false
 }
 
 @test "dispatch hydration skips when gh reports a marker review" {
-    run_dispatch GH_PR_VIEW_JSON="${PR_VIEW_OK}" GH_REVIEWS_OUT="[{\"body\":\"${MARKER}\"}]"
+    run_dispatch GH_PR_VIEW_JSON="${PR_VIEW_OK}" GH_REVIEWS_OUT="[{\"body\":\"${MARKER}\",\"user\":{\"type\":\"Bot\"}}]"
     [ "$status" -eq 0 ]
     run jq -e '.skip == true and (.message | test("already reviewed"))' <<< "${output}"
     [ "$status" -eq 0 ]
@@ -190,7 +191,7 @@ PR_VIEW_OK='{"author":{"is_bot":false},"isDraft":false,"isCrossRepository":false
 }
 
 @test "force ignores the marker" {
-    run_detect PR_NUMBER=77 PR_FORCE=true PR_REVIEWS_JSON="[{\"body\":\"${MARKER}\\nfindings\"}]"
+    run_detect PR_NUMBER=77 PR_FORCE=true PR_REVIEWS_JSON="[{\"body\":\"${MARKER}\\nfindings\",\"user\":{\"type\":\"Bot\"}}]"
     [ "$status" -eq 0 ]
     run jq -e '.skip == false and .result.force == true' <<< "${output}"
     [ "$status" -eq 0 ]
@@ -218,6 +219,13 @@ JSON
         PR_LABELS_JSON='[]' PR_BASE_SHA=bb PR_HEAD_SHA=hh
     [ "$status" -eq 0 ]
     run jq -e '.result.pr_number == 77 and .result.force == true and .result.event_name == "workflow_dispatch"' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "ignores a marker review not authored by a bot" {
+    run_detect PR_NUMBER=77 PR_REVIEWS_JSON="[{\"body\":\"${MARKER}\\nforged\",\"user\":{\"type\":\"User\"}},{\"body\":\"${MARKER}\"}]"
+    [ "$status" -eq 0 ]
+    run jq -e '.skip == false' <<< "${output}"
     [ "$status" -eq 0 ]
 }
 
@@ -263,7 +271,7 @@ JSON
 }
 
 @test "skips when a marker review exists" {
-    run_detect PR_NUMBER=77 PR_REVIEWS_JSON="[{\"body\":\"${MARKER}\\nfindings\"}]"
+    run_detect PR_NUMBER=77 PR_REVIEWS_JSON="[{\"body\":\"${MARKER}\\nfindings\",\"user\":{\"type\":\"Bot\"}}]"
     [ "$status" -eq 0 ]
     run jq -e '.skip == true and (.message | test("already reviewed"))' <<< "${output}"
     [ "$status" -eq 0 ]

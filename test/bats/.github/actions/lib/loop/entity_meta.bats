@@ -11,6 +11,7 @@
 # - entity_pr_number extracts the number from an entity pr key
 # - append_pr_review_meta no-ops for a non-numeric pr number
 # - append_pr_review_meta reports when no marker review exists
+# - append_pr_review_meta ignores marker reviews not authored by a Bot (forgery guard)
 # - append_pr_review_meta updates the newest marker review once
 # - append_pr_review_meta skips a review that already carries meta
 # - append_pr_review_meta skips older reviews when the newest marker review carries meta
@@ -93,6 +94,22 @@ EOF
     [ -z "$output" ]
 }
 
+@test "append_pr_review_meta ignores a marker review not authored by a bot" {
+    mock_gh_reviews '[{"id":1,"user":{"type":"Bot"},"body":"<!-- github-pr-review:v1 -->\nbot"},{"id":2,"user":{"type":"User"},"body":"<!-- github-pr-review:v1 -->\nforged"},{"id":3,"body":"<!-- github-pr-review:v1 -->\nno user"}]'
+    run append_pr_review_meta 77 "<!-- github-pr-review:v1 -->" pr-created claude "$(usage_fixture)" "https://x/run/1"
+    [ "$status" -eq 0 ]
+    [ "$(wc -l < "${BATS_TEST_TMPDIR}/put.log")" -eq 1 ]
+    [[ $(cat "${BATS_TEST_TMPDIR}/put.log") == *"repos/o/r/pulls/77/reviews/1 "* ]]
+}
+
+@test "append_pr_review_meta reports when no bot marker review exists" {
+    mock_gh_reviews '[{"id":2,"user":{"type":"User"},"body":"<!-- github-pr-review:v1 -->\nforged"}]'
+    run append_pr_review_meta 77 "<!-- github-pr-review:v1 -->" pr-created claude "$(usage_fixture)" "https://x/run/1"
+    [ "$status" -eq 0 ]
+    [[ $output == *"meta not appended"* ]]
+    [ ! -f "${BATS_TEST_TMPDIR}/put.log" ]
+}
+
 @test "append_pr_review_meta reports when no marker review exists" {
     mock_gh_reviews '[]'
     run append_pr_review_meta 77 "<!-- github-pr-review:v1 -->" pr-created claude "$(usage_fixture)" "https://x/run/1"
@@ -102,14 +119,14 @@ EOF
 }
 
 @test "append_pr_review_meta skips a review that already carries meta" {
-    mock_gh_reviews '[{"id":1,"body":"<!-- github-pr-review:v1 -->\nhi\n<!-- loop-meta:v1 -->"}]'
+    mock_gh_reviews '[{"id":1,"user":{"type":"Bot"},"body":"<!-- github-pr-review:v1 -->\nhi\n<!-- loop-meta:v1 -->"}]'
     run append_pr_review_meta 77 "<!-- github-pr-review:v1 -->" pr-created claude "$(usage_fixture)" "https://x/run/1"
     [ "$status" -eq 0 ]
     [ ! -f "${BATS_TEST_TMPDIR}/put.log" ]
 }
 
 @test "append_pr_review_meta skips older reviews when the newest marker review carries meta" {
-    mock_gh_reviews '[{"id":1,"body":"<!-- github-pr-review:v1 -->\nold"},{"id":2,"body":"<!-- github-pr-review:v1 -->\nnew\n<!-- loop-meta:v1 -->"}]'
+    mock_gh_reviews '[{"id":1,"user":{"type":"Bot"},"body":"<!-- github-pr-review:v1 -->\nold"},{"id":2,"user":{"type":"Bot"},"body":"<!-- github-pr-review:v1 -->\nnew\n<!-- loop-meta:v1 -->"}]'
     run append_pr_review_meta 77 "<!-- github-pr-review:v1 -->" pr-created claude "$(usage_fixture)" "https://x/run/1"
     [ "$status" -eq 0 ]
     [[ $output == *"already carries loop meta"* ]]
@@ -117,7 +134,7 @@ EOF
 }
 
 @test "append_pr_review_meta updates the newest marker review once" {
-    mock_gh_reviews '[{"id":1,"body":"<!-- github-pr-review:v1 -->\nold"},{"id":2,"body":"<!-- github-pr-review:v1 -->\nnew"}]'
+    mock_gh_reviews '[{"id":1,"user":{"type":"Bot"},"body":"<!-- github-pr-review:v1 -->\nold"},{"id":2,"user":{"type":"Bot"},"body":"<!-- github-pr-review:v1 -->\nnew"}]'
     run append_pr_review_meta 77 "<!-- github-pr-review:v1 -->" pr-created claude "$(usage_fixture)" "https://x/run/1"
     [ "$status" -eq 0 ]
     [ "$(wc -l < "${BATS_TEST_TMPDIR}/put.log")" -eq 1 ]
@@ -129,7 +146,7 @@ EOF
 }
 
 @test "append_pr_review_meta updates the newest review across paginated pages" {
-    mock_gh_reviews '[{"id":1,"body":"<!-- github-pr-review:v1 -->\nold"},{"id":2,"body":"other"}][{"id":3,"body":"<!-- github-pr-review:v1 -->\nmid"},{"id":4,"body":"<!-- github-pr-review:v1 -->\nlast"}]'
+    mock_gh_reviews '[{"id":1,"user":{"type":"Bot"},"body":"<!-- github-pr-review:v1 -->\nold"},{"id":2,"body":"other"}][{"id":3,"user":{"type":"Bot"},"body":"<!-- github-pr-review:v1 -->\nmid"},{"id":4,"user":{"type":"Bot"},"body":"<!-- github-pr-review:v1 -->\nlast"}]'
     run append_pr_review_meta 77 "<!-- github-pr-review:v1 -->" pr-created claude "$(usage_fixture)" "https://x/run/1"
     [ "$status" -eq 0 ]
     [ "$(wc -l < "${BATS_TEST_TMPDIR}/put.log")" -eq 1 ]
