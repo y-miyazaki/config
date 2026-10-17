@@ -80,11 +80,11 @@ Options:
     --run-id         Workflow run ID to record
     --workflow       Workflow display name
     --head-sha       Commit SHA for the failed run
-    --outcome        Run outcome (for example: pr-created, rejected, no-action)
+    --outcome        Run outcome (for example: pr_created, rejected, unchanged)
     --loop-run-id    GitHub Actions run ID for the automation execution (optional)
 
 Examples:
-    ./update_run_ledger.sh --run-id 123456789 --workflow ci-markdown --head-sha abc1234 --outcome pr-created
+    ./update_run_ledger.sh --run-id 123456789 --workflow ci-markdown --head-sha abc1234 --outcome pr_created
 EOF
     exit 0
 }
@@ -188,13 +188,14 @@ function resolve_from_env {
     fi
     if [[ -z ${OUTCOME} ]]; then
         case "${VERDICT:-}" in
-            APPROVE) OUTCOME="pr-created" ;;
+            APPROVE) OUTCOME="pr_created" ;;
             REJECT) OUTCOME="rejected" ;;
         esac
     fi
     case "${OUTCOME}" in
-        no-changes) OUTCOME="no-action" ;;
-        pr-created | rejected | watch | no-action) ;;
+        no-changes | no-action) OUTCOME="unchanged" ;;
+        pr-created) OUTCOME="pr_created" ;;
+        pr_created | pr_pushed | rejected | unchanged | watch) ;;
         error | escalated)
             OUTCOME=""
             ;;

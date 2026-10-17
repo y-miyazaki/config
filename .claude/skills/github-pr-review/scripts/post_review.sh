@@ -3,7 +3,7 @@
 # Description: Validate a github-pr-review report and post it as a COMMENT PR review
 #
 # Usage: ./post_review.sh
-#   Runs as the loop domain_persistence_script in finalize (after the checker verdict).
+#   Runs as the loop finalize_hook_script in finalize (after the checker verdict).
 #
 # Output:
 # - Posts one PR review (event COMMENT) via gh api; log lines and ::warning:: annotations on stdout

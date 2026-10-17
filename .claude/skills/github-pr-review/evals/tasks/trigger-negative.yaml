@@ -14,7 +14,7 @@ inputs:
   context:
     skip: false
     pr_number: 12
-    may_edit: false
+    agent_edit_allowed: false
 expected:
   output_contains:
     - out of scope

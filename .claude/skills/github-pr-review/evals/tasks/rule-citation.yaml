@@ -8,7 +8,7 @@ tags:
   - evidence
 inputs:
   prompt: >-
-    Use github-pr-review with may_edit true and write_target report. The diff adds
+    Use github-pr-review with agent_edit_allowed true and agent_edit_target report. The diff adds
     "eval $user_input" in scripts/run.sh line 12. The base AGENTS.md contains the sentence
     "Never pass untrusted input to eval." Write the report JSON whose findings array has one finding whose
     evidence is {"kind": "rule"}, path AGENTS.md, and quote copied verbatim from that sentence, with
@@ -19,8 +19,8 @@ inputs:
     base_sha: "1111111111111111111111111111111111111111"
     head_sha: "2222222222222222222222222222222222222222"
     report_path: ".loop-review/pr-9.json"
-    may_edit: true
-    write_target: report
+    agent_edit_allowed: true
+    agent_edit_target: report
     base_files:
       AGENTS.md: "Never pass untrusted input to eval."
 expected:

@@ -10,6 +10,8 @@
 # - update_run_ledger writes a new ledger entry
 # - update_run_ledger increments reject_count on rejected outcome
 # - update_run_ledger exits 0 when run-id is omitted
+# - update_run_ledger maps legacy outcomes to their new names
+# - update_run_ledger records pr_pushed
 # - update_run_ledger exits 0 on corrupt ledger file
 # - update_run_ledger preserves unrelated run entries
 # - update_run_ledger prunes entries older than seven days
@@ -59,10 +61,10 @@ teardown() {
 
 @test "update_run_ledger resolves fields from TARGET_JSON env" {
     export TARGET_JSON='{"workflow_run_id":"789","workflow_name":"ci-markdown","from":{"ref":"deadbeef"}}'
-    export OUTCOME="pr-created"
+    export OUTCOME="pr_created"
     run bash "${LEDGER_SCRIPT}"
     [ "$status" -eq 0 ]
-    run jq -e '.runs["789"].outcome == "pr-created"' "${LEDGER_FILE}"
+    run jq -e '.runs["789"].outcome == "pr_created"' "${LEDGER_FILE}"
     [ "$status" -eq 0 ]
     run jq -e '.runs["789"].head_sha == "deadbeef"' "${LEDGER_FILE}"
     [ "$status" -eq 0 ]
@@ -74,10 +76,10 @@ teardown() {
         --run-id 123 \
         --workflow ci-markdown \
         --head-sha abc1234 \
-        --outcome pr-created \
+        --outcome pr_created \
         --loop-run-id 999
     [ "$status" -eq 0 ]
-    run jq -e '.runs["123"].outcome == "pr-created"' "${LEDGER_FILE}"
+    run jq -e '.runs["123"].outcome == "pr_created"' "${LEDGER_FILE}"
     [ "$status" -eq 0 ]
     run jq -e '.runs["123"].workflow_name == "ci-markdown"' "${LEDGER_FILE}"
     [ "$status" -eq 0 ]
@@ -101,7 +103,7 @@ teardown() {
     run bash "${LEDGER_SCRIPT}" \
         --workflow ci-markdown \
         --head-sha abc1234 \
-        --outcome no-action
+        --outcome unchanged
     [ "$status" -eq 0 ]
     [[ $output == *"No workflow run id"* ]]
 }
@@ -121,17 +123,17 @@ teardown() {
     local recent
     recent="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
     jq -nc --arg updated_at "${recent}" \
-        '{runs:{"111":{outcome:"pr-created",reject_count:0,updated_at:$updated_at,workflow_name:"ci-shell"}}}' \
+        '{runs:{"111":{outcome:"pr_created",reject_count:0,updated_at:$updated_at,workflow_name:"ci-shell"}}}' \
         > "${LEDGER_FILE}"
     run bash "${LEDGER_SCRIPT}" \
         --run-id 222 \
         --workflow ci-markdown \
         --head-sha abc1234 \
-        --outcome no-action
+        --outcome unchanged
     [ "$status" -eq 0 ]
     run jq -e '.runs["111"].workflow_name == "ci-shell"' "${LEDGER_FILE}"
     [ "$status" -eq 0 ]
-    run jq -e '.runs["222"].outcome == "no-action"' "${LEDGER_FILE}"
+    run jq -e '.runs["222"].outcome == "unchanged"' "${LEDGER_FILE}"
     [ "$status" -eq 0 ]
 }
 
@@ -158,5 +160,25 @@ teardown() {
       and .runs.keep.workflow_name == "ci-keep"
       and .runs["333"].outcome == "watch"
     ' "${LEDGER_FILE}"
+    [ "$status" -eq 0 ]
+}
+
+@test "update_run_ledger maps legacy outcomes to their new names" {
+    local legacy expected
+    for pair in "pr-created:pr_created" "no-action:unchanged" "no-changes:unchanged"; do
+        legacy="${pair%%:*}"
+        expected="${pair##*:}"
+        rm -f "${LEDGER_FILE}"
+        run bash "${LEDGER_SCRIPT}" --run-id 321 --workflow ci-markdown --head-sha abc1234 --outcome "${legacy}"
+        [ "$status" -eq 0 ]
+        run jq -e --arg expected "${expected}" '.runs["321"].outcome == $expected' "${LEDGER_FILE}"
+        [ "$status" -eq 0 ]
+    done
+}
+
+@test "update_run_ledger records pr_pushed" {
+    run bash "${LEDGER_SCRIPT}" --run-id 654 --workflow ci-markdown --head-sha abc1234 --outcome pr_pushed
+    [ "$status" -eq 0 ]
+    run jq -e '.runs["654"].outcome == "pr_pushed"' "${LEDGER_FILE}"
     [ "$status" -eq 0 ]
 }
