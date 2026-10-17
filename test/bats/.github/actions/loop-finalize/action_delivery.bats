@@ -1,0 +1,129 @@
+#!/usr/bin/env bats
+# shellcheck disable=SC2154
+
+# Tests for delivery branching in .github/actions/loop-finalize/action.yml
+#
+# Use cases:
+# - inputs are the delivery contract (delivery, pr_auto_merge, state_branch, renamed
+#   finalize_* / agent_engine / pr_labels) in alphabetical order; removed inputs are gone
+# - push, PR creation, and branch deletion branch on inputs.delivery only
+# - Enable Auto-Merge runs only on inputs.pr_auto_merge == 'true'
+# - no step reads a finalize strategy or an old strategy value
+# - Create PR resolves detect JSON from the handoff (no detect_result_json input)
+# - Write State reads the required state_branch and passes finalize_commit_paths
+
+_bats_support="$(dirname "${BATS_TEST_FILENAME}")"
+while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
+    _bats_support="$(dirname "${_bats_support}")"
+done
+# shellcheck disable=SC1091
+source "${_bats_support}/support/common.bash"
+
+ACTION_YML="$(bats_workspace_root)/.github/actions/loop-finalize/action.yml"
+
+# Print the input names in file order.
+action_input_names() {
+    awk '
+        /^inputs:$/ { in_inputs = 1; next }
+        /^[a-z]/ { in_inputs = 0 }
+        in_inputs && /^  [a-z_]+:$/ { sub(/^  /, ""); sub(/:$/, ""); print }
+    ' "${ACTION_YML}"
+}
+
+# Print "KEY: value" lines of the env block of step $1.
+step_env() {
+    awk -v name="    - name: $1" '
+        /^    - name: / { in_step = ($0 == name); in_env = 0; next }
+        in_step && /^      env:$/ { in_env = 1; next }
+        in_step && in_env && /^        [A-Za-z_][A-Za-z0-9_]*:/ { sub(/^        /, ""); print; next }
+        in_step && in_env { in_env = 0 }
+    ' "${ACTION_YML}"
+}
+
+# Print the if: of step $1 on one line (folded >- blocks joined with spaces).
+step_if() {
+    awk -v name="    - name: $1" '
+        /^    - name: / {
+            if (in_if) { print buf; in_if = 0; buf = "" }
+            in_step = ($0 == name); next
+        }
+        in_step && /^      if: >-$/ { in_if = 1; next }
+        in_step && /^      if: / { sub(/^      if: /, ""); print; next }
+        in_step && in_if && /^        / { sub(/^ +/, ""); buf = buf (buf == "" ? "" : " ") $0; next }
+        in_step && in_if { print buf; in_if = 0; buf = "" }
+    ' "${ACTION_YML}"
+}
+
+@test "action has no finalize strategy or old strategy values" {
+    run grep -c -E 'finalize_strategy|FINALIZE_STRATEGY|open_pr|push_head|inputs\.auto_merge|inputs\.base_branch|state_push_branch|detect_result_json|domain_persistence|additional_commit_paths|inputs\.outcome_override|inputs\.engine|inputs\.labels' "${ACTION_YML}"
+    [ "${output}" = "0" ]
+}
+
+@test "action inputs are the delivery contract in alphabetical order" {
+    local expected
+    expected="$(printf '%s\n' \
+        agent_engine agent_result branch current_sha delivery execute_branch \
+        finalize_commit_paths finalize_hook_script finalize_outcome_override \
+        github_token handoff_dir handoff_key has_changes level loop_name \
+        notify_context_json open_rejections pr_auto_merge pr_body pr_draft \
+        pr_labels pr_title reject_reason skip_reason state_branch state_file \
+        target_json usage_json verdict)"
+    run action_input_names
+    [ "${status}" -eq 0 ]
+    [ "${output}" = "${expected}" ]
+}
+
+@test "create pr runs only for delivery pr_create" {
+    run step_if "Create PR"
+    [ "${output}" = "inputs.verdict == 'APPROVE' && inputs.has_changes == 'true' && inputs.branch != '' && inputs.delivery == 'pr_create'" ]
+}
+
+@test "create pr reads detect JSON from the handoff and the PR base from the target" {
+    run step_env "Create PR"
+    [ "${status}" -eq 0 ]
+    [[ ${output} == *$'HANDOFF_KEY: ${{ inputs.handoff_key }}'* ]]
+    [[ ${output} == *$'LOOP_HANDOFF_DIR: ${{ inputs.handoff_dir }}'* ]]
+    [[ ${output} == *$'PR_BASE_BRANCH: ${{ steps.target.outputs.pr_base_branch }}'* ]]
+    [[ ${output} == *$'AGENT_ENGINE: ${{ inputs.agent_engine }}'* ]]
+    [[ ${output} == *$'PR_LABELS: ${{ inputs.pr_labels }}'* ]]
+    [[ ${output} != *"DETECT_RESULT_JSON"* ]]
+}
+
+@test "delete agent branch keys on REJECT or delivery none" {
+    run step_if "Delete Agent Branch"
+    [ "${output}" = "inputs.branch != '' && (inputs.verdict == 'REJECT' || inputs.delivery == 'none')" ]
+}
+
+@test "enable auto-merge runs only when pr_auto_merge is true" {
+    run step_if "Enable Auto-Merge"
+    [ "${output}" = "inputs.pr_auto_merge == 'true'" ]
+}
+
+@test "outcome, state mode, and branch delete read inputs.delivery" {
+    local step checked=0
+    for step in "Determine Outcome" "Resolve State Write Mode" "Delete Agent Branch" "Parse Target"; do
+        run step_env "${step}"
+        [[ ${output} == *$'DELIVERY: ${{ inputs.delivery }}'* ]]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 4 ]
+}
+
+@test "parse target gates on the required state_branch" {
+    run step_env "Parse Target"
+    [[ ${output} == *$'STATE_BRANCH: ${{ inputs.state_branch }}'* ]]
+}
+
+@test "push to target branch runs only for delivery pr_push" {
+    run step_if "Push to Target Branch"
+    [ "${output}" = "inputs.verdict == 'APPROVE' && inputs.has_changes == 'true' && inputs.branch != '' && inputs.delivery == 'pr_push'" ]
+}
+
+@test "write state reads state_branch and finalize_commit_paths" {
+    run step_env "Write State"
+    [ "${status}" -eq 0 ]
+    [[ ${output} == *$'FINALIZE_COMMIT_PATHS: ${{ inputs.finalize_commit_paths }}'* ]]
+    [[ ${output} == *$'STATE_BRANCH: ${{ inputs.state_branch }}'* ]]
+    [[ ${output} != *"BASE_BRANCH"* ]]
+    [[ ${output} != *"STATE_PUSH_BRANCH"* ]]
+}

@@ -9,6 +9,8 @@ bats_require_minimum_version 1.5.0
 # - create_pr exits cleanly after PR creation (EXIT trap must not reference local scope)
 # - create_pr records redacted failure when gh pr create fails
 # - create_pr threads OUTCOME into the rendered PR body loop meta block
+# - ci-sweeper Failure context comes from the handoff-resolved detect JSON (no inline input)
+# - PR_LABELS adds --label; AGENT_ENGINE reaches the loop meta block
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -69,7 +71,6 @@ teardown() {
 
     script="$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr.sh"
     export AGENT_BRANCH="loop/test-branch"
-    export DETECT_RESULT_JSON="{}"
     export GITHUB_TOKEN="test-token"
     export GITHUB_REPOSITORY="example/repo"
     export HANDOFF_KEY="integration:main"
@@ -92,7 +93,6 @@ teardown() {
     script="$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr.sh"
     failure_file="${BATS_TEST_TMPDIR}/failure.json"
     export AGENT_BRANCH="loop/test-branch"
-    export DETECT_RESULT_JSON="{}"
     export GH_PR_CREATE_FAIL="1"
     export GITHUB_TOKEN="test-token"
     export GITHUB_REPOSITORY="example/repo"
@@ -120,7 +120,6 @@ teardown() {
     script="$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr.sh"
     export GH_ARGV_FILE="${BATS_TEST_TMPDIR}/gh-argv"
     export AGENT_BRANCH="loop/test-branch"
-    export DETECT_RESULT_JSON="{}"
     export GITHUB_TOKEN="test-token"
     export GITHUB_REPOSITORY="example/repo"
     export HANDOFF_KEY="integration:main"
@@ -144,7 +143,6 @@ teardown() {
     script="$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr.sh"
     export GH_ARGV_FILE="${BATS_TEST_TMPDIR}/gh-argv"
     export AGENT_BRANCH="loop/test-branch"
-    export DETECT_RESULT_JSON="{}"
     export GITHUB_TOKEN="test-token"
     export GITHUB_REPOSITORY="example/repo"
     export HANDOFF_KEY="integration:main"
@@ -169,7 +167,6 @@ teardown() {
     argv_file="${BATS_TEST_TMPDIR}/gh_argv"
     export GH_ARGV_FILE="${argv_file}"
     export AGENT_BRANCH="loop/test-branch"
-    export DETECT_RESULT_JSON="{}"
     export GITHUB_TOKEN="test-token"
     export GITHUB_REPOSITORY="example/repo"
     export HANDOFF_KEY="integration:main"
@@ -193,7 +190,6 @@ teardown() {
     body_file="${BATS_TEST_TMPDIR}/gh_body"
     export GH_BODY_CAPTURE_FILE="${body_file}"
     export AGENT_BRANCH="loop/test-branch"
-    export DETECT_RESULT_JSON="{}"
     export GITHUB_TOKEN="test-token"
     export GITHUB_REPOSITORY="example/repo"
     export HANDOFF_KEY="integration:main"
@@ -209,4 +205,59 @@ teardown() {
     [ "$status" -eq 0 ]
     grep -q -- 'blob/loop/test-branch/docs/a.md' "${body_file}"
     run ! grep -q -- 'blob/main/docs/a.md' "${body_file}"
+}
+
+@test "create_pr passes PR_LABELS as --label and AGENT_ENGINE into the body" {
+    local script body_file
+
+    script="$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr.sh"
+    body_file="${BATS_TEST_TMPDIR}/gh_body"
+    export GH_ARGV_FILE="${BATS_TEST_TMPDIR}/gh-argv"
+    export GH_BODY_CAPTURE_FILE="${body_file}"
+    export AGENT_BRANCH="loop/test-branch"
+    export AGENT_ENGINE="cursor"
+    export GITHUB_TOKEN="test-token"
+    export GITHUB_REPOSITORY="example/repo"
+    export HANDOFF_KEY="integration:main"
+    export LOOP_HANDOFF_DIR="${HANDOFF_DIR}"
+    export NOTIFY_CONTEXT_JSON='{"changed_files":[],"agent_report_summary":"done"}'
+    export PR_BASE_BRANCH="main"
+    export PR_BODY="Automated update"
+    export PR_LABELS="loop-automation"
+    export PR_TITLE="chore: test"
+    export SKIP_REASON="none"
+    export TARGET_JSON='{"key":"integration:main"}'
+
+    run bash "${script}"
+    [ "$status" -eq 0 ]
+    run sed -E 's/--body-file [^ ]+/--body-file BODY/' "${GH_ARGV_FILE}"
+    [ "$output" = "pr create --repo example/repo --base main --head loop/test-branch --title chore: test --body-file BODY --label loop-automation" ]
+    grep -qxE -- '\| Engine \| .cursor. \|' "${body_file}"
+}
+
+@test "create_pr renders ci-sweeper Failure context from the handoff detect result" {
+    local script body_file candidate
+
+    script="$(bats_workspace_root)/.github/actions/loop-finalize/lib/create_pr.sh"
+    body_file="${BATS_TEST_TMPDIR}/gh_body"
+    candidate='{"target_json":{"key":"pull_request:7"},"prompt":"p","verifier_context":"","result":{"failures":[{"workflow_name":"ci","job_name":"unit","failure_type":"test","reason":"handoff-boom"}]}}'
+    loop_handoff_write_bundle "${HANDOFF_DIR}" "${candidate}"
+    unset DETECT_RESULT_JSON
+    export GH_BODY_CAPTURE_FILE="${body_file}"
+    export AGENT_BRANCH="loop/test-branch"
+    export GITHUB_TOKEN="test-token"
+    export GITHUB_REPOSITORY="example/repo"
+    export HANDOFF_KEY="pull_request:7"
+    export LOOP_HANDOFF_DIR="${HANDOFF_DIR}"
+    export NOTIFY_CONTEXT_JSON='{"changed_files":[],"agent_report_summary":"done"}'
+    export PR_BASE_BRANCH="feature/x"
+    export PR_BODY="Automated update"
+    export PR_TITLE="fix(ci): test"
+    export SKIP_REASON="none"
+    export TARGET_JSON='{"key":"pull_request:7"}'
+
+    run bash "${script}"
+    [ "$status" -eq 0 ]
+    grep -qx -- '## Failure context' "${body_file}"
+    grep -q -- 'handoff-boom' "${body_file}"
 }

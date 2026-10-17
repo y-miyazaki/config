@@ -31,13 +31,13 @@ export LC_ALL=C.UTF-8
 #######################################
 # Global variables
 #######################################
+AGENT_ENGINE="${AGENT_ENGINE:-}"
 AGENT_REPORT_OVERVIEW="${AGENT_REPORT_OVERVIEW:-}"
 AGENT_REPORT_SUMMARY="${AGENT_REPORT_SUMMARY:-}"
 AGENT_REPORT_VERIFICATION="${AGENT_REPORT_VERIFICATION:-}"
 BLOB_REF="${BLOB_REF:-}"
 CHANGED_FILES_JSON="${CHANGED_FILES_JSON:-"[]"}"
 DETECT_RESULT_JSON="${DETECT_RESULT_JSON:-"{}"}"
-ENGINE="${ENGINE:-}"
 FAILURES_MAX="${FAILURES_MAX:-5}"
 GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-}"
 GITHUB_SERVER_URL="${GITHUB_SERVER_URL:-https://github.com}"
@@ -587,12 +587,12 @@ function render_automation_disclaimer {
 #   Metadata, disclaimer, and optional Created By line in that order. Missing optional sections are skipped.
 #
 # Globals:
+#   AGENT_ENGINE - AI engine slug for Created By footer
 #   AGENT_REPORT_OVERVIEW - Agent overview body text
 #   AGENT_REPORT_SUMMARY - Agent summary body text
 #   AGENT_REPORT_VERIFICATION - Agent verification body text
 #   CHANGED_FILES_JSON - JSON string array of changed paths
 #   DETECT_RESULT_JSON - Detect JSON with failures array
-#   ENGINE - AI engine slug for Created By footer
 #   LEVEL - Run metadata level
 #   PR_BODY_PREFIX - Caller static prefix
 #   SKIP_REASON - Run metadata skip reason
@@ -636,7 +636,7 @@ function render_pr_body {
         [[ -n ${section} ]] && printf '%s\n' "${section}"
     fi
 
-    render_run_metadata "${LEVEL}" "${TARGET_KEY}" "${SKIP_REASON}" "${ENGINE}" "${USAGE_JSON}"
+    render_run_metadata "${LEVEL}" "${TARGET_KEY}" "${SKIP_REASON}" "${AGENT_ENGINE}" "${USAGE_JSON}"
     render_automation_disclaimer
 }
 

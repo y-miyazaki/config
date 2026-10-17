@@ -4,8 +4,8 @@
 # Tests for .github/actions/loop-finalize/lib/should_push_target.sh
 #
 # Use cases:
-# - push and push_head push on APPROVE with changes
-# - open_pr and none never push
+# - delivery pr_push pushes on APPROVE with changes
+# - delivery pr_create, none, and old strategy names never push
 # - REJECT, no changes, or empty branch never push
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -19,25 +19,26 @@ setup() {
     bats_source_rel ".github/actions/loop-finalize/lib/should_push_target.sh"
 }
 
-@test "does not push for open_pr or none" {
-    run should_push_target APPROVE true loop/x/1 open_pr
-    [ "$status" -eq 1 ]
-    run should_push_target APPROVE true loop/x/1 none
-    [ "$status" -eq 1 ]
+@test "does not push for pr_create, none, or old strategy names" {
+    local delivery checked=0
+    for delivery in pr_create none push push_head open_pr ""; do
+        run should_push_target APPROVE true loop/x/1 "${delivery}"
+        [ "$status" -eq 1 ]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 6 ]
 }
 
 @test "does not push on REJECT, no changes, or empty branch" {
-    run should_push_target REJECT true loop/x/1 push
+    run should_push_target REJECT true loop/x/1 pr_push
     [ "$status" -eq 1 ]
-    run should_push_target APPROVE false loop/x/1 push
+    run should_push_target APPROVE false loop/x/1 pr_push
     [ "$status" -eq 1 ]
-    run should_push_target APPROVE true "" push
+    run should_push_target APPROVE true "" pr_push
     [ "$status" -eq 1 ]
 }
 
-@test "pushes on APPROVE with changes for push and push_head" {
-    run should_push_target APPROVE true loop/x/1 push
-    [ "$status" -eq 0 ]
-    run should_push_target APPROVE true loop/x/1 push_head
+@test "pushes on APPROVE with changes for pr_push" {
+    run should_push_target APPROVE true loop/x/1 pr_push
     [ "$status" -eq 0 ]
 }

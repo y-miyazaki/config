@@ -166,7 +166,7 @@ setup() {
     export LEVEL=L2
     export TARGET_KEY=integration:main
     export SKIP_REASON=none
-    export ENGINE=cursor
+    export AGENT_ENGINE=cursor
     export USAGE_JSON='{"total_input_tokens":100000,"total_output_tokens":6000,"model":"Composer-2.5"}'
     run render_pr_body
     [ "$status" -eq 0 ]
@@ -205,7 +205,7 @@ setup() {
     export LEVEL=L2
     export TARGET_KEY=integration:main
     export SKIP_REASON=none
-    export ENGINE=''
+    export AGENT_ENGINE=''
     export USAGE_JSON=''
     run render_pr_body
     [ "$status" -eq 0 ]

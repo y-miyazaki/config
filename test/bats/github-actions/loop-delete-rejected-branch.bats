@@ -4,9 +4,9 @@
 # Tests for .github/actions/loop-finalize/lib/should_delete_rejected_branch.sh
 #
 # Use cases:
-# - REJECT with no branch diff vs base → delete
-# - REJECT with has_changes true (diff vs base remains) → keep
-# - APPROVE never deletes
+# - REJECT with no branch diff vs base → delete (delivery pr_create)
+# - REJECT with has_changes true (diff vs base remains) → keep (delivery pr_create)
+# - APPROVE never deletes (delivery pr_push)
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -21,16 +21,16 @@ setup() {
 }
 
 @test "should_delete_rejected_branch is true for REJECT without has_changes" {
-    run should_delete_rejected_branch "REJECT" "false"
+    run should_delete_rejected_branch "REJECT" "false" "pr_create"
     [ "$status" -eq 0 ]
 }
 
 @test "should_delete_rejected_branch is false for REJECT when has_changes is true" {
-    run should_delete_rejected_branch "REJECT" "true"
+    run should_delete_rejected_branch "REJECT" "true" "pr_create"
     [ "$status" -eq 1 ]
 }
 
 @test "should_delete_rejected_branch is false for APPROVE even without has_changes" {
-    run should_delete_rejected_branch "APPROVE" "false"
+    run should_delete_rejected_branch "APPROVE" "false" "pr_push"
     [ "$status" -eq 1 ]
 }

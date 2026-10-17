@@ -6,9 +6,10 @@
 # Use cases:
 # - an explicit override wins over every other input
 # - a failed or cancelled agent job is error
-# - no product diff is rejected on REJECT and no-changes otherwise
-# - APPROVE with changes is pr-created for open_pr, push, push_head, and an empty strategy
-# - APPROVE with changes is reported for strategy none (no PR, nothing landed)
+# - no product diff is rejected on REJECT and unchanged otherwise, for every delivery
+# - APPROVE with changes follows the delivery table: pr_create is pr_created,
+#   pr_push is pr_pushed, none is reported
+# - APPROVE with changes and an unknown or empty delivery is error (fail closed)
 # - REJECT with changes is rejected; a missing verdict with changes is error
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -22,47 +23,63 @@ setup() {
     bats_source_rel ".github/actions/loop-finalize/lib/determine_outcome.sh"
 }
 
-@test "APPROVE with changes is pr-created for strategies that open or land" {
-    local s
-    for s in open_pr push push_head ""; do
-        run determine_outcome "" success true APPROVE "$s"
+@test "APPROVE with changes follows the delivery table" {
+    local row delivery expected checked=0
+    for row in "pr_create:pr_created" "pr_push:pr_pushed" "none:reported"; do
+        delivery="${row%%:*}"
+        expected="${row#*:}"
+        run determine_outcome "" success true APPROVE "${delivery}"
         [ "$status" -eq 0 ]
-        [ "$output" = "pr-created" ]
+        [ "$output" = "${expected}" ]
+        checked=$((checked + 1))
     done
+    [ "${checked}" -eq 3 ]
 }
 
-@test "APPROVE with changes is reported for strategy none" {
-    run determine_outcome "" success true APPROVE none
-    [ "$status" -eq 0 ]
-    [ "$output" = "reported" ]
+@test "APPROVE with changes is error for an unknown or empty delivery" {
+    local delivery checked=0
+    for delivery in "" open_pr push_head push; do
+        run determine_outcome "" success true APPROVE "${delivery}"
+        [ "$status" -eq 0 ]
+        [ "$output" = "error" ]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 4 ]
 }
 
 @test "failed or cancelled agent job is error" {
-    local r
+    local r checked=0
     for r in failure cancelled; do
-        run determine_outcome "" "$r" true APPROVE none
+        run determine_outcome "" "$r" true APPROVE pr_create
         [ "$output" = "error" ]
+        checked=$((checked + 1))
     done
+    [ "${checked}" -eq 2 ]
 }
 
-@test "no product diff is rejected or no-changes" {
-    run determine_outcome "" success false REJECT none
-    [ "$output" = "rejected" ]
-    run determine_outcome "" success false APPROVE none
-    [ "$output" = "no-changes" ]
-    run determine_outcome "" skipped false "" open_pr
-    [ "$output" = "no-changes" ]
+@test "no product diff is rejected or unchanged for every delivery" {
+    local delivery checked=0
+    for delivery in pr_create pr_push none; do
+        run determine_outcome "" success false REJECT "${delivery}"
+        [ "$output" = "rejected" ]
+        run determine_outcome "" success false APPROVE "${delivery}"
+        [ "$output" = "unchanged" ]
+        run determine_outcome "" skipped false "" "${delivery}"
+        [ "$output" = "unchanged" ]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 3 ]
 }
 
 @test "override wins" {
-    run determine_outcome watch failure true REJECT none
+    run determine_outcome watch failure true REJECT pr_create
     [ "$status" -eq 0 ]
     [ "$output" = "watch" ]
 }
 
 @test "REJECT with changes is rejected and a missing verdict is error" {
-    run determine_outcome "" success true REJECT none
+    run determine_outcome "" success true REJECT pr_push
     [ "$output" = "rejected" ]
-    run determine_outcome "" success true "" open_pr
+    run determine_outcome "" success true "" pr_create
     [ "$output" = "error" ]
 }

@@ -1,22 +1,14 @@
 name: loop-finalize
-description: "Finalize a loop run per target_json: strategy, state, optional domain persistence."
+description: "Finalize a loop run per delivery: push or PR, state, optional finalize hook."
 
 inputs:
-  additional_commit_paths:
+  agent_engine:
     default: ""
-    description: "Comma-separated paths to commit with state after domain persistence"
+    description: "AI engine slug for Created By footer (e.g. cursor)"
     required: false
   agent_result:
     default: "success"
     description: "Result of the agent job (success/failure/cancelled/skipped)"
-    required: false
-  auto_merge:
-    default: "false"
-    description: "Enable auto-merge on created PR (L3 + open_pr only)"
-    required: false
-  base_branch:
-    default: "main"
-    description: "Fallback base branch when target_json is absent"
     required: false
   branch:
     default: ""
@@ -25,28 +17,31 @@ inputs:
   current_sha:
     description: "SHA to record in per-target state"
     required: true
-  detect_result_json:
-    default: "{}"
-    description: "Detect script JSON (failures[]) for PR Failure context"
-    required: false
-  domain_persistence_script:
-    default: ""
-    description: "Optional bash script for domain ledger persistence"
-    required: false
-  engine:
-    default: ""
-    description: "AI engine slug for Created By footer (e.g. cursor)"
-    required: false
+  delivery:
+    description: "Declared delivery (pr_create | pr_push | none); every step branches on this value only"
+    required: true
   execute_branch:
     default: ""
-    description: "Agent branch name for domain_persistence_script env"
+    description: "Agent branch name for finalize_hook_script env"
+    required: false
+  finalize_commit_paths:
+    default: ""
+    description: "Comma-separated paths to commit with state after the finalize hook"
+    required: false
+  finalize_hook_script:
+    default: ""
+    description: "Optional bash script run once per finalize regardless of delivery (e.g. domain ledger)"
+    required: false
+  finalize_outcome_override:
+    default: ""
+    description: "Optional explicit outcome (e.g. watch from Skill classification)"
     required: false
   github_token:
-    description: "GitHub token for PR creation, state push, and domain persistence (exported as GH_TOKEN to domain_persistence_script)"
+    description: "GitHub token for PR creation, state push, and the finalize hook (exported as GH_TOKEN to finalize_hook_script)"
     required: true
   handoff_dir:
     default: ""
-    description: "Downloaded loop-handoff artifact directory"
+    description: "Downloaded loop-handoff artifact directory (detect JSON for the PR Failure context)"
     required: false
   handoff_key:
     default: ""
@@ -56,13 +51,8 @@ inputs:
     default: "false"
     description: "Whether HEAD differs from base in product files (or this run committed)"
     required: false
-  labels:
-    default: "loop-automation"
-    description: "Comma-separated labels for the PR"
-    required: false
   level:
-    default: ""
-    description: "Loop level for PR footer (e.g. L2)"
+    description: "Loop level shown in the PR body run metadata (display only; no step branches on it)"
     required: false
   loop_name:
     default: ""
@@ -76,9 +66,9 @@ inputs:
     default: "[]"
     description: "JSON array of unresolved structured rejections from the agent loop"
     required: false
-  outcome_override:
-    default: ""
-    description: "Optional explicit outcome (e.g. watch from Skill classification)"
+  pr_auto_merge:
+    default: "false"
+    description: "Enable auto-merge on the created PR (derived by detect: L3 and delivery pr_create)"
     required: false
   pr_body:
     default: ""
@@ -86,7 +76,11 @@ inputs:
     required: false
   pr_draft:
     default: "false"
-    description: "Create PR as draft when true (open_pr strategy)"
+    description: "Create PR as draft when true (delivery pr_create)"
+    required: false
+  pr_labels:
+    default: "loop-automation"
+    description: "Comma-separated labels for the PR"
     required: false
   pr_title:
     default: "chore: automated update (loop)"
@@ -100,18 +94,16 @@ inputs:
     default: "none"
     description: "Detect skip reason for PR failure context"
     required: false
+  state_branch:
+    description: "Branch for .loop/* state reads and commits"
+    required: true
   state_file:
     default: ""
     description: "Explicit state JSON path (defaults to .loop/state-<loop_name>.json when loop_name is set)"
     required: false
-  state_push_branch:
-    default: ""
-    description: "Branch for .loop/* commits (empty = base_branch)"
-    required: false
   target_json:
-    default: ""
-    description: "Target descriptor JSON from loop-detect matrix cell"
-    required: false
+    description: "Target descriptor JSON from the detect matrix cell (key, to.branch); empty fails"
+    required: true
   usage_json:
     default: ""
     description: "Measured usage JSON (total_input_tokens, total_output_tokens, model) for Created By footer"
@@ -122,7 +114,7 @@ inputs:
     required: false
 outputs:
   commit_sha:
-    description: "Commit SHA on target branch after push_head (empty when not pushed)"
+    description: "Commit SHA on target branch after delivery pr_push (empty when not pushed)"
     value: ${{ steps.push_target.outputs.commit_sha }}
   failure_message:
     description: "Truncated finalize failure message for run log"
@@ -146,21 +138,10 @@ runs:
       id: target
       shell: bash
       env:
-        BASE_BRANCH: ${{ inputs.base_branch }}
+        DELIVERY: ${{ inputs.delivery }}
+        STATE_BRANCH: ${{ inputs.state_branch }}
         TARGET_JSON: ${{ inputs.target_json }}
-      run: |
-        set -euo pipefail
-        if [[ -n "${TARGET_JSON}" ]] && jq -e . >/dev/null 2>&1 <<< "${TARGET_JSON}"; then
-          echo "target_key=$(jq -r '.key' <<< "${TARGET_JSON}")" >> "$GITHUB_OUTPUT"
-          echo "finalize_strategy=$(jq -r '.finalize // "open_pr"' <<< "${TARGET_JSON}")" >> "$GITHUB_OUTPUT"
-          echo "pr_base_branch=$(jq -r '.to.branch' <<< "${TARGET_JSON}")" >> "$GITHUB_OUTPUT"
-          echo "to_branch=$(jq -r '.to.branch' <<< "${TARGET_JSON}")" >> "$GITHUB_OUTPUT"
-        else
-          echo "target_key=integration:${BASE_BRANCH}" >> "$GITHUB_OUTPUT"
-          echo "finalize_strategy=open_pr" >> "$GITHUB_OUTPUT"
-          echo "pr_base_branch=${BASE_BRANCH}" >> "$GITHUB_OUTPUT"
-          echo "to_branch=${BASE_BRANCH}" >> "$GITHUB_OUTPUT"
-        fi
+      run: bash "${GITHUB_ACTION_PATH}/lib/parse_target.sh"
 
     - name: Resolve State File
       id: state_path
@@ -179,49 +160,36 @@ runs:
       shell: bash
       env:
         AGENT_RESULT: ${{ inputs.agent_result }}
-        FINALIZE_STRATEGY: ${{ steps.target.outputs.finalize_strategy }}
+        DELIVERY: ${{ inputs.delivery }}
+        FINALIZE_OUTCOME_OVERRIDE: ${{ inputs.finalize_outcome_override }}
         HAS_CHANGES: ${{ inputs.has_changes }}
-        OUTCOME_OVERRIDE: ${{ inputs.outcome_override }}
         VERDICT: ${{ inputs.verdict }}
       run: |
         set -euo pipefail
         # shellcheck source=lib/determine_outcome.sh
         source "${GITHUB_ACTION_PATH}/lib/determine_outcome.sh"
-        outcome="$(determine_outcome "${OUTCOME_OVERRIDE}" "${AGENT_RESULT}" "${HAS_CHANGES}" "${VERDICT}" "${FINALIZE_STRATEGY}")"
+        outcome="$(determine_outcome "${FINALIZE_OUTCOME_OVERRIDE}" "${AGENT_RESULT}" "${HAS_CHANGES}" "${VERDICT}" "${DELIVERY}")"
         echo "value=${outcome}" >> "$GITHUB_OUTPUT"
 
     - name: Resolve State Write Mode
       id: state_mode
       shell: bash
       env:
-        FINALIZE_STRATEGY: ${{ steps.target.outputs.finalize_strategy }}
+        DELIVERY: ${{ inputs.delivery }}
         HAS_CHANGES: ${{ inputs.has_changes }}
-        OUTCOME: ${{ steps.outcome.outputs.value }}
         VERDICT: ${{ inputs.verdict }}
       run: |
         set -euo pipefail
-        if [[ "${VERDICT}" == "APPROVE" && "${HAS_CHANGES}" == "true" ]]; then
-          case "${FINALIZE_STRATEGY}" in
-            open_pr)
-              echo "mode=pending" >> "$GITHUB_OUTPUT"
-              ;;
-            push|push_head)
-              echo "mode=advance" >> "$GITHUB_OUTPUT"
-              ;;
-            *)
-              echo "mode=metadata" >> "$GITHUB_OUTPUT"
-              ;;
-          esac
-        else
-          echo "mode=metadata" >> "$GITHUB_OUTPUT"
-        fi
+        # shellcheck source=lib/resolve_state_write_mode.sh
+        source "${GITHUB_ACTION_PATH}/lib/resolve_state_write_mode.sh"
+        echo "mode=$(resolve_state_write_mode "${VERDICT}" "${HAS_CHANGES}" "${DELIVERY}")" >> "$GITHUB_OUTPUT"
 
-    - name: Run Domain Persistence
-      if: inputs.domain_persistence_script != ''
+    - name: Run Finalize Hook
+      if: inputs.finalize_hook_script != ''
       shell: bash
       env:
-        DOMAIN_PERSISTENCE_SCRIPT: ${{ inputs.domain_persistence_script }}
         EXECUTE_BRANCH: ${{ inputs.execute_branch != '' && inputs.execute_branch || inputs.branch }}
+        FINALIZE_HOOK_SCRIPT: ${{ inputs.finalize_hook_script }}
         GH_TOKEN: ${{ inputs.github_token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
         LOOP_NAME: ${{ inputs.loop_name }}
@@ -231,7 +199,7 @@ runs:
         VERDICT: ${{ inputs.verdict }}
       run: |
         set -euo pipefail
-        bash "${DOMAIN_PERSISTENCE_SCRIPT}"
+        bash "${FINALIZE_HOOK_SCRIPT}"
 
     - name: Push to Target Branch
       id: push_target
@@ -239,7 +207,7 @@ runs:
         inputs.verdict == 'APPROVE' &&
         inputs.has_changes == 'true' &&
         inputs.branch != '' &&
-        contains(fromJSON('["push","push_head"]'), steps.target.outputs.finalize_strategy)
+        inputs.delivery == 'pr_push'
       shell: bash
       env:
         AGENT_BRANCH: ${{ inputs.branch }}
@@ -253,15 +221,13 @@ runs:
         inputs.verdict == 'APPROVE' &&
         inputs.has_changes == 'true' &&
         inputs.branch != '' &&
-        steps.target.outputs.finalize_strategy == 'open_pr'
+        inputs.delivery == 'pr_create'
       shell: bash
       env:
         AGENT_BRANCH: ${{ inputs.branch }}
-        DETECT_RESULT_JSON: ${{ inputs.detect_result_json }}
-        ENGINE: ${{ inputs.engine }}
+        AGENT_ENGINE: ${{ inputs.agent_engine }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         HANDOFF_KEY: ${{ inputs.handoff_key }}
-        LABELS: ${{ inputs.labels }}
         LEVEL: ${{ inputs.level }}
         LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json
         LOOP_HANDOFF_DIR: ${{ inputs.handoff_dir }}
@@ -270,6 +236,7 @@ runs:
         PR_BASE_BRANCH: ${{ steps.target.outputs.pr_base_branch }}
         PR_BODY: ${{ inputs.pr_body }}
         PR_DRAFT: ${{ inputs.pr_draft }}
+        PR_LABELS: ${{ inputs.pr_labels }}
         PR_TITLE: ${{ inputs.pr_title }}
         SKIP_REASON: ${{ inputs.skip_reason }}
         TARGET_JSON: ${{ inputs.target_json }}
@@ -277,12 +244,7 @@ runs:
       run: bash "${GITHUB_ACTION_PATH}/lib/create_pr.sh"
 
     - name: Enable Auto-Merge
-      if: >-
-        inputs.verdict == 'APPROVE' &&
-        inputs.has_changes == 'true' &&
-        inputs.branch != '' &&
-        steps.target.outputs.finalize_strategy == 'open_pr' &&
-        inputs.auto_merge == 'true'
+      if: inputs.pr_auto_merge == 'true'
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
@@ -297,8 +259,7 @@ runs:
       if: inputs.current_sha != '' && steps.state_path.outputs.state_file != ''
       shell: bash
       env:
-        ADDITIONAL_COMMIT_PATHS: ${{ inputs.additional_commit_paths }}
-        BASE_BRANCH: ${{ inputs.base_branch }}
+        FINALIZE_COMMIT_PATHS: ${{ inputs.finalize_commit_paths }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         LOOP_NAME: ${{ inputs.loop_name }}
         OPEN_REJECTIONS: ${{ inputs.open_rejections }}
@@ -307,19 +268,19 @@ runs:
         PENDING_PR_URL: ${{ steps.pr.outputs.url || '' }}
         REJECT_REASON: ${{ inputs.reject_reason }}
         SHA: ${{ inputs.current_sha }}
+        STATE_BRANCH: ${{ inputs.state_branch }}
         STATE_FILE: ${{ steps.state_path.outputs.state_file }}
-        STATE_PUSH_BRANCH: ${{ inputs.state_push_branch }}
         STATE_WRITE_MODE: ${{ steps.state_mode.outputs.mode }}
         TARGET_KEY: ${{ steps.target.outputs.target_key }}
         WRITE_TARGET_STATE: "true"
       run: bash "${GITHUB_ACTION_PATH}/lib/write_state.sh"
 
     - name: Delete Agent Branch
-      if: inputs.branch != '' && (inputs.verdict == 'REJECT' || steps.target.outputs.finalize_strategy == 'none')
+      if: inputs.branch != '' && (inputs.verdict == 'REJECT' || inputs.delivery == 'none')
       shell: bash
       env:
         AGENT_BRANCH: ${{ inputs.branch }}
-        FINALIZE_STRATEGY: ${{ steps.target.outputs.finalize_strategy }}
+        DELIVERY: ${{ inputs.delivery }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         HAS_CHANGES: ${{ inputs.has_changes }}
         VERDICT: ${{ inputs.verdict }}
@@ -327,8 +288,8 @@ runs:
         set -euo pipefail
         # shellcheck source=lib/should_delete_rejected_branch.sh
         source "${GITHUB_ACTION_PATH}/lib/should_delete_rejected_branch.sh"
-        if ! should_delete_rejected_branch "${VERDICT}" "${HAS_CHANGES}" "${FINALIZE_STRATEGY}"; then
-          echo "Skipping branch delete: strategy=${FINALIZE_STRATEGY} verdict=${VERDICT} has_changes=${HAS_CHANGES} (keep branch that still differs from base)"
+        if ! should_delete_rejected_branch "${VERDICT}" "${HAS_CHANGES}" "${DELIVERY}"; then
+          echo "Skipping branch delete: delivery=${DELIVERY} verdict=${VERDICT} has_changes=${HAS_CHANGES} (keep branch that still differs from base)"
           exit 0
         fi
         if ! [[ "${AGENT_BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then

@@ -9,9 +9,10 @@
 #
 # Design Rules:
 # - An explicit outcome override always wins
-# - A failed agent job is error; no product diff is rejected (REJECT) or no-changes
-# - APPROVE with changes is pr-created, except finalize strategy none, which opens
-#   no PR and lands nothing: it records reported (domain persistence delivered it)
+# - A failed agent job is error; no product diff is rejected (REJECT) or unchanged
+# - APPROVE with changes follows delivery: pr_create is pr_created, pr_push is
+#   pr_pushed, none is reported (no PR, nothing landed; the finalize hook delivered it)
+# - APPROVE with changes and an unknown delivery is error (fail closed)
 # - Any other verdict with changes is error
 #######################################
 
@@ -26,10 +27,11 @@
 #   $2 - Agent job result (success, skipped, failure, cancelled)
 #   $3 - has_changes flag (true/false)
 #   $4 - Verdict (APPROVE, REJECT, or empty)
-#   $5 - Finalize strategy (open_pr, push, push_head, none; may be empty)
+#   $5 - Delivery (pr_create, pr_push, none)
 #
 # Outputs:
-#   Outcome to stdout (pr-created, reported, no-changes, rejected, error, or the override)
+#   Outcome to stdout (pr_created, pr_pushed, reported, unchanged, rejected, error,
+#   or the override)
 #
 # Returns:
 #   0 always
@@ -40,7 +42,7 @@ function determine_outcome {
     local agent_result="$2"
     local has_changes="$3"
     local verdict="$4"
-    local strategy="${5:-}"
+    local delivery="${5:-}"
 
     if [[ -n ${override} ]]; then
         printf '%s\n' "${override}"
@@ -50,14 +52,15 @@ function determine_outcome {
         if [[ ${verdict} == "REJECT" ]]; then
             printf '%s\n' "rejected"
         else
-            printf '%s\n' "no-changes"
+            printf '%s\n' "unchanged"
         fi
     elif [[ ${verdict} == "APPROVE" ]]; then
-        if [[ ${strategy} == "none" ]]; then
-            printf '%s\n' "reported"
-        else
-            printf '%s\n' "pr-created"
-        fi
+        case "${delivery}" in
+            pr_create) printf '%s\n' "pr_created" ;;
+            pr_push) printf '%s\n' "pr_pushed" ;;
+            none) printf '%s\n' "reported" ;;
+            *) printf '%s\n' "error" ;;
+        esac
     elif [[ ${verdict} == "REJECT" ]]; then
         printf '%s\n' "rejected"
     else

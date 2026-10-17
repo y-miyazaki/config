@@ -30,7 +30,7 @@ setup() {
     TARGET_JSON='{"key":"integration:main"}'
     LEVEL="L2"
     SKIP_REASON="none"
-    ENGINE="cursor"
+    AGENT_ENGINE="cursor"
     USAGE_JSON='{"total_input_tokens":100000,"total_output_tokens":100000,"model":"Composer-2.5"}'
 
     run create_pr_body
@@ -47,11 +47,11 @@ setup() {
     TARGET_JSON='{"key":"integration:main"}'
     LEVEL="L2"
     SKIP_REASON="none"
-    OUTCOME="pr-created"
+    OUTCOME="pr_created"
 
     run create_pr_body
     [ "$status" -eq 0 ]
-    [[ $output == *"<summary>✅ <code>pr-created</code> · Loop details</summary>"* ]]
+    [[ $output == *"<summary>✅ <code>pr_created</code> · Loop details</summary>"* ]]
     [[ $output != *"<code>unknown</code>"* ]]
 }
 

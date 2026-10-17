@@ -1,13 +1,13 @@
 #!/bin/bash
 #######################################
 # Description:
-#   Create a GitHub pull request for loop-finalize open_pr strategy.
+#   Create a GitHub pull request for loop-finalize delivery pr_create.
 #   Resolves large JSON via handoff or inline env, composes the PR body,
 #   and invokes gh pr create without passing oversized payloads on argv.
 #
 # Usage:
 #   AGENT_BRANCH=... GITHUB_TOKEN=... GITHUB_REPOSITORY=... PR_BASE_BRANCH=... PR_TITLE=... \
-#   NOTIFY_CONTEXT_JSON=... [LOOP_HANDOFF_DIR=... HANDOFF_KEY=... DETECT_RESULT_JSON=...] \
+#   NOTIFY_CONTEXT_JSON=... [LOOP_HANDOFF_DIR=... HANDOFF_KEY=...] \
 #   bash lib/create_pr.sh
 #
 # Design Rules:
@@ -33,13 +33,11 @@ export LC_ALL=C.UTF-8
 # Global variables
 #######################################
 AGENT_BRANCH="${AGENT_BRANCH:-}"
-DETECT_RESULT_JSON="${DETECT_RESULT_JSON:-}"
-ENGINE="${ENGINE:-}"
+AGENT_ENGINE="${AGENT_ENGINE:-}"
 GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 GITHUB_OUTPUT="${GITHUB_OUTPUT:-}"
 GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-}"
 HANDOFF_KEY="${HANDOFF_KEY:-}"
-LABELS="${LABELS:-}"
 LEVEL="${LEVEL:-}"
 LOOP_HANDOFF_DIR="${LOOP_HANDOFF_DIR:-}"
 NOTIFY_CONTEXT_JSON="${NOTIFY_CONTEXT_JSON:-}"
@@ -47,6 +45,7 @@ OUTCOME="${OUTCOME:-}"
 PR_BASE_BRANCH="${PR_BASE_BRANCH:-}"
 PR_BODY="${PR_BODY:-}"
 PR_DRAFT="${PR_DRAFT:-false}"
+PR_LABELS="${PR_LABELS:-}"
 PR_TITLE="${PR_TITLE:-chore: automated update (loop)}"
 SKIP_REASON="${SKIP_REASON:-}"
 TARGET_JSON="${TARGET_JSON:-}"
@@ -57,18 +56,18 @@ USAGE_JSON="${USAGE_JSON:-}"
 #
 # Globals:
 #   AGENT_BRANCH - Head branch for the new PR
-#   DETECT_RESULT_JSON - Inline detect JSON (optional)
+#   AGENT_ENGINE - AI engine slug for the PR body loop meta block (optional)
 #   GITHUB_TOKEN - GitHub token for gh
 #   GITHUB_OUTPUT - GITHUB_OUTPUT file path (optional)
 #   GITHUB_REPOSITORY - owner/repo
-#   HANDOFF_KEY - Handoff key for detect JSON (optional)
-#   LABELS - PR labels (optional)
+#   HANDOFF_KEY - Handoff key for detect JSON (Failure context source; optional)
 #   LEVEL - Notify level for PR body (optional)
 #   LOOP_HANDOFF_DIR - Handoff directory (optional)
 #   NOTIFY_CONTEXT_JSON - Notify context JSON
 #   OUTCOME - Finalize outcome for Created By footer icon (optional)
 #   PR_BASE_BRANCH - Base branch
 #   PR_BODY - Static PR body prefix (optional)
+#   PR_LABELS - PR labels (optional)
 #   PR_TITLE - PR title
 #   SKIP_REASON - Footer skip reason (optional)
 #   TARGET_JSON - Target JSON (optional)
@@ -118,7 +117,7 @@ function main {
         --notify-json-file "${notify_json_path}"
     )
 
-    export AGENT_BRANCH PR_BODY ENGINE LEVEL OUTCOME SKIP_REASON TARGET_JSON USAGE_JSON
+    export AGENT_BRANCH AGENT_ENGINE PR_BODY LEVEL OUTCOME SKIP_REASON TARGET_JSON USAGE_JSON
     composed="$(bash "${script_dir}/create_pr_body.sh" "${body_args[@]}")"
 
     gh_args=(
@@ -131,8 +130,8 @@ function main {
         printf '%s' "${composed}" > "${body_path}"
         gh_args+=(--body-file "${body_path}")
     fi
-    if [[ -n ${LABELS} ]]; then
-        gh_args+=(--label "${LABELS}")
+    if [[ -n ${PR_LABELS} ]]; then
+        gh_args+=(--label "${PR_LABELS}")
     fi
     if [[ ${PR_DRAFT} == "true" ]]; then
         gh_args+=(--draft)

@@ -1,7 +1,7 @@
 #!/bin/bash
 #######################################
 # Description:
-#   Land an agent branch onto to.branch for finalize strategies push / push_head.
+#   Land an agent branch onto to.branch for delivery pr_push (existing PR head).
 #   Fetches the latest destination tip, merges the agent branch into it (preserving
 #   commits already on to.branch from earlier serialized runs), and pushes without
 #   force. Merge conflicts fail closed.
