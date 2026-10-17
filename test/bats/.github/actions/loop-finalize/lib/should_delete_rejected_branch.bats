@@ -5,9 +5,9 @@
 #
 # Use cases:
 # - legacy behavior without a strategy argument
-# - APPROVE with strategy none deletes the branch
+# - strategy none deletes the branch for any verdict, with or without changes
 # - APPROVE with open_pr, push, push_head keeps the branch
-# - REJECT with changes keeps the branch even for none
+# - REJECT with changes keeps the branch for open_pr, push, push_head
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -23,6 +23,16 @@ setup() {
 @test "deletes after APPROVE when strategy is none" {
     run should_delete_rejected_branch APPROVE true none
     [ "$status" -eq 0 ]
+}
+
+@test "deletes for strategy none regardless of verdict and changes" {
+    local v c
+    for v in APPROVE REJECT ""; do
+        for c in true false; do
+            run should_delete_rejected_branch "$v" "$c" none
+            [ "$status" -eq 0 ]
+        done
+    done
 }
 
 @test "keeps APPROVE branches for open_pr, push, push_head" {
@@ -41,7 +51,9 @@ setup() {
     [ "$status" -eq 1 ]
 }
 
-@test "REJECT with changes is kept for none too" {
-    run should_delete_rejected_branch REJECT true none
-    [ "$status" -eq 1 ]
+@test "keeps REJECT branches with changes for open_pr, push, push_head" {
+    for s in open_pr push push_head; do
+        run should_delete_rejected_branch REJECT true "$s"
+        [ "$status" -eq 1 ]
+    done
 }

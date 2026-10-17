@@ -11,6 +11,8 @@
 # - Push only APPROVE runs that have changes and a non-empty agent branch
 # - Push only for finalize strategies push and push_head
 # - Never push for open_pr (PR flow) or none (review-only); unknown values do not push
+# - Mirrors the `if:` of the "Push to Target Branch" step (lib/push_target.sh) in
+#   action.yml, which is the gate that runs; keep the two in sync
 #######################################
 
 #######################################

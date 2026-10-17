@@ -42,7 +42,7 @@ inputs:
     description: "Agent branch name for domain_persistence_script env"
     required: false
   github_token:
-    description: "GitHub token for PR creation and state push"
+    description: "GitHub token for PR creation, state push, and domain persistence (exported as GH_TOKEN to domain_persistence_script)"
     required: true
   handoff_dir:
     default: ""
@@ -179,30 +179,16 @@ runs:
       shell: bash
       env:
         AGENT_RESULT: ${{ inputs.agent_result }}
+        FINALIZE_STRATEGY: ${{ steps.target.outputs.finalize_strategy }}
         HAS_CHANGES: ${{ inputs.has_changes }}
         OUTCOME_OVERRIDE: ${{ inputs.outcome_override }}
         VERDICT: ${{ inputs.verdict }}
       run: |
         set -euo pipefail
-        if [[ -n "${OUTCOME_OVERRIDE}" ]]; then
-          echo "value=${OUTCOME_OVERRIDE}" >> "$GITHUB_OUTPUT"
-          exit 0
-        fi
-        if [[ "${AGENT_RESULT}" != "success" && "${AGENT_RESULT}" != "skipped" ]]; then
-          echo "value=error" >> "$GITHUB_OUTPUT"
-        elif [[ "${HAS_CHANGES}" != "true" ]]; then
-          if [[ "${VERDICT}" == "REJECT" ]]; then
-            echo "value=rejected" >> "$GITHUB_OUTPUT"
-          else
-            echo "value=no-changes" >> "$GITHUB_OUTPUT"
-          fi
-        elif [[ "${VERDICT}" == "APPROVE" ]]; then
-          echo "value=pr-created" >> "$GITHUB_OUTPUT"
-        elif [[ "${VERDICT}" == "REJECT" ]]; then
-          echo "value=rejected" >> "$GITHUB_OUTPUT"
-        else
-          echo "value=error" >> "$GITHUB_OUTPUT"
-        fi
+        # shellcheck source=lib/determine_outcome.sh
+        source "${GITHUB_ACTION_PATH}/lib/determine_outcome.sh"
+        outcome="$(determine_outcome "${OUTCOME_OVERRIDE}" "${AGENT_RESULT}" "${HAS_CHANGES}" "${VERDICT}" "${FINALIZE_STRATEGY}")"
+        echo "value=${outcome}" >> "$GITHUB_OUTPUT"
 
     - name: Resolve State Write Mode
       id: state_mode
@@ -342,7 +328,7 @@ runs:
         # shellcheck source=lib/should_delete_rejected_branch.sh
         source "${GITHUB_ACTION_PATH}/lib/should_delete_rejected_branch.sh"
         if ! should_delete_rejected_branch "${VERDICT}" "${HAS_CHANGES}" "${FINALIZE_STRATEGY}"; then
-          echo "Skipping branch delete: has_changes=${HAS_CHANGES} (keep branch that still differs from base)"
+          echo "Skipping branch delete: strategy=${FINALIZE_STRATEGY} verdict=${VERDICT} has_changes=${HAS_CHANGES} (keep branch that still differs from base)"
           exit 0
         fi
         if ! [[ "${AGENT_BRANCH}" =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
