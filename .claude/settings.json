@@ -190,6 +190,7 @@
       "Edit(./.env)",
       "Edit(./.env.*)",
       "Edit(./secrets/**)",
+      "Edit(~/**)",
       "Read(**/credentials/**)",
       "Read(**/*.crt)",
       "Read(**/*.key)",
@@ -244,6 +245,7 @@
       "Edit(mise.toml)",
       "Edit(package.json)",
       "Edit(renovate.json)",
+      "Edit(terraform.*.tfvars)",
       "Edit(tsconfig.json)"
     ]
   },
