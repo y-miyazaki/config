@@ -26,7 +26,7 @@ Zero findings — Overview says so explicitly; omit `### Candidates`.
 
 ## Report file (`may_edit: true`, `write_target: report`)
 
-Write JSON to `result.report_path` (for example `.loop/review/pr-<n>.json`). Start from `assets/report-template.json`.
+Write JSON to `result.report_path` (for example `.loop-review/pr-<n>.json`). Start from `assets/report-template.json`.
 
 | Field                 | Type   | Rule                                                                                                  |
 | --------------------- | ------ | ----------------------------------------------------------------------------------------------------- |

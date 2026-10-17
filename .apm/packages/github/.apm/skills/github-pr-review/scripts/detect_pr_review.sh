@@ -472,7 +472,7 @@ function build_result_json {
         base_sha "${PR_BASE_SHA}" \
         head_sha "${PR_HEAD_SHA}" \
         changed_files "${PR_CHANGED_FILES_JSON}" \
-        report_path ".loop/review/pr-${PR_NUMBER}.json" \
+        report_path ".loop-review/pr-${PR_NUMBER}.json" \
         event_name "${PR_EVENT_NAME}" \
         event_action "${PR_EVENT_ACTION}" \
         force "${PR_FORCE}"

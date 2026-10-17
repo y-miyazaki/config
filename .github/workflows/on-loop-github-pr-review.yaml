@@ -6,7 +6,7 @@
 # ci-loop-* SHA pins are bumped to a release that contains the loop-finalize
 # `finalize_strategy: none` fix (plan Task 3). The currently pinned loop-finalize
 # does not honor it: with the caller input `delivery: none`, an APPROVE verdict
-# merges and pushes the agent branch (including .loop/review/pr-<n>.json) into
+# merges and pushes the agent branch (including .loop-review/pr-<n>.json) into
 # the base branch. This applies to workflow_dispatch as well as pull_request_target.
 # - Until the pin bump: use workflow_dispatch only on a throwaway base branch or repo.
 # - The pull_request_target trigger below is COMMENTED OUT on purpose.

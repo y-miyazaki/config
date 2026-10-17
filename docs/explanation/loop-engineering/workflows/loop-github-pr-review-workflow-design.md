@@ -34,7 +34,7 @@ Review a pull request once when it is opened or marked ready, and post the resul
 
 The caller ships with the `pull_request_target` trigger **commented out**.
 
-Both triggers (including `workflow_dispatch`) are unsafe on a real base branch until the `ci-loop-*` SHA pins in the caller chain are bumped to a release that contains the `loop-finalize` fix for `finalize_strategy: none` (see [Finalize with `delivery: none`](#finalize-with-delivery-none)). With the older pinned `loop-finalize`, an APPROVE verdict merges and pushes the agent branch, including `.loop/review/pr-<n>.json`, into the base branch.
+Both triggers (including `workflow_dispatch`) are unsafe on a real base branch until the `ci-loop-*` SHA pins in the caller chain are bumped to a release that contains the `loop-finalize` fix for `finalize_strategy: none` (see [Finalize with `delivery: none`](#finalize-with-delivery-none)). With the older pinned `loop-finalize`, an APPROVE verdict merges and pushes the agent branch, including `.loop-review/pr-<n>.json`, into the base branch.
 
 | Stage                 | Action                                                                                                                                        |
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -93,7 +93,7 @@ Unset `PR_*` values are hydrated from `GITHUB_EVENT_PATH`; on `workflow_dispatch
 on-loop-github-pr-review.yaml
   loop → uses ci-loop-caller-entity.yaml
            detect  → loop-entity-detect (detect_pr_review.sh)
-           execute → ci-loop-agent (maker writes .loop/review/pr-<n>.json; checker verifies)
+           execute → ci-loop-agent (maker writes .loop-review/pr-<n>.json; checker verifies)
            finalize → delivery none: no push, agent branch deleted after APPROVE;
                       post_review.sh posts one COMMENT review
            record-skip → budget | circuit_breaker
@@ -105,7 +105,7 @@ The head is never checked out or executed. The loop runs from the base checkout,
 
 `detect_pr_review.sh` emits `skip: true` when any of these holds: the PR is a draft, a fork PR (head repository differs from base), bot-authored, labeled `no-loop` or `loop-automation`, or a review carrying the marker `<!-- github-pr-review:v1 -->` already exists (unless `PR_FORCE` is `true`). The job `if` in the caller refuses the same classes for `pull_request_target` so no run is queued for them (see [Intake Gating](../loop-engineering-design.md#intake-gating-self-retrigger-prevention)). Detect fails closed: when a required fact cannot be obtained, it emits an error envelope.
 
-When `skip` is `false`, `result` carries `pr_number`, `base_sha`, `head_sha`, `changed_files`, `report_path` (`.loop/review/pr-<n>.json`), and `handoff_key` (`entity:pr:<n>`).
+When `skip` is `false`, `result` carries `pr_number`, `base_sha`, `head_sha`, `changed_files`, `report_path` (`.loop-review/pr-<n>.json`), and `handoff_key` (`entity:pr:<n>`).
 
 ## Skill contract
 

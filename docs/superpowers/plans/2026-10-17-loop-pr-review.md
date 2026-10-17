@@ -19,7 +19,7 @@
 - 投稿は `COMMENT` のみ。承認・Request changes は投稿しない(D3)。
 - リンク: 行は SHA 固定の `https://github.com/{owner}/{repo}/blob/{full-sha}/{path}#L{start}-L{end}`。根拠は base の SHA、差分の行は head の SHA。PR / Issue は `#N`(D24)。
 - マーカー文字列: `<!-- github-pr-review:v1 -->`(D9)。
-- handoff_key: `entity:pr:<n>`。レポートのパス: `.loop/review/pr-<n>.json`。
+- handoff_key: `entity:pr:<n>`。レポートのパス: `.loop-review/pr-<n>.json`。
 - 新規・変更するシェルスクリプトは Bats を対にする(`.github/workflows/CLAUDE.md` の Verification、TEST-00)。Edit で `.sh` を編集した後は `shfmt -w` を直接実行する(`CLAUDE.md`)。
 - 配布物(`.github/actions/**`、`ci-*`)は SHA ピン。`ci-*` から `./.github/...` を参照しない。`on-*` は dogfood 中に `./.github/workflows/...` を参照してよい。
 - `.apm/packages/` を編集したら、同期先(`.agents/`、`.claude/` 等)は Stop フックの `sync_apm_artifacts.sh` が更新する。手で編集しない。
@@ -235,7 +235,7 @@ git commit -m "feat(loop): append loop meta to marker pull request reviews in fi
     "base_sha": "…",
     "head_sha": "…",
     "changed_files": ["a.sh"],
-    "report_path": ".loop/review/pr-77.json",
+    "report_path": ".loop-review/pr-77.json",
     "event_name": "pull_request_target",
     "event_action": "opened",
     "force": false
@@ -248,7 +248,7 @@ git commit -m "feat(loop): append loop meta to marker pull request reviews in fi
 
 | テスト名                                           | 入力                                                                                      | 期待                                                                                                            |
 | -------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `emits handoff_key and report_path for a human PR` | `PR_NUMBER=77`、`PR_REVIEWS_JSON='[]'`                                                    | `.skip == false and .result.handoff_key == "entity:pr:77" and .result.report_path == ".loop/review/pr-77.json"` |
+| `emits handoff_key and report_path for a human PR` | `PR_NUMBER=77`、`PR_REVIEWS_JSON='[]'`                                                    | `.skip == false and .result.handoff_key == "entity:pr:77" and .result.report_path == ".loop-review/pr-77.json"` |
 | `skips bot-authored PR`                            | `PR_AUTHOR_TYPE=Bot`                                                                      | `.skip == true`                                                                                                 |
 | `skips draft PR`                                   | `PR_DRAFT=true`                                                                           | `.skip == true`                                                                                                 |
 | `skips fork PR`                                    | `PR_IS_FORK=true`                                                                         | `.skip == true`                                                                                                 |

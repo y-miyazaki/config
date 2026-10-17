@@ -17,7 +17,7 @@ inputs:
     pr_number: 11
     base_sha: "1111111111111111111111111111111111111111"
     head_sha: "2222222222222222222222222222222222222222"
-    report_path: ".loop/review/pr-11.json"
+    report_path: ".loop-review/pr-11.json"
     changed_files:
       - README.md
     may_edit: true

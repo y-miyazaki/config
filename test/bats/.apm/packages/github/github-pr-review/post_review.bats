@@ -450,10 +450,10 @@ posted() {
     local work="${BATS_TEST_TMPDIR}/work" default_branch
     default_branch="$(git_test_repo_git rev-parse --abbrev-ref HEAD)"
     git_test_repo_git checkout -q -b loop/x
-    mkdir -p "${GIT_TEST_REPO}/.loop/review"
+    mkdir -p "${GIT_TEST_REPO}/.loop-review"
     write_report "[$(rule_finding Critical "${RULE_QUOTE}" 2 true)]"
-    cp "${REPORT}" "${GIT_TEST_REPO}/.loop/review/pr-7.json"
-    bats_git_commit "${GIT_TEST_REPO}" report .loop
+    cp "${REPORT}" "${GIT_TEST_REPO}/.loop-review/pr-7.json"
+    bats_git_commit "${GIT_TEST_REPO}" report .loop-review
     git_test_repo_git checkout -q "${default_branch}"
     bats_git_cmd clone -q "${GIT_TEST_REPO}" "${work}"
     run_in_repo "${work}" PR_BASE_SHA="${BASE_SHA}" PR_HEAD_SHA="${HEAD_SHA}" PR_DIFF_FILE="${DIFF_FILE}"

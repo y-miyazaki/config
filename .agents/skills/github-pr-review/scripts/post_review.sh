@@ -401,7 +401,7 @@ function post_payload {
 #   EXECUTE_BRANCH
 #
 # Arguments:
-#   $1 - Report path in the repository (.loop/review/pr-<n>.json)
+#   $1 - Report path in the repository (.loop-review/pr-<n>.json)
 #
 # Outputs:
 #   Report content to stdout
@@ -410,7 +410,7 @@ function post_payload {
 #   0 on success, 1 when the report cannot be read
 #
 # Usage:
-#   report="$(read_report ".loop/review/pr-7.json")"
+#   report="$(read_report ".loop-review/pr-7.json")"
 #
 #######################################
 function read_report {
@@ -728,8 +728,8 @@ function main {
         warn "TARGET_JSON has no entity:pr:<n> handoff key; review not posted"
         return 0
     fi
-    if ! report="$(read_report ".loop/review/pr-${pr_number}.json")" || [[ -z ${report} ]]; then
-        warn "report .loop/review/pr-${pr_number}.json could not be read; review not posted"
+    if ! report="$(read_report ".loop-review/pr-${pr_number}.json")" || [[ -z ${report} ]]; then
+        warn "report .loop-review/pr-${pr_number}.json could not be read; review not posted"
         return 0
     fi
     if ! validate_report "${report}" "${pr_number}"; then

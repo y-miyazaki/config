@@ -138,7 +138,7 @@ PR_VIEW_OK='{"author":{"is_bot":false},"isDraft":false,"isCrossRepository":false
 @test "emits handoff_key and report_path for a human PR" {
     run_detect PR_NUMBER=77 PR_REVIEWS_JSON='[]' PR_BASE_SHA=b1 PR_HEAD_SHA=h1 GITHUB_EVENT_NAME=pull_request_target
     [ "$status" -eq 0 ]
-    run jq -e '.skip == false and .result.handoff_key == "entity:pr:77" and .result.report_path == ".loop/review/pr-77.json"
+    run jq -e '.skip == false and .result.handoff_key == "entity:pr:77" and .result.report_path == ".loop-review/pr-77.json"
         and .result.base_sha == "b1" and .result.head_sha == "h1" and .result.changed_files == ["a.sh"]
         and .result.event_name == "pull_request_target" and .result.force == false
         and .verifier_context == "PR #77 base b1 head h1 files: 1"' <<< "${output}"

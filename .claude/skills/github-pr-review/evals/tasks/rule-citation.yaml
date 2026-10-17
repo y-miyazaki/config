@@ -18,7 +18,7 @@ inputs:
     pr_number: 9
     base_sha: "1111111111111111111111111111111111111111"
     head_sha: "2222222222222222222222222222222222222222"
-    report_path: ".loop/review/pr-9.json"
+    report_path: ".loop-review/pr-9.json"
     may_edit: true
     write_target: report
     base_files:

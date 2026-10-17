@@ -17,7 +17,7 @@ inputs:
     pr_number: 7
     base_sha: "1111111111111111111111111111111111111111"
     head_sha: "2222222222222222222222222222222222222222"
-    report_path: ".loop/review/pr-7.json"
+    report_path: ".loop-review/pr-7.json"
     changed_files:
       - src/app.sh
     pr_body: "Add retry to uploader. Closes #120."

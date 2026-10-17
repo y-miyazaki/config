@@ -134,7 +134,7 @@ Detect はセマンティックな指摘を出さない(チェックリストの
 
 ### レポートファイル(レビュー案)
 
-パスは detect が `result.report_path` で渡す(例: `.loop/review/pr-<n>.json`)。形式(案):
+パスは detect が `result.report_path` で渡す(例: `.loop-review/pr-<n>.json`。注: 当初案の `.loop/review/` は loop-execute の verifier が `.loop/` を差分から除外するため変更なし扱いになり REJECT されるので、`.loop-review/` に変更した)。形式(案):
 
 ```json
 {
