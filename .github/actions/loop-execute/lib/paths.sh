@@ -10,20 +10,20 @@
 # Design Rules:
 # - Allowlist and denylist checks run before the LLM checker
 # - Glob patterns follow gitwildmatch-style path rules (** crosses /)
-# - Empty DENYLIST is coerced to the platform default at loop start
+# - Empty AGENT_EDIT_DENYLIST is coerced to the platform default at loop start
 #######################################
 
 # Single definition of the platform denylist. Keep it to patterns that are
 # unsafe in any repository: a reusable workflow must not assume a caller's
 # directory layout, so domain paths (migrations, infrastructure, source trees)
-# belong in that repository's own caller `denylist:` instead.
+# belong in that repository's own caller `agent_edit_denylist:` instead.
 DEFAULT_EXECUTE_DENYLIST='**/.env,**/credentials*,**/secrets*'
 
 #######################################
 # apply_platform_denylist_default: Use platform denylist when caller omits one
 #
 # Globals:
-#   DENYLIST - Comma-separated glob denylist (read/write)
+#   AGENT_EDIT_DENYLIST - Comma-separated glob denylist (read/write)
 #
 # Arguments:
 #   None
@@ -36,8 +36,8 @@ DEFAULT_EXECUTE_DENYLIST='**/.env,**/credentials*,**/secrets*'
 #
 #######################################
 function apply_platform_denylist_default {
-    if [[ -z ${DENYLIST:-} ]]; then
-        DENYLIST="${DEFAULT_EXECUTE_DENYLIST}"
+    if [[ -z ${AGENT_EDIT_DENYLIST:-} ]]; then
+        AGENT_EDIT_DENYLIST="${DEFAULT_EXECUTE_DENYLIST}"
     fi
 }
 
@@ -45,7 +45,7 @@ function apply_platform_denylist_default {
 # collect_allowlist_violations: Find changed files outside the allowlist
 #
 # Globals:
-#   ALLOWLIST - Comma-separated glob allowlist (optional)
+#   AGENT_EDIT_ALLOWLIST - Comma-separated glob allowlist (optional)
 #
 # Arguments:
 #   $1 - Newline-separated changed file paths
@@ -60,10 +60,10 @@ function apply_platform_denylist_default {
 function collect_allowlist_violations {
     local changed_files="$1"
     local violations="" pattern file matched
-    if [[ -z ${ALLOWLIST:-} ]]; then
+    if [[ -z ${AGENT_EDIT_ALLOWLIST:-} ]]; then
         return 0
     fi
-    IFS=',' read -ra PATTERNS <<< "${ALLOWLIST:-}"
+    IFS=',' read -ra PATTERNS <<< "${AGENT_EDIT_ALLOWLIST:-}"
     while IFS= read -r file; do
         [[ -z ${file} ]] && continue
         matched="false"
@@ -86,7 +86,7 @@ function collect_allowlist_violations {
 # collect_denylist_violations: Find changed files matching the denylist
 #
 # Globals:
-#   DENYLIST - Comma-separated glob denylist
+#   AGENT_EDIT_DENYLIST - Comma-separated glob denylist
 #
 # Arguments:
 #   $1 - Newline-separated changed file paths
@@ -101,10 +101,10 @@ function collect_allowlist_violations {
 function collect_denylist_violations {
     local changed_files="$1"
     local violations="" pattern file
-    if [[ -z ${DENYLIST:-} ]]; then
+    if [[ -z ${AGENT_EDIT_DENYLIST:-} ]]; then
         return 0
     fi
-    IFS=',' read -ra PATTERNS <<< "${DENYLIST:-}"
+    IFS=',' read -ra PATTERNS <<< "${AGENT_EDIT_DENYLIST:-}"
     for pattern in "${PATTERNS[@]}"; do
         while IFS= read -r file; do
             [[ -z ${file} ]] && continue
@@ -229,7 +229,7 @@ function glob_to_ere {
 # infer_files_from_text: Infer file paths from checker text
 #
 # Globals:
-#   INFER_FILES_PATTERN - Optional extended-regex override
+#   AGENT_CHECKER_PATH_PATTERN - Optional extended-regex override
 #
 # Arguments:
 #   $1 - Checker text to scan
@@ -246,8 +246,8 @@ function infer_files_from_text {
     local text="$1"
     local fallback="$2"
     local inferred=""
-    if [[ -n ${INFER_FILES_PATTERN:-} ]]; then
-        inferred=$(printf '%s\n' "${text}" | grep -oE "${INFER_FILES_PATTERN}" | sort -u | paste -sd, - || true)
+    if [[ -n ${AGENT_CHECKER_PATH_PATTERN:-} ]]; then
+        inferred=$(printf '%s\n' "${text}" | grep -oE "${AGENT_CHECKER_PATH_PATTERN}" | sort -u | paste -sd, - || true)
     else
         inferred=$(printf '%s\n' "${text}" | grep -oE '[[:alnum:]_.-]+/[^[:space:],)]+' | sort -u | paste -sd, - || true)
     fi

@@ -11,7 +11,8 @@
 # - parse_verifier_output defaults to REJECT when unparsable
 # - parse_verifier_output parses cursor stream-json checker capture
 # - run_verify rejects instead of approving when the branch diff cannot be computed
-# - run_verify honors NO_CHANGES_VERDICT when the branch diff is empty
+# - run_verify honors AGENT_UNCHANGED_VERDICT when the branch diff is empty
+# - run_verify fails (no REJECT default) when AGENT_UNCHANGED_VERDICT is empty
 # - run_verify writes denylist_blocked when the diff matches the denylist
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -152,7 +153,7 @@ EOF
     [[ "$(cat "${attempt_dir}/reason")" == *"Could not compute the branch diff"* ]]
 }
 
-@test "run_verify honors NO_CHANGES_VERDICT when the branch diff is empty" {
+@test "run_verify honors AGENT_UNCHANGED_VERDICT when the branch diff is empty" {
     local remote work attempt_dir
 
     remote="${BATS_TEST_TMPDIR}/remote-empty"
@@ -170,14 +171,40 @@ EOF
     WORKTREE_PATH="${work}"
     BASE_BRANCH="main"
 
-    NO_CHANGES_VERDICT="REJECT"
+    AGENT_UNCHANGED_VERDICT="REJECT"
     run run_verify "${attempt_dir}" 1 "true"
     [[ ${status} -eq 0 ]]
     [[ "$(cat "${attempt_dir}/verdict")" == "REJECT" ]]
 
-    NO_CHANGES_VERDICT="APPROVE"
+    AGENT_UNCHANGED_VERDICT="APPROVE"
     run run_verify "${attempt_dir}" 1 "true"
     [[ "$(cat "${attempt_dir}/verdict")" == "APPROVE" ]]
+}
+
+@test "run_verify fails without a verdict when AGENT_UNCHANGED_VERDICT is empty and the diff is empty" {
+    local remote work attempt_dir
+
+    remote="${BATS_TEST_TMPDIR}/remote-unset"
+    work="${BATS_TEST_TMPDIR}/work-unset"
+    attempt_dir="${BATS_TEST_TMPDIR}/attempt-unset"
+
+    bats_git_fresh_repo "${remote}"
+    bats_git_cmd -C "${remote}" checkout -q -b main
+    printf 'base\n' > "${remote}/base.txt"
+    bats_git_commit "${remote}" "init"
+
+    bats_git_cmd clone -q "${remote}" "${work}"
+    bats_git_local_identity "${work}"
+
+    WORKTREE_PATH="${work}"
+    BASE_BRANCH="main"
+    AGENT_UNCHANGED_VERDICT=""
+    NO_CHANGES_VERDICT="APPROVE"
+
+    run run_verify "${attempt_dir}" 1 "true"
+    [ "${status}" -eq 1 ]
+    [ "${output}" = "::error::agent_unchanged_verdict is required (APPROVE or REJECT); got: ''" ]
+    [ ! -f "${attempt_dir}/verdict" ]
 }
 
 @test "run_verify writes denylist_blocked when the diff matches the denylist" {
@@ -199,7 +226,7 @@ EOF
 
     WORKTREE_PATH="${work}"
     BASE_BRANCH="main"
-    DENYLIST="**/secrets*"
+    AGENT_EDIT_DENYLIST="**/secrets*"
 
     run run_verify "${attempt_dir}" 1 "true"
     [[ ${status} -eq 0 ]]

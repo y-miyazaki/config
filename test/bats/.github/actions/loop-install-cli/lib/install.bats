@@ -4,6 +4,8 @@
 # Tests for .github/actions/loop-install-cli/lib/install.sh
 
 # Use cases:
+# - install.sh reads AGENT_ENGINE / AGENT_CLI_VERSION and ignores the legacy
+#   ENGINE / CLI_VERSION names
 # - install.sh rejects unsupported engine
 # - install.sh resolves pinned npm package version
 # - install.sh resolves latest npm package version via npm view
@@ -35,17 +37,55 @@ setup() {
 install_run() {
     run bash -c "cd '${WORKDIR}' && env \
         PATH='${MOCK_BIN}:${PATH}' \
-        ENGINE='${ENGINE}' \
-        CLI_VERSION='${CLI_VERSION}' \
+        AGENT_ENGINE='${AGENT_ENGINE}' \
+        AGENT_CLI_VERSION='${AGENT_CLI_VERSION}' \
         GITHUB_OUTPUT='${GITHUB_OUTPUT}' \
         GITHUB_PATH='${GITHUB_PATH}' \
         HOME='${TEST_HOME}' \
         bash '${INSTALL_SCRIPT}'"
 }
 
+@test "install.sh ignores the legacy ENGINE and CLI_VERSION names" {
+    cat > "${MOCK_BIN}/npm" << 'EOF2'
+#!/usr/bin/env bash
+if [[ $1 == "install" ]]; then
+    mkdir -p "$(pwd)/node_modules/.bin"
+    exit 0
+fi
+echo "unexpected npm invocation: $*" >&2
+exit 1
+EOF2
+    chmod +x "${MOCK_BIN}/npm"
+
+    run bash -c "cd '${WORKDIR}' && env \
+        PATH='${MOCK_BIN}:${PATH}' \
+        ENGINE='claude' \
+        CLI_VERSION='1.2.3' \
+        GITHUB_OUTPUT='${GITHUB_OUTPUT}' \
+        GITHUB_PATH='${GITHUB_PATH}' \
+        HOME='${TEST_HOME}' \
+        bash '${INSTALL_SCRIPT}'"
+    [ "$status" -ne 0 ]
+    [[ ${output} == *"AGENT_ENGINE"* ]]
+    [ ! -s "${GITHUB_OUTPUT}" ]
+
+    AGENT_ENGINE="claude"
+    run bash -c "cd '${WORKDIR}' && env \
+        PATH='${MOCK_BIN}:${PATH}' \
+        AGENT_ENGINE='${AGENT_ENGINE}' \
+        AGENT_CLI_VERSION='1.2.3' \
+        CLI_VERSION='9.9.9' \
+        GITHUB_OUTPUT='${GITHUB_OUTPUT}' \
+        GITHUB_PATH='${GITHUB_PATH}' \
+        HOME='${TEST_HOME}' \
+        bash '${INSTALL_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    [ "$(cat "${GITHUB_OUTPUT}")" = $'package=@anthropic-ai/claude-code\nversion=1.2.3' ]
+}
+
 @test "install.sh rejects unsupported engine" {
-    ENGINE="unknown"
-    CLI_VERSION="latest"
+    AGENT_ENGINE="unknown"
+    AGENT_CLI_VERSION="latest"
     install_run
     [ "$status" -eq 1 ]
 }
@@ -62,8 +102,8 @@ exit 1
 EOF
     chmod +x "${MOCK_BIN}/npm"
 
-    ENGINE="claude"
-    CLI_VERSION="1.2.3"
+    AGENT_ENGINE="claude"
+    AGENT_CLI_VERSION="1.2.3"
     install_run
     [ "$status" -eq 0 ]
     grep -Fx 'package=@anthropic-ai/claude-code' "${GITHUB_OUTPUT}"
@@ -89,8 +129,8 @@ esac
 EOF
     chmod +x "${MOCK_BIN}/npm"
 
-    ENGINE="codex"
-    CLI_VERSION="latest"
+    AGENT_ENGINE="codex"
+    AGENT_CLI_VERSION="latest"
     install_run
     [ "$status" -eq 0 ]
     grep -Fx 'package=@openai/codex' "${GITHUB_OUTPUT}"
@@ -111,8 +151,8 @@ exit 1
 EOF
     chmod +x "${MOCK_BIN}/curl"
 
-    ENGINE="cursor"
-    CLI_VERSION="2.0.0"
+    AGENT_ENGINE="cursor"
+    AGENT_CLI_VERSION="2.0.0"
     install_run
     [ "$status" -eq 0 ]
     grep -Fx 'package=cursor' "${GITHUB_OUTPUT}"
@@ -134,8 +174,8 @@ exit 1
 EOF
     chmod +x "${MOCK_BIN}/npm"
 
-    ENGINE="claude"
-    CLI_VERSION="1.2.3"
+    AGENT_ENGINE="claude"
+    AGENT_CLI_VERSION="1.2.3"
     install_run
     [ "$status" -eq 0 ]
     grep -Fx "${WORKDIR}/node_modules/.bin" "${GITHUB_PATH}"
@@ -152,8 +192,8 @@ exit 1
 EOF
     chmod +x "${MOCK_BIN}/npm"
 
-    ENGINE="claude"
-    CLI_VERSION="1.2.3"
+    AGENT_ENGINE="claude"
+    AGENT_CLI_VERSION="1.2.3"
     install_run
     [ "$status" -eq 1 ]
     [[ ${output} == *"installed without"* ]]

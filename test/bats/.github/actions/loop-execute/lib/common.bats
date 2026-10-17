@@ -5,10 +5,10 @@
 
 # Use cases:
 # - render_template replaces placeholders
-# - normalize_no_changes_verdict defaults to REJECT
-# - normalize_no_changes_verdict keeps an explicit APPROVE
-# - normalize_no_changes_verdict coerces reject variants to REJECT
-# - normalize_no_changes_verdict coerces unknown values to REJECT
+# - validate_agent_unchanged_verdict accepts APPROVE and REJECT
+# - validate_agent_unchanged_verdict fails on empty (no REJECT default) and ignores
+#   the legacy NO_CHANGES_VERDICT name
+# - validate_agent_unchanged_verdict fails on values other than APPROVE / REJECT
 # - parse_output_field extracts legacy line fields
 # - materialize_matrix_handoff_context resolves detect JSON from loop-handoff artifact
 # - materialize_matrix_handoff_context writes detect file and keeps prompt compact
@@ -30,30 +30,6 @@ setup() {
 @test "render_template replaces placeholders" {
     result=$(render_template "Hello {{name}}, attempt {{n}}" name "world" n "2")
     [ "${result}" = "Hello world, attempt 2" ]
-}
-
-@test "normalize_no_changes_verdict defaults to REJECT" {
-    unset NO_CHANGES_VERDICT
-    normalize_no_changes_verdict
-    [ "${NO_CHANGES_VERDICT}" = "REJECT" ]
-}
-
-@test "normalize_no_changes_verdict keeps an explicit APPROVE" {
-    NO_CHANGES_VERDICT="approve"
-    normalize_no_changes_verdict
-    [ "${NO_CHANGES_VERDICT}" = "APPROVE" ]
-}
-
-@test "normalize_no_changes_verdict coerces reject variants to REJECT" {
-    NO_CHANGES_VERDICT="reject"
-    normalize_no_changes_verdict
-    [ "${NO_CHANGES_VERDICT}" = "REJECT" ]
-}
-
-@test "normalize_no_changes_verdict coerces unknown values to REJECT" {
-    NO_CHANGES_VERDICT="maybe"
-    normalize_no_changes_verdict
-    [ "${NO_CHANGES_VERDICT}" = "REJECT" ]
 }
 
 @test "parse_output_field extracts legacy line fields" {
@@ -166,4 +142,36 @@ EOF
     run materialize_matrix_handoff_context
     [ "$status" -eq 1 ]
     [[ $output == *"inline DETECT_RESULT_JSON is invalid"* ]]
+}
+
+@test "validate_agent_unchanged_verdict accepts APPROVE and REJECT" {
+    local value checked=0
+    for value in APPROVE REJECT; do
+        AGENT_UNCHANGED_VERDICT="${value}"
+        run validate_agent_unchanged_verdict
+        [ "${status}" -eq 0 ]
+        [ -z "${output}" ]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 2 ]
+}
+
+@test "validate_agent_unchanged_verdict fails on empty and ignores NO_CHANGES_VERDICT" {
+    unset AGENT_UNCHANGED_VERDICT
+    NO_CHANGES_VERDICT="APPROVE"
+    run validate_agent_unchanged_verdict
+    [ "${status}" -eq 1 ]
+    [ "${output}" = "::error::agent_unchanged_verdict is required (APPROVE or REJECT); got: ''" ]
+}
+
+@test "validate_agent_unchanged_verdict fails on values other than APPROVE or REJECT" {
+    local value checked=0
+    for value in approve reject maybe; do
+        AGENT_UNCHANGED_VERDICT="${value}"
+        run validate_agent_unchanged_verdict
+        [ "${status}" -eq 1 ]
+        [ "${output}" = "::error::agent_unchanged_verdict is required (APPROVE or REJECT); got: '${value}'" ]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 3 ]
 }

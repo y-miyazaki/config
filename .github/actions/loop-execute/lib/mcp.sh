@@ -53,7 +53,7 @@ function append_agent_mcp_args {
 # prepare_agent_mcps: Enable MCP servers for the selected engine in CI
 #
 # Description:
-#   Codex does not read project .mcp.json automatically. When ENGINE is codex,
+#   Codex does not read project .mcp.json automatically. When AGENT_ENGINE is codex,
 #   render an isolated CODEX_HOME/config.toml from the shared MCP manifest.
 #
 # Globals:

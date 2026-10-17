@@ -39,27 +39,28 @@ HAS_CHANGES="false"
 DENYLIST_BLOCKED="false"
 OPEN_REJECTIONS_JSON='[]'
 REJECT_FEEDBACK=""
-OUTCOME_OVERRIDE=""
+FINALIZE_OUTCOME_OVERRIDE=""
 
 #######################################
 # initialize_loop_state: Prepare status directory and prompt defaults
 #
 # Globals:
+#   AGENT_UNCHANGED_VERDICT - Required APPROVE or REJECT (read; validated)
 #   STATUS_DIR - Caller env directory for attempt artifacts (read)
 #
 # Arguments:
 #   None
 #
 # Outputs:
-#   None
+#   Error annotation on stderr when AGENT_UNCHANGED_VERDICT is invalid
 #
 # Returns:
-#   None
+#   0 on success; 1 when AGENT_UNCHANGED_VERDICT is missing or invalid
 #
 #######################################
 function initialize_loop_state {
     mkdir -p "${STATUS_DIR}"
-    normalize_no_changes_verdict
+    validate_agent_unchanged_verdict || return 1
     materialize_matrix_handoff_context
     load_default_prompts
     apply_platform_denylist_default
@@ -79,7 +80,7 @@ function initialize_loop_state {
 #   None
 #
 # Returns:
-#   0 when outcome_override should be watch, 1 otherwise
+#   0 when finalize_outcome_override should be watch, 1 otherwise
 #
 #######################################
 function parse_outcome_override_from_agent_output {
@@ -148,7 +149,7 @@ function promote_has_changes_after_attempt {
 #   GITHUB_OUTPUT - GitHub Actions output file path (read)
 #   HAS_CHANGES - Whether this run or HEAD vs base has product changes (read)
 #   OPEN_REJECTIONS_JSON - Open rejection array JSON (read)
-#   OUTCOME_OVERRIDE - Skill watch override when set (read)
+#   FINALIZE_OUTCOME_OVERRIDE - Skill watch override when set (read)
 #   REASON - Final verdict reason (read)
 #   VERDICT - Final loop verdict (read)
 #
@@ -186,7 +187,7 @@ function write_loop_outputs {
         else
             echo "usage_json="
         fi
-        echo "outcome_override=${OUTCOME_OVERRIDE}"
+        echo "finalize_outcome_override=${FINALIZE_OUTCOME_OVERRIDE}"
     } >> "${GITHUB_OUTPUT}"
     echo "Final: verdict=${VERDICT} attempts=${ATTEMPT} has_changes=${HAS_CHANGES}"
     if [[ ${VERDICT} == "REJECT" && "$(jq 'length' <<< "${OPEN_REJECTIONS_JSON}")" -gt 0 ]]; then
@@ -200,11 +201,13 @@ function write_loop_outputs {
 # run_bounded_loop: Execute maker→checker attempts until APPROVE or max attempts
 #
 # Globals:
+#   AGENT_COMMIT_MESSAGE - Commit message prefix for attempt commits (read)
+#   AGENT_UNCHANGED_VERDICT - Verdict when the maker produces no changes (read)
 #   ATTEMPT - Current attempt counter (read/write)
 #   DENYLIST_BLOCKED - Whether the latest checked attempt hit the denylist (write)
 #   HAS_CHANGES - Whether this run or HEAD vs base has product changes (read/write)
 #   OPEN_REJECTIONS_JSON - Open rejection array JSON (read/write)
-#   OUTCOME_OVERRIDE - Skill watch override when set (write)
+#   FINALIZE_OUTCOME_OVERRIDE - Skill watch override when set (write)
 #   REASON - Verdict reason for current attempt (read/write)
 #   REJECT_FEEDBACK - Checker feedback for retry prompt (read)
 #   VERDICT - Loop verdict for current attempt (read/write)
@@ -271,7 +274,7 @@ function run_bounded_loop {
             continue
         fi
 
-        if commit_worktree_if_needed "${COMMIT_MESSAGE} (attempt ${ATTEMPT})"; then
+        if commit_worktree_if_needed "${AGENT_COMMIT_MESSAGE} (attempt ${ATTEMPT})"; then
             HAS_CHANGES="true"
             attempt_committed="true"
         elif [[ ${ATTEMPT} -gt 1 && -n ${REJECT_FEEDBACK} ]]; then
@@ -303,13 +306,13 @@ function run_bounded_loop {
         if [[ ${HAS_CHANGES} != "true" ]]; then
             if [[ -f ${attempt_dir}/agent-output.txt ]] \
                 && parse_outcome_override_from_agent_output "$(cat "${attempt_dir}/agent-output.txt")"; then
-                OUTCOME_OVERRIDE="watch"
+                FINALIZE_OUTCOME_OVERRIDE="watch"
                 REASON="Skill classified as watch with no file changes"
             else
-                VERDICT="${NO_CHANGES_VERDICT}"
+                VERDICT="${AGENT_UNCHANGED_VERDICT}"
                 REASON="No file changes produced"
             fi
-            echo "No changes; verdict=${VERDICT} outcome_override=${OUTCOME_OVERRIDE:-none}."
+            echo "No changes; verdict=${VERDICT} finalize_outcome_override=${FINALIZE_OUTCOME_OVERRIDE:-none}."
             echo "::endgroup::"
             break
         fi
@@ -350,7 +353,7 @@ function run_bounded_loop {
 # Globals:
 #   AGENT_LOOP_MAX_ATTEMPTS - Maximum maker attempts (read)
 #   AGENT_TOKEN - Authentication token for the selected engine (read)
-#   ENGINE - Agent engine name (read)
+#   AGENT_ENGINE - Agent engine name (read)
 #   GITHUB_OUTPUT - GitHub Actions output file path (read)
 #   PROMPT_TEXT - Base maker prompt (read)
 #   STATUS_DIR - Status directory for attempt artifacts (read)
@@ -372,7 +375,7 @@ function main {
     : "${GITHUB_OUTPUT:?}"
     : "${AGENT_LOOP_MAX_ATTEMPTS:?}"
     : "${PROMPT_TEXT:?}"
-    : "${ENGINE:?}"
+    : "${AGENT_ENGINE:?}"
     : "${AGENT_TOKEN:?}"
     initialize_loop_state
     run_bounded_loop

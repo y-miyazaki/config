@@ -4,11 +4,11 @@
 #   Install loop AI engine CLI and write package/version to GITHUB_OUTPUT.
 #
 # Usage:
-#   ENGINE=cursor CLI_VERSION=latest bash lib/install.sh
+#   AGENT_ENGINE=cursor AGENT_CLI_VERSION=latest bash lib/install.sh
 #
 # Design Rules:
 #   - Cursor uses curl installer; other engines use npm install
-#   - Unsupported ENGINE values fail with a clear error
+#   - Unsupported AGENT_ENGINE values fail with a clear error
 #
 # Output:
 #   Writes package and version to GITHUB_OUTPUT; may append bindir to GITHUB_PATH
@@ -27,8 +27,8 @@ export LC_ALL=C.UTF-8
 #######################################
 # Global variables
 #######################################
-ENGINE="${ENGINE:-}"
-CLI_VERSION="${CLI_VERSION:-latest}"
+AGENT_ENGINE="${AGENT_ENGINE:-}"
+AGENT_CLI_VERSION="${AGENT_CLI_VERSION:-latest}"
 PKG=""
 RESOLVED=""
 
@@ -105,10 +105,10 @@ function install_npm_package {
 }
 
 #######################################
-# resolve_engine_package: Map ENGINE to npm package identifier
+# resolve_engine_package: Map AGENT_ENGINE to npm package identifier
 #
 # Globals:
-#   ENGINE - Engine slug (claude|copilot|codex|cursor)
+#   AGENT_ENGINE - Engine slug (claude|copilot|codex|cursor)
 #   PKG - Set to package name on success
 #
 # Arguments:
@@ -118,28 +118,28 @@ function install_npm_package {
 #   None
 #
 # Returns:
-#   Exits 1 on unsupported ENGINE
+#   Exits 1 on unsupported AGENT_ENGINE
 #
 #######################################
 function resolve_engine_package {
-    case "${ENGINE}" in
+    case "${AGENT_ENGINE}" in
         claude) PKG="@anthropic-ai/claude-code" ;;
         copilot) PKG="@github/copilot" ;;
         codex) PKG="@openai/codex" ;;
         cursor) PKG="cursor" ;;
         *)
-            echo "::error::Unsupported engine: ${ENGINE}"
+            echo "::error::Unsupported engine: ${AGENT_ENGINE}"
             exit 1
             ;;
     esac
 }
 
 #######################################
-# resolve_package_version: Resolve CLI_VERSION to concrete version string
+# resolve_package_version: Resolve AGENT_CLI_VERSION to concrete version string
 #
 # Globals:
-#   ENGINE - Engine slug
-#   CLI_VERSION - Requested version or latest
+#   AGENT_ENGINE - Engine slug
+#   AGENT_CLI_VERSION - Requested version or latest
 #   PKG - npm package name for non-cursor engines
 #   RESOLVED - Set to resolved version
 #
@@ -154,22 +154,22 @@ function resolve_engine_package {
 #
 #######################################
 function resolve_package_version {
-    if [[ ${ENGINE} == "cursor" ]]; then
-        RESOLVED="${CLI_VERSION}"
+    if [[ ${AGENT_ENGINE} == "cursor" ]]; then
+        RESOLVED="${AGENT_CLI_VERSION}"
         return 0
     fi
-    if [[ ${CLI_VERSION} == "latest" ]]; then
+    if [[ ${AGENT_CLI_VERSION} == "latest" ]]; then
         RESOLVED="$(npm view "${PKG}" version)"
         return 0
     fi
-    RESOLVED="${CLI_VERSION}"
+    RESOLVED="${AGENT_CLI_VERSION}"
 }
 
 #######################################
-# validate_engine: Ensure ENGINE is provided
+# validate_engine: Ensure AGENT_ENGINE is provided
 #
 # Globals:
-#   ENGINE - Required engine slug
+#   AGENT_ENGINE - Required engine slug
 #
 # Arguments:
 #   None
@@ -178,11 +178,11 @@ function resolve_package_version {
 #   None
 #
 # Returns:
-#   Exits 1 when ENGINE is empty
+#   Exits 1 when AGENT_ENGINE is empty
 #
 #######################################
 function validate_engine {
-    : "${ENGINE:?}"
+    : "${AGENT_ENGINE:?}"
 }
 
 #######################################
@@ -214,7 +214,7 @@ function write_install_outputs {
 # main: Install engine CLI and record outputs
 #
 # Globals:
-#   ENGINE, CLI_VERSION, PKG, RESOLVED
+#   AGENT_ENGINE, AGENT_CLI_VERSION, PKG, RESOLVED
 #
 # Arguments:
 #   None
@@ -232,7 +232,7 @@ function main {
     resolve_package_version
     write_install_outputs
 
-    if [[ ${ENGINE} == "cursor" ]]; then
+    if [[ ${AGENT_ENGINE} == "cursor" ]]; then
         install_cursor_cli
         return 0
     fi

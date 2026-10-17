@@ -2,35 +2,35 @@ name: loop-agent-once
 description: "Run a single AI agent session (claude/copilot/codex/cursor). For non-loop one-shot use."
 
 inputs:
-  agent_allowed_tools:
+  agent_cli_version:
+    default: "latest"
+    description: "CLI package version"
+    required: false
+  agent_engine:
+    description: "AI engine (claude or copilot or codex or cursor)"
+    required: true
+  agent_maker_effort:
     default: ""
-    description: 'Newline-separated permission rules the running skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). The action grants nothing on its own; the host repository''s .claude/settings.json is also loaded when present. Engines without a per-tool allowlist warn and ignore it.'
+    description: "Maker reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
+    required: false
+  agent_maker_max_turns:
+    default: "5"
+    description: "Maximum maker agent conversation turns"
+    required: false
+  agent_maker_model:
+    default: ""
+    description: "Maker model override"
     required: false
   agent_token:
     description: "Authentication token for the selected engine (ANTHROPIC_API_KEY for claude, COPILOT_GITHUB_TOKEN for copilot, CURSOR_API_KEY for cursor, OPENAI_API_KEY for codex)"
     required: true
-  cli_version:
-    default: "latest"
-    description: "CLI package version"
-    required: false
-  effort:
+  agent_tool_allowlist:
     default: ""
-    description: "Reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
+    description: 'Newline-separated permission rules the running skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). The action grants nothing on its own; the host repository''s .claude/settings.json is also loaded when present. Engines without a per-tool allowlist warn and ignore it.'
     required: false
-  engine:
-    description: "AI engine (claude or copilot or codex or cursor)"
-    required: true
   github_token:
     description: "Resolved GitHub token for gh CLI and GitHub API side effects"
     required: true
-  max_turns:
-    default: "5"
-    description: "Maximum agent conversation turns"
-    required: false
-  model:
-    default: ""
-    description: "Optional model override"
-    required: false
   node_version:
     default: "24.21.0"
     description: "Node.js version for MCP servers (npx); keep aligned with mise.toml node"
@@ -74,21 +74,21 @@ runs:
     - name: Install CLI
       shell: bash
       env:
-        CLI_VERSION: ${{ inputs.cli_version }}
-        ENGINE: ${{ inputs.engine }}
+        AGENT_CLI_VERSION: ${{ inputs.agent_cli_version }}
+        AGENT_ENGINE: ${{ inputs.agent_engine }}
       run: bash "${GITHUB_ACTION_PATH}/../loop-install-cli/lib/install.sh"
 
     - name: Run CLI Agent
       id: run
       shell: bash
       env:
-        AGENT_ALLOWED_TOOLS: ${{ inputs.agent_allowed_tools }}
+        AGENT_ENGINE: ${{ inputs.agent_engine }}
+        AGENT_MAKER_EFFORT: ${{ inputs.agent_maker_effort }}
+        AGENT_MAKER_MAX_TURNS: ${{ inputs.agent_maker_max_turns }}
+        AGENT_MAKER_MODEL: ${{ inputs.agent_maker_model }}
         AGENT_TOKEN: ${{ inputs.agent_token }}
-        EFFORT: ${{ inputs.effort }}
-        ENGINE: ${{ inputs.engine }}
+        AGENT_TOOL_ALLOWLIST: ${{ inputs.agent_tool_allowlist }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
-        MAX_TURNS: ${{ inputs.max_turns }}
-        MODEL: ${{ inputs.model }}
         OUTPUT_FILE: ${{ inputs.output_file }}
         PROMPT: ${{ inputs.prompt_text }}
         WORKING_DIRECTORY: ${{ inputs.working_directory }}

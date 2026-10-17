@@ -3,7 +3,7 @@
 # Description: One-shot agent session for loop-agent-once (L1)
 #
 # Usage:
-#   AGENT_TOKEN=... ENGINE=... PROMPT=... bash lib/run.sh
+#   AGENT_TOKEN=... AGENT_ENGINE=... PROMPT=... bash lib/run.sh
 #
 # Output:
 #   Agent stdout; usage_json on GITHUB_OUTPUT when set
@@ -12,14 +12,19 @@
 #   - Delegates CLI execution to loop-execute/lib/agent.sh
 #   - Reuses loop-execute usage capture (Cursor stream-json)
 #   - Avoid pipe subshells so USAGE_* globals persist
+#   - The action passes AGENT_MAKER_MODEL / AGENT_MAKER_EFFORT /
+#     AGENT_MAKER_MAX_TURNS; run_loop_agent_once assigns them to the shared
+#     role variables MODEL / EFFORT / MAX_TURNS before run_agent (same as the
+#     maker in loop-execute/lib/loop.sh)
 #
 # Dependencies:
 #   - bash, jq, openssl, npx
 #   - loop-execute lib (agent.sh, usage.sh) via _init.sh
 #
 # Optional environment:
-#   AGENT_TOKEN, ENGINE, GITHUB_TOKEN, MAX_TURNS, MODEL, OUTPUT_FILE,
-#   PROMPT, WORKING_DIRECTORY, GITHUB_OUTPUT
+#   AGENT_ENGINE, AGENT_MAKER_EFFORT, AGENT_MAKER_MAX_TURNS, AGENT_MAKER_MODEL,
+#   AGENT_TOKEN, AGENT_TOOL_ALLOWLIST, GITHUB_TOKEN, OUTPUT_FILE, PROMPT,
+#   WORKING_DIRECTORY, GITHUB_OUTPUT
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -39,11 +44,9 @@ source "${SCRIPT_DIR}/_init.sh"
 # Global variables
 #######################################
 # Environment supplied by loop-agent-once composite action.
+AGENT_ENGINE="${AGENT_ENGINE-}"
 AGENT_TOKEN="${AGENT_TOKEN-}"
-ENGINE="${ENGINE-}"
 GITHUB_TOKEN="${GITHUB_TOKEN-}"
-MAX_TURNS="${MAX_TURNS:-}"
-MODEL="${MODEL:-}"
 OUTPUT_FILE="${OUTPUT_FILE:-}"
 PROMPT="${PROMPT-}"
 WORKING_DIRECTORY="${WORKING_DIRECTORY:-.}"
@@ -85,9 +88,16 @@ function emit_usage_json_output {
 #######################################
 # run_loop_agent_once: Run one engine CLI session and emit usage_json
 #
+# Description:
+#   Maps the caller's maker settings onto the role variables run_agent reads
+#   (EFFORT, MAX_TURNS, MODEL). Without this assignment an L1 session would
+#   silently fall back to the engine CLI defaults.
+#
 # Globals:
-#   AGENT_TOKEN, ENGINE, GITHUB_TOKEN, MAX_TURNS, MODEL, OUTPUT_FILE, PROMPT,
-#   WORKING_DIRECTORY, GITHUB_OUTPUT
+#   AGENT_ENGINE, AGENT_TOKEN, GITHUB_TOKEN, OUTPUT_FILE, PROMPT,
+#   WORKING_DIRECTORY, GITHUB_OUTPUT (read)
+#   AGENT_MAKER_EFFORT, AGENT_MAKER_MAX_TURNS, AGENT_MAKER_MODEL (read)
+#   EFFORT, MAX_TURNS, MODEL (write)
 #
 # Arguments:
 #   None
@@ -101,6 +111,11 @@ function emit_usage_json_output {
 #######################################
 function run_loop_agent_once {
     local rc=0
+
+    EFFORT="${AGENT_MAKER_EFFORT:-}"
+    MAX_TURNS="${AGENT_MAKER_MAX_TURNS:-}"
+    MODEL="${AGENT_MAKER_MODEL:-}"
+    export EFFORT MAX_TURNS MODEL
 
     reset_usage_totals
     if [[ -n ${OUTPUT_FILE} ]]; then

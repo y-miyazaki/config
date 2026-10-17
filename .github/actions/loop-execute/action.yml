@@ -2,10 +2,6 @@ name: loop-execute
 description: "Bounded Agent→Verify loop in one job. Installs CLI once, retries with checker feedback."
 
 inputs:
-  agent_allowed_tools:
-    default: ""
-    description: 'Newline-separated permission rules the running skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). The action grants nothing on its own; the host repository''s .claude/settings.json is also loaded when present. Engines without a per-tool allowlist warn and ignore it.'
-    required: false
   agent_checker_effort:
     default: ""
     description: "Checker reasoning effort (claude: low|medium|high|xhigh|max). Empty = engine default"
@@ -22,10 +18,33 @@ inputs:
     default: ""
     description: "Checker model override"
     required: false
+  agent_checker_path_pattern:
+    default: ""
+    description: "Optional extended-regex to infer file paths from checker text when JSON files is missing"
+    required: false
   agent_checker_skill_name:
     default: ""
     description: "Checker skill name (caller-supplied). Empty skips skill bind. Slash-load via /skill <SKILL.md> when resolved."
     required: false
+  agent_cli_version:
+    default: "latest"
+    description: "CLI package version"
+    required: false
+  agent_commit_message:
+    default: "chore: loop-automated update"
+    description: "Commit message prefix for loop attempts"
+    required: false
+  agent_edit_allowlist:
+    default: ""
+    description: "Comma-separated glob allowlist (** = unrestricted); changes outside these paths trigger REJECT"
+    required: false
+  agent_edit_denylist:
+    default: ""
+    description: "Comma-separated path denylist; empty applies DEFAULT_EXECUTE_DENYLIST from lib/paths.sh"
+    required: false
+  agent_engine:
+    description: "AI engine (claude | copilot | codex | cursor)"
+    required: true
   agent_loop_max_attempts:
     default: "3"
     description: "Maximum Agent→Verify loop attempts"
@@ -48,9 +67,13 @@ inputs:
   agent_token:
     description: "Authentication token for the selected engine"
     required: true
-  allowlist:
+  agent_tool_allowlist:
     default: ""
-    description: "Comma-separated glob allowlist; when set, changes outside these paths trigger REJECT"
+    description: 'Newline-separated permission rules the running skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). The action grants nothing on its own; the host repository''s .claude/settings.json is also loaded when present. Engines without a per-tool allowlist warn and ignore it.'
+    required: false
+  agent_unchanged_verdict:
+    default: ""
+    description: "Verdict when the maker produces no file changes (APPROVE or REJECT). Required at L2/L3 (validated at detect); empty is an error, there is no default"
     required: false
   base_branch:
     default: "main"
@@ -59,43 +82,16 @@ inputs:
   branch:
     description: "Worktree branch name"
     required: true
-  cli_version:
-    default: "latest"
-    description: "CLI package version"
-    required: false
-  commit_message:
-    default: "chore: loop-automated update"
-    description: "Commit message prefix for loop attempts"
-    required: false
-  denylist:
-    default: ""
-    description: "Comma-separated path denylist; empty applies DEFAULT_EXECUTE_DENYLIST from lib/paths.sh"
-    required: false
-  detect_result_json:
-    default: "{}"
-    description: "Detect script JSON result for notify_context_json fix_summary"
-    required: false
-  engine:
-    description: "AI engine (claude | copilot | codex | cursor)"
-    required: true
   github_token:
     description: "Resolved GitHub token for gh CLI, push, and API calls"
     required: true
   handoff_dir:
     default: ""
-    description: "Downloaded loop-handoff artifact directory (empty when inline detect_result_json is used)"
+    description: "Downloaded loop-handoff artifact directory; detect JSON for the maker prompt and notify context is resolved from it by handoff_key"
     required: false
   handoff_key:
     default: ""
     description: "Target handoff key for artifact payload lookup"
-    required: false
-  infer_files_pattern:
-    default: ""
-    description: "Optional extended-regex to infer file paths from checker text when JSON files is missing"
-    required: false
-  no_changes_verdict:
-    default: "REJECT"
-    description: "Verdict when the maker produces no file changes (APPROVE or REJECT); REJECT unless the loop's success state is no edit"
     required: false
   node_version:
     default: "24.21.0"
@@ -153,6 +149,9 @@ outputs:
   failure_stage:
     description: "Failure stage when execute push/notify fails (empty on success)"
     value: ${{ steps.failure_diag.outputs.failure_stage }}
+  finalize_outcome_override:
+    description: "Optional finalize outcome when Skill defers without edits (e.g. watch)"
+    value: ${{ steps.loop.outputs.finalize_outcome_override }}
   has_changes:
     description: "Whether HEAD differs from base (product files) or this run committed files"
     value: ${{ steps.push.outputs.has_changes }}
@@ -162,9 +161,6 @@ outputs:
   open_rejections:
     description: "JSON array of unresolved structured rejections"
     value: ${{ steps.loop.outputs.open_rejections }}
-  outcome_override:
-    description: "Optional finalize outcome when Skill defers without edits (e.g. watch)"
-    value: ${{ steps.loop.outputs.outcome_override }}
   reason:
     description: "Final checker reason"
     value: ${{ steps.loop.outputs.reason }}
@@ -193,8 +189,8 @@ runs:
     - name: Install CLI
       shell: bash
       env:
-        CLI_VERSION: ${{ inputs.cli_version }}
-        ENGINE: ${{ inputs.engine }}
+        AGENT_CLI_VERSION: ${{ inputs.agent_cli_version }}
+        AGENT_ENGINE: ${{ inputs.agent_engine }}
       run: bash "${GITHUB_ACTION_PATH}/../loop-install-cli/lib/install.sh"
 
     - name: Run Bounded Loop
@@ -202,30 +198,29 @@ runs:
       shell: bash
       working-directory: ${{ inputs.worktree_path }}
       env:
-        AGENT_ALLOWED_TOOLS: ${{ inputs.agent_allowed_tools }}
         AGENT_CHECKER_EFFORT: ${{ inputs.agent_checker_effort }}
         AGENT_CHECKER_INSTRUCTIONS: ${{ inputs.agent_checker_instructions }}
         AGENT_CHECKER_MAX_TURNS: ${{ inputs.agent_checker_max_turns }}
         AGENT_CHECKER_MODEL: ${{ inputs.agent_checker_model }}
+        AGENT_CHECKER_PATH_PATTERN: ${{ inputs.agent_checker_path_pattern }}
         AGENT_CHECKER_SKILL_NAME: ${{ inputs.agent_checker_skill_name }}
+        AGENT_COMMIT_MESSAGE: ${{ inputs.agent_commit_message }}
+        AGENT_EDIT_ALLOWLIST: ${{ inputs.agent_edit_allowlist }}
+        AGENT_EDIT_DENYLIST: ${{ inputs.agent_edit_denylist }}
+        AGENT_ENGINE: ${{ inputs.agent_engine }}
         AGENT_LOOP_MAX_ATTEMPTS: ${{ inputs.agent_loop_max_attempts }}
         AGENT_MAKER_EFFORT: ${{ inputs.agent_maker_effort }}
         AGENT_MAKER_MAX_TURNS: ${{ inputs.agent_maker_max_turns }}
         AGENT_MAKER_MODEL: ${{ inputs.agent_maker_model }}
         AGENT_MAKER_SKILL_NAME: ${{ inputs.agent_maker_skill_name }}
         AGENT_TOKEN: ${{ inputs.agent_token }}
-        ALLOWLIST: ${{ inputs.allowlist }}
+        AGENT_TOOL_ALLOWLIST: ${{ inputs.agent_tool_allowlist }}
+        AGENT_UNCHANGED_VERDICT: ${{ inputs.agent_unchanged_verdict }}
         BASE_BRANCH: ${{ inputs.base_branch }}
         BRANCH: ${{ inputs.branch }}
-        COMMIT_MESSAGE: ${{ inputs.commit_message }}
-        DENYLIST: ${{ inputs.denylist }}
-        DETECT_RESULT_JSON: ${{ inputs.detect_result_json }}
-        ENGINE: ${{ inputs.engine }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         HANDOFF_KEY: ${{ inputs.handoff_key }}
-        INFER_FILES_PATTERN: ${{ inputs.infer_files_pattern }}
         LOOP_HANDOFF_DIR: ${{ inputs.handoff_dir }}
-        NO_CHANGES_VERDICT: ${{ inputs.no_changes_verdict }}
         PROMPT_IMPLEMENTER_FEEDBACK: ${{ inputs.prompt_implementer_feedback }}
         PROMPT_TEXT: ${{ inputs.prompt_text }}
         PROMPT_VERIFIER_DEFAULT_CRITERIA: ${{ inputs.prompt_verifier_default_criteria }}
@@ -255,7 +250,6 @@ runs:
       shell: bash
       env:
         BASE_BRANCH: ${{ inputs.base_branch }}
-        DETECT_RESULT_JSON: ${{ inputs.detect_result_json }}
         HANDOFF_KEY: ${{ inputs.handoff_key }}
         HAS_CHANGES: ${{ steps.push.outputs.has_changes }}
         LOOP_HANDOFF_DIR: ${{ inputs.handoff_dir }}

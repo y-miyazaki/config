@@ -8,7 +8,8 @@
 #   BASE_BRANCH=main WORKTREE_PATH=/path/to/wt HAS_CHANGES=true bash lib/notify_context.sh
 #
 # Design Rules:
-#   - fix_summary is platform-owned from detect_result_json failures
+#   - fix_summary is platform-owned from the detect result JSON failures (resolved
+#     from the loop-handoff artifact; DETECT_RESULT_JSON is an optional inline override)
 #   - changed_files and diff_stat come from origin/BASE...HEAD (excludes .loop/)
 #     with HEAD^ fallback when origin/BASE is unavailable
 #   - agent_summary is optional; parsed from <!-- loop-agent-summary:v1 --> only

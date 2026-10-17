@@ -196,7 +196,8 @@ function write_verifier_output_contract {
 #   force push.sh to skip pushing the branch, even if HAS_CHANGES is true.
 #
 # Globals:
-#   BASE_BRANCH, DENYLIST, ALLOWLIST, WORKTREE_PATH
+#   BASE_BRANCH, AGENT_EDIT_DENYLIST, AGENT_EDIT_ALLOWLIST, WORKTREE_PATH
+#   AGENT_UNCHANGED_VERDICT - Verdict for an empty branch diff (APPROVE|REJECT)
 #   AGENT_CHECKER_EFFORT, AGENT_CHECKER_INSTRUCTIONS, AGENT_CHECKER_MAX_TURNS
 #   AGENT_CHECKER_MODEL
 #   LIB_DIR, OPEN_REJECTIONS_JSON, AGENT_MAKER_SKILL_NAME, VERIFIER_CONTEXT
@@ -211,7 +212,7 @@ function write_verifier_output_contract {
 #   None
 #
 # Returns:
-#   0
+#   0 after writing a verdict; 1 when AGENT_UNCHANGED_VERDICT is missing or invalid
 #
 #######################################
 function run_verify {
@@ -242,11 +243,15 @@ function run_verify {
     fi
     if [[ -z ${changed_files} ]]; then
         # An empty branch diff means the maker produced nothing to review, which
-        # is the same condition loop.sh resolves with NO_CHANGES_VERDICT. Honor
-        # the caller's setting here too rather than approving unconditionally:
-        # loops that deliver file changes set REJECT, while a loop whose success
-        # state is "no edit" (issue triage) sets APPROVE.
-        printf '%s\n' "${NO_CHANGES_VERDICT:-REJECT}" > "${attempt_dir}/verdict"
+        # is the same condition loop.sh resolves with AGENT_UNCHANGED_VERDICT.
+        # Honor the caller's setting here too rather than approving
+        # unconditionally. The value is required at L2/L3 and has no default:
+        # an empty value is a configuration error, not an implicit REJECT.
+        if ! validate_agent_unchanged_verdict; then
+            cd "${old_pwd}" || return 1
+            return 1
+        fi
+        printf '%s\n' "${AGENT_UNCHANGED_VERDICT}" > "${attempt_dir}/verdict"
         printf '%s\n' "No meaningful changes outside .loop/" > "${attempt_dir}/reason"
         cd "${old_pwd}" || return 1
         return 0

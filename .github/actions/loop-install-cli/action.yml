@@ -2,11 +2,11 @@ name: loop-install-cli
 description: "Install an AI agent CLI (claude/copilot/codex/cursor) once for subsequent loop actions."
 
 inputs:
-  cli_version:
+  agent_cli_version:
     default: "latest"
     description: "CLI package version"
     required: false
-  engine:
+  agent_engine:
     description: "AI engine (claude | copilot | codex | cursor)"
     required: true
   node_version:
@@ -45,6 +45,6 @@ runs:
       id: install
       shell: bash
       env:
-        CLI_VERSION: ${{ inputs.cli_version }}
-        ENGINE: ${{ inputs.engine }}
+        AGENT_CLI_VERSION: ${{ inputs.agent_cli_version }}
+        AGENT_ENGINE: ${{ inputs.agent_engine }}
       run: bash "${GITHUB_ACTION_PATH}/lib/install.sh"
