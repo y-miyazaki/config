@@ -5,6 +5,7 @@
 
 # Use cases:
 # - append_ignored records ledger skip reason
+# - configure_detect_environment defaults ledger to .loop/state-ci-sweeper-run-ledger.json
 # - classify_failure_type treats normal runner label as regression
 # - classify_failure_type treats waiting for runner as infra
 # - classify_failure_type treats shellcheck failure as regression
@@ -56,6 +57,12 @@ teardown() {
     [ "${#FAILURES_JSON[@]}" -eq 0 ]
     [ "${#IGNORED_JSON[@]}" -eq 1 ]
     [[ ${IGNORED_JSON[0]} == *"ledger: no-action"* ]]
+}
+
+@test "configure_detect_environment defaults ledger to .loop/state-ci-sweeper-run-ledger.json" {
+    unset CI_SWEEPER_LEDGER_FILE
+    configure_detect_environment
+    [ "${LEDGER_FILE}" = ".loop/state-ci-sweeper-run-ledger.json" ]
 }
 
 @test "classify_failure_type treats normal runner label as regression" {

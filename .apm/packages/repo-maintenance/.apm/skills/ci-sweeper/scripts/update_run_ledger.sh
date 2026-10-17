@@ -12,6 +12,9 @@
 # - Exit 0 on intentional skip paths (empty run id, should_skip, ledger update failure after warn)
 # - Exit 1 when jq is missing (required dependency)
 # - Merge into existing ledger without dropping unrelated run entries
+# - Always exit 0 on ledger problems so a ledger failure never blocks finalize
+# - loop-finalize passes only EXECUTE_BRANCH, LOOP_NAME, OUTCOME, STATE_FILE, TARGET_JSON, VERDICT to this script;
+#   CI_SWEEPER_LEDGER_FILE therefore stays at its default (.loop/state-ci-sweeper-run-ledger.json) when run from finalize
 # - Prune entries older than 30 days (aligned with caller run-log / state retention)
 # - Source shared helpers from scripts/lib/all.sh (synced via scripts/self/ai/sync_skill_lib.sh)
 #

@@ -31,7 +31,7 @@
 #   CI_SWEEPER_EVENT_HEAD_BRANCH      workflow_run head branch (stable; not rewritten per scan)
 #   CI_SWEEPER_HEAD_BRANCH            per-scan branch context (optional; rewritten by detect)
 #   CI_SWEEPER_HEAD_SHA               workflow_run event context (optional)
-#   CI_SWEEPER_LEDGER_FILE            Path to run ledger JSON (default: ci-sweeper-run-ledger.json; repo-relative)
+#   CI_SWEEPER_LEDGER_FILE            Path to run ledger JSON (default: .loop/state-ci-sweeper-run-ledger.json; repo-relative)
 #   CI_SWEEPER_REJECT_MAX_RETRIES     Max REJECT retries when policy is limited (default: 3)
 #   CI_SWEEPER_REJECT_RETRY_POLICY    block | retry | limited (aliases a/b/c)
 #   CI_SWEEPER_RUN_URL                workflow_run event context (optional)
@@ -1199,7 +1199,7 @@ function output_json {
 #######################################
 function configure_detect_environment {
     DEFAULT_BRANCH="${DEFAULT_BASE_BRANCH:-${DEFAULT_BRANCH:-main}}"
-    LEDGER_FILE="${CI_SWEEPER_LEDGER_FILE:-ci-sweeper-run-ledger.json}"
+    LEDGER_FILE="${CI_SWEEPER_LEDGER_FILE:-.loop/state-ci-sweeper-run-ledger.json}"
     LEDGER_FILE="${LEDGER_FILE#./}"
     SCAN_BRANCH_RUN_LIMIT="${SCAN_BRANCH_RUN_LIMIT:-100}"
     REJECT_RETRY_POLICY="${CI_SWEEPER_REJECT_RETRY_POLICY:-block}"
