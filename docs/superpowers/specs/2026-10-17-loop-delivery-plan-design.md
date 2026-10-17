@@ -42,7 +42,7 @@ loop の「結果をどう届けるか」は、本来1つの判断である。�
 - `delivery` と `level` から決まる判断(`pr_auto_merge`)と、`delivery` とターゲットの整合の検証は、`.github/actions/lib/loop/` の**1つの関数**で行う。caller、`ci-loop-agent.yaml`、`loop-finalize`、`loop-notify-pr` に、`delivery` や `level` を組み合わせる式を残さない。
 - `delivery` の値は、すべて実装がある値にする。未実装の値は検証で失敗させる(fail closed)。
 - 判断を表す入力(`delivery`、`level`)には、どの層にも既定値を置かない。`level` に従属する入力は、`level` ごとに検証する(第6節)。
-- 効かない値は受け付けない。L1 で、L2/L3 だけに効く入力を指定したら、検証で拒否する。
+- 効かない値は受け付けない。L1 で、L2/L3 だけに効く入力(第6節の表の入力と、checker・試行回数の入力)を指定したら、検証で拒否する。
 - 値、入力名、プロンプトのキー、環境変数の名前を、第1節の規則にそろえる。同じ値は、どの層でも同じ名前で運ぶ。
 
 ## 非目標
@@ -57,7 +57,7 @@ loop の「結果をどう届けるか」は、本来1つの判断である。�
 ## アンチゴール(これが起きたら失敗)
 
 - 導出の場所が増える(別の action や caller に、新しい `delivery` の判断式が入る)。
-- リリースの前後で、dogfood の loop の挙動が変わる(PR が開かない、開きすぎる、auto-merge の条件が変わる、state やブランチの扱いが変わる、loop が検証で止まる)。第8節の outcome の改名による値の変化だけは、意図した変更とする。
+- リリースの前後で、dogfood の loop の挙動が変わる(PR が開かない、開きすぎる、auto-merge の条件が変わる、state やブランチの扱いが変わる、loop が検証で止まる)。意図した変更は、次の2つだけとする。第8節の outcome の改名による値の変化と、第2節の `skip_reason` の新しい値(`pr_number_missing`)である。
 - 新しい設定値が増える(既存の入力を置き換えずに、並行して別の入力が生まれる)。
 
 ## 設計
@@ -75,15 +75,15 @@ loop の「結果をどう届けるか」は、本来1つの判断である。�
 
 入力名の対象は、次の接頭辞で表す。
 
-| 接頭辞                | 対象                                                         |
-| --------------------- | ------------------------------------------------------------ |
-| `agent_`              | maker と checker(実行するエージェント、その編集の範囲と出力) |
-| `detect_`             | 検出(何を対象にするか)                                       |
-| `finalize_`           | 着地と後処理                                                 |
-| `pr_`                 | finalize が作る PR                                           |
-| `state_`              | `.loop/` の状態の保存                                        |
-| `budget_`、`run_log_` | 予算と実行ログ(既存の名前のまま)                             |
-| `trigger_`            | 実行のきっかけになったイベント                               |
+| 接頭辞                | 対象                                                                                            |
+| --------------------- | ----------------------------------------------------------------------------------------------- |
+| `agent_`              | maker と checker(実行するエージェント、その編集の範囲と出力)                                    |
+| `detect_`             | 検出(何を対象にするか)                                                                          |
+| `finalize_`           | 着地と後処理                                                                                    |
+| `pr_`                 | PR(finalize が作る PR と、対象の既存 PR)。ただし、どの PR を監視するかの設定は `detect_` にする |
+| `state_`              | `.loop/` の状態の保存                                                                           |
+| `budget_`、`run_log_` | 予算と実行ログ(既存の名前のまま)                                                                |
+| `trigger_`            | 実行のきっかけになったイベント                                                                  |
 
 接頭辞のない入力は、loop 全体の設定である `delivery`、`level`、`loop_name`、`environment`(GitHub Actions の environment の名前)だけにする。
 
@@ -107,18 +107,18 @@ loop の「結果をどう届けるか」は、本来1つの判断である。�
 - `issue_create` は「作る」、`issue_comment` は「既存に書く」で、1つの値に分岐を隠さない。`pr_create`・`pr_push`・`pr_review` も同じで、PR の扱いの種別ごとに値を分ける。
 - `none` は「何もしない」の意味に限定する。pr-review が `none` で動いている現状は、Phase P で `pr_review` に移るまでの暫定である。
 - `none` 以外は finalize が配信するので、L2 以上でしか使えない(第6節)。
-- 「使えるターゲット」の種別は、`target_json` から読む。branch caller のターゲットは、既存の `target_json.mode`(`integration` / `pull_request`)で分ける。entity のターゲットは、現在 `target_json` に種別がない(`entity_target.sh:160-177`)。`loop-entity-detect` が、起動したイベントから `target_json.entity.kind`(`issue` / `pr`)を書き足す。skill の `handoff_key` の書式には頼らない。
+- 「使えるターゲット」の種別は、`target_json` から読む。branch caller のターゲットは、既存の `target_json.mode`(`integration` / `pull_request`)で分ける。entity のターゲットは、現在 `target_json` に種別がない(`entity_target.sh:160-177`)。skill の detect スクリプトが、結果に `result.entity.kind`(`issue` / `pr`)を必ず書く。skill は自分が扱う entity の種別を知っているので、起動したイベント(`workflow_dispatch` は Issue か PR かを持たず、`issue_comment` は両方で起きる)にも、`handoff_key` の書式にも頼らない。`loop-entity-detect` は、`kind` が `issue` か `pr` でなければ失敗させ、値を `target_json.entity.kind` に入れる。dogfood では、triage の `detect_issue.sh` が `issue`、pr-review の `detect_pr_review.sh` が `pr` を書く。
 - `pr_create` と `pr_push` は、安全条件が異なる。`pr_push` は、最新の head へ merge してから push し、衝突や non-fast-forward では fail closed にする(`push_target.sh`、`.github/workflows/CLAUDE.md` の push_head の規則)。
 - 現在の `git_landing_integration: push`(integration ブランチへ直接 push する)は、PR を経由しないので、どの値にも当たらない。dogfood の caller は使っていない。ユーザーの方針(「いらないなら削除」)に従い、削除する。
 - PR の種別を `delivery` に入れたので、`git_landing_integration` と `git_landing_pull_request` の入力は、どちらも削除する(第7-2節)。
 
 **dogfood の caller の移り先:**
 
-| loop                                                                        | 現在                                                                               | 新しい `delivery`                                                          |
-| --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| changelog、autofix、tech-debt、refactor、test-gap、docs-updater、ci-sweeper | `open_pr`(ci-sweeper の PR ターゲットも、既定値の `open_pr` で新しい PR を作る)    | `pr_create`                                                                |
-| pr-revise                                                                   | `open_pr` + `git_landing_pull_request: push_head`(手動起動では `open_pr` も選べる) | `pr_push`(手動起動の選択肢は `pr_push` / `pr_create` の `delivery` にする) |
-| pr-review、triage                                                           | `none`                                                                             | `none`                                                                     |
+| loop                                                                        | 現在                                                                               | 新しい `delivery`                                                                                             |
+| --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| changelog、autofix、tech-debt、refactor、test-gap、docs-updater、ci-sweeper | `open_pr`(ci-sweeper の PR ターゲットも、既定値の `open_pr` で新しい PR を作る)    | `pr_create`                                                                                                   |
+| pr-revise                                                                   | `open_pr` + `git_landing_pull_request: push_head`(手動起動では `open_pr` も選べる) | `pr_push`(手動起動の入力は `delivery` にし、`type: choice` で `pr_push` / `pr_create` だけを選べるようにする) |
+| pr-review、triage                                                           | `none`                                                                             | `none`                                                                                                        |
 
 ### 2. 導出と検証は `lib/loop/` の1つの関数で行う
 
@@ -138,10 +138,10 @@ loop の「結果をどう届けるか」は、本来1つの判断である。�
 
 **ターゲットの混在:** 旧い入力では、1回の実行に `open_pr` と `push_head` のターゲットが混在できた(integration は `open_pr`、pull_request は `push_head`)。新しい値では、`pr_push` は integration のターゲットを受け付けないので、混在は検証で失敗する。
 
-- pr-revise は、PR 番号で監視を絞るとき、integration のターゲットを捨てる(`detect.sh:259-283` の `apply_scoped_pr_number_filter`)。PR 番号がないときは、pr-revise の detect スクリプトがスキップする(`detect_pr_revise.sh:312-313`)。そのため dogfood では混在しない。
+- pr-revise は、PR 番号で監視を絞るとき、integration のターゲットを捨てる(`detect.sh:259-283` の `apply_scoped_pr_number_filter`)。PR 番号がないときは、pr-revise の detect スクリプトがスキップする(`detect_pr_revise.sh:1171-1174`)。そのため dogfood では混在しない。
 - 新しい設計では、この2つの守りを platform の規則にする。PR 番号を確かめる責任を、skill の detect スクリプトに任せない。
   - `pr_push` は、`detect_pr_enabled: true` を必須にし、`detect_branch_match` の指定を拒否する(設定の誤りなので、検証で失敗させる)。
-  - `pr_push` で `detect_pr_number` が空か 0 の起動(PR 番号を持たない `repository_dispatch` など)は、detect がスキップを返す。理由は `skip_reason` に書き、`record-skip` が run-log に `skipped` を記録する。現在の `detect_pr_revise.sh:312-313` のスキップと、観測できる挙動は同じである。
+  - `pr_push` で `detect_pr_number` が空か 0 の起動(PR 番号を持たない `repository_dispatch` など)は、detect がスキップを返す。理由は `skip_reason` の新しい値 `pr_number_missing` で示し、`record-skip` が run-log に `skipped` を記録する。現在は、pr-revise の detect スクリプトがスキップを決め(`detect_pr_revise.sh:1171-1174`)、platform が `skip_reason` に `no_changes` を書く(`detect.sh:1106`)。run-log に `skipped` が残る点は同じで、`skip_reason` の値だけが変わる(アンチゴールの節で、意図した変更とする)。
   - `pr_push` で integration のターゲットが出たら、失敗させる。上の2つの規則があれば到達しないが、守りとして残す。
 
 **下流の変更:**
@@ -200,11 +200,13 @@ caller の `permissions:` を `delivery` から導くことはしない。reusab
 | L2 / L3 | `pr_create`、`pr_push`、`none`(Phase P で `pr_review`、実装時に `issue_create` / `issue_comment` を追加) | `fix` か `report`(必須) | 必須(空は拒否)。制限しないときは `**` を書く | 任意(空は既定の denylist) | `APPROVE` か `REJECT`(必須) |
 
 - L1 で `pr_create` / `pr_push` を拒否するのは、現在の検証(L1 で `open_pr` を拒否)と同じである。L1 で `issue` / `log` / `notion` を通している現在の検証は、第1節の削除と fail closed により、`none` だけを通すようになる。
-- L1 で拒否する4つの入力は、どれも L1 の経路に届かない。`agent_unchanged_verdict`(現在の `no_changes_verdict`)は、`agent-l2` の `loop-execute` にだけ渡る(`ci-loop-agent.yaml:508`)。L1 の outcome は、成功なら常に「差分なし」になる(`ci-loop-agent.yaml:365`、`:381`)。
+- L1 で拒否する入力は、L1 では効かない。`agent_unchanged_verdict`(現在の `no_changes_verdict`)は、`agent-l2` の `loop-execute` にだけ渡る(`ci-loop-agent.yaml:508`)。L1 の outcome は、成功なら常に「差分なし」になる(`ci-loop-agent.yaml:365`、`:381`)。`agent_edit_allowlist` は、branch caller では L1 のプロンプトにも入る(`matrix.sh:100-106`、`detect.sh:459-462`)が、L1 のエージェントは編集しないので、効かない。
+- **checker と試行回数の入力も、L2/L3 だけに効く。** `agent_checker_effort`・`agent_checker_instructions`・`agent_checker_max_turns`・`agent_checker_model`・`agent_checker_skill_name`・`agent_loop_max_attempts` は、`agent-l2` の `loop-execute` でしか使われない。L1 は `loop-agent-once` だけを実行し、checker は動かない(`ci-loop-agent.yaml:283-323`)。現在は、2つの reusable がこれらを必須にしている(`ci-loop-caller-entity.yaml:29-49` など)ため、L1 の triage も値を書いている。新しい設計では、L1 で指定を拒否し、L2/L3 では `agent_checker_instructions`・`agent_checker_max_turns`・`agent_checker_model`・`agent_loop_max_attempts` を必須にする(`agent_checker_effort` は任意、`agent_checker_skill_name` は既定値 `loop-verifier` のまま)。`number` 型の入力は既定値を置かず、スクリプトは未指定を検出して検証する。triage からは、この6行も削除する。
 - `agent_edit_allowlist` の空は、現在「無制限」を意味する(`loop-execute/lib/paths.sh:63-65`、`loop-detect/action.yml:14`)。L2/L3 で空を拒否し、無制限は `**` で明示させる。`**` は全パスに一致する(`paths.sh` の `glob_to_ere`、`paths.bats:79-81`)。書き忘れが「無制限」として黙って通る状態を、なくすためである。
 - `build_constraints.sh` は、allowlist が空でないとき「Allowed paths: …」をプロンプトに出す(`build_constraints.sh:96-99`)。`**` のときは、現在の空と同じく何も出さないようにし、プロンプトの内容を変えない。
 - **検証に必要な値を detect に届ける。** 現在、`loop-entity-detect` には `allowlist`・`denylist`・`no_changes_verdict` の入力がなく、`loop-detect` には `denylist` と `no_changes_verdict` の入力がない(`loop-entity-detect/action.yml:6-65`、`loop-detect/action.yml`)。この表の検証を detect の時点で行うため、2つの action に、表の入力をすべて追加する。entity のプロンプトは allowlist を常に空で組み立てている(`entity_target.sh:69`)ので、受け取った値を使うように直す。
 - **検証は、スクリプトで行う。** composite action の `required: true` には頼らない。必須の値が空のときは、`validate_loop_write_contract.sh` が失敗させる。
+- **検証の失敗は、detect ジョブの失敗にする。** 現在、branch の detect は、検証に失敗すると `config_error` のスキップとして成功で終わる(`detect.sh:1186-1190`)。entity の detect は失敗する(`loop-entity-detect/lib/detect.sh:209-211`)。設定の誤りを黙って通さないため、どちらも失敗にそろえる。dogfood の設定はすべて検証を通るので、dogfood の挙動は変わらない。
 
 ### 7. 入力の改名、削除、既定値の整理
 
@@ -238,8 +240,8 @@ caller の入力(2つの reusable)の改名表である。同じ値を運ぶ下�
 | `max_targets_per_schedule`  | `detect_max_targets`         | 対象がない                                                |
 | `no_changes_verdict`        | `agent_unchanged_verdict`    | 対象がない。maker が差分を作らなかったときの判定          |
 | `outcome_override`          | `finalize_outcome_override`  | 対象がない                                                |
-| `pr_enabled`                | `detect_pr_enabled`          | `pr_` は作る PR を表す。これは監視の設定                  |
-| `pr_exclude`                | `detect_pr_exclusions`       | 監視の設定。動詞を名詞にする                              |
+| `pr_enabled`                | `detect_pr_enabled`          | 監視の設定なので `detect_`                                |
+| `pr_exclude`                | `detect_pr_denylist`         | 監視の設定。`*_allowlist` / `*_denylist` の形にそろえる   |
 | `pr_include_bots`           | `detect_pr_bot_allowlist`    | 監視の設定。動詞が入っている                              |
 | `priority`                  | `detect_priority`            | 対象がない                                                |
 | `scoped_pr_number`          | `detect_pr_number`           | 監視の設定。形容詞が先頭                                  |
@@ -253,7 +255,7 @@ caller の入力(2つの reusable)の改名表である。同じ値を運ぶ下�
 | `write_target` | `agent_edit_target`  |
 | `report_file`  | `agent_report_file`  |
 
-`agent_edit_allowed` は caller の入力ではなく、`level` から導出する(7-2)。「Allowed paths: …」の行の文言は変えない。`build_constraints.sh` の指示文のうち、キーの名前を含むもの(`:79`、`:86` の `may_edit`・`report_file`・`allowlist` など)は、新しいキーの名前に直す。
+`agent_edit_allowed` は caller の入力ではなく、`level` から導出する(7-2)。「Allowed paths: …」の行の文言は変えない。`build_constraints.sh` の指示文のうち、キーの名前を含むもの(`:79`、`:86` の `may_edit`・`report_file`)は、新しいキーの名前に直す。
 
 **checker の判定基準:** `loop-execute/lib/agent_output_format_criteria.md` は、checker に、`## Constraints` の `may_edit`・`write_target`・`report_file` で mode を判断させている(`:7`、`:9`、`:11`、`:13`、`:22`)。この基準は、`verifier.sh:310-314` で checker のプロンプトに連結される。プロンプトのキーと同時に、新しいキーの名前に直す。直さないと、checker が mode を判別できず、`validate_agent_report.sh:34` が対象にする5つの skill(changelog、ci-sweeper、docs-updater、refactor、tech-debt)で判定を誤る。
 
@@ -261,26 +263,39 @@ caller の入力(2つの reusable)の改名表である。同じ値を運ぶ下�
 
 **state ブランチと base ブランチ:** 現在は、同じ state ブランチが層ごとに別の名前で運ばれ、`base_branch` という1つの名前が2つの意味を持つ。
 
-| 層の入力                                                                           | 現在運ぶ値                                                                                                          | 新しい扱い                                                                                                                         |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `loop-detect` の `base_branch`                                                     | caller の `branch_state`(`ci-loop-caller.yaml:349`)                                                                 | `state_branch` に改名                                                                                                              |
-| `loop-run-log` の `base_branch`                                                    | state ブランチ(`ci-loop-caller.yaml:569`、`ci-loop-agent.yaml:361`、`:648`)                                         | `state_branch` に改名。`ci-loop-agent.yaml` の `state_push_branch != '' && … \|\| base_branch` の式もなくし、`state_branch` を渡す |
-| `ci-loop-agent.yaml`、`loop-finalize`、`loop-state-promote` の `state_push_branch` | state ブランチ(`loop-finalize/action.yml:107`、`loop-state-promote/action.yml:19`、`on-loop-state-promote.yaml:59`) | `state_branch` に改名。`on-loop-state-promote.yaml` も直す                                                                         |
-| `loop-finalize` の `base_branch`                                                   | PR の base のフォールバック(`action.yml:149`、`:161`)と、state ブランチが空のときの代わり(`action.yml:109`、`:301`) | 削除。PR の base は `target_json` から読み、state ブランチは必須の `state_branch` を使う                                           |
-| `loop-execute` の `base_branch`                                                    | 差分の比較先(`ci-loop-agent.yaml` がターゲットの base を `target_json` から取り出して渡す。`:497`)                  | 変えない。削除と改名の後は、この意味だけになる                                                                                     |
+| 層の入力                                                                           | 現在運ぶ値                                                                                                          | 新しい扱い                                                                                                                                                                                                                                                                         |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `loop-detect` の `base_branch`                                                     | caller の `branch_state`(`ci-loop-caller.yaml:349`)                                                                 | `state_branch` に改名                                                                                                                                                                                                                                                              |
+| `loop-run-log` の `base_branch`                                                    | state ブランチ(`ci-loop-caller.yaml:569`、`ci-loop-agent.yaml:361`、`:648`)                                         | `state_branch` に改名。`ci-loop-agent.yaml` の `state_push_branch != '' && … \|\| base_branch` の式もなくし、`state_branch` を渡す                                                                                                                                                 |
+| `ci-loop-agent.yaml`、`loop-finalize`、`loop-state-promote` の `state_push_branch` | state ブランチ(`loop-finalize/action.yml:107`、`loop-state-promote/action.yml:19`、`on-loop-state-promote.yaml:59`) | `state_branch` に改名し、どの層でも必須にする。`loop-state-promote` の、空なら既定ブランチを `gh repo view` で調べるフォールバック(`run.sh:286-297`)は削除し、`on-loop-state-promote.yaml:59` は空ではなく `main` を渡す(dogfood の既定ブランチは `main` なので、挙動は変わらない) |
+| `loop-finalize` の `base_branch`                                                   | PR の base のフォールバック(`action.yml:149`、`:161`)と、state ブランチが空のときの代わり(`action.yml:109`、`:301`) | 削除。PR の base は `target_json` から読み、state ブランチは必須の `state_branch` を使う                                                                                                                                                                                           |
+| `loop-execute` の `base_branch`                                                    | 差分の比較先(`ci-loop-agent.yaml` がターゲットの base を `target_json` から取り出して渡す。`:497`)                  | 変えない。ターゲットの base ブランチを表す                                                                                                                                                                                                                                         |
 
-**detect の JSON のキー:** skill の detect スクリプトが出す `.report_file`(`matrix.sh:73-74`、`detect_tech_debt.sh:215`)は、プロンプトのキーと同じ `agent_report_file` にする。
+- `loop-worktree-setup` の `base_branch` は、作業ツリーを作る元のブランチ(`target_json.from.branch`)を運ぶ(`ci-loop-agent.yaml:474`、`loop-worktree-setup/action.yml:9`)。ターゲットの base ではないので、`from_branch` に改名する。
+- skill に state ブランチを渡す環境変数 `DEFAULT_BASE_BRANCH`(`detect.sh:438`、`detect_ci_failures.sh:1201`)は、`STATE_BRANCH` に改名する。
+
+**下の層の action の入力:** caller の値を運ぶ下の層の入力も、caller と同じ名前にする。
+
+| action                                                | 現在の入力                                     | 新しい名前                                                         | 運ぶ値(`ci-loop-agent.yaml`)      |
+| ----------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------ | --------------------------------- |
+| `loop-agent-once`                                     | `effort`、`max_turns`、`model`                 | `agent_maker_effort`、`agent_maker_max_turns`、`agent_maker_model` | `agent_maker_*`(`:318-322`)       |
+| `loop-agent-once`、`loop-execute`、`loop-install-cli` | `agent_allowed_tools`、`cli_version`、`engine` | `agent_tool_allowlist`、`agent_cli_version`、`agent_engine`        | 同名の caller の入力(`:315-319`)  |
+| `loop-notify-pr`                                      | `max_attempts`                                 | `agent_loop_max_attempts`                                          | `agent_loop_max_attempts`(`:723`) |
+| `loop-worktree-setup`                                 | `branch_prefix`                                | `agent_branch_prefix`                                              | `branch_prefix`(`:476`)           |
+
+**detect の JSON のキー:** platform が読むキーのうち設定の値は、レポートファイルのパスだけである(`matrix.sh:73-74`、`lib/loop/verifier_context.sh:117`)。skill の detect スクリプトが出す `.report_file`(tech-debt の `detect_tech_debt.sh:215`、`:299`)は、プロンプトのキーと同じ `agent_report_file` にする。同じ概念を pr-review は `report_path` というキーで出している(`detect_pr_review.sh:479`。platform は読まず、`post_review.sh` が読む)ので、これも `agent_report_file` にそろえる。`.result.*`(`handoff_key`、`entity`、`event_name` など)は実行時のデータなので、範囲外とする。`.changelog_file` は changelog の skill 固有のキーで、プロンプトのキーではないので変えない。
 
 #### 7-2. 削除
 
-| 入力                                                                                    | 理由                                                                                                                                                                                                                                                  | 代わり                                                                                                                                                                                                           |
-| --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `may_edit`(2つの reusable、`loop-detect`、`loop-entity-detect`)                         | 全10 caller で `level != L1` と一致する。検証が食い違いを拒否しているだけ                                                                                                                                                                             | `lib/loop/` で `level` から導出し、プロンプトの `agent_edit_allowed` に出す。非推奨のシム `emit_loop_constraints_from_level` と、それを呼ぶ `emit_loop_constraints_legacy`(`build_constraints.sh:164`)も削除する |
-| `ci-loop-agent.yaml` の `finalize_enabled`(`:137`、`:568`)、caller の `auto_merge` の式 | 第2節                                                                                                                                                                                                                                                 | `finalize_enabled` は代わりなし。`pr_auto_merge` は detect ジョブの出力を、そのまま渡す                                                                                                                          |
-| `git_landing_integration`、`git_landing_pull_request`(caller、`loop-detect`)            | PR の種別を `delivery` の値で表す(第1節)。`push` は削除する                                                                                                                                                                                           | `delivery` の `pr_create` / `pr_push`                                                                                                                                                                            |
-| `dispatch_hook_token`(reusable と `loop-entity-detect`)                                 | トークンを `with:` で渡す。`.github/workflows/CLAUDE.md` は、reusable workflow にトークンを `with:` で渡すことを禁じている。dogfood は使っていない                                                                                                    | dispatch hook は、常に detect のトークンを使う(`loop-entity-detect/lib/detect.sh:51`、`:238` の分岐もなくす)。別のトークンが必要になったら `secrets:` で宣言する                                                 |
-| `ci-loop-agent.yaml` の `detect_result_json`                                            | 2つの caller が、常に `"{}"` を渡している(`ci-loop-caller.yaml` と `ci-loop-caller-entity.yaml` の execute ジョブ)。値を運んでいない                                                                                                                  | なし(`loop-execute` と `loop-finalize` の同名の入力と `DETECT_RESULT_JSON` も削除する)                                                                                                                           |
-| `ci-loop-agent.yaml` の `handoff_key`、`current_sha`、`base_branch`                     | どれも `target_json` から導ける(`target_json.key`、`target_json.from.ref`、pull_request なら `target_json.base.branch`、それ以外は `target_json.to.branch`)。`base_branch` は、2つの caller で式が異なる(entity の式は pull_request の分岐を持たない) | `ci-loop-agent.yaml` の中で `target_json` から取り出す。`matrix.sh:136` の `handoff_key` の複製もなくす。`agent-l2` の Parse Target の、`target_json` が空のときのフォールバック(`:459-465`)は削除し、失敗させる |
+| 入力                                                                                    | 理由                                                                                                                                                                                                                                                  | 代わり                                                                                                                                                                                                                                                                                                                                                                                         |
+| --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `may_edit`(2つの reusable、`loop-detect`、`loop-entity-detect`)                         | 全10 caller で `level != L1` と一致する。検証が食い違いを拒否しているだけ                                                                                                                                                                             | `lib/loop/` で `level` から導出し、プロンプトの `agent_edit_allowed` に出す。非推奨のシム `emit_loop_constraints_from_level` と、それを呼ぶ `emit_loop_constraints_legacy`(`build_constraints.sh:164`)も削除する                                                                                                                                                                               |
+| `ci-loop-agent.yaml` の `finalize_enabled`(`:137`、`:568`)、caller の `auto_merge` の式 | 第2節                                                                                                                                                                                                                                                 | `finalize_enabled` は代わりなし。`pr_auto_merge` は detect ジョブの出力を、そのまま渡す                                                                                                                                                                                                                                                                                                        |
+| `git_landing_integration`、`git_landing_pull_request`(caller、`loop-detect`)            | PR の種別を `delivery` の値で表す(第1節)。`push` は削除する                                                                                                                                                                                           | `delivery` の `pr_create` / `pr_push`                                                                                                                                                                                                                                                                                                                                                          |
+| `dispatch_hook_token`(reusable と `loop-entity-detect`)                                 | トークンを `with:` で渡す。`.github/workflows/CLAUDE.md` は、reusable workflow にトークンを `with:` で渡すことを禁じている。dogfood は使っていない                                                                                                    | dispatch hook は、常に detect のトークンを使う(`loop-entity-detect/lib/detect.sh:51`、`:238` の分岐もなくす)。別のトークンが必要になったら `secrets:` で宣言する                                                                                                                                                                                                                               |
+| `ci-loop-agent.yaml` の `detect_result_json`                                            | 2つの caller が、常に `"{}"` を渡している(`ci-loop-caller.yaml` と `ci-loop-caller-entity.yaml` の execute ジョブ)。値を運んでいない                                                                                                                  | なし。`loop-execute` と `loop-finalize` の同名の入力も削除する。ただし、handoff の成果物から解決した値を同じ環境変数 `DETECT_RESULT_JSON` で運ぶ内部の経路(`lib/loop/handoff.sh:186`、`loop-execute/lib/notify_context.sh:300`、`loop-finalize/lib/create_pr_body.sh:217`、`:238`、`render_pr_body.sh:39`、`:625`)は残す。ci-sweeper の修正 PR の本文の Failure context は、この経路で出ている |
+| `ci-loop-agent.yaml` の `handoff_key`、`current_sha`、`base_branch`                     | どれも `target_json` から導ける(`target_json.key`、`target_json.from.ref`、pull_request なら `target_json.base.branch`、それ以外は `target_json.to.branch`)。`base_branch` は、2つの caller で式が異なる(entity の式は pull_request の分岐を持たない) | `ci-loop-agent.yaml` の中で `target_json` から取り出す。`matrix.sh:136` と `entity_target.sh:189` の `handoff_key` の複製もなくす。`agent-l2` の Parse Target の、`target_json` が空のときのフォールバック(`:459-465`)は削除し、失敗させる                                                                                                                                                     |
+| `loop-notify-pr` の `level`(`action.yml:36-37`、`notify.sh:40`)                         | `notify.sh` が `LEVEL` を使うのは `:208` の1か所だけで、第2節でこの文面は `pr_auto_merge` だけで決める。使われない入力になる                                                                                                                          | なし                                                                                                                                                                                                                                                                                                                                                                                           |
 
 #### 7-3. 1つの入力が持つ2つの意味を分ける(`branch_state`)
 
@@ -296,8 +311,8 @@ caller の入力(2つの reusable)の改名表である。同じ値を運ぶ下�
 
 #### 7-4. 既定値の整理
 
-- **判断を表す入力(`delivery`、`level`):** どの層にも既定値を置かない。2つの reusable では必須にする。action とスクリプトにある既定値(`delivery` は `loop-detect/action.yml:31-33`、`detect.sh:957`。entity の `level` と `delivery` は `loop-entity-detect/lib/detect.sh:46-47`。`level` の `L2` は `loop-notify-pr/action.yml:36-37`、`notify.sh:40`)も削除し、空なら失敗させる。`git_landing_*` の既定値(`loop-detect/action.yml:35-42`、`detect.sh:500`、`:535`)は、入力ごと削除する(第7-2節)。docs-updater と ci-sweeper には `level: L2` を足す(他の caller は明示済み)。
-- **`level` に従属する入力(第6節の表の4つ):** 値を運ぶすべての層(2つの reusable、`ci-loop-agent.yaml`、`loop-detect`、`loop-entity-detect`、`loop-execute`)で、`required: false`、既定値 `""` にそろえる。`ci-loop-agent.yaml:170-171` と `loop-execute/action.yml:96-97` の `no_changes_verdict` の既定値 `REJECT` も削除する(値は detect の時点で検証済みのものだけが届く)。現在の既定値は、reusable ごとに異なる(`write_target` は branch で必須・entity で `report`、`allowlist` は branch で必須・entity で `""`、`no_changes_verdict` は branch で `REJECT`・entity で `APPROVE`)。許容値は第6節の表で検証する。triage からは、`write_target`・`allowlist`・`denylist`・`no_changes_verdict` の4行を削除する。autofix、pr-revise、pr-review の `allowlist: ""` は `"**"` にする(挙動は変わらない)。
+- **判断を表す入力(`delivery`、`level`):** どの層にも既定値を置かない。2つの reusable では必須にする。action とスクリプトにある既定値(`delivery` は `loop-detect/action.yml:31-33`、`detect.sh:957`。entity の `delivery` と `level` は `loop-entity-detect/action.yml:25-28`、`:43-46`、`loop-entity-detect/lib/detect.sh:46-47`)も削除し、空なら失敗させる。同じ `loop-entity-detect/action.yml` の `may_edit` と `write_target` の既定値は、入力ごと削除または第6節の扱いにする。`loop-notify-pr` の `level` は、既定値ではなく入力ごと削除する(第7-2節)。`git_landing_*` の既定値(`loop-detect/action.yml:35-42`、`detect.sh:500`、`:535`)は、入力ごと削除する(第7-2節)。docs-updater と ci-sweeper には `level: L2` を足す(他の caller は明示済み)。
+- **`level` に従属する入力(第6節の表の4つ):** 値を運ぶすべての層(2つの reusable、`ci-loop-agent.yaml`、`loop-detect`、`loop-entity-detect`、`loop-execute`)で、`required: false`、既定値 `""` にそろえる。`ci-loop-agent.yaml:170-171` と `loop-execute/action.yml:96-97` の `no_changes_verdict` の既定値 `REJECT` と、スクリプト層の `NO_CHANGES_VERDICT:-REJECT`(`loop-execute/lib/common.sh:109`、`verifier.sh:249`)も削除する(値は detect の時点で検証済みのものだけが届く)。現在の既定値は、reusable ごとに異なる(`write_target` は branch で必須・entity で `report`、`allowlist` は branch で必須・entity で `""`、`no_changes_verdict` は branch で `REJECT`・entity で `APPROVE`)。許容値は第6節の表で検証する。triage からは、`write_target`・`allowlist`・`denylist`・`no_changes_verdict` の4行を削除する。autofix、pr-revise、pr-review の `allowlist: ""` は `"**"` にする(挙動は変わらない)。
 - **配管の入力の明示された既定値:** caller が既定値と同じ値を書いている行は、削除する(挙動は変わらない)。対象は `environment: default`(10本)、`agent_checker_skill_name: loop-verifier`(10本)、`pr_body: ""`(6本)、`pr_enabled: false`(5本)、`max_targets_per_schedule: 3`(changelog、ci-sweeper、docs-updater)、`detect_domain_env_json: "{}"`(tech-debt、test-gap)、`pr_exclude: fork,draft,label:no-loop` と `pr_include_bots: ""`(ci-sweeper)。L2/L3 の caller の `denylist: ""`(6本)も、第6節の表で任意の入力なので、ここで削除する。判断を表す入力と、`level` に従属する必須の入力は、既定値と同じでも caller が書く。
 
 **確認して、残すもの:**
@@ -348,7 +363,7 @@ caller の入力(2つの reusable)の改名表である。同じ値を運ぶ下�
 
 ### pin とリリース
 
-dogfood の `on-loop-*.yaml` は、ローカルの `./.github/workflows/ci-loop-caller*.yaml` を呼ぶ。一方、`ci-loop-caller*.yaml` は `loop-detect`・`loop-entity-detect`・`ci-loop-agent.yaml` を、`ci-loop-agent.yaml` は `loop-execute`・`loop-finalize`・`loop-notify-pr`・`loop-agent-once` を、SHA で pin している(`ci-loop-caller.yaml:343`、`:483`、`ci-loop-caller-entity.yaml:303`、`:336`、`ci-loop-agent.yaml:312`、`:481`、`:571`、`:710`)。
+dogfood の `on-loop-*.yaml` は、ローカルの `./.github/workflows/ci-loop-caller*.yaml` を呼ぶ。一方、`ci-loop-caller*.yaml` は `loop-detect`・`loop-entity-detect`・`ci-loop-agent.yaml` を、`ci-loop-agent.yaml` は `loop-execute`・`loop-finalize`・`loop-notify-pr`・`loop-agent-once`・`loop-worktree-setup` を、SHA で pin している(`ci-loop-caller.yaml:343`、`:483`、`ci-loop-caller-entity.yaml:303`、`:336`、`ci-loop-agent.yaml:312`、`:470`、`:481`、`:571`、`:710`)。`loop-run-log` も同じく pin されている(`ci-loop-caller.yaml:566`、`ci-loop-caller-entity.yaml:419`、`ci-loop-agent.yaml:357`、`:643`)。
 
 `scripts/self/ci/pin_config_actions.sh` は、変更のコミットの上に、すべての pin を HEAD の SHA へ上げるコミットを積み、タグを付けて、変更と pin を1回の push で送る(`pin_config_actions.sh:325-392`)。push の時点で、caller と、pin された action・`ci-loop-agent.yaml` が同じ版にそろう。そのため、caller と action を1つのリリースで同時に変えてよい。旧い入力名と新しい入力名を両方受け付ける互換の処理は作らない。
 
@@ -384,7 +399,7 @@ dogfood の `on-loop-*.yaml` は、ローカルの `./.github/workflows/ci-loop-
 
 ## 影響を受ける箇所
 
-grep で確認した範囲である。各 PR で、同じ grep を実行して漏れがないことを確かめる。旧い名前(改名表の左列、削除する入力、旧い値、旧いプロンプトのキー)を grep の対象にする。
+grep で確認した範囲である。各 PR で、同じ grep を実行して漏れがないことを確かめる。旧い名前(改名表の左列、削除する入力、旧い値、旧いプロンプトのキー)と、それを大文字にした環境変数の名前(`NO_CHANGES_VERDICT`、`ENGINE`、`CLI_VERSION`、`COMMIT_MESSAGE`、`AGENT_ALLOWED_TOOLS`、`DEFAULT_BASE_BRANCH`、`STATE_PUSH_BRANCH` など)を grep の対象にする。
 
 **workflow:** `.github/workflows/{ci-loop-caller,ci-loop-caller-entity,ci-loop-agent}.yaml`、全 `on-loop-*.yaml`(10本。`on-loop-github-pr-revise.yaml:21-25` の workflow_dispatch の入力 `git_landing_pull_request` を `delivery` の選択に置き換えること、同じファイルの checker の指示文 `:94` とコメント `:3`、`:43`、`on-loop-github-pr-review.yaml:10` のコメントを含む)、`on-loop-state-promote.yaml`(`:59` の `state_push_branch`)、`.github/workflows/CLAUDE.md`(「`open_pr` untouched」、`push` / `push_head` の規則)。
 
@@ -393,8 +408,9 @@ grep で確認した範囲である。各 PR で、同じ grep を実行して�
 - `lib/loop/`: 導出関数(新設)、outcome の読み替え関数(新設)、`validate_loop_write_contract.sh`、`build_constraints.sh`、`loop_meta.sh`、`entity_meta.sh`
 - `loop-detect/{action.yml,lib/_init.sh,lib/branches.sh,lib/detect.sh,lib/matrix.sh,lib/prs.sh}`
 - `loop-entity-detect/{action.yml,lib/detect.sh,lib/entity_target.sh}`
-- `loop-execute/{action.yml,lib/paths.sh,lib/verifier.sh,lib/agent_output_format_criteria.md}`(改名する入力 `no_changes_verdict`・`allowlist`・`denylist`・`engine`・`cli_version`・`commit_message`・`infer_files_pattern`・`agent_allowed_tools` と対応する環境変数、削除する `detect_result_json`、checker の判定基準)
-- `loop-agent-once/action.yml`(`agent_allowed_tools`、`cli_version`、`engine`。`ci-loop-agent.yaml:315-319`)、`loop-worktree-setup/action.yml`(`branch_prefix`。`ci-loop-agent.yaml:476`)
+- `loop-execute/{action.yml,lib/paths.sh,lib/verifier.sh,lib/common.sh,lib/loop.sh,lib/agent.sh,lib/mcp.sh,lib/notify_context.sh,lib/agent_output_format_criteria.md}`(改名する入力 `no_changes_verdict`・`allowlist`・`denylist`・`engine`・`cli_version`・`commit_message`・`infer_files_pattern`・`agent_allowed_tools` と対応する環境変数、削除する `detect_result_json`、checker の判定基準)
+- `loop-agent-once/{action.yml,lib/run.sh}`、`loop-install-cli/{action.yml,lib/install.sh}`(`loop-execute/action.yml:196-198`、`loop-agent-once/action.yml:77-79` から呼ばれる)、`loop-worktree-setup/action.yml`
+- `lib/loop/verifier_context.sh`(`:117` の `.report_file`)
 - `loop-finalize/{action.yml,lib/create_pr.sh,lib/determine_outcome.sh,lib/should_push_target.sh,lib/should_delete_rejected_branch.sh,lib/write_state.sh,lib/prune_targets.sh,lib/push_target.sh}`
 - `loop-notify-pr/{action.yml,lib/notify.sh}`、`loop-run-log/action.yml`(`base_branch` の改名、outcome の説明)、`loop-state-promote/{action.yml,lib/run.sh}`
 
@@ -403,13 +419,16 @@ grep で確認した範囲である。各 PR で、同じ grep を実行して�
 - プロンプトのキー(`may_edit`、`write_target`、`report_file`)を読む skill: `github/` の `github-issue-autofix`、`github-issue-triage`、`github-pr-review`、`github-pr-revise`、`repo-maintenance/` の `changelog`、`ci-sweeper`、`docs-updater`、`refactor`、`tech-debt`、`test-gap`。各 skill の `SKILL.md`、`references/`、`assets/`、`evals/`(`may-edit-false.yaml` などのファイル名を含む)
 - `open_pr` を含む記述: `github-pr-revise/{SKILL.md,references/common-checklist.md}`、`github-issue-autofix/{scripts/detect_autofix.sh,evals/tasks/skip-open-pr.yaml}`(後の2つは、`open_pr` が「開いている PR」の意味かを読み分ける)
 - outcome を読む・書くスクリプト: `ci-sweeper/scripts/{update_run_ledger,detect_ci_failures}.sh`、`test-gap/scripts/update_test_gap_ledger.sh`、`test-gap/references/category-input-schema.md`
-- detect の JSON の `.report_file` を出すスクリプト: `tech-debt/scripts/detect_tech_debt.sh`(`:215`)ほか、grep で見つかるもの
+- detect の JSON の `.report_file` / `report_path` を出す・読むスクリプト: `tech-debt/scripts/detect_tech_debt.sh`(`:215`、`:299`)、`github-pr-review/scripts/{detect_pr_review,post_review}.sh`
+- `DEFAULT_BASE_BRANCH` を読むスクリプト: `ci-sweeper/scripts/detect_ci_failures.sh`(`:1201`)ほか、grep で見つかるもの
+- `result.entity.kind` を書く detect スクリプト: `github-issue-triage/scripts/detect_issue.sh`、`github-pr-review/scripts/detect_pr_review.sh`
 
 **bats:**
 
 - `test/bats/github-actions/` の `loop-caller-parity`、`loop-detect-delivery`、`loop-detect-enrich`、`loop-detect-matrix`、`loop-entity-detect`、`loop-write-contract`、`loop-write-state`、`loop-build-constraints`、`loop-prune-targets`
-- `test/bats/.github/actions/` の `loop-detect/lib/{branches,detect,pending,prs,guards}.bats`、`loop-entity-detect/lib/{entity_target,detect_dispatch_hook}.bats`、`loop-finalize/lib/{determine_outcome,should_delete_rejected_branch,should_push_target,push_target,create_pr_body}.bats`、`loop-notify-pr/lib/notify.bats`、`loop-run-log/lib/{append,run}.bats`、`lib/loop/{entity_meta,loop_meta,trigger_thread}.bats`、`loop-state-promote/` の bats、`loop-execute/lib/{paths,common,verifier}.bats`
-- `test/bats/.apm/packages/repo-maintenance/{ci-sweeper,test-gap}/`
+- `test/bats/.github/actions/` の `loop-detect/lib/{branches,detect,pending,prs,guards}.bats`、`loop-entity-detect/lib/{entity_target,detect_dispatch_hook}.bats`、`loop-finalize/lib/{determine_outcome,should_delete_rejected_branch,should_push_target,push_target,create_pr_body}.bats`、`loop-notify-pr/lib/notify.bats`、`loop-run-log/lib/{append,run}.bats`、`lib/loop/{entity_meta,loop_meta,trigger_thread}.bats`、`loop-state-promote/` の bats、`loop-execute/lib/{paths,common,verifier,agent,notify_context,loop}.bats`、`loop-finalize/lib/{create_pr,render_pr_body}.bats`、`loop-finalize/action_domain_persistence_env.bats`(ステップ名を探している)、`loop-detect/lib/handoff.bats`、`loop-agent-once/lib/run.bats`、`loop-install-cli/lib/install.bats`
+- `test/bats/github-actions/` の `loop-detect-scoped-pr`、`loop-verifier-context`
+- `test/bats/.apm/packages/repo-maintenance/{ci-sweeper,test-gap,tech-debt}/`
 
 **docs:**
 
