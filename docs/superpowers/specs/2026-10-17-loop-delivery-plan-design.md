@@ -12,9 +12,9 @@ loop の「結果をどう届けるか」は、本来1つの判断である。�
 
 | #   | 箇所                                                                       | 現在の判断                                                                                               | 問題                                                                                 |
 | --- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| 1   | `ci-loop-caller.yaml` / `ci-loop-caller-entity.yaml` の `finalize_enabled` | `delivery == open_pr \|\| (delivery == none && level != L1)`                                             | `delivery` と `level` の組み合わせ。同じ式が2つの caller に重複している              |
-| 2   | 同 `auto_merge`                                                            | `delivery == open_pr && level == L3 && target.finalize == open_pr`                                       | 3項。`target.finalize == open_pr` は `delivery == open_pr` を含意するため冗長        |
-| 3   | `entity_target.sh` の `finalize`                                           | `delivery == open_pr ? open_pr : none`                                                                   | `loop-detect` の `resolve_git_finalize_strategies` が同じ導出を別実装している(2か所) |
+| 1   | `ci-loop-caller.yaml` / `ci-loop-caller-entity.yaml` の `finalize_enabled` | `delivery == pr \|\| (delivery == none && level != L1)`                                                  | `delivery` と `level` の組み合わせ。同じ式が2つの caller に重複している              |
+| 2   | 同 `auto_merge`                                                            | `delivery == pr && level == L3 && target.finalize == open_pr`                                            | 3項。`target.finalize == open_pr` は `delivery == pr` を含意するため冗長             |
+| 3   | `entity_target.sh` の `finalize`                                           | `delivery == pr ? open_pr : none`                                                                        | `loop-detect` の `resolve_git_finalize_strategies` が同じ導出を別実装している(2か所) |
 | 4   | `validate_loop_write_contract.sh`                                          | `may_edit × write_target × delivery × level`                                                             | 4変数の許可表                                                                        |
 | 5   | `loop-finalize` の各ステップ                                               | push / ブランチ削除 / outcome が、それぞれ `verdict`・`has_changes`・`strategy` を個別に組み合わせて判断 | `strategy == none` の特別扱いが複数ステップに散在する                                |
 | 6   | `delivery` の enum                                                         | `log \| issue \| notion` は検証を通るが実装がなく、`none` と同じ挙動になる                               | 宣言と挙動が食い違い、黙って何もしない                                               |
@@ -29,12 +29,12 @@ loop の「結果をどう届けるか」は、本来1つの判断である。�
 - `delivery` と `level` から、finalize に必要な判断(実行するか、git landing、auto-merge、公開の種類)を **`loop-detect` の1か所**で導出し、下流は導出結果を参照するだけにする。caller と action に、`delivery` や `level` を組み合わせる式を残さない。
 - `delivery` の値は、すべて実装がある値にする。未実装の値は検証で失敗させる(fail closed)。
 - 必要な権限が `delivery` から一意に分かるようにする。
-- 既存 loop(`delivery: open_pr` と `none`)の挙動を変えない(振る舞い保存)。
+- 既存 loop(`delivery: pr` と `none`)の挙動を変えない(振る舞い保存)。
 
 ## 非目標
 
 - Linear / JIRA / Notion など外部システムへの配信。秘密情報の受け渡しを設計しない限り権限が曖昧になるため、将来の追加枠として記すだけにする。
-- 1回の実行での複合配信(`open_pr` と `issue` の同時実行)。既存 spec の方針を踏襲し、loop を分ける。
+- 1回の実行での複合配信(`pr` と `issue` の同時実行)。既存 spec の方針を踏襲し、loop を分ける。
 - `post_review.sh` の分割(Phase 5 として別 spec)。
 - `level` の意味(L1/L2/L3 のエージェント権限)の変更。
 
@@ -50,26 +50,30 @@ loop の「結果をどう届けるか」は、本来1つの判断である。�
 
 `delivery` は、「エージェントの出力を、git の外の世界へどう届けるか」を表す。閉じた集合とする。
 
-| 値        | 意味                                                                                                                               | 状態                                                           |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `open_pr` | fix PR を開く(L3 では auto-merge を有効にする)                                                                                     | 実装済み                                                       |
-| `none`    | プラットフォームは何も配信しない。エージェントが自分で完結する(L1 triage)か、レポートファイルを `domain_persistence_script` が扱う | 実装済み                                                       |
-| `issue`   | レポートを Issue に投稿する(既存 spec の Phase 4 アダプタ)                                                                         | 未実装。実装されるまで検証で拒否                               |
-| `review`  | 検証済みのレポートを PR レビューとして投稿する                                                                                     | **設計者の推測**。Phase 5 まで未実装。実装されるまで検証で拒否 |
+| 値              | 意味                                                                                                                               | 状態                                             |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `pr`            | PR を作る(L3 では auto-merge を有効にする。draft にするかは別入力 `pr_draft`)                                                      | 実装済み(現在の名前は `open_pr`。改名する)       |
+| `none`          | プラットフォームは何も配信しない。エージェントが自分で完結する(L1 triage)か、レポートファイルを `domain_persistence_script` が扱う | 実装済み                                         |
+| `issue`         | レポートから Issue を新規作成する                                                                                                  | 未実装。実装されるまで検証で拒否                 |
+| `issue_comment` | 既存の Issue にコメントを投稿する(対象は `target_json` の Issue 番号)                                                              | 未実装。実装されるまで検証で拒否                 |
+| `pr_review`     | 検証済みのレポートを、既存 PR へのレビュー(COMMENT 形式、インラインコメント付き)として投稿する                                     | **Phase 5 まで未実装**。実装されるまで検証で拒否 |
+
+**命名規則(MUST):** loop の設定値(`delivery`、`landing`、`publish` の値、関連する入力名)は、snake_case で、**対象(domain)を先、動作を後**に統一する(`pr_review`、`issue_comment`)。動詞を先頭にした値(`open_pr`)は作らない。名前でソートしたとき、同じ対象のものが隣に並ぶようにするためである。`delivery` と `landing` は同じ語彙を使い、同じ意味の値に別の名前を付けない(`pr` は両方で「PR を作る」)。
 
 - `log` と `notion` は enum から削除する。実装がなく、必要になったときに、複数の loop が使うと分かった時点で追加する。
-- `none` は「何もしない」の意味に限定する。pr-review が `none` で動いている現状は、Phase 5 で `review` に移るまでの暫定である。
+- `issue` は「作る」、`issue_comment` は「既存に書く」で、1つの値に分岐を隠さない(既存 spec の「Issue 番号があればコメント、なければ作成」は、この2値に分ける)。
+- `none` は「何もしない」の意味に限定する。pr-review が `none` で動いている現状は、Phase 5 で `pr_review` に移るまでの暫定である。
 
 ### 2. 導出は `loop-detect` で1回だけ行う(finalize plan)
 
 `loop-detect` と `loop-entity-detect` は、`delivery` と `level` から次を導出し、`finalize_plan` として出力する。
 
-| フィールド   | 値                                     | 導出                                                                                                                                                                                                                                                      |
-| ------------ | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `enabled`    | bool                                   | `level == L1` なら false。それ以外は `delivery != none` か、`domain_persistence_script` が指定されているとき true                                                                                                                                         |
-| `landing`    | `open_pr \| push \| push_head \| none` | 現在の `resolve_git_finalize_strategies` と同じ。`delivery` と、任意の `git_landing_integration` / `git_landing_pull_request`、ターゲット種別(integration / pull_request / entity)から決まる。`entity_target.sh` の導出は、この結果を使うように置き換える |
-| `auto_merge` | bool                                   | `delivery == open_pr` かつ `level == L3`                                                                                                                                                                                                                  |
-| `publish`    | `none \| issue \| review`              | `delivery` が `issue` / `review` のときだけその値。Phase 1〜4 では常に `none`                                                                                                                                                                             |
+| フィールド   | 値                                            | 導出                                                                                                                                                                                                                                                      |
+| ------------ | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enabled`    | bool                                          | `level == L1` なら false。それ以外は `delivery != none` か、`domain_persistence_script` が指定されているとき true                                                                                                                                         |
+| `landing`    | `pr \| push \| push_head \| none`             | 現在の `resolve_git_finalize_strategies` と同じ。`delivery` と、任意の `git_landing_integration` / `git_landing_pull_request`、ターゲット種別(integration / pull_request / entity)から決まる。`entity_target.sh` の導出は、この結果を使うように置き換える |
+| `auto_merge` | bool                                          | `delivery == pr` かつ `level == L3`                                                                                                                                                                                                                       |
+| `publish`    | `none \| pr_review \| issue \| issue_comment` | `delivery` が `pr_review` / `issue` / `issue_comment` のときだけその値。Phase 1〜4 では常に `none`                                                                                                                                                        |
 
 粒度: `enabled`・`auto_merge`・`publish` は**実行単位**(run 単位)の値で、`loop-detect` の job 出力として出す。`landing` は**ターゲット単位**の値で、現状どおり matrix の各要素の `target_json.finalize` に載せる(新しい経路は作らない)。
 
@@ -80,15 +84,15 @@ dogfood の全 caller の実際の組み合わせ(`on-loop-*.yaml` で確認済�
 
 | loop                                               | `delivery` | `level`          | `domain_persistence_script` | 旧 `enabled` | 新 `enabled` |
 | -------------------------------------------------- | ---------- | ---------------- | --------------------------- | ------------ | ------------ |
-| changelog、autofix、pr-revise、tech-debt、refactor | `open_pr`  | L2               | なし                        | true         | true         |
-| docs-updater                                       | `open_pr`  | 指定なし(既定値) | なし                        | true         | true         |
-| ci-sweeper                                         | `open_pr`  | 指定なし(既定値) | あり                        | true         | true         |
-| test-gap                                           | `open_pr`  | L2               | あり                        | true         | true         |
+| changelog、autofix、pr-revise、tech-debt、refactor | `pr`       | L2               | なし                        | true         | true         |
+| docs-updater                                       | `pr`       | 指定なし(既定値) | なし                        | true         | true         |
+| ci-sweeper                                         | `pr`       | 指定なし(既定値) | あり                        | true         | true         |
+| test-gap                                           | `pr`       | L2               | あり                        | true         | true         |
 | github-pr-review                                   | `none`     | L2               | あり                        | true         | true         |
 | github-issue-triage                                | `none`     | L1               | なし                        | false        | false        |
 
 - `level` の既定値の扱い(docs-updater、ci-sweeper)は、実装時に導出ロジックが既定値を使うことを確認する。
-- 旧式と新式が異なるのは、(a) L2/L3 で `delivery: none` かつスクリプトなし、(b) L1 で `open_pr`、の2つである。(a) に該当する caller は存在しない。(b) は `validate_loop_write_contract.sh` が拒否する組み合わせ(`open_pr` は `may_edit: true` を要し、L1 は `may_edit: true` を許さない)で、到達しない。
+- 旧式と新式が異なるのは、(a) L2/L3 で `delivery: none` かつスクリプトなし、(b) L1 で `pr`、の2つである。(a) に該当する caller は存在しない。(b) は `validate_loop_write_contract.sh` が拒否する組み合わせ(`pr` は `may_edit: true` を要し、L1 は `may_edit: true` を許さない)で、到達しない。
 - (a) の挙動の変更は、意図的な変更である: スクリプトも配信もない L2 の loop は、finalize で何も行うことがないため、実行しない。
 
 ### 3. `loop-finalize` は `landing` と `publish` だけを見る
@@ -105,7 +109,7 @@ dogfood の全 caller の実際の組み合わせ(`on-loop-*.yaml` で確認済�
 
 ### 5. 権限は `delivery` から導く
 
-`delivery` ごとに、caller の `permissions:` に必要な権限を表にする(例: `open_pr` は `contents: write` と `pull-requests: write`)。表は docs に置き、各 `on-loop-*.yaml` の `permissions:` が、その loop の `delivery` に必要な権限を**含む(上位集合である)**ことを、静的なテスト(bats)で検証する。完全一致は要求しない(既存 loop が、現在は広めの権限を持つため)。pr-review のように、`delivery: none` でもスクリプトが追加の権限を要する loop は、Phase 5 で `review` に移るまでの既知の例外として、テストに明記する(**設計者の判断**)。GitHub の reusable workflow は、caller の権限を超えられないため、プラットフォーム側での強制はしない。
+`delivery` ごとに、caller の `permissions:` に必要な権限を表にする(例: `pr` は `contents: write` と `pull-requests: write`)。表は docs に置き、各 `on-loop-*.yaml` の `permissions:` が、その loop の `delivery` に必要な権限を**含む(上位集合である)**ことを、静的なテスト(bats)で検証する。完全一致は要求しない(既存 loop が、現在は広めの権限を持つため)。pr-review のように、`delivery: none` でもスクリプトが追加の権限を要する loop は、Phase 5 で `pr_review` に移るまでの既知の例外として、テストに明記する(**設計者の判断**)。GitHub の reusable workflow は、caller の権限を超えられないため、プラットフォーム側での強制はしない。
 
 ### 6. `validate_loop_write_contract.sh`
 
@@ -113,16 +117,16 @@ dogfood の全 caller の実際の組み合わせ(`on-loop-*.yaml` で確認済�
 
 ## 移行
 
-| Phase | 内容                                                                                                                                                                                                                | 挙動                                                                                               |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| 0     | 本 spec                                                                                                                                                                                                             | —                                                                                                  |
-| 1     | `loop-detect` / `loop-entity-detect` に `finalize_plan` を追加。既存の出力と式は残す                                                                                                                                | 変更なし                                                                                           |
-| 2     | 2つの caller が `finalize_plan` を使う。重複する式を削除                                                                                                                                                            | 変更なし                                                                                           |
-| 3     | `loop-finalize` が `landing` を使う(`publish` は読まない)。`log` / `notion` を削除し、未実装の値(`issue` / `review`)を、既存の検証点(`validate_loop_write_contract.sh` と `detect.sh` の enum)で fail closed にする | `log` / `notion` / `issue` / `review` を指定した caller は検証で失敗する(現在は黙って `none` 扱い) |
-| 4     | 権限表と、`permissions:` の静的テストを追加。`validate_loop_write_contract.sh` を `delivery` 主キーの表に書き直す(Phase 3 の拒否は、書き直し前の表に追加する)                                                       | 変更なし                                                                                           |
-| 5     | `post_review.sh` を、投稿内容の生成(トークン不要)と投稿(プラットフォーム)に分割し、`delivery: review` を実装する。別 spec                                                                                           | pr-review が `review` に移る                                                                       |
+| Phase | 内容                                                                                                                                                                                                                                     | 挙動                                                                                                                    |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 0     | 本 spec                                                                                                                                                                                                                                  | —                                                                                                                       |
+| 1     | `loop-detect` / `loop-entity-detect` に `finalize_plan` を追加。既存の出力と式は残す                                                                                                                                                     | 変更なし                                                                                                                |
+| 2     | 2つの caller が `finalize_plan` を使う。重複する式を削除                                                                                                                                                                                 | 変更なし                                                                                                                |
+| 3     | `loop-finalize` が `landing` を使う(`publish` は読まない)。`log` / `notion` を削除し、未実装の値(`pr_review` / `issue` / `issue_comment`)を、既存の検証点(`validate_loop_write_contract.sh` と `detect.sh` の enum)で fail closed にする | `log` / `notion` / `pr_review` / `issue` / `issue_comment` を指定した caller は検証で失敗する(現在は黙って `none` 扱い) |
+| 4     | 権限表と、`permissions:` の静的テストを追加。`validate_loop_write_contract.sh` を `delivery` 主キーの表に書き直す(Phase 3 の拒否は、書き直し前の表に追加する)                                                                            | 変更なし                                                                                                                |
+| 5     | `post_review.sh` を、投稿内容の生成(トークン不要)と投稿(プラットフォーム)に分割し、`delivery: pr_review` を実装する。別 spec                                                                                                             | pr-review が `pr_review` に移る                                                                                         |
 
-各 Phase は、独立した PR にする。Phase 1〜4 は振る舞い保存で、Phase 3 の fail closed だけが、既存の誤設定を失敗にする(dogfood の caller は、すべて `open_pr` または `none` なので影響しない見込み)。
+各 Phase は、独立した PR にする。Phase 1〜4 は振る舞い保存で、Phase 3 の fail closed だけが、既存の誤設定を失敗にする(dogfood の caller は、すべて `pr` または `none` なので影響しない見込み)。
 
 ## 検証
 
@@ -150,5 +154,5 @@ dogfood の全 caller の実際の組み合わせ(`on-loop-*.yaml` で確認済�
 
 ## 未決(設計者の推測・要確認)
 
-- `review` を `delivery` の値にするか(Phase 5 の前提)。
+- 配信の値を `pr` / `pr_review` / `issue` / `issue_comment` / `none` とする(ユーザー承認済み)。`open_pr` から `pr` への改名は、全 caller・検証・docs に及ぶ破壊的変更で、Phase 3 以降に含める。`landing` の `open_pr` も、同じ理由で `pr` に改名する(`push` / `push_head` は、git の操作そのものを指すので残す)。`target_json.finalize`、`finalize_strategy`、`loop-finalize` の分岐、bats の fixture、docs の `open_pr` も同時に置き換える。なお、outcome の値(`pr-created`、`no-changes`)はハイフン区切りで、規則と食い違う。本 spec では扱わず、別途の整理候補として挙げる。
 - `enabled` の導出に、`domain_persistence_script` の有無を含める判断。
