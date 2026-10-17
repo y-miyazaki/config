@@ -50,6 +50,7 @@ loop の「結果をどう届けるか」は、本来1つの判断である。�
 - Linear / JIRA / Notion など外部システムへの配信。秘密情報の受け渡しを設計しない限り権限が曖昧になるため、将来の追加枠として記すだけにする。
 - 1回の実行での複合配信(`pr_create` と `issue_create` の同時実行、ターゲットごとに配信の種別を変えること)。既存 spec の方針を踏襲し、loop を分ける。
 - `post_review.sh` の分割(移行の節の Phase P として別 spec)。
+- エージェントの skill と設定の読み元(PR head かデフォルトブランチか)。[Loop エージェントの skill と設定の読み元](2026-10-17-loop-agent-config-source-design.md)で別に扱う。
 - `level` の意味(L1/L2/L3 のエージェント権限)の変更。
 - caller の `permissions:` を `delivery` ごとに絞ること。理由は第5節に書く。
 - `ci-loop-agent.yaml` と各 composite action を、caller を経由せずに直接呼ぶ利用者との互換性。docs が示す経路は `on-loop-* → ci-loop-caller* → ci-loop-agent` だけである(`loop-caller-reusable-design.md:356`)。
@@ -57,7 +58,7 @@ loop の「結果をどう届けるか」は、本来1つの判断である。�
 ## アンチゴール(これが起きたら失敗)
 
 - 導出の場所が増える(別の action や caller に、新しい `delivery` の判断式が入る)。
-- リリースの前後で、dogfood の loop の挙動が変わる(PR が開かない、開きすぎる、auto-merge の条件が変わる、state やブランチの扱いが変わる、loop が検証で止まる)。意図した変更は、次の3つだけとする。第8節の outcome の改名による値の変化、第2節の `skip_reason` の新しい値(`pr_number_missing`)、第10節で、PR を対象にする loop のエージェントが、PR head ではなくデフォルトブランチの skill と設定を使うことである。
+- リリースの前後で、dogfood の loop の挙動が変わる(PR が開かない、開きすぎる、auto-merge の条件が変わる、state やブランチの扱いが変わる、loop が検証で止まる)。意図した変更は、次の2つだけとする。第8節の outcome の改名による値の変化と、第2節の `skip_reason` の新しい値(`pr_number_missing`)である。
 - 新しい設定値が増える(既存の入力を置き換えずに、並行して別の入力が生まれる)。
 
 ## 設計
@@ -362,46 +363,6 @@ caller の入力(2つの reusable)の改名表である。同じ値を運ぶ下�
 - 静的に読んだ範囲での結論で、実行時には確認していない。状況証拠として、`.loop/state-ci-sweeper-run-ledger.json` はリポジトリに存在しない。
 - 対応: `update_run_ledger.sh` の既定値を `.loop/state-ci-sweeper-run-ledger.json` にする(test-gap と同じ形)。source は `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/scripts/update_run_ledger.sh` である。他の変更とは独立した不具合修正なので、最初に別 PR で直す。
 
-### 10. エージェントの skill と設定は、デフォルトブランチから読む
-
-**方針(ユーザー承認済み):** maker と checker が使う skill と設定は、PR head の作業ツリーからではなく、リポジトリのデフォルトブランチから読む。
-
-**GitHub Actions との対応:** GitHub は、workflow ファイルを、イベントごとに次の ref から読む(GitHub Docs の Events that trigger workflows)。
-
-| イベント                                                                                            | workflow ファイルの読み元 | この repo の loop                                                          |
-| --------------------------------------------------------------------------------------------------- | ------------------------- | -------------------------------------------------------------------------- |
-| `issue_comment`、`issues`、`schedule`、`workflow_run`、`repository_dispatch`、`pull_request_target` | デフォルトブランチ        | pr-revise(`@loop`)、triage、autofix、ci-sweeper、pr-review、changelog など |
-| `workflow_dispatch`                                                                                 | 起動時に選んだ ref        | 全 loop の手動起動                                                         |
-| `pull_request_review_comment`                                                                       | PR の merge commit        | pr-revise(レビューコメント)                                                |
-
-`pull_request_target` がデフォルトブランチで動くのは、信頼できない PR のコードに書き込み権限を渡さないためである。loop も、同じ考え方にそろえる。
-
-**現在の読み元:**
-
-| 読むもの                            | 現在の読み元                                                      | 根拠                                           |
-| ----------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------- |
-| detect スクリプト                   | 作業ツリーより前に固定(信頼できる側)                              | `loop-detect/lib/detect.sh:1200`               |
-| checker の skill                    | ジョブの checkout(`GITHUB_WORKSPACE`)を優先し、なければ作業ツリー | `loop-execute/lib/verifier_skill.sh:36`        |
-| maker の skill                      | エージェントの CLI が作業ディレクトリ(作業ツリー)から読み込む     | `loop-execute/lib/loop.sh:256`、`agent.sh:391` |
-| 権限の設定(`.claude/settings.json`) | 作業ツリー(`--setting-sources project`)                           | `agent.sh:57`                                  |
-| MCP の設定(`.mcp.json` など)        | 作業ツリー                                                        | `loop-execute/lib/mcp.sh:120-130`              |
-
-PR を対象にするターゲット(pr-revise、ci-sweeper の PR ターゲット)では、作業ツリーは PR head である(`loop-detect/lib/detect.sh:356-359`、`ci-loop-agent.yaml:454-455`、`:474-475`)。そのため次の2つが起きる。
-
-- PR が skill や権限の設定を書き換えると、その PR に対して書き込み権限付きで動くエージェントの指示と権限を、PR の作者が差し替えられる。
-- 本 spec のリリース前から開いている PR では、PR head の旧い skill が、旧いプロンプトのキー(`may_edit`)を探す。新しいキー(`agent_edit_allowed`)を見つけられず、編集せずに REJECT で終わり得る(第7-1節のプロンプトのキーの改名)。
-
-**新しい読み元:**
-
-- maker の skill、checker の skill、権限の設定、MCP の設定は、デフォルトブランチから読む。イベントに関係なく同じにする。`pull_request_review_comment` では、ジョブの checkout が PR の merge commit になるので、デフォルトブランチを別に取得する。
-- 例外は `workflow_dispatch` で、起動時に選んだ ref から読む。起動できるのは書き込み権限を持つ人だけで、作業ブランチの skill を dogfood で確かめる手段(移行の節のリリース前の確認)になるためである。
-- 作業ツリーの skill と設定は、エージェントに使わせない。エージェントが編集する対象のファイルとしては、これまでどおり作業ツリーにある。
-- 読み元を変えても、エージェントの差分(commit)に、読み元から持ち込んだファイルが入ってはならない。
-
-**対象にしないもの:** リポジトリの指示ファイル(`CLAUDE.md`、`AGENTS.md`、`.claude/rules/`)は、編集する対象のコードの規約であり、PR がその規約を変えることもある。本 spec では読み元を変えない(未決に記す)。
-
-**挙動の変化(意図した変更):** skill や設定を書き換える PR に対して pr-revise や ci-sweeper が動くとき、PR の版ではなく、デフォルトブランチの版の skill と設定を使う。PR を対象にしない loop(作業ツリーがデフォルトブランチから作られる loop)では、読み元の内容は現在と同じである。
-
 ## 移行
 
 ### pin とリリース
@@ -415,7 +376,10 @@ dogfood の `on-loop-*.yaml` は、ローカルの `./.github/workflows/ci-loop-
 1. ci-sweeper の ledger の不具合(第9節)を、先に別のリリースで直す。他の変更と独立しており、早く直すほど ledger の欠落が減るためである。
 2. 本 spec の残りの変更(第1〜8節)を、作業ブランチで進める。PR は話題ごとに分けてよいが、main に入れて push するのは、すべてがそろってからにする。
 3. 配布 skill を変えたら、`apm install`(`scripts/self/apm/sync_apm_artifacts.sh`)で同期先を更新し、同じ変更に含める。
-4. `pin_config_actions.sh` で、変更と pin を1回で push する。
+4. リリースの直前に、PR を対象にする loop(pr-revise、ci-sweeper の PR ターゲット)が当たり得る、開いている PR を確かめる。該当する PR は、push の後に main を取り込む(rebase か merge)まで、loop の対象にしない。
+5. `pin_config_actions.sh` で、変更と pin を1回で push する。
+
+手順4の理由: PR を対象にする loop の maker は、PR head の作業ツリーにある skill を読む(`loop-execute/action.yml:203` の `working-directory`)。リリース前から開いている PR では、PR head の旧い skill が旧いプロンプトのキー(`may_edit`)を探し、新しいキー(`agent_edit_allowed`)を見つけられない。そのため、編集せずに REJECT で終わり得る(第7-1節のプロンプトのキーの改名)。main を取り込めば、新しい skill が PR head に入るので解消する。skill と設定を PR head ではなくデフォルトブランチから読む変更は、[Loop エージェントの skill と設定の読み元](2026-10-17-loop-agent-config-source-design.md)で別に扱う。
 
 - push までの間、ローカルの caller と pin された古い action は食い違うが、main に入っていないので、dogfood は古い組み合わせのまま動く。
 - 例外は、`.loop/` に永続化されたデータである。push の前に書かれた outcome の旧い値は、push の後も state・run-log・ledger に残る。第8節の読み替えは、このために残す。
@@ -494,13 +458,8 @@ grep で確認した範囲である。各 PR で、同じ grep を実行して�
 - `TARGET_JSON` が空のときの `open_pr` へのフォールバックを削除する。
 - 改名表の新しい名前(第7-1節)。とくに、`no_changes` を `unchanged` にしたこと、`dispatch_hook_script` と `domain_persistence_script` を `detect_hook_script` と `finalize_hook_script` の対にしたこと、`write_target` と `may_edit` を `agent_edit_target` と `agent_edit_allowed` にしたこと。
 - outcome の旧い値の読み替えは、期限を設けずに残す。
-- 第10節の読み元の例外を `workflow_dispatch` だけにし、`pull_request_review_comment` でもデフォルトブランチから読むこと。
 
 ## ビルダーに任せること
-
-- 第10節の読み元の切り替え方。条件は、エージェントの差分に持ち込んだファイルが入らないこと、4つのエンジン(claude、codex、copilot、cursor)のどれでも、作業ツリーの skill と設定が使われないことである。候補は次のとおり。
-  - 作業ツリーの該当ディレクトリを、デフォルトブランチの内容で上書きし、commit の前に元に戻す(`git update-index --skip-worktree` か、commit の前の `git checkout -- <paths>`)。
-  - エンジンが対応していれば、設定と skill の場所を CLI の引数か環境変数で指定し、作業ツリーの設定を読ませない(claude の `--setting-sources` と `--add-dir` など)。
 
 - 導出関数と読み替え関数の名前と、`lib/loop/` 内のファイル名。
 - ターゲットの検証を、`loop-detect` のどの段階(絞り込みの後、matrix を組み立てる前)で行うか。
@@ -509,9 +468,6 @@ grep で確認した範囲である。各 PR で、同じ grep を実行して�
 - リリース前の dogfood の確認方法(ローカルの action を参照するか、`--no-push` の pin を使うか)。
 
 ## 未決(設計者の推測・要確認)
-
-- 第10節: 各エンジンの CLI が、skill と設定を作業ディレクトリ以外から読めるか、作業ディレクトリの設定を無効にできるかは、確かめていない。実装の最初に、エンジンごとに確かめる。
-- 第10節: リポジトリの指示ファイル(`CLAUDE.md`、`AGENTS.md`、`.claude/rules/`)の読み元。PR がエージェントの指示を差し替えられる点は skill と同じだが、編集する対象の規約でもあるため、本 spec では変えない。別に判断する。
 
 - **composite action の入力の扱い。** GitHub は、composite action の `required: true` を強制せず、宣言のない入力は警告だけで無視する、と理解している。リポジトリ内では確かめていない。本 spec は、この挙動に依存しない(必須の確認はスクリプトで行う)。
 - 第9節の ledger の不具合は、静的な読みによる結論で、実行時には確認していない。最初の PR で、finalize の実行後に `.loop/state-ci-sweeper-run-ledger.json` が commit されることを確かめる。
