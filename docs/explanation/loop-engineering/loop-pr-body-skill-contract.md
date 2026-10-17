@@ -135,10 +135,10 @@ Do **not** put these in **Summary** — they duplicate **Changes** / **Deferred*
 Every loop automation skill MUST:
 
 1. Define survey/apply report shapes in `references/common-output-format.md` (and `common-output-format-automation.md` when split).
-2. Ship `references/category-automation-envelope.md` with `may_edit` Constraints, PR body rules, and Session Metrics (automation path only).
+2. Ship `references/category-automation-envelope.md` with `agent_edit_allowed` Constraints, PR body rules, and Session Metrics (automation path only).
 3. Ship `assets/pr-body-template.md` and `assets/pr-body-template-survey.md` with fixed top-level headings and per-skill Overview examples (good/bad).
-4. Branch on `may_edit` from `## Constraints` only — do not branch agent behavior on caller `level`.
-5. Instruct the agent to load the PR template at synthesis time when `may_edit` is set in Constraints.
+4. Branch on `agent_edit_allowed` from `## Constraints` only — do not branch agent behavior on caller `level`.
+5. Instruct the agent to load the PR template at synthesis time when `agent_edit_allowed` is true in Constraints.
 6. Keep `## Session Metrics` separate from PR-facing `## Summary` (no duplicate headings).
 7. Overview MUST satisfy the [Overview contract](#overview-contract) — trigger, problem, action in plain language.
 8. Ship `references/category-pr-body-links.md` with per-skill link rules — see each skill's file; enforced for presence and placeholder patterns by `check_loop_pr_body_contract.sh`.
@@ -181,12 +181,12 @@ Loop automation skills listed in `validate_agent_report.sh` (`changelog`, `ci-sw
 
 ### Four-plane vs validation matrix
 
-| Plane     | Caller input                  | Skill reads? | `validate_agent_report.sh`                                                                    |
-| --------- | ----------------------------- | ------------ | --------------------------------------------------------------------------------------------- |
-| Autonomy  | `level`                       | No           | No                                                                                            |
-| Edit gate | `may_edit`                    | Yes          | Survey vs apply shape                                                                         |
-| Artifact  | `write_target`, `report_file` | Yes          | All listed skills use `### Changes` in apply shape (tech-debt lists `report_file` path there) |
-| Delivery  | `delivery`                    | No           | No                                                                                            |
+| Plane     | Caller input                             | Skill reads? | `validate_agent_report.sh`                                                                              |
+| --------- | ---------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------- |
+| Autonomy  | `level`                                  | No           | No                                                                                                      |
+| Edit gate | `agent_edit_allowed`                     | Yes          | Survey vs apply shape                                                                                   |
+| Artifact  | `agent_edit_target`, `agent_report_file` | Yes          | All listed skills use `### Changes` in apply shape (tech-debt lists the `agent_report_file` path there) |
+| Delivery  | `delivery`                               | No           | No                                                                                                      |
 
 Checks include: required `## Overview` / `## Summary` / `## Verification`; `### Changes` when diff is non-empty; forbidden legacy sections (`Fixes Applied`, `Outcome`, top-level `## Changes`); **Deferred vs git diff** consistency (catches [PR #454](https://github.com/y-miyazaki/config/pull/454)-class bugs).
 

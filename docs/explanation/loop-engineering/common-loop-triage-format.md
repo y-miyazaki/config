@@ -7,7 +7,7 @@
 | Concern                                | Location                                                                                           | When loaded                                                                     |
 | -------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | Survey/apply report shapes             | `references/common-output-format.md` (+ `common-output-format-automation.md` when split)           | Every run                                                                       |
-| Automation constraints + PR body rules | `references/category-automation-envelope.md`                                                       | Automation path only (`## Constraints` with `may_edit`)                         |
+| Automation constraints + PR body rules | `references/category-automation-envelope.md`                                                       | Automation path only (`## Constraints` with `agent_edit_allowed`)               |
 | PR synthesis templates                 | `assets/pr-body-template-survey.md`, `assets/pr-body-template.md`                                  | Automation synthesis                                                            |
 | PR body link rules                     | `references/category-pr-body-links.md` per skill                                                   | Synthesis; see [loop-pr-body-skill-contract.md](loop-pr-body-skill-contract.md) |
 | Loop PR body drift checks              | `bash scripts/self/apm/check_loop_pr_body_contract.sh` (via `sync_apm_artifacts.sh loop-contract`) | After editing loop skill templates/envelopes/link rules                         |
@@ -16,34 +16,34 @@
 
 ## Edit gate
 
-Automation runs branch on **`may_edit`** from `## Constraints` (injected by `loop-detect` during prompt assembly):
+Automation runs branch on **`agent_edit_allowed`** from `## Constraints` (derived by `loop-detect` from `level` — L1 `false`, L2/L3 `true` — and injected during prompt assembly):
 
-| `may_edit` | Behavior                                                                          |
-| ---------- | --------------------------------------------------------------------------------- |
-| `false`    | Survey — emit `### Candidates`; no file edits                                     |
-| `true`     | Apply — edit within allowlist; emit `### Changes` / deferrals + `## Verification` |
+| `agent_edit_allowed` | Behavior                                                                          |
+| -------------------- | --------------------------------------------------------------------------------- |
+| `false`              | Survey — emit `### Candidates`; no file edits                                     |
+| `true`               | Apply — edit within allowlist; emit `### Changes` / deferrals + `## Verification` |
 
-Interactive runs resolve `may_edit` from natural language (default survey; explicit fix language → apply). See each skill's `SKILL.md` Workflow.
+Interactive runs resolve `agent_edit_allowed` from natural language (default survey; explicit fix language → apply). See each skill's `SKILL.md` Workflow.
 
 ## Four-plane contract (caller vs skill)
 
 Loop callers configure four independent planes. Skills branch only on planes 2–3 from `## Constraints`; they **must not** read `level` or `delivery`.
 
-| Plane     | Caller inputs                                                 | Visible to skill?         |
-| --------- | ------------------------------------------------------------- | ------------------------- |
-| Autonomy  | `level` (L1/L2/L3)                                            | No — platform job routing |
-| Edit gate | `may_edit`                                                    | Yes                       |
-| Artifact  | `write_target` (`fix` \| `report`), `report_file` when report | Yes                       |
-| Delivery  | `delivery` (`open_pr`, `issue`, `log`, …)                     | No — `loop-finalize` only |
+| Plane     | Caller inputs                                                                                                                         | Visible to skill?         |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| Autonomy  | `level` (L1/L2/L3)                                                                                                                    | No — platform job routing |
+| Edit gate | `agent_edit_allowed` (derived from `level`; not a caller input)                                                                       | Yes                       |
+| Artifact  | `agent_edit_target` (`fix` \| `report`), `agent_report_file` when report                                                              | Yes                       |
+| Delivery  | `delivery` (`pr_create`, `pr_push`, `none`; `issue_comment`, `issue_create`, `pr_review` are reserved and rejected until implemented) | No — `loop-finalize` only |
 
 Spec: [Loop write target & delivery design](../../superpowers/specs/2026-07-23-loop-write-target-delivery-design.md). Caller reference: [loop-caller-inputs-reference.md](workflows/loop-caller-inputs-reference.md).
 
-When `may_edit: true`:
+When `agent_edit_allowed: true`:
 
-| `write_target` | Agent persists                                    |
-| -------------- | ------------------------------------------------- |
-| `fix`          | Source/docs/manifests within allowlist            |
-| `report`       | Structured file at `report_file` within allowlist |
+| `agent_edit_target` | Agent persists                                          |
+| ------------------- | ------------------------------------------------------- |
+| `fix`               | Source/docs/manifests within allowlist                  |
+| `report`            | Structured file at `agent_report_file` within allowlist |
 
 ## Skills using this pattern
 

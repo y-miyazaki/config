@@ -34,7 +34,7 @@ Package sources under `.apm/packages/**` are **distribution artifacts**. Treat e
 | Layer                              | Content                                                                                                                                                                              |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Instructions (`*.instructions.md`) | Generalized authoring rules; stem-based companion links; runtime paths under `.cursor/rules/`, `.claude/rules/`, `.kiro/steering/` — not package-tooling commands as normative steps |
-| Skills (`SKILL.md`, `references/`) | Portable contracts (schemas, exit semantics, `may_edit` / `write_target`), domain logic, in-skill `scripts/`                                                                         |
+| Skills (`SKILL.md`, `references/`) | Portable contracts (schemas, exit semantics, `agent_edit_allowed` / `agent_edit_target`), domain logic, in-skill `scripts/`                                                          |
 | Hooks / agents                     | Portable scripts and prompts; no consumer-tree path tables                                                                                                                           |
 
 Use **reuse-intended** wording (skills meant for redistribution) rather than naming this repository's package layout or install commands in consumer-facing prose.
@@ -78,20 +78,20 @@ Skills are **utility modules**. They carry the automation **contract** and domai
 
 ### Write in the skill (portable)
 
-| Topic                                                        | Typical files                                                                                  |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| Input JSON schema (`findings[]`, `failures[]`, `hints[]`, …) | `category-input-schema.md`                                                                     |
-| Edit gate (`may_edit`, `write_target`, `report_file`)        | `category-automation-envelope.md`                                                              |
-| Path scope (interactive vs automation allowlist)             | `category-scope.md`                                                                            |
-| Survey / apply report shapes, PR synthesis rules             | `common-output-format.md`, `common-output-format-automation.md`, `assets/pr-body-template*.md` |
-| PR body link rules (per-skill synthesis)                     | `category-pr-body-links.md`                                                                    |
-| Domain classification, checklists, troubleshooting           | `category-*.md`, `common-checklist.md`                                                         |
+| Topic                                                                      | Typical files                                                                                  |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Input JSON schema (`findings[]`, `failures[]`, `hints[]`, …)               | `category-input-schema.md`                                                                     |
+| Edit gate (`agent_edit_allowed`, `agent_edit_target`, `agent_report_file`) | `category-automation-envelope.md`                                                              |
+| Path scope (interactive vs automation allowlist)                           | `category-scope.md`                                                                            |
+| Survey / apply report shapes, PR synthesis rules                           | `common-output-format.md`, `common-output-format-automation.md`, `assets/pr-body-template*.md` |
+| PR body link rules (per-skill synthesis)                                   | `category-pr-body-links.md`                                                                    |
+| Domain classification, checklists, troubleshooting                         | `category-*.md`, `common-checklist.md`                                                         |
 
 ### Do not write in the skill (product / platform)
 
 - Canonical documentation path tables for a specific repository
 - Caller workflow or action names (`on-loop-*`, `ci-loop-caller`, finalize action names)
-- Platform autonomy planes (`level`, `delivery`) as branching rules — skills branch on `may_edit` and `write_target` only
+- Platform autonomy planes (`level`, `delivery`) as branching rules — skills branch on `agent_edit_allowed` and `agent_edit_target` only
 - Per-repository allowlist/denylist examples in `references/` (configure callers or repo `AGENTS.md` instead)
 - Any rule that only makes sense when Loop Engineering (or another host platform) is deployed
 
@@ -99,7 +99,7 @@ If content describes **when to update docs for loop workflows**, it belongs in a
 
 ### Automation path vs interactive path
 
-| Path               | Trigger                 | `may_edit` source                                  | Detect role                                                        |
+| Path               | Trigger                 | `agent_edit_allowed` source                        | Detect role                                                        |
 | ------------------ | ----------------------- | -------------------------------------------------- | ------------------------------------------------------------------ |
 | Interactive / hook | User or hook            | Natural language or structured JSON in the session | Skill or hook runs detect script                                   |
 | Automation         | Caller-assembled prompt | `## Constraints` injected by caller                | Detect emits facts; caller maps to schema arrays; skill classifies |

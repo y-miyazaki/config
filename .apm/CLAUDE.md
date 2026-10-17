@@ -8,13 +8,13 @@ Edit targets and sync: [CLAUDE.md § Edit routing](../CLAUDE.md#edit-routing-mus
 
 ## Distributable vs maintainer-only (MUST)
 
-| Write in `.apm/packages/**`                                    | Write in maintainer docs instead (`CLAUDE.md`, this file, `docs/`)                                                                                              |
-| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Portable contracts any consumer can follow                     | This repository's paths, CI, sync scripts, Loop caller/action names                                                                                             |
-| In-skill relative paths (`scripts/`, `references/`, `assets/`) | `apm install` / `sync_*` as normative user steps                                                                                                                |
-| Stem-based companion cross-links                               | Repo-specific `validate_*`, Bats `assert_*`, `scripts/lib/` paths in redistributable `references/`                                                              |
-| Behavior that does not assume this layout                      | Fixed universal directory mandates (`test/bats/` only, `docs/report/…` required)                                                                                |
-|                                                                | `may_edit` / automation envelope **for this consumer** — see [loop-pr-body-skill-contract](../docs/explanation/loop-engineering/loop-pr-body-skill-contract.md) |
+| Write in `.apm/packages/**`                                    | Write in maintainer docs instead (`CLAUDE.md`, this file, `docs/`)                                                                                                        |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Portable contracts any consumer can follow                     | This repository's paths, CI, sync scripts, Loop caller/action names                                                                                                       |
+| In-skill relative paths (`scripts/`, `references/`, `assets/`) | `apm install` / `sync_*` as normative user steps                                                                                                                          |
+| Stem-based companion cross-links                               | Repo-specific `validate_*`, Bats `assert_*`, `scripts/lib/` paths in redistributable `references/`                                                                        |
+| Behavior that does not assume this layout                      | Fixed universal directory mandates (`test/bats/` only, `docs/report/…` required)                                                                                          |
+|                                                                | `agent_edit_allowed` / automation envelope **for this consumer** — see [loop-pr-body-skill-contract](../docs/explanation/loop-engineering/loop-pr-body-skill-contract.md) |
 
 If a sentence applies only in this repository, it does **not** belong in a package source.
 

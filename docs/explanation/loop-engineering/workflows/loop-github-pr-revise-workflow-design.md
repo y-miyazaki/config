@@ -14,13 +14,14 @@
 
 Single intake for PR revision from human feedback: conversation or review comments containing default **`@loop`** (caller `mention` overrides) + `repository_dispatch` / `workflow_dispatch` → **branch / PR-head** caller.
 
-Detect skips bots and comments without the mention token. Default landing: `git_landing_pull_request=push_head` (stacked via `open_pr`).
+Detect skips bots and comments without the mention token. Default delivery: `pr_push` (lands on the PR head); manual dispatch can pick `pr_create` (a new stacked PR).
 
 ### Supported use cases
 
 - `issue_comment` on a PR conversation containing the configured mention (dogfood: `@loop`)
 - `pull_request_review_comment` (inline review) with the mention token
 - `repository_dispatch` (`loop-github-pr-revise`) or `workflow_dispatch` with explicit `feedback` and `pr_number`
+- `workflow_dispatch` input `delivery` (`type: choice`, default `pr_push`) selects `pr_push` (push to the PR head) or `pr_create` (new PR from the PR head); other values are not offered
 
 ### Out of scope
 
@@ -33,7 +34,7 @@ Detect skips bots and comments without the mention token. Default landing: `git_
 - Copilot Coding Agent as the maker (LE Agent via `ci-loop-agent` only)
 - Comment gather / one-session batching improvements (`#683`)
 - Last-run-only discard of earlier fixes on the PR head
-- Force-push or `cancel-in-progress` to recover merge conflicts (fail closed on `push_head`)
+- Force-push or `cancel-in-progress` to recover merge conflicts (fail closed on `pr_push`)
 
 Skill execution boundaries: `github-pr-revise` SKILL.md (`USE FOR` / `DO NOT USE FOR`).
 
@@ -41,44 +42,41 @@ Skill execution boundaries: `github-pr-revise` SKILL.md (`USE FOR` / `DO NOT USE
 
 Keys are passed in `on-loop-github-pr-revise.yaml` via `with:` on `ci-loop-caller.yaml`. Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md).
 
-| Input / JSON key             | Description                                                                    | Dogfood value                                                 |
-| ---------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| `ack_trigger_comment`        | Post `eyes` reaction on trigger comment via `ack-trigger`                      | `true`                                                        |
-| `agent_maker_instructions`   | Apply human feedback; address full `result.comments` array                     | Inline in caller workflow                                     |
-| `agent_maker_max_turns`      | Max maker turns per attempt                                                    | `100`                                                         |
-| `agent_maker_model`          | Maker model ID                                                                 | `claude-sonnet-5`                                             |
-| `agent_maker_effort`         | Maker reasoning effort. Only engines with an effort flag (claude) consume it   | `medium`                                                      |
-| `agent_maker_skill_name`     | Skill package                                                                  | `github-pr-revise`                                            |
-| `agent_loop_max_attempts`    | Max Agent→Verify cycles                                                        | `3`                                                           |
-| `agent_checker_instructions` | APPROVE/REJECT rubric (mention gate, full comment batch)                       | Inline in caller workflow                                     |
-| `agent_checker_max_turns`    | Max checker turns                                                              | `100`                                                         |
-| `agent_checker_model`        | Checker model ID                                                               | `claude-opus-5`                                               |
-| `agent_checker_effort`       | Checker reasoning effort. Only engines with an effort flag (claude) consume it | `medium`                                                      |
-| `agent_checker_skill_name`   | Checker skill                                                                  | `loop-verifier`                                               |
-| `allowlist`                  | File edit allowlist (empty = skill default)                                    | `""`                                                          |
-| `branch_match`               | Fallback integration watch (scoped PR mode drops integration targets)          | `main`                                                        |
-| `branch_state`               | `.loop/*` persistence branch                                                   | `main`                                                        |
-| `budget_max_runs_per_day`    | Daily run cap                                                                  | `10`                                                          |
-| `budget_max_tokens_per_day`  | Daily token cap                                                                | `1000000`                                                     |
-| `delivery`                   | Platform delivery after APPROVE                                                | `open_pr`                                                     |
-| `denylist`                   | Denylist globs                                                                 | `""`                                                          |
-| `detect_script`              | Domain detect script                                                           | `.agents/skills/github-pr-revise/scripts/detect_pr_revise.sh` |
-| `engine`                     | AI engine                                                                      | `claude`                                                      |
-| `environment`                | GitHub Environment for env-scoped secrets                                      | `default`                                                     |
-| `git_landing_pull_request`   | PR-head landing (`push_head` default; `open_pr` stacked)                       | `push_head`                                                   |
-| `level`                      | Autonomy (`L2`)                                                                | `L2`                                                          |
-| `loop_name`                  | Loop identifier                                                                | `github-pr-revise`                                            |
-| `may_edit`                   | Agent worktree edit gate                                                       | `true`                                                        |
-| `no_changes_verdict`         | Verdict when no file diff                                                      | `REJECT`                                                      |
-| `pr_enabled`                 | Watch open PR heads (required for PR revise)                                   | `true`                                                        |
-| `pr_exclude`                 | PR exclusion tokens                                                            | `fork,label:no-loop`                                          |
-| `scoped_pr_number`           | Fetch only this PR; drops integration watch                                    | From webhook / dispatch / `inputs.pr_number`                  |
-| `write_target`               | Agent artifact type                                                            | `fix`                                                         |
+| Input / JSON key             | Description                                                                                              | Dogfood value                                                 |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `agent_checker_effort`       | Checker reasoning effort. Only engines with an effort flag (claude) consume it                           | `medium`                                                      |
+| `agent_checker_instructions` | APPROVE/REJECT rubric (mention gate, full comment batch)                                                 | Inline in caller workflow                                     |
+| `agent_checker_max_turns`    | Max checker turns                                                                                        | `100`                                                         |
+| `agent_checker_model`        | Checker model ID                                                                                         | `claude-opus-5`                                               |
+| `agent_checker_skill_name`   | Checker skill                                                                                            | `loop-verifier`                                               |
+| `agent_edit_allowlist`       | File edit allowlist (`**` = unrestricted)                                                                | `**`                                                          |
+| `agent_edit_target`          | Agent artifact type                                                                                      | `fix`                                                         |
+| `agent_engine`               | AI engine                                                                                                | `claude`                                                      |
+| `agent_loop_max_attempts`    | Max Agent→Verify cycles                                                                                  | `3`                                                           |
+| `agent_maker_effort`         | Maker reasoning effort. Only engines with an effort flag (claude) consume it                             | `medium`                                                      |
+| `agent_maker_instructions`   | Apply human feedback; address full `result.comments` array                                               | Inline in caller workflow                                     |
+| `agent_maker_max_turns`      | Max maker turns per attempt                                                                              | `100`                                                         |
+| `agent_maker_model`          | Maker model ID                                                                                           | `claude-sonnet-5`                                             |
+| `agent_maker_skill_name`     | Skill package                                                                                            | `github-pr-revise`                                            |
+| `agent_tool_allowlist`       | Tool permission rules for the maker (read PR, diff, comment)                                             | `gh api`, `gh pr view`, `gh pr diff`, `gh pr comment`         |
+| `agent_unchanged_verdict`    | Verdict when no file diff                                                                                | `REJECT`                                                      |
+| `budget_max_runs_per_day`    | Daily run cap                                                                                            | `10`                                                          |
+| `budget_max_tokens_per_day`  | Daily token cap                                                                                          | `1000000`                                                     |
+| `delivery`                   | Where the output is delivered: `pr_push` (PR head) or `pr_create` (new PR)                               | `${{ inputs.delivery \|\| 'pr_push' }}`                       |
+| `detect_pr_denylist`         | PR exclusion tokens                                                                                      | `fork,label:no-loop`                                          |
+| `detect_pr_enabled`          | Watch open PR heads (required for `pr_push`)                                                             | `true`                                                        |
+| `detect_pr_number`           | Fetch only this PR; drops integration watch. `0` = unset (`pr_push` then skips with `pr_number_missing`) | From webhook / dispatch / `inputs.pr_number`, else `0`        |
+| `detect_script`              | Domain detect script                                                                                     | `.agents/skills/github-pr-revise/scripts/detect_pr_revise.sh` |
+| `environment`                | GitHub Environment for env-scoped secrets                                                                | `default`                                                     |
+| `level`                      | Autonomy (`L2`)                                                                                          | `L2`                                                          |
+| `loop_name`                  | Loop identifier                                                                                          | `github-pr-revise`                                            |
+| `state_branch`               | `.loop/*` persistence branch                                                                             | `main`                                                        |
+| `trigger_comment_ack`        | Post `eyes` reaction on trigger comment via `ack-trigger`                                                | `true`                                                        |
 
-### Domain detect environment (`detect_domain_env_json`)
+### Domain detect environment (`detect_env_json`)
 
 ```yaml
-detect_domain_env_json: ${{ format('{{"PR_NUMBER":"{0}","PR_MENTION":"{1}"}}', github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || '', inputs.mention || '@loop') }}
+detect_env_json: ${{ format('{{"PR_NUMBER":"{0}","PR_MENTION":"{1}"}}', github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || '', inputs.mention || '@loop') }}
 ```
 
 | JSON key / env var | Description                                | Dogfood value                                             |
@@ -86,7 +84,7 @@ detect_domain_env_json: ${{ format('{{"PR_NUMBER":"{0}","PR_MENTION":"{1}"}}', g
 | `PR_NUMBER`        | Target PR number                           | From event / dispatch / `workflow_dispatch` input         |
 | `PR_MENTION`       | Mention token required on comment webhooks | `@loop` (override via `workflow_dispatch.inputs.mention`) |
 
-`scoped_pr_number` scopes `loop-detect` to the webhook PR so comment events do not scan `main`. See [Loop Caller Inputs Reference — Scope](loop-caller-inputs-reference.md#scope-scoped_pr_number).
+`detect_pr_number` scopes `loop-detect` to the webhook PR so comment events do not scan `main`. See [Loop Caller Inputs Reference — Scope](loop-caller-inputs-reference.md#scope-detect_pr_number).
 
 ## Caller shape
 
@@ -95,8 +93,8 @@ on-loop-github-pr-revise.yaml
   loop → uses ci-loop-caller.yaml
            detect  → detect_pr_revise.sh
            ack-trigger (optional) → eyes reaction on trigger comment
-           execute → ci-loop-agent (may_edit=true)
-           finalize → push_head (default) or open_pr
+           execute → ci-loop-agent (level L2)
+           finalize → pr_push (default) or pr_create
 ```
 
 `issue_comment` jobs run only when `github.event.issue.pull_request` is set.
@@ -107,14 +105,14 @@ After detect proceeds on a comment webhook:
 
 | Stage      | Behavior                                                                                                                                      |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Start ACK  | `eyes` reaction on each gathered `result.comments[].comment_id` (fallback: trigger `comment.id`) via `ack-trigger` when `ack_trigger_comment` |
+| Start ACK  | `eyes` reaction on each gathered `result.comments[].comment_id` (fallback: trigger `comment.id`) via `ack-trigger` when `trigger_comment_ack` |
 | Done reply | Inline review: threaded REST reply; conversation comment: follow-up PR comment (`loop-notify-pr`)                                             |
 | Marker     | Run-level `loop-notify-pr` marker comment unchanged                                                                                           |
 | Resolve    | Human only — no auto-resolve                                                                                                                  |
 
 Detect JSON includes `result.comment_id`, `result.event_name`, inline review fields, and `result.comments` (batched open `@mention` feedback). See [Detect result](#detect-result).
 
-## Concurrency and push_head landing
+## Concurrency and pr_push landing
 
 Same-PR revise runs **serialize**; earlier product fixes must remain on the PR head.
 
@@ -123,10 +121,10 @@ Same-PR revise runs **serialize**; earlier product fixes must remain on the PR h
 | Concurrency group    | `loop-github-pr-revise-<pr_number>` on `on-loop-github-pr-revise.yaml`                                                       |
 | `cancel-in-progress` | `false` — do not kill in-flight revise work                                                                                  |
 | `queue`              | `max` — queued mentions wait; one worker per PR at a time                                                                    |
-| `push_head` landing  | `loop-finalize` `push_target.sh` checks out latest `to.branch`, merges the agent branch with `--no-ff`, pushes without force |
+| `pr_push` landing    | `loop-finalize` `push_target.sh` checks out latest `to.branch`, merges the agent branch with `--no-ff`, pushes without force |
 | Conflict             | Merge or non-fast-forward push fails the finalize step (fail closed; no tip overwrite)                                       |
 
-`open_pr` finalize is unchanged. Prefer keeping lost-commit prevention on the shared `push` / `push_head` path rather than force-push or cancel-newest policies.
+`pr_create` finalize is unchanged. Prefer keeping lost-commit prevention on the `pr_push` path rather than force-push or cancel-newest policies.
 
 ## Detect result
 
@@ -157,7 +155,7 @@ Hydration reads trigger fields from `GITHUB_EVENT_PATH` when the corresponding `
 
 ### Context for replies
 
-For an inline reply (`in_reply_to_id` set), detect adds `parent_body` (the body of the replied-to review comment) to that `comments[]` entry; the key is omitted when it is empty. The skill reads context before it branches on `may_edit`:
+For an inline reply (`in_reply_to_id` set), detect adds `parent_body` (the body of the replied-to review comment) to that `comments[]` entry; the key is omitted when it is empty. The skill reads context before it branches on `agent_edit_allowed`:
 
 - Inline reply: read `parent_body` (fetch the parent review comment when absent), the whole thread, and the commented line with its `diff_hunk`.
 - Otherwise: read the PR body and all comments and reviews.

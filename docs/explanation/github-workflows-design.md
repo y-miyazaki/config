@@ -104,7 +104,7 @@ Most caller workflows define configuration in `env:` when jobs are inlined in th
 ```yaml
 env:
   AGENT_MODEL: ""
-  DEFAULT_BASE_BRANCH: main
+  STATE_BRANCH: main
   DEFAULT_ENGINE: claude
   DEFAULT_LEVEL: L2
   AGENT_CHECKER_MODEL: ""

@@ -11,11 +11,11 @@ Use when implementing a new `on-loop-*.yaml` workflow. Add `docs/explanation/loo
 
 All must be true. See [Loop Engineering Design — Design Invariants](../explanation/loop-engineering/loop-engineering-design.md#design-invariants).
 
-- [ ] Agent never writes to integration branches during Execute (isolated worktree only). L3 integration `push` in Finalize only, with promotion gate
+- [ ] Agent never writes to integration branches during Execute (isolated worktree only). L3 integration landing (`pr_create` + auto-merge) in Finalize only, with promotion gate
 - [ ] Checker never modifies the repository (read-only phase)
 - [ ] Detect never writes state; **detect script invoked once per run** (no caller re-run)
 - [ ] Finalize never changes **source under repair**; `.loop/*` persistence allowed
-- [ ] State advances only through Finalize (and merge-gated promote for L2 `open_pr` — see Finalize below)
+- [ ] State advances only through Finalize (and merge-gated promote for L2 `pr_create` — see Finalize below)
 - [ ] Phases communicate via GitHub Actions outputs/inputs only
 - [ ] Checkout is performed by the caller workflow
 - [ ] Every decision is traceable (`skip_reason`, reject reason, outcome)
@@ -56,15 +56,15 @@ See [CONTEXT — Semantic Findings](../explanation/loop-engineering/CONTEXT.md#l
 
 #### Finalize
 
-- [ ] Behavior matches [finalize strategy matrix](../explanation/loop-engineering/loop-engineering-design.md#finalize-strategy-matrix) for `target.finalize` + `DEFAULT_LEVEL`
-- [ ] **L2 `open_pr`:** merge-gated cursor — `loop-finalize` writes `pending`; `last_sha` advances only when fix PR merges via `on-loop-state-promote.yaml` (label `loop-automation`). Fix PR is domain-only — see [State delivery philosophy](../explanation/loop-engineering/multi-branch-loops-design.md#state-delivery-philosophy)
-- [ ] `open_pr`: create PR on APPROVE; `push` / `push_head`: push on APPROVE; delete agent branch on REJECT
-- [ ] L2 with `delivery: none` (`finalize=none`) does not push; the agent branch is deleted after APPROVE; domain persistence reads the report from the agent branch
-- [ ] L3 `auto_merge` only when `finalize=open_pr` — not for `push` / `push_head`
-- [ ] State, run-log, domain ledger via `domain_persistence_script` in finalize job (no caller `git push` for `.loop/*`)
+- [ ] Behavior matches [finalize strategy matrix](../explanation/loop-engineering/loop-engineering-design.md#finalize-strategy-matrix) for `delivery` + `level`
+- [ ] **L2 `pr_create`:** merge-gated cursor — `loop-finalize` writes `pending`; `last_sha` advances only when fix PR merges via `on-loop-state-promote.yaml` (label `loop-automation`). Fix PR is domain-only — see [State delivery philosophy](../explanation/loop-engineering/multi-branch-loops-design.md#state-delivery-philosophy)
+- [ ] `pr_create`: create PR on APPROVE; `pr_push`: push on APPROVE; delete agent branch on REJECT
+- [ ] L2 with `delivery: none` (`delivery: none`) does not push; the agent branch is deleted after APPROVE; domain persistence reads the report from the agent branch
+- [ ] L3 `auto_merge` only when `delivery: pr_create` — not for `pr_push`
+- [ ] State, run-log, domain ledger via `finalize_hook_script` in finalize job (no caller `git push` for `.loop/*`)
 - [ ] `outcome: watch` for Skill Watch (no `consecutive_failures` increment)
 - [ ] `loop-finalize` + `if: always()` with appropriate guards
-- [ ] `loop-notify-pr` when `target_json.to.pr_number` is set ([spec](loop-notify-pr-specification.md)); includes bot fix PR link for `pull_request` + `open_pr`
+- [ ] `loop-notify-pr` when `target_json.to.pr_number` is set ([spec](loop-notify-pr-specification.md)); includes bot fix PR link for `pull_request` + `pr_create`
 - [ ] `pr_exclude` for PR-head watch; no `pr_require` label opt-in
 - [ ] GitHub-entity loops (issue/stale): caller grants `issues: write` / `pull-requests: write`; skill performs API actions in **Execute**; Finalize advances state cursor (no file PR at L1)
 
@@ -88,7 +88,7 @@ See [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loo
 - [ ] `target_matrix` with `mode`, `from`, `to`, stable `key` per cell
 - [ ] Matrix execute/finalize; capped by `LOOP_MAX_TARGETS_PER_SCHEDULE`
 - [ ] `LOOP_PR_EXCLUDE`; bots excluded unless `LOOP_PR_INCLUDE_BOTS`
-- [ ] `DEFAULT_LEVEL=L2` unless L3 gate passed; L3 = auto-merge on bot fix PR when `finalize=open_pr`
+- [ ] `level: L2` unless L3 gate passed; L3 = auto-merge on bot fix PR when `delivery: pr_create`
 - [ ] Per-target `concurrency.group` when using matrix fan-out
 
 ### Workflow Structure
@@ -101,7 +101,7 @@ See [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loo
 
 ### Retry Policy
 
-- [ ] **State cursor (general):** L2 `open_pr` → merge-gated `pending` (`last_sha` on fix PR merge); REJECT / no-op → `metadata` only (`last_sha` unchanged; circuit breaker at 3+); L3 push → cursor in same finalize run
+- [ ] **State cursor (general):** L2 `pr_create` → merge-gated `pending` (`last_sha` on fix PR merge); REJECT / no-op → `metadata` only (`last_sha` unchanged; circuit breaker at 3+); `pr_push` → cursor in same finalize run
 - [ ] `consecutive_failures` + `attempt_fingerprint` on `target.key`
 - [ ] Pause at 3+ consecutive failures (`circuit_breaker`)
 
@@ -124,5 +124,5 @@ See [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loo
 
 - [ ] Approval Rate > 80%, PR Merge Rate > 90%, Human Override Rate < 10% (2 weeks)
 - [ ] [cobusgreyling Pre-Flight Safety](https://github.com/cobusgreyling/loop-engineering/blob/main/docs/safety.md#pre-flight-safety-check) complete
-- [ ] L3 enables GitHub auto-merge on bot fix PRs (`finalize=open_pr`); never default `DEFAULT_LEVEL=L3` for new adopters
+- [ ] L3 enables GitHub auto-merge on bot fix PRs (`delivery: pr_create`); never default `level` to L3 for new adopters
 - [ ] Stop conditions and escalation path defined

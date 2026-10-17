@@ -24,7 +24,7 @@ Automated minimal repair when CI fails on integration branches and/or open PR he
 - Dedupe by `workflow_run_id` ledger; skip infra/flake/env failures as `outcome: watch`
 - `workflow_run` on repair-target CI workflows (dogfood default); `workflow_dispatch` for manual / `gh run list` scan; see [ops checklist](#workflow_run-operational-checklist)
 
-Dogfood uses **`open_pr` for all repair paths**. Direct branch push (`push` / `push_head`) is a platform exception path — not the ci-sweeper default. See [Finalize strategy](#finalize-strategy).
+Dogfood uses **`delivery: pr_create` for all repair paths**, including open PR heads (a new bot fix PR to the PR head branch). `pr_push` (push to an existing PR head) is a separate platform delivery — not the ci-sweeper default. See [Finalize strategy](#finalize-strategy).
 
 ### Out of scope
 
@@ -38,7 +38,7 @@ Entry skill design intent for failure kinds deferred via [Failure kind defer (B)
 - Separate `loop-pr-ci-healer` package
 - **Coverage-threshold and test-gap repair** — defer (B) until a domain skill exists
 - **Dependency-breakage repair** — defer (B); bot PR heads excluded in dogfood (`pr_include_bots: ""`)
-- Per-PR opt-in labels (`pr_require`) — removed; use `pr_exclude` only
+- Per-PR opt-in labels (`pr_require`) — removed; use `detect_pr_denylist` only
 
 Skill execution boundaries: `ci-sweeper` SKILL.md (`USE FOR` / `DO NOT USE FOR`).
 
@@ -58,7 +58,7 @@ See [CI failure repair — layered responsibilities](../loop-engineering-design.
 
 ### Failure contexts
 
-Two independent watch paths. Both use **`open_pr`** finalize; **`level`** selects human review (L2) vs GitHub auto-merge on the bot fix PR (L3).
+Two independent watch paths. Both use **`delivery: pr_create`**; **`level`** selects human review (L2) vs GitHub auto-merge on the bot fix PR (L3).
 
 | Context        | Trigger example                          | Bot fix PR target (`to.branch`) |
 | -------------- | ---------------------------------------- | ------------------------------- |
@@ -106,19 +106,18 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 **Dogfood minimum (autonomy + delivery + PR watch):**
 
 ```yaml
-delivery: open_pr
+agent_edit_target: fix
+delivery: pr_create
+detect_pr_denylist: fork,draft,label:no-loop
+detect_pr_enabled: true
 level: L2
-may_edit: true
-pr_enabled: true
-pr_exclude: fork,draft,label:no-loop
-write_target: fix
 ```
 
-Git landing (`open_pr` / `push` / `push_head`) is derived from `delivery` inside `loop-detect`. Advanced overrides use `git_landing_*` on the action only — not caller inputs. See [Level × finalize matrix](loop-caller-inputs-reference.md#level--finalize-matrix).
+`delivery` is the only declaration of how the output lands (`pr_create`, `pr_push`, or `none`); there is no separate git-landing input, and the agent edit gate (`agent_edit_allowed`) is derived from `level`. See [Level × finalize matrix](loop-caller-inputs-reference.md#level--finalize-matrix).
 
 | Input / JSON key             | Description                                                                                                                                                                                                               | Dogfood value                                                                                            |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `additional_commit_paths`    | Extra paths included in finalize commit (ledger file).                                                                                                                                                                    | `.loop/state-ci-sweeper-run-ledger.json`                                                                 |
+| `finalize_commit_paths`      | Extra paths included in finalize commit (ledger file).                                                                                                                                                                    | `.loop/state-ci-sweeper-run-ledger.json`                                                                 |
 | `agent_maker_max_turns`      | Max maker agent turns per loop attempt (one Agent→Verify cycle).                                                                                                                                                          | `100`                                                                                                    |
 | `agent_maker_model`          | Maker model ID. Cursor: `agent --list-models`.                                                                                                                                                                            | `claude-sonnet-5`                                                                                        |
 | `agent_maker_effort`         | Maker reasoning effort. Only engines with an effort flag (claude) consume it                                                                                                                                              | `medium`                                                                                                 |
@@ -127,31 +126,31 @@ Git landing (`open_pr` / `push` / `push_head`) is derived from `delivery` inside
 | `agent_checker_max_turns`    | Max checker agent turns per verification.                                                                                                                                                                                 | `100`                                                                                                    |
 | `agent_checker_model`        | Checker model ID. Cursor: `agent --list-models`.                                                                                                                                                                          | `claude-opus-5`                                                                                          |
 | `agent_checker_effort`       | Checker reasoning effort. Only engines with an effort flag (claude) consume it                                                                                                                                            | `medium`                                                                                                 |
-| `allowlist`                  | Comma-separated globs the maker may modify.                                                                                                                                                                               | `.github/**,.apm/packages/**,scripts/**,apm.yml,mise.toml,renovate/**,docs/**/*.md,README.md,mkdocs.yml` |
-| `branch_match`               | Comma-separated integration branch patterns to poll for failed CI.                                                                                                                                                        | `main`                                                                                                   |
-| `branch_state`               | Branch for `.loop/*` persistence, state migration, and watch fallback.                                                                                                                                                    | `main`                                                                                                   |
+| `agent_edit_allowlist`       | Comma-separated globs the maker may modify.                                                                                                                                                                               | `.github/**,.apm/packages/**,scripts/**,apm.yml,mise.toml,renovate/**,docs/**/*.md,README.md,mkdocs.yml` |
+| `detect_branch_match`        | Comma-separated integration branch patterns to poll for failed CI.                                                                                                                                                        | `main`                                                                                                   |
+| `state_branch`               | Branch for `.loop/*` persistence, and state migration (it no longer doubles as a watch fallback).                                                                                                                         | `main`                                                                                                   |
 | `budget_max_runs_per_day`    | Daily run cap keyed by `loop_name`. Caller input; `.loop/loop-budget.json` overrides when present.                                                                                                                        | `5` (caller); effective `50` via `.loop/loop-budget.json`                                                |
 | `budget_max_tokens_per_day`  | Daily aggregated token cap across loops.                                                                                                                                                                                  | `1000000`                                                                                                |
-| `denylist`                   | Not set — the platform default (`**/.env,**/credentials*,**/secrets*`) applies.                                                                                                                                           | Omitted                                                                                                  |
+| `agent_edit_denylist`        | Not set — the platform default (`**/.env,**/credentials*,**/secrets*`) applies.                                                                                                                                           | Omitted                                                                                                  |
 | Reusable workflow (`uses:`)  | `ci-loop-caller.yaml` — detect job requires `actions: write`, `contents: read`, and `pull-requests: read`; caller `permissions` must include `actions: write`.                                                            | `./.github/workflows/ci-loop-caller.yaml`                                                                |
 | `detect_script`              | Domain detect script path. Uses `gh run list` per watch branch / PR head.                                                                                                                                                 | `.agents/skills/ci-sweeper/scripts/detect_ci_failures.sh`                                                |
-| `domain_persistence_script`  | Bash script for `loop-finalize` domain persistence (run ledger updates).                                                                                                                                                  | `.agents/skills/ci-sweeper/scripts/update_run_ledger.sh`                                                 |
-| `engine`                     | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                                                                                                                                     | `claude`                                                                                                 |
+| `finalize_hook_script`       | Bash script for `loop-finalize` domain persistence (run ledger updates).                                                                                                                                                  | `.agents/skills/ci-sweeper/scripts/update_run_ledger.sh`                                                 |
+| `agent_engine`               | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                                                                                                                                     | `claude`                                                                                                 |
 | `level`                      | Autonomy: `L2` (human merges bot fix PR) or `L3` (GitHub auto-merge on bot fix PR).                                                                                                                                       | `L2`                                                                                                     |
 | `loop_name`                  | Loop identifier; state file `.loop/state-ci-sweeper.json`.                                                                                                                                                                | `ci-sweeper`                                                                                             |
-| `max_targets_per_schedule`   | Max targets per cron tick after priority filters.                                                                                                                                                                         | `3`                                                                                                      |
-| `no_changes_verdict`         | `APPROVE` or `REJECT` when maker produces no file diff on actionable CI failure.                                                                                                                                          | `REJECT`                                                                                                 |
+| `detect_max_targets`         | Max targets per cron tick after priority filters.                                                                                                                                                                         | `3`                                                                                                      |
+| `agent_unchanged_verdict`    | `APPROVE` or `REJECT` when maker produces no file diff on actionable CI failure.                                                                                                                                          | `REJECT`                                                                                                 |
 | `pr_body`                    | Optional static prefix (dogfood: `""`). `loop-finalize` composes agent Overview/Summary + mechanical sections. See [Loop PR Body Readable Design](../../../superpowers/specs/2026-07-21-loop-pr-body-readable-design.md). | `""`                                                                                                     |
-| `pr_enabled`                 | Watch open PR heads for failed CI.                                                                                                                                                                                        | `true`                                                                                                   |
-| `pr_exclude`                 | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`.                                                                                                                                                        | `fork,draft,label:no-loop`                                                                               |
-| `pr_include_bots`            | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots.                                                                                                                                        | `""`                                                                                                     |
-| `pr_title`                   | PR title when finalize strategy is `open_pr`.                                                                                                                                                                             | `chore(ci-sweeper): automated CI repair (loop-ci-sweeper)`                                               |
+| `detect_pr_enabled`          | Watch open PR heads for failed CI.                                                                                                                                                                                        | `true`                                                                                                   |
+| `detect_pr_denylist`         | PR exclusion tokens: `fork`, `draft`, `label:<name>`, `wip_title`.                                                                                                                                                        | `fork,draft,label:no-loop`                                                                               |
+| `detect_pr_bot_allowlist`    | Comma-separated bot logins to include when scanning PRs. Empty = exclude all bots.                                                                                                                                        | `""`                                                                                                     |
+| `pr_title`                   | PR title when `delivery` is `pr_create`.                                                                                                                                                                                  | `chore(ci-sweeper): automated CI repair (loop-ci-sweeper)`                                               |
 | `agent_maker_instructions`   | Domain instructions: classify Watch vs Fix; minimal diff; run validation skills.                                                                                                                                          | Inline in caller workflow                                                                                |
 | `agent_maker_skill_name`     | Skill package to invoke.                                                                                                                                                                                                  | `ci-sweeper`                                                                                             |
 
 **Removed from dogfood (do not set):** `pr_require`, `finalize_integration`, `finalize_pull_request` (replaced by `delivery`).
 
-### Domain detect environment (`detect_domain_env_json`)
+### Domain detect environment (`detect_env_json`)
 
 | JSON key                         | Description                                     | Dogfood value                            |
 | -------------------------------- | ----------------------------------------------- | ---------------------------------------- |
@@ -162,7 +161,7 @@ Git landing (`open_pr` / `push` / `push_head`) is derived from `delivery` inside
 **Event keys** (embed when `workflow_run` trigger is enabled on the caller):
 
 ```yaml
-detect_domain_env_json: ${{ format('{{"CI_SWEEPER_EVENT_HEAD_BRANCH":"{0}","CI_SWEEPER_HEAD_BRANCH":"{0}","CI_SWEEPER_HEAD_SHA":"{1}","CI_SWEEPER_WORKFLOW_RUN_ID":"{2}"}}', github.event.workflow_run.head_branch || 'main', github.event.workflow_run.head_sha || github.sha, github.event.workflow_run.id || '') }}
+detect_env_json: ${{ format('{{"CI_SWEEPER_EVENT_HEAD_BRANCH":"{0}","CI_SWEEPER_HEAD_BRANCH":"{0}","CI_SWEEPER_HEAD_SHA":"{1}","CI_SWEEPER_WORKFLOW_RUN_ID":"{2}"}}', github.event.workflow_run.head_branch || 'main', github.event.workflow_run.head_sha || github.sha, github.event.workflow_run.id || '') }}
 ```
 
 | JSON key                       | Description                                                                                                      |
@@ -176,10 +175,10 @@ detect_domain_env_json: ${{ format('{{"CI_SWEEPER_EVENT_HEAD_BRANCH":"{0}","CI_S
 
 ### Execute-only inputs
 
-| Input                       | Dogfood value                                            |
-| --------------------------- | -------------------------------------------------------- |
-| `additional_commit_paths`   | `.loop/state-ci-sweeper-run-ledger.json`                 |
-| `domain_persistence_script` | `.agents/skills/ci-sweeper/scripts/update_run_ledger.sh` |
+| Input                   | Dogfood value                                            |
+| ----------------------- | -------------------------------------------------------- |
+| `finalize_commit_paths` | `.loop/state-ci-sweeper-run-ledger.json`                 |
+| `finalize_hook_script`  | `.agents/skills/ci-sweeper/scripts/update_run_ledger.sh` |
 
 When `CI_SWEEPER_WORKFLOW_RUN_ID` is set, `loop-detect` enumerates **only** the failed head (matching integration branch or open PR). See [Trigger-aware priority](../multi-branch-loops-design.md#trigger-aware-priority). Detect script binaries are always pinned from the job checkout (branch_state), never from a stale PR worktree.
 
@@ -211,11 +210,11 @@ Per watch branch, `loop-detect` sets context; script uses `gh run list --branch 
 
 ### Pull request mode
 
-Requires `pr_enabled: true`.
+Requires `detect_pr_enabled: true`.
 
 - Failed runs where `head_branch` matches an eligible open PR
 - Emit `pr_number`, `base.branch` in `target_json.to`
-- Apply [PR exclusion rules](#pr-exclusion-pr_exclude)
+- Apply [PR exclusion rules](#pr-exclusion-detect_pr_denylist)
 
 ### Detect truth source
 
@@ -224,37 +223,37 @@ Requires `pr_enabled: true`.
 | integration  | `workflow_run_id` + ledger | `last_sha` in state (advance on finalize) |
 | pull_request | `workflow_run_id` + ledger | `head_ref` per PR in state                |
 
-**Rule:** Do not rely on `last_sha` alone to skip a still-failing workflow run. Ledger outcome `pr-created` or `watch` blocks re-processing same run ID under `block` policy.
+**Rule:** Do not rely on `last_sha` alone to skip a still-failing workflow run. Ledger outcome `pr_created`, `pr_pushed`, or `watch` blocks re-processing same run ID under `block` policy.
 
 ### Run ledger and REJECT retry policy (caller / detect)
 
-Owned by the **caller** and detect scripts — not by skill triage. Configure via `detect_domain_env_json`:
+Owned by the **caller** and detect scripts — not by skill triage. Configure via `detect_env_json`:
 
-| Variable                         | Default (portable detect default)        | Dogfood                                  | Description                                                                                                                        |
-| -------------------------------- | ---------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `CI_SWEEPER_LEDGER_FILE`         | `.loop/state-ci-sweeper-run-ledger.json` | `.loop/state-ci-sweeper-run-ledger.json` | Repo-relative ledger keyed by `workflow_run_id`                                                                                    |
-| `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`                                  | `block`                                  | `block`: skip any ledgered run. `retry`: skip only `pr-created`. `limited`: skip `rejected` after max retries. Aliases `a`/`b`/`c` |
-| `CI_SWEEPER_REJECT_MAX_RETRIES`  | `3`                                      | `3`                                      | Used when policy is `limited`                                                                                                      |
+| Variable                         | Default (portable detect default)        | Dogfood                                  | Description                                                                                                                                        |
+| -------------------------------- | ---------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CI_SWEEPER_LEDGER_FILE`         | `.loop/state-ci-sweeper-run-ledger.json` | `.loop/state-ci-sweeper-run-ledger.json` | Repo-relative ledger keyed by `workflow_run_id`                                                                                                    |
+| `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`                                  | `block`                                  | `block`: skip any ledgered run. `retry`: skip only `pr_created` and `pr_pushed`. `limited`: skip `rejected` after max retries. Aliases `a`/`b`/`c` |
+| `CI_SWEEPER_REJECT_MAX_RETRIES`  | `3`                                      | `3`                                      | Used when policy is `limited`                                                                                                                      |
 
-`update_run_ledger.sh` (via `domain_persistence_script`) prunes `runs` older than **30 days**. Detect places skipped runs in `ignored[]`; the skill only notes them in Overview.
+`update_run_ledger.sh` (via `finalize_hook_script`) prunes `runs` older than **30 days**. Detect places skipped runs in `ignored[]`; the skill only notes them in Overview.
 
-### `no_changes_verdict: REJECT`
+### `agent_unchanged_verdict: REJECT`
 
 When the Skill classifies **Fix** but the maker produces no changes → REJECT → `outcome: rejected`.
 
 When the Skill classifies **Watch** (infra/flake/env) with no code edit → `outcome: watch` (not REJECT). See [Outcome enum](../../../reference/specification.md#outcome-enum).
 
-## PR exclusion (`pr_exclude`)
+## PR exclusion (`detect_pr_denylist`)
 
-| Rule          | Default     | Token                           |
-| ------------- | ----------- | ------------------------------- |
-| Fork PR       | Exclude     | `fork`                          |
-| Draft         | Exclude     | `draft`                         |
-| Label opt-out | Exclude     | `label:<name>`                  |
-| Bots          | **Exclude** | use `pr_include_bots` to opt in |
-| WIP title     | Optional    | `wip_title`                     |
+| Rule          | Default     | Token                                   |
+| ------------- | ----------- | --------------------------------------- |
+| Fork PR       | Exclude     | `fork`                                  |
+| Draft         | Exclude     | `draft`                                 |
+| Label opt-out | Exclude     | `label:<name>`                          |
+| Bots          | **Exclude** | use `detect_pr_bot_allowlist` to opt in |
+| WIP title     | Optional    | `wip_title`                             |
 
-No label opt-in (`pr_require`) — eligible open PRs passing `pr_exclude` are watched when `pr_enabled: true`.
+No label opt-in (`pr_require`) — eligible open PRs passing `detect_pr_denylist` are watched when `detect_pr_enabled: true`.
 
 After finalize on `pull_request` targets, `loop-notify-pr` posts or updates a marker comment on the **human PR** (`target_json.to.pr_number`), including the bot fix PR URL when finalize creates one. See [loop-notify-pr Specification](../../../reference/loop-notify-pr-specification.md).
 
@@ -277,7 +276,7 @@ CI sweeper criteria require the fix to address the **logged failure** (semantic 
 
 PR body is composed by `loop-finalize` from agent `## Overview` / `## Summary` (skill-owned) plus mechanical sections. Dogfood sets `pr_body: ""`. See [Loop PR Body Skill Contract](../loop-pr-body-skill-contract.md).
 
-Platform rule for dogfood loops (changelog, docs-updater, ci-sweeper): **`target.finalize` is always `open_pr`**. **`level`** controls review vs auto-merge on the **bot fix PR**.
+Platform rule for dogfood loops (changelog, docs-updater, ci-sweeper): **`delivery` is always `pr_create`**. **`level`** controls review vs auto-merge on the **bot fix PR**.
 
 | Mode           | L2                                        | L3                                                        |
 | -------------- | ----------------------------------------- | --------------------------------------------------------- |
@@ -288,8 +287,8 @@ Reference: [Finalize strategy matrix](../loop-engineering-design.md#finalize-str
 
 | Persistence | Mechanism                                                 |
 | ----------- | --------------------------------------------------------- |
-| State       | `state-ci-sweeper.json` (`targets` map) on `branch_state` |
-| Run ledger  | `domain_persistence_script` → `update_run_ledger.sh`      |
+| State       | `state-ci-sweeper.json` (`targets` map) on `state_branch` |
+| Run ledger  | `finalize_hook_script` → `update_run_ledger.sh`           |
 | Run log     | `loop-run-log` in `loop-finalize` chain                   |
 
 Dogfood: **`level=L2`** until [L3 promotion gate](../loop-engineering-design.md).
@@ -304,11 +303,11 @@ Shared platform: [Multi-Branch — Shared platform checklist](../multi-branch-lo
 - [x] `on-loop-ci-sweeper.yaml` dogfood caller via `ci-loop-caller`
 - [x] `verifier_context` on execute path (`build_verifier_context_from_result` `.failures` branch)
 - [x] Single detect path via `loop-detect` (no caller re-run)
-- [x] `pr_enabled`
-- [x] Ledger via `domain_persistence_script` in `loop-finalize`
+- [x] `detect_pr_enabled`
+- [x] Ledger via `finalize_hook_script` in `loop-finalize`
 - [x] `outcome: watch` for Skill Watch classification
 - [x] `loop-notify-pr` on human PR for `pull_request` mode
-- [x] `open_pr` git landing for PR head targets (derived from `delivery: open_pr`)
+- [x] `pr_create` delivery for PR head targets (a new bot fix PR to the PR head branch)
 
 ## workflow_run Operational Checklist
 
@@ -317,15 +316,15 @@ Dogfood `on-loop-ci-sweeper.yaml` enables `workflow_run`. Keep these gates when 
 - [x] zizmor / security review complete (`zizmor: ignore[dangerous-triggers]` documented on the trigger)
 - [x] `workflow_run.workflows` lists only CI workflows to repair (not `on-loop-*` / `ci-loop-*` callers)
 - [x] Concurrency prevents overlapping runs on same workflow
-- [x] Event path sets `CI_SWEEPER_*` keys in `detect_domain_env_json`
+- [x] Event path sets `CI_SWEEPER_*` keys in `detect_env_json`
 - [x] Failed workflow is not the sweeper’s own finalize push (`[skip ci]` on ledger commits)
-- [x] Fork / draft / bot exclusions active (`pr_exclude`)
+- [x] Fork / draft / bot exclusions active (`detect_pr_denylist`)
 - [x] Job `if:` limits event runs to `failure` / `startup_failure`
 - [x] 1 failure event → 1 target (no unbounded matrix from one event) — `loop-detect` scopes watch list to failed head when `CI_SWEEPER_WORKFLOW_RUN_ID` is set; verify when expanding `workflows:`
 
 ## Dependency update (caller filter + domain skill)
 
-Tier 3 **dependency-update** behavior is a domain skill plus caller PR filters (`pr_include_bots`, `pr_exclude`) under **`ci-sweeper`** — not a separate loop package. Defer via [Failure kind defer (B)](../loop-engineering-design.md#failure-kind-defer-b) until the skill exists.
+Tier 3 **dependency-update** behavior is a domain skill plus caller PR filters (`detect_pr_bot_allowlist`, `detect_pr_denylist`) under **`ci-sweeper`** — not a separate loop package. Defer via [Failure kind defer (B)](../loop-engineering-design.md#failure-kind-defer-b) until the skill exists.
 
 ## Cross-Loop Note
 
