@@ -34,13 +34,23 @@ Review a pull request once when it is opened or marked ready, and post the resul
 
 The caller ships with the `pull_request_target` trigger **commented out**.
 
-Both triggers (including `workflow_dispatch`) are unsafe on a real base branch until the `ci-loop-*` SHA pins in the caller chain are bumped to a release that contains the `loop-finalize` fix for `finalize_strategy: none` (see [Finalize with `delivery: none`](#finalize-with-delivery-none)). With the older pinned `loop-finalize`, an APPROVE verdict merges and pushes the agent branch, including `.loop-review/pr-<n>.json`, into the base branch.
+Do not dispatch or enable the workflow until a release that contains all of the following platform fixes is pinned in the `ci-loop-*` `uses:` lines of the caller chain (`ci-loop-caller-entity.yaml` → `ci-loop-agent.yaml` → `loop-*` actions):
 
-| Stage                 | Action                                                                                                                                        |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Before the pin bump   | Use `workflow_dispatch` only, on a throwaway base branch or repository                                                                        |
-| After the pin bump    | Uncomment the `pull_request_target` trigger in `on-loop-github-pr-review.yaml`, then re-run `zizmor` (it has not checked the commented block) |
-| Intake gate on enable | `jobs.loop.if` already covers both events; enabling is only uncommenting the trigger                                                          |
+| Fix        | Change                                                                                                                                                           |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1, P2, P4 | `loop-finalize` never pushes for `finalize_strategy: none`, deletes the agent branch, and passes `GH_TOKEN` / `GITHUB_REPOSITORY` to `domain_persistence_script` |
+| B2         | Callers set `finalize_enabled` for `delivery: none` when `level` is not `L1`, so `loop-finalize` (and `post_review.sh`) runs at L2                               |
+| B3         | `loop-entity-detect` emits `target_json.from.branch`, which `ci-loop-agent` uses as the worktree base branch                                                     |
+| Meta guard | The `finalize-l2` PR review Meta step acts only on `entity:pr:<n>` handoff keys, before it sources any library, and cannot fail the job                          |
+
+With older pins, an APPROVE verdict can merge the agent branch, including `.loop-review/pr-<n>.json`, into the base branch, or the review is never posted (see [Finalize with `delivery: none`](#finalize-with-delivery-none)).
+
+| Stage                 | Action                                                                                                                                                    |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Before the pin bump   | Do not run the workflow; the `pull_request_target` trigger stays commented out                                                                            |
+| After the pin bump    | Uncomment the `pull_request_target` trigger in `on-loop-github-pr-review.yaml`, then re-run `zizmor` (it has not checked the commented block)             |
+| Manual dispatch       | Run `workflow_dispatch` from the default branch only; the base checkout, the rules read at base, and `post_review.sh` come from the ref the run starts on |
+| Intake gate on enable | `jobs.loop.if` already covers both events; enabling is only uncommenting the trigger                                                                      |
 
 ## Caller inputs
 
@@ -48,7 +58,7 @@ Keys are passed in `on-loop-github-pr-review.yaml` via `with:` on `ci-loop-calle
 
 | Input / JSON key             | Description                                                                    | Dogfood value                                                                      |
 | ---------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| `agent_allowed_tools`        | Read-only tool allowlist for the maker                                         | `gh api`, `gh pr diff`, `gh pr view`, `git show`                                   |
+| `agent_allowed_tools`        | Read-only tool allowlist for the maker                                         | `gh api -X GET`, `gh issue view`, `gh pr diff`, `gh pr view`, `git show`           |
 | `agent_maker_instructions`   | Domain maker task (review skill, read-only engine review, repo exclusions)     | Inline in caller workflow                                                          |
 | `agent_maker_max_turns`      | Max maker turns per attempt                                                    | `100`                                                                              |
 | `agent_maker_model`          | Maker model ID                                                                 | `claude-sonnet-5`                                                                  |
@@ -94,7 +104,7 @@ on-loop-github-pr-review.yaml
   loop → uses ci-loop-caller-entity.yaml
            detect  → loop-entity-detect (detect_pr_review.sh)
            execute → ci-loop-agent (maker writes .loop-review/pr-<n>.json; checker verifies)
-           finalize → delivery none: no push, agent branch deleted after APPROVE;
+           finalize → delivery none: no push, agent branch always deleted;
                       post_review.sh posts one COMMENT review
            record-skip → budget | circuit_breaker
 ```
@@ -103,7 +113,7 @@ The head is never checked out or executed. The loop runs from the base checkout,
 
 ## Detect contract
 
-`detect_pr_review.sh` emits `skip: true` when any of these holds: the PR is a draft, a fork PR (head repository differs from base), bot-authored, labeled `no-loop` or `loop-automation`, or a review carrying the marker `<!-- github-pr-review:v1 -->` already exists (unless `PR_FORCE` is `true`). The job `if` in the caller refuses the same classes for `pull_request_target` so no run is queued for them (see [Intake Gating](../loop-engineering-design.md#intake-gating-self-retrigger-prevention)). Detect fails closed: when a required fact cannot be obtained, it emits an error envelope.
+`detect_pr_review.sh` emits `skip: true` when any of these holds: the PR is a draft, a fork PR (head repository differs from base), bot-authored, labeled `no-loop` or `loop-automation`, or a Bot-authored review carrying the marker `<!-- github-pr-review:v1 -->` already exists (unless `PR_FORCE` is `true`). The job `if` in the caller refuses the same classes for `pull_request_target` so no run is queued for them (see [Intake Gating](../loop-engineering-design.md#intake-gating-self-retrigger-prevention)). Detect fails closed: when a required fact cannot be obtained, it emits an error envelope.
 
 When `skip` is `false`, `result` carries `pr_number`, `base_sha`, `head_sha`, `changed_files`, `report_path` (`.loop-review/pr-<n>.json`), and `handoff_key` (`entity:pr:<n>`).
 
@@ -135,9 +145,9 @@ The agent branch holding the report is read by the script from `EXECUTE_BRANCH`.
 
 ## Finalize with `delivery: none`
 
-`delivery: none` resolves to `finalize_strategy: none` at L2. `loop-finalize` never pushes the agent branch to the target branch for `none`, and deletes the agent branch after APPROVE (previously only after REJECT). The report is persisted only through `domain_persistence_script`, which receives `GH_TOKEN` and `GITHUB_REPOSITORY` from `loop-finalize` and reads the report from the agent branch before it is deleted.
+`delivery: none` resolves to `finalize_strategy: none` at L2, and the caller sets `finalize_enabled` for `delivery: none` when `level` is not `L1`. `loop-finalize` never pushes the agent branch to the target branch for `none`, deletes the agent branch whatever the verdict (previously only after an empty REJECT), and records the outcome `reported` instead of `pr-created` after APPROVE. The report is persisted only through `domain_persistence_script`, which receives `GH_TOKEN` and `GITHUB_REPOSITORY` from `loop-finalize` and reads the report from the agent branch before it is deleted.
 
-After posting, finalize appends the standard loop Meta (run URL, usage) to the posted marker review via `entity_meta.sh`. The append is a no-op when the marker review is absent and is idempotent when the Meta is already present.
+After posting, finalize appends the standard loop Meta (run URL, usage) to the posted marker review via `entity_meta.sh`. Only a Bot-authored review counts as the marker review, here and in detect, so a human who pastes the marker can neither suppress the review nor receive the Meta. The append is a no-op when the marker review is absent and is idempotent when the Meta is already present.
 
 ## Related changes
 
