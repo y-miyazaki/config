@@ -25,6 +25,20 @@ setup() {
     source "${DELIVERY_LIB}"
 }
 
+# Old behavior frozen from resolve_git_finalize_strategies (detect.sh) and the
+# caller auto_merge expression (ci-loop-caller.yaml). Row format:
+#   delivery git_landing_integration git_landing_pull_request finalize_integration finalize_pull_request
+GOLDEN_ROWS=(
+    "none open_pr open_pr none none"
+    "none open_pr push_head none none"
+    "none push open_pr none none"
+    "none push push_head none none"
+    "open_pr open_pr open_pr open_pr open_pr"
+    "open_pr open_pr push_head open_pr push_head"
+    "open_pr push open_pr push open_pr"
+    "open_pr push push_head push push_head"
+)
+
 @test "delivery_requires_pr_number_skip: pr_create empty does not skip" {
     run delivery_requires_pr_number_skip pr_create ""
     [ "$status" -eq 1 ]
@@ -45,6 +59,17 @@ setup() {
     [ "$status" -eq 0 ]
 }
 
+@test "delivery_requires_pr_number_skip: unknown delivery does not skip" {
+    run delivery_requires_pr_number_skip bogus ""
+    [ "$status" -eq 1 ]
+}
+
+@test "derive_pr_auto_merge: empty and unknown input is false" {
+    [ "$(derive_pr_auto_merge "" "")" = "false" ]
+    [ "$(derive_pr_auto_merge L3 bogus)" = "false" ]
+    [ "$(derive_pr_auto_merge L4 pr_create)" = "false" ]
+}
+
 @test "derive_pr_auto_merge: only L3 pr_create is true" {
     local level delivery expected out
     for level in L1 L2 L3; do
@@ -60,32 +85,16 @@ setup() {
     done
 }
 
-@test "golden: every old combination maps or is rejected consistently" {
-    # Old behavior frozen from resolve_git_finalize_strategies (detect.sh) and the
-    # caller auto_merge expression (ci-loop-caller.yaml). Row format:
-    #   delivery git_landing_integration git_landing_pull_request finalize_integration finalize_pull_request
-    local -a rows=(
-        "none open_pr open_pr none none"
-        "none open_pr push_head none none"
-        "none push open_pr none none"
-        "none push push_head none none"
-        "open_pr open_pr open_pr open_pr open_pr"
-        "open_pr open_pr push_head open_pr push_head"
-        "open_pr push open_pr push open_pr"
-        "open_pr push push_head push push_head"
-    )
-    local -a target_sets=("integration" "pull_request" "integration pull_request")
-    local row targets level old_delivery fin_i fin_p kind fin mapped new_delivery old_am
+@test "golden: mappable rows match old auto_merge and pass target validation" {
+    local row targets level old_delivery fin_i fin_p kind fin mapped new_delivery old_am mappable count=0
     local -a fins
-    local mappable cand cand_ok i mapped_cand
-    for row in "${rows[@]}"; do
+    for row in "${GOLDEN_ROWS[@]}"; do
         read -r old_delivery _ _ fin_i fin_p <<< "${row}"
-        for targets in "${target_sets[@]}"; do
+        for targets in "integration" "pull_request" "integration pull_request"; do
             fins=()
             for kind in ${targets}; do
-                [[ ${kind} == integration ]] && fins+=("${fin_i}") || fins+=("${fin_p}")
+                if [[ ${kind} == integration ]]; then fins+=("${fin_i}"); else fins+=("${fin_p}"); fi
             done
-            # Map old finalize values to new delivery values.
             mappable=true
             new_delivery=""
             for fin in "${fins[@]}"; do
@@ -101,52 +110,78 @@ setup() {
                 fi
                 new_delivery="${mapped}"
             done
+            [[ ${mappable} == true ]] || continue
+            validate_delivery_value "${new_delivery}"
+            for kind in ${targets}; do
+                validate_delivery_target "${new_delivery}" "{\"mode\":\"${kind}\"}" || {
+                    echo "target rejected: ${row} | ${kind} -> ${new_delivery}"
+                    return 1
+                }
+            done
             for level in L1 L2 L3; do
-                if [[ ${mappable} == true ]]; then
-                    validate_delivery_value "${new_delivery}"
-                    # Old auto_merge: delivery == open_pr && level == L3 && target finalize == open_pr
-                    for fin in "${fins[@]}"; do
-                        old_am=false
-                        [[ ${old_delivery} == open_pr && ${level} == L3 && ${fin} == open_pr ]] && old_am=true
-                        [ "$(derive_pr_auto_merge "${level}" "${new_delivery}")" = "${old_am}" ] || {
-                            echo "auto_merge mismatch: ${row} | ${targets} | ${level}"
-                            return 1
-                        }
-                    done
-                    for kind in ${targets}; do
-                        validate_delivery_target "${new_delivery}" "{\"mode\":\"${kind}\"}" || {
-                            echo "target rejected: ${row} | ${kind} -> ${new_delivery}"
-                            return 1
-                        }
-                    done
-                    # Old finalize_enabled: true for L2/L3 on every validated combination.
-                    if [[ ${level} != L1 ]]; then
-                        [[ ${old_delivery} == open_pr || ${old_delivery} == none ]]
-                    fi
-                else
-                    # No single new delivery reproduces the old per-target finalize values.
-                    for cand in none pr_create pr_push; do
-                        cand_ok=true
-                        i=0
-                        for kind in ${targets}; do
-                            validate_delivery_target "${cand}" "{\"mode\":\"${kind}\"}" 2> /dev/null || cand_ok=false
-                            case "${cand}" in
-                                pr_create) mapped_cand=open_pr ;;
-                                pr_push) mapped_cand=push_head ;;
-                                *) mapped_cand=none ;;
-                            esac
-                            [[ ${fins[i]} == "${mapped_cand}" ]] || cand_ok=false
-                            i=$((i + 1))
-                        done
-                        [[ ${cand_ok} == false ]] || {
-                            echo "unmappable row accepted: ${row} | ${targets} | ${cand}"
-                            return 1
-                        }
-                    done
-                fi
+                for fin in "${fins[@]}"; do
+                    old_am=false
+                    [[ ${old_delivery} == open_pr && ${level} == L3 && ${fin} == open_pr ]] && old_am=true
+                    [ "$(derive_pr_auto_merge "${level}" "${new_delivery}")" = "${old_am}" ] || {
+                        echo "auto_merge mismatch: ${row} | ${targets} | ${level}"
+                        return 1
+                    }
+                    count=$((count + 1))
+                done
             done
         done
     done
+    # Non-vacuous: a meaningful number of comparisons ran.
+    [ "${count}" -gt 30 ]
+}
+
+@test "golden: mixed open_pr and push_head has no single delivery" {
+    # pr_push rejects the integration target and accepts the pull_request target
+    run validate_delivery_target pr_push '{"mode":"integration"}'
+    [ "$status" -eq 1 ]
+    run validate_delivery_target pr_push '{"mode":"pull_request"}'
+    [ "$status" -eq 0 ]
+    # pr_create accepts both kinds, but would open a PR where the old run pushed the head
+    run validate_delivery_target pr_create '{"mode":"integration"}'
+    [ "$status" -eq 0 ]
+    run validate_delivery_target pr_create '{"mode":"pull_request"}'
+    [ "$status" -eq 0 ]
+    # the frozen table really contains the mixed row
+    local found=false row
+    for row in "${GOLDEN_ROWS[@]}"; do
+        [[ ${row} == "open_pr open_pr push_head open_pr push_head" ]] && found=true
+    done
+    [ "${found}" = true ]
+    # pr_create maps to open_pr for both targets, so it differs from push_head on the pull_request target
+    [ "$(derive_pr_auto_merge L3 pr_create)" = "true" ]
+}
+
+@test "golden: old push integration has no new delivery value" {
+    local row fin_i cand implied count=0
+    for row in "${GOLDEN_ROWS[@]}"; do
+        read -r _ _ _ fin_i _ <<< "${row}"
+        [[ ${fin_i} == push ]] || continue
+        count=$((count + 1))
+        run validate_delivery_value push
+        [ "$status" -eq 1 ]
+        [[ $output == *"::error::"* ]]
+        for cand in none pr_create pr_push; do
+            case "${cand}" in
+                pr_create) implied=open_pr ;;
+                pr_push) implied=push_head ;;
+                *) implied=none ;;
+            esac
+            [ "${implied}" != "${fin_i}" ]
+        done
+    done
+    # only the two open_pr rows finalize integration with push
+    [ "${count}" -eq 2 ]
+}
+
+@test "validate_delivery_detect_config: failures emit error annotation" {
+    run validate_delivery_detect_config pr_create false ""
+    [ "$status" -eq 1 ]
+    [[ $output == *"::error::"* ]]
 }
 
 @test "validate_delivery_detect_config: pr_create with branch match passes" {
@@ -177,6 +212,15 @@ setup() {
 @test "validate_delivery_detect_config: pr_push without pr detect fails" {
     run validate_delivery_detect_config pr_push false ""
     [ "$status" -eq 1 ]
+}
+
+@test "validate_delivery_target: failure emits error annotation and invalid delivery fails" {
+    run validate_delivery_target pr_push '{"mode":"integration"}'
+    [ "$status" -eq 1 ]
+    [[ $output == *"::error::"* ]]
+    run validate_delivery_target bogus '{"mode":"pull_request"}'
+    [ "$status" -eq 1 ]
+    [[ $output == *"::error::"* ]]
 }
 
 @test "validate_delivery_target: none accepts entity issue" {
