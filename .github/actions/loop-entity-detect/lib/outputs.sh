@@ -12,12 +12,18 @@
 # - Detect outputs mirror loop-detect write_detect_outputs shape
 #######################################
 
+_ENTITY_OUTPUTS_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if ! declare -f derive_pr_auto_merge > /dev/null 2>&1; then
+    # shellcheck source=../../lib/loop/delivery.sh disable=SC1091
+    source "${_ENTITY_OUTPUTS_LIB_DIR}/../../lib/loop/delivery.sh"
+fi
+
 #######################################
-# write_entity_detect_outputs: Write should_run, skip_reason, target_matrix
+# write_entity_detect_outputs: Write should_run, skip_reason, delivery, pr_auto_merge, target_matrix
 #
 # Globals:
 #   GITHUB_OUTPUT - GitHub Actions output file
-#   DELIVERY - Platform delivery channel
+#   DELIVERY, LEVEL - Read; pr_auto_merge is derived from them (derive_pr_auto_merge)
 #
 # Arguments:
 #   $1 - should_run (true|false)
@@ -41,6 +47,7 @@ function write_entity_detect_outputs {
         echo "should_run=${should_run}"
         echo "skip_reason=${skip_reason}"
         echo "delivery=${DELIVERY:-}"
+        echo "pr_auto_merge=$(derive_pr_auto_merge "${LEVEL:-}" "${DELIVERY:-}")"
         delim="TARGET_MATRIX_$(openssl rand -hex 8)"
         echo "target_matrix<<${delim}"
         echo "${target_matrix_json}"
@@ -68,7 +75,6 @@ function shrink_entity_matrix_for_output {
     local full_matrix="$1"
 
     jq -c '[.[] | {
-      handoff_key: .handoff_key,
       prompt: .prompt,
       target_json: .target_json,
       verifier_context: ""

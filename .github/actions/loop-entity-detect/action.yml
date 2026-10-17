@@ -3,6 +3,18 @@ description: >-
   Run one entity detect_script, apply light budget check, build single-target
   matrix and upload loop-handoff artifact for ci-loop-agent.
 inputs:
+  agent_edit_allowlist:
+    default: ""
+    description: Comma-separated glob paths the maker may edit (required at L2/L3; ** = unrestricted; must be empty at L1)
+    required: false
+  agent_edit_denylist:
+    default: ""
+    description: Comma-separated glob paths the maker must not edit (optional at L2/L3; empty = default denylist; must be empty at L1)
+    required: false
+  agent_edit_target:
+    default: ""
+    description: "Maker artifact: fix | report (required at L2/L3; must be empty at L1)"
+    required: false
   agent_maker_instructions:
     default: ""
     description: Extra instructions appended to maker prompt
@@ -10,6 +22,10 @@ inputs:
   agent_maker_skill_name:
     description: Skill directory name under common package
     required: true
+  agent_unchanged_verdict:
+    default: ""
+    description: "Checker verdict when the maker produces no diff: APPROVE | REJECT (required at L2/L3; must be empty at L1)"
+    required: false
   budget_file:
     default: .loop/loop-budget.json
     description: Path to loop budget JSON
@@ -23,34 +39,24 @@ inputs:
     description: Daily aggregated token cap
     required: false
   delivery:
-    default: none
-    description: Platform delivery after APPROVE
+    description: "Where the agent output is delivered: none | pr_create | pr_push (no default; empty or other values fail)"
+    required: true
+  detect_hook_script:
+    default: ""
+    description: Optional trusted post-detect hook (e.g. repository_dispatch); runs with github_token
     required: false
   detect_script:
-    description: Path to domain detect_*.sh script
+    description: Path to domain detect_*.sh script (must write result.entity.kind issue | pr when skip is false)
     required: true
-  dispatch_hook_script:
-    default: ""
-    description: Optional trusted post-detect hook (e.g. repository_dispatch)
-    required: false
-  dispatch_hook_token:
-    default: ""
-    description: Token for dispatch hook (falls back to github_token input)
-    required: false
   github_token:
-    description: Resolved GitHub token for detect scripts and API calls
+    description: Resolved GitHub token for detect scripts, the detect hook, and API calls
     required: true
   level:
-    default: L1
-    description: Autonomy level
-    required: false
+    description: "Autonomy level: L1 | L2 | L3 (no default; empty fails)"
+    required: true
   loop_name:
     description: Loop name for budget/state/run-log
     required: true
-  may_edit:
-    default: "false"
-    description: Whether maker may edit repository files
-    required: false
   run_log_file:
     default: .loop/loop-run-log.md
     description: Path to loop run log
@@ -59,22 +65,21 @@ inputs:
     default: ""
     description: Optional state file path override
     required: false
-  write_target:
-    default: report
-    description: Agent artifact when may_edit is true
-    required: false
 outputs:
   delivery:
-    description: Resolved platform delivery channel
+    description: Declared delivery (none | pr_create | pr_push)
     value: ${{ steps.detect.outputs.delivery }}
   handoff_artifact_name:
     description: Uploaded artifact name for loop-handoff bundle
     value: ${{ steps.handoff.outputs.artifact_name }}
+  pr_auto_merge:
+    description: "Whether the created PR is auto-merged: true only when level is L3 and delivery is pr_create"
+    value: ${{ steps.detect.outputs.pr_auto_merge }}
   should_run:
     description: Whether the execute job should run
     value: ${{ steps.detect.outputs.should_run }}
   skip_reason:
-    description: Why execution was skipped (budget | detect_skip)
+    description: Why execution was skipped (budget | detect_skip). Invalid level/delivery inputs, a missing or invalid result.entity.kind, and a target kind the delivery does not allow fail the step without skip_reason outputs.
     value: ${{ steps.detect.outputs.skip_reason }}
   state_file:
     description: Resolved loop state JSON path
@@ -101,21 +106,22 @@ runs:
       id: detect
       shell: bash
       env:
+        AGENT_EDIT_ALLOWLIST: ${{ inputs.agent_edit_allowlist }}
+        AGENT_EDIT_DENYLIST: ${{ inputs.agent_edit_denylist }}
+        AGENT_EDIT_TARGET: ${{ inputs.agent_edit_target }}
         AGENT_MAKER_INSTRUCTIONS: ${{ inputs.agent_maker_instructions }}
         AGENT_MAKER_SKILL_NAME: ${{ inputs.agent_maker_skill_name }}
+        AGENT_UNCHANGED_VERDICT: ${{ inputs.agent_unchanged_verdict }}
         BUDGET_FILE: ${{ inputs.budget_file }}
         BUDGET_MAX_RUNS_PER_DAY: ${{ inputs.budget_max_runs_per_day }}
         BUDGET_MAX_TOKENS_PER_DAY: ${{ inputs.budget_max_tokens_per_day }}
         DELIVERY: ${{ inputs.delivery }}
+        DETECT_HOOK_SCRIPT: ${{ inputs.detect_hook_script }}
         DETECT_SCRIPT: ${{ inputs.detect_script }}
-        DISPATCH_HOOK_SCRIPT: ${{ inputs.dispatch_hook_script }}
-        DISPATCH_HOOK_TOKEN: ${{ inputs.dispatch_hook_token != '' && inputs.dispatch_hook_token || inputs.github_token }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         LEVEL: ${{ inputs.level }}
         LOOP_NAME: ${{ inputs.loop_name }}
-        MAY_EDIT: ${{ inputs.may_edit }}
         RUN_LOG_FILE: ${{ inputs.run_log_file }}
-        WRITE_TARGET: ${{ inputs.write_target }}
       run: bash "${GITHUB_ACTION_PATH}/lib/detect.sh"
 
     - name: Record Handoff Artifact Name
