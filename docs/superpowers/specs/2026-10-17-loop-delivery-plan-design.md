@@ -401,9 +401,7 @@ dogfood の `on-loop-*.yaml` は、ローカルの `./.github/workflows/ci-loop-
 - 第6節の検証の表: 表の全セルについて、許可と拒否の両方を `loop-write-contract.bats` で確認する。
 - 旧い入力名が残っていないこと: 改名表の左列、削除する入力、旧い値、旧いプロンプトのキーを grep し、`.loop/` のデータと第8節の読み替え以外に残っていないことを確認する。
 - outcome: 読み替えの関数と、各 ledger スクリプトの対応表が、旧い値と新しい値の両方を正しく扱うことを確認する。`write_state.sh:163` の条件が、`pr_push` の着地で成立することを確認する。
-- リリースの前に、作業ブランチで dogfood の loop を `workflow_dispatch` で1回ずつ動かして、成功することを確認する。作業ブランチの caller は、ローカルの action を一時的に参照する(`.github/workflows/CLAUDE.md` の Pins が dogfood に許す範囲)か、`pin_config_actions.sh --no-push` で作った pin を使う。どちらにするかは、ビルダーが決める。
-  - maker は、ターゲットの作業ツリーにある skill を読む(`loop-execute/action.yml:203`)。branch caller の integration ターゲットの作業ツリーは、監視するブランチ(dogfood では `main`)から作られる(`loop-detect/lib/detect.sh:699-702`)。そのため、作業ブランチから dispatch するだけでは、maker はリリース前の `main` の旧い skill を読み、新しい skill と新しい action の組み合わせを確かめられない。
-  - 確認の間だけ、作業ブランチの branch caller の `detect_branch_match` と `state_branch` を作業ブランチの名前にする。作業ツリーが作業ブランチから作られ、state の書き込みも `main` ではなく作業ブランチに入る。確認が終わったら `main` に戻してから、手順5の push をする。entity caller の作業ツリーは起動した ref から作られるので、この変更はいらない。リリース後にも、run-log で1回ずつ成功を確認する。
+- dogfood の loop が、リリースの前後で成功すること。確認の手順(どのブランチで、どの値で動かすか)は、実装計画で決める。
 - zizmor / actionlint / ghalint が通ること(Stop フックで検証)。
 
 ## 影響を受ける箇所
@@ -467,7 +465,6 @@ grep で確認した範囲である。各 PR で、同じ grep を実行して�
 - ターゲットの検証を、`loop-detect` のどの段階(絞り込みの後、matrix を組み立てる前)で行うか。
 - `validate_loop_write_contract.sh` の新しい表の、コード上の書き方。
 - 話題ごとの PR の分け方。
-- リリース前の dogfood の確認方法(ローカルの action を参照するか、`--no-push` の pin を使うか)。
 
 ## 未決(設計者の推測・要確認)
 
