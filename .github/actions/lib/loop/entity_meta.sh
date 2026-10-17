@@ -189,6 +189,7 @@ function entity_pr_number {
 
 #######################################
 # find_marker_review_id: Resolve the newest pull request review carrying a marker
+# (pages combined; meta-carrying reviews are not excluded so reruns stay idempotent)
 #
 # Globals:
 #   GITHUB_TOKEN / GH_TOKEN - Token for gh
@@ -222,8 +223,8 @@ function find_marker_review_id {
         return 0
     fi
 
-    jq -r --arg marker "${marker}" --arg meta "${LOOP_META_MARKER}" '
-        [ .[]? | select((.body // "") | contains($marker)) | select(((.body // "") | contains($meta)) | not) ]
+    jq -rs --arg marker "${marker}" '
+        [ .[][]? | select((.body // "") | contains($marker)) ]
         | last
         | .id // empty
     ' <<< "${reviews}" 2> /dev/null || true
@@ -281,6 +282,10 @@ function append_pr_review_meta {
 
     body="$(gh api "repos/${REPOSITORY}/pulls/${pr_number}/reviews/${review_id}" --jq '.body // ""' 2> /dev/null || true)"
     if [[ -z ${body} ]]; then
+        return 0
+    fi
+    if [[ ${body} == *"${LOOP_META_MARKER}"* ]]; then
+        echo "::notice title=loop-meta::Review ${review_id} already carries loop meta; skipped"
         return 0
     fi
 
