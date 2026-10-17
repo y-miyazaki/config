@@ -142,8 +142,9 @@ MOCK
 @test "build_done_reply_body collapses outcome verdict commit and run into details" {
     run build_done_reply_body "push" "APPROVE" "checker ok" "abcdef012345" "https://github.com/o/r/commit/abcdef012345" "https://github.com/o/r/actions/runs/1" "Report." "" ""
     [ "$status" -eq 0 ]
-    [[ $output == *"<summary>✅ <code>push</code> · Loop details</summary>"* ]]
-    [[ $output == *"| Verdict | \`APPROVE\` |"* ]]
+    [[ $output == *"<summary>Meta</summary>"* ]]
+    [[ $output == *"| \`outcome\` | push |"* ]]
+    [[ $output == *"| \`verdict\` | APPROVE |"* ]]
     [[ $output == *"abcdef0"* ]]
     [[ $output == *"actions/runs/1"* ]]
     [[ $output == *"> checker ok"* ]]
@@ -153,21 +154,22 @@ MOCK
 @test "build_done_reply_body omits empty optional fields" {
     run build_done_reply_body "no-changes" "" "" "" "" "" "" "" ""
     [ "$status" -eq 0 ]
-    [[ $output != *"| Verdict |"* ]]
-    [[ $output != *"| Commit |"* ]]
+    [[ $output != *"| \`verdict\` |"* ]]
+    [[ $output != *"| \`commit\` |"* ]]
     [[ $output != *"**Files changed**"* ]]
 }
 
-@test "build_done_reply_body marks a REJECT verdict with the failure icon" {
+@test "build_done_reply_body records a REJECT outcome in the meta table" {
     run build_done_reply_body "rejected" "REJECT" "No file changes produced" "" "" "https://github.com/o/r/actions/runs/2" "" "" ""
     [ "$status" -eq 0 ]
-    [[ $output == *"<summary>❌ <code>rejected</code> · Loop details</summary>"* ]]
+    [[ $output == *"<summary>Meta</summary>"* ]]
+    [[ $output == *"| \`outcome\` | rejected |"* ]]
 }
 
-@test "build_done_reply_body marks a no-changes outcome with the neutral icon" {
+@test "build_done_reply_body records a no-changes outcome in the meta table" {
     run build_done_reply_body "no-changes" "APPROVE" "" "" "" "" "" "" ""
     [ "$status" -eq 0 ]
-    [[ $output == *"<summary>ℹ️ <code>no-changes</code> · Loop details</summary>"* ]]
+    [[ $output == *"| \`outcome\` | no-changes |"* ]]
 }
 
 @test "build_done_reply_body blockquotes every line of a multi-line reason" {

@@ -35,6 +35,6 @@ Rules:
 
 ## Verification
 
-- Command CI runs: `<command>`
-- Expected result: <pass; which new tests>
-- Not run in this environment.
+| Check               | Result                                           |
+| ------------------- | ------------------------------------------------ |
+| `<command CI runs>` | <skip — not run here; CI expects pass for tests> |

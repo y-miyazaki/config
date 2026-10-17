@@ -31,8 +31,10 @@ setup() {
 }
 
 @test "agent_report_skill_requires_format_check matches fix skills only" {
-    run agent_report_skill_requires_format_check "docs-updater"
-    [ "$status" -eq 0 ]
+    for skill in changelog ci-sweeper docs-updater refactor tech-debt test-gap; do
+        run agent_report_skill_requires_format_check "${skill}"
+        [ "$status" -eq 0 ]
+    done
     run agent_report_skill_requires_format_check "unknown-skill"
     [ "$status" -eq 1 ]
 }
