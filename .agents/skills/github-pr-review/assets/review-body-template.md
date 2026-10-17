@@ -13,6 +13,8 @@ Findings: <N> (Critical: <a> / Warning: <b> / Suggestion: <c>)
 <!--
   Only when findings were dropped for unverifiable evidence, a paragraph follows:
   Dropped: <k> (evidence could not be verified)
+  Only when more than 20 findings remain, the most severe 20 are posted and a paragraph follows:
+  Omitted: <m> (over the limit of 20 findings)
 -->
 
 <summary: what the PR does and the overall assessment; say explicitly when there are no findings>

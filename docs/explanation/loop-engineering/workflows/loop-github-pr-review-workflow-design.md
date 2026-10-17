@@ -136,9 +136,11 @@ See `.apm/packages/github/.apm/skills/github-pr-review/SKILL.md` and its `refere
 | Stale head            | A report `head_sha` that is missing or differs from the PR head posts nothing (the PR moved). A `base_sha` mismatch only warns                                                   |
 | Evidence verification | `rule` / `criteria` findings are kept only when `evidence.quote` is an exact substring of `evidence.path` as committed at the trusted base SHA (via `git`, not the working tree) |
 | Invalid findings      | Dropped; the review body reports the dropped count                                                                                                                               |
+| Finding limit         | At most 20 findings are posted; the most severe are kept (report order breaks ties) and the review body reports the omitted count                                                |
 | In-diff placement     | Findings whose lines are in the PR diff are posted inline; others move to the review body                                                                                        |
+| Link labels           | A path containing a backtick, bracket, or backslash is rendered as escaped text instead of a code span                                                                           |
 | Event                 | Always `COMMENT`; nothing in the report can change it                                                                                                                            |
-| Inline failure        | When posting with inline comments fails, the script retries once with all findings in the body                                                                                   |
+| Inline failure        | When GitHub rejects the post with HTTP 422, the script retries once with all findings in the body; other failures are not retried                                                |
 | Exit status           | Always `0`. Failures emit `::warning::` so finalize does not fail                                                                                                                |
 
 The agent branch holding the report is read by the script from `EXECUTE_BRANCH`.

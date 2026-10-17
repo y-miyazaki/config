@@ -19,6 +19,9 @@
 #   (no normalization) of evidence.path as committed at the trusted base SHA (git cat-file,
 #   not the working tree); other invalid findings are dropped
 # - in_diff findings whose lines are not in the PR diff move to the review body
+# - At most MAX_FINDINGS findings are posted (most severe kept); the omitted count is in the body
+# - Paths in link labels are escaped when they contain backticks, brackets, or backslashes
+# - A failed post is retried once with all findings in the body only on HTTP 422
 # - The review event is always COMMENT; nothing in the report can change it
 # - Posting failures and unexpected errors emit ::warning:: and exit 0 so finalize does not fail
 #   (main runs in a set -e subshell; the entry guard always exits 0)
@@ -58,6 +61,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/lib/all.sh"
 
 readonly REVIEW_MARKER='<!-- github-pr-review:v1 -->'
+# Most findings one review posts; the rest are omitted (most severe kept) and counted in the body
+readonly MAX_FINDINGS=20
 
 # jq defs shared by the renderers. review_body_template and inline_comment_template (with
 # finding_item / evidence_line) hold every fixed English string of the posted review; keep them
@@ -67,6 +72,8 @@ readonly REVIEW_JQ_LIB='
 def enc_path: split("/") | map(@uri) | join("/");
 def indent($n): gsub("\n"; "\n" + (" " * $n));
 def line_anchor: if .start_line then "L\(.start_line)-L\(.line)" else "L\(.line)" end;
+def md_label:
+  if test("[`\\[\\]\\\\]") then gsub("(?<c>[`\\[\\]\\\\])"; "\\\(.c)") else "`" + . + "`" end;
 def verbatim_quote($n):
   if contains("\n") then "\n" + (" " * $n) + ("````text\n" + . + "\n````" | indent($n))
   else " \"\(.)\"" end;
@@ -76,7 +83,7 @@ def evidence_line($repo; $base; $n):
     then "- Evidence: \(.evidence.quote | indent($n))" else empty end
   else
     (if (.evidence_anchor // "") != "" then "#\(.evidence_anchor)" else "" end) as $a
-    | "- Evidence: [`\(.evidence.path)\($a)`](https://github.com/\($repo)/blob/\($base)/\(.evidence.path | enc_path)\($a)) —\(.evidence.quote | verbatim_quote($n))"
+    | "- Evidence: [\("\(.evidence.path)\($a)" | md_label)](https://github.com/\($repo)/blob/\($base)/\(.evidence.path | enc_path)\($a)) —\(.evidence.quote | verbatim_quote($n))"
   end;
 def location_url($repo; $base; $head):
   (if (.location.side // "RIGHT") == "LEFT" then $base else $head end) as $sha
@@ -87,7 +94,7 @@ def inline_comment_template($repo; $base):
   + "\n\nTo request a fix, reply to this comment with `@loop`.\n";
 def finding_item($repo; $base; $head; $pr):
   if .inline then
-    "\(.number). **[\(.severity)]** \(.title | indent(3)) — inline: [`\(.location.path)#\(.location | line_anchor)`](https://github.com/\($repo)/pull/\($pr)/files)"
+    "\(.number). **[\(.severity)]** \(.title | indent(3)) — inline: [\("\(.location.path)#\(.location | line_anchor)" | md_label)](https://github.com/\($repo)/pull/\($pr)/files)"
   else
     ["\(.number). **[\(.severity)]** \(.title | indent(3))",
      (evidence_line($repo; $base; 5) | "   " + .),
@@ -107,6 +114,7 @@ def review_body_template($repo; $marker):
      "",
      "Findings: \($f | length) (Critical: \([$f[] | select(.severity == "Critical")] | length) / Warning: \([$f[] | select(.severity == "Warning")] | length) / Suggestion: \([$f[] | select(.severity == "Suggestion")] | length))",
      (if ($r.dropped // 0) > 0 then "", "Dropped: \($r.dropped) (evidence could not be verified)" else empty end),
+     (if ($r.omitted // 0) > 0 then "", "Omitted: \($r.omitted) (over the limit of \($r.finding_limit) findings)" else empty end),
      "",
      ($r.summary // ""),
      "",
@@ -122,17 +130,19 @@ def review_body_template($repo; $marker):
 '
 
 #######################################
-# annotate_report: Drop invalid findings, number the rest, and decide inline placement
+# annotate_report: Drop invalid findings, cap the rest, number them, and decide inline placement
 #
 # Globals:
 #   REVIEW_BASE_SHA
 #   PR_DIFF_FILE
+#   MAX_FINDINGS
 #
 # Arguments:
 #   $1 - Report JSON (envelope validated; SHAs replaced with trusted values)
 #
 # Outputs:
-#   Report JSON with findings[] kept (number, inline, evidence_anchor) and dropped count
+#   Report JSON with findings[] kept (number, inline, evidence_anchor), dropped count,
+#   omitted count (over MAX_FINDINGS), and finding_limit
 #
 # Returns:
 #   0
@@ -145,7 +155,7 @@ function annotate_report {
     local report="$1"
     local finding kind anchor inline path line side start
     local -a kept=()
-    local total number=0
+    local total
 
     total="$(jq -r '.findings | length' <<< "${report}")"
     while IFS= read -r finding; do
@@ -153,7 +163,6 @@ function annotate_report {
         if ! validate_finding "${finding}"; then
             continue
         fi
-        number=$((number + 1))
         kind="$(jq -r '.evidence.kind' <<< "${finding}")"
         anchor=""
         if [[ ${kind} != "bug" ]]; then
@@ -169,19 +178,27 @@ function annotate_report {
                 inline=true
             fi
         fi
-        kept+=("$(jq -c --argjson n "${number}" --argjson i "${inline}" --arg a "${anchor}" \
-            '.number = $n | .inline = $i | .evidence_anchor = $a | .location.side = (.location.side // "RIGHT")' \
+        kept+=("$(jq -c --argjson i "${inline}" --arg a "${anchor}" \
+            '.inline = $i | .evidence_anchor = $a | .location.side = (.location.side // "RIGHT")' \
             <<< "${finding}")")
     done < <(jq -c '.findings[]' <<< "${report}")
 
+    # Keep at most MAX_FINDINGS valid findings: the most severe win (report order breaks ties),
+    # then report order is restored and the survivors are numbered 1..n.
     {
         printf '%s\n' "${report}"
         if [[ ${#kept[@]} -gt 0 ]]; then
             printf '%s\n' "${kept[@]}"
         fi
-    } | jq -sc --argjson total "${total}" '
-        .[0] as $r | .[1:] as $f
-        | $r | .findings = $f | .dropped = ($total - ($f | length))'
+    } | jq -sc --argjson total "${total}" --argjson max "${MAX_FINDINGS}" '
+        def rank: {"Critical": 0, "Warning": 1, "Suggestion": 2}[.severity];
+        .[0] as $r | .[1:] as $v
+        | [$v | to_entries | sort_by((.value | rank), .key) | .[:$max] | sort_by(.key)
+           | to_entries[] | .value.value + {number: (.key + 1)}] as $f
+        | $r | .findings = $f
+        | .dropped = ($total - ($v | length))
+        | .omitted = (($v | length) - ($f | length))
+        | .finding_limit = $max'
 }
 
 #######################################
@@ -210,7 +227,9 @@ function base_evidence_blob {
 
     safe_relative_path "${rel}" || return 1
     [[ ${sha} =~ ^[0-9a-f]{40}$ ]] || return 1
-    entry="$(GIT_LITERAL_PATHSPECS=1 git ls-tree --full-tree "${sha}" -- "${rel}" 2> /dev/null)" || return 1
+    # -z prints the name unquoted (non-ASCII paths would otherwise be C-quoted and never match);
+    # NUL becomes newline, and safe_relative_path already rejected names containing one.
+    entry="$(GIT_LITERAL_PATHSPECS=1 git ls-tree -z --full-tree "${sha}" -- "${rel}" 2> /dev/null | tr '\0' '\n')" || return 1
     [[ -n ${entry} && ${entry} != *$'\n'* ]] || return 1
     name="${entry#*$'\t'}"
     read -r mode type _ <<< "${entry%%$'\t'*}"
@@ -377,20 +396,21 @@ function evidence_anchor {
 # Arguments:
 #   $1 - PR number
 #   $2 - Payload file path
+#   $3 - File that receives gh stderr (read to tell an HTTP 422 from other failures)
 #
 # Outputs:
-#   None
+#   gh stderr to $3
 #
 # Returns:
 #   0 on success, non-zero when gh fails
 #
 # Usage:
-#   post_payload 7 "${payload_file}"
+#   post_payload 7 "${payload_file}" "${err_file}"
 #
 #######################################
 function post_payload {
     GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}" gh api --method POST "repos/${GITHUB_REPOSITORY}/pulls/$1/reviews" \
-        --input "$2" > /dev/null
+        --input "$2" > /dev/null 2> "$3"
 }
 
 #######################################
@@ -555,7 +575,7 @@ function resolve_trusted_shas {
 }
 
 #######################################
-# safe_relative_path:Return whether a path is relative and stays inside its root
+# safe_relative_path: Return whether a path is relative and stays inside its root
 #
 # Globals:
 #   None
@@ -710,7 +730,7 @@ function warn {
 #
 #######################################
 function main {
-    local pr_number report annotated payload_file work_dir kept inline_count
+    local pr_number report annotated payload_file err_file work_dir kept inline_count
 
     if [[ ${VERDICT:-} != "APPROVE" ]]; then
         echo "post_review: VERDICT=${VERDICT:-} (not APPROVE); nothing to post"
@@ -773,17 +793,20 @@ function main {
     echo "post_review: PR #${pr_number} findings kept=${kept} inline=${inline_count} dropped=$(jq -r '.dropped' <<< "${annotated}")"
 
     payload_file="${work_dir}/payload.json"
+    err_file="${work_dir}/post.err"
     build_payload "${annotated}" > "${payload_file}"
-    if post_payload "${pr_number}" "${payload_file}"; then
+    if post_payload "${pr_number}" "${payload_file}" "${err_file}"; then
         echo "post_review: posted COMMENT review on PR #${pr_number}"
         return 0
     fi
 
-    if [[ ${inline_count} -gt 0 ]]; then
-        warn "posting with inline comments failed for PR #${pr_number}; retrying with all findings in the body"
+    # Only a 422 (an inline position GitHub rejects) is fixed by moving findings to the body;
+    # auth, rate-limit, and server errors would fail the same way again.
+    if [[ ${inline_count} -gt 0 ]] && grep -q 'HTTP 422' "${err_file}" 2> /dev/null; then
+        warn "posting with inline comments was rejected (HTTP 422) for PR #${pr_number}; retrying with all findings in the body"
         annotated="$(jq -c '.findings |= map(.inline = false)' <<< "${annotated}")"
         build_payload "${annotated}" > "${payload_file}"
-        if post_payload "${pr_number}" "${payload_file}"; then
+        if post_payload "${pr_number}" "${payload_file}" "${err_file}"; then
             echo "post_review: posted COMMENT review on PR #${pr_number} (body only)"
             return 0
         fi

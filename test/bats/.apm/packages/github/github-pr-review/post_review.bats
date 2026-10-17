@@ -17,8 +17,11 @@
 # - reports the dropped findings count
 # - fails closed (no post, exit 0) on unparseable input or unavailable trusted SHAs
 # - posting failure and unexpected errors warn and exit 0
-# - retries once without inline comments when the first post is rejected
+# - retries once without inline comments only when the first post is rejected with HTTP 422
 # - never sends an event other than COMMENT
+# - caps findings at 20 (most severe kept) and reports the omitted count
+# - escapes backticks and brackets in path link labels (hostile paths)
+# - verifies evidence at non-ASCII paths
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -39,6 +42,7 @@ setup() {
     mkdir -p "${GIT_TEST_REPO}/docs"
     printf '# Rules\n\n- %s\n- Stay within requested scope.\n' "${RULE_QUOTE}" > "${GIT_TEST_REPO}/AGENTS.md"
     printf 'CRIT-01 (MUST): Quote exactly\n' > "${GIT_TEST_REPO}/docs/criteria.md"
+    printf '%s\n' "${RULE_QUOTE}" > "${GIT_TEST_REPO}/docs/規約.md"
     printf '%s\n' "${RULE_QUOTE}" > "${BATS_TEST_TMPDIR}/outside.md"
     ln -s "${BATS_TEST_TMPDIR}/outside.md" "${GIT_TEST_REPO}/link.md"
     bats_git_commit "${GIT_TEST_REPO}" base
@@ -86,9 +90,13 @@ if [[ $1 == "api" && " $* " == *" --method POST "* ]]; then
     done
     if [[ -n ${GH_POST_FAIL_FIRST:-} && ! -f ${GH_CAPTURE_DIR}/.failed ]]; then
         touch "${GH_CAPTURE_DIR}/.failed"
+        echo "gh: Unprocessable Entity (HTTP ${GH_POST_FAIL_FIRST})" >&2
         exit 1
     fi
-    if [[ -n ${GH_POST_FAIL:-} ]]; then exit 1; fi
+    if [[ -n ${GH_POST_FAIL:-} ]]; then
+        echo "gh: Server Error (HTTP 500)" >&2
+        exit 1
+    fi
     echo '{}'
     exit 0
 fi
@@ -316,6 +324,42 @@ posted() {
     [ "$output" -eq 0 ]
 }
 
+@test "caps findings at 20, keeping the most severe, and reports the omitted count" {
+    local findings f i
+    findings="$(rule_finding Suggestion "${RULE_QUOTE}" 10 false)"
+    for i in $(seq 1 21); do
+        findings+=", $(bug_finding Warning 2 true | jq -c --arg t "W${i}" '.title = $t')"
+    done
+    findings+=", $(bug_finding Critical 3 false | jq -c '.title = "Last critical"')"
+    write_report "[${findings}]"
+    run_post
+    [ "$status" -eq 0 ]
+    body="$(posted | jq -r '.body')"
+    [[ ${body} == *"Findings: 20 (Critical: 1 / Warning: 19 / Suggestion: 0)"* ]]
+    [[ ${body} == *"Omitted: 3 (over the limit of 20 findings)"* ]]
+    [[ ${body} == *"20. **[Critical]** Last critical"* ]]
+    [[ ${body} != *"W20"* && ${body} != *"W21"* ]]
+    [[ ${body} != *"Dropped:"* ]]
+    f="$(posted | jq -r '[.comments[].body | capture("^\\*\\*#(?<n>[0-9]+) ").n] | join(",")')"
+    [ "${f}" = "$(seq -s, 1 19)" ]
+}
+
+@test "escapes backticks and brackets in path link labels" {
+    write_report "[$(bug_finding Critical 2 true | jq -c '.location.path = "we`ird].sh" | .location.in_diff = false')]"
+    run_post
+    [ "$status" -eq 0 ]
+    body="$(posted | jq -r '.body')"
+    [[ ${body} == *'- Location: https://github.com/o/r/blob/'"${HEAD_SHA}"'/we%60ird%5D.sh#L2'* ]]
+
+    write_report "[$(bug_finding Critical 2 true | jq -c '.location.path = "we`ird].sh"')]"
+    printf 'diff --git a/we`ird].sh b/we`ird].sh\n--- a/we`ird].sh\n+++ b/we`ird].sh\n@@ -1,1 +1,2 @@\n x\n+y\n' \
+        > "${BATS_TEST_TMPDIR}/odd.diff"
+    run_post PR_DIFF_FILE="${BATS_TEST_TMPDIR}/odd.diff"
+    [ "$status" -eq 0 ]
+    body="$(posted | jq -r '.body')"
+    [[ ${body} == *'— inline: [we\`ird\].sh#L2](https://github.com/o/r/pull/7/files)'* ]]
+}
+
 @test "keeps a bug finding without evidence path" {
     run validate_finding "$(bug_finding Critical 2 true)"
     [ "$status" -eq 0 ]
@@ -323,6 +367,11 @@ posted() {
 
 @test "keeps a multi-line quote that matches exactly" {
     run validate_finding "$(rule_finding Warning "${RULE_QUOTE}"$'\n- Stay within' 2 true)"
+    [ "$status" -eq 0 ]
+}
+
+@test "keeps a rule finding whose evidence path is non-ASCII" {
+    run validate_finding "$(rule_finding Warning "${RULE_QUOTE}" 2 true | jq -c '.evidence.path = "docs/規約.md"')"
     [ "$status" -eq 0 ]
 }
 
@@ -480,12 +529,20 @@ posted() {
 
 @test "retries without inline comments when the first post is rejected" {
     write_report "[$(bug_finding Critical 2 true)]"
-    run_post GH_POST_FAIL_FIRST=1
+    run_post GH_POST_FAIL_FIRST=422
     [ "$status" -eq 0 ]
     [ "$(grep -c -- '--method POST' "${GH_LOG}")" -eq 2 ]
     run jq -e '.event == "COMMENT" and (.comments | length) == 0' <<< "$(posted)"
     [ "$status" -eq 0 ]
     [[ "$(posted | jq -r '.body')" == *"- Location: https://github.com/o/r/blob/${HEAD_SHA}/a.sh#L2"* ]]
+}
+
+@test "retries only on HTTP 422; other post failures warn without a retry" {
+    write_report "[$(bug_finding Critical 2 true)]"
+    run_post GH_POST_FAIL_FIRST=502
+    [ "$status" -eq 0 ]
+    [ "$(grep -c -- '--method POST' "${GH_LOG}")" -eq 1 ]
+    [[ ${output} == *"::warning::post_review: failed to post review on PR #7"* ]]
 }
 
 @test "skips posting when the PR head moved after the review" {
