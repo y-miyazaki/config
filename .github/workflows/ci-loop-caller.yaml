@@ -10,19 +10,9 @@ name: ci-loop-caller
 on:
   workflow_call:
     inputs:
-      ack_trigger_comment:
-        default: false
-        description: "After detect proceeds, ACK the triggering comment with an eyes reaction (pr-revise)"
-        required: false
-        type: boolean
-      additional_commit_paths:
-        default: ""
-        description: "Extra paths included in finalize commit (e.g. ledger file)"
-        required: false
-        type: string
-      agent_allowed_tools:
-        default: ""
-        description: 'Newline-separated permission rules the skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). Caller-declared only — never derived from detect output. Empty grants nothing beyond the repository''s .claude/settings.json'
+      agent_branch_prefix:
+        default: "loop"
+        description: "Worktree branch prefix (L2/L3)"
         required: false
         type: string
       agent_checker_effort:
@@ -42,10 +32,44 @@ on:
         description: "Checker model ID"
         required: true
         type: string
+      agent_checker_path_pattern:
+        default: ""
+        description: "Extended regex that picks file paths out of checker text"
+        required: false
+        type: string
       agent_checker_skill_name:
         default: loop-verifier
         description: "Checker skill slash-loaded by loop-execute (distinct from agent_maker_skill_name)"
         required: false
+        type: string
+      agent_cli_version:
+        default: "latest"
+        description: "CLI agent version"
+        required: false
+        type: string
+      agent_commit_message:
+        default: "chore: loop-automated update"
+        description: "Commit message prefix for loop attempts (L2/L3)"
+        required: false
+        type: string
+      agent_edit_allowlist:
+        default: ""
+        description: "Comma-separated globs the maker may edit (required at L2/L3; ** = unrestricted; must be empty at L1)"
+        required: false
+        type: string
+      agent_edit_denylist:
+        default: ""
+        description: "Comma-separated globs the maker must not edit (optional at L2/L3; empty = platform default; must be empty at L1)"
+        required: false
+        type: string
+      agent_edit_target:
+        default: ""
+        description: "Maker artifact: fix | report (required at L2/L3; must be empty at L1)"
+        required: false
+        type: string
+      agent_engine:
+        description: "AI engine: claude | copilot | codex | cursor"
+        required: true
         type: string
       agent_loop_max_attempts:
         description: "Maximum Agent→Verify retry cycles"
@@ -73,28 +97,15 @@ on:
         description: "Skill package name"
         required: true
         type: string
-      allowlist:
-        description: "Comma-separated globs the maker may modify"
-        required: true
-        type: string
-      branch_match:
+      agent_tool_allowlist:
         default: ""
-        description: "Comma-separated integration branch patterns to watch (empty = branch_state only)"
+        description: 'Newline-separated permission rules the skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). Caller-declared only — never derived from detect output. Empty grants nothing beyond the repository''s .claude/settings.json'
         required: false
         type: string
-      branch_match_mode:
-        default: glob
-        description: "How to interpret branch_match: list, glob, or regex"
+      agent_unchanged_verdict:
+        default: ""
+        description: "Checker verdict when the maker produces no diff: APPROVE | REJECT (required at L2/L3; must be empty at L1)"
         required: false
-        type: string
-      branch_prefix:
-        default: "loop"
-        description: "Worktree branch prefix (L2/L3)"
-        required: false
-        type: string
-      branch_state:
-        description: "Branch for .loop/* persistence, state migration, and watch fallback when branch_match is empty"
-        required: true
         type: string
       budget_file:
         default: .loop/loop-budget.json
@@ -109,42 +120,56 @@ on:
         description: "Daily aggregated token cap"
         required: false
         type: number
-      cli_version:
-        default: "latest"
-        description: "CLI agent version"
-        required: false
-        type: string
-      commit_message:
-        default: "chore: loop-automated update"
-        description: "Commit message prefix for loop attempts (L2/L3)"
-        required: false
-        type: string
       delivery:
-        default: open_pr
-        description: "Platform delivery after APPROVE: log | issue | notion | open_pr | none"
-        required: false
+        description: "Where the agent output is delivered: none | pr_create | pr_push (required; no default)"
+        required: true
         type: string
-      denylist:
+      detect_branch_match:
         default: ""
-        description: "Comma-separated globs the maker must not touch"
+        description: "Comma-separated integration branch patterns to watch (empty = no integration targets; not allowed with delivery pr_push)"
         required: false
         type: string
-      detect_domain_env_json:
+      detect_branch_match_mode:
+        default: glob
+        description: "How to interpret detect_branch_match: list, glob, or regex"
+        required: false
+        type: string
+      detect_env_json:
         default: "{}"
         description: "JSON object of domain detect script environment variables"
         required: false
         type: string
-      detect_script:
-        description: "Path to domain detect_*.sh script"
-        required: true
-        type: string
-      domain_persistence_script:
+      detect_max_targets:
+        default: 3
+        description: "Max targets per cron tick after filters"
+        required: false
+        type: number
+      detect_pr_bot_allowlist:
         default: ""
-        description: "Bash script for loop-finalize domain persistence"
+        description: "Comma-separated bot logins to include when scanning PRs"
         required: false
         type: string
-      engine:
-        description: "AI engine: claude | copilot | codex | cursor"
+      detect_pr_denylist:
+        default: fork,draft,label:no-loop
+        description: "PR exclusion tokens"
+        required: false
+        type: string
+      detect_pr_enabled:
+        default: false
+        description: "Watch open PR heads for detect (required true for delivery pr_push)"
+        required: false
+        type: boolean
+      detect_pr_number:
+        description: "When set, detect watches only this open PR number (skip integration fan-out); 0 = unset (delivery pr_push then skips with pr_number_missing)"
+        required: false
+        type: number
+      detect_priority:
+        default: integration,pull_request
+        description: "Target mode priority order (comma-separated)"
+        required: false
+        type: string
+      detect_script:
+        description: "Path to domain detect_*.sh script"
         required: true
         type: string
       environment:
@@ -152,53 +177,28 @@ on:
         description: "GitHub environment for maintenance bot secrets"
         required: false
         type: string
-      git_landing_integration:
-        default: open_pr
-        description: "Advanced git landing when delivery is open_pr: open_pr | push (integration targets)"
-        required: false
-        type: string
-      git_landing_pull_request:
-        default: open_pr
-        description: "Advanced git landing when delivery is open_pr: open_pr | push_head (pull_request targets)"
-        required: false
-        type: string
-      infer_files_pattern:
+      finalize_commit_paths:
         default: ""
-        description: "Extended regex to infer file paths from checker text"
+        description: "Extra paths included in finalize commit (e.g. ledger file)"
         required: false
         type: string
-      labels:
-        default: "loop-automation"
-        description: "Comma-separated labels for created PR (finalize job)"
+      finalize_hook_script:
+        default: ""
+        description: "Bash script run once by loop-finalize regardless of delivery (e.g. domain ledger)"
+        required: false
+        type: string
+      finalize_outcome_override:
+        default: ""
+        description: "Optional explicit finalize outcome (e.g. watch)"
         required: false
         type: string
       level:
-        default: L2
-        description: "Autonomy: L1 | L2 | L3"
-        required: false
+        description: "Autonomy: L1 | L2 | L3 (required; no default)"
+        required: true
         type: string
       loop_name:
         description: "Loop identifier for state, budget, and concurrency"
         required: true
-        type: string
-      max_targets_per_schedule:
-        default: 3
-        description: "Max targets per cron tick after filters"
-        required: false
-        type: number
-      may_edit:
-        description: "Agent worktree edit gate: true | false"
-        required: true
-        type: boolean
-      no_changes_verdict:
-        default: REJECT
-        description: "APPROVE | REJECT when maker produces no file diff"
-        required: false
-        type: string
-      outcome_override:
-        default: ""
-        description: "Optional explicit finalize outcome (e.g. watch)"
-        required: false
         type: string
       pr_body:
         default: ""
@@ -207,32 +207,17 @@ on:
         type: string
       pr_draft:
         default: false
-        description: "Create open_pr finalize PR as draft when true"
+        description: "Create the finalize PR as draft when true (delivery pr_create)"
         required: false
         type: boolean
-      pr_enabled:
-        default: false
-        description: "Watch open PR heads for detect (pr_enabled)"
-        required: false
-        type: boolean
-      pr_exclude:
-        default: fork,draft,label:no-loop
-        description: "PR exclusion tokens"
-        required: false
-        type: string
-      pr_include_bots:
-        default: ""
-        description: "Comma-separated bot logins to include when scanning PRs"
+      pr_labels:
+        default: "loop-automation"
+        description: "Comma-separated labels for created PR (finalize job)"
         required: false
         type: string
       pr_title:
         default: ""
-        description: "PR title when finalize strategy is open_pr"
-        required: false
-        type: string
-      priority:
-        default: integration,pull_request
-        description: "Target mode priority order (comma-separated)"
+        description: "PR title when delivery is pr_create"
         required: false
         type: string
       run_log_file:
@@ -240,19 +225,20 @@ on:
         description: "JSONL run log path for budget aggregation"
         required: false
         type: string
-      scoped_pr_number:
-        description: "When set, detect watches only this open PR number (skip integration fan-out); 0 = unset"
-        required: false
-        type: number
+      state_branch:
+        description: "Branch that stores .loop/* state (not watched unless matched by detect_branch_match)"
+        required: true
+        type: string
       state_file:
         default: ""
         description: "Override state JSON path (default .loop/state-<loop_name>.json)"
         required: false
         type: string
-      write_target:
-        description: "Agent artifact when may_edit is true: fix | report"
-        required: true
-        type: string
+      trigger_comment_ack:
+        default: false
+        description: "After detect proceeds, ACK the triggering comment with an eyes reaction (pr-revise)"
+        required: false
+        type: boolean
     secrets:
       AGENT_TOKEN:
         description: "Authentication token for the selected engine"
@@ -283,6 +269,7 @@ jobs:
     outputs:
       delivery: ${{ steps.detect.outputs.delivery }}
       handoff_artifact_name: ${{ steps.detect.outputs.handoff_artifact_name }}
+      pr_auto_merge: ${{ steps.detect.outputs.pr_auto_merge }}
       run_started_at: ${{ steps.timing.outputs.started_at }}
       should_run: ${{ steps.detect.outputs.should_run }}
       skip_reason: ${{ steps.detect.outputs.skip_reason }}
@@ -301,31 +288,31 @@ jobs:
 
       - name: Export Detect Domain Env
         env:
-          DETECT_DOMAIN_ENV_JSON: ${{ inputs.detect_domain_env_json }}
+          DETECT_ENV_JSON: ${{ inputs.detect_env_json }}
         run: |
           set -euo pipefail
-          if [[ -n "${DETECT_DOMAIN_ENV_JSON}" && "${DETECT_DOMAIN_ENV_JSON}" != "{}" ]]; then
-            if ! echo "${DETECT_DOMAIN_ENV_JSON}" | jq -e 'type == "object"' >/dev/null; then
-              echo "detect_domain_env_json must be a JSON object" >&2
+          if [[ -n "${DETECT_ENV_JSON}" && "${DETECT_ENV_JSON}" != "{}" ]]; then
+            if ! echo "${DETECT_ENV_JSON}" | jq -e 'type == "object"' >/dev/null; then
+              echo "detect_env_json must be a JSON object" >&2
               exit 1
             fi
-            if ! echo "${DETECT_DOMAIN_ENV_JSON}" | jq -e               'to_entries | map(.key) | all(test("^[A-Z_][A-Z0-9_]*$"))'               >/dev/null; then
-              bad_key="$(echo "${DETECT_DOMAIN_ENV_JSON}" | jq -r                 'to_entries[] | select(.key | test("^[A-Z_][A-Z0-9_]*$") | not) | .key'                 | head -1)"
-              echo "detect_domain_env_json keys must match ^[A-Z_][A-Z0-9_]*$ (invalid: ${bad_key})" >&2
+            if ! echo "${DETECT_ENV_JSON}" | jq -e               'to_entries | map(.key) | all(test("^[A-Z_][A-Z0-9_]*$"))'               >/dev/null; then
+              bad_key="$(echo "${DETECT_ENV_JSON}" | jq -r                 'to_entries[] | select(.key | test("^[A-Z_][A-Z0-9_]*$") | not) | .key'                 | head -1)"
+              echo "detect_env_json keys must match ^[A-Z_][A-Z0-9_]*$ (invalid: ${bad_key})" >&2
               exit 1
             fi
-            if ! echo "${DETECT_DOMAIN_ENV_JSON}" | jq -e \
+            if ! echo "${DETECT_ENV_JSON}" | jq -e \
               '[to_entries[] | select(.value != "" and ((.value | tostring) | test("[\r\n]")))] | length == 0' \
               >/dev/null; then
-              bad_key="$(echo "${DETECT_DOMAIN_ENV_JSON}" | jq -r \
+              bad_key="$(echo "${DETECT_ENV_JSON}" | jq -r \
                 'to_entries[] | select(.value != "" and ((.value | tostring) | test("[\r\n]"))) | .key' \
                 | head -1)"
-              echo "detect_domain_env_json values must not contain newlines (key: ${bad_key})" >&2
+              echo "detect_env_json values must not contain newlines (key: ${bad_key})" >&2
               exit 1
             fi
             while IFS= read -r -d '' entry; do
               printf '%s\n' "${entry}" >> "${GITHUB_ENV}"
-            done < <(echo "${DETECT_DOMAIN_ENV_JSON}" | jq -jr \
+            done < <(echo "${DETECT_ENV_JSON}" | jq -jr \
               'to_entries[] | select(.value != "") | "\(.key)=\(.value)\u0000"')
           fi
 
@@ -343,36 +330,35 @@ jobs:
         uses: y-miyazaki/config/.github/actions/loop-detect@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
+          agent_edit_allowlist: ${{ inputs.agent_edit_allowlist }}
+          agent_edit_denylist: ${{ inputs.agent_edit_denylist }}
+          agent_edit_target: ${{ inputs.agent_edit_target }}
           agent_maker_instructions: ${{ inputs.agent_maker_instructions }}
           agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
-          allowlist: ${{ inputs.allowlist }}
-          base_branch: ${{ inputs.branch_state }}
+          agent_unchanged_verdict: ${{ inputs.agent_unchanged_verdict }}
           budget_file: ${{ inputs.budget_file }}
           budget_max_runs_per_day: ${{ inputs.budget_max_runs_per_day != null && format('{0}', inputs.budget_max_runs_per_day) || '' }}
           budget_max_tokens_per_day: ${{ inputs.budget_max_tokens_per_day != null && format('{0}', inputs.budget_max_tokens_per_day) || '' }}
           delivery: ${{ inputs.delivery }}
+          detect_branch_match: ${{ inputs.detect_branch_match }}
+          detect_branch_match_mode: ${{ inputs.detect_branch_match_mode }}
+          detect_max_targets: ${{ format('{0}', inputs.detect_max_targets) }}
+          detect_pr_bot_allowlist: ${{ inputs.detect_pr_bot_allowlist }}
+          detect_pr_denylist: ${{ inputs.detect_pr_denylist }}
+          detect_pr_enabled: ${{ inputs.detect_pr_enabled && 'true' || 'false' }}
+          detect_pr_number: ${{ inputs.detect_pr_number != 0 && format('{0}', inputs.detect_pr_number) || '' }}
+          detect_priority: ${{ inputs.detect_priority }}
           detect_script: ${{ inputs.detect_script }}
-          git_landing_integration: ${{ inputs.git_landing_integration }}
-          git_landing_pull_request: ${{ inputs.git_landing_pull_request }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           level: ${{ inputs.level }}
-          loop_branch_match: ${{ inputs.branch_match_mode }}
-          loop_integration_branches: ${{ inputs.branch_match }}
-          loop_max_targets_per_schedule: ${{ format('{0}', inputs.max_targets_per_schedule) }}
           loop_name: ${{ inputs.loop_name }}
-          loop_pr_enabled: ${{ inputs.pr_enabled && 'true' || 'false' }}
-          loop_pr_exclude: ${{ inputs.pr_exclude }}
-          loop_pr_include_bots: ${{ inputs.pr_include_bots }}
-          loop_priority: ${{ inputs.priority }}
-          loop_scoped_pr_number: ${{ inputs.scoped_pr_number != 0 && format('{0}', inputs.scoped_pr_number) || '' }}
-          may_edit: ${{ inputs.may_edit == true && 'true' || inputs.may_edit == false && 'false' || '' }}
           run_log_file: ${{ inputs.run_log_file }}
+          state_branch: ${{ inputs.state_branch }}
           state_file: ${{ inputs.state_file }}
-          write_target: ${{ inputs.write_target }}
 
   ack-trigger:
     if: >-
-      inputs.ack_trigger_comment &&
+      inputs.trigger_comment_ack &&
       needs.detect.outputs.should_run == 'true' &&
       (github.event_name == 'issue_comment' ||
       github.event_name == 'pull_request_review_comment')
@@ -483,48 +469,44 @@ jobs:
     uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
     with:
-      additional_commit_paths: ${{ inputs.additional_commit_paths }}
-      agent_allowed_tools: ${{ inputs.agent_allowed_tools }}
+      agent_branch_prefix: ${{ inputs.agent_branch_prefix }}
       agent_checker_effort: ${{ inputs.agent_checker_effort }}
       agent_checker_instructions: ${{ inputs.agent_checker_instructions }}
       agent_checker_max_turns: ${{ inputs.agent_checker_max_turns }}
       agent_checker_model: ${{ inputs.agent_checker_model }}
+      agent_checker_path_pattern: ${{ inputs.agent_checker_path_pattern }}
       agent_checker_skill_name: ${{ inputs.agent_checker_skill_name }}
+      agent_cli_version: ${{ inputs.agent_cli_version }}
+      agent_commit_message: ${{ inputs.agent_commit_message }}
+      agent_edit_allowlist: ${{ inputs.agent_edit_allowlist }}
+      agent_edit_denylist: ${{ inputs.agent_edit_denylist }}
+      agent_engine: ${{ inputs.agent_engine }}
       agent_loop_max_attempts: ${{ inputs.agent_loop_max_attempts }}
       agent_maker_effort: ${{ inputs.agent_maker_effort }}
       agent_maker_max_turns: ${{ inputs.agent_maker_max_turns }}
       agent_maker_model: ${{ inputs.agent_maker_model }}
       agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
-      allowlist: ${{ inputs.allowlist }}
-      auto_merge: ${{ (needs.detect.outputs.delivery == 'open_pr' && inputs.level == 'L3' && matrix.target.target_json.finalize == 'open_pr') && 'true' || 'false' }}
-      base_branch: ${{ matrix.target.target_json.mode == 'pull_request' && matrix.target.target_json.base.branch || matrix.target.target_json.to.branch }}
-      branch_prefix: ${{ inputs.branch_prefix }}
-      cli_version: ${{ inputs.cli_version }}
-      commit_message: ${{ inputs.commit_message }}
-      current_sha: ${{ matrix.target.target_json.from.ref }}
-      denylist: ${{ inputs.denylist }}
-      detect_result_json: "{}"
-      domain_persistence_script: ${{ inputs.domain_persistence_script }}
-      engine: ${{ inputs.engine }}
+      agent_tool_allowlist: ${{ inputs.agent_tool_allowlist }}
+      agent_unchanged_verdict: ${{ inputs.agent_unchanged_verdict }}
+      delivery: ${{ needs.detect.outputs.delivery }}
       environment: ${{ inputs.environment }}
-      finalize_enabled: ${{ needs.detect.outputs.delivery == 'open_pr' || (needs.detect.outputs.delivery == 'none' && inputs.level != 'L1') }}
+      finalize_commit_paths: ${{ inputs.finalize_commit_paths }}
+      finalize_hook_script: ${{ inputs.finalize_hook_script }}
+      finalize_outcome_override: ${{ inputs.finalize_outcome_override }}
       handoff_artifact_name: ${{ needs.detect.outputs.handoff_artifact_name }}
-      handoff_key: ${{ matrix.target.handoff_key }}
-      infer_files_pattern: ${{ inputs.infer_files_pattern }}
-      labels: ${{ inputs.labels }}
       level: ${{ inputs.level }}
       loop_name: ${{ inputs.loop_name }}
-      no_changes_verdict: ${{ inputs.no_changes_verdict }}
-      outcome_override: ${{ inputs.outcome_override }}
+      pr_auto_merge: ${{ needs.detect.outputs.pr_auto_merge }}
       pr_body: ${{ inputs.pr_body }}
       pr_draft: ${{ inputs.pr_draft }}
+      pr_labels: ${{ inputs.pr_labels }}
       pr_title: ${{ inputs.pr_title }}
       prompt_text: ${{ matrix.target.prompt }}
       run_log_file: ${{ inputs.run_log_file }}
       run_started_at: ${{ needs.detect.outputs.run_started_at }}
       skip_reason: ${{ needs.detect.outputs.skip_reason }}
+      state_branch: ${{ inputs.state_branch }}
       state_file: ${{ needs.detect.outputs.state_file }}
-      state_push_branch: ${{ inputs.branch_state }}
       target_json: ${{ toJson(matrix.target.target_json) }}
       verifier_context: ${{ matrix.target.verifier_context }}
     secrets:
@@ -566,10 +548,10 @@ jobs:
         uses: y-miyazaki/config/.github/actions/loop-run-log@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
-          base_branch: ${{ inputs.branch_state }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           loop_name: ${{ inputs.loop_name }}
           outcome: skipped
           run_log_file: ${{ inputs.run_log_file }}
           run_started_at: ${{ needs.detect.outputs.run_started_at }}
           skip_reason: ${{ needs.detect.outputs.skip_reason }}
+          state_branch: ${{ inputs.state_branch }}
