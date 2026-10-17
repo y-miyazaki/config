@@ -14,6 +14,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Increase agent_maker_max_turns to 15 across multiple workflows and configuration files (loop) ([5b1f7d8](https://github.com/y-miyazaki/config/commit/5b1f7d8e27c2c3b0949189b91633b97bfac535c9))
 - Reset consecutive failures in state-changelog.json and state-docs-updater.json (loop) ([dec0bbc](https://github.com/y-miyazaki/config/commit/dec0bbc24a584e3a2d44cf32985b32f339289ef9))
 - (goreleaser) Update goreleaser to v2.18.3 (#975) ([fc3d958](https://github.com/y-miyazaki/config/commit/fc3d958f21f460bb07690376055e60dbfe7dd202))
+- (loop) dogfood state branch (disposable, do not merge) ([0e27ebf](https://github.com/y-miyazaki/config/commit/0e27ebf569259d971b7eaef24fbfaec71f6509f7))
+
+## [1.8.123] - 2026-10-17
+
+### Fixed
+
+- (skills) map ledger outcomes to pr_created, pr_pushed and unchanged ([f3eb35a](https://github.com/y-miyazaki/config/commit/f3eb35a090ae88c5b3cc7812cfeafc225b383600))
+
+### Changed
+
+- align pins to v1.8.123 (bf37fda) ([518ff27](https://github.com/y-miyazaki/config/commit/518ff27a3a7232cbddf80fce343ead2a414fe90a))
+- finalize all pins v1.8.123 (f8346bf) ([bf37fda](https://github.com/y-miyazaki/config/commit/bf37fda81d4de5db60573e1373bf028f49807c5f))
+- pin all to release v1.8.123 (7b9f7ee) ([f8346bf](https://github.com/y-miyazaki/config/commit/f8346bf4b4189a488faec248b14000165c9927fd))
+- pin all to v1.8.123 (5a9b4d8) ([7b9f7ee](https://github.com/y-miyazaki/config/commit/7b9f7ee4477a50aa0c2affb35a646564d98cf332))
+- (skills) adopt renamed loop prompt keys and outcomes (repo-maintenance package) ([5a9b4d8](https://github.com/y-miyazaki/config/commit/5a9b4d860576d1df5126ec81d94347bcefe4d3c0))
+- (loop) document one-value delivery and renamed inputs ([2771bb7](https://github.com/y-miyazaki/config/commit/2771bb76d62a515840abcfdf45c1b4a581aead6e))
+- (skills) adopt renamed loop prompt keys and outcomes (github package) ([e109cc3](https://github.com/y-miyazaki/config/commit/e109cc3e4149b67088ab2088e352892c9862ceb5))
+- (loop) add input topology gate ([cfb737c](https://github.com/y-miyazaki/config/commit/cfb737c6e8a7eeb4ad5a0fffe2de5d3c2092024e))
 
 ## [1.8.121] - 2026-10-16
 
@@ -2492,6 +2510,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update GitHub Actions to use loop-install-cli and other actions version 1.8.4 ([2c56aa0](https://github.com/y-miyazaki/config/commit/2c56aa01ad05ff9a45d6dd0dfb3f65b39a03766c))
 
+[1.8.123]: https://github.com/y-miyazaki/config/compare/v1.8.121...518ff27a3a7232cbddf80fce343ead2a414fe90a
 [1.8.121]: https://github.com/y-miyazaki/config/compare/v1.8.120...5da13eb637a89cfa6d46d1a254ccb2463d87c4df
 [1.8.120]: https://github.com/y-miyazaki/config/compare/v1.8.119...fc7153542006aa1476d069debbd6e2b854463e8a
 [1.8.119]: https://github.com/y-miyazaki/config/compare/v1.8.118...8103690c11ef708b382835505bbfb7eb5e7c1561
