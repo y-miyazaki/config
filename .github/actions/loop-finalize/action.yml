@@ -236,6 +236,8 @@ runs:
       env:
         DOMAIN_PERSISTENCE_SCRIPT: ${{ inputs.domain_persistence_script }}
         EXECUTE_BRANCH: ${{ inputs.execute_branch != '' && inputs.execute_branch || inputs.branch }}
+        GH_TOKEN: ${{ inputs.github_token }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
         LOOP_NAME: ${{ inputs.loop_name }}
         OUTCOME: ${{ steps.outcome.outputs.value }}
         STATE_FILE: ${{ steps.state_path.outputs.state_file }}
