@@ -1861,6 +1861,31 @@ checksum = "sha256:bfdc634f3de0f1579180f7fcde0477610450420fe9f44d7c836812cf7ae7c
 url = "https://github.com/anthropics/claude-code/releases/download/v2.1.296/claude-win32-x64.zip"
 url_api = "https://api.github.com/repos/anthropics/claude-code/releases/assets/625599016"
 
+[[tools.claude]]
+version = "2.1.296"
+backend = "aqua:anthropics/claude-code"
+
+[tools.claude.options]
+"vars.lazy" = "true"
+
+[tools.claude."platforms.linux-arm64"]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.296/linux-arm64/claude"
+
+[tools.claude."platforms.linux-arm64-musl"]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.296/linux-arm64-musl/claude"
+
+[tools.claude."platforms.linux-x64"]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.296/linux-x64/claude"
+
+[tools.claude."platforms.linux-x64-musl"]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.296/linux-x64-musl/claude"
+
+[tools.claude."platforms.macos-arm64"]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.296/darwin-arm64/claude"
+
+[tools.claude."platforms.macos-x64"]
+url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.296/darwin-x64/claude"
+
 [[tools."github:DeusData/codebase-memory-mcp"]]
 version = "0.11.0"
 backend = "github:DeusData/codebase-memory-mcp"
