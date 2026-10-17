@@ -230,11 +230,11 @@ Requires `pr_enabled: true`.
 
 Owned by the **caller** and detect scripts — not by skill triage. Configure via `detect_domain_env_json`:
 
-| Variable                         | Default (portable detect default) | Dogfood                                  | Description                                                                                                                        |
-| -------------------------------- | --------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `CI_SWEEPER_LEDGER_FILE`         | `ci-sweeper-run-ledger.json`      | `.loop/state-ci-sweeper-run-ledger.json` | Repo-relative ledger keyed by `workflow_run_id`                                                                                    |
-| `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`                           | `block`                                  | `block`: skip any ledgered run. `retry`: skip only `pr-created`. `limited`: skip `rejected` after max retries. Aliases `a`/`b`/`c` |
-| `CI_SWEEPER_REJECT_MAX_RETRIES`  | `3`                               | `3`                                      | Used when policy is `limited`                                                                                                      |
+| Variable                         | Default (portable detect default)        | Dogfood                                  | Description                                                                                                                        |
+| -------------------------------- | ---------------------------------------- | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `CI_SWEEPER_LEDGER_FILE`         | `.loop/state-ci-sweeper-run-ledger.json` | `.loop/state-ci-sweeper-run-ledger.json` | Repo-relative ledger keyed by `workflow_run_id`                                                                                    |
+| `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`                                  | `block`                                  | `block`: skip any ledgered run. `retry`: skip only `pr-created`. `limited`: skip `rejected` after max retries. Aliases `a`/`b`/`c` |
+| `CI_SWEEPER_REJECT_MAX_RETRIES`  | `3`                                      | `3`                                      | Used when policy is `limited`                                                                                                      |
 
 `update_run_ledger.sh` (via `domain_persistence_script`) prunes `runs` older than **30 days**. Detect places skipped runs in `ignored[]`; the skill only notes them in Overview.
 
