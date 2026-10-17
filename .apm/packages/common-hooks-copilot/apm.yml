@@ -1,6 +1,6 @@
 name: common-hooks-copilot
 version: 2.0.0
-description: Common hooks for GitHub Copilot (actionlint, ghalint, zizmor, markdownlint, markdown-link-check)
+description: Common hooks for GitHub Copilot (actionlint, ghalint, zizmor, markdownlint, markdown-link-check, prettier)
 author: y-miyazaki
 license: Apache-2.0
 target: copilot
