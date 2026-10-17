@@ -280,7 +280,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@914aa0d83a954a79089abf8370ce069a27fc6620 # v1.8.125
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@62db1fa6bf5ca86eb83d13a13012ec375a0cbec1 # v1.8.125
 
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
@@ -289,7 +289,7 @@ jobs:
 
       - name: Detect Loop Work
         id: detect
-        uses: y-miyazaki/config/.github/actions/loop-entity-detect@914aa0d83a954a79089abf8370ce069a27fc6620 # v1.8.125
+        uses: y-miyazaki/config/.github/actions/loop-entity-detect@62db1fa6bf5ca86eb83d13a13012ec375a0cbec1 # v1.8.125
 
         with:
           agent_edit_allowlist: ${{ inputs.agent_edit_allowlist }}
@@ -323,7 +323,7 @@ jobs:
       fail-fast: false
       matrix:
         target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
-    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@914aa0d83a954a79089abf8370ce069a27fc6620 # v1.8.125
+    uses: y-miyazaki/config/.github/workflows/ci-loop-agent.yaml@62db1fa6bf5ca86eb83d13a13012ec375a0cbec1 # v1.8.125
 
     with:
       agent_branch_prefix: ${{ inputs.agent_branch_prefix }}
@@ -394,7 +394,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@914aa0d83a954a79089abf8370ce069a27fc6620 # v1.8.125
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@62db1fa6bf5ca86eb83d13a13012ec375a0cbec1 # v1.8.125
 
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
@@ -402,7 +402,7 @@ jobs:
           github_token: ${{ secrets.GH_TOKEN }}
 
       - name: Append Skip Run Log
-        uses: y-miyazaki/config/.github/actions/loop-run-log@914aa0d83a954a79089abf8370ce069a27fc6620 # v1.8.125
+        uses: y-miyazaki/config/.github/actions/loop-run-log@62db1fa6bf5ca86eb83d13a13012ec375a0cbec1 # v1.8.125
 
         with:
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
