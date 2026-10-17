@@ -58,7 +58,7 @@ jobs:
     steps:
       - name: Detect CodeQL Support
         id: detect
-        uses: y-miyazaki/config/.github/actions/detect-codeql-support@d27084caff55c53295518161a879d451b8aec161 # v1.8.124
+        uses: y-miyazaki/config/.github/actions/detect-codeql-support@ba42a54f15394c7011a9fa4701521f091ad879a1 # v1.8.125
 
 
       - name: Checkout Code
@@ -92,7 +92,7 @@ jobs:
     steps:
       - name: Detect SARIF Upload Support
         id: detect
-        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@d27084caff55c53295518161a879d451b8aec161 # v1.8.124
+        uses: y-miyazaki/config/.github/actions/detect-sarif-upload-support@ba42a54f15394c7011a9fa4701521f091ad879a1 # v1.8.125
 
 
       - name: Checkout Code
@@ -196,7 +196,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@d27084caff55c53295518161a879d451b8aec161 # v1.8.124
+        uses: y-miyazaki/config/.github/actions/summary@ba42a54f15394c7011a9fa4701521f091ad879a1 # v1.8.125
 
         with:
           artifacts: |
