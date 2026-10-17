@@ -130,7 +130,7 @@ jobs:
       finalize_hook_script: .agents/skills/github-pr-review/scripts/post_review.sh
       level: L2
       loop_name: github-pr-review
-      state_branch: main
+      state_branch: dogfood/loop-delivery
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}

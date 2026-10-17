@@ -139,7 +139,7 @@ jobs:
       detect_script: .agents/skills/github-issue-triage/scripts/detect_issue.sh
       level: L1
       loop_name: github-issue-triage
-      state_branch: main
+      state_branch: dogfood/loop-delivery
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}

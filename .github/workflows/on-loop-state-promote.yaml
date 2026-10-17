@@ -56,4 +56,4 @@ jobs:
           github_token: ${{ steps.app_token.outputs.token }}
           merged: ${{ github.event.pull_request.merged && 'true' || 'false' }}
           pr_number: ${{ github.event.pull_request.number }}
-          state_branch: main
+          state_branch: dogfood/loop-delivery

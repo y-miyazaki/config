@@ -80,14 +80,14 @@ jobs:
       budget_max_runs_per_day: 1
       budget_max_tokens_per_day: 1000000
       delivery: pr_create
-      detect_branch_match: main
+      detect_branch_match: dogfood/loop-delivery
       detect_env_json: >-
         {"CHANGELOG_FILE":"CHANGELOG.md","CHANGELOG_MERGE_COMMITS":"false"}
       detect_script: .agents/skills/changelog/scripts/detect_changelog_commits.sh
       level: L2
       loop_name: changelog
       pr_title: "chore(changelog): update CHANGELOG.md (loop-changelog)"
-      state_branch: main
+      state_branch: dogfood/loop-delivery
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}

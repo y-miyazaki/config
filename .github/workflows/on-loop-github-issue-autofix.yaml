@@ -79,13 +79,13 @@ jobs:
       budget_max_runs_per_day: 10
       budget_max_tokens_per_day: 1000000
       delivery: pr_create
-      detect_branch_match: main
+      detect_branch_match: dogfood/loop-delivery
       detect_env_json: ${{ format('{{"ISSUE_NUMBER":{0}}}', toJSON(format('{0}', github.event.issue.number || github.event.client_payload.issue_number || inputs.issue_number || ''))) }}
       detect_script: .agents/skills/github-issue-autofix/scripts/detect_autofix.sh
       level: L2
       loop_name: github-issue-autofix
       pr_draft: ${{ inputs.pr_draft || false }}
-      state_branch: main
+      state_branch: dogfood/loop-delivery
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}

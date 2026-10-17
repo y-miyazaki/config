@@ -133,7 +133,7 @@ jobs:
       detect_script: .agents/skills/github-pr-revise/scripts/detect_pr_revise.sh
       level: L2
       loop_name: github-pr-revise
-      state_branch: main
+      state_branch: dogfood/loop-delivery
       trigger_comment_ack: true
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}

@@ -113,7 +113,7 @@ jobs:
       budget_max_runs_per_day: 5
       budget_max_tokens_per_day: 1000000
       delivery: pr_create
-      detect_branch_match: main
+      detect_branch_match: dogfood/loop-delivery
       # agent_edit_denylist omitted: the platform default (lib/paths.sh DEFAULT_EXECUTE_DENYLIST) covers it
       # detect_env_json: LEDGER/REJECT_*; workflow_run event keys (EVENT_/HEAD_*/WORKFLOW_*) when present
       # Keys must stay alphabetically ordered. Values via toJSON() so quotes/backslashes stay valid JSON.
@@ -133,7 +133,7 @@ jobs:
       level: L2
       loop_name: ci-sweeper
       pr_title: "chore(ci-sweeper): automated CI repair (loop-ci-sweeper)"
-      state_branch: main
+      state_branch: dogfood/loop-delivery
     secrets:
       AGENT_TOKEN: ${{ secrets.AGENT_TOKEN }}
       BOT_APP_CLIENT_ID: ${{ secrets.MAINTENANCE_BOT_APP_CLIENT_ID }}
