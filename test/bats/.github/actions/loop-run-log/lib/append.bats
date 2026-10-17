@@ -83,7 +83,7 @@ _push_concurrent_entry() {
 
 @test "loop_run_log_build_entry sets tokens_total from usage_json" {
     local usage='{"total_input_tokens":1842,"total_output_tokens":17,"model":"composer-2.5"}'
-    result="$(loop_run_log_build_entry "2" 45 "true" "docs-updater" "pr-created" "none" "APPROVE" "999" "${usage}")"
+    result="$(loop_run_log_build_entry "2" 45 "true" "docs-updater" "pr_created" "none" "APPROVE" "999" "${usage}")"
     [ "$(jq -r '.tokens_total' <<< "${result}")" = "1859" ]
     [ "$(jq -r '.usage.total_input_tokens' <<< "${result}")" = "1842" ]
     [ "$(jq -r '.usage.total_output_tokens' <<< "${result}")" = "17" ]
@@ -272,7 +272,7 @@ _push_concurrent_entry() {
                         "claude-opus-5":{"tokens":6432,"cost_usd":0.746415}},
             "sessions":[{"role":"maker","attempt":1,"model":"claude-sonnet-5","input":26,"output":10642},
                         {"role":"checker","attempt":1,"model":"claude-opus-5","input":22,"output":6410}]}'
-    result="$(loop_run_log_build_entry "1" 816 "true" "tech-debt" "pr-created" "none" "APPROVE" "37927886699" "${usage}")"
+    result="$(loop_run_log_build_entry "1" 816 "true" "tech-debt" "pr_created" "none" "APPROVE" "37927886699" "${usage}")"
 
     [ "$(jq -r '.tokens_total' <<< "${result}")" = "17100" ]
     [ "$(jq -r '.cost_usd' <<< "${result}")" = "1.182053" ]

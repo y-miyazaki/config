@@ -8,7 +8,7 @@
 #
 # Usage:
 #   source created_by.sh
-#   source loop_meta.sh
+#   source loop_meta.sh   (sources outcome.sh itself)
 #   loop_meta_reset
 #   loop_meta_row "Level" "L2"
 #   build_loop_meta_block OUTCOME VERDICT REASON ENGINE USAGE_JSON RUN_URL
@@ -22,6 +22,11 @@
 #   - Caller-specific rows are added with loop_meta_row before rendering
 #   - Emits nothing when no row, reason, or usage field is known
 #######################################
+
+_LOOP_META_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=./outcome.sh
+# shellcheck disable=SC1091
+source "${_LOOP_META_DIR}/outcome.sh"
 
 # Marker identifying an already-rendered meta block (idempotency for appenders)
 LOOP_META_MARKER="<!-- loop-meta:v1 -->"
@@ -139,12 +144,12 @@ function build_loop_meta_block {
 #
 #######################################
 function loop_meta_icon {
-    local outcome="${1:-}"
-    local verdict="${2:-}"
+    local outcome verdict="${2:-}"
 
+    outcome="$(normalize_outcome "${1:-}")"
     if [[ ${verdict} == "REJECT" || ${outcome} == "rejected" || ${outcome} == "error" ]]; then
         printf '❌'
-    elif [[ -z ${outcome} || ${outcome} == "no-changes" || ${outcome} == "skipped" || ${outcome} == "watch" ]]; then
+    elif [[ -z ${outcome} || ${outcome} == "unchanged" || ${outcome} == "skipped" || ${outcome} == "watch" ]]; then
         printf 'ℹ️'
     else
         printf '✅'

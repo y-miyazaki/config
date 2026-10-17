@@ -6,7 +6,8 @@
 # Use cases:
 # - merged PR promotes pending.sha to last_sha on branch_state
 # - closed-without-merge clears pending only
-# - skip_state_pr warns and exits cleanly when direct push is blocked
+# - state_pr_skip warns and exits cleanly when direct push is blocked
+# - an empty STATE_BRANCH fails without consulting gh repo view
 # - opens auto-merge state PR when direct push is blocked
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -82,7 +83,7 @@ setup() {
         GITHUB_TOKEN='test-token' \
         MERGED='false' \
         PR_NUMBER='42' \
-        STATE_PUSH_BRANCH='main' \
+        STATE_BRANCH='main' \
         GITHUB_REPOSITORY='test/repo' \
         GITHUB_RUN_ID='1' \
         GITHUB_RUN_ATTEMPT='1'
@@ -91,9 +92,24 @@ setup() {
     run jq -e \
         '.targets["integration:main"].last_sha == "oldsha000000"
          and (.targets["integration:main"] | has("pending") | not)
-         and .targets["integration:main"].outcome == "pr-closed"' \
+         and .targets["integration:main"].outcome == "pr_closed"' \
         "${STATE_PROMOTE_WORK}/.loop/state-test.json"
     [ "$status" -eq 0 ]
+}
+
+@test "run.sh fails on empty STATE_BRANCH without gh repo view" {
+    state_promote_mock_gh
+    state_promote_run \
+        GITHUB_TOKEN='test-token' \
+        MERGED='true' \
+        PR_NUMBER='42' \
+        STATE_BRANCH='' \
+        GITHUB_REPOSITORY='test/repo'
+    [ "$status" -ne 0 ]
+    [[ $output == *"STATE_BRANCH"* ]]
+    [[ $output != *"unexpected gh"* ]]
+    run grep -c "repo view" "${RUN_SCRIPT}"
+    [ "${output}" = "0" ]
 }
 
 @test "run.sh opens state promote PR when direct push is blocked" {
@@ -104,8 +120,8 @@ setup() {
         GITHUB_TOKEN='test-token' \
         MERGED='true' \
         PR_NUMBER='42' \
-        SKIP_STATE_PR='false' \
-        STATE_PUSH_BRANCH='main' \
+        STATE_PR_SKIP='false' \
+        STATE_BRANCH='main' \
         GITHUB_REPOSITORY='test/repo' \
         GITHUB_RUN_ID='2' \
         GITHUB_RUN_ATTEMPT='1'
@@ -119,7 +135,7 @@ setup() {
         GITHUB_TOKEN='test-token' \
         MERGED='true' \
         PR_NUMBER='42' \
-        STATE_PUSH_BRANCH='main' \
+        STATE_BRANCH='main' \
         GITHUB_REPOSITORY='test/repo' \
         GITHUB_RUN_ID='3' \
         GITHUB_RUN_ATTEMPT='1'
@@ -128,24 +144,24 @@ setup() {
     run jq -e \
         '.targets["integration:main"].last_sha == "newsha111111"
          and (.targets["integration:main"] | has("pending") | not)
-         and .targets["integration:main"].outcome == "merged"
+         and .targets["integration:main"].outcome == "pr_merged"
          and .targets["integration:main"].consecutive_failures == 0' \
         "${STATE_PROMOTE_WORK}/.loop/state-test.json"
     [ "$status" -eq 0 ]
 }
 
-@test "run.sh skips state PR fallback when skip_state_pr is true" {
+@test "run.sh skips state PR fallback when state_pr_skip is true" {
     state_promote_block_push
 
     state_promote_run \
         GITHUB_TOKEN='test-token' \
         MERGED='true' \
         PR_NUMBER='42' \
-        SKIP_STATE_PR='true' \
-        STATE_PUSH_BRANCH='main' \
+        STATE_PR_SKIP='true' \
+        STATE_BRANCH='main' \
         GITHUB_REPOSITORY='test/repo' \
         GITHUB_RUN_ID='4' \
         GITHUB_RUN_ATTEMPT='1'
     [ "$status" -eq 0 ]
-    [[ $output == *"skip_state_pr=true"* ]]
+    [[ $output == *"state_pr_skip=true"* ]]
 }

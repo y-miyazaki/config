@@ -2,11 +2,10 @@
 #######################################
 # Description:
 #   Promote or clear pending loop state entries after a fix PR closes.
-#   Updates .loop/state-*.json only on the state push branch (explicit
-#   STATE_PUSH_BRANCH, or the repository default branch when unset).
+#   Updates .loop/state-*.json only on the state branch (STATE_BRANCH, required).
 #
 # Usage:
-#   GITHUB_TOKEN=... PR_NUMBER=... MERGED=true|false bash lib/run.sh
+#   GITHUB_TOKEN=... PR_NUMBER=... MERGED=true|false STATE_BRANCH=... bash lib/run.sh
 #
 # Design Rules:
 #   - Merged PRs promote pending.sha to last_sha
@@ -33,8 +32,8 @@ export LC_ALL=C.UTF-8
 #######################################
 MERGED="${MERGED:-false}"
 PR_NUMBER="${PR_NUMBER:?}"
-STATE_PUSH_BRANCH="${STATE_PUSH_BRANCH:-}"
-SKIP_STATE_PR="${SKIP_STATE_PR:-false}"
+STATE_BRANCH="${STATE_BRANCH:-}"
+STATE_PR_SKIP="${STATE_PR_SKIP:-false}"
 OUTCOME=""
 WRITE_MODE=""
 
@@ -48,7 +47,7 @@ WRITE_MODE=""
 #   $1 - State temp file path
 #   $2 - Target key
 #   $3 - ISO timestamp
-#   $4 - Outcome string (merged|pr-closed)
+#   $4 - Outcome string (pr_merged|pr_closed)
 #   $5 - Write mode (promote|clear_pending)
 #
 # Outputs:
@@ -144,8 +143,8 @@ function commit_changed_state_files {
         return 0
     fi
 
-    if [[ ${SKIP_STATE_PR} == "true" ]]; then
-        echo "::warning::Direct push blocked; skipping state PR (skip_state_pr=true)."
+    if [[ ${STATE_PR_SKIP} == "true" ]]; then
+        echo "::warning::Direct push blocked; skipping state PR (state_pr_skip=true)."
         return 0
     fi
 
@@ -249,7 +248,7 @@ function list_state_files {
 # validate_state_push_branch: Validate resolved state push branch name
 #
 # Globals:
-#   STATE_PUSH_BRANCH - Branch name set in main before call
+#   STATE_BRANCH - Branch name set before call
 #
 # Arguments:
 #   None
@@ -262,40 +261,10 @@ function list_state_files {
 #
 #######################################
 function validate_state_push_branch {
-    if ! [[ ${STATE_PUSH_BRANCH} =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
-        echo "::error::Invalid state push branch: ${STATE_PUSH_BRANCH}"
+    if ! [[ ${STATE_BRANCH} =~ ^[a-zA-Z0-9/_.-]+$ ]]; then
+        echo "::error::Invalid state push branch: ${STATE_BRANCH}"
         exit 1
     fi
-}
-
-#######################################
-# discover_state_push_branches: Resolve the single branch that hosts loop state
-#
-# Globals:
-#   STATE_PUSH_BRANCH - Optional explicit branch override
-#   GITHUB_REPOSITORY - Repository slug for default-branch lookup
-#
-# Arguments:
-#   $1 - Pull request number (unused; kept for call-site compatibility)
-#
-# Outputs:
-#   One branch name on stdout (explicit override or repository default)
-#
-# Returns:
-#   0 on success
-#
-#######################################
-function discover_state_push_branches {
-    local _pr="${1:-}"
-
-    if [[ -n ${STATE_PUSH_BRANCH} ]]; then
-        printf '%s\n' "${STATE_PUSH_BRANCH}"
-        return 0
-    fi
-
-    : "${GITHUB_REPOSITORY:?}"
-    STATE_PUSH_BRANCH="$(gh repo view "${GITHUB_REPOSITORY}" --json defaultBranchRef --jq '.defaultBranchRef.name')"
-    printf '%s\n' "${STATE_PUSH_BRANCH}"
 }
 
 #######################################
@@ -323,27 +292,27 @@ function process_state_push_branch {
     local -a target_keys=()
     local now state_file state_tmp target_key
 
-    STATE_PUSH_BRANCH="${push_branch}"
+    STATE_BRANCH="${push_branch}"
     validate_state_push_branch
 
-    git fetch origin "${STATE_PUSH_BRANCH}" --prune
-    git checkout -B "${STATE_PUSH_BRANCH}" "origin/${STATE_PUSH_BRANCH}"
+    git fetch origin "${STATE_BRANCH}" --prune
+    git checkout -B "${STATE_BRANCH}" "origin/${STATE_BRANCH}"
 
-    mapfile -t state_files < <(list_state_files "${STATE_PUSH_BRANCH}")
+    mapfile -t state_files < <(list_state_files "${STATE_BRANCH}")
     if [[ ${#state_files[@]} -eq 0 ]]; then
-        echo "No loop state files found on ${STATE_PUSH_BRANCH}."
+        echo "No loop state files found on ${STATE_BRANCH}."
         return 0
     fi
 
     now="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 
     for state_file in "${state_files[@]}"; do
-        if ! git cat-file -e "origin/${STATE_PUSH_BRANCH}:${state_file}" 2> /dev/null; then
+        if ! git cat-file -e "origin/${STATE_BRANCH}:${state_file}" 2> /dev/null; then
             continue
         fi
 
         mapfile -t target_keys < <(
-            git show "origin/${STATE_PUSH_BRANCH}:${state_file}" \
+            git show "origin/${STATE_BRANCH}:${state_file}" \
                 | jq -r --argjson pr "${PR_NUMBER}" '.targets // {} | to_entries[] | select(.value.pending.pr == $pr) | .key'
         )
         if [[ ${#target_keys[@]} -eq 0 ]]; then
@@ -351,7 +320,7 @@ function process_state_push_branch {
         fi
 
         state_tmp="$(mktemp)"
-        git show "origin/${STATE_PUSH_BRANCH}:${state_file}" > "${state_tmp}"
+        git show "origin/${STATE_BRANCH}:${state_file}" > "${state_tmp}"
         for target_key in "${target_keys[@]}"; do
             apply_pending_update "${state_tmp}" "${target_key}" "${now}" "${OUTCOME}" "${WRITE_MODE}"
             echo "Updated ${state_file} target ${target_key} (${WRITE_MODE})."
@@ -364,11 +333,11 @@ function process_state_push_branch {
     done
 
     if [[ ${#changed_files[@]} -eq 0 ]]; then
-        echo "No pending state matched PR #${PR_NUMBER} on ${STATE_PUSH_BRANCH}."
+        echo "No pending state matched PR #${PR_NUMBER} on ${STATE_BRANCH}."
         return 0
     fi
 
-    commit_changed_state_files "${STATE_PUSH_BRANCH}" "${changed_files[@]}"
+    commit_changed_state_files "${STATE_BRANCH}" "${changed_files[@]}"
 }
 
 #######################################
@@ -377,7 +346,7 @@ function process_state_push_branch {
 # Globals:
 #   MERGED - Whether the pull request merged
 #   PR_NUMBER - Closed pull request number
-#   STATE_PUSH_BRANCH - Optional branch override for .loop/* state files
+#   STATE_BRANCH - Required branch hosting .loop/* state files
 #   OUTCOME - Set from MERGED flag
 #   WRITE_MODE - promote|clear_pending
 #
@@ -392,28 +361,19 @@ function process_state_push_branch {
 #
 #######################################
 function main {
-    local -a push_branches=()
-    local push_branch
+    : "${STATE_BRANCH:?STATE_BRANCH is required}"
 
     configure_git_auth
 
-    mapfile -t push_branches < <(discover_state_push_branches "${PR_NUMBER}")
-    if [[ ${#push_branches[@]} -eq 0 ]]; then
-        echo "No state push branch resolved for PR #${PR_NUMBER}."
-        return 0
-    fi
-
     if [[ ${MERGED} == "true" ]]; then
-        OUTCOME="merged"
+        OUTCOME="pr_merged"
         WRITE_MODE="promote"
     else
-        OUTCOME="pr-closed"
+        OUTCOME="pr_closed"
         WRITE_MODE="clear_pending"
     fi
 
-    for push_branch in "${push_branches[@]}"; do
-        process_state_push_branch "${push_branch}"
-    done
+    process_state_push_branch "${STATE_BRANCH}"
 }
 
 if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then

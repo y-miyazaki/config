@@ -10,6 +10,9 @@
 # - build_comment_body includes marker and outcome
 # - build_comment_body includes L2 next step when bot fix PR created
 # - build_comment_body includes L3 auto-merge note when enabled
+# - build_comment_body L3 next step depends only on PR_AUTO_MERGE
+# - build_comment_body next step appears for pr_created and legacy pr-created only
+# - build_comment_body renders agent_loop_max_attempts in the attempt row
 # - build_comment_body shows Reason row for reject reason
 # - build_comment_body shows Reason even when changed files exist
 # - build_comment_body redacts secrets in reject reason
@@ -39,17 +42,16 @@ setup() {
     GITHUB_SERVER_URL="https://github.com"
     LOOP_NAME="ci-sweeper"
     LOOP_RUN_ID="99"
-    OUTCOME="pr-created"
+    OUTCOME="pr_created"
     PR_NUMBER="42"
     REPOSITORY="owner/repo"
     GITHUB_TOKEN="test-token"
     ATTEMPTS="1"
-    MAX_ATTEMPTS="3"
+    AGENT_LOOP_MAX_ATTEMPTS="3"
     COMMIT_SHA="abcdefghijk"
     VERDICT="APPROVE"
     REJECT_REASON=""
-    LEVEL="L2"
-    AUTO_MERGE="false"
+    PR_AUTO_MERGE="false"
     FIX_PR_NUMBER="406"
     FIX_PR_URL="https://github.com/owner/repo/pull/406"
     TARGET_JSON='{"to":{"branch":"feature/x","pr_number":42},"workflow_name":"ci-test","workflow_run_id":"123"}'
@@ -61,7 +63,7 @@ teardown() {
 }
 
 @test "build_comment_body appends Created By when engine and usage set" {
-    ENGINE="cursor"
+    AGENT_ENGINE="cursor"
     USAGE_JSON='{"total_input_tokens":100000,"total_output_tokens":6000,"model":"Composer-2.5"}'
     run build_comment_body "loop-bot"
     [ "$status" -eq 0 ]
@@ -103,7 +105,7 @@ teardown() {
     [ "$status" -eq 0 ]
     [[ $output == *"<!-- loop-notify-pr:v1:ci-sweeper -->"* ]]
     [[ $output == *"## Loop notification: ci-sweeper"* ]]
-    [[ $output == *"| Outcome | \`pr-created\` |"* ]]
+    [[ $output == *"| Outcome | \`pr_created\` |"* ]]
     [[ $output == *"| Bot fix PR | [#406]"* ]]
     [[ $output == *"| Actor | \`loop-bot\` |"* ]]
     [[ $output == *"| Branch | \`feature/x\` |"* ]]
@@ -120,12 +122,40 @@ teardown() {
 }
 
 @test "build_comment_body includes L3 auto-merge note when enabled" {
-    LEVEL="L3"
-    AUTO_MERGE="true"
+    PR_AUTO_MERGE="true"
     run build_comment_body "loop-bot"
     [ "$status" -eq 0 ]
     [[ $output == *"Next step (L3)"* ]]
     [[ $output == *"auto-merge"* ]]
+}
+
+@test "build_comment_body L3 next step depends only on PR_AUTO_MERGE" {
+    PR_AUTO_MERGE="true"
+    run build_comment_body "loop-bot"
+    [ "$status" -eq 0 ]
+    [[ $output == *"**Next step (L3):** Bot fix PR will auto-merge when checks pass."* ]]
+    [[ $output != *"Next step (L2)"* ]]
+    PR_AUTO_MERGE="false"
+    run build_comment_body "loop-bot"
+    [ "$status" -eq 0 ]
+    [[ $output == *"**Next step (L2):** Merge or close the bot fix PR"* ]]
+    [[ $output != *"Next step (L3)"* ]]
+}
+
+@test "build_comment_body next step appears for pr_created and legacy pr-created only" {
+    local outcome
+    for outcome in "pr_created" "pr-created"; do
+        OUTCOME="${outcome}"
+        run build_comment_body "loop-bot"
+        [ "$status" -eq 0 ]
+        [[ $output == *"Next step (L2)"* ]]
+    done
+    for outcome in "pr_pushed" "unchanged"; do
+        OUTCOME="${outcome}"
+        run build_comment_body "loop-bot"
+        [ "$status" -eq 0 ]
+        [[ $output != *"Next step"* ]]
+    done
 }
 
 @test "build_comment_body redacts secrets in reject reason" {
@@ -137,6 +167,12 @@ teardown() {
     [[ $output == *"| Reason |"* ]]
     [[ $output == *"Bearer [REDACTED]"* ]]
     [[ $output != *"super-secret-token-value"* ]]
+}
+
+@test "build_comment_body renders agent_loop_max_attempts in the attempt row" {
+    run build_comment_body "loop-bot"
+    [ "$status" -eq 0 ]
+    [[ $output == *"| Attempt | 1/3 |"* ]]
 }
 
 @test "build_comment_body shows Reason even when changed files exist" {

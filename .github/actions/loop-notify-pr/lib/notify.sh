@@ -5,7 +5,7 @@
 #   Environment variables mirror loop-notify-pr composite action inputs.
 #
 # Usage:
-#   LOOP_NAME=ci-sweeper OUTCOME=pr-created PR_NUMBER=42 GITHUB_TOKEN=... bash lib/notify.sh
+#   LOOP_NAME=ci-sweeper OUTCOME=pr_created PR_NUMBER=42 GITHUB_TOKEN=... bash lib/notify.sh
 #
 # Design Rules:
 #   - One marker comment per PR per loop name (idempotent upsert)
@@ -29,20 +29,19 @@ export LC_ALL=C.UTF-8
 #######################################
 # Global variables
 #######################################
+AGENT_ENGINE="${AGENT_ENGINE:-}"
+AGENT_LOOP_MAX_ATTEMPTS="${AGENT_LOOP_MAX_ATTEMPTS:-}"
 ATTEMPTS="${ATTEMPTS:-}"
-AUTO_MERGE="${AUTO_MERGE:-false}"
 COMMIT_SHA="${COMMIT_SHA:-}"
-ENGINE="${ENGINE:-}"
 FIX_PR_NUMBER="${FIX_PR_NUMBER:-}"
 FIX_PR_URL="${FIX_PR_URL:-}"
 GITHUB_OUTPUT="${GITHUB_OUTPUT:-}"
 GITHUB_SERVER_URL="${GITHUB_SERVER_URL:-https://github.com}"
-LEVEL="${LEVEL:-L2}"
 LOOP_NAME="${LOOP_NAME:-}"
 LOOP_RUN_ID="${LOOP_RUN_ID:-}"
-MAX_ATTEMPTS="${MAX_ATTEMPTS:-}"
 NOTIFY_CONTEXT_JSON="${NOTIFY_CONTEXT_JSON:-"{}"}"
 OUTCOME="${OUTCOME:-}"
+PR_AUTO_MERGE="${PR_AUTO_MERGE:-false}"
 PR_NUMBER="${PR_NUMBER:-}"
 REJECT_REASON="${REJECT_REASON:-}"
 REPOSITORY="${REPOSITORY:-}"
@@ -63,6 +62,9 @@ source "${_LOOP_CREATED_BY_LIB}/created_by.sh"
 # shellcheck source=../../lib/loop/loop_meta.sh
 # shellcheck disable=SC1091
 source "${_LOOP_CREATED_BY_LIB}/loop_meta.sh"
+# shellcheck source=../../lib/loop/outcome.sh
+# shellcheck disable=SC1091
+source "${_LOOP_CREATED_BY_LIB}/outcome.sh"
 # shellcheck source=../../lib/loop/trigger_thread.sh
 # shellcheck disable=SC1091
 source "${_LOOP_CREATED_BY_LIB}/trigger_thread.sh"
@@ -72,18 +74,17 @@ source "${_LOOP_CREATED_BY_LIB}/trigger_thread.sh"
 #
 # Globals:
 #   ATTEMPTS - Attempt count for display
-#   AUTO_MERGE - Whether the bot fix PR auto-merges (gates the L3 next-step text)
 #   COMMIT_SHA - Pushed commit SHA when present
-#   ENGINE - AI engine slug for Created By footer
+#   AGENT_ENGINE - AI engine slug for Created By footer
 #   FIX_PR_NUMBER - Bot fix PR number when present
 #   FIX_PR_URL - Bot fix PR URL when present
 #   GITHUB_SERVER_URL - GitHub server URL prefix
-#   LEVEL - Autonomy level (gates the L3 vs L2 next-step text)
 #   LOOP_NAME - Loop name for marker scoping
 #   LOOP_RUN_ID - Current workflow run id
-#   MAX_ATTEMPTS - Maximum attempts for display
+#   AGENT_LOOP_MAX_ATTEMPTS - Maximum attempts for display
 #   NOTIFY_CONTEXT_JSON - Machine context from loop-execute
 #   OUTCOME - Finalize outcome enum
+#   PR_AUTO_MERGE - Whether the bot fix PR auto-merges (gates the L3 next-step text)
 #   REJECT_REASON - Checker rejection reason
 #   REPOSITORY - owner/repo used to build workflow/commit URLs
 #   TARGET_JSON - Target descriptor JSON
@@ -204,8 +205,8 @@ function build_comment_body {
     fi
 
     next_step=""
-    if [[ ${OUTCOME} == "pr-created" && -n ${FIX_PR_URL} ]]; then
-        if [[ ${LEVEL} == "L3" && ${AUTO_MERGE} == "true" ]]; then
+    if [[ $(normalize_outcome "${OUTCOME}") == "pr_created" && -n ${FIX_PR_URL} ]]; then
+        if [[ ${PR_AUTO_MERGE} == "true" ]]; then
             next_step="**Next step (L3):** Bot fix PR will auto-merge when checks pass. Wait for CI on this PR after merge."
         else
             next_step="**Next step (L2):** Merge or close the bot fix PR above, then re-run CI on this PR."
@@ -227,7 +228,7 @@ ${marker}
 | Branch | \`${to_branch}\` |
 | Failed run | [${workflow_name} #${workflow_run_id:-—}](${workflow_url}) |
 | Loop run | [actions run](${loop_run_url}) |
-| Attempt | ${ATTEMPTS:-—}/${MAX_ATTEMPTS:-—} |
+| Attempt | ${ATTEMPTS:-—}/${AGENT_LOOP_MAX_ATTEMPTS:-—} |
 | Timestamp | ${timestamp} |
 EOF
 
@@ -296,7 +297,7 @@ ${agent_summary}
 EOF
     fi
 
-    created_by="$(render_created_by_line "${ENGINE}" "${USAGE_JSON}")"
+    created_by="$(render_created_by_line "${AGENT_ENGINE}" "${USAGE_JSON}")"
     if [[ -n ${created_by} ]]; then
         printf '\n%s\n' "${created_by}"
     fi
@@ -333,7 +334,7 @@ function find_existing_comment {
 #
 # Globals:
 #   COMMIT_SHA - Pushed commit SHA when present
-#   ENGINE - AI engine slug for Created By footer
+#   AGENT_ENGINE - AI engine slug for Created By footer
 #   GITHUB_SERVER_URL - GitHub server URL prefix
 #   LOOP_RUN_ID - Current workflow run id
 #   NOTIFY_CONTEXT_JSON - Machine context from loop-execute
@@ -382,7 +383,7 @@ function post_trigger_done_reply {
     overview="$(truncate_text_at_boundary "$(redact_sensitive_text "${overview}")" 1200)"
     summary="${overview}"
 
-    body="$(build_done_reply_body "${OUTCOME}" "${VERDICT}" "$(redact_sensitive_text "${REJECT_REASON}")" "${COMMIT_SHA}" "${commit_url}" "${loop_run_url}" "${summary}" "$(redact_sensitive_text "${changed_files}")" "$(redact_sensitive_text "${diff_stat}")" "${ENGINE}" "${USAGE_JSON}")"
+    body="$(build_done_reply_body "${OUTCOME}" "${VERDICT}" "$(redact_sensitive_text "${REJECT_REASON}")" "${COMMIT_SHA}" "${commit_url}" "${loop_run_url}" "${summary}" "$(redact_sensitive_text "${changed_files}")" "$(redact_sensitive_text "${diff_stat}")" "${AGENT_ENGINE}" "${USAGE_JSON}")"
 
     reply_trigger_comment "${body}"
 }
@@ -626,7 +627,7 @@ function resolve_actor {
 #   GITHUB_SERVER_URL - GitHub server URL prefix
 #   LOOP_NAME - Loop name for marker scoping
 #   LOOP_RUN_ID - Current workflow run id
-#   MAX_ATTEMPTS - Maximum attempts for display
+#   AGENT_LOOP_MAX_ATTEMPTS - Maximum attempts for display
 #   NOTIFY_CONTEXT_JSON - Machine context from loop-execute
 #   OUTCOME - Finalize outcome enum
 #   PR_NUMBER - Target pull request number

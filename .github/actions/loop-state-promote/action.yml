@@ -12,13 +12,12 @@ inputs:
   pr_number:
     description: "Closed pull request number"
     required: true
-  skip_state_pr:
+  state_branch:
+    description: "Branch hosting .loop/* state files"
+    required: true
+  state_pr_skip:
     default: "false"
-    description: "When true, skip state PR fallback when direct push to branch_state is blocked"
-    required: false
-  state_push_branch:
-    default: ""
-    description: "Branch hosting .loop/* state files (empty = repository default branch)"
+    description: "When true, skip state PR fallback when direct push to state_branch is blocked"
     required: false
 
 runs:
@@ -30,6 +29,6 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         MERGED: ${{ inputs.merged }}
         PR_NUMBER: ${{ inputs.pr_number }}
-        SKIP_STATE_PR: ${{ inputs.skip_state_pr }}
-        STATE_PUSH_BRANCH: ${{ inputs.state_push_branch }}
+        STATE_BRANCH: ${{ inputs.state_branch }}
+        STATE_PR_SKIP: ${{ inputs.state_pr_skip }}
       run: bash "${GITHUB_ACTION_PATH}/lib/run.sh"

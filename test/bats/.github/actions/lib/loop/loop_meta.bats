@@ -38,9 +38,9 @@ usage_fixture() {
 }
 
 @test "build_loop_meta_block carries engine model and tokens" {
-    run build_loop_meta_block "pr-created" "APPROVE" "" "claude" "$(usage_fixture)" "https://x/run/1"
+    run build_loop_meta_block "pr_created" "APPROVE" "" "claude" "$(usage_fixture)" "https://x/run/1"
     [ "$status" -eq 0 ]
-    [[ $output == *"<summary>✅ <code>pr-created</code> · Loop details</summary>"* ]]
+    [[ $output == *"<summary>✅ <code>pr_created</code> · Loop details</summary>"* ]]
     [[ $output == *"| Verdict | \`APPROVE\` |"* ]]
     [[ $output == *"| Engine | \`claude\` |"* ]]
     [[ $output == *"| Model | \`maker=claude-sonnet-5 checker=claude-opus-5\` |"* ]]
@@ -72,14 +72,33 @@ usage_fixture() {
     [ -z "$output" ]
 }
 
+@test "loop_meta_icon gives legacy outcome spellings the same icon as their new names" {
+    local pair legacy current
+    for pair in "no-changes:unchanged" "no-action:unchanged" "pr-created:pr_created" "merged:pr_merged" "pr-closed:pr_closed"; do
+        legacy="${pair%%:*}"
+        current="${pair##*:}"
+        run loop_meta_icon "${legacy}" "APPROVE"
+        [ "$status" -eq 0 ]
+        legacy_icon="${output}"
+        run loop_meta_icon "${current}" "APPROVE"
+        [ "$status" -eq 0 ]
+        [ "${output}" = "${legacy_icon}" ]
+        [ -n "${output}" ]
+    done
+    run loop_meta_icon "no-changes" "APPROVE"
+    [ "$output" = "ℹ️" ]
+    run loop_meta_icon "no-action" ""
+    [ "$output" = "ℹ️" ]
+}
+
 @test "loop_meta_icon maps outcome and verdict to a status emoji" {
-    run loop_meta_icon "pr-created" "APPROVE"
+    run loop_meta_icon "pr_created" "APPROVE"
     [ "$output" = "✅" ]
     run loop_meta_icon "rejected" "REJECT"
     [ "$output" = "❌" ]
     run loop_meta_icon "error" ""
     [ "$output" = "❌" ]
-    run loop_meta_icon "no-changes" "APPROVE"
+    run loop_meta_icon "unchanged" "APPROVE"
     [ "$output" = "ℹ️" ]
     run loop_meta_icon "" ""
     [ "$output" = "ℹ️" ]

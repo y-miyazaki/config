@@ -5,6 +5,7 @@
 
 # Use cases:
 # - run.sh rejects missing loop_name
+# - run.sh rejects missing state_branch
 # - run.sh appends entry, commits, and writes entry_json output
 # - run.sh computes duration when duration input is empty
 
@@ -53,6 +54,17 @@ setup() {
     [ "$status" -eq 1 ]
 }
 
+@test "run.sh rejects missing state_branch" {
+    run_log_run \
+        GITHUB_TOKEN='test-token' \
+        LOOP_NAME='docs-updater' \
+        OUTCOME='skipped' \
+        LOOP_RUN_ID='42' \
+        GITHUB_OUTPUT="${GITHUB_OUTPUT}"
+    [ "$status" -eq 1 ]
+    [[ $output == *"STATE_BRANCH"* ]]
+}
+
 @test "run.sh appends entry, commits, and writes entry_json output" {
     run_log_run \
         GITHUB_TOKEN='test-token' \
@@ -60,7 +72,7 @@ setup() {
         OUTCOME='skipped' \
         SKIP_REASON='budget' \
         RUN_LOG_FILE='.loop/loop-run-log.md' \
-        BASE_BRANCH='main' \
+        STATE_BRANCH='main' \
         LOOP_RUN_ID='42' \
         DURATION_S_INPUT='7' \
         GITHUB_OUTPUT="${GITHUB_OUTPUT}"
@@ -90,10 +102,10 @@ setup() {
     run_log_run \
         GITHUB_TOKEN='test-token' \
         LOOP_NAME='docs-updater' \
-        OUTCOME='no-changes' \
+        OUTCOME='unchanged' \
         SKIP_REASON='none' \
         RUN_LOG_FILE='.loop/loop-run-log.md' \
-        BASE_BRANCH='main' \
+        STATE_BRANCH='main' \
         LOOP_RUN_ID='99' \
         RUN_STARTED_AT="${started}" \
         GITHUB_OUTPUT="${GITHUB_OUTPUT}"
