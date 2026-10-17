@@ -18,7 +18,7 @@ metadata:
 ## Input
 
 - **Automation:** detect JSON from `detect_pr_review.sh` with `result.pr_number`, `result.base_sha`, `result.head_sha`, `result.changed_files`, `result.report_path`, and `result.handoff_key`. Read `may_edit` / `write_target` / `response_language` from `## Constraints`.
-- **Interactive:** PR URL or number. Same defaults as automation survey: summarize findings in chat, write no file.
+- **Interactive:** PR URL or number; there is no detect JSON. Resolve SHAs with read-only `gh pr view <n> --json baseRefOid,headRefOid` (base = `baseRefOid`, head = `headRefOid`). Default: present findings in chat and write no file; when the user asks for a report file, write it to the path the user names.
 
 ## Output Specification
 
@@ -63,8 +63,8 @@ When `may_edit` is `true`, resolve `write_target`: on the **interactive** path u
 
 1. Read detect JSON; if `skip: true` or `status: error`, report the reason and stop without writing a report.
 2. Confirm the PR's intent: read the PR title and body, linked Issues, and any related spec or design document. Record the result for `premises`.
-3. Open each changed file in the working tree (which holds the base commit) so the engine loads rules that apply to that path. Read the head version and the diff with read-only `gh pr diff` / `gh api`.
-4. Collect applicable rules: agent instruction files such as AGENTS.md or CLAUDE.md that the engine loaded, and domain review criteria (ID-tagged items in `references/category-*.md`) matching each changed file type. Read them from the base commit only, never from the PR head.
+3. Read the PR diff with `gh pr diff`. Read each changed file at base with `git show <base_sha>:<path>` (never from the checked-out tree, which may be the PR head), and the head version with `gh api` / `gh pr diff`. On the automation path the working tree is the base checkout, so opening files there is equivalent.
+4. Collect applicable rules: read applicable instruction files (nested and path-scoped included) from the base commit with `git show <base_sha>:<path>`, and domain review criteria (ID-tagged items in `references/category-*.md`) matching each changed file type, also from base. Never read rules from the PR head.
 5. Draft findings limited to the three evidence kinds in [category-review-rules.md](references/category-review-rules.md). Exclude pre-existing problems and every item in the "do not report" list.
 6. Drop findings you cannot support with evidence, and findings with low confidence.
 7. Decide the response language, then write the report as JSON to `result.report_path` following `assets/report-template.json`. Copy `head_sha` and `base_sha` from detect `result.head_sha` / `result.base_sha`; a missing or stale `head_sha` makes the poster refuse to post.

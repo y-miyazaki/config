@@ -10,7 +10,7 @@ Report a finding only when it has one of three evidence kinds. No evidence, no f
 | `criteria` | Verbatim text of an ID-tagged item in a domain review reference (`references/category-*.md`) that matches the file type | `evidence.path`, `evidence.quote`      |
 | `bug`      | The diff line and the concrete input or state that makes it fail; no rule is needed                                     | `evidence.quote` (line plus the input) |
 
-- Read rules and criteria from the **base commit** (the working tree), never from the PR head. A PR that edits a rule does not change what it is reviewed against.
+- Read rules and criteria from the **base commit** (`git show <base_sha>:<path>`; on the automation path the working tree is the base checkout), never from the PR head. A PR that edits a rule does not change what it is reviewed against.
 - Quote exactly: no paraphrase, no whitespace normalization. If the verbatim text cannot be found at base, drop the finding.
 - A `bug` finding states a failure that can be reproduced by reasoning from the diff line, for example "empty array input: `items[0]` is undefined at line 42". "Might be a problem" is not a bug.
 
@@ -41,9 +41,9 @@ Report only problems caused by lines the PR adds or changes. Do not report a pro
 
 Before drafting findings, read the PR body, linked Issues, and related specs. A finding that contradicts the stated intent without acknowledging it is "no context" and must be dropped. Record what you read in `premises`.
 
-## Open changed files at base
+## Read rules at base
 
-Do not rely on the diff alone. Open each changed file in the working tree (the base commit) so the engine loads rules scoped to that path. Do not list rule file paths from memory; use the rules the engine loaded and the files you opened. Read the head version and the diff with read-only `gh pr diff` / `gh api`.
+Do not rely on the diff alone. Read applicable instruction files (nested and path-scoped included) from the base commit with `git show <base_sha>:<path>`, never from the checked-out tree, which may be the PR head. Resolve `base_sha` from detect `result.base_sha`, or interactively with `gh pr view <n> --json baseRefOid,headRefOid`. Read the diff with `gh pr diff` and the head version with `gh api`; all `gh` calls are read-only.
 
 ## Response language
 
