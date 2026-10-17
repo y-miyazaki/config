@@ -251,7 +251,7 @@ runs:
         inputs.verdict == 'APPROVE' &&
         inputs.has_changes == 'true' &&
         inputs.branch != '' &&
-        steps.target.outputs.finalize_strategy != 'open_pr'
+        contains(fromJSON('["push","push_head"]'), steps.target.outputs.finalize_strategy)
       shell: bash
       env:
         AGENT_BRANCH: ${{ inputs.branch }}
@@ -326,11 +326,12 @@ runs:
         WRITE_TARGET_STATE: "true"
       run: bash "${GITHUB_ACTION_PATH}/lib/write_state.sh"
 
-    - name: Delete Branch on Rejection
-      if: inputs.verdict == 'REJECT' && inputs.branch != ''
+    - name: Delete Agent Branch
+      if: inputs.branch != '' && (inputs.verdict == 'REJECT' || steps.target.outputs.finalize_strategy == 'none')
       shell: bash
       env:
         AGENT_BRANCH: ${{ inputs.branch }}
+        FINALIZE_STRATEGY: ${{ steps.target.outputs.finalize_strategy }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         HAS_CHANGES: ${{ inputs.has_changes }}
         VERDICT: ${{ inputs.verdict }}
@@ -338,7 +339,7 @@ runs:
         set -euo pipefail
         # shellcheck source=lib/should_delete_rejected_branch.sh
         source "${GITHUB_ACTION_PATH}/lib/should_delete_rejected_branch.sh"
-        if ! should_delete_rejected_branch "${VERDICT}" "${HAS_CHANGES}"; then
+        if ! should_delete_rejected_branch "${VERDICT}" "${HAS_CHANGES}" "${FINALIZE_STRATEGY}"; then
           echo "Skipping branch delete: has_changes=${HAS_CHANGES} (keep branch that still differs from base)"
           exit 0
         fi
