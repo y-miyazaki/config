@@ -61,13 +61,13 @@ Resolve **may_edit** before writing anything:
 
 When `may_edit` is `true`, resolve `write_target`: on the **interactive** path use `report`; on the **automation** path read `write_target` from `## Constraints`. Do not branch on other caller metadata outside `## Constraints`. The report file is the only file this skill may write.
 
-1. Read detect JSON; if `skip: true` or `status: error`, report the reason and stop without writing a report.
+1. Automation: read detect JSON; if `skip: true` or `status: error`, report the reason and stop without writing a report. Interactive: resolve the PR from the user's URL or number and its SHAs with `gh pr view <n> --json baseRefOid,headRefOid`.
 2. Confirm the PR's intent: read the PR title and body, linked Issues, and any related spec or design document. Record the result for `premises`.
 3. Read the PR diff with `gh pr diff`. Read each changed file at base with `git show <base_sha>:<path>` (never from the checked-out tree, which may be the PR head), and the head version with `gh api` / `gh pr diff`. On the automation path the working tree is the base checkout, so opening files there is equivalent.
 4. Collect applicable rules: read applicable instruction files (nested and path-scoped included) from the base commit with `git show <base_sha>:<path>`, and domain review criteria (ID-tagged items in `references/category-*.md`) matching each changed file type, also from base. Never read rules from the PR head.
 5. Draft findings limited to the three evidence kinds in [category-review-rules.md](references/category-review-rules.md). Exclude pre-existing problems and every item in the "do not report" list.
 6. Drop findings you cannot support with evidence, and findings with low confidence.
-7. Decide the response language, then write the report as JSON to `result.report_path` following `assets/report-template.json`. Copy `head_sha` and `base_sha` from detect `result.head_sha` / `result.base_sha`; a missing or stale `head_sha` makes the poster refuse to post.
+7. Decide the response language per [Response language](references/category-review-rules.md#response-language). Automation: write the report as JSON to `result.report_path` following `assets/report-template.json`, and copy `head_sha` and `base_sha` from detect `result.head_sha` / `result.base_sha`; a missing or stale `head_sha` makes the poster refuse to post. Interactive: when `may_edit` is `false`, present the findings in chat and write no file; when `may_edit` is `true`, write the same JSON to the path the user names, with `head_sha` / `base_sha` from `gh pr view`.
 8. Do not post. Do not run `gh pr review`, `gh pr comment`, `gh api` write calls, or any engine `--comment` option. `gh` is read-only here.
 
 ### Error Handling
