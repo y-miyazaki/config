@@ -109,7 +109,7 @@ Dogfood sets `branch_match: main` and `branch_state: main`. That matches the usu
 
 ### Level × finalize matrix
 
-Dogfood loops use **`delivery: open_pr`** only — git landing (`open_pr` / `push` / `push_head`) is derived inside `loop-detect` from `delivery`. Advanced overrides: optional `git_landing_integration` / `git_landing_pull_request` on `ci-loop-caller` (forwarded to `loop-detect`).
+Dogfood loops use **`delivery: open_pr`**, except entity review loops (`github-pr-review`) that use `delivery: none` — git landing (`open_pr` / `push` / `push_head`) is derived inside `loop-detect` from `delivery`. Advanced overrides: optional `git_landing_integration` / `git_landing_pull_request` on `ci-loop-caller` (forwarded to `loop-detect`).
 
 | Mode           | `target.finalize` (derived from `delivery`) | L2                                    | L3                                                    |
 | -------------- | ------------------------------------------- | ------------------------------------- | ----------------------------------------------------- |

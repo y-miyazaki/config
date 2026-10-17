@@ -165,7 +165,7 @@ Queued runs wait for the active run to finish (detect → execute → finalize) 
 
 ### Per-entity group (entity-event callers)
 
-`on-loop-github-issue-autofix`, `on-loop-github-issue-triage`, and `on-loop-github-pr-revise` key the group by the Issue / PR they act on (`loop-<loop_name>-<number>`) rather than by `branch_state`. See [Multi-Branch Loops — Cross-Loop Coordination](multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency) for the rationale.
+`on-loop-github-issue-autofix`, `on-loop-github-issue-triage`, `on-loop-github-pr-revise`, and `on-loop-github-pr-review` key the group by the Issue / PR they act on (`loop-<loop_name>-<number>`) rather than by `branch_state`. See [Multi-Branch Loops — Cross-Loop Coordination](multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency) for the rationale.
 
 ## Matrix Fan-Out
 
