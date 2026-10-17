@@ -33,19 +33,20 @@ Change one, change all four in the same commit, at the same permission level. A 
 
 Do not run a tool directly when a hook in `.claude/settings.json` already runs it (`Stop` / `PostToolUse`); the hook result is the source of truth. Check `hooks` in `.claude/settings.json` first. If the hooks cannot be read, treat the tools below as hook-covered.
 
-| Hook-covered tool     | Trigger               |
-| --------------------- | --------------------- |
-| `actionlint`          | `Stop`                |
-| `ghalint`             | `Stop`                |
-| `gitleaks`            | `Stop`                |
-| `golangci-lint`       | `Stop`                |
-| `markdown-link-check` | `Stop`                |
-| `markdownlint-cli2`   | `Stop`                |
-| `shellcheck`          | `Stop`                |
-| `shfmt`               | `PostToolUse` (Write) |
-| `zizmor`              | `Stop`                |
+| Hook-covered tool     | Trigger                     |
+| --------------------- | --------------------------- |
+| `actionlint`          | `Stop`                      |
+| `ghalint`             | `Stop`                      |
+| `gitleaks`            | `Stop`                      |
+| `golangci-lint`       | `Stop`                      |
+| `markdown-link-check` | `Stop`                      |
+| `markdownlint-cli2`   | `Stop`                      |
+| `prettier`            | `PostToolUse` (Edit, Write) |
+| `shellcheck`          | `Stop`                      |
+| `shfmt`               | `PostToolUse` (Edit, Write) |
+| `zizmor`              | `Stop`                      |
 
-`shfmt` runs only after the Write tool, not after Edit; run it directly after editing a shell script with Edit. The `Stop` hook also runs `scripts/self/apm/sync_apm_artifacts.sh` (sync, not a lint tool).
+`shfmt` and `prettier` run after both the Edit and Write tools. The `Stop` hook also runs `scripts/self/apm/sync_apm_artifacts.sh` (sync, not a lint tool).
 
 ## Conventions
 
