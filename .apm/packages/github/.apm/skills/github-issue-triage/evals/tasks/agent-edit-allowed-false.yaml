@@ -1,14 +1,14 @@
-id: github-issue-triage-may-edit-false-001
-name: github-issue-triage API-only when may_edit is false
+id: github-issue-triage-agent-edit-allowed-false-001
+name: github-issue-triage API-only when agent_edit_allowed is false
 description: >-
-  Validate may_edit false limits side effects to labels/comments and states no
+  Validate agent_edit_allowed false limits side effects to labels/comments and states no
   repository file edits.
 tags:
   - quality
   - constraints
 inputs:
   prompt: >-
-    Use github-issue-triage with automation constraints may_edit false. Triage Issue #15 from
+    Use github-issue-triage with automation constraints agent_edit_allowed false. Triage Issue #15 from
     detect JSON. Emit ## Overview stating no repository file edits. List gh label/comment
     actions under ## Changes. Include ## Session Metrics. Do not open PRs or start
     github-issue-autofix.

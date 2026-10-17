@@ -1,5 +1,5 @@
 <!--
-PR-facing template for github-pr-revise automation (may_edit: true).
+PR-facing template for github-pr-revise automation (agent_edit_allowed: true).
 Load ONLY at synthesis time after applying review feedback.
 -->
 

@@ -35,5 +35,5 @@ When applying `triage:ready`, tell the human how to request a draft autofix PR l
 
 - Use `gh` for labels and comments.
 - Only allowlisted labels from `scripts/labels.json`.
-- No repository file edits when Constraints say `may_edit: false`.
+- No repository file edits when Constraints say `agent_edit_allowed: false`.
 - Mentions / `@` triggers are out of scope.

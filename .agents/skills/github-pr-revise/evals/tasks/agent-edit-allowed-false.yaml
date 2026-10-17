@@ -1,12 +1,12 @@
-id: github-pr-revise-may-edit-false-001
-name: github-pr-revise survey when may_edit is false
-description: Validate may_edit false emits survey shape without file edits.
+id: github-pr-revise-agent-edit-allowed-false-001
+name: github-pr-revise survey when agent_edit_allowed is false
+description: Validate agent_edit_allowed false emits survey shape without file edits.
 tags:
   - quality
   - constraints
 inputs:
   prompt: >-
-    Use github-pr-revise with automation constraints may_edit false. Survey PR #55 from detect
+    Use github-pr-revise with automation constraints agent_edit_allowed false. Survey PR #55 from detect
     JSON. Emit survey shape with ## Overview, ## Summary ### Candidates, and note no edits
     applied. Do not emit ## Verification or ### Changes. Do not edit files.
   context:

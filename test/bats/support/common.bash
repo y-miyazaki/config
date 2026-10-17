@@ -444,6 +444,51 @@ function assert_detect_refactor_error_json {
     ' <<< "${json}"
 }
 
+# assert_apm_skill_no_legacy_loop_names: Fail when a loop skill still uses retired loop names
+#
+# Checks every file under the skill (except the mirrored scripts/lib/) for the retired
+# prompt keys (may_edit, write_target, bare report_file), retired platform names
+# (finalize_strategy, git_landing_*, domain_persistence_script, DEFAULT_BASE_BRANCH, the
+# open_pr delivery value), and file names containing may-edit. Extra ERE patterns are
+# checked too (for example retired outcome values a skill must not mention).
+#
+# Arguments:
+#   $1 - Skill name (for example github-issue-triage)
+#   $@ - Optional extra ERE patterns to reject
+#
+# Outputs:
+#   Offending lines or file names on stdout
+#
+# Returns:
+#   0 when no retired name is found; 1 otherwise
+#
+function assert_apm_skill_no_legacy_loop_names {
+    local skill="$1"
+    shift
+    local dir pattern hits names
+    local -a patterns=(
+        '(^|[^_[:alnum:]])may_edit($|[^_[:alnum:]])'
+        'write_target'
+        '(^|[^_[:alnum:]])report_file'
+        'finalize_strategy'
+        'git_landing_'
+        'domain_persistence_script'
+        'DEFAULT_BASE_BRANCH'
+        '(^|[^_[:alnum:]])open_pr($|[^_[:alnum:]])'
+        "$@"
+    )
+    dir="$(apm_skill_dir "${skill}")"
+    hits=""
+    for pattern in "${patterns[@]}"; do
+        hits+="$(grep -rnE --exclude-dir=lib "${pattern}" "${dir}" || true)"
+    done
+    names="$(find "${dir}" -name '*may-edit*' -print)"
+    if [[ -n ${hits} || -n ${names} ]]; then
+        printf '%s\n' "${hits}" "${names}"
+        return 1
+    fi
+}
+
 # assert_loop_run_log_entry_json: Validate loop_run_log_build_entry JSON
 function assert_loop_run_log_entry_json {
     local json="$1"

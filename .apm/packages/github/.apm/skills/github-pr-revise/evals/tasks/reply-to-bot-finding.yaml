@@ -7,7 +7,7 @@ tags:
   - context
 inputs:
   prompt: >-
-    Use github-pr-revise with may_edit true and write_target fix for PR #61 in this mock eval
+    Use github-pr-revise with agent_edit_allowed true and agent_edit_target fix for PR #61 in this mock eval
     (describe the revision only; do not edit files on disk). The human replied "@loop please fix"
     to a review comment whose parent_body is "**#1 [Critical]** nil pointer dereference in
     handleUser when the profile is missing". State that you read the parent comment and its

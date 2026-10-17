@@ -2,7 +2,7 @@
 
 The agent writes a JSON report. A separate trusted step validates it, verifies quotes at the base commit, and renders and posts a single COMMENT review. See `assets/review-body-template.md` and `assets/inline-comment-template.md` for the rendered result.
 
-## Survey result (`may_edit: false`)
+## Survey result (`agent_edit_allowed: false`)
 
 No file edits. Summarize in chat or in the session report; **do not write the report file**.
 
@@ -24,7 +24,7 @@ No file edits. Summarize in chat or in the session report; **do not write the re
 
 Zero findings — Overview says so explicitly; omit `### Candidates`.
 
-## Report file (`may_edit: true`, `write_target: report`)
+## Report file (`agent_edit_allowed: true`, `agent_edit_target: report`)
 
 Write JSON to `result.report_path` (for example `.loop-review/pr-<n>.json`). Start from `assets/report-template.json`.
 

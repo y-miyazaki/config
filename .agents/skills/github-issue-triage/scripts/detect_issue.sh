@@ -10,6 +10,7 @@
 # Design Rules:
 # - Consume issue event fields from environment variables
 # - Skip bot actors and bot issue comments
+# - result.entity.kind is always issue (the loop entity platform requires it when skip=false)
 # - Output structured JSON via shared lib/json.sh
 # - Exit 0 on success; fatal errors emit status=error JSON and exit 1
 # - Source shared helpers from scripts/lib/all.sh (synced via scripts/self/apm/sync_skill_lib.sh)
@@ -464,6 +465,7 @@ function build_result_json {
         payload="$(jq -nc --arg n "${ISSUE_NUMBER}" '{issue_number: $n}')"
         json_object \
             handoff_key "entity:issue:${ISSUE_NUMBER}" \
+            entity '{"kind":"issue"}' \
             issue_number "$(json_number "${ISSUE_NUMBER}")" \
             title "${ISSUE_TITLE}" \
             body "${ISSUE_BODY}" \
@@ -479,6 +481,7 @@ function build_result_json {
     else
         json_object \
             handoff_key "entity:issue:${ISSUE_NUMBER}" \
+            entity '{"kind":"issue"}' \
             issue_number "$(json_number "${ISSUE_NUMBER}")" \
             title "${ISSUE_TITLE}" \
             body "${ISSUE_BODY}" \

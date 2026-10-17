@@ -1,5 +1,5 @@
 <!--
-PR-facing template for github-issue-autofix automation (may_edit: true).
+PR-facing template for github-issue-autofix automation (agent_edit_allowed: true).
 Load ONLY at synthesis time after the fix is implemented.
 Must include Fixes #<N> for the source Issue.
 -->

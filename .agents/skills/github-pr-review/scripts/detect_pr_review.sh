@@ -9,6 +9,7 @@
 #
 # Design Rules:
 # - Emit mechanical facts only (no semantic findings)
+# - result.entity.kind is always pr (the loop entity platform requires it when skip=false)
 # - Hydrate unset PR_* from GITHUB_EVENT_PATH (pull_request / pull_request_target / workflow_dispatch)
 # - Skip bot-authored, draft, fork, and excluded-label PRs
 # - Skip when a review carrying the github-pr-review marker already exists, unless force is set
@@ -472,6 +473,7 @@ function evaluate_skip {
 function build_result_json {
     json_object \
         handoff_key "entity:pr:${PR_NUMBER}" \
+        entity '{"kind":"pr"}' \
         pr_number "$(json_number "${PR_NUMBER}")" \
         base_sha "${PR_BASE_SHA}" \
         head_sha "${PR_HEAD_SHA}" \
