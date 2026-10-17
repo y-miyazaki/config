@@ -1,0 +1,732 @@
+#!/bin/bash
+#######################################
+# Description: Validate a github-pr-review report and post it as a COMMENT PR review
+#
+# Usage: ./post_review.sh
+#   Runs as the loop domain_persistence_script in finalize (after the checker verdict).
+#
+# Output:
+# - Posts one PR review (event COMMENT) via gh api; log lines and ::warning:: annotations on stdout
+#
+# Design Rules:
+# - Act only when VERDICT is APPROVE; any other verdict posts nothing
+# - Fail closed: unparseable TARGET_JSON, report, or SHAs post nothing, warn, and exit 0
+# - rule / criteria findings are kept only when evidence.quote is an exact substring
+#   (no normalization) of evidence.path in the base tree; other invalid findings are dropped
+# - in_diff findings whose lines are not in the PR diff move to the review body
+# - The review event is always COMMENT; nothing in the report can change it
+# - Posting failures emit ::warning:: and exit 0 so finalize does not fail
+# - Render fixed English headings and labels from the template defs in REVIEW_JQ_LIB
+#   (mirrors assets/review-body-template.md and assets/inline-comment-template.md)
+# - Source shared helpers from scripts/lib/all.sh (synced via scripts/self/apm/sync_skill_lib.sh)
+#
+# Dependencies:
+# - bash (POSIX bash, /bin/bash)
+# - jq, awk, realpath
+# - git (when REPORT_FILE is unset)
+# - gh (posting; gh pr diff when PR_DIFF_FILE is unset)
+#
+# Environment:
+#   VERDICT               Checker verdict; only APPROVE posts
+#   EXECUTE_BRANCH        Work branch holding the report file
+#   TARGET_JSON           Loop target JSON; PR number from .entity.handoff_key // .key (entity:pr:<n>)
+#   GITHUB_REPOSITORY     owner/repo
+#   GH_TOKEN / GITHUB_TOKEN Token for gh calls
+#   REPORT_FILE           Report path to read instead of git fetch + git show (test seam)
+#   PR_DIFF_FILE          Unified diff to read instead of gh pr diff (test seam)
+#   BASE_TREE_DIR         Base-branch working tree for evidence checks (default: current directory)
+#######################################
+
+# Error handling: exit on error, unset variable, or failed pipeline
+set -euo pipefail
+
+# Secure defaults
+umask 027
+export LC_ALL=C.UTF-8
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Load all-in-one library
+# shellcheck source=./lib/all.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/lib/all.sh"
+
+readonly REVIEW_MARKER='<!-- github-pr-review:v1 -->'
+
+# jq defs shared by the renderers. review_body_template and inline_comment_template (with
+# finding_item / evidence_line) hold every fixed English string of the posted review; keep them
+# in sync with the skill's assets/review-body-template.md and assets/inline-comment-template.md.
+# shellcheck disable=SC2016 # jq program: $vars are jq bindings, not shell expansions
+readonly REVIEW_JQ_LIB='
+def enc_path: split("/") | map(@uri) | join("/");
+def indent($n): gsub("\n"; "\n" + (" " * $n));
+def line_anchor: if .start_line then "L\(.start_line)-L\(.line)" else "L\(.line)" end;
+def verbatim_quote($n):
+  if contains("\n") then "\n" + (" " * $n) + ("````text\n" + . + "\n````" | indent($n))
+  else " \"\(.)\"" end;
+def evidence_line($repo; $base; $n):
+  if .evidence.kind == "bug" then
+    if ((.evidence.quote // "") | type) == "string" and ((.evidence.quote // "") | length) > 0
+    then "- Evidence: \(.evidence.quote | indent($n))" else empty end
+  else
+    (if (.evidence_anchor // "") != "" then "#\(.evidence_anchor)" else "" end) as $a
+    | "- Evidence: [`\(.evidence.path)\($a)`](https://github.com/\($repo)/blob/\($base)/\(.evidence.path | enc_path)\($a)) —\(.evidence.quote | verbatim_quote($n))"
+  end;
+def location_url($repo; $base; $head):
+  (if (.location.side // "RIGHT") == "LEFT" then $base else $head end) as $sha
+  | "https://github.com/\($repo)/blob/\($sha)/\(.location.path | enc_path)#\(.location | line_anchor)";
+def inline_comment_template($repo; $base):
+  "**#\(.number) [\(.severity)]** \(.title)\n\n"
+  + ([evidence_line($repo; $base; 2), "- Impact: \(.impact | indent(2))"] | join("\n"))
+  + "\n\nTo request a fix, reply to this comment with `@loop`.\n";
+def finding_item($repo; $base; $head; $pr):
+  if .inline then
+    "\(.number). **[\(.severity)]** \(.title | indent(3)) — inline: [`\(.location.path)#\(.location | line_anchor)`](https://github.com/\($repo)/pull/\($pr)/files)"
+  else
+    ["\(.number). **[\(.severity)]** \(.title | indent(3))",
+     (evidence_line($repo; $base; 5) | "   " + .),
+     "   - Location: \(location_url($repo; $base; $head))",
+     "   - Impact: \(.impact | indent(5))"] | join("\n")
+  end;
+def premise_text:
+  if type == "string" and length > 0 then .
+  elif type == "array" and length > 0 then map(tostring) | join(", ")
+  else "none" end;
+def review_body_template($repo; $marker):
+  . as $r
+  | ($r.findings // []) as $f
+  | [$marker,
+     "",
+     "## Code review",
+     "",
+     "Findings: \($f | length) (Critical: \([$f[] | select(.severity == "Critical")] | length) / Warning: \([$f[] | select(.severity == "Warning")] | length) / Suggestion: \([$f[] | select(.severity == "Suggestion")] | length))",
+     (if ($r.dropped // 0) > 0 then "", "Dropped: \($r.dropped) (evidence could not be verified)" else empty end),
+     "",
+     ($r.summary // ""),
+     "",
+     "### Premises checked",
+     "",
+     "- PR body: \($r.premises.pr_body | premise_text)",
+     "- Linked Issue / spec: \($r.premises.linked | premise_text)",
+     (if ($f | length) > 0 then
+        "", "### Findings", "",
+        ($f[] | finding_item($repo; $r.base_sha; $r.head_sha; $r.pr_number))
+      else empty end)]
+  | join("\n") + "\n";
+'
+
+#######################################
+# annotate_report: Drop invalid findings, number the rest, and decide inline placement
+#
+# Globals:
+#   BASE_TREE_DIR
+#   PR_DIFF_FILE
+#
+# Arguments:
+#   $1 - Report JSON (envelope already validated)
+#
+# Outputs:
+#   Report JSON with findings[] kept (number, inline, evidence_anchor) and dropped count
+#
+# Returns:
+#   0
+#
+# Usage:
+#   annotated="$(annotate_report "${report}")"
+#
+#######################################
+function annotate_report {
+    local report="$1"
+    local finding kind anchor inline path line side start
+    local -a kept=()
+    local total number=0
+
+    total="$(jq -r '.findings | length' <<< "${report}")"
+    while IFS= read -r finding; do
+        [[ -n ${finding} ]] || continue
+        if ! validate_finding "${finding}"; then
+            continue
+        fi
+        number=$((number + 1))
+        kind="$(jq -r '.evidence.kind' <<< "${finding}")"
+        anchor=""
+        if [[ ${kind} != "bug" ]]; then
+            anchor="$(evidence_anchor "${finding}")"
+        fi
+        inline=false
+        if [[ "$(jq -r '.location.in_diff == true' <<< "${finding}")" == "true" ]]; then
+            path="$(jq -r '.location.path' <<< "${finding}")"
+            line="$(jq -r '.location.line' <<< "${finding}")"
+            side="$(jq -r '.location.side // "RIGHT"' <<< "${finding}")"
+            start="$(jq -r '.location.start_line // ""' <<< "${finding}")"
+            if diff_contains_line "${path}" "${line}" "${side}" "${start}"; then
+                inline=true
+            fi
+        fi
+        kept+=("$(jq -c --argjson n "${number}" --argjson i "${inline}" --arg a "${anchor}" \
+            '.number = $n | .inline = $i | .evidence_anchor = $a | .location.side = (.location.side // "RIGHT")' \
+            <<< "${finding}")")
+    done < <(jq -c '.findings[]' <<< "${report}")
+
+    {
+        printf '%s\n' "${report}"
+        if [[ ${#kept[@]} -gt 0 ]]; then
+            printf '%s\n' "${kept[@]}"
+        fi
+    } | jq -sc --argjson total "${total}" '
+        .[0] as $r | .[1:] as $f
+        | $r | .findings = $f | .dropped = ($total - ($f | length))'
+}
+
+#######################################
+# base_evidence_file: Resolve evidence.path to a regular file inside BASE_TREE_DIR
+#
+# Globals:
+#   BASE_TREE_DIR
+#
+# Arguments:
+#   $1 - Evidence path (relative)
+#
+# Outputs:
+#   Absolute file path to stdout
+#
+# Returns:
+#   0 when the file exists inside the base tree (symlinks must not escape), 1 otherwise
+#
+# Usage:
+#   file="$(base_evidence_file "AGENTS.md")"
+#
+#######################################
+function base_evidence_file {
+    local rel="$1"
+    local root resolved
+
+    safe_relative_path "${rel}" || return 1
+    root="$(realpath -e -- "${BASE_TREE_DIR:-.}" 2> /dev/null)" || return 1
+    [[ -f "${root}/${rel}" ]] || return 1
+    resolved="$(realpath -e -- "${root}/${rel}" 2> /dev/null)" || return 1
+    [[ ${resolved} == "${root}/"* ]] || return 1
+    printf '%s' "${resolved}"
+}
+
+#######################################
+# build_payload: Build the reviews API payload (event is always COMMENT)
+#
+# Globals:
+#   GITHUB_REPOSITORY
+#   REVIEW_JQ_LIB
+#   REVIEW_MARKER
+#
+# Arguments:
+#   $1 - Annotated report JSON
+#
+# Outputs:
+#   Payload JSON to stdout
+#
+# Returns:
+#   0 on success
+#
+# Usage:
+#   payload="$(build_payload "${annotated}")"
+#
+#######################################
+function build_payload {
+    jq -c --arg repo "${GITHUB_REPOSITORY}" --arg marker "${REVIEW_MARKER}" "${REVIEW_JQ_LIB}"'
+        . as $r
+        | {
+            body: review_body_template($repo; $marker),
+            comments: [
+                $r.findings[] | select(.inline)
+                | {body: inline_comment_template($repo; $r.base_sha), line: .location.line,
+                   path: .location.path, side: .location.side}
+                  + (if .location.start_line then
+                       {start_line: .location.start_line, start_side: .location.side} else {} end)
+            ],
+            commit_id: $r.head_sha,
+            event: "COMMENT"
+        }' <<< "$1"
+}
+
+#######################################
+# diff_contains_line: Return whether a line is inside a hunk of the PR diff
+#
+# Globals:
+#   PR_DIFF_FILE
+#
+# Arguments:
+#   $1 - File path (new path; old path for deleted files)
+#   $2 - Line number
+#   $3 - Side (RIGHT = new file, LEFT = old file)
+#   $4 - Optional start line (must be in the same hunk)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 when the line (and start line) is in one hunk, 1 otherwise
+#
+# Usage:
+#   diff_contains_line a.sh 42 RIGHT 40
+#
+#######################################
+function diff_contains_line {
+    local diff_file="${PR_DIFF_FILE:-}"
+
+    [[ -n ${diff_file} && -r ${diff_file} ]] || return 1
+    [[ $2 =~ ^[1-9][0-9]*$ ]] || return 1
+    [[ -z ${4:-} || ${4} =~ ^[1-9][0-9]*$ ]] || return 1
+
+    DIFF_PATH="$1" DIFF_LINE="$2" DIFF_SIDE="$3" DIFF_START="${4:-}" awk '
+        function strip_path(p) {
+            sub(/\t.*$/, "", p)
+            if (p ~ /^[ab]\//) {
+                p = substr(p, 3)
+            }
+            return p
+        }
+        BEGIN {
+            target = ENVIRON["DIFF_PATH"]
+            line = ENVIRON["DIFF_LINE"] + 0
+            side = ENVIRON["DIFF_SIDE"]
+            start = (ENVIRON["DIFF_START"] == "") ? line : ENVIRON["DIFF_START"] + 0
+            old_rem = 0
+            new_rem = 0
+            found = 0
+        }
+        {
+            if (old_rem > 0 || new_rem > 0) {
+                c = substr($0, 1, 1)
+                if (c == " ") { old_rem--; new_rem-- }
+                else if (c == "-") { old_rem-- }
+                else if (c == "+") { new_rem-- }
+                next
+            }
+            if ($0 ~ /^diff --git /) { old_path = ""; new_path = ""; next }
+            if ($0 ~ /^--- /) { old_path = strip_path(substr($0, 5)); next }
+            if ($0 ~ /^\+\+\+ /) { new_path = strip_path(substr($0, 5)); next }
+            if ($0 ~ /^@@ -[0-9]+(,[0-9]+)? \+[0-9]+(,[0-9]+)? @@/) {
+                split(substr($2, 2), o, ",")
+                split(substr($3, 2), n, ",")
+                o_start = o[1] + 0; o_len = (2 in o) ? o[2] + 0 : 1
+                n_start = n[1] + 0; n_len = (2 in n) ? n[2] + 0 : 1
+                old_rem = o_len
+                new_rem = n_len
+                matches = (new_path != "/dev/null" && new_path == target) || (new_path == "/dev/null" && old_path == target)
+                if (!matches) { next }
+                if (side == "LEFT") { lo = o_start; hi = o_start + o_len - 1 }
+                else { lo = n_start; hi = n_start + n_len - 1 }
+                if (line >= lo && line <= hi && start >= lo && start <= hi) { found = 1 }
+            }
+        }
+        END { exit(found ? 0 : 1) }
+    ' "${diff_file}"
+}
+
+#######################################
+# evidence_anchor: Print the base line anchor (L<s> or L<s>-L<e>) of a verified quote
+#
+# Globals:
+#   BASE_TREE_DIR
+#
+# Arguments:
+#   $1 - Finding JSON (rule or criteria, already validated)
+#
+# Outputs:
+#   Anchor without the leading # to stdout (empty when unavailable)
+#
+# Returns:
+#   0
+#
+# Usage:
+#   anchor="$(evidence_anchor "${finding}")"
+#
+#######################################
+function evidence_anchor {
+    local finding="$1"
+    local file
+
+    file="$(base_evidence_file "$(jq -r '.evidence.path // ""' <<< "${finding}")")" || return 0
+    jq -r --rawfile content "${file}" '
+        .evidence.quote as $q
+        | ($q | match("^\n*").length) as $lead
+        | (($content | split($q)[0] | split("\n") | length) + $lead) as $start
+        | ([($q | gsub("^\n+|\n+$"; "") | split("\n") | length), 1] | max) as $count
+        | ($start + $count - 1) as $end
+        | if $end > $start then "L\($start)-L\($end)" else "L\($start)" end
+    ' <<< "${finding}" 2> /dev/null || true
+}
+
+#######################################
+# post_payload: POST a review payload with gh api
+#
+# Globals:
+#   GITHUB_REPOSITORY
+#   GH_TOKEN / GITHUB_TOKEN
+#
+# Arguments:
+#   $1 - PR number
+#   $2 - Payload file path
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 on success, non-zero when gh fails
+#
+# Usage:
+#   post_payload 7 "${payload_file}"
+#
+#######################################
+function post_payload {
+    GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}" gh api --method POST "repos/${GITHUB_REPOSITORY}/pulls/$1/reviews" \
+        --input "$2" > /dev/null
+}
+
+#######################################
+# read_report: Print the report JSON (REPORT_FILE or the work branch)
+#
+# Globals:
+#   REPORT_FILE
+#   EXECUTE_BRANCH
+#
+# Arguments:
+#   $1 - Report path in the repository (.loop/review/pr-<n>.json)
+#
+# Outputs:
+#   Report content to stdout
+#
+# Returns:
+#   0 on success, 1 when the report cannot be read
+#
+# Usage:
+#   report="$(read_report ".loop/review/pr-7.json")"
+#
+#######################################
+function read_report {
+    local report_path="$1"
+    local branch="${EXECUTE_BRANCH:-}"
+
+    if [[ -n ${REPORT_FILE:-} ]]; then
+        [[ -f ${REPORT_FILE} ]] || return 1
+        cat "${REPORT_FILE}"
+        return 0
+    fi
+
+    if [[ ! ${branch} =~ ^[A-Za-z0-9/_.-]+$ || ${branch} == *..* ]]; then
+        return 1
+    fi
+    git fetch --no-tags --quiet origin "+refs/heads/${branch}:refs/remotes/origin/${branch}" > /dev/null 2>&1 || return 1
+    git show "origin/${branch}:${report_path}" 2> /dev/null
+}
+
+#######################################
+# render_inline_comment: Render one inline comment body from an annotated finding
+#
+# Globals:
+#   GITHUB_REPOSITORY
+#   REVIEW_BASE_SHA (default for $2)
+#   REVIEW_JQ_LIB
+#
+# Arguments:
+#   $1 - Annotated finding JSON (number, severity, title, evidence, impact)
+#   $2 - Optional base SHA for evidence links
+#
+# Outputs:
+#   Markdown comment to stdout
+#
+# Returns:
+#   0 on success
+#
+# Usage:
+#   render_inline_comment "${finding}" "${base_sha}"
+#
+#######################################
+function render_inline_comment {
+    jq -r --arg repo "${GITHUB_REPOSITORY}" --arg base "${2:-${REVIEW_BASE_SHA:-}}" \
+        "${REVIEW_JQ_LIB} inline_comment_template(\$repo; \$base)" <<< "$1"
+}
+
+#######################################
+# render_review_body: Render the review body from an annotated report
+#
+# Globals:
+#   GITHUB_REPOSITORY
+#   REVIEW_JQ_LIB
+#   REVIEW_MARKER
+#
+# Arguments:
+#   $1 - Annotated report JSON (see annotate_report)
+#
+# Outputs:
+#   Markdown body to stdout
+#
+# Returns:
+#   0 on success
+#
+# Usage:
+#   render_review_body "${annotated}"
+#
+#######################################
+function render_review_body {
+    jq -r --arg repo "${GITHUB_REPOSITORY}" --arg marker "${REVIEW_MARKER}" \
+        "${REVIEW_JQ_LIB} review_body_template(\$repo; \$marker)" <<< "$1"
+}
+
+#######################################
+# resolve_pr_number: Extract the PR number from TARGET_JSON
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - TARGET_JSON
+#
+# Outputs:
+#   PR number to stdout
+#
+# Returns:
+#   0 on success, 1 when the handoff key is missing or not entity:pr:<n>
+#
+# Usage:
+#   pr_number="$(resolve_pr_number "${TARGET_JSON}")"
+#
+#######################################
+function resolve_pr_number {
+    local key
+
+    key="$(jq -r '(.entity.handoff_key // .key // "") | tostring' <<< "$1" 2> /dev/null)" || return 1
+    if [[ ! ${key} =~ ^entity:pr:([1-9][0-9]*)$ ]]; then
+        return 1
+    fi
+    printf '%s' "${BASH_REMATCH[1]}"
+}
+
+#######################################
+# safe_relative_path: Return whether a path is relative and stays inside its root
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Path
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 when the path is non-empty, relative, single-line, and has no .. segment
+#
+# Usage:
+#   safe_relative_path "docs/a.md"
+#
+#######################################
+function safe_relative_path {
+    local path="$1"
+
+    [[ -n ${path} && ${path} != /* && ${path} != *$'\n'* ]] || return 1
+    [[ /${path}/ != */../* ]]
+}
+
+#######################################
+# validate_finding: Check a finding's shape and verify rule/criteria evidence on base
+#
+# Globals:
+#   BASE_TREE_DIR
+#
+# Arguments:
+#   $1 - Finding JSON
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 when the finding is kept, 1 when it must be dropped
+#
+# Usage:
+#   if validate_finding "${finding}"; then ...
+#
+#######################################
+function validate_finding {
+    local finding="$1"
+    local kind location_path evidence_path file
+
+    jq -e '
+        def pos_int: type == "number" and . >= 1 and . == floor;
+        def text: type == "string" and length > 0;
+        type == "object"
+        and (.severity | IN("Critical", "Warning", "Suggestion"))
+        and (.title | text)
+        and (.impact | text)
+        and (.evidence | type) == "object"
+        and (.evidence.kind | IN("rule", "criteria", "bug"))
+        and (.location | type) == "object"
+        and (.location.path | text)
+        and (.location.line | pos_int)
+        and ((.location.side // "RIGHT") | IN("RIGHT", "LEFT"))
+        and (.location.start_line == null
+            or ((.location.start_line | pos_int) and .location.start_line < .location.line))
+        and (if .evidence.kind == "bug" then true
+            else (.evidence.path | text) and (.evidence.quote | text) end)
+    ' <<< "${finding}" > /dev/null 2>&1 || return 1
+
+    location_path="$(jq -r '.location.path' <<< "${finding}")"
+    safe_relative_path "${location_path}" || return 1
+
+    kind="$(jq -r '.evidence.kind' <<< "${finding}")"
+    if [[ ${kind} == "bug" ]]; then
+        return 0
+    fi
+
+    evidence_path="$(jq -r '.evidence.path' <<< "${finding}")"
+    file="$(base_evidence_file "${evidence_path}")" || return 1
+    jq -e --rawfile content "${file}" '.evidence.quote as $q | $content | contains($q)' \
+        <<< "${finding}" > /dev/null 2>&1
+}
+
+#######################################
+# validate_report: Check the report envelope (PR number, SHAs, premises, findings array)
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Report JSON
+#   $2 - Expected PR number
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 when the envelope is usable, 1 otherwise
+#
+# Usage:
+#   validate_report "${report}" 7
+#
+#######################################
+function validate_report {
+    jq -e --argjson n "$2" '
+        type == "object"
+        and .pr_number == $n
+        and ((.head_sha | type) == "string" and (.head_sha | test("^[0-9a-f]{40}$")))
+        and ((.base_sha | type) == "string" and (.base_sha | test("^[0-9a-f]{40}$")))
+        and (.findings | type) == "array"
+        and ((.premises // {}) | type) == "object"
+        and ((.summary // "") | type) == "string"
+    ' <<< "$1" > /dev/null 2>&1
+}
+
+#######################################
+# warn: Emit a GitHub Actions warning annotation
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Message
+#
+# Outputs:
+#   ::warning:: line to stdout
+#
+# Returns:
+#   0
+#
+# Usage:
+#   warn "report not found"
+#
+#######################################
+function warn {
+    printf '::warning::post_review: %s\n' "$1"
+}
+
+#######################################
+# main: Validate the report and post a COMMENT review when VERDICT is APPROVE
+#
+# Globals:
+#   VERDICT, TARGET_JSON, GITHUB_REPOSITORY, PR_DIFF_FILE, BASE_TREE_DIR, REVIEW_BASE_SHA (set)
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Log lines and ::warning:: annotations to stdout
+#
+# Returns:
+#   0 (never fails finalize)
+#
+# Usage:
+#   main
+#
+#######################################
+function main {
+    local pr_number report annotated payload_file work_dir kept inline_count
+
+    if [[ ${VERDICT:-} != "APPROVE" ]]; then
+        echo "post_review: VERDICT=${VERDICT:-} (not APPROVE); nothing to post"
+        return 0
+    fi
+    if ! command -v jq &> /dev/null; then
+        warn "jq is required; review not posted"
+        return 0
+    fi
+    if [[ ! ${GITHUB_REPOSITORY:-} =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
+        warn "GITHUB_REPOSITORY is missing or invalid; review not posted"
+        return 0
+    fi
+    if ! pr_number="$(resolve_pr_number "${TARGET_JSON:-}")"; then
+        warn "TARGET_JSON has no entity:pr:<n> handoff key; review not posted"
+        return 0
+    fi
+    if ! report="$(read_report ".loop/review/pr-${pr_number}.json")" || [[ -z ${report} ]]; then
+        warn "report .loop/review/pr-${pr_number}.json could not be read; review not posted"
+        return 0
+    fi
+    if ! validate_report "${report}" "${pr_number}"; then
+        warn "report for PR #${pr_number} is invalid (JSON, pr_number, SHAs, premises, or findings); review not posted"
+        return 0
+    fi
+
+    work_dir="$(mktemp -d)"
+    # shellcheck disable=SC2064
+    trap "rm -rf '${work_dir}'" EXIT
+
+    BASE_TREE_DIR="${BASE_TREE_DIR:-.}"
+    if [[ -z ${PR_DIFF_FILE:-} ]]; then
+        PR_DIFF_FILE="${work_dir}/pr.diff"
+        if ! GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}" gh pr diff "${pr_number}" --repo "${GITHUB_REPOSITORY}" \
+            > "${PR_DIFF_FILE}" 2> /dev/null; then
+            rm -f "${PR_DIFF_FILE}"
+        fi
+    fi
+    if [[ ! -r ${PR_DIFF_FILE} ]]; then
+        warn "PR #${pr_number} diff unavailable; in-diff findings move to the review body"
+    fi
+
+    REVIEW_BASE_SHA="$(jq -r '.base_sha' <<< "${report}")"
+    annotated="$(annotate_report "${report}")"
+    kept="$(jq -r '.findings | length' <<< "${annotated}")"
+    inline_count="$(jq -r '[.findings[] | select(.inline)] | length' <<< "${annotated}")"
+    echo "post_review: PR #${pr_number} findings kept=${kept} inline=${inline_count} dropped=$(jq -r '.dropped' <<< "${annotated}")"
+
+    payload_file="${work_dir}/payload.json"
+    build_payload "${annotated}" > "${payload_file}"
+    if post_payload "${pr_number}" "${payload_file}"; then
+        echo "post_review: posted COMMENT review on PR #${pr_number}"
+        return 0
+    fi
+
+    if [[ ${inline_count} -gt 0 ]]; then
+        warn "posting with inline comments failed for PR #${pr_number}; retrying with all findings in the body"
+        annotated="$(jq -c '.findings |= map(.inline = false)' <<< "${annotated}")"
+        build_payload "${annotated}" > "${payload_file}"
+        if post_payload "${pr_number}" "${payload_file}"; then
+            echo "post_review: posted COMMENT review on PR #${pr_number} (body only)"
+            return 0
+        fi
+    fi
+    warn "failed to post review on PR #${pr_number}"
+    return 0
+}
+
+if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
+    main "$@"
+fi
