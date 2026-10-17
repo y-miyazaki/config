@@ -1,5 +1,5 @@
 <!--
-Survey-only PR template for tech-debt automation (may_edit: false).
+Survey-only PR template for tech-debt automation (agent_edit_allowed: false).
 
 Load at synthesis time after survey output is complete.
 The caller extracts ## Overview and ## Summary only (no ## Verification).

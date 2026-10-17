@@ -16,15 +16,15 @@ inputs:
     required: false
   commit_sha:
     default: ""
-    description: "Commit SHA after successful push_head (empty for open_pr)"
+    description: "Commit SHA after successful pr_push (empty for pr_create)"
     required: false
   fix_pr_number:
     default: ""
-    description: "Bot fix PR number from loop-finalize (open_pr)"
+    description: "Bot fix PR number from loop-finalize (pr_create)"
     required: false
   fix_pr_url:
     default: ""
-    description: "Bot fix PR URL from loop-finalize (open_pr)"
+    description: "Bot fix PR URL from loop-finalize (pr_create)"
     required: false
   github_event_name:
     default: ""

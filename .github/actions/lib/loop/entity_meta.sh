@@ -87,7 +87,7 @@ function find_marker_comment_id {
 #   0 always (meta is best-effort; it must never fail the loop)
 #
 # Usage:
-#   append_entity_meta 936 "<!-- github-issue-triage:v1 -->" no-changes claude "${USAGE_JSON}" "${url}"
+#   append_entity_meta 936 "<!-- github-issue-triage:v1 -->" unchanged claude "${USAGE_JSON}" "${url}"
 #
 #######################################
 function append_entity_meta {
@@ -254,7 +254,7 @@ function find_marker_review_id {
 #   0 always (meta is best-effort; it must never fail the loop)
 #
 # Usage:
-#   append_pr_review_meta 77 "<!-- github-pr-review:v1 -->" pr-created claude "${USAGE_JSON}" "${url}"
+#   append_pr_review_meta 77 "<!-- github-pr-review:v1 -->" pr_created claude "${USAGE_JSON}" "${url}"
 #
 #######################################
 function append_pr_review_meta {

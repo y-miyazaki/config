@@ -1,5 +1,5 @@
 <!--
-Apply PR template for tech-debt automation (may_edit: true).
+Apply PR template for tech-debt automation (agent_edit_allowed: true).
 
 Load ONLY at synthesis time, after classification and edits complete.
 

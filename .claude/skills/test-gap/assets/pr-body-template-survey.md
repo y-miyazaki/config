@@ -1,5 +1,5 @@
 <!--
-Survey PR template for test-gap automation (may_edit: false).
+Survey PR template for test-gap automation (agent_edit_allowed: false).
 
 Load ONLY at synthesis time.
 

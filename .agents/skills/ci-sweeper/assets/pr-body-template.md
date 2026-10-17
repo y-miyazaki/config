@@ -1,5 +1,5 @@
 <!--
-PR-facing template for ci-sweeper automation (may_edit: true).
+PR-facing template for ci-sweeper automation (agent_edit_allowed: true).
 
 Load ONLY at synthesis time, after triage and file edits complete.
 The caller may add ## Failure context from detect; this template covers Overview + Summary + Verification.

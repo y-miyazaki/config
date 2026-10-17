@@ -2,6 +2,9 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
+      "Bash(git checkout:*)",
+      "Bash(git clean -f:*)",
+      "Bash(git commit:*)",
       "Bash(awk:*)",
       "Bash(basename:*)",
       "Bash(bash:*)",
@@ -222,9 +225,6 @@
     ],
     "ask": [
       "Bash(git branch -D:*)",
-      "Bash(git checkout:*)",
-      "Bash(git clean -f:*)",
-      "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(git rebase:*)",
       "Bash(git reset --hard:*)",

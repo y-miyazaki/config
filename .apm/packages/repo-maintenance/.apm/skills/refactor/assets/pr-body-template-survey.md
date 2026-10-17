@@ -1,5 +1,5 @@
 <!--
-Survey-only PR template for refactor automation (may_edit: false).
+Survey-only PR template for refactor automation (agent_edit_allowed: false).
 
 Load at synthesis time after survey output is complete.
 -->

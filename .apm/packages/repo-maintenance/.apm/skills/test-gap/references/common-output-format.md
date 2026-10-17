@@ -2,7 +2,7 @@
 
 Deferred subsection name for this skill: `### Deferred` (not `### Skipped`).
 
-## Survey result (`may_edit: false`)
+## Survey result (`agent_edit_allowed: false`)
 
 ```markdown
 # Test Gap Result
@@ -22,7 +22,7 @@ Deferred subsection name for this skill: `### Deferred` (not `### Skipped`).
 
 Survey rules: MUST NOT include `### Changes`, `### Deferred`, or `## Verification`. Zero candidates: Overview explains the no-op and omits `### Candidates`.
 
-## Apply result (`may_edit: true`, `write_target: fix`)
+## Apply result (`agent_edit_allowed: true`, `agent_edit_target: fix`)
 
 ```markdown
 # Test Gap Result

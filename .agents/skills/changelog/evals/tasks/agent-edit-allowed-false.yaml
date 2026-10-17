@@ -1,12 +1,12 @@
-id: changelog-may-edit-false-001
-name: changelog survey when may_edit is false
-description: Validate may_edit false lists commit Candidates in survey shape without file edits.
+id: changelog-agent-edit-allowed-false-001
+name: changelog survey when agent_edit_allowed is false
+description: Validate agent_edit_allowed false lists commit Candidates in survey shape without file edits.
 tags:
   - quality
   - constraints
 inputs:
   prompt: >-
-    Use changelog with automation constraints may_edit false. List the injected feat commit
+    Use changelog with automation constraints agent_edit_allowed false. List the injected feat commit
     under ### Candidates in survey shape. Do not edit CHANGELOG.md. Do not emit ##
     Verification or ### Changes. Emit ## Overview and ## Summary per
     common-output-format.md. State no edits applied in Overview.

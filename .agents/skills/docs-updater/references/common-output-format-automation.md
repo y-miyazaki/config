@@ -14,7 +14,7 @@ Every run emits `## Overview` first. Write a complete plain-language summary —
 
 Omit level, commit SHAs, run URLs, and boilerplate.
 
-## Survey-only result (`may_edit: false`)
+## Survey-only result (`agent_edit_allowed: false`)
 
 No file edits.
 
@@ -50,7 +50,7 @@ No file edits.
 | `## Verification` | **MUST NOT** appear                                  |
 | Zero candidates   | Overview explains no-op; omit empty `### Candidates` |
 
-## Apply result (`may_edit: true`)
+## Apply result (`agent_edit_allowed: true`)
 
 ```markdown
 # docs-updater Result
@@ -97,23 +97,23 @@ Separate from PR body. Emit after survey or apply work per [category-automation-
 ```markdown
 ## Session Metrics
 
-| Field             | Value                     |
-| ----------------- | ------------------------- |
-| may_edit          | <true\|false>             |
-| Commit range      | <commit_range>            |
-| Findings assessed | <count>                   |
-| Files modified    | <count>                   |
-| Outcome           | <one-line checker result> |
+| Field              | Value                     |
+| ------------------ | ------------------------- |
+| agent_edit_allowed | <true\|false>             |
+| Commit range       | <commit_range>            |
+| Findings assessed  | <count>                   |
+| Files modified     | <count>                   |
+| Outcome            | <one-line checker result> |
 ```
 
 ## PR body templates
 
-| `may_edit` | Template                            |
-| ---------- | ----------------------------------- |
-| `false`    | `assets/pr-body-template-survey.md` |
-| `true`     | `assets/pr-body-template.md`        |
+| `agent_edit_allowed` | Template                            |
+| -------------------- | ----------------------------------- |
+| `false`              | `assets/pr-body-template-survey.md` |
+| `true`               | `assets/pr-body-template.md`        |
 
-At synthesis, load the template for the resolved `may_edit`. Emit **exactly** `## Overview`, `## Summary`, and `## Verification` (apply only).
+At synthesis, load the template for the resolved `agent_edit_allowed`. Emit **exactly** `## Overview`, `## Summary`, and `## Verification` (apply only).
 
 ## Fixes / Deferred consistency
 

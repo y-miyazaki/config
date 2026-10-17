@@ -1,19 +1,19 @@
-id: tech-debt-may-edit-true-write-001
-name: tech-debt writes persisted report file when may_edit true
-description: Validate may_edit true emits apply shape and writes report_file path in Changes.
+id: tech-debt-agent-edit-allowed-true-write-001
+name: tech-debt writes persisted report file when agent_edit_allowed true
+description: Validate agent_edit_allowed true emits apply shape and writes agent_report_file path in Changes.
 tags:
   - quality
   - constraints
 inputs:
   prompt: >-
-    Use tech-debt with may_edit true. Classify the injected eol_hint as dependency_version
+    Use tech-debt with agent_edit_allowed true. Classify the injected eol_hint as dependency_version
     under High-Priority in persisted report. Emit apply PR shape with ### Changes listing
-    report_file docs/report/tech-debt/2026-07-19.md and ## Verification. Include Session
-    Metrics with may_edit true. Emit ## Overview and ## Summary per common-output-format.md.
+    agent_report_file docs/report/tech-debt/2026-07-19.md and ## Verification. Include Session
+    Metrics with agent_edit_allowed true. Emit ## Overview and ## Summary per common-output-format.md.
     Include Category labels on rows.
   context:
     commit_range: eval0001..eval0002
-    report_file: docs/report/tech-debt/2026-07-19.md
+    agent_report_file: docs/report/tech-debt/2026-07-19.md
     skip: false
     signals:
       - kind: eol_hint
@@ -28,7 +28,7 @@ expected:
     - dependency_version
     - docs/report/tech-debt/2026-07-19.md
     - Changes
-    - may_edit
+    - agent_edit_allowed
     - Verification
   outcomes:
     - type: task_completed

@@ -357,13 +357,13 @@ function assert_detect_tech_debt_ok_json {
             and (.value | type == "number")
             and (.window | type == "string" and length > 0);
         type == "object"
-        and (keys | sort) == ["commit_range", "hotspots", "previous_report", "report_file", "scope", "signals", "since", "skip", "status", "warnings"]
+        and (keys | sort) == ["agent_report_file", "commit_range", "hotspots", "previous_report", "scope", "signals", "since", "skip", "status", "warnings"]
         and (.status == "ok")
         and .scope == $expected_scope
         and (.since | type == "string")
         and (.commit_range | type == "string")
         and ($expected_since == "" or .since == $expected_since)
-        and (.report_file | type == "string" and length > 0)
+        and (.agent_report_file | type == "string" and length > 0)
         and (.previous_report | type == "string")
         and (.skip | type == "boolean")
         and (.signals | type == "array")
@@ -382,12 +382,12 @@ function assert_detect_tech_debt_error_json {
 
     jq -e --arg expected_message "${expected_message}" '
         type == "object"
-        and (keys | sort) == ["commit_range", "hotspots", "message", "previous_report", "report_file", "scope", "signals", "since", "skip", "status", "warnings"]
+        and (keys | sort) == ["agent_report_file", "commit_range", "hotspots", "message", "previous_report", "scope", "signals", "since", "skip", "status", "warnings"]
         and .status == "error"
         and (.scope | type == "string")
         and (.since | type == "string")
         and (.commit_range | type == "string")
-        and (.report_file | type == "string")
+        and (.agent_report_file | type == "string")
         and (.previous_report | type == "string")
         and .skip == true
         and (.signals | type == "array" and length == 0)

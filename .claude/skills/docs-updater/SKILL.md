@@ -65,7 +65,7 @@ Resolve whether to edit documentation files before patching:
 | Interactive / hook — default                                       | No — survey only                                                                                                                     |
 | Interactive / hook — explicit fix language in the same request     | Yes — examples: 修正して, "update the docs", "apply the doc patches". Do **not** treat bare `fix`/`sync` or skill name alone as edit |
 | Interactive / hook — follow-up after a prior survey in the session | Yes when the user explicitly asks to apply or patch listed documentation                                                             |
-| Automation — `## Constraints`                                      | Per `may_edit` in [category-automation-envelope.md](references/category-automation-envelope.md)                                      |
+| Automation — `## Constraints`                                      | Per `agent_edit_allowed` in [category-automation-envelope.md](references/category-automation-envelope.md)                            |
 
 ### Interactive / hook path
 
@@ -90,7 +90,7 @@ When detect JSON and `## Constraints` are present: follow [category-automation-e
 | Exceeds scope (>3 H2, new top-level document, etc.)             | Recoverable | Stop for file; note out of scope for new top-level authoring                                  |
 | `mkdocs.yml` missing                                            | Recoverable | Skip nav update                                                                               |
 | Fix requested but edits not allowed                             | Info        | Survey only; note that edits require an explicit fix request or caller permission             |
-| Automation `write_target` mismatch                              | Recoverable | Survey only per [category-automation-envelope.md](references/category-automation-envelope.md) |
+| Automation `agent_edit_target` mismatch                         | Recoverable | Survey only per [category-automation-envelope.md](references/category-automation-envelope.md) |
 
 ### Examples
 

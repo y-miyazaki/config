@@ -1,5 +1,5 @@
 <!--
-Apply PR template for test-gap automation (may_edit: true).
+Apply PR template for test-gap automation (agent_edit_allowed: true).
 
 Load ONLY at synthesis time, after tests are written.
 

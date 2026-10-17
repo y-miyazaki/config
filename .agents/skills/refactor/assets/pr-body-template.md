@@ -1,5 +1,5 @@
 <!--
-PR-facing template for refactor automation (may_edit: true).
+PR-facing template for refactor automation (agent_edit_allowed: true).
 
 Load ONLY at synthesis time, after refactor edits complete.
 

@@ -1,5 +1,5 @@
 <!--
-PR-facing template for changelog automation (may_edit: true).
+PR-facing template for changelog automation (agent_edit_allowed: true).
 
 Load ONLY at synthesis time, after CHANGELOG.md edits complete.
 

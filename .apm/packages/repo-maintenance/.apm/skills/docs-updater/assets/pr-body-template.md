@@ -1,5 +1,5 @@
 <!--
-PR-facing template for docs-updater automation (may_edit: true).
+PR-facing template for docs-updater automation (agent_edit_allowed: true).
 
 Load ONLY at synthesis time, after triage and file edits complete.
 The caller extracts ## Overview, ## Summary, and ## Verification for the PR body.
