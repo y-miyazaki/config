@@ -3,9 +3,14 @@
 # Tests for .github/actions/lib/loop/validate_loop_write_contract.sh
 #
 # Use cases:
-# - normative may_edit × write_target × delivery × level combinations
-# - enum rejection for invalid caller fields
-# - L1 read-only routing rejects may_edit true
+# - L1 accepts only delivery none with every edit field empty
+# - L1 rejects any non-empty edit field and any delivery other than none
+# - L2 and L3 accept pr_create, pr_push and none and reject other delivery values
+# - L2 and L3 require agent_edit_target fix or report
+# - L2 and L3 require a non-empty agent_edit_allowlist and accept ** as unrestricted
+# - L2 and L3 accept any agent_edit_denylist including empty
+# - L2 and L3 require agent_unchanged_verdict APPROVE or REJECT
+# - empty or unknown level is rejected at every call
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -21,102 +26,188 @@ setup() {
     source "${VALIDATE_LIB}"
 }
 
-@test "validate accepts may_edit false delivery log at L1" {
-    run validate_loop_write_contract "false" "" "log" "L1"
+@test "validate accepts L1 delivery none with empty edit fields" {
+    run validate_loop_write_contract "L1" "none" "" "" "" ""
     [ "$status" -eq 0 ]
 }
 
-@test "validate accepts may_edit false delivery none at L1" {
-    run validate_loop_write_contract "false" "" "none" "L1"
-    [ "$status" -eq 0 ]
+@test "validate accepts L2 and L3 agent_edit_allowlist double star" {
+    local checked=0 level
+    for level in L2 L3; do
+        run validate_loop_write_contract "${level}" "none" "fix" "**" "" "APPROVE"
+        [ "$status" -eq 0 ]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 2 ]
 }
 
-@test "validate accepts may_edit true write_target fix delivery none at L2" {
-    run validate_loop_write_contract "true" "fix" "none" "L2"
-    [ "$status" -eq 0 ]
+@test "validate accepts L2 and L3 agent_edit_denylist empty" {
+    local checked=0 level
+    for level in L2 L3; do
+        run validate_loop_write_contract "${level}" "none" "fix" "src/**" "" "APPROVE"
+        [ "$status" -eq 0 ]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 2 ]
 }
 
-@test "validate accepts may_edit true write_target fix delivery open_pr at L2" {
-    run validate_loop_write_contract "true" "fix" "open_pr" "L2"
-    [ "$status" -eq 0 ]
+@test "validate accepts L2 and L3 agent_edit_denylist set" {
+    local checked=0 level
+    for level in L2 L3; do
+        run validate_loop_write_contract "${level}" "none" "fix" "src/**" ".github/**" "APPROVE"
+        [ "$status" -eq 0 ]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 2 ]
 }
 
-@test "validate accepts may_edit true write_target report delivery open_pr at L2" {
-    run validate_loop_write_contract "true" "report" "open_pr" "L2"
-    [ "$status" -eq 0 ]
+@test "validate accepts L2 and L3 agent_edit_target fix and report" {
+    local checked=0 level target
+    for level in L2 L3; do
+        for target in fix report; do
+            run validate_loop_write_contract "${level}" "none" "${target}" "src/**" "" "APPROVE"
+            [ "$status" -eq 0 ]
+            checked=$((checked + 1))
+        done
+    done
+    [ "${checked}" -eq 4 ]
 }
 
-@test "validate rejects empty may_edit" {
-    run validate_loop_write_contract "" "fix" "open_pr" "L2"
+@test "validate accepts L2 and L3 agent_unchanged_verdict APPROVE and REJECT" {
+    local checked=0 level verdict
+    for level in L2 L3; do
+        for verdict in APPROVE REJECT; do
+            run validate_loop_write_contract "${level}" "none" "fix" "src/**" "" "${verdict}"
+            [ "$status" -eq 0 ]
+            checked=$((checked + 1))
+        done
+    done
+    [ "${checked}" -eq 4 ]
+}
+
+@test "validate accepts L2 and L3 delivery none pr_create and pr_push" {
+    local checked=0 level delivery
+    for level in L2 L3; do
+        for delivery in none pr_create pr_push; do
+            run validate_loop_write_contract "${level}" "${delivery}" "fix" "src/**" "" "APPROVE"
+            [ "$status" -eq 0 ]
+            checked=$((checked + 1))
+        done
+    done
+    [ "${checked}" -eq 6 ]
+}
+
+@test "validate rejects L1 delivery other than none" {
+    local checked=0 delivery
+    for delivery in "" pr_create pr_push pr_review issue_create issue_comment log issue notion open_pr; do
+        run validate_loop_write_contract "L1" "${delivery}" "" "" "" ""
+        [ "$status" -eq 1 ]
+        [[ $output == *"::error::"* ]]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 10 ]
+}
+
+@test "validate rejects L1 non-empty agent_edit_allowlist" {
+    run validate_loop_write_contract "L1" "none" "" "src/**" "" ""
     [ "$status" -eq 1 ]
-    [[ $output == *"may_edit is required"* ]]
+    [[ $output == *"agent_edit_allowlist"* ]]
 }
 
-@test "validate rejects invalid delivery" {
-    run validate_loop_write_contract "true" "fix" "slack" "L2"
+@test "validate rejects L1 non-empty agent_edit_denylist" {
+    run validate_loop_write_contract "L1" "none" "" "" ".github/**" ""
     [ "$status" -eq 1 ]
-    [[ $output == *"delivery must be"* ]]
+    [[ $output == *"agent_edit_denylist"* ]]
 }
 
-@test "validate rejects invalid level" {
-    run validate_loop_write_contract "true" "fix" "open_pr" "L0"
+@test "validate rejects L1 non-empty agent_edit_target" {
+    run validate_loop_write_contract "L1" "none" "fix" "" "" ""
+    [ "$status" -eq 1 ]
+    [[ $output == *"agent_edit_target"* ]]
+}
+
+@test "validate rejects L1 non-empty agent_unchanged_verdict" {
+    run validate_loop_write_contract "L1" "none" "" "" "" "APPROVE"
+    [ "$status" -eq 1 ]
+    [[ $output == *"agent_unchanged_verdict"* ]]
+}
+
+@test "validate rejects L2 and L3 delivery unimplemented or unknown" {
+    local checked=0 level delivery
+    for level in L2 L3; do
+        for delivery in "" pr_review issue_create issue_comment log issue notion open_pr slack; do
+            run validate_loop_write_contract "${level}" "${delivery}" "fix" "src/**" "" "APPROVE"
+            [ "$status" -eq 1 ]
+            [[ $output == *"delivery"* ]]
+            checked=$((checked + 1))
+        done
+    done
+    [ "${checked}" -eq 18 ]
+}
+
+@test "validate rejects L2 and L3 empty agent_edit_allowlist" {
+    local checked=0 level
+    for level in L2 L3; do
+        run validate_loop_write_contract "${level}" "none" "fix" "" "" "APPROVE"
+        [ "$status" -eq 1 ]
+        [[ $output == *"agent_edit_allowlist is required"* ]]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 2 ]
+}
+
+@test "validate rejects L2 and L3 empty agent_edit_target" {
+    local checked=0 level
+    for level in L2 L3; do
+        run validate_loop_write_contract "${level}" "none" "" "src/**" "" "APPROVE"
+        [ "$status" -eq 1 ]
+        [[ $output == *"agent_edit_target is required"* ]]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 2 ]
+}
+
+@test "validate rejects L2 and L3 empty agent_unchanged_verdict" {
+    local checked=0 level
+    for level in L2 L3; do
+        run validate_loop_write_contract "${level}" "none" "fix" "src/**" "" ""
+        [ "$status" -eq 1 ]
+        [[ $output == *"agent_unchanged_verdict is required"* ]]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 2 ]
+}
+
+@test "validate rejects L2 and L3 invalid agent_edit_target" {
+    local checked=0 level
+    for level in L2 L3; do
+        run validate_loop_write_contract "${level}" "none" "hybrid" "src/**" "" "APPROVE"
+        [ "$status" -eq 1 ]
+        [[ $output == *"agent_edit_target must be fix or report"* ]]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 2 ]
+}
+
+@test "validate rejects L2 and L3 invalid agent_unchanged_verdict" {
+    local checked=0 level
+    for level in L2 L3; do
+        run validate_loop_write_contract "${level}" "none" "fix" "src/**" "" "approve"
+        [ "$status" -eq 1 ]
+        [[ $output == *"agent_unchanged_verdict must be APPROVE or REJECT"* ]]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 2 ]
+}
+
+@test "validate rejects L4 level" {
+    run validate_loop_write_contract "L4" "none" "fix" "src/**" "" "APPROVE"
     [ "$status" -eq 1 ]
     [[ $output == *"level must be"* ]]
 }
 
-@test "validate rejects invalid may_edit" {
-    run validate_loop_write_contract "yes" "fix" "open_pr" "L2"
+@test "validate rejects empty level" {
+    run validate_loop_write_contract "" "none" "" "" "" ""
     [ "$status" -eq 1 ]
-    [[ $output == *"may_edit must be true or false"* ]]
-}
-
-@test "validate rejects invalid write_target" {
-    run validate_loop_write_contract "true" "hybrid" "open_pr" "L2"
-    [ "$status" -eq 1 ]
-    [[ $output == *"write_target must be fix or report"* ]]
-}
-
-@test "validate rejects L1 may_edit true write_target fix delivery open_pr" {
-    run validate_loop_write_contract "true" "fix" "open_pr" "L1"
-    [ "$status" -eq 1 ]
-    [[ $output == *"L1 with may_edit true"* ]]
-}
-
-@test "validate rejects L2 may_edit false delivery none" {
-    run validate_loop_write_contract "false" "" "none" "L2"
-    [ "$status" -eq 1 ]
-    [[ $output == *"L2/L3 require may_edit true"* ]]
-}
-
-@test "validate rejects L3 may_edit false delivery log" {
-    run validate_loop_write_contract "false" "" "log" "L3"
-    [ "$status" -eq 1 ]
-    [[ $output == *"L2/L3 require may_edit true"* ]]
-}
-
-@test "validate rejects may_edit false delivery open_pr" {
-    run validate_loop_write_contract "false" "" "open_pr" "L2"
-    [ "$status" -eq 1 ]
-    [[ $output == *"L2/L3 require may_edit true"* ]]
-}
-
-@test "validate rejects may_edit true without write_target" {
-    run validate_loop_write_contract "true" "" "open_pr" "L2"
-    [ "$status" -eq 1 ]
-}
-
-@test "validate rejects may_edit true write_target fix delivery log" {
-    run validate_loop_write_contract "true" "fix" "log" "L2"
-    [ "$status" -eq 1 ]
-}
-
-@test "validate rejects may_edit true write_target report delivery issue" {
-    run validate_loop_write_contract "true" "report" "issue" "L2"
-    [ "$status" -eq 1 ]
-}
-
-@test "validate warns write_target ignored when may_edit false" {
-    run validate_loop_write_contract "false" "fix" "log" "L1"
-    [ "$status" -eq 0 ]
-    [[ $output == *"write_target ignored when may_edit is false"* ]]
+    [[ $output == *"level is required"* ]]
 }
