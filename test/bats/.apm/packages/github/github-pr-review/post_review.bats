@@ -488,6 +488,33 @@ posted() {
     [[ "$(posted | jq -r '.body')" == *"- Location: https://github.com/o/r/blob/${HEAD_SHA}/a.sh#L2"* ]]
 }
 
+@test "skips posting when the PR head moved after the review" {
+    # Report written against an older head; the author pushed since (well-formed, different SHA)
+    write_report "[$(bug_finding Critical 2 true)]"
+    jq --arg old "$(printf 'd%.0s' {1..40})" '.head_sha = $old' "${REPORT}" > "${REPORT}.tmp"
+    mv "${REPORT}.tmp" "${REPORT}"
+    run_post
+    [ "$status" -eq 0 ]
+    [[ ${output} == *"::warning::"*"report head_sha does not match the PR head"*"review not posted"* ]]
+    run grep -c -- '--method POST' "${GH_LOG}"
+    [ "$output" -eq 0 ]
+}
+
+@test "skips posting when the report head_sha is forged, malformed, or missing" {
+    local mutation
+    for mutation in ".head_sha = \"${FORGED_SHA}\" | .base_sha = \"${FORGED_SHA}\"" \
+        '.head_sha = "abc"' '.head_sha = 42' 'del(.head_sha)'; do
+        write_report "[$(bug_finding Critical 2 true)]"
+        jq "${mutation}" "${REPORT}" > "${REPORT}.tmp" && mv "${REPORT}.tmp" "${REPORT}"
+        : > "${GH_LOG}"
+        run_post
+        [ "$status" -eq 0 ]
+        [[ ${output} == *"::warning::"*"report head_sha does not match the PR head"* ]]
+        run grep -c -- '--method POST' "${GH_LOG}"
+        [ "$output" -eq 0 ]
+    done
+}
+
 @test "uses the PR's SHAs from gh pr view" {
     write_report "[$(rule_finding Warning "${RULE_QUOTE}" 10 false)]"
     run_in_repo "${GIT_TEST_REPO}" REPORT_FILE="${REPORT}" PR_DIFF_FILE="${DIFF_FILE}" \
@@ -499,14 +526,14 @@ posted() {
     [[ "$(posted | jq -r '.body')" == *"blob/${BASE_SHA}/AGENTS.md#L3"* ]]
 }
 
-@test "uses trusted SHAs when the report SHAs are forged" {
+@test "uses trusted SHAs when only the report base_sha is forged" {
     write_report "[$(rule_finding Warning "${RULE_QUOTE}" 10 false), $(bug_finding Critical 2 true)]"
-    jq --arg f "${FORGED_SHA}" '.base_sha = $f | .head_sha = $f' "${REPORT}" > "${REPORT}.tmp"
+    jq --arg f "${FORGED_SHA}" '.base_sha = $f' "${REPORT}" > "${REPORT}.tmp"
     mv "${REPORT}.tmp" "${REPORT}"
     run_post
     [ "$status" -eq 0 ]
-    [[ ${output} == *"::warning::"*"differ from PR #7"* ]]
-    run jq -e --arg h "${HEAD_SHA}" '.commit_id == $h and (.comments | length) == 1' <<< "$(posted)"
+    [[ ${output} == *"::warning::"*"base_sha differs from PR #7"* ]]
+    run jq -e --arg h "${HEAD_SHA}" '.event == "COMMENT" and .commit_id == $h and (.comments | length) == 1' <<< "$(posted)"
     [ "$status" -eq 0 ]
     body="$(posted | jq -r '.body')"
     [[ ${body} == *"blob/${BASE_SHA}/AGENTS.md#L3"* ]]
@@ -514,11 +541,12 @@ posted() {
     [[ ${body} != *"${FORGED_SHA}"* ]]
     [[ "$(posted | jq -r '.comments[0].body')" != *"${FORGED_SHA}"* ]]
 
-    # Malformed report SHAs are ignored the same way (no fail-closed on report SHAs)
+    # A missing base_sha is warned about the same way
     write_report '[]'
-    jq '.head_sha = "abc" | del(.base_sha)' "${REPORT}" > "${REPORT}.tmp" && mv "${REPORT}.tmp" "${REPORT}"
+    jq 'del(.base_sha)' "${REPORT}" > "${REPORT}.tmp" && mv "${REPORT}.tmp" "${REPORT}"
     run_post
     [ "$status" -eq 0 ]
+    [[ ${output} == *"::warning::"*"base_sha differs"* ]]
     run jq -e --arg h "${HEAD_SHA}" '.event == "COMMENT" and .commit_id == $h' <<< "$(posted)"
     [ "$status" -eq 0 ]
 }

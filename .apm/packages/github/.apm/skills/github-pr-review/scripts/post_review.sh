@@ -13,7 +13,8 @@
 # - Fail closed: unparseable TARGET_JSON or report, or unavailable trusted SHAs, post nothing,
 #   warn, and exit 0
 # - Report base_sha/head_sha are never trusted: the PR's SHAs come from gh pr view and are used
-#   for evidence checks, all links, and commit_id (a mismatch is warned about and ignored)
+#   for evidence checks, all links, and commit_id. A report head_sha that is missing or differs
+#   from the PR head fails closed (the PR moved); a base_sha mismatch is only warned about
 # - rule / criteria findings are kept only when evidence.quote is an exact substring
 #   (no normalization) of evidence.path as committed at the trusted base SHA (git cat-file,
 #   not the working tree); other invalid findings are dropped
@@ -739,8 +740,15 @@ function main {
         warn "trusted base/head SHAs for PR #${pr_number} unavailable (gh pr view or base commit fetch failed); review not posted"
         return 0
     fi
-    if [[ "$(jq -r '"\(.base_sha // "")\t\(.head_sha // "")"' <<< "${report}")" != "${REVIEW_BASE_SHA}"$'\t'"${REVIEW_HEAD_SHA}" ]]; then
-        warn "report base_sha/head_sha differ from PR #${pr_number} (${REVIEW_BASE_SHA}/${REVIEW_HEAD_SHA}); using the PR's SHAs"
+    # A head mismatch means the PR moved after the review was written: line numbers may land on
+    # the wrong lines, so fail closed. A base mismatch is only a warning (evidence is verified
+    # at the trusted base regardless).
+    if [[ "$(jq -r '.head_sha // "" | tostring' <<< "${report}")" != "${REVIEW_HEAD_SHA}" ]]; then
+        warn "report head_sha does not match the PR head (${REVIEW_HEAD_SHA}) for PR #${pr_number}; review not posted"
+        return 0
+    fi
+    if [[ "$(jq -r '.base_sha // "" | tostring' <<< "${report}")" != "${REVIEW_BASE_SHA}" ]]; then
+        warn "report base_sha differs from PR #${pr_number} base (${REVIEW_BASE_SHA}); using the PR's base SHA"
     fi
     report="$(jq -c --arg b "${REVIEW_BASE_SHA}" --arg h "${REVIEW_HEAD_SHA}" '.base_sha = $b | .head_sha = $h' <<< "${report}")"
 
