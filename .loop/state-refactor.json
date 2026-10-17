@@ -6,6 +6,13 @@
       "consecutive_failures": 1,
       "open_rejections": [],
       "last_reject_reason": "No file changes produced"
+    },
+    "integration:dogfood/loop-delivery": {
+      "last_run": "2026-10-17T22:30:01Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
+      "open_rejections": [],
+      "last_reject_reason": "No file changes produced"
     }
   }
 }
