@@ -661,8 +661,13 @@ jobs:
       # L2 review agents submit their own marker-tagged pull request review
       # through gh, so no platform footer reaches it. Finalize knows the usage
       # totals, so it appends them here — collapsed, and last.
+      # continue-on-error: meta is cosmetic and must never fail finalize-l2.
+      # Only entity:pr:* handoff keys act, checked before any source: the libs
+      # are read from the caller checkout (no action path exists in a workflow
+      # run step), so a consumer without them must not reach the source lines.
       - name: Append Loop Meta To Pull Request Review
         if: always() && inputs.handoff_key != ''
+        continue-on-error: true
         env:
           ENGINE: ${{ inputs.engine }}
           GITHUB_TOKEN: ${{ steps.resolve_github_token.outputs.github_token }}
@@ -674,12 +679,22 @@ jobs:
           USAGE_JSON: ${{ needs.agent-l2.outputs.usage_json || '' }}
         run: |
           set -euo pipefail
+          if ! [[ "${HANDOFF_KEY}" =~ ^entity:pr:[1-9][0-9]*$ ]]; then
+            exit 0
+          fi
+          lib_dir=".github/actions/lib/loop"
+          for lib in created_by.sh loop_meta.sh entity_meta.sh; do
+            if [[ ! -f "${lib_dir}/${lib}" ]]; then
+              echo "::notice title=loop-meta::${lib_dir}/${lib} not in checkout; meta not appended"
+              exit 0
+            fi
+          done
           # shellcheck disable=SC1091
-          source .github/actions/lib/loop/created_by.sh
+          source "${lib_dir}/created_by.sh"
           # shellcheck disable=SC1091
-          source .github/actions/lib/loop/loop_meta.sh
+          source "${lib_dir}/loop_meta.sh"
           # shellcheck disable=SC1091
-          source .github/actions/lib/loop/entity_meta.sh
+          source "${lib_dir}/entity_meta.sh"
           pr_number="$(entity_pr_number "${HANDOFF_KEY}")"
           if [[ -z ${pr_number} ]]; then
             exit 0

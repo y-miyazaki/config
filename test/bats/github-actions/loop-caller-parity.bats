@@ -128,6 +128,20 @@ job_if_block() {
     grep -B5 'id: finalize' "${AGENT}" | grep -q 'if: inputs.finalize_enabled'
 }
 
+@test "finalize-l2 pr review meta step guards the handoff key before sourcing libs" {
+    # The step sources workspace-relative libs that a consumer checkout may not
+    # have; non-PR loops must exit before any source, and a failure must not
+    # fail finalize-l2.
+    local block guard_line source_line
+    block="$(awk '/- name: Append Loop Meta To Pull Request Review/{f=1} f&&/- name: Notify Pull Request/{exit} f' "${AGENT}")"
+    [[ -n ${block} ]]
+    grep -q 'continue-on-error: true' <<< "${block}"
+    guard_line="$(grep -n '\^entity:pr:' <<< "${block}" | head -1 | cut -d: -f1)"
+    source_line="$(grep -n 'source ' <<< "${block}" | head -1 | cut -d: -f1)"
+    [[ -n ${guard_line} && -n ${source_line} ]]
+    ((guard_line < source_line))
+}
+
 @test "finalize-l1 persists run-log after agent-l1" {
     grep -A40 '^  finalize-l1:' "${AGENT}" | grep -q 'loop-run-log'
     grep -A20 '^  finalize-l1:' "${AGENT}" | grep -q "inputs.level == 'L1'"
