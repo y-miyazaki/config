@@ -7,6 +7,20 @@
       "last_sha": "90ce88824a1c55a61b9941b69dcc18ef0d5e1d27",
       "open_rejections": [],
       "last_reject_reason": "No file changes produced"
+    },
+    "integration:dogfood/loop-delivery": {
+      "pending": {
+        "sha": "e41d9813b567dec4f31eb416822847aeaaac0dc8",
+        "pr": 997,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/997",
+        "loop_name": "docs-updater",
+        "created_at": "2026-10-17T22:28:11Z"
+      },
+      "last_run": "2026-10-17T22:28:11Z",
+      "outcome": "pr_created",
+      "consecutive_failures": 0,
+      "open_rejections": [],
+      "last_reject_reason": "Single docs-only line fix replacing retired outcome name 'no-op' with canonical 'unchanged'; verified against outcome.sh, specification.md enum, and loop-engineering-design.md; report meets apply-mode format"
     }
   }
 }
