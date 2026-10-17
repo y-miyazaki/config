@@ -376,10 +376,10 @@ dogfood の `on-loop-*.yaml` は、ローカルの `./.github/workflows/ci-loop-
 1. ci-sweeper の ledger の不具合(第9節)を、先に別のリリースで直す。他の変更と独立しており、早く直すほど ledger の欠落が減るためである。
 2. 本 spec の残りの変更(第1〜8節)を、作業ブランチで進める。PR は話題ごとに分けてよいが、main に入れて push するのは、すべてがそろってからにする。
 3. 配布 skill を変えたら、`apm install`(`scripts/self/apm/sync_apm_artifacts.sh`)で同期先を更新し、同じ変更に含める。
-4. リリースの直前に、PR を対象にする loop(pr-revise、ci-sweeper の PR ターゲット)が当たり得る、開いている PR を確かめる。該当する PR は、push の後に main を取り込む(rebase か merge)まで、loop の対象にしない。
+4. PR を対象にする loop(pr-revise、ci-sweeper の PR ターゲット)は、PR head がリリースのコミットを含まない PR に当てない。条件は PR を開いた時期ではなく、PR head の内容である。リリースの直前に開いている PR を確かめ、該当する PR には、push の後に main を取り込ませる(rebase か merge)。リリースより前の main から切ったブランチの PR を、リリースの後に開く場合も同じで、main を取り込んでから `@loop` を使う。取り込まずに当てた場合は、maker が編集せず REJECT で終わり得る(予算を1回分使う)。データは壊れないので、破壊的変更の影響として許容し、運用で避ける。
 5. `pin_config_actions.sh` で、変更と pin を1回で push する。
 
-手順4の理由: PR を対象にする loop の maker は、PR head の作業ツリーにある skill を読む(`loop-execute/action.yml:203` の `working-directory`)。リリース前から開いている PR では、PR head の旧い skill が旧いプロンプトのキー(`may_edit`)を探し、新しいキー(`agent_edit_allowed`)を見つけられない。そのため、編集せずに REJECT で終わり得る(第7-1節のプロンプトのキーの改名)。main を取り込めば、新しい skill が PR head に入るので解消する。skill と設定を PR head ではなくデフォルトブランチから読む変更は、[Loop エージェントの skill と設定の読み元](2026-10-17-loop-agent-config-source-design.md)で別に扱う。
+手順4の理由: PR を対象にする loop の maker は、PR head の作業ツリーにある skill を読む(`loop-execute/action.yml:203` の `working-directory`)。PR head がリリースのコミットを含まない PR では、PR head の旧い skill が旧いプロンプトのキー(`may_edit`)を探し、新しいキー(`agent_edit_allowed`)を見つけられない。そのため、編集せずに REJECT で終わり得る(第7-1節のプロンプトのキーの改名)。main を取り込めば、新しい skill が PR head に入るので解消する。skill と設定を PR head ではなくデフォルトブランチから読む変更は、[Loop エージェントの skill と設定の読み元](2026-10-17-loop-agent-config-source-design.md)で別に扱う。
 
 - push までの間、ローカルの caller と pin された古い action は食い違うが、main に入っていないので、dogfood は古い組み合わせのまま動く。
 - 例外は、`.loop/` に永続化されたデータである。push の前に書かれた outcome の旧い値は、push の後も state・run-log・ledger に残る。第8節の読み替えは、このために残す。
@@ -401,7 +401,9 @@ dogfood の `on-loop-*.yaml` は、ローカルの `./.github/workflows/ci-loop-
 - 第6節の検証の表: 表の全セルについて、許可と拒否の両方を `loop-write-contract.bats` で確認する。
 - 旧い入力名が残っていないこと: 改名表の左列、削除する入力、旧い値、旧いプロンプトのキーを grep し、`.loop/` のデータと第8節の読み替え以外に残っていないことを確認する。
 - outcome: 読み替えの関数と、各 ledger スクリプトの対応表が、旧い値と新しい値の両方を正しく扱うことを確認する。`write_state.sh:163` の条件が、`pr_push` の着地で成立することを確認する。
-- リリースの前に、作業ブランチで dogfood の loop を `workflow_dispatch` で1回ずつ動かして、成功することを確認する。作業ブランチの caller は、ローカルの action を一時的に参照する(`.github/workflows/CLAUDE.md` の Pins が dogfood に許す範囲)か、`pin_config_actions.sh --no-push` で作った pin を使う。どちらにするかは、ビルダーが決める。リリース後にも、run-log で1回ずつ成功を確認する。
+- リリースの前に、作業ブランチで dogfood の loop を `workflow_dispatch` で1回ずつ動かして、成功することを確認する。作業ブランチの caller は、ローカルの action を一時的に参照する(`.github/workflows/CLAUDE.md` の Pins が dogfood に許す範囲)か、`pin_config_actions.sh --no-push` で作った pin を使う。どちらにするかは、ビルダーが決める。
+  - maker は、ターゲットの作業ツリーにある skill を読む(`loop-execute/action.yml:203`)。branch caller の integration ターゲットの作業ツリーは、監視するブランチ(dogfood では `main`)から作られる(`loop-detect/lib/detect.sh:699-702`)。そのため、作業ブランチから dispatch するだけでは、maker はリリース前の `main` の旧い skill を読み、新しい skill と新しい action の組み合わせを確かめられない。
+  - 確認の間だけ、作業ブランチの branch caller の `detect_branch_match` と `state_branch` を作業ブランチの名前にする。作業ツリーが作業ブランチから作られ、state の書き込みも `main` ではなく作業ブランチに入る。確認が終わったら `main` に戻してから、手順5の push をする。entity caller の作業ツリーは起動した ref から作られるので、この変更はいらない。リリース後にも、run-log で1回ずつ成功を確認する。
 - zizmor / actionlint / ghalint が通ること(Stop フックで検証)。
 
 ## 影響を受ける箇所
