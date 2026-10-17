@@ -13,6 +13,11 @@
 #     <source_dir>    Directory containing main.go files (e.g., cmd/api)
 #     <output_dir>    Output directory name (e.g., api)
 #     [architecture]  Target architecture (default: arm64)
+#
+# Design Rules:
+#   - BINDIR must match [A-Za-z0-9._-]+ (no path separators or ..) because it is joined into rm -rf paths.
+#   - Only bin/<output_dir> and outputs/<output_dir> are cleaned before a build.
+#   - Missing required arguments print usage and exit 1; --help exits 0.
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -281,7 +286,7 @@ function find_lambda_functions {
     local files
     files=$(find "$DIR" -type f -name 'main.go')
     local file_count
-    file_count=$(printf "%s\n" "$files" | grep -c . || echo 0)
+    file_count=$(printf "%s\n" "$files" | grep -c . || true)
 
     if [[ $file_count -eq 0 ]]; then
         error_exit "No main.go files found in $DIR"
@@ -366,7 +371,7 @@ function validate_go_environment {
     log "INFO" "Using Go version $go_version"
 
     # Simple version check
-    if [[ "$(echo -e "$go_version\n$MIN_VERSION" | sort -V | head -n1)" != "$MIN_VERSION" ]]; then
+    if [[ "$(printf '%s\n%s\n' "$go_version" "$MIN_VERSION" | sort -V | head -n1)" != "$MIN_VERSION" ]]; then
         error_exit "Go version $go_version is less than minimum required version $MIN_VERSION"
     fi
 

@@ -53,29 +53,6 @@ readonly SEPARATOR='#######################################'
 declare -a FIX_DOC_TEMP_FILES=()
 
 #######################################
-# cleanup_fix_doc_temp_files: Remove tracked temporary files
-#
-# Globals:
-#   FIX_DOC_TEMP_FILES
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   None
-#######################################
-function cleanup_fix_doc_temp_files {
-    local f
-    for f in "${FIX_DOC_TEMP_FILES[@]}"; do
-        rm -f "${f}"
-    done
-}
-trap cleanup_fix_doc_temp_files EXIT
-
-#######################################
 # show_usage: Display script usage information
 #
 # Globals:
@@ -224,6 +201,29 @@ function canonical_order_index {
     done
     echo "-1"
 }
+
+#######################################
+# cleanup_fix_doc_temp_files: Remove tracked temporary files
+#
+# Globals:
+#   FIX_DOC_TEMP_FILES
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#######################################
+function cleanup_fix_doc_temp_files {
+    local f
+    for f in "${FIX_DOC_TEMP_FILES[@]}"; do
+        rm -f "${f}"
+    done
+}
+trap cleanup_fix_doc_temp_files EXIT
 
 #######################################
 # expand_target_paths: Expand a file or directory into shell script paths

@@ -21,10 +21,12 @@
 # Ensure common.sh is loaded for logging functions
 if ! declare -f log > /dev/null 2>&1; then
     # Try to source common.sh from the same directory
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    # Private name: do not overwrite the caller's SCRIPT_DIR
+    _LIB_COMMON_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     # shellcheck source=./common.sh
     # shellcheck disable=SC1091
-    source "$SCRIPT_DIR/common.sh"
+    source "${_LIB_COMMON_DIR}/common.sh"
+    unset _LIB_COMMON_DIR
 fi
 
 #######################################
@@ -134,32 +136,6 @@ function terraform_destroy {
 }
 
 #######################################
-# terraform_get_workspace: Get current Terraform workspace
-#
-# Description:
-#   Returns the name of the currently selected Terraform workspace
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   Current workspace name to stdout
-#
-# Returns:
-#   0 on success
-#
-# Usage:
-#   current_workspace=$(terraform_get_workspace)
-#
-#######################################
-function terraform_get_workspace {
-    terraform workspace show 2> /dev/null || echo "default"
-}
-
-#######################################
 # terraform_format: Format Terraform configuration files
 #
 # Description:
@@ -198,6 +174,32 @@ function terraform_format {
         execute_command_string "terraform fmt -recursive"
         log "INFO" "Terraform files formatted"
     fi
+}
+
+#######################################
+# terraform_get_workspace: Get current Terraform workspace
+#
+# Description:
+#   Returns the name of the currently selected Terraform workspace
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Current workspace name to stdout
+#
+# Returns:
+#   0 on success
+#
+# Usage:
+#   current_workspace=$(terraform_get_workspace)
+#
+#######################################
+function terraform_get_workspace {
+    terraform workspace show 2> /dev/null || echo "default"
 }
 
 #######################################
@@ -245,6 +247,58 @@ function terraform_init {
     fi
 
     log "INFO" "Terraform initialized with backend config: $backend_config"
+}
+
+#######################################
+# terraform_lint: Run tflint on Terraform configuration
+#
+# Description:
+#   Runs tflint to lint Terraform configuration files
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - Recursive mode (optional, "recursive" to run recursively)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None (exits on lint failure)
+#
+# Usage:
+#   terraform_lint "recursive"
+#
+#######################################
+function terraform_lint {
+    local recursive_mode="${1:-}"
+
+    echo_section "Terraform linting"
+
+    local lint_cmd="tflint"
+
+    # Use root .tflint.hcl if it exists and no explicit config is specified
+    local root_config
+    root_config="$(git rev-parse --show-toplevel 2> /dev/null)/.tflint.hcl"
+    if [[ -f $root_config ]]; then
+        lint_cmd="$lint_cmd --config=$root_config"
+        # Initialize plugins before linting
+        log "INFO" "Initializing tflint plugins..."
+        if ! execute_command_string "tflint --init --config=$root_config"; then
+            error_exit "tflint --init failed"
+        fi
+    fi
+
+    if [[ $recursive_mode == "recursive" ]]; then
+        lint_cmd="$lint_cmd --recursive"
+    fi
+
+    if ! execute_command_string "$lint_cmd"; then
+        error_exit "tflint found issues in Terraform configuration"
+    fi
+
+    log "INFO" "Terraform configuration linting passed"
 }
 
 #######################################
@@ -366,58 +420,6 @@ function terraform_validate {
     fi
 
     log "INFO" "Terraform configuration is valid"
-}
-
-#######################################
-# terraform_lint: Run tflint on Terraform configuration
-#
-# Description:
-#   Runs tflint to lint Terraform configuration files
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   $1 - Recursive mode (optional, "recursive" to run recursively)
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   None (exits on lint failure)
-#
-# Usage:
-#   terraform_lint "recursive"
-#
-#######################################
-function terraform_lint {
-    local recursive_mode="${1:-}"
-
-    echo_section "Terraform linting"
-
-    local lint_cmd="tflint"
-
-    # Use root .tflint.hcl if it exists and no explicit config is specified
-    local root_config
-    root_config="$(git rev-parse --show-toplevel 2> /dev/null)/.tflint.hcl"
-    if [[ -f $root_config ]]; then
-        lint_cmd="$lint_cmd --config=$root_config"
-        # Initialize plugins before linting
-        log "INFO" "Initializing tflint plugins..."
-        if ! execute_command_string "tflint --init --config=$root_config"; then
-            error_exit "tflint --init failed"
-        fi
-    fi
-
-    if [[ $recursive_mode == "recursive" ]]; then
-        lint_cmd="$lint_cmd --recursive"
-    fi
-
-    if ! execute_command_string "$lint_cmd"; then
-        error_exit "tflint found issues in Terraform configuration"
-    fi
-
-    log "INFO" "Terraform configuration linting passed"
 }
 
 #######################################

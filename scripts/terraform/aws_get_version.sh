@@ -284,7 +284,7 @@ function collect_glue_versions {
             is_latest="Yes"
         fi
 
-        buffer+="Glue,Version,glue,$version,$region,$is_latest,$status,$end_of_support_date,$end_of_life_date\n"
+        buffer+="Glue,Version,glue,$version,$region,$is_latest,$status,$end_of_support_date,$end_of_life_date"$'\n'
     done <<< "$GLUE_DATA"
 
     echo "$buffer"
@@ -334,7 +334,7 @@ function collect_lambda_versions {
             is_latest="Yes"
         fi
 
-        buffer+="Lambda,Runtime,$family,$runtime,$region,$is_latest,$status,$deprecation_date,$block_create_date,$block_update_date\n"
+        buffer+="Lambda,Runtime,$family,$runtime,$region,$is_latest,$status,$deprecation_date,$block_create_date,$block_update_date"$'\n'
     done <<< "$LAMBDA_DATA"
 
     echo "$buffer"
@@ -403,7 +403,7 @@ function collect_rds_versions {
                 # RDS versions don't have standardized deprecation dates from AWS API
                 local deprecation_date=""
                 local eol_date=""
-                buffer+="RDS,Engine,$engine,$version,$region,$is_latest,$status,$deprecation_date,$eol_date\n"
+                buffer+="RDS,Engine,$engine,$version,$region,$is_latest,$status,$deprecation_date,$eol_date"$'\n'
             fi
         done < <(echo "$engine_versions_json" | jq -c '.[]?')
     done
@@ -501,9 +501,10 @@ function output_csv_data {
         {
             echo "$header"
             if [[ $sort_output == "true" ]]; then
-                printf "%b" "$buffer" | sort
+                printf '%s\n' "$buffer" | sort
             else
-                printf "%b" "$buffer"
+                # Command substitution drops the buffer's trailing newline, so restore it
+                printf '%s\n' "$buffer"
             fi
             echo ""
         } >> "$OUTPUT_FILE"
@@ -601,7 +602,7 @@ function main {
 
     # Display summary
     local total_entries
-    total_entries=$(($(wc -l < "$OUTPUT_FILE") - $(echo "${RUNTIME_CATEGORIES[@]}" | wc -w))) # Subtract header lines
+    total_entries=$(($(wc -l < "$OUTPUT_FILE") - ${#categories_to_process[@]})) # Subtract header lines
     log "INFO" "Total runtime/engine versions collected: $total_entries"
 
     echo "Results written to: $OUTPUT_FILE"

@@ -11,6 +11,11 @@
 #   arguments:
 #     directory      Target directory to validate (optional)
 #                    If not provided, auto-detects all Node.js projects
+#
+# Design Rules:
+#   - Projects are auto-detected (package.json up to depth 2) when no directory is given.
+#   - Validation is read-only unless --fix is given; --dry-run prints planned commands only.
+#   - A missing or out-of-sync package-lock.json fails the run (non-zero exit).
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -276,7 +281,7 @@ function find_nodejs_projects {
         ! -path "*/node_modules.bak/*" \
         ! -path "*/.git/*" \
         ! -path "*/dist/*" \
-        ! -path "*/build/*" | while read -r pkg_json; do
+        ! -path "*/build/*" -print0 | while IFS= read -r -d '' pkg_json; do
         dirname "$pkg_json"
     done
 }

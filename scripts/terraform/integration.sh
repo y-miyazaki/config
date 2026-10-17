@@ -5,6 +5,10 @@
 # Usage: ./integration.sh [directory]
 #   arguments:
 #     directory: Target directory (optional, defaults to current)
+#
+# Design Rules:
+#   - ENV and TF_PLUGIN_CACHE_DIR are required environment variables.
+#   - tflint and trivy findings are reported as warnings; the integration steps themselves fail the run.
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -68,10 +72,31 @@ EOF
     exit 0
 }
 
-# Show usage if -h or --help is provided
-if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
-    show_usage
-fi
+#######################################
+# parse_arguments: Parse command line arguments
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $@ - Command line arguments
+#
+# Outputs:
+#   Writes help to stdout when -h or --help is given
+#
+# Returns:
+#   0 on success; exits 0 after showing help
+#######################################
+function parse_arguments {
+    case "${1:-}" in
+        -h | --help)
+            show_usage
+            ;;
+        -*)
+            error_exit "Unknown option: $1"
+            ;;
+    esac
+}
 
 #######################################
 ## Additional helper functions (alphabetical):
@@ -212,6 +237,8 @@ function validate_and_prepare {
 #
 #######################################
 function main {
+    parse_arguments "$@"
+
     # Set target directory
     local dir=${1:-./}
 

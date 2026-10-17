@@ -49,28 +49,6 @@ declare -a DRIFT_LINES=()
 DRIFT_COUNT=0
 
 #######################################
-# record_drift: Append a drift line and increment counter
-#
-# Globals:
-#   DRIFT_LINES
-#   DRIFT_COUNT
-#
-# Arguments:
-#   $1 - Drift description
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   0 on success
-#
-#######################################
-function record_drift {
-    DRIFT_LINES+=("$1")
-    DRIFT_COUNT=$((DRIFT_COUNT + 1))
-}
-
-#######################################
 # check_skill_target_drift: Compare one skill directory against an install target
 #
 # Globals:
@@ -120,6 +98,28 @@ function check_skill_target_drift {
             record_drift "${line}"
         done <<< "${diff_output}"
     fi
+}
+
+#######################################
+# record_drift: Append a drift line and increment counter
+#
+# Globals:
+#   DRIFT_LINES
+#   DRIFT_COUNT
+#
+# Arguments:
+#   $1 - Drift description
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function record_drift {
+    DRIFT_LINES+=("$1")
+    DRIFT_COUNT=$((DRIFT_COUNT + 1))
 }
 
 #######################################

@@ -8,6 +8,7 @@
 # - missing required arguments exit non-zero (show_usage 1), not 0
 # - value options without a value fail with a clear message
 # - clean_binaries refuses unsafe root directories
+# - deploy.sh and integration.sh reject unknown options
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -50,4 +51,13 @@ SCRIPTS_DIR="$(bats_workspace_root)/scripts"
     run bash "${SCRIPTS_DIR}/terraform/aws_deploy_sam.sh" --path
     [ "$status" -ne 0 ]
     [[ $output == *"requires a value"* ]]
+}
+
+@test "terraform deploy.sh and integration.sh reject unknown options" {
+    run bash "${SCRIPTS_DIR}/terraform/deploy.sh" --no-such-option
+    [ "$status" -ne 0 ]
+    [[ $output == *"Unknown option"* ]]
+    run bash "${SCRIPTS_DIR}/terraform/integration.sh" --no-such-option
+    [ "$status" -ne 0 ]
+    [[ $output == *"Unknown option"* ]]
 }

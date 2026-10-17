@@ -127,3 +127,76 @@ EOF
     run awk '/^    inputs:/{flag=1; next} flag && /^      [a-zA-Z0-9_]+:/{sub(/^      /,""); sub(/:.*/,""); print; if (++n==2) exit}' "${FIXTURE_DIR}/to-fix.yml"
     [ "$output" == $'alpha\nzebra' ]
 }
+
+@test "check covers every key after a quoted key in the same block" {
+    cat > "${FIXTURE_DIR}/quoted.yml" << 'EOF'
+jobs:
+  a:
+    steps:
+      - uses: x
+        with:
+          alpha: 1
+          "quoted-key": 2
+          zeta: 3
+          beta: 4
+EOF
+
+    run python3 "${CHECKER}" check "${FIXTURE_DIR}/quoted.yml"
+    [ "$status" -eq 1 ]
+    [[ $output == *"with block keys not alphabetically ordered"* ]]
+}
+
+@test "fix sorts a block that contains quoted keys and check passes afterward" {
+    cat > "${FIXTURE_DIR}/quoted-fix.yml" << 'EOF'
+jobs:
+  a:
+    steps:
+      - uses: x
+        with:
+          zeta: 1
+          "quoted-key": 2
+          alpha: 3
+EOF
+
+    run python3 "${CHECKER}" fix "${FIXTURE_DIR}/quoted-fix.yml"
+    [ "$status" -eq 0 ]
+    run python3 "${CHECKER}" check "${FIXTURE_DIR}/quoted-fix.yml"
+    [ "$status" -eq 0 ]
+    run grep -n 'alpha\|quoted-key\|zeta' "${FIXTURE_DIR}/quoted-fix.yml"
+    [[ ${lines[0]} == *"alpha"* ]]
+    [[ ${lines[1]} == *"quoted-key"* ]]
+    [[ ${lines[2]} == *"zeta"* ]]
+}
+
+@test "values that merely contain a colon do not end a block early" {
+    cat > "${FIXTURE_DIR}/url.yml" << 'EOF'
+jobs:
+  a:
+    steps:
+      - uses: x
+        with:
+          alpha: http://host:80/path
+          beta: 2
+EOF
+
+    run python3 "${CHECKER}" check "${FIXTURE_DIR}/url.yml"
+    [ "$status" -eq 0 ]
+}
+
+@test "fix keeps the file mode and leaves no temporary files behind" {
+    cat > "${FIXTURE_DIR}/mode.yml" << 'EOF'
+jobs:
+  a:
+    steps:
+      - uses: x
+        with:
+          zeta: 1
+          alpha: 2
+EOF
+    chmod 640 "${FIXTURE_DIR}/mode.yml"
+
+    run python3 "${CHECKER}" fix "${FIXTURE_DIR}/mode.yml"
+    [ "$status" -eq 0 ]
+    [ "$(stat -c '%a' "${FIXTURE_DIR}/mode.yml")" = "640" ]
+    [ "$(find "${FIXTURE_DIR}" -maxdepth 1 -name '.mode.yml.*' | wc -l)" -eq 0 ]
+}

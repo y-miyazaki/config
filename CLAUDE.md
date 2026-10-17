@@ -1,3 +1,5 @@
+@AGENTS.md
+
 # Project Instructions
 
 ## Edit routing (MUST)

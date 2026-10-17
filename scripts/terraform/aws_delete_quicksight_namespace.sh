@@ -7,6 +7,11 @@
 #     -d, --dry-run Only list the namespaces that would be deleted
 #     -h, --help    Display this help message
 #     -y, --yes     Skip the confirmation prompt
+#
+# Design Rules:
+#   - Destructive: deletes every QuickSight namespace in the account, so a confirmation is required.
+#   - --dry-run only lists the namespaces; --yes skips the confirmation prompt (required when stdin is not a terminal).
+#   - Stops on the first failed deletion and exits non-zero.
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline

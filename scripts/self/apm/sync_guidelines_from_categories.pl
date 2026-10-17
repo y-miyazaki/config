@@ -149,6 +149,15 @@ sub order_category_files {
   return (sort @domain), (sort @ap);
 }
 
+# Skills that could not be synced; reported at the end so "sync completed" is never misleading
+my @skipped;
+
+sub skip_skill {
+  my ($skill, $reason) = @_;
+  push @skipped, "$skill: $reason";
+  print STDERR "WARN: skipping $skill ($reason)\n";
+}
+
 for my $skill (sort keys %map) {
   my $instr = $map{$skill};
   # Extract package path from instruction file path (e.g., .apm/packages/common/.apm -> .apm/packages/common)
@@ -161,8 +170,8 @@ for my $skill (sort keys %map) {
   } else {
     next;
   }
-  next unless -d $ref_dir;
-  next unless -f $instr;
+  unless (-d $ref_dir) { skip_skill($skill, "references dir not found: $ref_dir"); next; }
+  unless (-f $instr)   { skip_skill($skill, "instructions file not found: $instr"); next; }
 
   my %level_by_id;
   my $instr_txt = read_all($instr);
@@ -174,7 +183,7 @@ for my $skill (sort keys %map) {
   }
 
   my @category_files = order_category_files(grep { -f $_ } bsd_glob("$ref_dir/category-*.md"));
-  next if !@category_files;
+  if (!@category_files) { skip_skill($skill, "no category-*.md in $ref_dir"); next; }
 
   my @parsed_categories;
 
@@ -230,7 +239,7 @@ for my $skill (sort keys %map) {
 
   # 2) regenerate common-checklist.md
   my $checklist = "$ref_dir/common-checklist.md";
-  next unless -f $checklist;
+  unless (-f $checklist) { skip_skill($skill, "checklist not found: $checklist"); next; }
 
   my ($title) = split /\n/, read_all($checklist);
   my @out = ($title, '');
@@ -295,7 +304,13 @@ for my $skill (sort keys %map) {
   if ($txt =~ /\n## Guidelines\n.*?\n## Testing and Validation\n/s) {
     $txt =~ s/\n## Guidelines\n.*?\n## Testing and Validation\n/\n## Guidelines\n\n$guideline_block\n## Testing and Validation\n/s;
     write_all($instr, $txt);
+  } else {
+    skip_skill($skill, "no '## Guidelines' ... '## Testing and Validation' block in $instr");
   }
 }
 
-print "sync completed\n";
+if (@skipped) {
+  printf "sync completed with %d skipped skill(s): %s\n", scalar(@skipped), join('; ', @skipped);
+} else {
+  print "sync completed\n";
+}

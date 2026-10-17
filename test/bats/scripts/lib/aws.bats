@@ -17,6 +17,10 @@
 # - format_aws_timestamp handles milliseconds
 # - parse_arn returns json with components
 # - get_resource_name_from_arn extracts resource name
+# - parse_arn keeps colons inside the resource field
+# - get_resource_name_from_arn returns the function name for a lambda ARN
+# - get_resource_name_from_arn fails for an invalid ARN
+# - get_resource_name_from_arn takes the name from type:name:qualifier and log-group ARNs
 # - get_waf_name extracts name from ARN path
 # - get_security_group_name resolves Name tag via resolve_ec2_tagged_resource_name
 # - get_subnet_name resolves Name tag from describe-subnets
@@ -298,4 +302,31 @@ MOCK
     run get_vpc_name "vpc-0123456789abcdef0" us-east-1
     [ "$status" -eq 0 ]
     [ "$output" = "vpc-0123456789abcdef0" ]
+}
+
+@test "parse_arn keeps colons inside the resource field" {
+    run parse_arn "arn:aws:lambda:us-east-1:123456789012:function:my-func"
+    [ "$status" -eq 0 ]
+    [ "$(jq -r '.resource' <<< "$output")" = "function:my-func" ]
+}
+
+@test "get_resource_name_from_arn returns the function name for a lambda ARN" {
+    run get_resource_name_from_arn "arn:aws:lambda:us-east-1:123456789012:function:my-func"
+    [ "$status" -eq 0 ]
+    [ "$output" = "my-func" ]
+}
+
+@test "get_resource_name_from_arn fails for an invalid ARN" {
+    run get_resource_name_from_arn "not-an-arn"
+    [ "$status" -ne 0 ]
+}
+
+@test "get_resource_name_from_arn takes the name from type:name:qualifier and log-group ARNs" {
+    run get_resource_name_from_arn "arn:aws:lambda:us-east-1:123456789012:function:my-func:live"
+    [ "$status" -eq 0 ]
+    [ "$output" = "my-func" ]
+
+    run get_resource_name_from_arn "arn:aws:logs:us-east-1:123456789012:log-group:/aws/lambda/x:*"
+    [ "$status" -eq 0 ]
+    [ "$output" = "/aws/lambda/x" ]
 }

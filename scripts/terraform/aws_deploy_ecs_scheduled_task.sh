@@ -409,11 +409,13 @@ function main {
     # Render Jsonnet to a temporary JSON file
     # ecschedule does not support --ext-str; rendering is handled here by the jsonnet CLI
     # ecspresso supports --ext-str natively, so no pre-rendering is needed for task definitions
-    local tmp_config
-    tmp_config=$(mktemp /tmp/ecschedule-XXXXXX.json)
-    # Expand now: tmp_config is local to main and is out of scope when the EXIT trap fires
+    # A temp dir keeps the .json file name portable (a suffix after the X's is GNU-only in mktemp)
+    local tmp_dir tmp_config
+    tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/ecschedule-XXXXXX")
+    tmp_config="${tmp_dir}/ecschedule.json"
+    # Expand now: tmp_dir is local to main and is out of scope when the EXIT trap fires
     # shellcheck disable=SC2064
-    trap "rm -f '${tmp_config}'" EXIT
+    trap "rm -rf '${tmp_dir}'" EXIT
 
     echo_section "Rendering configs: ENV=${ENV}"
     jsonnet \

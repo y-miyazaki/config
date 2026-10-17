@@ -48,17 +48,6 @@ declare -A DOMAIN_MIRROR_FILES=(
 
 declare -a TEMP_FILES=()
 
-cleanup_temp_files() {
-    local f
-    for f in "${TEMP_FILES[@]}"; do
-        rm -f "${f}"
-    done
-}
-trap cleanup_temp_files EXIT
-
-DRIFT_COUNT=0
-SYNC_COUNT=0
-
 #######################################
 # show_usage: Display usage information
 #######################################
@@ -168,6 +157,17 @@ function check_mirror_file {
         DRIFT_COUNT=$((DRIFT_COUNT + 1))
     fi
 }
+
+cleanup_temp_files() {
+    local f
+    for f in "${TEMP_FILES[@]}"; do
+        rm -f "${f}"
+    done
+}
+trap cleanup_temp_files EXIT
+
+DRIFT_COUNT=0
+SYNC_COUNT=0
 
 #######################################
 # domain_selected: Return whether a domain should run

@@ -7,6 +7,10 @@
 #     -h, --help      Display this help message
 #   arguments:
 #     module_name     Name of the module to test (default: kinesis_data_firehose_cloudwatch_logs_processor)
+#
+# Design Rules:
+#   - Tests run inside a Docker container built from the module; no local Node.js is required.
+#   - Exits with the test container exit code so failures are never masked.
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline

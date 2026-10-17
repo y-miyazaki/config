@@ -108,11 +108,39 @@ function sync_one_skill {
             DRIFT_COUNT=$((DRIFT_COUNT + 1))
         fi
     else
-        mkdir -p "${target_lib}"
-        rm -rf "${target_lib:?}"/*
-        cp -a "${SOURCE_LIB}"/. "${target_lib}/"
+        # Build the new lib/ next to the old one and swap it in, so a concurrent reader
+        # (for example apm install in a Stop hook) never sees a half-empty directory
+        local stale
+        local staging="${target_scripts}/.lib.new.$$"
+        local previous="${target_scripts}/.lib.old.$$"
+        # Leftovers from an interrupted earlier run (other PIDs)
+        rm -rf "${target_scripts}"/.lib.new.* "${staging:?}" "${previous:?}"
+        if [[ ! -d ${target_lib} ]]; then
+            for stale in "${target_scripts}"/.lib.old.*; do
+                [[ -d ${stale} ]] && mv "${stale}" "${target_lib}" && break
+            done
+        fi
+        rm -rf "${target_scripts}"/.lib.old.*
+        if ! cp -a "${SOURCE_LIB}" "${staging}"; then
+            rm -rf "${staging:?}"
+            echo "ERROR: Failed to stage lib for ${skill_name}" >&2
+            exit 1
+        fi
         # Python bytecode caches are gitignored build noise; never mirror them into skills
-        find "${target_lib}" -type d -name __pycache__ -prune -exec rm -rf {} +
+        find "${staging}" -type d -name __pycache__ -prune -exec rm -rf {} +
+        if [[ -d ${target_lib} ]]; then
+            mv "${target_lib}" "${previous}"
+        fi
+        if ! mv "${staging}" "${target_lib}"; then
+            # Restore the previous lib so the skill is never left without one
+            if [[ -d ${previous} ]]; then
+                mv "${previous}" "${target_lib}"
+            fi
+            rm -rf "${staging:?}"
+            echo "ERROR: Failed to install lib for ${skill_name}" >&2
+            exit 1
+        fi
+        rm -rf "${previous:?}"
         echo "  SYNCED: ${skill_name}"
         SYNC_COUNT=$((SYNC_COUNT + 1))
     fi

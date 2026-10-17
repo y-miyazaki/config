@@ -21,10 +21,12 @@
 # Ensure common.sh is loaded for logging functions
 if ! declare -f log > /dev/null 2>&1; then
     # Try to source common.sh from the same directory
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    # Private name: do not overwrite the caller's SCRIPT_DIR
+    _LIB_COMMON_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     # shellcheck source=./common.sh
     # shellcheck disable=SC1091
-    source "$SCRIPT_DIR/common.sh"
+    source "${_LIB_COMMON_DIR}/common.sh"
+    unset _LIB_COMMON_DIR
 fi
 
 #######################################

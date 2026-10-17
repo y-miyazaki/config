@@ -24,6 +24,52 @@ if ! declare -p REPO_PATHS_GITIGNORE_CACHE > /dev/null 2>&1; then
 fi
 
 #######################################
+# repo_append_find_prune_args: Append standard find prune predicates to an array
+#
+# Globals:
+#   REPO_PATHS_EXTRA_PRUNES - Comma-separated repository-relative prune roots
+#   REPO_PATHS_INCLUDE_AGENTS - When true, do not prune agent directories
+#
+# Arguments:
+#   $1 - Name reference to find argument array
+#   $@ - Optional extra repository-relative prune roots (merged with REPO_PATHS_EXTRA_PRUNES)
+#
+# Outputs:
+#   None
+#
+# Returns:
+#   None
+#
+# Usage:
+#   local -a find_args=(.)
+#   repo_append_find_prune_args find_args
+#   find_args+=(-name '*.md' -type f -print)
+#   find "${find_args[@]}" | sed 's|^\./||' | repo_filter_paths
+#
+#######################################
+function repo_append_find_prune_args {
+    # shellcheck disable=SC2178 # nameref to caller array by name
+    local -n _out=$1
+    shift
+    local -a extra_prunes=()
+    local extra
+
+    mapfile -t extra_prunes < <(repo_list_extra_prune_roots "$@")
+
+    _out+=(\( -path './.git')
+    if [[ ${REPO_PATHS_INCLUDE_AGENTS:-false} != "true" ]]; then
+        _out+=(-o -path './.agents' -o -path './.cursor' -o -path './.claude' -o -path './.codex' -o -path './.kiro' -o -path './.vscode')
+    fi
+    _out+=(-o -path './apm_modules' -o -path './node_modules' -o -path './dist' -o -path './build' -o -path './bin')
+    for extra in "${extra_prunes[@]}"; do
+        [[ -z ${extra} ]] && continue
+        extra="${extra#./}"
+        _out+=(-o -path "./${extra}" -o -path "./${extra}/*")
+    done
+    _out+=(\) -prune -o)
+}
+
+#######################################
 # repo_apply_git_rename: Classify a git rename for detect delta consumers
 #
 # When both paths are scannable, record renamed_files only. Cross-zone renames also
@@ -120,52 +166,6 @@ function repo_array_append_unique {
         [[ ${existing} == "${path}" ]] && return 0
     done
     _out+=("${path}")
-}
-
-#######################################
-# repo_append_find_prune_args: Append standard find prune predicates to an array
-#
-# Globals:
-#   REPO_PATHS_EXTRA_PRUNES - Comma-separated repository-relative prune roots
-#   REPO_PATHS_INCLUDE_AGENTS - When true, do not prune agent directories
-#
-# Arguments:
-#   $1 - Name reference to find argument array
-#   $@ - Optional extra repository-relative prune roots (merged with REPO_PATHS_EXTRA_PRUNES)
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   None
-#
-# Usage:
-#   local -a find_args=(.)
-#   repo_append_find_prune_args find_args
-#   find_args+=(-name '*.md' -type f -print)
-#   find "${find_args[@]}" | sed 's|^\./||' | repo_filter_paths
-#
-#######################################
-function repo_append_find_prune_args {
-    # shellcheck disable=SC2178 # nameref to caller array by name
-    local -n _out=$1
-    shift
-    local -a extra_prunes=()
-    local extra
-
-    mapfile -t extra_prunes < <(repo_list_extra_prune_roots "$@")
-
-    _out+=(\( -path './.git')
-    if [[ ${REPO_PATHS_INCLUDE_AGENTS:-false} != "true" ]]; then
-        _out+=(-o -path './.agents' -o -path './.cursor' -o -path './.claude' -o -path './.codex' -o -path './.kiro' -o -path './.vscode')
-    fi
-    _out+=(-o -path './apm_modules' -o -path './node_modules' -o -path './dist' -o -path './build' -o -path './bin')
-    for extra in "${extra_prunes[@]}"; do
-        [[ -z ${extra} ]] && continue
-        extra="${extra#./}"
-        _out+=(-o -path "./${extra}" -o -path "./${extra}/*")
-    done
-    _out+=(\) -prune -o)
 }
 
 #######################################

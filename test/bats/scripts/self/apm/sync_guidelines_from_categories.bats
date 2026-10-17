@@ -10,6 +10,9 @@ bats_require_minimum_version 1.5.0
 # - sync omits Check: children from always-on Guidelines (thin instructions)
 # - sync regenerates common-checklist.md from category rule titles
 # - sync appends Code Modification Guidelines when configured for the skill
+# - a level written in the category file wins over the instructions level
+# - skipped skills are reported instead of a plain "sync completed"
+# - a missing Guidelines block in the instructions file is reported
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -312,4 +315,63 @@ EOF
     run bash -c "cd '${root}' && perl '${SYNC_SCRIPT}'"
     [ "$status" -eq 0 ]
     grep -q 'S-01 (MUST): Fixture rule title missing inline level' "${ref}/category-structure.md"
+}
+
+@test "sync_guidelines lets a level written in the category file win over the instructions level" {
+    local root="${BATS_TEST_TMPDIR}/category-level-root"
+    local ref="${root}/.apm/packages/common/.apm/skills/agent-skills-review/references"
+    local instr="${root}/.apm/packages/common/.apm/instructions/agent-skills.instructions.md"
+    rm -rf "${root}"
+    mkdir -p "${ref}" "$(dirname "${instr}")"
+
+    cat > "${ref}/category-structure.md" << 'EOF'
+# Structural Checks (S)
+
+**S-01 (SHOULD): Fixture rule with an explicit category level**
+EOF
+    printf '# Agent Skills Review Checklist\n' > "${ref}/common-checklist.md"
+
+    cat > "${instr}" << 'EOF'
+# Agent Skills Instructions
+
+## Guidelines
+
+### Structural Checks (S)
+- S-01 (MUST): Fixture rule with an explicit category level
+
+## Testing and Validation
+EOF
+
+    run bash -c "cd '${root}' && perl '${SYNC_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    grep -q 'S-01 (SHOULD): Fixture rule with an explicit category level' "${instr}"
+}
+
+@test "sync_guidelines reports skipped skills instead of a plain sync completed" {
+    local root="${BATS_TEST_TMPDIR}/skipped-root"
+    rm -rf "${root}"
+    mkdir -p "${root}/.apm/packages/common/.apm/instructions"
+    printf '# T\n\n## Guidelines\n\nx\n\n## Testing and Validation\n' \
+        > "${root}/.apm/packages/common/.apm/instructions/agent-skills.instructions.md"
+
+    run --separate-stderr bash -c "cd '${root}' && perl '${SYNC_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    [[ $stderr == *"WARN: skipping agent-skills-review (references dir not found"* ]]
+    [[ $output == *"sync completed with "*" skipped skill(s)"* ]]
+    [[ $output != "sync completed" ]]
+}
+
+@test "sync_guidelines warns when the instructions file has no Guidelines block" {
+    local root="${BATS_TEST_TMPDIR}/noblock-root"
+    local ref="${root}/.apm/packages/common/.apm/skills/agent-skills-review/references"
+    local instr="${root}/.apm/packages/common/.apm/instructions/agent-skills.instructions.md"
+    rm -rf "${root}"
+    mkdir -p "${ref}" "$(dirname "${instr}")"
+    printf '# Structural Checks (S)\n\n**S-01 (MUST): Fixture rule**\n' > "${ref}/category-structure.md"
+    printf '# Agent Skills Review Checklist\n' > "${ref}/common-checklist.md"
+    printf '# Agent Skills Instructions\n\nNo guidelines block here.\n' > "${instr}"
+
+    run --separate-stderr bash -c "cd '${root}' && perl '${SYNC_SCRIPT}'"
+    [ "$status" -eq 0 ]
+    [[ $stderr == *"no '## Guidelines'"* ]]
 }

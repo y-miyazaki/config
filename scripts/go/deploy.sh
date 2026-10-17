@@ -9,6 +9,11 @@
 #     -h, --help      Display this help message
 #   arguments:
 #     <stage>    Deployment stage/environment (e.g., dev, staging, prod)
+#
+# Design Rules:
+#   - The stage argument is required; usage errors exit 1 and --help exits 0.
+#   - Dependencies are installed with npm ci so package-lock.json is never rewritten.
+#   - Commands run through execute_command (array form, no shell string interpolation).
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
