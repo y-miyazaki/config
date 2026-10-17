@@ -1,7 +1,9 @@
 # Reusable workflow: Loop agent execution
 # L1: agent-l1 (loop-agent-once) → finalize-l1 (run-log; future L1 delivery)
 # L2/L3: agent-l2 (loop-execute) → finalize-l2 (run-log always; loop-finalize when finalize_enabled)
-# finalize_enabled gates git landing / PR inside finalize-l2, not whether finalize runs.
+# finalize_enabled gates loop-finalize inside finalize-l2, not whether finalize runs.
+# Callers set it for delivery open_pr, and for delivery none on L2/L3 (strategy none:
+# domain persistence, state, branch cleanup; no git landing or PR).
 # Caller-facing prompts: loop-detect assembles maker text (prompt_text); domain checker rubric is agent_checker_instructions.
 # Checker prompt scaffolding (INITIAL/REGRESSION, output contract) is owned by loop-execute — not workflow_call inputs here.
 # Contract (L2/L3): outputs { branch, has_changes, verdict, reason, attempts }

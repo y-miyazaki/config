@@ -41,6 +41,17 @@ job_if_block() {
     [[ ${branch} == *"target_json.finalize == 'open_pr'"* ]]
 }
 
+@test "callers use the same finalize_enabled expression" {
+    # delivery none still needs loop-finalize on L2/L3 (domain persistence,
+    # state, branch cleanup); L1 has no finalize-l2 so it stays false there.
+    local branch entity
+    branch="$(grep 'finalize_enabled:' "${BRANCH_CALLER}" | head -1)"
+    entity="$(grep 'finalize_enabled:' "${ENTITY_CALLER}" | head -1)"
+    [[ -n ${branch} ]]
+    [[ ${branch} == "${entity}" ]]
+    [[ ${branch} == *"needs.detect.outputs.delivery == 'open_pr' || (needs.detect.outputs.delivery == 'none' && inputs.level != 'L1')"* ]]
+}
+
 @test "callers use the same may_edit detect mapping" {
     local branch entity
     # Literal GitHub Actions expression; do not expand.

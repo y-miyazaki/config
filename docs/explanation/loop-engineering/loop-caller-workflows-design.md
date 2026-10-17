@@ -85,7 +85,7 @@ auto_merge: ${{ needs.detect.outputs.delivery == 'open_pr' && needs.detect.outpu
 
 ## Finalize (inside ci-loop-agent)
 
-`finalize-l2` always runs after `agent-l2` (unless skipped/cancelled) so run-log is written even when `delivery` is `none`. When `finalize_enabled=true`, the same job runs `loop-finalize` in the **same workflow instance**, preserving execute output pairing per matrix cell. `finalize-l1` always runs after `agent-l1` and currently persists run-log only.
+`finalize-l2` always runs after `agent-l2` (unless skipped/cancelled) so run-log is written even when `delivery` is `none`. When `finalize_enabled=true`, the same job runs `loop-finalize` in the **same workflow instance**, preserving execute output pairing per matrix cell. Callers set `finalize_enabled` from `delivery == 'open_pr' || (delivery == 'none' && level != 'L1')`: an L2/L3 `delivery: none` loop still runs `loop-finalize` with strategy `none` (domain persistence, state, agent branch cleanup; no git landing or PR). `finalize-l1` always runs after `agent-l1` and currently persists run-log only.
 
 When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as a **sibling step** immediately after `loop-finalize` (not nested inside the composite — see [composite action composition](../../reference/specification.md#composite-action-composition)). See [loop-notify-pr Specification](../../reference/loop-notify-pr-specification.md).
 
