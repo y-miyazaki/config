@@ -419,6 +419,7 @@ declare -a LOOP_PR_BODY_LINKS_SKILLS=(
     ci-sweeper
     docs-updater
     github-issue-autofix
+    github-pr-review
     github-pr-revise
     refactor
     tech-debt
