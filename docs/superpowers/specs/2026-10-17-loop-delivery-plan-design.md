@@ -26,7 +26,7 @@ loop の「結果をどう届けるか」は、本来1つの判断である。�
 ## 目標
 
 - caller が宣言する配信は **`delivery` の1つだけ**にする。
-- `delivery` と `level` から、finalize に必要な判断(実行するか、git landing、auto-merge、公開の種類)を **`loop-detect` の1か所**で導出し、下流は導出結果を参照するだけにする。caller と action に、`delivery` や `level` を組み合わせる式を残さない。
+- `delivery` と `level` から、finalize に必要な判断(finalize 戦略、auto-merge、公開の種類)を **`loop-detect` の1か所**で導出し、下流は導出結果を参照するだけにする。caller と action に、`delivery` や `level` を組み合わせる式を残さない。
 - `delivery` の値は、すべて実装がある値にする。未実装の値は検証で失敗させる(fail closed)。
 - 必要な権限が `delivery` から一意に分かるようにする。
 - 既存 loop(`delivery: pr` と `none`)の挙動を変えない(振る舞い保存)。
@@ -58,7 +58,7 @@ loop の「結果をどう届けるか」は、本来1つの判断である。�
 | `issue_comment` | 既存の Issue にコメントを投稿する(対象は `target_json` の Issue 番号)                                                              | 未実装。実装されるまで検証で拒否                 |
 | `pr_review`     | 検証済みのレポートを、既存 PR へのレビュー(COMMENT 形式、インラインコメント付き)として投稿する                                     | **Phase 5 まで未実装**。実装されるまで検証で拒否 |
 
-**命名規則(MUST):** loop の設定値(`delivery`、`landing`、`publish` の値、関連する入力名)は、snake_case で、**対象(domain)を先、動作を後**に統一する(`pr_review`、`issue_comment`)。動詞を先頭にした値(`open_pr`)は作らない。名前でソートしたとき、同じ対象のものが隣に並ぶようにするためである。`delivery` と `landing` は同じ語彙を使い、同じ意味の値に別の名前を付けない(`pr` は両方で「PR を作る」)。
+**命名規則(MUST):** loop の設定値(`delivery`、`finalize`、`publish` の値、関連する入力名)は、snake_case で、**対象(domain)を先、動作を後**に統一する(`pr_review`、`issue_comment`)。動詞を先頭にした値(`open_pr`)は作らない。名前でソートしたとき、同じ対象のものが隣に並ぶようにするためである。`delivery` と `finalize` は同じ語彙を使い、同じ意味の値に別の名前を付けない(`pr` は両方で「PR を作る」)。新しい用語は作らず、`finalize`(`target_json.finalize`)と `git_landing_integration` / `git_landing_pull_request` は既存の名前を使う。
 
 - `log` と `notion` は enum から削除する。実装がなく、必要になったときに、複数の loop が使うと分かった時点で追加する。
 - `issue` は「作る」、`issue_comment` は「既存に書く」で、1つの値に分岐を隠さない(既存 spec の「Issue 番号があればコメント、なければ作成」は、この2値に分ける)。
@@ -70,42 +70,43 @@ loop の「結果をどう届けるか」は、本来1つの判断である。�
 
 | フィールド   | 値                                            | 導出                                                                                                                                                                                                                                                      |
 | ------------ | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `enabled`    | bool                                          | `level == L1` なら false。それ以外は `delivery != none` か、`domain_persistence_script` が指定されているとき true                                                                                                                                         |
-| `landing`    | `pr \| push \| push_head \| none`             | 現在の `resolve_git_finalize_strategies` と同じ。`delivery` と、任意の `git_landing_integration` / `git_landing_pull_request`、ターゲット種別(integration / pull_request / entity)から決まる。`entity_target.sh` の導出は、この結果を使うように置き換える |
+| `finalize`   | `pr \| push \| push_head \| none`             | 現在の `resolve_git_finalize_strategies` と同じ。`delivery` と、任意の `git_landing_integration` / `git_landing_pull_request`、ターゲット種別(integration / pull_request / entity)から決まる。`entity_target.sh` の導出は、この結果を使うように置き換える |
 | `auto_merge` | bool                                          | `delivery == pr` かつ `level == L3`                                                                                                                                                                                                                       |
 | `publish`    | `none \| pr_review \| issue \| issue_comment` | `delivery` が `pr_review` / `issue` / `issue_comment` のときだけその値。Phase 1〜4 では常に `none`                                                                                                                                                        |
 
-粒度: `enabled`・`auto_merge`・`publish` は**実行単位**(run 単位)の値で、`loop-detect` の job 出力として出す。`landing` は**ターゲット単位**の値で、現状どおり matrix の各要素の `target_json.finalize` に載せる(新しい経路は作らない)。
+`finalize` の値は、どのブランチへ、どう着地させるかを表す。`pr` は新規ブランチを作って PR を作る。`push_head` は既存 PR の head ブランチへ、最新の `to.branch` を merge して push する(pr-revise)。`push` は integration ブランチへ直接 push する。`none` は着地させない。`pr` と `push_head` は安全条件(merge、fail closed、`fetch-depth: 0`)が異なるため、区別を残す。
 
-- caller は `needs.detect.outputs.finalize_enabled` と `auto_merge` を、そのまま `ci-loop-agent` に渡す。`delivery` や `level` を使う式は caller から消える。
-- `enabled` の導出にドメインスクリプトの有無を含めるのは、現在の `none && level != L1` が意図していたこと(L2 で `delivery: none` でもスクリプトを走らせる)を、レベルに依存しない宣言に置き換えるためである。**この置き換えは設計者の判断**である。
+粒度: `auto_merge` と `publish` は**実行単位**(run 単位)の値で、`loop-detect` の job 出力として出す。`finalize` は**ターゲット単位**の値で、現状どおり matrix の各要素の `target_json.finalize` に載せる(新しい経路は作らない)。
 
-dogfood の全 caller の実際の組み合わせ(`on-loop-*.yaml` で確認済み)は次のとおりで、旧式と新式の結果は、すべて一致する。
+- caller は `auto_merge` を、そのまま `ci-loop-agent` に渡す。`delivery` や `level` を使う式は caller から消える。
+- **`finalize_enabled`(finalize ジョブを走らせるかどうかのフラグ)は廃止する。** finalize ジョブは `level != L1` のときだけ起動する。L1 は書き込み禁止なので、もともと finalize で行うことがない。`finalize == none` でスクリプトもない場合、ジョブは何もせずに終了する。これにより、`delivery` と `domain_persistence_script` の組み合わせで起動を判断する必要がなくなり、起動の判断は `level` だけになる(ユーザー承認済み)。
 
-| loop                                               | `delivery` | `level`          | `domain_persistence_script` | 旧 `enabled` | 新 `enabled` |
-| -------------------------------------------------- | ---------- | ---------------- | --------------------------- | ------------ | ------------ |
-| changelog、autofix、pr-revise、tech-debt、refactor | `pr`       | L2               | なし                        | true         | true         |
-| docs-updater                                       | `pr`       | 指定なし(既定値) | なし                        | true         | true         |
-| ci-sweeper                                         | `pr`       | 指定なし(既定値) | あり                        | true         | true         |
-| test-gap                                           | `pr`       | L2               | あり                        | true         | true         |
-| github-pr-review                                   | `none`     | L2               | あり                        | true         | true         |
-| github-issue-triage                                | `none`     | L1               | なし                        | false        | false        |
+dogfood の全 caller の実際の組み合わせ(`on-loop-*.yaml` で確認済み)での、旧 `finalize_enabled` と新しい起動条件(`level != L1`)の結果は、すべて一致する。
 
-- `level` の既定値の扱い(docs-updater、ci-sweeper)は、実装時に導出ロジックが既定値を使うことを確認する。
-- 旧式と新式が異なるのは、(a) L2/L3 で `delivery: none` かつスクリプトなし、(b) L1 で `pr`、の2つである。(a) に該当する caller は存在しない。(b) は `validate_loop_write_contract.sh` が拒否する組み合わせ(`pr` は `may_edit: true` を要し、L1 は `may_edit: true` を許さない)で、到達しない。
-- (a) の挙動の変更は、意図的な変更である: スクリプトも配信もない L2 の loop は、finalize で何も行うことがないため、実行しない。
+| loop                                               | `delivery` | `level`          | `domain_persistence_script` | 旧 `finalize_enabled` | 新: finalize ジョブ |
+| -------------------------------------------------- | ---------- | ---------------- | --------------------------- | --------------------- | ------------------- |
+| changelog、autofix、pr-revise、tech-debt、refactor | `pr`       | L2               | なし                        | true                  | 起動                |
+| docs-updater                                       | `pr`       | 指定なし(既定値) | なし                        | true                  | 起動                |
+| ci-sweeper                                         | `pr`       | 指定なし(既定値) | あり                        | true                  | 起動                |
+| test-gap                                           | `pr`       | L2               | あり                        | true                  | 起動                |
+| github-pr-review                                   | `none`     | L2               | あり                        | true                  | 起動                |
+| github-issue-triage                                | `none`     | L1               | なし                        | false                 | 起動しない          |
 
-### 3. `loop-finalize` は `landing` と `publish` だけを見る
+- `level` の既定値の扱い(docs-updater、ci-sweeper)は、実装時に起動条件が既定値を使うことを確認する。
+- 旧式と新式が異なるのは、(a) L2/L3 で `delivery: none` かつスクリプトなし(旧: 起動しない、新: 起動して何もしない)、(b) L1 で `pr`、の2つである。(a) に該当する caller は存在しない。(b) は `validate_loop_write_contract.sh` が拒否する組み合わせ(`pr` は `may_edit: true` を要し、L1 は `may_edit: true` を許さない)で、到達しない。
+- (a) の挙動の変更は、意図的な変更である: 何もしないジョブが走るだけで、副作用はない。
 
-- push・ブランチ削除・outcome の判断は、`landing`(と `publish`)を入力にする。「`strategy == none` なら…」という特別扱いを、`landing == none` の1つの規則にまとめる。
-- `determine_outcome` は、`landing == none` で APPROVE のとき `reported` を返す現在の挙動を保つ。
+### 3. `loop-finalize` は `finalize` と `publish` だけを見る
+
+- push・ブランチ削除・outcome の判断は、`finalize`(と `publish`)を入力にする。「`strategy == none` なら…」という特別扱いを、`finalize == none` の1つの規則にまとめる。
+- `determine_outcome` は、`finalize == none` で APPROVE のとき `reported` を返す現在の挙動を保つ。
 
 ### 4. `domain_persistence_script` の契約
 
 - 位置づけ: 配信ではなく、finalize に差し込む**副次的な独自処理**(ledger、ログなど)。
 - 許される範囲: リポジトリルート配下の相対パスのファイル更新のみ(現在の ledger スクリプトが、すでにこれを検証している)。外部システムへの書き込みはしない。
 - 権限: 書き込みトークンを必要としない。ただし、Phase 5 までは `post_review.sh` が `GH_TOKEN` を使うため、`GH_TOKEN` の受け渡しは残す(過渡的な例外として明記する)。
-- 実行条件: `landing` に関係なく、`enabled` のとき1回実行する。失敗の扱いは現在の挙動を変えない。
+- 実行条件: `finalize` に関係なく、finalize ジョブが起動したとき(`level != L1`)に1回実行する。失敗の扱いは現在の挙動を変えない。
 
 ### 5. 権限は `delivery` から導く
 
@@ -117,20 +118,20 @@ dogfood の全 caller の実際の組み合わせ(`on-loop-*.yaml` で確認済�
 
 ## 移行
 
-| Phase | 内容                                                                                                                                                                                                                                     | 挙動                                                                                                                    |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| 0     | 本 spec                                                                                                                                                                                                                                  | —                                                                                                                       |
-| 1     | `loop-detect` / `loop-entity-detect` に `finalize_plan` を追加。既存の出力と式は残す                                                                                                                                                     | 変更なし                                                                                                                |
-| 2     | 2つの caller が `finalize_plan` を使う。重複する式を削除                                                                                                                                                                                 | 変更なし                                                                                                                |
-| 3     | `loop-finalize` が `landing` を使う(`publish` は読まない)。`log` / `notion` を削除し、未実装の値(`pr_review` / `issue` / `issue_comment`)を、既存の検証点(`validate_loop_write_contract.sh` と `detect.sh` の enum)で fail closed にする | `log` / `notion` / `pr_review` / `issue` / `issue_comment` を指定した caller は検証で失敗する(現在は黙って `none` 扱い) |
-| 4     | 権限表と、`permissions:` の静的テストを追加。`validate_loop_write_contract.sh` を `delivery` 主キーの表に書き直す(Phase 3 の拒否は、書き直し前の表に追加する)                                                                            | 変更なし                                                                                                                |
-| 5     | `post_review.sh` を、投稿内容の生成(トークン不要)と投稿(プラットフォーム)に分割し、`delivery: pr_review` を実装する。別 spec                                                                                                             | pr-review が `pr_review` に移る                                                                                         |
+| Phase | 内容                                                                                                                                                                                                                                      | 挙動                                                                                                                    |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 0     | 本 spec                                                                                                                                                                                                                                   | —                                                                                                                       |
+| 1     | `loop-detect` / `loop-entity-detect` に `finalize_plan` を追加。既存の出力と式は残す                                                                                                                                                      | 変更なし                                                                                                                |
+| 2     | 2つの caller が `finalize_plan` を使う。`finalize_enabled` を廃止し、finalize ジョブは `level != L1` で起動する。重複する式を削除                                                                                                         | 変更なし                                                                                                                |
+| 3     | `loop-finalize` が `finalize` を使う(`publish` は読まない)。`log` / `notion` を削除し、未実装の値(`pr_review` / `issue` / `issue_comment`)を、既存の検証点(`validate_loop_write_contract.sh` と `detect.sh` の enum)で fail closed にする | `log` / `notion` / `pr_review` / `issue` / `issue_comment` を指定した caller は検証で失敗する(現在は黙って `none` 扱い) |
+| 4     | 権限表と、`permissions:` の静的テストを追加。`validate_loop_write_contract.sh` を `delivery` 主キーの表に書き直す(Phase 3 の拒否は、書き直し前の表に追加する)                                                                             | 変更なし                                                                                                                |
+| 5     | `post_review.sh` を、投稿内容の生成(トークン不要)と投稿(プラットフォーム)に分割し、`delivery: pr_review` を実装する。別 spec                                                                                                              | pr-review が `pr_review` に移る                                                                                         |
 
 各 Phase は、独立した PR にする。Phase 1〜4 は振る舞い保存で、Phase 3 の fail closed だけが、既存の誤設定を失敗にする(dogfood の caller は、すべて `pr` または `none` なので影響しない見込み)。
 
 ## 検証
 
-- 導出表のゴールデンテスト: dogfood の全 caller について、`(delivery, level, domain_persistence_script の有無)` から導出される `enabled` / `landing` / `auto_merge` が、現在の式の結果と一致することを bats で確認する。
+- 導出表のゴールデンテスト: dogfood の全 caller について、`(delivery, level)` から導出される finalize ジョブの起動 / `finalize` / `auto_merge` が、現在の式の結果と一致することを bats で確認する。
 - 既存の `loop-finalize` の bats(`determine_outcome` など)が、変更なしで通ること。
 - zizmor / actionlint / ghalint が通ること(Stop フックで検証)。
 
@@ -154,5 +155,5 @@ dogfood の全 caller の実際の組み合わせ(`on-loop-*.yaml` で確認済�
 
 ## 未決(設計者の推測・要確認)
 
-- 配信の値を `pr` / `pr_review` / `issue` / `issue_comment` / `none` とする(ユーザー承認済み)。`open_pr` から `pr` への改名は、全 caller・検証・docs に及ぶ破壊的変更で、Phase 3 以降に含める。`landing` の `open_pr` も、同じ理由で `pr` に改名する(`push` / `push_head` は、git の操作そのものを指すので残す)。`target_json.finalize`、`finalize_strategy`、`loop-finalize` の分岐、bats の fixture、docs の `open_pr` も同時に置き換える。なお、outcome の値(`pr-created`、`no-changes`)はハイフン区切りで、規則と食い違う。本 spec では扱わず、別途の整理候補として挙げる。
-- `enabled` の導出に、`domain_persistence_script` の有無を含める判断。
+- 配信の値を `pr` / `pr_review` / `issue` / `issue_comment` / `none` とする(ユーザー承認済み)。`open_pr` から `pr` への改名は、全 caller・検証・docs に及ぶ破壊的変更で、Phase 3 以降に含める。`finalize` の値の `open_pr` も、同じ理由で `pr` に改名する(`push` / `push_head` は、git の操作そのものを指すので残す)。`git_landing_pull_request` の値 `open_pr` も `pr` になる。`target_json.finalize`、`finalize_strategy`、`loop-finalize` の分岐、bats の fixture、docs の `open_pr` も同時に置き換える。なお、outcome の値(`pr-created`、`no-changes`)はハイフン区切りで、規則と食い違う。本 spec では扱わず、別途の整理候補として挙げる。
+- `push`(`git_landing_integration`)は、dogfood の caller に使用がないが、配布される公開入力で、`.github/workflows/CLAUDE.md` にも規則がある。削除は外部の利用者を壊すため、本 spec では扱わず、別途の整理候補とする。
