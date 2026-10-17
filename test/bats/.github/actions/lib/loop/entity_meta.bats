@@ -8,6 +8,11 @@
 # - entity_issue_number returns empty for non-issue keys
 # - append_entity_meta no-ops for a non-numeric issue number
 # - append_entity_meta reports when no marker comment exists
+# - entity_pr_number extracts the number from an entity pr key
+# - append_pr_review_meta no-ops for a non-numeric pr number
+# - append_pr_review_meta reports when no marker review exists
+# - append_pr_review_meta updates the newest marker review once
+# - append_pr_review_meta skips a review that already carries meta
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -21,6 +26,31 @@ setup() {
     bats_source_rel ".github/actions/lib/loop/loop_meta.sh"
     bats_source_rel ".github/actions/lib/loop/entity_meta.sh"
     REPOSITORY="o/r"
+}
+
+# Install a gh mock: GET prints $1 (reviews JSON); PUT records its args to put.log
+mock_gh_reviews() {
+    local mock_bin="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${mock_bin}"
+    printf '%s' "$1" > "${BATS_TEST_TMPDIR}/reviews.json"
+    cat > "${mock_bin}/gh" << 'EOF'
+#!/bin/bash
+for a in "$@"; do
+    if [[ $a == PUT ]]; then
+        printf '%s\n' "$*" >> "${BATS_TEST_TMPDIR}/put.log"
+        for b in "$@"; do
+            if [[ $b == body=@* ]]; then
+                cat "${b#body=@}" >> "${BATS_TEST_TMPDIR}/put.body"
+            fi
+        done
+        exit 0
+    fi
+done
+cat "${BATS_TEST_TMPDIR}/reviews.json"
+exit 0
+EOF
+    chmod +x "${mock_bin}/gh"
+    PATH="${mock_bin}:${PATH}"
 }
 
 usage_fixture() {
@@ -49,6 +79,37 @@ EOF
     [[ $output == *"meta not appended"* ]]
 }
 
+@test "append_pr_review_meta no-ops for a non-numeric pr number" {
+    run append_pr_review_meta "x" "<!-- m -->" "pr-created" claude "$(usage_fixture)" "https://x/run/1"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "append_pr_review_meta reports when no marker review exists" {
+    mock_gh_reviews '[]'
+    run append_pr_review_meta 77 "<!-- github-pr-review:v1 -->" pr-created claude "$(usage_fixture)" "https://x/run/1"
+    [ "$status" -eq 0 ]
+    [[ $output == *"meta not appended"* ]]
+    [ ! -f "${BATS_TEST_TMPDIR}/put.log" ]
+}
+
+@test "append_pr_review_meta skips a review that already carries meta" {
+    mock_gh_reviews '[{"id":1,"body":"<!-- github-pr-review:v1 -->\nhi\n<!-- loop-meta:v1 -->"}]'
+    run append_pr_review_meta 77 "<!-- github-pr-review:v1 -->" pr-created claude "$(usage_fixture)" "https://x/run/1"
+    [ "$status" -eq 0 ]
+    [ ! -f "${BATS_TEST_TMPDIR}/put.log" ]
+}
+
+@test "append_pr_review_meta updates the newest marker review once" {
+    mock_gh_reviews '[{"id":1,"body":"<!-- github-pr-review:v1 -->\nold"},{"id":2,"body":"<!-- github-pr-review:v1 -->\nnew"}]'
+    run append_pr_review_meta 77 "<!-- github-pr-review:v1 -->" pr-created claude "$(usage_fixture)" "https://x/run/1"
+    [ "$status" -eq 0 ]
+    [ "$(wc -l < "${BATS_TEST_TMPDIR}/put.log")" -eq 1 ]
+    [[ $(cat "${BATS_TEST_TMPDIR}/put.log") == *"repos/o/r/pulls/77/reviews/2"* ]]
+    [[ $(cat "${BATS_TEST_TMPDIR}/put.body") == *"new"* ]]
+    [[ $(cat "${BATS_TEST_TMPDIR}/put.body") == *"${LOOP_META_MARKER}"* ]]
+}
+
 @test "entity_issue_number extracts the number from an entity issue key" {
     run entity_issue_number "entity:issue:936"
     [ "$status" -eq 0 ]
@@ -57,6 +118,15 @@ EOF
 
 @test "entity_issue_number returns empty for non-issue keys" {
     run entity_issue_number "integration:main"
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "entity_pr_number extracts the number from an entity pr key" {
+    run entity_pr_number "entity:pr:77"
+    [ "$status" -eq 0 ]
+    [ "$output" = "77" ]
+    run entity_pr_number "entity:issue:77"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
 }
