@@ -55,7 +55,7 @@ claude = { version = "2.1.296", lazy = true, lazy_bins = ["claude"] }           
 ], allow_builds = [
   "lean-ctx-bin",
 ], install_env = { PNPM_CONFIG_IGNORE_SCRIPTS = "true" }, lazy = true, lazy_bins = ["lean-ctx"] } # context optimizer (hooks CLI + MCP npm)
-"github:microsoft/waza" = { version = "v0.38.9", lazy = true, lazy_bins = ["waza"] }                              # agent skill evaluator
+"github:microsoft/waza" = { version = "v0.38.10", lazy = true, lazy_bins = ["waza"] }                              # agent skill evaluator
 
 # AWS related tools
 "aqua:aws/aws-cli" = { version = "2.37.12", lazy = true, lazy_bins = ["aws", "aws_completer"] }                     # AWS CLI
