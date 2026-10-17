@@ -4,19 +4,19 @@
 # Tests for .github/actions/loop-detect/lib/prs.sh
 
 # Use cases:
-# - list_open_prs returns empty when pr_enabled is false
-# - pr_excluded allows bot author listed in include_bots
+# - list_open_prs returns empty when detect_pr_enabled is false
+# - pr_excluded allows bot author listed in detect_pr_bot_allowlist
 # - pr_excluded allows bot author when scoped intake selected the PR explicitly
-# - pr_excluded excludes bot authors when include_bots is empty
+# - pr_excluded excludes bot authors when detect_pr_bot_allowlist is empty
 # - pr_excluded excludes bot authors when scoped intake is false
-# - list_open_prs admits bot-authored PRs under LOOP_SCOPED_PR_NUMBER
+# - list_open_prs admits bot-authored PRs under DETECT_PR_NUMBER
 # - list_open_prs keeps fork/draft/label exclusions for scoped bot PRs
 # - list_open_prs still drops bot-authored PRs when scanning without a scoped number
 # - pr_excluded excludes draft when draft token is set
 # - pr_excluded excludes fork when fork token is set
 # - pr_excluded excludes label match
 # - pr_excluded excludes wip_title when token is set
-# - list_open_prs fails when gh missing and pr_enabled is true
+# - list_open_prs fails when gh missing and detect_pr_enabled is true
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -28,7 +28,7 @@ source "${_bats_support}/support/common.bash"
 setup() {
     bats_source_rel ".github/actions/loop-detect/lib/branches.sh"
     bats_source_rel ".github/actions/loop-detect/lib/prs.sh"
-    LOOP_PR_ENABLED="false"
+    DETECT_PR_ENABLED="false"
     OPEN_PRS_JSON=()
 }
 
@@ -38,8 +38,8 @@ pr_json_with_labels() {
         '{number:1,title:"fix",isDraft:false,author:{login:"alice"},labels:$labels,headRepository:{isFork:false}}'
 }
 
-@test "list_open_prs returns empty when pr_enabled is false" {
-    LOOP_PR_ENABLED="false"
+@test "list_open_prs returns empty when detect_pr_enabled is false" {
+    DETECT_PR_ENABLED="false"
     run list_open_prs "fork,draft" "" "token"
     [ "$status" -eq 0 ]
     [ "${#OPEN_PRS_JSON[@]}" -eq 0 ]
@@ -52,14 +52,14 @@ pr_json_with_labels() {
     [ "$status" -eq 1 ]
 }
 
-@test "pr_excluded allows bot author listed in include_bots" {
+@test "pr_excluded allows bot author listed in detect_pr_bot_allowlist" {
     local pr
     pr='{"number":1,"title":"deps","isDraft":false,"author":{"login":"dependabot"},"labels":[],"headRepository":{"isFork":false}}'
     run pr_excluded "${pr}" "fork" "dependabot"
     [ "$status" -eq 1 ]
 }
 
-@test "pr_excluded excludes bot authors when include_bots is empty" {
+@test "pr_excluded excludes bot authors when detect_pr_bot_allowlist is empty" {
     local pr
     pr='{"number":1,"title":"deps","isDraft":false,"author":{"login":"dependabot"},"labels":[],"headRepository":{"isFork":false}}'
     run pr_excluded "${pr}" "fork" ""
@@ -101,7 +101,7 @@ pr_json_with_labels() {
     [ "$status" -eq 0 ]
 }
 
-@test "list_open_prs fails when gh missing and pr_enabled is true" {
+@test "list_open_prs fails when gh missing and detect_pr_enabled is true" {
     local repo_root empty_bin
 
     repo_root="$(bats_workspace_root)"
@@ -113,7 +113,7 @@ pr_json_with_labels() {
         source "'"${repo_root}"'/.github/actions/loop-detect/lib/branches.sh"
         # shellcheck disable=SC1091
         source "'"${repo_root}"'/.github/actions/loop-detect/lib/prs.sh"
-        LOOP_PR_ENABLED="true"
+        DETECT_PR_ENABLED="true"
         PATH="'"${empty_bin}"'"
         command -v gh > /dev/null 2>&1 && exit 99
         list_open_prs "fork" "" "token"
@@ -122,7 +122,7 @@ pr_json_with_labels() {
     [[ $output == *"gh CLI is required"* ]]
 }
 
-@test "list_open_prs with LOOP_SCOPED_PR_NUMBER fetches that PR via gh pr view" {
+@test "list_open_prs with DETECT_PR_NUMBER fetches that PR via gh pr view" {
     local mock_bin
     mock_bin="${BATS_TEST_TMPDIR}/bin"
     mkdir -p "${mock_bin}"
@@ -136,8 +136,8 @@ printf 'unexpected gh: %s\n' "$*" >&2
 exit 1
 EOF
     chmod +x "${mock_bin}/gh"
-    LOOP_PR_ENABLED="true"
-    LOOP_SCOPED_PR_NUMBER="42"
+    DETECT_PR_ENABLED="true"
+    DETECT_PR_NUMBER="42"
     PATH="${mock_bin}:${PATH}"
     list_open_prs "fork,label:no-loop" "" "token"
     [ "${#OPEN_PRS_JSON[@]}" -eq 1 ]
@@ -145,7 +145,7 @@ EOF
     [ "$status" -eq 0 ]
 }
 
-@test "list_open_prs with LOOP_SCOPED_PR_NUMBER fetches when pr_enabled is false" {
+@test "list_open_prs with DETECT_PR_NUMBER fetches when detect_pr_enabled is false" {
     local mock_bin
     mock_bin="${BATS_TEST_TMPDIR}/bin"
     mkdir -p "${mock_bin}"
@@ -158,14 +158,14 @@ fi
 exit 1
 EOF
     chmod +x "${mock_bin}/gh"
-    LOOP_PR_ENABLED="false"
-    LOOP_SCOPED_PR_NUMBER="7"
+    DETECT_PR_ENABLED="false"
+    DETECT_PR_NUMBER="7"
     PATH="${mock_bin}:${PATH}"
     list_open_prs "fork,label:no-loop" "" "token"
     [ "${#OPEN_PRS_JSON[@]}" -eq 1 ]
 }
 
-@test "list_open_prs with LOOP_SCOPED_PR_NUMBER admits bot-authored PRs" {
+@test "list_open_prs with DETECT_PR_NUMBER admits bot-authored PRs" {
     local mock_bin
     mock_bin="${BATS_TEST_TMPDIR}/bin"
     mkdir -p "${mock_bin}"
@@ -175,14 +175,14 @@ printf '%s\n' '{"number":936,"title":"loop autofix","headRefName":"loop/github-i
 exit 0
 EOF
     chmod +x "${mock_bin}/gh"
-    LOOP_PR_ENABLED="true"
-    LOOP_SCOPED_PR_NUMBER="936"
+    DETECT_PR_ENABLED="true"
+    DETECT_PR_NUMBER="936"
     PATH="${mock_bin}:${PATH}"
     list_open_prs "fork,label:no-loop" "" "token"
     [ "${#OPEN_PRS_JSON[@]}" -eq 1 ]
 }
 
-@test "list_open_prs with LOOP_SCOPED_PR_NUMBER keeps label exclusions for bot PRs" {
+@test "list_open_prs with DETECT_PR_NUMBER keeps label exclusions for bot PRs" {
     local mock_bin
     mock_bin="${BATS_TEST_TMPDIR}/bin"
     mkdir -p "${mock_bin}"
@@ -192,14 +192,14 @@ printf '%s\n' '{"number":937,"title":"loop autofix","headRefName":"loop/x","head
 exit 0
 EOF
     chmod +x "${mock_bin}/gh"
-    LOOP_PR_ENABLED="true"
-    LOOP_SCOPED_PR_NUMBER="937"
+    DETECT_PR_ENABLED="true"
+    DETECT_PR_NUMBER="937"
     PATH="${mock_bin}:${PATH}"
     list_open_prs "fork,label:no-loop" "" "token"
     [ "${#OPEN_PRS_JSON[@]}" -eq 0 ]
 }
 
-@test "list_open_prs without LOOP_SCOPED_PR_NUMBER still drops bot-authored PRs" {
+@test "list_open_prs without DETECT_PR_NUMBER still drops bot-authored PRs" {
     local mock_bin
     mock_bin="${BATS_TEST_TMPDIR}/bin"
     mkdir -p "${mock_bin}"
@@ -209,14 +209,14 @@ printf '%s\n' '[{"number":938,"title":"deps","headRefName":"renovate/x","headRef
 exit 0
 EOF
     chmod +x "${mock_bin}/gh"
-    LOOP_PR_ENABLED="true"
-    LOOP_SCOPED_PR_NUMBER=""
+    DETECT_PR_ENABLED="true"
+    DETECT_PR_NUMBER=""
     PATH="${mock_bin}:${PATH}"
     list_open_prs "fork" "" "token"
     [ "${#OPEN_PRS_JSON[@]}" -eq 0 ]
 }
 
-@test "list_open_prs with LOOP_SCOPED_PR_NUMBER omits closed PRs" {
+@test "list_open_prs with DETECT_PR_NUMBER omits closed PRs" {
     local mock_bin
     mock_bin="${BATS_TEST_TMPDIR}/bin"
     mkdir -p "${mock_bin}"
@@ -226,8 +226,8 @@ printf '%s\n' '{"number":9,"title":"done","headRefName":"feat","headRefOid":"ghi
 exit 0
 EOF
     chmod +x "${mock_bin}/gh"
-    LOOP_PR_ENABLED="true"
-    LOOP_SCOPED_PR_NUMBER="9"
+    DETECT_PR_ENABLED="true"
+    DETECT_PR_NUMBER="9"
     PATH="${mock_bin}:${PATH}"
     list_open_prs "fork" "" "token"
     [ "${#OPEN_PRS_JSON[@]}" -eq 0 ]

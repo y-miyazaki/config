@@ -36,22 +36,29 @@ source "${LIB_DIR}/matrix.sh"
 _loop_action_lib="$(cd "${LIB_DIR}/../../lib/loop" && pwd)"
 # shellcheck source=../../lib/loop/handoff.sh disable=SC1091
 source "${_loop_action_lib}/handoff.sh"
+# shellcheck source=../../lib/loop/validate_loop_write_contract.sh disable=SC1091
+source "${_loop_action_lib}/validate_loop_write_contract.sh"
 
-LOOP_BRANCH_MATCH="${LOOP_BRANCH_MATCH:-glob}"
-LOOP_MAX_TARGETS_PER_SCHEDULE="${LOOP_MAX_TARGETS_PER_SCHEDULE:-3}"
-LOOP_PRIORITY="${LOOP_PRIORITY:-integration,pull_request}"
-LOOP_PR_EXCLUDE="${LOOP_PR_EXCLUDE:-fork,draft,label:no-loop}"
-LOOP_PR_INCLUDE_BOTS="${LOOP_PR_INCLUDE_BOTS:-}"
-LOOP_PR_ENABLED="${LOOP_PR_ENABLED:-false}"
+# Plumbing defaults only; decision inputs (DELIVERY, LEVEL) and the level-keyed
+# AGENT_* inputs have no default and are validated in detect.sh.
+DETECT_BRANCH_MATCH_MODE="${DETECT_BRANCH_MATCH_MODE:-glob}"
+DETECT_MAX_TARGETS="${DETECT_MAX_TARGETS:-3}"
+DETECT_PRIORITY="${DETECT_PRIORITY:-integration,pull_request}"
+DETECT_PR_DENYLIST="${DETECT_PR_DENYLIST:-fork,draft,label:no-loop}"
+DETECT_PR_BOT_ALLOWLIST="${DETECT_PR_BOT_ALLOWLIST:-}"
+DETECT_PR_ENABLED="${DETECT_PR_ENABLED:-false}"
 LOOP_SCOPED_HEAD_BRANCH="${LOOP_SCOPED_HEAD_BRANCH:-}"
-LOOP_SCOPED_PR_NUMBER="${LOOP_SCOPED_PR_NUMBER:-}"
-ALLOWLIST="${ALLOWLIST:-}"
+DETECT_PR_NUMBER="${DETECT_PR_NUMBER:-}"
+DETECT_BRANCH_MATCH="${DETECT_BRANCH_MATCH:-}"
+AGENT_EDIT_ALLOWLIST="${AGENT_EDIT_ALLOWLIST:-}"
+AGENT_EDIT_DENYLIST="${AGENT_EDIT_DENYLIST:-}"
+AGENT_EDIT_TARGET="${AGENT_EDIT_TARGET:-}"
+AGENT_UNCHANGED_VERDICT="${AGENT_UNCHANGED_VERDICT:-}"
 AGENT_MAKER_INSTRUCTIONS="${AGENT_MAKER_INSTRUCTIONS:-}"
-LOOP_INTEGRATION_BRANCHES="${LOOP_INTEGRATION_BRANCHES:-}"
 BUDGET_MAX_RUNS_PER_DAY="${BUDGET_MAX_RUNS_PER_DAY:-}"
 BUDGET_MAX_TOKENS_PER_DAY="${BUDGET_MAX_TOKENS_PER_DAY:-}"
-MAY_EDIT="${MAY_EDIT:-}"
-WRITE_TARGET="${WRITE_TARGET:-}"
+DELIVERY="${DELIVERY:-}"
+LEVEL="${LEVEL:-}"
 
 # Populated by detect.sh and sourced libraries.
 # shellcheck disable=SC2034

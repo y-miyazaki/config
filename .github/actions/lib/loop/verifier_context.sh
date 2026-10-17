@@ -114,7 +114,7 @@ function build_verifier_context_from_result {
             if ((.signals // []) | length) == 0 and ((.hotspots // []) | length) == 0 then ""
             else
                 "## Tech Debt Signals\n"
-                + "- report_file: " + (.report_file // "-") + "\n"
+                + "- agent_report_file: " + (.agent_report_file // "-") + "\n"
                 + "- previous_report: " + (.previous_report // "-") + "\n"
                 + "- signal_count: " + (((.signals // []) | length) | tostring) + "\n"
                 + "- hotspot_count: " + (((.hotspots // []) | length) | tostring) + "\n"

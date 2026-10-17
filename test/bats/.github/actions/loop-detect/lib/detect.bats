@@ -6,7 +6,7 @@ bats_require_minimum_version 1.5.0
 # Tests for .github/actions/loop-detect/lib/detect.sh (guard helpers and config gates)
 
 # Use cases:
-# - validate_branch_match rejects invalid LOOP_BRANCH_MATCH
+# - validate_branch_match rejects invalid DETECT_BRANCH_MATCH_MODE
 # - resolve_detect_script_path fails on empty or missing DETECT_SCRIPT
 # - require_scoped_head_for_workflow_run fails when workflow_run lacks scoped head
 # - apply_scoped_pr_number_filter drops integration and keeps matching PR only
@@ -20,8 +20,12 @@ bats_require_minimum_version 1.5.0
 # - checkout_context increments CHECKOUT_FAILED when checkout fails
 # - append_detect_candidate exits the detect phase when the detect script fails
 # - multi-target scan fails fast without appending later candidates after detect failure
-# - main treats unset or empty ALLOWLIST as unrestricted (GHA omits empty env)
-# - append_detect_candidate accepts unset ALLOWLIST and AGENT_MAKER_INSTRUCTIONS
+# - append_detect_candidate accepts unset AGENT_EDIT_ALLOWLIST and AGENT_MAKER_INSTRUCTIONS
+# - append_detect_candidate exports STATE_BRANCH (not DEFAULT_BASE_BRANCH) to the detect script
+# - target_json carries no finalize or report_file key; agent_report_file reaches the prompt
+# - main exits 1 without skip outputs when input validation fails
+# - main skips pr_push without a PR number (empty or 0) with pr_number_missing and exit 0
+# - main yields no integration targets when detect_branch_match is empty (no state_branch fallback)
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -34,6 +38,65 @@ make_detect_candidate() {
     local key="$1"
     jq -nc --arg key "${key}" \
         '{target_json:{key:$key,mode:"integration"},prompt:"p",verifier_context:"",result:{skip:false}}'
+}
+
+# stub_checkout_context replaces checkout_context with a stub that only enters the given repo.
+# The stub is sourced from BATS_TEST_TMPDIR so detect.sh calls it in place of the real checkout.
+stub_checkout_context() {
+    local stub="${BATS_TEST_TMPDIR}/checkout_context_stub.bash"
+
+    printf 'checkout_context() { cd %q || return 1; }\n' "$1" > "${stub}"
+    # shellcheck source=/dev/null
+    source "${stub}"
+}
+
+# export_main_env exports a valid L2 pr_push environment for running detect.sh main.
+export_main_env() {
+    local mock_bin="${DETECT_TMP}/bin"
+
+    mkdir -p "${mock_bin}" "${DETECT_TMP}/work"
+    : > "${DETECT_TMP}/detect_calls"
+    : > "${DETECT_TMP}/gh_calls"
+    cat > "${mock_bin}/gh" << EOF
+#!/usr/bin/env bash
+printf '%s\n' "\$*" >> '${DETECT_TMP}/gh_calls'
+printf '[]\n'
+EOF
+    chmod +x "${mock_bin}/gh"
+    cat > "${DETECT_TMP}/detect-main.sh" << EOF
+#!/usr/bin/env bash
+echo called >> '${DETECT_TMP}/detect_calls'
+printf '%s\n' '{"status":"ok","skip":true}'
+EOF
+    chmod +x "${DETECT_TMP}/detect-main.sh"
+
+    export PATH="${mock_bin}:${PATH}"
+    export GITHUB_OUTPUT="${DETECT_TMP}/github_output"
+    : > "${GITHUB_OUTPUT}"
+    export DETECT_SCRIPT="${DETECT_TMP}/detect-main.sh"
+    export STATE_FILE="${DETECT_TMP}/work/.loop/state-github-pr-revise.json"
+    export BUDGET_FILE="${DETECT_TMP}/work/.loop/loop-budget.json"
+    export RUN_LOG_FILE="${DETECT_TMP}/work/.loop/loop-run-log.md"
+    export LOOP_NAME="github-pr-revise"
+    export AGENT_MAKER_SKILL_NAME="github-pr-revise"
+    export STATE_BRANCH="main"
+    export LEVEL="L2"
+    export DELIVERY="pr_push"
+    export AGENT_EDIT_TARGET="fix"
+    export AGENT_EDIT_ALLOWLIST="**"
+    export AGENT_EDIT_DENYLIST=""
+    export AGENT_UNCHANGED_VERDICT="REJECT"
+    export DETECT_PR_ENABLED="true"
+    export DETECT_BRANCH_MATCH=""
+    export DETECT_PR_NUMBER=""
+    export GITHUB_TOKEN="test-token"
+    unset CI_SWEEPER_WORKFLOW_RUN_ID LOOP_SCOPED_HEAD_BRANCH
+}
+
+# run_detect_main runs detect.sh as the action does, from a non-repository work directory.
+run_detect_main() {
+    run --separate-stderr env -C "${DETECT_TMP}/work" \
+        bash "$(bats_workspace_root)/.github/actions/loop-detect/lib/detect.sh"
 }
 
 setup() {
@@ -76,22 +139,17 @@ EOF
     chmod +x "${DETECT_SCRIPT}"
 
     STATE_FILE="${state_file}"
-    BASE_BRANCH="main"
+    STATE_BRANCH="main"
     export AGENT_MAKER_SKILL_NAME="loop-ci-sweeper"
     LEVEL="L2"
-    ALLOWLIST="*"
+    AGENT_EDIT_ALLOWLIST="*"
     AGENT_MAKER_INSTRUCTIONS=""
-    MAY_EDIT="true"
-    WRITE_TARGET="fix"
-    LOOP_FINALIZE_INTEGRATION="open_pr"
+    AGENT_EDIT_TARGET="fix"
     PENDING_PR_BLOCKED=0
     CIRCUIT_BREAKER_BLOCKED=0
     CANDIDATES_JSON=()
 
-    checkout_context() {
-        cd "${repo_root}" || return 1
-        return 0
-    }
+    stub_checkout_context "${repo_root}"
 
     append_integration_candidate "main"
 
@@ -121,20 +179,16 @@ EOF
     chmod +x "${DETECT_SCRIPT}"
 
     STATE_FILE="${state_file}"
-    BASE_BRANCH="main"
+    STATE_BRANCH="main"
     export AGENT_MAKER_SKILL_NAME="loop-ci-sweeper"
     LEVEL="L2"
-    ALLOWLIST="*"
+    AGENT_EDIT_ALLOWLIST="*"
     AGENT_MAKER_INSTRUCTIONS=""
-    LOOP_FINALIZE_INTEGRATION="open_pr"
     PENDING_PR_BLOCKED=0
     CIRCUIT_BREAKER_BLOCKED=0
     CANDIDATES_JSON=()
 
-    checkout_context() {
-        cd "${repo_root}" || return 1
-        return 0
-    }
+    stub_checkout_context "${repo_root}"
 
     append_integration_candidate "main"
 
@@ -221,20 +275,16 @@ EOF
     chmod +x "${DETECT_SCRIPT}"
 
     STATE_FILE="${state_file}"
-    BASE_BRANCH="main"
+    STATE_BRANCH="main"
     export AGENT_MAKER_SKILL_NAME="loop-ci-sweeper"
     LEVEL="L2"
-    ALLOWLIST="*"
+    AGENT_EDIT_ALLOWLIST="*"
     AGENT_MAKER_INSTRUCTIONS=""
-    LOOP_FINALIZE_INTEGRATION="open_pr"
     PENDING_PR_BLOCKED=0
     CIRCUIT_BREAKER_BLOCKED=0
     CANDIDATES_JSON=()
 
-    checkout_context() {
-        cd "${repo_root}" || return 1
-        return 0
-    }
+    stub_checkout_context "${repo_root}"
 
     append_integration_candidate "main"
 
@@ -260,7 +310,7 @@ EOF
 @test "build_integration_target_json emits integration mode payload" {
     local json
 
-    run build_integration_target_json "integration:main" "main" "abcdefghijklmn" "open_pr"
+    run build_integration_target_json "integration:main" "main" "abcdefghijklmn"
     [ "$status" -eq 0 ]
     json="${output}"
     run jq -e \
@@ -271,14 +321,14 @@ EOF
          and .from.branch == "main"
          and .from.ref == $ref
          and .to.branch == "main"
-         and .finalize == "open_pr"' \
+         and (has("finalize") | not)' \
         <<< "${json}"
     [ "$status" -eq 0 ]
 }
 @test "build_pull_request_target_json emits pull_request mode payload with pr metadata" {
     local json
 
-    run build_pull_request_target_json "pull_request:42" "feature/auth" "abcdefghijklmn" "open_pr" 42 "main"
+    run build_pull_request_target_json "pull_request:42" "feature/auth" "abcdefghijklmn" 42 "main"
     [ "$status" -eq 0 ]
     json="${output}"
     run jq -e \
@@ -288,7 +338,7 @@ EOF
          and .from.branch == "feature/auth"
          and .to.pr_number == 42
          and .base.branch == "main"
-         and .finalize == "open_pr"' \
+         and (has("finalize") | not)' \
         <<< "${json}"
     [ "$status" -eq 0 ]
 }
@@ -343,12 +393,12 @@ EOF
     for i in 1 2 3 4; do
         CANDIDATES_JSON+=("$(make_detect_candidate "integration:branch${i}")")
     done
-    LOOP_MAX_TARGETS_PER_SCHEDULE=2
+    DETECT_MAX_TARGETS=2
     pre_cap_count=${#CANDIDATES_JSON[@]}
     skip_reason="none"
 
-    apply_target_cap "${LOOP_MAX_TARGETS_PER_SCHEDULE}"
-    if [[ ${pre_cap_count} -gt ${LOOP_MAX_TARGETS_PER_SCHEDULE} ]]; then
+    apply_target_cap "${DETECT_MAX_TARGETS}"
+    if [[ ${pre_cap_count} -gt ${DETECT_MAX_TARGETS} ]]; then
         skip_reason="target_budget"
     fi
 
@@ -384,16 +434,16 @@ EOF
 }
 @test "validate_branch_match accepts list glob and regex" {
     for mode in list glob regex; do
-        LOOP_BRANCH_MATCH="${mode}"
+        DETECT_BRANCH_MATCH_MODE="${mode}"
         run validate_branch_match
         [ "$status" -eq 0 ]
     done
 }
-@test "validate_branch_match rejects invalid LOOP_BRANCH_MATCH" {
-    LOOP_BRANCH_MATCH="invalid"
+@test "validate_branch_match rejects invalid DETECT_BRANCH_MATCH_MODE" {
+    DETECT_BRANCH_MATCH_MODE="invalid"
     run validate_branch_match
     [ "$status" -eq 1 ]
-    [[ $output == *"Invalid LOOP_BRANCH_MATCH"* ]]
+    [[ $output == *"Invalid DETECT_BRANCH_MATCH_MODE"* ]]
 }
 
 @test "detect_result_skip returns non-skip on invalid json" {
@@ -447,12 +497,12 @@ EOF
         source '${detect_lib}/detect.sh'
         DETECT_SCRIPT='${DETECT_SCRIPT}'
         STATE_FILE='${state_file}'
-        BASE_BRANCH='main'
+        STATE_BRANCH='main'
         export AGENT_MAKER_SKILL_NAME='loop-ci-sweeper'
         LEVEL='L2'
-        ALLOWLIST='*'
+        AGENT_EDIT_ALLOWLIST='*'
+        AGENT_EDIT_TARGET='fix'
         AGENT_MAKER_INSTRUCTIONS=''
-        LOOP_FINALIZE_INTEGRATION='open_pr'
         CANDIDATES_JSON=()
         checkout_context() { cd '${repo_root}' || return 1; }
         append_integration_candidate 'main'
@@ -503,12 +553,12 @@ EOF
         source '${detect_lib}/detect.sh'
         DETECT_SCRIPT='${DETECT_SCRIPT}'
         STATE_FILE='${state_file}'
-        BASE_BRANCH='main'
+        STATE_BRANCH='main'
         export AGENT_MAKER_SKILL_NAME='loop-ci-sweeper'
         LEVEL='L2'
-        ALLOWLIST='*'
+        AGENT_EDIT_ALLOWLIST='*'
+        AGENT_EDIT_TARGET='fix'
         AGENT_MAKER_INSTRUCTIONS=''
-        LOOP_FINALIZE_INTEGRATION='open_pr'
         CANDIDATES_JSON=()
         checkout_context() { cd '${repo_root}' || return 1; }
         append_integration_candidate 'main' || exit 1
@@ -526,46 +576,7 @@ EOF
     [[ $output == *"after_second=1"* ]]
 }
 
-@test "main treats unset ALLOWLIST as empty (workflow empty glob is unrestricted)" {
-    GITHUB_OUTPUT="${DETECT_TMP}/github_output"
-    : > "${GITHUB_OUTPUT}"
-    DETECT_SCRIPT="${DETECT_TMP}/detect.sh"
-    : > "${DETECT_SCRIPT}"
-    STATE_FILE="${DETECT_TMP}/state.json"
-    LOOP_NAME="github-issue-autofix"
-    BASE_BRANCH="main"
-    export AGENT_MAKER_SKILL_NAME="issue-autofix"
-    LEVEL="L2"
-    unset ALLOWLIST
-    unset MAY_EDIT
-
-    run main
-    [ "$status" -eq 0 ]
-    [[ $output != *"ALLOWLIST: parameter null or not set"* ]]
-    grep -q '^should_run=false$' "${GITHUB_OUTPUT}"
-    grep -q '^skip_reason=config_error$' "${GITHUB_OUTPUT}"
-}
-
-@test "main treats empty ALLOWLIST as unrestricted" {
-    GITHUB_OUTPUT="${DETECT_TMP}/github_output"
-    : > "${GITHUB_OUTPUT}"
-    DETECT_SCRIPT="${DETECT_TMP}/detect.sh"
-    : > "${DETECT_SCRIPT}"
-    STATE_FILE="${DETECT_TMP}/state.json"
-    LOOP_NAME="github-issue-autofix"
-    BASE_BRANCH="main"
-    export AGENT_MAKER_SKILL_NAME="issue-autofix"
-    LEVEL="L2"
-    ALLOWLIST=""
-    unset MAY_EDIT
-
-    run main
-    [ "$status" -eq 0 ]
-    [[ $output != *"ALLOWLIST: parameter null or not set"* ]]
-    grep -q '^skip_reason=config_error$' "${GITHUB_OUTPUT}"
-}
-
-@test "append_detect_candidate accepts unset ALLOWLIST and AGENT_MAKER_INSTRUCTIONS" {
+@test "append_detect_candidate accepts unset AGENT_EDIT_ALLOWLIST and AGENT_MAKER_INSTRUCTIONS" {
     local repo_root state_file
 
     repo_root="${DETECT_TMP}/repo-empty-allowlist"
@@ -587,24 +598,166 @@ EOF
     chmod +x "${DETECT_SCRIPT}"
 
     STATE_FILE="${state_file}"
-    BASE_BRANCH="main"
+    STATE_BRANCH="main"
     export AGENT_MAKER_SKILL_NAME="issue-autofix"
     LEVEL="L2"
-    unset ALLOWLIST
+    unset AGENT_EDIT_ALLOWLIST
     unset AGENT_MAKER_INSTRUCTIONS
-    MAY_EDIT="true"
-    WRITE_TARGET="fix"
-    LOOP_FINALIZE_INTEGRATION="open_pr"
+    AGENT_EDIT_TARGET="fix"
     PENDING_PR_BLOCKED=0
     CIRCUIT_BREAKER_BLOCKED=0
     CANDIDATES_JSON=()
 
-    checkout_context() {
-        cd "${repo_root}" || return 1
-        return 0
-    }
+    stub_checkout_context "${repo_root}"
 
     append_integration_candidate "main"
 
     [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
+}
+
+@test "append_detect_candidate exports STATE_BRANCH to the detect script instead of DEFAULT_BASE_BRANCH" {
+    local repo_root state_file env_file
+
+    repo_root="${DETECT_TMP}/repo-state-branch"
+    env_file="${DETECT_TMP}/detect_env"
+    mkdir -p "${repo_root}/.loop"
+    git init -q "${repo_root}"
+    git -C "${repo_root}" config user.email "test@example.com"
+    git -C "${repo_root}" config user.name "Test User"
+    git -C "${repo_root}" commit -q --allow-empty -m "init"
+    state_file="${repo_root}/.loop/state-ci-sweeper.json"
+    printf '%s\n' '{"targets":{}}' > "${state_file}"
+
+    DETECT_SCRIPT="${DETECT_TMP}/detect-env.sh"
+    cat > "${DETECT_SCRIPT}" << EOF
+#!/usr/bin/env bash
+printf '%s|%s\n' "\${STATE_BRANCH:-unset}" "\${DEFAULT_BASE_BRANCH:-unset}" > '${env_file}'
+printf '%s\n' '{"status":"ok","skip":true}'
+EOF
+    chmod +x "${DETECT_SCRIPT}"
+
+    unset DEFAULT_BASE_BRANCH
+    STATE_FILE="${state_file}"
+    STATE_BRANCH="release"
+    LEVEL="L2"
+    CANDIDATES_JSON=()
+
+    stub_checkout_context "${repo_root}"
+
+    append_integration_candidate "main"
+
+    [ "$(cat "${env_file}")" = "release|unset" ]
+}
+
+@test "append_detect_candidate target_json carries no finalize or report_file key" {
+    local repo_root state_file
+
+    repo_root="${DETECT_TMP}/repo-target-keys"
+    mkdir -p "${repo_root}/.loop"
+    git init -q "${repo_root}"
+    git -C "${repo_root}" config user.email "test@example.com"
+    git -C "${repo_root}" config user.name "Test User"
+    git -C "${repo_root}" commit -q --allow-empty -m "init"
+    state_file="${repo_root}/.loop/state-tech-debt.json"
+    printf '%s\n' '{"targets":{}}' > "${state_file}"
+
+    DETECT_SCRIPT="${DETECT_TMP}/detect-report.sh"
+    cat > "${DETECT_SCRIPT}" << 'EOF'
+#!/usr/bin/env bash
+printf '%s\n' '{"status":"ok","skip":false,"agent_report_file":"docs/report/tech-debt/2026-10-17.md","report_file":"legacy.md","signals":[]}'
+EOF
+    chmod +x "${DETECT_SCRIPT}"
+
+    STATE_FILE="${state_file}"
+    STATE_BRANCH="main"
+    export AGENT_MAKER_SKILL_NAME="tech-debt"
+    LEVEL="L2"
+    AGENT_EDIT_ALLOWLIST="docs/report/**"
+    AGENT_EDIT_TARGET="report"
+    CANDIDATES_JSON=()
+
+    stub_checkout_context "${repo_root}"
+
+    append_integration_candidate "main"
+
+    [ "${#CANDIDATES_JSON[@]}" -eq 1 ]
+    run jq -c '.target_json | keys' <<< "${CANDIDATES_JSON[0]}"
+    [ "$output" = '["from","key","mode","to"]' ]
+    run jq -r '.prompt' <<< "${CANDIDATES_JSON[0]}"
+    [[ $output == *$'\nagent_report_file: docs/report/tech-debt/2026-10-17.md\n'* ]]
+    [[ $output != *"legacy.md"* ]]
+}
+
+@test "main exits 1 without skip outputs when input validation fails" {
+    local -a cases=(
+        'AGENT_EDIT_ALLOWLIST=|::error::agent_edit_allowlist is required at L2 (use ** for unrestricted)'
+        'DELIVERY=|::error::delivery must be none|pr_create|pr_push (got: empty)'
+        'LEVEL=|::error::level is required (L1, L2, or L3)'
+        'DETECT_BRANCH_MATCH=main|::error::delivery pr_push does not allow detect_branch_match (got: main)'
+    )
+    local entry assignment expected checked=0
+    for entry in "${cases[@]}"; do
+        assignment="${entry%%|*}"
+        expected="${entry#*|}"
+        export_main_env
+        export "${assignment?}"
+        run_detect_main
+        [ "$status" -eq 1 ]
+        [ "$stderr" = "${expected}" ]
+        [ ! -s "${GITHUB_OUTPUT}" ]
+        [ ! -s "${DETECT_TMP}/detect_calls" ]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 4 ]
+}
+
+@test "main skips pr_push without a PR number with pr_number_missing and exit 0" {
+    local pr_number normalized expected entry checked=0
+    expected="should_run=false
+skip_reason=pr_number_missing
+delivery=pr_push
+pr_auto_merge=false
+target_matrix<<TARGET_MATRIX_X
+[]
+TARGET_MATRIX_X
+last_sha=
+current_sha=
+consecutive_failures=0
+prompt="
+    for pr_number in "" "0"; do
+        export_main_env
+        export DETECT_PR_NUMBER="${pr_number}"
+        run_detect_main
+        [ "$status" -eq 0 ]
+        normalized="$(sed -E 's/TARGET_MATRIX_[0-9a-f]{16}/TARGET_MATRIX_X/' "${GITHUB_OUTPUT}")"
+        [ "${normalized}" = "${expected}" ]
+        [ ! -s "${DETECT_TMP}/detect_calls" ]
+        [ ! -s "${DETECT_TMP}/gh_calls" ]
+
+        # The record-skip job passes skip_reason to loop-run-log unchanged.
+        entry="$(bash -c "
+            source '$(bats_workspace_root)/.github/actions/loop-run-log/lib/append.sh'
+            loop_run_log_build_entry '' 1 '' github-pr-revise skipped pr_number_missing '' 123
+        ")"
+        run jq -c '{outcome, skip_reason}' <<< "${entry}"
+        [ "$output" = '{"outcome":"skipped","skip_reason":"pr_number_missing"}' ]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 2 ]
+}
+
+@test "main yields no integration targets when detect_branch_match is empty" {
+    export_main_env
+    export DELIVERY="pr_create"
+    export DETECT_PR_NUMBER=""
+    export DETECT_PR_ENABLED="true"
+    export DETECT_BRANCH_MATCH=""
+    run_detect_main
+    [ "$status" -eq 0 ]
+    run grep -Fx 'skip_reason=no_changes' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+    run grep -Fx 'should_run=false' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+    [ -s "${DETECT_TMP}/gh_calls" ]
+    [ ! -s "${DETECT_TMP}/detect_calls" ]
 }
