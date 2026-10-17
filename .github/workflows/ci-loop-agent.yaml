@@ -1,7 +1,9 @@
 # Reusable workflow: Loop agent execution
 # L1: agent-l1 (loop-agent-once) → finalize-l1 (run-log; future L1 delivery)
 # L2/L3: agent-l2 (loop-execute) → finalize-l2 (run-log always; loop-finalize when finalize_enabled)
-# finalize_enabled gates git landing / PR inside finalize-l2, not whether finalize runs.
+# finalize_enabled gates loop-finalize inside finalize-l2, not whether finalize runs.
+# Callers set it for delivery open_pr, and for delivery none on L2/L3 (strategy none:
+# domain persistence, state, branch cleanup; no git landing or PR).
 # Caller-facing prompts: loop-detect assembles maker text (prompt_text); domain checker rubric is agent_checker_instructions.
 # Checker prompt scaffolding (INITIAL/REGRESSION, output contract) is owned by loop-execute — not workflow_call inputs here.
 # Contract (L2/L3): outputs { branch, has_changes, verdict, reason, attempts }
@@ -298,7 +300,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
@@ -307,7 +309,7 @@ jobs:
 
       - name: Run Agent Once
         id: agent
-        uses: y-miyazaki/config/.github/actions/loop-agent-once@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/loop-agent-once@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           agent_allowed_tools: ${{ inputs.agent_allowed_tools }}
@@ -344,7 +346,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
@@ -352,7 +354,7 @@ jobs:
           github_token: ${{ secrets.GH_TOKEN }}
 
       - name: Append Run Log
-        uses: y-miyazaki/config/.github/actions/loop-run-log@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/loop-run-log@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           agent_result: ${{ needs.agent-l1.result }}
@@ -433,7 +435,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
@@ -465,7 +467,7 @@ jobs:
 
       - name: Setup Worktree
         id: worktree
-        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/loop-worktree-setup@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
@@ -476,7 +478,7 @@ jobs:
 
       - name: Execute Bounded Loop
         id: execute
-        uses: y-miyazaki/config/.github/actions/loop-execute@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/loop-execute@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           agent_allowed_tools: ${{ inputs.agent_allowed_tools }}
@@ -550,7 +552,7 @@ jobs:
 
       - name: Resolve GitHub Token
         id: resolve_github_token
-        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/loop-resolve-push-token@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           bot_app_client_id: ${{ secrets.BOT_APP_CLIENT_ID }}
@@ -566,7 +568,7 @@ jobs:
         if: inputs.finalize_enabled
         continue-on-error: true
         id: finalize
-        uses: y-miyazaki/config/.github/actions/loop-finalize@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/loop-finalize@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           additional_commit_paths: ${{ inputs.additional_commit_paths }}
@@ -638,7 +640,7 @@ jobs:
 
       - name: Append Run Log
         if: always()
-        uses: y-miyazaki/config/.github/actions/loop-run-log@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/loop-run-log@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           agent_result: ${{ steps.run_log_meta.outputs.agent_result }}
@@ -656,12 +658,56 @@ jobs:
           usage_json: ${{ needs.agent-l2.outputs.usage_json || '' }}
           verdict: ${{ needs.agent-l2.outputs.verdict }}
 
+      # L2 review agents submit their own marker-tagged pull request review
+      # through gh, so no platform footer reaches it. Finalize knows the usage
+      # totals, so it appends them here — collapsed, and last.
+      # continue-on-error: meta is cosmetic and must never fail finalize-l2.
+      # Only entity:pr:* handoff keys act, checked before any source: the libs
+      # are read from the caller checkout (no action path exists in a workflow
+      # run step), so a consumer without them must not reach the source lines.
+      - name: Append Loop Meta To Pull Request Review
+        if: always() && inputs.handoff_key != ''
+        continue-on-error: true
+        env:
+          ENGINE: ${{ inputs.engine }}
+          GITHUB_TOKEN: ${{ steps.resolve_github_token.outputs.github_token }}
+          HANDOFF_KEY: ${{ inputs.handoff_key }}
+          LOOP_NAME: ${{ inputs.loop_name }}
+          OUTCOME: ${{ steps.finalize.outputs.outcome || 'error' }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          USAGE_JSON: ${{ needs.agent-l2.outputs.usage_json || '' }}
+        run: |
+          set -euo pipefail
+          if ! [[ "${HANDOFF_KEY}" =~ ^entity:pr:[1-9][0-9]*$ ]]; then
+            exit 0
+          fi
+          lib_dir=".github/actions/lib/loop"
+          for lib in created_by.sh loop_meta.sh entity_meta.sh; do
+            if [[ ! -f "${lib_dir}/${lib}" ]]; then
+              echo "::notice title=loop-meta::${lib_dir}/${lib} not in checkout; meta not appended"
+              exit 0
+            fi
+          done
+          # shellcheck disable=SC1091
+          source "${lib_dir}/created_by.sh"
+          # shellcheck disable=SC1091
+          source "${lib_dir}/loop_meta.sh"
+          # shellcheck disable=SC1091
+          source "${lib_dir}/entity_meta.sh"
+          pr_number="$(entity_pr_number "${HANDOFF_KEY}")"
+          if [[ -z ${pr_number} ]]; then
+            exit 0
+          fi
+          append_pr_review_meta "${pr_number}" "<!-- ${LOOP_NAME}:v1 -->" \
+            "${OUTCOME}" "${ENGINE}" "${USAGE_JSON}" "${RUN_URL}"
+
       - name: Notify Pull Request
         continue-on-error: true
         if: >-
           always() &&
           steps.notify_target.outputs.pr_number != ''
-        uses: y-miyazaki/config/.github/actions/loop-notify-pr@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/loop-notify-pr@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           attempts: ${{ needs.agent-l2.outputs.attempts || '' }}

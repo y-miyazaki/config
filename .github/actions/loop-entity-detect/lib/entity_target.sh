@@ -170,7 +170,7 @@ function build_entity_target_matrix {
                 {name: $event_name, action: $event_action}
                 + (if $comment_id == "" then {} else {comment_id: ($comment_id|tonumber? // $comment_id)} end)
               ),
-              from: {ref: $from_ref},
+              from: {branch: $to_branch, ref: $from_ref},
               to: {branch: $to_branch},
               finalize: (if $delivery == "open_pr" then "open_pr" else "none" end),
               loop_name: $loop_name

@@ -8,7 +8,9 @@
 # - None (library file, sourced by other scripts)
 #
 # Design Rules:
-# - Delete only empty-vs-base REJECT runs (has_changes is not true)
+# - Finalize strategy none (review-only) always deletes: nothing is merged or
+#   opened as a PR, and domain persistence has already read the branch
+# - Otherwise delete only empty-vs-base REJECT runs (has_changes is not true)
 # - Keep the branch when REJECT still has a product diff vs base (open PR / retries)
 #######################################
 
@@ -19,8 +21,9 @@
 #   None
 #
 # Arguments:
-#   $1 - Verdict (APPROVE or REJECT)
+#   $1 - Verdict (APPROVE or REJECT; may be empty)
 #   $2 - has_changes flag (true/false)
+#   $3 - finalize strategy (optional; default empty)
 #
 # Outputs:
 #   None
@@ -32,6 +35,10 @@
 function should_delete_rejected_branch {
     local verdict="$1"
     local has_changes="$2"
+    local strategy="${3:-}"
+    if [[ ${strategy} == "none" ]]; then
+        return 0
+    fi
     if [[ ${verdict} == "REJECT" && ${has_changes} != "true" ]]; then
         return 0
     fi

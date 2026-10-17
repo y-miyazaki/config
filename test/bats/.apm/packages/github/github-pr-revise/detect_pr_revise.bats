@@ -10,6 +10,7 @@
 # - Keep path/line empty for issue_comment (compat)
 # - Emit result.comments array (trigger fallback and PR_COMMENTS_JSON gather)
 # - Skip when gathered comments array is empty
+# - Add parent_body for replies (trigger and API-gathered); omit when absent or unavailable
 # - Gather via mocked gh filters eyes/bot/mention and batches review+issue comments
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -433,5 +434,90 @@ EOF
         and .result.path == "x.go"
         and .result.comments[0].subject_type == "file"
     ' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_pr_revise adds parent_body for a reply to a review comment" {
+    MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${MOCK_BIN}"
+    cat > "${MOCK_BIN}/gh" << 'EOF'
+#!/bin/bash
+if [[ "$1" == "api" && "$*" == *"pulls/comments/699"* ]]; then
+    printf '%s\n' '**#1 [Critical]** nil deref in handler'
+    exit 0
+fi
+printf 'unexpected gh: %s\n' "$*" >&2
+exit 1
+EOF
+    chmod +x "${MOCK_BIN}/gh"
+    PATH="${MOCK_BIN}:${PATH}"
+    export PATH
+    run env PR_NUMBER=11 PR_MENTION='@loop' PR_COMMENT_BODY='@loop please fix' \
+        PR_COMMENT_IN_REPLY_TO_ID=699 PR_ACTOR_TYPE=User \
+        GITHUB_EVENT_NAME=pull_request_review_comment \
+        GITHUB_REPOSITORY=owner/repo GH_TOKEN= GITHUB_TOKEN= \
+        bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '
+        .skip == false
+        and (.result.comments[0].parent_body | startswith("**#1 [Critical]**"))
+    ' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_pr_revise adds parent_body to API-gathered reply comments" {
+    MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${MOCK_BIN}"
+    cat > "${MOCK_BIN}/gh" << 'EOF'
+#!/bin/bash
+if [[ "$1" == "api" && "$*" == *"issues/77/comments"* ]]; then
+    printf '%s\n' '[]'
+    exit 0
+fi
+if [[ "$1" == "api" && "$*" == *"pulls/77/comments"* ]]; then
+    printf '%s\n' '[{"id":202,"body":"@loop fix","path":"a.go","line":9,"side":"RIGHT","in_reply_to_id":150,"user":{"login":"maintainer","type":"User"},"author_association":"OWNER","reactions":{"eyes":0}}]'
+    exit 0
+fi
+if [[ "$1" == "api" && "$*" == *"pulls/comments/150"* ]]; then
+    printf '%s\n' '**#2 [Warning]** missing test'
+    exit 0
+fi
+exit 1
+EOF
+    chmod +x "${MOCK_BIN}/gh"
+    PATH="${MOCK_BIN}:${PATH}"
+    export PATH
+    run env PR_NUMBER=77 PR_MENTION='@loop' PR_COMMENT_BODY='@loop fix' \
+        PR_ACTOR_TYPE=User GITHUB_EVENT_NAME=pull_request_review_comment \
+        GITHUB_REPOSITORY=owner/repo GITHUB_TOKEN=token \
+        bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '.result.comments[0].parent_body == "**#2 [Warning]** missing test"' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_pr_revise omits parent_body when there is no in_reply_to_id" {
+    run env PR_NUMBER=11 PR_MENTION='@loop' PR_COMMENT_BODY='@loop please fix' \
+        PR_ACTOR_TYPE=User GITHUB_EVENT_NAME=pull_request_review_comment \
+        bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '.result.comments[0] | has("parent_body") | not' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "detect_pr_revise omits parent_body and still succeeds when the parent fetch fails" {
+    MOCK_BIN="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${MOCK_BIN}"
+    printf '#!/bin/bash\nexit 1\n' > "${MOCK_BIN}/gh"
+    chmod +x "${MOCK_BIN}/gh"
+    PATH="${MOCK_BIN}:${PATH}"
+    export PATH
+    run env PR_NUMBER=11 PR_MENTION='@loop' PR_COMMENT_BODY='@loop please fix' \
+        PR_COMMENT_IN_REPLY_TO_ID=699 PR_ACTOR_TYPE=User \
+        GITHUB_EVENT_NAME=pull_request_review_comment \
+        GITHUB_REPOSITORY=owner/repo GH_TOKEN= GITHUB_TOKEN= \
+        bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '.skip == false and (.result.comments[0] | has("parent_body") | not)' <<< "${output}"
     [ "$status" -eq 0 ]
 }

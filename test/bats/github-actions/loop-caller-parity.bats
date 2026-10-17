@@ -41,6 +41,17 @@ job_if_block() {
     [[ ${branch} == *"target_json.finalize == 'open_pr'"* ]]
 }
 
+@test "callers use the same finalize_enabled expression" {
+    # delivery none still needs loop-finalize on L2/L3 (domain persistence,
+    # state, branch cleanup); L1 has no finalize-l2 so it stays false there.
+    local branch entity
+    branch="$(grep 'finalize_enabled:' "${BRANCH_CALLER}" | head -1)"
+    entity="$(grep 'finalize_enabled:' "${ENTITY_CALLER}" | head -1)"
+    [[ -n ${branch} ]]
+    [[ ${branch} == "${entity}" ]]
+    [[ ${branch} == *"needs.detect.outputs.delivery == 'open_pr' || (needs.detect.outputs.delivery == 'none' && inputs.level != 'L1')"* ]]
+}
+
 @test "callers use the same may_edit detect mapping" {
     local branch entity
     # Literal GitHub Actions expression; do not expand.
@@ -115,6 +126,20 @@ job_if_block() {
 
 @test "loop-finalize step is gated on finalize_enabled" {
     grep -B5 'id: finalize' "${AGENT}" | grep -q 'if: inputs.finalize_enabled'
+}
+
+@test "finalize-l2 pr review meta step guards the handoff key before sourcing libs" {
+    # The step sources workspace-relative libs that a consumer checkout may not
+    # have; non-PR loops must exit before any source, and a failure must not
+    # fail finalize-l2.
+    local block guard_line source_line
+    block="$(awk '/- name: Append Loop Meta To Pull Request Review/{f=1} f&&/- name: Notify Pull Request/{exit} f' "${AGENT}")"
+    [[ -n ${block} ]]
+    grep -q 'continue-on-error: true' <<< "${block}"
+    guard_line="$(grep -n '\^entity:pr:' <<< "${block}" | head -1 | cut -d: -f1)"
+    source_line="$(grep -n 'source ' <<< "${block}" | head -1 | cut -d: -f1)"
+    [[ -n ${guard_line} && -n ${source_line} ]]
+    ((guard_line < source_line))
 }
 
 @test "finalize-l1 persists run-log after agent-l1" {

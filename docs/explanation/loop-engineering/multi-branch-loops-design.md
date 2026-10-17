@@ -264,6 +264,7 @@ Entity-event callers use per-entity groups (`cancel-in-progress: false`, `queue:
 | `on-loop-github-issue-autofix` | `loop-github-issue-autofix-<issue>` | Issue number        |
 | `on-loop-github-issue-triage`  | `loop-github-issue-triage-<issue>`  | Issue number        |
 | `on-loop-github-pr-revise`     | `loop-github-pr-revise-<pr>`        | Pull request number |
+| `on-loop-github-pr-review`     | `loop-github-pr-review-<pr>`        | Pull request number |
 
 See [Loop Caller Workflows — Concurrency](loop-caller-workflows-design.md#concurrency).
 
@@ -307,6 +308,7 @@ Do not copy this list into per-loop workflow designs.
 | **github-issue-triage**  | [Issue Triage Workflow Design](workflows/loop-github-issue-triage-workflow-design.md)   | `on-loop-github-issue-triage.yaml`  |
 | **github-issue-autofix** | [Issue Autofix Workflow Design](workflows/loop-github-issue-autofix-workflow-design.md) | `on-loop-github-issue-autofix.yaml` |
 | **github-pr-revise**     | [PR Revise Workflow Design](workflows/loop-github-pr-revise-workflow-design.md)         | `on-loop-github-pr-revise.yaml`     |
+| **github-pr-review**     | [PR Review Workflow Design](workflows/loop-github-pr-review-workflow-design.md)         | `on-loop-github-pr-review.yaml`     |
 
 Add new loops as `docs/explanation/loop-engineering/workflows/<name>-workflow-design.md` without growing this file.
 

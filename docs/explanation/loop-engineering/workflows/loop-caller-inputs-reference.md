@@ -109,7 +109,7 @@ Dogfood sets `branch_match: main` and `branch_state: main`. That matches the usu
 
 ### Level × finalize matrix
 
-Dogfood loops use **`delivery: open_pr`** only — git landing (`open_pr` / `push` / `push_head`) is derived inside `loop-detect` from `delivery`. Advanced overrides: optional `git_landing_integration` / `git_landing_pull_request` on `ci-loop-caller` (forwarded to `loop-detect`).
+Dogfood loops use **`delivery: open_pr`**, except entity review loops (`github-pr-review`) that use `delivery: none` — git landing (`open_pr` / `push` / `push_head`) is derived inside `loop-detect` from `delivery`. Advanced overrides: optional `git_landing_integration` / `git_landing_pull_request` on `ci-loop-caller` (forwarded to `loop-detect`).
 
 | Mode           | `target.finalize` (derived from `delivery`) | L2                                    | L3                                                    |
 | -------------- | ------------------------------------------- | ------------------------------------- | ----------------------------------------------------- |
@@ -117,6 +117,8 @@ Dogfood loops use **`delivery: open_pr`** only — git landing (`open_pr` / `pus
 | `pull_request` | `open_pr`                                   | Bot fix PR → PR head; notify human PR | Bot fix PR → PR head; **auto-merge**; notify human PR |
 
 L3 **auto-merge** is [GitHub PR auto-merge](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/automatically-merging-a-pull-request) on the **bot fix PR** — not direct push to the branch. The human's open PR is not auto-merged.
+
+`delivery: none` (entity loops such as [PR Review Workflow Design](loop-github-pr-review-workflow-design.md#finalize-with-delivery-none)) resolves to `finalize: none` at L2: `loop-finalize` does not push, deletes the agent branch after APPROVE, and persists the report only through `domain_persistence_script`, which receives `GH_TOKEN` and `GITHUB_REPOSITORY`.
 
 Platform exception paths (`push`, `push_head`) are advanced `git_landing_*` overrides when `delivery: open_pr`; dogfood does not set them. See [Finalize strategy matrix](../loop-engineering-design.md#finalize-strategy-matrix).
 
@@ -421,6 +423,7 @@ Each detect script normalizes these keys at startup via `configure_detect_enviro
 | github-issue-triage  | [Issue Triage Workflow Design](loop-github-issue-triage-workflow-design.md)   | `on-loop-github-issue-triage.yaml` (entity caller) |
 | github-issue-autofix | [Issue Autofix Workflow Design](loop-github-issue-autofix-workflow-design.md) | `on-loop-github-issue-autofix.yaml`                |
 | github-pr-revise     | [PR Revise Workflow Design](loop-github-pr-revise-workflow-design.md)         | `on-loop-github-pr-revise.yaml`                    |
+| github-pr-review     | [PR Review Workflow Design](loop-github-pr-review-workflow-design.md)         | `on-loop-github-pr-review.yaml` (entity caller)    |
 
 ## References
 

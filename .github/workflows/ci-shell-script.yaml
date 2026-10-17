@@ -159,7 +159,7 @@ jobs:
 
       - name: Setup actionlint
         if: steps.discover.outputs.has_bats == 'true'
-        uses: y-miyazaki/config/.github/actions/install-github-release@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/install-github-release@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           binary: actionlint
@@ -169,7 +169,7 @@ jobs:
 
       - name: Setup ghalint
         if: steps.discover.outputs.has_bats == 'true'
-        uses: y-miyazaki/config/.github/actions/install-github-release@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/install-github-release@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           binary: ghalint
@@ -179,7 +179,7 @@ jobs:
 
       - name: Setup zizmor
         if: steps.discover.outputs.has_bats == 'true'
-        uses: y-miyazaki/config/.github/actions/install-github-release@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/install-github-release@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           asset_pattern: zizmor-x86_64-unknown-linux-gnu.tar.gz
@@ -235,7 +235,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/summary@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           artifacts: |
@@ -262,7 +262,7 @@ jobs:
 
       - name: Configure git auth
         if: github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/git-auth@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           github_token: ${{ github.token }}
@@ -305,7 +305,7 @@ jobs:
 
       - name: Install shfmt
         if: steps.file-list.outputs.no_files == 'false'
-        uses: y-miyazaki/config/.github/actions/install-github-release@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/install-github-release@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           asset_pattern: "shfmt_v{version}_linux_amd64"
@@ -432,7 +432,7 @@ jobs:
 
       - name: Clear git auth
         if: always() && github.event_name == 'pull_request'
-        uses: y-miyazaki/config/.github/actions/git-auth@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/git-auth@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           github_token: ${{ github.token }}
@@ -440,7 +440,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/summary@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
           artifacts: |

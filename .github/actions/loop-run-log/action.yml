@@ -41,7 +41,7 @@ inputs:
     description: "GitHub Actions workflow run ID"
     required: false
   outcome:
-    description: "Run outcome (pr-created | no-changes | rejected | error | skipped)"
+    description: "Run outcome (pr-created | reported | no-changes | rejected | error | skipped)"
     required: true
   run_log_file:
     default: ".loop/loop-run-log.md"

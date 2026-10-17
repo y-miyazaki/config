@@ -85,7 +85,7 @@ auto_merge: ${{ needs.detect.outputs.delivery == 'open_pr' && needs.detect.outpu
 
 ## Finalize (inside ci-loop-agent)
 
-`finalize-l2` always runs after `agent-l2` (unless skipped/cancelled) so run-log is written even when `delivery` is `none`. When `finalize_enabled=true`, the same job runs `loop-finalize` in the **same workflow instance**, preserving execute output pairing per matrix cell. `finalize-l1` always runs after `agent-l1` and currently persists run-log only.
+`finalize-l2` always runs after `agent-l2` (unless skipped/cancelled) so run-log is written even when `delivery` is `none`. When `finalize_enabled=true`, the same job runs `loop-finalize` in the **same workflow instance**, preserving execute output pairing per matrix cell. Callers set `finalize_enabled` from `delivery == 'open_pr' || (delivery == 'none' && level != 'L1')`: an L2/L3 `delivery: none` loop still runs `loop-finalize` with strategy `none` (domain persistence, state, agent branch cleanup; no git landing or PR). `finalize-l1` always runs after `agent-l1` and currently persists run-log only.
 
 When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as a **sibling step** immediately after `loop-finalize` (not nested inside the composite — see [composite action composition](../../reference/specification.md#composite-action-composition)). See [loop-notify-pr Specification](../../reference/loop-notify-pr-specification.md).
 
@@ -165,7 +165,7 @@ Queued runs wait for the active run to finish (detect → execute → finalize) 
 
 ### Per-entity group (entity-event callers)
 
-`on-loop-github-issue-autofix`, `on-loop-github-issue-triage`, and `on-loop-github-pr-revise` key the group by the Issue / PR they act on (`loop-<loop_name>-<number>`) rather than by `branch_state`. See [Multi-Branch Loops — Cross-Loop Coordination](multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency) for the rationale.
+`on-loop-github-issue-autofix`, `on-loop-github-issue-triage`, `on-loop-github-pr-revise`, and `on-loop-github-pr-review` key the group by the Issue / PR they act on (`loop-<loop_name>-<number>`) rather than by `branch_state`. See [Multi-Branch Loops — Cross-Loop Coordination](multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency) for the rationale.
 
 ## Matrix Fan-Out
 

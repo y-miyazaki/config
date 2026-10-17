@@ -510,6 +510,7 @@ Flat top-level `last_sha` is **removed**. Migration: on first read, copy legacy 
 | Outcome      | Meaning                                        | `consecutive_failures` |
 | ------------ | ---------------------------------------------- | ---------------------- |
 | `pr-created` | Fix PR or `push_head` succeeded                | Reset to 0             |
+| `reported`   | APPROVE with finalize strategy `none` (no PR)  | Reset to 0             |
 | `rejected`   | Actionable; checker REJECT or no-change REJECT | Increment              |
 | `no-op`      | No actionable detect result                    | Reset to 0             |
 | `watch`      | Present; Skill Watch (no code edit)            | No increment           |
