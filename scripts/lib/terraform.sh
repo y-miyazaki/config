@@ -510,8 +510,10 @@ function validate_terraform_env {
     # Validate required environment variables
     validate_env_vars "TF_PLUGIN_CACHE_DIR"
 
-    # Validate dependencies
-    require_dependencies "terraform"
+    # Validate dependencies (skip in dry-run so callers can validate without terraform installed)
+    if ! is_dry_run; then
+        require_dependencies "terraform"
+    fi
 
     # Create plugin cache directory
     if [[ -n ${TF_PLUGIN_CACHE_DIR} ]]; then
