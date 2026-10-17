@@ -199,7 +199,7 @@ jobs:
 
       - name: Setup Parameters
         id: setup-parameters
-        uses: y-miyazaki/config/.github/actions/schemaspy-setup-parameters@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/schemaspy-setup-parameters@7012cfa6895f9358d9e836c6f49bb9e9194a6b4c # v1.8.122
 
         with:
           db_host_input: ${{ secrets.DB_HOST }}
@@ -222,7 +222,7 @@ jobs:
       - name: Setup Bastion Connection
         if: ${{ env.USE_BASTION == 'true' }}
         id: bastion-connect
-        uses: y-miyazaki/config/.github/actions/schemaspy-bastion-connect@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/schemaspy-bastion-connect@7012cfa6895f9358d9e836c6f49bb9e9194a6b4c # v1.8.122
 
         with:
           bastion_instance_id: ${{ inputs.bastion_instance_id }}
@@ -231,7 +231,7 @@ jobs:
       - name: Setup SSM Port Forwarding
         if: ${{ env.USE_BASTION == 'true' }}
         id: start-port-forward
-        uses: y-miyazaki/config/.github/actions/schemaspy-ssm-port-forward@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/schemaspy-ssm-port-forward@7012cfa6895f9358d9e836c6f49bb9e9194a6b4c # v1.8.122
 
         with:
           bastion_id: ${{ steps.bastion-connect.outputs.bastion_id }}
@@ -384,7 +384,7 @@ jobs:
 
       - name: Cleanup SSM Port Forwarding
         if: ${{ always() && env.USE_BASTION == 'true' }}
-        uses: y-miyazaki/config/.github/actions/schemaspy-ssm-cleanup@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/schemaspy-ssm-cleanup@7012cfa6895f9358d9e836c6f49bb9e9194a6b4c # v1.8.122
 
         with:
           ssm_pid: ${{ steps.start-port-forward.outputs.ssm_pid }}
@@ -435,7 +435,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@5da13eb637a89cfa6d46d1a254ccb2463d87c4df # v1.8.121
+        uses: y-miyazaki/config/.github/actions/summary@7012cfa6895f9358d9e836c6f49bb9e9194a6b4c # v1.8.122
 
         with:
           artifacts: |
