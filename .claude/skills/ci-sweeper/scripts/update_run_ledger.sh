@@ -20,7 +20,7 @@
 # - jq
 #
 # Optional environment:
-#   CI_SWEEPER_LEDGER_FILE  Ledger path (default: ci-sweeper-run-ledger.json; repo-relative)
+#   CI_SWEEPER_LEDGER_FILE  Ledger path (default: .loop/state-ci-sweeper-run-ledger.json; repo-relative)
 #   GITHUB_RUN_ID           Default automation run id when --loop-run-id is omitted
 #   TARGET_JSON             target_json from caller finalize output (when CLI args omitted)
 #   OUTCOME                 Outcome from caller finalize output (when --outcome omitted)
@@ -44,7 +44,7 @@ source "${SCRIPT_DIR}/lib/all.sh"
 #######################################
 # Global variables
 #######################################
-LEDGER_FILE="${CI_SWEEPER_LEDGER_FILE:-ci-sweeper-run-ledger.json}"
+LEDGER_FILE="${CI_SWEEPER_LEDGER_FILE:-.loop/state-ci-sweeper-run-ledger.json}"
 RUN_ID=""
 WORKFLOW_NAME=""
 HEAD_SHA=""

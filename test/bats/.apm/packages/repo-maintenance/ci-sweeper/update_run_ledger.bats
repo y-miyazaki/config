@@ -4,6 +4,7 @@
 # Tests for .apm/packages/repo-maintenance/.apm/skills/ci-sweeper/scripts/update_run_ledger.sh
 
 # Use cases:
+# - update_run_ledger defaults ledger to .loop/state-ci-sweeper-run-ledger.json
 # - update_run_ledger resolves head_sha from TARGET_JSON head_sha field
 # - update_run_ledger resolves fields from TARGET_JSON env
 # - update_run_ledger writes a new ledger entry
@@ -31,6 +32,17 @@ setup() {
 
 teardown() {
     rm -f "${LEDGER_FILE:-}"
+}
+
+@test "update_run_ledger defaults ledger to .loop/state-ci-sweeper-run-ledger.json" {
+    local repo="${BATS_TEST_TMPDIR}/default-ledger-repo"
+    mkdir -p "${repo}"
+    run bash -c 'cd "$1" && git init -q . && env -u CI_SWEEPER_LEDGER_FILE OUTCOME=rejected bash "$2" --run-id 321 --workflow ci-go --head-sha abc1234' _ "${repo}" "${LEDGER_SCRIPT}"
+    [ "$status" -eq 0 ]
+    [ -f "${repo}/.loop/state-ci-sweeper-run-ledger.json" ]
+    [ ! -f "${repo}/ci-sweeper-run-ledger.json" ]
+    run jq -e '.runs["321"].outcome == "rejected"' "${repo}/.loop/state-ci-sweeper-run-ledger.json"
+    [ "$status" -eq 0 ]
 }
 
 @test "update_run_ledger resolves head_sha from TARGET_JSON head_sha field" {
