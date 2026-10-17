@@ -2,11 +2,16 @@
 # Design: docs/superpowers/specs/2026-10-17-loop-pr-review-design.md
 # Requires repository secret: AGENT_TOKEN (engine API key).
 #
-# ROLLOUT: the pull_request_target trigger below is COMMENTED OUT on purpose.
-# ENABLE ONLY AFTER the ci-loop-* SHA pins are bumped to a release that contains
-# the loop-finalize `finalize: none` fix (plan Task 3). Until then the pinned
-# loop-finalize merges and pushes the agent branch (with the report file) to the
-# base branch on APPROVE when delivery is none. Only workflow_dispatch is active.
+# ROLLOUT WARNING: BOTH triggers are unsafe on a real base branch until the
+# ci-loop-* SHA pins are bumped to a release that contains the loop-finalize
+# `finalize_strategy: none` fix (plan Task 3). The currently pinned loop-finalize
+# does not honor it: with the caller input `delivery: none`, an APPROVE verdict
+# merges and pushes the agent branch (including .loop/review/pr-<n>.json) into
+# the base branch. This applies to workflow_dispatch as well as pull_request_target.
+# - Until the pin bump: use workflow_dispatch only on a throwaway base branch or repo.
+# - The pull_request_target trigger below is COMMENTED OUT on purpose.
+# - ENABLE ONLY AFTER the pin bump: uncomment the trigger, and re-run zizmor
+#   (it has not checked the commented block).
 # The jobs.loop.if gate already covers both events; enabling is uncommenting the trigger.
 name: on-loop-github-pr-review
 
