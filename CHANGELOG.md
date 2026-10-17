@@ -16,6 +16,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (goreleaser) Update goreleaser to v2.18.3 (#975) ([fc3d958](https://github.com/y-miyazaki/config/commit/fc3d958f21f460bb07690376055e60dbfe7dd202))
 - (loop) dogfood state branch (disposable, do not merge) ([0e27ebf](https://github.com/y-miyazaki/config/commit/0e27ebf569259d971b7eaef24fbfaec71f6509f7))
 
+## [1.8.125] - 2026-10-17
+
+### Fixed
+
+- (loop) unify PR meta block as a Meta key/value table and validate test-gap reports ([ba42a54](https://github.com/y-miyazaki/config/commit/ba42a54f15394c7011a9fa4701521f091ad879a1))
+
+### Changed
+
+- align pins to v1.8.125 (68cf85c) ([fa4fb6f](https://github.com/y-miyazaki/config/commit/fa4fb6fbafa2425cba8623e8a8f8efc39aca864a))
+- finalize all pins v1.8.125 (62db1fa) ([68cf85c](https://github.com/y-miyazaki/config/commit/68cf85cf255658b1328e25a66c19c138e9c28b16))
+- pin all to release v1.8.125 (914aa0d) ([62db1fa](https://github.com/y-miyazaki/config/commit/62db1fa6bf5ca86eb83d13a13012ec375a0cbec1))
+- pin all to v1.8.125 (ba42a54) ([914aa0d](https://github.com/y-miyazaki/config/commit/914aa0d83a954a79089abf8370ce069a27fc6620))
+- loop-automated update (attempt 1) (#996) ([d48dea9](https://github.com/y-miyazaki/config/commit/d48dea9e189634b80e5f1cd55d0795abeb10e763))
+- loop-automated update (attempt 1) (#997) ([f691f1e](https://github.com/y-miyazaki/config/commit/f691f1eea8fc73545e37f8a6754b131bf097af02))
+- loop-automated update (attempt 1) (#998) ([3b6f55f](https://github.com/y-miyazaki/config/commit/3b6f55f606028b0bbd66f042c2579479848d22e3))
+
 ## [1.8.123] - 2026-10-17
 
 ### Fixed
@@ -2510,6 +2526,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update GitHub Actions to use loop-install-cli and other actions version 1.8.4 ([2c56aa0](https://github.com/y-miyazaki/config/commit/2c56aa01ad05ff9a45d6dd0dfb3f65b39a03766c))
 
+[1.8.125]: https://github.com/y-miyazaki/config/compare/v1.8.123...fa4fb6fbafa2425cba8623e8a8f8efc39aca864a
 [1.8.123]: https://github.com/y-miyazaki/config/compare/v1.8.121...518ff27a3a7232cbddf80fce343ead2a414fe90a
 [1.8.121]: https://github.com/y-miyazaki/config/compare/v1.8.120...5da13eb637a89cfa6d46d1a254ccb2463d87c4df
 [1.8.120]: https://github.com/y-miyazaki/config/compare/v1.8.119...fc7153542006aa1476d069debbd6e2b854463e8a
