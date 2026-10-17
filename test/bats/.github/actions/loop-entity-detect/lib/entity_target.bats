@@ -8,6 +8,7 @@
 # - build_entity_target_matrix builds a single-element matrix from a detect handoff_key
 # - build_entity_target_matrix fails fast when handoff_key is missing and skip is false
 # - build_entity_target_matrix sets target_json.finalize from delivery (none vs open_pr)
+# - build_entity_target_matrix emits target_json.from.branch and from.ref (worktree base)
 # - build_entity_target_matrix threads may_edit/write_target into the maker prompt
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -37,6 +38,15 @@ setup() {
     run build_entity_target_matrix "${BATS_TEST_TMPDIR}/d.json" "issue-triage" "issue-triage" "do triage" "L1" "none" "false" ""
     [ "$status" -eq 0 ]
     run jq -e 'length == 1 and .[0].handoff_key == "entity:issue:7"' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "build_entity_target_matrix emits from.branch and from.ref for the worktree" {
+    printf '%s' '{"status":"ok","skip":false,"result":{"handoff_key":"entity:pr:77"}}' > "${BATS_TEST_TMPDIR}/d.json"
+    GITHUB_REF_NAME=main GITHUB_SHA=abc123 run build_entity_target_matrix "${BATS_TEST_TMPDIR}/d.json" \
+        "github-pr-review" "github-pr-review" "review" "L2" "none" "true" "report"
+    [ "$status" -eq 0 ]
+    run jq -e '.[0].target_json.from == {branch: "main", ref: "abc123"} and .[0].target_json.to.branch == "main"' <<< "${output}"
     [ "$status" -eq 0 ]
 }
 
