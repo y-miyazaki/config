@@ -22,6 +22,9 @@
 # - jq
 # - gh (when PR facts, changed files, or reviews are fetched from the GitHub API)
 #
+# Fail closed: when a required fact (workflow_dispatch PR facts, reviews, changed files)
+# cannot be obtained and no seed env var supplies it, emit the error envelope.
+#
 # Optional environment:
 #   PR_NUMBER             Pull request number (required unless GITHUB_EVENT_PATH hydrates it)
 #   PR_FORCE              true|false; true ignores the existing-review marker (default: false)
@@ -181,7 +184,7 @@ function hydrate_pr_env_from_event {
             PR_DRAFT="$(jq -r '.pull_request.draft // false | tostring' <<< "${event_json}")"
         fi
         if [[ -z ${PR_IS_FORK:-} ]]; then
-            PR_IS_FORK="$(jq -r '((.pull_request.head.repo.full_name // "") != (.repository.full_name // "")) | tostring' <<< "${event_json}")"
+            PR_IS_FORK="$(jq -r '(.pull_request.head.repo.full_name // "") as $h | (.repository.full_name // "") as $r | (($h != "" and $r != "" and $h == $r) | not) | tostring' <<< "${event_json}")"
         fi
         if [[ -z ${PR_LABELS_JSON:-} ]]; then
             PR_LABELS_JSON="$(jq -c '[.pull_request.labels[]?.name]' <<< "${event_json}")"
@@ -261,11 +264,11 @@ function hydrate_pr_from_api_if_needed {
         return 0
     fi
     if ! gh_available; then
-        return 0
+        output_error "cannot determine PR facts for #${PR_NUMBER}: gh, token, or GITHUB_REPOSITORY unavailable and PR_* not seeded"
     fi
 
     pr_json="$(GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}" gh pr view "${PR_NUMBER}" --repo "${GITHUB_REPOSITORY}" \
-        --json author,isDraft,isCrossRepository,labels,baseRefOid,headRefOid,files)" || {
+        --json author,isDraft,isCrossRepository,labels,baseRefOid,headRefOid)" || {
         output_error "failed to fetch PR #${PR_NUMBER} from GitHub API"
     }
 
@@ -286,9 +289,6 @@ function hydrate_pr_from_api_if_needed {
     fi
     if [[ -z ${PR_HEAD_SHA:-} ]]; then
         PR_HEAD_SHA="$(jq -r '.headRefOid // ""' <<< "${pr_json}")"
-    fi
-    if [[ -z ${PR_CHANGED_FILES_JSON:-} ]]; then
-        PR_CHANGED_FILES_JSON="$(jq -c '[.files[]?.path]' <<< "${pr_json}")"
     fi
 }
 
@@ -317,12 +317,11 @@ function resolve_changed_files {
         return 0
     fi
     if ! gh_available; then
-        PR_CHANGED_FILES_JSON="[]"
-        return 0
+        output_error "cannot determine changed files for PR #${PR_NUMBER}: gh, token, or GITHUB_REPOSITORY unavailable"
     fi
 
-    PR_CHANGED_FILES_JSON="$(GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}" gh pr view "${PR_NUMBER}" --repo "${GITHUB_REPOSITORY}" --json files \
-        --jq '[.files[]?.path]')" || {
+    PR_CHANGED_FILES_JSON="$(GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}" gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" \
+        --jq '.[].filename' | jq -R -s -c 'split("\n") | map(select(length > 0))')" || {
         output_error "failed to fetch changed files for PR #${PR_NUMBER}"
     }
 }
@@ -351,7 +350,7 @@ function resolve_changed_files {
 function has_marker_review {
     if [[ -z ${PR_REVIEWS_JSON:-} ]]; then
         if ! gh_available; then
-            return 1
+            output_error "cannot determine existing reviews for PR #${PR_NUMBER}: gh, token, or GITHUB_REPOSITORY unavailable"
         fi
         PR_REVIEWS_JSON="$(GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}" gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/reviews" | jq -cs 'add // []')" || {
             output_error "failed to fetch reviews for PR #${PR_NUMBER}"
@@ -528,7 +527,11 @@ function main {
     PR_HEAD_SHA="${PR_HEAD_SHA:-}"
 
     evaluate_skip
-    resolve_changed_files
+    if [[ ${SKIP_FLAG} == "true" ]]; then
+        PR_CHANGED_FILES_JSON="${PR_CHANGED_FILES_JSON:-[]}"
+    else
+        resolve_changed_files
+    fi
 
     file_count="$(jq -r 'length' <<< "${PR_CHANGED_FILES_JSON}")"
     result_json="$(build_result_json)"
