@@ -59,6 +59,7 @@ See [CONTEXT — Semantic Findings](../explanation/loop-engineering/CONTEXT.md#l
 - [ ] Behavior matches [finalize strategy matrix](../explanation/loop-engineering/loop-engineering-design.md#finalize-strategy-matrix) for `target.finalize` + `DEFAULT_LEVEL`
 - [ ] **L2 `open_pr`:** merge-gated cursor — `loop-finalize` writes `pending`; `last_sha` advances only when fix PR merges via `on-loop-state-promote.yaml` (label `loop-automation`). Fix PR is domain-only — see [State delivery philosophy](../explanation/loop-engineering/multi-branch-loops-design.md#state-delivery-philosophy)
 - [ ] `open_pr`: create PR on APPROVE; `push` / `push_head`: push on APPROVE; delete agent branch on REJECT
+- [ ] L2 with `delivery: none` (`finalize=none`) does not push; the agent branch is deleted after APPROVE; domain persistence reads the report from the agent branch
 - [ ] L3 `auto_merge` only when `finalize=open_pr` — not for `push` / `push_head`
 - [ ] State, run-log, domain ledger via `domain_persistence_script` in finalize job (no caller `git push` for `.loop/*`)
 - [ ] `outcome: watch` for Skill Watch (no `consecutive_failures` increment)

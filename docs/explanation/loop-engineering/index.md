@@ -42,6 +42,7 @@ Each loop is a thin `on-loop-<name>.yaml` plus a design page. Input key lookup i
 | github-issue-triage  | [Issue Triage](workflows/loop-github-issue-triage-workflow-design.md)   | `on-loop-github-issue-triage.yaml`  |
 | github-issue-autofix | [Issue Autofix](workflows/loop-github-issue-autofix-workflow-design.md) | `on-loop-github-issue-autofix.yaml` |
 | github-pr-revise     | [PR Revise](workflows/loop-github-pr-revise-workflow-design.md)         | `on-loop-github-pr-revise.yaml`     |
+| github-pr-review     | [PR Review](workflows/loop-github-pr-review-workflow-design.md)         | `on-loop-github-pr-review.yaml`     |
 
 Also listed from [Multi-Branch Loops Design — Workflow Design Documents](multi-branch-loops-design.md#workflow-design-documents).
 

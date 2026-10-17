@@ -5,18 +5,19 @@ For concrete specifications (Actions/Workflows list, interfaces), see [Specifica
 
 ## Implementation Status
 
-| Loop (`loop_name`)     | Skill (`common`)       | Status                             | Level         |
-| ---------------------- | ---------------------- | ---------------------------------- | ------------- |
-| `docs-updater`         | `docs-updater`         | Dogfood L2; multi-branch on `main` | L2 (Assisted) |
-| `ci-sweeper`           | `ci-sweeper`           | Dogfood L2; integration + PR heads | L2 (Assisted) |
-| `changelog`            | `changelog`            | Dogfood L2; weekly schedule        | L2 (Assisted) |
-| `refactor`             | `refactor`             | Dogfood L2; weekly schedule        | L2 (Assisted) |
-| `tech-debt`            | `tech-debt`            | Dogfood L2; weekly report PR       | L2 (Assisted) |
-| `github-issue-triage`  | `github-issue-triage`  | Dogfood L1 / in progress           | L1 (Report)   |
-| `github-issue-autofix` | `github-issue-autofix` | Dogfood L2 / in progress           | L2 (Assisted) |
-| `github-pr-revise`     | `github-pr-revise`     | Dogfood L2 / in progress           | L2 (Assisted) |
-| `test-gap`             | `test-gap`             | Dogfood L2; weekly schedule        | L2 (Assisted) |
-| `loop-stale-pr`        | —                      | Not started                        | -             |
+| Loop (`loop_name`)     | Skill (`common`)       | Status                                                     | Level         |
+| ---------------------- | ---------------------- | ---------------------------------------------------------- | ------------- |
+| `docs-updater`         | `docs-updater`         | Dogfood L2; multi-branch on `main`                         | L2 (Assisted) |
+| `ci-sweeper`           | `ci-sweeper`           | Dogfood L2; integration + PR heads                         | L2 (Assisted) |
+| `changelog`            | `changelog`            | Dogfood L2; weekly schedule                                | L2 (Assisted) |
+| `refactor`             | `refactor`             | Dogfood L2; weekly schedule                                | L2 (Assisted) |
+| `tech-debt`            | `tech-debt`            | Dogfood L2; weekly report PR                               | L2 (Assisted) |
+| `github-issue-triage`  | `github-issue-triage`  | Dogfood L1 / in progress                                   | L1 (Report)   |
+| `github-issue-autofix` | `github-issue-autofix` | Dogfood L2 / in progress                                   | L2 (Assisted) |
+| `github-pr-revise`     | `github-pr-revise`     | Dogfood L2 / in progress                                   | L2 (Assisted) |
+| `github-pr-review`     | `github-pr-review`     | L2; `workflow_dispatch` only (see workflow design Rollout) | L2 (Assisted) |
+| `test-gap`             | `test-gap`             | Dogfood L2; weekly schedule                                | L2 (Assisted) |
+| `loop-stale-pr`        | —                      | Not started                                                | -             |
 
 Platform actions (`loop-detect` `target_matrix`, handoff artifact, `domain_persistence_script`, merge-gated `pending`) are implemented — see [Multi-Branch Loops Design](multi-branch-loops-design.md).
 
@@ -773,11 +774,12 @@ When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as
 
 `DEFAULT_LEVEL` is one switch. **Finalize behavior** is `target.finalize` + level:
 
-| `target.finalize` | L2                           | L3                                                                               |
-| ----------------- | ---------------------------- | -------------------------------------------------------------------------------- |
-| `open_pr`         | Create fix PR to `to.branch` | Create PR + optional `auto_merge` (allowlist + branch protection)                |
-| `push`            | N/A (use `open_pr` at L2)    | Push checker-approved commits to `to.branch` (integration only; explicit opt-in) |
-| `push_head`       | Push to PR head `to.branch`  | Same                                                                             |
+| `target.finalize` | L2                                                                                                   | L3                                                                               |
+| ----------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `open_pr`         | Create fix PR to `to.branch`                                                                         | Create PR + optional `auto_merge` (allowlist + branch protection)                |
+| `push`            | N/A (use `open_pr` at L2)                                                                            | Push checker-approved commits to `to.branch` (integration only; explicit opt-in) |
+| `push_head`       | Push to PR head `to.branch`                                                                          | Same                                                                             |
+| `none`            | No push, no PR; agent branch deleted after APPROVE; report persisted via `domain_persistence_script` | Same                                                                             |
 
 **Do not** map `L3` → auto-merge alone. `push` and `push_head` never enable auto-merge.
 

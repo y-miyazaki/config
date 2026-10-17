@@ -8,13 +8,13 @@ Loop **callers** (`on-loop-*.yaml`, `ci-loop-caller`) live in this repository. S
 
 Forge and runtime — not “loop vs chat”:
 
-| Package            | Install when                                 | Skills                                                                              |
-| ------------------ | -------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `common`           | Always (forge-neutral review/docs)           | `agent-skills-review`, `instructions-review`, `markdown-validation`, `docs-creator` |
-| `repo-maintenance` | Git + in-repo files; GitLab OK               | `changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`, `test-gap`      |
-| `github`           | GitHub Issue/PR (`gh`); no GHA YAML required | `github-issue-triage`, `github-issue-autofix`, `github-pr-revise`, `github-pr-body` |
-| `github-actions`   | `.github/workflows` review/validation        | `github-actions-review`, `github-actions-validation`                                |
-| `loop`             | Loop execute checker (generic)               | `loop-verifier`                                                                     |
+| Package            | Install when                                 | Skills                                                                                                  |
+| ------------------ | -------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `common`           | Always (forge-neutral review/docs)           | `agent-skills-review`, `instructions-review`, `markdown-validation`, `docs-creator`                     |
+| `repo-maintenance` | Git + in-repo files; GitLab OK               | `changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`, `test-gap`                          |
+| `github`           | GitHub Issue/PR (`gh`); no GHA YAML required | `github-issue-triage`, `github-issue-autofix`, `github-pr-revise`, `github-pr-review`, `github-pr-body` |
+| `github-actions`   | `.github/workflows` review/validation        | `github-actions-review`, `github-actions-validation`                                                    |
+| `loop`             | Loop execute checker (generic)               | `loop-verifier`                                                                                         |
 
 `github-pr-body` is GitHub-forge and Interactive; it is **not** a loop entry skill. `loop-verifier` is loop-generic and **not** a domain entry skill. `agent_checker_instructions` stays on each `on-loop-*.yaml`.
 
@@ -35,6 +35,7 @@ Update this table in the **same change** as adding or renaming a loop caller `ag
 | `github-issue-triage`  | `github`           | `on-loop-github-issue-triage.yaml`  | triage this Issue (URL/number)      | Issue event detect JSON                  |
 | `github-issue-autofix` | `github`           | `on-loop-github-issue-autofix.yaml` | implement/fix this Issue            | autofix label / dispatch detect JSON     |
 | `github-pr-revise`     | `github`           | `on-loop-github-pr-revise.yaml`     | apply this PR feedback              | mention-gated comment detect JSON        |
+| `github-pr-review`     | `github`           | `on-loop-github-pr-review.yaml`     | review this PR (URL/number)         | newly opened PR detect JSON              |
 
 ## Description contract (skill triggering)
 

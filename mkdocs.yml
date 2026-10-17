@@ -88,6 +88,7 @@ nav:
               - Issue Triage: explanation/loop-engineering/workflows/loop-github-issue-triage-workflow-design.md
               - Issue Autofix: explanation/loop-engineering/workflows/loop-github-issue-autofix-workflow-design.md
               - PR Revise: explanation/loop-engineering/workflows/loop-github-pr-revise-workflow-design.md
+              - PR Review: explanation/loop-engineering/workflows/loop-github-pr-review-workflow-design.md
           - Cross-cutting contracts:
               - Loop PR Body Skill Contract: explanation/loop-engineering/loop-pr-body-skill-contract.md
               - Loop Automation Report Format: explanation/loop-engineering/common-loop-triage-format.md
