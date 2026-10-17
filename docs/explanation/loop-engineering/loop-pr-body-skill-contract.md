@@ -177,7 +177,7 @@ Before emitting PR `## Summary`, run `git diff --name-only` (or `git diff --cach
 
 ## Mechanical validation (loop-execute)
 
-Loop automation skills listed in `validate_agent_report.sh` (`changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`) run mechanical format checks before the LLM checker. Failures produce structured REJECT (no APPROVE until fixed).
+Loop automation skills listed in `validate_agent_report.sh` (`changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`, `test-gap`) run mechanical format checks before the LLM checker. Failures produce structured REJECT (no APPROVE until fixed).
 
 ### Four-plane vs validation matrix
 

@@ -222,9 +222,9 @@ function build_done_reply_body {
     if [[ -n ${commit_sha} ]]; then
         short_sha="${commit_sha:0:7}"
         if [[ -n ${commit_url} && ${commit_url} != "#" ]]; then
-            loop_meta_row "Commit" "[\`${short_sha}\`](${commit_url})"
+            loop_meta_row "Commit" "[${short_sha}](${commit_url})"
         else
-            loop_meta_row "Commit" "\`${short_sha}\`"
+            loop_meta_row "Commit" "${short_sha}"
         fi
     fi
 

@@ -546,7 +546,7 @@ function render_run_metadata {
     # trigger reply, and entity Issue comment all carry the same meta block.
     loop_meta_reset
     [[ -n ${level} ]] && loop_meta_row "Level" "$(escape_markdown_table_cell "${level}")"
-    [[ -n ${target_key} ]] && loop_meta_row "Target" "\`$(escape_markdown_table_cell "${target_key}")\`"
+    [[ -n ${target_key} ]] && loop_meta_row "Target" "$(escape_markdown_table_cell "${target_key}")"
     [[ -n ${skip_reason} ]] && loop_meta_row "Skip reason" "$(escape_markdown_table_cell "${skip_reason}")"
 
     block="$(build_loop_meta_block "${OUTCOME:-}" "" "" "${engine}" "${usage_json}" "")"

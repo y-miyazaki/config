@@ -152,7 +152,7 @@ setup() {
 @test "render_run_metadata escapes pipe in skip reason" {
     run render_run_metadata L2 'integration:main' 'foo|bar' '' ''
     [ "$status" -eq 0 ]
-    [[ $output == *"· Loop details"* ]]
+    [[ $output == *"<summary>Meta</summary>"* ]]
     [[ $output == *"foo\\|bar"* ]]
     [[ $output != *"| foo | bar |"* ]]
 }
@@ -170,9 +170,9 @@ setup() {
     export USAGE_JSON='{"total_input_tokens":100000,"total_output_tokens":6000,"model":"Composer-2.5"}'
     run render_pr_body
     [ "$status" -eq 0 ]
-    [[ $output == *"| Engine | \`cursor\` |"* ]]
-    [[ $output == *"| Model | \`Composer-2.5\` |"* ]]
-    [[ $output == *"| Tokens | In/Out 100K/6K |"* ]]
+    [[ $output == *"| \`engine\` | cursor |"* ]]
+    [[ $output == *"| \`model\` | Composer-2.5 |"* ]]
+    [[ $output == *"| \`tokens\` | In/Out 100K/6K |"* ]]
     [[ $output == *"<details>"* ]]
     # One meta block only: no stray Created By line beside the collapsed table.
     [[ $output != *"Created By"* ]]
@@ -190,8 +190,8 @@ setup() {
     run render_pr_body
     [ "$status" -eq 0 ]
     [[ $output == *"## Failure context"* ]]
-    [[ $output == *"· Loop details"* ]]
-    [[ $output == *"| Level | L2 |"* ]]
+    [[ $output == *"<summary>Meta</summary>"* ]]
+    [[ $output == *"| \`level\` | L2 |"* ]]
     [[ $output != *"## Summary"* ]]
     [[ $output != *"- Level:"* ]]
 }
@@ -259,7 +259,7 @@ setup() {
     [ "$status" -eq 0 ]
     [[ $output == *"## Verification"* ]]
     [[ $output != *$'\n## Changes\n'* ]]
-    [[ $output == *"· Loop details"* ]]
+    [[ $output == *"<summary>Meta</summary>"* ]]
 }
 
 @test "render_pr_body orders prefix overview failure summary verification changes metadata" {
@@ -280,7 +280,7 @@ setup() {
     fail_i="$(printf '%s\n' "${output}" | grep -n '## Failure context' | head -1 | cut -d: -f1)"
     sum_i="$(printf '%s\n' "${output}" | grep -n '### Changes' | head -1 | cut -d: -f1)"
     ver_i="$(printf '%s\n' "${output}" | grep -n '## Verification' | head -1 | cut -d: -f1)"
-    meta_i="$(printf '%s\n' "${output}" | grep -n '· Loop details' | head -1 | cut -d: -f1)"
+    meta_i="$(printf '%s\n' "${output}" | grep -n '<summary>Meta</summary>' | head -1 | cut -d: -f1)"
     [ "${prefix_i}" -lt "${overview_i}" ]
     [ "${overview_i}" -lt "${fail_i}" ]
     [ "${fail_i}" -lt "${sum_i}" ]

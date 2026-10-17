@@ -31,7 +31,7 @@
 #######################################
 function agent_report_skill_requires_format_check {
     case "${1:-}" in
-        changelog | ci-sweeper | docs-updater | refactor | tech-debt) return 0 ;;
+        changelog | ci-sweeper | docs-updater | refactor | tech-debt | test-gap) return 0 ;;
         *) return 1 ;;
     esac
 }
