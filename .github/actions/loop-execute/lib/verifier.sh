@@ -241,6 +241,7 @@ function run_verify {
             "Changed path names contain unsafe characters" \
             "Rename paths that contain control characters, double quotes, or backslashes" \
             "Unsafe path: ${unsafe_error}"
+        echo "::error::Branch diff lists an unsafe path; refusing to approve: ${unsafe_error}"
         # Such names cannot be checked against the path guards, so treat them
         # like a denylist hit: the branch must never reach a remote.
         printf 'true\n' > "${attempt_dir}/denylist_blocked"

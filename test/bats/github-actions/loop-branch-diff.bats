@@ -1,8 +1,6 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
-bats_require_minimum_version 1.5.0
-
 # Tests for .github/actions/loop-execute/lib/paths.sh list_non_loop_branch_files
 #
 # Use cases:
@@ -11,6 +9,8 @@ bats_require_minimum_version 1.5.0
 # - HEAD identical to base is empty
 # - a rename lists both the old and the new path
 # - non-ASCII paths are listed unquoted; an unsafe path name lists nothing
+
+bats_require_minimum_version 1.5.0
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do

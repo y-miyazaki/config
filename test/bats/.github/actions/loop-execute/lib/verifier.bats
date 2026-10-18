@@ -322,4 +322,5 @@ EOF
     [[ "$(cat "${attempt_dir}/verdict")" == "REJECT" ]]
     [ -f "${attempt_dir}/denylist_blocked" ]
     grep -q 'unsafe characters' "${attempt_dir}/reason"
+    [[ ${output} == *"::error::Branch diff lists an unsafe path"* ]]
 }

@@ -1,8 +1,6 @@
 #!/usr/bin/env bats
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
-bats_require_minimum_version 1.5.0
-
 # Tests for .github/actions/lib/loop/edit_paths.sh
 
 # Use cases:
@@ -20,9 +18,12 @@ bats_require_minimum_version 1.5.0
 # - collect_denylist_violations returns nothing when denylist unset
 # - list_diff_paths lists non-ASCII paths unquoted and both sides of a rename
 # - list_diff_paths fails with 2 on a path with a control char, quote, or backslash
+# - list_diff_paths fails with 2 on a path that is not valid UTF-8
 # - list_diff_paths fails with 1 when git diff fails
 
 # - apply_platform_denylist_default preserves a caller denylist
+
+bats_require_minimum_version 1.5.0
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -179,6 +180,23 @@ function make_diff_repo {
         [ "$status" -eq 2 ]
         [ -z "$output" ]
         [[ $stderr == *"unsafe characters in changed path"* ]]
+    done
+}
+
+@test "list_diff_paths fails with 2 on a path that is not valid UTF-8" {
+    local name
+    make_diff_repo
+    for name in $'d\xff/.env' $'secrets\xff.txt' $'.github/workflows/\xff.yml'; do
+        git -C "${REPO}" checkout -q -B feature main
+        mkdir -p "$(dirname "${REPO}/${name}")"
+        printf 'x\n' > "${REPO}/${name}"
+        git -C "${REPO}" add -- "${name}"
+        git -C "${REPO}" commit -q -m invalid
+        run --separate-stderr bash -c 'cd "$1" && source "$2" && list_diff_paths main...HEAD --' _ "${REPO}" \
+            "$(bats_workspace_root)/.github/actions/lib/loop/edit_paths.sh"
+        [ "$status" -eq 2 ]
+        [ -z "$output" ]
+        [[ $stderr == *"not valid UTF-8"* ]]
     done
 }
 

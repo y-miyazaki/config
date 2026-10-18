@@ -236,7 +236,9 @@ function glob_to_ere {
 #   quotes, which defeats anchored globs and prefix checks). Paths are read
 #   NUL-separated; a path with a control character (newline, tab, ...), a
 #   double quote, or a backslash cannot be represented safely in a newline
-#   list and fails the call.
+#   list and fails the call. A path that is not valid UTF-8 also fails: the
+#   glob EREs do not match invalid bytes, so such a path could slip past the
+#   denylist. Validity is checked with iconv, independent of the locale.
 #
 # Globals:
 #   None
@@ -249,7 +251,8 @@ function glob_to_ere {
 #   the unsafe path (shell-quoted) to stderr
 #
 # Returns:
-#   0 on success, 1 when git diff fails, 2 when a path has unsafe characters
+#   0 on success, 1 when git diff fails or iconv is missing, 2 when a path
+#   has unsafe characters or is not valid UTF-8
 #
 #######################################
 function list_diff_paths {
@@ -273,9 +276,25 @@ function list_diff_paths {
             return 2
         fi
     done
-    if [[ ${#paths[@]} -gt 0 ]]; then
-        printf '%s\n' "${paths[@]}"
+    if [[ ${#paths[@]} -eq 0 ]]; then
+        return 0
     fi
+    if ! command -v iconv > /dev/null 2>&1; then
+        printf 'iconv is required to validate changed paths\n' >&2
+        return 1
+    fi
+    if ! printf '%s\0' "${paths[@]}" | iconv -f UTF-8 -t UTF-8 > /dev/null 2>&1; then
+        for path in "${paths[@]}"; do
+            if ! printf '%s' "${path}" | iconv -f UTF-8 -t UTF-8 > /dev/null 2>&1; then
+                printf -v quoted '%q' "${path}"
+                printf 'changed path is not valid UTF-8: %s\n' "${quoted}" >&2
+                return 2
+            fi
+        done
+        printf 'changed paths are not valid UTF-8\n' >&2
+        return 2
+    fi
+    printf '%s\n' "${paths[@]}"
 }
 
 #######################################

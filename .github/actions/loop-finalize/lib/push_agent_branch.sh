@@ -57,7 +57,8 @@
 #     branch=<validated name, or empty when empty or invalid>
 #     pushed=true|false (true only after a successful push)
 #     failed=true|false (true when a check or git step failed)
-#   Exit 1 only when GITHUB_OUTPUT or LOOP_FAILURE_FILE is unset; 0 otherwise.
+#   Exit 1 only when GITHUB_OUTPUT or LOOP_FAILURE_FILE is unset (or
+#   GITHUB_OUTPUT is unwritable); 0 otherwise.
 #
 #######################################
 
@@ -299,7 +300,7 @@ function write_outputs {
 #
 # Returns:
 #   0 when done or failed (see failed output); 1 when GITHUB_OUTPUT or
-#   LOOP_FAILURE_FILE is unset
+#   LOOP_FAILURE_FILE is unset (non-zero when GITHUB_OUTPUT is unwritable)
 #######################################
 function main {
     local branch bundle changed diff_status err err_file from_ref quoted remote_status violations
@@ -383,7 +384,7 @@ function main {
     err="$(cat "${err_file}" 2> /dev/null || true)"
     rm -f "${err_file}"
     if [[ ${diff_status} -eq 2 ]]; then
-        fail_push "changed paths of ${branch} include unsafe characters: ${err}"
+        fail_push "changed paths of ${branch} rejected: ${err}"
     fi
     if [[ ${diff_status} -ne 0 ]]; then
         fail_push "diff of ${branch} failed: ${err}"
@@ -396,7 +397,9 @@ function main {
         fail_push "edit path check failed"
     fi
     if [[ -n ${violations} ]]; then
-        violations="$(awk 'NF && !seen[$0]++' <<< "${violations}" | head -n "${MAX_REPORTED_PATHS}" | paste -sd, -)"
+        # awk reads all input and limits the output itself: an early-closing
+        # reader such as head would SIGPIPE awk and abort under pipefail.
+        violations="$(awk -v max="${MAX_REPORTED_PATHS}" 'NF && !seen[$0]++ && n++ < max' <<< "${violations}" | paste -sd, -)"
         fail_push "changed paths blocked by denylist, allowlist, or workflow guard: ${violations}"
     fi
 

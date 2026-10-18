@@ -17,6 +17,9 @@
 # - non-ASCII paths are checked unquoted (workflow guard, denylist); paths with
 #   control characters, double quotes, or backslashes fail
 # - an unwritable failure record still writes the three outputs and exits 0
+# - more than 100 violating paths still fail with the three outputs and exit 0
+# - a path that is not valid UTF-8 fails; a gitlink under .github/workflows/
+#   is a workflow change
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -239,6 +242,31 @@ function assert_pushed {
     [ -z "$(origin_sha "${BRANCH}")" ]
 }
 
+@test "a gitlink under .github/workflows/ needs a .github/ allowlist pattern" {
+    local sha
+    make_agent_branch
+    sha="$(git -C "${AGENT}" rev-parse HEAD)"
+    git -C "${AGENT}" update-index --add --cacheinfo "160000,${sha},.github/workflows/sm"
+    git -C "${AGENT}" commit -q -m gitlink
+    make_bundle
+    T_ALLOWLIST='**'
+    run_push
+    assert_failed "${BRANCH}"
+    [[ ${FAILURE_MESSAGE} == *".github/workflows/sm"* ]]
+    [ -z "$(origin_sha "${BRANCH}")" ]
+}
+
+@test "a path that is not valid UTF-8 is rejected" {
+    make_agent_branch
+    agent_commit $'d\xff/.env'
+    make_bundle
+    T_ALLOWLIST='**'
+    run_push
+    assert_failed "${BRANCH}"
+    [[ ${FAILURE_MESSAGE} == *"not valid UTF-8"* ]]
+    [ -z "$(origin_sha "${BRANCH}")" ]
+}
+
 @test "a rejected push fails" {
     make_agent_branch
     agent_commit docs/a.md
@@ -380,6 +408,23 @@ function assert_pushed {
     [ "${status}" -eq 1 ]
     run env -u LOOP_FAILURE_FILE GITHUB_OUTPUT="${OUTPUT_FILE}" AGENT_BRANCH='' bash "${PUSH_SCRIPT}"
     [ "${status}" -eq 1 ]
+}
+
+@test "more than 100 violating paths still fail with the three outputs" {
+    local index
+    make_agent_branch
+    mkdir -p "${AGENT}/src"
+    for index in $(seq 1 150); do
+        printf 'x\n' > "${AGENT}/src/a-file-with-a-rather-long-name-to-fill-the-pipe-buffer-quickly-${index}.sh"
+    done
+    git -C "${AGENT}" add src
+    git -C "${AGENT}" commit -q -m many
+    make_bundle
+    T_ALLOWLIST='docs/**'
+    run_push
+    assert_failed "${BRANCH}"
+    [[ ${FAILURE_MESSAGE} == *"src/"* ]]
+    [ -z "$(origin_sha "${BRANCH}")" ]
 }
 
 @test "non-ASCII workflow files need a .github/ allowlist pattern" {
