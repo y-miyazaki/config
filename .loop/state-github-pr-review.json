@@ -13,6 +13,13 @@
       "consecutive_failures": 0,
       "open_rejections": [],
       "last_reject_reason": "Report-only diff for PR #992; zero findings so no unevidenced or out-of-diff claims, premises recorded, and all three summary claims verified at the base commit"
+    },
+    "entity:pr:1010": {
+      "last_run": "2026-10-18T03:31:07Z",
+      "outcome": "rejected",
+      "consecutive_failures": 1,
+      "open_rejections": [],
+      "last_reject_reason": "No file changes produced"
     }
   }
 }
