@@ -8,7 +8,7 @@
 # - None (library file, sourced by other scripts)
 #
 # Design Rules:
-# - run_agent maps ENGINE to the correct CLI and token env var
+# - run_agent maps AGENT_ENGINE to the correct CLI and token env var
 # - run_agent_capture avoids pipe subshells so USAGE_* globals persist
 # - Maker sessions may write; checker sessions are read-only
 # - The action grants no tool permissions of its own: rules come from the host
@@ -29,13 +29,13 @@
 #   to the workflow that calls it.
 #   - --setting-sources project loads the host repository's .claude/settings.json
 #     when that file exists, and is a no-op when it does not.
-#   - AGENT_ALLOWED_TOOLS carries the rules the calling workflow declared for the
+#   - AGENT_TOOL_ALLOWLIST carries the rules the calling workflow declared for the
 #     skill it is running, so no repository inherits permissions it never granted.
 #   --permission-mode acceptEdits covers Edit/Write but not command execution, so
 #   a skill that shells out needs its commands declared either way.
 #
 # Globals:
-#   AGENT_ALLOWED_TOOLS - Optional newline-separated permission rules (may be unset)
+#   AGENT_TOOL_ALLOWLIST - Optional newline-separated permission rules (may be unset)
 #
 # Arguments:
 #   $1 - Name of the ARGS array variable (nameref)
@@ -56,10 +56,10 @@ function append_claude_permission_args {
 
     args_ref+=(--setting-sources project)
     if [[ ${allow_writes} == "true" ]]; then args_ref+=(--permission-mode acceptEdits); fi
-    if [[ -n ${AGENT_ALLOWED_TOOLS:-} ]]; then
+    if [[ -n ${AGENT_TOOL_ALLOWLIST:-} ]]; then
         while IFS= read -r rule; do
             [[ -n ${rule} ]] && extra_tools+=("${rule}")
-        done <<< "${AGENT_ALLOWED_TOOLS}"
+        done <<< "${AGENT_TOOL_ALLOWLIST}"
     fi
     if [[ ${#extra_tools[@]} -gt 0 ]]; then args_ref+=(--allowedTools "${extra_tools[@]}"); fi
 }
@@ -364,12 +364,12 @@ function run_agent_capture {
 # run_agent: Execute the configured AI engine CLI
 #
 # Globals:
-#   AGENT_ALLOWED_TOOLS - Optional newline-separated extra tool rules (claude only)
+#   AGENT_TOOL_ALLOWLIST - Optional newline-separated extra tool rules (claude only)
 #   AGENT_TOKEN - Authentication token for the selected engine
 #   ATTEMPT - Optional loop attempt number recorded on the usage session
 #   DETECT_JSON_FILE - Optional materialized detect JSON path granted as an extra read directory
 #   EFFORT - Optional reasoning effort level (engines with a dedicated flag only)
-#   ENGINE - Engine name (claude|copilot|codex|cursor)
+#   AGENT_ENGINE - Engine name (claude|copilot|codex|cursor)
 #   MAX_TURNS - Optional max turns override
 #   MODEL - Optional model override
 #   PROMPT - Prompt text
@@ -391,9 +391,9 @@ function run_agent {
     local working_root="${WORKING_DIRECTORY:-.}"
     local rc=0
 
-    prepare_agent_mcps "${ENGINE}" "${working_root}"
-    warn_unsupported_allowed_tools "${ENGINE}"
-    warn_unsupported_effort "${ENGINE}"
+    prepare_agent_mcps "${AGENT_ENGINE:-}" "${working_root}"
+    warn_unsupported_allowed_tools "${AGENT_ENGINE:-}"
+    warn_unsupported_effort "${AGENT_ENGINE:-}"
 
     # Opened here rather than in run_agent_capture: loop-agent-once calls
     # run_agent directly when it has no output file, and that session must be
@@ -422,15 +422,16 @@ function run_agent {
 #######################################
 function run_agent_engine {
     local allow_writes="${1:-true}"
+    local session_prompt="${PROMPT:-}"
 
-    case "${ENGINE}" in
+    case "${AGENT_ENGINE:-}" in
         claude)
             export ANTHROPIC_API_KEY="${AGENT_TOKEN}"
             # stream-json (not --bare) so usage.sh can read the usage event;
             # the wrapper restores the final text on stdout for report parsing.
-            local -a ARGS=(-p "${PROMPT}" --output-format stream-json --verbose)
+            local -a ARGS=(-p "${session_prompt}" --output-format stream-json --verbose)
             grant_claude_workspace_trust
-            append_agent_mcp_args ARGS "${ENGINE}"
+            append_agent_mcp_args ARGS "${AGENT_ENGINE:-}"
             append_claude_permission_args ARGS "${allow_writes}"
             # Detect JSON lives in STATUS_DIR, outside the worktree; without this the
             # agent cannot read the path the prompt points at.
@@ -442,23 +443,23 @@ function run_agent_engine {
             ;;
         copilot)
             export COPILOT_GITHUB_TOKEN="${AGENT_TOKEN}"
-            local -a ARGS=(-p "${PROMPT}" --no-ask-user)
-            append_agent_mcp_args ARGS "${ENGINE}"
+            local -a ARGS=(-p "${session_prompt}" --no-ask-user)
+            append_agent_mcp_args ARGS "${AGENT_ENGINE:-}"
             if [[ -n ${MAX_TURNS:-} ]]; then ARGS+=(--max-turns "${MAX_TURNS}"); fi
             if [[ -n ${MODEL:-} ]]; then ARGS+=(--model "${MODEL}"); fi
             copilot "${ARGS[@]}"
             ;;
         codex)
             export OPENAI_API_KEY="${AGENT_TOKEN}"
-            local -a ARGS=(--prompt "${PROMPT}" --auto-approve)
-            append_agent_mcp_args ARGS "${ENGINE}"
+            local -a ARGS=(--prompt "${session_prompt}" --auto-approve)
+            append_agent_mcp_args ARGS "${AGENT_ENGINE:-}"
             if [[ -n ${MODEL:-} ]]; then ARGS+=(--model "${MODEL}"); fi
             codex "${ARGS[@]}"
             ;;
         cursor)
             export CURSOR_API_KEY="${AGENT_TOKEN}"
-            local -a ARGS=(-p "${PROMPT}" --print --output-format stream-json --trust)
-            append_agent_mcp_args ARGS "${ENGINE}"
+            local -a ARGS=(-p "${session_prompt}" --print --output-format stream-json --trust)
+            append_agent_mcp_args ARGS "${AGENT_ENGINE:-}"
             local agent_bin
             if [[ ${allow_writes} == "true" && ${WORKING_DIRECTORY} != "." ]]; then
                 ARGS+=(--force)
@@ -475,7 +476,7 @@ function run_agent_engine {
             run_cursor_agent_with_usage "${agent_bin}" "${ARGS[@]}"
             ;;
         *)
-            echo "::error::Unsupported engine: ${ENGINE}"
+            echo "::error::Unsupported engine: ${AGENT_ENGINE:-}"
             exit 1
             ;;
     esac
@@ -492,7 +493,7 @@ function run_agent_engine {
 #   unused rules so the caller moves them to that engine's own config.
 #
 # Globals:
-#   AGENT_ALLOWED_TOOLS - Optional newline-separated permission rules (read)
+#   AGENT_TOOL_ALLOWLIST - Optional newline-separated permission rules (read)
 #
 # Arguments:
 #   $1 - Engine name
@@ -507,11 +508,11 @@ function run_agent_engine {
 function warn_unsupported_allowed_tools {
     local engine_name="${1:?engine name required}"
 
-    [[ -z ${AGENT_ALLOWED_TOOLS:-} ]] && return 0
+    [[ -z ${AGENT_TOOL_ALLOWLIST:-} ]] && return 0
     case "${engine_name}" in
         claude) return 0 ;;
         *)
-            echo "::warning::engine=${engine_name} ignores agent_allowed_tools;" \
+            echo "::warning::engine=${engine_name} ignores agent_tool_allowlist;" \
                 "declare its permissions in the engine's own config" \
                 "(copilot: --allow-tool, cursor: .cursor/cli.json, codex: sandbox/approval policy)"
             ;;

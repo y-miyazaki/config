@@ -132,6 +132,45 @@ function check_automation_envelope {
 }
 
 #######################################
+# check_comment_link_guidance: Require comment-posting skills to ship and list link rules
+#
+# Description:
+#   Skills that post comments or reviews instead of a PR body (github-issue-triage,
+#   github-pr-review) still write text that must carry links. They ship the same
+#   references/category-pr-body-links.md and must list it in SKILL.md.
+#
+# Globals:
+#   SKILLS_ROOT
+#   LOOP_COMMENT_LINKS_SKILLS
+#
+# Arguments:
+#   $1 - Skill name
+#
+# Outputs:
+#   None (records violations)
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function check_comment_link_guidance {
+    local skill="$1"
+    local skill_dir
+
+    skill_dir="$(loop_skill_dir "${skill}")"
+    if [[ ! -d ${skill_dir} ]]; then
+        record_violation "Missing skill directory ${skill} (SKILLS_ROOT=${SKILLS_ROOT:-unset}; resolved via apm_skill_root when unset)"
+        return 0
+    fi
+    if [[ ! -f ${skill_dir}/references/category-pr-body-links.md ]]; then
+        record_violation "${skill}/references/category-pr-body-links.md is missing"
+    fi
+    if ! grep -qF 'references/category-pr-body-links.md' "${skill_dir}/SKILL.md" 2> /dev/null; then
+        record_violation "${skill}/SKILL.md must list references/category-pr-body-links.md in its reference guide"
+    fi
+}
+
+#######################################
 # check_forbidden_patterns: Fail on deprecated Overview / template wording
 #
 # Globals:
@@ -213,6 +252,8 @@ function check_loop_skill {
     check_output_format_survey "${skill}"
     check_automation_envelope "${skill}"
     check_template_link_placeholders "${skill}"
+    check_template_link_rule "${skill}"
+    check_skill_link_guidance "${skill}"
 }
 
 #######################################
@@ -274,6 +315,52 @@ function check_required_file {
     if [[ ! -f ${full_path} ]]; then
         record_violation "Missing ${rel_path} for skill ${skill}"
     fi
+}
+
+#######################################
+# check_skill_link_guidance: Require SKILL.md and templates to carry the link/column rules
+#
+# Description:
+#   An agent only follows what its SKILL.md points at, so each skill that ships
+#   category-pr-body-links.md must list it and both PR body templates in SKILL.md,
+#   and each template must say to keep its table columns as written.
+#
+# Globals:
+#   SKILLS_ROOT
+#
+# Arguments:
+#   $1 - Skill name
+#
+# Outputs:
+#   None (records violations)
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function check_skill_link_guidance {
+    local skill="$1"
+    local skill_md rel_path full_path
+
+    loop_skill_uses_pr_body_links "${skill}" || return 0
+
+    skill_md="$(loop_skill_dir "${skill}")/SKILL.md"
+    if [[ -f ${skill_md} ]]; then
+        if ! grep -qF 'references/category-pr-body-links.md' "${skill_md}"; then
+            record_violation "${skill}/SKILL.md must list references/category-pr-body-links.md in its reference guide"
+        fi
+        if ! grep -qF 'assets/pr-body-template.md' "${skill_md}" || ! grep -qF 'assets/pr-body-template-survey.md' "${skill_md}"; then
+            record_violation "${skill}/SKILL.md must list assets/pr-body-template.md and assets/pr-body-template-survey.md in its reference guide"
+        fi
+    fi
+
+    for rel_path in assets/pr-body-template.md assets/pr-body-template-survey.md; do
+        full_path="$(loop_skill_dir "${skill}")/${rel_path}"
+        [[ -f ${full_path} ]] || continue
+        if ! grep -qF 'Keep the table columns as written' "${full_path}"; then
+            record_violation "${skill}/${rel_path} must say to keep the table columns as written"
+        fi
+    done
 }
 
 # check_survey_template: Validate survey PR body template headings
@@ -348,6 +435,46 @@ function check_template_link_placeholders {
 }
 
 #######################################
+# check_template_link_rule: Require link guidance and link placeholders in templates
+#
+# Description:
+#   Skills that ship category-pr-body-links.md must point their PR body templates at
+#   it and mark linkable Summary items with <linked ...> placeholders, because agents
+#   copy the template shape (a backtick placeholder yields a code span, not a link).
+#
+# Globals:
+#   SKILLS_ROOT
+#
+# Arguments:
+#   $1 - Skill name
+#
+# Outputs:
+#   None (records violations)
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function check_template_link_rule {
+    local skill="$1"
+    local rel_path full_path
+
+    loop_skill_uses_pr_body_links "${skill}" || return 0
+
+    for rel_path in assets/pr-body-template.md assets/pr-body-template-survey.md; do
+        full_path="$(loop_skill_dir "${skill}")/${rel_path}"
+        [[ -f ${full_path} ]] || continue
+        if ! grep -qF 'category-pr-body-links.md' "${full_path}"; then
+            record_violation "${skill}/${rel_path} must point at category-pr-body-links.md"
+        fi
+        # shellcheck disable=SC2016 # literal backticks are the pattern being detected
+        if grep -qE '^\| `[^` ]*[/.][^` ]*` \||^\| `[0-9a-f]{7,}` \|' "${full_path}"; then
+            record_violation "${skill}/${rel_path} has a backtick path in a Summary table row — use a <linked path> or <linked sha> placeholder (see category-pr-body-links.md)"
+        fi
+    done
+}
+
+#######################################
 # loop_skill_deferred_subsection: Return deferred subsection name for a loop skill
 #
 # Globals:
@@ -414,6 +541,12 @@ declare -a REQUIRED_FILES=(
 )
 
 # Skills that ship category-pr-body-links.md (per-skill link rules).
+# Skills that post comments or reviews (no PR body template) but still ship link rules.
+declare -a LOOP_COMMENT_LINKS_SKILLS=(
+    github-issue-triage
+    github-pr-review
+)
+
 declare -a LOOP_PR_BODY_LINKS_SKILLS=(
     changelog
     ci-sweeper
@@ -525,12 +658,16 @@ function main {
         check_loop_skill "${skill}"
     done
 
+    for skill in "${LOOP_COMMENT_LINKS_SKILLS[@]}"; do
+        check_comment_link_guidance "${skill}"
+    done
+
     if [[ ${#VIOLATIONS[@]} -gt 0 ]]; then
         printf '%s\n' "${VIOLATIONS[@]}"
         return 1
     fi
 
-    printf 'loop PR body contract: OK (%d skills)\n' "${#LOOP_SKILLS[@]}"
+    printf 'loop PR body contract: OK (%d skills, %d comment skills)\n' "${#LOOP_SKILLS[@]}" "${#LOOP_COMMENT_LINKS_SKILLS[@]}"
     return 0
 }
 

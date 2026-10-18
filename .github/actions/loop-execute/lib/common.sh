@@ -84,35 +84,6 @@ function load_default_prompts {
 }
 
 #######################################
-# normalize_no_changes_verdict: Normalize NO_CHANGES_VERDICT env var
-#
-# Description:
-#   Coerces NO_CHANGES_VERDICT to APPROVE or REJECT (default REJECT).
-#   A maker that produced nothing has nothing to approve, so an unset or
-#   unrecognized value fails closed. A loop whose success state is "no edit",
-#   such as issue triage, opts in with an explicit APPROVE.
-#
-# Globals:
-#   NO_CHANGES_VERDICT - Verdict when maker produces no file changes
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   None
-#
-#######################################
-function normalize_no_changes_verdict {
-    NO_CHANGES_VERDICT=$(printf '%s' "${NO_CHANGES_VERDICT:-REJECT}" | tr '[:lower:]' '[:upper:]')
-    if [[ ${NO_CHANGES_VERDICT} != "APPROVE" ]]; then
-        NO_CHANGES_VERDICT="REJECT"
-    fi
-}
-
-#######################################
 # materialize_matrix_handoff_context: Resolve compact detect handoff at execute time
 #
 # Description:
@@ -123,7 +94,8 @@ function normalize_no_changes_verdict {
 #   of inlining JSON into PROMPT_TEXT. Rebuild verifier_context from the same JSON.
 #
 # Globals:
-#   DETECT_RESULT_JSON - Detect script JSON from matrix cell (read)
+#   DETECT_RESULT_JSON - Optional inline detect JSON (read; unset in the action,
+#     which resolves detect JSON from the loop-handoff artifact)
 #   PROMPT_TEXT - Maker prompt (read/write)
 #   STATUS_DIR - Runner-local status directory for materialized detect JSON (read)
 #   DETECT_JSON_FILE - Path to materialized detect JSON when prompt uses marker (write)
@@ -254,4 +226,36 @@ function render_template {
         shift 2
     done
     printf '%s' "${result}"
+}
+
+#######################################
+# validate_agent_unchanged_verdict: Require an explicit unchanged verdict
+#
+# Description:
+#   AGENT_UNCHANGED_VERDICT is the verdict when the maker produces no file
+#   changes. loop-execute runs only at L2/L3, where the value is required and
+#   detect has already validated it, so there is no default: an empty or
+#   unrecognized value is a configuration error rather than an implicit REJECT.
+#
+# Globals:
+#   AGENT_UNCHANGED_VERDICT - APPROVE or REJECT (read)
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Error annotation on stderr when the value is missing or invalid
+#
+# Returns:
+#   0 when the value is APPROVE or REJECT, 1 otherwise
+#
+#######################################
+function validate_agent_unchanged_verdict {
+    case "${AGENT_UNCHANGED_VERDICT:-}" in
+        APPROVE | REJECT) return 0 ;;
+        *)
+            echo "::error::agent_unchanged_verdict is required (APPROVE or REJECT); got: '${AGENT_UNCHANGED_VERDICT:-}'" >&2
+            return 1
+            ;;
+    esac
 }

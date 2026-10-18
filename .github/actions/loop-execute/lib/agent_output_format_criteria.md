@@ -1,16 +1,16 @@
 ## Agent report output format (loop fix skills)
 
-Applies when the maker ran a loop fix skill (`docs-updater`, `refactor`, `ci-sweeper`, `changelog`, `tech-debt`).
+Applies when the maker ran a loop fix skill (`docs-updater`, `refactor`, `ci-sweeper`, `changelog`, `tech-debt`, `test-gap`).
 
 Canonical shapes: repository `docs/explanation/loop-engineering/common-loop-triage-format.md`.
 
-Resolve mode from **`may_edit`** and **`write_target`** in `## Constraints` (automation) or from the skill's interactive resolution — not from caller `level` or `delivery` metadata alone.
+Resolve mode from **`agent_edit_allowed`** and **`agent_edit_target`** in `## Constraints` (automation) or from the skill's interactive resolution — not from caller `level` or `delivery` metadata alone.
 
-### Apply mode — `write_target: report`
+### Apply mode — `agent_edit_target: report`
 
-When `write_target` is `report`, `### Changes` must include the `report_file` path when the branch diff is non-empty. Persisted report content may differ from PR Summary shape per skill references.
+When `agent_edit_target` is `report`, `### Changes` must include the `agent_report_file` path when the branch diff is non-empty. Persisted report content may differ from PR Summary shape per skill references.
 
-### Survey mode (`may_edit: false`)
+### Survey mode (`agent_edit_allowed: false`)
 
 When branch diff is empty and output has no `### Changes`, `### Deferred`, or `### Skipped`:
 
@@ -19,7 +19,7 @@ When branch diff is empty and output has no `### Changes`, `### Deferred`, or `#
 3. **MUST NOT** include `### Changes`, `### Deferred`, `### Skipped`, or `## Verification`
 4. Overview names dominant categories, files, or failure types — not counts alone
 
-### Apply mode (`may_edit: true`)
+### Apply mode (`agent_edit_allowed: true`)
 
 When branch diff is non-empty or output includes `### Changes`, `### Deferred`, or `### Skipped`:
 
@@ -28,7 +28,7 @@ ALL of the following must be true:
 1. Contains `## Overview`, `## Summary`, and `## Verification`
 2. `## Summary` includes `### Changes` when files were modified
 3. Deferred-style subsection when items were not fixed:
-   - `docs-updater`, `refactor`, `ci-sweeper`, `tech-debt`: `### Deferred` (omit when empty)
+   - `docs-updater`, `refactor`, `ci-sweeper`, `tech-debt`, `test-gap`: `### Deferred` (omit when empty)
    - `changelog`: `### Skipped` (omit when empty)
 4. **Changes / Deferred consistency:** every path in the branch diff (`origin/<base>...HEAD`, not only this attempt's delta) appears under `### Changes` and **no** deferred/skipped path appears in the branch diff
 5. Overview names what was fixed or recorded — not counts alone

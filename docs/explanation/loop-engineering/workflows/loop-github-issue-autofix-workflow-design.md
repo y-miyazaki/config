@@ -12,7 +12,7 @@
 
 ## Purpose
 
-Single intake for Issue→PR autofix: `labeled(autofix)` + `repository_dispatch` (`loop-github-issue-autofix`) + `workflow_dispatch` → **branch** caller (L2, `may_edit: true`, `write_target: fix`, `delivery: open_pr`).
+Single intake for Issue→PR autofix: `labeled(autofix)` + `repository_dispatch` (`loop-github-issue-autofix`) + `workflow_dispatch` → **branch** caller (L2, `agent_edit_target: fix`, `delivery: pr_create`).
 
 Detect skips when an open/draft PR already references the Issue with a closing keyword (`Fixes #N`, etc.). PR draft/open is controlled by caller `pr_draft` (**default open**).
 
@@ -29,7 +29,7 @@ Detect skips when an open/draft PR already references the Issue with a closing k
 - L3 auto-merge on the fix PR
 - Automatic autofix without the `autofix` label (`repository_dispatch` / `workflow_dispatch` remain explicit human paths)
 - Agent-initiated `repository_dispatch` (trusted hook only)
-- PR head mode (`pr_enabled` default off) — fixes target integration branch via `open_pr`
+- PR head mode (`detect_pr_enabled` default off) — fixes target the integration branch via `pr_create`
 - Second fix PR when an open/draft PR already references the Issue with a closing keyword (`Fixes #N`, etc.)
 
 Skill execution boundaries: `github-issue-autofix` SKILL.md (`USE FOR` / `DO NOT USE FOR`).
@@ -40,39 +40,37 @@ Keys are passed in `on-loop-github-issue-autofix.yaml` via `with:` on `ci-loop-c
 
 | Input / JSON key             | Description                                                                    | Dogfood value                                                   |
 | ---------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
-| `agent_maker_instructions`   | Minimal fix from detect JSON; PR body with `Fixes #N`                          | Inline in caller workflow                                       |
-| `agent_maker_max_turns`      | Max maker turns per attempt                                                    | `100`                                                           |
-| `agent_maker_model`          | Maker model ID                                                                 | `claude-sonnet-5`                                               |
-| `agent_maker_effort`         | Maker reasoning effort. Only engines with an effort flag (claude) consume it   | `medium`                                                        |
-| `agent_maker_skill_name`     | Skill package                                                                  | `github-issue-autofix`                                          |
-| `agent_loop_max_attempts`    | Max Agent→Verify cycles                                                        | `3`                                                             |
+| `agent_checker_effort`       | Checker reasoning effort. Only engines with an effort flag (claude) consume it | `medium`                                                        |
 | `agent_checker_instructions` | APPROVE/REJECT rubric                                                          | Inline in caller workflow                                       |
 | `agent_checker_max_turns`    | Max checker turns                                                              | `100`                                                           |
 | `agent_checker_model`        | Checker model ID                                                               | `claude-opus-5`                                                 |
-| `agent_checker_effort`       | Checker reasoning effort. Only engines with an effort flag (claude) consume it | `medium`                                                        |
 | `agent_checker_skill_name`   | Checker skill                                                                  | `loop-verifier`                                                 |
-| `allowlist`                  | File edit allowlist (empty = skill default)                                    | `""`                                                            |
-| `branch_match`               | Integration branch to fix against                                              | `main`                                                          |
-| `branch_state`               | `.loop/*` persistence branch                                                   | `main`                                                          |
+| `agent_edit_allowlist`       | File edit allowlist (`**` = unrestricted)                                      | `**`                                                            |
+| `agent_edit_target`          | Agent artifact type                                                            | `fix`                                                           |
+| `agent_engine`               | AI engine                                                                      | `claude`                                                        |
+| `agent_loop_max_attempts`    | Max Agent→Verify cycles                                                        | `3`                                                             |
+| `agent_maker_effort`         | Maker reasoning effort. Only engines with an effort flag (claude) consume it   | `medium`                                                        |
+| `agent_maker_instructions`   | Minimal fix from detect JSON; PR body with `Fixes #N`                          | Inline in caller workflow                                       |
+| `agent_maker_max_turns`      | Max maker turns per attempt                                                    | `100`                                                           |
+| `agent_maker_model`          | Maker model ID                                                                 | `claude-sonnet-5`                                               |
+| `agent_maker_skill_name`     | Skill package                                                                  | `github-issue-autofix`                                          |
+| `agent_tool_allowlist`       | Tool permission rules for the maker (read Issue, check existing PRs)           | `gh api`, `gh issue view`, `gh pr list`, `gh pr view`           |
+| `agent_unchanged_verdict`    | Verdict when no file diff                                                      | `REJECT`                                                        |
 | `budget_max_runs_per_day`    | Daily run cap                                                                  | `10`                                                            |
 | `budget_max_tokens_per_day`  | Daily token cap                                                                | `1000000`                                                       |
-| `delivery`                   | Platform delivery after APPROVE                                                | `open_pr`                                                       |
-| `denylist`                   | Denylist globs                                                                 | `""`                                                            |
+| `delivery`                   | Where the output is delivered                                                  | `pr_create`                                                     |
+| `detect_branch_match`        | Integration branch to fix against                                              | `main`                                                          |
 | `detect_script`              | Domain detect script                                                           | `.agents/skills/github-issue-autofix/scripts/detect_autofix.sh` |
-| `engine`                     | AI engine                                                                      | `claude`                                                        |
 | `environment`                | GitHub Environment for env-scoped secrets                                      | `default`                                                       |
-| `git_landing_integration`    | Advanced git landing override                                                  | `open_pr`                                                       |
 | `level`                      | Autonomy (`L2` — review PR)                                                    | `L2`                                                            |
 | `loop_name`                  | Loop identifier                                                                | `github-issue-autofix`                                          |
-| `may_edit`                   | Agent worktree edit gate                                                       | `true`                                                          |
-| `no_changes_verdict`         | Verdict when no file diff                                                      | `REJECT`                                                        |
 | `pr_draft`                   | Create fix PR as draft when true                                               | `false` (default open)                                          |
-| `write_target`               | Agent artifact type                                                            | `fix`                                                           |
+| `state_branch`               | `.loop/*` persistence branch                                                   | `main`                                                          |
 
-### Domain detect environment (`detect_domain_env_json`)
+### Domain detect environment (`detect_env_json`)
 
 ```yaml
-detect_domain_env_json: ${{ format('{{"ISSUE_NUMBER":{0}}}', toJSON(format('{0}', github.event.issue.number || github.event.client_payload.issue_number || inputs.issue_number || ''))) }}
+detect_env_json: ${{ format('{{"ISSUE_NUMBER":{0}}}', toJSON(format('{0}', github.event.issue.number || github.event.client_payload.issue_number || inputs.issue_number || ''))) }}
 ```
 
 | JSON key / env var | Description         | Notes               |
@@ -85,8 +83,8 @@ detect_domain_env_json: ${{ format('{{"ISSUE_NUMBER":{0}}}', toJSON(format('{0}'
 on-loop-github-issue-autofix.yaml
   loop → uses ci-loop-caller.yaml
            detect  → detect_autofix.sh
-           execute → ci-loop-agent (may_edit=true)
-           finalize → open_pr (pr_draft from inputs)
+           execute → ci-loop-agent (level L2)
+           finalize → pr_create (pr_draft from inputs)
 ```
 
 Concurrency: `loop-github-issue-autofix-${issue_number || run_id}`.

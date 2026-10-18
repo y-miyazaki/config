@@ -24,6 +24,10 @@ if ! declare -f emit_loop_constraints > /dev/null 2>&1; then
     # shellcheck source=../../lib/loop/build_constraints.sh disable=SC1091
     source "${_loop_action_lib}/build_constraints.sh"
 fi
+if ! declare -f derive_pr_auto_merge > /dev/null 2>&1; then
+    # shellcheck source=../../lib/loop/delivery.sh disable=SC1091
+    source "${_loop_action_lib}/delivery.sh"
+fi
 if ! declare -f build_verifier_context_from_result > /dev/null 2>&1; then
     # shellcheck source=../../lib/loop/verifier_context.sh disable=SC1091
     source "${_loop_action_lib}/verifier_context.sh"
@@ -37,41 +41,39 @@ fi
 #
 # Arguments:
 #   $1 - Skill name
-#   $2 - Autonomy level
-#   $3 - Allowlist csv
+#   $2 - Autonomy level (L1 | L2 | L3; agent_edit_allowed is derived from it)
+#   $3 - agent_edit_allowlist csv
 #   $4 - Prompt instructions
 #   $5 - Last SHA
 #   $6 - Current SHA
 #   $7 - Detect result JSON
 #   $8 - Open rejections prompt markdown
 #   $9 - Consecutive failures count
-#   $10 - may_edit (required when ## Constraints is emitted)
-#   $11 - write_target (required when may_edit is true)
-#   $12 - report_file (optional; falls back to detect JSON)
+#   $10 - agent_edit_target (fix | report; required at L2/L3)
+#   $11 - agent_report_file (optional; falls back to the detect JSON agent_report_file)
 #
 # Outputs:
 #   Prompt text on stdout
 #
 # Returns:
-#   0 on success
+#   0 on success; 1 when the constraints block cannot be emitted (invalid level or agent_edit_target)
 #
 #######################################
 function build_prompt_text {
     local agent_maker_skill_name="$1"
     local level="$2"
-    local allowlist="$3"
+    local agent_edit_allowlist="$3"
     local agent_maker_instructions="$4"
     local last_sha="$5"
     local current_sha="$6"
     local detect_result="$7"
     local open_rejections_prompt="$8"
     local consecutive_failures="$9"
-    local may_edit="${10:-}"
-    local write_target="${11:-}"
-    local report_file="${12:-}"
+    local agent_edit_target="${10:-}"
+    local agent_report_file="${11:-}"
 
-    if [[ -z ${report_file} ]]; then
-        report_file="$(jq -r '.report_file // ""' <<< "${detect_result}" 2> /dev/null || echo "")"
+    if [[ -z ${agent_report_file} ]]; then
+        agent_report_file="$(jq -r '.agent_report_file // ""' <<< "${detect_result}" 2> /dev/null || echo "")"
     fi
 
     {
@@ -97,14 +99,8 @@ function build_prompt_text {
             echo "## Instructions"
             echo "${agent_maker_instructions}"
         fi
-        if [[ -n ${level} || -n ${allowlist} ]]; then
-            echo ""
-            if [[ -z ${may_edit} ]]; then
-                echo "::error::may_edit is required for prompt constraints" >&2
-                return 1
-            fi
-            emit_loop_constraints "${may_edit}" "${write_target}" "${allowlist}" "${report_file}"
-        fi
+        echo ""
+        emit_loop_constraints "${level}" "${agent_edit_target}" "${agent_edit_allowlist}" "${agent_report_file}" || return 1
     }
 }
 
@@ -143,7 +139,7 @@ function shrink_matrix_candidate_for_output {
 # candidate_priority_rank: Echo numeric rank for mode (lower runs first)
 #
 # Globals:
-#   LOOP_PRIORITY - Comma-separated mode order
+#   DETECT_PRIORITY - Comma-separated mode order
 #
 # Arguments:
 #   $1 - Target mode (integration|pull_request)
@@ -160,7 +156,7 @@ function candidate_priority_rank {
     local -a order=()
     local idx=0 found=0 token
 
-    split_csv "${LOOP_PRIORITY}" order
+    split_csv "${DETECT_PRIORITY}" order
     for token in "${order[@]}"; do
         idx=$((idx + 1))
         if [[ ${token} == "${mode}" ]]; then
@@ -175,7 +171,7 @@ function candidate_priority_rank {
 }
 
 #######################################
-# sort_candidates_by_priority: Sort CANDIDATES_JSON by LOOP_PRIORITY
+# sort_candidates_by_priority: Sort CANDIDATES_JSON by DETECT_PRIORITY
 #
 # Globals:
 #   CANDIDATES_JSON - Array to sort in place
@@ -220,10 +216,11 @@ function sort_candidates_by_priority {
 }
 
 #######################################
-# write_detect_outputs: Write should_run, skip_reason, target_matrix
+# write_detect_outputs: Write should_run, skip_reason, delivery, pr_auto_merge, target_matrix
 #
 # Globals:
 #   GITHUB_OUTPUT - GitHub Actions output file
+#   DELIVERY, LEVEL - Read; pr_auto_merge is derived from them (derive_pr_auto_merge)
 #
 # Arguments:
 #   $1 - should_run (true|false)
@@ -246,6 +243,7 @@ function write_detect_outputs {
         echo "should_run=${should_run}"
         echo "skip_reason=${skip_reason}"
         echo "delivery=${DELIVERY:-}"
+        echo "pr_auto_merge=$(derive_pr_auto_merge "${LEVEL:-}" "${DELIVERY:-}")"
         local delim
         delim="TARGET_MATRIX_$(openssl rand -hex 8)"
         echo "target_matrix<<${delim}"

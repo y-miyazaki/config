@@ -38,6 +38,7 @@
       "Bash(git blame:*)",
       "Bash(git branch:*)",
       "Bash(git diff:*)",
+      "Bash(git fetch:*)",
       "Bash(git grep:*)",
       "Bash(git log:*)",
       "Bash(git remote -v:*)",
@@ -222,6 +223,7 @@
       "mcp__codebase-memory-mcp__delete_project"
     ],
     "ask": [
+      "Bash(gh workflow run:*)",
       "Bash(git branch -D:*)",
       "Bash(git clean -f:*)",
       "Bash(git push:*)",

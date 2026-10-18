@@ -4,20 +4,22 @@
 # Tests for .github/actions/loop-finalize/lib/write_state.sh
 
 # Use cases:
-# - validation: missing target_key / invalid state push branch
-# - advance mode: last_sha + outcome; reset consecutive_failures on pr-created
-# - rejected outcome increments consecutive_failures / stores open_rejections
+# - validation: missing target_key / missing or invalid state_branch
+# - advance mode: last_sha + outcome; reset consecutive_failures on pr_created
+# - rejected, pr_closed, and persisted old pr-closed outcomes increment consecutive_failures
+# - finalize_commit_paths are committed with the state file
 # - no-op when unchanged
 # - metadata mode: outcome without advancing last_sha
-# - pending mode: record pending without advancing last_sha (finalize open_pr path)
+# - pending mode: record pending without advancing last_sha (delivery pr_create path)
 # - promote mode: pending.sha → last_sha; clear pending
 # - clear_pending mode: clear pending only; last_sha unchanged
 # - apply_state_patch updates state via write_state_advance helper
 # - write_state_pending records pending without advancing last_sha
 # - write_state_promote promotes pending sha to last_sha
 # - write_state_clear_pending clears pending without advancing last_sha
-# - refuses PR fallback for advance + pr-created when push is blocked
-# - skip_state_pr warns when direct push is blocked
+# - refuses PR fallback for advance + pr_pushed when push is blocked
+# - opens the state PR fallback for advance + pr_created (the refusal keys on pr_pushed only)
+# - state_pr_skip warns when direct push is blocked
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -96,7 +98,7 @@ setup() {
 @test "apply_state_patch advances last_sha and clears pending via write_state_advance" {
     TARGET_KEY='integration:main'
     SHA='newsha111111'
-    OUTCOME='merged'
+    OUTCOME='pr_merged'
     REJECT_REASON=''
     OPEN_REJECTIONS='[]'
 
@@ -110,7 +112,7 @@ setup() {
     run jq -e \
         '.targets["integration:main"].last_sha == "newsha111111"
          and (.targets["integration:main"] | has("pending") | not)
-         and .targets["integration:main"].outcome == "merged"' \
+         and .targets["integration:main"].outcome == "pr_merged"' \
         "${STATE_TMP}"
     [ "$status" -eq 0 ]
     rm -f "${STATE_TMP}"
@@ -123,11 +125,11 @@ setup() {
     state_write_run \
         GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
-        BASE_BRANCH='main' \
+        STATE_BRANCH='main' \
         TARGET_KEY='integration:main' \
         WRITE_TARGET_STATE='true' \
         STATE_WRITE_MODE='clear_pending' \
-        OUTCOME='pr-closed' \
+        OUTCOME='pr_closed' \
         PENDING_PR_NUMBER='99' \
         OPEN_REJECTIONS='[]' \
         GITHUB_REPOSITORY='test/repo' \
@@ -137,7 +139,7 @@ setup() {
     run jq -e \
         '.targets["integration:main"].last_sha == "oldsha000000"
          and (.targets["integration:main"] | has("pending") | not)
-         and .targets["integration:main"].outcome == "pr-closed"' \
+         and .targets["integration:main"].outcome == "pr_closed"' \
         "${STATE_WRITE_WORK}/.loop/state-test.json"
     [ "$status" -eq 0 ]
 }
@@ -149,11 +151,11 @@ setup() {
     state_write_run \
         GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
-        BASE_BRANCH='main' \
+        STATE_BRANCH='main' \
         TARGET_KEY='integration:main' \
         WRITE_TARGET_STATE='true' \
         STATE_WRITE_MODE='clear_pending' \
-        OUTCOME='pr-closed' \
+        OUTCOME='pr_closed' \
         PENDING_PR_NUMBER='99' \
         OPEN_REJECTIONS='[]' \
         GITHUB_REPOSITORY='test/repo' \
@@ -171,7 +173,7 @@ setup() {
     state_write_run \
         GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
-        BASE_BRANCH='main' \
+        STATE_BRANCH='main' \
         TARGET_KEY='integration:main' \
         WRITE_TARGET_STATE='false' \
         GITHUB_REPOSITORY='test/repo' \
@@ -188,7 +190,7 @@ setup() {
     state_write_run \
         GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
-        BASE_BRANCH='main' \
+        STATE_BRANCH='main' \
         TARGET_KEY='integration:main' \
         WRITE_TARGET_STATE='true' \
         OUTCOME='rejected' \
@@ -206,6 +208,55 @@ setup() {
         "${STATE_WRITE_WORK}/.loop/state-test.json"
     [ "$status" -eq 0 ]
 }
+@test "run.sh increments consecutive_failures on pr_closed and old pr-closed outcomes" {
+    local outcome checked=0
+    for outcome in pr_closed pr-closed; do
+        printf '%s\n' '{"targets":{"integration:main":{"consecutive_failures":2}}}' \
+            > "${STATE_WRITE_WORK}/.loop/state-test.json"
+        state_write_seed
+
+        state_write_run \
+            GITHUB_TOKEN='test-token' \
+            STATE_FILE='.loop/state-test.json' \
+            STATE_BRANCH='main' \
+            TARGET_KEY='integration:main' \
+            WRITE_TARGET_STATE='true' \
+            STATE_WRITE_MODE='metadata' \
+            OUTCOME="${outcome}" \
+            SHA='def456' \
+            OPEN_REJECTIONS='[]' \
+            GITHUB_REPOSITORY='test/repo' \
+            GITHUB_RUN_ID='15' \
+            GITHUB_RUN_ATTEMPT='1'
+        [ "$status" -eq 0 ]
+        run jq -r '.targets["integration:main"].consecutive_failures' "${STATE_WRITE_WORK}/.loop/state-test.json"
+        [ "$output" = "3" ]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 2 ]
+}
+@test "run.sh commits finalize_commit_paths with the state file" {
+    printf '%s\n' '{"entries":[1]}' > "${STATE_WRITE_WORK}/.loop/state-test-ledger.json"
+
+    state_write_run \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='metadata' \
+        OUTCOME='reported' \
+        SHA='def456' \
+        OPEN_REJECTIONS='[]' \
+        FINALIZE_COMMIT_PATHS='.loop/state-test-ledger.json' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='16' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    run git --git-dir="${STATE_WRITE_BARE}" show main:.loop/state-test-ledger.json
+    [ "$status" -eq 0 ]
+    [ "$output" = '{"entries":[1]}' ]
+}
 @test "run.sh metadata mode updates outcome without advancing last_sha" {
     printf '%s\n' '{"targets":{"integration:main":{"last_sha":"oldsha000000","consecutive_failures":0}}}' \
         > "${STATE_WRITE_WORK}/.loop/state-test.json"
@@ -214,7 +265,7 @@ setup() {
     state_write_run \
         GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
-        BASE_BRANCH='main' \
+        STATE_BRANCH='main' \
         TARGET_KEY='integration:main' \
         WRITE_TARGET_STATE='true' \
         STATE_WRITE_MODE='metadata' \
@@ -240,11 +291,11 @@ setup() {
     state_write_run \
         GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
-        BASE_BRANCH='main' \
+        STATE_BRANCH='main' \
         TARGET_KEY='integration:main' \
         WRITE_TARGET_STATE='true' \
         STATE_WRITE_MODE='pending' \
-        OUTCOME='pr-created' \
+        OUTCOME='pr_created' \
         SHA='abcdefghi' \
         PENDING_PR_NUMBER='42' \
         PENDING_PR_URL='https://github.com/owner/repo/pull/42' \
@@ -269,11 +320,11 @@ setup() {
     state_write_run \
         GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
-        BASE_BRANCH='main' \
+        STATE_BRANCH='main' \
         TARGET_KEY='integration:main' \
         WRITE_TARGET_STATE='true' \
         STATE_WRITE_MODE='promote' \
-        OUTCOME='merged' \
+        OUTCOME='pr_merged' \
         PENDING_PR_NUMBER='99' \
         OPEN_REJECTIONS='[]' \
         GITHUB_REPOSITORY='test/repo' \
@@ -283,36 +334,59 @@ setup() {
     run jq -e \
         '.targets["integration:main"].last_sha == "newsha111111"
          and (.targets["integration:main"] | has("pending") | not)
-         and .targets["integration:main"].outcome == "merged"' \
+         and .targets["integration:main"].outcome == "pr_merged"' \
         "${STATE_WRITE_WORK}/.loop/state-test.json"
     [ "$status" -eq 0 ]
 }
-@test "run.sh refuses advance pr-created when direct push is blocked" {
+@test "run.sh opens state PR fallback for advance pr_created when direct push is blocked" {
     state_write_block_push
+    state_write_mock_gh
 
     state_write_run \
+        PATH="${PATH}" \
         GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
-        BASE_BRANCH='main' \
+        STATE_BRANCH='main' \
         TARGET_KEY='integration:main' \
         WRITE_TARGET_STATE='true' \
         STATE_WRITE_MODE='advance' \
-        OUTCOME='pr-created' \
+        OUTCOME='pr_created' \
+        SHA='abcdefghi' \
+        OPEN_REJECTIONS='[]' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='14' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 0 ]
+    [[ $output != *"state PR fallback refused"* ]]
+    [[ $output == *"State PR queued for auto-merge: https://github.com/test/repo/pull/99"* ]]
+}
+@test "run.sh refuses advance pr_pushed when direct push is blocked" {
+    state_write_block_push
+    state_write_mock_gh
+
+    state_write_run \
+        PATH="${PATH}" \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        STATE_BRANCH='main' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='true' \
+        STATE_WRITE_MODE='advance' \
+        OUTCOME='pr_pushed' \
         SHA='abcdefghi' \
         OPEN_REJECTIONS='[]' \
         GITHUB_REPOSITORY='test/repo' \
         GITHUB_RUN_ID='12' \
         GITHUB_RUN_ATTEMPT='1'
     [ "$status" -eq 1 ]
-    [[ $output == *"state PR fallback refused"* ]]
-    [[ $output == *"advance mode with pr-created outcome"* ]]
+    [[ $output == *"::error::Direct push to main blocked and state PR fallback refused: advance mode with pr_pushed outcome."* ]]
+    [[ $output != *"State PR queued"* ]]
 }
 @test "run.sh rejects invalid state push branch" {
     state_write_run \
         GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
-        BASE_BRANCH='main' \
-        STATE_PUSH_BRANCH='bad branch' \
+        STATE_BRANCH='bad branch' \
         TARGET_KEY='integration:main' \
         WRITE_TARGET_STATE='false' \
         GITHUB_REPOSITORY='test/repo' \
@@ -325,7 +399,7 @@ setup() {
     state_write_run \
         GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
-        BASE_BRANCH='main' \
+        STATE_BRANCH='main' \
         TARGET_KEY='' \
         WRITE_TARGET_STATE='false' \
         GITHUB_REPOSITORY='test/repo' \
@@ -334,33 +408,45 @@ setup() {
     [ "$status" -eq 1 ]
     [[ $output == *"target_key is required"* ]]
 }
-@test "run.sh skips state PR fallback when skip_state_pr is true" {
+@test "run.sh rejects missing state_branch" {
+    state_write_run \
+        GITHUB_TOKEN='test-token' \
+        STATE_FILE='.loop/state-test.json' \
+        TARGET_KEY='integration:main' \
+        WRITE_TARGET_STATE='false' \
+        GITHUB_REPOSITORY='test/repo' \
+        GITHUB_RUN_ID='1' \
+        GITHUB_RUN_ATTEMPT='1'
+    [ "$status" -eq 1 ]
+    [[ $output == *"::error::state_branch is required"* ]]
+}
+@test "run.sh skips state PR fallback when state_pr_skip is true" {
     state_write_block_push
 
     state_write_run \
         GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
-        BASE_BRANCH='main' \
+        STATE_BRANCH='main' \
         TARGET_KEY='integration:main' \
         WRITE_TARGET_STATE='true' \
-        OUTCOME='merged' \
+        OUTCOME='pr_merged' \
         SHA='abcdefghi' \
         OPEN_REJECTIONS='[]' \
-        SKIP_STATE_PR='true' \
+        STATE_PR_SKIP='true' \
         GITHUB_REPOSITORY='test/repo' \
         GITHUB_RUN_ID='13' \
         GITHUB_RUN_ATTEMPT='1'
     [ "$status" -eq 0 ]
-    [[ $output == *"skip_state_pr=true"* ]]
+    [[ $output == *"::warning::Direct push blocked; skipping state PR (state_pr_skip=true)."* ]]
 }
-@test "run.sh writes target state and resets consecutive_failures on pr-created" {
+@test "run.sh writes target state and resets consecutive_failures on pr_created" {
     state_write_run \
         GITHUB_TOKEN='test-token' \
         STATE_FILE='.loop/state-test.json' \
-        BASE_BRANCH='main' \
+        STATE_BRANCH='main' \
         TARGET_KEY='integration:main' \
         WRITE_TARGET_STATE='true' \
-        OUTCOME='pr-created' \
+        OUTCOME='pr_created' \
         SHA='abcdefghi' \
         OPEN_REJECTIONS='[]' \
         GITHUB_REPOSITORY='test/repo' \
@@ -371,7 +457,7 @@ setup() {
     run jq -e \
         --arg sha 'abcdefghi' \
         '.targets["integration:main"].last_sha == $sha
-         and .targets["integration:main"].outcome == "pr-created"
+         and .targets["integration:main"].outcome == "pr_created"
          and .targets["integration:main"].consecutive_failures == 0
          and .targets["integration:main"].open_rejections == []' \
         "${STATE_WRITE_WORK}/.loop/state-test.json"
@@ -379,7 +465,7 @@ setup() {
 }
 @test "write_state_clear_pending clears pending without advancing last_sha" {
     TARGET_KEY='integration:main'
-    OUTCOME='pr-closed'
+    OUTCOME='pr_closed'
     REJECT_REASON=''
     OPEN_REJECTIONS='[]'
     PENDING_PR_NUMBER='42'
@@ -401,7 +487,7 @@ setup() {
 @test "write_state_pending records pending without advancing last_sha" {
     TARGET_KEY='integration:main'
     SHA='pendingsha111'
-    OUTCOME='open_pr'
+    OUTCOME='pr_created'
     REJECT_REASON=''
     OPEN_REJECTIONS='[]'
     PENDING_PR_NUMBER='42'
@@ -424,7 +510,7 @@ setup() {
 }
 @test "write_state_promote promotes pending sha to last_sha" {
     TARGET_KEY='integration:main'
-    OUTCOME='merged'
+    OUTCOME='pr_merged'
     REJECT_REASON=''
     OPEN_REJECTIONS='[]'
     PENDING_PR_NUMBER='42'
@@ -444,12 +530,12 @@ setup() {
     rm -f "${STATE_TMP}"
 }
 
-@test "validate_additional_commit_path rejects path traversal" {
+@test "validate_finalize_commit_path rejects path traversal" {
     # shellcheck disable=SC1090
     source "${RUN_SCRIPT}"
-    run validate_additional_commit_path "../outside.json"
+    run validate_finalize_commit_path "../outside.json"
     [ "$status" -eq 1 ]
-    [[ $output == *"must not contain '..'"* ]]
+    [ "$output" = "::error::finalize_commit_paths must not contain '..': ../outside.json" ]
 }
 
 @test "validate_state_file_path rejects non-loop path" {

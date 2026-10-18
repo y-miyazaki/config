@@ -34,6 +34,16 @@ EOF
     export PATH="${mock_bin}:${PATH}"
 }
 
+# stub_checkout_context replaces checkout_context with a stub that only enters the given repo.
+# The stub is sourced from BATS_TEST_TMPDIR so detect.sh calls it in place of the real checkout.
+stub_checkout_context() {
+    local stub="${BATS_TEST_TMPDIR}/checkout_context_stub.bash"
+
+    printf 'checkout_context() { cd %q || return 1; }\n' "$1" > "${stub}"
+    # shellcheck source=/dev/null
+    source "${stub}"
+}
+
 pending_detect_repo_setup() {
     PENDING_REPO="${BATS_TEST_TMPDIR}/repo"
     rm -rf "${PENDING_REPO}"
@@ -62,17 +72,17 @@ setup() {
     bats_source_rel ".github/actions/loop-detect/lib/detect.sh"
     pending_detect_repo_setup
     STATE_FILE="${PENDING_REPO}/.loop/state-ci-sweeper.json"
-    BASE_BRANCH="main"
+    STATE_BRANCH="main"
     export AGENT_MAKER_SKILL_NAME="loop-ci-sweeper"
     LEVEL="L2"
-    ALLOWLIST="*"
+    AGENT_EDIT_ALLOWLIST="*"
+    AGENT_EDIT_TARGET="fix"
     AGENT_MAKER_INSTRUCTIONS=""
-    LOOP_FINALIZE_INTEGRATION="open_pr"
     PENDING_PR_BLOCKED=0
     CIRCUIT_BREAKER_BLOCKED=0
     CANDIDATES_JSON=()
     export GITHUB_TOKEN='test-token'
-    export DETECT_SCRIPT STATE_FILE BASE_BRANCH
+    export DETECT_SCRIPT STATE_FILE STATE_BRANCH
 }
 
 @test "append_integration_candidate blocks and skips detect when pending PR is OPEN" {
@@ -87,10 +97,7 @@ printf '%s\\n' '{"status":"ok","skip":true,"failures":[],"ignored":[]}'
 EOF
     chmod +x "${DETECT_SCRIPT}"
 
-    checkout_context() {
-        cd "${PENDING_REPO}" || return 1
-        return 0
-    }
+    stub_checkout_context "${PENDING_REPO}"
 
     append_integration_candidate "main"
 
@@ -111,10 +118,7 @@ printf '%s\\n' '{"status":"ok","skip":true,"failures":[],"ignored":[]}'
 EOF
     chmod +x "${DETECT_SCRIPT}"
 
-    checkout_context() {
-        cd "${PENDING_REPO}" || return 1
-        return 0
-    }
+    stub_checkout_context "${PENDING_REPO}"
 
     append_integration_candidate "main"
 
@@ -135,10 +139,7 @@ printf '%s\\n' '{"status":"ok","skip":true,"failures":[],"ignored":[]}'
 EOF
     chmod +x "${DETECT_SCRIPT}"
 
-    checkout_context() {
-        cd "${PENDING_REPO}" || return 1
-        return 0
-    }
+    stub_checkout_context "${PENDING_REPO}"
 
     # Assert we pass the pending gate and invoke detect (skip=true → no candidate).
     append_integration_candidate "main"
@@ -154,10 +155,7 @@ EOF
         '{"targets":{"pull_request:7":{"pending":{"sha":"abc","pr":99},"consecutive_failures":0,"open_rejections":[]}}}' \
         > "${STATE_FILE}"
 
-    checkout_context() {
-        cd "${PENDING_REPO}" || return 1
-        return 0
-    }
+    stub_checkout_context "${PENDING_REPO}"
 
     PENDING_PR_BLOCKED=0
     append_pull_request_candidate '{"number":7,"headRefName":"feat/x","headRefOid":"abc","baseRefName":"main"}'
@@ -182,10 +180,7 @@ printf '%s\\n' '{"status":"ok","skip":true,"failures":[],"ignored":[]}'
 EOF
     chmod +x "${DETECT_SCRIPT}"
 
-    checkout_context() {
-        cd "${PENDING_REPO}" || return 1
-        return 0
-    }
+    stub_checkout_context "${PENDING_REPO}"
 
     PENDING_PR_BLOCKED=0
     append_pull_request_candidate '{"number":7,"headRefName":"feat/x","headRefOid":"abc","baseRefName":"main"}'
@@ -199,10 +194,7 @@ EOF
     local github_output
 
     install_gh_pr_state_mock "OPEN"
-    checkout_context() {
-        cd "${PENDING_REPO}" || return 1
-        return 0
-    }
+    stub_checkout_context "${PENDING_REPO}"
     append_integration_candidate "main"
     [ "${PENDING_PR_BLOCKED}" -eq 1 ]
     [ "${#CANDIDATES_JSON[@]}" -eq 0 ]

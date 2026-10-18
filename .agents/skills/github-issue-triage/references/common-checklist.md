@@ -33,7 +33,7 @@ Gate IDs are for agent self-check and Deferred reasons. Issue identity in report
 
 ### SCOPE-01: API-only side effects
 
-- [ ] Labels and Issue comments only when `may_edit` is false
+- [ ] Labels and Issue comments only when `agent_edit_allowed` is false
 - [ ] Do not open PRs or start github-issue-autofix
 - [ ] Do not fire `repository_dispatch`
 - **PASS** if no repository file edits under L1 constraints

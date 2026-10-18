@@ -25,6 +25,10 @@
 # - render_failure_context renders markdown links when metadata present
 # - render_pr_body renders one collapsed loop meta block carrying engine/model/tokens
 # - render_pr_body omits the meta block when level, target, engine and usage are empty
+# - linkify_agent_text links changed paths and known commit SHAs written as code spans
+# - linkify_agent_text links a bare SHA only when it prefixes a detected commit
+# - linkify_agent_text leaves unknown paths, unknown SHAs, existing links, and fenced code alone
+# - render_pr_body links changed paths and SHAs in the agent summary
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -152,7 +156,7 @@ setup() {
 @test "render_run_metadata escapes pipe in skip reason" {
     run render_run_metadata L2 'integration:main' 'foo|bar' '' ''
     [ "$status" -eq 0 ]
-    [[ $output == *"· Loop details"* ]]
+    [[ $output == *"<summary>Meta</summary>"* ]]
     [[ $output == *"foo\\|bar"* ]]
     [[ $output != *"| foo | bar |"* ]]
 }
@@ -166,16 +170,18 @@ setup() {
     export LEVEL=L2
     export TARGET_KEY=integration:main
     export SKIP_REASON=none
-    export ENGINE=cursor
+    export AGENT_ENGINE=cursor
     export USAGE_JSON='{"total_input_tokens":100000,"total_output_tokens":6000,"model":"Composer-2.5"}'
     run render_pr_body
     [ "$status" -eq 0 ]
-    [[ $output == *"| Engine | \`cursor\` |"* ]]
-    [[ $output == *"| Model | \`Composer-2.5\` |"* ]]
-    [[ $output == *"| Tokens | In/Out 100K/6K |"* ]]
+    [[ $output == *"| engine | cursor |"* ]]
+    [[ $output == *"| model | Composer-2.5 |"* ]]
+    [[ $output == *"| tokens | In/Out 100K/6K |"* ]]
     [[ $output == *"<details>"* ]]
     # One meta block only: no stray Created By line beside the collapsed table.
     [[ $output != *"Created By"* ]]
+    [[ $output == *"</details>"$'\n\n'"${LOOP_META_FOOTER}"* ]]
+    [[ $output != *"created by a loop automation"* ]]
 }
 
 @test "render_pr_body empty prefix shows mechanical sections" {
@@ -190,25 +196,27 @@ setup() {
     run render_pr_body
     [ "$status" -eq 0 ]
     [[ $output == *"## Failure context"* ]]
-    [[ $output == *"· Loop details"* ]]
-    [[ $output == *"| Level | L2 |"* ]]
+    [[ $output == *"<summary>Meta</summary>"* ]]
+    [[ $output == *"| level | L2 |"* ]]
     [[ $output != *"## Summary"* ]]
     [[ $output != *"- Level:"* ]]
 }
 
-@test "render_pr_body omits the meta block when level target engine and usage are empty" {
+@test "render_pr_body keeps the shared footer when the meta block is empty" {
     export PR_BODY_PREFIX=''
     export AGENT_REPORT_OVERVIEW=''
     export DETECT_RESULT_JSON='{}'
     export CHANGED_FILES_JSON='[]'
     export AGENT_REPORT_SUMMARY=''
-    export LEVEL=L2
-    export TARGET_KEY=integration:main
-    export SKIP_REASON=none
-    export ENGINE=''
+    export LEVEL=''
+    export TARGET_KEY=''
+    export SKIP_REASON=''
+    export AGENT_ENGINE=''
     export USAGE_JSON=''
     run render_pr_body
     [ "$status" -eq 0 ]
+    [[ $output == *"<summary>Meta</summary>"* ]]
+    [[ $output == *"${LOOP_META_FOOTER}"* ]]
     [[ $output != *"Created By"* ]]
 }
 
@@ -259,7 +267,7 @@ setup() {
     [ "$status" -eq 0 ]
     [[ $output == *"## Verification"* ]]
     [[ $output != *$'\n## Changes\n'* ]]
-    [[ $output == *"· Loop details"* ]]
+    [[ $output == *"<summary>Meta</summary>"* ]]
 }
 
 @test "render_pr_body orders prefix overview failure summary verification changes metadata" {
@@ -280,11 +288,70 @@ setup() {
     fail_i="$(printf '%s\n' "${output}" | grep -n '## Failure context' | head -1 | cut -d: -f1)"
     sum_i="$(printf '%s\n' "${output}" | grep -n '### Changes' | head -1 | cut -d: -f1)"
     ver_i="$(printf '%s\n' "${output}" | grep -n '## Verification' | head -1 | cut -d: -f1)"
-    meta_i="$(printf '%s\n' "${output}" | grep -n '· Loop details' | head -1 | cut -d: -f1)"
+    meta_i="$(printf '%s\n' "${output}" | grep -n '<summary>Meta</summary>' | head -1 | cut -d: -f1)"
     [ "${prefix_i}" -lt "${overview_i}" ]
     [ "${overview_i}" -lt "${fail_i}" ]
     [ "${fail_i}" -lt "${sum_i}" ]
     [ "${sum_i}" -lt "${ver_i}" ]
     [ "${ver_i}" -lt "${meta_i}" ]
     [[ $output != *$'\n## Changes\n'* ]]
+}
+
+@test "linkify_agent_text links changed paths and known commit SHAs written as code spans" {
+    export GITHUB_REPOSITORY='org/repo' BLOB_REF='loop/test-gap'
+    export CHANGED_FILES_JSON='["test/bats/foo.bats","docs/a b.md"]'
+    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}'
+    run linkify_agent_text '| `test/bats/foo.bats` (new) | `abcdef0` | `./docs/a b.md` |'
+    [ "$status" -eq 0 ]
+    [[ $output == *"[test/bats/foo.bats](https://github.com/org/repo/blob/loop/test-gap/test/bats/foo.bats) (new)"* ]]
+    [[ $output == *"[abcdef0](https://github.com/org/repo/commit/abcdef0123456789abcdef0123456789abcdef01)"* ]]
+    [[ $output == *"[./docs/a b.md](https://github.com/org/repo/blob/loop/test-gap/docs/a%20b.md)"* ]]
+}
+
+@test "linkify_agent_text leaves unknown paths, unknown SHAs, existing links, and fenced code alone" {
+    export GITHUB_REPOSITORY='org/repo' BLOB_REF='loop/test-gap'
+    export CHANGED_FILES_JSON='["test/bats/foo.bats"]'
+    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}'
+    local text
+    text=$'`scripts/other.sh` `deadbeef` [`test/bats/foo.bats`](https://x/y)\n```\n`test/bats/foo.bats`\n```'
+    run linkify_agent_text "${text}"
+    [ "$status" -eq 0 ]
+    [ "${output}" = "${text}" ]
+}
+
+@test "linkify_agent_text is a no-op without repository or ref" {
+    export GITHUB_REPOSITORY='' BLOB_REF=''
+    export CHANGED_FILES_JSON='["test/bats/foo.bats"]'
+    export DETECT_RESULT_JSON='{}'
+    run linkify_agent_text 'edited `test/bats/foo.bats`'
+    [ "$status" -eq 0 ]
+    [ "${output}" = 'edited `test/bats/foo.bats`' ]
+}
+
+@test "render_pr_body links changed paths and SHAs in the agent summary" {
+    export GITHUB_REPOSITORY='org/repo' BLOB_REF='loop/test-gap'
+    export PR_BODY_PREFIX=''
+    export AGENT_REPORT_OVERVIEW='Added suite for `scripts/x.sh`.'
+    export AGENT_REPORT_SUMMARY=$'### Changes\n| Target | Gap |\n| --- | --- |\n| `test/bats/foo.bats` | none |\n| `abcdef0` | pin |'
+    export AGENT_REPORT_VERIFICATION='| `bats test/bats/foo.bats` | skip |'
+    export CHANGED_FILES_JSON='["test/bats/foo.bats"]'
+    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}'
+    run render_pr_body
+    [ "$status" -eq 0 ]
+    [[ $output == *"| [test/bats/foo.bats](https://github.com/org/repo/blob/loop/test-gap/test/bats/foo.bats) |"* ]]
+    [[ $output == *"| [abcdef0](https://github.com/org/repo/commit/abcdef0123456789abcdef0123456789abcdef01) |"* ]]
+    [[ $output == *"Added suite for \`scripts/x.sh\`."* ]]
+    [[ $output == *"| \`bats test/bats/foo.bats\` | skip |"* ]]
+}
+
+@test "linkify_agent_text links a bare SHA only when it prefixes a detected commit" {
+    export GITHUB_REPOSITORY='org/repo' BLOB_REF='loop/changelog'
+    export CHANGED_FILES_JSON='[]'
+    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}'
+    run linkify_agent_text '| abcdef0 | feat | pin (deadbeef) https://x/commit/abcdef0 |'
+    [ "$status" -eq 0 ]
+    [[ $output == *"| [abcdef0](https://github.com/org/repo/commit/abcdef0123456789abcdef0123456789abcdef01) |"* ]]
+    [[ $output == *"(deadbeef)"* ]]
+    [[ $output == *"https://x/commit/abcdef0"* ]]
+    [[ $output != *"commit/[abcdef0]"* ]]
 }

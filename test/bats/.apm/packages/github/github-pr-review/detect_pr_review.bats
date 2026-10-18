@@ -5,6 +5,7 @@
 #
 # Use cases:
 # - emits handoff_key, report_path, SHAs, and changed_files for a human PR
+# - emits result.entity.kind pr for the loop entity platform
 # - skips bot-authored, draft, fork, and excluded-label PRs
 # - skips when a Bot-authored marker review exists; PR_FORCE overrides the marker
 # - ignores a marker in a review not authored by a Bot (forgery guard)
@@ -143,6 +144,13 @@ PR_VIEW_OK='{"author":{"is_bot":false},"isDraft":false,"isCrossRepository":false
         and .result.base_sha == "b1" and .result.head_sha == "h1" and .result.changed_files == ["a.sh"]
         and .result.event_name == "pull_request_target" and .result.force == false
         and .verifier_context == "PR #77 base b1 head h1 files: 1"' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "emits result.entity.kind pr for a human PR" {
+    run_detect PR_NUMBER=77 PR_REVIEWS_JSON='[]' PR_BASE_SHA=b1 PR_HEAD_SHA=h1
+    [ "$status" -eq 0 ]
+    run jq -e '.skip == false and .result.entity == {"kind": "pr"}' <<< "${output}"
     [ "$status" -eq 0 ]
 }
 

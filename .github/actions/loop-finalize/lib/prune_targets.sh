@@ -14,9 +14,11 @@
 #   - Delete pull_request:* when terminal + aged + no pending
 #   - Cooldown watch reject fields after 30 days
 #   - Fail-safe: missing/invalid last_run → keep entry
+#   - Terminal outcomes are read through normalize_outcome, so persisted old names
+#     (pr-closed) are treated exactly like the new names (pr_closed)
 #
 # Dependencies:
-#   - bash, jq
+#   - bash, jq, lib/loop/outcome.sh
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -25,6 +27,10 @@ set -euo pipefail
 # Secure defaults
 umask 027
 export LC_ALL=C.UTF-8
+
+# shellcheck source=../../lib/loop/outcome.sh
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)/outcome.sh"
 
 #######################################
 # prune_targets_cutoff_date: UTC YYYY-MM-DD for 30-day window
@@ -47,6 +53,32 @@ function prune_targets_cutoff_date {
 }
 
 #######################################
+# prune_targets_outcome_map: Map each persisted target outcome to its current name
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - State JSON string with a .targets object
+#
+# Outputs:
+#   JSON object {"<persisted outcome>": "<normalize_outcome result>"} to stdout
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function prune_targets_outcome_map {
+    local state_json="$1"
+    local outcome map='{}'
+
+    while IFS= read -r outcome; do
+        map="$(jq -c --arg k "${outcome}" --arg v "$(normalize_outcome "${outcome}")" '. + {($k): $v}' <<< "${map}")"
+    done < <(jq -r '[.targets[] | objects | .outcome | strings] | unique | .[]' <<< "${state_json}")
+    printf '%s' "${map}"
+}
+
+#######################################
 # prune_targets_json: Apply retention to state JSON on stdin/arg
 #
 # Globals:
@@ -65,7 +97,7 @@ function prune_targets_cutoff_date {
 #######################################
 function prune_targets_json {
     local state_json="${1:-}"
-    local cutoff
+    local cutoff outcome_map
 
     if [[ -z ${state_json} ]]; then
         printf '%s' '{"targets":{}}'
@@ -81,10 +113,12 @@ function prune_targets_json {
     fi
 
     cutoff="$(prune_targets_cutoff_date)"
+    outcome_map="$(prune_targets_outcome_map "${state_json}")"
 
-    jq -c --arg cutoff "${cutoff}" '
+    jq -c --arg cutoff "${cutoff}" --argjson outcome_map "${outcome_map}" '
       def terminal:
-        .outcome == "rejected" or .outcome == "pr-closed";
+        ((.outcome | strings | $outcome_map[.]) // null) as $o
+        | $o == "rejected" or $o == "pr_closed";
       def aged:
         ((.last_run // "") | length) >= 10
         and ((.last_run[0:10]) < $cutoff);

@@ -1,5 +1,5 @@
 name: loop-run-log
-description: "Append one JSONL entry to .loop/loop-run-log.md, prune entries older than 30 days, and commit to the base branch."
+description: "Append one JSONL entry to .loop/loop-run-log.md, prune entries older than 30 days, and commit to the state branch."
 
 inputs:
   agent_result:
@@ -9,10 +9,6 @@ inputs:
   attempts:
     default: ""
     description: "Number of Agent→Verify attempts (empty when execute did not run)"
-    required: false
-  base_branch:
-    default: "main"
-    description: "Base branch the run log commit is pushed to"
     required: false
   duration_s:
     default: ""
@@ -41,7 +37,7 @@ inputs:
     description: "GitHub Actions workflow run ID"
     required: false
   outcome:
-    description: "Run outcome (pr-created | reported | no-changes | rejected | error | skipped)"
+    description: "Run outcome (pr_created | pr_pushed | reported | unchanged | rejected | error | skipped)"
     required: true
   run_log_file:
     default: ".loop/loop-run-log.md"
@@ -53,8 +49,11 @@ inputs:
     required: false
   skip_reason:
     default: "none"
-    description: "Why execution was skipped (none | no_changes | circuit_breaker | budget)"
+    description: "Why execution was skipped (none | no_changes | circuit_breaker | budget | pr_number_missing)"
     required: false
+  state_branch:
+    description: "Branch hosting .loop/* state files; the run log commit is pushed here"
+    required: true
   usage_json:
     default: ""
     description: "Measured token usage JSON from loop-execute (empty when unavailable)"
@@ -78,7 +77,6 @@ runs:
       env:
         AGENT_RESULT: ${{ inputs.agent_result }}
         ATTEMPTS: ${{ inputs.attempts }}
-        BASE_BRANCH: ${{ inputs.base_branch }}
         DURATION_S_INPUT: ${{ inputs.duration_s }}
         FAILURE_MESSAGE: ${{ inputs.failure_message }}
         FAILURE_STAGE: ${{ inputs.failure_stage }}
@@ -90,6 +88,7 @@ runs:
         RUN_LOG_FILE: ${{ inputs.run_log_file }}
         RUN_STARTED_AT: ${{ inputs.run_started_at }}
         SKIP_REASON: ${{ inputs.skip_reason }}
+        STATE_BRANCH: ${{ inputs.state_branch }}
         USAGE_JSON: ${{ inputs.usage_json }}
         VERDICT: ${{ inputs.verdict }}
       run: bash "${GITHUB_ACTION_PATH}/lib/run.sh"

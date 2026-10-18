@@ -2,6 +2,13 @@
 # shellcheck disable=SC2030,SC2031,SC2034,SC2154
 
 # Tests for .apm/packages/github/.apm/skills/github-issue-triage/scripts/detect_issue.sh
+#
+# Use cases:
+# - emits issue facts, handoff_key entity:issue:N, and result.entity.kind issue
+# - skips Bot actors, Bot comments, and triage:failed issues
+# - hydrates issue facts from GITHUB_EVENT_PATH and gh api
+# - emits dispatch flags only for the triage:ready + autofix handoff
+# - rejects invalid input with structured errors
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -39,6 +46,27 @@ DETECT_SCRIPT="$(apm_skill_script_path github-issue-triage detect_issue.sh)"
         bash "${DETECT_SCRIPT}"
     [ "$status" -eq 0 ]
     run jq -e '.skip == false and .result.handoff_key == "entity:issue:42"' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "emits result.entity.kind issue for human opened issue" {
+    run env ISSUE_NUMBER=42 ISSUE_TITLE='Crash on save' ISSUE_BODY='steps' \
+        ISSUE_LABELS_JSON='[]' ISSUE_EVENT_NAME=issues ISSUE_EVENT_ACTION=opened \
+        ISSUE_ACTOR=alice ISSUE_ACTOR_TYPE=User \
+        bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '.skip == false and .result.entity == {"kind": "issue"}' <<< "${output}"
+    [ "$status" -eq 0 ]
+}
+
+@test "emits result.entity.kind issue when dispatch flags are set" {
+    run env ISSUE_NUMBER=12 ISSUE_TITLE=t ISSUE_BODY=b \
+        ISSUE_LABELS_JSON='["triage:ready","autofix"]' \
+        ISSUE_EVENT_NAME=issues ISSUE_EVENT_ACTION=labeled ISSUE_LABEL_NAME=triage:ready \
+        ISSUE_ACTOR=alice ISSUE_ACTOR_TYPE=User \
+        bash "${DETECT_SCRIPT}"
+    [ "$status" -eq 0 ]
+    run jq -e '.result.dispatch_requested == true and .result.entity.kind == "issue"' <<< "${output}"
     [ "$status" -eq 0 ]
 }
 

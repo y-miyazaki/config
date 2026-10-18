@@ -1,16 +1,19 @@
 #!/bin/bash
 #######################################
 # Description:
-#   Write loop state JSON and commit/push to STATE_PUSH_BRANCH.
+#   Write loop state JSON and commit/push to STATE_BRANCH.
 #   Environment variables mirror loop-finalize Write State step env vars.
 #
 # Usage:
-#   GITHUB_TOKEN=<token> STATE_FILE=... TARGET_KEY=... bash lib/write_state.sh
+#   GITHUB_TOKEN=<token> STATE_BRANCH=main STATE_FILE=... TARGET_KEY=... bash lib/write_state.sh
 #
 # Design Rules:
 #   - state_write_mode controls whether last_sha, pending, or metadata is updated
-#   - Prefer direct push to branch_state; open auto-merge state PR when push is blocked
-#   - PR fallback is blocked for advance + pr-created (use pending mode for L2 open_pr)
+#   - STATE_BRANCH is required (no default branch fallback)
+#   - Prefer direct push to STATE_BRANCH; open auto-merge state PR when push is blocked
+#   - PR fallback is refused for advance + pr_pushed (delivery pr_push landed on the
+#     PR head; pr_create records pending instead of advance)
+#   - Persisted and passed outcomes are read through normalize_outcome (old names)
 #
 # Output:
 #   Commits state (and optional additional paths) to the resolved push branch
@@ -30,6 +33,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=prune_targets.sh
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/prune_targets.sh"
+# shellcheck source=../../lib/loop/outcome.sh
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/../../lib/loop/outcome.sh"
 
 #######################################
 # Global variables
@@ -37,9 +43,8 @@ source "${SCRIPT_DIR}/prune_targets.sh"
 REJECT_REASON="${REJECT_REASON:-}"
 OPEN_REJECTIONS="${OPEN_REJECTIONS:-[]}"
 WRITE_TARGET_STATE="${WRITE_TARGET_STATE:-true}"
-ADDITIONAL_COMMIT_PATHS="${ADDITIONAL_COMMIT_PATHS:-}"
-STATE_PUSH_BRANCH="${STATE_PUSH_BRANCH:-}"
-BASE_BRANCH="${BASE_BRANCH:-main}"
+FINALIZE_COMMIT_PATHS="${FINALIZE_COMMIT_PATHS:-}"
+STATE_BRANCH="${STATE_BRANCH:-}"
 TARGET_KEY="${TARGET_KEY:-}"
 OUTCOME="${OUTCOME:-}"
 SHA="${SHA:-}"
@@ -47,14 +52,14 @@ STATE_WRITE_MODE="${STATE_WRITE_MODE:-advance}"
 PENDING_PR_NUMBER="${PENDING_PR_NUMBER:-}"
 PENDING_PR_URL="${PENDING_PR_URL:-}"
 LOOP_NAME="${LOOP_NAME:-}"
-SKIP_STATE_PR="${SKIP_STATE_PR:-false}"
+STATE_PR_SKIP="${STATE_PR_SKIP:-false}"
 
 READ_BRANCH=""
 PUSH_BRANCH=""
 STATE_TMP=""
 
 #######################################
-# validate_additional_commit_path: Reject unsafe additional commit paths
+# validate_finalize_commit_path: Reject unsafe finalize commit paths
 #
 # Globals:
 #   None
@@ -69,19 +74,19 @@ STATE_TMP=""
 #   0 when valid, 1 otherwise
 #
 #######################################
-function validate_additional_commit_path {
+function validate_finalize_commit_path {
     local path="$1"
 
     if [[ ${path} == *".."* ]]; then
-        echo "::error::additional_commit_paths must not contain '..': ${path}" >&2
+        echo "::error::finalize_commit_paths must not contain '..': ${path}" >&2
         return 1
     fi
     if [[ ${path} == /* ]]; then
-        echo "::error::additional_commit_paths must be repo-relative: ${path}" >&2
+        echo "::error::finalize_commit_paths must be repo-relative: ${path}" >&2
         return 1
     fi
     if [[ ${path} =~ [[:space:]] ]]; then
-        echo "::error::additional_commit_paths must not contain whitespace: ${path}" >&2
+        echo "::error::finalize_commit_paths must not contain whitespace: ${path}" >&2
         return 1
     fi
     return 0
@@ -94,10 +99,10 @@ function validate_additional_commit_path {
 #   STATE_FILE - Path to state JSON
 #   STATE_TMP - Prepared state content
 #   PUSH_BRANCH - Git push destination branch
-#   READ_BRANCH - branch_state for direct push
-#   SKIP_STATE_PR - When true, skip PR fallback on push failure
+#   READ_BRANCH - STATE_BRANCH for direct push
+#   STATE_PR_SKIP - When true, skip PR fallback on push failure
 #   STATE_WRITE_MODE - advance|pending|metadata|promote|clear_pending
-#   ADDITIONAL_COMMIT_PATHS - Optional comma-separated extra paths
+#   FINALIZE_COMMIT_PATHS - Optional comma-separated extra paths
 #   SHA - Cursor SHA for PR body text
 #   OUTCOME - Outcome for PR body text
 #
@@ -118,14 +123,14 @@ function commit_and_push_state {
     mkdir -p "$(dirname "${STATE_FILE}")"
     cp "${STATE_TMP}" "${STATE_FILE}"
 
-    if [[ -n ${ADDITIONAL_COMMIT_PATHS} ]]; then
+    if [[ -n ${FINALIZE_COMMIT_PATHS} ]]; then
         declare -a extra=()
-        IFS=',' read -r -a extra <<< "${ADDITIONAL_COMMIT_PATHS}"
+        IFS=',' read -r -a extra <<< "${FINALIZE_COMMIT_PATHS}"
         for item in "${extra[@]}"; do
             item="${item#"${item%%[![:space:]]*}"}"
             item="${item%"${item##*[![:space:]]}"}"
             [[ -z ${item} ]] && continue
-            if ! validate_additional_commit_path "${item}"; then
+            if ! validate_finalize_commit_path "${item}"; then
                 return 1
             fi
             paths_to_add+=("${item}")
@@ -155,13 +160,16 @@ function commit_and_push_state {
         return 0
     fi
 
-    if [[ ${SKIP_STATE_PR} == "true" ]]; then
-        echo "::warning::Direct push blocked; skipping state PR (skip_state_pr=true)."
+    if [[ ${STATE_PR_SKIP} == "true" ]]; then
+        echo "::warning::Direct push blocked; skipping state PR (state_pr_skip=true)."
         return 0
     fi
 
-    if [[ ${STATE_WRITE_MODE} == "advance" && ${OUTCOME} == "pr-created" ]]; then
-        echo "::error::Direct push to ${PUSH_BRANCH} blocked and state PR fallback refused: advance mode with pr-created outcome. Use state_write_mode=pending for L2 open_pr."
+    # The state-only PR is not the landed path. Advance mode is reached only by
+    # delivery pr_push, whose outcome is pr_pushed. pr_create writes pending mode, so
+    # keying this refusal on pr_created would never match and silently disable it.
+    if [[ ${STATE_WRITE_MODE} == "advance" && $(normalize_outcome "${OUTCOME}") == "pr_pushed" ]]; then
+        echo "::error::Direct push to ${PUSH_BRANCH} blocked and state PR fallback refused: advance mode with pr_pushed outcome. Allow direct push to state_branch (ruleset bypass) for delivery pr_push."
         exit 1
     fi
 
@@ -308,8 +316,8 @@ function resolve_consecutive_failures {
         OPEN_REJECTIONS='[]'
     fi
 
-    case "${OUTCOME}" in
-        rejected | pr-closed)
+    case "$(normalize_outcome "${OUTCOME}")" in
+        rejected | pr_closed)
             echo $((prev_consecutive + 1))
             ;;
         watch | error | escalated)
@@ -701,7 +709,7 @@ function validate_state_file_path {
 }
 
 #######################################
-# main: Write loop state and push to branch_state
+# main: Write loop state and push to STATE_BRANCH
 #
 # Globals:
 #   None
@@ -725,7 +733,11 @@ function main {
 
     configure_git_auth
 
-    READ_BRANCH="${STATE_PUSH_BRANCH:-${BASE_BRANCH}}"
+    if [[ -z ${STATE_BRANCH} ]]; then
+        echo "::error::state_branch is required"
+        exit 1
+    fi
+    READ_BRANCH="${STATE_BRANCH}"
     PUSH_BRANCH="${READ_BRANCH}"
 
     validate_branches

@@ -6,15 +6,15 @@ For automation-path runs. Load on the automation path — see SKILL.md Reference
 
 The caller injects `## Constraints` after detect JSON in the assembled prompt. The agent reads:
 
-| Field               | Type    | Description                                                                                  |
-| ------------------- | ------- | -------------------------------------------------------------------------------------------- |
-| `may_edit`          | boolean | `false` — survey shape only; write no file. `true` — write the report file                   |
-| `write_target`      | string  | `report` when `may_edit: true` for this skill                                                |
-| `report_file`       | string  | Report path; prefer detect `result.report_path` when both are present                        |
-| `response_language` | string  | Language for agent-written prose; overrides the PR language (see category-review-rules.md)   |
-| `Allowed paths`     | string  | Optional allowlist globs from the caller; the report file is the only path this skill writes |
+| Field                | Type    | Description                                                                                  |
+| -------------------- | ------- | -------------------------------------------------------------------------------------------- |
+| `agent_edit_allowed` | boolean | `false` — survey shape only; write no file. `true` — write the report file                   |
+| `agent_edit_target`  | string  | `report` when `agent_edit_allowed: true` for this skill                                      |
+| `agent_report_file`  | string  | Report path; prefer detect `result.report_path` when both are present                        |
+| `response_language`  | string  | Language for agent-written prose; overrides the PR language (see category-review-rules.md)   |
+| `Allowed paths`      | string  | Optional allowlist globs from the caller; the report file is the only path this skill writes |
 
-Callers supply `may_edit`, `write_target` (`fix` | `report`), and optional `report_file` in `## Constraints`. The skill branches on `may_edit` and `write_target` only.
+Callers supply `agent_edit_allowed`, `agent_edit_target` (`fix` | `report`), and optional `agent_report_file` in `## Constraints`. The skill branches on `agent_edit_allowed` and `agent_edit_target` only.
 
 ## Report and session output
 

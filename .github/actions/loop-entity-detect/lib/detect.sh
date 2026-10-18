@@ -5,21 +5,25 @@
 # Usage: bash lib/detect.sh
 #
 # Output:
-# - Writes should_run, skip_reason, target_matrix to GITHUB_OUTPUT
+# - Writes should_run, skip_reason, delivery, pr_auto_merge, target_matrix to GITHUB_OUTPUT
 #
 # Design Rules:
 # - Pins DETECT_SCRIPT to an absolute path before invocation
 # - Invokes detect_script once per entity event (caller never re-runs)
 # - Large payloads live in loop-handoff artifact; matrix output stays slim
 # - Detect-script boundary: non-zero exit fails the step without skip_reason
+# - level and delivery have no defaults; invalid level-keyed inputs fail the step
+# - skip=false requires result.entity.kind issue | pr, allowed by delivery (validate_delivery_target)
+# - The detect hook always runs with the detect token (GITHUB_TOKEN)
 #
 # Dependencies:
 # - bash, jq, openssl
 #
 # Optional environment:
 #   DETECT_SCRIPT, LOOP_NAME, AGENT_MAKER_SKILL_NAME, AGENT_MAKER_INSTRUCTIONS, LEVEL, DELIVERY
+#   AGENT_EDIT_TARGET, AGENT_EDIT_ALLOWLIST, AGENT_EDIT_DENYLIST, AGENT_UNCHANGED_VERDICT
 #   BUDGET_FILE, BUDGET_MAX_RUNS_PER_DAY, BUDGET_MAX_TOKENS_PER_DAY, RUN_LOG_FILE
-#   DISPATCH_HOOK_SCRIPT, DISPATCH_HOOK_TOKEN (trusted post-detect dispatch hook)
+#   DETECT_HOOK_SCRIPT (trusted post-detect hook), GITHUB_TOKEN (detect token)
 #######################################
 
 # Error handling: exit on error, unset variable, or failed pipeline
@@ -43,14 +47,66 @@ DETECT_SCRIPT="${DETECT_SCRIPT-}"
 LOOP_NAME="${LOOP_NAME-}"
 AGENT_MAKER_SKILL_NAME="${AGENT_MAKER_SKILL_NAME-}"
 AGENT_MAKER_INSTRUCTIONS="${AGENT_MAKER_INSTRUCTIONS:-}"
-LEVEL="${LEVEL:-L1}"
-DELIVERY="${DELIVERY:-none}"
-MAY_EDIT="${MAY_EDIT:-}"
-WRITE_TARGET="${WRITE_TARGET:-}"
-DISPATCH_HOOK_SCRIPT="${DISPATCH_HOOK_SCRIPT:-}"
-DISPATCH_HOOK_TOKEN="${DISPATCH_HOOK_TOKEN:-}"
+LEVEL="${LEVEL-}"
+DELIVERY="${DELIVERY-}"
+AGENT_EDIT_TARGET="${AGENT_EDIT_TARGET-}"
+AGENT_EDIT_ALLOWLIST="${AGENT_EDIT_ALLOWLIST-}"
+AGENT_EDIT_DENYLIST="${AGENT_EDIT_DENYLIST-}"
+AGENT_UNCHANGED_VERDICT="${AGENT_UNCHANGED_VERDICT-}"
+DETECT_HOOK_SCRIPT="${DETECT_HOOK_SCRIPT-}"
 HANDOFF_DIR="${RUNNER_TEMP:-/tmp}/loop-handoff"
 DETECT_OUT="${RUNNER_TEMP:-/tmp}/entity-detect.json"
+
+#######################################
+# resolve_detect_hook_script: Pin and confine the trusted detect hook path
+#
+# Globals:
+#   GITHUB_WORKSPACE
+#
+# Arguments:
+#   $1 - Hook script path from DETECT_HOOK_SCRIPT
+#
+# Outputs:
+#   Absolute confined hook path on stdout
+#
+# Returns:
+#   0 on success; non-zero when the hook path is invalid
+#
+#######################################
+function resolve_detect_hook_script {
+    local hook_script="$1"
+    local workspace="${GITHUB_WORKSPACE:-$(pwd)}"
+
+    if [[ -z ${hook_script} ]]; then
+        echo "::error::DETECT_HOOK_SCRIPT is empty" >&2
+        return 1
+    fi
+
+    if [[ ${hook_script} != /* ]]; then
+        hook_script="$(pwd)/${hook_script}"
+    fi
+
+    if command -v realpath > /dev/null 2>&1; then
+        hook_script="$(realpath "${hook_script}")"
+    fi
+
+    if [[ -z ${workspace} || ${hook_script} != "${workspace}/"* ]]; then
+        echo "::error::DETECT_HOOK_SCRIPT must be under GITHUB_WORKSPACE: ${hook_script}" >&2
+        return 1
+    fi
+
+    if [[ ${hook_script} != */scripts/hooks/on_detect_dispatch.sh ]]; then
+        echo "::error::DETECT_HOOK_SCRIPT must end with scripts/hooks/on_detect_dispatch.sh" >&2
+        return 1
+    fi
+
+    if [[ ! -f ${hook_script} ]]; then
+        echo "::error::DETECT_HOOK_SCRIPT not found: ${hook_script}" >&2
+        return 1
+    fi
+
+    printf '%s' "${hook_script}"
+}
 
 #######################################
 # resolve_detect_script_path: Pin DETECT_SCRIPT to an absolute path
@@ -120,62 +176,12 @@ function write_entity_skip_outputs {
 }
 
 #######################################
-# resolve_dispatch_hook_script: Pin and confine trusted dispatch hook path
-#
-# Globals:
-#   GITHUB_WORKSPACE
-#
-# Arguments:
-#   $1 - Hook script path from DISPATCH_HOOK_SCRIPT
-#
-# Outputs:
-#   Absolute confined hook path on stdout
-#
-# Returns:
-#   0 on success; non-zero when the hook path is invalid
-#
-#######################################
-function resolve_dispatch_hook_script {
-    local hook_script="$1"
-    local workspace="${GITHUB_WORKSPACE:-$(pwd)}"
-
-    if [[ -z ${hook_script} ]]; then
-        echo "::error::DISPATCH_HOOK_SCRIPT is empty" >&2
-        return 1
-    fi
-
-    if [[ ${hook_script} != /* ]]; then
-        hook_script="$(pwd)/${hook_script}"
-    fi
-
-    if command -v realpath > /dev/null 2>&1; then
-        hook_script="$(realpath "${hook_script}")"
-    fi
-
-    if [[ -z ${workspace} || ${hook_script} != "${workspace}/"* ]]; then
-        echo "::error::DISPATCH_HOOK_SCRIPT must be under GITHUB_WORKSPACE: ${hook_script}" >&2
-        return 1
-    fi
-
-    if [[ ${hook_script} != */scripts/hooks/on_detect_dispatch.sh ]]; then
-        echo "::error::DISPATCH_HOOK_SCRIPT must end with scripts/hooks/on_detect_dispatch.sh" >&2
-        return 1
-    fi
-
-    if [[ ! -f ${hook_script} ]]; then
-        echo "::error::DISPATCH_HOOK_SCRIPT not found: ${hook_script}" >&2
-        return 1
-    fi
-
-    printf '%s' "${hook_script}"
-}
-
-#######################################
 # main: Run entity detect and publish matrix/handoff outputs
 #
 # Globals:
 #   DETECT_SCRIPT, LOOP_NAME, AGENT_MAKER_SKILL_NAME, AGENT_MAKER_INSTRUCTIONS, LEVEL, DELIVERY
-#   MAY_EDIT, WRITE_TARGET, DISPATCH_HOOK_SCRIPT, DISPATCH_HOOK_TOKEN
+#   AGENT_EDIT_TARGET, AGENT_EDIT_ALLOWLIST, AGENT_EDIT_DENYLIST, AGENT_UNCHANGED_VERDICT
+#   DETECT_HOOK_SCRIPT, GITHUB_TOKEN
 #   BUDGET_FILE, BUDGET_MAX_RUNS_PER_DAY, BUDGET_MAX_TOKENS_PER_DAY, RUN_LOG_FILE
 #   HANDOFF_DIR, DETECT_OUT
 #
@@ -183,10 +189,10 @@ function resolve_dispatch_hook_script {
 #   None
 #
 # Outputs:
-#   should_run, skip_reason, target_matrix on GITHUB_OUTPUT
+#   should_run, skip_reason, delivery, pr_auto_merge, target_matrix on GITHUB_OUTPUT
 #
 # Returns:
-#   0 on success
+#   0 on success or skip; exits 1 when input, entity kind, or target validation fails
 #
 #######################################
 function main {
@@ -197,16 +203,16 @@ function main {
         exit 1
     fi
 
-    if [[ -z ${MAY_EDIT} ]]; then
-        echo "::error::may_edit is required; set may_edit on the caller" >&2
-        exit 1
-    fi
-
     local loop_action_lib
     loop_action_lib="$(cd "${SCRIPT_DIR}/../../lib/loop" && pwd)"
     # shellcheck source=../../lib/loop/validate_loop_write_contract.sh disable=SC1091
     source "${loop_action_lib}/validate_loop_write_contract.sh"
-    if ! validate_loop_write_contract "${MAY_EDIT}" "${WRITE_TARGET}" "${DELIVERY}" "${LEVEL}"; then
+    # A configuration error fails the job (no outputs written).
+    if ! validate_loop_write_contract "${LEVEL}" "${DELIVERY}" "${AGENT_EDIT_TARGET}" \
+        "${AGENT_EDIT_ALLOWLIST}" "${AGENT_EDIT_DENYLIST}" "${AGENT_UNCHANGED_VERDICT}"; then
+        exit 1
+    fi
+    if ! validate_delivery_value "${DELIVERY}"; then
         exit 1
     fi
 
@@ -227,28 +233,34 @@ function main {
         exit 1
     fi
 
-    # Invoke whenever dispatch_requested==true (even if skip=true), status already ok.
-    if [[ -n ${DISPATCH_HOOK_SCRIPT} ]]; then
-        local hook_script
-        requested="$(jq -r '.result.dispatch_requested // false' "${DETECT_OUT}")"
-        if [[ ${requested} == "true" ]]; then
-            if ! hook_script="$(resolve_dispatch_hook_script "${DISPATCH_HOOK_SCRIPT}")"; then
-                exit 1
-            fi
-            GITHUB_TOKEN="${DISPATCH_HOOK_TOKEN:-${GITHUB_TOKEN:-}}" \
-                bash "${hook_script}" "${DETECT_OUT}"
-        fi
-    fi
-
-    full_matrix="$(build_entity_target_matrix \
+    # Validate the entity kind and target before the hook's side effects.
+    if ! full_matrix="$(build_entity_target_matrix \
         "${DETECT_OUT}" \
         "${LOOP_NAME}" \
         "${AGENT_MAKER_SKILL_NAME}" \
         "${AGENT_MAKER_INSTRUCTIONS}" \
         "${LEVEL}" \
         "${DELIVERY}" \
-        "${MAY_EDIT}" \
-        "${WRITE_TARGET}")"
+        "${AGENT_EDIT_TARGET}" \
+        "${AGENT_EDIT_ALLOWLIST}")"; then
+        exit 1
+    fi
+    if [[ $(jq 'length' <<< "${full_matrix}") -gt 0 ]] \
+        && ! validate_delivery_target "${DELIVERY}" "$(jq -c '.[0].target_json' <<< "${full_matrix}")"; then
+        exit 1
+    fi
+
+    # Invoke whenever dispatch_requested==true (even if skip=true), status already ok.
+    if [[ -n ${DETECT_HOOK_SCRIPT} ]]; then
+        local hook_script requested
+        requested="$(jq -r '.result.dispatch_requested // false' "${DETECT_OUT}")"
+        if [[ ${requested} == "true" ]]; then
+            if ! hook_script="$(resolve_detect_hook_script "${DETECT_HOOK_SCRIPT}")"; then
+                exit 1
+            fi
+            bash "${hook_script}" "${DETECT_OUT}"
+        fi
+    fi
 
     if [[ $(jq 'length' <<< "${full_matrix}") -eq 0 ]]; then
         write_entity_skip_outputs "detect_skip"

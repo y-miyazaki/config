@@ -8,7 +8,8 @@
 # - create_pr_body reads large detect JSON from file and ignores commits[] bulk
 # - create_pr_body prefers AGENT_BRANCH over target integration branch for blob links
 # - create_pr_body carries engine, model and tokens in the loop meta block
-# - create_pr_body carries outcome into the loop meta summary icon
+# - create_pr_body carries outcome into the loop meta table
+# - create_pr_body keeps commit and release SHAs so the agent report can link them
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -30,28 +31,29 @@ setup() {
     TARGET_JSON='{"key":"integration:main"}'
     LEVEL="L2"
     SKIP_REASON="none"
-    ENGINE="cursor"
+    AGENT_ENGINE="cursor"
     USAGE_JSON='{"total_input_tokens":100000,"total_output_tokens":100000,"model":"Composer-2.5"}'
 
     run create_pr_body
     [ "$status" -eq 0 ]
-    [[ $output == *"| Engine | \`cursor\` |"* ]]
-    [[ $output == *"| Model | \`Composer-2.5\` |"* ]]
-    [[ $output == *"| Tokens | In/Out 100K/100K |"* ]]
+    [[ $output == *"| engine | cursor |"* ]]
+    [[ $output == *"| model | Composer-2.5 |"* ]]
+    [[ $output == *"| tokens | In/Out 100K/100K |"* ]]
 }
 
-@test "create_pr_body carries outcome into the loop meta summary icon" {
+@test "create_pr_body carries outcome into the loop meta table" {
     PR_BODY=""
     NOTIFY_CONTEXT_JSON='{"changed_files":[],"agent_report_overview":"","agent_report_summary":""}'
     DETECT_RESULT_JSON='{"failures":[]}'
     TARGET_JSON='{"key":"integration:main"}'
     LEVEL="L2"
     SKIP_REASON="none"
-    OUTCOME="pr-created"
+    OUTCOME="pr_created"
 
     run create_pr_body
     [ "$status" -eq 0 ]
-    [[ $output == *"<summary>✅ <code>pr-created</code> · Loop details</summary>"* ]]
+    [[ $output == *"<summary>Meta</summary>"* ]]
+    [[ $output == *"| outcome | pr_created |"* ]]
     [[ $output != *"<code>unknown</code>"* ]]
 }
 
@@ -68,7 +70,7 @@ setup() {
     [[ $output == *"## Overview"* ]]
     [[ $output == *"Updated changelog"* ]]
     [[ $output == *"CHANGELOG.md"* ]]
-    [[ $output == *"· Loop details"* ]]
+    [[ $output == *"<summary>Meta</summary>"* ]]
     [[ $output == *"integration:main"* ]]
     [[ $output == *"## Failure context"* ]]
 }
@@ -120,4 +122,25 @@ setup() {
     [ "$status" -eq 0 ]
     [[ $output == *"[docs/a.md](https://github.com/org/repo/blob/loop/ci-sweeper-fix/docs/a.md)"* ]]
     [[ $output != *"/blob/main/docs/a.md"* ]]
+}
+
+@test "create_pr_body keeps commit and release SHAs so the agent report can link them" {
+    local sha_a="abcdef0123456789abcdef0123456789abcdef01"
+    local sha_b="1234567890abcdef1234567890abcdef12345678"
+    PR_BODY=""
+    GITHUB_REPOSITORY="org/repo"
+    GITHUB_SERVER_URL="https://github.com"
+    AGENT_BRANCH="loop/changelog/x"
+    SKIP_REASON="none"
+    LEVEL="L2"
+    DETECT_RESULT_JSON="$(jq -nc --arg a "${sha_a}" --arg b "${sha_b}" \
+        '{commits:[{sha:$a,subject:"feat: x"}],releases:[{tag_sha:$b,commit_shas:[$a]}],failures:[]}')"
+    NOTIFY_CONTEXT_JSON="$(jq -nc '{changed_files:["CHANGELOG.md"],agent_report_overview:"Recorded changes.",agent_report_summary:"### Changes\n| Commit | Type |\n| --- | --- |\n| abcdef0 | feat |\n| 1234567 | chore |"}')"
+    TARGET_JSON='{"key":"integration:main"}'
+    export PR_BODY GITHUB_REPOSITORY GITHUB_SERVER_URL AGENT_BRANCH SKIP_REASON LEVEL
+
+    run create_pr_body
+    [ "$status" -eq 0 ]
+    [[ $output == *"| [abcdef0](https://github.com/org/repo/commit/${sha_a}) |"* ]]
+    [[ $output == *"| [1234567](https://github.com/org/repo/commit/${sha_b}) |"* ]]
 }

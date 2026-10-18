@@ -6,7 +6,7 @@ Gate IDs are for agent self-check and Deferred reasons. PR identity in reports r
 
 ### SCOPE-01: Read-only first review
 
-- [ ] Write only the report file at `result.report_path`, and only when `may_edit: true` and `write_target: report`
+- [ ] Write only the report file at `result.report_path`, and only when `agent_edit_allowed: true` and `agent_edit_target: report`
 - [ ] Never post, approve, request changes, or edit source files
 - [ ] Use `gh` for read-only calls only
 - **PASS** if the report file is the only file changed and nothing was posted
@@ -45,5 +45,5 @@ Gate IDs are for agent self-check and Deferred reasons. PR identity in reports r
 
 - Detect `status: error` → stop; write no report
 - Detect `skip: true` → report skip reason; write no report
-- `may_edit: false` → survey only; write no file
-- `write_target` not `report` → survey only; note mismatch
+- `agent_edit_allowed: false` → survey only; write no file
+- `agent_edit_target` not `report` → survey only; note mismatch

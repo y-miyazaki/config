@@ -1,9 +1,9 @@
 # Reusable workflow: Loop agent execution
 # L1: agent-l1 (loop-agent-once) → finalize-l1 (run-log; future L1 delivery)
-# L2/L3: agent-l2 (loop-execute) → finalize-l2 (run-log always; loop-finalize when finalize_enabled)
-# finalize_enabled gates loop-finalize inside finalize-l2, not whether finalize runs.
-# Callers set it for delivery open_pr, and for delivery none on L2/L3 (strategy none:
-# domain persistence, state, branch cleanup; no git landing or PR).
+# L2/L3: agent-l2 (loop-execute) → finalize-l2 (loop-finalize and run-log always)
+# loop-finalize branches on delivery alone (pr_create | pr_push | none); delivery and
+# pr_auto_merge are detect outputs passed through unchanged by the callers.
+# The handoff key, checkout ref and base branch are read from target_json in each job.
 # Caller-facing prompts: loop-detect assembles maker text (prompt_text); domain checker rubric is agent_checker_instructions.
 # Checker prompt scaffolding (INITIAL/REGRESSION, output contract) is owned by loop-execute — not workflow_call inputs here.
 # Contract (L2/L3): outputs { branch, has_changes, verdict, reason, attempts }
@@ -15,14 +15,9 @@ name: ci-loop-agent
 on:
   workflow_call:
     inputs:
-      additional_commit_paths:
-        default: ""
-        description: "Comma-separated paths to commit with state after domain persistence"
-        required: false
-        type: string
-      agent_allowed_tools:
-        default: ""
-        description: 'Newline-separated permission rules the skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). Empty grants nothing beyond the repository''s .claude/settings.json'
+      agent_branch_prefix:
+        default: "loop"
+        description: "Worktree branch prefix (L2/L3)"
         required: false
         type: string
       agent_checker_effort:
@@ -45,10 +40,39 @@ on:
         description: "Checker model override (L2/L3)"
         required: false
         type: string
+      agent_checker_path_pattern:
+        default: ""
+        description: "Optional extended-regex that picks file paths out of checker text (L2/L3)"
+        required: false
+        type: string
       agent_checker_skill_name:
         default: "loop-verifier"
         description: "Checker skill name passed to loop-execute"
         required: false
+        type: string
+      agent_cli_version:
+        default: "latest"
+        description: "CLI agent version"
+        required: false
+        type: string
+      agent_commit_message:
+        default: "chore: loop-automated update"
+        description: "Commit message prefix for loop attempts (L2/L3)"
+        required: false
+        type: string
+      agent_edit_allowlist:
+        default: ""
+        description: "Comma-separated glob allowlist for the maker and checker (L2/L3; validated by detect)"
+        required: false
+        type: string
+      agent_edit_denylist:
+        default: ""
+        description: "Comma-separated path denylist for the maker and checker (L2/L3); empty applies the loop-execute platform default"
+        required: false
+        type: string
+      agent_engine:
+        description: "AI engine (claude | copilot | codex | cursor)"
+        required: true
         type: string
       agent_loop_max_attempts:
         default: 3
@@ -75,58 +99,18 @@ on:
         description: "Skill name (used for L2 branch naming)"
         required: false
         type: string
-      allowlist:
+      agent_tool_allowlist:
         default: ""
-        description: "Comma-separated glob allowlist for checker (L2/L3)"
+        description: 'Newline-separated permission rules the skill needs, in the engine''s own syntax (claude: "Bash(gh issue edit:*)"). Empty grants nothing beyond the repository''s .claude/settings.json'
         required: false
         type: string
-      auto_merge:
-        default: "false"
-        description: "Enable auto-merge on created PR (finalize job; L3 + open_pr only)"
-        required: false
-        type: string
-      base_branch:
-        default: "main"
-        description: "Base branch for verify diff (L2/L3)"
-        required: false
-        type: string
-      branch_prefix:
-        default: "loop"
-        description: "Worktree branch prefix (L2/L3)"
-        required: false
-        type: string
-      cli_version:
-        default: "latest"
-        description: "CLI agent version"
-        required: false
-        type: string
-      commit_message:
-        default: "chore: loop-automated update"
-        description: "Commit message prefix for loop attempts (L2/L3)"
-        required: false
-        type: string
-      current_sha:
+      agent_unchanged_verdict:
         default: ""
-        description: "SHA to record in per-target state (finalize job)"
+        description: "Verdict when the maker produces no file changes: APPROVE | REJECT (L2/L3; validated by detect)"
         required: false
         type: string
-      denylist:
-        default: ""
-        description: "Comma-separated path denylist for checker (L2/L3); empty applies the loop-execute platform default"
-        required: false
-        type: string
-      detect_result_json:
-        default: "{}"
-        description: "Detect script JSON result for notify_context_json (L2/L3)"
-        required: false
-        type: string
-      domain_persistence_script:
-        default: ""
-        description: "Optional bash script for domain ledger persistence (finalize job)"
-        required: false
-        type: string
-      engine:
-        description: "AI engine (claude | copilot | codex | cursor)"
+      delivery:
+        description: "Where the agent output is delivered: none | pr_create | pr_push (detect output; loop-finalize branches on it)"
         required: true
         type: string
       environment:
@@ -134,29 +118,24 @@ on:
         description: "GitHub environment for maintenance bot secrets"
         required: false
         type: string
-      finalize_enabled:
-        default: false
-        description: "Run loop-finalize git landing/PR inside finalize-l2 (not whether finalize-l2 runs)"
+      finalize_commit_paths:
+        default: ""
+        description: "Comma-separated paths to commit with state after the finalize hook"
         required: false
-        type: boolean
+        type: string
+      finalize_hook_script:
+        default: ""
+        description: "Optional bash script run once by loop-finalize regardless of delivery (e.g. domain ledger)"
+        required: false
+        type: string
+      finalize_outcome_override:
+        default: ""
+        description: "Optional explicit finalize outcome (e.g. watch)"
+        required: false
+        type: string
       handoff_artifact_name:
         default: ""
         description: "loop-handoff artifact name from loop-detect"
-        required: false
-        type: string
-      handoff_key:
-        default: ""
-        description: "Target handoff key for artifact payload resolution"
-        required: false
-        type: string
-      infer_files_pattern:
-        default: ""
-        description: "Optional extended-regex to infer file paths from checker text (L2/L3)"
-        required: false
-        type: string
-      labels:
-        default: "loop-automation"
-        description: "Comma-separated labels for created PR (finalize job)"
         required: false
         type: string
       level:
@@ -167,14 +146,9 @@ on:
         description: "Loop identifier for state, budget, and run-log"
         required: true
         type: string
-      no_changes_verdict:
-        default: "REJECT"
-        description: "Verdict when maker produces no file changes (APPROVE or REJECT, L2/L3); REJECT unless the loop's success state is no edit"
-        required: false
-        type: string
-      outcome_override:
-        default: ""
-        description: "Optional explicit finalize outcome (e.g. watch)"
+      pr_auto_merge:
+        default: "false"
+        description: "Enable auto-merge on the created PR (detect output: L3 and delivery pr_create)"
         required: false
         type: string
       pr_body:
@@ -187,6 +161,11 @@ on:
         description: "Create finalize PR as draft when true"
         required: false
         type: boolean
+      pr_labels:
+        default: "loop-automation"
+        description: "Comma-separated labels for created PR (finalize job)"
+        required: false
+        type: string
       pr_title:
         default: ""
         description: "PR title for finalize job"
@@ -212,19 +191,18 @@ on:
         description: "Detect skip reason recorded in run log (finalize job)"
         required: false
         type: string
+      state_branch:
+        description: "Branch for .loop/* state and run-log commits"
+        required: true
+        type: string
       state_file:
         default: ""
         description: "Loop state file path (L2/L3)"
         required: false
         type: string
-      state_push_branch:
-        default: ""
-        description: "Branch for .loop/* state commits (L2/L3)"
-        required: false
-        type: string
       target_json:
         default: ""
-        description: "Target descriptor from loop-detect matrix cell (L2/L3)"
+        description: "Target descriptor from the loop-detect matrix cell; the handoff key, checkout ref and base are read from it (required at L2/L3; empty fails)"
         required: false
         type: string
       verifier_context:
@@ -239,15 +217,15 @@ on:
       branch:
         description: "Branch with changes (L2 only, empty if L1 or no changes)"
         value: ${{ jobs.agent-l2.outputs.branch || '' }}
+      finalize_outcome_override:
+        description: "Optional finalize outcome from Skill deferral (e.g. watch)"
+        value: ${{ jobs.agent-l2.outputs.finalize_outcome_override || '' }}
       has_changes:
         description: "Whether agent produced file changes (L2 only)"
         value: ${{ jobs.agent-l2.outputs.has_changes || 'false' }}
       open_rejections:
         description: "JSON array of unresolved structured rejections (L2/L3)"
         value: ${{ jobs.agent-l2.outputs.open_rejections || '[]' }}
-      outcome_override:
-        description: "Optional finalize outcome from Skill deferral (e.g. watch)"
-        value: ${{ jobs.agent-l2.outputs.outcome_override || '' }}
       reason:
         description: "Final checker reason (L2/L3)"
         value: ${{ jobs.agent-l2.outputs.reason || '' }}
@@ -312,14 +290,19 @@ jobs:
         uses: y-miyazaki/config/.github/actions/loop-agent-once@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
-          agent_allowed_tools: ${{ inputs.agent_allowed_tools }}
+          agent_cli_version: ${{ inputs.agent_cli_version }}
+          agent_engine: ${{ inputs.agent_engine }}
+          agent_maker_effort: ${{ inputs.agent_maker_effort }}
+          agent_maker_max_turns: ${{ format('{0}', inputs.agent_maker_max_turns) }}
+          agent_maker_model: ${{ inputs.agent_maker_model }}
           agent_token: ${{ secrets.AGENT_TOKEN }}
-          cli_version: ${{ inputs.cli_version }}
-          effort: ${{ inputs.agent_maker_effort }}
-          engine: ${{ inputs.engine }}
+          agent_tool_allowlist: ${{ inputs.agent_tool_allowlist }}
+          # The agent ends its run with the comment text; this stage measures the usage
+          # and posts it once, with Meta and the footer (entity handoff keys only).
+          comment_handoff_key: ${{ fromJSON(inputs.target_json || '{}').key }}
+          comment_marker: <!-- ${{ inputs.loop_name }}:v1 -->
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
-          max_turns: ${{ format('{0}', inputs.agent_maker_max_turns) }}
-          model: ${{ inputs.agent_maker_model }}
+          output_file: ${{ runner.temp }}/loop-agent-output.md
           prompt_text: ${{ inputs.prompt_text }}
 
   finalize-l1:
@@ -332,9 +315,6 @@ jobs:
     environment: ${{ inputs.environment }}
     permissions:
       contents: write
-      # issues: write lets finalize append the loop meta block to the Issue
-      # comment an entity (L1) agent posted.
-      issues: write
       pull-requests: write
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -358,44 +338,15 @@ jobs:
 
         with:
           agent_result: ${{ needs.agent-l1.result }}
-          base_branch: ${{ inputs.state_push_branch != '' && inputs.state_push_branch || inputs.base_branch }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           has_changes: "false"
           loop_name: ${{ inputs.loop_name }}
-          outcome: ${{ needs.agent-l1.result == 'success' && 'no-changes' || 'error' }}
+          outcome: ${{ needs.agent-l1.result == 'success' && 'unchanged' || 'error' }}
           run_log_file: ${{ inputs.run_log_file }}
           run_started_at: ${{ inputs.run_started_at }}
           skip_reason: ${{ inputs.skip_reason }}
+          state_branch: ${{ inputs.state_branch }}
           usage_json: ${{ needs.agent-l1.outputs.usage_json || '' }}
-
-      # L1 agents post their own Issue comment through gh issue comment, so no
-      # platform footer reaches it. Finalize is the only stage that knows the
-      # usage totals, so it appends them here — collapsed, and last, so the
-      # agent's analysis stays the lead.
-      - name: Append Loop Meta To Entity Comment
-        env:
-          ENGINE: ${{ inputs.engine }}
-          GITHUB_TOKEN: ${{ steps.resolve_github_token.outputs.github_token }}
-          HANDOFF_KEY: ${{ inputs.handoff_key }}
-          LOOP_NAME: ${{ inputs.loop_name }}
-          OUTCOME: ${{ needs.agent-l1.result == 'success' && 'no-changes' || 'error' }}
-          REPOSITORY: ${{ github.repository }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          USAGE_JSON: ${{ needs.agent-l1.outputs.usage_json || '' }}
-        run: |
-          set -euo pipefail
-          # shellcheck disable=SC1091
-          source .github/actions/lib/loop/created_by.sh
-          # shellcheck disable=SC1091
-          source .github/actions/lib/loop/loop_meta.sh
-          # shellcheck disable=SC1091
-          source .github/actions/lib/loop/entity_meta.sh
-          issue_number="$(entity_issue_number "${HANDOFF_KEY}")"
-          if [[ -z ${issue_number} ]]; then
-            exit 0
-          fi
-          append_entity_meta "${issue_number}" "<!-- ${LOOP_NAME}:v1 -->" \
-            "${OUTCOME}" "${ENGINE}" "${USAGE_JSON}" "${RUN_URL}"
 
   agent-l2:
     if: inputs.level == 'L2' || inputs.level == 'L3'
@@ -407,10 +358,10 @@ jobs:
       branch: ${{ steps.worktree.outputs.branch }}
       failure_message: ${{ steps.execute.outputs.failure_message }}
       failure_stage: ${{ steps.execute.outputs.failure_stage }}
+      finalize_outcome_override: ${{ steps.execute.outputs.finalize_outcome_override }}
       has_changes: ${{ steps.execute.outputs.has_changes }}
       notify_context_json: ${{ steps.execute.outputs.notify_context_json }}
       open_rejections: ${{ steps.execute.outputs.open_rejections }}
-      outcome_override: ${{ steps.execute.outputs.outcome_override }}
       reason: ${{ steps.execute.outputs.reason }}
       usage_json: ${{ steps.execute.outputs.usage_json }}
       verdict: ${{ steps.execute.outputs.verdict }}
@@ -442,38 +393,39 @@ jobs:
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           github_token: ${{ secrets.GH_TOKEN }}
 
+      # No fallback: an empty or malformed target_json fails here instead of
+      # silently running the agent against a guessed branch.
       - name: Parse Target
         id: target
         env:
-          BASE_BRANCH: ${{ inputs.base_branch }}
           TARGET_JSON: ${{ inputs.target_json }}
         run: |
           set -euo pipefail
-          if [[ -n "${TARGET_JSON}" ]] && jq -e . >/dev/null 2>&1 <<< "${TARGET_JSON}"; then
-            {
-              echo "worktree_branch=$(jq -r '.from.branch' <<< "${TARGET_JSON}")"
-              echo "worktree_ref=$(jq -r '.from.ref' <<< "${TARGET_JSON}")"
-              echo "verify_base_branch=$(jq -r 'if .mode == "pull_request" then .base.branch else .to.branch end' <<< "${TARGET_JSON}")"
-              echo "target_key=$(jq -r '.key' <<< "${TARGET_JSON}")"
-            } >> "$GITHUB_OUTPUT"
-          else
-            {
-              echo "worktree_branch=${BASE_BRANCH}"
-              echo "worktree_ref="
-              echo "verify_base_branch=${BASE_BRANCH}"
-              echo "target_key=integration:${BASE_BRANCH}"
-            } >> "$GITHUB_OUTPUT"
+          if [[ -z "${TARGET_JSON}" ]] || ! jq -e 'type == "object"' >/dev/null 2>&1 <<< "${TARGET_JSON}"; then
+            echo "::error title=loop-agent::target_json is empty or not a JSON object" >&2
+            exit 1
           fi
+          nonempty='select(type == "string" and . != "")'
+          key="$(jq -er ".key | ${nonempty}" <<< "${TARGET_JSON}")"
+          from_branch="$(jq -er ".from.branch | ${nonempty}" <<< "${TARGET_JSON}")"
+          from_ref="$(jq -r '.from.ref // ""' <<< "${TARGET_JSON}")"
+          base_branch="$(jq -er "(if .mode == \"pull_request\" then .base.branch else .to.branch end) | ${nonempty}" <<< "${TARGET_JSON}")"
+          {
+            echo "base_branch=${base_branch}"
+            echo "from_branch=${from_branch}"
+            echo "from_ref=${from_ref}"
+            echo "key=${key}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Setup Worktree
         id: worktree
         uses: y-miyazaki/config/.github/actions/loop-worktree-setup@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
+          agent_branch_prefix: ${{ inputs.agent_branch_prefix }}
           agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
-          base_branch: ${{ steps.target.outputs.worktree_branch }}
-          base_ref: ${{ steps.target.outputs.worktree_ref }}
-          branch_prefix: ${{ inputs.branch_prefix }}
+          from_branch: ${{ steps.target.outputs.from_branch }}
+          from_ref: ${{ steps.target.outputs.from_ref }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
 
       - name: Execute Bounded Loop
@@ -481,31 +433,30 @@ jobs:
         uses: y-miyazaki/config/.github/actions/loop-execute@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
-          agent_allowed_tools: ${{ inputs.agent_allowed_tools }}
           agent_checker_effort: ${{ inputs.agent_checker_effort }}
           agent_checker_instructions: ${{ inputs.agent_checker_instructions }}
           agent_checker_max_turns: ${{ format('{0}', inputs.agent_checker_max_turns) }}
           agent_checker_model: ${{ inputs.agent_checker_model }}
+          agent_checker_path_pattern: ${{ inputs.agent_checker_path_pattern }}
           agent_checker_skill_name: ${{ inputs.agent_checker_skill_name }}
+          agent_cli_version: ${{ inputs.agent_cli_version }}
+          agent_commit_message: ${{ inputs.agent_commit_message }}
+          agent_edit_allowlist: ${{ inputs.agent_edit_allowlist }}
+          agent_edit_denylist: ${{ inputs.agent_edit_denylist }}
+          agent_engine: ${{ inputs.agent_engine }}
           agent_loop_max_attempts: ${{ format('{0}', inputs.agent_loop_max_attempts) }}
           agent_maker_effort: ${{ inputs.agent_maker_effort }}
           agent_maker_max_turns: ${{ format('{0}', inputs.agent_maker_max_turns) }}
           agent_maker_model: ${{ inputs.agent_maker_model }}
           agent_maker_skill_name: ${{ inputs.agent_maker_skill_name }}
           agent_token: ${{ secrets.AGENT_TOKEN }}
-          allowlist: ${{ inputs.allowlist }}
-          base_branch: ${{ steps.target.outputs.verify_base_branch }}
+          agent_tool_allowlist: ${{ inputs.agent_tool_allowlist }}
+          agent_unchanged_verdict: ${{ inputs.agent_unchanged_verdict }}
+          base_branch: ${{ steps.target.outputs.base_branch }}
           branch: ${{ steps.worktree.outputs.branch }}
-          cli_version: ${{ inputs.cli_version }}
-          commit_message: ${{ inputs.commit_message }}
-          denylist: ${{ inputs.denylist }}
-          detect_result_json: ${{ inputs.detect_result_json }}
-          engine: ${{ inputs.engine }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           handoff_dir: ${{ runner.temp }}/loop-handoff
-          handoff_key: ${{ inputs.handoff_key != '' && inputs.handoff_key || steps.target.outputs.target_key }}
-          infer_files_pattern: ${{ inputs.infer_files_pattern }}
-          no_changes_verdict: ${{ inputs.no_changes_verdict }}
+          handoff_key: ${{ steps.target.outputs.key }}
           prompt_text: ${{ inputs.prompt_text }}
           verifier_context: ${{ inputs.verifier_context }}
           worktree_path: ${{ steps.worktree.outputs.worktree_path }}
@@ -538,17 +489,27 @@ jobs:
           name: ${{ inputs.handoff_artifact_name }}
           path: ${{ runner.temp }}/loop-handoff
 
-      - name: Parse Notify Target
-        id: notify_target
+      # Tolerates an empty target_json so the run log below is still written;
+      # loop-finalize itself fails closed on an empty target_json.
+      - name: Parse Target
+        id: target
         env:
           TARGET_JSON: ${{ inputs.target_json }}
         run: |
           set -euo pipefail
-          if [[ -n "${TARGET_JSON}" ]] && jq -e . >/dev/null 2>&1 <<< "${TARGET_JSON}"; then
-            echo "pr_number=$(jq -r '.to.pr_number // empty' <<< "${TARGET_JSON}")" >> "$GITHUB_OUTPUT"
-          else
-            echo "pr_number=" >> "$GITHUB_OUTPUT"
+          from_ref=""
+          key=""
+          pr_number=""
+          if [[ -n "${TARGET_JSON}" ]] && jq -e 'type == "object"' >/dev/null 2>&1 <<< "${TARGET_JSON}"; then
+            from_ref="$(jq -r '.from.ref // empty' <<< "${TARGET_JSON}")"
+            key="$(jq -r '.key // empty' <<< "${TARGET_JSON}")"
+            pr_number="$(jq -r '.to.pr_number // empty' <<< "${TARGET_JSON}")"
           fi
+          {
+            echo "from_ref=${from_ref}"
+            echo "key=${key}"
+            echo "pr_number=${pr_number}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Resolve GitHub Token
         id: resolve_github_token
@@ -565,39 +526,37 @@ jobs:
       # Notify Pull Request, so the failure stays visible without aborting the
       # job before those steps run.
       - name: Finalize
-        if: inputs.finalize_enabled
         continue-on-error: true
         id: finalize
         uses: y-miyazaki/config/.github/actions/loop-finalize@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
-          additional_commit_paths: ${{ inputs.additional_commit_paths }}
+          agent_engine: ${{ inputs.agent_engine }}
           agent_result: ${{ needs.agent-l2.result }}
-          auto_merge: ${{ inputs.auto_merge }}
-          base_branch: ${{ inputs.base_branch }}
           branch: ${{ needs.agent-l2.outputs.branch }}
-          current_sha: ${{ inputs.current_sha }}
-          detect_result_json: ${{ inputs.detect_result_json }}
-          domain_persistence_script: ${{ inputs.domain_persistence_script }}
-          engine: ${{ inputs.engine }}
+          current_sha: ${{ steps.target.outputs.from_ref }}
+          delivery: ${{ inputs.delivery }}
           execute_branch: ${{ needs.agent-l2.outputs.branch }}
+          finalize_commit_paths: ${{ inputs.finalize_commit_paths }}
+          finalize_hook_script: ${{ inputs.finalize_hook_script }}
+          finalize_outcome_override: ${{ inputs.finalize_outcome_override != '' && inputs.finalize_outcome_override || needs.agent-l2.outputs.finalize_outcome_override }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           handoff_dir: ${{ runner.temp }}/loop-handoff
-          handoff_key: ${{ inputs.handoff_key }}
+          handoff_key: ${{ steps.target.outputs.key }}
           has_changes: ${{ needs.agent-l2.outputs.has_changes }}
-          labels: ${{ inputs.labels }}
           level: ${{ inputs.level }}
           loop_name: ${{ inputs.loop_name }}
           notify_context_json: ${{ needs.agent-l2.outputs.notify_context_json || '{}' }}
           open_rejections: ${{ needs.agent-l2.outputs.open_rejections }}
-          outcome_override: ${{ inputs.outcome_override != '' && inputs.outcome_override || needs.agent-l2.outputs.outcome_override }}
+          pr_auto_merge: ${{ inputs.pr_auto_merge }}
           pr_body: ${{ inputs.pr_body }}
           pr_draft: ${{ inputs.pr_draft == true && 'true' || 'false' }}
+          pr_labels: ${{ inputs.pr_labels }}
           pr_title: ${{ inputs.pr_title }}
           reject_reason: ${{ needs.agent-l2.outputs.reason }}
           skip_reason: ${{ inputs.skip_reason }}
+          state_branch: ${{ inputs.state_branch }}
           state_file: ${{ inputs.state_file }}
-          state_push_branch: ${{ inputs.state_push_branch }}
           target_json: ${{ inputs.target_json }}
           usage_json: ${{ needs.agent-l2.outputs.usage_json || '' }}
           verdict: ${{ needs.agent-l2.outputs.verdict }}
@@ -645,85 +604,40 @@ jobs:
         with:
           agent_result: ${{ steps.run_log_meta.outputs.agent_result }}
           attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
-          base_branch: ${{ inputs.state_push_branch != '' && inputs.state_push_branch || inputs.base_branch }}
           failure_message: ${{ steps.run_log_meta.outputs.failure_message }}
           failure_stage: ${{ steps.run_log_meta.outputs.failure_stage }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           has_changes: ${{ needs.agent-l2.outputs.has_changes }}
           loop_name: ${{ inputs.loop_name }}
-          outcome: ${{ steps.finalize.outcome == 'failure' && 'error' || steps.finalize.outputs.outcome || (needs.agent-l2.result != 'success' && needs.agent-l2.result != 'skipped' && 'error') || (needs.agent-l2.outputs.verdict == 'REJECT' && 'rejected') || 'no-changes' }}
+          outcome: ${{ steps.finalize.outcome == 'failure' && 'error' || steps.finalize.outputs.outcome || (needs.agent-l2.result != 'success' && needs.agent-l2.result != 'skipped' && 'error') || (needs.agent-l2.outputs.verdict == 'REJECT' && 'rejected') || 'unchanged' }}
           run_log_file: ${{ inputs.run_log_file }}
           run_started_at: ${{ inputs.run_started_at }}
           skip_reason: ${{ inputs.skip_reason }}
+          state_branch: ${{ inputs.state_branch }}
           usage_json: ${{ needs.agent-l2.outputs.usage_json || '' }}
           verdict: ${{ needs.agent-l2.outputs.verdict }}
-
-      # L2 review agents submit their own marker-tagged pull request review
-      # through gh, so no platform footer reaches it. Finalize knows the usage
-      # totals, so it appends them here — collapsed, and last.
-      # continue-on-error: meta is cosmetic and must never fail finalize-l2.
-      # Only entity:pr:* handoff keys act, checked before any source: the libs
-      # are read from the caller checkout (no action path exists in a workflow
-      # run step), so a consumer without them must not reach the source lines.
-      - name: Append Loop Meta To Pull Request Review
-        if: always() && inputs.handoff_key != ''
-        continue-on-error: true
-        env:
-          ENGINE: ${{ inputs.engine }}
-          GITHUB_TOKEN: ${{ steps.resolve_github_token.outputs.github_token }}
-          HANDOFF_KEY: ${{ inputs.handoff_key }}
-          LOOP_NAME: ${{ inputs.loop_name }}
-          OUTCOME: ${{ steps.finalize.outputs.outcome || 'error' }}
-          REPOSITORY: ${{ github.repository }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          USAGE_JSON: ${{ needs.agent-l2.outputs.usage_json || '' }}
-        run: |
-          set -euo pipefail
-          if ! [[ "${HANDOFF_KEY}" =~ ^entity:pr:[1-9][0-9]*$ ]]; then
-            exit 0
-          fi
-          lib_dir=".github/actions/lib/loop"
-          for lib in created_by.sh loop_meta.sh entity_meta.sh; do
-            if [[ ! -f "${lib_dir}/${lib}" ]]; then
-              echo "::notice title=loop-meta::${lib_dir}/${lib} not in checkout; meta not appended"
-              exit 0
-            fi
-          done
-          # shellcheck disable=SC1091
-          source "${lib_dir}/created_by.sh"
-          # shellcheck disable=SC1091
-          source "${lib_dir}/loop_meta.sh"
-          # shellcheck disable=SC1091
-          source "${lib_dir}/entity_meta.sh"
-          pr_number="$(entity_pr_number "${HANDOFF_KEY}")"
-          if [[ -z ${pr_number} ]]; then
-            exit 0
-          fi
-          append_pr_review_meta "${pr_number}" "<!-- ${LOOP_NAME}:v1 -->" \
-            "${OUTCOME}" "${ENGINE}" "${USAGE_JSON}" "${RUN_URL}"
 
       - name: Notify Pull Request
         continue-on-error: true
         if: >-
           always() &&
-          steps.notify_target.outputs.pr_number != ''
+          steps.target.outputs.pr_number != ''
         uses: y-miyazaki/config/.github/actions/loop-notify-pr@ffdb3d4056aa6f41faf9a2d9a098553bf27d6a75 # v1.8.122
 
         with:
+          agent_engine: ${{ inputs.agent_engine }}
+          agent_loop_max_attempts: ${{ format('{0}', inputs.agent_loop_max_attempts) }}
           attempts: ${{ needs.agent-l2.outputs.attempts || '' }}
-          auto_merge: ${{ inputs.auto_merge }}
           commit_sha: ${{ steps.finalize.outputs.commit_sha || '' }}
-          engine: ${{ inputs.engine }}
           fix_pr_number: ${{ steps.finalize.outputs.pr_number || '' }}
           fix_pr_url: ${{ steps.finalize.outputs.pr_url || '' }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
-          level: ${{ inputs.level }}
           loop_name: ${{ inputs.loop_name }}
           loop_run_id: ${{ github.run_id }}
-          max_attempts: ${{ format('{0}', inputs.agent_loop_max_attempts) }}
           notify_context_json: ${{ needs.agent-l2.outputs.notify_context_json || '{}' }}
           outcome: ${{ steps.finalize.outputs.outcome || 'error' }}
-          pr_number: ${{ steps.notify_target.outputs.pr_number }}
+          pr_auto_merge: ${{ inputs.pr_auto_merge }}
+          pr_number: ${{ steps.target.outputs.pr_number }}
           reject_reason: ${{ needs.agent-l2.outputs.reason }}
           repository: ${{ github.repository }}
           target_json: ${{ inputs.target_json }}

@@ -36,12 +36,12 @@ The caller ships with the `pull_request_target` trigger enabled; the `ci-loop-*`
 
 Do not dispatch or enable the workflow until a release that contains all of the following platform fixes is pinned in the `ci-loop-*` `uses:` lines of the caller chain (`ci-loop-caller-entity.yaml` → `ci-loop-agent.yaml` → `loop-*` actions):
 
-| Fix        | Change                                                                                                                                                           |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| P1, P2, P4 | `loop-finalize` never pushes for `finalize_strategy: none`, deletes the agent branch, and passes `GH_TOKEN` / `GITHUB_REPOSITORY` to `domain_persistence_script` |
-| B2         | Callers set `finalize_enabled` for `delivery: none` when `level` is not `L1`, so `loop-finalize` (and `post_review.sh`) runs at L2                               |
-| B3         | `loop-entity-detect` emits `target_json.from.branch`, which `ci-loop-agent` uses as the worktree base branch                                                     |
-| Meta guard | The `finalize-l2` PR review Meta step acts only on `entity:pr:<n>` handoff keys, before it sources any library, and cannot fail the job                          |
+| Fix        | Change                                                                                                                                             |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P1, P2, P4 | `loop-finalize` never pushes for `delivery: none`, deletes the agent branch, and passes `GH_TOKEN` / `GITHUB_REPOSITORY` to `finalize_hook_script` |
+| B2         | `loop-finalize` (and `post_review.sh`) always runs at L2/L3 for `delivery: none`; the `finalize_enabled` flag no longer exists                     |
+| B3         | `loop-entity-detect` emits `target_json.from.branch`, which `ci-loop-agent` uses as the worktree base branch                                       |
+| Meta guard | The `finalize-l2` PR review Meta step acts only on `entity:pr:<n>` handoff keys, before it sources any library, and cannot fail the job            |
 
 With older pins, an APPROVE verdict can merge the agent branch, including `.loop-review/pr-<n>.json`, into the base branch, or the review is never posted (see [Finalize with `delivery: none`](#finalize-with-delivery-none)).
 
@@ -56,43 +56,41 @@ With older pins, an APPROVE verdict can merge the agent branch, including `.loop
 
 Keys are passed in `on-loop-github-pr-review.yaml` via `with:` on `ci-loop-caller-entity.yaml`. Entity subset of [Loop Caller Inputs Reference](loop-caller-inputs-reference.md).
 
-| Input / JSON key             | Description                                                                    | Dogfood value                                                                      |
-| ---------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| `agent_allowed_tools`        | Read-only tool allowlist for the maker                                         | `gh api -X GET`, `gh issue view`, `gh pr diff`, `gh pr view`, `git show`           |
-| `agent_maker_instructions`   | Domain maker task (review skill, read-only engine review, repo exclusions)     | Inline in caller workflow                                                          |
-| `agent_maker_max_turns`      | Max maker turns per attempt                                                    | `100`                                                                              |
-| `agent_maker_model`          | Maker model ID                                                                 | `claude-sonnet-5`                                                                  |
-| `agent_maker_effort`         | Maker reasoning effort. Only engines with an effort flag (claude) consume it   | `medium`                                                                           |
-| `agent_maker_skill_name`     | Skill package                                                                  | `github-pr-review`                                                                 |
-| `agent_loop_max_attempts`    | Max Agent→Verify cycles                                                        | `3`                                                                                |
-| `agent_checker_instructions` | APPROVE/REJECT rubric (evidence kinds, in-diff lines, base-read evidence)      | Inline in caller workflow                                                          |
-| `agent_checker_max_turns`    | Max checker turns                                                              | `100`                                                                              |
-| `agent_checker_model`        | Checker model ID                                                               | `claude-opus-5`                                                                    |
-| `agent_checker_effort`       | Checker reasoning effort. Only engines with an effort flag (claude) consume it | `medium`                                                                           |
-| `agent_checker_skill_name`   | Checker skill                                                                  | `loop-verifier`                                                                    |
-| `allowlist`                  | File edit allowlist                                                            | `""`                                                                               |
-| `branch_state`               | `.loop/*` persistence branch                                                   | `main`                                                                             |
-| `budget_max_runs_per_day`    | Daily run cap                                                                  | `20`                                                                               |
-| `budget_max_tokens_per_day`  | Daily token cap                                                                | `1000000`                                                                          |
-| `delivery`                   | Platform delivery (`none` — no push, no PR)                                    | `none`                                                                             |
-| `denylist`                   | Denylist globs                                                                 | `""`                                                                               |
-| `detect_domain_env_json`     | Detect env (`PR_EXCLUDE_LABELS`, and on dispatch `PR_FORCE`, `PR_NUMBER`)      | See [Domain detect environment](#domain-detect-environment-detect_domain_env_json) |
-| `detect_script`              | Domain detect script                                                           | `.agents/skills/github-pr-review/scripts/detect_pr_review.sh`                      |
-| `domain_persistence_script`  | Trusted post step run in finalize                                              | `.agents/skills/github-pr-review/scripts/post_review.sh`                           |
-| `engine`                     | AI engine                                                                      | `claude`                                                                           |
-| `environment`                | GitHub Environment for env-scoped secrets                                      | `default`                                                                          |
-| `level`                      | Autonomy                                                                       | `L2`                                                                               |
-| `loop_name`                  | Loop identifier                                                                | `github-pr-review`                                                                 |
-| `may_edit`                   | Agent worktree edit gate (the report file is the only file written)            | `true`                                                                             |
-| `no_changes_verdict`         | Verdict when no file diff (a missing report is a failed run)                   | `REJECT`                                                                           |
-| `write_target`               | Agent artifact type                                                            | `report`                                                                           |
+| Input / JSON key             | Description                                                                    | Dogfood value                                                               |
+| ---------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `agent_checker_effort`       | Checker reasoning effort. Only engines with an effort flag (claude) consume it | `medium`                                                                    |
+| `agent_checker_instructions` | APPROVE/REJECT rubric (evidence kinds, in-diff lines, base-read evidence)      | Inline in caller workflow                                                   |
+| `agent_checker_max_turns`    | Max checker turns                                                              | `100`                                                                       |
+| `agent_checker_model`        | Checker model ID                                                               | `claude-opus-5`                                                             |
+| `agent_checker_skill_name`   | Checker skill                                                                  | `loop-verifier`                                                             |
+| `agent_edit_allowlist`       | File edit allowlist (`**` = unrestricted)                                      | `**`                                                                        |
+| `agent_edit_target`          | Agent artifact type (the report file is the only file written)                 | `report`                                                                    |
+| `agent_engine`               | AI engine                                                                      | `claude`                                                                    |
+| `agent_loop_max_attempts`    | Max Agent→Verify cycles                                                        | `3`                                                                         |
+| `agent_maker_effort`         | Maker reasoning effort. Only engines with an effort flag (claude) consume it   | `medium`                                                                    |
+| `agent_maker_instructions`   | Domain maker task (review skill, read-only engine review, repo exclusions)     | Inline in caller workflow                                                   |
+| `agent_maker_max_turns`      | Max maker turns per attempt                                                    | `100`                                                                       |
+| `agent_maker_model`          | Maker model ID                                                                 | `claude-sonnet-5`                                                           |
+| `agent_maker_skill_name`     | Skill package                                                                  | `github-pr-review`                                                          |
+| `agent_tool_allowlist`       | Read-only tool allowlist for the maker                                         | `gh api -X GET`, `gh issue view`, `gh pr diff`, `gh pr view`, `git show`    |
+| `agent_unchanged_verdict`    | Verdict when no file diff (a missing report is a failed run)                   | `REJECT`                                                                    |
+| `budget_max_runs_per_day`    | Daily run cap                                                                  | `20`                                                                        |
+| `budget_max_tokens_per_day`  | Daily token cap                                                                | `1000000`                                                                   |
+| `delivery`                   | Platform delivery (`none` — no push, no PR)                                    | `none`                                                                      |
+| `detect_env_json`            | Detect env (`PR_EXCLUDE_LABELS`, and on dispatch `PR_FORCE`, `PR_NUMBER`)      | See [Domain detect environment](#domain-detect-environment-detect_env_json) |
+| `detect_script`              | Domain detect script                                                           | `.agents/skills/github-pr-review/scripts/detect_pr_review.sh`               |
+| `environment`                | GitHub Environment for env-scoped secrets                                      | `default`                                                                   |
+| `finalize_hook_script`       | Trusted post step run once in finalize                                         | `.agents/skills/github-pr-review/scripts/post_review.sh`                    |
+| `level`                      | Autonomy                                                                       | `L2`                                                                        |
+| `loop_name`                  | Loop identifier                                                                | `github-pr-review`                                                          |
+| `state_branch`               | `.loop/*` persistence branch                                                   | `main`                                                                      |
 
-### Domain detect environment (`detect_domain_env_json`)
+### Domain detect environment (`detect_env_json`)
 
 `PR_EXCLUDE_LABELS` is `no-loop,loop-automation` on every path. `workflow_dispatch` also passes `PR_NUMBER` and `PR_FORCE`:
 
 ```yaml
-detect_domain_env_json: ${{ github.event_name == 'workflow_dispatch' && format('{{"PR_EXCLUDE_LABELS":"no-loop,loop-automation","PR_FORCE":"{0}","PR_NUMBER":"{1}"}}', inputs.force, inputs.pr_number) || '{"PR_EXCLUDE_LABELS":"no-loop,loop-automation"}' }}
+detect_env_json: ${{ github.event_name == 'workflow_dispatch' && format('{{"PR_EXCLUDE_LABELS":"no-loop,loop-automation","PR_FORCE":"{0}","PR_NUMBER":"{1}"}}', inputs.force, inputs.pr_number) || '{"PR_EXCLUDE_LABELS":"no-loop,loop-automation"}' }}
 ```
 
 Unset `PR_*` values are hydrated from `GITHUB_EVENT_PATH`; on `workflow_dispatch`, missing PR facts come from `gh pr view`.
@@ -128,7 +126,7 @@ See `.apm/packages/github/.apm/skills/github-pr-review/SKILL.md` and its `refere
 
 ## Posting contract (`post_review.sh`)
 
-`post_review.sh` runs as `domain_persistence_script` in finalize and posts only when the verdict is `APPROVE`.
+`post_review.sh` runs as `finalize_hook_script` in finalize and posts only when the verdict is `APPROVE`.
 
 | Rule                  | Behavior                                                                                                                                                                         |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -147,9 +145,9 @@ The agent branch holding the report is read by the script from `EXECUTE_BRANCH`.
 
 ## Finalize with `delivery: none`
 
-`delivery: none` resolves to `finalize_strategy: none` at L2, and the caller sets `finalize_enabled` for `delivery: none` when `level` is not `L1`. `loop-finalize` never pushes the agent branch to the target branch for `none`, deletes the agent branch whatever the verdict (previously only after an empty REJECT), and records the outcome `reported` instead of `pr-created` after APPROVE. The report is persisted only through `domain_persistence_script`, which receives `GH_TOKEN` and `GITHUB_REPOSITORY` from `loop-finalize` and reads the report from the agent branch before it is deleted.
+At L2, `loop-finalize` always runs and decides from `delivery: none`. It never pushes the agent branch to the target branch for `none`, deletes the agent branch whatever the verdict (previously only after an empty REJECT), and records the outcome `reported` instead of `pr_created` after APPROVE. The report is persisted only through `finalize_hook_script`, which receives `GH_TOKEN` and `GITHUB_REPOSITORY` from `loop-finalize` and reads the report from the agent branch before it is deleted.
 
-After posting, finalize appends the standard loop Meta (run URL, usage) to the posted marker review via `entity_meta.sh`. Only a Bot-authored review counts as the marker review, here and in detect, so a human who pastes the marker can neither suppress the review nor receive the Meta. The append is a no-op when the marker review is absent and is idempotent when the Meta is already present.
+`loop-finalize` builds the standard loop Meta and footer (`LOOP_META_BLOCK`: run URL, usage) and passes it to `finalize_hook_script` in the same environment. The hook appends it to the review body before posting, so the review goes out once, complete — nothing edits it afterwards.
 
 ## Related changes
 

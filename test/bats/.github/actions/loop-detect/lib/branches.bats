@@ -9,7 +9,7 @@
 # - branch_matches_pattern list mode requires exact match
 # - branch_matches_pattern glob mode matches release/*
 # - branch_matches_pattern regex mode matches extended regex
-# - resolve_integration_branches falls back to base when patterns empty
+# - resolve_integration_branches yields no branches when patterns are empty (no state_branch fallback)
 # - resolve_integration_branches list mode uses patterns as-is
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -43,7 +43,7 @@ setup() {
 }
 
 @test "branch_matches_pattern list mode requires exact match" {
-    LOOP_BRANCH_MATCH="list"
+    DETECT_BRANCH_MATCH_MODE="list"
 
     run branch_matches_pattern "main" "main"
     [ "$status" -eq 0 ]
@@ -53,7 +53,7 @@ setup() {
 }
 
 @test "branch_matches_pattern glob mode matches release/*" {
-    LOOP_BRANCH_MATCH="glob"
+    DETECT_BRANCH_MATCH_MODE="glob"
 
     run branch_matches_pattern "release/1.0" "release/*"
     [ "$status" -eq 0 ]
@@ -63,7 +63,7 @@ setup() {
 }
 
 @test "branch_matches_pattern regex mode matches extended regex" {
-    LOOP_BRANCH_MATCH="regex"
+    DETECT_BRANCH_MATCH_MODE="regex"
 
     run branch_matches_pattern "release/1.2.3" '^release/[0-9.]+$'
     [ "$status" -eq 0 ]
@@ -72,21 +72,27 @@ setup() {
     [ "$status" -ne 0 ]
 }
 
-@test "resolve_integration_branches falls back to base when patterns empty" {
-    LOOP_BRANCH_MATCH="glob"
-    INTEGRATION_BRANCHES=("stale")
+@test "resolve_integration_branches yields no branches when patterns are empty" {
+    local mode checked=0
 
-    resolve_integration_branches "" "main"
+    STATE_BRANCH="main"
+    for mode in list glob regex; do
+        DETECT_BRANCH_MATCH_MODE="${mode}"
+        INTEGRATION_BRANCHES=("stale")
 
-    [ "${#INTEGRATION_BRANCHES[@]}" -eq 1 ]
-    [ "${INTEGRATION_BRANCHES[0]}" = "main" ]
+        resolve_integration_branches ""
+
+        [ "${#INTEGRATION_BRANCHES[@]}" -eq 0 ]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 3 ]
 }
 
 @test "resolve_integration_branches list mode uses patterns as-is" {
-    LOOP_BRANCH_MATCH="list"
+    DETECT_BRANCH_MATCH_MODE="list"
     INTEGRATION_BRANCHES=()
 
-    resolve_integration_branches "main,develop" "main"
+    resolve_integration_branches "main,develop"
 
     [ "${#INTEGRATION_BRANCHES[@]}" -eq 2 ]
     [ "${INTEGRATION_BRANCHES[0]}" = "main" ]

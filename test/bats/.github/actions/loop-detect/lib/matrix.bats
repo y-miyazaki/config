@@ -10,8 +10,8 @@
 # - build_verifier_context_from_result still formats affected_docs
 # - build_verifier_context_from_result renders refactor hints markdown
 # - build_verifier_context_from_result returns empty string for empty hints array
-# - build_verifier_context_from_result renders tech-debt signals and hotspots markdown
-# - candidate_priority_rank follows LOOP_PRIORITY order
+# - build_verifier_context_from_result renders tech-debt signals and hotspots markdown with agent_report_file
+# - candidate_priority_rank follows DETECT_PRIORITY order
 # - shrink_matrix_candidate_for_output strips result and sets handoff_key
 # - sort_candidates_by_priority puts integration before pull_request by default
 
@@ -118,7 +118,7 @@ setup() {
     local detect_result
     detect_result="$(jq -nc '
         {
-            report_file: "docs/report/tech-debt/2026-07-21.md",
+            agent_report_file: "docs/report/tech-debt/2026-07-21.md",
             previous_report: "docs/report/tech-debt/2026-07-14.md",
             signals: [
                 {
@@ -136,7 +136,7 @@ setup() {
     ')"
     run build_verifier_context_from_result "${detect_result}"
     [ "$status" -eq 0 ]
-    [[ $output == *"## Tech Debt Signals"* ]]
+    [[ $output == *$'## Tech Debt Signals\n- agent_report_file: docs/report/tech-debt/2026-07-21.md\n'* ]]
     [[ $output == *"todo_comment"* ]]
     [[ $output == *"src/app.go"* ]]
     [[ $output == *"## Hotspots"* ]]
@@ -144,8 +144,8 @@ setup() {
     [[ $output == *"sensor skipped"* ]]
 }
 
-@test "candidate_priority_rank follows LOOP_PRIORITY order" {
-    LOOP_PRIORITY="pull_request,integration"
+@test "candidate_priority_rank follows DETECT_PRIORITY order" {
+    DETECT_PRIORITY="pull_request,integration"
 
     run candidate_priority_rank "pull_request"
     [ "$status" -eq 0 ]
@@ -164,7 +164,7 @@ setup() {
     local detect_result prompt
 
     detect_result='{"status":"ok","commits":[{"sha":"abc","type":"feat","scope":"","breaking":false,"subject":"big"}]}'
-    prompt="$(build_prompt_text "loop-changelog" "L2" "CHANGELOG.md" "do work" "since" "head" "${detect_result}" "" "0" "true" "fix")"
+    prompt="$(build_prompt_text "loop-changelog" "L2" "CHANGELOG.md" "do work" "since" "head" "${detect_result}" "" "0" "fix" "")"
 
     [[ ${prompt} == *"__LOOP_DETECT_RESULT_JSON__"* ]]
     [[ ${prompt} != *'"commits"'* ]]
@@ -181,7 +181,7 @@ setup() {
 }
 
 @test "sort_candidates_by_priority puts integration before pull_request by default" {
-    LOOP_PRIORITY="integration,pull_request"
+    DETECT_PRIORITY="integration,pull_request"
     CANDIDATES_JSON=(
         '{"target_json":{"mode":"pull_request","key":"pull_request:265"},"prompt":"pr"}'
         '{"target_json":{"mode":"integration","key":"integration:main"},"prompt":"int"}'

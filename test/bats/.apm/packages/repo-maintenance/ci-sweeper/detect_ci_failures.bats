@@ -5,13 +5,14 @@
 
 # Use cases:
 # - append_ignored records ledger skip reason
+# - configure_detect_environment defaults ledger to .loop/state-ci-sweeper-run-ledger.json
 # - classify_failure_type treats normal runner label as regression
 # - classify_failure_type treats waiting for runner as infra
 # - classify_failure_type treats shellcheck failure as regression
 # - normalize_reject_retry_policy accepts aliases a b c
 # - should_skip_processed_run block policy skips any ledgered run
-# - should_skip_processed_run retry policy skips only pr-created
-# - should_skip_processed_run limited policy allows retry for no-action outcome
+# - should_skip_processed_run retry policy skips only landed outcomes
+# - should_skip_processed_run limited policy allows retry for unchanged outcome
 # - should_skip_processed_run limited policy skips rejected at max retries
 # - collect_failures_for_run includes startup_failure as workflow-level failure
 # - collect_failures_for_run includes infra failures in failures array
@@ -58,6 +59,12 @@ teardown() {
     [[ ${IGNORED_JSON[0]} == *"ledger: no-action"* ]]
 }
 
+@test "configure_detect_environment defaults ledger to .loop/state-ci-sweeper-run-ledger.json" {
+    unset CI_SWEEPER_LEDGER_FILE
+    configure_detect_environment
+    [ "${LEDGER_FILE}" = ".loop/state-ci-sweeper-run-ledger.json" ]
+}
+
 @test "classify_failure_type treats normal runner label as regression" {
     run classify_failure_type "Job is about to start running on the runner: ubuntu-latest"
     [ "$status" -eq 0 ]
@@ -89,22 +96,37 @@ teardown() {
     [ "$status" -eq 0 ]
 }
 
-@test "should_skip_processed_run retry policy skips only pr-created" {
+@test "should_skip_processed_run retry policy skips only landed outcomes" {
     REJECT_RETRY_POLICY="retry"
-    printf '%s' '{"runs":{"123":{"outcome":"no-action","reject_count":0}}}' > "${LEDGER_FILE}"
-    run should_skip_processed_run "123"
-    [ "$status" -eq 1 ]
+    local outcome
+    for outcome in unchanged no-action; do
+        printf '%s' "{\"runs\":{\"123\":{\"outcome\":\"${outcome}\",\"reject_count\":0}}}" > "${LEDGER_FILE}"
+        run should_skip_processed_run "123"
+        [ "$status" -eq 1 ]
+    done
 
-    printf '%s' '{"runs":{"456":{"outcome":"pr-created","reject_count":0}}}' > "${LEDGER_FILE}"
-    run should_skip_processed_run "456"
-    [ "$status" -eq 0 ]
+    for outcome in pr_created pr_pushed pr-created; do
+        printf '%s' "{\"runs\":{\"456\":{\"outcome\":\"${outcome}\",\"reject_count\":0}}}" > "${LEDGER_FILE}"
+        run should_skip_processed_run "456"
+        [ "$status" -eq 0 ]
+    done
 }
 
-@test "should_skip_processed_run limited policy allows retry for no-action outcome" {
-    CI_SWEEPER_REJECT_RETRY_POLICY="limited"
-    printf '%s' '{"runs":{"123":{"outcome":"no-action","reject_count":0}}}' > "${LEDGER_FILE}"
+@test "should_skip_processed_run limited policy allows retry for unchanged outcome" {
+    REJECT_RETRY_POLICY="limited"
+    local outcome
+    for outcome in unchanged no-action; do
+        printf '%s' "{\"runs\":{\"123\":{\"outcome\":\"${outcome}\",\"reject_count\":0}}}" > "${LEDGER_FILE}"
+        run should_skip_processed_run "123"
+        [ "$status" -eq 1 ]
+    done
+}
+
+@test "should_skip_processed_run limited policy skips pr_pushed outcome" {
+    REJECT_RETRY_POLICY="limited"
+    printf '%s' '{"runs":{"123":{"outcome":"pr_pushed","reject_count":0}}}' > "${LEDGER_FILE}"
     run should_skip_processed_run "123"
-    [ "$status" -eq 1 ]
+    [ "$status" -eq 0 ]
 }
 
 @test "should_skip_processed_run limited policy skips rejected at max retries" {

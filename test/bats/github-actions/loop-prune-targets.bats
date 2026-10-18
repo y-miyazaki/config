@@ -9,7 +9,10 @@
 # - pull_request rejected aged: delete key
 # - pull_request rejected recent: keep
 # - pull_request with pending: keep even if terminal
-# - pull_request pr-closed aged: delete
+# - pull_request pr_closed aged: delete
+# - pull_request persisted old pr-closed aged: delete (same as pr_closed, via normalize_outcome)
+# - integration persisted old pr-closed aged: cooldown same as pr_closed
+# - non-terminal outcomes (pr_created, old pr-created, unchanged) aged: keep
 # - missing last_run: keep
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -126,21 +129,66 @@ setup() {
     [ "$status" -eq 0 ]
 }
 
-@test "prune_targets_json deletes aged pr-closed pull_request key" {
-    local state
-    state="$(jq -nc '{
-      targets: {
-        "pull_request:265": {
-          last_run: "2020-01-01T00:00:00Z",
-          outcome: "pr-closed",
-          consecutive_failures: 0
-        }
-      }
-    }')"
-    run prune_targets_json "${state}"
-    [ "$status" -eq 0 ]
-    run jq -e '(.targets|has("pull_request:265")|not)' <<< "${output}"
-    [ "$status" -eq 0 ]
+@test "prune_targets_json clears aged reject fields on integration key for old and new closed names" {
+    local state outcome checked=0
+    for outcome in pr_closed pr-closed; do
+        state="$(jq -nc --arg outcome "${outcome}" '{
+          targets: {
+            "integration:main": {
+              last_run: "2020-01-01T00:00:00Z",
+              outcome: $outcome,
+              consecutive_failures: 3,
+              last_reject_reason: "closed"
+            }
+          }
+        }')"
+        run prune_targets_json "${state}"
+        [ "$status" -eq 0 ]
+        run jq -c '.targets["integration:main"]' <<< "${output}"
+        [ "$output" = "{\"last_run\":\"2020-01-01T00:00:00Z\",\"outcome\":\"${outcome}\",\"consecutive_failures\":0}" ]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 2 ]
+}
+
+@test "prune_targets_json deletes aged pull_request key for old and new closed names" {
+    local state outcome checked=0
+    for outcome in pr_closed pr-closed; do
+        state="$(jq -nc --arg outcome "${outcome}" '{
+          targets: {
+            "pull_request:265": {
+              last_run: "2020-01-01T00:00:00Z",
+              outcome: $outcome,
+              consecutive_failures: 0
+            }
+          }
+        }')"
+        run prune_targets_json "${state}"
+        [ "$status" -eq 0 ]
+        [ "$output" = '{"targets":{}}' ]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 2 ]
+}
+
+@test "prune_targets_json keeps aged pull_request key for non-terminal outcomes" {
+    local state outcome checked=0
+    for outcome in pr_created pr-created pr_pushed unchanged no-changes; do
+        state="$(jq -nc --arg outcome "${outcome}" '{
+          targets: {
+            "pull_request:7": {
+              last_run: "2020-01-01T00:00:00Z",
+              outcome: $outcome
+            }
+          }
+        }')"
+        run prune_targets_json "${state}"
+        [ "$status" -eq 0 ]
+        run jq -r '.targets["pull_request:7"].outcome' <<< "${output}"
+        [ "$output" = "${outcome}" ]
+        checked=$((checked + 1))
+    done
+    [ "${checked}" -eq 5 ]
 }
 
 @test "prune_targets_json keeps entry when last_run missing" {

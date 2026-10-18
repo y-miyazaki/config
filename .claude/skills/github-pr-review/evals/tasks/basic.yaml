@@ -8,7 +8,7 @@ tags:
   - output-contract
 inputs:
   prompt: >-
-    Use github-pr-review with may_edit true and write_target report. Review PR #7 from detect
+    Use github-pr-review with agent_edit_allowed true and agent_edit_target report. Review PR #7 from detect
     JSON. Read the PR body and linked Issue first. Write the report JSON to result.report_path
     with pr_number, head_sha and base_sha copied from detect, response_language, premises,
     summary, and findings. Do not post a review or edit any other file.
@@ -21,8 +21,8 @@ inputs:
     changed_files:
       - src/app.sh
     pr_body: "Add retry to uploader. Closes #120."
-    may_edit: true
-    write_target: report
+    agent_edit_allowed: true
+    agent_edit_target: report
 expected:
   output_contains:
     - findings

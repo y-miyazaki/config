@@ -20,7 +20,7 @@ Loop PR bodies follow the same separation as [microsoft/apm `triage-panel`](http
 | Skill (`apm-triage-panel/SKILL.md`)            | `loop-*` skill (`SKILL.md` + references)                                  |
 | Verdict template (`assets/triage-template.md`) | `assets/pr-body-template.md` per loop skill                               |
 | Workflow posts comment                         | `loop-finalize` composes PR body; `loop-notify-pr` posts human PR comment |
-| Mechanical footer (ratification)               | `render_automation_disclaimer()`                                          |
+| Mechanical footer (ratification)               | `LOOP_META_FOOTER` via `build_loop_meta_block()`                          |
 
 ### What the skill owns
 
@@ -58,9 +58,8 @@ Per-skill required elements and examples live in each skill's `references/common
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `## Failure context`  | `detect_result_json.failures[]` (ci-sweeper) — Workflow/Job/Run as Markdown links when URLs are present                                                           |
 | `## Changes`          | git diff paths — **omitted** when agent Summary contains `### Changes` or `### Fixes Applied`; paths link to `blob/{branch}` when repository and branch are known |
-| `## Run Metadata`     | Level, Target, Skip reason table                                                                                                                                  |
-| Automation disclaimer | `render_automation_disclaimer()`                                                                                                                                  |
-| Created By footer     | One-line `Created By {engine} {model} In/Out: {in}/{out}` from engine + `usage_json` (omit when unavailable)                                                      |
+| `<details>Meta`       | Collapsed `| Key | Value |` table: outcome, level, target, skip_reason, engine, model, tokens                                                                                                                                  |
+| Loop footer           | `LOOP_META_FOOTER` — the one fixed `<sub>Written by Loop Engineering (LE)…</sub>` line that closes every loop surface (PR body, PR comment, trigger reply, Issue comment, review), always present, always the same text; Meta is likewise unconditional on every surface and author type |
 
 Finalize **passthrough** agent `## Overview`, `## Summary`, and `## Verification` with redact/truncate only — no table regeneration.
 
@@ -95,11 +94,7 @@ Architecture Proposal / Skipped / Watch / …
 
 <loop PR only — finalize-owned Level / Target / Skip reason table>
 
----
-
-_This PR was created by a loop automation. Review before merging._
-
-Created By <engine> <model> In/Out: <in>/<out>
+<sub>Written by Loop Engineering (LE), an automation — not by a person. Review before acting.</sub>
 ```
 
 ### List vs table
@@ -127,21 +122,24 @@ Do **not** put these in **Summary** — they duplicate **Changes** / **Deferred*
 4. `## Verification` (agent)
 5. `## Changes` (finalize — only when Summary lacks `### Changes` / `### Fixes Applied`)
 6. `## Run Metadata` (finalize)
-7. Automation disclaimer (finalize)
-8. Created By footer (finalize — engine/model/tokens when available)
+7. Loop footer (finalize — the same `LOOP_META_FOOTER` line on every surface)
 
 ## Skill checklist
 
 Every loop automation skill MUST:
 
 1. Define survey/apply report shapes in `references/common-output-format.md` (and `common-output-format-automation.md` when split).
-2. Ship `references/category-automation-envelope.md` with `may_edit` Constraints, PR body rules, and Session Metrics (automation path only).
+2. Ship `references/category-automation-envelope.md` with `agent_edit_allowed` Constraints, PR body rules, and Session Metrics (automation path only).
 3. Ship `assets/pr-body-template.md` and `assets/pr-body-template-survey.md` with fixed top-level headings and per-skill Overview examples (good/bad).
-4. Branch on `may_edit` from `## Constraints` only — do not branch agent behavior on caller `level`.
-5. Instruct the agent to load the PR template at synthesis time when `may_edit` is set in Constraints.
+4. Branch on `agent_edit_allowed` from `## Constraints` only — do not branch agent behavior on caller `level`.
+5. Instruct the agent to load the PR template at synthesis time when `agent_edit_allowed` is true in Constraints.
 6. Keep `## Session Metrics` separate from PR-facing `## Summary` (no duplicate headings).
 7. Overview MUST satisfy the [Overview contract](#overview-contract) — trigger, problem, action in plain language.
 8. Ship `references/category-pr-body-links.md` with per-skill link rules — see each skill's file; enforced for presence and placeholder patterns by `check_loop_pr_body_contract.sh`.
+9. List `references/category-pr-body-links.md`, `assets/pr-body-template.md`, and `assets/pr-body-template-survey.md` in the `SKILL.md` reference guide (an agent follows only what `SKILL.md` names); enforced by `check_loop_pr_body_contract.sh`.
+10. Mark linkable items in templates with `<linked path>`, `<linked sha>`, `<linked workflow>`, or `<linked job>`, and state `Keep the table columns as written` in each template's rules block. Link and column drift is steered by these rules, not by a `validate_agent_report.sh` REJECT.
+
+Skills that post comments or reviews instead of a PR body (`github-issue-triage`, `github-pr-review`) ship `references/category-pr-body-links.md` for that text and list it in `SKILL.md`; `check_loop_pr_body_contract.sh` enforces both.
 
 ## Source of truth
 
@@ -155,7 +153,9 @@ Every loop automation skill MUST:
 | `scripts/self/apm/check_loop_pr_body_contract.sh`                                   | `scripts/self/apm/`                                             | one script                                                                     |
 | `.github/actions/loop-finalize/lib/render_pr_body.sh`                               | `.github/actions/`                                              | one composer                                                                   |
 
-Edit link rules in the affected skill's `references/category-pr-body-links.md` directly. Templates use backtick placeholders only — not `https://github.com/org/repo/...` example links (markdown-link-check 404).
+`loop-finalize` also links what the agent left as a code span: a changed file path or a commit SHA found in the detect result becomes a markdown link in Overview, Summary, and Verification (`linkify_agent_text` in `render_pr_body.sh`). Unknown paths, example paths, existing links, and fenced code stay as written. Agents should still follow the link rules; this is a safety net, not a substitute.
+
+Edit link rules in the affected skill's `references/category-pr-body-links.md` directly. Templates mark linkable items with angle-bracket placeholders (`<linked path>`) only — not `https://github.com/org/repo/...` example links (markdown-link-check 404).
 
 ## Fixes / Deferred consistency
 
@@ -177,16 +177,16 @@ Before emitting PR `## Summary`, run `git diff --name-only` (or `git diff --cach
 
 ## Mechanical validation (loop-execute)
 
-Loop automation skills listed in `validate_agent_report.sh` (`changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`) run mechanical format checks before the LLM checker. Failures produce structured REJECT (no APPROVE until fixed).
+Loop automation skills listed in `validate_agent_report.sh` (`changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`, `test-gap`) run mechanical format checks before the LLM checker. Failures produce structured REJECT (no APPROVE until fixed).
 
 ### Four-plane vs validation matrix
 
-| Plane     | Caller input                  | Skill reads? | `validate_agent_report.sh`                                                                    |
-| --------- | ----------------------------- | ------------ | --------------------------------------------------------------------------------------------- |
-| Autonomy  | `level`                       | No           | No                                                                                            |
-| Edit gate | `may_edit`                    | Yes          | Survey vs apply shape                                                                         |
-| Artifact  | `write_target`, `report_file` | Yes          | All listed skills use `### Changes` in apply shape (tech-debt lists `report_file` path there) |
-| Delivery  | `delivery`                    | No           | No                                                                                            |
+| Plane     | Caller input                             | Skill reads? | `validate_agent_report.sh`                                                                              |
+| --------- | ---------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------- |
+| Autonomy  | `level`                                  | No           | No                                                                                                      |
+| Edit gate | `agent_edit_allowed`                     | Yes          | Survey vs apply shape                                                                                   |
+| Artifact  | `agent_edit_target`, `agent_report_file` | Yes          | All listed skills use `### Changes` in apply shape (tech-debt lists the `agent_report_file` path there) |
+| Delivery  | `delivery`                               | No           | No                                                                                                      |
 
 Checks include: required `## Overview` / `## Summary` / `## Verification`; `### Changes` when diff is non-empty; forbidden legacy sections (`Fixes Applied`, `Outcome`, top-level `## Changes`); **Deferred vs git diff** consistency (catches [PR #454](https://github.com/y-miyazaki/config/pull/454)-class bugs).
 

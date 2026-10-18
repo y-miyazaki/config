@@ -53,7 +53,7 @@ Shared shapes that apply to many loops. They are **not** nested jobs.
 | Topic                                     | Document                                                                        | Target files                                             |
 | ----------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | Action / detect I/O                       | [Specification](../../reference/specification.md)                               | `.github/actions/loop-*`, `detect_*.sh`                  |
-| PR body (templates, Created By, validate) | [Loop PR Body Skill Contract](loop-pr-body-skill-contract.md)                   | `render_pr_body.sh`, skill `assets/pr-body-template*.md` |
+| PR body (templates, Meta and footer, validate) | [Loop PR Body Skill Contract](loop-pr-body-skill-contract.md)                   | `render_pr_body.sh`, skill `assets/pr-body-template*.md` |
 | Survey/apply report shape                 | [Loop Automation Report Format](common-loop-triage-format.md)                   | skill output comments                                    |
 | PR comment notify                         | [loop-notify-pr Specification](../../reference/loop-notify-pr-specification.md) | `.github/actions/loop-notify-pr/`                        |
 | New-loop author checklist                 | [Loop Engineering Checklist](../../reference/loop-engineering-checklist.md)     | —                                                        |

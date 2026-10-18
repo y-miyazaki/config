@@ -1,6 +1,6 @@
 # Loop-Capable Skills
 
-Maintainer map for skills that have **both** an Interactive (chat) path and an Automation (Loop Engineering caller) path. Agents MUST use this file when changing envelope, detect JSON, report shape, `may_edit`, or description triggers — those edits are **family-wide**, not one-skill local.
+Maintainer map for skills that have **both** an Interactive (chat) path and an Automation (Loop Engineering caller) path. Agents MUST use this file when changing envelope, detect JSON, report shape, `agent_edit_allowed`, or description triggers — those edits are **family-wide**, not one-skill local.
 
 Loop **callers** (`on-loop-*.yaml`, `ci-loop-caller`) live in this repository. Skills are distributable. Skill **names** use domain stems (`ci-sweeper`, never `loop-ci-sweeper`); skills in the `github` package use a `github-` prefix (`github-issue-triage`, not `issue-triage`). `loop_name` matches the skill name (e.g. `github-issue-triage`); workflow files are `on-loop-<loop_name>.yaml`.
 
@@ -44,7 +44,7 @@ Update this table in the **same change** as adding or renaming a loop caller `ag
 1. State **what** the skill does in one clause.
 2. State **Interactive** use (“when the user asks …”) with concrete verbs — not only L2/workflow jargon.
 3. State **Automation** use (detect JSON / Constraints) as a second clause.
-4. State the **edit gate**: Interactive default survey; explicit apply/fix language or `may_edit: true` applies.
+4. State the **edit gate**: Interactive default survey; explicit apply/fix language or `agent_edit_allowed: true` applies.
 5. **MUST NOT** imply the skill is workflow-only (`Use for L2 …` as the only “when”).
 
 Automation-only detect details (`repository_dispatch`, `@loop` mention) belong in Input/Workflow, not as the sole description trigger.
@@ -53,19 +53,19 @@ Automation-only detect details (`repository_dispatch`, `@loop` mention) belong i
 
 When changing **any** row in the family below, apply the same class of edit to **every loop entry skill** that shares that artifact (or record an explicit exception in the PR).
 
-| Change class                                   | Touch                                                                                                                                                                                                                               |
-| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Survey/apply report headings                   | each skill `references/common-output-format.md` (+ `-automation.md` when split)                                                                                                                                                     |
-| `may_edit` / `write_target` / `## Constraints` | `references/category-automation-envelope.md`                                                                                                                                                                                        |
-| PR body templates                              | `assets/pr-body-template.md`, `assets/pr-body-template-survey.md`                                                                                                                                                                   |
-| PR body link rules                             | `references/category-pr-body-links.md` + `scripts/self/apm/check_loop_pr_body_contract.sh`                                                                                                                                          |
-| Detect JSON envelope                           | each `scripts/detect_*.sh` + `references/category-input-schema.md`                                                                                                                                                                  |
-| Description triggers                           | each `SKILL.md` frontmatter (this file’s contract)                                                                                                                                                                                  |
-| Checker domain rubric                          | matching `on-loop-*.yaml` `agent_checker_instructions` — **not** `loop-verifier`                                                                                                                                                    |
-| New loop caller checker wiring                 | each `on-loop-*.yaml`: `agent_maker_skill_name` + `agent_checker_skill_name: loop-verifier` + domain `agent_checker_instructions`                                                                                                   |
-| Generic checker prompt                         | Caller passes `agent_checker_skill_name` into `loop-execute`. Execute slash-loads `/skill <SKILL.md>` (same pattern as detect-assembled `prompt_text`) and lists the path as Input. Do not hardcode `loop-verifier` inside execute. |
-| Install drift list                             | `scripts/self/apm/check_apm_skill_install_drift.sh` `LOOP_SKILLS`                                                                                                                                                                   |
-| Package move                                   | this table, [architecture.md](../architecture.md), [specification.md](../../reference/specification.md), consumer `apm.yml` examples                                                                                                |
+| Change class                                                  | Touch                                                                                                                                                                                                                               |
+| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Survey/apply report headings                                  | each skill `references/common-output-format.md` (+ `-automation.md` when split)                                                                                                                                                     |
+| `agent_edit_allowed` / `agent_edit_target` / `## Constraints` | `references/category-automation-envelope.md`                                                                                                                                                                                        |
+| PR body templates                                             | `assets/pr-body-template.md`, `assets/pr-body-template-survey.md`                                                                                                                                                                   |
+| PR body link rules                                            | `references/category-pr-body-links.md` + `scripts/self/apm/check_loop_pr_body_contract.sh`                                                                                                                                          |
+| Detect JSON envelope                                          | each `scripts/detect_*.sh` + `references/category-input-schema.md`                                                                                                                                                                  |
+| Description triggers                                          | each `SKILL.md` frontmatter (this file’s contract)                                                                                                                                                                                  |
+| Checker domain rubric                                         | matching `on-loop-*.yaml` `agent_checker_instructions` — **not** `loop-verifier`                                                                                                                                                    |
+| New loop caller checker wiring                                | each `on-loop-*.yaml`: `agent_maker_skill_name` + `agent_checker_skill_name: loop-verifier` + domain `agent_checker_instructions`                                                                                                   |
+| Generic checker prompt                                        | Caller passes `agent_checker_skill_name` into `loop-execute`. Execute slash-loads `/skill <SKILL.md>` (same pattern as detect-assembled `prompt_text`) and lists the path as Input. Do not hardcode `loop-verifier` inside execute. |
+| Install drift list                                            | `scripts/self/apm/check_apm_skill_install_drift.sh` `LOOP_SKILLS`                                                                                                                                                                   |
+| Package move                                                  | this table, [architecture.md](../architecture.md), [specification.md](../../reference/specification.md), consumer `apm.yml` examples                                                                                                |
 
 Do **not** “fix only ci-sweeper” for envelope wording that all loop entry skills share.
 

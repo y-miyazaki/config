@@ -31,13 +31,13 @@ export LC_ALL=C.UTF-8
 #######################################
 # Global variables
 #######################################
+AGENT_ENGINE="${AGENT_ENGINE:-}"
 AGENT_REPORT_OVERVIEW="${AGENT_REPORT_OVERVIEW:-}"
 AGENT_REPORT_SUMMARY="${AGENT_REPORT_SUMMARY:-}"
 AGENT_REPORT_VERIFICATION="${AGENT_REPORT_VERIFICATION:-}"
 BLOB_REF="${BLOB_REF:-}"
 CHANGED_FILES_JSON="${CHANGED_FILES_JSON:-"[]"}"
 DETECT_RESULT_JSON="${DETECT_RESULT_JSON:-"{}"}"
-ENGINE="${ENGINE:-}"
 FAILURES_MAX="${FAILURES_MAX:-5}"
 GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-}"
 GITHUB_SERVER_URL="${GITHUB_SERVER_URL:-https://github.com}"
@@ -51,7 +51,7 @@ USAGE_JSON="${USAGE_JSON:-}"
 VERIFICATION_MAX_CHARS="${VERIFICATION_MAX_CHARS:-2000}"
 
 #######################################
-# Shared Created By footer (lib/loop/created_by.sh)
+# Shared loop meta block and footer (lib/loop/loop_meta.sh; usage labels from created_by.sh)
 #######################################
 _LOOP_CREATED_BY_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
 # shellcheck source=../../lib/loop/created_by.sh
@@ -100,10 +100,11 @@ function redact_sensitive_text {
 #
 # Description:
 #   Wrap pre-extracted agent body text under a ## heading. Empty input yields
-#   no output.
+#   no output. Code-span paths and SHAs that name a changed file or a detected
+#   commit are linked (see linkify_agent_text).
 #
 # Globals:
-#   None
+#   See linkify_agent_text
 #
 # Arguments:
 #   $1 - Pre-extracted body text (no heading)
@@ -126,6 +127,7 @@ function render_agent_section {
     if [[ -z ${text} ]]; then
         return 0
     fi
+    text="$(linkify_agent_text "${text}")"
     printf '%s\n' "${heading}"
     printf '%s\n' "${text}"
     printf '\n'
@@ -251,6 +253,104 @@ function github_repo_web_base {
         return 1
     fi
     printf '%s/%s' "${GITHUB_SERVER_URL%/}" "${GITHUB_REPOSITORY}"
+}
+
+#######################################
+# linkify_agent_text: Link code-span paths and commit SHAs in agent report text
+#
+# Description:
+#   Agents often write file paths and SHAs as code spans, which are not
+#   clickable. This turns a code span into a markdown link only when it names a
+#   changed file (CHANGED_FILES_JSON) or a commit SHA that appears in the detect
+#   result (DETECT_RESULT_JSON), so example paths and unknown tokens stay as
+#   written. A bare 7-40 hex token is linked only when it prefixes a detected
+#   commit SHA. Existing links and fenced code blocks are left alone. A no-op when
+#   the repository or blob ref is unknown.
+#
+# Globals:
+#   BLOB_REF - Git ref for blob links
+#   CHANGED_FILES_JSON - JSON string array of changed paths
+#   DETECT_RESULT_JSON - Detect JSON; 40-hex SHAs found in it are linkable
+#   GITHUB_REPOSITORY - owner/repo
+#   GITHUB_SERVER_URL - GitHub host
+#
+# Arguments:
+#   $1 - Agent report text
+#
+# Outputs:
+#   Text with linkable code spans replaced by markdown links, to stdout
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function linkify_agent_text {
+    local text="${1:-}"
+    local base
+
+    if [[ -z ${text} || -z ${BLOB_REF} ]] || ! base="$(github_repo_web_base)"; then
+        printf '%s' "${text}"
+        return 0
+    fi
+
+    BASE="${base}" REF="${BLOB_REF}" PATHS_JSON="${CHANGED_FILES_JSON}" DETECT_JSON="${DETECT_RESULT_JSON}" \
+        python3 -I - "${text}" << 'PY'
+import json
+import os
+import re
+import sys
+from urllib.parse import quote
+
+text = sys.argv[1]
+base = os.environ["BASE"]
+ref = os.environ["REF"]
+try:
+    paths = {p for p in json.loads(os.environ.get("PATHS_JSON") or "[]") if isinstance(p, str)}
+except ValueError:
+    paths = set()
+shas = sorted(set(re.findall(r"\b[0-9a-f]{40}\b", os.environ.get("DETECT_JSON") or "")))
+
+
+def link_token(token):
+    norm = token[2:] if token.startswith("./") else token
+    if norm in paths:
+        return "[%s](%s/blob/%s/%s)" % (token, base, ref, quote(norm, safe="/"))
+    return link_sha(token)
+
+
+def link_sha(token):
+    if re.fullmatch(r"[0-9a-f]{7,40}", token):
+        for sha in shas:
+            if sha.startswith(token):
+                return "[%s](%s/commit/%s)" % (token, base, sha)
+    return None
+
+
+def link(match):
+    if match.group(1):
+        return match.group(0)
+    if match.group(2):
+        return link_token(match.group(2)) or match.group(0)
+    return link_sha(match.group(3)) or match.group(0)
+
+
+# Alternatives, in priority order: an existing link, a code span, a bare SHA.
+pattern = re.compile(
+    r"(\[[^\]\n]*\]\([^)\n]*\))|`([^`\n]+)`|(?<![\w/#=.-])([0-9a-f]{7,40})(?![\w/-])"
+)
+
+out = []
+fenced = False
+for line in text.split("\n"):
+    if line.lstrip().startswith("```"):
+        fenced = not fenced
+        out.append(line)
+    elif fenced:
+        out.append(line)
+    else:
+        out.append(pattern.sub(link, line))
+sys.stdout.write("\n".join(out))
+PY
 }
 
 #######################################
@@ -538,45 +638,15 @@ function render_run_metadata {
     local usage_json="${5:-}"
     local block
 
-    if [[ -z ${level}${target_key}${skip_reason}${engine}${usage_json} ]]; then
-        return 0
-    fi
-
     # Shape comes from build_loop_meta_block so the PR body, PR comment,
     # trigger reply, and entity Issue comment all carry the same meta block.
     loop_meta_reset
     [[ -n ${level} ]] && loop_meta_row "Level" "$(escape_markdown_table_cell "${level}")"
-    [[ -n ${target_key} ]] && loop_meta_row "Target" "\`$(escape_markdown_table_cell "${target_key}")\`"
+    [[ -n ${target_key} ]] && loop_meta_row "Target" "$(escape_markdown_table_cell "${target_key}")"
     [[ -n ${skip_reason} ]] && loop_meta_row "Skip reason" "$(escape_markdown_table_cell "${skip_reason}")"
 
     block="$(build_loop_meta_block "${OUTCOME:-}" "" "" "${engine}" "${usage_json}" "")"
-    if [[ -z ${block} ]]; then
-        return 0
-    fi
     printf '%s\n\n' "${block}"
-}
-
-#######################################
-# render_automation_disclaimer: Render loop automation footer line
-#
-# Description:
-#   Emit the standard disclaimer appended to every loop-created PR body.
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   Disclaimer markdown to stdout
-#
-# Returns:
-#   0 on success
-#
-#######################################
-function render_automation_disclaimer {
-    printf '%s\n\n' $'---\n*This PR was created by a loop automation. Review before merging.*'
 }
 
 #######################################
@@ -584,15 +654,15 @@ function render_automation_disclaimer {
 #
 # Description:
 #   Assemble prefix, Overview, Failure context, Summary, Changes, Run
-#   Metadata, disclaimer, and optional Created By line in that order. Missing optional sections are skipped.
+#   Metadata, and the shared Loop Engineering footer (carried by the meta block) in that order. Missing optional sections are skipped.
 #
 # Globals:
+#   AGENT_ENGINE - AI engine slug for Created By footer
 #   AGENT_REPORT_OVERVIEW - Agent overview body text
 #   AGENT_REPORT_SUMMARY - Agent summary body text
 #   AGENT_REPORT_VERIFICATION - Agent verification body text
 #   CHANGED_FILES_JSON - JSON string array of changed paths
 #   DETECT_RESULT_JSON - Detect JSON with failures array
-#   ENGINE - AI engine slug for Created By footer
 #   LEVEL - Run metadata level
 #   PR_BODY_PREFIX - Caller static prefix
 #   SKIP_REASON - Run metadata skip reason
@@ -636,8 +706,7 @@ function render_pr_body {
         [[ -n ${section} ]] && printf '%s\n' "${section}"
     fi
 
-    render_run_metadata "${LEVEL}" "${TARGET_KEY}" "${SKIP_REASON}" "${ENGINE}" "${USAGE_JSON}"
-    render_automation_disclaimer
+    render_run_metadata "${LEVEL}" "${TARGET_KEY}" "${SKIP_REASON}" "${AGENT_ENGINE}" "${USAGE_JSON}"
 }
 
 #######################################

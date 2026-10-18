@@ -10,7 +10,10 @@
 # Design Rules:
 # - Enumerates integration branches and optional PR heads
 # - Pins DETECT_SCRIPT to an absolute path before any target checkout
-# - Scopes watch lists when LOOP_SCOPED_HEAD_BRANCH, LOOP_SCOPED_PR_NUMBER, or workflow_run event head is set
+# - Scopes watch lists when LOOP_SCOPED_HEAD_BRANCH, DETECT_PR_NUMBER, or workflow_run event head is set
+# - Validates level/delivery inputs first; a validation failure exits 1 (fails the job)
+# - delivery pr_push without a PR number skips with skip_reason=pr_number_missing (exit 0)
+# - Every target kind must be allowed by delivery (validate_delivery_target)
 # - Invokes detect_script once per scan context (caller never re-runs)
 # - Assembles target_matrix with prompt and verifier_context per cell
 # - Detect-script boundary: coupled only on the success-path interface (exit 0, valid JSON,
@@ -20,15 +23,18 @@
 #
 # Dependencies:
 # - bash, git, jq, openssl
-# - gh (when LOOP_PR_ENABLED=true)
+# - gh (when DETECT_PR_ENABLED=true)
+#
+# Required environment:
+#   DETECT_SCRIPT, STATE_FILE, LOOP_NAME, STATE_BRANCH, AGENT_MAKER_SKILL_NAME
+#   LEVEL, DELIVERY (no defaults; validated by validate_detect_inputs)
 #
 # Optional environment:
-#   DETECT_SCRIPT, STATE_FILE, LOOP_NAME, BASE_BRANCH, AGENT_MAKER_SKILL_NAME, LEVEL
-#   ALLOWLIST, AGENT_MAKER_INSTRUCTIONS (empty/unset = unrestricted / no extra instructions)
-#   LOOP_INTEGRATION_BRANCHES, LOOP_PR_ENABLED, LOOP_BRANCH_MATCH, LOOP_PRIORITY
-#   DELIVERY, GIT_FINALIZE_INTEGRATION, GIT_FINALIZE_PULL_REQUEST, GIT_LANDING_INTEGRATION, GIT_LANDING_PULL_REQUEST
-#   LOOP_MAX_TARGETS_PER_SCHEDULE
-#   LOOP_PR_EXCLUDE, LOOP_PR_INCLUDE_BOTS, LOOP_PR_ENABLED, AGENT_MAKER_INSTRUCTIONS, BUDGET_FILE, RUN_LOG_FILE
+#   AGENT_EDIT_TARGET, AGENT_EDIT_ALLOWLIST, AGENT_EDIT_DENYLIST, AGENT_UNCHANGED_VERDICT (level-keyed; validated)
+#   AGENT_MAKER_INSTRUCTIONS
+#   DETECT_BRANCH_MATCH (empty = no integration targets), DETECT_BRANCH_MATCH_MODE, DETECT_PRIORITY
+#   DETECT_MAX_TARGETS, DETECT_PR_ENABLED, DETECT_PR_DENYLIST, DETECT_PR_BOT_ALLOWLIST, DETECT_PR_NUMBER
+#   BUDGET_FILE, RUN_LOG_FILE
 #   LOOP_SCOPED_HEAD_BRANCH - when set, only scan this integration branch / PR head
 #   CI_SWEEPER_WORKFLOW_RUN_ID + CI_SWEEPER_EVENT_HEAD_BRANCH - workflow_run scope fallback
 #   GITHUB_TOKEN
@@ -52,7 +58,7 @@ source "${SCRIPT_DIR}/_init.sh"
 # Global variables
 #######################################
 # Environment supplied by loop-detect composite action (validated in main).
-BASE_BRANCH="${BASE_BRANCH-}"
+STATE_BRANCH="${STATE_BRANCH-}"
 DETECT_SCRIPT="${DETECT_SCRIPT-}"
 STATE_FILE="${STATE_FILE-}"
 
@@ -292,7 +298,6 @@ function apply_scoped_pr_number_filter {
 #   $1 - target_key
 #   $2 - branch name
 #   $3 - current SHA
-#   $4 - finalize action
 #
 # Outputs:
 #   Target JSON to stdout
@@ -305,7 +310,6 @@ function build_integration_target_json {
     local target_key="$1"
     local branch="$2"
     local current_sha="$3"
-    local finalize="$4"
 
     jq -nc \
         --arg mode "integration" \
@@ -313,13 +317,11 @@ function build_integration_target_json {
         --arg from_branch "${branch}" \
         --arg from_ref "${current_sha}" \
         --arg to_branch "${branch}" \
-        --arg finalize "${finalize}" \
         '{
             mode: $mode,
             key: $key,
             from: {branch: $from_branch, ref: $from_ref},
-            to: {branch: $to_branch},
-            finalize: $finalize
+            to: {branch: $to_branch}
         }'
 }
 
@@ -333,9 +335,8 @@ function build_integration_target_json {
 #   $1 - target_key
 #   $2 - head branch
 #   $3 - current SHA
-#   $4 - finalize action
-#   $5 - PR number
-#   $6 - base branch
+#   $4 - PR number
+#   $5 - base branch
 #
 # Outputs:
 #   Target JSON to stdout
@@ -348,9 +349,8 @@ function build_pull_request_target_json {
     local target_key="$1"
     local head_branch="$2"
     local current_sha="$3"
-    local finalize="$4"
-    local pr_number="$5"
-    local base_branch="$6"
+    local pr_number="$4"
+    local base_branch="$5"
 
     jq -nc \
         --arg mode "pull_request" \
@@ -360,14 +360,12 @@ function build_pull_request_target_json {
         --arg to_branch "${head_branch}" \
         --argjson pr_number "${pr_number}" \
         --arg base_branch "${base_branch}" \
-        --arg finalize "${finalize}" \
         '{
             mode: $mode,
             key: $key,
             from: {branch: $from_branch, ref: $from_ref},
             to: {branch: $to_branch, pr_number: $pr_number},
-            base: {branch: $base_branch},
-            finalize: $finalize
+            base: {branch: $base_branch}
         }'
 }
 
@@ -379,18 +377,17 @@ function build_pull_request_target_json {
 #   CIRCUIT_BREAKER_BLOCKED - Incremented when circuit breaker is open
 #   PENDING_PR_BLOCKED - Incremented when pending PR blocks detect
 #   STATE_FILE - Loop state JSON path
-#   BASE_BRANCH - Default base branch
+#   STATE_BRANCH - State branch; exported to the detect script as STATE_BRANCH
 #   DETECT_SCRIPT - Detect script path
-#   AGENT_MAKER_SKILL_NAME, LEVEL, ALLOWLIST, AGENT_MAKER_INSTRUCTIONS - Prompt inputs
+#   AGENT_MAKER_SKILL_NAME, LEVEL, AGENT_EDIT_ALLOWLIST, AGENT_EDIT_TARGET, AGENT_MAKER_INSTRUCTIONS - Prompt inputs
 #
 # Arguments:
 #   $1 - Target key
 #   $2 - Head branch name
 #   $3 - Optional checkout ref (empty string to omit)
-#   $4 - Finalize mode
-#   $5 - Optional accept-log extra text
-#   $6 - Target JSON builder function name
-#   $7+ - Extra args forwarded to the builder after common args
+#   $4 - Optional accept-log extra text
+#   $5 - Target JSON builder function name
+#   $6+ - Extra args forwarded to the builder after common args
 #
 # Outputs:
 #   Warning/notice annotations via helper loggers
@@ -403,10 +400,9 @@ function append_detect_candidate {
     local target_key="$1"
     local head_branch="$2"
     local checkout_ref="${3:-}"
-    local finalize="$4"
-    local accept_log_extra="${5:-}"
-    local target_json_builder="$6"
-    shift 6
+    local accept_log_extra="${4:-}"
+    local target_json_builder="$5"
+    shift 5
     local builder_args=("$@")
     local target_state last_sha current_sha detect_result verifier_context prompt_text open_prompt consecutive pending_pr
     local target_json candidate
@@ -417,7 +413,7 @@ function append_detect_candidate {
         checkout_context "${head_branch}" || return 0
     fi
 
-    target_state="$(read_target_state "${STATE_FILE}" "${target_key}" "${BASE_BRANCH}")"
+    target_state="$(read_target_state "${STATE_FILE}" "${target_key}" "${STATE_BRANCH}")"
     consecutive="$(target_consecutive_failures "${target_state}")"
     if target_circuit_breaker_open "${consecutive}"; then
         echo "::warning::Circuit breaker open for ${target_key}"
@@ -435,7 +431,7 @@ function append_detect_candidate {
     last_sha="$(target_last_sha "${target_state}" "${head_branch}")"
     current_sha="$(git rev-parse HEAD)"
     export CI_SWEEPER_HEAD_BRANCH="${head_branch}"
-    export DEFAULT_BASE_BRANCH="${BASE_BRANCH}"
+    export STATE_BRANCH
     detect_result="$(invoke_detect_script "${last_sha}" "${target_key}")"
 
     if detect_result_skip "${detect_result}"; then
@@ -447,19 +443,13 @@ function append_detect_candidate {
     open_prompt="$(target_open_rejections_prompt "${target_state}")"
     verifier_context="$(build_verifier_context_from_result "${detect_result}")"
 
-    target_json="$("${target_json_builder}" "${target_key}" "${head_branch}" "${current_sha}" "${finalize}" "${builder_args[@]}")"
+    target_json="$("${target_json_builder}" "${target_key}" "${head_branch}" "${current_sha}" "${builder_args[@]}")"
     target_json="$(enrich_target_json_with_ci_context "${target_json}" "${detect_result}")"
-    target_json="$(enrich_target_json_with_detect_fields "${target_json}" "${detect_result}")"
 
-    local report_file
-    local may_edit="${MAY_EDIT:-}"
-    local write_target="${WRITE_TARGET:-}"
-
-    report_file="$(jq -r '.report_file // ""' <<< "${detect_result}" 2> /dev/null || echo "")"
     prompt_text="$(build_prompt_text \
-        "${AGENT_MAKER_SKILL_NAME}" "${LEVEL}" "${ALLOWLIST:-}" "${AGENT_MAKER_INSTRUCTIONS:-}" \
+        "${AGENT_MAKER_SKILL_NAME}" "${LEVEL}" "${AGENT_EDIT_ALLOWLIST:-}" "${AGENT_MAKER_INSTRUCTIONS:-}" \
         "${last_sha}" "${current_sha}" "${detect_result}" "${open_prompt}" "${consecutive}" \
-        "${may_edit}" "${write_target}" "${report_file}")"
+        "${AGENT_EDIT_TARGET:-}" "")"
 
     candidate="$(build_loop_candidate_json \
         "${target_key}" "${target_json}" "${prompt_text}" "${verifier_context}" "${detect_result}")" \
@@ -479,7 +469,7 @@ function append_detect_candidate {
 # append_integration_candidate: Scan one integration branch
 #
 # Globals:
-#   GIT_FINALIZE_INTEGRATION - Git landing strategy for integration targets (derived from delivery)
+#   None
 #
 # Arguments:
 #   $1 - Branch name
@@ -497,7 +487,6 @@ function append_integration_candidate {
         "integration:${branch}" \
         "${branch}" \
         "" \
-        "${GIT_FINALIZE_INTEGRATION:-open_pr}" \
         "" \
         build_integration_target_json \
         "${branch}"
@@ -507,7 +496,7 @@ function append_integration_candidate {
 # append_pull_request_candidate: Scan one open pull request head
 #
 # Globals:
-#   GIT_FINALIZE_PULL_REQUEST - Git landing strategy for pull request targets (derived from delivery)
+#   None
 #
 # Arguments:
 #   $1 - PR JSON object
@@ -532,7 +521,6 @@ function append_pull_request_candidate {
         "pull_request:${pr_number}" \
         "${head_branch}" \
         "${head_ref}" \
-        "${GIT_FINALIZE_PULL_REQUEST:-open_pr}" \
         "head=${head_branch}" \
         build_pull_request_target_json \
         "${pr_number}" \
@@ -540,7 +528,7 @@ function append_pull_request_candidate {
 }
 
 #######################################
-# apply_target_cap: Cap candidates at LOOP_MAX_TARGETS_PER_SCHEDULE
+# apply_target_cap: Cap candidates at DETECT_MAX_TARGETS
 #
 # Globals:
 #   CANDIDATES_JSON - Truncated in place when over cap
@@ -810,43 +798,6 @@ function enrich_target_json_with_ci_context {
 }
 
 #######################################
-# enrich_target_json_with_detect_fields: Add detect-owned fields to target_json
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   $1 - Base target_json object string
-#   $2 - Detect script JSON result
-#
-# Outputs:
-#   Enriched target_json on stdout
-#
-# Returns:
-#   0 on success
-#
-#######################################
-function enrich_target_json_with_detect_fields {
-    local target_json="$1"
-    local detect_result="$2"
-    local report_file
-
-    if ! jq -e . <<< "${target_json}" > /dev/null 2>&1; then
-        log_detect_json_invalid "enrich_target_json_with_detect_fields" "target_json" "${target_json}"
-        printf '%s' "${target_json}"
-        return 0
-    fi
-
-    report_file="$(jq -r '.report_file // ""' <<< "${detect_result}" 2> /dev/null || echo "")"
-    if [[ -z ${report_file} ]]; then
-        printf '%s' "${target_json}"
-        return 0
-    fi
-
-    jq -c --arg rf "${report_file}" '. + {report_file: $rf}' <<< "${target_json}"
-}
-
-#######################################
 # invoke_detect_script: Run DETECT_SCRIPT; fatal failures exit the detect phase
 #
 # Globals:
@@ -885,93 +836,6 @@ function invoke_detect_script {
     fi
 
     printf '%s' "${detect_result}"
-}
-
-#######################################
-# resolve_git_finalize_strategies: Map delivery to git finalize modes
-#
-# Globals:
-#   DELIVERY, GIT_LANDING_INTEGRATION, GIT_LANDING_PULL_REQUEST - Read
-#   GIT_FINALIZE_INTEGRATION, GIT_FINALIZE_PULL_REQUEST - Set on success
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   0 on success; 1 when delivery or git_landing values are invalid
-#
-#######################################
-function resolve_git_finalize_strategies {
-    case "${DELIVERY}" in
-        open_pr)
-            GIT_FINALIZE_INTEGRATION="${GIT_LANDING_INTEGRATION:-open_pr}"
-            GIT_FINALIZE_PULL_REQUEST="${GIT_LANDING_PULL_REQUEST:-open_pr}"
-            case "${GIT_FINALIZE_INTEGRATION}" in
-                open_pr | push) ;;
-                *)
-                    echo "::error::git_landing_integration must be open_pr or push (got: ${GIT_FINALIZE_INTEGRATION})" >&2
-                    return 1
-                    ;;
-            esac
-            case "${GIT_FINALIZE_PULL_REQUEST}" in
-                open_pr | push_head) ;;
-                *)
-                    echo "::error::git_landing_pull_request must be open_pr or push_head (got: ${GIT_FINALIZE_PULL_REQUEST})" >&2
-                    return 1
-                    ;;
-            esac
-            ;;
-        none | log | issue | notion)
-            GIT_FINALIZE_INTEGRATION="none"
-            GIT_FINALIZE_PULL_REQUEST="none"
-            ;;
-        *)
-            echo "::error::delivery must be log|issue|notion|open_pr|none (got: ${DELIVERY})" >&2
-            return 1
-            ;;
-    esac
-}
-
-#######################################
-# resolve_loop_write_contract: Resolve and validate loop write/delivery contract
-#
-# Globals:
-#   MAY_EDIT, WRITE_TARGET, DELIVERY, LEVEL - Read and updated in place
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   None
-#
-# Returns:
-#   0 on success; 1 when validation fails
-#
-#######################################
-function resolve_loop_write_contract {
-    MAY_EDIT="${MAY_EDIT:-}"
-    WRITE_TARGET="${WRITE_TARGET:-}"
-    DELIVERY="${DELIVERY:-open_pr}"
-
-    if [[ -z ${MAY_EDIT} ]]; then
-        echo "::error::may_edit is required; set may_edit on the caller" >&2
-        return 1
-    fi
-
-    if ! declare -f validate_loop_write_contract > /dev/null 2>&1; then
-        _loop_action_lib="$(cd "${SCRIPT_DIR}/../../lib/loop" && pwd)"
-        # shellcheck source=../../lib/loop/validate_loop_write_contract.sh disable=SC1091
-        source "${_loop_action_lib}/validate_loop_write_contract.sh"
-    fi
-
-    if ! validate_loop_write_contract "${MAY_EDIT}" "${WRITE_TARGET}" "${DELIVERY}" "${LEVEL}"; then
-        return 1
-    fi
-
-    resolve_git_finalize_strategies
 }
 
 #######################################
@@ -1051,10 +915,10 @@ function log_detect_notice {
 }
 
 #######################################
-# validate_branch_match: Return 0 when LOOP_BRANCH_MATCH is valid
+# validate_branch_match: Return 0 when DETECT_BRANCH_MATCH_MODE is valid
 #
 # Globals:
-#   LOOP_BRANCH_MATCH - Match mode under validation
+#   DETECT_BRANCH_MATCH_MODE - Match mode under validation
 #
 # Arguments:
 #   None
@@ -1067,13 +931,67 @@ function log_detect_notice {
 #
 #######################################
 function validate_branch_match {
-    case "${LOOP_BRANCH_MATCH}" in
+    case "${DETECT_BRANCH_MATCH_MODE}" in
         list | glob | regex) return 0 ;;
         *)
-            echo "::error::Invalid LOOP_BRANCH_MATCH: ${LOOP_BRANCH_MATCH}"
+            echo "::error::Invalid DETECT_BRANCH_MATCH_MODE: ${DETECT_BRANCH_MATCH_MODE}"
             return 1
             ;;
     esac
+}
+
+#######################################
+# validate_candidate_targets: Fail when a candidate target kind is not allowed by delivery
+#
+# Globals:
+#   CANDIDATES_JSON - Candidate JSON strings (read)
+#   DELIVERY - Declared delivery (read)
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Error annotation on stderr for the first rejected target
+#
+# Returns:
+#   0 when every target is allowed; 1 otherwise
+#
+#######################################
+function validate_candidate_targets {
+    local candidate target_json
+
+    for candidate in "${CANDIDATES_JSON[@]+"${CANDIDATES_JSON[@]}"}"; do
+        target_json="$(jq -c '.target_json' <<< "${candidate}")"
+        validate_delivery_target "${DELIVERY}" "${target_json}" || return 1
+    done
+    return 0
+}
+
+#######################################
+# validate_detect_inputs: Validate level-keyed inputs and delivery against the detect settings
+#
+# Globals:
+#   LEVEL, DELIVERY - Decision inputs (read; no defaults)
+#   AGENT_EDIT_TARGET, AGENT_EDIT_ALLOWLIST, AGENT_EDIT_DENYLIST, AGENT_UNCHANGED_VERDICT - Read
+#   DETECT_PR_ENABLED, DETECT_BRANCH_MATCH - Read
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Error annotation on stderr for the first invalid input
+#
+# Returns:
+#   0 when valid; 1 when invalid
+#
+#######################################
+function validate_detect_inputs {
+    validate_loop_write_contract \
+        "${LEVEL:-}" "${DELIVERY:-}" "${AGENT_EDIT_TARGET:-}" \
+        "${AGENT_EDIT_ALLOWLIST:-}" "${AGENT_EDIT_DENYLIST:-}" "${AGENT_UNCHANGED_VERDICT:-}" || return 1
+    validate_delivery_value "${DELIVERY:-}" || return 1
+    validate_delivery_detect_config "${DELIVERY:-}" "${DETECT_PR_ENABLED:-}" "${DETECT_BRANCH_MATCH:-}" || return 1
+    return 0
 }
 
 #######################################
@@ -1112,7 +1030,7 @@ function write_empty_candidates_outputs {
 # write_legacy_outputs: Backward-compatible single-target outputs
 #
 # Globals:
-#   GITHUB_OUTPUT, STATE_FILE, BASE_BRANCH
+#   GITHUB_OUTPUT, STATE_FILE, STATE_BRANCH
 #
 # Arguments:
 #   $1 - target_matrix JSON array string
@@ -1142,7 +1060,7 @@ function write_legacy_outputs {
     last_sha=$(jq -r '.result.since // .result.commit_range // empty' <<< "${first}")
     current_sha=$(jq -r '.target_json.from.ref' <<< "${first}")
     target_key=$(jq -r '.target_json.key' <<< "${first}")
-    target_state="$(read_target_state "${STATE_FILE}" "${target_key}" "${BASE_BRANCH}")"
+    target_state="$(read_target_state "${STATE_FILE}" "${target_key}" "${STATE_BRANCH}")"
     consecutive="$(target_consecutive_failures "${target_state}")"
 
     {
@@ -1170,21 +1088,28 @@ function write_legacy_outputs {
 #   None
 #
 # Returns:
-#   None
+#   0 on success or skip; 1 when input or target validation fails
 #
 #######################################
 function main {
     : "${DETECT_SCRIPT:?}"
     : "${STATE_FILE:?}"
     : "${LOOP_NAME:?}"
-    : "${BASE_BRANCH:?}"
+    : "${STATE_BRANCH:?}"
     : "${AGENT_MAKER_SKILL_NAME:?}"
-    : "${LEVEL:?}"
-    ALLOWLIST="${ALLOWLIST:-}"
-    AGENT_MAKER_INSTRUCTIONS="${AGENT_MAKER_INSTRUCTIONS:-}"
 
-    if ! resolve_loop_write_contract; then
-        write_detect_outputs "false" "config_error" "[]"
+    # A configuration error fails the job instead of skipping (no outputs written).
+    if ! validate_detect_inputs; then
+        return 1
+    fi
+
+    # 0 is the workflow_call sentinel for "no PR number".
+    if [[ ${DETECT_PR_NUMBER:-} == "0" ]]; then
+        DETECT_PR_NUMBER=""
+    fi
+    if delivery_requires_pr_number_skip "${DELIVERY}" "${DETECT_PR_NUMBER:-}"; then
+        log_detect_notice "skip" "${LOOP_NAME}" "delivery=pr_push without detect_pr_number"
+        write_detect_outputs "false" "pr_number_missing" "[]"
         write_legacy_outputs "[]"
         return 0
     fi
@@ -1205,7 +1130,7 @@ function main {
     fi
 
     mkdir -p "$(dirname "${STATE_FILE}")"
-    migrate_state_targets "${STATE_FILE}" "${BASE_BRANCH}"
+    migrate_state_targets "${STATE_FILE}" "${STATE_BRANCH}"
 
     if ! validate_branch_match; then
         write_detect_outputs "false" "config_error" "[]"
@@ -1220,8 +1145,8 @@ function main {
         return 0
     fi
 
-    resolve_integration_branches "${LOOP_INTEGRATION_BRANCHES:-}" "${BASE_BRANCH}"
-    list_open_prs "${LOOP_PR_EXCLUDE}" "${LOOP_PR_INCLUDE_BOTS}" "${github_token}" || {
+    resolve_integration_branches "${DETECT_BRANCH_MATCH:-}"
+    list_open_prs "${DETECT_PR_DENYLIST}" "${DETECT_PR_BOT_ALLOWLIST}" "${github_token}" || {
         write_detect_outputs "false" "config_error" "[]"
         write_legacy_outputs "[]"
         return 0
@@ -1234,7 +1159,7 @@ function main {
         return 0
     fi
     apply_scoped_head_filter "${scoped_head}"
-    apply_scoped_pr_number_filter "${LOOP_SCOPED_PR_NUMBER:-}"
+    apply_scoped_pr_number_filter "${DETECT_PR_NUMBER:-}"
 
     if [[ ${#INTEGRATION_BRANCHES[@]} -eq 0 && ${#OPEN_PRS_JSON[@]} -eq 0 ]]; then
         write_detect_outputs "false" "no_changes" "[]"
@@ -1255,11 +1180,15 @@ function main {
         return 0
     fi
 
+    if ! validate_candidate_targets; then
+        return 1
+    fi
+
     sort_candidates_by_priority
 
     pre_cap_count=${#CANDIDATES_JSON[@]}
-    apply_target_cap "${LOOP_MAX_TARGETS_PER_SCHEDULE}"
-    if [[ ${pre_cap_count} -gt ${LOOP_MAX_TARGETS_PER_SCHEDULE} ]]; then
+    apply_target_cap "${DETECT_MAX_TARGETS}"
+    if [[ ${pre_cap_count} -gt ${DETECT_MAX_TARGETS} ]]; then
         skip_reason="target_budget"
     fi
 
@@ -1278,7 +1207,7 @@ function main {
     should_run="true"
 
     log_detect_notice "matrix" "${LOOP_NAME}" \
-        "should_run=true count=${#CANDIDATES_JSON[@]} keys=$(jq -r '[.[].target_json.key] | join(",")' <<< "${target_matrix_json}") skip_reason=${skip_reason} pr_enabled=${LOOP_PR_ENABLED} max_targets=${LOOP_MAX_TARGETS_PER_SCHEDULE} handoff_dir=${handoff_dir}"
+        "should_run=true count=${#CANDIDATES_JSON[@]} keys=$(jq -r '[.[].target_json.key] | join(",")' <<< "${target_matrix_json}") skip_reason=${skip_reason} delivery=${DELIVERY} detect_pr_enabled=${DETECT_PR_ENABLED} detect_max_targets=${DETECT_MAX_TARGETS} handoff_dir=${handoff_dir}"
 
     write_detect_outputs "${should_run}" "${skip_reason}" "${target_matrix_json}"
     write_legacy_outputs "${full_matrix_json}"

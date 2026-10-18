@@ -7,7 +7,7 @@
 #
 # Usage:
 #   PR_BODY=... DETECT_RESULT_JSON=... NOTIFY_CONTEXT_JSON=... \
-#   ENGINE=... LEVEL=... OUTCOME=... SKIP_REASON=... TARGET_JSON=... USAGE_JSON=... \
+#   AGENT_ENGINE=... LEVEL=... OUTCOME=... SKIP_REASON=... TARGET_JSON=... USAGE_JSON=... \
 #   bash lib/create_pr_body.sh
 #
 #   Large payloads: pass file paths as CLI arguments (avoids ARG_MAX / MAX_ARG_STRLEN):
@@ -16,7 +16,7 @@
 # Design Rules:
 #   - Default empty JSON with quoted "{}" — never ${VAR:-{}} (bash closes early)
 #   - Invalid JSON falls back to {}
-#   - Detect JSON is slimmed to failures[] before render (commits[] may be 100s of KB)
+#   - Detect JSON is slimmed to failures[] and commit_shas[] before render (commits[] may be 100s of KB)
 #   - Delegates composition to render_pr_body.sh
 #
 # Output:
@@ -36,8 +36,8 @@ export LC_ALL=C.UTF-8
 #######################################
 # Global variables
 #######################################
+AGENT_ENGINE="${AGENT_ENGINE:-}"
 DETECT_RESULT_JSON="${DETECT_RESULT_JSON:-}"
-ENGINE="${ENGINE:-}"
 LEVEL="${LEVEL:-}"
 NOTIFY_CONTEXT_JSON="${NOTIFY_CONTEXT_JSON:-}"
 OUTCOME="${OUTCOME:-}"
@@ -155,7 +155,7 @@ function read_json_payload {
 }
 
 #######################################
-# slim_detect_json_for_pr_body: Keep only failures[] for PR rendering
+# slim_detect_json_for_pr_body: Keep failures[] and commit SHAs for PR rendering
 #
 # Globals:
 #   None
@@ -164,7 +164,7 @@ function read_json_payload {
 #   $1 - Detect result JSON object string
 #
 # Outputs:
-#   Small JSON with failures array to stdout
+#   Small JSON with failures[] and commit_shas[] to stdout
 #
 # Returns:
 #   0 on success
@@ -177,7 +177,13 @@ function slim_detect_json_for_pr_body {
         printf '%s' '{}'
         return 0
     fi
-    jq -c '{failures: (.failures // [])}' <<< "${detect_json}"
+    # commit_shas keeps only full 40-hex SHAs (a few KB) so linkify_agent_text can link
+    # SHAs the agent cites without carrying commits[] bulk into the render.
+    jq -c '{
+        failures: (.failures // []),
+        commit_shas: ([(.commits // [])[]?.sha, (.releases // [])[]?.tag_sha, (.releases // [])[]?.commit_shas[]?]
+            | map(select(type == "string" and test("^[0-9a-f]{40}$"))) | unique)
+    }' <<< "${detect_json}"
 }
 
 #######################################
@@ -188,8 +194,8 @@ function slim_detect_json_for_pr_body {
 #   env, and print composed markdown.
 #
 # Globals:
-#   DETECT_RESULT_JSON - Detect JSON (optional)
-#   ENGINE - AI engine slug for Created By footer
+#   AGENT_ENGINE - AI engine slug for Created By footer
+#   DETECT_RESULT_JSON - Detect JSON (optional; create_pr.sh resolves it from the handoff)
 #   LEVEL - Footer level
 #   NOTIFY_CONTEXT_JSON - Notify context JSON (optional)
 #   OUTCOME - Finalize outcome for Created By footer icon (optional)
@@ -240,7 +246,7 @@ function create_pr_body {
     export AGENT_REPORT_OVERVIEW
     export AGENT_REPORT_SUMMARY
     export AGENT_REPORT_VERIFICATION
-    export ENGINE
+    export AGENT_ENGINE
     export LEVEL
     export OUTCOME
     export TARGET_KEY

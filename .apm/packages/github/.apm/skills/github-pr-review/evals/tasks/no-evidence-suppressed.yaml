@@ -8,7 +8,7 @@ tags:
   - suppression
 inputs:
   prompt: >-
-    Use github-pr-review with may_edit true and write_target report. The diff renames a local
+    Use github-pr-review with agent_edit_allowed true and agent_edit_target report. The diff renames a local
     variable from "x" to "count" in one file; no rule or criteria item covers naming and there
     is no bug. Write the report JSON with "findings": [] and still fill premises and summary
     stating there are no findings. Do not invent a finding.
@@ -18,8 +18,8 @@ inputs:
     base_sha: "1111111111111111111111111111111111111111"
     head_sha: "2222222222222222222222222222222222222222"
     report_path: ".loop-review/pr-10.json"
-    may_edit: true
-    write_target: report
+    agent_edit_allowed: true
+    agent_edit_target: report
 expected:
   output_contains:
     - '"findings": []'

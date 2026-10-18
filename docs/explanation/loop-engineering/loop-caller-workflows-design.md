@@ -49,11 +49,11 @@ Each slim matrix cell carries: `target_json`, `prompt`, `handoff_key`. Full `res
 1. Read [caller inputs](workflows/loop-caller-inputs-reference.md) (`branch_match`, `pr_enabled`, `level`, …).
 2. Enumerate integration branches / PRs; checkout per context; run `detect_script` per context.
 3. Apply [trigger-aware priority](multi-branch-loops-design.md#trigger-aware-priority).
-4. Cap at `max_targets_per_schedule`; excess → `target_budget` on next cron.
+4. Cap at `detect_max_targets`; excess → `target_budget` on next cron.
 
 ## Execute Job (matrix)
 
-Reusable workflow matrix cells cannot pair `needs.execute.outputs.*` with a separate finalize matrix job — GitHub Actions collapses reusable-workflow outputs across cells. **Finalize runs inside `ci-loop-agent.yaml`** (`finalize-l1` after `agent-l1`, `finalize-l2` after `agent-l2`). `finalize_enabled` only gates the `loop-finalize` git-landing step on `finalize-l2`.
+Reusable workflow matrix cells cannot pair `needs.execute.outputs.*` with a separate finalize matrix job — GitHub Actions collapses reusable-workflow outputs across cells. **Finalize runs inside `ci-loop-agent.yaml`** (`finalize-l1` after `agent-l1`, `finalize-l2` after `agent-l2`). `finalize-l2` runs `loop-finalize` on every L2/L3 run; the `delivery` value alone decides what `loop-finalize` does (`pr_create`, `pr_push`, or `none`).
 
 ```yaml
 execute:
@@ -64,28 +64,23 @@ execute:
       target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
   uses: ./.github/workflows/ci-loop-agent.yaml
   with:
-    base_branch: ${{ matrix.target.target_json.mode == 'pull_request' && matrix.target.target_json.base.branch || matrix.target.target_json.to.branch }}
-    current_sha: ${{ matrix.target.target_json.from.ref }}
-    detect_result_json: "{}"
-    finalize_enabled: true
     handoff_artifact_name: ${{ needs.detect.outputs.handoff_artifact_name }}
-    handoff_key: ${{ matrix.target.handoff_key }}
     prompt_text: ${{ matrix.target.prompt }}
     target_json: ${{ toJson(matrix.target.target_json) }}
     # … passthrough from detect + finalize config
 ```
 
-`target_json` is required. `verifier_context` and `result` are resolved at runtime from the loop-handoff artifact (or inline `detect_result_json` when non-empty).
+`target_json` is required. `ci-loop-agent.yaml` derives the handoff key, current SHA, and base branch from `target_json`. `verifier_context` and `result` are resolved at runtime from the loop-handoff artifact.
 
-**`DEFAULT_LEVEL` vs finalize:**
+**`DEFAULT_LEVEL` vs finalize:** `pr_auto_merge` is derived once by `loop-detect` (true only when `level == L3` and `delivery == pr_create`); callers pass the detect output through unchanged.
 
 ```yaml
-auto_merge: ${{ needs.detect.outputs.delivery == 'open_pr' && needs.detect.outputs.level == 'L3' && matrix.target.target_json.finalize == 'open_pr' }}
+pr_auto_merge: ${{ needs.detect.outputs.pr_auto_merge }}
 ```
 
 ## Finalize (inside ci-loop-agent)
 
-`finalize-l2` always runs after `agent-l2` (unless skipped/cancelled) so run-log is written even when `delivery` is `none`. When `finalize_enabled=true`, the same job runs `loop-finalize` in the **same workflow instance**, preserving execute output pairing per matrix cell. Callers set `finalize_enabled` from `delivery == 'open_pr' || (delivery == 'none' && level != 'L1')`: an L2/L3 `delivery: none` loop still runs `loop-finalize` with strategy `none` (domain persistence, state, agent branch cleanup; no git landing or PR). `finalize-l1` always runs after `agent-l1` and currently persists run-log only.
+`finalize-l2` always runs after `agent-l2` (unless skipped/cancelled) so run-log is written even when `delivery` is `none`. The same job runs `loop-finalize` in the **same workflow instance**, preserving execute output pairing per matrix cell. `loop-finalize` branches on `delivery` only: an L2/L3 `delivery: none` loop still runs `loop-finalize` (finalize hook, state, agent branch cleanup; no push or PR). `finalize-l1` always runs after `agent-l1` and currently persists run-log only.
 
 When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as a **sibling step** immediately after `loop-finalize` (not nested inside the composite — see [composite action composition](../../reference/specification.md#composite-action-composition)). See [loop-notify-pr Specification](../../reference/loop-notify-pr-specification.md).
 
@@ -93,15 +88,15 @@ When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as
 
 All `.loop/*` writes in **finalize step** via `loop-finalize` — not separate caller `git push` steps.
 
-| Input                       | Example                                                 |
-| --------------------------- | ------------------------------------------------------- |
-| `target_json`               | Matrix cell                                             |
-| `domain_persistence_script` | ci-sweeper: `update_run_ledger.sh`; docs-updater: empty |
-| `state_push_branch`         | `branch_state` input or default branch                  |
+| Input                  | Example                                                 |
+| ---------------------- | ------------------------------------------------------- |
+| `target_json`          | Matrix cell                                             |
+| `finalize_hook_script` | ci-sweeper: `update_run_ledger.sh`; docs-updater: empty |
+| `state_branch`         | `state_branch` input (required)                         |
 
-Push branch: `branch_state`, **not** `target.to.branch`.
+Push branch: `state_branch`, **not** `target.to.branch`.
 
-**Merge-gated state (L2 `open_pr`):** `loop-finalize` writes `pending` to `branch_state` after creating the domain-only PR. `on-loop-state-promote.yaml` (`pull_request_target` `closed`) promotes `pending` → `last_sha` on merge (direct push preferred; auto-merge state PR when push is blocked). L3 `push` / `push_head` advances `last_sha` in the same finalize run.
+**Merge-gated state (L2 `pr_create`):** `loop-finalize` writes `pending` to `state_branch` after creating the domain-only PR. `on-loop-state-promote.yaml` (`pull_request_target` `closed`) promotes `pending` → `last_sha` on merge (direct push preferred; auto-merge state PR when push is blocked). `pr_push` advances `last_sha` in the same finalize run.
 
 **Invariant:** Finalize does not edit application/doc **source under repair**.
 
@@ -150,7 +145,7 @@ on:
 
 ### Shared state branch (callers)
 
-Scheduled and `workflow_run` `on-loop-*.yaml` callers and `on-loop-state-promote.yaml` use the same group for a given `branch_state` (currently `loop-state-main`):
+Scheduled and `workflow_run` `on-loop-*.yaml` callers and `on-loop-state-promote.yaml` use the same group for a given `state_branch` (currently `loop-state-main`):
 
 ```yaml
 concurrency:
@@ -165,7 +160,7 @@ Queued runs wait for the active run to finish (detect → execute → finalize) 
 
 ### Per-entity group (entity-event callers)
 
-`on-loop-github-issue-autofix`, `on-loop-github-issue-triage`, `on-loop-github-pr-revise`, and `on-loop-github-pr-review` key the group by the Issue / PR they act on (`loop-<loop_name>-<number>`) rather than by `branch_state`. See [Multi-Branch Loops — Cross-Loop Coordination](multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency) for the rationale.
+`on-loop-github-issue-autofix`, `on-loop-github-issue-triage`, `on-loop-github-pr-revise`, and `on-loop-github-pr-review` key the group by the Issue / PR they act on (`loop-<loop_name>-<number>`) rather than by `state_branch`. See [Multi-Branch Loops — Cross-Loop Coordination](multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency) for the rationale.
 
 ## Matrix Fan-Out
 
@@ -180,20 +175,18 @@ execute:
     matrix:
       target: ${{ fromJson(needs.detect.outputs.target_matrix) }}
   uses: ./.github/workflows/ci-loop-agent.yaml
-  with:
-    finalize_enabled: true
 ```
 
 Each matrix cell = one `max_runs_per_day` consumption. Cap enumeration in `loop-detect`.
 
 ## Permissions (least privilege pattern)
 
-| Job         | Typical permissions                                                                                                            |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| detect      | `contents: read`, `actions: write` (upload artifact); profile may add `actions: read`, `pull-requests: read`                   |
-| execute     | `actions: read` (download artifact), `contents: write`, `pull-requests: write` (when `finalize_enabled=true`), engine-specific |
-| record-skip | `contents: write`, `pull-requests: write` (run-log PR fallback on protected branches)                                          |
-| finalize    | Runs inside `ci-loop-agent`; inherits caller `execute` job permissions                                                         |
+| Job         | Typical permissions                                                                                              |
+| ----------- | ---------------------------------------------------------------------------------------------------------------- |
+| detect      | `contents: read`, `actions: write` (upload artifact); profile may add `actions: read`, `pull-requests: read`     |
+| execute     | `actions: read` (download artifact), `contents: write`, `pull-requests: write` (L2/L3 finalize), engine-specific |
+| record-skip | `contents: write`, `pull-requests: write` (run-log PR fallback on protected branches)                            |
+| finalize    | Runs inside `ci-loop-agent`; inherits caller `execute` job permissions                                           |
 
 `on-loop-state-promote` needs `contents: write` and a token with `pull-requests: write` when `loop-state-promote` opens a state PR fallback (dogfood: maintenance bot app token).
 
@@ -219,13 +212,13 @@ Copy a thin `on-loop-*.yaml` (triggers + `with:` only). See [Loop Caller Reusabl
 
 Historical debt from early caller implementations. **All items below are resolved** in current `on-loop-*.yaml`; retained for audit trail only.
 
-| Debt                                             | Was                                          | Resolution (current)                                               |
-| ------------------------------------------------ | -------------------------------------------- | ------------------------------------------------------------------ |
-| Double detect script                             | `on-loop-ci-sweeper` re-ran detect in `run:` | `loop-detect` outputs `verifier_context` per matrix cell           |
-| Caller ledger `git push`                         | ci-sweeper pushed ledger from caller         | `domain_persistence_script` in `loop-finalize` via `ci-loop-agent` |
-| `auto_merge: level == L3` without finalize check | all L2+ callers                              | `delivery == 'open_pr' && level == L3 && finalize == 'open_pr'`    |
-| Single `DEFAULT_BASE_BRANCH` only                | all                                          | `LOOP_INTEGRATION_BRANCHES`                                        |
-| `docs-updater` detect path                       | `on-loop-docs-updater`                       | `docs-updater/scripts/detect_changes.sh`                           |
+| Debt                                             | Was                                          | Resolution (current)                                                                      |
+| ------------------------------------------------ | -------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Double detect script                             | `on-loop-ci-sweeper` re-ran detect in `run:` | `loop-detect` outputs `verifier_context` per matrix cell                                  |
+| Caller ledger `git push`                         | ci-sweeper pushed ledger from caller         | `finalize_hook_script` in `loop-finalize` via `ci-loop-agent`                             |
+| `auto_merge: level == L3` without finalize check | all L2+ callers                              | `pr_auto_merge` derived once by `loop-detect` (`level == L3` and `delivery == pr_create`) |
+| Single `DEFAULT_BASE_BRANCH` only                | all                                          | `DETECT_BRANCH_MATCH` (`detect_branch_match`)                                             |
+| `docs-updater` detect path                       | `on-loop-docs-updater`                       | `docs-updater/scripts/detect_changes.sh`                                                  |
 
 Structural baseline: [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md) (`ci-loop-caller.yaml`).
 

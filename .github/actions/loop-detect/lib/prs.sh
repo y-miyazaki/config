@@ -8,9 +8,9 @@
 # - None (library file; populates OPEN_PRS_JSON)
 #
 # Design Rules:
-# - Applies LOOP_PR_EXCLUDE tokens
-# - Applies LOOP_PR_INCLUDE_BOTS opt-in when scanning
-# - Bypasses the bot-author heuristic when LOOP_SCOPED_PR_NUMBER names the PR
+# - Applies DETECT_PR_DENYLIST tokens
+# - Applies DETECT_PR_BOT_ALLOWLIST opt-in when scanning
+# - Bypasses the bot-author heuristic when DETECT_PR_NUMBER names the PR
 #######################################
 
 #######################################
@@ -18,12 +18,12 @@
 #
 # Globals:
 #   OPEN_PRS_JSON - Output array
-#   LOOP_PR_ENABLED - Enable flag (read)
-#   LOOP_SCOPED_PR_NUMBER - When set, fetch that PR only via gh pr view
+#   DETECT_PR_ENABLED - Enable flag (read)
+#   DETECT_PR_NUMBER - When set, fetch that PR only via gh pr view
 #
 # Arguments:
-#   $1 - LOOP_PR_EXCLUDE csv
-#   $2 - LOOP_PR_INCLUDE_BOTS csv
+#   $1 - DETECT_PR_DENYLIST csv
+#   $2 - DETECT_PR_BOT_ALLOWLIST csv
 #   $3 - GitHub token
 #
 # Outputs:
@@ -40,23 +40,23 @@ function list_open_prs {
     local prs_json pr_line pr_state
 
     OPEN_PRS_JSON=()
-    if [[ ${LOOP_PR_ENABLED} != "true" && -z ${LOOP_SCOPED_PR_NUMBER:-} ]]; then
+    if [[ ${DETECT_PR_ENABLED} != "true" && -z ${DETECT_PR_NUMBER:-} ]]; then
         return 0
     fi
 
     if ! command -v gh > /dev/null 2>&1; then
-        echo "::error::gh CLI is required for LOOP_PR_ENABLED=true"
+        echo "::error::gh CLI is required for DETECT_PR_ENABLED=true"
         return 1
     fi
 
     export GITHUB_TOKEN="${github_token}"
 
-    if [[ -n ${LOOP_SCOPED_PR_NUMBER:-} ]]; then
-        if [[ ! ${LOOP_SCOPED_PR_NUMBER} =~ ^[1-9][0-9]*$ ]]; then
-            echo "::error::LOOP_SCOPED_PR_NUMBER must be a positive integer"
+    if [[ -n ${DETECT_PR_NUMBER:-} ]]; then
+        if [[ ! ${DETECT_PR_NUMBER} =~ ^[1-9][0-9]*$ ]]; then
+            echo "::error::DETECT_PR_NUMBER must be a positive integer"
             return 1
         fi
-        pr_line="$(gh pr view "${LOOP_SCOPED_PR_NUMBER}" --json \
+        pr_line="$(gh pr view "${DETECT_PR_NUMBER}" --json \
             number,title,headRefName,headRefOid,baseRefName,isDraft,author,labels,maintainerCanModify,headRepository,state \
             2> /dev/null || true)"
         if [[ -z ${pr_line} ]]; then

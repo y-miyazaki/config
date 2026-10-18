@@ -26,7 +26,7 @@ Detect mechanical structure hints on integration branches and open fix PRs after
 
 ### Out of scope
 
-- PR head healing (`pr_enabled` default off)
+- PR head healing (`detect_pr_enabled` default off)
 - Interactive or architecture-improvement intent (O3 proposal path) — use skill `refactor` manually
 - Lint/SAST smell scores as primary detect or repair mission
 - `tech-debt` report input or Apply under `report-*` names
@@ -63,27 +63,27 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `agent_checker_max_turns`    | Max checker agent turns per verification.                                                                         | `100`                                                     |
 | `agent_checker_model`        | Checker model ID. Cursor: `agent --list-models`.                                                                  | `claude-opus-5`                                           |
 | `agent_checker_effort`       | Checker reasoning effort. Only engines with an effort flag (claude) consume it                                    | `medium`                                                  |
-| `allowlist`                  | Comma-separated globs the maker may modify. Tight dogfood scope.                                                  | `.apm/packages/**,scripts/**`                             |
-| `branch_match`               | Comma-separated integration branch patterns to watch.                                                             | `main`                                                    |
-| `branch_state`               | Branch for `.loop/*` persistence, state migration, and watch fallback.                                            | `main`                                                    |
+| `agent_edit_allowlist`       | Comma-separated globs the maker may modify. Tight dogfood scope.                                                  | `.apm/packages/**,scripts/**`                             |
+| `detect_branch_match`        | Comma-separated integration branch patterns to watch.                                                             | `main`                                                    |
+| `state_branch`               | Branch for `.loop/*` persistence, and state migration (it no longer doubles as a watch fallback).                 | `main`                                                    |
 | `budget_max_runs_per_day`    | Daily run cap keyed by `loop_name`.                                                                               | `1`                                                       |
 | `budget_max_tokens_per_day`  | Daily aggregated token cap across loops.                                                                          | `1000000`                                                 |
 | `detect_script`              | Domain detect script path.                                                                                        | `.agents/skills/refactor/scripts/detect_refactor.sh`      |
-| `engine`                     | AI engine (`claude`, `copilot`, `codex`, `cursor`).                                                               | `claude`                                                  |
-| `delivery`                   | Platform delivery after APPROVE (`open_pr` for dogfood).                                                          | `open_pr`                                                 |
-| `infer_files_pattern`        | Extended regex to infer file paths from checker text.                                                             | See caller workflow                                       |
+| `agent_engine`               | AI engine (`claude`, `copilot`, `codex`, `cursor`).                                                               | `claude`                                                  |
+| `delivery`                   | Platform delivery after APPROVE (`pr_create` for dogfood).                                                        | `pr_create`                                               |
+| `agent_checker_path_pattern` | Extended regex to infer file paths from checker text.                                                             | See caller workflow                                       |
 | `level`                      | Autonomy level (`L1`, `L2`, `L3`). L2 opens review PR.                                                            | `L2`                                                      |
 | `loop_name`                  | Loop identifier; state file `.loop/state-refactor.json`.                                                          | `refactor`                                                |
-| `max_targets_per_schedule`   | Max hints processed per cron tick.                                                                                | `1`                                                       |
-| `may_edit`                   | Agent worktree edit gate (`true` for dogfood).                                                                    | `true`                                                    |
-| `no_changes_verdict`         | `APPROVE` or `REJECT` when maker produces no file diff.                                                           | `REJECT`                                                  |
+| `detect_max_targets`         | Max hints processed per cron tick.                                                                                | `1`                                                       |
+| `agent_edit_allowed`         | Agent worktree edit gate (`true` for dogfood).                                                                    | `true`                                                    |
+| `agent_unchanged_verdict`    | `APPROVE` or `REJECT` when maker produces no file diff.                                                           | `REJECT`                                                  |
 | `pr_body`                    | Optional static prefix (dogfood: `""`).                                                                           | `""`                                                      |
-| `pr_title`                   | PR title when finalize strategy is `open_pr`.                                                                     | `chore(refactor): structural improvement (loop-refactor)` |
+| `pr_title`                   | PR title when `delivery` is `pr_create`.                                                                          | `chore(refactor): structural improvement (loop-refactor)` |
 | `agent_maker_instructions`   | Domain instructions: invoke `refactor` survey-then-apply-all path; stack validation via A'.                       | Inline in caller workflow                                 |
-| `pr_enabled`                 | Enumerate open PR heads. Refactor loop uses integration branches only.                                            | `false`                                                   |
+| `detect_pr_enabled`          | Enumerate open PR heads. Refactor loop uses integration branches only.                                            | `false`                                                   |
 | `agent_maker_skill_name`     | Skill package to invoke.                                                                                          | `refactor`                                                |
 
-### Domain detect environment (`detect_domain_env_json`)
+### Domain detect environment (`detect_env_json`)
 
 | JSON key / env var              | Description                                                 | Dogfood value                 |
 | ------------------------------- | ----------------------------------------------------------- | ----------------------------- |
@@ -91,7 +91,7 @@ Shared semantics: [Loop Caller Inputs Reference](loop-caller-inputs-reference.md
 | `REFACTOR_OVERSIZED_FILE_LINES` | File line count threshold for `oversized_unit` (size only)  | `400`                         |
 | `REFACTOR_SCAN_GLOBS`           | Comma-separated globs for scan roots                        | `.apm/packages/**,scripts/**` |
 
-| `write_target` | Agent artifact when `may_edit` is true (`fix` for dogfood). | `fix` |
+| `agent_edit_target` | Agent artifact when `agent_edit_allowed` is true (`fix` for dogfood). | `fix` |
 
 ## Detect
 
@@ -116,7 +116,7 @@ Detect script outputs **facts** (not semantic repair decisions):
 
 - `from.ref` = HEAD on watch branch
 - `to.branch` = watch branch
-- `finalize` = `open_pr`
+- `delivery` = `pr_create`
 
 ### Stable filters (detect only)
 
@@ -128,12 +128,12 @@ No infra/env classification — not applicable.
 
 ### State fields (per target key)
 
-| Field                  | Role                                                               |
-| ---------------------- | ------------------------------------------------------------------ |
-| `last_sha`             | Scan cursor; advances when fix PR merges (`on-loop-state-promote`) |
-| `pending`              | Written at finalize on `open_pr`; promoted to `last_sha` on merge  |
-| `outcome`              | `pr-created`, `rejected`, `no-op`, …                               |
-| `consecutive_failures` | Circuit breaker                                                    |
+| Field                  | Role                                                                |
+| ---------------------- | ------------------------------------------------------------------- |
+| `last_sha`             | Scan cursor; advances when fix PR merges (`on-loop-state-promote`)  |
+| `pending`              | Written at finalize on `pr_create`; promoted to `last_sha` on merge |
+| `outcome`              | `pr_created`, `rejected`, `unchanged`, …                            |
+| `consecutive_failures` | Circuit breaker                                                     |
 
 ## Execute
 
@@ -147,11 +147,11 @@ No infra/env classification — not applicable.
 
 PR body is composed by `loop-finalize` from agent `## Overview` / `## Summary` (skill-owned) plus mechanical sections. Dogfood sets `pr_body: ""`. See [Loop PR Body Skill Contract](../loop-pr-body-skill-contract.md).
 
-Always `open_pr` to `to.branch` at L2.
+Always `delivery: pr_create` to `to.branch` at L2.
 
-No `domain_persistence_script`.
+No `finalize_hook_script`.
 
-**Merge-gated cursor:** Same platform rule as all L2 `open_pr` loops — `pending` at finalize, `last_sha` on fix PR merge via `on-loop-state-promote.yaml`.
+**Merge-gated cursor:** Same platform rule as all L2 `pr_create` loops — `pending` at finalize, `last_sha` on fix PR merge via `on-loop-state-promote.yaml`.
 
 ## State delivery
 
@@ -159,7 +159,7 @@ See [State delivery philosophy](../multi-branch-loops-design.md#state-delivery-p
 
 **Target (dogfood):** merge-gated `pending` + `on-loop-state-promote` — same as docs-updater.
 
-Persistence: `state-refactor.json` on `branch_state` via [finalize inside ci-loop-agent](../loop-caller-workflows-design.md#finalize-inside-ci-loop-agent).
+Persistence: `state-refactor.json` on `state_branch` via [finalize inside ci-loop-agent](../loop-caller-workflows-design.md#finalize-inside-ci-loop-agent).
 
 ## Implementation Checklist
 

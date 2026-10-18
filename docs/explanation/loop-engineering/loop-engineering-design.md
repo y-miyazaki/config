@@ -19,7 +19,7 @@ For concrete specifications (Actions/Workflows list, interfaces), see [Specifica
 | `test-gap`             | `test-gap`             | Dogfood L2; weekly schedule                     | L2 (Assisted) |
 | `loop-stale-pr`        | —                      | Not started                                     | -             |
 
-Platform actions (`loop-detect` `target_matrix`, handoff artifact, `domain_persistence_script`, merge-gated `pending`) are implemented — see [Multi-Branch Loops Design](multi-branch-loops-design.md).
+Platform actions (`loop-detect` `target_matrix`, handoff artifact, `finalize_hook_script`, merge-gated `pending`) are implemented — see [Multi-Branch Loops Design](multi-branch-loops-design.md).
 
 ## Loop Candidate Roadmap
 
@@ -169,7 +169,7 @@ Callers reference installed paths (e.g. `.agents/skills/<skill-name>/scripts/...
 | ------------------------------------------------------------------------------------- | --------------------------------------------------------- |
 | `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/SKILL.md`                      | Fix / Watch / Escalate classification + minimal CI repair |
 | `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/scripts/detect_ci_failures.sh` | Failed run detection (stable filters only)                |
-| `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/scripts/update_run_ledger.sh`  | `domain_persistence_script` target for finalize           |
+| `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/scripts/update_run_ledger.sh`  | `finalize_hook_script` target for finalize                |
 
 For caller inputs and behavior, see [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md).
 
@@ -208,7 +208,7 @@ For caller inputs and behavior, see [Report Tech Debt Workflow Design](workflows
 | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | `.apm/packages/repo-maintenance/.apm/skills/test-gap/SKILL.md`                          | Select one under-tested target; add tests within the allowlist       |
 | `.apm/packages/repo-maintenance/.apm/skills/test-gap/scripts/detect_test_gap.sh`        | Language-agnostic facts (`hotspots[]`, `ledger`, `verifier_context`) |
-| `.apm/packages/repo-maintenance/.apm/skills/test-gap/scripts/update_test_gap_ledger.sh` | `domain_persistence_script` target for finalize                      |
+| `.apm/packages/repo-maintenance/.apm/skills/test-gap/scripts/update_test_gap_ledger.sh` | `finalize_hook_script` target for finalize                           |
 
 For caller inputs and behavior, see [Test Gap Workflow Design](workflows/loop-test-gap-workflow-design.md).
 
@@ -248,16 +248,15 @@ flowchart TD
         A_L2 --> F_L2[finalize-l2 job]
         F_L1 --> F_LOG[loop-run-log step]
         F_L2 --> F_LOG
-        F_L2 --> F_LAND{finalize_enabled?}
-        F_LAND -->|yes| F_FIN[loop-finalize step]
+        F_L2 --> F_FIN[loop-finalize step]
         F_L2 --> F_NOTIFY[loop-notify-pr step optional]
     end
 
     subgraph finalize_inside["loop-finalize step detail"]
         direction TB
-        F_FIN --> F_STRAT{finalize strategy}
-        F_STRAT -->|open_pr L2| F_PENDING[pending cursor + fix PR]
-        F_STRAT -->|push / push_head| F_PUSH[push_target merge + push]
+        F_FIN --> F_STRAT{delivery}
+        F_STRAT -->|pr_create L2| F_PENDING[pending cursor + fix PR]
+        F_STRAT -->|pr_push| F_PUSH[push_target merge + push]
         F_STRAT -->|REJECT / metadata| F_META[outcome metadata only]
         F_PENDING --> F_PROMOTE[on-loop-state-promote on merge]
     end
@@ -359,15 +358,15 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 
 `loop-*` composite actions and reusable workflows must remain domain-agnostic. When adding loops such as `ci-sweeper`, `code-review`, or tech-debt remediation, domain logic must not leak into shared actions — otherwise every new loop requires editing the action layer.
 
-| Layer              | Domain-specific (caller / skill)                                        | Generic (action / reusable workflow)                                                                  |
-| ------------------ | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Detection criteria | `detect_script` path, script output (`result` facts)                    | `loop-detect` enumeration, checkout, guards, `target_matrix`                                          |
-| Maker prompt       | `agent_maker_instructions`, `agent_checker_instructions`, PR title/body | `loop-detect` prompt assembly via `lib/loop/build_constraints.sh` (may_edit, allowlist, write_target) |
-| Checker context    | Detect fact summary or CI log excerpt per target                        | Always wire `verifier_context` to `loop-execute` (may be empty)                                       |
-| Path scope         | `LOOP_ALLOWLIST`, Skill allowed paths                                   | denylist defaults in `loop-execute`, allowlist enforcement                                            |
-| Checker checker    | `agent_checker_skill_name` (e.g. `loop-verifier` from `loop` package)   | Slash-load `/skill <SKILL.md>`; path guards; INITIAL/REGRESSION orchestration in `loop-execute`       |
-| Checker domain bar | `agent_checker_instructions` in caller `env`                            | Appended to checker prompt `## Task`; embedded fallbacks only when skill files are missing            |
-| Domain persistence | `domain_persistence_script` path (optional)                             | `loop-finalize` invokes script with standard env; no domain logic in action                           |
+| Layer              | Domain-specific (caller / skill)                                        | Generic (action / reusable workflow)                                                                                            |
+| ------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Detection criteria | `detect_script` path, script output (`result` facts)                    | `loop-detect` enumeration, checkout, guards, `target_matrix`                                                                    |
+| Maker prompt       | `agent_maker_instructions`, `agent_checker_instructions`, PR title/body | `loop-detect` prompt assembly via `lib/loop/build_constraints.sh` (agent_edit_allowed, agent_edit_allowlist, agent_edit_target) |
+| Checker context    | Detect fact summary or CI log excerpt per target                        | Always wire `verifier_context` to `loop-execute` (may be empty)                                                                 |
+| Path scope         | `LOOP_ALLOWLIST`, Skill allowed paths                                   | denylist defaults in `loop-execute`, allowlist enforcement                                                                      |
+| Checker checker    | `agent_checker_skill_name` (e.g. `loop-verifier` from `loop` package)   | Slash-load `/skill <SKILL.md>`; path guards; INITIAL/REGRESSION orchestration in `loop-execute`                                 |
+| Checker domain bar | `agent_checker_instructions` in caller `env`                            | Appended to checker prompt `## Task`; embedded fallbacks only when skill files are missing                                      |
+| Domain persistence | `finalize_hook_script` path (optional)                                  | `loop-finalize` invokes script with standard env; no domain logic in action                                                     |
 
 **Caller input pattern** for a new `on-loop-*.yaml` (after [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md)):
 
@@ -399,7 +398,7 @@ Copy `on-loop-changelog.yaml` as a thin caller template (`with:` on `ci-loop-cal
 - Hardcoded file paths or glob patterns for a single loop
 - Domain-specific default commit messages or PR templates inside actions
 
-`loop-detect` is the boundary for prompt assembly: caller supplies `agent_maker_instructions` (domain task); detect injects generic `## Constraints` via `lib/loop/build_constraints.sh` (may_edit, allowlist, write_target).
+`loop-detect` is the boundary for prompt assembly: caller supplies `agent_maker_instructions` (domain task); detect injects generic `## Constraints` via `lib/loop/build_constraints.sh` (agent_edit_allowed, agent_edit_allowlist, agent_edit_target).
 
 ### Maker-Checker Separation (Most Important Principle)
 
@@ -429,11 +428,11 @@ Design how a loop stops before creating the loop itself. Never launch L3 without
 
 New patterns always start at L1. Even if an existing loop is at L3, new features start at L1.
 
-| Tier            | Description                                                                                                                | Approximate Duration            |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| L1 (Report)     | Read-only agent session; structured outcome in `.loop/state-*.json` and/or GitHub comment — no file edits in the worktree  | 1-2 weeks                       |
-| L2 (Assisted)   | Worktree modifications + bot review PR when `delivery: open_pr`; human merges fix PR. Auto-merge limited to path allowlist | Consider L3 after stabilization |
-| L3 (Unattended) | Only when denylist + budget cap + metrics + human gate are all established                                                 | Only after conditions are met   |
+| Tier            | Description                                                                                                                  | Approximate Duration            |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| L1 (Report)     | Read-only agent session; structured outcome in `.loop/state-*.json` and/or GitHub comment — no file edits in the worktree    | 1-2 weeks                       |
+| L2 (Assisted)   | Worktree modifications + bot review PR when `delivery: pr_create`; human merges fix PR. Auto-merge limited to path allowlist | Consider L3 after stabilization |
+| L3 (Unattended) | Only when denylist + budget cap + metrics + human gate are all established                                                   | Only after conditions are met   |
 
 L1 → L2 migration checklist:
 
@@ -549,15 +548,15 @@ Per-tier permissions:
 
 5 principles when multiple loops operate on the same repository:
 
-1. **Shared workflow concurrency**: Scheduled and `workflow_run` `on-loop-*.yaml` callers and `on-loop-state-promote.yaml` share `loop-state-<branch_state>` so detect sees fresh state before execute; entity-event callers key the group per Issue / PR for responsiveness
-2. **State file separation**: Each loop has its own JSON state file (`.loop/state-<loop_name>.json`); metadata commits land on `branch_state`, not fix-PR heads
+1. **Shared workflow concurrency**: Scheduled and `workflow_run` `on-loop-*.yaml` callers and `on-loop-state-promote.yaml` share `loop-state-<state_branch>` so detect sees fresh state before execute; entity-event callers key the group per Issue / PR for responsiveness
+2. **State file separation**: Each loop has its own JSON state file (`.loop/state-<loop_name>.json`); metadata commits land on `state_branch`, not fix-PR heads
 3. **Role separation**: Loops share platform actions but use distinct `loop_name`, budgets, and detect scripts — autonomy level (`L1`–`L3`) is per caller, not per loop category
 4. **Unified denylist**: All loops share the same path denylist defaults
 5. **Aggregated budget management**: Token consumption across loops is aggregated in `.loop/loop-run-log.md` against `.loop/loop-budget.json`
 
 **Evolution:** Loops act on integration branches and PR heads via `target_matrix` and caller `with:` inputs (`branch_match`, `pr_enabled`, `level`). See [Multi-Branch Loops Design](multi-branch-loops-design.md) and [Loop Caller Workflows Design](loop-caller-workflows-design.md).
 
-Cross-loop serialization uses shared workflow concurrency (`loop-state-<branch_state>`) on scheduled and `workflow_run` `on-loop-*.yaml` callers so detect runs on fresh state before execute. See [Multi-Branch Loops Design](multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency).
+Cross-loop serialization uses shared workflow concurrency (`loop-state-<state_branch>`) on scheduled and `workflow_run` `on-loop-*.yaml` callers so detect runs on fresh state before execute. See [Multi-Branch Loops Design](multi-branch-loops-design.md#cross-loop-coordination-workflow-concurrency).
 
 ### Intake Gating (Self-Retrigger Prevention)
 
@@ -600,7 +599,7 @@ Fan-out has no `if`-layer remedy: `workflow_run` raises one event per upstream w
 
 Absolute rules that must never be violated regardless of loop type, level, or engine. Use these as the primary checklist during design review.
 
-1. **Agent never writes to integration branches directly during Execute** — Maker edits run in an isolated worktree. At **L2**, integration-branch changes reach `to.branch` only via a fix PR. At **L3** with `delivery: open_pr` and advanced `git_landing_integration=push` on `loop-detect`, **Finalize** may push checker-approved commits to `to.branch` (explicit opt-in; see [Finalize strategy matrix](#finalize-strategy-matrix))
+1. **Agent never writes to integration branches directly during Execute** — Maker edits run in an isolated worktree. At **L2**, integration-branch changes reach `to.branch` only via a fix PR. At **L3** with `delivery: pr_create`, **Finalize** opens the fix PR with auto-merge enabled; direct push to an integration branch is not supported. `delivery: pr_push` pushes to an existing PR head only (see [Finalize strategy matrix](#finalize-strategy-matrix))
 2. **Checker never modifies the repository** — Verify phase is strictly read-only
 3. **Detect never writes state** — State changes only in Finalize
 4. **Finalize never changes source under repair** — It persists outcomes (PR, push, state, `.loop/*` metadata). Application/documentation files being fixed are not edited in Finalize
@@ -657,12 +656,12 @@ stateDiagram-v2
     Approved --> PRCreated : finalize creates fix PR\n(pending; last_sha unchanged)
     Rejected --> BranchDeleted : finalize deletes branch\n(metadata; last_sha unchanged)
 
-    NoChanges --> Idle : state: no-op or rejected\n(metadata)
+    NoChanges --> Idle : state: unchanged or rejected\n(metadata)
     PRCreated --> Idle : on-loop-state-promote\npending → last_sha on merge
     BranchDeleted --> Idle : same commits re-eligible\nuntil circuit_breaker
 ```
 
-**Key invariant (multi-branch L2 `open_pr`):** `last_sha` advances when the **fix is accepted** (fix PR merged via `on-loop-state-promote`, or L3 `push` / `push_head` in the same finalize run) — not merely because Finalize ran. On REJECT, `state_write_mode=metadata`: outcome and `consecutive_failures` update, but **`last_sha` does not advance** so the same commit range stays eligible until humans land a fix or the circuit breaker pauses the loop.
+**Key invariant (multi-branch L2 `pr_create`):** `last_sha` advances when the **fix is accepted** (fix PR merged via `on-loop-state-promote`, or `pr_push` in the same finalize run) — not merely because Finalize ran. On REJECT, `state_write_mode=metadata`: outcome and `consecutive_failures` update, but **`last_sha` does not advance** so the same commit range stays eligible until humans land a fix or the circuit breaker pauses the loop.
 
 **Why not advance `last_sha` on REJECT?** Advancing would skip the failing range permanently — the loop would never revisit commits that still need repair. That is worse for doc-drift and changelog loops where the underlying issue remains until someone merges a correct fix. Cost: the same range may be re-detected until `consecutive_failures` triggers `skip_reason=circuit_breaker` (default threshold 3). **ci-sweeper** adds run-ledger dedupe by `workflow_run_id` for CI-failure triggers.
 
@@ -671,12 +670,12 @@ stateDiagram-v2
 | Failure Type                               | Behavior                                                                                     | `last_sha`                         | State Record          |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------- | ---------------------------------- | --------------------- |
 | Detect failure (script error)              | Workflow fails. No state update. Next cron retries from same SHA                             | No change                          | No change             |
-| Agent produces no changes (actionable)     | Finalize records `rejected` when `no_changes_verdict=REJECT`                                 | No change (`metadata`)             | `outcome: rejected`   |
+| Agent produces no changes (actionable)     | Finalize records `rejected` when `agent_unchanged_verdict=REJECT`                            | No change (`metadata`)             | `outcome: rejected`   |
 | Skill Watch (no code edit)                 | Finalize records `watch`; ci-sweeper ledger may advance; no `consecutive_failures` increment | Loop-specific (ledger vs metadata) | `outcome: watch`      |
-| Agent produces no changes (non-actionable) | Finalize records `no-op`                                                                     | No change (`metadata`)             | `outcome: no-op`      |
+| Agent produces no changes (non-actionable) | Finalize records `unchanged`                                                                 | No change (`metadata`)             | `outcome: unchanged`  |
 | Checker REJECT                             | Finalize deletes branch, records rejection. Same commits re-eligible until circuit breaker   | No change (`metadata`)             | `outcome: rejected`   |
-| Checker APPROVE → L2 `open_pr`             | Fix PR created; `pending` written; `last_sha` advances on merge via `on-loop-state-promote`  | Unchanged until merge              | `outcome: pr-created` |
-| Checker APPROVE → L3 `push` / `push_head`  | Push in same finalize run                                                                    | Advances in same run               | `outcome: pr-created` |
+| Checker APPROVE → L2 `pr_create`           | Fix PR created; `pending` written; `last_sha` advances on merge via `on-loop-state-promote`  | Unchanged until merge              | `outcome: pr_created` |
+| Checker APPROVE → `pr_push`                | Push in same finalize run                                                                    | Advances in same run               | `outcome: pr_pushed`  |
 | Agent job cancelled (user/concurrency)     | Finalize does not run. No state update. Next cron retries from same SHA                      | No change                          | No change             |
 
 **Detect-script boundary (loop-detect ↔ skill):** loop-detect couples only on the **success-path interface** — exit 0, parseable JSON, `skip`, and fields used for matrix/prompt assembly. On **non-zero exit**, it echoes detect stdout verbatim and fails; it does **not** interpret skill error payloads (`status`, `message`, per-skill schema). Error shape is a skill/detect-script concern; the loop engine only observes the exit code.
@@ -693,7 +692,7 @@ stateDiagram-v2
 
 **Implementation**: `loop-finalize` increments `consecutive_failures` per `target.key` on `outcome: rejected`. `loop-detect` reads per-target counter and sets `skip_reason=circuit_breaker` when threshold is exceeded.
 
-**State / ledger retention (30 days):** On each `loop-finalize` state write (`lib/write_state.sh`), prune terminal `pull_request:*` keys older than 30 days (`rejected` / `pr-closed`, no `pending`). Watch keys (`integration:*`, …) are never deleted; aged reject metadata is cleared and `consecutive_failures` reset (cooldown). Keep `last_sha` / `pending`. CI sweeper run ledger (`update_run_ledger.sh`) drops `runs` entries with `updated_at` older than 30 days. Same window as `loop-run-log`. See [Loop State Targets Retention Design](../../superpowers/specs/2026-07-17-loop-state-targets-retention-design.md).
+**State / ledger retention (30 days):** On each `loop-finalize` state write (`lib/write_state.sh`), prune terminal `pull_request:*` keys older than 30 days (`rejected` / `pr_closed`, no `pending`). Watch keys (`integration:*`, …) are never deleted; aged reject metadata is cleared and `consecutive_failures` reset (cooldown). Keep `last_sha` / `pending`. CI sweeper run ledger (`update_run_ledger.sh`) drops `runs` entries with `updated_at` older than 30 days. Same window as `loop-run-log`. See [Loop State Targets Retention Design](../../superpowers/specs/2026-07-17-loop-state-targets-retention-design.md).
 
 **Reject reason recording**: On REJECT, Finalize writes the checker's `reason` field to state. This enables future feedback loops where reject reasons are analyzed to improve prompts or detect systematic issues.
 
@@ -760,42 +759,41 @@ Defines the responsibilities, inputs, outputs, and boundaries for each phase of 
 
 #### Finalize
 
-| Aspect             | Definition                                                                                                                                                                                                                                                                                                                 |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Responsibility** | Persist the outcome per `target.finalize`: open fix PR, push to branch, delete agent branch on rejection, update state, append run log, domain ledger (when applicable). **L2 `open_pr`:** write `pending` on fix PR creation; cursor advances only after merge via platform state promote — not at finalize success alone |
-| **Input**          | `target_json`, execute outputs (`branch`, `has_changes`, `verdict`, …), `current_sha`                                                                                                                                                                                                                                      |
-| **Output**         | PR URL and/or push result, updated state, run-log entry                                                                                                                                                                                                                                                                    |
-| **May modify**     | `.loop/*` persistence on `LOOP_STATE_PUSH_BRANCH`; PR/branch operations per strategy — not source files under repair                                                                                                                                                                                                       |
-| **Must not**       | Perform ad-hoc notifications outside `loop-notify-pr`; trigger downstream workflows; apply maker edits to application/doc source                                                                                                                                                                                           |
+| Aspect             | Definition                                                                                                                                                                                                                                                                                                                                           |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Responsibility** | Persist the outcome per `delivery`: open fix PR (`pr_create`), push to the PR head (`pr_push`), delete agent branch on rejection, update state, append run log, domain ledger (when applicable). **L2 `pr_create`:** write `pending` on fix PR creation; cursor advances only after merge via platform state promote — not at finalize success alone |
+| **Input**          | `target_json`, execute outputs (`branch`, `has_changes`, `verdict`, …), `current_sha`                                                                                                                                                                                                                                                                |
+| **Output**         | PR URL and/or push result, updated state, run-log entry                                                                                                                                                                                                                                                                                              |
+| **May modify**     | `.loop/*` persistence on `LOOP_STATE_PUSH_BRANCH`; PR/branch operations per strategy — not source files under repair                                                                                                                                                                                                                                 |
+| **Must not**       | Perform ad-hoc notifications outside `loop-notify-pr`; trigger downstream workflows; apply maker edits to application/doc source                                                                                                                                                                                                                     |
 
 When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as a **sibling step** immediately after `loop-finalize` (not nested inside the finalize action).
 
 ##### Finalize strategy matrix
 
-`DEFAULT_LEVEL` is one switch. **Finalize behavior** is `target.finalize` + level:
+`DEFAULT_LEVEL` is one switch. **Finalize behavior** is `delivery` + level:
 
-| `target.finalize` | L2                                                                                                   | L3                                                                               |
-| ----------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `open_pr`         | Create fix PR to `to.branch`                                                                         | Create PR + optional `auto_merge` (allowlist + branch protection)                |
-| `push`            | N/A (use `open_pr` at L2)                                                                            | Push checker-approved commits to `to.branch` (integration only; explicit opt-in) |
-| `push_head`       | Push to PR head `to.branch`                                                                          | Same                                                                             |
-| `none`            | No push, no PR; agent branch deleted after APPROVE; report persisted via `domain_persistence_script` | Same                                                                             |
+| `delivery`  | L2                                                                                           | L3                                                          |
+| ----------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `pr_create` | Create fix PR to `to.branch`                                                                 | Create PR + `pr_auto_merge` (allowlist + branch protection) |
+| `pr_push`   | Merge the latest head, then push to the PR head `to.branch`; no new PR                       | Same                                                        |
+| `none`      | No push, no PR; agent branch deleted after APPROVE; report handled by `finalize_hook_script` | Same                                                        |
 
-**Do not** map `L3` → auto-merge alone. `push` and `push_head` never enable auto-merge.
+**Do not** map `L3` → auto-merge alone. `pr_push` never enables auto-merge.
 
-**Merge-gated cursor (all L2 `open_pr` loops):** Fix PRs carry domain files only. `loop-finalize` writes `targets[key].pending` to `branch_state` without advancing `last_sha`. `on-loop-state-promote.yaml` (`pull_request_target` `closed`, label `loop-automation`) promotes `pending.sha` → `last_sha` on merge or clears `pending` when closed without merge. Writes land only on `branch_state` / repository default (never on fix-PR heads). **Required for every loop that opens review PRs** — dogfood target: unified across `changelog`, `docs-updater`, and `ci-sweeper`. See [State delivery philosophy](multi-branch-loops-design.md#state-delivery-philosophy).
+**Merge-gated cursor (all L2 `pr_create` loops):** Fix PRs carry domain files only. `loop-finalize` writes `targets[key].pending` to `state_branch` without advancing `last_sha`. `on-loop-state-promote.yaml` (`pull_request_target` `closed`, label `loop-automation`) promotes `pending.sha` → `last_sha` on merge or clears `pending` when closed without merge. Writes land only on `state_branch` (never on fix-PR heads). **Required for every loop that opens review PRs** — dogfood target: unified across `changelog`, `docs-updater`, and `ci-sweeper`. See [State delivery philosophy](multi-branch-loops-design.md#state-delivery-philosophy).
 
 **GitHub API deliverables (github-issue-triage, stale-pr):** Label, comment, and close **actions run in Execute** via the entry skill (e.g. `gh` / GitHub API) — not in Finalize. Finalize persists loop state and run-log only. Platform work for Tier 2 loops is **caller permissions** (`issues: write`, `pull-requests: write` as needed) plus checker rubric for API outcome fit.
 
 #### State cursor (general rule)
 
-| Loop shape                          | When `last_sha` / entity cursor advances                                                                       |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| L2 `open_pr` (worktree + review PR) | On fix PR **merge** via `on-loop-state-promote` (`pending` → `last_sha`)                                       |
-| L3 `push` / `push_head`             | Same finalize run as successful push                                                                           |
-| Checker REJECT / no-op / no-changes | **Does not advance** `last_sha` (`metadata` mode); same range re-eligible until circuit breaker or new commits |
-| API-only / `has_changes=false`      | Same finalize run on checker **APPROVE** (entity cursor e.g. `last_issue_number` in `targets[key]`)            |
-| L1 report-only                      | Run-log always; cursor advance optional per workflow design — default **APPROVE → finalize updates cursor**    |
+| Loop shape                            | When `last_sha` / entity cursor advances                                                                       |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| L2 `pr_create` (worktree + review PR) | On fix PR **merge** via `on-loop-state-promote` (`pending` → `last_sha`)                                       |
+| `pr_push`                             | Same finalize run as successful push                                                                           |
+| Checker REJECT / unchanged            | **Does not advance** `last_sha` (`metadata` mode); same range re-eligible until circuit breaker or new commits |
+| API-only / `has_changes=false`        | Same finalize run on checker **APPROVE** (entity cursor e.g. `last_issue_number` in `targets[key]`)            |
+| L1 report-only                        | Run-log always; cursor advance optional per workflow design — default **APPROVE → finalize updates cursor**    |
 
 No separate finalize strategy enum for comments/labels.
 

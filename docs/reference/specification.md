@@ -384,11 +384,11 @@ Loop **composite actions** must not nest other repository composite actions via 
 
 Loop **entry** skills are domain skills (no `loop-` name prefix) split by forge: `repo-maintenance` (`docs-updater`, `ci-sweeper`, `changelog`, `tech-debt`, `refactor`, `test-gap`) and `github` (`github-issue-triage`, `github-issue-autofix`, `github-pr-revise`). Generic checker: `loop` / `loop-verifier`. Callers set `agent_maker_skill_name` (maker), `agent_checker_skill_name` (checker; default `loop-verifier`), and `detect_script` to installed paths (`.agents/skills/<name>/...` after `apm install`). Family map: [Loop-Capable Skills](../explanation/loop-engineering/loop-capable-skills.md).
 
-| Artifact                      | Location                                 | Role                                                          |
-| ----------------------------- | ---------------------------------------- | ------------------------------------------------------------- |
-| Skill                         | `.apm/skills/<name>/SKILL.md`            | Maker behavior, classification, allowed paths                 |
-| Detect script                 | `.apm/skills/<name>/scripts/detect_*.sh` | Per-target scan in branch context set by `loop-detect`        |
-| Persistence script (optional) | `.apm/skills/<name>/scripts/*_ledger.sh` | Domain ledger via `loop-finalize` `domain_persistence_script` |
+| Artifact                      | Location                                 | Role                                                     |
+| ----------------------------- | ---------------------------------------- | -------------------------------------------------------- |
+| Skill                         | `.apm/skills/<name>/SKILL.md`            | Maker behavior, classification, allowed paths            |
+| Detect script                 | `.apm/skills/<name>/scripts/detect_*.sh` | Per-target scan in branch context set by `loop-detect`   |
+| Persistence script (optional) | `.apm/skills/<name>/scripts/*_ledger.sh` | Domain ledger via `loop-finalize` `finalize_hook_script` |
 
 ### Loop Engineering Actions
 
@@ -397,7 +397,7 @@ Loop **entry** skills are domain skills (no `loop-` name prefix) split by forge:
 | `loop-agent-once`     | Single read-only agent session (L1); accepts `node_version` / `uv_version` and enables workspace MCP via `lib/mcp.sh`                                                                                                                                                                                                                                     |
 | `loop-detect`         | Read `LOOP_*`, enumerate branches/PRs, checkout per context, read per-target state (`lib/state.sh`), invoke `detect_script` per context, assemble candidates and maker prompts (`lib/loop/build_constraints.sh`), write **loop-handoff** artifact, output slim `target_matrix`; guards (`budget`, circuit breaker). **No caller re-run of detect script** |
 | `loop-execute`        | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`, `node_version`, `uv_version`; enables workspace MCP via `lib/mcp.sh`; worktree from `from.ref` @ `from.branch`; outputs include `failure_stage` / `failure_message` on push/notify failures                                                                          |
-| `loop-finalize`       | Finalize per `target.finalize`, branch cleanup, per-target state write (`lib/write_state.sh`, `lib/prune_targets.sh`), optional `domain_persistence_script`; `.loop/*` to `LOOP_STATE_PUSH_BRANCH`; outputs include `failure_stage` / `failure_message` when finalize PR steps fail                                                                       |
+| `loop-finalize`       | Finalize per `delivery` (`pr_create` \| `pr_push` \| `none`), branch cleanup, per-target state write (`lib/write_state.sh`, `lib/prune_targets.sh`), optional `finalize_hook_script`; `.loop/*` to `STATE_BRANCH`; outputs include `failure_stage` / `failure_message` when finalize PR steps fail                                                        |
 | `loop-notify-pr`      | Post or update marker PR comment after finalize on `pull_request` targets (sibling step in `ci-loop-agent`, not nested in `loop-finalize`). Platform-owned Layers 1–2; optional skill appendix. See [loop-notify-pr Specification](loop-notify-pr-specification.md)                                                                                       |
 | `loop-install-cli`    | Install and cache the selected engine CLI; accepts `node_version` / `uv_version` so MCP servers can resolve via `npx` / `uvx`                                                                                                                                                                                                                             |
 | `loop-run-log`        | Append one JSONL entry to `.loop/loop-run-log.md` (optional `failure_stage` / `failure_message`), prune entries older than 30 days (sibling step in `ci-loop-agent` after `loop-finalize`, or `record-skip` in callers)                                                                                                                                   |
@@ -457,16 +457,15 @@ Library: `.github/actions/lib/loop/handoff.sh` (`LOOP_HANDOFF_VERSION=1`).
 
 Execute/finalize input. Schema: [Multi-Branch Loops Design](../explanation/loop-engineering/multi-branch-loops-design.md#target-model-from--to).
 
-| Field                     | Required     | Description                        |
-| ------------------------- | ------------ | ---------------------------------- |
-| `mode`                    | yes          | `integration` \| `pull_request`    |
-| `key`                     | yes          | State key                          |
-| `from.branch`, `from.ref` | yes          | Worktree checkout                  |
-| `to.branch`               | yes          | Finalize destination               |
-| `to.pr_number`            | pull_request | PR to notify after `push_head`     |
-| `base.branch`             | pull_request | Checker diff baseline              |
-| `finalize`                | yes          | `open_pr` \| `push` \| `push_head` |
-| `workflow_run_id`         | optional     | CI loops                           |
+| Field                     | Required     | Description                     |
+| ------------------------- | ------------ | ------------------------------- |
+| `mode`                    | yes          | `integration` \| `pull_request` |
+| `key`                     | yes          | State key                       |
+| `from.branch`, `from.ref` | yes          | Worktree checkout               |
+| `to.branch`               | yes          | Finalize destination            |
+| `to.pr_number`            | pull_request | PR to notify after `pr_push`    |
+| `base.branch`             | pull_request | Checker diff baseline           |
+| `workflow_run_id`         | optional     | CI loops                        |
 
 ### `loop-detect` outputs (caller detect job)
 
@@ -493,11 +492,11 @@ Execute/finalize input. Schema: [Multi-Branch Loops Design](../explanation/loop-
 
 ### `loop-finalize` inputs (additions)
 
-| Input                       | Required | Description                                                                                                                   |
-| --------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `target_json`               | yes      | Matrix cell target                                                                                                            |
-| `domain_persistence_script` | no       | Optional bash script (ledger). Standard env: `TARGET_JSON`, `OUTCOME`, `VERDICT`, `LOOP_NAME`, `STATE_FILE`, `EXECUTE_BRANCH` |
-| `state_push_branch`         | no       | Default: repository default branch                                                                                            |
+| Input                  | Required | Description                                                                                                                   |
+| ---------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `target_json`          | yes      | Matrix cell target                                                                                                            |
+| `finalize_hook_script` | no       | Optional bash script (ledger). Standard env: `TARGET_JSON`, `OUTCOME`, `VERDICT`, `LOOP_NAME`, `STATE_FILE`, `EXECUTE_BRANCH` |
+| `state_branch`         | no       | Default: repository default branch                                                                                            |
 
 `loop-notify-pr` is invoked by `ci-loop-agent` as a sibling step after `loop-finalize` when `target_json.to.pr_number` is set. `loop-run-log` is invoked as a sibling step after `loop-finalize` in the same finalize job (`loop_name` is required on `ci-loop-agent`). Both read outputs from prior steps (not via nested composite `uses:`).
 
@@ -509,12 +508,15 @@ Flat top-level `last_sha` is **removed**. Migration: on first read, copy legacy 
 
 | Outcome      | Meaning                                        | `consecutive_failures` |
 | ------------ | ---------------------------------------------- | ---------------------- |
-| `pr-created` | Fix PR or `push_head` succeeded                | Reset to 0             |
-| `reported`   | APPROVE with finalize strategy `none` (no PR)  | Reset to 0             |
+| `pr_created` | Fix PR created (`delivery: pr_create`)         | Reset to 0             |
+| `pr_pushed`  | Pushed to the PR head (`delivery: pr_push`)    | Reset to 0             |
+| `reported`   | APPROVE with `delivery: none` (no PR)          | Reset to 0             |
 | `rejected`   | Actionable; checker REJECT or no-change REJECT | Increment              |
-| `no-op`      | No actionable detect result                    | Reset to 0             |
+| `unchanged`  | No changes produced (no actionable result)     | Reset to 0             |
 | `watch`      | Present; Skill Watch (no code edit)            | No increment           |
 | `error`      | Execute failed                                 | Unchanged              |
+
+Persisted legacy outcomes are read as their new names: `pr-created` as `pr_created`, `merged` as `pr_merged`, `pr-closed` as `pr_closed`, and `no-changes` / `no-action` as `unchanged` (`.github/actions/lib/loop/outcome.sh`).
 
 ## Renovate
 

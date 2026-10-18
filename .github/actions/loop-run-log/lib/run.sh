@@ -1,7 +1,7 @@
 #!/bin/bash
 #######################################
 # Description:
-#   Append loop run log entry and commit/push to base branch.
+#   Append loop run log entry and commit/push to the state branch.
 #   Environment variables mirror loop-run-log composite action inputs.
 #
 # Usage:
@@ -36,7 +36,6 @@ source "${SCRIPT_DIR}/append.sh"
 #######################################
 ATTEMPTS="${ATTEMPTS:-}"
 AGENT_RESULT="${AGENT_RESULT:-}"
-BASE_BRANCH="${BASE_BRANCH:-}"
 DURATION_S_INPUT="${DURATION_S_INPUT:-}"
 FAILURE_MESSAGE="${FAILURE_MESSAGE:-}"
 FAILURE_STAGE="${FAILURE_STAGE:-}"
@@ -46,6 +45,7 @@ OUTCOME="${OUTCOME:-}"
 RUN_LOG_FILE="${RUN_LOG_FILE:-.loop/loop-run-log.md}"
 RUN_STARTED_AT="${RUN_STARTED_AT:-}"
 SKIP_REASON="${SKIP_REASON:-none}"
+STATE_BRANCH="${STATE_BRANCH:-}"
 GITHUB_TOKEN="${GITHUB_TOKEN:-}"
 USAGE_JSON="${USAGE_JSON:-}"
 VERDICT="${VERDICT:-}"
@@ -121,6 +121,7 @@ function resolve_duration_s {
 # Globals:
 #   LOOP_NAME - Required loop identifier
 #   OUTCOME - Required run outcome
+#   STATE_BRANCH - Required branch the run log commit is pushed to
 #   GITHUB_TOKEN - Required GitHub token for push
 #
 # Arguments:
@@ -136,6 +137,7 @@ function resolve_duration_s {
 function validate_required_inputs {
     : "${LOOP_NAME:?}"
     : "${OUTCOME:?}"
+    : "${STATE_BRANCH:?}"
     : "${GITHUB_TOKEN:?}"
 }
 
@@ -172,10 +174,10 @@ function write_entry_json_output {
 }
 
 #######################################
-# main: Append run log entry and push to base branch
+# main: Append run log entry and push to the state branch
 #
 # Globals:
-#   BASE_BRANCH - Branch the run log commit is pushed to
+#   STATE_BRANCH - Branch the run log commit is pushed to
 #   RUN_LOG_FILE - Path to the run log file to append and commit
 #   GITHUB_TOKEN - Token used to push the commit
 #
@@ -195,7 +197,7 @@ function main {
     validate_required_inputs
     duration_s="$(resolve_duration_s)"
     entry_json="$(append_run_log_entry "${duration_s}")"
-    loop_run_log_commit_and_push "${BASE_BRANCH}" "${RUN_LOG_FILE}" "${GITHUB_TOKEN}" "${entry_json}"
+    loop_run_log_commit_and_push "${STATE_BRANCH}" "${RUN_LOG_FILE}" "${GITHUB_TOKEN}" "${entry_json}"
     write_entry_json_output "${entry_json}"
 }
 

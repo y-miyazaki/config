@@ -36,6 +36,7 @@
     "git blame",
     "git branch",
     "git diff",
+    "git fetch",
     "git grep",
     "git log",
     "git remote -v",

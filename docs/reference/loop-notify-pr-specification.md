@@ -1,7 +1,7 @@
 # loop-notify-pr Specification (Draft)
 
 Platform specification for PR notifications after loop finalize on `pull_request` targets.
-Status: **implemented (P1)** — `loop-notify-pr`, `notify_context_json` in `.github/actions/`; PR-head finalize migration to `open_pr` pending.
+Status: **implemented (P1)** — `loop-notify-pr`, `notify_context_json` in `.github/actions/`; PR-head finalize migration to `pr_create` pending.
 
 | Layer                  | Document                                                                                                   |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------- |
@@ -11,12 +11,12 @@ Status: **implemented (P1)** — `loop-notify-pr`, `notify_context_json` in `.gi
 
 ## Problem
 
-When CI fails on a **human open PR**, the loop opens a separate **bot fix PR** targeting the PR head branch (`open_pr`). The human PR author has no in-thread signal unless the platform posts on the human PR.
+When CI fails on a **human open PR**, the loop opens a separate **bot fix PR** targeting the PR head branch (`pr_create`). The human PR author has no in-thread signal unless the platform posts on the human PR.
 
 ## Goals
 
 1. Post or update a single marker comment on the **human PR** (`target_json.to.pr_number`) when finalize runs for a `pull_request` target.
-2. Include fix summary and **link to the bot fix PR** when finalize creates one (`open_pr`).
+2. Include fix summary and **link to the bot fix PR** when finalize creates one (`pr_create`).
 3. Prompt the author to merge or close the bot fix PR (L2) or note that it was auto-merged (L3).
 4. Keep notification content platform-owned (Layers 1–2). Skill output is optional appendix only.
 5. Implement via shared `loop-notify-pr` action as a sibling step after `loop-finalize` in `ci-loop-agent` (not per-caller shell logic).
@@ -25,7 +25,7 @@ When CI fails on a **human open PR**, the loop opens a separate **bot fix PR** t
 
 ## Non-Goals (v1)
 
-- Notifications for `integration` + `open_pr` (fix PR body is sufficient; no human PR in scope).
+- Notifications for `integration` + `pr_create` (fix PR body is sufficient; no human PR in scope).
 - Per-PR opt-in labels (`pr_require` / `ci-sweeper-ok`) — removed; use `pr_exclude` only.
 - Auto-merge of the **human PR** (only the **bot fix PR** is auto-merged at L3).
 - Inline review comments per changed line (reviewdog-style).
@@ -81,8 +81,8 @@ Invocation: **sibling step** in `ci-loop-agent.yaml` immediately after `loop-fin
 | Actor           | GitHub App / bot login from token (`GET /user`); fallback `github-actions` on failure |
 | Outcome         | finalize outcome enum                                                                 |
 | Verdict         | `APPROVE` / `REJECT` / empty                                                          |
-| Reason          | execute `reason` (checker reject reason or no-changes reason); `—` when empty         |
-| Bot fix PR      | URL/number from finalize when `open_pr` succeeded                                     |
+| Reason          | execute `reason` (checker reject reason or unchanged reason); `—` when empty          |
+| Bot fix PR      | URL/number from finalize when `pr_create` succeeded                                   |
 | Branch          | `target_json.to.branch` (PR head)                                                     |
 | Human PR number | `target_json.to.pr_number`                                                            |
 | Failed workflow | `target_json.workflow_run_id` + URL from detect `result` or event env                 |
@@ -99,7 +99,7 @@ Invocation: **sibling step** in `ci-loop-agent.yaml` immediately after `loop-fin
 | `diff_stat`     | `git diff --stat` (truncated)                                                      |
 | `fix_summary`   | Template: `"Address CI failure in <job_name> (<workflow_name>)"` from detect facts |
 
-Reject / no-changes explanations belong in the Layer 1 **Reason** row, not under Fix context.
+Reject / unchanged explanations belong in the Layer 1 **Reason** row, not under Fix context.
 
 Omit `### Fix context` when there is no mechanical diff and outcome is not `watch`.
 
@@ -166,18 +166,18 @@ Schema unchanged — see prior revision for field list. Add `fix_pr_url` / `fix_
 Inputs/outputs unchanged from P1 except:
 
 - `commit_sha` — set when finalize pushed or opened PR from agent branch
-- Comment body includes bot fix PR link for `open_pr` finalize
+- Comment body includes bot fix PR link for `pr_create` finalize
 
 **Failure policy:** `continue-on-error: true` on notify step.
 
 ## Implementation Phases
 
-| Phase  | Deliverable                                                                             |
-| ------ | --------------------------------------------------------------------------------------- |
-| **P0** | Spec + design docs (this document)                                                      |
-| **P1** | `loop-notify-pr`, `notify_context_json`, `pr_exclude` filters                           |
-| **P2** | Dogfood ci-sweeper: `open_pr` to PR head + notify with fix PR link; remove `pr_require` |
-| **P3** | Optional `agent_summary` appendix in `ci-sweeper` skill reference                       |
+| Phase  | Deliverable                                                                               |
+| ------ | ----------------------------------------------------------------------------------------- |
+| **P0** | Spec + design docs (this document)                                                        |
+| **P1** | `loop-notify-pr`, `notify_context_json`, `pr_exclude` filters                             |
+| **P2** | Dogfood ci-sweeper: `pr_create` to PR head + notify with fix PR link; remove `pr_require` |
+| **P3** | Optional `agent_summary` appendix in `ci-sweeper` skill reference                         |
 
 ## Resolved decisions
 
@@ -185,7 +185,7 @@ Inputs/outputs unchanged from P1 except:
 | ------------------ | ---------------------------------------------------- |
 | Opt-in             | `pr_exclude` deny list only; no label opt-in         |
 | Human PR automerge | Never — L3 auto-merge applies to **bot fix PR** only |
-| Delivery           | `open_pr` to PR head branch; not direct `push_head`  |
+| Delivery           | `pr_create` to PR head branch; not direct `pr_push`  |
 | Marker scope       | `<!-- loop-notify-pr:v1:{loop_name} -->`             |
 
 ## Trigger thread UX (pr-revise)

@@ -8,13 +8,13 @@ Edit targets and sync: [CLAUDE.md § Edit routing](../CLAUDE.md#edit-routing-mus
 
 ## Distributable vs maintainer-only (MUST)
 
-| Write in `.apm/packages/**`                                    | Write in maintainer docs instead (`CLAUDE.md`, this file, `docs/`)                                                                                              |
-| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Portable contracts any consumer can follow                     | This repository's paths, CI, sync scripts, Loop caller/action names                                                                                             |
-| In-skill relative paths (`scripts/`, `references/`, `assets/`) | `apm install` / `sync_*` as normative user steps                                                                                                                |
-| Stem-based companion cross-links                               | Repo-specific `validate_*`, Bats `assert_*`, `scripts/lib/` paths in redistributable `references/`                                                              |
-| Behavior that does not assume this layout                      | Fixed universal directory mandates (`test/bats/` only, `docs/report/…` required)                                                                                |
-|                                                                | `may_edit` / automation envelope **for this consumer** — see [loop-pr-body-skill-contract](../docs/explanation/loop-engineering/loop-pr-body-skill-contract.md) |
+| Write in `.apm/packages/**`                                    | Write in maintainer docs instead (`CLAUDE.md`, this file, `docs/`)                                                                                                        |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Portable contracts any consumer can follow                     | This repository's paths, CI, sync scripts, Loop caller/action names                                                                                                       |
+| In-skill relative paths (`scripts/`, `references/`, `assets/`) | `apm install` / `sync_*` as normative user steps                                                                                                                          |
+| Stem-based companion cross-links                               | Repo-specific `validate_*`, Bats `assert_*`, `scripts/lib/` paths in redistributable `references/`                                                                        |
+| Behavior that does not assume this layout                      | Fixed universal directory mandates (`test/bats/` only, `docs/report/…` required)                                                                                          |
+|                                                                | `agent_edit_allowed` / automation envelope **for this consumer** — see [loop-pr-body-skill-contract](../docs/explanation/loop-engineering/loop-pr-body-skill-contract.md) |
 
 If a sentence applies only in this repository, it does **not** belong in a package source.
 
@@ -51,6 +51,25 @@ Place new skills by **forge/runtime**, never by “this is a loop skill”:
 Loop-capable skills (Interactive + Automation) are a **family**. Cross-cutting envelope, report shape, description triggers, and detect JSON changes MUST follow [Loop-Capable Skills](../docs/explanation/loop-engineering/loop-capable-skills.md) — do not patch a single loop entry skill’s shared contract in isolation.
 
 YAML `description` on those skills MUST mention conversation use first or equally with automation; MUST NOT read as workflow-only.
+
+---
+
+## Loop PR body skills (MUST)
+
+Applies to skills that ship `references/category-pr-body-links.md` (`changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`, `test-gap`, `github-issue-autofix`, `github-pr-revise`). Contract depth: [loop-pr-body-skill-contract](../docs/explanation/loop-engineering/loop-pr-body-skill-contract.md). Enforced by `scripts/self/apm/check_loop_pr_body_contract.sh` (runs in `sync_apm_artifacts.sh loop-contract` and Bats).
+
+| Rule                  | Requirement                                                                                                                                                                                                 |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Reference guide       | `SKILL.md` **MUST** list `references/category-pr-body-links.md`, `assets/pr-body-template.md`, and `assets/pr-body-template-survey.md` in its reference guide — an agent only follows what `SKILL.md` names |
+| Link everything       | Repository paths, commit SHAs, and workflow/job targets in Summary and Verification are markdown links per that skill's `category-pr-body-links.md`; a code span is not a link                              |
+| Template placeholders | Templates and `common-output-format*.md` mark linkable items with `<linked path>`, `<linked sha>`, `<linked workflow>`, `<linked job>` — **MUST NOT** use a backtick path or an example `org/repo` link     |
+| Template rules block  | Each template's leading comment carries the link rule and `Keep the table columns as written` — columns are not renamed, merged, or dropped (docs-updater's one-item bullet exception stays)                |
+| Format is not a gate  | Link and column drift is steered by the above, **not** by `validate_agent_report.sh` REJECT — a cosmetic miss must not cost a maker retry                                                                   |
+| Platform safety net   | `loop-finalize` (`linkify_agent_text`) links changed-file paths and detected SHAs the agent left unlinked. Maintainer-only: package sources **MUST NOT** rely on it or mention it                           |
+
+Comment-posting skills (`github-issue-triage`, `github-pr-review`) have no PR body template, but their comment/review text carries the same links: each ships `references/category-pr-body-links.md` (the file name is shared across loop skills; here it covers comment and review text) and lists it in `SKILL.md`. `github-pr-review` pins line links to a full commit SHA; `github-issue-triage` links `#N`, commits, and existing paths.
+
+Adding a loop skill that ships `category-pr-body-links.md` means adding it to `LOOP_PR_BODY_LINKS_SKILLS` (PR body skills) or `LOOP_COMMENT_LINKS_SKILLS` (comment-posting skills) in the checker.
 
 ---
 
@@ -98,6 +117,7 @@ Path layout differs only in library import lines and `WORKSPACE_ROOT` depth for 
 | ------------------------------------- | ---------------------------------------------------------------------------------- |
 | Skill self-containment (all skills)   | This file — [§ Skill design (MUST)](#skill-design-must)                            |
 | Skill vs product, automation envelope | [apm-package-design.md](../docs/explanation/apm-package-design.md)                 |
+| Loop PR body rules (links, templates) | This file — [§ Loop PR body skills (MUST)](#loop-pr-body-skills-must)              |
 | Instruction sync                      | [instructions-sync-workflow.md](../docs/explanation/instructions-sync-workflow.md) |
 | Loop platform (this consumer)         | [Loop Engineering](../docs/explanation/loop-engineering/index.md)                  |
 | SKILL authoring stems                 | companion `agent-skills` rules; `agent-skills-review` skill                        |

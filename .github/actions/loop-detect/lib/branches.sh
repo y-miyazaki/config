@@ -15,11 +15,11 @@
 # branch_matches_pattern: Return 0 when branch matches pattern
 #
 # Globals:
-#   LOOP_BRANCH_MATCH - Match mode (list|glob|regex)
+#   DETECT_BRANCH_MATCH_MODE - Match mode (list|glob|regex)
 #
 # Arguments:
 #   $1 - Branch name
-#   $2 - Pattern from LOOP_INTEGRATION_BRANCHES
+#   $2 - Pattern from DETECT_BRANCH_MATCH
 #
 # Outputs:
 #   None
@@ -31,7 +31,7 @@
 function branch_matches_pattern {
     local branch="$1"
     local pattern="$2"
-    local mode="${LOOP_BRANCH_MATCH}"
+    local mode="${DETECT_BRANCH_MATCH_MODE}"
 
     case "${mode}" in
         list)
@@ -76,12 +76,15 @@ function list_remote_branches {
 #######################################
 # resolve_integration_branches: Populate INTEGRATION_BRANCHES array
 #
+# Empty patterns yield no integration branches: the state branch is never
+# watched implicitly.
+#
 # Globals:
 #   INTEGRATION_BRANCHES - Output array of branch names
+#   DETECT_BRANCH_MATCH_MODE - Match mode (read)
 #
 # Arguments:
-#   $1 - Comma-separated branch patterns
-#   $2 - Fallback branch when patterns are empty
+#   $1 - Comma-separated branch patterns (DETECT_BRANCH_MATCH; empty = none)
 #
 # Outputs:
 #   None
@@ -92,7 +95,6 @@ function list_remote_branches {
 #######################################
 function resolve_integration_branches {
     local patterns_csv="$1"
-    local fallback_branch="$2"
     local -a patterns=()
     local branch pattern existing seen
 
@@ -100,13 +102,10 @@ function resolve_integration_branches {
     split_csv "${patterns_csv}" patterns
 
     if [[ ${#patterns[@]} -eq 0 ]]; then
-        if [[ -n ${fallback_branch} ]]; then
-            INTEGRATION_BRANCHES+=("${fallback_branch}")
-        fi
         return 0
     fi
 
-    if [[ ${LOOP_BRANCH_MATCH} == "list" ]]; then
+    if [[ ${DETECT_BRANCH_MATCH_MODE} == "list" ]]; then
         INTEGRATION_BRANCHES=("${patterns[@]}")
         return 0
     fi

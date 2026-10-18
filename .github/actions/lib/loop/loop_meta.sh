@@ -8,7 +8,7 @@
 #
 # Usage:
 #   source created_by.sh
-#   source loop_meta.sh
+#   source loop_meta.sh   (sources outcome.sh itself)
 #   loop_meta_reset
 #   loop_meta_row "Level" "L2"
 #   build_loop_meta_block OUTCOME VERDICT REASON ENGINE USAGE_JSON RUN_URL
@@ -17,15 +17,25 @@
 #   None (library file, sourced by other scripts)
 #
 # Design Rules:
-#   - Meta is collapsed and goes last; the change description stays the lead
+#   - Meta is collapsed (summary text: Meta) and goes last; the change description stays the lead
+#   - Meta and LOOP_META_FOOTER are unconditional: every surface carries both, no matter what is known
+#   - One `| Key | Value |` table: keys are plain snake_case, values are plain text
 #   - Engine, model, and token rows are always carried when the run reports them
 #   - Caller-specific rows are added with loop_meta_row before rendering
-#   - Emits nothing when no row, reason, or usage field is known
+#   - With nothing known the table still carries `outcome | unknown`
 #######################################
+
+_LOOP_META_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=./outcome.sh
+# shellcheck disable=SC1091
+source "${_LOOP_META_DIR}/outcome.sh"
 
 # Marker identifying an already-rendered meta block (idempotency for appenders)
 LOOP_META_MARKER="<!-- loop-meta:v1 -->"
-# Accumulated "| Field | Value |" rows for the next render
+# Closing line of every Loop Engineering surface. One fixed sentence: a reader (or a
+# PAT-posted comment that shows a human author) can tell the text was written by LE.
+LOOP_META_FOOTER="<sub>Written by Loop Engineering (LE), an automation — not by a person. Review before acting.</sub>"
+# Accumulated "| key | value |" rows for the next render
 LOOP_META_ROWS=()
 
 #######################################
@@ -44,7 +54,7 @@ LOOP_META_ROWS=()
 #   $6 - Loop run URL (optional)
 #
 # Outputs:
-#   Markdown block on stdout, or empty when nothing is known
+#   Markdown block on stdout: marker, collapsed Meta details, then LOOP_META_FOOTER
 #
 # Returns:
 #   0 on success
@@ -61,7 +71,7 @@ function build_loop_meta_block {
     local engine="${4:-}"
     local usage_json="${5:-}"
     local run_url="${6:-}"
-    local icon model tokens reason_line
+    local model tokens reason_line
     local -a rows=()
 
     if [[ ${#LOOP_META_ROWS[@]} -gt 0 ]]; then
@@ -69,7 +79,7 @@ function build_loop_meta_block {
     fi
 
     if [[ -n ${verdict} ]]; then
-        rows+=("| Verdict | \`${verdict}\` |")
+        rows+=("| verdict | ${verdict} |")
     fi
 
     model=""
@@ -81,30 +91,26 @@ function build_loop_meta_block {
         tokens="$(usage_tokens_label "${usage_json}")"
     fi
 
-    [[ -n ${engine} ]] && rows+=("| Engine | \`${engine}\` |")
-    [[ -n ${model} ]] && rows+=("| Model | \`${model}\` |")
-    [[ -n ${tokens} ]] && rows+=("| Tokens | In/Out ${tokens} |")
+    [[ -n ${engine} ]] && rows+=("| engine | ${engine} |")
+    [[ -n ${model} ]] && rows+=("| model | ${model} |")
+    [[ -n ${tokens} ]] && rows+=("| tokens | In/Out ${tokens} |")
     if [[ -n ${run_url} && ${run_url} != "-" ]]; then
-        rows+=("| Run | [View run](${run_url}) |")
+        rows+=("| run | [View run](${run_url}) |")
     fi
 
-    if [[ ${#rows[@]} -eq 0 && -z ${reason} ]]; then
-        return 0
-    fi
-
-    icon="$(loop_meta_icon "${outcome}" "${verdict}")"
+    # Meta and the footer are unconditional: a run with nothing to report still says
+    # who wrote the text. outcome leads the table; an unknown outcome reads "unknown".
+    outcome="${outcome:-unknown}"
+    rows=("| outcome | ${outcome} |" "${rows[@]}")
 
     {
         printf '%s\n' "${LOOP_META_MARKER}"
         printf '<details>\n'
-        printf '<summary>%s <code>%s</code> · Loop details</summary>\n\n' \
-            "${icon}" "${outcome:-unknown}"
-        if [[ ${#rows[@]} -gt 0 ]]; then
-            printf '%s\n' "| Field | Value |"
-            printf '%s\n' "| ----- | ----- |"
-            printf '%s\n' "${rows[@]}"
-            printf '\n'
-        fi
+        printf '<summary>Meta</summary>\n\n'
+        printf '%s\n' "| Key | Value |"
+        printf '%s\n' "| --- | --- |"
+        printf '%s\n' "${rows[@]}"
+        printf '\n'
         if [[ -n ${reason} ]]; then
             printf '**Why this verdict**\n\n'
             # Quote every line so multi-line checker reasons stay one block
@@ -114,41 +120,9 @@ function build_loop_meta_block {
             done <<< "${reason}"
             printf '\n'
         fi
-        printf '</details>\n'
+        printf '</details>\n\n'
+        printf '%s\n' "${LOOP_META_FOOTER}"
     }
-}
-
-#######################################
-# loop_meta_icon: Pick the status icon for an outcome/verdict pair
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   $1 - Outcome enum (optional)
-#   $2 - Verdict APPROVE/REJECT (optional)
-#
-# Outputs:
-#   Status emoji on stdout
-#
-# Returns:
-#   0 on success
-#
-# Usage:
-#   icon="$(loop_meta_icon "${OUTCOME}" "${VERDICT}")"
-#
-#######################################
-function loop_meta_icon {
-    local outcome="${1:-}"
-    local verdict="${2:-}"
-
-    if [[ ${verdict} == "REJECT" || ${outcome} == "rejected" || ${outcome} == "error" ]]; then
-        printf '❌'
-    elif [[ -z ${outcome} || ${outcome} == "no-changes" || ${outcome} == "skipped" || ${outcome} == "watch" ]]; then
-        printf 'ℹ️'
-    else
-        printf '✅'
-    fi
 }
 
 #######################################
@@ -181,8 +155,8 @@ function loop_meta_reset {
 #   LOOP_META_ROWS - Appended to
 #
 # Arguments:
-#   $1 - Field label
-#   $2 - Preformatted value cell (caller owns any backticks or links)
+#   $1 - Field label (rendered as a snake_case key: "Skip reason" -> skip_reason)
+#   $2 - Plain-text value cell (callers escape pipes; links are allowed for run and commit)
 #
 # Outputs:
 #   None
@@ -197,10 +171,12 @@ function loop_meta_reset {
 function loop_meta_row {
     local label="${1:-}"
     local value="${2:-}"
+    local key
 
     if [[ -z ${label} || -z ${value} ]]; then
         return 0
     fi
 
-    LOOP_META_ROWS+=("| ${label} | ${value} |")
+    key="$(tr '[:upper:] ' '[:lower:]_' <<< "${label}")"
+    LOOP_META_ROWS+=("| ${key} | ${value} |")
 }

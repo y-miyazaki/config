@@ -13,9 +13,9 @@
 # - detect_tech_debt emits stale_doc when TECH_DEBT_STALE_DAYS is zero
 # - detect_tech_debt emits churn hotspots for frequently edited files
 # - detect_tech_debt warns and continues when TECH_DEBT_SKIP_MLC=true
-# - detect_tech_debt emits report_file and previous_report enrich fields
+# - detect_tech_debt emits agent_report_file and previous_report enrich fields
 # - detect_tech_debt previous_report excludes today's dated report file
-# - detect_tech_debt honors TECH_DEBT_DIR for report_file path
+# - detect_tech_debt honors TECH_DEBT_DIR for agent_report_file path
 # - detect_tech_debt previous_report falls back to legacy tech-debt directory
 # - detect_tech_debt accepts --scope staged for loop-detect parity
 # - detect_tech_debt staged scope is noop without running sensors
@@ -236,7 +236,7 @@ EOF
     [[ $output == *'"previous_report": ""'* ]] || [[ $output == *'"previous_report":""'* ]]
 }
 
-@test "detect_tech_debt honors TECH_DEBT_DIR for report_file path" {
+@test "detect_tech_debt honors TECH_DEBT_DIR for agent_report_file path" {
     git_test_repo_setup
     local today_date
     today_date="$(date -u +%Y-%m-%d)"
@@ -246,8 +246,8 @@ EOF
     git_test_repo_git commit -q -m "chore: init"
     git_test_repo_run "env TECH_DEBT_DIR='reports/custom-debt' TECH_DEBT_LEGACY_SEARCH_DIRS='' TECH_DEBT_SKIP_MLC=true bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
-    [[ $output == *"\"report_file\": \"reports/custom-debt/${today_date}.md\""* ]] \
-        || [[ $output == *"\"report_file\":\"reports/custom-debt/${today_date}.md\""* ]]
+    [[ $output == *"\"agent_report_file\": \"reports/custom-debt/${today_date}.md\""* ]] \
+        || [[ $output == *"\"agent_report_file\":\"reports/custom-debt/${today_date}.md\""* ]]
 }
 
 @test "detect_tech_debt previous_report excludes today's dated report file" {
@@ -285,8 +285,8 @@ EOF
     assert_detect_tech_debt_ok_json "${output}" "all" ""
     [[ $output == *"\"previous_report\": \"${legacy_report}\""* ]] \
         || [[ $output == *"\"previous_report\":\"${legacy_report}\""* ]]
-    [[ $output == *"\"report_file\": \"docs/report/tech-debt/${today_date}.md\""* ]] \
-        || [[ $output == *"\"report_file\":\"docs/report/tech-debt/${today_date}.md\""* ]]
+    [[ $output == *"\"agent_report_file\": \"docs/report/tech-debt/${today_date}.md\""* ]] \
+        || [[ $output == *"\"agent_report_file\":\"docs/report/tech-debt/${today_date}.md\""* ]]
 }
 
 @test "detect_tech_debt previous_report picks latest dated md when older reports exist" {
@@ -324,7 +324,7 @@ EOF
     assert_detect_tech_debt_error_json "${output}" "scope"
 }
 
-@test "detect_tech_debt report_file matches UTC date pattern" {
+@test "detect_tech_debt agent_report_file matches UTC date pattern" {
     git_test_repo_setup
     printf 'ok\n' > "${GIT_TEST_REPO}/README.md"
     git_test_repo_git add README.md
@@ -334,8 +334,8 @@ EOF
     git_test_repo_run "bash '${DETECT_SCRIPT}'"
     [ "$status" -eq 0 ]
     assert_detect_tech_debt_ok_json "${output}" "all" ""
-    [[ $output == *"\"report_file\": \"docs/report/tech-debt/${expected_date}.md\""* ]] \
-        || [[ $output == *"\"report_file\":\"docs/report/tech-debt/${expected_date}.md\""* ]]
+    [[ $output == *"\"agent_report_file\": \"docs/report/tech-debt/${expected_date}.md\""* ]] \
+        || [[ $output == *"\"agent_report_file\":\"docs/report/tech-debt/${expected_date}.md\""* ]]
 }
 
 @test "detect_tech_debt returns error when not inside a git repository" {

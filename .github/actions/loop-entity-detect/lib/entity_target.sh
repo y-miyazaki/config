@@ -10,6 +10,9 @@
 # Design Rules:
 # - Pure Bash + jq (no gh)
 # - One GitHub entity per matrix (skip → empty array)
+# - skip=false requires result.handoff_key and result.entity.kind (issue | pr)
+# - target_json.entity is {handoff_key} merged with result.entity; no finalize key
+# - The matrix row carries the key only in target_json.key (no duplicate handoff_key)
 # - Action-local only; not part of scripts/lib skill sync
 #######################################
 
@@ -29,17 +32,17 @@ fi
 # Arguments:
 #   $1 - Skill name
 #   $2 - Prompt instructions
-#   $3 - Level (e.g. L1)
-#   $4 - Delivery (e.g. none)
+#   $3 - Level (L1 | L2 | L3; agent_edit_allowed is derived from it)
+#   $4 - Delivery (none | pr_create | pr_push)
 #   $5 - Detect result JSON string
-#   $6 - may_edit (true | false)
-#   $7 - write_target (fix | report | empty when may_edit false)
+#   $6 - agent_edit_target (fix | report; empty at L1)
+#   $7 - agent_edit_allowlist csv (empty at L1; ** = unrestricted)
 #
 # Outputs:
 #   Prompt text on stdout
 #
 # Returns:
-#   0 on success
+#   0 on success; 1 when the constraints block cannot be emitted (invalid level or agent_edit_target)
 #
 #######################################
 function build_entity_target_prompt {
@@ -48,8 +51,8 @@ function build_entity_target_prompt {
     local level="$3"
     local delivery="$4"
     local detect_result="$5"
-    local may_edit="$6"
-    local write_target="$7"
+    local agent_edit_target="$6"
+    local agent_edit_allowlist="$7"
 
     {
         echo "Run the ${agent_maker_skill_name} skill."
@@ -66,7 +69,7 @@ function build_entity_target_prompt {
         echo "level: ${level}"
         echo "delivery: ${delivery}"
         echo ""
-        emit_loop_constraints "${may_edit}" "${write_target}" "" ""
+        emit_loop_constraints "${level}" "${agent_edit_target}" "${agent_edit_allowlist}" "" || return 1
     }
 }
 
@@ -81,16 +84,17 @@ function build_entity_target_prompt {
 #   $2 - loop_name
 #   $3 - agent_maker_skill_name
 #   $4 - agent_maker_instructions
-#   $5 - level
-#   $6 - delivery
-#   $7 - may_edit (true | false)
-#   $8 - write_target (fix | report | empty when may_edit false)
+#   $5 - level (L1 | L2 | L3)
+#   $6 - delivery (none | pr_create | pr_push)
+#   $7 - agent_edit_target (fix | report; empty at L1)
+#   $8 - agent_edit_allowlist csv (empty at L1; ** = unrestricted)
 #
 # Outputs:
-#   JSON array on stdout (empty when skip=true)
+#   JSON array on stdout (empty when skip=true); error message on stderr
 #
 # Returns:
-#   0 on success, 1 on invalid input
+#   0 on success; 1 on invalid input (missing handoff_key, result.entity.kind not issue|pr,
+#   or a prompt that cannot be built)
 #
 #######################################
 function build_entity_target_matrix {
@@ -100,11 +104,11 @@ function build_entity_target_matrix {
     local agent_maker_instructions="$4"
     local level="$5"
     local delivery="$6"
-    local may_edit="$7"
-    local write_target="$8"
+    local agent_edit_target="$7"
+    local agent_edit_allowlist="$8"
 
     local detect_json skip event_name event_action comment_id
-    local handoff_key verifier_context prompt_text target_json matrix_json
+    local handoff_key entity_kind result_entity verifier_context prompt_text target_json matrix_json
     local default_branch default_ref
 
     if [[ -z ${detect_path} || ! -f ${detect_path} ]]; then
@@ -128,6 +132,13 @@ function build_entity_target_matrix {
         return 1
     fi
 
+    result_entity="$(jq -c '.result.entity | if type == "object" then . else {} end' <<< "${detect_json}")"
+    entity_kind="$(jq -r '.kind // empty' <<< "${result_entity}")"
+    if [[ ${entity_kind} != "issue" && ${entity_kind} != "pr" ]]; then
+        echo "build_entity_target_matrix: result.entity.kind must be issue or pr when skip=false (got: ${entity_kind:-empty})" >&2
+        return 1
+    fi
+
     event_name="$(jq -r '.result.event_name // "issues"' <<< "${detect_json}")"
     event_action="$(jq -r '.result.event_action // ""' <<< "${detect_json}")"
     comment_id="$(jq -r '.result.comment_id // empty' <<< "${detect_json}")"
@@ -141,8 +152,8 @@ function build_entity_target_matrix {
         "${level}" \
         "${delivery}" \
         "${detect_json}" \
-        "${may_edit}" \
-        "${write_target}")"
+        "${agent_edit_target}" \
+        "${agent_edit_allowlist}")" || return 1
 
     target_json="$(
         jq -nc \
@@ -154,25 +165,17 @@ function build_entity_target_matrix {
             --arg from_ref "${default_ref}" \
             --arg to_branch "${default_branch}" \
             --arg loop_name "${loop_name}" \
-            --arg delivery "${delivery}" \
-            --argjson result_entity "$(jq -c '.result.entity // {}' <<< "${detect_json}")" \
+            --argjson result_entity "${result_entity}" \
             '
             {
               key: $key,
-              entity: (
-                if ($result_entity | type) == "object" and ($result_entity | length) > 0 then
-                  $result_entity
-                else
-                  {handoff_key: $handoff_key}
-                end
-              ),
+              entity: ({handoff_key: $handoff_key} + $result_entity),
               event: (
                 {name: $event_name, action: $event_action}
                 + (if $comment_id == "" then {} else {comment_id: ($comment_id|tonumber? // $comment_id)} end)
               ),
               from: {branch: $to_branch, ref: $from_ref},
               to: {branch: $to_branch},
-              finalize: (if $delivery == "open_pr" then "open_pr" else "none" end),
               loop_name: $loop_name
             }
             '
@@ -180,13 +183,11 @@ function build_entity_target_matrix {
 
     matrix_json="$(
         jq -nc \
-            --arg handoff_key "${handoff_key}" \
             --arg prompt "${prompt_text}" \
             --arg verifier_context "${verifier_context}" \
             --argjson target_json "${target_json}" \
             --argjson result "$(jq -c '.result // {}' <<< "${detect_json}")" \
             '{
-              handoff_key: $handoff_key,
               prompt: $prompt,
               target_json: $target_json,
               verifier_context: $verifier_context,

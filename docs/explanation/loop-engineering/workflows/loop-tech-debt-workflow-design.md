@@ -74,35 +74,35 @@ Schedule: **`0 8 * * 1`** (Monday 08:00 UTC, weekly).
 | `agent_checker_max_turns`    | Max checker agent turns per verification.                                                                                                                                                                                 | `100`                                                            |
 | `agent_checker_model`        | Checker model ID. Cursor: `agent --list-models`.                                                                                                                                                                          | `claude-opus-5`                                                  |
 | `agent_checker_effort`       | Checker reasoning effort. Only engines with an effort flag (claude) consume it                                                                                                                                            | `medium`                                                         |
-| `allowlist`                  | Comma-separated globs the maker may modify. Report path plus optional secondary closed-set fix paths (`docs/**/*.md`, `package.json`, `go.mod`).                                                                          | `docs/report/tech-debt/**/*.md,docs/**/*.md,package.json,go.mod` |
-| `branch_match`               | Comma-separated integration branch patterns to watch.                                                                                                                                                                     | `main`                                                           |
-| `branch_state`               | Branch for `.loop/*` persistence, state migration, and watch fallback.                                                                                                                                                    | `main`                                                           |
+| `agent_edit_allowlist`       | Comma-separated globs the maker may modify. Report path plus optional secondary closed-set fix paths (`docs/**/*.md`, `package.json`, `go.mod`).                                                                          | `docs/report/tech-debt/**/*.md,docs/**/*.md,package.json,go.mod` |
+| `detect_branch_match`        | Comma-separated integration branch patterns to watch.                                                                                                                                                                     | `main`                                                           |
+| `state_branch`               | Branch for `.loop/*` persistence, and state migration (it no longer doubles as a watch fallback).                                                                                                                         | `main`                                                           |
 | `budget_max_runs_per_day`    | Daily run cap keyed by `loop_name`. Caller input; `.loop/loop-budget.json` overrides when present.                                                                                                                        | `2`                                                              |
 | `budget_max_tokens_per_day`  | Daily aggregated token cap across loops.                                                                                                                                                                                  | `1000000`                                                        |
-| `denylist`                   | Comma-separated globs the maker must not touch.                                                                                                                                                                           | `**/.env,**/credentials*,**/secrets*,src/**,.github/**`          |
+| `agent_edit_denylist`        | Comma-separated globs the maker must not touch.                                                                                                                                                                           | `**/.env,**/credentials*,**/secrets*,src/**,.github/**`          |
 | `detect_script`              | Domain detect script path.                                                                                                                                                                                                | `.agents/skills/tech-debt/scripts/detect_tech_debt.sh`           |
-| `engine`                     | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                                                                                                                                     | `claude`                                                         |
+| `agent_engine`               | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                                                                                                                                     | `claude`                                                         |
 | `environment`                | GitHub Environment for env-scoped secrets inside the reusable workflow. Leave `default` when repository secrets suffice.                                                                                                  | `default`                                                        |
-| `delivery`                   | Platform delivery after APPROVE (`open_pr` for dogfood).                                                                                                                                                                  | `open_pr`                                                        |
-| `infer_files_pattern`        | Extended regex to infer file paths from checker text.                                                                                                                                                                     | See caller workflow                                              |
+| `delivery`                   | Platform delivery after APPROVE (`pr_create` for dogfood).                                                                                                                                                                | `pr_create`                                                      |
+| `agent_checker_path_pattern` | Extended regex to infer file paths from checker text.                                                                                                                                                                     | See caller workflow                                              |
 | `level`                      | Autonomy level (`L1`, `L2`, `L3`). **L2 from start** — no L1 phase.                                                                                                                                                       | `L2`                                                             |
 | `loop_name`                  | Loop identifier; state file `.loop/state-tech-debt.json`.                                                                                                                                                                 | `tech-debt`                                                      |
-| `max_targets_per_schedule`   | Max targets per cron tick after priority filters.                                                                                                                                                                         | `1`                                                              |
-| `may_edit`                   | Agent worktree edit gate (`true` for dogfood).                                                                                                                                                                            | `true`                                                           |
-| `no_changes_verdict`         | `APPROVE` or `REJECT` when maker produces no file diff. **REJECT** when signals present but no report file written.                                                                                                       | `REJECT`                                                         |
+| `detect_max_targets`         | Max targets per cron tick after priority filters.                                                                                                                                                                         | `1`                                                              |
+| `agent_edit_allowed`         | Agent worktree edit gate (`true` for dogfood).                                                                                                                                                                            | `true`                                                           |
+| `agent_unchanged_verdict`    | `APPROVE` or `REJECT` when maker produces no file diff. **REJECT** when signals present but no report file written.                                                                                                       | `REJECT`                                                         |
 | `pr_body`                    | Optional static prefix (dogfood: `""`). `loop-finalize` composes agent Overview/Summary + mechanical sections. See [Loop PR Body Readable Design](../../../superpowers/specs/2026-07-21-loop-pr-body-readable-design.md). | `""`                                                             |
-| `pr_enabled`                 | Enumerate open PR heads. tech-debt uses integration branches only.                                                                                                                                                        | `false`                                                          |
-| `pr_title`                   | PR title when finalize strategy is `open_pr`.                                                                                                                                                                             | `docs(tech-debt): technical debt report (loop-tech-debt)`        |
+| `detect_pr_enabled`          | Enumerate open PR heads. tech-debt uses integration branches only.                                                                                                                                                        | `false`                                                          |
+| `pr_title`                   | PR title when `delivery` is `pr_create`.                                                                                                                                                                                  | `docs(tech-debt): technical debt report (loop-tech-debt)`        |
 | `agent_maker_instructions`   | Domain instructions: classify signals; write dated report; compare previous report.                                                                                                                                       | Inline in caller workflow                                        |
 | `agent_maker_skill_name`     | Skill package to invoke.                                                                                                                                                                                                  | `tech-debt`                                                      |
-| `write_target`               | Agent artifact when `may_edit` is true (`report` for this loop).                                                                                                                                                          | `report`                                                         |
+| `agent_edit_target`          | Agent artifact when `agent_edit_allowed` is true (`report` for this loop).                                                                                                                                                | `report`                                                         |
 
-### Domain detect environment (`detect_domain_env_json`)
+### Domain detect environment (`detect_env_json`)
 
-Dogfood passes `{}` — defaults match the layout below. Override paths when changing report location (align `allowlist` / `infer_files_pattern`).
+Dogfood passes `{}` — defaults match the layout below. Override paths when changing report location (align `agent_edit_allowlist` / `agent_checker_path_pattern`).
 
 ```yaml
-detect_domain_env_json: >-
+detect_env_json: >-
   {"TECH_DEBT_DIR":"docs/report/tech-debt"}
 ```
 
@@ -123,24 +123,24 @@ Per watch branch, `loop-detect` checks out the branch and invokes `detect_tech_d
 
 Detect script outputs **mechanical signals** (not semantic findings):
 
-| Field             | Role                                                                                                         |
-| ----------------- | ------------------------------------------------------------------------------------------------------------ |
-| `signals[]`       | Mechanical debt indicators from repo-wide sensors                                                            |
-| `hotspots[]`      | Aggregated high-density paths or categories                                                                  |
-| `warnings[]`      | Non-blocking sensor or scope warnings                                                                        |
-| `skip`            | `true` when no debt signals warrant a run                                                                    |
-| `report_file`     | Target path: `<TECH_DEBT_DIR>/<UTC-date>.md` (defaults under `docs/report/tech-debt/`)                       |
-| `previous_report` | Latest dated report under `TECH_DEBT_DIR` plus optional `TECH_DEBT_LEGACY_SEARCH_DIRS`; empty string if none |
+| Field               | Role                                                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `signals[]`         | Mechanical debt indicators from repo-wide sensors                                                            |
+| `hotspots[]`        | Aggregated high-density paths or categories                                                                  |
+| `warnings[]`        | Non-blocking sensor or scope warnings                                                                        |
+| `skip`              | `true` when no debt signals warrant a run                                                                    |
+| `agent_report_file` | Target path: `<TECH_DEBT_DIR>/<UTC-date>.md` (defaults under `docs/report/tech-debt/`)                       |
+| `previous_report`   | Latest dated report under `TECH_DEBT_DIR` plus optional `TECH_DEBT_LEGACY_SEARCH_DIRS`; empty string if none |
 
 **Default scope:** full repository (sensors read source for evidence; `docs/report/**` excluded from sensors per skill references).
 
-**Skill** (`tech-debt`) classifies signals into prioritized findings and writes `report_file` at L2.
+**Skill** (`tech-debt`) classifies signals into prioritized findings and writes `agent_report_file` at L2.
 
 `loop-detect` emits per-branch `target_json`:
 
 - `from.ref` = HEAD on watch branch
 - `to.branch` = watch branch
-- `finalize` = `open_pr`
+- `delivery` = `pr_create`
 
 ### Stable filters (detect only)
 
@@ -154,8 +154,8 @@ No infra/env classification — not applicable.
 | Field                  | Role                                                                  |
 | ---------------------- | --------------------------------------------------------------------- |
 | `last_sha`             | Scan cursor; advances when report PR merges (`on-loop-state-promote`) |
-| `pending`              | Written at finalize on `open_pr`; promoted to `last_sha` on merge     |
-| `outcome`              | `pr-created`, `rejected`, `no-op`, …                                  |
+| `pending`              | Written at finalize on `pr_create`; promoted to `last_sha` on merge   |
+| `outcome`              | `pr_created`, `rejected`, `unchanged`, …                              |
 | `consecutive_failures` | Circuit breaker                                                       |
 
 No `workflow_run_id` / ci ledger.
@@ -170,17 +170,17 @@ No `workflow_run_id` / ci ledger.
 
 PR body is composed by `loop-finalize` from agent `## Overview` / `## Summary` (skill-owned) plus mechanical sections. Dogfood sets `pr_body: ""`. See [Loop PR Body Skill Contract](../loop-pr-body-skill-contract.md).
 
-Always `open_pr` to `to.branch` at L2. L3 `push` rarely appropriate for report loops; if enabled, requires explicit promotion review.
+Always `delivery: pr_create` to `to.branch` at L2. Other deliveries (`pr_push`) are not used by this loop.
 
-No `domain_persistence_script`.
+No `finalize_hook_script`.
 
-**Merge-gated cursor:** Same platform rule as all L2 `open_pr` loops — `pending` at finalize, `last_sha` on report PR merge via `on-loop-state-promote.yaml`. See [State delivery philosophy](../multi-branch-loops-design.md#state-delivery-philosophy).
+**Merge-gated cursor:** Same platform rule as all L2 `pr_create` loops — `pending` at finalize, `last_sha` on report PR merge via `on-loop-state-promote.yaml`. See [State delivery philosophy](../multi-branch-loops-design.md#state-delivery-philosophy).
 
 ## Skill
 
-- Read `signals[]`, `hotspots[]`, `warnings[]`, `report_file`, `previous_report` from detect JSON
+- Read `signals[]`, `hotspots[]`, `warnings[]`, `agent_report_file`, `previous_report` from detect JSON
 - Classify per skill `category-debt-taxonomy.md` and `common-checklist.md`
-- At **L2**, write full report to `report_file` within allowlist
+- At **L2**, write full report to `agent_report_file` within allowlist
 - Emit session summary always (per `common-output-format.md`)
 - Cap **Critical + High** findings at 25 per report
 - Do not create GitHub Issues
@@ -204,7 +204,7 @@ See [State delivery philosophy](../multi-branch-loops-design.md#state-delivery-p
 
 **Target (dogfood):** merge-gated `pending` + `on-loop-state-promote` — same as changelog and docs-updater.
 
-Persistence: `state-tech-debt.json` on `branch_state` via [finalize inside ci-loop-agent](../loop-caller-workflows-design.md#finalize-inside-ci-loop-agent).
+Persistence: `state-tech-debt.json` on `state_branch` via [finalize inside ci-loop-agent](../loop-caller-workflows-design.md#finalize-inside-ci-loop-agent).
 
 ## Related action loops
 

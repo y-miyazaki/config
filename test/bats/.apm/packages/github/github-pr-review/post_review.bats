@@ -13,6 +13,7 @@
 # - checks diff membership per side and hunk (start_line in the same hunk)
 # - moves in_diff findings outside the diff (or without a diff) into the body
 # - posts a COMMENT review with marker, counts, premises, and numbered inline comments
+# - appends LOOP_META_BLOCK to the review body in the same post when the caller supplies it
 # - links evidence to the base SHA and locations to the head SHA
 # - reports the dropped findings count
 # - fails closed (no post, exit 0) on unparseable input or unavailable trusted SHAs
@@ -485,6 +486,24 @@ posted() {
     [[ ${body} == *"- PR body: checked"* ]]
     [[ ${body} == *"- Linked Issue / spec: #120"* ]]
     [[ ${body} != *"Dropped:"* ]]
+}
+
+@test "appends LOOP_META_BLOCK to the review body in the same post when supplied" {
+    write_report "[$(bug_finding Critical 2 true)]"
+    run_post LOOP_META_BLOCK=$'<details>\n<summary>Meta</summary>\n</details>\n\n<sub>footer</sub>'
+    [ "$status" -eq 0 ]
+    [ "$(grep -c -- '--method POST repos/o/r/pulls/7/reviews' "${GH_LOG}")" -eq 1 ]
+    body="$(posted | jq -r '.body')"
+    [[ ${body} == *"### Premises checked"* ]]
+    [[ ${body} == *$'\n\n<details>\n<summary>Meta</summary>'*"<sub>footer</sub>" ]]
+}
+
+@test "posts the review body unchanged when LOOP_META_BLOCK is absent" {
+    write_report "[$(bug_finding Critical 2 true)]"
+    run_post
+    [ "$status" -eq 0 ]
+    body="$(posted | jq -r '.body')"
+    [[ ${body} != *"<summary>Meta</summary>"* ]]
 }
 
 @test "reads the PR number from TARGET_JSON key" {

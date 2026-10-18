@@ -222,9 +222,9 @@ function build_done_reply_body {
     if [[ -n ${commit_sha} ]]; then
         short_sha="${commit_sha:0:7}"
         if [[ -n ${commit_url} && ${commit_url} != "#" ]]; then
-            loop_meta_row "Commit" "[\`${short_sha}\`](${commit_url})"
+            loop_meta_row "Commit" "[${short_sha}](${commit_url})"
         else
-            loop_meta_row "Commit" "\`${short_sha}\`"
+            loop_meta_row "Commit" "${short_sha}"
         fi
     fi
 
@@ -247,7 +247,11 @@ function build_done_reply_body {
             for ((i = 0; i < shown_count; i++)); do
                 file_entry="${files[i]}"
                 [[ -z ${file_entry} ]] && continue
-                echo "- \`${file_entry}\`"
+                if [[ -n ${commit_sha} && ${commit_url} == */commit/* ]]; then
+                    echo "- [${file_entry}](${commit_url%/commit/*}/blob/${commit_sha}/${file_entry})"
+                else
+                    echo "- \`${file_entry}\`"
+                fi
             done
             if [[ ${file_count} -gt ${shown_count} ]]; then
                 hidden_count=$((file_count - shown_count))
@@ -266,8 +270,6 @@ function build_done_reply_body {
         # trigger replies, and entity Issue comments all read the same.
         build_loop_meta_block "${outcome}" "${verdict}" "${detail_reason}" \
             "${engine}" "${usage_json}" "${loop_run_url}"
-        echo ""
-        echo "<sub>Replying to your mention. This thread is not auto-resolved — resolve it when you are satisfied.</sub>"
     }
 }
 
