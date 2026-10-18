@@ -7,6 +7,7 @@
 # - parse_arguments sets FORCE_INSTALL on -f/--force
 # - parse_arguments sets DB_TYPE from -t/--db-type's value
 # - parse_arguments rejects an unknown option
+# - parse_arguments rejects an unexpected positional argument
 # - parse_arguments requires a value for -t/--db-type
 # - validate_parameters rejects an invalid database type
 # - validate_parameters accepts every documented database type
@@ -37,6 +38,12 @@ INSTALL_SCHEMASPY="$(bats_workspace_root)/scripts/db/install_schemaspy.sh"
     run bash -c "source '${INSTALL_SCHEMASPY}'; parse_arguments --bogus"
     [ "$status" -ne 0 ]
     [[ $output == *"Unknown option: --bogus"* ]]
+}
+
+@test "parse_arguments rejects an unexpected positional argument" {
+    run bash -c "source '${INSTALL_SCHEMASPY}'; parse_arguments bogus-arg"
+    [ "$status" -ne 0 ]
+    [[ $output == *"Unexpected argument: bogus-arg"* ]]
 }
 
 @test "parse_arguments requires a value for -t/--db-type" {
