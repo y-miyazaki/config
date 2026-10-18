@@ -122,7 +122,7 @@ on:
         required: false
         type: number
       delivery:
-        description: "Where the agent output is delivered: none | pr_create | pr_push (required; no default)"
+        description: "Where the agent output is delivered: issue_comment | none | pr_create | pr_push | pr_review (required; no default)"
         required: true
         type: string
       detect_env_json:
@@ -147,6 +147,11 @@ on:
       finalize_commit_paths:
         default: ""
         description: "Extra paths included in finalize commit (e.g. ledger file)"
+        required: false
+        type: string
+      finalize_label_allowlist:
+        default: ""
+        description: "Newline-separated labels the finalize step may apply or remove (allowed only with delivery issue_comment or pr_review)"
         required: false
         type: string
       finalize_outcome_override:
@@ -304,6 +309,8 @@ jobs:
           delivery: ${{ inputs.delivery }}
           detect_hook_script: ${{ inputs.detect_hook_script }}
           detect_script: ${{ inputs.detect_script }}
+          finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}
+          finalize_script: ${{ inputs.finalize_script }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           level: ${{ inputs.level }}
           loop_name: ${{ inputs.loop_name }}
@@ -348,6 +355,7 @@ jobs:
       delivery: ${{ needs.detect.outputs.delivery }}
       environment: ${{ inputs.environment }}
       finalize_commit_paths: ${{ inputs.finalize_commit_paths }}
+      finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}
       finalize_outcome_override: ${{ inputs.finalize_outcome_override }}
       finalize_script: ${{ inputs.finalize_script }}
       handoff_artifact_name: ${{ needs.detect.outputs.handoff_artifact_name }}

@@ -1,7 +1,7 @@
 # Reusable workflow: Loop agent execution
-# L1: agent-l1 (loop-agent-once) → finalize-l1 (run-log; future L1 delivery)
+# L1: agent-l1 (loop-agent-once) → finalize-l1 (loop-finalize and run-log)
 # L2/L3: agent-l2 (loop-execute) → finalize-l2 (loop-finalize and run-log always)
-# loop-finalize branches on delivery alone (pr_create | pr_push | none); delivery and
+# loop-finalize branches on delivery alone (issue_comment | none | pr_create | pr_push | pr_review); delivery and
 # pr_auto_merge are detect outputs passed through unchanged by the callers.
 # The handoff key, checkout ref and base branch are read from target_json in each job.
 # Caller-facing prompts: loop-detect assembles maker text (prompt_text); domain checker rubric is agent_checker_instructions.
@@ -110,7 +110,7 @@ on:
         required: false
         type: string
       delivery:
-        description: "Where the agent output is delivered: none | pr_create | pr_push (detect output; loop-finalize branches on it)"
+        description: "Where the agent output is delivered: issue_comment | none | pr_create | pr_push | pr_review (detect output; loop-finalize branches on it)"
         required: true
         type: string
       environment:
@@ -121,6 +121,11 @@ on:
       finalize_commit_paths:
         default: ""
         description: "Comma-separated paths to commit with state after the finalize hook"
+        required: false
+        type: string
+      finalize_label_allowlist:
+        default: ""
+        description: "Newline-separated labels a delivered message may add or remove (delivery issue_comment | pr_review)"
         required: false
         type: string
       finalize_outcome_override:
@@ -202,7 +207,7 @@ on:
         type: string
       target_json:
         default: ""
-        description: "Target descriptor from the loop-detect matrix cell; the handoff key, checkout ref and base are read from it (required at L2/L3; empty fails)"
+        description: "Target descriptor from the loop-detect matrix cell; the handoff key, checkout ref and base are read from it (required at every level; empty fails)"
         required: false
         type: string
       verifier_context:
@@ -264,11 +269,11 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
+      message_json: ${{ steps.agent.outputs.message_json }}
       usage_json: ${{ steps.agent.outputs.usage_json }}
     permissions:
       contents: read
       copilot-requests: write # zizmor: ignore[excessive-permissions]
-      issues: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -297,12 +302,7 @@ jobs:
           agent_maker_model: ${{ inputs.agent_maker_model }}
           agent_token: ${{ secrets.AGENT_TOKEN }}
           agent_tool_allowlist: ${{ inputs.agent_tool_allowlist }}
-          # The agent ends its run with the comment text; this stage measures the usage
-          # and posts it once, with Meta and the footer (entity handoff keys only).
-          comment_handoff_key: ${{ fromJSON(inputs.target_json || '{}').key }}
-          comment_marker: <!-- ${{ inputs.loop_name }}:v1 -->
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
-          output_file: ${{ runner.temp }}/loop-agent-output.md
           prompt_text: ${{ inputs.prompt_text }}
 
   finalize-l1:
@@ -315,7 +315,7 @@ jobs:
     environment: ${{ inputs.environment }}
     permissions:
       contents: write
-      pull-requests: write
+      issues: write
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -333,7 +333,38 @@ jobs:
           bot_app_private_key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           github_token: ${{ secrets.GH_TOKEN }}
 
+      # GitHub drops a job output that contains a secret value, and a failed
+      # write leaves no message file; either way the agent's text is lost.
+      - name: Warn Missing Message
+        if: needs.agent-l1.result == 'success' && needs.agent-l1.outputs.message_json == '' && inputs.delivery == 'issue_comment'
+        run: |
+          echo "::warning title=loop-agent::agent-l1 succeeded but produced no message_json; nothing is delivered"
+
+      # continue-on-error: a delivery failure must not mask the run log below,
+      # which records it as error. current_sha and branch are empty at L1, so
+      # loop-finalize writes no state and pushes no branch.
+      - name: Finalize
+        continue-on-error: true
+        id: finalize
+        uses: y-miyazaki/config/.github/actions/loop-finalize@327f5778c6eeb733921fb00970960c4acafb4bfe # v1.8.123
+
+        with:
+          agent_engine: ${{ inputs.agent_engine }}
+          agent_result: ${{ needs.agent-l1.result }}
+          branch: ""
+          current_sha: ""
+          delivery: ${{ inputs.delivery }}
+          finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}
+          github_token: ${{ steps.resolve_github_token.outputs.github_token }}
+          level: ${{ inputs.level }}
+          loop_name: ${{ inputs.loop_name }}
+          message_json: ${{ needs.agent-l1.outputs.message_json || '' }}
+          state_branch: ${{ inputs.state_branch }}
+          target_json: ${{ inputs.target_json }}
+          usage_json: ${{ needs.agent-l1.outputs.usage_json || '' }}
+
       - name: Append Run Log
+        if: always()
         uses: y-miyazaki/config/.github/actions/loop-run-log@327f5778c6eeb733921fb00970960c4acafb4bfe # v1.8.123
 
         with:
@@ -341,7 +372,7 @@ jobs:
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}
           has_changes: "false"
           loop_name: ${{ inputs.loop_name }}
-          outcome: ${{ needs.agent-l1.result == 'success' && 'unchanged' || 'error' }}
+          outcome: ${{ steps.finalize.outcome == 'failure' && 'error' || steps.finalize.outputs.outcome || (needs.agent-l1.result != 'success' && needs.agent-l1.result != 'skipped' && 'error') || 'unchanged' }}
           run_log_file: ${{ inputs.run_log_file }}
           run_started_at: ${{ inputs.run_started_at }}
           skip_reason: ${{ inputs.skip_reason }}
@@ -472,6 +503,7 @@ jobs:
     permissions:
       actions: read
       contents: write
+      issues: write
       pull-requests: write
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -538,6 +570,7 @@ jobs:
           delivery: ${{ inputs.delivery }}
           execute_branch: ${{ needs.agent-l2.outputs.branch }}
           finalize_commit_paths: ${{ inputs.finalize_commit_paths }}
+          finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}
           finalize_outcome_override: ${{ inputs.finalize_outcome_override != '' && inputs.finalize_outcome_override || needs.agent-l2.outputs.finalize_outcome_override }}
           finalize_script: ${{ inputs.finalize_script }}
           github_token: ${{ steps.resolve_github_token.outputs.github_token }}

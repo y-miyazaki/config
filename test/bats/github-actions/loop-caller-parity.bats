@@ -5,7 +5,10 @@
 # Use cases:
 # - Both callers share platform wiring; finalize hops live in ci-loop-agent (finalize-l1 / finalize-l2)
 # - Callers declare delivery and level as required with no default
-# - agent-l1 gives Run Agent Once the entity handoff key and output file so the comment is posted once, with Meta and the footer
+# - agent-l1 holds no issues write and hands the agent's message to finalize-l1 as message_json
+# - finalize-l1 runs loop-finalize (empty current_sha and branch) with issues write, warns on a missing message, and logs the finalize outcome
+# - finalize-l2 holds issues write; both reusables pass finalize_script and finalize_label_allowlist to detect and ci-loop-agent
+# - target_json is required at every level
 # - No workflow step edits a message a loop already posted (no Append Loop Meta step)
 # - No loop-finalize step or lib/loop script edits a posted comment or review
 # - Callers pass the detect outputs delivery and pr_auto_merge straight through (no auto_merge or finalize_enabled expression)
@@ -199,23 +202,27 @@ dogfood_value() {
     done
 }
 
-@test "agent-l1 gives Run Agent Once the entity handoff key and output file" {
+@test "agent-l1 has no issues write and exposes message_json without comment inputs" {
     local block
     block="$(job_block "${AGENT}" agent-l1)"
-    grep -q 'comment_handoff_key: ${{ fromJSON(inputs.target_json || ' <<< "${block}"
-    grep -q 'comment_marker: <!-- ${{ inputs.loop_name }}:v1 -->' <<< "${block}"
-    grep -q 'output_file: ${{ runner.temp }}/' <<< "${block}"
+    [[ -n ${block} ]]
+    if grep -nE 'issues: write|comment_handoff_key|comment_marker|output_file' <<< "${block}"; then
+        return 1
+    fi
+    # Literal GitHub Actions expression; do not expand.
+    # shellcheck disable=SC2016
+    grep -qF 'message_json: ${{ steps.agent.outputs.message_json }}' <<< "${block}"
 }
 
 @test "no workflow step edits a message a loop already posted" {
-    if grep -n 'Append Loop Meta\|append_entity_meta\|append_pr_review_meta' "${AGENT}" "${ROOT}"/.github/workflows/*.yaml; then
+    if grep -n 'Append Loop Meta\|append_pr_review_meta' "${AGENT}" "${ROOT}"/.github/workflows/*.yaml; then
         return 1
     fi
 }
 
 @test "agent-l1 exposes usage_json and finalize-l1 passes it to run-log" {
     grep -A25 '^  agent-l1:' "${AGENT}" | grep -q 'usage_json:'
-    grep -A45 '^  finalize-l1:' "${AGENT}" | grep -q "needs.agent-l1.outputs.usage_json"
+    grep -A72 '^  finalize-l1:' "${AGENT}" | grep -q "needs.agent-l1.outputs.usage_json"
 }
 
 @test "agent-l2 parse target derives key, ref and base from an integration target_json" {
@@ -306,6 +313,20 @@ dogfood_value() {
     [[ ${branch} == "${entity}" ]]
     [[ -n ${branch} ]]
     [[ ${branch} == *"ci-loop-agent.yaml"* ]]
+}
+
+@test "both reusables pass finalize_script and finalize_label_allowlist to detect and to ci-loop-agent" {
+    local caller detect execute key
+    for caller in "${BRANCH_CALLER}" "${ENTITY_CALLER}"; do
+        input_block "${caller}" finalize_label_allowlist | grep -qF 'default: ""'
+        detect="$(job_block "${caller}" detect | step_block 'Detect Loop Work')"
+        execute="$(job_block "${caller}" execute)"
+        for key in finalize_label_allowlist finalize_script; do
+            grep -qxF "          ${key}: \${{ inputs.${key} }}" <<< "${detect}"
+            grep -qxF "      ${key}: \${{ inputs.${key} }}" <<< "${execute}"
+        done
+    done
+    input_block "${AGENT}" finalize_label_allowlist | grep -qF 'default: ""'
 }
 
 @test "branch execute waits for ack-trigger success or skip" {
@@ -655,10 +676,61 @@ dogfood_value() {
     done
 }
 
+@test "finalize-l1 has issues write and no pull-requests write" {
+    local block
+    block="$(job_block "${AGENT}" finalize-l1)"
+    grep -qxF '      contents: write' <<< "${block}"
+    grep -qxF '      issues: write' <<< "${block}"
+    if grep -n 'pull-requests: write' <<< "${block}"; then
+        return 1
+    fi
+}
+
 @test "finalize-l1 persists run-log after agent-l1" {
-    grep -A40 '^  finalize-l1:' "${AGENT}" | grep -q 'loop-run-log'
+    grep -A72 '^  finalize-l1:' "${AGENT}" | grep -q 'loop-run-log'
     grep -A20 '^  finalize-l1:' "${AGENT}" | grep -q "inputs.level == 'L1'"
     grep -A15 '^  finalize-l1:' "${AGENT}" | grep -q 'needs: agent-l1'
+}
+
+@test "finalize-l1 run log uses the finalize outcome" {
+    local step
+    step="$(job_block "${AGENT}" finalize-l1 | step_block 'Append Run Log')"
+    grep -qxF '        if: always()' <<< "${step}"
+    # Literal GitHub Actions expression; do not expand.
+    # shellcheck disable=SC2016
+    grep -qxF "          outcome: \${{ steps.finalize.outcome == 'failure' && 'error' || steps.finalize.outputs.outcome || (needs.agent-l1.result != 'success' && needs.agent-l1.result != 'skipped' && 'error') || 'unchanged' }}" <<< "${step}"
+}
+
+@test "finalize-l1 runs loop-finalize with an empty current_sha and branch" {
+    local step
+    step="$(job_block "${AGENT}" finalize-l1 | step_block 'Finalize')"
+    grep -qF 'uses: y-miyazaki/config/.github/actions/loop-finalize@' <<< "${step}"
+    grep -qxF '        continue-on-error: true' <<< "${step}"
+    grep -qxF '        id: finalize' <<< "${step}"
+    grep -qxF '          current_sha: ""' <<< "${step}"
+    grep -qxF '          branch: ""' <<< "${step}"
+    # Literal GitHub Actions expressions; do not expand.
+    # shellcheck disable=SC2016
+    grep -qxF "          message_json: \${{ needs.agent-l1.outputs.message_json || '' }}" <<< "${step}"
+    # shellcheck disable=SC2016
+    grep -qxF '          finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}' <<< "${step}"
+}
+
+@test "finalize-l1 warns when a successful agent left no message" {
+    local step
+    step="$(job_block "${AGENT}" finalize-l1 | step_block 'Warn Missing Message')"
+    grep -qxF "        if: needs.agent-l1.result == 'success' && needs.agent-l1.outputs.message_json == '' && inputs.delivery == 'issue_comment'" <<< "${step}"
+    grep -qF '::warning' <<< "${step}"
+}
+
+@test "finalize-l2 has issues write" {
+    local block step
+    block="$(job_block "${AGENT}" finalize-l2)"
+    grep -qxF '      issues: write' <<< "${block}"
+    step="$(step_block 'Finalize' <<< "${block}")"
+    # Literal GitHub Actions expression; do not expand.
+    # shellcheck disable=SC2016
+    grep -qxF '          finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}' <<< "${step}"
 }
 
 @test "finalize-l2 job if does not require finalize_enabled" {
@@ -873,6 +945,10 @@ dogfood_value() {
             fi
         done
     done
+}
+
+@test "target_json is described as required at every level" {
+    input_block "${AGENT}" target_json | grep -qF 'required at every level'
 }
 
 @test "no tracked file outside docs/superpowers names finalize_hook_script" {
