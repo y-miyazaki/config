@@ -71,7 +71,7 @@ jobs:
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: test-gap
       agent_unchanged_verdict: REJECT
-      budget_max_runs_per_day: 2
+      budget_max_runs_per_day: 20
       budget_max_tokens_per_day: 1000000
       delivery: pr_create
       detect_branch_match: dogfood/loop-delivery
