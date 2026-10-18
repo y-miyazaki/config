@@ -18,10 +18,11 @@
 #
 # Design Rules:
 #   - Meta is collapsed (summary text: Meta) and goes last; the change description stays the lead
+#   - LOOP_META_FOOTER closes every block, even when no row is known, so no surface lacks it
 #   - One `| Key | Value |` table: keys are plain snake_case, values are plain text
 #   - Engine, model, and token rows are always carried when the run reports them
 #   - Caller-specific rows are added with loop_meta_row before rendering
-#   - Emits nothing when no row, reason, or usage field is known
+#   - With no row, reason, or usage field known, emits the marker and the footer only
 #######################################
 
 _LOOP_META_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -31,6 +32,9 @@ source "${_LOOP_META_DIR}/outcome.sh"
 
 # Marker identifying an already-rendered meta block (idempotency for appenders)
 LOOP_META_MARKER="<!-- loop-meta:v1 -->"
+# Closing line of every Loop Engineering surface. One fixed sentence: a reader (or a
+# PAT-posted comment that shows a human author) can tell the text was written by LE.
+LOOP_META_FOOTER="<sub>Written by Loop Engineering (LE), an automation — not by a person. Review before acting.</sub>"
 # Accumulated "| key | value |" rows for the next render
 LOOP_META_ROWS=()
 
@@ -50,7 +54,8 @@ LOOP_META_ROWS=()
 #   $6 - Loop run URL (optional)
 #
 # Outputs:
-#   Markdown block on stdout, or empty when nothing is known
+#   Markdown block on stdout: marker, collapsed details when anything is known,
+#   then LOOP_META_FOOTER
 #
 # Returns:
 #   0 on success
@@ -94,35 +99,34 @@ function build_loop_meta_block {
         rows+=("| run | [View run](${run_url}) |")
     fi
 
-    if [[ ${#rows[@]} -eq 0 && -z ${reason} ]]; then
-        return 0
-    fi
-
     # outcome leads the table; it is not counted when deciding whether anything is known
-    if [[ -n ${outcome} ]]; then
+    if [[ ${#rows[@]} -gt 0 || -n ${reason} ]] && [[ -n ${outcome} ]]; then
         rows=("| outcome | ${outcome} |" "${rows[@]}")
     fi
 
     {
         printf '%s\n' "${LOOP_META_MARKER}"
-        printf '<details>\n'
-        printf '<summary>Meta</summary>\n\n'
-        if [[ ${#rows[@]} -gt 0 ]]; then
-            printf '%s\n' "| Key | Value |"
-            printf '%s\n' "| --- | --- |"
-            printf '%s\n' "${rows[@]}"
-            printf '\n'
+        if [[ ${#rows[@]} -gt 0 || -n ${reason} ]]; then
+            printf '<details>\n'
+            printf '<summary>Meta</summary>\n\n'
+            if [[ ${#rows[@]} -gt 0 ]]; then
+                printf '%s\n' "| Key | Value |"
+                printf '%s\n' "| --- | --- |"
+                printf '%s\n' "${rows[@]}"
+                printf '\n'
+            fi
+            if [[ -n ${reason} ]]; then
+                printf '**Why this verdict**\n\n'
+                # Quote every line so multi-line checker reasons stay one block
+                # instead of collapsing into a run-on paragraph.
+                while IFS= read -r reason_line; do
+                    printf '> %s\n' "${reason_line}"
+                done <<< "${reason}"
+                printf '\n'
+            fi
+            printf '</details>\n\n'
         fi
-        if [[ -n ${reason} ]]; then
-            printf '**Why this verdict**\n\n'
-            # Quote every line so multi-line checker reasons stay one block
-            # instead of collapsing into a run-on paragraph.
-            while IFS= read -r reason_line; do
-                printf '> %s\n' "${reason_line}"
-            done <<< "${reason}"
-            printf '\n'
-        fi
-        printf '</details>\n'
+        printf '%s\n' "${LOOP_META_FOOTER}"
     }
 }
 

@@ -51,7 +51,7 @@ USAGE_JSON="${USAGE_JSON:-}"
 VERIFICATION_MAX_CHARS="${VERIFICATION_MAX_CHARS:-2000}"
 
 #######################################
-# Shared Created By footer (lib/loop/created_by.sh)
+# Shared loop meta block and footer (lib/loop/loop_meta.sh; usage labels from created_by.sh)
 #######################################
 _LOOP_CREATED_BY_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
 # shellcheck source=../../lib/loop/created_by.sh
@@ -638,10 +638,6 @@ function render_run_metadata {
     local usage_json="${5:-}"
     local block
 
-    if [[ -z ${level}${target_key}${skip_reason}${engine}${usage_json} ]]; then
-        return 0
-    fi
-
     # Shape comes from build_loop_meta_block so the PR body, PR comment,
     # trigger reply, and entity Issue comment all carry the same meta block.
     loop_meta_reset
@@ -650,33 +646,7 @@ function render_run_metadata {
     [[ -n ${skip_reason} ]] && loop_meta_row "Skip reason" "$(escape_markdown_table_cell "${skip_reason}")"
 
     block="$(build_loop_meta_block "${OUTCOME:-}" "" "" "${engine}" "${usage_json}" "")"
-    if [[ -z ${block} ]]; then
-        return 0
-    fi
     printf '%s\n\n' "${block}"
-}
-
-#######################################
-# render_automation_disclaimer: Render loop automation footer line
-#
-# Description:
-#   Emit the standard disclaimer appended to every loop-created PR body.
-#
-# Globals:
-#   None
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   Disclaimer markdown to stdout
-#
-# Returns:
-#   0 on success
-#
-#######################################
-function render_automation_disclaimer {
-    printf '%s\n\n' $'---\n*This PR was created by a loop automation. Review before merging.*'
 }
 
 #######################################
@@ -684,7 +654,7 @@ function render_automation_disclaimer {
 #
 # Description:
 #   Assemble prefix, Overview, Failure context, Summary, Changes, Run
-#   Metadata, disclaimer, and optional Created By line in that order. Missing optional sections are skipped.
+#   Metadata, and the shared Loop Engineering footer (carried by the meta block) in that order. Missing optional sections are skipped.
 #
 # Globals:
 #   AGENT_ENGINE - AI engine slug for Created By footer
@@ -737,7 +707,6 @@ function render_pr_body {
     fi
 
     render_run_metadata "${LEVEL}" "${TARGET_KEY}" "${SKIP_REASON}" "${AGENT_ENGINE}" "${USAGE_JSON}"
-    render_automation_disclaimer
 }
 
 #######################################

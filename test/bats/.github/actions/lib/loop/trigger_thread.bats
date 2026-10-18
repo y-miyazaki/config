@@ -106,7 +106,9 @@ MOCK
     [ -n "${lead_line}" ]
     [ -n "${details_line}" ]
     [ "${lead_line}" -lt "${details_line}" ]
-    [[ $output == *"not auto-resolved"* ]]
+    # Same footer as every other loop surface; no thread-only closing note.
+    [[ $output == *"</details>"$'\n\n'"${LOOP_META_FOOTER}" ]]
+    [[ $output != *"not auto-resolved"* ]]
 }
 
 @test "build_done_reply_body promotes the reason to the lead when no report exists" {

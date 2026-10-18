@@ -270,8 +270,6 @@ function build_done_reply_body {
         # trigger replies, and entity Issue comments all read the same.
         build_loop_meta_block "${outcome}" "${verdict}" "${detail_reason}" \
             "${engine}" "${usage_json}" "${loop_run_url}"
-        echo ""
-        echo "<sub>Replying to your mention. This thread is not auto-resolved — resolve it when you are satisfied.</sub>"
     }
 }
 

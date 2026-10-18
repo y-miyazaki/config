@@ -20,7 +20,7 @@ Loop PR bodies follow the same separation as [microsoft/apm `triage-panel`](http
 | Skill (`apm-triage-panel/SKILL.md`)            | `loop-*` skill (`SKILL.md` + references)                                  |
 | Verdict template (`assets/triage-template.md`) | `assets/pr-body-template.md` per loop skill                               |
 | Workflow posts comment                         | `loop-finalize` composes PR body; `loop-notify-pr` posts human PR comment |
-| Mechanical footer (ratification)               | `render_automation_disclaimer()`                                          |
+| Mechanical footer (ratification)               | `LOOP_META_FOOTER` via `build_loop_meta_block()`                          |
 
 ### What the skill owns
 
@@ -58,9 +58,8 @@ Per-skill required elements and examples live in each skill's `references/common
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `## Failure context`  | `detect_result_json.failures[]` (ci-sweeper) — Workflow/Job/Run as Markdown links when URLs are present                                                           |
 | `## Changes`          | git diff paths — **omitted** when agent Summary contains `### Changes` or `### Fixes Applied`; paths link to `blob/{branch}` when repository and branch are known |
-| `## Run Metadata`     | Level, Target, Skip reason table                                                                                                                                  |
-| Automation disclaimer | `render_automation_disclaimer()`                                                                                                                                  |
-| Created By footer     | One-line `Created By {engine} {model} In/Out: {in}/{out}` from engine + `usage_json` (omit when unavailable)                                                      |
+| `<details>Meta`       | Collapsed `| Key | Value |` table: outcome, level, target, skip_reason, engine, model, tokens                                                                                                                                  |
+| Loop footer           | `LOOP_META_FOOTER` — the one fixed `<sub>Written by Loop Engineering (LE)…</sub>` line that closes every loop surface (PR body, PR comment, trigger reply, Issue comment, review), always present, always the same text |
 
 Finalize **passthrough** agent `## Overview`, `## Summary`, and `## Verification` with redact/truncate only — no table regeneration.
 
@@ -95,11 +94,7 @@ Architecture Proposal / Skipped / Watch / …
 
 <loop PR only — finalize-owned Level / Target / Skip reason table>
 
----
-
-_This PR was created by a loop automation. Review before merging._
-
-Created By <engine> <model> In/Out: <in>/<out>
+<sub>Written by Loop Engineering (LE), an automation — not by a person. Review before acting.</sub>
 ```
 
 ### List vs table
@@ -127,8 +122,7 @@ Do **not** put these in **Summary** — they duplicate **Changes** / **Deferred*
 4. `## Verification` (agent)
 5. `## Changes` (finalize — only when Summary lacks `### Changes` / `### Fixes Applied`)
 6. `## Run Metadata` (finalize)
-7. Automation disclaimer (finalize)
-8. Created By footer (finalize — engine/model/tokens when available)
+7. Loop footer (finalize — the same `LOOP_META_FOOTER` line on every surface)
 
 ## Skill checklist
 

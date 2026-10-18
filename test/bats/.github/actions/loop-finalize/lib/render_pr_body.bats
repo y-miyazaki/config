@@ -180,6 +180,8 @@ setup() {
     [[ $output == *"<details>"* ]]
     # One meta block only: no stray Created By line beside the collapsed table.
     [[ $output != *"Created By"* ]]
+    [[ $output == *"</details>"$'\n\n'"${LOOP_META_FOOTER}"* ]]
+    [[ $output != *"created by a loop automation"* ]]
 }
 
 @test "render_pr_body empty prefix shows mechanical sections" {
@@ -200,19 +202,21 @@ setup() {
     [[ $output != *"- Level:"* ]]
 }
 
-@test "render_pr_body omits the meta block when level target engine and usage are empty" {
+@test "render_pr_body keeps the shared footer when the meta block is empty" {
     export PR_BODY_PREFIX=''
     export AGENT_REPORT_OVERVIEW=''
     export DETECT_RESULT_JSON='{}'
     export CHANGED_FILES_JSON='[]'
     export AGENT_REPORT_SUMMARY=''
-    export LEVEL=L2
-    export TARGET_KEY=integration:main
-    export SKIP_REASON=none
+    export LEVEL=''
+    export TARGET_KEY=''
+    export SKIP_REASON=''
     export AGENT_ENGINE=''
     export USAGE_JSON=''
     run render_pr_body
     [ "$status" -eq 0 ]
+    [[ $output != *"<details>"* ]]
+    [[ $output == *"${LOOP_META_FOOTER}"* ]]
     [[ $output != *"Created By"* ]]
 }
 

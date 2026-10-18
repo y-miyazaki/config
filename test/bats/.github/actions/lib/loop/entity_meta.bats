@@ -8,6 +8,8 @@
 # - entity_issue_number returns empty for non-issue keys
 # - append_entity_meta no-ops for a non-numeric issue number
 # - append_entity_meta reports when no marker comment exists
+# - append_entity_meta falls back to the newest Bot comment since the run started when the agent omitted the marker
+# - append_entity_meta fallback ignores comments from before the run and from non-Bot authors
 # - entity_pr_number extracts the number from an entity pr key
 # - append_pr_review_meta no-ops for a non-numeric pr number
 # - append_pr_review_meta reports when no marker review exists
@@ -86,6 +88,53 @@ EOF
     run append_entity_meta "936" "<!-- github-issue-triage:v1 -->" "no-changes" "claude" "$(usage_fixture)" "https://x/run/1"
     [ "$status" -eq 0 ]
     [[ $output == *"meta not appended"* ]]
+}
+
+# Install a gh mock for Issue comments: GET list prints $1; PATCH records body to patch.body and the endpoint to patch.log
+mock_gh_issue_comments() {
+    local mock_bin="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "${mock_bin}"
+    printf '%s' "$1" > "${BATS_TEST_TMPDIR}/comments.json"
+    cat > "${mock_bin}/gh" << 'EOF'
+#!/bin/bash
+for a in "$@"; do
+    if [[ $a == PATCH ]]; then
+        printf '%s\n' "$*" >> "${BATS_TEST_TMPDIR}/patch.log"
+        for b in "$@"; do
+            if [[ $b == body=@* ]]; then
+                cat "${b#body=@}" >> "${BATS_TEST_TMPDIR}/patch.body"
+            fi
+        done
+        exit 0
+    fi
+done
+for a in "$@"; do
+    if [[ $a =~ /issues/comments/([0-9]+)$ ]]; then
+        jq -r --argjson id "${BASH_REMATCH[1]}" '[.[] | select(.id == $id)][0].body // ""' "${BATS_TEST_TMPDIR}/comments.json"
+        exit 0
+    fi
+done
+cat "${BATS_TEST_TMPDIR}/comments.json"
+exit 0
+EOF
+    chmod +x "${mock_bin}/gh"
+    PATH="${mock_bin}:${PATH}"
+}
+
+@test "append_entity_meta falls back to the newest Bot comment since the run started when the agent omitted the marker" {
+    mock_gh_issue_comments '[{"id":1,"created_at":"2026-10-18T03:00:00Z","user":{"type":"Bot"},"body":"older"},{"id":2,"created_at":"2026-10-18T03:12:22Z","user":{"type":"Bot"},"body":"Triage analysis."}]'
+    RUN_STARTED_AT="2026-10-18T03:10:00Z" run append_entity_meta "1009" "<!-- github-issue-triage:v1 -->" "unchanged" "claude" "$(usage_fixture)" "https://x/run/1"
+    [ "$status" -eq 0 ]
+    [[ "$(cat "${BATS_TEST_TMPDIR}/patch.log")" == *"issues/comments/2"* ]]
+    [[ "$(cat "${BATS_TEST_TMPDIR}/patch.body")" == "Triage analysis."*"| outcome | unchanged |"*"${LOOP_META_FOOTER}" ]]
+}
+
+@test "append_entity_meta fallback ignores comments from before the run and from non-Bot authors" {
+    mock_gh_issue_comments '[{"id":1,"created_at":"2026-10-18T03:00:00Z","user":{"type":"Bot"},"body":"older"},{"id":2,"created_at":"2026-10-18T03:12:22Z","user":{"type":"User"},"body":"a human"}]'
+    RUN_STARTED_AT="2026-10-18T03:10:00Z" run append_entity_meta "1009" "<!-- github-issue-triage:v1 -->" "unchanged" "claude" "$(usage_fixture)" "https://x/run/1"
+    [ "$status" -eq 0 ]
+    [[ $output == *"meta not appended"* ]]
+    [ ! -e "${BATS_TEST_TMPDIR}/patch.log" ]
 }
 
 @test "append_pr_review_meta no-ops for a non-numeric pr number" {

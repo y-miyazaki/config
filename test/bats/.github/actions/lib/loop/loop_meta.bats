@@ -6,7 +6,8 @@
 # Use cases:
 # - build_loop_meta_block carries engine model and tokens
 # - build_loop_meta_block renders caller rows above the engine rows
-# - build_loop_meta_block returns empty when nothing is known
+# - build_loop_meta_block ends with the one shared footer after the Meta details
+# - build_loop_meta_block emits only the footer when nothing is known
 # - build_loop_meta_block blockquotes every line of a multi-line reason
 # - build_loop_meta_block emits the idempotency marker
 # - loop_meta_reset clears queued caller rows
@@ -70,10 +71,20 @@ usage_fixture() {
     [[ $output == *"| skip_reason | none |"* ]]
 }
 
-@test "build_loop_meta_block returns empty when nothing is known" {
+@test "build_loop_meta_block emits only the footer when nothing is known" {
     run build_loop_meta_block "" "" "" "" "" ""
     [ "$status" -eq 0 ]
-    [ -z "$output" ]
+    [[ $output == *"<!-- loop-meta:v1 -->"* ]]
+    [[ $output == *"${LOOP_META_FOOTER}" ]]
+    [[ $output != *"<details>"* ]]
+}
+
+@test "build_loop_meta_block ends with the one shared footer after the Meta details" {
+    run build_loop_meta_block "push" "" "" "claude" "" ""
+    [ "$status" -eq 0 ]
+    [[ $LOOP_META_FOOTER == "<sub>Written by Loop Engineering (LE)"* ]]
+    [[ $output == *"</details>"$'\n\n'"${LOOP_META_FOOTER}" ]]
+    [ "$(grep -c 'Written by Loop Engineering' <<< "${output}")" -eq 1 ]
 }
 
 @test "loop_meta_reset clears queued caller rows" {

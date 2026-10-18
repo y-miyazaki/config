@@ -26,9 +26,15 @@
 #######################################
 # find_marker_comment_id: Resolve the newest Issue comment carrying a marker
 #
+# Description:
+#   An agent that posts through gh directly may omit the marker. When no marked
+#   comment exists and RUN_STARTED_AT is set, fall back to the newest Bot comment
+#   created since the run started (never a human comment, never one already carrying meta).
+#
 # Globals:
 #   GITHUB_TOKEN / GH_TOKEN - Token for gh
 #   REPOSITORY - owner/name
+#   RUN_STARTED_AT - ISO-8601 UTC run start (optional; enables the Bot-comment fallback)
 #
 # Arguments:
 #   $1 - Issue number
@@ -47,7 +53,7 @@
 function find_marker_comment_id {
     local issue_number="$1"
     local marker="$2"
-    local comments
+    local comments found
 
     if ! command -v gh > /dev/null 2>&1; then
         return 1
@@ -58,8 +64,21 @@ function find_marker_comment_id {
         return 0
     fi
 
-    jq -r --arg marker "${marker}" --arg meta "${LOOP_META_MARKER}" '
+    found="$(jq -r --arg marker "${marker}" --arg meta "${LOOP_META_MARKER}" '
         [ .[]? | select((.body // "") | contains($marker)) | select(((.body // "") | contains($meta)) | not) ]
+        | last
+        | .id // empty
+    ' <<< "${comments}" 2> /dev/null || true)"
+    if [[ -n ${found} || -z ${RUN_STARTED_AT:-} ]]; then
+        printf '%s' "${found}"
+        return 0
+    fi
+
+    jq -r --arg since "${RUN_STARTED_AT}" --arg meta "${LOOP_META_MARKER}" '
+        [ .[]?
+          | select((.user.type // "") == "Bot")
+          | select((.created_at // "") >= $since)
+          | select(((.body // "") | contains($meta)) | not) ]
         | last
         | .id // empty
     ' <<< "${comments}" 2> /dev/null || true

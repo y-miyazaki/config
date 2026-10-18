@@ -53,7 +53,7 @@ TRIGGER_COMMENT_ID="${TRIGGER_COMMENT_ID:-}"
 GITHUB_EVENT_NAME="${GITHUB_EVENT_NAME:-}"
 
 #######################################
-# Shared Created By footer (lib/loop/created_by.sh)
+# Shared loop meta block and footer (lib/loop/loop_meta.sh; usage labels from created_by.sh)
 #######################################
 _LOOP_CREATED_BY_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib/loop" && pwd)"
 # shellcheck source=../../lib/loop/created_by.sh
@@ -303,10 +303,7 @@ ${agent_summary}
 EOF
     fi
 
-    created_by="$(render_created_by_line "${AGENT_ENGINE}" "${USAGE_JSON}")"
-    if [[ -n ${created_by} ]]; then
-        printf '\n%s\n' "${created_by}"
-    fi
+    printf '\n%s\n' "${LOOP_META_FOOTER}"
 }
 
 #######################################

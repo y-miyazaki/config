@@ -357,6 +357,7 @@ jobs:
           LOOP_NAME: ${{ inputs.loop_name }}
           OUTCOME: ${{ needs.agent-l1.result == 'success' && 'unchanged' || 'error' }}
           REPOSITORY: ${{ github.repository }}
+          RUN_STARTED_AT: ${{ inputs.run_started_at }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           TARGET_JSON: ${{ inputs.target_json }}
           USAGE_JSON: ${{ needs.agent-l1.outputs.usage_json || '' }}
