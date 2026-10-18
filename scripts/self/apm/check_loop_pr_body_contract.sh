@@ -214,6 +214,7 @@ function check_loop_skill {
     check_automation_envelope "${skill}"
     check_template_link_placeholders "${skill}"
     check_template_link_rule "${skill}"
+    check_skill_link_guidance "${skill}"
 }
 
 #######################################
@@ -275,6 +276,52 @@ function check_required_file {
     if [[ ! -f ${full_path} ]]; then
         record_violation "Missing ${rel_path} for skill ${skill}"
     fi
+}
+
+#######################################
+# check_skill_link_guidance: Require SKILL.md and templates to carry the link/column rules
+#
+# Description:
+#   An agent only follows what its SKILL.md points at, so each skill that ships
+#   category-pr-body-links.md must list it and both PR body templates in SKILL.md,
+#   and each template must say to keep its table columns as written.
+#
+# Globals:
+#   SKILLS_ROOT
+#
+# Arguments:
+#   $1 - Skill name
+#
+# Outputs:
+#   None (records violations)
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function check_skill_link_guidance {
+    local skill="$1"
+    local skill_md rel_path full_path
+
+    loop_skill_uses_pr_body_links "${skill}" || return 0
+
+    skill_md="$(loop_skill_dir "${skill}")/SKILL.md"
+    if [[ -f ${skill_md} ]]; then
+        if ! grep -qF 'references/category-pr-body-links.md' "${skill_md}"; then
+            record_violation "${skill}/SKILL.md must list references/category-pr-body-links.md in its reference guide"
+        fi
+        if ! grep -qF 'assets/pr-body-template.md' "${skill_md}" || ! grep -qF 'assets/pr-body-template-survey.md' "${skill_md}"; then
+            record_violation "${skill}/SKILL.md must list assets/pr-body-template.md and assets/pr-body-template-survey.md in its reference guide"
+        fi
+    fi
+
+    for rel_path in assets/pr-body-template.md assets/pr-body-template-survey.md; do
+        full_path="$(loop_skill_dir "${skill}")/${rel_path}"
+        [[ -f ${full_path} ]] || continue
+        if ! grep -qF 'Keep the table columns as written' "${full_path}"; then
+            record_violation "${skill}/${rel_path} must say to keep the table columns as written"
+        fi
+    done
 }
 
 # check_survey_template: Validate survey PR body template headings

@@ -142,6 +142,8 @@ Every loop automation skill MUST:
 6. Keep `## Session Metrics` separate from PR-facing `## Summary` (no duplicate headings).
 7. Overview MUST satisfy the [Overview contract](#overview-contract) — trigger, problem, action in plain language.
 8. Ship `references/category-pr-body-links.md` with per-skill link rules — see each skill's file; enforced for presence and placeholder patterns by `check_loop_pr_body_contract.sh`.
+9. List `references/category-pr-body-links.md`, `assets/pr-body-template.md`, and `assets/pr-body-template-survey.md` in the `SKILL.md` reference guide (an agent follows only what `SKILL.md` names); enforced by `check_loop_pr_body_contract.sh`.
+10. Mark linkable items in templates with `<linked path>`, `<linked sha>`, `<linked workflow>`, or `<linked job>`, and state `Keep the table columns as written` in each template's rules block. Link and column drift is steered by these rules, not by a `validate_agent_report.sh` REJECT.
 
 ## Source of truth
 
