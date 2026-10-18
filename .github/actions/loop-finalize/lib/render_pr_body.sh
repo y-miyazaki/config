@@ -100,10 +100,11 @@ function redact_sensitive_text {
 #
 # Description:
 #   Wrap pre-extracted agent body text under a ## heading. Empty input yields
-#   no output.
+#   no output. Code-span paths and SHAs that name a changed file or a detected
+#   commit are linked (see linkify_agent_text).
 #
 # Globals:
-#   None
+#   See linkify_agent_text
 #
 # Arguments:
 #   $1 - Pre-extracted body text (no heading)
@@ -126,6 +127,7 @@ function render_agent_section {
     if [[ -z ${text} ]]; then
         return 0
     fi
+    text="$(linkify_agent_text "${text}")"
     printf '%s\n' "${heading}"
     printf '%s\n' "${text}"
     printf '\n'
@@ -251,6 +253,87 @@ function github_repo_web_base {
         return 1
     fi
     printf '%s/%s' "${GITHUB_SERVER_URL%/}" "${GITHUB_REPOSITORY}"
+}
+
+#######################################
+# linkify_agent_text: Link code-span paths and commit SHAs in agent report text
+#
+# Description:
+#   Agents often write file paths and SHAs as code spans, which are not
+#   clickable. This turns a code span into a markdown link only when it names a
+#   changed file (CHANGED_FILES_JSON) or a commit SHA that appears in the detect
+#   result (DETECT_RESULT_JSON), so example paths and unknown tokens stay as
+#   written. Existing links and fenced code blocks are left alone. A no-op when
+#   the repository or blob ref is unknown.
+#
+# Globals:
+#   BLOB_REF - Git ref for blob links
+#   CHANGED_FILES_JSON - JSON string array of changed paths
+#   DETECT_RESULT_JSON - Detect JSON; 40-hex SHAs found in it are linkable
+#   GITHUB_REPOSITORY - owner/repo
+#   GITHUB_SERVER_URL - GitHub host
+#
+# Arguments:
+#   $1 - Agent report text
+#
+# Outputs:
+#   Text with linkable code spans replaced by markdown links, to stdout
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function linkify_agent_text {
+    local text="${1:-}"
+    local base
+
+    if [[ -z ${text} || -z ${BLOB_REF} ]] || ! base="$(github_repo_web_base)"; then
+        printf '%s' "${text}"
+        return 0
+    fi
+
+    BASE="${base}" REF="${BLOB_REF}" PATHS_JSON="${CHANGED_FILES_JSON}" DETECT_JSON="${DETECT_RESULT_JSON}" \
+        python3 -I - "${text}" << 'PY'
+import json
+import os
+import re
+import sys
+from urllib.parse import quote
+
+text = sys.argv[1]
+base = os.environ["BASE"]
+ref = os.environ["REF"]
+try:
+    paths = {p for p in json.loads(os.environ.get("PATHS_JSON") or "[]") if isinstance(p, str)}
+except ValueError:
+    paths = set()
+shas = sorted(set(re.findall(r"\b[0-9a-f]{40}\b", os.environ.get("DETECT_JSON") or "")))
+
+
+def link(match):
+    token = match.group(1)
+    norm = token[2:] if token.startswith("./") else token
+    if norm in paths:
+        return "[%s](%s/blob/%s/%s)" % (token, base, ref, quote(norm, safe="/"))
+    if re.fullmatch(r"[0-9a-f]{7,40}", token):
+        for sha in shas:
+            if sha.startswith(token):
+                return "[%s](%s/commit/%s)" % (token, base, sha)
+    return match.group(0)
+
+
+out = []
+fenced = False
+for line in text.split("\n"):
+    if line.lstrip().startswith("```"):
+        fenced = not fenced
+        out.append(line)
+    elif fenced:
+        out.append(line)
+    else:
+        out.append(re.sub(r"(?<!\[)`([^`\n]+)`(?!\]\()", link, line))
+sys.stdout.write("\n".join(out))
+PY
 }
 
 #######################################

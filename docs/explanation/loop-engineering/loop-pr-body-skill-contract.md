@@ -155,6 +155,8 @@ Every loop automation skill MUST:
 | `scripts/self/apm/check_loop_pr_body_contract.sh`                                   | `scripts/self/apm/`                                             | one script                                                                     |
 | `.github/actions/loop-finalize/lib/render_pr_body.sh`                               | `.github/actions/`                                              | one composer                                                                   |
 
+`loop-finalize` also links what the agent left as a code span: a changed file path or a commit SHA found in the detect result becomes a markdown link in Overview, Summary, and Verification (`linkify_agent_text` in `render_pr_body.sh`). Unknown paths, example paths, existing links, and fenced code stay as written. Agents should still follow the link rules; this is a safety net, not a substitute.
+
 Edit link rules in the affected skill's `references/category-pr-body-links.md` directly. Templates mark linkable items with angle-bracket placeholders (`<linked path>`) only — not `https://github.com/org/repo/...` example links (markdown-link-check 404).
 
 ## Fixes / Deferred consistency
