@@ -54,7 +54,7 @@
 - **push で動く workflow:** allowlist に `.github/` を入れた caller(ci-sweeper)は、push したブランチの workflow が秘密情報を持って動くことを受け入れる(判断は自己申告の `verdict` だけ)。Create PR や `pr_push` の後に動く `pull_request` の workflow(例: `on-ci-security.yaml`)も、同じリポジトリのブランチのコードを秘密情報と一緒に動かす(この spec の前からある)。また、秘密情報を持つ push の workflow は、push された木のコードを動かしてはいけない。`on-ci-push-mise-update-lock.yaml:10-13` は全ブランチの `mise.toml` の変更で App の秘密鍵を持って `mise lock` を動かすので、`branches: [main]` に絞る(この spec の範囲外の別の修正)。
 - **ランタイムのトークン:** すべてのジョブにあり、Actions のキャッシュと artifact に書ける。キャッシュは第1節で止める。artifact は同じ run の中だけで使われ、finalize が検証する。bundle の名前は予測できるので、エージェントが先に同じ名前で上げ得る。上げるステップは `overwrite: true` にせず、既にあればエージェントのジョブを失敗させる。先に上げられても、finalize の検証の範囲を超えるものは push されない。
 - エンジンの認証情報 `AGENT_TOKEN` は、エージェントのジョブに残る。copilot エンジンでは、これが GitHub の PAT(`COPILOT_GITHUB_TOKEN`、`agent.sh:445`)で、ジョブの権限では制限されない。Copilot Requests だけに絞った fine-grained PAT にすることを、docs に書く。
-- `.claude/settings.json` の `Bash(bash:*)` などは、CI のエージェントにも読み込まれる。この spec の後は、ジョブに書き込みの認証情報がないので、GitHub への書き込みの抜け道にはならない。権限の4ファイル(CLAUDE.md の Permission parity)の見直しは別に扱う。
+- `.claude/settings.json` の `Bash(bash:*)` などは、CI のエージェントにも読み込まれる。この spec の後は、ジョブに書き込みの認証情報がないので、GitHub への書き込みの抜け道にはならない。権限の4ファイル(CLAUDE.md の Permission parity)の見直しは別に扱う。それまでの具体例: triage(L1)は、配信の spec で許可リストを読み取りに絞ったが、`--setting-sources project`(`agent.sh:57`)で読み込む `.claude/settings.json` が `gh api:*`・`gh issue comment:*`・`gh issue edit:*`・`gh label create:*` を許すため、書き込みを止めているのはプロンプトだけである(`Bash(gh api -X GET:*)` は後ろの `-X POST` でも一致し得る)。この spec の読み取り専用のトークンで、この抜け穴が塞がる。
 - REJECT のブランチを「人が調べるため」に push する挙動(`push.sh:21-23`)は変えない(push は finalize に移る)。
 
 ## 検証
