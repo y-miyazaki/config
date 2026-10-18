@@ -43,7 +43,7 @@ setup() {
     [[ $output == *"Unknown option: --bogus"* ]]
 }
 
-@test "parse_arguments refuses to run against \"/\" or \$HOME" {
+@test 'parse_arguments refuses to run against "/" or $HOME' {
     run bash -c "source '${CLEAN_SCRIPT}' && parse_arguments /"
     [ "$status" -ne 0 ]
     [[ $output == *"Refusing to clean unsafe root directory"* ]]
