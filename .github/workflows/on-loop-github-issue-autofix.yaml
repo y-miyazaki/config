@@ -71,7 +71,7 @@ jobs:
       # Autofix reads the Issue and checks for an existing PR that closes it; the
       # branch push and PR creation are done by the workflow, not by the agent.
       agent_tool_allowlist: |
-        Bash(gh api:*)
+        Bash(gh api -X GET:*)
         Bash(gh issue view:*)
         Bash(gh pr list:*)
         Bash(gh pr view:*)

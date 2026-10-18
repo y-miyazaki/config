@@ -118,10 +118,9 @@ jobs:
       # Revise reads the PR and its review threads; the push is done by the
       # workflow. No gh issue/label/release access.
       agent_tool_allowlist: |
-        Bash(gh api:*)
+        Bash(gh api -X GET:*)
         Bash(gh pr view:*)
         Bash(gh pr diff:*)
-        Bash(gh pr comment:*)
       agent_unchanged_verdict: REJECT
       budget_max_runs_per_day: 10
       budget_max_tokens_per_day: 1000000

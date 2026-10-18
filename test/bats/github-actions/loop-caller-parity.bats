@@ -1154,6 +1154,21 @@ triage_block() {
     grep -qxF 'Bash(gh label list:*)' <<< "${block}"
 }
 
+@test "L2 callers grant no write gh commands to the agent" {
+    local name wf block pat
+    for name in github-pr-revise github-issue-autofix ci-sweeper github-pr-review; do
+        wf="${ROOT}/.github/workflows/on-loop-${name}.yaml"
+        block="$(triage_block "${wf}" agent_tool_allowlist)"
+        [ -n "${block}" ]
+        for pat in 'Bash(gh api:*)' 'gh pr comment' 'gh issue comment' 'gh issue edit' 'gh label create'; do
+            if grep -qF "${pat}" <<< "${block}"; then
+                echo "${name}: agent_tool_allowlist grants ${pat}" >&2
+                return 1
+            fi
+        done
+    done
+}
+
 @test "triage caller intake admits needs-triage and triage:needs-info labels only" {
     local wf="${ROOT}/.github/workflows/on-loop-github-issue-triage.yaml" gate
     gate="$(awk '/^    if: >-$/ {f=1; next} f && /^    uses:/ {exit} f {print}' "${wf}")"

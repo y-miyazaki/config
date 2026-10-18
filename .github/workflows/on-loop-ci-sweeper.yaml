@@ -106,7 +106,7 @@ jobs:
       agent_maker_skill_name: ci-sweeper
       # Sweeper reads failing workflow runs and job logs; it never writes to GitHub.
       agent_tool_allowlist: |
-        Bash(gh api:*)
+        Bash(gh api -X GET:*)
         Bash(gh run list:*)
         Bash(gh run view:*)
       agent_unchanged_verdict: REJECT
@@ -114,7 +114,7 @@ jobs:
       budget_max_tokens_per_day: 1000000
       delivery: pr_create
       detect_branch_match: main
-      # agent_edit_denylist omitted: the platform default (lib/paths.sh DEFAULT_EXECUTE_DENYLIST) covers it
+      # agent_edit_denylist omitted: the platform default (DEFAULT_EXECUTE_DENYLIST in lib/loop/edit_paths.sh) covers it
       # detect_env_json: LEDGER/REJECT_*; workflow_run event keys (EVENT_/HEAD_*/WORKFLOW_*) when present
       # Keys must stay alphabetically ordered. Values via toJSON() so quotes/backslashes stay valid JSON.
       detect_env_json: |
