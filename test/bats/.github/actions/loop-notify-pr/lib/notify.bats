@@ -17,7 +17,7 @@
 # - build_comment_body shows Reason even when changed files exist
 # - build_comment_body redacts secrets in reject reason
 # - build_comment_body uses watch message when outcome is watch
-# - build_comment_body ends with the shared Loop Engineering footer and no Created By line
+# - build_comment_body ends with the shared Meta block and Loop Engineering footer, no Created By line
 # - resolve_actor uses login when gh api user succeeds
 # - resolve_actor falls back when gh api user fails with error JSON on stdout
 # - redact_sensitive_text redacts bearer tokens
@@ -62,12 +62,14 @@ teardown() {
     rm -f "${GITHUB_OUTPUT:-}"
 }
 
-@test "build_comment_body ends with the shared Loop Engineering footer and no Created By line" {
+@test "build_comment_body ends with the shared Meta block and Loop Engineering footer, no Created By line" {
     AGENT_ENGINE="cursor"
     USAGE_JSON='{"total_input_tokens":100000,"total_output_tokens":6000,"model":"Composer-2.5"}'
     run build_comment_body "loop-bot"
     [ "$status" -eq 0 ]
-    [[ $output == *"${LOOP_META_FOOTER}" ]]
+    [[ $output == *"<summary>Meta</summary>"* ]]
+    [[ $output == *"| engine | cursor |"* ]]
+    [[ $output == *"</details>"$'\n\n'"${LOOP_META_FOOTER}" ]]
     [[ $output != *"Created By"* ]]
 }
 

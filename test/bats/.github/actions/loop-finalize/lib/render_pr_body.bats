@@ -215,7 +215,7 @@ setup() {
     export USAGE_JSON=''
     run render_pr_body
     [ "$status" -eq 0 ]
-    [[ $output != *"<details>"* ]]
+    [[ $output == *"<summary>Meta</summary>"* ]]
     [[ $output == *"${LOOP_META_FOOTER}"* ]]
     [[ $output != *"Created By"* ]]
 }

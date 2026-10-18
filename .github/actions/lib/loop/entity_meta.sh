@@ -208,7 +208,7 @@ function entity_pr_number {
 }
 
 #######################################
-# find_marker_review_id: Resolve the newest Bot-authored pull request review
+# find_marker_review_id: Resolve the newest marker-tagged pull request review
 # carrying a marker (pages combined; meta-carrying reviews are not excluded so reruns stay idempotent)
 #
 # Globals:
@@ -243,10 +243,10 @@ function find_marker_review_id {
         return 0
     fi
 
-    # Only a Bot-authored review counts: a human can paste the marker into
-    # their own review, and meta must never be written onto it.
+    # Author is not checked: a PAT-posted review shows a human author, and the
+    # marker plus Meta and the footer are what mark it as the workflow's.
     jq -rs --arg marker "${marker}" '
-        [ .[][]? | select((.user.type? // "") == "Bot") | select((.body // "") | contains($marker)) ]
+        [ .[][]? | select((.body // "") | contains($marker)) ]
         | last
         | .id // empty
     ' <<< "${reviews}" 2> /dev/null || true

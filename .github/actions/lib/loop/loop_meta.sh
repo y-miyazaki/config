@@ -18,11 +18,11 @@
 #
 # Design Rules:
 #   - Meta is collapsed (summary text: Meta) and goes last; the change description stays the lead
-#   - LOOP_META_FOOTER closes every block, even when no row is known, so no surface lacks it
+#   - Meta and LOOP_META_FOOTER are unconditional: every surface carries both, no matter what is known
 #   - One `| Key | Value |` table: keys are plain snake_case, values are plain text
 #   - Engine, model, and token rows are always carried when the run reports them
 #   - Caller-specific rows are added with loop_meta_row before rendering
-#   - With no row, reason, or usage field known, emits the marker and the footer only
+#   - With nothing known the table still carries `outcome | unknown`
 #######################################
 
 _LOOP_META_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -54,8 +54,7 @@ LOOP_META_ROWS=()
 #   $6 - Loop run URL (optional)
 #
 # Outputs:
-#   Markdown block on stdout: marker, collapsed details when anything is known,
-#   then LOOP_META_FOOTER
+#   Markdown block on stdout: marker, collapsed Meta details, then LOOP_META_FOOTER
 #
 # Returns:
 #   0 on success
@@ -99,33 +98,29 @@ function build_loop_meta_block {
         rows+=("| run | [View run](${run_url}) |")
     fi
 
-    # outcome leads the table; it is not counted when deciding whether anything is known
-    if [[ ${#rows[@]} -gt 0 || -n ${reason} ]] && [[ -n ${outcome} ]]; then
-        rows=("| outcome | ${outcome} |" "${rows[@]}")
-    fi
+    # Meta and the footer are unconditional: a run with nothing to report still says
+    # who wrote the text. outcome leads the table; an unknown outcome reads "unknown".
+    outcome="${outcome:-unknown}"
+    rows=("| outcome | ${outcome} |" "${rows[@]}")
 
     {
         printf '%s\n' "${LOOP_META_MARKER}"
-        if [[ ${#rows[@]} -gt 0 || -n ${reason} ]]; then
-            printf '<details>\n'
-            printf '<summary>Meta</summary>\n\n'
-            if [[ ${#rows[@]} -gt 0 ]]; then
-                printf '%s\n' "| Key | Value |"
-                printf '%s\n' "| --- | --- |"
-                printf '%s\n' "${rows[@]}"
-                printf '\n'
-            fi
-            if [[ -n ${reason} ]]; then
-                printf '**Why this verdict**\n\n'
-                # Quote every line so multi-line checker reasons stay one block
-                # instead of collapsing into a run-on paragraph.
-                while IFS= read -r reason_line; do
-                    printf '> %s\n' "${reason_line}"
-                done <<< "${reason}"
-                printf '\n'
-            fi
-            printf '</details>\n\n'
+        printf '<details>\n'
+        printf '<summary>Meta</summary>\n\n'
+        printf '%s\n' "| Key | Value |"
+        printf '%s\n' "| --- | --- |"
+        printf '%s\n' "${rows[@]}"
+        printf '\n'
+        if [[ -n ${reason} ]]; then
+            printf '**Why this verdict**\n\n'
+            # Quote every line so multi-line checker reasons stay one block
+            # instead of collapsing into a run-on paragraph.
+            while IFS= read -r reason_line; do
+                printf '> %s\n' "${reason_line}"
+            done <<< "${reason}"
+            printf '\n'
         fi
+        printf '</details>\n\n'
         printf '%s\n' "${LOOP_META_FOOTER}"
     }
 }

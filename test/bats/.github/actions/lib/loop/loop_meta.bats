@@ -7,7 +7,7 @@
 # - build_loop_meta_block carries engine model and tokens
 # - build_loop_meta_block renders caller rows above the engine rows
 # - build_loop_meta_block ends with the one shared footer after the Meta details
-# - build_loop_meta_block emits only the footer when nothing is known
+# - build_loop_meta_block still renders Meta and the footer when nothing is known
 # - build_loop_meta_block blockquotes every line of a multi-line reason
 # - build_loop_meta_block emits the idempotency marker
 # - loop_meta_reset clears queued caller rows
@@ -71,12 +71,12 @@ usage_fixture() {
     [[ $output == *"| skip_reason | none |"* ]]
 }
 
-@test "build_loop_meta_block emits only the footer when nothing is known" {
+@test "build_loop_meta_block still renders Meta and the footer when nothing is known" {
     run build_loop_meta_block "" "" "" "" "" ""
     [ "$status" -eq 0 ]
-    [[ $output == *"<!-- loop-meta:v1 -->"* ]]
+    [[ $output == *"<summary>Meta</summary>"* ]]
+    [[ $output == *"| outcome | unknown |"* ]]
     [[ $output == *"${LOOP_META_FOOTER}" ]]
-    [[ $output != *"<details>"* ]]
 }
 
 @test "build_loop_meta_block ends with the one shared footer after the Meta details" {

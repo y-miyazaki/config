@@ -303,7 +303,9 @@ ${agent_summary}
 EOF
     fi
 
-    printf '\n%s\n' "${LOOP_META_FOOTER}"
+    # Same Meta block and footer as every other loop surface (footer is part of the block)
+    loop_meta_reset
+    printf '\n%s\n' "$(build_loop_meta_block "${OUTCOME}" "${VERDICT}" "" "${AGENT_ENGINE}" "${USAGE_JSON}" "${loop_run_url}")"
 }
 
 #######################################
