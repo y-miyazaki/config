@@ -10,17 +10,17 @@
     },
     "integration:dogfood/loop-delivery": {
       "pending": {
-        "sha": "ac80c55e4299a0ef04c764ed70649816b10a5136",
-        "pr": 1002,
-        "pr_url": "https://github.com/y-miyazaki/config/pull/1002",
+        "sha": "2462354351b4e349f3c19f4cf706ea3561c19838",
+        "pr": 1004,
+        "pr_url": "https://github.com/y-miyazaki/config/pull/1004",
         "loop_name": "changelog",
-        "created_at": "2026-10-18T00:58:27Z"
+        "created_at": "2026-10-18T01:16:13Z"
       },
-      "last_run": "2026-10-18T00:58:27Z",
+      "last_run": "2026-10-18T01:16:13Z",
       "outcome": "pr_created",
       "consecutive_failures": 0,
       "open_rejections": [],
-      "last_reject_reason": "Both prior rejections resolved: no invented 1.8.126 section, five commits under Unreleased with correct links and compare_url, and report now follows the apply-mode Overview/Summary/Verification contract"
+      "last_reject_reason": "CHANGELOG.md-only diff; 5 detect commits mapped with correct commit links into a detect-backed 1.8.127 section with footer link; released sections preserved; report matches apply-mode shape"
     }
   }
 }
