@@ -11,6 +11,7 @@
 # - action exposes message_json from the run step
 # - Run CLI Agent passes LOOP_MESSAGE_DIR and AGENT_MAKER_* (run.sh maps them onto the role vars) and
 #   never sets the role vars EFFORT / MAX_TURNS / MODEL directly
+# - setup actions do not use or save the Actions cache
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -65,4 +66,13 @@ ACTION_YML="$(bats_workspace_root)/.github/actions/loop-agent-once/action.yml"
     run grep -A2 '^  message_json:' "${ACTION_YML}"
     [ "${status}" -eq 0 ]
     [[ ${output} == *'value: ${{ steps.run.outputs.message_json }}'* ]]
+}
+
+@test "setup actions do not use or save the Actions cache" {
+    run grep -c 'enable-cache: true' "${ACTION_YML}"
+    [ "${output}" = "0" ]
+    run grep -c 'enable-cache: false' "${ACTION_YML}"
+    [ "${output}" = "1" ]
+    run grep -c 'package-manager-cache: false' "${ACTION_YML}"
+    [ "${output}" = "1" ]
 }

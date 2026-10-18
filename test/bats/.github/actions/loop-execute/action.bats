@@ -13,6 +13,7 @@
 # - Install CLI and Run Bounded Loop pass the renamed env vars; no step passes
 #   DETECT_RESULT_JSON (detect JSON comes from the handoff)
 # - no old input or env name remains in the file
+# - setup actions do not use or save the Actions cache
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -100,4 +101,13 @@ outcome_override:"* ]]
     done
     [ "${checked}" -eq 7 ]
     [[ ${output} != *"DETECT_RESULT_JSON"* ]]
+}
+
+@test "setup actions do not use or save the Actions cache" {
+    run grep -c 'enable-cache: true' "${ACTION_YML}"
+    [ "${output}" = "0" ]
+    run grep -c 'enable-cache: false' "${ACTION_YML}"
+    [ "${output}" = "1" ]
+    run grep -c 'package-manager-cache: false' "${ACTION_YML}"
+    [ "${output}" = "1" ]
 }

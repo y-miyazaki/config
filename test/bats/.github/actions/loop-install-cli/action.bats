@@ -6,6 +6,7 @@
 # Use cases:
 # - inputs are agent_cli_version / agent_engine (naming rule) in alphabetical order
 # - Install CLI passes AGENT_CLI_VERSION / AGENT_ENGINE to lib/install.sh
+# - setup actions do not use or save the Actions cache
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -33,4 +34,13 @@ ACTION_YML="$(bats_workspace_root)/.github/actions/loop-install-cli/action.yml"
         'AGENT_ENGINE: ${{ inputs.agent_engine }}')"
     run action_yml_step_env "${ACTION_YML}" "Install CLI"
     [ "${output}" = "${expected}" ]
+}
+
+@test "setup actions do not use or save the Actions cache" {
+    run grep -c 'enable-cache: true' "${ACTION_YML}"
+    [ "${output}" = "0" ]
+    run grep -c 'enable-cache: false' "${ACTION_YML}"
+    [ "${output}" = "1" ]
+    run grep -c 'package-manager-cache: false' "${ACTION_YML}"
+    [ "${output}" = "1" ]
 }
