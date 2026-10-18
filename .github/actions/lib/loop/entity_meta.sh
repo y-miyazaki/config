@@ -28,13 +28,15 @@
 #
 # Description:
 #   An agent that posts through gh directly may omit the marker. When no marked
-#   comment exists and RUN_STARTED_AT is set, fall back to the newest Bot comment
-#   created since the run started (never a human comment, never one already carrying meta).
+#   comment exists and RUN_STARTED_AT is set, fall back to the newest comment
+#   created since the run started, whoever the author is: a PAT-posted comment
+#   shows a human author, and Meta plus the footer are what mark it as the
+#   workflow's. A comment already carrying meta is never touched twice.
 #
 # Globals:
 #   GITHUB_TOKEN / GH_TOKEN - Token for gh
 #   REPOSITORY - owner/name
-#   RUN_STARTED_AT - ISO-8601 UTC run start (optional; enables the Bot-comment fallback)
+#   RUN_STARTED_AT - ISO-8601 UTC run start (optional; enables the newest-comment fallback)
 #
 # Arguments:
 #   $1 - Issue number
@@ -76,7 +78,6 @@ function find_marker_comment_id {
 
     jq -r --arg since "${RUN_STARTED_AT}" --arg meta "${LOOP_META_MARKER}" '
         [ .[]?
-          | select((.user.type // "") == "Bot")
           | select((.created_at // "") >= $since)
           | select(((.body // "") | contains($meta)) | not) ]
         | last

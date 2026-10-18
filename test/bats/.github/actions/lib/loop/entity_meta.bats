@@ -8,8 +8,8 @@
 # - entity_issue_number returns empty for non-issue keys
 # - append_entity_meta no-ops for a non-numeric issue number
 # - append_entity_meta reports when no marker comment exists
-# - append_entity_meta falls back to the newest Bot comment since the run started when the agent omitted the marker
-# - append_entity_meta fallback ignores comments from before the run and from non-Bot authors
+# - append_entity_meta falls back to the newest comment since the run started when the agent omitted the marker, whoever the author (PAT included)
+# - append_entity_meta fallback ignores comments from before the run and comments that already carry meta
 # - entity_pr_number extracts the number from an entity pr key
 # - append_pr_review_meta no-ops for a non-numeric pr number
 # - append_pr_review_meta reports when no marker review exists
@@ -121,16 +121,16 @@ EOF
     PATH="${mock_bin}:${PATH}"
 }
 
-@test "append_entity_meta falls back to the newest Bot comment since the run started when the agent omitted the marker" {
-    mock_gh_issue_comments '[{"id":1,"created_at":"2026-10-18T03:00:00Z","user":{"type":"Bot"},"body":"older"},{"id":2,"created_at":"2026-10-18T03:12:22Z","user":{"type":"Bot"},"body":"Triage analysis."}]'
+@test "append_entity_meta falls back to the newest comment since the run started when the agent omitted the marker" {
+    mock_gh_issue_comments '[{"id":1,"created_at":"2026-10-18T03:00:00Z","user":{"type":"Bot"},"body":"older"},{"id":2,"created_at":"2026-10-18T03:12:22Z","user":{"type":"User"},"body":"Triage analysis."}]'
     RUN_STARTED_AT="2026-10-18T03:10:00Z" run append_entity_meta "1009" "<!-- github-issue-triage:v1 -->" "unchanged" "claude" "$(usage_fixture)" "https://x/run/1"
     [ "$status" -eq 0 ]
     [[ "$(cat "${BATS_TEST_TMPDIR}/patch.log")" == *"issues/comments/2"* ]]
     [[ "$(cat "${BATS_TEST_TMPDIR}/patch.body")" == "Triage analysis."*"| outcome | unchanged |"*"${LOOP_META_FOOTER}" ]]
 }
 
-@test "append_entity_meta fallback ignores comments from before the run and from non-Bot authors" {
-    mock_gh_issue_comments '[{"id":1,"created_at":"2026-10-18T03:00:00Z","user":{"type":"Bot"},"body":"older"},{"id":2,"created_at":"2026-10-18T03:12:22Z","user":{"type":"User"},"body":"a human"}]'
+@test "append_entity_meta fallback ignores comments from before the run and comments that already carry meta" {
+    mock_gh_issue_comments '[{"id":1,"created_at":"2026-10-18T03:00:00Z","user":{"type":"User"},"body":"older"},{"id":2,"created_at":"2026-10-18T03:12:22Z","user":{"type":"User"},"body":"done\n\n<!-- loop-meta:v1 -->"}]'
     RUN_STARTED_AT="2026-10-18T03:10:00Z" run append_entity_meta "1009" "<!-- github-issue-triage:v1 -->" "unchanged" "claude" "$(usage_fixture)" "https://x/run/1"
     [ "$status" -eq 0 ]
     [[ $output == *"meta not appended"* ]]
