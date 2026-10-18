@@ -7,16 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-[Full diff](https://github.com/y-miyazaki/config/compare/af9ed8b2ba8e8cfaa162bd6be7e8ebb201e590b6...b6566a844dba52a1b4de8431056ae49e6c427471)
-
-### Changed
-
-- Increase agent_maker_max_turns to 15 across multiple workflows and configuration files (loop) ([5b1f7d8](https://github.com/y-miyazaki/config/commit/5b1f7d8e27c2c3b0949189b91633b97bfac535c9))
-- Reset consecutive failures in state-changelog.json and state-docs-updater.json (loop) ([dec0bbc](https://github.com/y-miyazaki/config/commit/dec0bbc24a584e3a2d44cf32985b32f339289ef9))
-- (goreleaser) Update goreleaser to v2.18.3 (#975) ([fc3d958](https://github.com/y-miyazaki/config/commit/fc3d958f21f460bb07690376055e60dbfe7dd202))
-- (loop) dogfood state branch (disposable, do not merge) ([0e27ebf](https://github.com/y-miyazaki/config/commit/0e27ebf569259d971b7eaef24fbfaec71f6509f7))
-
-## [1.8.126] - 2026-10-18
+[Full diff](https://github.com/y-miyazaki/config/compare/e7cf9e2c5a9c1c352d4e4e1c54ac710fd876cbb5...ac80c55e4299a0ef04c764ed70649816b10a5136)
 
 ### Fixed
 
@@ -24,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Increase agent_maker_max_turns to 15 across multiple workflows and configuration files (loop) ([5b1f7d8](https://github.com/y-miyazaki/config/commit/5b1f7d8e27c2c3b0949189b91633b97bfac535c9))
+- Reset consecutive failures in state-changelog.json and state-docs-updater.json (loop) ([dec0bbc](https://github.com/y-miyazaki/config/commit/dec0bbc24a584e3a2d44cf32985b32f339289ef9))
+- (goreleaser) Update goreleaser to v2.18.3 (#975) ([fc3d958](https://github.com/y-miyazaki/config/commit/fc3d958f21f460bb07690376055e60dbfe7dd202))
+- (loop) dogfood state branch (disposable, do not merge) ([0e27ebf](https://github.com/y-miyazaki/config/commit/0e27ebf569259d971b7eaef24fbfaec71f6509f7))
 - align pins to v1.8.126 (c215769) ([c408ad5](https://github.com/y-miyazaki/config/commit/c408ad59d40c74f79ad079e254d23395a6d91b52))
 - finalize all pins v1.8.126 (63e2d6a) ([c215769](https://github.com/y-miyazaki/config/commit/c215769da0d25b776f7e31daa237e09e6980470e))
 - pin all to release v1.8.126 (85e42fa) ([63e2d6a](https://github.com/y-miyazaki/config/commit/63e2d6a7d04483f416af763ae29c7729528f3efc))
@@ -2523,7 +2518,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update GitHub Actions to use loop-install-cli and other actions version 1.8.4 ([2c56aa0](https://github.com/y-miyazaki/config/commit/2c56aa01ad05ff9a45d6dd0dfb3f65b39a03766c))
 
-[1.8.126]: https://github.com/y-miyazaki/config/compare/v1.8.123...c408ad59d40c74f79ad079e254d23395a6d91b52
 [1.8.123]: https://github.com/y-miyazaki/config/compare/v1.8.121...518ff27a3a7232cbddf80fce343ead2a414fe90a
 [1.8.121]: https://github.com/y-miyazaki/config/compare/v1.8.120...5da13eb637a89cfa6d46d1a254ccb2463d87c4df
 [1.8.120]: https://github.com/y-miyazaki/config/compare/v1.8.119...fc7153542006aa1476d069debbd6e2b854463e8a
