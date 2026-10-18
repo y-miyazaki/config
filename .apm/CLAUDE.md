@@ -54,6 +54,23 @@ YAML `description` on those skills MUST mention conversation use first or equall
 
 ---
 
+## Loop PR body skills (MUST)
+
+Applies to skills that ship `references/category-pr-body-links.md` (`changelog`, `ci-sweeper`, `docs-updater`, `refactor`, `tech-debt`, `test-gap`, `github-issue-autofix`, `github-pr-revise`). Contract depth: [loop-pr-body-skill-contract](../docs/explanation/loop-engineering/loop-pr-body-skill-contract.md). Enforced by `scripts/self/apm/check_loop_pr_body_contract.sh` (runs in `sync_apm_artifacts.sh loop-contract` and Bats).
+
+| Rule                  | Requirement                                                                                                                                                                                                 |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Reference guide       | `SKILL.md` **MUST** list `references/category-pr-body-links.md`, `assets/pr-body-template.md`, and `assets/pr-body-template-survey.md` in its reference guide — an agent only follows what `SKILL.md` names |
+| Link everything       | Repository paths, commit SHAs, and workflow/job targets in Summary and Verification are markdown links per that skill's `category-pr-body-links.md`; a code span is not a link                              |
+| Template placeholders | Templates and `common-output-format*.md` mark linkable items with `<linked path>`, `<linked sha>`, `<linked workflow>`, `<linked job>` — **MUST NOT** use a backtick path or an example `org/repo` link     |
+| Template rules block  | Each template's leading comment carries the link rule and `Keep the table columns as written` — columns are not renamed, merged, or dropped (docs-updater's one-item bullet exception stays)                |
+| Format is not a gate  | Link and column drift is steered by the above, **not** by `validate_agent_report.sh` REJECT — a cosmetic miss must not cost a maker retry                                                                   |
+| Platform safety net   | `loop-finalize` (`linkify_agent_text`) links changed-file paths and detected SHAs the agent left unlinked. Maintainer-only: package sources **MUST NOT** rely on it or mention it                           |
+
+Adding a loop skill that ships `category-pr-body-links.md` means adding it to `LOOP_PR_BODY_LINKS_SKILLS` in the checker.
+
+---
+
 ## Redistribution (DIST) — maintainer judgment
 
 Enforce via PR review and this file. **Not** an `agent-skills-review` or `instructions-review` ItemID — those skills run in external repos and must stay generalized.
@@ -98,6 +115,7 @@ Path layout differs only in library import lines and `WORKSPACE_ROOT` depth for 
 | ------------------------------------- | ---------------------------------------------------------------------------------- |
 | Skill self-containment (all skills)   | This file — [§ Skill design (MUST)](#skill-design-must)                            |
 | Skill vs product, automation envelope | [apm-package-design.md](../docs/explanation/apm-package-design.md)                 |
+| Loop PR body rules (links, templates) | This file — [§ Loop PR body skills (MUST)](#loop-pr-body-skills-must)              |
 | Instruction sync                      | [instructions-sync-workflow.md](../docs/explanation/instructions-sync-workflow.md) |
 | Loop platform (this consumer)         | [Loop Engineering](../docs/explanation/loop-engineering/index.md)                  |
 | SKILL authoring stems                 | companion `agent-skills` rules; `agent-skills-review` skill                        |

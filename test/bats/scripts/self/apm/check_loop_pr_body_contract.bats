@@ -14,6 +14,8 @@
 # - check_loop_pr_body_contract validates test-gap required files
 # - check_loop_pr_body_contract requires templates to point at category-pr-body-links.md
 # - check_loop_pr_body_contract rejects backtick placeholders for linkable items in templates
+# - check_loop_pr_body_contract requires SKILL.md to list the link rules and both PR body templates
+# - check_loop_pr_body_contract requires templates to state the keep-table-columns rule
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -148,4 +150,27 @@ setup() {
     run env SKILLS_ROOT="${TEST_TMP}/skills" bash "${REPO_ROOT}/scripts/self/apm/check_loop_pr_body_contract.sh"
     [ "$status" -eq 1 ]
     [[ $output == *"docs-updater/assets/pr-body-template.md has a backtick path in a Summary table row"* ]]
+}
+
+@test "check_loop_pr_body_contract requires SKILL.md to list the link rules and both PR body templates" {
+    local skill_root="${TEST_TMP}/skills/refactor"
+    mkdir -p "${skill_root}/assets" "${skill_root}/references"
+    cp -R "$(apm_skill_dir refactor)/." "${skill_root}/"
+    sed -i '/category-pr-body-links.md/d; /assets\/pr-body-template-survey.md/d' "${skill_root}/SKILL.md"
+
+    run env SKILLS_ROOT="${TEST_TMP}/skills" bash "${REPO_ROOT}/scripts/self/apm/check_loop_pr_body_contract.sh"
+    [ "$status" -eq 1 ]
+    [[ $output == *"refactor/SKILL.md must list references/category-pr-body-links.md"* ]]
+    [[ $output == *"refactor/SKILL.md must list assets/pr-body-template.md and assets/pr-body-template-survey.md"* ]]
+}
+
+@test "check_loop_pr_body_contract requires templates to state the keep-table-columns rule" {
+    local skill_root="${TEST_TMP}/skills/tech-debt"
+    mkdir -p "${skill_root}/assets" "${skill_root}/references"
+    cp -R "$(apm_skill_dir tech-debt)/." "${skill_root}/"
+    sed -i '/Keep the table columns as written/d' "${skill_root}/assets/pr-body-template-survey.md"
+
+    run env SKILLS_ROOT="${TEST_TMP}/skills" bash "${REPO_ROOT}/scripts/self/apm/check_loop_pr_body_contract.sh"
+    [ "$status" -eq 1 ]
+    [[ $output == *"tech-debt/assets/pr-body-template-survey.md must say to keep the table columns as written"* ]]
 }
