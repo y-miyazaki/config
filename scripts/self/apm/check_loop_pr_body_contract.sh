@@ -132,6 +132,45 @@ function check_automation_envelope {
 }
 
 #######################################
+# check_comment_link_guidance: Require comment-posting skills to ship and list link rules
+#
+# Description:
+#   Skills that post comments or reviews instead of a PR body (github-issue-triage,
+#   github-pr-review) still write text that must carry links. They ship the same
+#   references/category-pr-body-links.md and must list it in SKILL.md.
+#
+# Globals:
+#   SKILLS_ROOT
+#   LOOP_COMMENT_LINKS_SKILLS
+#
+# Arguments:
+#   $1 - Skill name
+#
+# Outputs:
+#   None (records violations)
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function check_comment_link_guidance {
+    local skill="$1"
+    local skill_dir
+
+    skill_dir="$(loop_skill_dir "${skill}")"
+    if [[ ! -d ${skill_dir} ]]; then
+        record_violation "Missing skill directory ${skill} (SKILLS_ROOT=${SKILLS_ROOT:-unset}; resolved via apm_skill_root when unset)"
+        return 0
+    fi
+    if [[ ! -f ${skill_dir}/references/category-pr-body-links.md ]]; then
+        record_violation "${skill}/references/category-pr-body-links.md is missing"
+    fi
+    if ! grep -qF 'references/category-pr-body-links.md' "${skill_dir}/SKILL.md" 2> /dev/null; then
+        record_violation "${skill}/SKILL.md must list references/category-pr-body-links.md in its reference guide"
+    fi
+}
+
+#######################################
 # check_forbidden_patterns: Fail on deprecated Overview / template wording
 #
 # Globals:
@@ -502,6 +541,12 @@ declare -a REQUIRED_FILES=(
 )
 
 # Skills that ship category-pr-body-links.md (per-skill link rules).
+# Skills that post comments or reviews (no PR body template) but still ship link rules.
+declare -a LOOP_COMMENT_LINKS_SKILLS=(
+    github-issue-triage
+    github-pr-review
+)
+
 declare -a LOOP_PR_BODY_LINKS_SKILLS=(
     changelog
     ci-sweeper
@@ -613,12 +658,16 @@ function main {
         check_loop_skill "${skill}"
     done
 
+    for skill in "${LOOP_COMMENT_LINKS_SKILLS[@]}"; do
+        check_comment_link_guidance "${skill}"
+    done
+
     if [[ ${#VIOLATIONS[@]} -gt 0 ]]; then
         printf '%s\n' "${VIOLATIONS[@]}"
         return 1
     fi
 
-    printf 'loop PR body contract: OK (%d skills)\n' "${#LOOP_SKILLS[@]}"
+    printf 'loop PR body contract: OK (%d skills, %d comment skills)\n' "${#LOOP_SKILLS[@]}" "${#LOOP_COMMENT_LINKS_SKILLS[@]}"
     return 0
 }
 

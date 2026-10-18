@@ -39,8 +39,8 @@ metadata:
 - [common-output-format.md](references/common-output-format.md) (always read)
 - [category-input-schema.md](references/category-input-schema.md) (read when detect JSON is present)
 - [category-automation-envelope.md](references/category-automation-envelope.md) (read on automation path)
-- [category-pr-body-links.md](references/category-pr-body-links.md) (read at PR body synthesis)
-- `assets/pr-body-template.md` and `assets/pr-body-template-survey.md` (load at PR body synthesis; keep their headings and table columns as written)
+- [category-pr-body-links.md](references/category-pr-body-links.md) (read when synthesizing the PR body)
+- `assets/pr-body-template.md` and `assets/pr-body-template-survey.md` (read when synthesizing the PR body)
 
 ## Workflow
 

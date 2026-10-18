@@ -16,6 +16,7 @@
 # - check_loop_pr_body_contract rejects backtick placeholders for linkable items in templates
 # - check_loop_pr_body_contract requires SKILL.md to list the link rules and both PR body templates
 # - check_loop_pr_body_contract requires templates to state the keep-table-columns rule
+# - check_loop_pr_body_contract requires comment-posting skills to ship and list their link rules
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -173,4 +174,20 @@ setup() {
     run env SKILLS_ROOT="${TEST_TMP}/skills" bash "${REPO_ROOT}/scripts/self/apm/check_loop_pr_body_contract.sh"
     [ "$status" -eq 1 ]
     [[ $output == *"tech-debt/assets/pr-body-template-survey.md must say to keep the table columns as written"* ]]
+}
+
+@test "check_loop_pr_body_contract requires comment-posting skills to ship and list their link rules" {
+    local skill
+    for skill in github-issue-triage github-pr-review; do
+        local skill_root="${TEST_TMP}/skills/${skill}"
+        mkdir -p "${skill_root}"
+        cp -R "$(apm_skill_dir "${skill}")/." "${skill_root}/"
+    done
+    rm -f "${TEST_TMP}/skills/github-issue-triage/references/category-pr-body-links.md"
+    sed -i '/category-pr-body-links.md/d' "${TEST_TMP}/skills/github-pr-review/SKILL.md"
+
+    run env SKILLS_ROOT="${TEST_TMP}/skills" bash "${REPO_ROOT}/scripts/self/apm/check_loop_pr_body_contract.sh"
+    [ "$status" -eq 1 ]
+    [[ $output == *"github-issue-triage/references/category-pr-body-links.md is missing"* ]]
+    [[ $output == *"github-pr-review/SKILL.md must list references/category-pr-body-links.md"* ]]
 }
