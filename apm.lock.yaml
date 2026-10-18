@@ -421,8 +421,6 @@ dependencies:
   - .agents/skills/github-issue-triage/references/common-checklist.md
   - .agents/skills/github-issue-triage/references/common-output-format.md
   - .agents/skills/github-issue-triage/scripts/detect_issue.sh
-  - .agents/skills/github-issue-triage/scripts/hooks/README.md
-  - .agents/skills/github-issue-triage/scripts/hooks/on_detect_dispatch.sh
   - .agents/skills/github-issue-triage/scripts/issue_comment.sh
   - .agents/skills/github-issue-triage/scripts/label_fsm.sh
   - .agents/skills/github-issue-triage/scripts/labels.json
@@ -556,8 +554,6 @@ dependencies:
   - .claude/skills/github-issue-triage/references/common-checklist.md
   - .claude/skills/github-issue-triage/references/common-output-format.md
   - .claude/skills/github-issue-triage/scripts/detect_issue.sh
-  - .claude/skills/github-issue-triage/scripts/hooks/README.md
-  - .claude/skills/github-issue-triage/scripts/hooks/on_detect_dispatch.sh
   - .claude/skills/github-issue-triage/scripts/issue_comment.sh
   - .claude/skills/github-issue-triage/scripts/label_fsm.sh
   - .claude/skills/github-issue-triage/scripts/labels.json
@@ -676,7 +672,7 @@ dependencies:
     .agents/skills/github-issue-autofix/scripts/lib/terraform.sh: sha256:ea6645e2a7568d82745051d539eac406a35640b033dae8e5e72fbf0f96a56b55
     .agents/skills/github-issue-autofix/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .agents/skills/github-issue-autofix/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
-    .agents/skills/github-issue-triage/SKILL.md: sha256:7dd41e564c9f75253cb3189be9412ba6c15a079eca63742d217c045570cfa04a
+    .agents/skills/github-issue-triage/SKILL.md: sha256:5ffd7c6c85aa1e0636c5cc9a34892dff3a7c5ac4323ed3cae3bbb1bdae7f4fb1
     .agents/skills/github-issue-triage/eval.yaml: sha256:ca053ae3c564c3fb696cfc98c40f4c060f30e64c0151c8813aebd0d3091fa029
     .agents/skills/github-issue-triage/evals/tasks/agent-edit-allowed-false.yaml: sha256:5e8571dc0613b19f0d8c8c2f7a196472c1376b3726eb92a22133df3caec823d3
     .agents/skills/github-issue-triage/evals/tasks/basic.yaml: sha256:e54a772a5a9e1f28ef59891b8208a2328fc439a76cacc366818c45b081375903
@@ -684,14 +680,12 @@ dependencies:
     .agents/skills/github-issue-triage/evals/tasks/comment-history.yaml: sha256:4fe100239317580a4967081d7f9d557d7e7c33e2ca1e78c2e4342648de5f0db9
     .agents/skills/github-issue-triage/evals/tasks/noaction.yaml: sha256:36ff0e7c4a952789c50478344c3485f6f7609581fac31b5459a9134a67e0be6e
     .agents/skills/github-issue-triage/evals/tasks/trigger-negative.yaml: sha256:43c0179f2b2cd6f6fe7399db53f7f9cd2c98fa148ea948db39a5b9972aeb5a6b
-    .agents/skills/github-issue-triage/references/category-fsm.md: sha256:bbdf49db7492d76488e24a19934b0ff260764be959dd0ec8905d1c95c2e7ecb2
+    .agents/skills/github-issue-triage/references/category-fsm.md: sha256:e585ca28896d280f9758f41b123181f00b34d14075558ff5168816d78a43ee25
     .agents/skills/github-issue-triage/references/category-pr-body-links.md: sha256:858385f238c7624b5dacd16d16f5565634185efb0cdca47c21a91220bddf1f3a
     .agents/skills/github-issue-triage/references/category-prompt-rules.md: sha256:de5c14ac5189d4cc56ce604913fc78b43549b82ebc4711478bbdd719e6293e4d
     .agents/skills/github-issue-triage/references/common-checklist.md: sha256:61e1519a83531dcd872a0dc97896e3fd8927d40c2a11b96dfba4cdac3509ca8c
     .agents/skills/github-issue-triage/references/common-output-format.md: sha256:a694334df27befdc75d2fdd6fa02dde5ad565c6491776b9b3e9c71a7fb9dd689
-    .agents/skills/github-issue-triage/scripts/detect_issue.sh: sha256:f34934b78d48b244ce724fb3ef114da0f23764cc3d438b9321827bafbf523dde
-    .agents/skills/github-issue-triage/scripts/hooks/README.md: sha256:4f620cfe1b445df83443e9e99c6bc812df000d83f0280df5971df5b572f4abda
-    .agents/skills/github-issue-triage/scripts/hooks/on_detect_dispatch.sh: sha256:398c73ffae9f2d63ef624ac2d730df04ab59c783eade26d50d17a88a8baa52c8
+    .agents/skills/github-issue-triage/scripts/detect_issue.sh: sha256:4a54522ba77ab78b945488eb2ff171ba285ab3e524c7422532c951529a001f6c
     .agents/skills/github-issue-triage/scripts/issue_comment.sh: sha256:abee97c5cb2f018a0ac765449c39124f0cda5121b5e8a838efb98cac03bc7a23
     .agents/skills/github-issue-triage/scripts/label_fsm.sh: sha256:b4fe7d3b21aec402e0fbb7c56b1156b842023e0793d5da11dc64cc0e9fceed4b
     .agents/skills/github-issue-triage/scripts/labels.json: sha256:df7a567b6b08ca04392680d2cea769847401123dc3d3591a1dc28de5e53d4910
@@ -806,7 +800,7 @@ dependencies:
     .claude/skills/github-issue-autofix/scripts/lib/terraform.sh: sha256:ea6645e2a7568d82745051d539eac406a35640b033dae8e5e72fbf0f96a56b55
     .claude/skills/github-issue-autofix/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .claude/skills/github-issue-autofix/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
-    .claude/skills/github-issue-triage/SKILL.md: sha256:7dd41e564c9f75253cb3189be9412ba6c15a079eca63742d217c045570cfa04a
+    .claude/skills/github-issue-triage/SKILL.md: sha256:5ffd7c6c85aa1e0636c5cc9a34892dff3a7c5ac4323ed3cae3bbb1bdae7f4fb1
     .claude/skills/github-issue-triage/eval.yaml: sha256:ca053ae3c564c3fb696cfc98c40f4c060f30e64c0151c8813aebd0d3091fa029
     .claude/skills/github-issue-triage/evals/tasks/agent-edit-allowed-false.yaml: sha256:5e8571dc0613b19f0d8c8c2f7a196472c1376b3726eb92a22133df3caec823d3
     .claude/skills/github-issue-triage/evals/tasks/basic.yaml: sha256:e54a772a5a9e1f28ef59891b8208a2328fc439a76cacc366818c45b081375903
@@ -814,14 +808,12 @@ dependencies:
     .claude/skills/github-issue-triage/evals/tasks/comment-history.yaml: sha256:4fe100239317580a4967081d7f9d557d7e7c33e2ca1e78c2e4342648de5f0db9
     .claude/skills/github-issue-triage/evals/tasks/noaction.yaml: sha256:36ff0e7c4a952789c50478344c3485f6f7609581fac31b5459a9134a67e0be6e
     .claude/skills/github-issue-triage/evals/tasks/trigger-negative.yaml: sha256:43c0179f2b2cd6f6fe7399db53f7f9cd2c98fa148ea948db39a5b9972aeb5a6b
-    .claude/skills/github-issue-triage/references/category-fsm.md: sha256:bbdf49db7492d76488e24a19934b0ff260764be959dd0ec8905d1c95c2e7ecb2
+    .claude/skills/github-issue-triage/references/category-fsm.md: sha256:e585ca28896d280f9758f41b123181f00b34d14075558ff5168816d78a43ee25
     .claude/skills/github-issue-triage/references/category-pr-body-links.md: sha256:858385f238c7624b5dacd16d16f5565634185efb0cdca47c21a91220bddf1f3a
     .claude/skills/github-issue-triage/references/category-prompt-rules.md: sha256:de5c14ac5189d4cc56ce604913fc78b43549b82ebc4711478bbdd719e6293e4d
     .claude/skills/github-issue-triage/references/common-checklist.md: sha256:61e1519a83531dcd872a0dc97896e3fd8927d40c2a11b96dfba4cdac3509ca8c
     .claude/skills/github-issue-triage/references/common-output-format.md: sha256:a694334df27befdc75d2fdd6fa02dde5ad565c6491776b9b3e9c71a7fb9dd689
-    .claude/skills/github-issue-triage/scripts/detect_issue.sh: sha256:f34934b78d48b244ce724fb3ef114da0f23764cc3d438b9321827bafbf523dde
-    .claude/skills/github-issue-triage/scripts/hooks/README.md: sha256:4f620cfe1b445df83443e9e99c6bc812df000d83f0280df5971df5b572f4abda
-    .claude/skills/github-issue-triage/scripts/hooks/on_detect_dispatch.sh: sha256:398c73ffae9f2d63ef624ac2d730df04ab59c783eade26d50d17a88a8baa52c8
+    .claude/skills/github-issue-triage/scripts/detect_issue.sh: sha256:4a54522ba77ab78b945488eb2ff171ba285ab3e524c7422532c951529a001f6c
     .claude/skills/github-issue-triage/scripts/issue_comment.sh: sha256:abee97c5cb2f018a0ac765449c39124f0cda5121b5e8a838efb98cac03bc7a23
     .claude/skills/github-issue-triage/scripts/label_fsm.sh: sha256:b4fe7d3b21aec402e0fbb7c56b1156b842023e0793d5da11dc64cc0e9fceed4b
     .claude/skills/github-issue-triage/scripts/labels.json: sha256:df7a567b6b08ca04392680d2cea769847401123dc3d3591a1dc28de5e53d4910
@@ -4704,7 +4696,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:7dd41e564c9f75253cb3189be9412ba6c15a079eca63742d217c045570cfa04a
+  content_hash: sha256:5ffd7c6c85aa1e0636c5cc9a34892dff3a7c5ac4323ed3cae3bbb1bdae7f4fb1
 - kind: project-relative
   target: claude
   value: .claude/skills/github-issue-triage/eval.yaml
@@ -4776,7 +4768,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:bbdf49db7492d76488e24a19934b0ff260764be959dd0ec8905d1c95c2e7ecb2
+  content_hash: sha256:e585ca28896d280f9758f41b123181f00b34d14075558ff5168816d78a43ee25
 - kind: project-relative
   target: claude
   value: .claude/skills/github-issue-triage/references/category-pr-body-links.md
@@ -4821,25 +4813,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:f34934b78d48b244ce724fb3ef114da0f23764cc3d438b9321827bafbf523dde
-- kind: project-relative
-  target: claude
-  value: .claude/skills/github-issue-triage/scripts/hooks/README.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/github
-  active_owner: ./.apm/packages/github
-  content_hash: sha256:4f620cfe1b445df83443e9e99c6bc812df000d83f0280df5971df5b572f4abda
-- kind: project-relative
-  target: claude
-  value: .claude/skills/github-issue-triage/scripts/hooks/on_detect_dispatch.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/github
-  active_owner: ./.apm/packages/github
-  content_hash: sha256:398c73ffae9f2d63ef624ac2d730df04ab59c783eade26d50d17a88a8baa52c8
+  content_hash: sha256:4a54522ba77ab78b945488eb2ff171ba285ab3e524c7422532c951529a001f6c
 - kind: project-relative
   target: claude
   value: .claude/skills/github-issue-triage/scripts/issue_comment.sh
@@ -9987,7 +9961,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:7dd41e564c9f75253cb3189be9412ba6c15a079eca63742d217c045570cfa04a
+  content_hash: sha256:5ffd7c6c85aa1e0636c5cc9a34892dff3a7c5ac4323ed3cae3bbb1bdae7f4fb1
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-issue-triage/eval.yaml
@@ -10059,7 +10033,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:bbdf49db7492d76488e24a19934b0ff260764be959dd0ec8905d1c95c2e7ecb2
+  content_hash: sha256:e585ca28896d280f9758f41b123181f00b34d14075558ff5168816d78a43ee25
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-issue-triage/references/category-pr-body-links.md
@@ -10104,25 +10078,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:f34934b78d48b244ce724fb3ef114da0f23764cc3d438b9321827bafbf523dde
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/github-issue-triage/scripts/hooks/README.md
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/github
-  active_owner: ./.apm/packages/github
-  content_hash: sha256:4f620cfe1b445df83443e9e99c6bc812df000d83f0280df5971df5b572f4abda
-- kind: project-relative
-  target: cursor
-  value: .agents/skills/github-issue-triage/scripts/hooks/on_detect_dispatch.sh
-  runtime: null
-  scope: project
-  owners:
-  - ./.apm/packages/github
-  active_owner: ./.apm/packages/github
-  content_hash: sha256:398c73ffae9f2d63ef624ac2d730df04ab59c783eade26d50d17a88a8baa52c8
+  content_hash: sha256:4a54522ba77ab78b945488eb2ff171ba285ab3e524c7422532c951529a001f6c
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-issue-triage/scripts/issue_comment.sh
