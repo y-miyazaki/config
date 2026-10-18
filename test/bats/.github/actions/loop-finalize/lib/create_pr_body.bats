@@ -35,9 +35,9 @@ setup() {
 
     run create_pr_body
     [ "$status" -eq 0 ]
-    [[ $output == *"| \`engine\` | cursor |"* ]]
-    [[ $output == *"| \`model\` | Composer-2.5 |"* ]]
-    [[ $output == *"| \`tokens\` | In/Out 100K/100K |"* ]]
+    [[ $output == *"| engine | cursor |"* ]]
+    [[ $output == *"| model | Composer-2.5 |"* ]]
+    [[ $output == *"| tokens | In/Out 100K/100K |"* ]]
 }
 
 @test "create_pr_body carries outcome into the loop meta table" {
@@ -52,7 +52,7 @@ setup() {
     run create_pr_body
     [ "$status" -eq 0 ]
     [[ $output == *"<summary>Meta</summary>"* ]]
-    [[ $output == *"| \`outcome\` | pr_created |"* ]]
+    [[ $output == *"| outcome | pr_created |"* ]]
     [[ $output != *"<code>unknown</code>"* ]]
 }
 

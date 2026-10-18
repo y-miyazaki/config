@@ -232,7 +232,7 @@ teardown() {
     [ "$status" -eq 0 ]
     run sed -E 's/--body-file [^ ]+/--body-file BODY/' "${GH_ARGV_FILE}"
     [ "$output" = "pr create --repo example/repo --base main --head loop/test-branch --title chore: test --body-file BODY --label loop-automation" ]
-    grep -qxF -- '| `engine` | cursor |' "${body_file}"
+    grep -qxF -- '| engine | cursor |' "${body_file}"
 }
 
 @test "create_pr renders ci-sweeper Failure context from the handoff detect result" {

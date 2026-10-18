@@ -247,7 +247,11 @@ function build_done_reply_body {
             for ((i = 0; i < shown_count; i++)); do
                 file_entry="${files[i]}"
                 [[ -z ${file_entry} ]] && continue
-                echo "- \`${file_entry}\`"
+                if [[ -n ${commit_sha} && ${commit_url} == */commit/* ]]; then
+                    echo "- [${file_entry}](${commit_url%/commit/*}/blob/${commit_sha}/${file_entry})"
+                else
+                    echo "- \`${file_entry}\`"
+                fi
             done
             if [[ ${file_count} -gt ${shown_count} ]]; then
                 hidden_count=$((file_count - shown_count))

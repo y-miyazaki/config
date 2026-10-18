@@ -15,9 +15,9 @@ Deferred subsection name for this skill: `### Deferred` (not `### Skipped`).
 
 ### Candidates
 
-| Target         | Evidence                | Suggested tests       | Priority              |
-| -------------- | ----------------------- | --------------------- | --------------------- |
-| `path/to/file` | <churn, no paired test> | <behaviors to assert> | high \| medium \| low |
+| Target        | Evidence                | Suggested tests       | Priority              |
+| ------------- | ----------------------- | --------------------- | --------------------- |
+| <linked path> | <churn, no paired test> | <behaviors to assert> | high \| medium \| low |
 ```
 
 Survey rules: MUST NOT include `### Changes`, `### Deferred`, or `## Verification`. Zero candidates: Overview explains the no-op and omits `### Candidates`.
@@ -35,15 +35,15 @@ Survey rules: MUST NOT include `### Changes`, `### Deferred`, or `## Verificatio
 
 ### Changes
 
-| Target              | Gap                          | Tests added               |
-| ------------------- | ---------------------------- | ------------------------- |
-| `test/path/to/file` | <behavior that was untested> | <test names or behaviors> |
+| Target        | Gap                          | Tests added               |
+| ------------- | ---------------------------- | ------------------------- |
+| <linked path> | <behavior that was untested> | <test names or behaviors> |
 
 ### Deferred
 
-| Target         | Reason                         |
-| -------------- | ------------------------------ |
-| `path/to/file` | <needs production change, etc> |
+| Target        | Reason                         |
+| ------------- | ------------------------------ |
+| <linked path> | <needs production change, etc> |
 
 ## Verification
 

@@ -41,12 +41,12 @@ usage_fixture() {
     [ "$status" -eq 0 ]
     [[ $output == *"<summary>Meta</summary>"* ]]
     [[ $output == *"| Key | Value |"* ]]
-    [[ $output == *"| \`outcome\` | pr_created |"* ]]
-    [[ $output == *"| \`verdict\` | APPROVE |"* ]]
-    [[ $output == *"| \`engine\` | claude |"* ]]
-    [[ $output == *"| \`model\` | maker=claude-sonnet-5 checker=claude-opus-5 |"* ]]
-    [[ $output == *"| \`tokens\` | In/Out 58/15K |"* ]]
-    [[ $output == *"| \`run\` | [View run](https://x/run/1) |"* ]]
+    [[ $output == *"| outcome | pr_created |"* ]]
+    [[ $output == *"| verdict | APPROVE |"* ]]
+    [[ $output == *"| engine | claude |"* ]]
+    [[ $output == *"| model | maker=claude-sonnet-5 checker=claude-opus-5 |"* ]]
+    [[ $output == *"| tokens | In/Out 58/15K |"* ]]
+    [[ $output == *"| run | [View run](https://x/run/1) |"* ]]
     [[ $output != *"Loop details"* ]]
 }
 
@@ -63,11 +63,11 @@ usage_fixture() {
     loop_meta_row "Skip reason" "none"
     run build_loop_meta_block "push" "" "" "claude" "" ""
     [ "$status" -eq 0 ]
-    level_line="$(grep -n '| `level` | L2 |' <<< "${output}" | head -1 | cut -d: -f1)"
-    engine_line="$(grep -n '| `engine` |' <<< "${output}" | head -1 | cut -d: -f1)"
+    level_line="$(grep -n '| level | L2 |' <<< "${output}" | head -1 | cut -d: -f1)"
+    engine_line="$(grep -n '| engine |' <<< "${output}" | head -1 | cut -d: -f1)"
     [ "${level_line}" -lt "${engine_line}" ]
-    [[ $output == *"| \`target\` | integration:main |"* ]]
-    [[ $output == *"| \`skip_reason\` | none |"* ]]
+    [[ $output == *"| target | integration:main |"* ]]
+    [[ $output == *"| skip_reason | none |"* ]]
 }
 
 @test "build_loop_meta_block returns empty when nothing is known" {
@@ -81,7 +81,7 @@ usage_fixture() {
     loop_meta_reset
     run build_loop_meta_block "push" "" "" "claude" "" ""
     [ "$status" -eq 0 ]
-    [[ $output != *"| \`level\` |"* ]]
+    [[ $output != *"| level |"* ]]
 }
 
 @test "loop_meta_row skips empty labels and values" {
@@ -89,7 +89,6 @@ usage_fixture() {
     loop_meta_row "Level" ""
     run build_loop_meta_block "push" "" "" "claude" "" ""
     [ "$status" -eq 0 ]
-    [[ $output != *"| \`level\` |"* ]]
+    [[ $output != *"| level |"* ]]
     [[ $output != *"|  |"* ]]
-    [[ $output != *"| \`\` |"* ]]
 }

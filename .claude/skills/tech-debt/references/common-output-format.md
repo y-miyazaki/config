@@ -19,9 +19,9 @@ No file edits. **Do not write `agent_report_file`.** **Do not emit `### Changes`
 
 ### Candidates
 
-| Target      | Category   | Evidence            | Suggested approach         | Delegate                                       | Priority              |
-| ----------- | ---------- | ------------------- | -------------------------- | ---------------------------------------------- | --------------------- |
-| `path:line` | <category> | <snippet or metric> | <plain-language direction> | self \| refactor \| docs-updater \| human \| — | high \| medium \| low |
+| Target               | Category   | Evidence            | Suggested approach         | Delegate                                       | Priority              |
+| -------------------- | ---------- | ------------------- | -------------------------- | ---------------------------------------------- | --------------------- |
+| <linked path>:<line> | <category> | <snippet or metric> | <plain-language direction> | self \| refactor \| docs-updater \| human \| — | high \| medium \| low |
 
 ### Watch
 

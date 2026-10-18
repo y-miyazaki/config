@@ -213,6 +213,7 @@ function check_loop_skill {
     check_output_format_survey "${skill}"
     check_automation_envelope "${skill}"
     check_template_link_placeholders "${skill}"
+    check_template_link_rule "${skill}"
 }
 
 #######################################
@@ -343,6 +344,46 @@ function check_template_link_placeholders {
         [[ -f ${full_path} ]] || continue
         if grep -qF '](https://github.com/org/repo' "${full_path}"; then
             record_violation "Example org/repo markdown link in ${skill}/${rel_path} — use backtick placeholders (see category-pr-body-links.md)"
+        fi
+    done
+}
+
+#######################################
+# check_template_link_rule: Require link guidance and link placeholders in templates
+#
+# Description:
+#   Skills that ship category-pr-body-links.md must point their PR body templates at
+#   it and mark linkable Summary items with <linked ...> placeholders, because agents
+#   copy the template shape (a backtick placeholder yields a code span, not a link).
+#
+# Globals:
+#   SKILLS_ROOT
+#
+# Arguments:
+#   $1 - Skill name
+#
+# Outputs:
+#   None (records violations)
+#
+# Returns:
+#   0 on success
+#
+#######################################
+function check_template_link_rule {
+    local skill="$1"
+    local rel_path full_path
+
+    loop_skill_uses_pr_body_links "${skill}" || return 0
+
+    for rel_path in assets/pr-body-template.md assets/pr-body-template-survey.md; do
+        full_path="$(loop_skill_dir "${skill}")/${rel_path}"
+        [[ -f ${full_path} ]] || continue
+        if ! grep -qF 'category-pr-body-links.md' "${full_path}"; then
+            record_violation "${skill}/${rel_path} must point at category-pr-body-links.md"
+        fi
+        # shellcheck disable=SC2016 # literal backticks are the pattern being detected
+        if grep -qE '^\| `[^` ]*[/.][^` ]*` \||^\| `[0-9a-f]{7,}` \|' "${full_path}"; then
+            record_violation "${skill}/${rel_path} has a backtick path in a Summary table row — use a <linked path> or <linked sha> placeholder (see category-pr-body-links.md)"
         fi
     done
 }

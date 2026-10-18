@@ -170,9 +170,9 @@ setup() {
     export USAGE_JSON='{"total_input_tokens":100000,"total_output_tokens":6000,"model":"Composer-2.5"}'
     run render_pr_body
     [ "$status" -eq 0 ]
-    [[ $output == *"| \`engine\` | cursor |"* ]]
-    [[ $output == *"| \`model\` | Composer-2.5 |"* ]]
-    [[ $output == *"| \`tokens\` | In/Out 100K/6K |"* ]]
+    [[ $output == *"| engine | cursor |"* ]]
+    [[ $output == *"| model | Composer-2.5 |"* ]]
+    [[ $output == *"| tokens | In/Out 100K/6K |"* ]]
     [[ $output == *"<details>"* ]]
     # One meta block only: no stray Created By line beside the collapsed table.
     [[ $output != *"Created By"* ]]
@@ -191,7 +191,7 @@ setup() {
     [ "$status" -eq 0 ]
     [[ $output == *"## Failure context"* ]]
     [[ $output == *"<summary>Meta</summary>"* ]]
-    [[ $output == *"| \`level\` | L2 |"* ]]
+    [[ $output == *"| level | L2 |"* ]]
     [[ $output != *"## Summary"* ]]
     [[ $output != *"- Level:"* ]]
 }

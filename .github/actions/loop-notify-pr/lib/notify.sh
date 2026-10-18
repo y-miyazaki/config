@@ -104,7 +104,7 @@ source "${_LOOP_CREATED_BY_LIB}/trigger_thread.sh"
 function build_comment_body {
     local actor="$1"
     local marker branch to_branch workflow_name workflow_run_id workflow_url
-    local loop_run_url commit_url short_sha verdict_display fix_context agent_summary
+    local loop_run_url commit_url short_sha verdict_display branch_display fix_context agent_summary
     local agent_report_overview agent_report_summary has_agent_narrative
     local changed_files diff_stat fix_summary reject_display reason_display
     local timestamp bot_fix_pr next_step show_fix_context
@@ -137,6 +137,12 @@ function build_comment_body {
     else
         short_sha="-"
         commit_url="#"
+    fi
+
+    if [[ -n ${to_branch} && ${to_branch} != "-" && -n ${GITHUB_SERVER_URL} && -n ${REPOSITORY} ]]; then
+        branch_display="[${to_branch}](${GITHUB_SERVER_URL}/${REPOSITORY}/tree/${to_branch})"
+    else
+        branch_display="\`${to_branch}\`"
     fi
 
     if [[ -n ${VERDICT} ]]; then
@@ -225,7 +231,7 @@ ${marker}
 | Reason | ${reason_display} |
 | Actor | \`${actor}\` |
 | Commit | [\`${short_sha}\`](${commit_url}) |
-| Branch | \`${to_branch}\` |
+| Branch | ${branch_display} |
 | Failed run | [${workflow_name} #${workflow_run_id:-—}](${workflow_url}) |
 | Loop run | [actions run](${loop_run_url}) |
 | Attempt | ${ATTEMPTS:-—}/${AGENT_LOOP_MAX_ATTEMPTS:-—} |

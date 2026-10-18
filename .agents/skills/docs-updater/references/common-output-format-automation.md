@@ -29,9 +29,9 @@ No file edits.
 
 ### Candidates
 
-| Target           | Evidence                  | Suggested approach       | Priority              |
-| ---------------- | ------------------------- | ------------------------ | --------------------- |
-| `path/to/doc.md` | <stale/missing reference> | <plain-language fix dir> | high \| medium \| low |
+| Target        | Evidence                  | Suggested approach       | Priority              |
+| ------------- | ------------------------- | ------------------------ | --------------------- |
+| <linked path> | <stale/missing reference> | <plain-language fix dir> | high \| medium \| low |
 
 ### Watch
 
@@ -63,9 +63,9 @@ No file edits.
 
 ### Changes
 
-| Target           | What was wrong            | What changed            |
-| ---------------- | ------------------------- | ----------------------- |
-| `path/to/doc.md` | <stale/missing reference> | <minimal patch summary> |
+| Target        | What was wrong            | What changed            |
+| ------------- | ------------------------- | ----------------------- |
+| <linked path> | <stale/missing reference> | <minimal patch summary> |
 
 ### Deferred
 

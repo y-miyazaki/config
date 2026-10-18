@@ -27,9 +27,9 @@ No file edits. **Do not emit `### Changes`, `### Deferred`, or a Verification ta
 
 ### Watch
 
-| Target | Evidence                  | Why not now             |
-| ------ | ------------------------- | ----------------------- |
-| `path` | <plain-language evidence> | <plain-language reason> |
+| Target        | Evidence                  | Why not now             |
+| ------------- | ------------------------- | ----------------------- |
+| <linked path> | <plain-language evidence> | <plain-language reason> |
 
 ### Architecture Proposal
 
@@ -71,9 +71,9 @@ Survey runs internally first; final output uses the **apply** shape. **Do not em
 
 ### Deferred
 
-| Target | Why deferred            |
-| ------ | ----------------------- |
-| `path` | <plain-language reason> |
+| Target        | Why deferred            |
+| ------------- | ----------------------- |
+| <linked path> | <plain-language reason> |
 
 ## Verification
 
