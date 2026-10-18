@@ -1,5 +1,5 @@
 name: loop-finalize
-description: "Finalize a loop run per delivery: push or PR, state, optional finalize hook."
+description: "Finalize a loop run per delivery: push, PR, Issue comment, or PR review, state, optional finalize hook."
 
 inputs:
   agent_engine:
@@ -18,7 +18,7 @@ inputs:
     description: "SHA to record in per-target state"
     required: true
   delivery:
-    description: "Declared delivery (pr_create | pr_push | none); every step branches on this value only"
+    description: "Declared delivery (pr_create | pr_push | issue_comment | pr_review | none); every step branches on this value only"
     required: true
   execute_branch:
     default: ""
@@ -27,6 +27,10 @@ inputs:
   finalize_commit_paths:
     default: ""
     description: "Comma-separated paths to commit with state after the finalize hook"
+    required: false
+  finalize_label_allowlist:
+    default: ""
+    description: "Newline-separated labels a delivered message may add or remove (delivery issue_comment | pr_review)"
     required: false
   finalize_outcome_override:
     default: ""
@@ -57,6 +61,10 @@ inputs:
   loop_name:
     default: ""
     description: "Loop name / pattern (e.g. docs-updater)"
+    required: false
+  message_json:
+    default: ""
+    description: "Loop message from the agent job ({body, labels}); materialized into LOOP_MESSAGE_DIR before the finalize hook"
     required: false
   notify_context_json:
     default: "{}"
@@ -124,7 +132,7 @@ outputs:
     value: ${{ steps.failure_diag.outputs.failure_stage }}
   outcome:
     description: "Final outcome written to state"
-    value: ${{ steps.outcome.outputs.value }}
+    value: ${{ steps.deliver.outputs.outcome || steps.outcome.outputs.value }}
   pr_number:
     description: "Number of created PR (empty if not created)"
     value: ${{ steps.pr.outputs.number }}
@@ -134,6 +142,17 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Materialize Message
+      shell: bash
+      env:
+        LOOP_MESSAGE_DIR: ${{ runner.temp }}/loop-message
+        MESSAGE_JSON: ${{ inputs.message_json }}
+      run: |
+        set -euo pipefail
+        # shellcheck disable=SC1091
+        source "${GITHUB_ACTION_PATH}/../lib/loop/loop_message.sh"
+        loop_message_from_json "${MESSAGE_JSON}" "${LOOP_MESSAGE_DIR}"
+
     - name: Parse Target
       id: target
       shell: bash
@@ -193,6 +212,7 @@ runs:
         FINALIZE_SCRIPT: ${{ inputs.finalize_script }}
         GH_TOKEN: ${{ inputs.github_token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
+        LOOP_MESSAGE_DIR: ${{ runner.temp }}/loop-message
         LOOP_NAME: ${{ inputs.loop_name }}
         OUTCOME: ${{ steps.outcome.outputs.value }}
         RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -200,18 +220,41 @@ runs:
         TARGET_JSON: ${{ inputs.target_json }}
         USAGE_JSON: ${{ inputs.usage_json }}
         VERDICT: ${{ inputs.verdict }}
+      run: bash "${FINALIZE_SCRIPT}"
+
+    - name: Deliver Message
+      id: deliver
+      if: >-
+        (inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review') &&
+        inputs.agent_result == 'success' &&
+        inputs.verdict != 'REJECT'
+      shell: bash
+      env:
+        AGENT_ENGINE: ${{ inputs.agent_engine }}
+        DELIVERY: ${{ inputs.delivery }}
+        FINALIZE_LABEL_ALLOWLIST: ${{ inputs.finalize_label_allowlist }}
+        GH_TOKEN: ${{ inputs.github_token }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json
+        LOOP_MESSAGE_DIR: ${{ runner.temp }}/loop-message
+        LOOP_NAME: ${{ inputs.loop_name }}
+        OUTCOME: ${{ steps.outcome.outputs.value }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        TARGET_JSON: ${{ inputs.target_json }}
+        USAGE_JSON: ${{ inputs.usage_json }}
+        VERDICT: ${{ inputs.verdict }}
       run: |
         set -euo pipefail
-        # The hook posts the loop's message itself; hand it the Meta block and footer so
-        # they go out in that one message instead of a second edit afterwards.
+        loop_action_lib="${GITHUB_ACTION_PATH}/../lib/loop"
         # shellcheck disable=SC1091
-        source "${GITHUB_ACTION_PATH}/../lib/loop/created_by.sh"
+        source "${loop_action_lib}/created_by.sh"
         # shellcheck disable=SC1091
-        source "${GITHUB_ACTION_PATH}/../lib/loop/loop_meta.sh"
-        loop_meta_reset
-        LOOP_META_BLOCK="$(build_loop_meta_block "${OUTCOME}" "${VERDICT}" "" "${AGENT_ENGINE}" "${USAGE_JSON}" "${RUN_URL}")"
-        export LOOP_META_BLOCK
-        bash "${FINALIZE_SCRIPT}"
+        source "${loop_action_lib}/loop_meta.sh"
+        # shellcheck disable=SC1091
+        source "${loop_action_lib}/failure_record.sh"
+        # shellcheck disable=SC1091
+        source "${loop_action_lib}/deliver_message.sh"
+        deliver_loop_message
 
     - name: Push to Target Branch
       id: push_target
@@ -275,7 +318,7 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         LOOP_NAME: ${{ inputs.loop_name }}
         OPEN_REJECTIONS: ${{ inputs.open_rejections }}
-        OUTCOME: ${{ steps.outcome.outputs.value }}
+        OUTCOME: ${{ steps.deliver.outputs.outcome || steps.outcome.outputs.value }}
         PENDING_PR_NUMBER: ${{ steps.pr.outputs.number || '' }}
         PENDING_PR_URL: ${{ steps.pr.outputs.url || '' }}
         REJECT_REASON: ${{ inputs.reject_reason }}
@@ -288,7 +331,7 @@ runs:
       run: bash "${GITHUB_ACTION_PATH}/lib/write_state.sh"
 
     - name: Delete Agent Branch
-      if: inputs.branch != '' && (inputs.verdict == 'REJECT' || inputs.delivery == 'none')
+      if: always() && inputs.branch != '' && (inputs.verdict == 'REJECT' || inputs.delivery == 'none' || inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review')
       shell: bash
       env:
         AGENT_BRANCH: ${{ inputs.branch }}

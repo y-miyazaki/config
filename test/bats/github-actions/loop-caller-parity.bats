@@ -7,6 +7,7 @@
 # - Callers declare delivery and level as required with no default
 # - agent-l1 gives Run Agent Once the entity handoff key and output file so the comment is posted once, with Meta and the footer
 # - No workflow step edits a message a loop already posted (no Append Loop Meta step)
+# - No loop-finalize step or lib/loop script edits a posted comment or review
 # - Callers pass the detect outputs delivery and pr_auto_merge straight through (no auto_merge or finalize_enabled expression)
 # - ci-loop-agent derives the handoff key, checkout ref and base from target_json and fails closed when it is empty
 # - finalize-l2 always runs loop-finalize; loop-run-log receives state_branch with no fallback expression
@@ -876,6 +877,12 @@ dogfood_value() {
 
 @test "no tracked file outside docs/superpowers names finalize_hook_script" {
     run git -C "${ROOT}" grep -l -e finalize_hook_script -e FINALIZE_HOOK_SCRIPT -- . ':!docs/superpowers' ':!.agents' ':!.claude/skills' ':!apm_modules' ':!apm.lock.yaml' ':!.apm/packages/github/.apm/skills/github-pr-review/scripts/post_review.sh' ':!test/bats/github-actions/loop-caller-parity.bats' ':!scripts/self/ci/loop_input_topology.py'
+    [ "${status}" -eq 1 ]
+    [ -z "${output}" ]
+}
+
+@test "no loop-finalize step or lib/loop script edits a posted comment or review" {
+    run grep -nE -e '-X PATCH' -e '--method PATCH' -e 'edit-last' -e 'pulls/[^ ]*/reviews/[0-9]' "${ROOT}/.github/actions/loop-finalize/action.yml" "${ROOT}"/.github/actions/lib/loop/*.sh
     [ "${status}" -eq 1 ]
     [ -z "${output}" ]
 }

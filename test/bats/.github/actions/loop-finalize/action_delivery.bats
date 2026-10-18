@@ -4,6 +4,7 @@
 # Tests for delivery branching in .github/actions/loop-finalize/action.yml
 #
 # Use cases:
+# - Materialize Message and Deliver Message wire the loop message; outcome output follows the delivered outcome
 # - inputs are the delivery contract (delivery, pr_auto_merge, state_branch, renamed
 #   finalize_* / agent_engine / pr_labels) in alphabetical order; removed inputs are gone
 # - push, PR creation, and branch deletion branch on inputs.delivery only
@@ -63,9 +64,9 @@ step_if() {
     local expected
     expected="$(printf '%s\n' \
         agent_engine agent_result branch current_sha delivery execute_branch \
-        finalize_commit_paths finalize_outcome_override finalize_script \
-        github_token handoff_dir handoff_key has_changes level loop_name \
-        notify_context_json open_rejections pr_auto_merge pr_body pr_draft \
+        finalize_commit_paths finalize_label_allowlist finalize_outcome_override \
+        finalize_script github_token handoff_dir handoff_key has_changes level \
+        loop_name message_json notify_context_json open_rejections pr_auto_merge pr_body pr_draft \
         pr_labels pr_title reject_reason skip_reason state_branch state_file \
         target_json usage_json verdict)"
     run action_input_names
@@ -89,9 +90,74 @@ step_if() {
     [[ ${output} != *"DETECT_RESULT_JSON"* ]]
 }
 
-@test "delete agent branch keys on REJECT or delivery none" {
+@test "delete agent branch keys on REJECT or a delivery that never lands the branch" {
     run step_if "Delete Agent Branch"
-    [ "${output}" = "inputs.branch != '' && (inputs.verdict == 'REJECT' || inputs.delivery == 'none')" ]
+    [ "${output}" = "always() && inputs.branch != '' && (inputs.verdict == 'REJECT' || inputs.delivery == 'none' || inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review')" ]
+}
+
+@test "deliver message env is alphabetical and uses the planned outcome" {
+    run step_env "Deliver Message"
+    [ "${status}" -eq 0 ]
+    local expected
+    expected="$(cat <<'EOF2'
+AGENT_ENGINE: ${{ inputs.agent_engine }}
+DELIVERY: ${{ inputs.delivery }}
+FINALIZE_LABEL_ALLOWLIST: ${{ inputs.finalize_label_allowlist }}
+GH_TOKEN: ${{ inputs.github_token }}
+GITHUB_REPOSITORY: ${{ github.repository }}
+LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json
+LOOP_MESSAGE_DIR: ${{ runner.temp }}/loop-message
+LOOP_NAME: ${{ inputs.loop_name }}
+OUTCOME: ${{ steps.outcome.outputs.value }}
+RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+TARGET_JSON: ${{ inputs.target_json }}
+USAGE_JSON: ${{ inputs.usage_json }}
+VERDICT: ${{ inputs.verdict }}
+EOF2
+)"
+    [ "${output}" = "${expected}" ]
+}
+
+@test "deliver message runs for issue_comment and pr_review after a successful, non-REJECT agent" {
+    run step_if "Deliver Message"
+    [ "${output}" = "(inputs.delivery == 'issue_comment' || inputs.delivery == 'pr_review') && inputs.agent_result == 'success' && inputs.verdict != 'REJECT'" ]
+}
+
+@test "materialize message writes message_json into LOOP_MESSAGE_DIR" {
+    local script="${BATS_TEST_TMPDIR}/materialize.sh"
+    awk '
+        /^    - name: / { in_step = ($0 == "    - name: Materialize Message"); in_run = 0; next }
+        in_step && /^      run: \|$/ { in_run = 1; next }
+        in_step && in_run && /^        / { sub(/^        /, ""); print; next }
+        in_step && in_run { in_run = 0 }
+    ' "${ACTION_YML}" > "${script}"
+    [ -s "${script}" ]
+    run env GITHUB_ACTION_PATH="$(bats_workspace_root)/.github/actions/loop-finalize" \
+        LOOP_MESSAGE_DIR="${BATS_TEST_TMPDIR}/msg" MESSAGE_JSON='{"body":"x","labels":null}' \
+        bash "${script}"
+    [ "${status}" -eq 0 ]
+    [ "$(cat "${BATS_TEST_TMPDIR}/msg/message.md")" = "x" ]
+}
+
+@test "materialize message is the first step and has the message env" {
+    run awk '/^    - name: /{print; exit}' "${ACTION_YML}"
+    [ "${output}" = "    - name: Materialize Message" ]
+    run step_env "Materialize Message"
+    [ "${output}" = $'LOOP_MESSAGE_DIR: ${{ runner.temp }}/loop-message\nMESSAGE_JSON: ${{ inputs.message_json }}' ]
+}
+
+@test "outcome output and write state use the delivered outcome" {
+    run grep -c 'value: ${{ steps.deliver.outputs.outcome || steps.outcome.outputs.value }}' "${ACTION_YML}"
+    [ "${output}" = "1" ]
+    run step_env "Write State"
+    [[ ${output} == *$'OUTCOME: ${{ steps.deliver.outputs.outcome || steps.outcome.outputs.value }}'* ]]
+}
+
+@test "steps run in spec order" {
+    local expected
+    expected="Materialize Message, Parse Target, Resolve State File, Determine Outcome, Resolve State Write Mode, Run Finalize Hook, Deliver Message, Push to Target Branch, Create PR, Enable Auto-Merge, Write State, Delete Agent Branch, Export Failure Diagnostics"
+    run bash -c "awk '/^    - name: /{sub(/^    - name: /,\"\"); print}' '${ACTION_YML}' | paste -sd, - | sed 's/,/, /g'"
+    [ "${output}" = "${expected}" ]
 }
 
 @test "enable auto-merge runs only when pr_auto_merge is true" {

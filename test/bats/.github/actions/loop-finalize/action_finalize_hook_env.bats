@@ -8,7 +8,7 @@
 # - FINALIZE_SCRIPT is inputs.finalize_script
 # - GH_TOKEN is the resolved inputs.github_token
 # - GITHUB_REPOSITORY is github.repository
-# - the hook gets AGENT_ENGINE, USAGE_JSON and RUN_URL, and the step builds LOOP_META_BLOCK for it
+# - the hook gets LOOP_MESSAGE_DIR to write its message into; the step builds no LOOP_META_BLOCK
 # - env keys stay in alphabetical order (ORD-01)
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -69,11 +69,11 @@ finalize_hook_if() {
     [ "${output}" = "inputs.finalize_script != ''" ]
 }
 
-@test "finalize hook receives the data for, and builds, LOOP_META_BLOCK" {
+@test "finalize hook gets LOOP_MESSAGE_DIR and no LOOP_META_BLOCK" {
     run finalize_hook_env
     [ "${status}" -eq 0 ]
-    [[ ${output} == *$'AGENT_ENGINE: ${{ inputs.agent_engine }}'* ]]
-    [[ ${output} == *$'USAGE_JSON: ${{ inputs.usage_json }}'* ]]
-    [[ ${output} == *'RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'* ]]
-    awk '/^    - name: Run Finalize Hook/{f=1;next} f&&/^    - name:/{exit} f' "${ACTION_YML}" | grep -q 'export LOOP_META_BLOCK'
+    [[ ${output} == *$'LOOP_MESSAGE_DIR: ${{ runner.temp }}/loop-message'* ]]
+    [[ ${output} != *"LOOP_META_BLOCK"* ]]
+    run grep -c 'LOOP_META_BLOCK' "${ACTION_YML}"
+    [ "${output}" = "0" ]
 }
