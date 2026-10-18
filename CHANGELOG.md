@@ -16,6 +16,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (goreleaser) Update goreleaser to v2.18.3 (#975) ([fc3d958](https://github.com/y-miyazaki/config/commit/fc3d958f21f460bb07690376055e60dbfe7dd202))
 - (loop) dogfood state branch (disposable, do not merge) ([0e27ebf](https://github.com/y-miyazaki/config/commit/0e27ebf569259d971b7eaef24fbfaec71f6509f7))
 
+## [1.8.129] - 2026-10-18
+
+### Fixed
+
+- (loop) keep commit SHAs through detect slimming so the report links them ([2b0812c](https://github.com/y-miyazaki/config/commit/2b0812c168409a907b87470d98ef847dfa2093ad))
+
+### Changed
+
+- align pins to v1.8.129 (a38dd2c) ([f4b5000](https://github.com/y-miyazaki/config/commit/f4b50006abf40f2fa908334d43e7098ee162fb93))
+- finalize all pins v1.8.129 (c455154) ([a38dd2c](https://github.com/y-miyazaki/config/commit/a38dd2c1cf795eb2a37fa3e6b8b567dbb287f875))
+- pin all to release v1.8.129 (1766d1a) ([c455154](https://github.com/y-miyazaki/config/commit/c455154afd545bc57c6f82cb2c67421aba248959))
+- pin all to v1.8.129 (82f074d) ([1766d1a](https://github.com/y-miyazaki/config/commit/1766d1a6ec30b3a48d8aa75536e52d244ad83356))
+- (loop) dogfood raise test-gap daily run budget (disposable, do not merge) ([82f074d](https://github.com/y-miyazaki/config/commit/82f074dcb97f8f889f957b87c6631daef9b5e01a))
+
+## [1.8.128] - 2026-10-18
+
+### Changed
+
+- align pins to v1.8.128 (b671ddc) ([640d401](https://github.com/y-miyazaki/config/commit/640d401e9cb3669d401dd99b4486f6be2af31610))
+
 ## [1.8.123] - 2026-10-17
 
 ### Fixed
@@ -2510,6 +2530,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update GitHub Actions to use loop-install-cli and other actions version 1.8.4 ([2c56aa0](https://github.com/y-miyazaki/config/commit/2c56aa01ad05ff9a45d6dd0dfb3f65b39a03766c))
 
+[1.8.129]: https://github.com/y-miyazaki/config/compare/v1.8.128...f4b50006abf40f2fa908334d43e7098ee162fb93
+[1.8.128]: https://github.com/y-miyazaki/config/compare/v1.8.123...640d401e9cb3669d401dd99b4486f6be2af31610
 [1.8.123]: https://github.com/y-miyazaki/config/compare/v1.8.121...518ff27a3a7232cbddf80fce343ead2a414fe90a
 [1.8.121]: https://github.com/y-miyazaki/config/compare/v1.8.120...5da13eb637a89cfa6d46d1a254ccb2463d87c4df
 [1.8.120]: https://github.com/y-miyazaki/config/compare/v1.8.119...fc7153542006aa1476d069debbd6e2b854463e8a
