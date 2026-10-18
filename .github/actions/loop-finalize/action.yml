@@ -6,6 +6,14 @@ inputs:
     default: ""
     description: "AI engine slug for Created By footer (e.g. cursor)"
     required: false
+  agent_failure_message:
+    default: ""
+    description: "Failure message (stage) from the agent job (loop-execute failure_message / failure_stage); recorded when no finalize step recorded a failure"
+    required: false
+  agent_failure_stage:
+    default: ""
+    description: "Failure message (stage) from the agent job (loop-execute failure_message / failure_stage); recorded when no finalize step recorded a failure"
+    required: false
   agent_result:
     default: "success"
     description: "Result of the agent job (success/failure/cancelled/skipped)"
@@ -125,14 +133,14 @@ outputs:
     description: "Commit SHA on target branch after delivery pr_push (empty when not pushed)"
     value: ${{ steps.push_target.outputs.commit_sha }}
   failure_message:
-    description: "Truncated finalize failure message for run log"
+    description: "Redacted, truncated failure message for the run log (empty when nothing failed)"
     value: ${{ steps.failure_diag.outputs.failure_message }}
   failure_stage:
-    description: "Finalize failure stage when a step fails (empty on success)"
+    description: "Failure stage for the run log: the finalize record, else the agent stage, agent_execute, or finalize (empty when nothing failed)"
     value: ${{ steps.failure_diag.outputs.failure_stage }}
   outcome:
-    description: "Final outcome written to state"
-    value: ${{ steps.deliver.outputs.outcome || steps.outcome.outputs.value }}
+    description: "Final outcome for the run log: error when an earlier step failed or was cancelled, else the delivered or determined outcome"
+    value: ${{ steps.run_outcome.outputs.outcome }}
   pr_number:
     description: "Number of created PR (empty if not created)"
     value: ${{ steps.pr.outputs.number }}
@@ -352,6 +360,19 @@ runs:
           exit 1
         fi
         gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${AGENT_BRANCH}" 2>/dev/null || true
+
+    - name: Resolve Run Outcome
+      if: always()
+      id: run_outcome
+      shell: bash
+      env:
+        ACTION_STATUS: ${{ github.action_status }}
+        AGENT_FAILURE_MESSAGE: ${{ inputs.agent_failure_message }}
+        AGENT_FAILURE_STAGE: ${{ inputs.agent_failure_stage }}
+        AGENT_RESULT: ${{ inputs.agent_result }}
+        DELIVERED_OUTCOME: ${{ steps.deliver.outputs.outcome || steps.outcome.outputs.value }}
+        LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json
+      run: bash "${GITHUB_ACTION_PATH}/lib/resolve_run_outcome.sh"
 
     - name: Export Failure Diagnostics
       if: always()

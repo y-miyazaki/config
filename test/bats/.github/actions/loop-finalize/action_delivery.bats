@@ -11,6 +11,7 @@
 # - Enable Auto-Merge runs only on inputs.pr_auto_merge == 'true'
 # - no step reads a finalize strategy or an old strategy value
 # - Create PR resolves detect JSON from the handoff (no detect_result_json input)
+# - Resolve Run Outcome always runs right before Export Failure Diagnostics and owns the outcome output
 # - Write State reads the required state_branch and passes finalize_commit_paths
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -63,7 +64,7 @@ step_if() {
 @test "action inputs are the delivery contract in alphabetical order" {
     local expected
     expected="$(printf '%s\n' \
-        agent_engine agent_result branch current_sha delivery execute_branch \
+        agent_engine agent_failure_message agent_failure_stage agent_result branch current_sha delivery execute_branch \
         finalize_commit_paths finalize_label_allowlist finalize_outcome_override \
         finalize_script github_token handoff_dir handoff_key has_changes level \
         loop_name message_json notify_context_json open_rejections pr_auto_merge pr_body pr_draft \
@@ -146,16 +147,18 @@ EOF2
     [ "${output}" = $'LOOP_MESSAGE_DIR: ${{ runner.temp }}/loop-message\nMESSAGE_JSON: ${{ inputs.message_json }}' ]
 }
 
-@test "outcome output and write state use the delivered outcome" {
-    run grep -c 'value: ${{ steps.deliver.outputs.outcome || steps.outcome.outputs.value }}' "${ACTION_YML}"
+@test "outcome output comes from Resolve Run Outcome and write state keeps the delivered outcome" {
+    run grep -c 'value: ${{ steps.run_outcome.outputs.outcome }}' "${ACTION_YML}"
     [ "${output}" = "1" ]
+    run grep -c 'value: ${{ steps.deliver.outputs.outcome || steps.outcome.outputs.value }}' "${ACTION_YML}"
+    [ "${output}" = "0" ]
     run step_env "Write State"
     [[ ${output} == *$'OUTCOME: ${{ steps.deliver.outputs.outcome || steps.outcome.outputs.value }}'* ]]
 }
 
 @test "steps run in spec order" {
     local expected
-    expected="Materialize Message, Parse Target, Resolve State File, Determine Outcome, Resolve State Write Mode, Run Finalize Hook, Deliver Message, Push to Target Branch, Create PR, Enable Auto-Merge, Write State, Delete Agent Branch, Export Failure Diagnostics"
+    expected="Materialize Message, Parse Target, Resolve State File, Determine Outcome, Resolve State Write Mode, Run Finalize Hook, Deliver Message, Push to Target Branch, Create PR, Enable Auto-Merge, Write State, Delete Agent Branch, Resolve Run Outcome, Export Failure Diagnostics"
     run bash -c "awk '/^    - name: /{sub(/^    - name: /,\"\"); print}' '${ACTION_YML}' | paste -sd, - | sed 's/,/, /g'"
     [ "${output}" = "${expected}" ]
 }
@@ -192,4 +195,48 @@ EOF2
     [[ ${output} == *$'STATE_BRANCH: ${{ inputs.state_branch }}'* ]]
     [[ ${output} != *"BASE_BRANCH"* ]]
     [[ ${output} != *"STATE_PUSH_BRANCH"* ]]
+}
+
+@test "every failure record step uses the same LOOP_FAILURE_FILE" {
+    local step count=0
+    for step in "Deliver Message" "Create PR" "Resolve Run Outcome" "Export Failure Diagnostics"; do
+        run step_env "${step}"
+        [[ ${output} == *$'LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json'* ]]
+        count=$((count + 1))
+    done
+    [ "${count}" -eq 4 ]
+}
+
+@test "resolve run outcome always runs with the action status and the delivered outcome" {
+    run step_if "Resolve Run Outcome"
+    [ "${output}" = "always()" ]
+    local expected
+    expected="$(cat <<'EOF2'
+ACTION_STATUS: ${{ github.action_status }}
+AGENT_FAILURE_MESSAGE: ${{ inputs.agent_failure_message }}
+AGENT_FAILURE_STAGE: ${{ inputs.agent_failure_stage }}
+AGENT_RESULT: ${{ inputs.agent_result }}
+DELIVERED_OUTCOME: ${{ steps.deliver.outputs.outcome || steps.outcome.outputs.value }}
+LOOP_FAILURE_FILE: ${{ runner.temp }}/loop-finalize-failure.json
+EOF2
+)"
+    run step_env "Resolve Run Outcome"
+    [ "${output}" = "${expected}" ]
+}
+
+@test "resolve run outcome runs the lib script" {
+    local cmd
+    cmd="$(awk '
+        /^    - name: / { in_step = ($0 == "    - name: Resolve Run Outcome"); next }
+        in_step && /^      run: / { sub(/^      run: /, ""); print }
+    ' "${ACTION_YML}")"
+    [ -n "${cmd}" ]
+    run env GITHUB_ACTION_PATH="$(bats_workspace_root)/.github/actions/loop-finalize" \
+        ACTION_STATUS=failure DELIVERED_OUTCOME=pr_created AGENT_RESULT=success \
+        LOOP_FAILURE_FILE="${BATS_TEST_TMPDIR}/failure.json" \
+        GITHUB_OUTPUT="${BATS_TEST_TMPDIR}/output" \
+        bash -c "${cmd}"
+    [ "${status}" -eq 0 ]
+    grep -qx 'outcome=error' "${BATS_TEST_TMPDIR}/output"
+    grep -q '"finalize"' "${BATS_TEST_TMPDIR}/failure.json"
 }
