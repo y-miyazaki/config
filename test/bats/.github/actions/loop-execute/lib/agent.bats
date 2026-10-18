@@ -16,8 +16,9 @@ bats_require_minimum_version 1.5.0
 # - run_agent opens one usage session per invocation and tags it with USAGE_ROLE
 # - run_agent loads project settings but never grants workspace trust
 # - run_agent passes the fixed read baseline plus caller rules, and the fixed deny list
-# - the fixed deny list leaves the read-only gh rules callers declare reachable and
-#   neither fixed list names a consumer path
+# - the fixed deny list blocks --output writes from git diff/log/show and env dumps,
+#   leaves the platform's read commands and the read-only gh rules callers declare
+#   reachable, and neither fixed list names a consumer path
 # - run_agent leaves the copilot/codex/cursor arguments free of claude permission flags
 # - run_agent reads AGENT_ENGINE / AGENT_TOOL_ALLOWLIST, not the legacy ENGINE /
 #   AGENT_ALLOWED_TOOLS names
@@ -33,13 +34,45 @@ source "${_bats_support}/support/common.bash"
 # Fixed values copied from the plan, not derived from agent.sh, so a drift in
 # CLAUDE_PLATFORM_*_RULES fails these tests.
 EXPECTED_ALLOW_BASELINE='Bash(git diff:*) Bash(git log:*) Bash(git show:*) Bash(git status:*)'
-EXPECTED_DENY_RULES='Bash(curl:*) Bash(gh api *--method*) Bash(gh api *-X DELETE*) Bash(gh api *-X PATCH*) Bash(gh api *-X POST*) Bash(gh api *-X PUT*) Bash(gh issue close:*) Bash(gh issue comment:*) Bash(gh issue create:*) Bash(gh issue delete:*) Bash(gh issue edit:*) Bash(gh label create:*) Bash(gh label delete:*) Bash(gh label edit:*) Bash(gh pr close:*) Bash(gh pr comment:*) Bash(gh pr create:*) Bash(gh pr edit:*) Bash(gh pr merge:*) Bash(gh pr review:*) Bash(gh release create:*) Bash(gh release delete:*) Bash(gh release edit:*) Bash(gh release upload:*) Bash(gh run cancel:*) Bash(gh run rerun:*) Bash(gh secret:*) Bash(gh variable:*) Bash(gh workflow run:*) Bash(git diff *--output*) Bash(git push:*) Bash(printenv:*) Bash(sudo:*) Bash(wget:*)'
+EXPECTED_DENY_RULES='Bash(curl:*) Bash(env:*) Bash(gh api *--method*) Bash(gh api *-X DELETE*) Bash(gh api *-X PATCH*) Bash(gh api *-X POST*) Bash(gh api *-X PUT*) Bash(gh issue close:*) Bash(gh issue comment:*) Bash(gh issue create:*) Bash(gh issue delete:*) Bash(gh issue edit:*) Bash(gh label create:*) Bash(gh label delete:*) Bash(gh label edit:*) Bash(gh pr close:*) Bash(gh pr comment:*) Bash(gh pr create:*) Bash(gh pr edit:*) Bash(gh pr merge:*) Bash(gh pr review:*) Bash(gh release create:*) Bash(gh release delete:*) Bash(gh release edit:*) Bash(gh release upload:*) Bash(gh run cancel:*) Bash(gh run rerun:*) Bash(gh secret:*) Bash(gh variable:*) Bash(gh workflow run:*) Bash(git diff *--output*) Bash(git log *--output*) Bash(git push:*) Bash(git show *--output*) Bash(printenv:*) Bash(sudo:*) Bash(wget:*)'
 
 setup() {
     bats_source_rel ".github/actions/loop-execute/lib/usage.sh"
     bats_source_rel ".github/actions/loop-execute/lib/agent.sh"
     reset_usage_totals
     FIXTURE="$(bats_workspace_root)/test/fixtures/loop-execute/cursor-stream-json-usage.ndjson"
+}
+
+# _deny_rule_matching: Print the first platform deny rule that matches a command
+#
+# Arguments:
+#   $1 - Command text as the agent would write it
+#
+# Returns:
+#   0 when a rule matches (printed), 1 when none does
+_deny_rule_matching() {
+    local cmd="$1" deny_rule pattern
+
+    for deny_rule in "${CLAUDE_PLATFORM_DENY_RULES[@]}"; do
+        pattern="${deny_rule#Bash(}"
+        pattern="${pattern%)}"
+        # ":*" means the same as a trailing " *" and also matches the bare command.
+        if [[ ${pattern} == *':*' ]]; then
+            pattern="${pattern%:\*}"
+            # shellcheck disable=SC2053
+            if [[ ${cmd} == ${pattern} || ${cmd} == ${pattern}' '* ]]; then
+                echo "${deny_rule}"
+                return 0
+            fi
+            continue
+        fi
+        # shellcheck disable=SC2053
+        if [[ ${cmd} == ${pattern} ]]; then
+            echo "${deny_rule}"
+            return 0
+        fi
+    done
+    return 1
 }
 
 # _stub_claude_engine: Stub the claude CLI and MCP helpers so run_agent records its args
@@ -196,6 +229,19 @@ STUB
     [[ "$(cat "${wt}/keep.txt")" == "dirty" ]]
 }
 
+@test "platform deny rules block --output file writes from git diff, log and show" {
+    local cmd
+
+    for cmd in 'git diff --output=/tmp/x HEAD' 'git log -1 --format=x --output=/tmp/x' \
+        'git show -s --format=x --output=/tmp/x HEAD' 'env' 'env FOO=1 bash' 'printenv'; do
+        run _deny_rule_matching "${cmd}"
+        [ "${status}" -eq 0 ] || {
+            echo "no deny rule matches: ${cmd}" >&2
+            return 1
+        }
+    done
+}
+
 @test "platform deny rules do not cover the read-only gh rules callers declare" {
     local read_rule cmd deny_rule pattern
 
@@ -218,11 +264,24 @@ STUB
     done
 }
 
+@test "platform deny rules leave the platform's own read commands reachable" {
+    local cmd
+
+    for cmd in "git diff --name-only origin/main...HEAD -- . ':!.loop/'" \
+        'git show 0123abc:path/to/file.sh' 'git log --oneline' 'git status --porcelain' \
+        'gh api -X GET repos/o/r/pulls/1/files --paginate' 'gh pr view 1 --json body,comments'; do
+        if run _deny_rule_matching "${cmd}" && [ "${status}" -eq 0 ]; then
+            echo "${output} denies ${cmd}" >&2
+            return 1
+        fi
+    done
+}
+
 @test "platform rules name no consumer path" {
     local rule
 
     [ "${#CLAUDE_PLATFORM_ALLOW_RULES[@]}" -eq 4 ]
-    [ "${#CLAUDE_PLATFORM_DENY_RULES[@]}" -eq 34 ]
+    [ "${#CLAUDE_PLATFORM_DENY_RULES[@]}" -eq 37 ]
     for rule in "${CLAUDE_PLATFORM_ALLOW_RULES[@]}" "${CLAUDE_PLATFORM_DENY_RULES[@]}"; do
         case "${rule}" in
             *.agents/* | *.claude/* | *.apm/* | *scripts/* | *skills/*)

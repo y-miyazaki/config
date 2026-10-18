@@ -30,9 +30,11 @@ CLAUDE_PLATFORM_ALLOW_RULES=(
 )
 
 # Commands no claude session may run: GitHub writes, push, outbound transfer,
-# environment dumps, privilege escalation, and git diff --output file writes.
+# environment dumps, privilege escalation, and git diff/log/show --output file
+# writes.
 CLAUDE_PLATFORM_DENY_RULES=(
     'Bash(curl:*)'
+    'Bash(env:*)'
     'Bash(gh api *--method*)'
     'Bash(gh api *-X DELETE*)'
     'Bash(gh api *-X PATCH*)'
@@ -62,7 +64,9 @@ CLAUDE_PLATFORM_DENY_RULES=(
     'Bash(gh variable:*)'
     'Bash(gh workflow run:*)'
     'Bash(git diff *--output*)'
+    'Bash(git log *--output*)'
     'Bash(git push:*)'
+    'Bash(git show *--output*)'
     'Bash(printenv:*)'
     'Bash(sudo:*)'
     'Bash(wget:*)'

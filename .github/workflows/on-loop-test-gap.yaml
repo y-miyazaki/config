@@ -63,7 +63,7 @@ jobs:
       agent_maker_instructions: |
         Select exactly one under-tested target and add tests for it.
         Phase 1: shell scripts with paired Bats suites only. Add or extend `.bats` files under `test/bats/` mirroring the script path.
-        Follow the shell-script-validation skill and the Bats rules (every script needs a paired suite).
+        Follow the shell-script-validation skill's rules without running its validate script, and the Bats rules (every script needs a paired suite).
         Do not select a target whose paired test file path appears in `ledger.processed[]` (adding another new test file for that same target also counts as selecting it again) unless you can state a new reason in the PR body.
         You cannot run the tests here. Do not claim you ran them; state the command CI will run and the expected result.
         Do not edit production code. Report a suspected production bug under Deferred.
