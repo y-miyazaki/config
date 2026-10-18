@@ -581,7 +581,7 @@ dogfood_value() {
         name="${name#on-loop-}"
         case "${name}" in
             github-pr-revise) expected="${revise}" ;;
-            github-issue-triage) expected='none L1' ;;
+            github-issue-triage) expected='issue_comment L1' ;;
             github-pr-review) expected='pr_review L2' ;;
             changelog | ci-sweeper | docs-updater | github-issue-autofix | refactor | tech-debt | test-gap)
                 expected='pr_create L2'
@@ -961,4 +961,45 @@ dogfood_value() {
     run grep -nE -e '-X PATCH' -e '--method PATCH' -e 'edit-last' -e 'pulls/[^ ]*/reviews/[0-9]' "${ROOT}/.github/actions/loop-finalize/action.yml" "${ROOT}"/.github/actions/lib/loop/*.sh
     [ "${status}" -eq 1 ]
     [ -z "${output}" ]
+}
+
+# triage_block FILE KEY: print the block scalar lines of KEY in the triage caller
+triage_block() {
+    awk -v key="      $2: |" '
+        $0 == key {f=1; next}
+        f && /^        / {sub(/^        /, ""); print; next}
+        f {exit}
+    ' "$1"
+}
+
+@test "triage caller delivers issue_comment with the label allowlist" {
+    local wf="${ROOT}/.github/workflows/on-loop-github-issue-triage.yaml"
+    [ "$(dogfood_value "${wf}" delivery)" = "issue_comment" ]
+    run triage_block "${wf}" finalize_label_allowlist
+    [ "${status}" -eq 0 ]
+    [ "${output}" = "$(printf '%s\n' needs-triage bug feature question documentation triage:needs-info triage:ready triage:failed)" ]
+    ! grep -q autofix <<<"${output}"
+}
+
+@test "triage caller grants no write gh commands to the agent" {
+    local wf="${ROOT}/.github/workflows/on-loop-github-issue-triage.yaml" block
+    block="$(triage_block "${wf}" agent_tool_allowlist)"
+    [ -n "${block}" ]
+    for pat in 'gh issue edit' 'gh label create' 'gh issue comment' 'Bash(gh api:*)'; do
+        if grep -qF "${pat}" <<<"${block}"; then
+            echo "agent_tool_allowlist grants ${pat}" >&2
+            return 1
+        fi
+    done
+    grep -qxF 'Bash(gh api -X GET:*)' <<<"${block}"
+    grep -qxF 'Bash(gh issue view:*)' <<<"${block}"
+    grep -qxF 'Bash(gh label list:*)' <<<"${block}"
+}
+
+@test "triage maker instructions point at the message directory" {
+    local wf="${ROOT}/.github/workflows/on-loop-github-issue-triage.yaml" block
+    block="$(triage_block "${wf}" agent_maker_instructions)"
+    grep -qF 'message.md' <<<"${block}"
+    grep -qF 'message_labels.json' <<<"${block}"
+    ! grep -qF 'Your final message IS the comment' <<<"${block}"
 }

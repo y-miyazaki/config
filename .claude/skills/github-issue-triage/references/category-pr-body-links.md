@@ -1,6 +1,6 @@
 # Comment Links (github-issue-triage)
 
-Link everything that can be linked in an Issue comment. Apply when writing the text for `scripts/issue_comment.sh` (`create` and `correct`).
+Link everything that can be linked in an Issue comment. Apply when writing the text for `scripts/issue_comment.sh` (`create` and `correct`) or `message.md` in a message run.
 
 ## References
 
