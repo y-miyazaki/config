@@ -858,7 +858,7 @@ dogfood_value() {
         loop_scoped_pr_number max_attempts max_targets_per_schedule max_turns may_edit
         model no_changes_verdict outcome_override pr_enabled pr_exclude pr_include_bots
         priority scoped_pr_number state_push_branch write_target
-        DETECT_DOMAIN_ENV_JSON ENGINE
+        DETECT_DOMAIN_ENV_JSON ENGINE finalize_hook_script FINALIZE_HOOK_SCRIPT
     )
     for wf in "${BRANCH_CALLER}" "${ENTITY_CALLER}" "${AGENT}"; do
         for name in "${old_names[@]}"; do
@@ -872,4 +872,10 @@ dogfood_value() {
             fi
         done
     done
+}
+
+@test "no tracked file outside docs/superpowers names finalize_hook_script" {
+    run git -C "${ROOT}" grep -l -e finalize_hook_script -e FINALIZE_HOOK_SCRIPT -- . ':!docs/superpowers' ':!.agents' ':!.claude/skills' ':!apm_modules' ':!apm.lock.yaml' ':!.apm/packages/github/.apm/skills/github-pr-review/scripts/post_review.sh' ':!test/bats/github-actions/loop-caller-parity.bats' ':!scripts/self/ci/loop_input_topology.py'
+    [ "${status}" -eq 1 ]
+    [ -z "${output}" ]
 }

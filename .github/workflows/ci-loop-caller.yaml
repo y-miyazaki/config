@@ -182,14 +182,14 @@ on:
         description: "Extra paths included in finalize commit (e.g. ledger file)"
         required: false
         type: string
-      finalize_hook_script:
-        default: ""
-        description: "Bash script run once by loop-finalize regardless of delivery (e.g. domain ledger)"
-        required: false
-        type: string
       finalize_outcome_override:
         default: ""
         description: "Optional explicit finalize outcome (e.g. watch)"
+        required: false
+        type: string
+      finalize_script:
+        default: ""
+        description: "Bash script run once by loop-finalize regardless of delivery (e.g. domain ledger)"
         required: false
         type: string
       level:
@@ -491,8 +491,8 @@ jobs:
       delivery: ${{ needs.detect.outputs.delivery }}
       environment: ${{ inputs.environment }}
       finalize_commit_paths: ${{ inputs.finalize_commit_paths }}
-      finalize_hook_script: ${{ inputs.finalize_hook_script }}
       finalize_outcome_override: ${{ inputs.finalize_outcome_override }}
+      finalize_script: ${{ inputs.finalize_script }}
       handoff_artifact_name: ${{ needs.detect.outputs.handoff_artifact_name }}
       level: ${{ inputs.level }}
       loop_name: ${{ inputs.loop_name }}

@@ -63,7 +63,7 @@ step_if() {
     local expected
     expected="$(printf '%s\n' \
         agent_engine agent_result branch current_sha delivery execute_branch \
-        finalize_commit_paths finalize_hook_script finalize_outcome_override \
+        finalize_commit_paths finalize_outcome_override finalize_script \
         github_token handoff_dir handoff_key has_changes level loop_name \
         notify_context_json open_rejections pr_auto_merge pr_body pr_draft \
         pr_labels pr_title reject_reason skip_reason state_branch state_file \

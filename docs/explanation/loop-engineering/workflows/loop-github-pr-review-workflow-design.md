@@ -38,7 +38,7 @@ Do not dispatch or enable the workflow until a release that contains all of the 
 
 | Fix        | Change                                                                                                                                             |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| P1, P2, P4 | `loop-finalize` never pushes for `delivery: none`, deletes the agent branch, and passes `GH_TOKEN` / `GITHUB_REPOSITORY` to `finalize_hook_script` |
+| P1, P2, P4 | `loop-finalize` never pushes for `delivery: none`, deletes the agent branch, and passes `GH_TOKEN` / `GITHUB_REPOSITORY` to `finalize_script` |
 | B2         | `loop-finalize` (and `post_review.sh`) always runs at L2/L3 for `delivery: none`; the `finalize_enabled` flag no longer exists                     |
 | B3         | `loop-entity-detect` emits `target_json.from.branch`, which `ci-loop-agent` uses as the worktree base branch                                       |
 | Meta guard | The `finalize-l2` PR review Meta step acts only on `entity:pr:<n>` handoff keys, before it sources any library, and cannot fail the job            |
@@ -80,7 +80,7 @@ Keys are passed in `on-loop-github-pr-review.yaml` via `with:` on `ci-loop-calle
 | `detect_env_json`            | Detect env (`PR_EXCLUDE_LABELS`, and on dispatch `PR_FORCE`, `PR_NUMBER`)      | See [Domain detect environment](#domain-detect-environment-detect_env_json) |
 | `detect_script`              | Domain detect script                                                           | `.agents/skills/github-pr-review/scripts/detect_pr_review.sh`               |
 | `environment`                | GitHub Environment for env-scoped secrets                                      | `default`                                                                   |
-| `finalize_hook_script`       | Trusted post step run once in finalize                                         | `.agents/skills/github-pr-review/scripts/post_review.sh`                    |
+| `finalize_script`       | Trusted post step run once in finalize                                         | `.agents/skills/github-pr-review/scripts/post_review.sh`                    |
 | `level`                      | Autonomy                                                                       | `L2`                                                                        |
 | `loop_name`                  | Loop identifier                                                                | `github-pr-review`                                                          |
 | `state_branch`               | `.loop/*` persistence branch                                                   | `main`                                                                      |
@@ -126,7 +126,7 @@ See `.apm/packages/github/.apm/skills/github-pr-review/SKILL.md` and its `refere
 
 ## Posting contract (`post_review.sh`)
 
-`post_review.sh` runs as `finalize_hook_script` in finalize and posts only when the verdict is `APPROVE`.
+`post_review.sh` runs as `finalize_script` in finalize and posts only when the verdict is `APPROVE`.
 
 | Rule                  | Behavior                                                                                                                                                                         |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -145,9 +145,9 @@ The agent branch holding the report is read by the script from `EXECUTE_BRANCH`.
 
 ## Finalize with `delivery: none`
 
-At L2, `loop-finalize` always runs and decides from `delivery: none`. It never pushes the agent branch to the target branch for `none`, deletes the agent branch whatever the verdict (previously only after an empty REJECT), and records the outcome `reported` instead of `pr_created` after APPROVE. The report is persisted only through `finalize_hook_script`, which receives `GH_TOKEN` and `GITHUB_REPOSITORY` from `loop-finalize` and reads the report from the agent branch before it is deleted.
+At L2, `loop-finalize` always runs and decides from `delivery: none`. It never pushes the agent branch to the target branch for `none`, deletes the agent branch whatever the verdict (previously only after an empty REJECT), and records the outcome `reported` instead of `pr_created` after APPROVE. The report is persisted only through `finalize_script`, which receives `GH_TOKEN` and `GITHUB_REPOSITORY` from `loop-finalize` and reads the report from the agent branch before it is deleted.
 
-`loop-finalize` builds the standard loop Meta and footer (`LOOP_META_BLOCK`: run URL, usage) and passes it to `finalize_hook_script` in the same environment. The hook appends it to the review body before posting, so the review goes out once, complete — nothing edits it afterwards.
+`loop-finalize` builds the standard loop Meta and footer (`LOOP_META_BLOCK`: run URL, usage) and passes it to `finalize_script` in the same environment. The hook appends it to the review body before posting, so the review goes out once, complete — nothing edits it afterwards.
 
 ## Related changes
 

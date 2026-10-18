@@ -129,7 +129,7 @@ jobs:
       detect_pr_enabled: true
       detect_script: .agents/skills/ci-sweeper/scripts/detect_ci_failures.sh
       finalize_commit_paths: .loop/state-ci-sweeper-run-ledger.json
-      finalize_hook_script: .agents/skills/ci-sweeper/scripts/update_run_ledger.sh
+      finalize_script: .agents/skills/ci-sweeper/scripts/update_run_ledger.sh
       level: L2
       loop_name: ci-sweeper
       pr_title: "chore(ci-sweeper): automated CI repair (loop-ci-sweeper)"

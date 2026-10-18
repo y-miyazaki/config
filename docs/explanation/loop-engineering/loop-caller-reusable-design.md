@@ -269,7 +269,7 @@ Full mapping table: [Loop Caller Inputs Reference — `loop-detect` mapping](wor
 | Input                   | Required | Default | Used by                                      |
 | ----------------------- | -------- | ------- | -------------------------------------------- |
 | `finalize_commit_paths` | no       | `""`    | `ci-loop-agent` finalize (ci-sweeper ledger) |
-| `finalize_hook_script`  | no       | `""`    | `ci-loop-agent` finalize                     |
+| `finalize_script`  | no       | `""`    | `ci-loop-agent` finalize                     |
 
 #### Detect permissions
 

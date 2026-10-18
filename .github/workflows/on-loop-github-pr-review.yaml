@@ -6,7 +6,7 @@
 # contains the platform fixes this loop depends on (do not downgrade the pins):
 # - loop-finalize honors `delivery: none` (never pushes; P1), deletes the
 #   agent branch (P2), and passes GH_TOKEN / GITHUB_REPOSITORY to
-#   finalize_hook_script (P4)
+#   finalize_script (P4)
 # - finalize-l2 always runs loop-finalize on L2 / L3, including delivery none (B2)
 # - loop-entity-detect emits target_json.from.branch (B3)
 # - the finalize-l2 PR review meta step guards its handoff key (meta guard)
@@ -114,7 +114,7 @@ jobs:
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: github-pr-review
       # Review reads the PR and writes a report file only; posting is done by
-      # post_review.sh (finalize_hook_script) after the checker approves.
+      # post_review.sh (finalize_script) after the checker approves.
       agent_tool_allowlist: |
         Bash(gh api -X GET:*)
         Bash(gh issue view:*)
@@ -127,7 +127,7 @@ jobs:
       delivery: none
       detect_env_json: ${{ github.event_name == 'workflow_dispatch' && format('{{"PR_EXCLUDE_LABELS":"no-loop,loop-automation","PR_FORCE":"{0}","PR_NUMBER":"{1}"}}', inputs.force, inputs.pr_number) || '{"PR_EXCLUDE_LABELS":"no-loop,loop-automation"}' }}
       detect_script: .agents/skills/github-pr-review/scripts/detect_pr_review.sh
-      finalize_hook_script: .agents/skills/github-pr-review/scripts/post_review.sh
+      finalize_script: .agents/skills/github-pr-review/scripts/post_review.sh
       level: L2
       loop_name: github-pr-review
       state_branch: main

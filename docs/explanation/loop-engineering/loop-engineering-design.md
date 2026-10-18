@@ -19,7 +19,7 @@ For concrete specifications (Actions/Workflows list, interfaces), see [Specifica
 | `test-gap`             | `test-gap`             | Dogfood L2; weekly schedule                     | L2 (Assisted) |
 | `loop-stale-pr`        | —                      | Not started                                     | -             |
 
-Platform actions (`loop-detect` `target_matrix`, handoff artifact, `finalize_hook_script`, merge-gated `pending`) are implemented — see [Multi-Branch Loops Design](multi-branch-loops-design.md).
+Platform actions (`loop-detect` `target_matrix`, handoff artifact, `finalize_script`, merge-gated `pending`) are implemented — see [Multi-Branch Loops Design](multi-branch-loops-design.md).
 
 ## Loop Candidate Roadmap
 
@@ -169,7 +169,7 @@ Callers reference installed paths (e.g. `.agents/skills/<skill-name>/scripts/...
 | ------------------------------------------------------------------------------------- | --------------------------------------------------------- |
 | `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/SKILL.md`                      | Fix / Watch / Escalate classification + minimal CI repair |
 | `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/scripts/detect_ci_failures.sh` | Failed run detection (stable filters only)                |
-| `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/scripts/update_run_ledger.sh`  | `finalize_hook_script` target for finalize                |
+| `.apm/packages/repo-maintenance/.apm/skills/ci-sweeper/scripts/update_run_ledger.sh`  | `finalize_script` target for finalize                |
 
 For caller inputs and behavior, see [CI Sweeper Workflow Design](workflows/loop-ci-sweeper-workflow-design.md).
 
@@ -208,7 +208,7 @@ For caller inputs and behavior, see [Report Tech Debt Workflow Design](workflows
 | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | `.apm/packages/repo-maintenance/.apm/skills/test-gap/SKILL.md`                          | Select one under-tested target; add tests within the allowlist       |
 | `.apm/packages/repo-maintenance/.apm/skills/test-gap/scripts/detect_test_gap.sh`        | Language-agnostic facts (`hotspots[]`, `ledger`, `verifier_context`) |
-| `.apm/packages/repo-maintenance/.apm/skills/test-gap/scripts/update_test_gap_ledger.sh` | `finalize_hook_script` target for finalize                           |
+| `.apm/packages/repo-maintenance/.apm/skills/test-gap/scripts/update_test_gap_ledger.sh` | `finalize_script` target for finalize                           |
 
 For caller inputs and behavior, see [Test Gap Workflow Design](workflows/loop-test-gap-workflow-design.md).
 
@@ -366,7 +366,7 @@ State and observability files under `.loop/` (multi-loop coordination principle)
 | Path scope         | `LOOP_ALLOWLIST`, Skill allowed paths                                   | denylist defaults in `loop-execute`, allowlist enforcement                                                                      |
 | Checker checker    | `agent_checker_skill_name` (e.g. `loop-verifier` from `loop` package)   | Slash-load `/skill <SKILL.md>`; path guards; INITIAL/REGRESSION orchestration in `loop-execute`                                 |
 | Checker domain bar | `agent_checker_instructions` in caller `env`                            | Appended to checker prompt `## Task`; embedded fallbacks only when skill files are missing                                      |
-| Domain persistence | `finalize_hook_script` path (optional)                                  | `loop-finalize` invokes script with standard env; no domain logic in action                                                     |
+| Domain persistence | `finalize_script` path (optional)                                  | `loop-finalize` invokes script with standard env; no domain logic in action                                                     |
 
 **Caller input pattern** for a new `on-loop-*.yaml` (after [Loop Caller Reusable Workflow Design](loop-caller-reusable-design.md)):
 
@@ -777,7 +777,7 @@ When `target_json.to.pr_number` is set, `ci-loop-agent` runs `loop-notify-pr` as
 | ----------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
 | `pr_create` | Create fix PR to `to.branch`                                                                 | Create PR + `pr_auto_merge` (allowlist + branch protection) |
 | `pr_push`   | Merge the latest head, then push to the PR head `to.branch`; no new PR                       | Same                                                        |
-| `none`      | No push, no PR; agent branch deleted after APPROVE; report handled by `finalize_hook_script` | Same                                                        |
+| `none`      | No push, no PR; agent branch deleted after APPROVE; report handled by `finalize_script` | Same                                                        |
 
 **Do not** map `L3` → auto-merge alone. `pr_push` never enables auto-merge.
 

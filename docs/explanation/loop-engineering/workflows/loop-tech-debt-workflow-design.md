@@ -172,7 +172,7 @@ PR body is composed by `loop-finalize` from agent `## Overview` / `## Summary` (
 
 Always `delivery: pr_create` to `to.branch` at L2. Other deliveries (`pr_push`) are not used by this loop.
 
-No `finalize_hook_script`.
+No `finalize_script`.
 
 **Merge-gated cursor:** Same platform rule as all L2 `pr_create` loops — `pending` at finalize, `last_sha` on report PR merge via `on-loop-state-promote.yaml`. See [State delivery philosophy](../multi-branch-loops-design.md#state-delivery-philosophy).
 

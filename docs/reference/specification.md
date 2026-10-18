@@ -388,7 +388,7 @@ Loop **entry** skills are domain skills (no `loop-` name prefix) split by forge:
 | ----------------------------- | ---------------------------------------- | -------------------------------------------------------- |
 | Skill                         | `.apm/skills/<name>/SKILL.md`            | Maker behavior, classification, allowed paths            |
 | Detect script                 | `.apm/skills/<name>/scripts/detect_*.sh` | Per-target scan in branch context set by `loop-detect`   |
-| Persistence script (optional) | `.apm/skills/<name>/scripts/*_ledger.sh` | Domain ledger via `loop-finalize` `finalize_hook_script` |
+| Persistence script (optional) | `.apm/skills/<name>/scripts/*_ledger.sh` | Domain ledger via `loop-finalize` `finalize_script` |
 
 ### Loop Engineering Actions
 
@@ -397,7 +397,7 @@ Loop **entry** skills are domain skills (no `loop-` name prefix) split by forge:
 | `loop-agent-once`     | Single read-only agent session (L1); accepts `node_version` / `uv_version` and enables workspace MCP via `lib/mcp.sh`                                                                                                                                                                                                                                     |
 | `loop-detect`         | Read `LOOP_*`, enumerate branches/PRs, checkout per context, read per-target state (`lib/state.sh`), invoke `detect_script` per context, assemble candidates and maker prompts (`lib/loop/build_constraints.sh`), write **loop-handoff** artifact, output slim `target_matrix`; guards (`budget`, circuit breaker). **No caller re-run of detect script** |
 | `loop-execute`        | Bounded Agent→Verify loop (L2/L3); inputs include `target_json`, `verifier_context`, `node_version`, `uv_version`; enables workspace MCP via `lib/mcp.sh`; worktree from `from.ref` @ `from.branch`; outputs include `failure_stage` / `failure_message` on push/notify failures                                                                          |
-| `loop-finalize`       | Finalize per `delivery` (`pr_create` \| `pr_push` \| `none`), branch cleanup, per-target state write (`lib/write_state.sh`, `lib/prune_targets.sh`), optional `finalize_hook_script`; `.loop/*` to `STATE_BRANCH`; outputs include `failure_stage` / `failure_message` when finalize PR steps fail                                                        |
+| `loop-finalize`       | Finalize per `delivery` (`pr_create` \| `pr_push` \| `none`), branch cleanup, per-target state write (`lib/write_state.sh`, `lib/prune_targets.sh`), optional `finalize_script`; `.loop/*` to `STATE_BRANCH`; outputs include `failure_stage` / `failure_message` when finalize PR steps fail                                                        |
 | `loop-notify-pr`      | Post or update marker PR comment after finalize on `pull_request` targets (sibling step in `ci-loop-agent`, not nested in `loop-finalize`). Platform-owned Layers 1–2; optional skill appendix. See [loop-notify-pr Specification](loop-notify-pr-specification.md)                                                                                       |
 | `loop-install-cli`    | Install and cache the selected engine CLI; accepts `node_version` / `uv_version` so MCP servers can resolve via `npx` / `uvx`                                                                                                                                                                                                                             |
 | `loop-run-log`        | Append one JSONL entry to `.loop/loop-run-log.md` (optional `failure_stage` / `failure_message`), prune entries older than 30 days (sibling step in `ci-loop-agent` after `loop-finalize`, or `record-skip` in callers)                                                                                                                                   |
@@ -495,7 +495,7 @@ Execute/finalize input. Schema: [Multi-Branch Loops Design](../explanation/loop-
 | Input                  | Required | Description                                                                                                                   |
 | ---------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | `target_json`          | yes      | Matrix cell target                                                                                                            |
-| `finalize_hook_script` | no       | Optional bash script (ledger). Standard env: `TARGET_JSON`, `OUTCOME`, `VERDICT`, `LOOP_NAME`, `STATE_FILE`, `EXECUTE_BRANCH` |
+| `finalize_script` | no       | Optional bash script (ledger). Standard env: `TARGET_JSON`, `OUTCOME`, `VERDICT`, `LOOP_NAME`, `STATE_FILE`, `EXECUTE_BRANCH` |
 | `state_branch`         | no       | Default: repository default branch                                                                                            |
 
 `loop-notify-pr` is invoked by `ci-loop-agent` as a sibling step after `loop-finalize` when `target_json.to.pr_number` is set. `loop-run-log` is invoked as a sibling step after `loop-finalize` in the same finalize job (`loop_name` is required on `ci-loop-agent`). Both read outputs from prior steps (not via nested composite `uses:`).

@@ -168,7 +168,7 @@ On `REJECT`, state writes failure metadata to `state_branch` without advancing `
 
 On fix PR merge, `on-loop-state-promote` promotes `pending.sha` → `last_sha`.
 
-No `finalize_hook_script`.
+No `finalize_script`.
 
 ## Implementation Checklist
 

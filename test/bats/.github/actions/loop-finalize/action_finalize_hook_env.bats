@@ -4,8 +4,8 @@
 # Tests for the "Run Finalize Hook" step in .github/actions/loop-finalize/action.yml
 #
 # Use cases:
-# - the step runs whenever finalize_hook_script is set, regardless of delivery
-# - FINALIZE_HOOK_SCRIPT is inputs.finalize_hook_script
+# - the step runs whenever finalize_script is set, regardless of delivery
+# - FINALIZE_SCRIPT is inputs.finalize_script
 # - GH_TOKEN is the resolved inputs.github_token
 # - GITHUB_REPOSITORY is github.repository
 # - the hook gets AGENT_ENGINE, USAGE_JSON and RUN_URL, and the step builds LOOP_META_BLOCK for it
@@ -45,10 +45,10 @@ finalize_hook_if() {
     [ "${keys}" = "${sorted}" ]
 }
 
-@test "finalize hook env sets FINALIZE_HOOK_SCRIPT from inputs.finalize_hook_script" {
+@test "finalize hook env sets FINALIZE_SCRIPT from inputs.finalize_script" {
     run finalize_hook_env
     [ "${status}" -eq 0 ]
-    [[ ${output} == *$'FINALIZE_HOOK_SCRIPT: ${{ inputs.finalize_hook_script }}'* ]]
+    [[ ${output} == *$'FINALIZE_SCRIPT: ${{ inputs.finalize_script }}'* ]]
 }
 
 @test "finalize hook env sets GH_TOKEN from inputs.github_token" {
@@ -63,10 +63,10 @@ finalize_hook_if() {
     [[ ${output} == *$'GITHUB_REPOSITORY: ${{ github.repository }}'* ]]
 }
 
-@test "finalize hook runs whenever finalize_hook_script is set, regardless of delivery" {
+@test "finalize hook runs whenever finalize_script is set, regardless of delivery" {
     run finalize_hook_if
     [ "${status}" -eq 0 ]
-    [ "${output}" = "inputs.finalize_hook_script != ''" ]
+    [ "${output}" = "inputs.finalize_script != ''" ]
 }
 
 @test "finalize hook receives the data for, and builds, LOOP_META_BLOCK" {

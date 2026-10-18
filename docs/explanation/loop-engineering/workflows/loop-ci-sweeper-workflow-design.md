@@ -134,7 +134,7 @@ level: L2
 | `agent_edit_denylist`        | Not set — the platform default (`**/.env,**/credentials*,**/secrets*`) applies.                                                                                                                                           | Omitted                                                                                                  |
 | Reusable workflow (`uses:`)  | `ci-loop-caller.yaml` — detect job requires `actions: write`, `contents: read`, and `pull-requests: read`; caller `permissions` must include `actions: write`.                                                            | `./.github/workflows/ci-loop-caller.yaml`                                                                |
 | `detect_script`              | Domain detect script path. Uses `gh run list` per watch branch / PR head.                                                                                                                                                 | `.agents/skills/ci-sweeper/scripts/detect_ci_failures.sh`                                                |
-| `finalize_hook_script`       | Bash script for `loop-finalize` domain persistence (run ledger updates).                                                                                                                                                  | `.agents/skills/ci-sweeper/scripts/update_run_ledger.sh`                                                 |
+| `finalize_script`       | Bash script for `loop-finalize` domain persistence (run ledger updates).                                                                                                                                                  | `.agents/skills/ci-sweeper/scripts/update_run_ledger.sh`                                                 |
 | `agent_engine`               | AI engine (`claude`, `copilot`, `codex`, `cursor`). Maps `AGENT_TOKEN` to engine env.                                                                                                                                     | `claude`                                                                                                 |
 | `level`                      | Autonomy: `L2` (human merges bot fix PR) or `L3` (GitHub auto-merge on bot fix PR).                                                                                                                                       | `L2`                                                                                                     |
 | `loop_name`                  | Loop identifier; state file `.loop/state-ci-sweeper.json`.                                                                                                                                                                | `ci-sweeper`                                                                                             |
@@ -178,7 +178,7 @@ detect_env_json: ${{ format('{{"CI_SWEEPER_EVENT_HEAD_BRANCH":"{0}","CI_SWEEPER_
 | Input                   | Dogfood value                                            |
 | ----------------------- | -------------------------------------------------------- |
 | `finalize_commit_paths` | `.loop/state-ci-sweeper-run-ledger.json`                 |
-| `finalize_hook_script`  | `.agents/skills/ci-sweeper/scripts/update_run_ledger.sh` |
+| `finalize_script`  | `.agents/skills/ci-sweeper/scripts/update_run_ledger.sh` |
 
 When `CI_SWEEPER_WORKFLOW_RUN_ID` is set, `loop-detect` enumerates **only** the failed head (matching integration branch or open PR). See [Trigger-aware priority](../multi-branch-loops-design.md#trigger-aware-priority). Detect script binaries are always pinned from the job checkout (branch_state), never from a stale PR worktree.
 
@@ -235,7 +235,7 @@ Owned by the **caller** and detect scripts — not by skill triage. Configure vi
 | `CI_SWEEPER_REJECT_RETRY_POLICY` | `block`                                  | `block`                                  | `block`: skip any ledgered run. `retry`: skip only `pr_created` and `pr_pushed`. `limited`: skip `rejected` after max retries. Aliases `a`/`b`/`c` |
 | `CI_SWEEPER_REJECT_MAX_RETRIES`  | `3`                                      | `3`                                      | Used when policy is `limited`                                                                                                                      |
 
-`update_run_ledger.sh` (via `finalize_hook_script`) prunes `runs` older than **30 days**. Detect places skipped runs in `ignored[]`; the skill only notes them in Overview.
+`update_run_ledger.sh` (via `finalize_script`) prunes `runs` older than **30 days**. Detect places skipped runs in `ignored[]`; the skill only notes them in Overview.
 
 ### `agent_unchanged_verdict: REJECT`
 
@@ -288,7 +288,7 @@ Reference: [Finalize strategy matrix](../loop-engineering-design.md#finalize-str
 | Persistence | Mechanism                                                 |
 | ----------- | --------------------------------------------------------- |
 | State       | `state-ci-sweeper.json` (`targets` map) on `state_branch` |
-| Run ledger  | `finalize_hook_script` → `update_run_ledger.sh`           |
+| Run ledger  | `finalize_script` → `update_run_ledger.sh`           |
 | Run log     | `loop-run-log` in `loop-finalize` chain                   |
 
 Dogfood: **`level=L2`** until [L3 promotion gate](../loop-engineering-design.md).
@@ -304,7 +304,7 @@ Shared platform: [Multi-Branch — Shared platform checklist](../multi-branch-lo
 - [x] `verifier_context` on execute path (`build_verifier_context_from_result` `.failures` branch)
 - [x] Single detect path via `loop-detect` (no caller re-run)
 - [x] `detect_pr_enabled`
-- [x] Ledger via `finalize_hook_script` in `loop-finalize`
+- [x] Ledger via `finalize_script` in `loop-finalize`
 - [x] `outcome: watch` for Skill Watch classification
 - [x] `loop-notify-pr` on human PR for `pull_request` mode
 - [x] `pr_create` delivery for PR head targets (a new bot fix PR to the PR head branch)
