@@ -71,7 +71,7 @@ function build_loop_meta_block {
     local engine="${4:-}"
     local usage_json="${5:-}"
     local run_url="${6:-}"
-    local model tokens reason_line
+    local model tokens cache rounds reason_line
     local -a rows=()
 
     if [[ ${#LOOP_META_ROWS[@]} -gt 0 ]]; then
@@ -93,7 +93,21 @@ function build_loop_meta_block {
 
     [[ -n ${engine} ]] && rows+=("| engine | ${engine} |")
     [[ -n ${model} ]] && rows+=("| model | ${model} |")
-    [[ -n ${tokens} ]] && rows+=("| tokens | In/Out ${tokens} |")
+    if [[ -n ${tokens} ]]; then
+        cache=""
+        if declare -F usage_cache_label > /dev/null 2>&1; then
+            cache="$(usage_cache_label "${usage_json}")"
+        fi
+        if [[ -n ${cache} ]]; then
+            rows+=("| tokens | In/Out ${tokens} (cache ${cache}) |")
+        else
+            rows+=("| tokens | In/Out ${tokens} |")
+        fi
+    fi
+    if declare -F usage_rounds_label > /dev/null 2>&1; then
+        rounds="$(usage_rounds_label "${usage_json}" "${verdict}")"
+        [[ -n ${rounds} ]] && rows+=("| rounds | ${rounds} |")
+    fi
     if [[ -n ${run_url} && ${run_url} != "-" ]]; then
         rows+=("| run | [View run](${run_url}) |")
     fi

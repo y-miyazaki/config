@@ -182,3 +182,89 @@ function usage_tokens_label {
 
     printf '%s/%s' "${in_fmt}" "${out_fmt}"
 }
+
+#######################################
+# usage_cache_label: Resolve the prompt-cache label for a run
+#
+# Description:
+#   In/Out totals exclude cache traffic, so a cached run shows a tiny In figure.
+#   This label reports the cache counts next to it instead of folding them in.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - usage_json string (optional)
+#
+# Outputs:
+#   "read {n}, write {n}" on stdout; empty when no cache traffic was measured
+#
+# Returns:
+#   0 on success
+#
+# Usage:
+#   cache="$(usage_cache_label "${USAGE_JSON}")"
+#
+#######################################
+function usage_cache_label {
+    local usage_json="${1:-}"
+    local read="" write=""
+
+    if [[ -z ${usage_json} ]] || ! jq -e . > /dev/null 2>&1 <<< "${usage_json}"; then
+        return 0
+    fi
+    read="$(jq -r '.cache_read_tokens // 0' <<< "${usage_json}" 2> /dev/null || true)"
+    write="$(jq -r '.cache_write_tokens // 0' <<< "${usage_json}" 2> /dev/null || true)"
+    [[ ${read} =~ ^[0-9]+$ ]] || read=0
+    [[ ${write} =~ ^[0-9]+$ ]] || write=0
+    if ((read == 0 && write == 0)); then
+        return 0
+    fi
+    printf 'read %s, write %s' "$(format_compact_tokens "${read}")" "$(format_compact_tokens "${write}")"
+}
+
+#######################################
+# usage_rounds_label: Resolve the maker/checker round counts for a run
+#
+# Description:
+#   Counts maker and checker sessions. A checker session that did not end the run
+#   with APPROVE is a rejection, so rejected = checkers, minus one when the final
+#   verdict is APPROVE.
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   $1 - usage_json string (optional)
+#   $2 - Final verdict APPROVE/REJECT (optional)
+#
+# Outputs:
+#   "maker {n}, checker {n}, rejected {n}" on stdout; empty when no maker or
+#   checker session was recorded
+#
+# Returns:
+#   0 on success
+#
+# Usage:
+#   rounds="$(usage_rounds_label "${USAGE_JSON}" "${VERDICT}")"
+#
+#######################################
+function usage_rounds_label {
+    local usage_json="${1:-}"
+    local verdict="${2:-}"
+    local makers checkers rejected
+
+    if [[ -z ${usage_json} ]] || ! jq -e . > /dev/null 2>&1 <<< "${usage_json}"; then
+        return 0
+    fi
+    makers="$(jq -r '[(.sessions // [])[] | select(.role == "maker")] | length' <<< "${usage_json}" 2> /dev/null || echo 0)"
+    checkers="$(jq -r '[(.sessions // [])[] | select(.role == "checker")] | length' <<< "${usage_json}" 2> /dev/null || echo 0)"
+    if ((makers == 0 && checkers == 0)); then
+        return 0
+    fi
+    rejected="${checkers}"
+    if [[ ${verdict} == "APPROVE" && ${checkers} -gt 0 ]]; then
+        rejected=$((checkers - 1))
+    fi
+    printf 'maker %s, checker %s, rejected %s' "${makers}" "${checkers}" "${rejected}"
+}
