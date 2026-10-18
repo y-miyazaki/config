@@ -4,6 +4,7 @@
 # Tests for .github/actions/loop-finalize/lib/determine_outcome.sh
 #
 # Use cases:
+# - a failed agent push is error even with an outcome override
 # - an explicit override wins over every other input
 # - a failed or cancelled agent job is error
 # - no product diff is rejected on REJECT and unchanged otherwise, for every delivery
@@ -135,4 +136,12 @@ setup() {
     [ "$output" = "watch" ]
     run determine_outcome watch failure true REJECT pr_review
     [ "$output" = "watch" ]
+}
+
+@test "push failure is error even with an outcome override" {
+    run determine_outcome watch success true APPROVE pr_create true
+    [ "$status" -eq 0 ]
+    [ "$output" = "error" ]
+    run determine_outcome "" success true APPROVE pr_create false
+    [ "$output" = "pr_created" ]
 }

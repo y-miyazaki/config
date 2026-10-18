@@ -7,6 +7,7 @@
 # - APPROVE with changes follows the delivery table: pr_create is pending,
 #   pr_push is advance, none is metadata
 # - every other verdict / has_changes combination is metadata for every delivery
+# - a failed agent push is metadata for every delivery
 # - old strategy names (open_pr, push, push_head) are metadata (not recognized)
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -54,4 +55,13 @@ setup() {
         done
     done
     [ "${checked}" -eq 12 ]
+}
+
+@test "push failure records metadata" {
+    run resolve_state_write_mode APPROVE true pr_push true
+    [ "${output}" = "metadata" ]
+    run resolve_state_write_mode APPROVE true pr_create true
+    [ "${output}" = "metadata" ]
+    run resolve_state_write_mode APPROVE true pr_create false
+    [ "${output}" = "pending" ]
 }

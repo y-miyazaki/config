@@ -8,9 +8,11 @@
 # - None (library file, sourced by other scripts)
 #
 # Design Rules:
-# - Decision order: override, failed agent (error), REJECT (rejected), message
-#   deliveries, then the has_changes rules
-# - An explicit outcome override always wins
+# - Decision order: failed agent push (error), override, failed agent (error),
+#   REJECT (rejected), message deliveries, then the has_changes rules
+# - A failed agent push (push_failed=true) is error, even over an outcome
+#   override: the branch never reached the remote
+# - An explicit outcome override wins over everything else
 # - A failed agent job is error
 # - REJECT is rejected for every delivery, with or without changes
 # - issue_comment is issue_commented and pr_review is pr_reviewed, with or without
@@ -34,6 +36,7 @@
 #   $3 - has_changes flag (true/false)
 #   $4 - Verdict (APPROVE, REJECT, or empty)
 #   $5 - Delivery (pr_create, pr_push, none, issue_comment, pr_review)
+#   $6 - push_failed flag (true when the agent push failed; optional, defaults to false)
 #
 # Outputs:
 #   Outcome to stdout (pr_created, pr_pushed, reported, issue_commented, pr_reviewed,
@@ -49,8 +52,11 @@ function determine_outcome {
     local has_changes="$3"
     local verdict="$4"
     local delivery="${5:-}"
+    local push_failed="${6:-false}"
 
-    if [[ -n ${override} ]]; then
+    if [[ ${push_failed} == "true" ]]; then
+        printf '%s\n' "error"
+    elif [[ -n ${override} ]]; then
         printf '%s\n' "${override}"
     elif [[ ${agent_result} != "success" && ${agent_result} != "skipped" ]]; then
         printf '%s\n' "error"

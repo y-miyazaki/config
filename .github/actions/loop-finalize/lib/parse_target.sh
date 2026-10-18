@@ -2,7 +2,7 @@
 #######################################
 # Description:
 #   Validate the loop-finalize delivery, state_branch, and target_json, then write
-#   the target key, PR base branch, and to_branch to GITHUB_OUTPUT.
+#   base_branch, the target key, PR base branch, and to_branch to GITHUB_OUTPUT.
 #
 # Usage:
 #   DELIVERY=pr_create STATE_BRANCH=main TARGET_JSON='{"key":...,"mode":...,"to":{"branch":...}}' \
@@ -11,12 +11,14 @@
 # Design Rules:
 #   - target_json is required; an empty value fails (no silent PR fallback)
 #   - The PR base and to_branch come from target_json.to.branch
+#   - base_branch is target_json.base.branch for a pull_request target and
+#     target_json.to.branch otherwise (empty allowed)
 #   - delivery must be implemented and allow the target kind (lib/loop/delivery.sh)
 #   - state_branch is required; checked here so no PR or push runs before Write State
 #   - Nothing is written to GITHUB_OUTPUT unless every check passes
 #
 # Output:
-#   target_key, pr_base_branch, to_branch lines appended to GITHUB_OUTPUT
+#   base_branch, target_key, pr_base_branch, to_branch lines appended to GITHUB_OUTPUT
 #
 # Dependencies:
 #   - bash, jq, lib/loop/delivery.sh
@@ -62,7 +64,7 @@ TARGET_JSON="${TARGET_JSON:-}"
 #
 #######################################
 function main {
-    local target_key to_branch
+    local base_branch target_key to_branch
 
     : "${GITHUB_OUTPUT:?GITHUB_OUTPUT is required}"
 
@@ -94,7 +96,10 @@ function main {
 
     validate_delivery_target "${DELIVERY}" "${TARGET_JSON}" || exit 1
 
+    base_branch="$(jq -r '(if .mode == "pull_request" then .base.branch else .to.branch end) // ""' <<< "${TARGET_JSON}")"
+
     {
+        echo "base_branch=${base_branch}"
         echo "target_key=${target_key}"
         echo "pr_base_branch=${to_branch}"
         echo "to_branch=${to_branch}"

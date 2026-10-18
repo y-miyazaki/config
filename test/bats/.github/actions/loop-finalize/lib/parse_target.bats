@@ -45,13 +45,13 @@ setup() {
         bash "${PARSE_SCRIPT}"
     [ "${status}" -eq 0 ]
     run cat "${GITHUB_OUTPUT}"
-    [ "${output}" = $'target_key=entity:issue:3\npr_base_branch=main\nto_branch=main' ]
+    [ "${output}" = $'base_branch=main\ntarget_key=entity:issue:3\npr_base_branch=main\nto_branch=main' ]
     : > "${GITHUB_OUTPUT}"
     run env DELIVERY=pr_review TARGET_JSON='{"key":"entity:pr:4","entity":{"handoff_key":"entity:pr:4","kind":"pr"},"to":{"branch":"main"}}' \
         bash "${PARSE_SCRIPT}"
     [ "${status}" -eq 0 ]
     run cat "${GITHUB_OUTPUT}"
-    [ "${output}" = $'target_key=entity:pr:4\npr_base_branch=main\nto_branch=main' ]
+    [ "${output}" = $'base_branch=main\ntarget_key=entity:pr:4\npr_base_branch=main\nto_branch=main' ]
     run env DELIVERY=issue_comment TARGET_JSON='{"key":"entity:pr:4","entity":{"kind":"pr"},"to":{"branch":"main"}}' \
         bash "${PARSE_SCRIPT}"
     [ "${status}" -eq 1 ]
@@ -97,7 +97,7 @@ setup() {
         bash "${PARSE_SCRIPT}"
     [ "${status}" -eq 0 ]
     run cat "${GITHUB_OUTPUT}"
-    [ "${output}" = $'target_key=integration:release\npr_base_branch=release\nto_branch=release' ]
+    [ "${output}" = $'base_branch=release\ntarget_key=integration:release\npr_base_branch=release\nto_branch=release' ]
 }
 
 @test "parse_target reads the PR base from target_json for a pull_request target" {
@@ -105,5 +105,17 @@ setup() {
         bash "${PARSE_SCRIPT}"
     [ "${status}" -eq 0 ]
     run cat "${GITHUB_OUTPUT}"
-    [ "${output}" = $'target_key=pull_request:7\npr_base_branch=feature/x\nto_branch=feature/x' ]
+    [ "${output}" = $'base_branch=main\ntarget_key=pull_request:7\npr_base_branch=feature/x\nto_branch=feature/x' ]
+}
+
+@test "writes base_branch from base.branch for pull_request and to.branch otherwise" {
+    run env DELIVERY=pr_push TARGET_JSON='{"key":"pull_request:7","mode":"pull_request","to":{"branch":"feature/x","pr_number":7},"base":{"branch":"develop"}}' \
+        bash "${PARSE_SCRIPT}"
+    [ "${status}" -eq 0 ]
+    grep -qx 'base_branch=develop' "${GITHUB_OUTPUT}"
+    : > "${GITHUB_OUTPUT}"
+    run env DELIVERY=pr_create TARGET_JSON='{"key":"integration:release","mode":"integration","to":{"branch":"release"},"base":{"branch":"ignored"}}' \
+        bash "${PARSE_SCRIPT}"
+    [ "${status}" -eq 0 ]
+    grep -qx 'base_branch=release' "${GITHUB_OUTPUT}"
 }

@@ -11,6 +11,7 @@
 # - Only APPROVE with changes moves the cursor: pr_create records pending (the
 #   cursor advances when the PR merges), pr_push advances (the head was pushed)
 # - delivery none, every other verdict, and no changes record metadata only
+# - A failed agent push (push_failed=true) records metadata for every delivery
 # - Unknown delivery values record metadata (never advance the cursor)
 #######################################
 
@@ -24,6 +25,7 @@
 #   $1 - Verdict (APPROVE, REJECT, or empty)
 #   $2 - has_changes flag (true/false)
 #   $3 - Delivery (pr_create, pr_push, none)
+#   $4 - push_failed flag (true when the agent push failed; optional, defaults to false)
 #
 # Outputs:
 #   Mode to stdout (pending, advance, or metadata)
@@ -36,8 +38,9 @@ function resolve_state_write_mode {
     local verdict="$1"
     local has_changes="$2"
     local delivery="${3:-}"
+    local push_failed="${4:-false}"
 
-    if [[ ${verdict} != "APPROVE" || ${has_changes} != "true" ]]; then
+    if [[ ${push_failed} == "true" || ${verdict} != "APPROVE" || ${has_changes} != "true" ]]; then
         printf '%s\n' "metadata"
         return 0
     fi
