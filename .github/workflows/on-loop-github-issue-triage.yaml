@@ -38,10 +38,10 @@ jobs:
     # raise new webhooks. Bot senders and triage:failed are refused here, not in
     # detect, so no run is queued behind the in-flight one.
     # Label allowlist is intake-only — classification labels the agent itself
-    # applies (bug/feature/question/documentation) must stay out. triage:ready
-    # is kept for the detect-job dispatch hook (human hand-off to autofix);
-    # detect still skips the agent for it. autofix is owned by
-    # on-loop-github-issue-autofix.yaml and must not double-intake here.
+    # applies (bug/feature/question/documentation) must stay out, and so must
+    # triage:ready (detect skips it, so admitting it only queues skipped runs).
+    # autofix is owned by on-loop-github-issue-autofix.yaml and must not
+    # double-intake here.
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (
@@ -70,7 +70,7 @@ jobs:
           (
             github.event.action == 'labeled' &&
             contains(
-              fromJSON('["needs-triage","triage:needs-info","triage:ready"]'),
+              fromJSON('["needs-triage","triage:needs-info"]'),
               github.event.label.name
             )
           )
@@ -118,7 +118,7 @@ jobs:
         Do NOT post comments or change labels. Write the comment markdown to message.md, and the
         label changes as {"add":[...],"remove":[...]} to message_labels.json, in the loop message
         directory named at the end of this prompt. The comment has no preamble, no status line, and
-        no leading "---". Do not open PRs or call repository_dispatch (platform hook handles ready+autofix).
+        no leading "---". Do not open PRs or call repository_dispatch.
       agent_maker_max_turns: 100
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: github-issue-triage
@@ -134,8 +134,6 @@ jobs:
       budget_max_tokens_per_day: 1000000
       delivery: issue_comment
       detect_env_json: ${{ github.event_name == 'workflow_dispatch' && format('{{"ISSUE_NUMBER":{0}}}', toJSON(inputs.issue_number)) || '{}' }}
-
-      detect_hook_script: .agents/skills/github-issue-triage/scripts/hooks/on_detect_dispatch.sh
       detect_script: .agents/skills/github-issue-triage/scripts/detect_issue.sh
       finalize_label_allowlist: |
         needs-triage

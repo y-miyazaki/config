@@ -6,7 +6,7 @@ bats_require_minimum_version 1.5.0
 # Tests for .github/actions/loop-entity-detect/{action.yml,lib/detect.sh,lib/outputs.sh}
 #
 # Use cases:
-# - action.yml declares the renamed inputs and no removed inputs (may_edit, write_target, dispatch_hook_*)
+# - action.yml declares the renamed inputs and no removed inputs (may_edit, write_target, dispatch_hook_*, the post-detect hook input)
 # - action.yml has no default for delivery or level, maps inputs to env, and exposes pr_auto_merge
 # - resolve_detect_script_path pins relative and absolute detect scripts
 # - shrink_entity_matrix_for_output trims verifier_context and adds no handoff_key
@@ -91,7 +91,6 @@ budget_file
 budget_max_runs_per_day
 budget_max_tokens_per_day
 delivery
-detect_hook_script
 detect_script
 finalize_label_allowlist
 finalize_script
@@ -128,13 +127,13 @@ state_file"
 @test "action.yml maps every renamed input to its uppercase environment variable" {
     local name upper checked=0
     for name in agent_edit_allowlist agent_edit_denylist agent_edit_target agent_unchanged_verdict \
-        delivery detect_hook_script finalize_label_allowlist finalize_script level; do
+        delivery finalize_label_allowlist finalize_script level; do
         upper="$(tr '[:lower:]' '[:upper:]' <<< "${name}")"
         run grep -Fx "        ${upper}: \${{ inputs.${name} }}" "${ACTION_YML}"
         [ "$status" -eq 0 ]
         checked=$((checked + 1))
     done
-    [ "${checked}" -eq 9 ]
+    [ "${checked}" -eq 8 ]
     run grep -E 'DISPATCH_HOOK|MAY_EDIT|WRITE_TARGET' "${ACTION_YML}"
     [ "$status" -eq 1 ]
 }

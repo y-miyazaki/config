@@ -130,11 +130,6 @@ on:
         description: "JSON object of domain detect script environment variables"
         required: false
         type: string
-      detect_hook_script:
-        default: ""
-        description: "Optional trusted post-detect hook script path (runs with the detect token)"
-        required: false
-        type: string
       detect_script:
         description: "Path to domain detect_*.sh script"
         required: true
@@ -307,7 +302,6 @@ jobs:
           budget_max_runs_per_day: ${{ inputs.budget_max_runs_per_day != null && format('{0}', inputs.budget_max_runs_per_day) || '' }}
           budget_max_tokens_per_day: ${{ inputs.budget_max_tokens_per_day != null && format('{0}', inputs.budget_max_tokens_per_day) || '' }}
           delivery: ${{ inputs.delivery }}
-          detect_hook_script: ${{ inputs.detect_hook_script }}
           detect_script: ${{ inputs.detect_script }}
           finalize_label_allowlist: ${{ inputs.finalize_label_allowlist }}
           finalize_script: ${{ inputs.finalize_script }}

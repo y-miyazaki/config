@@ -41,10 +41,6 @@ inputs:
   delivery:
     description: "Where the agent output is delivered: issue_comment | none | pr_create | pr_push | pr_review (no default; empty or other values fail)"
     required: true
-  detect_hook_script:
-    default: ""
-    description: Optional trusted post-detect hook (e.g. repository_dispatch); runs with github_token
-    required: false
   detect_script:
     description: Path to domain detect_*.sh script (must write result.entity.kind issue | pr when skip is false)
     required: true
@@ -57,7 +53,7 @@ inputs:
     description: "Trusted script that writes the delivery message files (required at L2/L3 for delivery issue_comment or pr_review; must be empty at L1)"
     required: false
   github_token:
-    description: Resolved GitHub token for detect scripts, the detect hook, and API calls
+    description: Resolved GitHub token for detect scripts and API calls
     required: true
   level:
     description: "Autonomy level: L1 | L2 | L3 (no default; empty fails)"
@@ -124,7 +120,6 @@ runs:
         BUDGET_MAX_RUNS_PER_DAY: ${{ inputs.budget_max_runs_per_day }}
         BUDGET_MAX_TOKENS_PER_DAY: ${{ inputs.budget_max_tokens_per_day }}
         DELIVERY: ${{ inputs.delivery }}
-        DETECT_HOOK_SCRIPT: ${{ inputs.detect_hook_script }}
         DETECT_SCRIPT: ${{ inputs.detect_script }}
         FINALIZE_LABEL_ALLOWLIST: ${{ inputs.finalize_label_allowlist }}
         FINALIZE_SCRIPT: ${{ inputs.finalize_script }}

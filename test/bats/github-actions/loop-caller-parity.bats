@@ -931,7 +931,7 @@ dogfood_value() {
         loop_scoped_pr_number max_attempts max_targets_per_schedule max_turns may_edit
         model no_changes_verdict outcome_override pr_enabled pr_exclude pr_include_bots
         priority scoped_pr_number state_push_branch write_target
-        DETECT_DOMAIN_ENV_JSON ENGINE finalize_hook_script FINALIZE_HOOK_SCRIPT
+        DETECT_DOMAIN_ENV_JSON ENGINE finalize_hook_script FINALIZE_HOOK_SCRIPT detect_hook_script DETECT_HOOK_SCRIPT
     )
     for wf in "${BRANCH_CALLER}" "${ENTITY_CALLER}" "${AGENT}"; do
         for name in "${old_names[@]}"; do
@@ -996,10 +996,19 @@ triage_block() {
     grep -qxF 'Bash(gh label list:*)' <<<"${block}"
 }
 
+@test "triage caller intake admits needs-triage and triage:needs-info labels only" {
+    local wf="${ROOT}/.github/workflows/on-loop-github-issue-triage.yaml" gate
+    gate="$(awk '/^    if: >-$/ {f=1; next} f && /^    uses:/ {exit} f {print}' "${wf}")"
+    [ -n "${gate}" ]
+    grep -qF "fromJSON('[\"needs-triage\",\"triage:needs-info\"]')" <<<"${gate}"
+    [[ ${gate} != *'triage:ready'* ]]
+}
+
 @test "triage maker instructions point at the message directory" {
     local wf="${ROOT}/.github/workflows/on-loop-github-issue-triage.yaml" block
     block="$(triage_block "${wf}" agent_maker_instructions)"
     grep -qF 'message.md' <<<"${block}"
     grep -qF 'message_labels.json' <<<"${block}"
+    [[ ${block} != *'platform hook'* ]]
     ! grep -qF 'Your final message IS the comment' <<<"${block}"
 }
