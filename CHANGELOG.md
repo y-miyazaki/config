@@ -16,6 +16,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (goreleaser) Update goreleaser to v2.18.3 (#975) ([fc3d958](https://github.com/y-miyazaki/config/commit/fc3d958f21f460bb07690376055e60dbfe7dd202))
 - (loop) dogfood state branch (disposable, do not merge) ([0e27ebf](https://github.com/y-miyazaki/config/commit/0e27ebf569259d971b7eaef24fbfaec71f6509f7))
 
+## [1.8.128] - 2026-10-18
+
+### Added
+
+- (loop) link bare commit SHAs that prefix a detected commit ([d69ec3a](https://github.com/y-miyazaki/config/commit/d69ec3a681d1a108a9d1944be105c65128196c03))
+
+### Changed
+
+- align pins to v1.8.128 (b671ddc) ([640d401](https://github.com/y-miyazaki/config/commit/640d401e9cb3669d401dd99b4486f6be2af31610))
+- finalize all pins v1.8.128 (0e1af9a) ([b671ddc](https://github.com/y-miyazaki/config/commit/b671ddc22b180fcefa940fbae788da5564dc5609))
+- pin all to release v1.8.128 (5026f21) ([0e1af9a](https://github.com/y-miyazaki/config/commit/0e1af9a48281e32a1735caf28bfc8778dc2c92f3))
+- pin all to v1.8.128 (2f35e4f) ([5026f21](https://github.com/y-miyazaki/config/commit/5026f21bb77b63c712b8dba692b27da9581da8e7))
+- (loop) include comment-posting skills in the non-split skills fixture ([2f35e4f](https://github.com/y-miyazaki/config/commit/2f35e4f32fca6168ea9635b9a146a75368fbaaca))
+- (skills) ship link rules for github-issue-triage and enforce them for comment skills ([30f24bf](https://github.com/y-miyazaki/config/commit/30f24bffcadcf625d15500d436c690890cb5e79c))
+- (apm) document and enforce loop PR body link and template rules ([dde4578](https://github.com/y-miyazaki/config/commit/dde4578d69e1eb5b9b39fd08d41ef05c09591bef))
+- (skills) make PR body link rules and template columns explicit in SKILL.md ([df91022](https://github.com/y-miyazaki/config/commit/df910223d68c7efe2249a731d31c7abbe410cba3))
+
 ## [1.8.123] - 2026-10-17
 
 ### Fixed
@@ -2510,6 +2527,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update GitHub Actions to use loop-install-cli and other actions version 1.8.4 ([2c56aa0](https://github.com/y-miyazaki/config/commit/2c56aa01ad05ff9a45d6dd0dfb3f65b39a03766c))
 
+[1.8.128]: https://github.com/y-miyazaki/config/compare/v1.8.123...640d401e9cb3669d401dd99b4486f6be2af31610
 [1.8.123]: https://github.com/y-miyazaki/config/compare/v1.8.121...518ff27a3a7232cbddf80fce343ead2a414fe90a
 [1.8.121]: https://github.com/y-miyazaki/config/compare/v1.8.120...5da13eb637a89cfa6d46d1a254ccb2463d87c4df
 [1.8.120]: https://github.com/y-miyazaki/config/compare/v1.8.119...fc7153542006aa1476d069debbd6e2b854463e8a
