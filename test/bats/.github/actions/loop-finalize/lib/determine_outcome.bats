@@ -11,6 +11,10 @@
 #   pr_push is pr_pushed, none is reported
 # - APPROVE with changes and an unknown or empty delivery is error (fail closed)
 # - REJECT with changes is rejected; a missing verdict with changes is error
+# - issue_comment is issue_commented and pr_review is pr_reviewed regardless of
+#   has_changes and APPROVE/empty verdict
+# - REJECT is rejected for issue_comment and pr_review
+# - an override wins and a failed agent is error for issue_comment and pr_review
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -82,4 +86,53 @@ setup() {
     [ "$output" = "rejected" ]
     run determine_outcome "" success true "" pr_create
     [ "$output" = "error" ]
+}
+
+@test "REJECT is rejected for pr_review and issue_comment" {
+    local delivery c checked=0
+    for delivery in pr_review issue_comment; do
+        for c in true false; do
+            run determine_outcome "" success "$c" REJECT "${delivery}"
+            [ "$status" -eq 0 ]
+            [ "$output" = "rejected" ]
+            checked=$((checked + 1))
+        done
+    done
+    [ "${checked}" -eq 4 ]
+}
+
+@test "failed agent is error for issue_comment and pr_review" {
+    local delivery r checked=0
+    for delivery in issue_comment pr_review; do
+        for r in failure cancelled; do
+            run determine_outcome "" "$r" false APPROVE "${delivery}"
+            [ "$output" = "error" ]
+            checked=$((checked + 1))
+        done
+    done
+    [ "${checked}" -eq 4 ]
+}
+
+@test "issue_comment and pr_review are issue_commented and pr_reviewed with or without changes" {
+    local row delivery expected c v checked=0
+    for row in "issue_comment:issue_commented" "pr_review:pr_reviewed"; do
+        delivery="${row%%:*}"
+        expected="${row#*:}"
+        for c in true false; do
+            for v in APPROVE ""; do
+                run determine_outcome "" success "$c" "$v" "${delivery}"
+                [ "$status" -eq 0 ]
+                [ "$output" = "${expected}" ]
+                checked=$((checked + 1))
+            done
+        done
+    done
+    [ "${checked}" -eq 8 ]
+}
+
+@test "override wins over issue_comment and pr_review" {
+    run determine_outcome watch success true APPROVE issue_comment
+    [ "$output" = "watch" ]
+    run determine_outcome watch failure true REJECT pr_review
+    [ "$output" = "watch" ]
 }
