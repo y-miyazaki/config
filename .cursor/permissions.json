@@ -100,7 +100,8 @@
       "git commit, push, checkout, rebase, reset --hard, clean -f, and branch -D require approval.",
       "Do not read or write .env files, credentials, secrets/, private keys, or cloud credential paths.",
       "Do not dump environment variables (env, printenv); they carry tokens.",
-      "Do not write outside the repository (e.g. ~/)."
+      "Do not write outside the repository (e.g. ~/).",
+      "Do not call the codebase-memory-mcp delete_project tool."
     ]
   }
 }
