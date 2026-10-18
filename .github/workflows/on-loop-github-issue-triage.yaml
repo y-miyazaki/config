@@ -116,8 +116,8 @@ jobs:
       agent_maker_instructions: |
         Triage the Issue per the github-issue-triage skill.
         Apply allowlisted labels. The workflow posts the Issue comment itself (with its Meta block
-        and footer): do NOT post one. End your session with the comment markdown — analysis and any
-        questions — as your only output.
+        and footer): do NOT post one. Your final message IS the comment: only the comment markdown —
+        analysis and any questions — with no preamble, no status line, and no leading "---".
         Do not open PRs or call repository_dispatch (platform hook handles ready+autofix).
       agent_maker_max_turns: 100
       agent_maker_model: claude-sonnet-5

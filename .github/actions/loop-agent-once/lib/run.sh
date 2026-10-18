@@ -114,7 +114,7 @@ function emit_usage_json_output {
 function post_loop_comment {
     local rc="${1:-0}"
     local outcome="unchanged"
-    local issue_number
+    local issue_number comment_file
 
     if [[ -z ${COMMENT_HANDOFF_KEY:-} || -z ${OUTPUT_FILE:-} ]]; then
         return 0
@@ -133,8 +133,14 @@ function post_loop_comment {
         return 0
     fi
 
+    # run_agent_capture prefixes the agent's text with the platform's own
+    # "Agent summary:" / "Agent usage:" lines (usage.sh); they are not the agent's words.
+    comment_file="$(mktemp)"
+    grep -vE '^Agent (summary|usage): ' "${OUTPUT_FILE}" > "${comment_file}" || true
+
     GH_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-}}" post_entity_comment "${issue_number}" "${COMMENT_MARKER:-}" \
-        "${OUTPUT_FILE}" "${outcome}" "${AGENT_ENGINE:-}" "$(build_usage_json)" "${RUN_URL:-}"
+        "${comment_file}" "${outcome}" "${AGENT_ENGINE:-}" "$(build_usage_json)" "${RUN_URL:-}"
+    rm -f "${comment_file}"
 }
 
 #######################################

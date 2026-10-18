@@ -13,6 +13,7 @@
 #   the legacy MODEL / EFFORT / MAX_TURNS env values do not reach the agent
 # - run_loop_agent_once reads AGENT_ENGINE, not the legacy ENGINE name
 # - post_loop_comment posts the captured agent text with Meta and the footer as one Issue comment
+# - post_loop_comment drops the platform's own Agent summary / Agent usage lines from the captured text
 # - post_loop_comment does nothing when COMMENT_HANDOFF_KEY is empty or not an Issue key
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
@@ -180,6 +181,23 @@ STUB
     [[ ${body} == "<!-- t:v1 -->"$'\n'"Triage: documentation."* ]]
     [[ ${body} == *"| outcome | unchanged |"* ]]
     [[ ${body} == *"Written by Loop Engineering (LE)"* ]]
+}
+
+@test "post_loop_comment drops the platform's own Agent summary and Agent usage lines" {
+    _stub_gh_comment
+    OUTPUT_FILE="${BATS_TEST_TMPDIR}/agent.md"
+    printf '%s\n' \
+        'Agent summary: role=agent model=claude-sonnet-5 tools=13 turns=15 duration_ms=36360' \
+        'Agent usage: input=20 output=2823 cache_read=412973 cache_write=50663 cost_usd=0.237522' \
+        '' 'Triage: documentation.' 'Agent usage is shown in Meta.' > "${OUTPUT_FILE}"
+    COMMENT_HANDOFF_KEY=entity:issue:1014 COMMENT_MARKER="<!-- t:v1 -->" RUN_URL="https://x/run/1" REPOSITORY=o/r AGENT_ENGINE=claude
+    run post_loop_comment 0
+    [ "$status" -eq 0 ]
+    body="$(cat "${BATS_TEST_TMPDIR}/gh.body")"
+    [[ ${body} == "<!-- t:v1 -->"$'\n'"Triage: documentation."* ]]
+    [[ ${body} != *"Agent summary:"* ]]
+    [[ ${body} != *"Agent usage: input="* ]]
+    [[ ${body} == *"Agent usage is shown in Meta."* ]]
 }
 
 @test "post_loop_comment does nothing when COMMENT_HANDOFF_KEY is empty or not an Issue key" {
