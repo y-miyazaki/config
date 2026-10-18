@@ -263,7 +263,8 @@ function github_repo_web_base {
 #   clickable. This turns a code span into a markdown link only when it names a
 #   changed file (CHANGED_FILES_JSON) or a commit SHA that appears in the detect
 #   result (DETECT_RESULT_JSON), so example paths and unknown tokens stay as
-#   written. Existing links and fenced code blocks are left alone. A no-op when
+#   written. A bare 7-40 hex token is linked only when it prefixes a detected
+#   commit SHA. Existing links and fenced code blocks are left alone. A no-op when
 #   the repository or blob ref is unknown.
 #
 # Globals:
@@ -310,17 +311,33 @@ except ValueError:
 shas = sorted(set(re.findall(r"\b[0-9a-f]{40}\b", os.environ.get("DETECT_JSON") or "")))
 
 
-def link(match):
-    token = match.group(1)
+def link_token(token):
     norm = token[2:] if token.startswith("./") else token
     if norm in paths:
         return "[%s](%s/blob/%s/%s)" % (token, base, ref, quote(norm, safe="/"))
+    return link_sha(token)
+
+
+def link_sha(token):
     if re.fullmatch(r"[0-9a-f]{7,40}", token):
         for sha in shas:
             if sha.startswith(token):
                 return "[%s](%s/commit/%s)" % (token, base, sha)
-    return match.group(0)
+    return None
 
+
+def link(match):
+    if match.group(1):
+        return match.group(0)
+    if match.group(2):
+        return link_token(match.group(2)) or match.group(0)
+    return link_sha(match.group(3)) or match.group(0)
+
+
+# Alternatives, in priority order: an existing link, a code span, a bare SHA.
+pattern = re.compile(
+    r"(\[[^\]\n]*\]\([^)\n]*\))|`([^`\n]+)`|(?<![\w/#=.-])([0-9a-f]{7,40})(?![\w/-])"
+)
 
 out = []
 fenced = False
@@ -331,7 +348,7 @@ for line in text.split("\n"):
     elif fenced:
         out.append(line)
     else:
-        out.append(re.sub(r"(?<!\[)`([^`\n]+)`(?!\]\()", link, line))
+        out.append(pattern.sub(link, line))
 sys.stdout.write("\n".join(out))
 PY
 }
