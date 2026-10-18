@@ -103,7 +103,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
 
       - name: Download and install absc
-        uses: y-miyazaki/config/.github/actions/install-github-release@68cf85cf255658b1328e25a66c19c138e9c28b16 # v1.8.125
+        uses: y-miyazaki/config/.github/actions/install-github-release@4d9192ac7c60007ecad8110269ea395d6f67a217 # v1.8.126
 
         with:
           asset_pattern: "absc-linux-amd64.tar.gz"
@@ -181,7 +181,7 @@ jobs:
 
       - name: Summary
         if: always()
-        uses: y-miyazaki/config/.github/actions/summary@68cf85cf255658b1328e25a66c19c138e9c28b16 # v1.8.125
+        uses: y-miyazaki/config/.github/actions/summary@4d9192ac7c60007ecad8110269ea395d6f67a217 # v1.8.126
 
         with:
           artifacts: |
