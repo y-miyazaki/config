@@ -5,10 +5,12 @@
 #
 # Usage:
 #   bash scripts/self/ci/pin_config_actions.sh [TAG] [--dry-run] [--no-push]
+#   bash scripts/self/ci/pin_config_actions.sh --pin-only [TAG] [--dry-run]
 #
 # Design Rules:
 #   - fix commit → BASE_SHA; tag comes last
 #   - Step 4 aligns pins to RELEASE_SHA for zizmor ref-version-mismatch
+#   - --pin-only moves every pin to HEAD in one commit; it never tags or pushes
 #   - Tag stays on the release commit; the align commit updates yaml
 #
 # Output:
@@ -26,6 +28,7 @@ export LC_ALL=C.UTF-8
 DRY_RUN=false
 FORCE_TAG=false
 NO_PUSH=false
+PIN_ONLY=false
 REPO_ROOT=""
 TAG=""
 
@@ -50,7 +53,7 @@ TAG=""
 #######################################
 function show_usage {
     cat << EOF
-Usage: $(basename "$0") [TAG] [--dry-run] [--force-tag] [--no-push]
+Usage: $(basename "$0") [TAG] [--dry-run] [--force-tag] [--no-push] [--pin-only]
 
 Pin y-miyazaki/config actions/workflows to SHA refs (no @vX.Y.Z refs).
 
@@ -59,12 +62,14 @@ Options:
   --dry-run      Print planned steps without committing, tagging, or pushing
   --force-tag    Overwrite TAG on origin when it already exists (default: refuse)
   --no-push      Commit and tag locally without pushing to origin
+  --pin-only     Pin every ref to HEAD in one commit; no tag, no push (TAG defaults to the latest tag)
 
 Examples:
   bash scripts/self/ci/pin_config_actions.sh
   bash scripts/self/ci/pin_config_actions.sh v1.8.14
   bash scripts/self/ci/pin_config_actions.sh --dry-run
   bash scripts/self/ci/pin_config_actions.sh --no-push
+  bash scripts/self/ci/pin_config_actions.sh --pin-only
 EOF
     exit 0
 }
@@ -73,11 +78,12 @@ EOF
 # parse_arguments: Parse CLI options
 #
 # Description:
-#   Supports TAG, --dry-run, --no-push, and --help.
+#   Supports TAG, --dry-run, --no-push, --pin-only, and --help.
 #
 # Globals:
 #   DRY_RUN - Set to true when --dry-run is passed
 #   NO_PUSH - Set to true when --no-push is passed
+#   PIN_ONLY - Set to true when --pin-only is passed
 #   TAG     - Optional release tag (for example v1.8.14)
 #
 # Arguments:
@@ -102,6 +108,10 @@ function parse_arguments {
                 ;;
             --force-tag)
                 FORCE_TAG=true
+                shift
+                ;;
+            --pin-only)
+                PIN_ONLY=true
                 shift
                 ;;
             --no-push)
@@ -264,6 +274,26 @@ function next_patch_tag {
 }
 
 #######################################
+# latest_tag: Print the latest vMAJOR.MINOR.PATCH tag
+#
+# Globals:
+#   None
+#
+# Arguments:
+#   None
+#
+# Outputs:
+#   Latest tag on stdout (empty when none exists)
+#
+# Returns:
+#   0 always
+#
+#######################################
+function latest_tag {
+    git tag -l 'v[0-9]*.[0-9]*.[0-9]*' | sort -V | tail -1
+}
+
+#######################################
 # pin_all_to_head: Pin all config refs to HEAD
 #
 # Description:
@@ -305,10 +335,12 @@ function pin_all_to_head {
 #
 # Description:
 #   Pins config actions through four commit steps, tags RELEASE_SHA, and pushes.
+#   With --pin-only, pins every ref to HEAD in one commit and stops.
 #
 # Globals:
 #   DRY_RUN - Skips mutating git operations when true
 #   NO_PUSH - Skips git push when true
+#   PIN_ONLY - Pins to HEAD only: no tag, no push
 #   REPO_ROOT - Repository root directory
 #   TAG - Release tag to apply and create
 #
@@ -339,7 +371,10 @@ function main {
 
     git fetch --tags origin 2> /dev/null || true
 
-    if [[ -z ${TAG} ]]; then
+    if [[ -z ${TAG} && ${PIN_ONLY} == true ]]; then
+        TAG="$(latest_tag)"
+        [[ -n ${TAG} ]] || TAG="$(next_patch_tag)"
+    elif [[ -z ${TAG} ]]; then
         TAG="$(next_patch_tag)"
     fi
     base_sha="$(git rev-parse HEAD)"
@@ -350,6 +385,20 @@ function main {
     echo
 
     mapfile -t all_files < <(all_yaml_files)
+
+    if [[ ${PIN_ONLY} == true ]]; then
+        echo "=== pin only: all pins → HEAD ${base_sha:0:7} # ${TAG} (no tag, no push) ==="
+        if [[ ${DRY_RUN} == true ]]; then
+            echo "[dry-run]"
+        else
+            apply_pin_sha "${base_sha}" "${TAG}" "${all_files[@]}"
+            commit_yaml "chore: pin all to ${base_sha:0:7} (${TAG})" || echo "pins already up to date" >&2
+        fi
+        echo
+        echo "Done."
+        echo "  pinned_sha: ${base_sha}"
+        return 0
+    fi
 
     echo "=== 1: all pins → base SHA ${base_sha:0:7} ==="
     if [[ ${DRY_RUN} == true ]]; then

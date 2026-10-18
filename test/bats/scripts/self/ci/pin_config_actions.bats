@@ -10,6 +10,8 @@
 # - next_patch_tag increments the latest v-prefixed tag
 # - an existing origin tag is refused before anything is pushed (unless --force-tag)
 # - --help documents --force-tag
+# - --pin-only pins to HEAD in one commit without creating a tag
+# - --pin-only --dry-run leaves the tree untouched
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -84,4 +86,44 @@ EOF
     run bash "${PIN_SCRIPT}" --help
     [ "$status" -eq 0 ]
     [[ $output == *"--force-tag"* ]]
+}
+
+@test "pin_config_actions --pin-only pins to HEAD in one commit without a tag" {
+    mkdir -p "${GIT_TEST_REPO}/.github/workflows"
+    cat > "${GIT_TEST_REPO}/.github/workflows/test.yaml" << 'EOF'
+jobs:
+  test:
+    steps:
+      - uses: y-miyazaki/config/.github/actions/example@abc1234 # v1.0.0
+EOF
+    git_test_repo_commit "add workflow"
+    git_test_repo_git tag v1.0.0
+    local head_before commits_before
+    head_before="$(git -C "${GIT_TEST_REPO}" rev-parse HEAD)"
+    commits_before="$(git -C "${GIT_TEST_REPO}" rev-list --count HEAD)"
+
+    git_test_repo_run "bash '${PIN_SCRIPT}' --pin-only"
+    [ "$status" -eq 0 ]
+    grep -q "example@${head_before} # v1.0.0" "${GIT_TEST_REPO}/.github/workflows/test.yaml"
+    [ "$(git -C "${GIT_TEST_REPO}" rev-list --count HEAD)" -eq $((commits_before + 1)) ]
+    [ "$(git -C "${GIT_TEST_REPO}" tag -l | wc -l | tr -d ' ')" -eq 1 ]
+}
+
+@test "pin_config_actions --pin-only --dry-run leaves the tree untouched" {
+    mkdir -p "${GIT_TEST_REPO}/.github/workflows"
+    cat > "${GIT_TEST_REPO}/.github/workflows/test.yaml" << 'EOF'
+jobs:
+  test:
+    steps:
+      - uses: y-miyazaki/config/.github/actions/example@abc1234 # v1.0.0
+EOF
+    git_test_repo_commit "add workflow"
+    git_test_repo_git tag v1.0.0
+    local head_before
+    head_before="$(git -C "${GIT_TEST_REPO}" rev-parse HEAD)"
+
+    git_test_repo_run "bash '${PIN_SCRIPT}' --pin-only --dry-run"
+    [ "$status" -eq 0 ]
+    grep -q "example@abc1234" "${GIT_TEST_REPO}/.github/workflows/test.yaml"
+    [ "$(git -C "${GIT_TEST_REPO}" rev-parse HEAD)" = "${head_before}" ]
 }
