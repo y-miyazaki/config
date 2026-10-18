@@ -6,6 +6,7 @@ Load ONLY at synthesis time, after tests are written.
 Rules:
 - Keep top-level ## Overview, ## Summary, and ## Verification headings exactly as written.
 - Link every repository path, commit SHA, and workflow/job in Summary tables as a markdown link per category-pr-body-links.md. <linked ...> marks where a link goes; do not emit it, and do not use a plain code span for a linkable item.
+- Keep the table columns as written; do not rename, merge, or drop columns.
 - Use ### Deferred (not Skipped) for items not done in this run.
 - Do NOT emit ### Candidates, Outcome, or Suggested next action.
 - Never state that tests passed. You cannot run them here.
