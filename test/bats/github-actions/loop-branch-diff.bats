@@ -7,6 +7,7 @@
 # - clean worktree with commits ahead of base counts as branch changes
 # - only .loop/ files vs base do not count
 # - HEAD identical to base is empty
+# - a rename lists both the old and the new path
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -54,4 +55,18 @@ setup() {
     run list_non_loop_branch_files "${WORK}" "main"
     [ "$status" -eq 0 ]
     [ -z "$output" ]
+}
+
+@test "list_non_loop_branch_files lists both paths of a rename" {
+    printf 'hunter2\n' > "${WORK}/secrets.txt" # pragma: allowlist secret
+    bats_git_commit "${WORK}" "chore: add secrets file" secrets.txt
+    git -C "${WORK}" push -q origin main
+    git -C "${WORK}" checkout -q -b feature
+    mkdir -p "${WORK}/docs"
+    git -C "${WORK}" mv secrets.txt docs/notes.txt
+    bats_git_commit "${WORK}" "refactor: rename secrets file"
+    run list_non_loop_branch_files "${WORK}" "main"
+    [ "$status" -eq 0 ]
+    [[ $output == *"secrets.txt"* ]]
+    [[ $output == *"docs/notes.txt"* ]]
 }

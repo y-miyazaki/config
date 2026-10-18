@@ -230,7 +230,7 @@ function run_verify {
     # diff fails with "no merge base". Swallowing that failure used to read as
     # "no changes" and approve an unreviewed branch.
     git fetch origin "${BASE_BRANCH}" 2> /dev/null || true
-    if ! changed_files="$(git diff --name-only "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/' \
+    if ! changed_files="$(git diff --name-only --no-renames "origin/${BASE_BRANCH}...HEAD" -- . ':!.loop/' \
         2> "${attempt_dir}/branch-diff-error.txt")"; then
         local diff_error
         diff_error="$(tr '\n' ' ' < "${attempt_dir}/branch-diff-error.txt" | sed 's/ *$//')"
