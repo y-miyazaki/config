@@ -491,7 +491,7 @@ dependencies:
   - .agents/skills/github-pr-review/scripts/lib/terraform.sh
   - .agents/skills/github-pr-review/scripts/lib/validation.sh
   - .agents/skills/github-pr-review/scripts/lib/yaml_map_order.py
-  - .agents/skills/github-pr-review/scripts/post_review.sh
+  - .agents/skills/github-pr-review/scripts/render_review.sh
   - .agents/skills/github-pr-revise
   - .agents/skills/github-pr-revise/SKILL.md
   - .agents/skills/github-pr-revise/assets/pr-body-template-survey.md
@@ -626,7 +626,7 @@ dependencies:
   - .claude/skills/github-pr-review/scripts/lib/terraform.sh
   - .claude/skills/github-pr-review/scripts/lib/validation.sh
   - .claude/skills/github-pr-review/scripts/lib/yaml_map_order.py
-  - .claude/skills/github-pr-review/scripts/post_review.sh
+  - .claude/skills/github-pr-review/scripts/render_review.sh
   - .claude/skills/github-pr-revise
   - .claude/skills/github-pr-revise/SKILL.md
   - .claude/skills/github-pr-revise/assets/pr-body-template-survey.md
@@ -732,10 +732,10 @@ dependencies:
     .agents/skills/github-pr-body/scripts/pr_body.sh: sha256:f0d7a125e527fa642102167d922d1ce8234dc8a659a897668d9434ff23943177
     .agents/skills/github-pr-body/scripts/pr_comment.sh: sha256:22ffc9d892719fbaf89c80755f54fcb2f94d0eb7d7f8db75d2c26600144b9fa9
     .agents/skills/github-pr-body/scripts/pr_fetch.sh: sha256:28aac33206586f30c9e7014ba0c0aafef77dc3cf83c8e6a2b2a214f792378337
-    .agents/skills/github-pr-review/SKILL.md: sha256:171f84fbd6340fad44aa4429252041178015a8ebba5f4d914ace779f8651ed5a
-    .agents/skills/github-pr-review/assets/inline-comment-template.md: sha256:9c48671869ca42774bf8b391620c3bc18a77ad393b1cf084bcb1a391a9859fef
+    .agents/skills/github-pr-review/SKILL.md: sha256:6e89064c6d84bb812ed55a8627a26c83a6613fedf71e6da6d0288bc3722f6642
+    .agents/skills/github-pr-review/assets/inline-comment-template.md: sha256:32f93d2ecd88517598176a890c795ab9ad5defcb143fc311d96e6114853bde02
     .agents/skills/github-pr-review/assets/report-template.json: sha256:6cf31cf504d50ba3368387658554a51da329718f2d3539a5ae2cfdbdea6ccc0b
-    .agents/skills/github-pr-review/assets/review-body-template.md: sha256:b7cd516bba07a4073aba6479d73a53300e0bf070dfb95807b2a956e604e9a019
+    .agents/skills/github-pr-review/assets/review-body-template.md: sha256:df75c9c3af150915238a1ccc7400523fc4764689e086d43ba7b7ae03501b1cd6
     .agents/skills/github-pr-review/eval.yaml: sha256:a8ab8b9e7c83168e463a1bdba951b6132dae471e83d7fa3e2dda7b631bdc769d
     .agents/skills/github-pr-review/evals/tasks/basic.yaml: sha256:60e7214ea9cc9b1fd6c46da20a776ad9c0265caa80b42d676ee15edf8eb02503
     .agents/skills/github-pr-review/evals/tasks/no-evidence-suppressed.yaml: sha256:201e4972cfe50204db43f3361e2d407955c4074d3da888777b770cc8175b4066
@@ -758,7 +758,7 @@ dependencies:
     .agents/skills/github-pr-review/scripts/lib/terraform.sh: sha256:ea6645e2a7568d82745051d539eac406a35640b033dae8e5e72fbf0f96a56b55
     .agents/skills/github-pr-review/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .agents/skills/github-pr-review/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
-    .agents/skills/github-pr-review/scripts/post_review.sh: sha256:92bb0afc854fda41f47f4842eeab6027471a46a73d0ded31c0371e8a7d4684a8
+    .agents/skills/github-pr-review/scripts/render_review.sh: sha256:c8fb304265e0ba7758af0c00474fa0654ab7485e613d537a5ce581f771d41e75
     .agents/skills/github-pr-revise/SKILL.md: sha256:0daed4599c1b31e1a88d967677f9cba1c70bc8346dd336c392d129b3c7a25c58
     .agents/skills/github-pr-revise/assets/pr-body-template-survey.md: sha256:637eb1297f8a7fbb13ce0067c6ff4541b44bd703943bd798b1ef384dc6989525
     .agents/skills/github-pr-revise/assets/pr-body-template.md: sha256:21b9c3078309f5070964a80b44d83ee78ae220e09f19f5db07ccaabaaab9b9d5
@@ -862,10 +862,10 @@ dependencies:
     .claude/skills/github-pr-body/scripts/pr_body.sh: sha256:f0d7a125e527fa642102167d922d1ce8234dc8a659a897668d9434ff23943177
     .claude/skills/github-pr-body/scripts/pr_comment.sh: sha256:22ffc9d892719fbaf89c80755f54fcb2f94d0eb7d7f8db75d2c26600144b9fa9
     .claude/skills/github-pr-body/scripts/pr_fetch.sh: sha256:28aac33206586f30c9e7014ba0c0aafef77dc3cf83c8e6a2b2a214f792378337
-    .claude/skills/github-pr-review/SKILL.md: sha256:171f84fbd6340fad44aa4429252041178015a8ebba5f4d914ace779f8651ed5a
-    .claude/skills/github-pr-review/assets/inline-comment-template.md: sha256:9c48671869ca42774bf8b391620c3bc18a77ad393b1cf084bcb1a391a9859fef
+    .claude/skills/github-pr-review/SKILL.md: sha256:6e89064c6d84bb812ed55a8627a26c83a6613fedf71e6da6d0288bc3722f6642
+    .claude/skills/github-pr-review/assets/inline-comment-template.md: sha256:32f93d2ecd88517598176a890c795ab9ad5defcb143fc311d96e6114853bde02
     .claude/skills/github-pr-review/assets/report-template.json: sha256:6cf31cf504d50ba3368387658554a51da329718f2d3539a5ae2cfdbdea6ccc0b
-    .claude/skills/github-pr-review/assets/review-body-template.md: sha256:b7cd516bba07a4073aba6479d73a53300e0bf070dfb95807b2a956e604e9a019
+    .claude/skills/github-pr-review/assets/review-body-template.md: sha256:df75c9c3af150915238a1ccc7400523fc4764689e086d43ba7b7ae03501b1cd6
     .claude/skills/github-pr-review/eval.yaml: sha256:a8ab8b9e7c83168e463a1bdba951b6132dae471e83d7fa3e2dda7b631bdc769d
     .claude/skills/github-pr-review/evals/tasks/basic.yaml: sha256:60e7214ea9cc9b1fd6c46da20a776ad9c0265caa80b42d676ee15edf8eb02503
     .claude/skills/github-pr-review/evals/tasks/no-evidence-suppressed.yaml: sha256:201e4972cfe50204db43f3361e2d407955c4074d3da888777b770cc8175b4066
@@ -888,7 +888,7 @@ dependencies:
     .claude/skills/github-pr-review/scripts/lib/terraform.sh: sha256:ea6645e2a7568d82745051d539eac406a35640b033dae8e5e72fbf0f96a56b55
     .claude/skills/github-pr-review/scripts/lib/validation.sh: sha256:90d4a03121954f13303571b84e4590976040d42d47015fbc0b591d0315d8a502
     .claude/skills/github-pr-review/scripts/lib/yaml_map_order.py: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
-    .claude/skills/github-pr-review/scripts/post_review.sh: sha256:92bb0afc854fda41f47f4842eeab6027471a46a73d0ded31c0371e8a7d4684a8
+    .claude/skills/github-pr-review/scripts/render_review.sh: sha256:c8fb304265e0ba7758af0c00474fa0654ab7485e613d537a5ce581f771d41e75
     .claude/skills/github-pr-revise/SKILL.md: sha256:0daed4599c1b31e1a88d967677f9cba1c70bc8346dd336c392d129b3c7a25c58
     .claude/skills/github-pr-revise/assets/pr-body-template-survey.md: sha256:637eb1297f8a7fbb13ce0067c6ff4541b44bd703943bd798b1ef384dc6989525
     .claude/skills/github-pr-revise/assets/pr-body-template.md: sha256:21b9c3078309f5070964a80b44d83ee78ae220e09f19f5db07ccaabaaab9b9d5
@@ -5226,7 +5226,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:171f84fbd6340fad44aa4429252041178015a8ebba5f4d914ace779f8651ed5a
+  content_hash: sha256:6e89064c6d84bb812ed55a8627a26c83a6613fedf71e6da6d0288bc3722f6642
 - kind: project-relative
   target: claude
   value: .claude/skills/github-pr-review/assets/inline-comment-template.md
@@ -5235,7 +5235,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:9c48671869ca42774bf8b391620c3bc18a77ad393b1cf084bcb1a391a9859fef
+  content_hash: sha256:32f93d2ecd88517598176a890c795ab9ad5defcb143fc311d96e6114853bde02
 - kind: project-relative
   target: claude
   value: .claude/skills/github-pr-review/assets/report-template.json
@@ -5253,7 +5253,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:b7cd516bba07a4073aba6479d73a53300e0bf070dfb95807b2a956e604e9a019
+  content_hash: sha256:df75c9c3af150915238a1ccc7400523fc4764689e086d43ba7b7ae03501b1cd6
 - kind: project-relative
   target: claude
   value: .claude/skills/github-pr-review/eval.yaml
@@ -5454,13 +5454,13 @@ deployments:
   content_hash: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
 - kind: project-relative
   target: claude
-  value: .claude/skills/github-pr-review/scripts/post_review.sh
+  value: .claude/skills/github-pr-review/scripts/render_review.sh
   runtime: null
   scope: project
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:92bb0afc854fda41f47f4842eeab6027471a46a73d0ded31c0371e8a7d4684a8
+  content_hash: sha256:c8fb304265e0ba7758af0c00474fa0654ab7485e613d537a5ce581f771d41e75
 - kind: project-relative
   target: claude
   value: .claude/skills/github-pr-revise
@@ -10509,7 +10509,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:171f84fbd6340fad44aa4429252041178015a8ebba5f4d914ace779f8651ed5a
+  content_hash: sha256:6e89064c6d84bb812ed55a8627a26c83a6613fedf71e6da6d0288bc3722f6642
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-pr-review/assets/inline-comment-template.md
@@ -10518,7 +10518,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:9c48671869ca42774bf8b391620c3bc18a77ad393b1cf084bcb1a391a9859fef
+  content_hash: sha256:32f93d2ecd88517598176a890c795ab9ad5defcb143fc311d96e6114853bde02
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-pr-review/assets/report-template.json
@@ -10536,7 +10536,7 @@ deployments:
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:b7cd516bba07a4073aba6479d73a53300e0bf070dfb95807b2a956e604e9a019
+  content_hash: sha256:df75c9c3af150915238a1ccc7400523fc4764689e086d43ba7b7ae03501b1cd6
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-pr-review/eval.yaml
@@ -10737,13 +10737,13 @@ deployments:
   content_hash: sha256:eb542fe34e2e1c11c08d0f78c4717cb3521fbe5ae2f6e05712317fa5478ccf80
 - kind: project-relative
   target: cursor
-  value: .agents/skills/github-pr-review/scripts/post_review.sh
+  value: .agents/skills/github-pr-review/scripts/render_review.sh
   runtime: null
   scope: project
   owners:
   - ./.apm/packages/github
   active_owner: ./.apm/packages/github
-  content_hash: sha256:92bb0afc854fda41f47f4842eeab6027471a46a73d0ded31c0371e8a7d4684a8
+  content_hash: sha256:c8fb304265e0ba7758af0c00474fa0654ab7485e613d537a5ce581f771d41e75
 - kind: project-relative
   target: cursor
   value: .agents/skills/github-pr-revise
