@@ -177,7 +177,7 @@ run_named_case() {
     run env -u LOOP_FAILURE_FILE ACTION_STATUS=success AGENT_RESULT=success DELIVERED_OUTCOME=unchanged bash "${SCRIPT}"
     [ "${status}" -eq 1 ]
     [[ ${output} == *"::error::LOOP_FAILURE_FILE is required"* ]]
-    ! grep -q '^outcome=' "${GITHUB_OUTPUT}" 2> /dev/null
+    run ! grep -q '^outcome=' "${GITHUB_OUTPUT}" 2> /dev/null
 }
 
 @test "outcome is resolved before the agent stage is recorded" {

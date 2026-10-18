@@ -357,10 +357,11 @@ dogfood_value() {
     # record-skip used to enumerate circuit_breaker and budget, which silently
     # dropped no_changes from the run log. Both callers now gate on should_run
     # alone so a quiet tick is distinguishable from a loop that never started.
-    local caller
+    local caller block
     for caller in "${BRANCH_CALLER}" "${ENTITY_CALLER}"; do
-        grep -A6 'record-skip:' "${caller}" | grep -qF "needs.detect.outputs.should_run == 'false'"
-        ! grep -A6 'record-skip:' "${caller}" | grep -q "skip_reason == '"
+        block="$(grep -A6 'record-skip:' "${caller}")"
+        grep -qF "needs.detect.outputs.should_run == 'false'" <<< "${block}"
+        run ! grep -q "skip_reason == '" <<< "${block}"
     done
 }
 
