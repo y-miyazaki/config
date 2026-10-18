@@ -24,11 +24,11 @@ inputs:
     required: false
   agent_failure_message:
     default: ""
-    description: "Failure message (stage) from the agent job (loop-execute failure_message / failure_stage); recorded when no finalize step recorded a failure"
+    description: "Failure message from the agent job (loop-execute failure_message); recorded when no finalize step recorded a failure"
     required: false
   agent_failure_stage:
     default: ""
-    description: "Failure message (stage) from the agent job (loop-execute failure_message / failure_stage); recorded when no finalize step recorded a failure"
+    description: "Failure stage from the agent job (loop-execute failure_stage); recorded when no finalize step recorded a failure"
     required: false
   agent_maker_skill_name:
     default: ""
