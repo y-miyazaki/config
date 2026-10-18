@@ -95,43 +95,43 @@ function validate_loop_write_contract {
     local finalize_label_allowlist="${8:-}"
 
     case "${level}" in
-    L1)
-        if [[ ${delivery} != "none" && ${delivery} != "issue_comment" ]]; then
-            echo "::error::delivery must be none or issue_comment at L1 (got: ${delivery:-empty})" >&2
+        L1)
+            if [[ ${delivery} != "none" && ${delivery} != "issue_comment" ]]; then
+                echo "::error::delivery must be none or issue_comment at L1 (got: ${delivery:-empty})" >&2
+                return 1
+            fi
+            if [[ -n ${agent_edit_target} ]]; then
+                echo "::error::agent_edit_target is not allowed at L1 (L1 is read-only)" >&2
+                return 1
+            fi
+            if [[ -n ${agent_edit_allowlist} ]]; then
+                echo "::error::agent_edit_allowlist is not allowed at L1 (L1 is read-only)" >&2
+                return 1
+            fi
+            if [[ -n ${agent_edit_denylist} ]]; then
+                echo "::error::agent_edit_denylist is not allowed at L1 (L1 is read-only)" >&2
+                return 1
+            fi
+            if [[ -n ${agent_unchanged_verdict} ]]; then
+                echo "::error::agent_unchanged_verdict is not allowed at L1 (L1 is read-only)" >&2
+                return 1
+            fi
+            if [[ -n ${finalize_script} ]]; then
+                echo "::error::finalize_script is not allowed at L1" >&2
+                return 1
+            fi
+            validate_finalize_label_allowlist "${delivery}" "${finalize_label_allowlist}" || return 1
+            return 0
+            ;;
+        L2 | L3) ;;
+        "")
+            echo "::error::level is required (L1, L2, or L3)" >&2
             return 1
-        fi
-        if [[ -n ${agent_edit_target} ]]; then
-            echo "::error::agent_edit_target is not allowed at L1 (L1 is read-only)" >&2
+            ;;
+        *)
+            echo "::error::level must be L1, L2, or L3 (got: ${level})" >&2
             return 1
-        fi
-        if [[ -n ${agent_edit_allowlist} ]]; then
-            echo "::error::agent_edit_allowlist is not allowed at L1 (L1 is read-only)" >&2
-            return 1
-        fi
-        if [[ -n ${agent_edit_denylist} ]]; then
-            echo "::error::agent_edit_denylist is not allowed at L1 (L1 is read-only)" >&2
-            return 1
-        fi
-        if [[ -n ${agent_unchanged_verdict} ]]; then
-            echo "::error::agent_unchanged_verdict is not allowed at L1 (L1 is read-only)" >&2
-            return 1
-        fi
-        if [[ -n ${finalize_script} ]]; then
-            echo "::error::finalize_script is not allowed at L1" >&2
-            return 1
-        fi
-        validate_finalize_label_allowlist "${delivery}" "${finalize_label_allowlist}" || return 1
-        return 0
-        ;;
-    L2 | L3) ;;
-    "")
-        echo "::error::level is required (L1, L2, or L3)" >&2
-        return 1
-        ;;
-    *)
-        echo "::error::level must be L1, L2, or L3 (got: ${level})" >&2
-        return 1
-        ;;
+            ;;
     esac
 
     validate_delivery_value "${delivery}" || return 1
@@ -143,15 +143,15 @@ function validate_loop_write_contract {
     validate_finalize_label_allowlist "${delivery}" "${finalize_label_allowlist}" || return 1
 
     case "${agent_edit_target}" in
-    fix | report) ;;
-    "")
-        echo "::error::agent_edit_target is required at ${level} (fix or report)" >&2
-        return 1
-        ;;
-    *)
-        echo "::error::agent_edit_target must be fix or report (got: ${agent_edit_target})" >&2
-        return 1
-        ;;
+        fix | report) ;;
+        "")
+            echo "::error::agent_edit_target is required at ${level} (fix or report)" >&2
+            return 1
+            ;;
+        *)
+            echo "::error::agent_edit_target must be fix or report (got: ${agent_edit_target})" >&2
+            return 1
+            ;;
     esac
 
     if [[ -z ${agent_edit_allowlist} ]]; then
@@ -160,15 +160,15 @@ function validate_loop_write_contract {
     fi
 
     case "${agent_unchanged_verdict}" in
-    APPROVE | REJECT) ;;
-    "")
-        echo "::error::agent_unchanged_verdict is required at ${level} (APPROVE or REJECT)" >&2
-        return 1
-        ;;
-    *)
-        echo "::error::agent_unchanged_verdict must be APPROVE or REJECT (got: ${agent_unchanged_verdict})" >&2
-        return 1
-        ;;
+        APPROVE | REJECT) ;;
+        "")
+            echo "::error::agent_unchanged_verdict is required at ${level} (APPROVE or REJECT)" >&2
+            return 1
+            ;;
+        *)
+            echo "::error::agent_unchanged_verdict must be APPROVE or REJECT (got: ${agent_unchanged_verdict})" >&2
+            return 1
+            ;;
     esac
 
     return 0

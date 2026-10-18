@@ -101,7 +101,7 @@ function resolve_detect_script_path {
     fi
 
     # Prefer realpath when available so checkout symlinks do not re-bind the script.
-    if command -v realpath >/dev/null 2>&1; then
+    if command -v realpath > /dev/null 2>&1; then
         resolved="$(realpath "${resolved}")"
     else
         resolved="$(cd "$(dirname "${resolved}")" && pwd)/$(basename "${resolved}")"
@@ -229,7 +229,7 @@ function apply_scoped_head_filter {
     fi
 
     for pr_json in "${OPEN_PRS_JSON[@]+"${OPEN_PRS_JSON[@]}"}"; do
-        head_ref="$(jq -r '.headRefName // empty' <<<"${pr_json}")"
+        head_ref="$(jq -r '.headRefName // empty' <<< "${pr_json}")"
         if [[ ${head_ref} == "${scoped_head}" ]]; then
             kept_prs+=("${pr_json}")
         fi
@@ -274,7 +274,7 @@ function apply_scoped_pr_number_filter {
     INTEGRATION_BRANCHES=()
 
     for pr_json in "${OPEN_PRS_JSON[@]+"${OPEN_PRS_JSON[@]}"}"; do
-        number="$(jq -r '.number // empty' <<<"${pr_json}")"
+        number="$(jq -r '.number // empty' <<< "${pr_json}")"
         if [[ ${number} == "${scoped_pr}" ]]; then
             kept_prs+=("${pr_json}")
         fi
@@ -422,7 +422,7 @@ function append_detect_candidate {
     fi
 
     if target_pending_blocks_detect "${target_state}"; then
-        pending_pr=$(jq -r '.pending.pr // empty' <<<"${target_state}")
+        pending_pr=$(jq -r '.pending.pr // empty' <<< "${target_state}")
         echo "::warning::Pending PR #${pending_pr} blocks detect for ${target_key}"
         PENDING_PR_BLOCKED=$((PENDING_PR_BLOCKED + 1))
         return 0
@@ -436,7 +436,7 @@ function append_detect_candidate {
 
     if detect_result_skip "${detect_result}"; then
         log_detect_notice "skip" "${target_key}" \
-            "detect skip=true failures=$(jq -r '.failures|length // 0' <<<"${detect_result}") ignored=$(jq -r '.ignored|length // 0' <<<"${detect_result}") ignored_reasons=$(jq -r '[.ignored[]?.reason // empty] | join("; ")' <<<"${detect_result}")"
+            "detect skip=true failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") ignored=$(jq -r '.ignored|length // 0' <<< "${detect_result}") ignored_reasons=$(jq -r '[.ignored[]?.reason // empty] | join("; ")' <<< "${detect_result}")"
         return 0
     fi
 
@@ -452,15 +452,15 @@ function append_detect_candidate {
         "${AGENT_EDIT_TARGET:-}" "")"
 
     candidate="$(build_loop_candidate_json \
-        "${target_key}" "${target_json}" "${prompt_text}" "${verifier_context}" "${detect_result}")" ||
-        return 0
+        "${target_key}" "${target_json}" "${prompt_text}" "${verifier_context}" "${detect_result}")" \
+        || return 0
 
     if [[ -n $accept_log_extra ]]; then
         log_detect_notice "accept" "${target_key}" \
-            "failures=$(jq -r '.failures|length // 0' <<<"${detect_result}") failure_types=$(jq -r '[.failures[]?.failure_type // empty] | unique | join(",")' <<<"${detect_result}") ${accept_log_extra}"
+            "failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") failure_types=$(jq -r '[.failures[]?.failure_type // empty] | unique | join(",")' <<< "${detect_result}") ${accept_log_extra}"
     else
         log_detect_notice "accept" "${target_key}" \
-            "failures=$(jq -r '.failures|length // 0' <<<"${detect_result}") failure_types=$(jq -r '[.failures[]?.failure_type // empty] | unique | join(",")' <<<"${detect_result}")"
+            "failures=$(jq -r '.failures|length // 0' <<< "${detect_result}") failure_types=$(jq -r '[.failures[]?.failure_type // empty] | unique | join(",")' <<< "${detect_result}")"
     fi
     CANDIDATES_JSON+=("${candidate}")
 }
@@ -512,10 +512,10 @@ function append_pull_request_candidate {
     local pr_json="$1"
     local pr_number head_branch head_ref base_branch
 
-    pr_number=$(jq -r '.number' <<<"${pr_json}")
-    head_branch=$(jq -r '.headRefName' <<<"${pr_json}")
-    head_ref=$(jq -r '.headRefOid' <<<"${pr_json}")
-    base_branch=$(jq -r '.baseRefName' <<<"${pr_json}")
+    pr_number=$(jq -r '.number' <<< "${pr_json}")
+    head_branch=$(jq -r '.headRefName' <<< "${pr_json}")
+    head_ref=$(jq -r '.headRefOid' <<< "${pr_json}")
+    base_branch=$(jq -r '.baseRefName' <<< "${pr_json}")
 
     append_detect_candidate \
         "pull_request:${pr_number}" \
@@ -593,11 +593,11 @@ function build_loop_candidate_json {
         log_detect_error "build_loop_candidate_json(${target_key}): target_json is empty after enrich"
         return 1
     fi
-    if ! jq -e . <<<"${target_json}" >/dev/null 2>&1; then
+    if ! jq -e . <<< "${target_json}" > /dev/null 2>&1; then
         log_detect_json_invalid "build_loop_candidate_json(${target_key})" "target_json" "${target_json}"
         return 1
     fi
-    if ! jq -e . <<<"${detect_result}" >/dev/null 2>&1; then
+    if ! jq -e . <<< "${detect_result}" > /dev/null 2>&1; then
         log_detect_json_invalid "build_loop_candidate_json(${target_key})" "detect_result" "${detect_result}"
         return 1
     fi
@@ -607,10 +607,10 @@ function build_loop_candidate_json {
     prompt_file="$(mktemp)"
     verifier_file="$(mktemp)"
     jq_stderr="$(mktemp)"
-    printf '%s' "${target_json}" >"${target_file}"
-    printf '%s' "${detect_result}" >"${result_file}"
-    printf '%s' "${prompt_text}" >"${prompt_file}"
-    printf '%s' "${verifier_context}" >"${verifier_file}"
+    printf '%s' "${target_json}" > "${target_file}"
+    printf '%s' "${detect_result}" > "${result_file}"
+    printf '%s' "${prompt_text}" > "${prompt_file}"
+    printf '%s' "${verifier_context}" > "${verifier_file}"
 
     candidate="$(jq -n \
         --slurpfile target_json "${target_file}" \
@@ -618,14 +618,14 @@ function build_loop_candidate_json {
         --rawfile verifier_context "${verifier_file}" \
         --slurpfile result "${result_file}" \
         '{target_json: $target_json[0], prompt: $prompt, verifier_context: $verifier_context, result: $result[0]}' \
-        2>"${jq_stderr}")" || {
-        log_detect_error "build_loop_candidate_json(${target_key}): jq assembly failed (target_json_bytes=${#target_json}, detect_bytes=${#detect_result}, prompt_bytes=${#prompt_text}, verifier_bytes=${#verifier_context}): $(tr -d '\n\r' <"${jq_stderr}")"
+        2> "${jq_stderr}")" || {
+        log_detect_error "build_loop_candidate_json(${target_key}): jq assembly failed (target_json_bytes=${#target_json}, detect_bytes=${#detect_result}, prompt_bytes=${#prompt_text}, verifier_bytes=${#verifier_context}): $(tr -d '\n\r' < "${jq_stderr}")"
         rm -f "${target_file}" "${result_file}" "${prompt_file}" "${verifier_file}" "${jq_stderr}"
         return 1
     }
     rm -f "${target_file}" "${result_file}" "${prompt_file}" "${verifier_file}" "${jq_stderr}"
 
-    if [[ -z ${candidate} ]] || ! jq -e . <<<"${candidate}" >/dev/null 2>&1; then
+    if [[ -z ${candidate} ]] || ! jq -e . <<< "${candidate}" > /dev/null 2>&1; then
         log_detect_json_invalid "build_loop_candidate_json(${target_key})" "candidate_output" "${candidate}"
         return 1
     fi
@@ -662,7 +662,7 @@ function checkout_context {
     fi
 
     for attempt in 1 2 3; do
-        if git fetch origin "${branch}" --prune >/dev/null 2>&1; then
+        if git fetch origin "${branch}" --prune > /dev/null 2>&1; then
             fetch_ok=true
             break
         fi
@@ -678,7 +678,7 @@ function checkout_context {
     fi
 
     if [[ -n ${ref} ]]; then
-        if git checkout -q "${ref}" 2>/dev/null || git checkout -q -B "${branch}" "origin/${branch}" 2>/dev/null; then
+        if git checkout -q "${ref}" 2> /dev/null || git checkout -q -B "${branch}" "origin/${branch}" 2> /dev/null; then
             return 0
         fi
         echo "::warning::loop-detect/checkout: checkout failed for ${branch} ref ${ref}"
@@ -686,7 +686,7 @@ function checkout_context {
         return 1
     fi
 
-    if git checkout -q -B "${branch}" "origin/${branch}" 2>/dev/null || git checkout -q "${branch}" 2>/dev/null; then
+    if git checkout -q -B "${branch}" "origin/${branch}" 2> /dev/null || git checkout -q "${branch}" 2> /dev/null; then
         return 0
     fi
 
@@ -714,11 +714,11 @@ function checkout_context {
 function detect_result_skip {
     local result="$1"
     local skip_val
-    if ! jq -e . <<<"${result}" >/dev/null 2>&1; then
+    if ! jq -e . <<< "${result}" > /dev/null 2>&1; then
         log_detect_json_invalid "detect_result_skip" "detect_script_output" "${result}"
         return 1
     fi
-    skip_val=$(jq -r 'if (.skip | type) == "boolean" then (.skip | tostring) else "true" end' <<<"${result}")
+    skip_val=$(jq -r 'if (.skip | type) == "boolean" then (.skip | tostring) else "true" end' <<< "${result}")
     [[ ${skip_val} == "true" ]]
 }
 
@@ -744,17 +744,17 @@ function enrich_target_json_with_ci_context {
     local detect_result="$2"
     local enriched jq_stderr base_file detect_file
 
-    if ! jq -e '.failures[0]' <<<"${detect_result}" >/dev/null 2>&1; then
+    if ! jq -e '.failures[0]' <<< "${detect_result}" > /dev/null 2>&1; then
         printf '%s' "${target_json}"
         return 0
     fi
 
-    if ! jq -e . <<<"${target_json}" >/dev/null 2>&1; then
+    if ! jq -e . <<< "${target_json}" > /dev/null 2>&1; then
         log_detect_json_invalid "enrich_target_json_with_ci_context" "target_json" "${target_json}"
         printf '%s' "${target_json}"
         return 0
     fi
-    if ! jq -e . <<<"${detect_result}" >/dev/null 2>&1; then
+    if ! jq -e . <<< "${detect_result}" > /dev/null 2>&1; then
         log_detect_json_invalid "enrich_target_json_with_ci_context" "detect_result" "${detect_result}"
         printf '%s' "${target_json}"
         return 0
@@ -766,8 +766,8 @@ function enrich_target_json_with_ci_context {
     base_file="$(mktemp)"
     detect_file="$(mktemp)"
     jq_stderr="$(mktemp)"
-    printf '%s' "${target_json}" >"${base_file}"
-    printf '%s' "${detect_result}" >"${detect_file}"
+    printf '%s' "${target_json}" > "${base_file}"
+    printf '%s' "${detect_result}" > "${detect_file}"
 
     enriched="$(jq -n \
         --slurpfile base "${base_file}" \
@@ -777,15 +777,15 @@ function enrich_target_json_with_ci_context {
          | if ($f.workflow_run_id // "") != "" then .workflow_run_id = ($f.workflow_run_id | tostring) else . end
          | if ($f.workflow_name // "") != "" then .workflow_name = $f.workflow_name else . end
          | if ($f.head_sha // "") != "" then .head_sha = $f.head_sha else . end' \
-        2>"${jq_stderr}")" || {
-        log_detect_error "enrich_target_json_with_ci_context: jq enrich failed (base_bytes=${#target_json}, detect_bytes=${#detect_result}): $(tr -d '\n\r' <"${jq_stderr}")"
+        2> "${jq_stderr}")" || {
+        log_detect_error "enrich_target_json_with_ci_context: jq enrich failed (base_bytes=${#target_json}, detect_bytes=${#detect_result}): $(tr -d '\n\r' < "${jq_stderr}")"
         rm -f "${base_file}" "${detect_file}" "${jq_stderr}"
         printf '%s' "${target_json}"
         return 0
     }
     rm -f "${base_file}" "${detect_file}" "${jq_stderr}"
 
-    if [[ -z ${enriched} ]] || ! jq -e . <<<"${enriched}" >/dev/null 2>&1; then
+    if [[ -z ${enriched} ]] || ! jq -e . <<< "${enriched}" > /dev/null 2>&1; then
         log_detect_json_invalid "enrich_target_json_with_ci_context" "enriched_output" "${enriched}"
         log_detect_error "enrich_target_json_with_ci_context: using base target_json after enrich failure"
         printf '%s' "${target_json}"
@@ -793,7 +793,7 @@ function enrich_target_json_with_ci_context {
     fi
 
     log_detect_notice "enrich" "ok" \
-        "workflow_run_id=$(jq -r '.workflow_run_id // "-"' <<<"${enriched}")"
+        "workflow_run_id=$(jq -r '.workflow_run_id // "-"' <<< "${enriched}")"
     printf '%s' "${enriched}"
 }
 
@@ -882,8 +882,8 @@ function log_detect_json_invalid {
     local json="$3"
     local jq_err preview
 
-    jq_err="$(jq -e . <<<"${json}" 2>&1 >/dev/null || true)"
-    jq_err="$(tr -d '\n\r' <<<"${jq_err}")"
+    jq_err="$(jq -e . <<< "${json}" 2>&1 > /dev/null || true)"
+    jq_err="$(tr -d '\n\r' <<< "${jq_err}")"
     preview="$(printf '%.120s' "${json}" | tr -d '\n\r\t')"
     log_detect_error \
         "${context}: ${label} is not valid JSON (bytes=${#json}, jq_error=${jq_err:-unknown}, preview=${preview})"
@@ -932,11 +932,11 @@ function log_detect_notice {
 #######################################
 function validate_branch_match {
     case "${DETECT_BRANCH_MATCH_MODE}" in
-    list | glob | regex) return 0 ;;
-    *)
-        echo "::error::Invalid DETECT_BRANCH_MATCH_MODE: ${DETECT_BRANCH_MATCH_MODE}"
-        return 1
-        ;;
+        list | glob | regex) return 0 ;;
+        *)
+            echo "::error::Invalid DETECT_BRANCH_MATCH_MODE: ${DETECT_BRANCH_MATCH_MODE}"
+            return 1
+            ;;
     esac
 }
 
@@ -961,7 +961,7 @@ function validate_candidate_targets {
     local candidate target_json
 
     for candidate in "${CANDIDATES_JSON[@]+"${CANDIDATES_JSON[@]}"}"; do
-        target_json="$(jq -c '.target_json' <<<"${candidate}")"
+        target_json="$(jq -c '.target_json' <<< "${candidate}")"
         validate_delivery_target "${DELIVERY}" "${target_json}" || return 1
     done
     return 0
@@ -1051,17 +1051,17 @@ function write_legacy_outputs {
     if [[ ${target_matrix_json} == "[]" ]]; then
         {
             echo "last_sha="
-            echo "current_sha=$(git rev-parse HEAD 2>/dev/null || echo "")"
+            echo "current_sha=$(git rev-parse HEAD 2> /dev/null || echo "")"
             echo "consecutive_failures=0"
             echo "prompt="
-        } >>"${GITHUB_OUTPUT}"
+        } >> "${GITHUB_OUTPUT}"
         return 0
     fi
 
-    first=$(jq -c '.[0]' <<<"${target_matrix_json}")
-    last_sha=$(jq -r '.result.since // .result.commit_range // empty' <<<"${first}")
-    current_sha=$(jq -r '.target_json.from.ref' <<<"${first}")
-    target_key=$(jq -r '.target_json.key' <<<"${first}")
+    first=$(jq -c '.[0]' <<< "${target_matrix_json}")
+    last_sha=$(jq -r '.result.since // .result.commit_range // empty' <<< "${first}")
+    current_sha=$(jq -r '.target_json.from.ref' <<< "${first}")
+    target_key=$(jq -r '.target_json.key' <<< "${first}")
     target_state="$(read_target_state "${STATE_FILE}" "${target_key}" "${STATE_BRANCH}")"
     consecutive="$(target_consecutive_failures "${target_state}")"
 
@@ -1072,9 +1072,9 @@ function write_legacy_outputs {
         local delim
         delim="PROMPT_$(openssl rand -hex 8)"
         echo "prompt<<${delim}"
-        jq -r '.prompt' <<<"${first}"
+        jq -r '.prompt' <<< "${first}"
         echo "${delim}"
-    } >>"${GITHUB_OUTPUT}"
+    } >> "${GITHUB_OUTPUT}"
 }
 
 #######################################
@@ -1209,7 +1209,7 @@ function main {
     should_run="true"
 
     log_detect_notice "matrix" "${LOOP_NAME}" \
-        "should_run=true count=${#CANDIDATES_JSON[@]} keys=$(jq -r '[.[].target_json.key] | join(",")' <<<"${target_matrix_json}") skip_reason=${skip_reason} delivery=${DELIVERY} detect_pr_enabled=${DETECT_PR_ENABLED} detect_max_targets=${DETECT_MAX_TARGETS} handoff_dir=${handoff_dir}"
+        "should_run=true count=${#CANDIDATES_JSON[@]} keys=$(jq -r '[.[].target_json.key] | join(",")' <<< "${target_matrix_json}") skip_reason=${skip_reason} delivery=${DELIVERY} detect_pr_enabled=${DETECT_PR_ENABLED} detect_max_targets=${DETECT_MAX_TARGETS} handoff_dir=${handoff_dir}"
 
     write_detect_outputs "${should_run}" "${skip_reason}" "${target_matrix_json}"
     write_legacy_outputs "${full_matrix_json}"

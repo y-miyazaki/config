@@ -144,43 +144,43 @@ function validate_delivery_target {
     local target_json="${2:-}"
     local kind
 
-    kind="$(jq -r '.mode // .entity.kind // empty' <<<"${target_json}" 2>/dev/null)" || kind=""
+    kind="$(jq -r '.mode // .entity.kind // empty' <<< "${target_json}" 2> /dev/null)" || kind=""
 
     case "${kind}" in
-    integration | pull_request | issue | pr) ;;
-    *)
-        echo "::error::delivery ${delivery}: unknown target kind (got: ${kind:-empty})" >&2
-        return 1
-        ;;
+        integration | pull_request | issue | pr) ;;
+        *)
+            echo "::error::delivery ${delivery}: unknown target kind (got: ${kind:-empty})" >&2
+            return 1
+            ;;
     esac
 
     case "${delivery}" in
-    none | pr_create) return 0 ;;
-    issue_comment)
-        if [[ ${kind} == "issue" ]]; then
-            return 0
-        fi
-        echo "::error::delivery issue_comment allows only issue targets (got: ${kind})" >&2
-        return 1
-        ;;
-    pr_review)
-        if [[ ${kind} == "pr" ]]; then
-            return 0
-        fi
-        echo "::error::delivery pr_review allows only pr targets (got: ${kind})" >&2
-        return 1
-        ;;
-    pr_push)
-        if [[ ${kind} == "pull_request" ]]; then
-            return 0
-        fi
-        echo "::error::delivery pr_push allows only pull_request targets (got: ${kind})" >&2
-        return 1
-        ;;
-    *)
-        echo "::error::delivery ${delivery}: cannot validate target kind ${kind}" >&2
-        return 1
-        ;;
+        none | pr_create) return 0 ;;
+        issue_comment)
+            if [[ ${kind} == "issue" ]]; then
+                return 0
+            fi
+            echo "::error::delivery issue_comment allows only issue targets (got: ${kind})" >&2
+            return 1
+            ;;
+        pr_review)
+            if [[ ${kind} == "pr" ]]; then
+                return 0
+            fi
+            echo "::error::delivery pr_review allows only pr targets (got: ${kind})" >&2
+            return 1
+            ;;
+        pr_push)
+            if [[ ${kind} == "pull_request" ]]; then
+                return 0
+            fi
+            echo "::error::delivery pr_push allows only pull_request targets (got: ${kind})" >&2
+            return 1
+            ;;
+        *)
+            echo "::error::delivery ${delivery}: cannot validate target kind ${kind}" >&2
+            return 1
+            ;;
     esac
 }
 
@@ -204,14 +204,14 @@ function validate_delivery_value {
     local delivery="${1:-}"
 
     case "${delivery}" in
-    issue_comment | none | pr_create | pr_push | pr_review) return 0 ;;
-    issue_create)
-        echo "::error::delivery ${delivery} is not implemented" >&2
-        return 1
-        ;;
-    *)
-        echo "::error::delivery must be issue_comment|none|pr_create|pr_push|pr_review (got: ${delivery:-empty})" >&2
-        return 1
-        ;;
+        issue_comment | none | pr_create | pr_push | pr_review) return 0 ;;
+        issue_create)
+            echo "::error::delivery ${delivery} is not implemented" >&2
+            return 1
+            ;;
+        *)
+            echo "::error::delivery must be issue_comment|none|pr_create|pr_push|pr_review (got: ${delivery:-empty})" >&2
+            return 1
+            ;;
     esac
 }
