@@ -11,7 +11,8 @@
 #   to the --no-renames diff, including .loop/ paths and both sides of a rename
 # - an existing remote branch or a rejected push fails without force
 # - invalid agent branch names fail with branch= and invalid base branches fail
-# - an empty branch, a failed agent, or no changes push nothing and record nothing
+# - an empty branch, a failed agent, or no changes push nothing and record nothing,
+#   except an empty branch with changes from a successful agent, which fails closed
 # - every failure records stage push, writes pushed=false failed=true, and exits 0
 # - missing GITHUB_OUTPUT or LOOP_FAILURE_FILE exits 1
 # - non-ASCII paths are checked unquoted (workflow guard, denylist); paths with
@@ -444,15 +445,34 @@ function assert_pushed {
     assert_pushed
 }
 
-@test "nothing happens for an empty branch" {
+@test "nothing happens for an empty branch without changes or after a failed agent" {
+    local row
+    for row in "success:false" "failure:true" "cancelled:true" "skipped:false"; do
+        T_BRANCH=''
+        T_RESULT="${row%%:*}"
+        T_HAS_CHANGES="${row#*:}"
+        run_push
+        [ "${status}" -eq 0 ]
+        [ "${OUT_LINES}" -eq 3 ]
+        [ "${OUT_BRANCH}" = "" ]
+        [ "${OUT_PUSHED}" = "false" ]
+        [ "${OUT_FAILED}" = "false" ]
+        [ ! -e "${FAILURE_FILE}" ]
+    done
+}
+
+@test "an empty branch with changes from a successful agent fails closed" {
     T_BRANCH=''
+    T_RESULT='success'
+    T_HAS_CHANGES='true'
     run_push
     [ "${status}" -eq 0 ]
     [ "${OUT_LINES}" -eq 3 ]
     [ "${OUT_BRANCH}" = "" ]
     [ "${OUT_PUSHED}" = "false" ]
-    [ "${OUT_FAILED}" = "false" ]
-    [ ! -e "${FAILURE_FILE}" ]
+    [ "${OUT_FAILED}" = "true" ]
+    [ "$(jq -r '.failure_stage' "${FAILURE_FILE}")" = "push" ]
+    [[ $(jq -r '.failure_message' "${FAILURE_FILE}") == *"agent branch is empty"* ]]
 }
 
 @test "nothing is pushed when the agent failed or has no changes" {

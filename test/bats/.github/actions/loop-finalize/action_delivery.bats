@@ -140,7 +140,7 @@ step_run() {
     done
     run grep -c 'determine_outcome "${FINALIZE_OUTCOME_OVERRIDE}" "${AGENT_RESULT}" "${HAS_CHANGES}" "${VERDICT}" "${DELIVERY}" "${PUSH_FAILED}"' "${ACTION_YML}"
     [ "${output}" = "1" ]
-    run grep -c 'resolve_state_write_mode "${VERDICT}" "${HAS_CHANGES}" "${DELIVERY}" "${PUSH_FAILED}"' "${ACTION_YML}"
+    run grep -c 'resolve_state_write_mode "${VERDICT}" "${HAS_CHANGES}" "${DELIVERY}" "${PUSH_FAILED}" "${PUSHED}"' "${ACTION_YML}"
     [ "${output}" = "1" ]
     local action_path
     action_path="$(bats_workspace_root)/.github/actions/loop-finalize"
@@ -152,13 +152,44 @@ step_run() {
     grep -qx 'value=error' "${BATS_TEST_TMPDIR}/outcome.out"
     step_run "Resolve State Write Mode" > "${BATS_TEST_TMPDIR}/mode.sh"
     run env GITHUB_ACTION_PATH="${action_path}" GITHUB_OUTPUT="${BATS_TEST_TMPDIR}/mode.out" \
-        DELIVERY=pr_push HAS_CHANGES=true PUSH_FAILED=true VERDICT=APPROVE bash "${BATS_TEST_TMPDIR}/mode.sh"
+        DELIVERY=pr_push HAS_CHANGES=true PUSHED=false PUSH_FAILED=true VERDICT=APPROVE bash "${BATS_TEST_TMPDIR}/mode.sh"
     [ "${status}" -eq 0 ]
     grep -qx 'mode=metadata' "${BATS_TEST_TMPDIR}/mode.out"
     run env GITHUB_ACTION_PATH="${action_path}" GITHUB_OUTPUT="${BATS_TEST_TMPDIR}/mode_ok.out" \
-        DELIVERY=pr_push HAS_CHANGES=true PUSH_FAILED=false VERDICT=APPROVE bash "${BATS_TEST_TMPDIR}/mode.sh"
+        DELIVERY=pr_push HAS_CHANGES=true PUSHED=true PUSH_FAILED=false VERDICT=APPROVE bash "${BATS_TEST_TMPDIR}/mode.sh"
     [ "${status}" -eq 0 ]
     grep -qx 'mode=advance' "${BATS_TEST_TMPDIR}/mode_ok.out"
+}
+
+@test "state mode is metadata for pr_create and pr_push unless the agent branch was pushed" {
+    local action_path delivery row expected n=0
+    action_path="$(bats_workspace_root)/.github/actions/loop-finalize"
+    run step_env "Resolve State Write Mode"
+    [[ ${output} == *$'PUSHED: ${{ steps.agent_push.outputs.pushed }}'* ]]
+    step_run "Resolve State Write Mode" > "${BATS_TEST_TMPDIR}/mode.sh"
+    step_run "Determine Outcome" > "${BATS_TEST_TMPDIR}/outcome.sh"
+    # agent_result != success or a missing bundle upload: pushed=false, failed=false
+    for row in "pr_create:true:pending" "pr_create:false:metadata" "pr_push:true:advance" "pr_push:false:metadata"; do
+        IFS=: read -r delivery pushed expected <<< "${row}"
+        n=$((n + 1))
+        run env GITHUB_ACTION_PATH="${action_path}" GITHUB_OUTPUT="${BATS_TEST_TMPDIR}/m${n}.out" \
+            DELIVERY="${delivery}" HAS_CHANGES=true PUSHED="${pushed}" PUSH_FAILED=false VERDICT=APPROVE \
+            bash "${BATS_TEST_TMPDIR}/mode.sh"
+        [ "${status}" -eq 0 ]
+        grep -qx "mode=${expected}" "${BATS_TEST_TMPDIR}/m${n}.out"
+    done
+    [ "${n}" -eq 4 ]
+    # an agent override such as watch does not move the cursor when nothing was pushed
+    run env GITHUB_ACTION_PATH="${action_path}" GITHUB_OUTPUT="${BATS_TEST_TMPDIR}/watch.out" \
+        AGENT_RESULT=failure DELIVERY=pr_push FINALIZE_OUTCOME_OVERRIDE=watch HAS_CHANGES=true \
+        PUSH_FAILED=false VERDICT=APPROVE bash "${BATS_TEST_TMPDIR}/outcome.sh"
+    [ "${status}" -eq 0 ]
+    grep -qx 'value=watch' "${BATS_TEST_TMPDIR}/watch.out"
+    run env GITHUB_ACTION_PATH="${action_path}" GITHUB_OUTPUT="${BATS_TEST_TMPDIR}/watch_mode.out" \
+        DELIVERY=pr_push FINALIZE_OUTCOME_OVERRIDE=watch HAS_CHANGES=true PUSHED=false PUSH_FAILED=false \
+        VERDICT=APPROVE bash "${BATS_TEST_TMPDIR}/mode.sh"
+    [ "${status}" -eq 0 ]
+    grep -qx 'mode=metadata' "${BATS_TEST_TMPDIR}/watch_mode.out"
 }
 
 @test "deliver message env is alphabetical and uses the planned outcome" {

@@ -244,13 +244,14 @@ runs:
       env:
         DELIVERY: ${{ inputs.delivery }}
         HAS_CHANGES: ${{ inputs.has_changes }}
+        PUSHED: ${{ steps.agent_push.outputs.pushed }}
         PUSH_FAILED: ${{ steps.agent_push.outputs.failed }}
         VERDICT: ${{ inputs.verdict }}
       run: |
         set -euo pipefail
         # shellcheck source=lib/resolve_state_write_mode.sh
         source "${GITHUB_ACTION_PATH}/lib/resolve_state_write_mode.sh"
-        echo "mode=$(resolve_state_write_mode "${VERDICT}" "${HAS_CHANGES}" "${DELIVERY}" "${PUSH_FAILED}")" >> "$GITHUB_OUTPUT"
+        echo "mode=$(resolve_state_write_mode "${VERDICT}" "${HAS_CHANGES}" "${DELIVERY}" "${PUSH_FAILED}" "${PUSHED}")" >> "$GITHUB_OUTPUT"
 
     - name: Run Finalize Hook
       if: inputs.finalize_script != '' && steps.agent_push.outputs.failed != 'true'

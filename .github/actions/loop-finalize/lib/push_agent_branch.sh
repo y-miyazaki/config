@@ -30,6 +30,8 @@
 #   TO_BRANCH - Delivery branch; the agent branch must differ
 #
 # Design Rules:
+#   - An empty AGENT_BRANCH is a no-op, except with AGENT_RESULT=success and
+#     HAS_CHANGES=true, which fails (changes reported but nothing to push).
 #   - Order: name check, agent result/changes gate, bundle and base branch
 #     presence, base fetch, bundle verify, import of refs/heads/<branch> only,
 #     from.ref ancestry, denylist/allowlist/workflow re-check, remote branch
@@ -310,8 +312,12 @@ function main {
         exit 1
     fi
 
-    # 1. No agent branch: nothing to do
+    # 1. No agent branch: nothing to do, unless a successful agent reports
+    #    changes (fail closed instead of reporting success without a push)
     if [[ -z ${AGENT_BRANCH} ]]; then
+        if [[ ${AGENT_RESULT} == "success" && ${HAS_CHANGES} == "true" ]]; then
+            fail_push "agent branch is empty but the agent reported changes (has_changes=true)"
+        fi
         write_outputs "" "false" "false"
         return 0
     fi
