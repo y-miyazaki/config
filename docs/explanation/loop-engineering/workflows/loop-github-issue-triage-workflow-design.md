@@ -25,7 +25,7 @@ Behaviors to know:
 - `target_json` is required at every level including L1, because Deliver Message reads the Issue number from `handoff_key`. This is a contract change for external callers of `ci-loop-agent.yaml`.
 - Engines other than claude cannot write to `LOOP_MESSAGE_DIR` (only claude gets the write permission through `--add-dir`). With those engines, no message file exists and Deliver Message posts nothing (`unchanged`). This is a known limitation without an engine-specific flag.
 - Deliver Message runs only when the agent job succeeded and the verdict is not `REJECT`. A failed triage run no longer gets the agent-applied `triage:failed` label or a comment; the run-log shows `error`.
-- A delivery failure (label or post) fails the finalize step and records `failure_stage` `deliver_message`; failure of `finalize-l1` has no `failure_stage` in the run-log until the run-log outcome change lands.
+- A delivery failure (label or post) fails the finalize step and records `failure_stage` `deliver_message`; an agent failure is recorded as `agent_execute`.
 - The delivery outcome is `issue_commented`, or `unchanged` when the message is missing or blank.
 
 ### Supported use cases
