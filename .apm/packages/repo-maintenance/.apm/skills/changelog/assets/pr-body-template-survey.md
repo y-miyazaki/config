@@ -2,6 +2,9 @@
 Survey-only PR template for changelog automation (agent_edit_allowed: false).
 
 Load at synthesis time after survey output is complete.
+
+Rules:
+- Link every repository path, commit SHA, and workflow/job in Summary tables as a markdown link per category-pr-body-links.md. <linked ...> marks where a link goes; do not emit it, and do not use a plain code span for a linkable item.
 -->
 
 ## Overview
@@ -17,9 +20,9 @@ Load at synthesis time after survey output is complete.
 
 ### Candidates
 
-| Target    | Type   | Evidence  | Suggested approach  | Priority              |
-| --------- | ------ | --------- | ------------------- | --------------------- |
-| `abc1234` | <type> | <subject> | <Unreleased bullet> | high \| medium \| low |
+| Target       | Type   | Evidence  | Suggested approach  | Priority              |
+| ------------ | ------ | --------- | ------------------- | --------------------- |
+| <linked sha> | <type> | <subject> | <Unreleased bullet> | high \| medium \| low |
 
 ### Skipped
 

@@ -129,6 +129,13 @@ MOCK
     [[ $output == *"2 files changed, 8 insertions(+)"* ]]
 }
 
+@test "build_done_reply_body links changed files to the commit when its URL is known" {
+    run build_done_reply_body "push" "APPROVE" "ok" "abcdef012345" "https://github.com/o/r/commit/abcdef012345" "" "Report." "docs/a.md" ""
+    [ "$status" -eq 0 ]
+    [[ $output == *"- [docs/a.md](https://github.com/o/r/blob/abcdef012345/docs/a.md)"* ]]
+    [[ $output != *"- \`docs/a.md\`"* ]]
+}
+
 @test "build_done_reply_body caps a long changed-files list" {
     local files
     files="f1.md,f2.md,f3.md,f4.md,f5.md,f6.md,f7.md,f8.md,f9.md,f10.md,f11.md,f12.md"
@@ -143,8 +150,8 @@ MOCK
     run build_done_reply_body "push" "APPROVE" "checker ok" "abcdef012345" "https://github.com/o/r/commit/abcdef012345" "https://github.com/o/r/actions/runs/1" "Report." "" ""
     [ "$status" -eq 0 ]
     [[ $output == *"<summary>Meta</summary>"* ]]
-    [[ $output == *"| \`outcome\` | push |"* ]]
-    [[ $output == *"| \`verdict\` | APPROVE |"* ]]
+    [[ $output == *"| outcome | push |"* ]]
+    [[ $output == *"| verdict | APPROVE |"* ]]
     [[ $output == *"abcdef0"* ]]
     [[ $output == *"actions/runs/1"* ]]
     [[ $output == *"> checker ok"* ]]
@@ -154,8 +161,8 @@ MOCK
 @test "build_done_reply_body omits empty optional fields" {
     run build_done_reply_body "no-changes" "" "" "" "" "" "" "" ""
     [ "$status" -eq 0 ]
-    [[ $output != *"| \`verdict\` |"* ]]
-    [[ $output != *"| \`commit\` |"* ]]
+    [[ $output != *"| verdict |"* ]]
+    [[ $output != *"| commit |"* ]]
     [[ $output != *"**Files changed**"* ]]
 }
 
@@ -163,13 +170,13 @@ MOCK
     run build_done_reply_body "rejected" "REJECT" "No file changes produced" "" "" "https://github.com/o/r/actions/runs/2" "" "" ""
     [ "$status" -eq 0 ]
     [[ $output == *"<summary>Meta</summary>"* ]]
-    [[ $output == *"| \`outcome\` | rejected |"* ]]
+    [[ $output == *"| outcome | rejected |"* ]]
 }
 
 @test "build_done_reply_body records a no-changes outcome in the meta table" {
     run build_done_reply_body "no-changes" "APPROVE" "" "" "" "" "" "" ""
     [ "$status" -eq 0 ]
-    [[ $output == *"| \`outcome\` | no-changes |"* ]]
+    [[ $output == *"| outcome | no-changes |"* ]]
 }
 
 @test "build_done_reply_body blockquotes every line of a multi-line reason" {

@@ -12,6 +12,8 @@
 # - check_loop_pr_body_contract rejects deprecated patterns in automation format files
 # - check_loop_pr_body_contract rejects example org/repo markdown links in templates
 # - check_loop_pr_body_contract validates test-gap required files
+# - check_loop_pr_body_contract requires templates to point at category-pr-body-links.md
+# - check_loop_pr_body_contract rejects backtick placeholders for linkable items in templates
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -123,4 +125,27 @@ setup() {
     run env SKILLS_ROOT="${skills_root}" bash "${REPO_ROOT}/scripts/self/apm/check_loop_pr_body_contract.sh"
     [ "$status" -eq 1 ]
     [[ $output == *"Missing references/common-output-format.md for skill test-gap"* ]]
+}
+
+@test "check_loop_pr_body_contract requires templates to point at category-pr-body-links.md" {
+    local skill_root="${TEST_TMP}/skills/test-gap"
+    mkdir -p "${skill_root}/assets" "${skill_root}/references"
+    cp -R "$(apm_skill_dir test-gap)/." "${skill_root}/"
+    sed -i '/category-pr-body-links.md/d' "${skill_root}/assets/pr-body-template.md"
+
+    run env SKILLS_ROOT="${TEST_TMP}/skills" bash "${REPO_ROOT}/scripts/self/apm/check_loop_pr_body_contract.sh"
+    [ "$status" -eq 1 ]
+    [[ $output == *"test-gap/assets/pr-body-template.md must point at category-pr-body-links.md"* ]]
+}
+
+@test "check_loop_pr_body_contract rejects backtick placeholders for linkable items in templates" {
+    local skill_root="${TEST_TMP}/skills/docs-updater"
+    mkdir -p "${skill_root}/assets" "${skill_root}/references"
+    cp -R "$(apm_skill_dir docs-updater)/." "${skill_root}/"
+    # shellcheck disable=SC2016 # literal backticks are the template row under test
+    printf '%s\n' '| `docs/foo.md` | <from findings> | <minimal change summary> |' >> "${skill_root}/assets/pr-body-template.md"
+
+    run env SKILLS_ROOT="${TEST_TMP}/skills" bash "${REPO_ROOT}/scripts/self/apm/check_loop_pr_body_contract.sh"
+    [ "$status" -eq 1 ]
+    [[ $output == *"docs-updater/assets/pr-body-template.md has a backtick path in a Summary table row"* ]]
 }

@@ -5,6 +5,7 @@ Load ONLY at synthesis time.
 
 Rules:
 - Keep top-level ## Overview and ## Summary headings exactly as written.
+- Link every repository path, commit SHA, and workflow/job in Summary tables as a markdown link per category-pr-body-links.md. <linked ...> marks where a link goes; do not emit it, and do not use a plain code span for a linkable item.
 - Do NOT emit ### Changes, ### Deferred, or ## Verification.
 -->
 
@@ -21,6 +22,6 @@ Rules:
 
 ### Candidates
 
-| Target         | Evidence                | Suggested tests       | Priority              |
-| -------------- | ----------------------- | --------------------- | --------------------- |
-| `path/to/file` | <churn, no paired test> | <behaviors to assert> | high \| medium \| low |
+| Target        | Evidence                | Suggested tests       | Priority              |
+| ------------- | ----------------------- | --------------------- | --------------------- |
+| <linked path> | <churn, no paired test> | <behaviors to assert> | high \| medium \| low |

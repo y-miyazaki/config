@@ -108,7 +108,7 @@ teardown() {
     [[ $output == *"| Outcome | \`pr_created\` |"* ]]
     [[ $output == *"| Bot fix PR | [#406]"* ]]
     [[ $output == *"| Actor | \`loop-bot\` |"* ]]
-    [[ $output == *"| Branch | \`feature/x\` |"* ]]
+    [[ $output == *"| Branch | [feature/x](https://github.com/owner/repo/tree/feature/x) |"* ]]
     [[ $output == *"abcdefghijk"* ]]
     [[ $output == *"https://github.com/owner/repo/commit/abcdefghijk"* ]]
     [[ $output == *"actions/runs/99"* ]]

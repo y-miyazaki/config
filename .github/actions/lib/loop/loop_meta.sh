@@ -18,7 +18,7 @@
 #
 # Design Rules:
 #   - Meta is collapsed (summary text: Meta) and goes last; the change description stays the lead
-#   - One `| Key | Value |` table: keys are backticked snake_case, values are plain text
+#   - One `| Key | Value |` table: keys are plain snake_case, values are plain text
 #   - Engine, model, and token rows are always carried when the run reports them
 #   - Caller-specific rows are added with loop_meta_row before rendering
 #   - Emits nothing when no row, reason, or usage field is known
@@ -31,7 +31,7 @@ source "${_LOOP_META_DIR}/outcome.sh"
 
 # Marker identifying an already-rendered meta block (idempotency for appenders)
 LOOP_META_MARKER="<!-- loop-meta:v1 -->"
-# Accumulated "| `key` | value |" rows for the next render
+# Accumulated "| key | value |" rows for the next render
 LOOP_META_ROWS=()
 
 #######################################
@@ -75,7 +75,7 @@ function build_loop_meta_block {
     fi
 
     if [[ -n ${verdict} ]]; then
-        rows+=("| \`verdict\` | ${verdict} |")
+        rows+=("| verdict | ${verdict} |")
     fi
 
     model=""
@@ -87,11 +87,11 @@ function build_loop_meta_block {
         tokens="$(usage_tokens_label "${usage_json}")"
     fi
 
-    [[ -n ${engine} ]] && rows+=("| \`engine\` | ${engine} |")
-    [[ -n ${model} ]] && rows+=("| \`model\` | ${model} |")
-    [[ -n ${tokens} ]] && rows+=("| \`tokens\` | In/Out ${tokens} |")
+    [[ -n ${engine} ]] && rows+=("| engine | ${engine} |")
+    [[ -n ${model} ]] && rows+=("| model | ${model} |")
+    [[ -n ${tokens} ]] && rows+=("| tokens | In/Out ${tokens} |")
     if [[ -n ${run_url} && ${run_url} != "-" ]]; then
-        rows+=("| \`run\` | [View run](${run_url}) |")
+        rows+=("| run | [View run](${run_url}) |")
     fi
 
     if [[ ${#rows[@]} -eq 0 && -z ${reason} ]]; then
@@ -100,7 +100,7 @@ function build_loop_meta_block {
 
     # outcome leads the table; it is not counted when deciding whether anything is known
     if [[ -n ${outcome} ]]; then
-        rows=("| \`outcome\` | ${outcome} |" "${rows[@]}")
+        rows=("| outcome | ${outcome} |" "${rows[@]}")
     fi
 
     {
@@ -156,7 +156,7 @@ function loop_meta_reset {
 #   LOOP_META_ROWS - Appended to
 #
 # Arguments:
-#   $1 - Field label (rendered as a backticked snake_case key: "Skip reason" -> `skip_reason`)
+#   $1 - Field label (rendered as a snake_case key: "Skip reason" -> skip_reason)
 #   $2 - Plain-text value cell (callers escape pipes; links are allowed for run and commit)
 #
 # Outputs:
@@ -179,5 +179,5 @@ function loop_meta_row {
     fi
 
     key="$(tr '[:upper:] ' '[:lower:]_' <<< "${label}")"
-    LOOP_META_ROWS+=("| \`${key}\` | ${value} |")
+    LOOP_META_ROWS+=("| ${key} | ${value} |")
 }

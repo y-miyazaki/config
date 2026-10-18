@@ -15,15 +15,15 @@ No file edits. **Do not emit `### Changes`, `### Deferred`, or `## Verification`
 
 ### Candidates
 
-| Target                 | Evidence           | Suggested approach       | Priority              |
-| ---------------------- | ------------------ | ------------------------ | --------------------- |
-| `<workflow>` / `<job>` | <from log_excerpt> | <plain-language fix dir> | high \| medium \| low |
+| Target                           | Evidence           | Suggested approach       | Priority              |
+| -------------------------------- | ------------------ | ------------------------ | --------------------- |
+| <linked workflow> / <linked job> | <from log_excerpt> | <plain-language fix dir> | high \| medium \| low |
 
 ### Watch
 
-| Target                 | Evidence | Why not now             |
-| ---------------------- | -------- | ----------------------- |
-| `<workflow>` / `<job>` | <reason> | flake \| infra \| human |
+| Target                           | Evidence | Why not now             |
+| -------------------------------- | -------- | ----------------------- |
+| <linked workflow> / <linked job> | <reason> | flake \| infra \| human |
 ```
 
 ### Survey rules
@@ -44,15 +44,15 @@ No file edits. **Do not emit `### Changes`, `### Deferred`, or `## Verification`
 
 ### Changes
 
-| Target                 | What was wrong | What changed                                                       |
-| ---------------------- | -------------- | ------------------------------------------------------------------ |
-| `<workflow>` / `<job>` | <root cause>   | `path` (link per category-pr-body-links.md): <minimal fix summary> |
+| Target                           | What was wrong | What changed                         |
+| -------------------------------- | -------------- | ------------------------------------ |
+| <linked workflow> / <linked job> | <root cause>   | <linked path>: <minimal fix summary> |
 
 ### Deferred
 
-| Target                 | Why deferred            |
-| ---------------------- | ----------------------- |
-| `<workflow>` / `<job>` | <plain-language reason> |
+| Target                           | Why deferred            |
+| -------------------------------- | ----------------------- |
+| <linked workflow> / <linked job> | <plain-language reason> |
 
 ## Verification
 

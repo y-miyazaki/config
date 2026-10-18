@@ -8,6 +8,9 @@ Rules:
 - Summary contains ### Candidates and optional ### Watch only.
 - Do NOT emit ### Changes, ### Deferred, or ## Verification.
 - Overview must name dominant categories/files — not counts alone.
+
+Rules:
+- Link every repository path, commit SHA, and workflow/job in Summary tables as a markdown link per category-pr-body-links.md. <linked ...> marks where a link goes; do not emit it, and do not use a plain code span for a linkable item.
 -->
 
 ## Overview
@@ -23,9 +26,9 @@ Rules:
 
 ### Candidates
 
-| Target      | Category   | Evidence            | Suggested approach         | Delegate | Priority              |
-| ----------- | ---------- | ------------------- | -------------------------- | -------- | --------------------- |
-| `path:line` | <category> | <snippet or metric> | <plain-language direction> | <skill>  | high \| medium \| low |
+| Target               | Category   | Evidence            | Suggested approach         | Delegate | Priority              |
+| -------------------- | ---------- | ------------------- | -------------------------- | -------- | --------------------- |
+| <linked path>:<line> | <category> | <snippet or metric> | <plain-language direction> | <skill>  | high \| medium \| low |
 
 ### Watch
 

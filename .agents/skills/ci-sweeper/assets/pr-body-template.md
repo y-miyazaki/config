@@ -6,6 +6,7 @@ The caller may add ## Failure context from detect; this template covers Overview
 
 Rules:
 - Keep top-level ## Overview, ## Summary, and ## Verification headings exactly as written.
+- Link every repository path, commit SHA, and workflow/job in Summary tables as a markdown link per category-pr-body-links.md. <linked ...> marks where a link goes; do not emit it, and do not use a plain code span for a linkable item.
 - Do not duplicate detect failure URLs in Overview — URLs belong in caller-added ## Failure context.
 - In Summary tables, link file paths and workflow/job targets — see category-pr-body-links.md.
 - Summary contains ### Changes and ### Deferred only.
@@ -26,15 +27,15 @@ Rules:
 
 ### Changes
 
-| Workflow / Job         | What was wrong | What changed                                                              |
-| ---------------------- | -------------- | ------------------------------------------------------------------------- |
-| `<workflow>` / `<job>` | <root cause>   | `docs/foo.md` (link per category-pr-body-links.md): <minimal fix summary> |
+| Workflow / Job                   | What was wrong | What changed                         |
+| -------------------------------- | -------------- | ------------------------------------ |
+| <linked workflow> / <linked job> | <root cause>   | <linked path>: <minimal fix summary> |
 
 ### Deferred
 
-| Workflow / Job         | Why deferred            |
-| ---------------------- | ----------------------- |
-| `<workflow>` / `<job>` | <plain-language reason> |
+| Workflow / Job                   | Why deferred            |
+| -------------------------------- | ----------------------- |
+| <linked workflow> / <linked job> | <plain-language reason> |
 
 ## Verification
 
