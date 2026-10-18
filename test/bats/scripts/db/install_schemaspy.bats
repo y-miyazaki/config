@@ -12,6 +12,7 @@
 # - validate_parameters rejects an invalid database type
 # - validate_parameters accepts every documented database type
 # - validate_parameters creates the install directory when it is missing
+# - validate_parameters fails when INSTALL_DIR exists as a non-directory file
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -71,6 +72,13 @@ INSTALL_SCHEMASPY="$(bats_workspace_root)/scripts/db/install_schemaspy.sh"
     run bash -c "source '${INSTALL_SCHEMASPY}'; DB_TYPE=all; INSTALL_DIR='${dir}'; validate_parameters"
     [ "$status" -eq 0 ]
     [ -d "${dir}" ]
+}
+
+@test "validate_parameters fails when INSTALL_DIR exists as a non-directory file" {
+    local file="${BATS_TEST_TMPDIR}/not-a-dir"
+    : > "${file}"
+    run bash -c "source '${INSTALL_SCHEMASPY}'; DB_TYPE=all; INSTALL_DIR='${file}'; validate_parameters"
+    [ "$status" -ne 0 ]
 }
 
 @test "validate_parameters rejects an invalid database type" {
