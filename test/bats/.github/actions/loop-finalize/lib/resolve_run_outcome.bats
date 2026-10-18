@@ -6,6 +6,11 @@
 
 # Use cases:
 # - L2_CASES is a faithful transcription of the current finalize-l2 Resolve Run Log Metadata and outcome expression
+# - every L2_CASES row resolves to the transcribed outcome, failure stage and message
+# - intended differences from the transcription: cancelled composite, finalize record with a success status, L1 agent_execute, pr_push landing failure
+# - the outcome is resolved before the agent stage is recorded
+# - re-recording an already recorded agent message leaves it unchanged
+# - LOOP_FAILURE_FILE is required
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -101,54 +106,6 @@ current_l2_outcome() {
     fi
 }
 
-@test "current finalize-l2 run log metadata and outcome match L2_CASES" {
-    local yaml script checked=0 out_file
-    local name agent_result agent_stage agent_message action_status record_stage record_message delivered_outcome outcome failure_stage failure_message
-    local got_stage got_message got_outcome
-
-    yaml="$(bats_workspace_root)/.github/workflows/ci-loop-agent.yaml"
-    script="$(awk '/^      - name: Resolve Run Log Metadata$/ {f=1; next} f && /^        run: \|$/ {r=1; next} r && /^          / {sub(/^          /, ""); print; next} r {exit}' "${yaml}")"
-    [ -n "${script}" ]
-    grep -qxF "          outcome: \${{ steps.finalize.outcome == 'failure' && 'error' || steps.finalize.outputs.outcome || (needs.agent-l2.result != 'success' && needs.agent-l2.result != 'skipped' && 'error') || (needs.agent-l2.outputs.verdict == 'REJECT' && 'rejected') || 'unchanged' }}" "${yaml}"
-
-    out_file="${BATS_TEST_TMPDIR}/github_output"
-    while IFS='|' read -r name agent_result agent_stage agent_message action_status record_stage record_message delivered_outcome outcome failure_stage failure_message; do
-        : > "${out_file}"
-        GITHUB_OUTPUT="${out_file}" \
-            AGENT_RESULT="${agent_result}" \
-            EXEC_FAILURE_STAGE="${agent_stage}" \
-            EXEC_FAILURE_MESSAGE="${agent_message}" \
-            FINALIZE_STEP_RESULT="${action_status}" \
-            FINALIZE_FAILURE_STAGE="${record_stage}" \
-            FINALIZE_FAILURE_MESSAGE="${record_message}" \
-            bash -c "${script}"
-        got_stage="$(output_value failure_stage "${out_file}")"
-        got_message="$(output_value failure_message "${out_file}")"
-        got_outcome="$(current_l2_outcome "${action_status}" "${delivered_outcome}" "${agent_result}" "")"
-        if [[ ${got_stage} != "${failure_stage}" ]]; then
-            echo "case ${name}: failure_stage '${got_stage}' != '${failure_stage}'" >&2
-            return 1
-        fi
-        if [[ ${got_message} != "${failure_message}" ]]; then
-            echo "case ${name}: failure_message '${got_message}' != '${failure_message}'" >&2
-            return 1
-        fi
-        if [[ ${got_outcome} != "${outcome}" ]]; then
-            echo "case ${name}: outcome '${got_outcome}' != '${outcome}'" >&2
-            return 1
-        fi
-        checked=$((checked + 1))
-    done <<< "${L2_CASES}"
-    [ "${checked}" -eq 14 ]
-}
-
-# Use cases (resolve_run_outcome.sh):
-# - every L2_CASES row resolves to the transcribed outcome, failure stage and message
-# - intended differences from the transcription: cancelled composite, finalize record with a success status, L1 agent_execute, pr_push landing failure
-# - the outcome is resolved before the agent stage is recorded
-# - re-recording an already recorded agent message leaves it unchanged
-# - LOOP_FAILURE_FILE is required
-
 SCRIPT="$(bats_workspace_root)/.github/actions/loop-finalize/lib/resolve_run_outcome.sh"
 
 setup() {
@@ -228,6 +185,47 @@ run_named_case() {
     [ "${RUN_OUTCOME}" = "error" ]
     [ "${RUN_STAGE}" = "agent_execute" ]
     [ "${RUN_MESSAGE}" = "" ]
+}
+
+@test "current finalize-l2 run log metadata and outcome match L2_CASES" {
+    local yaml script checked=0 out_file
+    local name agent_result agent_stage agent_message action_status record_stage record_message delivered_outcome outcome failure_stage failure_message
+    local got_stage got_message got_outcome
+
+    yaml="$(bats_workspace_root)/.github/workflows/ci-loop-agent.yaml"
+    script="$(awk '/^      - name: Resolve Run Log Metadata$/ {f=1; next} f && /^        run: \|$/ {r=1; next} r && /^          / {sub(/^          /, ""); print; next} r {exit}' "${yaml}")"
+    [ -n "${script}" ]
+    grep -qxF "          outcome: \${{ steps.finalize.outcome == 'failure' && 'error' || steps.finalize.outputs.outcome || (needs.agent-l2.result != 'success' && needs.agent-l2.result != 'skipped' && 'error') || (needs.agent-l2.outputs.verdict == 'REJECT' && 'rejected') || 'unchanged' }}" "${yaml}"
+
+    out_file="${BATS_TEST_TMPDIR}/github_output"
+    while IFS='|' read -r name agent_result agent_stage agent_message action_status record_stage record_message delivered_outcome outcome failure_stage failure_message; do
+        : > "${out_file}"
+        GITHUB_OUTPUT="${out_file}" \
+            AGENT_RESULT="${agent_result}" \
+            EXEC_FAILURE_STAGE="${agent_stage}" \
+            EXEC_FAILURE_MESSAGE="${agent_message}" \
+            FINALIZE_STEP_RESULT="${action_status}" \
+            FINALIZE_FAILURE_STAGE="${record_stage}" \
+            FINALIZE_FAILURE_MESSAGE="${record_message}" \
+            bash -c "${script}"
+        got_stage="$(output_value failure_stage "${out_file}")"
+        got_message="$(output_value failure_message "${out_file}")"
+        got_outcome="$(current_l2_outcome "${action_status}" "${delivered_outcome}" "${agent_result}" "")"
+        if [[ ${got_stage} != "${failure_stage}" ]]; then
+            echo "case ${name}: failure_stage '${got_stage}' != '${failure_stage}'" >&2
+            return 1
+        fi
+        if [[ ${got_message} != "${failure_message}" ]]; then
+            echo "case ${name}: failure_message '${got_message}' != '${failure_message}'" >&2
+            return 1
+        fi
+        if [[ ${got_outcome} != "${outcome}" ]]; then
+            echo "case ${name}: outcome '${got_outcome}' != '${outcome}'" >&2
+            return 1
+        fi
+        checked=$((checked + 1))
+    done <<< "${L2_CASES}"
+    [ "${checked}" -eq 14 ]
 }
 
 @test "every L2_CASES row resolves to the transcribed outcome, stage and message" {
