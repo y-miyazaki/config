@@ -11,31 +11,84 @@
 # - run_agent maps AGENT_ENGINE to the correct CLI and token env var
 # - run_agent_capture avoids pipe subshells so USAGE_* globals persist
 # - Maker sessions may write; checker sessions are read-only
-# - The action grants no tool permissions of its own: rules come from the host
-#   repository's .claude/settings.json and from the calling workflow
-# - grant_claude_workspace_trust only unlocks the rules that repository already
-#   declares; without it Claude Code ignores its permissions.allow entirely
+# - Workspace trust is never granted, so the host repository's
+#   .claude/settings.json permissions.allow and additionalDirectories stay
+#   unused in CI (its deny, ask, hooks and env still apply)
+# - Claude permissions come only from the role's --permission-mode, the fixed
+#   read-only git baseline, the caller's rules, and the fixed deny list
 # - Permission rule syntax is engine-specific; engines that cannot apply the
 #   supplied rules warn instead of silently dropping them
 #######################################
+
+# Read-only git commands every claude session needs: the maker's synthesis
+# prompt and the checker's diff review both run them.
+CLAUDE_PLATFORM_ALLOW_RULES=(
+    'Bash(git diff:*)'
+    'Bash(git log:*)'
+    'Bash(git show:*)'
+    'Bash(git status:*)'
+)
+
+# Commands no claude session may run: GitHub writes, push, outbound transfer,
+# environment dumps, privilege escalation, and git diff --output file writes.
+CLAUDE_PLATFORM_DENY_RULES=(
+    'Bash(curl:*)'
+    'Bash(gh api *--method*)'
+    'Bash(gh api *-X DELETE*)'
+    'Bash(gh api *-X PATCH*)'
+    'Bash(gh api *-X POST*)'
+    'Bash(gh api *-X PUT*)'
+    'Bash(gh issue close:*)'
+    'Bash(gh issue comment:*)'
+    'Bash(gh issue create:*)'
+    'Bash(gh issue delete:*)'
+    'Bash(gh issue edit:*)'
+    'Bash(gh label create:*)'
+    'Bash(gh label delete:*)'
+    'Bash(gh label edit:*)'
+    'Bash(gh pr close:*)'
+    'Bash(gh pr comment:*)'
+    'Bash(gh pr create:*)'
+    'Bash(gh pr edit:*)'
+    'Bash(gh pr merge:*)'
+    'Bash(gh pr review:*)'
+    'Bash(gh release create:*)'
+    'Bash(gh release delete:*)'
+    'Bash(gh release edit:*)'
+    'Bash(gh release upload:*)'
+    'Bash(gh run cancel:*)'
+    'Bash(gh run rerun:*)'
+    'Bash(gh secret:*)'
+    'Bash(gh variable:*)'
+    'Bash(gh workflow run:*)'
+    'Bash(git diff *--output*)'
+    'Bash(git push:*)'
+    'Bash(printenv:*)'
+    'Bash(sudo:*)'
+    'Bash(wget:*)'
+)
 
 #######################################
 # append_claude_permission_args: Add permission flags for a Claude print session
 #
 # Description:
-#   A print-mode session has no approver, so any permission-gated tool call is
-#   denied unless a rule already allows it. This action grants nothing on its
-#   own: the permission surface belongs to the repository running the loop and
-#   to the workflow that calls it.
-#   - --setting-sources project loads the host repository's .claude/settings.json
-#     when that file exists, and is a no-op when it does not.
-#   - AGENT_TOOL_ALLOWLIST carries the rules the calling workflow declared for the
-#     skill it is running, so no repository inherits permissions it never granted.
-#   --permission-mode acceptEdits covers Edit/Write but not command execution, so
-#   a skill that shells out needs its commands declared either way.
+#   A print-mode session has no approver, and workspace trust is never granted,
+#   so the permission surface is exactly these four parts:
+#   - --setting-sources project loads the host repository's project settings
+#     (deny/ask rules, hooks, env, .mcp.json); its allow rules stay inactive
+#     without workspace trust.
+#   - --permission-mode follows the role: acceptEdits for makers (Edit/Write
+#     allowed, commands still need a rule) and dontAsk for checkers (every call
+#     without an allow rule is denied).
+#   - --allowedTools carries CLAUDE_PLATFORM_ALLOW_RULES followed by the rules
+#     the calling workflow declared in AGENT_TOOL_ALLOWLIST.
+#   - --disallowedTools carries CLAUDE_PLATFORM_DENY_RULES, which outrank every
+#     allow rule.
 #
 # Globals:
 #   AGENT_TOOL_ALLOWLIST - Optional newline-separated permission rules (may be unset)
+#   CLAUDE_PLATFORM_ALLOW_RULES - Fixed read-only allow baseline (read)
+#   CLAUDE_PLATFORM_DENY_RULES - Fixed deny list (read)
 #
 # Arguments:
 #   $1 - Name of the ARGS array variable (nameref)
@@ -51,17 +104,22 @@
 function append_claude_permission_args {
     local -n args_ref=$1
     local allow_writes="${2:-true}"
-    local -a extra_tools=()
+    local -a allow_rules=("${CLAUDE_PLATFORM_ALLOW_RULES[@]}")
     local rule
 
     args_ref+=(--setting-sources project)
-    if [[ ${allow_writes} == "true" ]]; then args_ref+=(--permission-mode acceptEdits); fi
+    if [[ ${allow_writes} == "true" ]]; then
+        args_ref+=(--permission-mode acceptEdits)
+    else
+        args_ref+=(--permission-mode dontAsk)
+    fi
     if [[ -n ${AGENT_TOOL_ALLOWLIST:-} ]]; then
         while IFS= read -r rule; do
-            [[ -n ${rule} ]] && extra_tools+=("${rule}")
+            [[ -n ${rule} ]] && allow_rules+=("${rule}")
         done <<< "${AGENT_TOOL_ALLOWLIST}"
     fi
-    if [[ ${#extra_tools[@]} -gt 0 ]]; then args_ref+=(--allowedTools "${extra_tools[@]}"); fi
+    args_ref+=(--allowedTools "${allow_rules[@]}")
+    args_ref+=(--disallowedTools "${CLAUDE_PLATFORM_DENY_RULES[@]}")
 }
 
 #######################################
@@ -158,84 +216,6 @@ function commit_worktree_if_needed {
         git commit -m "${msg}"
         return 0
     )
-}
-
-#######################################
-# grant_claude_workspace_trust: Accept workspace trust for the host repository
-#
-# Description:
-#   Claude Code applies a project's permissions.allow rules only for a folder
-#   whose workspace trust has been accepted; deny and ask rules apply either
-#   way. A print-mode session never shows the trust dialog, so without this the
-#   host repository's .claude/settings.json allow rules are ignored and only
-#   --allowedTools rules take effect. Trust is keyed on the main checkout root,
-#   which is GITHUB_WORKSPACE even while the agent runs in a worktree.
-#   ~/.claude.json also holds the sign-in session and MCP state, and a file
-#   Claude Code cannot parse aborts a print-mode run, so merge rather than
-#   overwrite and leave an unreadable file untouched.
-#   A host repository may relocate the configuration home with
-#   CLAUDE_CONFIG_DIR, which names a .claude directory, so also write the
-#   .claude.json beside it. The documented wording leaves the relocated path
-#   ambiguous; writing both candidates costs one small file and avoids a silent
-#   no-op that would look exactly like the bug this works around.
-#
-# Globals:
-#   CLAUDE_CONFIG_DIR - Relocated .claude directory; optional (read)
-#   GITHUB_WORKSPACE - Main checkout root; no-op when unset (read)
-#   HOME - Default configuration home (read)
-#
-# Arguments:
-#   None
-#
-# Outputs:
-#   Warning to stdout when trust cannot be granted
-#
-# Returns:
-#   0 always; a failure warns instead of aborting the agent run
-#
-#######################################
-function grant_claude_workspace_trust {
-    local config home root tmp
-    local -a homes=()
-    root="${GITHUB_WORKSPACE:-}"
-
-    if [[ -z ${root} ]]; then
-        echo "::warning::GITHUB_WORKSPACE unset; project allow rules stay inactive"
-        return 0
-    fi
-    if ! command -v jq > /dev/null 2>&1; then
-        echo "::warning::jq not found; project allow rules stay inactive"
-        return 0
-    fi
-
-    homes=("${HOME}")
-    if [[ -n ${CLAUDE_CONFIG_DIR:-} ]]; then
-        home="$(dirname "${CLAUDE_CONFIG_DIR}")"
-        [[ ${home} != "${HOME}" ]] && homes+=("${home}")
-    fi
-
-    for home in "${homes[@]}"; do
-        config="${home}/.claude.json"
-        [[ -d ${home} ]] || continue
-        if [[ -e ${config} && ! -s ${config} ]]; then rm -f "${config}"; fi
-        if [[ -e ${config} ]] && ! jq -e . "${config}" > /dev/null 2>&1; then
-            echo "::warning::${config} is not valid JSON; project allow rules stay inactive"
-            continue
-        fi
-        if [[ ! -e ${config} ]] && ! printf '{}\n' > "${config}" 2> /dev/null; then
-            echo "::warning::Cannot create ${config}; project allow rules stay inactive"
-            continue
-        fi
-
-        tmp="$(mktemp)" || continue
-        if jq --arg root "${root}" \
-            '.projects[$root].hasTrustDialogAccepted = true' \
-            "${config}" > "${tmp}" 2> /dev/null && mv "${tmp}" "${config}"; then
-            continue
-        fi
-        rm -f "${tmp}"
-        echo "::warning::Failed to grant workspace trust for ${root} in ${config}"
-    done
 }
 
 #######################################
@@ -431,7 +411,6 @@ function run_agent_engine {
             # stream-json (not --bare) so usage.sh can read the usage event;
             # the wrapper restores the final text on stdout for report parsing.
             local -a ARGS=(-p "${session_prompt}" --output-format stream-json --verbose)
-            grant_claude_workspace_trust
             append_agent_mcp_args ARGS "${AGENT_ENGINE:-}"
             append_claude_permission_args ARGS "${allow_writes}"
             # Detect JSON lives in STATUS_DIR, outside the worktree; without this the

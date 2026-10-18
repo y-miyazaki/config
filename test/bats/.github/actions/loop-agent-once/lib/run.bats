@@ -12,6 +12,7 @@
 #   run_agent and run_agent_capture (asserted on the stubbed claude CLI args);
 #   the legacy MODEL / EFFORT / MAX_TURNS env values do not reach the agent
 # - run_loop_agent_once reads AGENT_ENGINE, not the legacy ENGINE name
+# - run_loop_agent_once passes the fixed claude permission surface (acceptEdits, read baseline, deny list)
 # - run_loop_agent_once appends the message directory to the prompt and creates it
 # - run_loop_agent_once emits message_json from message.md and message_labels.json
 # - run_loop_agent_once emits an empty message_json when message.md is missing or labels are malformed
@@ -54,7 +55,7 @@ STUB
     AGENT_TOKEN="dummy-token"
     PROMPT="hello"
     WORKING_DIRECTORY="."
-    CLAUDE_BASE_ARGS='-p hello --output-format stream-json --verbose --settings {"enableAllProjectMcpServers":true} --setting-sources project --permission-mode acceptEdits'
+    CLAUDE_BASE_ARGS='-p hello --output-format stream-json --verbose --settings {"enableAllProjectMcpServers":true} --setting-sources project --permission-mode acceptEdits --allowedTools Bash(git diff:*) Bash(git log:*) Bash(git show:*) Bash(git status:*) --disallowedTools Bash(curl:*) Bash(gh api *--method*) Bash(gh api *-X DELETE*) Bash(gh api *-X PATCH*) Bash(gh api *-X POST*) Bash(gh api *-X PUT*) Bash(gh issue close:*) Bash(gh issue comment:*) Bash(gh issue create:*) Bash(gh issue delete:*) Bash(gh issue edit:*) Bash(gh label create:*) Bash(gh label delete:*) Bash(gh label edit:*) Bash(gh pr close:*) Bash(gh pr comment:*) Bash(gh pr create:*) Bash(gh pr edit:*) Bash(gh pr merge:*) Bash(gh pr review:*) Bash(gh release create:*) Bash(gh release delete:*) Bash(gh release edit:*) Bash(gh release upload:*) Bash(gh run cancel:*) Bash(gh run rerun:*) Bash(gh secret:*) Bash(gh variable:*) Bash(gh workflow run:*) Bash(git diff *--output*) Bash(git push:*) Bash(printenv:*) Bash(sudo:*) Bash(wget:*)'
 }
 
 @test "emit_usage_json_output writes empty usage_json when nothing captured" {

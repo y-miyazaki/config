@@ -5,22 +5,20 @@ bats_require_minimum_version 1.5.0
 # Tests for .github/actions/loop-execute/lib/agent.sh
 #
 # Use cases:
-# - grant_claude_workspace_trust marks GITHUB_WORKSPACE trusted so project allow rules apply
-# - grant_claude_workspace_trust merges into an existing ~/.claude.json instead of replacing it
-# - grant_claude_workspace_trust leaves an unparsable ~/.claude.json untouched
-# - grant_claude_workspace_trust no-ops when GITHUB_WORKSPACE is unset
-# - grant_claude_workspace_trust also writes beside a relocated CLAUDE_CONFIG_DIR
 # - run_agent_capture preserves USAGE_* unlike pipe to tee
 # - harvest_workspace_into_worktree copies modified files from GITHUB_WORKSPACE
 # - harvest_workspace_into_worktree deletes paths removed in GITHUB_WORKSPACE
 # - harvest_workspace_into_worktree is a no-op when workspace equals worktree
 # - harvest_workspace_into_worktree harvests a renamed file instead of failing
 # - harvest_workspace_into_worktree keeps the source file of a copy
-# - run_agent grants edit permission to claude maker sessions only, and forwards model/max-turns
+# - run_agent runs claude makers in acceptEdits and checkers in dontAsk, and forwards model/max-turns
 # - run_agent forwards EFFORT to claude and warns when the engine has no effort flag
 # - run_agent opens one usage session per invocation and tags it with USAGE_ROLE
-# - run_agent loads the host repository's project settings for maker and checker
-# - run_agent forwards only caller-declared permission rules, never its own
+# - run_agent loads project settings but never grants workspace trust
+# - run_agent passes the fixed read baseline plus caller rules, and the fixed deny list
+# - the fixed deny list leaves the read-only gh rules callers declare reachable and
+#   neither fixed list names a consumer path
+# - run_agent leaves the copilot/codex/cursor arguments free of claude permission flags
 # - run_agent reads AGENT_ENGINE / AGENT_TOOL_ALLOWLIST, not the legacy ENGINE /
 #   AGENT_ALLOWED_TOOLS names
 # - warn_unsupported_allowed_tools warns for engines with incompatible rule syntax
@@ -31,6 +29,11 @@ while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
 done
 # shellcheck disable=SC1091
 source "${_bats_support}/support/common.bash"
+
+# Fixed values copied from the plan, not derived from agent.sh, so a drift in
+# CLAUDE_PLATFORM_*_RULES fails these tests.
+EXPECTED_ALLOW_BASELINE='Bash(git diff:*) Bash(git log:*) Bash(git show:*) Bash(git status:*)'
+EXPECTED_DENY_RULES='Bash(curl:*) Bash(gh api *--method*) Bash(gh api *-X DELETE*) Bash(gh api *-X PATCH*) Bash(gh api *-X POST*) Bash(gh api *-X PUT*) Bash(gh issue close:*) Bash(gh issue comment:*) Bash(gh issue create:*) Bash(gh issue delete:*) Bash(gh issue edit:*) Bash(gh label create:*) Bash(gh label delete:*) Bash(gh label edit:*) Bash(gh pr close:*) Bash(gh pr comment:*) Bash(gh pr create:*) Bash(gh pr edit:*) Bash(gh pr merge:*) Bash(gh pr review:*) Bash(gh release create:*) Bash(gh release delete:*) Bash(gh release edit:*) Bash(gh release upload:*) Bash(gh run cancel:*) Bash(gh run rerun:*) Bash(gh secret:*) Bash(gh variable:*) Bash(gh workflow run:*) Bash(git diff *--output*) Bash(git push:*) Bash(printenv:*) Bash(sudo:*) Bash(wget:*)'
 
 setup() {
     bats_source_rel ".github/actions/loop-execute/lib/usage.sh"
@@ -86,70 +89,6 @@ STUB
     run_agent "true" 2>&1 | tee "${BATS_TEST_TMPDIR}/tee-out.txt" > /dev/null || true
     [[ ${USAGE_INPUT_TOTAL} -eq 0 ]]
     [[ ${USAGE_OUTPUT_TOTAL} -eq 0 ]]
-}
-
-@test "grant_claude_workspace_trust also writes beside a relocated CLAUDE_CONFIG_DIR" {
-    local cfg_home
-
-    HOME="${BATS_TEST_TMPDIR}/home-relocated"
-    cfg_home="${BATS_TEST_TMPDIR}/elsewhere"
-    mkdir -p "${HOME}" "${cfg_home}/.claude"
-    CLAUDE_CONFIG_DIR="${cfg_home}/.claude"
-    GITHUB_WORKSPACE="${BATS_TEST_TMPDIR}/ws-relocated"
-
-    grant_claude_workspace_trust
-    [[ "$(jq -r --arg r "${GITHUB_WORKSPACE}" \
-        '.projects[$r].hasTrustDialogAccepted' "${cfg_home}/.claude.json")" == "true" ]]
-    [[ "$(jq -r --arg r "${GITHUB_WORKSPACE}" \
-        '.projects[$r].hasTrustDialogAccepted' "${HOME}/.claude.json")" == "true" ]]
-    CLAUDE_CONFIG_DIR=""
-}
-
-@test "grant_claude_workspace_trust leaves an unparsable ~/.claude.json untouched" {
-    HOME="${BATS_TEST_TMPDIR}/home-broken"
-    mkdir -p "${HOME}"
-    printf 'not json\n' > "${HOME}/.claude.json"
-    GITHUB_WORKSPACE="${BATS_TEST_TMPDIR}/ws-broken"
-
-    run grant_claude_workspace_trust
-    [[ ${status} -eq 0 ]]
-    [[ ${output} == *"not valid JSON"* ]]
-    [[ "$(cat "${HOME}/.claude.json")" == "not json" ]]
-}
-
-@test "grant_claude_workspace_trust marks GITHUB_WORKSPACE trusted so project allow rules apply" {
-    HOME="${BATS_TEST_TMPDIR}/home-new"
-    mkdir -p "${HOME}"
-    GITHUB_WORKSPACE="${BATS_TEST_TMPDIR}/ws-new"
-
-    grant_claude_workspace_trust
-    [[ "$(jq -r --arg r "${GITHUB_WORKSPACE}" \
-        '.projects[$r].hasTrustDialogAccepted' "${HOME}/.claude.json")" == "true" ]]
-}
-
-@test "grant_claude_workspace_trust merges into an existing ~/.claude.json instead of replacing it" {
-    HOME="${BATS_TEST_TMPDIR}/home-merge"
-    mkdir -p "${HOME}"
-    printf '{"oauthAccount":{"uuid":"keep-me"},"projects":{"/other":{"hasTrustDialogAccepted":true}}}\n' \
-        > "${HOME}/.claude.json"
-    GITHUB_WORKSPACE="${BATS_TEST_TMPDIR}/ws-merge"
-
-    grant_claude_workspace_trust
-    [[ "$(jq -r '.oauthAccount.uuid' "${HOME}/.claude.json")" == "keep-me" ]]
-    [[ "$(jq -r '.projects["/other"].hasTrustDialogAccepted' "${HOME}/.claude.json")" == "true" ]]
-    [[ "$(jq -r --arg r "${GITHUB_WORKSPACE}" \
-        '.projects[$r].hasTrustDialogAccepted' "${HOME}/.claude.json")" == "true" ]]
-}
-
-@test "grant_claude_workspace_trust no-ops when GITHUB_WORKSPACE is unset" {
-    HOME="${BATS_TEST_TMPDIR}/home-unset"
-    mkdir -p "${HOME}"
-    GITHUB_WORKSPACE=""
-
-    run grant_claude_workspace_trust
-    [[ ${status} -eq 0 ]]
-    [[ ${output} == *"GITHUB_WORKSPACE unset"* ]]
-    [[ ! -e "${HOME}/.claude.json" ]]
 }
 
 @test "harvest_workspace_into_worktree copies modified files from GITHUB_WORKSPACE" {
@@ -257,6 +196,43 @@ STUB
     [[ "$(cat "${wt}/keep.txt")" == "dirty" ]]
 }
 
+@test "platform deny rules do not cover the read-only gh rules callers declare" {
+    local read_rule cmd deny_rule pattern
+
+    for read_rule in 'Bash(gh api -X GET:*)' 'Bash(gh issue view:*)' 'Bash(gh label list:*)' \
+        'Bash(gh pr diff:*)' 'Bash(gh pr list:*)' 'Bash(gh pr view:*)' 'Bash(gh repo view:*)' \
+        'Bash(gh run list:*)' 'Bash(gh run view:*)'; do
+        cmd="${read_rule#Bash(}"
+        cmd="${cmd%:\*)}"
+        for deny_rule in "${CLAUDE_PLATFORM_DENY_RULES[@]}"; do
+            pattern="${deny_rule#Bash(}"
+            pattern="${pattern%)}"
+            # ":*" means the same as a trailing " *".
+            [[ ${pattern} == *':*' ]] && pattern="${pattern%:\*} *"
+            # shellcheck disable=SC2053
+            if [[ ${cmd} == ${pattern} || "${cmd} x" == ${pattern} ]]; then
+                echo "${deny_rule} covers ${read_rule}"
+                return 1
+            fi
+        done
+    done
+}
+
+@test "platform rules name no consumer path" {
+    local rule
+
+    [ "${#CLAUDE_PLATFORM_ALLOW_RULES[@]}" -eq 4 ]
+    [ "${#CLAUDE_PLATFORM_DENY_RULES[@]}" -eq 34 ]
+    for rule in "${CLAUDE_PLATFORM_ALLOW_RULES[@]}" "${CLAUDE_PLATFORM_DENY_RULES[@]}"; do
+        case "${rule}" in
+            *.agents/* | *.claude/* | *.apm/* | *scripts/* | *skills/*)
+                echo "consumer path in ${rule}"
+                return 1
+                ;;
+        esac
+    done
+}
+
 @test "run_agent claude maker session grants edit permission and passes model" {
     local args_file
 
@@ -309,18 +285,30 @@ STUB
     run ! grep -q -- "--add-dir" "${args_file}"
 }
 
-@test "run_agent claude checker session stays read-only" {
+@test "run_agent claude appends caller rules after the read baseline" {
+    local args_file
+
+    args_file="${BATS_TEST_TMPDIR}/claude-allowed-tools-args.txt"
+    _stub_claude_engine "${args_file}"
+    AGENT_TOOL_ALLOWLIST="$(printf '%s\n' 'Bash(gh issue view:*)' '' 'Bash(gh label list:*)')"
+    run_agent "false" > /dev/null
+    grep -qF -- "--allowedTools ${EXPECTED_ALLOW_BASELINE} Bash(gh issue view:*) Bash(gh label list:*) --disallowedTools " "${args_file}"
+}
+
+@test "run_agent claude checker session runs in dontAsk mode with the read baseline" {
     local args_file
 
     args_file="${BATS_TEST_TMPDIR}/claude-checker-args.txt"
     _stub_claude_engine "${args_file}"
     MODEL="claude-opus-5"
     run_agent "false" > /dev/null
-    run ! grep -q -- "--permission-mode" "${args_file}"
+    grep -q -- "--permission-mode dontAsk" "${args_file}"
+    run ! grep -q -- "acceptEdits" "${args_file}"
+    grep -qF -- "--allowedTools ${EXPECTED_ALLOW_BASELINE}" "${args_file}"
     grep -q -- "--model claude-opus-5" "${args_file}"
 }
 
-@test "run_agent claude loads host project settings for both roles" {
+@test "run_agent claude keeps project setting sources for both roles" {
     local args_file
 
     args_file="${BATS_TEST_TMPDIR}/claude-setting-sources-args.txt"
@@ -332,15 +320,49 @@ STUB
     grep -q -- "--setting-sources project" "${args_file}"
 }
 
-@test "run_agent claude passes caller-declared rules and grants nothing on its own" {
+@test "run_agent claude never writes workspace trust" {
     local args_file
 
-    args_file="${BATS_TEST_TMPDIR}/claude-allowed-tools-args.txt"
+    args_file="${BATS_TEST_TMPDIR}/claude-no-trust-args.txt"
     _stub_claude_engine "${args_file}"
-    AGENT_TOOL_ALLOWLIST="$(printf '%s\n' 'Bash(gh issue edit:*)' '' 'Bash(gh issue comment:*)')"
+    HOME="${BATS_TEST_TMPDIR}/home-no-trust"
+    GITHUB_WORKSPACE="${BATS_TEST_TMPDIR}/ws-no-trust"
+    mkdir -p "${HOME}" "${GITHUB_WORKSPACE}"
+    run_agent "true" > /dev/null
     run_agent "false" > /dev/null
-    grep -q -- "--allowedTools Bash(gh issue edit:\*) Bash(gh issue comment:\*)" "${args_file}"
-    run ! grep -q -- "Bash(gh pr edit" "${args_file}"
+    [ ! -e "${HOME}/.claude.json" ]
+    run ! declare -F grant_claude_workspace_trust
+}
+
+@test "run_agent claude passes only the read baseline when the caller declared no rules" {
+    local args_file line allowed
+
+    args_file="${BATS_TEST_TMPDIR}/claude-no-allowed-tools-args.txt"
+    _stub_claude_engine "${args_file}"
+    AGENT_TOOL_ALLOWLIST=""
+    run_agent "true" > /dev/null
+    line="$(cat "${args_file}")"
+    allowed="${line#*--allowedTools }"
+    allowed="${allowed%% --disallowedTools *}"
+    [ "${allowed}" = "${EXPECTED_ALLOW_BASELINE}" ]
+}
+
+@test "run_agent claude passes the fixed deny list for maker and checker" {
+    local args_file role
+
+    args_file="${BATS_TEST_TMPDIR}/claude-deny-args.txt"
+    _stub_claude_engine "${args_file}"
+    for role in true false; do
+        : > "${args_file}"
+        run_agent "${role}" > /dev/null
+        # Nothing follows the variadic list here except --max-turns/--model.
+        grep -qF -- "--disallowedTools ${EXPECTED_DENY_RULES} --max-turns 5 --model claude-sonnet-5" "${args_file}"
+    done
+
+    mkdir -p "${BATS_TEST_TMPDIR}/status"
+    DETECT_JSON_FILE="${BATS_TEST_TMPDIR}/status/tmp.detect"
+    run_agent "false" > /dev/null
+    grep -qF -- "--disallowedTools ${EXPECTED_DENY_RULES} --add-dir ${BATS_TEST_TMPDIR}/status" "${args_file}"
 }
 
 @test "run_agent ignores the legacy ENGINE and AGENT_ALLOWED_TOOLS names" {
@@ -351,7 +373,7 @@ STUB
     AGENT_TOOL_ALLOWLIST=""
     AGENT_ALLOWED_TOOLS="Bash(gh issue edit:*)"
     run_agent "true" > /dev/null
-    run ! grep -q -- "--allowedTools" "${args_file}"
+    run ! grep -qF -- "Bash(gh issue edit:*) --disallowedTools" "${args_file}"
 
     rm -f "${args_file}"
     unset AGENT_ENGINE
@@ -361,14 +383,39 @@ STUB
     [ ! -f "${args_file}" ]
 }
 
-@test "run_agent claude omits allowedTools when the caller declared no rules" {
-    local args_file
+@test "run_agent leaves copilot, codex and cursor arguments without claude permission flags" {
+    local engine bin args_file
 
-    args_file="${BATS_TEST_TMPDIR}/claude-no-allowed-tools-args.txt"
-    _stub_claude_engine "${args_file}"
+    mkdir -p "${BATS_TEST_TMPDIR}/bin"
+    for bin in copilot codex agent; do
+        cat > "${BATS_TEST_TMPDIR}/bin/${bin}" << STUB
+#!/usr/bin/env bash
+printf '%s\n' "\$*" > "${BATS_TEST_TMPDIR}/${bin}-args.txt"
+STUB
+        chmod +x "${BATS_TEST_TMPDIR}/bin/${bin}"
+    done
+    PATH="${BATS_TEST_TMPDIR}/bin:${PATH}"
+    function prepare_agent_mcps { :; }
+    function append_agent_mcp_args { :; }
+    function run_cursor_agent_with_usage {
+        local agent_bin="$1"
+        shift
+        "${agent_bin}" "$@"
+    }
+    AGENT_TOKEN="dummy-token"
+    PROMPT="test prompt"
+    WORKING_DIRECTORY="."
     AGENT_TOOL_ALLOWLIST=""
-    run_agent "true" > /dev/null
-    run ! grep -q -- "--allowedTools" "${args_file}"
+
+    for engine in copilot codex cursor; do
+        AGENT_ENGINE="${engine}"
+        run_agent "false" > /dev/null
+    done
+    for args_file in copilot codex agent; do
+        args_file="${BATS_TEST_TMPDIR}/${args_file}-args.txt"
+        [ -s "${args_file}" ]
+        run ! grep -qE -- "--(permission-mode|allowedTools|disallowedTools|setting-sources)" "${args_file}"
+    done
 }
 
 @test "warn_unsupported_allowed_tools stays silent for claude and when unset" {
