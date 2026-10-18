@@ -2,6 +2,9 @@
 apm.lock.yaml
 aqua-checksums.json
 mise.lock
+# MCP configs materialized by `apm install` (its own JSON style)
+.cursor/mcp.json
+.mcp.json
 package-lock.json
 package.json
 pnpm-lock.yaml
