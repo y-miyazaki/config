@@ -93,6 +93,8 @@ budget_max_tokens_per_day
 delivery
 detect_hook_script
 detect_script
+finalize_label_allowlist
+finalize_script
 github_token
 level
 loop_name
@@ -126,13 +128,13 @@ state_file"
 @test "action.yml maps every renamed input to its uppercase environment variable" {
     local name upper checked=0
     for name in agent_edit_allowlist agent_edit_denylist agent_edit_target agent_unchanged_verdict \
-        delivery detect_hook_script level; do
+        delivery detect_hook_script finalize_label_allowlist finalize_script level; do
         upper="$(tr '[:lower:]' '[:upper:]' <<< "${name}")"
         run grep -Fx "        ${upper}: \${{ inputs.${name} }}" "${ACTION_YML}"
         [ "$status" -eq 0 ]
         checked=$((checked + 1))
     done
-    [ "${checked}" -eq 7 ]
+    [ "${checked}" -eq 9 ]
     run grep -E 'DISPATCH_HOOK|MAY_EDIT|WRITE_TARGET' "${ACTION_YML}"
     [ "$status" -eq 1 ]
 }
@@ -141,11 +143,12 @@ state_file"
     entity_detect_write_mock_script "${BATS_TEST_TMPDIR}/detect.sh" '{"status":"ok","skip":false,"result":{"handoff_key":"entity:issue:1","entity":{"kind":"issue"}}}'
     local -a cases=(
         'LEVEL=|::error::level is required (L1, L2, or L3)'
-        'DELIVERY=|::error::delivery must be none at L1 (got: empty)'
+        'DELIVERY=|::error::delivery must be none or issue_comment at L1 (got: empty)'
         'AGENT_EDIT_ALLOWLIST=**|::error::agent_edit_allowlist is not allowed at L1 (L1 is read-only)'
-        'LEVEL=L2 AGENT_EDIT_TARGET=fix AGENT_EDIT_ALLOWLIST=** AGENT_UNCHANGED_VERDICT=REJECT DELIVERY=|::error::delivery must be none|pr_create|pr_push (got: empty)'
+        'LEVEL=L2 AGENT_EDIT_TARGET=fix AGENT_EDIT_ALLOWLIST=** AGENT_UNCHANGED_VERDICT=REJECT DELIVERY=|::error::delivery must be issue_comment|none|pr_create|pr_push|pr_review (got: empty)'
         'LEVEL=L2 AGENT_EDIT_TARGET=fix AGENT_UNCHANGED_VERDICT=REJECT|::error::agent_edit_allowlist is required at L2 (use ** for unrestricted)'
         'LEVEL=L2 AGENT_EDIT_TARGET=fix AGENT_EDIT_ALLOWLIST=**|::error::agent_unchanged_verdict is required at L2 (APPROVE or REJECT)'
+        'LEVEL=L1 DELIVERY=issue_comment FINALIZE_SCRIPT=x.sh|::error::finalize_script is not allowed at L1'
     )
     local entry expected checked=0
     local -a assignments
@@ -159,7 +162,7 @@ state_file"
         [ ! -s "${GITHUB_OUTPUT}" ]
         checked=$((checked + 1))
     done
-    [ "${checked}" -eq 6 ]
+    [ "${checked}" -eq 7 ]
 }
 
 @test "main fails when skip is false and entity kind is missing or invalid" {
@@ -215,6 +218,21 @@ state_file"
     run find "${RUNNER_TEMP}/loop-handoff" -type f
     [ "$status" -eq 0 ]
     [ "$(wc -l <<< "${output}")" -ge 1 ]
+}
+
+@test "main publishes target matrix for L1 issue_comment on an issue entity" {
+    entity_detect_write_mock_script "${BATS_TEST_TMPDIR}/detect.sh" \
+        '{"status":"ok","skip":false,"result":{"handoff_key":"entity:issue:9","entity":{"kind":"issue"},"issue_number":9}}'
+    run_main DELIVERY=issue_comment FINALIZE_LABEL_ALLOWLIST=$'bug\nfeature'
+    [ "$status" -eq 0 ]
+    run grep -Fx 'should_run=true' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+    run grep -Fx 'delivery=issue_comment' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+    run grep -Fx 'pr_auto_merge=false' "${GITHUB_OUTPUT}"
+    [ "$status" -eq 0 ]
+    run jq -c '[length, .[0].target_json.entity.kind]' <<< "$(github_output_matrix)"
+    [ "$output" = '[1,"issue"]' ]
 }
 
 @test "main sets pr_auto_merge true at L3 with pr_create" {

@@ -86,7 +86,7 @@ function resolve_detect_hook_script {
         hook_script="$(pwd)/${hook_script}"
     fi
 
-    if command -v realpath > /dev/null 2>&1; then
+    if command -v realpath >/dev/null 2>&1; then
         hook_script="$(realpath "${hook_script}")"
     fi
 
@@ -143,7 +143,7 @@ function resolve_detect_script_path {
         return 1
     fi
 
-    if command -v realpath > /dev/null 2>&1; then
+    if command -v realpath >/dev/null 2>&1; then
         resolved="$(realpath "${resolved}")"
     else
         resolved="$(cd "$(dirname "${resolved}")" && pwd)/$(basename "${resolved}")"
@@ -209,7 +209,8 @@ function main {
     source "${loop_action_lib}/validate_loop_write_contract.sh"
     # A configuration error fails the job (no outputs written).
     if ! validate_loop_write_contract "${LEVEL}" "${DELIVERY}" "${AGENT_EDIT_TARGET}" \
-        "${AGENT_EDIT_ALLOWLIST}" "${AGENT_EDIT_DENYLIST}" "${AGENT_UNCHANGED_VERDICT}"; then
+        "${AGENT_EDIT_ALLOWLIST}" "${AGENT_EDIT_DENYLIST}" "${AGENT_UNCHANGED_VERDICT}" \
+        "${FINALIZE_SCRIPT:-}" "${FINALIZE_LABEL_ALLOWLIST:-}"; then
         exit 1
     fi
     if ! validate_delivery_value "${DELIVERY}"; then
@@ -226,7 +227,7 @@ function main {
         write_entity_skip_outputs "budget"
     fi
 
-    bash "${DETECT_SCRIPT}" > "${DETECT_OUT}"
+    bash "${DETECT_SCRIPT}" >"${DETECT_OUT}"
     detect_status="$(jq -r '.status // "error"' "${DETECT_OUT}")"
     if [[ ${detect_status} != "ok" ]]; then
         echo "::error::entity detect failed: status=$(jq -r '.status // "error"' "${DETECT_OUT}") message=$(jq -r '.message // ""' "${DETECT_OUT}")" >&2
@@ -245,8 +246,8 @@ function main {
         "${AGENT_EDIT_ALLOWLIST}")"; then
         exit 1
     fi
-    if [[ $(jq 'length' <<< "${full_matrix}") -gt 0 ]] \
-        && ! validate_delivery_target "${DELIVERY}" "$(jq -c '.[0].target_json' <<< "${full_matrix}")"; then
+    if [[ $(jq 'length' <<<"${full_matrix}") -gt 0 ]] &&
+        ! validate_delivery_target "${DELIVERY}" "$(jq -c '.[0].target_json' <<<"${full_matrix}")"; then
         exit 1
     fi
 
@@ -262,12 +263,12 @@ function main {
         fi
     fi
 
-    if [[ $(jq 'length' <<< "${full_matrix}") -eq 0 ]]; then
+    if [[ $(jq 'length' <<<"${full_matrix}") -eq 0 ]]; then
         write_entity_skip_outputs "detect_skip"
     fi
 
-    loop_handoff_init_bundle "${HANDOFF_DIR}" > /dev/null
-    candidate="$(jq -c '.[0]' <<< "${full_matrix}")"
+    loop_handoff_init_bundle "${HANDOFF_DIR}" >/dev/null
+    candidate="$(jq -c '.[0]' <<<"${full_matrix}")"
     if ! loop_handoff_write_candidate_payload "${HANDOFF_DIR}" "${candidate}"; then
         echo "::error::failed to write entity handoff payload" >&2
         exit 1

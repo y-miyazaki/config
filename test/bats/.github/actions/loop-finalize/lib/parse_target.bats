@@ -7,7 +7,8 @@
 # - an empty TARGET_JSON fails (no silent open_pr fallback)
 # - invalid JSON, a missing key, or a missing to.branch fails
 # - the PR base and to_branch come from target_json.to.branch (integration and pull_request)
-# - an empty or unimplemented delivery fails
+# - an empty or unimplemented (issue_create) delivery fails
+# - issue_comment accepts an issue entity and pr_review accepts a pr entity
 # - pr_push with an integration target fails (delivery/target guard)
 # - an empty STATE_BRANCH fails before any PR or push step runs
 
@@ -28,7 +29,7 @@ setup() {
 
 @test "parse_target fails for an empty or unimplemented delivery" {
     local delivery checked=0
-    for delivery in "" open_pr push_head pr_review; do
+    for delivery in "" open_pr push_head issue_create; do
         run env DELIVERY="${delivery}" TARGET_JSON='{"key":"integration:main","mode":"integration","to":{"branch":"main"}}' \
             bash "${PARSE_SCRIPT}"
         [ "${status}" -eq 1 ]
@@ -37,6 +38,23 @@ setup() {
         checked=$((checked + 1))
     done
     [ "${checked}" -eq 4 ]
+}
+
+@test "parse_target accepts issue_comment with an issue entity and pr_review with a pr entity" {
+    run env DELIVERY=issue_comment TARGET_JSON='{"key":"entity:issue:3","entity":{"handoff_key":"entity:issue:3","kind":"issue"},"to":{"branch":"main"}}' \
+        bash "${PARSE_SCRIPT}"
+    [ "${status}" -eq 0 ]
+    run cat "${GITHUB_OUTPUT}"
+    [ "${output}" = $'target_key=entity:issue:3\npr_base_branch=main\nto_branch=main' ]
+    : > "${GITHUB_OUTPUT}"
+    run env DELIVERY=pr_review TARGET_JSON='{"key":"entity:pr:4","entity":{"handoff_key":"entity:pr:4","kind":"pr"},"to":{"branch":"main"}}' \
+        bash "${PARSE_SCRIPT}"
+    [ "${status}" -eq 0 ]
+    run cat "${GITHUB_OUTPUT}"
+    [ "${output}" = $'target_key=entity:pr:4\npr_base_branch=main\nto_branch=main' ]
+    run env DELIVERY=issue_comment TARGET_JSON='{"key":"entity:pr:4","entity":{"kind":"pr"},"to":{"branch":"main"}}' \
+        bash "${PARSE_SCRIPT}"
+    [ "${status}" -eq 1 ]
 }
 
 @test "parse_target fails for an empty target_json" {
