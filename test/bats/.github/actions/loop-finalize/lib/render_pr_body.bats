@@ -25,6 +25,9 @@
 # - render_failure_context renders markdown links when metadata present
 # - render_pr_body renders one collapsed loop meta block carrying engine/model/tokens
 # - render_pr_body omits the meta block when level, target, engine and usage are empty
+# - linkify_agent_text links changed paths and known commit SHAs written as code spans
+# - linkify_agent_text leaves unknown paths, unknown SHAs, existing links, and fenced code alone
+# - render_pr_body links changed paths and SHAs in the agent summary
 
 _bats_support="$(dirname "${BATS_TEST_FILENAME}")"
 while [[ ! -f "${_bats_support}/support/common.bash" ]]; do
@@ -287,4 +290,51 @@ setup() {
     [ "${sum_i}" -lt "${ver_i}" ]
     [ "${ver_i}" -lt "${meta_i}" ]
     [[ $output != *$'\n## Changes\n'* ]]
+}
+
+@test "linkify_agent_text links changed paths and known commit SHAs written as code spans" {
+    export GITHUB_REPOSITORY='org/repo' BLOB_REF='loop/test-gap'
+    export CHANGED_FILES_JSON='["test/bats/foo.bats","docs/a b.md"]'
+    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}'
+    run linkify_agent_text '| `test/bats/foo.bats` (new) | `abcdef0` | `./docs/a b.md` |'
+    [ "$status" -eq 0 ]
+    [[ $output == *"[test/bats/foo.bats](https://github.com/org/repo/blob/loop/test-gap/test/bats/foo.bats) (new)"* ]]
+    [[ $output == *"[abcdef0](https://github.com/org/repo/commit/abcdef0123456789abcdef0123456789abcdef01)"* ]]
+    [[ $output == *"[./docs/a b.md](https://github.com/org/repo/blob/loop/test-gap/docs/a%20b.md)"* ]]
+}
+
+@test "linkify_agent_text leaves unknown paths, unknown SHAs, existing links, and fenced code alone" {
+    export GITHUB_REPOSITORY='org/repo' BLOB_REF='loop/test-gap'
+    export CHANGED_FILES_JSON='["test/bats/foo.bats"]'
+    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}'
+    local text
+    text=$'`scripts/other.sh` `deadbeef` [`test/bats/foo.bats`](https://x/y)\n```\n`test/bats/foo.bats`\n```'
+    run linkify_agent_text "${text}"
+    [ "$status" -eq 0 ]
+    [ "${output}" = "${text}" ]
+}
+
+@test "linkify_agent_text is a no-op without repository or ref" {
+    export GITHUB_REPOSITORY='' BLOB_REF=''
+    export CHANGED_FILES_JSON='["test/bats/foo.bats"]'
+    export DETECT_RESULT_JSON='{}'
+    run linkify_agent_text 'edited `test/bats/foo.bats`'
+    [ "$status" -eq 0 ]
+    [ "${output}" = 'edited `test/bats/foo.bats`' ]
+}
+
+@test "render_pr_body links changed paths and SHAs in the agent summary" {
+    export GITHUB_REPOSITORY='org/repo' BLOB_REF='loop/test-gap'
+    export PR_BODY_PREFIX=''
+    export AGENT_REPORT_OVERVIEW='Added suite for `scripts/x.sh`.'
+    export AGENT_REPORT_SUMMARY=$'### Changes\n| Target | Gap |\n| --- | --- |\n| `test/bats/foo.bats` | none |\n| `abcdef0` | pin |'
+    export AGENT_REPORT_VERIFICATION='| `bats test/bats/foo.bats` | skip |'
+    export CHANGED_FILES_JSON='["test/bats/foo.bats"]'
+    export DETECT_RESULT_JSON='{"commits":[{"sha":"abcdef0123456789abcdef0123456789abcdef01"}]}'
+    run render_pr_body
+    [ "$status" -eq 0 ]
+    [[ $output == *"| [test/bats/foo.bats](https://github.com/org/repo/blob/loop/test-gap/test/bats/foo.bats) |"* ]]
+    [[ $output == *"| [abcdef0](https://github.com/org/repo/commit/abcdef0123456789abcdef0123456789abcdef01) |"* ]]
+    [[ $output == *"Added suite for \`scripts/x.sh\`."* ]]
+    [[ $output == *"| \`bats test/bats/foo.bats\` | skip |"* ]]
 }
