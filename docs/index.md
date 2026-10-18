@@ -83,3 +83,5 @@ _Research and comparison reports._
 - [Waza Capabilities In This Repository](report/waza/waza-capabilities.md)
 - [Waza Eval Templates](report/waza/waza-eval-templates.md)
 - [Waza Quickstart](report/waza/waza-quickstart.md)
+
+<!-- dogfood: pr-review check, safe to close -->
