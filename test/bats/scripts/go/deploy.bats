@@ -21,10 +21,15 @@ source "${_bats_support}/support/common.bash"
 
 DEPLOY_SCRIPT="$(bats_workspace_root)/scripts/go/deploy.sh"
 
+setup() {
+    # shellcheck disable=SC1090
+    source "${DEPLOY_SCRIPT}"
+}
+
 @test "deploy.sh main completes successfully in dry-run mode" {
     run bash -c "DRY_RUN=true bash '${DEPLOY_SCRIPT}' dev"
     [ "$status" -eq 0 ]
-    [[ $output == *"Deploying to AWS (dev)"* ]]
+    [[ $output == *"DRY-RUN: Would execute: make deploy STAGE=dev"* ]]
     [[ $output == *"Deployment completed successfully!"* ]]
 }
 
@@ -41,25 +46,25 @@ DEPLOY_SCRIPT="$(bats_workspace_root)/scripts/go/deploy.sh"
 }
 
 @test "show_usage exits 0 when called without an error message" {
-    run bash -c "source '${DEPLOY_SCRIPT}' && show_usage"
+    run show_usage
     [ "$status" -eq 0 ]
     [[ $output == *"Usage:"* ]]
 }
 
 @test "show_usage prints the error message and exits 1 with a message" {
-    run bash -c "source '${DEPLOY_SCRIPT}' && show_usage 'boom'"
+    run show_usage 'boom'
     [ "$status" -eq 1 ]
     [[ $output == *"Error: boom"* ]]
 }
 
 @test "validate_arguments accepts a non-empty stage without exiting" {
-    run bash -c "source '${DEPLOY_SCRIPT}' && validate_arguments 'dev' && echo ok"
+    run validate_arguments 'dev'
     [ "$status" -eq 0 ]
-    [ "$output" = "ok" ]
+    [ -z "$output" ]
 }
 
 @test "validate_arguments exits via show_usage when the stage is empty" {
-    run bash -c "source '${DEPLOY_SCRIPT}' && validate_arguments ''"
+    run validate_arguments ''
     [ "$status" -eq 1 ]
     [[ $output == *"Stage argument is required"* ]]
 }
