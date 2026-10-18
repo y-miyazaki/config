@@ -123,7 +123,9 @@ jobs:
       agent_maker_model: claude-sonnet-5
       agent_maker_skill_name: github-issue-triage
       # Triage reads Issue facts only; finalize posts the comment and applies the
-      # labels. Read-only rules unblock the print-mode approver.
+      # labels. The allowlist is narrowed to read-only gh, but host project settings
+      # (.claude/settings.json) still apply via --setting-sources project until the
+      # credential-isolation work, so the prompt is what stops the agent from writing.
       agent_tool_allowlist: |
         Bash(gh api -X GET:*)
         Bash(gh issue view:*)
