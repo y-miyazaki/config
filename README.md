@@ -2,7 +2,7 @@
 
 Shared configuration packages for AI agent tooling, GitHub Actions workflows, and Renovate policy reuse.
 
-**[Documentation](https://y-miyazaki.github.io/config/)** · **[APM Tutorial](https://y-miyazaki.github.io/config/tutorials/apm-getting-started/)** · **[GitHub Actions Tutorial](https://y-miyazaki.github.io/config/tutorials/github-actions-getting-started/)** · **[Renovate Tutorial](https://y-miyazaki.github.io/config/tutorials/renovate-getting-started/)**
+**[Documentation](https://y-miyazaki.github.io/config/)** · **[APM Tutorial](https://y-miyazaki.github.io/config/tutorials/apm-getting-started/)** · **[GitHub Actions Tutorial](https://y-miyazaki.github.io/config/tutorials/github-actions-getting-started/)** · **[Renovate Tutorial](https://y-miyazaki.github.io/config/tutorials/renovate-getting-started/)** · **[Loop Engineering](https://y-miyazaki.github.io/config/explanation/loop-engineering/)**
 
 ---
 
