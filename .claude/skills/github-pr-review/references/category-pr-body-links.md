@@ -1,6 +1,6 @@
 # Review Links (github-pr-review)
 
-Link everything that can be linked in text that will be posted to GitHub. The poster renders the evidence, location, and file links itself from the report fields; follow these rules for any link you write in `summary`, `title`, or `impact`.
+Link everything that can be linked in text that will be posted to GitHub. The platform renders the evidence, location, and file links itself from the report fields; follow these rules for any link you write in `summary`, `title`, or `impact`.
 
 - Pin line links to a full commit SHA: `https://github.com/{owner}/{repo}/blob/{full-sha}/{path}#L{start}-L{end}`. Never link a branch name; later commits shift the lines
 - Evidence (rule or criteria quote) links use the **base** SHA from detect `result.base_sha`
