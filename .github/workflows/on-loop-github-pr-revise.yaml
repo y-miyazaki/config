@@ -129,7 +129,7 @@ jobs:
       detect_env_json: ${{ format('{{"PR_NUMBER":"{0}","PR_MENTION":"{1}"}}', github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || '', inputs.mention || '@loop') }}
       detect_pr_denylist: fork,label:no-loop
       detect_pr_enabled: true
-      detect_pr_number: ${{ github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || 0 }}
+      detect_pr_number: ${{ fromJSON(github.event.pull_request.number || github.event.issue.number || github.event.client_payload.pr_number || inputs.pr_number || 0) }}
       detect_script: .agents/skills/github-pr-revise/scripts/detect_pr_revise.sh
       level: L2
       loop_name: github-pr-revise

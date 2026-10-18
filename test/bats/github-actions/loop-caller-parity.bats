@@ -693,7 +693,9 @@ dogfood_value() {
 @test "github-pr-revise caller watches a scoped PR head" {
     local wf="${ROOT}/.github/workflows/on-loop-github-pr-revise.yaml"
     [ "$(dogfood_value "${wf}" detect_pr_enabled)" = true ]
-    [[ "$(dogfood_value "${wf}" detect_pr_number)" == *'inputs.pr_number || 0 }}' ]]
+    # detect_pr_number is a number input: the expression must go through fromJSON, or a
+    # workflow_dispatch run fails at startup with no jobs ("workflow file issue").
+    [[ "$(dogfood_value "${wf}" detect_pr_number)" == '${{ fromJSON('*'inputs.pr_number || 0) }}' ]]
     [ "$(dogfood_value "${wf}" detect_pr_denylist)" = 'fork,label:no-loop' ]
     # pr_push rejects detect_branch_match (spec 7-3).
     if dogfood_with "${wf}" | grep -q '^detect_branch_match:'; then
